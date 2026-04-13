@@ -7,9 +7,9 @@ class RunState {
   final EntityStats heroStats;
   final PlayerClassType heroClass;
   
-  // Variables pour gérer l'état du cooldown du sort
-  final int specialCooldown;
-  final int specialMaxCooldown;
+  // Variables pour gérer l'état du cooldown des sorts
+  final int skill1Cooldown;
+  final int skill2Cooldown;
   // Durée du buff d'attaque
   final int attackBuffDuration;
   // Durée du vol de vie (Berserker)
@@ -30,8 +30,8 @@ class RunState {
     required this.currentLevel,
     required this.heroStats,
     required this.heroClass,
-    this.specialCooldown = 0,
-    this.specialMaxCooldown = 3,
+    this.skill1Cooldown = 0,
+    this.skill2Cooldown = 0,
     this.attackBuffDuration = 0,
     this.lifestealDuration = 0,
   });
@@ -40,8 +40,8 @@ class RunState {
     int? currentLevel,
     EntityStats? heroStats,
     PlayerClassType? heroClass,
-    int? specialCooldown,
-    int? specialMaxCooldown,
+    int? skill1Cooldown,
+    int? skill2Cooldown,
     int? attackBuffDuration,
     int? lifestealDuration,
   }) {
@@ -49,8 +49,8 @@ class RunState {
       currentLevel: currentLevel ?? this.currentLevel,
       heroStats: heroStats ?? this.heroStats,
       heroClass: heroClass ?? this.heroClass,
-      specialCooldown: specialCooldown ?? this.specialCooldown,
-      specialMaxCooldown: specialMaxCooldown ?? this.specialMaxCooldown,
+      skill1Cooldown: skill1Cooldown ?? this.skill1Cooldown,
+      skill2Cooldown: skill2Cooldown ?? this.skill2Cooldown,
       attackBuffDuration: attackBuffDuration ?? this.attackBuffDuration,
       lifestealDuration: lifestealDuration ?? this.lifestealDuration,
     );
@@ -74,21 +74,36 @@ class RunController extends StateNotifier<RunState> {
     );
   }
 
-  /// Avance d'un niveau (après avoir drafté)
+  /// Avance d'un niveau (après avoir drafté) et restaure 50% du mana
   void nextLevel() {
-    state = state.copyWith(currentLevel: state.currentLevel + 1);
+    final currentStats = state.heroStats;
+    int manaToRestore = (currentStats.maxMana * 0.50).round();
+    int newMana = (currentStats.currentMana + manaToRestore).clamp(0, currentStats.maxMana);
+
+    state = state.copyWith(
+      currentLevel: state.currentLevel + 1,
+      heroStats: currentStats.copyWith(currentMana: newMana),
+      skill1Cooldown: 0,
+      skill2Cooldown: 0,
+    );
   }
 
   /// Applique un modificateur à la carte héro (ex: récompense de draft)
-  void applyHeroStatModifier({int maxPvAcc = 0, int attackAcc = 0, int armorAcc = 0}) {
+  void applyHeroStatModifier({int maxPvAcc = 0, int attackAcc = 0, int armorAcc = 0, int maxManaAcc = 0}) {
     final currentStats = state.heroStats;
     final newMaxPv = currentStats.maxPv + maxPvAcc;
     final newCurrentPv = (currentStats.currentPv + (maxPvAcc > 0 ? maxPvAcc : 0)).clamp(0, newMaxPv);
     
+    final newMaxMana = currentStats.maxMana + maxManaAcc;
+    // On ajoute aussi le bonus au mana actuel
+    final newCurrentMana = (currentStats.currentMana + maxManaAcc).clamp(0, newMaxMana);
+
     state = state.copyWith(
       heroStats: currentStats.copyWith(
         maxPv: newMaxPv,
         currentPv: newCurrentPv,
+        maxMana: newMaxMana,
+        currentMana: newCurrentMana,
         attaque: currentStats.attaque + attackAcc,
         armure: currentStats.armure + armorAcc,
       ),
@@ -119,51 +134,74 @@ class RunController extends StateNotifier<RunState> {
   /// Baisse le cooldown et la durée des buffs à chaque nouveau tour
   void tickCooldown() {
     state = state.copyWith(
-      specialCooldown: state.specialCooldown > 0 ? state.specialCooldown - 1 : 0,
+      skill1Cooldown: state.skill1Cooldown > 0 ? state.skill1Cooldown - 1 : 0,
+      skill2Cooldown: state.skill2Cooldown > 0 ? state.skill2Cooldown - 1 : 0,
       attackBuffDuration: state.attackBuffDuration > 0 ? state.attackBuffDuration - 1 : 0,
       lifestealDuration: state.lifestealDuration > 0 ? state.lifestealDuration - 1 : 0,
     );
   }
 
-  /// Réinitialise le cooldown après son utilisation (obsolète mais gardé pour interface par défaut)
-  void resetCooldown() {
-    state = state.copyWith(specialCooldown: state.specialMaxCooldown);
+  /// Consomme les ressources nécessaires. Retourne false si insuffisant.
+  bool consumeResource({int mana = 0, int hpPercent = 0}) {
+    int hpCost = 0;
+    if (hpPercent > 0) {
+      hpCost = (state.heroStats.currentPv * (hpPercent / 100.0)).round();
+      if (hpCost < 1) hpCost = 1;
+      if (state.heroStats.currentPv <= hpCost) return false;
+    }
+
+    if (mana > 0 && state.heroStats.currentMana < mana) {
+      return false;
+    }
+
+    state = state.copyWith(
+      heroStats: state.heroStats.copyWith(
+        currentMana: state.heroStats.currentMana - mana,
+        currentPv: state.heroStats.currentPv - hpCost,
+      ),
+    );
+    return true;
+  }
+
+  /// Tente de lancer le premier sort générique (pour méthodes externes)
+  bool triggerGenericSkill1({required int cd, int mana = 0, int hpPercent = 0}) {
+    if (state.skill1Cooldown > 0) return false;
+    if (!consumeResource(mana: mana, hpPercent: hpPercent)) return false;
+    state = state.copyWith(skill1Cooldown: cd);
+    return true;
+  }
+
+  /// Tente de lancer le second sort générique (pour méthodes externes)
+  bool triggerGenericSkill2({required int cd, int mana = 0, int hpPercent = 0}) {
+    if (state.skill2Cooldown > 0) return false;
+    if (!consumeResource(mana: mana, hpPercent: hpPercent)) return false;
+    state = state.copyWith(skill2Cooldown: cd);
+    return true;
   }
 
   /// Restaure 15 points d'armure de façon instantanée
-  void useArmorRestoreSpecial() {
-    if (state.specialCooldown > 0) return;
+  bool useArmorRestoreSpecial() {
+    if (!triggerGenericSkill1(cd: 2, mana: 3)) return false;
     
     final newArmor = state.heroStats.armure + 15;
     state = state.copyWith(
-      heroStats: state.heroStats.copyWith(armure: newArmor),
-      specialCooldown: state.specialMaxCooldown,
+      heroStats: state.heroStats.copyWith(armure: newArmor)
     );
+    return true;
   }
 
-  /// Augmente l'attaque de 25% pendant 2 tours
-  void useAttackBuffSpecial() {
-    if (state.specialCooldown > 0) return;
-
-    state = state.copyWith(
-      attackBuffDuration: 2,
-      specialCooldown: state.specialMaxCooldown,
-    );
+  /// Augmente l'attaque de 15% des PV Max pendant 2 tours
+  bool useAttackBuffSpecial() {
+    if (!triggerGenericSkill2(cd: 4, mana: 5)) return false;
+    state = state.copyWith(attackBuffDuration: 2);
+    return true;
   }
 
   /// Applique un effet de Vol de vie pour 3 tours (Berserker)
-  void useBerserkerLifesteal() {
-    if (state.specialCooldown > 0) return;
-    state = state.copyWith(
-      lifestealDuration: 3,
-      specialCooldown: state.specialMaxCooldown,
-    );
-  }
-
-  /// Réduit manuellement le cooldown sans effet (ex: pour les autres capacités déclenchées côté jeu)
-  void triggerGenericSpecial() {
-    if (state.specialCooldown > 0) return;
-    state = state.copyWith(specialCooldown: state.specialMaxCooldown);
+  bool useBerserkerLifesteal() {
+    if (!triggerGenericSkill1(cd: 4, hpPercent: 10)) return false;
+    state = state.copyWith(lifestealDuration: 3);
+    return true;
   }
 }
 

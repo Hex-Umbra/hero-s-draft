@@ -22,6 +22,8 @@ class PlayerClass {
     startingStats: EntityStats(
       maxPv: 100,
       currentPv: 100,
+      maxMana: 10,
+      currentMana: 10,
       armure: 20,
       attaque: 5,
       defense: 0.1, // 10% réduction
@@ -35,6 +37,8 @@ class PlayerClass {
     startingStats: EntityStats(
       maxPv: 80,
       currentPv: 80,
+      maxMana: 5,
+      currentMana: 5,
       armure: 0,
       attaque: 15,
       defense: 0.0,
@@ -48,6 +52,8 @@ class PlayerClass {
     startingStats: EntityStats(
       maxPv: 60,
       currentPv: 60,
+      maxMana: 15,
+      currentMana: 15,
       armure: 5,
       attaque: 10,
       defense: 0.05,

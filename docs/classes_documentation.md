@@ -1,6 +1,14 @@
 # Documentation des Classes : Hero's Draft
 
-Ce document répertorie l'ensemble des classes jouables actuellement intégrées au jeu "Hero's Draft", leurs caractéristiques de départ, le fonctionnement de leurs mécaniques spéciales (qui partagent un cooldown de 3 tours), ainsi que la cartographie des fichiers du code source responsables de ces mécaniques.
+Ce document répertorie l'ensemble des classes jouables actuellement intégrées au jeu "Hero's Draft", leurs caractéristiques de départ, le fonctionnement de leurs mécaniques spéciales et leurs coûts (Mana ou PV), ainsi que la cartographie des fichiers du code source responsables de ces mécaniques.
+
+---
+
+## Nouvelle Mécanique : Le Mana
+Chaque classe possède maintenant une jauge de **Mana** qui permet d'utiliser ses compétences spéciales.
+- Le coup des compétences est individuel, tout comme leur temps de rechargement (Cooldown).
+- A chaque niveau complété, le Héros régénère **50% de son Mana Maximum**.
+- Entre chaque niveau, les joueurs peuvent choisir diverses améliorations en récompense, incluant **Sagesse (+5 Mana Max)**, avec des probabilités égales.
 
 ---
 
@@ -9,13 +17,14 @@ Le Paladin est la classe la plus endurante. Elle se base sur la gestion de l'arm
 
 ### Statistiques de Base
 - **PV (Points de Vie)** : `100`
+- **Mana de départ** : `10`
 - **Armure de départ** : `20`
 - **Attaque** : `5`
 - **Défense** : `0.1` (10% de réduction des dégâts)
 
 ### Compétences Spéciales
-1. **Bouclier (+15 Armure)** : Injecte instantanément de manière inconditionnelle 15 points d'armures supplémentaires aux statistiques du héros (Déclenché via `useArmorRestoreSpecial`).
-2. **Rage (+15% PV Max en Attaque)** : Applique une altération temporelle au Héros. Son attaque totale sera augmentée d'un montant plat équivalent à `15%` de ses PV Max lors des 2 prochains tours (Déclenché via `useAttackBuffSpecial`).
+1. **Bouclier (+15 Armure)** : (Coût : 3 Mana, CD : 2 tours) Injecte instantanément de manière inconditionnelle 15 points d'armures supplémentaires aux statistiques du héros.
+2. **Rage (+15% PV Max en Attaque)** : (Coût : 5 Mana, CD : 4 tours) Applique une altération temporelle au Héros. Son attaque totale sera augmentée d'un montant plat équivalent à `15%` de ses PV Max lors des 2 prochains tours.
 
 ---
 
@@ -24,13 +33,14 @@ Le Mage possède de bonnes frappes moyennes, très peu de défense, mais est la 
 
 ### Statistiques de Base
 - **PV (Points de Vie)** : `60`
+- **Mana de départ** : `15`
 - **Armure de départ** : `5`
 - **Attaque** : `10`
 - **Défense** : `0.05` (5% de réduction des dégâts)
 
 ### Compétences Spéciales
-1. **Nova (AoE de 20%)** : Inflige instantanément `20%` de l'Attaque totale du Mage à **tous** les adversaires présents sur le terrain sans distinction. Cette compétence n'a pas besoin de cible pour être lancée.
-2. **Frappe de Foudre (150% Cible)** : Foudroie un ennemi sélectionné, lui infligeant `150%` de la valeur de l'Attaque totale. Nécessite qu'un ennemi soit actuellement ciblé.
+1. **Nova (AoE de 20%)** : (Coût : 4 Mana, CD : 2 tours) Inflige instantanément `20%` de l'Attaque totale du Mage à **tous** les adversaires présents sur le terrain sans distinction.
+2. **Frappe de Foudre (150% Cible)** : (Coût : 8 Mana, CD : 3 tours) Foudroie un ennemi sélectionné, lui infligeant `150%` de la valeur de l'Attaque totale. Nécessite qu'un ennemi soit actuellement ciblé.
 
 ---
 
@@ -39,31 +49,24 @@ Le Berserker n'a aucune armure ni aucune stat de protection (Défense à 0). Il 
 
 ### Statistiques de Base
 - **PV (Points de Vie)** : `80`
+- **Mana de départ** : `5`
 - **Armure de départ** : `0`
 - **Attaque** : `15`
 - **Défense** : `0.0` (Aucune réduction des dégâts)
 
 ### Compétences Spéciales
-1. **Vampirisme (3 Tours)** : Lance une charge de Lifesteal (`lifestealDuration = 3`) sur le héros. Pendant les 3 prochains tours, `25%` des dégâts occasionnés *via l'attaque de base sur les cibles* sont aspirés et soignent les Points de vie du Héros. (Mécanique gérée via `useBerserkerLifesteal` et calculée dans `executeTurn`).
-2. **Perce-Armure (Vol 15%)** : Lance une frappe brutale de `100%` de l'Attaque (comme une attaque normale) mais ce coup n'affecte pas l'Armure adverse : le coup frappe directement **les PV adverses**. En parallèle de la frappe, `15%` de l'armure totale qu'avait ce monstre sont convertis en statistiques d'Armure pour le Berserker.
+1. **Vampirisme (3 Tours)** : (Coût : **10% des PV Actuels**, CD : 4 tours) Lance une charge de Lifesteal (`lifestealDuration = 3`) sur le héros sans utiliser de Mana. Pendant les 3 prochains tours, `25%` des dégâts occasionnés *via l'attaque de base sur les cibles* sont aspirés et soignent les Points de vie du Héros.
+2. **Perce-Armure (Vol 15%)** : (Coût : 3 Mana, CD : 3 tours) Lance une frappe brutale de `100%` de l'Attaque (comme une attaque normale) mais ce coup n'affecte pas l'Armure adverse : le coup frappe directement **les PV adverses**. En parallèle de la frappe, `15%` de l'armure totale qu'avait ce monstre sont convertis en statistiques d'Armure.
 
 ---
 
-## Architecture des Fichiers Associés
+## Tableau des Récompenses de Draft et d'Améliorations
 
-Derrière ces différentes mécaniques, la logique est segmentée parmi les fichiers suivants :
+À la fin de chaque niveau d'ennemis vaincus, une interface apparaît pour proposer *une* amélioration au joueur parmi une sélection de 3 cartes tirées aléatoirement (chances égales) parmi le tableau de récompenses suivant :
 
-* **`lib/data/models/player_class.dart`** : 
-  * C'est le Data Model pur.
-  * Définit l'énumération `PlayerClassType`, construit les entités `PlayerClass.paladin`, `mage`, etc..., et fournit les statistiques brutes (`EntityStats`) à l'initialisation.
-* **`lib/ui/screens/class_selection_screen.dart`** :
-  * C'est le Widget parent où le joueur effectue son choix en début de partie en fonction d'un mapping des classes disponibles.
-* **`lib/ui/screens/game_screen.dart`** :
-  * Définit l'affichage adaptatif des boutons d'attaque spéciale (HUD). Selon le `runState.heroClass`, ce fichier affiche tantôt les boutons du Mage avec telle couleur, ou ceux du Berserker en interdisant le clic s'il n'y a pas de cible (`_game.selectedEnemy == null`).
-* **`lib/game/controllers/run_controller.dart`** :
-  * Point central du gestionnaire de State de la session.
-  * C'est ici que sont définies les stockages temporaires des buffs (`attackBuffDuration`, `lifestealDuration`), ainsi que l'application purement statistique des sorts agissant sur le joueur (ex: l'apport des 15 d'armure du Paladin).
-* **`lib/game/heros_draft_game.dart`** :
-  * C'est l'exécuteur Flame Game pour les scripts qui interagissent avec les ennemis ou le feu de l'action.
-  * Contient les scripts asynchrones `executeMageAoe()`, `executeMageTargeted()`, et `executeBerserkerTargeted()`.
-  * Contient également l'intercepteur de vie pour la logique de Vol de Vie des attaques classiques (via l'appel du `onPlayerHeal(heal)`).
+1. **Vitalité** : +15 PV Max
+2. **Aiguisage** : +5 Attaque
+3. **Plaque de Fer** : +10 Armure
+4. **Sagesse** : +5 Mana Max
+
+*Note : Lors du gain de mana max par "Sagesse", le héros gagne également cette même valeur en mana actuel.*

@@ -41,6 +41,7 @@ class DraftScreen extends ConsumerWidget {
                       maxPvAcc: choice.pvBoost,
                       attackAcc: choice.atkBoost,
                       armorAcc: choice.armorBoost,
+                      maxManaAcc: choice.manaBoost,
                     );
                     ref.read(runProvider.notifier).nextLevel();
                     onDraftComplete();
@@ -57,10 +58,11 @@ class DraftScreen extends ConsumerWidget {
   List<_DraftChoice> _generateChoices() {
     final rng = Random();
     return List.generate(3, (index) {
-        int type = rng.nextInt(3);
-        if (type == 0) return _DraftChoice('Vitalité', '+15 PV Max', 15, 0, 0);
-        if (type == 1) return _DraftChoice('Aiguisage', '+5 Attaque', 0, 5, 0);
-        return _DraftChoice('Plaque de Fer', '+10 Armure', 0, 0, 10);
+        int type = rng.nextInt(4);
+        if (type == 0) return _DraftChoice('Vitalité', '+15 PV Max', 15, 0, 0, 0);
+        if (type == 1) return _DraftChoice('Aiguisage', '+5 Attaque', 0, 5, 0, 0);
+        if (type == 2) return _DraftChoice('Plaque de Fer', '+10 Armure', 0, 0, 10, 0);
+        return _DraftChoice('Sagesse', '+5 Mana Max', 0, 0, 0, 5);
     });
   }
 }
@@ -71,6 +73,7 @@ class _DraftChoice {
   final int pvBoost;
   final int atkBoost;
   final int armorBoost;
+  final int manaBoost;
 
-  _DraftChoice(this.title, this.description, this.pvBoost, this.atkBoost, this.armorBoost);
+  _DraftChoice(this.title, this.description, this.pvBoost, this.atkBoost, this.armorBoost, this.manaBoost);
 }

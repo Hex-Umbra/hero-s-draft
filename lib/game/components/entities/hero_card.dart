@@ -16,7 +16,7 @@ class StatsTextComponent extends PositionComponent {
   void render(Canvas canvas) {
     final textSpan = TextSpan(
       children: [
-        TextSpan(text: 'HÉROS\n\nPV: ${stats.currentPv}/${stats.maxPv}\nArmure: ${stats.armure}\n', style: const TextStyle(color: Colors.white, fontSize: 16, height: 1.5)),
+        TextSpan(text: 'HÉROS\n\nPV: ${stats.currentPv}/${stats.maxPv}\nMana: ${stats.currentMana}/${stats.maxMana}\nArmure: ${stats.armure}\n', style: const TextStyle(color: Colors.white, fontSize: 16, height: 1.5)),
         if (bonusAttack > 0) ...[
           TextSpan(text: 'Attaque: ${stats.attaque + bonusAttack}(${stats.attaque} + ', style: const TextStyle(color: Colors.white, fontSize: 16, height: 1.5)),
           TextSpan(text: '$bonusAttack', style: const TextStyle(color: Colors.amber, fontSize: 16, height: 1.5, fontWeight: FontWeight.bold)),

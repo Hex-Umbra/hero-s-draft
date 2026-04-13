@@ -1,6 +1,8 @@
 class EntityStats {
   final int maxPv;
   final int currentPv;
+  final int maxMana;
+  final int currentMana;
   final int armure;
   final int attaque;
   final double defense; // Réduction en % (ex: 0.1 pour 10%)
@@ -8,6 +10,8 @@ class EntityStats {
   const EntityStats({
     required this.maxPv,
     required this.currentPv,
+    this.maxMana = 0,
+    this.currentMana = 0,
     required this.armure,
     required this.attaque,
     required this.defense,
@@ -16,6 +20,8 @@ class EntityStats {
   EntityStats copyWith({
     int? maxPv,
     int? currentPv,
+    int? maxMana,
+    int? currentMana,
     int? armure,
     int? attaque,
     double? defense,
@@ -23,6 +29,8 @@ class EntityStats {
     return EntityStats(
       maxPv: maxPv ?? this.maxPv,
       currentPv: currentPv ?? this.currentPv,
+      maxMana: maxMana ?? this.maxMana,
+      currentMana: currentMana ?? this.currentMana,
       armure: armure ?? this.armure,
       attaque: attaque ?? this.attaque,
       defense: defense ?? this.defense,
