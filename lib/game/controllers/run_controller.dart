@@ -20,7 +20,8 @@ class RunState {
 
   int get effectiveAttaque {
     if (attackBuffDuration > 0) {
-      return (heroStats.attaque * 1.25).round();
+      int bonus = (heroStats.maxPv * 0.15).round();
+      return heroStats.attaque + bonus;
     }
     return heroStats.attaque;
   }

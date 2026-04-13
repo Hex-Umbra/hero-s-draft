@@ -15,7 +15,7 @@ Le Paladin est la classe la plus endurante. Elle se base sur la gestion de l'arm
 
 ### Compétences Spéciales
 1. **Bouclier (+15 Armure)** : Injecte instantanément de manière inconditionnelle 15 points d'armures supplémentaires aux statistiques du héros (Déclenché via `useArmorRestoreSpecial`).
-2. **Rage (+25% Attaque)** : Applique une altération temporelle au Héros. Son attaque totale sera multipliée par `1.25` lors des 2 prochains tours (Déclenché via `useAttackBuffSpecial`).
+2. **Rage (+15% PV Max en Attaque)** : Applique une altération temporelle au Héros. Son attaque totale sera augmentée d'un montant plat équivalent à `15%` de ses PV Max lors des 2 prochains tours (Déclenché via `useAttackBuffSpecial`).
 
 ---
 

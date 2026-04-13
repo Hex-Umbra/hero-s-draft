@@ -116,7 +116,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                 ),
                 if (runState.attackBuffDuration > 0)
                   Text(
-                    'BUFF ATTAQUE (+25%) - Reste ${runState.attackBuffDuration} tour(s)',
+                    'BUFF RAGE (+15% PV Max) - Reste ${runState.attackBuffDuration} tour(s)',
                     style: const TextStyle(color: Colors.amber, fontSize: 14, fontWeight: FontWeight.bold),
                   ),
               ],
@@ -195,7 +195,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                 ref.read(runProvider.notifier).useAttackBuffSpecial();
             } : null,
             label: Text(
-              runState.specialCooldown == 0 ? '+25% Attaque' : 'Rage (CD: ${runState.specialCooldown})',
+              runState.specialCooldown == 0 ? '+15% PV Max (Dégâts)' : 'Rage (CD: ${runState.specialCooldown})',
               style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)
             ),
             icon: const Icon(Icons.flash_on, color: Colors.white),
