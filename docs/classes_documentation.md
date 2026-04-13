@@ -70,3 +70,31 @@ Le Berserker n'a aucune armure ni aucune stat de protection (Défense à 0). Il 
 4. **Sagesse** : +5 Mana Max
 
 *Note : Lors du gain de mana max par "Sagesse", le héros gagne également cette même valeur en mana actuel.*
+
+---
+
+## Architecture des Fichiers Associés
+
+Derrière ces différentes mécaniques, la logique est segmentée parmi les fichiers suivants :
+
+* **`lib/data/models/player_class.dart`** : 
+  * C'est le Data Model pur défini pour les classes d'origine.
+  * Définit l'énumération `PlayerClassType`, construit les entités statiques, et fournit les statistiques brutes (`EntityStats` avec le nouveau `MaxMana`) à l'initialisation.
+* **`lib/data/models/entity_stats.dart`** :
+  * Définit les statistiques vitales que peuvent avoir les héros ou les monstres (`PV`, `Armure`, `Attaque`, etc.) dont le nouveau système de `Mana`.
+* **`lib/ui/screens/class_selection_screen.dart`** :
+  * C'est le Menu où le joueur effectue son choix de la classe en début de session.
+* **`lib/game/controllers/run_controller.dart`** :
+  * Point central du gestionnaire de State de la session (`RunState`).
+  * C'est ici que sont définis les cooldowns individuels des sorts (`skill1Cooldown`, `skill2Cooldown`).
+  * Gère la consommation des ressources de `Mana` ou de `PV` pour l'activation d'un skill.
+  * Gère le Reset des cooldowns à 0 ainsi que la régénération de la moitié de `Mana` lors du saut vers le `nextLevel()`.
+* **`lib/game/heros_draft_game.dart`** :
+  * C'est l'exécuteur Flame Game pour les scripts qui interagissent avec les ennemis ou le terrain en plein combat.
+  * Contient les scripts asynchrones gérant les animations ou conséquences de sorts (ex: `executeMageAoe()`, `executeBerserkerTargeted()`).
+* **`lib/ui/screens/game_screen.dart`** :
+  * Définit l'affichage adaptatif des boutons d'attaque spéciale (HUD). Modifie sa couleur pour "Grisé et désactivé" si le `RunState` montre que les conditions financières (Mana ou CD) ne sont pas satisfaites.
+* **`lib/game/components/entities/hero_card.dart`** :
+  * Affiche la carte physique du Héros en plein combat (incluant l'actualisation continue de la chaîne string de ses `PV` et son `Mana`).
+* **`lib/ui/screens/draft_screen.dart`** :
+  * Gère l'interface de récompense tirée à chaque niveau aléatoirement, incluant la `Sagesse` pour booster le mana.
