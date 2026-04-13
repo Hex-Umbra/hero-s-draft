@@ -53,12 +53,14 @@ class HerosDraftGame extends FlameGame {
     }
     _currentState = state;
 
+    int bonusAtt = state.effectiveAttaque - state.heroStats.attaque;
+
     if (heroCard == null) {
-      heroCard = HeroCard(state.heroStats);
+      heroCard = HeroCard(state.heroStats, bonusAttack: bonusAtt);
       heroCard!.position = Vector2(size.x / 2, size.y - 150);
       add(heroCard!);
     } else {
-      heroCard!.updateStats(state.heroStats);
+      heroCard!.updateStats(state.heroStats, bonusAttack: bonusAtt);
     }
   }
 

@@ -6,11 +6,44 @@ import 'package:flame/effects.dart';
 import '../../../data/models/entity_stats.dart';
 import '../floating_text.dart';
 
+class StatsTextComponent extends PositionComponent {
+  EntityStats stats;
+  int bonusAttack;
+
+  StatsTextComponent(this.stats, this.bonusAttack) : super(position: Vector2(10, 10));
+
+  @override
+  void render(Canvas canvas) {
+    final textSpan = TextSpan(
+      children: [
+        TextSpan(text: 'HÉROS\n\nPV: ${stats.currentPv}/${stats.maxPv}\nArmure: ${stats.armure}\n', style: const TextStyle(color: Colors.white, fontSize: 16, height: 1.5)),
+        if (bonusAttack > 0) ...[
+          TextSpan(text: 'Attaque: ${stats.attaque + bonusAttack}(${stats.attaque} + ', style: const TextStyle(color: Colors.white, fontSize: 16, height: 1.5)),
+          TextSpan(text: '$bonusAttack', style: const TextStyle(color: Colors.amber, fontSize: 16, height: 1.5, fontWeight: FontWeight.bold)),
+          TextSpan(text: ')\n', style: const TextStyle(color: Colors.white, fontSize: 16, height: 1.5)),
+        ] else ...[
+          TextSpan(text: 'Attaque: ${stats.attaque}\n', style: const TextStyle(color: Colors.white, fontSize: 16, height: 1.5)),
+        ],
+        TextSpan(text: 'Défense: ${(stats.defense * 100).toInt()}%', style: const TextStyle(color: Colors.white, fontSize: 16, height: 1.5)),
+      ],
+    );
+
+    final textPainter = TextPainter(
+      text: textSpan,
+      textDirection: TextDirection.ltr,
+    );
+    
+    textPainter.layout();
+    textPainter.paint(canvas, Offset.zero);
+  }
+}
+
 class HeroCard extends PositionComponent with TapCallbacks {
   EntityStats stats;
-  late TextComponent statsText;
+  int bonusAttack;
+  late StatsTextComponent statsText;
 
-  HeroCard(this.stats) : super(size: Vector2(160, 220));
+  HeroCard(this.stats, {this.bonusAttack = 0}) : super(size: Vector2(160, 220));
 
   @override
   Future<void> onLoad() async {
@@ -34,22 +67,12 @@ class HeroCard extends PositionComponent with TapCallbacks {
         ..strokeWidth = 2,
     ));
 
-    // Texte des stats
-    statsText = TextComponent(
-      text: _buildStatsString(),
-      textRenderer: TextPaint(
-        style: const TextStyle(color: Colors.white, fontSize: 16, height: 1.5),
-      ),
-      position: Vector2(10, 10),
-    );
+    // Texte des stats dynamiques (incluant la coloration des bonus d'attaque)
+    statsText = StatsTextComponent(stats, bonusAttack);
     add(statsText);
   }
 
-  String _buildStatsString() {
-    return 'HÉROS\n\nPV: ${stats.currentPv}/${stats.maxPv}\nArmure: ${stats.armure}\nAttaque: ${stats.attaque}\nDéfense: ${(stats.defense * 100).toInt()}%';
-  }
-
-  void updateStats(EntityStats newStats) {
+  void updateStats(EntityStats newStats, {int bonusAttack = 0}) {
     if (newStats.armure < stats.armure) {
       _spawnFloatingText('-${stats.armure - newStats.armure}', Colors.blue, Vector2(size.x / 2, 0));
     } else if (newStats.armure > stats.armure) {
@@ -61,7 +84,9 @@ class HeroCard extends PositionComponent with TapCallbacks {
     }
 
     stats = newStats;
-    statsText.text = _buildStatsString();
+    this.bonusAttack = bonusAttack;
+    statsText.stats = newStats;
+    statsText.bonusAttack = bonusAttack;
   }
 
   void _spawnFloatingText(String text, Color color, Vector2 pos) {
