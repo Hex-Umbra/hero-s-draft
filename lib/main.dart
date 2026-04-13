@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'ui/screens/game_screen.dart';
+import 'ui/screens/home_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,7 +18,7 @@ class HerosDraftApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFF1E1E2C),
       ),
       debugShowCheckedModeBanner: false,
-      home: const GameScreen(),
+      home: const HomeScreen(),
     );
   }
 }

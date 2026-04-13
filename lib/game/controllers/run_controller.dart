@@ -12,6 +12,8 @@ class RunState {
   final int specialMaxCooldown;
   // Durée du buff d'attaque
   final int attackBuffDuration;
+  // Durée du vol de vie (Berserker)
+  final int lifestealDuration;
 
   bool get isBossLevel => currentLevel > 0 && currentLevel % 10 == 0;
   bool get isDead => heroStats.currentPv <= 0;
@@ -30,6 +32,7 @@ class RunState {
     this.specialCooldown = 0,
     this.specialMaxCooldown = 3,
     this.attackBuffDuration = 0,
+    this.lifestealDuration = 0,
   });
 
   RunState copyWith({
@@ -39,6 +42,7 @@ class RunState {
     int? specialCooldown,
     int? specialMaxCooldown,
     int? attackBuffDuration,
+    int? lifestealDuration,
   }) {
     return RunState(
       currentLevel: currentLevel ?? this.currentLevel,
@@ -47,6 +51,7 @@ class RunState {
       specialCooldown: specialCooldown ?? this.specialCooldown,
       specialMaxCooldown: specialMaxCooldown ?? this.specialMaxCooldown,
       attackBuffDuration: attackBuffDuration ?? this.attackBuffDuration,
+      lifestealDuration: lifestealDuration ?? this.lifestealDuration,
     );
   }
 }
@@ -115,6 +120,7 @@ class RunController extends StateNotifier<RunState> {
     state = state.copyWith(
       specialCooldown: state.specialCooldown > 0 ? state.specialCooldown - 1 : 0,
       attackBuffDuration: state.attackBuffDuration > 0 ? state.attackBuffDuration - 1 : 0,
+      lifestealDuration: state.lifestealDuration > 0 ? state.lifestealDuration - 1 : 0,
     );
   }
 
@@ -142,6 +148,21 @@ class RunController extends StateNotifier<RunState> {
       attackBuffDuration: 2,
       specialCooldown: state.specialMaxCooldown,
     );
+  }
+
+  /// Applique un effet de Vol de vie pour 3 tours (Berserker)
+  void useBerserkerLifesteal() {
+    if (state.specialCooldown > 0) return;
+    state = state.copyWith(
+      lifestealDuration: 3,
+      specialCooldown: state.specialMaxCooldown,
+    );
+  }
+
+  /// Réduit manuellement le cooldown sans effet (ex: pour les autres capacités déclenchées côté jeu)
+  void triggerGenericSpecial() {
+    if (state.specialCooldown > 0) return;
+    state = state.copyWith(specialCooldown: state.specialMaxCooldown);
   }
 }
 

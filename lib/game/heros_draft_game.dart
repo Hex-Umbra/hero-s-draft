@@ -18,11 +18,15 @@ class HerosDraftGame extends FlameGame {
   EnemyCard? selectedEnemy;
 
   final void Function(int) onPlayerTakeDamage;
+  final void Function(int) onPlayerHeal;
+  final void Function(int) onPlayerGainArmor;
   final void Function() onEnemiesDead;
   final void Function() onTurnEnded;
 
   HerosDraftGame({
     required this.onPlayerTakeDamage,
+    required this.onPlayerHeal,
+    required this.onPlayerGainArmor,
     required this.onEnemiesDead,
     required this.onTurnEnded,
   });
@@ -101,7 +105,14 @@ class HerosDraftGame extends FlameGame {
     await Future.delayed(const Duration(milliseconds: 200));
 
     int playerAttack = _currentState!.effectiveAttaque;
+    int dmgDealt = playerAttack; // Pour le lifesteal
     selectedEnemy!.updateStats(selectedEnemy!.stats.takeDamage(playerAttack));
+
+    // Lifesteal du Berserker
+    if (_currentState!.lifestealDuration > 0) {
+      int heal = (dmgDealt * 0.25).round();
+      if (heal > 0) onPlayerHeal(heal);
+    }
 
     // Si l'ennemi ciblé meurt, on le retire
     if (selectedEnemy!.stats.currentPv <= 0) {
@@ -117,9 +128,103 @@ class HerosDraftGame extends FlameGame {
       return;
     }
 
+    await _enemyRipostePhase();
+  }
+
+  Future<void> executeMageAoe() async {
+    if (currentPhase != TurnPhase.player || _currentState == null || _currentState!.isDead || enemyCards.isEmpty) return;
+    currentPhase = TurnPhase.enemy;
+
+    heroCard?.bumpAnimation();
+    await Future.delayed(const Duration(milliseconds: 200));
+
+    int dmg = (_currentState!.effectiveAttaque * 0.20).round();
+    if (dmg < 1) dmg = 1;
+
+    for (var enemy in enemyCards.toList()) {
+      enemy.updateStats(enemy.stats.takeDamage(dmg));
+      if (enemy.stats.currentPv <= 0) {
+        enemy.removeFromParent();
+        enemyCards.remove(enemy);
+        if (selectedEnemy == enemy) selectedEnemy = null;
+      }
+    }
+
+    if (enemyCards.isEmpty) {
+      onEnemiesDead();
+      currentPhase = TurnPhase.player;
+      return;
+    }
+
+    await _enemyRipostePhase();
+  }
+
+  Future<void> executeMageTargeted() async {
+    if (currentPhase != TurnPhase.player || selectedEnemy == null || _currentState == null || _currentState!.isDead) return;
+    currentPhase = TurnPhase.enemy;
+
+    heroCard?.bumpAnimation();
+    await Future.delayed(const Duration(milliseconds: 200));
+
+    int dmg = (_currentState!.effectiveAttaque * 1.50).round();
+    selectedEnemy!.updateStats(selectedEnemy!.stats.takeDamage(dmg));
+
+    if (selectedEnemy!.stats.currentPv <= 0) {
+      selectedEnemy!.removeFromParent();
+      enemyCards.remove(selectedEnemy);
+      selectedEnemy = null;
+    }
+
+    if (enemyCards.isEmpty) {
+      onEnemiesDead();
+      currentPhase = TurnPhase.player;
+      return;
+    }
+
+    await _enemyRipostePhase();
+  }
+
+  Future<void> executeBerserkerTargeted() async {
+    if (currentPhase != TurnPhase.player || selectedEnemy == null || _currentState == null || _currentState!.isDead) return;
+    currentPhase = TurnPhase.enemy;
+
+    heroCard?.bumpAnimation();
+    await Future.delayed(const Duration(milliseconds: 200));
+
+    int dmg = _currentState!.effectiveAttaque;
+    int stolenArmor = (selectedEnemy!.stats.armure * 0.15).round();
+    
+    // Ignore armure = on réduit direct les PV
+    int newPv = selectedEnemy!.stats.currentPv - dmg;
+    int newArm = selectedEnemy!.stats.armure - stolenArmor;
+    if (newPv < 0) newPv = 0;
+    if (newArm < 0) newArm = 0;
+
+    selectedEnemy!.updateStats(selectedEnemy!.stats.copyWith(currentPv: newPv, armure: newArm));
+
+    if (stolenArmor > 0) {
+      onPlayerGainArmor(stolenArmor);
+    }
+
+    if (selectedEnemy!.stats.currentPv <= 0) {
+      selectedEnemy!.removeFromParent();
+      enemyCards.remove(selectedEnemy);
+      selectedEnemy = null;
+    }
+
+    if (enemyCards.isEmpty) {
+      onEnemiesDead();
+      currentPhase = TurnPhase.player;
+      return;
+    }
+
+    await _enemyRipostePhase();
+  }
+
+  Future<void> _enemyRipostePhase() async {
     await Future.delayed(const Duration(milliseconds: 600));
 
-    // 2. Riposte des Ennemis (Séquentielle)
+    // Riposte des Ennemis (Séquentielle)
     for (var enemy in enemyCards) {
       if (_currentState == null || _currentState!.isDead) break;
       
@@ -131,10 +236,10 @@ class HerosDraftGame extends FlameGame {
 
     await Future.delayed(const Duration(milliseconds: 300));
 
-    // Fin du tour complet
     currentPhase = TurnPhase.player;
     onTurnEnded();
   }
+
 
   void resetEnemies() {
     _currentState = null;

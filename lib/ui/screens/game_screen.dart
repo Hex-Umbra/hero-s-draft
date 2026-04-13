@@ -5,6 +5,7 @@ import '../../game/heros_draft_game.dart';
 import '../../game/controllers/run_controller.dart';
 import '../../data/models/player_class.dart';
 import 'draft_screen.dart';
+import 'class_selection_screen.dart';
 
 class GameScreen extends ConsumerStatefulWidget {
   const GameScreen({super.key});
@@ -23,6 +24,13 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     _game = HerosDraftGame(
       onPlayerTakeDamage: (dmg) {
         ref.read(runProvider.notifier).takeDamage(dmg);
+      },
+      onPlayerHeal: (heal) {
+        ref.read(runProvider.notifier).heal(heal);
+      },
+      onPlayerGainArmor: (armor) {
+        final currentArmor = ref.read(runProvider).heroStats.armure;
+        ref.read(runProvider.notifier).setHeroStats(armure: currentArmor + armor);
       },
       onEnemiesDead: () {
         setState(() {
@@ -64,13 +72,27 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                     children: [
                        const Text('VOUS ÊTES MORT', style: TextStyle(color: Colors.white, fontSize: 40, fontWeight: FontWeight.bold)),
                        const SizedBox(height: 20),
-                       ElevatedButton(
-                         style: ElevatedButton.styleFrom(backgroundColor: Colors.white, foregroundColor: Colors.red),
-                         onPressed: () {
-                           ref.read(runProvider.notifier).startNewRun(PlayerClass.paladin);
-                           _game.resetEnemies();
-                         },
-                         child: const Text('Recommencer la Run'),
+                       Row(
+                         mainAxisSize: MainAxisSize.min,
+                         children: [
+                           ElevatedButton(
+                             style: ElevatedButton.styleFrom(backgroundColor: Colors.white, foregroundColor: Colors.red),
+                             onPressed: () {
+                               Navigator.of(context).popUntil((route) => route.isFirst);
+                             },
+                             child: const Text('Menu Principal'),
+                           ),
+                           const SizedBox(width: 10),
+                           ElevatedButton(
+                             style: ElevatedButton.styleFrom(backgroundColor: Colors.white, foregroundColor: Colors.red),
+                             onPressed: () {
+                               Navigator.of(context).pushReplacement(
+                                 MaterialPageRoute(builder: (context) => const ClassSelectionScreen()),
+                               );
+                             },
+                             child: const Text('Changer de Classe'),
+                           ),
+                         ]
                        )
                     ],
                   ),
@@ -101,6 +123,19 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             ),
           ),
           
+          // Bouton Pause (en haut à droite)
+          if (!runState.isDead && !_showDraft)
+            Positioned(
+              top: 40,
+              right: 20,
+              child: IconButton(
+                icon: const Icon(Icons.pause_circle_outline, color: Colors.white, size: 40),
+                onPressed: () {
+                  _showPauseMenu();
+                },
+              ),
+            ),
+          
           // HUD Fin de Tour
           if (!runState.isDead && !_showDraft)
             Positioned(
@@ -127,41 +162,164 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             Positioned(
               bottom: 20,
               right: 20,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  FloatingActionButton.extended(
-                    heroTag: 'armor_btn',
-                    backgroundColor: runState.specialCooldown == 0 ? Colors.blue : Colors.grey,
-                    onPressed: runState.specialCooldown == 0 ? () {
-                        ref.read(runProvider.notifier).useArmorRestoreSpecial();
-                    } : null,
-                    label: Text(
-                      runState.specialCooldown == 0 ? '+15 Armure' : 'Bouclier (CD: ${runState.specialCooldown})',
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)
-                    ),
-                    icon: const Icon(Icons.shield, color: Colors.white),
-                  ),
-                  const SizedBox(height: 10),
-                  FloatingActionButton.extended(
-                    heroTag: 'attack_btn',
-                    backgroundColor: runState.specialCooldown == 0 ? Colors.amber : Colors.grey,
-                    onPressed: runState.specialCooldown == 0 ? () {
-                        ref.read(runProvider.notifier).useAttackBuffSpecial();
-                    } : null,
-                    label: Text(
-                      runState.specialCooldown == 0 ? '+25% Attaque' : 'Rage (CD: ${runState.specialCooldown})',
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)
-                    ),
-                    icon: const Icon(Icons.flash_on, color: Colors.white),
-                  ),
-                ],
-              )
+              child: _buildSkillButtons(runState)
             )
         ],
       ),
     );
+  }
+
+  Widget _buildSkillButtons(RunState runState) {
+    if (runState.heroClass == PlayerClassType.paladin) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          FloatingActionButton.extended(
+            heroTag: 'armor_btn',
+            backgroundColor: runState.specialCooldown == 0 ? Colors.blue : Colors.grey,
+            onPressed: runState.specialCooldown == 0 ? () {
+                ref.read(runProvider.notifier).useArmorRestoreSpecial();
+            } : null,
+            label: Text(
+              runState.specialCooldown == 0 ? '+15 Armure' : 'Bouclier (CD: ${runState.specialCooldown})',
+              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)
+            ),
+            icon: const Icon(Icons.shield, color: Colors.white),
+          ),
+          const SizedBox(height: 10),
+          FloatingActionButton.extended(
+            heroTag: 'attack_btn',
+            backgroundColor: runState.specialCooldown == 0 ? Colors.amber : Colors.grey,
+            onPressed: runState.specialCooldown == 0 ? () {
+                ref.read(runProvider.notifier).useAttackBuffSpecial();
+            } : null,
+            label: Text(
+              runState.specialCooldown == 0 ? '+25% Attaque' : 'Rage (CD: ${runState.specialCooldown})',
+              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)
+            ),
+            icon: const Icon(Icons.flash_on, color: Colors.white),
+          ),
+        ],
+      );
+    } else if (runState.heroClass == PlayerClassType.mage) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          FloatingActionButton.extended(
+            heroTag: 'aoe_btn',
+            backgroundColor: runState.specialCooldown == 0 ? Colors.purple : Colors.grey,
+            onPressed: runState.specialCooldown == 0 ? () {
+                ref.read(runProvider.notifier).triggerGenericSpecial();
+                _game.executeMageAoe();
+            } : null,
+            label: Text(
+              runState.specialCooldown == 0 ? 'Nova (AoE)' : 'Nova (CD: ${runState.specialCooldown})',
+              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)
+            ),
+            icon: const Icon(Icons.blur_circular, color: Colors.white),
+          ),
+          const SizedBox(height: 10),
+          FloatingActionButton.extended(
+            heroTag: 'target_btn',
+            backgroundColor: runState.specialCooldown == 0 ? Colors.deepPurpleAccent : Colors.grey,
+            onPressed: runState.specialCooldown == 0 ? () {
+                if (_game.selectedEnemy != null) {
+                  ref.read(runProvider.notifier).triggerGenericSpecial();
+                  _game.executeMageTargeted();
+                }
+            } : null,
+            label: Text(
+              runState.specialCooldown == 0 ? 'Frappe de Foudre' : 'Frappe (CD: ${runState.specialCooldown})',
+              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)
+            ),
+            icon: const Icon(Icons.electric_bolt, color: Colors.white),
+          ),
+        ],
+      );
+    } else {
+      // Berserker
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          FloatingActionButton.extended(
+            heroTag: 'life_btn',
+            backgroundColor: runState.specialCooldown == 0 ? Colors.redAccent : Colors.grey,
+            onPressed: runState.specialCooldown == 0 ? () {
+                ref.read(runProvider.notifier).useBerserkerLifesteal();
+            } : null,
+            label: Text(
+              runState.specialCooldown == 0 ? 'Vampirisme (3T)' : 'Sangsue (CD: ${runState.specialCooldown})',
+              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)
+            ),
+            icon: const Icon(Icons.favorite, color: Colors.white),
+          ),
+          const SizedBox(height: 10),
+          FloatingActionButton.extended(
+            heroTag: 'pierce_btn',
+            backgroundColor: runState.specialCooldown == 0 ? Colors.orange : Colors.grey,
+            onPressed: runState.specialCooldown == 0 ? () {
+                if (_game.selectedEnemy != null) {
+                  ref.read(runProvider.notifier).triggerGenericSpecial();
+                  _game.executeBerserkerTargeted();
+                }
+            } : null,
+            label: Text(
+              runState.specialCooldown == 0 ? 'Perce-Armure' : 'Brise (CD: ${runState.specialCooldown})',
+              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)
+            ),
+            icon: const Icon(Icons.broken_image, color: Colors.white),
+          ),
+        ],
+      );
+    }
+  }
+
+  void _showPauseMenu() {
+    _game.pauseEngine();
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF2A2A3D),
+          title: const Text('PAUSE', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 10),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white, 
+                  foregroundColor: Colors.red,
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                ),
+                onPressed: () {
+                  // Ferme le dialog
+                  Navigator.of(context).pop();
+                  // Revient au premier écran (Menu Principal)
+                  Navigator.of(context).popUntil((route) => route.isFirst);
+                },
+                child: const Text('Retour au Menu Principal', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+              const SizedBox(height: 10),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Reprendre le Combat', style: TextStyle(color: Colors.white70)),
+              )
+            ],
+          ),
+        );
+      },
+    ).then((_) {
+      // Reprend le moteur de jeu peu importe comment on quitte le menu
+      _game.resumeEngine();
+    });
   }
 }
 
