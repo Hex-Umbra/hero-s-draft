@@ -110,10 +110,6 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                   'Niveau actuel : ${runState.currentLevel}',
                   style: const TextStyle(color: Colors.amber, fontSize: 24, fontWeight: FontWeight.bold),
                 ),
-                Text(
-                  'Classe : ${runState.heroClass.name}',
-                  style: const TextStyle(color: Colors.white70, fontSize: 16),
-                ),
                 if (runState.attackBuffDuration > 0)
                   Text(
                     'BUFF RAGE (+15% PV Max) - Reste ${runState.attackBuffDuration} tour(s)',

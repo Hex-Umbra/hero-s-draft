@@ -27,13 +27,13 @@ class StatBadge extends PositionComponent {
         bgColor = const Color(0xFFC0392B); // Dark Red
         break;
       case StatType.armor:
-        bgColor = const Color(0xFF7F8C8D); // Grey
+        bgColor = const Color(0xFF2980B9); // Blue
         break;
       case StatType.attack:
         bgColor = const Color(0xFFD35400); // Orange
         break;
       case StatType.defense:
-        bgColor = const Color(0xFF2980B9); // Blue
+        bgColor = const Color(0xFF7F8C8D); // Grey
         break;
       case StatType.mana:
         bgColor = const Color(0xFF8E44AD); // Purple

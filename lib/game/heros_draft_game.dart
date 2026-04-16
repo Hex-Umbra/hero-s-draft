@@ -2,6 +2,7 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'components/entities/hero_card.dart';
 import 'components/entities/enemy_card.dart';
+import '../data/models/player_class.dart';
 
 import 'controllers/run_controller.dart';
 import 'systems/encounter_system.dart';
@@ -56,7 +57,12 @@ class HerosDraftGame extends FlameGame {
     int bonusAtt = state.effectiveAttaque - state.heroStats.attaque;
 
     if (heroCard == null) {
-      heroCard = HeroCard(state.heroStats, bonusAttack: bonusAtt);
+      PlayerClass pClass = PlayerClass.availableClasses.firstWhere((c) => c.type == state.heroClass);
+      Color cColor = Colors.blue;
+      if (pClass.type == PlayerClassType.berserker) cColor = Colors.red;
+      if (pClass.type == PlayerClassType.mage) cColor = Colors.purple;
+
+      heroCard = HeroCard(state.heroStats, bonusAttack: bonusAtt, className: pClass.name, classColor: cColor);
       heroCard!.position = Vector2(size.x / 2, size.y - 150);
       add(heroCard!);
     } else {

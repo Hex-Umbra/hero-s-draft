@@ -9,6 +9,8 @@ import 'stat_badge.dart';
 class HeroCard extends PositionComponent with TapCallbacks {
   EntityStats stats;
   int bonusAttack;
+  String className;
+  Color classColor;
   
   late final TextComponent titleText;
   late final StatBadge hpBadge;
@@ -17,7 +19,7 @@ class HeroCard extends PositionComponent with TapCallbacks {
   late final StatBadge defenseBadge;
   late final StatBadge manaBadge;
 
-  HeroCard(this.stats, {this.bonusAttack = 0}) : super(size: Vector2(160, 220));
+  HeroCard(this.stats, {this.bonusAttack = 0, required this.className, required this.classColor}) : super(size: Vector2(160, 220));
 
   @override
   Future<void> onLoad() async {
@@ -46,9 +48,9 @@ class HeroCard extends PositionComponent with TapCallbacks {
     );
 
     titleText = TextComponent(
-      text: 'HÉROS',
+      text: className.toUpperCase(),
       textRenderer: TextPaint(
-        style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+        style: TextStyle(color: classColor, fontSize: 16, fontWeight: FontWeight.bold),
       ),
       anchor: Anchor.topCenter,
       position: Vector2(size.x / 2, 10),
