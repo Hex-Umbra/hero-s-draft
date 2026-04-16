@@ -4,88 +4,18 @@ import 'package:flutter/material.dart';
 import 'package:flame/effects.dart';
 import '../../../data/models/entity_stats.dart';
 import '../floating_text.dart';
-
-class StatsTextComponent extends PositionComponent {
-  EntityStats stats;
-  int bonusAttack;
-
-  StatsTextComponent(this.stats, this.bonusAttack)
-    : super(position: Vector2(10, 10));
-
-  @override
-  void render(Canvas canvas) {
-    final textSpan = TextSpan(
-      children: [
-        TextSpan(
-          text:
-              'HÉROS\n\nPV: ${stats.currentPv}/${stats.maxPv}\nMana: ${stats.currentMana}/${stats.maxMana}\nArmure: ${stats.armure}\n',
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            height: 1.5,
-          ),
-        ),
-        if (bonusAttack > 0) ...[
-          TextSpan(
-            text: 'Attaque: ${stats.attaque + bonusAttack}(${stats.attaque} + ',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              height: 1.5,
-            ),
-          ),
-          TextSpan(
-            text: '$bonusAttack',
-            style: const TextStyle(
-              color: Colors.amber,
-              fontSize: 16,
-              height: 1.5,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          TextSpan(
-            text: ')\n',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              height: 1.5,
-            ),
-          ),
-        ] else ...[
-          TextSpan(
-            text: 'Attaque: ${stats.attaque}\n',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              height: 1.5,
-            ),
-          ),
-        ],
-        TextSpan(
-          text: 'Défense: ${(stats.defense * 100).toInt()}%',
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            height: 1.5,
-          ),
-        ),
-      ],
-    );
-
-    final textPainter = TextPainter(
-      text: textSpan,
-      textDirection: TextDirection.ltr,
-    );
-
-    textPainter.layout();
-    textPainter.paint(canvas, Offset.zero);
-  }
-}
+import 'stat_badge.dart';
 
 class HeroCard extends PositionComponent with TapCallbacks {
   EntityStats stats;
   int bonusAttack;
-  late StatsTextComponent statsText;
+  
+  late final TextComponent titleText;
+  late final StatBadge hpBadge;
+  late final StatBadge armorBadge;
+  late final StatBadge attackBadge;
+  late final StatBadge defenseBadge;
+  late final StatBadge manaBadge;
 
   HeroCard(this.stats, {this.bonusAttack = 0}) : super(size: Vector2(160, 220));
 
@@ -115,9 +45,51 @@ class HeroCard extends PositionComponent with TapCallbacks {
       ),
     );
 
-    // Texte des stats dynamiques (incluant la coloration des bonus d'attaque)
-    statsText = StatsTextComponent(stats, bonusAttack);
-    add(statsText);
+    titleText = TextComponent(
+      text: 'HÉROS',
+      textRenderer: TextPaint(
+        style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+      ),
+      anchor: Anchor.topCenter,
+      position: Vector2(size.x / 2, 10),
+    );
+    add(titleText);
+
+    hpBadge = StatBadge(type: StatType.hp, value: '${stats.currentPv}/${stats.maxPv}');
+    hpBadge.position = Vector2(0, 0);
+    add(hpBadge);
+
+    armorBadge = StatBadge(type: StatType.armor, value: '${stats.armure}');
+    armorBadge.position = Vector2(size.x, 0);
+    add(armorBadge);
+
+    attackBadge = StatBadge(type: StatType.attack, value: '${stats.attaque}');
+    attackBadge.position = Vector2(0, size.y);
+    add(attackBadge);
+
+    defenseBadge = StatBadge(type: StatType.defense, value: '${(stats.defense * 100).toInt()}%');
+    defenseBadge.position = Vector2(size.x, size.y);
+    add(defenseBadge);
+
+    manaBadge = StatBadge(type: StatType.mana, value: '${stats.currentMana}/${stats.maxMana}');
+    manaBadge.position = Vector2(size.x / 2, size.y - 25);
+    add(manaBadge);
+
+    _refreshBadges();
+  }
+
+  void _refreshBadges() {
+    hpBadge.updateValue('${stats.currentPv}/${stats.maxPv}');
+    armorBadge.updateValue('${stats.armure}');
+    
+    if (bonusAttack > 0) {
+      attackBadge.updateValue('${stats.attaque + bonusAttack}', textColor: Colors.amber);
+    } else {
+      attackBadge.updateValue('${stats.attaque}', textColor: Colors.white);
+    }
+
+    defenseBadge.updateValue('${(stats.defense * 100).toInt()}%');
+    manaBadge.updateValue('${stats.currentMana}/${stats.maxMana}');
   }
 
   void updateStats(EntityStats newStats, {int bonusAttack = 0}) {
@@ -145,8 +117,7 @@ class HeroCard extends PositionComponent with TapCallbacks {
 
     stats = newStats;
     this.bonusAttack = bonusAttack;
-    statsText.stats = newStats;
-    statsText.bonusAttack = bonusAttack;
+    _refreshBadges();
   }
 
   void _spawnFloatingText(String text, Color color, Vector2 pos) {

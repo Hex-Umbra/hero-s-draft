@@ -4,15 +4,23 @@ import 'package:flutter/material.dart';
 import 'package:flame/effects.dart';
 import '../../../data/models/entity_stats.dart';
 import '../floating_text.dart';
+import 'stat_badge.dart';
 
 class EnemyCard extends PositionComponent with TapCallbacks {
   EntityStats stats;
-  late TextComponent statsText;
   final bool isBoss;
   final void Function(EnemyCard) onTapEnemy;
 
-  bool isSelected = false;
   late final RectangleComponent borderInfo;
+  late final TextComponent titleText;
+  
+  late final StatBadge hpBadge;
+  late final StatBadge armorBadge;
+  late final StatBadge attackBadge;
+  late final StatBadge defenseBadge;
+  late final StatBadge manaBadge;
+
+  bool isSelected = false;
 
   EnemyCard({
     required this.stats,
@@ -41,19 +49,44 @@ class EnemyCard extends PositionComponent with TapCallbacks {
     );
     add(borderInfo);
 
-    statsText = TextComponent(
-      text: _buildStatsString(),
+    String title = isBoss ? 'BOSS' : 'ENNEMI';
+    titleText = TextComponent(
+      text: title,
       textRenderer: TextPaint(
-        style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.5),
+        style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
       ),
-      position: Vector2(10, 10),
+      anchor: Anchor.topCenter,
+      position: Vector2(size.x / 2, 10),
     );
-    add(statsText);
+    add(titleText);
+
+    hpBadge = StatBadge(type: StatType.hp, value: '${stats.currentPv}/${stats.maxPv}');
+    hpBadge.position = Vector2(0, 0);
+    add(hpBadge);
+
+    armorBadge = StatBadge(type: StatType.armor, value: '${stats.armure}');
+    armorBadge.position = Vector2(size.x, 0);
+    add(armorBadge);
+
+    attackBadge = StatBadge(type: StatType.attack, value: '${stats.attaque}');
+    attackBadge.position = Vector2(0, size.y);
+    add(attackBadge);
+
+    defenseBadge = StatBadge(type: StatType.defense, value: '${(stats.defense * 100).toInt()}%');
+    defenseBadge.position = Vector2(size.x, size.y);
+    add(defenseBadge);
+
+    manaBadge = StatBadge(type: StatType.mana, value: '${stats.currentMana}/${stats.maxMana}');
+    manaBadge.position = Vector2(size.x / 2, size.y - 25);
+    add(manaBadge);
   }
 
-  String _buildStatsString() {
-    String title = isBoss ? 'BOSS' : 'ENNEMI';
-    return '$title\n\nPV: ${stats.currentPv}/${stats.maxPv}\nArmure: ${stats.armure}\nAttaque: ${stats.attaque}';
+  void _refreshBadges() {
+    hpBadge.updateValue('${stats.currentPv}/${stats.maxPv}');
+    armorBadge.updateValue('${stats.armure}');
+    attackBadge.updateValue('${stats.attaque}');
+    defenseBadge.updateValue('${(stats.defense * 100).toInt()}%');
+    manaBadge.updateValue('${stats.currentMana}/${stats.maxMana}');
   }
 
   void updateStats(EntityStats newStats) {
@@ -73,7 +106,7 @@ class EnemyCard extends PositionComponent with TapCallbacks {
     }
 
     stats = newStats;
-    statsText.text = _buildStatsString();
+    _refreshBadges();
   }
 
   void _spawnFloatingText(String text, Color color, Vector2 pos) {
