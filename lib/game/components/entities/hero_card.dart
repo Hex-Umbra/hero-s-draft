@@ -2,7 +2,6 @@ import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/effects.dart';
-import 'package:flame/effects.dart';
 import '../../../data/models/entity_stats.dart';
 import '../floating_text.dart';
 
@@ -15,24 +14,28 @@ class HeroCard extends PositionComponent with TapCallbacks {
   @override
   Future<void> onLoad() async {
     anchor = Anchor.center;
-    
+
     // Position par défaut au centre en bas pour le joueur
-    position = Vector2(250, 500); 
+    position = Vector2(250, 500);
 
     // Visuel Placeholder : Fond Bleu/Gris
-    add(RectangleComponent(
-      size: size,
-      paint: Paint()..color = const Color(0xFF2C3E50),
-    ));
-    
+    add(
+      RectangleComponent(
+        size: size,
+        paint: Paint()..color = const Color(0xFF2C3E50),
+      ),
+    );
+
     // Encadré de la carte
-    add(RectangleComponent(
-      size: size,
-      paint: Paint()
-        ..color = Colors.white
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2,
-    ));
+    add(
+      RectangleComponent(
+        size: size,
+        paint: Paint()
+          ..color = Colors.white
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2,
+      ),
+    );
 
     // Texte des stats
     statsText = TextComponent(
@@ -51,13 +54,25 @@ class HeroCard extends PositionComponent with TapCallbacks {
 
   void updateStats(EntityStats newStats) {
     if (newStats.armure < stats.armure) {
-      _spawnFloatingText('-${stats.armure - newStats.armure}', Colors.blue, Vector2(size.x / 2, 0));
+      _spawnFloatingText(
+        '-${stats.armure - newStats.armure}',
+        Colors.blue,
+        Vector2(size.x / 2, 0),
+      );
     } else if (newStats.armure > stats.armure) {
-      _spawnFloatingText('+${newStats.armure - stats.armure}', Colors.lightBlueAccent, Vector2(size.x / 2, 0));
+      _spawnFloatingText(
+        '+${newStats.armure - stats.armure}',
+        Colors.lightBlueAccent,
+        Vector2(size.x / 2, 0),
+      );
     }
 
     if (newStats.currentPv < stats.currentPv) {
-      _spawnFloatingText('-${stats.currentPv - newStats.currentPv}', Colors.red, Vector2(size.x / 2, 20));
+      _spawnFloatingText(
+        '-${stats.currentPv - newStats.currentPv}',
+        Colors.red,
+        Vector2(size.x / 2, 20),
+      );
     }
 
     stats = newStats;
