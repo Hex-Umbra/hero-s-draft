@@ -2,7 +2,6 @@ import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/effects.dart';
-import 'package:flame/effects.dart';
 import '../../../data/models/entity_stats.dart';
 import '../floating_text.dart';
 
@@ -11,12 +10,12 @@ class EnemyCard extends PositionComponent with TapCallbacks {
   late TextComponent statsText;
   final bool isBoss;
   final void Function(EnemyCard) onTapEnemy;
-  
+
   bool isSelected = false;
   late final RectangleComponent borderInfo;
 
   EnemyCard({
-    required this.stats, 
+    required this.stats,
     this.isBoss = false,
     required this.onTapEnemy,
   }) : super(size: Vector2(140, 200));
@@ -24,11 +23,14 @@ class EnemyCard extends PositionComponent with TapCallbacks {
   @override
   Future<void> onLoad() async {
     anchor = Anchor.center;
-    
-    add(RectangleComponent(
-      size: size,
-      paint: Paint()..color = isBoss ? const Color(0xFF8E44AD) : const Color(0xFFC0392B),
-    ));
+
+    add(
+      RectangleComponent(
+        size: size,
+        paint: Paint()
+          ..color = isBoss ? const Color(0xFF8E44AD) : const Color(0xFFC0392B),
+      ),
+    );
 
     borderInfo = RectangleComponent(
       size: size,
@@ -56,26 +58,34 @@ class EnemyCard extends PositionComponent with TapCallbacks {
 
   void updateStats(EntityStats newStats) {
     if (newStats.armure < stats.armure) {
-      _spawnFloatingText('-${stats.armure - newStats.armure}', Colors.blue, Vector2(size.x / 2, size.y - 20));
+      _spawnFloatingText(
+        '-${stats.armure - newStats.armure}',
+        Colors.blue,
+        Vector2(size.x / 2, size.y - 20),
+      );
     }
     if (newStats.currentPv < stats.currentPv) {
-      _spawnFloatingText('-${stats.currentPv - newStats.currentPv}', Colors.red, Vector2(size.x / 2, size.y));
+      _spawnFloatingText(
+        '-${stats.currentPv - newStats.currentPv}',
+        Colors.red,
+        Vector2(size.x / 2, size.y),
+      );
     }
-    
+
     stats = newStats;
     statsText.text = _buildStatsString();
   }
 
   void _spawnFloatingText(String text, Color color, Vector2 pos) {
     final ft = FloatingText(
-      text: text, 
-      color: color, 
+      text: text,
+      color: color,
       position: pos,
       movement: Vector2(0, 50),
     );
     add(ft);
   }
-  
+
   void setSelection(bool selected) {
     isSelected = selected;
     if (isSelected) {
