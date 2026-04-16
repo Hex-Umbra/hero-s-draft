@@ -79,14 +79,15 @@ class HerosDraftGame extends FlameGame {
     final enemyStats = EncounterSystem.generateEnemiesForLevel(level);
     bool isBoss = level > 0 && level % 10 == 0;
 
-    double startX = (size.x / 2) - ((enemyStats.length - 1) * 80);
+    double spacing = 195.0; // 140 width + 44 (2*radius) + 11 (half radius margin)
+    double startX = (size.x / 2) - ((enemyStats.length - 1) * (spacing / 2));
     
     for (int i = 0; i < enemyStats.length; i++) {
       final enemy = EnemyCard(
         stats: enemyStats[i], 
         isBoss: isBoss,
         onTapEnemy: _handlePlayerTargeting,
-      )..position = Vector2(startX + (i * 160), 160);
+      )..position = Vector2(startX + (i * spacing), 160);
       
       enemyCards.add(enemy);
       add(enemy);
