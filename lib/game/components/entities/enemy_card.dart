@@ -19,7 +19,6 @@ class EnemyCard extends PositionComponent with TapCallbacks {
   late final StatBadge hpBadge;
   late final StatBadge armorBadge;
   late final StatBadge attackBadge;
-  late final StatBadge defenseBadge;
   late final StatBadge manaBadge;
 
   bool isSelected = false;
@@ -75,10 +74,6 @@ class EnemyCard extends PositionComponent with TapCallbacks {
     attackBadge.position = Vector2(0, size.y);
     add(attackBadge);
 
-    defenseBadge = StatBadge(type: StatType.defense, value: '${(stats.defense * 100).toInt()}%');
-    defenseBadge.position = Vector2(size.x, size.y);
-    add(defenseBadge);
-
     manaBadge = StatBadge(type: StatType.mana, value: '${stats.currentMana}/${stats.maxMana}');
     manaBadge.position = Vector2(size.x / 2, size.y - 25);
     add(manaBadge);
@@ -87,8 +82,7 @@ class EnemyCard extends PositionComponent with TapCallbacks {
   void _refreshBadges() {
     hpBadge.updateValue('${stats.currentPv}/${stats.maxPv}');
     armorBadge.updateValue('${stats.armure}');
-    attackBadge.updateValue('${stats.attaque}');
-    defenseBadge.updateValue('${(stats.defense * 100).toInt()}%');
+    attackBadge.updateValue(stats.attaque.toString());
     manaBadge.updateValue('${stats.currentMana}/${stats.maxMana}');
   }
 

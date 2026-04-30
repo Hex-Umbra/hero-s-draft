@@ -69,7 +69,6 @@ class RunController extends StateNotifier<RunState> {
             currentMana: 10,
             armure: 20,
             attaque: 5,
-            defense: 0.1,
           ),
         ));
 
@@ -85,7 +84,6 @@ class RunController extends StateNotifier<RunState> {
         currentMana: chosenClass.maxMana,
         armure: chosenClass.baseArmor,
         attaque: chosenClass.baseDamage,
-        defense: chosenClass.id == 'paladin' ? 0.1 : (chosenClass.id == 'mage' ? 0.05 : 0.0), // TODO move defense to data
       ),
     );
   }

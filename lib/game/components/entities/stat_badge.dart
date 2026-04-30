@@ -1,7 +1,7 @@
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
-enum StatType { hp, armor, attack, defense, mana }
+enum StatType { hp, armor, attack, mana }
 
 class StatBadge extends PositionComponent {
   final StatType type;
@@ -31,9 +31,6 @@ class StatBadge extends PositionComponent {
         break;
       case StatType.attack:
         bgColor = const Color(0xFFD35400); // Orange
-        break;
-      case StatType.defense:
-        bgColor = const Color(0xFF7F8C8D); // Grey
         break;
       case StatType.mana:
         bgColor = const Color(0xFF8E44AD); // Purple

@@ -5,8 +5,6 @@ class EntityStats {
   final int currentMana;
   final int armure;
   final int attaque;
-  final double defense; // Réduction en % (ex: 0.1 pour 10%)
-
   const EntityStats({
     required this.maxPv,
     required this.currentPv,
@@ -14,7 +12,6 @@ class EntityStats {
     this.currentMana = 0,
     required this.armure,
     required this.attaque,
-    required this.defense,
   });
 
   EntityStats copyWith({
@@ -24,7 +21,6 @@ class EntityStats {
     int? currentMana,
     int? armure,
     int? attaque,
-    double? defense,
   }) {
     return EntityStats(
       maxPv: maxPv ?? this.maxPv,
@@ -33,19 +29,14 @@ class EntityStats {
       currentMana: currentMana ?? this.currentMana,
       armure: armure ?? this.armure,
       attaque: attaque ?? this.attaque,
-      defense: defense ?? this.defense,
     );
   }
 
   EntityStats takeDamage(int amount) {
     if (amount <= 0) return this;
     
-    // 1. Réduction via la Défense : Formule -> Dégâts finaux = (Attaque - Défense) absorbés par Armure puis PV
-    int damageAfterDefense = (amount * (1.0 - defense)).round();
-    if (damageAfterDefense <= 0) return this;
-
     // 2. Absorption via Armure
-    int damageAfterArmor = damageAfterDefense - armure;
+    int damageAfterArmor = amount - armure;
     int newArmor = armure;
     int newPv = currentPv;
 
@@ -55,7 +46,7 @@ class EntityStats {
       newPv -= damageAfterArmor;
     } else {
       // L'armure encaisse tout
-      newArmor -= damageAfterDefense;
+      newArmor -= amount;
     }
 
     if (newPv < 0) newPv = 0;

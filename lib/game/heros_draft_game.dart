@@ -99,7 +99,6 @@ class HerosDraftGame extends FlameGame {
         currentPv: data.maxHp,
         armure: 0,
         attaque: data.baseDamage,
-        defense: 0,
       );
 
       final enemy = EnemyCard(

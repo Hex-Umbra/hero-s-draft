@@ -16,7 +16,6 @@ class HeroCard extends PositionComponent with TapCallbacks {
   late final StatBadge hpBadge;
   late final StatBadge armorBadge;
   late final StatBadge attackBadge;
-  late final StatBadge defenseBadge;
   late final StatBadge manaBadge;
 
   HeroCard(this.stats, {this.bonusAttack = 0, required this.className, required this.classColor}) : super(size: Vector2(160, 220));
@@ -69,10 +68,6 @@ class HeroCard extends PositionComponent with TapCallbacks {
     attackBadge.position = Vector2(0, size.y);
     add(attackBadge);
 
-    defenseBadge = StatBadge(type: StatType.defense, value: '${(stats.defense * 100).toInt()}%');
-    defenseBadge.position = Vector2(size.x, size.y);
-    add(defenseBadge);
-
     manaBadge = StatBadge(type: StatType.mana, value: '${stats.currentMana}/${stats.maxMana}');
     manaBadge.position = Vector2(size.x / 2, size.y - 25);
     add(manaBadge);
@@ -90,7 +85,6 @@ class HeroCard extends PositionComponent with TapCallbacks {
       attackBadge.updateValue('${stats.attaque}', textColor: Colors.white);
     }
 
-    defenseBadge.updateValue('${(stats.defense * 100).toInt()}%');
     manaBadge.updateValue('${stats.currentMana}/${stats.maxMana}');
   }
 
