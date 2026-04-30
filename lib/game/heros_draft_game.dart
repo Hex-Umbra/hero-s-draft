@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'components/entities/hero_card.dart';
 import 'components/entities/enemy_card.dart';
 import '../models/data/enemy_data.dart';
+import '../models/data/skill_data.dart';
 
 import 'controllers/run_controller.dart';
 import 'systems/encounter_system.dart';
@@ -158,94 +159,74 @@ class HerosDraftGame extends FlameGame {
     await _enemyRipostePhase();
   }
 
-  Future<void> executeMageAoe() async {
-    if (currentPhase != TurnPhase.player || _currentState == null || _currentState!.isDead || enemyCards.isEmpty) return;
-    currentPhase = TurnPhase.enemy;
+  Future<void> executeSkill(SkillData skill, {required void Function() onTriggerAttackBuff, required void Function() onTriggerLifesteal}) async {
+    if (currentPhase != TurnPhase.player || _currentState == null || _currentState!.isDead) return;
 
-    heroCard?.bumpAnimation();
-    await Future.delayed(const Duration(milliseconds: 200));
+    if ((skill.effectType == 'damage_targeted' || skill.effectType == 'damage_pierce') && selectedEnemy == null) {
+      return;
+    }
 
-    int dmg = (_currentState!.effectiveAttaque * 0.20).round();
-    if (dmg < 1) dmg = 1;
+    if (skill.effectType.startsWith('damage')) {
+      if (enemyCards.isEmpty) return;
+      currentPhase = TurnPhase.enemy;
 
-    for (var enemy in enemyCards.toList()) {
-      enemy.updateStats(enemy.stats.takeDamage(dmg));
-      if (enemy.stats.currentPv <= 0) {
-        enemy.removeFromParent();
-        enemyCards.remove(enemy);
-        if (selectedEnemy == enemy) selectedEnemy = null;
+      heroCard?.bumpAnimation();
+      await Future.delayed(const Duration(milliseconds: 200));
+
+      if (skill.effectType == 'damage_aoe') {
+        int dmg = (_currentState!.effectiveAttaque * (skill.effectValue / 100.0)).round();
+        if (dmg < 1) dmg = 1;
+        for (var enemy in enemyCards.toList()) {
+          enemy.updateStats(enemy.stats.takeDamage(dmg));
+          if (enemy.stats.currentPv <= 0) {
+            enemy.removeFromParent();
+            enemyCards.remove(enemy);
+            if (selectedEnemy == enemy) selectedEnemy = null;
+          }
+        }
+      } else if (skill.effectType == 'damage_targeted') {
+        int dmg = (_currentState!.effectiveAttaque * (skill.effectValue / 100.0)).round();
+        selectedEnemy!.updateStats(selectedEnemy!.stats.takeDamage(dmg));
+        if (selectedEnemy!.stats.currentPv <= 0) {
+          selectedEnemy!.removeFromParent();
+          enemyCards.remove(selectedEnemy);
+          selectedEnemy = null;
+        }
+      } else if (skill.effectType == 'damage_pierce') {
+        int dmg = _currentState!.effectiveAttaque;
+        int stolenArmor = (selectedEnemy!.stats.armure * (skill.effectValue / 100.0)).round();
+        int newPv = selectedEnemy!.stats.currentPv - dmg;
+        int newArm = selectedEnemy!.stats.armure - stolenArmor;
+        if (newPv < 0) newPv = 0;
+        if (newArm < 0) newArm = 0;
+        selectedEnemy!.updateStats(selectedEnemy!.stats.copyWith(currentPv: newPv, armure: newArm));
+        if (stolenArmor > 0) {
+          onPlayerGainArmor(stolenArmor);
+        }
+        if (selectedEnemy!.stats.currentPv <= 0) {
+          selectedEnemy!.removeFromParent();
+          enemyCards.remove(selectedEnemy);
+          selectedEnemy = null;
+        }
+      }
+
+      if (enemyCards.isEmpty) {
+        onEnemiesDead();
+        currentPhase = TurnPhase.player;
+        return;
+      }
+
+      await _enemyRipostePhase();
+    } else {
+      // Pour les buffs, on ne change pas la phase et on applique l'effet
+      if (skill.effectType == 'armor_buff') {
+        onPlayerGainArmor(skill.effectValue);
+      } else if (skill.effectType == 'attack_buff') {
+        onTriggerAttackBuff();
+      } else if (skill.effectType == 'lifesteal_buff') {
+        onTriggerLifesteal();
       }
     }
-
-    if (enemyCards.isEmpty) {
-      onEnemiesDead();
-      currentPhase = TurnPhase.player;
-      return;
-    }
-
-    await _enemyRipostePhase();
-  }
-
-  Future<void> executeMageTargeted() async {
-    if (currentPhase != TurnPhase.player || selectedEnemy == null || _currentState == null || _currentState!.isDead) return;
-    currentPhase = TurnPhase.enemy;
-
-    heroCard?.bumpAnimation();
-    await Future.delayed(const Duration(milliseconds: 200));
-
-    int dmg = (_currentState!.effectiveAttaque * 1.50).round();
-    selectedEnemy!.updateStats(selectedEnemy!.stats.takeDamage(dmg));
-
-    if (selectedEnemy!.stats.currentPv <= 0) {
-      selectedEnemy!.removeFromParent();
-      enemyCards.remove(selectedEnemy);
-      selectedEnemy = null;
-    }
-
-    if (enemyCards.isEmpty) {
-      onEnemiesDead();
-      currentPhase = TurnPhase.player;
-      return;
-    }
-
-    await _enemyRipostePhase();
-  }
-
-  Future<void> executeBerserkerTargeted() async {
-    if (currentPhase != TurnPhase.player || selectedEnemy == null || _currentState == null || _currentState!.isDead) return;
-    currentPhase = TurnPhase.enemy;
-
-    heroCard?.bumpAnimation();
-    await Future.delayed(const Duration(milliseconds: 200));
-
-    int dmg = _currentState!.effectiveAttaque;
-    int stolenArmor = (selectedEnemy!.stats.armure * 0.15).round();
-    
-    // Ignore armure = on réduit direct les PV
-    int newPv = selectedEnemy!.stats.currentPv - dmg;
-    int newArm = selectedEnemy!.stats.armure - stolenArmor;
-    if (newPv < 0) newPv = 0;
-    if (newArm < 0) newArm = 0;
-
-    selectedEnemy!.updateStats(selectedEnemy!.stats.copyWith(currentPv: newPv, armure: newArm));
-
-    if (stolenArmor > 0) {
-      onPlayerGainArmor(stolenArmor);
-    }
-
-    if (selectedEnemy!.stats.currentPv <= 0) {
-      selectedEnemy!.removeFromParent();
-      enemyCards.remove(selectedEnemy);
-      selectedEnemy = null;
-    }
-
-    if (enemyCards.isEmpty) {
-      onEnemiesDead();
-      currentPhase = TurnPhase.player;
-      return;
-    }
-
-    await _enemyRipostePhase();
   }
 
   Future<void> _enemyRipostePhase() async {

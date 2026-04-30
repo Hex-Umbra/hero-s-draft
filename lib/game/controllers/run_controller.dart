@@ -195,29 +195,14 @@ class RunController extends StateNotifier<RunState> {
     return true;
   }
 
-  /// Restaure 15 points d'armure de façon instantanée
-  bool useArmorRestoreSpecial() {
-    if (!triggerGenericSkill1(cd: 2, mana: 3)) return false;
-    
-    final newArmor = state.heroStats.armure + 15;
-    state = state.copyWith(
-      heroStats: state.heroStats.copyWith(armure: newArmor)
-    );
-    return true;
+  /// Applique un buff d'attaque pour une durée donnée
+  void applyAttackBuff(int duration) {
+    state = state.copyWith(attackBuffDuration: duration);
   }
 
-  /// Augmente l'attaque de 15% des PV Max pendant 2 tours
-  bool useAttackBuffSpecial() {
-    if (!triggerGenericSkill2(cd: 4, mana: 5)) return false;
-    state = state.copyWith(attackBuffDuration: 2);
-    return true;
-  }
-
-  /// Applique un effet de Vol de vie pour 3 tours (Berserker)
-  bool useBerserkerLifesteal() {
-    if (!triggerGenericSkill1(cd: 4, hpPercent: 10)) return false;
-    state = state.copyWith(lifestealDuration: 3);
-    return true;
+  /// Applique un effet de Vol de vie pour une durée donnée
+  void applyLifestealBuff(int duration) {
+    state = state.copyWith(lifestealDuration: duration);
   }
 }
 

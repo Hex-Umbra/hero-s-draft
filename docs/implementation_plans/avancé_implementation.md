@@ -12,5 +12,8 @@
 - feat: implémentation Phase 4 
     - refactoring des classes de Héros (utilisation de HeroData et du JSON)
         - J'ai terminé la Phase 4. Les classes jouables (Paladin, Berserker, Mage) sont désormais chargées directement depuis le fichier heroes.json. Le ClassSelectionScreen lit dynamiquement ces données pour créer les boutons, et le RunState initialise les statistiques du joueur en fonction de la classe choisie.
+- feat: implémentation Phase 5 
+    - refactoring des compétences vers le JSON (Préparation au deckbuilding)
+        - J'ai terminé la Phase 5. Les compétences ont été extraites dans le fichier skills.json et toutes les fonctions spécifiques (executeMageAoe, executeBerserkerTargeted, etc.) ont été remplacées par un seul moteur générique executeSkill() dans le jeu. L'interface (GameScreen) génère maintenant ses boutons dynamiquement depuis ces données JSON !
     
 

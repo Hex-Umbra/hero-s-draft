@@ -1,1 +1,44 @@
-[]
+[
+  {
+    "id": "paladin_shield",
+    "name": "Bouclier",
+    "manaCost": 3,
+    "effectType": "armor_buff",
+    "effectValue": 15
+  },
+  {
+    "id": "paladin_rage",
+    "name": "Rage",
+    "manaCost": 5,
+    "effectType": "attack_buff",
+    "effectValue": 2
+  },
+  {
+    "id": "mage_nova",
+    "name": "Nova",
+    "manaCost": 4,
+    "effectType": "damage_aoe",
+    "effectValue": 20
+  },
+  {
+    "id": "mage_strike",
+    "name": "Frappe Foudre",
+    "manaCost": 8,
+    "effectType": "damage_targeted",
+    "effectValue": 150
+  },
+  {
+    "id": "berserker_leech",
+    "name": "Vampirisme",
+    "manaCost": 0,
+    "effectType": "lifesteal_buff",
+    "effectValue": 3
+  },
+  {
+    "id": "berserker_pierce",
+    "name": "Perce-Armure",
+    "manaCost": 3,
+    "effectType": "damage_pierce",
+    "effectValue": 15
+  }
+]

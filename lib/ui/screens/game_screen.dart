@@ -161,133 +161,85 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             Positioned(
               bottom: 20,
               right: 20,
-              child: _buildSkillButtons(runState)
+              child: _buildSkillButtons(runState, gameData)
             )
         ],
       ),
     );
   }
 
-  Widget _buildSkillButtons(RunState runState) {
-    if (runState.heroClassId == 'paladin') {
-      bool canSkill1 = runState.skill1Cooldown == 0 && runState.heroStats.currentMana >= 3;
-      bool canSkill2 = runState.skill2Cooldown == 0 && runState.heroStats.currentMana >= 5;
+  Widget _buildSkillButtons(RunState runState, dynamic gameData) {
+    List<dynamic> heroSkills = gameData.skills.where((s) => s.id.startsWith(runState.heroClassId)).toList();
+    
+    if (heroSkills.isEmpty) return const SizedBox.shrink();
 
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          FloatingActionButton.extended(
-            heroTag: 'armor_btn',
-            backgroundColor: canSkill1 ? Colors.blue : Colors.grey,
-            onPressed: canSkill1 ? () {
-                ref.read(runProvider.notifier).useArmorRestoreSpecial();
-            } : null,
-            label: Text(
-              runState.skill1Cooldown == 0 ? '+15 Armure (3 Mana)' : 'Bouclier (CD: ${runState.skill1Cooldown})',
-              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)
-            ),
-            icon: const Icon(Icons.shield, color: Colors.white),
-          ),
-          const SizedBox(height: 10),
-          FloatingActionButton.extended(
-            heroTag: 'attack_btn',
-            backgroundColor: canSkill2 ? Colors.amber : Colors.grey,
-            onPressed: canSkill2 ? () {
-                ref.read(runProvider.notifier).useAttackBuffSpecial();
-            } : null,
-            label: Text(
-              runState.skill2Cooldown == 0 ? '+15% PV Max (Dégâts) (5 Mana)' : 'Rage (CD: ${runState.skill2Cooldown})',
-              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)
-            ),
-            icon: const Icon(Icons.flash_on, color: Colors.white),
-          ),
-        ],
-      );
-    } else if (runState.heroClassId == 'mage') {
-      bool canSkill1 = runState.skill1Cooldown == 0 && runState.heroStats.currentMana >= 4;
-      bool canSkill2 = runState.skill2Cooldown == 0 && runState.heroStats.currentMana >= 8;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: heroSkills.asMap().entries.map((entry) {
+        int index = entry.key;
+        var skill = entry.value;
 
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          FloatingActionButton.extended(
-            heroTag: 'aoe_btn',
-            backgroundColor: canSkill1 ? Colors.purple : Colors.grey,
-            onPressed: canSkill1 ? () {
-                if (ref.read(runProvider.notifier).triggerGenericSkill1(cd: 2, mana: 4)) {
-                    _game.executeMageAoe();
+        int cd = index == 0 ? runState.skill1Cooldown : runState.skill2Cooldown;
+        bool canCast = cd == 0;
+        
+        if (skill.effectType == 'lifesteal_buff') {
+           int hpCost = (runState.heroStats.currentPv * 0.1).round();
+           if (hpCost < 1) hpCost = 1;
+           if (runState.heroStats.currentPv <= hpCost) canCast = false;
+        } else {
+           if (runState.heroStats.currentMana < skill.manaCost) canCast = false;
+        }
+
+        if ((skill.effectType == 'damage_targeted' || skill.effectType == 'damage_pierce') && _game.selectedEnemy == null) {
+            canCast = false;
+        }
+
+        Color btnColor = Colors.blueAccent;
+        if (runState.heroClassId == 'berserker') btnColor = Colors.redAccent;
+        if (runState.heroClassId == 'mage') btnColor = Colors.purple;
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: FloatingActionButton.extended(
+            heroTag: 'skill_${skill.id}',
+            backgroundColor: canCast ? btnColor : Colors.grey,
+            onPressed: canCast ? () {
+                bool triggered = false;
+                if (index == 0) {
+                    triggered = ref.read(runProvider.notifier).triggerGenericSkill1(
+                        cd: skill.effectType == 'lifesteal_buff' ? 4 : 2, 
+                        mana: skill.manaCost,
+                        hpPercent: skill.effectType == 'lifesteal_buff' ? 10 : 0
+                    );
+                } else {
+                    triggered = ref.read(runProvider.notifier).triggerGenericSkill2(
+                        cd: 4, 
+                        mana: skill.manaCost
+                    );
+                }
+                
+                if (triggered) {
+                    _game.executeSkill(
+                        skill,
+                        onTriggerAttackBuff: () {
+                            ref.read(runProvider.notifier).applyAttackBuff(skill.effectValue);
+                        },
+                        onTriggerLifesteal: () {
+                            ref.read(runProvider.notifier).applyLifestealBuff(skill.effectValue);
+                        }
+                    );
                 }
             } : null,
             label: Text(
-              runState.skill1Cooldown == 0 ? 'Nova (AoE) (4 Mana)' : 'Nova (CD: ${runState.skill1Cooldown})',
+              cd == 0 ? '${skill.name} (${skill.manaCost > 0 ? '${skill.manaCost} Mana' : 'Coût PV'})' : '${skill.name} (CD: $cd)',
               style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)
             ),
-            icon: const Icon(Icons.blur_circular, color: Colors.white),
+            icon: Icon(skill.effectType.contains('damage') ? Icons.flash_on : Icons.shield, color: Colors.white),
           ),
-          const SizedBox(height: 10),
-          FloatingActionButton.extended(
-            heroTag: 'target_btn',
-            backgroundColor: canSkill2 ? Colors.deepPurpleAccent : Colors.grey,
-            onPressed: canSkill2 ? () {
-                if (_game.selectedEnemy != null) {
-                  if (ref.read(runProvider.notifier).triggerGenericSkill2(cd: 3, mana: 8)) {
-                      _game.executeMageTargeted();
-                  }
-                }
-            } : null,
-            label: Text(
-              runState.skill2Cooldown == 0 ? 'Frappe Foudre (8 Mana)' : 'Frappe (CD: ${runState.skill2Cooldown})',
-              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)
-            ),
-            icon: const Icon(Icons.electric_bolt, color: Colors.white),
-          ),
-        ],
-      );
-    } else {
-      // Berserker
-      int hpCost = (runState.heroStats.currentPv * 0.1).round();
-      if (hpCost < 1) hpCost = 1;
-      bool canSkill1 = runState.skill1Cooldown == 0 && runState.heroStats.currentPv > hpCost;
-      bool canSkill2 = runState.skill2Cooldown == 0 && runState.heroStats.currentMana >= 3;
-
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          FloatingActionButton.extended(
-            heroTag: 'life_btn',
-            backgroundColor: canSkill1 ? Colors.redAccent : Colors.grey,
-            onPressed: canSkill1 ? () {
-                ref.read(runProvider.notifier).useBerserkerLifesteal();
-            } : null,
-            label: Text(
-              runState.skill1Cooldown == 0 ? 'Vampirisme (10% PV)' : 'Sangsue (CD: ${runState.skill1Cooldown})',
-              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)
-            ),
-            icon: const Icon(Icons.favorite, color: Colors.white),
-          ),
-          const SizedBox(height: 10),
-          FloatingActionButton.extended(
-            heroTag: 'pierce_btn',
-            backgroundColor: canSkill2 ? Colors.orange : Colors.grey,
-            onPressed: canSkill2 ? () {
-                if (_game.selectedEnemy != null) {
-                  if (ref.read(runProvider.notifier).triggerGenericSkill2(cd: 3, mana: 3)) {
-                      _game.executeBerserkerTargeted();
-                  }
-                }
-            } : null,
-            label: Text(
-              runState.skill2Cooldown == 0 ? 'Perce-Armure (3 Mana)' : 'Brise (CD: ${runState.skill2Cooldown})',
-              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)
-            ),
-            icon: const Icon(Icons.broken_image, color: Colors.white),
-          ),
-        ],
-      );
-    }
+        );
+      }).toList(),
+    );
   }
 
   void _showPauseMenu() {
