@@ -27,7 +27,7 @@ class EffectResolver {
     List<EnemyCard> enemyCards,
     EnemyCard? selectedEnemy,
   ) {
-    if (!canPlayCard(card, runController.state, selectedEnemy)) {
+    if (!canPlayCard(card, runController.currentState, selectedEnemy)) {
       return false;
     }
 
@@ -41,11 +41,11 @@ class EffectResolver {
       switch (effect.type) {
         case 'damage':
           if (card.data.target == CardTarget.singleEnemy && selectedEnemy != null) {
-            int dmg = _calculateDamage(effect.value, runController.state.effectiveAttaque);
+            int dmg = _calculateDamage(effect.value, runController.currentState.effectiveAttaque);
             selectedEnemy.updateStats(selectedEnemy.stats.takeDamage(dmg));
             triggerEnemyRiposte = true;
           } else if (card.data.target == CardTarget.allEnemies) {
-            int dmg = _calculateDamage(effect.value, runController.state.effectiveAttaque);
+            int dmg = _calculateDamage(effect.value, runController.currentState.effectiveAttaque);
             for (var enemy in enemyCards) {
               enemy.updateStats(enemy.stats.takeDamage(dmg));
             }
@@ -56,7 +56,7 @@ class EffectResolver {
           runController.heal(effect.value);
           break;
         case 'armor':
-          final currentArmor = runController.state.heroStats.armure;
+          final currentArmor = runController.currentState.heroStats.armure;
           runController.setHeroStats(armure: currentArmor + effect.value);
           break;
         case 'draw':

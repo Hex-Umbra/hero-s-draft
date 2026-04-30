@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/effects.dart';
@@ -8,7 +7,7 @@ import '../../models/data/card_data.dart';
 import '../heros_draft_game.dart';
 import 'entities/enemy_card.dart';
 
-class CardComponent extends PositionComponent with DragCallbacks, HasGameRef<HerosDraftGame> {
+class CardComponent extends PositionComponent with DragCallbacks, HasGameReference<HerosDraftGame> {
   final CardInstance card;
   
   Vector2 originalPosition = Vector2.zero();
@@ -117,8 +116,8 @@ class CardComponent extends PositionComponent with DragCallbacks, HasGameRef<Her
     
     // Gestion du ciblage (Arrow)
     if (card.data.target == CardTarget.singleEnemy) {
-      EnemyCard? hoveredEnemy = _findHoveredEnemy(event.canvasPosition);
-      gameRef.highlightEnemy(hoveredEnemy);
+      EnemyCard? hoveredEnemy = _findHoveredEnemy(position);
+      game.highlightEnemy(hoveredEnemy);
     }
   }
 
@@ -129,17 +128,17 @@ class CardComponent extends PositionComponent with DragCallbacks, HasGameRef<Her
     
     EnemyCard? targetedEnemy;
     if (card.data.target == CardTarget.singleEnemy) {
-       targetedEnemy = gameRef.highlightedEnemy;
+       targetedEnemy = game.highlightedEnemy;
     }
 
-    bool played = gameRef.tryPlayCard(this, targetedEnemy);
+    bool played = game.tryPlayCard(this, targetedEnemy);
 
     if (!played) {
       // Retour à la main
       _returnToHand();
     }
     
-    gameRef.highlightEnemy(null);
+    game.highlightEnemy(null);
   }
   
   @override
@@ -147,11 +146,11 @@ class CardComponent extends PositionComponent with DragCallbacks, HasGameRef<Her
     super.onDragCancel(event);
     isDragging = false;
     _returnToHand();
-    gameRef.highlightEnemy(null);
+    game.highlightEnemy(null);
   }
 
   EnemyCard? _findHoveredEnemy(Vector2 canvasPos) {
-    for (var enemy in gameRef.enemyCards) {
+    for (var enemy in game.enemyCards) {
       if (enemy.containsPoint(canvasPos)) {
         return enemy;
       }

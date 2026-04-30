@@ -58,6 +58,8 @@ class RunState {
 }
 
 class RunController extends StateNotifier<RunState> {
+  RunState get currentState => state;
+
   RunController()
       : super(RunState(
           currentLevel: 1,

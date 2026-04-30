@@ -20,6 +20,20 @@ class HerosDraftGame extends FlameGame {
   
   TurnPhase currentPhase = TurnPhase.player;
   EnemyCard? selectedEnemy;
+  EnemyCard? highlightedEnemy;
+
+  void highlightEnemy(EnemyCard? enemy) {
+    if (highlightedEnemy != enemy) {
+      highlightedEnemy?.setSelection(false);
+      highlightedEnemy = enemy;
+      highlightedEnemy?.setSelection(true);
+    }
+  }
+
+  bool tryPlayCard(dynamic card, EnemyCard? target) {
+    // TODO: Implémenter la logique de jeu de carte ou déléguer au GameScreen
+    return false;
+  }
 
   final void Function(int) onPlayerTakeDamage;
   final void Function(int) onPlayerHeal;
