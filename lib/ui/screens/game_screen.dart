@@ -6,6 +6,8 @@ import '../../game/controllers/run_controller.dart';
 import 'draft_screen.dart';
 import 'class_selection_screen.dart';
 import '../../services/game_data_service.dart';
+import '../../models/data/skill_data.dart';
+import '../../models/data/game_data_registry.dart';
 
 class GameScreen extends ConsumerStatefulWidget {
   const GameScreen({super.key});
@@ -168,8 +170,8 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     );
   }
 
-  Widget _buildSkillButtons(RunState runState, dynamic gameData) {
-    List<dynamic> heroSkills = gameData.skills.where((s) => s.id.startsWith(runState.heroClassId)).toList();
+  Widget _buildSkillButtons(RunState runState, GameDataRegistry gameData) {
+    var heroSkills = gameData.skills.where((SkillData s) => s.id.startsWith(runState.heroClassId)).toList();
     
     if (heroSkills.isEmpty) return const SizedBox.shrink();
 
