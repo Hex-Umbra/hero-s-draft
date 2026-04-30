@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'components/entities/hero_card.dart';
 import 'components/entities/enemy_card.dart';
 import '../data/models/player_class.dart';
+import '../models/data/enemy_data.dart';
 
 import 'controllers/run_controller.dart';
 import 'systems/encounter_system.dart';
@@ -10,6 +11,7 @@ import 'systems/encounter_system.dart';
 enum TurnPhase { player, enemy }
 
 class HerosDraftGame extends FlameGame {
+  List<EnemyData> availableEnemies = [];
   HeroCard? heroCard;
   List<EnemyCard> enemyCards = [];
   RunState? _currentState;
@@ -76,15 +78,26 @@ class HerosDraftGame extends FlameGame {
     }
     enemyCards.clear();
 
-    final enemyStats = EncounterSystem.generateEnemiesForLevel(level);
+    final enemyDataList = EncounterSystem.generateEnemiesForLevel(level, availableEnemies);
     bool isBoss = level > 0 && level % 10 == 0;
 
     double spacing = 195.0; // 140 width + 44 (2*radius) + 11 (half radius margin)
-    double startX = (size.x / 2) - ((enemyStats.length - 1) * (spacing / 2));
+    double startX = (size.x / 2) - ((enemyDataList.length - 1) * (spacing / 2));
     
-    for (int i = 0; i < enemyStats.length; i++) {
+    for (int i = 0; i < enemyDataList.length; i++) {
+      final data = enemyDataList[i];
+      // On initialise les stats réelles en se basant sur data
+      final stats = EntityStats(
+        maxPv: data.maxHp,
+        currentPv: data.maxHp,
+        armure: 0,
+        attaque: data.baseDamage,
+        defense: 0,
+      );
+
       final enemy = EnemyCard(
-        stats: enemyStats[i], 
+        stats: stats, 
+        data: data,
         isBoss: isBoss,
         onTapEnemy: _handlePlayerTargeting,
       )..position = Vector2(startX + (i * spacing), 160);

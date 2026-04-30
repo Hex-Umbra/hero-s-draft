@@ -6,6 +6,7 @@ import '../../game/controllers/run_controller.dart';
 import '../../data/models/player_class.dart';
 import 'draft_screen.dart';
 import 'class_selection_screen.dart';
+import '../../services/game_data_service.dart';
 
 class GameScreen extends ConsumerStatefulWidget {
   const GameScreen({super.key});
@@ -46,6 +47,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   @override
   Widget build(BuildContext context) {
     final runState = ref.watch(runProvider);
+    final gameData = ref.watch(gameDataLoaderProvider).requireValue;
+    
+    _game.availableEnemies = gameData.enemies;
     _game.syncState(runState);
 
     return Scaffold(

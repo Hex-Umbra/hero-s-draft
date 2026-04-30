@@ -1,1 +1,30 @@
-[]
+[
+  {
+    "id": "gobelin",
+    "name": "Gobelin",
+    "maxHp": 25,
+    "baseDamage": 5,
+    "spritePath": ""
+  },
+  {
+    "id": "orc",
+    "name": "Orc Furieux",
+    "maxHp": 40,
+    "baseDamage": 8,
+    "spritePath": ""
+  },
+  {
+    "id": "squelette",
+    "name": "Squelette",
+    "maxHp": 15,
+    "baseDamage": 12,
+    "spritePath": ""
+  },
+  {
+    "id": "slime",
+    "name": "Slime",
+    "maxHp": 10,
+    "baseDamage": 5,
+    "spritePath": ""
+  }
+]

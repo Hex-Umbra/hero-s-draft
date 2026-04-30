@@ -3,11 +3,13 @@ import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/effects.dart';
 import '../../../data/models/entity_stats.dart';
+import '../../../models/data/enemy_data.dart';
 import '../floating_text.dart';
 import 'stat_badge.dart';
 
 class EnemyCard extends PositionComponent with TapCallbacks {
   EntityStats stats;
+  final EnemyData? data;
   final bool isBoss;
   final void Function(EnemyCard) onTapEnemy;
 
@@ -24,6 +26,7 @@ class EnemyCard extends PositionComponent with TapCallbacks {
 
   EnemyCard({
     required this.stats,
+    this.data,
     this.isBoss = false,
     required this.onTapEnemy,
   }) : super(size: Vector2(140, 200));
@@ -49,7 +52,7 @@ class EnemyCard extends PositionComponent with TapCallbacks {
     );
     add(borderInfo);
 
-    String title = isBoss ? 'BOSS' : 'ENNEMI';
+    String title = data?.name ?? (isBoss ? 'BOSS' : 'ENNEMI');
     titleText = TextComponent(
       text: title,
       textRenderer: TextPaint(
