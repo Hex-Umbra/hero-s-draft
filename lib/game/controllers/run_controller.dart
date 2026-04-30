@@ -70,7 +70,7 @@ class RunController extends StateNotifier<RunState> {
             maxMana: 10,
             currentMana: 10,
             armure: 20,
-            attaque: 5,
+            attaque: 0, // Force de base à 0
           ),
         ));
 
@@ -85,7 +85,7 @@ class RunController extends StateNotifier<RunState> {
         maxMana: chosenClass.maxMana,
         currentMana: chosenClass.maxMana,
         armure: chosenClass.baseArmor,
-        attaque: chosenClass.baseDamage,
+        attaque: 0, // Force de base à 0
       ),
     );
   }

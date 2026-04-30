@@ -218,32 +218,12 @@ class HerosDraftGame extends FlameGame {
   }
 
   Future<void> executeTurn() async {
-    if (currentPhase != TurnPhase.player || selectedEnemy == null || _currentState == null || _currentState!.isDead) return;
+    if (currentPhase != TurnPhase.player || _currentState == null || _currentState!.isDead) return;
 
     currentPhase = TurnPhase.enemy; // Empêcher d'autres sélections
 
-    // 1. Attaque du Joueur
-    heroCard?.bumpAnimation();
-    await Future.delayed(const Duration(milliseconds: 200));
-
-    int playerAttack = _currentState!.effectiveAttaque;
-    int dmgDealt = playerAttack; // Pour le lifesteal
-    selectedEnemy!.updateStats(selectedEnemy!.stats.takeDamage(playerAttack));
-
-    // Lifesteal du Berserker
-    if (_currentState!.lifestealDuration > 0) {
-      int heal = (dmgDealt * 0.25).round();
-      if (heal > 0) onPlayerHeal(heal);
-    }
-
-    // Si l'ennemi ciblé meurt, on le retire
-    if (selectedEnemy!.stats.currentPv <= 0) {
-      selectedEnemy!.removeFromParent();
-      enemyCards.remove(selectedEnemy);
-      selectedEnemy = null;
-    }
-
-    // Victoire totale
+    // Fin du tour du joueur, on passe directement à la phase de l'ennemi.
+    // L'attaque automatique a été retirée car les dégâts sont maintenant infligés via les cartes.
     if (enemyCards.isEmpty) {
       onEnemiesDead();
       currentPhase = TurnPhase.player;
