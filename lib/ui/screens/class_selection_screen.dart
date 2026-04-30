@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/models/player_class.dart';
+import '../../models/data/hero_data.dart';
+import '../../services/game_data_service.dart';
 import '../../game/controllers/run_controller.dart';
 import 'game_screen.dart';
 
@@ -9,7 +10,9 @@ class ClassSelectionScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final classes = PlayerClass.availableClasses;
+    // Les données sont déjà chargées par le SplashScreen
+    final gameData = ref.watch(gameDataLoaderProvider).requireValue;
+    final classes = gameData.heroes;
 
     return Scaffold(
       appBar: AppBar(
@@ -31,10 +34,16 @@ class ClassSelectionScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildClassCard(BuildContext context, WidgetRef ref, PlayerClass playerClass) {
+  Widget _buildClassCard(BuildContext context, WidgetRef ref, HeroData playerClass) {
     Color classColor = Colors.blue;
-    if (playerClass.type == PlayerClassType.berserker) classColor = Colors.red;
-    if (playerClass.type == PlayerClassType.mage) classColor = Colors.purple;
+    if (playerClass.id == 'berserker') classColor = Colors.red;
+    if (playerClass.id == 'mage') classColor = Colors.purple;
+
+    IconData icon = Icons.person;
+    // On pourrait utiliser playerClass.iconPath plus tard
+    if (playerClass.id == 'paladin') icon = Icons.shield;
+    if (playerClass.id == 'berserker') icon = Icons.whatshot;
+    if (playerClass.id == 'mage') icon = Icons.auto_fix_high;
 
     return Container(
       width: 280,
@@ -50,7 +59,7 @@ class ClassSelectionScreen extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.person, size: 80, color: classColor),
+              Icon(icon, size: 80, color: classColor),
               const SizedBox(height: 20),
               Text(
                 playerClass.name,
@@ -58,16 +67,17 @@ class ClassSelectionScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 10),
               Text(
-                'PV: ${playerClass.startingStats.maxPv}\n'
-                'Attaque: ${playerClass.startingStats.attaque}\n'
-                'Armure: ${playerClass.startingStats.armure}\n',
+                'PV: ${playerClass.maxHp}\n'
+                'Mana: ${playerClass.maxMana}\n'
+                'Attaque: ${playerClass.baseDamage}\n'
+                'Armure: ${playerClass.baseArmor}\n',
                 style: const TextStyle(fontSize: 16, color: Colors.white),
                 textAlign: TextAlign.center,
               ),
               const Divider(color: Colors.white24, height: 30),
               Expanded(
                 child: Text(
-                  playerClass.heroDescription,
+                  playerClass.description,
                   style: const TextStyle(fontSize: 14, color: Colors.white70, fontStyle: FontStyle.italic),
                   textAlign: TextAlign.center,
                 ),

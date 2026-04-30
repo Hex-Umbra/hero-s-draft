@@ -1,1 +1,32 @@
-[]
+[
+  {
+    "id": "paladin",
+    "name": "Le Paladin",
+    "description": "Orienté Survie",
+    "iconPath": "person",
+    "maxHp": 100,
+    "maxMana": 10,
+    "baseDamage": 5,
+    "baseArmor": 20
+  },
+  {
+    "id": "berserker",
+    "name": "Le Berserker",
+    "description": "Orienté Dégâts",
+    "iconPath": "person",
+    "maxHp": 80,
+    "maxMana": 5,
+    "baseDamage": 15,
+    "baseArmor": 0
+  },
+  {
+    "id": "mage",
+    "name": "Le Mage",
+    "description": "Orienté Altération",
+    "iconPath": "person",
+    "maxHp": 60,
+    "maxMana": 15,
+    "baseDamage": 10,
+    "baseArmor": 5
+  }
+]

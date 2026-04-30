@@ -9,5 +9,8 @@
 - feat: implémentation Phase 3 
     - refactoring des ennemis pour utiliser EnemyData depuis le JSON
         - J'ai terminé la Phase 3. Les ennemis générés lors des combats utilisent maintenant strictement les données issues de enemies.json via le GameDataRegistry ! Le EncounterSystem et le EnemyCard ont été mis à jour en conséquence, et j'ai ajouté quelques ennemis d'exemple dans le JSON pour que ça fonctionne directement.
+- feat: implémentation Phase 4 
+    - refactoring des classes de Héros (utilisation de HeroData et du JSON)
+        - J'ai terminé la Phase 4. Les classes jouables (Paladin, Berserker, Mage) sont désormais chargées directement depuis le fichier heroes.json. Le ClassSelectionScreen lit dynamiquement ces données pour créer les boutons, et le RunState initialise les statistiques du joueur en fonction de la classe choisie.
     
 

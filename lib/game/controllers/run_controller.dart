@@ -1,11 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/entity_stats.dart';
-import '../../data/models/player_class.dart';
+import '../../models/data/hero_data.dart';
 
 class RunState {
   final int currentLevel;
   final EntityStats heroStats;
-  final PlayerClassType heroClass;
+  final String heroClassId;
   
   // Variables pour gérer l'état du cooldown des sorts
   final int skill1Cooldown;
@@ -29,7 +29,7 @@ class RunState {
   const RunState({
     required this.currentLevel,
     required this.heroStats,
-    required this.heroClass,
+    required this.heroClassId,
     this.skill1Cooldown = 0,
     this.skill2Cooldown = 0,
     this.attackBuffDuration = 0,
@@ -39,7 +39,7 @@ class RunState {
   RunState copyWith({
     int? currentLevel,
     EntityStats? heroStats,
-    PlayerClassType? heroClass,
+    String? heroClassId,
     int? skill1Cooldown,
     int? skill2Cooldown,
     int? attackBuffDuration,
@@ -48,7 +48,7 @@ class RunState {
     return RunState(
       currentLevel: currentLevel ?? this.currentLevel,
       heroStats: heroStats ?? this.heroStats,
-      heroClass: heroClass ?? this.heroClass,
+      heroClassId: heroClassId ?? this.heroClassId,
       skill1Cooldown: skill1Cooldown ?? this.skill1Cooldown,
       skill2Cooldown: skill2Cooldown ?? this.skill2Cooldown,
       attackBuffDuration: attackBuffDuration ?? this.attackBuffDuration,
@@ -61,16 +61,32 @@ class RunController extends StateNotifier<RunState> {
   RunController()
       : super(RunState(
           currentLevel: 1,
-          heroClass: PlayerClassType.paladin,
-          heroStats: PlayerClass.paladin.startingStats,
+          heroClassId: 'paladin',
+          heroStats: EntityStats(
+            maxPv: 100,
+            currentPv: 100,
+            maxMana: 10,
+            currentMana: 10,
+            armure: 20,
+            attaque: 5,
+            defense: 0.1,
+          ),
         ));
 
   /// Démarre une nouvelle partie avec la classe choisie
-  void startNewRun(PlayerClass chosenClass) {
+  void startNewRun(HeroData chosenClass) {
     state = RunState(
       currentLevel: 1,
-      heroClass: chosenClass.type,
-      heroStats: chosenClass.startingStats,
+      heroClassId: chosenClass.id,
+      heroStats: EntityStats(
+        maxPv: chosenClass.maxHp,
+        currentPv: chosenClass.maxHp,
+        maxMana: chosenClass.maxMana,
+        currentMana: chosenClass.maxMana,
+        armure: chosenClass.baseArmor,
+        attaque: chosenClass.baseDamage,
+        defense: chosenClass.id == 'paladin' ? 0.1 : (chosenClass.id == 'mage' ? 0.05 : 0.0), // TODO move defense to data
+      ),
     );
   }
 

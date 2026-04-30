@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../game/heros_draft_game.dart';
 import '../../game/controllers/run_controller.dart';
-import '../../data/models/player_class.dart';
 import 'draft_screen.dart';
 import 'class_selection_screen.dart';
 import '../../services/game_data_service.dart';
@@ -170,7 +169,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   }
 
   Widget _buildSkillButtons(RunState runState) {
-    if (runState.heroClass == PlayerClassType.paladin) {
+    if (runState.heroClassId == 'paladin') {
       bool canSkill1 = runState.skill1Cooldown == 0 && runState.heroStats.currentMana >= 3;
       bool canSkill2 = runState.skill2Cooldown == 0 && runState.heroStats.currentMana >= 5;
 
@@ -205,7 +204,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           ),
         ],
       );
-    } else if (runState.heroClass == PlayerClassType.mage) {
+    } else if (runState.heroClassId == 'mage') {
       bool canSkill1 = runState.skill1Cooldown == 0 && runState.heroStats.currentMana >= 4;
       bool canSkill2 = runState.skill2Cooldown == 0 && runState.heroStats.currentMana >= 8;
 
