@@ -1,5 +1,4 @@
 import 'dart:math';
-import '../../data/models/entity_stats.dart';
 import '../../models/data/enemy_data.dart';
 
 class EncounterSystem {

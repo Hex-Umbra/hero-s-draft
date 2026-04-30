@@ -4,6 +4,7 @@ import 'components/entities/hero_card.dart';
 import 'components/entities/enemy_card.dart';
 import '../models/data/enemy_data.dart';
 import '../models/data/skill_data.dart';
+import '../data/models/entity_stats.dart';
 
 import 'controllers/run_controller.dart';
 import 'systems/encounter_system.dart';
