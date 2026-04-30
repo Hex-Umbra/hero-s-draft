@@ -7,8 +7,8 @@ import '../../game/controllers/deck_controller.dart';
 import 'draft_screen.dart';
 import 'class_selection_screen.dart';
 import '../../services/game_data_service.dart';
-import '../../models/data/skill_data.dart';
-import '../../models/data/game_data_registry.dart';
+import '../../models/card_instance.dart';
+import '../../models/data/card_data.dart';
 
 class GameScreen extends ConsumerStatefulWidget {
   const GameScreen({super.key});
@@ -24,6 +24,23 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   @override
   void initState() {
     super.initState();
+    
+    Future.microtask(() {
+      final deck = ref.read(deckProvider);
+      if (deck.masterDeck.isEmpty) {
+        final starterCards = [
+          CardInstance(data: CardData(id: 'strike_1', name: 'Frappe', description: 'Inflige 5 dégâts', cost: 1, type: CardType.attack, category: CardCategory.global, rarity: CardRarity.common, target: CardTarget.singleEnemy, effects: [CardEffect(type: 'damage', value: 5)])),
+          CardInstance(data: CardData(id: 'strike_2', name: 'Frappe', description: 'Inflige 5 dégâts', cost: 1, type: CardType.attack, category: CardCategory.global, rarity: CardRarity.common, target: CardTarget.singleEnemy, effects: [CardEffect(type: 'damage', value: 5)])),
+          CardInstance(data: CardData(id: 'defend_1', name: 'Défense', description: 'Gagne 5 Armure', cost: 1, type: CardType.skill, category: CardCategory.global, rarity: CardRarity.common, target: CardTarget.none, effects: [CardEffect(type: 'armor', value: 5)])),
+          CardInstance(data: CardData(id: 'defend_2', name: 'Défense', description: 'Gagne 5 Armure', cost: 1, type: CardType.skill, category: CardCategory.global, rarity: CardRarity.common, target: CardTarget.none, effects: [CardEffect(type: 'armor', value: 5)])),
+          CardInstance(data: CardData(id: 'heal_1', name: 'Soin', description: 'Soigne 5 PV', cost: 2, type: CardType.skill, category: CardCategory.global, rarity: CardRarity.uncommon, target: CardTarget.none, effects: [CardEffect(type: 'heal', value: 5)])),
+        ];
+        ref.read(deckProvider.notifier).initializeStarterDeck(starterCards);
+        ref.read(deckProvider.notifier).initializeCombat();
+        ref.read(deckProvider.notifier).drawCards(5);
+      }
+    });
+
     _game = HerosDraftGame(
       onPlayerTakeDamage: (dmg) {
         ref.read(runProvider.notifier).takeDamage(dmg);
@@ -43,6 +60,56 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       onTurnEnded: () {
         ref.read(runProvider.notifier).startTurn();
         ref.read(deckProvider.notifier).drawCards(5);
+      },
+      onPlayCard: (card, target) {
+        // Validation basique (mana)
+        final runState = ref.read(runProvider);
+        if (runState.heroStats.currentMana < card.currentCost) return false;
+        
+        // Validation cible
+        if (card.data.target == CardTarget.singleEnemy && target == null) return false;
+
+        // Résolution des effets
+        ref.read(runProvider.notifier).consumeResource(mana: card.currentCost);
+        
+        for (var effect in card.data.effects) {
+          if (effect.type == 'damage') {
+             if (card.data.target == CardTarget.singleEnemy && target != null) {
+                target.updateStats(target.stats.takeDamage(effect.value + runState.effectiveAttaque));
+                if (target.stats.currentPv <= 0) {
+                   target.removeFromParent();
+                   _game.enemyCards.remove(target);
+                   if (_game.selectedEnemy == target) _game.selectedEnemy = null;
+                }
+             } else if (card.data.target == CardTarget.allEnemies) {
+                for (var enemy in _game.enemyCards.toList()) {
+                   enemy.updateStats(enemy.stats.takeDamage(effect.value + runState.effectiveAttaque));
+                   if (enemy.stats.currentPv <= 0) {
+                      enemy.removeFromParent();
+                      _game.enemyCards.remove(enemy);
+                      if (_game.selectedEnemy == enemy) _game.selectedEnemy = null;
+                   }
+                }
+             }
+          } else if (effect.type == 'armor') {
+             final currentArmor = ref.read(runProvider).heroStats.armure;
+             ref.read(runProvider.notifier).setHeroStats(armure: currentArmor + effect.value);
+          } else if (effect.type == 'heal') {
+             ref.read(runProvider.notifier).heal(effect.value);
+          } else if (effect.type == 'draw') {
+             ref.read(deckProvider.notifier).drawCards(effect.value);
+          }
+        }
+        
+        // Dire au DeckNotifier que la carte est jouée
+        ref.read(deckProvider.notifier).playCard(card);
+        
+        if (_game.enemyCards.isEmpty) {
+           _game.onEnemiesDead();
+           _game.currentPhase = TurnPhase.player;
+        }
+
+        return true;
       }
     );
   }
@@ -50,10 +117,12 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   @override
   Widget build(BuildContext context) {
     final runState = ref.watch(runProvider);
+    final deckState = ref.watch(deckProvider);
     final gameData = ref.watch(gameDataLoaderProvider).requireValue;
     
     _game.availableEnemies = gameData.enemies;
     _game.syncState(runState);
+    _game.syncDeck(deckState);
 
     return Scaffold(
       body: Stack(
@@ -65,6 +134,8 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               child: DraftScreen(
                 onDraftComplete: () {
                   setState(() { _showDraft = false; });
+                  ref.read(deckProvider.notifier).initializeCombat();
+                  ref.read(deckProvider.notifier).drawCards(5);
                 },
               ),
             ),
@@ -160,90 +231,31 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                 ),
               ),
             ),
+          // Draw Pile
+          if (!runState.isDead && !_showDraft)
+            Positioned(
+              bottom: 20,
+              left: 20,
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(color: Colors.blueGrey, borderRadius: BorderRadius.circular(8)),
+                child: Text('Pioche: ${deckState.drawPile.length}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
+            ),
             
-          // HUD Compétences Spéciales
+          // Discard Pile
           if (!runState.isDead && !_showDraft)
             Positioned(
               bottom: 20,
               right: 20,
-              child: _buildSkillButtons(runState, gameData)
-            )
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(color: Colors.grey[800], borderRadius: BorderRadius.circular(8)),
+                child: Text('Défausse: ${deckState.discardPile.length}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
+            ),
         ],
       ),
-    );
-  }
-
-  Widget _buildSkillButtons(RunState runState, GameDataRegistry gameData) {
-    var heroSkills = gameData.skills.where((SkillData s) => s.id.startsWith(runState.heroClassId)).toList();
-    
-    if (heroSkills.isEmpty) return const SizedBox.shrink();
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: heroSkills.asMap().entries.map((entry) {
-        int index = entry.key;
-        var skill = entry.value;
-
-        int cd = index == 0 ? runState.skill1Cooldown : runState.skill2Cooldown;
-        bool canCast = cd == 0;
-        
-        if (skill.effectType == 'lifesteal_buff') {
-           int hpCost = (runState.heroStats.currentPv * 0.1).round();
-           if (hpCost < 1) hpCost = 1;
-           if (runState.heroStats.currentPv <= hpCost) canCast = false;
-        } else {
-           if (runState.heroStats.currentMana < skill.manaCost) canCast = false;
-        }
-
-        if ((skill.effectType == 'damage_targeted' || skill.effectType == 'damage_pierce') && _game.selectedEnemy == null) {
-            canCast = false;
-        }
-
-        Color btnColor = Colors.blueAccent;
-        if (runState.heroClassId == 'berserker') btnColor = Colors.redAccent;
-        if (runState.heroClassId == 'mage') btnColor = Colors.purple;
-
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 10),
-          child: FloatingActionButton.extended(
-            heroTag: 'skill_${skill.id}',
-            backgroundColor: canCast ? btnColor : Colors.grey,
-            onPressed: canCast ? () {
-                bool triggered = false;
-                if (index == 0) {
-                    triggered = ref.read(runProvider.notifier).triggerGenericSkill1(
-                        cd: skill.effectType == 'lifesteal_buff' ? 4 : 2, 
-                        mana: skill.manaCost,
-                        hpPercent: skill.effectType == 'lifesteal_buff' ? 10 : 0
-                    );
-                } else {
-                    triggered = ref.read(runProvider.notifier).triggerGenericSkill2(
-                        cd: 4, 
-                        mana: skill.manaCost
-                    );
-                }
-                
-                if (triggered) {
-                    _game.executeSkill(
-                        skill,
-                        onTriggerAttackBuff: () {
-                            ref.read(runProvider.notifier).applyAttackBuff(skill.effectValue);
-                        },
-                        onTriggerLifesteal: () {
-                            ref.read(runProvider.notifier).applyLifestealBuff(skill.effectValue);
-                        }
-                    );
-                }
-            } : null,
-            label: Text(
-              cd == 0 ? '${skill.name} (${skill.manaCost > 0 ? '${skill.manaCost} Mana' : 'Coût PV'})' : '${skill.name} (CD: $cd)',
-              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)
-            ),
-            icon: Icon(skill.effectType.contains('damage') ? Icons.flash_on : Icons.shield, color: Colors.white),
-          ),
-        );
-      }).toList(),
     );
   }
 

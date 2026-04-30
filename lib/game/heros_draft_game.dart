@@ -1,12 +1,16 @@
+import 'dart:math';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
+import 'components/card_component.dart';
 import 'components/entities/hero_card.dart';
 import 'components/entities/enemy_card.dart';
+import '../models/card_instance.dart';
 import '../models/data/enemy_data.dart';
 import '../models/data/skill_data.dart';
 import '../data/models/entity_stats.dart';
 
 import 'controllers/run_controller.dart';
+import 'controllers/deck_controller.dart';
 import 'systems/encounter_system.dart';
 
 enum TurnPhase { player, enemy }
@@ -15,12 +19,31 @@ class HerosDraftGame extends FlameGame {
   List<EnemyData> availableEnemies = [];
   HeroCard? heroCard;
   List<EnemyCard> enemyCards = [];
+  List<CardComponent> handCards = [];
+  
   RunState? _currentState;
   RunState? _nextState;
+  DeckState? _nextDeckState;
   
   TurnPhase currentPhase = TurnPhase.player;
   EnemyCard? selectedEnemy;
   EnemyCard? highlightedEnemy;
+
+  final void Function(int) onPlayerTakeDamage;
+  final void Function(int) onPlayerHeal;
+  final void Function(int) onPlayerGainArmor;
+  final void Function() onEnemiesDead;
+  final void Function() onTurnEnded;
+  final bool Function(CardInstance, EnemyCard?) onPlayCard;
+
+  HerosDraftGame({
+    required this.onPlayerTakeDamage,
+    required this.onPlayerHeal,
+    required this.onPlayerGainArmor,
+    required this.onEnemiesDead,
+    required this.onTurnEnded,
+    required this.onPlayCard,
+  });
 
   void highlightEnemy(EnemyCard? enemy) {
     if (highlightedEnemy != enemy) {
@@ -30,30 +53,27 @@ class HerosDraftGame extends FlameGame {
     }
   }
 
-  bool tryPlayCard(dynamic card, EnemyCard? target) {
-    // TODO: Implémenter la logique de jeu de carte ou déléguer au GameScreen
+  bool tryPlayCard(dynamic cardComp, EnemyCard? target) {
+    if (cardComp is CardComponent && onPlayCard(cardComp.card, target)) {
+      // Si la carte est jouée, on la retire immédiatement visuellement 
+      // en attendant que syncDeck la supprime officiellement
+      cardComp.removeFromParent();
+      handCards.remove(cardComp);
+      _layoutHand();
+      return true;
+    }
     return false;
   }
-
-  final void Function(int) onPlayerTakeDamage;
-  final void Function(int) onPlayerHeal;
-  final void Function(int) onPlayerGainArmor;
-  final void Function() onEnemiesDead;
-  final void Function() onTurnEnded;
-
-  HerosDraftGame({
-    required this.onPlayerTakeDamage,
-    required this.onPlayerHeal,
-    required this.onPlayerGainArmor,
-    required this.onEnemiesDead,
-    required this.onTurnEnded,
-  });
 
   @override
   Color backgroundColor() => const Color(0xFF1E1E2C);
 
   void syncState(RunState state) {
     _nextState = state;
+  }
+  
+  void syncDeck(DeckState deckState) {
+    _nextDeckState = deckState;
   }
 
   @override
@@ -62,6 +82,66 @@ class HerosDraftGame extends FlameGame {
     if (_nextState != null && hasLayout) {
       _applyState(_nextState!);
       _nextState = null;
+    }
+    if (_nextDeckState != null && hasLayout) {
+      _applyDeckState(_nextDeckState!);
+      _nextDeckState = null;
+    }
+  }
+
+  void _applyDeckState(DeckState deck) {
+    // 1. Trouver les cartes à retirer (qui ne sont plus dans la main du DeckState)
+    final newHandIds = deck.hand.map((c) => c.uniqueId).toSet();
+    final cardsToRemove = handCards.where((c) => !newHandIds.contains(c.card.uniqueId)).toList();
+    
+    for (var c in cardsToRemove) {
+      c.removeFromParent();
+      handCards.remove(c);
+    }
+
+    // 2. Trouver les cartes à ajouter
+    final currentHandIds = handCards.map((c) => c.card.uniqueId).toSet();
+    final cardsToAdd = deck.hand.where((c) => !currentHandIds.contains(c.uniqueId)).toList();
+    
+    for (var c in cardsToAdd) {
+      final cardComp = CardComponent(c);
+      handCards.add(cardComp);
+      add(cardComp);
+    }
+
+    // 3. Mettre à jour le layout si la main a changé
+    if (cardsToRemove.isNotEmpty || cardsToAdd.isNotEmpty) {
+      _layoutHand();
+    }
+  }
+
+  void _layoutHand() {
+    if (handCards.isEmpty) return;
+
+    final int count = handCards.length;
+    // On veut un arc de cercle
+    final double radius = 800.0;
+    final double angleStep = 0.08; // Angle entre chaque carte
+    final double totalAngle = (count - 1) * angleStep;
+    final double startAngle = -totalAngle / 2;
+
+    // Le centre de l'arc de cercle est situé loin en bas de l'écran
+    final Vector2 centerPoint = Vector2(size.x / 2, size.y + radius - 150);
+
+    for (int i = 0; i < count; i++) {
+      if (handCards[i].isDragging) continue; // Ne pas animer une carte en cours de drag
+
+      final double angle = startAngle + (i * angleStep);
+      
+      // Position sur le cercle
+      final double x = centerPoint.x + radius * sin(angle);
+      final double y = centerPoint.y - radius * cos(angle);
+
+      // On oriente la carte
+      handCards[i].position = Vector2(x, y);
+      handCards[i].angle = angle;
+      handCards[i].originalPosition = Vector2(x, y);
+      handCards[i].originalAngle = angle;
     }
   }
 
