@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../game/heros_draft_game.dart';
 import '../../game/controllers/run_controller.dart';
+import '../../game/controllers/deck_controller.dart';
 import 'draft_screen.dart';
 import 'class_selection_screen.dart';
 import '../../services/game_data_service.dart';
@@ -40,7 +41,8 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         });
       },
       onTurnEnded: () {
-        ref.read(runProvider.notifier).tickCooldown();
+        ref.read(runProvider.notifier).startTurn();
+        ref.read(deckProvider.notifier).drawCards(5);
       }
     );
   }
@@ -150,6 +152,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                   ),
                   onPressed: () {
+                    ref.read(deckProvider.notifier).discardHand();
                     _game.executeTurn();
                   },
                   icon: const Icon(Icons.check, color: Colors.white),

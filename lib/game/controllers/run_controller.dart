@@ -145,14 +145,22 @@ class RunController extends StateNotifier<RunState> {
     state = state.copyWith(heroStats: state.heroStats.takeDamage(amount));
   }
 
-  /// Baisse le cooldown et la durée des buffs à chaque nouveau tour
-  void tickCooldown() {
+  /// Nouveau Tour : Baisse le cooldown, les buffs, et restaure le mana
+  void startTurn() {
     state = state.copyWith(
+      heroStats: state.heroStats.copyWith(
+        currentMana: state.heroStats.maxMana,
+      ),
       skill1Cooldown: state.skill1Cooldown > 0 ? state.skill1Cooldown - 1 : 0,
       skill2Cooldown: state.skill2Cooldown > 0 ? state.skill2Cooldown - 1 : 0,
       attackBuffDuration: state.attackBuffDuration > 0 ? state.attackBuffDuration - 1 : 0,
       lifestealDuration: state.lifestealDuration > 0 ? state.lifestealDuration - 1 : 0,
     );
+  }
+
+  /// Gardé pour la compatibilité avec l'ancien code s'il est appelé ailleurs
+  void tickCooldown() {
+    startTurn();
   }
 
   /// Consomme les ressources nécessaires. Retourne false si insuffisant.
