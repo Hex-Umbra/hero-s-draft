@@ -5,6 +5,7 @@ import 'package:flame/effects.dart';
 import '../../../data/models/entity_stats.dart';
 import '../floating_text.dart';
 import 'stat_badge.dart';
+import 'health_bar.dart';
 import '../../heros_draft_game.dart';
 
 class HeroCard extends PositionComponent with TapCallbacks, HasGameReference<HerosDraftGame> {
@@ -14,7 +15,7 @@ class HeroCard extends PositionComponent with TapCallbacks, HasGameReference<Her
   Color classColor;
   
   late final TextComponent titleText;
-  late final StatBadge hpBadge;
+  late final HealthBarComponent healthBar;
   late final StatBadge armorBadge;
   late final StatBadge attackBadge;
   late final StatBadge manaBadge;
@@ -57,9 +58,15 @@ class HeroCard extends PositionComponent with TapCallbacks, HasGameReference<Her
     );
     add(titleText);
 
-    hpBadge = StatBadge(type: StatType.hp, value: '${stats.currentPv}/${stats.maxPv}');
-    hpBadge.position = Vector2(0, 0);
-    add(hpBadge);
+    healthBar = HealthBarComponent(
+      barWidth: size.x - 20,
+      barHeight: 18,
+      currentPv: stats.currentPv.toDouble(),
+      maxPv: stats.maxPv.toDouble(),
+      barColor: const Color(0xFF27AE60), // Green for player
+    );
+    healthBar.position = Vector2(10, size.y + 10); // En dessous de la carte
+    add(healthBar);
 
     armorBadge = StatBadge(type: StatType.armor, value: '${stats.armure}');
     armorBadge.position = Vector2(size.x, 0);
@@ -77,7 +84,7 @@ class HeroCard extends PositionComponent with TapCallbacks, HasGameReference<Her
   }
 
   void _refreshBadges() {
-    hpBadge.updateValue('${stats.currentPv}/${stats.maxPv}');
+    healthBar.updateValues(stats.currentPv.toDouble(), stats.maxPv.toDouble());
     armorBadge.updateValue('${stats.armure}');
     
     if (bonusAttack > 0) {

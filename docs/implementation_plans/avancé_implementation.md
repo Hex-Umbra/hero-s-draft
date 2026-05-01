@@ -41,3 +41,9 @@
 - feat: implémentation Phase 6 
     - système de draft (Loot) et amélioration (Fusion)
         - J'ai terminé la Phase 6. J'ai ajouté la fonction `addCardToMasterDeck` dans le `DeckNotifier` qui gère l'ajout d'une carte post-combat et inclut l'algorithme d'Auto-Merge récursif. Dès que 3 cartes identiques au même niveau sont détectées, elles sont retirées et remplacées par une seule carte de niveau supérieur. L'écran de Draft est maintenant prêt à utiliser des cartes en récompense !
+
+## Phase 3 - Implémentation des Feedbacks, UI & UX
+
+- feat: implémentation Étape 1.1
+    - barres de vie dynamiques (HealthBarComponent)
+        - J'ai terminé l'Étape 1.1. J'ai créé le `HealthBarComponent` et je l'ai intégré dans `HeroCard` (vert, en bas) et `EnemyCard` (rouge, en haut), remplaçant les badges HP circulaires pour une meilleure lisibilité des points de vie.

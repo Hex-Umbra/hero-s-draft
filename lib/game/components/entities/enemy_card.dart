@@ -6,6 +6,7 @@ import '../../../data/models/entity_stats.dart';
 import '../../../models/data/enemy_data.dart';
 import '../floating_text.dart';
 import 'stat_badge.dart';
+import 'health_bar.dart';
 import '../../heros_draft_game.dart';
 
 class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<HerosDraftGame> {
@@ -17,7 +18,7 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
   late final RectangleComponent borderInfo;
   late final TextComponent titleText;
   
-  late final StatBadge hpBadge;
+  late final HealthBarComponent healthBar;
   late final StatBadge armorBadge;
   late final StatBadge attackBadge;
   late final StatBadge manaBadge;
@@ -63,9 +64,14 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
     );
     add(titleText);
 
-    hpBadge = StatBadge(type: StatType.hp, value: '${stats.currentPv}/${stats.maxPv}');
-    hpBadge.position = Vector2(0, 0);
-    add(hpBadge);
+    healthBar = HealthBarComponent(
+      barWidth: size.x - 20,
+      barHeight: 16,
+      currentPv: stats.currentPv.toDouble(),
+      maxPv: stats.maxPv.toDouble(),
+    );
+    healthBar.position = Vector2(10, -25); // Au-dessus de la carte
+    add(healthBar);
 
     armorBadge = StatBadge(type: StatType.armor, value: '${stats.armure}');
     armorBadge.position = Vector2(size.x, 0);
@@ -81,7 +87,7 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
   }
 
   void _refreshBadges() {
-    hpBadge.updateValue('${stats.currentPv}/${stats.maxPv}');
+    healthBar.updateValues(stats.currentPv.toDouble(), stats.maxPv.toDouble());
     armorBadge.updateValue('${stats.armure}');
     attackBadge.updateValue(stats.attaque.toString());
     manaBadge.updateValue('${stats.currentMana}/${stats.maxMana}');
