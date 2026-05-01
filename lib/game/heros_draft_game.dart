@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flame/game.dart';
+import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import 'components/card_component.dart';
 import 'components/entities/hero_card.dart';
@@ -44,6 +45,26 @@ class HerosDraftGame extends FlameGame {
     required this.onTurnEnded,
     required this.onPlayCard,
   });
+
+  @override
+  Future<void> onLoad() async {
+    await super.onLoad();
+    
+    // 1. Précharger les images
+    await images.loadAll([
+      'bg_dungeon.png',
+      'hero_paladin.png',
+      'enemy_goblin.png',
+      'enemy_boss.png',
+    ]);
+
+    // 2. Ajouter l'arrière-plan
+    final bgSprite = Sprite(images.fromCache('bg_dungeon.png'));
+    add(SpriteComponent(
+      sprite: bgSprite,
+      size: size,
+    )..priority = -100);
+  }
 
   void highlightEnemy(EnemyCard? enemy) {
     if (highlightedEnemy != enemy) {

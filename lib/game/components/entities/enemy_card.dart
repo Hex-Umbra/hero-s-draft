@@ -6,8 +6,9 @@ import '../../../data/models/entity_stats.dart';
 import '../../../models/data/enemy_data.dart';
 import '../floating_text.dart';
 import 'stat_badge.dart';
+import '../../heros_draft_game.dart';
 
-class EnemyCard extends PositionComponent with TapCallbacks {
+class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<HerosDraftGame> {
   EntityStats stats;
   final EnemyData? data;
   final bool isBoss;
@@ -34,11 +35,11 @@ class EnemyCard extends PositionComponent with TapCallbacks {
   Future<void> onLoad() async {
     anchor = Anchor.center;
 
+    String spriteName = isBoss ? 'enemy_boss.png' : 'enemy_goblin.png';
     add(
-      RectangleComponent(
+      SpriteComponent(
+        sprite: Sprite(game.images.fromCache(spriteName)),
         size: size,
-        paint: Paint()
-          ..color = isBoss ? const Color(0xFF8E44AD) : const Color(0xFFC0392B),
       ),
     );
 

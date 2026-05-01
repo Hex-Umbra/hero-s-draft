@@ -5,8 +5,9 @@ import 'package:flame/effects.dart';
 import '../../../data/models/entity_stats.dart';
 import '../floating_text.dart';
 import 'stat_badge.dart';
+import '../../heros_draft_game.dart';
 
-class HeroCard extends PositionComponent with TapCallbacks {
+class HeroCard extends PositionComponent with TapCallbacks, HasGameReference<HerosDraftGame> {
   EntityStats stats;
   int bonusAttack;
   String className;
@@ -27,11 +28,11 @@ class HeroCard extends PositionComponent with TapCallbacks {
     // Position par défaut au centre en bas pour le joueur
     position = Vector2(250, 500);
 
-    // Visuel Placeholder : Fond Bleu/Gris
+    // Visuel Sprite
     add(
-      RectangleComponent(
+      SpriteComponent(
+        sprite: Sprite(game.images.fromCache('hero_paladin.png')),
         size: size,
-        paint: Paint()..color = const Color(0xFF2C3E50),
       ),
     );
 
