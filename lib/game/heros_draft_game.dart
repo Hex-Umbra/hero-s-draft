@@ -12,6 +12,7 @@ import '../data/models/entity_stats.dart';
 
 import 'controllers/run_controller.dart';
 import 'controllers/deck_controller.dart';
+import '../models/enemy_intent.dart';
 import 'systems/encounter_system.dart';
 
 enum TurnPhase { player, enemy }
@@ -331,10 +332,31 @@ class HerosDraftGame extends FlameGame {
     for (var enemy in enemyCards) {
       if (_currentState == null || _currentState!.isDead) break;
       
+      final intent = enemy.currentIntent;
+      if (intent == null) continue;
+
       enemy.bumpAnimation();
       await Future.delayed(const Duration(milliseconds: 200));
-      onPlayerTakeDamage(enemy.stats.attaque);
+
+      switch (intent.type) {
+        case IntentType.attack:
+          onPlayerTakeDamage(intent.value);
+          break;
+        case IntentType.defend:
+          enemy.updateStats(enemy.stats.copyWith(armure: enemy.stats.armure + intent.value));
+          break;
+        case IntentType.buff:
+          // Buff simple : augmente l'attaque de base
+          enemy.updateStats(enemy.stats.copyWith(attaque: enemy.stats.attaque + intent.value));
+          break;
+      }
+      
       await Future.delayed(const Duration(milliseconds: 400));
+    }
+
+    // Préparer les prochaines intentions
+    for (var enemy in enemyCards) {
+      enemy.rollIntent();
     }
 
     await Future.delayed(const Duration(milliseconds: 300));

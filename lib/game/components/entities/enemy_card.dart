@@ -1,12 +1,15 @@
+import 'dart:math';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/effects.dart';
 import '../../../data/models/entity_stats.dart';
 import '../../../models/data/enemy_data.dart';
+import '../../../models/enemy_intent.dart';
 import '../floating_text.dart';
 import 'stat_badge.dart';
 import 'health_bar.dart';
+import 'intention_indicator.dart';
 import '../../heros_draft_game.dart';
 
 class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<HerosDraftGame> {
@@ -19,10 +22,12 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
   late final TextComponent titleText;
   
   late final HealthBarComponent healthBar;
+  late final IntentionIndicator intentionIndicator;
   late final StatBadge armorBadge;
   late final StatBadge attackBadge;
   late final StatBadge manaBadge;
 
+  EnemyIntent? currentIntent;
   bool isSelected = false;
 
   EnemyCard({
@@ -73,6 +78,10 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
     healthBar.position = Vector2(10, -25); // Au-dessus de la carte
     add(healthBar);
 
+    intentionIndicator = IntentionIndicator();
+    intentionIndicator.position = Vector2(size.x / 2, -60); // Au-dessus de la barre de vie
+    add(intentionIndicator);
+
     armorBadge = StatBadge(type: StatType.armor, value: '${stats.armure}');
     armorBadge.position = Vector2(size.x, 0);
     add(armorBadge);
@@ -84,6 +93,26 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
     manaBadge = StatBadge(type: StatType.mana, value: '${stats.currentMana}/${stats.maxMana}');
     manaBadge.position = Vector2(size.x / 2, size.y - 25);
     add(manaBadge);
+
+    rollIntent();
+  }
+
+  void rollIntent() {
+    final random = Random();
+    final roll = random.nextInt(100);
+    
+    if (roll < 60) {
+      // 60% Attack
+      currentIntent = EnemyIntent(type: IntentType.attack, value: stats.attaque);
+    } else if (roll < 90) {
+      // 30% Defend
+      currentIntent = EnemyIntent(type: IntentType.defend, value: 5 + random.nextInt(6));
+    } else {
+      // 10% Buff
+      currentIntent = EnemyIntent(type: IntentType.buff, value: 2);
+    }
+    
+    intentionIndicator.updateIntent(currentIntent);
   }
 
   void _refreshBadges() {
