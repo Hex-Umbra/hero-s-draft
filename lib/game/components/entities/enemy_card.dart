@@ -75,11 +75,11 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
       currentPv: stats.currentPv.toDouble(),
       maxPv: stats.maxPv.toDouble(),
     );
-    healthBar.position = Vector2(10, -size.y / 2 - 20); // Bien au-dessus de la carte
+    healthBar.position = Vector2(10, -25); // Position initiale fonctionnelle
     add(healthBar);
 
     intentionIndicator = IntentionIndicator();
-    intentionIndicator.position = Vector2(size.x / 2, -size.y / 2 - 50); // Encore au-dessus
+    intentionIndicator.position = Vector2(size.x / 2, -55); // Juste au-dessus de la barre de vie
     add(intentionIndicator);
 
     armorBadge = StatBadge(type: StatType.armor, value: '${stats.armure}');

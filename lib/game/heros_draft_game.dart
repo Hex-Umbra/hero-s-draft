@@ -244,7 +244,7 @@ class HerosDraftGame extends FlameGame {
         data: data,
         isBoss: isBoss,
         onTapEnemy: _handlePlayerTargeting,
-      )..position = Vector2(startX + (i * spacing), 160);
+      )..position = Vector2(startX + (i * spacing), 250);
       
       enemyCards.add(enemy);
       add(enemy);
