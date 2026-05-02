@@ -23,6 +23,10 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   String? _phaseBannerText;
   bool _showPhaseBanner = false;
 
+  String? _tooltipTitle;
+  String? _tooltipDescription;
+  bool _showTooltip = false;
+
   @override
   void initState() {
     super.initState();
@@ -65,6 +69,18 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       },
       onPhaseChanged: (phase) {
         _triggerPhaseBanner(phase == TurnPhase.player ? 'TOUR JOUEUR' : 'TOUR ENNEMI');
+      },
+      onShowTooltip: (title, description) {
+        setState(() {
+          _tooltipTitle = title;
+          _tooltipDescription = description;
+          _showTooltip = true;
+        });
+      },
+      onHideTooltip: () {
+        setState(() {
+          _showTooltip = false;
+        });
       },
       onPlayCard: (card, target) {
         // Validation basique (mana)
@@ -291,6 +307,42 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                       _phaseBannerText ?? '',
                       style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: 4),
                     ),
+                  ),
+                ),
+              ),
+            ),
+
+          // Tooltip Overlay
+          if (_showTooltip)
+            Positioned(
+              left: 40,
+              right: 40,
+              bottom: 220,
+              child: IgnorePointer(
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2A2A3D).withAlpha(240),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.blueAccent, width: 2),
+                    boxShadow: [
+                      BoxShadow(color: Colors.black.withAlpha(100), blurRadius: 10, spreadRadius: 5),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _tooltipTitle ?? '',
+                        style: const TextStyle(color: Colors.blueAccent, fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      const Divider(color: Colors.white24),
+                      Text(
+                        _tooltipDescription ?? '',
+                        style: const TextStyle(color: Colors.white, fontSize: 14),
+                      ),
+                    ],
                   ),
                 ),
               ),

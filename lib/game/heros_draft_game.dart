@@ -38,6 +38,8 @@ class HerosDraftGame extends FlameGame {
   final void Function() onEnemiesDead;
   final void Function() onTurnEnded;
   final void Function(TurnPhase) onPhaseChanged;
+  final void Function(String title, String description) onShowTooltip;
+  final void Function() onHideTooltip;
   final bool Function(CardInstance, EnemyCard?) onPlayCard;
 
   HerosDraftGame({
@@ -47,6 +49,8 @@ class HerosDraftGame extends FlameGame {
     required this.onEnemiesDead,
     required this.onTurnEnded,
     required this.onPhaseChanged,
+    required this.onShowTooltip,
+    required this.onHideTooltip,
     required this.onPlayCard,
   });
 

@@ -7,8 +7,34 @@ import '../../models/data/card_data.dart';
 import '../heros_draft_game.dart';
 import 'entities/enemy_card.dart';
 
-class CardComponent extends PositionComponent with DragCallbacks, HasGameReference<HerosDraftGame> {
+class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, HasGameReference<HerosDraftGame> {
   final CardInstance card;
+  // ...
+  @override
+  void onLongTapDown(TapDownEvent event) {
+    game.onShowTooltip(card.data.name, _buildDetailedDescription());
+  }
+
+  @override
+  void onTapUp(TapUpEvent event) {
+    game.onHideTooltip();
+  }
+
+  @override
+  void onTapCancel(TapCancelEvent event) {
+    game.onHideTooltip();
+  }
+
+  String _buildDetailedDescription() {
+    String desc = '${card.data.description}\n\n';
+    for (var effect in card.data.effects) {
+      if (effect.type == 'damage') desc += '• Dégâts: ${effect.value}\n';
+      if (effect.type == 'heal') desc += '• Soin: ${effect.value}\n';
+      if (effect.type == 'armor') desc += '• Armure: ${effect.value}\n';
+      if (effect.type == 'draw') desc += '• Pioche: ${effect.value} cartes\n';
+    }
+    return desc.trim();
+  }
   
   Vector2 originalPosition = Vector2.zero();
   double originalAngle = 0;

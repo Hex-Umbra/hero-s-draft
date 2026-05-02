@@ -1,10 +1,41 @@
 import 'package:flame/components.dart';
+import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
+import '../../heros_draft_game.dart';
 
 enum StatType { hp, armor, attack, mana }
 
-class StatBadge extends PositionComponent {
+class StatBadge extends PositionComponent with TapCallbacks, HasGameReference<HerosDraftGame> {
   final StatType type;
+  // ...
+  @override
+  void onLongTapDown(TapDownEvent event) {
+    final tooltipData = _getTooltipData();
+    game.onShowTooltip(tooltipData.$1, tooltipData.$2);
+  }
+
+  @override
+  void onTapUp(TapUpEvent event) {
+    game.onHideTooltip();
+  }
+
+  @override
+  void onTapCancel(TapCancelEvent event) {
+    game.onHideTooltip();
+  }
+
+  (String, String) _getTooltipData() {
+    switch (type) {
+      case StatType.hp:
+        return ('POINTS DE VIE', 'Votre santé actuelle. Si elle tombe à zéro, la partie est terminée.');
+      case StatType.armor:
+        return ('ARMURE', 'Réduit les prochains dégâts reçus. L\'armure est consommée avant les PV.');
+      case StatType.attack:
+        return ('FORCE', 'Augmente les dégâts infligés par vos cartes d\'attaque.');
+      case StatType.mana:
+        return ('MANA', 'Énergie utilisée pour jouer des cartes. Se régénère à chaque tour.');
+    }
+  }
   String _value;
   late final CircleComponent bg;
   late final TextComponent textComponent;

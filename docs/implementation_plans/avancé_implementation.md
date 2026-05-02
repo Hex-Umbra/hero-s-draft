@@ -62,3 +62,6 @@
 - feat: implémentation Étape 3.1
     - Bannières de Phase (Tour Joueur / Tour Ennemi)
         - J'ai terminé l'Étape 3.1. J'ai ajouté un système de callback `onPhaseChanged` dans le moteur Flame pour notifier Flutter des changements de tour. Dans `GameScreen`, j'ai implémenté un overlay animé (`AnimatedContainer`) qui affiche une bannière "TOUR JOUEUR" ou "TOUR ENNEMI" au centre de l'écran lors des transitions, améliorant ainsi la clarté stratégique.
+- feat: implémentation Étape 3.2
+    - Système de Tooltips
+        - J'ai terminé l'Étape 3.2. J'ai implémenté un système de tooltips déclenché par un appui long (`onLongTapDown` via `TapCallbacks`) sur les cartes (`CardComponent`) et les badges de statistiques (`StatBadge`). Un overlay Flutter dynamique affiche désormais le nom, la description et le détail des effets des objets survolés. J'ai validé l'absence d'erreurs via `dart analyze`.
