@@ -63,13 +63,18 @@ class IntentionIndicator extends PositionComponent with HasPaint {
     }
   }
 
+  @override
+  void renderTree(Canvas canvas) {
+    if (_intent != null) {
+      super.renderTree(canvas);
+    }
+  }
+
   void _updateVisual() {
     if (_intent == null) {
-      isVisible = false;
       return;
     }
 
-    isVisible = true;
     switch (_intent!.type) {
       case IntentType.attack:
         _iconText.text = 'ATK'; // Texte plus fiable que l'emoji
