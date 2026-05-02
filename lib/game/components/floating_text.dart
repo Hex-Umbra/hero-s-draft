@@ -3,7 +3,7 @@ import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flutter/material.dart';
 
-class FloatingText extends TextComponent {
+class FloatingText extends TextComponent with HasPaint {
   final bool isCritical;
 
   FloatingText({
@@ -26,6 +26,20 @@ class FloatingText extends TextComponent {
            ),
          ),
        );
+
+  @override
+  void render(Canvas canvas) {
+    // TextComponent ne supporte pas l'opacité nativement via OpacityEffect
+    // sans utiliser un saveLayer ou modifier le textRenderer.
+    // L'utilisation de saveLayer ici permet à l'OpacityEffect de fonctionner.
+    if (opacity < 1) {
+      canvas.saveLayer(size.toRect(), paint);
+      super.render(canvas);
+      canvas.restore();
+    } else {
+      super.render(canvas);
+    }
+  }
 
   @override
   Future<void> onLoad() async {
