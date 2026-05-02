@@ -5,8 +5,8 @@ Ce document liste les scénarios de test à réaliser pour valider l'implémenta
 ## 1. Clarté du Combat
 
 ### 1.1 Barres de Vie (`HealthBarComponent`)
-- [ ] **Visuel :** Vérifier que le Héros a une barre **verte** en bas de sa carte.
-- [ ] **Visuel :** Vérifier que les Ennemis ont une barre **rouge** au-dessus de leur carte.
+- [x] **Visuel :** Vérifier que le Héros a une barre **verte** en bas de sa carte.
+- [x] **Visuel :** Vérifier que les Ennemis ont une barre **rouge** au-dessus de leur carte.
 - [ ] **Mise à jour :** Infliger des dégâts et vérifier que la barre diminue proportionnellement.
 - [ ] **Mise à jour :** Soigner le héros et vérifier que la barre remonte.
 
