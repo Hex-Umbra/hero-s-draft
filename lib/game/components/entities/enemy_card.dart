@@ -147,7 +147,6 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
       text: text,
       color: color,
       position: pos,
-      movement: Vector2(0, 50),
     );
     add(ft);
   }

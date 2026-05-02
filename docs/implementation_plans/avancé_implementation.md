@@ -56,3 +56,6 @@
 - feat: implémentation Étape 2.2
     - Animations de "Dash" directionnelles
         - J'ai terminé l'Étape 2.2. J'ai refactorisé `bumpAnimation()` dans `HeroCard` et `EnemyCard` pour utiliser des `SequenceEffect`. Désormais, les entités effectuent un "Dash" vers leur cible (vers le haut pour le héros, vers le bas pour les ennemis) avec des courbes d'animation `easeOut` et `bounceOut` pour un rendu plus dynamique.
+- feat: implémentation Étape 2.3
+    - Floating Text amélioré
+        - J'ai terminé l'Étape 2.3. J'ai amélioré le composant `FloatingText` en ajoutant des trajectoires aléatoires en arc de cercle, un effet de fondu (`OpacityEffect`) et la gestion des textes critiques (plus grands avec un `ScaleEffect`). Le code a été nettoyé pour supprimer les paramètres de mouvement redondants.
