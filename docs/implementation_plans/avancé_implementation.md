@@ -50,3 +50,6 @@
 - feat: implémentation Étape 1.2
     - système d'intentions ennemies (Telegraphing)
         - J'ai terminé l'Étape 1.2. J'ai implémenté le système d'intentions (`EnemyIntent`) qui permet de prédire l'action de l'ennemi (Attaque, Défense, Buff). Les intentions sont affichées via un `IntentionIndicator` au-dessus de chaque ennemi et sont synchronisées avec la phase de riposte.
+- feat: implémentation Étape 2.1
+    - Screen Shake (Tremblement de caméra)
+        - J'ai terminé l'Étape 2.1. J'ai ajouté une méthode `shake()` dans `HerosDraftGame` utilisant les `MoveEffect` de Flame sur le viewfinder de la caméra. L'effet est déclenché avec une intensité variable : légère lors des attaques réussies du joueur et forte lors des dégâts subis par le héros.
