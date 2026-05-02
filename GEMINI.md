@@ -45,3 +45,4 @@ As a standard Flutter project, the following commands apply:
 - Follow `package:flutter_lints` (default Flutter linting rules).
 - Keep UI widgets (Flutter) and Game components (Flame) decoupled.
 - Use `FutureProvider` for asynchronous resource loading.
+- **Mandatory Validation**: Always run `dart analyze` at the end of each implementation phase and fix any identified issues before proceeding or finalizing the task.
