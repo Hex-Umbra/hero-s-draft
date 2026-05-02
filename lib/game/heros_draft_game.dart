@@ -37,6 +37,7 @@ class HerosDraftGame extends FlameGame {
   final void Function(int) onPlayerGainArmor;
   final void Function() onEnemiesDead;
   final void Function() onTurnEnded;
+  final void Function(TurnPhase) onPhaseChanged;
   final bool Function(CardInstance, EnemyCard?) onPlayCard;
 
   HerosDraftGame({
@@ -45,6 +46,7 @@ class HerosDraftGame extends FlameGame {
     required this.onPlayerGainArmor,
     required this.onEnemiesDead,
     required this.onTurnEnded,
+    required this.onPhaseChanged,
     required this.onPlayCard,
   });
 
@@ -342,6 +344,7 @@ class HerosDraftGame extends FlameGame {
   }
 
   Future<void> _enemyRipostePhase() async {
+    onPhaseChanged(TurnPhase.enemy);
     await Future.delayed(const Duration(milliseconds: 600));
 
     // Riposte des Ennemis (Séquentielle)
@@ -379,6 +382,7 @@ class HerosDraftGame extends FlameGame {
     await Future.delayed(const Duration(milliseconds: 300));
 
     currentPhase = TurnPhase.player;
+    onPhaseChanged(TurnPhase.player);
     onTurnEnded();
   }
 

@@ -20,6 +20,8 @@ class GameScreen extends ConsumerStatefulWidget {
 class _GameScreenState extends ConsumerState<GameScreen> {
   late HerosDraftGame _game;
   bool _showDraft = false;
+  String? _phaseBannerText;
+  bool _showPhaseBanner = false;
 
   @override
   void initState() {
@@ -60,6 +62,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       onTurnEnded: () {
         ref.read(runProvider.notifier).startTurn();
         ref.read(deckProvider.notifier).drawCards(5);
+      },
+      onPhaseChanged: (phase) {
+        _triggerPhaseBanner(phase == TurnPhase.player ? 'TOUR JOUEUR' : 'TOUR ENNEMI');
       },
       onPlayCard: (card, target) {
         // Validation basique (mana)
@@ -113,6 +118,19 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         return true;
       }
     );
+  }
+
+  void _triggerPhaseBanner(String text) async {
+    setState(() {
+      _phaseBannerText = text;
+      _showPhaseBanner = true;
+    });
+    await Future.delayed(const Duration(milliseconds: 1500));
+    if (mounted) {
+      setState(() {
+        _showPhaseBanner = false;
+      });
+    }
   }
 
   @override
@@ -255,6 +273,28 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                 child: Text('Défausse: ${deckState.discardPile.length}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               ),
             ),
+
+          // Phase Banner Overlay
+          if (_showPhaseBanner)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: Center(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                    padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 40),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withAlpha(180),
+                      border: Border.symmetric(horizontal: BorderSide(color: Colors.amber.withAlpha(200), width: 2)),
+                    ),
+                    child: Text(
+                      _phaseBannerText ?? '',
+                      style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: 4),
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -268,7 +308,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: const Color(0xFF2A2A3D),
-          title: const Text('PAUSE', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+          title: const Text('PAUSE', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold), textAlign: textAlign.center),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -305,4 +345,3 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     });
   }
 }
-
