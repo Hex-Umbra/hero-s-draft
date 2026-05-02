@@ -129,12 +129,20 @@ class HeroCard extends PositionComponent with TapCallbacks, HasGameReference<Her
     add(ft);
   }
 
-  void bumpAnimation() {
+  void dashAnimation() {
     add(
-      MoveEffect.by(
-        Vector2(0, -30),
-        EffectController(duration: 0.1, alternate: true),
-      ),
+      SequenceEffect([
+        MoveEffect.by(
+          Vector2(0, -50),
+          EffectController(duration: 0.1, curve: Curves.easeOut),
+        ),
+        MoveEffect.by(
+          Vector2(0, 50),
+          EffectController(duration: 0.15, curve: Curves.bounceOut),
+        ),
+      ]),
     );
   }
+
+  void bumpAnimation() => dashAnimation();
 }

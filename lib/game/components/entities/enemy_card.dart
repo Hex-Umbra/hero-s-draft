@@ -163,14 +163,22 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
     }
   }
 
-  void bumpAnimation() {
+  void dashAnimation() {
     add(
-      MoveEffect.by(
-        Vector2(0, 30),
-        EffectController(duration: 0.1, alternate: true),
-      ),
+      SequenceEffect([
+        MoveEffect.by(
+          Vector2(0, 50),
+          EffectController(duration: 0.1, curve: Curves.easeOut),
+        ),
+        MoveEffect.by(
+          Vector2(0, -50),
+          EffectController(duration: 0.15, curve: Curves.bounceOut),
+        ),
+      ]),
     );
   }
+
+  void bumpAnimation() => dashAnimation();
 
   @override
   void onTapDown(TapDownEvent event) {

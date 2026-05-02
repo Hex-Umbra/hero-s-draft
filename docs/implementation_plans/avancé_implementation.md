@@ -53,3 +53,6 @@
 - feat: implémentation Étape 2.1
     - Screen Shake (Tremblement de caméra)
         - J'ai terminé l'Étape 2.1. J'ai ajouté une méthode `shake()` dans `HerosDraftGame` utilisant les `MoveEffect` de Flame sur le viewfinder de la caméra. L'effet est déclenché avec une intensité variable : légère lors des attaques réussies du joueur et forte lors des dégâts subis par le héros.
+- feat: implémentation Étape 2.2
+    - Animations de "Dash" directionnelles
+        - J'ai terminé l'Étape 2.2. J'ai refactorisé `bumpAnimation()` dans `HeroCard` et `EnemyCard` pour utiliser des `SequenceEffect`. Désormais, les entités effectuent un "Dash" vers leur cible (vers le haut pour le héros, vers le bas pour les ennemis) avec des courbes d'animation `easeOut` et `bounceOut` pour un rendu plus dynamique.
