@@ -74,18 +74,15 @@ class HerosDraftGame extends FlameGame {
     )..priority = -100);
   }
 
-  /// Déclenche un tremblement de la caméra
-  void shake({double intensity = 5.0, double duration = 0.1}) {
+  /// Déclenche un tremblement de la caméra plus marqué
+  void shake({double intensity = 10.0, double duration = 0.2}) {
     camera.viewfinder.add(
-      MoveEffect.by(
-        Vector2(intensity, intensity),
-        EffectController(
-          duration: duration / 4,
-          reverseDuration: duration / 4,
-          alternate: true,
-          repeatCount: 2,
-        ),
-      ),
+      SequenceEffect([
+        MoveEffect.by(Vector2(intensity, -intensity), EffectController(duration: duration / 4)),
+        MoveEffect.by(Vector2(-intensity * 2, intensity * 2), EffectController(duration: duration / 4)),
+        MoveEffect.by(Vector2(intensity * 2, -intensity), EffectController(duration: duration / 4)),
+        MoveEffect.by(Vector2(-intensity, intensity), EffectController(duration: duration / 4)),
+      ]),
     );
   }
 

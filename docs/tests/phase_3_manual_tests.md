@@ -7,20 +7,20 @@ Ce document liste les scénarios de test à réaliser pour valider l'implémenta
 ### 1.1 Barres de Vie (`HealthBarComponent`)
 - [x] **Visuel :** Vérifier que le Héros a une barre **verte** en bas de sa carte.
 - [x] **Visuel :** Vérifier que les Ennemis ont une barre **rouge** au-dessus de leur carte.
-- [ ] **Mise à jour :** Infliger des dégâts et vérifier que la barre diminue proportionnellement.
-- [ ] **Mise à jour :** Soigner le héros et vérifier que la barre remonte.
+- [x] **Mise à jour :** Infliger des dégâts et vérifier que la barre diminue proportionnellement.
+- [x] **Mise à jour :** Soigner le héros et vérifier que la barre remonte.
 
 ### 1.2 Intentions Ennemies (`Telegraphing`)
-- [ ] **Génération :** Au début du tour du joueur, vérifier qu'une icône flotte au-dessus de chaque ennemi.
-- [ ] **Cohérence :** Vérifier que l'icône correspond à l'action (Épée = Attaque, Bouclier = Défense, Éclair = Buff).
-- [ ] **Exécution :** Pendant le tour ennemi, vérifier que l'ennemi exécute bien l'action annoncée (ex: si une épée de 10 était affichée, le joueur doit perdre 10 PV).
+- [x] **Génération :** Au début du tour du joueur, vérifier qu'une icône flotte au-dessus de chaque ennemi.
+- [x] **Cohérence :** Vérifier que l'icône correspond à l'action (Épée = Attaque, Bouclier = Défense, Éclair = Buff).
+- [x] **Exécution :** Pendant le tour ennemi, vérifier que l'ennemi exécute bien l'action annoncée (ex: si une épée de 10 était affichée, le joueur doit perdre 10 PV).
 
 ---
 
 ## 2. Le "Juice" (Animations)
 
 ### 2.1 Screen Shake
-- [ ] **Attaque Joueur :** Jouer une carte d'attaque. Vérifier qu'une **légère** secousse se produit.
+- [x] **Attaque Joueur :** Jouer une carte d'attaque. Vérifier qu'une **légère** secousse se produit.
 - [ ] **Dégâts subis :** Se laisser attaquer par un ennemi. Vérifier qu'une secousse **plus forte** se produit lors de l'impact.
 
 ### 2.2 Animations de "Dash"
