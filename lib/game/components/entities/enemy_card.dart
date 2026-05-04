@@ -36,7 +36,7 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
     this.data,
     this.isBoss = false,
     required this.onTapEnemy,
-  }) : super(size: Vector2(140, 200));
+  }) : super(size: Vector2(100, 140));
 
   @override
   Future<void> onLoad() async {
@@ -71,12 +71,12 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
     add(titleText);
 
     healthBar = HealthBarComponent(
-      barWidth: size.x - 20,
+      barWidth: 120, // Garder l'ancienne largeur fixe (140 - 20)
       barHeight: 16,
       currentPv: stats.currentPv.toDouble(),
       maxPv: stats.maxPv.toDouble(),
     );
-    healthBar.position = Vector2(10, -25); // Position initiale fonctionnelle
+    healthBar.position = Vector2((size.x - 120) / 2, -25); // Centré au-dessus de la carte
     add(healthBar);
 
     // Génère l'intention initiale manuellement pour éviter les soucis de synchronisation
@@ -95,15 +95,15 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
     add(intentionIndicator);
 
     armorBadge = StatBadge(type: StatType.armor, value: '${stats.armure}');
-    armorBadge.position = Vector2(size.x, 0);
+    armorBadge.position = Vector2(-15, 20);
     add(armorBadge);
 
     attackBadge = StatBadge(type: StatType.attack, value: '${stats.attaque}');
-    attackBadge.position = Vector2(0, size.y);
+    attackBadge.position = Vector2(-15, 55);
     add(attackBadge);
 
     manaBadge = StatBadge(type: StatType.mana, value: '${stats.currentMana}/${stats.maxMana}');
-    manaBadge.position = Vector2(size.x / 2, size.y - 25);
+    manaBadge.position = Vector2(-15, 90);
     add(manaBadge);
   }
 

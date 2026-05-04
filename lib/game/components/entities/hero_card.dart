@@ -18,7 +18,7 @@ class HeroCard extends PositionComponent with TapCallbacks, HasGameReference<Her
   late final StatBadge attackBadge;
   late final StatBadge manaBadge;
 
-  HeroCard(this.stats, {this.bonusAttack = 0}) : super(size: Vector2(160, 220));
+  HeroCard(this.stats, {this.bonusAttack = 0}) : super(size: Vector2(120, 160));
 
   @override
   Future<void> onLoad() async {
@@ -47,25 +47,25 @@ class HeroCard extends PositionComponent with TapCallbacks, HasGameReference<Her
     );
 
     healthBar = HealthBarComponent(
-      barWidth: size.x - 20,
+      barWidth: 140, // Garder l'ancienne largeur fixe (160 - 20)
       barHeight: 18,
       currentPv: stats.currentPv.toDouble(),
       maxPv: stats.maxPv.toDouble(),
       barColor: const Color(0xFF27AE60), // Green for player
     );
-    healthBar.position = Vector2(10, size.y + 10); // En dessous de la carte
+    healthBar.position = Vector2((size.x - 140) / 2, size.y + 10); // Centré en dessous de la carte
     add(healthBar);
 
     armorBadge = StatBadge(type: StatType.armor, value: '${stats.armure}');
-    armorBadge.position = Vector2(size.x, 0);
+    armorBadge.position = Vector2(-15, 20);
     add(armorBadge);
 
     attackBadge = StatBadge(type: StatType.attack, value: '${stats.attaque}');
-    attackBadge.position = Vector2(0, size.y);
+    attackBadge.position = Vector2(-15, 55);
     add(attackBadge);
 
     manaBadge = StatBadge(type: StatType.mana, value: '${stats.currentMana}/${stats.maxMana}');
-    manaBadge.position = Vector2(size.x / 2, size.y - 25);
+    manaBadge.position = Vector2(-15, 90);
     add(manaBadge);
 
     _refreshBadges();

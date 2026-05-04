@@ -74,4 +74,10 @@
 - feat: implémentation Étape 1
     - Repositionnement et Nettoyage de la Carte Joueur
         - J'ai terminé l'Étape 1. La carte du héros (`HeroCard`) est désormais centrée horizontalement en bas de l'écran. Le texte indiquant le nom de la classe a été supprimé de la carte pour épurer le visuel.
+- feat: implémentation Étape 2
+    - Redimensionnement des Cartes
+        - J'ai terminé l'Étape 2. La `HeroCard` est passée de `160x220` à `120x160` et les `EnemyCard` sont passées de `140x200` à `100x140`. Les barres de vie (ex: largeur fixe de 120 ou 140) ont été conservées avec leurs dimensions d'origine tout en étant correctement recentrées sur la nouvelle taille des cartes.
+- feat: implémentation Étape 3
+    - Réalignement des Badges de Statistiques
+        - J'ai terminé l'Étape 3. Les badges (Armure, Force, Mana) sont maintenant alignés verticalement le long du bord gauche de chaque carte (Ennemis et Héros), espacés proprement, ce qui unifie l'interface visuelle.
 
