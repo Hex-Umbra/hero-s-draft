@@ -93,6 +93,15 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         // Résolution des effets
         ref.read(runProvider.notifier).consumeResource(mana: card.currentCost);
         
+        // Animation du héros selon le type de carte
+        if (card.data.type == CardType.attack) {
+          _game.heroCard?.dashAnimation();
+        } else {
+          // Déterminer le type d'icône (défense ou buff générique)
+          bool hasArmor = card.data.effects.any((e) => e.type == 'armor');
+          _game.heroCard?.buffAnimation(hasArmor ? 'defend' : 'buff');
+        }
+
         for (var effect in card.data.effects) {
           if (effect.type == 'damage') {
              if (card.data.target == CardTarget.singleEnemy && target != null) {

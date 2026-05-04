@@ -24,9 +24,9 @@ Ce document liste les scénarios de test à réaliser pour valider l'implémenta
 - [ ] **Dégâts subis :** Se laisser attaquer par un ennemi. Vérifier qu'une secousse **plus forte** se produit lors de l'impact.
 
 ### 2.2 Animations de "Dash"
-- [ ] **Héros :** Jouer une carte d'attaque. Vérifier que le Héros fait un bond rapide vers le haut avant de revenir.
-- [ ] **Ennemis :** Pendant le tour ennemi, vérifier que l'ennemi qui attaque fait un bond vers le bas (vers le héros).
-- [ ] **Fluidité :** Vérifier l'effet "rebond" (`bounceOut`) lors du retour à la position initiale.
+- [x] **Héros :** Jouer une carte d'attaque. Vérifier que le Héros fait un bond rapide vers le haut avant de revenir.
+- [x] **Ennemis :** Pendant le tour ennemi, vérifier que l'ennemi qui attaque fait un bond vers le bas (vers le héros).
+- [x] **Fluidité :** Vérifier l'effet "rebond" (`bounceOut`) lors du retour à la position initiale.
 
 ### 2.3 Floating Text
 - [ ] **Trajectoire :** Vérifier que les nombres de dégâts/soins s'envolent en arc de cercle aléatoire.

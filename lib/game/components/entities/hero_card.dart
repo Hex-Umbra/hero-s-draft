@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flame/effects.dart';
 import '../../../data/models/entity_stats.dart';
 import '../floating_text.dart';
+import '../effect_icon.dart';
 import 'stat_badge.dart';
 import 'health_bar.dart';
 import '../../heros_draft_game.dart';
@@ -142,5 +143,22 @@ class HeroCard extends PositionComponent with TapCallbacks, HasGameReference<Her
         ),
       ]),
     );
+  }
+
+  void buffAnimation(String iconType) {
+    // Effet de concentration/respiration
+    add(
+      ScaleEffect.by(
+        Vector2.all(1.05),
+        EffectController(duration: 0.1, alternate: true),
+      ),
+    );
+
+    // Faire popper l'icône
+    final effectIcon = EffectIcon(
+      iconType: iconType,
+      position: Vector2(size.x / 2, 0), // Milieu haut
+    );
+    add(effectIcon);
   }
 }
