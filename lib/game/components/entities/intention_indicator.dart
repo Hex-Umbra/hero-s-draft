@@ -8,7 +8,7 @@ class IntentionIndicator extends PositionComponent with HasPaint {
   late final TextComponent _iconText;
   late final TextComponent _valueText;
 
-  IntentionIndicator() : super(size: Vector2(70, 30));
+  IntentionIndicator({EnemyIntent? initialIntent}) : _intent = initialIntent, super(size: Vector2(70, 30));
 
   @override
   Future<void> onLoad() async {

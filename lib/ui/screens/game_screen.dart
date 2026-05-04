@@ -95,7 +95,6 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         
         for (var effect in card.data.effects) {
           if (effect.type == 'damage') {
-             _game.shake(intensity: 4, duration: 0.1); // Secousse légère lors d'une attaque réussie
              if (card.data.target == CardTarget.singleEnemy && target != null) {
                 target.updateStats(target.stats.takeDamage(effect.value + runState.effectiveAttaque));
                 if (target.stats.currentPv <= 0) {

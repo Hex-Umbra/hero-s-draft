@@ -78,7 +78,18 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
     healthBar.position = Vector2(10, -25); // Position initiale fonctionnelle
     add(healthBar);
 
-    intentionIndicator = IntentionIndicator();
+    // Génère l'intention initiale manuellement pour éviter les soucis de synchronisation
+    final random = Random();
+    final roll = random.nextInt(100);
+    if (roll < 60) {
+      currentIntent = EnemyIntent(type: IntentType.attack, value: stats.attaque);
+    } else if (roll < 90) {
+      currentIntent = EnemyIntent(type: IntentType.defend, value: 5 + random.nextInt(6));
+    } else {
+      currentIntent = EnemyIntent(type: IntentType.buff, value: 2);
+    }
+
+    intentionIndicator = IntentionIndicator(initialIntent: currentIntent);
     intentionIndicator.position = Vector2(size.x / 2, -55); // Juste au-dessus de la barre de vie
     add(intentionIndicator);
 
@@ -93,8 +104,6 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
     manaBadge = StatBadge(type: StatType.mana, value: '${stats.currentMana}/${stats.maxMana}');
     manaBadge.position = Vector2(size.x / 2, size.y - 25);
     add(manaBadge);
-
-    rollIntent();
   }
 
   void rollIntent() {

@@ -1,7 +1,6 @@
 import 'dart:math';
 import 'package:flame/game.dart';
 import 'package:flame/components.dart';
-import 'package:flame/effects.dart';
 import 'package:flutter/material.dart';
 import 'components/card_component.dart';
 import 'components/entities/hero_card.dart';
@@ -72,22 +71,11 @@ class HerosDraftGame extends FlameGame {
       sprite: bgSprite,
       size: size,
     )..priority = -100);
-  }
+    }
 
-  /// Déclenche un tremblement de la caméra plus marqué
-  void shake({double intensity = 10.0, double duration = 0.2}) {
-    camera.viewfinder.add(
-      SequenceEffect([
-        MoveEffect.by(Vector2(intensity, -intensity), EffectController(duration: duration / 4)),
-        MoveEffect.by(Vector2(-intensity * 2, intensity * 2), EffectController(duration: duration / 4)),
-        MoveEffect.by(Vector2(intensity * 2, -intensity), EffectController(duration: duration / 4)),
-        MoveEffect.by(Vector2(-intensity, intensity), EffectController(duration: duration / 4)),
-      ]),
-    );
-  }
-
-  void highlightEnemy(EnemyCard? enemy) {
+    void highlightEnemy(EnemyCard? enemy) {
     if (highlightedEnemy != enemy) {
+
       highlightedEnemy?.setSelection(false);
       highlightedEnemy = enemy;
       highlightedEnemy?.setSelection(true);
@@ -360,7 +348,6 @@ class HerosDraftGame extends FlameGame {
 
       switch (intent.type) {
         case IntentType.attack:
-          shake(intensity: 12, duration: 0.15); // Secousse forte quand le joueur est touché
           onPlayerTakeDamage(intent.value);
           break;
         case IntentType.defend:
