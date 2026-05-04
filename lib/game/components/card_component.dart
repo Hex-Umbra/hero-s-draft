@@ -42,8 +42,8 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
   bool isDragging = false;
   
   // Paramètres visuels
-  static const double cardWidth = 140;
-  static const double cardHeight = 200;
+  static const double cardWidth = 100;
+  static const double cardHeight = 140;
 
   final Paint backgroundPaint = Paint()..color = const Color(0xFF2A2A3D);
   final Paint borderPaint = Paint()

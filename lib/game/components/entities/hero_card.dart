@@ -22,8 +22,8 @@ class HeroCard extends PositionComponent with TapCallbacks, HasGameReference<Her
   Future<void> onLoad() async {
     anchor = Anchor.center;
 
-    // Position par défaut au centre en bas pour le joueur
-    position = Vector2(game.size.x / 2, game.size.y - 150);
+    // Position par défaut au centre pour le joueur
+    position = Vector2(game.size.x / 2, game.size.y / 2 + 120);
 
     // Visuel Sprite
     add(

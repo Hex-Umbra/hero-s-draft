@@ -20,7 +20,6 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
   final void Function(EnemyCard) onTapEnemy;
 
   late final RectangleComponent borderInfo;
-  late final TextComponent titleText;
   
   late final HealthBarComponent healthBar;
   late final IntentionIndicator intentionIndicator;
@@ -58,17 +57,6 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
         ..strokeWidth = 2,
     );
     add(borderInfo);
-
-    String title = data?.name ?? (isBoss ? 'BOSS' : 'ENNEMI');
-    titleText = TextComponent(
-      text: title,
-      textRenderer: TextPaint(
-        style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
-      ),
-      anchor: Anchor.topCenter,
-      position: Vector2(size.x / 2, 10),
-    );
-    add(titleText);
 
     healthBar = HealthBarComponent(
       barWidth: 120, // Garder l'ancienne largeur fixe (140 - 20)

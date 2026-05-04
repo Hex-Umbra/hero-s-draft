@@ -256,9 +256,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           // Player Health Bar (Global HUD)
           if (!runState.isDead && !_showDraft)
             Positioned(
-              bottom: 100, // Au-dessus du bouton Fin de Tour
-              left: 100, // Laisse de la place pour la pioche/défausse
-              right: 100,
+              bottom: 20, 
+              left: 140, // Entre la pioche et le centre
+              width: 150, // Largeur fixe
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [

@@ -184,7 +184,7 @@ class HerosDraftGame extends FlameGame {
 
     if (heroCard == null) {
       heroCard = HeroCard(state.heroStats, bonusAttack: bonusAtt);
-      heroCard!.position = Vector2(size.x / 2, size.y - 150);
+      heroCard!.position = Vector2(size.x / 2, size.y / 2 + 120);
       add(heroCard!);
     } else {
       heroCard!.updateStats(state.heroStats, bonusAttack: bonusAtt);
