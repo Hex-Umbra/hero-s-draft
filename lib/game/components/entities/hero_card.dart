@@ -6,14 +6,12 @@ import '../../../data/models/entity_stats.dart';
 import '../floating_text.dart';
 import '../effect_icon.dart';
 import 'stat_badge.dart';
-import 'health_bar.dart';
 import '../../heros_draft_game.dart';
 
 class HeroCard extends PositionComponent with TapCallbacks, HasGameReference<HerosDraftGame> {
   EntityStats stats;
   int bonusAttack;
   
-  late final HealthBarComponent healthBar;
   late final StatBadge armorBadge;
   late final StatBadge attackBadge;
   late final StatBadge manaBadge;
@@ -46,16 +44,6 @@ class HeroCard extends PositionComponent with TapCallbacks, HasGameReference<Her
       ),
     );
 
-    healthBar = HealthBarComponent(
-      barWidth: 140, // Garder l'ancienne largeur fixe (160 - 20)
-      barHeight: 18,
-      currentPv: stats.currentPv.toDouble(),
-      maxPv: stats.maxPv.toDouble(),
-      barColor: const Color(0xFF27AE60), // Green for player
-    );
-    healthBar.position = Vector2((size.x - 140) / 2, size.y + 10); // Centré en dessous de la carte
-    add(healthBar);
-
     armorBadge = StatBadge(type: StatType.armor, value: '${stats.armure}');
     armorBadge.position = Vector2(-15, 20);
     add(armorBadge);
@@ -72,7 +60,6 @@ class HeroCard extends PositionComponent with TapCallbacks, HasGameReference<Her
   }
 
   void _refreshBadges() {
-    healthBar.updateValues(stats.currentPv.toDouble(), stats.maxPv.toDouble());
     armorBadge.updateValue('${stats.armure}');
     
     if (bonusAttack > 0) {

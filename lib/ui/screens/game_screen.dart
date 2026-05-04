@@ -252,6 +252,33 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                 },
               ),
             ),
+            
+          // Player Health Bar (Global HUD)
+          if (!runState.isDead && !_showDraft)
+            Positioned(
+              bottom: 100, // Au-dessus du bouton Fin de Tour
+              left: 100, // Laisse de la place pour la pioche/défausse
+              right: 100,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '${runState.heroStats.currentPv} / ${runState.heroStats.maxPv} PV',
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  const SizedBox(height: 4),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: LinearProgressIndicator(
+                      value: runState.heroStats.currentPv / runState.heroStats.maxPv,
+                      minHeight: 20,
+                      backgroundColor: Colors.black54,
+                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF27AE60)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           
           // HUD Fin de Tour
           if (!runState.isDead && !_showDraft)
