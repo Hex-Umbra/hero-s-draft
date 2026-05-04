@@ -22,7 +22,7 @@ C'est le cœur de l'expérience. Le joueur est plongé sur le champ de bataille 
     *   *Exemple (Paladin)* : Le joueur peut générer un gros bouclier (+15 armure) ou s'enrager pour augmenter ses dégâts en fonction de ses PV max.
     *   *Exemple (Mage)* : Le joueur peut déclencher une explosion de zone (Nova) ou cibler un ennemi avec la Foudre.
     *   *Exemple (Berserker)* : Le joueur sacrifie ses propres PV pour du vol de vie, ou brise l'armure d'une cible précise.
-*   **La Gestion du Temps** : L'expérience se déroule au tour par tour. Au centre en bas, un grand bouton "Fin de Tour" permet au joueur de passer la main aux ennemis une fois ses actions terminées. Passer son tour diminue les temps de recharge de ses compétences.
+*   **La Gestion du Temps** : L'expérience se déroule au tour par tour. À droite de l'écran, un grand bouton "Fin de Tour" permet au joueur de passer la main aux ennemis une fois ses actions terminées. Passer son tour diminue les temps de recharge de ses compétences.
 
 ## 4. L'Écran de Récompense (Le Draft - Évolution du Héros)
 *   **Déclencheur** : Lorsque le joueur réussit à tuer tous les ennemis présents à l'écran, le combat s'arrête instantanément.

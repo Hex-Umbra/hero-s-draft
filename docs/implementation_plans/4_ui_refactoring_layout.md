@@ -38,5 +38,5 @@ Repenser la disposition spatiale des éléments de jeu sur l'écran de combat po
 ### 4.2 Intégration globale dans l'Interface Flutter
 *   **Composant :** `GameScreen`
 *   **Action :** Créer un nouveau widget Flutter pour la barre de vie du joueur.
-*   **Positionnement :** L'intégrer dans le HUD principal (avec les widgets Flutter), alignée avec les piles de pioche/défausse et le bouton "Fin de Tour" en bas de l'écran.
+*   **Positionnement :** L'intégrer dans le HUD principal (avec les widgets Flutter), le bouton "Fin de Tour" étant désormais placé au milieu à droite de l'écran.
 *   **Dimensions :** Cette nouvelle barre devra être plus imposante et s'adapter dynamiquement à la largeur de l'écran ou de sa zone allouée pour une lecture immédiate de l'état de santé.

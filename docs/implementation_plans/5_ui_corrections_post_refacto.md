@@ -18,8 +18,8 @@ Ajuster l'interface utilisateur suite aux retours de la Phase 4 pour garantir un
 ## Étape 2 : Relocalisation et Redimensionnement de la Barre de Vie
 ### 2.1 Intégration de la barre de vie dans le bandeau inférieur
 *   **Composant :** `GameScreen`
-*   **Action :** Déplacer le widget Flutter de la barre de vie du joueur. Actuellement flottant et très large au-dessus du bouton "Fin de Tour", il sera inséré horizontalement au même niveau que les autres éléments du HUD inférieur (Pioche, Fin de Tour, Défausse).
-*   **Positionnement :** Placer la barre entre l'indicateur de "Pioche" (à gauche) et le bouton central "Fin de Tour". La largeur de la barre de vie sera fixée (ex: 150 pixels) pour s'adapter à cet espace sans déborder.
+*   **Action :** Déplacer le widget Flutter de la barre de vie du joueur. Actuellement flottant et très large, il sera inséré horizontalement au même niveau que les autres éléments du HUD inférieur (Pioche, Défausse).
+*   **Positionnement :** Placer la barre entre l'indicateur de "Pioche" (à gauche) et l'espace central. La largeur de la barre de vie sera fixée (ex: 150 pixels) pour s'adapter à cet espace sans déborder.
 
 ---
 

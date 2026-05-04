@@ -283,9 +283,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           // HUD Fin de Tour
           if (!runState.isDead && !_showDraft)
             Positioned(
-              bottom: 40,
-              left: 0,
-              right: 0,
+              right: 20,
+              top: 0,
+              bottom: 0,
               child: Center(
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
