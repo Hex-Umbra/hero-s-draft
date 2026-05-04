@@ -143,6 +143,4 @@ class HeroCard extends PositionComponent with TapCallbacks, HasGameReference<Her
       ]),
     );
   }
-
-  void bumpAnimation() => dashAnimation();
 }

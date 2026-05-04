@@ -7,6 +7,7 @@ import '../../../data/models/entity_stats.dart';
 import '../../../models/data/enemy_data.dart';
 import '../../../models/enemy_intent.dart';
 import '../floating_text.dart';
+import '../effect_icon.dart';
 import 'stat_badge.dart';
 import 'health_bar.dart';
 import 'intention_indicator.dart';
@@ -186,7 +187,22 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
     );
   }
 
-  void bumpAnimation() => dashAnimation();
+  void buffAnimation(IntentType type) {
+    // Effet de concentration/respiration
+    add(
+      ScaleEffect.by(
+        Vector2.all(1.05),
+        EffectController(duration: 0.1, alternate: true),
+      ),
+    );
+
+    // Faire popper l'icône
+    final effectIcon = EffectIcon(
+      iconType: type == IntentType.defend ? 'defend' : 'buff',
+      position: Vector2(size.x / 2, 0), // Milieu haut
+    );
+    add(effectIcon);
+  }
 
   @override
   void onTapDown(TapDownEvent event) {

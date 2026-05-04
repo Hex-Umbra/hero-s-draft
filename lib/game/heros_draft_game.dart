@@ -273,7 +273,7 @@ class HerosDraftGame extends FlameGame {
       if (enemyCards.isEmpty) return;
       currentPhase = TurnPhase.enemy;
 
-      heroCard?.bumpAnimation();
+      heroCard?.dashAnimation();
       await Future.delayed(const Duration(milliseconds: 200));
 
       if (skill.effectType == 'damage_aoe') {
@@ -343,7 +343,12 @@ class HerosDraftGame extends FlameGame {
       final intent = enemy.currentIntent;
       if (intent == null) continue;
 
-      enemy.bumpAnimation();
+      if (intent.type == IntentType.attack) {
+        enemy.dashAnimation();
+      } else {
+        enemy.buffAnimation(intent.type);
+      }
+      
       await Future.delayed(const Duration(milliseconds: 200));
 
       switch (intent.type) {
