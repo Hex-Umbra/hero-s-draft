@@ -5,12 +5,14 @@ import 'package:flutter/material.dart';
 
 class FloatingText extends TextComponent with HasPaint {
   final bool isCritical;
+  final bool isUpward;
 
   FloatingText({
     required String text,
     required Color color,
     required Vector2 position,
     this.isCritical = false,
+    this.isUpward = true,
   }) : super(
          text: text,
          position: position,
@@ -47,7 +49,11 @@ class FloatingText extends TextComponent with HasPaint {
     
     // Trajectoire aléatoire en arc de cercle
     final double driftX = (random.nextDouble() - 0.5) * 80; // Entre -40 et 40
-    final double driftY = -60 - random.nextDouble() * 40;   // Entre -60 et -100
+    double driftY = 60 + random.nextDouble() * 40; // Base positive (vers le bas)
+    
+    if (isUpward) {
+      driftY = -driftY; // Inverser pour aller vers le haut
+    }
 
     add(
       MoveEffect.by(

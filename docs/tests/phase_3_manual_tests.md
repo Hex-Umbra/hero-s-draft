@@ -30,7 +30,7 @@ Ce document liste les scénarios de test à réaliser pour valider l'implémenta
 
 ### 2.3 Floating Text
 - [ ] **Trajectoire :** Vérifier que les nombres de dégâts/soins s'envolent en arc de cercle aléatoire.
-- [ ] **Disparition :** Vérifier que le texte disparaît progressivement en fondu (`fade out`).
+- [x] **Disparition :** Vérifier que le texte disparaît progressivement en fondu (`fade out`).
 - [ ] **Critiques :** Si une carte inflige de gros dégâts (ou selon le flag `isCritical`), vérifier que le texte est plus gros et "pop" avec un effet de zoom.
 
 ---
@@ -38,18 +38,18 @@ Ce document liste les scénarios de test à réaliser pour valider l'implémenta
 ## 3. Interface Avancée
 
 ### 3.1 Bannières de Phase
-- [ ] **Transition :** Cliquer sur "Fin de Tour". Vérifier qu'une bannière **"TOUR ENNEMI"** apparaît au centre.
-- [ ] **Retour :** Après la riposte, vérifier qu'une bannière **"TOUR JOUEUR"** apparaît.
-- [ ] **Lisibilité :** Vérifier que le texte est bien centré et que l'overlay ne bloque pas les clics une fois disparu.
+- [x] **Transition :** Cliquer sur "Fin de Tour". Vérifier qu'une bannière **"TOUR ENNEMI"** apparaît au centre.
+- [x] **Retour :** Après la riposte, vérifier qu'une bannière **"TOUR JOUEUR"** apparaît.
+- [x] **Lisibilité :** Vérifier que le texte est bien centré et que l'overlay ne bloque pas les clics une fois disparu.
 
 ### 3.2 Système de Tooltips
-- [ ] **Cartes :** Maintenir un appui long sur une carte en main. Vérifier l'apparition d'un encadré détaillé (Nom, Effets détaillés).
-- [ ] **Statistiques :** Maintenir un appui long sur le badge d'Armure ou de Force. Vérifier que la description explique bien la statistique.
-- [ ] **Fermeture :** Relâcher l'appui. Vérifier que le tooltip disparaît immédiatement.
+- [x] **Cartes :** Maintenir un appui long sur une carte en main. Vérifier l'apparition d'un encadré détaillé (Nom, Effets détaillés).
+- [x] **Statistiques :** Maintenir un appui long sur le badge d'Armure ou de Force. Vérifier que la description explique bien la statistique.
+- [x] **Fermeture :** Relâcher l'appui. Vérifier que le tooltip disparaît immédiatement.
 
 ---
 
 ## Checklist Technique Finale
-- [ ] Aucun crash lors de l'utilisation prolongée.
-- [ ] `dart analyze` ne retourne aucune erreur.
-- [ ] Les animations ne ralentissent pas le jeu (performances stables).
+- [x] Aucun crash lors de l'utilisation prolongée.
+- [x] `dart analyze` ne retourne aucune erreur.
+- [x] Les animations ne ralentissent pas le jeu (performances stables).
