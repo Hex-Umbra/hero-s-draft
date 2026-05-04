@@ -16,14 +16,14 @@ class HeroCard extends PositionComponent with TapCallbacks, HasGameReference<Her
   late final StatBadge attackBadge;
   late final StatBadge manaBadge;
 
-  HeroCard(this.stats, {this.bonusAttack = 0}) : super(size: Vector2(120, 160));
+  HeroCard(this.stats, {this.bonusAttack = 0}) : super(size: Vector2(160, 220));
 
   @override
   Future<void> onLoad() async {
     anchor = Anchor.center;
 
     // Position par défaut au centre pour le joueur
-    position = Vector2(game.size.x / 2, game.size.y / 2 + 120);
+    position = Vector2(game.size.x / 2, game.size.y / 2 + 50);
 
     // Visuel Sprite
     add(
@@ -45,15 +45,15 @@ class HeroCard extends PositionComponent with TapCallbacks, HasGameReference<Her
     );
 
     armorBadge = StatBadge(type: StatType.armor, value: '${stats.armure}');
-    armorBadge.position = Vector2(-15, 20);
+    armorBadge.position = Vector2(-15, 30);
     add(armorBadge);
 
     attackBadge = StatBadge(type: StatType.attack, value: '${stats.attaque}');
-    attackBadge.position = Vector2(-15, 55);
+    attackBadge.position = Vector2(-15, 80);
     add(attackBadge);
 
     manaBadge = StatBadge(type: StatType.mana, value: '${stats.currentMana}/${stats.maxMana}');
-    manaBadge.position = Vector2(-15, 90);
+    manaBadge.position = Vector2(-15, 130);
     add(manaBadge);
 
     _refreshBadges();

@@ -258,7 +258,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             Positioned(
               bottom: 20, 
               left: 140, // Entre la pioche et le centre
-              width: 150, // Largeur fixe
+              width: 300, // Largeur augmentée
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [

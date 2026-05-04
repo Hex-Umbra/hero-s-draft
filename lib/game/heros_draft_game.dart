@@ -184,7 +184,7 @@ class HerosDraftGame extends FlameGame {
 
     if (heroCard == null) {
       heroCard = HeroCard(state.heroStats, bonusAttack: bonusAtt);
-      heroCard!.position = Vector2(size.x / 2, size.y / 2 + 120);
+      heroCard!.position = Vector2(size.x / 2, size.y / 2 + 50);
       add(heroCard!);
     } else {
       heroCard!.updateStats(state.heroStats, bonusAttack: bonusAtt);
@@ -200,7 +200,7 @@ class HerosDraftGame extends FlameGame {
     final enemyDataList = EncounterSystem.generateEnemiesForLevel(level, availableEnemies);
     bool isBoss = level > 0 && level % 10 == 0;
 
-    double spacing = 195.0; // 140 width + 44 (2*radius) + 11 (half radius margin)
+    double spacing = 210.0; // Augmenté pour la nouvelle taille des cartes
     double startX = (size.x / 2) - ((enemyDataList.length - 1) * (spacing / 2));
     
     for (int i = 0; i < enemyDataList.length; i++) {
@@ -218,7 +218,7 @@ class HerosDraftGame extends FlameGame {
         data: data,
         isBoss: isBoss,
         onTapEnemy: _handlePlayerTargeting,
-      )..position = Vector2(startX + (i * spacing), 250);
+      )..position = Vector2(startX + (i * spacing), 220);
       
       enemyCards.add(enemy);
       add(enemy);
