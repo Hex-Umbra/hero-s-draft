@@ -12,23 +12,20 @@ import '../../heros_draft_game.dart';
 class HeroCard extends PositionComponent with TapCallbacks, HasGameReference<HerosDraftGame> {
   EntityStats stats;
   int bonusAttack;
-  String className;
-  Color classColor;
   
-  late final TextComponent titleText;
   late final HealthBarComponent healthBar;
   late final StatBadge armorBadge;
   late final StatBadge attackBadge;
   late final StatBadge manaBadge;
 
-  HeroCard(this.stats, {this.bonusAttack = 0, required this.className, required this.classColor}) : super(size: Vector2(160, 220));
+  HeroCard(this.stats, {this.bonusAttack = 0}) : super(size: Vector2(160, 220));
 
   @override
   Future<void> onLoad() async {
     anchor = Anchor.center;
 
     // Position par défaut au centre en bas pour le joueur
-    position = Vector2(250, 500);
+    position = Vector2(game.size.x / 2, game.size.y - 150);
 
     // Visuel Sprite
     add(
@@ -48,16 +45,6 @@ class HeroCard extends PositionComponent with TapCallbacks, HasGameReference<Her
           ..strokeWidth = 2,
       ),
     );
-
-    titleText = TextComponent(
-      text: className.toUpperCase(),
-      textRenderer: TextPaint(
-        style: TextStyle(color: classColor, fontSize: 16, fontWeight: FontWeight.bold),
-      ),
-      anchor: Anchor.topCenter,
-      position: Vector2(size.x / 2, 10),
-    );
-    add(titleText);
 
     healthBar = HealthBarComponent(
       barWidth: size.x - 20,

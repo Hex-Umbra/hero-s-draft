@@ -68,3 +68,10 @@
 - feat: implémentation Étape 3.2
     - Système de Tooltips
         - J'ai terminé l'Étape 3.2. J'ai implémenté un système de tooltips déclenché par un appui long (`onLongTapDown` via `TapCallbacks`) sur les cartes (`CardComponent`) et les badges de statistiques (`StatBadge`). Un overlay Flutter dynamique affiche désormais le nom, la description et le détail des effets des objets survolés. J'ai validé l'absence d'erreurs via `dart analyze`.
+
+## Phase 4 - Refactoring du Layout UI
+
+- feat: implémentation Étape 1
+    - Repositionnement et Nettoyage de la Carte Joueur
+        - J'ai terminé l'Étape 1. La carte du héros (`HeroCard`) est désormais centrée horizontalement en bas de l'écran. Le texte indiquant le nom de la classe a été supprimé de la carte pour épurer le visuel.
+

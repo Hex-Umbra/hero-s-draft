@@ -183,18 +183,7 @@ class HerosDraftGame extends FlameGame {
     int bonusAtt = state.effectiveAttaque - state.heroStats.attaque;
 
     if (heroCard == null) {
-      Color cColor = Colors.blue;
-      String cName = 'Paladin';
-      if (state.heroClassId == 'berserker') {
-        cColor = Colors.red;
-        cName = 'Berserker';
-      }
-      if (state.heroClassId == 'mage') {
-        cColor = Colors.purple;
-        cName = 'Mage';
-      }
-
-      heroCard = HeroCard(state.heroStats, bonusAttack: bonusAtt, className: cName, classColor: cColor);
+      heroCard = HeroCard(state.heroStats, bonusAttack: bonusAtt);
       heroCard!.position = Vector2(size.x / 2, size.y - 150);
       add(heroCard!);
     } else {
