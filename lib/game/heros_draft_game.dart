@@ -63,7 +63,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
     // Reset previous card if it exists
     if (hoveredCard != null && !hoveredCard!.isDragging && hoveredCard != focusedCard) {
       hoveredCard!.isHovered = false;
-      hoveredCard!.priority = 10;
+      hoveredCard!.priority = hoveredCard!.basePriority;
       hoveredCard!.add(
         ScaleEffect.to(
           Vector2.all(1.0),
@@ -93,7 +93,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
     // Reset previous focus
     if (focusedCard != null) {
       focusedCard!.isHovered = false;
-      focusedCard!.priority = 10;
+      focusedCard!.priority = focusedCard!.basePriority;
       focusedCard!.add(
         MoveEffect.to(
           focusedCard!.originalPosition,
@@ -247,7 +247,10 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
     final Vector2 centerPoint = Vector2(size.x / 2, size.y + radius - 80);
 
     for (int i = 0; i < count; i++) {
-      if (handCards[i].isDragging) continue; // Ne pas animer une carte en cours de drag
+      final card = handCards[i];
+      card.basePriority = 10 + i; // Assigne une priorité basée sur l'index
+      
+      if (card.isDragging) continue;
 
       final double angle = startAngle + (i * angleStep);
       
@@ -256,10 +259,15 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
       final double y = centerPoint.y - radius * cos(angle);
 
       // On oriente la carte
-      handCards[i].position = Vector2(x, y);
-      handCards[i].angle = angle;
-      handCards[i].originalPosition = Vector2(x, y);
-      handCards[i].originalAngle = angle;
+      card.position = Vector2(x, y);
+      card.angle = angle;
+      card.originalPosition = Vector2(x, y);
+      card.originalAngle = angle;
+      
+      // Si la carte n'est pas mise en avant (hover/focus/drag), on applique sa basePriority
+      if (card != hoveredCard && card != focusedCard && !card.isDragging) {
+        card.priority = card.basePriority;
+      }
     }
   }
 

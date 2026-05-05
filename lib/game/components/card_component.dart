@@ -38,6 +38,7 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
   
   Vector2 originalPosition = Vector2.zero();
   double originalAngle = 0;
+  int basePriority = 10;
   
   bool isDragging = false;
   @override
@@ -230,6 +231,6 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
       ),
     );
     
-    priority = 10;
+    priority = basePriority;
   }
 }
