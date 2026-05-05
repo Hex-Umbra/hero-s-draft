@@ -151,8 +151,8 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
     game.setFocusedCard(this); 
     priority = 200; 
     
-    originalPosition = position.clone();
-    originalAngle = angle;
+    // On ne réinitialise plus originalPosition et originalAngle ici
+    // car ils doivent conserver les valeurs du fan layout
     
     angle = 0;
     scale = Vector2.all(1.25); 
@@ -210,6 +210,7 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
   void onDragEnd(DragEndEvent event) {
     super.onDragEnd(event);
     isDragging = false;
+    game.setFocusedCard(null); // On enlève le focus systématiquement
     
     if (_isHoveringCancelZone) {
       _returnToHand();
@@ -235,6 +236,7 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
   void onDragCancel(DragCancelEvent event) {
     super.onDragCancel(event);
     isDragging = false;
+    game.setFocusedCard(null);
     _returnToHand();
     game.highlightEnemy(null);
   }
