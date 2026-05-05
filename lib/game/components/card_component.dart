@@ -144,24 +144,39 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
     game.setFocusedCard(this);
   }
 
+  void _clearEffects() {
+    final effects = children.whereType<Effect>().toList();
+    if (effects.isNotEmpty) {
+      removeAll(effects);
+    }
+  }
+
   @override
   void onDragStart(DragStartEvent event) {
     super.onDragStart(event);
-    removeAll(children.whereType<Effect>());
     isDragging = true;
-    game.setFocusedCard(this); 
+    
+    // Nettoie proprement le focus/hover au niveau du jeu,
+    // (le flag isDragging = true empêchera setFocusedCard d'ajouter une animation de retour)
+    if (game.focusedCard == this) {
+      game.setFocusedCard(null);
+    }
+    if (game.hoveredCard == this) {
+      game.setHoveredCard(null);
+    }
+    
+    _clearEffects();
     priority = 200; 
     
-    // On ne réinitialise plus originalPosition et originalAngle ici
-    // car ils doivent conserver les valeurs du fan layout
-    
+    // La carte se remet droite
     angle = 0;
     scale = Vector2.all(1.25); 
   }
 
   @override
   void onDragUpdate(DragUpdateEvent event) {
-    position += event.localDelta;
+    // Utiliser canvasDelta évite les distorsions si l'échelle (scale) est modifiée
+    position += event.canvasDelta;
     
     // Feedback visuel de zone de sécurité (annulation)
     bool isInCancelZone = position.y > game.size.y - 220;
@@ -178,7 +193,7 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
   }
 
   void _applyCancelZoneFeedback(bool isCancelling) {
-    removeAll(children.whereType<Effect>());
+    _clearEffects();
     if (isCancelling) {
       // Effet d'annulation : plus petit, transparent, bordure grise
       add(ScaleEffect.to(Vector2.all(0.9), EffectController(duration: 0.1)));
@@ -262,7 +277,7 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
     costText.textRenderer = TextPaint(style: const TextStyle(color: Colors.lightBlueAccent, fontSize: 24, fontWeight: FontWeight.bold));
     descriptionText.textRenderer = TextPaint(style: const TextStyle(color: Colors.white70, fontSize: 14));
 
-    removeAll(children.whereType<Effect>());
+    _clearEffects();
 
     add(
       MoveEffect.to(
