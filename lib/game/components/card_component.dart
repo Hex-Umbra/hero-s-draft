@@ -147,6 +147,7 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
   @override
   void onDragStart(DragStartEvent event) {
     super.onDragStart(event);
+    removeAll(children.whereType<Effect>());
     isDragging = true;
     game.setFocusedCard(this); 
     priority = 200; 
@@ -177,6 +178,7 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
   }
 
   void _applyCancelZoneFeedback(bool isCancelling) {
+    removeAll(children.whereType<Effect>());
     if (isCancelling) {
       // Effet d'annulation : plus petit, transparent, bordure grise
       add(ScaleEffect.to(Vector2.all(0.9), EffectController(duration: 0.1)));
@@ -259,6 +261,8 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
     nameText.textRenderer = TextPaint(style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold));
     costText.textRenderer = TextPaint(style: const TextStyle(color: Colors.lightBlueAccent, fontSize: 24, fontWeight: FontWeight.bold));
     descriptionText.textRenderer = TextPaint(style: const TextStyle(color: Colors.white70, fontSize: 14));
+
+    removeAll(children.whereType<Effect>());
 
     add(
       MoveEffect.to(

@@ -61,29 +61,35 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
     if (hoveredCard == card) return;
 
     // Reset previous card if it exists
-    if (hoveredCard != null && !hoveredCard!.isDragging && hoveredCard != focusedCard) {
+    if (hoveredCard != null && hoveredCard != focusedCard) {
       hoveredCard!.isHovered = false;
       hoveredCard!.priority = hoveredCard!.basePriority;
-      hoveredCard!.add(
-        ScaleEffect.to(
-          Vector2.all(1.0),
-          EffectController(duration: 0.1, curve: Curves.easeIn),
-        ),
-      );
+      hoveredCard!.removeAll(hoveredCard!.children.whereType<Effect>());
+      if (!hoveredCard!.isDragging) {
+        hoveredCard!.add(
+          ScaleEffect.to(
+            Vector2.all(1.0),
+            EffectController(duration: 0.1, curve: Curves.easeIn),
+          ),
+        );
+      }
     }
 
     hoveredCard = card;
 
     // Set new hovered card
-    if (hoveredCard != null && !hoveredCard!.isDragging && hoveredCard != focusedCard) {
+    if (hoveredCard != null && hoveredCard != focusedCard) {
       hoveredCard!.isHovered = true;
       hoveredCard!.priority = 100;
-      hoveredCard!.add(
-        ScaleEffect.to(
-          Vector2.all(1.2),
-          EffectController(duration: 0.1, curve: Curves.easeOut),
-        ),
-      );
+      hoveredCard!.removeAll(hoveredCard!.children.whereType<Effect>());
+      if (!hoveredCard!.isDragging) {
+        hoveredCard!.add(
+          ScaleEffect.to(
+            Vector2.all(1.2),
+            EffectController(duration: 0.1, curve: Curves.easeOut),
+          ),
+        );
+      }
     }
   }
 
@@ -94,18 +100,21 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
     if (focusedCard != null) {
       focusedCard!.isHovered = false;
       focusedCard!.priority = focusedCard!.basePriority;
-      focusedCard!.add(
-        MoveEffect.to(
-          focusedCard!.originalPosition,
-          EffectController(duration: 0.15, curve: Curves.easeIn),
-        ),
-      );
-      focusedCard!.add(
-        ScaleEffect.to(
-          Vector2.all(1.0),
-          EffectController(duration: 0.15, curve: Curves.easeIn),
-        ),
-      );
+      focusedCard!.removeAll(focusedCard!.children.whereType<Effect>());
+      if (!focusedCard!.isDragging) {
+        focusedCard!.add(
+          MoveEffect.to(
+            focusedCard!.originalPosition,
+            EffectController(duration: 0.15, curve: Curves.easeIn),
+          ),
+        );
+        focusedCard!.add(
+          ScaleEffect.to(
+            Vector2.all(1.0),
+            EffectController(duration: 0.15, curve: Curves.easeIn),
+          ),
+        );
+      }
     }
 
     focusedCard = card;
@@ -114,18 +123,21 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
     if (focusedCard != null) {
       focusedCard!.isHovered = true;
       focusedCard!.priority = 150; // Plus haut que le hover simple
-      focusedCard!.add(
-        MoveEffect.to(
-          focusedCard!.originalPosition + Vector2(0, -60), // Monte plus haut
-          EffectController(duration: 0.2, curve: Curves.easeOut),
-        ),
-      );
-      focusedCard!.add(
-        ScaleEffect.to(
-          Vector2.all(1.25), // Légèrement plus grand que le hover
-          EffectController(duration: 0.2, curve: Curves.easeOut),
-        ),
-      );
+      focusedCard!.removeAll(focusedCard!.children.whereType<Effect>());
+      if (!focusedCard!.isDragging) {
+        focusedCard!.add(
+          MoveEffect.to(
+            focusedCard!.originalPosition + Vector2(0, -60), // Monte plus haut
+            EffectController(duration: 0.2, curve: Curves.easeOut),
+          ),
+        );
+        focusedCard!.add(
+          ScaleEffect.to(
+            Vector2.all(1.25), // Légèrement plus grand que le hover
+            EffectController(duration: 0.2, curve: Curves.easeOut),
+          ),
+        );
+      }
     }
   }
 
@@ -250,22 +262,24 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
       final card = handCards[i];
       card.basePriority = 10 + i; // Assigne une priorité basée sur l'index
       
-      if (card.isDragging) continue;
-
       final double angle = startAngle + (i * angleStep);
       
       // Position sur le cercle
       final double x = centerPoint.x + radius * sin(angle);
       final double y = centerPoint.y - radius * cos(angle);
 
-      // On oriente la carte
-      card.position = Vector2(x, y);
-      card.angle = angle;
+      // On sauvegarde TOUJOURS la position théorique dans la main
       card.originalPosition = Vector2(x, y);
       card.originalAngle = angle;
+
+      if (card.isDragging) continue;
+
+      // On n'oriente physiquement la carte que si elle n'est pas drag
+      card.position = Vector2(x, y);
+      card.angle = angle;
       
-      // Si la carte n'est pas mise en avant (hover/focus/drag), on applique sa basePriority
-      if (card != hoveredCard && card != focusedCard && !card.isDragging) {
+      // Si la carte n'est pas mise en avant (hover/focus), on applique sa basePriority
+      if (card != hoveredCard && card != focusedCard) {
         card.priority = card.basePriority;
       }
     }
