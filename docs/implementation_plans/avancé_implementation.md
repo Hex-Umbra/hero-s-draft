@@ -83,8 +83,7 @@
 - feat: implémentation Étape 4
     - Externalisation de la Barre de Vie du Joueur (HUD)
         - J'ai terminé l'Étape 4. Le composant Flame `HealthBarComponent` a été complètement retiré de la carte du héros (`HeroCard`). À la place, une nouvelle barre de progression Flutter dynamique et plus large a été intégrée directement dans le HUD principal de `GameScreen`, juste au-dessus du bouton "Fin de Tour". Elle est liée à l'état global Riverpod (`runState.heroStats`) pour se mettre à jour instantanément.
-- feat: implémentation Étape 5
-    - Espacement Dynamique des Cartes en Main
+- feat: Espacement Dynamique des Cartes en Main
         - J'ai terminé l'Étape 5. J'ai implémenté un système de calcul dynamique de l'angle d'espacement (`angleStep`) dans le fan layout de la main. Les cartes s'étalent désormais davantage lorsqu'il y en a peu et se resserrent automatiquement pour rester lisibles et accessibles à mesure que la main se remplit.
 - feat: implémentation Étape 6
     - Système de Focus au Clic avec Décalage Vertical
