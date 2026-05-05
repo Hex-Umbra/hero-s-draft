@@ -83,9 +83,13 @@
 - feat: implémentation Étape 4
     - Externalisation de la Barre de Vie du Joueur (HUD)
         - J'ai terminé l'Étape 4. Le composant Flame `HealthBarComponent` a été complètement retiré de la carte du héros (`HeroCard`). À la place, une nouvelle barre de progression Flutter dynamique et plus large a été intégrée directement dans le HUD principal de `GameScreen`, juste au-dessus du bouton "Fin de Tour". Elle est liée à l'état global Riverpod (`runState.heroStats`) pour se mettre à jour instantanément.
-- feat: Espacement Dynamique des Cartes en Main
+- feat: implémentation Étape 5
+    - Espacement Dynamique des Cartes en Main
         - J'ai terminé l'Étape 5. J'ai implémenté un système de calcul dynamique de l'angle d'espacement (`angleStep`) dans le fan layout de la main. Les cartes s'étalent désormais davantage lorsqu'il y en a peu et se resserrent automatiquement pour rester lisibles et accessibles à mesure que la main se remplit.
 - feat: implémentation Étape 6
     - Système de Focus au Clic avec Décalage Vertical
         - J'ai terminé l'Étape 6. J'ai ajouté un état `focusedCard` dans le moteur de jeu. Désormais, un clic sur une carte (via `onTapDown`) la fait monter verticalement de 60px avec une légère augmentation de taille, la détachant du reste de la main pour un meilleur confort de jeu avant le drag. Cliquer sur le fond de l'écran ou commencer à glisser une autre carte réinitialise proprement le focus.
+- feat: implémentation Étape 7
+    - Zone de Sécurité et Annulation de Jeu
+        - J'ai terminé l'Étape 7. J'ai mis en place une "Zone de Sécurité" en bas de l'écran. Pendant le drag, si une carte descend sous un seuil Y (220px du bas), elle devient semi-transparente, rétrécit et change de couleur de bordure pour indiquer l'annulation. Relâcher la carte dans cette zone interrompt l'action et la renvoie en main sans la jouer, offrant ainsi un feedback visuel clair et un droit à l'erreur au joueur.
 

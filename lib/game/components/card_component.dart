@@ -9,7 +9,7 @@ import 'entities/enemy_card.dart';
 
 class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, HoverCallbacks, HasGameReference<HerosDraftGame> {
   final CardInstance card;
-  // ...
+
   @override
   void onLongTapDown(TapDownEvent event) {
     game.onShowTooltip(card.data.name, _buildDetailedDescription());
@@ -41,6 +41,8 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
   int basePriority = 10;
   
   bool isDragging = false;
+  bool _isHoveringCancelZone = false;
+
   @override
   bool isHovered = false;
   
@@ -110,8 +112,6 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
       size: Vector2(size.x - 24, size.y / 2),
     );
     add(descriptionText);
-    
-    // TODO: Ajouter spritePath si on a des images
   }
 
   String _buildDescription() {
@@ -148,17 +148,13 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
   void onDragStart(DragStartEvent event) {
     super.onDragStart(event);
     isDragging = true;
-    game.setFocusedCard(this); // S'assure qu'elle est focus au début du drag
-    priority = 200; // Encore plus haut pendant le drag
+    game.setFocusedCard(this); 
+    priority = 200; 
     
-    // Sauvegarde la position d'origine (calculée par le fan layout)
     originalPosition = position.clone();
     originalAngle = angle;
     
-    // La carte se remet droite
     angle = 0;
-    // L'agrandissement est déjà géré par le focus ou le hover, 
-    // on peut forcer une valeur ici si besoin
     scale = Vector2.all(1.25); 
   }
 
@@ -166,10 +162,47 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
   void onDragUpdate(DragUpdateEvent event) {
     position += event.localDelta;
     
-    // Gestion du ciblage (Arrow)
+    // Feedback visuel de zone de sécurité (annulation)
+    bool isInCancelZone = position.y > game.size.y - 220;
+    if (isInCancelZone != _isHoveringCancelZone) {
+      _isHoveringCancelZone = isInCancelZone;
+      _applyCancelZoneFeedback(_isHoveringCancelZone);
+    }
+
+    // Gestion du ciblage (Arrow) - Uniquement si on n'est pas en zone d'annulation
     if (card.data.target == CardTarget.singleEnemy) {
-      EnemyCard? hoveredEnemy = _findHoveredEnemy(position);
+      EnemyCard? hoveredEnemy = _isHoveringCancelZone ? null : _findHoveredEnemy(position);
       game.highlightEnemy(hoveredEnemy);
+    }
+  }
+
+  void _applyCancelZoneFeedback(bool isCancelling) {
+    if (isCancelling) {
+      // Effet d'annulation : plus petit, transparent, bordure grise
+      add(ScaleEffect.to(Vector2.all(0.9), EffectController(duration: 0.1)));
+      backgroundPaint.color = const Color(0xFF2A2A3D).withAlpha(150);
+      borderPaint.color = Colors.grey;
+      
+      final nameStyle = (nameText.textRenderer as TextPaint).style;
+      final costStyle = (costText.textRenderer as TextPaint).style;
+      final descStyle = (descriptionText.textRenderer as TextPaint).style;
+
+      nameText.textRenderer = TextPaint(style: nameStyle.copyWith(color: Colors.white.withAlpha(150)));
+      costText.textRenderer = TextPaint(style: costStyle.copyWith(color: Colors.lightBlueAccent.withAlpha(150)));
+      descriptionText.textRenderer = TextPaint(style: descStyle.copyWith(color: Colors.white70.withAlpha(150)));
+    } else {
+      // Effet actif : grand, opaque, bordure bleue
+      add(ScaleEffect.to(Vector2.all(1.25), EffectController(duration: 0.1)));
+      backgroundPaint.color = const Color(0xFF2A2A3D);
+      borderPaint.color = Colors.blueAccent;
+
+      final nameStyle = (nameText.textRenderer as TextPaint).style;
+      final costStyle = (costText.textRenderer as TextPaint).style;
+      final descStyle = (descriptionText.textRenderer as TextPaint).style;
+
+      nameText.textRenderer = TextPaint(style: nameStyle.copyWith(color: Colors.white));
+      costText.textRenderer = TextPaint(style: costStyle.copyWith(color: Colors.lightBlueAccent));
+      descriptionText.textRenderer = TextPaint(style: descStyle.copyWith(color: Colors.white70));
     }
   }
 
@@ -178,6 +211,12 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
     super.onDragEnd(event);
     isDragging = false;
     
+    if (_isHoveringCancelZone) {
+      _returnToHand();
+      game.highlightEnemy(null);
+      return;
+    }
+
     EnemyCard? targetedEnemy;
     if (card.data.target == CardTarget.singleEnemy) {
        targetedEnemy = game.highlightedEnemy;
@@ -186,7 +225,6 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
     bool played = game.tryPlayCard(this, targetedEnemy);
 
     if (!played) {
-      // Retour à la main
       _returnToHand();
     }
     
@@ -211,7 +249,15 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
   }
 
   void _returnToHand() {
-    // Animation de retour
+    _isHoveringCancelZone = false;
+    
+    // Reset visual state
+    backgroundPaint.color = const Color(0xFF2A2A3D);
+    borderPaint.color = Colors.blueAccent;
+    nameText.textRenderer = TextPaint(style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold));
+    costText.textRenderer = TextPaint(style: const TextStyle(color: Colors.lightBlueAccent, fontSize: 24, fontWeight: FontWeight.bold));
+    descriptionText.textRenderer = TextPaint(style: const TextStyle(color: Colors.white70, fontSize: 14));
+
     add(
       MoveEffect.to(
         originalPosition,
