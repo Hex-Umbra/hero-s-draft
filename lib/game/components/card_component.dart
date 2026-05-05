@@ -40,6 +40,7 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
   double originalAngle = 0;
   
   bool isDragging = false;
+  @override
   bool isHovered = false;
   
   // Paramètres visuels
@@ -63,27 +64,15 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
   @override
   void onHoverEnter() {
     if (isDragging) return;
-    isHovered = true;
-    priority = 100; // Passe au-dessus des autres
-    add(
-      ScaleEffect.to(
-        Vector2.all(1.2),
-        EffectController(duration: 0.1, curve: Curves.easeOut),
-      ),
-    );
+    game.setHoveredCard(this);
   }
 
   @override
   void onHoverExit() {
     if (isDragging) return;
-    isHovered = false;
-    priority = 10; // Retour à la priorité normale
-    add(
-      ScaleEffect.to(
-        Vector2.all(1.0),
-        EffectController(duration: 0.1, curve: Curves.easeIn),
-      ),
-    );
+    if (game.hoveredCard == this) {
+      game.setHoveredCard(null);
+    }
   }
 
   @override

@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flame/game.dart';
 import 'package:flame/components.dart';
+import 'package:flame/effects.dart';
 import 'package:flutter/material.dart';
 import 'components/card_component.dart';
 import 'components/entities/hero_card.dart';
@@ -22,6 +23,7 @@ class HerosDraftGame extends FlameGame {
   HeroCard? heroCard;
   List<EnemyCard> enemyCards = [];
   List<CardComponent> handCards = [];
+  CardComponent? hoveredCard;
   
   RunState? _currentState;
   RunState? _nextState;
@@ -52,6 +54,36 @@ class HerosDraftGame extends FlameGame {
     required this.onHideTooltip,
     required this.onPlayCard,
   });
+
+  void setHoveredCard(CardComponent? card) {
+    if (hoveredCard == card) return;
+
+    // Reset previous card if it exists
+    if (hoveredCard != null && !hoveredCard!.isDragging) {
+      hoveredCard!.isHovered = false;
+      hoveredCard!.priority = 10;
+      hoveredCard!.add(
+        ScaleEffect.to(
+          Vector2.all(1.0),
+          EffectController(duration: 0.1, curve: Curves.easeIn),
+        ),
+      );
+    }
+
+    hoveredCard = card;
+
+    // Set new hovered card
+    if (hoveredCard != null && !hoveredCard!.isDragging) {
+      hoveredCard!.isHovered = true;
+      hoveredCard!.priority = 100;
+      hoveredCard!.add(
+        ScaleEffect.to(
+          Vector2.all(1.2),
+          EffectController(duration: 0.1, curve: Curves.easeOut),
+        ),
+      );
+    }
+  }
 
   @override
   Future<void> onLoad() async {
