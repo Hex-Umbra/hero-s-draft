@@ -149,13 +149,14 @@ class HerosDraftGame extends FlameGame {
 
     final int count = handCards.length;
     // On veut un arc de cercle
-    final double radius = 800.0;
-    final double angleStep = 0.08; // Angle entre chaque carte
+    final double radius = 1000.0;
+    final double angleStep = 0.07; // Angle entre chaque carte légèrement réduit pour l'agrandissement
     final double totalAngle = (count - 1) * angleStep;
     final double startAngle = -totalAngle / 2;
 
-    // Le centre de l'arc de cercle est situé loin en bas de l'écran
-    final Vector2 centerPoint = Vector2(size.x / 2, size.y + radius - 150);
+    // Le centre de l'arc de cercle est situé plus bas pour descendre les cartes
+    // On augmente size.y + radius pour les enfoncer davantage
+    final Vector2 centerPoint = Vector2(size.x / 2, size.y + radius - 80);
 
     for (int i = 0; i < count; i++) {
       if (handCards[i].isDragging) continue; // Ne pas animer une carte en cours de drag

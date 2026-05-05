@@ -7,7 +7,7 @@ import '../../models/data/card_data.dart';
 import '../heros_draft_game.dart';
 import 'entities/enemy_card.dart';
 
-class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, HasGameReference<HerosDraftGame> {
+class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, HoverCallbacks, HasGameReference<HerosDraftGame> {
   final CardInstance card;
   // ...
   @override
@@ -40,10 +40,11 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
   double originalAngle = 0;
   
   bool isDragging = false;
+  bool isHovered = false;
   
   // Paramètres visuels
-  static const double cardWidth = 100;
-  static const double cardHeight = 140;
+  static const double cardWidth = 140;
+  static const double cardHeight = 196;
 
   final Paint backgroundPaint = Paint()..color = const Color(0xFF2A2A3D);
   final Paint borderPaint = Paint()
@@ -60,14 +61,40 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
   }
 
   @override
+  void onHoverEnter() {
+    if (isDragging) return;
+    isHovered = true;
+    priority = 100; // Passe au-dessus des autres
+    add(
+      ScaleEffect.to(
+        Vector2.all(1.2),
+        EffectController(duration: 0.1, curve: Curves.easeOut),
+      ),
+    );
+  }
+
+  @override
+  void onHoverExit() {
+    if (isDragging) return;
+    isHovered = false;
+    priority = 10; // Retour à la priorité normale
+    add(
+      ScaleEffect.to(
+        Vector2.all(1.0),
+        EffectController(duration: 0.1, curve: Curves.easeIn),
+      ),
+    );
+  }
+
+  @override
   Future<void> onLoad() async {
     // Nom de la carte
     nameText = TextComponent(
       text: card.data.name,
       textRenderer: TextPaint(
-        style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+        style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
       ),
-      position: Vector2(size.x / 2, 10),
+      position: Vector2(size.x / 2, 12),
       anchor: Anchor.topCenter,
     );
     add(nameText);
@@ -76,9 +103,9 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
     costText = TextComponent(
       text: '${card.currentCost}',
       textRenderer: TextPaint(
-        style: const TextStyle(color: Colors.lightBlueAccent, fontSize: 20, fontWeight: FontWeight.bold),
+        style: const TextStyle(color: Colors.lightBlueAccent, fontSize: 24, fontWeight: FontWeight.bold),
       ),
-      position: Vector2(10, 10),
+      position: Vector2(12, 12),
     );
     add(costText);
 
@@ -86,11 +113,11 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
     descriptionText = TextComponent(
       text: _buildDescription(),
       textRenderer: TextPaint(
-        style: const TextStyle(color: Colors.white70, fontSize: 12),
+        style: const TextStyle(color: Colors.white70, fontSize: 14),
       ),
-      position: Vector2(size.x / 2, size.y / 2),
+      position: Vector2(size.x / 2, size.y / 2 + 20),
       anchor: Anchor.center,
-      size: Vector2(size.x - 20, size.y / 2),
+      size: Vector2(size.x - 24, size.y / 2),
     );
     add(descriptionText);
     
