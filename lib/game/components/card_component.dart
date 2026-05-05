@@ -138,10 +138,17 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
   }
 
   @override
+  void onTapDown(TapDownEvent event) {
+    super.onTapDown(event);
+    game.setFocusedCard(this);
+  }
+
+  @override
   void onDragStart(DragStartEvent event) {
     super.onDragStart(event);
     isDragging = true;
-    priority = 100; // Mettre la carte au premier plan
+    game.setFocusedCard(this); // S'assure qu'elle est focus au début du drag
+    priority = 200; // Encore plus haut pendant le drag
     
     // Sauvegarde la position d'origine (calculée par le fan layout)
     originalPosition = position.clone();
@@ -149,7 +156,9 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
     
     // La carte se remet droite
     angle = 0;
-    scale = Vector2.all(1.2); // S'agrandit
+    // L'agrandissement est déjà géré par le focus ou le hover, 
+    // on peut forcer une valeur ici si besoin
+    scale = Vector2.all(1.25); 
   }
 
   @override

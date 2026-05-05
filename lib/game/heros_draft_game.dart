@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flame/game.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
+import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 import 'components/card_component.dart';
 import 'components/entities/hero_card.dart';
@@ -18,12 +19,13 @@ import 'systems/encounter_system.dart';
 
 enum TurnPhase { player, enemy }
 
-class HerosDraftGame extends FlameGame {
+class HerosDraftGame extends FlameGame with TapCallbacks {
   List<EnemyData> availableEnemies = [];
   HeroCard? heroCard;
   List<EnemyCard> enemyCards = [];
   List<CardComponent> handCards = [];
   CardComponent? hoveredCard;
+  CardComponent? focusedCard;
   
   RunState? _currentState;
   RunState? _nextState;
@@ -59,7 +61,7 @@ class HerosDraftGame extends FlameGame {
     if (hoveredCard == card) return;
 
     // Reset previous card if it exists
-    if (hoveredCard != null && !hoveredCard!.isDragging) {
+    if (hoveredCard != null && !hoveredCard!.isDragging && hoveredCard != focusedCard) {
       hoveredCard!.isHovered = false;
       hoveredCard!.priority = 10;
       hoveredCard!.add(
@@ -73,7 +75,7 @@ class HerosDraftGame extends FlameGame {
     hoveredCard = card;
 
     // Set new hovered card
-    if (hoveredCard != null && !hoveredCard!.isDragging) {
+    if (hoveredCard != null && !hoveredCard!.isDragging && hoveredCard != focusedCard) {
       hoveredCard!.isHovered = true;
       hoveredCard!.priority = 100;
       hoveredCard!.add(
@@ -83,6 +85,55 @@ class HerosDraftGame extends FlameGame {
         ),
       );
     }
+  }
+
+  void setFocusedCard(CardComponent? card) {
+    if (focusedCard == card) return;
+
+    // Reset previous focus
+    if (focusedCard != null) {
+      focusedCard!.isHovered = false;
+      focusedCard!.priority = 10;
+      focusedCard!.add(
+        MoveEffect.to(
+          focusedCard!.originalPosition,
+          EffectController(duration: 0.15, curve: Curves.easeIn),
+        ),
+      );
+      focusedCard!.add(
+        ScaleEffect.to(
+          Vector2.all(1.0),
+          EffectController(duration: 0.15, curve: Curves.easeIn),
+        ),
+      );
+    }
+
+    focusedCard = card;
+
+    // Apply new focus
+    if (focusedCard != null) {
+      focusedCard!.isHovered = true;
+      focusedCard!.priority = 150; // Plus haut que le hover simple
+      focusedCard!.add(
+        MoveEffect.to(
+          focusedCard!.originalPosition + Vector2(0, -60), // Monte plus haut
+          EffectController(duration: 0.2, curve: Curves.easeOut),
+        ),
+      );
+      focusedCard!.add(
+        ScaleEffect.to(
+          Vector2.all(1.25), // Légèrement plus grand que le hover
+          EffectController(duration: 0.2, curve: Curves.easeOut),
+        ),
+      );
+    }
+  }
+
+  @override
+  void onTapDown(TapDownEvent event) {
+    super.onTapDown(event);
+    // Si on clique sur le fond (pas sur une carte), on enlève le focus
+    setFocusedCard(null);
   }
 
   @override
@@ -103,11 +154,10 @@ class HerosDraftGame extends FlameGame {
       sprite: bgSprite,
       size: size,
     )..priority = -100);
-    }
+  }
 
-    void highlightEnemy(EnemyCard? enemy) {
+  void highlightEnemy(EnemyCard? enemy) {
     if (highlightedEnemy != enemy) {
-
       highlightedEnemy?.setSelection(false);
       highlightedEnemy = enemy;
       highlightedEnemy?.setSelection(true);
