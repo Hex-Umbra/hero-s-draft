@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flame/game.dart';
+import 'package:flame/camera.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/events.dart';
@@ -152,6 +153,12 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
   Future<void> onLoad() async {
     await super.onLoad();
     
+    // En Flame moderne (v1.17+), la caméra est un composant. 
+    // On peut utiliser withFixedResolution pour avoir le comportement letterbox désiré.
+    // Cependant, HerosDraftGame hérite de FlameGame qui a déjà une caméra par défaut.
+    // Pour modifier le viewport de la caméra par défaut :
+    camera.viewport = FixedResolutionViewport(resolution: Vector2(1920, 1080));
+
     // 1. Précharger les images
     await images.loadAll([
       'bg_dungeon.png',
