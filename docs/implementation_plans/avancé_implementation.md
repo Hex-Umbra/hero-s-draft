@@ -112,3 +112,9 @@
     - Responsivité Dynamique du Moteur Flame
         - J'ai terminé la Phase 5 (Plan 10). Le moteur Flame utilise désormais tout l'espace disponible. Un `scaleFactor` dynamique ajuste la taille des cartes et des entités selon la hauteur de l'écran. Toutes les positions (Héros, Ennemis, Main) sont désormais relatives et se recalculent instantanément lors d'un redimensionnement via `onGameResize`. La zone d'annulation est également passée à un seuil relatif de 80% de la hauteur.
 
+## Phase 7 - Ajustements UI/UX et Tailles
+
+- feat: implémentation Phase 1
+    - Planification des ajustements visuels (Plan 11)
+        - J'ai rédigé le Plan 11 pour corriger le chevauchement de la barre de vie avec les cartes en main et augmenter la taille globale de tous les éléments Flame qui paraissent trop petits sur l'ensemble des résolutions.
+
