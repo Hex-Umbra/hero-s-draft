@@ -6,6 +6,7 @@ import '../../../data/models/entity_stats.dart';
 import '../floating_text.dart';
 import '../effect_icon.dart';
 import 'stat_badge.dart';
+import 'status_indicator.dart';
 import '../../heros_draft_game.dart';
 
 class HeroCard extends PositionComponent with TapCallbacks, HasGameReference<HerosDraftGame> {
@@ -15,6 +16,7 @@ class HeroCard extends PositionComponent with TapCallbacks, HasGameReference<Her
   late final StatBadge armorBadge;
   late final StatBadge attackBadge;
   late final StatBadge manaBadge;
+  late final StatusIndicator statusIndicator;
 
   HeroCard(this.stats, {this.bonusAttack = 0}) : super(size: Vector2(120, 160));
 
@@ -59,6 +61,10 @@ class HeroCard extends PositionComponent with TapCallbacks, HasGameReference<Her
     manaBadge.position = Vector2(-15, 130);
     add(manaBadge);
 
+    statusIndicator = StatusIndicator(statuses: stats.statuses);
+    statusIndicator.position = Vector2(0, -30); // Au dessus de la carte
+    add(statusIndicator);
+
     _refreshBadges();
   }
 
@@ -79,6 +85,7 @@ class HeroCard extends PositionComponent with TapCallbacks, HasGameReference<Her
     }
 
     manaBadge.updateValue('${stats.currentMana}/${stats.maxMana}');
+    statusIndicator.updateStatuses(stats.statuses);
   }
 
   void updateStats(EntityStats newStats, {int bonusAttack = 0}) {

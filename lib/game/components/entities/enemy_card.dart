@@ -11,6 +11,7 @@ import '../floating_text.dart';
 import '../effect_icon.dart';
 import 'stat_badge.dart';
 import 'intention_indicator.dart';
+import 'status_indicator.dart';
 import '../../heros_draft_game.dart';
 
 class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<HerosDraftGame> {
@@ -26,6 +27,7 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
   late final StatBadge armorBadge;
   late final StatBadge attackBadge;
   late final StatBadge manaBadge;
+  late final StatusIndicator statusIndicator;
 
   EnemyIntent? currentIntent;
   bool isSelected = false;
@@ -91,6 +93,10 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
     manaBadge = StatBadge(type: StatType.mana, value: '${stats.currentMana}/${stats.maxMana}');
     manaBadge.position = Vector2(-15, 100);
     add(manaBadge);
+
+    statusIndicator = StatusIndicator(statuses: stats.statuses);
+    statusIndicator.position = Vector2(0, size.y + 10); // En dessous de la carte
+    add(statusIndicator);
   }
 
   @override
@@ -123,6 +129,7 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
     armorBadge.updateValue('${stats.armure}');
     attackBadge.updateValue(stats.attaque.toString());
     manaBadge.updateValue('${stats.currentMana}/${stats.maxMana}');
+    statusIndicator.updateStatuses(stats.statuses);
   }
 
   void updateStats(EntityStats newStats) {
