@@ -16,7 +16,7 @@ class HeroCard extends PositionComponent with TapCallbacks, HasGameReference<Her
   late final StatBadge attackBadge;
   late final StatBadge manaBadge;
 
-  HeroCard(this.stats, {this.bonusAttack = 0}) : super(size: Vector2(160, 220));
+  HeroCard(this.stats, {this.bonusAttack = 0}) : super(size: Vector2(120, 160));
 
   @override
   Future<void> onLoad() async {

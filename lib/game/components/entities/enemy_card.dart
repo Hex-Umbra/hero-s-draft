@@ -35,7 +35,7 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
     this.data,
     this.isBoss = false,
     required this.onTapEnemy,
-  }) : super(size: Vector2(140, 190));
+  }) : super(size: Vector2(100, 140));
 
   @override
   Future<void> onLoad() async {
@@ -59,7 +59,7 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
     add(borderInfo);
 
     healthBar = HealthBarComponent(
-      barWidth: 140, // Maintenue à 140
+      barWidth: 140, 
       barHeight: 18,
       currentPv: stats.currentPv.toDouble(),
       maxPv: stats.maxPv.toDouble(),
@@ -83,15 +83,15 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
     add(intentionIndicator);
 
     armorBadge = StatBadge(type: StatType.armor, value: '${stats.armure}');
-    armorBadge.position = Vector2(-15, 30);
+    armorBadge.position = Vector2(-15, 20);
     add(armorBadge);
 
     attackBadge = StatBadge(type: StatType.attack, value: '${stats.attaque}');
-    attackBadge.position = Vector2(-15, 80);
+    attackBadge.position = Vector2(-15, 60);
     add(attackBadge);
 
     manaBadge = StatBadge(type: StatType.mana, value: '${stats.currentMana}/${stats.maxMana}');
-    manaBadge.position = Vector2(-15, 130);
+    manaBadge.position = Vector2(-15, 100);
     add(manaBadge);
   }
 
