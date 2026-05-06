@@ -1,4 +1,4 @@
-# Plan d'Implémentation 8 : World Map et Solidification Technique
+# Plan d'Implémentation 9 : World Map et Solidification Technique
 
 Ce document détaille le plan pour implémenter la Section 3 de l'analyse technique des évolutions futures (`docs/possible_upgrades/2_analyse_techniques_evols.md`). L'objectif est de structurer la progression du joueur via une carte du monde et de garantir la robustesse du code par des tests et du polissage technique.
 

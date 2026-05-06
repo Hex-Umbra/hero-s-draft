@@ -1,4 +1,4 @@
-# Plan d'Implémentation 7 : Interface et Expérience Utilisateur (UI/UX, Audio & Juice)
+# Plan d'Implémentation 8 : Interface et Expérience Utilisateur (UI/UX, Audio & Juice)
 
 Ce document détaille le plan pour implémenter la Section 2 de l'analyse technique des évolutions futures (`docs/possible_upgrades/2_analyse_techniques_evols.md`). L'objectif est de transformer l'expérience de jeu par l'ajout de sons, d'effets visuels avancés et d'une interface plus vivante.
 

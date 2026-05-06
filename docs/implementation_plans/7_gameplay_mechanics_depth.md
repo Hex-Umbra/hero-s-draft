@@ -1,4 +1,4 @@
-# Plan d'Implémentation 6 : Profondeur du Gameplay & Mécaniques de Combat
+# Plan d'Implémentation 7 : Profondeur du Gameplay & Mécaniques de Combat
 
 Ce document détaille le plan pour implémenter la Section 1 de l'analyse technique des évolutions futures (`docs/possible_upgrades/2_analyse_techniques_evols.md`). L'objectif est d'ajouter de la profondeur stratégique via des systèmes d'altérations d'état, des types de cartes spéciaux et des reliques.
 
