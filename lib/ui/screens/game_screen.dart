@@ -266,7 +266,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                   Align(
                     alignment: Alignment.bottomCenter,
                     child: Padding(
-                      padding: const EdgeInsets.only(bottom: 20),
+                      padding: const EdgeInsets.only(bottom: 5),
                       child: SizedBox(
                         width: screenWidth * 0.3, // 30% de la largeur
                         child: Column(

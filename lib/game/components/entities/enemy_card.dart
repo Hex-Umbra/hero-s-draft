@@ -9,7 +9,6 @@ import '../../../models/enemy_intent.dart';
 import '../floating_text.dart';
 import '../effect_icon.dart';
 import 'stat_badge.dart';
-import 'health_bar.dart';
 import 'intention_indicator.dart';
 import '../../heros_draft_game.dart';
 
@@ -21,7 +20,7 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
 
   late final RectangleComponent borderInfo;
   
-  late final HealthBarComponent healthBar;
+  late final StatBadge hpBadge;
   late final IntentionIndicator intentionIndicator;
   late final StatBadge armorBadge;
   late final StatBadge attackBadge;
@@ -61,14 +60,9 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
     );
     add(borderInfo);
 
-    healthBar = HealthBarComponent(
-      barWidth: 140, 
-      barHeight: 18,
-      currentPv: stats.currentPv.toDouble(),
-      maxPv: stats.maxPv.toDouble(),
-    );
-    healthBar.position = Vector2((size.x - 140) / 2, -30); // Centré au-dessus de la carte
-    add(healthBar);
+    hpBadge = StatBadge(type: StatType.hp, value: '${stats.currentPv}/${stats.maxPv}');
+    hpBadge.position = Vector2(size.x + 15, 20); // Aligné sur la droite
+    add(hpBadge);
 
     // Génère l'intention initiale manuellement pour éviter les soucis de synchronisation
     final random = Random();
@@ -82,7 +76,7 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
     }
 
     intentionIndicator = IntentionIndicator(initialIntent: currentIntent);
-    intentionIndicator.position = Vector2(size.x / 2, -65); // Juste au-dessus de la barre de vie
+    intentionIndicator.position = Vector2(size.x / 2, -25); // Juste au-dessus de la carte
     add(intentionIndicator);
 
     armorBadge = StatBadge(type: StatType.armor, value: '${stats.armure}');
@@ -124,7 +118,7 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
   }
 
   void _refreshBadges() {
-    healthBar.updateValues(stats.currentPv.toDouble(), stats.maxPv.toDouble());
+    hpBadge.updateValue('${stats.currentPv}/${stats.maxPv}');
     armorBadge.updateValue('${stats.armure}');
     attackBadge.updateValue(stats.attaque.toString());
     manaBadge.updateValue('${stats.currentMana}/${stats.maxMana}');

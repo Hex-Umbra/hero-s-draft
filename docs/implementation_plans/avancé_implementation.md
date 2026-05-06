@@ -123,4 +123,7 @@
 - feat: implémentation Phase 3
     - Ajustements fins de la taille et disposition (Plan 12 & 13)
         - J'ai terminé la Phase 3. Les cartes en main ont été spécifiquement réduites (`scaleFactor * 0.75`) tandis que les entités sur le terrain ont été agrandies (`scaleFactor * 1.3`). La main de cartes a été légèrement redescendue (`offset 0.15`) et son arc resserré (`angleStep max 0.08`). Enfin, la barre de vie du joueur a été réduite en largeur (30%) et en hauteur (12px) pour être moins intrusive.
+- feat: implémentation Phase 4
+    - Polissage de l'UI et des positions (Plan 14)
+        - J'ai terminé la Phase 4. La barre de vie du joueur a été collée tout en bas de l'écran. La barre de vie des ennemis a été remplacée par un badge statique circulaire situé à droite de leur carte. Enfin, l'indicateur d'intention des ennemis a été descendu pour être juste au-dessus du bord supérieur de la carte.
 
