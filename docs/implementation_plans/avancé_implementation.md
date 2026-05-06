@@ -120,4 +120,7 @@
 - feat: implémentation Phase 2
     - Ajustements des tailles et positions Flame
         - J'ai terminé la Phase 2. Le `scaleFactor` global a été augmenté (référence 800px) pour agrandir tous les éléments du jeu. L'arc de cercle de la main de cartes a été remonté (décalage de 25% de la hauteur) pour libérer l'espace visuel occupé par la barre de vie HUD en bas de l'écran.
+- feat: implémentation Phase 3
+    - Ajustements fins de la taille et disposition (Plan 12 & 13)
+        - J'ai terminé la Phase 3. Les cartes en main ont été spécifiquement réduites (`scaleFactor * 0.75`) tandis que les entités sur le terrain ont été agrandies (`scaleFactor * 1.3`). La main de cartes a été légèrement redescendue (`offset 0.15`) et son arc resserré (`angleStep max 0.08`). Enfin, la barre de vie du joueur a été réduite en largeur (30%) et en hauteur (12px) pour être moins intrusive.
 

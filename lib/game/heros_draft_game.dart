@@ -269,18 +269,18 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
     // On veut un arc de cercle proportionnel à la taille de l'écran
     final double radius = size.y * 1.5;
     
-    // Calcul dynamique de l'angle entre chaque carte
-    double angleStep = 0.12;
+    // Calcul dynamique de l'angle entre chaque carte (réduit pour plus de compacité)
+    double angleStep = 0.08;
     if (count > 4) {
-      angleStep = (0.5 / count).clamp(0.05, 0.12);
+      angleStep = (0.4 / count).clamp(0.04, 0.08);
     }
     
     final double totalAngle = (count - 1) * angleStep;
     final double startAngle = -totalAngle / 2;
 
     // Le centre de l'arc de cercle est situé plus bas pour descendre les cartes
-    // On utilise un offset relatif à size.y pour remonter la main (dégager la barre de vie)
-    final Vector2 centerPoint = Vector2(size.x / 2, size.y + radius - (size.y * 0.25));
+    // On ajuste l'offset pour redescendre la main car les cartes sont plus petites
+    final Vector2 centerPoint = Vector2(size.x / 2, size.y + radius - (size.y * 0.15));
 
     for (int i = 0; i < count; i++) {
       final card = handCards[i];

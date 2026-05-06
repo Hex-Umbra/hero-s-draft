@@ -268,13 +268,13 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                     child: Padding(
                       padding: const EdgeInsets.only(bottom: 20),
                       child: SizedBox(
-                        width: screenWidth * 0.4, // 40% de la largeur
+                        width: screenWidth * 0.3, // 30% de la largeur
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
                               '${runState.heroStats.currentPv} / ${runState.heroStats.maxPv} PV',
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
                             ),
                             const SizedBox(height: 4),
                             ClipRRect(
@@ -283,7 +283,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                                 value: (runState.heroStats.maxPv > 0) 
                                     ? runState.heroStats.currentPv / runState.heroStats.maxPv 
                                     : 0,
-                                minHeight: 20,
+                                minHeight: 12,
                                 backgroundColor: Colors.black54,
                                 valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF27AE60)),
                               ),
