@@ -135,3 +135,6 @@
 - feat: implémentation Phase 2
     - Types de Cartes Spéciaux (Pouvoirs et Malédictions)
         - J'ai terminé la Phase 2. J'ai implémenté le support pour les cartes de type `Power` (qui sont épuisées après usage et appliquent des effets permanents via des statuts de régénération comme `strength_regen` ou `armor_regen`) et les cartes de type `Status/Curse` (comme `Injury` qui est injouable). Le `DeckNotifier` gère déjà l'épuisement des pouvoirs, et j'ai enrichi le `EffectResolver` et les contrôleurs pour traiter ces nouveaux comportements de début de tour.
+- feat: implémentation Phase 3
+    - Reliques et Objets Passifs
+        - J'ai terminé la Phase 3. J'ai mis en place l'architecture des reliques avec `RelicData` et `RelicTrigger`. Le `RunController` gère désormais une liste de reliques et possède une méthode `applyRelics` pour déclencher des effets passifs (gain de mana, armure, force ou soin) à des moments clés (début de combat, début de tour). J'ai intégré ces appels dans le cycle de jeu principal et validé le tout par un `dart analyze`.

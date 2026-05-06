@@ -43,6 +43,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           CardInstance(data: CardData(id: 'heal_1', name: 'Soin', description: 'Soigne 5 PV', cost: 2, type: CardType.skill, category: CardCategory.global, rarity: CardRarity.uncommon, target: CardTarget.none, effects: [CardEffect(type: 'heal', value: 5)])),
         ];
         ref.read(deckProvider.notifier).initializeStarterDeck(starterCards);
+        ref.read(runProvider.notifier).startCombat();
         ref.read(deckProvider.notifier).initializeCombat();
         ref.read(deckProvider.notifier).drawCards(5);
       }
@@ -166,6 +167,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                     child: DraftScreen(
                       onDraftComplete: () {
                         setState(() { _showDraft = false; });
+                        ref.read(runProvider.notifier).startCombat();
                         ref.read(deckProvider.notifier).initializeCombat();
                         ref.read(deckProvider.notifier).drawCards(5);
                       },

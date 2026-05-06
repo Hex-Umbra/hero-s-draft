@@ -1,12 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/entity_stats.dart';
 import '../../models/data/hero_data.dart';
+import '../../models/data/relic_data.dart';
 import '../../models/status_effect.dart';
 
 class RunState {
   final int currentLevel;
   final EntityStats heroStats;
   final String heroClassId;
+  final List<RelicData> relics;
   
   // Variables pour gérer l'état du cooldown des sorts
   final int skill1Cooldown;
@@ -21,6 +23,7 @@ class RunState {
     required this.currentLevel,
     required this.heroStats,
     required this.heroClassId,
+    this.relics = const [],
     this.skill1Cooldown = 0,
     this.skill2Cooldown = 0,
   });
@@ -29,6 +32,7 @@ class RunState {
     int? currentLevel,
     EntityStats? heroStats,
     String? heroClassId,
+    List<RelicData>? relics,
     int? skill1Cooldown,
     int? skill2Cooldown,
   }) {
@@ -36,6 +40,7 @@ class RunState {
       currentLevel: currentLevel ?? this.currentLevel,
       heroStats: heroStats ?? this.heroStats,
       heroClassId: heroClassId ?? this.heroClassId,
+      relics: relics ?? this.relics,
       skill1Cooldown: skill1Cooldown ?? this.skill1Cooldown,
       skill2Cooldown: skill2Cooldown ?? this.skill2Cooldown,
     );
@@ -137,8 +142,63 @@ class RunController extends StateNotifier<RunState> {
     state = state.copyWith(heroStats: state.heroStats.addStatus(effect));
   }
 
+  /// Ajoute une relique à la collection
+  void addRelic(RelicData relic) {
+    state = state.copyWith(relics: [...state.relics, relic]);
+    if (relic.trigger == RelicTrigger.startOfRun) {
+      _applyRelicEffect(relic);
+    }
+  }
+
+  /// Déclenche les effets des reliques pour un trigger donné
+  void applyRelics(RelicTrigger trigger) {
+    final relevantRelics = state.relics.where((r) => r.trigger == trigger).toList();
+    for (var relic in relevantRelics) {
+      _applyRelicEffect(relic);
+    }
+  }
+
+  void _applyRelicEffect(RelicData relic) {
+    switch (relic.effectType) {
+      case 'gain_mana':
+        state = state.copyWith(
+          heroStats: state.heroStats.copyWith(
+            currentMana: state.heroStats.currentMana + relic.value,
+          ),
+        );
+        break;
+      case 'gain_armor':
+        state = state.copyWith(
+          heroStats: state.heroStats.copyWith(
+            armure: state.heroStats.armure + relic.value,
+          ),
+        );
+        break;
+      case 'gain_strength':
+        addStatus(StatusEffect(
+          id: 'strength',
+          name: 'Force (Relique)',
+          type: StatusType.buff,
+          value: relic.value,
+          duration: 99,
+        ));
+        break;
+      case 'heal':
+        heal(relic.value);
+        break;
+    }
+  }
+
+  /// Prépare l'état pour un nouveau combat
+  void startCombat() {
+    applyRelics(RelicTrigger.startOfCombat);
+  }
+
   /// Nouveau Tour : Applique les effets de début de tour, baisse le cooldown, les buffs, et restaure le mana
   void startTurn() {
+    // 0. Déclencher les reliques de début de tour
+    applyRelics(RelicTrigger.startOfTurn);
+
     // 1. Appliquer les effets de début de tour (ex: Poison, Regen)
     int poisonDamage = 0;
     int strengthGain = 0;
