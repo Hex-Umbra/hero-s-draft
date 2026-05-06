@@ -71,7 +71,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
       if (!hoveredCard!.isDragging) {
         hoveredCard!.add(
           ScaleEffect.to(
-            Vector2.all(1.0),
+            Vector2.all(scaleFactor * 0.75),
             EffectController(duration: 0.1, curve: Curves.easeIn),
           ),
         );
@@ -88,7 +88,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
       if (!hoveredCard!.isDragging) {
         hoveredCard!.add(
           ScaleEffect.to(
-            Vector2.all(1.2),
+            Vector2.all(scaleFactor * 0.75 * 1.2),
             EffectController(duration: 0.1, curve: Curves.easeOut),
           ),
         );
@@ -113,7 +113,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
         );
         focusedCard!.add(
           ScaleEffect.to(
-            Vector2.all(1.0),
+            Vector2.all(scaleFactor * 0.75),
             EffectController(duration: 0.15, curve: Curves.easeIn),
           ),
         );
@@ -136,7 +136,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
         );
         focusedCard!.add(
           ScaleEffect.to(
-            Vector2.all(1.25), // Légèrement plus grand que le hover
+            Vector2.all(scaleFactor * 0.75 * 1.25), // Légèrement plus grand que le hover
             EffectController(duration: 0.2, curve: Curves.easeOut),
           ),
         );
@@ -299,8 +299,14 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
       if (card.isDragging) continue;
 
       // On n'oriente physiquement la carte que si elle n'est pas drag
-      card.position = Vector2(x, y);
-      card.angle = angle;
+      if (card == focusedCard) {
+        // La carte est focus, elle doit rester droite et en hauteur
+        card.position = Vector2(x, y) + Vector2(0, -60);
+        card.angle = 0;
+      } else {
+        card.position = Vector2(x, y);
+        card.angle = angle;
+      }
       
       // Si la carte n'est pas mise en avant (hover/focus), on applique sa basePriority
       if (card != hoveredCard && card != focusedCard) {

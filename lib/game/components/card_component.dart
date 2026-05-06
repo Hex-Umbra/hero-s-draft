@@ -117,11 +117,16 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
     add(descriptionText);
   }
 
+  Vector2 _lastSize = Vector2.zero();
+
   @override
   void onGameResize(Vector2 size) {
+    if (_lastSize == size) return;
+    _lastSize = size.clone();
     super.onGameResize(size);
-    // Mise à jour de l'échelle si on n'est pas en train de drag (Réduite pour la main)
-    if (!isDragging) {
+
+    // Mise à jour de l'échelle si on n'est pas en train de drag ou focus
+    if (!isDragging && game.focusedCard != this) {
        scale = Vector2.all(game.scaleFactor * 0.75);
     }
   }
@@ -154,6 +159,7 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
   void onTapDown(TapDownEvent event) {
     super.onTapDown(event);
     game.setFocusedCard(this);
+    event.continuePropagation = false; // Empêche l'événement de se propager au jeu (qui annulerait le focus)
   }
 
   void _clearEffects() {
@@ -180,9 +186,9 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
     _clearEffects();
     priority = 200; 
     
-    // La carte se remet droite
+    // La carte se remet droite et s'agrandit pour le drag
     angle = 0;
-    scale = Vector2.all(1.25); 
+    scale = Vector2.all(game.scaleFactor * 0.75 * 1.25); 
   }
 
   @override
