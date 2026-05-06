@@ -104,4 +104,11 @@
 - feat: implémentation Phase 3
     - Refonte des Écrans de Menus (Draft & Sélection de Classe)
         - J'ai terminé la Phase 3. `DraftScreen` s'adapte maintenant dynamiquement au mode portrait/paysage via un `LayoutBuilder`. `ClassSelectionScreen` a été migré vers un `GridView` adaptatif. Le composant `UiCard` a été rendu flexible en utilisant un `AspectRatio`.
+- feat: implémentation Phase 4
+    - Tests Fonctionnels et Analyse des limites
+        - J'ai terminé la Phase 4. Les tests sur diverses résolutions (3K, mobile portrait, tablette) ont révélé que l'approche `FixedResolutionViewport` provoque un "letterboxing" extrême et ne permet pas une véritable responsivité du gameplay. Une analyse a été rédigée (`4_dynamic_game_responsiveness_analysis.md`) et un nouveau plan de responsivité dynamique (`10_dynamic_game_responsiveness.md`) a été préparé pour corriger ce comportement.
+
+- feat: implémentation Phase 5
+    - Responsivité Dynamique du Moteur Flame
+        - J'ai terminé la Phase 5 (Plan 10). Le moteur Flame utilise désormais tout l'espace disponible. Un `scaleFactor` dynamique ajuste la taille des cartes et des entités selon la hauteur de l'écran. Toutes les positions (Héros, Ennemis, Main) sont désormais relatives et se recalculent instantanément lors d'un redimensionnement via `onGameResize`. La zone d'annulation est également passée à un seuil relatif de 80% de la hauteur.
 

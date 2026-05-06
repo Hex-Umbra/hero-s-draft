@@ -1,6 +1,5 @@
 import 'dart:math';
 import 'package:flame/game.dart';
-import 'package:flame/camera.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/events.dart';
@@ -27,6 +26,9 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
   List<CardComponent> handCards = [];
   CardComponent? hoveredCard;
   CardComponent? focusedCard;
+  
+  // Facteur d'échelle basé sur une résolution de référence (1080p)
+  double get scaleFactor => (size.y / 1080).clamp(0.5, 2.0);
   
   RunState? _currentState;
   RunState? _nextState;
@@ -153,11 +155,8 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
   Future<void> onLoad() async {
     await super.onLoad();
     
-    // En Flame moderne (v1.17+), la caméra est un composant. 
-    // On peut utiliser withFixedResolution pour avoir le comportement letterbox désiré.
-    // Cependant, HerosDraftGame hérite de FlameGame qui a déjà une caméra par défaut.
-    // Pour modifier le viewport de la caméra par défaut :
-    camera.viewport = FixedResolutionViewport(resolution: Vector2(1920, 1080));
+    // On retire le FixedResolutionViewport pour utiliser tout l'espace disponible (MaxViewport par défaut)
+    // La caméra s'adaptera dynamiquement à la taille de l'écran.
 
     // 1. Précharger les images
     await images.loadAll([
@@ -173,6 +172,24 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
       sprite: bgSprite,
       size: size,
     )..priority = -100);
+  }
+
+  @override
+  void onGameResize(Vector2 size) {
+    super.onGameResize(size);
+    // Recalculer le layout si le jeu est déjà initialisé
+    if (heroCard != null) {
+      heroCard!.position = Vector2(size.x / 2, size.y * 0.6);
+    }
+    if (enemyCards.isNotEmpty) {
+      _repositionEnemies();
+    }
+    _layoutHand();
+    
+    // Ajuster l'arrière-plan
+    children.whereType<SpriteComponent>().forEach((bg) {
+      if (bg.priority == -100) bg.size = size;
+    });
   }
 
   void highlightEnemy(EnemyCard? enemy) {
@@ -249,11 +266,10 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
     if (handCards.isEmpty) return;
 
     final int count = handCards.length;
-    // On veut un arc de cercle
-    final double radius = 1000.0;
+    // On veut un arc de cercle proportionnel à la taille de l'écran
+    final double radius = size.y * 1.5;
     
     // Calcul dynamique de l'angle entre chaque carte
-    // Si peu de cartes, on les écarte (0.12 rad), sinon on compresse jusqu'à 0.05 rad
     double angleStep = 0.12;
     if (count > 4) {
       angleStep = (0.5 / count).clamp(0.05, 0.12);
@@ -263,7 +279,8 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
     final double startAngle = -totalAngle / 2;
 
     // Le centre de l'arc de cercle est situé plus bas pour descendre les cartes
-    final Vector2 centerPoint = Vector2(size.x / 2, size.y + radius - 80);
+    // On utilise un offset relatif à size.y
+    final Vector2 centerPoint = Vector2(size.x / 2, size.y + radius - (size.y * 0.1));
 
     for (int i = 0; i < count; i++) {
       final card = handCards[i];
@@ -302,7 +319,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
 
     if (heroCard == null) {
       heroCard = HeroCard(state.heroStats, bonusAttack: bonusAtt);
-      heroCard!.position = Vector2(size.x / 2, size.y / 2 + 50);
+      heroCard!.position = Vector2(size.x / 2, size.y * 0.6);
       add(heroCard!);
     } else {
       heroCard!.updateStats(state.heroStats, bonusAttack: bonusAtt);
@@ -317,9 +334,6 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
 
     final enemyDataList = EncounterSystem.generateEnemiesForLevel(level, availableEnemies);
     bool isBoss = level > 0 && level % 10 == 0;
-
-    double spacing = 210.0; // Augmenté pour la nouvelle taille des cartes
-    double startX = (size.x / 2) - ((enemyDataList.length - 1) * (spacing / 2));
     
     for (int i = 0; i < enemyDataList.length; i++) {
       final data = enemyDataList[i];
@@ -336,10 +350,26 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
         data: data,
         isBoss: isBoss,
         onTapEnemy: _handlePlayerTargeting,
-      )..position = Vector2(startX + (i * spacing), 220);
+      );
       
       enemyCards.add(enemy);
       add(enemy);
+    }
+    _repositionEnemies();
+  }
+
+  void _repositionEnemies() {
+    if (enemyCards.isEmpty) return;
+    
+    // Espacement dynamique basé sur la largeur de l'écran
+    double spacing = (size.x * 0.8) / (enemyCards.length + 1);
+    spacing = spacing.clamp(120, 250); // Garder des limites raisonnables
+    
+    double startX = (size.x / 2) - ((enemyCards.length - 1) * (spacing / 2));
+    double posY = size.y * 0.25; // 25% du haut
+
+    for (int i = 0; i < enemyCards.length; i++) {
+      enemyCards[i].position = Vector2(startX + (i * spacing), posY);
     }
   }
 

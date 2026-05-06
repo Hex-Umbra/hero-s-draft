@@ -40,6 +40,9 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
   @override
   Future<void> onLoad() async {
     anchor = Anchor.center;
+    
+    // Appliquer l'échelle initiale
+    scale = Vector2.all(game.scaleFactor);
 
     String spriteName = isBoss ? 'enemy_boss.png' : 'enemy_goblin.png';
     add(
@@ -93,6 +96,12 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
     manaBadge = StatBadge(type: StatType.mana, value: '${stats.currentMana}/${stats.maxMana}');
     manaBadge.position = Vector2(-15, 100);
     add(manaBadge);
+  }
+
+  @override
+  void onGameResize(Vector2 size) {
+    super.onGameResize(size);
+    scale = Vector2.all(game.scaleFactor);
   }
 
   void rollIntent() {

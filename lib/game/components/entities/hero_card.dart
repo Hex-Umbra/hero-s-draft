@@ -21,9 +21,12 @@ class HeroCard extends PositionComponent with TapCallbacks, HasGameReference<Her
   @override
   Future<void> onLoad() async {
     anchor = Anchor.center;
+    
+    // Appliquer l'échelle initiale
+    scale = Vector2.all(game.scaleFactor);
 
-    // Position par défaut au centre pour le joueur
-    position = Vector2(game.size.x / 2, game.size.y / 2 + 50);
+    // Position par défaut au centre pour le joueur (sera mise à jour par onGameResize du jeu)
+    position = Vector2(game.size.x / 2, game.size.y * 0.6);
 
     // Visuel Sprite
     add(
@@ -57,6 +60,13 @@ class HeroCard extends PositionComponent with TapCallbacks, HasGameReference<Her
     add(manaBadge);
 
     _refreshBadges();
+  }
+
+  @override
+  void onGameResize(Vector2 size) {
+    super.onGameResize(size);
+    // Mettre à jour l'échelle lors du redimensionnement
+    scale = Vector2.all(game.scaleFactor);
   }
 
   void _refreshBadges() {

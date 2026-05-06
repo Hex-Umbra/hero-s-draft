@@ -80,6 +80,9 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
 
   @override
   Future<void> onLoad() async {
+    // Appliquer l'échelle initiale
+    scale = Vector2.all(game.scaleFactor);
+
     // Nom de la carte
     nameText = TextComponent(
       text: card.data.name,
@@ -112,6 +115,15 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
       size: Vector2(size.x - 24, size.y / 2),
     );
     add(descriptionText);
+  }
+
+  @override
+  void onGameResize(Vector2 size) {
+    super.onGameResize(size);
+    // Mise à jour de l'échelle si on n'est pas en train de drag
+    if (!isDragging) {
+       scale = Vector2.all(game.scaleFactor);
+    }
   }
 
   String _buildDescription() {
@@ -179,7 +191,8 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
     position += event.canvasDelta;
     
     // Feedback visuel de zone de sécurité (annulation)
-    bool isInCancelZone = position.y > game.size.y - 220;
+    // On utilise désormais 80% de la hauteur de l'écran comme seuil
+    bool isInCancelZone = position.y > game.size.y * 0.8;
     if (isInCancelZone != _isHoveringCancelZone) {
       _isHoveringCancelZone = isInCancelZone;
       _applyCancelZoneFeedback(_isHoveringCancelZone);
@@ -293,7 +306,7 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
     );
     add(
       ScaleEffect.to(
-        Vector2.all(1.0),
+        Vector2.all(game.scaleFactor),
         EffectController(duration: 0.2, curve: Curves.easeOut),
       ),
     );
