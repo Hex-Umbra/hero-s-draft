@@ -98,4 +98,10 @@
 - feat: implémentation Phase 1
     - Configuration du Viewport Flame (Approche FixedResolutionViewport)
         - J'ai terminé la Phase 1. J'ai configuré la caméra du moteur Flame avec un `FixedResolutionViewport` réglé sur 1920x1080. Cette approche de "letterboxing" garantit que l'arène de combat et les cartes conservent leurs proportions et positions relatives quel que soit le ratio de l'écran de l'utilisateur.
+- feat: implémentation Phase 2
+    - Responsivité de l'UI Principale (GameScreen)
+        - J'ai terminé la Phase 2. Le HUD de `GameScreen` est désormais enveloppé dans une `SafeArea` et utilise des positionnements relatifs (`Align`, `MediaQuery`) pour la barre de vie et les boutons, évitant les superpositions sur petits écrans.
+- feat: implémentation Phase 3
+    - Refonte des Écrans de Menus (Draft & Sélection de Classe)
+        - J'ai terminé la Phase 3. `DraftScreen` s'adapte maintenant dynamiquement au mode portrait/paysage via un `LayoutBuilder`. `ClassSelectionScreen` a été migré vers un `GridView` adaptatif. Le composant `UiCard` a été rendu flexible en utilisant un `AspectRatio`.
 

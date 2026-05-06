@@ -20,14 +20,20 @@ class ClassSelectionScreen extends ConsumerWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: Center(
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: classes.map((c) => _buildClassCard(context, ref, c)).toList(),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: GridView.builder(
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 400, // Largeur max d'une carte
+              childAspectRatio: 0.75, // Ajustement de l'aspect ratio pour la verticalité
+              crossAxisSpacing: 20,
+              mainAxisSpacing: 20,
+            ),
+            itemCount: classes.length,
+            itemBuilder: (context, index) {
+              return _buildClassCard(context, ref, classes[index]);
+            },
           ),
         ),
       ),
@@ -40,66 +46,60 @@ class ClassSelectionScreen extends ConsumerWidget {
     if (playerClass.id == 'mage') classColor = Colors.purple;
 
     IconData icon = Icons.person;
-    // On pourrait utiliser playerClass.iconPath plus tard
     if (playerClass.id == 'paladin') icon = Icons.shield;
     if (playerClass.id == 'berserker') icon = Icons.whatshot;
     if (playerClass.id == 'mage') icon = Icons.auto_fix_high;
 
-    return Container(
-      width: 280,
-      margin: const EdgeInsets.symmetric(horizontal: 10),
-      child: Card(
-        color: const Color(0xFF2A2A3D),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: classColor, width: 2),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 80, color: classColor),
-              const SizedBox(height: 20),
-              Text(
-                playerClass.name,
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: classColor),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                'PV: ${playerClass.maxHp}\n'
-                'Mana: ${playerClass.maxMana}\n'
-                'Attaque: ${playerClass.baseDamage}\n'
-                'Armure: ${playerClass.baseArmor}\n',
-                style: const TextStyle(fontSize: 16, color: Colors.white),
-                textAlign: TextAlign.center,
-              ),
-              const Divider(color: Colors.white24, height: 30),
-              Expanded(
+    return Card(
+      color: const Color(0xFF2A2A3D),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: classColor, width: 2),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            Icon(icon, size: 60, color: classColor),
+            const SizedBox(height: 10),
+            Text(
+              playerClass.name,
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: classColor),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'PV: ${playerClass.maxHp} | Mana: ${playerClass.maxMana}\n'
+              'ATK: ${playerClass.baseDamage} | DEF: ${playerClass.baseArmor}',
+              style: const TextStyle(fontSize: 14, color: Colors.white),
+              textAlign: TextAlign.center,
+            ),
+            const Divider(color: Colors.white24, height: 20),
+            Expanded(
+              child: SingleChildScrollView(
                 child: Text(
                   playerClass.description,
-                  style: const TextStyle(fontSize: 14, color: Colors.white70, fontStyle: FontStyle.italic),
+                  style: const TextStyle(fontSize: 13, color: Colors.white70, fontStyle: FontStyle.italic),
                   textAlign: TextAlign.center,
                 ),
               ),
-              const SizedBox(height: 10),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: classColor,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 50),
-                ),
-                onPressed: () {
-                  ref.read(runProvider.notifier).startNewRun(playerClass);
-                  Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (context) => const GameScreen()),
-                    (route) => route.isFirst,
-                  );
-                },
-                child: const Text('Sélectionner', style: TextStyle(fontWeight: FontWeight.bold)),
-              )
-            ],
-          ),
+            ),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: classColor,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(double.infinity, 45),
+              ),
+              onPressed: () {
+                ref.read(runProvider.notifier).startNewRun(playerClass);
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (context) => const GameScreen()),
+                  (route) => route.isFirst,
+                );
+              },
+              child: const Text('Sélectionner', style: TextStyle(fontWeight: FontWeight.bold)),
+            )
+          ],
         ),
       ),
     );

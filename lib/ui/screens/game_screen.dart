@@ -162,6 +162,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     final runState = ref.watch(runProvider);
     final deckState = ref.watch(deckProvider);
     final gameData = ref.watch(gameDataLoaderProvider).requireValue;
+    final screenWidth = MediaQuery.of(context).size.width;
     
     _game.availableEnemies = gameData.enemies;
     _game.syncState(runState);
@@ -170,218 +171,232 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          GameWidget(game: _game),
+          // Le jeu prend tout l'écran
+          Positioned.fill(child: GameWidget(game: _game)),
           
-          if (_showDraft)
-            Positioned.fill(
-              child: DraftScreen(
-                onDraftComplete: () {
-                  setState(() { _showDraft = false; });
-                  ref.read(deckProvider.notifier).initializeCombat();
-                  ref.read(deckProvider.notifier).drawCards(5);
-                },
-              ),
-            ),
-          
-          if (!_showDraft && runState.isDead)
-            Positioned.fill(
-              child: Container(
-                color: Colors.red.withAlpha(230),
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                       const Text('VOUS ÊTES MORT', style: TextStyle(color: Colors.white, fontSize: 40, fontWeight: FontWeight.bold)),
-                       const SizedBox(height: 20),
-                       Row(
-                         mainAxisSize: MainAxisSize.min,
-                         children: [
-                           ElevatedButton(
-                             style: ElevatedButton.styleFrom(backgroundColor: Colors.white, foregroundColor: Colors.red),
-                             onPressed: () {
-                               Navigator.of(context).popUntil((route) => route.isFirst);
-                             },
-                             child: const Text('Menu Principal'),
-                           ),
-                           const SizedBox(width: 10),
-                           ElevatedButton(
-                             style: ElevatedButton.styleFrom(backgroundColor: Colors.white, foregroundColor: Colors.red),
-                             onPressed: () {
-                               Navigator.of(context).pushReplacement(
-                                 MaterialPageRoute(builder: (context) => const ClassSelectionScreen()),
-                               );
-                             },
-                             child: const Text('Changer de Classe'),
-                           ),
-                         ]
-                       )
-                    ],
-                  ),
-                ),
-              )
-            ),
-
-          Positioned(
-            top: 40,
-            left: 20,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          // HUD et Overlays dans une SafeArea
+          SafeArea(
+            child: Stack(
               children: [
-                Text(
-                  'Niveau actuel : ${runState.currentLevel}',
-                  style: const TextStyle(color: Colors.amber, fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-                if (runState.attackBuffDuration > 0)
-                  Text(
-                    'BUFF RAGE (+15% PV Max) - Reste ${runState.attackBuffDuration} tour(s)',
-                    style: const TextStyle(color: Colors.amber, fontSize: 14, fontWeight: FontWeight.bold),
+                if (_showDraft)
+                  Positioned.fill(
+                    child: DraftScreen(
+                      onDraftComplete: () {
+                        setState(() { _showDraft = false; });
+                        ref.read(deckProvider.notifier).initializeCombat();
+                        ref.read(deckProvider.notifier).drawCards(5);
+                      },
+                    ),
+                  ),
+                
+                if (!_showDraft && runState.isDead)
+                  Positioned.fill(
+                    child: Container(
+                      color: Colors.red.withAlpha(230),
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                             const Text('VOUS ÊTES MORT', style: TextStyle(color: Colors.white, fontSize: 40, fontWeight: FontWeight.bold)),
+                             const SizedBox(height: 20),
+                             Row(
+                               mainAxisSize: MainAxisSize.min,
+                               children: [
+                                 ElevatedButton(
+                                   style: ElevatedButton.styleFrom(backgroundColor: Colors.white, foregroundColor: Colors.red),
+                                   onPressed: () {
+                                     Navigator.of(context).popUntil((route) => route.isFirst);
+                                   },
+                                   child: const Text('Menu Principal'),
+                                 ),
+                                 const SizedBox(width: 10),
+                                 ElevatedButton(
+                                   style: ElevatedButton.styleFrom(backgroundColor: Colors.white, foregroundColor: Colors.red),
+                                   onPressed: () {
+                                     Navigator.of(context).pushReplacement(
+                                       MaterialPageRoute(builder: (context) => const ClassSelectionScreen()),
+                                     );
+                                   },
+                                   child: const Text('Changer de Classe'),
+                                 ),
+                               ]
+                             )
+                          ],
+                        ),
+                      ),
+                    )
+                  ),
+
+                // Indicateurs de niveau (Haut Gauche)
+                if (!runState.isDead && !_showDraft)
+                  Positioned(
+                    top: 10,
+                    left: 20,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Niveau actuel : ${runState.currentLevel}',
+                          style: const TextStyle(color: Colors.amber, fontSize: 24, fontWeight: FontWeight.bold),
+                        ),
+                        if (runState.attackBuffDuration > 0)
+                          Text(
+                            'BUFF RAGE (+15% PV Max) - Reste ${runState.attackBuffDuration} tour(s)',
+                            style: const TextStyle(color: Colors.amber, fontSize: 14, fontWeight: FontWeight.bold),
+                          ),
+                      ],
+                    ),
+                  ),
+                
+                // Bouton Pause (Haut Droite)
+                if (!runState.isDead && !_showDraft)
+                  Positioned(
+                    top: 10,
+                    right: 20,
+                    child: IconButton(
+                      icon: const Icon(Icons.pause_circle_outline, color: Colors.white, size: 40),
+                      onPressed: () {
+                        _showPauseMenu();
+                      },
+                    ),
+                  ),
+                  
+                // Barre de Vie du Joueur (Bas Centre)
+                if (!runState.isDead && !_showDraft)
+                  Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 20),
+                      child: SizedBox(
+                        width: screenWidth * 0.4, // 40% de la largeur
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '${runState.heroStats.currentPv} / ${runState.heroStats.maxPv} PV',
+                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                            ),
+                            const SizedBox(height: 4),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: LinearProgressIndicator(
+                                value: (runState.heroStats.maxPv > 0) 
+                                    ? runState.heroStats.currentPv / runState.heroStats.maxPv 
+                                    : 0,
+                                minHeight: 20,
+                                backgroundColor: Colors.black54,
+                                valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF27AE60)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                
+                // Bouton Fin de Tour (Milieu Droite)
+                if (!runState.isDead && !_showDraft)
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 20),
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blueAccent,
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        ),
+                        onPressed: () {
+                          ref.read(deckProvider.notifier).discardHand();
+                          _game.executeTurn();
+                        },
+                        icon: const Icon(Icons.check, color: Colors.white),
+                        label: const Text('Fin de Tour', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ),
+
+                // Draw Pile (Bas Gauche)
+                if (!runState.isDead && !_showDraft)
+                  Positioned(
+                    bottom: 20,
+                    left: 20,
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(color: Colors.blueGrey, borderRadius: BorderRadius.circular(8)),
+                      child: Text('Pioche: ${deckState.drawPile.length}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                  
+                // Discard Pile (Bas Droite)
+                if (!runState.isDead && !_showDraft)
+                  Positioned(
+                    bottom: 20,
+                    right: 20,
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(color: Colors.grey[800], borderRadius: BorderRadius.circular(8)),
+                      child: Text('Défausse: ${deckState.discardPile.length}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+
+                // Phase Banner Overlay (Centre)
+                if (_showPhaseBanner)
+                  IgnorePointer(
+                    child: Center(
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 40),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withAlpha(180),
+                          border: Border.symmetric(horizontal: BorderSide(color: Colors.amber.withAlpha(200), width: 2)),
+                        ),
+                        child: Text(
+                          _phaseBannerText ?? '',
+                          style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: 4),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                // Tooltip Overlay
+                if (_showTooltip)
+                  Positioned(
+                    left: 40,
+                    right: 40,
+                    bottom: 220,
+                    child: IgnorePointer(
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF2A2A3D).withAlpha(240),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.blueAccent, width: 2),
+                          boxShadow: [
+                            BoxShadow(color: Colors.black.withAlpha(100), blurRadius: 10, spreadRadius: 5),
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _tooltipTitle ?? '',
+                              style: const TextStyle(color: Colors.blueAccent, fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                            const Divider(color: Colors.white24),
+                            Text(
+                              _tooltipDescription ?? '',
+                              style: const TextStyle(color: Colors.white, fontSize: 14),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
               ],
             ),
           ),
-          
-          // Bouton Pause (en haut à droite)
-          if (!runState.isDead && !_showDraft)
-            Positioned(
-              top: 40,
-              right: 20,
-              child: IconButton(
-                icon: const Icon(Icons.pause_circle_outline, color: Colors.white, size: 40),
-                onPressed: () {
-                  _showPauseMenu();
-                },
-              ),
-            ),
-            
-          // Player Health Bar (Global HUD)
-          if (!runState.isDead && !_showDraft)
-            Positioned(
-              bottom: 20, 
-              left: 140, // Entre la pioche et le centre
-              width: 300, // Largeur augmentée
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    '${runState.heroStats.currentPv} / ${runState.heroStats.maxPv} PV',
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                  const SizedBox(height: 4),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: LinearProgressIndicator(
-                      value: runState.heroStats.currentPv / runState.heroStats.maxPv,
-                      minHeight: 20,
-                      backgroundColor: Colors.black54,
-                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF27AE60)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          
-          // HUD Fin de Tour
-          if (!runState.isDead && !_showDraft)
-            Positioned(
-              right: 20,
-              top: 0,
-              bottom: 0,
-              child: Center(
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blueAccent,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  ),
-                  onPressed: () {
-                    ref.read(deckProvider.notifier).discardHand();
-                    _game.executeTurn();
-                  },
-                  icon: const Icon(Icons.check, color: Colors.white),
-                  label: const Text('Fin de Tour', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                ),
-              ),
-            ),
-          // Draw Pile
-          if (!runState.isDead && !_showDraft)
-            Positioned(
-              bottom: 20,
-              left: 20,
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: Colors.blueGrey, borderRadius: BorderRadius.circular(8)),
-                child: Text('Pioche: ${deckState.drawPile.length}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-              ),
-            ),
-            
-          // Discard Pile
-          if (!runState.isDead && !_showDraft)
-            Positioned(
-              bottom: 20,
-              right: 20,
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: Colors.grey[800], borderRadius: BorderRadius.circular(8)),
-                child: Text('Défausse: ${deckState.discardPile.length}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-              ),
-            ),
-
-          // Phase Banner Overlay
-          if (_showPhaseBanner)
-            Positioned.fill(
-              child: IgnorePointer(
-                child: Center(
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                    padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 40),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withAlpha(180),
-                      border: Border.symmetric(horizontal: BorderSide(color: Colors.amber.withAlpha(200), width: 2)),
-                    ),
-                    child: Text(
-                      _phaseBannerText ?? '',
-                      style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: 4),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-          // Tooltip Overlay
-          if (_showTooltip)
-            Positioned(
-              left: 40,
-              right: 40,
-              bottom: 220,
-              child: IgnorePointer(
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF2A2A3D).withAlpha(240),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.blueAccent, width: 2),
-                    boxShadow: [
-                      BoxShadow(color: Colors.black.withAlpha(100), blurRadius: 10, spreadRadius: 5),
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _tooltipTitle ?? '',
-                        style: const TextStyle(color: Colors.blueAccent, fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      const Divider(color: Colors.white24),
-                      Text(
-                        _tooltipDescription ?? '',
-                        style: const TextStyle(color: Colors.white, fontSize: 14),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
         ],
       ),
     );

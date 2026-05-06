@@ -15,44 +15,81 @@ class DraftScreen extends ConsumerWidget {
 
     return Material(
       color: Colors.black87,
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'RÉCOMPENSE DE COMBAT',
-              style: TextStyle(color: Colors.amber, fontSize: 32, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              'Choisissez une amélioration pour votre héros',
-              style: TextStyle(color: Colors.white, fontSize: 18),
-            ),
-            const SizedBox(height: 50),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: choices.map((choice) => Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: UiCard(
-                  title: choice.title,
-                  description: choice.description,
-                  onTap: () {
-                    ref.read(runProvider.notifier).applyHeroStatModifier(
-                      maxPvAcc: choice.pvBoost,
-                      attackAcc: choice.atkBoost,
-                      armorAcc: choice.armorBoost,
-                      maxManaAcc: choice.manaBoost,
-                    );
-                    ref.read(runProvider.notifier).nextLevel();
-                    onDraftComplete();
-                  },
+      child: SafeArea(
+        child: Center(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              bool isPortrait = constraints.maxWidth < 600;
+
+              return Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'RÉCOMPENSE DE COMBAT',
+                      style: TextStyle(color: Colors.amber, fontSize: 32, fontWeight: FontWeight.bold),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'Choisissez une amélioration pour votre héros',
+                      style: TextStyle(color: Colors.white, fontSize: 18),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 30),
+                    if (isPortrait)
+                      // Mode Portrait : On empile verticalement (ou on scroll si besoin)
+                      Expanded(
+                        child: ListView(
+                          shrinkWrap: true,
+                          children: choices.map((choice) => Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 40),
+                            child: UiCard(
+                              title: choice.title,
+                              description: choice.description,
+                              onTap: () => _onChoiceSelected(ref, choice),
+                            ),
+                          )).toList(),
+                        ),
+                      )
+                    else
+                      // Mode Paysage : Row horizontale
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: choices.map((choice) => Flexible(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 200),
+                              child: UiCard(
+                                title: choice.title,
+                                description: choice.description,
+                                onTap: () => _onChoiceSelected(ref, choice),
+                              ),
+                            ),
+                          ),
+                        )).toList(),
+                      ),
+                  ],
                 ),
-              )).toList(),
-            ),
-          ],
+              );
+            }
+          ),
         ),
       ),
     );
+  }
+
+  void _onChoiceSelected(WidgetRef ref, _DraftChoice choice) {
+    ref.read(runProvider.notifier).applyHeroStatModifier(
+      maxPvAcc: choice.pvBoost,
+      attackAcc: choice.atkBoost,
+      armorAcc: choice.armorBoost,
+      maxManaAcc: choice.manaBoost,
+    );
+    ref.read(runProvider.notifier).nextLevel();
+    onDraftComplete();
   }
 
   List<_DraftChoice> _generateChoices() {
