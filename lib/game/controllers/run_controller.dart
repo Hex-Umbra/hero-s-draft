@@ -139,17 +139,38 @@ class RunController extends StateNotifier<RunState> {
 
   /// Nouveau Tour : Applique les effets de début de tour, baisse le cooldown, les buffs, et restaure le mana
   void startTurn() {
-    // 1. Appliquer les effets de début de tour (ex: Poison)
+    // 1. Appliquer les effets de début de tour (ex: Poison, Regen)
     int poisonDamage = 0;
+    int strengthGain = 0;
+    int armorGain = 0;
+
     for (var status in state.heroStats.statuses) {
       if (status.id == 'poison') {
         poisonDamage += status.value;
+      } else if (status.id == 'strength_regen') {
+        strengthGain += status.value;
+      } else if (status.id == 'armor_regen') {
+        armorGain += status.value;
       }
     }
 
     EntityStats updatedStats = state.heroStats;
     if (poisonDamage > 0) {
       updatedStats = updatedStats.takeDamage(poisonDamage);
+    }
+    if (strengthGain > 0) {
+      updatedStats = updatedStats.addStatus(StatusEffect(
+        id: 'strength',
+        name: 'Force',
+        type: StatusType.buff,
+        value: strengthGain,
+        duration: 1, // La force accumulée via regen pourrait être permanente ou durer 1 tour. 
+        // En général dans ces jeux, la Force est permanente jusqu'à la fin du combat.
+        // Si on veut qu'elle soit permanente, on met une durée longue ou on change la logique.
+      ));
+    }
+    if (armorGain > 0) {
+      updatedStats = updatedStats.copyWith(armure: updatedStats.armure + armorGain);
     }
 
     // 2. Restaurer Mana et décrémenter les statuts

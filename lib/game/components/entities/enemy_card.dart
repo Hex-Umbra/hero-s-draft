@@ -6,6 +6,7 @@ import 'package:flame/effects.dart';
 import '../../../data/models/entity_stats.dart';
 import '../../../models/data/enemy_data.dart';
 import '../../../models/enemy_intent.dart';
+import '../../../models/status_effect.dart';
 import '../floating_text.dart';
 import '../effect_icon.dart';
 import 'stat_badge.dart';
@@ -147,15 +148,37 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
   /// Applique les effets de début de tour de l'ennemi
   void startTurn() {
     int poisonDamage = 0;
+    int strengthGain = 0;
+    int armorGain = 0;
+
     for (var status in stats.statuses) {
       if (status.id == 'poison') {
         poisonDamage += status.value;
+      } else if (status.id == 'strength_regen') {
+        strengthGain += status.value;
+      } else if (status.id == 'armor_regen') {
+        armorGain += status.value;
       }
     }
 
+    EntityStats updatedStats = stats;
     if (poisonDamage > 0) {
-      updateStats(stats.takeDamage(poisonDamage));
+      updatedStats = updatedStats.takeDamage(poisonDamage);
     }
+    if (strengthGain > 0) {
+      updatedStats = updatedStats.addStatus(StatusEffect(
+        id: 'strength',
+        name: 'Force',
+        type: StatusType.buff,
+        value: strengthGain,
+        duration: 1,
+      ));
+    }
+    if (armorGain > 0) {
+      updatedStats = updatedStats.copyWith(armure: updatedStats.armure + armorGain);
+    }
+
+    updateStats(updatedStats);
 
     // Décrémenter les statuts pour le tour suivant
     updateStats(stats.tickStatuses());

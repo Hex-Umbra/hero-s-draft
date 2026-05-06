@@ -132,3 +132,6 @@
 - feat: implémentation Phase 1
     - Système d'Altérations d'État (Buffs/Debuffs)
         - J'ai terminé la Phase 1. J'ai modélisé les effets de statut avec la classe `StatusEffect`, intégré une liste de statuts dans `EntityStats`, et mis à jour le `RunController` et le `EffectResolver` pour gérer l'application et la résolution des effets (ex: Force, Faiblesse, Poison). Le système de dégâts prend désormais en compte ces modificateurs et le poison est appliqué automatiquement au début de chaque tour pour le héros et les ennemis.
+- feat: implémentation Phase 2
+    - Types de Cartes Spéciaux (Pouvoirs et Malédictions)
+        - J'ai terminé la Phase 2. J'ai implémenté le support pour les cartes de type `Power` (qui sont épuisées après usage et appliquent des effets permanents via des statuts de régénération comme `strength_regen` ou `armor_regen`) et les cartes de type `Status/Curse` (comme `Injury` qui est injouable). Le `DeckNotifier` gère déjà l'épuisement des pouvoirs, et j'ai enrichi le `EffectResolver` et les contrôleurs pour traiter ces nouveaux comportements de début de tour.

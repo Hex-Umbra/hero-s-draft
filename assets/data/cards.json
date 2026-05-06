@@ -131,5 +131,56 @@
       { "type": "damage", "value": 4 },
       { "type": "armor", "value": 4 }
     ]
+  },
+  {
+    "id": "demon_form",
+    "name": "Forme Démoniaque",
+    "description": "Au début de chaque tour, gagne 2 Force.",
+    "cost": 3,
+    "type": "power",
+    "category": "global",
+    "rarity": "rare",
+    "target": "self",
+    "effects": [
+      { "type": "apply_status", "statusId": "strength_regen", "value": 2, "duration": 99 }
+    ]
+  },
+  {
+    "id": "metallicize",
+    "name": "Métallisation",
+    "description": "Au début de chaque tour, gagne 3 Armure.",
+    "cost": 1,
+    "type": "power",
+    "category": "global",
+    "rarity": "uncommon",
+    "target": "self",
+    "effects": [
+      { "type": "apply_status", "statusId": "armor_regen", "value": 3, "duration": 99 }
+    ]
+  },
+  {
+    "id": "poison_stab",
+    "name": "Coup Empoisonné",
+    "description": "Inflige 5 dégâts. Applique 3 Poison.",
+    "cost": 1,
+    "type": "attack",
+    "category": "global",
+    "rarity": "common",
+    "target": "singleEnemy",
+    "effects": [
+      { "type": "damage", "value": 5 },
+      { "type": "apply_status", "statusId": "poison", "value": 3, "duration": 3 }
+    ]
+  },
+  {
+    "id": "injury",
+    "name": "Blessure",
+    "description": "Injouable.",
+    "cost": 99,
+    "type": "status",
+    "category": "global",
+    "rarity": "common",
+    "target": "none",
+    "effects": []
   }
 ]

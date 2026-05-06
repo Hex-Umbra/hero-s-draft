@@ -17,6 +17,10 @@ class EffectResolver {
         return StatusEffect(id: 'weakness', name: 'Faiblesse', type: StatusType.debuff, value: value, duration: duration);
       case 'vulnerable':
         return StatusEffect(id: 'vulnerable', name: 'Vulnérable', type: StatusType.debuff, value: value, duration: duration);
+      case 'strength_regen':
+        return StatusEffect(id: 'strength_regen', name: 'Éveil de Force', type: StatusType.buff, value: value, duration: duration);
+      case 'armor_regen':
+        return StatusEffect(id: 'armor_regen', name: 'Métallisation', type: StatusType.buff, value: value, duration: duration);
       default:
         return null;
     }
