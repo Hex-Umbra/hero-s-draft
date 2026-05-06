@@ -300,9 +300,9 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
 
       // On n'oriente physiquement la carte que si elle n'est pas drag
       if (card == focusedCard) {
-        // La carte est focus, elle doit rester droite et en hauteur
+        // La carte est focus, elle monte dans l'axe vertical mais garde son angle
         card.position = Vector2(x, y) + Vector2(0, -60);
-        card.angle = 0;
+        card.angle = angle;
       } else {
         card.position = Vector2(x, y);
         card.angle = angle;
