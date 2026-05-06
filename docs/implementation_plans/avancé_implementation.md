@@ -117,4 +117,7 @@
 - feat: implémentation Phase 1
     - Planification des ajustements visuels (Plan 11)
         - J'ai rédigé le Plan 11 pour corriger le chevauchement de la barre de vie avec les cartes en main et augmenter la taille globale de tous les éléments Flame qui paraissent trop petits sur l'ensemble des résolutions.
+- feat: implémentation Phase 2
+    - Ajustements des tailles et positions Flame
+        - J'ai terminé la Phase 2. Le `scaleFactor` global a été augmenté (référence 800px) pour agrandir tous les éléments du jeu. L'arc de cercle de la main de cartes a été remonté (décalage de 25% de la hauteur) pour libérer l'espace visuel occupé par la barre de vie HUD en bas de l'écran.
 

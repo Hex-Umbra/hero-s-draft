@@ -27,8 +27,8 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
   CardComponent? hoveredCard;
   CardComponent? focusedCard;
   
-  // Facteur d'échelle basé sur une résolution de référence (1080p)
-  double get scaleFactor => (size.y / 1080).clamp(0.5, 2.0);
+  // Facteur d'échelle basé sur une résolution de référence (800p pour agrandir les éléments)
+  double get scaleFactor => (size.y / 800).clamp(0.85, 2.5);
   
   RunState? _currentState;
   RunState? _nextState;
@@ -279,8 +279,8 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
     final double startAngle = -totalAngle / 2;
 
     // Le centre de l'arc de cercle est situé plus bas pour descendre les cartes
-    // On utilise un offset relatif à size.y
-    final Vector2 centerPoint = Vector2(size.x / 2, size.y + radius - (size.y * 0.1));
+    // On utilise un offset relatif à size.y pour remonter la main (dégager la barre de vie)
+    final Vector2 centerPoint = Vector2(size.x / 2, size.y + radius - (size.y * 0.25));
 
     for (int i = 0; i < count; i++) {
       final card = handCards[i];

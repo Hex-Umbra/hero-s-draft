@@ -80,8 +80,8 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
 
   @override
   Future<void> onLoad() async {
-    // Appliquer l'échelle initiale
-    scale = Vector2.all(game.scaleFactor);
+    // Appliquer l'échelle initiale (Réduite pour la main)
+    scale = Vector2.all(game.scaleFactor * 0.75);
 
     // Nom de la carte
     nameText = TextComponent(
@@ -120,9 +120,9 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
   @override
   void onGameResize(Vector2 size) {
     super.onGameResize(size);
-    // Mise à jour de l'échelle si on n'est pas en train de drag
+    // Mise à jour de l'échelle si on n'est pas en train de drag (Réduite pour la main)
     if (!isDragging) {
-       scale = Vector2.all(game.scaleFactor);
+       scale = Vector2.all(game.scaleFactor * 0.75);
     }
   }
 
@@ -306,7 +306,7 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
     );
     add(
       ScaleEffect.to(
-        Vector2.all(game.scaleFactor),
+        Vector2.all(game.scaleFactor * 0.75),
         EffectController(duration: 0.2, curve: Curves.easeOut),
       ),
     );

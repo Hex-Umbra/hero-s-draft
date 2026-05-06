@@ -41,8 +41,8 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
   Future<void> onLoad() async {
     anchor = Anchor.center;
     
-    // Appliquer l'échelle initiale
-    scale = Vector2.all(game.scaleFactor);
+    // Appliquer l'échelle initiale (Agrandie pour le terrain)
+    scale = Vector2.all(game.scaleFactor * 1.3);
 
     String spriteName = isBoss ? 'enemy_boss.png' : 'enemy_goblin.png';
     add(
@@ -101,7 +101,8 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
   @override
   void onGameResize(Vector2 size) {
     super.onGameResize(size);
-    scale = Vector2.all(game.scaleFactor);
+    // Mettre à jour l'échelle lors du redimensionnement (Agrandie pour le terrain)
+    scale = Vector2.all(game.scaleFactor * 1.3);
   }
 
   void rollIntent() {
