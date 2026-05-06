@@ -27,16 +27,22 @@ enum CardTarget {
 class CardEffect {
   final String type;
   final int value;
+  final String? statusId;
+  final int? duration;
 
   const CardEffect({
     required this.type,
     required this.value,
+    this.statusId,
+    this.duration,
   });
 
   factory CardEffect.fromJson(Map<String, dynamic> json) {
     return CardEffect(
       type: json['type'] as String,
       value: json['value'] as int,
+      statusId: json['statusId'] as String?,
+      duration: json['duration'] as int?,
     );
   }
 }

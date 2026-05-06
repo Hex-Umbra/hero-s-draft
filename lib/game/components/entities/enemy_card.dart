@@ -144,6 +144,23 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
     _refreshBadges();
   }
 
+  /// Applique les effets de début de tour de l'ennemi
+  void startTurn() {
+    int poisonDamage = 0;
+    for (var status in stats.statuses) {
+      if (status.id == 'poison') {
+        poisonDamage += status.value;
+      }
+    }
+
+    if (poisonDamage > 0) {
+      updateStats(stats.takeDamage(poisonDamage));
+    }
+
+    // Décrémenter les statuts pour le tour suivant
+    updateStats(stats.tickStatuses());
+  }
+
   void _spawnFloatingText(String text, Color color, Vector2 pos) {
     final ft = FloatingText(
       text: text,

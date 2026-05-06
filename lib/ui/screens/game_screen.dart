@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../game/heros_draft_game.dart';
 import '../../game/controllers/run_controller.dart';
 import '../../game/controllers/deck_controller.dart';
+import '../../game/services/effect_resolver.dart';
 import 'draft_screen.dart';
 import 'class_selection_screen.dart';
 import '../../services/game_data_service.dart';
@@ -83,15 +84,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         });
       },
       onPlayCard: (card, target) {
-        // Validation basique (mana)
-        final runState = ref.read(runProvider);
-        if (runState.heroStats.currentMana < card.currentCost) return false;
-        
-        // Validation cible
-        if (card.data.target == CardTarget.singleEnemy && target == null) return false;
-
-        // Résolution des effets
-        ref.read(runProvider.notifier).consumeResource(mana: card.currentCost);
+        final runController = ref.read(runProvider.notifier);
         
         // Animation du héros selon le type de carte
         if (card.data.type == CardType.attack) {
@@ -102,44 +95,34 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           _game.heroCard?.buffAnimation(hasArmor ? 'defend' : 'buff');
         }
 
-        for (var effect in card.data.effects) {
-          if (effect.type == 'damage') {
-             if (card.data.target == CardTarget.singleEnemy && target != null) {
-                target.updateStats(target.stats.takeDamage(effect.value + runState.effectiveAttaque));
-                if (target.stats.currentPv <= 0) {
-                   target.removeFromParent();
-                   _game.enemyCards.remove(target);
-                   if (_game.selectedEnemy == target) _game.selectedEnemy = null;
-                }
-             } else if (card.data.target == CardTarget.allEnemies) {
-                for (var enemy in _game.enemyCards.toList()) {
-                   enemy.updateStats(enemy.stats.takeDamage(effect.value + runState.effectiveAttaque));
-                   if (enemy.stats.currentPv <= 0) {
-                      enemy.removeFromParent();
-                      _game.enemyCards.remove(enemy);
-                      if (_game.selectedEnemy == enemy) _game.selectedEnemy = null;
-                   }
-                }
-             }
-          } else if (effect.type == 'armor') {
-             final currentArmor = ref.read(runProvider).heroStats.armure;
-             ref.read(runProvider.notifier).setHeroStats(armure: currentArmor + effect.value);
-          } else if (effect.type == 'heal') {
-             ref.read(runProvider.notifier).heal(effect.value);
-          } else if (effect.type == 'draw') {
-             ref.read(deckProvider.notifier).drawCards(effect.value);
+        // Résolution via EffectResolver
+        bool success = EffectResolver.resolveCard(
+          card,
+          runController,
+          _game.enemyCards,
+          target,
+        );
+
+        if (success) {
+          // Nettoyage des ennemis morts
+          for (var enemy in _game.enemyCards.toList()) {
+            if (enemy.stats.currentPv <= 0) {
+              enemy.removeFromParent();
+              _game.enemyCards.remove(enemy);
+              if (_game.selectedEnemy == enemy) _game.selectedEnemy = null;
+            }
+          }
+
+          // Dire au DeckNotifier que la carte est jouée
+          ref.read(deckProvider.notifier).playCard(card);
+          
+          if (_game.enemyCards.isEmpty) {
+            _game.onEnemiesDead();
+            _game.currentPhase = TurnPhase.player;
           }
         }
-        
-        // Dire au DeckNotifier que la carte est jouée
-        ref.read(deckProvider.notifier).playCard(card);
-        
-        if (_game.enemyCards.isEmpty) {
-           _game.onEnemiesDead();
-           _game.currentPhase = TurnPhase.player;
-        }
 
-        return true;
+        return success;
       }
     );
   }
@@ -239,11 +222,11 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                           'Niveau actuel : ${runState.currentLevel}',
                           style: const TextStyle(color: Colors.amber, fontSize: 24, fontWeight: FontWeight.bold),
                         ),
-                        if (runState.attackBuffDuration > 0)
-                          Text(
-                            'BUFF RAGE (+15% PV Max) - Reste ${runState.attackBuffDuration} tour(s)',
-                            style: const TextStyle(color: Colors.amber, fontSize: 14, fontWeight: FontWeight.bold),
-                          ),
+                        // Affichage simplifié des statuts du joueur
+                        ...runState.heroStats.statuses.map((s) => Text(
+                          '${s.name} : ${s.value} (${s.duration} tours)',
+                          style: const TextStyle(color: Colors.amber, fontSize: 14, fontWeight: FontWeight.bold),
+                        )),
                       ],
                     ),
                   ),

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/entity_stats.dart';
 import '../../models/data/hero_data.dart';
+import '../../models/status_effect.dart';
 
 class RunState {
   final int currentLevel;
@@ -10,21 +11,11 @@ class RunState {
   // Variables pour gérer l'état du cooldown des sorts
   final int skill1Cooldown;
   final int skill2Cooldown;
-  // Durée du buff d'attaque
-  final int attackBuffDuration;
-  // Durée du vol de vie (Berserker)
-  final int lifestealDuration;
 
   bool get isBossLevel => currentLevel > 0 && currentLevel % 10 == 0;
   bool get isDead => heroStats.currentPv <= 0;
 
-  int get effectiveAttaque {
-    if (attackBuffDuration > 0) {
-      int bonus = (heroStats.maxPv * 0.15).round();
-      return heroStats.attaque + bonus;
-    }
-    return heroStats.attaque;
-  }
+  int get effectiveAttaque => heroStats.effectiveAttaque;
 
   const RunState({
     required this.currentLevel,
@@ -32,8 +23,6 @@ class RunState {
     required this.heroClassId,
     this.skill1Cooldown = 0,
     this.skill2Cooldown = 0,
-    this.attackBuffDuration = 0,
-    this.lifestealDuration = 0,
   });
 
   RunState copyWith({
@@ -42,8 +31,6 @@ class RunState {
     String? heroClassId,
     int? skill1Cooldown,
     int? skill2Cooldown,
-    int? attackBuffDuration,
-    int? lifestealDuration,
   }) {
     return RunState(
       currentLevel: currentLevel ?? this.currentLevel,
@@ -51,8 +38,6 @@ class RunState {
       heroClassId: heroClassId ?? this.heroClassId,
       skill1Cooldown: skill1Cooldown ?? this.skill1Cooldown,
       skill2Cooldown: skill2Cooldown ?? this.skill2Cooldown,
-      attackBuffDuration: attackBuffDuration ?? this.attackBuffDuration,
-      lifestealDuration: lifestealDuration ?? this.lifestealDuration,
     );
   }
 }
@@ -147,16 +132,33 @@ class RunController extends StateNotifier<RunState> {
     state = state.copyWith(heroStats: state.heroStats.takeDamage(amount));
   }
 
-  /// Nouveau Tour : Baisse le cooldown, les buffs, et restaure le mana
+  /// Applique un effet de statut
+  void addStatus(StatusEffect effect) {
+    state = state.copyWith(heroStats: state.heroStats.addStatus(effect));
+  }
+
+  /// Nouveau Tour : Applique les effets de début de tour, baisse le cooldown, les buffs, et restaure le mana
   void startTurn() {
+    // 1. Appliquer les effets de début de tour (ex: Poison)
+    int poisonDamage = 0;
+    for (var status in state.heroStats.statuses) {
+      if (status.id == 'poison') {
+        poisonDamage += status.value;
+      }
+    }
+
+    EntityStats updatedStats = state.heroStats;
+    if (poisonDamage > 0) {
+      updatedStats = updatedStats.takeDamage(poisonDamage);
+    }
+
+    // 2. Restaurer Mana et décrémenter les statuts
     state = state.copyWith(
-      heroStats: state.heroStats.copyWith(
-        currentMana: state.heroStats.maxMana,
-      ),
+      heroStats: updatedStats.copyWith(
+        currentMana: updatedStats.maxMana,
+      ).tickStatuses(),
       skill1Cooldown: state.skill1Cooldown > 0 ? state.skill1Cooldown - 1 : 0,
       skill2Cooldown: state.skill2Cooldown > 0 ? state.skill2Cooldown - 1 : 0,
-      attackBuffDuration: state.attackBuffDuration > 0 ? state.attackBuffDuration - 1 : 0,
-      lifestealDuration: state.lifestealDuration > 0 ? state.lifestealDuration - 1 : 0,
     );
   }
 
@@ -205,12 +207,30 @@ class RunController extends StateNotifier<RunState> {
 
   /// Applique un buff d'attaque pour une durée donnée
   void applyAttackBuff(int duration) {
-    state = state.copyWith(attackBuffDuration: duration);
+    // On convertit l'ancien buff (15% de HP max) en un StatusEffect de Force
+    int bonus = (state.heroStats.maxPv * 0.15).round();
+    state = state.copyWith(
+      heroStats: state.heroStats.addStatus(StatusEffect(
+        id: 'strength',
+        name: 'Force',
+        type: StatusType.buff,
+        value: bonus,
+        duration: duration,
+      )),
+    );
   }
 
   /// Applique un effet de Vol de vie pour une durée donnée
   void applyLifestealBuff(int duration) {
-    state = state.copyWith(lifestealDuration: duration);
+    state = state.copyWith(
+      heroStats: state.heroStats.addStatus(StatusEffect(
+        id: 'lifesteal',
+        name: 'Vol de Vie',
+        type: StatusType.buff,
+        value: 1, // Utilisé comme booléen ou multiplicateur
+        duration: duration,
+      )),
+    );
   }
 }
 

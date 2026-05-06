@@ -112,7 +112,7 @@
     - Responsivité Dynamique du Moteur Flame
         - J'ai terminé la Phase 5 (Plan 10). Le moteur Flame utilise désormais tout l'espace disponible. Un `scaleFactor` dynamique ajuste la taille des cartes et des entités selon la hauteur de l'écran. Toutes les positions (Héros, Ennemis, Main) sont désormais relatives et se recalculent instantanément lors d'un redimensionnement via `onGameResize`. La zone d'annulation est également passée à un seuil relatif de 80% de la hauteur.
 
-## Phase 7 - Ajustements UI/UX et Tailles
+## Phase 6.5 - Ajustements UI/UX et Tailles
 
 - feat: implémentation Phase 1
     - Planification des ajustements visuels (Plan 11)
@@ -126,4 +126,9 @@
 - feat: implémentation Phase 4
     - Polissage de l'UI et des positions (Plan 14)
         - J'ai terminé la Phase 4. La barre de vie du joueur a été collée tout en bas de l'écran. La barre de vie des ennemis a été remplacée par un badge statique circulaire situé à droite de leur carte. Enfin, l'indicateur d'intention des ennemis a été descendu pour être juste au-dessus du bord supérieur de la carte.
+        
+## Phase 7 - Profondeur du Gameplay & Mécaniques de Combat
 
+- feat: implémentation Phase 1
+    - Système d'Altérations d'État (Buffs/Debuffs)
+        - J'ai terminé la Phase 1. J'ai modélisé les effets de statut avec la classe `StatusEffect`, intégré une liste de statuts dans `EntityStats`, et mis à jour le `RunController` et le `EffectResolver` pour gérer l'application et la résolution des effets (ex: Force, Faiblesse, Poison). Le système de dégâts prend désormais en compte ces modificateurs et le poison est appliqué automatiquement au début de chaque tour pour le héros et les ennemis.

@@ -479,6 +479,28 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
     onPhaseChanged(TurnPhase.enemy);
     await Future.delayed(const Duration(milliseconds: 600));
 
+    // Début de tour des ennemis (Poison, Tick de buffs, etc.)
+    for (var enemy in enemyCards) {
+      enemy.startTurn();
+    }
+    
+    // Nettoyage des ennemis morts (ex: par poison)
+    for (var enemy in enemyCards.toList()) {
+      if (enemy.stats.currentPv <= 0) {
+        enemy.removeFromParent();
+        enemyCards.remove(enemy);
+        if (selectedEnemy == enemy) selectedEnemy = null;
+      }
+    }
+
+    if (enemyCards.isEmpty) {
+      onEnemiesDead();
+      currentPhase = TurnPhase.player;
+      onPhaseChanged(TurnPhase.player);
+      onTurnEnded();
+      return;
+    }
+
     // Riposte des Ennemis (Séquentielle)
     for (var enemy in enemyCards) {
       if (_currentState == null || _currentState!.isDead) break;
