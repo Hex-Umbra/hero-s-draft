@@ -87,9 +87,9 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
     nameText = TextComponent(
       text: card.data.name,
       textRenderer: TextPaint(
-        style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+        style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
       ),
-      position: Vector2(size.x / 2, 12),
+      position: Vector2(size.x / 2 + 12, 12), // Décalé vers la droite pour éviter le mana
       anchor: Anchor.topCenter,
     );
     add(nameText);
@@ -98,9 +98,10 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
     costText = TextComponent(
       text: '${card.currentCost}',
       textRenderer: TextPaint(
-        style: const TextStyle(color: Colors.lightBlueAccent, fontSize: 24, fontWeight: FontWeight.bold),
+        style: const TextStyle(color: Colors.lightBlueAccent, fontSize: 22, fontWeight: FontWeight.bold),
       ),
-      position: Vector2(12, 12),
+      position: Vector2(16, 16),
+      anchor: Anchor.center,
     );
     add(costText);
 
@@ -108,9 +109,9 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
     descriptionText = TextComponent(
       text: _buildDescription(),
       textRenderer: TextPaint(
-        style: const TextStyle(color: Colors.white70, fontSize: 14),
+        style: const TextStyle(color: Colors.white70, fontSize: 11),
       ),
-      position: Vector2(size.x / 2, size.y / 2 + 20),
+      position: Vector2(size.x / 2, size.y / 2 + 15),
       anchor: Anchor.center,
       size: Vector2(size.x - 24, size.y / 2),
     );
@@ -138,7 +139,16 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
       if (effect.type == 'heal') desc += 'Soigne ${effect.value} PV.\n';
       if (effect.type == 'armor') desc += 'Donne ${effect.value} Armure.\n';
     }
-    if (desc.isEmpty) desc = card.data.description;
+    if (desc.isEmpty) {
+      desc = card.data.description;
+      // Ajout basique de retour à la ligne pour les descriptions longues sans effets
+      if (desc.length > 20) {
+        int spaceIdx = desc.indexOf(' ', 15);
+        if (spaceIdx != -1 && spaceIdx < desc.length - 1) {
+          desc = '${desc.substring(0, spaceIdx)}\n${desc.substring(spaceIdx + 1)}';
+        }
+      }
+    }
     return desc;
   }
 

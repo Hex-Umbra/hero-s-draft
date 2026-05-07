@@ -28,13 +28,29 @@ class UiCard extends StatelessWidget {
             ],
           ),
           child: Padding(
-            padding: const EdgeInsets.all(12.0),
+            padding: const EdgeInsets.all(8.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(title, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
-                const SizedBox(height: 20),
-                Text(description, style: const TextStyle(color: Colors.amberAccent, fontSize: 14), textAlign: TextAlign.center),
+                Text(
+                  title, 
+                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold), 
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: Center(
+                    child: SingleChildScrollView(
+                      child: Text(
+                        description, 
+                        style: const TextStyle(color: Colors.amberAccent, fontSize: 13), 
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
