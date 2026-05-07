@@ -121,7 +121,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         destination = const GameScreen();
         break;
       case MapNodeType.shop:
-        destination = const GameScreen(); 
+        destination = const ShopScreen(); 
         break;
       case MapNodeType.rest:
         destination = const GameScreen();
@@ -244,4 +244,6 @@ class MapConnectionPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+ oldDelegate) => false;
 }

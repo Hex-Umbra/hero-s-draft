@@ -153,3 +153,7 @@
 - feat: implémentation Phase 1.3
     - Interface World Map (MapScreen) et Intégration du Flux
         - J'ai terminé l'Étape 1.3. J'ai créé le `MapScreen` avec un `InteractiveViewer` et un `CustomPainter` pour afficher la carte et ses connexions. Le `RunController` a été mis à jour pour gérer l'état de la carte, la position du joueur et l'économie (or). Le flux de jeu est désormais complet : Sélection de classe -> Map -> Combat -> Draft -> Retour à la Map avec le nœud complété.
+
+- feat: implémentation Phase 2
+    - Système d'Or et Boutique (ShopScreen)
+        - J'ai terminé la Phase 2. L'économie est en place avec l'or gagné après les combats (dans `DraftScreen`). J'ai créé `ShopScreen` qui s'ouvre lorsqu'on clique sur un nœud "Shop". La boutique propose aléatoirement 3 cartes (excluant statuts) et un service de soin. L'or est correctement débité et les cartes sont ajoutées au Master Deck via le `DeckController`.
