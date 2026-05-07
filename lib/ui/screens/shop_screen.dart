@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../game/controllers/run_controller.dart';
@@ -52,11 +53,11 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
       ref.read(deckProvider.notifier).addCardToMasterDeck(instance);
       
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Acheté : ${card.name}'), backgroundColor: Colors.green),
+        SnackBar(content: Text(AppLocalizations.of(context)!.purchased(card.name)), backgroundColor: Colors.green),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pas assez d\'or !'), backgroundColor: Colors.red),
+        SnackBar(content: Text(AppLocalizations.of(context)!.notEnoughGold), backgroundColor: Colors.red),
       );
     }
   }
@@ -68,7 +69,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     
     if (currentPv >= maxPv) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vous avez déjà tous vos PV !'), backgroundColor: Colors.orange),
+        SnackBar(content: Text(AppLocalizations.of(context)!.fullHp), backgroundColor: Colors.orange),
       );
       return;
     }
@@ -80,11 +81,11 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
       runController.heal(amount);
       
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Soin appliqué !'), backgroundColor: Colors.green),
+        SnackBar(content: Text(AppLocalizations.of(context)!.healApplied), backgroundColor: Colors.green),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pas assez d\'or !'), backgroundColor: Colors.red),
+        SnackBar(content: Text(AppLocalizations.of(context)!.notEnoughGold), backgroundColor: Colors.red),
       );
     }
   }
@@ -94,11 +95,12 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     final runState = ref.watch(runProvider);
     final int healPrice = 30;
     final int healAmount = (runState.heroStats.maxPv * 0.3).round();
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: const Color(0xFF1E1E2C),
       appBar: AppBar(
-        title: const Text('Boutique', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text(l10n.shop, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.black45,
         elevation: 0,
         actions: [
@@ -124,9 +126,9 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text(
-                'Cartes à vendre',
-                style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+              Text(
+                l10n.cardsForSale,
+                style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
               Expanded(
@@ -176,9 +178,9 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                 ),
               ),
               const Divider(color: Colors.white24, height: 40),
-              const Text(
-                'Services',
-                style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+              Text(
+                l10n.services,
+                style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
               Row(
@@ -188,8 +190,8 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                       color: Colors.black45,
                       child: ListTile(
                         leading: const Icon(Icons.local_hospital, color: Colors.greenAccent, size: 40),
-                        title: const Text('Potion de Soin', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                        subtitle: Text('Restaure $healAmount PV', style: const TextStyle(color: Colors.white70)),
+                        title: Text(l10n.healingPotion, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                        subtitle: Text(l10n.restoresHp(healAmount), style: const TextStyle(color: Colors.white70)),
                         trailing: ElevatedButton.icon(
                           onPressed: _purchasedHeal ? null : () => _buyHeal(healPrice, healAmount),
                           icon: const Icon(Icons.monetization_on, color: Colors.amber, size: 18),
@@ -215,7 +217,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                   ref.read(runProvider.notifier).completeCurrentNode();
                   Navigator.of(context).pop();
                 },
-                child: const Text('Quitter la boutique', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                child: Text(l10n.leaveShop, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               ),
             ],
           ),

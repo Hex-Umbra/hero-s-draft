@@ -157,3 +157,7 @@
 - feat: implémentation Phase 2
     - Système d'Or et Boutique (ShopScreen)
         - J'ai terminé la Phase 2. L'économie est en place avec l'or gagné après les combats (dans `DraftScreen`). J'ai créé `ShopScreen` qui s'ouvre lorsqu'on clique sur un nœud "Shop". La boutique propose aléatoirement 3 cartes (excluant statuts) et un service de soin. L'or est correctement débité et les cartes sont ajoutées au Master Deck via le `DeckController`.
+
+- feat: implémentation Phase 3
+    - Solidification et Robustesse (Tests et i18n)
+        - J'ai terminé la Phase 3. J'ai ajouté des tests unitaires (`map_generator_test.dart`, `effect_resolver_test.dart`) pour garantir la fiabilité de la génération de map et de la logique de combat. J'ai également écrit un test de widget (`map_screen_test.dart`) et mis en place le package `flutter_localizations` avec des fichiers `.arb` pour préparer l'interface multilingue (français/anglais).

@@ -1,0 +1,52 @@
+{
+  "appTitle": "Hero's Draft",
+  "@appTitle": {
+    "description": "The title of the application"
+  },
+  "worldMap": "World Map",
+  "shop": "Shop",
+  "selectClass": "Choose your Class",
+  "youAreDead": "YOU ARE DEAD",
+  "mainMenu": "Main Menu",
+  "changeClass": "Change Class",
+  "currentLevel": "Current Level",
+  "endTurn": "End Turn",
+  "drawPile": "Draw: {count}",
+  "@drawPile": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "discardPile": "Discard: {count}",
+  "@discardPile": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "pause": "PAUSE",
+  "resumeCombat": "Resume Combat",
+  "playerTurn": "PLAYER TURN",
+  "enemyTurn": "ENEMY TURN",
+  "notEnoughGold": "Not enough gold!",
+  "purchased": "Purchased: {item}",
+  "@purchased": {
+    "placeholders": {
+      "item": { "type": "String" }
+    }
+  },
+  "healApplied": "Healing applied!",
+  "fullHp": "You already have max HP!",
+  "cardsForSale": "Cards for Sale",
+  "services": "Services",
+  "healingPotion": "Healing Potion",
+  "restoresHp": "Restores {amount} HP",
+  "@restoresHp": {
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "leaveShop": "Leave Shop",
+  "combatReward": "COMBAT REWARD",
+  "chooseUpgrade": "Choose an upgrade for your hero",
+  "select": "Select"
+}
