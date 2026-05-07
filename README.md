@@ -2,6 +2,8 @@
 
 "Hero's Draft" est un roguelike card game développé avec **Flutter** et **Flame**, utilisant **Riverpod** pour la gestion d'état. Le jeu propose des combats au tour par tour, des classes de personnages uniques, et un système de progression procédural.
 
+Site officiel: https://heros-draft.vilarserver.com/
+
 ## 1. Architecture Technique
 
 Le jeu repose sur une architecture hybride séparant le rendu, l'interface et la logique métier :

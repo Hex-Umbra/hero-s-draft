@@ -7,3 +7,4 @@
     - Ce dictionnaire devra être disponible avant de lancer une run.
 - un autre dictionnaire sera disponible pendant la run pour que le joueur puisse voir les cartes dans son masterDeck
 - Ajouter le système de cartes des personnages, certaines cartes apparaissent uniquement avec certains personnages.
+- Ajouter une sorte de tuto pour expliquer comment jouer, comment utiliser les cartes, comment fonctionne le système de merge, etc.
