@@ -107,14 +107,29 @@ class RunController extends StateNotifier<RunState> {
   void completeCurrentNode() {
     if (state.currentNodeId == null) return;
     
+    MapNode? completedNode;
     final updatedNodes = state.mapNodes.map((node) {
       if (node.id == state.currentNodeId) {
         node.isCompleted = true;
+        completedNode = node;
       }
       return node;
     }).toList();
 
     state = state.copyWith(mapNodes: updatedNodes);
+
+    if (completedNode != null && completedNode!.type == MapNodeType.boss) {
+      advanceToNextWorld();
+    }
+  }
+
+  /// Avance au monde suivant (boucle de jeu)
+  void advanceToNextWorld() {
+    final newMap = MapGeneratorService.generateMap();
+    state = state.copyWith(
+      mapNodes: newMap,
+      currentNodeId: null, // Réinitialise la position pour le nouveau monde
+    );
   }
 
   /// Ajoute de l'or au trésor du joueur

@@ -35,17 +35,25 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     final currentNodeId = runState.currentNodeId;
     final screenSize = MediaQuery.of(context).size;
 
-    // Ajustement dynamique si besoin
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final initialMatrix = Matrix4.translationValues(-200.0, -1500.0, 0.0) * Matrix4.diagonal3Values(0.8, 0.8, 1.0);
       if (_transformationController.value == initialMatrix) {
-         double scale = 0.8;
-         double dx = (screenSize.width - (1200 * scale)) / 2;
-         // Positionne le bas du container (2500 * scale) au bas de l'écran, avec une marge pour l'AppBar et la SafeArea
-         double dy = screenSize.height - (2500 * scale) - 150; 
-         
-         _transformationController.value = Matrix4.translationValues(dx, dy, 0.0)
-           * Matrix4.diagonal3Values(scale, scale, 1.0);
+          MapNode? targetNode;
+          if (currentNodeId != null) {
+            targetNode = nodes.firstWhere((n) => n.id == currentNodeId, orElse: () => nodes.first);
+          } else {
+            targetNode = nodes.firstWhere((n) => n.id.startsWith('node_0_'), orElse: () => nodes.first);
+          }
+          
+          double scale = 0.8;
+          double actualX = targetNode.position.x;
+          double actualY = targetNode.position.y + 300; // prise en compte du padding top
+          
+          double dx = (screenSize.width / 2) - (actualX * scale);
+          double dy = (screenSize.height / 2) - (actualY * scale);
+          
+          _transformationController.value = Matrix4.translationValues(dx, dy, 0.0)
+            * Matrix4.diagonal3Values(scale, scale, 1.0);
       }
     });
 
@@ -81,12 +89,12 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         constrained: false, // Permet au Container d'être plus grand que l'écran
         child: Container(
           width: 1200,
-          height: 2500,
-          padding: const EdgeInsets.symmetric(vertical: 200),
+          height: 2800,
+          padding: const EdgeInsets.only(top: 300, bottom: 200),
           child: Stack(
             children: [
               CustomPaint(
-                size: const Size(1200, 2500),
+                size: const Size(1200, 2800),
                 painter: MapConnectionPainter(nodes: nodes),
               ),
               ...nodes.map((node) => _MapNodeWidget(

@@ -173,3 +173,6 @@
 - feat: implémentation Phase 15 Étape 3
     - Améliorations de la Boutique (ShopScreen)
         - J'ai terminé l'Étape 3. La boutique propose désormais deux nouveaux services : l'Oubli (retirer une carte du deck pour 75 or) et le Miroir Magique (cloner une carte pour 150 or). Les cartes achetées disparaissent dynamiquement de la liste et l'interface globale a été ajustée.
+- feat: implémentation Phase 15 Étape 4
+    - Corrections et Améliorations de la World Map
+        - J'ai terminé l'Étape 4. La caméra de la MapScreen se centre désormais automatiquement sur le nœud actif ou le départ. Le nœud de Boss n'est plus coupé en haut de l'écran grâce à un ajustement du layout. Enfin, une boucle de gameplay a été implémentée : valider le nœud Boss génère une nouvelle carte tout en conservant les acquis du joueur.
