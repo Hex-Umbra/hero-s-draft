@@ -147,3 +147,6 @@
 - feat: implémentation Phase 1.1
     - Modélisation de la Carte (MapNode)
         - J'ai terminé l'Étape 1.1. J'ai créé le modèle `MapNode` avec les types de nœuds nécessaires (combat, elite, shop, rest, event) et la gestion des connexions pour structurer la progression sous forme de graphe.
+- feat: implémentation Phase 1.2
+    - Service de Génération de Carte (MapGeneratorService)
+        - J'ai terminé l'Étape 1.2. J'ai implémenté le `MapGeneratorService` qui génère un graphe acyclique dirigé (DAG) avec plusieurs étages. Le service garantit la connectivité entre les étages et répartit aléatoirement les types de rencontres (Combat, Élite, Boutique, Repos, Événement).
