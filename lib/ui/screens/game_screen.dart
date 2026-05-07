@@ -38,12 +38,15 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       
       // Initialisation du starter deck si c'est le début de la run
       if (deck.masterDeck.isEmpty) {
+        final gameData = ref.read(gameDataLoaderProvider).requireValue;
+        
+        // On récupère les cartes par ID depuis les données JSON
         final starterCards = [
-          CardInstance(data: CardData(id: 'strike_basic', name: 'Frappe', description: 'Inflige 6 dégâts', cost: 1, type: CardType.attack, category: CardCategory.global, rarity: CardRarity.common, target: CardTarget.singleEnemy, effects: [const CardEffect(type: 'damage', value: 6)])),
-          CardInstance(data: CardData(id: 'defend_basic', name: 'Défense', description: 'Gagne 5 Armure', cost: 1, type: CardType.skill, category: CardCategory.global, rarity: CardRarity.common, target: CardTarget.self, effects: [const CardEffect(type: 'armor', value: 5)])),
-          CardInstance(data: CardData(id: 'demon_form', name: 'Forme Démoniaque', description: 'Au début de chaque tour, gagne 2 Force.', cost: 3, type: CardType.power, category: CardCategory.global, rarity: CardRarity.rare, target: CardTarget.self, effects: [const CardEffect(type: 'apply_status', statusId: 'strength_regen', value: 2, duration: 99)])),
-          CardInstance(data: CardData(id: 'metallicize', name: 'Métallisation', description: 'Au début de chaque tour, gagne 3 Armure.', cost: 1, type: CardType.power, category: CardCategory.global, rarity: CardRarity.uncommon, target: CardTarget.self, effects: [const CardEffect(type: 'apply_status', statusId: 'armor_regen', value: 3, duration: 99)])),
-          CardInstance(data: CardData(id: 'poison_stab', name: 'Coup Empoisonné', description: 'Inflige 5 dégâts. Applique 3 Poison.', cost: 1, type: CardType.attack, category: CardCategory.global, rarity: CardRarity.common, target: CardTarget.singleEnemy, effects: [const CardEffect(type: 'damage', value: 5), const CardEffect(type: 'apply_status', statusId: 'poison', value: 3, duration: 3)])),
+          CardInstance(data: gameData.cards.firstWhere((c) => c.id == 'strike_basic')),
+          CardInstance(data: gameData.cards.firstWhere((c) => c.id == 'defend_basic')),
+          CardInstance(data: gameData.cards.firstWhere((c) => c.id == 'demon_form')),
+          CardInstance(data: gameData.cards.firstWhere((c) => c.id == 'metallicize')),
+          CardInstance(data: gameData.cards.firstWhere((c) => c.id == 'poison_stab')),
         ];
 
         // Ajout d'une relique de test
@@ -247,7 +250,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                         ),
                         // Affichage simplifié des statuts du joueur
                         ...runState.heroStats.statuses.map((s) => Text(
-                          '${s.name} : ${s.value} (${s.duration} tours)',
+                          s.duration > 90 
+                              ? '${s.name} : ${s.value} (Permanent)'
+                              : '${s.name} : ${s.value} (${s.duration} tours)',
                           style: const TextStyle(color: Colors.amber, fontSize: 14, fontWeight: FontWeight.bold),
                         )),
                       ],

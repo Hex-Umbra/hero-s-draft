@@ -176,3 +176,6 @@
 - feat: implémentation Phase 15 Étape 4
     - Corrections et Améliorations de la World Map
         - J'ai terminé l'Étape 4. La caméra de la MapScreen se centre désormais automatiquement sur le nœud actif ou le départ. Le nœud de Boss n'est plus coupé en haut de l'écran grâce à un ajustement du layout. Enfin, une boucle de gameplay a été implémentée : valider le nœud Boss génère une nouvelle carte tout en conservant les acquis du joueur.
+- feat: implémentation Phase 15 Étape 5
+    - Correction d'affichage et de logique des buffs
+        - J'ai terminé l'Étape 5. J'ai corrigé la persistance des statuts (la force de Forme Démoniaque ne disparaît plus instantanément au début du tour grâce au passage de la durée de 1 à 99 et à la correction de l'addition des durées dans `StatusEffect.combine`). De plus, l'interface n'affiche plus "(99 tours)" pour les buffs permanents (> 90 tours) et le deck de départ pioche correctement ses données dans `cards.json` au lieu d'utiliser des instances en dur.

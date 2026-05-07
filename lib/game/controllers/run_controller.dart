@@ -244,7 +244,7 @@ class RunController extends StateNotifier<RunState> {
           name: 'Force (Relique)',
           type: StatusType.buff,
           value: relic.value,
-          duration: 99,
+          duration: 3, // Limité à 3 tours au lieu de 99
         ));
         break;
       case 'heal':
@@ -288,7 +288,7 @@ class RunController extends StateNotifier<RunState> {
         name: 'Force',
         type: StatusType.buff,
         value: strengthGain,
-        duration: 1, 
+        duration: 3, // 3 tours maximum au lieu d'un buff permanent
       ));
     }
     if (armorGain > 0) {

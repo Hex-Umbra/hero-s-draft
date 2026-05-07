@@ -135,27 +135,27 @@
   {
     "id": "demon_form",
     "name": "Forme Démoniaque",
-    "description": "Au début de chaque tour, gagne 2 Force.",
+    "description": "Pendant 3 tours, gagne 2 Force au début du tour.",
     "cost": 3,
     "type": "power",
     "category": "global",
     "rarity": "rare",
     "target": "self",
     "effects": [
-      { "type": "apply_status", "statusId": "strength_regen", "value": 2, "duration": 99 }
+      { "type": "apply_status", "statusId": "strength_regen", "value": 2, "duration": 3 }
     ]
   },
   {
     "id": "metallicize",
     "name": "Métallisation",
-    "description": "Au début de chaque tour, gagne 3 Armure.",
+    "description": "Pendant 3 tours, gagne 3 Armure au début du tour.",
     "cost": 1,
     "type": "power",
     "category": "global",
     "rarity": "uncommon",
     "target": "self",
     "effects": [
-      { "type": "apply_status", "statusId": "armor_regen", "value": 3, "duration": 99 }
+      { "type": "apply_status", "statusId": "armor_regen", "value": 3, "duration": 3 }
     ]
   },
   {

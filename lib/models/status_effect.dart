@@ -41,7 +41,7 @@ class StatusEffect {
     if (isStackable) {
       return copyWith(
         value: value + other.value,
-        duration: duration + other.duration,
+        duration: duration > other.duration ? duration : other.duration, // Ne pas additionner les durées
       );
     } else {
       // Rafraîchit la durée si elle est plus grande
