@@ -17,7 +17,12 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   @override
   void initState() {
     super.initState();
-    _transformationController.value = Matrix4.diagonal3Values(0.8, 0.8, 1.0);
+    // Center horizontally (Container is 1200 wide, screen usually ~400-800, we offset by a calculated amount)
+    // Start at the bottom: container is 2500, we want to see the bottom.
+    // For a generic screen width of ~400, offset X by ~ -400. Offset Y by ~ -1800.
+    // The exact values can be tweaked, but translation is required.
+    _transformationController.value = Matrix4.translationValues(-200.0, -1500.0, 0.0)
+      * Matrix4.diagonal3Values(0.8, 0.8, 1.0);
   }
 
   @override
@@ -31,6 +36,16 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     final runState = ref.watch(runProvider);
     final nodes = runState.mapNodes;
     final currentNodeId = runState.currentNodeId;
+    final screenSize = MediaQuery.of(context).size;
+
+    // Ajustement dynamique si besoin
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final initialMatrix = Matrix4.translationValues(-200.0, -1500.0, 0.0) * Matrix4.diagonal3Values(0.8, 0.8, 1.0);
+      if (_transformationController.value == initialMatrix) {
+         _transformationController.value = Matrix4.translationValues(-(1200 - screenSize.width) / 2, -(2500 - screenSize.height) + 100, 0.0)
+           * Matrix4.diagonal3Values(0.8, 0.8, 1.0);
+      }
+    });
 
     return Scaffold(
       backgroundColor: const Color(0xFF0D0D1A),
@@ -57,28 +72,27 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       ),
       body: InteractiveViewer(
         transformationController: _transformationController,
-        boundaryMargin: const EdgeInsets.all(500),
+        boundaryMargin: const EdgeInsets.all(1000),
         minScale: 0.1,
         maxScale: 2.0,
-        child: SingleChildScrollView(
-          child: Container(
-            width: 1200,
-            height: 2500,
-            padding: const EdgeInsets.symmetric(vertical: 200),
-            child: Stack(
-              children: [
-                CustomPaint(
-                  size: const Size(1200, 2500),
-                  painter: MapConnectionPainter(nodes: nodes),
-                ),
-                ...nodes.map((node) => _MapNodeWidget(
-                      node: node,
-                      isAvailable: _isNodeAvailable(node, nodes, currentNodeId),
-                      isCurrent: node.id == currentNodeId,
-                      onTap: () => _onNodeTap(context, ref, node),
-                    )),
-              ],
-            ),
+        constrained: false, // Permet au Container d'être plus grand que l'écran
+        child: Container(
+          width: 1200,
+          height: 2500,
+          padding: const EdgeInsets.symmetric(vertical: 200),
+          child: Stack(
+            children: [
+              CustomPaint(
+                size: const Size(1200, 2500),
+                painter: MapConnectionPainter(nodes: nodes),
+              ),
+              ...nodes.map((node) => _MapNodeWidget(
+                    node: node,
+                    isAvailable: _isNodeAvailable(node, nodes, currentNodeId),
+                    isCurrent: node.id == currentNodeId,
+                    onTap: () => _onNodeTap(context, ref, node),
+                  )),
+            ],
           ),
         ),
       ),
