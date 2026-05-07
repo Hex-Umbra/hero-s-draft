@@ -179,6 +179,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     
     _game.availableEnemies = gameData.enemies;
+    _game.availableHeroes = gameData.heroes;
     _game.syncState(runState);
     _game.syncDeck(deckState);
 

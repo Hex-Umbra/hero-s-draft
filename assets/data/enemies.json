@@ -4,27 +4,27 @@
     "name": "Gobelin",
     "maxHp": 25,
     "baseDamage": 5,
-    "spritePath": ""
+    "spritePath": "enemy_goblin.png"
   },
   {
     "id": "orc",
     "name": "Orc Furieux",
     "maxHp": 40,
     "baseDamage": 8,
-    "spritePath": ""
+    "spritePath": "enemy_goblin.png"
   },
   {
     "id": "squelette",
     "name": "Squelette",
     "maxHp": 15,
     "baseDamage": 12,
-    "spritePath": ""
+    "spritePath": "enemy_goblin.png"
   },
   {
     "id": "slime",
     "name": "Slime",
     "maxHp": 10,
     "baseDamage": 5,
-    "spritePath": ""
+    "spritePath": "enemy_goblin.png"
   }
 ]

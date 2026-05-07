@@ -9,6 +9,7 @@ import 'components/entities/hero_card.dart';
 import 'components/entities/enemy_card.dart';
 import '../models/card_instance.dart';
 import '../models/data/enemy_data.dart';
+import '../models/data/hero_data.dart';
 import '../models/data/skill_data.dart';
 import '../data/models/entity_stats.dart';
 
@@ -21,6 +22,7 @@ enum TurnPhase { player, enemy }
 
 class HerosDraftGame extends FlameGame with TapCallbacks {
   List<EnemyData> availableEnemies = [];
+  List<HeroData> availableHeroes = [];
   HeroCard? heroCard;
   List<EnemyCard> enemyCards = [];
   List<CardComponent> handCards = [];
@@ -164,8 +166,9 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
     await images.loadAll([
       'bg_dungeon.png',
       'hero_paladin.png',
+      'hero_berserker.png',
+      'hero_mage.png',
       'enemy_goblin.png',
-      'enemy_boss.png',
     ]);
 
     // 2. Ajouter l'arrière-plan
@@ -326,7 +329,13 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
     int bonusAtt = state.effectiveAttaque - state.heroStats.attaque;
 
     if (heroCard == null) {
-      heroCard = HeroCard(state.heroStats, bonusAttack: bonusAtt);
+      String imagePath = 'hero_paladin.png';
+      if (availableHeroes.isNotEmpty) {
+        final heroData = availableHeroes.firstWhere((h) => h.id == state.heroClassId, orElse: () => availableHeroes.first);
+        imagePath = heroData.iconPath;
+      }
+      
+      heroCard = HeroCard(state.heroStats, bonusAttack: bonusAtt, imagePath: imagePath);
       heroCard!.position = Vector2(size.x / 2, size.y * 0.6);
       add(heroCard!);
     } else {

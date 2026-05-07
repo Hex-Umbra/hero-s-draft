@@ -46,7 +46,9 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
     // Appliquer l'échelle initiale (Agrandie pour le terrain)
     scale = Vector2.all(game.scaleFactor * 1.3);
 
-    String spriteName = isBoss ? 'enemy_boss.png' : 'enemy_goblin.png';
+    String spriteName = data?.spritePath ?? 'enemy_goblin.png';
+    if (spriteName.isEmpty) spriteName = 'enemy_goblin.png';
+
     add(
       SpriteComponent(
         sprite: Sprite(game.images.fromCache(spriteName)),

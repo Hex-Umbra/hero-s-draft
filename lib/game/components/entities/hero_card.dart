@@ -12,13 +12,14 @@ import '../../heros_draft_game.dart';
 class HeroCard extends PositionComponent with TapCallbacks, HasGameReference<HerosDraftGame> {
   EntityStats stats;
   int bonusAttack;
+  final String imagePath;
   
   late final StatBadge armorBadge;
   late final StatBadge attackBadge;
   late final StatBadge manaBadge;
   late final StatusIndicator statusIndicator;
 
-  HeroCard(this.stats, {this.bonusAttack = 0}) : super(size: Vector2(120, 160));
+  HeroCard(this.stats, {this.bonusAttack = 0, required this.imagePath}) : super(size: Vector2(120, 160));
 
   @override
   Future<void> onLoad() async {
@@ -33,7 +34,7 @@ class HeroCard extends PositionComponent with TapCallbacks, HasGameReference<Her
     // Visuel Sprite
     add(
       SpriteComponent(
-        sprite: Sprite(game.images.fromCache('hero_paladin.png')),
+        sprite: Sprite(game.images.fromCache(imagePath)),
         size: size,
       ),
     );
