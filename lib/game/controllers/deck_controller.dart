@@ -164,6 +164,13 @@ class DeckNotifier extends StateNotifier<DeckState> {
     state = state.copyWith(masterDeck: currentMasterDeck);
   }
 
+  /// Retire une carte spécifique du Master Deck (ex: Boutique)
+  void removeCardFromMasterDeck(CardInstance cardToRemove) {
+    var currentMasterDeck = List<CardInstance>.from(state.masterDeck);
+    currentMasterDeck.removeWhere((c) => c.uniqueId == cardToRemove.uniqueId);
+    state = state.copyWith(masterDeck: currentMasterDeck);
+  }
+
   /// Ajoute une carte spécifique directement dans la défausse (ex: blessure d'ennemi)
   void addCardToDiscardPile(CardInstance newCard) {
     var currentDiscardPile = List<CardInstance>.from(state.discardPile);

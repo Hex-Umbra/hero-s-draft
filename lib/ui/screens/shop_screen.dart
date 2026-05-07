@@ -19,7 +19,6 @@ class ShopScreen extends ConsumerStatefulWidget {
 class _ShopScreenState extends ConsumerState<ShopScreen> {
   bool _isInitialized = false;
   List<CardData> _cardsForSale = [];
-  final List<CardData> _purchasedCards = [];
   bool _purchasedHeal = false;
 
   @override
@@ -33,10 +32,8 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
 
   void _initializeShop() {
     final gameData = ref.read(gameDataLoaderProvider).requireValue;
-    // Filtrer pour ne pas vendre de statuts ou malédictions
     final allCards = gameData.cards.where((c) => c.type != CardType.status).toList();
     
-    // Choisir 3 cartes aléatoires
     final rng = Random();
     List<CardData> shuffled = List.from(allCards)..shuffle(rng);
     _cardsForSale = shuffled.take(3).toList();
@@ -46,9 +43,8 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     final runController = ref.read(runProvider.notifier);
     if (runController.spendGold(price)) {
       setState(() {
-        _purchasedCards.add(card);
+        _cardsForSale.remove(card);
       });
-      // Créer une instance et l'ajouter au deck
       final instance = CardInstance(data: card);
       ref.read(deckProvider.notifier).addCardToMasterDeck(instance);
       
@@ -90,6 +86,116 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     }
   }
 
+  void _showRemovalModal(int price) {
+    final deckState = ref.read(deckProvider);
+    final masterDeck = deckState.masterDeck;
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF2A2A3D),
+          title: const Text('Choisissez une carte à oublier', style: TextStyle(color: Colors.white)),
+          content: SizedBox(
+            width: double.maxFinite,
+            height: 400,
+            child: GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 0.7,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+              ),
+              itemCount: masterDeck.length,
+              itemBuilder: (context, index) {
+                final card = masterDeck[index];
+                return UiCard(
+                  title: card.data.name,
+                  description: 'Niveau ${card.level}\n\n${card.data.description}',
+                  onTap: () {
+                    final runController = ref.read(runProvider.notifier);
+                    if (runController.spendGold(price)) {
+                      ref.read(deckProvider.notifier).removeCardFromMasterDeck(card);
+                      Navigator.of(ctx).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Carte oubliée !'), backgroundColor: Colors.green),
+                      );
+                    } else {
+                      Navigator.of(ctx).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Pas assez d\'or !'), backgroundColor: Colors.red),
+                      );
+                    }
+                  },
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Annuler', style: TextStyle(color: Colors.white70)),
+            )
+          ],
+        );
+      }
+    );
+  }
+
+  void _showCloneModal(int price) {
+    final deckState = ref.read(deckProvider);
+    final masterDeck = List.of(deckState.masterDeck);
+    
+    masterDeck.shuffle();
+    final options = masterDeck.take(3).toList();
+    
+    if (options.isEmpty) {
+       return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF2A2A3D),
+          title: const Text('Choisissez une carte à cloner', style: TextStyle(color: Colors.white)),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: options.map((card) => ListTile(
+                title: Text(card.data.name, style: const TextStyle(color: Colors.amber)),
+                subtitle: Text('Niveau ${card.level}', style: const TextStyle(color: Colors.white70)),
+                onTap: () {
+                  final runController = ref.read(runProvider.notifier);
+                  if (runController.spendGold(price)) {
+                    ref.read(deckProvider.notifier).addCardToMasterDeck(
+                      CardInstance(data: card.data, level: card.level)
+                    );
+                    Navigator.of(ctx).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Carte clonée !'), backgroundColor: Colors.green),
+                    );
+                  } else {
+                    Navigator.of(ctx).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Pas assez d\'or !'), backgroundColor: Colors.red),
+                    );
+                  }
+                },
+              )).toList(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Annuler', style: TextStyle(color: Colors.white70)),
+            )
+          ],
+        );
+      }
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final runState = ref.watch(runProvider);
@@ -118,10 +224,10 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
             ),
           )
         ],
-        automaticallyImplyLeading: false, // Empêcher le retour sans compléter le nœud
+        automaticallyImplyLeading: false,
       ),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -131,21 +237,27 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                 style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
-              Expanded(
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _cardsForSale.length,
-                  itemBuilder: (context, index) {
-                    final card = _cardsForSale[index];
-                    final isPurchased = _purchasedCards.contains(card);
-                    int price = 25;
-                    if (card.rarity == CardRarity.uncommon) price = 50;
-                    if (card.rarity == CardRarity.rare) price = 100;
+              if (_cardsForSale.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 40),
+                  child: Center(
+                    child: Text('Plus de cartes en stock !', style: TextStyle(color: Colors.white54, fontSize: 18)),
+                  ),
+                )
+              else
+                SizedBox(
+                  height: 280,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _cardsForSale.length,
+                    itemBuilder: (context, index) {
+                      final card = _cardsForSale[index];
+                      int price = 25;
+                      if (card.rarity == CardRarity.uncommon) price = 50;
+                      if (card.rarity == CardRarity.rare) price = 100;
 
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 20),
-                      child: Opacity(
-                        opacity: isPurchased ? 0.3 : 1.0,
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 20),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -155,14 +267,12 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                               child: UiCard(
                                 title: card.name,
                                 description: card.description,
-                                onTap: () {
-                                  if (!isPurchased) _buyCard(card, price);
-                                },
+                                onTap: () => _buyCard(card, price),
                               ),
                             ),
                             const SizedBox(height: 10),
                             ElevatedButton.icon(
-                              onPressed: isPurchased ? null : () => _buyCard(card, price),
+                              onPressed: () => _buyCard(card, price),
                               icon: const Icon(Icons.monetization_on, color: Colors.amber, size: 18),
                               label: Text('$price', style: const TextStyle(fontWeight: FontWeight.bold)),
                               style: ElevatedButton.styleFrom(
@@ -172,39 +282,68 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                             )
                           ],
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
-              ),
               const Divider(color: Colors.white24, height: 40),
               Text(
                 l10n.services,
                 style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(
-                    child: Card(
-                      color: Colors.black45,
-                      child: ListTile(
-                        leading: const Icon(Icons.local_hospital, color: Colors.greenAccent, size: 40),
-                        title: Text(l10n.healingPotion, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                        subtitle: Text(l10n.restoresHp(healAmount), style: const TextStyle(color: Colors.white70)),
-                        trailing: ElevatedButton.icon(
-                          onPressed: _purchasedHeal ? null : () => _buyHeal(healPrice, healAmount),
-                          icon: const Icon(Icons.monetization_on, color: Colors.amber, size: 18),
-                          label: Text('$healPrice', style: const TextStyle(fontWeight: FontWeight.bold)),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _purchasedHeal ? Colors.grey : Colors.green.shade800,
-                            foregroundColor: Colors.white,
-                          ),
-                        ),
-                      ),
+              Card(
+                color: Colors.black45,
+                child: ListTile(
+                  leading: const Icon(Icons.local_hospital, color: Colors.greenAccent, size: 40),
+                  title: Text(l10n.healingPotion, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  subtitle: Text(l10n.restoresHp(healAmount), style: const TextStyle(color: Colors.white70)),
+                  trailing: ElevatedButton.icon(
+                    onPressed: _purchasedHeal ? null : () => _buyHeal(healPrice, healAmount),
+                    icon: const Icon(Icons.monetization_on, color: Colors.amber, size: 18),
+                    label: Text('$healPrice', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _purchasedHeal ? Colors.grey : Colors.green.shade800,
+                      foregroundColor: Colors.white,
                     ),
                   ),
-                ],
+                ),
+              ),
+              const SizedBox(height: 10),
+              Card(
+                color: Colors.black45,
+                child: ListTile(
+                  leading: const Icon(Icons.delete_forever, color: Colors.redAccent, size: 40),
+                  title: const Text('Oubli', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  subtitle: const Text('Retire une carte de votre deck', style: TextStyle(color: Colors.white70)),
+                  trailing: ElevatedButton.icon(
+                    onPressed: () => _showRemovalModal(75),
+                    icon: const Icon(Icons.monetization_on, color: Colors.amber, size: 18),
+                    label: const Text('75', style: TextStyle(fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red.shade800,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Card(
+                color: Colors.black45,
+                child: ListTile(
+                  leading: const Icon(Icons.content_copy, color: Colors.blueAccent, size: 40),
+                  title: const Text('Miroir Magique', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  subtitle: const Text('Clone une carte de votre deck', style: TextStyle(color: Colors.white70)),
+                  trailing: ElevatedButton.icon(
+                    onPressed: () => _showCloneModal(150),
+                    icon: const Icon(Icons.monetization_on, color: Colors.amber, size: 18),
+                    label: const Text('150', style: TextStyle(fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue.shade800,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ),
               ),
               const SizedBox(height: 30),
               ElevatedButton(

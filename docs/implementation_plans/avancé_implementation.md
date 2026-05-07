@@ -170,3 +170,6 @@
 - feat: implémentation Phase 15 Étape 2
     - Refonte des Récompenses de Draft (Combat)
         - J'ai terminé l'Étape 2. Une 4ème option de récompense (Clonage) avec une probabilité d'apparition de 30% a été ajoutée. Le joueur peut choisir cette option pour ouvrir un modal affichant 3 cartes aléatoires de son deck, en sélectionner une et l'ajouter à son deck (ce qui déclenche l'Auto-Merge si applicable).
+- feat: implémentation Phase 15 Étape 3
+    - Améliorations de la Boutique (ShopScreen)
+        - J'ai terminé l'Étape 3. La boutique propose désormais deux nouveaux services : l'Oubli (retirer une carte du deck pour 75 or) et le Miroir Magique (cloner une carte pour 150 or). Les cartes achetées disparaissent dynamiquement de la liste et l'interface globale a été ajustée.
