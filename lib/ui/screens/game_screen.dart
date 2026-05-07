@@ -10,6 +10,7 @@ import 'class_selection_screen.dart';
 import '../../services/game_data_service.dart';
 import '../../models/card_instance.dart';
 import '../../models/data/card_data.dart';
+import '../../models/data/relic_data.dart';
 
 class GameScreen extends ConsumerStatefulWidget {
   const GameScreen({super.key});
@@ -36,12 +37,24 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       final deck = ref.read(deckProvider);
       if (deck.masterDeck.isEmpty) {
         final starterCards = [
-          CardInstance(data: CardData(id: 'strike_1', name: 'Frappe', description: 'Inflige 5 dégâts', cost: 1, type: CardType.attack, category: CardCategory.global, rarity: CardRarity.common, target: CardTarget.singleEnemy, effects: [CardEffect(type: 'damage', value: 5)])),
-          CardInstance(data: CardData(id: 'strike_2', name: 'Frappe', description: 'Inflige 5 dégâts', cost: 1, type: CardType.attack, category: CardCategory.global, rarity: CardRarity.common, target: CardTarget.singleEnemy, effects: [CardEffect(type: 'damage', value: 5)])),
-          CardInstance(data: CardData(id: 'defend_1', name: 'Défense', description: 'Gagne 5 Armure', cost: 1, type: CardType.skill, category: CardCategory.global, rarity: CardRarity.common, target: CardTarget.none, effects: [CardEffect(type: 'armor', value: 5)])),
-          CardInstance(data: CardData(id: 'defend_2', name: 'Défense', description: 'Gagne 5 Armure', cost: 1, type: CardType.skill, category: CardCategory.global, rarity: CardRarity.common, target: CardTarget.none, effects: [CardEffect(type: 'armor', value: 5)])),
-          CardInstance(data: CardData(id: 'heal_1', name: 'Soin', description: 'Soigne 5 PV', cost: 2, type: CardType.skill, category: CardCategory.global, rarity: CardRarity.uncommon, target: CardTarget.none, effects: [CardEffect(type: 'heal', value: 5)])),
+          CardInstance(data: CardData(id: 'strike_basic', name: 'Frappe', description: 'Inflige 6 dégâts', cost: 1, type: CardType.attack, category: CardCategory.global, rarity: CardRarity.common, target: CardTarget.singleEnemy, effects: [const CardEffect(type: 'damage', value: 6)])),
+          CardInstance(data: CardData(id: 'defend_basic', name: 'Défense', description: 'Gagne 5 Armure', cost: 1, type: CardType.skill, category: CardCategory.global, rarity: CardRarity.common, target: CardTarget.self, effects: [const CardEffect(type: 'armor', value: 5)])),
+          CardInstance(data: CardData(id: 'demon_form', name: 'Forme Démoniaque', description: 'Au début de chaque tour, gagne 2 Force.', cost: 3, type: CardType.power, category: CardCategory.global, rarity: CardRarity.rare, target: CardTarget.self, effects: [const CardEffect(type: 'apply_status', statusId: 'strength_regen', value: 2, duration: 99)])),
+          CardInstance(data: CardData(id: 'metallicize', name: 'Métallisation', description: 'Au début de chaque tour, gagne 3 Armure.', cost: 1, type: CardType.power, category: CardCategory.global, rarity: CardRarity.uncommon, target: CardTarget.self, effects: [const CardEffect(type: 'apply_status', statusId: 'armor_regen', value: 3, duration: 99)])),
+          CardInstance(data: CardData(id: 'poison_stab', name: 'Coup Empoisonné', description: 'Inflige 5 dégâts. Applique 3 Poison.', cost: 1, type: CardType.attack, category: CardCategory.global, rarity: CardRarity.common, target: CardTarget.singleEnemy, effects: [const CardEffect(type: 'damage', value: 5), const CardEffect(type: 'apply_status', statusId: 'poison', value: 3, duration: 3)])),
+          CardInstance(data: CardData(id: 'injury', name: 'Blessure', description: 'Injouable.', cost: 99, type: CardType.status, category: CardCategory.global, rarity: CardRarity.common, target: CardTarget.none, effects: [])),
         ];
+
+        // Ajout d'une relique de test
+        ref.read(runProvider.notifier).addRelic(const RelicData(
+          id: 'test_relic',
+          name: 'Calendrier de Pierre',
+          description: 'Au début du combat, gagne 6 Armure.',
+          trigger: RelicTrigger.startOfCombat,
+          effectType: 'gain_armor',
+          value: 6,
+        ));
+
         ref.read(deckProvider.notifier).initializeStarterDeck(starterCards);
         ref.read(runProvider.notifier).startCombat();
         ref.read(deckProvider.notifier).initializeCombat();
