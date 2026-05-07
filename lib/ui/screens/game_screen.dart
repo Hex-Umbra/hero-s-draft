@@ -35,6 +35,8 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     
     Future.microtask(() {
       final deck = ref.read(deckProvider);
+      
+      // Initialisation du starter deck si c'est le début de la run
       if (deck.masterDeck.isEmpty) {
         final starterCards = [
           CardInstance(data: CardData(id: 'strike_basic', name: 'Frappe', description: 'Inflige 6 dégâts', cost: 1, type: CardType.attack, category: CardCategory.global, rarity: CardRarity.common, target: CardTarget.singleEnemy, effects: [const CardEffect(type: 'damage', value: 6)])),
@@ -56,10 +58,12 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         ));
 
         ref.read(deckProvider.notifier).initializeStarterDeck(starterCards);
-        ref.read(runProvider.notifier).startCombat();
-        ref.read(deckProvider.notifier).initializeCombat();
-        ref.read(deckProvider.notifier).drawCards(5);
       }
+
+      // On initialise toujours le combat quand on arrive sur l'écran
+      ref.read(runProvider.notifier).startCombat();
+      ref.read(deckProvider.notifier).initializeCombat();
+      ref.read(deckProvider.notifier).drawCards(5);
     });
 
     _game = HerosDraftGame(
@@ -180,9 +184,8 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                     child: DraftScreen(
                       onDraftComplete: () {
                         setState(() { _showDraft = false; });
-                        ref.read(runProvider.notifier).startCombat();
-                        ref.read(deckProvider.notifier).initializeCombat();
-                        ref.read(deckProvider.notifier).drawCards(5);
+                        ref.read(runProvider.notifier).completeCurrentNode();
+                        Navigator.of(context).pop(); // Retour à la carte
                       },
                     ),
                   ),

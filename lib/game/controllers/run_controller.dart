@@ -2,13 +2,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/entity_stats.dart';
 import '../../models/data/hero_data.dart';
 import '../../models/data/relic_data.dart';
+import '../../models/map_node.dart';
 import '../../models/status_effect.dart';
+import '../../services/map_generator_service.dart';
 
 class RunState {
   final int currentLevel;
   final EntityStats heroStats;
   final String heroClassId;
   final List<RelicData> relics;
+  final List<MapNode> mapNodes;
+  final String? currentNodeId;
+  final int gold;
   
   // Variables pour gérer l'état du cooldown des sorts
   final int skill1Cooldown;
@@ -24,6 +29,9 @@ class RunState {
     required this.heroStats,
     required this.heroClassId,
     this.relics = const [],
+    this.mapNodes = const [],
+    this.currentNodeId,
+    this.gold = 0,
     this.skill1Cooldown = 0,
     this.skill2Cooldown = 0,
   });
@@ -33,6 +41,9 @@ class RunState {
     EntityStats? heroStats,
     String? heroClassId,
     List<RelicData>? relics,
+    List<MapNode>? mapNodes,
+    String? currentNodeId,
+    int? gold,
     int? skill1Cooldown,
     int? skill2Cooldown,
   }) {
@@ -41,6 +52,9 @@ class RunState {
       heroStats: heroStats ?? this.heroStats,
       heroClassId: heroClassId ?? this.heroClassId,
       relics: relics ?? this.relics,
+      mapNodes: mapNodes ?? this.mapNodes,
+      currentNodeId: currentNodeId ?? this.currentNodeId,
+      gold: gold ?? this.gold,
       skill1Cooldown: skill1Cooldown ?? this.skill1Cooldown,
       skill2Cooldown: skill2Cooldown ?? this.skill2Cooldown,
     );
@@ -66,6 +80,7 @@ class RunController extends StateNotifier<RunState> {
 
   /// Démarre une nouvelle partie avec la classe choisie
   void startNewRun(HeroData chosenClass) {
+    final generatedMap = MapGeneratorService.generateMap();
     state = RunState(
       currentLevel: 1,
       heroClassId: chosenClass.id,
@@ -77,7 +92,41 @@ class RunController extends StateNotifier<RunState> {
         armure: chosenClass.baseArmor,
         attaque: 0, // Force de base à 0
       ),
+      mapNodes: generatedMap,
+      currentNodeId: null,
+      gold: 50,
     );
+  }
+
+  /// Sélectionne un nœud sur la carte et déplace le joueur
+  void travelToNode(String nodeId) {
+    state = state.copyWith(currentNodeId: nodeId);
+  }
+
+  /// Marque le nœud actuel comme complété
+  void completeCurrentNode() {
+    if (state.currentNodeId == null) return;
+    
+    final updatedNodes = state.mapNodes.map((node) {
+      if (node.id == state.currentNodeId) {
+        node.isCompleted = true;
+      }
+      return node;
+    }).toList();
+
+    state = state.copyWith(mapNodes: updatedNodes);
+  }
+
+  /// Ajoute de l'or au trésor du joueur
+  void gainGold(int amount) {
+    state = state.copyWith(gold: state.gold + amount);
+  }
+
+  /// Dépense de l'or. Retourne false si fonds insuffisants.
+  bool spendGold(int amount) {
+    if (state.gold < amount) return false;
+    state = state.copyWith(gold: state.gold - amount);
+    return true;
   }
 
   /// Avance d'un niveau (après avoir drafté) et restaure 50% du mana
@@ -224,9 +273,7 @@ class RunController extends StateNotifier<RunState> {
         name: 'Force',
         type: StatusType.buff,
         value: strengthGain,
-        duration: 1, // La force accumulée via regen pourrait être permanente ou durer 1 tour. 
-        // En général dans ces jeux, la Force est permanente jusqu'à la fin du combat.
-        // Si on veut qu'elle soit permanente, on met une durée longue ou on change la logique.
+        duration: 1, 
       ));
     }
     if (armorGain > 0) {
@@ -288,7 +335,6 @@ class RunController extends StateNotifier<RunState> {
 
   /// Applique un buff d'attaque pour une durée donnée
   void applyAttackBuff(int duration) {
-    // On convertit l'ancien buff (15% de HP max) en un StatusEffect de Force
     int bonus = (state.heroStats.maxPv * 0.15).round();
     state = state.copyWith(
       heroStats: state.heroStats.addStatus(StatusEffect(
@@ -308,7 +354,7 @@ class RunController extends StateNotifier<RunState> {
         id: 'lifesteal',
         name: 'Vol de Vie',
         type: StatusType.buff,
-        value: 1, // Utilisé comme booléen ou multiplicateur
+        value: 1, 
         duration: duration,
       )),
     );

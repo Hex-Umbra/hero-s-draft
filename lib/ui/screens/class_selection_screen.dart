@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/data/hero_data.dart';
 import '../../services/game_data_service.dart';
 import '../../game/controllers/run_controller.dart';
-import 'game_screen.dart';
+import 'map_screen.dart';
 
 class ClassSelectionScreen extends ConsumerWidget {
   const ClassSelectionScreen({super.key});
@@ -72,9 +72,9 @@ class ClassSelectionScreen extends ConsumerWidget {
               'ATK: ${playerClass.baseDamage} | DEF: ${playerClass.baseArmor}',
               style: const TextStyle(fontSize: 14, color: Colors.white),
               textAlign: TextAlign.center,
-            ),
-            const Divider(color: Colors.white24, height: 20),
-            Expanded(
+              ),
+              const Divider(color: Colors.white24, height: 20),
+              Expanded(
               child: SingleChildScrollView(
                 child: Text(
                   playerClass.description,
@@ -82,7 +82,7 @@ class ClassSelectionScreen extends ConsumerWidget {
                   textAlign: TextAlign.center,
                 ),
               ),
-            ),
+              ),
             const SizedBox(height: 10),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -93,7 +93,7 @@ class ClassSelectionScreen extends ConsumerWidget {
               onPressed: () {
                 ref.read(runProvider.notifier).startNewRun(playerClass);
                 Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (context) => const GameScreen()),
+                  MaterialPageRoute(builder: (context) => const MapScreen()),
                   (route) => route.isFirst,
                 );
               },

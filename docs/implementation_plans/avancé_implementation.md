@@ -150,3 +150,6 @@
 - feat: implémentation Phase 1.2
     - Service de Génération de Carte (MapGeneratorService)
         - J'ai terminé l'Étape 1.2. J'ai implémenté le `MapGeneratorService` qui génère un graphe acyclique dirigé (DAG) avec plusieurs étages. Le service garantit la connectivité entre les étages et répartit aléatoirement les types de rencontres (Combat, Élite, Boutique, Repos, Événement).
+- feat: implémentation Phase 1.3
+    - Interface World Map (MapScreen) et Intégration du Flux
+        - J'ai terminé l'Étape 1.3. J'ai créé le `MapScreen` avec un `InteractiveViewer` et un `CustomPainter` pour afficher la carte et ses connexions. Le `RunController` a été mis à jour pour gérer l'état de la carte, la position du joueur et l'économie (or). Le flux de jeu est désormais complet : Sélection de classe -> Map -> Combat -> Draft -> Retour à la Map avec le nœud complété.

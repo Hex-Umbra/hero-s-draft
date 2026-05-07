@@ -39,7 +39,6 @@ class DraftScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 30),
                     if (isPortrait)
-                      // Mode Portrait : On empile verticalement (ou on scroll si besoin)
                       Expanded(
                         child: ListView(
                           shrinkWrap: true,
@@ -54,7 +53,6 @@ class DraftScreen extends ConsumerWidget {
                         ),
                       )
                     else
-                      // Mode Paysage : Row horizontale
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: choices.map((choice) => Flexible(
@@ -82,13 +80,21 @@ class DraftScreen extends ConsumerWidget {
   }
 
   void _onChoiceSelected(WidgetRef ref, _DraftChoice choice) {
-    ref.read(runProvider.notifier).applyHeroStatModifier(
+    final runController = ref.read(runProvider.notifier);
+    runController.applyHeroStatModifier(
       maxPvAcc: choice.pvBoost,
       attackAcc: choice.atkBoost,
       armorAcc: choice.armorBoost,
       maxManaAcc: choice.manaBoost,
     );
-    ref.read(runProvider.notifier).nextLevel();
+    
+    // Récompense en or aléatoire
+    final rng = Random();
+    runController.gainGold(rng.nextInt(15) + 10);
+    
+    // On avance d'un niveau (optionnel selon si on veut que currentLevel = nombre de combats)
+    runController.nextLevel();
+    
     onDraftComplete();
   }
 
