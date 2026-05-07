@@ -141,3 +141,9 @@
 - feat: implémentation Phase 4
     - Visualisation des Statuts (UI)
         - J'ai terminé la Phase 4. J'ai créé le composant `StatusIndicator` qui affiche une rangée d'icônes dynamiques avec leurs valeurs respectives (Poison, Force, Faiblesse, etc.). Ce composant a été intégré à `HeroCard` (au-dessus) et `EnemyCard` (au-dessous), permettant au joueur de suivre en temps réel les altérations d'état actives sur toutes les entités du terrain.
+
+## Phase 8 - World Map et Solidification Technique
+
+- feat: implémentation Phase 1.1
+    - Modélisation de la Carte (MapNode)
+        - J'ai terminé l'Étape 1.1. J'ai créé le modèle `MapNode` avec les types de nœuds nécessaires (combat, elite, shop, rest, event) et la gestion des connexions pour structurer la progression sous forme de graphe.
