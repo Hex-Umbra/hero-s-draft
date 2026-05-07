@@ -161,3 +161,12 @@
 - feat: implémentation Phase 3
     - Solidification et Robustesse (Tests et i18n)
         - J'ai terminé la Phase 3. J'ai ajouté des tests unitaires (`map_generator_test.dart`, `effect_resolver_test.dart`) pour garantir la fiabilité de la génération de map et de la logique de combat. J'ai également écrit un test de widget (`map_screen_test.dart`) et mis en place le package `flutter_localizations` avec des fichiers `.arb` pour préparer l'interface multilingue (français/anglais).
+
+## Phase 8.5 - Polissage du Contenu, de la Map et de la Progression
+
+- feat: implémentation Phase 15 Étape 1
+    - Amélioration des Cartes Statuts et de l'IA Ennemie
+        - J'ai terminé l'Étape 1. Les cartes de statut sont explicitement bloquées lors du jeu, la carte "Blessure" a été retirée du deck de base, et l'IA ennemie possède désormais l'intention `debuffDeck` avec une probabilité de 10% pour ajouter des statuts dans la défausse du joueur.
+- feat: implémentation Phase 15 Étape 2
+    - Refonte des Récompenses de Draft (Combat)
+        - J'ai terminé l'Étape 2. Une 4ème option de récompense (Clonage) avec une probabilité d'apparition de 30% a été ajoutée. Le joueur peut choisir cette option pour ouvrir un modal affichant 3 cartes aléatoires de son deck, en sélectionner une et l'ajouter à son deck (ce qui déclenche l'Auto-Merge si applicable).

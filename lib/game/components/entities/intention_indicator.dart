@@ -94,6 +94,12 @@ class IntentionIndicator extends PositionComponent with HasPaint {
         _valueText.textRenderer = TextPaint(style: const TextStyle(color: Colors.purpleAccent, fontWeight: FontWeight.bold, fontSize: 14));
         _iconText.textRenderer = TextPaint(style: const TextStyle(color: Colors.purpleAccent, fontWeight: FontWeight.bold, fontSize: 12));
         break;
+      case IntentType.debuffDeck:
+        _iconText.text = 'CUR';
+        _valueText.text = '${_intent!.value}';
+        _valueText.textRenderer = TextPaint(style: const TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 14));
+        _iconText.textRenderer = TextPaint(style: const TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 12));
+        break;
     }
   }
 }

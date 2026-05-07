@@ -33,6 +33,11 @@ class EffectResolver {
       return false;
     }
 
+    // Interdiction de jouer les statuts
+    if (card.data.type == CardType.status) {
+      return false;
+    }
+
     // Vérification de la cible
     if (card.data.target == CardTarget.singleEnemy && selectedEnemy == null) {
       return false;

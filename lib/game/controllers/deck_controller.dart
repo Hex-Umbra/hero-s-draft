@@ -163,6 +163,13 @@ class DeckNotifier extends StateNotifier<DeckState> {
 
     state = state.copyWith(masterDeck: currentMasterDeck);
   }
+
+  /// Ajoute une carte spécifique directement dans la défausse (ex: blessure d'ennemi)
+  void addCardToDiscardPile(CardInstance newCard) {
+    var currentDiscardPile = List<CardInstance>.from(state.discardPile);
+    currentDiscardPile.add(newCard);
+    state = state.copyWith(discardPile: currentDiscardPile);
+  }
 }
 
 final deckProvider = StateNotifierProvider<DeckNotifier, DeckState>((ref) {

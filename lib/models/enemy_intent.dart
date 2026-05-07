@@ -1,4 +1,4 @@
-enum IntentType { attack, defend, buff }
+enum IntentType { attack, defend, buff, debuffDeck }
 
 class EnemyIntent {
   final IntentType type;

@@ -42,6 +42,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
   final void Function(int) onPlayerHeal;
   final void Function(int) onPlayerGainArmor;
   final void Function() onEnemiesDead;
+  final void Function(int) onEnemyDebuffDeck;
   final void Function() onTurnEnded;
   final void Function(TurnPhase) onPhaseChanged;
   final void Function(String title, String description) onShowTooltip;
@@ -53,6 +54,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
     required this.onPlayerHeal,
     required this.onPlayerGainArmor,
     required this.onEnemiesDead,
+    required this.onEnemyDebuffDeck,
     required this.onTurnEnded,
     required this.onPhaseChanged,
     required this.onShowTooltip,
@@ -526,6 +528,10 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
         case IntentType.buff:
           // Buff simple : augmente l'attaque de base
           enemy.updateStats(enemy.stats.copyWith(attaque: enemy.stats.attaque + intent.value));
+          break;
+        case IntentType.debuffDeck:
+          // Ajoute une blessure dans la défausse
+          onEnemyDebuffDeck(intent.value);
           break;
       }
       
