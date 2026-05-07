@@ -2,6 +2,7 @@
 - Rajouter plus d'images et de sons
 - être plus clair sur les stats des ennemis et des persos
 - Vérifier le bug de map qui se remet a gauche pendant le drag vers le haut sur certains écrans.
+- Après le boss fight, il serait bien que la map génère de nouvelles routes.
 - Vérifier que le système de merge fonctionne correctement.
 - Faire un dictionnaire des cartes disponibles.
     - Ce dictionnaire devra être disponible avant de lancer une run.
