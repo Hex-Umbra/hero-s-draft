@@ -17,10 +17,6 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   @override
   void initState() {
     super.initState();
-    // Center horizontally (Container is 1200 wide, screen usually ~400-800, we offset by a calculated amount)
-    // Start at the bottom: container is 2500, we want to see the bottom.
-    // For a generic screen width of ~400, offset X by ~ -400. Offset Y by ~ -1800.
-    // The exact values can be tweaked, but translation is required.
     _transformationController.value = Matrix4.translationValues(-200.0, -1500.0, 0.0)
       * Matrix4.diagonal3Values(0.8, 0.8, 1.0);
   }
@@ -80,6 +76,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         boundaryMargin: const EdgeInsets.all(1000),
         minScale: 0.1,
         maxScale: 2.0,
+        scaleEnabled: false, // Bloque le zoom (dézoom/zoom désactivé)
         constrained: false, // Permet au Container d'être plus grand que l'écran
         child: Container(
           width: 1200,
@@ -198,7 +195,7 @@ class _MapNodeWidget extends StatelessWidget {
                 width: 70,
                 height: 70,
                 decoration: BoxDecoration(
-                  color: isCurrent ? Colors.white.withValues(alpha: 0.12) : Colors.black87,
+                  color: isCurrent ? const Color(0xFF2A2A40) : const Color(0xFF1A1A2E),
                   shape: BoxShape.circle,
                   border: Border.all(
                     color: isCurrent ? Colors.yellow : (isAvailable ? color : color.withValues(alpha: 0.5)),
