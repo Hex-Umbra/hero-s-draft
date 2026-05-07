@@ -61,8 +61,6 @@ class EffectResolver {
     // Consomme le mana
     runController.consumeResource(mana: card.currentCost);
 
-    bool triggerEnemyRiposte = false;
-
     // Applique les effets
     for (var effect in card.data.effects) {
       switch (effect.type) {
@@ -70,13 +68,11 @@ class EffectResolver {
           if (card.data.target == CardTarget.singleEnemy && selectedEnemy != null) {
             int dmg = _calculateDamage(effect.value, runController.currentState.heroStats);
             selectedEnemy.updateStats(selectedEnemy.stats.takeDamage(dmg));
-            triggerEnemyRiposte = true;
           } else if (card.data.target == CardTarget.allEnemies) {
             int dmg = _calculateDamage(effect.value, runController.currentState.heroStats);
             for (var enemy in enemyCards) {
               enemy.updateStats(enemy.stats.takeDamage(dmg));
             }
-            triggerEnemyRiposte = true;
           }
           break;
         case 'heal':
@@ -108,7 +104,7 @@ class EffectResolver {
       }
     }
 
-    return triggerEnemyRiposte;
+    return true; // La carte a été jouée avec succès
   }
 
   /// Calcule les dégâts finaux (influencé par la force et les debuffs)

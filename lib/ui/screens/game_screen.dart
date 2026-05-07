@@ -112,7 +112,12 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       onPlayCard: (card, target) {
         final runController = ref.read(runProvider.notifier);
         
-        // Animation du héros selon le type de carte
+        // 1. Vérification si la carte peut être jouée
+        if (!EffectResolver.canPlayCard(card, runController.currentState, target)) {
+          return false; // Pas assez de mana ou cible invalide
+        }
+
+        // 2. Animation du héros selon le type de carte
         if (card.data.type == CardType.attack) {
           _game.heroCard?.dashAnimation();
         } else {
@@ -121,7 +126,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           _game.heroCard?.buffAnimation(hasArmor ? 'defend' : 'buff');
         }
 
-        // Résolution via EffectResolver
+        // 3. Résolution via EffectResolver
         bool success = EffectResolver.resolveCard(
           card,
           runController,
