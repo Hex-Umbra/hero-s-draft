@@ -1,0 +1,7 @@
+- Clarifier l'indicateur des ennemis
+- Rajouter plus d'images et de sons
+- être plus clair sur les stats des ennemis et des persos
+- Vérifier le bug de map qui se remet a gauche pendant le drag vers le haut sur certains écrans.
+- Vérifier que le système de merge fonctionne correctement.
+- Faire un dictionnaire des cartes disponibles.
+- Ajouter le système de cartes des personnages, certaines cartes apparaissent uniquement avec certains personnages.
