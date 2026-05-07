@@ -4,4 +4,6 @@
 - Vérifier le bug de map qui se remet a gauche pendant le drag vers le haut sur certains écrans.
 - Vérifier que le système de merge fonctionne correctement.
 - Faire un dictionnaire des cartes disponibles.
+    - Ce dictionnaire devra être disponible avant de lancer une run.
+- un autre dictionnaire sera disponible pendant la run pour que le joueur puisse voir les cartes dans son masterDeck
 - Ajouter le système de cartes des personnages, certaines cartes apparaissent uniquement avec certains personnages.
