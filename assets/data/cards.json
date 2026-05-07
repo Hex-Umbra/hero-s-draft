@@ -9,7 +9,10 @@
     "rarity": "common",
     "target": "singleEnemy",
     "effects": [
-      { "type": "damage", "value": 6 }
+      {
+        "type": "damage",
+        "value": 6
+      }
     ]
   },
   {
@@ -22,7 +25,10 @@
     "rarity": "common",
     "target": "self",
     "effects": [
-      { "type": "armor", "value": 5 }
+      {
+        "type": "armor",
+        "value": 5
+      }
     ]
   },
   {
@@ -35,8 +41,14 @@
     "rarity": "uncommon",
     "target": "singleEnemy",
     "effects": [
-      { "type": "damage", "value": 3 },
-      { "type": "draw", "value": 1 }
+      {
+        "type": "damage",
+        "value": 3
+      },
+      {
+        "type": "draw",
+        "value": 1
+      }
     ]
   },
   {
@@ -49,7 +61,10 @@
     "rarity": "common",
     "target": "allEnemies",
     "effects": [
-      { "type": "damage", "value": 5 }
+      {
+        "type": "damage",
+        "value": 5
+      }
     ]
   },
   {
@@ -62,7 +77,10 @@
     "rarity": "common",
     "target": "self",
     "effects": [
-      { "type": "draw", "value": 2 }
+      {
+        "type": "draw",
+        "value": 2
+      }
     ]
   },
   {
@@ -75,7 +93,10 @@
     "rarity": "rare",
     "target": "self",
     "effects": [
-      { "type": "heal", "value": 8 }
+      {
+        "type": "heal",
+        "value": 8
+      }
     ]
   },
   {
@@ -88,7 +109,10 @@
     "rarity": "uncommon",
     "target": "self",
     "effects": [
-      { "type": "armor", "value": 12 }
+      {
+        "type": "armor",
+        "value": 12
+      }
     ]
   },
   {
@@ -101,7 +125,10 @@
     "rarity": "uncommon",
     "target": "singleEnemy",
     "effects": [
-      { "type": "damage", "value": 14 }
+      {
+        "type": "damage",
+        "value": 14
+      }
     ]
   },
   {
@@ -114,8 +141,14 @@
     "rarity": "rare",
     "target": "self",
     "effects": [
-      { "type": "armor", "value": 6 },
-      { "type": "draw", "value": 1 }
+      {
+        "type": "armor",
+        "value": 6
+      },
+      {
+        "type": "draw",
+        "value": 1
+      }
     ]
   },
   {
@@ -128,21 +161,32 @@
     "rarity": "epic",
     "target": "allEnemies",
     "effects": [
-      { "type": "damage", "value": 4 },
-      { "type": "armor", "value": 4 }
+      {
+        "type": "damage",
+        "value": 4
+      },
+      {
+        "type": "armor",
+        "value": 4
+      }
     ]
   },
   {
     "id": "demon_form",
     "name": "Forme Démoniaque",
-    "description": "Pendant 3 tours, gagne 2 Force au début du tour.",
+    "description": "Gagne 4 Force pendant 3 tours.",
     "cost": 3,
     "type": "power",
     "category": "global",
     "rarity": "rare",
     "target": "self",
     "effects": [
-      { "type": "apply_status", "statusId": "strength_regen", "value": 2, "duration": 3 }
+      {
+        "type": "apply_status",
+        "statusId": "strength",
+        "value": 4,
+        "duration": 3
+      }
     ]
   },
   {
@@ -155,7 +199,12 @@
     "rarity": "uncommon",
     "target": "self",
     "effects": [
-      { "type": "apply_status", "statusId": "armor_regen", "value": 3, "duration": 3 }
+      {
+        "type": "apply_status",
+        "statusId": "armor_regen",
+        "value": 3,
+        "duration": 3
+      }
     ]
   },
   {
@@ -168,19 +217,16 @@
     "rarity": "common",
     "target": "singleEnemy",
     "effects": [
-      { "type": "damage", "value": 5 },
-      { "type": "apply_status", "statusId": "poison", "value": 3, "duration": 3 }
+      {
+        "type": "damage",
+        "value": 5
+      },
+      {
+        "type": "apply_status",
+        "statusId": "poison",
+        "value": 3,
+        "duration": 3
+      }
     ]
-  },
-  {
-    "id": "injury",
-    "name": "Blessure",
-    "description": "Injouable.",
-    "cost": 99,
-    "type": "status",
-    "category": "global",
-    "rarity": "common",
-    "target": "none",
-    "effects": []
   }
 ]

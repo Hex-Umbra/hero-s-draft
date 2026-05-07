@@ -255,6 +255,13 @@ class RunController extends StateNotifier<RunState> {
 
   /// Prépare l'état pour un nouveau combat
   void startCombat() {
+    // 1. Nettoyage des buffs/debuffs du combat précédent
+    state = state.copyWith(
+      heroStats: state.heroStats.copyWith(
+        statuses: [],
+      ),
+    );
+    // 2. Déclenchement des reliques
     applyRelics(RelicTrigger.startOfCombat);
   }
 
