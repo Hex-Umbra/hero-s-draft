@@ -153,7 +153,9 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                               child: UiCard(
                                 title: card.name,
                                 description: card.description,
-                                onTap: isPurchased ? null : () => _buyCard(card, price),
+                                onTap: () {
+                                  if (!isPurchased) _buyCard(card, price);
+                                },
                               ),
                             ),
                             const SizedBox(height: 10),

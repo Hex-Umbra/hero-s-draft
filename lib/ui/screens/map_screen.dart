@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../game/controllers/run_controller.dart';
 import '../../models/map_node.dart';
 import 'game_screen.dart';
+import 'shop_screen.dart';
 
 class MapScreen extends ConsumerStatefulWidget {
   const MapScreen({super.key});
@@ -244,6 +245,4 @@ class MapConnectionPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
- oldDelegate) => false;
 }
