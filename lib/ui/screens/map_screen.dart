@@ -42,8 +42,13 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final initialMatrix = Matrix4.translationValues(-200.0, -1500.0, 0.0) * Matrix4.diagonal3Values(0.8, 0.8, 1.0);
       if (_transformationController.value == initialMatrix) {
-         _transformationController.value = Matrix4.translationValues(-(1200 - screenSize.width) / 2, -(2500 - screenSize.height) + 100, 0.0)
-           * Matrix4.diagonal3Values(0.8, 0.8, 1.0);
+         double scale = 0.8;
+         double dx = (screenSize.width - (1200 * scale)) / 2;
+         // Positionne le bas du container (2500 * scale) au bas de l'écran, avec une marge pour l'AppBar et la SafeArea
+         double dy = screenSize.height - (2500 * scale) - 150; 
+         
+         _transformationController.value = Matrix4.translationValues(dx, dy, 0.0)
+           * Matrix4.diagonal3Values(scale, scale, 1.0);
       }
     });
 
