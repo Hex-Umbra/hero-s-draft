@@ -1,6 +1,6 @@
-- Clarifier l'indicateur des ennemis
-- Rajouter plus d'images et de sons
-- être plus clair sur les stats des ennemis et des persos
+- ~~Clarifier l'indicateur des ennemis~~
+- ~~Rajouter plus d'images et de sons~~
+- ~~être plus clair sur les stats des ennemis et des persos~~
 - Vérifier le bug de map qui se remet a gauche pendant le drag vers le haut sur certains écrans.
 - Après le boss fight, il serait bien que la map génère de nouvelles routes.
 - Vérifier que le système de merge fonctionne correctement.
@@ -9,3 +9,5 @@
 - un autre dictionnaire sera disponible pendant la run pour que le joueur puisse voir les cartes dans son masterDeck
 - Ajouter le système de cartes des personnages, certaines cartes apparaissent uniquement avec certains personnages.
 - Ajouter une sorte de tuto pour expliquer comment jouer, comment utiliser les cartes, comment fonctionne le système de merge, etc.
+- Dans la boutique, dans le menu pour détruire une carte changer l'affichage, les cartes apparaitront en liste et non entiere pour économiser de l'espace et une meilleure lisibilité
+- Vérifier que les boss apparaissent bien tout les 10 rencontres et que la récompense est correcte. Lé récompense étant une relique (pour le moment, laisser la possibilité de choisir plusiseur entre plusieurs options)
