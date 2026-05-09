@@ -15,6 +15,7 @@ class RunState {
   final List<MapNode> mapNodes;
   final String? currentNodeId;
   final int gold;
+  final int baseArmor; // Armure permanente (de base + améliorations de draft)
   
   // Variables pour gérer l'état du cooldown des sorts
   final int skill1Cooldown;
@@ -34,6 +35,7 @@ class RunState {
     this.mapNodes = const [],
     this.currentNodeId,
     this.gold = 0,
+    this.baseArmor = 0,
     this.skill1Cooldown = 0,
     this.skill2Cooldown = 0,
   });
@@ -48,6 +50,7 @@ class RunState {
     String? currentNodeId,
     bool resetCurrentNode = false,
     int? gold,
+    int? baseArmor,
     int? skill1Cooldown,
     int? skill2Cooldown,
   }) {
@@ -60,6 +63,7 @@ class RunState {
       mapNodes: mapNodes ?? this.mapNodes,
       currentNodeId: resetCurrentNode ? null : (currentNodeId ?? this.currentNodeId),
       gold: gold ?? this.gold,
+      baseArmor: baseArmor ?? this.baseArmor,
       skill1Cooldown: skill1Cooldown ?? this.skill1Cooldown,
       skill2Cooldown: skill2Cooldown ?? this.skill2Cooldown,
     );
@@ -74,6 +78,7 @@ class RunController extends StateNotifier<RunState> {
           currentLevel: 1,
           act: 1,
           heroClassId: 'paladin',
+          baseArmor: 20,
           heroStats: EntityStats(
             maxPv: 100,
             currentPv: 100,
@@ -91,6 +96,7 @@ class RunController extends StateNotifier<RunState> {
       currentLevel: 1,
       act: 1,
       heroClassId: chosenClass.id,
+      baseArmor: chosenClass.baseArmor,
       heroStats: EntityStats(
         maxPv: chosenClass.maxHp,
         currentPv: chosenClass.maxHp,
@@ -176,7 +182,10 @@ class RunController extends StateNotifier<RunState> {
     // On ajoute aussi le bonus au mana actuel
     final newCurrentMana = (currentStats.currentMana + maxManaAcc).clamp(0, newMaxMana);
 
+    final newBaseArmor = state.baseArmor + armorAcc;
+
     state = state.copyWith(
+      baseArmor: newBaseArmor,
       heroStats: currentStats.copyWith(
         maxPv: newMaxPv,
         currentPv: newCurrentPv,
@@ -264,9 +273,11 @@ class RunController extends StateNotifier<RunState> {
   /// Prépare l'état pour un nouveau combat
   void startCombat() {
     // 1. Nettoyage des buffs/debuffs du combat précédent
+    // ET reset de l'armure à la valeur de base permanente
     state = state.copyWith(
       heroStats: state.heroStats.copyWith(
         statuses: [],
+        armure: state.baseArmor,
       ),
     );
     // 2. Déclenchement des reliques

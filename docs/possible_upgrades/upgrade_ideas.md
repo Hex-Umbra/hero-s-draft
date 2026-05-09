@@ -1,9 +1,9 @@
 - ~~Clarifier l'indicateur des ennemis~~
 - ~~Rajouter plus d'images et de sons~~
 - ~~être plus clair sur les stats des ennemis et des persos~~
-- Vérifier le bug de map qui se remet a gauche pendant le drag vers le haut sur certains écrans.
-- Après le boss fight, il serait bien que la map génère de nouvelles routes.
-- S'assurer que l'armure gagner via les cartes a jouer pendant un combat se reset a la fin du combat.
+- ~~Vérifier le bug de map qui se remet a gauche pendant le drag vers le haut sur certains écrans~~.
+- ~~Après le boss fight, il serait bien que la map génère de nouvelles routes.~~
+- ~~S'assurer que l'armure gagner via les cartes a jouer pendant un combat se reset a la fin du combat.~~
 - Il y a une carte qui quand elle est jouée fait piocher des cartes au joueur, mais la logique n'est pas encore implémenter
 - Vérifier que le système de merge fonctionne correctement.
 - Faire un dictionnaire des cartes disponibles.
