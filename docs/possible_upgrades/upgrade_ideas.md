@@ -24,4 +24,5 @@
 - Rajouter un tooltips sur les noeuds de la map pour expliquer ce qu'ils font, ainsi qu'une légende sur le coté dans l'interface.
     - Rajouter un système de hover sur les noeuds pour indiquer au joueur qu'il est dessus et qu'il peut cliquer dessus.
 - On a déjà un système de séléction de carte pendant le combat, le joueur peut "focus" sur une carte. Il faudrati un système pour pouvoir jouer la carte après l'avoir séléctionné en plus du système drag and drop actuel
-- 
+- Dans les descriptions des cartes il faudrati rajouter un système de différenciation entre chaque "type" de dégâts (physique, de feu, de froid, de poison, etc) et d'armure (d'armure, d'armure temporaire, d'armure rémanente, etc)
+    - Pour les dégâts, il faudrait rajouter une icone pour chaque type de dégâts, par exemple pour les dégâts de feu, une icone de flamme.Pareil pour les autres types de dégâts et pour les armures.
