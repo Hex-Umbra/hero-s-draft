@@ -15,4 +15,4 @@
 - Vérifier que les boss apparaissent bien tout les 10 rencontres et que la récompense est correcte. Lé récompense étant une relique (pour le moment, laisser la possibilité de choisir plusiseur entre plusieurs options)
 - Equilibrer les stats des personnages et des ennemis, les ennemis gagnent en difficulté. 
 - Ajouter un nombre minimum de noeud dans la map pour certains event comme les magasins, chaque map doit apparaitre au moins une fois par génération de map.
-- 
+- Afficher sur les cartes a jouer qui attaque l'addition entre l'attaque et les dégâts de base de l'attaque. Exemple : si le personnage a 5 d'attaque et que la carte inflige 6 dégâts, afficher 11 (6+5).

@@ -7,108 +7,158 @@ enum StatType { hp, armor, attack, mana }
 
 class StatBadge extends PositionComponent with TapCallbacks, HasGameReference<HerosDraftGame> {
   final StatType type;
+  final bool isCircle;
   String _value;
+  double _fillPercentage;
   String? _customTooltipTitle;
   String? _customTooltipDescription;
   
-  late final RectangleComponent bg;
-  late final TextComponent iconComponent;
-  late final TextComponent textComponent;
-  final double radius;
+  late TextComponent iconComponent;
+  late TextComponent textComponent;
 
   StatBadge({
     required this.type,
     required String value,
-    this.radius = 24.0,
+    this.isCircle = false,
+    double fillPercentage = 1.0,
     String? tooltipTitle,
     String? tooltipDescription,
   }) : _value = value, 
+       _fillPercentage = fillPercentage,
        _customTooltipTitle = tooltipTitle,
        _customTooltipDescription = tooltipDescription,
-       super(size: Vector2(55, 30));
+       super(size: isCircle ? Vector2.all(36) : Vector2(48, 22));
 
   @override
   Future<void> onLoad() async {
     anchor = Anchor.center;
-    
-    Color bgColor;
+    _updateVisuals();
+  }
+
+  void _updateVisuals() {
+    removeAll(children);
+
+    Color color;
     String iconText;
     switch (type) {
       case StatType.hp:
-        bgColor = const Color(0xFFE74C3C);
+        color = const Color(0xFFE74C3C);
         iconText = 'HP';
         break;
       case StatType.armor:
-        bgColor = const Color(0xFF3498DB);
+        color = const Color(0xFF3498DB);
         iconText = 'ARM';
         break;
       case StatType.attack:
-        bgColor = const Color(0xFFF39C12);
+        color = const Color(0xFFF39C12);
         iconText = 'ATK';
         break;
       case StatType.mana:
-        bgColor = const Color(0xFF9B59B6);
+        color = const Color(0xFF9B59B6);
         iconText = 'MP';
         break;
     }
 
-    add(RectangleComponent(
-      size: size,
-      paint: Paint()..color = Colors.black.withAlpha(180),
-    ));
+    if (isCircle) {
+      // Background noir
+      add(CircleComponent(
+        radius: size.x / 2,
+        paint: Paint()..color = Colors.black.withAlpha(220),
+      ));
 
-    // Barre colorée sur le côté
-    add(RectangleComponent(
-      size: Vector2(4, size.y),
-      paint: Paint()..color = bgColor,
-      position: Vector2(0, 0),
-    ));
+      // Arc de cercle pour les HP (décrémente)
+      add(CircleProgressComponent(
+        radius: size.x / 2,
+        percentage: _fillPercentage,
+        color: color,
+      ));
 
-    iconComponent = TextComponent(
-      text: iconText,
-      textRenderer: TextPaint(
-        style: TextStyle(
-          color: bgColor,
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      anchor: Anchor.centerLeft,
-      position: Vector2(8, size.y / 2),
-    );
-    add(iconComponent);
+      // Bordure
+      add(CircleComponent(
+        radius: size.x / 2,
+        paint: Paint()
+          ..color = Colors.white.withAlpha(100)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.5,
+      ));
 
-    textComponent = TextComponent(
-      text: _value,
-      textRenderer: TextPaint(
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 14,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      anchor: Anchor.centerRight,
-      position: Vector2(size.x - 6, size.y / 2),
-    );
-    add(textComponent);
-  }
-
-  void updateValue(String newValue, {Color? textColor, String? tooltipTitle, String? tooltipDescription}) {
-    _value = newValue;
-    if (isLoaded) {
-      textComponent.text = newValue;
-      if (textColor != null) {
-        textComponent.textRenderer = TextPaint(
-          style: TextStyle(
-            color: textColor,
-            fontSize: 14,
+      textComponent = TextComponent(
+        text: _value.split('/').first, // Pour le cercle on ne garde que le PV actuel
+        textRenderer: TextPaint(
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 10,
             fontWeight: FontWeight.bold,
           ),
-        );
-      }
+        ),
+        anchor: Anchor.center,
+        position: size / 2,
+      );
+      add(textComponent);
+    } else {
+      // Layout rectangulaire pour les autres badges
+      add(RectangleComponent(
+        size: size,
+        paint: Paint()..color = Colors.black.withAlpha(200),
+      ));
+
+      add(RectangleComponent(
+        size: Vector2(3, size.y),
+        paint: Paint()..color = color,
+      ));
+
+      iconComponent = TextComponent(
+        text: iconText,
+        textRenderer: TextPaint(
+          style: TextStyle(
+            color: color,
+            fontSize: 8,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        anchor: Anchor.centerLeft,
+        position: Vector2(6, size.y / 2),
+      );
+      add(iconComponent);
+
+      textComponent = TextComponent(
+        text: _value,
+        textRenderer: TextPaint(
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        anchor: Anchor.centerRight,
+        position: Vector2(size.x - 4, size.y / 2),
+      );
+      add(textComponent);
     }
+  }
+
+  void updateValue(String newValue, {double? fillPercentage, Color? textColor, String? tooltipTitle, String? tooltipDescription}) {
+    _value = newValue;
+    if (fillPercentage != null) _fillPercentage = fillPercentage;
     if (tooltipTitle != null) _customTooltipTitle = tooltipTitle;
     if (tooltipDescription != null) _customTooltipDescription = tooltipDescription;
+
+    if (isLoaded) {
+      if (isCircle) {
+        _updateVisuals(); // On reconstruit pour mettre à jour l'arc
+      } else {
+        textComponent.text = newValue;
+        if (textColor != null) {
+          textComponent.textRenderer = TextPaint(
+            style: TextStyle(
+              color: textColor,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+            ),
+          );
+        }
+      }
+    }
   }
 
   @override
@@ -142,5 +192,33 @@ class StatBadge extends PositionComponent with TapCallbacks, HasGameReference<He
       case StatType.mana:
         return ('MANA', 'Énergie utilisée pour lancer des capacités spéciales.');
     }
+  }
+}
+
+class CircleProgressComponent extends PositionComponent {
+  final double radius;
+  final double percentage;
+  final Color color;
+
+  CircleProgressComponent({
+    required this.radius,
+    required this.percentage,
+    required this.color,
+  }) : super(size: Vector2.all(radius * 2));
+
+  @override
+  void render(Canvas canvas) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+    
+    // Dessine un arc de cercle à partir du haut (-pi/2)
+    canvas.drawArc(
+      Rect.fromLTWH(0, 0, size.x, size.y),
+      -1.5708, // -90 degrés
+      6.28319 * percentage, // 360 degrés * pourcentage
+      true,
+      paint,
+    );
   }
 }

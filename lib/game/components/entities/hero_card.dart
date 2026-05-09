@@ -51,15 +51,15 @@ class HeroCard extends PositionComponent with TapCallbacks, HasGameReference<Her
     );
 
     armorBadge = StatBadge(type: StatType.armor, value: '${stats.armure}');
-    armorBadge.position = Vector2(-15, 30);
+    armorBadge.position = Vector2(-12, 35);
     add(armorBadge);
 
     attackBadge = StatBadge(type: StatType.attack, value: '${stats.attaque}');
-    attackBadge.position = Vector2(-15, 80);
+    attackBadge.position = Vector2(-12, 80);
     add(attackBadge);
 
     manaBadge = StatBadge(type: StatType.mana, value: '${stats.currentMana}/${stats.maxMana}');
-    manaBadge.position = Vector2(-15, 130);
+    manaBadge.position = Vector2(-12, 125);
     add(manaBadge);
 
     statusIndicator = StatusIndicator(statuses: stats.statuses);

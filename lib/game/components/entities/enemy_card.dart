@@ -65,8 +65,13 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
     );
     add(borderInfo);
 
-    hpBadge = StatBadge(type: StatType.hp, value: '${stats.currentPv}/${stats.maxPv}');
-    hpBadge.position = Vector2(size.x + 15, 20); // Aligné sur la droite
+    hpBadge = StatBadge(
+      type: StatType.hp, 
+      value: '${stats.currentPv}/${stats.maxPv}',
+      isCircle: true,
+      fillPercentage: stats.maxPv > 0 ? stats.currentPv / stats.maxPv : 1.0,
+    );
+    hpBadge.position = Vector2(size.x / 2, size.y); // Centré en bas
     add(hpBadge);
 
     final random = Random();
@@ -82,19 +87,19 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
     }
 
     intentionIndicator = IntentionIndicator(initialIntent: currentIntent);
-    intentionIndicator.position = Vector2(size.x / 2, -25); // Juste au-dessus de la carte
+    intentionIndicator.position = Vector2(size.x / 2, -30); // Juste au-dessus de la carte
     add(intentionIndicator);
 
     armorBadge = StatBadge(type: StatType.armor, value: '${stats.armure}');
-    armorBadge.position = Vector2(-15, 20);
+    armorBadge.position = Vector2(-12, 25);
     add(armorBadge);
 
     attackBadge = StatBadge(type: StatType.attack, value: '${stats.attaque}');
-    attackBadge.position = Vector2(-15, 60);
+    attackBadge.position = Vector2(-12, 55);
     add(attackBadge);
 
     manaBadge = StatBadge(type: StatType.mana, value: '${stats.currentMana}/${stats.maxMana}');
-    manaBadge.position = Vector2(-15, 100);
+    manaBadge.position = Vector2(-12, 85);
     add(manaBadge);
 
     statusIndicator = StatusIndicator(statuses: stats.statuses);
@@ -135,6 +140,7 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
   void _refreshBadges() {
     hpBadge.updateValue(
       '${stats.currentPv}/${stats.maxPv}',
+      fillPercentage: stats.maxPv > 0 ? stats.currentPv / stats.maxPv : 0,
       tooltipTitle: 'POINTS DE VIE',
       tooltipDescription: 'Santé actuelle de l\'ennemi : ${stats.currentPv} / ${stats.maxPv}.',
     );
