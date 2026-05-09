@@ -65,31 +65,35 @@ class EffectResolver {
 
     // Applique les effets
     for (var effect in card.data.effects) {
+      // Calcul de la valeur rÃ©elle selon le niveau de la carte (+50% par niveau supplÃ©mentaire)
+      final int baseValue = effect.value;
+      final int scaledValue = (baseValue * (1 + (card.level - 1) * 0.5)).round();
+
       switch (effect.type) {
         case 'damage':
           if (card.data.target == CardTarget.singleEnemy && selectedEnemy != null) {
-            int dmg = _calculateDamage(effect.value, runController.currentState.heroStats);
+            int dmg = _calculateDamage(scaledValue, runController.currentState.heroStats);
             selectedEnemy.updateStats(selectedEnemy.stats.takeDamage(dmg));
           } else if (card.data.target == CardTarget.allEnemies) {
-            int dmg = _calculateDamage(effect.value, runController.currentState.heroStats);
+            int dmg = _calculateDamage(scaledValue, runController.currentState.heroStats);
             for (var enemy in enemyCards) {
               enemy.updateStats(enemy.stats.takeDamage(dmg));
             }
           }
           break;
         case 'heal':
-          runController.heal(effect.value);
+          runController.heal(scaledValue);
           break;
         case 'armor':
           final currentArmor = runController.currentState.heroStats.armure;
-          runController.setHeroStats(armure: currentArmor + effect.value);
+          runController.setHeroStats(armure: currentArmor + scaledValue);
           break;
         case 'draw':
-          deckController.drawCards(effect.value);
+          deckController.drawCards(scaledValue);
           break;
         case 'apply_status':
           if (effect.statusId != null) {
-            final status = _createStatus(effect.statusId!, effect.value, effect.duration ?? 1);
+            final status = _createStatus(effect.statusId!, scaledValue, effect.duration ?? 1);
             if (status != null) {
               if (card.data.target == CardTarget.singleEnemy && selectedEnemy != null) {
                 selectedEnemy.updateStats(selectedEnemy.stats.addStatus(status));

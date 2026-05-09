@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 class UiCard extends StatelessWidget {
   final String title;
   final String description;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   const UiCard({
     super.key,
     required this.title,
     required this.description,
-    required this.onTap,
+    this.onTap,
   });
 
   @override

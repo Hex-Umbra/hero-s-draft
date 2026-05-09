@@ -16,3 +16,4 @@
 - Equilibrer les stats des personnages et des ennemis, les ennemis gagnent en difficulté. 
 - Ajouter un nombre minimum de noeud dans la map pour certains event comme les magasins, chaque map doit apparaitre au moins une fois par génération de map.
 - Afficher sur les cartes a jouer qui attaque l'addition entre l'attaque et les dégâts de base de l'attaque. Exemple : si le personnage a 5 d'attaque et que la carte inflige 6 dégâts, afficher 11 (6+5).
+- Pendant la phase de récompense après un combat, par moment les récompense "reroll" plusieurs fois d'elles-mêmes. Il faut s'assurer que la récompense est correcte. (à vérifier)

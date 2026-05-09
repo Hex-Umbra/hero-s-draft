@@ -133,35 +133,31 @@ class DeckNotifier extends StateNotifier<DeckState> {
     );
   }
 
-  /// Ajoute une carte au Master Deck avec système d'Auto-Merge
+  /// Ajoute une carte au Master Deck
   void addCardToMasterDeck(CardInstance newCard) {
+    state = state.copyWith(masterDeck: [...state.masterDeck, newCard]);
+  }
+
+  /// Fusionne 3 cartes identiques en une carte de niveau supérieur
+  void mergeCards(String cardId, int level) {
     var currentMasterDeck = List<CardInstance>.from(state.masterDeck);
-    currentMasterDeck.add(newCard);
-
-    // Vérification de la fusion
-    bool merged = true;
-    while (merged) {
-      merged = false;
-      // Parcourt le deck pour trouver 3 exemplaires identiques
-      for (var card in currentMasterDeck) {
-        var duplicates = currentMasterDeck.where((c) => c.data.id == card.data.id && c.level == card.level).toList();
-        if (duplicates.length >= 3) {
-          // Retire 3 exemplaires
-          for (int i = 0; i < 3; i++) {
-            currentMasterDeck.removeWhere((c) => c.uniqueId == duplicates[i].uniqueId);
-          }
-          // Ajoute la carte de niveau supérieur
-          currentMasterDeck.add(CardInstance(
-            data: card.data,
-            level: card.level + 1,
-          ));
-          merged = true;
-          break; // On relance la boucle
-        }
-      }
+    
+    // Trouve les 3 exemplaires
+    var duplicates = currentMasterDeck.where((c) => c.data.id == cardId && c.level == level).toList();
+    
+    if (duplicates.length >= 3) {
+      // Retire les 3 exemplaires (en utilisant uniqueId pour être sûr)
+      final idsToRemove = duplicates.take(3).map((c) => c.uniqueId).toSet();
+      currentMasterDeck.removeWhere((c) => idsToRemove.contains(c.uniqueId));
+      
+      // Ajoute la carte de niveau supérieur
+      currentMasterDeck.add(CardInstance(
+        data: duplicates[0].data,
+        level: level + 1,
+      ));
+      
+      state = state.copyWith(masterDeck: currentMasterDeck);
     }
-
-    state = state.copyWith(masterDeck: currentMasterDeck);
   }
 
   /// Retire une carte spécifique du Master Deck (ex: Boutique)

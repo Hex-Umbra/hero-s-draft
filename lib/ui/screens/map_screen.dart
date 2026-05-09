@@ -4,6 +4,7 @@ import '../../game/controllers/run_controller.dart';
 import '../../models/map_node.dart';
 import 'game_screen.dart';
 import 'shop_screen.dart';
+import 'deck_screen.dart';
 
 class MapScreen extends ConsumerStatefulWidget {
   const MapScreen({super.key});
@@ -71,6 +72,15 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         backgroundColor: Colors.black45,
         elevation: 0,
         centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.style, color: Colors.white),
+          tooltip: 'Mon Deck',
+          onPressed: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => const DeckScreen()),
+            );
+          },
+        ),
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),

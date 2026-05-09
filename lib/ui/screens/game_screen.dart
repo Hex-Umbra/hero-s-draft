@@ -7,6 +7,7 @@ import '../../game/controllers/deck_controller.dart';
 import '../../game/services/effect_resolver.dart';
 import 'draft_screen.dart';
 import 'class_selection_screen.dart';
+import 'deck_screen.dart';
 import '../../services/game_data_service.dart';
 import '../../models/card_instance.dart';
 import '../../models/data/card_data.dart';
@@ -249,16 +250,33 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Acte ${runState.act} - Niveau : ${runState.currentLevel}',
-                          style: const TextStyle(color: Colors.amber, fontSize: 24, fontWeight: FontWeight.bold),
+                        Row(
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.style, color: Colors.white, size: 30),
+                              tooltip: 'Mon Deck',
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(builder: (context) => const DeckScreen(allowMerge: false)),
+                                );
+                              },
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Acte ${runState.act} - Niveau : ${runState.currentLevel}',
+                              style: const TextStyle(color: Colors.amber, fontSize: 24, fontWeight: FontWeight.bold),
+                            ),
+                          ],
                         ),
                         // Affichage simplifié des statuts du joueur
-                        ...runState.heroStats.statuses.map((s) => Text(
-                          s.duration > 90 
-                              ? '${s.name} : ${s.value} (Permanent)'
-                              : '${s.name} : ${s.value} (${s.duration} tours)',
-                          style: const TextStyle(color: Colors.amber, fontSize: 14, fontWeight: FontWeight.bold),
+                        ...runState.heroStats.statuses.map((s) => Padding(
+                          padding: const EdgeInsets.only(left: 45),
+                          child: Text(
+                            s.duration > 90 
+                                ? '${s.name} : ${s.value} (Permanent)'
+                                : '${s.name} : ${s.value} (${s.duration} tours)',
+                            style: const TextStyle(color: Colors.amber, fontSize: 14, fontWeight: FontWeight.bold),
+                          ),
                         )),
                       ],
                     ),
