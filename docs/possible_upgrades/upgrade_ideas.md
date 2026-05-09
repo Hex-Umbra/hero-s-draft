@@ -6,17 +6,22 @@
 - ~~S'assurer que l'armure gagner via les cartes a jouer pendant un combat se reset a la fin du combat.~~
 - ~~Dans le shop il y a des cartes achetables qui permette de piocher des cartes (exemple: quick_attck, concentration). Actuellement, l'effet de ces cartes ne fonctionne pas.~~
 - ~~Vérifier que le système de merge fonctionne correctement. Quand 3 cartes identiques sont dans le masterDeck, elles doivent fusionner en une carte de niveau supérieur. On vas laisser le vhoix au joueur de merge ou non les cartes.~~ 
-- ~Faire un dictionnaire des cartes disponibles.
-    - Ce dictionnaire devra être disponible avant de lancer une run.
-- un autre dictionnaire sera disponible pendant la run pour que le joueur puisse voir les cartes dans son masterDeck~
+- ~~Faire un dictionnaire des cartes disponibles.~~
+    - ~~Ce dictionnaire devra être disponible avant de lancer une run~~
+- ~~un autre dictionnaire sera disponible pendant la run pour que le joueur puisse voir les cartes dans son masterDeck~~
 - Ajouter le système de cartes des personnages, certaines cartes apparaissent uniquement avec certains personnages.
 - Ajouter une sorte de tuto pour expliquer comment jouer, comment utiliser les cartes, comment fonctionne le système de merge, etc.
-- Dans la boutique, dans le menu pour détruire une carte changer l'affichage, les cartes apparaitront en liste et non entiere pour économiser de l'espace et une meilleure lisibilité
+- ~~Dans la boutique, dans le menu pour détruire une carte changer l'affichage, les cartes apparaitront en liste et non entiere pour économiser de l'espace et une meilleure lisibilité~~
 - Vérifier que les boss apparaissent bien tout les 10 rencontres et que la récompense est correcte. Lé récompense étant une relique (pour le moment, laisser la possibilité de choisir plusiseur entre plusieurs options)
 - Equilibrer les stats des personnages et des ennemis, les ennemis gagnent en difficulté. 
 - Ajouter un nombre minimum de noeud dans la map pour certains event comme les magasins, chaque map doit apparaitre au moins une fois par génération de map.
 - Afficher sur les cartes a jouer qui attaque l'addition entre l'attaque et les dégâts de base de l'attaque. Exemple : si le personnage a 5 d'attaque et que la carte inflige 6 dégâts, afficher 11 (6+5).
 - Pendant la phase de récompense après un combat, par moment les récompense "reroll" plusieurs fois d'elles-mêmes. Il faut s'assurer que la récompense est correcte. (à vérifier)
 - Dans la map plusieurs type de noeuds sont disponible mais pour le moment seul le shop est fonctionnel. Rajouter les autres noeuds.
-- Lorsqu'une carte est améliorée (niveau passe de 1 a 3) bien fmodifier la description de la carte pour afficher les nouveaux effets ou les nouveaux dégâts.
+- Lorsqu'une carte est améliorée (niveau passe de 1 a 3) bien modifier la description de la carte pour afficher les nouveaux effets ou les nouveaux dégâts (la logique elle fonctionne bel et bien comme attendu).
 - Changer l'emplacement du bouton "mon deck" pour le déplacer a coté de la barre de vie du joueur pendant un combat. Tandis que sur la map indiquer plus clairement avec un texte et pas juste un bouton.
+- Revoir les cartes ajouer en combat pour leur affichage, le texte ne s'adapte pas bien a la largeur de la carte et dépasse souvent.
+- Rajouter un tooltips sur les noeuds de la map pour expliquer ce qu'ils font, ainsi qu'une légende sur le coté dans l'interface.
+    - Rajouter un système de hover sur les noeuds pour indiquer au joueur qu'il est dessus et qu'il peut cliquer dessus.
+- On a déjà un système de séléction de carte pendant le combat, le joueur peut "focus" sur une carte. Il faudrati un système pour pouvoir jouer la carte après l'avoir séléctionné en plus du système drag and drop actuel
+- 
