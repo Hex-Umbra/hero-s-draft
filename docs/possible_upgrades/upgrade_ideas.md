@@ -3,6 +3,8 @@
 - ~~être plus clair sur les stats des ennemis et des persos~~
 - Vérifier le bug de map qui se remet a gauche pendant le drag vers le haut sur certains écrans.
 - Après le boss fight, il serait bien que la map génère de nouvelles routes.
+- S'assurer que l'armure gagner via les cartes a jouer pendant un combat se reset a la fin du combat.
+- Il y a une carte qui quand elle est jouée fait piocher des cartes au joueur, mais la logique n'est pas encore implémenter
 - Vérifier que le système de merge fonctionne correctement.
 - Faire un dictionnaire des cartes disponibles.
     - Ce dictionnaire devra être disponible avant de lancer une run.
@@ -11,3 +13,6 @@
 - Ajouter une sorte de tuto pour expliquer comment jouer, comment utiliser les cartes, comment fonctionne le système de merge, etc.
 - Dans la boutique, dans le menu pour détruire une carte changer l'affichage, les cartes apparaitront en liste et non entiere pour économiser de l'espace et une meilleure lisibilité
 - Vérifier que les boss apparaissent bien tout les 10 rencontres et que la récompense est correcte. Lé récompense étant une relique (pour le moment, laisser la possibilité de choisir plusiseur entre plusieurs options)
+- Equilibrer les stats des personnages et des ennemis, les ennemis gagnent en difficulté. 
+- Ajouter un nombre minimum de noeud dans la map pour certains event comme les magasins, chaque map doit apparaitre au moins une fois par génération de map.
+- 

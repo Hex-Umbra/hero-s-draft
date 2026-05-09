@@ -251,7 +251,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Niveau actuel : ${runState.currentLevel}',
+                          'Acte ${runState.act} - Niveau : ${runState.currentLevel}',
                           style: const TextStyle(color: Colors.amber, fontSize: 24, fontWeight: FontWeight.bold),
                         ),
                         // Affichage simplifié des statuts du joueur

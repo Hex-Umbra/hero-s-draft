@@ -14,6 +14,7 @@ class MapScreen extends ConsumerStatefulWidget {
 
 class _MapScreenState extends ConsumerState<MapScreen> {
   final TransformationController _transformationController = TransformationController();
+  int? _lastActCentered;
 
   @override
   void initState() {
@@ -36,12 +37,13 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     final screenSize = MediaQuery.of(context).size;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final initialMatrix = Matrix4.translationValues(-200.0, -1500.0, 0.0) * Matrix4.diagonal3Values(0.8, 0.8, 1.0);
-      if (_transformationController.value == initialMatrix) {
+      // Force le re-centrage si on change d'acte ou si on n'a jamais centré
+      if (_lastActCentered != runState.act || (currentNodeId == null && _lastActCentered == null)) {
           MapNode? targetNode;
           if (currentNodeId != null) {
             targetNode = nodes.firstWhere((n) => n.id == currentNodeId, orElse: () => nodes.first);
           } else {
+            // Pour un nouvel acte, on cible le milieu du premier étage
             targetNode = nodes.firstWhere((n) => n.id.startsWith('node_0_'), orElse: () => nodes.first);
           }
           
@@ -52,15 +54,20 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           double dx = (screenSize.width / 2) - (actualX * scale);
           double dy = (screenSize.height / 2) - (actualY * scale);
           
-          _transformationController.value = Matrix4.translationValues(dx, dy, 0.0)
-            * Matrix4.diagonal3Values(scale, scale, 1.0);
+          if (mounted) {
+            setState(() {
+              _transformationController.value = Matrix4.translationValues(dx, dy, 0.0)
+                * Matrix4.diagonal3Values(scale, scale, 1.0);
+              _lastActCentered = runState.act;
+            });
+          }
       }
     });
 
     return Scaffold(
       backgroundColor: const Color(0xFF0D0D1A),
       appBar: AppBar(
-        title: const Text('Carte du Monde', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text('Acte ${runState.act} - Carte du Monde', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.black45,
         elevation: 0,
         centerTitle: true,
@@ -112,11 +119,16 @@ class _MapScreenState extends ConsumerState<MapScreen> {
 
   bool _isNodeAvailable(MapNode node, List<MapNode> allNodes, String? currentNodeId) {
     if (currentNodeId == null) {
-      return node.id.contains('node_0_');
+      return node.id.startsWith('node_0_');
     }
     
-    final currentNode = allNodes.firstWhere((n) => n.id == currentNodeId);
-    return currentNode.connections.contains(node.id);
+    try {
+      final currentNode = allNodes.firstWhere((n) => n.id == currentNodeId);
+      return currentNode.connections.contains(node.id);
+    } catch (e) {
+      // Cas de repli si le noeud actuel n'est plus dans la liste (ex: changement d'acte mal synchronisÃ©)
+      return node.id.startsWith('node_0_');
+    }
   }
 
   void _onNodeTap(BuildContext context, WidgetRef ref, MapNode node) {
@@ -240,17 +252,20 @@ class MapConnectionPainter extends CustomPainter {
 
     for (var node in nodes) {
       for (var targetId in node.connections) {
-        final targetNode = nodes.firstWhere((n) => n.id == targetId);
-        
-        canvas.drawLine(
-          Offset(node.position.x, node.position.y),
-          Offset(targetNode.position.x, targetNode.position.y),
-          paint,
-        );
+        try {
+          final targetNode = nodes.firstWhere((n) => n.id == targetId);
+          canvas.drawLine(
+            Offset(node.position.x, node.position.y),
+            Offset(targetNode.position.x, targetNode.position.y),
+            paint,
+          );
+        } catch (e) {
+          // Ignorer si la cible n'existe pas (cas de changement de map)
+        }
       }
     }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant MapConnectionPainter oldDelegate) => oldDelegate.nodes != nodes;
 }

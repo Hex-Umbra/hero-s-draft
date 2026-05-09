@@ -8,6 +8,7 @@ import '../../services/map_generator_service.dart';
 
 class RunState {
   final int currentLevel;
+  final int act;
   final EntityStats heroStats;
   final String heroClassId;
   final List<RelicData> relics;
@@ -26,6 +27,7 @@ class RunState {
 
   const RunState({
     required this.currentLevel,
+    this.act = 1,
     required this.heroStats,
     required this.heroClassId,
     this.relics = const [],
@@ -38,22 +40,25 @@ class RunState {
 
   RunState copyWith({
     int? currentLevel,
+    int? act,
     EntityStats? heroStats,
     String? heroClassId,
     List<RelicData>? relics,
     List<MapNode>? mapNodes,
     String? currentNodeId,
+    bool resetCurrentNode = false,
     int? gold,
     int? skill1Cooldown,
     int? skill2Cooldown,
   }) {
     return RunState(
       currentLevel: currentLevel ?? this.currentLevel,
+      act: act ?? this.act,
       heroStats: heroStats ?? this.heroStats,
       heroClassId: heroClassId ?? this.heroClassId,
       relics: relics ?? this.relics,
       mapNodes: mapNodes ?? this.mapNodes,
-      currentNodeId: currentNodeId ?? this.currentNodeId,
+      currentNodeId: resetCurrentNode ? null : (currentNodeId ?? this.currentNodeId),
       gold: gold ?? this.gold,
       skill1Cooldown: skill1Cooldown ?? this.skill1Cooldown,
       skill2Cooldown: skill2Cooldown ?? this.skill2Cooldown,
@@ -67,6 +72,7 @@ class RunController extends StateNotifier<RunState> {
   RunController()
       : super(RunState(
           currentLevel: 1,
+          act: 1,
           heroClassId: 'paladin',
           heroStats: EntityStats(
             maxPv: 100,
@@ -83,6 +89,7 @@ class RunController extends StateNotifier<RunState> {
     final generatedMap = MapGeneratorService.generateMap();
     state = RunState(
       currentLevel: 1,
+      act: 1,
       heroClassId: chosenClass.id,
       heroStats: EntityStats(
         maxPv: chosenClass.maxHp,
@@ -128,7 +135,8 @@ class RunController extends StateNotifier<RunState> {
     final newMap = MapGeneratorService.generateMap();
     state = state.copyWith(
       mapNodes: newMap,
-      currentNodeId: null, // Réinitialise la position pour le nouveau monde
+      act: state.act + 1,
+      resetCurrentNode: true, // Reset la position pour le nouveau monde
     );
   }
 
