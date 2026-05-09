@@ -4,7 +4,7 @@
 - ~~Vérifier le bug de map qui se remet a gauche pendant le drag vers le haut sur certains écrans~~.
 - ~~Après le boss fight, il serait bien que la map génère de nouvelles routes.~~
 - ~~S'assurer que l'armure gagner via les cartes a jouer pendant un combat se reset a la fin du combat.~~
-- Il y a une carte qui quand elle est jouée fait piocher des cartes au joueur, mais la logique n'est pas encore implémenter
+- Dans le shop il y a des cartes achetables qui permette de piocher des cartes (exemple: quick_attck, concentration). Actuellement, l'effet de ces cartes ne fonctionne pas.
 - Vérifier que le système de merge fonctionne correctement.
 - Faire un dictionnaire des cartes disponibles.
     - Ce dictionnaire devra être disponible avant de lancer une run.
