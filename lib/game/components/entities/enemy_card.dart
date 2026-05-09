@@ -78,12 +78,10 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
     final roll = random.nextInt(100);
     if (roll < 60) {
       currentIntent = EnemyIntent(type: IntentType.attack, value: stats.attaque);
-    } else if (roll < 80) {
+    } else if (roll < 85) {
       currentIntent = EnemyIntent(type: IntentType.defend, value: 5 + random.nextInt(6));
-    } else if (roll < 90) {
-      currentIntent = EnemyIntent(type: IntentType.buff, value: 2);
     } else {
-      currentIntent = EnemyIntent(type: IntentType.debuffDeck, value: 1);
+      currentIntent = EnemyIntent(type: IntentType.buff, value: 2);
     }
 
     intentionIndicator = IntentionIndicator(initialIntent: currentIntent);
@@ -123,15 +121,12 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
     if (roll < 60) {
       // 60% Attack
       currentIntent = EnemyIntent(type: IntentType.attack, value: stats.attaque);
-    } else if (roll < 80) {
-      // 20% Defend
+    } else if (roll < 85) {
+      // 25% Defend
       currentIntent = EnemyIntent(type: IntentType.defend, value: 5 + random.nextInt(6));
-    } else if (roll < 90) {
-      // 10% Buff
-      currentIntent = EnemyIntent(type: IntentType.buff, value: 2);
     } else {
-      // 10% Debuff
-      currentIntent = EnemyIntent(type: IntentType.debuffDeck, value: 1);
+      // 15% Buff
+      currentIntent = EnemyIntent(type: IntentType.buff, value: 2);
     }
     
     intentionIndicator.updateIntent(currentIntent);

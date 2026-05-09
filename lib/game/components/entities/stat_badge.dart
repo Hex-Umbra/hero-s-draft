@@ -125,38 +125,63 @@ class StatBadge extends PositionComponent with TapCallbacks, HasGameReference<He
       add(iconComponent);
 
       if (hasBonus) {
-        // Affichage complexe : Total (Base + Bonus)
-        final totalText = TextComponent(
+        // Affichage complexe : Total (Base + Bonus) avec mesure dynamique pour un alignement parfait
+        final totalStyle = const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold);
+        final normalStyle = const TextStyle(color: Colors.white70, fontSize: 8);
+        final bonusStyle = const TextStyle(color: Colors.orangeAccent, fontSize: 8, fontWeight: FontWeight.bold);
+        
+        final String part1 = ' ($_baseValue+';
+        final String part2 = '$_bonusValue';
+        final String part3 = ')';
+
+        double measure(String text, TextStyle style) {
+          final tp = TextPainter(
+            text: TextSpan(text: text, style: style),
+            textDirection: TextDirection.ltr,
+          )..layout();
+          return tp.width;
+        }
+
+        final double totalW = measure(_value, totalStyle);
+        final double p1W = measure(part1, normalStyle);
+        final double p2W = measure(part2, bonusStyle);
+        final double p3W = measure(part3, normalStyle);
+        
+        final double fullW = totalW + p1W + p2W + p3W;
+        
+        // On commence aprÃ¨s l'icÃ´ne (environ x=20) et on centre dans l'espace restant
+        double currentX = 20 + (size.x - 20 - fullW) / 2;
+        
+        add(TextComponent(
           text: _value,
-          textRenderer: TextPaint(style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+          textRenderer: TextPaint(style: totalStyle),
           anchor: Anchor.centerLeft,
-          position: Vector2(size.x - 65, size.y / 2),
-        );
-        add(totalText);
+          position: Vector2(currentX, size.y / 2),
+        ));
+        currentX += totalW;
 
-        final detailText = TextComponent(
-          text: ' ($_baseValue+',
-          textRenderer: TextPaint(style: const TextStyle(color: Colors.white70, fontSize: 9)),
+        add(TextComponent(
+          text: part1,
+          textRenderer: TextPaint(style: normalStyle),
           anchor: Anchor.centerLeft,
-          position: Vector2(size.x - 50, size.y / 2),
-        );
-        add(detailText);
+          position: Vector2(currentX, size.y / 2),
+        ));
+        currentX += p1W;
 
-        final bonusText = TextComponent(
-          text: '$_bonusValue',
-          textRenderer: TextPaint(style: const TextStyle(color: Colors.orangeAccent, fontSize: 9, fontWeight: FontWeight.bold)),
+        add(TextComponent(
+          text: part2,
+          textRenderer: TextPaint(style: bonusStyle),
           anchor: Anchor.centerLeft,
-          position: Vector2(size.x - 22, size.y / 2),
-        );
-        add(bonusText);
+          position: Vector2(currentX, size.y / 2),
+        ));
+        currentX += p2W;
 
-        final closingText = TextComponent(
-          text: ')',
-          textRenderer: TextPaint(style: const TextStyle(color: Colors.white70, fontSize: 9)),
+        add(TextComponent(
+          text: part3,
+          textRenderer: TextPaint(style: normalStyle),
           anchor: Anchor.centerLeft,
-          position: Vector2(size.x - 8, size.y / 2),
-        );
-        add(closingText);
+          position: Vector2(currentX, size.y / 2),
+        ));
       } else {
         textComponent = TextComponent(
           text: _value,

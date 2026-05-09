@@ -85,10 +85,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         });
       },
       onEnemyDebuffDeck: (count) {
-        final card = CardInstance(data: const CardData(id: 'injury', name: 'Blessure', description: 'Injouable.', cost: 99, type: CardType.status, category: CardCategory.global, rarity: CardRarity.common, target: CardTarget.none, effects: []));
-        for (int i = 0; i < count; i++) {
-          ref.read(deckProvider.notifier).addCardToDiscardPile(CardInstance(data: card.data)); // Nouvelle instance
-        }
+        // Logique retirée car la carte "Blessure" de test a été supprimée
       },
       onTurnEnded: () {
         ref.read(runProvider.notifier).startTurn();

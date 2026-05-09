@@ -539,7 +539,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
           enemy.updateStats(enemy.stats.copyWith(attaque: enemy.stats.attaque + intent.value));
           break;
         case IntentType.debuffDeck:
-          // Ajoute une blessure dans la défausse
+          // Géré via le callback onEnemyDebuffDeck (désormais désactivé)
           onEnemyDebuffDeck(intent.value);
           break;
       }
