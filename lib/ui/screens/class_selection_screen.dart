@@ -4,6 +4,7 @@ import '../../models/data/hero_data.dart';
 import '../../services/game_data_service.dart';
 import '../../game/controllers/run_controller.dart';
 import 'map_screen.dart';
+import 'card_dictionary_screen.dart';
 
 class ClassSelectionScreen extends ConsumerWidget {
   const ClassSelectionScreen({super.key});
@@ -19,6 +20,18 @@ class ClassSelectionScreen extends ConsumerWidget {
         title: const Text('Choisissez votre Classe'),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.menu_book),
+            tooltip: 'Dictionnaire des cartes',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const CardDictionaryScreen()),
+              );
+            },
+          ),
+          const SizedBox(width: 10),
+        ],
       ),
       body: SafeArea(
         child: Padding(

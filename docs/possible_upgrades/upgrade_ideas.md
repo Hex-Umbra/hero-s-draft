@@ -4,8 +4,8 @@
 - ~~Vérifier le bug de map qui se remet a gauche pendant le drag vers le haut sur certains écrans~~.
 - ~~Après le boss fight, il serait bien que la map génère de nouvelles routes.~~
 - ~~S'assurer que l'armure gagner via les cartes a jouer pendant un combat se reset a la fin du combat.~~
-- Dans le shop il y a des cartes achetables qui permette de piocher des cartes (exemple: quick_attck, concentration). Actuellement, l'effet de ces cartes ne fonctionne pas.
-- Vérifier que le système de merge fonctionne correctement.
+- ~~Dans le shop il y a des cartes achetables qui permette de piocher des cartes (exemple: quick_attck, concentration). Actuellement, l'effet de ces cartes ne fonctionne pas.~~
+- Vérifier que le système de merge fonctionne correctement. Quand 3 cartes identiques sont dans le masterDeck, elles doivent fusionner en une carte de niveau supérieur. On vas laisser le vhoix au joueur de merge ou non les cartes. 
 - Faire un dictionnaire des cartes disponibles.
     - Ce dictionnaire devra être disponible avant de lancer une run.
 - un autre dictionnaire sera disponible pendant la run pour que le joueur puisse voir les cartes dans son masterDeck

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'class_selection_screen.dart';
+import 'card_dictionary_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -38,6 +39,19 @@ class HomeScreen extends StatelessWidget {
                 );
               },
               child: const Text('JOUER', style: TextStyle(color: Colors.white)),
+            ),
+            const SizedBox(height: 20),
+            OutlinedButton(
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                side: const BorderSide(color: Colors.white70, width: 2),
+              ),
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const CardDictionaryScreen()),
+                );
+              },
+              child: const Text('DICTIONNAIRE', style: TextStyle(color: Colors.white, fontSize: 18)),
             ),
           ],
         ),
