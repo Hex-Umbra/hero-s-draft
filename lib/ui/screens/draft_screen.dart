@@ -45,7 +45,7 @@ class DraftScreen extends ConsumerWidget {
                         child: ListView(
                           shrinkWrap: true,
                           children: choices.map((choice) => Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 40),
+                            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 60),
                             child: UiCard(
                               title: choice.title,
                               description: choice.description,
@@ -59,9 +59,9 @@ class DraftScreen extends ConsumerWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: choices.map((choice) => Flexible(
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            padding: const EdgeInsets.symmetric(horizontal: 3),
                             child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 200),
+                              constraints: const BoxConstraints(maxWidth: 60),
                               child: UiCard(
                                 title: choice.title,
                                 description: choice.description,

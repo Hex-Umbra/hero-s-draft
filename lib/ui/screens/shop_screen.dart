@@ -100,18 +100,18 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
             width: double.maxFinite,
             height: 400,
             child: GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 0.7,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 100, // Taille max fixe pour garantir le format Nano
+                childAspectRatio: 0.65,
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 8,
               ),
               itemCount: masterDeck.length,
               itemBuilder: (context, index) {
                 final card = masterDeck[index];
                 return UiCard(
                   title: card.data.name,
-                  description: 'Niveau ${card.level}\n\n${card.data.description}',
+                  description: 'Niv. ${card.level}\n\n${card.data.description}',
                   onTap: () {
                     final runController = ref.read(runProvider.notifier);
                     if (runController.spendGold(price)) {
@@ -246,7 +246,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                 )
               else
                 SizedBox(
-                  height: 280,
+                  height: 140,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
                     itemCount: _cardsForSale.length,
@@ -257,27 +257,29 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                       if (card.rarity == CardRarity.rare) price = 100;
 
                       return Padding(
-                        padding: const EdgeInsets.only(right: 20),
+                        padding: const EdgeInsets.only(right: 8),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             SizedBox(
-                              width: 150,
-                              height: 220,
+                              width: 70,
+                              height: 100,
                               child: UiCard(
                                 title: card.name,
                                 description: card.description,
                                 onTap: () => _buyCard(card, price),
                               ),
                             ),
-                            const SizedBox(height: 10),
+                            const SizedBox(height: 4),
                             ElevatedButton.icon(
                               onPressed: () => _buyCard(card, price),
-                              icon: const Icon(Icons.monetization_on, color: Colors.amber, size: 18),
-                              label: Text('$price', style: const TextStyle(fontWeight: FontWeight.bold)),
+                              icon: const Icon(Icons.monetization_on, color: Colors.amber, size: 12),
+                              label: Text('$price', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.black45,
                                 foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+                                minimumSize: const Size(50, 24),
                               ),
                             )
                           ],

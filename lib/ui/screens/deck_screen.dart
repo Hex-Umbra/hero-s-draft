@@ -40,11 +40,11 @@ class DeckScreen extends ConsumerWidget {
               const SizedBox(height: 20),
               Expanded(
                 child: GridView.builder(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 0.65,
-                    crossAxisSpacing: 15,
-                    mainAxisSpacing: 15,
+                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 100, // Taille max fixe pour garantir le format Nano
+                    childAspectRatio: 0.55,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
                   ),
                   itemCount: groups.keys.length,
                   itemBuilder: (context, index) {
@@ -61,48 +61,51 @@ class DeckScreen extends ConsumerWidget {
                             children: [
                               UiCard(
                                 title: card.data.name,
-                                description: 'Niveau ${card.level}\n\n${card.data.description}',
+                                description: 'Niv. ${card.level}\n\n${card.data.description}',
                               ),
                               Positioned(
-                                top: 5,
-                                right: 5,
+                                top: 0,
+                                right: 0,
                                 child: Container(
-                                  padding: const EdgeInsets.all(8),
+                                  padding: const EdgeInsets.all(2),
                                   decoration: const BoxDecoration(
                                     color: Colors.amber,
                                     shape: BoxShape.circle,
                                   ),
                                   child: Text(
                                     'x$count',
-                                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+                                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 7),
                                   ),
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 1),
                         if (canMerge && allowMerge)
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          SizedBox(
+                            height: 18,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 0),
+                              ),
+                              onPressed: () {
+                                _confirmMerge(context, ref, card);
+                              },
+                              child: const Text('MERGE', style: TextStyle(fontSize: 6)),
                             ),
-                            onPressed: () {
-                              _confirmMerge(context, ref, card);
-                            },
-                            child: const Text('FUSIONNER (3)'),
                           )
                         else if (canMerge && !allowMerge)
                           const Text(
-                            'Fusion possible (hors combat)',
-                            style: TextStyle(color: Colors.orangeAccent, fontSize: 10, fontWeight: FontWeight.bold),
+                            'Merge!',
+                            style: TextStyle(color: Colors.orangeAccent, fontSize: 6, fontWeight: FontWeight.bold),
                           )
                         else
                           Text(
-                            '${3 - count} de plus pour fusion',
-                            style: const TextStyle(color: Colors.white54, fontSize: 10),
+                            '+${3 - count}',
+                            style: const TextStyle(color: Colors.white54, fontSize: 6),
                           ),
                       ],
                     );
