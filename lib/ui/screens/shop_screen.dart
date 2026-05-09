@@ -98,20 +98,23 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
           title: const Text('Choisissez une carte à oublier', style: TextStyle(color: Colors.white)),
           content: SizedBox(
             width: double.maxFinite,
-            height: 400,
+            height: 500,
             child: GridView.builder(
               gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 100, // Taille max fixe pour garantir le format Nano
+                maxCrossAxisExtent: 200, // Doublé pour un affichage plus clair
                 childAspectRatio: 0.65,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
               ),
               itemCount: masterDeck.length,
               itemBuilder: (context, index) {
                 final card = masterDeck[index];
                 return UiCard(
                   title: card.data.name,
-                  description: 'Niv. ${card.level}\n\n${card.data.description}',
+                  description: card.data.description,
+                  cost: card.data.cost,
+                  rarity: 'Niveau ${card.level}',
+                  target: _getTargetLabel(card.data.target),
                   onTap: () {
                     final runController = ref.read(runProvider.notifier);
                     if (runController.spendGold(price)) {
@@ -140,6 +143,24 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
         );
       }
     );
+  }
+
+  String _getRarityLabel(CardRarity rarity) {
+    switch (rarity) {
+      case CardRarity.common: return 'Commun';
+      case CardRarity.uncommon: return 'Peu Commun';
+      case CardRarity.rare: return 'Rare';
+      case CardRarity.epic: return 'Épique';
+    }
+  }
+
+  String _getTargetLabel(CardTarget target) {
+    switch (target) {
+      case CardTarget.singleEnemy: return 'Cible unique';
+      case CardTarget.allEnemies: return 'Tous les ennemis';
+      case CardTarget.self: return 'Soi-même';
+      case CardTarget.none: return 'Aucune';
+    }
   }
 
   void _showCloneModal(int price) {
@@ -262,11 +283,14 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             SizedBox(
-                              width: 70,
-                              height: 100,
+                              width: 120,
+                              height: 170,
                               child: UiCard(
                                 title: card.name,
                                 description: card.description,
+                                cost: card.cost,
+                                rarity: _getRarityLabel(card.rarity),
+                                target: _getTargetLabel(card.target),
                                 onTap: () => _buyCard(card, price),
                               ),
                             ),

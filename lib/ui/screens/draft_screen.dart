@@ -45,11 +45,12 @@ class DraftScreen extends ConsumerWidget {
                         child: ListView(
                           shrinkWrap: true,
                           children: choices.map((choice) => Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 60),
+                            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 40),
                             child: UiCard(
                               title: choice.title,
                               description: choice.description,
                               onTap: () => _onChoiceSelected(context, ref, choice),
+                              rarity: 'Amélioration',
                             ),
                           )).toList(),
                         ),
@@ -59,13 +60,14 @@ class DraftScreen extends ConsumerWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: choices.map((choice) => Flexible(
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 3),
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
                             child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 60),
+                              constraints: const BoxConstraints(maxWidth: 160),
                               child: UiCard(
                                 title: choice.title,
                                 description: choice.description,
                                 onTap: () => _onChoiceSelected(context, ref, choice),
+                                rarity: 'Amélioration',
                               ),
                             ),
                           ),

@@ -47,17 +47,20 @@ class CardDictionaryScreen extends ConsumerWidget {
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                        maxCrossAxisExtent: 100, // Taille max fixe pour garantir le format Nano
-                        childAspectRatio: 0.65,
-                        crossAxisSpacing: 8,
-                        mainAxisSpacing: 8,
+                        maxCrossAxisExtent: 200, // Doublé pour un affichage plus clair
+                        childAspectRatio: 0.7,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
                       ),
                       itemCount: group.value.length,
                       itemBuilder: (context, index) {
                         final card = group.value[index];
                         return UiCard(
                           title: card.name,
-                          description: '${_getRarityLabel(card.rarity)}\nCible : ${_getTargetLabel(card.target)}\n\n${card.description}',
+                          description: card.description,
+                          rarity: _getRarityLabel(card.rarity),
+                          target: _getTargetLabel(card.target),
+                          cost: card.cost,
                         );
                       },
                     ),

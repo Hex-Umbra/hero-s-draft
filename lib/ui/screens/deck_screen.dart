@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../game/controllers/deck_controller.dart';
 import '../../models/card_instance.dart';
+import '../../models/data/card_data.dart';
 import '../widgets/ui_card.dart';
 
 class DeckScreen extends ConsumerWidget {
@@ -41,10 +42,10 @@ class DeckScreen extends ConsumerWidget {
               Expanded(
                 child: GridView.builder(
                   gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent: 100, // Taille max fixe pour garantir le format Nano
-                    childAspectRatio: 0.55,
-                    crossAxisSpacing: 8,
-                    mainAxisSpacing: 8,
+                    maxCrossAxisExtent: 200, // Doublé pour un affichage plus clair
+                    childAspectRatio: 0.6,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
                   ),
                   itemCount: groups.keys.length,
                   itemBuilder: (context, index) {
@@ -61,51 +62,51 @@ class DeckScreen extends ConsumerWidget {
                             children: [
                               UiCard(
                                 title: card.data.name,
-                                description: 'Niv. ${card.level}\n\n${card.data.description}',
+                                description: card.data.description,
+                                cost: card.data.cost,
+                                target: _getTargetLabel(card.data.target),
+                                rarity: '${_getRarityLabel(card.data.rarity)} - Niv. ${card.level}',
                               ),
                               Positioned(
-                                top: 0,
-                                right: 0,
+                                top: 5,
+                                right: 5,
                                 child: Container(
-                                  padding: const EdgeInsets.all(2),
+                                  padding: const EdgeInsets.all(6),
                                   decoration: const BoxDecoration(
                                     color: Colors.amber,
                                     shape: BoxShape.circle,
                                   ),
                                   child: Text(
                                     'x$count',
-                                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 7),
+                                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 11),
                                   ),
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        const SizedBox(height: 1),
+                        const SizedBox(height: 8),
                         if (canMerge && allowMerge)
-                          SizedBox(
-                            height: 18,
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 0),
-                              ),
-                              onPressed: () {
-                                _confirmMerge(context, ref, card);
-                              },
-                              child: const Text('MERGE', style: TextStyle(fontSize: 6)),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                             ),
+                            onPressed: () {
+                              _confirmMerge(context, ref, card);
+                            },
+                            child: const Text('FUSIONNER (3)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                           )
                         else if (canMerge && !allowMerge)
                           const Text(
-                            'Merge!',
-                            style: TextStyle(color: Colors.orangeAccent, fontSize: 6, fontWeight: FontWeight.bold),
+                            'Fusion possible',
+                            style: TextStyle(color: Colors.orangeAccent, fontSize: 10, fontWeight: FontWeight.bold),
                           )
                         else
                           Text(
-                            '+${3 - count}',
-                            style: const TextStyle(color: Colors.white54, fontSize: 6),
+                            '${3 - count} de plus requis',
+                            style: const TextStyle(color: Colors.white54, fontSize: 10),
                           ),
                       ],
                     );
@@ -117,6 +118,26 @@ class DeckScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  String _getRarityLabel(CardRarity rarity) {
+    switch (rarity) {
+      case CardRarity.common: return 'Commun';
+      case CardRarity.uncommon: return 'Peu Commun';
+      case CardRarity.rare: return 'Rare';
+      case CardRarity.epic: return 'Épique';
+    }
+    return 'Commun';
+  }
+
+  String _getTargetLabel(CardTarget target) {
+    switch (target) {
+      case CardTarget.singleEnemy: return 'Cible unique';
+      case CardTarget.allEnemies: return 'Tous les ennemis';
+      case CardTarget.self: return 'Soi-même';
+      case CardTarget.none: return 'Aucune';
+    }
+    return 'Aucune';
   }
 
   void _confirmMerge(BuildContext context, WidgetRef ref, CardInstance card) {
