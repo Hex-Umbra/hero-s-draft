@@ -9,6 +9,8 @@ class StatBadge extends PositionComponent with TapCallbacks, HasGameReference<He
   final StatType type;
   final bool isCircle;
   String _value;
+  int? _baseValue;
+  int? _bonusValue;
   double _fillPercentage;
   String? _customTooltipTitle;
   String? _customTooltipDescription;
@@ -19,11 +21,15 @@ class StatBadge extends PositionComponent with TapCallbacks, HasGameReference<He
   StatBadge({
     required this.type,
     required String value,
+    int? baseValue,
+    int? bonusValue,
     this.isCircle = false,
     double fillPercentage = 1.0,
     String? tooltipTitle,
     String? tooltipDescription,
   }) : _value = value, 
+       _baseValue = baseValue,
+       _bonusValue = bonusValue,
        _fillPercentage = fillPercentage,
        _customTooltipTitle = tooltipTitle,
        _customTooltipDescription = tooltipDescription,
@@ -60,20 +66,18 @@ class StatBadge extends PositionComponent with TapCallbacks, HasGameReference<He
     }
 
     if (isCircle) {
-      // Background noir
+      // ... (Circle logic remains same, but we could use it for Hero HP too if requested)
       add(CircleComponent(
         radius: size.x / 2,
         paint: Paint()..color = Colors.black.withAlpha(220),
       ));
 
-      // Arc de cercle pour les HP (décrémente)
       add(CircleProgressComponent(
         radius: size.x / 2,
         percentage: _fillPercentage,
         color: color,
       ));
 
-      // Bordure
       add(CircleComponent(
         radius: size.x / 2,
         paint: Paint()
@@ -83,20 +87,23 @@ class StatBadge extends PositionComponent with TapCallbacks, HasGameReference<He
       ));
 
       textComponent = TextComponent(
-        text: _value.split('/').first, // Pour le cercle on ne garde que le PV actuel
+        text: _value.split('/').first,
         textRenderer: TextPaint(
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
         ),
         anchor: Anchor.center,
         position: size / 2,
       );
       add(textComponent);
     } else {
-      // Layout rectangulaire pour les autres badges
+      // Ajuste la largeur si bonus présent
+      final bool hasBonus = _bonusValue != null && _bonusValue! > 0;
+      if (hasBonus) {
+        size.x = 90; // Élargit pour le format "Total (Base + Bonus)"
+      } else {
+        size.x = 48;
+      }
+
       add(RectangleComponent(
         size: size,
         paint: Paint()..color = Colors.black.withAlpha(200),
@@ -110,54 +117,70 @@ class StatBadge extends PositionComponent with TapCallbacks, HasGameReference<He
       iconComponent = TextComponent(
         text: iconText,
         textRenderer: TextPaint(
-          style: TextStyle(
-            color: color,
-            fontSize: 8,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: color, fontSize: 8, fontWeight: FontWeight.bold),
         ),
         anchor: Anchor.centerLeft,
         position: Vector2(6, size.y / 2),
       );
       add(iconComponent);
 
-      textComponent = TextComponent(
-        text: _value,
-        textRenderer: TextPaint(
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 11,
-            fontWeight: FontWeight.bold,
+      if (hasBonus) {
+        // Affichage complexe : Total (Base + Bonus)
+        final totalText = TextComponent(
+          text: _value,
+          textRenderer: TextPaint(style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+          anchor: Anchor.centerLeft,
+          position: Vector2(size.x - 65, size.y / 2),
+        );
+        add(totalText);
+
+        final detailText = TextComponent(
+          text: ' ($_baseValue+',
+          textRenderer: TextPaint(style: const TextStyle(color: Colors.white70, fontSize: 9)),
+          anchor: Anchor.centerLeft,
+          position: Vector2(size.x - 50, size.y / 2),
+        );
+        add(detailText);
+
+        final bonusText = TextComponent(
+          text: '$_bonusValue',
+          textRenderer: TextPaint(style: const TextStyle(color: Colors.orangeAccent, fontSize: 9, fontWeight: FontWeight.bold)),
+          anchor: Anchor.centerLeft,
+          position: Vector2(size.x - 22, size.y / 2),
+        );
+        add(bonusText);
+
+        final closingText = TextComponent(
+          text: ')',
+          textRenderer: TextPaint(style: const TextStyle(color: Colors.white70, fontSize: 9)),
+          anchor: Anchor.centerLeft,
+          position: Vector2(size.x - 8, size.y / 2),
+        );
+        add(closingText);
+      } else {
+        textComponent = TextComponent(
+          text: _value,
+          textRenderer: TextPaint(
+            style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
           ),
-        ),
-        anchor: Anchor.centerRight,
-        position: Vector2(size.x - 4, size.y / 2),
-      );
-      add(textComponent);
+          anchor: Anchor.centerRight,
+          position: Vector2(size.x - 4, size.y / 2),
+        );
+        add(textComponent);
+      }
     }
   }
 
-  void updateValue(String newValue, {double? fillPercentage, Color? textColor, String? tooltipTitle, String? tooltipDescription}) {
+  void updateValue(String newValue, {int? baseValue, int? bonusValue, double? fillPercentage, Color? textColor, String? tooltipTitle, String? tooltipDescription}) {
     _value = newValue;
+    _baseValue = baseValue;
+    _bonusValue = bonusValue;
     if (fillPercentage != null) _fillPercentage = fillPercentage;
     if (tooltipTitle != null) _customTooltipTitle = tooltipTitle;
     if (tooltipDescription != null) _customTooltipDescription = tooltipDescription;
 
     if (isLoaded) {
-      if (isCircle) {
-        _updateVisuals(); // On reconstruit pour mettre à jour l'arc
-      } else {
-        textComponent.text = newValue;
-        if (textColor != null) {
-          textComponent.textRenderer = TextPaint(
-            style: TextStyle(
-              color: textColor,
-              fontSize: 11,
-              fontWeight: FontWeight.bold,
-            ),
-          );
-        }
-      }
+      _updateVisuals(); // On reconstruit car le layout peut changer (largeur)
     }
   }
 

@@ -12,6 +12,7 @@ import '../../heros_draft_game.dart';
 class HeroCard extends PositionComponent with TapCallbacks, HasGameReference<HerosDraftGame> {
   EntityStats stats;
   int bonusAttack;
+  int baseArmor;
   final String imagePath;
   
   late final StatBadge armorBadge;
@@ -19,7 +20,7 @@ class HeroCard extends PositionComponent with TapCallbacks, HasGameReference<Her
   late final StatBadge manaBadge;
   late final StatusIndicator statusIndicator;
 
-  HeroCard(this.stats, {this.bonusAttack = 0, required this.imagePath}) : super(size: Vector2(120, 160));
+  HeroCard(this.stats, {this.bonusAttack = 0, this.baseArmor = 0, required this.imagePath}) : super(size: Vector2(120, 160));
 
   @override
   Future<void> onLoad() async {
@@ -77,24 +78,25 @@ class HeroCard extends PositionComponent with TapCallbacks, HasGameReference<Her
   }
 
   void _refreshBadges() {
+    int currentArmor = stats.armure;
+    int bonusArmor = (currentArmor > baseArmor) ? (currentArmor - baseArmor) : 0;
+    int displayBaseArmor = (currentArmor > baseArmor) ? baseArmor : currentArmor;
+
     armorBadge.updateValue(
-      '${stats.armure}', 
+      '$currentArmor', 
+      baseValue: displayBaseArmor,
+      bonusValue: bonusArmor,
       tooltipTitle: 'ARMURE', 
-      tooltipDescription: 'Réduit les prochains dégâts reçus. Actuellement : ${stats.armure} points d\'armure.',
+      tooltipDescription: 'Réduit les prochains dégâts reçus. Base : $baseArmor, Bonus : $bonusArmor.',
     );
     
     int totalAttack = stats.attaque + bonusAttack;
-    String attackDesc = 'Base : ${stats.attaque}';
-    if (bonusAttack > 0) {
-      attackDesc += ' + Buff : $bonusAttack';
-    }
-    attackDesc += ' = $totalAttack dégâts par coup.';
-
     attackBadge.updateValue(
       '$totalAttack', 
-      textColor: bonusAttack > 0 ? Colors.amber : Colors.white,
+      baseValue: stats.attaque,
+      bonusValue: bonusAttack,
       tooltipTitle: 'FORCE',
-      tooltipDescription: attackDesc,
+      tooltipDescription: 'Base : ${stats.attaque}, Bonus : $bonusAttack.',
     );
 
     manaBadge.updateValue(
@@ -105,7 +107,7 @@ class HeroCard extends PositionComponent with TapCallbacks, HasGameReference<Her
     statusIndicator.updateStatuses(stats.statuses);
   }
 
-  void updateStats(EntityStats newStats, {int bonusAttack = 0}) {
+  void updateStats(EntityStats newStats, {int bonusAttack = 0, int baseArmor = 0}) {
     if (newStats.armure < stats.armure) {
       _spawnFloatingText(
         '-${stats.armure - newStats.armure}',
@@ -130,6 +132,7 @@ class HeroCard extends PositionComponent with TapCallbacks, HasGameReference<Her
 
     stats = newStats;
     this.bonusAttack = bonusAttack;
+    this.baseArmor = baseArmor;
     _refreshBadges();
   }
 
