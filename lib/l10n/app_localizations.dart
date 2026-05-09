@@ -259,6 +259,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select'**
   String get select;
+
+  /// No description provided for @nextAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Next action'**
+  String get nextAction;
 }
 
 class _AppLocalizationsDelegate

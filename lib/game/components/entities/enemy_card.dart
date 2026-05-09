@@ -100,6 +100,8 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
     statusIndicator = StatusIndicator(statuses: stats.statuses);
     statusIndicator.position = Vector2(0, size.y + 10); // En dessous de la carte
     add(statusIndicator);
+
+    _refreshBadges();
   }
 
   @override
@@ -131,10 +133,26 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
   }
 
   void _refreshBadges() {
-    hpBadge.updateValue('${stats.currentPv}/${stats.maxPv}');
-    armorBadge.updateValue('${stats.armure}');
-    attackBadge.updateValue(stats.attaque.toString());
-    manaBadge.updateValue('${stats.currentMana}/${stats.maxMana}');
+    hpBadge.updateValue(
+      '${stats.currentPv}/${stats.maxPv}',
+      tooltipTitle: 'POINTS DE VIE',
+      tooltipDescription: 'Santé actuelle de l\'ennemi : ${stats.currentPv} / ${stats.maxPv}.',
+    );
+    armorBadge.updateValue(
+      '${stats.armure}',
+      tooltipTitle: 'ARMURE',
+      tooltipDescription: 'L\'ennemi possède ${stats.armure} d\'armure. Elle doit être brisée avant de toucher aux PV.',
+    );
+    attackBadge.updateValue(
+      stats.attaque.toString(),
+      tooltipTitle: 'FORCE',
+      tooltipDescription: 'L\'ennemi inflige ${stats.attaque} dégâts de base avec ses attaques.',
+    );
+    manaBadge.updateValue(
+      '${stats.currentMana}/${stats.maxMana}',
+      tooltipTitle: 'MANA',
+      tooltipDescription: 'Énergie de l\'ennemi. Actuellement : ${stats.currentMana}/${stats.maxMana}.',
+    );
     statusIndicator.updateStatuses(stats.statuses);
   }
 

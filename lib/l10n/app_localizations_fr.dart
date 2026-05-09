@@ -96,4 +96,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get select => 'Sélectionner';
+
+  @override
+  String get nextAction => 'Prochaine action';
 }

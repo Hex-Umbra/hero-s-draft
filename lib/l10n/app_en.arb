@@ -48,5 +48,6 @@
   "leaveShop": "Leave Shop",
   "combatReward": "COMBAT REWARD",
   "chooseUpgrade": "Choose an upgrade for your hero",
-  "select": "Select"
+  "select": "Select",
+  "nextAction": "Next action"
 }

@@ -77,15 +77,31 @@ class HeroCard extends PositionComponent with TapCallbacks, HasGameReference<Her
   }
 
   void _refreshBadges() {
-    armorBadge.updateValue('${stats.armure}');
+    armorBadge.updateValue(
+      '${stats.armure}', 
+      tooltipTitle: 'ARMURE', 
+      tooltipDescription: 'Réduit les prochains dégâts reçus. Actuellement : ${stats.armure} points d\'armure.',
+    );
     
+    int totalAttack = stats.attaque + bonusAttack;
+    String attackDesc = 'Base : ${stats.attaque}';
     if (bonusAttack > 0) {
-      attackBadge.updateValue('${stats.attaque + bonusAttack}', textColor: Colors.amber);
-    } else {
-      attackBadge.updateValue('${stats.attaque}', textColor: Colors.white);
+      attackDesc += ' + Buff : $bonusAttack';
     }
+    attackDesc += ' = $totalAttack dégâts par coup.';
 
-    manaBadge.updateValue('${stats.currentMana}/${stats.maxMana}');
+    attackBadge.updateValue(
+      '$totalAttack', 
+      textColor: bonusAttack > 0 ? Colors.amber : Colors.white,
+      tooltipTitle: 'FORCE',
+      tooltipDescription: attackDesc,
+    );
+
+    manaBadge.updateValue(
+      '${stats.currentMana}/${stats.maxMana}', 
+      tooltipTitle: 'MANA',
+      tooltipDescription: 'Énergie utilisée pour lancer des sorts. Régénérée à chaque tour. Actuellement : ${stats.currentMana}/${stats.maxMana}.',
+    );
     statusIndicator.updateStatuses(stats.statuses);
   }
 

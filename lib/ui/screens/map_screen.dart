@@ -48,8 +48,8 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           }
           
           double scale = 0.8;
-          double actualX = targetNode.position.x;
-          double actualY = targetNode.position.y + 300; // prise en compte du padding top
+          double actualX = targetNode.position.x + 1000; // padding left
+          double actualY = targetNode.position.y + 1000; // padding top
           
           double dx = (screenSize.width / 2) - (actualX * scale);
           double dy = (screenSize.height / 2) - (actualY * scale);
@@ -89,19 +89,19 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       ),
       body: InteractiveViewer(
         transformationController: _transformationController,
-        boundaryMargin: const EdgeInsets.all(1000),
+        boundaryMargin: const EdgeInsets.all(2000), // Très large marge pour éviter les snaps sur 4K
         minScale: 0.1,
         maxScale: 2.0,
         scaleEnabled: false, // Bloque le zoom (dézoom/zoom désactivé)
         constrained: false, // Permet au Container d'être plus grand que l'écran
         child: Container(
-          width: 1200,
-          height: 2800,
-          padding: const EdgeInsets.only(top: 300, bottom: 200),
+          width: 3000, // Largeur généreuse
+          height: 5000, // Hauteur généreuse
+          padding: const EdgeInsets.symmetric(horizontal: 1000, vertical: 1000), // Centrage des nodes dans le container
           child: Stack(
             children: [
               CustomPaint(
-                size: const Size(1200, 2800),
+                size: const Size(1000, 3000),
                 painter: MapConnectionPainter(nodes: nodes),
               ),
               ...nodes.map((node) => _MapNodeWidget(

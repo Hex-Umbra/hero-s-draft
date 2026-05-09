@@ -7,7 +7,110 @@ enum StatType { hp, armor, attack, mana }
 
 class StatBadge extends PositionComponent with TapCallbacks, HasGameReference<HerosDraftGame> {
   final StatType type;
-  // ...
+  String _value;
+  String? _customTooltipTitle;
+  String? _customTooltipDescription;
+  
+  late final RectangleComponent bg;
+  late final TextComponent iconComponent;
+  late final TextComponent textComponent;
+  final double radius;
+
+  StatBadge({
+    required this.type,
+    required String value,
+    this.radius = 24.0,
+    String? tooltipTitle,
+    String? tooltipDescription,
+  }) : _value = value, 
+       _customTooltipTitle = tooltipTitle,
+       _customTooltipDescription = tooltipDescription,
+       super(size: Vector2(55, 30));
+
+  @override
+  Future<void> onLoad() async {
+    anchor = Anchor.center;
+    
+    Color bgColor;
+    String iconText;
+    switch (type) {
+      case StatType.hp:
+        bgColor = const Color(0xFFE74C3C);
+        iconText = 'HP';
+        break;
+      case StatType.armor:
+        bgColor = const Color(0xFF3498DB);
+        iconText = 'ARM';
+        break;
+      case StatType.attack:
+        bgColor = const Color(0xFFF39C12);
+        iconText = 'ATK';
+        break;
+      case StatType.mana:
+        bgColor = const Color(0xFF9B59B6);
+        iconText = 'MP';
+        break;
+    }
+
+    add(RectangleComponent(
+      size: size,
+      paint: Paint()..color = Colors.black.withAlpha(180),
+    ));
+
+    // Barre colorée sur le côté
+    add(RectangleComponent(
+      size: Vector2(4, size.y),
+      paint: Paint()..color = bgColor,
+      position: Vector2(0, 0),
+    ));
+
+    iconComponent = TextComponent(
+      text: iconText,
+      textRenderer: TextPaint(
+        style: TextStyle(
+          color: bgColor,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      anchor: Anchor.centerLeft,
+      position: Vector2(8, size.y / 2),
+    );
+    add(iconComponent);
+
+    textComponent = TextComponent(
+      text: _value,
+      textRenderer: TextPaint(
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      anchor: Anchor.centerRight,
+      position: Vector2(size.x - 6, size.y / 2),
+    );
+    add(textComponent);
+  }
+
+  void updateValue(String newValue, {Color? textColor, String? tooltipTitle, String? tooltipDescription}) {
+    _value = newValue;
+    if (isLoaded) {
+      textComponent.text = newValue;
+      if (textColor != null) {
+        textComponent.textRenderer = TextPaint(
+          style: TextStyle(
+            color: textColor,
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+          ),
+        );
+      }
+    }
+    if (tooltipTitle != null) _customTooltipTitle = tooltipTitle;
+    if (tooltipDescription != null) _customTooltipDescription = tooltipDescription;
+  }
+
   @override
   void onLongTapDown(TapDownEvent event) {
     final tooltipData = _getTooltipData();
@@ -25,96 +128,19 @@ class StatBadge extends PositionComponent with TapCallbacks, HasGameReference<He
   }
 
   (String, String) _getTooltipData() {
+    if (_customTooltipTitle != null && _customTooltipDescription != null) {
+      return (_customTooltipTitle!, _customTooltipDescription!);
+    }
+
     switch (type) {
       case StatType.hp:
-        return ('POINTS DE VIE', 'Votre santé actuelle. Si elle tombe à zéro, la partie est terminée.');
+        return ('POINTS DE VIE', 'Santé actuelle de l\'entité. Si elle tombe à zéro, l\'entité est vaincue.');
       case StatType.armor:
         return ('ARMURE', 'Réduit les prochains dégâts reçus. L\'armure est consommée avant les PV.');
       case StatType.attack:
-        return ('FORCE', 'Augmente les dégâts infligés par vos cartes d\'attaque.');
+        return ('FORCE', 'Dégâts de base de l\'entité. Affecte la puissance des attaques.');
       case StatType.mana:
-        return ('MANA', 'Énergie utilisée pour jouer des cartes. Se régénère à chaque tour.');
-    }
-  }
-  String _value;
-  late final CircleComponent bg;
-  late final TextComponent textComponent;
-  final double radius;
-
-  StatBadge({
-    required this.type,
-    required String value,
-    this.radius = 22.0,
-  }) : _value = value, super(size: Vector2.all(radius * 2));
-
-  @override
-  Future<void> onLoad() async {
-    anchor = Anchor.center;
-    
-    Color bgColor;
-    Color strokeColor = Colors.white;
-    switch (type) {
-      case StatType.hp:
-        bgColor = const Color(0xFFC0392B); // Dark Red
-        break;
-      case StatType.armor:
-        bgColor = const Color(0xFF2980B9); // Blue
-        break;
-      case StatType.attack:
-        bgColor = const Color(0xFFD35400); // Orange
-        break;
-      case StatType.mana:
-        bgColor = const Color(0xFF8E44AD); // Purple
-        break;
-    }
-
-    add(CircleComponent(
-      radius: radius,
-      paint: Paint()..color = bgColor,
-    ));
-
-    add(CircleComponent(
-      radius: radius,
-      paint: Paint()
-        ..color = strokeColor
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2,
-    ));
-
-    textComponent = TextComponent(
-      text: _value,
-      textRenderer: TextPaint(
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      anchor: Anchor.center,
-      position: Vector2.all(radius),
-    );
-    add(textComponent);
-  }
-
-  void updateValue(String newValue, {Color? textColor}) {
-    _value = newValue;
-    textComponent.text = newValue;
-    if (textColor != null) {
-      textComponent.textRenderer = TextPaint(
-        style: TextStyle(
-          color: textColor,
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-        ),
-      );
-    } else {
-      textComponent.textRenderer = TextPaint(
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-        ),
-      );
+        return ('MANA', 'Énergie utilisée pour lancer des capacités spéciales.');
     }
   }
 }

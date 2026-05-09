@@ -25,5 +25,6 @@
   "leaveShop": "Quitter la boutique",
   "combatReward": "RÉCOMPENSE DE COMBAT",
   "chooseUpgrade": "Choisissez une amélioration pour votre héros",
-  "select": "Sélectionner"
+  "select": "Sélectionner",
+  "nextAction": "Prochaine action"
 }
