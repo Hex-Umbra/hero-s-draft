@@ -41,6 +41,7 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
   int basePriority = 10;
   
   bool isDragging = false;
+  double _targetTilt = 0;
   bool _isHoveringCancelZone = false;
 
   @override
@@ -75,6 +76,19 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
     if (isDragging) return;
     if (game.hoveredCard == this) {
       game.setHoveredCard(null);
+    }
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    if (isDragging) {
+      // Interpolation fluide pour l'effet de tilt (inclinaison)
+      // On utilise un lerp manuel pour éviter d'importer dart:ui si possible, 
+      // mais Flutter l'expose via material ou animation.
+      angle += (_targetTilt - angle) * 15 * dt;
+      // Amortissement du tilt cible pour qu'il revienne à 0 quand le mouvement s'arrête
+      _targetTilt += (0 - _targetTilt) * 5 * dt;
     }
   }
 
@@ -183,6 +197,7 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
   void onDragStart(DragStartEvent event) {
     super.onDragStart(event);
     isDragging = true;
+    _targetTilt = 0;
     
     // Nettoie proprement le focus/hover au niveau du jeu,
     // (le flag isDragging = true empêchera setFocusedCard d'ajouter une animation de retour)
@@ -205,6 +220,10 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
   void onDragUpdate(DragUpdateEvent event) {
     // Utiliser canvasDelta évite les distorsions si l'échelle (scale) est modifiée
     position += event.canvasDelta;
+
+    // Calcul du tilt dynamique basé sur la vitesse horizontale
+    // On limite l'inclinaison pour ne pas faire de tours complets
+    _targetTilt = (event.canvasDelta.x * 0.08).clamp(-0.4, 0.4);
     
     // Feedback visuel de zone de sécurité (annulation)
     // On utilise désormais 80% de la hauteur de l'écran comme seuil
@@ -256,6 +275,7 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
   void onDragEnd(DragEndEvent event) {
     super.onDragEnd(event);
     isDragging = false;
+    _targetTilt = 0;
     game.setFocusedCard(null); // On enlève le focus systématiquement
     
     if (_isHoveringCancelZone) {
@@ -282,6 +302,7 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
   void onDragCancel(DragCancelEvent event) {
     super.onDragCancel(event);
     isDragging = false;
+    _targetTilt = 0;
     game.setFocusedCard(null);
     _returnToHand();
     game.highlightEnemy(null);
@@ -311,19 +332,19 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
     add(
       MoveEffect.to(
         originalPosition,
-        EffectController(duration: 0.2, curve: Curves.easeOut),
+        EffectController(duration: 0.4, curve: Curves.elasticOut),
       ),
     );
     add(
       RotateEffect.to(
         originalAngle,
-        EffectController(duration: 0.2, curve: Curves.easeOut),
+        EffectController(duration: 0.4, curve: Curves.elasticOut),
       ),
     );
     add(
       ScaleEffect.to(
         Vector2.all(game.scaleFactor * 0.75),
-        EffectController(duration: 0.2, curve: Curves.easeOut),
+        EffectController(duration: 0.4, curve: Curves.elasticOut),
       ),
     );
     
