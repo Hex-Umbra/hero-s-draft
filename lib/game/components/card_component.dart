@@ -1,6 +1,8 @@
+import 'dart:math';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/effects.dart';
+import 'package:flame/particles.dart';
 import 'package:flutter/material.dart' hide Image;
 import '../../models/card_instance.dart';
 import '../../models/data/card_data.dart';
@@ -84,13 +86,49 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
     super.update(dt);
     if (isDragging) {
       // Interpolation fluide pour l'effet de tilt (inclinaison)
-      // On utilise un lerp manuel pour éviter d'importer dart:ui si possible, 
-      // mais Flutter l'expose via material ou animation.
       angle += (_targetTilt - angle) * 15 * dt;
       // Amortissement du tilt cible pour qu'il revienne à 0 quand le mouvement s'arrête
       _targetTilt += (0 - _targetTilt) * 5 * dt;
+
+      // Génération de la queue de particules arc-en-ciel
+      _spawnRainbowParticle();
     }
   }
+
+  double _particleHue = 0;
+
+  void _spawnRainbowParticle() {
+    // On fait défiler la teinte (0-360) pour l'effet arc-en-ciel
+    _particleHue = (_particleHue + 10) % 360;
+    final color = HSVColor.fromAHSV(1.0, _particleHue, 0.8, 1.0).toColor();
+
+    // Création d'une particule qui bouge légèrement et rétrécit
+    game.add(
+      ParticleSystemComponent(
+        particle: Particle.generate(
+          count: 2,
+          lifespan: 0.4,
+          generator: (i) => MovingParticle(
+            curve: Curves.easeOut,
+            // Vitesse aléatoire pour l'éparpillement
+            from: position.clone(),
+            to: position + Vector2((rand.nextDouble() - 0.5) * 40, (rand.nextDouble() - 0.5) * 40),
+            child: ScaledParticle(
+              scale: 1.0,
+              // Une petite étincelle (cercle de rayon 2)
+              // Le cercle reçoit directement le Paint avec la couleur arc-en-ciel
+              child: CircleParticle(
+                radius: 2,
+                paint: Paint()..color = color,
+              ),
+            ),
+          ),
+        ),
+      )..priority = priority - 1, // Juste derrière la carte
+    );
+  }
+
+  final rand = Random();
 
   @override
   Future<void> onLoad() async {
@@ -348,6 +386,72 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
       ),
     );
     
-    priority = basePriority;
+  priority = basePriority;
+  }
+
+  void playAnimation(EnemyCard? target, {required VoidCallback onComplete}) {
+    isDragging = false;
+    priority = 500; // Au-dessus de tout le monde
+
+    // Direction de l'attaque
+    final targetPos = target?.position ?? position + Vector2(0, -size.y * 2);
+    final anticipationDir = (position - targetPos).normalized();
+
+    // Flash blanc (on change les paints)
+    backgroundPaint.color = Colors.white;
+    borderPaint.color = Colors.white;
+    nameText.textRenderer = TextPaint(style: const TextStyle(color: Colors.transparent));
+    costText.textRenderer = TextPaint(style: const TextStyle(color: Colors.transparent));
+    descriptionText.textRenderer = TextPaint(style: const TextStyle(color: Colors.transparent));
+
+    add(
+      SequenceEffect([
+        // 1. Anticipation (Recule légèrement)
+        MoveEffect.by(
+          anticipationDir * 40,
+          EffectController(duration: 0.1, curve: Curves.easeOut),
+        ),
+        // 2. Dash vers la cible
+        MoveEffect.to(
+          targetPos,
+          EffectController(duration: 0.15, curve: Curves.easeIn),
+        ),
+        // 3. Impact et disparition
+        ScaleEffect.to(
+          Vector2.all(0.0),
+          EffectController(duration: 0.05),
+          onComplete: () {
+            _spawnImpactParticles(targetPos);
+            onComplete();
+          },
+        ),
+      ]),
+    );
+  }
+
+  void _spawnImpactParticles(Vector2 impactPos) {
+    // Éclat de particules de la couleur de la bordure (bleu par défaut)
+    final color = Colors.blueAccent;
+    
+    game.add(
+      ParticleSystemComponent(
+        particle: Particle.generate(
+          count: 15,
+          lifespan: 0.5,
+          generator: (i) => MovingParticle(
+            curve: Curves.easeOut,
+            from: impactPos,
+            to: impactPos + Vector2((rand.nextDouble() - 0.5) * 200, (rand.nextDouble() - 0.5) * 200),
+            child: ScaledParticle(
+              scale: 1.5,
+              child: CircleParticle(
+                radius: 2,
+                paint: Paint()..color = color,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

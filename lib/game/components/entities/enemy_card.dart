@@ -171,10 +171,36 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
         Colors.red,
         Vector2(size.x / 2, size.y),
       );
+      // Feedback visuel d'impact
+      shakeAndFlashAnimation();
     }
 
     stats = newStats;
     _refreshBadges();
+  }
+
+  void shakeAndFlashAnimation() {
+    // 1. Tremblement (Shake)
+    // On utilise un petit effet de va-et-vient aléatoire
+    final rand = Random();
+    for (int i = 0; i < 4; i++) {
+      add(
+        MoveEffect.by(
+          Vector2((rand.nextDouble() - 0.5) * 20, (rand.nextDouble() - 0.5) * 20),
+          EffectController(duration: 0.025, alternate: true),
+        ),
+      );
+    }
+
+    // 2. Flash Blanc (via Opacity et ColorFilter ou simplement en changeant la couleur du sprite si possible)
+    // Ici on va utiliser un ColorEffect s'il est disponible, sinon on joue sur l'opacité
+    add(
+      ColorEffect(
+        Colors.white,
+        EffectController(duration: 0.1, alternate: true),
+        opacityTo: 0.8,
+      ),
+    );
   }
 
   /// Applique les effets de début de tour de l'ennemi

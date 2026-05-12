@@ -185,3 +185,9 @@
         - feat: implémentation Phase 1
         - Dynamisme de la Carte en Main (Inertie & Tilt)
         - J'ai terminé la Phase 1. J'ai implémenté un système de "Tilt" dynamique dans `CardComponent` qui incline la carte en fonction de sa vitesse de déplacement latérale pendant le drag. J'ai également amélioré l'animation de retour en main en utilisant `Curves.elasticOut` pour simuler un effet de ressort satisfaisant, inspiré du feeling organique de Balatro.
+        - feat: implémentation Phase 2
+            - Séquence de Jeu et Impact (Attack Sequence)
+                - J'ai terminé la Phase 2. L'action de jouer une carte est désormais spectaculaire : la carte recule en anticipation, fonce vers sa cible à haute vitesse, devient blanche à l'impact et explose en un bouquet de particules bleues. Le moteur `HerosDraftGame` a été mis à jour pour attendre la fin de cette animation avant de retirer officiellement la carte du monde.
+        - feat: implémentation Phase 3
+            - Réaction de l'Ennemi (Feedback de Dégâts)
+                - J'ai terminé la Phase 3. J'ai ajouté une méthode `shakeAndFlashAnimation` dans `EnemyCard` qui se déclenche lors de la réception de dégâts, provoquant un tremblement aléatoire et un flash blanc. Le composant `FloatingText` a également été amélioré avec un effet de "Pop" initial (`ScaleEffect` avec `bounceOut`), rendant l'affichage des dégâts beaucoup plus percutant.

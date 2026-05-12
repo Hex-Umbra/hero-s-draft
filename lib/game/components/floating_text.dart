@@ -47,6 +47,9 @@ class FloatingText extends TextComponent with HasPaint {
   Future<void> onLoad() async {
     final random = Random();
     
+    // Initialisation de l'échelle pour l'effet "pop"
+    scale = Vector2.all(0.1);
+
     // Trajectoire aléatoire en arc de cercle
     final double driftX = (random.nextDouble() - 0.5) * 80; // Entre -40 et 40
     double driftY = 60 + random.nextDouble() * 40; // Base positive (vers le bas)
@@ -55,6 +58,15 @@ class FloatingText extends TextComponent with HasPaint {
       driftY = -driftY; // Inverser pour aller vers le haut
     }
 
+    // 1. Effet de Pop (Agrandissement rapide)
+    add(
+      ScaleEffect.to(
+        Vector2.all(1.0),
+        EffectController(duration: 0.15, curve: Curves.bounceOut),
+      ),
+    );
+
+    // 2. Mouvement (Drift)
     add(
       MoveEffect.by(
         Vector2(driftX, driftY),
@@ -62,6 +74,7 @@ class FloatingText extends TextComponent with HasPaint {
       ),
     );
 
+    // 3. Fondu (Fade out)
     add(
       OpacityEffect.fadeOut(
         EffectController(duration: 1.0, curve: Curves.easeIn),

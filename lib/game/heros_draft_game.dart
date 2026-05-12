@@ -207,11 +207,16 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
 
   bool tryPlayCard(dynamic cardComp, EnemyCard? target) {
     if (cardComp is CardComponent && onPlayCard(cardComp.card, target)) {
-      // Si la carte est jouée, on la retire immédiatement visuellement 
-      // en attendant que syncDeck la supprime officiellement
-      cardComp.removeFromParent();
+      // Si la carte est jouée, on lance l'animation spectaculaire
+      // On la retire immédiatement de handCards pour qu'elle ne soit plus layoutée
       handCards.remove(cardComp);
       _layoutHand();
+      
+      // On lance l'animation de vol et d'impact
+      cardComp.playAnimation(target, onComplete: () {
+        cardComp.removeFromParent();
+      });
+      
       return true;
     }
     return false;
