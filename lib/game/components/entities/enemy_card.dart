@@ -180,6 +180,8 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
   }
 
   void shakeAndFlashAnimation() {
+    // TODO: Audio Hook - sfx_impact_heavy (Jouer un son d'impact lors de la réception de dégâts)
+    
     // 1. Tremblement (Shake)
     // On utilise un petit effet de va-et-vient aléatoire
     final rand = Random();

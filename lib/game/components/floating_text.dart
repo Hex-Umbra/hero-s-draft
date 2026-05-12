@@ -47,6 +47,8 @@ class FloatingText extends TextComponent with HasPaint {
   Future<void> onLoad() async {
     final random = Random();
     
+    // TODO: Audio Hook - sfx_ui_pop (Jouer un son de 'pop' lors de l'apparition du texte)
+
     // Initialisation de l'échelle pour l'effet "pop"
     scale = Vector2.all(0.1);
 

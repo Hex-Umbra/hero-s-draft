@@ -81,12 +81,26 @@ Le `MapGeneratorService` crée une structure de nœuds de manière aléatoire ma
 
 ---
 
-## 6. UX et Feedback (Le "Juice")
+## 6. UX, Feedback et "Game Juice" (Style Balatro)
 
-Un jeu se sent "bon" grâce aux feedbacks visuels :
-- **Damage Numbers** : Chaque coup affiche un chiffre qui monte et disparaît (`FloatingText`).
-- **Screen Shake / Bump** : Les composants "sautent" légèrement vers leur cible lors d'une attaque.
-- **Tooltips** : Survoler une icône affiche instantanément une explication claire.
+Un jeu se sent "bon" grâce aux feedbacks visuels immédiats. Voici comment nous avons transformé un combat statique en une expérience dynamique :
+
+### Les Particules (Flame Particle System)
+Les particules ajoutent une couche de magie.
+- **Queue de traînée** : Utilisation de `ParticleSystemComponent` pour créer des étincelles arc-en-ciel qui suivent la carte lors du drag.
+- **Explosion d'impact** : À l'impact d'une carte sur un ennemi, un bouquet de particules jaillit pour souligner la force du coup.
+
+### Séquences d'Animations Complexes
+Au lieu d'un mouvement linéaire, on utilise `SequenceEffect` :
+1. **Anticipation** : La carte recule (comme un ressort que l'on tend).
+2. **Action** : Elle fonce vers sa cible.
+3. **Résolution** : Elle disparaît dans un flash blanc à l'impact.
+
+### Feedback Physique (Shake & Flash)
+L'ennemi doit "encaisser" le coup visuellement :
+- **ShakeEffect** : Un tremblement rapide et aléatoire simule l'impact physique.
+- **ColorEffect** : Un flash blanc instantané attire l'attention sur l'entité qui a reçu les dégâts.
+- **Pop élastique** : Les chiffres de dégâts (`FloatingText`) utilisent `Curves.bounceOut` pour "bondir" à l'écran, rendant chaque point de dégât gratifiant à voir.
 
 ---
 
