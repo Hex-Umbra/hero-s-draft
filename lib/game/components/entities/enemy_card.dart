@@ -14,7 +14,7 @@ import 'intention_indicator.dart';
 import 'status_indicator.dart';
 import '../../heros_draft_game.dart';
 
-class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<HerosDraftGame> {
+class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<HerosDraftGame>, HasPaint {
   EntityStats stats;
   final EnemyData? data;
   final bool isBoss;
@@ -28,6 +28,7 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
   late final StatBadge attackBadge;
   late final StatBadge manaBadge;
   late final StatusIndicator statusIndicator;
+  late final SpriteComponent sprite;
 
   EnemyIntent? currentIntent;
   bool isSelected = false;
@@ -49,12 +50,11 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
     String spriteName = data?.spritePath ?? 'enemy_goblin.png';
     if (spriteName.isEmpty) spriteName = 'enemy_goblin.png';
 
-    add(
-      SpriteComponent(
-        sprite: Sprite(game.images.fromCache(spriteName)),
-        size: size,
-      ),
+    sprite = SpriteComponent(
+      sprite: Sprite(game.images.fromCache(spriteName)),
+      size: size,
     );
+    add(sprite);
 
     borderInfo = RectangleComponent(
       size: size,

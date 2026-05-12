@@ -90,6 +90,8 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
       // Amortissement du tilt cible pour qu'il revienne à 0 quand le mouvement s'arrête
       _targetTilt += (0 - _targetTilt) * 5 * dt;
 
+      // TODO: Audio Hook - sfx_card_slide (Jouer un son de glissement si la vitesse est élevée)
+
       // Génération de la queue de particules arc-en-ciel
       _spawnRainbowParticle();
     }
