@@ -8,6 +8,7 @@
     "category": "global",
     "rarity": "common",
     "target": "singleEnemy",
+    "animation": "melee",
     "effects": [
       {
         "type": "damage",
@@ -24,6 +25,7 @@
     "category": "global",
     "rarity": "common",
     "target": "self",
+    "animation": "buff",
     "effects": [
       {
         "type": "armor",
@@ -40,6 +42,7 @@
     "category": "global",
     "rarity": "uncommon",
     "target": "singleEnemy",
+    "animation": "melee",
     "effects": [
       {
         "type": "damage",
@@ -60,6 +63,7 @@
     "category": "global",
     "rarity": "common",
     "target": "allEnemies",
+    "animation": "magic",
     "effects": [
       {
         "type": "damage",
@@ -76,6 +80,7 @@
     "category": "global",
     "rarity": "common",
     "target": "self",
+    "animation": "buff",
     "effects": [
       {
         "type": "draw",
@@ -92,6 +97,7 @@
     "category": "global",
     "rarity": "rare",
     "target": "self",
+    "animation": "buff",
     "effects": [
       {
         "type": "heal",
@@ -108,6 +114,7 @@
     "category": "global",
     "rarity": "uncommon",
     "target": "self",
+    "animation": "buff",
     "effects": [
       {
         "type": "armor",
@@ -124,6 +131,7 @@
     "category": "global",
     "rarity": "uncommon",
     "target": "singleEnemy",
+    "animation": "melee",
     "effects": [
       {
         "type": "damage",
@@ -140,6 +148,7 @@
     "category": "global",
     "rarity": "rare",
     "target": "self",
+    "animation": "buff",
     "effects": [
       {
         "type": "armor",
@@ -160,6 +169,7 @@
     "category": "global",
     "rarity": "epic",
     "target": "allEnemies",
+    "animation": "magic",
     "effects": [
       {
         "type": "damage",
@@ -180,6 +190,7 @@
     "category": "global",
     "rarity": "rare",
     "target": "self",
+    "animation": "buff",
     "effects": [
       {
         "type": "apply_status",
@@ -198,6 +209,7 @@
     "category": "global",
     "rarity": "uncommon",
     "target": "self",
+    "animation": "buff",
     "effects": [
       {
         "type": "apply_status",
@@ -216,6 +228,7 @@
     "category": "global",
     "rarity": "common",
     "target": "singleEnemy",
+    "animation": "magic",
     "effects": [
       {
         "type": "damage",

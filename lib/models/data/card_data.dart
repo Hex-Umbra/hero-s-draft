@@ -40,6 +40,7 @@ class CardData {
   final CardRarity rarity;
   final CardTarget target;
   final String? spritePath;
+  final String? animation; // Type d'animation (ex: 'melee', 'magic', 'buff')
   final List<CardEffect> effects;
 
   const CardData({
@@ -53,6 +54,7 @@ class CardData {
     required this.rarity,
     required this.target,
     this.spritePath,
+    this.animation,
     required this.effects,
   });
 
@@ -77,6 +79,7 @@ class CardData {
         orElse: () => CardTarget.singleEnemy,
       ),
       spritePath: json['spritePath'] as String?,
+      animation: json['animation'] as String?,
       effects:
           (json['effects'] as List<dynamic>?)
               ?.map((e) => CardEffect.fromJson(e as Map<String, dynamic>))

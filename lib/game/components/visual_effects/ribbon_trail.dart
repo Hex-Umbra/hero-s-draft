@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart' hide Image;
 
@@ -98,16 +97,16 @@ class RibbonTrail extends Component {
     }
     path.close();
 
-    // 1. Lueur extérieure (Glow)
+    // 1. Lueur extérieure (Glow) - Opacité réduite
     final glowPaint = Paint()
-      ..color = _glowColor.withAlpha(120)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
+      ..color = _glowColor.withAlpha(60) // Passage de 120 à 60
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
     canvas.drawPath(path, glowPaint);
 
-    // 2. Cœur brillant (Core)
+    // 2. Cœur brillant (Core) - Opacité réduite
     final corePaint = Paint()
-      ..color = _coreColor.withAlpha(220)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
+      ..color = _coreColor.withAlpha(150) // Passage de 220 à 150
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
     canvas.drawPath(path, corePaint);
   }
 }

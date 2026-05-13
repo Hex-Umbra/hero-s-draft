@@ -114,53 +114,52 @@ class CardComponent extends PositionComponent
     final rainbowColor =
         HSVColor.fromAHSV(1.0, _particleHue, 0.8, 1.0).toColor();
 
-    // Création d'un mélange de particules blanches et arc-en-ciel
+    // Vecteur de gravité (vers le bas)
+    final gravity = Vector2(0, 150);
+
+    // Création d'un mélange de particules avec gravité (AcceleratedParticle)
     game.add(
       ParticleSystemComponent(
         particle: Particle.generate(
-          count: 6, // Plus de particules pour un effet plus dense
-          lifespan: 0.5,
+          count: 3,
+          lifespan: 0.6, // Un peu plus long pour voir l'effet de chute
           generator: (i) {
-            if (i < 2) {
-              // Traînée blanche "centrale" et plus stable pour l'aspect continu
-              return MovingParticle(
-                curve: Curves.easeOut,
-                from: position.clone(),
-                to:
-                    position +
-                    Vector2(
-                      (rand.nextDouble() - 0.5) * 20,
-                      (rand.nextDouble() - 0.5) * 20,
-                    ),
+            // Vitesse initiale aléatoire pour que les particules "sortent" de la carte
+            final initialVelocity = Vector2(
+              (rand.nextDouble() - 0.5) * 50,
+              (rand.nextDouble() - 0.5) * 50,
+            );
+
+            if (i == 0) {
+              // Particule blanche
+              return AcceleratedParticle(
+                position: position.clone(),
+                speed: initialVelocity,
+                acceleration: gravity,
                 child: ScaledParticle(
                   child: CircleParticle(
-                    radius: 2.5,
-                    paint: Paint()..color = Colors.white.withAlpha(200),
+                    radius: 2.0,
+                    paint: Paint()..color = Colors.white.withAlpha(100),
                   ),
                 ),
               );
             } else {
-              // Particules arc-en-ciel plus éparpillées (étincelles)
-              return MovingParticle(
-                curve: Curves.easeOut,
-                from: position.clone(),
-                to:
-                    position +
-                    Vector2(
-                      (rand.nextDouble() - 0.5) * 60,
-                      (rand.nextDouble() - 0.5) * 60,
-                    ),
+              // Particules arc-en-ciel
+              return AcceleratedParticle(
+                position: position.clone(),
+                speed: initialVelocity * 1.5,
+                acceleration: gravity,
                 child: ScaledParticle(
                   child: CircleParticle(
-                    radius: 1.0 + rand.nextDouble() * 2.5,
-                    paint: Paint()..color = rainbowColor,
+                    radius: 2.0 + rand.nextDouble() * 2.0,
+                    paint: Paint()..color = rainbowColor.withAlpha(150),
                   ),
                 ),
               );
             }
           },
         ),
-      )..priority = priority - 1, // Juste derrière la carte
+      )..priority = priority - 1,
     );
   }
 
@@ -487,22 +486,29 @@ class CardComponent extends PositionComponent
     isDragging = false;
     priority = 500; // Au-dessus de tout le monde
 
+    final animType = card.data.animation ?? 'melee';
+
+    switch (animType) {
+      case 'magic':
+        _playMagicAnimation(target, onComplete);
+        break;
+      case 'buff':
+        _playBuffAnimation(onComplete);
+        break;
+      case 'melee':
+      default:
+        _playMeleeAnimation(target, onComplete);
+        break;
+    }
+  }
+
+  void _playMeleeAnimation(EnemyCard? target, VoidCallback onComplete) {
     // Direction de l'attaque
     final targetPos = target?.position ?? position + Vector2(0, -size.y * 2);
     final anticipationDir = (position - targetPos).normalized();
 
-    // Flash blanc (on change les paints)
-    backgroundPaint.color = Colors.white;
-    borderPaint.color = Colors.white;
-    nameText.textRenderer = TextPaint(
-      style: const TextStyle(color: Colors.transparent),
-    );
-    costText.textRenderer = TextPaint(
-      style: const TextStyle(color: Colors.transparent),
-    );
-    descriptionText.textRenderer = TextPaint(
-      style: const TextStyle(color: Colors.transparent),
-    );
+    // Flash blanc
+    _applyFlashVisual();
 
     add(
       SequenceEffect([
@@ -521,7 +527,7 @@ class CardComponent extends PositionComponent
           Vector2.all(0.0),
           EffectController(duration: 0.05),
           onComplete: () {
-            _spawnImpactParticles(targetPos);
+            _spawnImpactParticles(targetPos, color: Colors.blueAccent);
             onComplete();
           },
         ),
@@ -529,14 +535,93 @@ class CardComponent extends PositionComponent
     );
   }
 
-  void _spawnImpactParticles(Vector2 impactPos) {
-    // Éclat de particules de la couleur de la bordure (bleu par défaut)
-    final color = Colors.blueAccent;
+  void _playMagicAnimation(EnemyCard? target, VoidCallback onComplete) {
+    final targetPos = target?.position ?? position + Vector2(0, -size.y * 2);
 
+    // Effet visuel : Teinte violette/magique
+    backgroundPaint.color = Colors.deepPurpleAccent;
+    borderPaint.color = Colors.cyanAccent;
+
+    add(
+      SequenceEffect([
+        // 1. Lévitation et vibration
+        MoveEffect.by(
+          Vector2(0, -30),
+          EffectController(duration: 0.3, curve: Curves.easeInOut),
+        ),
+        // 2. Pulsation (Chargement)
+        ScaleEffect.to(
+          Vector2.all(game.scaleFactor * 1.1),
+          EffectController(
+            duration: 0.4,
+            alternate: true,
+            curve: Curves.elasticIn,
+          ),
+        ),
+        // 3. Explosion magique et disparition
+        ScaleEffect.to(
+          Vector2.all(0.0),
+          EffectController(duration: 0.2, curve: Curves.easeIn),
+          onComplete: () {
+            _spawnImpactParticles(
+              targetPos,
+              color: Colors.purpleAccent,
+              count: 25,
+            );
+            onComplete();
+          },
+        ),
+      ]),
+    );
+  }
+
+  void _playBuffAnimation(VoidCallback onComplete) {
+    // Effet visuel : Teinte dorée
+    backgroundPaint.color = Colors.amber.withAlpha(200);
+    borderPaint.color = Colors.white;
+
+    add(
+      SequenceEffect([
+        // 1. Montée douce (Élévation spirituelle)
+        MoveEffect.by(
+          Vector2(0, -100),
+          EffectController(duration: 0.6, curve: Curves.easeOut),
+        ),
+        // 2. Fondu et disparition
+        OpacityEffect.to(
+          0.0,
+          EffectController(duration: 0.3),
+          onComplete: () {
+            onComplete();
+          },
+        ),
+      ]),
+    );
+  }
+
+  void _applyFlashVisual() {
+    backgroundPaint.color = Colors.white;
+    borderPaint.color = Colors.white;
+    nameText.textRenderer = TextPaint(
+      style: const TextStyle(color: Colors.transparent),
+    );
+    costText.textRenderer = TextPaint(
+      style: const TextStyle(color: Colors.transparent),
+    );
+    descriptionText.textRenderer = TextPaint(
+      style: const TextStyle(color: Colors.transparent),
+    );
+  }
+
+  void _spawnImpactParticles(
+    Vector2 impactPos, {
+    Color color = Colors.blueAccent,
+    int count = 15,
+  }) {
     game.add(
       ParticleSystemComponent(
         particle: Particle.generate(
-          count: 15,
+          count: count,
           lifespan: 0.5,
           generator: (i) => MovingParticle(
             curve: Curves.easeOut,
