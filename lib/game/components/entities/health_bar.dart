@@ -5,7 +5,7 @@ class HealthBarComponent extends PositionComponent {
   final double barWidth;
   final double barHeight;
   final Color barColor;
-  
+
   double _currentPv;
   double _maxPv;
 
@@ -19,9 +19,9 @@ class HealthBarComponent extends PositionComponent {
     required double currentPv,
     required double maxPv,
     this.barColor = const Color(0xFFC0392B),
-  })  : _currentPv = currentPv,
-        _maxPv = maxPv,
-        super(size: Vector2(barWidth, barHeight));
+  }) : _currentPv = currentPv,
+       _maxPv = maxPv,
+       super(size: Vector2(barWidth, barHeight));
 
   @override
   Future<void> onLoad() async {
@@ -69,7 +69,7 @@ class HealthBarComponent extends PositionComponent {
   void updateValues(double current, double max) {
     _currentPv = current;
     _maxPv = max;
-    
+
     // Mise à jour visuelle
     final progress = (_currentPv / _maxPv).clamp(0.0, 1.0);
     _foreground.size.x = progress * barWidth;

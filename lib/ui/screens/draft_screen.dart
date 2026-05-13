@@ -30,7 +30,11 @@ class DraftScreen extends ConsumerWidget {
                   children: [
                     const Text(
                       'RÉCOMPENSE DE COMBAT',
-                      style: TextStyle(color: Colors.amber, fontSize: 32, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: Colors.amber,
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 10),
@@ -44,39 +48,59 @@ class DraftScreen extends ConsumerWidget {
                       Expanded(
                         child: ListView(
                           shrinkWrap: true,
-                          children: choices.map((choice) => Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 40),
-                            child: UiCard(
-                              title: choice.title,
-                              description: choice.description,
-                              onTap: () => _onChoiceSelected(context, ref, choice),
-                              rarity: 'Amélioration',
-                            ),
-                          )).toList(),
+                          children: choices
+                              .map(
+                                (choice) => Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 8,
+                                    horizontal: 40,
+                                  ),
+                                  child: UiCard(
+                                    title: choice.title,
+                                    description: choice.description,
+                                    onTap: () =>
+                                        _onChoiceSelected(context, ref, choice),
+                                    rarity: 'Amélioration',
+                                  ),
+                                ),
+                              )
+                              .toList(),
                         ),
                       )
                     else
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: choices.map((choice) => Flexible(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 160),
-                              child: UiCard(
-                                title: choice.title,
-                                description: choice.description,
-                                onTap: () => _onChoiceSelected(context, ref, choice),
-                                rarity: 'Amélioration',
+                        children: choices
+                            .map(
+                              (choice) => Flexible(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                  ),
+                                  child: ConstrainedBox(
+                                    constraints: const BoxConstraints(
+                                      maxWidth: 160,
+                                    ),
+                                    child: UiCard(
+                                      title: choice.title,
+                                      description: choice.description,
+                                      onTap: () => _onChoiceSelected(
+                                        context,
+                                        ref,
+                                        choice,
+                                      ),
+                                      rarity: 'Amélioration',
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                        )).toList(),
+                            )
+                            .toList(),
                       ),
                   ],
                 ),
               );
-            }
+            },
           ),
         ),
       ),
@@ -94,14 +118,14 @@ class DraftScreen extends ConsumerWidget {
   void _showCloneModal(BuildContext context, WidgetRef ref) {
     final deckState = ref.read(deckProvider);
     final masterDeck = List.of(deckState.masterDeck);
-    
+
     // Choisir 3 cartes aléatoires
     masterDeck.shuffle();
     final options = masterDeck.take(3).toList();
-    
+
     if (options.isEmpty) {
-       _finishDraft(ref);
-       return;
+      _finishDraft(ref);
+      return;
     }
 
     showDialog(
@@ -110,29 +134,48 @@ class DraftScreen extends ConsumerWidget {
       builder: (ctx) {
         return AlertDialog(
           backgroundColor: const Color(0xFF2A2A3D),
-          title: const Text('Choisissez une carte à cloner', style: TextStyle(color: Colors.white)),
+          title: const Text(
+            'Choisissez une carte à cloner',
+            style: TextStyle(color: Colors.white),
+          ),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: options.map((card) => ListTile(
-                title: Text(card.data.name, style: const TextStyle(color: Colors.amber)),
-                subtitle: Text('Niveau ${card.level}', style: const TextStyle(color: Colors.white70)),
-                onTap: () {
-                  ref.read(deckProvider.notifier).addCardToMasterDeck(
-                    CardInstance(data: card.data, level: card.level)
-                  );
-                  Navigator.of(ctx).pop();
-                  _finishDraft(ref);
-                },
-              )).toList(),
+              children: options
+                  .map(
+                    (card) => ListTile(
+                      title: Text(
+                        card.data.name,
+                        style: const TextStyle(color: Colors.amber),
+                      ),
+                      subtitle: Text(
+                        'Niveau ${card.level}',
+                        style: const TextStyle(color: Colors.white70),
+                      ),
+                      onTap: () {
+                        ref
+                            .read(deckProvider.notifier)
+                            .addCardToMasterDeck(
+                              CardInstance(data: card.data, level: card.level),
+                            );
+                        Navigator.of(ctx).pop();
+                        _finishDraft(ref);
+                      },
+                    ),
+                  )
+                  .toList(),
             ),
           ),
         );
-      }
+      },
     );
   }
 
-  void _onChoiceSelected(BuildContext context, WidgetRef ref, _DraftChoice choice) {
+  void _onChoiceSelected(
+    BuildContext context,
+    WidgetRef ref,
+    _DraftChoice choice,
+  ) {
     if (choice.isCloneOption) {
       _showCloneModal(context, ref);
       return;
@@ -145,22 +188,34 @@ class DraftScreen extends ConsumerWidget {
       armorAcc: choice.armorBoost,
       maxManaAcc: choice.manaBoost,
     );
-    
+
     _finishDraft(ref);
   }
 
   List<_DraftChoice> _generateChoices() {
     final rng = Random();
     final choices = List.generate(3, (index) {
-        int type = rng.nextInt(4);
-        if (type == 0) return _DraftChoice('Vitalité', '+15 PV Max', 15, 0, 0, 0);
-        if (type == 1) return _DraftChoice('Aiguisage', '+5 Attaque', 0, 5, 0, 0);
-        if (type == 2) return _DraftChoice('Plaque de Fer', '+10 Armure', 0, 0, 10, 0);
-        return _DraftChoice('Sagesse', '+5 Mana Max', 0, 0, 0, 5);
+      int type = rng.nextInt(4);
+      if (type == 0) return _DraftChoice('Vitalité', '+15 PV Max', 15, 0, 0, 0);
+      if (type == 1) return _DraftChoice('Aiguisage', '+5 Attaque', 0, 5, 0, 0);
+      if (type == 2) {
+        return _DraftChoice('Plaque de Fer', '+10 Armure', 0, 0, 10, 0);
+      }
+      return _DraftChoice('Sagesse', '+5 Mana Max', 0, 0, 0, 5);
     });
 
     if (rng.nextDouble() < 0.3) {
-      choices.add(_DraftChoice('Miroir', 'Cloner une carte de votre deck', 0, 0, 0, 0, isCloneOption: true));
+      choices.add(
+        _DraftChoice(
+          'Miroir',
+          'Cloner une carte de votre deck',
+          0,
+          0,
+          0,
+          0,
+          isCloneOption: true,
+        ),
+      );
     }
 
     return choices;
@@ -176,5 +231,13 @@ class _DraftChoice {
   final int manaBoost;
   final bool isCloneOption;
 
-  _DraftChoice(this.title, this.description, this.pvBoost, this.atkBoost, this.armorBoost, this.manaBoost, {this.isCloneOption = false});
+  _DraftChoice(
+    this.title,
+    this.description,
+    this.pvBoost,
+    this.atkBoost,
+    this.armorBoost,
+    this.manaBoost, {
+    this.isCloneOption = false,
+  });
 }

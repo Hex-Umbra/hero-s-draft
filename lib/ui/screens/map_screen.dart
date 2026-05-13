@@ -14,14 +14,16 @@ class MapScreen extends ConsumerStatefulWidget {
 }
 
 class _MapScreenState extends ConsumerState<MapScreen> {
-  final TransformationController _transformationController = TransformationController();
+  final TransformationController _transformationController =
+      TransformationController();
   int? _lastActCentered;
 
   @override
   void initState() {
     super.initState();
-    _transformationController.value = Matrix4.translationValues(-200.0, -1500.0, 0.0)
-      * Matrix4.diagonal3Values(0.8, 0.8, 1.0);
+    _transformationController.value =
+        Matrix4.translationValues(-200.0, -1500.0, 0.0) *
+        Matrix4.diagonal3Values(0.8, 0.8, 1.0);
   }
 
   @override
@@ -39,36 +41,50 @@ class _MapScreenState extends ConsumerState<MapScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Force le re-centrage si on change d'acte ou si on n'a jamais centré
-      if (_lastActCentered != runState.act || (currentNodeId == null && _lastActCentered == null)) {
-          MapNode? targetNode;
-          if (currentNodeId != null) {
-            targetNode = nodes.firstWhere((n) => n.id == currentNodeId, orElse: () => nodes.first);
-          } else {
-            // Pour un nouvel acte, on cible le milieu du premier étage
-            targetNode = nodes.firstWhere((n) => n.id.startsWith('node_0_'), orElse: () => nodes.first);
-          }
-          
-          double scale = 0.8;
-          double actualX = targetNode.position.x + 1000; // padding left
-          double actualY = targetNode.position.y + 1000; // padding top
-          
-          double dx = (screenSize.width / 2) - (actualX * scale);
-          double dy = (screenSize.height / 2) - (actualY * scale);
-          
-          if (mounted) {
-            setState(() {
-              _transformationController.value = Matrix4.translationValues(dx, dy, 0.0)
-                * Matrix4.diagonal3Values(scale, scale, 1.0);
-              _lastActCentered = runState.act;
-            });
-          }
+      if (_lastActCentered != runState.act ||
+          (currentNodeId == null && _lastActCentered == null)) {
+        MapNode? targetNode;
+        if (currentNodeId != null) {
+          targetNode = nodes.firstWhere(
+            (n) => n.id == currentNodeId,
+            orElse: () => nodes.first,
+          );
+        } else {
+          // Pour un nouvel acte, on cible le milieu du premier étage
+          targetNode = nodes.firstWhere(
+            (n) => n.id.startsWith('node_0_'),
+            orElse: () => nodes.first,
+          );
+        }
+
+        double scale = 0.8;
+        double actualX = targetNode.position.x + 1000; // padding left
+        double actualY = targetNode.position.y + 1000; // padding top
+
+        double dx = (screenSize.width / 2) - (actualX * scale);
+        double dy = (screenSize.height / 2) - (actualY * scale);
+
+        if (mounted) {
+          setState(() {
+            _transformationController.value =
+                Matrix4.translationValues(dx, dy, 0.0) *
+                Matrix4.diagonal3Values(scale, scale, 1.0);
+            _lastActCentered = runState.act;
+          });
+        }
       }
     });
 
     return Scaffold(
       backgroundColor: const Color(0xFF0D0D1A),
       appBar: AppBar(
-        title: Text('Acte ${runState.act} - Carte du Monde', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text(
+          'Acte ${runState.act} - Carte du Monde',
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         backgroundColor: Colors.black45,
         elevation: 0,
         centerTitle: true,
@@ -76,9 +92,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           icon: const Icon(Icons.style, color: Colors.white),
           tooltip: 'Mon Deck',
           onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => const DeckScreen()),
-            );
+            Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (context) => const DeckScreen()));
           },
         ),
         actions: [
@@ -86,20 +102,30 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                const Icon(Icons.monetization_on, color: Colors.amber, size: 24),
+                const Icon(
+                  Icons.monetization_on,
+                  color: Colors.amber,
+                  size: 24,
+                ),
                 const SizedBox(width: 4),
                 Text(
                   '${runState.gold}',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.amber),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.amber,
+                  ),
                 ),
               ],
             ),
-          )
+          ),
         ],
       ),
       body: InteractiveViewer(
         transformationController: _transformationController,
-        boundaryMargin: const EdgeInsets.all(2000), // Très large marge pour éviter les snaps sur 4K
+        boundaryMargin: const EdgeInsets.all(
+          2000,
+        ), // Très large marge pour éviter les snaps sur 4K
         minScale: 0.1,
         maxScale: 2.0,
         scaleEnabled: false, // Bloque le zoom (dézoom/zoom désactivé)
@@ -107,19 +133,24 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         child: Container(
           width: 3000, // Largeur généreuse
           height: 5000, // Hauteur généreuse
-          padding: const EdgeInsets.symmetric(horizontal: 1000, vertical: 1000), // Centrage des nodes dans le container
+          padding: const EdgeInsets.symmetric(
+            horizontal: 1000,
+            vertical: 1000,
+          ), // Centrage des nodes dans le container
           child: Stack(
             children: [
               CustomPaint(
                 size: const Size(1000, 3000),
                 painter: MapConnectionPainter(nodes: nodes),
               ),
-              ...nodes.map((node) => _MapNodeWidget(
-                    node: node,
-                    isAvailable: _isNodeAvailable(node, nodes, currentNodeId),
-                    isCurrent: node.id == currentNodeId,
-                    onTap: () => _onNodeTap(context, ref, node),
-                  )),
+              ...nodes.map(
+                (node) => _MapNodeWidget(
+                  node: node,
+                  isAvailable: _isNodeAvailable(node, nodes, currentNodeId),
+                  isCurrent: node.id == currentNodeId,
+                  onTap: () => _onNodeTap(context, ref, node),
+                ),
+              ),
             ],
           ),
         ),
@@ -127,11 +158,15 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     );
   }
 
-  bool _isNodeAvailable(MapNode node, List<MapNode> allNodes, String? currentNodeId) {
+  bool _isNodeAvailable(
+    MapNode node,
+    List<MapNode> allNodes,
+    String? currentNodeId,
+  ) {
     if (currentNodeId == null) {
       return node.id.startsWith('node_0_');
     }
-    
+
     try {
       final currentNode = allNodes.firstWhere((n) => n.id == currentNodeId);
       return currentNode.connections.contains(node.id);
@@ -143,7 +178,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
 
   void _onNodeTap(BuildContext context, WidgetRef ref, MapNode node) {
     ref.read(runProvider.notifier).travelToNode(node.id);
-    
+
     Widget destination;
     switch (node.type) {
       case MapNodeType.combat:
@@ -152,7 +187,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         destination = const GameScreen();
         break;
       case MapNodeType.shop:
-        destination = const ShopScreen(); 
+        destination = const ShopScreen();
         break;
       case MapNodeType.rest:
         destination = const GameScreen();
@@ -162,9 +197,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         break;
     }
 
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => destination),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => destination));
   }
 }
 
@@ -226,17 +261,33 @@ class _MapNodeWidget extends StatelessWidget {
                 width: 70,
                 height: 70,
                 decoration: BoxDecoration(
-                  color: isCurrent ? const Color(0xFF2A2A40) : const Color(0xFF1A1A2E),
+                  color: isCurrent
+                      ? const Color(0xFF2A2A40)
+                      : const Color(0xFF1A1A2E),
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: isCurrent ? Colors.yellow : (isAvailable ? color : color.withValues(alpha: 0.5)),
+                    color: isCurrent
+                        ? Colors.yellow
+                        : (isAvailable ? color : color.withValues(alpha: 0.5)),
                     width: isCurrent ? 4 : 2,
                   ),
-                  boxShadow: isCurrent ? [
-                    BoxShadow(color: Colors.yellow.withValues(alpha: 0.5), blurRadius: 15, spreadRadius: 2)
-                  ] : [],
+                  boxShadow: isCurrent
+                      ? [
+                          BoxShadow(
+                            color: Colors.yellow.withValues(alpha: 0.5),
+                            blurRadius: 15,
+                            spreadRadius: 2,
+                          ),
+                        ]
+                      : [],
                 ),
-                child: Icon(icon, color: isAvailable || isCurrent ? color : color.withValues(alpha: 0.5), size: 35),
+                child: Icon(
+                  icon,
+                  color: isAvailable || isCurrent
+                      ? color
+                      : color.withValues(alpha: 0.5),
+                  size: 35,
+                ),
               ),
             ),
             if (node.isCompleted)
@@ -277,5 +328,6 @@ class MapConnectionPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant MapConnectionPainter oldDelegate) => oldDelegate.nodes != nodes;
+  bool shouldRepaint(covariant MapConnectionPainter oldDelegate) =>
+      oldDelegate.nodes != nodes;
 }

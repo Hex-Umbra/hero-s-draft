@@ -30,7 +30,11 @@ class UiCard extends StatelessWidget {
             border: Border.all(color: Colors.amber, width: 1.5),
             borderRadius: BorderRadius.circular(8),
             boxShadow: [
-              BoxShadow(color: Colors.black.withAlpha(128), blurRadius: 6, offset: const Offset(0, 3)),
+              BoxShadow(
+                color: Colors.black.withAlpha(128),
+                blurRadius: 6,
+                offset: const Offset(0, 3),
+              ),
             ],
           ),
           child: Stack(
@@ -41,13 +45,17 @@ class UiCard extends StatelessWidget {
                   children: [
                     // Titre
                     Text(
-                      title, 
-                      style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold), 
+                      title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
                       textAlign: TextAlign.center,
                       maxLines: 2,
                     ),
                     const Divider(color: Colors.white24, height: 12),
-                    
+
                     // Rareté
                     if (rarity != null)
                       Text(
@@ -59,26 +67,32 @@ class UiCard extends StatelessWidget {
                           fontStyle: FontStyle.italic,
                         ),
                       ),
-                    
+
                     // Cible
                     if (target != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 2),
                         child: Text(
                           'Cible : $target',
-                          style: const TextStyle(color: Colors.white70, fontSize: 9),
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 9,
+                          ),
                         ),
                       ),
-                      
+
                     const SizedBox(height: 8),
-                    
+
                     // Description
                     Expanded(
                       child: Center(
                         child: SingleChildScrollView(
                           child: Text(
-                            description, 
-                            style: const TextStyle(color: Colors.amberAccent, fontSize: 11), 
+                            description,
+                            style: const TextStyle(
+                              color: Colors.amberAccent,
+                              fontSize: 11,
+                            ),
                             textAlign: TextAlign.center,
                           ),
                         ),
@@ -87,7 +101,7 @@ class UiCard extends StatelessWidget {
                   ],
                 ),
               ),
-              
+
               // Coût en Mana (Haut Gauche)
               if (cost != null)
                 Positioned(
@@ -99,11 +113,17 @@ class UiCard extends StatelessWidget {
                       color: const Color(0xFF9B59B6), // Couleur Mana
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.white70, width: 1),
-                      boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
+                      boxShadow: const [
+                        BoxShadow(color: Colors.black26, blurRadius: 4),
+                      ],
                     ),
                     child: Text(
                       '$cost',
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                      ),
                     ),
                   ),
                 ),

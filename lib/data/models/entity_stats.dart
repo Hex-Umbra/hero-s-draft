@@ -43,13 +43,13 @@ class EntityStats {
   EntityStats addStatus(StatusEffect effect) {
     final index = statuses.indexWhere((s) => s.id == effect.id);
     List<StatusEffect> newStatuses = List.from(statuses);
-    
+
     if (index != -1) {
       newStatuses[index] = newStatuses[index].combine(effect);
     } else {
       newStatuses.add(effect);
     }
-    
+
     return copyWith(statuses: newStatuses);
   }
 
@@ -59,7 +59,7 @@ class EntityStats {
         .map((s) => s.copyWith(duration: s.duration - 1))
         .where((s) => s.duration > 0)
         .toList();
-    
+
     return copyWith(statuses: newStatuses);
   }
 
@@ -76,7 +76,7 @@ class EntityStats {
 
   EntityStats takeDamage(int amount) {
     if (amount <= 0) return this;
-    
+
     // 2. Absorption via Armure
     int damageAfterArmor = amount - armure;
     int newArmor = armure;

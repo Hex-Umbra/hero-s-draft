@@ -9,7 +9,12 @@ import '../../models/data/card_data.dart';
 import '../heros_draft_game.dart';
 import 'entities/enemy_card.dart';
 
-class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, HoverCallbacks, HasGameReference<HerosDraftGame> {
+class CardComponent extends PositionComponent
+    with
+        DragCallbacks,
+        TapCallbacks,
+        HoverCallbacks,
+        HasGameReference<HerosDraftGame> {
   final CardInstance card;
 
   @override
@@ -37,18 +42,18 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
     }
     return desc.trim();
   }
-  
+
   Vector2 originalPosition = Vector2.zero();
   double originalAngle = 0;
   int basePriority = 10;
-  
+
   bool isDragging = false;
   double _targetTilt = 0;
   bool _isHoveringCancelZone = false;
 
   @override
   bool isHovered = false;
-  
+
   // Paramètres visuels
   static const double cardWidth = 140;
   static const double cardHeight = 196;
@@ -58,7 +63,7 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
     ..color = Colors.blueAccent
     ..style = PaintingStyle.stroke
     ..strokeWidth = 3;
-    
+
   late TextComponent nameText;
   late TextComponent costText;
   late TextComponent descriptionText;
@@ -114,15 +119,17 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
             curve: Curves.easeOut,
             // Vitesse aléatoire pour l'éparpillement
             from: position.clone(),
-            to: position + Vector2((rand.nextDouble() - 0.5) * 40, (rand.nextDouble() - 0.5) * 40),
+            to:
+                position +
+                Vector2(
+                  (rand.nextDouble() - 0.5) * 40,
+                  (rand.nextDouble() - 0.5) * 40,
+                ),
             child: ScaledParticle(
               scale: 1.0,
               // Une petite étincelle (cercle de rayon 2)
               // Le cercle reçoit directement le Paint avec la couleur arc-en-ciel
-              child: CircleParticle(
-                radius: 2,
-                paint: Paint()..color = color,
-              ),
+              child: CircleParticle(radius: 2, paint: Paint()..color = color),
             ),
           ),
         ),
@@ -141,9 +148,16 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
     nameText = TextComponent(
       text: card.data.name,
       textRenderer: TextPaint(
-        style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 13,
+          fontWeight: FontWeight.bold,
+        ),
       ),
-      position: Vector2(size.x / 2 + 12, 12), // Décalé vers la droite pour éviter le mana
+      position: Vector2(
+        size.x / 2 + 12,
+        12,
+      ), // Décalé vers la droite pour éviter le mana
       anchor: Anchor.topCenter,
     );
     add(nameText);
@@ -152,7 +166,11 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
     costText = TextComponent(
       text: '${card.currentCost}',
       textRenderer: TextPaint(
-        style: const TextStyle(color: Colors.lightBlueAccent, fontSize: 22, fontWeight: FontWeight.bold),
+        style: const TextStyle(
+          color: Colors.lightBlueAccent,
+          fontSize: 22,
+          fontWeight: FontWeight.bold,
+        ),
       ),
       position: Vector2(16, 16),
       anchor: Anchor.center,
@@ -182,7 +200,7 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
 
     // Mise à jour de l'échelle si on n'est pas en train de drag ou focus
     if (!isDragging && game.focusedCard != this) {
-       scale = Vector2.all(game.scaleFactor * 0.75);
+      scale = Vector2.all(game.scaleFactor * 0.75);
     }
   }
 
@@ -199,7 +217,8 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
       if (desc.length > 20) {
         int spaceIdx = desc.indexOf(' ', 15);
         if (spaceIdx != -1 && spaceIdx < desc.length - 1) {
-          desc = '${desc.substring(0, spaceIdx)}\n${desc.substring(spaceIdx + 1)}';
+          desc =
+              '${desc.substring(0, spaceIdx)}\n${desc.substring(spaceIdx + 1)}';
         }
       }
     }
@@ -210,12 +229,12 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
   void render(Canvas canvas) {
     final rect = size.toRect();
     final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(10));
-    
+
     // Fond
     canvas.drawRRect(rrect, backgroundPaint);
     // Bordure
     canvas.drawRRect(rrect, borderPaint);
-    
+
     super.render(canvas);
   }
 
@@ -223,7 +242,8 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
   void onTapDown(TapDownEvent event) {
     super.onTapDown(event);
     game.setFocusedCard(this);
-    event.continuePropagation = false; // Empêche l'événement de se propager au jeu (qui annulerait le focus)
+    event.continuePropagation =
+        false; // Empêche l'événement de se propager au jeu (qui annulerait le focus)
   }
 
   void _clearEffects() {
@@ -238,7 +258,7 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
     super.onDragStart(event);
     isDragging = true;
     _targetTilt = 0;
-    
+
     // Nettoie proprement le focus/hover au niveau du jeu,
     // (le flag isDragging = true empêchera setFocusedCard d'ajouter une animation de retour)
     if (game.focusedCard == this) {
@@ -247,13 +267,13 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
     if (game.hoveredCard == this) {
       game.setHoveredCard(null);
     }
-    
+
     _clearEffects();
-    priority = 200; 
-    
+    priority = 200;
+
     // La carte se remet droite et s'agrandit pour le drag
     angle = 0;
-    scale = Vector2.all(game.scaleFactor * 0.75 * 1.25); 
+    scale = Vector2.all(game.scaleFactor * 0.75 * 1.25);
   }
 
   @override
@@ -264,7 +284,7 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
     // Calcul du tilt dynamique basé sur la vitesse horizontale
     // On limite l'inclinaison pour ne pas faire de tours complets
     _targetTilt = (event.canvasDelta.x * 0.08).clamp(-0.4, 0.4);
-    
+
     // Feedback visuel de zone de sécurité (annulation)
     // On utilise désormais 80% de la hauteur de l'écran comme seuil
     bool isInCancelZone = position.y > game.size.y * 0.8;
@@ -275,7 +295,9 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
 
     // Gestion du ciblage (Arrow) - Uniquement si on n'est pas en zone d'annulation
     if (card.data.target == CardTarget.singleEnemy) {
-      EnemyCard? hoveredEnemy = _isHoveringCancelZone ? null : _findHoveredEnemy(position);
+      EnemyCard? hoveredEnemy = _isHoveringCancelZone
+          ? null
+          : _findHoveredEnemy(position);
       game.highlightEnemy(hoveredEnemy);
     }
   }
@@ -287,14 +309,20 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
       add(ScaleEffect.to(Vector2.all(0.9), EffectController(duration: 0.1)));
       backgroundPaint.color = const Color(0xFF2A2A3D).withAlpha(150);
       borderPaint.color = Colors.grey;
-      
+
       final nameStyle = (nameText.textRenderer as TextPaint).style;
       final costStyle = (costText.textRenderer as TextPaint).style;
       final descStyle = (descriptionText.textRenderer as TextPaint).style;
 
-      nameText.textRenderer = TextPaint(style: nameStyle.copyWith(color: Colors.white.withAlpha(150)));
-      costText.textRenderer = TextPaint(style: costStyle.copyWith(color: Colors.lightBlueAccent.withAlpha(150)));
-      descriptionText.textRenderer = TextPaint(style: descStyle.copyWith(color: Colors.white70.withAlpha(150)));
+      nameText.textRenderer = TextPaint(
+        style: nameStyle.copyWith(color: Colors.white.withAlpha(150)),
+      );
+      costText.textRenderer = TextPaint(
+        style: costStyle.copyWith(color: Colors.lightBlueAccent.withAlpha(150)),
+      );
+      descriptionText.textRenderer = TextPaint(
+        style: descStyle.copyWith(color: Colors.white70.withAlpha(150)),
+      );
     } else {
       // Effet actif : grand, opaque, bordure bleue
       add(ScaleEffect.to(Vector2.all(1.25), EffectController(duration: 0.1)));
@@ -305,9 +333,15 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
       final costStyle = (costText.textRenderer as TextPaint).style;
       final descStyle = (descriptionText.textRenderer as TextPaint).style;
 
-      nameText.textRenderer = TextPaint(style: nameStyle.copyWith(color: Colors.white));
-      costText.textRenderer = TextPaint(style: costStyle.copyWith(color: Colors.lightBlueAccent));
-      descriptionText.textRenderer = TextPaint(style: descStyle.copyWith(color: Colors.white70));
+      nameText.textRenderer = TextPaint(
+        style: nameStyle.copyWith(color: Colors.white),
+      );
+      costText.textRenderer = TextPaint(
+        style: costStyle.copyWith(color: Colors.lightBlueAccent),
+      );
+      descriptionText.textRenderer = TextPaint(
+        style: descStyle.copyWith(color: Colors.white70),
+      );
     }
   }
 
@@ -317,7 +351,7 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
     isDragging = false;
     _targetTilt = 0;
     game.setFocusedCard(null); // On enlève le focus systématiquement
-    
+
     if (_isHoveringCancelZone) {
       _returnToHand();
       game.highlightEnemy(null);
@@ -326,7 +360,7 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
 
     EnemyCard? targetedEnemy;
     if (card.data.target == CardTarget.singleEnemy) {
-       targetedEnemy = game.highlightedEnemy;
+      targetedEnemy = game.highlightedEnemy;
     }
 
     bool played = game.tryPlayCard(this, targetedEnemy);
@@ -334,10 +368,10 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
     if (!played) {
       _returnToHand();
     }
-    
+
     game.highlightEnemy(null);
   }
-  
+
   @override
   void onDragCancel(DragCancelEvent event) {
     super.onDragCancel(event);
@@ -359,13 +393,27 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
 
   void _returnToHand() {
     _isHoveringCancelZone = false;
-    
+
     // Reset visual state
     backgroundPaint.color = const Color(0xFF2A2A3D);
     borderPaint.color = Colors.blueAccent;
-    nameText.textRenderer = TextPaint(style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold));
-    costText.textRenderer = TextPaint(style: const TextStyle(color: Colors.lightBlueAccent, fontSize: 24, fontWeight: FontWeight.bold));
-    descriptionText.textRenderer = TextPaint(style: const TextStyle(color: Colors.white70, fontSize: 14));
+    nameText.textRenderer = TextPaint(
+      style: const TextStyle(
+        color: Colors.white,
+        fontSize: 16,
+        fontWeight: FontWeight.bold,
+      ),
+    );
+    costText.textRenderer = TextPaint(
+      style: const TextStyle(
+        color: Colors.lightBlueAccent,
+        fontSize: 24,
+        fontWeight: FontWeight.bold,
+      ),
+    );
+    descriptionText.textRenderer = TextPaint(
+      style: const TextStyle(color: Colors.white70, fontSize: 14),
+    );
 
     _clearEffects();
 
@@ -387,8 +435,8 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
         EffectController(duration: 0.4, curve: Curves.elasticOut),
       ),
     );
-    
-  priority = basePriority;
+
+    priority = basePriority;
   }
 
   void playAnimation(EnemyCard? target, {required VoidCallback onComplete}) {
@@ -402,9 +450,15 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
     // Flash blanc (on change les paints)
     backgroundPaint.color = Colors.white;
     borderPaint.color = Colors.white;
-    nameText.textRenderer = TextPaint(style: const TextStyle(color: Colors.transparent));
-    costText.textRenderer = TextPaint(style: const TextStyle(color: Colors.transparent));
-    descriptionText.textRenderer = TextPaint(style: const TextStyle(color: Colors.transparent));
+    nameText.textRenderer = TextPaint(
+      style: const TextStyle(color: Colors.transparent),
+    );
+    costText.textRenderer = TextPaint(
+      style: const TextStyle(color: Colors.transparent),
+    );
+    descriptionText.textRenderer = TextPaint(
+      style: const TextStyle(color: Colors.transparent),
+    );
 
     add(
       SequenceEffect([
@@ -434,7 +488,7 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
   void _spawnImpactParticles(Vector2 impactPos) {
     // Éclat de particules de la couleur de la bordure (bleu par défaut)
     final color = Colors.blueAccent;
-    
+
     game.add(
       ParticleSystemComponent(
         particle: Particle.generate(
@@ -443,13 +497,15 @@ class CardComponent extends PositionComponent with DragCallbacks, TapCallbacks, 
           generator: (i) => MovingParticle(
             curve: Curves.easeOut,
             from: impactPos,
-            to: impactPos + Vector2((rand.nextDouble() - 0.5) * 200, (rand.nextDouble() - 0.5) * 200),
+            to:
+                impactPos +
+                Vector2(
+                  (rand.nextDouble() - 0.5) * 200,
+                  (rand.nextDouble() - 0.5) * 200,
+                ),
             child: ScaledParticle(
               scale: 1.5,
-              child: CircleParticle(
-                radius: 2,
-                paint: Paint()..color = color,
-              ),
+              child: CircleParticle(radius: 2, paint: Paint()..color = color),
             ),
           ),
         ),

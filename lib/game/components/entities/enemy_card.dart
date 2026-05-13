@@ -14,14 +14,15 @@ import 'intention_indicator.dart';
 import 'status_indicator.dart';
 import '../../heros_draft_game.dart';
 
-class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<HerosDraftGame>, HasPaint {
+class EnemyCard extends PositionComponent
+    with TapCallbacks, HasGameReference<HerosDraftGame>, HasPaint {
   EntityStats stats;
   final EnemyData? data;
   final bool isBoss;
   final void Function(EnemyCard) onTapEnemy;
 
   late final RectangleComponent borderInfo;
-  
+
   late final StatBadge hpBadge;
   late final IntentionIndicator intentionIndicator;
   late final StatBadge armorBadge;
@@ -43,7 +44,7 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
   @override
   Future<void> onLoad() async {
     anchor = Anchor.center;
-    
+
     // Appliquer l'échelle initiale (Agrandie pour le terrain)
     scale = Vector2.all(game.scaleFactor * 1.3);
 
@@ -66,7 +67,7 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
     add(borderInfo);
 
     hpBadge = StatBadge(
-      type: StatType.hp, 
+      type: StatType.hp,
       value: '${stats.currentPv}/${stats.maxPv}',
       isCircle: true,
       fillPercentage: stats.maxPv > 0 ? stats.currentPv / stats.maxPv : 1.0,
@@ -77,15 +78,24 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
     final random = Random();
     final roll = random.nextInt(100);
     if (roll < 60) {
-      currentIntent = EnemyIntent(type: IntentType.attack, value: stats.attaque);
+      currentIntent = EnemyIntent(
+        type: IntentType.attack,
+        value: stats.attaque,
+      );
     } else if (roll < 85) {
-      currentIntent = EnemyIntent(type: IntentType.defend, value: 5 + random.nextInt(6));
+      currentIntent = EnemyIntent(
+        type: IntentType.defend,
+        value: 5 + random.nextInt(6),
+      );
     } else {
       currentIntent = EnemyIntent(type: IntentType.buff, value: 2);
     }
 
     intentionIndicator = IntentionIndicator(initialIntent: currentIntent);
-    intentionIndicator.position = Vector2(size.x / 2, -30); // Juste au-dessus de la carte
+    intentionIndicator.position = Vector2(
+      size.x / 2,
+      -30,
+    ); // Juste au-dessus de la carte
     add(intentionIndicator);
 
     armorBadge = StatBadge(type: StatType.armor, value: '${stats.armure}');
@@ -96,12 +106,18 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
     attackBadge.position = Vector2(-12, 55);
     add(attackBadge);
 
-    manaBadge = StatBadge(type: StatType.mana, value: '${stats.currentMana}/${stats.maxMana}');
+    manaBadge = StatBadge(
+      type: StatType.mana,
+      value: '${stats.currentMana}/${stats.maxMana}',
+    );
     manaBadge.position = Vector2(-12, 85);
     add(manaBadge);
 
     statusIndicator = StatusIndicator(statuses: stats.statuses);
-    statusIndicator.position = Vector2(0, size.y + 10); // En dessous de la carte
+    statusIndicator.position = Vector2(
+      0,
+      size.y + 10,
+    ); // En dessous de la carte
     add(statusIndicator);
 
     _refreshBadges();
@@ -117,18 +133,24 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
   void rollIntent() {
     final random = Random();
     final roll = random.nextInt(100);
-    
+
     if (roll < 60) {
       // 60% Attack
-      currentIntent = EnemyIntent(type: IntentType.attack, value: stats.attaque);
+      currentIntent = EnemyIntent(
+        type: IntentType.attack,
+        value: stats.attaque,
+      );
     } else if (roll < 85) {
       // 25% Defend
-      currentIntent = EnemyIntent(type: IntentType.defend, value: 5 + random.nextInt(6));
+      currentIntent = EnemyIntent(
+        type: IntentType.defend,
+        value: 5 + random.nextInt(6),
+      );
     } else {
       // 15% Buff
       currentIntent = EnemyIntent(type: IntentType.buff, value: 2);
     }
-    
+
     intentionIndicator.updateIntent(currentIntent);
   }
 
@@ -137,22 +159,26 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
       '${stats.currentPv}/${stats.maxPv}',
       fillPercentage: stats.maxPv > 0 ? stats.currentPv / stats.maxPv : 0,
       tooltipTitle: 'POINTS DE VIE',
-      tooltipDescription: 'Santé actuelle de l\'ennemi : ${stats.currentPv} / ${stats.maxPv}.',
+      tooltipDescription:
+          'Santé actuelle de l\'ennemi : ${stats.currentPv} / ${stats.maxPv}.',
     );
     armorBadge.updateValue(
       '${stats.armure}',
       tooltipTitle: 'ARMURE',
-      tooltipDescription: 'L\'ennemi possède ${stats.armure} d\'armure. Elle doit être brisée avant de toucher aux PV.',
+      tooltipDescription:
+          'L\'ennemi possède ${stats.armure} d\'armure. Elle doit être brisée avant de toucher aux PV.',
     );
     attackBadge.updateValue(
       stats.attaque.toString(),
       tooltipTitle: 'FORCE',
-      tooltipDescription: 'L\'ennemi inflige ${stats.attaque} dégâts de base avec ses attaques.',
+      tooltipDescription:
+          'L\'ennemi inflige ${stats.attaque} dégâts de base avec ses attaques.',
     );
     manaBadge.updateValue(
       '${stats.currentMana}/${stats.maxMana}',
       tooltipTitle: 'MANA',
-      tooltipDescription: 'Énergie de l\'ennemi. Actuellement : ${stats.currentMana}/${stats.maxMana}.',
+      tooltipDescription:
+          'Énergie de l\'ennemi. Actuellement : ${stats.currentMana}/${stats.maxMana}.',
     );
     statusIndicator.updateStatuses(stats.statuses);
   }
@@ -181,14 +207,17 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
 
   void shakeAndFlashAnimation() {
     // TODO: Audio Hook - sfx_impact_heavy (Jouer un son d'impact lors de la réception de dégâts)
-    
+
     // 1. Tremblement (Shake)
     // On utilise un petit effet de va-et-vient aléatoire
     final rand = Random();
     for (int i = 0; i < 4; i++) {
       add(
         MoveEffect.by(
-          Vector2((rand.nextDouble() - 0.5) * 20, (rand.nextDouble() - 0.5) * 20),
+          Vector2(
+            (rand.nextDouble() - 0.5) * 20,
+            (rand.nextDouble() - 0.5) * 20,
+          ),
           EffectController(duration: 0.025, alternate: true),
         ),
       );
@@ -226,16 +255,20 @@ class EnemyCard extends PositionComponent with TapCallbacks, HasGameReference<He
       updatedStats = updatedStats.takeDamage(poisonDamage);
     }
     if (strengthGain > 0) {
-      updatedStats = updatedStats.addStatus(StatusEffect(
-        id: 'strength',
-        name: 'Force',
-        type: StatusType.buff,
-        value: strengthGain,
-        duration: 1,
-      ));
+      updatedStats = updatedStats.addStatus(
+        StatusEffect(
+          id: 'strength',
+          name: 'Force',
+          type: StatusType.buff,
+          value: strengthGain,
+          duration: 1,
+        ),
+      );
     }
     if (armorGain > 0) {
-      updatedStats = updatedStats.copyWith(armure: updatedStats.armure + armorGain);
+      updatedStats = updatedStats.copyWith(
+        armure: updatedStats.armure + armorGain,
+      );
     }
 
     updateStats(updatedStats);

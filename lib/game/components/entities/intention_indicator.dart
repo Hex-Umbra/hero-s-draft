@@ -4,14 +4,17 @@ import '../../../models/enemy_intent.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../heros_draft_game.dart';
 
-class IntentionIndicator extends PositionComponent with HasPaint, HasGameReference<HerosDraftGame> {
+class IntentionIndicator extends PositionComponent
+    with HasPaint, HasGameReference<HerosDraftGame> {
   EnemyIntent? _intent;
   late final RectangleComponent _bg;
   late final TextComponent _label;
   late final TextComponent _iconText;
   late final TextComponent _valueText;
 
-  IntentionIndicator({EnemyIntent? initialIntent}) : _intent = initialIntent, super(size: Vector2(90, 45));
+  IntentionIndicator({EnemyIntent? initialIntent})
+    : _intent = initialIntent,
+      super(size: Vector2(90, 45));
 
   @override
   Future<void> onLoad() async {
@@ -24,13 +27,15 @@ class IntentionIndicator extends PositionComponent with HasPaint, HasGameReferen
     add(_bg);
 
     // Bordure plus visible
-    _bg.add(RectangleComponent(
-      size: size,
-      paint: Paint()
-        ..color = Colors.amber.withAlpha(180)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.5,
-    ));
+    _bg.add(
+      RectangleComponent(
+        size: size,
+        paint: Paint()
+          ..color = Colors.amber.withAlpha(180)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.5,
+      ),
+    );
 
     // Label "Next action"
     final l10n = AppLocalizations.of(game.buildContext!)!;
@@ -50,9 +55,7 @@ class IntentionIndicator extends PositionComponent with HasPaint, HasGameReferen
 
     _iconText = TextComponent(
       text: '',
-      textRenderer: TextPaint(
-        style: const TextStyle(fontSize: 16),
-      ),
+      textRenderer: TextPaint(style: const TextStyle(fontSize: 16)),
       anchor: Anchor.centerLeft,
       position: Vector2(10, size.y / 2 + 8),
     );
@@ -71,7 +74,7 @@ class IntentionIndicator extends PositionComponent with HasPaint, HasGameReferen
       position: Vector2(size.x - 10, size.y / 2 + 8),
     );
     add(_valueText);
-    
+
     _updateVisual();
   }
 
@@ -98,26 +101,74 @@ class IntentionIndicator extends PositionComponent with HasPaint, HasGameReferen
       case IntentType.attack:
         _iconText.text = 'ATK';
         _valueText.text = '${_intent!.value}';
-        _valueText.textRenderer = TextPaint(style: const TextStyle(color: Color(0xFFFF5252), fontWeight: FontWeight.bold, fontSize: 18));
-        _iconText.textRenderer = TextPaint(style: const TextStyle(color: Color(0xFFFF5252), fontWeight: FontWeight.bold, fontSize: 12));
+        _valueText.textRenderer = TextPaint(
+          style: const TextStyle(
+            color: Color(0xFFFF5252),
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        );
+        _iconText.textRenderer = TextPaint(
+          style: const TextStyle(
+            color: Color(0xFFFF5252),
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+          ),
+        );
         break;
       case IntentType.defend:
         _iconText.text = 'DEF';
         _valueText.text = '${_intent!.value}';
-        _valueText.textRenderer = TextPaint(style: const TextStyle(color: Color(0xFF448AFF), fontWeight: FontWeight.bold, fontSize: 18));
-        _iconText.textRenderer = TextPaint(style: const TextStyle(color: Color(0xFF448AFF), fontWeight: FontWeight.bold, fontSize: 12));
+        _valueText.textRenderer = TextPaint(
+          style: const TextStyle(
+            color: Color(0xFF448AFF),
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        );
+        _iconText.textRenderer = TextPaint(
+          style: const TextStyle(
+            color: Color(0xFF448AFF),
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+          ),
+        );
         break;
       case IntentType.buff:
         _iconText.text = 'BUF';
         _valueText.text = '+${_intent!.value}';
-        _valueText.textRenderer = TextPaint(style: const TextStyle(color: Color(0xFFE040FB), fontWeight: FontWeight.bold, fontSize: 18));
-        _iconText.textRenderer = TextPaint(style: const TextStyle(color: Color(0xFFE040FB), fontWeight: FontWeight.bold, fontSize: 12));
+        _valueText.textRenderer = TextPaint(
+          style: const TextStyle(
+            color: Color(0xFFE040FB),
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        );
+        _iconText.textRenderer = TextPaint(
+          style: const TextStyle(
+            color: Color(0xFFE040FB),
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+          ),
+        );
         break;
       case IntentType.debuffDeck:
         _iconText.text = 'CUR';
         _valueText.text = '${_intent!.value}';
-        _valueText.textRenderer = TextPaint(style: const TextStyle(color: Color(0xFF69F0AE), fontWeight: FontWeight.bold, fontSize: 18));
-        _iconText.textRenderer = TextPaint(style: const TextStyle(color: Color(0xFF69F0AE), fontWeight: FontWeight.bold, fontSize: 12));
+        _valueText.textRenderer = TextPaint(
+          style: const TextStyle(
+            color: Color(0xFF69F0AE),
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        );
+        _iconText.textRenderer = TextPaint(
+          style: const TextStyle(
+            color: Color(0xFF69F0AE),
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+          ),
+        );
         break;
     }
   }

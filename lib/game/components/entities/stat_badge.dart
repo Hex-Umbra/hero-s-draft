@@ -5,7 +5,8 @@ import '../../heros_draft_game.dart';
 
 enum StatType { hp, armor, attack, mana }
 
-class StatBadge extends PositionComponent with TapCallbacks, HasGameReference<HerosDraftGame> {
+class StatBadge extends PositionComponent
+    with TapCallbacks, HasGameReference<HerosDraftGame> {
   final StatType type;
   final bool isCircle;
   String _value;
@@ -14,7 +15,7 @@ class StatBadge extends PositionComponent with TapCallbacks, HasGameReference<He
   double _fillPercentage;
   String? _customTooltipTitle;
   String? _customTooltipDescription;
-  
+
   late TextComponent iconComponent;
   late TextComponent textComponent;
 
@@ -27,7 +28,7 @@ class StatBadge extends PositionComponent with TapCallbacks, HasGameReference<He
     double fillPercentage = 1.0,
     String? tooltipTitle,
     String? tooltipDescription,
-  }) : _value = value, 
+  }) : _value = value,
        _baseValue = baseValue,
        _bonusValue = bonusValue,
        _fillPercentage = fillPercentage,
@@ -67,29 +68,39 @@ class StatBadge extends PositionComponent with TapCallbacks, HasGameReference<He
 
     if (isCircle) {
       // ... (Circle logic remains same, but we could use it for Hero HP too if requested)
-      add(CircleComponent(
-        radius: size.x / 2,
-        paint: Paint()..color = Colors.black.withAlpha(220),
-      ));
+      add(
+        CircleComponent(
+          radius: size.x / 2,
+          paint: Paint()..color = Colors.black.withAlpha(220),
+        ),
+      );
 
-      add(CircleProgressComponent(
-        radius: size.x / 2,
-        percentage: _fillPercentage,
-        color: color,
-      ));
+      add(
+        CircleProgressComponent(
+          radius: size.x / 2,
+          percentage: _fillPercentage,
+          color: color,
+        ),
+      );
 
-      add(CircleComponent(
-        radius: size.x / 2,
-        paint: Paint()
-          ..color = Colors.white.withAlpha(100)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.5,
-      ));
+      add(
+        CircleComponent(
+          radius: size.x / 2,
+          paint: Paint()
+            ..color = Colors.white.withAlpha(100)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1.5,
+        ),
+      );
 
       textComponent = TextComponent(
         text: _value.split('/').first,
         textRenderer: TextPaint(
-          style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         anchor: Anchor.center,
         position: size / 2,
@@ -104,20 +115,28 @@ class StatBadge extends PositionComponent with TapCallbacks, HasGameReference<He
         size.x = 48;
       }
 
-      add(RectangleComponent(
-        size: size,
-        paint: Paint()..color = Colors.black.withAlpha(200),
-      ));
+      add(
+        RectangleComponent(
+          size: size,
+          paint: Paint()..color = Colors.black.withAlpha(200),
+        ),
+      );
 
-      add(RectangleComponent(
-        size: Vector2(3, size.y),
-        paint: Paint()..color = color,
-      ));
+      add(
+        RectangleComponent(
+          size: Vector2(3, size.y),
+          paint: Paint()..color = color,
+        ),
+      );
 
       iconComponent = TextComponent(
         text: iconText,
         textRenderer: TextPaint(
-          style: TextStyle(color: color, fontSize: 8, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: color,
+            fontSize: 8,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         anchor: Anchor.centerLeft,
         position: Vector2(6, size.y / 2),
@@ -126,10 +145,18 @@ class StatBadge extends PositionComponent with TapCallbacks, HasGameReference<He
 
       if (hasBonus) {
         // Affichage complexe : Total (Base + Bonus) avec mesure dynamique pour un alignement parfait
-        final totalStyle = const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold);
+        final totalStyle = const TextStyle(
+          color: Colors.white,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+        );
         final normalStyle = const TextStyle(color: Colors.white70, fontSize: 8);
-        final bonusStyle = const TextStyle(color: Colors.orangeAccent, fontSize: 8, fontWeight: FontWeight.bold);
-        
+        final bonusStyle = const TextStyle(
+          color: Colors.orangeAccent,
+          fontSize: 8,
+          fontWeight: FontWeight.bold,
+        );
+
         final String part1 = ' ($_baseValue+';
         final String part2 = '$_bonusValue';
         final String part3 = ')';
@@ -146,47 +173,59 @@ class StatBadge extends PositionComponent with TapCallbacks, HasGameReference<He
         final double p1W = measure(part1, normalStyle);
         final double p2W = measure(part2, bonusStyle);
         final double p3W = measure(part3, normalStyle);
-        
+
         final double fullW = totalW + p1W + p2W + p3W;
-        
+
         // On commence aprÃ¨s l'icÃ´ne (environ x=20) et on centre dans l'espace restant
         double currentX = 20 + (size.x - 20 - fullW) / 2;
-        
-        add(TextComponent(
-          text: _value,
-          textRenderer: TextPaint(style: totalStyle),
-          anchor: Anchor.centerLeft,
-          position: Vector2(currentX, size.y / 2),
-        ));
+
+        add(
+          TextComponent(
+            text: _value,
+            textRenderer: TextPaint(style: totalStyle),
+            anchor: Anchor.centerLeft,
+            position: Vector2(currentX, size.y / 2),
+          ),
+        );
         currentX += totalW;
 
-        add(TextComponent(
-          text: part1,
-          textRenderer: TextPaint(style: normalStyle),
-          anchor: Anchor.centerLeft,
-          position: Vector2(currentX, size.y / 2),
-        ));
+        add(
+          TextComponent(
+            text: part1,
+            textRenderer: TextPaint(style: normalStyle),
+            anchor: Anchor.centerLeft,
+            position: Vector2(currentX, size.y / 2),
+          ),
+        );
         currentX += p1W;
 
-        add(TextComponent(
-          text: part2,
-          textRenderer: TextPaint(style: bonusStyle),
-          anchor: Anchor.centerLeft,
-          position: Vector2(currentX, size.y / 2),
-        ));
+        add(
+          TextComponent(
+            text: part2,
+            textRenderer: TextPaint(style: bonusStyle),
+            anchor: Anchor.centerLeft,
+            position: Vector2(currentX, size.y / 2),
+          ),
+        );
         currentX += p2W;
 
-        add(TextComponent(
-          text: part3,
-          textRenderer: TextPaint(style: normalStyle),
-          anchor: Anchor.centerLeft,
-          position: Vector2(currentX, size.y / 2),
-        ));
+        add(
+          TextComponent(
+            text: part3,
+            textRenderer: TextPaint(style: normalStyle),
+            anchor: Anchor.centerLeft,
+            position: Vector2(currentX, size.y / 2),
+          ),
+        );
       } else {
         textComponent = TextComponent(
           text: _value,
           textRenderer: TextPaint(
-            style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           anchor: Anchor.centerRight,
           position: Vector2(size.x - 4, size.y / 2),
@@ -196,13 +235,23 @@ class StatBadge extends PositionComponent with TapCallbacks, HasGameReference<He
     }
   }
 
-  void updateValue(String newValue, {int? baseValue, int? bonusValue, double? fillPercentage, Color? textColor, String? tooltipTitle, String? tooltipDescription}) {
+  void updateValue(
+    String newValue, {
+    int? baseValue,
+    int? bonusValue,
+    double? fillPercentage,
+    Color? textColor,
+    String? tooltipTitle,
+    String? tooltipDescription,
+  }) {
     _value = newValue;
     _baseValue = baseValue;
     _bonusValue = bonusValue;
     if (fillPercentage != null) _fillPercentage = fillPercentage;
     if (tooltipTitle != null) _customTooltipTitle = tooltipTitle;
-    if (tooltipDescription != null) _customTooltipDescription = tooltipDescription;
+    if (tooltipDescription != null) {
+      _customTooltipDescription = tooltipDescription;
+    }
 
     if (isLoaded) {
       _updateVisuals(); // On reconstruit car le layout peut changer (largeur)
@@ -232,13 +281,25 @@ class StatBadge extends PositionComponent with TapCallbacks, HasGameReference<He
 
     switch (type) {
       case StatType.hp:
-        return ('POINTS DE VIE', 'Santé actuelle de l\'entité. Si elle tombe à zéro, l\'entité est vaincue.');
+        return (
+          'POINTS DE VIE',
+          'Santé actuelle de l\'entité. Si elle tombe à zéro, l\'entité est vaincue.',
+        );
       case StatType.armor:
-        return ('ARMURE', 'Réduit les prochains dégâts reçus. L\'armure est consommée avant les PV.');
+        return (
+          'ARMURE',
+          'Réduit les prochains dégâts reçus. L\'armure est consommée avant les PV.',
+        );
       case StatType.attack:
-        return ('FORCE', 'Dégâts de base de l\'entité. Affecte la puissance des attaques.');
+        return (
+          'FORCE',
+          'Dégâts de base de l\'entité. Affecte la puissance des attaques.',
+        );
       case StatType.mana:
-        return ('MANA', 'Énergie utilisée pour lancer des capacités spéciales.');
+        return (
+          'MANA',
+          'Énergie utilisée pour lancer des capacités spéciales.',
+        );
     }
   }
 }
@@ -259,7 +320,7 @@ class CircleProgressComponent extends PositionComponent {
     final paint = Paint()
       ..color = color
       ..style = PaintingStyle.fill;
-    
+
     // Dessine un arc de cercle à partir du haut (-pi/2)
     canvas.drawArc(
       Rect.fromLTWH(0, 0, size.x, size.y),

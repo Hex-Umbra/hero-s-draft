@@ -32,8 +32,10 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
 
   void _initializeShop() {
     final gameData = ref.read(gameDataLoaderProvider).requireValue;
-    final allCards = gameData.cards.where((c) => c.type != CardType.status).toList();
-    
+    final allCards = gameData.cards
+        .where((c) => c.type != CardType.status)
+        .toList();
+
     final rng = Random();
     List<CardData> shuffled = List.from(allCards)..shuffle(rng);
     _cardsForSale = shuffled.take(3).toList();
@@ -47,13 +49,19 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
       });
       final instance = CardInstance(data: card);
       ref.read(deckProvider.notifier).addCardToMasterDeck(instance);
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.purchased(card.name)), backgroundColor: Colors.green),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.purchased(card.name)),
+          backgroundColor: Colors.green,
+        ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.notEnoughGold), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.notEnoughGold),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -62,10 +70,13 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     final runController = ref.read(runProvider.notifier);
     final currentPv = ref.read(runProvider).heroStats.currentPv;
     final maxPv = ref.read(runProvider).heroStats.maxPv;
-    
+
     if (currentPv >= maxPv) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.fullHp), backgroundColor: Colors.orange),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.fullHp),
+          backgroundColor: Colors.orange,
+        ),
       );
       return;
     }
@@ -75,13 +86,19 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
         _purchasedHeal = true;
       });
       runController.heal(amount);
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.healApplied), backgroundColor: Colors.green),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.healApplied),
+          backgroundColor: Colors.green,
+        ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.notEnoughGold), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.notEnoughGold),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -95,7 +112,10 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
       builder: (ctx) {
         return AlertDialog(
           backgroundColor: const Color(0xFF2A2A3D),
-          title: const Text('Choisissez une carte à oublier', style: TextStyle(color: Colors.white)),
+          title: const Text(
+            'Choisissez une carte à oublier',
+            style: TextStyle(color: Colors.white),
+          ),
           content: SizedBox(
             width: double.maxFinite,
             height: 500,
@@ -118,15 +138,23 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                   onTap: () {
                     final runController = ref.read(runProvider.notifier);
                     if (runController.spendGold(price)) {
-                      ref.read(deckProvider.notifier).removeCardFromMasterDeck(card);
+                      ref
+                          .read(deckProvider.notifier)
+                          .removeCardFromMasterDeck(card);
                       Navigator.of(ctx).pop();
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Carte oubliée !'), backgroundColor: Colors.green),
+                        const SnackBar(
+                          content: Text('Carte oubliée !'),
+                          backgroundColor: Colors.green,
+                        ),
                       );
                     } else {
                       Navigator.of(ctx).pop();
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Pas assez d\'or !'), backgroundColor: Colors.red),
+                        const SnackBar(
+                          content: Text('Pas assez d\'or !'),
+                          backgroundColor: Colors.red,
+                        ),
                       );
                     }
                   },
@@ -137,41 +165,52 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Annuler', style: TextStyle(color: Colors.white70)),
-            )
+              child: const Text(
+                'Annuler',
+                style: TextStyle(color: Colors.white70),
+              ),
+            ),
           ],
         );
-      }
+      },
     );
   }
 
   String _getRarityLabel(CardRarity rarity) {
     switch (rarity) {
-      case CardRarity.common: return 'Commun';
-      case CardRarity.uncommon: return 'Peu Commun';
-      case CardRarity.rare: return 'Rare';
-      case CardRarity.epic: return 'Épique';
+      case CardRarity.common:
+        return 'Commun';
+      case CardRarity.uncommon:
+        return 'Peu Commun';
+      case CardRarity.rare:
+        return 'Rare';
+      case CardRarity.epic:
+        return 'Épique';
     }
   }
 
   String _getTargetLabel(CardTarget target) {
     switch (target) {
-      case CardTarget.singleEnemy: return 'Cible unique';
-      case CardTarget.allEnemies: return 'Tous les ennemis';
-      case CardTarget.self: return 'Soi-même';
-      case CardTarget.none: return 'Aucune';
+      case CardTarget.singleEnemy:
+        return 'Cible unique';
+      case CardTarget.allEnemies:
+        return 'Tous les ennemis';
+      case CardTarget.self:
+        return 'Soi-même';
+      case CardTarget.none:
+        return 'Aucune';
     }
   }
 
   void _showCloneModal(int price) {
     final deckState = ref.read(deckProvider);
     final masterDeck = List.of(deckState.masterDeck);
-    
+
     masterDeck.shuffle();
     final options = masterDeck.take(3).toList();
-    
+
     if (options.isEmpty) {
-       return;
+      return;
     }
 
     showDialog(
@@ -179,41 +218,68 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
       builder: (ctx) {
         return AlertDialog(
           backgroundColor: const Color(0xFF2A2A3D),
-          title: const Text('Choisissez une carte à cloner', style: TextStyle(color: Colors.white)),
+          title: const Text(
+            'Choisissez une carte à cloner',
+            style: TextStyle(color: Colors.white),
+          ),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: options.map((card) => ListTile(
-                title: Text(card.data.name, style: const TextStyle(color: Colors.amber)),
-                subtitle: Text('Niveau ${card.level}', style: const TextStyle(color: Colors.white70)),
-                onTap: () {
-                  final runController = ref.read(runProvider.notifier);
-                  if (runController.spendGold(price)) {
-                    ref.read(deckProvider.notifier).addCardToMasterDeck(
-                      CardInstance(data: card.data, level: card.level)
-                    );
-                    Navigator.of(ctx).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Carte clonée !'), backgroundColor: Colors.green),
-                    );
-                  } else {
-                    Navigator.of(ctx).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Pas assez d\'or !'), backgroundColor: Colors.red),
-                    );
-                  }
-                },
-              )).toList(),
+              children: options
+                  .map(
+                    (card) => ListTile(
+                      title: Text(
+                        card.data.name,
+                        style: const TextStyle(color: Colors.amber),
+                      ),
+                      subtitle: Text(
+                        'Niveau ${card.level}',
+                        style: const TextStyle(color: Colors.white70),
+                      ),
+                      onTap: () {
+                        final runController = ref.read(runProvider.notifier);
+                        if (runController.spendGold(price)) {
+                          ref
+                              .read(deckProvider.notifier)
+                              .addCardToMasterDeck(
+                                CardInstance(
+                                  data: card.data,
+                                  level: card.level,
+                                ),
+                              );
+                          Navigator.of(ctx).pop();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Carte clonée !'),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        } else {
+                          Navigator.of(ctx).pop();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Pas assez d\'or !'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                  )
+                  .toList(),
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Annuler', style: TextStyle(color: Colors.white70)),
-            )
+              child: const Text(
+                'Annuler',
+                style: TextStyle(color: Colors.white70),
+              ),
+            ),
           ],
         );
-      }
+      },
     );
   }
 
@@ -227,7 +293,13 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF1E1E2C),
       appBar: AppBar(
-        title: Text(l10n.shop, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text(
+          l10n.shop,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         backgroundColor: Colors.black45,
         elevation: 0,
         actions: [
@@ -235,15 +307,23 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                const Icon(Icons.monetization_on, color: Colors.amber, size: 24),
+                const Icon(
+                  Icons.monetization_on,
+                  color: Colors.amber,
+                  size: 24,
+                ),
                 const SizedBox(width: 4),
                 Text(
                   '${runState.gold}',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.amber),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.amber,
+                  ),
                 ),
               ],
             ),
-          )
+          ),
         ],
         automaticallyImplyLeading: false,
       ),
@@ -255,14 +335,21 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
             children: [
               Text(
                 l10n.cardsForSale,
-                style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 20),
               if (_cardsForSale.isEmpty)
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 40),
                   child: Center(
-                    child: Text('Plus de cartes en stock !', style: TextStyle(color: Colors.white54, fontSize: 18)),
+                    child: Text(
+                      'Plus de cartes en stock !',
+                      style: TextStyle(color: Colors.white54, fontSize: 18),
+                    ),
                   ),
                 )
               else
@@ -297,15 +384,28 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                             const SizedBox(height: 4),
                             ElevatedButton.icon(
                               onPressed: () => _buyCard(card, price),
-                              icon: const Icon(Icons.monetization_on, color: Colors.amber, size: 12),
-                              label: Text('$price', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+                              icon: const Icon(
+                                Icons.monetization_on,
+                                color: Colors.amber,
+                                size: 12,
+                              ),
+                              label: Text(
+                                '$price',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 10,
+                                ),
+                              ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.black45,
                                 foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                  vertical: 0,
+                                ),
                                 minimumSize: const Size(50, 24),
                               ),
-                            )
+                            ),
                           ],
                         ),
                       );
@@ -315,21 +415,49 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
               const Divider(color: Colors.white24, height: 40),
               Text(
                 l10n.services,
-                style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 20),
               Card(
                 color: Colors.black45,
                 child: ListTile(
-                  leading: const Icon(Icons.local_hospital, color: Colors.greenAccent, size: 40),
-                  title: Text(l10n.healingPotion, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                  subtitle: Text(l10n.restoresHp(healAmount), style: const TextStyle(color: Colors.white70)),
+                  leading: const Icon(
+                    Icons.local_hospital,
+                    color: Colors.greenAccent,
+                    size: 40,
+                  ),
+                  title: Text(
+                    l10n.healingPotion,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  subtitle: Text(
+                    l10n.restoresHp(healAmount),
+                    style: const TextStyle(color: Colors.white70),
+                  ),
                   trailing: ElevatedButton.icon(
-                    onPressed: _purchasedHeal ? null : () => _buyHeal(healPrice, healAmount),
-                    icon: const Icon(Icons.monetization_on, color: Colors.amber, size: 18),
-                    label: Text('$healPrice', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    onPressed: _purchasedHeal
+                        ? null
+                        : () => _buyHeal(healPrice, healAmount),
+                    icon: const Icon(
+                      Icons.monetization_on,
+                      color: Colors.amber,
+                      size: 18,
+                    ),
+                    label: Text(
+                      '$healPrice',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _purchasedHeal ? Colors.grey : Colors.green.shade800,
+                      backgroundColor: _purchasedHeal
+                          ? Colors.grey
+                          : Colors.green.shade800,
                       foregroundColor: Colors.white,
                     ),
                   ),
@@ -339,13 +467,33 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
               Card(
                 color: Colors.black45,
                 child: ListTile(
-                  leading: const Icon(Icons.delete_forever, color: Colors.redAccent, size: 40),
-                  title: const Text('Oubli', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                  subtitle: const Text('Retire une carte de votre deck', style: TextStyle(color: Colors.white70)),
+                  leading: const Icon(
+                    Icons.delete_forever,
+                    color: Colors.redAccent,
+                    size: 40,
+                  ),
+                  title: const Text(
+                    'Oubli',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  subtitle: const Text(
+                    'Retire une carte de votre deck',
+                    style: TextStyle(color: Colors.white70),
+                  ),
                   trailing: ElevatedButton.icon(
                     onPressed: () => _showRemovalModal(75),
-                    icon: const Icon(Icons.monetization_on, color: Colors.amber, size: 18),
-                    label: const Text('75', style: TextStyle(fontWeight: FontWeight.bold)),
+                    icon: const Icon(
+                      Icons.monetization_on,
+                      color: Colors.amber,
+                      size: 18,
+                    ),
+                    label: const Text(
+                      '75',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red.shade800,
                       foregroundColor: Colors.white,
@@ -357,13 +505,33 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
               Card(
                 color: Colors.black45,
                 child: ListTile(
-                  leading: const Icon(Icons.content_copy, color: Colors.blueAccent, size: 40),
-                  title: const Text('Miroir Magique', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                  subtitle: const Text('Clone une carte de votre deck', style: TextStyle(color: Colors.white70)),
+                  leading: const Icon(
+                    Icons.content_copy,
+                    color: Colors.blueAccent,
+                    size: 40,
+                  ),
+                  title: const Text(
+                    'Miroir Magique',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  subtitle: const Text(
+                    'Clone une carte de votre deck',
+                    style: TextStyle(color: Colors.white70),
+                  ),
                   trailing: ElevatedButton.icon(
                     onPressed: () => _showCloneModal(150),
-                    icon: const Icon(Icons.monetization_on, color: Colors.amber, size: 18),
-                    label: const Text('150', style: TextStyle(fontWeight: FontWeight.bold)),
+                    icon: const Icon(
+                      Icons.monetization_on,
+                      color: Colors.amber,
+                      size: 18,
+                    ),
+                    label: const Text(
+                      '150',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue.shade800,
                       foregroundColor: Colors.white,
@@ -382,7 +550,13 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                   ref.read(runProvider.notifier).completeCurrentNode();
                   Navigator.of(context).pop();
                 },
-                child: Text(l10n.leaveShop, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                child: Text(
+                  l10n.leaveShop,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ],
           ),

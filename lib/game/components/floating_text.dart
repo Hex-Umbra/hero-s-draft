@@ -46,7 +46,7 @@ class FloatingText extends TextComponent with HasPaint {
   @override
   Future<void> onLoad() async {
     final random = Random();
-    
+
     // TODO: Audio Hook - sfx_ui_pop (Jouer un son de 'pop' lors de l'apparition du texte)
 
     // Initialisation de l'échelle pour l'effet "pop"
@@ -54,8 +54,9 @@ class FloatingText extends TextComponent with HasPaint {
 
     // Trajectoire aléatoire en arc de cercle
     final double driftX = (random.nextDouble() - 0.5) * 80; // Entre -40 et 40
-    double driftY = 60 + random.nextDouble() * 40; // Base positive (vers le bas)
-    
+    double driftY =
+        60 + random.nextDouble() * 40; // Base positive (vers le bas)
+
     if (isUpward) {
       driftY = -driftY; // Inverser pour aller vers le haut
     }

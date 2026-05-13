@@ -47,7 +47,7 @@ class DeckNotifier extends StateNotifier<DeckState> {
   void initializeCombat() {
     final newDrawPile = List<CardInstance>.from(state.masterDeck);
     newDrawPile.shuffle(Random());
-    
+
     state = state.copyWith(
       drawPile: newDrawPile,
       hand: [],
@@ -61,7 +61,7 @@ class DeckNotifier extends StateNotifier<DeckState> {
     var currentDrawPile = List<CardInstance>.from(state.drawPile);
     var currentHand = List<CardInstance>.from(state.hand);
     var currentDiscardPile = List<CardInstance>.from(state.discardPile);
-    
+
     for (int i = 0; i < amount; i++) {
       if (currentDrawPile.isEmpty) {
         if (currentDiscardPile.isEmpty) {
@@ -73,10 +73,10 @@ class DeckNotifier extends StateNotifier<DeckState> {
         currentDrawPile.shuffle(Random());
         currentDiscardPile.clear();
       }
-      
+
       currentHand.add(currentDrawPile.removeLast());
     }
-    
+
     state = state.copyWith(
       drawPile: currentDrawPile,
       hand: currentHand,
@@ -88,28 +88,22 @@ class DeckNotifier extends StateNotifier<DeckState> {
   void shuffleDiscardIntoDraw() {
     var newDrawPile = List<CardInstance>.from(state.drawPile);
     var currentDiscardPile = List<CardInstance>.from(state.discardPile);
-    
+
     newDrawPile.addAll(currentDiscardPile);
     newDrawPile.shuffle(Random());
-    
-    state = state.copyWith(
-      drawPile: newDrawPile,
-      discardPile: [],
-    );
+
+    state = state.copyWith(drawPile: newDrawPile, discardPile: []);
   }
 
   /// Défausse toute la main à la fin du tour
   void discardHand() {
     var currentHand = List<CardInstance>.from(state.hand);
     var currentDiscardPile = List<CardInstance>.from(state.discardPile);
-    
+
     currentDiscardPile.addAll(currentHand);
     currentHand.clear();
-    
-    state = state.copyWith(
-      hand: currentHand,
-      discardPile: currentDiscardPile,
-    );
+
+    state = state.copyWith(hand: currentHand, discardPile: currentDiscardPile);
   }
 
   /// Joue une carte : la retire de la main et l'envoie dans la défausse (ou l'épuise si pouvoir)
@@ -141,21 +135,22 @@ class DeckNotifier extends StateNotifier<DeckState> {
   /// Fusionne 3 cartes identiques en une carte de niveau supérieur
   void mergeCards(String cardId, int level) {
     var currentMasterDeck = List<CardInstance>.from(state.masterDeck);
-    
+
     // Trouve les 3 exemplaires
-    var duplicates = currentMasterDeck.where((c) => c.data.id == cardId && c.level == level).toList();
-    
+    var duplicates = currentMasterDeck
+        .where((c) => c.data.id == cardId && c.level == level)
+        .toList();
+
     if (duplicates.length >= 3) {
       // Retire les 3 exemplaires (en utilisant uniqueId pour être sûr)
       final idsToRemove = duplicates.take(3).map((c) => c.uniqueId).toSet();
       currentMasterDeck.removeWhere((c) => idsToRemove.contains(c.uniqueId));
-      
+
       // Ajoute la carte de niveau supérieur
-      currentMasterDeck.add(CardInstance(
-        data: duplicates[0].data,
-        level: level + 1,
-      ));
-      
+      currentMasterDeck.add(
+        CardInstance(data: duplicates[0].data, level: level + 1),
+      );
+
       state = state.copyWith(masterDeck: currentMasterDeck);
     }
   }

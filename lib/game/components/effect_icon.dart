@@ -5,26 +5,29 @@ import 'package:flutter/material.dart';
 class EffectIcon extends TextComponent with HasPaint {
   final String iconType;
 
-  EffectIcon({
-    required this.iconType,
-    required Vector2 position,
-  }) : super(
-         text: _getEmojiForType(iconType),
-         position: position,
-         anchor: Anchor.center,
-         textRenderer: TextPaint(
-           style: const TextStyle(
-             fontSize: 32,
-             shadows: [
-               Shadow(color: Colors.black, offset: Offset(1, 1), blurRadius: 2),
-             ],
-           ),
-         ),
-       );
+  EffectIcon({required this.iconType, required Vector2 position})
+    : super(
+        text: _getEmojiForType(iconType),
+        position: position,
+        anchor: Anchor.center,
+        textRenderer: TextPaint(
+          style: const TextStyle(
+            fontSize: 32,
+            shadows: [
+              Shadow(color: Colors.black, offset: Offset(1, 1), blurRadius: 2),
+            ],
+          ),
+        ),
+      );
 
   static String _getEmojiForType(String type) {
     if (type == 'defend') return '🛡️';
-    if (type == 'buff' || type == 'armor_buff' || type == 'attack_buff' || type == 'lifesteal_buff') return '✨';
+    if (type == 'buff' ||
+        type == 'armor_buff' ||
+        type == 'attack_buff' ||
+        type == 'lifesteal_buff') {
+      return '✨';
+    }
     return '';
   }
 

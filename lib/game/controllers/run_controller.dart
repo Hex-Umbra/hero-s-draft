@@ -16,7 +16,7 @@ class RunState {
   final String? currentNodeId;
   final int gold;
   final int baseArmor; // Armure permanente (de base + améliorations de draft)
-  
+
   // Variables pour gérer l'état du cooldown des sorts
   final int skill1Cooldown;
   final int skill2Cooldown;
@@ -61,7 +61,9 @@ class RunState {
       heroClassId: heroClassId ?? this.heroClassId,
       relics: relics ?? this.relics,
       mapNodes: mapNodes ?? this.mapNodes,
-      currentNodeId: resetCurrentNode ? null : (currentNodeId ?? this.currentNodeId),
+      currentNodeId: resetCurrentNode
+          ? null
+          : (currentNodeId ?? this.currentNodeId),
       gold: gold ?? this.gold,
       baseArmor: baseArmor ?? this.baseArmor,
       skill1Cooldown: skill1Cooldown ?? this.skill1Cooldown,
@@ -74,7 +76,8 @@ class RunController extends StateNotifier<RunState> {
   RunState get currentState => state;
 
   RunController()
-      : super(RunState(
+    : super(
+        RunState(
           currentLevel: 1,
           act: 1,
           heroClassId: 'paladin',
@@ -87,7 +90,8 @@ class RunController extends StateNotifier<RunState> {
             armure: 20,
             attaque: 0, // Force de base à 0
           ),
-        ));
+        ),
+      );
 
   /// Démarre une nouvelle partie avec la classe choisie
   void startNewRun(HeroData chosenClass) {
@@ -119,7 +123,7 @@ class RunController extends StateNotifier<RunState> {
   /// Marque le nœud actuel comme complété
   void completeCurrentNode() {
     if (state.currentNodeId == null) return;
-    
+
     MapNode? completedNode;
     final updatedNodes = state.mapNodes.map((node) {
       if (node.id == state.currentNodeId) {
@@ -162,7 +166,10 @@ class RunController extends StateNotifier<RunState> {
   void nextLevel() {
     final currentStats = state.heroStats;
     int manaToRestore = (currentStats.maxMana * 0.50).round();
-    int newMana = (currentStats.currentMana + manaToRestore).clamp(0, currentStats.maxMana);
+    int newMana = (currentStats.currentMana + manaToRestore).clamp(
+      0,
+      currentStats.maxMana,
+    );
 
     state = state.copyWith(
       currentLevel: state.currentLevel + 1,
@@ -173,14 +180,26 @@ class RunController extends StateNotifier<RunState> {
   }
 
   /// Applique un modificateur à la carte héro (ex: récompense de draft)
-  void applyHeroStatModifier({int maxPvAcc = 0, int attackAcc = 0, int armorAcc = 0, int maxManaAcc = 0}) {
+  void applyHeroStatModifier({
+    int maxPvAcc = 0,
+    int attackAcc = 0,
+    int armorAcc = 0,
+    int maxManaAcc = 0,
+  }) {
     final currentStats = state.heroStats;
     final newMaxPv = currentStats.maxPv + maxPvAcc;
-    final newCurrentPv = (currentStats.currentPv + (maxPvAcc > 0 ? maxPvAcc : 0)).clamp(0, newMaxPv);
-    
+    final newCurrentPv =
+        (currentStats.currentPv + (maxPvAcc > 0 ? maxPvAcc : 0)).clamp(
+          0,
+          newMaxPv,
+        );
+
     final newMaxMana = currentStats.maxMana + maxManaAcc;
     // On ajoute aussi le bonus au mana actuel
-    final newCurrentMana = (currentStats.currentMana + maxManaAcc).clamp(0, newMaxMana);
+    final newCurrentMana = (currentStats.currentMana + maxManaAcc).clamp(
+      0,
+      newMaxMana,
+    );
 
     final newBaseArmor = state.baseArmor + armorAcc;
 
@@ -199,8 +218,13 @@ class RunController extends StateNotifier<RunState> {
 
   /// Applique un soin en jeu
   void heal(int amount) {
-    int newPv = (state.heroStats.currentPv + amount).clamp(0, state.heroStats.maxPv);
-    state = state.copyWith(heroStats: state.heroStats.copyWith(currentPv: newPv));
+    int newPv = (state.heroStats.currentPv + amount).clamp(
+      0,
+      state.heroStats.maxPv,
+    );
+    state = state.copyWith(
+      heroStats: state.heroStats.copyWith(currentPv: newPv),
+    );
   }
 
   /// Modifie la valeur exacte d'un champ sans affecter les max (pour la récupération d'armure par ex)
@@ -233,7 +257,9 @@ class RunController extends StateNotifier<RunState> {
 
   /// Déclenche les effets des reliques pour un trigger donné
   void applyRelics(RelicTrigger trigger) {
-    final relevantRelics = state.relics.where((r) => r.trigger == trigger).toList();
+    final relevantRelics = state.relics
+        .where((r) => r.trigger == trigger)
+        .toList();
     for (var relic in relevantRelics) {
       _applyRelicEffect(relic);
     }
@@ -256,13 +282,15 @@ class RunController extends StateNotifier<RunState> {
         );
         break;
       case 'gain_strength':
-        addStatus(StatusEffect(
-          id: 'strength',
-          name: 'Force (Relique)',
-          type: StatusType.buff,
-          value: relic.value,
-          duration: 3, // Limité à 3 tours au lieu de 99
-        ));
+        addStatus(
+          StatusEffect(
+            id: 'strength',
+            name: 'Force (Relique)',
+            type: StatusType.buff,
+            value: relic.value,
+            duration: 3, // Limité à 3 tours au lieu de 99
+          ),
+        );
         break;
       case 'heal':
         heal(relic.value);
@@ -309,23 +337,27 @@ class RunController extends StateNotifier<RunState> {
       updatedStats = updatedStats.takeDamage(poisonDamage);
     }
     if (strengthGain > 0) {
-      updatedStats = updatedStats.addStatus(StatusEffect(
-        id: 'strength',
-        name: 'Force',
-        type: StatusType.buff,
-        value: strengthGain,
-        duration: 3, // 3 tours maximum au lieu d'un buff permanent
-      ));
+      updatedStats = updatedStats.addStatus(
+        StatusEffect(
+          id: 'strength',
+          name: 'Force',
+          type: StatusType.buff,
+          value: strengthGain,
+          duration: 3, // 3 tours maximum au lieu d'un buff permanent
+        ),
+      );
     }
     if (armorGain > 0) {
-      updatedStats = updatedStats.copyWith(armure: updatedStats.armure + armorGain);
+      updatedStats = updatedStats.copyWith(
+        armure: updatedStats.armure + armorGain,
+      );
     }
 
     // 2. Restaurer Mana et décrémenter les statuts
     state = state.copyWith(
-      heroStats: updatedStats.copyWith(
-        currentMana: updatedStats.maxMana,
-      ).tickStatuses(),
+      heroStats: updatedStats
+          .copyWith(currentMana: updatedStats.maxMana)
+          .tickStatuses(),
       skill1Cooldown: state.skill1Cooldown > 0 ? state.skill1Cooldown - 1 : 0,
       skill2Cooldown: state.skill2Cooldown > 0 ? state.skill2Cooldown - 1 : 0,
     );
@@ -359,7 +391,11 @@ class RunController extends StateNotifier<RunState> {
   }
 
   /// Tente de lancer le premier sort générique (pour méthodes externes)
-  bool triggerGenericSkill1({required int cd, int mana = 0, int hpPercent = 0}) {
+  bool triggerGenericSkill1({
+    required int cd,
+    int mana = 0,
+    int hpPercent = 0,
+  }) {
     if (state.skill1Cooldown > 0) return false;
     if (!consumeResource(mana: mana, hpPercent: hpPercent)) return false;
     state = state.copyWith(skill1Cooldown: cd);
@@ -367,7 +403,11 @@ class RunController extends StateNotifier<RunState> {
   }
 
   /// Tente de lancer le second sort générique (pour méthodes externes)
-  bool triggerGenericSkill2({required int cd, int mana = 0, int hpPercent = 0}) {
+  bool triggerGenericSkill2({
+    required int cd,
+    int mana = 0,
+    int hpPercent = 0,
+  }) {
     if (state.skill2Cooldown > 0) return false;
     if (!consumeResource(mana: mana, hpPercent: hpPercent)) return false;
     state = state.copyWith(skill2Cooldown: cd);
@@ -378,26 +418,30 @@ class RunController extends StateNotifier<RunState> {
   void applyAttackBuff(int duration) {
     int bonus = (state.heroStats.maxPv * 0.15).round();
     state = state.copyWith(
-      heroStats: state.heroStats.addStatus(StatusEffect(
-        id: 'strength',
-        name: 'Force',
-        type: StatusType.buff,
-        value: bonus,
-        duration: duration,
-      )),
+      heroStats: state.heroStats.addStatus(
+        StatusEffect(
+          id: 'strength',
+          name: 'Force',
+          type: StatusType.buff,
+          value: bonus,
+          duration: duration,
+        ),
+      ),
     );
   }
 
   /// Applique un effet de Vol de vie pour une durée donnée
   void applyLifestealBuff(int duration) {
     state = state.copyWith(
-      heroStats: state.heroStats.addStatus(StatusEffect(
-        id: 'lifesteal',
-        name: 'Vol de Vie',
-        type: StatusType.buff,
-        value: 1, 
-        duration: duration,
-      )),
+      heroStats: state.heroStats.addStatus(
+        StatusEffect(
+          id: 'lifesteal',
+          name: 'Vol de Vie',
+          type: StatusType.buff,
+          value: 1,
+          duration: duration,
+        ),
+      ),
     );
   }
 }

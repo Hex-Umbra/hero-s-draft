@@ -1,28 +1,10 @@
-enum CardType {
-  attack,
-  skill,
-  power,
-  status,
-}
+enum CardType { attack, skill, power, status }
 
-enum CardCategory {
-  global,
-  characterSpecific,
-}
+enum CardCategory { global, characterSpecific }
 
-enum CardRarity {
-  common,
-  uncommon,
-  rare,
-  epic,
-}
+enum CardRarity { common, uncommon, rare, epic }
 
-enum CardTarget {
-  singleEnemy,
-  allEnemies,
-  self,
-  none,
-}
+enum CardTarget { singleEnemy, allEnemies, self, none }
 
 class CardEffect {
   final String type;
@@ -81,12 +63,22 @@ class CardData {
       description: json['description'] as String,
       cost: json['cost'] as int,
       type: CardType.values.firstWhere((e) => e.name == json['type']),
-      category: CardCategory.values.firstWhere((e) => e.name == json['category'], orElse: () => CardCategory.global),
+      category: CardCategory.values.firstWhere(
+        (e) => e.name == json['category'],
+        orElse: () => CardCategory.global,
+      ),
       heroClass: json['heroClass'] as String?,
-      rarity: CardRarity.values.firstWhere((e) => e.name == json['rarity'], orElse: () => CardRarity.common),
-      target: CardTarget.values.firstWhere((e) => e.name == json['target'], orElse: () => CardTarget.singleEnemy),
+      rarity: CardRarity.values.firstWhere(
+        (e) => e.name == json['rarity'],
+        orElse: () => CardRarity.common,
+      ),
+      target: CardTarget.values.firstWhere(
+        (e) => e.name == json['target'],
+        orElse: () => CardTarget.singleEnemy,
+      ),
       spritePath: json['spritePath'] as String?,
-      effects: (json['effects'] as List<dynamic>?)
+      effects:
+          (json['effects'] as List<dynamic>?)
               ?.map((e) => CardEffect.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],

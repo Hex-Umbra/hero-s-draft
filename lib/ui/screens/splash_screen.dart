@@ -13,9 +13,12 @@ class SplashScreen extends ConsumerWidget {
     return Scaffold(
       body: Center(
         child: gameData.when(
-          data: (_) => const HomeScreen(), // Si les données sont chargées, on affiche l'écran d'accueil
-          loading: () => const CircularProgressIndicator(), // Pendant le chargement
-          error: (error, stack) => Text('Erreur de chargement: $error'), // En cas d'erreur
+          data: (_) =>
+              const HomeScreen(), // Si les données sont chargées, on affiche l'écran d'accueil
+          loading: () =>
+              const CircularProgressIndicator(), // Pendant le chargement
+          error: (error, stack) =>
+              Text('Erreur de chargement: $error'), // En cas d'erreur
         ),
       ),
     );

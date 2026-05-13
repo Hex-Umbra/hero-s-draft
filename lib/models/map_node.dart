@@ -1,13 +1,6 @@
 import 'package:flame/extensions.dart';
 
-enum MapNodeType {
-  combat,
-  elite,
-  shop,
-  rest,
-  event,
-  boss,
-}
+enum MapNodeType { combat, elite, shop, rest, event, boss }
 
 class MapNode {
   final String id;

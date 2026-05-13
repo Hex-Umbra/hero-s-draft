@@ -15,7 +15,7 @@ void main() {
       );
 
       stats = stats.takeDamage(15);
-      
+
       expect(stats.armure, 0);
       expect(stats.currentPv, 95);
     });
@@ -39,7 +39,7 @@ void main() {
       );
 
       stats = stats.addStatus(poison);
-      
+
       expect(stats.statuses.length, 1);
       expect(stats.statuses.first.value, 3);
       expect(stats.statuses.first.duration, 2);
@@ -52,9 +52,9 @@ void main() {
         value: 2,
         duration: 3,
       );
-      
+
       stats = stats.addStatus(poison2);
-      
+
       expect(stats.statuses.length, 1);
       expect(stats.statuses.first.value, 5); // 3 + 2
       expect(stats.statuses.first.duration, 5); // 2 + 3
@@ -88,7 +88,7 @@ void main() {
       );
 
       stats = stats.addStatus(strength);
-      
+
       expect(stats.effectiveAttaque, 8); // 5 base + 3 strength
     });
   });

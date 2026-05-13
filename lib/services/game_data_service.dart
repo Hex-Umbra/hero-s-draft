@@ -19,9 +19,17 @@ final gameDataLoaderProvider = FutureProvider<GameDataRegistry>((ref) async {
   final cardsList = jsonDecode(cardsJson) as List;
 
   return GameDataRegistry(
-    enemies: enemiesList.map((e) => EnemyData.fromJson(e as Map<String, dynamic>)).toList(),
-    heroes: heroesList.map((e) => HeroData.fromJson(e as Map<String, dynamic>)).toList(),
-    skills: skillsList.map((e) => SkillData.fromJson(e as Map<String, dynamic>)).toList(),
-    cards: cardsList.map((e) => CardData.fromJson(e as Map<String, dynamic>)).toList(),
+    enemies: enemiesList
+        .map((e) => EnemyData.fromJson(e as Map<String, dynamic>))
+        .toList(),
+    heroes: heroesList
+        .map((e) => HeroData.fromJson(e as Map<String, dynamic>))
+        .toList(),
+    skills: skillsList
+        .map((e) => SkillData.fromJson(e as Map<String, dynamic>))
+        .toList(),
+    cards: cardsList
+        .map((e) => CardData.fromJson(e as Map<String, dynamic>))
+        .toList(),
   );
 });

@@ -11,24 +11,64 @@ class EffectResolver {
   static StatusEffect? _createStatus(String statusId, int value, int duration) {
     switch (statusId) {
       case 'poison':
-        return StatusEffect(id: 'poison', name: 'Poison', type: StatusType.debuff, value: value, duration: duration);
+        return StatusEffect(
+          id: 'poison',
+          name: 'Poison',
+          type: StatusType.debuff,
+          value: value,
+          duration: duration,
+        );
       case 'strength':
-        return StatusEffect(id: 'strength', name: 'Force', type: StatusType.buff, value: value, duration: duration);
+        return StatusEffect(
+          id: 'strength',
+          name: 'Force',
+          type: StatusType.buff,
+          value: value,
+          duration: duration,
+        );
       case 'weakness':
-        return StatusEffect(id: 'weakness', name: 'Faiblesse', type: StatusType.debuff, value: value, duration: duration);
+        return StatusEffect(
+          id: 'weakness',
+          name: 'Faiblesse',
+          type: StatusType.debuff,
+          value: value,
+          duration: duration,
+        );
       case 'vulnerable':
-        return StatusEffect(id: 'vulnerable', name: 'VunÃ©rable', type: StatusType.debuff, value: value, duration: duration);
+        return StatusEffect(
+          id: 'vulnerable',
+          name: 'VunÃ©rable',
+          type: StatusType.debuff,
+          value: value,
+          duration: duration,
+        );
       case 'strength_regen':
-        return StatusEffect(id: 'strength_regen', name: 'Ã‰veil de Force', type: StatusType.buff, value: value, duration: duration);
+        return StatusEffect(
+          id: 'strength_regen',
+          name: 'Ã‰veil de Force',
+          type: StatusType.buff,
+          value: value,
+          duration: duration,
+        );
       case 'armor_regen':
-        return StatusEffect(id: 'armor_regen', name: 'MÃ©tallisation', type: StatusType.buff, value: value, duration: duration);
+        return StatusEffect(
+          id: 'armor_regen',
+          name: 'MÃ©tallisation',
+          type: StatusType.buff,
+          value: value,
+          duration: duration,
+        );
       default:
         return null;
     }
   }
 
   /// VÃ©rifie si la carte peut Ãªtre jouÃ©e
-  static bool canPlayCard(CardInstance card, RunState runState, EnemyCard? selectedEnemy) {
+  static bool canPlayCard(
+    CardInstance card,
+    RunState runState,
+    EnemyCard? selectedEnemy,
+  ) {
     // VÃ©rification du mana
     if (runState.heroStats.currentMana < card.currentCost) {
       return false;
@@ -67,15 +107,23 @@ class EffectResolver {
     for (var effect in card.data.effects) {
       // Calcul de la valeur rÃ©elle selon le niveau de la carte (+50% par niveau supplÃ©mentaire)
       final int baseValue = effect.value;
-      final int scaledValue = (baseValue * (1 + (card.level - 1) * 0.5)).round();
+      final int scaledValue = (baseValue * (1 + (card.level - 1) * 0.5))
+          .round();
 
       switch (effect.type) {
         case 'damage':
-          if (card.data.target == CardTarget.singleEnemy && selectedEnemy != null) {
-            int dmg = _calculateDamage(scaledValue, runController.currentState.heroStats);
+          if (card.data.target == CardTarget.singleEnemy &&
+              selectedEnemy != null) {
+            int dmg = _calculateDamage(
+              scaledValue,
+              runController.currentState.heroStats,
+            );
             selectedEnemy.updateStats(selectedEnemy.stats.takeDamage(dmg));
           } else if (card.data.target == CardTarget.allEnemies) {
-            int dmg = _calculateDamage(scaledValue, runController.currentState.heroStats);
+            int dmg = _calculateDamage(
+              scaledValue,
+              runController.currentState.heroStats,
+            );
             for (var enemy in enemyCards) {
               enemy.updateStats(enemy.stats.takeDamage(dmg));
             }
@@ -93,10 +141,17 @@ class EffectResolver {
           break;
         case 'apply_status':
           if (effect.statusId != null) {
-            final status = _createStatus(effect.statusId!, scaledValue, effect.duration ?? 1);
+            final status = _createStatus(
+              effect.statusId!,
+              scaledValue,
+              effect.duration ?? 1,
+            );
             if (status != null) {
-              if (card.data.target == CardTarget.singleEnemy && selectedEnemy != null) {
-                selectedEnemy.updateStats(selectedEnemy.stats.addStatus(status));
+              if (card.data.target == CardTarget.singleEnemy &&
+                  selectedEnemy != null) {
+                selectedEnemy.updateStats(
+                  selectedEnemy.stats.addStatus(status),
+                );
               } else if (card.data.target == CardTarget.allEnemies) {
                 for (var enemy in enemyCards) {
                   enemy.updateStats(enemy.stats.addStatus(status));
@@ -116,9 +171,11 @@ class EffectResolver {
   /// Calcule les dÃ©gÃ¢ts finaux (influencÃ© par la force et les debuffs)
   static int _calculateDamage(int baseDamage, EntityStats attackerStats) {
     int totalDamage = baseDamage + attackerStats.effectiveAttaque;
-    
+
     // Application de la faiblesse (-25% dÃ©gÃ¢ts)
-    final weakness = attackerStats.statuses.where((s) => s.id == 'weakness').toList();
+    final weakness = attackerStats.statuses
+        .where((s) => s.id == 'weakness')
+        .toList();
     if (weakness.isNotEmpty) {
       totalDamage = (totalDamage * 0.75).round();
     }

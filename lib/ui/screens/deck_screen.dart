@@ -24,7 +24,10 @@ class DeckScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: const Color(0xFF1E1E2C),
       appBar: AppBar(
-        title: const Text('Mon Deck', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Mon Deck',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.black45,
         elevation: 0,
       ),
@@ -42,7 +45,8 @@ class DeckScreen extends ConsumerWidget {
               Expanded(
                 child: GridView.builder(
                   gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent: 200, // Doublé pour un affichage plus clair
+                    maxCrossAxisExtent:
+                        200, // Doublé pour un affichage plus clair
                     childAspectRatio: 0.6,
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
@@ -65,7 +69,8 @@ class DeckScreen extends ConsumerWidget {
                                 description: card.data.description,
                                 cost: card.data.cost,
                                 target: _getTargetLabel(card.data.target),
-                                rarity: '${_getRarityLabel(card.data.rarity)} - Niv. ${card.level}',
+                                rarity:
+                                    '${_getRarityLabel(card.data.rarity)} - Niv. ${card.level}',
                               ),
                               Positioned(
                                 top: 5,
@@ -78,7 +83,11 @@ class DeckScreen extends ConsumerWidget {
                                   ),
                                   child: Text(
                                     'x$count',
-                                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 11),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                      fontSize: 11,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -91,22 +100,38 @@ class DeckScreen extends ConsumerWidget {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.green,
                               foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
                             ),
                             onPressed: () {
                               _confirmMerge(context, ref, card);
                             },
-                            child: const Text('FUSIONNER (3)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                            child: const Text(
+                              'FUSIONNER (3)',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           )
                         else if (canMerge && !allowMerge)
                           const Text(
                             'Fusion possible',
-                            style: TextStyle(color: Colors.orangeAccent, fontSize: 10, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              color: Colors.orangeAccent,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
                           )
                         else
                           Text(
                             '${3 - count} de plus requis',
-                            style: const TextStyle(color: Colors.white54, fontSize: 10),
+                            style: const TextStyle(
+                              color: Colors.white54,
+                              fontSize: 10,
+                            ),
                           ),
                       ],
                     );
@@ -122,22 +147,28 @@ class DeckScreen extends ConsumerWidget {
 
   String _getRarityLabel(CardRarity rarity) {
     switch (rarity) {
-      case CardRarity.common: return 'Commun';
-      case CardRarity.uncommon: return 'Peu Commun';
-      case CardRarity.rare: return 'Rare';
-      case CardRarity.epic: return 'Épique';
+      case CardRarity.common:
+        return 'Commun';
+      case CardRarity.uncommon:
+        return 'Peu Commun';
+      case CardRarity.rare:
+        return 'Rare';
+      case CardRarity.epic:
+        return 'Épique';
     }
-    return 'Commun';
   }
 
   String _getTargetLabel(CardTarget target) {
     switch (target) {
-      case CardTarget.singleEnemy: return 'Cible unique';
-      case CardTarget.allEnemies: return 'Tous les ennemis';
-      case CardTarget.self: return 'Soi-même';
-      case CardTarget.none: return 'Aucune';
+      case CardTarget.singleEnemy:
+        return 'Cible unique';
+      case CardTarget.allEnemies:
+        return 'Tous les ennemis';
+      case CardTarget.self:
+        return 'Soi-même';
+      case CardTarget.none:
+        return 'Aucune';
     }
-    return 'Aucune';
   }
 
   void _confirmMerge(BuildContext context, WidgetRef ref, CardInstance card) {
@@ -145,7 +176,10 @@ class DeckScreen extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF2A2A3D),
-        title: const Text('Confirmer la fusion', style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Confirmer la fusion',
+          style: TextStyle(color: Colors.white),
+        ),
         content: Text(
           'Voulez-vous fusionner 3 exemplaires de "${card.data.name}" (Niv. ${card.level}) pour obtenir un exemplaire de Niveau ${card.level + 1} ?',
           style: const TextStyle(color: Colors.white70),
@@ -153,21 +187,31 @@ class DeckScreen extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Annuler', style: TextStyle(color: Colors.white54)),
+            child: const Text(
+              'Annuler',
+              style: TextStyle(color: Colors.white54),
+            ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
             onPressed: () {
-              ref.read(deckProvider.notifier).mergeCards(card.data.id, card.level);
+              ref
+                  .read(deckProvider.notifier)
+                  .mergeCards(card.data.id, card.level);
               Navigator.of(ctx).pop();
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Fusion réussie : ${card.data.name} est maintenant Niveau ${card.level + 1} !'),
+                  content: Text(
+                    'Fusion réussie : ${card.data.name} est maintenant Niveau ${card.level + 1} !',
+                  ),
                   backgroundColor: Colors.green,
                 ),
               );
             },
-            child: const Text('Fusionner', style: TextStyle(color: Colors.white)),
+            child: const Text(
+              'Fusionner',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),

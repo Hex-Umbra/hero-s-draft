@@ -26,7 +26,9 @@ class ClassSelectionScreen extends ConsumerWidget {
             tooltip: 'Dictionnaire des cartes',
             onPressed: () {
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const CardDictionaryScreen()),
+                MaterialPageRoute(
+                  builder: (context) => const CardDictionaryScreen(),
+                ),
               );
             },
           ),
@@ -39,7 +41,8 @@ class ClassSelectionScreen extends ConsumerWidget {
           child: GridView.builder(
             gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
               maxCrossAxisExtent: 400, // Largeur max d'une carte
-              childAspectRatio: 0.75, // Ajustement de l'aspect ratio pour la verticalité
+              childAspectRatio:
+                  0.75, // Ajustement de l'aspect ratio pour la verticalité
               crossAxisSpacing: 20,
               mainAxisSpacing: 20,
             ),
@@ -53,7 +56,11 @@ class ClassSelectionScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildClassCard(BuildContext context, WidgetRef ref, HeroData playerClass) {
+  Widget _buildClassCard(
+    BuildContext context,
+    WidgetRef ref,
+    HeroData playerClass,
+  ) {
     Color classColor = Colors.blue;
     if (playerClass.id == 'berserker') classColor = Colors.red;
     if (playerClass.id == 'mage') classColor = Colors.purple;
@@ -77,7 +84,11 @@ class ClassSelectionScreen extends ConsumerWidget {
             const SizedBox(height: 10),
             Text(
               playerClass.name,
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: classColor),
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: classColor,
+              ),
             ),
             const SizedBox(height: 10),
             Text(
@@ -85,17 +96,21 @@ class ClassSelectionScreen extends ConsumerWidget {
               'ATK: ${playerClass.baseDamage} | DEF: ${playerClass.baseArmor}',
               style: const TextStyle(fontSize: 14, color: Colors.white),
               textAlign: TextAlign.center,
-              ),
-              const Divider(color: Colors.white24, height: 20),
-              Expanded(
+            ),
+            const Divider(color: Colors.white24, height: 20),
+            Expanded(
               child: SingleChildScrollView(
                 child: Text(
                   playerClass.description,
-                  style: const TextStyle(fontSize: 13, color: Colors.white70, fontStyle: FontStyle.italic),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Colors.white70,
+                    fontStyle: FontStyle.italic,
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ),
-              ),
+            ),
             const SizedBox(height: 10),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -110,8 +125,11 @@ class ClassSelectionScreen extends ConsumerWidget {
                   (route) => route.isFirst,
                 );
               },
-              child: const Text('Sélectionner', style: TextStyle(fontWeight: FontWeight.bold)),
-            )
+              child: const Text(
+                'Sélectionner',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
           ],
         ),
       ),

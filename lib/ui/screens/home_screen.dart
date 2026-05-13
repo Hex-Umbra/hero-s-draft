@@ -29,13 +29,21 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: 60),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 20),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 60,
+                  vertical: 20,
+                ),
                 backgroundColor: Colors.blueAccent,
-                textStyle: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                textStyle: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               onPressed: () {
                 Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => const ClassSelectionScreen()),
+                  MaterialPageRoute(
+                    builder: (context) => const ClassSelectionScreen(),
+                  ),
                 );
               },
               child: const Text('JOUER', style: TextStyle(color: Colors.white)),
@@ -43,15 +51,23 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: 20),
             OutlinedButton(
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 40,
+                  vertical: 15,
+                ),
                 side: const BorderSide(color: Colors.white70, width: 2),
               ),
               onPressed: () {
                 Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => const CardDictionaryScreen()),
+                  MaterialPageRoute(
+                    builder: (context) => const CardDictionaryScreen(),
+                  ),
                 );
               },
-              child: const Text('DICTIONNAIRE', style: TextStyle(color: Colors.white, fontSize: 18)),
+              child: const Text(
+                'DICTIONNAIRE',
+                style: TextStyle(color: Colors.white, fontSize: 18),
+              ),
             ),
           ],
         ),

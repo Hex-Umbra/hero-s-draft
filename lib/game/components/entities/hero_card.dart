@@ -9,23 +9,29 @@ import 'stat_badge.dart';
 import 'status_indicator.dart';
 import '../../heros_draft_game.dart';
 
-class HeroCard extends PositionComponent with TapCallbacks, HasGameReference<HerosDraftGame> {
+class HeroCard extends PositionComponent
+    with TapCallbacks, HasGameReference<HerosDraftGame> {
   EntityStats stats;
   int bonusAttack;
   int baseArmor;
   final String imagePath;
-  
+
   late final StatBadge armorBadge;
   late final StatBadge attackBadge;
   late final StatBadge manaBadge;
   late final StatusIndicator statusIndicator;
 
-  HeroCard(this.stats, {this.bonusAttack = 0, this.baseArmor = 0, required this.imagePath}) : super(size: Vector2(120, 160));
+  HeroCard(
+    this.stats, {
+    this.bonusAttack = 0,
+    this.baseArmor = 0,
+    required this.imagePath,
+  }) : super(size: Vector2(120, 160));
 
   @override
   Future<void> onLoad() async {
     anchor = Anchor.center;
-    
+
     // Appliquer l'échelle initiale (Agrandie pour le terrain)
     scale = Vector2.all(game.scaleFactor * 1.3);
 
@@ -59,7 +65,10 @@ class HeroCard extends PositionComponent with TapCallbacks, HasGameReference<Her
     attackBadge.position = Vector2(-12, 80);
     add(attackBadge);
 
-    manaBadge = StatBadge(type: StatType.mana, value: '${stats.currentMana}/${stats.maxMana}');
+    manaBadge = StatBadge(
+      type: StatType.mana,
+      value: '${stats.currentMana}/${stats.maxMana}',
+    );
     manaBadge.position = Vector2(-12, 125);
     add(manaBadge);
 
@@ -79,20 +88,25 @@ class HeroCard extends PositionComponent with TapCallbacks, HasGameReference<Her
 
   void _refreshBadges() {
     int currentArmor = stats.armure;
-    int bonusArmor = (currentArmor > baseArmor) ? (currentArmor - baseArmor) : 0;
-    int displayBaseArmor = (currentArmor > baseArmor) ? baseArmor : currentArmor;
+    int bonusArmor = (currentArmor > baseArmor)
+        ? (currentArmor - baseArmor)
+        : 0;
+    int displayBaseArmor = (currentArmor > baseArmor)
+        ? baseArmor
+        : currentArmor;
 
     armorBadge.updateValue(
-      '$currentArmor', 
+      '$currentArmor',
       baseValue: displayBaseArmor,
       bonusValue: bonusArmor,
-      tooltipTitle: 'ARMURE', 
-      tooltipDescription: 'Réduit les prochains dégâts reçus. Base : $baseArmor, Bonus : $bonusArmor.',
+      tooltipTitle: 'ARMURE',
+      tooltipDescription:
+          'Réduit les prochains dégâts reçus. Base : $baseArmor, Bonus : $bonusArmor.',
     );
-    
+
     int totalAttack = stats.attaque + bonusAttack;
     attackBadge.updateValue(
-      '$totalAttack', 
+      '$totalAttack',
       baseValue: stats.attaque,
       bonusValue: bonusAttack,
       tooltipTitle: 'FORCE',
@@ -100,14 +114,19 @@ class HeroCard extends PositionComponent with TapCallbacks, HasGameReference<Her
     );
 
     manaBadge.updateValue(
-      '${stats.currentMana}/${stats.maxMana}', 
+      '${stats.currentMana}/${stats.maxMana}',
       tooltipTitle: 'MANA',
-      tooltipDescription: 'Énergie utilisée pour lancer des sorts. Régénérée à chaque tour. Actuellement : ${stats.currentMana}/${stats.maxMana}.',
+      tooltipDescription:
+          'Énergie utilisée pour lancer des sorts. Régénérée à chaque tour. Actuellement : ${stats.currentMana}/${stats.maxMana}.',
     );
     statusIndicator.updateStatuses(stats.statuses);
   }
 
-  void updateStats(EntityStats newStats, {int bonusAttack = 0, int baseArmor = 0}) {
+  void updateStats(
+    EntityStats newStats, {
+    int bonusAttack = 0,
+    int baseArmor = 0,
+  }) {
     if (newStats.armure < stats.armure) {
       _spawnFloatingText(
         '-${stats.armure - newStats.armure}',

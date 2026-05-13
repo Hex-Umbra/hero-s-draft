@@ -14,14 +14,17 @@ class CardDictionaryScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: const Color(0xFF1E1E2C),
       appBar: AppBar(
-        title: const Text('Dictionnaire des Cartes', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Dictionnaire des Cartes',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.black45,
         elevation: 0,
       ),
       body: gameDataAsync.when(
         data: (gameData) {
           final allCards = gameData.cards;
-          
+
           // Grouper par catégorie ou type ? Essayons par type pour la clarté
           final Map<CardType, List<CardData>> groupedCards = {};
           for (var card in allCards) {
@@ -40,18 +43,24 @@ class CardDictionaryScreen extends ConsumerWidget {
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       child: Text(
                         _getTypeLabel(group.key),
-                        style: const TextStyle(color: Colors.amber, fontSize: 24, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          color: Colors.amber,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     GridView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                        maxCrossAxisExtent: 200, // Doublé pour un affichage plus clair
-                        childAspectRatio: 0.7,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                      ),
+                      gridDelegate:
+                          const SliverGridDelegateWithMaxCrossAxisExtent(
+                            maxCrossAxisExtent:
+                                200, // Doublé pour un affichage plus clair
+                            childAspectRatio: 0.7,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                          ),
                       itemCount: group.value.length,
                       itemBuilder: (context, index) {
                         final card = group.value[index];
@@ -70,36 +79,54 @@ class CardDictionaryScreen extends ConsumerWidget {
             ),
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator(color: Colors.amber)),
-        error: (err, stack) => Center(child: Text('Erreur : $err', style: const TextStyle(color: Colors.red))),
+        loading: () =>
+            const Center(child: CircularProgressIndicator(color: Colors.amber)),
+        error: (err, stack) => Center(
+          child: Text(
+            'Erreur : $err',
+            style: const TextStyle(color: Colors.red),
+          ),
+        ),
       ),
     );
   }
 
   String _getTypeLabel(CardType type) {
     switch (type) {
-      case CardType.attack: return 'ATTAQUES';
-      case CardType.skill: return 'COMPÉTENCES';
-      case CardType.power: return 'POUVOIRS';
-      case CardType.status: return 'STATUTS / MALÉDICTIONS';
+      case CardType.attack:
+        return 'ATTAQUES';
+      case CardType.skill:
+        return 'COMPÉTENCES';
+      case CardType.power:
+        return 'POUVOIRS';
+      case CardType.status:
+        return 'STATUTS / MALÉDICTIONS';
     }
   }
 
   String _getRarityLabel(CardRarity rarity) {
     switch (rarity) {
-      case CardRarity.common: return 'Commun';
-      case CardRarity.uncommon: return 'Peu Commun';
-      case CardRarity.rare: return 'Rare';
-      case CardRarity.epic: return 'Épique';
+      case CardRarity.common:
+        return 'Commun';
+      case CardRarity.uncommon:
+        return 'Peu Commun';
+      case CardRarity.rare:
+        return 'Rare';
+      case CardRarity.epic:
+        return 'Épique';
     }
   }
 
   String _getTargetLabel(CardTarget target) {
     switch (target) {
-      case CardTarget.singleEnemy: return 'Cible unique';
-      case CardTarget.allEnemies: return 'Tous les ennemis';
-      case CardTarget.self: return 'Soi-même';
-      case CardTarget.none: return 'Aucune';
+      case CardTarget.singleEnemy:
+        return 'Cible unique';
+      case CardTarget.allEnemies:
+        return 'Tous les ennemis';
+      case CardTarget.self:
+        return 'Soi-même';
+      case CardTarget.none:
+        return 'Aucune';
     }
   }
 }
