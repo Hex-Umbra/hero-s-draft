@@ -8,6 +8,7 @@ import '../../models/card_instance.dart';
 import '../../models/data/card_data.dart';
 import '../heros_draft_game.dart';
 import 'entities/enemy_card.dart';
+import 'visual_effects/ribbon_trail.dart';
 
 class CardComponent extends PositionComponent
     with
@@ -50,6 +51,7 @@ class CardComponent extends PositionComponent
   bool isDragging = false;
   double _targetTilt = 0;
   bool _isHoveringCancelZone = false;
+  RibbonTrail? _activeTrail;
 
   @override
   bool isHovered = false;
@@ -97,41 +99,66 @@ class CardComponent extends PositionComponent
 
       // TODO: Audio Hook - sfx_card_slide (Jouer un son de glissement si la vitesse est élevée)
 
-      // Génération de la queue de particules arc-en-ciel
-      _spawnRainbowParticle();
+      // Génération de la queue de particules améliorée (Blanche + Arc-en-ciel)
+      _spawnTrailParticles();
+      // Mise à jour du ruban
+      _activeTrail?.addPoint(position);
     }
   }
 
   double _particleHue = 0;
 
-  void _spawnRainbowParticle() {
+  void _spawnTrailParticles() {
     // On fait défiler la teinte (0-360) pour l'effet arc-en-ciel
-    _particleHue = (_particleHue + 10) % 360;
-    final color = HSVColor.fromAHSV(1.0, _particleHue, 0.8, 1.0).toColor();
+    _particleHue = (_particleHue + 15) % 360;
+    final rainbowColor =
+        HSVColor.fromAHSV(1.0, _particleHue, 0.8, 1.0).toColor();
 
-    // Création d'une particule qui bouge légèrement et rétrécit
+    // Création d'un mélange de particules blanches et arc-en-ciel
     game.add(
       ParticleSystemComponent(
         particle: Particle.generate(
-          count: 2,
-          lifespan: 0.4,
-          generator: (i) => MovingParticle(
-            curve: Curves.easeOut,
-            // Vitesse aléatoire pour l'éparpillement
-            from: position.clone(),
-            to:
-                position +
-                Vector2(
-                  (rand.nextDouble() - 0.5) * 40,
-                  (rand.nextDouble() - 0.5) * 40,
+          count: 6, // Plus de particules pour un effet plus dense
+          lifespan: 0.5,
+          generator: (i) {
+            if (i < 2) {
+              // Traînée blanche "centrale" et plus stable pour l'aspect continu
+              return MovingParticle(
+                curve: Curves.easeOut,
+                from: position.clone(),
+                to:
+                    position +
+                    Vector2(
+                      (rand.nextDouble() - 0.5) * 20,
+                      (rand.nextDouble() - 0.5) * 20,
+                    ),
+                child: ScaledParticle(
+                  child: CircleParticle(
+                    radius: 2.5,
+                    paint: Paint()..color = Colors.white.withAlpha(200),
+                  ),
                 ),
-            child: ScaledParticle(
-              scale: 1.0,
-              // Une petite étincelle (cercle de rayon 2)
-              // Le cercle reçoit directement le Paint avec la couleur arc-en-ciel
-              child: CircleParticle(radius: 2, paint: Paint()..color = color),
-            ),
-          ),
+              );
+            } else {
+              // Particules arc-en-ciel plus éparpillées (étincelles)
+              return MovingParticle(
+                curve: Curves.easeOut,
+                from: position.clone(),
+                to:
+                    position +
+                    Vector2(
+                      (rand.nextDouble() - 0.5) * 60,
+                      (rand.nextDouble() - 0.5) * 60,
+                    ),
+                child: ScaledParticle(
+                  child: CircleParticle(
+                    radius: 1.0 + rand.nextDouble() * 2.5,
+                    paint: Paint()..color = rainbowColor,
+                  ),
+                ),
+              );
+            }
+          },
         ),
       )..priority = priority - 1, // Juste derrière la carte
     );
@@ -259,6 +286,14 @@ class CardComponent extends PositionComponent
     isDragging = true;
     _targetTilt = 0;
 
+    // Initialisation du ruban
+    _activeTrail = RibbonTrail(
+      priority: priority - 1,
+      glowColor: Colors.amber,
+      coreColor: Colors.white,
+    );
+    game.add(_activeTrail!);
+
     // Nettoie proprement le focus/hover au niveau du jeu,
     // (le flag isDragging = true empêchera setFocusedCard d'ajouter une animation de retour)
     if (game.focusedCard == this) {
@@ -351,6 +386,10 @@ class CardComponent extends PositionComponent
     isDragging = false;
     _targetTilt = 0;
     game.setFocusedCard(null); // On enlève le focus systématiquement
+    
+    // Arrêt du ruban
+    _activeTrail?.stop();
+    _activeTrail = null;
 
     if (_isHoveringCancelZone) {
       _returnToHand();
@@ -378,6 +417,11 @@ class CardComponent extends PositionComponent
     isDragging = false;
     _targetTilt = 0;
     game.setFocusedCard(null);
+    
+    // Arrêt du ruban
+    _activeTrail?.stop();
+    _activeTrail = null;
+
     _returnToHand();
     game.highlightEnemy(null);
   }
