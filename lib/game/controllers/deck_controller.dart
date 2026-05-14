@@ -97,13 +97,17 @@ class DeckNotifier extends StateNotifier<DeckState> {
 
   /// Défausse toute la main à la fin du tour
   void discardHand() {
-    var currentHand = List<CardInstance>.from(state.hand);
-    var currentDiscardPile = List<CardInstance>.from(state.discardPile);
+    final currentHand = List<CardInstance>.from(state.hand);
+    final currentDiscardPile = List<CardInstance>.from(state.discardPile);
+
+    if (currentHand.isEmpty) return;
 
     currentDiscardPile.addAll(currentHand);
-    currentHand.clear();
-
-    state = state.copyWith(hand: currentHand, discardPile: currentDiscardPile);
+    
+    state = state.copyWith(
+      hand: [], 
+      discardPile: currentDiscardPile,
+    );
   }
 
   /// Joue une carte : la retire de la main et l'envoie dans la défausse (ou l'épuise si pouvoir)

@@ -66,6 +66,9 @@ class CardComponent extends PositionComponent
 
   String _buildDetailedDescription() {
     String desc = '${card.data.description}\n\n';
+    if (card.data.type == CardType.power) {
+      desc += '⚠️ USAGE UNIQUE (Épuisement)\n\n';
+    }
     for (var effect in card.data.effects) {
       final scaledValue = (effect.value * (1 + (card.level - 1) * 0.5)).round();
       if (effect.type == 'damage') desc += '• Dégâts: $scaledValue\n';

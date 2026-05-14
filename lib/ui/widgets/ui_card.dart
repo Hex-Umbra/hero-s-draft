@@ -77,15 +77,49 @@ class UiCard extends StatelessWidget {
                     ),
                     const Divider(color: Colors.white24, height: 12),
 
-                    // Rareté
+                    // Rareté et Type (Usage Unique pour Pouvoirs)
                     if (rarity != null)
-                      Text(
-                        rarity!,
-                        style: TextStyle(
-                          color: _getRarityColor(rarity!),
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          fontStyle: FontStyle.italic,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            rarity!,
+                            style: TextStyle(
+                              color: _getRarityColor(rarity!),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                          if (effects != null &&
+                              effects!.any((e) => false)) // Placeholder
+                            const Text(''), // Reserved
+                        ],
+                      ),
+
+                    // Badge Usage Unique pour les Pouvoirs
+                    if (title.contains('Forme') ||
+                        title.contains('Métallisation') ||
+                        description.contains('épuisée'))
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 1,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.redAccent,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Text(
+                            'USAGE UNIQUE',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 8,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                       ),
 
