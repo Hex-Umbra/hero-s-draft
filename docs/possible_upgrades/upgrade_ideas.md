@@ -26,3 +26,4 @@
 - On a déjà un système de séléction de carte pendant le combat, le joueur peut "focus" sur une carte. Il faudrati un système pour pouvoir jouer la carte après l'avoir séléctionné en plus du système drag and drop actuel
 - Dans les descriptions des cartes il faudrati rajouter un système de différenciation entre chaque "type" de dégâts (physique, de feu, de froid, de poison, etc) et d'armure (d'armure, d'armure temporaire, d'armure rémanente, etc)
     - Pour les dégâts, il faudrait rajouter une icone pour chaque type de dégâts, par exemple pour les dégâts de feu, une icone de flamme.Pareil pour les autres types de dégâts et pour les armures.
+- On vas modifier les cartes de types élémentaires, certaines appliqueront uniquement l'effet élémentaire sans infliger de dégâts et donc l'effet sera plus puissant. Tandis qu'il y en auras d'autres qui ferons et des dégâts et appliqueront l'effet mais cette fois ci moins puissant.
