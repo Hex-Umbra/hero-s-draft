@@ -284,6 +284,23 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                     ),
                   ),
 
+                // Bouton Pause (Haut Droite)
+                if (!runState.isDead && !_showDraft)
+                  Positioned(
+                    top: 10,
+                    right: 20,
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.pause_circle_outline,
+                        color: Colors.white,
+                        size: 40,
+                      ),
+                      onPressed: () {
+                        _showPauseMenu();
+                      },
+                    ),
+                  ),
+
                 // Indicateurs de niveau (Haut Gauche)
                 if (!runState.isDead && !_showDraft)
                   Positioned(
@@ -292,39 +309,18 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            IconButton(
-                              icon: const Icon(
-                                Icons.style,
-                                color: Colors.white,
-                                size: 30,
-                              ),
-                              tooltip: 'Mon Deck',
-                              onPressed: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        const DeckScreen(allowMerge: false),
-                                  ),
-                                );
-                              },
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Acte ${runState.act} - Niveau : ${runState.currentLevel}',
-                              style: const TextStyle(
-                                color: Colors.amber,
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
+                        Text(
+                          'Acte ${runState.act} - Niveau : ${runState.currentLevel}',
+                          style: const TextStyle(
+                            color: Colors.amber,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         // Affichage simplifié des statuts du joueur
                         ...runState.heroStats.statuses.map(
                           (s) => Padding(
-                            padding: const EdgeInsets.only(left: 45),
+                            padding: const EdgeInsets.only(left: 5),
                             child: Text(
                               s.duration > 90
                                   ? '${s.name} : ${s.value} (Permanent)'
@@ -341,30 +337,17 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                     ),
                   ),
 
-                // HUD Bas (Vie + Deck + Pause)
+                // HUD Bas (Vie + Deck)
                 if (!runState.isDead && !_showDraft)
                   Align(
                     alignment: Alignment.bottomCenter,
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 5),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                    child: SizedBox(
+                      width: screenWidth,
+                      height: 50,
+                      child: Stack(
+                        alignment: Alignment.center,
                         children: [
-                          // Bouton Mon Deck
-                          IconButton(
-                            icon: const Icon(Icons.style, color: Colors.amber),
-                            tooltip: 'Mon Deck',
-                            onPressed: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => const DeckScreen(
-                                    allowMerge: false,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                          const SizedBox(width: 8),
+                          // Barre de Vie (Centrée)
                           SizedBox(
                             width: screenWidth * 0.3, // 30% de la largeur
                             child: Column(
@@ -378,7 +361,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                                     fontSize: 14,
                                   ),
                                 ),
-                                const SizedBox(height: 4),
+                                const SizedBox(height: 2),
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(10),
                                   child: LinearProgressIndicator(
@@ -390,24 +373,30 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                                     backgroundColor: Colors.black54,
                                     valueColor:
                                         const AlwaysStoppedAnimation<Color>(
-                                          Color(0xFF27AE60),
-                                        ),
+                                      Color(0xFF27AE60),
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          // Bouton Pause
-                          IconButton(
-                            icon: const Icon(
-                              Icons.pause_circle_outline,
-                              color: Colors.white,
-                              size: 32,
+                          // Bouton Mon Deck (Positionné à gauche de la barre)
+                          Positioned(
+                            bottom: 0,
+                            left: (screenWidth * 0.35) - 50, // Ajusté pour être à gauche du centre
+                            child: IconButton(
+                              icon: const Icon(Icons.style, color: Colors.amber),
+                              tooltip: 'Mon Deck',
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => const DeckScreen(
+                                      allowMerge: false,
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
-                            onPressed: () {
-                              _showPauseMenu();
-                            },
                           ),
                         ],
                       ),
