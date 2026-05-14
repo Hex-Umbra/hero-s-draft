@@ -133,6 +133,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                   title: card.data.name,
                   description: card.data.description,
                   cost: card.data.cost,
+                  effects: card.data.effects,
                   rarity: 'Niveau ${card.level}',
                   target: _getTargetLabel(card.data.target),
                   onTap: () {
@@ -354,7 +355,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                 )
               else
                 SizedBox(
-                  height: 140,
+                  height: 220,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
                     itemCount: _cardsForSale.length,
@@ -376,6 +377,8 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                                 title: card.name,
                                 description: card.description,
                                 cost: card.cost,
+                                effects: card.effects,
+                                level: 1,
                                 rarity: _getRarityLabel(card.rarity),
                                 target: _getTargetLabel(card.target),
                                 onTap: () => _buyCard(card, price),

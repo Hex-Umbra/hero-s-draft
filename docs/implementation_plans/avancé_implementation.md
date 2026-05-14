@@ -200,3 +200,6 @@
 - fix: Affichage dynamique des statistiques des cartes (Leveling)
     - Mise à jour de CardComponent et UiCard
         - J'ai corrigé le bug d'affichage des descriptions des cartes améliorées. Les composants `CardComponent` et `UiCard` calculent désormais dynamiquement les valeurs des effets (+50% par niveau au-dessus du niveau 1) pour afficher les dégâts, soins et armure réels correspondant au niveau de la carte.
+- fix: Correction de l'overflow dans la boutique (ShopScreen)
+    - Ajustement des contraintes de hauteur
+        - J'ai corrigé une erreur `RenderFlex overflow` dans la boutique en augmentant la hauteur du conteneur des cartes à 220px. Cela laisse suffisamment d'espace pour afficher les cartes (`UiCard`) et leurs boutons d'achat sans dépassement vertical.
