@@ -9,14 +9,45 @@ import '../../models/data/card_data.dart';
 import '../heros_draft_game.dart';
 import 'entities/enemy_card.dart';
 import 'visual_effects/ribbon_trail.dart';
+import 'visual_effects/slash_effect.dart';
 
 class CardComponent extends PositionComponent
     with
         DragCallbacks,
         TapCallbacks,
         HoverCallbacks,
-        HasGameReference<HerosDraftGame> {
+        HasGameReference<HerosDraftGame>
+    implements OpacityProvider {
   final CardInstance card;
+
+  double _opacity = 1.0;
+
+  @override
+  double get opacity => _opacity;
+
+  @override
+  set opacity(double value) {
+    _opacity = value;
+    backgroundPaint.color = backgroundPaint.color.withValues(alpha: value);
+    borderPaint.color = borderPaint.color.withValues(alpha: value);
+
+    // Appliquer aux textes (si initialisés)
+    try {
+      final nameStyle = (nameText.textRenderer as TextPaint).style;
+      nameText.textRenderer =
+          TextPaint(style: nameStyle.copyWith(color: nameStyle.color?.withValues(alpha: value)));
+          
+      final costStyle = (costText.textRenderer as TextPaint).style;
+      costText.textRenderer =
+          TextPaint(style: costStyle.copyWith(color: costStyle.color?.withValues(alpha: value)));
+          
+      final descStyle = (descriptionText.textRenderer as TextPaint).style;
+      descriptionText.textRenderer =
+          TextPaint(style: descStyle.copyWith(color: descStyle.color?.withValues(alpha: value)));
+    } catch (_) {
+      // Ignorer si les textes ne sont pas encore chargés
+    }
+  }
 
   @override
   void onLongTapDown(TapDownEvent event) {
@@ -495,11 +526,74 @@ class CardComponent extends PositionComponent
       case 'buff':
         _playBuffAnimation(onComplete);
         break;
+      case 'poison':
+        _playStatusAnimation(target, Colors.greenAccent, onComplete);
+        break;
+      case 'fire':
+        _playStatusAnimation(target, Colors.orangeAccent, onComplete);
+        break;
+      case 'ice':
+        _playStatusAnimation(target, Colors.lightBlueAccent, onComplete);
+        break;
+      case 'lightning':
+        _playStatusAnimation(target, Colors.yellowAccent, onComplete);
+        break;
       case 'melee':
       default:
         _playMeleeAnimation(target, onComplete);
         break;
     }
+  }
+
+  void _playStatusAnimation(
+    EnemyCard? target,
+    Color color,
+    VoidCallback onComplete,
+  ) {
+    final targetPos = target?.position ?? position + Vector2(0, -size.y * 2);
+
+    // Effet visuel thématique
+    backgroundPaint.color = color.withValues(alpha: 0.8);
+    borderPaint.color = Colors.white;
+
+    add(
+      SequenceEffect([
+        // 1. Ascension et rotation (Chargement magique)
+        CombinedEffect([
+          MoveEffect.by(
+            Vector2(0, -50),
+            EffectController(duration: 0.4, curve: Curves.easeOut),
+          ),
+          RotateEffect.by(
+            0.2,
+            EffectController(duration: 0.4, alternate: true),
+          ),
+        ]),
+        // 2. Dash rapide vers la cible
+        MoveEffect.to(
+          targetPos,
+          EffectController(duration: 0.2, curve: Curves.easeIn),
+        ),
+        // 3. Explosion thématique et disparition
+        ScaleEffect.to(
+          Vector2.all(0.0),
+          EffectController(duration: 0.1),
+          onComplete: () {
+            if (target != null) {
+              // Particules thématiques denses
+              _spawnImpactParticles(
+                targetPos,
+                color: color,
+                count: 30,
+              );
+              // Réaction de l'ennemi
+              target.shakeAndFlashAnimation();
+            }
+            onComplete();
+          },
+        ),
+      ]),
+    );
   }
 
   void _playMeleeAnimation(EnemyCard? target, VoidCallback onComplete) {
@@ -527,7 +621,20 @@ class CardComponent extends PositionComponent
           Vector2.all(0.0),
           EffectController(duration: 0.05),
           onComplete: () {
-            _spawnImpactParticles(targetPos, color: Colors.blueAccent);
+            // Effet de Slash sur l'ennemi
+            if (target != null) {
+              game.add(
+                SlashEffect(
+                  position: target.position.clone(),
+                  size: target.size * 1.5, // Plus grand que l'ennemi pour le style
+                  color: Colors.redAccent,
+                ),
+              );
+              // Faire trembler l'ennemi
+              target.shakeAndFlashAnimation();
+            }
+
+            _spawnImpactParticles(targetPos, color: Colors.redAccent);
             onComplete();
           },
         ),
