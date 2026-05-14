@@ -67,10 +67,11 @@ class CardComponent extends PositionComponent
   String _buildDetailedDescription() {
     String desc = '${card.data.description}\n\n';
     for (var effect in card.data.effects) {
-      if (effect.type == 'damage') desc += '• Dégâts: ${effect.value}\n';
-      if (effect.type == 'heal') desc += '• Soin: ${effect.value}\n';
-      if (effect.type == 'armor') desc += '• Armure: ${effect.value}\n';
-      if (effect.type == 'draw') desc += '• Pioche: ${effect.value} cartes\n';
+      final scaledValue = (effect.value * (1 + (card.level - 1) * 0.5)).round();
+      if (effect.type == 'damage') desc += '• Dégâts: $scaledValue\n';
+      if (effect.type == 'heal') desc += '• Soin: $scaledValue\n';
+      if (effect.type == 'armor') desc += '• Armure: $scaledValue\n';
+      if (effect.type == 'draw') desc += '• Pioche: $scaledValue cartes\n';
     }
     return desc.trim();
   }
@@ -264,9 +265,10 @@ class CardComponent extends PositionComponent
   String _buildDescription() {
     String desc = '';
     for (var effect in card.data.effects) {
-      if (effect.type == 'damage') desc += 'Inflige ${effect.value} dégâts.\n';
-      if (effect.type == 'heal') desc += 'Soigne ${effect.value} PV.\n';
-      if (effect.type == 'armor') desc += 'Donne ${effect.value} Armure.\n';
+      final scaledValue = (effect.value * (1 + (card.level - 1) * 0.5)).round();
+      if (effect.type == 'damage') desc += 'Inflige $scaledValue dégâts.\n';
+      if (effect.type == 'heal') desc += 'Soigne $scaledValue PV.\n';
+      if (effect.type == 'armor') desc += 'Donne $scaledValue Armure.\n';
     }
     if (desc.isEmpty) {
       desc = card.data.description;

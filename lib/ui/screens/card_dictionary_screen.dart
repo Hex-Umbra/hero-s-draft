@@ -70,6 +70,7 @@ class CardDictionaryScreen extends ConsumerWidget {
                           rarity: _getRarityLabel(card.rarity),
                           target: _getTargetLabel(card.target),
                           cost: card.cost,
+                          effects: card.effects,
                         );
                       },
                     ),

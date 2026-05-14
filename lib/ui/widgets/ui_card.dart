@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../models/data/card_data.dart';
 
 class UiCard extends StatelessWidget {
   final String title;
@@ -6,6 +7,8 @@ class UiCard extends StatelessWidget {
   final String? rarity;
   final String? target;
   final int? cost;
+  final int? level;
+  final List<CardEffect>? effects;
   final VoidCallback? onTap;
 
   const UiCard({
@@ -15,8 +18,26 @@ class UiCard extends StatelessWidget {
     this.rarity,
     this.target,
     this.cost,
+    this.level,
+    this.effects,
     this.onTap,
   });
+
+  String _buildDescription() {
+    if (level == null || effects == null || effects!.isEmpty) {
+      return description;
+    }
+
+    String desc = '';
+    for (var effect in effects!) {
+      final scaledValue = (effect.value * (1 + (level! - 1) * 0.5)).round();
+      if (effect.type == 'damage') desc += 'Inflige $scaledValue dégâts.\n';
+      if (effect.type == 'heal') desc += 'Soigne $scaledValue PV.\n';
+      if (effect.type == 'armor') desc += 'Donne $scaledValue Armure.\n';
+    }
+
+    return desc.isNotEmpty ? desc.trim() : description;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -88,7 +109,7 @@ class UiCard extends StatelessWidget {
                       child: Center(
                         child: SingleChildScrollView(
                           child: Text(
-                            description,
+                            _buildDescription(),
                             style: const TextStyle(
                               color: Colors.amberAccent,
                               fontSize: 11,

@@ -197,3 +197,6 @@
 - fix: Correction du reroll des récompenses
     - Refonte du composant DraftScreen
         - J'ai corrigé le bug qui provoquait la régénération automatique des récompenses après un combat. Le composant `DraftScreen` a été converti en `ConsumerStatefulWidget` et la génération des choix a été déplacée dans `initState` afin de garantir qu'elle ne s'exécute qu'une seule fois par sélection.
+- fix: Affichage dynamique des statistiques des cartes (Leveling)
+    - Mise à jour de CardComponent et UiCard
+        - J'ai corrigé le bug d'affichage des descriptions des cartes améliorées. Les composants `CardComponent` et `UiCard` calculent désormais dynamiquement les valeurs des effets (+50% par niveau au-dessus du niveau 1) pour afficher les dégâts, soins et armure réels correspondant au niveau de la carte.
