@@ -206,3 +206,6 @@
 - feat: Amélioration de l'accès au Deck et Notifications de Fusion
     - Refonte du HUD et de la Map
         - J'ai déplacé le bouton "Mon Deck" à côté de la barre de vie du joueur pendant le combat pour un accès plus intuitif, tout en maintenant le bouton "Pause" en haut à droite. Sur la carte du monde (`MapScreen`), le bouton est désormais plus explicite avec du texte ("MON DECK") et inclut un indicateur visuel (point rouge et texte "DECK (!)") lorsqu'une fusion de 3 cartes identiques est possible.
+- fix: Correction du cycle de pioche et disparition de cartes
+    - Robustification du DeckNotifier
+        - J'ai corrigé un bug où des cartes pouvaient sembler disparaître ou être dupliquées dans le deck. La méthode `playCard` a été sécurisée pour ne déplacer une carte vers la défausse que si elle est réellement présente en main, évitant les doublons d'ID qui causaient des erreurs d'affichage dans le moteur Flame. J'ai également vérifié et validé le cycle de recyclage de la défausse vers la pioche.

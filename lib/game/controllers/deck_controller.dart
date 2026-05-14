@@ -112,19 +112,24 @@ class DeckNotifier extends StateNotifier<DeckState> {
     var currentDiscardPile = List<CardInstance>.from(state.discardPile);
     var currentExhaustPile = List<CardInstance>.from(state.exhaustPile);
 
-    currentHand.removeWhere((c) => c.uniqueId == card.uniqueId);
+    // Trouver l'index pour ne supprimer qu'un seul exemplaire si doublons (sécurité)
+    final index = currentHand.indexWhere((c) => c.uniqueId == card.uniqueId);
 
-    if (card.data.type == CardType.power) {
-      currentExhaustPile.add(card);
-    } else {
-      currentDiscardPile.add(card);
+    if (index != -1) {
+      final cardToPlay = currentHand.removeAt(index);
+
+      if (cardToPlay.data.type == CardType.power) {
+        currentExhaustPile.add(cardToPlay);
+      } else {
+        currentDiscardPile.add(cardToPlay);
+      }
+
+      state = state.copyWith(
+        hand: currentHand,
+        discardPile: currentDiscardPile,
+        exhaustPile: currentExhaustPile,
+      );
     }
-
-    state = state.copyWith(
-      hand: currentHand,
-      discardPile: currentDiscardPile,
-      exhaustPile: currentExhaustPile,
-    );
   }
 
   /// Ajoute une carte au Master Deck
