@@ -341,59 +341,75 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                     ),
                   ),
 
-                // Bouton Pause (Haut Droite)
-                if (!runState.isDead && !_showDraft)
-                  Positioned(
-                    top: 10,
-                    right: 20,
-                    child: IconButton(
-                      icon: const Icon(
-                        Icons.pause_circle_outline,
-                        color: Colors.white,
-                        size: 40,
-                      ),
-                      onPressed: () {
-                        _showPauseMenu();
-                      },
-                    ),
-                  ),
-
-                // Barre de Vie du Joueur (Bas Centre)
+                // HUD Bas (Vie + Deck + Pause)
                 if (!runState.isDead && !_showDraft)
                   Align(
                     alignment: Alignment.bottomCenter,
                     child: Padding(
                       padding: const EdgeInsets.only(bottom: 5),
-                      child: SizedBox(
-                        width: screenWidth * 0.3, // 30% de la largeur
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              '${runState.heroStats.currentPv} / ${runState.heroStats.maxPv} PV',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(10),
-                              child: LinearProgressIndicator(
-                                value: (runState.heroStats.maxPv > 0)
-                                    ? runState.heroStats.currentPv /
-                                          runState.heroStats.maxPv
-                                    : 0,
-                                minHeight: 12,
-                                backgroundColor: Colors.black54,
-                                valueColor: const AlwaysStoppedAnimation<Color>(
-                                  Color(0xFF27AE60),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // Bouton Mon Deck
+                          IconButton(
+                            icon: const Icon(Icons.style, color: Colors.amber),
+                            tooltip: 'Mon Deck',
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => const DeckScreen(
+                                    allowMerge: false,
+                                  ),
                                 ),
-                              ),
+                              );
+                            },
+                          ),
+                          const SizedBox(width: 8),
+                          SizedBox(
+                            width: screenWidth * 0.3, // 30% de la largeur
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  '${runState.heroStats.currentPv} / ${runState.heroStats.maxPv} PV',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: LinearProgressIndicator(
+                                    value: (runState.heroStats.maxPv > 0)
+                                        ? runState.heroStats.currentPv /
+                                              runState.heroStats.maxPv
+                                        : 0,
+                                    minHeight: 12,
+                                    backgroundColor: Colors.black54,
+                                    valueColor:
+                                        const AlwaysStoppedAnimation<Color>(
+                                          Color(0xFF27AE60),
+                                        ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(width: 8),
+                          // Bouton Pause
+                          IconButton(
+                            icon: const Icon(
+                              Icons.pause_circle_outline,
+                              color: Colors.white,
+                              size: 32,
+                            ),
+                            onPressed: () {
+                              _showPauseMenu();
+                            },
+                          ),
+                        ],
                       ),
                     ),
                   ),

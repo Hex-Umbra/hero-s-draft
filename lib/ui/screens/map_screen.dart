@@ -5,6 +5,8 @@ import '../../models/map_node.dart';
 import 'game_screen.dart';
 import 'shop_screen.dart';
 import 'deck_screen.dart';
+import '../../models/card_instance.dart';
+import '../../game/controllers/deck_controller.dart';
 
 class MapScreen extends ConsumerStatefulWidget {
   const MapScreen({super.key});
@@ -30,6 +32,16 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   void dispose() {
     _transformationController.dispose();
     super.dispose();
+  }
+
+  bool _checkCanMerge(List<CardInstance> masterDeck) {
+    final Map<String, int> counts = {};
+    for (var card in masterDeck) {
+      final key = '${card.data.id}_${card.level}';
+      counts[key] = (counts[key] ?? 0) + 1;
+      if (counts[key]! >= 3) return true;
+    }
+    return false;
   }
 
   @override
@@ -75,6 +87,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       }
     });
 
+    final deckState = ref.watch(deckProvider);
+    final canMerge = _checkCanMerge(deckState.masterDeck);
+
     return Scaffold(
       backgroundColor: const Color(0xFF0D0D1A),
       appBar: AppBar(
@@ -88,14 +103,42 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         backgroundColor: Colors.black45,
         elevation: 0,
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.style, color: Colors.white),
-          tooltip: 'Mon Deck',
+        leadingWidth: 120,
+        leading: TextButton.icon(
           onPressed: () {
             Navigator.of(
               context,
             ).push(MaterialPageRoute(builder: (context) => const DeckScreen()));
           },
+          icon: Stack(
+            children: [
+              const Icon(Icons.style, color: Colors.white),
+              if (canMerge)
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 10,
+                      minHeight: 10,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          label: Text(
+            canMerge ? 'DECK (!)' : 'MON DECK',
+            style: TextStyle(
+              color: canMerge ? Colors.amber : Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
+          ),
         ),
         actions: [
           Padding(

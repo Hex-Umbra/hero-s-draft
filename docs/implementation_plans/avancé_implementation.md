@@ -203,3 +203,6 @@
 - fix: Correction de l'overflow dans la boutique (ShopScreen)
     - Ajustement des contraintes de hauteur
         - J'ai corrigé une erreur `RenderFlex overflow` dans la boutique en augmentant la hauteur du conteneur des cartes à 220px. Cela laisse suffisamment d'espace pour afficher les cartes (`UiCard`) et leurs boutons d'achat sans dépassement vertical.
+- feat: Amélioration de l'accès au Deck et Notifications de Fusion
+    - Refonte du HUD et de la Map
+        - J'ai déplacé le bouton "Mon Deck" à côté de la barre de vie du joueur pendant le combat pour un accès plus intuitif. Sur la carte du monde (`MapScreen`), le bouton est désormais plus explicite avec du texte ("MON DECK") et inclut un indicateur visuel (point rouge et texte "DECK (!)") lorsqu'une fusion de 3 cartes identiques est possible.
