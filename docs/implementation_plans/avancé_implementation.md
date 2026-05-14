@@ -191,3 +191,9 @@
         - feat: implémentation Phase 3
             - Réaction de l'Ennemi (Feedback de Dégâts)
                 - J'ai terminé la Phase 3. J'ai ajouté une méthode `shakeAndFlashAnimation` dans `EnemyCard` qui se déclenche lors de la réception de dégâts, provoquant un tremblement aléatoire et un flash blanc. Le composant `FloatingText` a également été amélioré avec un effet de "Pop" initial (`ScaleEffect` avec `bounceOut`), rendant l'affichage des dégâts beaucoup plus percutant.
+
+## Phase 10 - Corrections de Bugs et Stabilité
+
+- fix: Correction du reroll des récompenses
+    - Refonte du composant DraftScreen
+        - J'ai corrigé le bug qui provoquait la régénération automatique des récompenses après un combat. Le composant `DraftScreen` a été converti en `ConsumerStatefulWidget` et la génération des choix a été déplacée dans `initState` afin de garantir qu'elle ne s'exécute qu'une seule fois par sélection.

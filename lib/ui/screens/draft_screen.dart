@@ -6,15 +6,26 @@ import '../../game/controllers/deck_controller.dart';
 import '../../models/card_instance.dart';
 import '../widgets/ui_card.dart';
 
-class DraftScreen extends ConsumerWidget {
+class DraftScreen extends ConsumerStatefulWidget {
   final VoidCallback onDraftComplete;
 
   const DraftScreen({super.key, required this.onDraftComplete});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final choices = _generateChoices();
+  ConsumerState<DraftScreen> createState() => _DraftScreenState();
+}
 
+class _DraftScreenState extends ConsumerState<DraftScreen> {
+  late List<_DraftChoice> _choices;
+
+  @override
+  void initState() {
+    super.initState();
+    _choices = _generateChoices();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Material(
       color: Colors.black87,
       child: SafeArea(
@@ -48,7 +59,7 @@ class DraftScreen extends ConsumerWidget {
                       Expanded(
                         child: ListView(
                           shrinkWrap: true,
-                          children: choices
+                          children: _choices
                               .map(
                                 (choice) => Padding(
                                   padding: const EdgeInsets.symmetric(
@@ -70,7 +81,7 @@ class DraftScreen extends ConsumerWidget {
                     else
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: choices
+                        children: _choices
                             .map(
                               (choice) => Flexible(
                                 child: Padding(
@@ -112,7 +123,7 @@ class DraftScreen extends ConsumerWidget {
     final rng = Random();
     runController.gainGold(rng.nextInt(15) + 10);
     runController.nextLevel();
-    onDraftComplete();
+    widget.onDraftComplete();
   }
 
   void _showCloneModal(BuildContext context, WidgetRef ref) {
@@ -221,6 +232,7 @@ class DraftScreen extends ConsumerWidget {
     return choices;
   }
 }
+
 
 class _DraftChoice {
   final String title;
