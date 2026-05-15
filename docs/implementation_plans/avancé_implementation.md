@@ -197,6 +197,9 @@
 - feat: implémentation Étape 1
     - Lignes de connexion animées et rendu visuel (MapScreen)
         - J'ai terminé l'Étape 1. Le `MapConnectionPainter` a été entièrement refactorisé pour dessiner des chemins en pointillés (`dash path`). Un `AnimationController` a été ajouté au `MapScreen` pour animer la phase des pointillés en continu, donnant une illusion de défilement fluide et d'énergie circulant le long des chemins de la carte.
+- feat: implémentation Étape 2
+    - Animation du Pion Joueur (Avatar de Map)
+        - J'ai terminé l'Étape 2. J'ai créé un composant `_PlayerPawn` qui représente physiquement le joueur sur la carte. Grâce à un `AnimatedPositioned` avec une courbe `easeInOutBack`, le pion se déplace désormais de manière fluide entre les nœuds lorsque le joueur sélectionne une destination, offrant un feedback visuel beaucoup plus satisfaisant et immersif que le simple changement de couleur précédent.
 
 
         ## Phase 9 - Visual Juice & Game Feel (Style Balatro)

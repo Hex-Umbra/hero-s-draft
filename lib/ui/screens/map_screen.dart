@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flame/extensions.dart' hide Matrix4;
 import '../../game/controllers/run_controller.dart';
 import '../../models/map_node.dart';
 import 'game_screen.dart';
@@ -233,6 +234,11 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
                       onHideTooltip: _hideTooltip,
                     ),
                   ),
+                  // Pion du Joueur Animé
+                  if (currentNodeId != null)
+                    _PlayerPawn(
+                      position: nodes.firstWhere((n) => n.id == currentNodeId).position,
+                    ),
                 ],
               ),
             ),
@@ -597,14 +603,12 @@ class MapConnectionPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withAlpha(60) // Un peu plus visible
+      ..color = Colors.white.withAlpha(60)
       ..strokeWidth = 3
       ..style = PaintingStyle.stroke;
 
     final double dashLength = 12.0;
     final double dashSpace = 8.0;
-    // La phase se décale dans le temps grâce à l'animation (de 0 à 1)
-    // Multiplié pour correspondre à la taille d'un motif complet
     final double phase = animation.value * (dashLength + dashSpace) * 2;
 
     for (var node in nodes) {
@@ -617,7 +621,7 @@ class MapConnectionPainter extends CustomPainter {
             ..lineTo(targetNode.position.x, targetNode.position.y);
 
           for (final ui.PathMetric metric in path.computeMetrics()) {
-            double distance = -phase; // Décalage de départ pour l'animation
+            double distance = -phase;
             bool draw = true;
             while (distance < metric.length) {
               final double len = draw ? dashLength : dashSpace;
@@ -635,7 +639,7 @@ class MapConnectionPainter extends CustomPainter {
             }
           }
         } catch (e) {
-          // Ignorer si la cible n'existe pas (cas de changement de map)
+          // Ignorer si la cible n'existe pas
         }
       }
     }
@@ -644,5 +648,68 @@ class MapConnectionPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant MapConnectionPainter oldDelegate) =>
       oldDelegate.nodes != nodes || oldDelegate.animation != animation;
+}
+
+class _PlayerPawn extends StatelessWidget {
+  final Vector2 position;
+
+  const _PlayerPawn({required this.position});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedPositioned(
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeInOutBack, // Petit effet de ressort lors de l'arrivée
+      left: position.x - 20,
+      top: position.y - 65, // Un peu au dessus du centre du node
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.white.withAlpha(150),
+                  blurRadius: 10,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.person_pin,
+              color: Colors.blueAccent,
+              size: 32,
+            ),
+          ),
+          CustomPaint(
+            size: const Size(10, 10),
+            painter: _PawnPointerPainter(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PawnPointerPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+
+    final path = Path()
+      ..moveTo(0, 0)
+      ..lineTo(size.width, 0)
+      ..lineTo(size.width / 2, size.height)
+      ..close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
