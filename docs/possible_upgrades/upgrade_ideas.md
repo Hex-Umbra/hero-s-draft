@@ -20,7 +20,7 @@
 - Dans la map plusieurs type de noeuds sont disponible mais pour le moment seul le shop est fonctionnel. Rajouter les autres noeuds.
 - ~~Lorsqu'une carte est améliorée (niveau passe de 1 a 3) bien modifier la description de la carte pour afficher les nouveaux effets ou les nouveaux dégâts (la logique elle fonctionne bel et bien comme attendu)~~.
 - ~~Changer l'emplacement du bouton "mon deck" pour le déplacer a coté de la barre de vie du joueur pendant un combat. Tandis que sur la map indiquer plus clairement avec un texte et pas juste un bouton. Afficher également sur la map une notif pour dire qu'il y a une fusion possible.~~
-- Revoir les cartes ajouer en combat pour leur affichage, le texte ne s'adapte pas bien a la largeur de la carte et dépasse souvent.
+- ~~Revoir les cartes ajouer en combat pour leur affichage, le texte ne s'adapte pas bien a la largeur de la carte et dépasse souvent.~~
 - Rajouter un tooltips sur les noeuds de la map pour expliquer ce qu'ils font, ainsi qu'une légende sur le coté dans l'interface.
     - Rajouter un système de hover sur les noeuds pour indiquer au joueur qu'il est dessus et qu'il peut cliquer dessus.
 - On a déjà un système de séléction de carte pendant le combat, le joueur peut "focus" sur une carte. Il faudrati un système pour pouvoir jouer la carte après l'avoir séléctionné en plus du système drag and drop actuel
