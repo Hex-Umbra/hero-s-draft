@@ -1,3 +1,4 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../game/controllers/run_controller.dart';
@@ -17,10 +18,12 @@ class MapScreen extends ConsumerStatefulWidget {
   ConsumerState<MapScreen> createState() => _MapScreenState();
 }
 
-class _MapScreenState extends ConsumerState<MapScreen> {
+class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateMixin {
   final TransformationController _transformationController =
       TransformationController();
   int? _lastActCentered;
+
+  late final AnimationController _dashController;
 
   // État des tooltips
   String? _tooltipTitle;
@@ -46,6 +49,11 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   @override
   void initState() {
     super.initState();
+    _dashController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat();
+    
     _transformationController.value =
         Matrix4.translationValues(-200.0, -1500.0, 0.0) *
         Matrix4.diagonal3Values(0.8, 0.8, 1.0);
@@ -53,6 +61,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
 
   @override
   void dispose() {
+    _dashController.dispose();
     _transformationController.dispose();
     super.dispose();
   }
@@ -209,7 +218,10 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                 children: [
                   CustomPaint(
                     size: const Size(1000, 3000),
-                    painter: MapConnectionPainter(nodes: nodes),
+                    painter: MapConnectionPainter(
+                      nodes: nodes,
+                      animation: _dashController,
+                    ),
                   ),
                   ...nodes.map(
                     (node) => _MapNodeWidget(
@@ -577,25 +589,51 @@ class _LegendItem extends StatelessWidget {
 
 class MapConnectionPainter extends CustomPainter {
   final List<MapNode> nodes;
+  final Animation<double> animation;
 
-  MapConnectionPainter({required this.nodes});
+  MapConnectionPainter({required this.nodes, required this.animation})
+      : super(repaint: animation);
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withAlpha(30)
+      ..color = Colors.white.withAlpha(60) // Un peu plus visible
       ..strokeWidth = 3
       ..style = PaintingStyle.stroke;
+
+    final double dashLength = 12.0;
+    final double dashSpace = 8.0;
+    // La phase se décale dans le temps grâce à l'animation (de 0 à 1)
+    // Multiplié pour correspondre à la taille d'un motif complet
+    final double phase = animation.value * (dashLength + dashSpace) * 2;
 
     for (var node in nodes) {
       for (var targetId in node.connections) {
         try {
           final targetNode = nodes.firstWhere((n) => n.id == targetId);
-          canvas.drawLine(
-            Offset(node.position.x, node.position.y),
-            Offset(targetNode.position.x, targetNode.position.y),
-            paint,
-          );
+          
+          final Path path = Path()
+            ..moveTo(node.position.x, node.position.y)
+            ..lineTo(targetNode.position.x, targetNode.position.y);
+
+          for (final ui.PathMetric metric in path.computeMetrics()) {
+            double distance = -phase; // Décalage de départ pour l'animation
+            bool draw = true;
+            while (distance < metric.length) {
+              final double len = draw ? dashLength : dashSpace;
+              if (draw) {
+                final double start = distance < 0 ? 0 : distance;
+                final double end = (distance + len > metric.length)
+                    ? metric.length
+                    : distance + len;
+                if (start < end) {
+                  canvas.drawPath(metric.extractPath(start, end), paint);
+                }
+              }
+              distance += len;
+              draw = !draw;
+            }
+          }
         } catch (e) {
           // Ignorer si la cible n'existe pas (cas de changement de map)
         }
@@ -605,6 +643,6 @@ class MapConnectionPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant MapConnectionPainter oldDelegate) =>
-      oldDelegate.nodes != nodes;
+      oldDelegate.nodes != nodes || oldDelegate.animation != animation;
 }
 

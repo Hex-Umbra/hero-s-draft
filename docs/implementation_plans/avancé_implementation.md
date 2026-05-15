@@ -192,6 +192,13 @@
     - Refonte du système de buffs (Finis les buffs infinis)
         J'ai terminé l'Étape 5. J'ai nettoyé les altérations d'état entre les combats (`statuses = []` au début d'un combat). J'ai modifié les cartes comme *Forme Démoniaque* pour qu'elles n'utilisent plus une mécanique de "régénération" buggée, mais qu'elles appliquent directement un buff de *Force* d'une durée stricte (ex: 3 tours). L'effet de *Métallisation* a aussi été borné dans le temps. (Nécessite un redémarrage complet de l'app pour charger le JSON mis à jour).
 
+## Phase 11 - Refonte Avancée de la World Map
+
+- feat: implémentation Étape 1
+    - Lignes de connexion animées et rendu visuel (MapScreen)
+        - J'ai terminé l'Étape 1. Le `MapConnectionPainter` a été entièrement refactorisé pour dessiner des chemins en pointillés (`dash path`). Un `AnimationController` a été ajouté au `MapScreen` pour animer la phase des pointillés en continu, donnant une illusion de défilement fluide et d'énergie circulant le long des chemins de la carte.
+
+
         ## Phase 9 - Visual Juice & Game Feel (Style Balatro)
 
         - feat: implémentation Phase 1
