@@ -206,6 +206,9 @@
 - feat: implémentation Étape 4
     - Surbrillance dynamique des Chemins (Path Highlighting)
         - J'ai terminé l'Étape 4. Un système de planification de route a été mis en place. Lorsqu'un joueur survole un nœud accessible (même éloigné de plusieurs étages), un algorithme de recherche récursif identifie tous les chemins possibles depuis la position actuelle. Les lignes de connexion correspondantes s'illuminent alors d'une lueur bleue intense dans le `MapConnectionPainter`, permettant au joueur de mieux anticiper sa progression stratégique.
+- feat: implémentation Étape 5
+    - Génération Dirigée et Chokepoints (Structure Stratégique)
+        - J'ai terminé l'Étape 5. Le `MapGeneratorService` a été enrichi avec des règles structurelles avancées. La carte comporte désormais un point de passage unique obligatoire (chokepoint) à l'étage 5, forçant un choix crucial entre un Élite et un Repos. De plus, un nœud de Repos est désormais garanti à l'étage précédant le Boss, assurant une courbe de difficulté plus juste et permettant au joueur de se préparer à l'affrontement final.
 
 
         ## Phase 9 - Visual Juice & Game Feel (Style Balatro)

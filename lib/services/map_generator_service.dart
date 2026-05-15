@@ -17,6 +17,11 @@ class MapGeneratorService {
       List<MapNode> floorNodes = [];
       int rowWidth = 2 + _random.nextInt(maxWidth - 1); // 2 to maxWidth nodes
 
+      // Special case: Chokepoint at middle floor
+      if (y == 5) {
+        rowWidth = 1;
+      }
+
       // Special case: Boss floor always has 1 node
       if (y == floors - 1) {
         rowWidth = 1;
@@ -24,7 +29,18 @@ class MapGeneratorService {
 
       for (int x = 0; x < rowWidth; x++) {
         final id = 'node_${y}_$x';
-        final type = _getRandomNodeType(y, floors);
+        MapNodeType type = _getRandomNodeType(y, floors);
+
+        // Force structure rules
+        if (y == 5) {
+          // Chokepoint is either Elite or Rest
+          type = _random.nextBool() ? MapNodeType.elite : MapNodeType.rest;
+        } else if (y == floors - 2) {
+          // Guaranteed Rest before boss
+          type = MapNodeType.rest;
+        } else if (y == floors - 1) {
+          type = MapNodeType.boss;
+        }
 
         // Spread nodes horizontally
         final posX = (x + 0.5) * (1000 / rowWidth);
