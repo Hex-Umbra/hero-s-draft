@@ -26,6 +26,15 @@ class RunState {
 
   int get effectiveAttaque => heroStats.effectiveAttaque;
 
+  MapNodeType? get currentNodeType {
+    if (currentNodeId == null) return null;
+    try {
+      return mapNodes.firstWhere((n) => n.id == currentNodeId).type;
+    } catch (_) {
+      return null;
+    }
+  }
+
   const RunState({
     required this.currentLevel,
     this.act = 1,

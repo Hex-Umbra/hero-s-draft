@@ -5,6 +5,8 @@ import '../../models/map_node.dart';
 import 'game_screen.dart';
 import 'shop_screen.dart';
 import 'deck_screen.dart';
+import 'rest_screen.dart';
+import 'event_screen.dart';
 import '../../models/card_instance.dart';
 import '../../game/controllers/deck_controller.dart';
 
@@ -367,10 +369,10 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         destination = const ShopScreen();
         break;
       case MapNodeType.rest:
-        destination = const GameScreen();
+        destination = const RestScreen();
         break;
       case MapNodeType.event:
-        destination = const GameScreen();
+        destination = const EventScreen();
         break;
     }
 

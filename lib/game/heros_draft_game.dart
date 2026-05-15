@@ -16,6 +16,7 @@ import '../data/models/entity_stats.dart';
 import 'controllers/run_controller.dart';
 import 'controllers/deck_controller.dart';
 import '../models/enemy_intent.dart';
+import '../models/map_node.dart';
 import 'systems/encounter_system.dart';
 
 enum TurnPhase { player, enemy }
@@ -337,7 +338,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
   void _applyState(RunState state) {
     if (_currentState == null ||
         _currentState!.currentLevel < state.currentLevel) {
-      _spawnEnemies(state.currentLevel);
+      _spawnEnemies(state.currentLevel, nodeType: state.currentNodeType);
     }
     _currentState = state;
 
@@ -370,7 +371,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
     }
   }
 
-  void _spawnEnemies(int level) {
+  void _spawnEnemies(int level, {MapNodeType? nodeType}) {
     for (var enemy in enemyCards) {
       enemy.removeFromParent();
     }
@@ -379,17 +380,27 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
     final enemyDataList = EncounterSystem.generateEnemiesForLevel(
       level,
       availableEnemies,
+      nodeType: nodeType,
     );
-    bool isBoss = level > 0 && level % 10 == 0;
+
+    bool isBoss = nodeType == MapNodeType.boss;
+    bool isElite = nodeType == MapNodeType.elite;
+
+    double multiplier = 1.0;
+    if (isBoss) {
+      multiplier = 3.0;
+    } else if (isElite) {
+      multiplier = 1.5;
+    }
 
     for (int i = 0; i < enemyDataList.length; i++) {
       final data = enemyDataList[i];
-      // On initialise les stats réelles en se basant sur data
+      // On initialise les stats réelles en se basant sur data et le multiplicateur
       final stats = EntityStats(
-        maxPv: data.maxHp,
-        currentPv: data.maxHp,
+        maxPv: (data.maxHp * multiplier).round(),
+        currentPv: (data.maxHp * multiplier).round(),
         armure: 0,
-        attaque: data.baseDamage,
+        attaque: (data.baseDamage * multiplier).round(),
       );
 
       final enemy = EnemyCard(
@@ -398,6 +409,11 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
         isBoss: isBoss,
         onTapEnemy: _handlePlayerTargeting,
       );
+
+      // Si c'est un Boss, on l'agrandit visuellement
+      if (isBoss) {
+        enemy.scale = Vector2.all(1.5);
+      }
 
       enemyCards.add(enemy);
       add(enemy);

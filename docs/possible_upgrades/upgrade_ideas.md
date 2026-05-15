@@ -14,15 +14,14 @@
 - ~~Dans la boutique, dans le menu pour détruire une carte changer l'affichage, les cartes apparaitront en liste et non entiere pour économiser de l'espace et une meilleure lisibilité~~
 - Vérifier que les boss apparaissent bien tout les 10 rencontres et que la récompense est correcte. Lé récompense étant une relique (pour le moment, laisser la possibilité de choisir plusiseur entre plusieurs options)
 - Equilibrer les stats des personnages et des ennemis, les ennemis gagnent en difficulté. 
-- Ajouter un nombre minimum de noeud dans la map pour certains event comme les magasins, chaque map doit apparaitre au moins une fois par génération de map.
 - ~~Afficher sur les cartes a jouer qui attaque l'addition entre l'attaque et les dégâts de base de l'attaque. Exemple : si le personnage a 5 d'attaque et que la carte inflige 6 dégâts, afficher 11 (6+5)~~.
 - ~~Pendant la phase de récompense après un combat, par moment les récompense "reroll" plusieurs fois d'elles-mêmes. Il faut s'assurer que la récompense est correcte. (à vérifier)~~
-- Dans la map plusieurs type de noeuds sont disponible mais pour le moment seul le shop est fonctionnel. Rajouter les autres noeuds.
+- ~~Dans la map plusieurs type de noeuds sont disponible mais pour le moment seul le shop est fonctionnel. Rajouter les autres noeuds.~~
 - ~~Lorsqu'une carte est améliorée (niveau passe de 1 a 3) bien modifier la description de la carte pour afficher les nouveaux effets ou les nouveaux dégâts (la logique elle fonctionne bel et bien comme attendu)~~.
 - ~~Changer l'emplacement du bouton "mon deck" pour le déplacer a coté de la barre de vie du joueur pendant un combat. Tandis que sur la map indiquer plus clairement avec un texte et pas juste un bouton. Afficher également sur la map une notif pour dire qu'il y a une fusion possible.~~
 - ~~Revoir les cartes ajouer en combat pour leur affichage, le texte ne s'adapte pas bien a la largeur de la carte et dépasse souvent.~~
-- Rajouter un tooltips sur les noeuds de la map pour expliquer ce qu'ils font, ainsi qu'une légende sur le coté dans l'interface.
-    - Rajouter un système de hover sur les noeuds pour indiquer au joueur qu'il est dessus et qu'il peut cliquer dessus.
+- ~~Rajouter un tooltips sur les noeuds de la map pour expliquer ce qu'ils font, ainsi qu'une légende sur le coté dans l'interface~~.
+    - ~~Rajouter un système de hover sur les noeuds pour indiquer au joueur qu'il est dessus et qu'il peut cliquer dessus.~~
 - On a déjà un système de séléction de carte pendant le combat, le joueur peut "focus" sur une carte. Il faudrati un système pour pouvoir jouer la carte après l'avoir séléctionné en plus du système drag and drop actuel
 - Dans les descriptions des cartes il faudrati rajouter un système de différenciation entre chaque "type" de dégâts (physique, de feu, de froid, de poison, etc) et d'armure (d'armure, d'armure temporaire, d'armure rémanente, etc)
     - Pour les dégâts, il faudrait rajouter une icone pour chaque type de dégâts, par exemple pour les dégâts de feu, une icone de flamme.Pareil pour les autres types de dégâts et pour les armures.

@@ -156,6 +156,15 @@
 - feat: implémentation Phase 1.4
     - Améliorations UI/UX de la World Map (Tooltips, Légende, Hover)
         - J'ai terminé l'Étape 1.4. J'ai ajouté un système de tooltips explicatifs sur chaque nœud (via appui long), une légende interactive dans le coin inférieur gauche pour identifier les types de rencontres, et un effet de survol dynamique (agrandissement et lueur) pour indiquer les nœuds sélectionnables.
+- feat: implémentation Phase 1.5
+    - Multiplicateurs de difficulté pour Élites et Boss
+        - J'ai terminé l'Étape 1.5. Les nœuds Élite appliquent désormais un multiplicateur de 1.5x aux statistiques des ennemis (PV et Attaque). Les nœuds Boss appliquent un multiplicateur de 3.0x, génèrent un seul ennemi et l'agrandissent visuellement de 50% pour un effet colossal.
+- feat: implémentation Phase 1.6
+    - Nœud de Repos (RestScreen)
+        - J'ai terminé l'Étape 1.6. J'ai créé le `RestScreen` qui propose trois actions au joueur : se reposer (+30% PV), forger (améliorer une carte au niveau supérieur) ou oublier (retirer définitivement une carte du deck). Le système de sélection de carte a été intégré directement dans cet écran via un modal.
+- feat: implémentation Phase 1.7
+    - Nœud d'Événement (EventScreen)
+        - J'ai terminé l'Étape 1.7. J'ai mis en place un système d'événements textuels basé sur un fichier JSON (`events.json`). Le joueur doit faire face à des situations narratives avec des choix multiples ayant des conséquences immédiates sur ses statistiques, son or ou son deck.
 
 - feat: implémentation Phase 2
     - Système d'Or et Boutique (ShopScreen)

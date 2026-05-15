@@ -1,0 +1,60 @@
+[
+  {
+    "id": "mysterious_altar",
+    "title": "L'Autel Mystérieux",
+    "description": "Vous découvrez un autel ancien couvert de runes rougeoyantes. Une voix semble murmurer dans votre esprit, réclamant un sacrifice en échange de puissance.",
+    "choices": [
+      {
+        "text": "Sacrifier votre sang (-15 PV, +1 Force)",
+        "resultText": "L'autel absorbe votre sang et une force sombre parcourt vos veines.",
+        "actions": [
+          { "type": "take_damage", "value": 15 },
+          { "type": "gain_strength", "value": 1 }
+        ]
+      },
+      {
+        "text": "Faire une offrande d'or (-50 Or, +10 PV Max)",
+        "resultText": "Les pièces disparaissent dans une fente de l'autel. Vous vous sentez plus robuste.",
+        "actions": [
+          { "type": "spend_gold", "value": 50 },
+          { "type": "gain_max_hp", "value": 10 }
+        ]
+      },
+      {
+        "text": "Prier et partir (Rien)",
+        "resultText": "Vous marmonnez une prière rapide et continuez votre chemin sans incident.",
+        "actions": []
+      }
+    ]
+  },
+  {
+    "id": "goblin_merchant",
+    "title": "Le Marchand Fugitif",
+    "description": "Un petit gobelin portant un sac énorme court vers vous. 'S'il vous plaît ! Je suis poursuivi ! Achetez quelque chose vite !'",
+    "choices": [
+      {
+        "text": "Acheter un sac mystérieux (-40 Or, +80 Or ou -20 PV)",
+        "resultText": "Vous ouvrez le sac... c'est une bourse pleine de pièces d'or dérobées !",
+        "actions": [
+          { "type": "spend_gold", "value": 40 },
+          { "type": "gain_gold", "value": 80 }
+        ]
+      },
+      {
+        "text": "Voler le gobelin (+50 Or, -10 PV)",
+        "resultText": "Le gobelin vous griffe avant de s'enfuir en laissant tomber quelques pièces.",
+        "actions": [
+          { "type": "gain_gold", "value": 50 },
+          { "type": "take_damage", "value": 10 }
+        ]
+      },
+      {
+        "text": "L'aider à se cacher (+1 Relique aléatoire)",
+        "resultText": "Pour vous remercier, il vous tend une vieille amulette avant de disparaître dans les buissons.",
+        "actions": [
+          { "type": "gain_relic", "value": "test_relic" }
+        ]
+      }
+    ]
+  }
+]

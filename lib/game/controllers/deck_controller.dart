@@ -164,11 +164,28 @@ class DeckNotifier extends StateNotifier<DeckState> {
     }
   }
 
+  /// Retire une carte spécifique du Master Deck (ex: Boutique ou Oubli)
+  void removeCardById(String uniqueId) {
+    var currentMasterDeck = List<CardInstance>.from(state.masterDeck);
+    currentMasterDeck.removeWhere((c) => c.uniqueId == uniqueId);
+    state = state.copyWith(masterDeck: currentMasterDeck);
+  }
+
+  /// Améliore une carte (niveau +1) définitivement (Forge)
+  void upgradeCard(String uniqueId) {
+    state = state.copyWith(
+      masterDeck: state.masterDeck.map((c) {
+        if (c.uniqueId == uniqueId) {
+          return c.copyWith(level: c.level + 1);
+        }
+        return c;
+      }).toList(),
+    );
+  }
+
   /// Retire une carte spécifique du Master Deck (ex: Boutique)
   void removeCardFromMasterDeck(CardInstance cardToRemove) {
-    var currentMasterDeck = List<CardInstance>.from(state.masterDeck);
-    currentMasterDeck.removeWhere((c) => c.uniqueId == cardToRemove.uniqueId);
-    state = state.copyWith(masterDeck: currentMasterDeck);
+    removeCardById(cardToRemove.uniqueId);
   }
 
   /// Ajoute une carte spécifique directement dans la défausse (ex: blessure d'ennemi)
