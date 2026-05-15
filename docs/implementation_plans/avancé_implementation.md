@@ -192,25 +192,6 @@
     - Refonte du système de buffs (Finis les buffs infinis)
         J'ai terminé l'Étape 5. J'ai nettoyé les altérations d'état entre les combats (`statuses = []` au début d'un combat). J'ai modifié les cartes comme *Forme Démoniaque* pour qu'elles n'utilisent plus une mécanique de "régénération" buggée, mais qu'elles appliquent directement un buff de *Force* d'une durée stricte (ex: 3 tours). L'effet de *Métallisation* a aussi été borné dans le temps. (Nécessite un redémarrage complet de l'app pour charger le JSON mis à jour).
 
-## Phase 11 - Refonte Avancée de la World Map
-
-- feat: implémentation Étape 1
-    - Lignes de connexion animées et rendu visuel (MapScreen)
-        - J'ai terminé l'Étape 1. Le `MapConnectionPainter` a été entièrement refactorisé pour dessiner des chemins en pointillés (`dash path`). Un `AnimationController` a été ajouté au `MapScreen` pour animer la phase des pointillés en continu, donnant une illusion de défilement fluide et d'énergie circulant le long des chemins de la carte.
-- feat: implémentation Étape 2
-    - Animation du Pion Joueur (Avatar de Map)
-        - J'ai terminé l'Étape 2. J'ai créé un composant `_PlayerPawn` qui représente physiquement le joueur sur la carte. Grâce à un `AnimatedPositioned` avec une courbe `easeInOutBack`, le pion se déplace désormais de manière fluide entre les nœuds lorsque le joueur sélectionne une destination, offrant un feedback visuel beaucoup plus satisfaisant et immersif que le simple changement de couleur précédent.
-- feat: implémentation Étape 3
-    - Boutique et Repos en Overlays (Transitions Immersives)
-        - J'ai terminé l'Étape 3. Les écrans de Boutique (`ShopScreen`) et de Repos (`RestScreen`) ne sont plus des pages séparées mais s'ouvrent désormais sous forme de modales translucides (`showGeneralDialog`) par-dessus la carte du monde. L'utilisation d'un `BackdropFilter` pour flouter l'arrière-plan permet au joueur de garder le contexte visuel du voyage tout en effectuant ses achats ou son repos, renforçant considérablement l'immersion.
-- feat: implémentation Étape 4
-    - Surbrillance dynamique des Chemins (Path Highlighting)
-        - J'ai terminé l'Étape 4. Un système de planification de route a été mis en place. Lorsqu'un joueur survole un nœud accessible (même éloigné de plusieurs étages), un algorithme de recherche récursif identifie tous les chemins possibles depuis la position actuelle. Les lignes de connexion correspondantes s'illuminent alors d'une lueur bleue intense dans le `MapConnectionPainter`, permettant au joueur de mieux anticiper sa progression stratégique.
-- feat: implémentation Étape 5
-    - Génération Dirigée et Chokepoints (Structure Stratégique)
-        - J'ai terminé l'Étape 5. Le `MapGeneratorService` a été enrichi avec des règles structurelles avancées. La carte comporte désormais un point de passage unique obligatoire (chokepoint) à l'étage 5, forçant un choix crucial entre un Élite et un Repos. De plus, un nœud de Repos est désormais garanti à l'étage précédant le Boss, assurant une courbe de difficulté plus juste et permettant au joueur de se préparer à l'affrontement final.
-
-
         ## Phase 9 - Visual Juice & Game Feel (Style Balatro)
 
         - feat: implémentation Phase 1
@@ -255,3 +236,23 @@
 - feat: Refonte fondamentale du rendu textuel des cartes (Combat)
     - Passage au TextPainter natif de Flutter
         - J'ai entièrement réécrit le système d'affichage des textes sur les cartes de combat. En abandonnant les `TextComponent` de Flame au profit de `TextPainter` (Flutter natif), j'ai supprimé tout risque de crash lié aux widgets de texte complexes tout en obtenant un contrôle total sur le retour à la ligne (`word wrap`), l'alignement et la richesse stylistique. Les textes sont désormais dessinés manuellement sur le `Canvas` de Flame, garantissant une fluidité parfaite et une stabilité maximale.
+
+
+## Phase 11 - Refonte Avancée de la World Map
+
+- feat: implémentation Étape 1
+    - Lignes de connexion animées et rendu visuel (MapScreen)
+        - J'ai terminé l'Étape 1. Le `MapConnectionPainter` a été entièrement refactorisé pour dessiner des chemins en pointillés (`dash path`). Un `AnimationController` a été ajouté au `MapScreen` pour animer la phase des pointillés en continu, donnant une illusion de défilement fluide et d'énergie circulant le long des chemins de la carte.
+- feat: implémentation Étape 2
+    - Animation du Pion Joueur (Avatar de Map)
+        - J'ai terminé l'Étape 2. J'ai créé un composant `_PlayerPawn` qui représente physiquement le joueur sur la carte. Grâce à un `AnimatedPositioned` avec une courbe `easeInOutBack`, le pion se déplace désormais de manière fluide entre les nœuds lorsque le joueur sélectionne une destination, offrant un feedback visuel beaucoup plus satisfaisant et immersif que le simple changement de couleur précédent.
+- feat: implémentation Étape 3
+    - Boutique et Repos en Overlays (Transitions Immersives)
+        - J'ai terminé l'Étape 3. Les écrans de Boutique (`ShopScreen`) et de Repos (`RestScreen`) ne sont plus des pages séparées mais s'ouvrent désormais sous forme de modales translucides (`showGeneralDialog`) par-dessus la carte du monde. L'utilisation d'un `BackdropFilter` pour flouter l'arrière-plan permet au joueur de garder le contexte visuel du voyage tout en effectuant ses achats ou son repos, renforçant considérablement l'immersion.
+- feat: implémentation Étape 4
+    - Surbrillance dynamique des Chemins (Path Highlighting)
+        - J'ai terminé l'Étape 4. Un système de planification de route a été mis en place. Lorsqu'un joueur survole un nœud accessible (même éloigné de plusieurs étages), un algorithme de recherche récursif identifie tous les chemins possibles depuis la position actuelle. Les lignes de connexion correspondantes s'illuminent alors d'une lueur bleue intense dans le `MapConnectionPainter`, permettant au joueur de mieux anticiper sa progression stratégique.
+- feat: implémentation Étape 5
+    - Génération Dirigée et Chokepoints (Structure Stratégique)
+        - J'ai terminé l'Étape 5. Le `MapGeneratorService` a été enrichi avec des règles structurelles avancées. La carte comporte désormais un point de passage unique obligatoire (chokepoint) à l'étage 5, forçant un choix crucial entre un Élite et un Repos. De plus, un nœud de Repos est désormais garanti à l'étage précédant le Boss, assurant une courbe de difficulté plus juste et permettant au joueur de se préparer à l'affrontement final.
+
