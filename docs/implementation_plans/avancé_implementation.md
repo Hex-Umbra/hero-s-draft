@@ -153,6 +153,9 @@
 - feat: implémentation Phase 1.3
     - Interface World Map (MapScreen) et Intégration du Flux
         - J'ai terminé l'Étape 1.3. J'ai créé le `MapScreen` avec un `InteractiveViewer` et un `CustomPainter` pour afficher la carte et ses connexions. Le `RunController` a été mis à jour pour gérer l'état de la carte, la position du joueur et l'économie (or). Le flux de jeu est désormais complet : Sélection de classe -> Map -> Combat -> Draft -> Retour à la Map avec le nœud complété.
+- feat: implémentation Phase 1.4
+    - Améliorations UI/UX de la World Map (Tooltips, Légende, Hover)
+        - J'ai terminé l'Étape 1.4. J'ai ajouté un système de tooltips explicatifs sur chaque nœud (via appui long), une légende interactive dans le coin inférieur gauche pour identifier les types de rencontres, et un effet de survol dynamique (agrandissement et lueur) pour indiquer les nœuds sélectionnables.
 
 - feat: implémentation Phase 2
     - Système d'Or et Boutique (ShopScreen)
