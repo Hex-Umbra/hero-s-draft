@@ -200,6 +200,9 @@
 - feat: implémentation Étape 2
     - Animation du Pion Joueur (Avatar de Map)
         - J'ai terminé l'Étape 2. J'ai créé un composant `_PlayerPawn` qui représente physiquement le joueur sur la carte. Grâce à un `AnimatedPositioned` avec une courbe `easeInOutBack`, le pion se déplace désormais de manière fluide entre les nœuds lorsque le joueur sélectionne une destination, offrant un feedback visuel beaucoup plus satisfaisant et immersif que le simple changement de couleur précédent.
+- feat: implémentation Étape 3
+    - Boutique et Repos en Overlays (Transitions Immersives)
+        - J'ai terminé l'Étape 3. Les écrans de Boutique (`ShopScreen`) et de Repos (`RestScreen`) ne sont plus des pages séparées mais s'ouvrent désormais sous forme de modales translucides (`showGeneralDialog`) par-dessus la carte du monde. L'utilisation d'un `BackdropFilter` pour flouter l'arrière-plan permet au joueur de garder le contexte visuel du voyage tout en effectuant ses achats ou son repos, renforçant considérablement l'immersion.
 
 
         ## Phase 9 - Visual Juice & Game Feel (Style Balatro)

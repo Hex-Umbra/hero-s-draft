@@ -374,29 +374,79 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
   }
 
   void _onNodeTap(BuildContext context, WidgetRef ref, MapNode node) {
+    if (node.type == MapNodeType.shop || node.type == MapNodeType.rest) {
+      _showNodeOverlay(context, node);
+    } else {
+      ref.read(runProvider.notifier).travelToNode(node.id);
+
+      Widget destination;
+      switch (node.type) {
+        case MapNodeType.combat:
+        case MapNodeType.elite:
+        case MapNodeType.boss:
+          destination = const GameScreen();
+          break;
+        case MapNodeType.event:
+          destination = const EventScreen();
+          break;
+        default:
+          destination = const GameScreen();
+      }
+
+      Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (context) => destination));
+    }
+  }
+
+  void _showNodeOverlay(BuildContext context, MapNode node) {
     ref.read(runProvider.notifier).travelToNode(node.id);
 
-    Widget destination;
-    switch (node.type) {
-      case MapNodeType.combat:
-      case MapNodeType.elite:
-      case MapNodeType.boss:
-        destination = const GameScreen();
-        break;
-      case MapNodeType.shop:
-        destination = const ShopScreen();
-        break;
-      case MapNodeType.rest:
-        destination = const RestScreen();
-        break;
-      case MapNodeType.event:
-        destination = const EventScreen();
-        break;
-    }
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierLabel: 'NodeOverlay',
+      barrierColor: Colors.black54,
+      transitionDuration: const Duration(milliseconds: 300),
+      pageBuilder: (context, anim1, anim2) {
+        Widget content;
+        if (node.type == MapNodeType.shop) {
+          content = const ShopScreen();
+        } else {
+          content = const RestScreen();
+        }
 
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (context) => destination));
+        return BackdropFilter(
+          filter: ui.ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+          child: Center(
+            child: Container(
+              width: MediaQuery.of(context).size.width * 0.9,
+              height: MediaQuery.of(context).size.height * 0.85,
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E1E2C),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.white24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(150),
+                    blurRadius: 30,
+                    spreadRadius: 10,
+                  ),
+                ],
+              ),
+              child: content,
+            ),
+          ),
+        );
+      },
+      transitionBuilder: (context, anim1, anim2, child) {
+        return ScaleTransition(
+          scale: CurvedAnimation(parent: anim1, curve: Curves.easeOutBack),
+          child: FadeTransition(opacity: anim1, child: child),
+        );
+      },
+    );
   }
 }
 
