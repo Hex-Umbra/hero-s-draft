@@ -44,6 +44,10 @@ class CardComponent extends PositionComponent
       final descStyle = (descriptionText.textRenderer as TextPaint).style;
       descriptionText.textRenderer =
           TextPaint(style: descStyle.copyWith(color: descStyle.color?.withValues(alpha: value)));
+          
+      final usageStyle = (usageText.textRenderer as TextPaint).style;
+      usageText.textRenderer =
+          TextPaint(style: usageStyle.copyWith(color: usageStyle.color?.withValues(alpha: value)));
     } catch (_) {
       // Ignorer si les textes ne sont pas encore chargés
     }
@@ -104,6 +108,7 @@ class CardComponent extends PositionComponent
   late TextComponent nameText;
   late TextComponent costText;
   late TextComponent descriptionText;
+  late TextComponent usageText;
 
   CardComponent(this.card) : super(size: Vector2(cardWidth, cardHeight)) {
     anchor = Anchor.center;
@@ -249,6 +254,22 @@ class CardComponent extends PositionComponent
       size: Vector2(size.x - 24, size.y / 2),
     );
     add(descriptionText);
+
+    // Nombre d'utilisations (Usage Unique pour les Pouvoirs)
+    final isPower = card.data.type == CardType.power;
+    usageText = TextComponent(
+      text: isPower ? '1/1' : '',
+      textRenderer: TextPaint(
+        style: const TextStyle(
+          color: Colors.redAccent,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      position: Vector2(size.x - 12, size.y - 12),
+      anchor: Anchor.bottomRight,
+    );
+    add(usageText);
   }
 
   Vector2 _lastSize = Vector2.zero();
