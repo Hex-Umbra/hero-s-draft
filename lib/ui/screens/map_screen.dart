@@ -192,17 +192,17 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
     final canMerge = _checkCanMerge(deckState.masterDeck);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0D1A),
+      backgroundColor: const Color(0xFFE8D5B5), // Fond parchemin clair
       appBar: AppBar(
         title: Text(
           'Acte ${runState.act} - Carte du Monde',
           style: const TextStyle(
-            color: Colors.white,
+            color: Color(0xFF4A3728), // Texte brun foncÃ©
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: Colors.black45,
-        elevation: 0,
+        backgroundColor: const Color(0xFFD2B48C).withAlpha(200), // Tan translucide
+        elevation: 2,
         centerTitle: true,
         leadingWidth: 120,
         leading: TextButton.icon(
@@ -213,7 +213,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
           },
           icon: Stack(
             children: [
-              const Icon(Icons.style, color: Colors.white),
+              const Icon(Icons.style, color: Color(0xFF4A3728)),
               if (canMerge)
                 Positioned(
                   right: 0,
@@ -235,7 +235,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
           label: Text(
             canMerge ? 'DECK (!)' : 'MON DECK',
             style: TextStyle(
-              color: canMerge ? Colors.amber : Colors.white,
+              color: canMerge ? Colors.redAccent : const Color(0xFF4A3728),
               fontWeight: FontWeight.bold,
               fontSize: 12,
             ),
@@ -248,7 +248,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
               children: [
                 const Icon(
                   Icons.monetization_on,
-                  color: Colors.amber,
+                  color: Color(0xFF8B4513),
                   size: 24,
                 ),
                 const SizedBox(width: 4),
@@ -257,7 +257,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.amber,
+                    color: Color(0xFF8B4513),
                   ),
                 ),
               ],
@@ -269,20 +269,29 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
         children: [
           InteractiveViewer(
             transformationController: _transformationController,
-            boundaryMargin: const EdgeInsets.all(
-              2000,
-            ), // Très large marge pour éviter les snaps sur 4K
+            boundaryMargin: const EdgeInsets.all(2000),
             minScale: 0.1,
             maxScale: 2.0,
-            scaleEnabled: false, // Bloque le zoom (dézoom/zoom désactivé)
-            constrained: false, // Permet au Container d'être plus grand que l'écran
+            scaleEnabled: false,
+            constrained: false,
             child: Container(
-              width: 3000, // Largeur généreuse
-              height: 5000, // Hauteur généreuse
+              width: 3000,
+              height: 5000,
               padding: const EdgeInsets.symmetric(
                 horizontal: 1000,
                 vertical: 1000,
-              ), // Centrage des nodes dans le container
+              ),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF5DEB3), // Couleur Wheat
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFFF5DEB3),
+                    const Color(0xFFE8D5B5),
+                    const Color(0xFFD2B48C),
+                  ],
+                  radius: 1.5,
+                ),
+              ),
               child: Stack(
                 children: [
                   CustomPaint(
@@ -291,6 +300,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
                       nodes: nodes,
                       animation: _dashController,
                       highlightedConnections: _highlightedConnections,
+                      isParchmentMode: true,
                     ),
                   ),
                   ...nodes.map(
@@ -305,7 +315,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
                       onHoverExit: () => _updateHighlight(null, nodes, currentNodeId),
                     ),
                   ),
-                  // Pion du Joueur Animé
+                  // Pion du Joueur AnimÃ©
                   if (currentNodeId != null)
                     _PlayerPawn(
                       position: nodes.firstWhere((n) => n.id == currentNodeId).position,
@@ -321,9 +331,16 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.black54,
+                color: const Color(0xFF4A3728).withAlpha(230), // Brun foncé
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.white24),
+                border: Border.all(color: const Color(0xFFD2B48C)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(50),
+                    blurRadius: 10,
+                    offset: const Offset(2, 2),
+                  ),
+                ],
               ),
               child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -332,7 +349,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
                   Text(
                     'LÉGENDE',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: Color(0xFFE8D5B5), // Couleur parchemin
                       fontWeight: FontWeight.bold,
                       fontSize: 12,
                     ),
@@ -340,7 +357,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
                   Divider(color: Colors.white24),
                   _LegendItem(
                     icon: Icons.flash_on,
-                    color: Colors.white70,
+                    color: Colors.white,
                     label: 'Combat',
                   ),
                   _LegendItem(
@@ -382,16 +399,16 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2A2A3D).withAlpha(240),
+                    color: const Color(0xFFF4ECD8), // Fond papier
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: Colors.blueAccent,
+                      color: const Color(0xFF8B4513),
                       width: 2,
                     ),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withAlpha(100),
-                        blurRadius: 10,
+                        blurRadius: 15,
                         spreadRadius: 5,
                       ),
                     ],
@@ -403,16 +420,16 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
                       Text(
                         _tooltipTitle ?? '',
                         style: const TextStyle(
-                          color: Colors.blueAccent,
+                          color: Color(0xFF8B4513), // Brun sienne
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const Divider(color: Colors.white24),
+                      const Divider(color: Colors.black12),
                       Text(
                         _tooltipDescription ?? '',
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: Color(0xFF4A3728), // Brun sombre
                           fontSize: 14,
                         ),
                       ),
@@ -728,22 +745,28 @@ class MapConnectionPainter extends CustomPainter {
   final List<MapNode> nodes;
   final Animation<double> animation;
   final Set<(String, String)> highlightedConnections;
+  final bool isParchmentMode;
 
   MapConnectionPainter({
     required this.nodes,
     required this.animation,
     this.highlightedConnections = const {},
+    this.isParchmentMode = false,
   }) : super(repaint: animation);
 
   @override
   void paint(Canvas canvas, Size size) {
     final paintBase = Paint()
-      ..color = Colors.white.withAlpha(60)
+      ..color = isParchmentMode
+          ? const Color(0xFF4A3728).withAlpha(80) // Brun encre dilué
+          : Colors.white.withAlpha(60)
       ..strokeWidth = 3
       ..style = PaintingStyle.stroke;
 
     final paintHighlight = Paint()
-      ..color = Colors.blueAccent
+      ..color = isParchmentMode
+          ? const Color(0xFF8B4513) // Brun sienne pour la surbrillance
+          : Colors.blueAccent
       ..strokeWidth = 5
       ..style = PaintingStyle.stroke
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
