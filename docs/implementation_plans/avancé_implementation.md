@@ -203,6 +203,9 @@
 - feat: implémentation Étape 3
     - Boutique et Repos en Overlays (Transitions Immersives)
         - J'ai terminé l'Étape 3. Les écrans de Boutique (`ShopScreen`) et de Repos (`RestScreen`) ne sont plus des pages séparées mais s'ouvrent désormais sous forme de modales translucides (`showGeneralDialog`) par-dessus la carte du monde. L'utilisation d'un `BackdropFilter` pour flouter l'arrière-plan permet au joueur de garder le contexte visuel du voyage tout en effectuant ses achats ou son repos, renforçant considérablement l'immersion.
+- feat: implémentation Étape 4
+    - Surbrillance dynamique des Chemins (Path Highlighting)
+        - J'ai terminé l'Étape 4. Un système de planification de route a été mis en place. Lorsqu'un joueur survole un nœud accessible (même éloigné de plusieurs étages), un algorithme de recherche récursif identifie tous les chemins possibles depuis la position actuelle. Les lignes de connexion correspondantes s'illuminent alors d'une lueur bleue intense dans le `MapConnectionPainter`, permettant au joueur de mieux anticiper sa progression stratégique.
 
 
         ## Phase 9 - Visual Juice & Game Feel (Style Balatro)

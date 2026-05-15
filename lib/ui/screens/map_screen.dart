@@ -26,6 +26,74 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
 
   late final AnimationController _dashController;
 
+  // État de la surbrillance
+  Set<String> _highlightedNodeIds = {};
+  Set<(String, String)> _highlightedConnections = {};
+
+  void _updateHighlight(String? hoveredNodeId, List<MapNode> nodes, String? currentNodeId) {
+    if (hoveredNodeId == null) {
+      if (_highlightedNodeIds.isNotEmpty || _highlightedConnections.isNotEmpty) {
+        setState(() {
+          _highlightedNodeIds = {};
+          _highlightedConnections = {};
+        });
+      }
+      return;
+    }
+
+    // Si on survole le noeud actuel ou un noeud non atteignable, on ignore
+    if (hoveredNodeId == currentNodeId) return;
+
+    final Set<String> reachableNodes = {};
+    final Set<(String, String)> reachableConnections = {};
+
+    // Algorithme de recherche inverse : On part du noeud survolé et on remonte
+    // vers le noeud actuel pour voir s'il y a un chemin.
+    if (_findPathToCurrent(hoveredNodeId, currentNodeId, nodes, reachableNodes, reachableConnections)) {
+      setState(() {
+        _highlightedNodeIds = reachableNodes;
+        _highlightedConnections = reachableConnections;
+      });
+    }
+  }
+
+  bool _findPathToCurrent(
+    String targetId,
+    String? startId,
+    List<MapNode> allNodes,
+    Set<String> pathNodes,
+    Set<(String, String)> pathConnections,
+  ) {
+    // Si on a atteint le point de départ (ou l'étage 0 si on n'a pas commencé)
+    if (targetId == startId || (startId == null && targetId.startsWith('node_0_'))) {
+      pathNodes.add(targetId);
+      return true;
+    }
+
+    // Trouver tous les parents (noeuds de l'étage précédent qui pointent vers targetId)
+    bool foundPath = false;
+    
+    // Optimisation : seuls les noeuds de l'étage précédent peuvent être parents
+    final targetFloor = int.parse(targetId.split('_')[1]);
+    if (targetFloor == 0) return false;
+
+    final parents = allNodes.where((n) {
+      final nFloor = int.parse(n.id.split('_')[1]);
+      return nFloor == targetFloor - 1 && n.connections.contains(targetId);
+    });
+
+    for (var parent in parents) {
+      if (_findPathToCurrent(parent.id, startId, allNodes, pathNodes, pathConnections)) {
+        pathNodes.add(targetId);
+        pathNodes.add(parent.id);
+        pathConnections.add((parent.id, targetId));
+        foundPath = true;
+      }
+    }
+
+    return foundPath;
+  }
+
   // État des tooltips
   String? _tooltipTitle;
   String? _tooltipDescription;
@@ -222,6 +290,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
                     painter: MapConnectionPainter(
                       nodes: nodes,
                       animation: _dashController,
+                      highlightedConnections: _highlightedConnections,
                     ),
                   ),
                   ...nodes.map(
@@ -232,6 +301,8 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
                       onTap: () => _onNodeTap(context, ref, node),
                       onShowTooltip: _showNodeTooltip,
                       onHideTooltip: _hideTooltip,
+                      onHoverEnter: () => _updateHighlight(node.id, nodes, currentNodeId),
+                      onHoverExit: () => _updateHighlight(null, nodes, currentNodeId),
                     ),
                   ),
                   // Pion du Joueur Animé
@@ -457,6 +528,8 @@ class _MapNodeWidget extends StatefulWidget {
   final VoidCallback onTap;
   final Function(String, String) onShowTooltip;
   final VoidCallback onHideTooltip;
+  final VoidCallback onHoverEnter;
+  final VoidCallback onHoverExit;
 
   const _MapNodeWidget({
     required this.node,
@@ -465,6 +538,8 @@ class _MapNodeWidget extends StatefulWidget {
     required this.onTap,
     required this.onShowTooltip,
     required this.onHideTooltip,
+    required this.onHoverEnter,
+    required this.onHoverExit,
   });
 
   @override
@@ -547,8 +622,14 @@ class _MapNodeWidgetState extends State<_MapNodeWidget> {
       left: widget.node.position.x - 35,
       top: widget.node.position.y - 35,
       child: MouseRegion(
-        onEnter: (_) => setState(() => _isHovered = true),
-        onExit: (_) => setState(() => _isHovered = false),
+        onEnter: (_) {
+          setState(() => _isHovered = true);
+          widget.onHoverEnter();
+        },
+        onExit: (_) {
+          setState(() => _isHovered = false);
+          widget.onHoverExit();
+        },
         cursor: widget.isAvailable
             ? SystemMouseCursors.click
             : SystemMouseCursors.basic,
@@ -646,16 +727,26 @@ class _LegendItem extends StatelessWidget {
 class MapConnectionPainter extends CustomPainter {
   final List<MapNode> nodes;
   final Animation<double> animation;
+  final Set<(String, String)> highlightedConnections;
 
-  MapConnectionPainter({required this.nodes, required this.animation})
-      : super(repaint: animation);
+  MapConnectionPainter({
+    required this.nodes,
+    required this.animation,
+    this.highlightedConnections = const {},
+  }) : super(repaint: animation);
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
+    final paintBase = Paint()
       ..color = Colors.white.withAlpha(60)
       ..strokeWidth = 3
       ..style = PaintingStyle.stroke;
+
+    final paintHighlight = Paint()
+      ..color = Colors.blueAccent
+      ..strokeWidth = 5
+      ..style = PaintingStyle.stroke
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
 
     final double dashLength = 12.0;
     final double dashSpace = 8.0;
@@ -665,7 +756,9 @@ class MapConnectionPainter extends CustomPainter {
       for (var targetId in node.connections) {
         try {
           final targetNode = nodes.firstWhere((n) => n.id == targetId);
-          
+          final bool isHighlighted = highlightedConnections.contains((node.id, targetId));
+          final paint = isHighlighted ? paintHighlight : paintBase;
+
           final Path path = Path()
             ..moveTo(node.position.x, node.position.y)
             ..lineTo(targetNode.position.x, targetNode.position.y);
@@ -697,7 +790,9 @@ class MapConnectionPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant MapConnectionPainter oldDelegate) =>
-      oldDelegate.nodes != nodes || oldDelegate.animation != animation;
+      oldDelegate.nodes != nodes ||
+      oldDelegate.animation != animation ||
+      oldDelegate.highlightedConnections != highlightedConnections;
 }
 
 class _PlayerPawn extends StatelessWidget {
