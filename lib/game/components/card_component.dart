@@ -288,9 +288,15 @@ class CardComponent extends PositionComponent
 
   String _buildDescription() {
     String desc = '';
+    // Récupérer l'attaque du héros via le jeu pour l'affichage dynamique
+    final heroAttack = game.heroCard?.stats.effectiveAttaque ?? 0;
+
     for (var effect in card.data.effects) {
       final scaledValue = (effect.value * (1 + (card.level - 1) * 0.5)).round();
-      if (effect.type == 'damage') desc += 'Inflige $scaledValue dégâts.\n';
+      if (effect.type == 'damage') {
+        final totalDmg = scaledValue + heroAttack;
+        desc += 'Inflige $totalDmg dégâts.\n';
+      }
       if (effect.type == 'heal') desc += 'Soigne $scaledValue PV.\n';
       if (effect.type == 'armor') desc += 'Donne $scaledValue Armure.\n';
     }

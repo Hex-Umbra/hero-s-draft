@@ -212,3 +212,6 @@
 - feat: Indicateurs visuels pour les cartes à usage unique (Pouvoirs)
     - Clarification de la mécanique d'épuisement
         - Afin de rendre explicite la mécanique d'épuisement des cartes de type "Pouvoir", j'ai ajouté un badge rouge "USAGE UNIQUE" sur les `UiCard` et une mention "USAGE UNIQUE (Épuisement)" dans les tooltips détaillés. De plus, pendant le combat, ces cartes affichent désormais un indicateur "1/1" en rouge en bas à droite pour signaler leur usage unique immédiat.
+- feat: Affichage dynamique des dégâts finaux sur les cartes
+    - Calcul en temps réel avec bonus d'attaque
+        - Les cartes d'attaque affichent désormais la somme exacte des dégâts qui seront infligés (Dégâts de base de la carte + Statistique d'Attaque du héros). Cet affichage est mis à jour dynamiquement pendant le combat, permettant au joueur de voir l'impact de ses buffs de force ou débuffs de faiblesse directement sur ses cartes avant de les jouer.
