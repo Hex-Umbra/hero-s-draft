@@ -311,13 +311,13 @@ class _MapNodeWidget extends StatelessWidget {
                   border: Border.all(
                     color: isCurrent
                         ? Colors.yellow
-                        : (isAvailable ? color : color.withValues(alpha: 0.5)),
+                        : (isAvailable ? color : color.withAlpha(128)),
                     width: isCurrent ? 4 : 2,
                   ),
                   boxShadow: isCurrent
                       ? [
                           BoxShadow(
-                            color: Colors.yellow.withValues(alpha: 0.5),
+                            color: Colors.yellow.withAlpha(128),
                             blurRadius: 15,
                             spreadRadius: 2,
                           ),
@@ -328,7 +328,7 @@ class _MapNodeWidget extends StatelessWidget {
                   icon,
                   color: isAvailable || isCurrent
                       ? color
-                      : color.withValues(alpha: 0.5),
+                      : color.withAlpha(128),
                   size: 35,
                 ),
               ),
@@ -350,7 +350,7 @@ class MapConnectionPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.12)
+      ..color = Colors.white.withAlpha(30)
       ..strokeWidth = 3
       ..style = PaintingStyle.stroke;
 
@@ -374,3 +374,4 @@ class MapConnectionPainter extends CustomPainter {
   bool shouldRepaint(covariant MapConnectionPainter oldDelegate) =>
       oldDelegate.nodes != nodes;
 }
+

@@ -339,10 +339,11 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
                 // HUD Bas (Vie + Deck)
                 if (!runState.isDead && !_showDraft)
-                  Align(
-                    alignment: Alignment.bottomCenter,
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
                     child: SizedBox(
-                      width: screenWidth,
                       height: 50,
                       child: Stack(
                         alignment: Alignment.center,
@@ -383,7 +384,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                           // Bouton Mon Deck (Positionné à gauche de la barre)
                           Positioned(
                             bottom: 0,
-                            left: (screenWidth * 0.35) - 50, // Ajusté pour être à gauche du centre
+                            left: (screenWidth * 0.35) - 50,
                             child: IconButton(
                               icon: const Icon(Icons.style, color: Colors.amber),
                               tooltip: 'Mon Deck',
@@ -405,29 +406,27 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
                 // Bouton Fin de Tour (Milieu Droite)
                 if (!runState.isDead && !_showDraft)
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: 20),
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blueAccent,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 12,
-                          ),
+                  Positioned(
+                    right: 20,
+                    top: MediaQuery.of(context).size.height / 2 - 25,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blueAccent,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
                         ),
-                        onPressed: () {
-                          ref.read(deckProvider.notifier).discardHand();
-                          _game.executeTurn();
-                        },
-                        icon: const Icon(Icons.check, color: Colors.white),
-                        label: const Text(
-                          'Fin de Tour',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      ),
+                      onPressed: () {
+                        ref.read(deckProvider.notifier).discardHand();
+                        _game.executeTurn();
+                      },
+                      icon: const Icon(Icons.check, color: Colors.white),
+                      label: const Text(
+                        'Fin de Tour',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),

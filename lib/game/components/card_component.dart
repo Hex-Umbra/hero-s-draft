@@ -25,32 +25,86 @@ class CardComponent extends PositionComponent
   @override
   double get opacity => _opacity;
 
+  // TextPainters pour le rendu manuel
+  late TextPainter _namePainter;
+  late TextPainter _costPainter;
+  late TextPainter _descPainter;
+  late TextPainter _usagePainter;
+
+  // État visuel actuel (pour savoir si on doit repeindre en blanc, etc.)
+  bool _isFlashing = false;
+  bool _isCancelling = false;
+
   @override
   set opacity(double value) {
+    if (_opacity == value) return;
     _opacity = value;
-    backgroundPaint.color = backgroundPaint.color.withValues(alpha: value);
-    borderPaint.color = borderPaint.color.withValues(alpha: value);
+    _updateTextPainters();
+  }
 
-    // Appliquer aux textes (si initialisés)
-    try {
-      final nameStyle = (nameText.textRenderer as TextPaint).style;
-      nameText.textRenderer =
-          TextPaint(style: nameStyle.copyWith(color: nameStyle.color?.withValues(alpha: value)));
-          
-      final costStyle = (costText.textRenderer as TextPaint).style;
-      costText.textRenderer =
-          TextPaint(style: costStyle.copyWith(color: costStyle.color?.withValues(alpha: value)));
-          
-      final descStyle = (descriptionText.textRenderer as TextPaint).style;
-      descriptionText.textRenderer =
-          TextPaint(style: descStyle.copyWith(color: descStyle.color?.withValues(alpha: value)));
-          
-      final usageStyle = (usageText.textRenderer as TextPaint).style;
-      usageText.textRenderer =
-          TextPaint(style: usageStyle.copyWith(color: usageStyle.color?.withValues(alpha: value)));
-    } catch (_) {
-      // Ignorer si les textes ne sont pas encore chargés
+  void _updateTextPainters() {
+    final int alpha = (_opacity * 255).toInt();
+    
+    // Configurer le style de base selon l'état
+    Color nameColor = _isFlashing ? Colors.transparent : Colors.white.withAlpha(alpha);
+    Color costColor = _isFlashing ? Colors.transparent : Colors.lightBlueAccent.withAlpha(alpha);
+    Color descColor = _isFlashing ? Colors.transparent : Colors.white70.withAlpha(alpha);
+    Color usageColor = _isFlashing ? Colors.transparent : Colors.redAccent.withAlpha(alpha);
+
+    if (_isCancelling) {
+      nameColor = Colors.white.withAlpha((alpha * 0.6).toInt());
+      costColor = Colors.lightBlueAccent.withAlpha((alpha * 0.6).toInt());
+      descColor = Colors.white70.withAlpha((alpha * 0.6).toInt());
     }
+
+    _namePainter = TextPainter(
+      text: TextSpan(
+        text: card.data.name,
+        style: TextStyle(
+          color: nameColor,
+          fontSize: 13,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+      textAlign: TextAlign.center,
+    )..layout(maxWidth: size.x - 24);
+
+    _costPainter = TextPainter(
+      text: TextSpan(
+        text: '${card.currentCost}',
+        style: TextStyle(
+          color: costColor,
+          fontSize: 22,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+
+    _descPainter = TextPainter(
+      text: TextSpan(
+        text: _buildDescription(),
+        style: TextStyle(
+          color: descColor,
+          fontSize: 10,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+      textAlign: TextAlign.center,
+    )..layout(maxWidth: size.x - 20);
+
+    _usagePainter = TextPainter(
+      text: TextSpan(
+        text: card.data.type == CardType.power ? '1/1' : '',
+        style: TextStyle(
+          color: usageColor,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
   }
 
   @override
@@ -105,11 +159,6 @@ class CardComponent extends PositionComponent
     ..style = PaintingStyle.stroke
     ..strokeWidth = 3;
 
-  late TextComponent nameText;
-  late TextComponent costText;
-  late TextComponent descriptionText;
-  late TextComponent usageText;
-
   CardComponent(this.card) : super(size: Vector2(cardWidth, cardHeight)) {
     anchor = Anchor.center;
   }
@@ -137,8 +186,6 @@ class CardComponent extends PositionComponent
       // Amortissement du tilt cible pour qu'il revienne à 0 quand le mouvement s'arrête
       _targetTilt += (0 - _targetTilt) * 5 * dt;
 
-      // TODO: Audio Hook - sfx_card_slide (Jouer un son de glissement si la vitesse est élevée)
-
       // Génération de la queue de particules améliorée (Blanche + Arc-en-ciel)
       _spawnTrailParticles();
       // Mise à jour du ruban
@@ -149,29 +196,24 @@ class CardComponent extends PositionComponent
   double _particleHue = 0;
 
   void _spawnTrailParticles() {
-    // On fait défiler la teinte (0-360) pour l'effet arc-en-ciel
     _particleHue = (_particleHue + 15) % 360;
     final rainbowColor =
         HSVColor.fromAHSV(1.0, _particleHue, 0.8, 1.0).toColor();
 
-    // Vecteur de gravité (vers le bas)
     final gravity = Vector2(0, 150);
 
-    // Création d'un mélange de particules avec gravité (AcceleratedParticle)
     game.add(
       ParticleSystemComponent(
         particle: Particle.generate(
           count: 3,
-          lifespan: 0.6, // Un peu plus long pour voir l'effet de chute
+          lifespan: 0.6,
           generator: (i) {
-            // Vitesse initiale aléatoire pour que les particules "sortent" de la carte
             final initialVelocity = Vector2(
               (rand.nextDouble() - 0.5) * 50,
               (rand.nextDouble() - 0.5) * 50,
             );
 
             if (i == 0) {
-              // Particule blanche
               return AcceleratedParticle(
                 position: position.clone(),
                 speed: initialVelocity,
@@ -184,7 +226,6 @@ class CardComponent extends PositionComponent
                 ),
               );
             } else {
-              // Particules arc-en-ciel
               return AcceleratedParticle(
                 position: position.clone(),
                 speed: initialVelocity * 1.5,
@@ -207,69 +248,8 @@ class CardComponent extends PositionComponent
 
   @override
   Future<void> onLoad() async {
-    // Appliquer l'échelle initiale (Réduite pour la main)
     scale = Vector2.all(game.scaleFactor * 0.75);
-
-    // Nom de la carte
-    nameText = TextComponent(
-      text: card.data.name,
-      textRenderer: TextPaint(
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 13,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      position: Vector2(
-        size.x / 2 + 12,
-        12,
-      ), // Décalé vers la droite pour éviter le mana
-      anchor: Anchor.topCenter,
-    );
-    add(nameText);
-
-    // Coût en mana
-    costText = TextComponent(
-      text: '${card.currentCost}',
-      textRenderer: TextPaint(
-        style: const TextStyle(
-          color: Colors.lightBlueAccent,
-          fontSize: 22,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      position: Vector2(16, 16),
-      anchor: Anchor.center,
-    );
-    add(costText);
-
-    // Description (simplifiée pour l'instant)
-    descriptionText = TextComponent(
-      text: _buildDescription(),
-      textRenderer: TextPaint(
-        style: const TextStyle(color: Colors.white70, fontSize: 11),
-      ),
-      position: Vector2(size.x / 2, size.y / 2 + 15),
-      anchor: Anchor.center,
-      size: Vector2(size.x - 24, size.y / 2),
-    );
-    add(descriptionText);
-
-    // Nombre d'utilisations (Usage Unique pour les Pouvoirs)
-    final isPower = card.data.type == CardType.power;
-    usageText = TextComponent(
-      text: isPower ? '1/1' : '',
-      textRenderer: TextPaint(
-        style: const TextStyle(
-          color: Colors.redAccent,
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      position: Vector2(size.x - 12, size.y - 12),
-      anchor: Anchor.bottomRight,
-    );
-    add(usageText);
+    _updateTextPainters();
   }
 
   Vector2 _lastSize = Vector2.zero();
@@ -280,7 +260,6 @@ class CardComponent extends PositionComponent
     _lastSize = size.clone();
     super.onGameResize(size);
 
-    // Mise à jour de l'échelle si on n'est pas en train de drag ou focus
     if (!isDragging && game.focusedCard != this) {
       scale = Vector2.all(game.scaleFactor * 0.75);
     }
@@ -288,7 +267,6 @@ class CardComponent extends PositionComponent
 
   String _buildDescription() {
     String desc = '';
-    // Récupérer l'attaque du héros via le jeu pour l'affichage dynamique
     final heroAttack = game.heroCard?.stats.effectiveAttaque ?? 0;
 
     for (var effect in card.data.effects) {
@@ -302,16 +280,8 @@ class CardComponent extends PositionComponent
     }
     if (desc.isEmpty) {
       desc = card.data.description;
-      // Ajout basique de retour à la ligne pour les descriptions longues sans effets
-      if (desc.length > 20) {
-        int spaceIdx = desc.indexOf(' ', 15);
-        if (spaceIdx != -1 && spaceIdx < desc.length - 1) {
-          desc =
-              '${desc.substring(0, spaceIdx)}\n${desc.substring(spaceIdx + 1)}';
-        }
-      }
     }
-    return desc;
+    return desc.trim();
   }
 
   @override
@@ -324,6 +294,32 @@ class CardComponent extends PositionComponent
     // Bordure
     canvas.drawRRect(rrect, borderPaint);
 
+    // Dessin manuel des textes
+    if (!_isFlashing) {
+      // Nom
+      _namePainter.paint(
+        canvas,
+        Offset(size.x / 2 - _namePainter.width / 2 + 10, 10),
+      );
+      // Coût
+      _costPainter.paint(canvas, const Offset(8, 6));
+      // Description (centrée verticalement et horizontalement)
+      _descPainter.paint(
+        canvas,
+        Offset(
+          size.x / 2 - _descPainter.width / 2,
+          size.y / 2 + 15 - _descPainter.height / 2,
+        ),
+      );
+      // Usage
+      if (card.data.type == CardType.power) {
+        _usagePainter.paint(
+          canvas,
+          Offset(size.x - _usagePainter.width - 8, size.y - _usagePainter.height - 8),
+        );
+      }
+    }
+
     super.render(canvas);
   }
 
@@ -331,8 +327,7 @@ class CardComponent extends PositionComponent
   void onTapDown(TapDownEvent event) {
     super.onTapDown(event);
     game.setFocusedCard(this);
-    event.continuePropagation =
-        false; // Empêche l'événement de se propager au jeu (qui annulerait le focus)
+    event.continuePropagation = false;
   }
 
   void _clearEffects() {
@@ -348,7 +343,6 @@ class CardComponent extends PositionComponent
     isDragging = true;
     _targetTilt = 0;
 
-    // Initialisation du ruban
     _activeTrail = RibbonTrail(
       priority: priority - 1,
       glowColor: Colors.amber,
@@ -356,8 +350,6 @@ class CardComponent extends PositionComponent
     );
     game.add(_activeTrail!);
 
-    // Nettoie proprement le focus/hover au niveau du jeu,
-    // (le flag isDragging = true empêchera setFocusedCard d'ajouter une animation de retour)
     if (game.focusedCard == this) {
       game.setFocusedCard(null);
     }
@@ -368,29 +360,21 @@ class CardComponent extends PositionComponent
     _clearEffects();
     priority = 200;
 
-    // La carte se remet droite et s'agrandit pour le drag
     angle = 0;
     scale = Vector2.all(game.scaleFactor * 0.75 * 1.25);
   }
 
   @override
   void onDragUpdate(DragUpdateEvent event) {
-    // Utiliser canvasDelta évite les distorsions si l'échelle (scale) est modifiée
     position += event.canvasDelta;
-
-    // Calcul du tilt dynamique basé sur la vitesse horizontale
-    // On limite l'inclinaison pour ne pas faire de tours complets
     _targetTilt = (event.canvasDelta.x * 0.08).clamp(-0.4, 0.4);
 
-    // Feedback visuel de zone de sécurité (annulation)
-    // On utilise désormais 80% de la hauteur de l'écran comme seuil
     bool isInCancelZone = position.y > game.size.y * 0.8;
     if (isInCancelZone != _isHoveringCancelZone) {
       _isHoveringCancelZone = isInCancelZone;
       _applyCancelZoneFeedback(_isHoveringCancelZone);
     }
 
-    // Gestion du ciblage (Arrow) - Uniquement si on n'est pas en zone d'annulation
     if (card.data.target == CardTarget.singleEnemy) {
       EnemyCard? hoveredEnemy = _isHoveringCancelZone
           ? null
@@ -401,45 +385,18 @@ class CardComponent extends PositionComponent
 
   void _applyCancelZoneFeedback(bool isCancelling) {
     _clearEffects();
+    _isCancelling = isCancelling;
+    
     if (isCancelling) {
-      // Effet d'annulation : plus petit, transparent, bordure grise
       add(ScaleEffect.to(Vector2.all(0.9), EffectController(duration: 0.1)));
       backgroundPaint.color = const Color(0xFF2A2A3D).withAlpha(150);
       borderPaint.color = Colors.grey;
-
-      final nameStyle = (nameText.textRenderer as TextPaint).style;
-      final costStyle = (costText.textRenderer as TextPaint).style;
-      final descStyle = (descriptionText.textRenderer as TextPaint).style;
-
-      nameText.textRenderer = TextPaint(
-        style: nameStyle.copyWith(color: Colors.white.withAlpha(150)),
-      );
-      costText.textRenderer = TextPaint(
-        style: costStyle.copyWith(color: Colors.lightBlueAccent.withAlpha(150)),
-      );
-      descriptionText.textRenderer = TextPaint(
-        style: descStyle.copyWith(color: Colors.white70.withAlpha(150)),
-      );
     } else {
-      // Effet actif : grand, opaque, bordure bleue
       add(ScaleEffect.to(Vector2.all(1.25), EffectController(duration: 0.1)));
       backgroundPaint.color = const Color(0xFF2A2A3D);
       borderPaint.color = Colors.blueAccent;
-
-      final nameStyle = (nameText.textRenderer as TextPaint).style;
-      final costStyle = (costText.textRenderer as TextPaint).style;
-      final descStyle = (descriptionText.textRenderer as TextPaint).style;
-
-      nameText.textRenderer = TextPaint(
-        style: nameStyle.copyWith(color: Colors.white),
-      );
-      costText.textRenderer = TextPaint(
-        style: costStyle.copyWith(color: Colors.lightBlueAccent),
-      );
-      descriptionText.textRenderer = TextPaint(
-        style: descStyle.copyWith(color: Colors.white70),
-      );
     }
+    _updateTextPainters();
   }
 
   @override
@@ -447,9 +404,8 @@ class CardComponent extends PositionComponent
     super.onDragEnd(event);
     isDragging = false;
     _targetTilt = 0;
-    game.setFocusedCard(null); // On enlève le focus systématiquement
+    game.setFocusedCard(null);
     
-    // Arrêt du ruban
     _activeTrail?.stop();
     _activeTrail = null;
 
@@ -480,7 +436,6 @@ class CardComponent extends PositionComponent
     _targetTilt = 0;
     game.setFocusedCard(null);
     
-    // Arrêt du ruban
     _activeTrail?.stop();
     _activeTrail = null;
 
@@ -499,28 +454,13 @@ class CardComponent extends PositionComponent
 
   void _returnToHand() {
     _isHoveringCancelZone = false;
+    _isCancelling = false;
+    _isFlashing = false;
 
-    // Reset visual state
     backgroundPaint.color = const Color(0xFF2A2A3D);
     borderPaint.color = Colors.blueAccent;
-    nameText.textRenderer = TextPaint(
-      style: const TextStyle(
-        color: Colors.white,
-        fontSize: 16,
-        fontWeight: FontWeight.bold,
-      ),
-    );
-    costText.textRenderer = TextPaint(
-      style: const TextStyle(
-        color: Colors.lightBlueAccent,
-        fontSize: 24,
-        fontWeight: FontWeight.bold,
-      ),
-    );
-    descriptionText.textRenderer = TextPaint(
-      style: const TextStyle(color: Colors.white70, fontSize: 14),
-    );
-
+    
+    _updateTextPainters();
     _clearEffects();
 
     add(
@@ -547,7 +487,7 @@ class CardComponent extends PositionComponent
 
   void playAnimation(EnemyCard? target, {required VoidCallback onComplete}) {
     isDragging = false;
-    priority = 500; // Au-dessus de tout le monde
+    priority = 500;
 
     final animType = card.data.animation ?? 'melee';
 
@@ -584,13 +524,11 @@ class CardComponent extends PositionComponent
   ) {
     final targetPos = target?.position ?? position + Vector2(0, -size.y * 2);
 
-    // Effet visuel thématique
-    backgroundPaint.color = color.withValues(alpha: 0.8);
+    backgroundPaint.color = color.withAlpha(204);
     borderPaint.color = Colors.white;
 
     add(
       SequenceEffect([
-        // 1. Ascension et rotation (Chargement magique)
         CombinedEffect([
           MoveEffect.by(
             Vector2(0, -50),
@@ -601,24 +539,20 @@ class CardComponent extends PositionComponent
             EffectController(duration: 0.4, alternate: true),
           ),
         ]),
-        // 2. Dash rapide vers la cible
         MoveEffect.to(
           targetPos,
           EffectController(duration: 0.2, curve: Curves.easeIn),
         ),
-        // 3. Explosion thématique et disparition
         ScaleEffect.to(
           Vector2.all(0.0),
           EffectController(duration: 0.1),
           onComplete: () {
             if (target != null) {
-              // Particules thématiques denses
               _spawnImpactParticles(
                 targetPos,
                 color: color,
                 count: 30,
               );
-              // Réaction de l'ennemi
               target.shakeAndFlashAnimation();
             }
             onComplete();
@@ -629,40 +563,33 @@ class CardComponent extends PositionComponent
   }
 
   void _playMeleeAnimation(EnemyCard? target, VoidCallback onComplete) {
-    // Direction de l'attaque
     final targetPos = target?.position ?? position + Vector2(0, -size.y * 2);
     final anticipationDir = (position - targetPos).normalized();
 
-    // Flash blanc
     _applyFlashVisual();
 
     add(
       SequenceEffect([
-        // 1. Anticipation (Recule légèrement)
         MoveEffect.by(
           anticipationDir * 40,
           EffectController(duration: 0.1, curve: Curves.easeOut),
         ),
-        // 2. Dash vers la cible
         MoveEffect.to(
           targetPos,
           EffectController(duration: 0.15, curve: Curves.easeIn),
         ),
-        // 3. Impact et disparition
         ScaleEffect.to(
           Vector2.all(0.0),
           EffectController(duration: 0.05),
           onComplete: () {
-            // Effet de Slash sur l'ennemi
             if (target != null) {
               game.add(
                 SlashEffect(
                   position: target.position.clone(),
-                  size: target.size * 1.5, // Plus grand que l'ennemi pour le style
+                  size: target.size * 1.5,
                   color: Colors.redAccent,
                 ),
               );
-              // Faire trembler l'ennemi
               target.shakeAndFlashAnimation();
             }
 
@@ -677,18 +604,15 @@ class CardComponent extends PositionComponent
   void _playMagicAnimation(EnemyCard? target, VoidCallback onComplete) {
     final targetPos = target?.position ?? position + Vector2(0, -size.y * 2);
 
-    // Effet visuel : Teinte violette/magique
     backgroundPaint.color = Colors.deepPurpleAccent;
     borderPaint.color = Colors.cyanAccent;
 
     add(
       SequenceEffect([
-        // 1. Lévitation et vibration
         MoveEffect.by(
           Vector2(0, -30),
           EffectController(duration: 0.3, curve: Curves.easeInOut),
         ),
-        // 2. Pulsation (Chargement)
         ScaleEffect.to(
           Vector2.all(game.scaleFactor * 1.1),
           EffectController(
@@ -697,7 +621,6 @@ class CardComponent extends PositionComponent
             curve: Curves.elasticIn,
           ),
         ),
-        // 3. Explosion magique et disparition
         ScaleEffect.to(
           Vector2.all(0.0),
           EffectController(duration: 0.2, curve: Curves.easeIn),
@@ -715,18 +638,15 @@ class CardComponent extends PositionComponent
   }
 
   void _playBuffAnimation(VoidCallback onComplete) {
-    // Effet visuel : Teinte dorée
     backgroundPaint.color = Colors.amber.withAlpha(200);
     borderPaint.color = Colors.white;
 
     add(
       SequenceEffect([
-        // 1. Montée douce (Élévation spirituelle)
         MoveEffect.by(
           Vector2(0, -100),
           EffectController(duration: 0.6, curve: Curves.easeOut),
         ),
-        // 2. Fondu et disparition
         OpacityEffect.to(
           0.0,
           EffectController(duration: 0.3),
@@ -739,17 +659,10 @@ class CardComponent extends PositionComponent
   }
 
   void _applyFlashVisual() {
+    _isFlashing = true;
     backgroundPaint.color = Colors.white;
     borderPaint.color = Colors.white;
-    nameText.textRenderer = TextPaint(
-      style: const TextStyle(color: Colors.transparent),
-    );
-    costText.textRenderer = TextPaint(
-      style: const TextStyle(color: Colors.transparent),
-    );
-    descriptionText.textRenderer = TextPaint(
-      style: const TextStyle(color: Colors.transparent),
-    );
+    _updateTextPainters();
   }
 
   void _spawnImpactParticles(
@@ -781,3 +694,4 @@ class CardComponent extends PositionComponent
     );
   }
 }
+

@@ -215,3 +215,12 @@
 - feat: Affichage dynamique des dégâts finaux sur les cartes
     - Calcul en temps réel avec bonus d'attaque
         - Les cartes d'attaque affichent désormais la somme exacte des dégâts qui seront infligés (Dégâts de base de la carte + Statistique d'Attaque du héros). Cet affichage est mis à jour dynamiquement pendant le combat, permettant au joueur de voir l'impact de ses buffs de force ou débuffs de faiblesse directement sur ses cartes avant de les jouer.
+- fix: Optimisation de l'affichage du texte sur les cartes en combat
+    - Utilisation de TextBoxComponent et gestion de l'overflow
+        - J'ai corrigé les problèmes de dépassement de texte sur les cartes jouées pendant le combat. L'utilisation de `TextBoxComponent` permet désormais un retour à la ligne automatique pour les descriptions. Les tailles de police et les marges internes ont été ajustées pour garantir que le nom de la carte et ses effets restent parfaitement lisibles et confinés dans les limites de la carte.
+- fix: Restauration de la visibilité des entités et de l'interactivité
+    - Correction des crashs Flame et du blocage des hit-tests
+        - J'ai résolu un bug majeur qui rendait les entités de jeu invisibles et l'interface non interactive. La cause était double : un crash silencieux du moteur Flame dû à des méthodes de couleur incompatibles, et un blocage des événements tactiles par une `SafeArea` mal positionnée. J'ai sécurisé le `CardComponent` avec des méthodes robustes (`withAlpha`) et refactorisé le HUD de `GameScreen` pour utiliser exclusivement des widgets `Positioned`, garantissant ainsi que l'interface Flutter ne bloque plus le moteur Flame.
+- feat: Refonte fondamentale du rendu textuel des cartes (Combat)
+    - Passage au TextPainter natif de Flutter
+        - J'ai entièrement réécrit le système d'affichage des textes sur les cartes de combat. En abandonnant les `TextComponent` de Flame au profit de `TextPainter` (Flutter natif), j'ai supprimé tout risque de crash lié aux widgets de texte complexes tout en obtenant un contrôle total sur le retour à la ligne (`word wrap`), l'alignement et la richesse stylistique. Les textes sont désormais dessinés manuellement sur le `Canvas` de Flame, garantissant une fluidité parfaite et une stabilité maximale.
