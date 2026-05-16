@@ -96,7 +96,7 @@ class CardComponent extends PositionComponent
 
     _usagePainter = TextPainter(
       text: TextSpan(
-        text: card.data.type == CardType.power ? '1/1' : '',
+        text: (card.data.type == CardType.power || card.data.isExhaust) ? '1/1' : '',
         style: TextStyle(
           color: usageColor,
           fontSize: 10,
@@ -124,7 +124,7 @@ class CardComponent extends PositionComponent
 
   String _buildDetailedDescription() {
     String desc = '${card.data.description}\n\n';
-    if (card.data.type == CardType.power) {
+    if (card.data.type == CardType.power || card.data.isExhaust) {
       desc += '⚠️ USAGE UNIQUE (Épuisement)\n\n';
     }
     for (var effect in card.data.effects) {

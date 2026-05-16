@@ -122,7 +122,7 @@ class DeckNotifier extends StateNotifier<DeckState> {
     if (index != -1) {
       final cardToPlay = currentHand.removeAt(index);
 
-      if (cardToPlay.data.type == CardType.power) {
+      if (cardToPlay.data.type == CardType.power || cardToPlay.data.isExhaust) {
         currentExhaustPile.add(cardToPlay);
       } else {
         currentDiscardPile.add(cardToPlay);

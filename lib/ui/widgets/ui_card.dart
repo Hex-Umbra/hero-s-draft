@@ -9,6 +9,7 @@ class UiCard extends StatelessWidget {
   final int? cost;
   final int? level;
   final List<CardEffect>? effects;
+  final bool isExhaust;
   final VoidCallback? onTap;
 
   const UiCard({
@@ -20,6 +21,7 @@ class UiCard extends StatelessWidget {
     this.cost,
     this.level,
     this.effects,
+    this.isExhaust = false,
     this.onTap,
   });
 
@@ -34,6 +36,7 @@ class UiCard extends StatelessWidget {
       if (effect.type == 'damage') desc += 'Inflige $scaledValue dégâts.\n';
       if (effect.type == 'heal') desc += 'Soigne $scaledValue PV.\n';
       if (effect.type == 'armor') desc += 'Donne $scaledValue Armure.\n';
+      if (effect.type == 'gain_mana') desc += 'Gagne $scaledValue Mana.\n';
     }
 
     return desc.isNotEmpty ? desc.trim() : description;
@@ -97,10 +100,8 @@ class UiCard extends StatelessWidget {
                         ],
                       ),
 
-                    // Badge Usage Unique pour les Pouvoirs
-                    if (title.contains('Forme') ||
-                        title.contains('Métallisation') ||
-                        description.contains('épuisée'))
+                    // Badge Usage Unique pour les cartes épuisables
+                    if (isExhaust)
                       Padding(
                         padding: const EdgeInsets.only(top: 2),
                         child: Container(

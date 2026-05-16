@@ -231,11 +231,12 @@ class RunController extends StateNotifier<RunState> {
   }
 
   /// Modifie la valeur exacte d'un champ sans affecter les max (pour la récupération d'armure par ex)
-  void setHeroStats({int? currentPv, int? armure}) {
+  void setHeroStats({int? currentPv, int? armure, int? currentMana}) {
     state = state.copyWith(
       heroStats: state.heroStats.copyWith(
         currentPv: currentPv ?? state.heroStats.currentPv,
         armure: armure ?? state.heroStats.armure,
+        currentMana: currentMana ?? state.heroStats.currentMana,
       ),
     );
   }

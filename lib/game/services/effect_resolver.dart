@@ -136,6 +136,10 @@ class EffectResolver {
           final currentArmor = runController.currentState.heroStats.armure;
           runController.setHeroStats(armure: currentArmor + scaledValue);
           break;
+        case 'gain_mana':
+          final currentMana = runController.currentState.heroStats.currentMana;
+          runController.setHeroStats(currentMana: currentMana + scaledValue);
+          break;
         case 'draw':
           deckController.drawCards(scaledValue);
           break;

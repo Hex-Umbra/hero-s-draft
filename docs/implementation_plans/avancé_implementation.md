@@ -267,3 +267,6 @@
 - feat: implémentation Phase 19 Étape 3
     - Rééquilibrage et Audit des Cartes
         - J'ai terminé l'Étape 3. J'ai examiné le fichier `cards.json`. Le ratio de dégâts de *Frappe Lourde* (14 dégâts pour 2 mana) est bien calibré par rapport au coût des cartes standard. De plus, j'ai nerf la carte *Attaque Rapide* (coût 0) en lui retirant sa capacité de pioche, évitant ainsi un avantage de cyclage gratuit, ce qui la rend plus juste vis-à-vis du nouveau système de mana.
+- feat: implémentation Phase 19 Étape 4
+    - Ajout de mécaniques de gain de Mana
+        - J'ai terminé l'Étape 4. J'ai créé la carte *Focalisation* (coût 0, Gagnez 1 de Mana ce tour-ci, Épuisement) dans le fichier JSON. Pour supporter ceci, j'ai ajouté l'effet `gain_mana` dans `EffectResolver` et étendu `setHeroStats` de `RunController` pour accepter les gains de mana en combat. J'ai également implémenté une propriété `isExhaust` sur toutes les cartes pour généraliser la mécanique d'usage unique aux compétences (les UI ont été mis à jour pour afficher le badge "USAGE UNIQUE" basé sur ce booléen).

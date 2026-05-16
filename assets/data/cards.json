@@ -306,5 +306,23 @@
         "duration": 2
       }
     ]
+  },
+  {
+    "id": "focus",
+    "name": "Focalisation",
+    "description": "Gagnez 1 de Mana ce tour-ci.",
+    "cost": 0,
+    "type": "skill",
+    "category": "global",
+    "rarity": "uncommon",
+    "target": "self",
+    "animation": "buff",
+    "isExhaust": true,
+    "effects": [
+      {
+        "type": "gain_mana",
+        "value": 1
+      }
+    ]
   }
 ]

@@ -41,6 +41,7 @@ class CardData {
   final CardTarget target;
   final String? spritePath;
   final String? animation; // Type d'animation (ex: 'melee', 'magic', 'buff')
+  final bool isExhaust;
   final List<CardEffect> effects;
 
   const CardData({
@@ -55,6 +56,7 @@ class CardData {
     required this.target,
     this.spritePath,
     this.animation,
+    this.isExhaust = false,
     required this.effects,
   });
 
@@ -80,6 +82,7 @@ class CardData {
       ),
       spritePath: json['spritePath'] as String?,
       animation: json['animation'] as String?,
+      isExhaust: json['isExhaust'] as bool? ?? false,
       effects:
           (json['effects'] as List<dynamic>?)
               ?.map((e) => CardEffect.fromJson(e as Map<String, dynamic>))
