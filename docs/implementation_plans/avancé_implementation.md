@@ -270,3 +270,6 @@
 - feat: implémentation Phase 19 Étape 4
     - Ajout de mécaniques de gain de Mana
         - J'ai terminé l'Étape 4. J'ai créé la carte *Focalisation* (coût 0, Gagnez 1 de Mana ce tour-ci, Épuisement) dans le fichier JSON. Pour supporter ceci, j'ai ajouté l'effet `gain_mana` dans `EffectResolver` et étendu `setHeroStats` de `RunController` pour accepter les gains de mana en combat. J'ai également implémenté une propriété `isExhaust` sur toutes les cartes pour généraliser la mécanique d'usage unique aux compétences (les UI ont été mis à jour pour afficher le badge "USAGE UNIQUE" basé sur ce booléen).
+- feat: implémentation Phase 19 Étape 5
+    - Mise à jour de l'Interface Utilisateur (UI)
+        - J'ai terminé l'Étape 5. J'ai supprimé l'ancien composant texte (`10/10`) représentant le mana sur la carte du héros. À la place, une nouvelle jauge sous forme de cristaux de mana dynamiques a été intégrée directement au-dessus de la barre de vie dans l'HUD principal (`GameScreen`). De plus, j'ai implémenté un système de feedback visuel dans `CardComponent` : les cartes trop chères sont désormais teintées en rouge et ne peuvent plus être glissées (l'interaction déclenche une petite animation de secousse "shake"). La refonte de l'économie de Mana est ainsi terminée !

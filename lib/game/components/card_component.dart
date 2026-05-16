@@ -42,6 +42,12 @@ class CardComponent extends PositionComponent
     _updateTextPainters();
   }
 
+  bool get _canAfford {
+    if (!isLoaded || !isMounted) return true;
+    final currentMana = game.currentRunState?.heroStats.currentMana ?? 0;
+    return currentMana >= card.currentCost;
+  }
+
   void _updateTextPainters() {
     final int alpha = (_opacity * 255).toInt();
     
@@ -55,6 +61,10 @@ class CardComponent extends PositionComponent
       nameColor = Colors.white.withAlpha((alpha * 0.6).toInt());
       costColor = Colors.lightBlueAccent.withAlpha((alpha * 0.6).toInt());
       descColor = Colors.white70.withAlpha((alpha * 0.6).toInt());
+    }
+    
+    if (!_canAfford && !_isFlashing) {
+      costColor = Colors.redAccent.withAlpha(alpha);
     }
 
     _namePainter = TextPainter(
@@ -290,9 +300,18 @@ class CardComponent extends PositionComponent
     final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(10));
 
     // Fond
-    canvas.drawRRect(rrect, backgroundPaint);
+    if (!_canAfford && !_isFlashing) {
+      canvas.drawRRect(rrect, Paint()..color = const Color(0xFF4A1A1A)); // Rouge sombre
+    } else {
+      canvas.drawRRect(rrect, backgroundPaint);
+    }
+    
     // Bordure
-    canvas.drawRRect(rrect, borderPaint);
+    if (!_canAfford && !_isFlashing) {
+      canvas.drawRRect(rrect, Paint()..color = Colors.redAccent..style = PaintingStyle.stroke..strokeWidth = 3);
+    } else {
+      canvas.drawRRect(rrect, borderPaint);
+    }
 
     // Dessin manuel des textes
     if (!_isFlashing) {
@@ -340,6 +359,13 @@ class CardComponent extends PositionComponent
   @override
   void onDragStart(DragStartEvent event) {
     super.onDragStart(event);
+    
+    if (!_canAfford) {
+      // Effet de tremblement si le joueur n'a pas assez de mana
+      _shakeAnimation();
+      return;
+    }
+
     isDragging = true;
     _targetTilt = 0;
 
@@ -366,6 +392,8 @@ class CardComponent extends PositionComponent
 
   @override
   void onDragUpdate(DragUpdateEvent event) {
+    if (!isDragging) return;
+    
     position += event.canvasDelta;
     _targetTilt = (event.canvasDelta.x * 0.08).clamp(-0.4, 0.4);
 
@@ -402,6 +430,8 @@ class CardComponent extends PositionComponent
   @override
   void onDragEnd(DragEndEvent event) {
     super.onDragEnd(event);
+    if (!isDragging) return;
+    
     isDragging = false;
     _targetTilt = 0;
     game.setFocusedCard(null);
@@ -432,6 +462,8 @@ class CardComponent extends PositionComponent
   @override
   void onDragCancel(DragCancelEvent event) {
     super.onDragCancel(event);
+    if (!isDragging) return;
+    
     isDragging = false;
     _targetTilt = 0;
     game.setFocusedCard(null);
@@ -483,6 +515,18 @@ class CardComponent extends PositionComponent
     );
 
     priority = basePriority;
+  }
+
+  void _shakeAnimation() {
+    add(
+      SequenceEffect([
+        MoveEffect.by(Vector2(5, 0), EffectController(duration: 0.05)),
+        MoveEffect.by(Vector2(-10, 0), EffectController(duration: 0.05)),
+        MoveEffect.by(Vector2(10, 0), EffectController(duration: 0.05)),
+        MoveEffect.by(Vector2(-10, 0), EffectController(duration: 0.05)),
+        MoveEffect.by(Vector2(5, 0), EffectController(duration: 0.05)),
+      ]),
+    );
   }
 
   void playAnimation(EnemyCard? target, {required VoidCallback onComplete}) {

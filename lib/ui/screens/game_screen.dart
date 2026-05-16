@@ -344,16 +344,45 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                     left: 0,
                     right: 0,
                     child: SizedBox(
-                      height: 50,
+                      height: 80,
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
-                          // Barre de Vie (Centrée)
+                          // Barre de Vie et Mana (Centrée)
                           SizedBox(
-                            width: screenWidth * 0.3, // 30% de la largeur
+                            width: screenWidth * 0.4, // 40% de la largeur
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
+                                // Cristaux de Mana
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: List.generate(
+                                      runState.heroStats.maxMana, (index) {
+                                    final isActive =
+                                        index < runState.heroStats.currentMana;
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 4.0),
+                                      child: Icon(
+                                        Icons.diamond,
+                                        color: isActive
+                                            ? Colors.cyanAccent
+                                            : Colors.white24,
+                                        size: 20,
+                                        shadows: isActive
+                                            ? [
+                                                const Shadow(
+                                                  color: Colors.cyanAccent,
+                                                  blurRadius: 8,
+                                                )
+                                              ]
+                                            : null,
+                                      ),
+                                    );
+                                  }),
+                                ),
+                                const SizedBox(height: 4),
                                 Text(
                                   '${runState.heroStats.currentPv} / ${runState.heroStats.maxPv} PV',
                                   style: const TextStyle(

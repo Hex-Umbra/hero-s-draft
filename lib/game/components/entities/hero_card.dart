@@ -18,7 +18,6 @@ class HeroCard extends PositionComponent
 
   late final StatBadge armorBadge;
   late final StatBadge attackBadge;
-  late final StatBadge manaBadge;
   late final StatusIndicator statusIndicator;
 
   HeroCard(
@@ -65,13 +64,6 @@ class HeroCard extends PositionComponent
     attackBadge.position = Vector2(-12, 80);
     add(attackBadge);
 
-    manaBadge = StatBadge(
-      type: StatType.mana,
-      value: '${stats.currentMana}/${stats.maxMana}',
-    );
-    manaBadge.position = Vector2(-12, 125);
-    add(manaBadge);
-
     statusIndicator = StatusIndicator(statuses: stats.statuses);
     statusIndicator.position = Vector2(0, -30); // Au dessus de la carte
     add(statusIndicator);
@@ -113,12 +105,6 @@ class HeroCard extends PositionComponent
       tooltipDescription: 'Base : ${stats.attaque}, Bonus : $bonusAttack.',
     );
 
-    manaBadge.updateValue(
-      '${stats.currentMana}/${stats.maxMana}',
-      tooltipTitle: 'MANA',
-      tooltipDescription:
-          'Énergie utilisée pour lancer des sorts. Régénérée à chaque tour. Actuellement : ${stats.currentMana}/${stats.maxMana}.',
-    );
     statusIndicator.updateStatuses(stats.statuses);
   }
 

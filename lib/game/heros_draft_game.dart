@@ -34,6 +34,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
   double get scaleFactor => (size.y / 800).clamp(0.85, 2.5);
 
   RunState? _currentState;
+  RunState? get currentRunState => _currentState;
   RunState? _nextState;
   DeckState? _nextDeckState;
 
