@@ -94,8 +94,8 @@ class RunController extends StateNotifier<RunState> {
           heroStats: EntityStats(
             maxPv: 100,
             currentPv: 100,
-            maxMana: 10,
-            currentMana: 10,
+            maxMana: 3,
+            currentMana: 3,
             armure: 20,
             attaque: 0, // Force de base à 0
           ),
@@ -171,18 +171,12 @@ class RunController extends StateNotifier<RunState> {
     return true;
   }
 
-  /// Avance d'un niveau (après avoir drafté) et restaure 50% du mana
+  /// Avance d'un niveau (après avoir drafté)
   void nextLevel() {
     final currentStats = state.heroStats;
-    int manaToRestore = (currentStats.maxMana * 0.50).round();
-    int newMana = (currentStats.currentMana + manaToRestore).clamp(
-      0,
-      currentStats.maxMana,
-    );
-
     state = state.copyWith(
       currentLevel: state.currentLevel + 1,
-      heroStats: currentStats.copyWith(currentMana: newMana),
+      heroStats: currentStats.copyWith(currentMana: currentStats.maxMana),
       skill1Cooldown: 0,
       skill2Cooldown: 0,
     );
@@ -307,26 +301,30 @@ class RunController extends StateNotifier<RunState> {
     }
   }
 
-  /// Prépare l'état pour un nouveau combat
   void startCombat() {
-    // 1. Nettoyage des buffs/debuffs du combat précédent
-    // ET reset de l'armure à la valeur de base permanente
+    // 1. Nettoyage des buffs/debuffs du combat précédent,
+    // reset de l'armure à la valeur de base permanente, et restauration du mana au max
     state = state.copyWith(
       heroStats: state.heroStats.copyWith(
         statuses: [],
         armure: state.baseArmor,
+        currentMana: state.heroStats.maxMana,
       ),
     );
     // 2. Déclenchement des reliques
     applyRelics(RelicTrigger.startOfCombat);
   }
 
-  /// Nouveau Tour : Applique les effets de début de tour, baisse le cooldown, les buffs, et restaure le mana
   void startTurn() {
-    // 0. Déclencher les reliques de début de tour
+    // 1. Restaurer le Mana à sa valeur maximale (ne se cumule pas d'un tour à l'autre)
+    state = state.copyWith(
+      heroStats: state.heroStats.copyWith(currentMana: state.heroStats.maxMana),
+    );
+
+    // 2. Déclencher les reliques de début de tour (qui peuvent maintenant rajouter du mana par-dessus)
     applyRelics(RelicTrigger.startOfTurn);
 
-    // 1. Appliquer les effets de début de tour (ex: Poison, Regen)
+    // 3. Appliquer les effets de début de tour (ex: Poison, Regen)
     int poisonDamage = 0;
     int strengthGain = 0;
     int armorGain = 0;
@@ -362,11 +360,9 @@ class RunController extends StateNotifier<RunState> {
       );
     }
 
-    // 2. Restaurer Mana et décrémenter les statuts
+    // 4. Décrémenter les statuts et les cooldowns
     state = state.copyWith(
-      heroStats: updatedStats
-          .copyWith(currentMana: updatedStats.maxMana)
-          .tickStatuses(),
+      heroStats: updatedStats.tickStatuses(),
       skill1Cooldown: state.skill1Cooldown > 0 ? state.skill1Cooldown - 1 : 0,
       skill2Cooldown: state.skill2Cooldown > 0 ? state.skill2Cooldown - 1 : 0,
     );

@@ -256,8 +256,11 @@
     - Génération Dirigée et Chokepoints (Structure Stratégique)
         - J'ai terminé l'Étape 5. Le `MapGeneratorService` a été enrichi avec des règles structurelles avancées. La carte comporte désormais un point de passage unique obligatoire (chokepoint) à l'étage 5, forçant un choix crucial entre un Élite et un Repos. De plus, un nœud de Repos est désormais garanti à l'étage précédant le Boss, assurant une courbe de difficulté plus juste et permettant au joueur de se préparer à l'affrontement final.
 
-## Game Balancing
+## Phase 12 - Game Balancing
 
 - feat: implémentation Phase 19 Étape 1
     - Uniformisation du mana maximum des héros
         - J'ai terminé l'Étape 1. Le fichier `heroes.json` a été mis à jour pour que tous les héros aient désormais un mana maximum standardisé à 3, afin de préparer le nouveau système de ressource de style Deckbuilder Roguelike.
+- feat: implémentation Phase 19 Étape 2
+    - Adaptation de la logique de combat (Riverpod)
+        - J'ai terminé l'Étape 2. Le `RunController` a été refactorisé. Dans `startTurn()`, le mana est désormais strictement réinitialisé à son maximum *avant* l'application des reliques, empêchant le cumul de mana entre les tours. Les restaurations partielles obsolètes (50% après un draft) ont été supprimées au profit d'une remise à zéro complète du mana au début de chaque combat (`startCombat()`).
