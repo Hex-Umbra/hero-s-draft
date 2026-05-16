@@ -5,6 +5,7 @@ import '../../models/data/relic_data.dart';
 import '../../models/map_node.dart';
 import '../../models/status_effect.dart';
 import '../../services/map_generator_service.dart';
+import '../systems/trait_system.dart';
 
 class RunState {
   final int currentLevel;
@@ -15,7 +16,7 @@ class RunState {
   final List<MapNode> mapNodes;
   final String? currentNodeId;
   final int gold;
-  final int baseArmor; // Armure permanente (de base + améliorations de draft)
+  final String? passiveTrait; // Trait passif du héros (ex: regenArmor)
 
   // Variables pour gérer l'état du cooldown des sorts
   final int skill1Cooldown;
@@ -44,7 +45,7 @@ class RunState {
     this.mapNodes = const [],
     this.currentNodeId,
     this.gold = 0,
-    this.baseArmor = 0,
+    this.passiveTrait,
     this.skill1Cooldown = 0,
     this.skill2Cooldown = 0,
   });
@@ -59,7 +60,7 @@ class RunState {
     String? currentNodeId,
     bool resetCurrentNode = false,
     int? gold,
-    int? baseArmor,
+    String? passiveTrait,
     int? skill1Cooldown,
     int? skill2Cooldown,
   }) {
@@ -74,7 +75,7 @@ class RunState {
           ? null
           : (currentNodeId ?? this.currentNodeId),
       gold: gold ?? this.gold,
-      baseArmor: baseArmor ?? this.baseArmor,
+      passiveTrait: passiveTrait ?? this.passiveTrait,
       skill1Cooldown: skill1Cooldown ?? this.skill1Cooldown,
       skill2Cooldown: skill2Cooldown ?? this.skill2Cooldown,
     );
@@ -90,13 +91,13 @@ class RunController extends StateNotifier<RunState> {
           currentLevel: 1,
           act: 1,
           heroClassId: 'paladin',
-          baseArmor: 20,
+          passiveTrait: 'regenArmor',
           heroStats: EntityStats(
             maxPv: 100,
             currentPv: 100,
             maxMana: 3,
             currentMana: 3,
-            armure: 20,
+            armure: 0,
             attaque: 0, // Force de base à 0
           ),
         ),
@@ -109,13 +110,13 @@ class RunController extends StateNotifier<RunState> {
       currentLevel: 1,
       act: 1,
       heroClassId: chosenClass.id,
-      baseArmor: chosenClass.baseArmor,
+      passiveTrait: chosenClass.passiveTrait,
       heroStats: EntityStats(
         maxPv: chosenClass.maxHp,
         currentPv: chosenClass.maxHp,
         maxMana: chosenClass.maxMana,
         currentMana: chosenClass.maxMana,
-        armure: chosenClass.baseArmor,
+        armure: 0,
         attaque: 0, // Force de base à 0
       ),
       mapNodes: generatedMap,
@@ -204,10 +205,7 @@ class RunController extends StateNotifier<RunState> {
       newMaxMana,
     );
 
-    final newBaseArmor = state.baseArmor + armorAcc;
-
     state = state.copyWith(
-      baseArmor: newBaseArmor,
       heroStats: currentStats.copyWith(
         maxPv: newMaxPv,
         currentPv: newCurrentPv,
@@ -304,11 +302,11 @@ class RunController extends StateNotifier<RunState> {
 
   void startCombat() {
     // 1. Nettoyage des buffs/debuffs du combat précédent,
-    // reset de l'armure à la valeur de base permanente, et restauration du mana au max
+    // reset de l'armure à 0, et restauration du mana au max
     state = state.copyWith(
       heroStats: state.heroStats.copyWith(
         statuses: [],
-        armure: state.baseArmor,
+        armure: 0,
         currentMana: state.heroStats.maxMana,
       ),
     );
@@ -367,6 +365,9 @@ class RunController extends StateNotifier<RunState> {
       skill1Cooldown: state.skill1Cooldown > 0 ? state.skill1Cooldown - 1 : 0,
       skill2Cooldown: state.skill2Cooldown > 0 ? state.skill2Cooldown - 1 : 0,
     );
+
+    // 5. Déclencher les traits passifs
+    TraitSystem.onTurnStart(this);
   }
 
   /// Gardé pour la compatibilité avec l'ancien code s'il est appelé ailleurs

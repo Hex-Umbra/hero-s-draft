@@ -13,7 +13,6 @@ class HeroCard extends PositionComponent
     with TapCallbacks, HasGameReference<HerosDraftGame> {
   EntityStats stats;
   int bonusAttack;
-  int baseArmor;
   final String imagePath;
 
   late final StatBadge armorBadge;
@@ -23,7 +22,6 @@ class HeroCard extends PositionComponent
   HeroCard(
     this.stats, {
     this.bonusAttack = 0,
-    this.baseArmor = 0,
     required this.imagePath,
   }) : super(size: Vector2(120, 160));
 
@@ -80,20 +78,14 @@ class HeroCard extends PositionComponent
 
   void _refreshBadges() {
     int currentArmor = stats.armure;
-    int bonusArmor = (currentArmor > baseArmor)
-        ? (currentArmor - baseArmor)
-        : 0;
-    int displayBaseArmor = (currentArmor > baseArmor)
-        ? baseArmor
-        : currentArmor;
 
     armorBadge.updateValue(
       '$currentArmor',
-      baseValue: displayBaseArmor,
-      bonusValue: bonusArmor,
+      baseValue: 0,
+      bonusValue: currentArmor,
       tooltipTitle: 'ARMURE',
       tooltipDescription:
-          'Réduit les prochains dégâts reçus. Base : $baseArmor, Bonus : $bonusArmor.',
+          'Réduit les prochains dégâts reçus. Temporaire : $currentArmor.',
     );
 
     int totalAttack = stats.attaque + bonusAttack;
@@ -111,7 +103,6 @@ class HeroCard extends PositionComponent
   void updateStats(
     EntityStats newStats, {
     int bonusAttack = 0,
-    int baseArmor = 0,
   }) {
     if (newStats.armure < stats.armure) {
       _spawnFloatingText(
@@ -137,7 +128,6 @@ class HeroCard extends PositionComponent
 
     stats = newStats;
     this.bonusAttack = bonusAttack;
-    this.baseArmor = baseArmor;
     _refreshBadges();
   }
 

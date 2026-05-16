@@ -276,3 +276,7 @@
 - feat: implémentation Phase 19 Étape 6
     - Validation finale des cas limites
         - J'ai terminé l'Étape 6. J'ai réalisé un audit complet du `RunController` et de `EffectResolver` concernant le cycle de vie du mana. J'ai confirmé que `startCombat()` initialise toujours le `currentMana` au niveau du `maxMana`, et que `startTurn()` procède à une réinitialisation similaire, empêchant toute fuite ou accumulation de mana entre les niveaux de la carte ou les tours de combat. Les coûts en mana des compétences sont également correctement prélevés sans valeurs négatives. Tous les tests statiques passent avec succès. La Phase 19 est à présent achevée.
+
+- feat: implémentation Phase 20 Étape 1 à 3
+    - Refonte complète de l'Armure de base par des Traits Passifs
+        - J'ai terminé la Phase 20. L'attribut statique `baseArmor` a été supprimé des modèles de données (`HeroData`, `RunState`) et remplacé par un système de `passiveTrait`. Trois traits ont été implémentés dans un nouveau fichier `TraitSystem` : *regenArmor* (Paladin, 2 armure/fin de tour), *berserkerArmor* (Berserker, +1 armure/10 PV manquants au début du tour), et *spellArmor* (Mage, +1 armure à chaque sort joué). Ces événements sont désormais connectés respectivement au `RunController` et au `GameScreen`. Enfin, l'interface de sélection (`ClassSelectionScreen`) a été mise à jour avec des bulles d'information explicatives, et la logique d'armure de `HeroCard` a été allégée pour s'adapter à cette dynamique plus active.

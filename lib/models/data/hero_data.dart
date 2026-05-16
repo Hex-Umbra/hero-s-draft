@@ -6,7 +6,7 @@ class HeroData {
   final int maxHp;
   final int maxMana;
   final int baseDamage;
-  final int baseArmor;
+  final String? passiveTrait;
 
   const HeroData({
     required this.id,
@@ -16,7 +16,7 @@ class HeroData {
     required this.maxHp,
     required this.maxMana,
     required this.baseDamage,
-    required this.baseArmor,
+    this.passiveTrait,
   });
 
   factory HeroData.fromJson(Map<String, dynamic> json) {
@@ -28,7 +28,7 @@ class HeroData {
       maxHp: json['maxHp'] as int,
       maxMana: json['maxMana'] as int,
       baseDamage: json['baseDamage'] as int,
-      baseArmor: json['baseArmor'] as int? ?? 0,
+      passiveTrait: json['passiveTrait'] as String?,
     );
   }
 }

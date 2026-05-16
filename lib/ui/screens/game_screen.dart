@@ -5,6 +5,7 @@ import '../../game/heros_draft_game.dart';
 import '../../game/controllers/run_controller.dart';
 import '../../game/controllers/deck_controller.dart';
 import '../../game/services/effect_resolver.dart';
+import '../../game/systems/trait_system.dart';
 import 'draft_screen.dart';
 import 'class_selection_screen.dart';
 import 'deck_screen.dart';
@@ -168,6 +169,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
           // Dire au DeckNotifier que la carte est jouée
           ref.read(deckProvider.notifier).playCard(card);
+          
+          // Déclencher les traits passifs
+          TraitSystem.onCardPlayed(runController, card);
 
           if (_game.enemyCards.isEmpty) {
             _game.onEnemiesDead();
@@ -447,6 +451,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                         ),
                       ),
                       onPressed: () {
+                        TraitSystem.onTurnEnd(ref.read(runProvider.notifier));
                         ref.read(deckProvider.notifier).discardHand();
                         _game.executeTurn();
                       },

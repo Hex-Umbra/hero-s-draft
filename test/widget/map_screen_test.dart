@@ -31,7 +31,7 @@ void main() {
       iconPath: 'test',
       maxHp: 10,
       maxMana: 3,
-      baseArmor: 0,
+      passiveTrait: 'regenArmor',
       baseDamage: 0,
     );
 

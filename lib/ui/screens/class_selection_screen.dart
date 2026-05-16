@@ -70,6 +70,23 @@ class ClassSelectionScreen extends ConsumerWidget {
     if (playerClass.id == 'berserker') icon = Icons.whatshot;
     if (playerClass.id == 'mage') icon = Icons.auto_fix_high;
 
+    String traitName = 'Aucun trait';
+    String traitDesc = '';
+    switch (playerClass.passiveTrait) {
+      case 'regenArmor':
+        traitName = 'Régénération d\'Armure';
+        traitDesc = 'Gagne 2 d\'Armure à la fin du tour';
+        break;
+      case 'berserkerArmor':
+        traitName = 'Armure du Berserker';
+        traitDesc = 'Gagne 1 d\'Armure par tranche de 10 PV manquants (au début du tour)';
+        break;
+      case 'spellArmor':
+        traitName = 'Armure Magique';
+        traitDesc = 'Gagne 1 d\'Armure en jouant une carte Compétence';
+        break;
+    }
+
     return Card(
       color: const Color(0xFF2A2A3D),
       shape: RoundedRectangleBorder(
@@ -93,9 +110,31 @@ class ClassSelectionScreen extends ConsumerWidget {
             const SizedBox(height: 10),
             Text(
               'PV: ${playerClass.maxHp} | Mana: ${playerClass.maxMana}\n'
-              'ATK: ${playerClass.baseDamage} | DEF: ${playerClass.baseArmor}',
+              'ATK: ${playerClass.baseDamage}',
               style: const TextStyle(fontSize: 14, color: Colors.white),
               textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 10),
+            Tooltip(
+              message: traitDesc,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white12,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.shield, size: 16, color: Colors.cyanAccent),
+                    const SizedBox(width: 4),
+                    Text(
+                      traitName,
+                      style: const TextStyle(fontSize: 13, color: Colors.cyanAccent),
+                    ),
+                  ],
+                ),
+              ),
             ),
             const Divider(color: Colors.white24, height: 20),
             Expanded(

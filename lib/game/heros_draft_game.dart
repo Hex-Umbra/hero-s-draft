@@ -358,7 +358,6 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
       heroCard = HeroCard(
         state.heroStats,
         bonusAttack: bonusAtt,
-        baseArmor: state.baseArmor,
         imagePath: imagePath,
       );
       heroCard!.position = Vector2(size.x / 2, size.y * 0.6);
@@ -367,7 +366,6 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
       heroCard!.updateStats(
         state.heroStats,
         bonusAttack: bonusAtt,
-        baseArmor: state.baseArmor,
       );
     }
   }

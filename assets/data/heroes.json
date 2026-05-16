@@ -7,7 +7,7 @@
     "maxHp": 100,
     "maxMana": 3,
     "baseDamage": 5,
-    "baseArmor": 20
+    "passiveTrait": "regenArmor"
   },
   {
     "id": "berserker",
@@ -17,7 +17,7 @@
     "maxHp": 80,
     "maxMana": 3,
     "baseDamage": 15,
-    "baseArmor": 0
+    "passiveTrait": "berserkerArmor"
   },
   {
     "id": "mage",
@@ -27,6 +27,6 @@
     "maxHp": 60,
     "maxMana": 3,
     "baseDamage": 10,
-    "baseArmor": 5
+    "passiveTrait": "spellArmor"
   }
 ]
