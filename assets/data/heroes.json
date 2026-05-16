@@ -5,7 +5,7 @@
     "description": "Orienté Survie",
     "iconPath": "hero_paladin.png",
     "maxHp": 100,
-    "maxMana": 10,
+    "maxMana": 3,
     "baseDamage": 5,
     "baseArmor": 20
   },
@@ -15,7 +15,7 @@
     "description": "Orienté Dégâts",
     "iconPath": "hero_berserker.png",
     "maxHp": 80,
-    "maxMana": 5,
+    "maxMana": 3,
     "baseDamage": 15,
     "baseArmor": 0
   },
@@ -25,7 +25,7 @@
     "description": "Orienté Altération",
     "iconPath": "hero_mage.png",
     "maxHp": 60,
-    "maxMana": 15,
+    "maxMana": 3,
     "baseDamage": 10,
     "baseArmor": 5
   }
