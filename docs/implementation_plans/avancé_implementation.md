@@ -273,3 +273,6 @@
 - feat: implémentation Phase 19 Étape 5
     - Mise à jour de l'Interface Utilisateur (UI)
         - J'ai terminé l'Étape 5. J'ai supprimé l'ancien composant texte (`10/10`) représentant le mana sur la carte du héros. À la place, une nouvelle jauge sous forme de cristaux de mana dynamiques a été intégrée directement au-dessus de la barre de vie dans l'HUD principal (`GameScreen`). De plus, j'ai implémenté un système de feedback visuel dans `CardComponent` : les cartes trop chères sont désormais teintées en rouge et ne peuvent plus être glissées (l'interaction déclenche une petite animation de secousse "shake"). La refonte de l'économie de Mana est ainsi terminée !
+- feat: implémentation Phase 19 Étape 6
+    - Validation finale des cas limites
+        - J'ai terminé l'Étape 6. J'ai réalisé un audit complet du `RunController` et de `EffectResolver` concernant le cycle de vie du mana. J'ai confirmé que `startCombat()` initialise toujours le `currentMana` au niveau du `maxMana`, et que `startTurn()` procède à une réinitialisation similaire, empêchant toute fuite ou accumulation de mana entre les niveaux de la carte ou les tours de combat. Les coûts en mana des compétences sont également correctement prélevés sans valeurs négatives. Tous les tests statiques passent avec succès. La Phase 19 est à présent achevée.
