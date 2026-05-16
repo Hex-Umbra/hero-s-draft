@@ -264,3 +264,6 @@
 - feat: implémentation Phase 19 Étape 2
     - Adaptation de la logique de combat (Riverpod)
         - J'ai terminé l'Étape 2. Le `RunController` a été refactorisé. Dans `startTurn()`, le mana est désormais strictement réinitialisé à son maximum *avant* l'application des reliques, empêchant le cumul de mana entre les tours. Les restaurations partielles obsolètes (50% après un draft) ont été supprimées au profit d'une remise à zéro complète du mana au début de chaque combat (`startCombat()`).
+- feat: implémentation Phase 19 Étape 3
+    - Rééquilibrage et Audit des Cartes
+        - J'ai terminé l'Étape 3. J'ai examiné le fichier `cards.json`. Le ratio de dégâts de *Frappe Lourde* (14 dégâts pour 2 mana) est bien calibré par rapport au coût des cartes standard. De plus, j'ai nerf la carte *Attaque Rapide* (coût 0) en lui retirant sa capacité de pioche, évitant ainsi un avantage de cyclage gratuit, ce qui la rend plus juste vis-à-vis du nouveau système de mana.

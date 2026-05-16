@@ -36,7 +36,7 @@
   {
     "id": "quick_attack",
     "name": "Attaque Rapide",
-    "description": "Inflige 3 dégâts. Pioche 1 carte.",
+    "description": "Inflige 3 dégâts.",
     "cost": 0,
     "type": "attack",
     "category": "global",
@@ -47,10 +47,6 @@
       {
         "type": "damage",
         "value": 3
-      },
-      {
-        "type": "draw",
-        "value": 1
       }
     ]
   },
