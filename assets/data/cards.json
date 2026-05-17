@@ -36,8 +36,8 @@
   {
     "id": "quick_attack",
     "name": "Attaque Rapide",
-    "description": "Inflige 3 dégâts.",
-    "cost": 0,
+    "description": "Inflige 3 dégâts et pioche 1 carte.",
+    "cost": 1,
     "type": "attack",
     "category": "global",
     "rarity": "uncommon",
@@ -47,6 +47,10 @@
       {
         "type": "damage",
         "value": 3
+      },
+      {
+        "type": "draw",
+        "value": 1
       }
     ]
   },
@@ -94,6 +98,7 @@
     "rarity": "rare",
     "target": "self",
     "animation": "buff",
+    "isExhaust": true,
     "effects": [
       {
         "type": "heal",

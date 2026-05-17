@@ -535,28 +535,35 @@ class CardComponent extends PositionComponent
 
     final animType = card.data.animation ?? 'melee';
 
+    void wrappedOnComplete() {
+      if (card.data.isExhaust) {
+        _spawnExhaustParticles(position);
+      }
+      onComplete();
+    }
+
     switch (animType) {
       case 'magic':
-        _playMagicAnimation(target, onComplete);
+        _playMagicAnimation(target, wrappedOnComplete);
         break;
       case 'buff':
-        _playBuffAnimation(onComplete);
+        _playBuffAnimation(wrappedOnComplete);
         break;
       case 'poison':
-        _playStatusAnimation(target, Colors.greenAccent, onComplete);
+        _playStatusAnimation(target, Colors.greenAccent, wrappedOnComplete);
         break;
       case 'fire':
-        _playStatusAnimation(target, Colors.orangeAccent, onComplete);
+        _playStatusAnimation(target, Colors.orangeAccent, wrappedOnComplete);
         break;
       case 'ice':
-        _playStatusAnimation(target, Colors.lightBlueAccent, onComplete);
+        _playStatusAnimation(target, Colors.lightBlueAccent, wrappedOnComplete);
         break;
       case 'lightning':
-        _playStatusAnimation(target, Colors.yellowAccent, onComplete);
+        _playStatusAnimation(target, Colors.yellowAccent, wrappedOnComplete);
         break;
       case 'melee':
       default:
-        _playMeleeAnimation(target, onComplete);
+        _playMeleeAnimation(target, wrappedOnComplete);
         break;
     }
   }
@@ -731,6 +738,34 @@ class CardComponent extends PositionComponent
             child: ScaledParticle(
               scale: 1.5,
               child: CircleParticle(radius: 2, paint: Paint()..color = color),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _spawnExhaustParticles(Vector2 exhaustPos) {
+    game.add(
+      ParticleSystemComponent(
+        particle: Particle.generate(
+          count: 40,
+          lifespan: 0.8,
+          generator: (i) => MovingParticle(
+            curve: Curves.easeOutQuad,
+            from: exhaustPos,
+            to:
+                exhaustPos +
+                Vector2(
+                  (rand.nextDouble() - 0.5) * 150,
+                  (rand.nextDouble() - 1.0) * 200, // Move upwards
+                ),
+            child: ScaledParticle(
+              scale: 2.0,
+              child: CircleParticle(
+                radius: 3, 
+                paint: Paint()..color = rand.nextBool() ? Colors.orange : Colors.red,
+              ),
             ),
           ),
         ),
