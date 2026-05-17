@@ -24,6 +24,21 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
     _choices = _generateChoices();
   }
 
+  String _rarityToString(RewardRarity rarity) {
+    switch (rarity) {
+      case RewardRarity.legendary:
+        return 'Légendaire';
+      case RewardRarity.epic:
+        return 'Épique';
+      case RewardRarity.rare:
+        return 'Rare';
+      case RewardRarity.uncommon:
+        return 'Peu Commun';
+      case RewardRarity.common:
+        return 'Commun';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Material(
@@ -71,7 +86,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
                                     description: choice.description,
                                     onTap: () =>
                                         _onChoiceSelected(context, ref, choice),
-                                    rarity: 'Amélioration',
+                                    rarity: _rarityToString(choice.rarity),
                                   ),
                                 ),
                               )
@@ -100,7 +115,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
                                         ref,
                                         choice,
                                       ),
-                                      rarity: 'Amélioration',
+                                      rarity: _rarityToString(choice.rarity),
                                     ),
                                   ),
                                 ),
@@ -198,21 +213,87 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
       attackAcc: choice.atkBoost,
       armorAcc: choice.armorBoost,
       maxManaAcc: choice.manaBoost,
+      luckAcc: choice.luckBoost,
     );
 
     _finishDraft(ref);
   }
 
+  RewardRarity _rollRarity(int luck) {
+    final rng = Random();
+    // Probabilités de base (sur 100)
+    double legendaryChance = 1.0;
+    double epicChance = 4.0;
+    double rareChance = 15.0;
+    double uncommonChance = 30.0;
+    
+    // La chance augmente les probabilités des hautes raretés
+    legendaryChance += luck * 0.5;
+    epicChance += luck * 1.5;
+    rareChance += luck * 3.0;
+    uncommonChance += luck * 4.0;
+
+    double roll = rng.nextDouble() * 100;
+
+    if (roll < legendaryChance) return RewardRarity.legendary;
+    roll -= legendaryChance;
+    if (roll < epicChance) return RewardRarity.epic;
+    roll -= epicChance;
+    if (roll < rareChance) return RewardRarity.rare;
+    roll -= rareChance;
+    if (roll < uncommonChance) return RewardRarity.uncommon;
+    
+    return RewardRarity.common;
+  }
+
   List<_DraftChoice> _generateChoices() {
     final rng = Random();
+    final runState = ref.read(runProvider);
+    final luck = runState.heroStats.luck;
+
     final choices = List.generate(3, (index) {
-      int type = rng.nextInt(4);
-      if (type == 0) return _DraftChoice('Vitalité', '+15 PV Max', 15, 0, 0, 0);
-      if (type == 1) return _DraftChoice('Aiguisage', '+5 Attaque', 0, 5, 0, 0);
-      if (type == 2) {
-        return _DraftChoice('Plaque de Fer', '+10 Armure', 0, 0, 10, 0);
+      RewardRarity rarity = _rollRarity(luck);
+
+      if (rarity == RewardRarity.legendary) {
+        return _DraftChoice(
+          'Trèfle à 4 feuilles',
+          '+1 Chance',
+          0,
+          0,
+          0,
+          0,
+          luckBoost: 1,
+          rarity: rarity,
+        );
       }
-      return _DraftChoice('Sagesse', '+5 Mana Max', 0, 0, 0, 5);
+
+      double multiplier = 1.0;
+      if (rarity == RewardRarity.uncommon) multiplier = 1.5;
+      if (rarity == RewardRarity.rare) multiplier = 2.0;
+      if (rarity == RewardRarity.epic) multiplier = 3.0;
+
+      int type = rng.nextInt(4);
+      if (type == 0) {
+        int boost = (15 * multiplier).round();
+        return _DraftChoice('Vitalité', '+$boost PV Max', boost, 0, 0, 0, rarity: rarity);
+      }
+      if (type == 1) {
+        int boost = (5 * multiplier).round();
+        return _DraftChoice('Aiguisage', '+$boost Attaque', 0, boost, 0, 0, rarity: rarity);
+      }
+      if (type == 2) {
+        int boost = (10 * multiplier).round();
+        return _DraftChoice('Plaque de Fer', '+$boost Armure', 0, 0, boost, 0, rarity: rarity);
+      }
+      
+      // type == 3 : Sagesse
+      // Le mana max est puissant, on ajuste le scaling pour éviter des valeurs folles
+      double manaMultiplier = 1.0;
+      if (rarity == RewardRarity.uncommon) manaMultiplier = 1.2; // +6
+      if (rarity == RewardRarity.rare) manaMultiplier = 1.6; // +8
+      if (rarity == RewardRarity.epic) manaMultiplier = 2.0; // +10
+      int boost = (5 * manaMultiplier).round();
+      return _DraftChoice('Sagesse', '+$boost Mana Max', 0, 0, 0, boost, rarity: rarity);
     });
 
     if (rng.nextDouble() < 0.3) {
@@ -225,6 +306,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
           0,
           0,
           isCloneOption: true,
+          rarity: RewardRarity.epic, // Le miroir est considéré comme épique
         ),
       );
     }
@@ -233,6 +315,13 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
   }
 }
 
+enum RewardRarity {
+  common,
+  uncommon,
+  rare,
+  epic,
+  legendary
+}
 
 class _DraftChoice {
   final String title;
@@ -241,7 +330,9 @@ class _DraftChoice {
   final int atkBoost;
   final int armorBoost;
   final int manaBoost;
+  final int luckBoost;
   final bool isCloneOption;
+  final RewardRarity rarity;
 
   _DraftChoice(
     this.title,
@@ -250,6 +341,8 @@ class _DraftChoice {
     this.atkBoost,
     this.armorBoost,
     this.manaBoost, {
+    this.luckBoost = 0,
     this.isCloneOption = false,
+    this.rarity = RewardRarity.common,
   });
 }

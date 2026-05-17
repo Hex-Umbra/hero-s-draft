@@ -51,9 +51,18 @@ class UiCard extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             color: const Color(0xFF2C3E50),
-            border: Border.all(color: Colors.amber, width: 1.5),
+            border: Border.all(
+              color: rarity != null ? _getRarityColor(rarity!) : Colors.amber, 
+              width: rarity != null && rarity!.toLowerCase().contains('légendaire') ? 2.5 : 1.5
+            ),
             borderRadius: BorderRadius.circular(8),
             boxShadow: [
+              if (rarity != null && (rarity!.toLowerCase().contains('épique') || rarity!.toLowerCase().contains('légendaire')))
+                BoxShadow(
+                  color: _getRarityColor(rarity!).withAlpha(150),
+                  blurRadius: 10,
+                  spreadRadius: 2,
+                ),
               BoxShadow(
                 color: Colors.black.withAlpha(128),
                 blurRadius: 6,
