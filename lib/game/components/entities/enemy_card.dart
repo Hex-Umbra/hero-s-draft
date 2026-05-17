@@ -33,6 +33,7 @@ class EnemyCard extends PositionComponent
 
   EnemyIntent? currentIntent;
   bool isSelected = false;
+  int _intentStep = 0;
 
   EnemyCard({
     required this.stats,
@@ -75,21 +76,7 @@ class EnemyCard extends PositionComponent
     hpBadge.position = Vector2(size.x / 2, size.y); // Centré en bas
     add(hpBadge);
 
-    final random = Random();
-    final roll = random.nextInt(100);
-    if (roll < 60) {
-      currentIntent = EnemyIntent(
-        type: IntentType.attack,
-        value: stats.attaque,
-      );
-    } else if (roll < 85) {
-      currentIntent = EnemyIntent(
-        type: IntentType.defend,
-        value: 5 + random.nextInt(6),
-      );
-    } else {
-      currentIntent = EnemyIntent(type: IntentType.buff, value: 2);
-    }
+    _determineNextIntent();
 
     intentionIndicator = IntentionIndicator(initialIntent: currentIntent);
     intentionIndicator.position = Vector2(
@@ -131,27 +118,35 @@ class EnemyCard extends PositionComponent
   }
 
   void rollIntent() {
-    final random = Random();
-    final roll = random.nextInt(100);
-
-    if (roll < 60) {
-      // 60% Attack
-      currentIntent = EnemyIntent(
-        type: IntentType.attack,
-        value: stats.attaque,
-      );
-    } else if (roll < 85) {
-      // 25% Defend
-      currentIntent = EnemyIntent(
-        type: IntentType.defend,
-        value: 5 + random.nextInt(6),
-      );
-    } else {
-      // 15% Buff
-      currentIntent = EnemyIntent(type: IntentType.buff, value: 2);
-    }
-
+    _determineNextIntent();
     intentionIndicator.updateIntent(currentIntent);
+  }
+
+  void _determineNextIntent() {
+    if (data?.intents != null && data!.intents!.isNotEmpty) {
+      currentIntent = data!.intents![_intentStep];
+      _intentStep = (_intentStep + 1) % data!.intents!.length;
+    } else {
+      final random = Random();
+      final roll = random.nextInt(100);
+
+      if (roll < 60) {
+        // 60% Attack
+        currentIntent = EnemyIntent(
+          type: IntentType.attack,
+          value: stats.attaque,
+        );
+      } else if (roll < 85) {
+        // 25% Defend
+        currentIntent = EnemyIntent(
+          type: IntentType.defend,
+          value: 5 + random.nextInt(6),
+        );
+      } else {
+        // 15% Buff
+        currentIntent = EnemyIntent(type: IntentType.buff, value: 2);
+      }
+    }
   }
 
   void _refreshBadges() {

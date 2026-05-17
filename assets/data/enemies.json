@@ -1,30 +1,49 @@
 [
   {
-    "id": "gobelin",
-    "name": "Gobelin",
-    "maxHp": 25,
-    "baseDamage": 5,
-    "spritePath": "enemy_goblin.png"
+    "id": "slime",
+    "name": "Slime",
+    "maxHp": 18,
+    "baseDamage": 4,
+    "spritePath": "enemy_goblin.png",
+    "tier": 1,
+    "intents": [
+      { "type": "attack", "value": 4 }
+    ]
   },
   {
-    "id": "orc",
-    "name": "Orc Furieux",
-    "maxHp": 40,
-    "baseDamage": 8,
-    "spritePath": "enemy_goblin.png"
+    "id": "gobelin",
+    "name": "Gobelin",
+    "maxHp": 28,
+    "baseDamage": 5,
+    "spritePath": "enemy_goblin.png",
+    "tier": 1,
+    "intents": [
+      { "type": "attack", "value": 5 }
+    ]
   },
   {
     "id": "squelette",
     "name": "Squelette",
-    "maxHp": 15,
-    "baseDamage": 12,
-    "spritePath": "enemy_goblin.png"
+    "maxHp": 22,
+    "baseDamage": 8,
+    "spritePath": "enemy_goblin.png",
+    "tier": 2,
+    "intents": [
+      { "type": "attack", "value": 8 },
+      { "type": "attack", "value": 10 }
+    ]
   },
   {
-    "id": "slime",
-    "name": "Slime",
-    "maxHp": 10,
-    "baseDamage": 5,
-    "spritePath": "enemy_goblin.png"
+    "id": "orc",
+    "name": "Orc Furieux",
+    "maxHp": 50,
+    "baseDamage": 8,
+    "spritePath": "enemy_goblin.png",
+    "tier": 3,
+    "intents": [
+      { "type": "attack", "value": 8 },
+      { "type": "buff", "value": 2 },
+      { "type": "attack", "value": 12 }
+    ]
   }
 ]
