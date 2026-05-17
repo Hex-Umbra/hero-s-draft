@@ -6,6 +6,7 @@ class EntityStats {
   final int maxMana;
   final int currentMana;
   final int armure;
+  final int armorMastery; // Bonus permanent ajouté à chaque gain d'armure
   final int attaque;
   final int luck;
   final List<StatusEffect> statuses;
@@ -16,6 +17,7 @@ class EntityStats {
     this.maxMana = 0,
     this.currentMana = 0,
     required this.armure,
+    this.armorMastery = 0,
     required this.attaque,
     this.luck = 0,
     this.statuses = const [],
@@ -27,6 +29,7 @@ class EntityStats {
     int? maxMana,
     int? currentMana,
     int? armure,
+    int? armorMastery,
     int? attaque,
     int? luck,
     List<StatusEffect>? statuses,
@@ -37,6 +40,7 @@ class EntityStats {
       maxMana: maxMana ?? this.maxMana,
       currentMana: currentMana ?? this.currentMana,
       armure: armure ?? this.armure,
+      armorMastery: armorMastery ?? this.armorMastery,
       attaque: attaque ?? this.attaque,
       luck: luck ?? this.luck,
       statuses: statuses ?? this.statuses,

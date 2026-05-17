@@ -118,6 +118,7 @@ class RunController extends StateNotifier<RunState> {
         maxMana: chosenClass.maxMana,
         currentMana: chosenClass.maxMana,
         armure: 0,
+        armorMastery: chosenClass.armorMastery,
         attaque: 0, // Force de base à 0
         luck: chosenClass.luck,
       ),
@@ -215,7 +216,7 @@ class RunController extends StateNotifier<RunState> {
         maxMana: newMaxMana,
         currentMana: newCurrentMana,
         attaque: currentStats.attaque + attackAcc,
-        armure: currentStats.armure + armorAcc,
+        armorMastery: currentStats.armorMastery + armorAcc,
         luck: currentStats.luck + luckAcc,
       ),
     );

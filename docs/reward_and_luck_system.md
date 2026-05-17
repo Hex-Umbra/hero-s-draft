@@ -29,17 +29,17 @@ Le système utilise l'énumération `RewardRarity`. Chaque niveau (hors Légenda
 ### Valeurs de Base (Rareté Commun)
 - **Vitalité** : +5 PV Max
 - **Aiguisage** : +2 Attaque
-- **Plaque de Fer** : +5 Armure
+- **Forge d'Acier** : +1 Maîtrise d'Armure
 - **Sagesse** : +1 Mana Max
 
 ### Tableau des Valeurs par Rareté
 *Valeurs arrondies à l'entier le plus proche.*
 
-| Statistique | Commun (x1) | Peu Commun (x1.5) | Rare (x2) | Épique (x3) |
+| Statistique | Commun (x1) | Peu Commun | Rare | Épique |
 | :--- | :---: | :---: | :---: | :---: |
 | **PV Max** | +5 | +8 | +10 | +15 |
 | **Attaque** | +2 | +3 | +4 | +6 |
-| **Armure** | +5 | +8 | +10 | +15 |
+| **Maîtrise d'Armure** | +1 | +2 | +3 | +5 |
 | **Mana Max** | +1 | +2 | +2 | +3 |
 
 ---
@@ -78,6 +78,15 @@ Les objets de rareté **Légendaire** ne remplacent pas les 3 choix standards. I
 3.  **Test Bonus 2** : Lancement d'un dé pour le Miroir (Probabilité Légendaire).
 
 *Note : Il est possible d'avoir 3, 4 ou 5 récompenses au total selon la réussite de ces tests bonus.*
+
+---
+
+## 6. Focus : Maîtrise d'Armure (Forge d'Acier)
+
+La Maîtrise d'Armure est une statistique synergique qui augmente **tous les gains d'armure** de sa valeur.
+- **Exemple** : Si vous avez 3 de Maîtrise et jouez une carte donnant 5 Armure, vous recevez réellement **8 Armure** (5 + 3).
+- **Synergies** : Fonctionne avec les cartes, les traits passifs (Regen d'armure du Paladin) et les reliques.
+- **Persistance** : Contrairement à l'armure qui est remise à 0 au début de chaque combat, la Maîtrise est une statistique permanente.
 
 ---
 

@@ -276,8 +276,14 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
         return _DraftChoice('Aiguisage', '+$boost Attaque', 0, boost, 0, 0, rarity: rarity);
       }
       if (type == 2) {
-        int boost = (5 * multiplier).round();
-        return _DraftChoice('Plaque de Fer', '+$boost Armure', 0, 0, boost, 0, rarity: rarity);
+        // Maîtrise d'Armure (Bonus permanent sur tous les gains)
+        // Les valeurs sont plus petites car c'est un bonus cumulatif puissant
+        double masteryMultiplier = 1.0;
+        if (rarity == RewardRarity.uncommon) masteryMultiplier = 2.0; // +2
+        if (rarity == RewardRarity.rare) masteryMultiplier = 3.0; // +3
+        if (rarity == RewardRarity.epic) masteryMultiplier = 5.0; // +5
+        int boost = (1 * masteryMultiplier).round();
+        return _DraftChoice('Forge d\'Acier', '+$boost à tous vos gains d\'Armure', 0, 0, boost, 0, rarity: rarity);
       }
       
       // type == 3 : Sagesse (Mana)

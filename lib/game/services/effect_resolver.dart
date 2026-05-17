@@ -133,8 +133,11 @@ class EffectResolver {
           runController.heal(scaledValue);
           break;
         case 'armor':
-          final currentArmor = runController.currentState.heroStats.armure;
-          runController.setHeroStats(armure: currentArmor + scaledValue);
+          final currentStats = runController.currentState.heroStats;
+          final currentArmor = currentStats.armure;
+          runController.setHeroStats(
+            armure: currentArmor + scaledValue + currentStats.armorMastery,
+          );
           break;
         case 'gain_mana':
           final currentMana = runController.currentState.heroStats.currentMana;

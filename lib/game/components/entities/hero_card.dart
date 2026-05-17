@@ -78,6 +78,7 @@ class HeroCard extends PositionComponent
 
   void _refreshBadges() {
     int currentArmor = stats.armure;
+    int mastery = stats.armorMastery;
 
     armorBadge.updateValue(
       '$currentArmor',
@@ -85,7 +86,7 @@ class HeroCard extends PositionComponent
       bonusValue: currentArmor,
       tooltipTitle: 'ARMURE',
       tooltipDescription:
-          'Réduit les prochains dégâts reçus. Temporaire : $currentArmor.',
+          'Réduit les prochains dégâts reçus. Temporaire : $currentArmor.\nMaîtrise : +$mastery à chaque gain.',
     );
 
     int totalAttack = stats.attaque + bonusAttack;
