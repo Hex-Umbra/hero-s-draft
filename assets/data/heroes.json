@@ -7,6 +7,7 @@
     "maxHp": 100,
     "maxMana": 3,
     "baseDamage": 5,
+    "luck": 0,
     "passiveTrait": "regenArmor"
   },
   {
@@ -17,6 +18,7 @@
     "maxHp": 80,
     "maxMana": 3,
     "baseDamage": 15,
+    "luck": 0,
     "passiveTrait": "berserkerArmor"
   },
   {
@@ -27,6 +29,7 @@
     "maxHp": 60,
     "maxMana": 3,
     "baseDamage": 10,
+    "luck": 0,
     "passiveTrait": "spellArmor"
   }
 ]

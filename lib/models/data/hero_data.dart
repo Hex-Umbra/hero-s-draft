@@ -6,6 +6,7 @@ class HeroData {
   final int maxHp;
   final int maxMana;
   final int baseDamage;
+  final int luck;
   final String? passiveTrait;
 
   const HeroData({
@@ -16,6 +17,7 @@ class HeroData {
     required this.maxHp,
     required this.maxMana,
     required this.baseDamage,
+    this.luck = 0,
     this.passiveTrait,
   });
 
@@ -28,6 +30,7 @@ class HeroData {
       maxHp: json['maxHp'] as int,
       maxMana: json['maxMana'] as int,
       baseDamage: json['baseDamage'] as int,
+      luck: json['luck'] as int? ?? 0,
       passiveTrait: json['passiveTrait'] as String?,
     );
   }

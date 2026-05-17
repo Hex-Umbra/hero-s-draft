@@ -99,6 +99,7 @@ class RunController extends StateNotifier<RunState> {
             currentMana: 3,
             armure: 0,
             attaque: 0, // Force de base à 0
+            luck: 0,
           ),
         ),
       );
@@ -118,6 +119,7 @@ class RunController extends StateNotifier<RunState> {
         currentMana: chosenClass.maxMana,
         armure: 0,
         attaque: 0, // Force de base à 0
+        luck: chosenClass.luck,
       ),
       mapNodes: generatedMap,
       currentNodeId: null,
@@ -189,6 +191,7 @@ class RunController extends StateNotifier<RunState> {
     int attackAcc = 0,
     int armorAcc = 0,
     int maxManaAcc = 0,
+    int luckAcc = 0,
   }) {
     final currentStats = state.heroStats;
     final newMaxPv = currentStats.maxPv + maxPvAcc;
@@ -213,6 +216,7 @@ class RunController extends StateNotifier<RunState> {
         currentMana: newCurrentMana,
         attaque: currentStats.attaque + attackAcc,
         armure: currentStats.armure + armorAcc,
+        luck: currentStats.luck + luckAcc,
       ),
     );
   }

@@ -7,6 +7,7 @@ class EntityStats {
   final int currentMana;
   final int armure;
   final int attaque;
+  final int luck;
   final List<StatusEffect> statuses;
 
   const EntityStats({
@@ -16,6 +17,7 @@ class EntityStats {
     this.currentMana = 0,
     required this.armure,
     required this.attaque,
+    this.luck = 0,
     this.statuses = const [],
   });
 
@@ -26,6 +28,7 @@ class EntityStats {
     int? currentMana,
     int? armure,
     int? attaque,
+    int? luck,
     List<StatusEffect>? statuses,
   }) {
     return EntityStats(
@@ -35,6 +38,7 @@ class EntityStats {
       currentMana: currentMana ?? this.currentMana,
       armure: armure ?? this.armure,
       attaque: attaque ?? this.attaque,
+      luck: luck ?? this.luck,
       statuses: statuses ?? this.statuses,
     );
   }
