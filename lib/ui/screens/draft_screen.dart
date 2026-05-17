@@ -219,7 +219,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
     _finishDraft(ref);
   }
 
-  RewardRarity _rollRarity(int luck) {
+  RewardRarity _rollRarity(int luck, {bool canBeLegendary = true}) {
     final rng = Random();
     // Probabilités de base (sur 100)
     double legendaryChance = 1.0;
@@ -235,8 +235,14 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
 
     double roll = rng.nextDouble() * 100;
 
-    if (roll < legendaryChance) return RewardRarity.legendary;
-    roll -= legendaryChance;
+    if (canBeLegendary && roll < legendaryChance) return RewardRarity.legendary;
+    if (!canBeLegendary) {
+      // Si on ne peut pas être légendaire, on décale le roll pour ignorer la tranche légendaire
+      roll = (rng.nextDouble() * (100 - legendaryChance)) + legendaryChance;
+    } else {
+      roll -= legendaryChance;
+    }
+
     if (roll < epicChance) return RewardRarity.epic;
     roll -= epicChance;
     if (roll < rareChance) return RewardRarity.rare;
@@ -251,21 +257,9 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
     final runState = ref.read(runProvider);
     final luck = runState.heroStats.luck;
 
+    // 1. Génération des 3 choix standards (Commun à Épique)
     final choices = List.generate(3, (index) {
-      RewardRarity rarity = _rollRarity(luck);
-
-      if (rarity == RewardRarity.legendary) {
-        return _DraftChoice(
-          'Trèfle à 4 feuilles',
-          '+1 Chance',
-          0,
-          0,
-          0,
-          0,
-          luckBoost: 1,
-          rarity: rarity,
-        );
-      }
+      RewardRarity rarity = _rollRarity(luck, canBeLegendary: false);
 
       double multiplier = 1.0;
       if (rarity == RewardRarity.uncommon) multiplier = 1.5;
@@ -274,29 +268,46 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
 
       int type = rng.nextInt(4);
       if (type == 0) {
-        int boost = (15 * multiplier).round();
+        int boost = (5 * multiplier).round();
         return _DraftChoice('Vitalité', '+$boost PV Max', boost, 0, 0, 0, rarity: rarity);
       }
       if (type == 1) {
-        int boost = (5 * multiplier).round();
+        int boost = (2 * multiplier).round();
         return _DraftChoice('Aiguisage', '+$boost Attaque', 0, boost, 0, 0, rarity: rarity);
       }
       if (type == 2) {
-        int boost = (10 * multiplier).round();
+        int boost = (5 * multiplier).round();
         return _DraftChoice('Plaque de Fer', '+$boost Armure', 0, 0, boost, 0, rarity: rarity);
       }
       
-      // type == 3 : Sagesse
-      // Le mana max est puissant, on ajuste le scaling pour éviter des valeurs folles
-      double manaMultiplier = 1.0;
-      if (rarity == RewardRarity.uncommon) manaMultiplier = 1.2; // +6
-      if (rarity == RewardRarity.rare) manaMultiplier = 1.6; // +8
-      if (rarity == RewardRarity.epic) manaMultiplier = 2.0; // +10
-      int boost = (5 * manaMultiplier).round();
+      // type == 3 : Sagesse (Mana)
+      // On utilise les mêmes multiplicateurs pour rester cohérent
+      int boost = (1 * multiplier).round();
+      if (boost < 1) boost = 1;
       return _DraftChoice('Sagesse', '+$boost Mana Max', 0, 0, 0, boost, rarity: rarity);
     });
 
-    if (rng.nextDouble() < 0.3) {
+    // 2. Tirage des récompenses Légendaires (En bonus, en plus des 3 choix)
+    // Chaque récompense légendaire est testée indépendamment
+    
+    // Trèfle à 4 feuilles
+    if (_rollRarity(luck) == RewardRarity.legendary) {
+      choices.add(
+        _DraftChoice(
+          'Trèfle à 4 feuilles',
+          '+1 Chance',
+          0,
+          0,
+          0,
+          0,
+          luckBoost: 1,
+          rarity: RewardRarity.legendary,
+        ),
+      );
+    }
+
+    // Miroir (Clonage)
+    if (_rollRarity(luck) == RewardRarity.legendary) {
       choices.add(
         _DraftChoice(
           'Miroir',
@@ -306,7 +317,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
           0,
           0,
           isCloneOption: true,
-          rarity: RewardRarity.epic, // Le miroir est considéré comme épique
+          rarity: RewardRarity.legendary,
         ),
       );
     }
