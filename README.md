@@ -1,44 +1,79 @@
-# Hero's Draft - Roguelike Deckbuilder
+# ⚔️ Hero's Draft - Roguelike Deckbuilder
 
-"Hero's Draft" est un roguelike card game développé avec **Flutter** et **Flame**, utilisant **Riverpod** pour la gestion d'état. Le jeu propose des combats au tour par tour, des classes de personnages uniques, et un système de progression procédural.
+![Flutter](https://img.shields.io/badge/Flutter-%2302569B.svg?style=for-the-badge&logo=Flutter&logoColor=white)
+![Flame](https://img.shields.io/badge/Flame-%23E040FB.svg?style=for-the-badge&logo=flame&logoColor=white)
+![Riverpod](https://img.shields.io/badge/Riverpod-%23000000.svg?style=for-the-badge&logo=dart&logoColor=white)
+
+**Hero's Draft** est un Roguelike Deckbuilder dynamique, pensé pour offrir un "game feel" percutant et une architecture technique irréprochable. Développé avec **Flutter** et le moteur **Flame**, le jeu propose des combats tactiques, une progression procédurale sur carte, et une architecture 100% *Data-Driven*.
 
 Site officiel: https://heros-draft.vilarserver.com/
 
-## 1. Architecture Technique
+---
 
-Le jeu repose sur une architecture hybride séparant le rendu, l'interface et la logique métier :
-- **Moteur de Jeu (Flame)** : Gère la boucle de jeu principale, le rendu des cartes (Héros et Ennemis) sur le plateau, les animations de combat (dash, buffs, tremblements) et les effets de particules.
-- **Interface Utilisateur (Flutter)** : Gère le HUD (barres de vie, mana, boutons de fin de tour), les menus interactifs (écran de sélection, draft de cartes en fin de combat), et les tooltips descriptifs.
-- **Gestion d'État (Riverpod)** : Centralise la logique métier via le `RunController` (statistiques du héros, niveau en cours) et le `DeckController` (gestion de la pioche, de la main, et de la défausse).
-- **Data-Driven Design** : Les données du jeu (cartes, ennemis, héros, compétences) sont définies dans des fichiers JSON (`assets/data/`), chargés dynamiquement au démarrage via le `GameDataService`. Cela permet d'équilibrer le jeu sans recompiler.
+## ✨ Key Features (Gameplay & Game Feel)
 
-## 2. Mécaniques Principales
+Le jeu a été conçu pour offrir une expérience fluide, réactive et stratégique, s'inspirant des références du genre tout en y ajoutant une forte dose de dynamisme (Visual Juice).
 
-### Système de Deckbuilding
-Le joueur gère un deck de cartes. À chaque tour, il pioche des cartes (Attaques, Défenses, Soins) coûtant du Mana. Les cartes non jouées sont défaussées à la fin du tour. Le système inclut des mécanismes de ciblage (ciblage unique ou effets de zone).
+*   **🃏 Dynamic Combat & Visual Juice** : Le maniement des cartes est organique (tilt, inertie lors du glisser-déposer). Jouer une carte déclenche une séquence d'attaque percutante avec recul d'anticipation, impact visuel, tremblements d'écran (shake) et explosions de particules.
+*   **🗺️ Strategic World Map** : L'exploration n'est plus linéaire. Les joueurs naviguent sur un graphe procédural généré dynamiquement. La carte inclut des chemins animés, des culs-de-sac stratégiques (chokepoints) et différents types de nœuds : Combats, Élites, Boss, Boutiques, Feux de camp et Événements narratifs.
+*   **⚙️ Deep Mechanics & Traits** : 
+    *   **Classes Uniques** : Paladin, Berserker, Mage, chacun possédant des traits passifs exclusifs (ex: régénération d'armure, gain de puissance selon les PV manquants).
+    *   **Altérations d'État** : Gestion complète des buffs/debuffs (Poison, Force, Faiblesse, Régénération).
+    *   **Système de Reliques** : Objets passifs modifiant l'économie de la partie.
+*   **💰 Deckbuilding & Economy** : Gestion stricte du Mana (réinitialisé chaque tour), système de Draft post-combat avec **Auto-Merge** (fusionner 3 cartes identiques pour les améliorer), et une Boutique interactive pour affiner son deck ou retirer des cartes.
 
-### Intentions Ennemies (Telegraphing)
-Les ennemis affichent leurs intentions (Attaquer, Se défendre, Se buffer) au-dessus de leur carte avant d'agir. Le joueur peut ainsi planifier sa défense et sa stratégie en conséquence.
+---
 
-### Résolution des Combats et Statistiques
-Chaque entité possède des **PV (Points de Vie)**, de l'**Armure** (qui absorbe les dégâts avant les PV), une **Attaque** de base, et du **Mana** (pour le joueur). Les effets des cartes sont résolus dynamiquement via l'`EffectResolver`.
+## 🏗️ Under the Hood (Architecture Technique)
 
-### Système de Draft (Loot)
-À la fin de chaque combat, le jeu se met en pause et affiche un écran de Draft (Flutter). Le joueur peut y choisir des améliorations permanentes (bonus de PV max, d'attaque, d'armure ou de mana max) avant de passer au niveau suivant.
+Hero's Draft n'est pas qu'un jeu, c'est un moteur de deckbuilder robuste et extensible.
 
-## 3. Feuille de Route et État d'Avancement
+### The Power Couple : Flame 🤝 Riverpod
+Le projet sépare strictement le rendu de la logique métier :
+*   **Riverpod (Cerveau)** : Gère l'état global. Le `RunController` supervise les statistiques du joueur, les reliques et la progression sur la carte. Le `DeckController` gère la logique des piles (Main, Pioche, Défausse, Épuisement) de manière purement logique.
+*   **Flame (Muscles)** : Gère la boucle de jeu, les entités (`PositionComponent`) et les animations. Les composants Flame écoutent les changements de Riverpod pour se mettre à jour, garantissant qu'aucun bug visuel ne puisse corrompre l'état de la partie.
+*   **Flutter (Interface)** : Gère le HUD, les barres de vie, les modales fluides (Boutique, Repos) et les tooltips interactifs par-dessus le canvas Flame.
 
-Le développement est structuré en plusieurs phases d'implémentation. 
+### 100% Data-Driven Heart
+Pas de cartes ou d'ennemis codés en dur. Tout le contenu du jeu est externalisé dans des fichiers JSON (`assets/data/`). Le moteur lit ces fichiers au démarrage. 
+Pour équilibrer le jeu, nerfer un ennemi ou modifier le coût en mana d'une carte, il suffit de changer une ligne dans un JSON, sans jamais recompiler le code métier.
 
-### ✅ Phases Terminées (Disponibles dans `docs/implementation_plans/done/`)
-1. **Architecture Data-Driven** : Migration des entités hardcodées vers des fichiers JSON.
-2. **Système de Deckbuilding** : Implémentation de la pioche, défausse, coût en mana et gestion des cartes.
-3. **Feedbacks UI/UX** : Ajout des intentions ennemies, tooltips, et amélioration des textes de dégâts flottants.
-4. **Refactoring UI/Layout** : Restructuration du HUD, des barres de vie, et de l'intégration entre Flutter et Flame.
-5. **Corrections Post-Refacto** : Stabilisation des bugs visuels et logiques suite à la refonte de l'interface.
+### Responsivité Dynamique
+Le jeu intègre un système de scaling sur mesure. Le moteur Flame s'adapte à la hauteur de l'écran, recalculant instantanément la taille et la position relative des cartes, des ennemis et de l'arène, garantissant une expérience parfaite du mobile au moniteur 4K.
 
-### 🚧 Phases À Venir (En cours de planification)
-6. **Interface Responsiveness** : Adaptation complète de l'interface Flutter et de la caméra Flame pour tous les formats d'écrans (Mobile, Tablette, Desktop).
-7. **Profondeur de Gameplay** : Ajout d'altérations d'état (Buffs/Debuffs : Poison, Vulnérabilité, Régénération), de types de cartes spéciaux (Pouvoirs) et d'un système de Reliques passives.
-8. **Expérience Audio & Juice** : Intégration de `flame_audio` pour la musique et les bruitages, ajout de systèmes de particules avancés et de "Screen Shake".
-9. **World Map et Progression** : Remplacement de la progression linéaire par une carte du monde procédurale (nœuds de combat, marchands, feux de camp) et un système d'économie (Or).
+---
+
+## 🛠️ Developer Guide
+
+### Lancer le projet
+Hero's Draft est un projet Flutter standard. Assurez-vous d'avoir Flutter SDK (>= 3.11.4) installé.
+
+```bash
+# Récupérer les dépendances
+flutter pub get
+
+# Lancer sur l'appareil par défaut
+flutter run
+
+# Lancer les tests (génération de carte, résolution d'effets, etc.)
+flutter test
+```
+
+### Modding (Ajouter du contenu)
+Grâce à l'architecture Data-Driven, étendre le jeu est trivial :
+1. Ouvrez `assets/data/cards.json` ou `enemies.json`.
+2. Dupliquez une entrée existante et modifiez ses valeurs (nom, coût, effets, pv).
+3. Relancez l'application. La nouvelle carte ou le nouvel ennemi est déjà dans le jeu, pris en compte par la Boutique, les récompenses et le système de combat !
+
+*Note: Pensez à toujours lancer `dart analyze` après une modification du code.*
+
+---
+
+## 🚀 Roadmap & Status
+
+Le moteur de base et l'architecture complète sont **terminés et fonctionnels** (Phases 1 à 12 validées).
+
+**À venir :**
+*   **Expérience Audio** : Intégration de `flame_audio` pour la musique dynamique et les effets sonores (SFX de cartes, impacts).
+*   **Plus de Profondeur** : Nouvelles reliques, nouveaux archétypes de cartes (Malédictions à jouer) et de nouveaux événements narratifs.
+*   **Polissage Final** : Équilibrage des derniers pourcentages, animations spécifiques aux boss, et préparation pour les plateformes de distribution.
