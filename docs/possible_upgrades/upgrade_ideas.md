@@ -31,3 +31,6 @@
 - Sur la map empêcher la génération du même noeud l'un après l'autre sur la route (exemple: ne pas avoir 3 élites d'affilés, ou 3 repos d'affilés, etc.), également mettre un nombre maximum et minimum de chaque type de noeud sur la route (sauf pour les noeuds de combat qui n'aura ni maximum ni minimum)
 - ~~Rajouter un système de rareté aux récompenses de fin de combat, (par exemple la récompense "sagesse" peut avoir 4 rareté différentes, la plus basse étant un effet simple et la plus haute un effet très puissant allant de +1 a +4)~~
     - ~~Il faudra donc rajouter une nouvelle stats de "chance" obtenables dans les reliques par exemple mais également dans les récompense mais avec une chance très infime car cette récompense n'aura qu'une rareté -> Légendaire. (C'est un exemple, il faudra bien entendu ajuster le tout pour que cela soit équilibré)~~
+- Supprimer les MP des ennemis
+- Afficher correctement l'armure du personnage (plus de 0+11, il faudrait que cela affiche l'armure total)
+- Modifier la zone de repos qui est actuellement trop forte, surtout la forge qui permet de monter de niveau n'importe quelle carte sans aucun risque et sans coût autre que l'or.
