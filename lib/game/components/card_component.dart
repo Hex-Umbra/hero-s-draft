@@ -38,6 +38,7 @@ class CardComponent extends PositionComponent
   // État visuel actuel
   bool _isFlashing = false;
   bool _isCancelling = false;
+  bool isPlayed = false;
 
   bool get _isSelected => game.focusedCard == this;
 
@@ -236,6 +237,7 @@ class CardComponent extends PositionComponent
 
   @override
   void onLongTapDown(TapDownEvent event) {
+    if (isPlayed) return;
     game.onShowTooltip(card.data.name, _buildDetailedDescription());
   }
 
@@ -291,12 +293,14 @@ class CardComponent extends PositionComponent
 
   @override
   void onHoverEnter() {
+    if (isPlayed) return;
     if (isDragging) return;
     game.setHoveredCard(this);
   }
 
   @override
   void onHoverExit() {
+    if (isPlayed) return;
     if (isDragging) return;
     if (game.hoveredCard == this) {
       game.setHoveredCard(null);
@@ -531,6 +535,7 @@ class CardComponent extends PositionComponent
 
   @override
   void onTapDown(TapDownEvent event) {
+    if (isPlayed) return;
     super.onTapDown(event);
     game.setFocusedCard(this);
     refreshVisuals(); // Refresh painters for selection
@@ -546,6 +551,7 @@ class CardComponent extends PositionComponent
 
   @override
   void onDragStart(DragStartEvent event) {
+    if (isPlayed) return;
     super.onDragStart(event);
     
     if (!_canAfford) {
@@ -580,6 +586,7 @@ class CardComponent extends PositionComponent
 
   @override
   void onDragUpdate(DragUpdateEvent event) {
+    if (isPlayed) return;
     if (!isDragging) return;
     
     position += event.canvasDelta;
@@ -613,6 +620,7 @@ class CardComponent extends PositionComponent
 
   @override
   void onDragEnd(DragEndEvent event) {
+    if (isPlayed) return;
     super.onDragEnd(event);
     if (!isDragging) return;
     
@@ -645,6 +653,7 @@ class CardComponent extends PositionComponent
 
   @override
   void onDragCancel(DragCancelEvent event) {
+    if (isPlayed) return;
     super.onDragCancel(event);
     if (!isDragging) return;
     
@@ -713,6 +722,7 @@ class CardComponent extends PositionComponent
   }
 
   void playAnimation(EnemyCard? target, {required VoidCallback onComplete}) {
+    isPlayed = true;
     isDragging = false;
     priority = 500;
 
