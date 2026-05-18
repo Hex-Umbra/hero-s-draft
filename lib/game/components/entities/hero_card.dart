@@ -19,12 +19,39 @@ class HeroCard extends PositionComponent
   late final StatBadge armorBadge;
   late final StatBadge attackBadge;
   late final StatusIndicator statusIndicator;
+  late final RectangleComponent borderInfo;
 
   HeroCard(
     this.stats, {
     this.bonusAttack = 0,
     required this.imagePath,
   }) : super(size: Vector2(120, 160));
+
+  bool _isHighlighted = false;
+  Effect? _highlightEffect;
+
+  void setHighlight(bool highlight) {
+    if (_isHighlighted == highlight) return;
+    _isHighlighted = highlight;
+
+    if (_isHighlighted) {
+      borderInfo.paint.color = Colors.cyanAccent;
+      borderInfo.paint.strokeWidth = 4;
+      _highlightEffect = ScaleEffect.to(
+        Vector2.all(1.05),
+        EffectController(duration: 0.2, reverseDuration: 0.2, infinite: true),
+      );
+      add(_highlightEffect!);
+    } else {
+      borderInfo.paint.color = Colors.white;
+      borderInfo.paint.strokeWidth = 2;
+      if (_highlightEffect != null) {
+        _highlightEffect!.removeFromParent();
+        _highlightEffect = null;
+      }
+      add(ScaleEffect.to(Vector2.all(1.0), EffectController(duration: 0.2)));
+    }
+  }
 
   @override
   void onTapDown(TapDownEvent event) {
@@ -61,15 +88,14 @@ class HeroCard extends PositionComponent
     );
 
     // Encadré de la carte
-    add(
-      RectangleComponent(
-        size: size,
-        paint: Paint()
-          ..color = Colors.white
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2,
-      ),
+    borderInfo = RectangleComponent(
+      size: size,
+      paint: Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2,
     );
+    add(borderInfo);
 
     armorBadge = StatBadge(type: StatType.armor, value: '${stats.armure}');
     armorBadge.position = Vector2(-12, 35);

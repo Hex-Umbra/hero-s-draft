@@ -293,6 +293,32 @@ class EnemyCard extends PositionComponent
     }
   }
 
+  bool _isHighlighted = false;
+  Effect? _highlightEffect;
+
+  void setHighlight(bool highlight) {
+    if (_isHighlighted == highlight) return;
+    _isHighlighted = highlight;
+
+    if (_isHighlighted) {
+      borderInfo.paint.color = Colors.cyanAccent;
+      borderInfo.paint.strokeWidth = 3;
+      _highlightEffect = ScaleEffect.to(
+        Vector2.all(1.05),
+        EffectController(duration: 0.2, reverseDuration: 0.2, infinite: true),
+      );
+      add(_highlightEffect!);
+    } else {
+      borderInfo.paint.color = isSelected ? Colors.amber : Colors.white;
+      borderInfo.paint.strokeWidth = isSelected ? 4 : 2;
+      if (_highlightEffect != null) {
+        _highlightEffect!.removeFromParent();
+        _highlightEffect = null;
+      }
+      add(ScaleEffect.to(Vector2.all(1.0), EffectController(duration: 0.2)));
+    }
+  }
+
   void dashAnimation() {
     add(
       SequenceEffect([

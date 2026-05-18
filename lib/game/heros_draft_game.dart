@@ -3,10 +3,11 @@ import 'package:flame/game.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/events.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Image, PointerMoveEvent;
 import 'components/card_component.dart';
 import 'components/entities/hero_card.dart';
 import 'components/entities/enemy_card.dart';
+import 'components/visual_effects/targeting_line.dart';
 import '../models/card_instance.dart';
 import '../models/data/enemy_data.dart';
 import '../models/data/hero_data.dart';
@@ -22,7 +23,8 @@ import 'systems/encounter_system.dart';
 
 enum TurnPhase { player, enemy }
 
-class HerosDraftGame extends FlameGame with TapCallbacks {
+class HerosDraftGame extends FlameGame
+    with TapCallbacks, PointerMoveCallbacks {
   List<EnemyData> availableEnemies = [];
   List<HeroData> availableHeroes = [];
   HeroCard? heroCard;
@@ -30,6 +32,9 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
   List<CardComponent> handCards = [];
   CardComponent? hoveredCard;
   CardComponent? focusedCard;
+
+  late final TargetingLine targetingLine;
+  Vector2 _lastPointerPos = Vector2.zero();
 
   // Facteur d'échelle basé sur une résolution de référence (800p pour agrandir les éléments)
   double get scaleFactor => (size.y / 800).clamp(0.85, 2.5);
@@ -129,6 +134,8 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
           ),
         );
       }
+      targetingLine.hide();
+      _clearTargetHighlights();
     }
 
     focusedCard = card;
@@ -155,6 +162,50 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
           ),
         );
       }
+      targetingLine.color = _getCardTypeColor(focusedCard!.card.data.type);
+      _applyTargetHighlights(focusedCard!.card.data.target);
+    }
+  }
+
+  Color _getCardTypeColor(CardType type) {
+    switch (type) {
+      case CardType.attack:
+        return Colors.redAccent;
+      case CardType.skill:
+        return Colors.blueAccent;
+      case CardType.power:
+        return Colors.amber;
+      case CardType.status:
+        return Colors.blueGrey;
+    }
+  }
+
+  void _clearTargetHighlights() {
+    for (var enemy in enemyCards) {
+      enemy.setHighlight(false);
+    }
+    heroCard?.setHighlight(false);
+  }
+
+  void _applyTargetHighlights(CardTarget target) {
+    if (target == CardTarget.singleEnemy || target == CardTarget.allEnemies) {
+      for (var enemy in enemyCards) {
+        enemy.setHighlight(true);
+      }
+    } else if (target == CardTarget.self) {
+      heroCard?.setHighlight(true);
+    }
+  }
+
+  @override
+  void onPointerMove(PointerMoveEvent event) {
+    _lastPointerPos = event.localPosition;
+
+    if (focusedCard != null && !focusedCard!.isDragging) {
+      targetingLine.updatePoints(
+        focusedCard!.position + Vector2(0, -40),
+        _lastPointerPos,
+      );
     }
   }
 
@@ -168,6 +219,10 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
   @override
   Future<void> onLoad() async {
     await super.onLoad();
+
+    // 0. Initialiser la ligne de ciblage
+    targetingLine = TargetingLine();
+    add(targetingLine..priority = 300);
 
     // On retire le FixedResolutionViewport pour utiliser tout l'espace disponible (MaxViewport par défaut)
     // La caméra s'adaptera dynamiquement à la taille de l'écran.
