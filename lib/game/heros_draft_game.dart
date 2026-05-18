@@ -74,6 +74,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
       hoveredCard!.isHovered = false;
       hoveredCard!.priority = hoveredCard!.basePriority;
       hoveredCard!.removeAll(hoveredCard!.children.whereType<Effect>());
+      hoveredCard!.refreshVisuals();
       if (!hoveredCard!.isDragging) {
         hoveredCard!.add(
           ScaleEffect.to(
@@ -91,6 +92,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
       hoveredCard!.isHovered = true;
       hoveredCard!.priority = 100;
       hoveredCard!.removeAll(hoveredCard!.children.whereType<Effect>());
+      hoveredCard!.refreshVisuals();
       if (!hoveredCard!.isDragging) {
         hoveredCard!.add(
           ScaleEffect.to(
@@ -107,17 +109,19 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
 
     // Reset previous focus
     if (focusedCard != null) {
-      focusedCard!.isHovered = false;
-      focusedCard!.priority = focusedCard!.basePriority;
-      focusedCard!.removeAll(focusedCard!.children.whereType<Effect>());
-      if (!focusedCard!.isDragging) {
-        focusedCard!.add(
+      final oldFocused = focusedCard!;
+      oldFocused.isHovered = false;
+      oldFocused.priority = oldFocused.basePriority;
+      oldFocused.removeAll(oldFocused.children.whereType<Effect>());
+      oldFocused.refreshVisuals();
+      if (!oldFocused.isDragging) {
+        oldFocused.add(
           MoveEffect.to(
-            focusedCard!.originalPosition,
+            oldFocused.originalPosition,
             EffectController(duration: 0.15, curve: Curves.easeIn),
           ),
         );
-        focusedCard!.add(
+        oldFocused.add(
           ScaleEffect.to(
             Vector2.all(scaleFactor * 0.75),
             EffectController(duration: 0.15, curve: Curves.easeIn),
@@ -133,6 +137,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
       focusedCard!.isHovered = true;
       focusedCard!.priority = 150; // Plus haut que le hover simple
       focusedCard!.removeAll(focusedCard!.children.whereType<Effect>());
+      focusedCard!.refreshVisuals();
       if (!focusedCard!.isDragging) {
         focusedCard!.add(
           MoveEffect.to(

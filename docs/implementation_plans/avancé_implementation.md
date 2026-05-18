@@ -300,3 +300,6 @@
 - feat: implémentation Phase 1
     - Modernisation du widget UiCard et uniformisation thématique
         - J'ai terminé la Phase 1. Le widget `UiCard` a été entièrement modernisé avec un système de thèmes visuels basés sur le type de carte (Attaque, Compétence, Pouvoir). Chaque type possède désormais sa propre bordure colorée, un dégradé de fond spécifique et une icône en filigrane. J'ai également intégré les états de sélection (`isSelected`) et de désactivation (`isGrayedOut`), et mis à jour tous les écrans de menus (Shop, Deck, Draft, Dictionnaire, Repos) pour refléter ces changements visuels.
+- feat: implémentation Phase 2
+    - Unification visuelle dans Flame (CardComponent) et synchronisation des thèmes
+        - J'ai terminé la Phase 2. Le `CardComponent` du moteur Flame a été entièrement refactorisé pour utiliser le même langage visuel que le widget Flutter `UiCard`. Le rendu manuel via `Canvas` inclut désormais des dégradés de fond (`ui.Gradient`), des bordures thématiques (Rouge, Bleu, Or) et l'affichage d'icônes de fond via `TextPainter`. J'ai également synchronisé l'état de sélection (`focusedCard`) pour afficher un halo lumineux (Glow) identique aux menus, et optimisé le rafraîchissement des peintres via une nouvelle méthode `refreshVisuals()`.
