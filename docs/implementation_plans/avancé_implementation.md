@@ -319,8 +319,8 @@
 ## Phase 26 - Corrections Ciblage & Combat
 
 - feat: implémentation Phase 1 à 3
-    - Ajustement des animations de surbrillance et ligne de ciblage
-        - J'ai terminé les corrections de la Phase 26. Les animations de surbrillance (`highlight`) sur les cibles (Ennemis et Héros) ont été adoucies : l'échelle maximale est réduite (1.02) et la vitesse ralentie. J'ai également corrigé un bug majeur de désynchronisation visuelle : lorsqu'une cible est désélectionnée ou cliquée, tous les effets d'échelle en cours sont brutalement arrêtés et la carte reprend instantanément sa taille d'origine (1.0) avant de relancer toute autre animation, empêchant les entités de rester bloquées dans un état agrandi. Enfin, la courbe de Bézier de la `TargetingLine` a été supprimée au profit d'une ligne droite classique, avec un calcul d'angle de flèche révisé pour suivre cette nouvelle trajectoire directe. L'analyse statique a été validée avec succès.
+    - Ajustement des retours visuels : Halo (Glow) pulsant et ligne droite
+        - J'ai terminé les corrections de la Phase 26. Toute notion de changement d'échelle (scaling) pour indiquer les cibles valides a été bannie pour garantir une stabilité visuelle totale et éviter les déformations cumulatives. À la place, j'ai implémenté un **effet de Halo lumineux (Glow)** dynamique : lorsqu'une cible est valide, une aura bleu cyan apparaît et pulse via une oscillation fluide de son opacité, de son épaisseur et de son flou (calculé par une fonction sinus dans la boucle d'update). Ce retour visuel est beaucoup plus élégant, stable et moins agressif. La `TargetingLine` est désormais une ligne droite directe pour une clarté stratégique accrue. L'analyse statique a été validée avec succès.
 
 ## Phase 27 - Bugfix "Carte Fantôme" (Désynchronisation Focus/Animation)
 

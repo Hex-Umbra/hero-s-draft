@@ -294,7 +294,8 @@ class EnemyCard extends PositionComponent
   }
 
   bool _isHighlighted = false;
-  Effect? _highlightEffect;
+  double _glowOpacity = 1.0;
+  Effect? _glowAnimation;
 
   void setHighlight(bool highlight) {
     if (_isHighlighted == highlight) return;
@@ -303,22 +304,55 @@ class EnemyCard extends PositionComponent
     if (_isHighlighted) {
       borderInfo.paint.color = Colors.cyanAccent;
       borderInfo.paint.strokeWidth = 3;
-      _highlightEffect = ScaleEffect.to(
-        Vector2.all(1.02),
-        EffectController(duration: 0.5, reverseDuration: 0.5, infinite: true),
-      );
-      add(_highlightEffect!);
+      
+      // Animation de pulsation de l'opacité du halo
+      _glowAnimation = SequenceEffect([
+        OpacityEffect.to(0.3, EffectController(duration: 0.8, curve: Curves.easeInOut)),
+        OpacityEffect.to(1.0, EffectController(duration: 0.8, curve: Curves.easeInOut)),
+      ], onComplete: () {}, infinite: true);
+      
+      // Note: On ne peut pas appliquer OpacityEffect directement sur un Paint dans render facilement sans ruse.
+      // On va utiliser un timer ou simplement laisser le render utiliser une valeur sinusoïdale basée sur le temps de jeu
+      // pour une pulsation fluide du contraste/transparence.
     } else {
       borderInfo.paint.color = isSelected ? Colors.amber : Colors.white;
       borderInfo.paint.strokeWidth = isSelected ? 4 : 2;
       
-      final scaleEffects = children.whereType<ScaleEffect>().toList();
-      removeAll(scaleEffects);
-      _highlightEffect = null;
+      _glowAnimation?.removeFromParent();
+      _glowAnimation = null;
       
+      // Nettoyage scale de sécurité
+      final scaleEffects = children.whereType<ScaleEffect>().toList();
+      removeAll(scaleEffects); 
       scale = Vector2.all(1.0);
-      add(ScaleEffect.to(Vector2.all(1.0), EffectController(duration: 0.1)));
     }
+  }
+
+  double _totalTime = 0;
+  @override
+  void update(double dt) {
+    super.update(dt);
+    if (_isHighlighted) {
+      _totalTime += dt;
+      // Oscillation entre 0.2 et 0.8 pour l'opacité du halo
+      _glowOpacity = 0.5 + 0.3 * sin(_totalTime * 4);
+    }
+  }
+
+  @override
+  void render(Canvas canvas) {
+    // Si surbrillance active, on dessine un halo pulsant
+    if (_isHighlighted) {
+      final rect = size.toRect();
+      final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(0));
+      final glowPaint = Paint()
+        ..color = Colors.cyanAccent.withValues(alpha: _glowOpacity)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 6 + (2 * _glowOpacity) // Légère variation d'épaisseur pour le "poids" visuel
+        ..maskFilter = MaskFilter.blur(BlurStyle.outer, 8 + (4 * _glowOpacity));
+      canvas.drawRRect(rrect, glowPaint);
+    }
+    super.render(canvas);
   }
 
   void dashAnimation() {

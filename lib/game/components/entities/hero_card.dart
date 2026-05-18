@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
@@ -28,7 +29,8 @@ class HeroCard extends PositionComponent
   }) : super(size: Vector2(120, 160));
 
   bool _isHighlighted = false;
-  Effect? _highlightEffect;
+  double _glowOpacity = 1.0;
+  double _totalTime = 0;
 
   void setHighlight(bool highlight) {
     if (_isHighlighted == highlight) return;
@@ -37,22 +39,39 @@ class HeroCard extends PositionComponent
     if (_isHighlighted) {
       borderInfo.paint.color = Colors.cyanAccent;
       borderInfo.paint.strokeWidth = 4;
-      _highlightEffect = ScaleEffect.to(
-        Vector2.all(1.02),
-        EffectController(duration: 0.5, reverseDuration: 0.5, infinite: true),
-      );
-      add(_highlightEffect!);
     } else {
       borderInfo.paint.color = Colors.white;
       borderInfo.paint.strokeWidth = 2;
       
+      // Nettoyage scale au cas où
       final scaleEffects = children.whereType<ScaleEffect>().toList();
       removeAll(scaleEffects);
-      _highlightEffect = null;
-      
-      scale = Vector2.all(1.0);
-      add(ScaleEffect.to(Vector2.all(1.0), EffectController(duration: 0.1)));
+      scale = Vector2.all(game.scaleFactor * 1.3);
     }
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    if (_isHighlighted) {
+      _totalTime += dt;
+      _glowOpacity = 0.5 + 0.3 * sin(_totalTime * 4);
+    }
+  }
+
+  @override
+  void render(Canvas canvas) {
+    if (_isHighlighted) {
+      final rect = size.toRect();
+      final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(0));
+      final glowPaint = Paint()
+        ..color = Colors.cyanAccent.withValues(alpha: _glowOpacity)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 8 + (2 * _glowOpacity)
+        ..maskFilter = MaskFilter.blur(BlurStyle.outer, 10 + (4 * _glowOpacity));
+      canvas.drawRRect(rrect, glowPaint);
+    }
+    super.render(canvas);
   }
 
   @override
