@@ -28,12 +28,12 @@ class CardComponent extends PositionComponent
 
   // TextPainters pour le rendu manuel
   late TextPainter _namePainter;
-  late TextPainter _costPainter;
   late TextPainter _descPainter;
   late TextPainter _usagePainter;
   late TextPainter _typePainter;
   late TextPainter _bgIconPainter;
   late TextPainter _rarityPainter;
+  TextPainter? _manaPainter;
 
   // État visuel actuel
   bool _isFlashing = false;
@@ -71,18 +71,7 @@ class CardComponent extends PositionComponent
   }
 
   Color _getBackgroundColor() {
-    if (_isCancelling) return const Color(0xFF1A1A1A);
-    
-    switch (card.data.type) {
-      case CardType.attack:
-        return const Color(0xFF3D1A1A);
-      case CardType.skill:
-        return const Color(0xFF1A2A3D);
-      case CardType.power:
-        return const Color(0xFF3D351A);
-      case CardType.status:
-        return const Color(0xFF2D2D2D);
-    }
+    return _isCancelling ? const Color(0xFF1A1A1A) : const Color(0xFF2A2A3D);
   }
 
   IconData _getTypeIconData() {
@@ -126,19 +115,19 @@ class CardComponent extends PositionComponent
     
     // Configurer le style de base selon l'état
     Color nameColor = _isFlashing ? Colors.transparent : Colors.white.withAlpha(alpha);
-    Color costColor = _isFlashing ? Colors.transparent : Colors.white.withAlpha(alpha);
     Color descColor = _isFlashing ? Colors.transparent : Colors.white.withAlpha(alpha);
     Color usageColor = _isFlashing ? Colors.transparent : Colors.white.withAlpha(alpha);
     Color typeLabelColor = _isFlashing ? Colors.transparent : typeColor.withAlpha((alpha * 0.7).toInt());
     Color rarityColor = _isFlashing ? Colors.transparent : _getRarityColor().withAlpha(alpha);
+    Color manaColor = _isFlashing ? Colors.transparent : Colors.cyanAccent.withAlpha(alpha);
 
     if (_isCancelling) {
       final cancelAlpha = (alpha * 0.6).toInt();
       nameColor = nameColor.withAlpha(cancelAlpha);
-      costColor = costColor.withAlpha(cancelAlpha);
       descColor = descColor.withAlpha(cancelAlpha);
       typeLabelColor = typeLabelColor.withAlpha(cancelAlpha);
       rarityColor = rarityColor.withAlpha(cancelAlpha);
+      manaColor = manaColor.withAlpha(cancelAlpha);
     }
 
     _namePainter = TextPainter(
@@ -155,17 +144,29 @@ class CardComponent extends PositionComponent
       textAlign: TextAlign.center,
     )..layout(maxWidth: size.x - 24);
 
-    _costPainter = TextPainter(
-      text: TextSpan(
-        text: '${card.currentCost}',
-        style: TextStyle(
-          color: costColor,
-          fontSize: 14,
-          fontWeight: FontWeight.w900,
+    if (card.currentCost > 0) {
+      final manaString = String.fromCharCode(Icons.diamond_rounded.codePoint);
+      String fullManaString = '';
+      for (int i = 0; i < card.currentCost; i++) {
+        fullManaString += manaString;
+      }
+      
+      _manaPainter = TextPainter(
+        text: TextSpan(
+          text: fullManaString,
+          style: TextStyle(
+            color: manaColor,
+            fontSize: 16,
+            fontFamily: Icons.diamond_rounded.fontFamily,
+            package: Icons.diamond_rounded.fontPackage,
+            letterSpacing: 2.0,
+          ),
         ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
+        textDirection: TextDirection.ltr,
+      )..layout();
+    } else {
+      _manaPainter = null;
+    }
 
     _descPainter = TextPainter(
       text: TextSpan(
@@ -279,7 +280,6 @@ class CardComponent extends PositionComponent
   static const double cardWidth = 140;
   static const double cardHeight = 196;
 
-  final Paint backgroundPaint = Paint()..color = const Color(0xFF2A2A3D);
   final Paint borderPaint = Paint()
     ..color = Colors.blueAccent
     ..style = PaintingStyle.stroke
@@ -460,34 +460,34 @@ class CardComponent extends PositionComponent
       canvas.drawRRect(rrect, glowPaint);
     }
 
-    // Dessin manuel des textes
+    // Dessin manuel des textes (Coordonnées Fixes)
     if (!_isFlashing) {
-      // Titre (centré haut)
+      // Titre (centré, fixe en haut)
       _namePainter.paint(
         canvas,
-        Offset(size.x / 2 - _namePainter.width / 2, 12),
+        Offset(size.x / 2 - _namePainter.width / 2, 16),
       );
 
-      // Ligne séparatrice
+      // Ligne séparatrice (fixe)
       final linePaint = Paint()
         ..color = typeColor.withAlpha(100)
         ..strokeWidth = 1.5;
       canvas.drawLine(
-        Offset(size.x / 2 - 20, 32),
-        Offset(size.x / 2 + 20, 32),
+        Offset(size.x / 2 - 20, 36),
+        Offset(size.x / 2 + 20, 36),
         linePaint,
       );
 
-      // Rareté
+      // Rareté (fixe sous la ligne)
       _rarityPainter.paint(
         canvas,
-        Offset(size.x / 2 - _rarityPainter.width / 2, 38),
+        Offset(size.x / 2 - _rarityPainter.width / 2, 42),
       );
 
-      // Badge Brûle (Exhaust)
+      // Badge Brûle (Exhaust) (fixe)
       if (card.data.isExhaust || card.data.type == CardType.power) {
         final badgeRect = Rect.fromCenter(
-          center: Offset(size.x / 2, 55),
+          center: Offset(size.x / 2, 60),
           width: 40,
           height: 14,
         );
@@ -497,38 +497,32 @@ class CardComponent extends PositionComponent
         );
         _usagePainter.paint(
           canvas,
-          Offset(size.x / 2 - _usagePainter.width / 2, 55 - _usagePainter.height / 2),
+          Offset(size.x / 2 - _usagePainter.width / 2, 60 - _usagePainter.height / 2),
         );
       }
 
-      // Description (centrée)
+      // Description (centrée sur une zone fixe)
+      // La description peut faire plusieurs lignes, on la centre verticalement autour de Y = 105
       _descPainter.paint(
         canvas,
         Offset(
           size.x / 2 - _descPainter.width / 2,
-          size.y / 2 + 10 - _descPainter.height / 2,
+          115 - _descPainter.height / 2,
         ),
       );
 
-      // Type Label (bas)
+      // Cristaux de Mana (En bas au centre)
+      if (_manaPainter != null) {
+        _manaPainter!.paint(
+          canvas,
+          Offset(size.x / 2 - _manaPainter!.width / 2, 150),
+        );
+      }
+
+      // Type Label (tout en bas)
       _typePainter.paint(
         canvas,
-        Offset(size.x / 2 - _typePainter.width / 2, size.y - 18),
-      );
-
-      // Coût en Mana (Cercle en haut à gauche)
-      final manaCirclePaint = Paint()..color = const Color(0xFF6A4C93);
-      canvas.drawCircle(const Offset(0, 0), 14, manaCirclePaint);
-      
-      final manaBorderPaint = Paint()
-        ..color = Colors.white
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2;
-      canvas.drawCircle(const Offset(0, 0), 14, manaBorderPaint);
-
-      _costPainter.paint(
-        canvas,
-        Offset(-_costPainter.width / 2, -_costPainter.height / 2),
+        Offset(size.x / 2 - _typePainter.width / 2, 175),
       );
     }
 
@@ -679,7 +673,6 @@ class CardComponent extends PositionComponent
     _isCancelling = false;
     _isFlashing = false;
 
-    backgroundPaint.color = const Color(0xFF2A2A3D);
     borderPaint.color = Colors.blueAccent;
     
     refreshVisuals();
@@ -765,7 +758,6 @@ class CardComponent extends PositionComponent
   ) {
     final targetPos = target?.position ?? position + Vector2(0, -size.y * 2);
 
-    backgroundPaint.color = color.withAlpha(204);
     borderPaint.color = Colors.white;
 
     add(
@@ -845,7 +837,6 @@ class CardComponent extends PositionComponent
   void _playMagicAnimation(EnemyCard? target, VoidCallback onComplete) {
     final targetPos = target?.position ?? position + Vector2(0, -size.y * 2);
 
-    backgroundPaint.color = Colors.deepPurpleAccent;
     borderPaint.color = Colors.cyanAccent;
 
     add(
@@ -879,7 +870,6 @@ class CardComponent extends PositionComponent
   }
 
   void _playBuffAnimation(VoidCallback onComplete) {
-    backgroundPaint.color = Colors.amber.withAlpha(200);
     borderPaint.color = Colors.white;
 
     add(
@@ -901,7 +891,6 @@ class CardComponent extends PositionComponent
 
   void _applyFlashVisual() {
     _isFlashing = true;
-    backgroundPaint.color = Colors.white;
     borderPaint.color = Colors.white;
     refreshVisuals();
   }

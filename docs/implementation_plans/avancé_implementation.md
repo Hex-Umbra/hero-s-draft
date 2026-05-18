@@ -309,3 +309,9 @@
 - feat: implémentation Phase 4
     - Polissage visuel, ligne de ciblage et highlights
         - J'ai terminé la Phase 4. L'expérience utilisateur a été considérablement enrichie par l'ajout de feedbacks visuels dynamiques. Une nouvelle composante `TargetingLine` dessine une flèche courbe entre la carte focalisée et le pointeur, facilitant le ciblage. J'ai également implémenté un système de surbrillance (`setHighlight`) sur les ennemis et le héros : lorsqu'une carte est sélectionnée, les cibles valides s'illuminent et pulsent doucement, indiquant clairement au joueur où il peut agir. Les transitions entre le clic, le focus et le drag ont été affinées pour une fluidité maximale.
+
+## Phase 25 - Corrections UI des Cartes (Fond, Textes, Mana)
+
+- feat: implémentation Phase 1 à 3
+    - Uniformisation du fond, alignement absolu des textes et refonte de l'affichage du mana
+        - J'ai terminé les corrections de l'UI. Le fond des cartes a été uniformisé pour rester sombre, peu importe le type de la carte, ce qui fait mieux ressortir les bordures colorées. L'alignement des textes (Titre, Rareté, Description, Tag "Brûle" et Type) a été fixé en absolu à l'aide de widgets `Positioned` dans `UiCard` et de coordonnées en dur dans `CardComponent`, évitant ainsi tout décalage disgracieux, peu importe la taille de la description. Enfin, l'affichage numérique du mana (en haut à gauche) a été remplacé par des icônes de cristaux de mana alignées en bas au centre, ajoutant une touche visuelle plus immersive et harmonieuse. L'analyse statique a été validée avec succès.

@@ -66,19 +66,7 @@ class UiCard extends StatelessWidget {
   }
 
   Color _getBackgroundColor() {
-    if (isGrayedOut) return const Color(0xFF1A1A1A);
-    switch (type) {
-      case CardType.attack:
-        return const Color(0xFF3D1A1A);
-      case CardType.skill:
-        return const Color(0xFF1A2A3D);
-      case CardType.power:
-        return const Color(0xFF3D351A);
-      case CardType.status:
-        return const Color(0xFF2D2D2D);
-      default:
-        return const Color(0xFF2C3E50);
-    }
+    return isGrayedOut ? const Color(0xFF1A1A1A) : const Color(0xFF2A2A3D);
   }
 
   @override
@@ -132,131 +120,146 @@ class UiCard extends StatelessWidget {
                   ),
                 ),
               ),
-              
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10.0),
-                child: Column(
-                  children: [
-                    // Titre
-                    Text(
-                      title.toUpperCase(),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.5,
-                      ),
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                    ),
-                    const SizedBox(height: 4),
-                    Container(
-                      height: 1.5,
-                      width: 40,
-                      color: typeColor.withAlpha(100),
-                    ),
-                    const SizedBox(height: 6),
 
-                    // Rareté
-                    if (rarity != null)
-                      Text(
-                        rarity!.toUpperCase(),
-                        style: TextStyle(
-                          color: _getRarityColor(rarity!),
-                          fontSize: 9,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-
-                    // Badge Usage Unique
-                    if (isExhaust)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.redAccent.withAlpha(200),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            'BRÛLE',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 8,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ),
-                      ),
-
-                    const Spacer(),
-
-                    // Description
-                    Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withAlpha(60),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        _buildDescription(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          height: 1.3,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    
-                    const Spacer(),
-                    
-                    // Type Label
-                    Text(
-                      _getTypeLabel().toUpperCase(),
-                      style: TextStyle(
-                        color: typeColor.withAlpha(180),
-                        fontSize: 8,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.0,
-                      ),
-                    ),
-                  ],
+              // Titre (Fixé en haut)
+              Positioned(
+                top: 10,
+                left: 8,
+                right: 8,
+                child: Text(
+                  title.toUpperCase(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.5,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
                 ),
               ),
 
-              // Coût en Mana (Haut Gauche)
-              if (cost != null)
-                Positioned(
-                  top: -5,
-                  left: -5,
+              // Ligne de séparation
+              Positioned(
+                top: 30,
+                left: 0,
+                right: 0,
+                child: Center(
                   child: Container(
-                    width: 28,
-                    height: 28,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF6A4C93), // Violet Profond Mana
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
-                      boxShadow: const [
-                        BoxShadow(color: Colors.black45, blurRadius: 4, offset: Offset(1, 1)),
-                      ],
+                    height: 1.5,
+                    width: 40,
+                    color: typeColor.withAlpha(100),
+                  ),
+                ),
+              ),
+
+              // Rareté
+              if (rarity != null)
+                Positioned(
+                  top: 36,
+                  left: 0,
+                  right: 0,
+                  child: Text(
+                    rarity!.toUpperCase(),
+                    style: TextStyle(
+                      color: _getRarityColor(rarity!),
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.2,
                     ),
-                    child: Center(
-                      child: Text(
-                        '$cost',
-                        style: const TextStyle(
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+
+              // Badge Usage Unique
+              if (isExhaust || type == CardType.power)
+                Positioned(
+                  top: 50,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.redAccent.withAlpha(200),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Text(
+                        'BRÛLE',
+                        style: TextStyle(
                           color: Colors.white,
+                          fontSize: 8,
                           fontWeight: FontWeight.w900,
-                          fontSize: 14,
                         ),
                       ),
                     ),
                   ),
                 ),
+
+              // Description (Centrée et fixe verticalement)
+              Positioned(
+                top: 75,
+                left: 8,
+                right: 8,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withAlpha(60),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    _buildDescription(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      height: 1.3,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+
+              // Cristaux de Mana (En bas au centre)
+              if (cost != null && cost! > 0)
+                Positioned(
+                  bottom: 22,
+                  left: 0,
+                  right: 0,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(
+                      cost!,
+                      (index) => const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 1.0),
+                        child: Icon(
+                          Icons.diamond_rounded,
+                          color: Colors.cyanAccent,
+                          size: 14,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+              // Type Label (Fixé tout en bas)
+              Positioned(
+                bottom: 6,
+                left: 0,
+                right: 0,
+                child: Text(
+                  _getTypeLabel().toUpperCase(),
+                  style: TextStyle(
+                    color: typeColor.withAlpha(180),
+                    fontSize: 8,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.0,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
             ],
           ),
         ),
