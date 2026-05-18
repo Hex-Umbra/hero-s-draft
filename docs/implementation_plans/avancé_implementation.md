@@ -315,3 +315,9 @@
 - feat: implémentation Phase 1 à 3
     - Uniformisation du fond, alignement absolu des textes et refonte de l'affichage du mana
         - J'ai terminé les corrections de l'UI. Le fond des cartes a été uniformisé pour rester sombre, peu importe le type de la carte, ce qui fait mieux ressortir les bordures colorées. L'alignement des textes de l'en-tête (Titre, Ligne de séparation, Rareté, et Badge) a été optimisé avec un espacement régulier. La description est désormais parfaitement centrée au milieu de la carte et dépourvue de fond sombre, renforçant l'aspect minimaliste et clair de l'interface. Le badge "Brûle" a été renommé en "USAGE UNIQUE" pour plus de lisibilité. Enfin, l'affichage numérique du mana (en haut à gauche) a été remplacé par des icônes de cristaux de mana alignées en bas au centre, ajoutant une touche visuelle plus immersive et harmonieuse. L'analyse statique a été validée avec succès.
+
+## Phase 26 - Corrections Ciblage & Combat
+
+- feat: implémentation Phase 1 à 3
+    - Ajustement des animations de surbrillance et ligne de ciblage
+        - J'ai terminé les corrections de la Phase 26. Les animations de surbrillance (`highlight`) sur les cibles (Ennemis et Héros) ont été adoucies : l'échelle maximale est réduite (1.02) et la vitesse ralentie. J'ai également corrigé un bug majeur de désynchronisation visuelle : lorsqu'une cible est désélectionnée ou cliquée, tous les effets d'échelle en cours sont brutalement arrêtés et la carte reprend instantanément sa taille d'origine (1.0) avant de relancer toute autre animation, empêchant les entités de rester bloquées dans un état agrandi. Enfin, la courbe de Bézier de la `TargetingLine` a été supprimée au profit d'une ligne droite classique, avec un calcul d'angle de flèche révisé pour suivre cette nouvelle trajectoire directe. L'analyse statique a été validée avec succès.

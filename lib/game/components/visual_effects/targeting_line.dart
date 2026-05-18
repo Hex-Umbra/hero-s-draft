@@ -20,21 +20,15 @@ class TargetingLine extends Component {
       ..style = PaintingStyle.stroke
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
 
-    // Dessiner la ligne avec un effet de pointillés/courbe
+    // Dessiner la ligne droite
     final path = Path();
     path.moveTo(from!.x, from!.y);
-    
-    // Courbe de Bézier quadratique pour un effet plus organique
-    final controlPoint = Vector2(
-      (from!.x + to!.x) / 2,
-      min(from!.y, to!.y) - 50,
-    );
-    path.quadraticBezierTo(controlPoint.x, controlPoint.y, to!.x, to!.y);
+    path.lineTo(to!.x, to!.y);
 
     canvas.drawPath(path, paint);
 
     // Dessiner une flèche au bout
-    final angle = atan2(to!.y - controlPoint.y, to!.x - controlPoint.x);
+    final angle = atan2(to!.y - from!.y, to!.x - from!.x);
     final arrowSize = 15.0;
     
     final arrowPath = Path();

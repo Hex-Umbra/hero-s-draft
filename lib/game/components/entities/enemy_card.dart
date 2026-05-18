@@ -304,18 +304,20 @@ class EnemyCard extends PositionComponent
       borderInfo.paint.color = Colors.cyanAccent;
       borderInfo.paint.strokeWidth = 3;
       _highlightEffect = ScaleEffect.to(
-        Vector2.all(1.05),
-        EffectController(duration: 0.2, reverseDuration: 0.2, infinite: true),
+        Vector2.all(1.02),
+        EffectController(duration: 0.5, reverseDuration: 0.5, infinite: true),
       );
       add(_highlightEffect!);
     } else {
       borderInfo.paint.color = isSelected ? Colors.amber : Colors.white;
       borderInfo.paint.strokeWidth = isSelected ? 4 : 2;
-      if (_highlightEffect != null) {
-        _highlightEffect!.removeFromParent();
-        _highlightEffect = null;
-      }
-      add(ScaleEffect.to(Vector2.all(1.0), EffectController(duration: 0.2)));
+      
+      final scaleEffects = children.whereType<ScaleEffect>().toList();
+      removeAll(scaleEffects);
+      _highlightEffect = null;
+      
+      scale = Vector2.all(1.0);
+      add(ScaleEffect.to(Vector2.all(1.0), EffectController(duration: 0.1)));
     }
   }
 
