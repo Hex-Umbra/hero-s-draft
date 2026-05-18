@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../game/controllers/run_controller.dart';
 import '../../game/controllers/deck_controller.dart';
 import '../../models/card_instance.dart';
+import '../../models/data/card_data.dart';
 import '../widgets/ui_card.dart';
 
 class DraftScreen extends ConsumerStatefulWidget {

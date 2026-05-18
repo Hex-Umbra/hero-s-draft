@@ -8,6 +8,7 @@ import '../effect_icon.dart';
 import 'stat_badge.dart';
 import 'status_indicator.dart';
 import '../../heros_draft_game.dart';
+import '../../../models/data/card_data.dart';
 
 class HeroCard extends PositionComponent
     with TapCallbacks, HasGameReference<HerosDraftGame> {
@@ -24,6 +25,22 @@ class HeroCard extends PositionComponent
     this.bonusAttack = 0,
     required this.imagePath,
   }) : super(size: Vector2(120, 160));
+
+  @override
+  void onTapDown(TapDownEvent event) {
+    super.onTapDown(event);
+
+    // Système Click-to-Play : Ciblage de soi-même
+    if (game.focusedCard != null) {
+      if (game.focusedCard!.card.data.target == CardTarget.self) {
+        bool played = game.tryPlayCard(game.focusedCard!, null);
+        if (played) {
+          game.setFocusedCard(null);
+          return;
+        }
+      }
+    }
+  }
 
   @override
   Future<void> onLoad() async {

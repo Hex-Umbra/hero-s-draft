@@ -11,6 +11,7 @@ import '../models/card_instance.dart';
 import '../models/data/enemy_data.dart';
 import '../models/data/hero_data.dart';
 import '../models/data/skill_data.dart';
+import '../models/data/card_data.dart';
 import '../data/models/entity_stats.dart';
 
 import 'controllers/run_controller.dart';
@@ -445,6 +446,19 @@ class HerosDraftGame extends FlameGame with TapCallbacks {
         _currentState!.isDead ||
         currentPhase != TurnPhase.player) {
       return;
+    }
+
+    // Système Click-to-Play
+    if (focusedCard != null) {
+      // Si on a une carte sélectionnée et qu'on clique sur un ennemi
+      if (focusedCard!.card.data.target == CardTarget.singleEnemy ||
+          focusedCard!.card.data.target == CardTarget.allEnemies) {
+        bool played = tryPlayCard(focusedCard!, target);
+        if (played) {
+          setFocusedCard(null);
+          return;
+        }
+      }
     }
 
     for (var e in enemyCards) {

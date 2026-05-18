@@ -143,7 +143,7 @@ class UiCard extends StatelessWidget {
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 12,
-                        fontWeight: FontWeight.black,
+                        fontWeight: FontWeight.w900,
                         letterSpacing: 0.5,
                       ),
                       textAlign: TextAlign.center,
@@ -182,12 +182,12 @@ class UiCard extends StatelessWidget {
                             color: Colors.redAccent.withAlpha(200),
                             borderRadius: BorderRadius.circular(4),
                           ),
-                          child: const Text(
+                          child: Text(
                             'BRÛLE',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 8,
-                              fontWeight: FontWeight.black,
+                              fontWeight: FontWeight.w900,
                             ),
                           ),
                         ),
@@ -250,7 +250,7 @@ class UiCard extends StatelessWidget {
                         '$cost',
                         style: const TextStyle(
                           color: Colors.white,
-                          fontWeight: FontWeight.black,
+                          fontWeight: FontWeight.w900,
                           fontSize: 14,
                         ),
                       ),
@@ -267,7 +267,7 @@ class UiCard extends StatelessWidget {
   IconData _getTypeIcon() {
     switch (type) {
       case CardType.attack:
-        return Icons.G_mobiledata_rounded; // Swords equivalent
+        return Icons.hardware_rounded;
       case CardType.skill:
         return Icons.shield_rounded;
       case CardType.power:

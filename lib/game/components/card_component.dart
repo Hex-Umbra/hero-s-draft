@@ -67,8 +67,6 @@ class CardComponent extends PositionComponent
         return Colors.amber;
       case CardType.status:
         return Colors.blueGrey;
-      default:
-        return Colors.blueAccent;
     }
   }
 
@@ -84,23 +82,19 @@ class CardComponent extends PositionComponent
         return const Color(0xFF3D351A);
       case CardType.status:
         return const Color(0xFF2D2D2D);
-      default:
-        return const Color(0xFF2C3E50);
     }
   }
 
   IconData _getTypeIconData() {
     switch (card.data.type) {
       case CardType.attack:
-        return Icons.G_mobiledata_rounded;
+        return Icons.hardware_rounded;
       case CardType.skill:
         return Icons.shield_rounded;
       case CardType.power:
         return Icons.auto_fix_high_rounded;
       case CardType.status:
         return Icons.warning_rounded;
-      default:
-        return Icons.help_outline;
     }
   }
 
@@ -114,8 +108,6 @@ class CardComponent extends PositionComponent
         return 'Pouvoir';
       case CardType.status:
         return 'Statut';
-      default:
-        return 'Carte';
     }
   }
 
@@ -155,7 +147,7 @@ class CardComponent extends PositionComponent
         style: TextStyle(
           color: nameColor,
           fontSize: 12,
-          fontWeight: FontWeight.black,
+          fontWeight: FontWeight.w900,
           letterSpacing: 0.5,
         ),
       ),
@@ -169,7 +161,7 @@ class CardComponent extends PositionComponent
         style: TextStyle(
           color: costColor,
           fontSize: 14,
-          fontWeight: FontWeight.black,
+          fontWeight: FontWeight.w900,
         ),
       ),
       textDirection: TextDirection.ltr,
@@ -194,7 +186,7 @@ class CardComponent extends PositionComponent
         style: TextStyle(
           color: usageColor,
           fontSize: 8,
-          fontWeight: FontWeight.black,
+          fontWeight: FontWeight.w900,
         ),
       ),
       textDirection: TextDirection.ltr,
