@@ -141,7 +141,7 @@ class UiCard extends StatelessWidget {
 
               // Ligne de séparation
               Positioned(
-                top: 30,
+                top: 28,
                 left: 0,
                 right: 0,
                 child: Center(
@@ -188,7 +188,7 @@ class UiCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: const Text(
-                        'BRÛLE',
+                        'USAGE UNIQUE',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 8,
@@ -199,17 +199,13 @@ class UiCard extends StatelessWidget {
                   ),
                 ),
 
-              // Description (Centrée et fixe verticalement)
+              // Description (Centrée verticalement)
               Positioned(
-                top: 75,
+                top: 68,
+                bottom: 40,
                 left: 8,
                 right: 8,
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withAlpha(60),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
+                child: Center(
                   child: Text(
                     _buildDescription(),
                     style: const TextStyle(

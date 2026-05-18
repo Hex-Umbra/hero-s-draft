@@ -183,7 +183,7 @@ class CardComponent extends PositionComponent
 
     _usagePainter = TextPainter(
       text: TextSpan(
-        text: 'BRÛLE',
+        text: 'USAGE UNIQUE',
         style: TextStyle(
           color: usageColor,
           fontSize: 8,
@@ -465,7 +465,7 @@ class CardComponent extends PositionComponent
       // Titre (centré, fixe en haut)
       _namePainter.paint(
         canvas,
-        Offset(size.x / 2 - _namePainter.width / 2, 16),
+        Offset(size.x / 2 - _namePainter.width / 2, 14),
       );
 
       // Ligne séparatrice (fixe)
@@ -473,8 +473,8 @@ class CardComponent extends PositionComponent
         ..color = typeColor.withAlpha(100)
         ..strokeWidth = 1.5;
       canvas.drawLine(
-        Offset(size.x / 2 - 20, 36),
-        Offset(size.x / 2 + 20, 36),
+        Offset(size.x / 2 - 20, 32),
+        Offset(size.x / 2 + 20, 32),
         linePaint,
       );
 
@@ -484,11 +484,12 @@ class CardComponent extends PositionComponent
         Offset(size.x / 2 - _rarityPainter.width / 2, 42),
       );
 
-      // Badge Brûle (Exhaust) (fixe)
+      // Badge Usage Unique (fixe)
       if (card.data.isExhaust || card.data.type == CardType.power) {
+        final badgeWidth = _usagePainter.width + 12;
         final badgeRect = Rect.fromCenter(
-          center: Offset(size.x / 2, 60),
-          width: 40,
+          center: Offset(size.x / 2, 62),
+          width: badgeWidth,
           height: 14,
         );
         canvas.drawRRect(
@@ -497,17 +498,16 @@ class CardComponent extends PositionComponent
         );
         _usagePainter.paint(
           canvas,
-          Offset(size.x / 2 - _usagePainter.width / 2, 60 - _usagePainter.height / 2),
+          Offset(size.x / 2 - _usagePainter.width / 2, 62 - _usagePainter.height / 2),
         );
       }
 
-      // Description (centrée sur une zone fixe)
-      // La description peut faire plusieurs lignes, on la centre verticalement autour de Y = 105
+      // Description (centrée parfaitement sur la carte)
       _descPainter.paint(
         canvas,
         Offset(
           size.x / 2 - _descPainter.width / 2,
-          115 - _descPainter.height / 2,
+          (size.y / 2) - _descPainter.height / 2 + 5, // Légèrement décalée vers le bas pour l'équilibre
         ),
       );
 
