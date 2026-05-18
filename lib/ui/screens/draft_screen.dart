@@ -87,6 +87,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
                                     onTap: () =>
                                         _onChoiceSelected(context, ref, choice),
                                     rarity: _rarityToString(choice.rarity),
+                                    type: CardType.power,
                                   ),
                                 ),
                               )
@@ -116,6 +117,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
                                         choice,
                                       ),
                                       rarity: _rarityToString(choice.rarity),
+                                      type: CardType.power,
                                     ),
                                   ),
                                 ),

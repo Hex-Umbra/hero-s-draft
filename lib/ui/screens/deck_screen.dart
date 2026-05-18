@@ -71,6 +71,8 @@ class DeckScreen extends ConsumerWidget {
                                 target: _getTargetLabel(card.data.target),
                                 level: card.level,
                                 effects: card.data.effects,
+                                type: card.data.type,
+                                isExhaust: card.data.isExhaust,
                                 rarity:
                                     '${_getRarityLabel(card.data.rarity)} - Niv. ${card.level}',
                               ),

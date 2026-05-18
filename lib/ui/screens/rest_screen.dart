@@ -129,6 +129,8 @@ class _RestScreenState extends ConsumerState<RestScreen> {
                             cost: card.data.cost,
                             level: card.level,
                             effects: card.data.effects,
+                            type: card.data.type,
+                            isExhaust: card.data.isExhaust,
                             rarity: 'Niveau ${card.level}',
                           ),
                         );

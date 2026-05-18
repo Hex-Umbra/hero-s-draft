@@ -140,7 +140,7 @@
         - J'ai terminé la Phase 3. J'ai mis en place l'architecture des reliques avec `RelicData` et `RelicTrigger`. Le `RunController` gère désormais une liste de reliques et possède une méthode `applyRelics` pour déclencher des effets passifs (gain de mana, armure, force ou soin) à des moments clés (début de combat, début de tour). J'ai intégré ces appels dans le cycle de jeu principal et validé le tout par un `dart analyze`.
 - feat: implémentation Phase 4
     - Visualisation des Statuts (UI)
-        - J'ai terminé la Phase 4. J'ai créé le composant `StatusIndicator` qui affiche une rangée d'icônes dynamiques avec leurs valeurs respectives (Poison, Force, Faiblesse, etc.). Ce composant a été intégré à `HeroCard` (au-dessus) et `EnemyCard` (au-dessous), permettant au joueur de suivre en temps réel les altérations d'état actives sur toutes les entités du terrain.
+        - J'ai terminé la Phase 4. J'ai créé le composant `StatusIndicator` qui affiche une rangée d'icônes dynamiques with their values respective (Poison, Force, Faiblesse, etc.). Ce composant a été intégré à `HeroCard` (au-dessus) et `EnemyCard` (au-dessous), permettant au joueur de suivre en temps réel les altérations d'état actives sur toutes les entités du terrain.
 
 ## Phase 8 - World Map et Solidification Technique
 
@@ -164,7 +164,7 @@
         - J'ai terminé l'Étape 1.6. J'ai créé le `RestScreen` qui propose trois actions au joueur : se reposer (+30% PV), forger (améliorer une carte au niveau supérieur) ou oublier (retirer définitivement une carte du deck). Le système de sélection de carte a été intégré directement dans cet écran via un modal.
 - feat: implémentation Phase 1.7
     - Nœud d'Événement (EventScreen)
-        - J'ai terminé l'Étape 1.7. J'ai mis en place un système d'événements textuels basé sur un fichier JSON (`events.json`). Le joueur doit faire face à des situations narratives avec des choix multiples ayant des conséquences immédiates sur ses statistiques, son or ou son deck.
+        - J'ai terminé l'Étape 1.7. J'ai mis en place un système d'événements textuels basé sur un fichier JSON (`events.json`). Le joueur doit face à des situations narratives avec des choix multiples ayant des conséquences immédiates sur ses statistiques, son or ou son deck.
 
 - feat: implémentation Phase 2
     - Système d'Or et Boutique (ShopScreen)
@@ -192,17 +192,17 @@
     - Refonte du système de buffs (Finis les buffs infinis)
         J'ai terminé l'Étape 5. J'ai nettoyé les altérations d'état entre les combats (`statuses = []` au début d'un combat). J'ai modifié les cartes comme *Forme Démoniaque* pour qu'elles n'utilisent plus une mécanique de "régénération" buggée, mais qu'elles appliquent directement un buff de *Force* d'une durée stricte (ex: 3 tours). L'effet de *Métallisation* a aussi été borné dans le temps. (Nécessite un redémarrage complet de l'app pour charger le JSON mis à jour).
 
-        ## Phase 9 - Visual Juice & Game Feel (Style Balatro)
+## Phase 9 - Visual Juice & Game Feel (Style Balatro)
 
-        - feat: implémentation Phase 1
-        - Dynamisme de la Carte en Main (Inertie & Tilt)
+- feat: implémentation Phase 1
+    - Dynamisme de la Carte en Main (Inertie & Tilt)
         - J'ai terminé la Phase 1. J'ai implémenté un système de "Tilt" dynamique dans `CardComponent` qui incline la carte en fonction de sa vitesse de déplacement latérale pendant le drag. J'ai également amélioré l'animation de retour en main en utilisant `Curves.elasticOut` pour simuler un effet de ressort satisfaisant, inspiré du feeling organique de Balatro.
-        - feat: implémentation Phase 2
-            - Séquence de Jeu et Impact (Attack Sequence)
-                - J'ai terminé la Phase 2. L'action de jouer une carte est désormais spectaculaire : la carte recule en anticipation, fonce vers sa cible à haute vitesse, devient blanche à l'impact et explose en un bouquet de particules bleues. Le moteur `HerosDraftGame` a été mis à jour pour attendre la fin de cette animation avant de retirer officiellement la carte du monde.
-        - feat: implémentation Phase 3
-            - Réaction de l'Ennemi (Feedback de Dégâts)
-                - J'ai terminé la Phase 3. J'ai ajouté une méthode `shakeAndFlashAnimation` dans `EnemyCard` qui se déclenche lors de la réception de dégâts, provoquant un tremblement aléatoire et un flash blanc. Le composant `FloatingText` a également été amélioré avec un effet de "Pop" initial (`ScaleEffect` avec `bounceOut`), rendant l'affichage des dégâts beaucoup plus percutant.
+- feat: implémentation Phase 2
+    - Séquence de Jeu et Impact (Attack Sequence)
+        - J'ai terminé la Phase 2. L'action de jouer une carte est désormais spectaculaire : la carte recule en anticipation, fonce vers sa cible à haute vitesse, devient blanche à l'impact et explose en un bouquet de particules bleues. Le moteur `HerosDraftGame` a été mis à jour pour attendre la fin de cette animation avant de retirer officiellement la carte du monde.
+- feat: implémentation Phase 3
+    - Réaction de l'Ennemi (Feedback de Dégâts)
+        - J'ai terminé la Phase 3. J'ai ajouté une méthode `shakeAndFlashAnimation` dans `EnemyCard` qui se déclenche lors de la réception de dégâts, provoquant un tremblement aléatoire et un flash blanc. Le composant `FloatingText` a également été amélioré avec un effet de "Pop" initial (`ScaleEffect` avec `bounceOut`), rendant l'affichage des dégâts beaucoup plus percutant.
 
 ## Phase 10 - Corrections de Bugs et Stabilité
 
@@ -294,3 +294,9 @@
         - J'ai terminé les étapes 2 à 4 de la Phase 23. J'ai créé l'énumération `RewardRarity` pour gérer les niveaux de rareté (Commun, Peu Commun, Rare, Épique, Légendaire). L'algorithme de génération de récompenses de `DraftScreen` utilise maintenant la statistique de `luck` du héros pour ajuster dynamiquement les probabilités de "roll" vers de meilleures raretés. Les valeurs des bonus (PV, Attaque, Mana) sont multipliées selon cette rareté.
     - Correction de l'Incohérence d'Armure (Option B : Maîtrise)
         - L'armure étant réinitialisée à chaque combat, la récompense d'armure brute était inutile. J'ai implémenté le système de **Maîtrise d'Armure** (statistique persistante). La récompense "Forge d'Acier" augmente désormais cette maîtrise, qui s'ajoute à CHAQUE gain d'armure (via cartes, traits passifs ou reliques). Enfin, l'interface `UiCard` et le `HeroCard` (Tooltip) ont été mis à jour pour refléter ces changements.
+
+## Phase 24 - Refonte UI et Interaction des Cartes
+
+- feat: implémentation Phase 1
+    - Modernisation du widget UiCard et uniformisation thématique
+        - J'ai terminé la Phase 1. Le widget `UiCard` a été entièrement modernisé avec un système de thèmes visuels basés sur le type de carte (Attaque, Compétence, Pouvoir). Chaque type possède désormais sa propre bordure colorée, un dégradé de fond spécifique et une icône en filigrane. J'ai également intégré les états de sélection (`isSelected`) et de désactivation (`isGrayedOut`), et mis à jour tous les écrans de menus (Shop, Deck, Draft, Dictionnaire, Repos) pour refléter ces changements visuels.

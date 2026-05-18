@@ -136,6 +136,8 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                   effects: card.data.effects,
                   rarity: 'Niveau ${card.level}',
                   target: _getTargetLabel(card.data.target),
+                  type: card.data.type,
+                  isExhaust: card.data.isExhaust,
                   onTap: () {
                     final runController = ref.read(runProvider.notifier);
                     if (runController.spendGold(price)) {
