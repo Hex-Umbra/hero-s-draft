@@ -62,9 +62,10 @@ class HeroCard extends PositionComponent
     // Système Click-to-Play : Ciblage de soi-même
     if (game.focusedCard != null) {
       if (game.focusedCard!.card.data.target == CardTarget.self) {
-        bool played = game.tryPlayCard(game.focusedCard!, null);
+        final cardToPlay = game.focusedCard!;
+        game.setFocusedCard(null);
+        bool played = game.tryPlayCard(cardToPlay, null);
         if (played) {
-          game.setFocusedCard(null);
           return;
         }
       }

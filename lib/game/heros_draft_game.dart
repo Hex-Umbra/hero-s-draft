@@ -508,9 +508,10 @@ class HerosDraftGame extends FlameGame
       // Si on a une carte sélectionnée et qu'on clique sur un ennemi
       if (focusedCard!.card.data.target == CardTarget.singleEnemy ||
           focusedCard!.card.data.target == CardTarget.allEnemies) {
-        bool played = tryPlayCard(focusedCard!, target);
+        final cardToPlay = focusedCard!;
+        setFocusedCard(null);
+        bool played = tryPlayCard(cardToPlay, target);
         if (played) {
-          setFocusedCard(null);
           return;
         }
       }

@@ -716,6 +716,8 @@ class CardComponent extends PositionComponent
     isDragging = false;
     priority = 500;
 
+    _clearEffects();
+
     final animType = card.data.animation ?? 'melee';
 
     void wrappedOnComplete() {

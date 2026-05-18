@@ -321,3 +321,8 @@
 - feat: implémentation Phase 1 à 3
     - Ajustement des animations de surbrillance et ligne de ciblage
         - J'ai terminé les corrections de la Phase 26. Les animations de surbrillance (`highlight`) sur les cibles (Ennemis et Héros) ont été adoucies : l'échelle maximale est réduite (1.02) et la vitesse ralentie. J'ai également corrigé un bug majeur de désynchronisation visuelle : lorsqu'une cible est désélectionnée ou cliquée, tous les effets d'échelle en cours sont brutalement arrêtés et la carte reprend instantanément sa taille d'origine (1.0) avant de relancer toute autre animation, empêchant les entités de rester bloquées dans un état agrandi. Enfin, la courbe de Bézier de la `TargetingLine` a été supprimée au profit d'une ligne droite classique, avec un calcul d'angle de flèche révisé pour suivre cette nouvelle trajectoire directe. L'analyse statique a été validée avec succès.
+
+## Phase 27 - Bugfix "Carte Fantôme" (Désynchronisation Focus/Animation)
+
+- fix: Correction du blocage des cartes en main lors du Click-to-Play
+    - J'ai identifié et corrigé un bug critique où une carte jouée via "Click-to-Play" restait visuellement bloquée sur l'écran tout en restant interactive. La cause racine était un conflit d'ordre d'exécution : lorsque la carte était jouée, l'animation d'impact/destruction était initiée, mais immédiatement annulée par l'appel à `setFocusedCard(null)` qui supprimait tous les effets de la carte. De ce fait, le rappel `onComplete()` déclenchant la suppression de la carte de l'écran n'était jamais exécuté. La correction a consisté à désactiver le focus de la carte *avant* de lancer son animation de combat, et à purger (`_clearEffects()`) proprement la file d'attente d'effets visuels dans `playAnimation()`.
