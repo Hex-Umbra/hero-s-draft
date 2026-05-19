@@ -373,49 +373,12 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                                     price = 100;
                                   }
 
-                                  return Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      SizedBox(
-                                        width: 150,
-                                        height: 220,
-                                        child: UiCard(
-                                          title: card.name,
-                                          description: card.description,
-                                          cost: card.cost,
-                                          effects: card.effects,
-                                          level: 1,
-                                          rarity: _getRarityLabel(card.rarity),
-                                          target: _getTargetLabel(card.target),
-                                          onTap: () => _buyCard(card, price),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      ElevatedButton.icon(
-                                        onPressed: () => _buyCard(card, price),
-                                        icon: const Icon(
-                                          Icons.monetization_on,
-                                          color: Colors.amber,
-                                          size: 14,
-                                        ),
-                                        label: Text(
-                                          '$price',
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.black45,
-                                          foregroundColor: Colors.white,
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                            vertical: 4,
-                                          ),
-                                          minimumSize: const Size(60, 32),
-                                        ),
-                                      ),
-                                    ],
+                                  return _ShopCardItem(
+                                    card: card,
+                                    price: price,
+                                    onPressed: () => _buyCard(card, price),
+                                    rarityLabel: _getRarityLabel(card.rarity),
+                                    targetLabel: _getTargetLabel(card.target),
                                   );
                                 }).toList(),
                               ),
@@ -510,7 +473,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
   }
 }
 
-class _ShopServiceWidget extends StatelessWidget {
+class _ShopServiceWidget extends StatefulWidget {
   final IconData icon;
   final Color iconColor;
   final String title;
@@ -530,76 +493,190 @@ class _ShopServiceWidget extends StatelessWidget {
   });
 
   @override
+  State<_ShopServiceWidget> createState() => _ShopServiceWidgetState();
+}
+
+class _ShopServiceWidgetState extends State<_ShopServiceWidget> {
+  bool _isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 130,
-      height: 170,
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: Colors.black45,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white10),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            color: iconColor,
-            size: 28,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      cursor: SystemMouseCursors.click,
+      child: AnimatedScale(
+        scale: _isHovered ? 1.05 : 1.0,
+        duration: const Duration(milliseconds: 200),
+        child: InkWell(
+          onTap: widget.onPressed,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            width: 130,
+            height: 170,
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.black45,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: _isHovered ? Colors.amber.withOpacity(0.5) : Colors.white10,
+                width: _isHovered ? 2 : 1,
+              ),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Icon(
+                  widget.icon,
+                  color: widget.iconColor,
+                  size: 28,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  widget.title,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      widget.description,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ElevatedButton.icon(
+                  onPressed: widget.onPressed,
+                  icon: const Icon(
+                    Icons.monetization_on,
+                    color: Colors.amber,
+                    size: 12,
+                  ),
+                  label: Text(
+                    '${widget.price}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: widget.onPressed == null ? Colors.grey : widget.buttonColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    minimumSize: const Size(double.infinity, 28),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 4),
-          Expanded(
-            child: Center(
-              child: Text(
-                description,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 10,
+        ),
+      ),
+    );
+  }
+}
+
+class _ShopCardItem extends StatefulWidget {
+  final CardData card;
+  final int price;
+  final VoidCallback onPressed;
+  final String rarityLabel;
+  final String targetLabel;
+
+  const _ShopCardItem({
+    required this.card,
+    required this.price,
+    required this.onPressed,
+    required this.rarityLabel,
+    required this.targetLabel,
+  });
+
+  @override
+  State<_ShopCardItem> createState() => _ShopCardItemState();
+}
+
+class _ShopCardItemState extends State<_ShopCardItem> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      cursor: SystemMouseCursors.click,
+      child: AnimatedScale(
+        scale: _isHovered ? 1.05 : 1.0,
+        duration: const Duration(milliseconds: 200),
+        child: InkWell(
+          onTap: widget.onPressed,
+          borderRadius: BorderRadius.circular(12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 150,
+                height: 220,
+                child: UiCard(
+                  title: widget.card.name,
+                  description: widget.card.description,
+                  cost: widget.card.cost,
+                  effects: widget.card.effects,
+                  level: 1,
+                  rarity: widget.rarityLabel,
+                  target: widget.targetLabel,
+                  onTap: widget.onPressed,
                 ),
               ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          ElevatedButton.icon(
-            onPressed: onPressed,
-            icon: const Icon(
-              Icons.monetization_on,
-              color: Colors.amber,
-              size: 12,
-            ),
-            label: Text(
-              '$price',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
+              const SizedBox(height: 8),
+              ElevatedButton.icon(
+                onPressed: widget.onPressed,
+                icon: const Icon(
+                  Icons.monetization_on,
+                  color: Colors.amber,
+                  size: 14,
+                ),
+                label: Text(
+                  '${widget.price}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _isHovered ? Colors.amber.shade900 : Colors.black45,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
+                  minimumSize: const Size(60, 32),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    side: BorderSide(
+                      color: _isHovered ? Colors.amber : Colors.transparent,
+                      width: 1,
+                    ),
+                  ),
+                ),
               ),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: onPressed == null ? Colors.grey : buttonColor,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-              minimumSize: const Size(double.infinity, 28),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
