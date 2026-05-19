@@ -71,7 +71,7 @@ void main() {
     // Manually travel to test state change logic inside MapScreen
     // Usually tapping would push a new route. Since we just want to verify state logic:
     runNotifier.travelToNode(firstFloorNodeId);
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 1000));
 
     expect(container.read(runProvider).currentNodeId, firstFloorNodeId);
   });

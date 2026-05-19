@@ -42,11 +42,6 @@ class HeroCard extends PositionComponent
     } else {
       borderInfo.paint.color = Colors.white;
       borderInfo.paint.strokeWidth = 2;
-      
-      // Nettoyage scale au cas où
-      final scaleEffects = children.whereType<ScaleEffect>().toList();
-      removeAll(scaleEffects);
-      scale = Vector2.all(game.scaleFactor * 1.3);
     }
   }
 
@@ -218,14 +213,6 @@ class HeroCard extends PositionComponent
   }
 
   void buffAnimation(String iconType) {
-    // Effet de concentration/respiration
-    add(
-      ScaleEffect.by(
-        Vector2.all(1.05),
-        EffectController(duration: 0.1, alternate: true),
-      ),
-    );
-
     // Faire popper l'icône
     final effectIcon = EffectIcon(
       iconType: iconType,

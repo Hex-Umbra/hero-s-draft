@@ -357,7 +357,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                 )
               else
                 SizedBox(
-                  height: 220,
+                  height: 300,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
                     itemCount: _cardsForSale.length,
@@ -368,13 +368,13 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                       if (card.rarity == CardRarity.rare) price = 100;
 
                       return Padding(
-                        padding: const EdgeInsets.only(right: 8),
+                        padding: const EdgeInsets.only(right: 12),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             SizedBox(
-                              width: 120,
-                              height: 170,
+                              width: 150,
+                              height: 220,
                               child: UiCard(
                                 title: card.name,
                                 description: card.description,
@@ -386,29 +386,29 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                                 onTap: () => _buyCard(card, price),
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: 8),
                             ElevatedButton.icon(
                               onPressed: () => _buyCard(card, price),
                               icon: const Icon(
                                 Icons.monetization_on,
                                 color: Colors.amber,
-                                size: 12,
+                                size: 14,
                               ),
                               label: Text(
                                 '$price',
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 10,
+                                  fontSize: 12,
                                 ),
                               ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.black45,
                                 foregroundColor: Colors.white,
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 4,
-                                  vertical: 0,
+                                  horizontal: 12,
+                                  vertical: 4,
                                 ),
-                                minimumSize: const Size(50, 24),
+                                minimumSize: const Size(60, 32),
                               ),
                             ),
                           ],
@@ -433,18 +433,19 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                   leading: const Icon(
                     Icons.local_hospital,
                     color: Colors.greenAccent,
-                    size: 40,
+                    size: 32,
                   ),
                   title: Text(
                     l10n.healingPotion,
                     style: const TextStyle(
                       color: Colors.white,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   subtitle: Text(
                     l10n.restoresHp(healAmount),
-                    style: const TextStyle(color: Colors.white70),
+                    style: const TextStyle(color: Colors.white70, fontSize: 13),
                   ),
                   trailing: ElevatedButton.icon(
                     onPressed: _purchasedHeal
@@ -453,17 +454,19 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                     icon: const Icon(
                       Icons.monetization_on,
                       color: Colors.amber,
-                      size: 18,
+                      size: 16,
                     ),
                     label: Text(
                       '$healPrice',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: _purchasedHeal
                           ? Colors.grey
                           : Colors.green.shade800,
                       foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      minimumSize: const Size(60, 36),
                     ),
                   ),
                 ),
@@ -475,33 +478,36 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                   leading: const Icon(
                     Icons.delete_forever,
                     color: Colors.redAccent,
-                    size: 40,
+                    size: 32,
                   ),
                   title: const Text(
                     'Oubli',
                     style: TextStyle(
                       color: Colors.white,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   subtitle: const Text(
                     'Retire une carte de votre deck',
-                    style: TextStyle(color: Colors.white70),
+                    style: TextStyle(color: Colors.white70, fontSize: 13),
                   ),
                   trailing: ElevatedButton.icon(
                     onPressed: () => _showRemovalModal(75),
                     icon: const Icon(
                       Icons.monetization_on,
                       color: Colors.amber,
-                      size: 18,
+                      size: 16,
                     ),
                     label: const Text(
                       '75',
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red.shade800,
                       foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      minimumSize: const Size(60, 36),
                     ),
                   ),
                 ),
@@ -513,33 +519,36 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                   leading: const Icon(
                     Icons.content_copy,
                     color: Colors.blueAccent,
-                    size: 40,
+                    size: 32,
                   ),
                   title: const Text(
                     'Miroir Magique',
                     style: TextStyle(
                       color: Colors.white,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   subtitle: const Text(
                     'Clone une carte de votre deck',
-                    style: TextStyle(color: Colors.white70),
+                    style: TextStyle(color: Colors.white70, fontSize: 13),
                   ),
                   trailing: ElevatedButton.icon(
                     onPressed: () => _showCloneModal(150),
                     icon: const Icon(
                       Icons.monetization_on,
                       color: Colors.amber,
-                      size: 18,
+                      size: 16,
                     ),
                     label: const Text(
                       '150',
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue.shade800,
                       foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      minimumSize: const Size(60, 36),
                     ),
                   ),
                 ),

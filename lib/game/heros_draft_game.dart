@@ -429,6 +429,11 @@ class HerosDraftGame extends FlameGame
         bonusAttack: bonusAtt,
       );
     }
+
+    // Rafraîchir les visuels de la main pour synchroniser les descriptions (ex: dégâts avec la force)
+    for (var card in handCards) {
+      card.refreshVisuals();
+    }
   }
 
   void _spawnEnemies(int level, {MapNodeType? nodeType}) {

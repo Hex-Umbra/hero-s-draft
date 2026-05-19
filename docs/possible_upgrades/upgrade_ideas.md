@@ -54,3 +54,4 @@
 - Réduire la taille de l'affichage de l'intentention des ennemies
 - le bouton "mon deck" est actuellement mal positionner, il est superposé a la barre de vie, on vas le placer proche du bouton pause. 
 - rajouter une très légére animation de shake sur la carte a jouer quand le joueur n'as pas le mana requis pour la jouer
+- bloquer certains type de cartes par rapport a la classe que le joueur a choisi au départ. Par exemple le berserker ne pourra pas utiliser de carte de type "armure" ou même recevoir un bonus de type "armure" dans les récompenses.

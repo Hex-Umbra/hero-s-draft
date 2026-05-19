@@ -57,14 +57,14 @@ void main() {
 
       expect(stats.statuses.length, 1);
       expect(stats.statuses.first.value, 5); // 3 + 2
-      expect(stats.statuses.first.duration, 5); // 2 + 3
+      expect(stats.statuses.first.duration, 3); // max(2, 3)
 
       // Tick statuses reduces duration
       stats = stats.tickStatuses();
-      expect(stats.statuses.first.duration, 4);
+      expect(stats.statuses.first.duration, 2);
 
       stats = stats.tickStatuses();
-      expect(stats.statuses.first.duration, 3);
+      expect(stats.statuses.first.duration, 1);
     });
 
     test('effectiveAttaque calculates base + strength', () {

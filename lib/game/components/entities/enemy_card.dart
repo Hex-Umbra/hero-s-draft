@@ -320,11 +320,6 @@ class EnemyCard extends PositionComponent
       
       _glowAnimation?.removeFromParent();
       _glowAnimation = null;
-      
-      // Nettoyage scale de sécurité
-      final scaleEffects = children.whereType<ScaleEffect>().toList();
-      removeAll(scaleEffects); 
-      scale = Vector2.all(1.0);
     }
   }
 
@@ -371,14 +366,6 @@ class EnemyCard extends PositionComponent
   }
 
   void buffAnimation(IntentType type) {
-    // Effet de concentration/respiration
-    add(
-      ScaleEffect.by(
-        Vector2.all(1.05),
-        EffectController(duration: 0.1, alternate: true),
-      ),
-    );
-
     // Faire popper l'icône
     final effectIcon = EffectIcon(
       iconType: type == IntentType.defend ? 'defend' : 'buff',
