@@ -54,4 +54,3 @@
 - Réduire la taille de l'affichage de l'intentention des ennemies
 - le bouton "mon deck" est actuellement mal positionner, il est superposé a la barre de vie, on vas le placer proche du bouton pause. 
 - rajouter une très légére animation de shake sur la carte a jouer quand le joueur n'as pas le mana requis pour la jouer
-- 
