@@ -113,7 +113,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
         return AlertDialog(
           backgroundColor: const Color(0xFF2A2A3D),
           title: const Text(
-            'Choisissez une carte à oublier',
+            'Choisissez une carte à purger',
             style: TextStyle(color: Colors.white),
           ),
           content: SizedBox(
@@ -147,7 +147,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                       Navigator.of(ctx).pop();
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Carte oubliée !'),
+                          content: Text('Carte purgée !'),
                           backgroundColor: Colors.green,
                         ),
                       );
@@ -331,250 +331,275 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
         automaticallyImplyLeading: false,
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
+        child: Padding(
           padding: const EdgeInsets.all(20.0),
-          child: Column(
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                l10n.cardsForSale,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 20),
-              if (_cardsForSale.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 40),
-                  child: Center(
-                    child: Text(
-                      'Plus de cartes en stock !',
-                      style: TextStyle(color: Colors.white54, fontSize: 18),
+              // Main Section (75%) - Cards for Sale
+              Expanded(
+                flex: 3,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      l10n.cardsForSale,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                )
-              else
-                SizedBox(
-                  height: 300,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _cardsForSale.length,
-                    itemBuilder: (context, index) {
-                      final card = _cardsForSale[index];
-                      int price = 25;
-                      if (card.rarity == CardRarity.uncommon) price = 50;
-                      if (card.rarity == CardRarity.rare) price = 100;
+                    const SizedBox(height: 20),
+                    Expanded(
+                      child: _cardsForSale.isEmpty
+                          ? const Center(
+                              child: Text(
+                                'Plus de cartes en stock !',
+                                style: TextStyle(
+                                    color: Colors.white54, fontSize: 18),
+                              ),
+                            )
+                          : SingleChildScrollView(
+                              child: Wrap(
+                                spacing: 12,
+                                runSpacing: 20,
+                                children: _cardsForSale.map((card) {
+                                  int price = 25;
+                                  if (card.rarity == CardRarity.uncommon) {
+                                    price = 50;
+                                  }
+                                  if (card.rarity == CardRarity.rare) {
+                                    price = 100;
+                                  }
 
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 12),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            SizedBox(
-                              width: 150,
-                              height: 220,
-                              child: UiCard(
-                                title: card.name,
-                                description: card.description,
-                                cost: card.cost,
-                                effects: card.effects,
-                                level: 1,
-                                rarity: _getRarityLabel(card.rarity),
-                                target: _getTargetLabel(card.target),
-                                onTap: () => _buyCard(card, price),
+                                  return Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      SizedBox(
+                                        width: 150,
+                                        height: 220,
+                                        child: UiCard(
+                                          title: card.name,
+                                          description: card.description,
+                                          cost: card.cost,
+                                          effects: card.effects,
+                                          level: 1,
+                                          rarity: _getRarityLabel(card.rarity),
+                                          target: _getTargetLabel(card.target),
+                                          onTap: () => _buyCard(card, price),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      ElevatedButton.icon(
+                                        onPressed: () => _buyCard(card, price),
+                                        icon: const Icon(
+                                          Icons.monetization_on,
+                                          color: Colors.amber,
+                                          size: 14,
+                                        ),
+                                        label: Text(
+                                          '$price',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.black45,
+                                          foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 4,
+                                          ),
+                                          minimumSize: const Size(60, 32),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                }).toList(),
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            ElevatedButton.icon(
-                              onPressed: () => _buyCard(card, price),
-                              icon: const Icon(
-                                Icons.monetization_on,
-                                color: Colors.amber,
-                                size: 14,
-                              ),
-                              label: Text(
-                                '$price',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                ),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.black45,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 4,
-                                ),
-                                minimumSize: const Size(60, 32),
-                              ),
+                    ),
+                  ],
+                ),
+              ),
+              const VerticalDivider(color: Colors.white24, width: 40),
+              // Sidebar Section (25%) - Services
+              Expanded(
+                flex: 1,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      l10n.services,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Wrap(
+                          spacing: 8,
+                          runSpacing: 12,
+                          alignment: WrapAlignment.center,
+                          children: [
+                            _ShopServiceWidget(
+                              icon: Icons.local_hospital,
+                              iconColor: Colors.greenAccent,
+                              title: l10n.healingPotion,
+                              description: l10n.restoresHp(healAmount),
+                              price: healPrice,
+                              onPressed: _purchasedHeal
+                                  ? null
+                                  : () => _buyHeal(healPrice, healAmount),
+                              buttonColor: Colors.green.shade800,
+                            ),
+                            _ShopServiceWidget(
+                              icon: Icons.delete_forever,
+                              iconColor: Colors.redAccent,
+                              title: 'Purger',
+                              description: 'Retire une carte de votre deck',
+                              price: 75,
+                              onPressed: () => _showRemovalModal(75),
+                              buttonColor: Colors.red.shade800,
+                            ),
+                            _ShopServiceWidget(
+                              icon: Icons.content_copy,
+                              iconColor: Colors.blueAccent,
+                              title: 'Miroir Magique',
+                              description: 'Clone une carte de votre deck',
+                              price: 150,
+                              onPressed: () => _showCloneModal(150),
+                              buttonColor: Colors.blue.shade800,
                             ),
                           ],
                         ),
-                      );
-                    },
-                  ),
-                ),
-              const Divider(color: Colors.white24, height: 40),
-              Text(
-                l10n.services,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 20),
-              Card(
-                color: Colors.black45,
-                child: ListTile(
-                  leading: const Icon(
-                    Icons.local_hospital,
-                    color: Colors.greenAccent,
-                    size: 32,
-                  ),
-                  title: Text(
-                    l10n.healingPotion,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  subtitle: Text(
-                    l10n.restoresHp(healAmount),
-                    style: const TextStyle(color: Colors.white70, fontSize: 13),
-                  ),
-                  trailing: ElevatedButton.icon(
-                    onPressed: _purchasedHeal
-                        ? null
-                        : () => _buyHeal(healPrice, healAmount),
-                    icon: const Icon(
-                      Icons.monetization_on,
-                      color: Colors.amber,
-                      size: 16,
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        backgroundColor: Colors.blueAccent,
+                        foregroundColor: Colors.white,
+                      ),
+                      onPressed: () {
+                        ref.read(runProvider.notifier).completeCurrentNode();
+                        Navigator.of(context).pop();
+                      },
+                      child: Text(
+                        l10n.leaveShop,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
-                    label: Text(
-                      '$healPrice',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _purchasedHeal
-                          ? Colors.grey
-                          : Colors.green.shade800,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                      minimumSize: const Size(60, 36),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Card(
-                color: Colors.black45,
-                child: ListTile(
-                  leading: const Icon(
-                    Icons.delete_forever,
-                    color: Colors.redAccent,
-                    size: 32,
-                  ),
-                  title: const Text(
-                    'Oubli',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  subtitle: const Text(
-                    'Retire une carte de votre deck',
-                    style: TextStyle(color: Colors.white70, fontSize: 13),
-                  ),
-                  trailing: ElevatedButton.icon(
-                    onPressed: () => _showRemovalModal(75),
-                    icon: const Icon(
-                      Icons.monetization_on,
-                      color: Colors.amber,
-                      size: 16,
-                    ),
-                    label: const Text(
-                      '75',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red.shade800,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                      minimumSize: const Size(60, 36),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Card(
-                color: Colors.black45,
-                child: ListTile(
-                  leading: const Icon(
-                    Icons.content_copy,
-                    color: Colors.blueAccent,
-                    size: 32,
-                  ),
-                  title: const Text(
-                    'Miroir Magique',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  subtitle: const Text(
-                    'Clone une carte de votre deck',
-                    style: TextStyle(color: Colors.white70, fontSize: 13),
-                  ),
-                  trailing: ElevatedButton.icon(
-                    onPressed: () => _showCloneModal(150),
-                    icon: const Icon(
-                      Icons.monetization_on,
-                      color: Colors.amber,
-                      size: 16,
-                    ),
-                    label: const Text(
-                      '150',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue.shade800,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                      minimumSize: const Size(60, 36),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 30),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: Colors.blueAccent,
-                  foregroundColor: Colors.white,
-                ),
-                onPressed: () {
-                  ref.read(runProvider.notifier).completeCurrentNode();
-                  Navigator.of(context).pop();
-                },
-                child: Text(
-                  l10n.leaveShop,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  ],
                 ),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ShopServiceWidget extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String title;
+  final String description;
+  final int price;
+  final VoidCallback? onPressed;
+  final Color buttonColor;
+
+  const _ShopServiceWidget({
+    required this.icon,
+    required this.iconColor,
+    required this.title,
+    required this.description,
+    required this.price,
+    required this.onPressed,
+    required this.buttonColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 130,
+      height: 170,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.black45,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(
+            icon,
+            color: iconColor,
+            size: 28,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Expanded(
+            child: Center(
+              child: Text(
+                description,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 10,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          ElevatedButton.icon(
+            onPressed: onPressed,
+            icon: const Icon(
+              Icons.monetization_on,
+              color: Colors.amber,
+              size: 12,
+            ),
+            label: Text(
+              '$price',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: onPressed == null ? Colors.grey : buttonColor,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              minimumSize: const Size(double.infinity, 28),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
