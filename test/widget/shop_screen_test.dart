@@ -145,7 +145,7 @@ void main() {
     expect(find.text('Étal étendu'), findsOneWidget);
     expect(find.text('Renouveler'), findsOneWidget);
 
-    // 5. Test Shop Expansion ('Étal étendu' costing 80 gold)
+    // 5. Test Shop Expansion ('Étal étendu' costing 100 gold)
     final initialGold = container.read(runProvider).gold;
     expect(initialGold, 200);
     expect(container.read(runProvider).bonusShopCards, 0);
@@ -155,8 +155,8 @@ void main() {
     await tester.tap(expandButton);
     await tester.pumpAndSettle();
 
-    // Verify gold decreases by 80 and bonusShopCards increases to 1
-    expect(container.read(runProvider).gold, 120);
+    // Verify gold decreases by 100 and bonusShopCards increases to 1
+    expect(container.read(runProvider).gold, 100);
     expect(container.read(runProvider).bonusShopCards, 1);
 
     // Now, there should be 4 cards displayed on the screen!
@@ -169,7 +169,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify gold decreases by 15
-    expect(container.read(runProvider).gold, 105);
+    expect(container.read(runProvider).gold, 85);
 
     // There should still be 4 cards on the shelf
     expect(find.byType(UiCard), findsNWidgets(4));

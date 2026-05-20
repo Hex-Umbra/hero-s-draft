@@ -341,3 +341,6 @@
 - feat: implémentation Phase 3
     - tests unitaires et de widgets de validation
         - J'ai terminé la Phase 3. J'ai conçu et intégré des tests unitaires complets pour valider le comportement de `RunController` lors du démarrage d'une nouvelle partie et de l'achat d'agrandissement de boutique. De plus, j'ai écrit un widget test pour `ShopScreen`, mockant le chargement de données avec un ProviderScope personnalisé et validant les transitions d'or, l'accroissement dynamique de la boutique à 4 cartes à la suite d'une expansion et la régénération de stock après un renouvellement. La suite de tests s'exécute avec succès.
+- feat: implémentation Phase 4
+    - réorganisation de la boutique et ajustement des tarifs
+        - J'ai terminé la Phase 4. J'ai réorganisé l'ordre d'affichage des services de la boutique dans la barre latérale pour qu'ils soient listés par ordre de prix croissant (Renouveler (15), Soin (30), Purger (75), Étal étendu (100), Miroir Magique (150)). Le tarif du service "Étal étendu" a été augmenté de 80 à 100 pièces d'or. J'ai également mis à jour la suite de tests de widgets pour valider le nouveau débit de 100 pièces d'or et s'assurer que les calculs de solde après les transactions restent corrects. Les tests et l'analyse statique passent avec succès.
