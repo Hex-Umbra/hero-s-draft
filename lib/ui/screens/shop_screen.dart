@@ -519,7 +519,7 @@ class _ShopServiceWidgetState extends State<_ShopServiceWidget> {
               color: Colors.black45,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: _isHovered ? Colors.amber.withOpacity(0.5) : Colors.white10,
+                color: _isHovered ? Colors.amber.withValues(alpha: 0.5) : Colors.white10,
                 width: _isHovered ? 2 : 1,
               ),
             ),
