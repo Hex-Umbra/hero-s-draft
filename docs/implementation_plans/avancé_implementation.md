@@ -329,3 +329,9 @@
 
 - fix: Correction de l'exploit de la carte persistante via Multi-Touch (Drag + Click)
     - J'ai corrigé une faille critique permettant de jouer une carte à l'infini. Si un joueur cliquait sur une cible (lançant l'animation) et interagissait physiquement avec la carte en même temps (ex: Drag via un deuxième doigt), l'événement de Drag interrompait brutalement l'animation d'attaque de la carte (`_clearEffects`). La carte ne se détruisait donc jamais et retournait virtuellement en main (`_returnToHand`). Or, le système principal l'ayant déjà retirée de la liste logique de la main, le rafraîchissement de fin de tour (`_applyDeckState`) l'ignorait totalement. Résultat : une carte "fantôme" physiquement présente et indéfiniment jouable tant que le joueur avait du mana. J'ai ajouté une sécurité stricte (`isPlayed = true`) qui verrouille instantanément tous les événements tactiles (`onDragStart`, `onTapDown`, etc.) d'une carte dès l'instant où son attaque est confirmée.
+
+## Phase 28 - Nouveaux Services de Boutique (Agrandissement & Renouvellement)
+
+- feat: implémentation Phase 1 
+    - extension de la structure de l'état (RunState & RunController)
+        - J'ai terminé la Phase 1. J'ai ajouté le champ persistant `bonusShopCards` à `RunState`, mis à jour les constructeurs et la méthode `copyWith`, et implémenté la méthode `buyShopExpansion()` dans le `RunController` pour incrémenter définitivement la taille de l'étal de la boutique.

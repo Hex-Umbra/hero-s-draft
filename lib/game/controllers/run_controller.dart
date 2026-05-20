@@ -17,6 +17,7 @@ class RunState {
   final String? currentNodeId;
   final int gold;
   final String? passiveTrait; // Trait passif du héros (ex: regenArmor)
+  final int bonusShopCards; // Nombre additionnel de cartes dans le shop
 
   // Variables pour gérer l'état du cooldown des sorts
   final int skill1Cooldown;
@@ -48,6 +49,7 @@ class RunState {
     this.passiveTrait,
     this.skill1Cooldown = 0,
     this.skill2Cooldown = 0,
+    this.bonusShopCards = 0,
   });
 
   RunState copyWith({
@@ -63,6 +65,7 @@ class RunState {
     String? passiveTrait,
     int? skill1Cooldown,
     int? skill2Cooldown,
+    int? bonusShopCards,
   }) {
     return RunState(
       currentLevel: currentLevel ?? this.currentLevel,
@@ -78,6 +81,7 @@ class RunState {
       passiveTrait: passiveTrait ?? this.passiveTrait,
       skill1Cooldown: skill1Cooldown ?? this.skill1Cooldown,
       skill2Cooldown: skill2Cooldown ?? this.skill2Cooldown,
+      bonusShopCards: bonusShopCards ?? this.bonusShopCards,
     );
   }
 }
@@ -101,6 +105,7 @@ class RunController extends StateNotifier<RunState> {
             attaque: 0, // Force de base à 0
             luck: 0,
           ),
+          bonusShopCards: 0,
         ),
       );
 
@@ -125,7 +130,13 @@ class RunController extends StateNotifier<RunState> {
       mapNodes: generatedMap,
       currentNodeId: null,
       gold: 50,
+      bonusShopCards: 0,
     );
+  }
+
+  /// Augmente définitivement le nombre de cartes affichées dans la boutique
+  void buyShopExpansion() {
+    state = state.copyWith(bonusShopCards: state.bonusShopCards + 1);
   }
 
   /// Sélectionne un nœud sur la carte et déplace le joueur
