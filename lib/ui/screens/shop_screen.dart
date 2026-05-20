@@ -38,7 +38,8 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
 
     final rng = Random();
     List<CardData> shuffled = List.from(allCards)..shuffle(rng);
-    _cardsForSale = shuffled.take(3).toList();
+    final runState = ref.read(runProvider);
+    _cardsForSale = shuffled.take(3 + runState.bonusShopCards).toList();
   }
 
   void _buyCard(CardData card, int price) {
@@ -90,6 +91,69 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context)!.healApplied),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.notEnoughGold),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _expandShop(int price) {
+    final runController = ref.read(runProvider.notifier);
+    if (runController.spendGold(price)) {
+      runController.buyShopExpansion();
+
+      final gameData = ref.read(gameDataLoaderProvider).requireValue;
+      final allCards = gameData.cards.where((c) => c.type != CardType.status).toList();
+      final existingIds = _cardsForSale.map((c) => c.id).toSet();
+      final available = allCards.where((c) => !existingIds.contains(c.id)).toList();
+
+      if (available.isNotEmpty) {
+        final rng = Random();
+        setState(() {
+          _cardsForSale.add(available[rng.nextInt(available.length)]);
+        });
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Boutique agrandie définitivement !'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.notEnoughGold),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _rerollCards(int price) {
+    final runController = ref.read(runProvider.notifier);
+    if (runController.spendGold(price)) {
+      final gameData = ref.read(gameDataLoaderProvider).requireValue;
+      final allCards = gameData.cards.where((c) => c.type != CardType.status).toList();
+      
+      final rng = Random();
+      List<CardData> shuffled = List.from(allCards)..shuffle(rng);
+      
+      final runState = ref.read(runProvider);
+      setState(() {
+        _cardsForSale = shuffled.take(3 + runState.bonusShopCards).toList();
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Cartes renouvelées !'),
           backgroundColor: Colors.green,
         ),
       );
@@ -438,6 +502,24 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                               price: 150,
                               onPressed: () => _showCloneModal(150),
                               buttonColor: Colors.blue.shade800,
+                            ),
+                            _ShopServiceWidget(
+                              icon: Icons.add_shopping_cart,
+                              iconColor: Colors.amberAccent,
+                              title: 'Étal étendu',
+                              description: 'Ajoute 1 carte de plus en vente définitivement',
+                              price: 80,
+                              onPressed: () => _expandShop(80),
+                              buttonColor: Colors.amber.shade800,
+                            ),
+                            _ShopServiceWidget(
+                              icon: Icons.refresh,
+                              iconColor: Colors.tealAccent,
+                              title: 'Renouveler',
+                              description: 'Renouvelle les cartes en vente',
+                              price: 15,
+                              onPressed: () => _rerollCards(15),
+                              buttonColor: Colors.teal.shade800,
                             ),
                           ],
                         ),

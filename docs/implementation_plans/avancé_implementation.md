@@ -335,3 +335,9 @@
 - feat: implémentation Phase 1 
     - extension de la structure de l'état (RunState & RunController)
         - J'ai terminé la Phase 1. J'ai ajouté le champ persistant `bonusShopCards` à `RunState`, mis à jour les constructeurs et la méthode `copyWith`, et implémenté la méthode `buyShopExpansion()` dans le `RunController` pour incrémenter définitivement la taille de l'étal de la boutique.
+- feat: implémentation Phase 2
+    - intégration de l'interface utilisateur de la boutique (ShopScreen)
+        - J'ai terminé la Phase 2. J'ai mis à jour la méthode `_initializeShop()` pour charger un étal dont le nombre de cartes est dynamique (`3 + runState.bonusShopCards`). J'ai implémenté le service `_expandShop` (80 or) qui applique définitivement l'amélioration dans l'état de la run et ajoute instantanément une carte supplémentaire non-doublon en rayon. J'ai également implémenté le service `_rerollCards` (15 or) pour rafraîchir l'intégralité des cartes en rayon selon la taille de l'étal courant. Enfin, j'ai ajouté ces deux options de service dans la barre latérale de la boutique.
+- feat: implémentation Phase 3
+    - tests unitaires et de widgets de validation
+        - J'ai terminé la Phase 3. J'ai conçu et intégré des tests unitaires complets pour valider le comportement de `RunController` lors du démarrage d'une nouvelle partie et de l'achat d'agrandissement de boutique. De plus, j'ai écrit un widget test pour `ShopScreen`, mockant le chargement de données avec un ProviderScope personnalisé et validant les transitions d'or, l'accroissement dynamique de la boutique à 4 cartes à la suite d'une expansion et la régénération de stock après un renouvellement. La suite de tests s'exécute avec succès.
