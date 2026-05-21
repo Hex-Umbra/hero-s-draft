@@ -787,7 +787,7 @@ class MapConnectionPainter extends CustomPainter {
             ..lineTo(targetNode.position.x, targetNode.position.y);
 
           for (final ui.PathMetric metric in path.computeMetrics()) {
-            double distance = -phase;
+            double distance = phase - (dashLength + dashSpace) * 2;
             bool draw = true;
             while (distance < metric.length) {
               final double len = draw ? dashLength : dashSpace;
