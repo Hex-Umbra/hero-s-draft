@@ -31,6 +31,21 @@ class EnemyCard extends PositionComponent
   late final SpriteComponent sprite;
 
   EnemyIntent? currentIntent;
+
+  EnemyIntent? get effectiveIntent {
+    final intent = currentIntent;
+    if (intent == null) return null;
+    if (intent.type == IntentType.attack) {
+      final int baseDmg = data?.baseDamage ?? stats.effectiveAttaque;
+      final int bonus = stats.effectiveAttaque - baseDmg;
+      return EnemyIntent(
+        type: intent.type,
+        value: max(stats.effectiveAttaque, intent.value + bonus),
+      );
+    }
+    return intent;
+  }
+
   bool isSelected = false;
   int _intentStep = 0;
 
@@ -77,7 +92,7 @@ class EnemyCard extends PositionComponent
 
     _determineNextIntent();
 
-    intentionIndicator = IntentionIndicator(initialIntent: currentIntent);
+    intentionIndicator = IntentionIndicator(initialIntent: effectiveIntent);
     intentionIndicator.position = Vector2(
       size.x / 2,
       -30,
@@ -88,7 +103,13 @@ class EnemyCard extends PositionComponent
     armorBadge.position = Vector2(-12, 25);
     add(armorBadge);
 
-    attackBadge = StatBadge(type: StatType.attack, value: '${stats.attaque}');
+    final int initialStrength = stats.effectiveAttaque - stats.attaque;
+    attackBadge = StatBadge(
+      type: StatType.attack,
+      value: '${stats.effectiveAttaque}',
+      baseValue: stats.attaque,
+      bonusValue: initialStrength > 0 ? initialStrength : null,
+    );
     attackBadge.position = Vector2(-12, 55);
     add(attackBadge);
 
@@ -113,7 +134,7 @@ class EnemyCard extends PositionComponent
 
   void rollIntent() {
     _determineNextIntent();
-    intentionIndicator.updateIntent(currentIntent);
+    intentionIndicator.updateIntent(effectiveIntent);
   }
 
   void _determineNextIntent() {
@@ -157,11 +178,15 @@ class EnemyCard extends PositionComponent
       tooltipDescription:
           'L\'ennemi possède ${stats.armure} d\'armure. Elle doit être brisée avant de toucher aux PV.',
     );
+    final int strengthBonus = stats.effectiveAttaque - stats.attaque;
     attackBadge.updateValue(
-      stats.attaque.toString(),
+      stats.effectiveAttaque.toString(),
+      baseValue: stats.attaque,
+      bonusValue: strengthBonus > 0 ? strengthBonus : null,
       tooltipTitle: 'FORCE',
-      tooltipDescription:
-          'L\'ennemi inflige ${stats.attaque} dégâts de base avec ses attaques.',
+      tooltipDescription: strengthBonus > 0
+          ? 'Base : ${stats.attaque}, Bonus : +$strengthBonus. L\'ennemi inflige ${stats.effectiveAttaque} dégâts.'
+          : 'L\'ennemi inflige ${stats.attaque} dégâts de base avec ses attaques.',
     );
 
     statusIndicator.updateStatuses(stats.statuses);
@@ -187,6 +212,7 @@ class EnemyCard extends PositionComponent
 
     stats = newStats;
     _refreshBadges();
+    intentionIndicator.updateIntent(effectiveIntent);
   }
 
   void shakeAndFlashAnimation() {

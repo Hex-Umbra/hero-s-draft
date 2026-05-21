@@ -666,7 +666,7 @@ class HerosDraftGame extends FlameGame
     for (var enemy in enemyCards) {
       if (_currentState == null || _currentState!.isDead) break;
 
-      final intent = enemy.currentIntent;
+      final intent = enemy.effectiveIntent;
       if (intent == null) continue;
 
       if (intent.type == IntentType.attack) {
