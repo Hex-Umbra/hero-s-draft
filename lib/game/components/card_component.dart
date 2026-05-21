@@ -537,7 +537,11 @@ class CardComponent extends PositionComponent
   void onTapDown(TapDownEvent event) {
     if (isPlayed) return;
     super.onTapDown(event);
-    game.setFocusedCard(this);
+    if (game.focusedCard == this) {
+      game.setFocusedCard(null);
+    } else {
+      game.setFocusedCard(this);
+    }
     refreshVisuals(); // Refresh painters for selection
     event.continuePropagation = false;
   }

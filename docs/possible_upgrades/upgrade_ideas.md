@@ -47,7 +47,7 @@
 - Changer le système de noeud de la map actuellement pour proposer plusieurs divergences de chemins vers plsuieurs finalités différentes (plusieurs type de boss différents a la fin, le joueur choisira donc lequel il voudra combattre en choisissant le bon chemin). Comme par exemple: 3 chemins différents pour 3 types de boss différents (le boss de feu, le boss de glace, le boss de foudre). Les noeuds élites pourraient également être différent selon le chemin choisi. Rajouter des noeuds de trésors et des noeuds mystères. 
 - ~~Pendant le combat pour déselectionner une carte, il faudrait pouvoir recliquer dessus pour la déselectionner en plus de juste cliquer a l'extérieur de la carte~~.
 - ~~Petit bug au niveaux des aniamtions de scaling lorsqu'on clique sur une carte a jouer pour savoir sur quel cible la jouer~~.
-- bug d'affichage des dégâts infligé par le poison, les valeurs se superposent a certains moment ce qui créer ue problème de lisibilité.
+- ~~bug d'affichage des dégâts infligé par le poison, les valeurs se superposent a certains moment ce qui créer ue problème de lisibilité~~.
 - Au fur et a mesure de la run, ou pour des ennemis spécifiques, cacher les intentions
 - Rajouter une stats de critique pour les dégâts et les soins. Permettre de gagner cette statistique grace aux reliques ou aux récompenses de fin de combats. L'ennemi aura lui aussi une statistique de critique.
 - Rendre la barre de vie du joueur plus épaisse

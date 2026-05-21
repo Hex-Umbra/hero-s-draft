@@ -28,3 +28,9 @@
 - fix: résolution du bug de superposition et de rafraîchissement des dégâts de poison
     - implémentation d'une comparaison de listes en profondeur et d'une mise à jour en place (reconciliation) des icônes de statut
         - J'ai terminé la correction du bug d'affichage des dégâts de poison. Le composant `StatusIndicator` a été optimisé pour effectuer une comparaison en profondeur (`_areStatusListsEqual`) des statuts de l'entité lors de chaque mise à jour, évitant ainsi les rafraîchissements redondants. De plus, le mécanisme asynchrone d'effacement complet (`removeAll`/`add`) a été remplacé par un système de réconciliation en place (`updateStatus`), permettant de mettre à jour la valeur textuelle directement sur le composant existant. Cela élimine définitivement les conflits de timing asynchrone et les superpositions de textes (valeurs illisibles) lorsque du poison est réappliqué sur un ennemi déjà empoisonné.
+        
+## Phase 31 - Amélioration de l'interaction et de la désélection des cartes en combat
+
+- feat: possibilité de désélectionner une carte en recliquant dessus
+    - modification de la gestion de focus dans `CardComponent.onTapDown` pour basculer (toggle) l'état de sélection
+        - J'ai terminé l'amélioration de la sélection de carte en combat. Désormais, lorsqu'un joueur clique sur une carte déjà sélectionnée (qui a le focus), elle est automatiquement désélectionnée en appelant `game.setFocusedCard(null)`. Si la carte n'a pas le focus, elle est sélectionnée normalement. Cela offre une interaction plus intuitive et naturelle en plus du clic sur le fond de l'écran pour annuler la sélection.
