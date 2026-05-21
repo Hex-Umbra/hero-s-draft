@@ -15,6 +15,7 @@ class ClassSelectionScreen extends ConsumerWidget {
     // Les données sont déjà chargées par le SplashScreen
     final gameData = ref.watch(gameDataLoaderProvider).requireValue;
     final classes = gameData.heroes;
+    final bool isMobile = MediaQuery.of(context).size.width < 600;
 
     return Scaffold(
       appBar: AppBar(
@@ -38,20 +39,20 @@ class ClassSelectionScreen extends ConsumerWidget {
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.all(isMobile ? 10 : 20),
           child: GridView.builder(
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 400, // Largeur max d'une carte
-              childAspectRatio:
-                  0.75, // Ajustement de l'aspect ratio pour la verticalité
-              crossAxisSpacing: 20,
-              mainAxisSpacing: 20,
+            gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: isMobile ? 200 : 400, // Divise par deux sur mobile pour afficher 2 colonnes réduites
+              childAspectRatio: 0.75, // Conserve le format vertical
+              crossAxisSpacing: isMobile ? 10 : 20,
+              mainAxisSpacing: isMobile ? 10 : 20,
             ),
             itemCount: classes.length,
             itemBuilder: (context, index) {
               return _InteractiveClassCard(
                 playerClass: classes[index],
                 ref: ref,
+                isMobile: isMobile,
               );
             },
           ),
@@ -64,10 +65,12 @@ class ClassSelectionScreen extends ConsumerWidget {
 class _InteractiveClassCard extends StatefulWidget {
   final HeroData playerClass;
   final WidgetRef ref;
+  final bool isMobile;
 
   const _InteractiveClassCard({
     required this.playerClass,
     required this.ref,
+    required this.isMobile,
   });
 
   @override
@@ -185,7 +188,7 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                     ..setEntry(3, 2, 0.002) // Perspective 3D
                     ..rotateX(-currentTiltY) // Inverser pour que ça penche vers le curseur
                     ..rotateY(currentTiltX),
-                  alignment: FractionalOffset.center,
+                  alignment: Alignment.center,
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     decoration: BoxDecoration(
@@ -206,35 +209,36 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(14),
                       child: Padding(
-                        padding: const EdgeInsets.all(20),
+                        padding: EdgeInsets.all(widget.isMobile ? 10 : 20),
                         child: Column(
                           children: [
-                            const SizedBox(height: 10),
+                            SizedBox(height: widget.isMobile ? 4 : 10),
                             // Floating hero icon
                             AnimatedBuilder(
                               animation: _floatAnimation,
                               builder: (context, child) {
+                                final double floatOffset = _floatAnimation.value * (widget.isMobile ? 0.5 : 1.0);
                                 return Transform.translate(
-                                  offset: Offset(0, _floatAnimation.value),
+                                  offset: Offset(0, floatOffset),
                                   child: Icon(
                                     icon,
-                                    size: 65,
+                                    size: widget.isMobile ? 32 : 65,
                                     color: classColor,
                                     shadows: [
                                       Shadow(
                                         color: classColor.withValues(alpha: 0.5),
-                                        blurRadius: 10,
+                                        blurRadius: widget.isMobile ? 5 : 10,
                                       ),
                                     ],
                                   ),
                                 );
                               },
                             ),
-                            const SizedBox(height: 15),
+                            SizedBox(height: widget.isMobile ? 6 : 15),
                             Text(
                               playerClass.name,
                               style: TextStyle(
-                                fontSize: 26,
+                                fontSize: widget.isMobile ? 16 : 26,
                                 fontWeight: FontWeight.bold,
                                 color: classColor,
                                 letterSpacing: 1.2,
@@ -246,42 +250,48 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                 ],
                               ),
                             ),
-                            const SizedBox(height: 12),
+                            SizedBox(height: widget.isMobile ? 6 : 12),
                             // Stats with beautiful icons and display
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: widget.isMobile ? 6 : 12,
+                                vertical: widget.isMobile ? 4 : 8,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.white.withValues(alpha: 0.04),
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: BorderRadius.circular(widget.isMobile ? 6 : 10),
                               ),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                 children: [
                                   _buildStatBadge(
-                                    const Icon(Icons.favorite, size: 16, color: Colors.redAccent),
+                                    Icon(Icons.favorite, size: widget.isMobile ? 11 : 16, color: Colors.redAccent),
                                     '${playerClass.maxHp}',
                                   ),
-                                  Container(width: 1, height: 16, color: Colors.white24),
+                                  Container(width: 1, height: widget.isMobile ? 10 : 16, color: Colors.white24),
                                   _buildStatBadge(
-                                    const Icon(Icons.diamond_rounded, size: 16, color: Colors.cyanAccent),
+                                    Icon(Icons.diamond_rounded, size: widget.isMobile ? 11 : 16, color: Colors.cyanAccent),
                                     '${playerClass.maxMana}',
                                   ),
-                                  Container(width: 1, height: 16, color: Colors.white24),
+                                  Container(width: 1, height: widget.isMobile ? 10 : 16, color: Colors.white24),
                                   _buildStatBadge(
-                                    const SwordIcon(size: 16, color: Colors.orangeAccent),
+                                    SwordIcon(size: widget.isMobile ? 11 : 16, color: Colors.orangeAccent),
                                     '${playerClass.baseDamage}',
                                   ),
                                 ],
                               ),
                             ),
-                            const SizedBox(height: 15),
+                            SizedBox(height: widget.isMobile ? 6 : 15),
                             // Passive trait
                             Container(
                               width: double.infinity,
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: widget.isMobile ? 6 : 12,
+                                vertical: widget.isMobile ? 4 : 8,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.cyanAccent.withValues(alpha: 0.06),
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: BorderRadius.circular(widget.isMobile ? 6 : 10),
                                 border: Border.all(
                                   color: Colors.cyanAccent.withValues(alpha: 0.25),
                                   width: 1.0,
@@ -293,12 +303,12 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      const Icon(Icons.shield, size: 16, color: Colors.cyanAccent),
-                                      const SizedBox(width: 6),
+                                      Icon(Icons.shield, size: widget.isMobile ? 10 : 16, color: Colors.cyanAccent),
+                                      SizedBox(width: widget.isMobile ? 3 : 6),
                                       Text(
                                         traitName.toUpperCase(),
-                                        style: const TextStyle(
-                                          fontSize: 11,
+                                        style: TextStyle(
+                                          fontSize: widget.isMobile ? 8.5 : 11,
                                           fontWeight: FontWeight.bold,
                                           color: Colors.cyanAccent,
                                           letterSpacing: 0.8,
@@ -306,39 +316,43 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 5),
+                                  SizedBox(height: widget.isMobile ? 2 : 5),
                                   Text(
                                     traitDesc,
                                     style: TextStyle(
-                                      fontSize: 10.5,
+                                      fontSize: widget.isMobile ? 8.0 : 10.5,
                                       color: Colors.cyanAccent.withValues(alpha: 0.85),
-                                      height: 1.3,
+                                      height: 1.25,
                                     ),
                                     textAlign: TextAlign.center,
                                   ),
                                 ],
                               ),
                             ),
-                            const Divider(color: Colors.white12, height: 25),
+                            Divider(
+                              color: Colors.white12,
+                              height: widget.isMobile ? 12 : 25,
+                            ),
                             // Description text
                             Expanded(
                               child: SingleChildScrollView(
                                 child: Text(
                                   playerClass.description,
-                                  style: const TextStyle(
-                                    fontSize: 13,
+                                  style: TextStyle(
+                                    fontSize: widget.isMobile ? 9.5 : 13,
                                     color: Colors.white70,
                                     fontStyle: FontStyle.italic,
-                                    height: 1.4,
+                                    height: 1.3,
                                   ),
                                   textAlign: TextAlign.center,
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 15),
+                            SizedBox(height: widget.isMobile ? 6 : 15),
                             // Premium Selection Button
                             _PremiumSelectionButton(
                               classColor: classColor,
+                              isMobile: widget.isMobile,
                               onPressed: () {
                                 widget.ref.read(runProvider.notifier).startNewRun(playerClass);
                                 Navigator.of(context).pushAndRemoveUntil(
@@ -362,14 +376,15 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
   }
 
   Widget _buildStatBadge(Widget iconWidget, String value) {
+    final bool isMobile = widget.isMobile;
     return Row(
       children: [
         iconWidget,
-        const SizedBox(width: 4),
+        SizedBox(width: isMobile ? 2 : 4),
         Text(
           value,
-          style: const TextStyle(
-            fontSize: 14,
+          style: TextStyle(
+            fontSize: isMobile ? 10 : 14,
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
@@ -382,10 +397,12 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
 class _PremiumSelectionButton extends StatefulWidget {
   final Color classColor;
   final VoidCallback onPressed;
+  final bool isMobile;
 
   const _PremiumSelectionButton({
     required this.classColor,
     required this.onPressed,
+    required this.isMobile,
   });
 
   @override
@@ -444,11 +461,11 @@ class _PremiumSelectionButtonState extends State<_PremiumSelectionButton>
             scale: _scaleAnimation,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              height: 48,
+              height: widget.isMobile ? 34 : 48,
               width: double.infinity,
               decoration: BoxDecoration(
                 gradient: gradient,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(widget.isMobile ? 8 : 12),
                 boxShadow: [
                   BoxShadow(
                     color: widget.classColor.withValues(alpha: _isHovered ? 0.5 : 0.25),
@@ -457,11 +474,11 @@ class _PremiumSelectionButtonState extends State<_PremiumSelectionButton>
                   ),
                 ],
               ),
-              child: const Center(
+              child: Center(
                 child: Text(
                   'Sélectionner',
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: widget.isMobile ? 12 : 16,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                     letterSpacing: 1.1,

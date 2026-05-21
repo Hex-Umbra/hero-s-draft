@@ -19,3 +19,7 @@
 - feat: affichage détaillé des traits passifs d'armure
     - intégration d'un panneau d'information permanent sur les cartes de classe décrivant le fonctionnement et l'activation des passifs
         - J'ai terminé l'ajout des descriptions détaillées des passifs d'armure sur l'écran de sélection de classe. Le widget `Tooltip` masquant les descriptions a été remplacé par un conteneur permanent affichant en clair les conditions d'activation et les effets des passifs (Régénération d'Armure, Armure du Berserker, Armure Magique), y compris la prise en compte du bonus de statistique "Maîtrise".
+
+- feat: réduction de la taille des cartes de classe sur mobile
+    - ajustement de l'affichage sur mobile en adaptant les dimensions de la grille et en déclarant la variable isMobile
+        - J'ai terminé la réduction de taille des cartes de classe sur mobile. J'ai d'abord corrigé les erreurs de syntaxe de la rotation 3D et restauré le bon alignement de LayoutBuilder. J'ai ensuite déclaré la variable `isMobile` via une requête de média (`MediaQuery.of(context).size.width < 600`), ce qui active la mise en page adaptative. Enfin, les cartes de classe s'affichent maintenant sur deux colonnes de taille réduite de moitié sur les écrans mobiles tout en conservant leur lisibilité et leurs magnifiques animations.
