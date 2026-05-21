@@ -28,9 +28,29 @@
 - fix: résolution du bug de superposition et de rafraîchissement des dégâts de poison
     - implémentation d'une comparaison de listes en profondeur et d'une mise à jour en place (reconciliation) des icônes de statut
         - J'ai terminé la correction du bug d'affichage des dégâts de poison. Le composant `StatusIndicator` a été optimisé pour effectuer une comparaison en profondeur (`_areStatusListsEqual`) des statuts de l'entité lors de chaque mise à jour, évitant ainsi les rafraîchissements redondants. De plus, le mécanisme asynchrone d'effacement complet (`removeAll`/`add`) a été remplacé par un système de réconciliation en place (`updateStatus`), permettant de mettre à jour la valeur textuelle directement sur le composant existant. Cela élimine définitivement les conflits de timing asynchrone et les superpositions de textes (valeurs illisibles) lorsque du poison est réappliqué sur un ennemi déjà empoisonné.
-        
+
 ## Phase 31 - Amélioration de l'interaction et de la désélection des cartes en combat
 
 - feat: possibilité de désélectionner une carte en recliquant dessus
     - modification de la gestion de focus dans `CardComponent.onTapDown` pour basculer (toggle) l'état de sélection
         - J'ai terminé l'amélioration de la sélection de carte en combat. Désormais, lorsqu'un joueur clique sur une carte déjà sélectionnée (qui a le focus), elle est automatiquement désélectionnée en appelant `game.setFocusedCard(null)`. Si la carte n'a pas le focus, elle est sélectionnée normalement. Cela offre une interaction plus intuitive et naturelle en plus du clic sur le fond de l'écran pour annuler la sélection.
+## Phase 32 - Ajustements UI : Barre de vie, Intentions des ennemis et Bouton Mon Deck
+
+- feat: Rendre la barre de vie du joueur plus épaisse et arrondie
+    - Augmentation de l'épaisseur de la barre de progression des PV dans le HUD inférieur
+        - J'ai terminé l'épaississement de la barre de vie du joueur. En ajustant le paramètre `minHeight` du `LinearProgressIndicator` dans `game_screen.dart` de `12` à `22` pixels et en lui ajoutant des coins arrondis avec un `BorderRadius.circular(12)` dans un widget `ClipRRect`, la barre de vie est désormais beaucoup plus visible, moderne et premium.
+
+- feat: Repositionnement ergonomique du bouton "Mon Deck"
+    - Déplacement du bouton "Mon Deck" du HUD inférieur vers le HUD supérieur à côté du bouton pause
+        - J'ai terminé le repositionnement du bouton "Mon Deck". Auparavant superposé à la barre de vie dans la partie inférieure de l'écran, il est désormais placé tout en haut à droite à `Positioned(top: 10, right: 75)`. Il se trouve idéalement aligné à gauche du bouton Pause (qui est à `right: 20`), arborant une icône de couleur ambre de taille `40` pour une ergonomie optimale sans aucune superposition d'éléments.
+
+- feat: Réduction de la taille de l'affichage de l'intention des ennemis
+    - Optimisation de la taille et de la typographie du composant `IntentionIndicator`
+        - J'ai terminé la réduction de taille de l'indicateur d'intention des ennemis. Les dimensions du composant dans `intention_indicator.dart` ont été réduites de `Vector2(90, 45)` à `Vector2(74, 34)` (soit environ 25% de réduction), rendant l'interface plus épurée. Les tailles de police ont été ajustées en conséquence : le label "Next action" passe de `10` à `8`, l'indicateur d'action de `12` à `10` et la valeur numérique de l'intention de `18` à `13`. La bordure a été affinée de `1.5` à `1.0` de largeur de ligne, et les coordonnées verticales des textes ont été adaptées à la nouvelle hauteur pour un rendu centré et impeccable.
+
+## Phase 33 - Inversion de l'effet d'inclinaison 3D (tilt) sur l'écran de sélection de classe
+
+- feat: Inversion du sens de rotation 3D des cartes de classe au survol de la souris
+    - Inversion des angles `rotateX` et `rotateY` du widget `Transform` dans `class_selection_screen.dart`
+        - J'ai terminé l'inversion du sens du tilt 3D sur l'écran de sélection de classe. Au lieu de s'incliner vers le curseur (ce qui rapprochait la zone survolée de l'écran), les signes mathématiques des rotations de la transformation 3D ont été inversés (`..rotateX(currentTiltY)` et `..rotateY(-currentTiltX)`). Désormais, la zone située sous la souris recule vers l'arrière-plan (effet d'enfoncement tridimensionnel) tandis que la partie opposée pivote vers l'avant, créant une interaction plus vivante, moderne et digne d'un jeu de cartes premium.
+

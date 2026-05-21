@@ -14,7 +14,7 @@ class IntentionIndicator extends PositionComponent
 
   IntentionIndicator({EnemyIntent? initialIntent})
     : _intent = initialIntent,
-      super(size: Vector2(90, 45));
+      super(size: Vector2(74, 34));
 
   @override
   Future<void> onLoad() async {
@@ -26,38 +26,38 @@ class IntentionIndicator extends PositionComponent
     );
     add(_bg);
 
-    // Bordure plus visible
+    // Bordure plus fine et discrète
     _bg.add(
       RectangleComponent(
         size: size,
         paint: Paint()
           ..color = Colors.amber.withAlpha(180)
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.5,
+          ..strokeWidth = 1.0,
       ),
     );
 
-    // Label "Next action"
+    // Label "Next action" plus petit
     final l10n = AppLocalizations.of(game.buildContext!)!;
     _label = TextComponent(
       text: '${l10n.nextAction} :',
       textRenderer: TextPaint(
         style: const TextStyle(
           color: Colors.amberAccent,
-          fontSize: 10,
+          fontSize: 8,
           fontWeight: FontWeight.bold,
         ),
       ),
       anchor: Anchor.topCenter,
-      position: Vector2(size.x / 2, 4),
+      position: Vector2(size.x / 2, 2),
     );
     add(_label);
 
     _iconText = TextComponent(
       text: '',
-      textRenderer: TextPaint(style: const TextStyle(fontSize: 16)),
+      textRenderer: TextPaint(style: const TextStyle(fontSize: 10)),
       anchor: Anchor.centerLeft,
-      position: Vector2(10, size.y / 2 + 8),
+      position: Vector2(8, size.y / 2 + 6),
     );
     add(_iconText);
 
@@ -66,12 +66,12 @@ class IntentionIndicator extends PositionComponent
       textRenderer: TextPaint(
         style: const TextStyle(
           color: Colors.white,
-          fontSize: 18,
+          fontSize: 13,
           fontWeight: FontWeight.bold,
         ),
       ),
       anchor: Anchor.centerRight,
-      position: Vector2(size.x - 10, size.y / 2 + 8),
+      position: Vector2(size.x - 8, size.y / 2 + 6),
     );
     add(_valueText);
 
@@ -105,14 +105,14 @@ class IntentionIndicator extends PositionComponent
           style: const TextStyle(
             color: Color(0xFFFF5252),
             fontWeight: FontWeight.bold,
-            fontSize: 18,
+            fontSize: 13,
           ),
         );
         _iconText.textRenderer = TextPaint(
           style: const TextStyle(
             color: Color(0xFFFF5252),
             fontWeight: FontWeight.bold,
-            fontSize: 12,
+            fontSize: 10,
           ),
         );
         break;
@@ -123,14 +123,14 @@ class IntentionIndicator extends PositionComponent
           style: const TextStyle(
             color: Color(0xFF448AFF),
             fontWeight: FontWeight.bold,
-            fontSize: 18,
+            fontSize: 13,
           ),
         );
         _iconText.textRenderer = TextPaint(
           style: const TextStyle(
             color: Color(0xFF448AFF),
             fontWeight: FontWeight.bold,
-            fontSize: 12,
+            fontSize: 10,
           ),
         );
         break;
@@ -141,14 +141,14 @@ class IntentionIndicator extends PositionComponent
           style: const TextStyle(
             color: Color(0xFFE040FB),
             fontWeight: FontWeight.bold,
-            fontSize: 18,
+            fontSize: 13,
           ),
         );
         _iconText.textRenderer = TextPaint(
           style: const TextStyle(
             color: Color(0xFFE040FB),
             fontWeight: FontWeight.bold,
-            fontSize: 12,
+            fontSize: 10,
           ),
         );
         break;
@@ -159,14 +159,14 @@ class IntentionIndicator extends PositionComponent
           style: const TextStyle(
             color: Color(0xFF69F0AE),
             fontWeight: FontWeight.bold,
-            fontSize: 18,
+            fontSize: 13,
           ),
         );
         _iconText.textRenderer = TextPaint(
           style: const TextStyle(
             color: Color(0xFF69F0AE),
             fontWeight: FontWeight.bold,
-            fontSize: 12,
+            fontSize: 10,
           ),
         );
         break;
