@@ -5,6 +5,7 @@ import '../../services/game_data_service.dart';
 import '../../game/controllers/run_controller.dart';
 import 'map_screen.dart';
 import 'card_dictionary_screen.dart';
+import '../widgets/sword_icon.dart';
 
 class ClassSelectionScreen extends ConsumerWidget {
   const ClassSelectionScreen({super.key});
@@ -256,11 +257,20 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                 children: [
-                                  _buildStatBadge(Icons.favorite, '${playerClass.maxHp}', Colors.redAccent),
+                                  _buildStatBadge(
+                                    const Icon(Icons.favorite, size: 16, color: Colors.redAccent),
+                                    '${playerClass.maxHp}',
+                                  ),
                                   Container(width: 1, height: 16, color: Colors.white24),
-                                  _buildStatBadge(Icons.bolt, '${playerClass.maxMana}', Colors.purpleAccent),
+                                  _buildStatBadge(
+                                    const Icon(Icons.diamond_rounded, size: 16, color: Colors.cyanAccent),
+                                    '${playerClass.maxMana}',
+                                  ),
                                   Container(width: 1, height: 16, color: Colors.white24),
-                                  _buildStatBadge(Icons.flash_on, '${playerClass.baseDamage}', Colors.orangeAccent),
+                                  _buildStatBadge(
+                                    const SwordIcon(size: 16, color: Colors.orangeAccent),
+                                    '${playerClass.baseDamage}',
+                                  ),
                                 ],
                               ),
                             ),
@@ -337,10 +347,10 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
     );
   }
 
-  Widget _buildStatBadge(IconData icon, String value, Color color) {
+  Widget _buildStatBadge(Widget iconWidget, String value) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: color),
+        iconWidget,
         const SizedBox(width: 4),
         Text(
           value,

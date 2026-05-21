@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/data/card_data.dart';
+import 'sword_icon.dart';
 
 class UiCard extends StatelessWidget {
   final String title;
@@ -113,11 +114,18 @@ class UiCard extends StatelessWidget {
               Positioned.fill(
                 child: Opacity(
                   opacity: 0.05,
-                  child: Icon(
-                    _getTypeIcon(),
-                    size: 80,
-                    color: Colors.white,
-                  ),
+                  child: type == CardType.attack
+                      ? const Center(
+                          child: SwordIcon(
+                            size: 80,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Icon(
+                          _getTypeIcon(),
+                          size: 80,
+                          color: Colors.white,
+                        ),
                 ),
               ),
 
