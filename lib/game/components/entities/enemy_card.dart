@@ -27,7 +27,6 @@ class EnemyCard extends PositionComponent
   late final IntentionIndicator intentionIndicator;
   late final StatBadge armorBadge;
   late final StatBadge attackBadge;
-  late final StatBadge manaBadge;
   late final StatusIndicator statusIndicator;
   late final SpriteComponent sprite;
 
@@ -93,12 +92,7 @@ class EnemyCard extends PositionComponent
     attackBadge.position = Vector2(-12, 55);
     add(attackBadge);
 
-    manaBadge = StatBadge(
-      type: StatType.mana,
-      value: '${stats.currentMana}/${stats.maxMana}',
-    );
-    manaBadge.position = Vector2(-12, 85);
-    add(manaBadge);
+
 
     statusIndicator = StatusIndicator(statuses: stats.statuses);
     statusIndicator.position = Vector2(
@@ -169,12 +163,7 @@ class EnemyCard extends PositionComponent
       tooltipDescription:
           'L\'ennemi inflige ${stats.attaque} dégâts de base avec ses attaques.',
     );
-    manaBadge.updateValue(
-      '${stats.currentMana}/${stats.maxMana}',
-      tooltipTitle: 'MANA',
-      tooltipDescription:
-          'Énergie de l\'ennemi. Actuellement : ${stats.currentMana}/${stats.maxMana}.',
-    );
+
     statusIndicator.updateStatuses(stats.statuses);
   }
 

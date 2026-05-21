@@ -142,8 +142,6 @@ class HeroCard extends PositionComponent
 
     armorBadge.updateValue(
       '$currentArmor',
-      baseValue: 0,
-      bonusValue: currentArmor,
       tooltipTitle: 'ARMURE',
       tooltipDescription:
           'Réduit les prochains dégâts reçus. Temporaire : $currentArmor.\nMaîtrise : +$mastery à chaque gain.',

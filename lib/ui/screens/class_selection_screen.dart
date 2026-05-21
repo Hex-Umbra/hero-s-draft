@@ -48,19 +48,92 @@ class ClassSelectionScreen extends ConsumerWidget {
             ),
             itemCount: classes.length,
             itemBuilder: (context, index) {
-              return _buildClassCard(context, ref, classes[index]);
+              return _InteractiveClassCard(
+                playerClass: classes[index],
+                ref: ref,
+              );
             },
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildClassCard(
-    BuildContext context,
-    WidgetRef ref,
-    HeroData playerClass,
-  ) {
+class _InteractiveClassCard extends StatefulWidget {
+  final HeroData playerClass;
+  final WidgetRef ref;
+
+  const _InteractiveClassCard({
+    required this.playerClass,
+    required this.ref,
+  });
+
+  @override
+  State<_InteractiveClassCard> createState() => _InteractiveClassCardState();
+}
+
+class _InteractiveClassCardState extends State<_InteractiveClassCard>
+    with SingleTickerProviderStateMixin {
+  bool _isHovered = false;
+  double _tiltX = 0.0;
+  double _tiltY = 0.0;
+
+  // For float/breath animation of icon
+  late final AnimationController _floatController;
+  late final Animation<double> _floatAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _floatController = AnimationController(
+      duration: const Duration(seconds: 3),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _floatAnimation = Tween<double>(begin: -4, end: 4).animate(
+      CurvedAnimation(parent: _floatController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _floatController.dispose();
+    super.dispose();
+  }
+
+  void _onPointerMove(PointerEvent event, Size cardSize) {
+    if (cardSize.width == 0 || cardSize.height == 0) return;
+    
+    // Relative position from center (-0.5 to 0.5)
+    final double relX = (event.localPosition.dx / cardSize.width) - 0.5;
+    final double relY = (event.localPosition.dy / cardSize.height) - 0.5;
+
+    setState(() {
+      // Limit tilt angle (approx 0.15 radians max)
+      _tiltX = relX * 0.3;
+      _tiltY = relY * 0.3;
+    });
+  }
+
+  void _onPointerExit() {
+    setState(() {
+      _isHovered = false;
+      _tiltX = 0.0;
+      _tiltY = 0.0;
+    });
+  }
+
+  void _onPointerEnter() {
+    setState(() {
+      _isHovered = true;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final playerClass = widget.playerClass;
+    
     Color classColor = Colors.blue;
     if (playerClass.id == 'berserker') classColor = Colors.red;
     if (playerClass.id == 'mage') classColor = Colors.purple;
@@ -87,89 +160,292 @@ class ClassSelectionScreen extends ConsumerWidget {
         break;
     }
 
-    return Card(
-      color: const Color(0xFF2A2A3D),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: classColor, width: 2),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            Icon(icon, size: 60, color: classColor),
-            const SizedBox(height: 10),
-            Text(
-              playerClass.name,
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: classColor,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'PV: ${playerClass.maxHp} | Mana: ${playerClass.maxMana}\n'
-              'ATK: ${playerClass.baseDamage}',
-              style: const TextStyle(fontSize: 14, color: Colors.white),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 10),
-            Tooltip(
-              message: traitDesc,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.white12,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.shield, size: 16, color: Colors.cyanAccent),
-                    const SizedBox(width: 4),
-                    Text(
-                      traitName,
-                      style: const TextStyle(fontSize: 13, color: Colors.cyanAccent),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final cardSize = Size(constraints.maxWidth, constraints.maxHeight);
+
+        return MouseRegion(
+          onEnter: (_) => _onPointerEnter(),
+          onExit: (_) => _onPointerExit(),
+          child: Listener(
+            onPointerMove: (e) => _onPointerMove(e, cardSize),
+            onPointerHover: (e) => _onPointerMove(e, cardSize),
+            child: TweenAnimationBuilder<double>(
+              duration: const Duration(milliseconds: 150),
+              curve: Curves.easeOut,
+              tween: Tween<double>(begin: 0.0, end: _isHovered ? 1.0 : 0.0),
+              builder: (context, hoverVal, child) {
+                // Interpolate rotation to standard or tilt value
+                final double currentTiltX = _tiltX * hoverVal;
+                final double currentTiltY = _tiltY * hoverVal;
+
+                return Transform(
+                  transform: Matrix4.identity()
+                    ..setEntry(3, 2, 0.002) // Perspective 3D
+                    ..rotateX(-currentTiltY) // Inverser pour que ça penche vers le curseur
+                    ..rotateY(currentTiltX),
+                  alignment: FractionalOffset.center,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2A2A3D),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: classColor.withValues(alpha: _isHovered ? 1.0 : 0.7),
+                        width: _isHovered ? 3.0 : 2.0,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: classColor.withValues(alpha: _isHovered ? 0.4 : 0.15),
+                          blurRadius: _isHovered ? 25 : 10,
+                          spreadRadius: _isHovered ? 4 : 1,
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
-            ),
-            const Divider(color: Colors.white24, height: 20),
-            Expanded(
-              child: SingleChildScrollView(
-                child: Text(
-                  playerClass.description,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Colors.white70,
-                    fontStyle: FontStyle.italic,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          children: [
+                            const SizedBox(height: 10),
+                            // Floating hero icon
+                            AnimatedBuilder(
+                              animation: _floatAnimation,
+                              builder: (context, child) {
+                                return Transform.translate(
+                                  offset: Offset(0, _floatAnimation.value),
+                                  child: Icon(
+                                    icon,
+                                    size: 65,
+                                    color: classColor,
+                                    shadows: [
+                                      Shadow(
+                                        color: classColor.withValues(alpha: 0.5),
+                                        blurRadius: 10,
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 15),
+                            Text(
+                              playerClass.name,
+                              style: TextStyle(
+                                fontSize: 26,
+                                fontWeight: FontWeight.bold,
+                                color: classColor,
+                                letterSpacing: 1.2,
+                                shadows: [
+                                  Shadow(
+                                    color: classColor.withValues(alpha: 0.3),
+                                    blurRadius: 6,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            // Stats with beautiful icons and display
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.04),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  _buildStatBadge(Icons.favorite, '${playerClass.maxHp}', Colors.redAccent),
+                                  Container(width: 1, height: 16, color: Colors.white24),
+                                  _buildStatBadge(Icons.bolt, '${playerClass.maxMana}', Colors.purpleAccent),
+                                  Container(width: 1, height: 16, color: Colors.white24),
+                                  _buildStatBadge(Icons.flash_on, '${playerClass.baseDamage}', Colors.orangeAccent),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 15),
+                            // Passive trait
+                            Tooltip(
+                              message: traitDesc,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: Colors.cyanAccent.withValues(alpha: 0.08),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: Colors.cyanAccent.withValues(alpha: 0.3),
+                                    width: 1.0,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.shield, size: 16, color: Colors.cyanAccent),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      traitName,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.cyanAccent,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const Divider(color: Colors.white12, height: 25),
+                            // Description text
+                            Expanded(
+                              child: SingleChildScrollView(
+                                child: Text(
+                                  playerClass.description,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.white70,
+                                    fontStyle: FontStyle.italic,
+                                    height: 1.4,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 15),
+                            // Premium Selection Button
+                            _PremiumSelectionButton(
+                              classColor: classColor,
+                              onPressed: () {
+                                widget.ref.read(runProvider.notifier).startNewRun(playerClass);
+                                Navigator.of(context).pushAndRemoveUntil(
+                                  MaterialPageRoute(builder: (context) => const MapScreen()),
+                                  (route) => route.isFirst,
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: classColor,
-                foregroundColor: Colors.white,
-                minimumSize: const Size(double.infinity, 45),
-              ),
-              onPressed: () {
-                ref.read(runProvider.notifier).startNewRun(playerClass);
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (context) => const MapScreen()),
-                  (route) => route.isFirst,
                 );
               },
-              child: const Text(
-                'Sélectionner',
-                style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildStatBadge(IconData icon, String value, Color color) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: color),
+        const SizedBox(width: 4),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PremiumSelectionButton extends StatefulWidget {
+  final Color classColor;
+  final VoidCallback onPressed;
+
+  const _PremiumSelectionButton({
+    required this.classColor,
+    required this.onPressed,
+  });
+
+  @override
+  State<_PremiumSelectionButton> createState() => _PremiumSelectionButtonState();
+}
+
+class _PremiumSelectionButtonState extends State<_PremiumSelectionButton>
+    with SingleTickerProviderStateMixin {
+  bool _isHovered = false;
+  late AnimationController _pressController;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _pressController = AnimationController(
+      duration: const Duration(milliseconds: 100),
+      vsync: this,
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
+      CurvedAnimation(parent: _pressController, curve: Curves.easeIn),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pressController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final gradient = LinearGradient(
+      colors: [
+        widget.classColor,
+        widget.classColor.withBlue(255).withGreen(100),
+      ],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    );
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTapDown: (_) => _pressController.forward(),
+        onTapUp: (_) {
+          _pressController.reverse();
+          widget.onPressed();
+        },
+        onTapCancel: () => _pressController.reverse(),
+        child: AnimatedScale(
+          scale: _isHovered ? 1.04 : 1.0,
+          duration: const Duration(milliseconds: 150),
+          child: ScaleTransition(
+            scale: _scaleAnimation,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              height: 48,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                gradient: gradient,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: widget.classColor.withValues(alpha: _isHovered ? 0.5 : 0.25),
+                    blurRadius: _isHovered ? 15 : 6,
+                    offset: Offset(0, _isHovered ? 4 : 2),
+                  ),
+                ],
+              ),
+              child: const Center(
+                child: Text(
+                  'Sélectionner',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    letterSpacing: 1.1,
+                  ),
+                ),
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
