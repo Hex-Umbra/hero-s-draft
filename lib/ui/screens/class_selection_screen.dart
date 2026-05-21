@@ -43,7 +43,7 @@ class ClassSelectionScreen extends ConsumerWidget {
           child: GridView.builder(
             gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
               maxCrossAxisExtent: isMobile ? 200 : 400, // Divise par deux sur mobile pour afficher 2 colonnes réduites
-              childAspectRatio: 0.75, // Conserve le format vertical
+              childAspectRatio: isMobile ? 0.68 : 0.75, // Plus haute sur mobile pour donner plus d'espace vertical
               crossAxisSpacing: isMobile ? 10 : 20,
               mainAxisSpacing: isMobile ? 10 : 20,
             ),

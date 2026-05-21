@@ -45,8 +45,8 @@
 - Modifier l'affichage des rencontre dans la map, lorsque le joueur clique sur un noeud rencontre, il faudrait afficher toutes les informations nécessaire comme les hp et les gold
 - ~~Uniformiser l'affichage des cartes a jouer et des cartes de l'inventaire, on vas garder l'affichage des cartes dans les menus de la forge, du shop, etc, mais on vas également rajouter des bordures/fond par rapport au type de cartes a jouer (buff/attaques/défenses), pour cela on vas modifier le widget actuel de la carte pour qu'il soit réutilisable partout dans le jeu, les menus comme les combats~~.
 - Changer le système de noeud de la map actuellement pour proposer plusieurs divergences de chemins vers plsuieurs finalités différentes (plusieurs type de boss différents a la fin, le joueur choisira donc lequel il voudra combattre en choisissant le bon chemin). Comme par exemple: 3 chemins différents pour 3 types de boss différents (le boss de feu, le boss de glace, le boss de foudre). Les noeuds élites pourraient également être différent selon le chemin choisi. Rajouter des noeuds de trésors et des noeuds mystères. 
-- Pendant le combat pour déselectionner une carte, il faudrait pouvoir recliquer dessus pour la déselectionner en plus de juste cliquer a l'extérieur de la carte.
-- Petit bug au niveaux des aniamtions de scaling lorsqu'on clique sur une carte a jouer pour savoir sur quel cible la jouer.
+- ~~Pendant le combat pour déselectionner une carte, il faudrait pouvoir recliquer dessus pour la déselectionner en plus de juste cliquer a l'extérieur de la carte~~.
+- ~~Petit bug au niveaux des aniamtions de scaling lorsqu'on clique sur une carte a jouer pour savoir sur quel cible la jouer~~.
 - bug d'affichage des dégâts infligé par le poison, les valeurs se superposent a certains moment ce qui créer ue problème de lisibilité.
 - Au fur et a mesure de la run, ou pour des ennemis spécifiques, cacher les intentions
 - Rajouter une stats de critique pour les dégâts et les soins. Permettre de gagner cette statistique grace aux reliques ou aux récompenses de fin de combats. L'ennemi aura lui aussi une statistique de critique.
