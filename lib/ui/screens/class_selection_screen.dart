@@ -186,8 +186,8 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                 return Transform(
                   transform: Matrix4.identity()
                     ..setEntry(3, 2, 0.002) // Perspective 3D
-                    ..rotateX(-currentTiltY) // Inverser pour que ça penche vers le curseur
-                    ..rotateY(currentTiltX),
+                    ..rotateX(currentTiltY) // Inversé : le côté avec le curseur s'éloigne (tilt vers l'arrière)
+                    ..rotateY(-currentTiltX),
                   alignment: Alignment.center,
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),

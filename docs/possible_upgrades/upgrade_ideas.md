@@ -50,9 +50,9 @@
 - ~~bug d'affichage des dégâts infligé par le poison, les valeurs se superposent a certains moment ce qui créer ue problème de lisibilité~~.
 - Au fur et a mesure de la run, ou pour des ennemis spécifiques, cacher les intentions
 - Rajouter une stats de critique pour les dégâts et les soins. Permettre de gagner cette statistique grace aux reliques ou aux récompenses de fin de combats. L'ennemi aura lui aussi une statistique de critique.
-- Rendre la barre de vie du joueur plus épaisse
-- Réduire la taille de l'affichage de l'intentention des ennemies
-- le bouton "mon deck" est actuellement mal positionner, il est superposé a la barre de vie, on vas le placer proche du bouton pause. 
+- ~~Rendre la barre de vie du joueur plus épaisse~~
+- ~~Réduire la taille de l'affichage de l'intentention des ennemies~~
+- ~~le bouton "mon deck" est actuellement mal positionner, il est superposé a la barre de vie, on vas le placer proche du bouton pause. ~~
 - rajouter une très légére animation de shake sur la carte a jouer quand le joueur n'as pas le mana requis pour la jouer
 - bloquer certains type de cartes par rapport a la classe que le joueur a choisi au départ. Par exemple le berserker ne pourra pas utiliser de carte de type "armure" ou même recevoir un bonus de type "armure" dans les récompenses.
 - ~~Dans le shop, pour augmenter la nombre de cartes qui apparaissent faire payer un prix au joueur, cela augmentera définitivement le nombre de cartes qui apparaissent dans tout les shop qu'il visitera~~
