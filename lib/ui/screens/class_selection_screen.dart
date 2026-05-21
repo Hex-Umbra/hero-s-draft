@@ -114,9 +114,9 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
     final double relY = (event.localPosition.dy / cardSize.height) - 0.5;
 
     setState(() {
-      // Limit tilt angle (approx 0.15 radians max)
-      _tiltX = relX * 0.3;
-      _tiltY = relY * 0.3;
+      // Limit tilt angle (approx 0.075 radians max, reduced by half)
+      _tiltX = relX * 0.15;
+      _tiltY = relY * 0.15;
     });
   }
 
