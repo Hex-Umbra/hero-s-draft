@@ -15,3 +15,7 @@
 - feat: refonte des icônes d'attaque et de mana dans l'interface utilisateur
     - intégration d'un widget personnalisé `SwordIcon` (dessin vectoriel d'une épée) et de l'icône de cristal `diamond_rounded` pour le mana
         - J'ai terminé la refonte des icônes de statistiques de l'écran de sélection de classe et des cartes à jouer. Le mana utilise désormais l'icône de cristal `Icons.diamond_rounded` de couleur cyan (`Colors.cyanAccent`) identique à celle des cartes en combat. Pour l'attaque, en raison de l'absence d'une icône d'épée native dans le SDK Flutter utilisé, j'ai créé un widget `SwordIcon` sur mesure utilisant un `CustomPainter` pour tracer une épée vectorielle avec reliefs 3D et dégradés. Ce widget est utilisé dans les badges de l'écran de sélection de classe et comme motif de fond sur les cartes d'attaque.
+
+- feat: affichage détaillé des traits passifs d'armure
+    - intégration d'un panneau d'information permanent sur les cartes de classe décrivant le fonctionnement et l'activation des passifs
+        - J'ai terminé l'ajout des descriptions détaillées des passifs d'armure sur l'écran de sélection de classe. Le widget `Tooltip` masquant les descriptions a été remplacé par un conteneur permanent affichant en clair les conditions d'activation et les effets des passifs (Régénération d'Armure, Armure du Berserker, Armure Magique), y compris la prise en compte du bonus de statistique "Maîtrise".

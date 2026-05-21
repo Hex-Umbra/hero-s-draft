@@ -149,15 +149,15 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
     switch (playerClass.passiveTrait) {
       case 'regenArmor':
         traitName = 'Régénération d\'Armure';
-        traitDesc = 'Gagne 2 d\'Armure à la fin du tour';
+        traitDesc = 'Gagne 2 points d\'Armure (+ Maîtrise) automatiquement à la fin de chaque tour.';
         break;
       case 'berserkerArmor':
         traitName = 'Armure du Berserker';
-        traitDesc = 'Gagne 1 d\'Armure par tranche de 10 PV manquants (au début du tour)';
+        traitDesc = 'Gagne 1 point d\'Armure (+ Maîtrise) au début du tour pour chaque tranche de 10 PV manquants.';
         break;
       case 'spellArmor':
         traitName = 'Armure Magique';
-        traitDesc = 'Gagne 1 d\'Armure en jouant une carte Compétence';
+        traitDesc = 'Gagne 1 point d\'Armure (+ Maîtrise) instantanément chaque fois que vous jouez une carte Compétence.';
         break;
     }
 
@@ -276,33 +276,47 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                             ),
                             const SizedBox(height: 15),
                             // Passive trait
-                            Tooltip(
-                              message: traitDesc,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: Colors.cyanAccent.withValues(alpha: 0.08),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: Colors.cyanAccent.withValues(alpha: 0.3),
-                                    width: 1.0,
-                                  ),
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.cyanAccent.withValues(alpha: 0.06),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: Colors.cyanAccent.withValues(alpha: 0.25),
+                                  width: 1.0,
                                 ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(Icons.shield, size: 16, color: Colors.cyanAccent),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      traitName,
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.cyanAccent,
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(Icons.shield, size: 16, color: Colors.cyanAccent),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        traitName.toUpperCase(),
+                                        style: const TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.cyanAccent,
+                                          letterSpacing: 0.8,
+                                        ),
                                       ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 5),
+                                  Text(
+                                    traitDesc,
+                                    style: TextStyle(
+                                      fontSize: 10.5,
+                                      color: Colors.cyanAccent.withValues(alpha: 0.85),
+                                      height: 1.3,
                                     ),
-                                  ],
-                                ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
                               ),
                             ),
                             const Divider(color: Colors.white12, height: 25),
