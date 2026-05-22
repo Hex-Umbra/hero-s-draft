@@ -200,7 +200,7 @@ class _EventScreenState extends ConsumerState<EventScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.remove_circle_outline, color: Colors.white54, size: 22),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           Text(
             'Aucun effet',
             style: TextStyle(
@@ -395,7 +395,7 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                               return Transform.scale(
                                 scale: value,
                                 child: Opacity(
-                                  opacity: value,
+                                  opacity: value.clamp(0.0, 1.0),
                                   child: child,
                                 ),
                               );

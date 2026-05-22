@@ -12,6 +12,7 @@ import 'deck_screen.dart';
 import '../../services/game_data_service.dart';
 import '../../models/card_instance.dart';
 import '../../models/data/card_data.dart';
+import '../../models/enemy_intent.dart';
 
 class GameScreen extends ConsumerStatefulWidget {
   const GameScreen({super.key});
@@ -616,6 +617,153 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
+                      ),
+                    ),
+                  ),
+
+                // Panneau des Intentions Ennemies (Bas Droite, au-dessus de la Défausse)
+                if (!runState.isDead && !_showDraft && _game.enemyCards.isNotEmpty)
+                  Positioned(
+                    bottom: 80,
+                    right: 20,
+                    child: Container(
+                      width: 200,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1E1E2C).withAlpha(240),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.amberAccent.withAlpha(100),
+                          width: 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withAlpha(150),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Row(
+                            children: [
+                              Icon(
+                                Icons.remove_red_eye_outlined,
+                                color: Colors.amberAccent,
+                                size: 14,
+                              ),
+                              SizedBox(width: 6),
+                              Text(
+                                "INTENTIONS ENNEMIES",
+                                style: TextStyle(
+                                  color: Colors.amberAccent,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1.2,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Divider(color: Colors.white12, height: 12),
+                          ..._game.enemyCards.map((enemy) {
+                            final intent = enemy.effectiveIntent;
+                            final name = enemy.data?.name ?? 'Ennemi';
+                            
+                            Widget intentWidget;
+                            if (intent == null) {
+                              intentWidget = const Text(
+                                "En attente...",
+                                style: TextStyle(
+                                  color: Colors.white30,
+                                  fontSize: 12,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              );
+                            } else {
+                              IconData icon;
+                              Color color;
+                              String label;
+
+                              switch (intent.type) {
+                                case IntentType.attack:
+                                  icon = Icons.flash_on;
+                                  color = const Color(0xFFFF5252);
+                                  label = 'Attaque : ${intent.value}';
+                                  break;
+                                case IntentType.defend:
+                                  icon = Icons.shield;
+                                  color = const Color(0xFF448AFF);
+                                  label = 'Défense : +${intent.value}';
+                                  break;
+                                case IntentType.buff:
+                                  icon = Icons.trending_up;
+                                  color = const Color(0xFFE040FB);
+                                  label = 'Buff Force : +${intent.value}';
+                                  break;
+                                case IntentType.debuffDeck:
+                                  icon = Icons.sick;
+                                  color = const Color(0xFF69F0AE);
+                                  label = 'Malédiction : ${intent.value}';
+                                  break;
+                              }
+
+                              intentWidget = Row(
+                                children: [
+                                  Icon(icon, color: color, size: 14),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    label,
+                                    style: TextStyle(
+                                      color: color,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }
+
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          name,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            color: enemy.isBoss ? Colors.amberAccent : Colors.white,
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '${enemy.stats.currentPv}/${enemy.stats.maxPv} PV',
+                                        style: const TextStyle(
+                                          color: Colors.white54,
+                                          fontSize: 11,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 2),
+                                  intentWidget,
+                                  if (enemy != _game.enemyCards.last)
+                                    const Divider(color: Colors.white10, height: 12),
+                                ],
+                              ),
+                            );
+                          }),
+                        ],
                       ),
                     ),
                   ),

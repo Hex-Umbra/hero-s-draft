@@ -87,9 +87,8 @@ class IntentionIndicator extends PositionComponent
 
   @override
   void renderTree(Canvas canvas) {
-    if (_intent != null) {
-      super.renderTree(canvas);
-    }
+    // Ne plus dessiner l'ancien rectangle par-dessus la carte en combat
+    // Tout est maintenant géré par le panneau HUD réactif en bas à droite
   }
 
   void _updateVisual() {

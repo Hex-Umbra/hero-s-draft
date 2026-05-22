@@ -71,4 +71,16 @@
         - Afin de donner un retour visuel clair et satisfaisant lors des rencontres d'événements, j'ai enrichi l'interface de `event_screen.dart`. Une fois qu'un choix d'événement est résolu, un nouvel en-tête « EFFETS APPLIQUÉS » apparaît sous la description du résultat, accompagné d'une série de badges colorés.
         - Chaque type d'action est représenté de manière distincte : l'or gagné/perdu (icône or ambre, avec fond vert pour gain ou rouge pour perte), les points de vie perdus/gagnés (icône cœur, fond rouge ou vert), l'augmentation de PV Max (icône d'ajout rose), la Force obtenue (icône d'éclair orange), et les reliques gagnées (icône d'étoile violette). Si un choix n'entraîne aucun effet (comme la prière), un badge neutre « Aucun effet » est affiché.
         - L'ensemble de ces badges apparaît grâce à une micro-animation d'échelle et d'opacité fluide (`TweenAnimationBuilder` sur 500ms avec une courbe `Curves.easeOutBack`) pour un effet haut de gamme très réactif.
+        - **Correction d'overshoot d'opacité** : Pour éviter toute exception Flutter liée à un dépassement d'opacité (`opacity >= 0.0 && opacity <= 1.0` non respecté dû à l'effet de rebond de `Curves.easeOutBack`), la valeur d'animation passée au widget `Opacity` a été sécurisée avec un `.clamp(0.0, 1.0)`.
+
+## Phase 46 - Refonte de l'affichage des intentions d'attaques ennemies
+
+- feat: Délocalisation des intentions ennemies vers un panneau HUD réactif et clair
+    - Retrait de l'indicateur rectangulaire intrusif au-dessus des ennemis et intégration d'un panneau d'intentions modernisé au-dessus de la défausse.
+        - Pour rendre le combat plus lisible et dégager l'arène, j'ai masqué l'ancien rendu de l'indicateur d'intention (`IntentionIndicator.renderTree` configuré pour ne plus rien tracer sur le canvas Flame).
+        - À la place, un panneau d'intentions dynamique et élégant a été intégré dans `game_screen.dart`, positionné idéalement à droite au-dessus de la défausse (`bottom: 80, right: 20`).
+        - Ce panneau récapitule tous les ennemis vivants avec leurs points de vie actuels, leur nom (coloré en doré s'il s'agit d'un Boss), ainsi que leur intention réactive et formatée avec des icônes et couleurs adaptées (Attaque en rouge vif, Défense en bleu, Buff Force en violet, Malédictions en vert printanier).
+        - L'import de `enemy_intent.dart` a été ajouté au sommet de `game_screen.dart` pour permettre la manipulation saine de l'enum `IntentType`.
+
+
 
