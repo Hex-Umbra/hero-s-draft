@@ -57,5 +57,9 @@
         - J'ai identifié la cause racine d'un bug persistant de persistance de la pioche : lorsqu'une partie se terminait par la mort du joueur et qu'une nouvelle run était lancée, le deck de cartes conservait les ajouts et fusions de la partie précédente car le fournisseur global `deckProvider` n'était pas réinitialisé.
         - Pour y remédier, j'ai introduit la méthode `clearDeck()` dans `DeckNotifier` pour réinitialiser le `DeckState`. Cette méthode est désormais systématiquement appelée au clic sur le bouton de sélection dans `class_selection_screen.dart`, juste avant de lancer la nouvelle partie via `startNewRun`. Cela garantit que la nouvelle run commence toujours avec le paquet de cartes de départ approprié et réinitialisé.
 
+## Phase 44 - Coloration dynamique des prix de la boutique (Bouton d'achat vert/rouge)
 
-
+- feat: Affichage dynamique en vert ou rouge du coût en or dans le shop
+    - Ajout du calcul de solvabilité (`canAfford`) et coloration translucide premium des boutons de prix.
+        - J'ai modifié `shop_screen.dart` afin d'intégrer un retour visuel direct et élégant sur la solvabilité du joueur dans le shop. Désormais, le montant nécessaire pour acheter un article (cartes en vente comme services de la boutique) s'affiche avec un fond vert premium (si le joueur a suffisamment d'or, ex. `Colors.green.shade900`) ou rouge premium (s'il n'a pas assez d'or, ex. `Colors.red.shade900`).
+        - Les effets de survol souris (`_isHovered`) ont également été adaptés pour illuminer harmonieusement la couleur correspondante (vert plus clair ou rouge plus clair), tout en préservant le style sombre translucide haut de gamme du HUD et le comportement de désactivation (bouton grisé pour les potions déjà achetées).

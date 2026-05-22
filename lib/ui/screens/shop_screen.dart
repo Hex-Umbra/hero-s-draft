@@ -437,12 +437,14 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                                     price = 100;
                                   }
 
+                                  final bool canAfford = runState.gold >= price;
                                   return _ShopCardItem(
                                     card: card,
                                     price: price,
                                     onPressed: () => _buyCard(card, price),
                                     rarityLabel: _getRarityLabel(card.rarity),
                                     targetLabel: _getTargetLabel(card.target),
+                                    canAfford: canAfford,
                                   );
                                 }).toList(),
                               ),
@@ -482,6 +484,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                               price: 15,
                               onPressed: () => _rerollCards(15),
                               buttonColor: Colors.teal.shade800,
+                              canAfford: runState.gold >= 15,
                             ),
                             _ShopServiceWidget(
                               icon: Icons.local_hospital,
@@ -493,6 +496,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                                   ? null
                                   : () => _buyHeal(healPrice, healAmount),
                               buttonColor: Colors.green.shade800,
+                              canAfford: runState.gold >= healPrice,
                             ),
                             _ShopServiceWidget(
                               icon: Icons.delete_forever,
@@ -502,6 +506,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                               price: 75,
                               onPressed: () => _showRemovalModal(75),
                               buttonColor: Colors.red.shade800,
+                              canAfford: runState.gold >= 75,
                             ),
                             _ShopServiceWidget(
                               icon: Icons.add_shopping_cart,
@@ -511,6 +516,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                               price: 100,
                               onPressed: () => _expandShop(100),
                               buttonColor: Colors.amber.shade800,
+                              canAfford: runState.gold >= 100,
                             ),
                             _ShopServiceWidget(
                               icon: Icons.content_copy,
@@ -520,6 +526,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                               price: 150,
                               onPressed: () => _showCloneModal(150),
                               buttonColor: Colors.blue.shade800,
+                              canAfford: runState.gold >= 150,
                             ),
                           ],
                         ),
@@ -563,6 +570,7 @@ class _ShopServiceWidget extends StatefulWidget {
   final int price;
   final VoidCallback? onPressed;
   final Color buttonColor;
+  final bool canAfford;
 
   const _ShopServiceWidget({
     required this.icon,
@@ -572,6 +580,7 @@ class _ShopServiceWidget extends StatefulWidget {
     required this.price,
     required this.onPressed,
     required this.buttonColor,
+    required this.canAfford,
   });
 
   @override
@@ -655,7 +664,11 @@ class _ShopServiceWidgetState extends State<_ShopServiceWidget> {
                     ),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: widget.onPressed == null ? Colors.grey : widget.buttonColor,
+                    backgroundColor: widget.onPressed == null
+                        ? Colors.grey
+                        : (widget.canAfford
+                            ? (_isHovered ? Colors.green.shade700 : Colors.green.shade900)
+                            : (_isHovered ? Colors.red.shade700 : Colors.red.shade900)),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                     minimumSize: const Size(double.infinity, 28),
@@ -679,6 +692,7 @@ class _ShopCardItem extends StatefulWidget {
   final VoidCallback onPressed;
   final String rarityLabel;
   final String targetLabel;
+  final bool canAfford;
 
   const _ShopCardItem({
     required this.card,
@@ -686,6 +700,7 @@ class _ShopCardItem extends StatefulWidget {
     required this.onPressed,
     required this.rarityLabel,
     required this.targetLabel,
+    required this.canAfford,
   });
 
   @override
@@ -740,7 +755,9 @@ class _ShopCardItemState extends State<_ShopCardItem> {
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _isHovered ? Colors.amber.shade900 : Colors.black45,
+                  backgroundColor: widget.canAfford
+                      ? (_isHovered ? Colors.green.shade700 : Colors.green.shade900)
+                      : (_isHovered ? Colors.red.shade700 : Colors.red.shade900),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
