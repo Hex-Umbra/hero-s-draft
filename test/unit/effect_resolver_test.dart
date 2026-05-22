@@ -146,5 +146,46 @@ void main() {
       // value = max(stats.effectiveAttaque, intent.value + bonus) = max(9, 12 + 1) = 13.
       expect(enemy.effectiveIntent?.value, 13);
     });
+
+    test('EnemyCard effectiveIntent scales attack proportionally for Elites with buffs', () {
+      // Simulate an elite enemy spawned with a multiplier of 2.25
+      // JSON baseDamage = 8. Spawns with stats.attaque = 18.
+      final eliteEnemy = EnemyCard(
+        stats: const EntityStats(
+          maxPv: 50,
+          currentPv: 50,
+          armure: 0,
+          attaque: 18,
+        ),
+        data: const EnemyData(
+          id: 'orc',
+          name: 'Orc Furieux',
+          maxHp: 50,
+          baseDamage: 8,
+          spritePath: '',
+        ),
+        onTapEnemy: (_) {},
+      );
+
+      // 1st action: Attack 8 in JSON should scale to 18
+      eliteEnemy.currentIntent = EnemyIntent(type: IntentType.attack, value: 8);
+      expect(eliteEnemy.effectiveIntent?.value, 18);
+
+      // 2nd action: Buff 2 in JSON is executed, stats.attaque is buffed to 20
+      eliteEnemy.stats = eliteEnemy.stats.copyWith(attaque: 20);
+      expect(eliteEnemy.stats.effectiveAttaque, 20);
+
+      // 3rd action: Attack 8 in JSON should now scale to 18 + 2 (inBattleBonus) = 20
+      eliteEnemy.currentIntent = EnemyIntent(type: IntentType.attack, value: 8);
+      expect(eliteEnemy.effectiveIntent?.value, 20);
+
+      // A stronger attack: Attack 10 in JSON should scale to 23 (10 * 2.25) + 2 (inBattleBonus) = 25
+      eliteEnemy.currentIntent = EnemyIntent(type: IntentType.attack, value: 10);
+      expect(eliteEnemy.effectiveIntent?.value, 25);
+
+      // An even stronger attack: Attack 12 in JSON should scale to 27 (12 * 2.25) + 2 (inBattleBonus) = 29
+      eliteEnemy.currentIntent = EnemyIntent(type: IntentType.attack, value: 12);
+      expect(eliteEnemy.effectiveIntent?.value, 29);
+    });
   });
 }

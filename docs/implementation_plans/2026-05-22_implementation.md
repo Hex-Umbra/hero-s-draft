@@ -7,3 +7,9 @@
 - feat: Animation de tremblement (shake) sur les cartes injouables faute de mana
     - Intégration dans onTapDown et onDragStart pour donner un retour visuel clair
         - J'ai ajouté un retour visuel immédiat et ergonomique sous forme de micro-animation de tremblement latéral (shake) lorsque le joueur essaie de jouer une carte qu'il ne peut pas s'offrir en mana (soit en cliquant dessus via `onTapDown` soit en initiant un drag via `onDragStart`). De plus, le mécanisme `_shakeAnimation` a été optimisé pour être totalement robuste contre les clics rapides répétés (réinitialisation et annulation des anciens effets en cours), garantissant que la carte retourne toujours à sa position idéale de main sans décalage cumulatif.
+
+## Phase 37 - Correction du calcul des intentions d'attaque des ennemis élites buffés
+
+- fix: Correction du calcul des dégâts d'intentions des élites/boss buffés
+    - Introduction d'une formule de mise à l'échelle proportionnelle de l'intention et de séparation du bonus dynamique en combat.
+        - Résolution du problème où les intentions d'attaque successives des ennemis élites ou boss (qui ont un modificateur de spawn initial) calculaient de façon erronée les dégâts de leurs attaques secondaires. Désormais, le modificateur de spawn (`_spawnMultiplier`) et l'attaque de départ (`_startingAttaque`) sont stockés à l'instanciation de `EnemyCard`. Les bonus de combat (comme les buffs plats d'attaque ou les statuts de Force) sont calculés de manière isolée (`inBattleBonus = stats.effectiveAttaque - _startingAttaque`) et ajoutés à l'intention préalablement mise à l'échelle proportionnelle : `max(stats.effectiveAttaque, scaledValue + inBattleBonus)`. Les tests unitaires ont été étendus et valident la correction.

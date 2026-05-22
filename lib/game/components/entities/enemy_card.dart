@@ -32,15 +32,18 @@ class EnemyCard extends PositionComponent
 
   EnemyIntent? currentIntent;
 
+  late final int _startingAttaque;
+  late final double _spawnMultiplier;
+
   EnemyIntent? get effectiveIntent {
     final intent = currentIntent;
     if (intent == null) return null;
     if (intent.type == IntentType.attack) {
-      final int baseDmg = data?.baseDamage ?? stats.effectiveAttaque;
-      final int bonus = stats.effectiveAttaque - baseDmg;
+      final int scaledValue = (intent.value * _spawnMultiplier).round();
+      final int inBattleBonus = stats.effectiveAttaque - _startingAttaque;
       return EnemyIntent(
         type: intent.type,
-        value: max(stats.effectiveAttaque, intent.value + bonus),
+        value: max(stats.effectiveAttaque, scaledValue + inBattleBonus),
       );
     }
     return intent;
@@ -54,7 +57,11 @@ class EnemyCard extends PositionComponent
     this.data,
     this.isBoss = false,
     required this.onTapEnemy,
-  }) : super(size: Vector2(100, 140));
+  }) : super(size: Vector2(100, 140)) {
+    _startingAttaque = stats.attaque;
+    final int baseDmg = data?.baseDamage ?? stats.attaque;
+    _spawnMultiplier = baseDmg > 0 ? stats.attaque / baseDmg : 1.0;
+  }
 
   @override
   Future<void> onLoad() async {
