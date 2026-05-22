@@ -209,7 +209,16 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     _game.syncState(runState);
     _game.syncDeck(deckState);
 
-    return Scaffold(
+    final currentNodeId = runState.currentNodeId;
+    bool isCompleted = false;
+    try {
+      final currentNode = runState.mapNodes.firstWhere((n) => n.id == currentNodeId);
+      isCompleted = currentNode.isCompleted;
+    } catch (_) {}
+
+    return PopScope(
+      canPop: isCompleted || runState.isDead,
+      child: Scaffold(
       body: Stack(
         children: [
           // Le jeu prend tout l'écran
@@ -601,7 +610,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           ),
         ],
       ),
-    );
+    ),);
   }
 
   void _showPauseMenu() {

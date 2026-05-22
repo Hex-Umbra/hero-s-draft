@@ -454,9 +454,16 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
 
     try {
       final currentNode = allNodes.firstWhere((n) => n.id == currentNodeId);
+      
+      // Si le nœud actuel n'est pas complété, on ne peut pas avancer.
+      // Seul le nœud actuel lui-même est actif afin de pouvoir y ré-entrer.
+      if (!currentNode.isCompleted) {
+        return node.id == currentNodeId;
+      }
+
       return currentNode.connections.contains(node.id);
     } catch (e) {
-      // Cas de repli si le noeud actuel n'est plus dans la liste (ex: changement d'acte mal synchronisÃ©)
+      // Cas de repli si le noeud actuel n'est plus dans la liste (ex: changement d'acte mal synchronisé)
       return node.id.startsWith('node_0_');
     }
   }
@@ -495,7 +502,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
       barrierLabel: 'NodeOverlay',
       barrierColor: Colors.black54,
       transitionDuration: const Duration(milliseconds: 300),
-      pageBuilder: (context, anim1, anim2) {
+      pageBuilder: (dialogContext, anim1, anim2) {
         Widget content;
         if (node.type == MapNodeType.shop) {
           content = const ShopScreen();
@@ -505,28 +512,42 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
           content = const EventScreen();
         }
 
-        return BackdropFilter(
-          filter: ui.ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-          child: Center(
-            child: Container(
-              width: MediaQuery.of(context).size.width * 0.9,
-              height: MediaQuery.of(context).size.height * 0.85,
-              clipBehavior: Clip.antiAlias,
-              decoration: BoxDecoration(
-                color: const Color(0xFF1E1E2C),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.white24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withAlpha(150),
-                    blurRadius: 30,
-                    spreadRadius: 10,
+        return Consumer(
+          builder: (context, ref, child) {
+            final runState = ref.watch(runProvider);
+            bool isCompleted = false;
+            try {
+              final activeNode = runState.mapNodes.firstWhere((n) => n.id == node.id);
+              isCompleted = activeNode.isCompleted;
+            } catch (_) {}
+
+            return PopScope(
+              canPop: isCompleted,
+              child: BackdropFilter(
+                filter: ui.ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                child: Center(
+                  child: Container(
+                    width: MediaQuery.of(context).size.width * 0.9,
+                    height: MediaQuery.of(context).size.height * 0.85,
+                    clipBehavior: Clip.antiAlias,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1E1E2C),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.white24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(150),
+                          blurRadius: 30,
+                          spreadRadius: 10,
+                        ),
+                      ],
+                    ),
+                    child: content,
                   ),
-                ],
+                ),
               ),
-              child: content,
-            ),
-          ),
+            );
+          },
         );
       },
       transitionBuilder: (context, anim1, anim2, child) {
