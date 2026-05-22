@@ -475,7 +475,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                 if (!runState.isDead && !_showDraft && _showManaWarning)
                   Positioned(
                     right: 20,
-                    top: MediaQuery.of(context).size.height / 2 - 130,
+                    top: MediaQuery.of(context).size.height / 2 - 85,
                     child: Container(
                       width: 200,
                       padding: const EdgeInsets.all(10),
@@ -494,73 +494,14 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                           ),
                         ],
                       ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Text(
-                            "Plus de mana.\nTerminer le tour ?",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              TextButton(
-                                style: TextButton.styleFrom(
-                                  padding: EdgeInsets.zero,
-                                  minimumSize: const Size(60, 30),
-                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _showManaWarning = false;
-                                  });
-                                },
-                                child: const Text(
-                                  'Non',
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.blueAccent,
-                                  foregroundColor: Colors.white,
-                                  elevation: 0,
-                                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                                  minimumSize: const Size(60, 30),
-                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _showManaWarning = false;
-                                  });
-                                  TraitSystem.onTurnEnd(ref.read(runProvider.notifier));
-                                  ref.read(deckProvider.notifier).discardHand();
-                                  _game.executeTurn();
-                                },
-                                child: const Text(
-                                  'Oui',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+                      child: const Text(
+                        "Plus de mana.\nTerminer le tour ?",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),

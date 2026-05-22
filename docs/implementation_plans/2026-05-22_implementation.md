@@ -38,9 +38,9 @@
 
 ## Phase 41 - Avertissement contextuel de fin de tour à 0 mana
 
-- feat: Demander au joueur s'il veut finir son tour lorsqu'il n'a plus de mana sans bloquer le jeu
-    - Interception de la transition du mana vers 0 et affichage d'un encadré contextuel élégant juste au-dessus du bouton de fin de tour.
-        - J'ai implémenté un système d'alerte non intrusif dans `game_screen.dart`. Lorsqu'un lancer de carte fait passer le mana du joueur à exactement 0, et après un délai de 600ms pour laisser les animations visuelles s'achever, un élégant encadré ("Plus de mana. Terminer le tour ?") apparaît directement au-dessus du bouton "Fin de Tour". Cet avertissement contextuel permet au joueur de terminer son tour immédiatement (bouton "Oui") ou de refuser (bouton "Non") pour jouer d'éventuelles cartes à coût 0. L'avertissement se désactive automatiquement dès que le joueur récupère du mana ou lorsque son tour prend fin.
+- feat: Signaler au joueur qu'il n'a plus de mana via une notification contextuelle non interactive
+    - Interception de la transition du mana vers 0 et affichage d'un encadré élégant et non intrusif juste au-dessus du bouton de fin de tour.
+        - J'ai implémenté un système d'alerte dans `game_screen.dart`. Lorsqu'un lancer de carte fait passer le mana du joueur à exactement 0, et après un délai de 600ms pour laisser les animations visuelles s'achever, un élégant encadré d'avertissement ("Plus de mana. Terminer le tour ?") apparaît directement au-dessus du bouton "Fin de Tour". Cette notification est purement informative et non interactive (sans boutons "Oui" / "Non"), incitant directement le joueur à utiliser le bouton "Fin de Tour" situé juste en dessous si aucune autre action (comme des cartes à coût 0) n'est possible. L'avertissement se désactive automatiquement dès que le joueur récupère du mana ou lorsque son tour prend fin.
 
 
 
