@@ -378,7 +378,7 @@ class CardComponent extends PositionComponent
 
   @override
   Future<void> onLoad() async {
-    scale = Vector2.all(game.scaleFactor * 0.75);
+    scale = Vector2.all(game.scaleFactor * 0.88);
     refreshVisuals();
   }
 
@@ -391,7 +391,7 @@ class CardComponent extends PositionComponent
     super.onGameResize(size);
 
     if (!isDragging && game.focusedCard != this) {
-      scale = Vector2.all(game.scaleFactor * 0.75);
+      scale = Vector2.all(game.scaleFactor * 0.88);
     }
   }
 
@@ -589,7 +589,7 @@ class CardComponent extends PositionComponent
     priority = 200;
 
     angle = 0;
-    scale = Vector2.all(game.scaleFactor * 0.75 * 1.25);
+    scale = Vector2.all(game.scaleFactor * 0.88 * 1.25);
     refreshVisuals();
   }
 
@@ -710,7 +710,7 @@ class CardComponent extends PositionComponent
     );
     add(
       ScaleEffect.to(
-        Vector2.all(game.scaleFactor * 0.75),
+        Vector2.all(game.scaleFactor * 0.88),
         EffectController(duration: 0.4, curve: Curves.elasticOut),
       ),
     );

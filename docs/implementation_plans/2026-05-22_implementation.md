@@ -128,4 +128,16 @@
     - Passage de la largeur du panneau à 250px (au lieu de 200px) et augmentation des espacements et tailles de polices des éléments internes.
         - Le panneau d'intentions a été agrandi visuellement pour offrir un meilleur repère ergonomique. Sa largeur est passée à `250px` avec des marges intérieures (`padding`) de `16px`. Les tailles des polices et icônes ont également été augmentées (titre à `12px` et icône à `16px`, labels d'intentions à `13px`, etc.) garantissant une lisibilité idéale pour les intentions et points de vie des monstres.
 
+## Phase 52 - Repositionnement général du terrain de combat et agrandissement des cartes en main
+
+- feat: Réajustement des positions des cartes d'ennemis et du héros vers le haut du terrain
+    - Remontée des cartes d'ennemis à 15% de la hauteur de l'écran (au lieu de 25%) et de la carte du héros à 48% (au lieu de 60%).
+        - Afin de libérer de l'espace vertical au bas du terrain de combat pour accueillir une main de cartes agrandie, les ennemis ont été remontés plus près du bord supérieur de l'écran en ramenant leur ordonnée `posY` de `0.25` à `0.15` dans `_repositionEnemies()`.
+        - De même, la carte du joueur (`HeroCard`) a été remontée vers le milieu de l'écran en modifiant sa coordonnée Y de `0.6` à `0.48` dans les méthodes `onGameResize()` et `_applyState()` de `HerosDraftGame`.
+- feat: Remontée et agrandissement significatif des cartes jouables en main
+    - Augmentation du facteur d'échelle des cartes en main de 0.75 à 0.88 et remontée de l'arc de cercle de la main de 15% à 23%.
+        - Pour améliorer le confort visuel lors de la sélection des cartes et rendre les illustrations et descriptions textuelles plus faciles à lire, la taille globale des cartes jouables a été agrandie en passant leur coefficient d'échelle de base de `0.75` à `0.88` dans `CardComponent` et `HerosDraftGame` (les effets de survol et de focus s'adaptent proportionnellement).
+        - De plus, pour accompagner cet agrandissement sans qu'elles ne sortent de l'écran par le bas, le centre de l'arc de cercle du deck de combat dans `_layoutHand()` a été ajusté de `size.y * 0.15` à `size.y * 0.23`, ce qui remonte agréablement la main de cartes sur l'axe vertical.
+
+
 

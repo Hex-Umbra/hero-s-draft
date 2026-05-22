@@ -89,7 +89,7 @@ class HerosDraftGame extends FlameGame
       if (!hoveredCard!.isDragging) {
         hoveredCard!.add(
           ScaleEffect.to(
-            Vector2.all(scaleFactor * 0.75),
+            Vector2.all(scaleFactor * 0.88),
             EffectController(duration: 0.1, curve: Curves.easeIn),
           ),
         );
@@ -107,7 +107,7 @@ class HerosDraftGame extends FlameGame
       if (!hoveredCard!.isDragging) {
         hoveredCard!.add(
           ScaleEffect.to(
-            Vector2.all(scaleFactor * 0.75 * 1.2),
+            Vector2.all(scaleFactor * 0.88 * 1.2),
             EffectController(duration: 0.1, curve: Curves.easeOut),
           ),
         );
@@ -134,7 +134,7 @@ class HerosDraftGame extends FlameGame
         );
         oldFocused.add(
           ScaleEffect.to(
-            Vector2.all(scaleFactor * 0.75),
+            Vector2.all(scaleFactor * 0.88),
             EffectController(duration: 0.15, curve: Curves.easeIn),
           ),
         );
@@ -161,7 +161,7 @@ class HerosDraftGame extends FlameGame
         focusedCard!.add(
           ScaleEffect.to(
             Vector2.all(
-              scaleFactor * 0.75 * 1.25,
+              scaleFactor * 0.88 * 1.25,
             ), // Légèrement plus grand que le hover
             EffectController(duration: 0.2, curve: Curves.easeOut),
           ),
@@ -283,7 +283,7 @@ class HerosDraftGame extends FlameGame
     super.onGameResize(size);
     // Recalculer le layout si le jeu est déjà initialisé
     if (heroCard != null) {
-      heroCard!.position = Vector2(size.x / 2, size.y * 0.6);
+      heroCard!.position = Vector2(size.x / 2, size.y * 0.48);
     }
     if (enemyCards.isNotEmpty) {
       _repositionEnemies();
@@ -394,11 +394,10 @@ class HerosDraftGame extends FlameGame
     final double totalAngle = (count - 1) * angleStep;
     final double startAngle = -totalAngle / 2;
 
-    // Le centre de l'arc de cercle est situé plus bas pour descendre les cartes
-    // On ajuste l'offset pour redescendre la main car les cartes sont plus petites
+    // Le centre de l'arc de cercle est ajusté pour remonter et agrandir la main
     final Vector2 centerPoint = Vector2(
       size.x / 2,
-      size.y + radius - (size.y * 0.15),
+      size.y + radius - (size.y * 0.23),
     );
 
     for (int i = 0; i < count; i++) {
@@ -458,7 +457,7 @@ class HerosDraftGame extends FlameGame
         bonusAttack: bonusAtt,
         imagePath: imagePath,
       );
-      heroCard!.position = Vector2(size.x / 2, size.y * 0.6);
+      heroCard!.position = Vector2(size.x / 2, size.y * 0.48);
       add(heroCard!);
     } else {
       heroCard!.updateStats(
@@ -532,7 +531,7 @@ class HerosDraftGame extends FlameGame
     spacing = spacing.clamp(120, 250); // Garder des limites raisonnables
 
     double startX = (size.x / 2) - ((enemyCards.length - 1) * (spacing / 2));
-    double posY = size.y * 0.25; // 25% du haut
+    double posY = size.y * 0.15; // 15% du haut (remonté pour libérer l'espace)
 
     for (int i = 0; i < enemyCards.length; i++) {
       enemyCards[i].position = Vector2(startX + (i * spacing), posY);
