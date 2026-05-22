@@ -63,3 +63,12 @@
     - Ajout du calcul de solvabilité (`canAfford`) et coloration translucide premium des boutons de prix.
         - J'ai modifié `shop_screen.dart` afin d'intégrer un retour visuel direct et élégant sur la solvabilité du joueur dans le shop. Désormais, le montant nécessaire pour acheter un article (cartes en vente comme services de la boutique) s'affiche avec un fond vert premium (si le joueur a suffisamment d'or, ex. `Colors.green.shade900`) ou rouge premium (s'il n'a pas assez d'or, ex. `Colors.red.shade900`).
         - Les effets de survol souris (`_isHovered`) ont également été adaptés pour illuminer harmonieusement la couleur correspondante (vert plus clair ou rouge plus clair), tout en préservant le style sombre translucide haut de gamme du HUD et le comportement de désactivation (bouton grisé pour les potions déjà achetées).
+
+## Phase 45 - Affichage clair des gains et pertes lors des événements
+
+- feat: Affichage explicite des gains et pertes de statistiques lors des choix d'événements
+    - Intégration de badges de conséquences animés et colorés décrivant les effets appliqués après chaque résolution.
+        - Afin de donner un retour visuel clair et satisfaisant lors des rencontres d'événements, j'ai enrichi l'interface de `event_screen.dart`. Une fois qu'un choix d'événement est résolu, un nouvel en-tête « EFFETS APPLIQUÉS » apparaît sous la description du résultat, accompagné d'une série de badges colorés.
+        - Chaque type d'action est représenté de manière distincte : l'or gagné/perdu (icône or ambre, avec fond vert pour gain ou rouge pour perte), les points de vie perdus/gagnés (icône cœur, fond rouge ou vert), l'augmentation de PV Max (icône d'ajout rose), la Force obtenue (icône d'éclair orange), et les reliques gagnées (icône d'étoile violette). Si un choix n'entraîne aucun effet (comme la prière), un badge neutre « Aucun effet » est affiché.
+        - L'ensemble de ces badges apparaît grâce à une micro-animation d'échelle et d'opacité fluide (`TweenAnimationBuilder` sur 500ms avec une courbe `Curves.easeOutBack`) pour un effet haut de gamme très réactif.
+

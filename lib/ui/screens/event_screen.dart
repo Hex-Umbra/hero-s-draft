@@ -82,6 +82,139 @@ class _EventScreenState extends ConsumerState<EventScreen> {
     Navigator.of(context).pop();
   }
 
+  Widget _buildActionBadge(EventAction action) {
+    IconData icon;
+    Color iconColor;
+    Color textColor;
+    Color bgColor;
+    String text;
+
+    switch (action.type) {
+      case 'gain_gold':
+        icon = Icons.monetization_on;
+        iconColor = Colors.amber;
+        textColor = Colors.greenAccent;
+        bgColor = Colors.green.withAlpha(30);
+        text = '+${action.value} Or';
+        break;
+      case 'spend_gold':
+        icon = Icons.monetization_on;
+        iconColor = Colors.amber;
+        textColor = Colors.redAccent;
+        bgColor = Colors.red.withAlpha(30);
+        text = '-${action.value} Or';
+        break;
+      case 'take_damage':
+        icon = Icons.favorite_border;
+        iconColor = Colors.redAccent;
+        textColor = Colors.redAccent;
+        bgColor = Colors.red.withAlpha(30);
+        text = '-${action.value} PV';
+        break;
+      case 'heal':
+        icon = Icons.favorite;
+        iconColor = Colors.greenAccent;
+        textColor = Colors.greenAccent;
+        bgColor = Colors.green.withAlpha(30);
+        text = '+${action.value} PV';
+        break;
+      case 'gain_max_hp':
+        icon = Icons.add_box;
+        iconColor = Colors.pinkAccent;
+        textColor = Colors.pinkAccent;
+        bgColor = Colors.pink.withAlpha(30);
+        text = '+${action.value} PV Max';
+        break;
+      case 'gain_strength':
+        icon = Icons.bolt;
+        iconColor = Colors.orangeAccent;
+        textColor = Colors.orangeAccent;
+        bgColor = Colors.orange.withAlpha(30);
+        text = '+${action.value} Force';
+        break;
+      case 'gain_relic':
+        icon = Icons.auto_awesome;
+        iconColor = Colors.purpleAccent;
+        textColor = Colors.purpleAccent;
+        bgColor = Colors.purple.withAlpha(30);
+        text = '+1 Relique';
+        break;
+      default:
+        icon = Icons.help_outline;
+        iconColor = Colors.white54;
+        textColor = Colors.white70;
+        bgColor = Colors.white.withAlpha(15);
+        text = '${action.type}: ${action.value}';
+    }
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: textColor.withAlpha(80),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: textColor.withAlpha(20),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: iconColor, size: 22),
+          const SizedBox(width: 10),
+          Text(
+            text,
+            style: TextStyle(
+              color: textColor,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNoEffectBadge() {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withAlpha(10),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.white24,
+          width: 1.5,
+        ),
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.remove_circle_outline, color: Colors.white54, size: 22),
+          const SizedBox(width: 10),
+          Text(
+            'Aucun effet',
+            style: TextStyle(
+              color: Colors.white70,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_event == null) {
@@ -217,6 +350,7 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                     child: Column(
                       children: [
                         Container(
+                          width: double.infinity,
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
                             color: Colors.white.withAlpha(5),
@@ -234,6 +368,50 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                             ),
                           ),
                         ),
+                        if (_isResolved) ...[
+                          const SizedBox(height: 25),
+                          const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.flash_on, color: Colors.blueAccent, size: 20),
+                              SizedBox(width: 8),
+                              Text(
+                                "EFFETS APPLIQUÉS",
+                                style: TextStyle(
+                                  color: Colors.blueAccent,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                  letterSpacing: 1.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          TweenAnimationBuilder<double>(
+                            tween: Tween<double>(begin: 0.0, end: 1.0),
+                            duration: const Duration(milliseconds: 500),
+                            curve: Curves.easeOutBack,
+                            builder: (context, value, child) {
+                              return Transform.scale(
+                                scale: value,
+                                child: Opacity(
+                                  opacity: value,
+                                  child: child,
+                                ),
+                              );
+                            },
+                            child: Wrap(
+                              alignment: WrapAlignment.center,
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: _selectedChoice!.actions.isEmpty
+                                  ? [_buildNoEffectBadge()]
+                                  : _selectedChoice!.actions
+                                      .map((action) => _buildActionBadge(action))
+                                      .toList(),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
