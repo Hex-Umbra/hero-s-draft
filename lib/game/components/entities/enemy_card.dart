@@ -68,8 +68,8 @@ class EnemyCard extends PositionComponent
   Future<void> onLoad() async {
     anchor = Anchor.center;
 
-    // Appliquer l'échelle initiale (Agrandie pour le terrain)
-    scale = Vector2.all(game.scaleFactor * 1.3);
+    // Appliquer l'échelle initiale (Agrandie pour le terrain et Boss proportionnel)
+    scale = Vector2.all(game.scaleFactor * 1.45 * (isBoss ? 1.25 : 1.0));
 
     String spriteName = data?.spritePath ?? 'enemy_goblin.png';
     if (spriteName.isEmpty) spriteName = 'enemy_goblin.png';
@@ -161,8 +161,8 @@ class EnemyCard extends PositionComponent
   @override
   void onGameResize(Vector2 size) {
     super.onGameResize(size);
-    // Mettre à jour l'échelle lors du redimensionnement (Agrandie pour le terrain)
-    scale = Vector2.all(game.scaleFactor * 1.3);
+    // Mettre à jour l'échelle lors du redimensionnement (Agrandie pour le terrain et Boss proportionnel)
+    scale = Vector2.all(game.scaleFactor * 1.45 * (isBoss ? 1.25 : 1.0));
   }
 
   void rollIntent() {

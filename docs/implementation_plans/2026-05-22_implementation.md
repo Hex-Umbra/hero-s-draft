@@ -150,6 +150,17 @@
         - Pour rendre le statut vital et les ressources en combat encore plus visibles et gratifiants, les icônes de cristaux de mana (`Icons.diamond`) ont été agrandies à `24px` dans `game_screen.dart`.
         - La barre de vie (`LinearProgressIndicator`) a vu son épaisseur augmentée à `26px` (avec un texte à `13sp`) et la hauteur totale du conteneur de HUD bas a été portée à `88px` (au lieu de 80px) pour préserver un espacement aéré et équilibré.
 
+## Phase 54 - Redescente des ennemis et agrandissement des sprites de monstres
+
+- feat: Descente des cartes d'ennemis à 21% de l'écran
+    - Modification du posY des ennemis à 21% de la hauteur (au lieu de 18%).
+        - Pour améliorer la mise en scène et la clarté visuelle de l'arène de combat, les cartes d'ennemis ont été descendues un peu plus bas en ajustant leur position à `size.y * 0.21` dans `_repositionEnemies()`.
+- feat: Agrandissement léger des sprites d'ennemis de 1.3 à 1.45
+    - Modification du facteur multiplicateur d'échelle des EnemyCard et gestion robuste de la taille de Boss lors des redimensionnements.
+        - Pour rendre les ennemis plus imposants et offrir un meilleur confort d'affichage de leurs superbes visuels PNG sans distorsion, j'ai augmenté leur échelle de base à `game.scaleFactor * 1.45` (au lieu de 1.3) dans les méthodes `onLoad()` et `onGameResize()` de `EnemyCard`.
+        - Cette formule a également été enrichie de la condition `(isBoss ? 1.25 : 1.0)` afin de préserver l'échelle supérieure de 1.25x pour les Boss lors du redimensionnement de l'application, résolvant durablement le risque de réinitialisation involontaire de leur taille.
+
+
 
 
 

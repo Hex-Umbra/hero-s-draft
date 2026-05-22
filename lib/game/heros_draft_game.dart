@@ -531,7 +531,7 @@ class HerosDraftGame extends FlameGame
     spacing = spacing.clamp(120, 250); // Garder des limites raisonnables
 
     double startX = (size.x / 2) - ((enemyCards.length - 1) * (spacing / 2));
-    double posY = size.y * 0.18; // 18% du haut (redescendu très légèrement)
+    double posY = size.y * 0.21; // 21% du haut (redescendu pour aérer)
 
     for (int i = 0; i < enemyCards.length; i++) {
       enemyCards[i].position = Vector2(startX + (i * spacing), posY);
