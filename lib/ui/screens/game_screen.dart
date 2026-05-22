@@ -30,6 +30,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   String? _tooltipDescription;
   bool _showTooltip = false;
   bool _showManaWarning = false;
+  int _turnCount = 1;
 
   @override
   void initState() {
@@ -95,6 +96,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       onTurnEnded: () {
         setState(() {
           _showManaWarning = false;
+          _turnCount++;
         });
         ref.read(runProvider.notifier).startTurn();
         ref.read(deckProvider.notifier).drawCards(5);
@@ -535,6 +537,42 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
                           ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                // Compteur de tour placé juste en dessous du bouton de Fin de Tour
+                if (!runState.isDead && !_showDraft)
+                  Positioned(
+                    right: 20,
+                    top: MediaQuery.of(context).size.height / 2 + 33,
+                    child: Container(
+                      width: 170,
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1E1E2C).withAlpha(200),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: Colors.white24,
+                          width: 1,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withAlpha(80),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        "Tour $_turnCount",
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
                         ),
                       ),
                     ),

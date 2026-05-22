@@ -43,5 +43,12 @@
         - J'ai implémenté un système d'alerte dans `game_screen.dart`. Lorsqu'un lancer de carte fait passer le mana du joueur à exactement 0, et après un délai de 600ms pour laisser les animations visuelles s'achever, un élégant encadré d'avertissement ("Plus de mana. Terminer le tour ?") apparaît directement au-dessus du bouton "Fin de Tour". Cette notification est purement informative et non interactive (sans boutons "Oui" / "Non"), incitant directement le joueur à utiliser le bouton "Fin de Tour" situé juste en dessous si aucune autre action (comme des cartes à coût 0) n'est possible.
         - **Alignement et dimensions** : Le conteneur d'avertissement et le bouton « Fin de Tour » ont tous deux été configurés avec une largeur identique fixe de `170` pixels, garantissant un alignement horizontal parfait sur le côté droit de l'écran. L'espacement vertical a également été finement ajusté pour offrir un rendu visuel harmonieux et unifié. L'avertissement se désactive automatiquement dès que le joueur récupère du mana ou lorsque son tour prend fin.
 
+## Phase 42 - Compteur de tour en combat
+
+- feat: Affichage d'un compteur de tour élégant juste sous le bouton de fin de tour
+    - Ajout d'une variable d'état `_turnCount` et affichage d'un widget conteneur centré et parfaitement aligné de 170px de large.
+        - J'ai introduit un compteur réactif de tours (`_turnCount` initialisé à 1) au sein de `_GameScreenState`. Ce compteur s'incrémente automatiquement à chaque transition de phase ramenant le tour au joueur (via le callback `onTurnEnded`).
+        - Un conteneur d'affichage reprenant le même thème sombre haut de gamme (`0xFF1E1E2C` à 200 d'opacité) et la même largeur de `170` pixels que les éléments supérieurs a été ajouté exactement 10 pixels en dessous du bouton « Fin de Tour » (`top: MediaQuery.of(context).size.height / 2 + 33`), offrant une excellente cohérence visuelle et un repère direct sur la progression temporelle du combat.
+
 
 

@@ -61,4 +61,4 @@
 - Ajouter un menu qui se lance dès que le joueur n'as plus de mana pour lui demander si il veux finir son tour 
 - ~~La quantité d'hp du joueur sera affiché dans la barre de vie~~
 - Rendre les intentions d'attaques des ennemis plus claires, par exemple plutot que d'avoir un rectangle par dessus la carte, faire afficher sur le coté bas droit, proche du widget de défausse ou juste au dessus, une notification claire de l'intention des ennemis (voire comment faire quand il y a plusieurs ennemis).
-- Afficher un compteur de tour juste en dessous du bouton de fin de tour
+- ~~Afficher un compteur de tour juste en dessous du bouton de fin de tour~~
