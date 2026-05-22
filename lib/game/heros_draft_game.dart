@@ -19,6 +19,7 @@ import 'controllers/run_controller.dart';
 import 'controllers/deck_controller.dart';
 import '../models/enemy_intent.dart';
 import '../models/map_node.dart';
+import '../models/status_effect.dart';
 import 'systems/encounter_system.dart';
 
 enum TurnPhase { player, enemy }
@@ -687,9 +688,17 @@ class HerosDraftGame extends FlameGame
           );
           break;
         case IntentType.buff:
-          // Buff simple : augmente l'attaque de base
+          // Buff simple : applique un statut Force permanent pour le combat (99 tours)
           enemy.updateStats(
-            enemy.stats.copyWith(attaque: enemy.stats.attaque + intent.value),
+            enemy.stats.addStatus(
+              StatusEffect(
+                id: 'strength',
+                name: 'Force',
+                type: StatusType.buff,
+                value: intent.value,
+                duration: 99,
+              ),
+            ),
           );
           break;
         case IntentType.debuffDeck:

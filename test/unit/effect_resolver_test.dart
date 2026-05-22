@@ -171,8 +171,16 @@ void main() {
       eliteEnemy.currentIntent = EnemyIntent(type: IntentType.attack, value: 8);
       expect(eliteEnemy.effectiveIntent?.value, 18);
 
-      // 2nd action: Buff 2 in JSON is executed, stats.attaque is buffed to 20
-      eliteEnemy.stats = eliteEnemy.stats.copyWith(attaque: 20);
+      // 2nd action: Buff 2 in JSON is executed, applying 2 Strength status
+      eliteEnemy.stats = eliteEnemy.stats.addStatus(
+        const StatusEffect(
+          id: 'strength',
+          name: 'Force',
+          type: StatusType.buff,
+          value: 2,
+          duration: 99,
+        ),
+      );
       expect(eliteEnemy.stats.effectiveAttaque, 20);
 
       // 3rd action: Attack 8 in JSON should now scale to 18 + 2 (inBattleBonus) = 20

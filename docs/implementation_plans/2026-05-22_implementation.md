@@ -19,3 +19,9 @@
 - fix: Suppression du bonus automatique d'armure de début de combat
     - Retrait de la relique de test dans GameScreen et nettoyage de l'import inutile
         - J'ai supprimé l'ajout automatique de la relique temporaire "Calendrier de Pierre" (qui offrait systématiquement +6 armure au début de chaque combat lorsque le deck de départ était vide lors d'un test). Cela corrige le comportement inattendu où les classes, notamment le Berserker, commençaient systématiquement le combat avec 6 d'armure au lieu de leur valeur par défaut de 0. J'ai également nettoyé l'import inutile de `relic_data.dart` et validé le code avec `flutter analyze` et `flutter test`.
+
+## Phase 39 - Refactoring des buffs ennemis via le système de Force (StatusEffect)
+
+- fix: Conversion du buff plat d'attaque en statut de Force permanent
+    - Remplacement de la mutation directe de stats.attaque par l'ajout du statut strength pour éviter les doubles calculs
+        - Résolution définitive du problème de calcul d'attaque sur les élites buffés (où une attaque après buff comptabilisait doublement l'effet). Les intentions de type `buff` appliquent désormais un `StatusEffect` de Force ('strength') de 99 tours (permanent pour le combat) au lieu de muter directement la variable `attaque` du modèle `EntityStats`. Les getters réactifs et l'indicateur d'intention tirent parti de ce statut de manière saine, et la couverture de test a été mise à jour et validée.
