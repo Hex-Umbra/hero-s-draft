@@ -13,3 +13,9 @@
 - fix: Correction du calcul des dégâts d'intentions des élites/boss buffés
     - Introduction d'une formule de mise à l'échelle proportionnelle de l'intention et de séparation du bonus dynamique en combat.
         - Résolution du problème où les intentions d'attaque successives des ennemis élites ou boss (qui ont un modificateur de spawn initial) calculaient de façon erronée les dégâts de leurs attaques secondaires. Désormais, le modificateur de spawn (`_spawnMultiplier`) et l'attaque de départ (`_startingAttaque`) sont stockés à l'instanciation de `EnemyCard`. Les bonus de combat (comme les buffs plats d'attaque ou les statuts de Force) sont calculés de manière isolée (`inBattleBonus = stats.effectiveAttaque - _startingAttaque`) et ajoutés à l'intention préalablement mise à l'échelle proportionnelle : `max(stats.effectiveAttaque, scaledValue + inBattleBonus)`. Les tests unitaires ont été étendus et valident la correction.
+
+## Phase 38 - Suppression de la relique de test temporaire
+
+- fix: Suppression du bonus automatique d'armure de début de combat
+    - Retrait de la relique de test dans GameScreen et nettoyage de l'import inutile
+        - J'ai supprimé l'ajout automatique de la relique temporaire "Calendrier de Pierre" (qui offrait systématiquement +6 armure au début de chaque combat lorsque le deck de départ était vide lors d'un test). Cela corrige le comportement inattendu où les classes, notamment le Berserker, commençaient systématiquement le combat avec 6 d'armure au lieu de leur valeur par défaut de 0. J'ai également nettoyé l'import inutile de `relic_data.dart` et validé le code avec `flutter analyze` et `flutter test`.

@@ -12,7 +12,6 @@ import 'deck_screen.dart';
 import '../../services/game_data_service.dart';
 import '../../models/card_instance.dart';
 import '../../models/data/card_data.dart';
-import '../../models/data/relic_data.dart';
 
 class GameScreen extends ConsumerStatefulWidget {
   const GameScreen({super.key});
@@ -61,19 +60,6 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           ),
         ];
 
-        // Ajout d'une relique de test
-        ref
-            .read(runProvider.notifier)
-            .addRelic(
-              const RelicData(
-                id: 'test_relic',
-                name: 'Calendrier de Pierre',
-                description: 'Au début du combat, gagne 6 Armure.',
-                trigger: RelicTrigger.startOfCombat,
-                effectType: 'gain_armor',
-                value: 6,
-              ),
-            );
 
         ref.read(deckProvider.notifier).initializeStarterDeck(starterCards);
       }
