@@ -537,6 +537,11 @@ class CardComponent extends PositionComponent
   void onTapDown(TapDownEvent event) {
     if (isPlayed) return;
     super.onTapDown(event);
+    if (!_canAfford) {
+      _shakeAnimation();
+      event.continuePropagation = false;
+      return;
+    }
     if (game.focusedCard == this) {
       game.setFocusedCard(null);
     } else {
@@ -714,6 +719,25 @@ class CardComponent extends PositionComponent
   }
 
   void _shakeAnimation() {
+    // Évite les décalages cumulés si l'animation est déclenchée à répétition rapidement
+    if (!isDragging) {
+      final basePos = _isSelected 
+          ? originalPosition + Vector2(0, -60)
+          : originalPosition;
+      position = basePos;
+    }
+
+    final existingShakes = children.whereType<SequenceEffect>().toList();
+    if (existingShakes.isNotEmpty) {
+      removeAll(existingShakes);
+      if (!isDragging) {
+        final basePos = _isSelected 
+            ? originalPosition + Vector2(0, -60)
+            : originalPosition;
+        position = basePos;
+      }
+    }
+
     add(
       SequenceEffect([
         MoveEffect.by(Vector2(5, 0), EffectController(duration: 0.05)),
