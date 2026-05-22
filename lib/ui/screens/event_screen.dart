@@ -88,6 +88,12 @@ class _EventScreenState extends ConsumerState<EventScreen> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
+    final runState = ref.watch(runProvider);
+    final heroStats = runState.heroStats;
+    final currentPv = heroStats.currentPv;
+    final maxPv = heroStats.maxPv;
+    final gold = runState.gold;
+
     return Scaffold(
       backgroundColor: const Color(0xFF0D0D1A),
       body: Container(
@@ -105,11 +111,96 @@ class _EventScreenState extends ConsumerState<EventScreen> {
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 40),
+            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 25),
             child: Column(
               children: [
-                const Icon(Icons.help_outline, color: Colors.blueAccent, size: 60),
+                // Barre de statistiques (PV & Or)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Badge des PV
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.redAccent.withAlpha(25),
+                        borderRadius: BorderRadius.circular(30),
+                        border: Border.all(
+                          color: Colors.redAccent.withAlpha(80),
+                          width: 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.redAccent.withAlpha(15),
+                            blurRadius: 10,
+                            spreadRadius: 1,
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.favorite,
+                            color: Colors.redAccent,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '$currentPv / $maxPv PV',
+                            style: const TextStyle(
+                              color: Colors.redAccent,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Badge de l'or
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.withAlpha(25),
+                        borderRadius: BorderRadius.circular(30),
+                        border: Border.all(
+                          color: Colors.amber.withAlpha(80),
+                          width: 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.amber.withAlpha(15),
+                            blurRadius: 10,
+                            spreadRadius: 1,
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.monetization_on,
+                            color: Colors.amber,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '$gold Or',
+                            style: const TextStyle(
+                              color: Colors.amber,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 20),
+                const Icon(Icons.help_outline, color: Colors.blueAccent, size: 60),
+                const SizedBox(height: 15),
                 Text(
                   _event!.title,
                   textAlign: TextAlign.center,
@@ -120,7 +211,7 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                     letterSpacing: 2,
                   ),
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 25),
                 Expanded(
                   child: SingleChildScrollView(
                     child: Column(

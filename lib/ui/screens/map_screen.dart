@@ -462,7 +462,9 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
   }
 
   void _onNodeTap(BuildContext context, WidgetRef ref, MapNode node) {
-    if (node.type == MapNodeType.shop || node.type == MapNodeType.rest) {
+    if (node.type == MapNodeType.shop ||
+        node.type == MapNodeType.rest ||
+        node.type == MapNodeType.event) {
       _showNodeOverlay(context, node);
     } else {
       ref.read(runProvider.notifier).travelToNode(node.id);
@@ -473,9 +475,6 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
         case MapNodeType.elite:
         case MapNodeType.boss:
           destination = const GameScreen();
-          break;
-        case MapNodeType.event:
-          destination = const EventScreen();
           break;
         default:
           destination = const GameScreen();
@@ -500,8 +499,10 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
         Widget content;
         if (node.type == MapNodeType.shop) {
           content = const ShopScreen();
-        } else {
+        } else if (node.type == MapNodeType.rest) {
           content = const RestScreen();
+        } else {
+          content = const EventScreen();
         }
 
         return BackdropFilter(
