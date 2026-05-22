@@ -133,11 +133,23 @@
 - feat: Réajustement des positions des cartes d'ennemis et du héros vers le haut du terrain
     - Remontée des cartes d'ennemis à 15% de la hauteur de l'écran (au lieu de 25%) et de la carte du héros à 48% (au lieu de 60%).
         - Afin de libérer de l'espace vertical au bas du terrain de combat pour accueillir une main de cartes agrandie, les ennemis ont été remontés plus près du bord supérieur de l'écran en ramenant leur ordonnée `posY` de `0.25` à `0.15` dans `_repositionEnemies()`.
-        - De même, la carte du joueur (`HeroCard`) a été remontée vers le milieu de l'écran en modifiant sa coordonnée Y de `0.6` à `0.48` dans les méthodes `onGameResize()` et `_applyState()` de `HerosDraftGame`.
+        - De même, la carte du joueur (`HeroCard`) a été remontée vers le milieu de l'écran en modifiant sa coordonnée Y de `0.6` à `0.48` dans les méthodes `onGameResize()` and `_applyState()` de `HerosDraftGame`.
 - feat: Remontée et agrandissement significatif des cartes jouables en main
     - Augmentation du facteur d'échelle des cartes en main de 0.75 à 0.88 et remontée de l'arc de cercle de la main de 15% à 23%.
         - Pour améliorer le confort visuel lors de la sélection des cartes et rendre les illustrations et descriptions textuelles plus faciles à lire, la taille globale des cartes jouables a été agrandie en passant leur coefficient d'échelle de base de `0.75` à `0.88` dans `CardComponent` et `HerosDraftGame` (les effets de survol et de focus s'adaptent proportionnellement).
         - De plus, pour accompagner cet agrandissement sans qu'elles ne sortent de l'écran par le bas, le centre de l'arc de cercle du deck de combat dans `_layoutHand()` a été ajusté de `size.y * 0.15` à `size.y * 0.23`, ce qui remonte agréablement la main de cartes sur l'axe vertical.
+
+## Phase 53 - Ajustement fin des positions de combat et agrandissement des indicateurs HUD (Vie et Mana)
+
+- feat: Redescente très légère des monstres et du joueur pour aérer le haut de l'écran
+    - Ajustement des ennemis à 18% (au lieu de 15%) et du héros à 51% (au lieu de 48%).
+        - Afin d'aérer le haut de l'écran tout en préservant le confort d'affichage des intentions et des badges, l'ordonnée Y des ennemis dans `_repositionEnemies()` a été ajustée de `0.15` à `0.18`.
+        - De même, le héros a été repositionné très légèrement plus bas en modifiant son coefficient Y de `0.48` à `0.51` dans `onGameResize()` et `_applyState()` de `HerosDraftGame`.
+- feat: Agrandissement de la barre de vie et des icônes de cristaux de mana dans le HUD
+    - Augmentation de la hauteur de la barre de vie à 26px (au lieu de 22px) et de la taille des gemmes de mana à 24px (au lieu de 20px).
+        - Pour rendre le statut vital et les ressources en combat encore plus visibles et gratifiants, les icônes de cristaux de mana (`Icons.diamond`) ont été agrandies à `24px` dans `game_screen.dart`.
+        - La barre de vie (`LinearProgressIndicator`) a vu son épaisseur augmentée à `26px` (avec un texte à `13sp`) et la hauteur totale du conteneur de HUD bas a été portée à `88px` (au lieu de 80px) pour préserver un espacement aéré et équilibré.
+
 
 
 

@@ -283,7 +283,7 @@ class HerosDraftGame extends FlameGame
     super.onGameResize(size);
     // Recalculer le layout si le jeu est déjà initialisé
     if (heroCard != null) {
-      heroCard!.position = Vector2(size.x / 2, size.y * 0.48);
+      heroCard!.position = Vector2(size.x / 2, size.y * 0.51);
     }
     if (enemyCards.isNotEmpty) {
       _repositionEnemies();
@@ -457,7 +457,7 @@ class HerosDraftGame extends FlameGame
         bonusAttack: bonusAtt,
         imagePath: imagePath,
       );
-      heroCard!.position = Vector2(size.x / 2, size.y * 0.48);
+      heroCard!.position = Vector2(size.x / 2, size.y * 0.51);
       add(heroCard!);
     } else {
       heroCard!.updateStats(
@@ -531,7 +531,7 @@ class HerosDraftGame extends FlameGame
     spacing = spacing.clamp(120, 250); // Garder des limites raisonnables
 
     double startX = (size.x / 2) - ((enemyCards.length - 1) * (spacing / 2));
-    double posY = size.y * 0.15; // 15% du haut (remonté pour libérer l'espace)
+    double posY = size.y * 0.18; // 18% du haut (redescendu très légèrement)
 
     for (int i = 0; i < enemyCards.length; i++) {
       enemyCards[i].position = Vector2(startX + (i * spacing), posY);

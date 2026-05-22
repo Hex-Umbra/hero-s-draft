@@ -397,7 +397,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                     left: 0,
                     right: 0,
                     child: SizedBox(
-                      height: 80,
+                      height: 88,
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
@@ -422,7 +422,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                                         color: isActive
                                             ? Colors.cyanAccent
                                             : Colors.white24,
-                                        size: 20,
+                                        size: 24,
                                         shadows: isActive
                                             ? [
                                                 const Shadow(
@@ -446,7 +446,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                                             ? runState.heroStats.currentPv /
                                                   runState.heroStats.maxPv
                                             : 0,
-                                        minHeight: 22,
+                                        minHeight: 26,
                                         backgroundColor: Colors.black54,
                                         valueColor:
                                             const AlwaysStoppedAnimation<Color>(
@@ -458,7 +458,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                                         style: const TextStyle(
                                           color: Colors.white,
                                           fontWeight: FontWeight.bold,
-                                          fontSize: 12,
+                                          fontSize: 13,
                                           shadows: [
                                             Shadow(
                                               color: Colors.black54,
