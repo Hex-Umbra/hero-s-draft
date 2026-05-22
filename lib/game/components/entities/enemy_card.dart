@@ -76,9 +76,33 @@ class EnemyCard extends PositionComponent
     // Chargement asynchrone robuste (lit le cache si déjà chargé, ou charge depuis les assets sinon)
     final image = await game.images.load(spriteName);
 
+    // Préserver le ratio d'aspect original de l'image (type BoxFit.contain)
+    final double imgWidth = image.width.toDouble();
+    final double imgHeight = image.height.toDouble();
+    final double imgRatio = imgWidth / imgHeight;
+    final double cardRatio = size.x / size.y; // Ratio de la carte (100 / 140 = 0.714)
+
+    Vector2 spriteSize;
+    Vector2 spritePosition;
+
+    if (imgRatio > cardRatio) {
+      // L'image est plus large/carrée que le ratio de la carte (ex. le slime 320x320) -> Ajuster sur la largeur
+      final double width = size.x;
+      final double height = size.x / imgRatio;
+      spriteSize = Vector2(width, height);
+      spritePosition = Vector2(0, (size.y - height) / 2); // Centrer verticalement
+    } else {
+      // L'image est plus élancée/haute que le ratio de la carte -> Ajuster sur la hauteur
+      final double height = size.y;
+      final double width = size.y * imgRatio;
+      spriteSize = Vector2(width, height);
+      spritePosition = Vector2((size.x - width) / 2, 0); // Centrer horizontalement
+    }
+
     sprite = SpriteComponent(
       sprite: Sprite(image),
-      size: size,
+      size: spriteSize,
+      position: spritePosition,
     );
     add(sprite);
 

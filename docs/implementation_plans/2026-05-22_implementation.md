@@ -94,3 +94,12 @@
         - Afin de supprimer toute nécessité d'ajouter manuellement chaque nouvelle image d'ennemi ou de héros dans le code Dart, j'ai transformé la routine d'initialisation de `onLoad` dans `heros_draft_game.dart`.
         - Le jeu va désormais lire de manière asynchrone `enemies.json` (pour récupérer chaque champ `spritePath`) et `heroes.json` (pour récupérer chaque champ `iconPath`). Toutes ces images sont collectées, dédoublonnées via un `Set` et préchargées automatiquement via `images.loadAll`.
         - Un garde-fou robuste avec try-catch garantit un fallback élégant sur une liste par défaut si un environnement de test ne dispose pas de ces fichiers JSON mockés, prévenant toute régression de la suite d'intégration.
+
+## Phase 48 - Préservation automatique du ratio d'aspect des images d'ennemis (BoxFit.contain)
+
+- feat: Rendu proportionnel des sprites d'ennemis pour éviter toute distorsion visuelle
+    - Remplacement du dimensionnement forcé par un calcul dynamique respectant le ratio original des PNG (intégration d'une logique de type BoxFit.contain).
+        - Lorsque des images d'aspect ratio différent (comme le nouveau Slime, qui est un carré parfait de 320x320) sont intégrées dans le cadre rectangulaire standard des cartes d'ennemis (100x140), le moteur Flame étirait auparavant le sprite par défaut pour occuper tout l'espace, provoquant un écrasement horizontal disgracieux.
+        - Pour y remédier, j'ai implémenté un système de dimensionnement proportionnel automatique dans `EnemyCard.onLoad`. L'image est analysée pour en extraire son ratio intrinsèque (`width / height`).
+        - Si l'image est plus large ou carrée que le ratio de la carte, le sprite s'ajuste sur la largeur et se centre verticalement. Si elle est plus haute, elle s'ajuste sur la hauteur et se centre horizontalement.
+        - Cela permet de supporter nativement et sans aucune déformation les images carrées transparentes faites à la main ou tout autre format alternatif, garantissant un rendu impeccable pour chaque asset de remplacement.
