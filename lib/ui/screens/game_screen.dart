@@ -29,6 +29,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   String? _tooltipTitle;
   String? _tooltipDescription;
   bool _showTooltip = false;
+  bool _showManaWarning = false;
 
   @override
   void initState() {
@@ -92,6 +93,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         // Logique retirée car la carte "Blessure" de test a été supprimée
       },
       onTurnEnded: () {
+        setState(() {
+          _showManaWarning = false;
+        });
         ref.read(runProvider.notifier).startTurn();
         ref.read(deckProvider.notifier).drawCards(5);
       },
@@ -163,15 +167,23 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           if (_game.enemyCards.isEmpty) {
             _game.onEnemiesDead();
             _game.currentPhase = TurnPhase.player;
-          } else if (previousMana > 0 && runController.currentState.heroStats.currentMana == 0) {
-            // Demander s'il veut finir son tour après un court délai (pour laisser les animations se faire)
-            Future.delayed(const Duration(milliseconds: 600), () {
-              if (mounted &&
-                  _game.enemyCards.isNotEmpty &&
-                  ref.read(runProvider).heroStats.currentMana == 0) {
-                _showEndTurnConfirmationDialog();
-              }
-            });
+          } else {
+            if (runController.currentState.heroStats.currentMana > 0) {
+              setState(() {
+                _showManaWarning = false;
+              });
+            } else if (previousMana > 0 && runController.currentState.heroStats.currentMana == 0) {
+              // Demander s'il veut finir son tour après un court délai (pour laisser les animations se faire)
+              Future.delayed(const Duration(milliseconds: 600), () {
+                if (mounted &&
+                    _game.enemyCards.isNotEmpty &&
+                    ref.read(runProvider).heroStats.currentMana == 0) {
+                  setState(() {
+                    _showManaWarning = true;
+                  });
+                }
+              });
+            }
           }
         }
 
@@ -459,6 +471,100 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                     ),
                   ),
 
+                // Avertissement "Plus de mana" placé au-dessus du bouton de Fin de Tour
+                if (!runState.isDead && !_showDraft && _showManaWarning)
+                  Positioned(
+                    right: 20,
+                    top: MediaQuery.of(context).size.height / 2 - 130,
+                    child: Container(
+                      width: 200,
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1E1E2C).withAlpha(245),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.cyanAccent.withAlpha(200),
+                          width: 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withAlpha(150),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            "Plus de mana.\nTerminer le tour ?",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              TextButton(
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.zero,
+                                  minimumSize: const Size(60, 30),
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _showManaWarning = false;
+                                  });
+                                },
+                                child: const Text(
+                                  'Non',
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blueAccent,
+                                  foregroundColor: Colors.white,
+                                  elevation: 0,
+                                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                                  minimumSize: const Size(60, 30),
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _showManaWarning = false;
+                                  });
+                                  TraitSystem.onTurnEnd(ref.read(runProvider.notifier));
+                                  ref.read(deckProvider.notifier).discardHand();
+                                  _game.executeTurn();
+                                },
+                                child: const Text(
+                                  'Oui',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
                 // Bouton Fin de Tour (Milieu Droite)
                 if (!runState.isDead && !_showDraft)
                   Positioned(
@@ -473,6 +579,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                         ),
                       ),
                       onPressed: () {
+                        setState(() {
+                          _showManaWarning = false;
+                        });
                         TraitSystem.onTurnEnd(ref.read(runProvider.notifier));
                         ref.read(deckProvider.notifier).discardHand();
                         _game.executeTurn();
@@ -673,78 +782,5 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       // Reprend le moteur de jeu peu importe comment on quitte le menu
       _game.resumeEngine();
     });
-  }
-
-  void _showEndTurnConfirmationDialog() {
-    if (!mounted) return;
-    
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF1E1E2C),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: Colors.cyanAccent, width: 2),
-          ),
-          title: const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.flash_off, color: Colors.cyanAccent, size: 28),
-              SizedBox(width: 8),
-              Text(
-                'PLUS DE MANA',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 2,
-                ),
-              ),
-            ],
-          ),
-          content: const Text(
-            'Vous n\'avez plus de points de mana. Voulez-vous terminer votre tour ?',
-            style: TextStyle(color: Colors.white70, fontSize: 16),
-            textAlign: TextAlign.center,
-          ),
-          actionsAlignment: MainAxisAlignment.spaceEvenly,
-          actions: [
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.grey[800],
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Non', style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueAccent,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              onPressed: () {
-                Navigator.of(context).pop();
-                // Finir le tour
-                TraitSystem.onTurnEnd(ref.read(runProvider.notifier));
-                ref.read(deckProvider.notifier).discardHand();
-                _game.executeTurn();
-              },
-              child: const Text('Oui', style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
-          ],
-        );
-      },
-    );
   }
 }

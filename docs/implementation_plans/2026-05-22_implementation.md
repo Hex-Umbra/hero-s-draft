@@ -36,11 +36,11 @@
     - Intégration d'un Stack contenant le LinearProgressIndicator et le Text pour un rendu plus compact et lisible
         - J'ai modifié l'implémentation du HUD de combat dans `game_screen.dart`. Auparavant, les PV textuels ('currentPv / maxPv PV') étaient affichés au-dessus de la barre de vie. Désormais, ils sont intégrés et centrés directement au sein de celle-ci grâce à un widget `Stack`. Cela offre un rendu visuel plus moderne et compact, tout en garantissant une lisibilité optimale grâce à des ombres textuelles.
 
-## Phase 41 - Invite de fin de tour automatique à 0 mana
+## Phase 41 - Avertissement contextuel de fin de tour à 0 mana
 
-- feat: Demander au joueur s'il veut finir son tour lorsqu'il n'a plus de mana
-    - Interception de la transition du mana vers 0 à la suite d'un lancer de carte, et déclenchement d'un dialogue de confirmation esthétique.
-        - J'ai ajouté un mécanisme de détection de transition du mana dans `onPlayCard` au sein de `game_screen.dart`. Si la valeur de mana du joueur passe d'une valeur supérieure à zéro à exactement zéro à la suite du jeu d'une carte, et qu'il reste des ennemis en vie, une boîte de dialogue stylisée et thématisée s'affiche après un délai de 600ms (laissant ainsi les animations visuelles se dérouler). Ce dialogue de confirmation ("Plus de Mana") permet au joueur de terminer son tour immédiatement en un clic ou de refuser s'il possède des cartes à coût 0 ou souhaite examiner le plateau.
+- feat: Demander au joueur s'il veut finir son tour lorsqu'il n'a plus de mana sans bloquer le jeu
+    - Interception de la transition du mana vers 0 et affichage d'un encadré contextuel élégant juste au-dessus du bouton de fin de tour.
+        - J'ai implémenté un système d'alerte non intrusif dans `game_screen.dart`. Lorsqu'un lancer de carte fait passer le mana du joueur à exactement 0, et après un délai de 600ms pour laisser les animations visuelles s'achever, un élégant encadré ("Plus de mana. Terminer le tour ?") apparaît directement au-dessus du bouton "Fin de Tour". Cet avertissement contextuel permet au joueur de terminer son tour immédiatement (bouton "Oui") ou de refuser (bouton "Non") pour jouer d'éventuelles cartes à coût 0. L'avertissement se désactive automatiquement dès que le joueur récupère du mana ou lorsque son tour prend fin.
 
 
 
