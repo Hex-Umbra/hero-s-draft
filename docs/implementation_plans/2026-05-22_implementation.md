@@ -118,3 +118,14 @@
         - Pour améliorer la finesse visuelle du menu de sélection de classe, j'ai réduit l'angle du tilt effect lorsque la souris survole la carte de classe en diminuant le coefficient multiplicateur à `0.05` (au lieu de `0.15`), limitant ainsi l'inclinaison maximale à environ 0.025 radians pour un effet beaucoup plus subtil et haut de gamme.
         - De plus, j'ai ajouté un effet de halo lumineux interactif et très léger qui suit précisément la position du curseur sur la carte. Cela a été accompli en stockant la coordonnée locale du pointeur (`_mousePosition`) lors de l'événement de déplacement, puis en l'utilisant au sein d'un widget `Stack` interne pour projeter un conteneur d'effet (`IgnorePointer`) décoré d'un `RadialGradient` centré de façon dynamique sur le curseur. L'opacité douce et la couleur adaptée à chaque classe offrent un rendu visuel premium et extrêmement réactif.
 
+## Phase 51 - Affichage immédiat des intentions ennemies et agrandissement du panneau HUD
+
+- fix: Résolution de l'affichage différé des intentions ennemies au début des combats
+    - Initialisation synchrone de l'intention dans le constructeur de `EnemyCard` au lieu de `onLoad` asynchrone, et ajout d'un callback `onEnemiesSpawned` pour notifier Flutter de forcer le rebuild de l'interface.
+        - Pour éliminer le comportement inesthétique où les intentions ennemies étaient masquées en début de combat (et ne s'affichaient qu'après l'interaction avec une carte), j'ai déplacé le premier appel de `_determineNextIntent()` du chargement d'image asynchrone `onLoad` directement dans le constructeur synchrone de `EnemyCard`. Ainsi, l'intention est calculée dès la naissance du composant.
+        - D'autre part, j'ai introduit le callback `onEnemiesSpawned` dans `HerosDraftGame`. Il est automatiquement déclenché à la fin de `_spawnEnemies` (durant la frame initiale d'update). Le widget `GameScreen` y souscrit et appelle instantanément un `setState` pour synchroniser le HUD Flutter avec les intentions prêtes de Flame.
+- feat: Agrandissement du panneau d'intentions ennemies pour une meilleure lisibilité
+    - Passage de la largeur du panneau à 250px (au lieu de 200px) et augmentation des espacements et tailles de polices des éléments internes.
+        - Le panneau d'intentions a été agrandi visuellement pour offrir un meilleur repère ergonomique. Sa largeur est passée à `250px` avec des marges intérieures (`padding`) de `16px`. Les tailles des polices et icônes ont également été augmentées (titre à `12px` et icône à `16px`, labels d'intentions à `13px`, etc.) garantissant une lisibilité idéale pour les intentions et points de vie des monstres.
+
+

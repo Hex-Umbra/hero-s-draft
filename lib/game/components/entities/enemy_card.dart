@@ -61,6 +61,7 @@ class EnemyCard extends PositionComponent
     _startingAttaque = stats.attaque;
     final int baseDmg = data?.baseDamage ?? stats.attaque;
     _spawnMultiplier = baseDmg > 0 ? stats.attaque / baseDmg : 1.0;
+    _determineNextIntent();
   }
 
   @override
@@ -123,8 +124,6 @@ class EnemyCard extends PositionComponent
     );
     hpBadge.position = Vector2(size.x / 2, size.y); // Centré en bas
     add(hpBadge);
-
-    _determineNextIntent();
 
     intentionIndicator = IntentionIndicator(initialIntent: effectiveIntent);
     intentionIndicator.position = Vector2(

@@ -192,6 +192,11 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
         return success;
       },
+      onEnemiesSpawned: () {
+        if (mounted) {
+          setState(() {});
+        }
+      },
     );
   }
 
@@ -627,8 +632,8 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                     bottom: 80,
                     right: 20,
                     child: Container(
-                      width: 200,
-                      padding: const EdgeInsets.all(12),
+                      width: 250,
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: const Color(0xFF1E1E2C).withAlpha(240),
                         borderRadius: BorderRadius.circular(12),
@@ -653,14 +658,14 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                               Icon(
                                 Icons.remove_red_eye_outlined,
                                 color: Colors.amberAccent,
-                                size: 14,
+                                size: 16,
                               ),
                               SizedBox(width: 6),
                               Text(
                                 "INTENTIONS ENNEMIES",
                                 style: TextStyle(
                                   color: Colors.amberAccent,
-                                  fontSize: 10,
+                                  fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 1.2,
                                 ),
@@ -678,7 +683,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                                 "En attente...",
                                 style: TextStyle(
                                   color: Colors.white30,
-                                  fontSize: 12,
+                                  fontSize: 13,
                                   fontStyle: FontStyle.italic,
                                 ),
                               );
@@ -712,13 +717,13 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
                               intentWidget = Row(
                                 children: [
-                                  Icon(icon, color: color, size: 14),
+                                  Icon(icon, color: color, size: 16),
                                   const SizedBox(width: 6),
                                   Text(
                                     label,
                                     style: TextStyle(
                                       color: color,
-                                      fontSize: 12,
+                                      fontSize: 13,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -740,7 +745,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                                           overflow: TextOverflow.ellipsis,
                                           style: TextStyle(
                                             color: enemy.isBoss ? Colors.amberAccent : Colors.white,
-                                            fontSize: 13,
+                                            fontSize: 14,
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
@@ -750,7 +755,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                                         '${enemy.stats.currentPv}/${enemy.stats.maxPv} PV',
                                         style: const TextStyle(
                                           color: Colors.white54,
-                                          fontSize: 11,
+                                          fontSize: 12,
                                         ),
                                       ),
                                     ],

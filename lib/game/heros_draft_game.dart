@@ -61,6 +61,7 @@ class HerosDraftGame extends FlameGame
   final void Function(String title, String description) onShowTooltip;
   final void Function() onHideTooltip;
   final bool Function(CardInstance, EnemyCard?) onPlayCard;
+  final VoidCallback? onEnemiesSpawned;
 
   HerosDraftGame({
     required this.onPlayerTakeDamage,
@@ -73,6 +74,7 @@ class HerosDraftGame extends FlameGame
     required this.onShowTooltip,
     required this.onHideTooltip,
     required this.onPlayCard,
+    this.onEnemiesSpawned,
   });
 
   void setHoveredCard(CardComponent? card) {
@@ -519,6 +521,7 @@ class HerosDraftGame extends FlameGame
       add(enemy);
     }
     _repositionEnemies();
+    onEnemiesSpawned?.call();
   }
 
   void _repositionEnemies() {
