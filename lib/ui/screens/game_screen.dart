@@ -477,7 +477,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                     right: 20,
                     top: MediaQuery.of(context).size.height / 2 - 85,
                     child: Container(
-                      width: 200,
+                      width: 170,
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
                         color: const Color(0xFF1E1E2C).withAlpha(245),
@@ -511,28 +511,30 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                   Positioned(
                     right: 20,
                     top: MediaQuery.of(context).size.height / 2 - 25,
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blueAccent,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 12,
+                    child: SizedBox(
+                      width: 170,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blueAccent,
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 12,
+                          ),
                         ),
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _showManaWarning = false;
-                        });
-                        TraitSystem.onTurnEnd(ref.read(runProvider.notifier));
-                        ref.read(deckProvider.notifier).discardHand();
-                        _game.executeTurn();
-                      },
-                      icon: const Icon(Icons.check, color: Colors.white),
-                      label: const Text(
-                        'Fin de Tour',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
+                        onPressed: () {
+                          setState(() {
+                            _showManaWarning = false;
+                          });
+                          TraitSystem.onTurnEnd(ref.read(runProvider.notifier));
+                          ref.read(deckProvider.notifier).discardHand();
+                          _game.executeTurn();
+                        },
+                        icon: const Icon(Icons.check, color: Colors.white),
+                        label: const Text(
+                          'Fin de Tour',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
