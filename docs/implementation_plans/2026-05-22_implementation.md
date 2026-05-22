@@ -30,3 +30,10 @@
     - Remplacement de stats.attaque par data?.baseDamage ?? _startingAttaque lors du roll d'intentions aléatoires
         - Correction d'un bug identifié où, si l'ennemi n'avait pas d'intentions définies dans son fichier JSON de données (fallback aléatoire), la génération de l'intention d'attaque utilisait stats.attaque (déjà mise à l'échelle) au lieu de sa valeur brute de base. Cela entraînait une double multiplication de l'échelle par _spawnMultiplier dans le getter réactif effectiveIntent. Le correctif garantit que la génération aléatoire s'appuie désormais sur la valeur non mise à l'échelle.
 
+## Phase 40 - Affichage des PV dans la barre de vie
+
+- feat: Affichage de la quantité de PV directement dans la barre de vie du joueur
+    - Intégration d'un Stack contenant le LinearProgressIndicator et le Text pour un rendu plus compact et lisible
+        - J'ai modifié l'implémentation du HUD de combat dans `game_screen.dart`. Auparavant, les PV textuels ('currentPv / maxPv PV') étaient affichés au-dessus de la barre de vie. Désormais, ils sont intégrés et centrés directement au sein de celle-ci grâce à un widget `Stack`. Cela offre un rendu visuel plus moderne et compact, tout en garantissant une lisibilité optimale grâce à des ombres textuelles.
+
+

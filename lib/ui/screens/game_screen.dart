@@ -406,28 +406,39 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                                   }),
                                 ),
                                 const SizedBox(height: 4),
-                                Text(
-                                  '${runState.heroStats.currentPv} / ${runState.heroStats.maxPv} PV',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(12),
-                                  child: LinearProgressIndicator(
-                                    value: (runState.heroStats.maxPv > 0)
-                                        ? runState.heroStats.currentPv /
-                                              runState.heroStats.maxPv
-                                        : 0,
-                                    minHeight: 22,
-                                    backgroundColor: Colors.black54,
-                                    valueColor:
-                                        const AlwaysStoppedAnimation<Color>(
-                                      Color(0xFF27AE60),
-                                    ),
+                                  child: Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      LinearProgressIndicator(
+                                        value: (runState.heroStats.maxPv > 0)
+                                            ? runState.heroStats.currentPv /
+                                                  runState.heroStats.maxPv
+                                            : 0,
+                                        minHeight: 22,
+                                        backgroundColor: Colors.black54,
+                                        valueColor:
+                                            const AlwaysStoppedAnimation<Color>(
+                                          Color(0xFF27AE60),
+                                        ),
+                                      ),
+                                      Text(
+                                        '${runState.heroStats.currentPv} / ${runState.heroStats.maxPv} PV',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                          shadows: [
+                                            Shadow(
+                                              color: Colors.black54,
+                                              offset: Offset(1, 1),
+                                              blurRadius: 2,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
