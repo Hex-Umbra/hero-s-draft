@@ -115,6 +115,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       onPlayCard: (card, target) {
         final runController = ref.read(runProvider.notifier);
         final deckController = ref.read(deckProvider.notifier);
+        final previousMana = runController.currentState.heroStats.currentMana;
 
         // 1. VÃ©rification si la carte peut Ãªtre jouÃ©e
         if (!EffectResolver.canPlayCard(
@@ -162,6 +163,15 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           if (_game.enemyCards.isEmpty) {
             _game.onEnemiesDead();
             _game.currentPhase = TurnPhase.player;
+          } else if (previousMana > 0 && runController.currentState.heroStats.currentMana == 0) {
+            // Demander s'il veut finir son tour après un court délai (pour laisser les animations se faire)
+            Future.delayed(const Duration(milliseconds: 600), () {
+              if (mounted &&
+                  _game.enemyCards.isNotEmpty &&
+                  ref.read(runProvider).heroStats.currentMana == 0) {
+                _showEndTurnConfirmationDialog();
+              }
+            });
           }
         }
 
@@ -663,5 +673,78 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       // Reprend le moteur de jeu peu importe comment on quitte le menu
       _game.resumeEngine();
     });
+  }
+
+  void _showEndTurnConfirmationDialog() {
+    if (!mounted) return;
+    
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF1E1E2C),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: Colors.cyanAccent, width: 2),
+          ),
+          title: const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.flash_off, color: Colors.cyanAccent, size: 28),
+              SizedBox(width: 8),
+              Text(
+                'PLUS DE MANA',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 2,
+                ),
+              ),
+            ],
+          ),
+          content: const Text(
+            'Vous n\'avez plus de points de mana. Voulez-vous terminer votre tour ?',
+            style: TextStyle(color: Colors.white70, fontSize: 16),
+            textAlign: TextAlign.center,
+          ),
+          actionsAlignment: MainAxisAlignment.spaceEvenly,
+          actions: [
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.grey[800],
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Non', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueAccent,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+                // Finir le tour
+                TraitSystem.onTurnEnd(ref.read(runProvider.notifier));
+                ref.read(deckProvider.notifier).discardHand();
+                _game.executeTurn();
+              },
+              child: const Text('Oui', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
