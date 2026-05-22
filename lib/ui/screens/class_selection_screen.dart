@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/data/hero_data.dart';
 import '../../services/game_data_service.dart';
 import '../../game/controllers/run_controller.dart';
+import '../../game/controllers/deck_controller.dart';
 import 'map_screen.dart';
 import 'card_dictionary_screen.dart';
 import '../widgets/sword_icon.dart';
@@ -354,6 +355,7 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                               classColor: classColor,
                               isMobile: widget.isMobile,
                               onPressed: () {
+                                widget.ref.read(deckProvider.notifier).clearDeck();
                                 widget.ref.read(runProvider.notifier).startNewRun(playerClass);
                                 Navigator.of(context).pushAndRemoveUntil(
                                   MaterialPageRoute(builder: (context) => const MapScreen()),

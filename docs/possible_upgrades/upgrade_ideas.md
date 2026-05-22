@@ -62,3 +62,6 @@
 - ~~La quantité d'hp du joueur sera affiché dans la barre de vie~~
 - Rendre les intentions d'attaques des ennemis plus claires, par exemple plutot que d'avoir un rectangle par dessus la carte, faire afficher sur le coté bas droit, proche du widget de défausse ou juste au dessus, une notification claire de l'intention des ennemis (voire comment faire quand il y a plusieurs ennemis).
 - ~~Afficher un compteur de tour juste en dessous du bouton de fin de tour~~
+- Dans le menu du shop afficher en vert ou en rouge le montant de gold nécessaire en fonction du nombre de gold du joueur. Si le joueur peut acheter la carte alors le montant a un fond vert, sinon un fond rouge
+- dans une rencontre de type événement afficher clairement quand le joueur perd des pv ou gagne des gold
+- ~~quand le joueur "meurt" puis relance une run il semblerait que le deck de cartes obtenus avant n'est pas correctement nettoyé et remis aux cartes de base.~~

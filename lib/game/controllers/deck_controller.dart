@@ -38,6 +38,11 @@ class DeckState {
 class DeckNotifier extends StateNotifier<DeckState> {
   DeckNotifier() : super(const DeckState());
 
+  /// Vide complètement le deck (pour une nouvelle run)
+  void clearDeck() {
+    state = const DeckState();
+  }
+
   /// Initialise le master deck au début d'une run
   void initializeStarterDeck(List<CardInstance> initialDeck) {
     state = state.copyWith(masterDeck: initialDeck);

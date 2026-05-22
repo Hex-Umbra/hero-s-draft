@@ -50,5 +50,12 @@
         - J'ai introduit un compteur réactif de tours (`_turnCount` initialisé à 1) au sein de `_GameScreenState`. Ce compteur s'incrémente automatiquement à chaque transition de phase ramenant le tour au joueur (via le callback `onTurnEnded`).
         - Un conteneur d'affichage reprenant le même thème sombre haut de gamme (`0xFF1E1E2C` à 200 d'opacité) et la même largeur de `170` pixels que les éléments supérieurs a été ajouté exactement 10 pixels en dessous du bouton « Fin de Tour » (`top: MediaQuery.of(context).size.height / 2 + 33`), offrant une excellente cohérence visuelle et un repère direct sur la progression temporelle du combat.
 
+## Phase 43 - Réinitialisation du Deck lors du lancement d'une nouvelle partie
+
+- fix: Réinitialisation du deck de cartes à la sélection d'une classe
+    - Ajout d'une méthode `clearDeck()` dans `DeckNotifier` et appel de celle-ci lors du clic sur le bouton de sélection d'une classe.
+        - J'ai identifié la cause racine d'un bug persistant de persistance de la pioche : lorsqu'une partie se terminait par la mort du joueur et qu'une nouvelle run était lancée, le deck de cartes conservait les ajouts et fusions de la partie précédente car le fournisseur global `deckProvider` n'était pas réinitialisé.
+        - Pour y remédier, j'ai introduit la méthode `clearDeck()` dans `DeckNotifier` pour réinitialiser le `DeckState`. Cette méthode est désormais systématiquement appelée au clic sur le bouton de sélection dans `class_selection_screen.dart`, juste avant de lancer la nouvelle partie via `startNewRun`. Cela garantit que la nouvelle run commence toujours avec le paquet de cartes de départ approprié et réinitialisé.
+
 
 
