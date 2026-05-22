@@ -156,7 +156,7 @@ class EnemyCard extends PositionComponent
         // 60% Attack
         currentIntent = EnemyIntent(
           type: IntentType.attack,
-          value: stats.attaque,
+          value: data?.baseDamage ?? _startingAttaque,
         );
       } else if (roll < 85) {
         // 25% Defend

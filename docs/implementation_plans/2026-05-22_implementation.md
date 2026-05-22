@@ -25,3 +25,8 @@
 - fix: Conversion du buff plat d'attaque en statut de Force permanent
     - Remplacement de la mutation directe de stats.attaque par l'ajout du statut strength pour éviter les doubles calculs
         - Résolution définitive du problème de calcul d'attaque sur les élites buffés (où une attaque après buff comptabilisait doublement l'effet). Les intentions de type `buff` appliquent désormais un `StatusEffect` de Force ('strength') de 99 tours (permanent pour le combat) au lieu de muter directement la variable `attaque` du modèle `EntityStats`. Les getters réactifs et l'indicateur d'intention tirent parti de ce statut de manière saine, et la couverture de test a été mise à jour et validée.
+
+- fix: Prévention de la double mise à l'échelle des intentions d'attaque générées aléatoirement (fallback)
+    - Remplacement de stats.attaque par data?.baseDamage ?? _startingAttaque lors du roll d'intentions aléatoires
+        - Correction d'un bug identifié où, si l'ennemi n'avait pas d'intentions définies dans son fichier JSON de données (fallback aléatoire), la génération de l'intention d'attaque utilisait stats.attaque (déjà mise à l'échelle) au lieu de sa valeur brute de base. Cela entraînait une double multiplication de l'échelle par _spawnMultiplier dans le getter réactif effectiveIntent. Le correctif garantit que la génération aléatoire s'appuie désormais sur la valeur non mise à l'échelle.
+
