@@ -83,6 +83,7 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
   bool _isHovered = false;
   double _tiltX = 0.0;
   double _tiltY = 0.0;
+  Offset? _mousePosition;
 
   // For float/breath animation of icon
   late final AnimationController _floatController;
@@ -115,9 +116,10 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
     final double relY = (event.localPosition.dy / cardSize.height) - 0.5;
 
     setState(() {
-      // Limit tilt angle (approx 0.075 radians max, reduced by half)
-      _tiltX = relX * 0.15;
-      _tiltY = relY * 0.15;
+      // Limit tilt angle (approx 0.025 radians max)
+      _tiltX = relX * 0.05;
+      _tiltY = relY * 0.05;
+      _mousePosition = event.localPosition;
     });
   }
 
@@ -126,6 +128,7 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
       _isHovered = false;
       _tiltX = 0.0;
       _tiltY = 0.0;
+      _mousePosition = null;
     });
   }
 
@@ -209,162 +212,186 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(14),
-                      child: Padding(
-                        padding: EdgeInsets.all(widget.isMobile ? 8 : 20),
-                        child: Column(
-                          children: [
-                            SizedBox(height: widget.isMobile ? 3 : 10),
-                            // Floating hero icon
-                            AnimatedBuilder(
-                              animation: _floatAnimation,
-                              builder: (context, child) {
-                                final double floatOffset = _floatAnimation.value * (widget.isMobile ? 0.5 : 1.0);
-                                return Transform.translate(
-                                  offset: Offset(0, floatOffset),
-                                  child: Icon(
-                                    icon,
-                                    size: widget.isMobile ? 48 : 65,
+                      child: Stack(
+                        children: [
+                          if (_isHovered && _mousePosition != null)
+                            Positioned.fill(
+                              child: IgnorePointer(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    gradient: RadialGradient(
+                                      center: Alignment(
+                                        (_mousePosition!.dx / cardSize.width) * 2 - 1,
+                                        (_mousePosition!.dy / cardSize.height) * 2 - 1,
+                                      ),
+                                      radius: 0.6,
+                                      colors: [
+                                        classColor.withValues(alpha: 0.12),
+                                        Colors.transparent,
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          Padding(
+                            padding: EdgeInsets.all(widget.isMobile ? 8 : 20),
+                            child: Column(
+                              children: [
+                                SizedBox(height: widget.isMobile ? 3 : 10),
+                                // Floating hero icon
+                                AnimatedBuilder(
+                                  animation: _floatAnimation,
+                                  builder: (context, child) {
+                                    final double floatOffset = _floatAnimation.value * (widget.isMobile ? 0.5 : 1.0);
+                                    return Transform.translate(
+                                      offset: Offset(0, floatOffset),
+                                      child: Icon(
+                                        icon,
+                                        size: widget.isMobile ? 48 : 65,
+                                        color: classColor,
+                                        shadows: [
+                                          Shadow(
+                                            color: classColor.withValues(alpha: 0.5),
+                                            blurRadius: widget.isMobile ? 5 : 10,
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
+                                SizedBox(height: widget.isMobile ? 4 : 15),
+                                Text(
+                                  playerClass.name,
+                                  style: TextStyle(
+                                    fontSize: widget.isMobile ? 20 : 26,
+                                    fontWeight: FontWeight.bold,
                                     color: classColor,
+                                    letterSpacing: 1.2,
                                     shadows: [
                                       Shadow(
-                                        color: classColor.withValues(alpha: 0.5),
-                                        blurRadius: widget.isMobile ? 5 : 10,
+                                        color: classColor.withValues(alpha: 0.3),
+                                        blurRadius: 6,
                                       ),
                                     ],
                                   ),
-                                );
-                              },
-                            ),
-                            SizedBox(height: widget.isMobile ? 4 : 15),
-                            Text(
-                              playerClass.name,
-                              style: TextStyle(
-                                fontSize: widget.isMobile ? 20 : 26,
-                                fontWeight: FontWeight.bold,
-                                color: classColor,
-                                letterSpacing: 1.2,
-                                shadows: [
-                                  Shadow(
-                                    color: classColor.withValues(alpha: 0.3),
-                                    blurRadius: 6,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            SizedBox(height: widget.isMobile ? 4 : 12),
-                            // Stats with beautiful icons and display
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: widget.isMobile ? 4 : 12,
-                                vertical: widget.isMobile ? 4 : 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.04),
-                                borderRadius: BorderRadius.circular(widget.isMobile ? 6 : 10),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  _buildStatBadge(
-                                    Icon(Icons.favorite, size: widget.isMobile ? 14 : 16, color: Colors.redAccent),
-                                    '${playerClass.maxHp}',
-                                  ),
-                                  Container(width: 1, height: widget.isMobile ? 12 : 16, color: Colors.white24),
-                                  _buildStatBadge(
-                                    Icon(Icons.diamond_rounded, size: widget.isMobile ? 14 : 16, color: Colors.cyanAccent),
-                                    '${playerClass.maxMana}',
-                                  ),
-                                  Container(width: 1, height: widget.isMobile ? 12 : 16, color: Colors.white24),
-                                  _buildStatBadge(
-                                    SwordIcon(size: widget.isMobile ? 14 : 16, color: Colors.orangeAccent),
-                                    '${playerClass.baseDamage}',
-                                  ),
-                                ],
-                              ),
-                            ),
-                            SizedBox(height: widget.isMobile ? 4 : 15),
-                            // Passive trait
-                            Container(
-                              width: double.infinity,
-                              padding: EdgeInsets.symmetric(
-                                horizontal: widget.isMobile ? 4 : 12,
-                                vertical: widget.isMobile ? 4 : 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.cyanAccent.withValues(alpha: 0.06),
-                                borderRadius: BorderRadius.circular(widget.isMobile ? 6 : 10),
-                                border: Border.all(
-                                  color: Colors.cyanAccent.withValues(alpha: 0.25),
-                                  width: 1.0,
                                 ),
-                              ),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
+                                SizedBox(height: widget.isMobile ? 4 : 12),
+                                // Stats with beautiful icons and display
+                                Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: widget.isMobile ? 4 : 12,
+                                    vertical: widget.isMobile ? 4 : 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.04),
+                                    borderRadius: BorderRadius.circular(widget.isMobile ? 6 : 10),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                     children: [
-                                      Icon(Icons.shield, size: widget.isMobile ? 12 : 16, color: Colors.cyanAccent),
-                                      SizedBox(width: widget.isMobile ? 3 : 6),
-                                      Text(
-                                        traitName.toUpperCase(),
-                                        style: TextStyle(
-                                          fontSize: widget.isMobile ? 10 : 11,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.cyanAccent,
-                                          letterSpacing: 0.8,
-                                        ),
+                                      _buildStatBadge(
+                                        Icon(Icons.favorite, size: widget.isMobile ? 14 : 16, color: Colors.redAccent),
+                                        '${playerClass.maxHp}',
+                                      ),
+                                      Container(width: 1, height: widget.isMobile ? 12 : 16, color: Colors.white24),
+                                      _buildStatBadge(
+                                        Icon(Icons.diamond_rounded, size: widget.isMobile ? 14 : 16, color: Colors.cyanAccent),
+                                        '${playerClass.maxMana}',
+                                      ),
+                                      Container(width: 1, height: widget.isMobile ? 12 : 16, color: Colors.white24),
+                                      _buildStatBadge(
+                                        SwordIcon(size: widget.isMobile ? 14 : 16, color: Colors.orangeAccent),
+                                        '${playerClass.baseDamage}',
                                       ),
                                     ],
                                   ),
-                                  SizedBox(height: widget.isMobile ? 2 : 5),
-                                  Text(
-                                    traitDesc,
-                                    style: TextStyle(
-                                      fontSize: widget.isMobile ? 9.5 : 10.5,
-                                      color: Colors.cyanAccent.withValues(alpha: 0.85),
-                                      height: 1.25,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Divider(
-                              color: Colors.white12,
-                              height: widget.isMobile ? 8 : 25,
-                            ),
-                            // Description text
-                            Expanded(
-                              child: SingleChildScrollView(
-                                child: Text(
-                                  playerClass.description,
-                                  style: TextStyle(
-                                    fontSize: widget.isMobile ? 11.5 : 13,
-                                    color: Colors.white70,
-                                    fontStyle: FontStyle.italic,
-                                    height: 1.3,
-                                  ),
-                                  textAlign: TextAlign.center,
                                 ),
-                              ),
+                                SizedBox(height: widget.isMobile ? 4 : 15),
+                                // Passive trait
+                                Container(
+                                  width: double.infinity,
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: widget.isMobile ? 4 : 12,
+                                    vertical: widget.isMobile ? 4 : 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.cyanAccent.withValues(alpha: 0.06),
+                                    borderRadius: BorderRadius.circular(widget.isMobile ? 6 : 10),
+                                    border: Border.all(
+                                      color: Colors.cyanAccent.withValues(alpha: 0.25),
+                                      width: 1.0,
+                                    ),
+                                  ),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(Icons.shield, size: widget.isMobile ? 12 : 16, color: Colors.cyanAccent),
+                                          SizedBox(width: widget.isMobile ? 3 : 6),
+                                          Text(
+                                            traitName.toUpperCase(),
+                                            style: TextStyle(
+                                              fontSize: widget.isMobile ? 10 : 11,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.cyanAccent,
+                                              letterSpacing: 0.8,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      SizedBox(height: widget.isMobile ? 2 : 5),
+                                      Text(
+                                        traitDesc,
+                                        style: TextStyle(
+                                          fontSize: widget.isMobile ? 9.5 : 10.5,
+                                          color: Colors.cyanAccent.withValues(alpha: 0.85),
+                                          height: 1.25,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Divider(
+                                  color: Colors.white12,
+                                  height: widget.isMobile ? 8 : 25,
+                                ),
+                                // Description text
+                                Expanded(
+                                  child: SingleChildScrollView(
+                                    child: Text(
+                                      playerClass.description,
+                                      style: TextStyle(
+                                        fontSize: widget.isMobile ? 11.5 : 13,
+                                        color: Colors.white70,
+                                        fontStyle: FontStyle.italic,
+                                        height: 1.3,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: widget.isMobile ? 4 : 15),
+                                // Premium Selection Button
+                                _PremiumSelectionButton(
+                                  classColor: classColor,
+                                  isMobile: widget.isMobile,
+                                  onPressed: () {
+                                    widget.ref.read(deckProvider.notifier).clearDeck();
+                                    widget.ref.read(runProvider.notifier).startNewRun(playerClass);
+                                    Navigator.of(context).pushAndRemoveUntil(
+                                      MaterialPageRoute(builder: (context) => const MapScreen()),
+                                      (route) => route.isFirst,
+                                    );
+                                  },
+                                ),
+                              ],
                             ),
-                            SizedBox(height: widget.isMobile ? 4 : 15),
-                            // Premium Selection Button
-                            _PremiumSelectionButton(
-                              classColor: classColor,
-                              isMobile: widget.isMobile,
-                              onPressed: () {
-                                widget.ref.read(deckProvider.notifier).clearDeck();
-                                widget.ref.read(runProvider.notifier).startNewRun(playerClass);
-                                Navigator.of(context).pushAndRemoveUntil(
-                                  MaterialPageRoute(builder: (context) => const MapScreen()),
-                                  (route) => route.isFirst,
-                                );
-                              },
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                   ),

@@ -110,3 +110,11 @@
     - Déplacement de `armure: 0` de `startCombat()` vers `completeCurrentNode()` dans `run_controller.dart` et ajout du déclenchement du passif au premier tour.
         - Auparavant, le reset complet de l'armure à 0 se faisait lors de la fonction `startCombat()`, ce qui écrasait instantanément le passif de l'Armure du Berserker (qui octroie de l'armure en fonction des PV manquants dès le début du combat/tour).
         - Pour y remédier, j'ai déplacé ce nettoyage de l'armure (`armure: 0`) et des statuts à la fin du combat, précisément dans la fonction `completeCurrentNode()` de `run_controller.dart`. De plus, j'ai ajouté l'appel de `TraitSystem.onTurnStart(this)` à la fin de `startCombat()` pour garantir que le passif s'applique correctement dès le premier tour du combat. Un test unitaire dédié a été écrit pour valider l'intégrité de ce comportement.
+
+## Phase 50 - Réduction du tilt effect et ajout d'un halo lumineux interactif réactif dans la sélection de classe
+
+- feat: Réduction du tilt effect et ajout d'un halo lumineux réactif sur les cartes de sélection de classe
+    - Diminution du facteur multiplicateur de tilt à 0.05 et intégration d'un RadialGradient interactif centré sur la position de la souris.
+        - Pour améliorer la finesse visuelle du menu de sélection de classe, j'ai réduit l'angle du tilt effect lorsque la souris survole la carte de classe en diminuant le coefficient multiplicateur à `0.05` (au lieu de `0.15`), limitant ainsi l'inclinaison maximale à environ 0.025 radians pour un effet beaucoup plus subtil et haut de gamme.
+        - De plus, j'ai ajouté un effet de halo lumineux interactif et très léger qui suit précisément la position du curseur sur la carte. Cela a été accompli en stockant la coordonnée locale du pointeur (`_mousePosition`) lors de l'événement de déplacement, puis en l'utilisant au sein d'un widget `Stack` interne pour projeter un conteneur d'effet (`IgnorePointer`) décoré d'un `RadialGradient` centré de façon dynamique sur le curseur. L'opacité douce et la couleur adaptée à chaque classe offrent un rendu visuel premium et extrêmement réactif.
+
