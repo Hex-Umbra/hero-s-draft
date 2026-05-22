@@ -73,8 +73,11 @@ class EnemyCard extends PositionComponent
     String spriteName = data?.spritePath ?? 'enemy_goblin.png';
     if (spriteName.isEmpty) spriteName = 'enemy_goblin.png';
 
+    // Chargement asynchrone robuste (lit le cache si déjà chargé, ou charge depuis les assets sinon)
+    final image = await game.images.load(spriteName);
+
     sprite = SpriteComponent(
-      sprite: Sprite(game.images.fromCache(spriteName)),
+      sprite: Sprite(image),
       size: size,
     );
     add(sprite);

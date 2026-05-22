@@ -1,4 +1,6 @@
 import 'dart:math';
+import 'dart:convert';
+import 'package:flutter/services.dart';
 import 'package:flame/game.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
@@ -228,14 +230,46 @@ class HerosDraftGame extends FlameGame
     // On retire le FixedResolutionViewport pour utiliser tout l'espace disponible (MaxViewport par défaut)
     // La caméra s'adaptera dynamiquement à la taille de l'écran.
 
-    // 1. Précharger les images
-    await images.loadAll([
-      'bg_dungeon.png',
-      'hero_paladin.png',
-      'hero_berserker.png',
-      'hero_mage.png',
-      'enemy_goblin.png',
-    ]);
+    // 1. Précharger les images dynamiquement à partir des fichiers JSON
+    final List<String> imagesToPreload = ['bg_dungeon.png'];
+
+    try {
+      // Préchargement dynamique des ennemis
+      final String enemiesRaw = await rootBundle.loadString('assets/data/enemies.json');
+      final List<dynamic> enemiesJson = jsonDecode(enemiesRaw);
+      for (final enemy in enemiesJson) {
+        final spritePath = enemy['spritePath'] as String?;
+        if (spritePath != null && spritePath.isNotEmpty) {
+          imagesToPreload.add(spritePath);
+        }
+      }
+
+      // Préchargement dynamique des héros
+      final String heroesRaw = await rootBundle.loadString('assets/data/heroes.json');
+      final List<dynamic> heroesJson = jsonDecode(heroesRaw);
+      for (final hero in heroesJson) {
+        final iconPath = hero['iconPath'] as String?;
+        if (iconPath != null && iconPath.isNotEmpty) {
+          imagesToPreload.add(iconPath);
+        }
+      }
+    } catch (e) {
+      // En cas d'erreur de chargement (ex. dans certains environnements de tests unitaires sans assets), fallback sur les défauts
+      imagesToPreload.addAll([
+        'hero_paladin.png',
+        'hero_berserker.png',
+        'hero_mage.png',
+        'enemy_goblin.png',
+        'enemy_slime.png',
+        'enemy_skeleton.png',
+        'enemy_orc.png',
+      ]);
+    }
+
+    // Éliminer les doublons éventuels
+    final uniqueImages = imagesToPreload.toSet().toList();
+
+    await images.loadAll(uniqueImages);
 
     // 2. Ajouter l'arrière-plan
     final bgSprite = Sprite(images.fromCache('bg_dungeon.png'));

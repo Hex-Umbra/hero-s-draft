@@ -82,5 +82,15 @@
         - Ce panneau récapitule tous les ennemis vivants avec leurs points de vie actuels, leur nom (coloré en doré s'il s'agit d'un Boss), ainsi que leur intention réactive et formatée avec des icônes et couleurs adaptées (Attaque en rouge vif, Défense en bleu, Buff Force en violet, Malédictions en vert printanier).
         - L'import de `enemy_intent.dart` a été ajouté au sommet de `game_screen.dart` pour permettre la manipulation saine de l'enum `IntentType`.
 
+## Phase 47 - Résolution du chargement des images de nouveaux ennemis et automatisation 100% dynamique
 
+- fix: Préchargement et chargement asynchrone robuste des nouveaux ennemis (Slime, Orc, Squelette)
+    - Ajout des images manquantes dans images.loadAll de heros_draft_game.dart et sécurisation via game.images.load dans enemy_card.dart.
+        - J'ai identifié et corrigé la cause racine pour laquelle les nouvelles images d'ennemis ne se chargeaient pas correctement. D'une part, Flame s'attend à ce que toutes les images soient préchargées en cache au démarrage, mais seules les images du héros et du gobelin étaient déclarées dans `images.loadAll` de `heros_draft_game.dart`. J'ai complété cette liste en y intégrant `enemy_slime.png`, `enemy_skeleton.png` et `enemy_orc.png`.
+        - D'autre part, pour rendre le système totalement pérenne et immunisé contre d'autres oublis futurs (si d'autres ennemis ou mods sont ajoutés dans `enemies.json`), j'ai modifié l'initialisation du sprite dans `EnemyCard.onLoad`. Au lieu de récupérer directement l'image depuis le cache de manière synchrone via `images.fromCache` (ce qui provoque un crash si l'image n'y est pas présente), j'ai basculé sur un chargement asynchrone robuste : `await game.images.load(spriteName)`. Cette méthode vérifie intelligemment le cache avant de solliciter le disque, garantissant un chargement fluide et sans crash.
 
+- feat: Automatisation et dynamique complète du préchargement des images des héros et ennemis
+    - Intégration d'un parseur JSON au démarrage du jeu dans heros_draft_game.dart pour lire et charger à la volée toutes les images définies dans les fichiers de données.
+        - Afin de supprimer toute nécessité d'ajouter manuellement chaque nouvelle image d'ennemi ou de héros dans le code Dart, j'ai transformé la routine d'initialisation de `onLoad` dans `heros_draft_game.dart`.
+        - Le jeu va désormais lire de manière asynchrone `enemies.json` (pour récupérer chaque champ `spritePath`) et `heroes.json` (pour récupérer chaque champ `iconPath`). Toutes ces images sont collectées, dédoublonnées via un `Set` et préchargées automatiquement via `images.loadAll`.
+        - Un garde-fou robuste avec try-catch garantit un fallback élégant sur une liste par défaut si un environnement de test ne dispose pas de ces fichiers JSON mockés, prévenant toute régression de la suite d'intégration.
