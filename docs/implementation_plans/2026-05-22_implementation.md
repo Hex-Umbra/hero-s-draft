@@ -103,3 +103,10 @@
         - Pour y remédier, j'ai implémenté un système de dimensionnement proportionnel automatique dans `EnemyCard.onLoad`. L'image est analysée pour en extraire son ratio intrinsèque (`width / height`).
         - Si l'image est plus large ou carrée que le ratio de la carte, le sprite s'ajuste sur la largeur et se centre verticalement. Si elle est plus haute, elle s'ajuste sur la hauteur et se centre horizontalement.
         - Cela permet de supporter nativement et sans aucune déformation les images carrées transparentes faites à la main ou tout autre format alternatif, garantissant un rendu impeccable pour chaque asset de remplacement.
+
+## Phase 49 - Relocalisation de la réinitialisation de l'armure en fin de combat
+
+- fix: Réinitialisation de l'armure en fin de combat pour préserver les passifs de début de combat
+    - Déplacement de `armure: 0` de `startCombat()` vers `completeCurrentNode()` dans `run_controller.dart` et ajout du déclenchement du passif au premier tour.
+        - Auparavant, le reset complet de l'armure à 0 se faisait lors de la fonction `startCombat()`, ce qui écrasait instantanément le passif de l'Armure du Berserker (qui octroie de l'armure en fonction des PV manquants dès le début du combat/tour).
+        - Pour y remédier, j'ai déplacé ce nettoyage de l'armure (`armure: 0`) et des statuts à la fin du combat, précisément dans la fonction `completeCurrentNode()` de `run_controller.dart`. De plus, j'ai ajouté l'appel de `TraitSystem.onTurnStart(this)` à la fin de `startCombat()` pour garantir que le passif s'applique correctement dès le premier tour du combat. Un test unitaire dédié a été écrit pour valider l'intégrité de ce comportement.

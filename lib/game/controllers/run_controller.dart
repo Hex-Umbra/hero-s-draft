@@ -157,7 +157,14 @@ class RunController extends StateNotifier<RunState> {
       return node;
     }).toList();
 
-    state = state.copyWith(mapNodes: updatedNodes);
+    // Reset de l'armure et nettoyage des statuts à la fin du combat pour préserver les passifs
+    state = state.copyWith(
+      mapNodes: updatedNodes,
+      heroStats: state.heroStats.copyWith(
+        armure: 0,
+        statuses: [],
+      ),
+    );
 
     if (completedNode != null && completedNode!.type == MapNodeType.boss) {
       advanceToNextWorld();
@@ -318,16 +325,17 @@ class RunController extends StateNotifier<RunState> {
 
   void startCombat() {
     // 1. Nettoyage des buffs/debuffs du combat précédent,
-    // reset de l'armure à 0, et restauration du mana au max
+    // et restauration du mana au max (l'armure est remise à 0 en fin de combat dans completeCurrentNode)
     state = state.copyWith(
       heroStats: state.heroStats.copyWith(
         statuses: [],
-        armure: 0,
         currentMana: state.heroStats.maxMana,
       ),
     );
     // 2. Déclenchement des reliques
     applyRelics(RelicTrigger.startOfCombat);
+    // 3. Déclenchement des passifs de début de combat/tour pour le tour 1 (ex: Berserker)
+    TraitSystem.onTurnStart(this);
   }
 
   void startTurn() {
