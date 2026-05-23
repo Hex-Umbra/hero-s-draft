@@ -7,6 +7,7 @@ import '../../game/controllers/deck_controller.dart';
 import 'map_screen.dart';
 import 'card_dictionary_screen.dart';
 import '../widgets/sword_icon.dart';
+import '../../models/data/passive_data.dart';
 
 class ClassSelectionScreen extends ConsumerWidget {
   const ClassSelectionScreen({super.key});
@@ -141,6 +142,11 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
   @override
   Widget build(BuildContext context) {
     final playerClass = widget.playerClass;
+    final gameData = widget.ref.watch(gameDataLoaderProvider).requireValue;
+    final passive = gameData.passives.firstWhere(
+      (p) => p.id == playerClass.passiveTrait,
+      orElse: () => PassiveData.fallback(playerClass.passiveTrait ?? ''),
+    );
     
     Color classColor = Colors.blue;
     if (playerClass.id == 'berserker') classColor = Colors.red;
@@ -151,22 +157,8 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
     if (playerClass.id == 'berserker') icon = Icons.whatshot;
     if (playerClass.id == 'mage') icon = Icons.auto_fix_high;
 
-    String traitName = 'Aucun trait';
-    String traitDesc = '';
-    switch (playerClass.passiveTrait) {
-      case 'regenArmor':
-        traitName = 'Régénération d\'Armure';
-        traitDesc = 'Gagne 2 points d\'Armure (+ Maîtrise) automatiquement à la fin de chaque tour.';
-        break;
-      case 'berserkerArmor':
-        traitName = 'Armure du Berserker';
-        traitDesc = 'Gagne 1 point d\'Armure (+ Maîtrise) au début du tour pour chaque tranche de 10 PV manquants.';
-        break;
-      case 'spellArmor':
-        traitName = 'Armure Magique';
-        traitDesc = 'Gagne 1 point d\'Armure (+ Maîtrise) instantanément chaque fois que vous jouez une carte Compétence.';
-        break;
-    }
+    final String traitName = passive.name;
+    final String traitDesc = passive.description;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -381,7 +373,7 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                   isMobile: widget.isMobile,
                                   onPressed: () {
                                     widget.ref.read(deckProvider.notifier).clearDeck();
-                                    widget.ref.read(runProvider.notifier).startNewRun(playerClass);
+                                    widget.ref.read(runProvider.notifier).startNewRun(playerClass, passive);
                                     Navigator.of(context).pushAndRemoveUntil(
                                       MaterialPageRoute(builder: (context) => const MapScreen()),
                                       (route) => route.isFirst,

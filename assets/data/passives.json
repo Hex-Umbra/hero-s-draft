@@ -1,0 +1,26 @@
+[
+  {
+    "id": "regenArmor",
+    "name": "Régénération d'Armure",
+    "description": "Gagne 2 points d'Armure (+ Maîtrise) automatiquement à la fin de chaque tour.",
+    "trigger": "endOfTurn",
+    "effectType": "gain_armor",
+    "value": 2
+  },
+  {
+    "id": "berserkerArmor",
+    "name": "Armure du Berserker",
+    "description": "Gagne 1 point d'Armure (+ Maîtrise) au début du tour pour chaque tranche de 10 PV manquants.",
+    "trigger": "startOfTurn",
+    "effectType": "berserker_armor",
+    "value": 1
+  },
+  {
+    "id": "spellArmor",
+    "name": "Armure Magique",
+    "description": "Gagne 1 point d'Armure (+ Maîtrise) instantanément chaque fois que vous jouez une carte Compétence.",
+    "trigger": "onCardPlayed",
+    "effectType": "spell_armor",
+    "value": 1
+  }
+]

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/entity_stats.dart';
 import '../../models/data/hero_data.dart';
 import '../../models/data/relic_data.dart';
+import '../../models/data/passive_data.dart';
 import '../../models/map_node.dart';
 import '../../models/status_effect.dart';
 import '../../services/map_generator_service.dart';
@@ -17,6 +18,7 @@ class RunState {
   final String? currentNodeId;
   final int gold;
   final String? passiveTrait; // Trait passif du héros (ex: regenArmor)
+  final PassiveData? activePassive; // Passif dynamique du héros
   final int bonusShopCards; // Nombre additionnel de cartes dans le shop
 
   // Variables pour gérer l'état du cooldown des sorts
@@ -47,6 +49,7 @@ class RunState {
     this.currentNodeId,
     this.gold = 0,
     this.passiveTrait,
+    this.activePassive,
     this.skill1Cooldown = 0,
     this.skill2Cooldown = 0,
     this.bonusShopCards = 0,
@@ -63,6 +66,7 @@ class RunState {
     bool resetCurrentNode = false,
     int? gold,
     String? passiveTrait,
+    PassiveData? activePassive,
     int? skill1Cooldown,
     int? skill2Cooldown,
     int? bonusShopCards,
@@ -79,6 +83,7 @@ class RunState {
           : (currentNodeId ?? this.currentNodeId),
       gold: gold ?? this.gold,
       passiveTrait: passiveTrait ?? this.passiveTrait,
+      activePassive: activePassive ?? this.activePassive,
       skill1Cooldown: skill1Cooldown ?? this.skill1Cooldown,
       skill2Cooldown: skill2Cooldown ?? this.skill2Cooldown,
       bonusShopCards: bonusShopCards ?? this.bonusShopCards,
@@ -96,6 +101,7 @@ class RunController extends StateNotifier<RunState> {
           act: 1,
           heroClassId: 'paladin',
           passiveTrait: 'regenArmor',
+          activePassive: PassiveData.fallback('regenArmor'),
           heroStats: EntityStats(
             maxPv: 100,
             currentPv: 100,
@@ -110,13 +116,14 @@ class RunController extends StateNotifier<RunState> {
       );
 
   /// Démarre une nouvelle partie avec la classe choisie
-  void startNewRun(HeroData chosenClass) {
+  void startNewRun(HeroData chosenClass, [PassiveData? activePassive]) {
     final generatedMap = MapGeneratorService.generateMap();
     state = RunState(
       currentLevel: 1,
       act: 1,
       heroClassId: chosenClass.id,
       passiveTrait: chosenClass.passiveTrait,
+      activePassive: activePassive ?? PassiveData.fallback(chosenClass.passiveTrait ?? ''),
       heroStats: EntityStats(
         maxPv: chosenClass.maxHp,
         currentPv: chosenClass.maxHp,

@@ -89,6 +89,7 @@ void main() {
     skills: [],
     cards: mockCards,
     events: [],
+    passives: [],
   );
 
   testWidgets('ShopScreen shows correct cards and handles Reroll and Expand services', (
