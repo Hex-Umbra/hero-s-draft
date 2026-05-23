@@ -49,26 +49,10 @@ class StatBadge extends PositionComponent
       size = Vector2(90, 14);
 
       add(
-        RectangleComponent(
+        LinearProgressBarComponent(
           size: size,
-          paint: Paint()..color = Colors.black.withAlpha(200),
-        ),
-      );
-
-      add(
-        RectangleComponent(
-          size: Vector2(size.x * _fillPercentage, size.y),
-          paint: Paint()..color = const Color(0xFFE74C3C),
-        ),
-      );
-
-      add(
-        RectangleComponent(
-          size: size,
-          paint: Paint()
-            ..color = Colors.white.withAlpha(80)
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 1.0,
+          percentage: _fillPercentage,
+          borderRadius: 4.0,
         ),
       );
 
@@ -379,5 +363,54 @@ class CircleProgressComponent extends PositionComponent {
       true,
       paint,
     );
+  }
+}
+
+class LinearProgressBarComponent extends PositionComponent {
+  final double percentage;
+  final double borderRadius;
+
+  LinearProgressBarComponent({
+    required Vector2 size,
+    required this.percentage,
+    this.borderRadius = 4.0,
+  }) : super(size: size);
+
+  @override
+  void render(Canvas canvas) {
+    final rect = size.toRect();
+    final rrect = RRect.fromRectAndRadius(rect, Radius.circular(borderRadius));
+
+    // 1. Dessine l'arrière-plan sombre
+    final bgPaint = Paint()..color = Colors.black.withAlpha(200);
+    canvas.drawRRect(rrect, bgPaint);
+
+    if (percentage > 0) {
+      canvas.save();
+      canvas.clipRRect(rrect);
+
+      // 2. Dessine le remplissage avec gradient
+      final fillRect = Rect.fromLTWH(0, 0, size.x * percentage.clamp(0.0, 1.0), size.y);
+      final fillPaint = Paint()
+        ..shader = const LinearGradient(
+          colors: [
+            Color(0xFF8B0000), // Rouge foncé
+            Color(0xFFE74C3C), // Rouge vif
+            Color(0xFFFF7675), // Rouge clair / corail
+          ],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ).createShader(fillRect);
+
+      canvas.drawRect(fillRect, fillPaint);
+      canvas.restore();
+    }
+
+    // 3. Dessine la bordure blanche translucide
+    final borderPaint = Paint()
+      ..color = Colors.white.withAlpha(80)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+    canvas.drawRRect(rrect, borderPaint);
   }
 }

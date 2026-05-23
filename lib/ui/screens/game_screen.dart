@@ -421,39 +421,61 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                                   }),
                                 ),
                                 const SizedBox(height: 4),
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Stack(
-                                    alignment: Alignment.center,
-                                    children: [
-                                      LinearProgressIndicator(
-                                        value: (runState.heroStats.maxPv > 0)
-                                            ? runState.heroStats.currentPv /
-                                                  runState.heroStats.maxPv
-                                            : 0,
-                                        minHeight: 26,
-                                        backgroundColor: Colors.black54,
-                                        valueColor:
-                                            const AlwaysStoppedAnimation<Color>(
-                                          Color(0xFF27AE60),
-                                        ),
-                                      ),
-                                      Text(
-                                        '${runState.heroStats.currentPv} / ${runState.heroStats.maxPv} PV',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 13,
-                                          shadows: [
-                                            Shadow(
-                                              color: Colors.black54,
-                                              offset: Offset(1, 1),
-                                              blurRadius: 2,
+                                Container(
+                                  height: 26,
+                                  decoration: BoxDecoration(
+                                    color: Colors.black54,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: Colors.white.withAlpha(50),
+                                      width: 1.0,
+                                    ),
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(11),
+                                    child: Stack(
+                                      children: [
+                                        if (runState.heroStats.maxPv > 0 &&
+                                            runState.heroStats.currentPv > 0)
+                                          FractionallySizedBox(
+                                            widthFactor: (runState.heroStats
+                                                        .currentPv /
+                                                    runState.heroStats.maxPv)
+                                                .clamp(0.0, 1.0),
+                                            heightFactor: 1.0,
+                                            child: Container(
+                                              decoration: const BoxDecoration(
+                                                gradient: LinearGradient(
+                                                  colors: [
+                                                    Color(0xFF1E824C), // Vert forêt foncé
+                                                    Color(0xFF27AE60), // Vert éclatant
+                                                    Color(0xFF58D68D), // Vert doux / menthe
+                                                  ],
+                                                  begin: Alignment.centerLeft,
+                                                  end: Alignment.centerRight,
+                                                ),
+                                              ),
                                             ),
-                                          ],
+                                          ),
+                                        Center(
+                                          child: Text(
+                                            '${runState.heroStats.currentPv} / ${runState.heroStats.maxPv} PV',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 13,
+                                              shadows: [
+                                                Shadow(
+                                                  color: Colors.black54,
+                                                  offset: Offset(1, 1),
+                                                  blurRadius: 2,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ],

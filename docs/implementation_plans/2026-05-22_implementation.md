@@ -194,16 +194,14 @@
 - feat: Remplacement du cercle de PV des ennemis par une barre de vie horizontale au-dessus de leur carte
     - Configuration de `StatBadge` pour les PV ennemis avec `isCircle: false` et repositionnement au sommet.
         - Afin de rendre la lecture des combats plus directe et uniforme par rapport à l'affichage du joueur, la barre de vie circulaire (au bas de la carte monstre) a été supprimée.
-        - À la place, les PV de l'ennemi s'affichent sous forme de barre de progression rectangulaire horizontale de `90x14` pixels (fond noir translucide, remplissage rouge vif représentant le pourcentage des PV et contour fin blanc satiné). Le texte au format `'currentPv/maxPv'` est parfaitement centré en gras à l'intérieur.
+        - À la place, les PV de l'ennemi s'affichent sous forme de barre de progression rectangulaire horizontale de `90x14` pixels avec des coins arrondis (`borderRadius: 4.0`).
+        - Le remplissage dispose d'un dégradé linéaire volumétrique moderne à trois tons (du rouge brique sombre `0xFF8B0000` au corail vif `0xFFFF7675` en passant par le rouge pur `0xFFE74C3C`).
+        - Le texte au format `'currentPv/maxPv'` est parfaitement centré en gras à l'intérieur d'une bordure fine blanche translucide.
         - Cette barre de vie a été positionnée pile au-dessus du cadre de la carte monstre à `y = -10` avec un point d'ancrage centré, assurant une intégration visuelle de qualité supérieure.
+- feat: Modernisation esthétique de la barre de vie du joueur avec bords arrondis et dégradé vert premium
+    - Remplacement de `LinearProgressIndicator` par un conteneur personnalisé pour le HUD du joueur.
+        - Pour correspondre à la charte visuelle haut de gamme et harmoniser les barres de vie, le Material `LinearProgressIndicator` brut et uni du joueur a été remplacé par un widget `Container` personnalisé.
+        - Il affiche désormais une bordure fine translucide, des coins arrondis de `12px` (via `ClipRRect`) et un dégradé linéaire horizontal très élégant à trois tons (du vert forêt profond `0xFF1E824C` au vert menthe éclatant `0xFF58D68D` en passant par le vert émeraude vibrant `0xFF27AE60`).
 - feat: Repositionnement de l'indicateur d'intention ennemi pour éviter toute collision visuelle
     - Ajustement vertical de `intentionIndicator` à l'ordonnée Y = -35.
         - Pour accompagner le déplacement de la nouvelle barre de vie linéaire au sommet des cartes de monstres, la position de l'indicateur d'intentions Flame (`intentionIndicator`) a été reculée légèrement vers le haut à `y = -35` (au lieu de `y = -30`). Cela évite tout chevauchement et offre une aération idéale au-dessus des ennemis.
-
-
-
-
-
-
-
-
