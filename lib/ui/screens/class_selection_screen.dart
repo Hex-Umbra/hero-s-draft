@@ -456,14 +456,23 @@ class _PremiumSelectionButtonState extends State<_PremiumSelectionButton>
 
   @override
   Widget build(BuildContext context) {
-    final gradient = LinearGradient(
-      colors: [
-        widget.classColor,
-        widget.classColor.withBlue(255).withGreen(100),
-      ],
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-    );
+    final LinearGradient gradient = widget.classColor == Colors.blue
+        ? const LinearGradient(
+            colors: [
+              Color(0xFF0D47A1), // Bleu marine profond
+              Color(0xFF00B0FF), // Bleu azur/cyan éclatant
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          )
+        : LinearGradient(
+            colors: [
+              widget.classColor,
+              widget.classColor.withBlue(255).withGreen(100),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          );
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
