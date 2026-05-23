@@ -150,6 +150,17 @@
         - Pour rendre le statut vital et les ressources en combat encore plus visibles et gratifiants, les icônes de cristaux de mana (`Icons.diamond`) ont été agrandies à `24px` dans `game_screen.dart`.
         - La barre de vie (`LinearProgressIndicator`) a vu son épaisseur augmentée à `26px` (avec un texte à `13sp`) et la hauteur totale du conteneur de HUD bas a été portée à `88px` (au lieu de 80px) pour préserver un espacement aéré et équilibré.
 
+## Phase 53 - Ajustement fin des positions de combat et agrandissement des indicateurs HUD (Vie et Mana)
+
+- feat: Redescente très légère des monstres et du joueur pour aérer le haut de l'écran
+    - Ajustement des ennemis à 18% (au lieu de 15%) et du héros à 51% (au lieu de 48%).
+        - Afin d'aérer le haut de l'écran tout en préservant le confort d'affichage des intentions et des badges, l'ordonnée Y des ennemis dans `_repositionEnemies()` a été ajustée de `0.15` à `0.18`.
+        - De même, le héros a été repositionné très légèrement plus bas en modifiant son coefficient Y de `0.48` à `0.51` dans `onGameResize()` et `_applyState()` de `HerosDraftGame`.
+- feat: Agrandissement de la barre de vie et des icônes de cristaux de mana dans le HUD
+    - Augmentation de la hauteur de la barre de vie à 26px (au lieu de 22px) et de la taille des gemmes de mana à 24px (au lieu de 20px).
+        - Pour rendre le statut vital et les ressources en combat encore plus visibles et gratifiants, les icônes de cristaux de mana (`Icons.diamond`) ont été agrandies à `24px` dans `game_screen.dart`.
+        - La barre de vie (`LinearProgressIndicator`) a vu son épaisseur augmentée à `26px` (avec un texte à `13sp`) et la hauteur totale du conteneur de HUD bas a été portée à `88px` (au lieu de 80px) pour préserver un espacement aéré et équilibré.
+
 ## Phase 54 - Redescente des ennemis et agrandissement des sprites de monstres
 
 - feat: Descente des cartes d'ennemis à 21% de l'écran
@@ -159,6 +170,19 @@
     - Modification du facteur multiplicateur d'échelle des EnemyCard et gestion robuste de la taille de Boss lors des redimensionnements.
         - Pour rendre les ennemis plus imposants et offrir un meilleur confort d'affichage de leurs superbes visuels PNG sans distorsion, j'ai augmenté leur échelle de base à `game.scaleFactor * 1.45` (au lieu de 1.3) dans les méthodes `onLoad()` et `onGameResize()` de `EnemyCard`.
         - Cette formule a également été enrichie de la condition `(isBoss ? 1.25 : 1.0)` afin de préserver l'échelle supérieure de 1.25x pour les Boss lors du redimensionnement de l'application, résolvant durablement le risque de réinitialisation involontaire de leur taille.
+
+## Phase 55 - Panneau HUD symétrique affichant les effets de statut actifs du joueur et suppression de l'ancien texte obsolète
+
+- feat: Création d'un panneau HUD interactif pour les buffs/debuffs du joueur au-dessus de la pioche
+    - Intégration d'un conteneur à gauche (bottom: 80, left: 20) reprenant l'esthétique du panneau d'intentions.
+        - Pour offrir au joueur une visibilité claire, ergonomique et équilibrée de ses propres modificateurs de combat (Force, Poison, Métallisation, etc.), j'ai créé un panneau HUD dédié positionné symétriquement à gauche, au-dessus de la pioche (`bottom: 80, left: 20`).
+        - Ce panneau interroge en temps réel `runState.heroStats.statuses` et affiche chaque modificateur avec une icône adaptée (`Icons.flash_on` orange pour la Force, `Icons.sick` vert pour le Poison, `Icons.shield` cyan pour la Métallisation, etc.), sa valeur de puissance ainsi que son nombre de tours restants.
+        - Si aucun statut n'est actif, un indicateur discret "Aucun effet actif" s'affiche de manière élégante. Les imports nécessaires ont été ajoutés et toutes les couleurs s'intègrent dans la charte esthétique haut de gamme.
+- fix: Retrait de l'ancien affichage textuel de buffs simplifié sous les textes d'Acte et de Niveau
+    - Suppression de la liste textuelle orange devenue obsolète sous l'en-tête de niveau en haut à gauche.
+        - L'ancien affichage brut qui listait en orange les statuts sous le texte "Acte / Niveau" a été retiré de `game_screen.dart` afin de désencombrer le haut de l'écran, ce dernier étant désormais avantageusement remplacé par le nouveau panneau interactif et complet au-dessus de la pioche.
+
+
 
 
 
