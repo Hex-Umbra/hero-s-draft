@@ -57,13 +57,21 @@ class StatBadge extends PositionComponent
     if (type == StatType.hp && !isCircle) {
       size = Vector2(130, 16);
 
-      // 1. Dessine l'Attaque: ⚔️ X
+      // 1. Dessine l'Attaque : Épée custom dessinée en rouge + Valeur
+      add(
+        FlameSwordIcon(
+          position: Vector2(0, size.y / 2),
+          size: Vector2(10, 10),
+          color: const Color(0xFFFF3B30),
+          anchor: Anchor.centerLeft,
+        ),
+      );
       add(
         TextComponent(
-          text: '⚔️$_attackValue',
+          text: '$_attackValue',
           textRenderer: TextPaint(
             style: const TextStyle(
-              color: Colors.orangeAccent,
+              color: Color(0xFFFF5252),
               fontSize: 9,
               fontWeight: FontWeight.bold,
               shadows: [
@@ -72,17 +80,39 @@ class StatBadge extends PositionComponent
             ),
           ),
           anchor: Anchor.centerLeft,
-          position: Vector2(0, size.y / 2),
+          position: Vector2(11, size.y / 2),
         ),
       );
 
-      // 2. Dessine l'Armure: 🛡️ Y (toujours affichée)
+      // 2. Dessine l'Armure : Bouclier MaterialIcons en dégradé bleu/cyan + Valeur
       add(
         TextComponent(
-          text: '🛡️$_armorValue',
+          text: '\u{e57c}', // Icons.shield
+          textRenderer: TextPaint(
+            style: TextStyle(
+              fontFamily: 'MaterialIcons',
+              fontSize: 10,
+              foreground: Paint()
+                ..shader = const LinearGradient(
+                  colors: [Color(0xFF2196F3), Color(0xFF00E5FF)],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ).createShader(const Rect.fromLTWH(0, 0, 10, 10)),
+              shadows: const [
+                Shadow(color: Colors.black, blurRadius: 2.0, offset: Offset(1, 1)),
+              ],
+            ),
+          ),
+          anchor: Anchor.centerLeft,
+          position: Vector2(28, size.y / 2),
+        ),
+      );
+      add(
+        TextComponent(
+          text: '$_armorValue',
           textRenderer: TextPaint(
             style: const TextStyle(
-              color: Colors.lightBlueAccent,
+              color: Color(0xFF00E5FF),
               fontSize: 9,
               fontWeight: FontWeight.bold,
               shadows: [
@@ -91,7 +121,7 @@ class StatBadge extends PositionComponent
             ),
           ),
           anchor: Anchor.centerLeft,
-          position: Vector2(32, size.y / 2),
+          position: Vector2(39, size.y / 2),
         ),
       );
 
@@ -527,5 +557,101 @@ class LinearProgressBarComponent extends PositionComponent {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
     canvas.drawRRect(rrect, borderPaint);
+  }
+}
+
+class FlameSwordIcon extends PositionComponent {
+  final Color color;
+
+  FlameSwordIcon({
+    required Vector2 position,
+    required Vector2 size,
+    required this.color,
+    Anchor anchor = Anchor.topLeft,
+  }) : super(position: position, size: size, anchor: anchor);
+
+  @override
+  void render(Canvas canvas) {
+    final double w = size.x;
+    final double h = size.y;
+    final double cx = w / 2;
+
+    // Use two shades of the color for a premium, beveled 3D look
+    final HSLColor hslColor = HSLColor.fromColor(color);
+    final Color lightColor = hslColor.withLightness((hslColor.lightness + 0.15).clamp(0.0, 1.0)).toColor();
+    final Color darkColor = hslColor.withLightness((hslColor.lightness - 0.15).clamp(0.0, 1.0)).toColor();
+
+    final Paint mainPaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    final Paint lightPaint = Paint()
+      ..color = lightColor
+      ..style = PaintingStyle.fill;
+
+    final Paint darkPaint = Paint()
+      ..color = darkColor
+      ..style = PaintingStyle.fill;
+
+    // 1. Blade: Left half (shaded dark for a bevel effect)
+    final Path leftBlade = Path()
+      ..moveTo(cx, h * 0.05) // Tip
+      ..lineTo(cx - w * 0.12, h * 0.20) // Left shoulder
+      ..lineTo(cx - w * 0.07, h * 0.65) // Left bottom base
+      ..lineTo(cx, h * 0.65) // Center base
+      ..close();
+    canvas.drawPath(leftBlade, darkPaint);
+
+    // 1. Blade: Right half (shaded light for a bevel effect)
+    final Path rightBlade = Path()
+      ..moveTo(cx, h * 0.05) // Tip
+      ..lineTo(cx + w * 0.12, h * 0.20) // Right shoulder
+      ..lineTo(cx + w * 0.07, h * 0.65) // Right bottom base
+      ..lineTo(cx, h * 0.65) // Center base
+      ..close();
+    canvas.drawPath(rightBlade, lightPaint);
+
+    // 2. Crossguard (Beautiful slightly curved design)
+    final Path guardPath = Path()
+      ..moveTo(cx - w * 0.30, h * 0.64)
+      ..quadraticBezierTo(cx - w * 0.32, h * 0.62, cx - w * 0.32, h * 0.60) // Left end curve
+      ..lineTo(cx - w * 0.26, h * 0.66)
+      ..lineTo(cx + w * 0.26, h * 0.66)
+      ..lineTo(cx + w * 0.32, h * 0.60) // Right end curve
+      ..quadraticBezierTo(cx + w * 0.32, h * 0.62, cx + w * 0.30, h * 0.64)
+      ..lineTo(cx, h * 0.72) // Curve point downward in center
+      ..close();
+    canvas.drawPath(guardPath, mainPaint);
+
+    // Highlight center of guard
+    final Paint guardHighlight = Paint()
+      ..color = lightColor
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(Offset(cx, h * 0.68), w * 0.06, guardHighlight);
+
+    // 3. Grip/Hilt (Leather wrapped look via alternating segments)
+    final Paint gripPaint = Paint()
+      ..color = darkColor
+      ..style = PaintingStyle.fill;
+    
+    final Path gripPath = Path()
+      ..moveTo(cx - w * 0.05, h * 0.72)
+      ..lineTo(cx + w * 0.05, h * 0.72)
+      ..lineTo(cx + w * 0.04, h * 0.88)
+      ..lineTo(cx - w * 0.04, h * 0.88)
+      ..close();
+    canvas.drawPath(gripPath, gripPaint);
+
+    // Hilt wrappings details
+    final Paint wrapPaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = w * 0.02;
+    canvas.drawLine(Offset(cx - w * 0.05, h * 0.76), Offset(cx + w * 0.05, h * 0.78), wrapPaint);
+    canvas.drawLine(Offset(cx - w * 0.05, h * 0.81), Offset(cx + w * 0.05, h * 0.83), wrapPaint);
+
+    // 4. Pommel (Round circular jewel at the base)
+    canvas.drawCircle(Offset(cx, h * 0.91), w * 0.08, lightPaint);
+    canvas.drawCircle(Offset(cx, h * 0.91), w * 0.06, mainPaint);
   }
 }

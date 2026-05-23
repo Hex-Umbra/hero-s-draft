@@ -391,9 +391,8 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
-                          // Barre de Vie et Mana (Centrée)
-                          SizedBox(
-                            width: screenWidth * 0.4, // 40% de la largeur
+                                                SizedBox(
+                            width: screenWidth * 0.52, // Élargi pour accueillir les stats sans tasser la barre de vie
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -436,68 +435,80 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                                     final currentArmor = runState.heroStats.armure;
 
                                     return Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
-                                        // 1. Dégâts d'Attaque (Rouge Gradient, sans fond)
-                                        ShaderMask(
-                                          shaderCallback: (bounds) => const LinearGradient(
-                                            colors: [
-                                              Color(0xFFFF2A2A),
-                                              Color(0xFFFF7A7A),
-                                            ],
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                          ).createShader(bounds),
-                                          blendMode: BlendMode.srcIn,
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              const SwordIcon(size: 20, color: Colors.white),
-                                              const SizedBox(width: 4),
-                                              Text(
-                                                '$totalAttack',
-                                                style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 16,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        const SizedBox(width: 14),
-
-                                        // 2. Armure (Bleu Gradient, sans fond, toujours affiché)
-                                        ShaderMask(
-                                          shaderCallback: (bounds) => const LinearGradient(
-                                            colors: [
-                                              Color(0xFF2196F3),
-                                              Color(0xFF00E5FF),
-                                            ],
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                          ).createShader(bounds),
-                                          blendMode: BlendMode.srcIn,
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              const Icon(Icons.shield, color: Colors.white, size: 20),
-                                              const SizedBox(width: 4),
-                                              Text(
-                                                '$currentArmor',
-                                                style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 16,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        const SizedBox(width: 14),
-
-                                        // 3. Barre de vie progressive avec superposition d'armure
+                                        // 1. Stats à gauche (alignés à droite pour s'accoler à la barre de vie)
                                         Expanded(
+                                          flex: 1,
+                                          child: Align(
+                                            alignment: Alignment.centerRight,
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                // Dégâts d'Attaque (Rouge Gradient, sans fond)
+                                                ShaderMask(
+                                                  shaderCallback: (bounds) => const LinearGradient(
+                                                    colors: [
+                                                      Color(0xFFFF2A2A),
+                                                      Color(0xFFFF7A7A),
+                                                    ],
+                                                    begin: Alignment.topLeft,
+                                                    end: Alignment.bottomRight,
+                                                  ).createShader(bounds),
+                                                  blendMode: BlendMode.srcIn,
+                                                  child: Row(
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    children: [
+                                                      const SwordIcon(size: 20, color: Colors.white),
+                                                      const SizedBox(width: 4),
+                                                      Text(
+                                                        '$totalAttack',
+                                                        style: const TextStyle(
+                                                          color: Colors.white,
+                                                          fontWeight: FontWeight.bold,
+                                                          fontSize: 16,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 14),
+
+                                                // Armure (Bleu Gradient, sans fond, toujours affiché)
+                                                ShaderMask(
+                                                  shaderCallback: (bounds) => const LinearGradient(
+                                                    colors: [
+                                                      Color(0xFF2196F3),
+                                                      Color(0xFF00E5FF),
+                                                    ],
+                                                    begin: Alignment.topLeft,
+                                                    end: Alignment.bottomRight,
+                                                  ).createShader(bounds),
+                                                  blendMode: BlendMode.srcIn,
+                                                  child: Row(
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    children: [
+                                                      const Icon(Icons.shield, color: Colors.white, size: 20),
+                                                      const SizedBox(width: 4),
+                                                      Text(
+                                                        '$currentArmor',
+                                                        style: const TextStyle(
+                                                          color: Colors.white,
+                                                          fontWeight: FontWeight.bold,
+                                                          fontSize: 16,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 14), // Espacement avec la barre de vie
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+
+                                        // 2. Barre de vie progressive centrée (Largeur fixe de 26% de l'écran)
+                                        SizedBox(
+                                          width: screenWidth * 0.26,
                                           child: Container(
                                             height: 26,
                                             decoration: BoxDecoration(
@@ -585,6 +596,12 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                                               ),
                                             ),
                                           ),
+                                        ),
+
+                                        // 3. Espaceur symétrique à droite (pour garantir le centrage parfait de la barre de vie)
+                                        const Expanded(
+                                          flex: 1,
+                                          child: SizedBox(),
                                         ),
                                       ],
                                     );

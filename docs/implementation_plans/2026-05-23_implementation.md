@@ -135,10 +135,10 @@
             - **Barre de PV & Armure** (dans un `Expanded`) : Barre verte progressive sur laquelle se superpose graphiquement une jauge d'armure bleue translucide progressive s'étirant harmonieusement.
         - **Nettoyage statique** : Les importations devenues inutiles après le refactoring (`status_indicator.dart`, `stat_badge.dart`) ont été nettoyées, maintenant un rapport `dart analyze` parfait à 0 warning.
 
-## Phase 72 - Ajustements Esthétiques et Effet 3D Translucide de l'Armure (Combat)
+## Phase 72 - Ajustements Esthétiques, Cohérence des Icônes et Centrage Mathématique (Combat)
 
-- style: Sublimation graphique de la barre d'armure en combat et design épuré en dégradés pour le joueur
-    - Ajout d'un padding intérieur aux jauges d'armure du joueur (Flutter) et de l'ennemi (Flame) pour un effet de superposition 3D, et application de ShaderMask pour des statistiques joueur sans conteneur de couleur.
+- style: Sublimation graphique de la barre d'armure en combat et centrage horizontal parfait du HUD Joueur
+    - Ajout d'un padding intérieur aux jauges d'armure, application de ShaderMask pour des statistiques joueur sans conteneur de couleur, et homogénéisation totale des icônes ennemis/joueur avec centrage mathématique de la barre de vie du joueur.
         - **Barre d'armure du joueur (Flutter)** : L'overlay d'armure bleue translucide superposé à la jauge de points de vie dispose désormais d'un padding intérieur (`vertical: 3.0`, `horizontal: 1.5`) et d'un arrondi (`borderRadius: BorderRadius.circular(8)`), complété par une fine bordure brillante cyan (`Colors.cyanAccent.withValues(alpha: 0.7)`). Cela donne une magnifique sensation de bouclier d'énergie 3D flottant par-dessus la jauge verte principale.
         - **Barre d'armure de l'ennemi (Flame)** : La jauge d'armure au-dessus des ennemis a également vu son padding intérieur ajusté (`vertPad = 2.0`, `horizPad = 1.5`), créant une cohérence visuelle parfaite avec le joueur et renforçant l'aspect de capsule d'armure flottante.
         - **Statistiques d'Attaque et d'Armure du joueur (HUD Bas)** :
@@ -146,4 +146,12 @@
             - Augmentation de la taille des icônes à `20` et des valeurs numériques à `16` (en gras) pour une lisibilité maximale à l'écran.
             - **Attaque** : Colorisation de l'icône de l'épée et de sa valeur avec un dégradé de rouge ardent (`Color(0xFFFF2A2A)` vers `Color(0xFFFF7A7A)`) via un composant `ShaderMask` avec `BlendMode.srcIn`.
             - **Armure** : Colorisation de l'icône du bouclier et de sa valeur (toujours affichée, même à `0`) avec un dégradé bleu glacier arctique (`Color(0xFF2196F3)` vers `Color(0xFF00E5FF)`).
+        - **Icônes Ennemis Homogénéisées (Flame)** :
+            - Remplacement des anciens émojis textuels `⚔️` et `🛡️` par les exactes répliques des icônes du joueur pour une cohérence graphique absolue.
+            - L'épée de l'ennemi est dessinée via un composant vectoriel custom `FlameSwordIcon` (reprenant le dessin en perspective de `CustomPainter`) de couleur rouge assortie (`Color(0xFFFF3B30)`), avec sa valeur textuelle en rouge vif.
+            - Le bouclier est rendu avec l'icône `Icons.shield` de la police `MaterialIcons` teintée d'un dégradé bleu-cyan à l'aide d'un shader `LinearGradient`, avec sa valeur textuelle en cyan vif.
+        - **Centrage Mathématique du HUD Joueur (Flutter)** :
+            - Résolution du décalage de la barre de vie provoqué par l'ajout des statistiques sur son côté gauche.
+            - Élargissement de l'enveloppe du HUD bas à `screenWidth * 0.52` et réorganisation de la `Row` avec deux conteneurs `Expanded(flex: 1)` entourant une barre de vie de taille fixe `screenWidth * 0.26`.
+            - Les statistiques sont alignées à droite du conteneur de gauche, créant un alignement parfait avec le bord gauche de la barre de vie, tandis que l'espaceur de droite garantit un **centrage horizontal absolu et pixel-perfect** de la barre de vie à l'écran.
         - **Robustesse et Performance** : Aucun problème de performance ou de rendu n'est introduit. Le code respecte à 100% les critères de typage fort et de linting.
