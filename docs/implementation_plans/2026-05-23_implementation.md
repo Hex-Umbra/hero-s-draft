@@ -109,6 +109,32 @@
     - Raccourcissement de la liste des statistiques affichées dans l'overlay de la carte.
         - **Problématique** : L'affichage redondant de l'or (déjà présent de manière proéminente en haut à droite dans l'AppBar avec une icône de pièce d'or sienne) encombrait inutilement le nouveau panneau flottant de statistiques rapides.
         - **Résolution (`map_screen.dart`)** : Retrait complet de la ligne d'or (`_buildMiniStatRow` d'or) du composant `Column` du panneau de statistiques flottant. Cela permet d'épurer l'overlay de statistiques rapides, en concentrant l'information uniquement sur l'état physique du héros (PV, Mana) et ses capacités passives (Attaque, Maîtrise, Chance), tout en maintenant une hauteur compacte idéale.
+        
+## Phase 70 - Résolution du plantage BackdropFilter sur Flutter Web (DDC) et raccourci d'œil des stats
+
+- bugfix: Contournement des crashs de BackdropFilter sur le Web (DDC) et intégration d'un raccourci visuel d'œil pour les stats
+    - Création d'un helper cross-platform de floutage/couleur opaque et intégration d'une icône d'œil dans le panneau flottant de la carte.
+        - **Problématique 1 (Crash Web BackdropFilter)** : Sur Flutter Web (notamment sous le compilateur DDC), l'application de transitions de disparition (fondu, échelle) sur un widget `BackdropFilter` placé en racine de modale entraînait un plantage complet de l'application (écran blanc) avec l'erreur `Assertion failed: rendering/object.dart:318:16` puis `Aborted()`.
+        - **Résolution du flou Web (`map_screen.dart`)** : Import de `package:flutter/foundation.dart` pour exposer `kIsWeb`. Implémentation d'une méthode de wrapping `_wrapWithBlur` dans `_MapScreenState` :
+            - **Sur le Web** : Le `BackdropFilter` est remplacent par une couleur sombre translucide premium (`Colors.black.withValues(alpha: 0.75)`). Cela évite le calcul de flou gaussien défectueux en DDC tout en offrant un contraste exceptionnel.
+            - **En Natif** : Le `BackdropFilter` traditionnel est conservé à l'intérieur d'un `ClipRect` de sécurité pour empêcher les fuites graphiques du flou gaussien.
+            - Cette méthode a été appliquée sur les 3 modales de la carte (`_showNodeOverlay`, `_showStatsDialog`, `_showInventoryDialog`).
+        - **Raccourci visuel "œil" (`map_screen.dart`)** : Ajout d'une icône `Icons.visibility_outlined` (œil) rétroéclairée dans le panneau flottant d'aperçu des statistiques rapides en bas à droite de la carte, permettant d'ouvrir directement la modale de statistiques complètes. Pour éviter tout dépassement RenderFlex (overflow) en basse résolution ou dans les suites de tests automatisés (avec la police carrée Ahem), le titre a été enveloppé d'un `Expanded` et la largeur a été ajustée de `140` à `165` pixels.
+
+## Phase 71 - Refonte UX & Style du Combat (HUD du Joueur et barre de vie Ennemis)
+
+- feat: Modernisation graphique de l'affichage de l'armure et de l'attaque en combat et aération de la scène de jeu
+    - Remplacement des badges Flame flottants encombrants par un HUD bas Flutter complet et une barre de PV enrichie au-dessus des ennemis.
+        - **Épurage de la Scène de Combat (Flame)** : Retrait de tous les anciens badges flottants individuels (`armorBadge` d'armure, `attackBadge` d'attaque, `statusIndicator` de buff/debuff) sur les cartes du joueur (`HeroCard`) et des monstres (`EnemyCard`). Les cartes physiques respirent et affichent fièrement leur design artistique sans surcharge.
+        - **Modernisation de la barre de vie Ennemis (Flame)** : La barre de PV au-dessus de chaque ennemi sur le terrain (`StatBadge` de type `hp`) est devenue un tableau de bord compact et unifié (`130x16`) :
+            - Affiche à gauche sa valeur d'attaque effective (icône épée `⚔️` ambre) et d'armure (icône bouclier `🛡️` bleu clair, visible en permanence y compris à `0`) à gauche de sa barre de vie.
+            - Superpose graphiquement une jauge d'armure progressive bleue translucide par-dessus son remplissage de PV rouge, s'étirant dynamiquement.
+        - **HUD Joueur Intégré (Flutter bas-milieu)** : Remplacement de la simple barre de PV par une ligne horizontale (`Row`) regroupant :
+            - **Attaque** à gauche : Conteneur orange équipé de `SwordIcon` et affichant l'attaque effective mise à jour en temps réel (base + force active + bonus de sélection).
+            - **Armure** à gauche : Conteneur bleu équipé de `Icons.shield` et affichant sa valeur (toujours visible, affiche `0` si l'armure est nulle).
+            - **Barre de PV & Armure** (dans un `Expanded`) : Barre verte progressive sur laquelle se superpose graphiquement une jauge d'armure bleue translucide progressive s'étirant harmonieusement.
+        - **Nettoyage statique** : Les importations devenues inutiles après le refactoring (`status_indicator.dart`, `stat_badge.dart`) ont été nettoyées, maintenant un rapport `dart analyze` parfait à 0 warning.
+
 
 
 

@@ -6,8 +6,6 @@ import 'package:flame/effects.dart';
 import '../../../data/models/entity_stats.dart';
 import '../floating_text.dart';
 import '../effect_icon.dart';
-import 'stat_badge.dart';
-import 'status_indicator.dart';
 import '../../heros_draft_game.dart';
 import '../../../models/data/card_data.dart';
 
@@ -17,9 +15,6 @@ class HeroCard extends PositionComponent
   int bonusAttack;
   final String imagePath;
 
-  late final StatBadge armorBadge;
-  late final StatBadge attackBadge;
-  late final StatusIndicator statusIndicator;
   late final RectangleComponent borderInfo;
 
   HeroCard(
@@ -118,19 +113,6 @@ class HeroCard extends PositionComponent
     );
     add(borderInfo);
 
-    armorBadge = StatBadge(type: StatType.armor, value: '${stats.armure}');
-    armorBadge.position = Vector2(-12, 35);
-    add(armorBadge);
-
-    attackBadge = StatBadge(type: StatType.attack, value: '${stats.attaque}');
-    attackBadge.position = Vector2(-12, 80);
-    add(attackBadge);
-
-    statusIndicator = StatusIndicator(statuses: stats.statuses);
-    statusIndicator.position = Vector2(0, -30); // Au dessus de la carte
-    add(statusIndicator);
-
-    _refreshBadges();
   }
 
   @override
@@ -138,29 +120,6 @@ class HeroCard extends PositionComponent
     super.onGameResize(size);
     // Mettre à jour l'échelle lors du redimensionnement (Agrandie pour le terrain)
     scale = Vector2.all(game.scaleFactor * 1.3);
-  }
-
-  void _refreshBadges() {
-    int currentArmor = stats.armure;
-    int mastery = stats.armorMastery;
-
-    armorBadge.updateValue(
-      '$currentArmor',
-      tooltipTitle: 'ARMURE',
-      tooltipDescription:
-          'Réduit les prochains dégâts reçus. Temporaire : $currentArmor.\nMaîtrise d\'Armure : +$mastery aux gains d\'armure du passif de classe.',
-    );
-
-    int totalAttack = stats.attaque + bonusAttack;
-    attackBadge.updateValue(
-      '$totalAttack',
-      baseValue: stats.attaque,
-      bonusValue: bonusAttack,
-      tooltipTitle: 'ATTAQUE',
-      tooltipDescription: 'Base : ${stats.attaque}, Bonus : $bonusAttack.',
-    );
-
-    statusIndicator.updateStatuses(stats.statuses);
   }
 
   void updateStats(
@@ -191,7 +150,6 @@ class HeroCard extends PositionComponent
 
     stats = newStats;
     this.bonusAttack = bonusAttack;
-    _refreshBadges();
   }
 
   void _spawnFloatingText(String text, Color color, Vector2 pos) {

@@ -1,6 +1,7 @@
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../widgets/sword_icon.dart';
 import '../../game/heros_draft_game.dart';
 import '../../game/controllers/run_controller.dart';
 import '../../game/controllers/deck_controller.dart';
@@ -425,62 +426,181 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                                   }),
                                 ),
                                 const SizedBox(height: 4),
-                                Container(
-                                  height: 26,
-                                  decoration: BoxDecoration(
-                                    color: Colors.black54,
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: Colors.white.withAlpha(50),
-                                      width: 1.0,
-                                    ),
-                                  ),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(11),
-                                    child: Stack(
+                                Builder(
+                                  builder: (context) {
+                                    int bonusAttack = 0;
+                                    try {
+                                      bonusAttack = _game.heroCard?.bonusAttack ?? 0;
+                                    } catch (_) {}
+                                    final totalAttack = runState.heroStats.effectiveAttaque + bonusAttack;
+                                    final currentArmor = runState.heroStats.armure;
+
+                                    return Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
-                                        if (runState.heroStats.maxPv > 0 &&
-                                            runState.heroStats.currentPv > 0)
-                                          FractionallySizedBox(
-                                            widthFactor: (runState.heroStats
-                                                        .currentPv /
-                                                    runState.heroStats.maxPv)
-                                                .clamp(0.0, 1.0),
-                                            heightFactor: 1.0,
-                                            child: Container(
-                                              decoration: const BoxDecoration(
-                                                gradient: LinearGradient(
-                                                  colors: [
-                                                    Color(0xFF1E824C), // Vert forêt foncé
-                                                    Color(0xFF27AE60), // Vert éclatant
-                                                    Color(0xFF58D68D), // Vert doux / menthe
-                                                  ],
-                                                  begin: Alignment.centerLeft,
-                                                  end: Alignment.centerRight,
+                                        // 1. Badge d'Attaque (Orange)
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: Colors.orangeAccent.withValues(alpha: 0.95),
+                                            borderRadius: BorderRadius.circular(6),
+                                            border: Border.all(
+                                              color: Colors.orange.withValues(alpha: 0.5),
+                                              width: 1.0,
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withAlpha(50),
+                                                blurRadius: 4,
+                                                offset: const Offset(1, 1),
+                                              ),
+                                            ],
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const SwordIcon(size: 14, color: Colors.white),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                '$totalAttack',
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 12,
                                                 ),
                                               ),
-                                            ),
+                                            ],
                                           ),
-                                        Center(
-                                          child: Text(
-                                            '${runState.heroStats.currentPv} / ${runState.heroStats.maxPv} PV',
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 13,
-                                              shadows: [
-                                                Shadow(
-                                                  color: Colors.black54,
-                                                  offset: Offset(1, 1),
-                                                  blurRadius: 2,
+                                        ),
+                                        const SizedBox(width: 8),
+
+                                        // 2. Badge d'Armure (Bleu, toujours affiché)
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: Colors.blueAccent.withValues(alpha: 0.95),
+                                            borderRadius: BorderRadius.circular(6),
+                                            border: Border.all(
+                                              color: Colors.cyanAccent.withValues(alpha: 0.5),
+                                              width: 1.0,
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withAlpha(50),
+                                                blurRadius: 4,
+                                                offset: const Offset(1, 1),
+                                              ),
+                                            ],
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const Icon(Icons.shield, color: Colors.white, size: 14),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                '$currentArmor',
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 12,
                                                 ),
-                                              ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+
+                                        // 3. Barre de vie progressive avec superposition d'armure
+                                        Expanded(
+                                          child: Container(
+                                            height: 26,
+                                            decoration: BoxDecoration(
+                                              color: Colors.black54,
+                                              borderRadius: BorderRadius.circular(12),
+                                              border: Border.all(
+                                                color: Colors.white.withAlpha(50),
+                                                width: 1.0,
+                                              ),
+                                            ),
+                                            child: ClipRRect(
+                                              borderRadius: BorderRadius.circular(11),
+                                              child: Stack(
+                                                children: [
+                                                  // Remplissage PV (Vert)
+                                                  if (runState.heroStats.maxPv > 0 &&
+                                                      runState.heroStats.currentPv > 0)
+                                                    FractionallySizedBox(
+                                                      alignment: Alignment.centerLeft,
+                                                      widthFactor: (runState.heroStats.currentPv /
+                                                              runState.heroStats.maxPv)
+                                                          .clamp(0.0, 1.0),
+                                                      heightFactor: 1.0,
+                                                      child: Container(
+                                                        decoration: const BoxDecoration(
+                                                          gradient: LinearGradient(
+                                                            colors: [
+                                                              Color(0xFF1E824C), // Vert forêt foncé
+                                                              Color(0xFF27AE60), // Vert éclatant
+                                                              Color(0xFF58D68D), // Vert doux / menthe
+                                                            ],
+                                                            begin: Alignment.centerLeft,
+                                                            end: Alignment.centerRight,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  // Remplissage Armure (Bleu Translucide, se superpose)
+                                                  if (currentArmor > 0 && runState.heroStats.maxPv > 0)
+                                                    FractionallySizedBox(
+                                                      alignment: Alignment.centerLeft,
+                                                      widthFactor: (currentArmor / runState.heroStats.maxPv)
+                                                          .clamp(0.0, 1.0),
+                                                      heightFactor: 1.0,
+                                                      child: Container(
+                                                        decoration: BoxDecoration(
+                                                          gradient: LinearGradient(
+                                                            colors: [
+                                                              Colors.blueAccent.withValues(alpha: 0.4),
+                                                              Colors.lightBlueAccent.withValues(alpha: 0.6),
+                                                            ],
+                                                            begin: Alignment.centerLeft,
+                                                            end: Alignment.centerRight,
+                                                          ),
+                                                          border: const Border(
+                                                            right: BorderSide(
+                                                              color: Colors.cyanAccent,
+                                                              width: 2.0,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  // Texte des PV
+                                                  Center(
+                                                    child: Text(
+                                                      '${runState.heroStats.currentPv} / ${runState.heroStats.maxPv} PV',
+                                                      style: const TextStyle(
+                                                        color: Colors.white,
+                                                        fontWeight: FontWeight.bold,
+                                                        fontSize: 13,
+                                                        shadows: [
+                                                          Shadow(
+                                                            color: Colors.black54,
+                                                            offset: Offset(1, 1),
+                                                            blurRadius: 2,
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
                                             ),
                                           ),
                                         ),
                                       ],
-                                    ),
-                                  ),
+                                    );
+                                  },
                                 ),
                               ],
                             ),

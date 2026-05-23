@@ -10,7 +10,6 @@ import '../../../models/status_effect.dart';
 import '../floating_text.dart';
 import '../effect_icon.dart';
 import 'stat_badge.dart';
-import 'status_indicator.dart';
 import '../../heros_draft_game.dart';
 
 class EnemyCard extends PositionComponent
@@ -23,9 +22,6 @@ class EnemyCard extends PositionComponent
   late final RectangleComponent borderInfo;
 
   late final StatBadge hpBadge;
-  late final StatBadge armorBadge;
-  late final StatBadge attackBadge;
-  late final StatusIndicator statusIndicator;
   late final SpriteComponent sprite;
 
   EnemyIntent? currentIntent;
@@ -119,32 +115,12 @@ class EnemyCard extends PositionComponent
       value: '${stats.currentPv}/${stats.maxPv}',
       isCircle: false,
       fillPercentage: stats.maxPv > 0 ? stats.currentPv / stats.maxPv : 1.0,
+      attackValue: stats.effectiveAttaque,
+      armorValue: stats.armure,
+      armorPercentage: stats.maxPv > 0 ? stats.armure / stats.maxPv : 0.0,
     );
-    hpBadge.position = Vector2(size.x / 2, -10); // Pile au-dessus de la carte
+    hpBadge.position = Vector2(size.x / 2, -12); // Centré légèrement au-dessus de la carte
     add(hpBadge);
-
-    armorBadge = StatBadge(type: StatType.armor, value: '${stats.armure}');
-    armorBadge.position = Vector2(-12, 25);
-    add(armorBadge);
-
-    final int initialStrength = stats.effectiveAttaque - stats.attaque;
-    attackBadge = StatBadge(
-      type: StatType.attack,
-      value: '${stats.effectiveAttaque}',
-      baseValue: stats.attaque,
-      bonusValue: initialStrength > 0 ? initialStrength : null,
-    );
-    attackBadge.position = Vector2(-12, 55);
-    add(attackBadge);
-
-
-
-    statusIndicator = StatusIndicator(statuses: stats.statuses);
-    statusIndicator.position = Vector2(
-      0,
-      size.y + 10,
-    ); // En dessous de la carte
-    add(statusIndicator);
 
     _refreshBadges();
   }
@@ -188,31 +164,15 @@ class EnemyCard extends PositionComponent
   }
 
   void _refreshBadges() {
-    hpBadge.updateValue(
+    hpBadge.updateHpValues(
       '${stats.currentPv}/${stats.maxPv}',
-      fillPercentage: stats.maxPv > 0 ? stats.currentPv / stats.maxPv : 0,
-      tooltipTitle: 'POINTS DE VIE',
-      tooltipDescription:
-          'Santé actuelle de l\'ennemi : ${stats.currentPv} / ${stats.maxPv}.',
+      stats.maxPv > 0 ? stats.currentPv / stats.maxPv : 0.0,
+      stats.effectiveAttaque,
+      stats.armure,
+      armorPercentage: stats.maxPv > 0 ? stats.armure / stats.maxPv : 0.0,
+      tooltipTitle: 'STATS DE L\'ENNEMI',
+      tooltipDescription: 'Santé : ${stats.currentPv}/${stats.maxPv} PV.\nAttaque : ${stats.effectiveAttaque}.\nArmure : ${stats.armure}.',
     );
-    armorBadge.updateValue(
-      '${stats.armure}',
-      tooltipTitle: 'ARMURE',
-      tooltipDescription:
-          'L\'ennemi possède ${stats.armure} d\'armure. Elle doit être brisée avant de toucher aux PV.',
-    );
-    final int strengthBonus = stats.effectiveAttaque - stats.attaque;
-    attackBadge.updateValue(
-      stats.effectiveAttaque.toString(),
-      baseValue: stats.attaque,
-      bonusValue: strengthBonus > 0 ? strengthBonus : null,
-      tooltipTitle: 'ATTAQUE',
-      tooltipDescription: strengthBonus > 0
-          ? 'Base : ${stats.attaque}, Bonus : +$strengthBonus. L\'ennemi inflige ${stats.effectiveAttaque} dégâts.'
-          : 'L\'ennemi inflige ${stats.attaque} dégâts de base avec ses attaques.',
-    );
-
-    statusIndicator.updateStatuses(stats.statuses);
   }
 
   void updateStats(EntityStats newStats) {

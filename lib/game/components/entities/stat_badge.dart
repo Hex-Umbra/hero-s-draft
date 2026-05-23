@@ -13,6 +13,9 @@ class StatBadge extends PositionComponent
   int? _baseValue;
   int? _bonusValue;
   double _fillPercentage;
+  int _attackValue;
+  int _armorValue;
+  double _armorPercentage;
   String? _customTooltipTitle;
   String? _customTooltipDescription;
 
@@ -26,15 +29,21 @@ class StatBadge extends PositionComponent
     int? bonusValue,
     this.isCircle = false,
     double fillPercentage = 1.0,
+    int attackValue = 0,
+    int armorValue = 0,
+    double armorPercentage = 0.0,
     String? tooltipTitle,
     String? tooltipDescription,
   }) : _value = value,
        _baseValue = baseValue,
        _bonusValue = bonusValue,
        _fillPercentage = fillPercentage,
+       _attackValue = attackValue,
+       _armorValue = armorValue,
+       _armorPercentage = armorPercentage,
        _customTooltipTitle = tooltipTitle,
        _customTooltipDescription = tooltipDescription,
-       super(size: isCircle ? Vector2.all(36) : (type == StatType.hp ? Vector2(90, 14) : Vector2(48, 22)));
+       super(size: isCircle ? Vector2.all(36) : (type == StatType.hp ? Vector2(130, 16) : Vector2(48, 22)));
 
   @override
   Future<void> onLoad() async {
@@ -46,15 +55,55 @@ class StatBadge extends PositionComponent
     removeAll(children);
 
     if (type == StatType.hp && !isCircle) {
-      size = Vector2(90, 14);
+      size = Vector2(130, 16);
 
+      // 1. Dessine l'Attaque: ⚔️ X
       add(
-        LinearProgressBarComponent(
-          size: size,
-          percentage: _fillPercentage,
-          borderRadius: 4.0,
+        TextComponent(
+          text: '⚔️$_attackValue',
+          textRenderer: TextPaint(
+            style: const TextStyle(
+              color: Colors.orangeAccent,
+              fontSize: 9,
+              fontWeight: FontWeight.bold,
+              shadows: [
+                Shadow(color: Colors.black, blurRadius: 2.0, offset: Offset(1, 1)),
+              ],
+            ),
+          ),
+          anchor: Anchor.centerLeft,
+          position: Vector2(0, size.y / 2),
         ),
       );
+
+      // 2. Dessine l'Armure: 🛡️ Y (toujours affichée)
+      add(
+        TextComponent(
+          text: '🛡️$_armorValue',
+          textRenderer: TextPaint(
+            style: const TextStyle(
+              color: Colors.lightBlueAccent,
+              fontSize: 9,
+              fontWeight: FontWeight.bold,
+              shadows: [
+                Shadow(color: Colors.black, blurRadius: 2.0, offset: Offset(1, 1)),
+              ],
+            ),
+          ),
+          anchor: Anchor.centerLeft,
+          position: Vector2(32, size.y / 2),
+        ),
+      );
+
+      // 3. Dessine la Barre de vie progressive avec l'armure superposée
+      final pb = LinearProgressBarComponent(
+        size: Vector2(66, 13),
+        percentage: _fillPercentage,
+        armorPercentage: _armorPercentage,
+        borderRadius: 4.0,
+      );
+      pb.position = Vector2(64, 1.5);
+      add(pb);
 
       textComponent = TextComponent(
         text: _value,
@@ -73,7 +122,7 @@ class StatBadge extends PositionComponent
           ),
         ),
         anchor: Anchor.center,
-        position: size / 2,
+        position: Vector2(97, size.y / 2),
       );
       add(textComponent);
       return;
@@ -292,6 +341,30 @@ class StatBadge extends PositionComponent
     }
   }
 
+  void updateHpValues(
+    String hpValue,
+    double fillPercentage,
+    int attackValue,
+    int armorValue, {
+    double? armorPercentage,
+    String? tooltipTitle,
+    String? tooltipDescription,
+  }) {
+    _value = hpValue;
+    _fillPercentage = fillPercentage;
+    _attackValue = attackValue;
+    _armorValue = armorValue;
+    if (armorPercentage != null) _armorPercentage = armorPercentage;
+    if (tooltipTitle != null) _customTooltipTitle = tooltipTitle;
+    if (tooltipDescription != null) {
+      _customTooltipDescription = tooltipDescription;
+    }
+
+    if (isLoaded) {
+      _updateVisuals();
+    }
+  }
+
   @override
   void onLongTapDown(TapDownEvent event) {
     final tooltipData = _getTooltipData();
@@ -368,11 +441,13 @@ class CircleProgressComponent extends PositionComponent {
 
 class LinearProgressBarComponent extends PositionComponent {
   final double percentage;
+  final double armorPercentage;
   final double borderRadius;
 
   LinearProgressBarComponent({
     required Vector2 size,
     required this.percentage,
+    this.armorPercentage = 0.0,
     this.borderRadius = 4.0,
   }) : super(size: size);
 
@@ -389,7 +464,7 @@ class LinearProgressBarComponent extends PositionComponent {
       canvas.save();
       canvas.clipRRect(rrect);
 
-      // 2. Dessine le remplissage avec gradient
+      // 2. Dessine le remplissage avec gradient (Rouge)
       final fillRect = Rect.fromLTWH(0, 0, size.x * percentage.clamp(0.0, 1.0), size.y);
       final fillPaint = Paint()
         ..shader = const LinearGradient(
@@ -406,7 +481,27 @@ class LinearProgressBarComponent extends PositionComponent {
       canvas.restore();
     }
 
-    // 3. Dessine la bordure blanche translucide
+    if (armorPercentage > 0) {
+      canvas.save();
+      canvas.clipRRect(rrect);
+
+      // 3. Dessine l'armure superposée avec gradient bleu translucide
+      final armorRect = Rect.fromLTWH(0, 0, size.x * armorPercentage.clamp(0.0, 1.0), size.y);
+      final armorPaint = Paint()
+        ..shader = LinearGradient(
+          colors: [
+            Colors.blueAccent.withValues(alpha: 0.4),
+            Colors.lightBlueAccent.withValues(alpha: 0.6),
+          ],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ).createShader(armorRect);
+
+      canvas.drawRect(armorRect, armorPaint);
+      canvas.restore();
+    }
+
+    // 4. Dessine la bordure blanche translucide
     final borderPaint = Paint()
       ..color = Colors.white.withAlpha(80)
       ..style = PaintingStyle.stroke
