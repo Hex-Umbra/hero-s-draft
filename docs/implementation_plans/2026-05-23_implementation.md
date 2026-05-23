@@ -96,6 +96,22 @@
             3. **Traduction du Scroll** : Dès qu'un `PointerScrollEvent` est capturé, la routine extrait la matrice de transformation active de `_transformationController`, récupère sa translation actuelle et lui applique un décalage vertical opposé au déplacement de la molette (`scrollDelta.dy`). La nouvelle coordonnée Y est réassignée en préservant intactes la translation X et la mise à l'échelle.
         - **Bénéfice** : Le joueur peut désormais faire défiler la carte verticalement de manière ultra-fluide avec sa molette (scroller vers le bas révèle le bas de la carte, scroller vers le haut révèle le boss au sommet), en parfaite synergie avec le glisser-déplacer d'origine qui reste 100% fonctionnel et réactif.
 
+## Phase 68 - Centrage Horizontal du Titre de l'Acte dans la Toolbar de la Carte
+
+- style: Forcer le centrage parfait du numéro de l'acte au milieu de l'AppBar
+    - Réassignation de la propriété `centerTitle` de l'AppBar à true dans la vue de la carte.
+        - **Problématique** : Le titre de l'acte exploré (ex : "Acte 1") apparaissait aligné à gauche par défaut à côté de la rangée de boutons outils de gauche, créant un déséquilibre esthétique notable dans l'AppBar.
+        - **Résolution (`map_screen.dart`)** : Modification de la propriété `centerTitle` de `false` à `true` dans le constructeur de l' `AppBar`. Le titre s'affiche désormais de façon parfaitement équilibrée et royale au centre exact de la largeur de la barre d'outils, assurant un rendu graphique irréprochable et symétrique.
+
+## Phase 69 - Épuration du Panneau Flottant de Statistiques de la Carte
+
+- ux: Retirer la quantité d'or du petit panneau flottant de statistiques en bas à droite
+    - Raccourcissement de la liste des statistiques affichées dans l'overlay de la carte.
+        - **Problématique** : L'affichage redondant de l'or (déjà présent de manière proéminente en haut à droite dans l'AppBar avec une icône de pièce d'or sienne) encombrait inutilement le nouveau panneau flottant de statistiques rapides.
+        - **Résolution (`map_screen.dart`)** : Retrait complet de la ligne d'or (`_buildMiniStatRow` d'or) du composant `Column` du panneau de statistiques flottant. Cela permet d'épurer l'overlay de statistiques rapides, en concentrant l'information uniquement sur l'état physique du héros (PV, Mana) et ses capacités passives (Attaque, Maîtrise, Chance), tout en maintenant une hauteur compacte idéale.
+
+
+
 
 
 

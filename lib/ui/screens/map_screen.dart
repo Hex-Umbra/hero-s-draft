@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flame/extensions.dart' hide Matrix4;
@@ -210,7 +211,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
         ),
         backgroundColor: const Color(0xFFD2B48C).withAlpha(200), // Tan translucide
         elevation: 2,
-        centerTitle: false,
+        centerTitle: true,
         leadingWidth: 360,
         leading: Row(
           mainAxisSize: MainAxisSize.min,
@@ -526,18 +527,46 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
-                    'STATS DU HÉROS',
-                    style: TextStyle(
-                      color: Color(0xFFE8D5B5), // Parchemin
-                      fontWeight: FontWeight.bold,
-                      fontSize: 11,
-                      letterSpacing: 0.8,
+                  SizedBox(
+                    width: 165,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Expanded(
+                          child: Text(
+                            'STATS DU HÉROS',
+                            style: TextStyle(
+                              color: Color(0xFFE8D5B5), // Parchemin
+                              fontWeight: FontWeight.bold,
+                              fontSize: 11,
+                              letterSpacing: 0.8,
+                            ),
+                          ),
+                        ),
+                        Tooltip(
+                          message: 'Afficher les détails',
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () => _showStatsDialog(context),
+                              borderRadius: BorderRadius.circular(4),
+                              child: const Padding(
+                                padding: EdgeInsets.all(2.0),
+                                child: Icon(
+                                  Icons.visibility_outlined,
+                                  color: Color(0xFFE8D5B5),
+                                  size: 16,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 4),
                   Container(
-                    width: 140,
+                    width: 165,
                     height: 1,
                     color: const Color(0xFFD2B48C).withAlpha(80),
                   ),
@@ -554,13 +583,6 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
                     icon: Icons.diamond_rounded,
                     iconColor: Colors.cyanAccent,
                     value: '${stats.currentMana}/${stats.maxMana} Mana',
-                  ),
-                  const SizedBox(height: 6),
-                  // Or
-                  _buildMiniStatRow(
-                    icon: Icons.monetization_on,
-                    iconColor: Colors.amber,
-                    value: '${runState.gold} Or',
                   ),
                   const SizedBox(height: 6),
                   // Attaque
@@ -671,8 +693,8 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
 
             return PopScope(
               canPop: isCompleted,
-              child: BackdropFilter(
-                filter: ui.ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+              child: _wrapWithBlur(
+                sigma: 5,
                 child: Center(
                   child: Container(
                     width: MediaQuery.of(context).size.width * 0.9,
@@ -744,8 +766,8 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
 
             final stats = runState.heroStats;
 
-            return BackdropFilter(
-              filter: ui.ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+            return _wrapWithBlur(
+              sigma: 8,
               child: Center(
                 child: Container(
                   width: min(MediaQuery.of(context).size.width * 0.85, 500),
@@ -969,8 +991,8 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
             final runState = ref.watch(runProvider);
             final relics = runState.relics;
 
-            return BackdropFilter(
-              filter: ui.ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+            return _wrapWithBlur(
+              sigma: 8,
               child: Center(
                 child: Container(
                   width: min(MediaQuery.of(context).size.width * 0.85, 600),
@@ -1313,6 +1335,21 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
           ),
         ),
       ],
+    );
+  }
+
+  Widget _wrapWithBlur({required Widget child, double sigma = 8.0}) {
+    if (kIsWeb) {
+      return Container(
+        color: Colors.black.withValues(alpha: 0.75),
+        child: child,
+      );
+    }
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ui.ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
+        child: child,
+      ),
     );
   }
 }
