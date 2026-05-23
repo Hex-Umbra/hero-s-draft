@@ -181,6 +181,14 @@
 - fix: Retrait de l'ancien affichage textuel de buffs simplifié sous les textes d'Acte et de Niveau
     - Suppression de la liste textuelle orange devenue obsolète sous l'en-tête de niveau en haut à gauche.
         - L'ancien affichage brut qui listait en orange les statuts sous le texte "Acte / Niveau" a été retiré de `game_screen.dart` afin de désencombrer le haut de l'écran, ce dernier étant désormais avantageusement remplacé par le nouveau panneau interactif et complet au-dessus de la pioche.
+- feat: Uniformisation de la terminologie de combat en remplaçant la Force par l'Attaque
+    - Remplacement systématique de toutes les occurrences utilisateur et de logique de "Force" par "Attaque" (ou "puissance" pour le lore).
+        - Pour éliminer toute confusion dans les statistiques du joueur et rester 100% cohérent, j'ai parcouru le projet et renommé toutes les mentions de la statistique de combat "Force" par "Attaque" :
+          - Dans les badges d'aide de statut (`StatBadge`, `EnemyCard` et `HeroCard`), le titre de l'infobulle est passé de `FORCE` à `ATTAQUE`.
+          - Dans la logique des statuts appliqués en combat (événements de `event_screen.dart`, reliques de `run_controller.dart`, intentions de `heros_draft_game.dart`, buffs de `effect_resolver.dart`, etc.), le libellé dynamique du statut a été renommé de `'Force'` à `'Attaque'`.
+          - Dans le fichier d'événements, le choix sacrificiel a été mis à jour de "+1 Force" à "+1 Attaque" et sa description à "une puissance sombre".
+          - Les libellés d'affichage dans le panneau HUD du joueur et le panneau d'intentions ennemies ont également été uniformisés.
+
 
 
 

@@ -677,7 +677,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                                 case 'strength':
                                   icon = Icons.flash_on;
                                   color = Colors.orangeAccent;
-                                  label = 'Force : +${status.value}';
+                                  label = 'Attaque : +${status.value}';
                                   break;
                                 case 'poison':
                                   icon = Icons.sick;
@@ -821,7 +821,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                                 case IntentType.buff:
                                   icon = Icons.trending_up;
                                   color = const Color(0xFFE040FB);
-                                  label = 'Buff Force : +${intent.value}';
+                                  label = 'Buff Attaque : +${intent.value}';
                                   break;
                                 case IntentType.debuffDeck:
                                   icon = Icons.sick;

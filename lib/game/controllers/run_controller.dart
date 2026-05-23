@@ -310,7 +310,7 @@ class RunController extends StateNotifier<RunState> {
         addStatus(
           StatusEffect(
             id: 'strength',
-            name: 'Force (Relique)',
+            name: 'Attaque (Relique)',
             type: StatusType.buff,
             value: relic.value,
             duration: 3, // Limité à 3 tours au lieu de 99
@@ -370,7 +370,7 @@ class RunController extends StateNotifier<RunState> {
       updatedStats = updatedStats.addStatus(
         StatusEffect(
           id: 'strength',
-          name: 'Force',
+          name: 'Attaque',
           type: StatusType.buff,
           value: strengthGain,
           duration: 3, // 3 tours maximum au lieu d'un buff permanent
@@ -452,7 +452,7 @@ class RunController extends StateNotifier<RunState> {
       heroStats: state.heroStats.addStatus(
         StatusEffect(
           id: 'strength',
-          name: 'Force',
+          name: 'Attaque',
           type: StatusType.buff,
           value: bonus,
           duration: duration,

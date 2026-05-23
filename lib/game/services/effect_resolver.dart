@@ -21,7 +21,7 @@ class EffectResolver {
       case 'strength':
         return StatusEffect(
           id: 'strength',
-          name: 'Force',
+          name: 'Attaque',
           type: StatusType.buff,
           value: value,
           duration: duration,
@@ -45,7 +45,7 @@ class EffectResolver {
       case 'strength_regen':
         return StatusEffect(
           id: 'strength_regen',
-          name: 'Ã‰veil de Force',
+          name: 'Éveil d\'Attaque',
           type: StatusType.buff,
           value: value,
           duration: duration,

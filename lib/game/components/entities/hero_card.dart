@@ -152,7 +152,7 @@ class HeroCard extends PositionComponent
       '$totalAttack',
       baseValue: stats.attaque,
       bonusValue: bonusAttack,
-      tooltipTitle: 'FORCE',
+      tooltipTitle: 'ATTAQUE',
       tooltipDescription: 'Base : ${stats.attaque}, Bonus : $bonusAttack.',
     );
 

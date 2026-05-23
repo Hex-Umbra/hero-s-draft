@@ -63,7 +63,7 @@ class _EventScreenState extends ConsumerState<EventScreen> {
           runController.addStatus(
             StatusEffect(
               id: 'strength',
-              name: 'Force',
+              name: 'Attaque',
               type: StatusType.buff,
               value: action.value as int,
               duration: 3,
@@ -130,7 +130,7 @@ class _EventScreenState extends ConsumerState<EventScreen> {
         iconColor = Colors.orangeAccent;
         textColor = Colors.orangeAccent;
         bgColor = Colors.orange.withAlpha(30);
-        text = '+${action.value} Force';
+        text = '+${action.value} Attaque';
         break;
       case 'gain_relic':
         icon = Icons.auto_awesome;

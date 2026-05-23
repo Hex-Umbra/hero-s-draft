@@ -216,7 +216,7 @@ class EnemyCard extends PositionComponent
       stats.effectiveAttaque.toString(),
       baseValue: stats.attaque,
       bonusValue: strengthBonus > 0 ? strengthBonus : null,
-      tooltipTitle: 'FORCE',
+      tooltipTitle: 'ATTAQUE',
       tooltipDescription: strengthBonus > 0
           ? 'Base : ${stats.attaque}, Bonus : +$strengthBonus. L\'ennemi inflige ${stats.effectiveAttaque} dégâts.'
           : 'L\'ennemi inflige ${stats.attaque} dégâts de base avec ses attaques.',
@@ -301,7 +301,7 @@ class EnemyCard extends PositionComponent
       updatedStats = updatedStats.addStatus(
         StatusEffect(
           id: 'strength',
-          name: 'Force',
+          name: 'Attaque',
           type: StatusType.buff,
           value: strengthGain,
           duration: 1,

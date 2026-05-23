@@ -185,7 +185,7 @@
   {
     "id": "demon_form",
     "name": "Forme Démoniaque",
-    "description": "Gagne 4 Force pendant 3 tours.",
+    "description": "Gagne 4 ATK pendant 3 tours.",
     "cost": 3,
     "type": "power",
     "category": "global",

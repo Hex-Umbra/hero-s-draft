@@ -292,7 +292,7 @@ class StatBadge extends PositionComponent
         );
       case StatType.attack:
         return (
-          'FORCE',
+          'ATTAQUE',
           'Dégâts de base de l\'entité. Affecte la puissance des attaques.',
         );
       case StatType.mana:

@@ -729,7 +729,7 @@ class HerosDraftGame extends FlameGame
             enemy.stats.addStatus(
               StatusEffect(
                 id: 'strength',
-                name: 'Force',
+                name: 'Attaque',
                 type: StatusType.buff,
                 value: intent.value,
                 duration: 99,
