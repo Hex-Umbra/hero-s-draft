@@ -195,7 +195,11 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       },
       onEnemiesSpawned: () {
         if (mounted) {
-          setState(() {});
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              setState(() {});
+            }
+          });
         }
       },
     );

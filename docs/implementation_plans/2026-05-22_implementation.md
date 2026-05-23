@@ -206,3 +206,7 @@
     - Retrait de `IntentionIndicator` dans `EnemyCard` et suppression du fichier `lib/game/components/entities/intention_indicator.dart`.
         - Puisque le rendu de l'intention au-dessus de la carte a été désactivé (dans la Phase 46) au profit du nouveau panneau HUD dans l'interface Flutter, l'ancien composant `IntentionIndicator` était invisible et n'avait plus aucune utilité.
         - Pour assainir la structure du jeu et supprimer le code mort, toutes les références à `intentionIndicator` dans `EnemyCard` ont été supprimées, et le fichier source `intention_indicator.dart` a été définitivement effacé du projet.
+- fix: Résolution de l'exception "setState() called during build" liée à onEnemiesSpawned
+    - Sécurisation de l'appel à `setState` dans le callback `onEnemiesSpawned` de `GameScreen` via `WidgetsBinding.instance.addPostFrameCallback`.
+        - L'initialisation asynchrone ou l'update Flame de la frame initiale déclenchait `onEnemiesSpawned` alors que Flutter était en cours de construction du widget tree (notamment dans `LayoutBuilder` de `GameWidget`). Appeler directement `setState` provoquait une assertion critique du framework Flutter.
+        - Le correctif encapsule le rafraîchissement d'état dans `addPostFrameCallback`, repoussant son exécution à la fin immédiate de la frame de build en cours et garantissant une transition parfaitement stable et sans crash lors du lancement des combats.
