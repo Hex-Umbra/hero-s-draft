@@ -787,7 +787,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
                                 icon: const Icon(Icons.shield_outlined, color: Colors.lightBlueAccent, size: 16),
                                 title: 'Maîtrise',
                                 value: '+${stats.armorMastery}',
-                                subtitle: 'Bonus d\'Armure',
+                                subtitle: 'Sur l\'Armure Passive',
                               ),
                             ),
                             const SizedBox(width: 12),

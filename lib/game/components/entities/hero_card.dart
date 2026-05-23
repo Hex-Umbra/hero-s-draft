@@ -148,7 +148,7 @@ class HeroCard extends PositionComponent
       '$currentArmor',
       tooltipTitle: 'ARMURE',
       tooltipDescription:
-          'Réduit les prochains dégâts reçus. Temporaire : $currentArmor.\nMaîtrise : +$mastery à chaque gain.',
+          'Réduit les prochains dégâts reçus. Temporaire : $currentArmor.\nMaîtrise d\'Armure : +$mastery aux gains d\'armure du passif de classe.',
     );
 
     int totalAttack = stats.attaque + bonusAttack;

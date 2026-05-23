@@ -591,7 +591,7 @@ class CardComponent extends PositionComponent
     position += event.canvasDelta;
     _targetTilt = (event.canvasDelta.x * 0.08).clamp(-0.4, 0.4);
 
-    bool isInCancelZone = position.y > game.size.y * 0.8;
+    bool isInCancelZone = position.y > game.size.y * 0.68;
     if (isInCancelZone != _isHoveringCancelZone) {
       _isHoveringCancelZone = isInCancelZone;
       _applyCancelZoneFeedback(_isHoveringCancelZone);

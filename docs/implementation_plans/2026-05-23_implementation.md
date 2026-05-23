@@ -38,4 +38,24 @@
         - **Résolution** : Modification de la gestion de l'action `gain_strength` dans `event_screen.dart` pour qu'elle appelle désormais directement `runController.applyHeroStatModifier(attackAcc: action.value as int)`. Le buff de +1 Attaque s'ajoute ainsi de manière définitive à la statistique de base `attaque` du héros (comme le fait déjà l'action `gain_max_hp` pour les points de vie), persistant correctement à travers les combats et apparaissant proprement dans les panneaux de statistiques.
         - **Nettoyage** : Suppression de l'import inutilisé `status_effect.dart` dans `event_screen.dart` identifié par l'analyse statique de Dart.
 
+## Phase 63 - Restriction du bonus de Maîtrise d'Armure au seul Passif de Classe
+
+- feat: Restreindre l'application du bonus d'armure global (`armorMastery`) pour qu'il n'impacte que les passifs de classe
+    - Modification du calcul des gains d'armure de cartes classiques pour exclure le bonus et réorientation des tooltips.
+        - **Problématique** : L'attribut de statistiques permanent `armorMastery` (augmenté via les récompenses ou buffs de maîtrise) était appliqué sans distinction à TOUS les gains d'armure du jeu, y compris lors du jeu de cartes ordinaires (ex: "Défense") via l'effet `armor` du résolveur.
+        - **Résolution dans `EffectResolver`** : Suppression de `+ currentStats.armorMastery` dans le traitement de l'effet `armor` de `lib/game/services/effect_resolver.dart`. Désormais, jouer une carte d'armure n'ajoute que sa valeur propre (éventuellement scalée par son niveau).
+        - **Réservation aux Passifs (`TraitSystem`)** : Le bonus global de maîtrise (`stats.armorMastery`) reste pleinement appliqué dans `lib/game/systems/trait_system.dart` lors du déclenchement automatique des passifs de classe (tels que `berserkerArmor`, `regenArmor` ou `spellArmor`). Cela respecte précisément le souhait de valoriser et d'améliorer spécifiquement la signature passive du personnage choisi.
+        - **Mise à jour graphique (UI / Tooltips)** :
+            - **Dans `hero_card.dart`** : Mise à jour de l'infobulle du badge d'armure pour indiquer de façon explicite : `Maîtrise d'Armure : +$mastery aux gains d'armure du passif de classe`.
+            - **Dans `map_screen.dart`** : Modification du sous-titre de la statistique Maîtrise du panneau d'affichage pour spécifier : `Sur l'Armure Passive`.
+
+## Phase 64 - Ajustement Ergonomique de la Hauteur de la Zone d'Annulation (Drag and Drop)
+
+- ux: Remonter le seuil de la zone d'annulation lors du glisser-déposer des cartes
+    - Modification de la coordonnée Y de détection de la cancel zone pour s'aligner naturellement avec le sommet de la main de cartes.
+        - **Problématique** : La limite de la zone d'annulation était fixée très bas, à 80% de la hauteur de l'écran (`game.size.y * 0.8`). Comme les cartes en main s'étalent sur un arc de cercle positionné entre 77% et 85% de la hauteur de l'écran, le joueur devait glisser sa carte extrêmement bas pour annuler, ou risquait de jouer involontairement sa carte s'il la relâchait à peine au-dessus des autres cartes.
+        - **Résolution dans `CardComponent`** : Remontée du seuil de détection dans `onDragUpdate` à 68% de la hauteur de l'écran (`game.size.y * 0.68`). Désormais, tout relâchement en dessous de cette ligne (donc dans la zone de la main de cartes) annule proprement le jeu et renvoie la carte en main sans déclencher d'action accidentelle. Le joueur doit faire glisser la carte clairement dans la moitié supérieure de l'écran pour la valider, ce qui rend le gameplay tactile 100% robuste, intuitif et naturel.
+
+
+
 
