@@ -77,6 +77,10 @@ class HeroCard extends PositionComponent
     if (game.focusedCard != null) {
       if (game.focusedCard!.card.data.target == CardTarget.self) {
         final cardToPlay = game.focusedCard!;
+        if (!cardToPlay.canAfford) {
+          cardToPlay.shakeAnimation();
+          return;
+        }
         game.setFocusedCard(null);
         bool played = game.tryPlayCard(cardToPlay, null);
         if (played) {

@@ -49,14 +49,14 @@ class CardComponent extends PositionComponent
     refreshVisuals();
   }
 
-  bool get _canAfford {
+  bool get canAfford {
     if (!isLoaded || !isMounted) return true;
     final currentMana = game.currentRunState?.heroStats.currentMana ?? 0;
     return currentMana >= card.currentCost;
   }
 
   Color _getTypeColor() {
-    if (!_canAfford && !_isFlashing) return Colors.redAccent;
+    if (!canAfford && !_isFlashing) return Colors.redAccent;
     if (_isCancelling) return Colors.grey;
     
     switch (card.data.type) {
@@ -537,11 +537,6 @@ class CardComponent extends PositionComponent
   void onTapDown(TapDownEvent event) {
     if (isPlayed) return;
     super.onTapDown(event);
-    if (!_canAfford) {
-      _shakeAnimation();
-      event.continuePropagation = false;
-      return;
-    }
     if (game.focusedCard == this) {
       game.setFocusedCard(null);
     } else {
@@ -562,11 +557,6 @@ class CardComponent extends PositionComponent
   void onDragStart(DragStartEvent event) {
     if (isPlayed) return;
     super.onDragStart(event);
-    
-    if (!_canAfford) {
-      _shakeAnimation();
-      return;
-    }
 
     isDragging = true;
     _targetTilt = 0;
@@ -646,6 +636,13 @@ class CardComponent extends PositionComponent
       return;
     }
 
+    if (!canAfford) {
+      shakeAnimation();
+      _returnToHand();
+      game.highlightEnemy(null);
+      return;
+    }
+
     EnemyCard? targetedEnemy;
     if (card.data.target == CardTarget.singleEnemy) {
       targetedEnemy = game.highlightedEnemy;
@@ -718,7 +715,7 @@ class CardComponent extends PositionComponent
     priority = basePriority;
   }
 
-  void _shakeAnimation() {
+  void shakeAnimation() {
     // Évite les décalages cumulés si l'animation est déclenchée à répétition rapidement
     if (!isDragging) {
       final basePos = _isSelected 
