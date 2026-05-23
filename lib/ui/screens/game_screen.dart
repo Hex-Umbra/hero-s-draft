@@ -820,12 +820,32 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                             
                             Widget intentWidget;
                             if (intent == null) {
-                              intentWidget = const Text(
-                                "En attente...",
-                                style: TextStyle(
-                                  color: Colors.white30,
-                                  fontSize: 13,
-                                  fontStyle: FontStyle.italic,
+                              intentWidget = Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withAlpha(10),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: Colors.white.withAlpha(30),
+                                    width: 1.0,
+                                  ),
+                                ),
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.hourglass_empty,
+                                        color: Colors.white30, size: 14),
+                                    SizedBox(width: 6),
+                                    Text(
+                                      "En attente...",
+                                      style: TextStyle(
+                                        color: Colors.white30,
+                                        fontSize: 12,
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               );
                             } else {
@@ -835,9 +855,23 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
                               switch (intent.type) {
                                 case IntentType.attack:
-                                  icon = Icons.flash_on;
-                                  color = const Color(0xFFFF5252);
-                                  label = 'Attaque : ${intent.value}';
+                                  if (intent.value >= 20) {
+                                    icon = Icons.gavel;
+                                    color = const Color(0xFFC0392B); // Crimson profond
+                                    label = 'Attaque Dévastatrice : ${intent.value}';
+                                  } else if (intent.value >= 12) {
+                                    icon = Icons.whatshot;
+                                    color = const Color(0xFFE74C3C); // Écarlate
+                                    label = 'Attaque Lourde : ${intent.value}';
+                                  } else if (intent.value >= 6) {
+                                    icon = Icons.flash_on;
+                                    color = const Color(0xFFFF7675); // Corail
+                                    label = 'Attaque : ${intent.value}';
+                                  } else {
+                                    icon = Icons.bolt;
+                                    color = const Color(0xFFF39C12); // Ambre/Orange
+                                    label = 'Attaque Rapide : ${intent.value}';
+                                  }
                                   break;
                                 case IntentType.defend:
                                   icon = Icons.shield;
@@ -856,19 +890,33 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                                   break;
                               }
 
-                              intentWidget = Row(
-                                children: [
-                                  Icon(icon, color: color, size: 16),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    label,
-                                    style: TextStyle(
-                                      color: color,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                              intentWidget = Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: color.withAlpha(20),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: color.withAlpha(60),
+                                    width: 1.0,
                                   ),
-                                ],
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(icon, color: color, size: 14),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      label,
+                                      style: TextStyle(
+                                        color: color,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               );
                             }
 

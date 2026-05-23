@@ -210,3 +210,16 @@
     - Sécurisation de l'appel à `setState` dans le callback `onEnemiesSpawned` de `GameScreen` via `WidgetsBinding.instance.addPostFrameCallback`.
         - L'initialisation asynchrone ou l'update Flame de la frame initiale déclenchait `onEnemiesSpawned` alors que Flutter était en cours de construction du widget tree (notamment dans `LayoutBuilder` de `GameWidget`). Appeler directement `setState` provoquait une assertion critique du framework Flutter.
         - Le correctif encapsule le rafraîchissement d'état dans `addPostFrameCallback`, repoussant son exécution à la fin immédiate de la frame de build en cours et garantissant une transition parfaitement stable et sans crash lors du lancement des combats.
+
+## Phase 57 - Classification et thématisation des intentions d'attaque des ennemis
+
+- feat: Remplacement du libellé d'attaque par des catégories d'intensité dynamiques
+    - Analyse de `intent.value` dans `game_screen.dart` pour subdiviser l'action d'attaque en 4 types d'intentions distincts :
+        - **Attaque Dévastatrice** (`value >= 20`) : Icône `Icons.gavel` (marteau de force), couleur rouge sang cramoisi (`0xFFC0392B`).
+        - **Attaque Lourde** (`12 <= value < 20`) : Icône `Icons.whatshot` (flamme de danger), couleur écarlate intense (`0xFFE74C3C`).
+        - **Attaque Standard** (`6 <= value < 12`) : Icône `Icons.flash_on` (éclair standard), couleur corail vif (`0xFFFF7675`).
+        - **Attaque Rapide** (`value < 6`) : Icône `Icons.bolt` (vitesse), couleur ambre orangé (`0xFFF39C12`).
+- feat: Encapsulation des intentions dans des capsules visuelles (glassmorphism/badges) colorées
+    - Enveloppement de chaque intention répertoriée dans le panneau HUD latéral dans un widget `Container` en forme de capsule.
+    - Chaque capsule arbore un fond très doucement teinté de la couleur thématique de l'intention (`color.withAlpha(20)`), un contour fin assorti (`color.withAlpha(60)`) et des textes stylisés, créant une interface utilisateur extrêmement premium et lisible.
+    - L'état d'attente initial ("En attente...") a également été converti en capsule grise translucide uniforme.
