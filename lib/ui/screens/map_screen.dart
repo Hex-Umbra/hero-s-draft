@@ -153,6 +153,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
   @override
   Widget build(BuildContext context) {
     final runState = ref.watch(runProvider);
+    final stats = runState.heroStats;
     final nodes = runState.mapNodes;
     final currentNodeId = runState.currentNodeId;
     final screenSize = MediaQuery.of(context).size;
@@ -490,6 +491,88 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
                 ),
               ),
             ),
+          // Aperçu des Stats du Joueur (Flottant en bas à droite)
+          Positioned(
+            right: 20,
+            bottom: 20,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF4A3728).withAlpha(230), // Même brun foncé que la Légende
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFD2B48C)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(50),
+                    blurRadius: 10,
+                    offset: const Offset(2, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'STATS DU HÉROS',
+                    style: TextStyle(
+                      color: Color(0xFFE8D5B5), // Parchemin
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Container(
+                    width: 140,
+                    height: 1,
+                    color: const Color(0xFFD2B48C).withAlpha(80),
+                  ),
+                  const SizedBox(height: 8),
+                  // PV
+                  _buildMiniStatRow(
+                    icon: Icons.favorite,
+                    iconColor: Colors.redAccent,
+                    value: '${stats.currentPv}/${stats.maxPv} PV',
+                  ),
+                  const SizedBox(height: 6),
+                  // Mana
+                  _buildMiniStatRow(
+                    icon: Icons.diamond_rounded,
+                    iconColor: Colors.cyanAccent,
+                    value: '${stats.currentMana}/${stats.maxMana} Mana',
+                  ),
+                  const SizedBox(height: 6),
+                  // Or
+                  _buildMiniStatRow(
+                    icon: Icons.monetization_on,
+                    iconColor: Colors.amber,
+                    value: '${runState.gold} Or',
+                  ),
+                  const SizedBox(height: 6),
+                  // Attaque
+                  _buildMiniStatRowWidget(
+                    icon: SwordIcon(size: 16, color: Colors.orangeAccent),
+                    value: '${stats.attaque} Attaque',
+                  ),
+                  const SizedBox(height: 6),
+                  // Maîtrise
+                  _buildMiniStatRow(
+                    icon: Icons.shield_outlined,
+                    iconColor: Colors.lightBlueAccent,
+                    value: '+${stats.armorMastery} Maîtrise',
+                  ),
+                  const SizedBox(height: 6),
+                  // Chance
+                  _buildMiniStatRow(
+                    icon: Icons.casino_outlined,
+                    iconColor: Colors.amberAccent,
+                    value: '${stats.luck} Chance',
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -1170,6 +1253,53 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildMiniStatRow({
+    required IconData icon,
+    required Color iconColor,
+    required String value,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, color: iconColor, size: 16),
+        const SizedBox(width: 8),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Color(0xFFE8D5B5),
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMiniStatRowWidget({
+    required Widget icon,
+    required String value,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: 16,
+          height: 16,
+          child: Center(child: icon),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Color(0xFFE8D5B5),
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+          ),
+        ),
+      ],
     );
   }
 }

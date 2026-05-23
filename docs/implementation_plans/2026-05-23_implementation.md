@@ -56,6 +56,22 @@
         - **Problématique** : La limite de la zone d'annulation était fixée très bas, à 80% de la hauteur de l'écran (`game.size.y * 0.8`). Comme les cartes en main s'étalent sur un arc de cercle positionné entre 77% et 85% de la hauteur de l'écran, le joueur devait glisser sa carte extrêmement bas pour annuler, ou risquait de jouer involontairement sa carte s'il la relâchait à peine au-dessus des autres cartes.
         - **Résolution dans `CardComponent`** : Remontée du seuil de détection dans `onDragUpdate` à 68% de la hauteur de l'écran (`game.size.y * 0.68`). Désormais, tout relâchement en dessous de cette ligne (donc dans la zone de la main de cartes) annule proprement le jeu et renvoie la carte en main sans déclencher d'action accidentelle. Le joueur doit faire glisser la carte clairement dans la moitié supérieure de l'écran pour la valider, ce qui rend le gameplay tactile 100% robuste, intuitif et naturel.
 
+## Phase 65 - Intégration d'un Aperçu Flottant des Statistiques de Base sur la Carte
+
+- feat: Ajout d'un panneau flottant compact présentant l'état du joueur directement sur l'écran de la carte
+    - Création d'un overlay de statistiques épuré et esthétique positionné en bas à droite de la carte, parfaitement symétrique à la légende.
+        - **Problématique** : Bien qu'il existe un menu complet très détaillé accessible via le bouton "STATS" de l'AppBar, le joueur n'avait pas de vue immédiate sur ses ressources (PV, Mana, Or) ni ses modificateurs de combat (Attaque, Maîtrise d'Armure, Chance) lors de son exploration de la carte de l'acte sans devoir ouvrir un dialogue modal.
+        - **Résolution visuelle (`map_screen.dart`)** : Conception d'un panneau flottant `STATS DU HÉROS` placé au coin inférieur droit de la vue (`Positioned` à `right: 20, bottom: 20`), conçu en parfaite harmonie stylistique avec la légende médiévale (fond brun foncé semi-translucide `0xFF4A3728`, bordure dorée beige `0xFFD2B48C`, et ombrage marqué).
+        - **Contenu Compact** : Ce panneau affiche de manière sobre et qualitative les statistiques fondamentales actualisées en temps réel via l'état Riverpod :
+            - **PV** : `${stats.currentPv}/${stats.maxPv}` avec une icône de cœur rouge.
+            - **Mana** : `${stats.currentMana}/${stats.maxMana}` avec un cristal cyan.
+            - **Or** : `${runState.gold}` avec une pièce d'or dorée.
+            - **Attaque** : `${stats.attaque}` avec le widget `SwordIcon` orange.
+            - **Maîtrise d'Armure** : `+${stats.armorMastery}` avec un bouclier bleu ciel.
+            - **Chance** : `${stats.luck}` avec un dé doré.
+        - **Sous-composants** : Intégration de deux méthodes privées d'aide (`_buildMiniStatRow` et `_buildMiniStatRowWidget`) pour normaliser l'espacement, l'alignement et la typographie des lignes de statistiques afin de conserver un rendu graphique ultra-premium et rigoureux.
+
+
 
 
 
