@@ -485,19 +485,39 @@ class LinearProgressBarComponent extends PositionComponent {
       canvas.save();
       canvas.clipRRect(rrect);
 
-      // 3. Dessine l'armure superposée avec gradient bleu translucide
-      final armorRect = Rect.fromLTWH(0, 0, size.x * armorPercentage.clamp(0.0, 1.0), size.y);
-      final armorPaint = Paint()
-        ..shader = LinearGradient(
-          colors: [
-            Colors.blueAccent.withValues(alpha: 0.4),
-            Colors.lightBlueAccent.withValues(alpha: 0.6),
-          ],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ).createShader(armorRect);
+      // 3. Dessine l'armure superposée avec gradient bleu translucide et un padding intérieur
+      final double vertPad = 2.0;
+      final double horizPad = 1.5;
+      final double drawWidth = (size.x * armorPercentage.clamp(0.0, 1.0)) - (horizPad * 2);
+      
+      if (drawWidth > 0) {
+        final armorRect = Rect.fromLTWH(
+          horizPad,
+          vertPad,
+          drawWidth,
+          size.y - (vertPad * 2),
+        );
+        final armorRRect = RRect.fromRectAndRadius(armorRect, const Radius.circular(2.0));
+        
+        final armorPaint = Paint()
+          ..shader = LinearGradient(
+            colors: [
+              Colors.blueAccent.withValues(alpha: 0.45),
+              Colors.lightBlueAccent.withValues(alpha: 0.65),
+            ],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ).createShader(armorRect);
 
-      canvas.drawRect(armorRect, armorPaint);
+        canvas.drawRRect(armorRRect, armorPaint);
+        
+        // Petite bordure bleu clair brillante sur la capsule d'armure
+        final armorBorderPaint = Paint()
+          ..color = Colors.cyanAccent.withValues(alpha: 0.7)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 0.5;
+        canvas.drawRRect(armorRRect, armorBorderPaint);
+      }
       canvas.restore();
     }
 

@@ -438,77 +438,63 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                                     return Row(
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
-                                        // 1. Badge d'Attaque (Orange)
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                          decoration: BoxDecoration(
-                                            color: Colors.orangeAccent.withValues(alpha: 0.95),
-                                            borderRadius: BorderRadius.circular(6),
-                                            border: Border.all(
-                                              color: Colors.orange.withValues(alpha: 0.5),
-                                              width: 1.0,
-                                            ),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.black.withAlpha(50),
-                                                blurRadius: 4,
-                                                offset: const Offset(1, 1),
-                                              ),
+                                        // 1. Dégâts d'Attaque (Rouge Gradient, sans fond)
+                                        ShaderMask(
+                                          shaderCallback: (bounds) => const LinearGradient(
+                                            colors: [
+                                              Color(0xFFFF2A2A),
+                                              Color(0xFFFF7A7A),
                                             ],
-                                          ),
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                          ).createShader(bounds),
+                                          blendMode: BlendMode.srcIn,
                                           child: Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              const SwordIcon(size: 14, color: Colors.white),
+                                              const SwordIcon(size: 20, color: Colors.white),
                                               const SizedBox(width: 4),
                                               Text(
                                                 '$totalAttack',
                                                 style: const TextStyle(
                                                   color: Colors.white,
                                                   fontWeight: FontWeight.bold,
-                                                  fontSize: 12,
+                                                  fontSize: 16,
                                                 ),
                                               ),
                                             ],
                                           ),
                                         ),
-                                        const SizedBox(width: 8),
+                                        const SizedBox(width: 14),
 
-                                        // 2. Badge d'Armure (Bleu, toujours affiché)
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                          decoration: BoxDecoration(
-                                            color: Colors.blueAccent.withValues(alpha: 0.95),
-                                            borderRadius: BorderRadius.circular(6),
-                                            border: Border.all(
-                                              color: Colors.cyanAccent.withValues(alpha: 0.5),
-                                              width: 1.0,
-                                            ),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.black.withAlpha(50),
-                                                blurRadius: 4,
-                                                offset: const Offset(1, 1),
-                                              ),
+                                        // 2. Armure (Bleu Gradient, sans fond, toujours affiché)
+                                        ShaderMask(
+                                          shaderCallback: (bounds) => const LinearGradient(
+                                            colors: [
+                                              Color(0xFF2196F3),
+                                              Color(0xFF00E5FF),
                                             ],
-                                          ),
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                          ).createShader(bounds),
+                                          blendMode: BlendMode.srcIn,
                                           child: Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              const Icon(Icons.shield, color: Colors.white, size: 14),
+                                              const Icon(Icons.shield, color: Colors.white, size: 20),
                                               const SizedBox(width: 4),
                                               Text(
                                                 '$currentArmor',
                                                 style: const TextStyle(
                                                   color: Colors.white,
                                                   fontWeight: FontWeight.bold,
-                                                  fontSize: 12,
+                                                  fontSize: 16,
                                                 ),
                                               ),
                                             ],
                                           ),
                                         ),
-                                        const SizedBox(width: 8),
+                                        const SizedBox(width: 14),
 
                                         // 3. Barre de vie progressive avec superposition d'armure
                                         Expanded(
@@ -549,27 +535,29 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                                                         ),
                                                       ),
                                                     ),
-                                                  // Remplissage Armure (Bleu Translucide, se superpose)
+                                                  // Remplissage Armure (Bleu Translucide, se superpose avec padding pour un effet 3D par-dessus)
                                                   if (currentArmor > 0 && runState.heroStats.maxPv > 0)
                                                     FractionallySizedBox(
                                                       alignment: Alignment.centerLeft,
                                                       widthFactor: (currentArmor / runState.heroStats.maxPv)
                                                           .clamp(0.0, 1.0),
                                                       heightFactor: 1.0,
-                                                      child: Container(
-                                                        decoration: BoxDecoration(
-                                                          gradient: LinearGradient(
-                                                            colors: [
-                                                              Colors.blueAccent.withValues(alpha: 0.4),
-                                                              Colors.lightBlueAccent.withValues(alpha: 0.6),
-                                                            ],
-                                                            begin: Alignment.centerLeft,
-                                                            end: Alignment.centerRight,
-                                                          ),
-                                                          border: const Border(
-                                                            right: BorderSide(
-                                                              color: Colors.cyanAccent,
-                                                              width: 2.0,
+                                                      child: Padding(
+                                                        padding: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 1.5),
+                                                        child: Container(
+                                                          decoration: BoxDecoration(
+                                                            gradient: LinearGradient(
+                                                              colors: [
+                                                                Colors.blueAccent.withValues(alpha: 0.45),
+                                                                Colors.lightBlueAccent.withValues(alpha: 0.65),
+                                                              ],
+                                                              begin: Alignment.centerLeft,
+                                                              end: Alignment.centerRight,
+                                                            ),
+                                                            borderRadius: BorderRadius.circular(8),
+                                                            border: Border.all(
+                                                              color: Colors.cyanAccent.withValues(alpha: 0.7),
+                                                              width: 1.0,
                                                             ),
                                                           ),
                                                         ),
