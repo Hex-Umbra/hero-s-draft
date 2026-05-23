@@ -34,7 +34,7 @@ class StatBadge extends PositionComponent
        _fillPercentage = fillPercentage,
        _customTooltipTitle = tooltipTitle,
        _customTooltipDescription = tooltipDescription,
-       super(size: isCircle ? Vector2.all(36) : Vector2(48, 22));
+       super(size: isCircle ? Vector2.all(36) : (type == StatType.hp ? Vector2(90, 14) : Vector2(48, 22)));
 
   @override
   Future<void> onLoad() async {
@@ -44,6 +44,56 @@ class StatBadge extends PositionComponent
 
   void _updateVisuals() {
     removeAll(children);
+
+    if (type == StatType.hp && !isCircle) {
+      size = Vector2(90, 14);
+
+      add(
+        RectangleComponent(
+          size: size,
+          paint: Paint()..color = Colors.black.withAlpha(200),
+        ),
+      );
+
+      add(
+        RectangleComponent(
+          size: Vector2(size.x * _fillPercentage, size.y),
+          paint: Paint()..color = const Color(0xFFE74C3C),
+        ),
+      );
+
+      add(
+        RectangleComponent(
+          size: size,
+          paint: Paint()
+            ..color = Colors.white.withAlpha(80)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1.0,
+        ),
+      );
+
+      textComponent = TextComponent(
+        text: _value,
+        textRenderer: TextPaint(
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 9,
+            fontWeight: FontWeight.bold,
+            shadows: [
+              Shadow(
+                color: Colors.black54,
+                offset: Offset(0.5, 0.5),
+                blurRadius: 1.0,
+              ),
+            ],
+          ),
+        ),
+        anchor: Anchor.center,
+        position: size / 2,
+      );
+      add(textComponent);
+      return;
+    }
 
     Color color;
     String iconText;

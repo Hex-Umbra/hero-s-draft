@@ -189,6 +189,17 @@
           - Dans le fichier d'événements, le choix sacrificiel a été mis à jour de "+1 Force" à "+1 Attaque" et sa description à "une puissance sombre".
           - Les libellés d'affichage dans le panneau HUD du joueur et le panneau d'intentions ennemies ont également été uniformisés.
 
+## Phase 56 - Barre de vie des ennemis linéaire et repositionnée au-dessus des cartes
+
+- feat: Remplacement du cercle de PV des ennemis par une barre de vie horizontale au-dessus de leur carte
+    - Configuration de `StatBadge` pour les PV ennemis avec `isCircle: false` et repositionnement au sommet.
+        - Afin de rendre la lecture des combats plus directe et uniforme par rapport à l'affichage du joueur, la barre de vie circulaire (au bas de la carte monstre) a été supprimée.
+        - À la place, les PV de l'ennemi s'affichent sous forme de barre de progression rectangulaire horizontale de `90x14` pixels (fond noir translucide, remplissage rouge vif représentant le pourcentage des PV et contour fin blanc satiné). Le texte au format `'currentPv/maxPv'` est parfaitement centré en gras à l'intérieur.
+        - Cette barre de vie a été positionnée pile au-dessus du cadre de la carte monstre à `y = -10` avec un point d'ancrage centré, assurant une intégration visuelle de qualité supérieure.
+- feat: Repositionnement de l'indicateur d'intention ennemi pour éviter toute collision visuelle
+    - Ajustement vertical de `intentionIndicator` à l'ordonnée Y = -35.
+        - Pour accompagner le déplacement de la nouvelle barre de vie linéaire au sommet des cartes de monstres, la position de l'indicateur d'intentions Flame (`intentionIndicator`) a été reculée légèrement vers le haut à `y = -35` (au lieu de `y = -30`). Cela évite tout chevauchement et offre une aération idéale au-dessus des ennemis.
+
 
 
 

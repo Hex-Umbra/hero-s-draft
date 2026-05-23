@@ -119,17 +119,17 @@ class EnemyCard extends PositionComponent
     hpBadge = StatBadge(
       type: StatType.hp,
       value: '${stats.currentPv}/${stats.maxPv}',
-      isCircle: true,
+      isCircle: false,
       fillPercentage: stats.maxPv > 0 ? stats.currentPv / stats.maxPv : 1.0,
     );
-    hpBadge.position = Vector2(size.x / 2, size.y); // Centré en bas
+    hpBadge.position = Vector2(size.x / 2, -10); // Pile au-dessus de la carte
     add(hpBadge);
 
     intentionIndicator = IntentionIndicator(initialIntent: effectiveIntent);
     intentionIndicator.position = Vector2(
       size.x / 2,
-      -30,
-    ); // Juste au-dessus de la carte
+      -35,
+    ); // Juste au-dessus de la barre de vie
     add(intentionIndicator);
 
     armorBadge = StatBadge(type: StatType.armor, value: '${stats.armure}');
