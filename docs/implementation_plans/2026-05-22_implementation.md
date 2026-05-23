@@ -202,6 +202,7 @@
     - Remplacement de `LinearProgressIndicator` par un conteneur personnalisé pour le HUD du joueur.
         - Pour correspondre à la charte visuelle haut de gamme et harmoniser les barres de vie, le Material `LinearProgressIndicator` brut et uni du joueur a été remplacé par un widget `Container` personnalisé.
         - Il affiche désormais une bordure fine translucide, des coins arrondis de `12px` (via `ClipRRect`) et un dégradé linéaire horizontal très élégant à trois tons (du vert forêt profond `0xFF1E824C` au vert menthe éclatant `0xFF58D68D` en passant par le vert émeraude vibrant `0xFF27AE60`).
-- feat: Repositionnement de l'indicateur d'intention ennemi pour éviter toute collision visuelle
-    - Ajustement vertical de `intentionIndicator` à l'ordonnée Y = -35.
-        - Pour accompagner le déplacement de la nouvelle barre de vie linéaire au sommet des cartes de monstres, la position de l'indicateur d'intentions Flame (`intentionIndicator`) a été reculée légèrement vers le haut à `y = -35` (au lieu de `y = -30`). Cela évite tout chevauchement et offre une aération idéale au-dessus des ennemis.
+- refactor: Nettoyage et suppression complète du composant d'intention obsolète (IntentionIndicator)
+    - Retrait de `IntentionIndicator` dans `EnemyCard` et suppression du fichier `lib/game/components/entities/intention_indicator.dart`.
+        - Puisque le rendu de l'intention au-dessus de la carte a été désactivé (dans la Phase 46) au profit du nouveau panneau HUD dans l'interface Flutter, l'ancien composant `IntentionIndicator` était invisible et n'avait plus aucune utilité.
+        - Pour assainir la structure du jeu et supprimer le code mort, toutes les références à `intentionIndicator` dans `EnemyCard` ont été supprimées, et le fichier source `intention_indicator.dart` a été définitivement effacé du projet.

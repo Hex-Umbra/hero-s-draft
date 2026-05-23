@@ -10,7 +10,6 @@ import '../../../models/status_effect.dart';
 import '../floating_text.dart';
 import '../effect_icon.dart';
 import 'stat_badge.dart';
-import 'intention_indicator.dart';
 import 'status_indicator.dart';
 import '../../heros_draft_game.dart';
 
@@ -24,7 +23,6 @@ class EnemyCard extends PositionComponent
   late final RectangleComponent borderInfo;
 
   late final StatBadge hpBadge;
-  late final IntentionIndicator intentionIndicator;
   late final StatBadge armorBadge;
   late final StatBadge attackBadge;
   late final StatusIndicator statusIndicator;
@@ -125,13 +123,6 @@ class EnemyCard extends PositionComponent
     hpBadge.position = Vector2(size.x / 2, -10); // Pile au-dessus de la carte
     add(hpBadge);
 
-    intentionIndicator = IntentionIndicator(initialIntent: effectiveIntent);
-    intentionIndicator.position = Vector2(
-      size.x / 2,
-      -35,
-    ); // Juste au-dessus de la barre de vie
-    add(intentionIndicator);
-
     armorBadge = StatBadge(type: StatType.armor, value: '${stats.armure}');
     armorBadge.position = Vector2(-12, 25);
     add(armorBadge);
@@ -167,7 +158,6 @@ class EnemyCard extends PositionComponent
 
   void rollIntent() {
     _determineNextIntent();
-    intentionIndicator.updateIntent(effectiveIntent);
   }
 
   void _determineNextIntent() {
@@ -245,7 +235,6 @@ class EnemyCard extends PositionComponent
 
     stats = newStats;
     _refreshBadges();
-    intentionIndicator.updateIntent(effectiveIntent);
   }
 
   void shakeAndFlashAnimation() {
