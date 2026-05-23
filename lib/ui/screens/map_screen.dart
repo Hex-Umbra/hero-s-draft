@@ -177,8 +177,8 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
         }
 
         double scale = 0.8;
-        double actualX = targetNode.position.x + 1000; // padding left
-        double actualY = targetNode.position.y + 1000; // padding top
+        double actualX = (currentNodeId != null ? targetNode.position.x : 500.0) + 1000; // padding left
+        double actualY = targetNode.position.y + 80.0 + 1000; // padding top + visual Y offset
 
         double dx = (screenSize.width / 2) - (actualX * scale);
         double dy = (screenSize.height / 2) - (actualY * scale);
@@ -1403,7 +1403,7 @@ class _MapNodeWidgetState extends State<_MapNodeWidget> {
 
     return Positioned(
       left: widget.node.position.x - 35,
-      top: widget.node.position.y - 35,
+      top: widget.node.position.y - 35 + 80.0,
       child: MouseRegion(
         onEnter: (_) {
           setState(() => _isHovered = true);
@@ -1549,8 +1549,8 @@ class MapConnectionPainter extends CustomPainter {
           final paint = isHighlighted ? paintHighlight : paintBase;
 
           final Path path = Path()
-            ..moveTo(node.position.x, node.position.y)
-            ..lineTo(targetNode.position.x, targetNode.position.y);
+            ..moveTo(node.position.x, node.position.y + 80.0)
+            ..lineTo(targetNode.position.x, targetNode.position.y + 80.0);
 
           for (final ui.PathMetric metric in path.computeMetrics()) {
             double distance = phase - (dashLength + dashSpace) * 2;
@@ -1595,7 +1595,7 @@ class _PlayerPawn extends StatelessWidget {
       duration: const Duration(milliseconds: 600),
       curve: Curves.easeInOutBack, // Petit effet de ressort lors de l'arrivée
       left: position.x - 20,
-      top: position.y - 65, // Un peu au dessus du centre du node
+      top: position.y - 65 + 80.0, // Un peu au dessus du centre du node
       child: Column(
         children: [
           Container(

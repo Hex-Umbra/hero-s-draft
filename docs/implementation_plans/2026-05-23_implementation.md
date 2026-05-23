@@ -71,6 +71,21 @@
             - **Chance** : `${stats.luck}` avec un dé doré.
         - **Sous-composants** : Intégration de deux méthodes privées d'aide (`_buildMiniStatRow` et `_buildMiniStatRowWidget`) pour normaliser l'espacement, l'alignement et la typographie des lignes de statistiques afin de conserver un rendu graphique ultra-premium et rigoureux.
 
+## Phase 66 - Optimisation du Centrage de la Caméra et Résolution de l'Affichage du Boss sur la Carte
+
+- bugfix: Centrage horizontal par défaut au chargement de la carte et correction du boss coupé à moitié en haut
+    - Résolution des coordonnées de centrage X/Y et décalage visuel global de la carte pour assurer la visibilité totale du nœud boss.
+        - **Problématique 1 (Boss coupé)** : Le nœud final du boss est généré logiquement à l'ordonnée `posY = 0.0`. Dans la Stack de taille $1000 \times 3000$ pixels, cela positionnait le centre du nœud boss pile au niveau de la bordure supérieure de la vue. Son icône de taille $70$ pixels était donc tronquée à 50% de sa surface.
+        - **Problématique 2 (Caméra excentrée)** : Au premier chargement de l'acte (`currentNodeId == null`), le moteur centrait la caméra sur le premier nœud de la première ligne. Or, ce nœud étant situé à l'extrême gauche, la caméra apparaissait collée au bord gauche de la carte, occultant les autres nœuds disponibles du premier étage.
+        - **Résolution du Boss coupé (`map_screen.dart`)** : Application d'un décalage visuel constant `yOffset = 80.0` pixels sur l'axe vertical lors du rendu des composants dans le fichier `map_screen.dart`. Ce décalage a été répercuté à 4 endroits stratégiques :
+            1. **`MapConnectionPainter`** : Décalage des coordonnées Y de début et de fin de chaque ligne tracée (`node.position.y + 80.0`).
+            2. **`_MapNodeWidgetState`** : Décalage du `top` du composant de nœud (`widget.node.position.y - 35 + 80.0`).
+            3. **`_PlayerPawn`** : Décalage du `top` du pion représentant le joueur (`position.y - 65 + 80.0`).
+            4. **`WidgetsBinding.instance.addPostFrameCallback`** : Décalage de la cible de focalisation de la caméra (`targetNode.position.y + 80.0`).
+            *Grâce à cette approche purement graphique en bout de chaîne, le boss est désormais parfaitement visible et décalé vers le bas de 80px, tandis que les tests unitaires logiques (qui exigent que le boss soit à `y = 0.0`) continuent de valider à 100%.*
+        - **Résolution du Centrage Horizontal (`map_screen.dart`)** : Modification du calcul horizontal `actualX` dans les routines de centrage post-frame de `map_screen.dart`. Si aucun nœud de départ n'est actif, `actualX` est positionné sur `500.0` (le centre géométrique de la largeur de la carte de $1000$px). La caméra apparaît maintenant divinement centrée au milieu du premier étage, offrant au joueur une vision globale et claire de toutes les options de départ possibles.
+
+
 
 
 
