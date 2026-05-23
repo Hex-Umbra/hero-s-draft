@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flame/extensions.dart' hide Matrix4;
 import '../../game/controllers/run_controller.dart';
@@ -320,60 +321,72 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
       ),
       body: Stack(
         children: [
-          InteractiveViewer(
-            transformationController: _transformationController,
-            boundaryMargin: const EdgeInsets.all(2000),
-            minScale: 0.1,
-            maxScale: 2.0,
-            scaleEnabled: false,
-            constrained: false,
-            child: Container(
-              width: 3000,
-              height: 5000,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 1000,
-                vertical: 1000,
-              ),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF5DEB3), // Couleur Wheat
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFFF5DEB3),
-                    const Color(0xFFE8D5B5),
-                    const Color(0xFFD2B48C),
-                  ],
-                  radius: 1.5,
+          Listener(
+            onPointerSignal: (pointerSignal) {
+              if (pointerSignal is PointerScrollEvent) {
+                final matrix = _transformationController.value.clone();
+                final translation = matrix.getTranslation();
+                // vertical scrolling of map screen using mouse wheel
+                final double newY = translation.y - pointerSignal.scrollDelta.dy;
+                matrix.setTranslationRaw(translation.x, newY, translation.z);
+                _transformationController.value = matrix;
+              }
+            },
+            child: InteractiveViewer(
+              transformationController: _transformationController,
+              boundaryMargin: const EdgeInsets.all(2000),
+              minScale: 0.1,
+              maxScale: 2.0,
+              scaleEnabled: false,
+              constrained: false,
+              child: Container(
+                width: 3000,
+                height: 5000,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 1000,
+                  vertical: 1000,
                 ),
-              ),
-              child: Stack(
-                children: [
-                  CustomPaint(
-                    size: const Size(1000, 3000),
-                    painter: MapConnectionPainter(
-                      nodes: nodes,
-                      animation: _dashController,
-                      highlightedConnections: _highlightedConnections,
-                      isParchmentMode: true,
-                    ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF5DEB3), // Couleur Wheat
+                  gradient: RadialGradient(
+                    colors: [
+                      const Color(0xFFF5DEB3),
+                      const Color(0xFFE8D5B5),
+                      const Color(0xFFD2B48C),
+                    ],
+                    radius: 1.5,
                   ),
-                  ...nodes.map(
-                    (node) => _MapNodeWidget(
-                      node: node,
-                      isAvailable: _isNodeAvailable(node, nodes, currentNodeId),
-                      isCurrent: node.id == currentNodeId,
-                      onTap: () => _onNodeTap(context, ref, node),
-                      onShowTooltip: _showNodeTooltip,
-                      onHideTooltip: _hideTooltip,
-                      onHoverEnter: () => _updateHighlight(node.id, nodes, currentNodeId),
-                      onHoverExit: () => _updateHighlight(null, nodes, currentNodeId),
+                ),
+                child: Stack(
+                  children: [
+                    CustomPaint(
+                      size: const Size(1000, 3000),
+                      painter: MapConnectionPainter(
+                        nodes: nodes,
+                        animation: _dashController,
+                        highlightedConnections: _highlightedConnections,
+                        isParchmentMode: true,
+                      ),
                     ),
-                  ),
-                  // Pion du Joueur AnimÃ©
-                  if (currentNodeId != null)
-                    _PlayerPawn(
-                      position: nodes.firstWhere((n) => n.id == currentNodeId).position,
+                    ...nodes.map(
+                      (node) => _MapNodeWidget(
+                        node: node,
+                        isAvailable: _isNodeAvailable(node, nodes, currentNodeId),
+                        isCurrent: node.id == currentNodeId,
+                        onTap: () => _onNodeTap(context, ref, node),
+                        onShowTooltip: _showNodeTooltip,
+                        onHideTooltip: _hideTooltip,
+                        onHoverEnter: () => _updateHighlight(node.id, nodes, currentNodeId),
+                        onHoverExit: () => _updateHighlight(null, nodes, currentNodeId),
+                      ),
                     ),
-                ],
+                    // Pion du Joueur AnimÃ©
+                    if (currentNodeId != null)
+                      _PlayerPawn(
+                        position: nodes.firstWhere((n) => n.id == currentNodeId).position,
+                      ),
+                  ],
+                ),
               ),
             ),
           ),

@@ -75,4 +75,4 @@
 - ~~Modifier la récompense de gains d'armure, elle n'affectera pas TOUT les gains d'armure, améliorera uniquement le bonus du passif de chaque perso~~
 - ~~modifier la zone où "lacher" la carte quand on on la hold pour le drag and drop, la zone actuelle est trop basse, il faut la remonter au niveau des cartes a jouer~~
 - ~~Ajouter un petit aperçu des stats du joueur dans la map, il y a déjà un menu dédié pour afficher les stats en détails, pour ce composant on n'affichera que les stats de bases avec l'icone de la stat et la valeur~~
-- Quand l'écran de la map apparait, la "caméra" est centré sur le premier noeud toujours en bas a gauche de la map, il faudrait faire apparaitre au centre de la pour voir tout les noeurd accessible de la premiere ligne par la même occasion vérifier pourquoi le dernier noeud (celui de boss) est coupé a moitié
+- ~~Quand l'écran de la map apparait, la "caméra" est centré sur le premier noeud toujours en bas a gauche de la map, il faudrait faire apparaitre au centre de la pour voir tout les noeurd accessible de la premiere ligne par la même occasion vérifier pourquoi le dernier noeud (celui de boss) est coupé a moitié~~

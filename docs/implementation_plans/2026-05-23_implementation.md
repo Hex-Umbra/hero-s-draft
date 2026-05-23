@@ -85,6 +85,18 @@
             *Grâce à cette approche purement graphique en bout de chaîne, le boss est désormais parfaitement visible et décalé vers le bas de 80px, tandis que les tests unitaires logiques (qui exigent que le boss soit à `y = 0.0`) continuent de valider à 100%.*
         - **Résolution du Centrage Horizontal (`map_screen.dart`)** : Modification du calcul horizontal `actualX` dans les routines de centrage post-frame de `map_screen.dart`. Si aucun nœud de départ n'est actif, `actualX` est positionné sur `500.0` (le centre géométrique de la largeur de la carte de $1000$px). La caméra apparaît maintenant divinement centrée au milieu du premier étage, offrant au joueur une vision globale et claire de toutes les options de départ possibles.
 
+## Phase 67 - Intégration du Défilement Vertical de la Carte à la Molette de la Souris (Scroll)
+
+- ux: Permettre de faire défiler la carte de haut en bas ou de bas en haut avec la molette de la souris
+    - Enveloppement de la vue InteractiveViewer dans un écouteur de signaux de pointage pour intercepter et transcrire les évènements de scroll.
+        - **Problématique** : Le parcours de la carte se faisait exclusivement en cliquant et glissant (click-and-drag/pan) avec le pointeur ou le doigt. Sur ordinateur de bureau ou avec une souris de jeu, cette méthode s'avère moins naturelle et plus fatigante que le défilement fluide classique à la molette.
+        - **Résolution ergonomique (`map_screen.dart`)** : 
+            1. **Importation** : Ajout de la bibliothèque standard `package:flutter/gestures.dart` pour la gestion avancée des signaux physiques de la souris.
+            2. **Intégration du `Listener`** : Enveloppement d' `InteractiveViewer` dans un widget `Listener` configuré sur la propriété `onPointerSignal`. 
+            3. **Traduction du Scroll** : Dès qu'un `PointerScrollEvent` est capturé, la routine extrait la matrice de transformation active de `_transformationController`, récupère sa translation actuelle et lui applique un décalage vertical opposé au déplacement de la molette (`scrollDelta.dy`). La nouvelle coordonnée Y est réassignée en préservant intactes la translation X et la mise à l'échelle.
+        - **Bénéfice** : Le joueur peut désormais faire défiler la carte verticalement de manière ultra-fluide avec sa molette (scroller vers le bas révèle le bas de la carte, scroller vers le haut révèle le boss au sommet), en parfaite synergie avec le glisser-déplacer d'origine qui reste 100% fonctionnel et réactif.
+
+
 
 
 
