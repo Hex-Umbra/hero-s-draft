@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../game/controllers/run_controller.dart';
 import '../../models/data/event_data.dart';
 import '../../services/game_data_service.dart';
-import '../../models/status_effect.dart';
 
 class EventScreen extends ConsumerStatefulWidget {
   const EventScreen({super.key});
@@ -60,15 +59,7 @@ class _EventScreenState extends ConsumerState<EventScreen> {
           runController.applyHeroStatModifier(maxPvAcc: action.value as int);
           break;
         case 'gain_strength':
-          runController.addStatus(
-            StatusEffect(
-              id: 'strength',
-              name: 'Attaque',
-              type: StatusType.buff,
-              value: action.value as int,
-              duration: 3,
-            ),
-          );
+          runController.applyHeroStatModifier(attackAcc: action.value as int);
           break;
         case 'gain_relic':
           // Pour l'instant on ignore ou on ajoute une relique fixe de test

@@ -30,3 +30,12 @@
         - **Dans `onDragEnd`** : Si le joueur relâche la carte sur une cible ou la zone de jeu mais qu'il ne dispose pas de mana suffisant (`!canAfford`), la carte déclenche désormais son animation de secousse (`shakeAnimation()`) et retourne en main de manière fluide (`_returnToHand()`), bloquant l'action uniquement lors de la tentative réelle d'exécution.
         - **Système Click-to-Play** : Les handlers de ciblage de `_handlePlayerTargeting` dans `heros_draft_game.dart` (pour le ciblage d'ennemis) et `onTapDown` dans `hero_card.dart` (pour le ciblage de soi-même) interceptent le clic si la carte ciblée n'est pas payable, déclenchent la secousse visuelle (`shakeAnimation()`) et bloquent l'action sans pour autant désélectionner la carte, réduisant significativement toute frustration liée à la prise de décision en combat.
 
+## Phase 62 - Correction du buff permanent de l'événement Autel Mystérieux
+
+- bugfix: Correction de l'application du buff de +1 Attaque de l'événement "Autel" pour qu'il soit persistant
+    - Remplacement de l'application d'un effet temporaire de combat par une modification directe et permanente de la statistique d'attaque de base du héros.
+        - **Problématique** : L'action `gain_strength` de l'événement "Autel Mystérieux" instanciat précédemment un `StatusEffect` temporaire de 3 tours appliqué hors combat via `addStatus`. Ce dernier était systématiquement écrasé et réinitialisé (`statuses: []`) lors du lancement du combat suivant par le `RunController`.
+        - **Résolution** : Modification de la gestion de l'action `gain_strength` dans `event_screen.dart` pour qu'elle appelle désormais directement `runController.applyHeroStatModifier(attackAcc: action.value as int)`. Le buff de +1 Attaque s'ajoute ainsi de manière définitive à la statistique de base `attaque` du héros (comme le fait déjà l'action `gain_max_hp` pour les points de vie), persistant correctement à travers les combats et apparaissant proprement dans les panneaux de statistiques.
+        - **Nettoyage** : Suppression de l'import inutilisé `status_effect.dart` dans `event_screen.dart` identifié par l'analyse statique de Dart.
+
+
