@@ -142,18 +142,36 @@
             - `dart analyze` exécuté avec 0 warning ni erreur.
             - `flutter test` exécuté avec succès : 17 tests sur 17 validés à 100%.
 
-## Phase 83 - Optimisation Visuelle et Résolution des Débordements de l'Inventaire (Map)
+## Phase 83 - Optimisation Visuelle et Refonte Majeure de l'Inventaire (Map)
 
-- style: Remplacement de la GridView par un LayoutBuilder combiné à un Wrap à hauteur fixe (180px) et réduction des espacements internes pour éliminer les débordements (overflow)
-    - Résolution définitive de l'exception Flutter `RenderFlex overflowed by 6.8 pixels on the bottom` sur tous les formats d'écrans et configurations de polices.
-        - **Refonte Structurale de la Grille (`lib/ui/screens/map_screen.dart`)** :
-            - Remplacement de `GridView.builder` par un `LayoutBuilder` dynamique.
-            - Calcul intelligent des colonnes (2 colonnes si la largeur disponible est supérieure à 500px, sinon 1 colonne plein écran pour les mobiles).
-            - Utilisation d'un `SingleChildScrollView` enveloppant un `Wrap` d'éléments encapsulés dans des `SizedBox` de hauteur **strictement fixe à 180px** (augmentée depuis 175px) pour offrir une marge de hauteur de sécurité supplémentaire.
-        - **Refonte Graphique de `_buildRelicCard()`** :
-            - Le titre de la relique (`relic.name`) accepte désormais jusqu'à 2 lignes (`maxLines: 2`) au lieu d'une seule ligne tronquée pour afficher parfaitement les noms longs.
-            - Réduction intelligente de la marge de rembourrage interne (`padding` vertical passant de `12` à `8` pixels) et des séparations verticales (`SizedBox(height: 5)` et `SizedBox(height: 2)`) ainsi que de l'espacement de la description (`padding` vertical réduit à `2.0` pixels), libérant un total cumulé de 16 pixels supplémentaires en hauteur utile.
-            - Ajustement du texte de description (`relic.description`) avec une police qualitative (`fontSize: 11` au lieu de `9.5`) et un espacement de ligne fluide (`height: 1.3`). La hauteur de carte fixe à 180px combinée aux réductions d'espacements internes immunise complètement les composants contre tout débordement de type RenderFlex.
+- style: Agrandissement du menu, cartes sur 2 colonnes occupant la moitié de la largeur, hauteur triplée à 220px et descriptions défilantes
+    - Refonte complète de la grille de reliques et de la structure des cartes pour éliminer tout débordement (overflow) tout en maximisant la visibilité des descriptions.
+        - **Refonte Structurale du Menu et de la Grille (`lib/ui/screens/map_screen.dart`)** :
+            - Agrandissement substantiel du conteneur de dialogue de l'inventaire (`width` portée à 90% de l'écran ou max `850px` ; `height` à 85% de l'écran ou max `650px`) pour un rendu aéré et premium.
+            - Restructuration du `LayoutBuilder` pour forcer chaque carte à occuper **exactement la moitié de la largeur disponible** (`cardWidth = (availableWidth - 16) / 2`), garantissant 2 colonnes symétriques et exploitant pleinement la surface.
+            - Fixation de la hauteur de chaque carte à **220px** (hauteur triplée), résolvant définitivement les débordements de `RenderFlex` et les textes tronqués.
+        - **Confort Visuel Premium dans `_buildRelicCard()`** :
+            - Ré-introduction de marges de rembourrage spacieuses (`const EdgeInsets.all(16)`) et d'un espacement vertical généreux (`const SizedBox(height: 14)`).
+            - Agrandissement qualitatif des polices et émojis : Émojis à `fontSize: 24`, titre principal à `fontSize: 14.5` (semi-bold) et badges à `fontSize: 9`.
+            - **Intégration d'un Conteneur Défilant pour la Description** : Enveloppement du texte de description (`fontSize: 12`, `height: 1.45`) dans un `SingleChildScrollView` avec un défilement physique rebondissant (`BouncingScrollPhysics`). Cela garantit une lecture complète et fluide des descriptions quelle que soit leur longueur ou le niveau de zoom système.
         - **Robustesse et Tests** :
             - Validation par `dart analyze` : 0 avertissement ni erreur de type.
             - Non-régression prouvée par `flutter test` : 17 tests sur 17 passés avec succès.
+
+## Phase 84 - Récompense d'Élite Relique et Suppression du Draft de Statistiques
+
+- feat: Attribution de reliques lors des victoires d'Élites et suppression de l'écran de draft/choix de statistiques pour ces combats
+    - Transformation du système de récompense des Élites pour valoriser l'acquisition directe de reliques plutôt que la sélection de statistiques de base.
+        - **Évolution d'onEnemiesDead (`lib/ui/screens/game_screen.dart`)** :
+            - Fusion de la logique d'attribution des reliques : le bloc de sélection pondérée (50% Commun, 30% Peu Commun, 13% Rare, 5% Épique, 2% Légendaire) et d'attribution automatique de relique s'exécute désormais tant pour les Boss (`MapNodeType.boss`) que pour les Élites (`MapNodeType.elite`).
+            - Ajout d'un traitement asymétrique de fin de combat pour les combats Élites :
+                - Attribution directe d'or au héros via `gainGold(Random().nextInt(15) + 20)` (bonus d'or rehaussé pour marquer la difficulté).
+                - Passage automatique au niveau de run suivant via `nextLevel()`.
+                - Finalisation du nœud de la carte via `completeCurrentNode()`.
+                - Déclenchement d'un court délai d'attente fluide de 1500ms avant de fermer l'arène de combat (`Navigator.of(context).pop()`), permettant au joueur d'admirer la notification `SnackBar` de la relique rare/légendaire obtenue.
+                - **Bypass de DraftScreen** : L'écran de choix de statistiques (draft de 3 bonus) est totalement ignoré et désactivé lors de la victoire contre un ennemi Élite, recentrant l'intérêt des Élites uniquement sur l'acquisition de reliques.
+        - **Préservation pour les Combats Communs et Boss** :
+            - Les combats standards continuent de diriger le joueur vers `DraftScreen` pour choisir un bonus de statistiques et cloner des cartes, tandis que les combats de Boss préservent le double gain (Relique + DraftScreen), maintenant le boss comme l'arène de fin d'acte suprême.
+        - **Robustesse et Tests** :
+            - `dart analyze` validé avec 0 warning ni erreur de type.
+            - Non-régression confirmée par `flutter test` avec 17 tests sur 17 passés avec succès.

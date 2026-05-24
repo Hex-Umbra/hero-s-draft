@@ -93,7 +93,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       },
       onEnemiesDead: () {
         final runState = ref.read(runProvider);
-        if (runState.currentNodeType == MapNodeType.boss) {
+        final currentNodeType = runState.currentNodeType;
+
+        if (currentNodeType == MapNodeType.boss || currentNodeType == MapNodeType.elite) {
           final gameData = ref.read(gameDataLoaderProvider).requireValue;
           final relics = gameData.relics;
           if (relics.isNotEmpty) {
@@ -161,9 +163,25 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           }
         }
 
-        setState(() {
-          _showDraft = true;
-        });
+        if (currentNodeType == MapNodeType.elite) {
+          // Les élites donnent une relique et de l'or, pas de draft de statistiques
+          final runController = ref.read(runProvider.notifier);
+          final rng = Random();
+          // L'élite donne un peu plus d'or qu'un combat standard (ex: 20 à 35)
+          runController.gainGold(rng.nextInt(15) + 20);
+          runController.nextLevel();
+          
+          Future.delayed(const Duration(milliseconds: 1500), () {
+            if (mounted) {
+              runController.completeCurrentNode();
+              Navigator.of(context).pop(); // Retour à la carte
+            }
+          });
+        } else {
+          setState(() {
+            _showDraft = true;
+          });
+        }
       },
       onEnemyDebuffDeck: (count) {
         // Logique retirée car la carte "Blessure" de test a été supprimée
