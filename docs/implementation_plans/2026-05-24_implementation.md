@@ -304,3 +304,47 @@
             - Écriture d'une suite de tests unitaires dédiée dans `test/unit/deck_controller_test.dart` pour couvrir la pioche sans mélange mid-turn et le mélange manuel.
             - `dart analyze` exécuté avec 0 problème signalé.
             - `flutter test` complété à 100% avec succès (20 tests sur 20 validés).
+
+## Phase 93 - Menu Dynamique des Probabilités et Chance Intégrée (Map & Combat & Événements)
+
+- feat: Ajout d'un menu de probabilités dynamique sur la Map et indexation des tirages de reliques sur la statistique de Chance
+    - Amélioration de la transparence du gameplay en permettant de visualiser l'impact de la statistique Chance (`luck`) sur les taux d'obtention de cartes, de bonus légendaires et de reliques.
+        - **Reliques indexées sur la Chance (`game_screen.dart` & `event_screen.dart`)** :
+            - Harmonisation de la logique métier pour les tirages de reliques. L'ancien taux fixe a été remplacé par une formule dynamique similaire aux cartes (Légendaire : `2.0 + luck * 0.5` %, Épique : `5.0 + luck * 1.0` %, Rare : `13.0 + luck * 2.0` %, Peu Commun : `30.0 + luck * 3.0` %, Commun : le reste).
+            - Cette formule s'applique désormais tant lors du tirage de relique suite à un combat d'Élite ou de Boss (`game_screen.dart`) que lors des choix d'événements aléatoires (`event_screen.dart`).
+        - **Boutons d'Accès au Menu (`map_screen.dart`)** :
+            - **AppBar** : Intégration d'un bouton `CHANCES` doté d'une icône de dés (`Icons.casino_outlined`) à droite du bouton `RELIQUES`.
+            - **Stat Box** : Le bouton d'information cliquable (`Icons.info_outline`) a été ajouté à côté de la statistique de Chance dans l'aperçu flottant.
+        - **Dialogue de Probabilités Premium (`map_screen.dart`)** :
+            - Conception d'un popup sous effet de flou de verre (glassmorphism) via `_wrapWithBlur` et `showGeneralDialog`.
+            - Affichage de la statistique active au centre de l'enveloppe avec une bordure dorée brillante.
+            - Affichage de 3 sections distinctes comparant les valeurs de base (Chance = 0) aux valeurs actuelles avec des jauges de couleur vibrantes :
+                1. **Draft standard de récompenses** (Cartes/Stats en fin de combat).
+                2. **Bonus Légendaire de Combat** (Bonus de Trèfle / Miroir).
+                3. **Butin de Reliques** (Élites, Bosses & Événements).
+        - **Tests Unitaires Dédiés (`test/unit/probabilities_test.dart`)** :
+            - Ajout d'une suite de tests rigoureuse validant l'intégrité des calculs mathématiques pour les différentes valeurs de Chance (`luck = 0`, `luck = 5`, `luck = 10`), garantissant que la somme des raretés est toujours égale à 100%.
+        - **Stabilité et Compilabilité** :
+            - Validation par `dart analyze` : 0 warning, 0 error.
+            - `flutter test` complété avec succès (25 tests sur 25 validés).
+
+## Phase 94 - Réglage et Personnalisation des Probabilités de Base (Cartes, Niveaux et Reliques)
+
+- feat: Personnalisation des probabilités de base pour les cartes de draft, les récompenses de niveau et les reliques
+    - Ajustement des probabilités fondamentales du gameplay selon les souhaits d'équilibrage du concepteur.
+        - **Refonte des Probabilités de Cartes standard (`draft_screen.dart` & `map_screen.dart`)** :
+            - Taux de base mis à jour : Commun (`60%`), Peu commun (`20%`), Rare (`14%`), Épique (`5%`), Légendaire (`1%`).
+        - **Refonte des Récompenses de Niveau (`draft_screen.dart` & `map_screen.dart`)** :
+            - Section "Bonus Spécial / Bonus de Trèfle" renommée officiellement en "Récompense de niveau" dans l'interface et le modèle.
+            - Taux de base mis à jour : Commun (`60%`), Peu commun (`20%`), Rare (`15%`), Épique (`4.5%`), Légendaire (`0.5%`).
+            - Intégration dans le moteur de draft via le paramètre optionnel `isLevelReward` lors de l'appel à `_rollRarity` pour différencier mécaniquement les tirages spéciaux de niveau des tirages standards de combat.
+        - **Refonte des Reliques (`game_screen.dart`, `event_screen.dart` & `map_screen.dart`)** :
+            - Taux de base mis à jour : Commun (`60%`), Peu commun (`20%`), Rare (`14%`), Épique (`5%`), Légendaire (`1%`).
+            - Application homogène de ces nouveaux taux dans les combats Élites/Boss (`game_screen.dart`) et les événements aléatoires (`event_screen.dart`).
+        - **Mise à jour des Tests Unitaires (`probabilities_test.dart`)** :
+            - Actualisation complète de toutes les assertions de probabilités cumulées mathématiques et des fonctions locales mockées pour s'aligner sur les nouveaux taux.
+        - **Stabilité et Compilabilité** :
+            - Validation par `dart analyze` : 0 warning, 0 error.
+            - `flutter test` complété avec succès (25 tests sur 25 validés).
+
+

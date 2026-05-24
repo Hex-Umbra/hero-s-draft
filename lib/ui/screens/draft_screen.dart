@@ -222,13 +222,13 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
     _finishDraft(ref);
   }
 
-  RewardRarity _rollRarity(int luck, {bool canBeLegendary = true}) {
+  RewardRarity _rollRarity(int luck, {bool canBeLegendary = true, bool isLevelReward = false}) {
     final rng = Random();
     // Probabilités de base (sur 100)
-    double legendaryChance = 1.0;
-    double epicChance = 4.0;
-    double rareChance = 15.0;
-    double uncommonChance = 30.0;
+    double legendaryChance = isLevelReward ? 0.5 : 1.0;
+    double epicChance = isLevelReward ? 4.5 : 5.0;
+    double rareChance = isLevelReward ? 15.0 : 14.0;
+    double uncommonChance = 20.0;
     
     // La chance augmente les probabilités des hautes raretés
     legendaryChance += luck * 0.5;
@@ -300,7 +300,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
     // Chaque récompense légendaire est testée indépendamment
     
     // Trèfle à 4 feuilles
-    if (_rollRarity(luck) == RewardRarity.legendary) {
+    if (_rollRarity(luck, isLevelReward: true) == RewardRarity.legendary) {
       choices.add(
         _DraftChoice(
           'Trèfle à 4 feuilles',
@@ -316,7 +316,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
     }
 
     // Miroir (Clonage)
-    if (_rollRarity(luck) == RewardRarity.legendary) {
+    if (_rollRarity(luck, isLevelReward: true) == RewardRarity.legendary) {
       choices.add(
         _DraftChoice(
           'Miroir',

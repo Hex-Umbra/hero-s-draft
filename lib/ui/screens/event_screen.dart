@@ -66,19 +66,37 @@ class _EventScreenState extends ConsumerState<EventScreen> {
           final gameData = ref.read(gameDataLoaderProvider).requireValue;
           final relics = gameData.relics;
           if (relics.isNotEmpty) {
-            // Weighted selection matching boss selection
+            // Weighted selection scaled by player luck
+            final runState = ref.read(runProvider);
+            final luck = runState.heroStats.luck;
             final rand = Random().nextDouble() * 100;
+            
+            final double legChance = 1.0 + luck * 0.5;
+            final double epicChance = 5.0 + luck * 1.0;
+            final double rareChance = 14.0 + luck * 2.0;
+            final double uncommonChance = 20.0 + luck * 3.0;
+
             RelicRarity rarity;
-            if (rand < 50) {
-              rarity = RelicRarity.common;
-            } else if (rand < 80) {
-              rarity = RelicRarity.uncommon;
-            } else if (rand < 93) {
-              rarity = RelicRarity.rare;
-            } else if (rand < 98) {
-              rarity = RelicRarity.epic;
-            } else {
+            double roll = rand;
+            if (roll < legChance) {
               rarity = RelicRarity.legendary;
+            } else {
+              roll -= legChance;
+              if (roll < epicChance) {
+                rarity = RelicRarity.epic;
+              } else {
+                roll -= epicChance;
+                if (roll < rareChance) {
+                  rarity = RelicRarity.rare;
+                } else {
+                  roll -= rareChance;
+                  if (roll < uncommonChance) {
+                    rarity = RelicRarity.uncommon;
+                  } else {
+                    rarity = RelicRarity.common;
+                  }
+                }
+              }
             }
 
             var filtered = relics.where((r) => r.rarity == rarity).toList();
