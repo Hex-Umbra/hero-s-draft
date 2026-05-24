@@ -158,18 +158,16 @@
             - Validation par `dart analyze` : 0 avertissement ni erreur de type.
             - Non-régression prouvée par `flutter test` : 17 tests sur 17 passés avec succès.
 
-## Phase 84 - Récompense d'Élite Relique et Suppression du Draft de Statistiques
+## Phase 84 - Récompense d'Élite Relique, Suppression du Draft et Transition Fluide
 
-- feat: Attribution de reliques lors des victoires d'Élites et suppression de l'écran de draft/choix de statistiques pour ces combats
-    - Transformation du système de récompense des Élites pour valoriser l'acquisition directe de reliques plutôt que la sélection de statistiques de base.
+- feat: Attribution de reliques lors des victoires d'Élites, suppression de l'écran de draft/choix, et correction du bug de réapparition visuelle
+    - Transformation du système de récompense des Élites et sécurisation des transitions d'écrans pour une expérience fluide et sans artefact graphique.
         - **Évolution d'onEnemiesDead (`lib/ui/screens/game_screen.dart`)** :
             - Fusion de la logique d'attribution des reliques : le bloc de sélection pondérée (50% Commun, 30% Peu Commun, 13% Rare, 5% Épique, 2% Légendaire) et d'attribution automatique de relique s'exécute désormais tant pour les Boss (`MapNodeType.boss`) que pour les Élites (`MapNodeType.elite`).
-            - Ajout d'un traitement asymétrique de fin de combat pour les combats Élites :
-                - Attribution directe d'or au héros via `gainGold(Random().nextInt(15) + 20)` (bonus d'or rehaussé pour marquer la difficulté).
-                - Passage automatique au niveau de run suivant via `nextLevel()`.
-                - Finalisation du nœud de la carte via `completeCurrentNode()`.
-                - Déclenchement d'un court délai d'attente fluide de 1500ms avant de fermer l'arène de combat (`Navigator.of(context).pop()`), permettant au joueur d'admirer la notification `SnackBar` de la relique rare/légendaire obtenue.
+            - Ajout d'un traitement asymétrique et sécurisé de fin de combat pour les combats Élites :
                 - **Bypass de DraftScreen** : L'écran de choix de statistiques (draft de 3 bonus) est totalement ignoré et désactivé lors de la victoire contre un ennemi Élite, recentrant l'intérêt des Élites uniquement sur l'acquisition de reliques.
+                - **Correction du Bug Visuel de Réapparition** : Auparavant, l'or et la progression de niveau (`nextLevel()`) étaient mis à jour immédiatement en début de méthode. Cette incrémentation de niveau déclenchait instantanément la reconstruction réactive du HUD de jeu et forçait le moteur Flame à engendrer (`_spawnEnemies()`) les monstres du niveau supérieur au beau milieu de l'arène vide durant les 1.5s d'affichage de la SnackBar.
+                - **Résolution par Synchronisation Atomique** : Décalage de l'appel de `gainGold(...)` et `nextLevel(...)` à l'intérieur du bloc de temporisation `Future.delayed`. Les gains de ressources, l'avancement de niveau, la finalisation du nœud de carte et la fermeture de l'écran (`Navigator.pop`) s'exécutent désormais dans la même transaction synchrone de fin. L'arène de combat reste parfaitement vide et sereine, valorisant la relique obtenue avant un retour instantané à la carte de jeu.
         - **Préservation pour les Combats Communs et Boss** :
             - Les combats standards continuent de diriger le joueur vers `DraftScreen` pour choisir un bonus de statistiques et cloner des cartes, tandis que les combats de Boss préservent le double gain (Relique + DraftScreen), maintenant le boss comme l'arène de fin d'acte suprême.
         - **Robustesse et Tests** :

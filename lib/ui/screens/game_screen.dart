@@ -167,12 +167,13 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           // Les élites donnent une relique et de l'or, pas de draft de statistiques
           final runController = ref.read(runProvider.notifier);
           final rng = Random();
-          // L'élite donne un peu plus d'or qu'un combat standard (ex: 20 à 35)
-          runController.gainGold(rng.nextInt(15) + 20);
-          runController.nextLevel();
           
+          // On attend d'abord 1.5s dans l'arène vide pour laisser le joueur voir la relique
           Future.delayed(const Duration(milliseconds: 1500), () {
             if (mounted) {
+              // Attribution des gains et transition au moment précis du pop pour éviter toute réapparition visuelle
+              runController.gainGold(rng.nextInt(15) + 20);
+              runController.nextLevel();
               runController.completeCurrentNode();
               Navigator.of(context).pop(); // Retour à la carte
             }
