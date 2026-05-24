@@ -84,27 +84,13 @@ class StatBadge extends PositionComponent
         ),
       );
 
-      // 2. Dessine l'Armure : Bouclier MaterialIcons en dégradé bleu/cyan + Valeur
+      // 2. Dessine l'Armure : Bouclier vectoriel premium dessiné en bleu/cyan + Valeur
       add(
-        TextComponent(
-          text: '\u{e57c}', // Icons.shield
-          textRenderer: TextPaint(
-            style: TextStyle(
-              fontFamily: 'MaterialIcons',
-              fontSize: 10,
-              foreground: Paint()
-                ..shader = const LinearGradient(
-                  colors: [Color(0xFF2196F3), Color(0xFF00E5FF)],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ).createShader(const Rect.fromLTWH(0, 0, 10, 10)),
-              shadows: const [
-                Shadow(color: Colors.black, blurRadius: 2.0, offset: Offset(1, 1)),
-              ],
-            ),
-          ),
-          anchor: Anchor.centerLeft,
+        FlameShieldIcon(
           position: Vector2(28, size.y / 2),
+          size: Vector2(10, 10),
+          color: const Color(0xFF2196F3),
+          anchor: Anchor.centerLeft,
         ),
       );
       add(
@@ -494,8 +480,17 @@ class LinearProgressBarComponent extends PositionComponent {
       canvas.save();
       canvas.clipRRect(rrect);
 
-      // 2. Dessine le remplissage avec gradient (Rouge)
-      final fillRect = Rect.fromLTWH(0, 0, size.x * percentage.clamp(0.0, 1.0), size.y);
+      // 2. Dessine le remplissage de PV avec gradient (Rouge) doté d'un padding pour loger à l'intérieur
+      final double pvVertPad = 2.0;
+      final double pvHorizPad = 1.5;
+      final fillRect = Rect.fromLTWH(
+        pvHorizPad,
+        pvVertPad,
+        (size.x * percentage.clamp(0.0, 1.0)) - (pvHorizPad * 2),
+        size.y - (pvVertPad * 2),
+      );
+      final pvRRect = RRect.fromRectAndRadius(fillRect, const Radius.circular(2.0));
+      
       final fillPaint = Paint()
         ..shader = const LinearGradient(
           colors: [
@@ -507,7 +502,7 @@ class LinearProgressBarComponent extends PositionComponent {
           end: Alignment.centerRight,
         ).createShader(fillRect);
 
-      canvas.drawRect(fillRect, fillPaint);
+      canvas.drawRRect(pvRRect, fillPaint);
       canvas.restore();
     }
 
@@ -515,9 +510,9 @@ class LinearProgressBarComponent extends PositionComponent {
       canvas.save();
       canvas.clipRRect(rrect);
 
-      // 3. Dessine l'armure superposée avec gradient bleu translucide et un padding intérieur
-      final double vertPad = 2.0;
-      final double horizPad = 1.5;
+      // 3. Dessine l'armure superposée qui englobe la barre de vie (presque pleine hauteur)
+      final double vertPad = 0.5;
+      final double horizPad = 0.5;
       final double drawWidth = (size.x * armorPercentage.clamp(0.0, 1.0)) - (horizPad * 2);
       
       if (drawWidth > 0) {
@@ -527,7 +522,7 @@ class LinearProgressBarComponent extends PositionComponent {
           drawWidth,
           size.y - (vertPad * 2),
         );
-        final armorRRect = RRect.fromRectAndRadius(armorRect, const Radius.circular(2.0));
+        final armorRRect = RRect.fromRectAndRadius(armorRect, const Radius.circular(3.5));
         
         final armorPaint = Paint()
           ..shader = LinearGradient(
@@ -541,7 +536,7 @@ class LinearProgressBarComponent extends PositionComponent {
 
         canvas.drawRRect(armorRRect, armorPaint);
         
-        // Petite bordure bleu clair brillante sur la capsule d'armure
+        // Petite bordure bleu clair brillante sur la capsule d'armure qui englobe
         final armorBorderPaint = Paint()
           ..color = Colors.cyanAccent.withValues(alpha: 0.7)
           ..style = PaintingStyle.stroke
@@ -653,5 +648,72 @@ class FlameSwordIcon extends PositionComponent {
     // 4. Pommel (Round circular jewel at the base)
     canvas.drawCircle(Offset(cx, h * 0.91), w * 0.08, lightPaint);
     canvas.drawCircle(Offset(cx, h * 0.91), w * 0.06, mainPaint);
+  }
+}
+
+class FlameShieldIcon extends PositionComponent {
+  final Color color;
+
+  FlameShieldIcon({
+    required Vector2 position,
+    required Vector2 size,
+    required this.color,
+    Anchor anchor = Anchor.topLeft,
+  }) : super(position: position, size: size, anchor: anchor);
+
+  @override
+  void render(Canvas canvas) {
+    final double w = size.x;
+    final double h = size.y;
+    final double cx = w / 2;
+
+    // Use two shades of the color for a premium, beveled 3D look
+    final HSLColor hslColor = HSLColor.fromColor(color);
+    final Color lightColor = hslColor.withLightness((hslColor.lightness + 0.12).clamp(0.0, 1.0)).toColor();
+    final Color darkColor = hslColor.withLightness((hslColor.lightness - 0.12).clamp(0.0, 1.0)).toColor();
+
+    final Paint lightPaint = Paint()
+      ..color = lightColor
+      ..style = PaintingStyle.fill;
+
+    final Paint darkPaint = Paint()
+      ..color = darkColor
+      ..style = PaintingStyle.fill;
+
+    // 1. Dessine la moitié gauche du bouclier (teinte sombre pour effet biseau)
+    final Path leftShield = Path()
+      ..moveTo(cx, h * 0.08) // Sommet centre
+      ..lineTo(w * 0.12, h * 0.18) // Épaule gauche
+      ..lineTo(w * 0.12, h * 0.58) // Flanc gauche
+      ..quadraticBezierTo(w * 0.12, h * 0.85, cx, h * 0.95) // Arrondi vers la pointe
+      ..lineTo(cx, h * 0.08)
+      ..close();
+    canvas.drawPath(leftShield, darkPaint);
+
+    // 2. Dessine la moitié droite du bouclier (teinte claire)
+    final Path rightShield = Path()
+      ..moveTo(cx, h * 0.08)
+      ..lineTo(w * 0.88, h * 0.18) // Épaule droite
+      ..lineTo(w * 0.88, h * 0.58) // Flanc droit
+      ..quadraticBezierTo(w * 0.88, h * 0.85, cx, h * 0.95) // Arrondi vers la pointe
+      ..lineTo(cx, h * 0.08)
+      ..close();
+    canvas.drawPath(rightShield, lightPaint);
+
+    // 3. Jolie bordure brillante de couleur cyan accent
+    final Paint borderPaint = Paint()
+      ..color = Colors.cyanAccent.withValues(alpha: 0.8)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = w * 0.08;
+
+    final Path borderPath = Path()
+      ..moveTo(cx, h * 0.08)
+      ..lineTo(w * 0.12, h * 0.18)
+      ..lineTo(w * 0.12, h * 0.58)
+      ..quadraticBezierTo(w * 0.12, h * 0.85, cx, h * 0.95)
+      ..quadraticBezierTo(w * 0.88, h * 0.85, w * 0.88, h * 0.58)
+      ..lineTo(w * 0.88, h * 0.18)
+      ..close();
+    canvas.drawPath(borderPath, borderPaint);
   }
 }

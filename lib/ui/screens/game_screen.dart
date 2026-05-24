@@ -523,57 +523,61 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                                               borderRadius: BorderRadius.circular(11),
                                               child: Stack(
                                                 children: [
-                                                  // Remplissage PV (Vert)
-                                                  if (runState.heroStats.maxPv > 0 &&
-                                                      runState.heroStats.currentPv > 0)
-                                                    FractionallySizedBox(
-                                                      alignment: Alignment.centerLeft,
-                                                      widthFactor: (runState.heroStats.currentPv /
-                                                              runState.heroStats.maxPv)
-                                                          .clamp(0.0, 1.0),
-                                                      heightFactor: 1.0,
-                                                      child: Container(
-                                                        decoration: const BoxDecoration(
-                                                          gradient: LinearGradient(
-                                                            colors: [
-                                                              Color(0xFF1E824C), // Vert forêt foncé
-                                                              Color(0xFF27AE60), // Vert éclatant
-                                                              Color(0xFF58D68D), // Vert doux / menthe
-                                                            ],
-                                                            begin: Alignment.centerLeft,
-                                                            end: Alignment.centerRight,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  // Remplissage Armure (Bleu Translucide, se superpose avec padding pour un effet 3D par-dessus)
-                                                  if (currentArmor > 0 && runState.heroStats.maxPv > 0)
-                                                    FractionallySizedBox(
-                                                      alignment: Alignment.centerLeft,
-                                                      widthFactor: (currentArmor / runState.heroStats.maxPv)
-                                                          .clamp(0.0, 1.0),
-                                                      heightFactor: 1.0,
-                                                      child: Padding(
-                                                        padding: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 1.5),
-                                                        child: Container(
-                                                          decoration: BoxDecoration(
-                                                            gradient: LinearGradient(
-                                                              colors: [
-                                                                Colors.blueAccent.withValues(alpha: 0.45),
-                                                                Colors.lightBlueAccent.withValues(alpha: 0.65),
-                                                              ],
-                                                              begin: Alignment.centerLeft,
-                                                              end: Alignment.centerRight,
-                                                            ),
-                                                            borderRadius: BorderRadius.circular(8),
-                                                            border: Border.all(
-                                                              color: Colors.cyanAccent.withValues(alpha: 0.7),
-                                                              width: 1.0,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
+                                                   // Remplissage PV (Vert - Core interne avec padding)
+                                                   if (runState.heroStats.maxPv > 0 &&
+                                                       runState.heroStats.currentPv > 0)
+                                                     FractionallySizedBox(
+                                                       alignment: Alignment.centerLeft,
+                                                       widthFactor: (runState.heroStats.currentPv /
+                                                               runState.heroStats.maxPv)
+                                                           .clamp(0.0, 1.0),
+                                                       heightFactor: 1.0,
+                                                       child: Padding(
+                                                         padding: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 1.5),
+                                                         child: Container(
+                                                           decoration: BoxDecoration(
+                                                             borderRadius: BorderRadius.circular(8),
+                                                             gradient: const LinearGradient(
+                                                               colors: [
+                                                                 Color(0xFF1E824C), // Vert forêt foncé
+                                                                 Color(0xFF27AE60), // Vert éclatant
+                                                                 Color(0xFF58D68D), // Vert doux / menthe
+                                                               ],
+                                                               begin: Alignment.centerLeft,
+                                                               end: Alignment.centerRight,
+                                                             ),
+                                                           ),
+                                                         ),
+                                                       ),
+                                                     ),
+                                                   // Remplissage Armure (Bleu Translucide - Englobant avec 0.5px de padding)
+                                                   if (currentArmor > 0 && runState.heroStats.maxPv > 0)
+                                                     FractionallySizedBox(
+                                                       alignment: Alignment.centerLeft,
+                                                       widthFactor: (currentArmor / runState.heroStats.maxPv)
+                                                           .clamp(0.0, 1.0),
+                                                       heightFactor: 1.0,
+                                                       child: Padding(
+                                                         padding: const EdgeInsets.symmetric(vertical: 0.5, horizontal: 0.5),
+                                                         child: Container(
+                                                           decoration: BoxDecoration(
+                                                             gradient: LinearGradient(
+                                                               colors: [
+                                                                 Colors.blueAccent.withValues(alpha: 0.45),
+                                                                 Colors.lightBlueAccent.withValues(alpha: 0.65),
+                                                               ],
+                                                               begin: Alignment.centerLeft,
+                                                               end: Alignment.centerRight,
+                                                             ),
+                                                             borderRadius: BorderRadius.circular(10),
+                                                             border: Border.all(
+                                                               color: Colors.cyanAccent.withValues(alpha: 0.7),
+                                                               width: 1.0,
+                                                             ),
+                                                           ),
+                                                         ),
+                                                       ),
+                                                     ),
                                                   // Texte des PV
                                                   Center(
                                                     child: Text(

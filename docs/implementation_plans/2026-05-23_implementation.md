@@ -149,9 +149,16 @@
         - **Icônes Ennemis Homogénéisées (Flame)** :
             - Remplacement des anciens émojis textuels `⚔️` et `🛡️` par les exactes répliques des icônes du joueur pour une cohérence graphique absolue.
             - L'épée de l'ennemi est dessinée via un composant vectoriel custom `FlameSwordIcon` (reprenant le dessin en perspective de `CustomPainter`) de couleur rouge assortie (`Color(0xFFFF3B30)`), avec sa valeur textuelle en rouge vif.
-            - Le bouclier est rendu avec l'icône `Icons.shield` de la police `MaterialIcons` teintée d'un dégradé bleu-cyan à l'aide d'un shader `LinearGradient`, avec sa valeur textuelle en cyan vif.
+            - Le bouclier est rendu à l'aide d'un composant vectoriel custom `FlameShieldIcon` de taille `10x10` dessiné en bleu-cyan (`Color(0xFF2196F3)`). Il utilise le même effet de biseau 3D que l'épée (moitié gauche sombre, moitié droite claire) et est orné d'une fine bordure brillante cyan intense (`Colors.cyanAccent`), offrant un rendu parfaitement stable et indépendant des polices de caractères du système, avec sa valeur textuelle en cyan vif.
         - **Centrage Mathématique du HUD Joueur (Flutter)** :
             - Résolution du décalage de la barre de vie provoqué par l'ajout des statistiques sur son côté gauche.
             - Élargissement de l'enveloppe du HUD bas à `screenWidth * 0.52` et réorganisation de la `Row` avec deux conteneurs `Expanded(flex: 1)` entourant une barre de vie de taille fixe `screenWidth * 0.26`.
             - Les statistiques sont alignées à droite du conteneur de gauche, créant un alignement parfait avec le bord gauche de la barre de vie, tandis que l'espaceur de droite garantit un **centrage horizontal absolu et pixel-perfect** de la barre de vie à l'écran.
+        - **Correction de la Récompense d'Armure (Draft)** :
+            - Alignement de la description du draft dans `lib/ui/screens/draft_screen.dart` avec les règles mécaniques de la Phase 63.
+            - Remplacement de l'ancien descriptif de la récompense d'armure "Forge d'Acier" (`+$boost à tous vos gains d'Armure`) par `+$boost aux gains d'Armure de votre passif`.
+        - **Effet d'Armure Englobante (Enwrapping Effect)** :
+            - Inversion de la hiérarchie de rembourrage (padding) afin que la jauge bleue translucide d'armure enrobe et « englobe » la jauge de PV au lieu d'être confinée à l'intérieur.
+            - **HUD Joueur (Flutter)** : Le remplissage de PV vert a été doté d'un padding de `3.0`px vertical et `1.5`px horizontal (agissant comme le noyau central interne), tandis que l'overlay d'armure bleue translucide s'étend désormais sur presque toute la hauteur du conteneur parent (padding minimal de `0.5`px) avec un `borderRadius` de `10` et une bordure cyan active, créant une enveloppe d'énergie externe protectrice très qualitative.
+            - **Rendu Ennemis (Flame)** : Même modification appliquée dans `LinearProgressBarComponent` ; le remplissage rouge des PV reçoit un padding interne (`pvVertPad = 2.0`, `pvHorizPad = 1.5`), et la jauge bleue d'armure s'affiche à pleine hauteur (`vertPad = 0.5`, `horizPad = 0.5`, arrondi `3.5`) pour englober la barre de vie.
         - **Robustesse et Performance** : Aucun problème de performance ou de rendu n'est introduit. Le code respecte à 100% les critères de typage fort et de linting.
