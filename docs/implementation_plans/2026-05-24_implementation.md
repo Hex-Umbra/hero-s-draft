@@ -212,3 +212,18 @@
         - **Robustesse et Validation** :
             - `dart analyze` validé avec 0 warning ni erreur de type.
             - Non-régression prouvée par `flutter test` avec 17 tests sur 17 passés avec succès.
+
+## Phase 87 - Rendu Dynamique Intégral et Résolution du Ciblage Multi-Cibles sur les Cartes (Combat & UI)
+
+- fix: Résolution de l'omission du ciblage multi-cibles dans la description dynamique et support complet des statuts
+    - Correction du bug où les descriptions dynamiques en jeu perdaient le contexte multi-cible (ex: "à tous les ennemis" pour "Balayage") et extension de la génération dynamique à tous les effets de statuts, pioches et gains de mana.
+        - **Correction du Ciblage Multi-Cibles (Flame & Flutter)** :
+            - Intégration de vérifications de ciblage dans le constructeur de description dynamique de `CardComponent` (`lib/game/components/card_component.dart`) et de `UiCard` (`lib/ui/widgets/ui_card.dart`).
+            - Suffixation automatique de `" à tous les ennemis."` aux dégâts infligés si le ciblage de la carte est `CardTarget.allEnemies` (ou le libellé cible `'Tous les ennemis'` / `'allEnemies'`), rétablissant une parité parfaite avec la description des données JSON pour des cartes comme *"Balayage"* et *"Cri de Guerre"*.
+        - **Génération Dynamique des Effets de Statut (`apply_status`)** :
+            - Prise en charge intégrale des effets `apply_status` dans `_buildDescription()` pour les deux rendus (combat et menus), permettant à toutes les cartes appliquant des statuts (comme *"Coup Empoisonné"*, *"Forme Démoniaque"*, *"Métallisation"*, etc.) de voir leurs valeurs et durées se mettre à jour dynamiquement selon le niveau de la carte.
+            - Support de tous les types de statuts actifs du jeu (`strength`, `armor_regen`, `poison`, `weakness`, `vulnerable`, `strength_regen`, `burn`, `freeze`, `shock`).
+        - **Ajout des Effets de Pioche et Mana** :
+            - Support des types d'effets `draw` et `gain_mana` dans `CardComponent` pour assurer une cohérence et une complétude totale avec le widget `UiCard`.
+        - **Robustesse et Validation** :
+            - Validation par `dart analyze` : 0 avertissement ni erreur de type (No issues found!).

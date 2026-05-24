@@ -40,11 +40,49 @@ class UiCard extends StatelessWidget {
     String desc = '';
     for (var effect in effects!) {
       final scaledValue = (effect.value * (1 + (level! - 1) * 0.5)).round();
-      if (effect.type == 'damage') desc += 'Inflige $scaledValue dégâts.\n';
+      if (effect.type == 'damage') {
+        if (target == 'Tous les ennemis' || target == 'allEnemies') {
+          desc += 'Inflige $scaledValue dégâts à tous les ennemis.\n';
+        } else {
+          desc += 'Inflige $scaledValue dégâts.\n';
+        }
+      }
       if (effect.type == 'heal') desc += 'Soigne $scaledValue PV.\n';
       if (effect.type == 'armor') desc += 'Donne $scaledValue Armure.\n';
       if (effect.type == 'gain_mana') desc += 'Gagne $scaledValue Mana.\n';
       if (effect.type == 'draw') desc += 'Pioche $scaledValue cartes.\n';
+      if (effect.type == 'apply_status') {
+        final duration = effect.duration ?? 1;
+        switch (effect.statusId) {
+          case 'strength':
+            desc += 'Gagne $scaledValue ATK pendant $duration tours.\n';
+            break;
+          case 'armor_regen':
+            desc += 'Pendant $duration tours, gagne $scaledValue Armure au début du tour.\n';
+            break;
+          case 'poison':
+            desc += 'Applique $scaledValue Poison.\n';
+            break;
+          case 'weakness':
+            desc += 'Applique $scaledValue Faiblesse.\n';
+            break;
+          case 'vulnerable':
+            desc += 'Applique $scaledValue Vulnérable.\n';
+            break;
+          case 'strength_regen':
+            desc += 'Gagne $scaledValue Éveil d\'Attaque pendant $duration tours.\n';
+            break;
+          case 'burn':
+            desc += 'Applique $scaledValue Brûlure.\n';
+            break;
+          case 'freeze':
+            desc += 'Applique $scaledValue Gel.\n';
+            break;
+          case 'shock':
+            desc += 'Applique $scaledValue Électrocution.\n';
+            break;
+        }
+      }
     }
 
     return desc.isNotEmpty ? desc.trim() : description;

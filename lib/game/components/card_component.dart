@@ -403,10 +403,48 @@ class CardComponent extends PositionComponent
       final scaledValue = (effect.value * (1 + (card.level - 1) * 0.5)).round();
       if (effect.type == 'damage') {
         final totalDmg = scaledValue + heroAttack;
-        desc += 'Inflige $totalDmg dégâts.\n';
+        if (card.data.target == CardTarget.allEnemies) {
+          desc += 'Inflige $totalDmg dégâts à tous les ennemis.\n';
+        } else {
+          desc += 'Inflige $totalDmg dégâts.\n';
+        }
       }
       if (effect.type == 'heal') desc += 'Soigne $scaledValue PV.\n';
       if (effect.type == 'armor') desc += 'Donne $scaledValue Armure.\n';
+      if (effect.type == 'gain_mana') desc += 'Gagne $scaledValue Mana.\n';
+      if (effect.type == 'draw') desc += 'Pioche $scaledValue cartes.\n';
+      if (effect.type == 'apply_status') {
+        final duration = effect.duration ?? 1;
+        switch (effect.statusId) {
+          case 'strength':
+            desc += 'Gagne $scaledValue ATK pendant $duration tours.\n';
+            break;
+          case 'armor_regen':
+            desc += 'Pendant $duration tours, gagne $scaledValue Armure au début du tour.\n';
+            break;
+          case 'poison':
+            desc += 'Applique $scaledValue Poison.\n';
+            break;
+          case 'weakness':
+            desc += 'Applique $scaledValue Faiblesse.\n';
+            break;
+          case 'vulnerable':
+            desc += 'Applique $scaledValue Vulnérable.\n';
+            break;
+          case 'strength_regen':
+            desc += 'Gagne $scaledValue Éveil d\'Attaque pendant $duration tours.\n';
+            break;
+          case 'burn':
+            desc += 'Applique $scaledValue Brûlure.\n';
+            break;
+          case 'freeze':
+            desc += 'Applique $scaledValue Gel.\n';
+            break;
+          case 'shock':
+            desc += 'Applique $scaledValue Électrocution.\n';
+            break;
+        }
+      }
     }
     if (desc.isEmpty) {
       desc = card.data.description;
