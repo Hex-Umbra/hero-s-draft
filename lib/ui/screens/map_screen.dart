@@ -1096,7 +1096,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
                                     final double availableWidth = constraints.maxWidth;
                                     // Une relique prend exactement la moitié de la largeur disponible (2 colonnes) avec un espacement de 16px
                                     final double cardWidth = (availableWidth - 16) / 2;
-                                    const double cardHeight = 220; // Hauteur triplée très généreuse pour un confort visuel absolu
+                                    const double cardHeight = 110; // Hauteur réduite de moitié pour un affichage compact et fluide
 
                                     return SingleChildScrollView(
                                       child: Wrap(
@@ -1268,7 +1268,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
     }
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: const Color(0xFF2A2A3D),
         borderRadius: BorderRadius.circular(16),
@@ -1290,24 +1290,24 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
                 children: [
                   Text(
                     relic.emoji,
-                    style: const TextStyle(fontSize: 24),
+                    style: const TextStyle(fontSize: 20),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       relic.name,
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 14.5,
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
                       ),
-                      maxLines: 2,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                     decoration: BoxDecoration(
                       color: triggerColor.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(6),
@@ -1317,14 +1317,14 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
                       triggerText,
                       style: TextStyle(
                         color: triggerColor,
-                        fontSize: 9,
+                        fontSize: 8,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 6),
               Expanded(
                 child: SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
@@ -1332,18 +1332,18 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
                     relic.description,
                     style: const TextStyle(
                       color: Colors.white70,
-                      fontSize: 12,
-                      height: 1.45,
+                      fontSize: 11,
+                      height: 1.3,
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 6),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                     decoration: BoxDecoration(
                       color: rarityColor.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(4),
@@ -1352,7 +1352,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
                       rarityText,
                       style: TextStyle(
                         color: rarityColor,
-                        fontSize: 8.5,
+                        fontSize: 8,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -1366,10 +1366,10 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
               right: 0,
               bottom: 0,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: Colors.amber.shade900,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(10),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.5),
@@ -1381,7 +1381,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
                   '×$count',
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 13,
+                    fontSize: 11,
                     fontWeight: FontWeight.bold,
                   ),
                 ),

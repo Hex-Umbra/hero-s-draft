@@ -192,3 +192,23 @@
         - **Robustesse et Validation** :
             - `dart analyze` exécuté avec succès : 0 erreur, 0 avertissement.
             - `flutter test` exécuté avec succès : 17 tests sur 17 passés.
+
+## Phase 86 - Réduction de Moitié de la Hauteur des Cartes de Reliques (HUD/Inventaire)
+
+- style: Ajustement de la hauteur de chaque relique à 110px et optimisation du rendu compact des textes et des badges
+    - Adaptation du design des reliques pour occuper moitié moins d'espace vertical tout en conservant une lisibilité et une esthétique exemplaires.
+        - **Refonte Graphique dans `lib/ui/screens/map_screen.dart`** :
+            - **Hauteur de Carte Divisée par Deux** : Ajustement de `cardHeight` de `220px` à **110px** au sein du `LayoutBuilder` de la grille de reliques de l'inventaire, pour un rendu beaucoup plus condensé et harmonieux de type jeu de cartes.
+            - **Optimisation des Espacements et Paddings** :
+                - Remplacement du padding interne généreux de `16` par un rembourrage condensé de `const EdgeInsets.symmetric(horizontal: 12, vertical: 8)`.
+                - Réduction des espaces inter-blocs (`SizedBox(height: 6)` au lieu de `14` et `10`), dégageant un maximum de place pour la description.
+            - **Ajustement de la Typographie et des Éléments Visuels** :
+                - Taille des émojis fixée à `20` (au lieu de `24`).
+                - Taille du nom de la relique fixée à `13` (semi-bold) et limitation du nom sur une seule ligne (`maxLines: 1` avec points de suspension en cas de débordement).
+                - Badges d'activation (`trigger`) et de rareté (`rarityText`) réduits à `fontSize: 8` avec des paddings resserrés de `6x3` et `6x3`.
+                - Badge de quantité cumulée (`xN`) ajusté à `fontSize: 11` avec un padding de `8x3` et des bords arrondis de `10` à la coordonnée `Positioned(right: 0, bottom: 0)`, s'alignant idéalement en face du badge de rareté à gauche.
+            - **Maintien du Rendu de Description Défilant** :
+                - Le texte descriptif (`fontSize: 11`, hauteur `1.3`, couleur `white70`) demeure enveloppé dans le conteneur défilant indépendant `SingleChildScrollView` avec effet `BouncingScrollPhysics`. Cela garantit que les descriptions les plus longues restent entièrement lisibles par glissement de doigt dans un espace vertical restreint à 110px.
+        - **Robustesse et Validation** :
+            - `dart analyze` validé avec 0 warning ni erreur de type.
+            - Non-régression prouvée par `flutter test` avec 17 tests sur 17 passés avec succès.

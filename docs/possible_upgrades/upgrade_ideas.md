@@ -85,4 +85,4 @@
 - Vérifier pourquoi la descritpion de la carte "Balayage" en jeu est différente de sa desciption dans les données.
 - ~~A la fin d'un combat élites, le joueur n'est pas envoyé directement sur la map avec l'attribution de la relique aléatoire. Il y a un bug visuelle qui fait "réapparaitre" des ennemis au moment où la notification de quel relique est donnée avant de quitter le combat pour ensuite repartir sur la map~~
 - Modifier la snackbar de notification pour une notification plus discrète et plus esthétique, plutot de que d'avoir une grosse barre de couleur qui apparait en bas de l'écran, on aurait le message quelque part sur l'écran comme a au centre a gauche affichant les différente notif déja mise en place.
-- 
+- Rajouter un menu dans la map qui permet au joueur de voir toutes les probabilités de chance d'obtenir des reliques, des cartes et des récompenses en fonction de leur rareté (valeur actuelle, comme ça la ils peuvent voir la valeur avec l'augmentation de leur chance)
