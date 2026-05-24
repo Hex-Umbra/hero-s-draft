@@ -227,3 +227,38 @@
             - Support des types d'effets `draw` et `gain_mana` dans `CardComponent` pour assurer une cohérence et une complétude totale avec le widget `UiCard`.
         - **Robustesse et Validation** :
             - Validation par `dart analyze` : 0 avertissement ni erreur de type (No issues found!).
+
+## Phase 88 - Données Statiques du Draft et Nouvelles Cartes Spécifiques de Classe
+
+- feat: Ajout de 6 nouvelles cartes spécifiques de classe dans cards.json pour structurer le pool de draft de départ
+    - Création d'un ensemble de cartes uniques non draftables et auto-injectées pour renforcer la synergie thématique de départ de chaque héros.
+        - **Création de Cartes Spécifiques de Classe (`assets/data/cards.json`)** :
+            - **Paladin** : Ajout de *Bouclier Sacré* (`holy_shield` - Rare, donne 8 d'Armure et soigne 2 PV) et *Châtiment* (`smite` - Peu Commun, inflige 6 dégâts et donne 4 d'Armure).
+            - **Berserker** : Ajout de *Frappe Téméraire* (`reckless_strike` - Peu Commun, inflige 15 dégâts) et *Posture de Rage* (`rage_form` - Commun, gagne 2 Force pour 1 tour et pioche 1 carte).
+            - **Mage** : Ajout de *Projectile Magique* (`magic_missile` - Commun, inflige 5 dégâts et pioche 1 carte) et *Surtension de Mana* (`mana_surge` - Peu Commun, gagne 2 Mana ce tour, Usage Unique).
+            - Toutes ces cartes possèdent la catégorie `characterSpecific` et l'attribut `heroClass` associé afin d'être exclues du pool de draft des cartes globales.
+        - **Préservation de la Flexibilité des Héros** :
+            - Maintien du fichier `heroes.json` sans starter deck codé en dur, permettant d'extraire dynamiquement toutes les cartes d'une classe lors de la validation du draft initial du joueur.
+        - **Robustesse et Analyse Statique** :
+            - Analyse réussie avec `dart analyze` reportant 0 problème dans le chargement et le parsing asynchrone des fichiers JSON modifiés.
+
+## Phase 89 - Écran de Sélection et de Draft de Départ (Starter Deck Draft)
+
+- feat: Implémentation du StarterDeckDraftScreen pour la personnalisation du deck de départ du héros choisi
+    - Développement d'un nouvel écran interactif permettant de choisir 5 cartes globales parmi 10 propositions pondérées selon leur rareté.
+        - **Algorithme de Tirage et Pondération Dynamique** :
+            - Sélection de 10 cartes globales uniques (excluant les statuts).
+            - Application de la pondération de tirage : Commun (60%), Peu Commun (20%), Rare (14%), Épique (5%), Légendaire (1%).
+            - Cascade de repli robuste en cas de pool de rareté vide (ex: Légendaire) vers les raretés inférieures pour garantir 10 tirages valides.
+            - Sécurité contre la surreprésentation limitant toute carte à un maximum de 2 copies dans le pool de propositions.
+        - **Interface Graphique Premium Responsive** :
+            - Design immersif avec un en-tête moderne en flou de verre (glassmorphism) adapté à la classe choisie (liserés et ombrages bleus pour Paladin, rouges pour Berserker, violets pour Mage).
+            - Grid de cartes adaptatif à la résolution mobile utilisant le composant `UiCard`.
+            - Affichage d'un badge compteur "X / 5" et d'icônes animées de coche (checkmark) sur les cartes sélectionnées.
+        - **Initialisation Métier et Redirection de la Run** :
+            - Le bouton de validation "Entrer dans l'Umbra" s'active uniquement lorsque 5 cartes sont cochées.
+            - À la validation : extraction des cartes de classe du héros depuis `cards.json` (`heroClass == chosenHeroId`), combinaison avec les 5 cartes draftées globales pour fonder le deck de départ (7 cartes au total), initialisation complète du deck et de la partie via `deckProvider` et `runProvider`, puis redirection immédiate vers `MapScreen`.
+        - **Migration de Code Déprécié** :
+            - Migration complète de tous les appels obsolètes à `withOpacity` vers `.withValues(alpha: ...)` au sein du nouveau fichier pour respecter les directives Flutter 3.x et éviter toute régression.
+        - **Validation Statique du Projet** :
+            - Résolution de toutes les alertes de linting avec un rapport de 0 problème trouvé sous `dart analyze`.

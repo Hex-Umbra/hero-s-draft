@@ -329,5 +329,132 @@
         "value": 1
       }
     ]
+  },
+  {
+    "id": "holy_shield",
+    "name": "Bouclier Sacré",
+    "description": "Donne 8 d'Armure et soigne 2 PV.",
+    "cost": 1,
+    "type": "skill",
+    "category": "characterSpecific",
+    "heroClass": "paladin",
+    "rarity": "rare",
+    "target": "self",
+    "animation": "buff",
+    "effects": [
+      {
+        "type": "armor",
+        "value": 8
+      },
+      {
+        "type": "heal",
+        "value": 2
+      }
+    ]
+  },
+  {
+    "id": "smite",
+    "name": "Châtiment",
+    "description": "Inflige 6 dégâts et donne 4 d'Armure.",
+    "cost": 1,
+    "type": "attack",
+    "category": "characterSpecific",
+    "heroClass": "paladin",
+    "rarity": "uncommon",
+    "target": "singleEnemy",
+    "animation": "melee",
+    "effects": [
+      {
+        "type": "damage",
+        "value": 6
+      },
+      {
+        "type": "armor",
+        "value": 4
+      }
+    ]
+  },
+  {
+    "id": "reckless_strike",
+    "name": "Frappe Téméraire",
+    "description": "Inflige 15 dégâts.",
+    "cost": 2,
+    "type": "attack",
+    "category": "characterSpecific",
+    "heroClass": "berserker",
+    "rarity": "uncommon",
+    "target": "singleEnemy",
+    "animation": "melee",
+    "effects": [
+      {
+        "type": "damage",
+        "value": 15
+      }
+    ]
+  },
+  {
+    "id": "rage_form",
+    "name": "Posture de Rage",
+    "description": "Applique 2 Force ce tour-ci. Pioche 1 carte.",
+    "cost": 1,
+    "type": "skill",
+    "category": "characterSpecific",
+    "heroClass": "berserker",
+    "rarity": "common",
+    "target": "self",
+    "animation": "buff",
+    "effects": [
+      {
+        "type": "apply_status",
+        "statusId": "strength",
+        "value": 2,
+        "duration": 1
+      },
+      {
+        "type": "draw",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "magic_missile",
+    "name": "Projectile Magique",
+    "description": "Inflige 5 dégâts et pioche 1 carte.",
+    "cost": 1,
+    "type": "attack",
+    "category": "characterSpecific",
+    "heroClass": "mage",
+    "rarity": "common",
+    "target": "singleEnemy",
+    "animation": "magic",
+    "effects": [
+      {
+        "type": "damage",
+        "value": 5
+      },
+      {
+        "type": "draw",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "mana_surge",
+    "name": "Surtension de Mana",
+    "description": "Gagne 2 cristaux de Mana ce tour-ci.",
+    "cost": 0,
+    "type": "skill",
+    "category": "characterSpecific",
+    "heroClass": "mage",
+    "rarity": "uncommon",
+    "target": "self",
+    "animation": "buff",
+    "isExhaust": true,
+    "effects": [
+      {
+        "type": "gain_mana",
+        "value": 2
+      }
+    ]
   }
 ]
