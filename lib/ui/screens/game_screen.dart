@@ -193,7 +193,11 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           _turnCount++;
         });
         ref.read(runProvider.notifier).startTurn();
-        ref.read(deckProvider.notifier).drawCards(5);
+        final deckNotifier = ref.read(deckProvider.notifier);
+        if (ref.read(deckProvider).drawPile.length < 5) {
+          deckNotifier.shuffleDiscardIntoDraw();
+        }
+        deckNotifier.drawCards(5);
       },
       onPhaseChanged: (phase) {
         _triggerPhaseBanner(

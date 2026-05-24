@@ -61,31 +61,19 @@ class DeckNotifier extends StateNotifier<DeckState> {
     );
   }
 
-  /// Pioche [amount] cartes
+  /// Pioche [amount] cartes depuis la pioche actuelle uniquement (sans mélange de défausse mid-turn)
   void drawCards(int amount) {
     var currentDrawPile = List<CardInstance>.from(state.drawPile);
     var currentHand = List<CardInstance>.from(state.hand);
-    var currentDiscardPile = List<CardInstance>.from(state.discardPile);
 
-    for (int i = 0; i < amount; i++) {
-      if (currentDrawPile.isEmpty) {
-        if (currentDiscardPile.isEmpty) {
-          // Plus aucune carte à piocher dans la défausse non plus
-          break;
-        }
-        // Mélange la défausse dans la pioche
-        currentDrawPile = List<CardInstance>.from(currentDiscardPile);
-        currentDrawPile.shuffle(Random());
-        currentDiscardPile.clear();
-      }
-
+    final int toDraw = min(amount, currentDrawPile.length);
+    for (int i = 0; i < toDraw; i++) {
       currentHand.add(currentDrawPile.removeLast());
     }
 
     state = state.copyWith(
       drawPile: currentDrawPile,
       hand: currentHand,
-      discardPile: currentDiscardPile,
     );
   }
 

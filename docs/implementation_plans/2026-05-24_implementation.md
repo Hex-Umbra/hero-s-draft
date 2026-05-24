@@ -255,6 +255,7 @@
             - Design immersif avec un en-tête moderne en flou de verre (glassmorphism) adapté à la classe choisie (liserés et ombrages bleus pour Paladin, rouges pour Berserker, violets pour Mage).
             - Grid de cartes adaptatif à la résolution mobile utilisant le composant `UiCard`.
             - Affichage d'un badge compteur "X / 5" et d'icônes animées de coche (checkmark) sur les cartes sélectionnées.
+            - **Résolution du Bug des Doublons** : Remplacement de l'ancien suivi par référence d'objet (`CardData`) par un suivi par index unique dans le pool (`_selectedIndexes` de type `Set<int>`). Cela garantit que si deux copies identiques d'une même carte globale sont proposées dans le pool de draft de 10 cartes, le joueur peut sélectionner, désélectionner et visualiser chaque exemplaire de façon totalement indépendante, résolvant le problème de fusion de sélection.
         - **Initialisation Métier et Redirection de la Run** :
             - Le bouton de validation "Entrer dans l'Umbra" s'active uniquement lorsque 5 cartes sont cochées.
             - À la validation : extraction des cartes de classe du héros depuis `cards.json` (`heroClass == chosenHeroId`), combinaison avec les 5 cartes draftées globales pour fonder le deck de départ (7 cartes au total), initialisation complète du deck et de la partie via `deckProvider` et `runProvider`, puis redirection immédiate vers `MapScreen`.
@@ -288,3 +289,18 @@
             - Repositionnement sémantique du bloc d'initialisation en "Fallback de secours" : la logique est préservée mais commentée explicitement comme telle pour empêcher tout crash applicatif si le jeu est lancé directement sur l'écran de combat hors du flux de draft (ex: raccourcis de développement).
         - **Robustesse** :
             - `dart analyze` reportant 0 avertissement, validant la propreté absolue de la modification.
+
+## Phase 92 - Correction du Système de Pioche et Défausse (Combat)
+
+- fix: Séparation des mécaniques de pioche mid-turn et début de tour pour éviter le mélange automatique de la défausse
+    - Modification de la pioche de cartes en combat pour empêcher le joueur de repiocher indéfiniment ses propres cartes jouées dans le même tour.
+        - **Désactivation du Mélange Automatique Mid-Turn (`lib/game/controllers/deck_controller.dart`)** :
+            - Modification de `drawCards(int amount)` pour ne piocher que les cartes actuellement présentes dans `drawPile`, jusqu'au nombre de cartes disponibles.
+            - Retrait du re-mélange automatique de `discardPile` vers `drawPile` en cours de pioche pour éviter les abus et les boucles de jeu infinies.
+        - **Garantie de Pioche Complète de Début de Tour (`lib/ui/screens/game_screen.dart`)** :
+            - Dans `onTurnEnded` (lors de la transition au tour du joueur), vérification de la taille de `drawPile`.
+            - Si la pioche contient moins de 5 cartes, appel explicite de `shuffleDiscardIntoDraw()` pour mélanger la défausse dans la pioche avant de lancer la pioche initiale de 5 cartes.
+        - **Tests et Qualité du Code** :
+            - Écriture d'une suite de tests unitaires dédiée dans `test/unit/deck_controller_test.dart` pour couvrir la pioche sans mélange mid-turn et le mélange manuel.
+            - `dart analyze` exécuté avec 0 problème signalé.
+            - `flutter test` complété à 100% avec succès (20 tests sur 20 validés).

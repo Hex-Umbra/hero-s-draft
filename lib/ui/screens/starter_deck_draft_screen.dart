@@ -27,7 +27,7 @@ class StarterDeckDraftScreen extends ConsumerStatefulWidget {
 
 class _StarterDeckDraftScreenState extends ConsumerState<StarterDeckDraftScreen> {
   late List<CardData> _draftPool;
-  final List<CardData> _selectedCards = [];
+  final Set<int> _selectedIndexes = {};
   bool _isPoolGenerated = false;
 
   @override
@@ -128,13 +128,13 @@ class _StarterDeckDraftScreenState extends ConsumerState<StarterDeckDraftScreen>
     return CardRarity.legendary;
   }
 
-  void _toggleCardSelection(CardData card) {
+  void _toggleCardSelection(int index) {
     setState(() {
-      if (_selectedCards.contains(card)) {
-        _selectedCards.remove(card);
+      if (_selectedIndexes.contains(index)) {
+        _selectedIndexes.remove(index);
       } else {
-        if (_selectedCards.length < 5) {
-          _selectedCards.add(card);
+        if (_selectedIndexes.length < 5) {
+          _selectedIndexes.add(index);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -149,7 +149,7 @@ class _StarterDeckDraftScreenState extends ConsumerState<StarterDeckDraftScreen>
   }
 
   void _startAdventure() {
-    if (_selectedCards.length != 5) return;
+    if (_selectedIndexes.length != 5) return;
 
     final gameData = ref.read(gameDataLoaderProvider).requireValue;
 
@@ -166,8 +166,9 @@ class _StarterDeckDraftScreenState extends ConsumerState<StarterDeckDraftScreen>
       finalDeck.add(CardInstance(data: cardData));
     }
 
-    // Ajouter les 5 cartes globales sélectionnées
-    for (var cardData in _selectedCards) {
+    // Ajouter les 5 cartes globales sélectionnées par index
+    final selectedCards = _selectedIndexes.map((idx) => _draftPool[idx]).toList();
+    for (var cardData in selectedCards) {
       finalDeck.add(CardInstance(data: cardData));
     }
 
@@ -276,17 +277,17 @@ class _StarterDeckDraftScreenState extends ConsumerState<StarterDeckDraftScreen>
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                       decoration: BoxDecoration(
-                        color: _selectedCards.length == 5 ? Colors.green.withValues(alpha: 0.2) : Colors.amber.withValues(alpha: 0.1),
+                        color: _selectedIndexes.length == 5 ? Colors.green.withValues(alpha: 0.2) : Colors.amber.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: _selectedCards.length == 5 ? Colors.green : Colors.amber.withValues(alpha: 0.5),
+                          color: _selectedIndexes.length == 5 ? Colors.green : Colors.amber.withValues(alpha: 0.5),
                           width: 1.5,
                         ),
                       ),
                       child: Text(
-                        'Cartes sélectionnées : ${_selectedCards.length} / 5',
+                        'Cartes sélectionnées : ${_selectedIndexes.length} / 5',
                         style: TextStyle(
-                          color: _selectedCards.length == 5 ? Colors.greenAccent : Colors.amberAccent,
+                          color: _selectedIndexes.length == 5 ? Colors.greenAccent : Colors.amberAccent,
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
                         ),
@@ -313,11 +314,11 @@ class _StarterDeckDraftScreenState extends ConsumerState<StarterDeckDraftScreen>
                         itemCount: _draftPool.length,
                         itemBuilder: (context, index) {
                           final card = _draftPool[index];
-                          final isSelected = _selectedCards.contains(card);
-                          final isMaxSelected = _selectedCards.length == 5;
+                          final isSelected = _selectedIndexes.contains(index);
+                          final isMaxSelected = _selectedIndexes.length == 5;
 
                           return GestureDetector(
-                            onTap: () => _toggleCardSelection(card),
+                            onTap: () => _toggleCardSelection(index),
                             child: AnimatedOpacity(
                               duration: const Duration(milliseconds: 200),
                               opacity: isSelected ? 1.0 : (isMaxSelected ? 0.4 : 1.0),
@@ -371,12 +372,12 @@ class _StarterDeckDraftScreenState extends ConsumerState<StarterDeckDraftScreen>
 
               // BOUTON DE VALIDATION
               AnimatedScale(
-                scale: _selectedCards.length == 5 ? 1.0 : 0.96,
+                scale: _selectedIndexes.length == 5 ? 1.0 : 0.96,
                 duration: const Duration(milliseconds: 150),
                 child: Container(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16),
-                    boxShadow: _selectedCards.length == 5
+                    boxShadow: _selectedIndexes.length == 5
                         ? [
                             BoxShadow(
                               color: classColor.withValues(alpha: 0.4),
@@ -389,21 +390,21 @@ class _StarterDeckDraftScreenState extends ConsumerState<StarterDeckDraftScreen>
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 18),
-                      backgroundColor: _selectedCards.length == 5 ? classColor : Colors.grey.shade800,
+                      backgroundColor: _selectedIndexes.length == 5 ? classColor : Colors.grey.shade800,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
                       elevation: 0,
                     ),
-                    onPressed: _selectedCards.length == 5 ? _startAdventure : null,
+                    onPressed: _selectedIndexes.length == 5 ? _startAdventure : null,
                     child: Text(
                       'ENTRER DANS L\'UMBRA',
                       style: TextStyle(
                         fontSize: isMobile ? 16 : 20,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 1.2,
-                        color: _selectedCards.length == 5 ? Colors.white : Colors.white24,
+                        color: _selectedIndexes.length == 5 ? Colors.white : Colors.white24,
                       ),
                     ),
                   ),
