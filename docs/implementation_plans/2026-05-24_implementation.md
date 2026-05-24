@@ -141,3 +141,19 @@
         - **Vérification Intégrale** :
             - `dart analyze` exécuté avec 0 warning ni erreur.
             - `flutter test` exécuté avec succès : 17 tests sur 17 validés à 100%.
+
+## Phase 83 - Optimisation Visuelle et Résolution des Débordements de l'Inventaire (Map)
+
+- style: Remplacement de la GridView par un LayoutBuilder combiné à un Wrap à hauteur fixe (180px) et réduction des espacements internes pour éliminer les débordements (overflow)
+    - Résolution définitive de l'exception Flutter `RenderFlex overflowed by 6.8 pixels on the bottom` sur tous les formats d'écrans et configurations de polices.
+        - **Refonte Structurale de la Grille (`lib/ui/screens/map_screen.dart`)** :
+            - Remplacement de `GridView.builder` par un `LayoutBuilder` dynamique.
+            - Calcul intelligent des colonnes (2 colonnes si la largeur disponible est supérieure à 500px, sinon 1 colonne plein écran pour les mobiles).
+            - Utilisation d'un `SingleChildScrollView` enveloppant un `Wrap` d'éléments encapsulés dans des `SizedBox` de hauteur **strictement fixe à 180px** (augmentée depuis 175px) pour offrir une marge de hauteur de sécurité supplémentaire.
+        - **Refonte Graphique de `_buildRelicCard()`** :
+            - Le titre de la relique (`relic.name`) accepte désormais jusqu'à 2 lignes (`maxLines: 2`) au lieu d'une seule ligne tronquée pour afficher parfaitement les noms longs.
+            - Réduction intelligente de la marge de rembourrage interne (`padding` vertical passant de `12` à `8` pixels) et des séparations verticales (`SizedBox(height: 5)` et `SizedBox(height: 2)`) ainsi que de l'espacement de la description (`padding` vertical réduit à `2.0` pixels), libérant un total cumulé de 16 pixels supplémentaires en hauteur utile.
+            - Ajustement du texte de description (`relic.description`) avec une police qualitative (`fontSize: 11` au lieu de `9.5`) et un espacement de ligne fluide (`height: 1.3`). La hauteur de carte fixe à 180px combinée aux réductions d'espacements internes immunise complètement les composants contre tout débordement de type RenderFlex.
+        - **Robustesse et Tests** :
+            - Validation par `dart analyze` : 0 avertissement ni erreur de type.
+            - Non-régression prouvée par `flutter test` : 17 tests sur 17 passés avec succès.

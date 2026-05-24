@@ -1091,19 +1091,28 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
                                     ),
                                   ],
                                 )
-                              : GridView.builder(
-                                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                                    maxCrossAxisExtent: 260,
-                                    childAspectRatio: 2.1,
-                                    crossAxisSpacing: 12,
-                                    mainAxisSpacing: 12,
-                                  ),
-                                  itemCount: uniqueIds.length,
-                                  itemBuilder: (context, index) {
-                                    final id = uniqueIds[index];
-                                    final relic = relicMap[id]!;
-                                    final count = relicCounts[id]!;
-                                    return _buildRelicCard(relic, count);
+                              : LayoutBuilder(
+                                  builder: (context, constraints) {
+                                    final double availableWidth = constraints.maxWidth;
+                                    final int crossAxisCount = availableWidth > 500 ? 2 : 1;
+                                    final double cardWidth = (availableWidth - (crossAxisCount - 1) * 12) / crossAxisCount;
+                                    const double cardHeight = 180; // Hauteur fixe garantie pour éliminer tout débordement
+
+                                    return SingleChildScrollView(
+                                      child: Wrap(
+                                        spacing: 12,
+                                        runSpacing: 12,
+                                        children: uniqueIds.map((id) {
+                                          final relic = relicMap[id]!;
+                                          final count = relicCounts[id]!;
+                                          return SizedBox(
+                                            width: cardWidth,
+                                            height: cardHeight,
+                                            child: _buildRelicCard(relic, count),
+                                          );
+                                        }).toList(),
+                                      ),
+                                    );
                                   },
                                 ),
                         ),
@@ -1259,7 +1268,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
     }
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: const Color(0xFF2A2A3D),
         borderRadius: BorderRadius.circular(16),
@@ -1278,24 +1287,26 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
                     relic.emoji,
                     style: const TextStyle(fontSize: 18),
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       relic.name,
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 12,
+                        fontSize: 12.5,
                         fontWeight: FontWeight.bold,
                       ),
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  const SizedBox(width: 4),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
@@ -1314,19 +1325,23 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
                   ),
                 ],
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 5),
               Expanded(
-                child: Text(
-                  relic.description,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 9.5,
-                    height: 1.2,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2.0),
+                  child: Text(
+                    relic.description,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 11,
+                      height: 1.3,
+                    ),
+                    maxLines: 4,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+              const SizedBox(height: 2),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
