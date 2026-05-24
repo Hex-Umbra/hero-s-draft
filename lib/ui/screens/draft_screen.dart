@@ -260,14 +260,15 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
     final runState = ref.read(runProvider);
     final luck = runState.heroStats.luck;
 
-    // 1. Génération des 3 choix standards (Commun à Épique)
+    // 1. Génération des 3 choix standards (Commun à Légendaire)
     final choices = List.generate(3, (index) {
-      RewardRarity rarity = _rollRarity(luck, canBeLegendary: false);
+      RewardRarity rarity = _rollRarity(luck, canBeLegendary: true, isLevelReward: false);
 
       double multiplier = 1.0;
       if (rarity == RewardRarity.uncommon) multiplier = 1.5;
       if (rarity == RewardRarity.rare) multiplier = 2.0;
       if (rarity == RewardRarity.epic) multiplier = 3.0;
+      if (rarity == RewardRarity.legendary) multiplier = 4.0;
 
       int type = rng.nextInt(4);
       if (type == 0) {

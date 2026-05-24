@@ -1192,71 +1192,27 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
     rareChance = rareChance.clamp(0.0, 100.0);
     uncommonChance = uncommonChance.clamp(0.0, 100.0);
 
-    if (isLevelReward) {
-      double pLeg = legendaryChance;
-      double pEpic = epicChance;
-      double pRare = rareChance;
-      double pUncommon = uncommonChance;
-      
-      double sum = pLeg;
-      pEpic = pEpic.clamp(0.0, 100.0 - sum);
-      sum += pEpic;
-      pRare = pRare.clamp(0.0, 100.0 - sum);
-      sum += pRare;
-      pUncommon = pUncommon.clamp(0.0, 100.0 - sum);
-      sum += pUncommon;
-      double pCommon = (100.0 - sum).clamp(0.0, 100.0);
+    double pLeg = legendaryChance;
+    double pEpic = epicChance;
+    double pRare = rareChance;
+    double pUncommon = uncommonChance;
+    
+    double sum = pLeg;
+    pEpic = pEpic.clamp(0.0, 100.0 - sum);
+    sum += pEpic;
+    pRare = pRare.clamp(0.0, 100.0 - sum);
+    sum += pRare;
+    pUncommon = pUncommon.clamp(0.0, 100.0 - sum);
+    sum += pUncommon;
+    double pCommon = (100.0 - sum).clamp(0.0, 100.0);
 
-      return {
-        'legendary': pLeg,
-        'epic': pEpic,
-        'rare': pRare,
-        'uncommon': pUncommon,
-        'common': pCommon,
-      };
-    } else {
-      double totalRange = 100.0 - legendaryChance;
-      if (totalRange <= 0) {
-        return {
-          'legendary': 0.0,
-          'epic': 100.0,
-          'rare': 0.0,
-          'uncommon': 0.0,
-          'common': 0.0,
-        };
-      }
-      
-      double pEpic = 0.0;
-      if (epicChance > legendaryChance) {
-        pEpic = (epicChance - legendaryChance) / totalRange * 100.0;
-      }
-      
-      double pRare = rareChance / totalRange * 100.0;
-      double pUncommon = uncommonChance / totalRange * 100.0;
-      
-      double sum = pEpic + pRare + pUncommon;
-      if (sum > 100.0) {
-        pEpic = pEpic / sum * 100.0;
-        pRare = pRare / sum * 100.0;
-        pUncommon = pUncommon / sum * 100.0;
-        return {
-          'legendary': 0.0,
-          'epic': pEpic,
-          'rare': pRare,
-          'uncommon': pUncommon,
-          'common': 0.0,
-        };
-      }
-      
-      double pCommon = 100.0 - sum;
-      return {
-        'legendary': 0.0,
-        'epic': pEpic,
-        'rare': pRare,
-        'uncommon': pUncommon,
-        'common': pCommon,
-      };
-    }
+    return {
+      'legendary': pLeg,
+      'epic': pEpic,
+      'rare': pRare,
+      'uncommon': pUncommon,
+      'common': pCommon,
+    };
   }
 
   Map<String, double> calculateRelicProbabilities(int luck) {
