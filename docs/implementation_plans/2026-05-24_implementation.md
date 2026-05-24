@@ -262,3 +262,29 @@
             - Migration complète de tous les appels obsolètes à `withOpacity` vers `.withValues(alpha: ...)` au sein du nouveau fichier pour respecter les directives Flutter 3.x et éviter toute régression.
         - **Validation Statique du Projet** :
             - Résolution de toutes les alertes de linting avec un rapport de 0 problème trouvé sous `dart analyze`.
+
+## Phase 90 - Interception et Routage de la Sélection de Classe vers le Draft
+
+- feat: Raccordement de l'écran StarterDeckDraftScreen dans le flux de navigation principal du jeu
+    - Modification du comportement du bouton de validation dans ClassSelectionScreen pour intercepter le départ direct de run et proposer l'écran de draft.
+        - **Intégration et Importation du Widget** :
+            - Ajout de l'import de `starter_deck_draft_screen.dart` au sommet de `class_selection_screen.dart` pour relier les deux modules d'interface.
+        - **Bouton de Sélection Premium (`_PremiumSelectionButton`)** :
+            - Auparavant, le clic sur "Sélectionner" déclenchait immédiatement `ref.read(runProvider.notifier).startNewRun(...)` et déportait le joueur directement vers `MapScreen`.
+            - Remplacement de cette transition par un `Navigator.of(context).push(...)` standard, transmettant les informations thématiques `playerClass` (HeroData) et `passive` (PassiveData) du héros choisi vers la vue de draft `StarterDeckDraftScreen`.
+        - **Déportation Propre de la Logique de Démarrage** :
+            - Le nettoyage du deck et l'initialisation de la run sont désormais délégués en fin de chaîne dans l'écran de draft, assurant que le cycle de vie de la partie ne débute réellement qu'une fois le choix de deck du joueur définitivement accompli et validé.
+        - **Stabilité et Compilabilité** :
+            - Vérification par l'analyseur statique Dart se terminant avec succès (0 warning, 0 error).
+
+## Phase 91 - Sécurisation par Fallback et Nettoyage de l'Initialisation de Deck (Combat)
+
+- fix: Sécurisation du chargement de l'arène de combat avec un starter deck de secours dans GameScreen
+    - Transformation de la logique d'initialisation dans GameScreen en filet de sauvetage défensif pour les phases de test ou débogage en développement.
+        - **Évitement de l'Écrasement du Deck Drafté** :
+            - Auparavant, `game_screen.dart` créait un ensemble statique de 5 cartes et forçait le chargement de celles-ci.
+            - La création du deck maître s'effectuant désormais en amont au cours de la phase de draft, la condition `deck.masterDeck.isEmpty` évitera naturellement cette initialisation statique en combat.
+        - **Redéfinition en Filet de Sécurité (Fallback)** :
+            - Repositionnement sémantique du bloc d'initialisation en "Fallback de secours" : la logique est préservée mais commentée explicitement comme telle pour empêcher tout crash applicatif si le jeu est lancé directement sur l'écran de combat hors du flux de draft (ex: raccourcis de développement).
+        - **Robustesse** :
+            - `dart analyze` reportant 0 avertissement, validant la propreté absolue de la modification.

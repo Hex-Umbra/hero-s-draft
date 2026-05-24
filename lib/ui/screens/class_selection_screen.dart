@@ -6,6 +6,7 @@ import '../../game/controllers/run_controller.dart';
 import '../../game/controllers/deck_controller.dart';
 import 'map_screen.dart';
 import 'card_dictionary_screen.dart';
+import 'starter_deck_draft_screen.dart';
 import '../widgets/sword_icon.dart';
 import '../../models/data/passive_data.dart';
 
@@ -372,11 +373,13 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                   classColor: classColor,
                                   isMobile: widget.isMobile,
                                   onPressed: () {
-                                    widget.ref.read(deckProvider.notifier).clearDeck();
-                                    widget.ref.read(runProvider.notifier).startNewRun(playerClass, passive);
-                                    Navigator.of(context).pushAndRemoveUntil(
-                                      MaterialPageRoute(builder: (context) => const MapScreen()),
-                                      (route) => route.isFirst,
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) => StarterDeckDraftScreen(
+                                          playerClass: playerClass,
+                                          passive: passive,
+                                        ),
+                                      ),
                                     );
                                   },
                                 ),

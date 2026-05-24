@@ -45,7 +45,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     Future.microtask(() {
       final deck = ref.read(deckProvider);
 
-      // Initialisation du starter deck si c'est le début de la run
+      // Fallback de sécurité : initialise un starter deck de secours si le deck maître est vide (ex: test direct en développement)
       if (deck.masterDeck.isEmpty) {
         final gameData = ref.read(gameDataLoaderProvider).requireValue;
 
