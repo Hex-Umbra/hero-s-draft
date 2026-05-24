@@ -24,7 +24,8 @@ class EnemyCard extends PositionComponent
 
   late final StatBadge hpBadge;
   late final SpriteComponent sprite;
-  late final StatusIndicator statusIndicator;
+  late final StatusIndicator buffIndicator;
+  late final StatusIndicator debuffIndicator;
 
   EnemyIntent? currentIntent;
 
@@ -124,12 +125,18 @@ class EnemyCard extends PositionComponent
     hpBadge.position = Vector2(size.x / 2, -12); // Centré légèrement au-dessus de la carte
     add(hpBadge);
 
-    // Positionner les debuffs/buffs sur le côté droit de la carte
-    statusIndicator = StatusIndicator(
-      statuses: stats.statuses,
+    // Positionner les buffs (à gauche) et les debuffs (à droite)
+    buffIndicator = StatusIndicator(
+      statuses: stats.statuses.where((s) => s.type == StatusType.buff).toList(),
+      position: Vector2(-36, 10),
+    );
+    add(buffIndicator);
+
+    debuffIndicator = StatusIndicator(
+      statuses: stats.statuses.where((s) => s.type == StatusType.debuff).toList(),
       position: Vector2(size.x + 4, 10),
     );
-    add(statusIndicator);
+    add(debuffIndicator);
 
     _refreshBadges();
   }
@@ -204,7 +211,8 @@ class EnemyCard extends PositionComponent
 
     stats = newStats;
     _refreshBadges();
-    statusIndicator.updateStatuses(newStats.statuses);
+    buffIndicator.updateStatuses(newStats.statuses.where((s) => s.type == StatusType.buff).toList());
+    debuffIndicator.updateStatuses(newStats.statuses.where((s) => s.type == StatusType.debuff).toList());
   }
 
   void shakeAndFlashAnimation() {

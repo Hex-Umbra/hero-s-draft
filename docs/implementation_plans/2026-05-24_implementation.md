@@ -24,3 +24,18 @@
             - Alignement de la description du draft dans `lib/ui/screens/draft_screen.dart` avec les règles mécaniques de la Phase 63.
             - Remplacement de l'ancien descriptif de la récompense d'armure "Forge d'Acier" (`+$boost à tous vos gains d'Armure`) par `+$boost aux gains d'Armure de votre passif`.
         - **Robustesse et Performance** : Aucun problème de performance ou de rendu n'est introduit. Le code respecte à 100% les critères de typage fort et de linting.
+
+## Phase 74 - Séparation Sémantique des Buffs/Debuffs Ennemis et Épuration du Héros (Combat)
+
+- feat: Distinction visuelle des buffs/debuffs sur les cartes ennemies et suppression des indicateurs sur la carte du joueur
+    - Séparation des effets en buffs (côté gauche de la carte de l'ennemi) et debuffs (côté droit), et suppression de l'affichage redondant sur la carte du héros.
+        - **Distinction Buffs vs Debuffs Ennemis (Flame)** :
+            - Division de l'ancien `statusIndicator` unique dans `EnemyCard` en deux instances spécialisées : `buffIndicator` et `debuffIndicator`.
+            - Positionnement asymétrique soigné :
+                - Les buffs (effets positifs de type `StatusType.buff` comme la force ou la régénération d'armure) sont empilés à gauche de la carte : `position = Vector2(-36, 10)`.
+                - Les debuffs (effets négatifs de type `StatusType.debuff` comme le poison ou la vulnérabilité) sont empilés à droite : `position = Vector2(size.x + 4, 10)`.
+            - Filtrage dynamique via `stats.statuses.where((s) => s.type == StatusType.buff).toList()` (pour les buffs) et `stats.statuses.where((s) => s.type == StatusType.debuff).toList()` (pour les debuffs) lors de l'initialisation dans `onLoad` et des mises à jour dans `updateStats`.
+        - **Épuration de la Carte du Joueur (`HeroCard`)** :
+            - Le joueur bénéficiant déjà d'un panneau HUD Flutter dédié et complet au bas de l'écran de combat pour afficher ses statuts actifs, l'affichage d'un second indicateur à droite de la carte `HeroCard` a été entièrement supprimé.
+            - Cela allège visuellement la partie inférieure de l'arène de combat et évite toute surcharge d'informations en éliminant les redondances.
+
