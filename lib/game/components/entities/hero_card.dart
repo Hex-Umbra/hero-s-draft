@@ -6,6 +6,7 @@ import 'package:flame/effects.dart';
 import '../../../data/models/entity_stats.dart';
 import '../floating_text.dart';
 import '../effect_icon.dart';
+import 'status_indicator.dart';
 import '../../heros_draft_game.dart';
 import '../../../models/data/card_data.dart';
 
@@ -16,6 +17,7 @@ class HeroCard extends PositionComponent
   final String imagePath;
 
   late final RectangleComponent borderInfo;
+  late final StatusIndicator statusIndicator;
 
   HeroCard(
     this.stats, {
@@ -113,6 +115,12 @@ class HeroCard extends PositionComponent
     );
     add(borderInfo);
 
+    // Positionner les debuffs/buffs sur le côté droit de la carte
+    statusIndicator = StatusIndicator(
+      statuses: stats.statuses,
+      position: Vector2(size.x + 4, 10),
+    );
+    add(statusIndicator);
   }
 
   @override
@@ -150,6 +158,7 @@ class HeroCard extends PositionComponent
 
     stats = newStats;
     this.bonusAttack = bonusAttack;
+    statusIndicator.updateStatuses(newStats.statuses);
   }
 
   void _spawnFloatingText(String text, Color color, Vector2 pos) {

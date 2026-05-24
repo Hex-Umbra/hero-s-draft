@@ -1,0 +1,26 @@
+## Phase 73 - Refonte Visuelle des Statuts, Alignements et Effet 3D Englobant (Combat)
+
+- style: Alignement horizontal du HUD, boucliers vectoriels Flame, et indicateurs verticaux de debuffs sur les cartes
+    - Intégration de structures symétriques pour le HUD, dessins géométriques 3D de boucliers et d'épées en Flame, et empilement précis des debuffs (poison, etc.) sur le flanc droit des cartes de combat.
+        - **Indicateur de Debuffs Verticaux sur les Cartes (Flame)** :
+            - Ré-intégration complète de `StatusIndicator` sur le côté droit de `HeroCard` et `EnemyCard` (`position = Vector2(size.x + 4, 10)`), à l'extérieur de leur bordure de carte.
+            - Empilement vertical des icônes de statut (`currentY += 36` à chaque rafraîchissement) au lieu d'une disposition horizontale pour éviter tout débordement ou gêne visuelle.
+            - Restructuration visuelle de `_StatusIcon` (taille ajustée à `20x20` et taille d'émoticône à `14`) :
+                - **Quantité de dégâts / valeur** : S'affiche à droite de l'icône à la coordonnée `position = Vector2(22, size.y / 2)` avec un ancrage `Anchor.centerLeft`, coloré en vert brillant (buff) ou rouge (debuff) avec un ombrage marqué.
+                - **Tours restants** : S'affiche en bas de l'icône à la coordonnée `position = Vector2(size.x / 2, size.y + 1)` avec un ancrage `Anchor.topCenter`, coloré en jaune ambré brillant (`Colors.amberAccent`), rendant les statuts extrêmement faciles à lire en un coup d'œil.
+        - **Superposition d'Armure Englobante (Effet 3D)** :
+            - Inversion de la logique de rembourrage (*padding*) afin que la jauge bleue translucide d'armure enveloppe et « englobe » la jauge de points de vie au lieu d'être logée à l'intérieur.
+            - **HUD Joueur (Flutter)** : Le remplissage vert de PV a été doté d'un padding de `3.0`px vertical et `1.5`px horizontal (agissant comme le noyau physique interne), tandis que l'overlay bleu translucide s'étend sur presque toute la hauteur du conteneur parent (padding minimal de `0.5`px) avec un `borderRadius` de `10` et une bordure cyan active, créant une enveloppe d'énergie externe protectrice très qualitative.
+            - **Rendu Ennemis (Flame)** : Même modification appliquée dans `LinearProgressBarComponent` ; le remplissage rouge des PV reçoit un padding interne (`pvVertPad = 2.0`, `pvHorizPad = 1.5`), et la jauge bleue d'armure s'affiche presque à pleine hauteur (`vertPad = 0.5`, `horizPad = 0.5`, arrondi `3.5`) pour englober la barre de vie.
+        - **Icônes Ennemis Homogénéisées (Flame)** :
+            - Remplacement complet des anciens émojis textuels `⚔️` et `🛡️` par les exactes répliques des icônes du joueur pour une cohérence graphique absolue.
+            - L'épée de l'ennemi est dessinée via un composant vectoriel custom `FlameSwordIcon` (reprenant le dessin en perspective de `CustomPainter`) de couleur rouge assortie (`Color(0xFFFF3B30)`), avec sa valeur textuelle en rouge vif.
+            - Le bouclier est rendu à l'aide d'un composant vectoriel custom `FlameShieldIcon` de taille `10x10` dessiné en bleu-cyan (`Color(0xFF2196F3)`). Il utilise le même effet de biseau 3D que l'épée (moitié gauche sombre, moitié droite claire) et est orné d'une fine bordure brillante cyan intense (`Colors.cyanAccent`), offrant un rendu parfaitement stable et indépendant des polices de caractères du système, avec sa valeur textuelle en cyan vif.
+        - **Centrage Mathématique du HUD Joueur (Flutter)** :
+            - Résolution du décalage de la barre de vie provoqué par l'ajout des statistiques sur son côté gauche.
+            - Élargissement de l'enveloppe du HUD bas à `screenWidth * 0.52` et réorganisation de la `Row` avec deux conteneurs `Expanded(flex: 1)` entourant une barre de vie de taille fixe `screenWidth * 0.26`.
+            - Les statistiques sont alignées à droite du conteneur de gauche, créant un alignement parfait avec le bord gauche de la barre de vie, tandis que l'espaceur de droite garantit un **centrage horizontal absolu et pixel-perfect** de la barre de vie à l'écran.
+        - **Correction de la Récompense d'Armure (Draft)** :
+            - Alignement de la description du draft dans `lib/ui/screens/draft_screen.dart` avec les règles mécaniques de la Phase 63.
+            - Remplacement de l'ancien descriptif de la récompense d'armure "Forge d'Acier" (`+$boost à tous vos gains d'Armure`) par `+$boost aux gains d'Armure de votre passif`.
+        - **Robustesse et Performance** : Aucun problème de performance ou de rendu n'est introduit. Le code respecte à 100% les critères de typage fort et de linting.

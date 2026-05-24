@@ -48,18 +48,18 @@ class StatusIndicator extends PositionComponent {
       }
     }
 
-    // Mettre à jour ou ajouter les icônes actives
-    double currentX = 0;
+    // Mettre à jour ou ajouter les icônes actives (empilées verticalement)
+    double currentY = 0;
     for (var status in list) {
       final existingIcon = iconMap[status.id];
       if (existingIcon != null) {
         existingIcon.updateStatus(status);
-        existingIcon.position = Vector2(currentX, 0);
+        existingIcon.position = Vector2(0, currentY);
       } else {
-        final icon = _StatusIcon(status: status, position: Vector2(currentX, 0));
+        final icon = _StatusIcon(status: status, position: Vector2(0, currentY));
         add(icon);
       }
-      currentX += 30; // Espacement entre les icônes
+      currentY += 36; // Espacement vertical suffisant pour loger l'icône, le texte à droite et les tours en bas
     }
   }
 }
@@ -67,44 +67,66 @@ class StatusIndicator extends PositionComponent {
 class _StatusIcon extends PositionComponent {
   StatusEffect status;
   TextComponent? _valueText;
+  TextComponent? _durationText;
 
   _StatusIcon({required this.status, super.position})
-    : super(size: Vector2(25, 25));
+    : super(size: Vector2(20, 20));
 
   @override
   Future<void> onLoad() async {
-    // Emoji de fond
+    // Emoji de fond centré dans la zone de l'icône (20x20)
     add(
       TextComponent(
         text: _getEmoji(status.id),
         anchor: Anchor.center,
         position: size / 2,
-        textRenderer: TextPaint(style: const TextStyle(fontSize: 18)),
+        textRenderer: TextPaint(style: const TextStyle(fontSize: 14)),
       ),
     );
 
-    // Valeur/Durée en petit
+    // 1. Valeur (Dégâts / Puissance) : à droite de l'icône (x=24, y=10)
     _valueText = TextComponent(
       text: status.value.toString(),
-      anchor: Anchor.bottomRight,
-      position: size,
+      anchor: Anchor.centerLeft,
+      position: Vector2(22, size.y / 2),
       textRenderer: TextPaint(
         style: TextStyle(
-          fontSize: 12,
+          fontSize: 10,
           color: status.type == StatusType.buff
               ? Colors.greenAccent
               : Colors.redAccent,
           fontWeight: FontWeight.bold,
-          shadows: const [Shadow(color: Colors.black, blurRadius: 2)],
+          shadows: const [
+            Shadow(color: Colors.black, blurRadius: 2.0, offset: Offset(1, 1)),
+          ],
         ),
       ),
     );
     add(_valueText!);
+
+    // 2. Durée (Nombre de tours restants) : en bas de l'icône (x=10, y=22)
+    _durationText = TextComponent(
+      text: status.duration.toString(),
+      anchor: Anchor.topCenter,
+      position: Vector2(size.x / 2, size.y + 1),
+      textRenderer: TextPaint(
+        style: const TextStyle(
+          fontSize: 8.5,
+          color: Colors.amberAccent,
+          fontWeight: FontWeight.bold,
+          shadows: [
+            Shadow(color: Colors.black, blurRadius: 2.0, offset: Offset(1, 1)),
+          ],
+        ),
+      ),
+    );
+    add(_durationText!);
   }
 
   void updateStatus(StatusEffect newStatus) {
     status = newStatus;
     _valueText?.text = status.value.toString();
+    _durationText?.text = status.duration.toString();
   }
 
   String _getEmoji(String id) {

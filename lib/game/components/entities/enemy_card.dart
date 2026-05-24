@@ -10,6 +10,7 @@ import '../../../models/status_effect.dart';
 import '../floating_text.dart';
 import '../effect_icon.dart';
 import 'stat_badge.dart';
+import 'status_indicator.dart';
 import '../../heros_draft_game.dart';
 
 class EnemyCard extends PositionComponent
@@ -23,6 +24,7 @@ class EnemyCard extends PositionComponent
 
   late final StatBadge hpBadge;
   late final SpriteComponent sprite;
+  late final StatusIndicator statusIndicator;
 
   EnemyIntent? currentIntent;
 
@@ -122,6 +124,13 @@ class EnemyCard extends PositionComponent
     hpBadge.position = Vector2(size.x / 2, -12); // Centré légèrement au-dessus de la carte
     add(hpBadge);
 
+    // Positionner les debuffs/buffs sur le côté droit de la carte
+    statusIndicator = StatusIndicator(
+      statuses: stats.statuses,
+      position: Vector2(size.x + 4, 10),
+    );
+    add(statusIndicator);
+
     _refreshBadges();
   }
 
@@ -195,6 +204,7 @@ class EnemyCard extends PositionComponent
 
     stats = newStats;
     _refreshBadges();
+    statusIndicator.updateStatuses(newStats.statuses);
   }
 
   void shakeAndFlashAnimation() {
