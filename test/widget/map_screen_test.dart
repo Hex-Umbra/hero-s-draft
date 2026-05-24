@@ -17,6 +17,7 @@ final mockGameDataLoaderProvider = FutureProvider<GameDataRegistry>((
     cards: [],
     events: [],
     passives: [],
+    relics: [],
   );
 });
 

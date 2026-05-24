@@ -4,6 +4,7 @@ import 'skill_data.dart';
 import 'card_data.dart';
 import 'event_data.dart';
 import 'passive_data.dart';
+import 'relic_data.dart';
 
 class GameDataRegistry {
   final List<EnemyData> enemies;
@@ -12,6 +13,7 @@ class GameDataRegistry {
   final List<CardData> cards;
   final List<EventData> events;
   final List<PassiveData> passives;
+  final List<RelicData> relics;
 
   const GameDataRegistry({
     required this.enemies,
@@ -20,5 +22,6 @@ class GameDataRegistry {
     required this.cards,
     required this.events,
     required this.passives,
+    required this.relics,
   });
 }

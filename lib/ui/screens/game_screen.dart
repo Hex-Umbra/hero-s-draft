@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,8 +14,10 @@ import 'deck_screen.dart';
 import '../../services/game_data_service.dart';
 import '../../models/card_instance.dart';
 import '../../models/data/card_data.dart';
+import '../../models/data/relic_data.dart';
 import '../../models/enemy_intent.dart';
 import '../../models/status_effect.dart';
+import '../../models/map_node.dart';
 
 class GameScreen extends ConsumerStatefulWidget {
   const GameScreen({super.key});
@@ -89,6 +92,75 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             .setHeroStats(armure: currentArmor + armor);
       },
       onEnemiesDead: () {
+        final runState = ref.read(runProvider);
+        if (runState.currentNodeType == MapNodeType.boss) {
+          final gameData = ref.read(gameDataLoaderProvider).requireValue;
+          final relics = gameData.relics;
+          if (relics.isNotEmpty) {
+            // Weighted selection
+            final rand = Random().nextDouble() * 100;
+            RelicRarity rarity;
+            if (rand < 50) {
+              rarity = RelicRarity.common;
+            } else if (rand < 80) {
+              rarity = RelicRarity.uncommon;
+            } else if (rand < 93) {
+              rarity = RelicRarity.rare;
+            } else if (rand < 98) {
+              rarity = RelicRarity.epic;
+            } else {
+              rarity = RelicRarity.legendary;
+            }
+
+            var filtered = relics.where((r) => r.rarity == rarity).toList();
+            if (filtered.isEmpty) {
+              filtered = relics.where((r) => r.rarity == RelicRarity.common).toList();
+              if (filtered.isEmpty) {
+                filtered = relics;
+              }
+            }
+            final chosenRelic = filtered[Random().nextInt(filtered.length)];
+            ref.read(runProvider.notifier).addRelic(chosenRelic);
+
+            // Display snackbar
+            String rarityStr = '';
+            Color rarityColor = Colors.grey;
+            switch (chosenRelic.rarity) {
+              case RelicRarity.common:
+                rarityStr = 'COMMUN';
+                rarityColor = Colors.grey;
+                break;
+              case RelicRarity.uncommon:
+                rarityStr = 'PEU COMMUN';
+                rarityColor = Colors.green;
+                break;
+              case RelicRarity.rare:
+                rarityStr = 'RARE';
+                rarityColor = Colors.blueAccent;
+                break;
+              case RelicRarity.epic:
+                rarityStr = 'ÉPIQUE';
+                rarityColor = Colors.purpleAccent;
+                break;
+              case RelicRarity.legendary:
+                rarityStr = 'LÉGENDAIRE';
+                rarityColor = Colors.amber;
+                break;
+            }
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  '👑 RELIQUE OBTENUE : ${chosenRelic.emoji} ${chosenRelic.name} ($rarityStr)',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                backgroundColor: rarityColor,
+                duration: const Duration(seconds: 4),
+              ),
+            );
+          }
+        }
+
         setState(() {
           _showDraft = true;
         });
@@ -108,6 +180,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         _triggerPhaseBanner(
           phase == TurnPhase.player ? 'TOUR JOUEUR' : 'TOUR ENNEMI',
         );
+      },
+      onEnemyKilled: () {
+        ref.read(runProvider.notifier).onEnemyKilled();
       },
       onShowTooltip: (title, description) {
         setState(() {
@@ -160,6 +235,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               enemy.removeFromParent();
               _game.enemyCards.remove(enemy);
               if (_game.selectedEnemy == enemy) _game.selectedEnemy = null;
+              runController.onEnemyKilled();
             }
           }
 
@@ -168,6 +244,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           
           // Déclencher les traits passifs
           TraitSystem.onCardPlayed(runController, card);
+
+          // Déclencher les reliques liées aux cartes jouées
+          runController.applyRelics(RelicTrigger.onCardPlayed);
 
           if (_game.enemyCards.isEmpty) {
             _game.onEnemiesDead();
@@ -673,6 +752,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                             _showManaWarning = false;
                           });
                           TraitSystem.onTurnEnd(ref.read(runProvider.notifier));
+                          ref.read(runProvider.notifier).applyRelics(RelicTrigger.endOfTurn);
                           ref.read(deckProvider.notifier).discardHand();
                           _game.executeTurn();
                         },

@@ -62,6 +62,7 @@ class HerosDraftGame extends FlameGame
   final void Function() onHideTooltip;
   final bool Function(CardInstance, EnemyCard?) onPlayCard;
   final VoidCallback? onEnemiesSpawned;
+  final void Function() onEnemyKilled;
 
   HerosDraftGame({
     required this.onPlayerTakeDamage,
@@ -74,6 +75,7 @@ class HerosDraftGame extends FlameGame
     required this.onShowTooltip,
     required this.onHideTooltip,
     required this.onPlayCard,
+    required this.onEnemyKilled,
     this.onEnemiesSpawned,
   });
 
@@ -625,6 +627,7 @@ class HerosDraftGame extends FlameGame
             enemy.removeFromParent();
             enemyCards.remove(enemy);
             if (selectedEnemy == enemy) selectedEnemy = null;
+            onEnemyKilled();
           }
         }
       } else if (skill.effectType == 'damage_targeted') {
@@ -636,6 +639,7 @@ class HerosDraftGame extends FlameGame
           selectedEnemy!.removeFromParent();
           enemyCards.remove(selectedEnemy);
           selectedEnemy = null;
+          onEnemyKilled();
         }
       } else if (skill.effectType == 'damage_pierce') {
         int dmg = _currentState!.effectiveAttaque;
@@ -655,6 +659,7 @@ class HerosDraftGame extends FlameGame
           selectedEnemy!.removeFromParent();
           enemyCards.remove(selectedEnemy);
           selectedEnemy = null;
+          onEnemyKilled();
         }
       }
 
@@ -692,6 +697,7 @@ class HerosDraftGame extends FlameGame
         enemy.removeFromParent();
         enemyCards.remove(enemy);
         if (selectedEnemy == enemy) selectedEnemy = null;
+        onEnemyKilled();
       }
     }
 

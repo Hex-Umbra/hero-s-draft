@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../game/controllers/run_controller.dart';
 import '../../models/data/event_data.dart';
+import '../../models/data/relic_data.dart';
 import '../../services/game_data_service.dart';
 
 class EventScreen extends ConsumerStatefulWidget {
@@ -62,7 +63,71 @@ class _EventScreenState extends ConsumerState<EventScreen> {
           runController.applyHeroStatModifier(attackAcc: action.value as int);
           break;
         case 'gain_relic':
-          // Pour l'instant on ignore ou on ajoute une relique fixe de test
+          final gameData = ref.read(gameDataLoaderProvider).requireValue;
+          final relics = gameData.relics;
+          if (relics.isNotEmpty) {
+            // Weighted selection matching boss selection
+            final rand = Random().nextDouble() * 100;
+            RelicRarity rarity;
+            if (rand < 50) {
+              rarity = RelicRarity.common;
+            } else if (rand < 80) {
+              rarity = RelicRarity.uncommon;
+            } else if (rand < 93) {
+              rarity = RelicRarity.rare;
+            } else if (rand < 98) {
+              rarity = RelicRarity.epic;
+            } else {
+              rarity = RelicRarity.legendary;
+            }
+
+            var filtered = relics.where((r) => r.rarity == rarity).toList();
+            if (filtered.isEmpty) {
+              filtered = relics.where((r) => r.rarity == RelicRarity.common).toList();
+              if (filtered.isEmpty) {
+                filtered = relics;
+              }
+            }
+            final chosenRelic = filtered[Random().nextInt(filtered.length)];
+            runController.addRelic(chosenRelic);
+
+            // Display snackbar
+            String rarityStr = '';
+            Color rarityColor = Colors.grey;
+            switch (chosenRelic.rarity) {
+              case RelicRarity.common:
+                rarityStr = 'COMMUN';
+                rarityColor = Colors.grey;
+                break;
+              case RelicRarity.uncommon:
+                rarityStr = 'PEU COMMUN';
+                rarityColor = Colors.green;
+                break;
+              case RelicRarity.rare:
+                rarityStr = 'RARE';
+                rarityColor = Colors.blueAccent;
+                break;
+              case RelicRarity.epic:
+                rarityStr = 'ÉPIQUE';
+                rarityColor = Colors.purpleAccent;
+                break;
+              case RelicRarity.legendary:
+                rarityStr = 'LÉGENDAIRE';
+                rarityColor = Colors.amber;
+                break;
+            }
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  '👑 RELIQUE OBTENUE : ${chosenRelic.emoji} ${chosenRelic.name} ($rarityStr)',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                backgroundColor: rarityColor,
+                duration: const Duration(seconds: 4),
+              ),
+            );
+          }
           break;
       }
     }

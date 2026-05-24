@@ -1,0 +1,122 @@
+[
+  {
+    "id": "iron_talisman",
+    "name": "Talisman de Fer",
+    "description": "Gagne 2 points d'Armure au début de chaque tour.",
+    "trigger": "startOfTurn",
+    "effectType": "gain_armor",
+    "value": 2,
+    "rarity": "common",
+    "emoji": "🪙"
+  },
+  {
+    "id": "ancestral_shield",
+    "name": "Bouclier Ancestral",
+    "description": "Gagne 5 points d'Armure au début du combat.",
+    "trigger": "startOfCombat",
+    "effectType": "gain_armor",
+    "value": 5,
+    "rarity": "uncommon",
+    "emoji": "🛡️"
+  },
+  {
+    "id": "protection_rune",
+    "name": "Rune de Protection",
+    "description": "Gagne 3 points d'Armure à la fin de chaque tour.",
+    "trigger": "endOfTurn",
+    "effectType": "gain_armor",
+    "value": 3,
+    "rarity": "uncommon",
+    "emoji": "🌀"
+  },
+  {
+    "id": "mage_amulet",
+    "name": "Amulette du Mage",
+    "description": "Gagne 1 point d'Armure chaque fois que vous jouez une carte.",
+    "trigger": "onCardPlayed",
+    "effectType": "gain_armor",
+    "value": 1,
+    "rarity": "rare",
+    "emoji": "📿"
+  },
+  {
+    "id": "mana_crystal",
+    "name": "Cristal de Mana",
+    "description": "Gagne 1 Mana au début du combat.",
+    "trigger": "startOfCombat",
+    "effectType": "gain_mana",
+    "value": 1,
+    "rarity": "rare",
+    "emoji": "💎"
+  },
+  {
+    "id": "spirit_essence",
+    "name": "Essence Spirituelle",
+    "description": "Gagne 1 Mana chaque fois qu'un ennemi meurt.",
+    "trigger": "onEnemyKilled",
+    "effectType": "gain_mana",
+    "value": 1,
+    "rarity": "rare",
+    "emoji": "🧪"
+  },
+  {
+    "id": "cursed_blade",
+    "name": "Lame Maudite",
+    "description": "Gagne 2 Force au début du combat.",
+    "trigger": "startOfCombat",
+    "effectType": "gain_strength",
+    "value": 2,
+    "rarity": "uncommon",
+    "emoji": "🗡️"
+  },
+  {
+    "id": "regen_ring",
+    "name": "Anneau de Régénération",
+    "description": "Restaure 2 PV à la fin de chaque tour.",
+    "trigger": "endOfTurn",
+    "effectType": "heal",
+    "value": 2,
+    "rarity": "rare",
+    "emoji": "💍"
+  },
+  {
+    "id": "vampiric_fang",
+    "name": "Croc Vampirique",
+    "description": "Restaure 8 PV chaque fois qu'un ennemi meurt.",
+    "trigger": "onEnemyKilled",
+    "effectType": "heal",
+    "value": 8,
+    "rarity": "uncommon",
+    "emoji": "🧛"
+  },
+  {
+    "id": "lucky_clover",
+    "name": "Trèfle Enchanté",
+    "description": "+1 Chance de manière permanente pour toute la run.",
+    "trigger": "startOfRun",
+    "effectType": "gain_luck",
+    "value": 1,
+    "rarity": "epic",
+    "emoji": "🍀"
+  },
+  {
+    "id": "fortune_dice",
+    "name": "Dé de Fortune",
+    "description": "+2 Chance de manière permanente pour toute la run.",
+    "trigger": "startOfRun",
+    "effectType": "gain_luck",
+    "value": 2,
+    "rarity": "legendary",
+    "emoji": "🎲"
+  },
+  {
+    "id": "energy_stone",
+    "name": "Pierre d'Énergie",
+    "description": "Gagne 1 Mana au début de chaque tour.",
+    "trigger": "startOfTurn",
+    "effectType": "gain_mana",
+    "value": 1,
+    "rarity": "epic",
+    "emoji": "⚡"
+  }
+]

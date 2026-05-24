@@ -39,3 +39,105 @@
             - Le joueur bénéficiant déjà d'un panneau HUD Flutter dédié et complet au bas de l'écran de combat pour afficher ses statuts actifs, l'affichage d'un second indicateur à droite de la carte `HeroCard` a été entièrement supprimé.
             - Cela allège visuellement la partie inférieure de l'arène de combat et évite toute surcharge d'informations en éliminant les redondances.
 
+## Phase 75 - Modèle de Données des Reliques et Base de Données JSON
+
+- feat: Ajout du fichier de données `relics.json` contenant 12 reliques et mise à jour du modèle `RelicData` avec rareté et emojis
+    - Création d'une base de données équilibrée de 12 reliques et extension du modèle de données Dart pour inclure les attributs visuels et de classification requis.
+        - **Création du Fichier `assets/data/relics.json`** :
+            - Définition de 12 reliques distinctes couvrant 6 déclencheurs (`startOfRun`, `startOfCombat`, `startOfTurn`, `endOfTurn`, `onCardPlayed`, `onEnemyKilled`) et 5 types d'effets (`gain_armor`, `gain_mana`, `gain_strength`, `heal`, `gain_luck`).
+            - Attribution d'une rareté (`common`, `uncommon`, `rare`, `epic`, `legendary`) et d'un emoji approprié pour chaque relique.
+        - **Mise à Jour de `RelicData` (`lib/models/data/relic_data.dart`)** :
+            - Ajout de l'énumération `RelicRarity` représentant les 5 niveaux de rareté.
+            - Ajout des champs `rarity` (de type `RelicRarity`) et `emoji` (de type `String`) à la classe `RelicData`.
+            - Adaptation du constructeur constant et mise à jour de la fabrique `RelicData.fromJson` pour analyser et injecter ces nouvelles propriétés depuis le JSON.
+
+## Phase 76 - Intégration et Chargement Asynchrone des Reliques dans le Registre
+
+- feat: Enregistrement et chargement de `relics.json` via `GameDataService` et association dans `GameDataRegistry`
+    - Configuration de la chaîne de chargement des ressources de l'application pour inclure le nouveau catalogue de reliques.
+        - **Mise à Jour de `GameDataRegistry` (`lib/models/data/game_data_registry.dart`)** :
+            - Déclaration du champ final `List<RelicData> relics` pour stocker en mémoire les reliques disponibles.
+            - Ajout de ce champ comme paramètre requis dans le constructeur constant de la classe.
+        - **Mise à Jour du Service de Chargement (`lib/services/game_data_service.dart`)** :
+            - Chargement asynchrone du fichier `assets/data/relics.json` via le `rootBundle`.
+            - Décodage et conversion du JSON brut en une liste d'instances de `RelicData` typées.
+            - Fourniture de cette liste au constructeur de `GameDataRegistry` retourné par le `gameDataLoaderProvider`.
+
+## Phase 77 - Extension de la Logique de RunController (Effets de Reliques et Triggers)
+
+- feat: Ajout du traitement de `gain_luck`, correction de `gain_strength`, et implémentation de `onEnemyKilled()` dans `RunController`
+    - Implémentation des règles de résolution d'effets de reliques et enrichissement des points de déclenchement du moteur de jeu.
+        - **Mécanique de Force Corrigée (`gain_strength`)** :
+            - Distinction selon le trigger : pour un déclenchement de type `startOfRun`, le bonus de Force est appliqué de manière permanente aux caractéristiques fondamentales du héros via `applyHeroStatModifier(attackAcc: relic.value)`.
+            - Pour les autres triggers (ex: début de combat), le bonus est appliqué via un `StatusEffect` d'une durée de 99 tours (couvrant tout le combat) au lieu de l'ancienne limite de 3 tours.
+        - **Mécanique de Chance Implémentée (`gain_luck`)** :
+            - Ajout du cas `gain_luck` dans `_applyRelicEffect`.
+            - Augmentation permanente de la Chance du héros via `applyHeroStatModifier(luckAcc: relic.value)` pour le trigger `startOfRun`.
+            - Pour les autres cas, incrémentation directe et dynamique de la statistique `luck` dans `heroStats`.
+        - **Nouveau Déclencheur d'Élimination d'Ennemi (`onEnemyKilled()`)** :
+            - Ajout de la méthode `onEnemyKilled()` qui appelle `applyRelics(RelicTrigger.onEnemyKilled)` pour appliquer les effets des reliques correspondantes (tels que "Essence Spirituelle" et "Croc Vampirique").
+
+## Phase 78 - Signalement et Transmission de la Mort des Ennemis (Flame)
+
+- feat: Ajout du callback `onEnemyKilled` dans `HerosDraftGame` et déclenchement lors du décès d'un adversaire
+    - Propagation de l'événement de mort des ennemis depuis le moteur de rendu Flame vers le gestionnaire d'état Flutter.
+        - **Ajout du Callback (`lib/game/heros_draft_game.dart`)** :
+            - Intégration de la fonction de rappel `onEnemyKilled` de type `void Function()` dans la signature et le constructeur de `HerosDraftGame`.
+        - **Déclenchement lors des Compétences de Dégâts** :
+            - Appel de `onEnemyKilled()` dans la méthode `executeSkill` à la mort d'un ou plusieurs ennemis via des compétences de zone (`damage_aoe`), ciblées (`damage_targeted`) ou perforantes (`damage_pierce`).
+        - **Déclenchement lors de la Phase de Riposte Ennemie** :
+            - Appel de `onEnemyKilled()` lors du nettoyage des ennemis succombant aux effets récurrents de combat (tels que le poison) dans `_enemyRipostePhase()`.
+
+## Phase 79 - Raccordement des Triggers et Attribution de Relique de Boss (UI & Game loop)
+
+- feat: Intégration des triggers de reliques `onCardPlayed`, `endOfTurn`, `onEnemyKilled` et attribution de relique après combat de Boss dans `GameScreen`
+    - Raccordement du moteur graphique et de l'interface utilisateur avec la logique des reliques et le système de récompenses du jeu.
+        - **Intégration d'onEnemyKilled** :
+            - Liaison du callback de mort de `HerosDraftGame` avec `runController.onEnemyKilled()` lors de l'initialisation du jeu.
+            - Appel de `runController.onEnemyKilled()` dans `onPlayCard` lors du nettoyage local des ennemis tués par le joueur.
+        - **Intégration d'onCardPlayed et endOfTurn** :
+            - Ajout du déclencheur `applyRelics(RelicTrigger.onCardPlayed)` après la résolution réussie d'une carte dans `onPlayCard`.
+            - Ajout du déclencheur `applyRelics(RelicTrigger.endOfTurn)` lors de l'activation du bouton « Fin de Tour ».
+        - **Attribution des Reliques de Boss** :
+            - Dans le callback de victoire de combat (`onEnemiesDead`), détection si le nœud actuel est de type `MapNodeType.boss`.
+            - Tirage pondéré par rareté : 50% Commun, 30% Peu Commun, 13% Rare, 5% Épique, 2% Légendaire.
+            - Attribution automatique de la relique tirée via `runController.addRelic` et affichage d'une notification visuelle via une `SnackBar` stylisée selon la rareté de la relique.
+
+## Phase 80 - Résolution de l'Action d'Événement Relique (UI & Logic)
+
+- feat: Implémentation complète de l'action `gain_relic` pour les événements aléatoires dans `EventScreen`
+    - Ajout du traitement dynamique de la récompense de relique lors du choix d'une option d'événement.
+        - **Import des Dépendances** :
+            - Ajout de l'import de `relic_data.dart` dans `lib/ui/screens/event_screen.dart` pour permettre la manipulation des structures de relique.
+        - **Résolution de l'Action `gain_relic` dans `_handleAction()`** :
+            - Extraction de la liste complète des reliques du registre de données de jeu `gameDataLoaderProvider`.
+            - Application de la même logique de probabilité de rareté pondérée que pour les récompenses de Boss (50% Commun, 30% Peu Commun, 13% Rare, 5% Épique, 2% Légendaire).
+            - Ajout de la relique tirée à la collection permanente du joueur via `runController.addRelic()`.
+            - Affichage d'une `SnackBar` colorée selon le niveau de rareté de la relique avec son emoji associé pour informer instantanément le joueur de son acquisition.
+
+## Phase 81 - Regroupement Visuel et Stacking Premium de l'Inventaire des Reliques (UI)
+
+- style: Refonte visuelle de l'inventaire dans `MapScreen` avec distinction des raretés, emojis custom et indicateurs de stacks (×N)
+    - Amélioration de l'expérience utilisateur et de la clarté de l'inventaire en regroupant les doublons et en introduisant des codes couleur qualitatifs.
+        - **Calcul et Regroupement des Doublons** :
+            - Comptabilisation dynamique de la quantité de chaque relique possédée en associant l'ID à son nombre d'occurrences.
+            - Remplacement de la grille d'affichage simple par une grille d'éléments uniques ordonnés, évitant de polluer l'inventaire de cartes identiques.
+        - **Refonte Graphique de `_buildRelicCard()` (`lib/ui/screens/map_screen.dart`)** :
+            - **Rareté Dynamique** : Application d'un liséré de couleur brillant et d'un ombrage adapté selon la rareté de la relique (Commun = Gris `Color(0xFF8E8E93)`, Peu Commun = Vert `Color(0xFF34C759)`, Rare = Bleu `Color(0xFF007AFF)`, Épique = Violet `Color(0xFFAF52DE)`, Légendaire = Doré `Color(0xFFFFCC00)`).
+            - **Intégration d'Emojis** : Remplacement de l'icône d'étoile générique par l'emoji spécifique de la relique chargé depuis `relics.json`.
+            - **Badge de Classification** : Ajout d'un badge textuel coloré (ex: « LÉGENDAIRE ») en bas à gauche de la carte.
+            - **Compteur de Stacking** : Superposition d'un badge de stack premium (ex: « ×3 ») coloré en orange-ambré en bas à droite de la carte lorsque l'occurrence de la relique est supérieure à 1, reflétant fidèlement le stacking infini du système de jeu.
+
+## Phase 82 - Tests Unitaires Dédiés au Système de Reliques et Validation
+
+- feat: Ajout d'une suite de tests unitaires pour valider les mécaniques d'empilement (stacking), d'activation et de déclenchement des reliques
+    - Couverture complète de la logique métier pour prévenir toute régression future.
+        - **Écriture des Tests (`test/unit/run_controller_test.dart`)** :
+            - Vérification que l'ajout d'une relique via `addRelic` fonctionne parfaitement.
+            - Validation que le trigger `startOfRun` est résolu et appliqué immédiatement (ex: augmentation permanente de la Chance).
+            - Validation de l'empilement (stacking) et de l'indépendance de traitement : obtenir 2× la même relique applique 2× son effet lors des triggers.
+        - **Mise à Jour des Mocks de Tests Existants** :
+            - Correction de `mockGameDataLoaderProvider` dans `test/widget/map_screen_test.dart` et `test/widget/shop_screen_test.dart` pour instancier `GameDataRegistry` avec la nouvelle liste de reliques requise.
+        - **Vérification Intégrale** :
+            - `dart analyze` exécuté avec 0 warning ni erreur.
+            - `flutter test` exécuté avec succès : 17 tests sur 17 validés à 100%.

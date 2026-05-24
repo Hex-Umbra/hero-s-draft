@@ -297,6 +297,11 @@ class RunController extends StateNotifier<RunState> {
     }
   }
 
+  /// Déclenche les reliques d'élimination d'ennemi
+  void onEnemyKilled() {
+    applyRelics(RelicTrigger.onEnemyKilled);
+  }
+
   void _applyRelicEffect(RelicData relic) {
     switch (relic.effectType) {
       case 'gain_mana':
@@ -314,15 +319,30 @@ class RunController extends StateNotifier<RunState> {
         );
         break;
       case 'gain_strength':
-        addStatus(
-          StatusEffect(
-            id: 'strength',
-            name: 'Attaque (Relique)',
-            type: StatusType.buff,
-            value: relic.value,
-            duration: 3, // Limité à 3 tours au lieu de 99
-          ),
-        );
+        if (relic.trigger == RelicTrigger.startOfRun) {
+          applyHeroStatModifier(attackAcc: relic.value);
+        } else {
+          addStatus(
+            StatusEffect(
+              id: 'strength',
+              name: 'Force (Relique)',
+              type: StatusType.buff,
+              value: relic.value,
+              duration: 99, // 99 tours (durée du combat)
+            ),
+          );
+        }
+        break;
+      case 'gain_luck':
+        if (relic.trigger == RelicTrigger.startOfRun) {
+          applyHeroStatModifier(luckAcc: relic.value);
+        } else {
+          state = state.copyWith(
+            heroStats: state.heroStats.copyWith(
+              luck: state.heroStats.luck + relic.value,
+            ),
+          );
+        }
         break;
       case 'heal':
         heal(relic.value);

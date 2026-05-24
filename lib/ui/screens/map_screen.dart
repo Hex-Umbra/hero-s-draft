@@ -991,6 +991,15 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
             final runState = ref.watch(runProvider);
             final relics = runState.relics;
 
+            // Regroupement des reliques par doublon (stacking)
+            final Map<String, int> relicCounts = {};
+            final Map<String, RelicData> relicMap = {};
+            for (var r in relics) {
+              relicCounts[r.id] = (relicCounts[r.id] ?? 0) + 1;
+              relicMap[r.id] = r;
+            }
+            final uniqueIds = relicCounts.keys.toList();
+
             return _wrapWithBlur(
               sigma: 8,
               child: Center(
@@ -1089,10 +1098,12 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
                                     crossAxisSpacing: 12,
                                     mainAxisSpacing: 12,
                                   ),
-                                  itemCount: relics.length,
+                                  itemCount: uniqueIds.length,
                                   itemBuilder: (context, index) {
-                                    final relic = relics[index];
-                                    return _buildRelicCard(relic);
+                                    final id = uniqueIds[index];
+                                    final relic = relicMap[id]!;
+                                    final count = relicCounts[id]!;
+                                    return _buildRelicCard(relic, count);
                                   },
                                 ),
                         ),
@@ -1192,7 +1203,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
     );
   }
 
-  Widget _buildRelicCard(dynamic relic) {
+  Widget _buildRelicCard(RelicData relic, int count) {
     Color triggerColor = Colors.grey;
     String triggerText = 'Passif';
     switch (relic.trigger) {
@@ -1222,70 +1233,148 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
         break;
     }
 
+    Color rarityColor = Colors.grey;
+    String rarityText = 'Commun';
+    switch (relic.rarity) {
+      case RelicRarity.common:
+        rarityColor = const Color(0xFF8E8E93);
+        rarityText = 'COMMUN';
+        break;
+      case RelicRarity.uncommon:
+        rarityColor = const Color(0xFF34C759);
+        rarityText = 'PEU COMMUN';
+        break;
+      case RelicRarity.rare:
+        rarityColor = const Color(0xFF007AFF);
+        rarityText = 'RARE';
+        break;
+      case RelicRarity.epic:
+        rarityColor = const Color(0xFFAF52DE);
+        rarityText = 'ÉPIQUE';
+        break;
+      case RelicRarity.legendary:
+        rarityColor = const Color(0xFFFFCC00);
+        rarityText = 'LÉGENDAIRE';
+        break;
+    }
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: const Color(0xFF2A2A3D),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.purpleAccent.withValues(alpha: 0.25), width: 1.5),
+        border: Border.all(color: rarityColor.withValues(alpha: 0.5), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.purpleAccent.withValues(alpha: 0.05),
+            color: rarityColor.withValues(alpha: 0.15),
             blurRadius: 10,
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Stack(
         children: [
-          Row(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Icon(Icons.stars, color: Colors.purpleAccent, size: 20),
-              const SizedBox(width: 6),
+              Row(
+                children: [
+                  Text(
+                    relic.emoji,
+                    style: const TextStyle(fontSize: 18),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      relic.name,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: triggerColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: triggerColor.withValues(alpha: 0.3), width: 0.5),
+                    ),
+                    child: Text(
+                      triggerText,
+                      style: TextStyle(
+                        color: triggerColor,
+                        fontSize: 8,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
               Expanded(
                 child: Text(
-                  relic.name,
+                  relic.description,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 9.5,
+                    height: 1.2,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: rarityColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      rarityText,
+                      style: TextStyle(
+                        color: rarityColor,
+                        fontSize: 7.5,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          if (count > 1)
+            Positioned(
+              right: 0,
+              bottom: 0,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.amber.shade900,
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.5),
+                      blurRadius: 4,
+                    ),
+                  ],
+                ),
+                child: Text(
+                  '×$count',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: triggerColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: triggerColor.withValues(alpha: 0.3), width: 0.5),
-                ),
-                child: Text(
-                  triggerText,
-                  style: TextStyle(
-                    color: triggerColor,
-                    fontSize: 8,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Expanded(
-            child: Text(
-              relic.description,
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 9.5,
-                height: 1.2,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
             ),
-          ),
         ],
       ),
     );

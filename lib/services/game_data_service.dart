@@ -7,6 +7,7 @@ import '../models/data/skill_data.dart';
 import '../models/data/card_data.dart';
 import '../models/data/event_data.dart';
 import '../models/data/passive_data.dart';
+import '../models/data/relic_data.dart';
 import '../models/data/game_data_registry.dart';
 
 final gameDataLoaderProvider = FutureProvider<GameDataRegistry>((ref) async {
@@ -16,6 +17,7 @@ final gameDataLoaderProvider = FutureProvider<GameDataRegistry>((ref) async {
   final cardsJson = await rootBundle.loadString('assets/data/cards.json');
   final eventsJson = await rootBundle.loadString('assets/data/events.json');
   final passivesJson = await rootBundle.loadString('assets/data/passives.json');
+  final relicsJson = await rootBundle.loadString('assets/data/relics.json');
 
   final enemiesList = jsonDecode(enemiesJson) as List;
   final heroesList = jsonDecode(heroesJson) as List;
@@ -23,6 +25,7 @@ final gameDataLoaderProvider = FutureProvider<GameDataRegistry>((ref) async {
   final cardsList = jsonDecode(cardsJson) as List;
   final eventsList = jsonDecode(eventsJson) as List;
   final passivesList = jsonDecode(passivesJson) as List;
+  final relicsList = jsonDecode(relicsJson) as List;
 
   return GameDataRegistry(
     enemies: enemiesList
@@ -42,6 +45,9 @@ final gameDataLoaderProvider = FutureProvider<GameDataRegistry>((ref) async {
         .toList(),
     passives: passivesList
         .map((e) => PassiveData.fromJson(e as Map<String, dynamic>))
+        .toList(),
+    relics: relicsList
+        .map((e) => RelicData.fromJson(e as Map<String, dynamic>))
         .toList(),
   );
 });

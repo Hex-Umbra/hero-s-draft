@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
 import 'package:roguelike_card_game/models/data/hero_data.dart';
+import 'package:roguelike_card_game/models/data/relic_data.dart';
 
 void main() {
   group('RunController & RunState Tests', () {
@@ -76,6 +77,67 @@ void main() {
       // When the node is completed, armor should reset to 0
       controller.completeCurrentNode();
       expect(controller.state.heroStats.armure, 0);
+    });
+
+    test('Relic system: addRelic, startOfRun effect, trigger application and stacking', () {
+      final controller = RunController();
+      const dummyHero = HeroData(
+        id: 'paladin',
+        name: 'Paladin',
+        description: 'A holy knight',
+        iconPath: 'paladin.png',
+        maxHp: 100,
+        maxMana: 3,
+        baseDamage: 5,
+        luck: 0,
+        armorMastery: 0,
+        passiveTrait: 'regenArmor',
+      );
+      controller.startNewRun(dummyHero);
+
+      // 1. startOfRun trigger is applied immediately
+      const luckyClover = RelicData(
+        id: 'lucky_clover',
+        name: 'Trèfle Enchanté',
+        description: '+1 Chance',
+        trigger: RelicTrigger.startOfRun,
+        effectType: 'gain_luck',
+        value: 1,
+        rarity: RelicRarity.epic,
+        emoji: '🍀',
+      );
+
+      expect(controller.state.heroStats.luck, 0);
+      controller.addRelic(luckyClover);
+      expect(controller.state.heroStats.luck, 1);
+      expect(controller.state.relics.length, 1);
+
+      // Stacking lucky clover gives +1 luck again
+      controller.addRelic(luckyClover);
+      expect(controller.state.heroStats.luck, 2);
+      expect(controller.state.relics.length, 2);
+
+      // 2. Combat triggers and stacking
+      const talisman = RelicData(
+        id: 'iron_talisman',
+        name: 'Talisman de Fer',
+        description: 'Gagne 2 armure',
+        trigger: RelicTrigger.startOfTurn,
+        effectType: 'gain_armor',
+        value: 2,
+        rarity: RelicRarity.common,
+        emoji: '🪙',
+      );
+
+      controller.addRelic(talisman);
+      controller.addRelic(talisman); // Stack x2
+
+      expect(controller.state.heroStats.armure, 0);
+      
+      // Trigger startOfTurn relics
+      controller.applyRelics(RelicTrigger.startOfTurn);
+      // Stacking 2 x 2 armure = 4 armure
+      expect(controller.state.heroStats.armure, 4);
     });
   });
 }
