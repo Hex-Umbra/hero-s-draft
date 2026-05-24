@@ -525,11 +525,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                                 const SizedBox(height: 4),
                                 Builder(
                                   builder: (context) {
-                                    int bonusAttack = 0;
-                                    try {
-                                      bonusAttack = _game.heroCard?.bonusAttack ?? 0;
-                                    } catch (_) {}
-                                    final totalAttack = runState.heroStats.effectiveAttaque + bonusAttack;
+                                    final totalAttack = runState.heroStats.effectiveAttaque;
                                     final currentArmor = runState.heroStats.armure;
 
                                     return Row(

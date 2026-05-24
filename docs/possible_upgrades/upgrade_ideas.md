@@ -83,4 +83,6 @@
 - ~~Modifier les récompense d'un combat d'élites, la récompense sera désormais une relique aléatoire.~~
 - Modifier l'effet de la relique "Cristal de mana"
 - Vérifier pourquoi la descritpion de la carte "Balayage" en jeu est différente de sa desciption dans les données.
-- A la fin d'un combat élites, le joueur n'est pas envoyé directement sur la map avec l'attribution de la relique aléatoire. Il y a un bug visuelle qui fait "réapparaitre" des ennemis au moment où la notification de quel relique est donnée avant de quitter le combat pour ensuite repartir sur la map
+- ~~A la fin d'un combat élites, le joueur n'est pas envoyé directement sur la map avec l'attribution de la relique aléatoire. Il y a un bug visuelle qui fait "réapparaitre" des ennemis au moment où la notification de quel relique est donnée avant de quitter le combat pour ensuite repartir sur la map~~
+- Modifier la snackbar de notification pour une notification plus discrète et plus esthétique, plutot de que d'avoir une grosse barre de couleur qui apparait en bas de l'écran, on aurait le message quelque part sur l'écran comme a au centre a gauche affichant les différente notif déja mise en place.
+- 

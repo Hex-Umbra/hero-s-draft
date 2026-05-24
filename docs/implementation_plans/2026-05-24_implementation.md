@@ -173,3 +173,22 @@
         - **Robustesse et Tests** :
             - `dart analyze` validé avec 0 warning ni erreur de type.
             - Non-régression confirmée par `flutter test` avec 17 tests sur 17 passés avec succès.
+
+## Phase 85 - Correction du Double Cumul de la Force dans l'Affichage du HUD
+
+- fix: Résolution du bug de double addition des buffs d'attaque/force temporaires dans le HUD de combat
+    - Rectification de la formule de calcul de l'attaque affichée au bas de l'écran pour refléter exactement les statistiques réelles du joueur.
+        - **Analyse du Problème** :
+            - Le joueur possédait une Force de base de `26` et 2 instances de la relique "Lame Maudite" (octroyant `+2` Force chacune au début du combat, soit un buff temporaire de `+4` Force).
+            - En combat, la valeur d'attaque affichée dans le HUD était de `34` au lieu de `30` (`26 + 4`).
+            - L'analyse du code a révélé que la variable `totalAttack` dans `GameScreen` était calculée via la formule erronée : `runState.heroStats.effectiveAttaque + bonusAttack`.
+            - `effectiveAttaque` (provenant du modèle `EntityStats`) calcule déjà la somme de la Force de base et de l'ensemble des modificateurs de statut actifs (`attaque + strength_status_value`), retournant correctement `30`.
+            - `bonusAttack` (provoyant du composant Flame `HeroCard`) lisait la différence `effectiveAttaque - attaque`, retournant également `4`.
+            - La formule additionnait ainsi la Force temporaire **deux fois**, affichant à tort `34` (`30 + 4`).
+        - **Résolution dans `lib/ui/screens/game_screen.dart`** :
+            - Remplacement de la formule erronée par l'exacte source de vérité : `final totalAttack = runState.heroStats.effectiveAttaque`.
+            - Nettoyage du code en éliminant les blocs `try-catch` obsolètes et redondants qui tentaient de lire `bonusAttack` depuis le composant Flame.
+            - La valeur affichée correspond maintenant de manière pixel-perfect et rigoureuse à l'attaque effective du joueur (`30`), assurant une parfaite transparence mathématique pour le joueur.
+        - **Robustesse et Validation** :
+            - `dart analyze` exécuté avec succès : 0 erreur, 0 avertissement.
+            - `flutter test` exécuté avec succès : 17 tests sur 17 passés.
