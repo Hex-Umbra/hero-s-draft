@@ -36,3 +36,20 @@
         - **Fourniture globale** :
             - Enregistrement du fournisseur Riverpod global `combatProvider`.
 
+## Phase 97 - Découplage Complet des Services Métier (Refactoring - Étape 3)
+
+- feat: Rénovation de l'EffectResolver pour le libérer de toute dépendance vis-à-vis de Flame
+    - Refactoring complet du résolveur d'effets de cartes afin qu'il opère uniquement sur des états logiques Riverpod purs (`CombatController` et `String? selectedEnemyId`), éliminant tout import ou manipulation de composants de rendu graphiques Flame (`EnemyCard`).
+        - **Épuration de `EffectResolver` (`lib/game/services/effect_resolver.dart`)** :
+            - Suppression définitive de l'import de `lib/game/components/entities/enemy_card.dart`.
+            - Adaptation de `canPlayCard` : remplace le paramètre `EnemyCard? selectedEnemy` par `String? selectedEnemyId` pour vérifier purement s'il y a une cible légitime pour les cartes de type `singleEnemy`.
+            - Refonte de `resolveCard` : remplace `List<EnemyCard> enemyCards` par `CombatController combatController` et `EnemyCard? selectedEnemy` par `String? selectedEnemyId`.
+            - Réécriture de la boucle d'application d'effets :
+                - Pour les effets `damage` et `apply_status` ciblant `singleEnemy` : recherche de l'instance `EnemyInstance` dans `combatController.state.enemies` par son ID, calcul des dégâts/effets purs et mise à jour de ses statistiques logiques en invoquant `combatController.updateEnemyStats(...)`.
+                - Pour les effets ciblant `allEnemies` : itération sur toutes les instances d'ennemis logiques du combat et mise à jour via `updateEnemyStats` dans le contrôleur Riverpod.
+            - Avantage immédiat : La classe `EffectResolver` est maintenant **100% découplée** et devient immédiatement testable de manière unitaire et instantanée, sans instanciation lourde du moteur Flame.
+        - **Déstubbage de `CombatController` (`lib/game/controllers/combat_controller.dart`)** :
+            - Ré-activation complète de l'import `import '../services/effect_resolver.dart';` au sommet du fichier.
+            - Rétablissement de la connexion nominale de `EffectResolver.resolveCard` dans la méthode `applyPlayerCardPlay` en lui transmettant `this` (le contrôleur lui-même) et `state.selectedEnemyId` (l'ID ciblé par le joueur).
+
+

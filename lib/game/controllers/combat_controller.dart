@@ -11,12 +11,14 @@ import '../../../models/status_effect.dart';
 import '../../../models/map_node.dart';
 import '../systems/encounter_system.dart';
 import '../systems/trait_system.dart';
-// import '../services/effect_resolver.dart';
+import '../services/effect_resolver.dart';
 import 'run_controller.dart';
 import 'deck_controller.dart';
 
 class CombatController extends StateNotifier<CombatState> {
   CombatController() : super(const CombatState());
+
+  CombatState get currentState => state;
 
   /// Génère les ennemis via EncounterSystem et initialise l'état du combat
   void initializeCombat(
@@ -94,15 +96,14 @@ class CombatController extends StateNotifier<CombatState> {
     RunController runController,
     DeckNotifier deckController,
   ) {
-    // 1. Résolution des effets (temporairement stubbé pour l'Étape 2, sera connecté à l'Étape 3)
-    // final success = EffectResolver.resolveCard(
-    //   card,
-    //   runController,
-    //   deckController,
-    //   this,
-    //   state.selectedEnemyId,
-    // );
-    const success = true;
+    // 1. Résolution des effets
+    final success = EffectResolver.resolveCardState(
+      card,
+      runController,
+      deckController,
+      this,
+      state.selectedEnemyId,
+    );
 
     if (success) {
       // 2. Transmettre au deck que la carte est jouée

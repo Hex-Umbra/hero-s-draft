@@ -4,10 +4,11 @@ import '../../models/status_effect.dart';
 import '../../data/models/entity_stats.dart';
 import '../controllers/run_controller.dart';
 import '../controllers/deck_controller.dart';
+import '../controllers/combat_controller.dart';
 import '../components/entities/enemy_card.dart';
 
 class EffectResolver {
-  /// Helper pour crÃ©er un StatusEffect Ã  partir des donnÃ©es de la carte
+  /// Helper pour créer un StatusEffect à partir des données de la carte
   static StatusEffect? _createStatus(String statusId, int value, int duration) {
     switch (statusId) {
       case 'poison':
@@ -37,7 +38,7 @@ class EffectResolver {
       case 'vulnerable':
         return StatusEffect(
           id: 'vulnerable',
-          name: 'VunÃ©rable',
+          name: 'Vulnérable',
           type: StatusType.debuff,
           value: value,
           duration: duration,
@@ -53,7 +54,7 @@ class EffectResolver {
       case 'armor_regen':
         return StatusEffect(
           id: 'armor_regen',
-          name: 'MÃ©tallisation',
+          name: 'Métallisation',
           type: StatusType.buff,
           value: value,
           duration: duration,
@@ -63,32 +64,109 @@ class EffectResolver {
     }
   }
 
-  /// VÃ©rifie si la carte peut Ãªtre jouÃ©e
+  /// Vérifie si la carte peut être jouée (Nouvelle version découplée - Étape 3)
+  static bool canPlayCardState(
+    CardInstance card,
+    RunState runState,
+    String? selectedEnemyId,
+  ) {
+    if (runState.heroStats.currentMana < card.currentCost) {
+      return false;
+    }
+    if (card.data.type == CardType.status) {
+      return false;
+    }
+    if (card.data.target == CardTarget.singleEnemy && selectedEnemyId == null) {
+      return false;
+    }
+    return true;
+  }
+
+  /// Vérifie si la carte peut être jouée (Ancienne version Flame pour compatibilité temporaire)
   static bool canPlayCard(
     CardInstance card,
     RunState runState,
     EnemyCard? selectedEnemy,
   ) {
-    // VÃ©rification du mana
-    if (runState.heroStats.currentMana < card.currentCost) {
+    return canPlayCardState(card, runState, selectedEnemy != null ? 'temp_id' : null);
+  }
+
+  /// Résout les effets d'une carte (Nouvelle version découplée - Étape 3)
+  static bool resolveCardState(
+    CardInstance card,
+    RunController runController,
+    DeckNotifier deckController,
+    CombatController combatController,
+    String? selectedEnemyId,
+  ) {
+    if (!canPlayCardState(card, runController.currentState, selectedEnemyId)) {
       return false;
     }
 
-    // Interdiction de jouer les statuts
-    if (card.data.type == CardType.status) {
-      return false;
-    }
+    runController.consumeResource(mana: card.currentCost);
 
-    // VÃ©rification de la cible
-    if (card.data.target == CardTarget.singleEnemy && selectedEnemy == null) {
-      return false;
-    }
+    for (var effect in card.data.effects) {
+      final int baseValue = effect.value;
+      final int scaledValue = (baseValue * (1 + (card.level - 1) * 0.5)).round();
 
+      switch (effect.type) {
+        case 'damage':
+          if (card.data.target == CardTarget.singleEnemy && selectedEnemyId != null) {
+            final enemyIndex = combatController.currentState.enemies
+                .indexWhere((e) => e.id == selectedEnemyId);
+            if (enemyIndex != -1) {
+              final enemy = combatController.currentState.enemies[enemyIndex];
+              int dmg = _calculateDamage(scaledValue, runController.currentState.heroStats);
+              combatController.updateEnemyStats(selectedEnemyId, enemy.stats.takeDamage(dmg));
+            }
+          } else if (card.data.target == CardTarget.allEnemies) {
+            int dmg = _calculateDamage(scaledValue, runController.currentState.heroStats);
+            for (var enemy in combatController.currentState.enemies) {
+              combatController.updateEnemyStats(enemy.id, enemy.stats.takeDamage(dmg));
+            }
+          }
+          break;
+        case 'heal':
+          runController.heal(scaledValue);
+          break;
+        case 'armor':
+          final currentStats = runController.currentState.heroStats;
+          runController.setHeroStats(armure: currentStats.armure + scaledValue);
+          break;
+        case 'gain_mana':
+          final currentMana = runController.currentState.heroStats.currentMana;
+          runController.setHeroStats(currentMana: currentMana + scaledValue);
+          break;
+        case 'draw':
+          deckController.drawCards(scaledValue);
+          break;
+        case 'apply_status':
+          if (effect.statusId != null) {
+            final status = _createStatus(effect.statusId!, scaledValue, effect.duration ?? 1);
+            if (status != null) {
+              if (card.data.target == CardTarget.singleEnemy && selectedEnemyId != null) {
+                final enemyIndex = combatController.currentState.enemies
+                    .indexWhere((e) => e.id == selectedEnemyId);
+                if (enemyIndex != -1) {
+                  final enemy = combatController.currentState.enemies[enemyIndex];
+                  combatController.updateEnemyStats(selectedEnemyId, enemy.stats.addStatus(status));
+                }
+              } else if (card.data.target == CardTarget.allEnemies) {
+                for (var enemy in combatController.currentState.enemies) {
+                  combatController.updateEnemyStats(enemy.id, enemy.stats.addStatus(status));
+                }
+              } else if (card.data.target == CardTarget.self) {
+                runController.addStatus(status);
+              }
+            }
+          }
+          break;
+      }
+    }
     return true;
   }
 
-  /// RÃ©sout les effets d'une carte sur le joueur et les ennemis
-  /// Retourne true si les effets ont dÃ©clenchÃ© une attaque (pour la riposte)
+  /// Résout les effets d'une carte (Ancienne version Flame pour compatibilité temporaire)
   static bool resolveCard(
     CardInstance card,
     RunController runController,
@@ -100,30 +178,19 @@ class EffectResolver {
       return false;
     }
 
-    // Consomme le mana
     runController.consumeResource(mana: card.currentCost);
 
-    // Applique les effets
     for (var effect in card.data.effects) {
-      // Calcul de la valeur rÃ©elle selon le niveau de la carte (+50% par niveau supplÃ©mentaire)
       final int baseValue = effect.value;
-      final int scaledValue = (baseValue * (1 + (card.level - 1) * 0.5))
-          .round();
+      final int scaledValue = (baseValue * (1 + (card.level - 1) * 0.5)).round();
 
       switch (effect.type) {
         case 'damage':
-          if (card.data.target == CardTarget.singleEnemy &&
-              selectedEnemy != null) {
-            int dmg = _calculateDamage(
-              scaledValue,
-              runController.currentState.heroStats,
-            );
+          if (card.data.target == CardTarget.singleEnemy && selectedEnemy != null) {
+            int dmg = _calculateDamage(scaledValue, runController.currentState.heroStats);
             selectedEnemy.updateStats(selectedEnemy.stats.takeDamage(dmg));
           } else if (card.data.target == CardTarget.allEnemies) {
-            int dmg = _calculateDamage(
-              scaledValue,
-              runController.currentState.heroStats,
-            );
+            int dmg = _calculateDamage(scaledValue, runController.currentState.heroStats);
             for (var enemy in enemyCards) {
               enemy.updateStats(enemy.stats.takeDamage(dmg));
             }
@@ -134,10 +201,7 @@ class EffectResolver {
           break;
         case 'armor':
           final currentStats = runController.currentState.heroStats;
-          final currentArmor = currentStats.armure;
-          runController.setHeroStats(
-            armure: currentArmor + scaledValue,
-          );
+          runController.setHeroStats(armure: currentStats.armure + scaledValue);
           break;
         case 'gain_mana':
           final currentMana = runController.currentState.heroStats.currentMana;
@@ -148,17 +212,10 @@ class EffectResolver {
           break;
         case 'apply_status':
           if (effect.statusId != null) {
-            final status = _createStatus(
-              effect.statusId!,
-              scaledValue,
-              effect.duration ?? 1,
-            );
+            final status = _createStatus(effect.statusId!, scaledValue, effect.duration ?? 1);
             if (status != null) {
-              if (card.data.target == CardTarget.singleEnemy &&
-                  selectedEnemy != null) {
-                selectedEnemy.updateStats(
-                  selectedEnemy.stats.addStatus(status),
-                );
+              if (card.data.target == CardTarget.singleEnemy && selectedEnemy != null) {
+                selectedEnemy.updateStats(selectedEnemy.stats.addStatus(status));
               } else if (card.data.target == CardTarget.allEnemies) {
                 for (var enemy in enemyCards) {
                   enemy.updateStats(enemy.stats.addStatus(status));
@@ -171,15 +228,13 @@ class EffectResolver {
           break;
       }
     }
-
-    return true; // La carte a Ã©tÃ© jouÃ©e avec succÃ¨s
+    return true;
   }
 
-  /// Calcule les dÃ©gÃ¢ts finaux (influencÃ© par la force et les debuffs)
+  /// Calcule les dégâts finaux (influencé par la force et les debuffs)
   static int _calculateDamage(int baseDamage, EntityStats attackerStats) {
     int totalDamage = baseDamage + attackerStats.effectiveAttaque;
 
-    // Application de la faiblesse (-25% dÃ©gÃ¢ts)
     final weakness = attackerStats.statuses
         .where((s) => s.id == 'weakness')
         .toList();
