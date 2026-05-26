@@ -188,11 +188,11 @@ class EffectResolver {
         case 'damage':
           if (card.data.target == CardTarget.singleEnemy && selectedEnemy != null) {
             int dmg = _calculateDamage(scaledValue, runController.currentState.heroStats);
-            selectedEnemy.updateStats(selectedEnemy.stats.takeDamage(dmg));
+            selectedEnemy.updateStats(selectedEnemy.instance.copyWith(stats: selectedEnemy.stats.takeDamage(dmg)));
           } else if (card.data.target == CardTarget.allEnemies) {
             int dmg = _calculateDamage(scaledValue, runController.currentState.heroStats);
             for (var enemy in enemyCards) {
-              enemy.updateStats(enemy.stats.takeDamage(dmg));
+              enemy.updateStats(enemy.instance.copyWith(stats: enemy.stats.takeDamage(dmg)));
             }
           }
           break;
@@ -215,10 +215,10 @@ class EffectResolver {
             final status = _createStatus(effect.statusId!, scaledValue, effect.duration ?? 1);
             if (status != null) {
               if (card.data.target == CardTarget.singleEnemy && selectedEnemy != null) {
-                selectedEnemy.updateStats(selectedEnemy.stats.addStatus(status));
+                selectedEnemy.updateStats(selectedEnemy.instance.copyWith(stats: selectedEnemy.stats.addStatus(status)));
               } else if (card.data.target == CardTarget.allEnemies) {
                 for (var enemy in enemyCards) {
-                  enemy.updateStats(enemy.stats.addStatus(status));
+                  enemy.updateStats(enemy.instance.copyWith(stats: enemy.stats.addStatus(status)));
                 }
               } else if (card.data.target == CardTarget.self) {
                 runController.addStatus(status);

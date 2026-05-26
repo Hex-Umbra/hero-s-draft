@@ -20,11 +20,7 @@ import '../data/models/entity_stats.dart';
 import 'controllers/run_controller.dart';
 import 'controllers/deck_controller.dart';
 import '../models/enemy_intent.dart';
-import '../models/map_node.dart';
-import '../models/status_effect.dart';
-import 'systems/encounter_system.dart';
-
-enum TurnPhase { player, enemy }
+import '../models/combat_state.dart';
 
 class HerosDraftGame extends FlameGame
     with TapCallbacks, PointerMoveCallbacks {
@@ -39,13 +35,16 @@ class HerosDraftGame extends FlameGame
   late final TargetingLine targetingLine;
   Vector2 _lastPointerPos = Vector2.zero();
 
-  // Facteur d'échelle basé sur une résolution de référence (800p pour agrandir les éléments)
   double get scaleFactor => (size.y / 800).clamp(0.85, 2.5);
 
   RunState? _currentState;
   RunState? get currentRunState => _currentState;
   RunState? _nextState;
   DeckState? _nextDeckState;
+
+  CombatState? _currentCombatState;
+  CombatState? get currentCombatState => _currentCombatState;
+  CombatState? _nextCombatState;
 
   TurnPhase currentPhase = TurnPhase.player;
   EnemyCard? selectedEnemy;
@@ -64,6 +63,13 @@ class HerosDraftGame extends FlameGame
   final VoidCallback? onEnemiesSpawned;
   final void Function() onEnemyKilled;
 
+  // Nouveaux callbacks de découplage Riverpod combat - Étape 4
+  final void Function(String enemyId) onResolveEnemyIntent;
+  final void Function() onStartEnemyTurn;
+  final void Function() onEndEnemyTurn;
+  final void Function(String? enemyId) onSelectEnemy;
+  final void Function(String enemyId, EntityStats stats) onUpdateEnemyStats;
+
   HerosDraftGame({
     required this.onPlayerTakeDamage,
     required this.onPlayerHeal,
@@ -76,13 +82,17 @@ class HerosDraftGame extends FlameGame
     required this.onHideTooltip,
     required this.onPlayCard,
     required this.onEnemyKilled,
+    required this.onResolveEnemyIntent,
+    required this.onStartEnemyTurn,
+    required this.onEndEnemyTurn,
+    required this.onSelectEnemy,
+    required this.onUpdateEnemyStats,
     this.onEnemiesSpawned,
   });
 
   void setHoveredCard(CardComponent? card) {
     if (hoveredCard == card) return;
 
-    // Reset previous card if it exists
     if (hoveredCard != null && hoveredCard != focusedCard) {
       hoveredCard!.isHovered = false;
       hoveredCard!.priority = hoveredCard!.basePriority;
@@ -100,7 +110,6 @@ class HerosDraftGame extends FlameGame
 
     hoveredCard = card;
 
-    // Set new hovered card
     if (hoveredCard != null && hoveredCard != focusedCard) {
       hoveredCard!.isHovered = true;
       hoveredCard!.priority = 100;
@@ -120,7 +129,6 @@ class HerosDraftGame extends FlameGame
   void setFocusedCard(CardComponent? card) {
     if (focusedCard == card) return;
 
-    // Reset previous focus
     if (focusedCard != null) {
       final oldFocused = focusedCard!;
       oldFocused.isHovered = false;
@@ -147,16 +155,15 @@ class HerosDraftGame extends FlameGame
 
     focusedCard = card;
 
-    // Apply new focus
     if (focusedCard != null) {
       focusedCard!.isHovered = true;
-      focusedCard!.priority = 150; // Plus haut que le hover simple
+      focusedCard!.priority = 150;
       focusedCard!.removeAll(focusedCard!.children.whereType<Effect>());
       focusedCard!.refreshVisuals();
       if (!focusedCard!.isDragging) {
         focusedCard!.add(
           MoveEffect.to(
-            focusedCard!.originalPosition + Vector2(0, -60), // Monte plus haut
+            focusedCard!.originalPosition + Vector2(0, -60),
             EffectController(duration: 0.2, curve: Curves.easeOut),
           ),
         );
@@ -164,7 +171,7 @@ class HerosDraftGame extends FlameGame
           ScaleEffect.to(
             Vector2.all(
               scaleFactor * 0.88 * 1.25,
-            ), // Légèrement plus grand que le hover
+            ),
             EffectController(duration: 0.2, curve: Curves.easeOut),
           ),
         );
@@ -219,7 +226,6 @@ class HerosDraftGame extends FlameGame
   @override
   void onTapDown(TapDownEvent event) {
     super.onTapDown(event);
-    // Si on clique sur le fond (pas sur une carte), on enlève le focus
     setFocusedCard(null);
   }
 
@@ -227,18 +233,12 @@ class HerosDraftGame extends FlameGame
   Future<void> onLoad() async {
     await super.onLoad();
 
-    // 0. Initialiser la ligne de ciblage
     targetingLine = TargetingLine();
     add(targetingLine..priority = 300);
 
-    // On retire le FixedResolutionViewport pour utiliser tout l'espace disponible (MaxViewport par défaut)
-    // La caméra s'adaptera dynamiquement à la taille de l'écran.
-
-    // 1. Précharger les images dynamiquement à partir des fichiers JSON
     final List<String> imagesToPreload = ['bg_dungeon.png'];
 
     try {
-      // Préchargement dynamique des ennemis
       final String enemiesRaw = await rootBundle.loadString('assets/data/enemies.json');
       final List<dynamic> enemiesJson = jsonDecode(enemiesRaw);
       for (final enemy in enemiesJson) {
@@ -248,7 +248,6 @@ class HerosDraftGame extends FlameGame
         }
       }
 
-      // Préchargement dynamique des héros
       final String heroesRaw = await rootBundle.loadString('assets/data/heroes.json');
       final List<dynamic> heroesJson = jsonDecode(heroesRaw);
       for (final hero in heroesJson) {
@@ -258,7 +257,6 @@ class HerosDraftGame extends FlameGame
         }
       }
     } catch (e) {
-      // En cas d'erreur de chargement (ex. dans certains environnements de tests unitaires sans assets), fallback sur les défauts
       imagesToPreload.addAll([
         'hero_paladin.png',
         'hero_berserker.png',
@@ -270,12 +268,9 @@ class HerosDraftGame extends FlameGame
       ]);
     }
 
-    // Éliminer les doublons éventuels
     final uniqueImages = imagesToPreload.toSet().toList();
-
     await images.loadAll(uniqueImages);
 
-    // 2. Ajouter l'arrière-plan
     final bgSprite = Sprite(images.fromCache('bg_dungeon.png'));
     add(SpriteComponent(sprite: bgSprite, size: size)..priority = -100);
   }
@@ -283,7 +278,6 @@ class HerosDraftGame extends FlameGame
   @override
   void onGameResize(Vector2 size) {
     super.onGameResize(size);
-    // Recalculer le layout si le jeu est déjà initialisé
     if (heroCard != null) {
       heroCard!.position = Vector2(size.x / 2, size.y * 0.51);
     }
@@ -292,7 +286,6 @@ class HerosDraftGame extends FlameGame
     }
     _layoutHand();
 
-    // Ajuster l'arrière-plan
     children.whereType<SpriteComponent>().forEach((bg) {
       if (bg.priority == -100) bg.size = size;
     });
@@ -308,12 +301,9 @@ class HerosDraftGame extends FlameGame
 
   bool tryPlayCard(dynamic cardComp, EnemyCard? target) {
     if (cardComp is CardComponent && onPlayCard(cardComp.card, target)) {
-      // Si la carte est jouée, on lance l'animation spectaculaire
-      // On la retire immédiatement de handCards pour qu'elle ne soit plus layoutée
       handCards.remove(cardComp);
       _layoutHand();
 
-      // On lance l'animation de vol et d'impact
       cardComp.playAnimation(
         target,
         onComplete: () {
@@ -337,6 +327,10 @@ class HerosDraftGame extends FlameGame
     _nextDeckState = deckState;
   }
 
+  void syncCombat(CombatState combatState) {
+    _nextCombatState = combatState;
+  }
+
   @override
   void update(double dt) {
     super.update(dt);
@@ -348,10 +342,13 @@ class HerosDraftGame extends FlameGame
       _applyDeckState(_nextDeckState!);
       _nextDeckState = null;
     }
+    if (_nextCombatState != null && hasLayout) {
+      _applyCombatState(_nextCombatState!);
+      _nextCombatState = null;
+    }
   }
 
   void _applyDeckState(DeckState deck) {
-    // 1. Trouver les cartes à retirer (qui ne sont plus dans la main du DeckState)
     final newHandIds = deck.hand.map((c) => c.uniqueId).toSet();
     final cardsToRemove = handCards
         .where((c) => !newHandIds.contains(c.card.uniqueId))
@@ -362,7 +359,6 @@ class HerosDraftGame extends FlameGame
       handCards.remove(c);
     }
 
-    // 2. Trouver les cartes à ajouter
     final currentHandIds = handCards.map((c) => c.card.uniqueId).toSet();
     final cardsToAdd = deck.hand
         .where((c) => !currentHandIds.contains(c.uniqueId))
@@ -374,7 +370,6 @@ class HerosDraftGame extends FlameGame
       add(cardComp);
     }
 
-    // 3. Mettre à jour le layout si la main a changé
     if (cardsToRemove.isNotEmpty || cardsToAdd.isNotEmpty) {
       _layoutHand();
     }
@@ -384,10 +379,8 @@ class HerosDraftGame extends FlameGame
     if (handCards.isEmpty) return;
 
     final int count = handCards.length;
-    // On veut un arc de cercle proportionnel à la taille de l'écran
     final double radius = size.y * 1.5;
 
-    // Calcul dynamique de l'angle entre chaque carte (réduit pour plus de compacité)
     double angleStep = 0.08;
     if (count > 4) {
       angleStep = (0.4 / count).clamp(0.04, 0.08);
@@ -396,7 +389,6 @@ class HerosDraftGame extends FlameGame
     final double totalAngle = (count - 1) * angleStep;
     final double startAngle = -totalAngle / 2;
 
-    // Le centre de l'arc de cercle est ajusté pour remonter et agrandir la main
     final Vector2 centerPoint = Vector2(
       size.x / 2,
       size.y + radius - (size.y * 0.23),
@@ -404,23 +396,19 @@ class HerosDraftGame extends FlameGame
 
     for (int i = 0; i < count; i++) {
       final card = handCards[i];
-      card.basePriority = 10 + i; // Assigne une priorité basée sur l'index
+      card.basePriority = 10 + i;
 
       final double angle = startAngle + (i * angleStep);
 
-      // Position sur le cercle
       final double x = centerPoint.x + radius * sin(angle);
       final double y = centerPoint.y - radius * cos(angle);
 
-      // On sauvegarde TOUJOURS la position théorique dans la main
       card.originalPosition = Vector2(x, y);
       card.originalAngle = angle;
 
       if (card.isDragging) continue;
 
-      // On n'oriente physiquement la carte que si elle n'est pas drag
       if (card == focusedCard) {
-        // La carte est focus, elle monte dans l'axe vertical mais garde son angle
         card.position = Vector2(x, y) + Vector2(0, -60);
         card.angle = angle;
       } else {
@@ -428,7 +416,6 @@ class HerosDraftGame extends FlameGame
         card.angle = angle;
       }
 
-      // Si la carte n'est pas mise en avant (hover/focus), on applique sa basePriority
       if (card != hoveredCard && card != focusedCard) {
         card.priority = card.basePriority;
       }
@@ -436,10 +423,6 @@ class HerosDraftGame extends FlameGame
   }
 
   void _applyState(RunState state) {
-    if (_currentState == null ||
-        _currentState!.currentLevel < state.currentLevel) {
-      _spawnEnemies(state.currentLevel, nodeType: state.currentNodeType);
-    }
     _currentState = state;
 
     int bonusAtt = state.effectiveAttaque - state.heroStats.attaque;
@@ -468,72 +451,82 @@ class HerosDraftGame extends FlameGame
       );
     }
 
-    // Rafraîchir les visuels de la main pour synchroniser les descriptions (ex: dégâts avec la force)
     for (var card in handCards) {
       card.refreshVisuals();
     }
   }
 
-  void _spawnEnemies(int level, {MapNodeType? nodeType}) {
-    for (var enemy in enemyCards) {
-      enemy.removeFromParent();
-    }
-    enemyCards.clear();
+  void _applyCombatState(CombatState state) {
+    currentPhase = state.turnPhase;
 
-    final enemyDataList = EncounterSystem.generateEnemiesForLevel(
-      level,
-      availableEnemies,
-      nodeType: nodeType,
-    );
+    // 1. Gérer les disparitions (morts)
+    final newEnemiesIds = state.enemies.map((e) => e.id).toSet();
+    final cardsToRemove = enemyCards.where((c) => !newEnemiesIds.contains(c.id)).toList();
 
-    bool isBoss = nodeType == MapNodeType.boss;
-    bool isElite = nodeType == MapNodeType.elite;
-
-    double multiplier = 1.0;
-    if (isBoss) {
-      multiplier = 3.0;
-    } else if (isElite) {
-      multiplier = 1.5;
-    }
-
-    for (int i = 0; i < enemyDataList.length; i++) {
-      final data = enemyDataList[i];
-      // On initialise les stats réelles en se basant sur data et le multiplicateur
-      final stats = EntityStats(
-        maxPv: (data.maxHp * multiplier).round(),
-        currentPv: (data.maxHp * multiplier).round(),
-        armure: 0,
-        attaque: (data.baseDamage * multiplier).round(),
+    for (var card in cardsToRemove) {
+      card.add(
+        OpacityEffect.to(
+          0.0,
+          EffectController(duration: 0.4),
+        ),
       );
-
-      final enemy = EnemyCard(
-        stats: stats,
-        data: data,
-        isBoss: isBoss,
-        onTapEnemy: _handlePlayerTargeting,
+      card.add(
+        ScaleEffect.to(
+          Vector2.zero(),
+          EffectController(duration: 0.4),
+          onComplete: () {
+            card.removeFromParent();
+          },
+        ),
       );
+      enemyCards.remove(card);
+    }
 
-      // Si c'est un Boss, on l'agrandit visuellement
-      if (isBoss) {
-        enemy.scale = Vector2.all(1.5);
+    // 2. Gérer les apparitions ou mises à jour
+    bool listChanged = cardsToRemove.isNotEmpty;
+
+    for (var enemyInstance in state.enemies) {
+      final existingIndex = enemyCards.indexWhere((c) => c.id == enemyInstance.id);
+      if (existingIndex != -1) {
+        enemyCards[existingIndex].updateStats(enemyInstance);
+      } else {
+        final enemyCard = EnemyCard(
+          instance: enemyInstance,
+          onTapEnemy: _handlePlayerTargeting,
+        );
+        enemyCards.add(enemyCard);
+        add(enemyCard);
+        listChanged = true;
       }
-
-      enemyCards.add(enemy);
-      add(enemy);
     }
-    _repositionEnemies();
-    onEnemiesSpawned?.call();
+
+    // 3. Repositionner si la liste a changé
+    if (listChanged) {
+      _repositionEnemies();
+      onEnemiesSpawned?.call();
+    }
+
+    // 4. Synchroniser la sélection visuelle
+    selectedEnemy = null;
+    for (var card in enemyCards) {
+      final isSelected = card.id == state.selectedEnemyId;
+      card.setSelection(isSelected);
+      if (isSelected) {
+        selectedEnemy = card;
+      }
+    }
+
+    _currentCombatState = state;
   }
 
   void _repositionEnemies() {
     if (enemyCards.isEmpty) return;
 
-    // Espacement dynamique basé sur la largeur de l'écran
     double spacing = (size.x * 0.8) / (enemyCards.length + 1);
-    spacing = spacing.clamp(120, 250); // Garder des limites raisonnables
+    spacing = spacing.clamp(120, 250);
 
     double startX = (size.x / 2) - ((enemyCards.length - 1) * (spacing / 2));
-    double posY = size.y * 0.21; // 21% du haut (redescendu pour aérer)
+    double posY = size.y * 0.21;
 
     for (int i = 0; i < enemyCards.length; i++) {
       enemyCards[i].position = Vector2(startX + (i * spacing), posY);
@@ -547,9 +540,7 @@ class HerosDraftGame extends FlameGame
       return;
     }
 
-    // Système Click-to-Play
     if (focusedCard != null) {
-      // Si on a une carte sélectionnée et qu'on clique sur un ennemi
       if (focusedCard!.card.data.target == CardTarget.singleEnemy ||
           focusedCard!.card.data.target == CardTarget.allEnemies) {
         final cardToPlay = focusedCard!;
@@ -565,11 +556,7 @@ class HerosDraftGame extends FlameGame
       }
     }
 
-    for (var e in enemyCards) {
-      e.setSelection(false);
-    }
-    target.setSelection(true);
-    selectedEnemy = target;
+    onSelectEnemy(target.id);
   }
 
   Future<void> executeTurn() async {
@@ -579,10 +566,8 @@ class HerosDraftGame extends FlameGame
       return;
     }
 
-    currentPhase = TurnPhase.enemy; // Empêcher d'autres sélections
+    currentPhase = TurnPhase.enemy;
 
-    // Fin du tour du joueur, on passe directement à la phase de l'ennemi.
-    // L'attaque automatique a été retirée car les dégâts sont maintenant infligés via les cartes.
     if (enemyCards.isEmpty) {
       onEnemiesDead();
       currentPhase = TurnPhase.player;
@@ -622,25 +607,13 @@ class HerosDraftGame extends FlameGame
                 .round();
         if (dmg < 1) dmg = 1;
         for (var enemy in enemyCards.toList()) {
-          enemy.updateStats(enemy.stats.takeDamage(dmg));
-          if (enemy.stats.currentPv <= 0) {
-            enemy.removeFromParent();
-            enemyCards.remove(enemy);
-            if (selectedEnemy == enemy) selectedEnemy = null;
-            onEnemyKilled();
-          }
+          onUpdateEnemyStats(enemy.id, enemy.stats.takeDamage(dmg));
         }
       } else if (skill.effectType == 'damage_targeted') {
         int dmg =
             (_currentState!.effectiveAttaque * (skill.effectValue / 100.0))
                 .round();
-        selectedEnemy!.updateStats(selectedEnemy!.stats.takeDamage(dmg));
-        if (selectedEnemy!.stats.currentPv <= 0) {
-          selectedEnemy!.removeFromParent();
-          enemyCards.remove(selectedEnemy);
-          selectedEnemy = null;
-          onEnemyKilled();
-        }
+        onUpdateEnemyStats(selectedEnemy!.id, selectedEnemy!.stats.takeDamage(dmg));
       } else if (skill.effectType == 'damage_pierce') {
         int dmg = _currentState!.effectiveAttaque;
         int stolenArmor =
@@ -649,20 +622,18 @@ class HerosDraftGame extends FlameGame
         int newArm = selectedEnemy!.stats.armure - stolenArmor;
         if (newPv < 0) newPv = 0;
         if (newArm < 0) newArm = 0;
-        selectedEnemy!.updateStats(
+        
+        onUpdateEnemyStats(
+          selectedEnemy!.id,
           selectedEnemy!.stats.copyWith(currentPv: newPv, armure: newArm),
         );
         if (stolenArmor > 0) {
           onPlayerGainArmor(stolenArmor);
         }
-        if (selectedEnemy!.stats.currentPv <= 0) {
-          selectedEnemy!.removeFromParent();
-          enemyCards.remove(selectedEnemy);
-          selectedEnemy = null;
-          onEnemyKilled();
-        }
       }
 
+      // La riposte est déclenchée après l'effet visuel et la mise à jour Riverpod
+      await Future.delayed(const Duration(milliseconds: 400));
       if (enemyCards.isEmpty) {
         onEnemiesDead();
         currentPhase = TurnPhase.player;
@@ -671,7 +642,6 @@ class HerosDraftGame extends FlameGame
 
       await _enemyRipostePhase();
     } else {
-      // Pour les buffs, on ne change pas la phase et on applique l'effet
       if (skill.effectType == 'armor_buff') {
         onPlayerGainArmor(skill.effectValue);
       } else if (skill.effectType == 'attack_buff') {
@@ -686,31 +656,15 @@ class HerosDraftGame extends FlameGame
     onPhaseChanged(TurnPhase.enemy);
     await Future.delayed(const Duration(milliseconds: 600));
 
-    // Début de tour des ennemis (Poison, Tick de buffs, etc.)
-    for (var enemy in enemyCards) {
-      enemy.startTurn();
-    }
+    // 1. Début de tour des ennemis (Poison, Tick de buffs, etc. résolu dans Riverpod)
+    onStartEnemyTurn();
 
-    // Nettoyage des ennemis morts (ex: par poison)
-    for (var enemy in enemyCards.toList()) {
-      if (enemy.stats.currentPv <= 0) {
-        enemy.removeFromParent();
-        enemyCards.remove(enemy);
-        if (selectedEnemy == enemy) selectedEnemy = null;
-        onEnemyKilled();
-      }
-    }
-
-    if (enemyCards.isEmpty) {
-      onEnemiesDead();
-      currentPhase = TurnPhase.player;
-      onPhaseChanged(TurnPhase.player);
-      onTurnEnded();
-      return;
-    }
+    // Laisser le temps aux animations de ticks (ex: poison) avant les attaques
+    await Future.delayed(const Duration(milliseconds: 400));
 
     // Riposte des Ennemis (Séquentielle)
-    for (var enemy in enemyCards) {
+    final activeEnemies = List<EnemyCard>.from(enemyCards);
+    for (var enemy in activeEnemies) {
       if (_currentState == null || _currentState!.isDead) break;
 
       final intent = enemy.effectiveIntent;
@@ -724,51 +678,20 @@ class HerosDraftGame extends FlameGame
 
       await Future.delayed(const Duration(milliseconds: 200));
 
-      switch (intent.type) {
-        case IntentType.attack:
-          onPlayerTakeDamage(intent.value);
-          break;
-        case IntentType.defend:
-          enemy.updateStats(
-            enemy.stats.copyWith(armure: enemy.stats.armure + intent.value),
-          );
-          break;
-        case IntentType.buff:
-          // Buff simple : applique un statut Force permanent pour le combat (99 tours)
-          enemy.updateStats(
-            enemy.stats.addStatus(
-              StatusEffect(
-                id: 'strength',
-                name: 'Attaque',
-                type: StatusType.buff,
-                value: intent.value,
-                duration: 99,
-              ),
-            ),
-          );
-          break;
-        case IntentType.debuffDeck:
-          // Géré via le callback onEnemyDebuffDeck (désormais désactivé)
-          onEnemyDebuffDeck(intent.value);
-          break;
-      }
+      // Résoudre l'intention dans Riverpod
+      onResolveEnemyIntent(enemy.id);
 
       await Future.delayed(const Duration(milliseconds: 400));
     }
 
-    // Préparer les prochaines intentions
-    for (var enemy in enemyCards) {
-      enemy.rollIntent();
-    }
-
     await Future.delayed(const Duration(milliseconds: 300));
 
-    currentPhase = TurnPhase.player;
-    onPhaseChanged(TurnPhase.player);
-    onTurnEnded();
+    // 2. Fin de tour ennemi dans Riverpod (roll intents, repasse le tour au joueur)
+    onEndEnemyTurn();
   }
 
   void resetEnemies() {
     _currentState = null;
+    _currentCombatState = null;
   }
 }

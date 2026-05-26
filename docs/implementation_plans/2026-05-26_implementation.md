@@ -52,4 +52,24 @@
             - Ré-activation complète de l'import `import '../services/effect_resolver.dart';` au sommet du fichier.
             - Rétablissement de la connexion nominale de `EffectResolver.resolveCard` dans la méthode `applyPlayerCardPlay` en lui transmettant `this` (le contrôleur lui-même) et `state.selectedEnemyId` (l'ID ciblé par le joueur).
 
+## Phase 98 - Intégration de l'Interface Utilisateur (HUD Flutter & Flame) (Refactoring - Étape 4)
+
+- feat: Synchronisation réactive entre l'état Riverpod du combat et le rendu visuel Flame
+    - Restructuration complète des écrans de jeu et des arènes de combat pour connecter dynamiquement l'état Riverpod `CombatState` au moteur Flame et au HUD Flutter, établissant un flux de données unidirectionnel propre.
+        - **Refactorisation de `EnemyCard` (`lib/game/components/entities/enemy_card.dart`)** :
+            - Remplacement de l'état interne mutable et de la logique autonome de calcul d'intentions par un couplage à un objet immuable `EnemyInstance instance` fourni par le State.
+            - Suppression définitive des méthodes de décision (`_determineNextIntent`, `rollIntent`, `startTurn`) et de la mutation directe des PV/Armure, rendant le composant 100% passif.
+            - Intégration de `updateStats(EnemyInstance newInstance)` : compare réactivement l'ancien état PV/Armure avec le nouveau pour déclencher automatiquement des animations visuelles ad-hoc (secousse d'impact, flash blanc de dégâts, et popups de textes flottants colorés).
+        - **Refactorisation de `HerosDraftGame` (`lib/game/heros_draft_game.dart`)** :
+            - Implémentation de la synchronisation réactive de combat `syncCombat(CombatState combatState)`.
+            - Gestion du cycle de vie des composants : instanciation dynamique des cartes d'ennemis `EnemyCard` lorsqu'un ID apparaît dans le State, et déclenchement ordonné des animations de mort/retrait visuel lorsqu'un ennemi disparaît de l'état logique.
+            - Restructuration asynchrone cadencée de la phase de riposte `_enemyRipostePhase` : orchestre temporellement les animations graphiques séquentielles (effet de dash) tout en déléguant l'évaluation logique des intentions et l'application des dégâts à Riverpod via `resolveEnemyIntent(...)`.
+        - **Refactorisation de `GameScreen` (`lib/ui/screens/game_screen.dart`)** :
+            - Surveillance réactive du `combatProvider` via `ref.watch(combatProvider)` pour piloter l'arène graphique et alimenter dynamiquement le panneau HUD Flutter d'intentions ennemies.
+            - Connexion nominale de la fin de tour et des interactions de ciblage d'ennemis au contrôleur global Riverpod.
+            - Gestion automatisée de la victoire/défaite en écoutant les drapeaux réactifs `isCombatEnded` et `isVictory` pour rediriger proprement le joueur vers les écrans correspondants.
+        - **Mise à Jour de la Suite de Tests Unitaires (`test/unit/effect_resolver_test.dart`)** :
+            - Migration complète des tests de scaling d'intentions et d'effets de statuts pour utiliser directement le modèle logique pur `EnemyInstance` au lieu du composant visuel Flame `EnemyCard`, augmentant la robustesse de validation hors-moteur.
+
+
 

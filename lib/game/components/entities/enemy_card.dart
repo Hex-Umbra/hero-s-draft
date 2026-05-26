@@ -7,6 +7,7 @@ import '../../../data/models/entity_stats.dart';
 import '../../../models/data/enemy_data.dart';
 import '../../../models/enemy_intent.dart';
 import '../../../models/status_effect.dart';
+import '../../../models/enemy_instance.dart';
 import '../floating_text.dart';
 import '../effect_icon.dart';
 import 'stat_badge.dart';
@@ -15,51 +16,28 @@ import '../../heros_draft_game.dart';
 
 class EnemyCard extends PositionComponent
     with TapCallbacks, HasGameReference<HerosDraftGame>, HasPaint {
-  EntityStats stats;
-  final EnemyData? data;
-  final bool isBoss;
+  EnemyInstance instance;
   final void Function(EnemyCard) onTapEnemy;
 
   late final RectangleComponent borderInfo;
-
   late final StatBadge hpBadge;
   late final SpriteComponent sprite;
   late final StatusIndicator buffIndicator;
   late final StatusIndicator debuffIndicator;
 
-  EnemyIntent? currentIntent;
-
-  late final int _startingAttaque;
-  late final double _spawnMultiplier;
-
-  EnemyIntent? get effectiveIntent {
-    final intent = currentIntent;
-    if (intent == null) return null;
-    if (intent.type == IntentType.attack) {
-      final int scaledValue = (intent.value * _spawnMultiplier).round();
-      final int inBattleBonus = stats.effectiveAttaque - _startingAttaque;
-      return EnemyIntent(
-        type: intent.type,
-        value: max(stats.effectiveAttaque, scaledValue + inBattleBonus),
-      );
-    }
-    return intent;
-  }
+  String get id => instance.id;
+  EnemyData get data => instance.data;
+  EntityStats get stats => instance.stats;
+  EnemyIntent? get currentIntent => instance.currentIntent;
+  EnemyIntent? get effectiveIntent => instance.effectiveIntent;
+  bool get isBoss => instance.isBoss;
 
   bool isSelected = false;
-  int _intentStep = 0;
 
   EnemyCard({
-    required this.stats,
-    this.data,
-    this.isBoss = false,
+    required this.instance,
     required this.onTapEnemy,
-  }) : super(size: Vector2(100, 140)) {
-    _startingAttaque = stats.attaque;
-    final int baseDmg = data?.baseDamage ?? stats.attaque;
-    _spawnMultiplier = baseDmg > 0 ? stats.attaque / baseDmg : 1.0;
-    _determineNextIntent();
-  }
+  }) : super(size: Vector2(100, 140));
 
   @override
   Future<void> onLoad() async {
@@ -68,7 +46,7 @@ class EnemyCard extends PositionComponent
     // Appliquer l'échelle initiale (Agrandie pour le terrain et Boss proportionnel)
     scale = Vector2.all(game.scaleFactor * 1.45 * (isBoss ? 1.25 : 1.0));
 
-    String spriteName = data?.spritePath ?? 'enemy_goblin.png';
+    String spriteName = data.spritePath;
     if (spriteName.isEmpty) spriteName = 'enemy_goblin.png';
 
     // Chargement asynchrone robuste (lit le cache si déjà chargé, ou charge depuis les assets sinon)
@@ -148,37 +126,6 @@ class EnemyCard extends PositionComponent
     scale = Vector2.all(game.scaleFactor * 1.45 * (isBoss ? 1.25 : 1.0));
   }
 
-  void rollIntent() {
-    _determineNextIntent();
-  }
-
-  void _determineNextIntent() {
-    if (data?.intents != null && data!.intents!.isNotEmpty) {
-      currentIntent = data!.intents![_intentStep];
-      _intentStep = (_intentStep + 1) % data!.intents!.length;
-    } else {
-      final random = Random();
-      final roll = random.nextInt(100);
-
-      if (roll < 60) {
-        // 60% Attack
-        currentIntent = EnemyIntent(
-          type: IntentType.attack,
-          value: data?.baseDamage ?? _startingAttaque,
-        );
-      } else if (roll < 85) {
-        // 25% Defend
-        currentIntent = EnemyIntent(
-          type: IntentType.defend,
-          value: 5 + random.nextInt(6),
-        );
-      } else {
-        // 15% Buff
-        currentIntent = EnemyIntent(type: IntentType.buff, value: 2);
-      }
-    }
-  }
-
   void _refreshBadges() {
     hpBadge.updateHpValues(
       '${stats.currentPv}/${stats.maxPv}',
@@ -191,17 +138,20 @@ class EnemyCard extends PositionComponent
     );
   }
 
-  void updateStats(EntityStats newStats) {
-    if (newStats.armure < stats.armure) {
+  void updateStats(EnemyInstance newInstance) {
+    final oldStats = stats;
+    final newStats = newInstance.stats;
+
+    if (newStats.armure < oldStats.armure) {
       _spawnFloatingText(
-        '-${stats.armure - newStats.armure}',
+        '-${oldStats.armure - newStats.armure}',
         Colors.blue,
         Vector2(size.x / 2, size.y - 20),
       );
     }
-    if (newStats.currentPv < stats.currentPv) {
+    if (newStats.currentPv < oldStats.currentPv) {
       _spawnFloatingText(
-        '-${stats.currentPv - newStats.currentPv}',
+        '-${oldStats.currentPv - newStats.currentPv}',
         Colors.red,
         Vector2(size.x / 2, size.y),
       );
@@ -209,17 +159,14 @@ class EnemyCard extends PositionComponent
       shakeAndFlashAnimation();
     }
 
-    stats = newStats;
+    instance = newInstance;
     _refreshBadges();
     buffIndicator.updateStatuses(newStats.statuses.where((s) => s.type == StatusType.buff).toList());
     debuffIndicator.updateStatuses(newStats.statuses.where((s) => s.type == StatusType.debuff).toList());
   }
 
   void shakeAndFlashAnimation() {
-    // TODO: Audio Hook - sfx_impact_heavy (Jouer un son d'impact lors de la réception de dégâts)
-
     // 1. Tremblement (Shake)
-    // On utilise un petit effet de va-et-vient aléatoire
     final rand = Random();
     for (int i = 0; i < 4; i++) {
       add(
@@ -233,8 +180,7 @@ class EnemyCard extends PositionComponent
       );
     }
 
-    // 2. Flash Blanc (via Opacity et ColorFilter ou simplement en changeant la couleur du sprite si possible)
-    // Ici on va utiliser un ColorEffect s'il est disponible, sinon on joue sur l'opacité
+    // 2. Flash Blanc
     add(
       ColorEffect(
         Colors.white,
@@ -242,49 +188,6 @@ class EnemyCard extends PositionComponent
         opacityTo: 0.8,
       ),
     );
-  }
-
-  /// Applique les effets de début de tour de l'ennemi
-  void startTurn() {
-    int poisonDamage = 0;
-    int strengthGain = 0;
-    int armorGain = 0;
-
-    for (var status in stats.statuses) {
-      if (status.id == 'poison') {
-        poisonDamage += status.value;
-      } else if (status.id == 'strength_regen') {
-        strengthGain += status.value;
-      } else if (status.id == 'armor_regen') {
-        armorGain += status.value;
-      }
-    }
-
-    EntityStats updatedStats = stats;
-    if (poisonDamage > 0) {
-      updatedStats = updatedStats.takeDamage(poisonDamage);
-    }
-    if (strengthGain > 0) {
-      updatedStats = updatedStats.addStatus(
-        StatusEffect(
-          id: 'strength',
-          name: 'Attaque',
-          type: StatusType.buff,
-          value: strengthGain,
-          duration: 1,
-        ),
-      );
-    }
-    if (armorGain > 0) {
-      updatedStats = updatedStats.copyWith(
-        armure: updatedStats.armure + armorGain,
-      );
-    }
-
-    updateStats(updatedStats);
-
-    // Décrémenter les statuts pour le tour suivant
-    updateStats(stats.tickStatuses());
   }
 
   void _spawnFloatingText(String text, Color color, Vector2 pos) {
@@ -320,15 +223,10 @@ class EnemyCard extends PositionComponent
       borderInfo.paint.color = Colors.cyanAccent;
       borderInfo.paint.strokeWidth = 3;
       
-      // Animation de pulsation de l'opacité du halo
       _glowAnimation = SequenceEffect([
         OpacityEffect.to(0.3, EffectController(duration: 0.8, curve: Curves.easeInOut)),
         OpacityEffect.to(1.0, EffectController(duration: 0.8, curve: Curves.easeInOut)),
       ], onComplete: () {}, infinite: true);
-      
-      // Note: On ne peut pas appliquer OpacityEffect directement sur un Paint dans render facilement sans ruse.
-      // On va utiliser un timer ou simplement laisser le render utiliser une valeur sinusoïdale basée sur le temps de jeu
-      // pour une pulsation fluide du contraste/transparence.
     } else {
       borderInfo.paint.color = isSelected ? Colors.amber : Colors.white;
       borderInfo.paint.strokeWidth = isSelected ? 4 : 2;
@@ -344,21 +242,19 @@ class EnemyCard extends PositionComponent
     super.update(dt);
     if (_isHighlighted) {
       _totalTime += dt;
-      // Oscillation entre 0.2 et 0.8 pour l'opacité du halo
       _glowOpacity = 0.5 + 0.3 * sin(_totalTime * 4);
     }
   }
 
   @override
   void render(Canvas canvas) {
-    // Si surbrillance active, on dessine un halo pulsant
     if (_isHighlighted) {
       final rect = size.toRect();
       final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(0));
       final glowPaint = Paint()
         ..color = Colors.cyanAccent.withValues(alpha: _glowOpacity)
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 6 + (2 * _glowOpacity) // Légère variation d'épaisseur pour le "poids" visuel
+        ..strokeWidth = 6 + (2 * _glowOpacity)
         ..maskFilter = MaskFilter.blur(BlurStyle.outer, 8 + (4 * _glowOpacity));
       canvas.drawRRect(rrect, glowPaint);
     }
@@ -381,10 +277,9 @@ class EnemyCard extends PositionComponent
   }
 
   void buffAnimation(IntentType type) {
-    // Faire popper l'icône
     final effectIcon = EffectIcon(
       iconType: type == IntentType.defend ? 'defend' : 'buff',
-      position: Vector2(size.x / 2, 0), // Milieu haut
+      position: Vector2(size.x / 2, 0),
     );
     add(effectIcon);
   }

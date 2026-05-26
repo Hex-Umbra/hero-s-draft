@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/data/models/entity_stats.dart';
 import 'package:roguelike_card_game/models/status_effect.dart';
-import 'package:roguelike_card_game/game/components/entities/enemy_card.dart';
+import 'package:roguelike_card_game/models/enemy_instance.dart';
 import 'package:roguelike_card_game/models/data/enemy_data.dart';
 import 'package:roguelike_card_game/models/enemy_intent.dart';
 
@@ -95,8 +95,8 @@ void main() {
       expect(stats.effectiveAttaque, 8); // 5 base + 3 strength
     });
 
-    test('EnemyCard effectiveIntent scales attack with current stats', () {
-      final enemy = EnemyCard(
+    test('EnemyInstance effectiveIntent scales attack with current stats', () {
+      var enemy = EnemyInstance(
         stats: const EntityStats(
           maxPv: 20,
           currentPv: 20,
@@ -110,47 +110,57 @@ void main() {
           baseDamage: 8,
           spritePath: '',
         ),
-        onTapEnemy: (_) {},
       );
 
       // Raw intent is attack with value 8
-      enemy.currentIntent = EnemyIntent(type: IntentType.attack, value: 8);
+      enemy = enemy.copyWith(currentIntent: EnemyIntent(type: IntentType.attack, value: 8));
       expect(enemy.effectiveIntent?.value, 8);
 
-      // Boost stats.attaque to 10 (+2 buff)
-      enemy.stats = enemy.stats.copyWith(attaque: 10);
-      expect(enemy.effectiveIntent?.value, 10); // Should be 10!
+      // 1. Permanent/spawn-time scaling: Boost base stats.attaque to 10 (e.g. from level)
+      var scaledEnemy = enemy.copyWith(stats: enemy.stats.copyWith(attaque: 10));
+      expect(scaledEnemy.effectiveIntent?.value, 10); // 8 * 1.25 = 10
 
-      // Raw intent with value 12 (special attack) when stats.attaque is 10
-      enemy.currentIntent = EnemyIntent(type: IntentType.attack, value: 12);
-      expect(enemy.effectiveIntent?.value, 14); // 12 + (10 - 8) = 14!
+      // Raw intent with value 12 (special attack) when base stats.attaque is scaled to 10
+      scaledEnemy = scaledEnemy.copyWith(currentIntent: EnemyIntent(type: IntentType.attack, value: 12));
+      expect(scaledEnemy.effectiveIntent?.value, 15); // 12 * 1.25 = 15
 
-      // Debuff stats.attaque to 6
-      enemy.stats = enemy.stats.copyWith(attaque: 6);
-      expect(enemy.effectiveIntent?.value, 10); // 12 + (6 - 8) = 10 (which is >= stats.attaque 6)
-
-      // Test with status effect 'strength' buff of +3
-      final strengthBuff = StatusEffect(
-        id: 'strength',
-        name: 'Force',
-        type: StatusType.buff,
-        value: 3,
-        duration: 2,
+      // 2. In-battle strength status: Keep base stats.attaque at 8, add a +2 strength buff
+      var buffedEnemy = enemy.copyWith(
+        stats: enemy.stats.addStatus(const StatusEffect(
+          id: 'strength',
+          name: 'Force',
+          type: StatusType.buff,
+          value: 2,
+          duration: 99,
+        )),
       );
-      enemy.stats = enemy.stats.addStatus(strengthBuff);
+      expect(buffedEnemy.stats.effectiveAttaque, 10);
       
-      // Now base stats.attaque is 6, but effectiveAttaque is 9.
-      // The attack intent value is 12 (special attack).
-      // Base damage in data is 8.
-      // bonus = stats.effectiveAttaque - baseDamage = 9 - 8 = 1.
-      // value = max(stats.effectiveAttaque, intent.value + bonus) = max(9, 12 + 1) = 13.
-      expect(enemy.effectiveIntent?.value, 13);
+      // Raw intent with value 12 (special attack) with +2 strength
+      buffedEnemy = buffedEnemy.copyWith(currentIntent: EnemyIntent(type: IntentType.attack, value: 12));
+      expect(buffedEnemy.effectiveIntent?.value, 14); // 12 + 2 = 14
+
+      // 3. In-battle strength debuff: Keep base stats.attaque at 8, add a -2 strength debuff
+      var debuffedEnemy = enemy.copyWith(
+        stats: enemy.stats.addStatus(const StatusEffect(
+          id: 'strength',
+          name: 'Force',
+          type: StatusType.buff,
+          value: -2,
+          duration: 99,
+        )),
+      );
+      expect(debuffedEnemy.stats.effectiveAttaque, 6);
+      
+      // Raw intent with value 12 (special attack) with -2 strength
+      debuffedEnemy = debuffedEnemy.copyWith(currentIntent: EnemyIntent(type: IntentType.attack, value: 12));
+      expect(debuffedEnemy.effectiveIntent?.value, 10); // 12 - 2 = 10
     });
 
-    test('EnemyCard effectiveIntent scales attack proportionally for Elites with buffs', () {
+    test('EnemyInstance effectiveIntent scales attack proportionally for Elites with buffs', () {
       // Simulate an elite enemy spawned with a multiplier of 2.25
       // JSON baseDamage = 8. Spawns with stats.attaque = 18.
-      final eliteEnemy = EnemyCard(
+      var eliteEnemy = EnemyInstance(
         stats: const EntityStats(
           maxPv: 50,
           currentPv: 50,
@@ -164,35 +174,36 @@ void main() {
           baseDamage: 8,
           spritePath: '',
         ),
-        onTapEnemy: (_) {},
       );
 
       // 1st action: Attack 8 in JSON should scale to 18
-      eliteEnemy.currentIntent = EnemyIntent(type: IntentType.attack, value: 8);
+      eliteEnemy = eliteEnemy.copyWith(currentIntent: EnemyIntent(type: IntentType.attack, value: 8));
       expect(eliteEnemy.effectiveIntent?.value, 18);
 
       // 2nd action: Buff 2 in JSON is executed, applying 2 Strength status
-      eliteEnemy.stats = eliteEnemy.stats.addStatus(
-        const StatusEffect(
-          id: 'strength',
-          name: 'Force',
-          type: StatusType.buff,
-          value: 2,
-          duration: 99,
+      eliteEnemy = eliteEnemy.copyWith(
+        stats: eliteEnemy.stats.addStatus(
+          const StatusEffect(
+            id: 'strength',
+            name: 'Force',
+            type: StatusType.buff,
+            value: 2,
+            duration: 99,
+          ),
         ),
       );
       expect(eliteEnemy.stats.effectiveAttaque, 20);
 
       // 3rd action: Attack 8 in JSON should now scale to 18 + 2 (inBattleBonus) = 20
-      eliteEnemy.currentIntent = EnemyIntent(type: IntentType.attack, value: 8);
+      eliteEnemy = eliteEnemy.copyWith(currentIntent: EnemyIntent(type: IntentType.attack, value: 8));
       expect(eliteEnemy.effectiveIntent?.value, 20);
 
       // A stronger attack: Attack 10 in JSON should scale to 23 (10 * 2.25) + 2 (inBattleBonus) = 25
-      eliteEnemy.currentIntent = EnemyIntent(type: IntentType.attack, value: 10);
+      eliteEnemy = eliteEnemy.copyWith(currentIntent: EnemyIntent(type: IntentType.attack, value: 10));
       expect(eliteEnemy.effectiveIntent?.value, 25);
 
       // An even stronger attack: Attack 12 in JSON should scale to 27 (12 * 2.25) + 2 (inBattleBonus) = 29
-      eliteEnemy.currentIntent = EnemyIntent(type: IntentType.attack, value: 12);
+      eliteEnemy = eliteEnemy.copyWith(currentIntent: EnemyIntent(type: IntentType.attack, value: 12));
       expect(eliteEnemy.effectiveIntent?.value, 29);
     });
   });
