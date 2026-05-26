@@ -11,6 +11,24 @@ class EnemyInstance {
   final int intentStep;
   final bool isBoss;
 
+  EnemyIntent? get effectiveIntent {
+    final intent = currentIntent;
+    if (intent == null) return null;
+    if (intent.type == IntentType.attack) {
+      final double spawnMultiplier =
+          data.baseDamage > 0 ? stats.attaque / data.baseDamage : 1.0;
+      final int scaledValue = (intent.value * spawnMultiplier).round();
+      final int inBattleBonus = stats.effectiveAttaque - stats.attaque;
+      return EnemyIntent(
+        type: intent.type,
+        value: (stats.effectiveAttaque > (scaledValue + inBattleBonus))
+            ? stats.effectiveAttaque
+            : (scaledValue + inBattleBonus),
+      );
+    }
+    return intent;
+  }
+
   EnemyInstance({
     String? id,
     required this.data,
