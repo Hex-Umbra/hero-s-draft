@@ -119,6 +119,28 @@
         - **Validation Statique Complète** :
             - Lancement de `dart analyze` validant l'absence d'avertissements ou d'erreurs sur l'intégralité du projet.
 
+## Phase 2 : Étape 2 - Découpage de l'Écran de Combat (game_screen.dart)
+
+- refactor: Extraction des composants HUD et dialogs de `game_screen.dart`
+    - Découpage complet du fichier monolithique `game_screen.dart` (passant de plus de 1350 lignes à seulement 820 lignes), améliorant considérablement l'organisation visuelle du combat et la testabilité des widgets du HUD.
+        - **Création du Widget `PlayerHealthBar` (`lib/ui/widgets/hud/player_health_bar.dart`)** :
+            - Extraction de la barre de PV et d'armure superposée avec liseré cyan progressif, ainsi que des jauges de dégâts d'attaque de base sous forme d'icônes à gradients premiums.
+        - **Création du Widget `ManaIndicator` (`lib/ui/widgets/hud/mana_indicator.dart`)** :
+            - Encapsulation autonome de la ligne de cristaux de mana diamantés avec ombrages de lueurs néon cyan.
+        - **Création du Widget `StatusEffectsPanel` (`lib/ui/widgets/hud/status_effects_panel.dart`)** :
+            - Extraction du panneau d'affichage des modificateurs de statut actifs du héros (Poison, Force, Métallisation) avec leurs icônes représentatives et indicateurs de tours restants.
+        - **Création du Widget `EnemyIntentsPanel` (`lib/ui/widgets/hud/enemy_intents_panel.dart`)** :
+            - Déplacement de la liste d'intentions ennemies et de l'état des PV des monstres (attaques lourdes, blocages, buffs, malédictions) dans un sous-widget propre avec bordures adaptées au type d'intention.
+        - **Création du Dialog `PauseDialog` (`lib/ui/widgets/hud/dialogs/pause_dialog.dart`)** :
+            - Extraction du menu de pause interactif gérant de façon générique les actions de reprise et de retour au menu principal.
+        - **Épuration de `GameScreen` (`lib/ui/screens/game_screen.dart`)** :
+            - Intégration nominale des nouveaux widgets HUD Flutter réutilisables et nettoyage de plus de 500 lignes de code graphique complexe.
+        - **Création des Tests de Widgets Dédiés** :
+            - Écriture de tests dans `test/widget/player_health_bar_test.dart` et `test/widget/mana_indicator_test.dart` vérifiant la justesse des rendus visuels sous des états logiques spécifiques.
+        - **Validation Statique & Exécution des Tests** :
+            - Lancement de `dart analyze` (aucun problème détecté) et succès complet de l'ensemble de la suite de tests (`All tests passed!`).
+
+
 
 
 
