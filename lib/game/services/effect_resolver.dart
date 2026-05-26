@@ -5,7 +5,6 @@ import '../../data/models/entity_stats.dart';
 import '../controllers/run_controller.dart';
 import '../controllers/deck_controller.dart';
 import '../controllers/combat_controller.dart';
-import '../components/entities/enemy_card.dart';
 
 class EffectResolver {
   /// Helper pour créer un StatusEffect à partir des données de la carte
@@ -64,8 +63,8 @@ class EffectResolver {
     }
   }
 
-  /// Vérifie si la carte peut être jouée (Nouvelle version découplée - Étape 3)
-  static bool canPlayCardState(
+  /// Vérifie si la carte peut être jouée
+  static bool canPlayCard(
     CardInstance card,
     RunState runState,
     String? selectedEnemyId,
@@ -82,24 +81,15 @@ class EffectResolver {
     return true;
   }
 
-  /// Vérifie si la carte peut être jouée (Ancienne version Flame pour compatibilité temporaire)
-  static bool canPlayCard(
-    CardInstance card,
-    RunState runState,
-    EnemyCard? selectedEnemy,
-  ) {
-    return canPlayCardState(card, runState, selectedEnemy != null ? 'temp_id' : null);
-  }
-
-  /// Résout les effets d'une carte (Nouvelle version découplée - Étape 3)
-  static bool resolveCardState(
+  /// Résout les effets d'une carte
+  static bool resolveCard(
     CardInstance card,
     RunController runController,
     DeckNotifier deckController,
     CombatController combatController,
     String? selectedEnemyId,
   ) {
-    if (!canPlayCardState(card, runController.currentState, selectedEnemyId)) {
+    if (!canPlayCard(card, runController.currentState, selectedEnemyId)) {
       return false;
     }
 
@@ -154,71 +144,6 @@ class EffectResolver {
               } else if (card.data.target == CardTarget.allEnemies) {
                 for (var enemy in combatController.currentState.enemies) {
                   combatController.updateEnemyStats(enemy.id, enemy.stats.addStatus(status));
-                }
-              } else if (card.data.target == CardTarget.self) {
-                runController.addStatus(status);
-              }
-            }
-          }
-          break;
-      }
-    }
-    return true;
-  }
-
-  /// Résout les effets d'une carte (Ancienne version Flame pour compatibilité temporaire)
-  static bool resolveCard(
-    CardInstance card,
-    RunController runController,
-    DeckNotifier deckController,
-    List<EnemyCard> enemyCards,
-    EnemyCard? selectedEnemy,
-  ) {
-    if (!canPlayCard(card, runController.currentState, selectedEnemy)) {
-      return false;
-    }
-
-    runController.consumeResource(mana: card.currentCost);
-
-    for (var effect in card.data.effects) {
-      final int baseValue = effect.value;
-      final int scaledValue = (baseValue * (1 + (card.level - 1) * 0.5)).round();
-
-      switch (effect.type) {
-        case 'damage':
-          if (card.data.target == CardTarget.singleEnemy && selectedEnemy != null) {
-            int dmg = _calculateDamage(scaledValue, runController.currentState.heroStats);
-            selectedEnemy.updateStats(selectedEnemy.instance.copyWith(stats: selectedEnemy.stats.takeDamage(dmg)));
-          } else if (card.data.target == CardTarget.allEnemies) {
-            int dmg = _calculateDamage(scaledValue, runController.currentState.heroStats);
-            for (var enemy in enemyCards) {
-              enemy.updateStats(enemy.instance.copyWith(stats: enemy.stats.takeDamage(dmg)));
-            }
-          }
-          break;
-        case 'heal':
-          runController.heal(scaledValue);
-          break;
-        case 'armor':
-          final currentStats = runController.currentState.heroStats;
-          runController.setHeroStats(armure: currentStats.armure + scaledValue);
-          break;
-        case 'gain_mana':
-          final currentMana = runController.currentState.heroStats.currentMana;
-          runController.setHeroStats(currentMana: currentMana + scaledValue);
-          break;
-        case 'draw':
-          deckController.drawCards(scaledValue);
-          break;
-        case 'apply_status':
-          if (effect.statusId != null) {
-            final status = _createStatus(effect.statusId!, scaledValue, effect.duration ?? 1);
-            if (status != null) {
-              if (card.data.target == CardTarget.singleEnemy && selectedEnemy != null) {
-                selectedEnemy.updateStats(selectedEnemy.instance.copyWith(stats: selectedEnemy.stats.addStatus(status)));
-              } else if (card.data.target == CardTarget.allEnemies) {
-                for (var enemy in enemyCards) {
-                  enemy.updateStats(enemy.instance.copyWith(stats: enemy.stats.addStatus(status)));
                 }
               } else if (card.data.target == CardTarget.self) {
                 runController.addStatus(status);

@@ -71,5 +71,26 @@
         - **Mise à Jour de la Suite de Tests Unitaires (`test/unit/effect_resolver_test.dart`)** :
             - Migration complète des tests de scaling d'intentions et d'effets de statuts pour utiliser directement le modèle logique pur `EnemyInstance` au lieu du composant visuel Flame `EnemyCard`, augmentant la robustesse de validation hors-moteur.
 
+## Phase 99 - Finalisation, Nettoyage & Suite de Tests du CombatController (Refactoring - Étape 5)
+
+- feat: Déploiement de tests unitaires purs pour valider le CombatController en isolation et nettoyage complet
+    - Finalisation de la phase 1 du refactoring par l'écriture d'une suite de tests rigoureuse et le nettoyage de toutes les fonctions transitoires de compatibilité.
+        - **Élimination définitive des fonctions héritées dans `EffectResolver` (`lib/game/services/effect_resolver.dart`)** :
+            - Suppression définitive des versions obsolètes dépendantes de Flame de `canPlayCard(...)` et `resolveCard(...)`.
+            - Renommage de `canPlayCardState` et `resolveCardState` en `canPlayCard` et `resolveCard` nominaux.
+            - Adaptation correspondante des appels dans `lib/game/controllers/combat_controller.dart` et `lib/ui/screens/game_screen.dart`.
+        - **Création du Fichier de Tests Unitaires Dédié `test/unit/combat_controller_test.dart`** :
+            - Conception de tests unitaires purement logiques, 100% déterministes, en court-circuitant le générateur aléatoire `EncounterSystem` via l'injection directe d'états `CombatState` mockés.
+            - Scénarios de tests implémentés et validés :
+                - `initializeCombat` : Validation du comportement nominal d'initialisation, des calculs de multiplicateurs de PV et d'attaque pour les nœuds Standards, Élites (x1.5) et Boss (x3.0), ainsi que le tirage de la première intention de chaque ennemi.
+                - `selectEnemy` : Validation du ciblage actif et du nettoyage lors du ciblage d'un ennemi inexistant/nul.
+                - `resolveEnemyIntent` : Validation de l'application correcte des intentions des ennemis (dégâts infligés au PV du héros dans `RunController`, gain d'armure propre).
+                - `startEnemyTurn` : Validation de l'évaluation globale et simultanée des effets récurrents de début de tour de tous les ennemis (ex: dégâts autonomes de Poison sur les PV de l'ennemi, réduction de durée des statuts actifs) et du nettoyage immédiat des monstres succombant au Poison.
+                - `applyPlayerCardPlay` : Simulation complète de l'application d'une carte d'attaque simple (ex: Strike) par le joueur, validation de la consommation de Mana, de la prise en compte du bonus de Force du héros (`strength`), de la mise à jour des statistiques de vie de l'ennemi ciblé, et du déclenchement automatique des drapeaux de fin de combat (`isCombatEnded`, `isVictory`) lorsque tous les ennemis ont trépassé.
+        - **Robustesse et Stabilité** :
+            - Validation unitaire totale hors-moteur, garantissant la fiabilité des calculs de combat.
+            - Tous les tests de l'application (unitaires et widgets) compilent et passent avec succès.
+
+
 
 

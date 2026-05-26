@@ -246,7 +246,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         final combatController = ref.read(combatProvider.notifier);
         final previousMana = runController.currentState.heroStats.currentMana;
 
-        if (!EffectResolver.canPlayCardState(
+        if (!EffectResolver.canPlayCard(
           card,
           runController.currentState,
           target?.id,

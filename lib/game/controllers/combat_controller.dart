@@ -97,7 +97,7 @@ class CombatController extends StateNotifier<CombatState> {
     DeckNotifier deckController,
   ) {
     // 1. Résolution des effets
-    final success = EffectResolver.resolveCardState(
+    final success = EffectResolver.resolveCard(
       card,
       runController,
       deckController,
