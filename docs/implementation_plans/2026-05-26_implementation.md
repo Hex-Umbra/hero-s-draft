@@ -174,3 +174,22 @@
             - Lancement de `dart analyze` (100% propre, aucune erreur ou avertissement).
             - Succès total de l'intégralité de la suite de tests Flutter (`All tests passed!`).
 
+## Phase 4 : Étape 1 - Remplissage des Fichiers de Ressources Localisées (ARB)
+
+- feat: Centralisation complète des chaînes de caractères de l'UI et du HUD dans les fichiers ARB
+    - Ajout exhaustif de toutes les clés de traduction requises pour l'internationalisation complète dans `lib/l10n/app_en.arb` et `lib/l10n/app_fr.arb`.
+        - **Ajouts pour la Carte du Monde (`MapScreen`)** :
+            - Clés de navigation et d'interface : `myDeck`, `stats`, `relics`, `chances`, `goldCount`.
+            - Clés des dialogues : `heroStatsTitle`, `classPassive`, `relicInventory`, `emptyInventory`, `luckPercentageTitle`, `currentLuck` (avec placeholder numérique).
+            - Légendes complètes : `legendTitle`, `legendCombat`, `legendElite`, `legendShop`, `legendRest`, `legendEvent`, `legendBoss`.
+            - Infobulles explicatives pour tous les nœuds de la carte : de `tooltipCombatTitle` / `Desc` jusqu'à `tooltipBossTitle` / `Desc`.
+        - **Ajouts pour l'Écran de Combat (`GameScreen` et HUD)** :
+            - Informations d'état : `actLevel` (avec placeholders pour l'acte et le niveau), `playerEffects`, `enemyIntents`, `noStatusActive`, `waitingIntents`, `manaWarning`, `turnCount` (avec placeholder).
+            - Options de pause : `pauseTitle`, `backToMainMenu`.
+        - **Ajouts pour les Éléments Graphiques Flame** :
+            - Déclencheurs de reliques : de `relicTriggerRun` à `relicTriggerEnemyKilled`.
+            - Raretés unifiées : de `rarityCommon` à `rarityLegendary`.
+            - Descriptions et titres des tooltips d'attributs primaires : PV, Armure, Force/Attaque et Mana (`tooltipHpTitle`/`Desc`, etc.).
+    - **Validation et Régénération** :
+        - Exécution réussie de `flutter gen-l10n` pour régénérer la classe fortement typée `AppLocalizations`.
+        - Validation de la conformité statique globale avec `flutter analyze` : résultat 100% propre, aucune erreur ou avertissement de lint.

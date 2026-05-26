@@ -99,4 +99,192 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nextAction => 'Next action';
+
+  @override
+  String get myDeck => 'My Deck';
+
+  @override
+  String get stats => 'Stats';
+
+  @override
+  String get relics => 'Relics';
+
+  @override
+  String get chances => 'Chances';
+
+  @override
+  String goldCount(int count) {
+    return 'Gold: $count';
+  }
+
+  @override
+  String get heroStatsTitle => 'Hero Statistics';
+
+  @override
+  String get classPassive => 'Class Passive';
+
+  @override
+  String get relicInventory => 'Relic Inventory';
+
+  @override
+  String get emptyInventory => 'Your inventory is empty';
+
+  @override
+  String get luckPercentageTitle => 'Rarity Loot Rates';
+
+  @override
+  String currentLuck(int luck) {
+    return 'Your Luck: $luck';
+  }
+
+  @override
+  String get legendTitle => 'LEGEND';
+
+  @override
+  String get legendCombat => 'Normal Combat';
+
+  @override
+  String get legendElite => 'Elite Combat';
+
+  @override
+  String get legendShop => 'Merchant Shop';
+
+  @override
+  String get legendRest => 'Rest Camp';
+
+  @override
+  String get legendEvent => 'Unknown Event';
+
+  @override
+  String get legendBoss => 'Boss Combat';
+
+  @override
+  String get tooltipCombatTitle => 'Normal Combat';
+
+  @override
+  String get tooltipCombatDesc =>
+      'Face a standard monster to earn cards and gold.';
+
+  @override
+  String get tooltipEliteTitle => 'Elite Combat';
+
+  @override
+  String get tooltipEliteDesc =>
+      'A much tougher fight, but guarantees a relic reward.';
+
+  @override
+  String get tooltipShopTitle => 'Merchant Shop';
+
+  @override
+  String get tooltipShopDesc =>
+      'Spend your hard-earned gold to buy cards and potions.';
+
+  @override
+  String get tooltipRestTitle => 'Rest Camp';
+
+  @override
+  String get tooltipRestDesc => 'Rest to recover 30% of your max HP.';
+
+  @override
+  String get tooltipEventTitle => 'Unknown Event';
+
+  @override
+  String get tooltipEventDesc =>
+      'Who knows what surprises or dangers await here?';
+
+  @override
+  String get tooltipBossTitle => 'Boss Combat';
+
+  @override
+  String get tooltipBossDesc =>
+      'Defeat the guardian of this floor to complete the act!';
+
+  @override
+  String actLevel(int act, int level) {
+    return 'Act $act - Level: $level';
+  }
+
+  @override
+  String get playerEffects => 'Player Effects';
+
+  @override
+  String get enemyIntents => 'Enemy Intentions';
+
+  @override
+  String get noStatusActive => 'No active effect';
+
+  @override
+  String get waitingIntents => 'Waiting...';
+
+  @override
+  String get manaWarning => 'No mana left.\nEnd your turn?';
+
+  @override
+  String turnCount(int count) {
+    return 'Turn $count';
+  }
+
+  @override
+  String get pauseTitle => 'PAUSE';
+
+  @override
+  String get backToMainMenu => 'Back to Main Menu';
+
+  @override
+  String get relicTriggerRun => 'Run Start';
+
+  @override
+  String get relicTriggerCombat => 'Combat Start';
+
+  @override
+  String get relicTriggerTurnStart => 'Turn Start';
+
+  @override
+  String get relicTriggerTurnEnd => 'Turn End';
+
+  @override
+  String get relicTriggerCardPlayed => 'Card Played';
+
+  @override
+  String get relicTriggerEnemyKilled => 'Enemy Killed';
+
+  @override
+  String get rarityCommon => 'Common';
+
+  @override
+  String get rarityUncommon => 'Uncommon';
+
+  @override
+  String get rarityRare => 'Rare';
+
+  @override
+  String get rarityEpic => 'Epic';
+
+  @override
+  String get rarityLegendary => 'Legendary';
+
+  @override
+  String get tooltipHpTitle => 'Hit Points (HP)';
+
+  @override
+  String get tooltipHpDesc => 'Your health pool. If it reaches 0, you die.';
+
+  @override
+  String get tooltipArmorTitle => 'Block / Armor';
+
+  @override
+  String get tooltipArmorDesc =>
+      'Absorbs next attacks\' damage. Removed at turn start.';
+
+  @override
+  String get tooltipAttackTitle => 'Attack Damage Boost';
+
+  @override
+  String get tooltipAttackDesc => 'Increases the damage of your attack cards.';
+
+  @override
+  String get tooltipManaTitle => 'Mana';
+
+  @override
+  String get tooltipManaDesc => 'Energy resource used to play cards each turn.';
 }

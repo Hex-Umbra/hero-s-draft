@@ -49,5 +49,91 @@
   "combatReward": "COMBAT REWARD",
   "chooseUpgrade": "Choose an upgrade for your hero",
   "select": "Select",
-  "nextAction": "Next action"
+  "nextAction": "Next action",
+
+  "myDeck": "My Deck",
+  "stats": "Stats",
+  "relics": "Relics",
+  "chances": "Chances",
+  "goldCount": "Gold: {count}",
+  "@goldCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "heroStatsTitle": "Hero Statistics",
+  "classPassive": "Class Passive",
+  "relicInventory": "Relic Inventory",
+  "emptyInventory": "Your inventory is empty",
+  "luckPercentageTitle": "Rarity Loot Rates",
+  "currentLuck": "Your Luck: {luck}",
+  "@currentLuck": {
+    "placeholders": {
+      "luck": { "type": "int" }
+    }
+  },
+
+  "legendTitle": "LEGEND",
+  "legendCombat": "Normal Combat",
+  "legendElite": "Elite Combat",
+  "legendShop": "Merchant Shop",
+  "legendRest": "Rest Camp",
+  "legendEvent": "Unknown Event",
+  "legendBoss": "Boss Combat",
+
+  "tooltipCombatTitle": "Normal Combat",
+  "tooltipCombatDesc": "Face a standard monster to earn cards and gold.",
+  "tooltipEliteTitle": "Elite Combat",
+  "tooltipEliteDesc": "A much tougher fight, but guarantees a relic reward.",
+  "tooltipShopTitle": "Merchant Shop",
+  "tooltipShopDesc": "Spend your hard-earned gold to buy cards and potions.",
+  "tooltipRestTitle": "Rest Camp",
+  "tooltipRestDesc": "Rest to recover 30% of your max HP.",
+  "tooltipEventTitle": "Unknown Event",
+  "tooltipEventDesc": "Who knows what surprises or dangers await here?",
+  "tooltipBossTitle": "Boss Combat",
+  "tooltipBossDesc": "Defeat the guardian of this floor to complete the act!",
+
+  "actLevel": "Act {act} - Level: {level}",
+  "@actLevel": {
+    "placeholders": {
+      "act": { "type": "int" },
+      "level": { "type": "int" }
+    }
+  },
+  "playerEffects": "Player Effects",
+  "enemyIntents": "Enemy Intentions",
+  "noStatusActive": "No active effect",
+  "waitingIntents": "Waiting...",
+  "manaWarning": "No mana left.\nEnd your turn?",
+  "turnCount": "Turn {count}",
+  "@turnCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "pauseTitle": "PAUSE",
+  "backToMainMenu": "Back to Main Menu",
+
+  "relicTriggerRun": "Run Start",
+  "relicTriggerCombat": "Combat Start",
+  "relicTriggerTurnStart": "Turn Start",
+  "relicTriggerTurnEnd": "Turn End",
+  "relicTriggerCardPlayed": "Card Played",
+  "relicTriggerEnemyKilled": "Enemy Killed",
+
+  "rarityCommon": "Common",
+  "rarityUncommon": "Uncommon",
+  "rarityRare": "Rare",
+  "rarityEpic": "Epic",
+  "rarityLegendary": "Legendary",
+
+  "tooltipHpTitle": "Hit Points (HP)",
+  "tooltipHpDesc": "Your health pool. If it reaches 0, you die.",
+  "tooltipArmorTitle": "Block / Armor",
+  "tooltipArmorDesc": "Absorbs next attacks' damage. Removed at turn start.",
+  "tooltipAttackTitle": "Attack Damage Boost",
+  "tooltipAttackDesc": "Increases the damage of your attack cards.",
+  "tooltipManaTitle": "Mana",
+  "tooltipManaDesc": "Energy resource used to play cards each turn."
 }

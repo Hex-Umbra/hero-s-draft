@@ -265,6 +265,354 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Next action'**
   String get nextAction;
+
+  /// No description provided for @myDeck.
+  ///
+  /// In en, this message translates to:
+  /// **'My Deck'**
+  String get myDeck;
+
+  /// No description provided for @stats.
+  ///
+  /// In en, this message translates to:
+  /// **'Stats'**
+  String get stats;
+
+  /// No description provided for @relics.
+  ///
+  /// In en, this message translates to:
+  /// **'Relics'**
+  String get relics;
+
+  /// No description provided for @chances.
+  ///
+  /// In en, this message translates to:
+  /// **'Chances'**
+  String get chances;
+
+  /// No description provided for @goldCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Gold: {count}'**
+  String goldCount(int count);
+
+  /// No description provided for @heroStatsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hero Statistics'**
+  String get heroStatsTitle;
+
+  /// No description provided for @classPassive.
+  ///
+  /// In en, this message translates to:
+  /// **'Class Passive'**
+  String get classPassive;
+
+  /// No description provided for @relicInventory.
+  ///
+  /// In en, this message translates to:
+  /// **'Relic Inventory'**
+  String get relicInventory;
+
+  /// No description provided for @emptyInventory.
+  ///
+  /// In en, this message translates to:
+  /// **'Your inventory is empty'**
+  String get emptyInventory;
+
+  /// No description provided for @luckPercentageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rarity Loot Rates'**
+  String get luckPercentageTitle;
+
+  /// No description provided for @currentLuck.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Luck: {luck}'**
+  String currentLuck(int luck);
+
+  /// No description provided for @legendTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'LEGEND'**
+  String get legendTitle;
+
+  /// No description provided for @legendCombat.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal Combat'**
+  String get legendCombat;
+
+  /// No description provided for @legendElite.
+  ///
+  /// In en, this message translates to:
+  /// **'Elite Combat'**
+  String get legendElite;
+
+  /// No description provided for @legendShop.
+  ///
+  /// In en, this message translates to:
+  /// **'Merchant Shop'**
+  String get legendShop;
+
+  /// No description provided for @legendRest.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest Camp'**
+  String get legendRest;
+
+  /// No description provided for @legendEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown Event'**
+  String get legendEvent;
+
+  /// No description provided for @legendBoss.
+  ///
+  /// In en, this message translates to:
+  /// **'Boss Combat'**
+  String get legendBoss;
+
+  /// No description provided for @tooltipCombatTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal Combat'**
+  String get tooltipCombatTitle;
+
+  /// No description provided for @tooltipCombatDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Face a standard monster to earn cards and gold.'**
+  String get tooltipCombatDesc;
+
+  /// No description provided for @tooltipEliteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Elite Combat'**
+  String get tooltipEliteTitle;
+
+  /// No description provided for @tooltipEliteDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A much tougher fight, but guarantees a relic reward.'**
+  String get tooltipEliteDesc;
+
+  /// No description provided for @tooltipShopTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Merchant Shop'**
+  String get tooltipShopTitle;
+
+  /// No description provided for @tooltipShopDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Spend your hard-earned gold to buy cards and potions.'**
+  String get tooltipShopDesc;
+
+  /// No description provided for @tooltipRestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest Camp'**
+  String get tooltipRestTitle;
+
+  /// No description provided for @tooltipRestDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest to recover 30% of your max HP.'**
+  String get tooltipRestDesc;
+
+  /// No description provided for @tooltipEventTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown Event'**
+  String get tooltipEventTitle;
+
+  /// No description provided for @tooltipEventDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Who knows what surprises or dangers await here?'**
+  String get tooltipEventDesc;
+
+  /// No description provided for @tooltipBossTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Boss Combat'**
+  String get tooltipBossTitle;
+
+  /// No description provided for @tooltipBossDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Defeat the guardian of this floor to complete the act!'**
+  String get tooltipBossDesc;
+
+  /// No description provided for @actLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Act {act} - Level: {level}'**
+  String actLevel(int act, int level);
+
+  /// No description provided for @playerEffects.
+  ///
+  /// In en, this message translates to:
+  /// **'Player Effects'**
+  String get playerEffects;
+
+  /// No description provided for @enemyIntents.
+  ///
+  /// In en, this message translates to:
+  /// **'Enemy Intentions'**
+  String get enemyIntents;
+
+  /// No description provided for @noStatusActive.
+  ///
+  /// In en, this message translates to:
+  /// **'No active effect'**
+  String get noStatusActive;
+
+  /// No description provided for @waitingIntents.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting...'**
+  String get waitingIntents;
+
+  /// No description provided for @manaWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'No mana left.\nEnd your turn?'**
+  String get manaWarning;
+
+  /// No description provided for @turnCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn {count}'**
+  String turnCount(int count);
+
+  /// No description provided for @pauseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'PAUSE'**
+  String get pauseTitle;
+
+  /// No description provided for @backToMainMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to Main Menu'**
+  String get backToMainMenu;
+
+  /// No description provided for @relicTriggerRun.
+  ///
+  /// In en, this message translates to:
+  /// **'Run Start'**
+  String get relicTriggerRun;
+
+  /// No description provided for @relicTriggerCombat.
+  ///
+  /// In en, this message translates to:
+  /// **'Combat Start'**
+  String get relicTriggerCombat;
+
+  /// No description provided for @relicTriggerTurnStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn Start'**
+  String get relicTriggerTurnStart;
+
+  /// No description provided for @relicTriggerTurnEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn End'**
+  String get relicTriggerTurnEnd;
+
+  /// No description provided for @relicTriggerCardPlayed.
+  ///
+  /// In en, this message translates to:
+  /// **'Card Played'**
+  String get relicTriggerCardPlayed;
+
+  /// No description provided for @relicTriggerEnemyKilled.
+  ///
+  /// In en, this message translates to:
+  /// **'Enemy Killed'**
+  String get relicTriggerEnemyKilled;
+
+  /// No description provided for @rarityCommon.
+  ///
+  /// In en, this message translates to:
+  /// **'Common'**
+  String get rarityCommon;
+
+  /// No description provided for @rarityUncommon.
+  ///
+  /// In en, this message translates to:
+  /// **'Uncommon'**
+  String get rarityUncommon;
+
+  /// No description provided for @rarityRare.
+  ///
+  /// In en, this message translates to:
+  /// **'Rare'**
+  String get rarityRare;
+
+  /// No description provided for @rarityEpic.
+  ///
+  /// In en, this message translates to:
+  /// **'Epic'**
+  String get rarityEpic;
+
+  /// No description provided for @rarityLegendary.
+  ///
+  /// In en, this message translates to:
+  /// **'Legendary'**
+  String get rarityLegendary;
+
+  /// No description provided for @tooltipHpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hit Points (HP)'**
+  String get tooltipHpTitle;
+
+  /// No description provided for @tooltipHpDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Your health pool. If it reaches 0, you die.'**
+  String get tooltipHpDesc;
+
+  /// No description provided for @tooltipArmorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Block / Armor'**
+  String get tooltipArmorTitle;
+
+  /// No description provided for @tooltipArmorDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Absorbs next attacks\' damage. Removed at turn start.'**
+  String get tooltipArmorDesc;
+
+  /// No description provided for @tooltipAttackTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Attack Damage Boost'**
+  String get tooltipAttackTitle;
+
+  /// No description provided for @tooltipAttackDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Increases the damage of your attack cards.'**
+  String get tooltipAttackDesc;
+
+  /// No description provided for @tooltipManaTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mana'**
+  String get tooltipManaTitle;
+
+  /// No description provided for @tooltipManaDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Energy resource used to play cards each turn.'**
+  String get tooltipManaDesc;
 }
 
 class _AppLocalizationsDelegate
