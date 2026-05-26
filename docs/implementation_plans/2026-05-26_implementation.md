@@ -156,3 +156,21 @@
             - Remplacement de plus de 400 lignes de codes inline par l'importation propre de nos nouveaux widgets modularisés, transformant le badge en un simple coordinateur de mise en page réactif.
         - **Validation Statique Complète** :
             - Succès complet de `dart analyze` garantissant la stabilité et la propreté du code.
+
+## Phase 3 : Étape 2 - Modularisation de la Carte de Jeu (card_component.dart)
+
+- refactor: Découpage du fichier `card_component.dart` pour isoler son rendu textuel et ses effets visuels
+    - Allègement massif de `card_component.dart` (passant de 1030 lignes à seulement 430 lignes), déléguant l'intégralité de sa peinture textuelle et de ses animations cinématiques de combat à des classes spécialisées et autonomes.
+        - **Création du Rendu Textuel `CardTextRenderer` (`lib/game/components/widgets/card_text_renderer.dart`)** :
+            - Centralisation et configuration des 6 instances de `TextPainter` (Titre, Coût en Mana sous forme de diamants vectoriels, Rareté, Description dynamique ajustée à la force active du joueur, Type et Bandeau rouge "Usage Unique").
+            - Gestion de la mise en page géométrique et du tracé textuel sur Canvas.
+        - **Création de l'Animateur de Combat `CardAnimator` (`lib/game/components/visual_effects/card_animator.dart`)** :
+            - Isolation de toute la cinématique visuelle de combat : tremblements impossible-à-jouer (`shakeAnimation`), dashs corps-à-corps avec slash vectoriel, zoom de sorts magiques, fondus de buffs et trajectoires de statuts colorées (Poison, Brûlure, Gel, Électrocution).
+            - Encapsulation des systèmes physiques de particules : traînées arc-en-ciel lors du drag (`spawnTrailParticles`), explosions d'impacts d'effets et désintégration par étincelles en cas d'épuisement.
+            - Gestion du retour élastique de la carte en main en cas d'annulation du glissement (`returnToHand`).
+        - **Épuration de `CardComponent` (`lib/game/components/card_component.dart`)** :
+            - Remplacement de près de 600 lignes de code graphique par l'instanciation de nos deux délégués `textRenderer` et `animator`, recentrant le composant uniquement sur les événements d'interactions physiques (glissements, détection de survol, clics).
+        - **Validation Statique & Exécution des Tests** :
+            - Lancement de `dart analyze` (100% propre, aucune erreur ou avertissement).
+            - Succès total de l'intégralité de la suite de tests Flutter (`All tests passed!`).
+
