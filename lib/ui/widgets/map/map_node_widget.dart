@@ -1,0 +1,176 @@
+import 'package:flutter/material.dart';
+import '../../../models/map_node.dart';
+
+class MapNodeWidget extends StatefulWidget {
+  final MapNode node;
+  final bool isAvailable;
+  final bool isCurrent;
+  final VoidCallback onTap;
+  final Function(String, String) onShowTooltip;
+  final VoidCallback onHideTooltip;
+  final VoidCallback onHoverEnter;
+  final VoidCallback onHoverExit;
+
+  const MapNodeWidget({
+    super.key,
+    required this.node,
+    required this.isAvailable,
+    required this.isCurrent,
+    required this.onTap,
+    required this.onShowTooltip,
+    required this.onHideTooltip,
+    required this.onHoverEnter,
+    required this.onHoverExit,
+  });
+
+  @override
+  State<MapNodeWidget> createState() => _MapNodeWidgetState();
+}
+
+class _MapNodeWidgetState extends State<MapNodeWidget> {
+  bool _isHovered = false;
+
+  (String, String) _getTooltipData() {
+    switch (widget.node.type) {
+      case MapNodeType.combat:
+        return (
+          'COMBAT',
+          'Une rencontre standard avec des ennemis. Gagnez de l\'or et de nouvelles cartes.'
+        );
+      case MapNodeType.elite:
+        return (
+          'ÉLITE',
+          'Un combat très difficile contre des ennemis puissants. Offre de meilleures récompenses et des reliques.'
+        );
+      case MapNodeType.shop:
+        return (
+          'BOUTIQUE',
+          'Dépensez votre or pour acheter des cartes, retirer des cartes de votre deck ou cloner vos meilleures cartes.'
+        );
+      case MapNodeType.rest:
+        return (
+          'REPOS',
+          'Une zone sûre pour reprendre des forces ou améliorer votre équipement.'
+        );
+      case MapNodeType.event:
+        return (
+          'ÉVÉNEMENT',
+          'Une rencontre imprévisible qui peut vous octroyer des bonus... ou des malus.'
+        );
+      case MapNodeType.boss:
+        return (
+          'BOSS',
+          'L\'épreuve ultime de cet acte. Battez le boss pour passer à l\'acte suivant.'
+        );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    IconData icon;
+    Color color;
+
+    switch (widget.node.type) {
+      case MapNodeType.combat:
+        icon = Icons.flash_on;
+        color = Colors.white70;
+        break;
+      case MapNodeType.elite:
+        icon = Icons.warning_amber_rounded;
+        color = Colors.redAccent;
+        break;
+      case MapNodeType.shop:
+        icon = Icons.shopping_cart_outlined;
+        color = Colors.amber;
+        break;
+      case MapNodeType.rest:
+        icon = Icons.nightlight_round;
+        color = Colors.greenAccent;
+        break;
+      case MapNodeType.event:
+        icon = Icons.help_outline;
+        color = Colors.blueAccent;
+        break;
+      case MapNodeType.boss:
+        icon = Icons.dangerous;
+        color = Colors.purpleAccent;
+        break;
+    }
+
+    final tooltipData = _getTooltipData();
+
+    return Positioned(
+      left: widget.node.position.x - 35,
+      top: widget.node.position.y - 35 + 80.0,
+      child: MouseRegion(
+        onEnter: (_) {
+          setState(() => _isHovered = true);
+          widget.onHoverEnter();
+        },
+        onExit: (_) {
+          setState(() => _isHovered = false);
+          widget.onHoverExit();
+        },
+        cursor: widget.isAvailable
+            ? SystemMouseCursors.click
+            : SystemMouseCursors.basic,
+        child: GestureDetector(
+          onTap: widget.isAvailable ? widget.onTap : null,
+          onLongPressStart: (_) =>
+              widget.onShowTooltip(tooltipData.$1, tooltipData.$2),
+          onLongPressEnd: (_) => widget.onHideTooltip(),
+          child: Column(
+            children: [
+              Opacity(
+                opacity: widget.node.isCompleted
+                    ? 0.4
+                    : (widget.isAvailable ? 1.0 : 0.2),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: _isHovered && widget.isAvailable ? 85 : 70,
+                  height: _isHovered && widget.isAvailable ? 85 : 70,
+                  decoration: BoxDecoration(
+                    color: widget.isCurrent
+                        ? const Color(0xFF2A2A40)
+                        : const Color(0xFF1A1A2E),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: widget.isCurrent
+                          ? Colors.yellow
+                          : (_isHovered && widget.isAvailable
+                              ? Colors.white
+                              : (widget.isAvailable
+                                  ? color
+                                  : color.withAlpha(128))),
+                      width: widget.isCurrent || _isHovered ? 4 : 2,
+                    ),
+                    boxShadow: (widget.isCurrent ||
+                            (_isHovered && widget.isAvailable))
+                        ? [
+                          BoxShadow(
+                            color: (widget.isCurrent ? Colors.yellow : color)
+                                .withAlpha(128),
+                            blurRadius: _isHovered ? 20 : 15,
+                            spreadRadius: _isHovered ? 4 : 2,
+                          ),
+                        ]
+                        : [],
+                  ),
+                  child: Icon(
+                    icon,
+                    color: widget.isAvailable || widget.isCurrent
+                        ? color
+                        : color.withAlpha(128),
+                    size: _isHovered && widget.isAvailable ? 42 : 35,
+                  ),
+                ),
+              ),
+              if (widget.node.isCompleted)
+                const Icon(Icons.check_circle, color: Colors.green, size: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

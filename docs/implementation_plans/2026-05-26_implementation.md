@@ -92,6 +92,34 @@
             - Validation unitaire totale hors-moteur, garantissant la fiabilité des calculs de combat.
             - Tous les tests de l'application (unitaires et widgets) compilent et passent avec succès.
 
+## Phase 2 : Étape 1 - Découpage de l'Écran de la Carte (map_screen.dart)
+
+- refactor: Extraction des composants et dialogues de `map_screen.dart` pour réduire sa dette technique
+    - Découpage complet du fichier monolithique `map_screen.dart` (qui est passé de plus de 2300 lignes à seulement 630 lignes), augmentant la modularité, la lisibilité et l'organisation de l'UI.
+        - **Création du `BlurWrapper` (`lib/ui/widgets/blur_wrapper.dart`)** :
+            - Extraction de l'effet de flou dynamique (`BackdropFilter`) avec prise en charge du repli intelligent (`kIsWeb`) sur fond sombre opaque afin d'éviter toute duplication de logique visuelle.
+        - **Création du Widget `MapConnectionPainter` (`lib/ui/widgets/map/map_connection_painter.dart`)** :
+            - Isolation complète du painter vectoriel personnalisé dessinant les connexions en pointillés animés entre les nœuds de la carte.
+        - **Création du Widget `MapLegend` (`lib/ui/widgets/map/map_legend.dart`)** :
+            - Encapsulation autonome de la légende cartographique flottante avec sa liste d'icônes et de libellés descriptifs.
+        - **Création du Widget `MapNodeWidget` (`lib/ui/widgets/map/map_node_widget.dart`)** :
+            - Déplacement de la logique de rendu individuel de nœud (gestion des clics, détection de survol, animations de dimensions, tooltips, et badges de complétion) dans sa propre classe.
+        - **Création du Widget `PlayerPawn` (`lib/ui/widgets/map/player_pawn.dart`)** :
+            - Extraction du pion animé du joueur avec son indicateur vectoriel pointé vers le bas et son amortissement cinématique.
+        - **Création du Dialog `StatsDialog` (`lib/ui/widgets/map/dialogs/stats_dialog.dart`)** :
+            - Isolation de la fiche de personnage complète avec affichage des jauges de PV progressives, cristaux de mana, statistiques secondaires (Attaque, Maîtrise, Chance) et passif de classe.
+        - **Création du Dialog `RelicsDialog` (`lib/ui/widgets/map/dialogs/relics_dialog.dart`)** :
+            - Extraction de la grille adaptative de reliques gérant le groupement intelligent des doublons magiques (stacking) et l'affichage des déclencheurs de combat.
+        - **Création du Dialog `ProbabilitiesDialog` (`lib/ui/widgets/map/dialogs/probabilities_dialog.dart`)** :
+            - Déplacement de la logique algorithmique et de l'interface des chances de butin de cartes/reliques bonifiées par la statistique Chance du héros.
+        - **Création du Widget `HeroMiniStatsPanel` (`lib/ui/widgets/map/hero_mini_stats_panel.dart`)** :
+            - Isolation du panneau résumé flottant des statistiques en bas à droite de la carte de navigation.
+        - **Épuration Globale de `MapScreen` (`lib/ui/screens/map_screen.dart`)** :
+            - Importation nominale des nouveaux widgets et suppression de 1700 lignes de code répétitif et monolithique.
+        - **Validation Statique Complète** :
+            - Lancement de `dart analyze` validant l'absence d'avertissements ou d'erreurs sur l'intégralité du projet.
+
+
 
 
 
