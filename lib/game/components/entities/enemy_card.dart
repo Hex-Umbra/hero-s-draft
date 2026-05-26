@@ -117,6 +117,13 @@ class EnemyCard extends PositionComponent
     add(debuffIndicator);
 
     _refreshBadges();
+
+    // Apply visual states now that borderInfo is initialized
+    setSelection(isSelected);
+    if (_isHighlighted) {
+      _isHighlighted = false;
+      setHighlight(true);
+    }
   }
 
   @override
@@ -202,6 +209,7 @@ class EnemyCard extends PositionComponent
 
   void setSelection(bool selected) {
     isSelected = selected;
+    if (!isLoaded) return;
     if (isSelected) {
       borderInfo.paint.color = Colors.amber;
       borderInfo.paint.strokeWidth = 4;
@@ -218,6 +226,7 @@ class EnemyCard extends PositionComponent
   void setHighlight(bool highlight) {
     if (_isHighlighted == highlight) return;
     _isHighlighted = highlight;
+    if (!isLoaded) return;
 
     if (_isHighlighted) {
       borderInfo.paint.color = Colors.cyanAccent;

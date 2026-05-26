@@ -60,6 +60,7 @@
             - Remplacement de l'état interne mutable et de la logique autonome de calcul d'intentions par un couplage à un objet immuable `EnemyInstance instance` fourni par le State.
             - Suppression définitive des méthodes de décision (`_determineNextIntent`, `rollIntent`, `startTurn`) et de la mutation directe des PV/Armure, rendant le composant 100% passif.
             - Intégration de `updateStats(EnemyInstance newInstance)` : compare réactivement l'ancien état PV/Armure avec le nouveau pour déclencher automatiquement des animations visuelles ad-hoc (secousse d'impact, flash blanc de dégâts, et popups de textes flottants colorés).
+            - Sécurisation asynchrone contre les `LateInitializationError` : ajout de gardes `isLoaded` au sein de `setSelection(...)` et `setHighlight(...)` pour interdire l'accès à `borderInfo` avant la complétion de la méthode `onLoad()`, et synchronisation tardive des états visuels en fin de chargement.
         - **Refactorisation de `HerosDraftGame` (`lib/game/heros_draft_game.dart`)** :
             - Implémentation de la synchronisation réactive de combat `syncCombat(CombatState combatState)`.
             - Gestion du cycle de vie des composants : instanciation dynamique des cartes d'ennemis `EnemyCard` lorsqu'un ID apparaît dans le State, et déclenchement ordonné des animations de mort/retrait visuel lorsqu'un ennemi disparaît de l'état logique.
