@@ -47,6 +47,39 @@ class EntityStats {
     );
   }
 
+  factory EntityStats.fromJson(Map<String, dynamic> json) {
+    var statusesJson = json['statuses'] as List?;
+    List<StatusEffect> parsedStatuses = [];
+    if (statusesJson != null) {
+      parsedStatuses = statusesJson
+          .map((e) => StatusEffect.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
+    return EntityStats(
+      maxPv: json['maxPv'] as int,
+      currentPv: json['currentPv'] as int,
+      maxMana: json['maxMana'] as int? ?? 0,
+      currentMana: json['currentMana'] as int? ?? 0,
+      armure: json['armure'] as int,
+      armorMastery: json['armorMastery'] as int? ?? 0,
+      attaque: json['attaque'] as int,
+      luck: json['luck'] as int? ?? 0,
+      statuses: parsedStatuses,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'maxPv': maxPv,
+        'currentPv': currentPv,
+        'maxMana': maxMana,
+        'currentMana': currentMana,
+        'armure': armure,
+        'armorMastery': armorMastery,
+        'attaque': attaque,
+        'luck': luck,
+        'statuses': statuses.map((s) => s.toJson()).toList(),
+      };
+
   /// Ajoute ou combine un effet de statut
   EntityStats addStatus(StatusEffect effect) {
     final index = statuses.indexWhere((s) => s.id == effect.id);
