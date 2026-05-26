@@ -140,8 +140,19 @@
         - **Validation Statique & Exécution des Tests** :
             - Lancement de `dart analyze` (aucun problème détecté) et succès complet de l'ensemble de la suite de tests (`All tests passed!`).
 
+## Phase 3 : Étape 1 - Modularisation du Badge de Statistiques (stat_badge.dart)
 
-
-
-
-
+- refactor: Extraction des composants internes de `stat_badge.dart` pour réduire sa dette technique
+    - Découpage complet du fichier `stat_badge.dart` (passant de 720 lignes à seulement 430 lignes), isolant la logique de dessin vectoriel complexe et les barres de vie dans des fichiers séparés et réutilisables.
+        - **Création du Widget `FlameSwordIcon` (`lib/game/components/widgets/flame_sword_icon.dart`)** :
+            - Extraction du tracé vectoriel d'une épée 3D biseautée avec garde incurvée, poignée en cuir segmentée et pommeau circulaire orné d'un joyau.
+        - **Création du Widget `FlameShieldIcon` (`lib/game/components/widgets/flame_shield_icon.dart`)** :
+            - Extraction du tracé vectoriel d'un bouclier de guerrier biseauté aux couleurs cyan brillant translucides.
+        - **Création du Widget `LinearProgressBarComponent` (`lib/game/components/widgets/linear_progress_bar.dart`)** :
+            - Extraction de la barre de vie horizontale rouge dotée d'un dégradé et de sa jauge d'armure bleue brillante (avec liseré cyan accent) superposée.
+        - **Création du Widget `CircleProgressComponent` (`lib/game/components/widgets/circle_progress.dart`)** :
+            - Extraction de l'arc de progression circulaire utilisé pour le rendu des jauges de vie rondes du héros.
+        - **Épuration de `StatBadge` (`lib/game/components/entities/stat_badge.dart`)** :
+            - Remplacement de plus de 400 lignes de codes inline par l'importation propre de nos nouveaux widgets modularisés, transformant le badge en un simple coordinateur de mise en page réactif.
+        - **Validation Statique Complète** :
+            - Succès complet de `dart analyze` garantissant la stabilité et la propreté du code.
