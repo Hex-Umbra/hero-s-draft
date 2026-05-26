@@ -81,7 +81,15 @@
 - ~~Modifier l'affichage des reliques dans le menu des reliques accessible depuis la map, actuellement le composant est trop petit et n'affiche pas correctement tout la description de la relique donc on ne sait pas ce qu'elle fait.~~
 - ~~Modifier les récompense d'un combat d'élites, la récompense sera désormais une relique aléatoire.~~
 - Modifier l'effet de la relique "Cristal de mana"
-- Vérifier pourquoi la descritpion de la carte "Balayage" en jeu est différente de sa desciption dans les données.
+- ~~Vérifier pourquoi la descritpion de la carte "Balayage" en jeu est différente de sa desciption dans les données.~~
 - ~~A la fin d'un combat élites, le joueur n'est pas envoyé directement sur la map avec l'attribution de la relique aléatoire. Il y a un bug visuelle qui fait "réapparaitre" des ennemis au moment où la notification de quel relique est donnée avant de quitter le combat pour ensuite repartir sur la map~~
 - Modifier la snackbar de notification pour une notification plus discrète et plus esthétique, plutot de que d'avoir une grosse barre de couleur qui apparait en bas de l'écran, on aurait le message quelque part sur l'écran comme a au centre a gauche affichant les différente notif déja mise en place.
-- Rajouter un menu dans la map qui permet au joueur de voir toutes les probabilités de chance d'obtenir des reliques, des cartes et des récompenses en fonction de leur rareté (valeur actuelle, comme ça la ils peuvent voir la valeur avec l'augmentation de leur chance)
+- ~~Rajouter un menu dans la map qui permet au joueur de voir toutes les probabilités de chance d'obtenir des reliques, des cartes et des récompenses en fonction de leur rareté (valeur actuelle, comme ça la ils peuvent voir la valeur avec l'augmentation de leur chance)~~
+- Agrandir la taille des informations du joueur quand il est en combat ou le faire scale en fonction de la taille de l'écran du joueur 
+- Afficher le nombre de tour d'un buff ou debuff dans la desciption de la carte plus spécifiquement le tooltip
+- Pour les reliques il faut trouver un intérêt pour avoir des cartes de fin ou début de tour 
+- Dans la map, dans la toolbar avec les boutons, afficher dans un petit badgedansel bouton 'Relique" le nombre total de reliques possédé par le joueur
+- Pour l'événement "Autel mystérieux", il faudrait rajouter une contrepartie au fait de recevoir une relique, actuellemnt ce n'est pas équilibré de recevoir une relique sans aucun échange ou désavantages pour le joueur 
+- Pour les reliques, rajouter au bout d'un certain actes (par exemple l'acte 5), un nouveau type de rencontre qui apparait tout les 5 actes a 100% ou a n'importe quel actes a 10%. Cette rencontre permettra au joueur d'échanger certaines de ses reliques contre une relique de rang supérieur. Il en faudra 3 pour avoir la relique de rareté supérieur. Cette relique qui est proposé au joueur lui est affiché dès le moment où il choisi la rencontre, il sait ce qu'il vas avoir et peux choisir d'échanger ou non ses reliques.
+- Il y a actuellement un bug avec un evenement aux alentours de l'acte 4 a investiguer en profondeur
+- Modifier les desciptions des cartes pour avoir seulement les icones et la valeur pour plus de lisibilité, la description des cartes sera écrites dans les tooltips des cartes.
