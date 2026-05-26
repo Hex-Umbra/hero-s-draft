@@ -193,3 +193,21 @@
     - **Validation et Régénération** :
         - Exécution réussie de `flutter gen-l10n` pour régénérer la classe fortement typée `AppLocalizations`.
         - Validation de la conformité statique globale avec `flutter analyze` : résultat 100% propre, aucune erreur ou avertissement de lint.
+
+## Phase 4 : Étape 2 - Structuration des Modèles et JSON Bilingues
+
+- feat: Structuration bilingue intégrale des fichiers de données JSON et des modèles Dart
+    - Migration complète de tous les fichiers JSON d'assets (`assets/data/`) pour y intégrer les clés multilingues, éliminant tout risque de désynchronisation de l'équilibrage :
+        - **`cards.json`** : Ajout de `"name_en"`, `"name_fr"`, `"description_en"`, `"description_fr"`.
+        - **`relics.json`** : Ajout de `"name_en"`, `"name_fr"`, `"description_en"`, `"description_fr"`.
+        - **`enemies.json`** : Ajout de `"name_en"`, `"name_fr"`.
+        - **`heroes.json`** : Ajout de `"name_en"`, `"name_fr"`, `"description_en"`, `"description_fr"`.
+        - **`passives.json`** : Ajout de `"name_en"`, `"name_fr"`, `"description_en"`, `"description_fr"`.
+    - Refactoring des modèles Dart correspondants (`lib/models/data/`) pour supporter le chargement bilingue dynamique :
+        - **Modèles modifiés** : `CardData`, `RelicData`, `EnemyData`, `HeroData` et `PassiveData`.
+        - **Structure bilingue propre** : Ajout des attributs `nameEn`/`nameFr` et `descriptionEn`/`descriptionFr`.
+        - **Getters localisés** : Ajout des méthodes helpers `getName(locale)` et `getDescription(locale)` (ou seulement `getName(locale)` pour les ennemis).
+        - **Support Rétrocompatible et Résilient** : Conservation temporaire des propriétés `.name` et `.description` en tant que getters ou champs fallback pour assurer la compilabilité totale du projet sans impact immédiat sur l'UI/Flame.
+        - **Fallback Statique des Passifs** : Mise à jour de la méthode `PassiveData.fallback` pour retourner des instances avec des textes multilingues.
+    - **Validation Statique** :
+        - Lancement de `flutter analyze` : **100% propre, aucune erreur de compilation ou avertissement de lint**, confirmant la parfaite réussite de la rétrocompatibilité temporaire.

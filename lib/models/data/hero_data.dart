@@ -1,7 +1,11 @@
 class HeroData {
   final String id;
-  final String name;
-  final String description;
+  final String name; // Temporary backward compatibility
+  final String description; // Temporary backward compatibility
+  final String nameEn;
+  final String nameFr;
+  final String descriptionEn;
+  final String descriptionFr;
   final String iconPath;
   final int maxHp;
   final int maxMana;
@@ -12,8 +16,12 @@ class HeroData {
 
   const HeroData({
     required this.id,
-    required this.name,
-    required this.description,
+    this.name = '',
+    this.description = '',
+    this.nameEn = '',
+    this.nameFr = '',
+    this.descriptionEn = '',
+    this.descriptionFr = '',
     required this.iconPath,
     required this.maxHp,
     required this.maxMana,
@@ -23,11 +31,23 @@ class HeroData {
     this.passiveTrait,
   });
 
+  String getName(String locale) => locale == 'fr' ? nameFr : nameEn;
+  String getDescription(String locale) => locale == 'fr' ? descriptionFr : descriptionEn;
+
   factory HeroData.fromJson(Map<String, dynamic> json) {
+    final nEn = json['name_en'] as String? ?? json['name'] as String? ?? '';
+    final nFr = json['name_fr'] as String? ?? json['name'] as String? ?? '';
+    final dEn = json['description_en'] as String? ?? json['description'] as String? ?? '';
+    final dFr = json['description_fr'] as String? ?? json['description'] as String? ?? '';
+
     return HeroData(
       id: json['id'] as String,
-      name: json['name'] as String,
-      description: json['description'] as String,
+      name: nFr,
+      description: dFr,
+      nameEn: nEn,
+      nameFr: nFr,
+      descriptionEn: dEn,
+      descriptionFr: dFr,
       iconPath: json['iconPath'] as String,
       maxHp: json['maxHp'] as int,
       maxMana: json['maxMana'] as int,

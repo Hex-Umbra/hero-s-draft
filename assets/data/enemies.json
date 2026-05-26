@@ -1,7 +1,8 @@
 [
   {
     "id": "slime",
-    "name": "Slime",
+    "name_en": "Slime",
+    "name_fr": "Slime",
     "maxHp": 18,
     "baseDamage": 4,
     "spritePath": "enemy_slime.png",
@@ -12,7 +13,8 @@
   },
   {
     "id": "gobelin",
-    "name": "Gobelin",
+    "name_en": "Goblin",
+    "name_fr": "Gobelin",
     "maxHp": 28,
     "baseDamage": 5,
     "spritePath": "enemy_goblin.png",
@@ -23,7 +25,8 @@
   },
   {
     "id": "squelette",
-    "name": "Squelette",
+    "name_en": "Skeleton",
+    "name_fr": "Squelette",
     "maxHp": 22,
     "baseDamage": 8,
     "spritePath": "enemy_skeleton.png",
@@ -35,7 +38,8 @@
   },
   {
     "id": "orc",
-    "name": "Orc Furieux",
+    "name_en": "Furious Orc",
+    "name_fr": "Orc Furieux",
     "maxHp": 50,
     "baseDamage": 8,
     "spritePath": "enemy_orc.png",

@@ -1,8 +1,10 @@
 [
   {
     "id": "paladin",
-    "name": "Le Paladin",
-    "description": "Orienté Survie",
+    "name_en": "Paladin",
+    "name_fr": "Le Paladin",
+    "description_en": "Survival Oriented",
+    "description_fr": "Orienté Survie",
     "iconPath": "hero_paladin.png",
     "maxHp": 100,
     "maxMana": 3,
@@ -12,8 +14,10 @@
   },
   {
     "id": "berserker",
-    "name": "Le Berserker",
-    "description": "Orienté Dégâts",
+    "name_en": "Berserker",
+    "name_fr": "Le Berserker",
+    "description_en": "Damage Oriented",
+    "description_fr": "Orienté Dégâts",
     "iconPath": "hero_berserker.png",
     "maxHp": 80,
     "maxMana": 3,
@@ -23,8 +27,10 @@
   },
   {
     "id": "mage",
-    "name": "Le Mage",
-    "description": "Orienté Altération",
+    "name_en": "Mage",
+    "name_fr": "Le Mage",
+    "description_en": "Alteration Oriented",
+    "description_fr": "Orienté Altération",
     "iconPath": "hero_mage.png",
     "maxHp": 60,
     "maxMana": 3,

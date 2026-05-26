@@ -2,7 +2,9 @@ import '../enemy_intent.dart';
 
 class EnemyData {
   final String id;
-  final String name;
+  final String name; // Temporary backward compatibility
+  final String nameEn;
+  final String nameFr;
   final int maxHp;
   final int baseDamage;
   final String spritePath;
@@ -11,13 +13,17 @@ class EnemyData {
 
   const EnemyData({
     required this.id,
-    required this.name,
+    this.name = '',
+    this.nameEn = '',
+    this.nameFr = '',
     required this.maxHp,
     required this.baseDamage,
     required this.spritePath,
     this.tier = 1,
     this.intents,
   });
+
+  String getName(String locale) => locale == 'fr' ? nameFr : nameEn;
 
   factory EnemyData.fromJson(Map<String, dynamic> json) {
     var intentsJson = json['intents'] as List?;
@@ -27,9 +33,14 @@ class EnemyData {
           intentsJson.map((e) => EnemyIntent.fromJson(e)).toList();
     }
 
+    final nEn = json['name_en'] as String? ?? json['name'] as String? ?? '';
+    final nFr = json['name_fr'] as String? ?? json['name'] as String? ?? '';
+
     return EnemyData(
       id: json['id'] as String,
-      name: json['name'] as String,
+      name: nFr,
+      nameEn: nEn,
+      nameFr: nFr,
       maxHp: json['maxHp'] as int,
       baseDamage: json['baseDamage'] as int,
       spritePath: json['spritePath'] as String,

@@ -31,8 +31,12 @@ class CardEffect {
 
 class CardData {
   final String id;
-  final String name;
-  final String description;
+  final String name; // Temporary backward compatibility
+  final String description; // Temporary backward compatibility
+  final String nameEn;
+  final String nameFr;
+  final String descriptionEn;
+  final String descriptionFr;
   final int cost;
   final CardType type;
   final CardCategory category;
@@ -46,8 +50,12 @@ class CardData {
 
   const CardData({
     required this.id,
-    required this.name,
-    required this.description,
+    this.name = '',
+    this.description = '',
+    this.nameEn = '',
+    this.nameFr = '',
+    this.descriptionEn = '',
+    this.descriptionFr = '',
     required this.cost,
     required this.type,
     required this.category,
@@ -60,11 +68,23 @@ class CardData {
     required this.effects,
   });
 
+  String getName(String locale) => locale == 'fr' ? nameFr : nameEn;
+  String getDescription(String locale) => locale == 'fr' ? descriptionFr : descriptionEn;
+
   factory CardData.fromJson(Map<String, dynamic> json) {
+    final nEn = json['name_en'] as String? ?? json['name'] as String? ?? '';
+    final nFr = json['name_fr'] as String? ?? json['name'] as String? ?? '';
+    final dEn = json['description_en'] as String? ?? json['description'] as String? ?? '';
+    final dFr = json['description_fr'] as String? ?? json['description'] as String? ?? '';
+
     return CardData(
       id: json['id'] as String,
-      name: json['name'] as String,
-      description: json['description'] as String,
+      name: nFr,
+      description: dFr,
+      nameEn: nEn,
+      nameFr: nFr,
+      descriptionEn: dEn,
+      descriptionFr: dFr,
       cost: json['cost'] as int,
       type: CardType.values.firstWhere((e) => e.name == json['type']),
       category: CardCategory.values.firstWhere(
