@@ -291,4 +291,146 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get tooltipManaDesc =>
       'Ressource d\'énergie utilisée pour jouer des cartes chaque tour.';
+
+  @override
+  String get cardTypeAttack => 'Attaque';
+
+  @override
+  String get cardTypeSkill => 'Compétence';
+
+  @override
+  String get cardTypePower => 'Pouvoir';
+
+  @override
+  String get cardTypeStatus => 'Statut';
+
+  @override
+  String get oncePlayed => 'USAGE UNIQUE';
+
+  @override
+  String get exhaustWarning => '⚠️ USAGE UNIQUE (Épuisement)';
+
+  @override
+  String get hpAbbreviation => 'PV';
+
+  @override
+  String get enemyIntentsTitle => 'INTENTIONS ENNEMIES';
+
+  @override
+  String intentDevastatingAttack(int value) {
+    return 'Attaque Dévastatrice : $value';
+  }
+
+  @override
+  String intentHeavyAttack(int value) {
+    return 'Attaque Lourde : $value';
+  }
+
+  @override
+  String intentAttack(int value) {
+    return 'Attaque : $value';
+  }
+
+  @override
+  String intentQuickAttack(int value) {
+    return 'Attaque Rapide : $value';
+  }
+
+  @override
+  String intentDefend(int value) {
+    return 'Défense : +$value';
+  }
+
+  @override
+  String intentBuff(int value) {
+    return 'Buff Attaque : +$value';
+  }
+
+  @override
+  String intentCurse(int value) {
+    return 'Malédiction : $value';
+  }
+
+  @override
+  String get enemyStatsTitle => 'STATS DE L\'ENNEMI';
+
+  @override
+  String enemyStatsDesc(int hp, int maxHp, int attack, int armor) {
+    return 'Santé : $hp/$maxHp PV.\nAttaque : $attack.\nArmure : $armor.';
+  }
+
+  @override
+  String cardDescDamage(int amount) {
+    return 'Inflige $amount dégâts.';
+  }
+
+  @override
+  String cardDescDamageAll(int amount) {
+    return 'Inflige $amount dégâts à tous les ennemis.';
+  }
+
+  @override
+  String cardDescHeal(int amount) {
+    return 'Soigne $amount PV.';
+  }
+
+  @override
+  String cardDescArmor(int amount) {
+    return 'Donne $amount Armure.';
+  }
+
+  @override
+  String cardDescGainMana(int amount) {
+    return 'Gagne $amount Mana.';
+  }
+
+  @override
+  String cardDescDraw(int amount) {
+    return 'Pioche $amount cartes.';
+  }
+
+  @override
+  String cardDescStatusStrength(int amount, int duration) {
+    return 'Gagne $amount ATK pendant $duration tours.';
+  }
+
+  @override
+  String cardDescStatusArmorRegen(int amount, int duration) {
+    return 'Pendant $duration tours, gagne $amount Armure au début du tour.';
+  }
+
+  @override
+  String cardDescStatusPoison(int amount) {
+    return 'Applique $amount Poison.';
+  }
+
+  @override
+  String cardDescStatusWeakness(int amount) {
+    return 'Applique $amount Faiblesse.';
+  }
+
+  @override
+  String cardDescStatusVulnerable(int amount) {
+    return 'Applique $amount Vulnérable.';
+  }
+
+  @override
+  String cardDescStatusStrengthRegen(int amount, int duration) {
+    return 'Gagne $amount Éveil d\'Attaque pendant $duration tours.';
+  }
+
+  @override
+  String cardDescStatusBurn(int amount) {
+    return 'Applique $amount Brûlure.';
+  }
+
+  @override
+  String cardDescStatusFreeze(int amount) {
+    return 'Applique $amount Gel.';
+  }
+
+  @override
+  String cardDescStatusShock(int amount) {
+    return 'Applique $amount Électrocution.';
+  }
 }

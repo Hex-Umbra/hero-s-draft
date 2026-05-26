@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../../models/enemy_instance.dart';
 import '../../../models/enemy_intent.dart';
 
@@ -12,6 +13,9 @@ class EnemyIntentsPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
+
     return Container(
       width: 250,
       padding: const EdgeInsets.all(16),
@@ -34,17 +38,17 @@ class EnemyIntentsPanel extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.remove_red_eye_outlined,
                 color: Colors.amberAccent,
                 size: 16,
               ),
-              SizedBox(width: 6),
+              const SizedBox(width: 6),
               Text(
-                "INTENTIONS ENNEMIES",
-                style: TextStyle(
+                l10n.enemyIntentsTitle.toUpperCase(),
+                style: const TextStyle(
                   color: Colors.amberAccent,
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
@@ -56,7 +60,7 @@ class EnemyIntentsPanel extends StatelessWidget {
           const Divider(color: Colors.white12, height: 12),
           ...enemies.map((enemy) {
             final intent = enemy.effectiveIntent;
-            final name = enemy.data.name;
+            final name = enemy.data.getName(locale);
 
             Widget intentWidget;
             if (intent == null) {
@@ -70,14 +74,14 @@ class EnemyIntentsPanel extends StatelessWidget {
                     width: 1.0,
                   ),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.hourglass_empty, color: Colors.white30, size: 14),
-                    SizedBox(width: 6),
+                    const Icon(Icons.hourglass_empty, color: Colors.white30, size: 14),
+                    const SizedBox(width: 6),
                     Text(
-                      "En attente...",
-                      style: TextStyle(
+                      l10n.waitingIntents,
+                      style: const TextStyle(
                         color: Colors.white30,
                         fontSize: 12,
                         fontStyle: FontStyle.italic,
@@ -96,35 +100,35 @@ class EnemyIntentsPanel extends StatelessWidget {
                   if (intent.value >= 20) {
                     icon = Icons.gavel;
                     color = const Color(0xFFC0392B); // Crimson profond
-                    label = 'Attaque Dévastatrice : ${intent.value}';
+                    label = l10n.intentDevastatingAttack(intent.value);
                   } else if (intent.value >= 12) {
                     icon = Icons.whatshot;
                     color = const Color(0xFFE74C3C); // Écarlate
-                    label = 'Attaque Lourde : ${intent.value}';
+                    label = l10n.intentHeavyAttack(intent.value);
                   } else if (intent.value >= 6) {
                     icon = Icons.flash_on;
                     color = const Color(0xFFFF7675); // Corail
-                    label = 'Attaque : ${intent.value}';
+                    label = l10n.intentAttack(intent.value);
                   } else {
                     icon = Icons.bolt;
                     color = const Color(0xFFF39C12); // Ambre/Orange
-                    label = 'Attaque Rapide : ${intent.value}';
+                    label = l10n.intentQuickAttack(intent.value);
                   }
                   break;
                 case IntentType.defend:
                   icon = Icons.shield;
                   color = const Color(0xFF448AFF);
-                  label = 'Défense : +${intent.value}';
+                  label = l10n.intentDefend(intent.value);
                   break;
                 case IntentType.buff:
                   icon = Icons.trending_up;
                   color = const Color(0xFFE040FB);
-                  label = 'Buff Attaque : +${intent.value}';
+                  label = l10n.intentBuff(intent.value);
                   break;
                 case IntentType.debuffDeck:
                   icon = Icons.sick;
                   color = const Color(0xFF69F0AE);
-                  label = 'Malédiction : ${intent.value}';
+                  label = l10n.intentCurse(intent.value);
                   break;
               }
 
@@ -179,7 +183,7 @@ class EnemyIntentsPanel extends StatelessWidget {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        '${enemy.stats.currentPv}/${enemy.stats.maxPv} PV',
+                        '${enemy.stats.currentPv}/${enemy.stats.maxPv} ${l10n.hpAbbreviation}',
                         style: const TextStyle(
                           color: Colors.white54,
                           fontSize: 12,

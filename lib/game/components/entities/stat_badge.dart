@@ -1,6 +1,7 @@
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
+import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../heros_draft_game.dart';
 import '../widgets/circle_progress.dart';
 import '../widgets/flame_shield_icon.dart';
@@ -400,6 +401,25 @@ class StatBadge extends PositionComponent
     game.onHideTooltip();
   }
 
+  String get activeLocale {
+    final context = game.buildContext;
+    if (context != null) {
+      return Localizations.localeOf(context).languageCode;
+    }
+    return 'fr'; // Langue par défaut en secours
+  }
+
+  String getTranslation(String Function(AppLocalizations) select) {
+    final context = game.buildContext;
+    if (context != null) {
+      final localizations = AppLocalizations.of(context);
+      if (localizations != null) {
+        return select(localizations);
+      }
+    }
+    return ''; // Chute si non monté
+  }
+
   (String, String) _getTooltipData() {
     if (_customTooltipTitle != null && _customTooltipDescription != null) {
       return (_customTooltipTitle!, _customTooltipDescription!);
@@ -408,23 +428,23 @@ class StatBadge extends PositionComponent
     switch (type) {
       case StatType.hp:
         return (
-          'POINTS DE VIE',
-          'Santé actuelle de l\'entité. Si elle tombe à zéro, l\'entité est vaincue.',
+          getTranslation((l) => l.tooltipHpTitle),
+          getTranslation((l) => l.tooltipHpDesc)
         );
       case StatType.armor:
         return (
-          'ARMURE',
-          'Réduit les prochains dégâts reçus. L\'armure est consommée avant les PV.',
+          getTranslation((l) => l.tooltipArmorTitle),
+          getTranslation((l) => l.tooltipArmorDesc)
         );
       case StatType.attack:
         return (
-          'ATTAQUE',
-          'Dégâts de base de l\'entité. Affecte la puissance des attaques.',
+          getTranslation((l) => l.tooltipAttackTitle),
+          getTranslation((l) => l.tooltipAttackDesc)
         );
       case StatType.mana:
         return (
-          'MANA',
-          'Énergie utilisée pour lancer des capacités spéciales.',
+          getTranslation((l) => l.tooltipManaTitle),
+          getTranslation((l) => l.tooltipManaDesc)
         );
     }
   }

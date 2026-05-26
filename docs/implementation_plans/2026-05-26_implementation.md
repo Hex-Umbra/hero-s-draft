@@ -233,3 +233,25 @@
         - **Notifications SnackBar** : Traduction dynamique du message de gain de reliques (`"RELIQUE OBTENUE"` / `"RELIC OBTAINED"`) et formatage de la rareté et du nom de l'objet magique acquis selon la locale active.
     - **Validation Statique Globale** :
         - Lancement final de `flutter analyze` : **100% propre, aucune erreur ou avertissement de lint détecté**, garantissant la parfaite stabilité et la propreté de l'internationalisation de la couche UI Flutter.
+
+## Phase 4 : Étape 4 - Localisation dans la Couche Graphique (Flame Components) & HUD Additionnel
+
+- refactor: Traduction dynamique et internationalisation complète du moteur Flame et du panneau d'intentions ennemies
+    - Localisation de la Carte de Jeu (`CardComponent` et `CardTextRenderer`) :
+        - **Intégration locale** : Implémentation des helpers `activeLocale` et `getTranslation` dans `CardComponent` basés sur le `buildContext` de Flame.
+        - **Nom et Rareté** : Affichage bilingue du titre de la carte (`getName(locale)`) et de la rareté (`rarityCommon` à `rarityLegendary`) sur le Canvas.
+        - **Label de Type** : Traduction dynamique des types de cartes (`cardTypeAttack`, `cardTypeSkill`, `cardTypePower`, `cardTypeStatus`).
+        - **Description Dynamique** : Refonte de `buildDescription()` dans `CardTextRenderer` pour mapper en temps réel chaque effet mécanique (dégâts standard/multicibles, soins, armure, gain de mana, pioche, statuts) vers les clés `AppLocalizations` correspondantes avec prise en charge dynamique des multiplicateurs.
+        - **Tooltip détaillé** : Localisation complète de la bulle d'aide sur long clic (`onLongTapDown` et `_buildDetailedDescription`).
+    - Localisation des Ennemis (`EnemyCard` et `EnemyIntentsPanel`) :
+        - **Fiche Ennemi Flame** : Ajout des helpers locale dans `EnemyCard` et traduction des tooltips de statistiques (`enemyStatsTitle` / `enemyStatsDesc`) combinant PV, Attaque et Armure selon la langue active.
+        - **Panneau d'Intentions HUD** : Refonte de `EnemyIntentsPanel` pour afficher le nom localisé des monstres (`enemy.data.getName(locale)`) et formater dynamiquement chaque type d'intention hostile (Attaque Dévastatrice, Lourde, Standard, Rapide, Défense, Buff d'Attaque, Malédiction) en traduisant les abréviations de vie en `HP` / `PV`.
+    - **Création d'un Test Unitaire de Traduction Dédié** :
+        - Écriture de `test/unit/localization_test.dart` validant le chargement bilingue et les replis automatiques (fallbacks) de `CardData`.
+    - **Ajustement des Tests de Widgets** :
+        - Configuration des delegates de localisation (`AppLocalizations.delegate`) au sein des `MaterialApp` de test dans `starter_deck_draft_screen_test.dart` et `map_screen_test.dart` pour assurer la résolution des routes navigables.
+    - **Validation Statique & Exécution** :
+        - Exécution de `flutter gen-l10n` régénérant proprement les dictionnaires de ressources fortement typés.
+        - Lancement de `flutter test` : **100% vert, tous les 33 tests unitaires et de widgets passent avec succès !**
+        - Lancement final de `dart analyze` : **100% vert, 0 warning, 0 erreur**, confirmant la perfection de l'intégration et l'absence de régression.
+

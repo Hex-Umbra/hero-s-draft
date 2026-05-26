@@ -3,6 +3,7 @@ import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/effects.dart';
+import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../../data/models/entity_stats.dart';
 import '../../../models/data/enemy_data.dart';
 import '../../../models/enemy_intent.dart';
@@ -133,15 +134,38 @@ class EnemyCard extends PositionComponent
     scale = Vector2.all(game.scaleFactor * 1.45 * (isBoss ? 1.25 : 1.0));
   }
 
+  String get activeLocale {
+    final context = game.buildContext;
+    if (context != null) {
+      return Localizations.localeOf(context).languageCode;
+    }
+    return 'fr'; // Langue par défaut en secours
+  }
+
+  String getTranslation(String Function(AppLocalizations) select, {String fallback = ''}) {
+    final context = game.buildContext;
+    if (context != null) {
+      final localizations = AppLocalizations.of(context);
+      if (localizations != null) {
+        return select(localizations);
+      }
+    }
+    return fallback;
+  }
+
   void _refreshBadges() {
+    final hpSuffix = getTranslation((l) => l.hpAbbreviation, fallback: 'PV');
     hpBadge.updateHpValues(
       '${stats.currentPv}/${stats.maxPv}',
       stats.maxPv > 0 ? stats.currentPv / stats.maxPv : 0.0,
       stats.effectiveAttaque,
       stats.armure,
       armorPercentage: stats.maxPv > 0 ? stats.armure / stats.maxPv : 0.0,
-      tooltipTitle: 'STATS DE L\'ENNEMI',
-      tooltipDescription: 'Santé : ${stats.currentPv}/${stats.maxPv} PV.\nAttaque : ${stats.effectiveAttaque}.\nArmure : ${stats.armure}.',
+      tooltipTitle: getTranslation((l) => l.enemyStatsTitle, fallback: 'STATS DE L\'ENNEMI'),
+      tooltipDescription: getTranslation(
+        (l) => l.enemyStatsDesc(stats.currentPv, stats.maxPv, stats.effectiveAttaque, stats.armure),
+        fallback: 'Santé : ${stats.currentPv}/${stats.maxPv} $hpSuffix.\nAttaque : ${stats.effectiveAttaque}.\nArmure : ${stats.armure}.',
+      ),
     );
   }
 

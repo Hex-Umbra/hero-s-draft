@@ -3,6 +3,7 @@ import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/effects.dart';
 import 'package:flutter/material.dart' hide Image;
+import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../models/card_instance.dart';
 import '../../models/data/card_data.dart';
 import '../heros_draft_game.dart';
@@ -82,16 +83,35 @@ class CardComponent extends PositionComponent
     }
   }
 
+  String get activeLocale {
+    final context = game.buildContext;
+    if (context != null) {
+      return Localizations.localeOf(context).languageCode;
+    }
+    return 'fr'; // Langue par défaut en secours
+  }
+
+  String getTranslation(String Function(AppLocalizations) select, {String fallback = ''}) {
+    final context = game.buildContext;
+    if (context != null) {
+      final localizations = AppLocalizations.of(context);
+      if (localizations != null) {
+        return select(localizations);
+      }
+    }
+    return fallback;
+  }
+
   String getTypeLabel() {
     switch (card.data.type) {
       case CardType.attack:
-        return 'Attaque';
+        return getTranslation((l) => l.cardTypeAttack, fallback: 'Attaque');
       case CardType.skill:
-        return 'Compétence';
+        return getTranslation((l) => l.cardTypeSkill, fallback: 'Compétence');
       case CardType.power:
-        return 'Pouvoir';
+        return getTranslation((l) => l.cardTypePower, fallback: 'Pouvoir');
       case CardType.status:
-        return 'Statut';
+        return getTranslation((l) => l.cardTypeStatus, fallback: 'Statut');
     }
   }
 
@@ -111,7 +131,7 @@ class CardComponent extends PositionComponent
   @override
   void onLongTapDown(TapDownEvent event) {
     if (isPlayed) return;
-    game.onShowTooltip(card.data.name, _buildDetailedDescription());
+    game.onShowTooltip(card.data.getName(activeLocale), _buildDetailedDescription());
   }
 
   @override
@@ -125,16 +145,24 @@ class CardComponent extends PositionComponent
   }
 
   String _buildDetailedDescription() {
-    String desc = '${card.data.description}\n\n';
+    String desc = '${card.data.getDescription(activeLocale)}\n\n';
     if (card.data.type == CardType.power || card.data.isExhaust) {
-      desc += '⚠️ USAGE UNIQUE (Épuisement)\n\n';
+      desc += '${getTranslation((l) => l.exhaustWarning, fallback: '⚠️ USAGE UNIQUE (Épuisement)')}\n\n';
     }
     for (var effect in card.data.effects) {
       final scaledValue = (effect.value * (1 + (card.level - 1) * 0.5)).round();
-      if (effect.type == 'damage') desc += '• Dégâts: $scaledValue\n';
-      if (effect.type == 'heal') desc += '• Soin: $scaledValue\n';
-      if (effect.type == 'armor') desc += '• Armure: $scaledValue\n';
-      if (effect.type == 'draw') desc += '• Pioche: $scaledValue cartes\n';
+      if (effect.type == 'damage') {
+        desc += '• ${getTranslation((l) => l.cardDescDamage(scaledValue), fallback: 'Dégâts: $scaledValue')}\n';
+      }
+      if (effect.type == 'heal') {
+        desc += '• ${getTranslation((l) => l.cardDescHeal(scaledValue), fallback: 'Soin: $scaledValue')}\n';
+      }
+      if (effect.type == 'armor') {
+        desc += '• ${getTranslation((l) => l.cardDescArmor(scaledValue), fallback: 'Armure: $scaledValue')}\n';
+      }
+      if (effect.type == 'draw') {
+        desc += '• ${getTranslation((l) => l.cardDescDraw(scaledValue), fallback: 'Pioche: $scaledValue cartes')}\n';
+      }
     }
     return desc.trim();
   }

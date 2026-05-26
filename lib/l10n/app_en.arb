@@ -135,5 +135,158 @@
   "tooltipAttackTitle": "Attack Damage Boost",
   "tooltipAttackDesc": "Increases the damage of your attack cards.",
   "tooltipManaTitle": "Mana",
-  "tooltipManaDesc": "Energy resource used to play cards each turn."
+  "tooltipManaDesc": "Energy resource used to play cards each turn.",
+  "cardTypeAttack": "Attack",
+  "cardTypeSkill": "Skill",
+  "cardTypePower": "Power",
+  "cardTypeStatus": "Status",
+  "oncePlayed": "ONCE PLAYED",
+  "exhaustWarning": "⚠️ ONCE PLAYED (Exhaust)",
+  "hpAbbreviation": "HP",
+  "enemyIntentsTitle": "ENEMY INTENTIONS",
+  "intentDevastatingAttack": "Devastating Attack: {value}",
+  "@intentDevastatingAttack": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "intentHeavyAttack": "Heavy Attack: {value}",
+  "@intentHeavyAttack": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "intentAttack": "Attack: {value}",
+  "@intentAttack": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "intentQuickAttack": "Quick Attack: {value}",
+  "@intentQuickAttack": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "intentDefend": "Defend: +{value}",
+  "@intentDefend": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "intentBuff": "Buff Attack: +{value}",
+  "@intentBuff": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "intentCurse": "Curse: {value}",
+  "@intentCurse": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "enemyStatsTitle": "ENEMY STATS",
+  "enemyStatsDesc": "Health: {hp}/{maxHp} HP.\nAttack: {attack}.\nArmor: {armor}.",
+  "@enemyStatsDesc": {
+    "placeholders": {
+      "hp": { "type": "int" },
+      "maxHp": { "type": "int" },
+      "attack": { "type": "int" },
+      "armor": { "type": "int" }
+    }
+  },
+  "cardDescDamage": "Deals {amount} damage.",
+  "@cardDescDamage": {
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "cardDescDamageAll": "Deals {amount} damage to all enemies.",
+  "@cardDescDamageAll": {
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "cardDescHeal": "Heals {amount} HP.",
+  "@cardDescHeal": {
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "cardDescArmor": "Gives {amount} Block.",
+  "@cardDescArmor": {
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "cardDescGainMana": "Gains {amount} Mana.",
+  "@cardDescGainMana": {
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "cardDescDraw": "Draws {amount} cards.",
+  "@cardDescDraw": {
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "cardDescStatusStrength": "Gains {amount} ATK for {duration} turns.",
+  "@cardDescStatusStrength": {
+    "placeholders": {
+      "amount": { "type": "int" },
+      "duration": { "type": "int" }
+    }
+  },
+  "cardDescStatusArmorRegen": "For {duration} turns, gains {amount} Block at turn start.",
+  "@cardDescStatusArmorRegen": {
+    "placeholders": {
+      "amount": { "type": "int" },
+      "duration": { "type": "int" }
+    }
+  },
+  "cardDescStatusPoison": "Applies {amount} Poison.",
+  "@cardDescStatusPoison": {
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "cardDescStatusWeakness": "Applies {amount} Weakness.",
+  "@cardDescStatusWeakness": {
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "cardDescStatusVulnerable": "Applies {amount} Vulnerable.",
+  "@cardDescStatusVulnerable": {
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "cardDescStatusStrengthRegen": "Gains {amount} Attack Awakening for {duration} turns.",
+  "@cardDescStatusStrengthRegen": {
+    "placeholders": {
+      "amount": { "type": "int" },
+      "duration": { "type": "int" }
+    }
+  },
+  "cardDescStatusBurn": "Applies {amount} Burn.",
+  "@cardDescStatusBurn": {
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "cardDescStatusFreeze": "Applies {amount} Freeze.",
+  "@cardDescStatusFreeze": {
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "cardDescStatusShock": "Applies {amount} Shock.",
+  "@cardDescStatusShock": {
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  }
 }

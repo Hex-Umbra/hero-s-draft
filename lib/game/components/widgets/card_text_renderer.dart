@@ -40,7 +40,7 @@ class CardTextRenderer {
 
     namePainter = TextPainter(
       text: TextSpan(
-        text: card.card.data.name.toUpperCase(),
+        text: card.card.data.getName(card.activeLocale).toUpperCase(),
         style: TextStyle(
           color: nameColor,
           fontSize: 12,
@@ -91,7 +91,7 @@ class CardTextRenderer {
 
     usagePainter = TextPainter(
       text: TextSpan(
-        text: 'USAGE UNIQUE',
+        text: card.getTranslation((l) => l.oncePlayed, fallback: 'USAGE UNIQUE').toUpperCase(),
         style: TextStyle(
           color: usageColor,
           fontSize: 8,
@@ -114,9 +114,23 @@ class CardTextRenderer {
       textDirection: TextDirection.ltr,
     )..layout();
 
+    final rarityName = card.card.data.rarity.name.toLowerCase();
+    String rarityLabel = card.card.data.rarity.name;
+    if (rarityName.contains('legendary')) {
+      rarityLabel = card.getTranslation((l) => l.rarityLegendary, fallback: 'LÉGENDAIRE');
+    } else if (rarityName.contains('epic')) {
+      rarityLabel = card.getTranslation((l) => l.rarityEpic, fallback: 'ÉPIQUE');
+    } else if (rarityName.contains('rare')) {
+      rarityLabel = card.getTranslation((l) => l.rarityRare, fallback: 'RARE');
+    } else if (rarityName.contains('uncommon')) {
+      rarityLabel = card.getTranslation((l) => l.rarityUncommon, fallback: 'PEU COMMUN');
+    } else if (rarityName.contains('common')) {
+      rarityLabel = card.getTranslation((l) => l.rarityCommon, fallback: 'COMMUN');
+    }
+
     rarityPainter = TextPainter(
       text: TextSpan(
-        text: card.card.data.rarity.name.toUpperCase(),
+        text: rarityLabel.toUpperCase(),
         style: TextStyle(
           color: rarityColor,
           fontSize: 8,
@@ -151,50 +165,58 @@ class CardTextRenderer {
       if (effect.type == 'damage') {
         final totalDmg = scaledValue + heroAttack;
         if (card.card.data.target == CardTarget.allEnemies) {
-          desc += 'Inflige $totalDmg dégâts à tous les ennemis.\n';
+          desc += '${card.getTranslation((l) => l.cardDescDamageAll(totalDmg), fallback: 'Inflige $totalDmg dégâts à tous les ennemis.')}\n';
         } else {
-          desc += 'Inflige $totalDmg dégâts.\n';
+          desc += '${card.getTranslation((l) => l.cardDescDamage(totalDmg), fallback: 'Inflige $totalDmg dégâts.')}\n';
         }
       }
-      if (effect.type == 'heal') desc += 'Soigne $scaledValue PV.\n';
-      if (effect.type == 'armor') desc += 'Donne $scaledValue Armure.\n';
-      if (effect.type == 'gain_mana') desc += 'Gagne $scaledValue Mana.\n';
-      if (effect.type == 'draw') desc += 'Pioche $scaledValue cartes.\n';
+      if (effect.type == 'heal') {
+        desc += '${card.getTranslation((l) => l.cardDescHeal(scaledValue), fallback: 'Soigne $scaledValue PV.')}\n';
+      }
+      if (effect.type == 'armor') {
+        desc += '${card.getTranslation((l) => l.cardDescArmor(scaledValue), fallback: 'Donne $scaledValue Armure.')}\n';
+      }
+      if (effect.type == 'gain_mana') {
+        desc += '${card.getTranslation((l) => l.cardDescGainMana(scaledValue), fallback: 'Gagne $scaledValue Mana.')}\n';
+      }
+      if (effect.type == 'draw') {
+        desc += '${card.getTranslation((l) => l.cardDescDraw(scaledValue), fallback: 'Pioche $scaledValue cartes.')}\n';
+      }
       if (effect.type == 'apply_status') {
         final duration = effect.duration ?? 1;
         switch (effect.statusId) {
           case 'strength':
-            desc += 'Gagne $scaledValue ATK pendant $duration tours.\n';
+            desc += '${card.getTranslation((l) => l.cardDescStatusStrength(scaledValue, duration), fallback: 'Gagne $scaledValue ATK pendant $duration tours.')}\n';
             break;
           case 'armor_regen':
-            desc += 'Pendant $duration tours, gagne $scaledValue Armure au début du tour.\n';
+            desc += '${card.getTranslation((l) => l.cardDescStatusArmorRegen(scaledValue, duration), fallback: 'Pendant $duration tours, gagne $scaledValue Armure au début du tour.')}\n';
             break;
           case 'poison':
-            desc += 'Applique $scaledValue Poison.\n';
+            desc += '${card.getTranslation((l) => l.cardDescStatusPoison(scaledValue), fallback: 'Applique $scaledValue Poison.')}\n';
             break;
           case 'weakness':
-            desc += 'Applique $scaledValue Faiblesse.\n';
+            desc += '${card.getTranslation((l) => l.cardDescStatusWeakness(scaledValue), fallback: 'Applique $scaledValue Faiblesse.')}\n';
             break;
           case 'vulnerable':
-            desc += 'Applique $scaledValue Vulnérable.\n';
+            desc += '${card.getTranslation((l) => l.cardDescStatusVulnerable(scaledValue), fallback: 'Applique $scaledValue Vulnérable.')}\n';
             break;
           case 'strength_regen':
-            desc += 'Gagne $scaledValue Éveil d\'Attaque pendant $duration tours.\n';
+            desc += '${card.getTranslation((l) => l.cardDescStatusStrengthRegen(scaledValue, duration), fallback: 'Gagne $scaledValue Éveil d\'Attaque pendant $duration tours.')}\n';
             break;
           case 'burn':
-            desc += 'Applique $scaledValue Brûlure.\n';
+            desc += '${card.getTranslation((l) => l.cardDescStatusBurn(scaledValue), fallback: 'Applique $scaledValue Brûlure.')}\n';
             break;
           case 'freeze':
-            desc += 'Applique $scaledValue Gel.\n';
+            desc += '${card.getTranslation((l) => l.cardDescStatusFreeze(scaledValue), fallback: 'Applique $scaledValue Gel.')}\n';
             break;
           case 'shock':
-            desc += 'Applique $scaledValue Électrocution.\n';
+            desc += '${card.getTranslation((l) => l.cardDescStatusShock(scaledValue), fallback: 'Applique $scaledValue Électrocution.')}\n';
             break;
         }
       }
     }
     if (desc.isEmpty) {
-      desc = card.card.data.description;
+      desc = card.card.data.getDescription(card.activeLocale);
     }
     return desc.trim();
   }

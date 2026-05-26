@@ -613,6 +613,198 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Energy resource used to play cards each turn.'**
   String get tooltipManaDesc;
+
+  /// No description provided for @cardTypeAttack.
+  ///
+  /// In en, this message translates to:
+  /// **'Attack'**
+  String get cardTypeAttack;
+
+  /// No description provided for @cardTypeSkill.
+  ///
+  /// In en, this message translates to:
+  /// **'Skill'**
+  String get cardTypeSkill;
+
+  /// No description provided for @cardTypePower.
+  ///
+  /// In en, this message translates to:
+  /// **'Power'**
+  String get cardTypePower;
+
+  /// No description provided for @cardTypeStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get cardTypeStatus;
+
+  /// No description provided for @oncePlayed.
+  ///
+  /// In en, this message translates to:
+  /// **'ONCE PLAYED'**
+  String get oncePlayed;
+
+  /// No description provided for @exhaustWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'⚠️ ONCE PLAYED (Exhaust)'**
+  String get exhaustWarning;
+
+  /// No description provided for @hpAbbreviation.
+  ///
+  /// In en, this message translates to:
+  /// **'HP'**
+  String get hpAbbreviation;
+
+  /// No description provided for @enemyIntentsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'ENEMY INTENTIONS'**
+  String get enemyIntentsTitle;
+
+  /// No description provided for @intentDevastatingAttack.
+  ///
+  /// In en, this message translates to:
+  /// **'Devastating Attack: {value}'**
+  String intentDevastatingAttack(int value);
+
+  /// No description provided for @intentHeavyAttack.
+  ///
+  /// In en, this message translates to:
+  /// **'Heavy Attack: {value}'**
+  String intentHeavyAttack(int value);
+
+  /// No description provided for @intentAttack.
+  ///
+  /// In en, this message translates to:
+  /// **'Attack: {value}'**
+  String intentAttack(int value);
+
+  /// No description provided for @intentQuickAttack.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Attack: {value}'**
+  String intentQuickAttack(int value);
+
+  /// No description provided for @intentDefend.
+  ///
+  /// In en, this message translates to:
+  /// **'Defend: +{value}'**
+  String intentDefend(int value);
+
+  /// No description provided for @intentBuff.
+  ///
+  /// In en, this message translates to:
+  /// **'Buff Attack: +{value}'**
+  String intentBuff(int value);
+
+  /// No description provided for @intentCurse.
+  ///
+  /// In en, this message translates to:
+  /// **'Curse: {value}'**
+  String intentCurse(int value);
+
+  /// No description provided for @enemyStatsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'ENEMY STATS'**
+  String get enemyStatsTitle;
+
+  /// No description provided for @enemyStatsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Health: {hp}/{maxHp} HP.\nAttack: {attack}.\nArmor: {armor}.'**
+  String enemyStatsDesc(int hp, int maxHp, int attack, int armor);
+
+  /// No description provided for @cardDescDamage.
+  ///
+  /// In en, this message translates to:
+  /// **'Deals {amount} damage.'**
+  String cardDescDamage(int amount);
+
+  /// No description provided for @cardDescDamageAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Deals {amount} damage to all enemies.'**
+  String cardDescDamageAll(int amount);
+
+  /// No description provided for @cardDescHeal.
+  ///
+  /// In en, this message translates to:
+  /// **'Heals {amount} HP.'**
+  String cardDescHeal(int amount);
+
+  /// No description provided for @cardDescArmor.
+  ///
+  /// In en, this message translates to:
+  /// **'Gives {amount} Block.'**
+  String cardDescArmor(int amount);
+
+  /// No description provided for @cardDescGainMana.
+  ///
+  /// In en, this message translates to:
+  /// **'Gains {amount} Mana.'**
+  String cardDescGainMana(int amount);
+
+  /// No description provided for @cardDescDraw.
+  ///
+  /// In en, this message translates to:
+  /// **'Draws {amount} cards.'**
+  String cardDescDraw(int amount);
+
+  /// No description provided for @cardDescStatusStrength.
+  ///
+  /// In en, this message translates to:
+  /// **'Gains {amount} ATK for {duration} turns.'**
+  String cardDescStatusStrength(int amount, int duration);
+
+  /// No description provided for @cardDescStatusArmorRegen.
+  ///
+  /// In en, this message translates to:
+  /// **'For {duration} turns, gains {amount} Block at turn start.'**
+  String cardDescStatusArmorRegen(int amount, int duration);
+
+  /// No description provided for @cardDescStatusPoison.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies {amount} Poison.'**
+  String cardDescStatusPoison(int amount);
+
+  /// No description provided for @cardDescStatusWeakness.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies {amount} Weakness.'**
+  String cardDescStatusWeakness(int amount);
+
+  /// No description provided for @cardDescStatusVulnerable.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies {amount} Vulnerable.'**
+  String cardDescStatusVulnerable(int amount);
+
+  /// No description provided for @cardDescStatusStrengthRegen.
+  ///
+  /// In en, this message translates to:
+  /// **'Gains {amount} Attack Awakening for {duration} turns.'**
+  String cardDescStatusStrengthRegen(int amount, int duration);
+
+  /// No description provided for @cardDescStatusBurn.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies {amount} Burn.'**
+  String cardDescStatusBurn(int amount);
+
+  /// No description provided for @cardDescStatusFreeze.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies {amount} Freeze.'**
+  String cardDescStatusFreeze(int amount);
+
+  /// No description provided for @cardDescStatusShock.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies {amount} Shock.'**
+  String cardDescStatusShock(int amount);
 }
 
 class _AppLocalizationsDelegate
