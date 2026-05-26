@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../../../game/controllers/run_controller.dart';
 import '../../../../models/data/relic_data.dart';
 import '../../blur_wrapper.dart';
@@ -41,6 +42,9 @@ class RelicsDialog extends ConsumerWidget {
     }
     final uniqueIds = relicCounts.keys.toList();
 
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
+
     return BlurWrapper(
       sigma: 8,
       child: Center(
@@ -70,13 +74,13 @@ class RelicsDialog extends ConsumerWidget {
                   children: [
                     const Icon(Icons.inventory_2, color: Colors.amber, size: 32),
                     const SizedBox(width: 12),
-                    const Expanded(
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'INVENTAIRE DES RELIQUES',
-                            style: TextStyle(
+                            l10n.relicInventory.toUpperCase(),
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -84,8 +88,10 @@ class RelicsDialog extends ConsumerWidget {
                             ),
                           ),
                           Text(
-                            'Objets magiques passifs en votre possession',
-                            style: TextStyle(
+                            locale == 'fr'
+                                ? 'Objets magiques passifs en votre possession'
+                                : 'Passive magical items in your possession',
+                            style: const TextStyle(
                               color: Colors.white60,
                               fontSize: 12,
                             ),
@@ -111,20 +117,22 @@ class RelicsDialog extends ConsumerWidget {
                               color: Colors.white.withValues(alpha: 0.1),
                             ),
                             const SizedBox(height: 16),
-                            const Text(
-                              'Votre inventaire est vide',
-                              style: TextStyle(
+                            Text(
+                              l10n.emptyInventory,
+                              style: const TextStyle(
                                 color: Colors.white60,
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             const SizedBox(height: 8),
-                            const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 32.0),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 32.0),
                               child: Text(
-                                'Triomphez des monstres Élites ou explorez la Boutique pour acquérir des Reliques et obtenir de précieux effets passifs.',
-                                style: TextStyle(
+                                locale == 'fr'
+                                    ? 'Triomphez des monstres Élites ou explorez la Boutique pour acquérir des Reliques et obtenir de précieux effets passifs.'
+                                    : 'Defeat Elite monsters or explore the Shop to acquire Relics and obtain precious passive effects.',
+                                style: const TextStyle(
                                   color: Colors.white38,
                                   fontSize: 12,
                                 ),
@@ -138,8 +146,7 @@ class RelicsDialog extends ConsumerWidget {
                             final double availableWidth = constraints.maxWidth;
                             // Une relique prend exactement la moitié de la largeur disponible (2 colonnes) avec un espacement de 16px
                             final double cardWidth = (availableWidth - 16) / 2;
-                            const double cardHeight =
-                                110; // Hauteur réduite de moitié pour un affichage compact et fluide
+                            const double cardHeight = 110;
 
                             return SingleChildScrollView(
                               child: Wrap(
@@ -151,7 +158,7 @@ class RelicsDialog extends ConsumerWidget {
                                   return SizedBox(
                                     width: cardWidth,
                                     height: cardHeight,
-                                    child: _buildRelicCard(relic, count),
+                                    child: _buildRelicCard(context, relic, count),
                                   );
                                 }).toList(),
                               ),
@@ -167,58 +174,61 @@ class RelicsDialog extends ConsumerWidget {
     );
   }
 
-  Widget _buildRelicCard(RelicData relic, int count) {
+  Widget _buildRelicCard(BuildContext context, RelicData relic, int count) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
+
     Color triggerColor = Colors.grey;
     String triggerText = 'Passif';
     switch (relic.trigger) {
       case RelicTrigger.startOfRun:
-        triggerText = 'Début Run';
+        triggerText = l10n.relicTriggerRun;
         triggerColor = Colors.blueAccent;
         break;
       case RelicTrigger.startOfCombat:
-        triggerText = 'Début Combat';
+        triggerText = l10n.relicTriggerCombat;
         triggerColor = Colors.redAccent;
         break;
       case RelicTrigger.startOfTurn:
-        triggerText = 'Début Tour';
+        triggerText = l10n.relicTriggerTurnStart;
         triggerColor = Colors.greenAccent;
         break;
       case RelicTrigger.endOfTurn:
-        triggerText = 'Fin Tour';
+        triggerText = l10n.relicTriggerTurnEnd;
         triggerColor = Colors.amberAccent;
         break;
       case RelicTrigger.onCardPlayed:
-        triggerText = 'Carte Jouée';
+        triggerText = l10n.relicTriggerCardPlayed;
         triggerColor = Colors.purpleAccent;
         break;
       case RelicTrigger.onEnemyKilled:
-        triggerText = 'Ennemi Tué';
+        triggerText = l10n.relicTriggerEnemyKilled;
         triggerColor = Colors.orangeAccent;
         break;
     }
 
     Color rarityColor = Colors.grey;
-    String rarityText = 'Commun';
+    String rarityText = l10n.rarityCommon;
     switch (relic.rarity) {
       case RelicRarity.common:
         rarityColor = const Color(0xFF8E8E93);
-        rarityText = 'COMMUN';
+        rarityText = l10n.rarityCommon.toUpperCase();
         break;
       case RelicRarity.uncommon:
         rarityColor = const Color(0xFF34C759);
-        rarityText = 'PEU COMMUN';
+        rarityText = l10n.rarityUncommon.toUpperCase();
         break;
       case RelicRarity.rare:
         rarityColor = const Color(0xFF007AFF);
-        rarityText = 'RARE';
+        rarityText = l10n.rarityRare.toUpperCase();
         break;
       case RelicRarity.epic:
         rarityColor = const Color(0xFFAF52DE);
-        rarityText = 'ÉPIQUE';
+        rarityText = l10n.rarityEpic.toUpperCase();
         break;
       case RelicRarity.legendary:
         rarityColor = const Color(0xFFFFCC00);
-        rarityText = 'LÉGENDAIRE';
+        rarityText = l10n.rarityLegendary.toUpperCase();
         break;
     }
 
@@ -251,7 +261,7 @@ class RelicsDialog extends ConsumerWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      relic.name,
+                      relic.getName(locale),
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 13,
@@ -288,7 +298,7 @@ class RelicsDialog extends ConsumerWidget {
                 child: SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
                   child: Text(
-                    relic.description,
+                    relic.getDescription(locale),
                     style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 11,

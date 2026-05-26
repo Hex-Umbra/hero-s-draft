@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:roguelike_card_game/l10n/app_localizations.dart';
 
 class LegendItem extends StatelessWidget {
   final IconData icon;
@@ -36,6 +37,8 @@ class MapLegend extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -50,48 +53,48 @@ class MapLegend extends StatelessWidget {
           ),
         ],
       ),
-      child: const Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'LÉGENDE',
-            style: TextStyle(
+            l10n.legendTitle,
+            style: const TextStyle(
               color: Color(0xFFE8D5B5), // Couleur parchemin
               fontWeight: FontWeight.bold,
               fontSize: 12,
             ),
           ),
-          Divider(color: Colors.white24),
+          const Divider(color: Colors.white24),
           LegendItem(
             icon: Icons.flash_on,
             color: Colors.white,
-            label: 'Combat',
+            label: l10n.legendCombat,
           ),
           LegendItem(
             icon: Icons.warning_amber_rounded,
             color: Colors.redAccent,
-            label: 'Élite',
+            label: l10n.legendElite,
           ),
           LegendItem(
             icon: Icons.shopping_cart_outlined,
             color: Colors.amber,
-            label: 'Boutique',
+            label: l10n.legendShop,
           ),
           LegendItem(
             icon: Icons.nightlight_round,
             color: Colors.greenAccent,
-            label: 'Repos',
+            label: l10n.legendRest,
           ),
           LegendItem(
             icon: Icons.help_outline,
             color: Colors.blueAccent,
-            label: 'Événement',
+            label: l10n.legendEvent,
           ),
           LegendItem(
             icon: Icons.dangerous,
             color: Colors.purpleAccent,
-            label: 'Boss',
+            label: l10n.legendBoss,
           ),
         ],
       ),

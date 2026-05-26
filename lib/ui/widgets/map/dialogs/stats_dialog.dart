@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../../../game/controllers/run_controller.dart';
 import '../../../../models/data/passive_data.dart';
 import '../../../../services/game_data_service.dart';
@@ -42,6 +43,9 @@ class StatsDialog extends ConsumerWidget {
       orElse: () => gameData.heroes.first,
     );
 
+    final locale = Localizations.localeOf(context).languageCode;
+    final l10n = AppLocalizations.of(context)!;
+
     Color classColor = Colors.blue;
     if (runState.heroClassId == 'berserker') classColor = Colors.red;
     if (runState.heroClassId == 'mage') classColor = Colors.purple;
@@ -53,8 +57,8 @@ class StatsDialog extends ConsumerWidget {
 
     final passive = runState.activePassive ??
         PassiveData.fallback(runState.passiveTrait ?? '');
-    final traitName = passive.name;
-    final traitDesc = passive.description;
+    final traitName = passive.getName(locale);
+    final traitDesc = passive.getDescription(locale);
 
     final stats = runState.heroStats;
 
@@ -92,7 +96,7 @@ class StatsDialog extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            heroData.name.toUpperCase(),
+                            heroData.getName(locale).toUpperCase(),
                             style: TextStyle(
                               color: classColor,
                               fontSize: 22,
@@ -101,7 +105,7 @@ class StatsDialog extends ConsumerWidget {
                             ),
                           ),
                           Text(
-                            'Acte ${runState.act} • Niveau ${runState.currentLevel}',
+                            l10n.actLevel(runState.act, runState.currentLevel),
                             style: const TextStyle(
                               color: Colors.white60,
                               fontSize: 14,
@@ -117,9 +121,9 @@ class StatsDialog extends ConsumerWidget {
                   ],
                 ),
                 const Divider(color: Colors.white12, height: 24),
-                const Text(
-                  'STATISTIQUES DE LA RUN',
-                  style: TextStyle(
+                Text(
+                  l10n.heroStatsTitle.toUpperCase(),
+                  style: const TextStyle(
                     color: Colors.amberAccent,
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
@@ -132,7 +136,7 @@ class StatsDialog extends ConsumerWidget {
                   context,
                   icon: Icons.favorite,
                   iconColor: Colors.redAccent,
-                  label: 'Points de Vie',
+                  label: l10n.tooltipHpTitle,
                   value: '${stats.currentPv} / ${stats.maxPv}',
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8),
@@ -167,8 +171,8 @@ class StatsDialog extends ConsumerWidget {
                   context,
                   icon: Icons.diamond_rounded,
                   iconColor: Colors.cyanAccent,
-                  label: 'Mana / Énergie',
-                  value: '${stats.maxMana} Cristaux',
+                  label: l10n.tooltipManaTitle,
+                  value: '${stats.maxMana} ${locale == 'fr' ? 'Cristaux' : 'Crystals'}',
                   child: Row(
                     children: List.generate(
                       stats.maxMana,
@@ -191,9 +195,9 @@ class StatsDialog extends ConsumerWidget {
                     Expanded(
                       child: _buildCompactStatCard(
                         icon: SwordIcon(size: 16, color: Colors.orangeAccent),
-                        title: 'Attaque',
+                        title: locale == 'fr' ? 'Attaque' : 'Attack',
                         value: '${stats.attaque}',
-                        subtitle: 'Dégâts de base',
+                        subtitle: locale == 'fr' ? 'Dégâts de base' : 'Base damage',
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -201,9 +205,9 @@ class StatsDialog extends ConsumerWidget {
                       child: _buildCompactStatCard(
                         icon: const Icon(Icons.shield_outlined,
                             color: Colors.lightBlueAccent, size: 16),
-                        title: 'Maîtrise',
+                        title: locale == 'fr' ? 'Maîtrise' : 'Mastery',
                         value: '+${stats.armorMastery}',
-                        subtitle: 'Sur l\'Armure Passive',
+                        subtitle: locale == 'fr' ? "Sur l'Armure Passive" : "On passive armor",
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -211,9 +215,9 @@ class StatsDialog extends ConsumerWidget {
                       child: _buildCompactStatCard(
                         icon: const Icon(Icons.casino_outlined,
                             color: Colors.amberAccent, size: 16),
-                        title: 'Chance',
+                        title: locale == 'fr' ? 'Chance' : 'Luck',
                         value: '${stats.luck}',
-                        subtitle: 'Loot & Événements',
+                        subtitle: locale == 'fr' ? 'Loot & Événements' : 'Loot & Events',
                       ),
                     ),
                   ],
@@ -238,7 +242,7 @@ class StatsDialog extends ConsumerWidget {
                               size: 18, color: Colors.cyanAccent),
                           const SizedBox(width: 8),
                           Text(
-                            'EFFET PASSIF : $traitName',
+                            '${l10n.classPassive.toUpperCase()} : $traitName',
                             style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,

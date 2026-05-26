@@ -13,6 +13,8 @@ class HeroMiniStatsPanel extends ConsumerWidget {
     final runState = ref.watch(runProvider);
     final stats = runState.heroStats;
 
+    final locale = Localizations.localeOf(context).languageCode;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
@@ -36,10 +38,10 @@ class HeroMiniStatsPanel extends ConsumerWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'STATS DU HÉROS',
-                    style: TextStyle(
+                    locale == 'fr' ? 'STATS DU HÉROS' : 'HERO STATS',
+                    style: const TextStyle(
                       color: Color(0xFFE8D5B5), // Parchemin
                       fontWeight: FontWeight.bold,
                       fontSize: 11,
@@ -48,7 +50,7 @@ class HeroMiniStatsPanel extends ConsumerWidget {
                   ),
                 ),
                 Tooltip(
-                  message: 'Afficher les détails',
+                  message: locale == 'fr' ? 'Afficher les détails' : 'Show details',
                   child: Material(
                     color: Colors.transparent,
                     child: InkWell(
@@ -79,7 +81,7 @@ class HeroMiniStatsPanel extends ConsumerWidget {
           _buildMiniStatRow(
             icon: Icons.favorite,
             iconColor: Colors.redAccent,
-            value: '${stats.currentPv}/${stats.maxPv} PV',
+            value: '${stats.currentPv}/${stats.maxPv} ${locale == 'fr' ? 'PV' : 'HP'}',
           ),
           const SizedBox(height: 6),
           // Mana
@@ -92,14 +94,14 @@ class HeroMiniStatsPanel extends ConsumerWidget {
           // Attaque
           _buildMiniStatRowWidget(
             icon: SwordIcon(size: 16, color: Colors.orangeAccent),
-            value: '${stats.attaque} Attaque',
+            value: '${stats.attaque} ${locale == 'fr' ? 'Attaque' : 'Attack'}',
           ),
           const SizedBox(height: 6),
           // Maîtrise
           _buildMiniStatRow(
             icon: Icons.shield_outlined,
             iconColor: Colors.lightBlueAccent,
-            value: '+${stats.armorMastery} Maîtrise',
+            value: '+${stats.armorMastery} ${locale == 'fr' ? 'Maîtrise' : 'Mastery'}',
           ),
           const SizedBox(height: 6),
           // Chance
@@ -111,10 +113,10 @@ class HeroMiniStatsPanel extends ConsumerWidget {
                 _buildMiniStatRow(
                   icon: Icons.casino_outlined,
                   iconColor: Colors.amberAccent,
-                  value: '${stats.luck} Chance',
+                  value: '${stats.luck} ${locale == 'fr' ? 'Chance' : 'Luck'}',
                 ),
                 Tooltip(
-                  message: 'Voir les probabilités',
+                  message: locale == 'fr' ? 'Voir les probabilités' : 'View probabilities',
                   child: Material(
                     color: Colors.transparent,
                     child: InkWell(

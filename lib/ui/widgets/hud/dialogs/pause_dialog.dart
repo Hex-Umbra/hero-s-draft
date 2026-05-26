@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:roguelike_card_game/l10n/app_localizations.dart';
 
 class PauseDialog extends StatelessWidget {
   final VoidCallback onResume;
@@ -29,11 +30,13 @@ class PauseDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return AlertDialog(
       backgroundColor: const Color(0xFF2A2A3D),
-      title: const Text(
-        'PAUSE',
-        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+      title: Text(
+        l10n.pauseTitle,
+        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         textAlign: TextAlign.center,
       ),
       content: Column(
@@ -48,17 +51,17 @@ class PauseDialog extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 15),
             ),
             onPressed: onExit,
-            child: const Text(
-              'Retour au Menu Principal',
-              style: TextStyle(fontWeight: FontWeight.bold),
+            child: Text(
+              l10n.backToMainMenu,
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
           const SizedBox(height: 10),
           TextButton(
             onPressed: onResume,
-            child: const Text(
-              'Reprendre le Combat',
-              style: TextStyle(color: Colors.white70),
+            child: Text(
+              l10n.resumeCombat,
+              style: const TextStyle(color: Colors.white70),
             ),
           ),
         ],

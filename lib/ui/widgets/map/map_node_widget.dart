@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../../models/map_node.dart';
 
 class MapNodeWidget extends StatefulWidget {
@@ -30,43 +31,44 @@ class MapNodeWidget extends StatefulWidget {
 class _MapNodeWidgetState extends State<MapNodeWidget> {
   bool _isHovered = false;
 
-  (String, String) _getTooltipData() {
+  (String, String) _getTooltipData(AppLocalizations l10n) {
     switch (widget.node.type) {
       case MapNodeType.combat:
         return (
-          'COMBAT',
-          'Une rencontre standard avec des ennemis. Gagnez de l\'or et de nouvelles cartes.'
+          l10n.tooltipCombatTitle,
+          l10n.tooltipCombatDesc
         );
       case MapNodeType.elite:
         return (
-          'ÉLITE',
-          'Un combat très difficile contre des ennemis puissants. Offre de meilleures récompenses et des reliques.'
+          l10n.tooltipEliteTitle,
+          l10n.tooltipEliteDesc
         );
       case MapNodeType.shop:
         return (
-          'BOUTIQUE',
-          'Dépensez votre or pour acheter des cartes, retirer des cartes de votre deck ou cloner vos meilleures cartes.'
+          l10n.tooltipShopTitle,
+          l10n.tooltipShopDesc
         );
       case MapNodeType.rest:
         return (
-          'REPOS',
-          'Une zone sûre pour reprendre des forces ou améliorer votre équipement.'
+          l10n.tooltipRestTitle,
+          l10n.tooltipRestDesc
         );
       case MapNodeType.event:
         return (
-          'ÉVÉNEMENT',
-          'Une rencontre imprévisible qui peut vous octroyer des bonus... ou des malus.'
+          l10n.tooltipEventTitle,
+          l10n.tooltipEventDesc
         );
       case MapNodeType.boss:
         return (
-          'BOSS',
-          'L\'épreuve ultime de cet acte. Battez le boss pour passer à l\'acte suivant.'
+          l10n.tooltipBossTitle,
+          l10n.tooltipBossDesc
         );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     IconData icon;
     Color color;
 
@@ -97,7 +99,7 @@ class _MapNodeWidgetState extends State<MapNodeWidget> {
         break;
     }
 
-    final tooltipData = _getTooltipData();
+    final tooltipData = _getTooltipData(l10n);
 
     return Positioned(
       left: widget.node.position.x - 35,

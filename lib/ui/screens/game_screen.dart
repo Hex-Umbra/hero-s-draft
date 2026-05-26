@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../game/heros_draft_game.dart';
 import '../../game/controllers/run_controller.dart';
 import '../../game/controllers/deck_controller.dart';
@@ -94,27 +95,29 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         ref.read(runProvider.notifier).addRelic(chosenRelic);
 
         // Display snackbar
+        final l10n = AppLocalizations.of(context)!;
+        final locale = Localizations.localeOf(context).languageCode;
         String rarityStr = '';
         Color rarityColor = Colors.grey;
         switch (chosenRelic.rarity) {
           case RelicRarity.common:
-            rarityStr = 'COMMUN';
+            rarityStr = l10n.rarityCommon.toUpperCase();
             rarityColor = Colors.grey;
             break;
           case RelicRarity.uncommon:
-            rarityStr = 'PEU COMMUN';
+            rarityStr = l10n.rarityUncommon.toUpperCase();
             rarityColor = Colors.green;
             break;
           case RelicRarity.rare:
-            rarityStr = 'RARE';
+            rarityStr = l10n.rarityRare.toUpperCase();
             rarityColor = Colors.blueAccent;
             break;
           case RelicRarity.epic:
-            rarityStr = 'ÉPIQUE';
+            rarityStr = l10n.rarityEpic.toUpperCase();
             rarityColor = Colors.purpleAccent;
             break;
           case RelicRarity.legendary:
-            rarityStr = 'LÉGENDAIRE';
+            rarityStr = l10n.rarityLegendary.toUpperCase();
             rarityColor = Colors.amber;
             break;
         }
@@ -122,7 +125,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '👑 RELIQUE OBTENUE : ${chosenRelic.emoji} ${chosenRelic.name} ($rarityStr)',
+              '👑 ${locale == 'fr' ? 'RELIQUE OBTENUE' : 'RELIC OBTAINED'} : ${chosenRelic.emoji} ${chosenRelic.getName(locale)} ($rarityStr)',
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             backgroundColor: rarityColor,
@@ -225,8 +228,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         deckNotifier.drawCards(5);
       },
       onPhaseChanged: (phase) {
+        final l10n = AppLocalizations.of(context)!;
         _triggerPhaseBanner(
-          phase == TurnPhase.player ? 'TOUR JOUEUR' : 'TOUR ENNEMI',
+          phase == TurnPhase.player ? l10n.playerTurn : l10n.enemyTurn,
         );
       },
       onEnemyKilled: () {
@@ -341,6 +345,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     final deckState = ref.watch(deckProvider);
     final combatState = ref.watch(combatProvider);
     final gameData = ref.watch(gameDataLoaderProvider).requireValue;
+    final l10n = AppLocalizations.of(context)!;
 
     ref.listen<CombatState>(combatProvider, (previous, next) {
       if (next.isCombatEnded && next.isVictory) {
@@ -395,9 +400,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Text(
-                                'VOUS ÊTES MORT',
-                                style: TextStyle(
+                              Text(
+                                l10n.youAreDead,
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 40,
                                   fontWeight: FontWeight.bold,
@@ -416,7 +421,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                                       Navigator.of(context)
                                           .popUntil((route) => route.isFirst);
                                     },
-                                    child: const Text('Menu Principal'),
+                                    child: Text(l10n.mainMenu),
                                   ),
                                   const SizedBox(width: 10),
                                   ElevatedButton(
@@ -432,7 +437,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                                         ),
                                       );
                                     },
-                                    child: const Text('Changer de Classe'),
+                                    child: Text(l10n.changeClass),
                                   ),
                                 ],
                               ),
@@ -453,7 +458,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                           color: Colors.amber,
                           size: 40,
                         ),
-                        tooltip: 'Mon Deck',
+                        tooltip: l10n.myDeck,
                         onPressed: () {
                           Navigator.of(context).push(
                             MaterialPageRoute(
@@ -490,7 +495,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Acte ${runState.act} - Niveau : ${runState.currentLevel}',
+                            l10n.actLevel(runState.act, runState.currentLevel),
                             style: const TextStyle(
                               color: Colors.amber,
                               fontSize: 24,
@@ -562,10 +567,10 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                             ),
                           ],
                         ),
-                        child: const Text(
-                          "Plus de mana.\nTerminer le tour ?",
+                        child: Text(
+                          l10n.manaWarning,
                           textAlign: TextAlign.center,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
@@ -601,9 +606,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                             _game.executeTurn();
                           },
                           icon: const Icon(Icons.check, color: Colors.white),
-                          label: const Text(
-                            'Fin de Tour',
-                            style: TextStyle(
+                          label: Text(
+                            l10n.endTurn,
+                            style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
                             ),
@@ -636,7 +641,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                           ],
                         ),
                         child: Text(
-                          "Tour $_turnCount",
+                          l10n.turnCount(_turnCount),
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                             color: Colors.white,
@@ -660,7 +665,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          'Pioche: ${deckState.drawPile.length}',
+                          l10n.drawPile(deckState.drawPile.length),
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -681,7 +686,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          'Défausse: ${deckState.discardPile.length}',
+                          l10n.discardPile(deckState.discardPile.length),
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,

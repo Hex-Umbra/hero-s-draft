@@ -211,3 +211,25 @@
         - **Fallback Statique des Passifs** : Mise à jour de la méthode `PassiveData.fallback` pour retourner des instances avec des textes multilingues.
     - **Validation Statique** :
         - Lancement de `flutter analyze` : **100% propre, aucune erreur de compilation ou avertissement de lint**, confirmant la parfaite réussite de la rétrocompatibilité temporaire.
+
+## Phase 4 : Étape 3 - Remplacement des Chaînes dans les Écrans et Dialogues (UI Flutter)
+
+- refactor: Internationalisation complète de la couche UI Flutter par substitution par AppLocalizations
+    - Localisation de l'Écran de la Carte (`MapScreen`) :
+        - **Barre d'application** : Utilisation de `l10n.worldMap` combinée avec le numéro de l'acte dynamique.
+        - **Boutons de navigation** : Remplacement des étiquettes en dur par `l10n.myDeck.toUpperCase()`, `l10n.stats.toUpperCase()`, `l10n.relics.toUpperCase()`, et `l10n.chances.toUpperCase()`.
+    - Localisation du Panneau de Légende de Carte (`MapLegend`) :
+        - Remplacement de l'en-tête `LÉGENDE` et de tous les types de nœuds (`Combat`, `Élite`, `Boutique`, `Repos`, `Événement`, `Boss`) par leurs clés de ressources localisées ARB respectives.
+    - Localisation des Nœuds individuels (`MapNodeWidget`) :
+        - Chargement bilingue dynamique des titres et descriptifs détaillés des infobulles (tooltips) pour chacun des six types de nœuds.
+    - Localisation des Dialogues de Détails (`StatsDialog`, `RelicsDialog`, `ProbabilitiesDialog` et `HeroMiniStatsPanel`) :
+        - **StatsDialog** : Traduction dynamique des en-têtes de statistiques, des jauges de Points de vie et de Mana (incluant le pluriel contextuel `"Cristaux"` / `"Crystals"`), des cartes de stats d'Attaque/Maîtrise/Chance, et du bloc passif de classe (chargement dynamique du nom et de la description via `getName(locale)` / `getDescription(locale)`).
+        - **RelicsDialog** : Groupement (stacking) et rendu bilingue dynamique des reliques en main (nom, description, types de déclencheurs et raretés traduites via ARB).
+        - **ProbabilitiesDialog** : Rendu bilingue complet des descriptifs et titres des trois grandes tables de chance de loot (Draft standard, récompenses de niveau, et butin de reliques) avec prise en charge dynamique des raretés localisées.
+        - **HeroMiniStatsPanel** : Traduction bilingue des indicateurs abrégés affichés en surimpression sur la carte du monde.
+    - Localisation de l'Écran de Combat (`GameScreen`) et ses HUD :
+        - **Dialogue de Pause (`PauseDialog`)** : En-tête de pause et boutons d'action d'échappement entièrement traduits.
+        - **HUD de combat** : Remplacement du bandeau de tour (`l10n.playerTurn` / `l10n.enemyTurn`), de l'avertissement de mana vide (`l10n.manaWarning`), du bouton de fin de tour (`l10n.endTurn`), du compteur de tours (`l10n.turnCount`), et des compteurs de Pioche et Défausse.
+        - **Notifications SnackBar** : Traduction dynamique du message de gain de reliques (`"RELIQUE OBTENUE"` / `"RELIC OBTAINED"`) et formatage de la rareté et du nom de l'objet magique acquis selon la locale active.
+    - **Validation Statique Globale** :
+        - Lancement final de `flutter analyze` : **100% propre, aucune erreur ou avertissement de lint détecté**, garantissant la parfaite stabilité et la propreté de l'internationalisation de la couche UI Flutter.

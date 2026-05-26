@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../game/controllers/run_controller.dart';
 import '../../models/map_node.dart';
 import 'game_screen.dart';
@@ -209,11 +210,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final deckState = ref.watch(deckProvider);
     final canMerge = _checkCanMerge(deckState.masterDeck);
 
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: const Color(0xFFE8D5B5), // Fond parchemin clair
       appBar: AppBar(
         title: Text(
-          'Acte ${runState.act}',
+          '${l10n.worldMap} - Acte ${runState.act}',
           style: const TextStyle(
             color: Color(0xFF4A3728),
             fontWeight: FontWeight.bold,
@@ -264,7 +267,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   ],
                 ),
                 label: Text(
-                  canMerge ? 'DECK (!)' : 'MON DECK',
+                  canMerge ? 'DECK (!)' : l10n.myDeck.toUpperCase(),
                   style: TextStyle(
                     color: canMerge ? Colors.redAccent : const Color(0xFF4A3728),
                     fontWeight: FontWeight.bold,
@@ -285,9 +288,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 onPressed: () => StatsDialog.show(context),
                 icon: const Icon(Icons.bar_chart_rounded,
                     color: Color(0xFF4A3728), size: 20),
-                label: const Text(
-                  'STATS',
-                  style: TextStyle(
+                label: Text(
+                  l10n.stats.toUpperCase(),
+                  style: const TextStyle(
                     color: Color(0xFF4A3728),
                     fontWeight: FontWeight.bold,
                     fontSize: 10.5,
@@ -307,9 +310,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 onPressed: () => RelicsDialog.show(context),
                 icon: const Icon(Icons.inventory_2_outlined,
                     color: Color(0xFF4A3728), size: 20),
-                label: const Text(
-                  'RELIQUES',
-                  style: TextStyle(
+                label: Text(
+                  l10n.relics.toUpperCase(),
+                  style: const TextStyle(
                     color: Color(0xFF4A3728),
                     fontWeight: FontWeight.bold,
                     fontSize: 10.5,
@@ -329,9 +332,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 onPressed: () => ProbabilitiesDialog.show(context),
                 icon: const Icon(Icons.casino_outlined,
                     color: Color(0xFF4A3728), size: 20),
-                label: const Text(
-                  'CHANCES',
-                  style: TextStyle(
+                label: Text(
+                  l10n.chances.toUpperCase(),
+                  style: const TextStyle(
                     color: Color(0xFF4A3728),
                     fontWeight: FontWeight.bold,
                     fontSize: 10.5,

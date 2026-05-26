@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../../../game/controllers/run_controller.dart';
 import '../../blur_wrapper.dart';
 
@@ -106,6 +107,9 @@ class ProbabilitiesDialog extends ConsumerWidget {
     final baseRelics = calculateRelicProbabilities(0);
     final curRelics = calculateRelicProbabilities(luck);
 
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
+
     return BlurWrapper(
       sigma: 8,
       child: Center(
@@ -136,13 +140,13 @@ class ProbabilitiesDialog extends ConsumerWidget {
                     const Icon(Icons.casino_outlined,
                         color: Colors.amberAccent, size: 36),
                     const SizedBox(width: 12),
-                    const Expanded(
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'TAUX D\'OBTENTION DES RARETÉS',
-                            style: TextStyle(
+                            l10n.luckPercentageTitle.toUpperCase(),
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -150,8 +154,10 @@ class ProbabilitiesDialog extends ConsumerWidget {
                             ),
                           ),
                           Text(
-                            'Ajustement en temps réel basé sur votre statistique de Chance',
-                            style: TextStyle(
+                            locale == 'fr'
+                                ? 'Ajustement en temps réel basé sur votre statistique de Chance'
+                                : 'Real-time adjustments based on your Luck statistic',
+                            style: const TextStyle(
                               color: Colors.white60,
                               fontSize: 12,
                             ),
@@ -183,7 +189,7 @@ class ProbabilitiesDialog extends ConsumerWidget {
                             color: Colors.amberAccent, size: 28),
                         const SizedBox(width: 12),
                         Text(
-                          'Votre Chance : $luck',
+                          l10n.currentLuck(luck),
                           style: const TextStyle(
                             color: Colors.amberAccent,
                             fontSize: 18,
@@ -201,38 +207,39 @@ class ProbabilitiesDialog extends ConsumerWidget {
                     child: Column(
                       children: [
                         _buildProbabilitySectionCard(
-                          title: 'Draft standard de récompenses',
-                          subtitle:
-                              'Chances d\'obtenir chaque rareté de carte/stat en fin de combat standard',
+                          title: locale == 'fr' ? 'Draft standard de récompenses' : 'Standard Reward Draft',
+                          subtitle: locale == 'fr'
+                              ? "Chances d'obtenir chaque rareté de carte/stat en fin de combat standard"
+                              : "Chances of getting each card/stat rarity at the end of standard combat",
                           icon: Icons.style_outlined,
                           accentColor: Colors.cyanAccent,
                           rows: [
                             _buildProbabilityRow(
-                              rarityName: 'Légendaire',
+                              rarityName: l10n.rarityLegendary,
                               color: Colors.amber,
                               basePercent: baseDraftStd['legendary']!,
                               currentPercent: curDraftStd['legendary']!,
                             ),
                             _buildProbabilityRow(
-                              rarityName: 'Épique',
+                              rarityName: l10n.rarityEpic,
                               color: Colors.purpleAccent,
                               basePercent: baseDraftStd['epic']!,
                               currentPercent: curDraftStd['epic']!,
                             ),
                             _buildProbabilityRow(
-                              rarityName: 'Rare',
+                              rarityName: l10n.rarityRare,
                               color: Colors.blueAccent,
                               basePercent: baseDraftStd['rare']!,
                               currentPercent: curDraftStd['rare']!,
                             ),
                             _buildProbabilityRow(
-                              rarityName: 'Peu Commun',
+                              rarityName: l10n.rarityUncommon,
                               color: Colors.greenAccent,
                               basePercent: baseDraftStd['uncommon']!,
                               currentPercent: curDraftStd['uncommon']!,
                             ),
                             _buildProbabilityRow(
-                              rarityName: 'Commun',
+                              rarityName: l10n.rarityCommon,
                               color: Colors.grey,
                               basePercent: baseDraftStd['common']!,
                               currentPercent: curDraftStd['common']!,
@@ -240,38 +247,39 @@ class ProbabilitiesDialog extends ConsumerWidget {
                           ],
                         ),
                         _buildProbabilitySectionCard(
-                          title: 'Récompense de niveau',
-                          subtitle:
-                              'Chances d\'obtenir chaque rareté d\'option lors de la montée de niveau (Trèfle / Miroir)',
+                          title: locale == 'fr' ? 'Récompense de niveau' : 'Level Reward',
+                          subtitle: locale == 'fr'
+                              ? "Chances d'obtenir chaque rareté d'option lors de la montée de niveau (Trèfle / Miroir)"
+                              : "Chances of getting each option rarity when leveling up (Clover / Mirror)",
                           icon: Icons.auto_awesome_outlined,
                           accentColor: Colors.lightGreenAccent,
                           rows: [
                             _buildProbabilityRow(
-                              rarityName: 'Légendaire',
+                              rarityName: l10n.rarityLegendary,
                               color: Colors.amber,
                               basePercent: baseDraftLeg['legendary']!,
                               currentPercent: curDraftLeg['legendary']!,
                             ),
                             _buildProbabilityRow(
-                              rarityName: 'Épique',
+                              rarityName: l10n.rarityEpic,
                               color: Colors.purpleAccent,
                               basePercent: baseDraftLeg['epic']!,
                               currentPercent: curDraftLeg['epic']!,
                             ),
                             _buildProbabilityRow(
-                              rarityName: 'Rare',
+                              rarityName: l10n.rarityRare,
                               color: Colors.blueAccent,
                               basePercent: baseDraftLeg['rare']!,
                               currentPercent: curDraftLeg['rare']!,
                             ),
                             _buildProbabilityRow(
-                              rarityName: 'Peu Commun',
+                              rarityName: l10n.rarityUncommon,
                               color: Colors.greenAccent,
                               basePercent: baseDraftLeg['uncommon']!,
                               currentPercent: curDraftLeg['uncommon']!,
                             ),
                             _buildProbabilityRow(
-                              rarityName: 'Commun',
+                              rarityName: l10n.rarityCommon,
                               color: Colors.grey,
                               basePercent: baseDraftLeg['common']!,
                               currentPercent: curDraftLeg['common']!,
@@ -279,38 +287,39 @@ class ProbabilitiesDialog extends ConsumerWidget {
                           ],
                         ),
                         _buildProbabilitySectionCard(
-                          title: 'Butin de Reliques',
-                          subtitle:
-                              'Chances d\'apparition des reliques par rareté (Boss, Élites & Événements)',
+                          title: locale == 'fr' ? 'Butin de Reliques' : 'Relic Loot',
+                          subtitle: locale == 'fr'
+                              ? "Chances d'apparition des reliques par rareté (Boss, Élites & Événements)"
+                              : "Relic drop rates by rarity (Boss, Elites & Events)",
                           icon: Icons.emoji_events_outlined,
                           accentColor: Colors.amber,
                           rows: [
                             _buildProbabilityRow(
-                              rarityName: 'Légendaire',
+                              rarityName: l10n.rarityLegendary,
                               color: Colors.amber,
                               basePercent: baseRelics['legendary']!,
                               currentPercent: curRelics['legendary']!,
                             ),
                             _buildProbabilityRow(
-                              rarityName: 'Épique',
+                              rarityName: l10n.rarityEpic,
                               color: Colors.purpleAccent,
                               basePercent: baseRelics['epic']!,
                               currentPercent: curRelics['epic']!,
                             ),
                             _buildProbabilityRow(
-                              rarityName: 'Rare',
+                              rarityName: l10n.rarityRare,
                               color: Colors.blueAccent,
                               basePercent: baseRelics['rare']!,
                               currentPercent: curRelics['rare']!,
                             ),
                             _buildProbabilityRow(
-                              rarityName: 'Peu Commun',
+                              rarityName: l10n.rarityUncommon,
                               color: Colors.greenAccent,
                               basePercent: baseRelics['uncommon']!,
                               currentPercent: curRelics['uncommon']!,
                             ),
                             _buildProbabilityRow(
-                              rarityName: 'Commun',
+                              rarityName: l10n.rarityCommon,
                               color: Colors.grey,
                               basePercent: baseRelics['common']!,
                               currentPercent: curRelics['common']!,
