@@ -1,4 +1,4 @@
-import 'dart:ui' as ui;
+import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../../models/map_node.dart';
 
@@ -34,7 +34,8 @@ class MapConnectionPainter extends CustomPainter {
 
     final double dashLength = 12.0;
     final double dashSpace = 8.0;
-    final double phase = animation.value * (dashLength + dashSpace) * 2;
+    final double totalDash = dashLength + dashSpace;
+    final double phase = animation.value * totalDash * 2;
 
     for (var node in nodes) {
       for (var targetId in node.connections) {
@@ -44,27 +45,31 @@ class MapConnectionPainter extends CustomPainter {
               highlightedConnections.contains((node.id, targetId));
           final paint = isHighlighted ? paintHighlight : paintBase;
 
-          final Path path = Path()
-            ..moveTo(node.position.x, node.position.y + 80.0)
-            ..lineTo(targetNode.position.x, targetNode.position.y + 80.0);
+          final Offset A = Offset(node.position.x, node.position.y + 80.0);
+          final Offset B = Offset(targetNode.position.x, targetNode.position.y + 80.0);
 
-          for (final ui.PathMetric metric in path.computeMetrics()) {
-            double distance = phase - (dashLength + dashSpace) * 2;
-            bool draw = true;
-            while (distance < metric.length) {
-              final double len = draw ? dashLength : dashSpace;
-              if (draw) {
-                final double start = distance < 0 ? 0 : distance;
-                final double end = (distance + len > metric.length)
-                    ? metric.length
-                    : distance + len;
-                if (start < end) {
-                  canvas.drawPath(metric.extractPath(start, end), paint);
-                }
-              }
-              distance += len;
-              draw = !draw;
+          final double dx = B.dx - A.dx;
+          final double dy = B.dy - A.dy;
+          final double L = sqrt(dx * dx + dy * dy);
+          if (L == 0) continue;
+
+          final double ux = dx / L;
+          final double uy = dy / L;
+
+          // Clamped math-based dashes to prevent WASM path allocation heap leak
+          double currentDist = (phase % totalDash) - totalDash;
+          while (currentDist < L) {
+            final double start = currentDist.clamp(0.0, L);
+            final double end = (currentDist + dashLength).clamp(0.0, L);
+
+            if (start < end) {
+              canvas.drawLine(
+                Offset(A.dx + ux * start, A.dy + uy * start),
+                Offset(A.dx + ux * end, A.dy + uy * end),
+                paint,
+              );
             }
+            currentDist += totalDash;
           }
         } catch (e) {
           // Ignorer si la cible n'existe pas

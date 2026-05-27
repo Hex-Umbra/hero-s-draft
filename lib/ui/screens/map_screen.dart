@@ -409,13 +409,15 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 ),
                 child: Stack(
                   children: [
-                    CustomPaint(
-                      size: const Size(1000, 3000),
-                      painter: MapConnectionPainter(
-                        nodes: nodes,
-                        animation: _dashController,
-                        highlightedConnections: _highlightedConnections,
-                        isParchmentMode: true,
+                    RepaintBoundary(
+                      child: CustomPaint(
+                        size: const Size(1000, 3000),
+                        painter: MapConnectionPainter(
+                          nodes: nodes,
+                          animation: _dashController,
+                          highlightedConnections: _highlightedConnections,
+                          isParchmentMode: true,
+                        ),
                       ),
                     ),
                     ...nodes.map(

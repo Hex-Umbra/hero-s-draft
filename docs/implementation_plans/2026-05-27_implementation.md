@@ -32,3 +32,20 @@
                 - Liaison nominale de `onTurnEnded` à la nouvelle méthode `_startPlayerNewTurn`.
                 - Rénovation d' `onEndEnemyTurn` pour appeler séquentiellement `combatController.endEnemyTurn()` puis `_startPlayerNewTurn()`.
             - Avantage immédiat : Le cycle de combat (pioche, défausse, régénération de mana) est désormais parfaitement fluide, réactif, et s'exécute de façon cadencée et sécurisée.
+
+## Phase 102 - Résolution du Plantage CanvasKit WebAssembly (tas de mémoire sature)
+
+- fix: Optimisation du tracé des liaisons animées pour éliminer les fuites de mémoire WASM à 60 FPS
+    - Résolution d'un plantage critique `RuntimeError: Aborted()` survenant après un certain temps de jeu sur la carte du monde en mode Flutter Web (CanvasKit).
+        - **Analyse du Problème** :
+            - Le tracé animé des liaisons entre nœuds (`MapConnectionPainter`) instanciait de nouveaux objets `Path` et calculait de façon continue des métriques complexes via `computeMetrics()` et `extractPath()` à chaque frame.
+            - Sous WebAssembly CanvasKit (Skia), ces objets ne sont pas libérés immédiatement par le Garbage Collector de Dart car ce sont des allocations natives. L'accumulation ultra-rapide d'objets natives sature le tas WASM, provoquant un plantage irrécupérable de l'application.
+            - De plus, l'absence de `RepaintBoundary` forçait Flutter à repeindre l'intégralité du Stack (les 15+ widgets de nœuds complexes, pion du joueur et HUD) à chaque frame, surchargeant le CPU/GPU.
+        - **Refactoring Vectoriel Mathématique Pur (`lib/ui/widgets/map/map_connection_painter.dart`)** :
+            - Élimination totale des allocations d'objets `Path`, `computeMetrics` et `extractPath`.
+            - Écriture d'un algorithme de découpe vectoriel mathématique direct dans Dart : calcul de la distance euclidienne entre points (`sqrt`), vecteur unitaire directionnel et découpe manuelle des coordonnées des segments à dessiner.
+            - Utilisation directe du tracé primitif optimisé de Skia `canvas.drawLine(...)` pour dessiner chaque pointillé.
+            - Avantage : **0 allocation WASM** lors de l'exécution, évitant définitivement tout débordement de mémoire et allégeant considérablement l'usage CPU.
+        - **Isolation du Calque Graphique (`lib/ui/screens/map_screen.dart`)** :
+            - Enveloppement du widget `CustomPaint` (contenant le peintre de connexions) dans un `RepaintBoundary`.
+            - Cela crée un calque de rendu indépendant. L'animation des pointillés se redessine à 60 FPS uniquement sur son propre plan isolé, libérant les nœuds de carte statiques et le HUD d'être repeints inutilement.
