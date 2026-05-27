@@ -49,3 +49,22 @@
         - **Isolation du Calque Graphique (`lib/ui/screens/map_screen.dart`)** :
             - Enveloppement du widget `CustomPaint` (contenant le peintre de connexions) dans un `RepaintBoundary`.
             - Cela crée un calque de rendu indépendant. L'animation des pointillés se redessine à 60 FPS uniquement sur son propre plan isolé, libérant les nœuds de carte statiques et le HUD d'être repeints inutilement.
+
+## Phase 103 - Rénovation Architecturale : Centralisation de la Boutique et des Événements dans Riverpod (Étape 1)
+
+- refactor: Migration de la logique métier de la Boutique et des Événements vers la couche de gestion d'état Riverpod
+    - **Analyse du Problème initial** :
+        - Les fichiers `shop_screen.dart` et `event_screen.dart` centralisaient de manière inline des règles métiers et du hasard (shuffling des cartes, calcul de prix selon la rareté, duplication, purge, tirage d'événements et calcul des probabilités pondérées d'obtention de reliques par rapport à la chance (*Luck*)).
+        - Cette imbrication de logique interdisait les tests unitaires et créait un couplage fort entre l'interface utilisateur et le gameplay.
+    - **Mise en place de l'infrastructure Boutique (`lib/models/shop_state.dart`, `lib/game/controllers/shop_controller.dart`)** :
+        - Définition d'un état immutable `ShopState` contenant la liste des cartes en vente (`cardsForSale`) et le marqueur de soin acheté (`purchasedHeal`).
+        - Création du `ShopController` gérant de manière isolée l'initialisation, l'achat de cartes, le reroll, l'achat de soin, l'expansion, la purge et le clonage.
+        - Refactoring de `shop_screen.dart` pour observer réactivement `shopProvider` et déléguer toutes les actions utilisateur. Intégration de `Future.microtask` pour initialiser le stock à l'entrée afin d'éviter toute violation de cycle de build Riverpod.
+    - **Mise en place de l'infrastructure Événement (`lib/models/event_state.dart`, `lib/game/controllers/event_controller.dart`)** :
+        - Définition d'un état immutable `EventState` contenant l'événement actif (`activeEvent`), le choix sélectionné (`selectedChoice`) et le marqueur de résolution (`isResolved`).
+        - Création de `EventController` centralisant les tirages d'événements et le traitement de leurs conséquences (or, dégâts, soin, modificateurs de stats du héros et gains de reliques pondérés par la chance).
+        - Refactoring de `event_screen.dart` pour décharger toute sa logique de gameplay.
+    - **Écriture et passage des Tests Unitaires & Widgets** :
+        - Création de `test/unit/shop_controller_test.dart` et `test/unit/event_controller_test.dart` validant de manière déterministe les transactions, le hasard boutique et les calculs de probabilités de reliques.
+        - Validation : Passage de **14 nouveaux tests**, portant le total du projet à **47 tests unitaires et widget validés avec 100% de réussite** et 0 avertissement `flutter analyze`.
+

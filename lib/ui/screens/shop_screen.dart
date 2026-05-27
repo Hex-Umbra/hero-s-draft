@@ -1,12 +1,11 @@
-import 'dart:math';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../game/controllers/run_controller.dart';
 import '../../game/controllers/deck_controller.dart';
+import '../../game/controllers/shop_controller.dart';
 import '../../services/game_data_service.dart';
 import '../../models/data/card_data.dart';
-import '../../models/card_instance.dart';
 import '../widgets/ui_card.dart';
 
 class ShopScreen extends ConsumerStatefulWidget {
@@ -18,39 +17,26 @@ class ShopScreen extends ConsumerStatefulWidget {
 
 class _ShopScreenState extends ConsumerState<ShopScreen> {
   bool _isInitialized = false;
-  List<CardData> _cardsForSale = [];
-  bool _purchasedHeal = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_isInitialized) {
-      _initializeShop();
+      Future.microtask(() {
+        final gameData = ref.read(gameDataLoaderProvider).requireValue;
+        final runState = ref.read(runProvider);
+        ref.read(shopProvider.notifier).initializeShop(gameData.cards, runState.bonusShopCards);
+      });
       _isInitialized = true;
     }
   }
 
-  void _initializeShop() {
-    final gameData = ref.read(gameDataLoaderProvider).requireValue;
-    final allCards = gameData.cards
-        .where((c) => c.type != CardType.status)
-        .toList();
-
-    final rng = Random();
-    List<CardData> shuffled = List.from(allCards)..shuffle(rng);
-    final runState = ref.read(runProvider);
-    _cardsForSale = shuffled.take(3 + runState.bonusShopCards).toList();
-  }
-
   void _buyCard(CardData card, int price) {
+    final shopController = ref.read(shopProvider.notifier);
     final runController = ref.read(runProvider.notifier);
-    if (runController.spendGold(price)) {
-      setState(() {
-        _cardsForSale.remove(card);
-      });
-      final instance = CardInstance(data: card);
-      ref.read(deckProvider.notifier).addCardToMasterDeck(instance);
+    final deckNotifier = ref.read(deckProvider.notifier);
 
+    if (shopController.buyCard(card, price, runController, deckNotifier)) {
       final locale = Localizations.localeOf(context).languageCode;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -69,6 +55,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
   }
 
   void _buyHeal(int price, int amount) {
+    final shopController = ref.read(shopProvider.notifier);
     final runController = ref.read(runProvider.notifier);
     final currentPv = ref.read(runProvider).heroStats.currentPv;
     final maxPv = ref.read(runProvider).heroStats.maxPv;
@@ -83,12 +70,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
       return;
     }
 
-    if (runController.spendGold(price)) {
-      setState(() {
-        _purchasedHeal = true;
-      });
-      runController.heal(amount);
-
+    if (shopController.buyHeal(price, amount, runController)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context)!.healApplied),
@@ -106,22 +88,11 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
   }
 
   void _expandShop(int price) {
+    final shopController = ref.read(shopProvider.notifier);
     final runController = ref.read(runProvider.notifier);
-    if (runController.spendGold(price)) {
-      runController.buyShopExpansion();
+    final gameData = ref.read(gameDataLoaderProvider).requireValue;
 
-      final gameData = ref.read(gameDataLoaderProvider).requireValue;
-      final allCards = gameData.cards.where((c) => c.type != CardType.status).toList();
-      final existingIds = _cardsForSale.map((c) => c.id).toSet();
-      final available = allCards.where((c) => !existingIds.contains(c.id)).toList();
-
-      if (available.isNotEmpty) {
-        final rng = Random();
-        setState(() {
-          _cardsForSale.add(available[rng.nextInt(available.length)]);
-        });
-      }
-
+    if (shopController.expandShop(price, gameData.cards, runController)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context)!.shopExpanded),
@@ -139,19 +110,12 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
   }
 
   void _rerollCards(int price) {
+    final shopController = ref.read(shopProvider.notifier);
     final runController = ref.read(runProvider.notifier);
-    if (runController.spendGold(price)) {
-      final gameData = ref.read(gameDataLoaderProvider).requireValue;
-      final allCards = gameData.cards.where((c) => c.type != CardType.status).toList();
-      
-      final rng = Random();
-      List<CardData> shuffled = List.from(allCards)..shuffle(rng);
-      
-      final runState = ref.read(runProvider);
-      setState(() {
-        _cardsForSale = shuffled.take(3 + runState.bonusShopCards).toList();
-      });
+    final gameData = ref.read(gameDataLoaderProvider).requireValue;
+    final runState = ref.read(runProvider);
 
+    if (shopController.rerollCards(price, gameData.cards, runState.bonusShopCards, runController)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context)!.shopRerolled),
@@ -188,7 +152,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
             height: 500,
             child: GridView.builder(
               gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 200, // Doublé pour un affichage plus clair
+                maxCrossAxisExtent: 200,
                 childAspectRatio: 0.65,
                 crossAxisSpacing: 10,
                 mainAxisSpacing: 10,
@@ -207,11 +171,11 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                   type: card.data.type,
                   isExhaust: card.data.isExhaust,
                   onTap: () {
+                    final shopController = ref.read(shopProvider.notifier);
                     final runController = ref.read(runProvider.notifier);
-                    if (runController.spendGold(price)) {
-                      ref
-                          .read(deckProvider.notifier)
-                          .removeCardFromMasterDeck(card);
+                    final deckNotifier = ref.read(deckProvider.notifier);
+
+                    if (shopController.purgeCard(price, card, runController, deckNotifier)) {
                       Navigator.of(ctx).pop();
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
@@ -313,16 +277,11 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                         style: const TextStyle(color: Colors.white70),
                       ),
                       onTap: () {
+                        final shopController = ref.read(shopProvider.notifier);
                         final runController = ref.read(runProvider.notifier);
-                        if (runController.spendGold(price)) {
-                          ref
-                              .read(deckProvider.notifier)
-                              .addCardToMasterDeck(
-                                CardInstance(
-                                  data: card.data,
-                                  level: card.level,
-                                ),
-                              );
+                        final deckNotifier = ref.read(deckProvider.notifier);
+
+                        if (shopController.cloneCard(price, card, runController, deckNotifier)) {
                           Navigator.of(ctx).pop();
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
@@ -362,6 +321,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
   @override
   Widget build(BuildContext context) {
     final runState = ref.watch(runProvider);
+    final shopState = ref.watch(shopProvider);
     final int healPrice = 30;
     final int healAmount = (runState.heroStats.maxPv * 0.3).round();
     final l10n = AppLocalizations.of(context)!;
@@ -425,7 +385,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                     ),
                     const SizedBox(height: 20),
                     Expanded(
-                      child: _cardsForSale.isEmpty
+                      child: shopState.cardsForSale.isEmpty
                           ? Center(
                               child: Text(
                                 l10n.noCardsInStock,
@@ -437,15 +397,8 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                               child: Wrap(
                                 spacing: 12,
                                 runSpacing: 20,
-                                children: _cardsForSale.map((card) {
-                                  int price = 25;
-                                  if (card.rarity == CardRarity.uncommon) {
-                                    price = 50;
-                                  }
-                                  if (card.rarity == CardRarity.rare) {
-                                    price = 100;
-                                  }
-
+                                children: shopState.cardsForSale.map((card) {
+                                  final int price = ShopController.getCardPrice(card.rarity);
                                   final bool canAfford = runState.gold >= price;
                                   return _ShopCardItem(
                                     card: card,
@@ -501,7 +454,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                               title: l10n.healingPotion,
                               description: l10n.restoresHp(healAmount),
                               price: healPrice,
-                              onPressed: _purchasedHeal
+                              onPressed: shopState.purchasedHeal
                                   ? null
                                   : () => _buyHeal(healPrice, healAmount),
                               buttonColor: Colors.green.shade800,

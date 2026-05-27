@@ -1,7 +1,7 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../game/controllers/run_controller.dart';
+import '../../game/controllers/event_controller.dart';
 import '../../models/data/event_data.dart';
 import '../../models/data/relic_data.dart';
 import '../../services/game_data_service.dart';
@@ -14,141 +14,63 @@ class EventScreen extends ConsumerStatefulWidget {
 }
 
 class _EventScreenState extends ConsumerState<EventScreen> {
-  EventData? _event;
-  EventChoice? _selectedChoice;
-  bool _isResolved = false;
 
   @override
   void initState() {
     super.initState();
-    _pickRandomEvent();
-  }
-
-  void _pickRandomEvent() {
-    final gameData = ref.read(gameDataLoaderProvider).requireValue;
-    if (gameData.events.isNotEmpty) {
-      final random = Random();
-      setState(() {
-        _event = gameData.events[random.nextInt(gameData.events.length)];
-      });
-    }
+    Future.microtask(() {
+      final gameData = ref.read(gameDataLoaderProvider).requireValue;
+      ref.read(eventProvider.notifier).initializeEvent(gameData.events);
+    });
   }
 
   void _handleChoice(EventChoice choice) {
-    setState(() {
-      _selectedChoice = choice;
-      _isResolved = true;
-    });
-
+    final gameData = ref.read(gameDataLoaderProvider).requireValue;
     final runController = ref.read(runProvider.notifier);
 
-    for (var action in choice.actions) {
-      switch (action.type) {
-        case 'gain_gold':
-          runController.gainGold(action.value as int);
-          break;
-        case 'spend_gold':
-          runController.spendGold(action.value as int);
-          break;
-        case 'take_damage':
-          runController.takeDamage(action.value as int);
-          break;
-        case 'heal':
-          runController.heal(action.value as int);
-          break;
-        case 'gain_max_hp':
-          runController.applyHeroStatModifier(maxPvAcc: action.value as int);
-          break;
-        case 'gain_strength':
-          runController.applyHeroStatModifier(attackAcc: action.value as int);
-          break;
-        case 'gain_relic':
-          final gameData = ref.read(gameDataLoaderProvider).requireValue;
-          final relics = gameData.relics;
-          if (relics.isNotEmpty) {
-            // Weighted selection scaled by player luck
-            final runState = ref.read(runProvider);
-            final luck = runState.heroStats.luck;
-            final rand = Random().nextDouble() * 100;
-            
-            final double legChance = 1.0 + luck * 0.5;
-            final double epicChance = 5.0 + luck * 1.0;
-            final double rareChance = 14.0 + luck * 2.0;
-            final double uncommonChance = 20.0 + luck * 3.0;
+    final chosenRelic = ref.read(eventProvider.notifier).selectChoice(
+          choice,
+          runController,
+          gameData.relics,
+        );
 
-            RelicRarity rarity;
-            double roll = rand;
-            if (roll < legChance) {
-              rarity = RelicRarity.legendary;
-            } else {
-              roll -= legChance;
-              if (roll < epicChance) {
-                rarity = RelicRarity.epic;
-              } else {
-                roll -= epicChance;
-                if (roll < rareChance) {
-                  rarity = RelicRarity.rare;
-                } else {
-                  roll -= rareChance;
-                  if (roll < uncommonChance) {
-                    rarity = RelicRarity.uncommon;
-                  } else {
-                    rarity = RelicRarity.common;
-                  }
-                }
-              }
-            }
-
-            var filtered = relics.where((r) => r.rarity == rarity).toList();
-            if (filtered.isEmpty) {
-              filtered = relics.where((r) => r.rarity == RelicRarity.common).toList();
-              if (filtered.isEmpty) {
-                filtered = relics;
-              }
-            }
-            final chosenRelic = filtered[Random().nextInt(filtered.length)];
-            runController.addRelic(chosenRelic);
-
-            // Display snackbar
-            String rarityStr = '';
-            Color rarityColor = Colors.grey;
-            switch (chosenRelic.rarity) {
-              case RelicRarity.common:
-                rarityStr = 'COMMUN';
-                rarityColor = Colors.grey;
-                break;
-              case RelicRarity.uncommon:
-                rarityStr = 'PEU COMMUN';
-                rarityColor = Colors.green;
-                break;
-              case RelicRarity.rare:
-                rarityStr = 'RARE';
-                rarityColor = Colors.blueAccent;
-                break;
-              case RelicRarity.epic:
-                rarityStr = 'ÉPIQUE';
-                rarityColor = Colors.purpleAccent;
-                break;
-              case RelicRarity.legendary:
-                rarityStr = 'LÉGENDAIRE';
-                rarityColor = Colors.amber;
-                break;
-            }
-
-            final locale = Localizations.localeOf(context).languageCode;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  '👑 ${locale == 'fr' ? 'RELIQUE OBTENUE' : 'RELIC OBTAINED'} : ${chosenRelic.emoji} ${chosenRelic.getName(locale)} ($rarityStr)',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                backgroundColor: rarityColor,
-                duration: const Duration(seconds: 4),
-              ),
-            );
-          }
+    if (chosenRelic != null) {
+      String rarityStr = '';
+      Color rarityColor = Colors.grey;
+      switch (chosenRelic.rarity) {
+        case RelicRarity.common:
+          rarityStr = 'COMMUN';
+          rarityColor = Colors.grey;
+          break;
+        case RelicRarity.uncommon:
+          rarityStr = 'PEU COMMUN';
+          rarityColor = Colors.green;
+          break;
+        case RelicRarity.rare:
+          rarityStr = 'RARE';
+          rarityColor = Colors.blueAccent;
+          break;
+        case RelicRarity.epic:
+          rarityStr = 'ÉPIQUE';
+          rarityColor = Colors.purpleAccent;
+          break;
+        case RelicRarity.legendary:
+          rarityStr = 'LÉGENDAIRE';
+          rarityColor = Colors.amber;
           break;
       }
+
+      final locale = Localizations.localeOf(context).languageCode;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '👑 ${locale == 'fr' ? 'RELIQUE OBTENUE' : 'RELIC OBTAINED'} : ${chosenRelic.emoji} ${chosenRelic.getName(locale)} ($rarityStr)',
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          backgroundColor: rarityColor,
+          duration: const Duration(seconds: 4),
+        ),
+      );
     }
   }
 
@@ -296,7 +218,10 @@ class _EventScreenState extends ConsumerState<EventScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_event == null) {
+    final eventState = ref.watch(eventProvider);
+    final activeEvent = eventState.activeEvent;
+
+    if (activeEvent == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
@@ -415,7 +340,7 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                 const Icon(Icons.help_outline, color: Colors.blueAccent, size: 60),
                 const SizedBox(height: 15),
                 Text(
-                  _event!.getTitle(locale),
+                  activeEvent.getTitle(locale),
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     color: Colors.white,
@@ -438,9 +363,9 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                             border: Border.all(color: Colors.white10),
                           ),
                           child: Text(
-                            !_isResolved
-                                ? _event!.getDescription(locale)
-                                : _selectedChoice!.getResultText(locale),
+                            !eventState.isResolved
+                                ? activeEvent.getDescription(locale)
+                                : eventState.selectedChoice!.getResultText(locale),
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               color: Colors.white70,
@@ -450,7 +375,7 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                             ),
                           ),
                         ),
-                        if (_isResolved) ...[
+                        if (eventState.isResolved && eventState.selectedChoice != null) ...[
                           const SizedBox(height: 25),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -486,9 +411,9 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                               alignment: WrapAlignment.center,
                               spacing: 8,
                               runSpacing: 8,
-                              children: _selectedChoice!.actions.isEmpty
+                              children: eventState.selectedChoice!.actions.isEmpty
                                   ? [_buildNoEffectBadge()]
-                                  : _selectedChoice!.actions
+                                  : eventState.selectedChoice!.actions
                                       .map((action) => _buildActionBadge(action))
                                       .toList(),
                             ),
@@ -499,8 +424,8 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                   ),
                 ),
                 const SizedBox(height: 40),
-                if (!_isResolved)
-                  ..._event!.choices.map((choice) => Padding(
+                if (!eventState.isResolved)
+                  ...activeEvent.choices.map((choice) => Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: _EventOptionButton(
                           text: choice.getText(locale),
