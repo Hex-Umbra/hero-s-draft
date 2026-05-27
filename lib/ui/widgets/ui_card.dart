@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../models/data/card_data.dart';
 import 'sword_icon.dart';
 
@@ -32,7 +33,8 @@ class UiCard extends StatelessWidget {
     this.onTap,
   });
 
-  String _buildDescription() {
+  String _buildDescription(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (level == null || effects == null || effects!.isEmpty) {
       return description;
     }
@@ -42,44 +44,44 @@ class UiCard extends StatelessWidget {
       final scaledValue = (effect.value * (1 + (level! - 1) * 0.5)).round();
       if (effect.type == 'damage') {
         if (target == 'Tous les ennemis' || target == 'allEnemies') {
-          desc += 'Inflige $scaledValue dégâts à tous les ennemis.\n';
+          desc += '${l10n.cardDescDamageAll(scaledValue)}\n';
         } else {
-          desc += 'Inflige $scaledValue dégâts.\n';
+          desc += '${l10n.cardDescDamage(scaledValue)}\n';
         }
       }
-      if (effect.type == 'heal') desc += 'Soigne $scaledValue PV.\n';
-      if (effect.type == 'armor') desc += 'Donne $scaledValue Armure.\n';
-      if (effect.type == 'gain_mana') desc += 'Gagne $scaledValue Mana.\n';
-      if (effect.type == 'draw') desc += 'Pioche $scaledValue cartes.\n';
+      if (effect.type == 'heal') desc += '${l10n.cardDescHeal(scaledValue)}\n';
+      if (effect.type == 'armor') desc += '${l10n.cardDescArmor(scaledValue)}\n';
+      if (effect.type == 'gain_mana') desc += '${l10n.cardDescGainMana(scaledValue)}\n';
+      if (effect.type == 'draw') desc += '${l10n.cardDescDraw(scaledValue)}\n';
       if (effect.type == 'apply_status') {
         final duration = effect.duration ?? 1;
         switch (effect.statusId) {
           case 'strength':
-            desc += 'Gagne $scaledValue ATK pendant $duration tours.\n';
+            desc += '${l10n.cardDescStatusStrength(scaledValue, duration)}\n';
             break;
           case 'armor_regen':
-            desc += 'Pendant $duration tours, gagne $scaledValue Armure au début du tour.\n';
+            desc += '${l10n.cardDescStatusArmorRegen(scaledValue, duration)}\n';
             break;
           case 'poison':
-            desc += 'Applique $scaledValue Poison.\n';
+            desc += '${l10n.cardDescStatusPoison(scaledValue)}\n';
             break;
           case 'weakness':
-            desc += 'Applique $scaledValue Faiblesse.\n';
+            desc += '${l10n.cardDescStatusWeakness(scaledValue)}\n';
             break;
           case 'vulnerable':
-            desc += 'Applique $scaledValue Vulnérable.\n';
+            desc += '${l10n.cardDescStatusVulnerable(scaledValue)}\n';
             break;
           case 'strength_regen':
-            desc += 'Gagne $scaledValue Éveil d\'Attaque pendant $duration tours.\n';
+            desc += '${l10n.cardDescStatusStrengthRegen(scaledValue, duration)}\n';
             break;
           case 'burn':
-            desc += 'Applique $scaledValue Brûlure.\n';
+            desc += '${l10n.cardDescStatusBurn(scaledValue)}\n';
             break;
           case 'freeze':
-            desc += 'Applique $scaledValue Gel.\n';
+            desc += '${l10n.cardDescStatusFreeze(scaledValue)}\n';
             break;
           case 'shock':
-            desc += 'Applique $scaledValue Électrocution.\n';
+            desc += '${l10n.cardDescStatusShock(scaledValue)}\n';
             break;
         }
       }
@@ -110,6 +112,7 @@ class UiCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final typeColor = _getTypeColor();
     final bgColor = _getBackgroundColor();
 
@@ -192,9 +195,9 @@ class UiCard extends StatelessWidget {
                 right: 0,
                 child: Center(
                   child: Container(
-                    height: 1.5,
-                    width: 40,
-                    color: typeColor.withAlpha(100),
+                     height: 1.5,
+                     width: 40,
+                     color: typeColor.withAlpha(100),
                   ),
                 ),
               ),
@@ -208,7 +211,7 @@ class UiCard extends StatelessWidget {
                   child: Text(
                     rarity!.toUpperCase(),
                     style: TextStyle(
-                      color: _getRarityColor(rarity!),
+                      color: _getRarityColor(context, rarity!),
                       fontSize: 9,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1.2,
@@ -233,9 +236,9 @@ class UiCard extends StatelessWidget {
                         color: Colors.redAccent.withAlpha(200),
                         borderRadius: BorderRadius.circular(4),
                       ),
-                      child: const Text(
-                        'USAGE UNIQUE',
-                        style: TextStyle(
+                      child: Text(
+                        l10n.oncePlayed.toUpperCase(),
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 8,
                           fontWeight: FontWeight.w900,
@@ -253,7 +256,7 @@ class UiCard extends StatelessWidget {
                 right: 8,
                 child: Center(
                   child: Text(
-                    _buildDescription(),
+                    _buildDescription(context),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 10,
@@ -292,7 +295,7 @@ class UiCard extends StatelessWidget {
                 left: 0,
                 right: 0,
                 child: Text(
-                  _getTypeLabel().toUpperCase(),
+                  _getTypeLabel(context).toUpperCase(),
                   style: TextStyle(
                     color: typeColor.withAlpha(180),
                     fontSize: 8,
@@ -324,28 +327,40 @@ class UiCard extends StatelessWidget {
     }
   }
 
-  String _getTypeLabel() {
+  String _getTypeLabel(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     switch (type) {
       case CardType.attack:
-        return 'Attaque';
+        return l10n.cardTypeAttack;
       case CardType.skill:
-        return 'Compétence';
+        return l10n.cardTypeSkill;
       case CardType.power:
-        return 'Pouvoir';
+        return l10n.cardTypePower;
       case CardType.status:
-        return 'Statut';
+        return l10n.cardTypeStatus;
       default:
         return 'Carte';
     }
   }
 
-  Color _getRarityColor(String rarity) {
+  Color _getRarityColor(BuildContext context, String rarity) {
+    final l10n = AppLocalizations.of(context)!;
     final r = rarity.toLowerCase();
-    if (r.contains('légendaire')) return Colors.orangeAccent;
-    if (r.contains('épique') || r.contains('epic')) return Colors.purpleAccent;
-    if (r.contains('rare')) return Colors.blueAccent;
-    if (r.contains('peu commun')) return Colors.greenAccent;
-    if (r.contains('commun')) return Colors.white70;
+    if (r == l10n.rarityLegendary.toLowerCase() || r.contains('legendary') || r.contains('légendaire')) {
+      return Colors.orangeAccent;
+    }
+    if (r == l10n.rarityEpic.toLowerCase() || r.contains('epic') || r.contains('épique')) {
+      return Colors.purpleAccent;
+    }
+    if (r == l10n.rarityRare.toLowerCase() || r.contains('rare')) {
+      return Colors.blueAccent;
+    }
+    if (r == l10n.rarityUncommon.toLowerCase() || r.contains('uncommon') || r.contains('peu commun')) {
+      return Colors.greenAccent;
+    }
+    if (r == l10n.rarityCommon.toLowerCase() || r.contains('common') || r.contains('commun')) {
+      return Colors.white70;
+    }
     return Colors.white54;
   }
 }

@@ -288,5 +288,31 @@
     "placeholders": {
       "amount": { "type": "int" }
     }
-  }
+  },
+  "cancel": "Cancel",
+  "shopExpanded": "Shop expanded permanently!",
+  "shopRerolled": "Cards renewed!",
+  "chooseCardToPurge": "Choose a card to purge",
+  "cardPurged": "Card purged!",
+  "chooseCardToClone": "Choose a card to clone",
+  "cardCloned": "Card cloned!",
+  "noCardsInStock": "Out of stock!",
+  "levelLabel": "Lvl {level}",
+  "@levelLabel": {
+    "placeholders": {
+      "level": { "type": "int" }
+    }
+  },
+  "shopReroll": "Reroll",
+  "shopRerollDesc": "Reroll cards for sale",
+  "shopPurge": "Purge",
+  "shopPurgeDesc": "Remove a card from your deck",
+  "shopExpand": "Expand Shop",
+  "shopExpandDesc": "Permanently add 1 more card for sale",
+  "shopClone": "Mirror Magic",
+  "shopCloneDesc": "Clone a card from your deck",
+  "targetSingleEnemy": "Single enemy",
+  "targetAllEnemies": "All enemies",
+  "targetSelf": "Self",
+  "targetNone": "None"
 }

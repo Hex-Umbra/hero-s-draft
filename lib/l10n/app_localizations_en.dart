@@ -429,4 +429,69 @@ class AppLocalizationsEn extends AppLocalizations {
   String cardDescStatusShock(int amount) {
     return 'Applies $amount Shock.';
   }
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get shopExpanded => 'Shop expanded permanently!';
+
+  @override
+  String get shopRerolled => 'Cards renewed!';
+
+  @override
+  String get chooseCardToPurge => 'Choose a card to purge';
+
+  @override
+  String get cardPurged => 'Card purged!';
+
+  @override
+  String get chooseCardToClone => 'Choose a card to clone';
+
+  @override
+  String get cardCloned => 'Card cloned!';
+
+  @override
+  String get noCardsInStock => 'Out of stock!';
+
+  @override
+  String levelLabel(int level) {
+    return 'Lvl $level';
+  }
+
+  @override
+  String get shopReroll => 'Reroll';
+
+  @override
+  String get shopRerollDesc => 'Reroll cards for sale';
+
+  @override
+  String get shopPurge => 'Purge';
+
+  @override
+  String get shopPurgeDesc => 'Remove a card from your deck';
+
+  @override
+  String get shopExpand => 'Expand Shop';
+
+  @override
+  String get shopExpandDesc => 'Permanently add 1 more card for sale';
+
+  @override
+  String get shopClone => 'Mirror Magic';
+
+  @override
+  String get shopCloneDesc => 'Clone a card from your deck';
+
+  @override
+  String get targetSingleEnemy => 'Single enemy';
+
+  @override
+  String get targetAllEnemies => 'All enemies';
+
+  @override
+  String get targetSelf => 'Self';
+
+  @override
+  String get targetNone => 'None';
 }

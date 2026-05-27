@@ -255,3 +255,18 @@
         - Lancement de `flutter test` : **100% vert, tous les 33 tests unitaires et de widgets passent avec succès !**
         - Lancement final de `dart analyze` : **100% vert, 0 warning, 0 erreur**, confirmant la perfection de l'intégration et l'absence de régression.
 
+## Phase 4 : Étape 5 - Localisation de l'Écran Boutique (ShopScreen)
+
+- refactor: Internationalisation de ShopScreen, purge de tous les textes en dur et adaptation du test de widget
+    - Localisation complète de `ShopScreen` (`lib/ui/screens/shop_screen.dart`) :
+        - **Modaux d'achat et interactions** : Remplacement des messages de SnackBars d'achat d'amélioration de boutique (`_expandShop`), de renouvellement (`_rerollCards`), de purge (`_showRemovalModal`) et de copie (`_showCloneModal`) par des clés `AppLocalizations` correspondantes (`shopExpanded`, `shopRerolled`, `cardPurged`, `cardCloned`, etc.).
+        - **Traductions dynamiques des Cartes** : Refonte de la modal de purge et du widget `_ShopCardItem` pour charger bilinguement les noms et les descriptions des cartes à l'aide de `getName(locale)` et `getDescription(locale)`.
+        - **Localisation des services du menu latéral** : Traduction bilingue des services ("Renouveler", "Purger", "Étal étendu", "Miroir Magique") en français et en anglais grâce aux nouvelles clés ARB introduites.
+        - **Label de Rareté et Cibles** : Migration des helpers statiques `_getRarityLabel` et `_getTargetLabel` pour utiliser `AppLocalizations` au lieu de chaînes codées en dur en français.
+    - **Enrichissement des Ressources ARB** :
+        - Ajout de 17 nouvelles clés de traduction pour la boutique et la gestion des boîtes de dialogue de cartes dans `lib/l10n/app_en.arb` et `lib/l10n/app_fr.arb`.
+    - **Ajustement de la suite de Tests** :
+        - Mise à jour du widget de test `test/widget/shop_screen_test.dart` en le configurant explicitement sous la locale française (`Locale('fr', '')`) pour garantir l'exécution sans régression des assertions textuelles originelles.
+    - **Validation Statique & Exécution** :
+        - Exécution de `flutter gen-l10n` et de `flutter test` : **100% vert, tous les 33 tests passent avec succès !**
+        - Lancement final de `dart analyze` : **100% vert, 0 warning, 0 erreur !**

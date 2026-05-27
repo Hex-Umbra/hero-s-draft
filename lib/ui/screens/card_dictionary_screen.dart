@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../services/game_data_service.dart';
 import '../../models/data/card_data.dart';
 import '../widgets/ui_card.dart';
@@ -10,13 +11,15 @@ class CardDictionaryScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final gameDataAsync = ref.watch(gameDataLoaderProvider);
+    final locale = Localizations.localeOf(context).languageCode;
+    final isFr = locale == 'fr';
 
     return Scaffold(
       backgroundColor: const Color(0xFF1E1E2C),
       appBar: AppBar(
-        title: const Text(
-          'Dictionnaire des Cartes',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        title: Text(
+          isFr ? 'Dictionnaire des Cartes' : 'Card Dictionary',
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.black45,
         elevation: 0,
@@ -42,7 +45,7 @@ class CardDictionaryScreen extends ConsumerWidget {
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       child: Text(
-                        _getTypeLabel(group.key),
+                        _getTypeLabel(context, group.key),
                         style: const TextStyle(
                           color: Colors.amber,
                           fontSize: 24,
@@ -65,10 +68,10 @@ class CardDictionaryScreen extends ConsumerWidget {
                       itemBuilder: (context, index) {
                         final card = group.value[index];
                         return UiCard(
-                          title: card.name,
-                          description: card.description,
-                          rarity: _getRarityLabel(card.rarity),
-                          target: _getTargetLabel(card.target),
+                          title: card.getName(locale),
+                          description: card.getDescription(locale),
+                          rarity: _getRarityLabel(context, card.rarity),
+                          target: _getTargetLabel(locale, card.target),
                           cost: card.cost,
                           type: card.type,
                           isExhaust: card.isExhaust,
@@ -94,44 +97,48 @@ class CardDictionaryScreen extends ConsumerWidget {
     );
   }
 
-  String _getTypeLabel(CardType type) {
+  String _getTypeLabel(BuildContext context, CardType type) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
     switch (type) {
       case CardType.attack:
-        return 'ATTAQUES';
+        return '${l10n.cardTypeAttack.toUpperCase()}S';
       case CardType.skill:
-        return 'COMPÉTENCES';
+        return '${l10n.cardTypeSkill.toUpperCase()}S';
       case CardType.power:
-        return 'POUVOIRS';
+        return '${l10n.cardTypePower.toUpperCase()}S';
       case CardType.status:
-        return 'STATUTS / MALÉDICTIONS';
+        return locale == 'fr' ? 'STATUTS / MALÉDICTIONS' : 'STATUS / CURSES';
     }
   }
 
-  String _getRarityLabel(CardRarity rarity) {
+  String _getRarityLabel(BuildContext context, CardRarity rarity) {
+    final l10n = AppLocalizations.of(context)!;
     switch (rarity) {
       case CardRarity.common:
-        return 'Commun';
+        return l10n.rarityCommon;
       case CardRarity.uncommon:
-        return 'Peu Commun';
+        return l10n.rarityUncommon;
       case CardRarity.rare:
-        return 'Rare';
+        return l10n.rarityRare;
       case CardRarity.epic:
-        return 'Épique';
+        return l10n.rarityEpic;
       case CardRarity.legendary:
-        return 'Légendaire';
+        return l10n.rarityLegendary;
     }
   }
 
-  String _getTargetLabel(CardTarget target) {
+  String _getTargetLabel(String locale, CardTarget target) {
+    final isFr = locale == 'fr';
     switch (target) {
       case CardTarget.singleEnemy:
-        return 'Cible unique';
+        return isFr ? 'Cible unique' : 'Single enemy';
       case CardTarget.allEnemies:
-        return 'Tous les ennemis';
+        return isFr ? 'Tous les ennemis' : 'All enemies';
       case CardTarget.self:
-        return 'Soi-même';
+        return isFr ? 'Soi-même' : 'Self';
       case CardTarget.none:
-        return 'Aucune';
+        return isFr ? 'Aucune' : 'None';
     }
   }
 }

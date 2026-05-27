@@ -433,4 +433,69 @@ class AppLocalizationsFr extends AppLocalizations {
   String cardDescStatusShock(int amount) {
     return 'Applique $amount Électrocution.';
   }
+
+  @override
+  String get cancel => 'Annuler';
+
+  @override
+  String get shopExpanded => 'Boutique agrandie définitivement !';
+
+  @override
+  String get shopRerolled => 'Cartes renouvelées !';
+
+  @override
+  String get chooseCardToPurge => 'Choisissez une carte à purger';
+
+  @override
+  String get cardPurged => 'Carte purgée !';
+
+  @override
+  String get chooseCardToClone => 'Choisissez une carte à cloner';
+
+  @override
+  String get cardCloned => 'Carte clonée !';
+
+  @override
+  String get noCardsInStock => 'Plus de cartes en stock !';
+
+  @override
+  String levelLabel(int level) {
+    return 'Niv $level';
+  }
+
+  @override
+  String get shopReroll => 'Renouveler';
+
+  @override
+  String get shopRerollDesc => 'Renouvelle les cartes en vente';
+
+  @override
+  String get shopPurge => 'Purger';
+
+  @override
+  String get shopPurgeDesc => 'Retire une carte de votre deck';
+
+  @override
+  String get shopExpand => 'Étal étendu';
+
+  @override
+  String get shopExpandDesc => 'Ajoute 1 carte de plus en vente définitivement';
+
+  @override
+  String get shopClone => 'Miroir Magique';
+
+  @override
+  String get shopCloneDesc => 'Clone une carte de votre deck';
+
+  @override
+  String get targetSingleEnemy => 'Cible unique';
+
+  @override
+  String get targetAllEnemies => 'Tous les ennemis';
+
+  @override
+  String get targetSelf => 'Soi-même';
+
+  @override
+  String get targetNone => 'Aucune';
 }

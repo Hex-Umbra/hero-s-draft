@@ -51,9 +51,10 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
       final instance = CardInstance(data: card);
       ref.read(deckProvider.notifier).addCardToMasterDeck(instance);
 
+      final locale = Localizations.localeOf(context).languageCode;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.purchased(card.name)),
+          content: Text(AppLocalizations.of(context)!.purchased(card.getName(locale))),
           backgroundColor: Colors.green,
         ),
       );
@@ -122,8 +123,8 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Boutique agrandie définitivement !'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.shopExpanded),
           backgroundColor: Colors.green,
         ),
       );
@@ -152,8 +153,8 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Cartes renouvelées !'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.shopRerolled),
           backgroundColor: Colors.green,
         ),
       );
@@ -170,15 +171,17 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
   void _showRemovalModal(int price) {
     final deckState = ref.read(deckProvider);
     final masterDeck = deckState.masterDeck;
+    final locale = Localizations.localeOf(context).languageCode;
+    final l10n = AppLocalizations.of(context)!;
 
     showDialog(
       context: context,
       builder: (ctx) {
         return AlertDialog(
           backgroundColor: const Color(0xFF2A2A3D),
-          title: const Text(
-            'Choisissez une carte à purger',
-            style: TextStyle(color: Colors.white),
+          title: Text(
+            l10n.chooseCardToPurge,
+            style: const TextStyle(color: Colors.white),
           ),
           content: SizedBox(
             width: double.maxFinite,
@@ -194,12 +197,13 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
               itemBuilder: (context, index) {
                 final card = masterDeck[index];
                 return UiCard(
-                  title: card.data.name,
-                  description: card.data.description,
+                  title: card.data.getName(locale),
+                  description: card.data.getDescription(locale),
                   cost: card.data.cost,
                   effects: card.data.effects,
-                  rarity: 'Niveau ${card.level}',
-                  target: _getTargetLabel(card.data.target),
+                  level: card.level,
+                  rarity: l10n.levelLabel(card.level),
+                  target: _getTargetLabel(card.data.target, l10n),
                   type: card.data.type,
                   isExhaust: card.data.isExhaust,
                   onTap: () {
@@ -210,16 +214,16 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                           .removeCardFromMasterDeck(card);
                       Navigator.of(ctx).pop();
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Carte purgée !'),
+                        SnackBar(
+                          content: Text(l10n.cardPurged),
                           backgroundColor: Colors.green,
                         ),
                       );
                     } else {
                       Navigator.of(ctx).pop();
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Pas assez d\'or !'),
+                        SnackBar(
+                          content: Text(l10n.notEnoughGold),
                           backgroundColor: Colors.red,
                         ),
                       );
@@ -232,9 +236,9 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text(
-                'Annuler',
-                style: TextStyle(color: Colors.white70),
+              child: Text(
+                l10n.cancel,
+                style: const TextStyle(color: Colors.white70),
               ),
             ),
           ],
@@ -243,31 +247,31 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     );
   }
 
-  String _getRarityLabel(CardRarity rarity) {
+  String _getRarityLabel(CardRarity rarity, AppLocalizations l10n) {
     switch (rarity) {
       case CardRarity.common:
-        return 'Commun';
+        return l10n.rarityCommon;
       case CardRarity.uncommon:
-        return 'Peu Commun';
+        return l10n.rarityUncommon;
       case CardRarity.rare:
-        return 'Rare';
+        return l10n.rarityRare;
       case CardRarity.epic:
-        return 'Épique';
+        return l10n.rarityEpic;
       case CardRarity.legendary:
-        return 'Légendaire';
+        return l10n.rarityLegendary;
     }
   }
 
-  String _getTargetLabel(CardTarget target) {
+  String _getTargetLabel(CardTarget target, AppLocalizations l10n) {
     switch (target) {
       case CardTarget.singleEnemy:
-        return 'Cible unique';
+        return l10n.targetSingleEnemy;
       case CardTarget.allEnemies:
-        return 'Tous les ennemis';
+        return l10n.targetAllEnemies;
       case CardTarget.self:
-        return 'Soi-même';
+        return l10n.targetSelf;
       case CardTarget.none:
-        return 'Aucune';
+        return l10n.targetNone;
     }
   }
 
@@ -282,14 +286,17 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
       return;
     }
 
+    final locale = Localizations.localeOf(context).languageCode;
+    final l10n = AppLocalizations.of(context)!;
+
     showDialog(
       context: context,
       builder: (ctx) {
         return AlertDialog(
           backgroundColor: const Color(0xFF2A2A3D),
-          title: const Text(
-            'Choisissez une carte à cloner',
-            style: TextStyle(color: Colors.white),
+          title: Text(
+            l10n.chooseCardToClone,
+            style: const TextStyle(color: Colors.white),
           ),
           content: SingleChildScrollView(
             child: Column(
@@ -298,11 +305,11 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                   .map(
                     (card) => ListTile(
                       title: Text(
-                        card.data.name,
+                        card.data.getName(locale),
                         style: const TextStyle(color: Colors.amber),
                       ),
                       subtitle: Text(
-                        'Niveau ${card.level}',
+                        l10n.levelLabel(card.level),
                         style: const TextStyle(color: Colors.white70),
                       ),
                       onTap: () {
@@ -318,16 +325,16 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                               );
                           Navigator.of(ctx).pop();
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Carte clonée !'),
+                            SnackBar(
+                              content: Text(l10n.cardCloned),
                               backgroundColor: Colors.green,
                             ),
                           );
                         } else {
                           Navigator.of(ctx).pop();
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Pas assez d\'or !'),
+                            SnackBar(
+                              content: Text(l10n.notEnoughGold),
                               backgroundColor: Colors.red,
                             ),
                           );
@@ -341,9 +348,9 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text(
-                'Annuler',
-                style: TextStyle(color: Colors.white70),
+              child: Text(
+                l10n.cancel,
+                style: const TextStyle(color: Colors.white70),
               ),
             ),
           ],
@@ -419,10 +426,10 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                     const SizedBox(height: 20),
                     Expanded(
                       child: _cardsForSale.isEmpty
-                          ? const Center(
+                          ? Center(
                               child: Text(
-                                'Plus de cartes en stock !',
-                                style: TextStyle(
+                                l10n.noCardsInStock,
+                                style: const TextStyle(
                                     color: Colors.white54, fontSize: 18),
                               ),
                             )
@@ -444,8 +451,8 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                                     card: card,
                                     price: price,
                                     onPressed: () => _buyCard(card, price),
-                                    rarityLabel: _getRarityLabel(card.rarity),
-                                    targetLabel: _getTargetLabel(card.target),
+                                    rarityLabel: _getRarityLabel(card.rarity, l10n),
+                                    targetLabel: _getTargetLabel(card.target, l10n),
                                     canAfford: canAfford,
                                   );
                                 }).toList(),
@@ -481,8 +488,8 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                             _ShopServiceWidget(
                               icon: Icons.refresh,
                               iconColor: Colors.tealAccent,
-                              title: 'Renouveler',
-                              description: 'Renouvelle les cartes en vente',
+                              title: l10n.shopReroll,
+                              description: l10n.shopRerollDesc,
                               price: 15,
                               onPressed: () => _rerollCards(15),
                               buttonColor: Colors.teal.shade800,
@@ -503,8 +510,8 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                             _ShopServiceWidget(
                               icon: Icons.delete_forever,
                               iconColor: Colors.redAccent,
-                              title: 'Purger',
-                              description: 'Retire une carte de votre deck',
+                              title: l10n.shopPurge,
+                              description: l10n.shopPurgeDesc,
                               price: 75,
                               onPressed: () => _showRemovalModal(75),
                               buttonColor: Colors.red.shade800,
@@ -513,8 +520,8 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                             _ShopServiceWidget(
                               icon: Icons.add_shopping_cart,
                               iconColor: Colors.amberAccent,
-                              title: 'Étal étendu',
-                              description: 'Ajoute 1 carte de plus en vente définitivement',
+                              title: l10n.shopExpand,
+                              description: l10n.shopExpandDesc,
                               price: 100,
                               onPressed: () => _expandShop(100),
                               buttonColor: Colors.amber.shade800,
@@ -523,8 +530,8 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                             _ShopServiceWidget(
                               icon: Icons.content_copy,
                               iconColor: Colors.blueAccent,
-                              title: 'Miroir Magique',
-                              description: 'Clone une carte de votre deck',
+                              title: l10n.shopClone,
+                              description: l10n.shopCloneDesc,
                               price: 150,
                               onPressed: () => _showCloneModal(150),
                               buttonColor: Colors.blue.shade800,
@@ -727,19 +734,24 @@ class _ShopCardItemState extends State<_ShopCardItem> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              SizedBox(
-                width: 150,
-                height: 220,
-                child: UiCard(
-                  title: widget.card.name,
-                  description: widget.card.description,
-                  cost: widget.card.cost,
-                  effects: widget.card.effects,
-                  level: 1,
-                  rarity: widget.rarityLabel,
-                  target: widget.targetLabel,
-                  onTap: widget.onPressed,
-                ),
+              Builder(
+                builder: (context) {
+                  final locale = Localizations.localeOf(context).languageCode;
+                  return SizedBox(
+                    width: 150,
+                    height: 220,
+                    child: UiCard(
+                      title: widget.card.getName(locale),
+                      description: widget.card.getDescription(locale),
+                      cost: widget.card.cost,
+                      effects: widget.card.effects,
+                      level: 1,
+                      rarity: widget.rarityLabel,
+                      target: widget.targetLabel,
+                      onTap: widget.onPressed,
+                    ),
+                  );
+                }
               ),
               const SizedBox(height: 8),
               ElevatedButton.icon(

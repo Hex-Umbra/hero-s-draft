@@ -130,6 +130,7 @@ void main() {
             GlobalCupertinoLocalizations.delegate,
           ],
           supportedLocales: const [Locale('en', ''), Locale('fr', '')],
+          locale: const Locale('fr', ''),
           home: const Scaffold(
             body: ShopScreen(),
           ),

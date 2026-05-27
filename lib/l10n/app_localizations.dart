@@ -805,6 +805,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Applies {amount} Shock.'**
   String cardDescStatusShock(int amount);
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// No description provided for @shopExpanded.
+  ///
+  /// In en, this message translates to:
+  /// **'Shop expanded permanently!'**
+  String get shopExpanded;
+
+  /// No description provided for @shopRerolled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cards renewed!'**
+  String get shopRerolled;
+
+  /// No description provided for @chooseCardToPurge.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a card to purge'**
+  String get chooseCardToPurge;
+
+  /// No description provided for @cardPurged.
+  ///
+  /// In en, this message translates to:
+  /// **'Card purged!'**
+  String get cardPurged;
+
+  /// No description provided for @chooseCardToClone.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a card to clone'**
+  String get chooseCardToClone;
+
+  /// No description provided for @cardCloned.
+  ///
+  /// In en, this message translates to:
+  /// **'Card cloned!'**
+  String get cardCloned;
+
+  /// No description provided for @noCardsInStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Out of stock!'**
+  String get noCardsInStock;
+
+  /// No description provided for @levelLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Lvl {level}'**
+  String levelLabel(int level);
+
+  /// No description provided for @shopReroll.
+  ///
+  /// In en, this message translates to:
+  /// **'Reroll'**
+  String get shopReroll;
+
+  /// No description provided for @shopRerollDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Reroll cards for sale'**
+  String get shopRerollDesc;
+
+  /// No description provided for @shopPurge.
+  ///
+  /// In en, this message translates to:
+  /// **'Purge'**
+  String get shopPurge;
+
+  /// No description provided for @shopPurgeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove a card from your deck'**
+  String get shopPurgeDesc;
+
+  /// No description provided for @shopExpand.
+  ///
+  /// In en, this message translates to:
+  /// **'Expand Shop'**
+  String get shopExpand;
+
+  /// No description provided for @shopExpandDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently add 1 more card for sale'**
+  String get shopExpandDesc;
+
+  /// No description provided for @shopClone.
+  ///
+  /// In en, this message translates to:
+  /// **'Mirror Magic'**
+  String get shopClone;
+
+  /// No description provided for @shopCloneDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Clone a card from your deck'**
+  String get shopCloneDesc;
+
+  /// No description provided for @targetSingleEnemy.
+  ///
+  /// In en, this message translates to:
+  /// **'Single enemy'**
+  String get targetSingleEnemy;
+
+  /// No description provided for @targetAllEnemies.
+  ///
+  /// In en, this message translates to:
+  /// **'All enemies'**
+  String get targetAllEnemies;
+
+  /// No description provided for @targetSelf.
+  ///
+  /// In en, this message translates to:
+  /// **'Self'**
+  String get targetSelf;
+
+  /// No description provided for @targetNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get targetNone;
 }
 
 class _AppLocalizationsDelegate

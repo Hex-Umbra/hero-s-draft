@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../game/controllers/deck_controller.dart';
 import '../../models/card_instance.dart';
 import '../../models/data/card_data.dart';
@@ -13,6 +14,9 @@ class DeckScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final deckState = ref.watch(deckProvider);
     final masterDeck = deckState.masterDeck;
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
+    final isFr = locale == 'fr';
 
     // Grouper les cartes pour identifier les fusions possibles
     final Map<String, List<CardInstance>> groups = {};
@@ -24,9 +28,9 @@ class DeckScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: const Color(0xFF1E1E2C),
       appBar: AppBar(
-        title: const Text(
-          'Mon Deck',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        title: Text(
+          l10n.myDeck,
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.black45,
         elevation: 0,
@@ -38,7 +42,7 @@ class DeckScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Total : ${masterDeck.length} cartes',
+                isFr ? 'Total : ${masterDeck.length} cartes' : 'Total: ${masterDeck.length} cards',
                 style: const TextStyle(color: Colors.white70, fontSize: 16),
               ),
               const SizedBox(height: 20),
@@ -65,16 +69,17 @@ class DeckScreen extends ConsumerWidget {
                           child: Stack(
                             children: [
                               UiCard(
-                                title: card.data.name,
-                                description: card.data.description,
+                                title: card.data.getName(locale),
+                                description: card.data.getDescription(locale),
                                 cost: card.data.cost,
-                                target: _getTargetLabel(card.data.target),
+                                target: _getTargetLabel(locale, card.data.target),
                                 level: card.level,
                                 effects: card.data.effects,
                                 type: card.data.type,
                                 isExhaust: card.data.isExhaust,
-                                rarity:
-                                    '${_getRarityLabel(card.data.rarity)} - Niv. ${card.level}',
+                                rarity: isFr
+                                    ? '${_getRarityLabel(context, card.data.rarity)} - Niv. ${card.level}'
+                                    : '${_getRarityLabel(context, card.data.rarity)} - Lvl. ${card.level}',
                               ),
                               Positioned(
                                 top: 5,
@@ -112,18 +117,18 @@ class DeckScreen extends ConsumerWidget {
                             onPressed: () {
                               _confirmMerge(context, ref, card);
                             },
-                            child: const Text(
-                              'FUSIONNER (3)',
-                              style: TextStyle(
+                            child: Text(
+                              isFr ? 'FUSIONNER (3)' : 'MERGE (3)',
+                              style: const TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                           )
                         else if (canMerge && !allowMerge)
-                          const Text(
-                            'Fusion possible',
-                            style: TextStyle(
+                          Text(
+                            isFr ? 'Fusion possible' : 'Merge possible',
+                            style: const TextStyle(
                               color: Colors.orangeAccent,
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
@@ -131,7 +136,7 @@ class DeckScreen extends ConsumerWidget {
                           )
                         else
                           Text(
-                            '${3 - count} de plus requis',
+                            isFr ? '${3 - count} de plus requis' : '${3 - count} more required',
                             style: const TextStyle(
                               color: Colors.white54,
                               fontSize: 10,
@@ -149,53 +154,61 @@ class DeckScreen extends ConsumerWidget {
     );
   }
 
-  String _getRarityLabel(CardRarity rarity) {
+  String _getRarityLabel(BuildContext context, CardRarity rarity) {
+    final l10n = AppLocalizations.of(context)!;
     switch (rarity) {
       case CardRarity.common:
-        return 'Commun';
+        return l10n.rarityCommon;
       case CardRarity.uncommon:
-        return 'Peu Commun';
+        return l10n.rarityUncommon;
       case CardRarity.rare:
-        return 'Rare';
+        return l10n.rarityRare;
       case CardRarity.epic:
-        return 'Épique';
+        return l10n.rarityEpic;
       case CardRarity.legendary:
-        return 'Légendaire';
+        return l10n.rarityLegendary;
     }
   }
 
-  String _getTargetLabel(CardTarget target) {
+  String _getTargetLabel(String locale, CardTarget target) {
+    final isFr = locale == 'fr';
     switch (target) {
       case CardTarget.singleEnemy:
-        return 'Cible unique';
+        return isFr ? 'Cible unique' : 'Single enemy';
       case CardTarget.allEnemies:
-        return 'Tous les ennemis';
+        return isFr ? 'Tous les ennemis' : 'All enemies';
       case CardTarget.self:
-        return 'Soi-même';
+        return isFr ? 'Soi-même' : 'Self';
       case CardTarget.none:
-        return 'Aucune';
+        return isFr ? 'Aucune' : 'None';
     }
   }
 
   void _confirmMerge(BuildContext context, WidgetRef ref, CardInstance card) {
+    final locale = Localizations.localeOf(context).languageCode;
+    final isFr = locale == 'fr';
+    final cardName = card.data.getName(locale);
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF2A2A3D),
-        title: const Text(
-          'Confirmer la fusion',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          isFr ? 'Confirmer la fusion' : 'Confirm Merge',
+          style: const TextStyle(color: Colors.white),
         ),
         content: Text(
-          'Voulez-vous fusionner 3 exemplaires de "${card.data.name}" (Niv. ${card.level}) pour obtenir un exemplaire de Niveau ${card.level + 1} ?',
+          isFr
+              ? 'Voulez-vous fusionner 3 exemplaires de "$cardName" (Niv. ${card.level}) pour obtenir un exemplaire de Niveau ${card.level + 1} ?'
+              : 'Do you want to merge 3 copies of "$cardName" (Lvl. ${card.level}) to obtain a Lvl. ${card.level + 1} copy?',
           style: const TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text(
-              'Annuler',
-              style: TextStyle(color: Colors.white54),
+            child: Text(
+              isFr ? 'Annuler' : 'Cancel',
+              style: const TextStyle(color: Colors.white54),
             ),
           ),
           ElevatedButton(
@@ -208,15 +221,17 @@ class DeckScreen extends ConsumerWidget {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
-                    'Fusion réussie : ${card.data.name} est maintenant Niveau ${card.level + 1} !',
+                    isFr
+                        ? 'Fusion réussie : $cardName est maintenant Niveau ${card.level + 1} !'
+                        : 'Merge successful: $cardName is now Level ${card.level + 1}!',
                   ),
                   backgroundColor: Colors.green,
                 ),
               );
             },
-            child: const Text(
-              'Fusionner',
-              style: TextStyle(color: Colors.white),
+            child: Text(
+              isFr ? 'Fusionner' : 'Merge',
+              style: const TextStyle(color: Colors.white),
             ),
           ),
         ],

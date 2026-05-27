@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../models/data/hero_data.dart';
 import '../../services/game_data_service.dart';
 import 'card_dictionary_screen.dart';
@@ -16,16 +17,19 @@ class ClassSelectionScreen extends ConsumerWidget {
     final gameData = ref.watch(gameDataLoaderProvider).requireValue;
     final classes = gameData.heroes;
     final bool isMobile = MediaQuery.of(context).size.width < 600;
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
+    final isFr = locale == 'fr';
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Choisissez votre Classe'),
+        title: Text(l10n.selectClass),
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
           IconButton(
             icon: const Icon(Icons.menu_book),
-            tooltip: 'Dictionnaire des cartes',
+            tooltip: isFr ? 'Dictionnaire des cartes' : 'Card Dictionary',
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -145,6 +149,7 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
       (p) => p.id == playerClass.passiveTrait,
       orElse: () => PassiveData.fallback(playerClass.passiveTrait ?? ''),
     );
+    final locale = Localizations.localeOf(context).languageCode;
     
     Color classColor = Colors.blue;
     if (playerClass.id == 'berserker') classColor = Colors.red;
@@ -155,8 +160,8 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
     if (playerClass.id == 'berserker') icon = Icons.whatshot;
     if (playerClass.id == 'mage') icon = Icons.auto_fix_high;
 
-    final String traitName = passive.name;
-    final String traitDesc = passive.description;
+    final String traitName = passive.getName(locale);
+    final String traitDesc = passive.getDescription(locale);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -252,7 +257,7 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                 ),
                                 SizedBox(height: widget.isMobile ? 4 : 15),
                                 Text(
-                                  playerClass.name,
+                                  playerClass.getName(locale),
                                   style: TextStyle(
                                     fontSize: widget.isMobile ? 20 : 26,
                                     fontWeight: FontWeight.bold,
@@ -353,7 +358,7 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                 Expanded(
                                   child: SingleChildScrollView(
                                     child: Text(
-                                      playerClass.description,
+                                      playerClass.getDescription(locale),
                                       style: TextStyle(
                                         fontSize: widget.isMobile ? 11.5 : 13,
                                         color: Colors.white70,
@@ -456,6 +461,7 @@ class _PremiumSelectionButtonState extends State<_PremiumSelectionButton>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final LinearGradient gradient = widget.classColor == Colors.blue
         ? const LinearGradient(
             colors: [
@@ -506,7 +512,7 @@ class _PremiumSelectionButtonState extends State<_PremiumSelectionButton>
               ),
               child: Center(
                 child: Text(
-                  'Sélectionner',
+                  l10n.select,
                   style: TextStyle(
                     fontSize: widget.isMobile ? 14 : 16,
                     fontWeight: FontWeight.bold,

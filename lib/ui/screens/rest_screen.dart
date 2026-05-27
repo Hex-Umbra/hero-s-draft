@@ -16,6 +16,8 @@ class _RestScreenState extends ConsumerState<RestScreen> {
   bool _actionTaken = false;
 
   void _heal() {
+    final locale = Localizations.localeOf(context).languageCode;
+    final isFr = locale == 'fr';
     final runController = ref.read(runProvider.notifier);
     final maxHp = runController.currentState.heroStats.maxPv;
     final healAmount = (maxHp * 0.3).round();
@@ -28,16 +30,24 @@ class _RestScreenState extends ConsumerState<RestScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Repos terminé. Vous avez récupéré $healAmount PV.'),
+        content: Text(
+          isFr
+              ? 'Repos terminé. Vous avez récupéré $healAmount PV.'
+              : 'Rest complete. You recovered $healAmount HP.',
+        ),
         backgroundColor: Colors.green,
       ),
     );
   }
 
   void _upgradeCard() async {
+    final locale = Localizations.localeOf(context).languageCode;
+    final isFr = locale == 'fr';
     final selectedCard = await _showCardSelector(
-      title: 'FORGER UNE CARTE',
-      subtitle: 'Choisissez une carte à améliorer définitivement.',
+      title: isFr ? 'FORGER UNE CARTE' : 'FORGE A CARD',
+      subtitle: isFr
+          ? 'Choisissez une carte à améliorer définitivement.'
+          : 'Choose a card to permanently upgrade.',
     );
 
     if (selectedCard != null) {
@@ -48,9 +58,14 @@ class _RestScreenState extends ConsumerState<RestScreen> {
       });
 
       if (mounted) {
+        final cardName = selectedCard.data.getName(locale);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${selectedCard.data.name} a été améliorée au Niveau ${selectedCard.level + 1} !'),
+            content: Text(
+              isFr
+                  ? '$cardName a été améliorée au Niveau ${selectedCard.level + 1} !'
+                  : '$cardName was upgraded to Level ${selectedCard.level + 1}!',
+            ),
             backgroundColor: Colors.amber,
           ),
         );
@@ -59,9 +74,13 @@ class _RestScreenState extends ConsumerState<RestScreen> {
   }
 
   void _removeCard() async {
+    final locale = Localizations.localeOf(context).languageCode;
+    final isFr = locale == 'fr';
     final selectedCard = await _showCardSelector(
-      title: 'OUBLIER UNE CARTE',
-      subtitle: 'Choisissez une carte à retirer définitivement de votre deck.',
+      title: isFr ? 'OUBLIER UNE CARTE' : 'REMOVE A CARD',
+      subtitle: isFr
+          ? 'Choisissez une carte à retirer définitivement de votre deck.'
+          : 'Choose a card to permanently remove from your deck.',
     );
 
     if (selectedCard != null) {
@@ -72,9 +91,14 @@ class _RestScreenState extends ConsumerState<RestScreen> {
       });
 
       if (mounted) {
+        final cardName = selectedCard.data.getName(locale);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${selectedCard.data.name} a été retirée du deck.'),
+            content: Text(
+              isFr
+                  ? '$cardName a été retirée du deck.'
+                  : '$cardName was removed from your deck.',
+            ),
             backgroundColor: Colors.redAccent,
           ),
         );
@@ -83,6 +107,8 @@ class _RestScreenState extends ConsumerState<RestScreen> {
   }
 
   Future<CardInstance?> _showCardSelector({required String title, required String subtitle}) {
+    final locale = Localizations.localeOf(context).languageCode;
+    final isFr = locale == 'fr';
     return showModalBottomSheet<CardInstance>(
       context: context,
       isScrollControlled: true,
@@ -124,14 +150,14 @@ class _RestScreenState extends ConsumerState<RestScreen> {
                         return GestureDetector(
                           onTap: () => Navigator.of(context).pop(card),
                           child: UiCard(
-                            title: card.data.name,
-                            description: card.data.description,
+                            title: card.data.getName(locale),
+                            description: card.data.getDescription(locale),
                             cost: card.data.cost,
                             level: card.level,
                             effects: card.data.effects,
                             type: card.data.type,
                             isExhaust: card.data.isExhaust,
-                            rarity: 'Niveau ${card.level}',
+                            rarity: isFr ? 'Niveau ${card.level}' : 'Level ${card.level}',
                           ),
                         );
                       },
@@ -155,6 +181,8 @@ class _RestScreenState extends ConsumerState<RestScreen> {
   Widget build(BuildContext context) {
     final runState = ref.watch(runProvider);
     final heroStats = runState.heroStats;
+    final locale = Localizations.localeOf(context).languageCode;
+    final isFr = locale == 'fr';
 
     return Scaffold(
       backgroundColor: const Color(0xFF0D0D1A),
@@ -181,9 +209,9 @@ class _RestScreenState extends ConsumerState<RestScreen> {
                   size: 80,
                 ),
                 const SizedBox(height: 20),
-                const Text(
-                  'ZONE DE REPOS',
-                  style: TextStyle(
+                Text(
+                  isFr ? 'ZONE DE REPOS' : 'REST CAMP',
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
@@ -192,7 +220,9 @@ class _RestScreenState extends ConsumerState<RestScreen> {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  'Le crépitement du feu vous apaise...',
+                  isFr
+                      ? 'Le crépitement du feu vous apaise...'
+                      : 'The crackling fire calms you...',
                   style: TextStyle(
                     color: Colors.white.withAlpha(150),
                     fontSize: 16,
@@ -203,24 +233,30 @@ class _RestScreenState extends ConsumerState<RestScreen> {
                 if (!_actionTaken) ...[
                   _RestOption(
                     icon: Icons.favorite,
-                    title: 'SE REPOSER',
-                    description: 'Restaure 30% des PV Max (${(heroStats.maxPv * 0.3).round()} PV)',
+                    title: isFr ? 'SE REPOSER' : 'REST',
+                    description: isFr
+                        ? 'Restaure 30% des PV Max (${(heroStats.maxPv * 0.3).round()} PV)'
+                        : 'Restores 30% of Max HP (${(heroStats.maxPv * 0.3).round()} HP)',
                     onTap: _heal,
                     color: Colors.greenAccent,
                   ),
                   const SizedBox(height: 20),
                   _RestOption(
                     icon: Icons.auto_fix_high,
-                    title: 'FORGER',
-                    description: 'Améliore définitivement une carte de votre deck.',
+                    title: isFr ? 'FORGER' : 'FORGE',
+                    description: isFr
+                        ? 'Améliore définitivement une carte de votre deck.'
+                        : 'Permanently upgrade a card in your deck.',
                     onTap: _upgradeCard,
                     color: Colors.amberAccent,
                   ),
                   const SizedBox(height: 20),
                   _RestOption(
                     icon: Icons.delete_sweep,
-                    title: 'OUBLIER',
-                    description: 'Retire définitivement une carte de votre deck.',
+                    title: isFr ? 'OUBLIER' : 'REMOVE',
+                    description: isFr
+                        ? 'Retire définitivement une carte de votre deck.'
+                        : 'Permanently remove a card from your deck.',
                     onTap: _removeCard,
                     color: Colors.redAccent,
                   ),
@@ -238,9 +274,9 @@ class _RestScreenState extends ConsumerState<RestScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
                     ),
                     onPressed: _leave,
-                    child: const Text(
-                      'CONTINUER LA ROUTE',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    child: Text(
+                      isFr ? 'CONTINUER LA ROUTE' : 'PROCEED ONWARD',
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],

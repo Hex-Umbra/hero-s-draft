@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../game/controllers/run_controller.dart';
 import '../../game/controllers/deck_controller.dart';
 import '../../models/card_instance.dart';
@@ -25,23 +26,64 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
     _choices = _generateChoices();
   }
 
-  String _rarityToString(RewardRarity rarity) {
+  String _rarityToString(BuildContext context, RewardRarity rarity) {
+    final l10n = AppLocalizations.of(context)!;
     switch (rarity) {
       case RewardRarity.legendary:
-        return 'Légendaire';
+        return l10n.rarityLegendary;
       case RewardRarity.epic:
-        return 'Épique';
+        return l10n.rarityEpic;
       case RewardRarity.rare:
-        return 'Rare';
+        return l10n.rarityRare;
       case RewardRarity.uncommon:
-        return 'Peu Commun';
+        return l10n.rarityUncommon;
       case RewardRarity.common:
-        return 'Commun';
+        return l10n.rarityCommon;
     }
+  }
+
+  String _getChoiceTitle(BuildContext context, _DraftChoice choice) {
+    final locale = Localizations.localeOf(context).languageCode;
+    final isFr = locale == 'fr';
+    if (choice.title == 'Vitalité') return isFr ? 'Vitalité' : 'Vitality';
+    if (choice.title == 'Aiguisage') return isFr ? 'Aiguisage' : 'Sharpening';
+    if (choice.title == 'Forge d\'Acier') return isFr ? 'Forge d\'Acier' : 'Steel Forge';
+    if (choice.title == 'Sagesse') return isFr ? 'Sagesse' : 'Wisdom';
+    if (choice.title == 'Trèfle à 4 feuilles') return isFr ? 'Trèfle à 4 feuilles' : '4-Leaf Clover';
+    if (choice.title == 'Miroir') return isFr ? 'Miroir' : 'Mirror';
+    return choice.title;
+  }
+
+  String _getChoiceDescription(BuildContext context, _DraftChoice choice) {
+    final locale = Localizations.localeOf(context).languageCode;
+    final isFr = locale == 'fr';
+    if (choice.title == 'Vitalité') {
+      return isFr ? '+${choice.pvBoost} PV Max' : '+${choice.pvBoost} Max HP';
+    }
+    if (choice.title == 'Aiguisage') {
+      return isFr ? '+${choice.atkBoost} Attaque' : '+${choice.atkBoost} Attack';
+    }
+    if (choice.title == 'Forge d\'Acier') {
+      return isFr 
+          ? '+${choice.armorBoost} aux gains d\'Armure de votre passif' 
+          : '+${choice.armorBoost} to your passive\'s Block gain';
+    }
+    if (choice.title == 'Sagesse') {
+      return isFr ? '+${choice.manaBoost} Mana Max' : '+${choice.manaBoost} Max Mana';
+    }
+    if (choice.title == 'Trèfle à 4 feuilles') {
+      return isFr ? '+1 Chance' : '+1 Luck';
+    }
+    if (choice.title == 'Miroir') {
+      return isFr ? 'Cloner une carte de votre deck' : 'Clone a card from your deck';
+    }
+    return choice.description;
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Material(
       color: Colors.black87,
       child: SafeArea(
@@ -55,9 +97,9 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text(
-                      'RÉCOMPENSE DE COMBAT',
-                      style: TextStyle(
+                    Text(
+                      l10n.combatReward,
+                      style: const TextStyle(
                         color: Colors.amber,
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
@@ -65,9 +107,9 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 10),
-                    const Text(
-                      'Choisissez une amélioration pour votre héros',
-                      style: TextStyle(color: Colors.white, fontSize: 18),
+                    Text(
+                      l10n.chooseUpgrade,
+                      style: const TextStyle(color: Colors.white, fontSize: 18),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 30),
@@ -83,11 +125,11 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
                                     horizontal: 40,
                                   ),
                                   child: UiCard(
-                                    title: choice.title,
-                                    description: choice.description,
+                                    title: _getChoiceTitle(context, choice),
+                                    description: _getChoiceDescription(context, choice),
                                     onTap: () =>
                                         _onChoiceSelected(context, ref, choice),
-                                    rarity: _rarityToString(choice.rarity),
+                                    rarity: _rarityToString(context, choice.rarity),
                                     type: CardType.power,
                                   ),
                                 ),
@@ -110,14 +152,14 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
                                       maxWidth: 160,
                                     ),
                                     child: UiCard(
-                                      title: choice.title,
-                                      description: choice.description,
+                                      title: _getChoiceTitle(context, choice),
+                                      description: _getChoiceDescription(context, choice),
                                       onTap: () => _onChoiceSelected(
                                         context,
                                         ref,
                                         choice,
                                       ),
-                                      rarity: _rarityToString(choice.rarity),
+                                      rarity: _rarityToString(context, choice.rarity),
                                       type: CardType.power,
                                     ),
                                   ),
@@ -147,6 +189,8 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
   void _showCloneModal(BuildContext context, WidgetRef ref) {
     final deckState = ref.read(deckProvider);
     final masterDeck = List.of(deckState.masterDeck);
+    final locale = Localizations.localeOf(context).languageCode;
+    final isFr = locale == 'fr';
 
     // Choisir 3 cartes aléatoires
     masterDeck.shuffle();
@@ -163,9 +207,9 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
       builder: (ctx) {
         return AlertDialog(
           backgroundColor: const Color(0xFF2A2A3D),
-          title: const Text(
-            'Choisissez une carte à cloner',
-            style: TextStyle(color: Colors.white),
+          title: Text(
+            isFr ? 'Choisissez une carte à cloner' : 'Choose a card to clone',
+            style: const TextStyle(color: Colors.white),
           ),
           content: SingleChildScrollView(
             child: Column(
@@ -174,11 +218,11 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
                   .map(
                     (card) => ListTile(
                       title: Text(
-                        card.data.name,
+                        card.data.getName(locale),
                         style: const TextStyle(color: Colors.amber),
                       ),
                       subtitle: Text(
-                        'Niveau ${card.level}',
+                        isFr ? 'Niveau ${card.level}' : 'Level ${card.level}',
                         style: const TextStyle(color: Colors.white70),
                       ),
                       onTap: () {
