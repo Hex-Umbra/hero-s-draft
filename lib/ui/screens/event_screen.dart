@@ -164,55 +164,58 @@ class _EventScreenState extends ConsumerState<EventScreen> {
     Color bgColor;
     String text;
 
+    final locale = Localizations.localeOf(context).languageCode;
+    final isFr = locale == 'fr';
+
     switch (action.type) {
       case 'gain_gold':
         icon = Icons.monetization_on;
         iconColor = Colors.amber;
         textColor = Colors.greenAccent;
         bgColor = Colors.green.withAlpha(30);
-        text = '+${action.value} Or';
+        text = '+${action.value} ${isFr ? 'Or' : 'Gold'}';
         break;
       case 'spend_gold':
         icon = Icons.monetization_on;
         iconColor = Colors.amber;
         textColor = Colors.redAccent;
         bgColor = Colors.red.withAlpha(30);
-        text = '-${action.value} Or';
+        text = '-${action.value} ${isFr ? 'Or' : 'Gold'}';
         break;
       case 'take_damage':
         icon = Icons.favorite_border;
         iconColor = Colors.redAccent;
         textColor = Colors.redAccent;
         bgColor = Colors.red.withAlpha(30);
-        text = '-${action.value} PV';
+        text = '-${action.value} ${isFr ? 'PV' : 'HP'}';
         break;
       case 'heal':
         icon = Icons.favorite;
         iconColor = Colors.greenAccent;
         textColor = Colors.greenAccent;
         bgColor = Colors.green.withAlpha(30);
-        text = '+${action.value} PV';
+        text = '+${action.value} ${isFr ? 'PV' : 'HP'}';
         break;
       case 'gain_max_hp':
         icon = Icons.add_box;
         iconColor = Colors.pinkAccent;
         textColor = Colors.pinkAccent;
         bgColor = Colors.pink.withAlpha(30);
-        text = '+${action.value} PV Max';
+        text = '+${action.value} ${isFr ? 'PV Max' : 'Max HP'}';
         break;
       case 'gain_strength':
         icon = Icons.bolt;
         iconColor = Colors.orangeAccent;
         textColor = Colors.orangeAccent;
         bgColor = Colors.orange.withAlpha(30);
-        text = '+${action.value} Attaque';
+        text = '+${action.value} ${isFr ? 'Attaque' : 'Attack'}';
         break;
       case 'gain_relic':
         icon = Icons.auto_awesome;
         iconColor = Colors.purpleAccent;
         textColor = Colors.purpleAccent;
         bgColor = Colors.purple.withAlpha(30);
-        text = '+1 Relique';
+        text = isFr ? '+1 Relique' : '+1 Relic';
         break;
       default:
         icon = Icons.help_outline;
@@ -260,6 +263,7 @@ class _EventScreenState extends ConsumerState<EventScreen> {
   }
 
   Widget _buildNoEffectBadge() {
+    final locale = Localizations.localeOf(context).languageCode;
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -271,14 +275,14 @@ class _EventScreenState extends ConsumerState<EventScreen> {
           width: 1.5,
         ),
       ),
-      child: const Row(
+      child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.remove_circle_outline, color: Colors.white54, size: 22),
-          SizedBox(width: 10),
+          const Icon(Icons.remove_circle_outline, color: Colors.white54, size: 22),
+          const SizedBox(width: 10),
           Text(
-            'Aucun effet',
-            style: TextStyle(
+            locale == 'fr' ? 'Aucun effet' : 'No effect',
+            style: const TextStyle(
               color: Colors.white70,
               fontWeight: FontWeight.bold,
               fontSize: 16,
@@ -296,6 +300,7 @@ class _EventScreenState extends ConsumerState<EventScreen> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
+    final locale = Localizations.localeOf(context).languageCode;
     final runState = ref.watch(runProvider);
     final heroStats = runState.heroStats;
     final currentPv = heroStats.currentPv;
@@ -354,7 +359,7 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            '$currentPv / $maxPv PV',
+                            '$currentPv / $maxPv ${locale == 'fr' ? 'PV' : 'HP'}',
                             style: const TextStyle(
                               color: Colors.redAccent,
                               fontWeight: FontWeight.bold,
@@ -393,7 +398,7 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            '$gold Or',
+                            '$gold ${locale == 'fr' ? 'Or' : 'Gold'}',
                             style: const TextStyle(
                               color: Colors.amber,
                               fontWeight: FontWeight.bold,
@@ -410,7 +415,7 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                 const Icon(Icons.help_outline, color: Colors.blueAccent, size: 60),
                 const SizedBox(height: 15),
                 Text(
-                  _event!.title,
+                  _event!.getTitle(locale),
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     color: Colors.white,
@@ -433,7 +438,9 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                             border: Border.all(color: Colors.white10),
                           ),
                           child: Text(
-                            !_isResolved ? _event!.description : _selectedChoice!.resultText,
+                            !_isResolved
+                                ? _event!.getDescription(locale)
+                                : _selectedChoice!.getResultText(locale),
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               color: Colors.white70,
@@ -445,14 +452,14 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                         ),
                         if (_isResolved) ...[
                           const SizedBox(height: 25),
-                          const Row(
+                          Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.flash_on, color: Colors.blueAccent, size: 20),
-                              SizedBox(width: 8),
+                              const Icon(Icons.flash_on, color: Colors.blueAccent, size: 20),
+                              const SizedBox(width: 8),
                               Text(
-                                "EFFETS APPLIQUÉS",
-                                style: TextStyle(
+                                locale == 'fr' ? "EFFETS APPLIQUÉS" : "EFFECTS APPLIED",
+                                style: const TextStyle(
                                   color: Colors.blueAccent,
                                   fontWeight: FontWeight.bold,
                                   fontSize: 14,
@@ -496,13 +503,13 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                   ..._event!.choices.map((choice) => Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: _EventOptionButton(
-                          text: choice.text,
+                          text: choice.getText(locale),
                           onPressed: () => _handleChoice(choice),
                         ),
                       ))
                 else
                   _EventOptionButton(
-                    text: 'CONTINUER',
+                    text: locale == 'fr' ? 'CONTINUER' : 'CONTINUE',
                     onPressed: _leave,
                     highlight: true,
                   ),

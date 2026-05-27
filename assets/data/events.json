@@ -1,56 +1,72 @@
 [
   {
     "id": "mysterious_altar",
-    "title": "L'Autel Mystérieux",
-    "description": "Vous découvrez un autel ancien couvert de runes rougeoyantes. Une voix semble murmurer dans votre esprit, réclamant un sacrifice en échange de puissance.",
+    "title_en": "Mysterious Altar",
+    "title_fr": "L'Autel Mystérieux",
+    "description_en": "You discover an ancient altar covered in glowing runes. A voice seems to whisper in your mind, demanding a sacrifice in exchange for power.",
+    "description_fr": "Vous découvrez un autel ancien couvert de runes rougeoyantes. Une voix semble murmurer dans votre esprit, réclamant un sacrifice en échange de puissance.",
     "choices": [
       {
-        "text": "Sacrifier votre sang (-15 PV, +1 Attaque)",
-        "resultText": "L'autel absorbe votre sang et une puissance sombre parcourt vos veines.",
+        "text_en": "Sacrifice your blood (-15 HP, +1 Attack)",
+        "text_fr": "Sacrifier votre sang (-15 PV, +1 Attaque)",
+        "result_text_en": "The altar absorbs your blood and a dark power courses through your veins.",
+        "result_text_fr": "L'autel absorbe votre sang et une puissance sombre parcourt vos veines.",
         "actions": [
           { "type": "take_damage", "value": 15 },
           { "type": "gain_strength", "value": 1 }
         ]
       },
       {
-        "text": "Faire une offrande d'or (-50 Or, +10 PV Max)",
-        "resultText": "Les pièces disparaissent dans une fente de l'autel. Vous vous sentez plus robuste.",
+        "text_en": "Make a gold offering (-50 Gold, +10 Max HP)",
+        "text_fr": "Faire une offrande d'or (-50 Or, +10 PV Max)",
+        "result_text_en": "The coins disappear into a slot in the altar. You feel more robust.",
+        "result_text_fr": "Les pièces disparaissent dans une fente de l'autel. Vous vous sentez plus robuste.",
         "actions": [
           { "type": "spend_gold", "value": 50 },
           { "type": "gain_max_hp", "value": 10 }
         ]
       },
       {
-        "text": "Prier et partir (Rien)",
-        "resultText": "Vous marmonnez une prière rapide et continuez votre chemin sans incident.",
+        "text_en": "Pray and leave (Nothing)",
+        "text_fr": "Prier et partir (Rien)",
+        "result_text_en": "You mutter a quick prayer and continue on your way without incident.",
+        "result_text_fr": "Vous marmonnez une prière rapide et continuez votre chemin sans incident.",
         "actions": []
       }
     ]
   },
   {
     "id": "goblin_merchant",
-    "title": "Le Marchand Fugitif",
-    "description": "Un petit gobelin portant un sac énorme court vers vous. 'S'il vous plaît ! Je suis poursuivi ! Achetez quelque chose vite !'",
+    "title_en": "The Fugitive Merchant",
+    "title_fr": "Le Marchand Fugitif",
+    "description_en": "A small goblin carrying a huge sack runs toward you. 'Please! I am being pursued! Buy something quickly!'",
+    "description_fr": "Un petit gobelin portant un sac énorme court vers vous. 'S'il vous plaît ! Je suis poursuivi ! Achetez quelque chose vite !'",
     "choices": [
       {
-        "text": "Acheter un sac mystérieux (-40 Or, +80 Or ou -20 PV)",
-        "resultText": "Vous ouvrez le sac... c'est une bourse pleine de pièces d'or dérobées !",
+        "text_en": "Buy a mysterious bag (-40 Gold, +80 Gold or -20 HP)",
+        "text_fr": "Acheter un sac mystérieux (-40 Or, +80 Or ou -20 PV)",
+        "result_text_en": "You open the bag... it's a purse full of stolen gold coins!",
+        "result_text_fr": "Vous ouvrez le sac... c'est une bourse pleine de pièces d'or dérobées !",
         "actions": [
           { "type": "spend_gold", "value": 40 },
           { "type": "gain_gold", "value": 80 }
         ]
       },
       {
-        "text": "Voler le gobelin (+50 Or, -10 PV)",
-        "resultText": "Le gobelin vous griffe avant de s'enfuir en laissant tomber quelques pièces.",
+        "text_en": "Rob the goblin (+50 Gold, -10 HP)",
+        "text_fr": "Voler le gobelin (+50 Or, -10 PV)",
+        "result_text_en": "The goblin scratches you before fleeing, dropping a few coins.",
+        "result_text_fr": "Le gobelin vous griffe avant de s'enfuir en laissant tomber quelques pièces.",
         "actions": [
           { "type": "gain_gold", "value": 50 },
           { "type": "take_damage", "value": 10 }
         ]
       },
       {
-        "text": "L'aider à se cacher (+1 Relique aléatoire)",
-        "resultText": "Pour vous remercier, il vous tend une vieille amulette avant de disparaître dans les buissons.",
+        "text_en": "Help him hide (+1 random Relic)",
+        "text_fr": "L'aider à se cacher (+1 Relique aléatoire)",
+        "result_text_en": "To thank you, he hands you an old amulet before disappearing into the bushes.",
+        "result_text_fr": "Pour vous remercier, il vous tend une vieille amulette avant de disparaître dans les buissons.",
         "actions": [
           { "type": "gain_relic", "value": "test_relic" }
         ]

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../../models/status_effect.dart';
 
 class StatusEffectsPanel extends StatelessWidget {
@@ -11,6 +12,9 @@ class StatusEffectsPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
+
     return Container(
       width: 250,
       padding: const EdgeInsets.all(16),
@@ -33,17 +37,17 @@ class StatusEffectsPanel extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.offline_bolt,
                 color: Colors.cyanAccent,
                 size: 16,
               ),
-              SizedBox(width: 6),
+              const SizedBox(width: 6),
               Text(
-                "EFFETS DU JOUEUR",
-                style: TextStyle(
+                l10n.playerEffects.toUpperCase(),
+                style: const TextStyle(
                   color: Colors.cyanAccent,
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
@@ -54,9 +58,9 @@ class StatusEffectsPanel extends StatelessWidget {
           ),
           const Divider(color: Colors.white12, height: 12),
           if (statuses.isEmpty)
-            const Text(
-              "Aucun effet actif",
-              style: TextStyle(
+            Text(
+              l10n.noStatusActive,
+              style: const TextStyle(
                 color: Colors.white30,
                 fontSize: 13,
                 fontStyle: FontStyle.italic,
@@ -72,17 +76,45 @@ class StatusEffectsPanel extends StatelessWidget {
                 case 'strength':
                   icon = Icons.flash_on;
                   color = Colors.orangeAccent;
-                  label = 'Attaque : +${status.value}';
+                  label = locale == 'fr'
+                      ? 'Attaque : +${status.value}'
+                      : 'Attack: +${status.value}';
                   break;
                 case 'poison':
                   icon = Icons.sick;
                   color = const Color(0xFF69F0AE);
-                  label = 'Poison : ${status.value}';
+                  label = locale == 'fr'
+                      ? 'Poison : ${status.value}'
+                      : 'Poison: ${status.value}';
                   break;
                 case 'metallicize':
+                case 'armor_regen':
                   icon = Icons.shield;
                   color = Colors.cyanAccent;
-                  label = 'Métallisation : +${status.value}';
+                  label = locale == 'fr'
+                      ? 'Métallisation : +${status.value}'
+                      : 'Plated Armor: +${status.value}';
+                  break;
+                case 'weakness':
+                  icon = Icons.arrow_downward;
+                  color = Colors.redAccent;
+                  label = locale == 'fr'
+                      ? 'Faiblesse : ${status.value}'
+                      : 'Weakness: ${status.value}';
+                  break;
+                case 'vulnerable':
+                  icon = Icons.arrow_downward;
+                  color = Colors.redAccent;
+                  label = locale == 'fr'
+                      ? 'Vulnérable : ${status.value}'
+                      : 'Vulnerable: ${status.value}';
+                  break;
+                case 'strength_regen':
+                  icon = Icons.flash_on;
+                  color = Colors.orangeAccent;
+                  label = locale == 'fr'
+                      ? "Éveil d'Attaque : +${status.value}"
+                      : 'Attack Awakening: +${status.value}';
                   break;
                 default:
                   icon = status.type == StatusType.buff
@@ -121,7 +153,7 @@ class StatusEffectsPanel extends StatelessWidget {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '${status.duration} trs',
+                      '${status.duration} ${locale == 'fr' ? 'trs' : 'turns'}',
                       style: const TextStyle(
                         color: Colors.white54,
                         fontSize: 12,
