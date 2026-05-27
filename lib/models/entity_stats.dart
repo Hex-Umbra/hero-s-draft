@@ -1,4 +1,4 @@
-import '../../models/status_effect.dart';
+import 'status_effect.dart';
 
 class EntityStats {
   final int maxPv;

@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/game/controllers/combat_controller.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
 import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
@@ -11,7 +12,7 @@ import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/status_effect.dart';
 import 'package:roguelike_card_game/models/map_node.dart';
-import 'package:roguelike_card_game/data/models/entity_stats.dart';
+import 'package:roguelike_card_game/models/entity_stats.dart';
 
 void main() {
   group('CombatController Tests', () {
@@ -118,7 +119,8 @@ void main() {
 
     test('resolveEnemyIntent applies intent effects to the player and self', () {
       final combatController = CombatController();
-      final runController = RunController();
+      final container = ProviderContainer();
+      final runController = container.read(runProvider.notifier);
       runController.startNewRun(paladinHero);
       
       final enemy = EnemyInstance(
@@ -160,7 +162,8 @@ void main() {
 
     test('startEnemyTurn ticks statuses (Poison) on all enemies and cleans up dead ones', () {
       final combatController = CombatController();
-      final runController = RunController();
+      final container = ProviderContainer();
+      final runController = container.read(runProvider.notifier);
       runController.startNewRun(paladinHero);
 
       final enemy1 = EnemyInstance(
@@ -223,7 +226,8 @@ void main() {
 
     test('applyPlayerCardPlay plays Strike card, consumes mana, resolves damage, and cleans dead enemies', () {
       final combatController = CombatController();
-      final runController = RunController();
+      final container = ProviderContainer();
+      final runController = container.read(runProvider.notifier);
       runController.startNewRun(paladinHero);
       
       // Inject +5 strength to player hero to test force bonus scaling (Strike 6 + 5 = 11 dmg)

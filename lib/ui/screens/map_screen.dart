@@ -3,6 +3,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../game/controllers/run_controller.dart';
+import '../../game/controllers/inventory_controller.dart';
 import '../../models/map_node.dart';
 import 'game_screen.dart';
 import 'shop_screen.dart';
@@ -163,6 +164,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   @override
   Widget build(BuildContext context) {
     final runState = ref.watch(runProvider);
+    final inventoryState = ref.watch(inventoryProvider);
     final nodes = runState.mapNodes;
     final currentNodeId = runState.currentNodeId;
     final screenSize = MediaQuery.of(context).size;
@@ -356,7 +358,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  '${runState.gold}',
+                  '${inventoryState.gold}',
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,

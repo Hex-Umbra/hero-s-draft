@@ -4,7 +4,7 @@ import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/effects.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
-import '../../../data/models/entity_stats.dart';
+import '../../../models/entity_stats.dart';
 import '../../../models/data/enemy_data.dart';
 import '../../../models/enemy_intent.dart';
 import '../../../models/status_effect.dart';

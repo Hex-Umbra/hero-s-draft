@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../game/controllers/run_controller.dart';
 import '../../game/controllers/deck_controller.dart';
 import '../../game/controllers/shop_controller.dart';
+import '../../game/controllers/inventory_controller.dart';
 import '../../services/game_data_service.dart';
 import '../../models/data/card_data.dart';
 import '../widgets/ui_card.dart';
@@ -24,8 +25,8 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     if (!_isInitialized) {
       Future.microtask(() {
         final gameData = ref.read(gameDataLoaderProvider).requireValue;
-        final runState = ref.read(runProvider);
-        ref.read(shopProvider.notifier).initializeShop(gameData.cards, runState.bonusShopCards);
+        final inventoryState = ref.read(inventoryProvider);
+        ref.read(shopProvider.notifier).initializeShop(gameData.cards, inventoryState.bonusShopCards);
       });
       _isInitialized = true;
     }
@@ -33,10 +34,10 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
 
   void _buyCard(CardData card, int price) {
     final shopController = ref.read(shopProvider.notifier);
-    final runController = ref.read(runProvider.notifier);
+    final inventoryController = ref.read(inventoryProvider.notifier);
     final deckNotifier = ref.read(deckProvider.notifier);
 
-    if (shopController.buyCard(card, price, runController, deckNotifier)) {
+    if (shopController.buyCard(card, price, inventoryController, deckNotifier)) {
       final locale = Localizations.localeOf(context).languageCode;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -56,6 +57,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
 
   void _buyHeal(int price, int amount) {
     final shopController = ref.read(shopProvider.notifier);
+    final inventoryController = ref.read(inventoryProvider.notifier);
     final runController = ref.read(runProvider.notifier);
     final currentPv = ref.read(runProvider).heroStats.currentPv;
     final maxPv = ref.read(runProvider).heroStats.maxPv;
@@ -70,7 +72,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
       return;
     }
 
-    if (shopController.buyHeal(price, amount, runController)) {
+    if (shopController.buyHeal(price, amount, inventoryController, runController)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context)!.healApplied),
@@ -89,10 +91,10 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
 
   void _expandShop(int price) {
     final shopController = ref.read(shopProvider.notifier);
-    final runController = ref.read(runProvider.notifier);
+    final inventoryController = ref.read(inventoryProvider.notifier);
     final gameData = ref.read(gameDataLoaderProvider).requireValue;
 
-    if (shopController.expandShop(price, gameData.cards, runController)) {
+    if (shopController.expandShop(price, gameData.cards, inventoryController)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context)!.shopExpanded),
@@ -111,11 +113,11 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
 
   void _rerollCards(int price) {
     final shopController = ref.read(shopProvider.notifier);
-    final runController = ref.read(runProvider.notifier);
+    final inventoryController = ref.read(inventoryProvider.notifier);
     final gameData = ref.read(gameDataLoaderProvider).requireValue;
-    final runState = ref.read(runProvider);
+    final inventoryState = ref.read(inventoryProvider);
 
-    if (shopController.rerollCards(price, gameData.cards, runState.bonusShopCards, runController)) {
+    if (shopController.rerollCards(price, gameData.cards, inventoryState.bonusShopCards, inventoryController)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context)!.shopRerolled),
@@ -172,10 +174,10 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                   isExhaust: card.data.isExhaust,
                   onTap: () {
                     final shopController = ref.read(shopProvider.notifier);
-                    final runController = ref.read(runProvider.notifier);
+                    final inventoryController = ref.read(inventoryProvider.notifier);
                     final deckNotifier = ref.read(deckProvider.notifier);
 
-                    if (shopController.purgeCard(price, card, runController, deckNotifier)) {
+                    if (shopController.purgeCard(price, card, inventoryController, deckNotifier)) {
                       Navigator.of(ctx).pop();
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
@@ -278,10 +280,10 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                       ),
                       onTap: () {
                         final shopController = ref.read(shopProvider.notifier);
-                        final runController = ref.read(runProvider.notifier);
+                        final inventoryController = ref.read(inventoryProvider.notifier);
                         final deckNotifier = ref.read(deckProvider.notifier);
 
-                        if (shopController.cloneCard(price, card, runController, deckNotifier)) {
+                        if (shopController.cloneCard(price, card, inventoryController, deckNotifier)) {
                           Navigator.of(ctx).pop();
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
@@ -321,6 +323,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
   @override
   Widget build(BuildContext context) {
     final runState = ref.watch(runProvider);
+    final inventoryState = ref.watch(inventoryProvider);
     final shopState = ref.watch(shopProvider);
     final int healPrice = 30;
     final int healAmount = (runState.heroStats.maxPv * 0.3).round();
@@ -350,7 +353,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  '${runState.gold}',
+                  '${inventoryState.gold}',
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -399,7 +402,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                                 runSpacing: 20,
                                 children: shopState.cardsForSale.map((card) {
                                   final int price = ShopController.getCardPrice(card.rarity);
-                                  final bool canAfford = runState.gold >= price;
+                                  final bool canAfford = inventoryState.gold >= price;
                                   return _ShopCardItem(
                                     card: card,
                                     price: price,
@@ -446,7 +449,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                               price: 15,
                               onPressed: () => _rerollCards(15),
                               buttonColor: Colors.teal.shade800,
-                              canAfford: runState.gold >= 15,
+                              canAfford: inventoryState.gold >= 15,
                             ),
                             _ShopServiceWidget(
                               icon: Icons.local_hospital,
@@ -458,7 +461,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                                   ? null
                                   : () => _buyHeal(healPrice, healAmount),
                               buttonColor: Colors.green.shade800,
-                              canAfford: runState.gold >= healPrice,
+                              canAfford: inventoryState.gold >= healPrice,
                             ),
                             _ShopServiceWidget(
                               icon: Icons.delete_forever,
@@ -468,7 +471,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                               price: 75,
                               onPressed: () => _showRemovalModal(75),
                               buttonColor: Colors.red.shade800,
-                              canAfford: runState.gold >= 75,
+                              canAfford: inventoryState.gold >= 75,
                             ),
                             _ShopServiceWidget(
                               icon: Icons.add_shopping_cart,
@@ -478,7 +481,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                               price: 100,
                               onPressed: () => _expandShop(100),
                               buttonColor: Colors.amber.shade800,
-                              canAfford: runState.gold >= 100,
+                              canAfford: inventoryState.gold >= 100,
                             ),
                             _ShopServiceWidget(
                               icon: Icons.content_copy,
@@ -488,7 +491,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                               price: 150,
                               onPressed: () => _showCloneModal(150),
                               buttonColor: Colors.blue.shade800,
-                              canAfford: runState.gold >= 150,
+                              canAfford: inventoryState.gold >= 150,
                             ),
                           ],
                         ),

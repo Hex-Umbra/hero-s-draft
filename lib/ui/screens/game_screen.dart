@@ -7,6 +7,7 @@ import '../../game/heros_draft_game.dart';
 import '../../game/controllers/run_controller.dart';
 import '../../game/controllers/deck_controller.dart';
 import '../../game/controllers/combat_controller.dart';
+import '../../game/controllers/inventory_controller.dart';
 import '../../models/combat_state.dart';
 import '../../game/services/effect_resolver.dart';
 import '../../game/systems/trait_system.dart';
@@ -92,7 +93,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           }
         }
         final chosenRelic = filtered[Random().nextInt(filtered.length)];
-        ref.read(runProvider.notifier).addRelic(chosenRelic);
+        ref.read(inventoryProvider.notifier).addRelic(chosenRelic);
 
         // Display snackbar
         final l10n = AppLocalizations.of(context)!;
@@ -141,7 +142,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
       Future.delayed(const Duration(milliseconds: 1500), () {
         if (mounted) {
-          runController.gainGold(rng.nextInt(15) + 20);
+          ref.read(inventoryProvider.notifier).gainGold(rng.nextInt(15) + 20);
           runController.nextLevel();
           runController.completeCurrentNode();
           Navigator.of(context).pop(); // Retour à la carte

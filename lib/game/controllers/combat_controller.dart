@@ -1,6 +1,6 @@
 import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../data/models/entity_stats.dart';
+import '../../../models/entity_stats.dart';
 import '../../../models/card_instance.dart';
 import '../../../models/combat_state.dart';
 import '../../../models/enemy_instance.dart';

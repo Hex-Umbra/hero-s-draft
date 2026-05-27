@@ -1,14 +1,18 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/game/controllers/event_controller.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
+import 'package:roguelike_card_game/game/controllers/inventory_controller.dart';
 import 'package:roguelike_card_game/models/data/event_data.dart';
 import 'package:roguelike_card_game/models/data/relic_data.dart';
 import 'package:roguelike_card_game/models/data/hero_data.dart';
 
 void main() {
   group('EventController Unit Tests', () {
+    late ProviderContainer container;
     late EventController eventController;
     late RunController runController;
+    late InventoryController inventoryController;
 
     const dummyHero = HeroData(
       id: 'paladin',
@@ -95,8 +99,10 @@ void main() {
     ];
 
     setUp(() {
-      eventController = EventController();
-      runController = RunController();
+      container = ProviderContainer();
+      eventController = container.read(eventProvider.notifier);
+      runController = container.read(runProvider.notifier);
+      inventoryController = container.read(inventoryProvider.notifier);
 
       runController.startNewRun(dummyHero);
     });
@@ -112,7 +118,7 @@ void main() {
       eventController.setEvent(testEvent);
       final choice = testEvent.choices[0]; // Pray Choice
 
-      eventController.selectChoice(choice, runController, []);
+      eventController.selectChoice(choice, runController, inventoryController, []);
 
       expect(eventController.state.isResolved, true);
       expect(eventController.state.selectedChoice, choice);
@@ -125,11 +131,11 @@ void main() {
     test('selectChoice resolves gold choice', () {
       eventController.setEvent(testEvent);
       final choice = testEvent.choices[1]; // Gold Choice
-      final initialGold = runController.state.gold;
+      final initialGold = inventoryController.state.gold;
 
-      eventController.selectChoice(choice, runController, []);
+      eventController.selectChoice(choice, runController, inventoryController, []);
 
-      expect(runController.state.gold, initialGold + 50);
+      expect(inventoryController.state.gold, initialGold + 50);
     });
 
     test('selectChoice selects relic based on luck and mockRoll (legendary)', () {
@@ -141,6 +147,7 @@ void main() {
       final chosen = eventController.selectChoice(
         choice,
         runController,
+        inventoryController,
         testRelicPool,
         mockRoll: 0.5,
       );
@@ -148,8 +155,8 @@ void main() {
       expect(chosen, isNotNull);
       expect(chosen!.rarity, RelicRarity.legendary);
       expect(chosen.id, 'r_legendary');
-      // Verify the relic is added to run state
-      expect(runController.state.relics.contains(chosen), true);
+      // Verify the relic is added to inventory state
+      expect(inventoryController.state.relics.contains(chosen), true);
     });
 
     test('selectChoice selects relic based on luck and mockRoll (common)', () {
@@ -160,6 +167,7 @@ void main() {
       final chosen = eventController.selectChoice(
         choice,
         runController,
+        inventoryController,
         testRelicPool,
         mockRoll: 50.0,
       );
@@ -167,7 +175,7 @@ void main() {
       expect(chosen, isNotNull);
       expect(chosen!.rarity, RelicRarity.common);
       expect(chosen.id, 'r_common');
-      expect(runController.state.relics.contains(chosen), true);
+      expect(inventoryController.state.relics.contains(chosen), true);
     });
   });
 }

@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/models/entity_stats.dart';
+import '../../models/entity_stats.dart';
 import '../../models/data/hero_data.dart';
 import '../../models/data/relic_data.dart';
 import '../../models/data/passive_data.dart';
@@ -7,23 +7,18 @@ import '../../models/map_node.dart';
 import '../../models/status_effect.dart';
 import '../../services/map_generator_service.dart';
 import '../systems/trait_system.dart';
+import 'inventory_controller.dart';
+import 'skill_controller.dart';
 
 class RunState {
   final int currentLevel;
   final int act;
   final EntityStats heroStats;
   final String heroClassId;
-  final List<RelicData> relics;
   final List<MapNode> mapNodes;
   final String? currentNodeId;
-  final int gold;
   final String? passiveTrait; // Trait passif du héros (ex: regenArmor)
   final PassiveData? activePassive; // Passif dynamique du héros
-  final int bonusShopCards; // Nombre additionnel de cartes dans le shop
-
-  // Variables pour gérer l'état du cooldown des sorts
-  final int skill1Cooldown;
-  final int skill2Cooldown;
 
   bool get isBossLevel => currentLevel > 0 && currentLevel % 10 == 0;
   bool get isDead => heroStats.currentPv <= 0;
@@ -44,15 +39,10 @@ class RunState {
     this.act = 1,
     required this.heroStats,
     required this.heroClassId,
-    this.relics = const [],
     this.mapNodes = const [],
     this.currentNodeId,
-    this.gold = 0,
     this.passiveTrait,
     this.activePassive,
-    this.skill1Cooldown = 0,
-    this.skill2Cooldown = 0,
-    this.bonusShopCards = 0,
   });
 
   RunState copyWith({
@@ -60,41 +50,33 @@ class RunState {
     int? act,
     EntityStats? heroStats,
     String? heroClassId,
-    List<RelicData>? relics,
     List<MapNode>? mapNodes,
     String? currentNodeId,
     bool resetCurrentNode = false,
-    int? gold,
     String? passiveTrait,
     PassiveData? activePassive,
-    int? skill1Cooldown,
-    int? skill2Cooldown,
-    int? bonusShopCards,
   }) {
     return RunState(
       currentLevel: currentLevel ?? this.currentLevel,
       act: act ?? this.act,
       heroStats: heroStats ?? this.heroStats,
       heroClassId: heroClassId ?? this.heroClassId,
-      relics: relics ?? this.relics,
       mapNodes: mapNodes ?? this.mapNodes,
       currentNodeId: resetCurrentNode
           ? null
           : (currentNodeId ?? this.currentNodeId),
-      gold: gold ?? this.gold,
       passiveTrait: passiveTrait ?? this.passiveTrait,
       activePassive: activePassive ?? this.activePassive,
-      skill1Cooldown: skill1Cooldown ?? this.skill1Cooldown,
-      skill2Cooldown: skill2Cooldown ?? this.skill2Cooldown,
-      bonusShopCards: bonusShopCards ?? this.bonusShopCards,
     );
   }
 }
 
 class RunController extends StateNotifier<RunState> {
+  final Ref ref;
+
   RunState get currentState => state;
 
-  RunController()
+  RunController(this.ref)
     : super(
         RunState(
           currentLevel: 1,
@@ -102,7 +84,7 @@ class RunController extends StateNotifier<RunState> {
           heroClassId: 'paladin',
           passiveTrait: 'regenArmor',
           activePassive: PassiveData.fallback('regenArmor'),
-          heroStats: EntityStats(
+          heroStats: const EntityStats(
             maxPv: 100,
             currentPv: 100,
             maxMana: 3,
@@ -111,7 +93,6 @@ class RunController extends StateNotifier<RunState> {
             attaque: 0, // Force de base à 0
             luck: 0,
           ),
-          bonusShopCards: 0,
         ),
       );
 
@@ -136,14 +117,17 @@ class RunController extends StateNotifier<RunState> {
       ),
       mapNodes: generatedMap,
       currentNodeId: null,
-      gold: 50,
-      bonusShopCards: 0,
     );
-  }
 
-  /// Augmente définitivement le nombre de cartes affichées dans la boutique
-  void buyShopExpansion() {
-    state = state.copyWith(bonusShopCards: state.bonusShopCards + 1);
+    // Réinitialise l'inventaire avec 50 d'or de départ
+    ref.read(inventoryProvider.notifier).reset(
+      initialGold: 50,
+      initialRelics: const [],
+      initialBonusShopCards: 0,
+    );
+
+    // Réinitialise les cooldowns de sorts
+    ref.read(skillProvider.notifier).resetCooldowns();
   }
 
   /// Sélectionne un nœud sur la carte et déplace le joueur
@@ -188,27 +172,15 @@ class RunController extends StateNotifier<RunState> {
     );
   }
 
-  /// Ajoute de l'or au trésor du joueur
-  void gainGold(int amount) {
-    state = state.copyWith(gold: state.gold + amount);
-  }
-
-  /// Dépense de l'or. Retourne false si fonds insuffisants.
-  bool spendGold(int amount) {
-    if (state.gold < amount) return false;
-    state = state.copyWith(gold: state.gold - amount);
-    return true;
-  }
-
   /// Avance d'un niveau (après avoir drafté)
   void nextLevel() {
     final currentStats = state.heroStats;
     state = state.copyWith(
       currentLevel: state.currentLevel + 1,
       heroStats: currentStats.copyWith(currentMana: currentStats.maxMana),
-      skill1Cooldown: 0,
-      skill2Cooldown: 0,
     );
+    // Réinitialise les cooldowns à chaque nouveau niveau
+    ref.read(skillProvider.notifier).resetCooldowns();
   }
 
   /// Applique un modificateur à la carte héro (ex: récompense de draft)
@@ -279,21 +251,14 @@ class RunController extends StateNotifier<RunState> {
     state = state.copyWith(heroStats: state.heroStats.addStatus(effect));
   }
 
-  /// Ajoute une relique à la collection
-  void addRelic(RelicData relic) {
-    state = state.copyWith(relics: [...state.relics, relic]);
-    if (relic.trigger == RelicTrigger.startOfRun) {
-      _applyRelicEffect(relic);
-    }
-  }
-
   /// Déclenche les effets des reliques pour un trigger donné
   void applyRelics(RelicTrigger trigger) {
-    final relevantRelics = state.relics
+    final relics = ref.read(inventoryProvider).relics;
+    final relevantRelics = relics
         .where((r) => r.trigger == trigger)
         .toList();
     for (var relic in relevantRelics) {
-      _applyRelicEffect(relic);
+      applyRelicEffect(relic);
     }
   }
 
@@ -302,7 +267,7 @@ class RunController extends StateNotifier<RunState> {
     applyRelics(RelicTrigger.onEnemyKilled);
   }
 
-  void _applyRelicEffect(RelicData relic) {
+  void applyRelicEffect(RelicData relic) {
     switch (relic.effectType) {
       case 'gain_mana':
         state = state.copyWith(
@@ -410,12 +375,12 @@ class RunController extends StateNotifier<RunState> {
       );
     }
 
-    // 4. Décrémenter les statuts et les cooldowns
+    // 4. Décrémenter les statuts
     state = state.copyWith(
       heroStats: updatedStats.tickStatuses(),
-      skill1Cooldown: state.skill1Cooldown > 0 ? state.skill1Cooldown - 1 : 0,
-      skill2Cooldown: state.skill2Cooldown > 0 ? state.skill2Cooldown - 1 : 0,
     );
+    // Décrémenter les cooldowns via le skill provider
+    ref.read(skillProvider.notifier).tickCooldowns();
 
     // 5. Déclencher les traits passifs
     TraitSystem.onTurnStart(this);
@@ -445,30 +410,6 @@ class RunController extends StateNotifier<RunState> {
         currentPv: state.heroStats.currentPv - hpCost,
       ),
     );
-    return true;
-  }
-
-  /// Tente de lancer le premier sort générique (pour méthodes externes)
-  bool triggerGenericSkill1({
-    required int cd,
-    int mana = 0,
-    int hpPercent = 0,
-  }) {
-    if (state.skill1Cooldown > 0) return false;
-    if (!consumeResource(mana: mana, hpPercent: hpPercent)) return false;
-    state = state.copyWith(skill1Cooldown: cd);
-    return true;
-  }
-
-  /// Tente de lancer le second sort générique (pour méthodes externes)
-  bool triggerGenericSkill2({
-    required int cd,
-    int mana = 0,
-    int hpPercent = 0,
-  }) {
-    if (state.skill2Cooldown > 0) return false;
-    if (!consumeResource(mana: mana, hpPercent: hpPercent)) return false;
-    state = state.copyWith(skill2Cooldown: cd);
     return true;
   }
 
@@ -505,5 +446,5 @@ class RunController extends StateNotifier<RunState> {
 }
 
 final runProvider = StateNotifierProvider<RunController, RunState>((ref) {
-  return RunController();
+  return RunController(ref);
 });

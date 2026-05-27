@@ -6,6 +6,7 @@ import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'package:roguelike_card_game/ui/screens/shop_screen.dart';
 import 'package:roguelike_card_game/ui/widgets/ui_card.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
+import 'package:roguelike_card_game/game/controllers/inventory_controller.dart';
 import 'package:roguelike_card_game/models/data/hero_data.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
@@ -128,7 +129,7 @@ void main() {
     runNotifier.startNewRun(mockHero);
     
     // Give player plenty of gold for testing services (80 + 15 = 95 gold required minimum)
-    runNotifier.state = runNotifier.state.copyWith(gold: 200);
+    container.read(inventoryProvider.notifier).reset(initialGold: 200);
 
     // 2. Build the ShopScreen widget
     await tester.pumpWidget(
@@ -161,9 +162,9 @@ void main() {
     expect(find.text('Renouveler'), findsOneWidget);
 
     // 5. Test Shop Expansion ('Étal étendu' costing 100 gold)
-    final initialGold = container.read(runProvider).gold;
+    final initialGold = container.read(inventoryProvider).gold;
     expect(initialGold, 200);
-    expect(container.read(runProvider).bonusShopCards, 0);
+    expect(container.read(inventoryProvider).bonusShopCards, 0);
 
     // Find the 'Étal étendu' button and tap it
     final expandButton = find.text('Étal étendu');
@@ -171,8 +172,8 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify gold decreases by 100 and bonusShopCards increases to 1
-    expect(container.read(runProvider).gold, 100);
-    expect(container.read(runProvider).bonusShopCards, 1);
+    expect(container.read(inventoryProvider).gold, 100);
+    expect(container.read(inventoryProvider).bonusShopCards, 1);
 
     // Now, there should be 4 cards displayed on the screen!
     expect(find.byType(UiCard), findsNWidgets(4));
@@ -184,7 +185,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify gold decreases by 15
-    expect(container.read(runProvider).gold, 85);
+    expect(container.read(inventoryProvider).gold, 85);
 
     // There should still be 4 cards on the shelf
     expect(find.byType(UiCard), findsNWidgets(4));

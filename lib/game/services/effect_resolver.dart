@@ -1,7 +1,7 @@
 import '../../models/card_instance.dart';
 import '../../models/data/card_data.dart';
 import '../../models/status_effect.dart';
-import '../../data/models/entity_stats.dart';
+import '../../models/entity_stats.dart';
 import '../controllers/run_controller.dart';
 import '../controllers/deck_controller.dart';
 import '../controllers/combat_controller.dart';

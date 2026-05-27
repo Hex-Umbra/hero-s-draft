@@ -4,6 +4,7 @@ import '../../models/event_state.dart';
 import '../../models/data/event_data.dart';
 import '../../models/data/relic_data.dart';
 import 'run_controller.dart';
+import 'inventory_controller.dart';
 
 class EventController extends StateNotifier<EventState> {
   EventController() : super(const EventState());
@@ -39,6 +40,7 @@ class EventController extends StateNotifier<EventState> {
   RelicData? selectChoice(
     EventChoice choice,
     RunController runController,
+    InventoryController inventoryController,
     List<RelicData> allRelics, {
     double? mockRoll, // Permet d'injecter un jet de dé fixe pour les tests
     int? mockRelicIndex, // Permet d'injecter l'index de sélection de relique pour les tests
@@ -53,10 +55,10 @@ class EventController extends StateNotifier<EventState> {
     for (var action in choice.actions) {
       switch (action.type) {
         case 'gain_gold':
-          runController.gainGold(action.value as int);
+          inventoryController.gainGold(action.value as int);
           break;
         case 'spend_gold':
-          runController.spendGold(action.value as int);
+          inventoryController.spendGold(action.value as int);
           break;
         case 'take_damage':
           runController.takeDamage(action.value as int);
@@ -115,7 +117,7 @@ class EventController extends StateNotifier<EventState> {
             final rng = Random();
             final index = mockRelicIndex ?? rng.nextInt(filtered.length);
             chosenRelic = filtered[index % filtered.length];
-            runController.addRelic(chosenRelic);
+            inventoryController.addRelic(chosenRelic);
           }
           break;
       }

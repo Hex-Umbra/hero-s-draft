@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../game/controllers/run_controller.dart';
 import '../../game/controllers/event_controller.dart';
+import '../../game/controllers/inventory_controller.dart';
 import '../../models/data/event_data.dart';
 import '../../models/data/relic_data.dart';
 import '../../services/game_data_service.dart';
@@ -27,10 +28,12 @@ class _EventScreenState extends ConsumerState<EventScreen> {
   void _handleChoice(EventChoice choice) {
     final gameData = ref.read(gameDataLoaderProvider).requireValue;
     final runController = ref.read(runProvider.notifier);
+    final inventoryController = ref.read(inventoryProvider.notifier);
 
     final chosenRelic = ref.read(eventProvider.notifier).selectChoice(
           choice,
           runController,
+          inventoryController,
           gameData.relics,
         );
 
@@ -227,10 +230,11 @@ class _EventScreenState extends ConsumerState<EventScreen> {
 
     final locale = Localizations.localeOf(context).languageCode;
     final runState = ref.watch(runProvider);
+    final inventoryState = ref.watch(inventoryProvider);
     final heroStats = runState.heroStats;
     final currentPv = heroStats.currentPv;
     final maxPv = heroStats.maxPv;
-    final gold = runState.gold;
+    final gold = inventoryState.gold;
 
     return Scaffold(
       backgroundColor: const Color(0xFF0D0D1A),

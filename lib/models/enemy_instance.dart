@@ -1,5 +1,5 @@
 import 'package:uuid/uuid.dart';
-import '../data/models/entity_stats.dart';
+import 'entity_stats.dart';
 import 'data/enemy_data.dart';
 import 'enemy_intent.dart';
 

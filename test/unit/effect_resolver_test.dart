@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:roguelike_card_game/data/models/entity_stats.dart';
+import 'package:roguelike_card_game/models/entity_stats.dart';
 import 'package:roguelike_card_game/models/status_effect.dart';
 import 'package:roguelike_card_game/models/enemy_instance.dart';
 import 'package:roguelike_card_game/models/data/enemy_data.dart';

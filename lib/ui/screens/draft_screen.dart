@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../game/controllers/run_controller.dart';
 import '../../game/controllers/deck_controller.dart';
+import '../../game/controllers/inventory_controller.dart';
 import '../../models/card_instance.dart';
 import '../../models/data/card_data.dart';
 import '../widgets/ui_card.dart';
@@ -181,7 +182,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
   void _finishDraft(WidgetRef ref) {
     final runController = ref.read(runProvider.notifier);
     final rng = Random();
-    runController.gainGold(rng.nextInt(15) + 10);
+    ref.read(inventoryProvider.notifier).gainGold(rng.nextInt(15) + 10);
     runController.nextLevel();
     widget.onDraftComplete();
   }

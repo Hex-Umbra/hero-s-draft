@@ -5,6 +5,7 @@ import '../../models/data/card_data.dart';
 import '../../models/card_instance.dart';
 import 'run_controller.dart';
 import 'deck_controller.dart';
+import 'inventory_controller.dart';
 
 class ShopController extends StateNotifier<ShopState> {
   ShopController() : super(const ShopState());
@@ -48,10 +49,10 @@ class ShopController extends StateNotifier<ShopState> {
   bool buyCard(
     CardData card,
     int price,
-    RunController runController,
+    InventoryController inventoryController,
     DeckNotifier deckNotifier,
   ) {
-    if (runController.spendGold(price)) {
+    if (inventoryController.spendGold(price)) {
       state = state.copyWith(
         cardsForSale: state.cardsForSale.where((c) => c.id != card.id).toList(),
       );
@@ -66,11 +67,12 @@ class ShopController extends StateNotifier<ShopState> {
   bool buyHeal(
     int price,
     int amount,
+    InventoryController inventoryController,
     RunController runController,
   ) {
     if (state.purchasedHeal) return false;
 
-    if (runController.spendGold(price)) {
+    if (inventoryController.spendGold(price)) {
       runController.heal(amount);
       state = state.copyWith(purchasedHeal: true);
       return true;
@@ -82,10 +84,10 @@ class ShopController extends StateNotifier<ShopState> {
   bool expandShop(
     int price,
     List<CardData> allCards,
-    RunController runController,
+    InventoryController inventoryController,
   ) {
-    if (runController.spendGold(price)) {
-      runController.buyShopExpansion();
+    if (inventoryController.spendGold(price)) {
+      inventoryController.buyShopExpansion();
 
       final eligibleCards = allCards
           .where((c) => c.type != CardType.status)
@@ -110,9 +112,9 @@ class ShopController extends StateNotifier<ShopState> {
     int price,
     List<CardData> allCards,
     int bonusShopCards,
-    RunController runController,
+    InventoryController inventoryController,
   ) {
-    if (runController.spendGold(price)) {
+    if (inventoryController.spendGold(price)) {
       final eligibleCards = allCards
           .where((c) => c.type != CardType.status)
           .toList();
@@ -135,10 +137,10 @@ class ShopController extends StateNotifier<ShopState> {
   bool purgeCard(
     int price,
     CardInstance card,
-    RunController runController,
+    InventoryController inventoryController,
     DeckNotifier deckNotifier,
   ) {
-    if (runController.spendGold(price)) {
+    if (inventoryController.spendGold(price)) {
       deckNotifier.removeCardFromMasterDeck(card);
       return true;
     }
@@ -149,10 +151,10 @@ class ShopController extends StateNotifier<ShopState> {
   bool cloneCard(
     int price,
     CardInstance card,
-    RunController runController,
+    InventoryController inventoryController,
     DeckNotifier deckNotifier,
   ) {
-    if (runController.spendGold(price)) {
+    if (inventoryController.spendGold(price)) {
       deckNotifier.addCardToMasterDeck(
         CardInstance(data: card.data, level: card.level),
       );

@@ -3,7 +3,7 @@ import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/effects.dart';
-import '../../../data/models/entity_stats.dart';
+import '../../../models/entity_stats.dart';
 import '../floating_text.dart';
 import '../effect_icon.dart';
 import '../../heros_draft_game.dart';

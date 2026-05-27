@@ -2,7 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
-import '../../../../game/controllers/run_controller.dart';
+import '../../../../game/controllers/inventory_controller.dart';
 import '../../../../models/data/relic_data.dart';
 import '../../blur_wrapper.dart';
 
@@ -30,8 +30,8 @@ class RelicsDialog extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final runState = ref.watch(runProvider);
-    final relics = runState.relics;
+    final inventoryState = ref.watch(inventoryProvider);
+    final relics = inventoryState.relics;
 
     // Regroupement des reliques par doublon (stacking)
     final Map<String, int> relicCounts = {};

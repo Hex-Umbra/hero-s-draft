@@ -1,30 +1,37 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
+import 'package:roguelike_card_game/game/controllers/inventory_controller.dart';
 import 'package:roguelike_card_game/models/data/hero_data.dart';
 import 'package:roguelike_card_game/models/data/relic_data.dart';
 
 void main() {
   group('RunController & RunState Tests', () {
-    test('RunState constructor sets default bonusShopCards to 0', () {
-      final controller = RunController();
-      expect(controller.state.bonusShopCards, 0);
+    test('RunState constructor sets default bonusShopCards to 0 in inventory', () {
+      final container = ProviderContainer();
+      final inventoryState = container.read(inventoryProvider);
+      expect(inventoryState.bonusShopCards, 0);
     });
 
-    test('buyShopExpansion increments bonusShopCards correctly', () {
-      final controller = RunController();
-      expect(controller.state.bonusShopCards, 0);
+    test('buyShopExpansion increments bonusShopCards correctly in inventory', () {
+      final container = ProviderContainer();
+      final inventoryController = container.read(inventoryProvider.notifier);
+      expect(container.read(inventoryProvider).bonusShopCards, 0);
 
-      controller.buyShopExpansion();
-      expect(controller.state.bonusShopCards, 1);
+      inventoryController.buyShopExpansion();
+      expect(container.read(inventoryProvider).bonusShopCards, 1);
 
-      controller.buyShopExpansion();
-      expect(controller.state.bonusShopCards, 2);
+      inventoryController.buyShopExpansion();
+      expect(container.read(inventoryProvider).bonusShopCards, 2);
     });
 
-    test('startNewRun resets bonusShopCards to 0', () {
-      final controller = RunController();
-      controller.buyShopExpansion();
-      expect(controller.state.bonusShopCards, 1);
+    test('startNewRun resets bonusShopCards to 0 and gold to 50 in inventory', () {
+      final container = ProviderContainer();
+      final runController = container.read(runProvider.notifier);
+      final inventoryController = container.read(inventoryProvider.notifier);
+      
+      inventoryController.buyShopExpansion();
+      expect(container.read(inventoryProvider).bonusShopCards, 1);
 
       const dummyHero = HeroData(
         id: 'paladin',
@@ -41,12 +48,14 @@ void main() {
         passiveTrait: 'regenArmor',
       );
 
-      controller.startNewRun(dummyHero);
-      expect(controller.state.bonusShopCards, 0);
+      runController.startNewRun(dummyHero);
+      expect(container.read(inventoryProvider).bonusShopCards, 0);
+      expect(container.read(inventoryProvider).gold, 50);
     });
 
     test('Berserker armor passive triggers at start of combat when player has missing HP and resets at end of combat', () {
-      final controller = RunController();
+      final container = ProviderContainer();
+      final runController = container.read(runProvider.notifier);
       
       const berserkerHero = HeroData(
         id: 'berserker',
@@ -63,28 +72,31 @@ void main() {
         passiveTrait: 'berserkerArmor',
       );
 
-      controller.startNewRun(berserkerHero);
+      runController.startNewRun(berserkerHero);
       
       // Set missing HP: 80 max HP, set current to 60 (20 missing HP)
-      controller.setHeroStats(currentPv: 60, armure: 0);
+      runController.setHeroStats(currentPv: 60, armure: 0);
       
       // Travel to a node to have currentNodeId set
-      controller.travelToNode('node_1');
+      runController.travelToNode('node_1');
       
       // At the start of combat, the passive should trigger:
       // Missing HP = 20. Gain = 20 ~/ 10 = 2 armor.
       // Total gain = 2 + armorMastery (1) = 3 armor.
-      controller.startCombat();
+      runController.startCombat();
       
-      expect(controller.state.heroStats.armure, 3);
+      expect(runController.state.heroStats.armure, 3);
       
       // When the node is completed, armor should reset to 0
-      controller.completeCurrentNode();
-      expect(controller.state.heroStats.armure, 0);
+      runController.completeCurrentNode();
+      expect(runController.state.heroStats.armure, 0);
     });
 
     test('Relic system: addRelic, startOfRun effect, trigger application and stacking', () {
-      final controller = RunController();
+      final container = ProviderContainer();
+      final runController = container.read(runProvider.notifier);
+      final inventoryController = container.read(inventoryProvider.notifier);
+
       const dummyHero = HeroData(
         id: 'paladin',
         nameEn: 'Paladin',
@@ -99,7 +111,7 @@ void main() {
         armorMastery: 0,
         passiveTrait: 'regenArmor',
       );
-      controller.startNewRun(dummyHero);
+      runController.startNewRun(dummyHero);
 
       // 1. startOfRun trigger is applied immediately
       const luckyClover = RelicData(
@@ -115,15 +127,15 @@ void main() {
         emoji: '🍀',
       );
 
-      expect(controller.state.heroStats.luck, 0);
-      controller.addRelic(luckyClover);
-      expect(controller.state.heroStats.luck, 1);
-      expect(controller.state.relics.length, 1);
+      expect(runController.state.heroStats.luck, 0);
+      inventoryController.addRelic(luckyClover);
+      expect(runController.state.heroStats.luck, 1);
+      expect(inventoryController.state.relics.length, 1);
 
       // Stacking lucky clover gives +1 luck again
-      controller.addRelic(luckyClover);
-      expect(controller.state.heroStats.luck, 2);
-      expect(controller.state.relics.length, 2);
+      inventoryController.addRelic(luckyClover);
+      expect(runController.state.heroStats.luck, 2);
+      expect(inventoryController.state.relics.length, 2);
 
       // 2. Combat triggers and stacking
       const talisman = RelicData(
@@ -139,15 +151,15 @@ void main() {
         emoji: '🪙',
       );
 
-      controller.addRelic(talisman);
-      controller.addRelic(talisman); // Stack x2
+      inventoryController.addRelic(talisman);
+      inventoryController.addRelic(talisman); // Stack x2
 
-      expect(controller.state.heroStats.armure, 0);
+      expect(runController.state.heroStats.armure, 0);
       
       // Trigger startOfTurn relics
-      controller.applyRelics(RelicTrigger.startOfTurn);
+      runController.applyRelics(RelicTrigger.startOfTurn);
       // Stacking 2 x 2 armure = 4 armure
-      expect(controller.state.heroStats.armure, 4);
+      expect(runController.state.heroStats.armure, 4);
     });
   });
 }

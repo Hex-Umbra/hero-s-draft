@@ -68,3 +68,27 @@
         - Création de `test/unit/shop_controller_test.dart` et `test/unit/event_controller_test.dart` validant de manière déterministe les transactions, le hasard boutique et les calculs de probabilités de reliques.
         - Validation : Passage de **14 nouveaux tests**, portant le total du projet à **47 tests unitaires et widget validés avec 100% de réussite** et 0 avertissement `flutter analyze`.
 
+## Phase 104 - Rénovation Architecturale : Découpage du Mega-Contrôleur RunController & Harmonisation des Modèles (Étape 2)
+
+- refactor: Découplage de l'inventaire et des compétences de RunController et réorganisation du modèle EntityStats
+    - **Analyse du Problème initial** :
+        - Le fichier `RunController` (510 lignes) agissait comme un "God Class", mélangeant à la fois les données de progression globale (niveau, carte, classe, PV max/actuel), l'inventaire d'or et de reliques, ainsi que le suivi des cooldowns des compétences actives.
+        - Cette centralisation surchargeait le contrôleur principal, provoquait des notifications de reconstruction inutiles sur toute l'interface et compliquait le code et les tests.
+        - De plus, le fichier `entity_stats.dart` était localisé dans `lib/data/models/`, rompant l'uniformité avec les autres modèles situés dans `lib/models/`.
+    - **Harmonisation des Modèles** :
+        - Déplacement physique de `entity_stats.dart` vers `lib/models/entity_stats.dart`.
+        - Remplacement des imports de `entity_stats.dart` dans 7 fichiers source (`enemy_card.dart`, `hero_card.dart`, `combat_controller.dart`, `run_controller.dart`, `heros_draft_game.dart`, `effect_resolver.dart`, `enemy_instance.dart`) et 2 fichiers de tests (`combat_controller_test.dart`, `effect_resolver_test.dart`).
+    - **Découplage de l'Inventaire (Or et Reliques)** :
+        - Création d'un état immutable `InventoryState` (`lib/models/inventory_state.dart`) pour stocker `gold`, `relics`, et `bonusShopCards`.
+        - Création du `InventoryController` (`lib/game/controllers/inventory_controller.dart`) étendant `StateNotifier<InventoryState>` pour centraliser les gains/pertes d'or, l'ajout de reliques, l'achat d'expansion et les réinitialisations.
+    - **Découplage des Compétences (Sorts et Cooldowns)** :
+        - Création d'un état immutable `SkillState` (`lib/models/skill_state.dart`) pour stocker les cooldowns `skill1Cooldown` et `skill2Cooldown`.
+        - Création du `SkillController` (`lib/game/controllers/skill_controller.dart`) pour centraliser le déclenchement des compétences (avec validation et consommation de ressources) et l'écoulement des tours.
+    - **Simplification de `RunController` & Raccordement UI/Tests** :
+        - Retrait des variables et fonctions d'or, de reliques et de cooldowns de `RunState` et `RunController`. Passage de Riverpod `Ref` à son constructeur pour lui permettre de piloter réactivement `inventoryProvider` et `skillProvider`.
+        - Adaptation de la couché UI (`shop_screen.dart`, `event_screen.dart`, `map_screen.dart`, `game_screen.dart`, `draft_screen.dart`, `relics_dialog.dart`) pour observer et manipuler réactivement ces nouveaux providers spécialisés.
+    - **Validation & Rénovation des Tests** :
+        - Rénovation complète de tous les tests unitaires et widget existants pour instancier les contrôleurs via un `ProviderContainer` Riverpod, reproduisant fidèlement le comportement découplé de production.
+        - Création de `test/unit/inventory_controller_test.dart` et `test/unit/skill_controller_test.dart` (validation déterministe des transactions d'or, des reliques, des ticks de cooldowns et des ressources).
+        - **Résultat** : **58 tests unitaires et widget validés avec 100% de réussite** et 0 avertissement `flutter analyze`.
+
