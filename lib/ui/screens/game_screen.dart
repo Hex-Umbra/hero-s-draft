@@ -154,6 +154,19 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     }
   }
 
+  void _startPlayerNewTurn() {
+    setState(() {
+      _showManaWarning = false;
+      _turnCount++;
+    });
+    ref.read(runProvider.notifier).startTurn();
+    final deckNotifier = ref.read(deckProvider.notifier);
+    if (ref.read(deckProvider).drawPile.length < 5) {
+      deckNotifier.shuffleDiscardIntoDraw();
+    }
+    deckNotifier.drawCards(5);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -215,18 +228,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       onEnemyDebuffDeck: (count) {
         // Logique retirée car la carte "Blessure" de test a été supprimée
       },
-      onTurnEnded: () {
-        setState(() {
-          _showManaWarning = false;
-          _turnCount++;
-        });
-        ref.read(runProvider.notifier).startTurn();
-        final deckNotifier = ref.read(deckProvider.notifier);
-        if (ref.read(deckProvider).drawPile.length < 5) {
-          deckNotifier.shuffleDiscardIntoDraw();
-        }
-        deckNotifier.drawCards(5);
-      },
+      onTurnEnded: _startPlayerNewTurn,
       onPhaseChanged: (phase) {
         final l10n = AppLocalizations.of(context)!;
         _triggerPhaseBanner(
@@ -269,6 +271,10 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           _game.heroCard?.buffAnimation(hasArmor ? 'defend' : 'buff');
         }
 
+        if (target != null) {
+          combatController.selectEnemy(target.id);
+        }
+
         combatController.applyPlayerCardPlay(
           card,
           runController,
@@ -307,6 +313,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       },
       onEndEnemyTurn: () {
         ref.read(combatProvider.notifier).endEnemyTurn();
+        _startPlayerNewTurn();
       },
       onSelectEnemy: (enemyId) {
         ref.read(combatProvider.notifier).selectEnemy(enemyId);
