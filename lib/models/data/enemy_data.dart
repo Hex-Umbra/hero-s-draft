@@ -2,7 +2,6 @@ import '../enemy_intent.dart';
 
 class EnemyData {
   final String id;
-  final String name; // Temporary backward compatibility
   final String nameEn;
   final String nameFr;
   final int maxHp;
@@ -13,7 +12,6 @@ class EnemyData {
 
   const EnemyData({
     required this.id,
-    this.name = '',
     this.nameEn = '',
     this.nameFr = '',
     required this.maxHp,
@@ -38,7 +36,6 @@ class EnemyData {
 
     return EnemyData(
       id: json['id'] as String,
-      name: nFr,
       nameEn: nEn,
       nameFr: nFr,
       maxHp: json['maxHp'] as int,

@@ -2,8 +2,6 @@ import 'relic_data.dart';
 
 class PassiveData {
   final String id;
-  final String name; // Temporary backward compatibility
-  final String description; // Temporary backward compatibility
   final String nameEn;
   final String nameFr;
   final String descriptionEn;
@@ -14,8 +12,6 @@ class PassiveData {
 
   const PassiveData({
     required this.id,
-    this.name = '',
-    this.description = '',
     this.nameEn = '',
     this.nameFr = '',
     this.descriptionEn = '',
@@ -36,8 +32,6 @@ class PassiveData {
 
     return PassiveData(
       id: json['id'] as String,
-      name: nFr,
-      description: dFr,
       nameEn: nEn,
       nameFr: nFr,
       descriptionEn: dEn,
@@ -53,8 +47,6 @@ class PassiveData {
       case 'regenArmor':
         return const PassiveData(
           id: 'regenArmor',
-          name: "Régénération d'Armure",
-          description: "Gagne 2 points d'Armure (+ Maîtrise) automatiquement à la fin de chaque tour.",
           nameEn: 'Armor Regeneration',
           nameFr: "Régénération d'Armure",
           descriptionEn: 'Gain 2 Block (+ Mastery) automatically at the end of each turn.',
@@ -66,8 +58,6 @@ class PassiveData {
       case 'berserkerArmor':
         return const PassiveData(
           id: 'berserkerArmor',
-          name: "Armure du Berserker",
-          description: "Gagne 1 point d'Armure (+ Maîtrise) au début du tour pour chaque tranche de 10 PV manquants.",
           nameEn: 'Berserker Armor',
           nameFr: 'Armure du Berserker',
           descriptionEn: 'Gain 1 Block (+ Mastery) at the start of your turn for every 10 missing HP.',
@@ -79,8 +69,6 @@ class PassiveData {
       case 'spellArmor':
         return const PassiveData(
           id: 'spellArmor',
-          name: "Armure Magique",
-          description: "Gagne 1 point d'Armure (+ Maîtrise) instantanément chaque fois que vous jouez une carte Compétence.",
           nameEn: 'Spell Armor',
           nameFr: 'Armure Magique',
           descriptionEn: 'Gain 1 Block (+ Mastery) instantly each time you play a Skill card.',
@@ -92,8 +80,6 @@ class PassiveData {
       default:
         return const PassiveData(
           id: 'none',
-          name: 'Aucun',
-          description: '',
           nameEn: 'None',
           nameFr: 'Aucun',
           descriptionEn: '',

@@ -105,7 +105,8 @@ void main() {
         ),
         data: const EnemyData(
           id: 'test',
-          name: 'Test Enemy',
+          nameEn: 'Test Enemy',
+          nameFr: 'Test Ennemi',
           maxHp: 20,
           baseDamage: 8,
           spritePath: '',
@@ -169,7 +170,8 @@ void main() {
         ),
         data: const EnemyData(
           id: 'orc',
-          name: 'Orc Furieux',
+          nameEn: 'Furious Orc',
+          nameFr: 'Orc Furieux',
           maxHp: 50,
           baseDamage: 8,
           spritePath: '',

@@ -10,8 +10,10 @@ void main() {
       final cardA = CardInstance(
         data: const CardData(
           id: 'strike',
-          name: 'Strike',
-          description: 'd',
+          nameEn: 'Strike',
+          nameFr: 'Frappe',
+          descriptionEn: 'd',
+          descriptionFr: 'd',
           cost: 1,
           type: CardType.attack,
           category: CardCategory.global,
@@ -23,8 +25,10 @@ void main() {
       final cardB = CardInstance(
         data: const CardData(
           id: 'defend',
-          name: 'Defend',
-          description: 'd',
+          nameEn: 'Defend',
+          nameFr: 'Défense',
+          descriptionEn: 'd',
+          descriptionFr: 'd',
           cost: 1,
           type: CardType.skill,
           category: CardCategory.global,
@@ -60,8 +64,10 @@ void main() {
       final cardA = CardInstance(
         data: const CardData(
           id: 'strike',
-          name: 'Strike',
-          description: 'd',
+          nameEn: 'Strike',
+          nameFr: 'Frappe',
+          descriptionEn: 'd',
+          descriptionFr: 'd',
           cost: 1,
           type: CardType.attack,
           category: CardCategory.global,
@@ -73,8 +79,10 @@ void main() {
       final cardB = CardInstance(
         data: const CardData(
           id: 'defend',
-          name: 'Defend',
-          description: 'd',
+          nameEn: 'Defend',
+          nameFr: 'Défense',
+          descriptionEn: 'd',
+          descriptionFr: 'd',
           cost: 1,
           type: CardType.skill,
           category: CardCategory.global,

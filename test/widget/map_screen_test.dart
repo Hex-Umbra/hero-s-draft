@@ -30,8 +30,10 @@ void main() {
     // 1. Arrange state
     final hero = const HeroData(
       id: 'test_hero',
-      name: 'Test',
-      description: 'Test',
+      nameEn: 'Test',
+      nameFr: 'Test',
+      descriptionEn: 'Test',
+      descriptionFr: 'Test',
       iconPath: 'test',
       maxHp: 10,
       maxMana: 3,

@@ -31,8 +31,6 @@ class CardEffect {
 
 class CardData {
   final String id;
-  final String name; // Temporary backward compatibility
-  final String description; // Temporary backward compatibility
   final String nameEn;
   final String nameFr;
   final String descriptionEn;
@@ -50,8 +48,6 @@ class CardData {
 
   const CardData({
     required this.id,
-    this.name = '',
-    this.description = '',
     this.nameEn = '',
     this.nameFr = '',
     this.descriptionEn = '',
@@ -79,8 +75,6 @@ class CardData {
 
     return CardData(
       id: json['id'] as String,
-      name: nFr,
-      description: dFr,
       nameEn: nEn,
       nameFr: nFr,
       descriptionEn: dEn,

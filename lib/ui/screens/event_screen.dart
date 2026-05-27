@@ -135,10 +135,11 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                 break;
             }
 
+            final locale = Localizations.localeOf(context).languageCode;
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                  '👑 RELIQUE OBTENUE : ${chosenRelic.emoji} ${chosenRelic.name} ($rarityStr)',
+                  '👑 ${locale == 'fr' ? 'RELIQUE OBTENUE' : 'RELIC OBTAINED'} : ${chosenRelic.emoji} ${chosenRelic.getName(locale)} ($rarityStr)',
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 backgroundColor: rarityColor,

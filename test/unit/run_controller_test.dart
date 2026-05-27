@@ -28,8 +28,10 @@ void main() {
 
       const dummyHero = HeroData(
         id: 'paladin',
-        name: 'Paladin',
-        description: 'A holy knight',
+        nameEn: 'Paladin',
+        nameFr: 'Paladin',
+        descriptionEn: 'A holy knight',
+        descriptionFr: 'Un saint chevalier',
         iconPath: 'paladin.png',
         maxHp: 100,
         maxMana: 3,
@@ -48,8 +50,10 @@ void main() {
       
       const berserkerHero = HeroData(
         id: 'berserker',
-        name: 'Berserker',
-        description: 'A raging warrior',
+        nameEn: 'Berserker',
+        nameFr: 'Berserker',
+        descriptionEn: 'A raging warrior',
+        descriptionFr: 'Un guerrier enragé',
         iconPath: 'berserker.png',
         maxHp: 80,
         maxMana: 3,
@@ -83,8 +87,10 @@ void main() {
       final controller = RunController();
       const dummyHero = HeroData(
         id: 'paladin',
-        name: 'Paladin',
-        description: 'A holy knight',
+        nameEn: 'Paladin',
+        nameFr: 'Paladin',
+        descriptionEn: 'A holy knight',
+        descriptionFr: 'Un saint chevalier',
         iconPath: 'paladin.png',
         maxHp: 100,
         maxMana: 3,
@@ -98,8 +104,10 @@ void main() {
       // 1. startOfRun trigger is applied immediately
       const luckyClover = RelicData(
         id: 'lucky_clover',
-        name: 'Trèfle Enchanté',
-        description: '+1 Chance',
+        nameEn: 'Lucky Clover',
+        nameFr: 'Trèfle Enchanté',
+        descriptionEn: '+1 Luck',
+        descriptionFr: '+1 Chance',
         trigger: RelicTrigger.startOfRun,
         effectType: 'gain_luck',
         value: 1,
@@ -120,8 +128,10 @@ void main() {
       // 2. Combat triggers and stacking
       const talisman = RelicData(
         id: 'iron_talisman',
-        name: 'Talisman de Fer',
-        description: 'Gagne 2 armure',
+        nameEn: 'Iron Talisman',
+        nameFr: 'Talisman de Fer',
+        descriptionEn: 'Gain 2 armor',
+        descriptionFr: 'Gagne 2 armure',
         trigger: RelicTrigger.startOfTurn,
         effectType: 'gain_armor',
         value: 2,

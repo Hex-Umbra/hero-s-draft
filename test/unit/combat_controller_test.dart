@@ -17,7 +17,8 @@ void main() {
   group('CombatController Tests', () {
     final goblinData = EnemyData(
       id: 'goblin',
-      name: 'Goblin',
+      nameEn: 'Goblin',
+      nameFr: 'Gobelin',
       maxHp: 20,
       baseDamage: 5,
       spritePath: 'goblin.png',
@@ -30,7 +31,8 @@ void main() {
 
     final orcData = EnemyData(
       id: 'orc',
-      name: 'Orc',
+      nameEn: 'Orc',
+      nameFr: 'Orque',
       maxHp: 30,
       baseDamage: 8,
       spritePath: 'orc.png',
@@ -42,8 +44,10 @@ void main() {
 
     final paladinHero = HeroData(
       id: 'paladin',
-      name: 'Paladin',
-      description: 'A holy knight',
+      nameEn: 'Paladin',
+      nameFr: 'Paladin',
+      descriptionEn: 'A holy knight',
+      descriptionFr: 'Un saint chevalier',
       iconPath: 'paladin.png',
       maxHp: 100,
       maxMana: 3,
@@ -247,8 +251,10 @@ void main() {
       final strikeCard = CardInstance(
         data: const CardData(
           id: 'strike',
-          name: 'Strike',
-          description: 'Inflige 6 dégâts',
+          nameEn: 'Strike',
+          nameFr: 'Frappe',
+          descriptionEn: 'Deals 6 damage.',
+          descriptionFr: 'Inflige 6 dégâts.',
           cost: 1,
           type: CardType.attack,
           category: CardCategory.global,

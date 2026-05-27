@@ -18,8 +18,10 @@ void main() {
     // Global cards for selection
     const CardData(
       id: 'slash',
-      name: 'Slash',
-      description: 'Deal 6 damage',
+      nameEn: 'Slash',
+      nameFr: 'Entaille',
+      descriptionEn: 'Deal 6 damage',
+      descriptionFr: 'Inflige 6 dégâts',
       cost: 1,
       type: CardType.attack,
       category: CardCategory.global,
@@ -29,8 +31,10 @@ void main() {
     ),
     const CardData(
       id: 'shield',
-      name: 'Shield',
-      description: 'Gain 5 armor',
+      nameEn: 'Shield',
+      nameFr: 'Bouclier',
+      descriptionEn: 'Gain 5 armor',
+      descriptionFr: 'Gagne 5 armure',
       cost: 1,
       type: CardType.skill,
       category: CardCategory.global,
@@ -41,8 +45,10 @@ void main() {
     // Class specific cards (will be auto-added)
     const CardData(
       id: 'holy_shield',
-      name: 'Bouclier Sacré',
-      description: 'Gain 8 armor and heal 2 HP',
+      nameEn: 'Holy Shield',
+      nameFr: 'Bouclier Sacré',
+      descriptionEn: 'Gain 8 armor and heal 2 HP',
+      descriptionFr: 'Gagne 8 armure et soigne 2 PV',
       cost: 2,
       type: CardType.skill,
       category: CardCategory.characterSpecific,
@@ -55,8 +61,10 @@ void main() {
 
   final mockHero = const HeroData(
     id: 'paladin',
-    name: 'Paladin',
-    description: 'A holy knight',
+    nameEn: 'Paladin',
+    nameFr: 'Paladin',
+    descriptionEn: 'A holy knight',
+    descriptionFr: 'Un saint chevalier',
     iconPath: 'paladin.png',
     maxHp: 100,
     maxMana: 3,
@@ -68,8 +76,10 @@ void main() {
 
   final mockPassive = const PassiveData(
     id: 'regenArmor',
-    name: 'Armor Regeneration',
-    description: 'Regen armor each turn',
+    nameEn: 'Armor Regeneration',
+    nameFr: "Régénération d'Armure",
+    descriptionEn: 'Regen armor each turn',
+    descriptionFr: "Régénère l'armure chaque tour",
     trigger: RelicTrigger.endOfTurn,
     effectType: 'gain_armor',
     value: 2,

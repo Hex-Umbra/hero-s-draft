@@ -270,3 +270,26 @@
     - **Validation Statique & Exécution** :
         - Exécution de `flutter gen-l10n` et de `flutter test` : **100% vert, tous les 33 tests passent avec succès !**
         - Lancement final de `dart analyze` : **100% vert, 0 warning, 0 erreur !**
+
+## Phase 4 : Étape 6 - Suppression des Champs Dépréciés Rétrocompatibles
+
+- refactor: Suppression complète des propriétés name et description dépréciées et migration de tous les tests unitaires et widgets
+    - **Modèles de Données Purifiés** :
+        - Retrait définitif des variables temporaires `name` et `description`, ainsi que de leurs valeurs par défaut dans les constructeurs des classes `CardData`, `RelicData`, `EnemyData`, `HeroData` et `PassiveData`.
+        - Mise à jour de la désérialisation JSON (`fromJson`) et de la sérialisation (`toJson`) pour éliminer l'ancienne clé plate au profit des clés suffixées `name_en` / `name_fr` et `description_en` / `description_fr`.
+    - **Nettoyage des Fiches et Écrans restants** :
+        - Migration de `StarterDeckDraftScreen` (`lib/ui/screens/starter_deck_draft_screen.dart`) pour résoudre dynamiquement les noms et descriptions bilingues des cartes dans l'interface de sélection initiale.
+        - Migration de `EventScreen` (`lib/ui/screens/event_screen.dart`) pour résoudre bilinguement les noms des reliques reçues lors de résolutions d'événements aléatoires.
+        - Mise à jour de la sérialisation de l'instance d'ennemi dans `EnemyInstance` (`lib/models/enemy_instance.dart`) afin de persister proprement les structures bilingues.
+    - **Mise à Niveau Intégrale des Tests Mocks** :
+        - Ajustement global de tous les fichiers de tests instanciant manuellement des structures de données pour se conformer à la signature bilingue sans les paramètres dépréciés. Fichiers impactés :
+            - `test/unit/combat_controller_test.dart`
+            - `test/unit/effect_resolver_test.dart`
+            - `test/unit/run_controller_test.dart`
+            - `test/unit/deck_controller_test.dart`
+            - `test/widget/map_screen_test.dart`
+            - `test/widget/shop_screen_test.dart`
+            - `test/widget/starter_deck_draft_screen_test.dart`
+    - **Validation Statique & Exécution Finale** :
+        - Exécution de `dart analyze` : **100% vert, 0 warning, 0 erreur !**
+        - Exécution de la suite complète `flutter test` : **100% vert, les 33 tests passent avec brio !**

@@ -215,6 +215,7 @@ class _StarterDeckDraftScreenState extends ConsumerState<StarterDeckDraftScreen>
   @override
   Widget build(BuildContext context) {
     final bool isMobile = MediaQuery.of(context).size.width < 600;
+    final locale = Localizations.localeOf(context).languageCode;
     
     // Couleurs thématiques par classe
     Color classColor = Colors.blue;
@@ -325,8 +326,8 @@ class _StarterDeckDraftScreenState extends ConsumerState<StarterDeckDraftScreen>
                               child: Stack(
                                 children: [
                                   UiCard(
-                                    title: card.name,
-                                    description: card.description,
+                                    title: card.getName(locale),
+                                    description: card.getDescription(locale),
                                     cost: card.cost,
                                     effects: card.effects,
                                     level: 1,

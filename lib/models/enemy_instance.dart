@@ -74,7 +74,8 @@ class EnemyInstance {
         'id': id,
         'data': {
           'id': data.id,
-          'name': data.name,
+          'name_en': data.nameEn,
+          'name_fr': data.nameFr,
           'maxHp': data.maxHp,
           'baseDamage': data.baseDamage,
           'spritePath': data.spritePath,
