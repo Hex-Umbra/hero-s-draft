@@ -92,3 +92,24 @@
         - Création de `test/unit/inventory_controller_test.dart` et `test/unit/skill_controller_test.dart` (validation déterministe des transactions d'or, des reliques, des ticks de cooldowns et des ressources).
         - **Résultat** : **58 tests unitaires et widget validés avec 100% de réussite** et 0 avertissement `flutter analyze`.
 
+## Phase 105 - Optimisations Visuelles, Caching dans Flame et Centralisation des Constantes (Étape 3)
+
+- refactor: Optimisation du cycle de vie du rendu Flame dans `StatBadge` et centralisation des priorités visuelles et dimensions
+    - **Analyse du Problème initial** :
+        - La méthode `_updateVisuals()` de `StatBadge` détruisait systématiquement l'ensemble de ses composants enfants (`removeAll(children)`) pour reconstruire entièrement la barre de vie, l'épée, le bouclier et les étiquettes de texte à chaque modification de statistiques. Cela créait un overhead important de garbage collection et d'allocations répétées sous Flutter/Flame.
+        - Les valeurs de z-index (`priority`) et les dimensions physiques des composants (comme `140x196` pour `CardComponent` ou les priorités de tracé) étaient codées en dur sous forme de variables locales ou de "nombres magiques".
+    - **Optimisation du cycle de rendu de `StatBadge`** :
+        - Ajout de variables membres privées pour mettre en cache les sous-composants enfants (`_attackTextComponent`, `_armorTextComponent`, `_progressBarComponent`, `_circleProgressComponent`, `textComponent`).
+        - Remplacement du cycle destructeur de mise à jour par une initialisation unique dans `onLoad` via `_initVisuals()`.
+        - Implémentation de mises à jour réactives directes "en place" dans `updateHpValues()` et `updateValue()` : modification des propriétés `.text` des TextComponents et `.percentage`/`.armorPercentage` des barres de progression vectorielles existantes, préservant ainsi l'arborescence Flame intacte.
+    - **Rénovation Vectorielle & Mutabilité** :
+        - Retrait du mot-clé `final` sur les propriétés de progression (`percentage` et `armorPercentage`) dans `LinearProgressBarComponent` et `CircleProgressComponent` pour permettre leur modification et mise à jour dynamique directe à 60 FPS sans réallocation.
+    - **Centralisation des Constantes Visuelles** :
+        - Création d'un fichier centralisé `lib/game/game_constants.dart` regroupant :
+            - Les priorités de z-indexing (`priorityBackground`, `priorityCardBase`, `priorityCardHovered`, etc.).
+            - Les dimensions physiques des cartes (`cardWidth`, `cardHeight`, `cardSize`).
+            - Les dimensions des badges de statistiques (`badgeHpSize`, `badgeStandardSize`, `badgeCircleSize`).
+        - Refactoring de `CardComponent`, `CardAnimator` et `HerosDraftGame` pour remplacer tous les nombres magiques par ces constantes globales unifiées.
+    - **Validation & Rénovation des Tests** :
+        - Exécution et passage avec succès des tests unitaires et widget (les contrats d'API publique de `StatBadge` restant parfaitement préservés).
+        - **Résultat** : **58 tests unitaires et widget validés avec 100% de réussite** et 0 avertissement `flutter analyze` sur tout le projet.

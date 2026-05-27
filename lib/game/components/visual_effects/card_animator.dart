@@ -4,6 +4,7 @@ import 'package:flame/effects.dart';
 import 'package:flame/particles.dart';
 import 'package:flutter/material.dart';
 import '../card_component.dart';
+import '../../game_constants.dart';
 import '../entities/enemy_card.dart';
 import 'slash_effect.dart';
 
@@ -127,7 +128,7 @@ class CardAnimator {
   void playAnimation(EnemyCard? target, {required VoidCallback onComplete}) {
     card.isPlayed = true;
     card.isDragging = false;
-    card.priority = 500;
+    card.priority = GameConstants.priorityCardDraggingMax;
 
     card.clearEffects();
 

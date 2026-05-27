@@ -7,6 +7,7 @@ import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../models/card_instance.dart';
 import '../../models/data/card_data.dart';
 import '../heros_draft_game.dart';
+import '../game_constants.dart';
 import 'entities/enemy_card.dart';
 import 'visual_effects/ribbon_trail.dart';
 import 'widgets/card_text_renderer.dart';
@@ -179,8 +180,8 @@ class CardComponent extends PositionComponent
   bool isHovered = false;
 
   // Paramètres visuels
-  static const double cardWidth = 140;
-  static const double cardHeight = 196;
+  static const double cardWidth = GameConstants.cardWidth;
+  static const double cardHeight = GameConstants.cardHeight;
 
   final Paint borderPaint = Paint()
     ..color = Colors.blueAccent

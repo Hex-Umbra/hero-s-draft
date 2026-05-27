@@ -16,6 +16,7 @@ import '../models/data/hero_data.dart';
 import '../models/data/skill_data.dart';
 import '../models/data/card_data.dart';
 import '../models/entity_stats.dart';
+import 'game_constants.dart';
 
 import 'controllers/run_controller.dart';
 import 'controllers/deck_controller.dart';
@@ -112,7 +113,7 @@ class HerosDraftGame extends FlameGame
 
     if (hoveredCard != null && hoveredCard != focusedCard) {
       hoveredCard!.isHovered = true;
-      hoveredCard!.priority = 100;
+      hoveredCard!.priority = GameConstants.priorityCardHovered;
       hoveredCard!.removeAll(hoveredCard!.children.whereType<Effect>());
       hoveredCard!.refreshVisuals();
       if (!hoveredCard!.isDragging) {
@@ -157,7 +158,7 @@ class HerosDraftGame extends FlameGame
 
     if (focusedCard != null) {
       focusedCard!.isHovered = true;
-      focusedCard!.priority = 150;
+      focusedCard!.priority = GameConstants.priorityCardFocused;
       focusedCard!.removeAll(focusedCard!.children.whereType<Effect>());
       focusedCard!.refreshVisuals();
       if (!focusedCard!.isDragging) {
@@ -234,7 +235,7 @@ class HerosDraftGame extends FlameGame
     await super.onLoad();
 
     targetingLine = TargetingLine();
-    add(targetingLine..priority = 300);
+    add(targetingLine..priority = GameConstants.priorityTargetingLine);
 
     final List<String> imagesToPreload = ['bg_dungeon.png'];
 
@@ -272,7 +273,7 @@ class HerosDraftGame extends FlameGame
     await images.loadAll(uniqueImages);
 
     final bgSprite = Sprite(images.fromCache('bg_dungeon.png'));
-    add(SpriteComponent(sprite: bgSprite, size: size)..priority = -100);
+    add(SpriteComponent(sprite: bgSprite, size: size)..priority = GameConstants.priorityBackground);
   }
 
   @override
@@ -287,7 +288,7 @@ class HerosDraftGame extends FlameGame
     _layoutHand();
 
     children.whereType<SpriteComponent>().forEach((bg) {
-      if (bg.priority == -100) bg.size = size;
+      if (bg.priority == GameConstants.priorityBackground) bg.size = size;
     });
   }
 

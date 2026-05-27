@@ -2,8 +2,8 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
 class LinearProgressBarComponent extends PositionComponent {
-  final double percentage;
-  final double armorPercentage;
+  double percentage;
+  double armorPercentage;
   final double borderRadius;
 
   LinearProgressBarComponent({

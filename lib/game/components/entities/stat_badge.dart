@@ -3,6 +3,7 @@ import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../heros_draft_game.dart';
+import '../../game_constants.dart';
 import '../widgets/circle_progress.dart';
 import '../widgets/flame_shield_icon.dart';
 import '../widgets/flame_sword_icon.dart';
@@ -24,8 +25,13 @@ class StatBadge extends PositionComponent
   String? _customTooltipTitle;
   String? _customTooltipDescription;
 
-  late TextComponent iconComponent;
-  late TextComponent textComponent;
+  // Cached Flame sub-components for incremental in-place updates
+  TextComponent? iconComponent;
+  TextComponent? textComponent;
+  TextComponent? _attackTextComponent;
+  TextComponent? _armorTextComponent;
+  LinearProgressBarComponent? _progressBarComponent;
+  CircleProgressComponent? _circleProgressComponent;
 
   StatBadge({
     required this.type,
@@ -48,21 +54,22 @@ class StatBadge extends PositionComponent
        _armorPercentage = armorPercentage,
        _customTooltipTitle = tooltipTitle,
        _customTooltipDescription = tooltipDescription,
-       super(size: isCircle ? Vector2.all(36) : (type == StatType.hp ? Vector2(130, 16) : Vector2(48, 22)));
+       super(size: isCircle ? GameConstants.badgeCircleSize : (type == StatType.hp ? GameConstants.badgeHpSize : GameConstants.badgeStandardSize));
 
   @override
   Future<void> onLoad() async {
     anchor = Anchor.center;
-    _updateVisuals();
+    _initVisuals();
   }
 
-  void _updateVisuals() {
+  /// Initialise l'ensemble des composants une seule fois lors du chargement
+  void _initVisuals() {
     removeAll(children);
 
     if (type == StatType.hp && !isCircle) {
-      size = Vector2(130, 16);
+      size = GameConstants.badgeHpSize;
 
-      // 1. Dessine l'Attaque : Épée custom dessinée en rouge + Valeur
+      // 1. Dessine l'Attaque : Épée + Valeur
       add(
         FlameSwordIcon(
           position: Vector2(0, size.y / 2),
@@ -71,25 +78,24 @@ class StatBadge extends PositionComponent
           anchor: Anchor.centerLeft,
         ),
       );
-      add(
-        TextComponent(
-          text: '$_attackValue',
-          textRenderer: TextPaint(
-            style: const TextStyle(
-              color: Color(0xFFFF5252),
-              fontSize: 9,
-              fontWeight: FontWeight.bold,
-              shadows: [
-                Shadow(color: Colors.black, blurRadius: 2.0, offset: Offset(1, 1)),
-              ],
-            ),
+      _attackTextComponent = TextComponent(
+        text: '$_attackValue',
+        textRenderer: TextPaint(
+          style: const TextStyle(
+            color: Color(0xFFFF5252),
+            fontSize: 9,
+            fontWeight: FontWeight.bold,
+            shadows: [
+              Shadow(color: Colors.black, blurRadius: 2.0, offset: Offset(1, 1)),
+            ],
           ),
-          anchor: Anchor.centerLeft,
-          position: Vector2(11, size.y / 2),
         ),
+        anchor: Anchor.centerLeft,
+        position: Vector2(11, size.y / 2),
       );
+      add(_attackTextComponent!);
 
-      // 2. Dessine l'Armure : Bouclier vectoriel premium dessiné en bleu/cyan + Valeur
+      // 2. Dessine l'Armure : Bouclier + Valeur
       add(
         FlameShieldIcon(
           position: Vector2(28, size.y / 2),
@@ -98,33 +104,32 @@ class StatBadge extends PositionComponent
           anchor: Anchor.centerLeft,
         ),
       );
-      add(
-        TextComponent(
-          text: '$_armorValue',
-          textRenderer: TextPaint(
-            style: const TextStyle(
-              color: Color(0xFF00E5FF),
-              fontSize: 9,
-              fontWeight: FontWeight.bold,
-              shadows: [
-                Shadow(color: Colors.black, blurRadius: 2.0, offset: Offset(1, 1)),
-              ],
-            ),
+      _armorTextComponent = TextComponent(
+        text: '$_armorValue',
+        textRenderer: TextPaint(
+          style: const TextStyle(
+            color: Color(0xFF00E5FF),
+            fontSize: 9,
+            fontWeight: FontWeight.bold,
+            shadows: [
+              Shadow(color: Colors.black, blurRadius: 2.0, offset: Offset(1, 1)),
+            ],
           ),
-          anchor: Anchor.centerLeft,
-          position: Vector2(39, size.y / 2),
         ),
+        anchor: Anchor.centerLeft,
+        position: Vector2(39, size.y / 2),
       );
+      add(_armorTextComponent!);
 
       // 3. Dessine la Barre de vie progressive avec l'armure superposée
-      final pb = LinearProgressBarComponent(
+      _progressBarComponent = LinearProgressBarComponent(
         size: Vector2(66, 13),
         percentage: _fillPercentage,
         armorPercentage: _armorPercentage,
         borderRadius: 4.0,
       );
-      pb.position = Vector2(64, 1.5);
-      add(pb);
+      _progressBarComponent!.position = Vector2(64, 1.5);
+      add(_progressBarComponent!);
 
       textComponent = TextComponent(
         text: _value,
@@ -145,7 +150,7 @@ class StatBadge extends PositionComponent
         anchor: Anchor.center,
         position: Vector2(97, size.y / 2),
       );
-      add(textComponent);
+      add(textComponent!);
       return;
     }
 
@@ -178,13 +183,12 @@ class StatBadge extends PositionComponent
         ),
       );
 
-      add(
-        CircleProgressComponent(
-          radius: size.x / 2,
-          percentage: _fillPercentage,
-          color: color,
-        ),
+      _circleProgressComponent = CircleProgressComponent(
+        radius: size.x / 2,
+        percentage: _fillPercentage,
+        color: color,
       );
+      add(_circleProgressComponent!);
 
       add(
         CircleComponent(
@@ -208,7 +212,7 @@ class StatBadge extends PositionComponent
         anchor: Anchor.center,
         position: size / 2,
       );
-      add(textComponent);
+      add(textComponent!);
     } else {
       // Ajuste la largeur si bonus présent
       final bool hasBonus = _bonusValue != null && _bonusValue! > 0;
@@ -244,100 +248,106 @@ class StatBadge extends PositionComponent
         anchor: Anchor.centerLeft,
         position: Vector2(6, size.y / 2),
       );
-      add(iconComponent);
+      add(iconComponent!);
 
-      if (hasBonus) {
-        // Affichage complexe : Total (Base + Bonus) avec mesure dynamique pour un alignement parfait
-        final totalStyle = const TextStyle(
-          color: Colors.white,
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
-        );
-        final normalStyle = const TextStyle(color: Colors.white70, fontSize: 8);
-        final bonusStyle = const TextStyle(
-          color: Colors.orangeAccent,
-          fontSize: 8,
-          fontWeight: FontWeight.bold,
-        );
-
-        final String part1 = ' ($_baseValue+';
-        final String part2 = '$_bonusValue';
-        final String part3 = ')';
-
-        double measure(String text, TextStyle style) {
-          final tp = TextPainter(
-            text: TextSpan(text: text, style: style),
-            textDirection: TextDirection.ltr,
-          )..layout();
-          return tp.width;
-        }
-
-        final double totalW = measure(_value, totalStyle);
-        final double p1W = measure(part1, normalStyle);
-        final double p2W = measure(part2, bonusStyle);
-        final double p3W = measure(part3, normalStyle);
-
-        final double fullW = totalW + p1W + p2W + p3W;
-
-        // On commence après l'icône (environ x=20) et on centre dans l'espace restant
-        double currentX = 20 + (size.x - 20 - fullW) / 2;
-
-        add(
-          TextComponent(
-            text: _value,
-            textRenderer: TextPaint(style: totalStyle),
-            anchor: Anchor.centerLeft,
-            position: Vector2(currentX, size.y / 2),
-          ),
-        );
-        currentX += totalW;
-
-        add(
-          TextComponent(
-            text: part1,
-            textRenderer: TextPaint(style: normalStyle),
-            anchor: Anchor.centerLeft,
-            position: Vector2(currentX, size.y / 2),
-          ),
-        );
-        currentX += p1W;
-
-        add(
-          TextComponent(
-            text: part2,
-            textRenderer: TextPaint(style: bonusStyle),
-            anchor: Anchor.centerLeft,
-            position: Vector2(currentX, size.y / 2),
-          ),
-        );
-        currentX += p2W;
-
-        add(
-          TextComponent(
-            text: part3,
-            textRenderer: TextPaint(style: normalStyle),
-            anchor: Anchor.centerLeft,
-            position: Vector2(currentX, size.y / 2),
-          ),
-        );
-      } else {
-        textComponent = TextComponent(
-          text: _value,
-          textRenderer: TextPaint(
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 11,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          anchor: Anchor.centerRight,
-          position: Vector2(size.x - 4, size.y / 2),
-        );
-        add(textComponent);
-      }
+      _rebuildStaticBadgeContent(hasBonus, color);
     }
   }
 
+  /// Reconstruit la section de texte dynamique (utilisée pour les badges rectangulaires simples/bonus)
+  void _rebuildStaticBadgeContent(bool hasBonus, Color color) {
+    // Nettoie les TextComponents de valeur précédents pour éviter les doublons
+    children.whereType<TextComponent>().where((tc) => tc != iconComponent).toList().forEach(remove);
+
+    if (hasBonus) {
+      final totalStyle = const TextStyle(
+        color: Colors.white,
+        fontSize: 10,
+        fontWeight: FontWeight.bold,
+      );
+      final normalStyle = const TextStyle(color: Colors.white70, fontSize: 8);
+      final bonusStyle = const TextStyle(
+        color: Colors.orangeAccent,
+        fontSize: 8,
+        fontWeight: FontWeight.bold,
+      );
+
+      final String part1 = ' ($_baseValue+';
+      final String part2 = '$_bonusValue';
+      final String part3 = ')';
+
+      double measure(String text, TextStyle style) {
+        final tp = TextPainter(
+          text: TextSpan(text: text, style: style),
+          textDirection: TextDirection.ltr,
+        )..layout();
+        return tp.width;
+      }
+
+      final double totalW = measure(_value, totalStyle);
+      final double p1W = measure(part1, normalStyle);
+      final double p2W = measure(part2, bonusStyle);
+      final double p3W = measure(part3, normalStyle);
+
+      final double fullW = totalW + p1W + p2W + p3W;
+      double currentX = 20 + (size.x - 20 - fullW) / 2;
+
+      add(
+        TextComponent(
+          text: _value,
+          textRenderer: TextPaint(style: totalStyle),
+          anchor: Anchor.centerLeft,
+          position: Vector2(currentX, size.y / 2),
+        ),
+      );
+      currentX += totalW;
+
+      add(
+        TextComponent(
+          text: part1,
+          textRenderer: TextPaint(style: normalStyle),
+          anchor: Anchor.centerLeft,
+          position: Vector2(currentX, size.y / 2),
+        ),
+      );
+      currentX += p1W;
+
+      add(
+        TextComponent(
+          text: part2,
+          textRenderer: TextPaint(style: bonusStyle),
+          anchor: Anchor.centerLeft,
+          position: Vector2(currentX, size.y / 2),
+        ),
+      );
+      currentX += p2W;
+
+      add(
+        TextComponent(
+          text: part3,
+          textRenderer: TextPaint(style: normalStyle),
+          anchor: Anchor.centerLeft,
+          position: Vector2(currentX, size.y / 2),
+        ),
+      );
+    } else {
+      textComponent = TextComponent(
+        text: _value,
+        textRenderer: TextPaint(
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        anchor: Anchor.centerRight,
+        position: Vector2(size.x - 4, size.y / 2),
+      );
+      add(textComponent!);
+    }
+  }
+
+  /// Met à jour la valeur et la progression de manière incrémentale en place
   void updateValue(
     String newValue, {
     int? baseValue,
@@ -357,10 +367,47 @@ class StatBadge extends PositionComponent
     }
 
     if (isLoaded) {
-      _updateVisuals(); // On reconstruit car le layout peut changer (largeur)
+      if (isCircle) {
+        if (_circleProgressComponent != null) {
+          _circleProgressComponent!.percentage = _fillPercentage;
+        }
+        if (textComponent != null) {
+          textComponent!.text = _value.split('/').first;
+        }
+      } else if (type != StatType.hp) {
+        final bool hasBonus = _bonusValue != null && _bonusValue! > 0;
+        final double targetWidth = hasBonus ? 90.0 : 48.0;
+
+        // Si le layout ou la largeur change (ex: bonus apparu/disparu), on réinitialise
+        if (size.x != targetWidth) {
+          _initVisuals();
+        } else {
+          // Sinon, on effectue une simple mise à jour en place des TextComponents de valeur
+          Color color;
+          switch (type) {
+            case StatType.hp:
+              color = const Color(0xFFE74C3C);
+              break;
+            case StatType.armor:
+              color = const Color(0xFF3498DB);
+              break;
+            case StatType.attack:
+              color = const Color(0xFFF39C12);
+              break;
+            case StatType.mana:
+              color = const Color(0xFF9B59B6);
+              break;
+          }
+          _rebuildStaticBadgeContent(hasBonus, color);
+        }
+      } else {
+        // Fallback HP horizontal
+        _initVisuals();
+      }
     }
   }
 
+  /// Met à jour les valeurs complexes d'HP de manière 100% incrémentale (en place)
   void updateHpValues(
     String hpValue,
     double fillPercentage,
@@ -381,7 +428,20 @@ class StatBadge extends PositionComponent
     }
 
     if (isLoaded) {
-      _updateVisuals();
+      // Optimisation absolue : mise à jour des valeurs existantes sans remove ni reconstruction !
+      if (_attackTextComponent != null) {
+        _attackTextComponent!.text = '$_attackValue';
+      }
+      if (_armorTextComponent != null) {
+        _armorTextComponent!.text = '$_armorValue';
+      }
+      if (_progressBarComponent != null) {
+        _progressBarComponent!.percentage = _fillPercentage;
+        _progressBarComponent!.armorPercentage = _armorPercentage;
+      }
+      if (textComponent != null) {
+        textComponent!.text = _value;
+      }
     }
   }
 

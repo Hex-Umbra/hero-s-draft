@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 class CircleProgressComponent extends PositionComponent {
   final double radius;
-  final double percentage;
+  double percentage;
   final Color color;
 
   CircleProgressComponent({
