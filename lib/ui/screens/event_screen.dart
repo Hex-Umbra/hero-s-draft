@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../game/controllers/run_controller.dart';
 import '../../game/controllers/event_controller.dart';
 import '../../game/controllers/inventory_controller.dart';
@@ -82,15 +83,14 @@ class _EventScreenState extends ConsumerState<EventScreen> {
     Navigator.of(context).pop();
   }
 
-  Widget _buildActionBadge(EventAction action) {
+  Widget _buildActionBadge(BuildContext context, EventAction action) {
     IconData icon;
     Color iconColor;
     Color textColor;
     Color bgColor;
     String text;
 
-    final locale = Localizations.localeOf(context).languageCode;
-    final isFr = locale == 'fr';
+    final l10n = AppLocalizations.of(context)!;
 
     switch (action.type) {
       case 'gain_gold':
@@ -98,49 +98,49 @@ class _EventScreenState extends ConsumerState<EventScreen> {
         iconColor = Colors.amber;
         textColor = Colors.greenAccent;
         bgColor = Colors.green.withAlpha(30);
-        text = '+${action.value} ${isFr ? 'Or' : 'Gold'}';
+        text = l10n.eventGainGold(action.value);
         break;
       case 'spend_gold':
         icon = Icons.monetization_on;
         iconColor = Colors.amber;
         textColor = Colors.redAccent;
         bgColor = Colors.red.withAlpha(30);
-        text = '-${action.value} ${isFr ? 'Or' : 'Gold'}';
+        text = l10n.eventSpendGold(action.value);
         break;
       case 'take_damage':
         icon = Icons.favorite_border;
         iconColor = Colors.redAccent;
         textColor = Colors.redAccent;
         bgColor = Colors.red.withAlpha(30);
-        text = '-${action.value} ${isFr ? 'PV' : 'HP'}';
+        text = l10n.eventLoseHp(action.value);
         break;
       case 'heal':
         icon = Icons.favorite;
         iconColor = Colors.greenAccent;
         textColor = Colors.greenAccent;
         bgColor = Colors.green.withAlpha(30);
-        text = '+${action.value} ${isFr ? 'PV' : 'HP'}';
+        text = l10n.eventGainHp(action.value);
         break;
       case 'gain_max_hp':
         icon = Icons.add_box;
         iconColor = Colors.pinkAccent;
         textColor = Colors.pinkAccent;
         bgColor = Colors.pink.withAlpha(30);
-        text = '+${action.value} ${isFr ? 'PV Max' : 'Max HP'}';
+        text = l10n.eventGainMaxHp(action.value);
         break;
       case 'gain_strength':
         icon = Icons.bolt;
         iconColor = Colors.orangeAccent;
         textColor = Colors.orangeAccent;
         bgColor = Colors.orange.withAlpha(30);
-        text = '+${action.value} ${isFr ? 'Attaque' : 'Attack'}';
+        text = l10n.eventGainAttack(action.value);
         break;
       case 'gain_relic':
         icon = Icons.auto_awesome;
         iconColor = Colors.purpleAccent;
         textColor = Colors.purpleAccent;
         bgColor = Colors.purple.withAlpha(30);
-        text = isFr ? '+1 Relique' : '+1 Relic';
+        text = l10n.eventGainRelic;
         break;
       default:
         icon = Icons.help_outline;
@@ -418,7 +418,7 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                               children: eventState.selectedChoice!.actions.isEmpty
                                   ? [_buildNoEffectBadge()]
                                   : eventState.selectedChoice!.actions
-                                      .map((action) => _buildActionBadge(action))
+                                      .map((action) => _buildActionBadge(context, action))
                                       .toList(),
                             ),
                           ),

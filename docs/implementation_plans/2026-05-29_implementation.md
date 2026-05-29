@@ -1,0 +1,24 @@
+## Phase 106 - Rénovation de la Localisation (i18n Absolue) — 2026-05-29
+
+- refactor: Internationalisation absolue de la couche UI Flutter et découplage complet de la localisation des statuts de combat
+    - **Centralisation des Ressources Multilingues (ARB)** :
+        - Enrichissement de `lib/l10n/app_en.arb` et `lib/l10n/app_fr.arb` avec l'intégration systématique de clés pour le dictionnaire de cartes, les statuts, et les indicateurs d'effets d'événements.
+        - Ajout des clés clés globales `"cardDictionary"` (Card Dictionary / Dictionnaire des Cartes) et `"statusCurses"` (STATUS / CURSES / STATUTS / MALÉDICTIONS).
+        - Intégration de clés dynamiques de gains et pertes asynchrones d'événements avec placeholders numériques : `eventGainGold`, `eventSpendGold`, `eventLoseHp`, `eventGainHp`, `eventGainMaxHp`, `eventGainAttack`, et `eventGainRelic`.
+        - Lancement et compilation robuste des ressources via `flutter gen-l10n`.
+    - **Remplacement Nominal de `isFr` par `AppLocalizations` dans la couche UI** :
+        - **`rest_screen.dart`** : Retrait du flag `isFr` local, remplacement de toutes les chaînes de feu de camp (Forge, Repos, Oubli) par des clés `AppLocalizations` fortement typées.
+        - **`starter_deck_draft_screen.dart`** : Localisation bilingue complète de la constitution de deck, du compteur réactif de sélection de cartes et des dialogues d'avertissement.
+        - **`card_dictionary_screen.dart`** : Remplacement nominal des en-têtes de catégorie, des types et cibles de cartes (`_getTargetLabel` et `_getTypeLabel`) par les délégués `AppLocalizations` correspondants.
+        - **`class_selection_screen.dart`** : Remplacement des tooltips codés en dur par `l10n.cardDictionary`.
+        - **`deck_screen.dart`** : Rénovation des dialogues de fusion de cartes et labels de rareté.
+        - **`draft_screen.dart`** : Traduction dynamique bilingue des choix permanents d'augmentation de statistiques (Vitalité, Aiguisage, Sagesse, Forge d'Acier, Trèfle à 4 feuilles, Miroir) et du dialogue de clonage.
+        - **`event_screen.dart`** : Restructuration complète de la méthode `_buildActionBadge` pour accepter un `BuildContext` et mapper dynamiquement chaque type d'effet de l'événement vers les traducteurs fortement typés d'AppLocalizations, éliminant définitivement toute chaîne brute.
+    - **Découplage Logic-Rendu pour les Statuts de Combat** :
+        - **`status_effects_panel.dart`** : Rénovation complète pour extraire et traduire les buffs et debuffs (Poison, Force, Faiblesse, Vulnérabilité, Métallisation/Régénération d'Armure, Éveil d'Attaque, Vol de vie) à la volée sur l'UI via `status.id` et `AppLocalizations` au lieu de coder les noms en dur dans le moteur ou les services métiers.
+        - Nettoyage du fichier et suppression des variables inutilisées.
+    - **Uniformisation et Résolution des Tests de Widgets** :
+        - Migration de la configuration de locale dans `test/widget/starter_deck_draft_screen_test.dart` en lui injectant explicitement `locale: const Locale('fr', '')` pour garantir la validation parfaite des assertions textuelles réactives.
+    - **Robustesse Statologique** :
+        - Validation de la propreté statique totale du projet via `flutter analyze` : **0 avertissement, 0 erreur**.
+        - Exécution de l'intégralité de la suite de tests automatisés via `flutter test` : **100% de réussite (58 tests passés avec succès !)**.

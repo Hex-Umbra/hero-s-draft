@@ -314,5 +314,219 @@
   "targetSingleEnemy": "Single enemy",
   "targetAllEnemies": "All enemies",
   "targetSelf": "Self",
-  "targetNone": "None"
+  "targetNone": "None",
+  "restCampTitle": "REST CAMP",
+  "restCampSubtitle": "The crackling fire calms you...",
+  "restCampRest": "REST",
+  "restCampRestDesc": "Restores 30% of Max HP ({amount} HP)",
+  "@restCampRestDesc": {
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "restCampForge": "FORGE",
+  "restCampForgeDesc": "Permanently upgrade a card in your deck.",
+  "restCampRemove": "REMOVE",
+  "restCampRemoveDesc": "Permanently remove a card from your deck.",
+  "restCampProceed": "PROCEED ONWARD",
+  "restCampSnackbarHeal": "Rest complete. You recovered {amount} HP.",
+  "@restCampSnackbarHeal": {
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "restCampSnackbarForge": "{cardName} was upgraded to Level {level}!",
+  "@restCampSnackbarForge": {
+    "placeholders": {
+      "cardName": { "type": "String" },
+      "level": { "type": "int" }
+    }
+  },
+  "restCampSnackbarRemove": "{cardName} was removed from your deck.",
+  "@restCampSnackbarRemove": {
+    "placeholders": {
+      "cardName": { "type": "String" }
+    }
+  },
+  "restCampForgeTitle": "FORGE A CARD",
+  "restCampForgeSubtitle": "Choose a card to permanently upgrade.",
+  "restCampRemoveTitle": "REMOVE A CARD",
+  "restCampRemoveSubtitle": "Choose a card to permanently remove from your deck.",
+  "draftDeckTitle": "DECK CONSTITUTION",
+  "draftDeckSubtitle": "Select exactly 5 global cards from the 10 offered to launch the run.",
+  "draftDeckSelectedCount": "Selected cards: {count} / 5",
+  "@draftDeckSelectedCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "draftDeckProceed": "ENTER THE UMBRA",
+  "draftDeckSnackbarMax": "You can only select up to 5 cards.",
+  "mergeLabel": "MERGE ({count})",
+  "@mergeLabel": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "mergePossible": "Merge possible",
+  "mergeMoreRequired": "{count} more required",
+  "@mergeMoreRequired": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "confirmMerge": "Confirm Merge",
+  "draftChoiceVitality": "Vitality",
+  "draftChoiceVitalityDesc": "+{amount} Max HP",
+  "@draftChoiceVitalityDesc": {
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "draftChoiceSharpening": "Sharpening",
+  "draftChoiceSharpeningDesc": "+{amount} Attack",
+  "@draftChoiceSharpeningDesc": {
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "draftChoiceSteelForge": "Steel Forge",
+  "draftChoiceSteelForgeDesc": "+{amount} to your passive's Block gain",
+  "@draftChoiceSteelForgeDesc": {
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "draftChoiceWisdom": "Wisdom",
+  "draftChoiceWisdomDesc": "+{amount} Max Mana",
+  "@draftChoiceWisdomDesc": {
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "draftChoiceClover": "4-Leaf Clover",
+  "draftChoiceCloverDesc": "+{amount} Luck",
+  "@draftChoiceCloverDesc": {
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "draftChoiceMirror": "Mirror",
+  "draftChoiceMirrorDesc": "Clone a card from your deck",
+  "statusPoison": "Poison: {value}",
+  "@statusPoison": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "statusStrength": "Attack: +{value}",
+  "@statusStrength": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "statusWeakness": "Weakness: {value}",
+  "@statusWeakness": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "statusVulnerable": "Vulnerable: {value}",
+  "@statusVulnerable": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "statusStrengthRegen": "Attack Awakening: +{value}",
+  "@statusStrengthRegen": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "statusArmorRegen": "Plated Armor: +{value}",
+  "@statusArmorRegen": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "statusLifesteal": "Lifesteal: {value}",
+  "@statusLifesteal": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "statusTurns": "{count} turns",
+  "@statusTurns": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "deckTotalCards": "Total: {count} cards",
+  "@deckTotalCards": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "deckMergeConfirm": "Do you want to merge 3 copies of \"{cardName}\" (Lvl. {level}) to obtain a Lvl. {nextLevel} copy?",
+  "@deckMergeConfirm": {
+    "placeholders": {
+      "cardName": { "type": "String" },
+      "level": { "type": "int" },
+      "nextLevel": { "type": "int" }
+    }
+  },
+  "deckMergeSuccess": "Merge successful: {cardName} is now Level {level}!",
+  "@deckMergeSuccess": {
+    "placeholders": {
+      "cardName": { "type": "String" },
+      "level": { "type": "int" }
+    }
+  },
+  "rarityLevel": "{rarity} - Lvl. {level}",
+  "@rarityLevel": {
+    "placeholders": {
+      "rarity": { "type": "String" },
+      "level": { "type": "int" }
+    }
+  },
+  "merge": "Merge",
+  "cardDictionary": "Card Dictionary",
+  "statusCurses": "STATUS / CURSES",
+  "eventGainGold": "+{amount} Gold",
+  "@eventGainGold": {
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "eventSpendGold": "-{amount} Gold",
+  "@eventSpendGold": {
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "eventLoseHp": "-{amount} HP",
+  "@eventLoseHp": {
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "eventGainHp": "+{amount} HP",
+  "@eventGainHp": {
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "eventGainMaxHp": "+{amount} Max HP",
+  "@eventGainMaxHp": {
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "eventGainAttack": "+{amount} Attack",
+  "@eventGainAttack": {
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "eventGainRelic": "+1 Relic"
 }

@@ -498,4 +498,247 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get targetNone => 'Aucune';
+
+  @override
+  String get restCampTitle => 'ZONE DE REPOS';
+
+  @override
+  String get restCampSubtitle => 'Le crépitement du feu vous apaise...';
+
+  @override
+  String get restCampRest => 'SE REPOSER';
+
+  @override
+  String restCampRestDesc(int amount) {
+    return 'Restaure 30% des PV Max ($amount PV)';
+  }
+
+  @override
+  String get restCampForge => 'FORGER';
+
+  @override
+  String get restCampForgeDesc =>
+      'Améliore définitivement une carte de votre deck.';
+
+  @override
+  String get restCampRemove => 'OUBLIER';
+
+  @override
+  String get restCampRemoveDesc =>
+      'Retire définitivement une carte de votre deck.';
+
+  @override
+  String get restCampProceed => 'CONTINUER LA ROUTE';
+
+  @override
+  String restCampSnackbarHeal(int amount) {
+    return 'Repos terminé. Vous avez récupéré $amount PV.';
+  }
+
+  @override
+  String restCampSnackbarForge(String cardName, int level) {
+    return '$cardName a été améliorée au Niveau $level !';
+  }
+
+  @override
+  String restCampSnackbarRemove(String cardName) {
+    return '$cardName a été retirée du deck.';
+  }
+
+  @override
+  String get restCampForgeTitle => 'FORGER UNE CARTE';
+
+  @override
+  String get restCampForgeSubtitle =>
+      'Choisissez une carte à améliorer définitivement.';
+
+  @override
+  String get restCampRemoveTitle => 'OUBLIER UNE CARTE';
+
+  @override
+  String get restCampRemoveSubtitle =>
+      'Choisissez une carte à retirer définitivement de votre deck.';
+
+  @override
+  String get draftDeckTitle => 'CONSTITUTION DU DECK';
+
+  @override
+  String get draftDeckSubtitle =>
+      'Sélectionnez précisément 5 cartes globales parmi les 10 proposées pour lancer la run.';
+
+  @override
+  String draftDeckSelectedCount(int count) {
+    return 'Cartes sélectionnées : $count / 5';
+  }
+
+  @override
+  String get draftDeckProceed => 'ENTRER DANS L\'UMBRA';
+
+  @override
+  String get draftDeckSnackbarMax =>
+      'Vous pouvez sélectionner jusqu\'à 5 cartes maximum.';
+
+  @override
+  String mergeLabel(int count) {
+    return 'FUSIONNER ($count)';
+  }
+
+  @override
+  String get mergePossible => 'Fusion possible';
+
+  @override
+  String mergeMoreRequired(int count) {
+    return '$count de plus requis';
+  }
+
+  @override
+  String get confirmMerge => 'Confirmer la fusion';
+
+  @override
+  String get draftChoiceVitality => 'Vitalité';
+
+  @override
+  String draftChoiceVitalityDesc(int amount) {
+    return '+$amount PV Max';
+  }
+
+  @override
+  String get draftChoiceSharpening => 'Aiguisage';
+
+  @override
+  String draftChoiceSharpeningDesc(int amount) {
+    return '+$amount Attaque';
+  }
+
+  @override
+  String get draftChoiceSteelForge => 'Forge d\'Acier';
+
+  @override
+  String draftChoiceSteelForgeDesc(int amount) {
+    return '+$amount aux gains d\'Armure de votre passif';
+  }
+
+  @override
+  String get draftChoiceWisdom => 'Sagesse';
+
+  @override
+  String draftChoiceWisdomDesc(int amount) {
+    return '+$amount Mana Max';
+  }
+
+  @override
+  String get draftChoiceClover => 'Trèfle à 4 feuilles';
+
+  @override
+  String draftChoiceCloverDesc(int amount) {
+    return '+$amount Chance';
+  }
+
+  @override
+  String get draftChoiceMirror => 'Miroir';
+
+  @override
+  String get draftChoiceMirrorDesc => 'Cloner une carte de votre deck';
+
+  @override
+  String statusPoison(int value) {
+    return 'Poison : $value';
+  }
+
+  @override
+  String statusStrength(int value) {
+    return 'Attaque : +$value';
+  }
+
+  @override
+  String statusWeakness(int value) {
+    return 'Faiblesse : $value';
+  }
+
+  @override
+  String statusVulnerable(int value) {
+    return 'Vulnérable : $value';
+  }
+
+  @override
+  String statusStrengthRegen(int value) {
+    return 'Éveil d\'Attaque : +$value';
+  }
+
+  @override
+  String statusArmorRegen(int value) {
+    return 'Métallisation : +$value';
+  }
+
+  @override
+  String statusLifesteal(int value) {
+    return 'Vol de Vie : $value';
+  }
+
+  @override
+  String statusTurns(int count) {
+    return '$count trs';
+  }
+
+  @override
+  String deckTotalCards(int count) {
+    return 'Total : $count cartes';
+  }
+
+  @override
+  String deckMergeConfirm(String cardName, int level, int nextLevel) {
+    return 'Voulez-vous fusionner 3 exemplaires de \"$cardName\" (Niv. $level) pour obtenir un exemplaire de Niveau $nextLevel ?';
+  }
+
+  @override
+  String deckMergeSuccess(String cardName, int level) {
+    return 'Fusion réussie : $cardName est maintenant Niveau $level !';
+  }
+
+  @override
+  String rarityLevel(String rarity, int level) {
+    return '$rarity - Niv. $level';
+  }
+
+  @override
+  String get merge => 'Fusionner';
+
+  @override
+  String get cardDictionary => 'Dictionnaire des Cartes';
+
+  @override
+  String get statusCurses => 'STATUTS / MALÉDICTIONS';
+
+  @override
+  String eventGainGold(int amount) {
+    return '+$amount Or';
+  }
+
+  @override
+  String eventSpendGold(int amount) {
+    return '-$amount Or';
+  }
+
+  @override
+  String eventLoseHp(int amount) {
+    return '-$amount PV';
+  }
+
+  @override
+  String eventGainHp(int amount) {
+    return '+$amount PV';
+  }
+
+  @override
+  String eventGainMaxHp(int amount) {
+    return '+$amount PV Max';
+  }
+
+  @override
+  String eventGainAttack(int amount) {
+    return '+$amount Attaque';
+  }
+
+  @override
+  String get eventGainRelic => '+1 Relique';
 }

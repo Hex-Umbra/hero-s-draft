@@ -44,39 +44,35 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
   }
 
   String _getChoiceTitle(BuildContext context, _DraftChoice choice) {
-    final locale = Localizations.localeOf(context).languageCode;
-    final isFr = locale == 'fr';
-    if (choice.title == 'Vitalité') return isFr ? 'Vitalité' : 'Vitality';
-    if (choice.title == 'Aiguisage') return isFr ? 'Aiguisage' : 'Sharpening';
-    if (choice.title == 'Forge d\'Acier') return isFr ? 'Forge d\'Acier' : 'Steel Forge';
-    if (choice.title == 'Sagesse') return isFr ? 'Sagesse' : 'Wisdom';
-    if (choice.title == 'Trèfle à 4 feuilles') return isFr ? 'Trèfle à 4 feuilles' : '4-Leaf Clover';
-    if (choice.title == 'Miroir') return isFr ? 'Miroir' : 'Mirror';
+    final l10n = AppLocalizations.of(context)!;
+    if (choice.title == 'Vitalité') return l10n.draftChoiceVitality;
+    if (choice.title == 'Aiguisage') return l10n.draftChoiceSharpening;
+    if (choice.title == 'Forge d\'Acier') return l10n.draftChoiceSteelForge;
+    if (choice.title == 'Sagesse') return l10n.draftChoiceWisdom;
+    if (choice.title == 'Trèfle à 4 feuilles') return l10n.draftChoiceClover;
+    if (choice.title == 'Miroir') return l10n.draftChoiceMirror;
     return choice.title;
   }
 
   String _getChoiceDescription(BuildContext context, _DraftChoice choice) {
-    final locale = Localizations.localeOf(context).languageCode;
-    final isFr = locale == 'fr';
+    final l10n = AppLocalizations.of(context)!;
     if (choice.title == 'Vitalité') {
-      return isFr ? '+${choice.pvBoost} PV Max' : '+${choice.pvBoost} Max HP';
+      return l10n.draftChoiceVitalityDesc(choice.pvBoost);
     }
     if (choice.title == 'Aiguisage') {
-      return isFr ? '+${choice.atkBoost} Attaque' : '+${choice.atkBoost} Attack';
+      return l10n.draftChoiceSharpeningDesc(choice.atkBoost);
     }
     if (choice.title == 'Forge d\'Acier') {
-      return isFr 
-          ? '+${choice.armorBoost} aux gains d\'Armure de votre passif' 
-          : '+${choice.armorBoost} to your passive\'s Block gain';
+      return l10n.draftChoiceSteelForgeDesc(choice.armorBoost);
     }
     if (choice.title == 'Sagesse') {
-      return isFr ? '+${choice.manaBoost} Mana Max' : '+${choice.manaBoost} Max Mana';
+      return l10n.draftChoiceWisdomDesc(choice.manaBoost);
     }
     if (choice.title == 'Trèfle à 4 feuilles') {
-      return isFr ? '+1 Chance' : '+1 Luck';
+      return l10n.draftChoiceCloverDesc(choice.luckBoost);
     }
     if (choice.title == 'Miroir') {
-      return isFr ? 'Cloner une carte de votre deck' : 'Clone a card from your deck';
+      return l10n.draftChoiceMirrorDesc;
     }
     return choice.description;
   }
@@ -190,8 +186,8 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
   void _showCloneModal(BuildContext context, WidgetRef ref) {
     final deckState = ref.read(deckProvider);
     final masterDeck = List.of(deckState.masterDeck);
+    final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).languageCode;
-    final isFr = locale == 'fr';
 
     // Choisir 3 cartes aléatoires
     masterDeck.shuffle();
@@ -209,7 +205,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
         return AlertDialog(
           backgroundColor: const Color(0xFF2A2A3D),
           title: Text(
-            isFr ? 'Choisissez une carte à cloner' : 'Choose a card to clone',
+            l10n.chooseCardToClone,
             style: const TextStyle(color: Colors.white),
           ),
           content: SingleChildScrollView(
@@ -223,7 +219,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
                         style: const TextStyle(color: Colors.amber),
                       ),
                       subtitle: Text(
-                        isFr ? 'Niveau ${card.level}' : 'Level ${card.level}',
+                        l10n.levelLabel(card.level),
                         style: const TextStyle(color: Colors.white70),
                       ),
                       onTap: () {

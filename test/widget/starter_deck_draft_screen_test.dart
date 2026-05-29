@@ -124,6 +124,7 @@ void main() {
             GlobalCupertinoLocalizations.delegate,
           ],
           supportedLocales: const [Locale('en', ''), Locale('fr', '')],
+          locale: const Locale('fr', ''),
           home: StarterDeckDraftScreen(
             playerClass: mockHero,
             passive: mockPassive,

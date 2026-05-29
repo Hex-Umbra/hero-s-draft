@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../game/controllers/run_controller.dart';
 import '../../game/controllers/deck_controller.dart';
 import '../../models/card_instance.dart';
@@ -16,8 +17,7 @@ class _RestScreenState extends ConsumerState<RestScreen> {
   bool _actionTaken = false;
 
   void _heal() {
-    final locale = Localizations.localeOf(context).languageCode;
-    final isFr = locale == 'fr';
+    final l10n = AppLocalizations.of(context)!;
     final runController = ref.read(runProvider.notifier);
     final maxHp = runController.currentState.heroStats.maxPv;
     final healAmount = (maxHp * 0.3).round();
@@ -30,24 +30,18 @@ class _RestScreenState extends ConsumerState<RestScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          isFr
-              ? 'Repos terminé. Vous avez récupéré $healAmount PV.'
-              : 'Rest complete. You recovered $healAmount HP.',
-        ),
+        content: Text(l10n.restCampSnackbarHeal(healAmount)),
         backgroundColor: Colors.green,
       ),
     );
   }
 
   void _upgradeCard() async {
+    final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).languageCode;
-    final isFr = locale == 'fr';
     final selectedCard = await _showCardSelector(
-      title: isFr ? 'FORGER UNE CARTE' : 'FORGE A CARD',
-      subtitle: isFr
-          ? 'Choisissez une carte à améliorer définitivement.'
-          : 'Choose a card to permanently upgrade.',
+      title: l10n.restCampForgeTitle,
+      subtitle: l10n.restCampForgeSubtitle,
     );
 
     if (selectedCard != null) {
@@ -61,11 +55,7 @@ class _RestScreenState extends ConsumerState<RestScreen> {
         final cardName = selectedCard.data.getName(locale);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              isFr
-                  ? '$cardName a été améliorée au Niveau ${selectedCard.level + 1} !'
-                  : '$cardName was upgraded to Level ${selectedCard.level + 1}!',
-            ),
+            content: Text(l10n.restCampSnackbarForge(cardName, selectedCard.level + 1)),
             backgroundColor: Colors.amber,
           ),
         );
@@ -74,13 +64,11 @@ class _RestScreenState extends ConsumerState<RestScreen> {
   }
 
   void _removeCard() async {
+    final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).languageCode;
-    final isFr = locale == 'fr';
     final selectedCard = await _showCardSelector(
-      title: isFr ? 'OUBLIER UNE CARTE' : 'REMOVE A CARD',
-      subtitle: isFr
-          ? 'Choisissez une carte à retirer définitivement de votre deck.'
-          : 'Choose a card to permanently remove from your deck.',
+      title: l10n.restCampRemoveTitle,
+      subtitle: l10n.restCampRemoveSubtitle,
     );
 
     if (selectedCard != null) {
@@ -94,11 +82,7 @@ class _RestScreenState extends ConsumerState<RestScreen> {
         final cardName = selectedCard.data.getName(locale);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              isFr
-                  ? '$cardName a été retirée du deck.'
-                  : '$cardName was removed from your deck.',
-            ),
+            content: Text(l10n.restCampSnackbarRemove(cardName)),
             backgroundColor: Colors.redAccent,
           ),
         );
@@ -107,8 +91,8 @@ class _RestScreenState extends ConsumerState<RestScreen> {
   }
 
   Future<CardInstance?> _showCardSelector({required String title, required String subtitle}) {
+    final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).languageCode;
-    final isFr = locale == 'fr';
     return showModalBottomSheet<CardInstance>(
       context: context,
       isScrollControlled: true,
@@ -157,7 +141,7 @@ class _RestScreenState extends ConsumerState<RestScreen> {
                             effects: card.data.effects,
                             type: card.data.type,
                             isExhaust: card.data.isExhaust,
-                            rarity: isFr ? 'Niveau ${card.level}' : 'Level ${card.level}',
+                            rarity: l10n.levelLabel(card.level),
                           ),
                         );
                       },
@@ -179,10 +163,9 @@ class _RestScreenState extends ConsumerState<RestScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final runState = ref.watch(runProvider);
     final heroStats = runState.heroStats;
-    final locale = Localizations.localeOf(context).languageCode;
-    final isFr = locale == 'fr';
 
     return Scaffold(
       backgroundColor: const Color(0xFF0D0D1A),
@@ -210,7 +193,7 @@ class _RestScreenState extends ConsumerState<RestScreen> {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  isFr ? 'ZONE DE REPOS' : 'REST CAMP',
+                  l10n.restCampTitle,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 32,
@@ -220,9 +203,7 @@ class _RestScreenState extends ConsumerState<RestScreen> {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  isFr
-                      ? 'Le crépitement du feu vous apaise...'
-                      : 'The crackling fire calms you...',
+                  l10n.restCampSubtitle,
                   style: TextStyle(
                     color: Colors.white.withAlpha(150),
                     fontSize: 16,
@@ -233,30 +214,24 @@ class _RestScreenState extends ConsumerState<RestScreen> {
                 if (!_actionTaken) ...[
                   _RestOption(
                     icon: Icons.favorite,
-                    title: isFr ? 'SE REPOSER' : 'REST',
-                    description: isFr
-                        ? 'Restaure 30% des PV Max (${(heroStats.maxPv * 0.3).round()} PV)'
-                        : 'Restores 30% of Max HP (${(heroStats.maxPv * 0.3).round()} HP)',
+                    title: l10n.restCampRest,
+                    description: l10n.restCampRestDesc((heroStats.maxPv * 0.3).round()),
                     onTap: _heal,
                     color: Colors.greenAccent,
                   ),
                   const SizedBox(height: 20),
                   _RestOption(
                     icon: Icons.auto_fix_high,
-                    title: isFr ? 'FORGER' : 'FORGE',
-                    description: isFr
-                        ? 'Améliore définitivement une carte de votre deck.'
-                        : 'Permanently upgrade a card in your deck.',
+                    title: l10n.restCampForge,
+                    description: l10n.restCampForgeDesc,
                     onTap: _upgradeCard,
                     color: Colors.amberAccent,
                   ),
                   const SizedBox(height: 20),
                   _RestOption(
                     icon: Icons.delete_sweep,
-                    title: isFr ? 'OUBLIER' : 'REMOVE',
-                    description: isFr
-                        ? 'Retire définitivement une carte de votre deck.'
-                        : 'Permanently remove a card from your deck.',
+                    title: l10n.restCampRemove,
+                    description: l10n.restCampRemoveDesc,
                     onTap: _removeCard,
                     color: Colors.redAccent,
                   ),
@@ -275,7 +250,7 @@ class _RestScreenState extends ConsumerState<RestScreen> {
                     ),
                     onPressed: _leave,
                     child: Text(
-                      isFr ? 'CONTINUER LA ROUTE' : 'PROCEED ONWARD',
+                      l10n.restCampProceed,
                       style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                     ),
                   ),

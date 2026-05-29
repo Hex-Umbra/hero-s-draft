@@ -494,4 +494,243 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get targetNone => 'None';
+
+  @override
+  String get restCampTitle => 'REST CAMP';
+
+  @override
+  String get restCampSubtitle => 'The crackling fire calms you...';
+
+  @override
+  String get restCampRest => 'REST';
+
+  @override
+  String restCampRestDesc(int amount) {
+    return 'Restores 30% of Max HP ($amount HP)';
+  }
+
+  @override
+  String get restCampForge => 'FORGE';
+
+  @override
+  String get restCampForgeDesc => 'Permanently upgrade a card in your deck.';
+
+  @override
+  String get restCampRemove => 'REMOVE';
+
+  @override
+  String get restCampRemoveDesc => 'Permanently remove a card from your deck.';
+
+  @override
+  String get restCampProceed => 'PROCEED ONWARD';
+
+  @override
+  String restCampSnackbarHeal(int amount) {
+    return 'Rest complete. You recovered $amount HP.';
+  }
+
+  @override
+  String restCampSnackbarForge(String cardName, int level) {
+    return '$cardName was upgraded to Level $level!';
+  }
+
+  @override
+  String restCampSnackbarRemove(String cardName) {
+    return '$cardName was removed from your deck.';
+  }
+
+  @override
+  String get restCampForgeTitle => 'FORGE A CARD';
+
+  @override
+  String get restCampForgeSubtitle => 'Choose a card to permanently upgrade.';
+
+  @override
+  String get restCampRemoveTitle => 'REMOVE A CARD';
+
+  @override
+  String get restCampRemoveSubtitle =>
+      'Choose a card to permanently remove from your deck.';
+
+  @override
+  String get draftDeckTitle => 'DECK CONSTITUTION';
+
+  @override
+  String get draftDeckSubtitle =>
+      'Select exactly 5 global cards from the 10 offered to launch the run.';
+
+  @override
+  String draftDeckSelectedCount(int count) {
+    return 'Selected cards: $count / 5';
+  }
+
+  @override
+  String get draftDeckProceed => 'ENTER THE UMBRA';
+
+  @override
+  String get draftDeckSnackbarMax => 'You can only select up to 5 cards.';
+
+  @override
+  String mergeLabel(int count) {
+    return 'MERGE ($count)';
+  }
+
+  @override
+  String get mergePossible => 'Merge possible';
+
+  @override
+  String mergeMoreRequired(int count) {
+    return '$count more required';
+  }
+
+  @override
+  String get confirmMerge => 'Confirm Merge';
+
+  @override
+  String get draftChoiceVitality => 'Vitality';
+
+  @override
+  String draftChoiceVitalityDesc(int amount) {
+    return '+$amount Max HP';
+  }
+
+  @override
+  String get draftChoiceSharpening => 'Sharpening';
+
+  @override
+  String draftChoiceSharpeningDesc(int amount) {
+    return '+$amount Attack';
+  }
+
+  @override
+  String get draftChoiceSteelForge => 'Steel Forge';
+
+  @override
+  String draftChoiceSteelForgeDesc(int amount) {
+    return '+$amount to your passive\'s Block gain';
+  }
+
+  @override
+  String get draftChoiceWisdom => 'Wisdom';
+
+  @override
+  String draftChoiceWisdomDesc(int amount) {
+    return '+$amount Max Mana';
+  }
+
+  @override
+  String get draftChoiceClover => '4-Leaf Clover';
+
+  @override
+  String draftChoiceCloverDesc(int amount) {
+    return '+$amount Luck';
+  }
+
+  @override
+  String get draftChoiceMirror => 'Mirror';
+
+  @override
+  String get draftChoiceMirrorDesc => 'Clone a card from your deck';
+
+  @override
+  String statusPoison(int value) {
+    return 'Poison: $value';
+  }
+
+  @override
+  String statusStrength(int value) {
+    return 'Attack: +$value';
+  }
+
+  @override
+  String statusWeakness(int value) {
+    return 'Weakness: $value';
+  }
+
+  @override
+  String statusVulnerable(int value) {
+    return 'Vulnerable: $value';
+  }
+
+  @override
+  String statusStrengthRegen(int value) {
+    return 'Attack Awakening: +$value';
+  }
+
+  @override
+  String statusArmorRegen(int value) {
+    return 'Plated Armor: +$value';
+  }
+
+  @override
+  String statusLifesteal(int value) {
+    return 'Lifesteal: $value';
+  }
+
+  @override
+  String statusTurns(int count) {
+    return '$count turns';
+  }
+
+  @override
+  String deckTotalCards(int count) {
+    return 'Total: $count cards';
+  }
+
+  @override
+  String deckMergeConfirm(String cardName, int level, int nextLevel) {
+    return 'Do you want to merge 3 copies of \"$cardName\" (Lvl. $level) to obtain a Lvl. $nextLevel copy?';
+  }
+
+  @override
+  String deckMergeSuccess(String cardName, int level) {
+    return 'Merge successful: $cardName is now Level $level!';
+  }
+
+  @override
+  String rarityLevel(String rarity, int level) {
+    return '$rarity - Lvl. $level';
+  }
+
+  @override
+  String get merge => 'Merge';
+
+  @override
+  String get cardDictionary => 'Card Dictionary';
+
+  @override
+  String get statusCurses => 'STATUS / CURSES';
+
+  @override
+  String eventGainGold(int amount) {
+    return '+$amount Gold';
+  }
+
+  @override
+  String eventSpendGold(int amount) {
+    return '-$amount Gold';
+  }
+
+  @override
+  String eventLoseHp(int amount) {
+    return '-$amount HP';
+  }
+
+  @override
+  String eventGainHp(int amount) {
+    return '+$amount HP';
+  }
+
+  @override
+  String eventGainMaxHp(int amount) {
+    return '+$amount Max HP';
+  }
+
+  @override
+  String eventGainAttack(int amount) {
+    return '+$amount Attack';
+  }
+
+  @override
+  String get eventGainRelic => '+1 Relic';
 }

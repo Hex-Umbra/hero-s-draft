@@ -931,6 +931,360 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'None'**
   String get targetNone;
+
+  /// No description provided for @restCampTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'REST CAMP'**
+  String get restCampTitle;
+
+  /// No description provided for @restCampSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The crackling fire calms you...'**
+  String get restCampSubtitle;
+
+  /// No description provided for @restCampRest.
+  ///
+  /// In en, this message translates to:
+  /// **'REST'**
+  String get restCampRest;
+
+  /// No description provided for @restCampRestDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Restores 30% of Max HP ({amount} HP)'**
+  String restCampRestDesc(int amount);
+
+  /// No description provided for @restCampForge.
+  ///
+  /// In en, this message translates to:
+  /// **'FORGE'**
+  String get restCampForge;
+
+  /// No description provided for @restCampForgeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently upgrade a card in your deck.'**
+  String get restCampForgeDesc;
+
+  /// No description provided for @restCampRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'REMOVE'**
+  String get restCampRemove;
+
+  /// No description provided for @restCampRemoveDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently remove a card from your deck.'**
+  String get restCampRemoveDesc;
+
+  /// No description provided for @restCampProceed.
+  ///
+  /// In en, this message translates to:
+  /// **'PROCEED ONWARD'**
+  String get restCampProceed;
+
+  /// No description provided for @restCampSnackbarHeal.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest complete. You recovered {amount} HP.'**
+  String restCampSnackbarHeal(int amount);
+
+  /// No description provided for @restCampSnackbarForge.
+  ///
+  /// In en, this message translates to:
+  /// **'{cardName} was upgraded to Level {level}!'**
+  String restCampSnackbarForge(String cardName, int level);
+
+  /// No description provided for @restCampSnackbarRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'{cardName} was removed from your deck.'**
+  String restCampSnackbarRemove(String cardName);
+
+  /// No description provided for @restCampForgeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'FORGE A CARD'**
+  String get restCampForgeTitle;
+
+  /// No description provided for @restCampForgeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a card to permanently upgrade.'**
+  String get restCampForgeSubtitle;
+
+  /// No description provided for @restCampRemoveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'REMOVE A CARD'**
+  String get restCampRemoveTitle;
+
+  /// No description provided for @restCampRemoveSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a card to permanently remove from your deck.'**
+  String get restCampRemoveSubtitle;
+
+  /// No description provided for @draftDeckTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'DECK CONSTITUTION'**
+  String get draftDeckTitle;
+
+  /// No description provided for @draftDeckSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select exactly 5 global cards from the 10 offered to launch the run.'**
+  String get draftDeckSubtitle;
+
+  /// No description provided for @draftDeckSelectedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected cards: {count} / 5'**
+  String draftDeckSelectedCount(int count);
+
+  /// No description provided for @draftDeckProceed.
+  ///
+  /// In en, this message translates to:
+  /// **'ENTER THE UMBRA'**
+  String get draftDeckProceed;
+
+  /// No description provided for @draftDeckSnackbarMax.
+  ///
+  /// In en, this message translates to:
+  /// **'You can only select up to 5 cards.'**
+  String get draftDeckSnackbarMax;
+
+  /// No description provided for @mergeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'MERGE ({count})'**
+  String mergeLabel(int count);
+
+  /// No description provided for @mergePossible.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge possible'**
+  String get mergePossible;
+
+  /// No description provided for @mergeMoreRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} more required'**
+  String mergeMoreRequired(int count);
+
+  /// No description provided for @confirmMerge.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Merge'**
+  String get confirmMerge;
+
+  /// No description provided for @draftChoiceVitality.
+  ///
+  /// In en, this message translates to:
+  /// **'Vitality'**
+  String get draftChoiceVitality;
+
+  /// No description provided for @draftChoiceVitalityDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'+{amount} Max HP'**
+  String draftChoiceVitalityDesc(int amount);
+
+  /// No description provided for @draftChoiceSharpening.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharpening'**
+  String get draftChoiceSharpening;
+
+  /// No description provided for @draftChoiceSharpeningDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'+{amount} Attack'**
+  String draftChoiceSharpeningDesc(int amount);
+
+  /// No description provided for @draftChoiceSteelForge.
+  ///
+  /// In en, this message translates to:
+  /// **'Steel Forge'**
+  String get draftChoiceSteelForge;
+
+  /// No description provided for @draftChoiceSteelForgeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'+{amount} to your passive\'s Block gain'**
+  String draftChoiceSteelForgeDesc(int amount);
+
+  /// No description provided for @draftChoiceWisdom.
+  ///
+  /// In en, this message translates to:
+  /// **'Wisdom'**
+  String get draftChoiceWisdom;
+
+  /// No description provided for @draftChoiceWisdomDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'+{amount} Max Mana'**
+  String draftChoiceWisdomDesc(int amount);
+
+  /// No description provided for @draftChoiceClover.
+  ///
+  /// In en, this message translates to:
+  /// **'4-Leaf Clover'**
+  String get draftChoiceClover;
+
+  /// No description provided for @draftChoiceCloverDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'+{amount} Luck'**
+  String draftChoiceCloverDesc(int amount);
+
+  /// No description provided for @draftChoiceMirror.
+  ///
+  /// In en, this message translates to:
+  /// **'Mirror'**
+  String get draftChoiceMirror;
+
+  /// No description provided for @draftChoiceMirrorDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Clone a card from your deck'**
+  String get draftChoiceMirrorDesc;
+
+  /// No description provided for @statusPoison.
+  ///
+  /// In en, this message translates to:
+  /// **'Poison: {value}'**
+  String statusPoison(int value);
+
+  /// No description provided for @statusStrength.
+  ///
+  /// In en, this message translates to:
+  /// **'Attack: +{value}'**
+  String statusStrength(int value);
+
+  /// No description provided for @statusWeakness.
+  ///
+  /// In en, this message translates to:
+  /// **'Weakness: {value}'**
+  String statusWeakness(int value);
+
+  /// No description provided for @statusVulnerable.
+  ///
+  /// In en, this message translates to:
+  /// **'Vulnerable: {value}'**
+  String statusVulnerable(int value);
+
+  /// No description provided for @statusStrengthRegen.
+  ///
+  /// In en, this message translates to:
+  /// **'Attack Awakening: +{value}'**
+  String statusStrengthRegen(int value);
+
+  /// No description provided for @statusArmorRegen.
+  ///
+  /// In en, this message translates to:
+  /// **'Plated Armor: +{value}'**
+  String statusArmorRegen(int value);
+
+  /// No description provided for @statusLifesteal.
+  ///
+  /// In en, this message translates to:
+  /// **'Lifesteal: {value}'**
+  String statusLifesteal(int value);
+
+  /// No description provided for @statusTurns.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} turns'**
+  String statusTurns(int count);
+
+  /// No description provided for @deckTotalCards.
+  ///
+  /// In en, this message translates to:
+  /// **'Total: {count} cards'**
+  String deckTotalCards(int count);
+
+  /// No description provided for @deckMergeConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you want to merge 3 copies of \"{cardName}\" (Lvl. {level}) to obtain a Lvl. {nextLevel} copy?'**
+  String deckMergeConfirm(String cardName, int level, int nextLevel);
+
+  /// No description provided for @deckMergeSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge successful: {cardName} is now Level {level}!'**
+  String deckMergeSuccess(String cardName, int level);
+
+  /// No description provided for @rarityLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'{rarity} - Lvl. {level}'**
+  String rarityLevel(String rarity, int level);
+
+  /// No description provided for @merge.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge'**
+  String get merge;
+
+  /// No description provided for @cardDictionary.
+  ///
+  /// In en, this message translates to:
+  /// **'Card Dictionary'**
+  String get cardDictionary;
+
+  /// No description provided for @statusCurses.
+  ///
+  /// In en, this message translates to:
+  /// **'STATUS / CURSES'**
+  String get statusCurses;
+
+  /// No description provided for @eventGainGold.
+  ///
+  /// In en, this message translates to:
+  /// **'+{amount} Gold'**
+  String eventGainGold(int amount);
+
+  /// No description provided for @eventSpendGold.
+  ///
+  /// In en, this message translates to:
+  /// **'-{amount} Gold'**
+  String eventSpendGold(int amount);
+
+  /// No description provided for @eventLoseHp.
+  ///
+  /// In en, this message translates to:
+  /// **'-{amount} HP'**
+  String eventLoseHp(int amount);
+
+  /// No description provided for @eventGainHp.
+  ///
+  /// In en, this message translates to:
+  /// **'+{amount} HP'**
+  String eventGainHp(int amount);
+
+  /// No description provided for @eventGainMaxHp.
+  ///
+  /// In en, this message translates to:
+  /// **'+{amount} Max HP'**
+  String eventGainMaxHp(int amount);
+
+  /// No description provided for @eventGainAttack.
+  ///
+  /// In en, this message translates to:
+  /// **'+{amount} Attack'**
+  String eventGainAttack(int amount);
+
+  /// No description provided for @eventGainRelic.
+  ///
+  /// In en, this message translates to:
+  /// **'+1 Relic'**
+  String get eventGainRelic;
 }
 
 class _AppLocalizationsDelegate

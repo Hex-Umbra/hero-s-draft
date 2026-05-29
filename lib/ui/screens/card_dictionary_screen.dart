@@ -11,14 +11,14 @@ class CardDictionaryScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final gameDataAsync = ref.watch(gameDataLoaderProvider);
+    final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).languageCode;
-    final isFr = locale == 'fr';
 
     return Scaffold(
       backgroundColor: const Color(0xFF1E1E2C),
       appBar: AppBar(
         title: Text(
-          isFr ? 'Dictionnaire des Cartes' : 'Card Dictionary',
+          l10n.cardDictionary,
           style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.black45,
@@ -71,7 +71,7 @@ class CardDictionaryScreen extends ConsumerWidget {
                           title: card.getName(locale),
                           description: card.getDescription(locale),
                           rarity: _getRarityLabel(context, card.rarity),
-                          target: _getTargetLabel(locale, card.target),
+                          target: _getTargetLabel(context, card.target),
                           cost: card.cost,
                           type: card.type,
                           isExhaust: card.isExhaust,
@@ -99,7 +99,6 @@ class CardDictionaryScreen extends ConsumerWidget {
 
   String _getTypeLabel(BuildContext context, CardType type) {
     final l10n = AppLocalizations.of(context)!;
-    final locale = Localizations.localeOf(context).languageCode;
     switch (type) {
       case CardType.attack:
         return '${l10n.cardTypeAttack.toUpperCase()}S';
@@ -108,7 +107,7 @@ class CardDictionaryScreen extends ConsumerWidget {
       case CardType.power:
         return '${l10n.cardTypePower.toUpperCase()}S';
       case CardType.status:
-        return locale == 'fr' ? 'STATUTS / MALÉDICTIONS' : 'STATUS / CURSES';
+        return l10n.statusCurses;
     }
   }
 
@@ -128,17 +127,17 @@ class CardDictionaryScreen extends ConsumerWidget {
     }
   }
 
-  String _getTargetLabel(String locale, CardTarget target) {
-    final isFr = locale == 'fr';
+  String _getTargetLabel(BuildContext context, CardTarget target) {
+    final l10n = AppLocalizations.of(context)!;
     switch (target) {
       case CardTarget.singleEnemy:
-        return isFr ? 'Cible unique' : 'Single enemy';
+        return l10n.targetSingleEnemy;
       case CardTarget.allEnemies:
-        return isFr ? 'Tous les ennemis' : 'All enemies';
+        return l10n.targetAllEnemies;
       case CardTarget.self:
-        return isFr ? 'Soi-même' : 'Self';
+        return l10n.targetSelf;
       case CardTarget.none:
-        return isFr ? 'Aucune' : 'None';
+        return l10n.targetNone;
     }
   }
 }

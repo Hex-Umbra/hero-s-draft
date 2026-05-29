@@ -13,7 +13,6 @@ class StatusEffectsPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final locale = Localizations.localeOf(context).languageCode;
 
     return Container(
       width: 250,
@@ -76,45 +75,38 @@ class StatusEffectsPanel extends StatelessWidget {
                 case 'strength':
                   icon = Icons.flash_on;
                   color = Colors.orangeAccent;
-                  label = locale == 'fr'
-                      ? 'Attaque : +${status.value}'
-                      : 'Attack: +${status.value}';
+                  label = l10n.statusStrength(status.value);
                   break;
                 case 'poison':
                   icon = Icons.sick;
                   color = const Color(0xFF69F0AE);
-                  label = locale == 'fr'
-                      ? 'Poison : ${status.value}'
-                      : 'Poison: ${status.value}';
+                  label = l10n.statusPoison(status.value);
                   break;
                 case 'metallicize':
                 case 'armor_regen':
                   icon = Icons.shield;
                   color = Colors.cyanAccent;
-                  label = locale == 'fr'
-                      ? 'Métallisation : +${status.value}'
-                      : 'Plated Armor: +${status.value}';
+                  label = l10n.statusArmorRegen(status.value);
                   break;
                 case 'weakness':
                   icon = Icons.arrow_downward;
                   color = Colors.redAccent;
-                  label = locale == 'fr'
-                      ? 'Faiblesse : ${status.value}'
-                      : 'Weakness: ${status.value}';
+                  label = l10n.statusWeakness(status.value);
                   break;
                 case 'vulnerable':
                   icon = Icons.arrow_downward;
                   color = Colors.redAccent;
-                  label = locale == 'fr'
-                      ? 'Vulnérable : ${status.value}'
-                      : 'Vulnerable: ${status.value}';
+                  label = l10n.statusVulnerable(status.value);
                   break;
                 case 'strength_regen':
                   icon = Icons.flash_on;
                   color = Colors.orangeAccent;
-                  label = locale == 'fr'
-                      ? "Éveil d'Attaque : +${status.value}"
-                      : 'Attack Awakening: +${status.value}';
+                  label = l10n.statusStrengthRegen(status.value);
+                  break;
+                case 'lifesteal':
+                  icon = Icons.favorite;
+                  color = Colors.redAccent;
+                  label = l10n.statusLifesteal(status.value);
                   break;
                 default:
                   icon = status.type == StatusType.buff
@@ -153,7 +145,7 @@ class StatusEffectsPanel extends StatelessWidget {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '${status.duration} ${locale == 'fr' ? 'trs' : 'turns'}',
+                      l10n.statusTurns(status.duration),
                       style: const TextStyle(
                         color: Colors.white54,
                         fontSize: 12,

@@ -18,8 +18,6 @@ class ClassSelectionScreen extends ConsumerWidget {
     final classes = gameData.heroes;
     final bool isMobile = MediaQuery.of(context).size.width < 600;
     final l10n = AppLocalizations.of(context)!;
-    final locale = Localizations.localeOf(context).languageCode;
-    final isFr = locale == 'fr';
 
     return Scaffold(
       appBar: AppBar(
@@ -29,7 +27,7 @@ class ClassSelectionScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.menu_book),
-            tooltip: isFr ? 'Dictionnaire des cartes' : 'Card Dictionary',
+            tooltip: l10n.cardDictionary,
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(

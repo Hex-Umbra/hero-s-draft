@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../game/controllers/run_controller.dart';
 import '../../game/controllers/deck_controller.dart';
 import '../../models/card_instance.dart';
@@ -129,6 +130,7 @@ class _StarterDeckDraftScreenState extends ConsumerState<StarterDeckDraftScreen>
   }
 
   void _toggleCardSelection(int index) {
+    final l10n = AppLocalizations.of(context)!;
     setState(() {
       if (_selectedIndexes.contains(index)) {
         _selectedIndexes.remove(index);
@@ -137,10 +139,10 @@ class _StarterDeckDraftScreenState extends ConsumerState<StarterDeckDraftScreen>
           _selectedIndexes.add(index);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Vous ne pouvez sélectionner que 5 cartes maximum.'),
+            SnackBar(
+              content: Text(l10n.draftDeckSnackbarMax),
               backgroundColor: Colors.orangeAccent,
-              duration: Duration(seconds: 1),
+              duration: const Duration(seconds: 1),
             ),
           );
         }
@@ -185,30 +187,32 @@ class _StarterDeckDraftScreenState extends ConsumerState<StarterDeckDraftScreen>
   }
 
   String _getRarityLabel(CardRarity rarity) {
+    final l10n = AppLocalizations.of(context)!;
     switch (rarity) {
       case CardRarity.common:
-        return 'Commun';
+        return l10n.rarityCommon;
       case CardRarity.uncommon:
-        return 'Peu Commun';
+        return l10n.rarityUncommon;
       case CardRarity.rare:
-        return 'Rare';
+        return l10n.rarityRare;
       case CardRarity.epic:
-        return 'Épique';
+        return l10n.rarityEpic;
       case CardRarity.legendary:
-        return 'Légendaire';
+        return l10n.rarityLegendary;
     }
   }
 
   String _getTargetLabel(CardTarget target) {
+    final l10n = AppLocalizations.of(context)!;
     switch (target) {
       case CardTarget.singleEnemy:
-        return 'Cible unique';
+        return l10n.targetSingleEnemy;
       case CardTarget.allEnemies:
-        return 'Tous les ennemis';
+        return l10n.targetAllEnemies;
       case CardTarget.self:
-        return 'Soi-même';
+        return l10n.targetSelf;
       case CardTarget.none:
-        return 'Aucune';
+        return l10n.targetNone;
     }
   }
 
@@ -216,6 +220,7 @@ class _StarterDeckDraftScreenState extends ConsumerState<StarterDeckDraftScreen>
   Widget build(BuildContext context) {
     final bool isMobile = MediaQuery.of(context).size.width < 600;
     final locale = Localizations.localeOf(context).languageCode;
+    final l10n = AppLocalizations.of(context)!;
     
     // Couleurs thématiques par classe
     Color classColor = Colors.blue;
@@ -248,7 +253,7 @@ class _StarterDeckDraftScreenState extends ConsumerState<StarterDeckDraftScreen>
                 child: Column(
                   children: [
                     Text(
-                      'CONSTITUTION DU DECK',
+                      l10n.draftDeckTitle,
                       style: TextStyle(
                         fontSize: isMobile ? 22 : 28,
                         fontWeight: FontWeight.w900,
@@ -265,7 +270,7 @@ class _StarterDeckDraftScreenState extends ConsumerState<StarterDeckDraftScreen>
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Sélectionnez précisément 5 cartes globales parmi les 10 proposées pour lancer la run.',
+                      l10n.draftDeckSubtitle,
                       style: TextStyle(
                         color: Colors.white70,
                         fontSize: isMobile ? 11 : 14,
@@ -286,7 +291,7 @@ class _StarterDeckDraftScreenState extends ConsumerState<StarterDeckDraftScreen>
                         ),
                       ),
                       child: Text(
-                        'Cartes sélectionnées : ${_selectedIndexes.length} / 5',
+                        l10n.draftDeckSelectedCount(_selectedIndexes.length),
                         style: TextStyle(
                           color: _selectedIndexes.length == 5 ? Colors.greenAccent : Colors.amberAccent,
                           fontWeight: FontWeight.bold,
@@ -400,7 +405,7 @@ class _StarterDeckDraftScreenState extends ConsumerState<StarterDeckDraftScreen>
                     ),
                     onPressed: _selectedIndexes.length == 5 ? _startAdventure : null,
                     child: Text(
-                      'ENTRER DANS L\'UMBRA',
+                      l10n.draftDeckProceed,
                       style: TextStyle(
                         fontSize: isMobile ? 16 : 20,
                         fontWeight: FontWeight.w900,
