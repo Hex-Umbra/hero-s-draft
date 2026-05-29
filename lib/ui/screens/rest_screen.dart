@@ -167,95 +167,98 @@ class _RestScreenState extends ConsumerState<RestScreen> {
     final runState = ref.watch(runProvider);
     final heroStats = runState.heroStats;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF0D0D1A),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.black,
-              const Color(0xFF1A0A00).withAlpha(180), // Ambiance feu de camp
-              Colors.black,
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.nightlight_round,
-                  color: Colors.orangeAccent,
-                  size: 80,
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  l10n.restCampTitle,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 4,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  l10n.restCampSubtitle,
-                  style: TextStyle(
-                    color: Colors.white.withAlpha(150),
-                    fontSize: 16,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-                const SizedBox(height: 60),
-                if (!_actionTaken) ...[
-                  _RestOption(
-                    icon: Icons.favorite,
-                    title: l10n.restCampRest,
-                    description: l10n.restCampRestDesc((heroStats.maxPv * 0.3).round()),
-                    onTap: _heal,
-                    color: Colors.greenAccent,
-                  ),
-                  const SizedBox(height: 20),
-                  _RestOption(
-                    icon: Icons.auto_fix_high,
-                    title: l10n.restCampForge,
-                    description: l10n.restCampForgeDesc,
-                    onTap: _upgradeCard,
-                    color: Colors.amberAccent,
-                  ),
-                  const SizedBox(height: 20),
-                  _RestOption(
-                    icon: Icons.delete_sweep,
-                    title: l10n.restCampRemove,
-                    description: l10n.restCampRemoveDesc,
-                    onTap: _removeCard,
-                    color: Colors.redAccent,
-                  ),
-                ] else ...[
-                  const Icon(
-                    Icons.check_circle_outline,
-                    color: Colors.green,
-                    size: 100,
-                  ),
-                  const SizedBox(height: 30),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white12,
-                      side: const BorderSide(color: Colors.white54),
-                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
-                    ),
-                    onPressed: _leave,
-                    child: Text(
-                      l10n.restCampProceed,
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ],
+    return PopScope(
+      canPop: _actionTaken,
+      child: Scaffold(
+        backgroundColor: const Color(0xFF0D0D1A),
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.black,
+                const Color(0xFF1A0A00).withAlpha(180), // Ambiance feu de camp
+                Colors.black,
               ],
+            ),
+          ),
+          child: SafeArea(
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.nightlight_round,
+                    color: Colors.orangeAccent,
+                    size: 80,
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    l10n.restCampTitle,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 4,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    l10n.restCampSubtitle,
+                    style: TextStyle(
+                      color: Colors.white.withAlpha(150),
+                      fontSize: 16,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                  const SizedBox(height: 60),
+                  if (!_actionTaken) ...[
+                    _RestOption(
+                      icon: Icons.favorite,
+                      title: l10n.restCampRest,
+                      description: l10n.restCampRestDesc((heroStats.maxPv * 0.3).round()),
+                      onTap: _heal,
+                      color: Colors.greenAccent,
+                    ),
+                    const SizedBox(height: 20),
+                    _RestOption(
+                      icon: Icons.auto_fix_high,
+                      title: l10n.restCampForge,
+                      description: l10n.restCampForgeDesc,
+                      onTap: _upgradeCard,
+                      color: Colors.amberAccent,
+                    ),
+                    const SizedBox(height: 20),
+                    _RestOption(
+                      icon: Icons.delete_sweep,
+                      title: l10n.restCampRemove,
+                      description: l10n.restCampRemoveDesc,
+                      onTap: _removeCard,
+                      color: Colors.redAccent,
+                    ),
+                  ] else ...[
+                    const Icon(
+                      Icons.check_circle_outline,
+                      color: Colors.green,
+                      size: 100,
+                    ),
+                    const SizedBox(height: 30),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white12,
+                        side: const BorderSide(color: Colors.white54),
+                        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+                      ),
+                      onPressed: _leave,
+                      child: Text(
+                        l10n.restCampProceed,
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ),
           ),
         ),

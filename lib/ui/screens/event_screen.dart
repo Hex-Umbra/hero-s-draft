@@ -236,213 +236,216 @@ class _EventScreenState extends ConsumerState<EventScreen> {
     final maxPv = heroStats.maxPv;
     final gold = inventoryState.gold;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF0D0D1A),
-      body: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.black,
-              const Color(0xFF0D1A2E).withAlpha(180),
-              Colors.black,
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 25),
-            child: Column(
-              children: [
-                // Barre de statistiques (PV & Or)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Badge des PV
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.redAccent.withAlpha(25),
-                        borderRadius: BorderRadius.circular(30),
-                        border: Border.all(
-                          color: Colors.redAccent.withAlpha(80),
-                          width: 1.5,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.redAccent.withAlpha(15),
-                            blurRadius: 10,
-                            spreadRadius: 1,
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.favorite,
-                            color: Colors.redAccent,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '$currentPv / $maxPv ${locale == 'fr' ? 'PV' : 'HP'}',
-                            style: const TextStyle(
-                              color: Colors.redAccent,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Badge de l'or
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.amber.withAlpha(25),
-                        borderRadius: BorderRadius.circular(30),
-                        border: Border.all(
-                          color: Colors.amber.withAlpha(80),
-                          width: 1.5,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.amber.withAlpha(15),
-                            blurRadius: 10,
-                            spreadRadius: 1,
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.monetization_on,
-                            color: Colors.amber,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '$gold ${locale == 'fr' ? 'Or' : 'Gold'}',
-                            style: const TextStyle(
-                              color: Colors.amber,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                const Icon(Icons.help_outline, color: Colors.blueAccent, size: 60),
-                const SizedBox(height: 15),
-                Text(
-                  activeEvent.getTitle(locale),
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 2,
-                  ),
-                ),
-                const SizedBox(height: 25),
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withAlpha(5),
-                            borderRadius: BorderRadius.circular(15),
-                            border: Border.all(color: Colors.white10),
-                          ),
-                          child: Text(
-                            !eventState.isResolved
-                                ? activeEvent.getDescription(locale)
-                                : eventState.selectedChoice!.getResultText(locale),
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 18,
-                              height: 1.5,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        ),
-                        if (eventState.isResolved && eventState.selectedChoice != null) ...[
-                          const SizedBox(height: 25),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.flash_on, color: Colors.blueAccent, size: 20),
-                              const SizedBox(width: 8),
-                              Text(
-                                locale == 'fr' ? "EFFETS APPLIQUÉS" : "EFFECTS APPLIED",
-                                style: const TextStyle(
-                                  color: Colors.blueAccent,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                  letterSpacing: 1.5,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          TweenAnimationBuilder<double>(
-                            tween: Tween<double>(begin: 0.0, end: 1.0),
-                            duration: const Duration(milliseconds: 500),
-                            curve: Curves.easeOutBack,
-                            builder: (context, value, child) {
-                              return Transform.scale(
-                                scale: value,
-                                child: Opacity(
-                                  opacity: value.clamp(0.0, 1.0),
-                                  child: child,
-                                ),
-                              );
-                            },
-                            child: Wrap(
-                              alignment: WrapAlignment.center,
-                              spacing: 8,
-                              runSpacing: 8,
-                              children: eventState.selectedChoice!.actions.isEmpty
-                                  ? [_buildNoEffectBadge()]
-                                  : eventState.selectedChoice!.actions
-                                      .map((action) => _buildActionBadge(context, action))
-                                      .toList(),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 40),
-                if (!eventState.isResolved)
-                  ...activeEvent.choices.map((choice) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: _EventOptionButton(
-                          text: choice.getText(locale),
-                          onPressed: () => _handleChoice(choice),
-                        ),
-                      ))
-                else
-                  _EventOptionButton(
-                    text: locale == 'fr' ? 'CONTINUER' : 'CONTINUE',
-                    onPressed: _leave,
-                    highlight: true,
-                  ),
+    return PopScope(
+      canPop: eventState.isResolved,
+      child: Scaffold(
+        backgroundColor: const Color(0xFF0D0D1A),
+        body: Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.black,
+                const Color(0xFF0D1A2E).withAlpha(180),
+                Colors.black,
               ],
+            ),
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 25),
+              child: Column(
+                children: [
+                  // Barre de statistiques (PV & Or)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Badge des PV
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.redAccent.withAlpha(25),
+                          borderRadius: BorderRadius.circular(30),
+                          border: Border.all(
+                            color: Colors.redAccent.withAlpha(80),
+                            width: 1.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.redAccent.withAlpha(15),
+                              blurRadius: 10,
+                              spreadRadius: 1,
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.favorite,
+                              color: Colors.redAccent,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '$currentPv / $maxPv ${locale == 'fr' ? 'PV' : 'HP'}',
+                              style: const TextStyle(
+                                color: Colors.redAccent,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Badge de l'or
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.withAlpha(25),
+                          borderRadius: BorderRadius.circular(30),
+                          border: Border.all(
+                            color: Colors.amber.withAlpha(80),
+                            width: 1.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.amber.withAlpha(15),
+                              blurRadius: 10,
+                              spreadRadius: 1,
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.monetization_on,
+                              color: Colors.amber,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '$gold ${locale == 'fr' ? 'Or' : 'Gold'}',
+                              style: const TextStyle(
+                                color: Colors.amber,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  const Icon(Icons.help_outline, color: Colors.blueAccent, size: 60),
+                  const SizedBox(height: 15),
+                  Text(
+                    activeEvent.getTitle(locale),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                  const SizedBox(height: 25),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withAlpha(5),
+                              borderRadius: BorderRadius.circular(15),
+                              border: Border.all(color: Colors.white10),
+                            ),
+                            child: Text(
+                              !eventState.isResolved
+                                  ? activeEvent.getDescription(locale)
+                                  : eventState.selectedChoice!.getResultText(locale),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 18,
+                                height: 1.5,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ),
+                          if (eventState.isResolved && eventState.selectedChoice != null) ...[
+                            const SizedBox(height: 25),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.flash_on, color: Colors.blueAccent, size: 20),
+                                const SizedBox(width: 8),
+                                Text(
+                                  locale == 'fr' ? "EFFETS APPLIQUÉS" : "EFFECTS APPLIED",
+                                  style: const TextStyle(
+                                    color: Colors.blueAccent,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                    letterSpacing: 1.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            TweenAnimationBuilder<double>(
+                              tween: Tween<double>(begin: 0.0, end: 1.0),
+                              duration: const Duration(milliseconds: 500),
+                              curve: Curves.easeOutBack,
+                              builder: (context, value, child) {
+                                return Transform.scale(
+                                  scale: value,
+                                  child: Opacity(
+                                    opacity: value.clamp(0.0, 1.0),
+                                    child: child,
+                                  ),
+                                );
+                              },
+                              child: Wrap(
+                                alignment: WrapAlignment.center,
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: eventState.selectedChoice!.actions.isEmpty
+                                    ? [_buildNoEffectBadge()]
+                                    : eventState.selectedChoice!.actions
+                                        .map((action) => _buildActionBadge(context, action))
+                                        .toList(),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+                  if (!eventState.isResolved)
+                    ...activeEvent.choices.map((choice) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _EventOptionButton(
+                            text: choice.getText(locale),
+                            onPressed: () => _handleChoice(choice),
+                          ),
+                        ))
+                  else
+                    _EventOptionButton(
+                      text: locale == 'fr' ? 'CONTINUER' : 'CONTINUE',
+                      onPressed: _leave,
+                      highlight: true,
+                    ),
+                ],
+              ),
             ),
           ),
         ),

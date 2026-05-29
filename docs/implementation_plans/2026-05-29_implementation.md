@@ -22,3 +22,19 @@
     - **Robustesse Statologique** :
         - Validation de la propreté statique totale du projet via `flutter analyze` : **0 avertissement, 0 erreur**.
         - Exécution de l'intégralité de la suite de tests automatisés via `flutter test` : **100% de réussite (58 tests passés avec succès !)**.
+
+## Phase 107 - Optimisation du Démarrage & Navigation Robuste — 2026-05-29
+
+- refactor: Parallélisation des I/O au chargement et unification de la navigation des nœuds en plein écran avec PopScope réactifs
+    - **Optimisation des performances d'I/O au démarrage (Cold Start)** :
+        - **`game_data_service.dart`** : Refactoring complet de `gameDataLoaderProvider`. Remplacement des 7 appels asynchrones séquentiels `await rootBundle.loadString(...)` par un unique appel de groupe parallélisé `Future.wait(...)`, éliminant tout blocage du fil d'exécution principal et améliorant le temps de Cold Start de façon significative.
+    - **Unification de la Navigation des Nœuds** :
+        - **`map_screen.dart`** : Suppression définitive de la méthode d'overlay dialog `_showNodeOverlay` et de son gestionnaire de fenêtres modales `showGeneralDialog`. Nettoyage des imports de widgets inutilisés (`blur_wrapper.dart`).
+        - Refactoring de `_onNodeTap` pour rediriger uniformément et en plein écran toutes les destinations de la carte (`GameScreen`, `ShopScreen`, `RestScreen`, `EventScreen`) à l'aide de routes standard `MaterialPageRoute`.
+    - **Sécurisation réactive de flux via PopScope** :
+        - **`rest_screen.dart`** : Enveloppement du Scaffold par un `PopScope(canPop: _actionTaken)`. Empêche le joueur de quitter la zone de repos par un balayage arrière (swipe back) ou via le bouton physique sans avoir choisi une option de camp (soigner, forger, oublier) ou cliqué sur "CONTINUER LA ROUTE".
+        - **`event_screen.dart`** : Enveloppement du Scaffold par un `PopScope(canPop: eventState.isResolved)`. Verrouille la navigation arrière tant que le choix d'événement n'est pas complètement validé.
+        - **`shop_screen.dart`** : Enveloppement par un `PopScope(canPop: true)` assurant un comportement fiable et robuste du bouton physique de retour matériel vers la carte.
+    - **Fiabilité et Assurance Qualité** :
+        - Exécution et passage au vert de la suite de tests (`flutter test`) : **100% de réussite (58/58 tests validés)**.
+        - Validation de la conformité statique du projet (`flutter analyze`) : **0 avertissement, 0 erreur**.

@@ -329,7 +329,9 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     final int healAmount = (runState.heroStats.maxPv * 0.3).round();
     final l10n = AppLocalizations.of(context)!;
 
-    return Scaffold(
+    return PopScope(
+      canPop: true,
+      child: Scaffold(
       backgroundColor: const Color(0xFF1E1E2C),
       appBar: AppBar(
         title: Text(
@@ -523,7 +525,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
           ),
         ),
       ),
-    );
+    ),);
   }
 }
 

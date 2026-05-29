@@ -12,7 +12,6 @@ import 'rest_screen.dart';
 import 'event_screen.dart';
 import '../../models/card_instance.dart';
 import '../../game/controllers/deck_controller.dart';
-import '../widgets/blur_wrapper.dart';
 import '../widgets/map/map_connection_painter.dart';
 import '../widgets/map/map_legend.dart';
 import '../widgets/map/map_node_widget.dart';
@@ -541,94 +540,28 @@ class _MapScreenState extends ConsumerState<MapScreen>
   }
 
   void _onNodeTap(BuildContext context, WidgetRef ref, MapNode node) {
-    if (node.type == MapNodeType.shop ||
-        node.type == MapNodeType.rest ||
-        node.type == MapNodeType.event) {
-      _showNodeOverlay(context, node);
-    } else {
-      ref.read(runProvider.notifier).travelToNode(node.id);
-
-      Widget destination;
-      switch (node.type) {
-        case MapNodeType.combat:
-        case MapNodeType.elite:
-        case MapNodeType.boss:
-          destination = const GameScreen();
-          break;
-        default:
-          destination = const GameScreen();
-      }
-
-      Navigator.of(
-        context,
-      ).push(MaterialPageRoute(builder: (context) => destination));
-    }
-  }
-
-  void _showNodeOverlay(BuildContext context, MapNode node) {
     ref.read(runProvider.notifier).travelToNode(node.id);
 
-    showGeneralDialog(
-      context: context,
-      barrierDismissible: false,
-      barrierLabel: 'NodeOverlay',
-      barrierColor: Colors.black54,
-      transitionDuration: const Duration(milliseconds: 300),
-      pageBuilder: (dialogContext, anim1, anim2) {
-        Widget content;
-        if (node.type == MapNodeType.shop) {
-          content = const ShopScreen();
-        } else if (node.type == MapNodeType.rest) {
-          content = const RestScreen();
-        } else {
-          content = const EventScreen();
-        }
+    Widget destination;
+    switch (node.type) {
+      case MapNodeType.combat:
+      case MapNodeType.elite:
+      case MapNodeType.boss:
+        destination = const GameScreen();
+        break;
+      case MapNodeType.shop:
+        destination = const ShopScreen();
+        break;
+      case MapNodeType.rest:
+        destination = const RestScreen();
+        break;
+      case MapNodeType.event:
+        destination = const EventScreen();
+        break;
+    }
 
-        return Consumer(
-          builder: (context, ref, child) {
-            final runState = ref.watch(runProvider);
-            bool isCompleted = false;
-            try {
-              final activeNode =
-                  runState.mapNodes.firstWhere((n) => n.id == node.id);
-              isCompleted = activeNode.isCompleted;
-            } catch (_) {}
-
-            return PopScope(
-              canPop: isCompleted,
-              child: BlurWrapper(
-                sigma: 5,
-                child: Center(
-                  child: Container(
-                    width: MediaQuery.of(context).size.width * 0.9,
-                    height: MediaQuery.of(context).size.height * 0.85,
-                    clipBehavior: Clip.antiAlias,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1E1E2C),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.white24),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withAlpha(150),
-                          blurRadius: 30,
-                          spreadRadius: 10,
-                        ),
-                      ],
-                    ),
-                    child: content,
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
-      transitionBuilder: (context, anim1, anim2, child) {
-        return ScaleTransition(
-          scale: CurvedAnimation(parent: anim1, curve: Curves.easeOutBack),
-          child: FadeTransition(opacity: anim1, child: child),
-        );
-      },
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => destination),
     );
   }
 }

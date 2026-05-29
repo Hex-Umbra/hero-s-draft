@@ -11,21 +11,23 @@ import '../models/data/relic_data.dart';
 import '../models/data/game_data_registry.dart';
 
 final gameDataLoaderProvider = FutureProvider<GameDataRegistry>((ref) async {
-  final enemiesJson = await rootBundle.loadString('assets/data/enemies.json');
-  final heroesJson = await rootBundle.loadString('assets/data/heroes.json');
-  final skillsJson = await rootBundle.loadString('assets/data/skills.json');
-  final cardsJson = await rootBundle.loadString('assets/data/cards.json');
-  final eventsJson = await rootBundle.loadString('assets/data/events.json');
-  final passivesJson = await rootBundle.loadString('assets/data/passives.json');
-  final relicsJson = await rootBundle.loadString('assets/data/relics.json');
+  final results = await Future.wait([
+    rootBundle.loadString('assets/data/enemies.json'),
+    rootBundle.loadString('assets/data/heroes.json'),
+    rootBundle.loadString('assets/data/skills.json'),
+    rootBundle.loadString('assets/data/cards.json'),
+    rootBundle.loadString('assets/data/events.json'),
+    rootBundle.loadString('assets/data/passives.json'),
+    rootBundle.loadString('assets/data/relics.json'),
+  ]);
 
-  final enemiesList = jsonDecode(enemiesJson) as List;
-  final heroesList = jsonDecode(heroesJson) as List;
-  final skillsList = jsonDecode(skillsJson) as List;
-  final cardsList = jsonDecode(cardsJson) as List;
-  final eventsList = jsonDecode(eventsJson) as List;
-  final passivesList = jsonDecode(passivesJson) as List;
-  final relicsList = jsonDecode(relicsJson) as List;
+  final enemiesList = jsonDecode(results[0]) as List;
+  final heroesList = jsonDecode(results[1]) as List;
+  final skillsList = jsonDecode(results[2]) as List;
+  final cardsList = jsonDecode(results[3]) as List;
+  final eventsList = jsonDecode(results[4]) as List;
+  final passivesList = jsonDecode(results[5]) as List;
+  final relicsList = jsonDecode(results[6]) as List;
 
   return GameDataRegistry(
     enemies: enemiesList
