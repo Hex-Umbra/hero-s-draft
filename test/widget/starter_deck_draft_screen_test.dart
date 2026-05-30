@@ -111,6 +111,7 @@ void main() {
         gameDataLoaderProvider.overrideWith((ref) => mockRegistry),
       ],
     );
+    addTearDown(container.dispose);
 
     // Build the screen
     await tester.pumpWidget(
@@ -184,5 +185,6 @@ void main() {
       final id = deckState.masterDeck[i].data.id;
       expect(id == 'slash' || id == 'shield', isTrue);
     }
+    container.dispose();
   });
 }

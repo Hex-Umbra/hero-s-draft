@@ -11,6 +11,8 @@ import '../../models/data/passive_data.dart';
 import '../../services/game_data_service.dart';
 import '../widgets/ui_card.dart';
 import 'map_screen.dart';
+import '../widgets/notification_overlay.dart';
+
 
 class StarterDeckDraftScreen extends ConsumerStatefulWidget {
   final HeroData playerClass;
@@ -138,12 +140,9 @@ class _StarterDeckDraftScreenState extends ConsumerState<StarterDeckDraftScreen>
         if (_selectedIndexes.length < 5) {
           _selectedIndexes.add(index);
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l10n.draftDeckSnackbarMax),
-              backgroundColor: Colors.orangeAccent,
-              duration: const Duration(seconds: 1),
-            ),
+          context.showNotification(
+            l10n.draftDeckSnackbarMax,
+            type: NotificationType.warning,
           );
         }
       }

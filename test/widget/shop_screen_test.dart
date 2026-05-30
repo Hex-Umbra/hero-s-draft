@@ -123,6 +123,7 @@ void main() {
         gameDataLoaderProvider.overrideWith((ref) => mockRegistry),
       ],
     );
+    addTearDown(container.dispose);
 
     // Initialize run with enough gold (e.g. 200)
     final runNotifier = container.read(runProvider.notifier);
@@ -189,5 +190,7 @@ void main() {
 
     // There should still be 4 cards on the shelf
     expect(find.byType(UiCard), findsNWidgets(4));
+    
+    container.dispose();
   });
 }

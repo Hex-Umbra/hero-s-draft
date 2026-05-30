@@ -24,6 +24,7 @@ import '../widgets/hud/mana_indicator.dart';
 import '../widgets/hud/status_effects_panel.dart';
 import '../widgets/hud/enemy_intents_panel.dart';
 import '../widgets/hud/dialogs/pause_dialog.dart';
+import '../widgets/notification_overlay.dart';
 
 class GameScreen extends ConsumerStatefulWidget {
   const GameScreen({super.key});
@@ -99,39 +100,27 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         final l10n = AppLocalizations.of(context)!;
         final locale = Localizations.localeOf(context).languageCode;
         String rarityStr = '';
-        Color rarityColor = Colors.grey;
         switch (chosenRelic.rarity) {
           case RelicRarity.common:
             rarityStr = l10n.rarityCommon.toUpperCase();
-            rarityColor = Colors.grey;
             break;
           case RelicRarity.uncommon:
             rarityStr = l10n.rarityUncommon.toUpperCase();
-            rarityColor = Colors.green;
             break;
           case RelicRarity.rare:
             rarityStr = l10n.rarityRare.toUpperCase();
-            rarityColor = Colors.blueAccent;
             break;
           case RelicRarity.epic:
             rarityStr = l10n.rarityEpic.toUpperCase();
-            rarityColor = Colors.purpleAccent;
             break;
           case RelicRarity.legendary:
             rarityStr = l10n.rarityLegendary.toUpperCase();
-            rarityColor = Colors.amber;
             break;
         }
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '👑 ${locale == 'fr' ? 'RELIQUE OBTENUE' : 'RELIC OBTAINED'} : ${chosenRelic.emoji} ${chosenRelic.getName(locale)} ($rarityStr)',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            backgroundColor: rarityColor,
-            duration: const Duration(seconds: 4),
-          ),
+        context.showNotification(
+          '👑 ${locale == 'fr' ? 'RELIQUE OBTENUE' : 'RELIC OBTAINED'} : ${chosenRelic.emoji} ${chosenRelic.getName(locale)} ($rarityStr)',
+          type: NotificationType.success,
         );
       }
     }

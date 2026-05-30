@@ -5,6 +5,8 @@ import '../../game/controllers/run_controller.dart';
 import '../../game/controllers/deck_controller.dart';
 import '../../models/card_instance.dart';
 import '../widgets/ui_card.dart';
+import '../widgets/notification_overlay.dart';
+
 
 class RestScreen extends ConsumerStatefulWidget {
   const RestScreen({super.key});
@@ -28,11 +30,9 @@ class _RestScreenState extends ConsumerState<RestScreen> {
       _actionTaken = true;
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l10n.restCampSnackbarHeal(healAmount)),
-        backgroundColor: Colors.green,
-      ),
+    context.showNotification(
+      l10n.restCampSnackbarHeal(healAmount),
+      type: NotificationType.success,
     );
   }
 
@@ -53,11 +53,9 @@ class _RestScreenState extends ConsumerState<RestScreen> {
 
       if (mounted) {
         final cardName = selectedCard.data.getName(locale);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.restCampSnackbarForge(cardName, selectedCard.level + 1)),
-            backgroundColor: Colors.amber,
-          ),
+        context.showNotification(
+          l10n.restCampSnackbarForge(cardName, selectedCard.level + 1),
+          type: NotificationType.warning,
         );
       }
     }
@@ -80,11 +78,9 @@ class _RestScreenState extends ConsumerState<RestScreen> {
 
       if (mounted) {
         final cardName = selectedCard.data.getName(locale);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.restCampSnackbarRemove(cardName)),
-            backgroundColor: Colors.redAccent,
-          ),
+        context.showNotification(
+          l10n.restCampSnackbarRemove(cardName),
+          type: NotificationType.error,
         );
       }
     }

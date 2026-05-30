@@ -42,6 +42,7 @@ void main() {
     );
 
     final container = ProviderContainer();
+    addTearDown(container.dispose);
     final runNotifier = container.read(runProvider.notifier);
 
     // Generate map
@@ -89,5 +90,6 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1000));
 
     expect(container.read(runProvider).currentNodeId, firstFloorNodeId);
+    container.dispose();
   });
 }

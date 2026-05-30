@@ -7,6 +7,8 @@ import '../../game/controllers/inventory_controller.dart';
 import '../../models/data/event_data.dart';
 import '../../models/data/relic_data.dart';
 import '../../services/game_data_service.dart';
+import '../widgets/notification_overlay.dart';
+
 
 class EventScreen extends ConsumerStatefulWidget {
   const EventScreen({super.key});
@@ -40,40 +42,28 @@ class _EventScreenState extends ConsumerState<EventScreen> {
 
     if (chosenRelic != null) {
       String rarityStr = '';
-      Color rarityColor = Colors.grey;
       switch (chosenRelic.rarity) {
         case RelicRarity.common:
           rarityStr = 'COMMUN';
-          rarityColor = Colors.grey;
           break;
         case RelicRarity.uncommon:
           rarityStr = 'PEU COMMUN';
-          rarityColor = Colors.green;
           break;
         case RelicRarity.rare:
           rarityStr = 'RARE';
-          rarityColor = Colors.blueAccent;
           break;
         case RelicRarity.epic:
           rarityStr = 'ÉPIQUE';
-          rarityColor = Colors.purpleAccent;
           break;
         case RelicRarity.legendary:
           rarityStr = 'LÉGENDAIRE';
-          rarityColor = Colors.amber;
           break;
       }
 
       final locale = Localizations.localeOf(context).languageCode;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '👑 ${locale == 'fr' ? 'RELIQUE OBTENUE' : 'RELIC OBTAINED'} : ${chosenRelic.emoji} ${chosenRelic.getName(locale)} ($rarityStr)',
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          backgroundColor: rarityColor,
-          duration: const Duration(seconds: 4),
-        ),
+      context.showNotification(
+        '👑 ${locale == 'fr' ? 'RELIQUE OBTENUE' : 'RELIC OBTAINED'} : ${chosenRelic.emoji} ${chosenRelic.getName(locale)} ($rarityStr)',
+        type: NotificationType.success,
       );
     }
   }

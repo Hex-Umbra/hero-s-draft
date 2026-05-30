@@ -5,6 +5,8 @@ import '../../game/controllers/deck_controller.dart';
 import '../../models/card_instance.dart';
 import '../../models/data/card_data.dart';
 import '../widgets/ui_card.dart';
+import '../widgets/notification_overlay.dart';
+
 
 class DeckScreen extends ConsumerWidget {
   final bool allowMerge;
@@ -215,13 +217,9 @@ class DeckScreen extends ConsumerWidget {
                   .read(deckProvider.notifier)
                   .mergeCards(card.data.id, card.level);
               Navigator.of(ctx).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    l10n.deckMergeSuccess(cardName, card.level + 1),
-                  ),
-                  backgroundColor: Colors.green,
-                ),
+              context.showNotification(
+                l10n.deckMergeSuccess(cardName, card.level + 1),
+                type: NotificationType.success,
               );
             },
             child: Text(

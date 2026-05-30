@@ -8,6 +8,8 @@ import '../../game/controllers/inventory_controller.dart';
 import '../../services/game_data_service.dart';
 import '../../models/data/card_data.dart';
 import '../widgets/ui_card.dart';
+import '../widgets/notification_overlay.dart';
+
 
 class ShopScreen extends ConsumerStatefulWidget {
   const ShopScreen({super.key});
@@ -39,18 +41,14 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
 
     if (shopController.buyCard(card, price, inventoryController, deckNotifier)) {
       final locale = Localizations.localeOf(context).languageCode;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)!.purchased(card.getName(locale))),
-          backgroundColor: Colors.green,
-        ),
+      context.showNotification(
+        AppLocalizations.of(context)!.purchased(card.getName(locale)),
+        type: NotificationType.success,
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)!.notEnoughGold),
-          backgroundColor: Colors.red,
-        ),
+      context.showNotification(
+        AppLocalizations.of(context)!.notEnoughGold,
+        type: NotificationType.error,
       );
     }
   }
@@ -63,28 +61,22 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     final maxPv = ref.read(runProvider).heroStats.maxPv;
 
     if (currentPv >= maxPv) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)!.fullHp),
-          backgroundColor: Colors.orange,
-        ),
+      context.showNotification(
+        AppLocalizations.of(context)!.fullHp,
+        type: NotificationType.warning,
       );
       return;
     }
 
     if (shopController.buyHeal(price, amount, inventoryController, runController)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)!.healApplied),
-          backgroundColor: Colors.green,
-        ),
+      context.showNotification(
+        AppLocalizations.of(context)!.healApplied,
+        type: NotificationType.success,
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)!.notEnoughGold),
-          backgroundColor: Colors.red,
-        ),
+      context.showNotification(
+        AppLocalizations.of(context)!.notEnoughGold,
+        type: NotificationType.error,
       );
     }
   }
@@ -95,18 +87,14 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     final gameData = ref.read(gameDataLoaderProvider).requireValue;
 
     if (shopController.expandShop(price, gameData.cards, inventoryController)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)!.shopExpanded),
-          backgroundColor: Colors.green,
-        ),
+      context.showNotification(
+        AppLocalizations.of(context)!.shopExpanded,
+        type: NotificationType.success,
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)!.notEnoughGold),
-          backgroundColor: Colors.red,
-        ),
+      context.showNotification(
+        AppLocalizations.of(context)!.notEnoughGold,
+        type: NotificationType.error,
       );
     }
   }
@@ -118,18 +106,14 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     final inventoryState = ref.read(inventoryProvider);
 
     if (shopController.rerollCards(price, gameData.cards, inventoryState.bonusShopCards, inventoryController)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)!.shopRerolled),
-          backgroundColor: Colors.green,
-        ),
+      context.showNotification(
+        AppLocalizations.of(context)!.shopRerolled,
+        type: NotificationType.success,
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)!.notEnoughGold),
-          backgroundColor: Colors.red,
-        ),
+      context.showNotification(
+        AppLocalizations.of(context)!.notEnoughGold,
+        type: NotificationType.error,
       );
     }
   }
@@ -179,19 +163,15 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
 
                     if (shopController.purgeCard(price, card, inventoryController, deckNotifier)) {
                       Navigator.of(ctx).pop();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(l10n.cardPurged),
-                          backgroundColor: Colors.green,
-                        ),
+                      context.showNotification(
+                        l10n.cardPurged,
+                        type: NotificationType.success,
                       );
                     } else {
                       Navigator.of(ctx).pop();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(l10n.notEnoughGold),
-                          backgroundColor: Colors.red,
-                        ),
+                      context.showNotification(
+                        l10n.notEnoughGold,
+                        type: NotificationType.error,
                       );
                     }
                   },
@@ -285,19 +265,15 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
 
                         if (shopController.cloneCard(price, card, inventoryController, deckNotifier)) {
                           Navigator.of(ctx).pop();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(l10n.cardCloned),
-                              backgroundColor: Colors.green,
-                            ),
+                          context.showNotification(
+                            l10n.cardCloned,
+                            type: NotificationType.success,
                           );
                         } else {
                           Navigator.of(ctx).pop();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(l10n.notEnoughGold),
-                              backgroundColor: Colors.red,
-                            ),
+                          context.showNotification(
+                            l10n.notEnoughGold,
+                            type: NotificationType.error,
                           );
                         }
                       },
