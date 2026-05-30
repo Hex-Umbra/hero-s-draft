@@ -309,8 +309,45 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
                 onPressed: () => RelicsDialog.show(context),
-                icon: const Icon(Icons.inventory_2_outlined,
-                    color: Color(0xFF4A3728), size: 20),
+                icon: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    const Icon(Icons.inventory_2_outlined,
+                        color: Color(0xFF4A3728), size: 20),
+                    if (inventoryState.relics.isNotEmpty)
+                      Positioned(
+                        right: -6,
+                        top: -6,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 1,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF8B4513),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: const Color(0xFFE8D5B5),
+                              width: 1,
+                            ),
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 14,
+                            minHeight: 14,
+                          ),
+                          child: Text(
+                            '${inventoryState.relics.length}',
+                            style: const TextStyle(
+                              color: Color(0xFFE8D5B5),
+                              fontSize: 8.5,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
                 label: Text(
                   l10n.relics.toUpperCase(),
                   style: const TextStyle(
