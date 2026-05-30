@@ -164,7 +164,6 @@ class CardTextRenderer {
       if (effect.type == 'apply_status') {
         if (effect.statusId == 'burn') return 'fire';
         if (effect.statusId == 'freeze') return 'cold';
-        if (effect.statusId == 'poison') return 'poison';
         if (effect.statusId == 'shock') return 'electric';
       }
     }
@@ -174,9 +173,6 @@ class CardTextRenderer {
     }
     if (lowerTitle.contains('glace') || lowerTitle.contains('ice') || lowerTitle.contains('gel') || lowerTitle.contains('freeze') || lowerTitle.contains('froid') || lowerTitle.contains('cold')) {
       return 'cold';
-    }
-    if (lowerTitle.contains('poison') || lowerTitle.contains('venin') || lowerTitle.contains('toxic')) {
-      return 'poison';
     }
     if (lowerTitle.contains('foudre') || lowerTitle.contains('thunder') || lowerTitle.contains('shock') || lowerTitle.contains('lightning') || lowerTitle.contains('tonnerre') || lowerTitle.contains('élec')) {
       return 'electric';
@@ -329,7 +325,7 @@ class CardTextRenderer {
           text: String.fromCharCode(visuals.icon.codePoint),
           style: TextStyle(
             color: iconColor,
-            fontSize: 12,
+            fontSize: 36, // Tripled icon size
             fontFamily: 'MaterialIcons',
           ),
         ),
@@ -340,7 +336,7 @@ class CardTextRenderer {
           text: ' $valueToDisplay',
           style: TextStyle(
             color: Colors.white.withAlpha((opacity * 255).toInt()),
-            fontSize: 10,
+            fontSize: 22, // Enlarged value font size
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -348,9 +344,13 @@ class CardTextRenderer {
 
       if (i < card.card.data.effects.length - 1) {
         children.add(
-          const TextSpan(
-            text: '   ',
-            style: TextStyle(fontSize: 10),
+          TextSpan(
+            text: '  |  ',
+            style: TextStyle(
+              color: Colors.white24.withAlpha((opacity * 255).toInt()),
+              fontSize: 22,
+              fontWeight: FontWeight.w200,
+            ),
           ),
         );
       }

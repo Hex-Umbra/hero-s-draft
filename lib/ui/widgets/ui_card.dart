@@ -49,7 +49,6 @@ class UiCard extends StatelessWidget {
         if (effect.type == 'apply_status') {
           if (effect.statusId == 'burn') return 'fire';
           if (effect.statusId == 'freeze') return 'cold';
-          if (effect.statusId == 'poison') return 'poison';
           if (effect.statusId == 'shock') return 'electric';
         }
       }
@@ -60,9 +59,6 @@ class UiCard extends StatelessWidget {
     }
     if (lowerTitle.contains('glace') || lowerTitle.contains('ice') || lowerTitle.contains('gel') || lowerTitle.contains('freeze') || lowerTitle.contains('froid') || lowerTitle.contains('cold')) {
       return 'cold';
-    }
-    if (lowerTitle.contains('poison') || lowerTitle.contains('venin') || lowerTitle.contains('toxic')) {
-      return 'poison';
     }
     if (lowerTitle.contains('foudre') || lowerTitle.contains('thunder') || lowerTitle.contains('shock') || lowerTitle.contains('lightning') || lowerTitle.contains('tonnerre') || lowerTitle.contains('élec')) {
       return 'electric';
@@ -202,52 +198,54 @@ class UiCard extends StatelessWidget {
     }
 
     final List<Widget> badges = [];
-    for (var effect in effects!) {
+    for (int i = 0; i < effects!.length; i++) {
+      final effect = effects![i];
       final currentLevel = level ?? 1;
       final scaledValue = (effect.value * (1 + (currentLevel - 1) * 0.5)).round();
       final visuals = _getEffectVisuals(effect);
+      
       badges.add(
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-          decoration: BoxDecoration(
-            color: visuals.color.withAlpha(20),
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(
-              color: visuals.color.withAlpha(80),
-              width: 1,
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              visuals.icon,
+              color: visuals.color,
+              size: 33, // Tripled icon size
             ),
-            boxShadow: [
-              BoxShadow(
-                color: visuals.color.withAlpha(10),
-                blurRadius: 4,
+            const SizedBox(width: 5),
+            Text(
+              '$scaledValue',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 22, // Enlarged value font size
+                fontWeight: FontWeight.bold,
               ),
-            ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                visuals.icon,
-                color: visuals.color,
-                size: 11,
-              ),
-              const SizedBox(width: 3),
-              Text(
-                '$scaledValue',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       );
+
+      if (i < effects!.length - 1) {
+        badges.add(
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 6.0),
+            child: Text(
+              '|',
+              style: TextStyle(
+                color: Colors.white24,
+                fontSize: 24,
+                fontWeight: FontWeight.w200,
+              ),
+            ),
+          ),
+        );
+      }
     }
 
     return Wrap(
       alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
       spacing: 4,
       runSpacing: 4,
       children: badges,

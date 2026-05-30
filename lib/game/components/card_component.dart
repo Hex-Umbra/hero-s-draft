@@ -152,7 +152,6 @@ class CardComponent extends PositionComponent
       if (effect.type == 'apply_status') {
         if (effect.statusId == 'burn') return 'fire';
         if (effect.statusId == 'freeze') return 'cold';
-        if (effect.statusId == 'poison') return 'poison';
         if (effect.statusId == 'shock') return 'electric';
       }
     }
@@ -162,9 +161,6 @@ class CardComponent extends PositionComponent
     }
     if (lowerTitle.contains('glace') || lowerTitle.contains('ice') || lowerTitle.contains('gel') || lowerTitle.contains('freeze') || lowerTitle.contains('froid') || lowerTitle.contains('cold')) {
       return 'cold';
-    }
-    if (lowerTitle.contains('poison') || lowerTitle.contains('venin') || lowerTitle.contains('toxic')) {
-      return 'poison';
     }
     if (lowerTitle.contains('foudre') || lowerTitle.contains('thunder') || lowerTitle.contains('shock') || lowerTitle.contains('lightning') || lowerTitle.contains('tonnerre') || lowerTitle.contains('élec')) {
       return 'electric';
