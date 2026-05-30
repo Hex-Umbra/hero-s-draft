@@ -68,46 +68,15 @@ class UiCard extends StatelessWidget {
 
   _UiCardEffectVisuals _getEffectVisuals(CardEffect effect) {
     if (effect.type == 'damage') {
-      final damageType = _determineDamageType();
-      switch (damageType) {
-        case 'fire':
-          return const _UiCardEffectVisuals(
-            icon: Icons.local_fire_department_rounded,
-            color: Colors.orangeAccent,
-          );
-        case 'cold':
-          return const _UiCardEffectVisuals(
-            icon: Icons.ac_unit_rounded,
-            color: Colors.lightBlueAccent,
-          );
-        case 'poison':
-          return const _UiCardEffectVisuals(
-            icon: Icons.science_rounded,
-            color: Colors.greenAccent,
-          );
-        case 'electric':
-          return const _UiCardEffectVisuals(
-            icon: Icons.flash_on_rounded,
-            color: Colors.amberAccent,
-          );
-        default:
-          return const _UiCardEffectVisuals(
-            icon: Icons.hardware_rounded,
-            color: Colors.redAccent,
-          );
-      }
+      return const _UiCardEffectVisuals(
+        icon: Icons.hardware_rounded,
+        color: Colors.redAccent,
+      );
     }
     if (effect.type == 'armor') {
-      final damageType = _determineDamageType();
-      Color armorColor = Colors.blueAccent;
-      if (damageType == 'cold') {
-        armorColor = Colors.cyanAccent;
-      } else if (damageType == 'fire') {
-        armorColor = Colors.deepOrangeAccent;
-      }
-      return _UiCardEffectVisuals(
+      return const _UiCardEffectVisuals(
         icon: Icons.shield_rounded,
-        color: armorColor,
+        color: Colors.blueAccent,
       );
     }
     if (effect.type == 'heal') {
@@ -211,14 +180,14 @@ class UiCard extends StatelessWidget {
             Icon(
               visuals.icon,
               color: visuals.color,
-              size: 33, // Tripled icon size
+              size: 25, // Reduced by 1/4 (from 33)
             ),
-            const SizedBox(width: 5),
+            const SizedBox(width: 4),
             Text(
               '$scaledValue',
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 22, // Enlarged value font size
+                fontSize: 18, // Reduced from 22
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -234,7 +203,7 @@ class UiCard extends StatelessWidget {
               '|',
               style: TextStyle(
                 color: Colors.white24,
-                fontSize: 24,
+                fontSize: 20, // Reduced from 24
                 fontWeight: FontWeight.w200,
               ),
             ),

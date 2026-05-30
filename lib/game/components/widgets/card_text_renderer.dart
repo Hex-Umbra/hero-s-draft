@@ -157,71 +157,19 @@ class CardTextRenderer {
 
 
 
-  String _determineDamageType() {
-    final lowerTitle = '${card.card.data.getName(card.activeLocale).toLowerCase()} ${card.card.data.id.toLowerCase()}';
-    
-    for (var effect in card.card.data.effects) {
-      if (effect.type == 'apply_status') {
-        if (effect.statusId == 'burn') return 'fire';
-        if (effect.statusId == 'freeze') return 'cold';
-        if (effect.statusId == 'shock') return 'electric';
-      }
-    }
-    
-    if (lowerTitle.contains('feu') || lowerTitle.contains('fire') || lowerTitle.contains('brûlure') || lowerTitle.contains('burn')) {
-      return 'fire';
-    }
-    if (lowerTitle.contains('glace') || lowerTitle.contains('ice') || lowerTitle.contains('gel') || lowerTitle.contains('freeze') || lowerTitle.contains('froid') || lowerTitle.contains('cold')) {
-      return 'cold';
-    }
-    if (lowerTitle.contains('foudre') || lowerTitle.contains('thunder') || lowerTitle.contains('shock') || lowerTitle.contains('lightning') || lowerTitle.contains('tonnerre') || lowerTitle.contains('élec')) {
-      return 'electric';
-    }
-    return 'physical';
-  }
+
 
   _RendererEffectVisuals _getEffectVisuals(CardEffect effect) {
     if (effect.type == 'damage') {
-      final damageType = _determineDamageType();
-      switch (damageType) {
-        case 'fire':
-          return const _RendererEffectVisuals(
-            icon: Icons.local_fire_department_rounded,
-            color: Colors.orangeAccent,
-          );
-        case 'cold':
-          return const _RendererEffectVisuals(
-            icon: Icons.ac_unit_rounded,
-            color: Colors.lightBlueAccent,
-          );
-        case 'poison':
-          return const _RendererEffectVisuals(
-            icon: Icons.science_rounded,
-            color: Colors.greenAccent,
-          );
-        case 'electric':
-          return const _RendererEffectVisuals(
-            icon: Icons.flash_on_rounded,
-            color: Colors.amberAccent,
-          );
-        default:
-          return const _RendererEffectVisuals(
-            icon: Icons.hardware_rounded,
-            color: Colors.redAccent,
-          );
-      }
+      return const _RendererEffectVisuals(
+        icon: Icons.hardware_rounded,
+        color: Colors.redAccent,
+      );
     }
     if (effect.type == 'armor') {
-      final damageType = _determineDamageType();
-      Color armorColor = Colors.blueAccent;
-      if (damageType == 'cold') {
-        armorColor = Colors.cyanAccent;
-      } else if (damageType == 'fire') {
-        armorColor = Colors.deepOrangeAccent;
-      }
-      return _RendererEffectVisuals(
+      return const _RendererEffectVisuals(
         icon: Icons.shield_rounded,
-        color: armorColor,
+        color: Colors.blueAccent,
       );
     }
     if (effect.type == 'heal') {
@@ -325,7 +273,7 @@ class CardTextRenderer {
           text: String.fromCharCode(visuals.icon.codePoint),
           style: TextStyle(
             color: iconColor,
-            fontSize: 36, // Tripled icon size
+            fontSize: 27, // Reduced by 1/4 (from 36)
             fontFamily: 'MaterialIcons',
           ),
         ),
@@ -336,7 +284,7 @@ class CardTextRenderer {
           text: ' $valueToDisplay',
           style: TextStyle(
             color: Colors.white.withAlpha((opacity * 255).toInt()),
-            fontSize: 22, // Enlarged value font size
+            fontSize: 18, // Reduced from 22
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -348,7 +296,7 @@ class CardTextRenderer {
             text: '  |  ',
             style: TextStyle(
               color: Colors.white24.withAlpha((opacity * 255).toInt()),
-              fontSize: 22,
+              fontSize: 18, // Reduced from 22
               fontWeight: FontWeight.w200,
             ),
           ),
