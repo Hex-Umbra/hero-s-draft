@@ -257,6 +257,9 @@ class UiCard extends StatelessWidget {
       if (effect.type == 'draw') desc += '${l10n.cardDescDraw(scaledValue)}\n';
       if (effect.type == 'apply_status') {
         final duration = effect.duration ?? 1;
+        final turnsText = l10n.localeName == 'fr' 
+            ? ' pendant $duration tours' 
+            : ' for $duration turns';
         switch (effect.statusId) {
           case 'strength':
             desc += '${l10n.cardDescStatusStrength(scaledValue, duration)}\n';
@@ -265,25 +268,49 @@ class UiCard extends StatelessWidget {
             desc += '${l10n.cardDescStatusArmorRegen(scaledValue, duration)}\n';
             break;
           case 'poison':
-            desc += '${l10n.cardDescStatusPoison(scaledValue)}\n';
+            String baseText = l10n.cardDescStatusPoison(scaledValue).trim();
+            if (baseText.endsWith('.')) {
+              baseText = baseText.substring(0, baseText.length - 1);
+            }
+            desc += '$baseText$turnsText.\n';
             break;
           case 'weakness':
-            desc += '${l10n.cardDescStatusWeakness(scaledValue)}\n';
+            String baseText = l10n.cardDescStatusWeakness(scaledValue).trim();
+            if (baseText.endsWith('.')) {
+              baseText = baseText.substring(0, baseText.length - 1);
+            }
+            desc += '$baseText$turnsText.\n';
             break;
           case 'vulnerable':
-            desc += '${l10n.cardDescStatusVulnerable(scaledValue)}\n';
+            String baseText = l10n.cardDescStatusVulnerable(scaledValue).trim();
+            if (baseText.endsWith('.')) {
+              baseText = baseText.substring(0, baseText.length - 1);
+            }
+            desc += '$baseText$turnsText.\n';
             break;
           case 'strength_regen':
             desc += '${l10n.cardDescStatusStrengthRegen(scaledValue, duration)}\n';
             break;
           case 'burn':
-            desc += '${l10n.cardDescStatusBurn(scaledValue)}\n';
+            String baseText = l10n.cardDescStatusBurn(scaledValue).trim();
+            if (baseText.endsWith('.')) {
+              baseText = baseText.substring(0, baseText.length - 1);
+            }
+            desc += '$baseText$turnsText.\n';
             break;
           case 'freeze':
-            desc += '${l10n.cardDescStatusFreeze(scaledValue)}\n';
+            String baseText = l10n.cardDescStatusFreeze(scaledValue).trim();
+            if (baseText.endsWith('.')) {
+              baseText = baseText.substring(0, baseText.length - 1);
+            }
+            desc += '$baseText$turnsText.\n';
             break;
           case 'shock':
-            desc += '${l10n.cardDescStatusShock(scaledValue)}\n';
+            String baseText = l10n.cardDescStatusShock(scaledValue).trim();
+            if (baseText.endsWith('.')) {
+              baseText = baseText.substring(0, baseText.length - 1);
+            }
+            desc += '$baseText$turnsText.\n';
             break;
         }
       }

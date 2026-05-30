@@ -215,6 +215,9 @@ class CardComponent extends PositionComponent
       }
       if (effect.type == 'apply_status') {
         final duration = effect.duration ?? 1;
+        final turnsText = activeLocale == 'fr' 
+            ? ' pendant $duration tours' 
+            : ' for $duration turns';
         switch (effect.statusId) {
           case 'strength':
             desc += '• ${getTranslation((l) => l.cardDescStatusStrength(scaledValue, duration), fallback: 'Gagne $scaledValue ATK pendant $duration tours.')}\n';
@@ -223,25 +226,49 @@ class CardComponent extends PositionComponent
             desc += '• ${getTranslation((l) => l.cardDescStatusArmorRegen(scaledValue, duration), fallback: 'Pendant $duration tours, gagne $scaledValue Armure au début du tour.')}\n';
             break;
           case 'poison':
-            desc += '• ${getTranslation((l) => l.cardDescStatusPoison(scaledValue), fallback: 'Applique $scaledValue Poison.')}\n';
+            String baseText = getTranslation((l) => l.cardDescStatusPoison(scaledValue), fallback: 'Applique $scaledValue Poison.').trim();
+            if (baseText.endsWith('.')) {
+              baseText = baseText.substring(0, baseText.length - 1);
+            }
+            desc += '• $baseText$turnsText.\n';
             break;
           case 'weakness':
-            desc += '• ${getTranslation((l) => l.cardDescStatusWeakness(scaledValue), fallback: 'Applique $scaledValue Faiblesse.')}\n';
+            String baseText = getTranslation((l) => l.cardDescStatusWeakness(scaledValue), fallback: 'Applique $scaledValue Faiblesse.').trim();
+            if (baseText.endsWith('.')) {
+              baseText = baseText.substring(0, baseText.length - 1);
+            }
+            desc += '• $baseText$turnsText.\n';
             break;
           case 'vulnerable':
-            desc += '• ${getTranslation((l) => l.cardDescStatusVulnerable(scaledValue), fallback: 'Applique $scaledValue Vulnérable.')}\n';
+            String baseText = getTranslation((l) => l.cardDescStatusVulnerable(scaledValue), fallback: 'Applique $scaledValue Vulnérable.').trim();
+            if (baseText.endsWith('.')) {
+              baseText = baseText.substring(0, baseText.length - 1);
+            }
+            desc += '• $baseText$turnsText.\n';
             break;
           case 'strength_regen':
             desc += '• ${getTranslation((l) => l.cardDescStatusStrengthRegen(scaledValue, duration), fallback: 'Gagne $scaledValue Éveil d\'Attaque pendant $duration tours.')}\n';
             break;
           case 'burn':
-            desc += '• ${getTranslation((l) => l.cardDescStatusBurn(scaledValue), fallback: 'Applique $scaledValue Brûlure.')}\n';
+            String baseText = getTranslation((l) => l.cardDescStatusBurn(scaledValue), fallback: 'Applique $scaledValue Brûlure.').trim();
+            if (baseText.endsWith('.')) {
+              baseText = baseText.substring(0, baseText.length - 1);
+            }
+            desc += '• $baseText$turnsText.\n';
             break;
           case 'freeze':
-            desc += '• ${getTranslation((l) => l.cardDescStatusFreeze(scaledValue), fallback: 'Applique $scaledValue Gel.')}\n';
+            String baseText = getTranslation((l) => l.cardDescStatusFreeze(scaledValue), fallback: 'Applique $scaledValue Gel.').trim();
+            if (baseText.endsWith('.')) {
+              baseText = baseText.substring(0, baseText.length - 1);
+            }
+            desc += '• $baseText$turnsText.\n';
             break;
           case 'shock':
-            desc += '• ${getTranslation((l) => l.cardDescStatusShock(scaledValue), fallback: 'Applique $scaledValue Électrocution.')}\n';
+            String baseText = getTranslation((l) => l.cardDescStatusShock(scaledValue), fallback: 'Applique $scaledValue Électrocution.').trim();
+            if (baseText.endsWith('.')) {
+              baseText = baseText.substring(0, baseText.length - 1);
+            }
+            desc += '• $baseText$turnsText.\n';
             break;
         }
       }
