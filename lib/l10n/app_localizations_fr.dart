@@ -638,7 +638,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get draftChoiceMirror => 'Miroir';
 
   @override
-  String get draftChoiceMirrorDesc => 'Cloner une carte de votre deck';
+  String get draftChoiceMirrorDesc =>
+      'Cloner une carte au choix parmi 3 cartes aléatoires de votre deck';
 
   @override
   String statusPoison(int value) {

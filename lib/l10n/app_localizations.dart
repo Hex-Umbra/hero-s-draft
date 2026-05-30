@@ -1151,7 +1151,7 @@ abstract class AppLocalizations {
   /// No description provided for @draftChoiceMirrorDesc.
   ///
   /// In en, this message translates to:
-  /// **'Clone a card from your deck'**
+  /// **'Clone a card chosen from 3 random cards in your deck'**
   String get draftChoiceMirrorDesc;
 
   /// No description provided for @statusPoison.
