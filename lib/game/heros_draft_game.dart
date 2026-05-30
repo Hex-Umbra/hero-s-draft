@@ -556,8 +556,6 @@ class HerosDraftGame extends FlameGame
         }
       }
     }
-
-    onSelectEnemy(target.id);
   }
 
   Future<void> executeTurn() async {

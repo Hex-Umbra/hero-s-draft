@@ -71,7 +71,7 @@ void main() {
       expect(goblinInstance.stats.attaque, 5); // 5 * 1.0
       expect(goblinInstance.currentIntent?.type, IntentType.attack);
       expect(goblinInstance.intentStep, 1); // incremented step
-      expect(combatController.currentState.selectedEnemyId, goblinInstance.id);
+      expect(combatController.currentState.selectedEnemyId, isNull);
       expect(combatController.currentState.turnPhase, TurnPhase.player);
       expect(combatController.currentState.isCombatEnded, isFalse);
 
@@ -293,6 +293,41 @@ void main() {
       expect(combatController.currentState.enemies.isEmpty, isTrue);
       expect(combatController.currentState.isCombatEnded, isTrue);
       expect(combatController.currentState.isVictory, isTrue);
+    });
+
+    test('initializeCombat has null selectedEnemyId and does not auto-select on enemy death', () {
+      final combatController = CombatController();
+      final container = ProviderContainer();
+      final runController = container.read(runProvider.notifier);
+      runController.startNewRun(paladinHero);
+      
+      final enemy1 = EnemyInstance(
+        data: goblinData,
+        stats: const EntityStats(maxPv: 20, currentPv: 20, armure: 0, attaque: 5),
+      );
+      final enemy2 = EnemyInstance(
+        data: orcData,
+        stats: const EntityStats(maxPv: 30, currentPv: 30, armure: 0, attaque: 8),
+      );
+
+      combatController.state = CombatState(
+        enemies: [enemy1, enemy2],
+        selectedEnemyId: null,
+        turnPhase: TurnPhase.player,
+      );
+      expect(combatController.currentState.selectedEnemyId, isNull);
+
+      // Explicitly select enemy1
+      final actualEnemy1Id = enemy1.id;
+      combatController.selectEnemy(actualEnemy1Id);
+      expect(combatController.currentState.selectedEnemyId, actualEnemy1Id);
+
+      // Kill enemy1
+      combatController.updateEnemyStats(actualEnemy1Id, const EntityStats(maxPv: 20, currentPv: 0, armure: 0, attaque: 5));
+      combatController.startEnemyTurn(runController); // This will clean up dead enemies (enemy1)
+
+      // enemy1 is dead, selectedEnemyId should now be null, NOT fallback to enemy2
+      expect(combatController.currentState.selectedEnemyId, isNull);
     });
   });
 }

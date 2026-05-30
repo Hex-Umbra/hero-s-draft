@@ -66,7 +66,7 @@ class CombatController extends StateNotifier<CombatState> {
       enemies: enemies,
       turnPhase: TurnPhase.player,
       turnCount: 1,
-      selectedEnemyId: enemies.isNotEmpty ? enemies.first.id : null,
+      selectedEnemyId: null,
       isCombatEnded: false,
       isVictory: false,
     );
@@ -261,8 +261,7 @@ class CombatController extends StateNotifier<CombatState> {
       String? nextSelected = state.selectedEnemyId;
       if (nextSelected != null &&
           !remainingEnemies.any((e) => e.id == nextSelected)) {
-        nextSelected =
-            remainingEnemies.isNotEmpty ? remainingEnemies.first.id : null;
+        nextSelected = null;
       }
 
       final bool isCombatEnded = remainingEnemies.isEmpty;
