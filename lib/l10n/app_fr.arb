@@ -181,7 +181,7 @@
   "draftChoiceClover": "Trèfle à 4 feuilles",
   "draftChoiceCloverDesc": "+{amount} Chance",
   "draftChoiceMirror": "Miroir",
-  "draftChoiceMirrorDesc": "Cloner une carte de votre deck",
+  "draftChoiceMirrorDesc": "Cloner une carte au choix parmi 3 cartes aléatoires de votre deck",
   "statusPoison": "Poison : {value}",
   "statusStrength": "Attaque : +{value}",
   "statusWeakness": "Faiblesse : {value}",

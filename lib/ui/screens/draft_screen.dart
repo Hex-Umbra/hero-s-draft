@@ -362,7 +362,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
       choices.add(
         _DraftChoice(
           'Miroir',
-          'Cloner une carte de votre deck',
+          'Cloner une carte au choix parmi 3 cartes aléatoires de votre deck',
           0,
           0,
           0,

@@ -412,7 +412,7 @@
     }
   },
   "draftChoiceMirror": "Mirror",
-  "draftChoiceMirrorDesc": "Clone a card from your deck",
+  "draftChoiceMirrorDesc": "Clone a card chosen from 3 random cards in your deck",
   "statusPoison": "Poison: {value}",
   "@statusPoison": {
     "placeholders": {
