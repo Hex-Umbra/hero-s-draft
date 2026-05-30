@@ -145,24 +145,109 @@ class CardComponent extends PositionComponent
     game.onHideTooltip();
   }
 
+  String _determineDamageType() {
+    final lowerTitle = '${card.data.getName(activeLocale).toLowerCase()} ${card.data.id.toLowerCase()}';
+    
+    for (var effect in card.data.effects) {
+      if (effect.type == 'apply_status') {
+        if (effect.statusId == 'burn') return 'fire';
+        if (effect.statusId == 'freeze') return 'cold';
+        if (effect.statusId == 'poison') return 'poison';
+        if (effect.statusId == 'shock') return 'electric';
+      }
+    }
+    
+    if (lowerTitle.contains('feu') || lowerTitle.contains('fire') || lowerTitle.contains('brûlure') || lowerTitle.contains('burn')) {
+      return 'fire';
+    }
+    if (lowerTitle.contains('glace') || lowerTitle.contains('ice') || lowerTitle.contains('gel') || lowerTitle.contains('freeze') || lowerTitle.contains('froid') || lowerTitle.contains('cold')) {
+      return 'cold';
+    }
+    if (lowerTitle.contains('poison') || lowerTitle.contains('venin') || lowerTitle.contains('toxic')) {
+      return 'poison';
+    }
+    if (lowerTitle.contains('foudre') || lowerTitle.contains('thunder') || lowerTitle.contains('shock') || lowerTitle.contains('lightning') || lowerTitle.contains('tonnerre') || lowerTitle.contains('élec')) {
+      return 'electric';
+    }
+    return 'physical';
+  }
+
   String _buildDetailedDescription() {
-    String desc = '${card.data.getDescription(activeLocale)}\n\n';
+    String desc = '';
+    
+    final elementalType = _determineDamageType();
+    if (card.data.effects.isNotEmpty && elementalType != 'physical') {
+      final typeStr = elementalType == 'fire' 
+          ? (activeLocale == 'fr' ? 'FEU 🔥' : 'FIRE 🔥')
+          : elementalType == 'cold'
+              ? (activeLocale == 'fr' ? 'FROID ❄️' : 'COLD ❄️')
+              : elementalType == 'poison'
+                  ? (activeLocale == 'fr' ? 'POISON 🧪' : 'POISON 🧪')
+                  : (activeLocale == 'fr' ? 'FOUDRE ⚡' : 'LIGHTNING ⚡');
+      desc += '[$typeStr]\n';
+    }
+
+    desc += '${card.data.getDescription(activeLocale)}\n\n';
+    
     if (card.data.type == CardType.power || card.data.isExhaust) {
       desc += '${getTranslation((l) => l.exhaustWarning, fallback: '⚠️ USAGE UNIQUE (Épuisement)')}\n\n';
     }
+    
+    final heroAttack = game.heroCard?.stats.effectiveAttaque ?? 0;
+    
     for (var effect in card.data.effects) {
       final scaledValue = (effect.value * (1 + (card.level - 1) * 0.5)).round();
       if (effect.type == 'damage') {
-        desc += '• ${getTranslation((l) => l.cardDescDamage(scaledValue), fallback: 'Dégâts: $scaledValue')}\n';
+        final totalDmg = scaledValue + heroAttack;
+        if (card.data.target == CardTarget.allEnemies) {
+          desc += '• ${getTranslation((l) => l.cardDescDamageAll(totalDmg), fallback: 'Inflige $totalDmg dégâts à tous les ennemis.')}\n';
+        } else {
+          desc += '• ${getTranslation((l) => l.cardDescDamage(totalDmg), fallback: 'Inflige $totalDmg dégâts.')}\n';
+        }
       }
       if (effect.type == 'heal') {
-        desc += '• ${getTranslation((l) => l.cardDescHeal(scaledValue), fallback: 'Soin: $scaledValue')}\n';
+        desc += '• ${getTranslation((l) => l.cardDescHeal(scaledValue), fallback: 'Soigne $scaledValue PV.')}\n';
       }
       if (effect.type == 'armor') {
-        desc += '• ${getTranslation((l) => l.cardDescArmor(scaledValue), fallback: 'Armure: $scaledValue')}\n';
+        desc += '• ${getTranslation((l) => l.cardDescArmor(scaledValue), fallback: 'Donne $scaledValue Armure.')}\n';
+      }
+      if (effect.type == 'gain_mana') {
+        desc += '• ${getTranslation((l) => l.cardDescGainMana(scaledValue), fallback: 'Gagne $scaledValue Mana.')}\n';
       }
       if (effect.type == 'draw') {
-        desc += '• ${getTranslation((l) => l.cardDescDraw(scaledValue), fallback: 'Pioche: $scaledValue cartes')}\n';
+        desc += '• ${getTranslation((l) => l.cardDescDraw(scaledValue), fallback: 'Pioche $scaledValue cartes.')}\n';
+      }
+      if (effect.type == 'apply_status') {
+        final duration = effect.duration ?? 1;
+        switch (effect.statusId) {
+          case 'strength':
+            desc += '• ${getTranslation((l) => l.cardDescStatusStrength(scaledValue, duration), fallback: 'Gagne $scaledValue ATK pendant $duration tours.')}\n';
+            break;
+          case 'armor_regen':
+            desc += '• ${getTranslation((l) => l.cardDescStatusArmorRegen(scaledValue, duration), fallback: 'Pendant $duration tours, gagne $scaledValue Armure au début du tour.')}\n';
+            break;
+          case 'poison':
+            desc += '• ${getTranslation((l) => l.cardDescStatusPoison(scaledValue), fallback: 'Applique $scaledValue Poison.')}\n';
+            break;
+          case 'weakness':
+            desc += '• ${getTranslation((l) => l.cardDescStatusWeakness(scaledValue), fallback: 'Applique $scaledValue Faiblesse.')}\n';
+            break;
+          case 'vulnerable':
+            desc += '• ${getTranslation((l) => l.cardDescStatusVulnerable(scaledValue), fallback: 'Applique $scaledValue Vulnérable.')}\n';
+            break;
+          case 'strength_regen':
+            desc += '• ${getTranslation((l) => l.cardDescStatusStrengthRegen(scaledValue, duration), fallback: 'Gagne $scaledValue Éveil d\'Attaque pendant $duration tours.')}\n';
+            break;
+          case 'burn':
+            desc += '• ${getTranslation((l) => l.cardDescStatusBurn(scaledValue), fallback: 'Applique $scaledValue Brûlure.')}\n';
+            break;
+          case 'freeze':
+            desc += '• ${getTranslation((l) => l.cardDescStatusFreeze(scaledValue), fallback: 'Applique $scaledValue Gel.')}\n';
+            break;
+          case 'shock':
+            desc += '• ${getTranslation((l) => l.cardDescStatusShock(scaledValue), fallback: 'Applique $scaledValue Électrocution.')}\n';
+            break;
+        }
       }
     }
     return desc.trim();

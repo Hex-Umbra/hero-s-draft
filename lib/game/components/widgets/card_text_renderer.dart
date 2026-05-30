@@ -3,6 +3,12 @@ import 'package:flutter/material.dart';
 import '../../../models/data/card_data.dart';
 import '../card_component.dart';
 
+class _RendererEffectVisuals {
+  final IconData icon;
+  final Color color;
+  const _RendererEffectVisuals({required this.icon, required this.color});
+}
+
 class CardTextRenderer {
   final CardComponent card;
 
@@ -77,14 +83,7 @@ class CardTextRenderer {
     }
 
     descPainter = TextPainter(
-      text: TextSpan(
-        text: buildDescription(),
-        style: TextStyle(
-          color: descColor,
-          fontSize: 10,
-          height: 1.3,
-        ),
-      ),
+      text: _buildCompactDescriptionSpan(descColor, opacity),
       textDirection: TextDirection.ltr,
       textAlign: TextAlign.center,
     )..layout(maxWidth: card.size.x - 20);
@@ -154,6 +153,210 @@ class CardTextRenderer {
       ),
       textDirection: TextDirection.ltr,
     )..layout();
+  }
+
+
+
+  String _determineDamageType() {
+    final lowerTitle = '${card.card.data.getName(card.activeLocale).toLowerCase()} ${card.card.data.id.toLowerCase()}';
+    
+    for (var effect in card.card.data.effects) {
+      if (effect.type == 'apply_status') {
+        if (effect.statusId == 'burn') return 'fire';
+        if (effect.statusId == 'freeze') return 'cold';
+        if (effect.statusId == 'poison') return 'poison';
+        if (effect.statusId == 'shock') return 'electric';
+      }
+    }
+    
+    if (lowerTitle.contains('feu') || lowerTitle.contains('fire') || lowerTitle.contains('brûlure') || lowerTitle.contains('burn')) {
+      return 'fire';
+    }
+    if (lowerTitle.contains('glace') || lowerTitle.contains('ice') || lowerTitle.contains('gel') || lowerTitle.contains('freeze') || lowerTitle.contains('froid') || lowerTitle.contains('cold')) {
+      return 'cold';
+    }
+    if (lowerTitle.contains('poison') || lowerTitle.contains('venin') || lowerTitle.contains('toxic')) {
+      return 'poison';
+    }
+    if (lowerTitle.contains('foudre') || lowerTitle.contains('thunder') || lowerTitle.contains('shock') || lowerTitle.contains('lightning') || lowerTitle.contains('tonnerre') || lowerTitle.contains('élec')) {
+      return 'electric';
+    }
+    return 'physical';
+  }
+
+  _RendererEffectVisuals _getEffectVisuals(CardEffect effect) {
+    if (effect.type == 'damage') {
+      final damageType = _determineDamageType();
+      switch (damageType) {
+        case 'fire':
+          return const _RendererEffectVisuals(
+            icon: Icons.local_fire_department_rounded,
+            color: Colors.orangeAccent,
+          );
+        case 'cold':
+          return const _RendererEffectVisuals(
+            icon: Icons.ac_unit_rounded,
+            color: Colors.lightBlueAccent,
+          );
+        case 'poison':
+          return const _RendererEffectVisuals(
+            icon: Icons.science_rounded,
+            color: Colors.greenAccent,
+          );
+        case 'electric':
+          return const _RendererEffectVisuals(
+            icon: Icons.flash_on_rounded,
+            color: Colors.amberAccent,
+          );
+        default:
+          return const _RendererEffectVisuals(
+            icon: Icons.hardware_rounded,
+            color: Colors.redAccent,
+          );
+      }
+    }
+    if (effect.type == 'armor') {
+      final damageType = _determineDamageType();
+      Color armorColor = Colors.blueAccent;
+      if (damageType == 'cold') {
+        armorColor = Colors.cyanAccent;
+      } else if (damageType == 'fire') {
+        armorColor = Colors.deepOrangeAccent;
+      }
+      return _RendererEffectVisuals(
+        icon: Icons.shield_rounded,
+        color: armorColor,
+      );
+    }
+    if (effect.type == 'heal') {
+      return const _RendererEffectVisuals(
+        icon: Icons.favorite_rounded,
+        color: Colors.pinkAccent,
+      );
+    }
+    if (effect.type == 'gain_mana') {
+      return const _RendererEffectVisuals(
+        icon: Icons.diamond_rounded,
+        color: Colors.cyanAccent,
+      );
+    }
+    if (effect.type == 'draw') {
+      return const _RendererEffectVisuals(
+        icon: Icons.style_rounded,
+        color: Colors.amber,
+      );
+    }
+    if (effect.type == 'apply_status') {
+      switch (effect.statusId) {
+        case 'strength':
+        case 'strength_regen':
+          return const _RendererEffectVisuals(
+            icon: Icons.bolt_rounded,
+            color: Colors.orangeAccent,
+          );
+        case 'armor_regen':
+          return const _RendererEffectVisuals(
+            icon: Icons.autorenew_rounded,
+            color: Colors.blueAccent,
+          );
+        case 'poison':
+          return const _RendererEffectVisuals(
+            icon: Icons.science_rounded,
+            color: Colors.greenAccent,
+          );
+        case 'weakness':
+          return const _RendererEffectVisuals(
+            icon: Icons.trending_down_rounded,
+            color: Colors.purpleAccent,
+          );
+        case 'vulnerable':
+          return const _RendererEffectVisuals(
+            icon: Icons.gps_fixed_rounded,
+            color: Colors.deepOrangeAccent,
+          );
+        case 'burn':
+          return const _RendererEffectVisuals(
+            icon: Icons.local_fire_department_rounded,
+            color: Colors.orangeAccent,
+          );
+        case 'freeze':
+          return const _RendererEffectVisuals(
+            icon: Icons.ac_unit_rounded,
+            color: Colors.lightBlueAccent,
+          );
+        case 'shock':
+          return const _RendererEffectVisuals(
+            icon: Icons.flash_on_rounded,
+            color: Colors.amberAccent,
+          );
+      }
+    }
+    return const _RendererEffectVisuals(
+      icon: Icons.help_outline,
+      color: Colors.grey,
+    );
+  }
+
+  TextSpan _buildCompactDescriptionSpan(Color descColor, double opacity) {
+    if (card.card.data.effects.isEmpty) {
+      return TextSpan(
+        text: card.card.data.getDescription(card.activeLocale),
+        style: TextStyle(
+          color: descColor,
+          fontSize: 9,
+          height: 1.2,
+        ),
+      );
+    }
+
+    final heroAttack = card.game.heroCard?.stats.effectiveAttaque ?? 0;
+    final List<InlineSpan> children = [];
+
+    for (int i = 0; i < card.card.data.effects.length; i++) {
+      final effect = card.card.data.effects[i];
+      final scaledValue = (effect.value * (1 + (card.card.level - 1) * 0.5)).round();
+      
+      int valueToDisplay = scaledValue;
+      if (effect.type == 'damage') {
+        valueToDisplay = scaledValue + heroAttack;
+      }
+
+      final visuals = _getEffectVisuals(effect);
+      final iconColor = visuals.color.withAlpha((opacity * 255).toInt());
+
+      children.add(
+        TextSpan(
+          text: String.fromCharCode(visuals.icon.codePoint),
+          style: TextStyle(
+            color: iconColor,
+            fontSize: 12,
+            fontFamily: 'MaterialIcons',
+          ),
+        ),
+      );
+
+      children.add(
+        TextSpan(
+          text: ' $valueToDisplay',
+          style: TextStyle(
+            color: Colors.white.withAlpha((opacity * 255).toInt()),
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      );
+
+      if (i < card.card.data.effects.length - 1) {
+        children.add(
+          const TextSpan(
+            text: '   ',
+            style: TextStyle(fontSize: 10),
+          ),
+        );
+      }
+    }
+
+    return TextSpan(children: children);
   }
 
   String buildDescription() {
