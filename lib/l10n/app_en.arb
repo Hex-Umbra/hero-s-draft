@@ -252,16 +252,37 @@
       "amount": { "type": "int" }
     }
   },
+  "cardDescStatusPoisonDuration": "Applies {amount} Poison for {duration} turns.",
+  "@cardDescStatusPoisonDuration": {
+    "placeholders": {
+      "amount": { "type": "int" },
+      "duration": { "type": "int" }
+    }
+  },
   "cardDescStatusWeakness": "Applies {amount} Weakness.",
   "@cardDescStatusWeakness": {
     "placeholders": {
       "amount": { "type": "int" }
     }
   },
+  "cardDescStatusWeaknessDuration": "Applies {amount} Weakness for {duration} turns.",
+  "@cardDescStatusWeaknessDuration": {
+    "placeholders": {
+      "amount": { "type": "int" },
+      "duration": { "type": "int" }
+    }
+  },
   "cardDescStatusVulnerable": "Applies {amount} Vulnerable.",
   "@cardDescStatusVulnerable": {
     "placeholders": {
       "amount": { "type": "int" }
+    }
+  },
+  "cardDescStatusVulnerableDuration": "Applies {amount} Vulnerable for {duration} turns.",
+  "@cardDescStatusVulnerableDuration": {
+    "placeholders": {
+      "amount": { "type": "int" },
+      "duration": { "type": "int" }
     }
   },
   "cardDescStatusStrengthRegen": "Gains {amount} Attack Awakening for {duration} turns.",
@@ -277,16 +298,37 @@
       "amount": { "type": "int" }
     }
   },
+  "cardDescStatusBurnDuration": "Applies {amount} Burn for {duration} turns.",
+  "@cardDescStatusBurnDuration": {
+    "placeholders": {
+      "amount": { "type": "int" },
+      "duration": { "type": "int" }
+    }
+  },
   "cardDescStatusFreeze": "Applies {amount} Freeze.",
   "@cardDescStatusFreeze": {
     "placeholders": {
       "amount": { "type": "int" }
     }
   },
+  "cardDescStatusFreezeDuration": "Applies {amount} Freeze for {duration} turns.",
+  "@cardDescStatusFreezeDuration": {
+    "placeholders": {
+      "amount": { "type": "int" },
+      "duration": { "type": "int" }
+    }
+  },
   "cardDescStatusShock": "Applies {amount} Shock.",
   "@cardDescStatusShock": {
     "placeholders": {
       "amount": { "type": "int" }
+    }
+  },
+  "cardDescStatusShockDuration": "Applies {amount} Shock for {duration} turns.",
+  "@cardDescStatusShockDuration": {
+    "placeholders": {
+      "amount": { "type": "int" },
+      "duration": { "type": "int" }
     }
   },
   "cancel": "Cancel",

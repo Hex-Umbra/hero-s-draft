@@ -405,13 +405,28 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String cardDescStatusPoisonDuration(int amount, int duration) {
+    return 'Applique $amount Poison pendant $duration tours.';
+  }
+
+  @override
   String cardDescStatusWeakness(int amount) {
     return 'Applique $amount Faiblesse.';
   }
 
   @override
+  String cardDescStatusWeaknessDuration(int amount, int duration) {
+    return 'Applique $amount Faiblesse pendant $duration tours.';
+  }
+
+  @override
   String cardDescStatusVulnerable(int amount) {
     return 'Applique $amount Vulnérable.';
+  }
+
+  @override
+  String cardDescStatusVulnerableDuration(int amount, int duration) {
+    return 'Applique $amount Vulnérable pendant $duration tours.';
   }
 
   @override
@@ -425,13 +440,28 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String cardDescStatusBurnDuration(int amount, int duration) {
+    return 'Applique $amount Brûlure pendant $duration tours.';
+  }
+
+  @override
   String cardDescStatusFreeze(int amount) {
     return 'Applique $amount Gel.';
   }
 
   @override
+  String cardDescStatusFreezeDuration(int amount, int duration) {
+    return 'Applique $amount Gel pendant $duration tours.';
+  }
+
+  @override
   String cardDescStatusShock(int amount) {
     return 'Applique $amount Électrocution.';
+  }
+
+  @override
+  String cardDescStatusShockDuration(int amount, int duration) {
+    return 'Applique $amount Électrocution pendant $duration tours.';
   }
 
   @override

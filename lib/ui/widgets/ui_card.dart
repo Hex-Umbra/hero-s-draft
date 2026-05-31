@@ -173,27 +173,59 @@ class UiCard extends StatelessWidget {
       final scaledValue = (effect.value * (1 + (currentLevel - 1) * 0.5)).round();
       final visuals = _getEffectVisuals(effect);
       
-      badges.add(
-        Row(
+      final effectMainRow = Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            visuals.icon,
+            color: visuals.color,
+            size: 25, // Reduced by 1/4 (from 33)
+          ),
+          const SizedBox(width: 4),
+          Text(
+            '$scaledValue',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18, // Reduced from 22
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      );
+
+      Widget badgeWidget = effectMainRow;
+
+      if (effect.type == 'apply_status') {
+        final duration = effect.duration ?? 1;
+        badgeWidget = Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              visuals.icon,
-              color: visuals.color,
-              size: 25, // Reduced by 1/4 (from 33)
-            ),
-            const SizedBox(width: 4),
-            Text(
-              '$scaledValue',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 18, // Reduced from 22
-                fontWeight: FontWeight.bold,
-              ),
+            effectMainRow,
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.timer_outlined,
+                  color: Colors.white60,
+                  size: 10,
+                ),
+                const SizedBox(width: 2),
+                Text(
+                  '$duration',
+                  style: const TextStyle(
+                    color: Colors.white60,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    height: 1.0,
+                  ),
+                ),
+              ],
             ),
           ],
-        ),
-      );
+        );
+      }
+
+      badges.add(badgeWidget);
 
       if (i < effects!.length - 1) {
         badges.add(
@@ -257,9 +289,6 @@ class UiCard extends StatelessWidget {
       if (effect.type == 'draw') desc += '${l10n.cardDescDraw(scaledValue)}\n';
       if (effect.type == 'apply_status') {
         final duration = effect.duration ?? 1;
-        final turnsText = l10n.localeName == 'fr' 
-            ? ' pendant $duration tours' 
-            : ' for $duration turns';
         switch (effect.statusId) {
           case 'strength':
             desc += '${l10n.cardDescStatusStrength(scaledValue, duration)}\n';
@@ -268,49 +297,25 @@ class UiCard extends StatelessWidget {
             desc += '${l10n.cardDescStatusArmorRegen(scaledValue, duration)}\n';
             break;
           case 'poison':
-            String baseText = l10n.cardDescStatusPoison(scaledValue).trim();
-            if (baseText.endsWith('.')) {
-              baseText = baseText.substring(0, baseText.length - 1);
-            }
-            desc += '$baseText$turnsText.\n';
+            desc += '${l10n.cardDescStatusPoisonDuration(scaledValue, duration)}\n';
             break;
           case 'weakness':
-            String baseText = l10n.cardDescStatusWeakness(scaledValue).trim();
-            if (baseText.endsWith('.')) {
-              baseText = baseText.substring(0, baseText.length - 1);
-            }
-            desc += '$baseText$turnsText.\n';
+            desc += '${l10n.cardDescStatusWeaknessDuration(scaledValue, duration)}\n';
             break;
           case 'vulnerable':
-            String baseText = l10n.cardDescStatusVulnerable(scaledValue).trim();
-            if (baseText.endsWith('.')) {
-              baseText = baseText.substring(0, baseText.length - 1);
-            }
-            desc += '$baseText$turnsText.\n';
+            desc += '${l10n.cardDescStatusVulnerableDuration(scaledValue, duration)}\n';
             break;
           case 'strength_regen':
             desc += '${l10n.cardDescStatusStrengthRegen(scaledValue, duration)}\n';
             break;
           case 'burn':
-            String baseText = l10n.cardDescStatusBurn(scaledValue).trim();
-            if (baseText.endsWith('.')) {
-              baseText = baseText.substring(0, baseText.length - 1);
-            }
-            desc += '$baseText$turnsText.\n';
+            desc += '${l10n.cardDescStatusBurnDuration(scaledValue, duration)}\n';
             break;
           case 'freeze':
-            String baseText = l10n.cardDescStatusFreeze(scaledValue).trim();
-            if (baseText.endsWith('.')) {
-              baseText = baseText.substring(0, baseText.length - 1);
-            }
-            desc += '$baseText$turnsText.\n';
+            desc += '${l10n.cardDescStatusFreezeDuration(scaledValue, duration)}\n';
             break;
           case 'shock':
-            String baseText = l10n.cardDescStatusShock(scaledValue).trim();
-            if (baseText.endsWith('.')) {
-              baseText = baseText.substring(0, baseText.length - 1);
-            }
-            desc += '$baseText$turnsText.\n';
+            desc += '${l10n.cardDescStatusShockDuration(scaledValue, duration)}\n';
             break;
         }
       }

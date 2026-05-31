@@ -770,17 +770,35 @@ abstract class AppLocalizations {
   /// **'Applies {amount} Poison.'**
   String cardDescStatusPoison(int amount);
 
+  /// No description provided for @cardDescStatusPoisonDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies {amount} Poison for {duration} turns.'**
+  String cardDescStatusPoisonDuration(int amount, int duration);
+
   /// No description provided for @cardDescStatusWeakness.
   ///
   /// In en, this message translates to:
   /// **'Applies {amount} Weakness.'**
   String cardDescStatusWeakness(int amount);
 
+  /// No description provided for @cardDescStatusWeaknessDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies {amount} Weakness for {duration} turns.'**
+  String cardDescStatusWeaknessDuration(int amount, int duration);
+
   /// No description provided for @cardDescStatusVulnerable.
   ///
   /// In en, this message translates to:
   /// **'Applies {amount} Vulnerable.'**
   String cardDescStatusVulnerable(int amount);
+
+  /// No description provided for @cardDescStatusVulnerableDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies {amount} Vulnerable for {duration} turns.'**
+  String cardDescStatusVulnerableDuration(int amount, int duration);
 
   /// No description provided for @cardDescStatusStrengthRegen.
   ///
@@ -794,17 +812,35 @@ abstract class AppLocalizations {
   /// **'Applies {amount} Burn.'**
   String cardDescStatusBurn(int amount);
 
+  /// No description provided for @cardDescStatusBurnDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies {amount} Burn for {duration} turns.'**
+  String cardDescStatusBurnDuration(int amount, int duration);
+
   /// No description provided for @cardDescStatusFreeze.
   ///
   /// In en, this message translates to:
   /// **'Applies {amount} Freeze.'**
   String cardDescStatusFreeze(int amount);
 
+  /// No description provided for @cardDescStatusFreezeDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies {amount} Freeze for {duration} turns.'**
+  String cardDescStatusFreezeDuration(int amount, int duration);
+
   /// No description provided for @cardDescStatusShock.
   ///
   /// In en, this message translates to:
   /// **'Applies {amount} Shock.'**
   String cardDescStatusShock(int amount);
+
+  /// No description provided for @cardDescStatusShockDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies {amount} Shock for {duration} turns.'**
+  String cardDescStatusShockDuration(int amount, int duration);
 
   /// No description provided for @cancel.
   ///
