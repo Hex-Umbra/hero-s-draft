@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/entity_stats.dart';
 import '../../models/data/hero_data.dart';
@@ -217,6 +218,37 @@ class RunController extends StateNotifier<RunState> {
         luck: currentStats.luck + luckAcc,
       ),
     );
+  }
+
+  /// Ajoute de l'Expérience au joueur.
+  /// Gère les montées de niveaux successives avec conservation de l'XP excédentaire (carry-over).
+  /// Retourne [true] si au moins un niveau a été gagné.
+  bool gainXp(int amount) {
+    if (amount <= 0) return false;
+
+    var currentStats = state.heroStats;
+    int newXp = currentStats.xp + amount;
+    int currentLevel = currentStats.level;
+    int currentXpToNext = currentStats.xpToNextLevel;
+    bool leveledUp = false;
+
+    while (newXp >= currentXpToNext) {
+      newXp -= currentXpToNext;
+      currentLevel++;
+      // Formule d'XP requise pour le nouveau niveau: 100 * (1.5 ^ (level - 1))
+      currentXpToNext = (100 * pow(1.5, currentLevel - 1)).round();
+      leveledUp = true;
+    }
+
+    state = state.copyWith(
+      heroStats: currentStats.copyWith(
+        level: currentLevel,
+        xp: newXp,
+        xpToNextLevel: currentXpToNext,
+      ),
+    );
+
+    return leveledUp;
   }
 
   /// Applique un soin en jeu
