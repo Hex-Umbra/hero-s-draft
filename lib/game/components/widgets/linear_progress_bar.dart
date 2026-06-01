@@ -35,8 +35,11 @@ class LinearProgressBarComponent extends PositionComponent {
         (size.x * percentage.clamp(0.0, 1.0)) - (pvHorizPad * 2),
         size.y - (pvVertPad * 2),
       );
-      final pvRRect = RRect.fromRectAndRadius(fillRect, const Radius.circular(2.0));
-      
+      final pvRRect = RRect.fromRectAndRadius(
+        fillRect,
+        const Radius.circular(2.0),
+      );
+
       final fillPaint = Paint()
         ..shader = const LinearGradient(
           colors: [
@@ -59,8 +62,9 @@ class LinearProgressBarComponent extends PositionComponent {
       // 3. Dessine l'armure superposée qui englobe la barre de vie (presque pleine hauteur)
       final double vertPad = 0.5;
       final double horizPad = 0.5;
-      final double drawWidth = (size.x * armorPercentage.clamp(0.0, 1.0)) - (horizPad * 2);
-      
+      final double drawWidth =
+          (size.x * armorPercentage.clamp(0.0, 1.0)) - (horizPad * 2);
+
       if (drawWidth > 0) {
         final armorRect = Rect.fromLTWH(
           horizPad,
@@ -68,8 +72,11 @@ class LinearProgressBarComponent extends PositionComponent {
           drawWidth,
           size.y - (vertPad * 2),
         );
-        final armorRRect = RRect.fromRectAndRadius(armorRect, const Radius.circular(3.5));
-        
+        final armorRRect = RRect.fromRectAndRadius(
+          armorRect,
+          const Radius.circular(3.5),
+        );
+
         final armorPaint = Paint()
           ..shader = LinearGradient(
             colors: [
@@ -81,7 +88,7 @@ class LinearProgressBarComponent extends PositionComponent {
           ).createShader(armorRect);
 
         canvas.drawRRect(armorRRect, armorPaint);
-        
+
         // Petite bordure bleu clair brillante sur la capsule d'armure qui englobe
         final armorBorderPaint = Paint()
           ..color = Colors.cyanAccent.withValues(alpha: 0.7)

@@ -71,10 +71,7 @@ class DeckNotifier extends StateNotifier<DeckState> {
       currentHand.add(currentDrawPile.removeLast());
     }
 
-    state = state.copyWith(
-      drawPile: currentDrawPile,
-      hand: currentHand,
-    );
+    state = state.copyWith(drawPile: currentDrawPile, hand: currentHand);
   }
 
   /// Mélange la défausse dans la pioche manuellement
@@ -96,11 +93,8 @@ class DeckNotifier extends StateNotifier<DeckState> {
     if (currentHand.isEmpty) return;
 
     currentDiscardPile.addAll(currentHand);
-    
-    state = state.copyWith(
-      hand: [], 
-      discardPile: currentDiscardPile,
-    );
+
+    state = state.copyWith(hand: [], discardPile: currentDiscardPile);
   }
 
   /// Joue une carte : la retire de la main et l'envoie dans la défausse (ou l'épuise si pouvoir)

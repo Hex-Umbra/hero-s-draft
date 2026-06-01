@@ -5,10 +5,7 @@ import '../../../models/status_effect.dart';
 class StatusEffectsPanel extends StatelessWidget {
   final List<StatusEffect> statuses;
 
-  const StatusEffectsPanel({
-    super.key,
-    required this.statuses,
-  });
+  const StatusEffectsPanel({super.key, required this.statuses});
 
   @override
   Widget build(BuildContext context) {
@@ -20,10 +17,7 @@ class StatusEffectsPanel extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF1E1E2C).withAlpha(240),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Colors.cyanAccent.withAlpha(100),
-          width: 1.5,
-        ),
+        border: Border.all(color: Colors.cyanAccent.withAlpha(100), width: 1.5),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withAlpha(150),

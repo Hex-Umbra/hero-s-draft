@@ -2,12 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-enum NotificationType {
-  info,
-  success,
-  error,
-  warning,
-}
+enum NotificationType { info, success, error, warning }
 
 class GameNotification {
   final String id;
@@ -72,15 +67,19 @@ class NotificationNotifier extends StateNotifier<List<GameNotification>> {
 
 final notificationProvider =
     StateNotifierProvider<NotificationNotifier, List<GameNotification>>((ref) {
-  return NotificationNotifier();
-});
+      return NotificationNotifier();
+    });
 
 extension NotificationContextExtension on BuildContext {
-  void showNotification(String message, {NotificationType type = NotificationType.info}) {
+  void showNotification(
+    String message, {
+    NotificationType type = NotificationType.info,
+  }) {
     try {
-      ProviderScope.containerOf(this, listen: false)
-          .read(notificationProvider.notifier)
-          .show(message, type: type);
+      ProviderScope.containerOf(
+        this,
+        listen: false,
+      ).read(notificationProvider.notifier).show(message, type: type);
     } catch (e) {
       debugPrint("Notification: $message (Type: $type)");
     }
@@ -91,10 +90,12 @@ class GameNotificationOverlay extends ConsumerStatefulWidget {
   const GameNotificationOverlay({super.key});
 
   @override
-  ConsumerState<GameNotificationOverlay> createState() => _GameNotificationOverlayState();
+  ConsumerState<GameNotificationOverlay> createState() =>
+      _GameNotificationOverlayState();
 }
 
-class _GameNotificationOverlayState extends ConsumerState<GameNotificationOverlay> {
+class _GameNotificationOverlayState
+    extends ConsumerState<GameNotificationOverlay> {
   @override
   void dispose() {
     // Annule tous les Timers restants et nettoie le cache lors du démontage du widget (indispensable pour les tests)
@@ -143,7 +144,8 @@ class _AnimatedNotificationTile extends StatefulWidget {
   const _AnimatedNotificationTile({required this.notification});
 
   @override
-  State<_AnimatedNotificationTile> createState() => _AnimatedNotificationTileState();
+  State<_AnimatedNotificationTile> createState() =>
+      _AnimatedNotificationTileState();
 }
 
 class _AnimatedNotificationTileState extends State<_AnimatedNotificationTile>
@@ -159,9 +161,10 @@ class _AnimatedNotificationTileState extends State<_AnimatedNotificationTile>
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
-    _slideAnimation = Tween<double>(begin: -1.0, end: 0.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
-    );
+    _slideAnimation = Tween<double>(
+      begin: -1.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
     _fadeAnimation = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
     _controller.forward();
   }
@@ -202,10 +205,7 @@ class _AnimatedNotificationTileState extends State<_AnimatedNotificationTile>
       builder: (context, child) {
         return Transform.translate(
           offset: Offset(_slideAnimation.value * 300, 0),
-          child: Opacity(
-            opacity: _fadeAnimation.value,
-            child: child,
-          ),
+          child: Opacity(opacity: _fadeAnimation.value, child: child),
         );
       },
       child: Container(
@@ -213,10 +213,7 @@ class _AnimatedNotificationTileState extends State<_AnimatedNotificationTile>
         decoration: BoxDecoration(
           color: const Color(0xFF1E1E2C).withValues(alpha: 0.95),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: color.withValues(alpha: 0.3),
-            width: 1.5,
-          ),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
           boxShadow: [
             BoxShadow(
               color: color.withValues(alpha: 0.08),
@@ -235,23 +232,20 @@ class _AnimatedNotificationTileState extends State<_AnimatedNotificationTile>
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Container(
-                width: 6,
-                color: color,
-              ),
+              Container(width: 6, color: color),
               const SizedBox(width: 12),
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 12.0),
-                child: Icon(
-                  icon,
-                  color: color,
-                  size: 20,
-                ),
+                child: Icon(icon, color: color, size: 20),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.only(right: 12.0, top: 12.0, bottom: 12.0),
+                  padding: const EdgeInsets.only(
+                    right: 12.0,
+                    top: 12.0,
+                    bottom: 12.0,
+                  ),
                   child: Text(
                     n.message,
                     style: const TextStyle(

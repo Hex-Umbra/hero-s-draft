@@ -5,11 +5,7 @@ class PauseDialog extends StatelessWidget {
   final VoidCallback onResume;
   final VoidCallback onExit;
 
-  const PauseDialog({
-    super.key,
-    required this.onResume,
-    required this.onExit,
-  });
+  const PauseDialog({super.key, required this.onResume, required this.onExit});
 
   static Future<void> show(
     BuildContext context, {
@@ -20,10 +16,7 @@ class PauseDialog extends StatelessWidget {
       context: context,
       barrierDismissible: true,
       builder: (BuildContext context) {
-        return PauseDialog(
-          onResume: onResume,
-          onExit: onExit,
-        );
+        return PauseDialog(onResume: onResume, onExit: onExit);
       },
     );
   }
@@ -36,7 +29,10 @@ class PauseDialog extends StatelessWidget {
       backgroundColor: const Color(0xFF2A2A3D),
       title: Text(
         l10n.pauseTitle,
-        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
         textAlign: TextAlign.center,
       ),
       content: Column(

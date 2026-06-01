@@ -22,13 +22,20 @@ class PassiveData {
   });
 
   String getName(String locale) => locale == 'fr' ? nameFr : nameEn;
-  String getDescription(String locale) => locale == 'fr' ? descriptionFr : descriptionEn;
+  String getDescription(String locale) =>
+      locale == 'fr' ? descriptionFr : descriptionEn;
 
   factory PassiveData.fromJson(Map<String, dynamic> json) {
     final nEn = json['name_en'] as String? ?? json['name'] as String? ?? '';
     final nFr = json['name_fr'] as String? ?? json['name'] as String? ?? '';
-    final dEn = json['description_en'] as String? ?? json['description'] as String? ?? '';
-    final dFr = json['description_fr'] as String? ?? json['description'] as String? ?? '';
+    final dEn =
+        json['description_en'] as String? ??
+        json['description'] as String? ??
+        '';
+    final dFr =
+        json['description_fr'] as String? ??
+        json['description'] as String? ??
+        '';
 
     return PassiveData(
       id: json['id'] as String,
@@ -49,8 +56,10 @@ class PassiveData {
           id: 'regenArmor',
           nameEn: 'Armor Regeneration',
           nameFr: "Régénération d'Armure",
-          descriptionEn: 'Gain 2 Block (+ Mastery) automatically at the end of each turn.',
-          descriptionFr: "Gagne 2 points d'Armure (+ Maîtrise) automatiquement à la fin de chaque tour.",
+          descriptionEn:
+              'Gain 2 Block (+ Mastery) automatically at the end of each turn.',
+          descriptionFr:
+              "Gagne 2 points d'Armure (+ Maîtrise) automatiquement à la fin de chaque tour.",
           trigger: RelicTrigger.endOfTurn,
           effectType: 'gain_armor',
           value: 2,
@@ -60,8 +69,10 @@ class PassiveData {
           id: 'berserkerArmor',
           nameEn: 'Berserker Armor',
           nameFr: 'Armure du Berserker',
-          descriptionEn: 'Gain 1 Block (+ Mastery) at the start of your turn for every 10 missing HP.',
-          descriptionFr: "Gagne 1 point d'Armure (+ Maîtrise) au début du tour pour chaque tranche de 10 PV manquants.",
+          descriptionEn:
+              'Gain 1 Block (+ Mastery) at the start of your turn for every 10 missing HP.',
+          descriptionFr:
+              "Gagne 1 point d'Armure (+ Maîtrise) au début du tour pour chaque tranche de 10 PV manquants.",
           trigger: RelicTrigger.startOfTurn,
           effectType: 'berserker_armor',
           value: 1,
@@ -71,8 +82,10 @@ class PassiveData {
           id: 'spellArmor',
           nameEn: 'Spell Armor',
           nameFr: 'Armure Magique',
-          descriptionEn: 'Gain 1 Block (+ Mastery) instantly each time you play a Skill card.',
-          descriptionFr: "Gagne 1 point d'Armure (+ Maîtrise) instantanément chaque fois que vous jouez une carte Compétence.",
+          descriptionEn:
+              'Gain 1 Block (+ Mastery) instantly each time you play a Skill card.',
+          descriptionFr:
+              "Gagne 1 point d'Armure (+ Maîtrise) instantanément chaque fois que vous jouez une carte Compétence.",
           trigger: RelicTrigger.onCardPlayed,
           effectType: 'spell_armor',
           value: 1,

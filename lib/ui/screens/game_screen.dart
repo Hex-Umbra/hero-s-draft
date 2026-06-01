@@ -87,8 +87,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
         var filtered = relics.where((r) => r.rarity == rarity).toList();
         if (filtered.isEmpty) {
-          filtered =
-              relics.where((r) => r.rarity == RelicRarity.common).toList();
+          filtered = relics
+              .where((r) => r.rarity == RelicRarity.common)
+              .toList();
           if (filtered.isEmpty) {
             filtered = relics;
           }
@@ -191,7 +192,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
       final runState = ref.read(runProvider);
       final gameData = ref.read(gameDataLoaderProvider).requireValue;
-      ref.read(combatProvider.notifier).initializeCombat(
+      ref
+          .read(combatProvider.notifier)
+          .initializeCombat(
             runState.currentLevel,
             runState.currentNodeType,
             gameData.enemies,
@@ -291,15 +294,14 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         return true;
       },
       onResolveEnemyIntent: (enemyId) {
-        ref.read(combatProvider.notifier).resolveEnemyIntent(
-              enemyId,
-              ref.read(runProvider.notifier),
-            );
+        ref
+            .read(combatProvider.notifier)
+            .resolveEnemyIntent(enemyId, ref.read(runProvider.notifier));
       },
       onStartEnemyTurn: () {
-        ref.read(combatProvider.notifier).startEnemyTurn(
-              ref.read(runProvider.notifier),
-            );
+        ref
+            .read(combatProvider.notifier)
+            .startEnemyTurn(ref.read(runProvider.notifier));
       },
       onEndEnemyTurn: () {
         ref.read(combatProvider.notifier).endEnemyTurn();
@@ -359,8 +361,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     final currentNodeId = runState.currentNodeId;
     bool isCompleted = false;
     try {
-      final currentNode =
-          runState.mapNodes.firstWhere((n) => n.id == currentNodeId);
+      final currentNode = runState.mapNodes.firstWhere(
+        (n) => n.id == currentNodeId,
+      );
       isCompleted = currentNode.isCompleted;
     } catch (_) {}
 
@@ -415,8 +418,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                                       foregroundColor: Colors.red,
                                     ),
                                     onPressed: () {
-                                      Navigator.of(context)
-                                          .popUntil((route) => route.isFirst);
+                                      Navigator.of(
+                                        context,
+                                      ).popUntil((route) => route.isFirst);
                                     },
                                     child: Text(l10n.mainMenu),
                                   ),
@@ -459,9 +463,8 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                         onPressed: () {
                           Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (context) => const DeckScreen(
-                                allowMerge: false,
-                              ),
+                              builder: (context) =>
+                                  const DeckScreen(allowMerge: false),
                             ),
                           );
                         },
@@ -515,7 +518,8 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                           alignment: Alignment.center,
                           children: [
                             SizedBox(
-                              width: MediaQuery.of(context).size.width *
+                              width:
+                                  MediaQuery.of(context).size.width *
                                   0.52, // Élargi pour accueillir les stats sans tasser la barre de vie
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
@@ -586,16 +590,15 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                         child: ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blueAccent,
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 12,
-                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
                           onPressed: () {
                             setState(() {
                               _showManaWarning = false;
                             });
                             TraitSystem.onTurnEnd(
-                                ref.read(runProvider.notifier));
+                              ref.read(runProvider.notifier),
+                            );
                             ref
                                 .read(runProvider.notifier)
                                 .applyRelics(RelicTrigger.endOfTurn);
@@ -625,10 +628,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                         decoration: BoxDecoration(
                           color: const Color(0xFF1E1E2C).withAlpha(200),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: Colors.white24,
-                            width: 1,
-                          ),
+                          border: Border.all(color: Colors.white24, width: 1),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withAlpha(80),
@@ -709,9 +709,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                     Positioned(
                       bottom: 80,
                       right: 20,
-                      child: EnemyIntentsPanel(
-                        enemies: combatState.enemies,
-                      ),
+                      child: EnemyIntentsPanel(enemies: combatState.enemies),
                     ),
 
                   // Phase Banner Overlay (Centre)

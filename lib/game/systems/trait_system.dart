@@ -7,7 +7,8 @@ import '../../models/data/passive_data.dart';
 class TraitSystem {
   /// Appelé au début du tour du joueur
   static void onTurnStart(RunController controller) {
-    final passive = controller.currentState.activePassive ??
+    final passive =
+        controller.currentState.activePassive ??
         PassiveData.fallback(controller.currentState.passiveTrait ?? '');
     final stats = controller.currentState.heroStats;
 
@@ -32,7 +33,8 @@ class TraitSystem {
 
   /// Appelé à la fin du tour du joueur
   static void onTurnEnd(RunController controller) {
-    final passive = controller.currentState.activePassive ??
+    final passive =
+        controller.currentState.activePassive ??
         PassiveData.fallback(controller.currentState.passiveTrait ?? '');
     final stats = controller.currentState.heroStats;
 
@@ -47,7 +49,8 @@ class TraitSystem {
 
   /// Appelé lorsqu'une carte est jouée avec succès
   static void onCardPlayed(RunController controller, CardInstance card) {
-    final passive = controller.currentState.activePassive ??
+    final passive =
+        controller.currentState.activePassive ??
         PassiveData.fallback(controller.currentState.passiveTrait ?? '');
     final stats = controller.currentState.heroStats;
 

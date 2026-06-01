@@ -44,8 +44,12 @@ class ClassSelectionScreen extends ConsumerWidget {
           padding: EdgeInsets.all(isMobile ? 10 : 20),
           child: GridView.builder(
             gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: isMobile ? 200 : 400, // Divise par deux sur mobile pour afficher 2 colonnes réduites
-              childAspectRatio: isMobile ? 0.68 : 0.75, // Plus haute sur mobile pour donner plus d'espace vertical
+              maxCrossAxisExtent: isMobile
+                  ? 200
+                  : 400, // Divise par deux sur mobile pour afficher 2 colonnes réduites
+              childAspectRatio: isMobile
+                  ? 0.68
+                  : 0.75, // Plus haute sur mobile pour donner plus d'espace vertical
               crossAxisSpacing: isMobile ? 10 : 20,
               mainAxisSpacing: isMobile ? 10 : 20,
             ),
@@ -111,7 +115,7 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
 
   void _onPointerMove(PointerEvent event, Size cardSize) {
     if (cardSize.width == 0 || cardSize.height == 0) return;
-    
+
     // Relative position from center (-0.5 to 0.5)
     final double relX = (event.localPosition.dx / cardSize.width) - 0.5;
     final double relY = (event.localPosition.dy / cardSize.height) - 0.5;
@@ -148,7 +152,7 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
       orElse: () => PassiveData.fallback(playerClass.passiveTrait ?? ''),
     );
     final locale = Localizations.localeOf(context).languageCode;
-    
+
     Color classColor = Colors.blue;
     if (playerClass.id == 'berserker') classColor = Colors.red;
     if (playerClass.id == 'mage') classColor = Colors.purple;
@@ -183,7 +187,9 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                 return Transform(
                   transform: Matrix4.identity()
                     ..setEntry(3, 2, 0.002) // Perspective 3D
-                    ..rotateX(currentTiltY) // Inversé : le côté avec le curseur s'éloigne (tilt vers l'arrière)
+                    ..rotateX(
+                      currentTiltY,
+                    ) // Inversé : le côté avec le curseur s'éloigne (tilt vers l'arrière)
                     ..rotateY(-currentTiltX),
                   alignment: Alignment.center,
                   child: AnimatedContainer(
@@ -192,12 +198,16 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                       color: const Color(0xFF2A2A3D),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: classColor.withValues(alpha: _isHovered ? 1.0 : 0.7),
+                        color: classColor.withValues(
+                          alpha: _isHovered ? 1.0 : 0.7,
+                        ),
                         width: _isHovered ? 3.0 : 2.0,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: classColor.withValues(alpha: _isHovered ? 0.4 : 0.15),
+                          color: classColor.withValues(
+                            alpha: _isHovered ? 0.4 : 0.15,
+                          ),
                           blurRadius: _isHovered ? 25 : 10,
                           spreadRadius: _isHovered ? 4 : 1,
                         ),
@@ -214,8 +224,12 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                   decoration: BoxDecoration(
                                     gradient: RadialGradient(
                                       center: Alignment(
-                                        (_mousePosition!.dx / cardSize.width) * 2 - 1,
-                                        (_mousePosition!.dy / cardSize.height) * 2 - 1,
+                                        (_mousePosition!.dx / cardSize.width) *
+                                                2 -
+                                            1,
+                                        (_mousePosition!.dy / cardSize.height) *
+                                                2 -
+                                            1,
                                       ),
                                       radius: 0.6,
                                       colors: [
@@ -236,7 +250,9 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                 AnimatedBuilder(
                                   animation: _floatAnimation,
                                   builder: (context, child) {
-                                    final double floatOffset = _floatAnimation.value * (widget.isMobile ? 0.5 : 1.0);
+                                    final double floatOffset =
+                                        _floatAnimation.value *
+                                        (widget.isMobile ? 0.5 : 1.0);
                                     return Transform.translate(
                                       offset: Offset(0, floatOffset),
                                       child: Icon(
@@ -245,8 +261,12 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                         color: classColor,
                                         shadows: [
                                           Shadow(
-                                            color: classColor.withValues(alpha: 0.5),
-                                            blurRadius: widget.isMobile ? 5 : 10,
+                                            color: classColor.withValues(
+                                              alpha: 0.5,
+                                            ),
+                                            blurRadius: widget.isMobile
+                                                ? 5
+                                                : 10,
                                           ),
                                         ],
                                       ),
@@ -263,7 +283,9 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                     letterSpacing: 1.2,
                                     shadows: [
                                       Shadow(
-                                        color: classColor.withValues(alpha: 0.3),
+                                        color: classColor.withValues(
+                                          alpha: 0.3,
+                                        ),
                                         blurRadius: 6,
                                       ),
                                     ],
@@ -278,23 +300,45 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                   ),
                                   decoration: BoxDecoration(
                                     color: Colors.white.withValues(alpha: 0.04),
-                                    borderRadius: BorderRadius.circular(widget.isMobile ? 6 : 10),
+                                    borderRadius: BorderRadius.circular(
+                                      widget.isMobile ? 6 : 10,
+                                    ),
                                   ),
                                   child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceEvenly,
                                     children: [
                                       _buildStatBadge(
-                                        Icon(Icons.favorite, size: widget.isMobile ? 14 : 16, color: Colors.redAccent),
+                                        Icon(
+                                          Icons.favorite,
+                                          size: widget.isMobile ? 14 : 16,
+                                          color: Colors.redAccent,
+                                        ),
                                         '${playerClass.maxHp}',
                                       ),
-                                      Container(width: 1, height: widget.isMobile ? 12 : 16, color: Colors.white24),
+                                      Container(
+                                        width: 1,
+                                        height: widget.isMobile ? 12 : 16,
+                                        color: Colors.white24,
+                                      ),
                                       _buildStatBadge(
-                                        Icon(Icons.diamond_rounded, size: widget.isMobile ? 14 : 16, color: Colors.cyanAccent),
+                                        Icon(
+                                          Icons.diamond_rounded,
+                                          size: widget.isMobile ? 14 : 16,
+                                          color: Colors.cyanAccent,
+                                        ),
                                         '${playerClass.maxMana}',
                                       ),
-                                      Container(width: 1, height: widget.isMobile ? 12 : 16, color: Colors.white24),
+                                      Container(
+                                        width: 1,
+                                        height: widget.isMobile ? 12 : 16,
+                                        color: Colors.white24,
+                                      ),
                                       _buildStatBadge(
-                                        SwordIcon(size: widget.isMobile ? 14 : 16, color: Colors.orangeAccent),
+                                        SwordIcon(
+                                          size: widget.isMobile ? 14 : 16,
+                                          color: Colors.orangeAccent,
+                                        ),
                                         '${playerClass.baseDamage}',
                                       ),
                                     ],
@@ -309,10 +353,16 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                     vertical: widget.isMobile ? 4 : 8,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: Colors.cyanAccent.withValues(alpha: 0.06),
-                                    borderRadius: BorderRadius.circular(widget.isMobile ? 6 : 10),
+                                    color: Colors.cyanAccent.withValues(
+                                      alpha: 0.06,
+                                    ),
+                                    borderRadius: BorderRadius.circular(
+                                      widget.isMobile ? 6 : 10,
+                                    ),
                                     border: Border.all(
-                                      color: Colors.cyanAccent.withValues(alpha: 0.25),
+                                      color: Colors.cyanAccent.withValues(
+                                        alpha: 0.25,
+                                      ),
                                       width: 1.0,
                                     ),
                                   ),
@@ -320,14 +370,23 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
                                         children: [
-                                          Icon(Icons.shield, size: widget.isMobile ? 12 : 16, color: Colors.cyanAccent),
-                                          SizedBox(width: widget.isMobile ? 3 : 6),
+                                          Icon(
+                                            Icons.shield,
+                                            size: widget.isMobile ? 12 : 16,
+                                            color: Colors.cyanAccent,
+                                          ),
+                                          SizedBox(
+                                            width: widget.isMobile ? 3 : 6,
+                                          ),
                                           Text(
                                             traitName.toUpperCase(),
                                             style: TextStyle(
-                                              fontSize: widget.isMobile ? 10 : 11,
+                                              fontSize: widget.isMobile
+                                                  ? 10
+                                                  : 11,
                                               fontWeight: FontWeight.bold,
                                               color: Colors.cyanAccent,
                                               letterSpacing: 0.8,
@@ -339,8 +398,12 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                       Text(
                                         traitDesc,
                                         style: TextStyle(
-                                          fontSize: widget.isMobile ? 9.5 : 10.5,
-                                          color: Colors.cyanAccent.withValues(alpha: 0.85),
+                                          fontSize: widget.isMobile
+                                              ? 9.5
+                                              : 10.5,
+                                          color: Colors.cyanAccent.withValues(
+                                            alpha: 0.85,
+                                          ),
                                           height: 1.25,
                                         ),
                                         textAlign: TextAlign.center,
@@ -375,10 +438,11 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                   onPressed: () {
                                     Navigator.of(context).push(
                                       MaterialPageRoute(
-                                        builder: (context) => StarterDeckDraftScreen(
-                                          playerClass: playerClass,
-                                          passive: passive,
-                                        ),
+                                        builder: (context) =>
+                                            StarterDeckDraftScreen(
+                                              playerClass: playerClass,
+                                              passive: passive,
+                                            ),
                                       ),
                                     );
                                   },
@@ -430,7 +494,8 @@ class _PremiumSelectionButton extends StatefulWidget {
   });
 
   @override
-  State<_PremiumSelectionButton> createState() => _PremiumSelectionButtonState();
+  State<_PremiumSelectionButton> createState() =>
+      _PremiumSelectionButtonState();
 }
 
 class _PremiumSelectionButtonState extends State<_PremiumSelectionButton>
@@ -446,9 +511,10 @@ class _PremiumSelectionButtonState extends State<_PremiumSelectionButton>
       duration: const Duration(milliseconds: 100),
       vsync: this,
     );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
-      CurvedAnimation(parent: _pressController, curve: Curves.easeIn),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.95,
+    ).animate(CurvedAnimation(parent: _pressController, curve: Curves.easeIn));
   }
 
   @override
@@ -502,7 +568,9 @@ class _PremiumSelectionButtonState extends State<_PremiumSelectionButton>
                 borderRadius: BorderRadius.circular(widget.isMobile ? 8 : 12),
                 boxShadow: [
                   BoxShadow(
-                    color: widget.classColor.withValues(alpha: _isHovered ? 0.5 : 0.25),
+                    color: widget.classColor.withValues(
+                      alpha: _isHovered ? 0.5 : 0.25,
+                    ),
                     blurRadius: _isHovered ? 15 : 6,
                     offset: Offset(0, _isHovered ? 4 : 2),
                   ),

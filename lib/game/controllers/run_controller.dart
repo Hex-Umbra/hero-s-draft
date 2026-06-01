@@ -104,7 +104,8 @@ class RunController extends StateNotifier<RunState> {
       act: 1,
       heroClassId: chosenClass.id,
       passiveTrait: chosenClass.passiveTrait,
-      activePassive: activePassive ?? PassiveData.fallback(chosenClass.passiveTrait ?? ''),
+      activePassive:
+          activePassive ?? PassiveData.fallback(chosenClass.passiveTrait ?? ''),
       heroStats: EntityStats(
         maxPv: chosenClass.maxHp,
         currentPv: chosenClass.maxHp,
@@ -120,11 +121,13 @@ class RunController extends StateNotifier<RunState> {
     );
 
     // Réinitialise l'inventaire avec 50 d'or de départ
-    ref.read(inventoryProvider.notifier).reset(
-      initialGold: 50,
-      initialRelics: const [],
-      initialBonusShopCards: 0,
-    );
+    ref
+        .read(inventoryProvider.notifier)
+        .reset(
+          initialGold: 50,
+          initialRelics: const [],
+          initialBonusShopCards: 0,
+        );
 
     // Réinitialise les cooldowns de sorts
     ref.read(skillProvider.notifier).resetCooldowns();
@@ -151,10 +154,7 @@ class RunController extends StateNotifier<RunState> {
     // Reset de l'armure et nettoyage des statuts à la fin du combat pour préserver les passifs
     state = state.copyWith(
       mapNodes: updatedNodes,
-      heroStats: state.heroStats.copyWith(
-        armure: 0,
-        statuses: [],
-      ),
+      heroStats: state.heroStats.copyWith(armure: 0, statuses: []),
     );
 
     if (completedNode != null && completedNode!.type == MapNodeType.boss) {
@@ -254,9 +254,7 @@ class RunController extends StateNotifier<RunState> {
   /// Déclenche les effets des reliques pour un trigger donné
   void applyRelics(RelicTrigger trigger) {
     final relics = ref.read(inventoryProvider).relics;
-    final relevantRelics = relics
-        .where((r) => r.trigger == trigger)
-        .toList();
+    final relevantRelics = relics.where((r) => r.trigger == trigger).toList();
     for (var relic in relevantRelics) {
       applyRelicEffect(relic);
     }
@@ -376,9 +374,7 @@ class RunController extends StateNotifier<RunState> {
     }
 
     // 4. Décrémenter les statuts
-    state = state.copyWith(
-      heroStats: updatedStats.tickStatuses(),
-    );
+    state = state.copyWith(heroStats: updatedStats.tickStatuses());
     // Décrémenter les cooldowns via le skill provider
     ref.read(skillProvider.notifier).tickCooldowns();
 

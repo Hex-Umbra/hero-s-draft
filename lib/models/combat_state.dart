@@ -32,7 +32,9 @@ class CombatState {
       enemies: enemies ?? this.enemies,
       turnPhase: turnPhase ?? this.turnPhase,
       turnCount: turnCount ?? this.turnCount,
-      selectedEnemyId: clearSelectedEnemy ? null : (selectedEnemyId ?? this.selectedEnemyId),
+      selectedEnemyId: clearSelectedEnemy
+          ? null
+          : (selectedEnemyId ?? this.selectedEnemyId),
       isCombatEnded: isCombatEnded ?? this.isCombatEnded,
       isVictory: isVictory ?? this.isVictory,
     );
@@ -61,11 +63,11 @@ class CombatState {
   }
 
   Map<String, dynamic> toJson() => {
-        'enemies': enemies.map((e) => e.toJson()).toList(),
-        'turnPhase': turnPhase.toString().split('.').last,
-        'turnCount': turnCount,
-        'selectedEnemyId': selectedEnemyId,
-        'isCombatEnded': isCombatEnded,
-        'isVictory': isVictory,
-      };
+    'enemies': enemies.map((e) => e.toJson()).toList(),
+    'turnPhase': turnPhase.toString().split('.').last,
+    'turnCount': turnCount,
+    'selectedEnemyId': selectedEnemyId,
+    'isCombatEnded': isCombatEnded,
+    'isVictory': isVictory,
+  };
 }

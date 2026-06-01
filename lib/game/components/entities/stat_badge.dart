@@ -54,7 +54,13 @@ class StatBadge extends PositionComponent
        _armorPercentage = armorPercentage,
        _customTooltipTitle = tooltipTitle,
        _customTooltipDescription = tooltipDescription,
-       super(size: isCircle ? GameConstants.badgeCircleSize : (type == StatType.hp ? GameConstants.badgeHpSize : GameConstants.badgeStandardSize));
+       super(
+         size: isCircle
+             ? GameConstants.badgeCircleSize
+             : (type == StatType.hp
+                   ? GameConstants.badgeHpSize
+                   : GameConstants.badgeStandardSize),
+       );
 
   @override
   Future<void> onLoad() async {
@@ -86,7 +92,11 @@ class StatBadge extends PositionComponent
             fontSize: 9,
             fontWeight: FontWeight.bold,
             shadows: [
-              Shadow(color: Colors.black, blurRadius: 2.0, offset: Offset(1, 1)),
+              Shadow(
+                color: Colors.black,
+                blurRadius: 2.0,
+                offset: Offset(1, 1),
+              ),
             ],
           ),
         ),
@@ -112,7 +122,11 @@ class StatBadge extends PositionComponent
             fontSize: 9,
             fontWeight: FontWeight.bold,
             shadows: [
-              Shadow(color: Colors.black, blurRadius: 2.0, offset: Offset(1, 1)),
+              Shadow(
+                color: Colors.black,
+                blurRadius: 2.0,
+                offset: Offset(1, 1),
+              ),
             ],
           ),
         ),
@@ -257,7 +271,11 @@ class StatBadge extends PositionComponent
   /// Reconstruit la section de texte dynamique (utilisée pour les badges rectangulaires simples/bonus)
   void _rebuildStaticBadgeContent(bool hasBonus, Color color) {
     // Nettoie les TextComponents de valeur précédents pour éviter les doublons
-    children.whereType<TextComponent>().where((tc) => tc != iconComponent).toList().forEach(remove);
+    children
+        .whereType<TextComponent>()
+        .where((tc) => tc != iconComponent)
+        .toList()
+        .forEach(remove);
 
     if (hasBonus) {
       final totalStyle = const TextStyle(
@@ -489,22 +507,22 @@ class StatBadge extends PositionComponent
       case StatType.hp:
         return (
           getTranslation((l) => l.tooltipHpTitle),
-          getTranslation((l) => l.tooltipHpDesc)
+          getTranslation((l) => l.tooltipHpDesc),
         );
       case StatType.armor:
         return (
           getTranslation((l) => l.tooltipArmorTitle),
-          getTranslation((l) => l.tooltipArmorDesc)
+          getTranslation((l) => l.tooltipArmorDesc),
         );
       case StatType.attack:
         return (
           getTranslation((l) => l.tooltipAttackTitle),
-          getTranslation((l) => l.tooltipAttackDesc)
+          getTranslation((l) => l.tooltipAttackDesc),
         );
       case StatType.mana:
         return (
           getTranslation((l) => l.tooltipManaTitle),
-          getTranslation((l) => l.tooltipManaDesc)
+          getTranslation((l) => l.tooltipManaDesc),
         );
     }
   }

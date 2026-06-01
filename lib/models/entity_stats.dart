@@ -69,16 +69,16 @@ class EntityStats {
   }
 
   Map<String, dynamic> toJson() => {
-        'maxPv': maxPv,
-        'currentPv': currentPv,
-        'maxMana': maxMana,
-        'currentMana': currentMana,
-        'armure': armure,
-        'armorMastery': armorMastery,
-        'attaque': attaque,
-        'luck': luck,
-        'statuses': statuses.map((s) => s.toJson()).toList(),
-      };
+    'maxPv': maxPv,
+    'currentPv': currentPv,
+    'maxMana': maxMana,
+    'currentMana': currentMana,
+    'armure': armure,
+    'armorMastery': armorMastery,
+    'attaque': attaque,
+    'luck': luck,
+    'statuses': statuses.map((s) => s.toJson()).toList(),
+  };
 
   /// Ajoute ou combine un effet de statut
   EntityStats addStatus(StatusEffect effect) {

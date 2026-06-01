@@ -23,12 +23,18 @@ class SlashEffect extends PositionComponent with HasPaint {
       SequenceEffect([
         // 1. Apparition rapide et étirement
         CombinedEffect([
-          ScaleEffect.to(Vector2(1.2, 1), EffectController(duration: 0.1, curve: Curves.easeOut)),
+          ScaleEffect.to(
+            Vector2(1.2, 1),
+            EffectController(duration: 0.1, curve: Curves.easeOut),
+          ),
           OpacityEffect.to(1.0, EffectController(duration: 0.05)),
         ]),
         // 2. Disparition
         CombinedEffect([
-          ScaleEffect.to(Vector2(1.5, 0), EffectController(duration: 0.2, curve: Curves.easeIn)),
+          ScaleEffect.to(
+            Vector2(1.5, 0),
+            EffectController(duration: 0.2, curve: Curves.easeIn),
+          ),
           OpacityEffect.to(0.0, EffectController(duration: 0.2)),
         ]),
         RemoveEffect(),

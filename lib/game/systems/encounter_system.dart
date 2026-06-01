@@ -12,7 +12,8 @@ class EncounterSystem {
   }) {
     if (availableEnemies.isEmpty) return [];
 
-    bool isBoss = nodeType == MapNodeType.boss || (level > 0 && level % 10 == 0);
+    bool isBoss =
+        nodeType == MapNodeType.boss || (level > 0 && level % 10 == 0);
     bool isElite = nodeType == MapNodeType.elite;
 
     // Nombre d'ennemis aléatoire (1 à 3 max) basé sur la difficulté

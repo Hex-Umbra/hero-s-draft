@@ -42,36 +42,42 @@ void main() {
       expect(inventoryController.state.gold, 80);
     });
 
-    test('spendGold decreases gold on success and returns true, returns false on failure', () {
-      final success = inventoryController.spendGold(30);
-      expect(success, true);
-      expect(inventoryController.state.gold, 20);
+    test(
+      'spendGold decreases gold on success and returns true, returns false on failure',
+      () {
+        final success = inventoryController.spendGold(30);
+        expect(success, true);
+        expect(inventoryController.state.gold, 20);
 
-      final failure = inventoryController.spendGold(30);
-      expect(failure, false);
-      expect(inventoryController.state.gold, 20); // unchanged
-    });
+        final failure = inventoryController.spendGold(30);
+        expect(failure, false);
+        expect(inventoryController.state.gold, 20); // unchanged
+      },
+    );
 
-    test('addRelic adds relic and triggers startOfRun effect if trigger is startOfRun', () {
-      const luckyClover = RelicData(
-        id: 'lucky_clover',
-        nameEn: 'Lucky Clover',
-        nameFr: 'Trèfle Enchanté',
-        descriptionEn: '+1 Luck',
-        descriptionFr: '+1 Chance',
-        trigger: RelicTrigger.startOfRun,
-        effectType: 'gain_luck',
-        value: 1,
-        rarity: RelicRarity.epic,
-        emoji: '🍀',
-      );
+    test(
+      'addRelic adds relic and triggers startOfRun effect if trigger is startOfRun',
+      () {
+        const luckyClover = RelicData(
+          id: 'lucky_clover',
+          nameEn: 'Lucky Clover',
+          nameFr: 'Trèfle Enchanté',
+          descriptionEn: '+1 Luck',
+          descriptionFr: '+1 Chance',
+          trigger: RelicTrigger.startOfRun,
+          effectType: 'gain_luck',
+          value: 1,
+          rarity: RelicRarity.epic,
+          emoji: '🍀',
+        );
 
-      expect(runController.state.heroStats.luck, 0);
-      inventoryController.addRelic(luckyClover);
+        expect(runController.state.heroStats.luck, 0);
+        inventoryController.addRelic(luckyClover);
 
-      expect(inventoryController.state.relics.contains(luckyClover), true);
-      expect(runController.state.heroStats.luck, 1);
-    });
+        expect(inventoryController.state.relics.contains(luckyClover), true);
+        expect(runController.state.heroStats.luck, 1);
+      },
+    );
 
     test('buyShopExpansion increments bonusShopCards correctly', () {
       inventoryController.buyShopExpansion();

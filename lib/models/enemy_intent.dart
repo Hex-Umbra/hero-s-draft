@@ -9,14 +9,15 @@ class EnemyIntent {
   factory EnemyIntent.fromJson(Map<String, dynamic> json) {
     return EnemyIntent(
       type: IntentType.values.firstWhere(
-          (e) => e.toString().split('.').last == json['type'],
-          orElse: () => IntentType.attack),
+        (e) => e.toString().split('.').last == json['type'],
+        orElse: () => IntentType.attack,
+      ),
       value: json['value'] as int,
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'type': type.toString().split('.').last,
-        'value': value,
-      };
+    'type': type.toString().split('.').last,
+    'value': value,
+  };
 }

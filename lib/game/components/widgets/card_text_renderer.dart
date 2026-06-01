@@ -39,14 +39,26 @@ class CardTextRenderer {
   void refreshVisuals(double opacity, bool isFlashing, bool isCancelling) {
     final int alpha = (opacity * 255).toInt();
     final typeColor = card.getTypeColor();
-    
+
     // Configurer le style de base selon l'état
-    Color nameColor = isFlashing ? Colors.transparent : Colors.white.withAlpha(alpha);
-    Color descColor = isFlashing ? Colors.transparent : Colors.white.withAlpha(alpha);
-    Color usageColor = isFlashing ? Colors.transparent : Colors.white.withAlpha(alpha);
-    Color typeLabelColor = isFlashing ? Colors.transparent : typeColor.withAlpha((alpha * 0.7).toInt());
-    Color rarityColor = isFlashing ? Colors.transparent : card.getRarityColor().withAlpha(alpha);
-    Color manaColor = isFlashing ? Colors.transparent : Colors.cyanAccent.withAlpha(alpha);
+    Color nameColor = isFlashing
+        ? Colors.transparent
+        : Colors.white.withAlpha(alpha);
+    Color descColor = isFlashing
+        ? Colors.transparent
+        : Colors.white.withAlpha(alpha);
+    Color usageColor = isFlashing
+        ? Colors.transparent
+        : Colors.white.withAlpha(alpha);
+    Color typeLabelColor = isFlashing
+        ? Colors.transparent
+        : typeColor.withAlpha((alpha * 0.7).toInt());
+    Color rarityColor = isFlashing
+        ? Colors.transparent
+        : card.getRarityColor().withAlpha(alpha);
+    Color manaColor = isFlashing
+        ? Colors.transparent
+        : Colors.cyanAccent.withAlpha(alpha);
 
     if (isCancelling) {
       final cancelAlpha = (alpha * 0.6).toInt();
@@ -77,7 +89,7 @@ class CardTextRenderer {
       for (int i = 0; i < card.card.currentCost; i++) {
         fullManaString += manaString;
       }
-      
+
       manaPainter = TextPainter(
         text: TextSpan(
           text: fullManaString,
@@ -99,11 +111,7 @@ class CardTextRenderer {
       descPainter = TextPainter(
         text: TextSpan(
           text: card.card.data.getDescription(card.activeLocale),
-          style: TextStyle(
-            color: descColor,
-            fontSize: 9,
-            height: 1.2,
-          ),
+          style: TextStyle(color: descColor, fontSize: 9, height: 1.2),
         ),
         textDirection: TextDirection.ltr,
         textAlign: TextAlign.center,
@@ -113,11 +121,12 @@ class CardTextRenderer {
       descPainter = null;
       badges.clear();
       final heroAttack = card.game.heroCard?.stats.effectiveAttaque ?? 0;
-      
+
       for (int i = 0; i < card.card.data.effects.length; i++) {
         final effect = card.card.data.effects[i];
-        final scaledValue = (effect.value * (1 + (card.card.level - 1) * 0.5)).round();
-        
+        final scaledValue = (effect.value * (1 + (card.card.level - 1) * 0.5))
+            .round();
+
         int valueToDisplay = scaledValue;
         if (effect.type == 'damage') {
           valueToDisplay = scaledValue + heroAttack;
@@ -194,17 +203,21 @@ class CardTextRenderer {
           )..layout();
         }
 
-        badges.add(BadgePainters(
-          iconAndValuePainter: iconAndValuePainter,
-          timerPainter: timerPainter,
-          separatorPainter: separatorPainter,
-        ));
+        badges.add(
+          BadgePainters(
+            iconAndValuePainter: iconAndValuePainter,
+            timerPainter: timerPainter,
+            separatorPainter: separatorPainter,
+          ),
+        );
       }
     }
 
     usagePainter = TextPainter(
       text: TextSpan(
-        text: card.getTranslation((l) => l.oncePlayed, fallback: 'USAGE UNIQUE').toUpperCase(),
+        text: card
+            .getTranslation((l) => l.oncePlayed, fallback: 'USAGE UNIQUE')
+            .toUpperCase(),
         style: TextStyle(
           color: usageColor,
           fontSize: 8,
@@ -230,15 +243,27 @@ class CardTextRenderer {
     final rarityName = card.card.data.rarity.name.toLowerCase();
     String rarityLabel = card.card.data.rarity.name;
     if (rarityName.contains('legendary')) {
-      rarityLabel = card.getTranslation((l) => l.rarityLegendary, fallback: 'LÉGENDAIRE');
+      rarityLabel = card.getTranslation(
+        (l) => l.rarityLegendary,
+        fallback: 'LÉGENDAIRE',
+      );
     } else if (rarityName.contains('epic')) {
-      rarityLabel = card.getTranslation((l) => l.rarityEpic, fallback: 'ÉPIQUE');
+      rarityLabel = card.getTranslation(
+        (l) => l.rarityEpic,
+        fallback: 'ÉPIQUE',
+      );
     } else if (rarityName.contains('rare')) {
       rarityLabel = card.getTranslation((l) => l.rarityRare, fallback: 'RARE');
     } else if (rarityName.contains('uncommon')) {
-      rarityLabel = card.getTranslation((l) => l.rarityUncommon, fallback: 'PEU COMMUN');
+      rarityLabel = card.getTranslation(
+        (l) => l.rarityUncommon,
+        fallback: 'PEU COMMUN',
+      );
     } else if (rarityName.contains('common')) {
-      rarityLabel = card.getTranslation((l) => l.rarityCommon, fallback: 'COMMUN');
+      rarityLabel = card.getTranslation(
+        (l) => l.rarityCommon,
+        fallback: 'COMMUN',
+      );
     }
 
     rarityPainter = TextPainter(
@@ -268,10 +293,6 @@ class CardTextRenderer {
       textDirection: TextDirection.ltr,
     )..layout();
   }
-
-
-
-
 
   _RendererEffectVisuals _getEffectVisuals(CardEffect effect) {
     if (effect.type == 'damage') {
@@ -355,63 +376,77 @@ class CardTextRenderer {
     );
   }
 
-
-
   String buildDescription() {
     String desc = '';
     final heroAttack = card.game.heroCard?.stats.effectiveAttaque ?? 0;
 
     for (var effect in card.card.data.effects) {
-      final scaledValue = (effect.value * (1 + (card.card.level - 1) * 0.5)).round();
+      final scaledValue = (effect.value * (1 + (card.card.level - 1) * 0.5))
+          .round();
       if (effect.type == 'damage') {
         final totalDmg = scaledValue + heroAttack;
         if (card.card.data.target == CardTarget.allEnemies) {
-          desc += '${card.getTranslation((l) => l.cardDescDamageAll(totalDmg), fallback: 'Inflige $totalDmg dégâts à tous les ennemis.')}\n';
+          desc +=
+              '${card.getTranslation((l) => l.cardDescDamageAll(totalDmg), fallback: 'Inflige $totalDmg dégâts à tous les ennemis.')}\n';
         } else {
-          desc += '${card.getTranslation((l) => l.cardDescDamage(totalDmg), fallback: 'Inflige $totalDmg dégâts.')}\n';
+          desc +=
+              '${card.getTranslation((l) => l.cardDescDamage(totalDmg), fallback: 'Inflige $totalDmg dégâts.')}\n';
         }
       }
       if (effect.type == 'heal') {
-        desc += '${card.getTranslation((l) => l.cardDescHeal(scaledValue), fallback: 'Soigne $scaledValue PV.')}\n';
+        desc +=
+            '${card.getTranslation((l) => l.cardDescHeal(scaledValue), fallback: 'Soigne $scaledValue PV.')}\n';
       }
       if (effect.type == 'armor') {
-        desc += '${card.getTranslation((l) => l.cardDescArmor(scaledValue), fallback: 'Donne $scaledValue Armure.')}\n';
+        desc +=
+            '${card.getTranslation((l) => l.cardDescArmor(scaledValue), fallback: 'Donne $scaledValue Armure.')}\n';
       }
       if (effect.type == 'gain_mana') {
-        desc += '${card.getTranslation((l) => l.cardDescGainMana(scaledValue), fallback: 'Gagne $scaledValue Mana.')}\n';
+        desc +=
+            '${card.getTranslation((l) => l.cardDescGainMana(scaledValue), fallback: 'Gagne $scaledValue Mana.')}\n';
       }
       if (effect.type == 'draw') {
-        desc += '${card.getTranslation((l) => l.cardDescDraw(scaledValue), fallback: 'Pioche $scaledValue cartes.')}\n';
+        desc +=
+            '${card.getTranslation((l) => l.cardDescDraw(scaledValue), fallback: 'Pioche $scaledValue cartes.')}\n';
       }
       if (effect.type == 'apply_status') {
         final duration = effect.duration ?? 1;
         switch (effect.statusId) {
           case 'strength':
-            desc += '${card.getTranslation((l) => l.cardDescStatusStrength(scaledValue, duration), fallback: 'Gagne $scaledValue ATK pendant $duration tours.')}\n';
+            desc +=
+                '${card.getTranslation((l) => l.cardDescStatusStrength(scaledValue, duration), fallback: 'Gagne $scaledValue ATK pendant $duration tours.')}\n';
             break;
           case 'armor_regen':
-            desc += '${card.getTranslation((l) => l.cardDescStatusArmorRegen(scaledValue, duration), fallback: 'Pendant $duration tours, gagne $scaledValue Armure au début du tour.')}\n';
+            desc +=
+                '${card.getTranslation((l) => l.cardDescStatusArmorRegen(scaledValue, duration), fallback: 'Pendant $duration tours, gagne $scaledValue Armure au début du tour.')}\n';
             break;
           case 'poison':
-            desc += '${card.getTranslation((l) => l.cardDescStatusPoisonDuration(scaledValue, duration), fallback: 'Applique $scaledValue Poison pendant $duration tours.')}\n';
+            desc +=
+                '${card.getTranslation((l) => l.cardDescStatusPoisonDuration(scaledValue, duration), fallback: 'Applique $scaledValue Poison pendant $duration tours.')}\n';
             break;
           case 'weakness':
-            desc += '${card.getTranslation((l) => l.cardDescStatusWeaknessDuration(scaledValue, duration), fallback: 'Applique $scaledValue Faiblesse pendant $duration tours.')}\n';
+            desc +=
+                '${card.getTranslation((l) => l.cardDescStatusWeaknessDuration(scaledValue, duration), fallback: 'Applique $scaledValue Faiblesse pendant $duration tours.')}\n';
             break;
           case 'vulnerable':
-            desc += '${card.getTranslation((l) => l.cardDescStatusVulnerableDuration(scaledValue, duration), fallback: 'Applique $scaledValue Vulnérable pendant $duration tours.')}\n';
+            desc +=
+                '${card.getTranslation((l) => l.cardDescStatusVulnerableDuration(scaledValue, duration), fallback: 'Applique $scaledValue Vulnérable pendant $duration tours.')}\n';
             break;
           case 'strength_regen':
-            desc += '${card.getTranslation((l) => l.cardDescStatusStrengthRegen(scaledValue, duration), fallback: 'Gagne $scaledValue Éveil d\'Attaque pendant $duration tours.')}\n';
+            desc +=
+                '${card.getTranslation((l) => l.cardDescStatusStrengthRegen(scaledValue, duration), fallback: 'Gagne $scaledValue Éveil d\'Attaque pendant $duration tours.')}\n';
             break;
           case 'burn':
-            desc += '${card.getTranslation((l) => l.cardDescStatusBurnDuration(scaledValue, duration), fallback: 'Applique $scaledValue Brûlure pendant $duration tours.')}\n';
+            desc +=
+                '${card.getTranslation((l) => l.cardDescStatusBurnDuration(scaledValue, duration), fallback: 'Applique $scaledValue Brûlure pendant $duration tours.')}\n';
             break;
           case 'freeze':
-            desc += '${card.getTranslation((l) => l.cardDescStatusFreezeDuration(scaledValue, duration), fallback: 'Applique $scaledValue Gel pendant $duration tours.')}\n';
+            desc +=
+                '${card.getTranslation((l) => l.cardDescStatusFreezeDuration(scaledValue, duration), fallback: 'Applique $scaledValue Gel pendant $duration tours.')}\n';
             break;
           case 'shock':
-            desc += '${card.getTranslation((l) => l.cardDescStatusShockDuration(scaledValue, duration), fallback: 'Applique $scaledValue Électrocution pendant $duration tours.')}\n';
+            desc +=
+                '${card.getTranslation((l) => l.cardDescStatusShockDuration(scaledValue, duration), fallback: 'Applique $scaledValue Électrocution pendant $duration tours.')}\n';
             break;
         }
       }
@@ -428,14 +463,14 @@ class CardTextRenderer {
     // Icône de fond subtile
     bgIconPainter.paint(
       canvas,
-      Offset(size.x / 2 - bgIconPainter.width / 2, size.y / 2 - bgIconPainter.height / 2),
+      Offset(
+        size.x / 2 - bgIconPainter.width / 2,
+        size.y / 2 - bgIconPainter.height / 2,
+      ),
     );
 
     // Titre (centré, fixe en haut)
-    namePainter.paint(
-      canvas,
-      Offset(size.x / 2 - namePainter.width / 2, 14),
-    );
+    namePainter.paint(canvas, Offset(size.x / 2 - namePainter.width / 2, 14));
 
     // Ligne séparatrice (fixe)
     final linePaint = Paint()
@@ -467,7 +502,10 @@ class CardTextRenderer {
       );
       usagePainter.paint(
         canvas,
-        Offset(size.x / 2 - usagePainter.width / 2, 62 - usagePainter.height / 2),
+        Offset(
+          size.x / 2 - usagePainter.width / 2,
+          62 - usagePainter.height / 2,
+        ),
       );
     }
 
@@ -489,10 +527,10 @@ class CardTextRenderer {
           w += b.separatorPainter!.width;
         }
         totalWidth += w;
-        
+
         double h = b.iconAndValuePainter.height;
         if (b.timerPainter != null) {
-          h += b.timerPainter!.height + 2; 
+          h += b.timerPainter!.height + 2;
         }
         if (h > maxHeight) maxHeight = h;
       }
@@ -502,12 +540,16 @@ class CardTextRenderer {
 
       for (final b in badges) {
         b.iconAndValuePainter.paint(canvas, Offset(currentX, startY));
-        
+
         if (b.timerPainter != null) {
-          double centerOffset = (b.iconAndValuePainter.width - b.timerPainter!.width) / 2;
+          double centerOffset =
+              (b.iconAndValuePainter.width - b.timerPainter!.width) / 2;
           b.timerPainter!.paint(
-            canvas, 
-            Offset(currentX + centerOffset, startY + b.iconAndValuePainter.height + 2)
+            canvas,
+            Offset(
+              currentX + centerOffset,
+              startY + b.iconAndValuePainter.height + 2,
+            ),
           );
         }
 
@@ -516,7 +558,12 @@ class CardTextRenderer {
         if (b.separatorPainter != null) {
           b.separatorPainter!.paint(
             canvas,
-            Offset(currentX, startY + (b.iconAndValuePainter.height - b.separatorPainter!.height) / 2)
+            Offset(
+              currentX,
+              startY +
+                  (b.iconAndValuePainter.height - b.separatorPainter!.height) /
+                      2,
+            ),
           );
           currentX += b.separatorPainter!.width;
         }
@@ -532,9 +579,6 @@ class CardTextRenderer {
     }
 
     // Type Label (tout en bas)
-    typePainter.paint(
-      canvas,
-      Offset(size.x / 2 - typePainter.width / 2, 175),
-    );
+    typePainter.paint(canvas, Offset(size.x / 2 - typePainter.width / 2, 175));
   }
 }

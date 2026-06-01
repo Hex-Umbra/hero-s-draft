@@ -16,13 +16,20 @@ class EventData {
   });
 
   String getTitle(String locale) => locale == 'fr' ? titleFr : titleEn;
-  String getDescription(String locale) => locale == 'fr' ? descriptionFr : descriptionEn;
+  String getDescription(String locale) =>
+      locale == 'fr' ? descriptionFr : descriptionEn;
 
   factory EventData.fromJson(Map<String, dynamic> json) {
     final tEn = json['title_en'] as String? ?? json['title'] as String? ?? '';
     final tFr = json['title_fr'] as String? ?? json['title'] as String? ?? '';
-    final dEn = json['description_en'] as String? ?? json['description'] as String? ?? '';
-    final dFr = json['description_fr'] as String? ?? json['description'] as String? ?? '';
+    final dEn =
+        json['description_en'] as String? ??
+        json['description'] as String? ??
+        '';
+    final dFr =
+        json['description_fr'] as String? ??
+        json['description'] as String? ??
+        '';
 
     return EventData(
       id: json['id'] as String,
@@ -53,13 +60,20 @@ class EventChoice {
   });
 
   String getText(String locale) => locale == 'fr' ? textFr : textEn;
-  String getResultText(String locale) => locale == 'fr' ? resultTextFr : resultTextEn;
+  String getResultText(String locale) =>
+      locale == 'fr' ? resultTextFr : resultTextEn;
 
   factory EventChoice.fromJson(Map<String, dynamic> json) {
     final tEn = json['text_en'] as String? ?? json['text'] as String? ?? '';
     final tFr = json['text_fr'] as String? ?? json['text'] as String? ?? '';
-    final rEn = json['result_text_en'] as String? ?? json['resultText'] as String? ?? '';
-    final rFr = json['result_text_fr'] as String? ?? json['resultText'] as String? ?? '';
+    final rEn =
+        json['result_text_en'] as String? ??
+        json['resultText'] as String? ??
+        '';
+    final rFr =
+        json['result_text_fr'] as String? ??
+        json['resultText'] as String? ??
+        '';
 
     return EventChoice(
       textEn: tEn,
@@ -77,15 +91,9 @@ class EventAction {
   final String type; // gain_gold, take_damage, heal, gain_relic
   final dynamic value;
 
-  EventAction({
-    required this.type,
-    required this.value,
-  });
+  EventAction({required this.type, required this.value});
 
   factory EventAction.fromJson(Map<String, dynamic> json) {
-    return EventAction(
-      type: json['type'] as String,
-      value: json['value'],
-    );
+    return EventAction(type: json['type'] as String, value: json['value']);
   }
 }

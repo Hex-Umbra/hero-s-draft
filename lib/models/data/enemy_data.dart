@@ -27,8 +27,7 @@ class EnemyData {
     var intentsJson = json['intents'] as List?;
     List<EnemyIntent>? parsedIntents;
     if (intentsJson != null) {
-      parsedIntents =
-          intentsJson.map((e) => EnemyIntent.fromJson(e)).toList();
+      parsedIntents = intentsJson.map((e) => EnemyIntent.fromJson(e)).toList();
     }
 
     final nEn = json['name_en'] as String? ?? json['name'] as String? ?? '';

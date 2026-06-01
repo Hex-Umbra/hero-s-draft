@@ -19,7 +19,9 @@ class EventState {
   }) {
     return EventState(
       activeEvent: activeEvent ?? this.activeEvent,
-      selectedChoice: clearSelectedChoice ? null : (selectedChoice ?? this.selectedChoice),
+      selectedChoice: clearSelectedChoice
+          ? null
+          : (selectedChoice ?? this.selectedChoice),
       isResolved: isResolved ?? this.isResolved,
     );
   }

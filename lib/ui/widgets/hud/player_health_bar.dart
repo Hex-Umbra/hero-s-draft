@@ -32,10 +32,7 @@ class PlayerHealthBar extends StatelessWidget {
                 // Dégâts d'Attaque (Rouge Gradient, sans fond)
                 ShaderMask(
                   shaderCallback: (bounds) => const LinearGradient(
-                    colors: [
-                      Color(0xFFFF2A2A),
-                      Color(0xFFFF7A7A),
-                    ],
+                    colors: [Color(0xFFFF2A2A), Color(0xFFFF7A7A)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ).createShader(bounds),
@@ -61,10 +58,7 @@ class PlayerHealthBar extends StatelessWidget {
                 // Armure (Bleu Gradient, sans fond, toujours affiché)
                 ShaderMask(
                   shaderCallback: (bounds) => const LinearGradient(
-                    colors: [
-                      Color(0xFF2196F3),
-                      Color(0xFF00E5FF),
-                    ],
+                    colors: [Color(0xFF2196F3), Color(0xFF00E5FF)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ).createShader(bounds),
@@ -99,10 +93,7 @@ class PlayerHealthBar extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.black54,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: Colors.white.withAlpha(50),
-                width: 1.0,
-              ),
+              border: Border.all(color: Colors.white.withAlpha(50), width: 1.0),
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(11),
@@ -116,7 +107,9 @@ class PlayerHealthBar extends StatelessWidget {
                       heightFactor: 1.0,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
-                            vertical: 3.0, horizontal: 1.5),
+                          vertical: 3.0,
+                          horizontal: 1.5,
+                        ),
                         child: Container(
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(8),
@@ -141,7 +134,9 @@ class PlayerHealthBar extends StatelessWidget {
                       heightFactor: 1.0,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
-                            vertical: 0.5, horizontal: 0.5),
+                          vertical: 0.5,
+                          horizontal: 0.5,
+                        ),
                         child: Container(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
@@ -186,10 +181,7 @@ class PlayerHealthBar extends StatelessWidget {
         ),
 
         // 3. Espaceur symétrique à droite (pour garantir le centrage parfait de la barre de vie)
-        const Expanded(
-          flex: 1,
-          child: SizedBox(),
-        ),
+        const Expanded(flex: 1, child: SizedBox()),
       ],
     );
   }

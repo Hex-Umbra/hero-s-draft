@@ -15,8 +15,9 @@ class EnemyInstance {
     final intent = currentIntent;
     if (intent == null) return null;
     if (intent.type == IntentType.attack) {
-      final double spawnMultiplier =
-          data.baseDamage > 0 ? stats.attaque / data.baseDamage : 1.0;
+      final double spawnMultiplier = data.baseDamage > 0
+          ? stats.attaque / data.baseDamage
+          : 1.0;
       final int scaledValue = (intent.value * spawnMultiplier).round();
       final int inBattleBonus = stats.effectiveAttaque - stats.attaque;
       return EnemyIntent(
@@ -71,20 +72,20 @@ class EnemyInstance {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'data': {
-          'id': data.id,
-          'name_en': data.nameEn,
-          'name_fr': data.nameFr,
-          'maxHp': data.maxHp,
-          'baseDamage': data.baseDamage,
-          'spritePath': data.spritePath,
-          'tier': data.tier,
-          'intents': data.intents?.map((i) => i.toJson()).toList(),
-        },
-        'stats': stats.toJson(),
-        'currentIntent': currentIntent?.toJson(),
-        'intentStep': intentStep,
-        'isBoss': isBoss,
-      };
+    'id': id,
+    'data': {
+      'id': data.id,
+      'name_en': data.nameEn,
+      'name_fr': data.nameFr,
+      'maxHp': data.maxHp,
+      'baseDamage': data.baseDamage,
+      'spritePath': data.spritePath,
+      'tier': data.tier,
+      'intents': data.intents?.map((i) => i.toJson()).toList(),
+    },
+    'stats': stats.toJson(),
+    'currentIntent': currentIntent?.toJson(),
+    'intentStep': intentStep,
+    'isBoss': isBoss,
+  };
 }

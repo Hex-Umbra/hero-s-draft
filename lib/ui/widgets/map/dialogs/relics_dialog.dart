@@ -56,7 +56,9 @@ class RelicsDialog extends ConsumerWidget {
             color: const Color(0xFF1E1E2C),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-                color: Colors.amberAccent.withValues(alpha: 0.3), width: 2),
+              color: Colors.amberAccent.withValues(alpha: 0.3),
+              width: 2,
+            ),
             boxShadow: [
               BoxShadow(
                 color: Colors.amberAccent.withValues(alpha: 0.1),
@@ -72,7 +74,11 @@ class RelicsDialog extends ConsumerWidget {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.inventory_2, color: Colors.amber, size: 32),
+                    const Icon(
+                      Icons.inventory_2,
+                      color: Colors.amber,
+                      size: 32,
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -127,7 +133,9 @@ class RelicsDialog extends ConsumerWidget {
                             ),
                             const SizedBox(height: 8),
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 32.0,
+                              ),
                               child: Text(
                                 locale == 'fr'
                                     ? 'Triomphez des monstres Élites ou explorez la Boutique pour acquérir des Reliques et obtenir de précieux effets passifs.'
@@ -158,7 +166,11 @@ class RelicsDialog extends ConsumerWidget {
                                   return SizedBox(
                                     width: cardWidth,
                                     height: cardHeight,
-                                    child: _buildRelicCard(context, relic, count),
+                                    child: _buildRelicCard(
+                                      context,
+                                      relic,
+                                      count,
+                                    ),
                                   );
                                 }).toList(),
                               ),
@@ -238,12 +250,11 @@ class RelicsDialog extends ConsumerWidget {
         color: const Color(0xFF2A2A3D),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-            color: rarityColor.withValues(alpha: 0.5), width: 1.5),
+          color: rarityColor.withValues(alpha: 0.5),
+          width: 1.5,
+        ),
         boxShadow: [
-          BoxShadow(
-            color: rarityColor.withValues(alpha: 0.15),
-            blurRadius: 10,
-          ),
+          BoxShadow(color: rarityColor.withValues(alpha: 0.15), blurRadius: 10),
         ],
       ),
       child: Stack(
@@ -254,10 +265,7 @@ class RelicsDialog extends ConsumerWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text(
-                    relic.emoji,
-                    style: const TextStyle(fontSize: 20),
-                  ),
+                  Text(relic.emoji, style: const TextStyle(fontSize: 20)),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -273,14 +281,17 @@ class RelicsDialog extends ConsumerWidget {
                   ),
                   const SizedBox(width: 6),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: triggerColor.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(
-                          color: triggerColor.withValues(alpha: 0.3),
-                          width: 0.5),
+                        color: triggerColor.withValues(alpha: 0.3),
+                        width: 0.5,
+                      ),
                     ),
                     child: Text(
                       triggerText,
@@ -312,8 +323,10 @@ class RelicsDialog extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: rarityColor.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(4),

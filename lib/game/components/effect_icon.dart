@@ -2,69 +2,208 @@ import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flutter/material.dart';
 
-class EffectIcon extends TextComponent with HasPaint {
+class EffectIcon extends PositionComponent with HasPaint {
   final String iconType;
 
   EffectIcon({required this.iconType, required Vector2 position})
-    : super(
-        text: _getEmojiForType(iconType),
-        position: position,
-        anchor: Anchor.center,
-        textRenderer: TextPaint(
-          style: const TextStyle(
-            fontSize: 32,
-            shadows: [
-              Shadow(color: Colors.black, offset: Offset(1, 1), blurRadius: 2),
-            ],
-          ),
-        ),
-      );
-
-  static String _getEmojiForType(String type) {
-    if (type == 'defend') return '🛡️';
-    if (type == 'buff' ||
-        type == 'armor_buff' ||
-        type == 'attack_buff' ||
-        type == 'lifesteal_buff') {
-      return '✨';
-    }
-    return '';
-  }
+    : super(position: position, size: Vector2(40, 40), anchor: Anchor.center);
 
   @override
   Future<void> onLoad() async {
-    // Animation combinée : Flotte vers le haut, gonfle puis disparaît en fondu
+    // Combined premium animation: drift upward, scale up-and-down, and fade out
     add(
       MoveEffect.by(
-        Vector2(0, -60),
-        EffectController(duration: 1.0, curve: Curves.easeOut),
+        Vector2(0, -65),
+        EffectController(duration: 1.1, curve: Curves.easeOutCubic),
       ),
     );
 
     add(
       OpacityEffect.fadeOut(
-        EffectController(duration: 1.0, curve: Curves.easeIn),
+        EffectController(duration: 1.1, curve: Curves.easeIn),
       ),
     );
 
     add(
-      ScaleEffect.by(
-        Vector2.all(1.5),
-        EffectController(duration: 0.2, alternate: true),
-      ),
+      SequenceEffect([
+        ScaleEffect.to(
+          Vector2.all(1.4),
+          EffectController(duration: 0.25, curve: Curves.easeOutQuad),
+        ),
+        ScaleEffect.to(
+          Vector2.all(1.0),
+          EffectController(duration: 0.25, curve: Curves.easeInQuad),
+        ),
+      ]),
     );
 
-    add(RemoveEffect(delay: 1.0));
+    add(RemoveEffect(delay: 1.1));
   }
 
   @override
   void render(Canvas canvas) {
+    // TextComponent / PositionComponent opacity handling with saveLayer for clean fade out
     if (opacity < 1) {
       canvas.saveLayer(size.toRect(), paint);
-      super.render(canvas);
+      _drawVector(canvas);
       canvas.restore();
     } else {
-      super.render(canvas);
+      _drawVector(canvas);
     }
+    super.render(canvas);
+  }
+
+  void _drawVector(Canvas canvas) {
+    canvas.save();
+    // Translate origin to center of component for symmetrical drawing
+    canvas.translate(size.x / 2, size.y / 2);
+
+    Color glowColor;
+    Color coreColor;
+    Color strokeColor;
+
+    if (iconType == 'defend' ||
+        iconType == 'shield' ||
+        iconType == 'armor_buff') {
+      glowColor = Colors.cyanAccent;
+      coreColor = const Color(0xFF0EA5E9); // Modern sky blue
+      strokeColor = Colors.white;
+
+      final glowPaint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 5
+        ..color = glowColor.withValues(alpha: opacity)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+
+      final fillPaint = Paint()
+        ..style = PaintingStyle.fill
+        ..color = coreColor.withValues(alpha: opacity);
+
+      final strokePaint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..color = strokeColor.withValues(alpha: opacity);
+
+      final shieldPath = Path();
+      shieldPath.moveTo(0, -14);
+      shieldPath.lineTo(12, -14);
+      shieldPath.quadraticBezierTo(14, 5, 0, 16);
+      shieldPath.quadraticBezierTo(-14, 5, -12, -14);
+      shieldPath.close();
+
+      canvas.drawPath(shieldPath, glowPaint);
+      canvas.drawPath(shieldPath, fillPaint);
+      canvas.drawPath(shieldPath, strokePaint);
+      // Center line vertical accent
+      canvas.drawLine(const Offset(0, -14), const Offset(0, 16), strokePaint);
+    } else if (iconType == 'poison' || iconType == 'debuff') {
+      glowColor = const Color(0xFF10B981); // Emerald poison green
+      coreColor = const Color(0xFF047857); // Deep emerald
+      strokeColor = const Color(0xFF34D399); // Light mint
+
+      final glowPaint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 5
+        ..color = glowColor.withValues(alpha: opacity)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+
+      final fillPaint = Paint()
+        ..style = PaintingStyle.fill
+        ..color = coreColor.withValues(alpha: opacity);
+
+      final strokePaint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..color = strokeColor.withValues(alpha: opacity);
+
+      final dropPath = Path();
+      dropPath.moveTo(0, -15);
+      dropPath.cubicTo(8, -5, 13, 2, 13, 8);
+      dropPath.arcToPoint(
+        const Offset(-13, 8),
+        radius: const Radius.circular(13),
+        clockwise: true,
+      );
+      dropPath.cubicTo(-13, 2, -8, -5, 0, -15);
+      dropPath.close();
+
+      canvas.drawPath(dropPath, glowPaint);
+      canvas.drawPath(dropPath, fillPaint);
+      canvas.drawPath(dropPath, strokePaint);
+    } else if (iconType == 'buff' || iconType == 'attack_buff') {
+      // Crossed swords
+      glowColor = Colors.orangeAccent;
+      strokeColor = Colors.white;
+
+      final glowPaint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 5
+        ..color = glowColor.withValues(alpha: opacity)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
+
+      final strokePaint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3
+        ..color = strokeColor.withValues(alpha: opacity);
+
+      final goldPaint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3
+        ..color = Colors.amberAccent.withValues(alpha: opacity);
+
+      // Sword 1 (bottom-left to top-right)
+      canvas.drawLine(const Offset(-12, 12), const Offset(12, -12), glowPaint);
+      canvas.drawLine(
+        const Offset(-12, 12),
+        const Offset(12, -12),
+        strokePaint,
+      );
+      // Sword 1 guard
+      canvas.drawLine(const Offset(-8, 2), const Offset(-2, 8), goldPaint);
+
+      // Sword 2 (bottom-right to top-left)
+      canvas.drawLine(const Offset(12, 12), const Offset(-12, -12), glowPaint);
+      canvas.drawLine(
+        const Offset(12, 12),
+        const Offset(-12, -12),
+        strokePaint,
+      );
+      // Sword 2 guard
+      canvas.drawLine(const Offset(8, 2), const Offset(2, 8), goldPaint);
+    } else {
+      // General Sparkle Aura (4-pointed star)
+      glowColor = Colors.amber;
+      coreColor = const Color(0xFFF59E0B);
+      strokeColor = Colors.white;
+
+      final glowPaint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 5
+        ..color = glowColor.withValues(alpha: opacity)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+
+      final fillPaint = Paint()
+        ..style = PaintingStyle.fill
+        ..color = coreColor.withValues(alpha: opacity);
+
+      final strokePaint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..color = strokeColor.withValues(alpha: opacity);
+
+      final starPath = Path();
+      starPath.moveTo(0, -15);
+      starPath.quadraticBezierTo(0, 0, 15, 0);
+      starPath.quadraticBezierTo(0, 0, 0, 15);
+      starPath.quadraticBezierTo(0, 0, -15, 0);
+      starPath.quadraticBezierTo(0, 0, 0, -15);
+      starPath.close();
+
+      canvas.drawPath(starPath, glowPaint);
+      canvas.drawPath(starPath, fillPaint);
+      canvas.drawPath(starPath, strokePaint);
+    }
+
+    canvas.restore();
   }
 }

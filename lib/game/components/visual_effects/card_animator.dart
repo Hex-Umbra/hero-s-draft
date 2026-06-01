@@ -6,18 +6,17 @@ import 'package:flutter/material.dart';
 import '../card_component.dart';
 import '../../game_constants.dart';
 import '../entities/enemy_card.dart';
+import '../entities/hero_card.dart';
 import 'slash_effect.dart';
 
 class CardAnimator {
   final CardComponent card;
   final Random rand = Random();
-  double particleHue = 0;
 
   CardAnimator(this.card);
 
   void spawnTrailParticles() {
-    particleHue = (particleHue + 15) % 360;
-    final rainbowColor = HSVColor.fromAHSV(1.0, particleHue, 0.8, 1.0).toColor();
+    final elementalColor = card.getElementalColor();
     final gravity = Vector2(0, 150);
 
     card.game.add(
@@ -51,7 +50,7 @@ class CardAnimator {
                 child: ScaledParticle(
                   child: CircleParticle(
                     radius: 2.0 + rand.nextDouble() * 2.0,
-                    paint: Paint()..color = rainbowColor.withAlpha(150),
+                    paint: Paint()..color = elementalColor.withAlpha(150),
                   ),
                 ),
               );
@@ -68,7 +67,7 @@ class CardAnimator {
     card.isFlashing = false;
 
     card.borderPaint.color = Colors.blueAccent;
-    
+
     card.refreshVisuals();
     card.clearEffects();
 
@@ -86,7 +85,9 @@ class CardAnimator {
     );
     card.add(
       ScaleEffect.to(
-        Vector2.all(card.game.scaleFactor * 0.88),
+        card.game.focusedCard == card
+            ? Vector2.all(card.game.scaleFactor * 0.88 * 1.25)
+            : Vector2.all(card.game.scaleFactor * 0.88),
         EffectController(duration: 0.4, curve: Curves.elasticOut),
       ),
     );
@@ -97,7 +98,7 @@ class CardAnimator {
   void shakeAnimation() {
     // Évite les décalages cumulés si l'animation est déclenchée à répétition rapidement
     if (!card.isDragging) {
-      final basePos = card.game.focusedCard == card 
+      final basePos = card.game.focusedCard == card
           ? card.originalPosition + Vector2(0, -60)
           : card.originalPosition;
       card.position = basePos;
@@ -107,7 +108,7 @@ class CardAnimator {
     if (existingShakes.isNotEmpty) {
       card.removeAll(existingShakes);
       if (!card.isDragging) {
-        final basePos = card.game.focusedCard == card 
+        final basePos = card.game.focusedCard == card
             ? card.originalPosition + Vector2(0, -60)
             : card.originalPosition;
         card.position = basePos;
@@ -149,7 +150,11 @@ class CardAnimator {
         _playBuffAnimation(wrappedOnComplete);
         break;
       case 'poison':
-        _playStatusAnimation(target, Colors.greenAccent, wrappedOnComplete);
+        _playStatusAnimation(
+          target,
+          const Color(0xFF10B981),
+          wrappedOnComplete,
+        );
         break;
       case 'fire':
         _playStatusAnimation(target, Colors.orangeAccent, wrappedOnComplete);
@@ -172,7 +177,8 @@ class CardAnimator {
     Color color,
     VoidCallback onComplete,
   ) {
-    final targetPos = target?.position ?? card.position + Vector2(0, -card.size.y * 2);
+    final targetPos =
+        target?.position ?? card.position + Vector2(0, -card.size.y * 2);
 
     card.borderPaint.color = Colors.white;
 
@@ -197,12 +203,10 @@ class CardAnimator {
           EffectController(duration: 0.1),
           onComplete: () {
             if (target != null) {
-              spawnImpactParticles(
-                targetPos,
-                color: color,
-                count: 30,
+              spawnImpactParticles(targetPos, color: color, count: 30);
+              target.shakeAndFlashAnimation(
+                isPoison: color == const Color(0xFF10B981),
               );
-              target.shakeAndFlashAnimation();
             }
             onComplete();
           },
@@ -212,7 +216,8 @@ class CardAnimator {
   }
 
   void _playMeleeAnimation(EnemyCard? target, VoidCallback onComplete) {
-    final targetPos = target?.position ?? card.position + Vector2(0, -card.size.y * 2);
+    final targetPos =
+        target?.position ?? card.position + Vector2(0, -card.size.y * 2);
     final anticipationDir = (card.position - targetPos).normalized();
 
     card.applyFlashVisual();
@@ -251,7 +256,8 @@ class CardAnimator {
   }
 
   void _playMagicAnimation(EnemyCard? target, VoidCallback onComplete) {
-    final targetPos = target?.position ?? card.position + Vector2(0, -card.size.y * 2);
+    final targetPos =
+        target?.position ?? card.position + Vector2(0, -card.size.y * 2);
 
     card.borderPaint.color = Colors.cyanAccent;
 
@@ -288,6 +294,18 @@ class CardAnimator {
   void _playBuffAnimation(VoidCallback onComplete) {
     card.borderPaint.color = Colors.white;
 
+    final hasHeal = card.card.data.effects.any((e) => e.type == 'heal');
+    final hasArmor = card.card.data.effects.any((e) => e.type == 'armor');
+    final hero = card.game.heroCard;
+
+    if (hero != null) {
+      if (hasHeal) {
+        _spawnHealParticles(hero.position);
+      } else if (hasArmor) {
+        _spawnShieldDome(hero);
+      }
+    }
+
     card.add(
       SequenceEffect([
         MoveEffect.by(
@@ -303,6 +321,42 @@ class CardAnimator {
         ),
       ]),
     );
+  }
+
+  void _spawnHealParticles(Vector2 heroPos) {
+    card.game.add(
+      ParticleSystemComponent(
+        particle: Particle.generate(
+          count: 20,
+          lifespan: 1.2,
+          generator: (i) {
+            final startX = heroPos.x + (rand.nextDouble() - 0.5) * 80;
+            final startY = heroPos.y + 40;
+            final endY = startY - 120 - rand.nextDouble() * 60;
+            final endX = startX + (rand.nextDouble() - 0.5) * 30;
+
+            final isGold = rand.nextBool();
+            final color = isGold
+                ? const Color(0xFFFFD700)
+                : const Color(0xFF10B981);
+
+            return MovingParticle(
+              from: Vector2(startX, startY),
+              to: Vector2(endX, endY),
+              child: CrossParticle(
+                color: color,
+                size: 8.0 + rand.nextDouble() * 8.0,
+                lifespan: 1.2,
+              ),
+            );
+          },
+        ),
+      )..priority = 100,
+    );
+  }
+
+  void _spawnShieldDome(HeroCard hero) {
+    card.game.add(ShieldDome(hero: hero, duration: 0.8));
   }
 
   void spawnImpactParticles(
@@ -352,13 +406,82 @@ class CardAnimator {
             child: ScaledParticle(
               scale: 2.0,
               child: CircleParticle(
-                radius: 3, 
-                paint: Paint()..color = rand.nextBool() ? Colors.orange : Colors.red,
+                radius: 3,
+                paint: Paint()
+                  ..color = rand.nextBool() ? Colors.orange : Colors.red,
               ),
             ),
           ),
         ),
       ),
     );
+  }
+}
+
+class CrossParticle extends Particle {
+  final Color color;
+  final double size;
+
+  CrossParticle({
+    required this.color,
+    required this.size,
+    required double lifespan,
+  }) : super(lifespan: lifespan);
+
+  @override
+  void render(Canvas canvas) {
+    final paint = Paint()
+      ..color = color.withValues(alpha: (1.0 - progress).clamp(0.0, 1.0))
+      ..strokeWidth = size * 0.25
+      ..style = PaintingStyle.stroke;
+
+    final half = size / 2;
+    canvas.drawLine(Offset(0, -half), Offset(0, half), paint);
+    canvas.drawLine(Offset(-half, 0), Offset(half, 0), paint);
+  }
+}
+
+class ShieldDome extends PositionComponent with HasPaint {
+  final HeroCard hero;
+  double _time = 0;
+  final double duration;
+
+  ShieldDome({required this.hero, required this.duration})
+    : super(priority: hero.priority + 5) {
+    add(RemoveEffect(delay: duration));
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _time += dt;
+    position = hero.position;
+  }
+
+  @override
+  void render(Canvas canvas) {
+    final double pulse = 1.0 + 0.05 * sin(_time * 15);
+    final double radius = 70.0 * pulse;
+
+    final currentProgress = (_time / duration).clamp(0.0, 1.0);
+    final double opacity = 1.0 - currentProgress;
+
+    final rect = Rect.fromCircle(center: Offset.zero, radius: radius);
+
+    // Draw glowing dome arc
+    final paint = Paint()
+      ..color = Colors.cyanAccent.withValues(alpha: 0.4 * opacity)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+
+    canvas.drawArc(rect, pi, pi, false, paint);
+
+    // Draw soft inner fill dome
+    final innerPaint = Paint()
+      ..color = Colors.cyanAccent.withValues(alpha: 0.15 * opacity)
+      ..style = PaintingStyle.fill;
+
+    canvas.drawArc(rect, pi, pi, true, innerPaint);
   }
 }

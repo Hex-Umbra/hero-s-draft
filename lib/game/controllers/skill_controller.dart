@@ -16,7 +16,9 @@ class SkillController extends StateNotifier<SkillState> {
 
   bool triggerSkill1(int cd, {int mana = 0, int hpPercent = 0}) {
     if (state.skill1Cooldown > 0) return false;
-    final success = ref.read(runProvider.notifier).consumeResource(mana: mana, hpPercent: hpPercent);
+    final success = ref
+        .read(runProvider.notifier)
+        .consumeResource(mana: mana, hpPercent: hpPercent);
     if (!success) return false;
     state = state.copyWith(skill1Cooldown: cd);
     return true;
@@ -24,7 +26,9 @@ class SkillController extends StateNotifier<SkillState> {
 
   bool triggerSkill2(int cd, {int mana = 0, int hpPercent = 0}) {
     if (state.skill2Cooldown > 0) return false;
-    final success = ref.read(runProvider.notifier).consumeResource(mana: mana, hpPercent: hpPercent);
+    final success = ref
+        .read(runProvider.notifier)
+        .consumeResource(mana: mana, hpPercent: hpPercent);
     if (!success) return false;
     state = state.copyWith(skill2Cooldown: cd);
     return true;

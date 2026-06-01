@@ -12,7 +12,11 @@ class EventController extends StateNotifier<EventState> {
   /// Sélectionne un événement aléatoire parmi la liste disponible
   void initializeEvent(List<EventData> events) {
     if (events.isEmpty) {
-      state = const EventState(activeEvent: null, selectedChoice: null, isResolved: false);
+      state = const EventState(
+        activeEvent: null,
+        selectedChoice: null,
+        isResolved: false,
+      );
       return;
     }
 
@@ -43,12 +47,10 @@ class EventController extends StateNotifier<EventState> {
     InventoryController inventoryController,
     List<RelicData> allRelics, {
     double? mockRoll, // Permet d'injecter un jet de dé fixe pour les tests
-    int? mockRelicIndex, // Permet d'injecter l'index de sélection de relique pour les tests
+    int?
+    mockRelicIndex, // Permet d'injecter l'index de sélection de relique pour les tests
   }) {
-    state = state.copyWith(
-      selectedChoice: choice,
-      isResolved: true,
-    );
+    state = state.copyWith(selectedChoice: choice, isResolved: true);
 
     RelicData? chosenRelic;
 
@@ -108,7 +110,9 @@ class EventController extends StateNotifier<EventState> {
 
             var filtered = allRelics.where((r) => r.rarity == rarity).toList();
             if (filtered.isEmpty) {
-              filtered = allRelics.where((r) => r.rarity == RelicRarity.common).toList();
+              filtered = allRelics
+                  .where((r) => r.rarity == RelicRarity.common)
+                  .toList();
               if (filtered.isEmpty) {
                 filtered = allRelics;
               }

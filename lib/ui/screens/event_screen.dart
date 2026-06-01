@@ -9,7 +9,6 @@ import '../../models/data/relic_data.dart';
 import '../../services/game_data_service.dart';
 import '../widgets/notification_overlay.dart';
 
-
 class EventScreen extends ConsumerStatefulWidget {
   const EventScreen({super.key});
 
@@ -18,7 +17,6 @@ class EventScreen extends ConsumerStatefulWidget {
 }
 
 class _EventScreenState extends ConsumerState<EventScreen> {
-
   @override
   void initState() {
     super.initState();
@@ -33,7 +31,9 @@ class _EventScreenState extends ConsumerState<EventScreen> {
     final runController = ref.read(runProvider.notifier);
     final inventoryController = ref.read(inventoryProvider.notifier);
 
-    final chosenRelic = ref.read(eventProvider.notifier).selectChoice(
+    final chosenRelic = ref
+        .read(eventProvider.notifier)
+        .selectChoice(
           choice,
           runController,
           inventoryController,
@@ -146,10 +146,7 @@ class _EventScreenState extends ConsumerState<EventScreen> {
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: textColor.withAlpha(80),
-          width: 1.5,
-        ),
+        border: Border.all(color: textColor.withAlpha(80), width: 1.5),
         boxShadow: [
           BoxShadow(
             color: textColor.withAlpha(20),
@@ -185,15 +182,16 @@ class _EventScreenState extends ConsumerState<EventScreen> {
       decoration: BoxDecoration(
         color: Colors.white.withAlpha(10),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.white24,
-          width: 1.5,
-        ),
+        border: Border.all(color: Colors.white24, width: 1.5),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.remove_circle_outline, color: Colors.white54, size: 22),
+          const Icon(
+            Icons.remove_circle_outline,
+            color: Colors.white54,
+            size: 22,
+          ),
           const SizedBox(width: 10),
           Text(
             locale == 'fr' ? 'Aucun effet' : 'No effect',
@@ -254,7 +252,10 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                     children: [
                       // Badge des PV
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.redAccent.withAlpha(25),
                           borderRadius: BorderRadius.circular(30),
@@ -293,7 +294,10 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                       ),
                       // Badge de l'or
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.amber.withAlpha(25),
                           borderRadius: BorderRadius.circular(30),
@@ -333,7 +337,11 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                     ],
                   ),
                   const SizedBox(height: 20),
-                  const Icon(Icons.help_outline, color: Colors.blueAccent, size: 60),
+                  const Icon(
+                    Icons.help_outline,
+                    color: Colors.blueAccent,
+                    size: 60,
+                  ),
                   const SizedBox(height: 15),
                   Text(
                     activeEvent.getTitle(locale),
@@ -361,7 +369,9 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                             child: Text(
                               !eventState.isResolved
                                   ? activeEvent.getDescription(locale)
-                                  : eventState.selectedChoice!.getResultText(locale),
+                                  : eventState.selectedChoice!.getResultText(
+                                      locale,
+                                    ),
                               textAlign: TextAlign.center,
                               style: const TextStyle(
                                 color: Colors.white70,
@@ -371,15 +381,22 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                               ),
                             ),
                           ),
-                          if (eventState.isResolved && eventState.selectedChoice != null) ...[
+                          if (eventState.isResolved &&
+                              eventState.selectedChoice != null) ...[
                             const SizedBox(height: 25),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(Icons.flash_on, color: Colors.blueAccent, size: 20),
+                                const Icon(
+                                  Icons.flash_on,
+                                  color: Colors.blueAccent,
+                                  size: 20,
+                                ),
                                 const SizedBox(width: 8),
                                 Text(
-                                  locale == 'fr' ? "EFFETS APPLIQUÉS" : "EFFECTS APPLIED",
+                                  locale == 'fr'
+                                      ? "EFFETS APPLIQUÉS"
+                                      : "EFFECTS APPLIED",
                                   style: const TextStyle(
                                     color: Colors.blueAccent,
                                     fontWeight: FontWeight.bold,
@@ -407,11 +424,17 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                                 alignment: WrapAlignment.center,
                                 spacing: 8,
                                 runSpacing: 8,
-                                children: eventState.selectedChoice!.actions.isEmpty
+                                children:
+                                    eventState.selectedChoice!.actions.isEmpty
                                     ? [_buildNoEffectBadge()]
                                     : eventState.selectedChoice!.actions
-                                        .map((action) => _buildActionBadge(context, action))
-                                        .toList(),
+                                          .map(
+                                            (action) => _buildActionBadge(
+                                              context,
+                                              action,
+                                            ),
+                                          )
+                                          .toList(),
                               ),
                             ),
                           ],
@@ -421,13 +444,15 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                   ),
                   const SizedBox(height: 40),
                   if (!eventState.isResolved)
-                    ...activeEvent.choices.map((choice) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: _EventOptionButton(
-                            text: choice.getText(locale),
-                            onPressed: () => _handleChoice(choice),
-                          ),
-                        ))
+                    ...activeEvent.choices.map(
+                      (choice) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _EventOptionButton(
+                          text: choice.getText(locale),
+                          onPressed: () => _handleChoice(choice),
+                        ),
+                      ),
+                    )
                   else
                     _EventOptionButton(
                       text: locale == 'fr' ? 'CONTINUER' : 'CONTINUE',
@@ -468,7 +493,9 @@ class _EventOptionButton extends StatelessWidget {
             width: 1.5,
           ),
           padding: const EdgeInsets.symmetric(vertical: 18),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
         onPressed: onPressed,
         child: Text(

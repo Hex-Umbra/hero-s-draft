@@ -23,12 +23,7 @@ class ManaIndicator extends StatelessWidget {
             color: isActive ? Colors.cyanAccent : Colors.white24,
             size: 24,
             shadows: isActive
-                ? [
-                    const Shadow(
-                      color: Colors.cyanAccent,
-                      blurRadius: 8,
-                    )
-                  ]
+                ? [const Shadow(color: Colors.cyanAccent, blurRadius: 8)]
                 : null,
           ),
         );

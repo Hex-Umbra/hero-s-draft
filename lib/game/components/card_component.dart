@@ -54,7 +54,7 @@ class CardComponent extends PositionComponent
   Color getTypeColor() {
     if (!canAfford && !isFlashing) return Colors.redAccent;
     if (isCancelling) return Colors.grey;
-    
+
     switch (card.data.type) {
       case CardType.attack:
         return Colors.redAccent;
@@ -92,7 +92,10 @@ class CardComponent extends PositionComponent
     return 'fr'; // Langue par défaut en secours
   }
 
-  String getTranslation(String Function(AppLocalizations) select, {String fallback = ''}) {
+  String getTranslation(
+    String Function(AppLocalizations) select, {
+    String fallback = '',
+  }) {
     final context = game.buildContext;
     if (context != null) {
       final localizations = AppLocalizations.of(context);
@@ -132,7 +135,10 @@ class CardComponent extends PositionComponent
   @override
   void onLongTapDown(TapDownEvent event) {
     if (isPlayed) return;
-    game.onShowTooltip(card.data.getName(activeLocale), _buildDetailedDescription());
+    game.onShowTooltip(
+      card.data.getName(activeLocale),
+      _buildDetailedDescription(),
+    );
   }
 
   @override
@@ -146,102 +152,158 @@ class CardComponent extends PositionComponent
   }
 
   String _determineDamageType() {
-    final lowerTitle = '${card.data.getName(activeLocale).toLowerCase()} ${card.data.id.toLowerCase()}';
-    
+    final lowerTitle =
+        '${card.data.getName(activeLocale).toLowerCase()} ${card.data.id.toLowerCase()}';
+
     for (var effect in card.data.effects) {
       if (effect.type == 'apply_status') {
         if (effect.statusId == 'burn') return 'fire';
         if (effect.statusId == 'freeze') return 'cold';
         if (effect.statusId == 'shock') return 'electric';
+        if (effect.statusId == 'poison') return 'poison';
       }
     }
-    
-    if (lowerTitle.contains('feu') || lowerTitle.contains('fire') || lowerTitle.contains('brûlure') || lowerTitle.contains('burn')) {
+
+    if (lowerTitle.contains('feu') ||
+        lowerTitle.contains('fire') ||
+        lowerTitle.contains('brûlure') ||
+        lowerTitle.contains('burn')) {
       return 'fire';
     }
-    if (lowerTitle.contains('glace') || lowerTitle.contains('ice') || lowerTitle.contains('gel') || lowerTitle.contains('freeze') || lowerTitle.contains('froid') || lowerTitle.contains('cold')) {
+    if (lowerTitle.contains('glace') ||
+        lowerTitle.contains('ice') ||
+        lowerTitle.contains('gel') ||
+        lowerTitle.contains('freeze') ||
+        lowerTitle.contains('froid') ||
+        lowerTitle.contains('cold')) {
       return 'cold';
     }
-    if (lowerTitle.contains('foudre') || lowerTitle.contains('thunder') || lowerTitle.contains('shock') || lowerTitle.contains('lightning') || lowerTitle.contains('tonnerre') || lowerTitle.contains('élec')) {
+    if (lowerTitle.contains('foudre') ||
+        lowerTitle.contains('thunder') ||
+        lowerTitle.contains('shock') ||
+        lowerTitle.contains('lightning') ||
+        lowerTitle.contains('tonnerre') ||
+        lowerTitle.contains('élec')) {
       return 'electric';
+    }
+    if (lowerTitle.contains('poison') ||
+        lowerTitle.contains('tox') ||
+        lowerTitle.contains('venin') ||
+        lowerTitle.contains('venom')) {
+      return 'poison';
     }
     return 'physical';
   }
 
+  Color getElementalColor() {
+    final type = _determineDamageType();
+    switch (type) {
+      case 'fire':
+        return Colors.orangeAccent;
+      case 'cold':
+        return Colors.cyanAccent;
+      case 'poison':
+        return const Color(0xFF10B981); // Emerald green
+      case 'electric':
+        return Colors.amberAccent;
+      case 'physical':
+      default:
+        return card.data.type == CardType.attack
+            ? const Color(0xFFEF4444)
+            : Colors.white70;
+    }
+  }
+
   String _buildDetailedDescription() {
     String desc = '';
-    
+
     final elementalType = _determineDamageType();
     if (card.data.effects.isNotEmpty && elementalType != 'physical') {
-      final typeStr = elementalType == 'fire' 
+      final typeStr = elementalType == 'fire'
           ? (activeLocale == 'fr' ? 'FEU 🔥' : 'FIRE 🔥')
           : elementalType == 'cold'
-              ? (activeLocale == 'fr' ? 'FROID ❄️' : 'COLD ❄️')
-              : elementalType == 'poison'
-                  ? (activeLocale == 'fr' ? 'POISON 🧪' : 'POISON 🧪')
-                  : (activeLocale == 'fr' ? 'FOUDRE ⚡' : 'LIGHTNING ⚡');
+          ? (activeLocale == 'fr' ? 'FROID ❄️' : 'COLD ❄️')
+          : elementalType == 'poison'
+          ? (activeLocale == 'fr' ? 'POISON 🧪' : 'POISON 🧪')
+          : (activeLocale == 'fr' ? 'FOUDRE ⚡' : 'LIGHTNING ⚡');
       desc += '[$typeStr]\n';
     }
 
     desc += '${card.data.getDescription(activeLocale)}\n\n';
-    
+
     if (card.data.type == CardType.power || card.data.isExhaust) {
-      desc += '${getTranslation((l) => l.exhaustWarning, fallback: '⚠️ USAGE UNIQUE (Épuisement)')}\n\n';
+      desc +=
+          '${getTranslation((l) => l.exhaustWarning, fallback: '⚠️ USAGE UNIQUE (Épuisement)')}\n\n';
     }
-    
+
     final heroAttack = game.heroCard?.stats.effectiveAttaque ?? 0;
-    
+
     for (var effect in card.data.effects) {
       final scaledValue = (effect.value * (1 + (card.level - 1) * 0.5)).round();
       if (effect.type == 'damage') {
         final totalDmg = scaledValue + heroAttack;
         if (card.data.target == CardTarget.allEnemies) {
-          desc += '• ${getTranslation((l) => l.cardDescDamageAll(totalDmg), fallback: 'Inflige $totalDmg dégâts à tous les ennemis.')}\n';
+          desc +=
+              '• ${getTranslation((l) => l.cardDescDamageAll(totalDmg), fallback: 'Inflige $totalDmg dégâts à tous les ennemis.')}\n';
         } else {
-          desc += '• ${getTranslation((l) => l.cardDescDamage(totalDmg), fallback: 'Inflige $totalDmg dégâts.')}\n';
+          desc +=
+              '• ${getTranslation((l) => l.cardDescDamage(totalDmg), fallback: 'Inflige $totalDmg dégâts.')}\n';
         }
       }
       if (effect.type == 'heal') {
-        desc += '• ${getTranslation((l) => l.cardDescHeal(scaledValue), fallback: 'Soigne $scaledValue PV.')}\n';
+        desc +=
+            '• ${getTranslation((l) => l.cardDescHeal(scaledValue), fallback: 'Soigne $scaledValue PV.')}\n';
       }
       if (effect.type == 'armor') {
-        desc += '• ${getTranslation((l) => l.cardDescArmor(scaledValue), fallback: 'Donne $scaledValue Armure.')}\n';
+        desc +=
+            '• ${getTranslation((l) => l.cardDescArmor(scaledValue), fallback: 'Donne $scaledValue Armure.')}\n';
       }
       if (effect.type == 'gain_mana') {
-        desc += '• ${getTranslation((l) => l.cardDescGainMana(scaledValue), fallback: 'Gagne $scaledValue Mana.')}\n';
+        desc +=
+            '• ${getTranslation((l) => l.cardDescGainMana(scaledValue), fallback: 'Gagne $scaledValue Mana.')}\n';
       }
       if (effect.type == 'draw') {
-        desc += '• ${getTranslation((l) => l.cardDescDraw(scaledValue), fallback: 'Pioche $scaledValue cartes.')}\n';
+        desc +=
+            '• ${getTranslation((l) => l.cardDescDraw(scaledValue), fallback: 'Pioche $scaledValue cartes.')}\n';
       }
       if (effect.type == 'apply_status') {
         final duration = effect.duration ?? 1;
         switch (effect.statusId) {
           case 'strength':
-            desc += '• ${getTranslation((l) => l.cardDescStatusStrength(scaledValue, duration), fallback: 'Gagne $scaledValue ATK pendant $duration tours.')}\n';
+            desc +=
+                '• ${getTranslation((l) => l.cardDescStatusStrength(scaledValue, duration), fallback: 'Gagne $scaledValue ATK pendant $duration tours.')}\n';
             break;
           case 'armor_regen':
-            desc += '• ${getTranslation((l) => l.cardDescStatusArmorRegen(scaledValue, duration), fallback: 'Pendant $duration tours, gagne $scaledValue Armure au début du tour.')}\n';
+            desc +=
+                '• ${getTranslation((l) => l.cardDescStatusArmorRegen(scaledValue, duration), fallback: 'Pendant $duration tours, gagne $scaledValue Armure au début du tour.')}\n';
             break;
           case 'poison':
-            desc += '• ${getTranslation((l) => l.cardDescStatusPoisonDuration(scaledValue, duration), fallback: 'Applique $scaledValue Poison pendant $duration tours.')}\n';
+            desc +=
+                '• ${getTranslation((l) => l.cardDescStatusPoisonDuration(scaledValue, duration), fallback: 'Applique $scaledValue Poison pendant $duration tours.')}\n';
             break;
           case 'weakness':
-            desc += '• ${getTranslation((l) => l.cardDescStatusWeaknessDuration(scaledValue, duration), fallback: 'Applique $scaledValue Faiblesse pendant $duration tours.')}\n';
+            desc +=
+                '• ${getTranslation((l) => l.cardDescStatusWeaknessDuration(scaledValue, duration), fallback: 'Applique $scaledValue Faiblesse pendant $duration tours.')}\n';
             break;
           case 'vulnerable':
-            desc += '• ${getTranslation((l) => l.cardDescStatusVulnerableDuration(scaledValue, duration), fallback: 'Applique $scaledValue Vulnérable pendant $duration tours.')}\n';
+            desc +=
+                '• ${getTranslation((l) => l.cardDescStatusVulnerableDuration(scaledValue, duration), fallback: 'Applique $scaledValue Vulnérable pendant $duration tours.')}\n';
             break;
           case 'strength_regen':
-            desc += '• ${getTranslation((l) => l.cardDescStatusStrengthRegen(scaledValue, duration), fallback: 'Gagne $scaledValue Éveil d\'Attaque pendant $duration tours.')}\n';
+            desc +=
+                '• ${getTranslation((l) => l.cardDescStatusStrengthRegen(scaledValue, duration), fallback: 'Gagne $scaledValue Éveil d\'Attaque pendant $duration tours.')}\n';
             break;
           case 'burn':
-            desc += '• ${getTranslation((l) => l.cardDescStatusBurnDuration(scaledValue, duration), fallback: 'Applique $scaledValue Brûlure pendant $duration tours.')}\n';
+            desc +=
+                '• ${getTranslation((l) => l.cardDescStatusBurnDuration(scaledValue, duration), fallback: 'Applique $scaledValue Brûlure pendant $duration tours.')}\n';
             break;
           case 'freeze':
-            desc += '• ${getTranslation((l) => l.cardDescStatusFreezeDuration(scaledValue, duration), fallback: 'Applique $scaledValue Gel pendant $duration tours.')}\n';
+            desc +=
+                '• ${getTranslation((l) => l.cardDescStatusFreezeDuration(scaledValue, duration), fallback: 'Applique $scaledValue Gel pendant $duration tours.')}\n';
             break;
           case 'shock':
-            desc += '• ${getTranslation((l) => l.cardDescStatusShockDuration(scaledValue, duration), fallback: 'Applique $scaledValue Électrocution pendant $duration tours.')}\n';
+            desc +=
+                '• ${getTranslation((l) => l.cardDescStatusShockDuration(scaledValue, duration), fallback: 'Applique $scaledValue Électrocution pendant $duration tours.')}\n';
             break;
         }
       }
@@ -334,14 +396,10 @@ class CardComponent extends PositionComponent
     if (isFlashing) {
       bgPaint.color = Colors.white;
     } else {
-      bgPaint.shader = ui.Gradient.linear(
-        Offset.zero,
-        Offset(0, size.y),
-        [
-          bgColor,
-          bgColor.withAlpha(200),
-        ],
-      );
+      bgPaint.shader = ui.Gradient.linear(Offset.zero, Offset(0, size.y), [
+        bgColor,
+        bgColor.withAlpha(200),
+      ]);
     }
     canvas.drawRRect(rrect, bgPaint);
 
@@ -402,7 +460,7 @@ class CardComponent extends PositionComponent
 
     _activeTrail = RibbonTrail(
       priority: priority - 1,
-      glowColor: Colors.amber,
+      glowColor: getElementalColor(),
       coreColor: Colors.white,
     );
     game.add(_activeTrail!);
@@ -426,7 +484,7 @@ class CardComponent extends PositionComponent
   void onDragUpdate(DragUpdateEvent event) {
     if (isPlayed) return;
     if (!isDragging) return;
-    
+
     position += event.canvasDelta;
     _targetTilt = (event.canvasDelta.x * 0.08).clamp(-0.4, 0.4);
 
@@ -447,7 +505,7 @@ class CardComponent extends PositionComponent
   void _applyCancelZoneFeedback(bool cancelling) {
     clearEffects();
     isCancelling = cancelling;
-    
+
     if (cancelling) {
       add(ScaleEffect.to(Vector2.all(0.9), EffectController(duration: 0.1)));
     } else {
@@ -461,11 +519,11 @@ class CardComponent extends PositionComponent
     if (isPlayed) return;
     super.onDragEnd(event);
     if (!isDragging) return;
-    
+
     isDragging = false;
     _targetTilt = 0;
     game.setFocusedCard(null);
-    
+
     _activeTrail?.stop();
     _activeTrail = null;
 
@@ -501,11 +559,11 @@ class CardComponent extends PositionComponent
     if (isPlayed) return;
     super.onDragCancel(event);
     if (!isDragging) return;
-    
+
     isDragging = false;
     _targetTilt = 0;
     game.setFocusedCard(null);
-    
+
     _activeTrail?.stop();
     _activeTrail = null;
 

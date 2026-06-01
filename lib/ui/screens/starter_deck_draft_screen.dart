@@ -13,7 +13,6 @@ import '../widgets/ui_card.dart';
 import 'map_screen.dart';
 import '../widgets/notification_overlay.dart';
 
-
 class StarterDeckDraftScreen extends ConsumerStatefulWidget {
   final HeroData playerClass;
   final PassiveData passive;
@@ -25,10 +24,12 @@ class StarterDeckDraftScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<StarterDeckDraftScreen> createState() => _StarterDeckDraftScreenState();
+  ConsumerState<StarterDeckDraftScreen> createState() =>
+      _StarterDeckDraftScreenState();
 }
 
-class _StarterDeckDraftScreenState extends ConsumerState<StarterDeckDraftScreen> {
+class _StarterDeckDraftScreenState
+    extends ConsumerState<StarterDeckDraftScreen> {
   late List<CardData> _draftPool;
   final Set<int> _selectedIndexes = {};
   bool _isPoolGenerated = false;
@@ -44,10 +45,12 @@ class _StarterDeckDraftScreenState extends ConsumerState<StarterDeckDraftScreen>
 
   void _generateDraftPool() {
     final gameData = ref.read(gameDataLoaderProvider).requireValue;
-    
+
     // 1. Filtrer pour n'obtenir que les cartes globales non statut
     final globalCards = gameData.cards
-        .where((c) => c.category == CardCategory.global && c.type != CardType.status)
+        .where(
+          (c) => c.category == CardCategory.global && c.type != CardType.status,
+        )
         .toList();
 
     if (globalCards.isEmpty) {
@@ -67,10 +70,12 @@ class _StarterDeckDraftScreenState extends ConsumerState<StarterDeckDraftScreen>
       while (chosenCard == null && attempts < 50) {
         attempts++;
         final rarity = _rollRarity(rng);
-        
+
         // Filtrer les cartes globales de cette rareté
-        var matchingCards = globalCards.where((c) => c.rarity == rarity).toList();
-        
+        var matchingCards = globalCards
+            .where((c) => c.rarity == rarity)
+            .toList();
+
         // Si aucune carte de cette rareté n'existe, on tente les raretés inférieures en cascade
         if (matchingCards.isEmpty) {
           final fallbackOrder = [
@@ -80,7 +85,9 @@ class _StarterDeckDraftScreenState extends ConsumerState<StarterDeckDraftScreen>
             CardRarity.common,
           ];
           for (var fallbackRarity in fallbackOrder) {
-            matchingCards = globalCards.where((c) => c.rarity == fallbackRarity).toList();
+            matchingCards = globalCards
+                .where((c) => c.rarity == fallbackRarity)
+                .toList();
             if (matchingCards.isNotEmpty) break;
           }
         }
@@ -116,14 +123,14 @@ class _StarterDeckDraftScreenState extends ConsumerState<StarterDeckDraftScreen>
 
   CardRarity _rollRarity(Random rng) {
     final double roll = rng.nextDouble() * 100.0;
-    
+
     // Seuils validés :
     // Commun : 60% (0.0 -> 60.0)
     // Peu Commun : 20% (60.0 -> 80.0)
     // Rare : 14% (80.0 -> 94.0)
     // Épique : 5% (94.0 -> 99.0)
     // Légendaire : 1% (99.0 -> 100.0)
-    
+
     if (roll < 60.0) return CardRarity.common;
     if (roll < 80.0) return CardRarity.uncommon;
     if (roll < 94.0) return CardRarity.rare;
@@ -156,7 +163,11 @@ class _StarterDeckDraftScreenState extends ConsumerState<StarterDeckDraftScreen>
 
     // 1. Récupérer toutes les cartes de classe du personnage (cartes persos auto-ajoutées)
     final classCards = gameData.cards
-        .where((c) => c.category == CardCategory.characterSpecific && c.heroClass == widget.playerClass.id)
+        .where(
+          (c) =>
+              c.category == CardCategory.characterSpecific &&
+              c.heroClass == widget.playerClass.id,
+        )
         .toList();
 
     // 2. Assembler le deck de départ (5 choisies + N de classe auto-ajoutées)
@@ -168,14 +179,18 @@ class _StarterDeckDraftScreenState extends ConsumerState<StarterDeckDraftScreen>
     }
 
     // Ajouter les 5 cartes globales sélectionnées par index
-    final selectedCards = _selectedIndexes.map((idx) => _draftPool[idx]).toList();
+    final selectedCards = _selectedIndexes
+        .map((idx) => _draftPool[idx])
+        .toList();
     for (var cardData in selectedCards) {
       finalDeck.add(CardInstance(data: cardData));
     }
 
     // 3. Initialiser les providers
     ref.read(deckProvider.notifier).clearDeck();
-    ref.read(runProvider.notifier).startNewRun(widget.playerClass, widget.passive);
+    ref
+        .read(runProvider.notifier)
+        .startNewRun(widget.playerClass, widget.passive);
     ref.read(deckProvider.notifier).initializeStarterDeck(finalDeck);
 
     // 4. Redirection propre vers la map de jeu
@@ -220,7 +235,7 @@ class _StarterDeckDraftScreenState extends ConsumerState<StarterDeckDraftScreen>
     final bool isMobile = MediaQuery.of(context).size.width < 600;
     final locale = Localizations.localeOf(context).languageCode;
     final l10n = AppLocalizations.of(context)!;
-    
+
     // Couleurs thématiques par classe
     Color classColor = Colors.blue;
     if (widget.playerClass.id == 'berserker') classColor = Colors.red;
@@ -236,11 +251,17 @@ class _StarterDeckDraftScreenState extends ConsumerState<StarterDeckDraftScreen>
             children: [
               // HEADER (Immersif & Thématique)
               Container(
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 16,
+                  horizontal: 20,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFF1E1E2C).withValues(alpha: 0.8),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: classColor.withValues(alpha: 0.3), width: 1.5),
+                  border: Border.all(
+                    color: classColor.withValues(alpha: 0.3),
+                    width: 1.5,
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: classColor.withValues(alpha: 0.1),
@@ -280,19 +301,28 @@ class _StarterDeckDraftScreenState extends ConsumerState<StarterDeckDraftScreen>
                     const SizedBox(height: 12),
                     // Badge Compteur
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
-                        color: _selectedIndexes.length == 5 ? Colors.green.withValues(alpha: 0.2) : Colors.amber.withValues(alpha: 0.1),
+                        color: _selectedIndexes.length == 5
+                            ? Colors.green.withValues(alpha: 0.2)
+                            : Colors.amber.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: _selectedIndexes.length == 5 ? Colors.green : Colors.amber.withValues(alpha: 0.5),
+                          color: _selectedIndexes.length == 5
+                              ? Colors.green
+                              : Colors.amber.withValues(alpha: 0.5),
                           width: 1.5,
                         ),
                       ),
                       child: Text(
                         l10n.draftDeckSelectedCount(_selectedIndexes.length),
                         style: TextStyle(
-                          color: _selectedIndexes.length == 5 ? Colors.greenAccent : Colors.amberAccent,
+                          color: _selectedIndexes.length == 5
+                              ? Colors.greenAccent
+                              : Colors.amberAccent,
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
                         ),
@@ -326,7 +356,9 @@ class _StarterDeckDraftScreenState extends ConsumerState<StarterDeckDraftScreen>
                             onTap: () => _toggleCardSelection(index),
                             child: AnimatedOpacity(
                               duration: const Duration(milliseconds: 200),
-                              opacity: isSelected ? 1.0 : (isMaxSelected ? 0.4 : 1.0),
+                              opacity: isSelected
+                                  ? 1.0
+                                  : (isMaxSelected ? 0.4 : 1.0),
                               child: Stack(
                                 children: [
                                   UiCard(
@@ -351,10 +383,15 @@ class _StarterDeckDraftScreenState extends ConsumerState<StarterDeckDraftScreen>
                                         decoration: BoxDecoration(
                                           color: classColor,
                                           shape: BoxShape.circle,
-                                          border: Border.all(color: Colors.white, width: 1.5),
+                                          border: Border.all(
+                                            color: Colors.white,
+                                            width: 1.5,
+                                          ),
                                           boxShadow: [
                                             BoxShadow(
-                                              color: Colors.black.withValues(alpha: 0.5),
+                                              color: Colors.black.withValues(
+                                                alpha: 0.5,
+                                              ),
                                               blurRadius: 4,
                                             ),
                                           ],
@@ -395,21 +432,27 @@ class _StarterDeckDraftScreenState extends ConsumerState<StarterDeckDraftScreen>
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 18),
-                      backgroundColor: _selectedIndexes.length == 5 ? classColor : Colors.grey.shade800,
+                      backgroundColor: _selectedIndexes.length == 5
+                          ? classColor
+                          : Colors.grey.shade800,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
                       elevation: 0,
                     ),
-                    onPressed: _selectedIndexes.length == 5 ? _startAdventure : null,
+                    onPressed: _selectedIndexes.length == 5
+                        ? _startAdventure
+                        : null,
                     child: Text(
                       l10n.draftDeckProceed,
                       style: TextStyle(
                         fontSize: isMobile ? 16 : 20,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 1.2,
-                        color: _selectedIndexes.length == 5 ? Colors.white : Colors.white24,
+                        color: _selectedIndexes.length == 5
+                            ? Colors.white
+                            : Colors.white24,
                       ),
                     ),
                   ),

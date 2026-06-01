@@ -6,10 +6,7 @@ import '../../../models/enemy_intent.dart';
 class EnemyIntentsPanel extends StatelessWidget {
   final List<EnemyInstance> enemies;
 
-  const EnemyIntentsPanel({
-    super.key,
-    required this.enemies,
-  });
+  const EnemyIntentsPanel({super.key, required this.enemies});
 
   @override
   Widget build(BuildContext context) {
@@ -77,7 +74,11 @@ class EnemyIntentsPanel extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.hourglass_empty, color: Colors.white30, size: 14),
+                    const Icon(
+                      Icons.hourglass_empty,
+                      color: Colors.white30,
+                      size: 14,
+                    ),
                     const SizedBox(width: 6),
                     Text(
                       l10n.waitingIntents,
@@ -137,10 +138,7 @@ class EnemyIntentsPanel extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: color.withAlpha(20),
                   borderRadius: BorderRadius.circular(6),
-                  border: Border.all(
-                    color: color.withAlpha(60),
-                    width: 1.0,
-                  ),
+                  border: Border.all(color: color.withAlpha(60), width: 1.0),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -174,8 +172,9 @@ class EnemyIntentsPanel extends StatelessWidget {
                           name,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            color:
-                                enemy.isBoss ? Colors.amberAccent : Colors.white,
+                            color: enemy.isBoss
+                                ? Colors.amberAccent
+                                : Colors.white,
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
                           ),

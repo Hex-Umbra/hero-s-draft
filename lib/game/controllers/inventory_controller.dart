@@ -29,7 +29,11 @@ class InventoryController extends StateNotifier<InventoryState> {
     state = state.copyWith(bonusShopCards: state.bonusShopCards + 1);
   }
 
-  void reset({int initialGold = 50, List<RelicData> initialRelics = const [], int initialBonusShopCards = 0}) {
+  void reset({
+    int initialGold = 50,
+    List<RelicData> initialRelics = const [],
+    int initialBonusShopCards = 0,
+  }) {
     state = InventoryState(
       gold: initialGold,
       relics: initialRelics,
@@ -38,6 +42,7 @@ class InventoryController extends StateNotifier<InventoryState> {
   }
 }
 
-final inventoryProvider = StateNotifierProvider<InventoryController, InventoryState>((ref) {
-  return InventoryController(ref);
-});
+final inventoryProvider =
+    StateNotifierProvider<InventoryController, InventoryState>((ref) {
+      return InventoryController(ref);
+    });

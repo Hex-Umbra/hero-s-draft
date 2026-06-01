@@ -97,22 +97,37 @@ class EffectResolver {
 
     for (var effect in card.data.effects) {
       final int baseValue = effect.value;
-      final int scaledValue = (baseValue * (1 + (card.level - 1) * 0.5)).round();
+      final int scaledValue = (baseValue * (1 + (card.level - 1) * 0.5))
+          .round();
 
       switch (effect.type) {
         case 'damage':
-          if (card.data.target == CardTarget.singleEnemy && selectedEnemyId != null) {
-            final enemyIndex = combatController.currentState.enemies
-                .indexWhere((e) => e.id == selectedEnemyId);
+          if (card.data.target == CardTarget.singleEnemy &&
+              selectedEnemyId != null) {
+            final enemyIndex = combatController.currentState.enemies.indexWhere(
+              (e) => e.id == selectedEnemyId,
+            );
             if (enemyIndex != -1) {
               final enemy = combatController.currentState.enemies[enemyIndex];
-              int dmg = _calculateDamage(scaledValue, runController.currentState.heroStats);
-              combatController.updateEnemyStats(selectedEnemyId, enemy.stats.takeDamage(dmg));
+              int dmg = _calculateDamage(
+                scaledValue,
+                runController.currentState.heroStats,
+              );
+              combatController.updateEnemyStats(
+                selectedEnemyId,
+                enemy.stats.takeDamage(dmg),
+              );
             }
           } else if (card.data.target == CardTarget.allEnemies) {
-            int dmg = _calculateDamage(scaledValue, runController.currentState.heroStats);
+            int dmg = _calculateDamage(
+              scaledValue,
+              runController.currentState.heroStats,
+            );
             for (var enemy in combatController.currentState.enemies) {
-              combatController.updateEnemyStats(enemy.id, enemy.stats.takeDamage(dmg));
+              combatController.updateEnemyStats(
+                enemy.id,
+                enemy.stats.takeDamage(dmg),
+              );
             }
           }
           break;
@@ -132,18 +147,30 @@ class EffectResolver {
           break;
         case 'apply_status':
           if (effect.statusId != null) {
-            final status = _createStatus(effect.statusId!, scaledValue, effect.duration ?? 1);
+            final status = _createStatus(
+              effect.statusId!,
+              scaledValue,
+              effect.duration ?? 1,
+            );
             if (status != null) {
-              if (card.data.target == CardTarget.singleEnemy && selectedEnemyId != null) {
+              if (card.data.target == CardTarget.singleEnemy &&
+                  selectedEnemyId != null) {
                 final enemyIndex = combatController.currentState.enemies
                     .indexWhere((e) => e.id == selectedEnemyId);
                 if (enemyIndex != -1) {
-                  final enemy = combatController.currentState.enemies[enemyIndex];
-                  combatController.updateEnemyStats(selectedEnemyId, enemy.stats.addStatus(status));
+                  final enemy =
+                      combatController.currentState.enemies[enemyIndex];
+                  combatController.updateEnemyStats(
+                    selectedEnemyId,
+                    enemy.stats.addStatus(status),
+                  );
                 }
               } else if (card.data.target == CardTarget.allEnemies) {
                 for (var enemy in combatController.currentState.enemies) {
-                  combatController.updateEnemyStats(enemy.id, enemy.stats.addStatus(status));
+                  combatController.updateEnemyStats(
+                    enemy.id,
+                    enemy.stats.addStatus(status),
+                  );
                 }
               } else if (card.data.target == CardTarget.self) {
                 runController.addStatus(status);

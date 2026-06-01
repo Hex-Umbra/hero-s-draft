@@ -100,29 +100,38 @@ void main() {
       expect(shopController.state.cardsForSale.length, 4);
     });
 
-    test('buyCard successfully spends gold, removes card from shop, and adds it to deck', () {
-      shopController.initializeShop(testCardPool, 0);
-      final cardToBuy = shopController.state.cardsForSale.first;
-      final price = ShopController.getCardPrice(cardToBuy.rarity);
-      final initialGold = inventoryController.state.gold;
+    test(
+      'buyCard successfully spends gold, removes card from shop, and adds it to deck',
+      () {
+        shopController.initializeShop(testCardPool, 0);
+        final cardToBuy = shopController.state.cardsForSale.first;
+        final price = ShopController.getCardPrice(cardToBuy.rarity);
+        final initialGold = inventoryController.state.gold;
 
-      final success = shopController.buyCard(
-        cardToBuy,
-        price,
-        inventoryController,
-        deckNotifier,
-      );
+        final success = shopController.buyCard(
+          cardToBuy,
+          price,
+          inventoryController,
+          deckNotifier,
+        );
 
-      expect(success, true);
-      expect(inventoryController.state.gold, initialGold - price);
-      expect(shopController.state.cardsForSale.contains(cardToBuy), false);
-      expect(deckNotifier.state.masterDeck.any((c) => c.data.id == cardToBuy.id), true);
-    });
+        expect(success, true);
+        expect(inventoryController.state.gold, initialGold - price);
+        expect(shopController.state.cardsForSale.contains(cardToBuy), false);
+        expect(
+          deckNotifier.state.masterDeck.any((c) => c.data.id == cardToBuy.id),
+          true,
+        );
+      },
+    );
 
     test('buyCard fails and does not modify state if gold is insufficient', () {
       shopController.initializeShop(testCardPool, 0);
-      final cardToBuy = shopController.state.cardsForSale.firstWhere((c) => c.rarity == CardRarity.rare, orElse: () => testCardPool[2]);
-      
+      final cardToBuy = shopController.state.cardsForSale.firstWhere(
+        (c) => c.rarity == CardRarity.rare,
+        orElse: () => testCardPool[2],
+      );
+
       // Mettre l'or à 0
       inventoryController.spendGold(inventoryController.state.gold);
 
@@ -137,7 +146,12 @@ void main() {
       expect(inventoryController.state.gold, 0);
       // Reste dans la boutique si l'achat a échoué (s'il y était initialement)
       shopController.initializeShop([cardToBuy], 0);
-      final tryAgain = shopController.buyCard(cardToBuy, 100, inventoryController, deckNotifier);
+      final tryAgain = shopController.buyCard(
+        cardToBuy,
+        100,
+        inventoryController,
+        deckNotifier,
+      );
       expect(tryAgain, false);
       expect(shopController.state.cardsForSale.contains(cardToBuy), true);
     });
@@ -148,7 +162,12 @@ void main() {
       expect(runController.state.heroStats.currentPv, 60);
 
       // Achat du soin
-      final success = shopController.buyHeal(30, 30, inventoryController, runController);
+      final success = shopController.buyHeal(
+        30,
+        30,
+        inventoryController,
+        runController,
+      );
 
       expect(success, true);
       expect(runController.state.heroStats.currentPv, 90);
@@ -156,29 +175,46 @@ void main() {
       expect(shopController.state.purchasedHeal, true);
 
       // Tenter un second achat de soin
-      final success2 = shopController.buyHeal(30, 30, inventoryController, runController);
+      final success2 = shopController.buyHeal(
+        30,
+        30,
+        inventoryController,
+        runController,
+      );
       expect(success2, false);
       expect(runController.state.heroStats.currentPv, 90); // inchangé
       expect(inventoryController.state.gold, 70); // inchangé
     });
 
-    test('expandShop expands cards list and increments run bonus expansion', () {
-      shopController.initializeShop(testCardPool.sublist(0, 3), 0);
-      expect(shopController.state.cardsForSale.length, 3);
-      expect(inventoryController.state.bonusShopCards, 0);
+    test(
+      'expandShop expands cards list and increments run bonus expansion',
+      () {
+        shopController.initializeShop(testCardPool.sublist(0, 3), 0);
+        expect(shopController.state.cardsForSale.length, 3);
+        expect(inventoryController.state.bonusShopCards, 0);
 
-      final success = shopController.expandShop(10, testCardPool, inventoryController);
+        final success = shopController.expandShop(
+          10,
+          testCardPool,
+          inventoryController,
+        );
 
-      expect(success, true);
-      expect(inventoryController.state.bonusShopCards, 1);
-      // Contient maintenant 4 cartes (la 4ème du pool a été ajoutée)
-      expect(shopController.state.cardsForSale.length, 4);
-    });
+        expect(success, true);
+        expect(inventoryController.state.bonusShopCards, 1);
+        // Contient maintenant 4 cartes (la 4ème du pool a été ajoutée)
+        expect(shopController.state.cardsForSale.length, 4);
+      },
+    );
 
     test('rerollCards refreshes cards with new draw', () {
       shopController.initializeShop(testCardPool, 0);
 
-      final success = shopController.rerollCards(15, testCardPool, 0, inventoryController);
+      final success = shopController.rerollCards(
+        15,
+        testCardPool,
+        0,
+        inventoryController,
+      );
 
       expect(success, true);
       expect(inventoryController.state.gold, 85); // 100 - 15 = 85
@@ -191,7 +227,12 @@ void main() {
       deckNotifier.initializeStarterDeck([cardToPurge]);
       expect(deckNotifier.state.masterDeck.length, 1);
 
-      final success = shopController.purgeCard(75, cardToPurge, inventoryController, deckNotifier);
+      final success = shopController.purgeCard(
+        75,
+        cardToPurge,
+        inventoryController,
+        deckNotifier,
+      );
 
       expect(success, true);
       expect(inventoryController.state.gold, 25); // 100 - 75 = 25
@@ -203,7 +244,12 @@ void main() {
       deckNotifier.initializeStarterDeck([cardToClone]);
       expect(deckNotifier.state.masterDeck.length, 1);
 
-      final success = shopController.cloneCard(50, cardToClone, inventoryController, deckNotifier);
+      final success = shopController.cloneCard(
+        50,
+        cardToClone,
+        inventoryController,
+        deckNotifier,
+      );
 
       expect(success, true);
       expect(inventoryController.state.gold, 50); // 100 - 50 = 50

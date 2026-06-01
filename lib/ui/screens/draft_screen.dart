@@ -123,10 +123,16 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
                                   ),
                                   child: UiCard(
                                     title: _getChoiceTitle(context, choice),
-                                    description: _getChoiceDescription(context, choice),
+                                    description: _getChoiceDescription(
+                                      context,
+                                      choice,
+                                    ),
                                     onTap: () =>
                                         _onChoiceSelected(context, ref, choice),
-                                    rarity: _rarityToString(context, choice.rarity),
+                                    rarity: _rarityToString(
+                                      context,
+                                      choice.rarity,
+                                    ),
                                     type: CardType.power,
                                   ),
                                 ),
@@ -150,13 +156,19 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
                                     ),
                                     child: UiCard(
                                       title: _getChoiceTitle(context, choice),
-                                      description: _getChoiceDescription(context, choice),
+                                      description: _getChoiceDescription(
+                                        context,
+                                        choice,
+                                      ),
                                       onTap: () => _onChoiceSelected(
                                         context,
                                         ref,
                                         choice,
                                       ),
-                                      rarity: _rarityToString(context, choice.rarity),
+                                      rarity: _rarityToString(
+                                        context,
+                                        choice.rarity,
+                                      ),
                                       type: CardType.power,
                                     ),
                                   ),
@@ -263,14 +275,18 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
     _finishDraft(ref);
   }
 
-  RewardRarity _rollRarity(int luck, {bool canBeLegendary = true, bool isLevelReward = false}) {
+  RewardRarity _rollRarity(
+    int luck, {
+    bool canBeLegendary = true,
+    bool isLevelReward = false,
+  }) {
     final rng = Random();
     // Probabilités de base (sur 100)
     double legendaryChance = isLevelReward ? 0.5 : 1.0;
     double epicChance = isLevelReward ? 4.5 : 5.0;
     double rareChance = isLevelReward ? 15.0 : 14.0;
     double uncommonChance = 20.0;
-    
+
     // La chance augmente les probabilités des hautes raretés
     legendaryChance += luck * 0.5;
     epicChance += luck * 1.5;
@@ -292,7 +308,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
     if (roll < rareChance) return RewardRarity.rare;
     roll -= rareChance;
     if (roll < uncommonChance) return RewardRarity.uncommon;
-    
+
     return RewardRarity.common;
   }
 
@@ -303,7 +319,11 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
 
     // 1. Génération des 3 choix standards (Commun à Légendaire)
     final choices = List.generate(3, (index) {
-      RewardRarity rarity = _rollRarity(luck, canBeLegendary: true, isLevelReward: false);
+      RewardRarity rarity = _rollRarity(
+        luck,
+        canBeLegendary: true,
+        isLevelReward: false,
+      );
 
       double multiplier = 1.0;
       if (rarity == RewardRarity.uncommon) multiplier = 1.5;
@@ -314,11 +334,27 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
       int type = rng.nextInt(4);
       if (type == 0) {
         int boost = (5 * multiplier).round();
-        return _DraftChoice('Vitalité', '+$boost PV Max', boost, 0, 0, 0, rarity: rarity);
+        return _DraftChoice(
+          'Vitalité',
+          '+$boost PV Max',
+          boost,
+          0,
+          0,
+          0,
+          rarity: rarity,
+        );
       }
       if (type == 1) {
         int boost = (2 * multiplier).round();
-        return _DraftChoice('Aiguisage', '+$boost Attaque', 0, boost, 0, 0, rarity: rarity);
+        return _DraftChoice(
+          'Aiguisage',
+          '+$boost Attaque',
+          0,
+          boost,
+          0,
+          0,
+          rarity: rarity,
+        );
       }
       if (type == 2) {
         // Maîtrise d'Armure (Bonus permanent sur les gains passifs uniquement)
@@ -328,19 +364,35 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
         if (rarity == RewardRarity.rare) masteryMultiplier = 3.0; // +3
         if (rarity == RewardRarity.epic) masteryMultiplier = 5.0; // +5
         int boost = (1 * masteryMultiplier).round();
-        return _DraftChoice('Forge d\'Acier', '+$boost aux gains d\'Armure de votre passif', 0, 0, boost, 0, rarity: rarity);
+        return _DraftChoice(
+          'Forge d\'Acier',
+          '+$boost aux gains d\'Armure de votre passif',
+          0,
+          0,
+          boost,
+          0,
+          rarity: rarity,
+        );
       }
-      
+
       // type == 3 : Sagesse (Mana)
       // On utilise les mêmes multiplicateurs pour rester cohérent
       int boost = (1 * multiplier).round();
       if (boost < 1) boost = 1;
-      return _DraftChoice('Sagesse', '+$boost Mana Max', 0, 0, 0, boost, rarity: rarity);
+      return _DraftChoice(
+        'Sagesse',
+        '+$boost Mana Max',
+        0,
+        0,
+        0,
+        boost,
+        rarity: rarity,
+      );
     });
 
     // 2. Tirage des récompenses Légendaires (En bonus, en plus des 3 choix)
     // Chaque récompense légendaire est testée indépendamment
-    
+
     // Trèfle à 4 feuilles
     if (_rollRarity(luck, isLevelReward: true) == RewardRarity.legendary) {
       choices.add(
@@ -377,13 +429,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
   }
 }
 
-enum RewardRarity {
-  common,
-  uncommon,
-  rare,
-  epic,
-  legendary
-}
+enum RewardRarity { common, uncommon, rare, epic, legendary }
 
 class _DraftChoice {
   final String title;

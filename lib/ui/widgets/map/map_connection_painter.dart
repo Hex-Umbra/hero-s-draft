@@ -41,12 +41,17 @@ class MapConnectionPainter extends CustomPainter {
       for (var targetId in node.connections) {
         try {
           final targetNode = nodes.firstWhere((n) => n.id == targetId);
-          final bool isHighlighted =
-              highlightedConnections.contains((node.id, targetId));
+          final bool isHighlighted = highlightedConnections.contains((
+            node.id,
+            targetId,
+          ));
           final paint = isHighlighted ? paintHighlight : paintBase;
 
           final Offset A = Offset(node.position.x, node.position.y + 80.0);
-          final Offset B = Offset(targetNode.position.x, targetNode.position.y + 80.0);
+          final Offset B = Offset(
+            targetNode.position.x,
+            targetNode.position.y + 80.0,
+          );
 
           final double dx = B.dx - A.dx;
           final double dy = B.dy - A.dy;

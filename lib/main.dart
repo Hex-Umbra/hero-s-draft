@@ -40,4 +40,3 @@ class HerosDraftApp extends StatelessWidget {
     );
   }
 }
-

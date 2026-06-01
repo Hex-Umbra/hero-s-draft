@@ -93,14 +93,14 @@ class ShopController extends StateNotifier<ShopState> {
           .where((c) => c.type != CardType.status)
           .toList();
       final existingIds = state.cardsForSale.map((c) => c.id).toSet();
-      final available = eligibleCards.where((c) => !existingIds.contains(c.id)).toList();
+      final available = eligibleCards
+          .where((c) => !existingIds.contains(c.id))
+          .toList();
 
       if (available.isNotEmpty) {
         final rng = Random();
         final newCard = available[rng.nextInt(available.length)];
-        state = state.copyWith(
-          cardsForSale: [...state.cardsForSale, newCard],
-        );
+        state = state.copyWith(cardsForSale: [...state.cardsForSale, newCard]);
       }
       return true;
     }
@@ -125,9 +125,7 @@ class ShopController extends StateNotifier<ShopState> {
       final List<CardData> shuffled = List.from(eligibleCards)..shuffle(rng);
       final count = min(shuffled.length, 3 + bonusShopCards);
 
-      state = state.copyWith(
-        cardsForSale: shuffled.take(count).toList(),
-      );
+      state = state.copyWith(cardsForSale: shuffled.take(count).toList());
       return true;
     }
     return false;

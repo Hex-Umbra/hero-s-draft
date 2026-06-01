@@ -45,16 +45,12 @@ void main() {
         EventChoice(
           textEn: 'Search for gold (+50 Gold)',
           textFr: 'Chercher de l\'or (+50 Or)',
-          actions: [
-            EventAction(type: 'gain_gold', value: 50),
-          ],
+          actions: [EventAction(type: 'gain_gold', value: 50)],
         ),
         EventChoice(
           textEn: 'Touch the altar (Gain a random Relic)',
           textFr: 'Toucher l\'autel (Gagner une relique aléatoire)',
-          actions: [
-            EventAction(type: 'gain_relic', value: 1),
-          ],
+          actions: [EventAction(type: 'gain_relic', value: 1)],
         ),
       ],
     );
@@ -114,50 +110,66 @@ void main() {
       expect(eventController.state.selectedChoice, null);
     });
 
-    test('selectChoice resolves simple actions correctly (strength and damage)', () {
-      eventController.setEvent(testEvent);
-      final choice = testEvent.choices[0]; // Pray Choice
+    test(
+      'selectChoice resolves simple actions correctly (strength and damage)',
+      () {
+        eventController.setEvent(testEvent);
+        final choice = testEvent.choices[0]; // Pray Choice
 
-      eventController.selectChoice(choice, runController, inventoryController, []);
+        eventController.selectChoice(
+          choice,
+          runController,
+          inventoryController,
+          [],
+        );
 
-      expect(eventController.state.isResolved, true);
-      expect(eventController.state.selectedChoice, choice);
-      // Hero stats update: strength + 2
-      expect(runController.state.heroStats.attaque, 2);
-      // HP decreases by 10
-      expect(runController.state.heroStats.currentPv, 90);
-    });
+        expect(eventController.state.isResolved, true);
+        expect(eventController.state.selectedChoice, choice);
+        // Hero stats update: strength + 2
+        expect(runController.state.heroStats.attaque, 2);
+        // HP decreases by 10
+        expect(runController.state.heroStats.currentPv, 90);
+      },
+    );
 
     test('selectChoice resolves gold choice', () {
       eventController.setEvent(testEvent);
       final choice = testEvent.choices[1]; // Gold Choice
       final initialGold = inventoryController.state.gold;
 
-      eventController.selectChoice(choice, runController, inventoryController, []);
+      eventController.selectChoice(
+        choice,
+        runController,
+        inventoryController,
+        [],
+      );
 
       expect(inventoryController.state.gold, initialGold + 50);
     });
 
-    test('selectChoice selects relic based on luck and mockRoll (legendary)', () {
-      eventController.setEvent(testEvent);
-      final choice = testEvent.choices[2]; // Relic Choice
+    test(
+      'selectChoice selects relic based on luck and mockRoll (legendary)',
+      () {
+        eventController.setEvent(testEvent);
+        final choice = testEvent.choices[2]; // Relic Choice
 
-      // Roll is 0.5, which is < legChance (1.0 + 0 * 0.5 = 1.0)
-      // This should pick a Legendary relic from our pool
-      final chosen = eventController.selectChoice(
-        choice,
-        runController,
-        inventoryController,
-        testRelicPool,
-        mockRoll: 0.5,
-      );
+        // Roll is 0.5, which is < legChance (1.0 + 0 * 0.5 = 1.0)
+        // This should pick a Legendary relic from our pool
+        final chosen = eventController.selectChoice(
+          choice,
+          runController,
+          inventoryController,
+          testRelicPool,
+          mockRoll: 0.5,
+        );
 
-      expect(chosen, isNotNull);
-      expect(chosen!.rarity, RelicRarity.legendary);
-      expect(chosen.id, 'r_legendary');
-      // Verify the relic is added to inventory state
-      expect(inventoryController.state.relics.contains(chosen), true);
-    });
+        expect(chosen, isNotNull);
+        expect(chosen!.rarity, RelicRarity.legendary);
+        expect(chosen.id, 'r_legendary');
+        // Verify the relic is added to inventory state
+        expect(inventoryController.state.relics.contains(chosen), true);
+      },
+    );
 
     test('selectChoice selects relic based on luck and mockRoll (common)', () {
       eventController.setEvent(testEvent);

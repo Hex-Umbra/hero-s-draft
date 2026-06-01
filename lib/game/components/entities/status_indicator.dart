@@ -12,12 +12,17 @@ class StatusIndicator extends PositionComponent {
     _refresh();
   }
 
-  bool _areStatusListsEqual(List<StatusEffect> list1, List<StatusEffect> list2) {
+  bool _areStatusListsEqual(
+    List<StatusEffect> list1,
+    List<StatusEffect> list2,
+  ) {
     if (list1.length != list2.length) return false;
     for (int i = 0; i < list1.length; i++) {
       final s1 = list1[i];
       final s2 = list2[i];
-      if (s1.id != s2.id || s1.value != s2.value || s1.duration != s2.duration) {
+      if (s1.id != s2.id ||
+          s1.value != s2.value ||
+          s1.duration != s2.duration) {
         return false;
       }
     }
@@ -36,7 +41,7 @@ class StatusIndicator extends PositionComponent {
     // Récupérer les icônes existantes pour faire une mise à jour en place (reconciliation)
     final currentIcons = children.whereType<_StatusIcon>().toList();
     final Map<String, _StatusIcon> iconMap = {
-      for (var icon in currentIcons) icon.status.id: icon
+      for (var icon in currentIcons) icon.status.id: icon,
     };
 
     final Set<String> newIds = list.map((s) => s.id).toSet();
@@ -56,10 +61,14 @@ class StatusIndicator extends PositionComponent {
         existingIcon.updateStatus(status);
         existingIcon.position = Vector2(0, currentY);
       } else {
-        final icon = _StatusIcon(status: status, position: Vector2(0, currentY));
+        final icon = _StatusIcon(
+          status: status,
+          position: Vector2(0, currentY),
+        );
         add(icon);
       }
-      currentY += 36; // Espacement vertical suffisant pour loger l'icône, le texte à droite et les tours en bas
+      currentY +=
+          36; // Espacement vertical suffisant pour loger l'icône, le texte à droite et les tours en bas
     }
   }
 }

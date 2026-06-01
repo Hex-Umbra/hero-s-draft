@@ -3,7 +3,9 @@ import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/effects.dart';
+import 'package:flame/particles.dart';
 import '../../../models/entity_stats.dart';
+import '../../../models/combat_state.dart';
 import '../floating_text.dart';
 import '../effect_icon.dart';
 import '../../heros_draft_game.dart';
@@ -16,12 +18,10 @@ class HeroCard extends PositionComponent
   final String imagePath;
 
   late final RectangleComponent borderInfo;
+  late final SpriteComponent sprite;
 
-  HeroCard(
-    this.stats, {
-    this.bonusAttack = 0,
-    required this.imagePath,
-  }) : super(size: Vector2(120, 160));
+  HeroCard(this.stats, {this.bonusAttack = 0, required this.imagePath})
+    : super(size: Vector2(120, 160));
 
   bool _isHighlighted = false;
   double _glowOpacity = 1.0;
@@ -58,7 +58,10 @@ class HeroCard extends PositionComponent
         ..color = Colors.cyanAccent.withValues(alpha: _glowOpacity)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 8 + (2 * _glowOpacity)
-        ..maskFilter = MaskFilter.blur(BlurStyle.outer, 10 + (4 * _glowOpacity));
+        ..maskFilter = MaskFilter.blur(
+          BlurStyle.outer,
+          10 + (4 * _glowOpacity),
+        );
       canvas.drawRRect(rrect, glowPaint);
     }
     super.render(canvas);
@@ -96,12 +99,11 @@ class HeroCard extends PositionComponent
     position = Vector2(game.size.x / 2, game.size.y * 0.6);
 
     // Visuel Sprite
-    add(
-      SpriteComponent(
-        sprite: Sprite(game.images.fromCache(imagePath)),
-        size: size,
-      ),
+    sprite = SpriteComponent(
+      sprite: Sprite(game.images.fromCache(imagePath)),
+      size: size,
     );
+    add(sprite);
 
     // Encadré de la carte
     borderInfo = RectangleComponent(
@@ -121,29 +123,55 @@ class HeroCard extends PositionComponent
     scale = Vector2.all(game.scaleFactor * 1.3);
   }
 
-  void updateStats(
-    EntityStats newStats, {
-    int bonusAttack = 0,
-  }) {
-    if (newStats.armure < stats.armure) {
+  void updateStats(EntityStats newStats, {int bonusAttack = 0}) {
+    final oldStats = stats;
+
+    final isPlayerTurnPhase = game.currentPhase == TurnPhase.player;
+    final hadPoison = oldStats.statuses.any((s) => s.id == 'poison');
+    final isPoisonDamage = isPlayerTurnPhase && hadPoison;
+
+    if (newStats.armure < oldStats.armure) {
+      final lostArmor = oldStats.armure - newStats.armure;
       _spawnFloatingText(
-        '-${stats.armure - newStats.armure}',
-        Colors.blue,
-        Vector2(size.x / 2, 0),
+        '-$lostArmor',
+        const Color(0xFF3B82F6), // Technical premium blue
+        Vector2(size.x / 2, size.y - 20),
+        isShield: true,
       );
-    } else if (newStats.armure > stats.armure) {
+      shieldHitAnimation();
+    } else if (newStats.armure > oldStats.armure) {
+      final gainedArmor = newStats.armure - oldStats.armure;
       _spawnFloatingText(
-        '+${newStats.armure - stats.armure}',
+        '+$gainedArmor',
         Colors.lightBlueAccent,
         Vector2(size.x / 2, 0),
       );
     }
 
-    if (newStats.currentPv < stats.currentPv) {
+    if (newStats.currentPv < oldStats.currentPv) {
+      final lostHp = oldStats.currentPv - newStats.currentPv;
+      final isCritical = lostHp >= 15;
+      final damageColor = isPoisonDamage
+          ? const Color(0xFF10B981) // Poison neon green
+          : (isCritical
+                ? const Color(0xFFEF4444)
+                : const Color(0xFFF87171)); // Red spectrum
+
       _spawnFloatingText(
-        '-${stats.currentPv - newStats.currentPv}',
-        Colors.red,
+        '-$lostHp',
+        damageColor,
         Vector2(size.x / 2, 20),
+        isCritical: isCritical,
+        isPoison: isPoisonDamage,
+      );
+
+      // Visual animations feedback
+      shakeAndFlashAnimation(isPoison: isPoisonDamage);
+
+      // Spawn particles
+      spawnDamageParticles(
+        color: damageColor,
+        count: isCritical ? 25 : (isPoisonDamage ? 12 : 15),
       );
     }
 
@@ -151,8 +179,145 @@ class HeroCard extends PositionComponent
     this.bonusAttack = bonusAttack;
   }
 
-  void _spawnFloatingText(String text, Color color, Vector2 pos) {
-    final ft = FloatingText(text: text, color: color, position: pos);
+  void shieldHitAnimation() {
+    removeAll(children.whereType<ScaleEffect>());
+    final double baseScale = game.scaleFactor * 1.3;
+
+    // Bump d'échelle pour l'armure
+    add(
+      SequenceEffect([
+        ScaleEffect.to(
+          Vector2.all(baseScale * 1.08),
+          EffectController(duration: 0.06, curve: Curves.easeOut),
+        ),
+        ScaleEffect.to(
+          Vector2.all(baseScale),
+          EffectController(duration: 0.2, curve: Curves.easeIn),
+          onComplete: () {
+            _refreshBorderVisuals();
+          },
+        ),
+      ]),
+    );
+
+    // Bordure bleu cyan temporaire
+    borderInfo.paint.color = Colors.cyanAccent;
+    borderInfo.paint.strokeWidth = _isHighlighted ? 6 : 4;
+  }
+
+  void _refreshBorderVisuals() {
+    if (_isHighlighted) {
+      borderInfo.paint.color = Colors.cyanAccent;
+      borderInfo.paint.strokeWidth = 4;
+    } else {
+      borderInfo.paint.color = Colors.white;
+      borderInfo.paint.strokeWidth = 2;
+    }
+  }
+
+  void shakeAndFlashAnimation({bool isPoison = false}) {
+    final double baseScale = game.scaleFactor * 1.3;
+
+    removeAll(children.whereType<ScaleEffect>());
+    sprite.removeAll(sprite.children.whereType<ColorEffect>());
+
+    // 1. Sleek Scale Bump (Elastic Out)
+    add(
+      SequenceEffect([
+        ScaleEffect.to(
+          Vector2.all(baseScale * (isPoison ? 1.12 : 1.22)),
+          EffectController(duration: 0.08, curve: Curves.easeOut),
+        ),
+        ScaleEffect.to(
+          Vector2.all(baseScale),
+          EffectController(duration: 0.35, curve: Curves.elasticOut),
+        ),
+      ]),
+    );
+
+    // 2. High-frequency Shake
+    final rand = Random();
+    final shakeIntensity = isPoison ? 8.0 : 18.0;
+    for (int i = 0; i < 5; i++) {
+      add(
+        MoveEffect.by(
+          Vector2(
+            (rand.nextDouble() - 0.5) * shakeIntensity,
+            (rand.nextDouble() - 0.5) * shakeIntensity,
+          ),
+          EffectController(duration: 0.025, alternate: true),
+        ),
+      );
+    }
+
+    // 3. Decoupled Color Tint on sprite
+    final flashColor = isPoison ? const Color(0xFF10B981) : Colors.redAccent;
+    sprite.add(
+      SequenceEffect([
+        ColorEffect(
+          flashColor,
+          EffectController(duration: 0.1),
+          opacityTo: 0.75,
+        ),
+        ColorEffect(
+          flashColor,
+          EffectController(duration: 0.25, curve: Curves.easeIn),
+          opacityTo: 0.0,
+        ),
+      ]),
+    );
+  }
+
+  void spawnDamageParticles({required Color color, required int count}) {
+    final rand = Random();
+    final centerPos = position.clone();
+
+    game.add(
+      ParticleSystemComponent(
+        particle: Particle.generate(
+          count: count,
+          lifespan: 0.6,
+          generator: (i) {
+            final angle = rand.nextDouble() * 2 * pi;
+            final targetOffset =
+                Vector2(cos(angle), sin(angle)) * (40 + rand.nextDouble() * 60);
+
+            return MovingParticle(
+              curve: Curves.easeOutCubic,
+              from: centerPos,
+              to: centerPos + targetOffset,
+              child: ScaledParticle(
+                child: CircleParticle(
+                  radius: 1.5 + rand.nextDouble() * 2.0,
+                  paint: Paint()
+                    ..color = color.withValues(alpha: 0.95)
+                    ..style = PaintingStyle.fill,
+                ),
+              ),
+            );
+          },
+        ),
+      )..priority = priority + 10,
+    );
+  }
+
+  void _spawnFloatingText(
+    String text,
+    Color color,
+    Vector2 pos, {
+    bool isCritical = false,
+    bool isPoison = false,
+    bool isShield = false,
+  }) {
+    final ft = FloatingText(
+      text: text,
+      color: color,
+      position: pos,
+      isUpward: true,
+      isCritical: isCritical,
+      isPoison: isPoison,
+      isShield: isShield,
+    );
     add(ft);
   }
 

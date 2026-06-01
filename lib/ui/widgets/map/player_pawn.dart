@@ -34,10 +34,7 @@ class PlayerPawn extends StatelessWidget {
               size: 32,
             ),
           ),
-          CustomPaint(
-            size: const Size(10, 10),
-            painter: PawnPointerPainter(),
-          ),
+          CustomPaint(size: const Size(10, 10), painter: PawnPointerPainter()),
         ],
       ),
     );

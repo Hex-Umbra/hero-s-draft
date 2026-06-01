@@ -22,7 +22,10 @@ class CardDictionaryScreen extends ConsumerWidget {
         appBar: AppBar(
           title: Text(
             locale == 'fr' ? 'Dictionnaire' : 'Dictionary',
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           backgroundColor: Colors.black45,
           elevation: 0,
@@ -30,7 +33,10 @@ class CardDictionaryScreen extends ConsumerWidget {
             indicatorColor: Colors.amber,
             labelColor: Colors.amber,
             unselectedLabelColor: Colors.white60,
-            labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            labelStyle: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
             unselectedLabelStyle: const TextStyle(fontSize: 14),
             tabs: [
               Tab(text: locale == 'fr' ? 'Cartes' : 'Cards'),
@@ -47,8 +53,9 @@ class CardDictionaryScreen extends ConsumerWidget {
               ],
             );
           },
-          loading: () =>
-              const Center(child: CircularProgressIndicator(color: Colors.amber)),
+          loading: () => const Center(
+            child: CircularProgressIndicator(color: Colors.amber),
+          ),
           error: (err, stack) => Center(
             child: Text(
               'Erreur : $err',
@@ -60,7 +67,11 @@ class CardDictionaryScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildCardsTab(BuildContext context, List<CardData> allCards, String locale) {
+  Widget _buildCardsTab(
+    BuildContext context,
+    List<CardData> allCards,
+    String locale,
+  ) {
     // Grouper par type pour la clarté
     final Map<CardType, List<CardData>> groupedCards = {};
     for (var card in allCards) {
@@ -90,7 +101,8 @@ class CardDictionaryScreen extends ConsumerWidget {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                  maxCrossAxisExtent: 200, // Doublé pour un affichage plus clair
+                  maxCrossAxisExtent:
+                      200, // Doublé pour un affichage plus clair
                   childAspectRatio: 0.7,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
@@ -117,7 +129,11 @@ class CardDictionaryScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildRelicsTab(BuildContext context, List<RelicData> allRelics, String locale) {
+  Widget _buildRelicsTab(
+    BuildContext context,
+    List<RelicData> allRelics,
+    String locale,
+  ) {
     final Map<RelicRarity, List<RelicData>> groupedRelics = {};
     for (var rarity in RelicRarity.values) {
       groupedRelics[rarity] = [];
@@ -250,10 +266,7 @@ class _RelicDictionaryCard extends StatelessWidget {
   final RelicData relic;
   final String locale;
 
-  const _RelicDictionaryCard({
-    required this.relic,
-    required this.locale,
-  });
+  const _RelicDictionaryCard({required this.relic, required this.locale});
 
   @override
   Widget build(BuildContext context) {
@@ -323,10 +336,7 @@ class _RelicDictionaryCard extends StatelessWidget {
           width: 1.5,
         ),
         boxShadow: [
-          BoxShadow(
-            color: rarityColor.withValues(alpha: 0.15),
-            blurRadius: 10,
-          ),
+          BoxShadow(color: rarityColor.withValues(alpha: 0.15), blurRadius: 10),
         ],
       ),
       child: Column(
@@ -335,10 +345,7 @@ class _RelicDictionaryCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                relic.emoji,
-                style: const TextStyle(fontSize: 20),
-              ),
+              Text(relic.emoji, style: const TextStyle(fontSize: 20)),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(

@@ -19,8 +19,12 @@ class FlameShieldIcon extends PositionComponent {
 
     // Use two shades of the color for a premium, beveled 3D look
     final HSLColor hslColor = HSLColor.fromColor(color);
-    final Color lightColor = hslColor.withLightness((hslColor.lightness + 0.12).clamp(0.0, 1.0)).toColor();
-    final Color darkColor = hslColor.withLightness((hslColor.lightness - 0.12).clamp(0.0, 1.0)).toColor();
+    final Color lightColor = hslColor
+        .withLightness((hslColor.lightness + 0.12).clamp(0.0, 1.0))
+        .toColor();
+    final Color darkColor = hslColor
+        .withLightness((hslColor.lightness - 0.12).clamp(0.0, 1.0))
+        .toColor();
 
     final Paint lightPaint = Paint()
       ..color = lightColor
@@ -35,7 +39,12 @@ class FlameShieldIcon extends PositionComponent {
       ..moveTo(cx, h * 0.08) // Sommet centre
       ..lineTo(w * 0.12, h * 0.18) // Épaule gauche
       ..lineTo(w * 0.12, h * 0.58) // Flanc gauche
-      ..quadraticBezierTo(w * 0.12, h * 0.85, cx, h * 0.95) // Arrondi vers la pointe
+      ..quadraticBezierTo(
+        w * 0.12,
+        h * 0.85,
+        cx,
+        h * 0.95,
+      ) // Arrondi vers la pointe
       ..lineTo(cx, h * 0.08)
       ..close();
     canvas.drawPath(leftShield, darkPaint);
@@ -45,7 +54,12 @@ class FlameShieldIcon extends PositionComponent {
       ..moveTo(cx, h * 0.08)
       ..lineTo(w * 0.88, h * 0.18) // Épaule droite
       ..lineTo(w * 0.88, h * 0.58) // Flanc droit
-      ..quadraticBezierTo(w * 0.88, h * 0.85, cx, h * 0.95) // Arrondi vers la pointe
+      ..quadraticBezierTo(
+        w * 0.88,
+        h * 0.85,
+        cx,
+        h * 0.95,
+      ) // Arrondi vers la pointe
       ..lineTo(cx, h * 0.08)
       ..close();
     canvas.drawPath(rightShield, lightPaint);

@@ -28,9 +28,12 @@ class ProbabilitiesDialog extends ConsumerWidget {
   }
 
   static Map<String, double> calculateDraftProbabilities(
-      int luck, bool isLevelReward) {
-    double legendaryChance =
-        isLevelReward ? 0.5 + luck * 0.5 : 1.0 + luck * 0.5;
+    int luck,
+    bool isLevelReward,
+  ) {
+    double legendaryChance = isLevelReward
+        ? 0.5 + luck * 0.5
+        : 1.0 + luck * 0.5;
     double epicChance = isLevelReward ? 4.5 + luck * 1.5 : 5.0 + luck * 1.5;
     double rareChance = isLevelReward ? 15.0 + luck * 3.0 : 14.0 + luck * 3.0;
     double uncommonChance = 20.0 + luck * 4.0;
@@ -121,7 +124,9 @@ class ProbabilitiesDialog extends ConsumerWidget {
             color: const Color(0xFF1E1E2C),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-                color: Colors.amberAccent.withValues(alpha: 0.3), width: 2),
+              color: Colors.amberAccent.withValues(alpha: 0.3),
+              width: 2,
+            ),
             boxShadow: [
               BoxShadow(
                 color: Colors.amberAccent.withValues(alpha: 0.15),
@@ -137,8 +142,11 @@ class ProbabilitiesDialog extends ConsumerWidget {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.casino_outlined,
-                        color: Colors.amberAccent, size: 36),
+                    const Icon(
+                      Icons.casino_outlined,
+                      color: Colors.amberAccent,
+                      size: 36,
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -175,18 +183,25 @@ class ProbabilitiesDialog extends ConsumerWidget {
                 Center(
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 24, vertical: 12),
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.amberAccent.withAlpha(20),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                          color: Colors.amberAccent.withAlpha(60), width: 1.5),
+                        color: Colors.amberAccent.withAlpha(60),
+                        width: 1.5,
+                      ),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.casino,
-                            color: Colors.amberAccent, size: 28),
+                        const Icon(
+                          Icons.casino,
+                          color: Colors.amberAccent,
+                          size: 28,
+                        ),
                         const SizedBox(width: 12),
                         Text(
                           l10n.currentLuck(luck),
@@ -207,7 +222,9 @@ class ProbabilitiesDialog extends ConsumerWidget {
                     child: Column(
                       children: [
                         _buildProbabilitySectionCard(
-                          title: locale == 'fr' ? 'Draft standard de récompenses' : 'Standard Reward Draft',
+                          title: locale == 'fr'
+                              ? 'Draft standard de récompenses'
+                              : 'Standard Reward Draft',
                           subtitle: locale == 'fr'
                               ? "Chances d'obtenir chaque rareté de carte/stat en fin de combat standard"
                               : "Chances of getting each card/stat rarity at the end of standard combat",
@@ -247,7 +264,9 @@ class ProbabilitiesDialog extends ConsumerWidget {
                           ],
                         ),
                         _buildProbabilitySectionCard(
-                          title: locale == 'fr' ? 'Récompense de niveau' : 'Level Reward',
+                          title: locale == 'fr'
+                              ? 'Récompense de niveau'
+                              : 'Level Reward',
                           subtitle: locale == 'fr'
                               ? "Chances d'obtenir chaque rareté d'option lors de la montée de niveau (Trèfle / Miroir)"
                               : "Chances of getting each option rarity when leveling up (Clover / Mirror)",
@@ -287,7 +306,9 @@ class ProbabilitiesDialog extends ConsumerWidget {
                           ],
                         ),
                         _buildProbabilitySectionCard(
-                          title: locale == 'fr' ? 'Butin de Reliques' : 'Relic Loot',
+                          title: locale == 'fr'
+                              ? 'Butin de Reliques'
+                              : 'Relic Loot',
                           subtitle: locale == 'fr'
                               ? "Chances d'apparition des reliques par rareté (Boss, Élites & Événements)"
                               : "Relic drop rates by rarity (Boss, Elites & Events)",
@@ -379,8 +400,11 @@ class ProbabilitiesDialog extends ConsumerWidget {
                     style: const TextStyle(color: Colors.white30, fontSize: 13),
                   ),
                   const SizedBox(width: 8),
-                  const Icon(Icons.arrow_forward_rounded,
-                      color: Colors.white24, size: 14),
+                  const Icon(
+                    Icons.arrow_forward_rounded,
+                    color: Colors.white24,
+                    size: 14,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     '${currentPercent.toStringAsFixed(1)}%',
@@ -394,13 +418,19 @@ class ProbabilitiesDialog extends ConsumerWidget {
                   ),
                   if (isIncreased) ...[
                     const SizedBox(width: 4),
-                    const Icon(Icons.trending_up,
-                        color: Colors.greenAccent, size: 14),
+                    const Icon(
+                      Icons.trending_up,
+                      color: Colors.greenAccent,
+                      size: 14,
+                    ),
                   ] else if (isDecreased) ...[
                     const SizedBox(width: 4),
-                    const Icon(Icons.trending_down,
-                        color: Colors.redAccent, size: 14),
-                  ]
+                    const Icon(
+                      Icons.trending_down,
+                      color: Colors.redAccent,
+                      size: 14,
+                    ),
+                  ],
                 ],
               ),
             ],
@@ -431,17 +461,11 @@ class ProbabilitiesDialog extends ConsumerWidget {
                   height: 8,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [
-                        color.withAlpha(100),
-                        color,
-                      ],
+                      colors: [color.withAlpha(100), color],
                     ),
                     borderRadius: BorderRadius.circular(4),
                     boxShadow: [
-                      BoxShadow(
-                        color: color.withAlpha(80),
-                        blurRadius: 4,
-                      ),
+                      BoxShadow(color: color.withAlpha(80), blurRadius: 4),
                     ],
                   ),
                 ),

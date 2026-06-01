@@ -55,7 +55,8 @@ class StatsDialog extends ConsumerWidget {
     if (runState.heroClassId == 'berserker') classIcon = Icons.whatshot;
     if (runState.heroClassId == 'mage') classIcon = Icons.auto_fix_high;
 
-    final passive = runState.activePassive ??
+    final passive =
+        runState.activePassive ??
         PassiveData.fallback(runState.passiveTrait ?? '');
     final traitName = passive.getName(locale);
     final traitDesc = passive.getDescription(locale);
@@ -72,7 +73,9 @@ class StatsDialog extends ConsumerWidget {
             color: const Color(0xFF1E1E2C),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-                color: classColor.withValues(alpha: 0.3), width: 2),
+              color: classColor.withValues(alpha: 0.3),
+              width: 2,
+            ),
             boxShadow: [
               BoxShadow(
                 color: classColor.withValues(alpha: 0.15),
@@ -172,7 +175,8 @@ class StatsDialog extends ConsumerWidget {
                   icon: Icons.diamond_rounded,
                   iconColor: Colors.cyanAccent,
                   label: l10n.tooltipManaTitle,
-                  value: '${stats.maxMana} ${locale == 'fr' ? 'Cristaux' : 'Crystals'}',
+                  value:
+                      '${stats.maxMana} ${locale == 'fr' ? 'Cristaux' : 'Crystals'}',
                   child: Row(
                     children: List.generate(
                       stats.maxMana,
@@ -197,27 +201,39 @@ class StatsDialog extends ConsumerWidget {
                         icon: SwordIcon(size: 16, color: Colors.orangeAccent),
                         title: locale == 'fr' ? 'Attaque' : 'Attack',
                         value: '${stats.attaque}',
-                        subtitle: locale == 'fr' ? 'Dégâts de base' : 'Base damage',
+                        subtitle: locale == 'fr'
+                            ? 'Dégâts de base'
+                            : 'Base damage',
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: _buildCompactStatCard(
-                        icon: const Icon(Icons.shield_outlined,
-                            color: Colors.lightBlueAccent, size: 16),
+                        icon: const Icon(
+                          Icons.shield_outlined,
+                          color: Colors.lightBlueAccent,
+                          size: 16,
+                        ),
                         title: locale == 'fr' ? 'Maîtrise' : 'Mastery',
                         value: '+${stats.armorMastery}',
-                        subtitle: locale == 'fr' ? "Sur l'Armure Passive" : "On passive armor",
+                        subtitle: locale == 'fr'
+                            ? "Sur l'Armure Passive"
+                            : "On passive armor",
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: _buildCompactStatCard(
-                        icon: const Icon(Icons.casino_outlined,
-                            color: Colors.amberAccent, size: 16),
+                        icon: const Icon(
+                          Icons.casino_outlined,
+                          color: Colors.amberAccent,
+                          size: 16,
+                        ),
                         title: locale == 'fr' ? 'Chance' : 'Luck',
                         value: '${stats.luck}',
-                        subtitle: locale == 'fr' ? 'Loot & Événements' : 'Loot & Events',
+                        subtitle: locale == 'fr'
+                            ? 'Loot & Événements'
+                            : 'Loot & Events',
                       ),
                     ),
                   ],
@@ -238,8 +254,11 @@ class StatsDialog extends ConsumerWidget {
                     children: [
                       Row(
                         children: [
-                          const Icon(Icons.shield,
-                              size: 18, color: Colors.cyanAccent),
+                          const Icon(
+                            Icons.shield,
+                            size: 18,
+                            color: Colors.cyanAccent,
+                          ),
                           const SizedBox(width: 8),
                           Text(
                             '${l10n.classPassive.toUpperCase()} : $traitName',
@@ -299,9 +318,10 @@ class StatsDialog extends ConsumerWidget {
             Text(
               value,
               style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold),
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),
@@ -341,7 +361,10 @@ class StatsDialog extends ConsumerWidget {
           Text(
             value,
             style: const TextStyle(
-                color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 2),
           Text(

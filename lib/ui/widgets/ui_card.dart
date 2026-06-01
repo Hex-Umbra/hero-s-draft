@@ -39,11 +39,9 @@ class UiCard extends StatelessWidget {
     this.onTap,
   });
 
-
-
   String _determineDamageType() {
     final lowerTitle = title.toLowerCase();
-    
+
     if (effects != null) {
       for (var effect in effects!) {
         if (effect.type == 'apply_status') {
@@ -53,14 +51,27 @@ class UiCard extends StatelessWidget {
         }
       }
     }
-    
-    if (lowerTitle.contains('feu') || lowerTitle.contains('fire') || lowerTitle.contains('brûlure') || lowerTitle.contains('burn')) {
+
+    if (lowerTitle.contains('feu') ||
+        lowerTitle.contains('fire') ||
+        lowerTitle.contains('brûlure') ||
+        lowerTitle.contains('burn')) {
       return 'fire';
     }
-    if (lowerTitle.contains('glace') || lowerTitle.contains('ice') || lowerTitle.contains('gel') || lowerTitle.contains('freeze') || lowerTitle.contains('froid') || lowerTitle.contains('cold')) {
+    if (lowerTitle.contains('glace') ||
+        lowerTitle.contains('ice') ||
+        lowerTitle.contains('gel') ||
+        lowerTitle.contains('freeze') ||
+        lowerTitle.contains('froid') ||
+        lowerTitle.contains('cold')) {
       return 'cold';
     }
-    if (lowerTitle.contains('foudre') || lowerTitle.contains('thunder') || lowerTitle.contains('shock') || lowerTitle.contains('lightning') || lowerTitle.contains('tonnerre') || lowerTitle.contains('élec')) {
+    if (lowerTitle.contains('foudre') ||
+        lowerTitle.contains('thunder') ||
+        lowerTitle.contains('shock') ||
+        lowerTitle.contains('lightning') ||
+        lowerTitle.contains('tonnerre') ||
+        lowerTitle.contains('élec')) {
       return 'electric';
     }
     return 'physical';
@@ -170,9 +181,10 @@ class UiCard extends StatelessWidget {
     for (int i = 0; i < effects!.length; i++) {
       final effect = effects![i];
       final currentLevel = level ?? 1;
-      final scaledValue = (effect.value * (1 + (currentLevel - 1) * 0.5)).round();
+      final scaledValue = (effect.value * (1 + (currentLevel - 1) * 0.5))
+          .round();
       final visuals = _getEffectVisuals(effect);
-      
+
       final effectMainRow = Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -255,18 +267,18 @@ class UiCard extends StatelessWidget {
 
   String _buildDetailedDescription(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    
+
     // Add elemental header if applicable
     String desc = '';
     final elementalType = _determineDamageType();
     if (effects != null && effects!.isNotEmpty && elementalType != 'physical') {
-      final typeStr = elementalType == 'fire' 
+      final typeStr = elementalType == 'fire'
           ? 'FEU 🔥'
           : elementalType == 'cold'
-              ? 'FROID ❄️'
-              : elementalType == 'poison'
-                  ? 'POISON 🧪'
-                  : 'FOUDRE ⚡';
+          ? 'FROID ❄️'
+          : elementalType == 'poison'
+          ? 'POISON 🧪'
+          : 'FOUDRE ⚡';
       desc += '[$typeStr]\n';
     }
 
@@ -284,8 +296,10 @@ class UiCard extends StatelessWidget {
         }
       }
       if (effect.type == 'heal') desc += '${l10n.cardDescHeal(scaledValue)}\n';
-      if (effect.type == 'armor') desc += '${l10n.cardDescArmor(scaledValue)}\n';
-      if (effect.type == 'gain_mana') desc += '${l10n.cardDescGainMana(scaledValue)}\n';
+      if (effect.type == 'armor')
+        desc += '${l10n.cardDescArmor(scaledValue)}\n';
+      if (effect.type == 'gain_mana')
+        desc += '${l10n.cardDescGainMana(scaledValue)}\n';
       if (effect.type == 'draw') desc += '${l10n.cardDescDraw(scaledValue)}\n';
       if (effect.type == 'apply_status') {
         final duration = effect.duration ?? 1;
@@ -297,25 +311,32 @@ class UiCard extends StatelessWidget {
             desc += '${l10n.cardDescStatusArmorRegen(scaledValue, duration)}\n';
             break;
           case 'poison':
-            desc += '${l10n.cardDescStatusPoisonDuration(scaledValue, duration)}\n';
+            desc +=
+                '${l10n.cardDescStatusPoisonDuration(scaledValue, duration)}\n';
             break;
           case 'weakness':
-            desc += '${l10n.cardDescStatusWeaknessDuration(scaledValue, duration)}\n';
+            desc +=
+                '${l10n.cardDescStatusWeaknessDuration(scaledValue, duration)}\n';
             break;
           case 'vulnerable':
-            desc += '${l10n.cardDescStatusVulnerableDuration(scaledValue, duration)}\n';
+            desc +=
+                '${l10n.cardDescStatusVulnerableDuration(scaledValue, duration)}\n';
             break;
           case 'strength_regen':
-            desc += '${l10n.cardDescStatusStrengthRegen(scaledValue, duration)}\n';
+            desc +=
+                '${l10n.cardDescStatusStrengthRegen(scaledValue, duration)}\n';
             break;
           case 'burn':
-            desc += '${l10n.cardDescStatusBurnDuration(scaledValue, duration)}\n';
+            desc +=
+                '${l10n.cardDescStatusBurnDuration(scaledValue, duration)}\n';
             break;
           case 'freeze':
-            desc += '${l10n.cardDescStatusFreezeDuration(scaledValue, duration)}\n';
+            desc +=
+                '${l10n.cardDescStatusFreezeDuration(scaledValue, duration)}\n';
             break;
           case 'shock':
-            desc += '${l10n.cardDescStatusShockDuration(scaledValue, duration)}\n';
+            desc +=
+                '${l10n.cardDescStatusShockDuration(scaledValue, duration)}\n';
             break;
         }
       }
@@ -358,10 +379,7 @@ class UiCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: const Color(0xFF1E1E2C).withAlpha(245),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: typeColor,
-            width: 1.5,
-          ),
+          border: Border.all(color: typeColor, width: 1.5),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withAlpha(185),
@@ -397,10 +415,7 @@ class UiCard extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  bgColor,
-                  bgColor.withAlpha(200),
-                ],
+                colors: [bgColor, bgColor.withAlpha(200)],
               ),
               border: Border.all(
                 color: isSelected ? Colors.white : typeColor,
@@ -429,16 +444,9 @@ class UiCard extends StatelessWidget {
                     opacity: 0.05,
                     child: type == CardType.attack
                         ? const Center(
-                            child: SwordIcon(
-                              size: 80,
-                              color: Colors.white,
-                            ),
+                            child: SwordIcon(size: 80, color: Colors.white),
                           )
-                        : Icon(
-                            _getTypeIcon(),
-                            size: 80,
-                            color: Colors.white,
-                          ),
+                        : Icon(_getTypeIcon(), size: 80, color: Colors.white),
                   ),
                 ),
 
@@ -467,9 +475,9 @@ class UiCard extends StatelessWidget {
                   right: 0,
                   child: Center(
                     child: Container(
-                       height: 1.5,
-                       width: 40,
-                       color: typeColor.withAlpha(100),
+                      height: 1.5,
+                      width: 40,
+                      color: typeColor.withAlpha(100),
                     ),
                   ),
                 ),
@@ -526,56 +534,54 @@ class UiCard extends StatelessWidget {
                   bottom: 40,
                   left: 8,
                   right: 8,
-                  child: Center(
-                    child: _buildCompactDescription(context),
-                  ),
+                  child: Center(child: _buildCompactDescription(context)),
                 ),
 
-              // Cristaux de Mana (En bas au centre)
-              if (cost != null && cost! > 0)
-                Positioned(
-                  bottom: 22,
-                  left: 0,
-                  right: 0,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(
-                      cost!,
-                      (index) => const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 1.0),
-                        child: Icon(
-                          Icons.diamond_rounded,
-                          color: Colors.cyanAccent,
-                          size: 14,
+                // Cristaux de Mana (En bas au centre)
+                if (cost != null && cost! > 0)
+                  Positioned(
+                    bottom: 22,
+                    left: 0,
+                    right: 0,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(
+                        cost!,
+                        (index) => const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 1.0),
+                          child: Icon(
+                            Icons.diamond_rounded,
+                            color: Colors.cyanAccent,
+                            size: 14,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
 
-              // Type Label (Fixé tout en bas)
-              Positioned(
-                bottom: 6,
-                left: 0,
-                right: 0,
-                child: Text(
-                  _getTypeLabel(context).toUpperCase(),
-                  style: TextStyle(
-                    color: typeColor.withAlpha(180),
-                    fontSize: 8,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.0,
+                // Type Label (Fixé tout en bas)
+                Positioned(
+                  bottom: 6,
+                  left: 0,
+                  right: 0,
+                  child: Text(
+                    _getTypeLabel(context).toUpperCase(),
+                    style: TextStyle(
+                      color: typeColor.withAlpha(180),
+                      fontSize: 8,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.0,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   IconData _getTypeIcon() {
     switch (type) {
@@ -611,19 +617,27 @@ class UiCard extends StatelessWidget {
   Color _getRarityColor(BuildContext context, String rarity) {
     final l10n = AppLocalizations.of(context)!;
     final r = rarity.toLowerCase();
-    if (r == l10n.rarityLegendary.toLowerCase() || r.contains('legendary') || r.contains('légendaire')) {
+    if (r == l10n.rarityLegendary.toLowerCase() ||
+        r.contains('legendary') ||
+        r.contains('légendaire')) {
       return Colors.orangeAccent;
     }
-    if (r == l10n.rarityEpic.toLowerCase() || r.contains('epic') || r.contains('épique')) {
+    if (r == l10n.rarityEpic.toLowerCase() ||
+        r.contains('epic') ||
+        r.contains('épique')) {
       return Colors.purpleAccent;
     }
     if (r == l10n.rarityRare.toLowerCase() || r.contains('rare')) {
       return Colors.blueAccent;
     }
-    if (r == l10n.rarityUncommon.toLowerCase() || r.contains('uncommon') || r.contains('peu commun')) {
+    if (r == l10n.rarityUncommon.toLowerCase() ||
+        r.contains('uncommon') ||
+        r.contains('peu commun')) {
       return Colors.greenAccent;
     }
-    if (r == l10n.rarityCommon.toLowerCase() || r.contains('common') || r.contains('commun')) {
+    if (r == l10n.rarityCommon.toLowerCase() ||
+        r.contains('common') ||
+        r.contains('commun')) {
       return Colors.white70;
     }
     return Colors.white54;

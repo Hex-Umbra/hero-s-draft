@@ -7,13 +7,7 @@ enum RelicTrigger {
   onEnemyKilled,
 }
 
-enum RelicRarity {
-  common,
-  uncommon,
-  rare,
-  epic,
-  legendary,
-}
+enum RelicRarity { common, uncommon, rare, epic, legendary }
 
 class RelicData {
   final String id;
@@ -41,13 +35,20 @@ class RelicData {
   });
 
   String getName(String locale) => locale == 'fr' ? nameFr : nameEn;
-  String getDescription(String locale) => locale == 'fr' ? descriptionFr : descriptionEn;
+  String getDescription(String locale) =>
+      locale == 'fr' ? descriptionFr : descriptionEn;
 
   factory RelicData.fromJson(Map<String, dynamic> json) {
     final nEn = json['name_en'] as String? ?? json['name'] as String? ?? '';
     final nFr = json['name_fr'] as String? ?? json['name'] as String? ?? '';
-    final dEn = json['description_en'] as String? ?? json['description'] as String? ?? '';
-    final dFr = json['description_fr'] as String? ?? json['description'] as String? ?? '';
+    final dEn =
+        json['description_en'] as String? ??
+        json['description'] as String? ??
+        '';
+    final dFr =
+        json['description_fr'] as String? ??
+        json['description'] as String? ??
+        '';
 
     return RelicData(
       id: json['id'] as String,

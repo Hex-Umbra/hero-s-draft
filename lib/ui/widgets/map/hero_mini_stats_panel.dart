@@ -50,7 +50,9 @@ class HeroMiniStatsPanel extends ConsumerWidget {
                   ),
                 ),
                 Tooltip(
-                  message: locale == 'fr' ? 'Afficher les détails' : 'Show details',
+                  message: locale == 'fr'
+                      ? 'Afficher les détails'
+                      : 'Show details',
                   child: Material(
                     color: Colors.transparent,
                     child: InkWell(
@@ -81,7 +83,8 @@ class HeroMiniStatsPanel extends ConsumerWidget {
           _buildMiniStatRow(
             icon: Icons.favorite,
             iconColor: Colors.redAccent,
-            value: '${stats.currentPv}/${stats.maxPv} ${locale == 'fr' ? 'PV' : 'HP'}',
+            value:
+                '${stats.currentPv}/${stats.maxPv} ${locale == 'fr' ? 'PV' : 'HP'}',
           ),
           const SizedBox(height: 6),
           // Mana
@@ -101,7 +104,8 @@ class HeroMiniStatsPanel extends ConsumerWidget {
           _buildMiniStatRow(
             icon: Icons.shield_outlined,
             iconColor: Colors.lightBlueAccent,
-            value: '+${stats.armorMastery} ${locale == 'fr' ? 'Maîtrise' : 'Mastery'}',
+            value:
+                '+${stats.armorMastery} ${locale == 'fr' ? 'Maîtrise' : 'Mastery'}',
           ),
           const SizedBox(height: 6),
           // Chance
@@ -116,7 +120,9 @@ class HeroMiniStatsPanel extends ConsumerWidget {
                   value: '${stats.luck} ${locale == 'fr' ? 'Chance' : 'Luck'}',
                 ),
                 Tooltip(
-                  message: locale == 'fr' ? 'Voir les probabilités' : 'View probabilities',
+                  message: locale == 'fr'
+                      ? 'Voir les probabilités'
+                      : 'View probabilities',
                   child: Material(
                     color: Colors.transparent,
                     child: InkWell(
@@ -170,11 +176,7 @@ class HeroMiniStatsPanel extends ConsumerWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        SizedBox(
-          width: 16,
-          height: 16,
-          child: Center(child: icon),
-        ),
+        SizedBox(width: 16, height: 16, child: Center(child: icon)),
         const SizedBox(width: 8),
         Text(
           value,

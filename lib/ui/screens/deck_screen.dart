@@ -7,7 +7,6 @@ import '../../models/data/card_data.dart';
 import '../widgets/ui_card.dart';
 import '../widgets/notification_overlay.dart';
 
-
 class DeckScreen extends ConsumerWidget {
   final bool allowMerge;
   const DeckScreen({super.key, this.allowMerge = true});
@@ -31,7 +30,10 @@ class DeckScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(
           l10n.myDeck,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         backgroundColor: Colors.black45,
         elevation: 0,

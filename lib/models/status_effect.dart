@@ -50,13 +50,13 @@ class StatusEffect {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'type': type.toString().split('.').last,
-        'value': value,
-        'duration': duration,
-        'isStackable': isStackable,
-      };
+    'id': id,
+    'name': name,
+    'type': type.toString().split('.').last,
+    'value': value,
+    'duration': duration,
+    'isStackable': isStackable,
+  };
 
   /// Retourne un nouvel effet combiné si stackable, sinon rafraîchit la durée
   StatusEffect combine(StatusEffect other) {

@@ -52,11 +52,7 @@ class CombatController extends StateNotifier<CombatState> {
         attaque: (data.baseDamage * multiplier).round(),
       );
 
-      var enemy = EnemyInstance(
-        data: data,
-        stats: stats,
-        isBoss: isBoss,
-      );
+      var enemy = EnemyInstance(data: data, stats: stats, isBoss: isBoss);
 
       enemy = _rollIntent(enemy);
       enemies.add(enemy);
@@ -135,7 +131,9 @@ class CombatController extends StateNotifier<CombatState> {
         break;
       case IntentType.defend:
         final updatedEnemy = enemy.copyWith(
-          stats: enemy.stats.copyWith(armure: enemy.stats.armure + intent.value),
+          stats: enemy.stats.copyWith(
+            armure: enemy.stats.armure + intent.value,
+          ),
         );
         _updateEnemy(updatedEnemy);
         break;
@@ -213,8 +211,9 @@ class CombatController extends StateNotifier<CombatState> {
 
   /// Fin de la phase ennemie : roll intents et retour au joueur
   void endEnemyTurn() {
-    final List<EnemyInstance> rolledEnemies =
-        state.enemies.map((enemy) => _rollIntent(enemy)).toList();
+    final List<EnemyInstance> rolledEnemies = state.enemies
+        .map((enemy) => _rollIntent(enemy))
+        .toList();
 
     state = state.copyWith(
       enemies: rolledEnemies,
@@ -313,14 +312,12 @@ class CombatController extends StateNotifier<CombatState> {
         nextIntent = EnemyIntent(type: IntentType.buff, value: 2);
       }
     }
-    return enemy.copyWith(
-      currentIntent: nextIntent,
-      intentStep: nextStep,
-    );
+    return enemy.copyWith(currentIntent: nextIntent, intentStep: nextStep);
   }
 }
 
-final combatProvider =
-    StateNotifierProvider<CombatController, CombatState>((ref) {
+final combatProvider = StateNotifierProvider<CombatController, CombatState>((
+  ref,
+) {
   return CombatController();
 });

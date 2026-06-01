@@ -23,8 +23,7 @@ import 'controllers/deck_controller.dart';
 import '../models/enemy_intent.dart';
 import '../models/combat_state.dart';
 
-class HerosDraftGame extends FlameGame
-    with TapCallbacks, PointerMoveCallbacks {
+class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   List<EnemyData> availableEnemies = [];
   List<HeroData> availableHeroes = [];
   HeroCard? heroCard;
@@ -170,28 +169,13 @@ class HerosDraftGame extends FlameGame
         );
         focusedCard!.add(
           ScaleEffect.to(
-            Vector2.all(
-              scaleFactor * 0.88 * 1.25,
-            ),
+            Vector2.all(scaleFactor * 0.88 * 1.25),
             EffectController(duration: 0.2, curve: Curves.easeOut),
           ),
         );
       }
-      targetingLine.color = _getCardTypeColor(focusedCard!.card.data.type);
+      targetingLine.color = focusedCard!.getElementalColor();
       _applyTargetHighlights(focusedCard!.card.data.target);
-    }
-  }
-
-  Color _getCardTypeColor(CardType type) {
-    switch (type) {
-      case CardType.attack:
-        return Colors.redAccent;
-      case CardType.skill:
-        return Colors.blueAccent;
-      case CardType.power:
-        return Colors.amber;
-      case CardType.status:
-        return Colors.blueGrey;
     }
   }
 
@@ -240,7 +224,9 @@ class HerosDraftGame extends FlameGame
     final List<String> imagesToPreload = ['bg_dungeon.png'];
 
     try {
-      final String enemiesRaw = await rootBundle.loadString('assets/data/enemies.json');
+      final String enemiesRaw = await rootBundle.loadString(
+        'assets/data/enemies.json',
+      );
       final List<dynamic> enemiesJson = jsonDecode(enemiesRaw);
       for (final enemy in enemiesJson) {
         final spritePath = enemy['spritePath'] as String?;
@@ -249,7 +235,9 @@ class HerosDraftGame extends FlameGame
         }
       }
 
-      final String heroesRaw = await rootBundle.loadString('assets/data/heroes.json');
+      final String heroesRaw = await rootBundle.loadString(
+        'assets/data/heroes.json',
+      );
       final List<dynamic> heroesJson = jsonDecode(heroesRaw);
       for (final hero in heroesJson) {
         final iconPath = hero['iconPath'] as String?;
@@ -273,7 +261,10 @@ class HerosDraftGame extends FlameGame
     await images.loadAll(uniqueImages);
 
     final bgSprite = Sprite(images.fromCache('bg_dungeon.png'));
-    add(SpriteComponent(sprite: bgSprite, size: size)..priority = GameConstants.priorityBackground);
+    add(
+      SpriteComponent(sprite: bgSprite, size: size)
+        ..priority = GameConstants.priorityBackground,
+    );
   }
 
   @override
@@ -446,10 +437,7 @@ class HerosDraftGame extends FlameGame
       heroCard!.position = Vector2(size.x / 2, size.y * 0.51);
       add(heroCard!);
     } else {
-      heroCard!.updateStats(
-        state.heroStats,
-        bonusAttack: bonusAtt,
-      );
+      heroCard!.updateStats(state.heroStats, bonusAttack: bonusAtt);
     }
 
     for (var card in handCards) {
@@ -462,15 +450,12 @@ class HerosDraftGame extends FlameGame
 
     // 1. Gérer les disparitions (morts)
     final newEnemiesIds = state.enemies.map((e) => e.id).toSet();
-    final cardsToRemove = enemyCards.where((c) => !newEnemiesIds.contains(c.id)).toList();
+    final cardsToRemove = enemyCards
+        .where((c) => !newEnemiesIds.contains(c.id))
+        .toList();
 
     for (var card in cardsToRemove) {
-      card.add(
-        OpacityEffect.to(
-          0.0,
-          EffectController(duration: 0.4),
-        ),
-      );
+      card.add(OpacityEffect.to(0.0, EffectController(duration: 0.4)));
       card.add(
         ScaleEffect.to(
           Vector2.zero(),
@@ -487,7 +472,9 @@ class HerosDraftGame extends FlameGame
     bool listChanged = cardsToRemove.isNotEmpty;
 
     for (var enemyInstance in state.enemies) {
-      final existingIndex = enemyCards.indexWhere((c) => c.id == enemyInstance.id);
+      final existingIndex = enemyCards.indexWhere(
+        (c) => c.id == enemyInstance.id,
+      );
       if (existingIndex != -1) {
         enemyCards[existingIndex].updateStats(enemyInstance);
       } else {
@@ -612,7 +599,10 @@ class HerosDraftGame extends FlameGame
         int dmg =
             (_currentState!.effectiveAttaque * (skill.effectValue / 100.0))
                 .round();
-        onUpdateEnemyStats(selectedEnemy!.id, selectedEnemy!.stats.takeDamage(dmg));
+        onUpdateEnemyStats(
+          selectedEnemy!.id,
+          selectedEnemy!.stats.takeDamage(dmg),
+        );
       } else if (skill.effectType == 'damage_pierce') {
         int dmg = _currentState!.effectiveAttaque;
         int stolenArmor =
@@ -621,7 +611,7 @@ class HerosDraftGame extends FlameGame
         int newArm = selectedEnemy!.stats.armure - stolenArmor;
         if (newPv < 0) newPv = 0;
         if (newArm < 0) newArm = 0;
-        
+
         onUpdateEnemyStats(
           selectedEnemy!.id,
           selectedEnemy!.stats.copyWith(currentPv: newPv, armure: newArm),

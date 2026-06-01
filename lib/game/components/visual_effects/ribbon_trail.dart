@@ -17,20 +17,20 @@ class RibbonTrail extends Component {
     Color glowColor = Colors.amber,
     Color coreColor = Colors.white,
     int priority = 0,
-  })  : _maxPoints = maxPoints,
-        _startWidth = startWidth,
-        _glowColor = glowColor,
-        _coreColor = coreColor {
+  }) : _maxPoints = maxPoints,
+       _startWidth = startWidth,
+       _glowColor = glowColor,
+       _coreColor = coreColor {
     this.priority = priority;
   }
 
   /// Ajoute un nouveau point à la traînée.
   void addPoint(Vector2 pos) {
     if (!_isActive) return;
-    
+
     // Éviter d'ajouter des points trop proches pour garder une courbe fluide
     if (_points.isNotEmpty && (_points.first - pos).length < 3) return;
-    
+
     _points.insert(0, pos.clone());
     if (_points.length > _maxPoints) {
       _points.removeLast();
@@ -45,7 +45,7 @@ class RibbonTrail extends Component {
   @override
   void update(double dt) {
     super.update(dt);
-    
+
     // Si la traînée est arrêtée ou si on veut qu'elle défile, on retire les points les plus vieux
     if (!_isActive && _points.isNotEmpty) {
       _points.removeLast();
@@ -70,19 +70,19 @@ class RibbonTrail extends Component {
     for (int i = 0; i < _points.length; i++) {
       final p = _points[i];
       Vector2 direction;
-      
+
       if (i < _points.length - 1) {
         direction = (_points[i + 1] - p).normalized();
       } else {
         direction = (p - _points[i - 1]).normalized();
       }
-      
+
       // Calcul de la normale (perpendiculaire au mouvement)
       final normal = Vector2(-direction.y, direction.x);
-      
+
       // Largeur décroissante (tapering)
       final width = _startWidth * (1.0 - (i / _maxPoints));
-      
+
       leftSide.add((p + normal * (width / 2)).toOffset());
       rightSide.add((p - normal * (width / 2)).toOffset());
     }
@@ -99,13 +99,15 @@ class RibbonTrail extends Component {
 
     // 1. Lueur extérieure (Glow) - Opacité réduite
     final glowPaint = Paint()
-      ..color = _glowColor.withAlpha(60) // Passage de 120 à 60
+      ..color = _glowColor
+          .withAlpha(60) // Passage de 120 à 60
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
     canvas.drawPath(path, glowPaint);
 
     // 2. Cœur brillant (Core) - Opacité réduite
     final corePaint = Paint()
-      ..color = _coreColor.withAlpha(150) // Passage de 220 à 150
+      ..color = _coreColor
+          .withAlpha(150) // Passage de 220 à 150
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
     canvas.drawPath(path, corePaint);
   }

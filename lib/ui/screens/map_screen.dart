@@ -41,7 +41,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
   Set<(String, String)> _highlightedConnections = {};
 
   void _updateHighlight(
-      String? hoveredNodeId, List<MapNode> nodes, String? currentNodeId) {
+    String? hoveredNodeId,
+    List<MapNode> nodes,
+    String? currentNodeId,
+  ) {
     if (hoveredNodeId == null) {
       if (_highlightedNodeIds.isNotEmpty ||
           _highlightedConnections.isNotEmpty) {
@@ -61,8 +64,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
     // Algorithme de recherche inverse : On part du noeud survolé et on remonte
     // vers le noeud actuel pour voir s'il y a un chemin.
-    if (_findPathToCurrent(hoveredNodeId, currentNodeId, nodes, reachableNodes,
-        reachableConnections)) {
+    if (_findPathToCurrent(
+      hoveredNodeId,
+      currentNodeId,
+      nodes,
+      reachableNodes,
+      reachableConnections,
+    )) {
       setState(() {
         _highlightedNodeIds = reachableNodes;
         _highlightedConnections = reachableConnections;
@@ -98,7 +106,12 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
     for (var parent in parents) {
       if (_findPathToCurrent(
-          parent.id, startId, allNodes, pathNodes, pathConnections)) {
+        parent.id,
+        startId,
+        allNodes,
+        pathNodes,
+        pathConnections,
+      )) {
         pathNodes.add(targetId);
         pathNodes.add(parent.id);
         pathConnections.add((parent.id, targetId));
@@ -140,7 +153,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
     _transformationController.value =
         Matrix4.translationValues(-200.0, -1500.0, 0.0) *
-            Matrix4.diagonal3Values(0.8, 0.8, 1.0);
+        Matrix4.diagonal3Values(0.8, 0.8, 1.0);
   }
 
   @override
@@ -189,8 +202,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
         double scale = 0.8;
         double actualX =
             (currentNodeId != null ? targetNode.position.x : 500.0) +
-                1000; // padding left
-        double actualY = targetNode.position.y +
+            1000; // padding left
+        double actualY =
+            targetNode.position.y +
             80.0 +
             1000; // padding top + visual Y offset
 
@@ -201,7 +215,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
           setState(() {
             _transformationController.value =
                 Matrix4.translationValues(dx, dy, 0.0) *
-                    Matrix4.diagonal3Values(scale, scale, 1.0);
+                Matrix4.diagonal3Values(scale, scale, 1.0);
             _lastActCentered = runState.act;
           });
         }
@@ -223,8 +237,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor:
-            const Color(0xFFD2B48C).withAlpha(200), // Tan translucide
+        backgroundColor: const Color(
+          0xFFD2B48C,
+        ).withAlpha(200), // Tan translucide
         elevation: 2,
         centerTitle: true,
         leadingWidth: 430,
@@ -241,10 +256,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
                 onPressed: () {
-                  Navigator.of(
-                    context,
-                  ).push(
-                      MaterialPageRoute(builder: (context) => const DeckScreen()));
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => const DeckScreen()),
+                  );
                 },
                 icon: Stack(
                   children: [
@@ -270,16 +284,19 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 label: Text(
                   canMerge ? 'DECK (!)' : l10n.myDeck.toUpperCase(),
                   style: TextStyle(
-                    color: canMerge ? Colors.redAccent : const Color(0xFF4A3728),
+                    color: canMerge
+                        ? Colors.redAccent
+                        : const Color(0xFF4A3728),
                     fontWeight: FontWeight.bold,
                     fontSize: 10.5,
                   ),
                 ),
               ),
               Container(
-                  width: 1,
-                  height: 20,
-                  color: const Color(0xFF4A3728).withAlpha(50)),
+                width: 1,
+                height: 20,
+                color: const Color(0xFF4A3728).withAlpha(50),
+              ),
               TextButton.icon(
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 6),
@@ -287,8 +304,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
                 onPressed: () => StatsDialog.show(context),
-                icon: const Icon(Icons.bar_chart_rounded,
-                    color: Color(0xFF4A3728), size: 20),
+                icon: const Icon(
+                  Icons.bar_chart_rounded,
+                  color: Color(0xFF4A3728),
+                  size: 20,
+                ),
                 label: Text(
                   l10n.stats.toUpperCase(),
                   style: const TextStyle(
@@ -299,9 +319,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 ),
               ),
               Container(
-                  width: 1,
-                  height: 20,
-                  color: const Color(0xFF4A3728).withAlpha(50)),
+                width: 1,
+                height: 20,
+                color: const Color(0xFF4A3728).withAlpha(50),
+              ),
               TextButton.icon(
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 6),
@@ -312,8 +333,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 icon: Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    const Icon(Icons.inventory_2_outlined,
-                        color: Color(0xFF4A3728), size: 20),
+                    const Icon(
+                      Icons.inventory_2_outlined,
+                      color: Color(0xFF4A3728),
+                      size: 20,
+                    ),
                     if (inventoryState.relics.isNotEmpty)
                       Positioned(
                         right: -6,
@@ -358,9 +382,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 ),
               ),
               Container(
-                  width: 1,
-                  height: 20,
-                  color: const Color(0xFF4A3728).withAlpha(50)),
+                width: 1,
+                height: 20,
+                color: const Color(0xFF4A3728).withAlpha(50),
+              ),
               TextButton.icon(
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 6),
@@ -368,8 +393,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
                 onPressed: () => ProbabilitiesDialog.show(context),
-                icon: const Icon(Icons.casino_outlined,
-                    color: Color(0xFF4A3728), size: 20),
+                icon: const Icon(
+                  Icons.casino_outlined,
+                  color: Color(0xFF4A3728),
+                  size: 20,
+                ),
                 label: Text(
                   l10n.chances.toUpperCase(),
                   style: const TextStyle(
@@ -461,8 +489,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     ...nodes.map(
                       (node) => MapNodeWidget(
                         node: node,
-                        isAvailable:
-                            _isNodeAvailable(node, nodes, currentNodeId),
+                        isAvailable: _isNodeAvailable(
+                          node,
+                          nodes,
+                          currentNodeId,
+                        ),
                         isCurrent: node.id == currentNodeId,
                         onTap: () => _onNodeTap(context, ref, node),
                         onShowTooltip: _showNodeTooltip,
@@ -486,11 +517,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
             ),
           ),
           // Légende
-          const Positioned(
-            left: 20,
-            bottom: 20,
-            child: MapLegend(),
-          ),
+          const Positioned(left: 20, bottom: 20, child: MapLegend()),
           // Tooltip Overlay
           if (_showTooltip)
             Positioned(
@@ -541,11 +568,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
               ),
             ),
           // Aperçu des Stats du Joueur (Flottant en bas à droite)
-          const Positioned(
-            right: 20,
-            bottom: 20,
-            child: HeroMiniStatsPanel(),
-          ),
+          const Positioned(right: 20, bottom: 20, child: HeroMiniStatsPanel()),
         ],
       ),
     );
@@ -597,8 +620,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
         break;
     }
 
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => destination),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => destination));
   }
 }

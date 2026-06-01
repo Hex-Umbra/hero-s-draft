@@ -35,34 +35,40 @@ void main() {
       expect(skillController.state.skill2Cooldown, 0);
     });
 
-    test('triggerSkill1 succeeds, consumes mana, and sets cooldown; fails if mana is insufficient', () {
-      // Paladin starts with 3 mana.
-      // Trigger skill 1 with cost 2 mana, cooldown 3.
-      final success = skillController.triggerSkill1(3, mana: 2);
-      expect(success, true);
-      expect(skillController.state.skill1Cooldown, 3);
-      expect(runController.state.heroStats.currentMana, 1);
+    test(
+      'triggerSkill1 succeeds, consumes mana, and sets cooldown; fails if mana is insufficient',
+      () {
+        // Paladin starts with 3 mana.
+        // Trigger skill 1 with cost 2 mana, cooldown 3.
+        final success = skillController.triggerSkill1(3, mana: 2);
+        expect(success, true);
+        expect(skillController.state.skill1Cooldown, 3);
+        expect(runController.state.heroStats.currentMana, 1);
 
-      // Reset cooldown to try again but with insufficient mana (only 1 left)
-      skillController.resetCooldowns();
-      final failure = skillController.triggerSkill1(3, mana: 2);
-      expect(failure, false);
-      expect(skillController.state.skill1Cooldown, 0); // unchanged
-      expect(runController.state.heroStats.currentMana, 1); // unchanged
-    });
+        // Reset cooldown to try again but with insufficient mana (only 1 left)
+        skillController.resetCooldowns();
+        final failure = skillController.triggerSkill1(3, mana: 2);
+        expect(failure, false);
+        expect(skillController.state.skill1Cooldown, 0); // unchanged
+        expect(runController.state.heroStats.currentMana, 1); // unchanged
+      },
+    );
 
-    test('triggerSkill2 succeeds, consumes mana, and sets cooldown; fails if skill on cooldown', () {
-      final success = skillController.triggerSkill2(2, mana: 1);
-      expect(success, true);
-      expect(skillController.state.skill2Cooldown, 2);
-      expect(runController.state.heroStats.currentMana, 2);
+    test(
+      'triggerSkill2 succeeds, consumes mana, and sets cooldown; fails if skill on cooldown',
+      () {
+        final success = skillController.triggerSkill2(2, mana: 1);
+        expect(success, true);
+        expect(skillController.state.skill2Cooldown, 2);
+        expect(runController.state.heroStats.currentMana, 2);
 
-      // Attempt to trigger while on cooldown
-      final failure = skillController.triggerSkill2(2, mana: 1);
-      expect(failure, false);
-      expect(skillController.state.skill2Cooldown, 2); // unchanged
-      expect(runController.state.heroStats.currentMana, 2); // unchanged
-    });
+        // Attempt to trigger while on cooldown
+        final failure = skillController.triggerSkill2(2, mana: 1);
+        expect(failure, false);
+        expect(skillController.state.skill2Cooldown, 2); // unchanged
+        expect(runController.state.heroStats.currentMana, 2); // unchanged
+      },
+    );
 
     test('tickCooldowns decrements cooldowns correctly', () {
       skillController.triggerSkill1(3, mana: 1);

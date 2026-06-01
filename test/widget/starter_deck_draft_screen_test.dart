@@ -107,9 +107,7 @@ void main() {
     });
 
     final container = ProviderContainer(
-      overrides: [
-        gameDataLoaderProvider.overrideWith((ref) => mockRegistry),
-      ],
+      overrides: [gameDataLoaderProvider.overrideWith((ref) => mockRegistry)],
     );
     addTearDown(container.dispose);
 

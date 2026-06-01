@@ -7,7 +7,6 @@ import '../../models/card_instance.dart';
 import '../widgets/ui_card.dart';
 import '../widgets/notification_overlay.dart';
 
-
 class RestScreen extends ConsumerStatefulWidget {
   const RestScreen({super.key});
 
@@ -23,9 +22,9 @@ class _RestScreenState extends ConsumerState<RestScreen> {
     final runController = ref.read(runProvider.notifier);
     final maxHp = runController.currentState.heroStats.maxPv;
     final healAmount = (maxHp * 0.3).round();
-    
+
     runController.heal(healAmount);
-    
+
     setState(() {
       _actionTaken = true;
     });
@@ -46,7 +45,7 @@ class _RestScreenState extends ConsumerState<RestScreen> {
 
     if (selectedCard != null) {
       ref.read(deckProvider.notifier).upgradeCard(selectedCard.uniqueId);
-      
+
       setState(() {
         _actionTaken = true;
       });
@@ -71,7 +70,7 @@ class _RestScreenState extends ConsumerState<RestScreen> {
 
     if (selectedCard != null) {
       ref.read(deckProvider.notifier).removeCardById(selectedCard.uniqueId);
-      
+
       setState(() {
         _actionTaken = true;
       });
@@ -86,7 +85,10 @@ class _RestScreenState extends ConsumerState<RestScreen> {
     }
   }
 
-  Future<CardInstance?> _showCardSelector({required String title, required String subtitle}) {
+  Future<CardInstance?> _showCardSelector({
+    required String title,
+    required String subtitle,
+  }) {
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).languageCode;
     return showModalBottomSheet<CardInstance>(
@@ -118,12 +120,13 @@ class _RestScreenState extends ConsumerState<RestScreen> {
                   builder: (context, ref, child) {
                     final deck = ref.watch(deckProvider).masterDeck;
                     return GridView.builder(
-                      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                        maxCrossAxisExtent: 180,
-                        childAspectRatio: 0.6,
-                        crossAxisSpacing: 10,
-                        mainAxisSpacing: 10,
-                      ),
+                      gridDelegate:
+                          const SliverGridDelegateWithMaxCrossAxisExtent(
+                            maxCrossAxisExtent: 180,
+                            childAspectRatio: 0.6,
+                            crossAxisSpacing: 10,
+                            mainAxisSpacing: 10,
+                          ),
                       itemCount: deck.length,
                       itemBuilder: (context, index) {
                         final card = deck[index];
@@ -213,7 +216,9 @@ class _RestScreenState extends ConsumerState<RestScreen> {
                     _RestOption(
                       icon: Icons.favorite,
                       title: l10n.restCampRest,
-                      description: l10n.restCampRestDesc((heroStats.maxPv * 0.3).round()),
+                      description: l10n.restCampRestDesc(
+                        (heroStats.maxPv * 0.3).round(),
+                      ),
                       onTap: _heal,
                       color: Colors.greenAccent,
                     ),
@@ -244,12 +249,18 @@ class _RestScreenState extends ConsumerState<RestScreen> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white12,
                         side: const BorderSide(color: Colors.white54),
-                        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 40,
+                          vertical: 20,
+                        ),
                       ),
                       onPressed: _leave,
                       child: Text(
                         l10n.restCampProceed,
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
@@ -311,7 +322,10 @@ class _RestOption extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       description,
-                      style: const TextStyle(color: Colors.white70, fontSize: 12),
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),

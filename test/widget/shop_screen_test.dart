@@ -106,91 +106,88 @@ void main() {
     relics: [],
   );
 
-  testWidgets('ShopScreen shows correct cards and handles Reroll and Expand services', (
-    WidgetTester tester,
-  ) async {
-    // Set a larger viewport size so sidebar buttons are on-screen
-    tester.view.physicalSize = const Size(1200, 900);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(() {
-      tester.view.resetPhysicalSize();
-      tester.view.resetDevicePixelRatio();
-    });
+  testWidgets(
+    'ShopScreen shows correct cards and handles Reroll and Expand services',
+    (WidgetTester tester) async {
+      // Set a larger viewport size so sidebar buttons are on-screen
+      tester.view.physicalSize = const Size(1200, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
 
-    // 1. Setup Riverpod Container
-    final container = ProviderContainer(
-      overrides: [
-        gameDataLoaderProvider.overrideWith((ref) => mockRegistry),
-      ],
-    );
-    addTearDown(container.dispose);
+      // 1. Setup Riverpod Container
+      final container = ProviderContainer(
+        overrides: [gameDataLoaderProvider.overrideWith((ref) => mockRegistry)],
+      );
+      addTearDown(container.dispose);
 
-    // Initialize run with enough gold (e.g. 200)
-    final runNotifier = container.read(runProvider.notifier);
-    runNotifier.startNewRun(mockHero);
-    
-    // Give player plenty of gold for testing services (80 + 15 = 95 gold required minimum)
-    container.read(inventoryProvider.notifier).reset(initialGold: 200);
+      // Initialize run with enough gold (e.g. 200)
+      final runNotifier = container.read(runProvider.notifier);
+      runNotifier.startNewRun(mockHero);
 
-    // 2. Build the ShopScreen widget
-    await tester.pumpWidget(
-      UncontrolledProviderScope(
-        container: container,
-        child: MaterialApp(
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          supportedLocales: const [Locale('en', ''), Locale('fr', '')],
-          locale: const Locale('fr', ''),
-          home: const Scaffold(
-            body: ShopScreen(),
+      // Give player plenty of gold for testing services (80 + 15 = 95 gold required minimum)
+      container.read(inventoryProvider.notifier).reset(initialGold: 200);
+
+      // 2. Build the ShopScreen widget
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('en', ''), Locale('fr', '')],
+            locale: const Locale('fr', ''),
+            home: const Scaffold(body: ShopScreen()),
           ),
         ),
-      ),
-    );
+      );
 
-    // Wait for frames
-    await tester.pumpAndSettle();
+      // Wait for frames
+      await tester.pumpAndSettle();
 
-    // 3. Verify the screen displays 3 cards originally (default capacity)
-    expect(find.byType(UiCard), findsNWidgets(3));
+      // 3. Verify the screen displays 3 cards originally (default capacity)
+      expect(find.byType(UiCard), findsNWidgets(3));
 
-    // 4. Verify shop services buttons exist
-    expect(find.text('Étal étendu'), findsOneWidget);
-    expect(find.text('Renouveler'), findsOneWidget);
+      // 4. Verify shop services buttons exist
+      expect(find.text('Étal étendu'), findsOneWidget);
+      expect(find.text('Renouveler'), findsOneWidget);
 
-    // 5. Test Shop Expansion ('Étal étendu' costing 100 gold)
-    final initialGold = container.read(inventoryProvider).gold;
-    expect(initialGold, 200);
-    expect(container.read(inventoryProvider).bonusShopCards, 0);
+      // 5. Test Shop Expansion ('Étal étendu' costing 100 gold)
+      final initialGold = container.read(inventoryProvider).gold;
+      expect(initialGold, 200);
+      expect(container.read(inventoryProvider).bonusShopCards, 0);
 
-    // Find the 'Étal étendu' button and tap it
-    final expandButton = find.text('Étal étendu');
-    await tester.tap(expandButton);
-    await tester.pumpAndSettle();
+      // Find the 'Étal étendu' button and tap it
+      final expandButton = find.text('Étal étendu');
+      await tester.tap(expandButton);
+      await tester.pumpAndSettle();
 
-    // Verify gold decreases by 100 and bonusShopCards increases to 1
-    expect(container.read(inventoryProvider).gold, 100);
-    expect(container.read(inventoryProvider).bonusShopCards, 1);
+      // Verify gold decreases by 100 and bonusShopCards increases to 1
+      expect(container.read(inventoryProvider).gold, 100);
+      expect(container.read(inventoryProvider).bonusShopCards, 1);
 
-    // Now, there should be 4 cards displayed on the screen!
-    expect(find.byType(UiCard), findsNWidgets(4));
+      // Now, there should be 4 cards displayed on the screen!
+      expect(find.byType(UiCard), findsNWidgets(4));
 
-    // 6. Test Card Reroll ('Renouveler' costing 15 gold)
-    // Find the 'Renouveler' button and tap it
-    final rerollButton = find.text('Renouveler');
-    await tester.tap(rerollButton);
-    await tester.pumpAndSettle();
+      // 6. Test Card Reroll ('Renouveler' costing 15 gold)
+      // Find the 'Renouveler' button and tap it
+      final rerollButton = find.text('Renouveler');
+      await tester.tap(rerollButton);
+      await tester.pumpAndSettle();
 
-    // Verify gold decreases by 15
-    expect(container.read(inventoryProvider).gold, 85);
+      // Verify gold decreases by 15
+      expect(container.read(inventoryProvider).gold, 85);
 
-    // There should still be 4 cards on the shelf
-    expect(find.byType(UiCard), findsNWidgets(4));
-    
-    container.dispose();
-  });
+      // There should still be 4 cards on the shelf
+      expect(find.byType(UiCard), findsNWidgets(4));
+
+      container.dispose();
+    },
+  );
 }

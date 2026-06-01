@@ -2,8 +2,13 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('Probabilities Logic Tests', () {
-    Map<String, double> calculateDraftProbabilities(int luck, bool isLevelReward) {
-      double legendaryChance = isLevelReward ? 0.5 + luck * 0.5 : 1.0 + luck * 0.5;
+    Map<String, double> calculateDraftProbabilities(
+      int luck,
+      bool isLevelReward,
+    ) {
+      double legendaryChance = isLevelReward
+          ? 0.5 + luck * 0.5
+          : 1.0 + luck * 0.5;
       double epicChance = isLevelReward ? 4.5 + luck * 1.5 : 5.0 + luck * 1.5;
       double rareChance = isLevelReward ? 15.0 + luck * 3.0 : 14.0 + luck * 3.0;
       double uncommonChance = 20.0 + luck * 4.0;
@@ -17,7 +22,7 @@ void main() {
       double pEpic = epicChance;
       double pRare = rareChance;
       double pUncommon = uncommonChance;
-      
+
       double sum = pLeg;
       pEpic = pEpic.clamp(0.0, 100.0 - sum);
       sum += pEpic;
@@ -66,41 +71,50 @@ void main() {
       };
     }
 
-    test('calculateDraftProbabilities with luck = 0 (isLevelReward = false)', () {
-      final probs = calculateDraftProbabilities(0, false);
-      expect(probs['legendary'], 1.0);
-      expect(probs['epic'], 5.0);
-      expect(probs['rare'], 14.0);
-      expect(probs['uncommon'], 20.0);
-      expect(probs['common'], 60.0);
-      
-      final sum = probs.values.reduce((a, b) => a + b);
-      expect(sum, closeTo(100.0, 0.01));
-    });
+    test(
+      'calculateDraftProbabilities with luck = 0 (isLevelReward = false)',
+      () {
+        final probs = calculateDraftProbabilities(0, false);
+        expect(probs['legendary'], 1.0);
+        expect(probs['epic'], 5.0);
+        expect(probs['rare'], 14.0);
+        expect(probs['uncommon'], 20.0);
+        expect(probs['common'], 60.0);
 
-    test('calculateDraftProbabilities with luck = 5 (isLevelReward = false)', () {
-      final probs = calculateDraftProbabilities(5, false);
-      expect(probs['legendary'], 3.5);
-      expect(probs['epic'], 12.5);
-      expect(probs['rare'], 29.0);
-      expect(probs['uncommon'], 40.0);
-      expect(probs['common'], 15.0);
+        final sum = probs.values.reduce((a, b) => a + b);
+        expect(sum, closeTo(100.0, 0.01));
+      },
+    );
 
-      final sum = probs.values.reduce((a, b) => a + b);
-      expect(sum, closeTo(100.0, 0.01));
-    });
+    test(
+      'calculateDraftProbabilities with luck = 5 (isLevelReward = false)',
+      () {
+        final probs = calculateDraftProbabilities(5, false);
+        expect(probs['legendary'], 3.5);
+        expect(probs['epic'], 12.5);
+        expect(probs['rare'], 29.0);
+        expect(probs['uncommon'], 40.0);
+        expect(probs['common'], 15.0);
 
-    test('calculateDraftProbabilities with luck = 0 (isLevelReward = true)', () {
-      final probs = calculateDraftProbabilities(0, true);
-      expect(probs['legendary'], 0.5);
-      expect(probs['epic'], 4.5);
-      expect(probs['rare'], 15.0);
-      expect(probs['uncommon'], 20.0);
-      expect(probs['common'], 60.0);
+        final sum = probs.values.reduce((a, b) => a + b);
+        expect(sum, closeTo(100.0, 0.01));
+      },
+    );
 
-      final sum = probs.values.reduce((a, b) => a + b);
-      expect(sum, closeTo(100.0, 0.01));
-    });
+    test(
+      'calculateDraftProbabilities with luck = 0 (isLevelReward = true)',
+      () {
+        final probs = calculateDraftProbabilities(0, true);
+        expect(probs['legendary'], 0.5);
+        expect(probs['epic'], 4.5);
+        expect(probs['rare'], 15.0);
+        expect(probs['uncommon'], 20.0);
+        expect(probs['common'], 60.0);
+
+        final sum = probs.values.reduce((a, b) => a + b);
+        expect(sum, closeTo(100.0, 0.01));
+      },
+    );
 
     test('calculateRelicProbabilities with luck = 0', () {
       final probs = calculateRelicProbabilities(0);

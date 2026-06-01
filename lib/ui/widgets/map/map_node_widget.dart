@@ -34,35 +34,17 @@ class _MapNodeWidgetState extends State<MapNodeWidget> {
   (String, String) _getTooltipData(AppLocalizations l10n) {
     switch (widget.node.type) {
       case MapNodeType.combat:
-        return (
-          l10n.tooltipCombatTitle,
-          l10n.tooltipCombatDesc
-        );
+        return (l10n.tooltipCombatTitle, l10n.tooltipCombatDesc);
       case MapNodeType.elite:
-        return (
-          l10n.tooltipEliteTitle,
-          l10n.tooltipEliteDesc
-        );
+        return (l10n.tooltipEliteTitle, l10n.tooltipEliteDesc);
       case MapNodeType.shop:
-        return (
-          l10n.tooltipShopTitle,
-          l10n.tooltipShopDesc
-        );
+        return (l10n.tooltipShopTitle, l10n.tooltipShopDesc);
       case MapNodeType.rest:
-        return (
-          l10n.tooltipRestTitle,
-          l10n.tooltipRestDesc
-        );
+        return (l10n.tooltipRestTitle, l10n.tooltipRestDesc);
       case MapNodeType.event:
-        return (
-          l10n.tooltipEventTitle,
-          l10n.tooltipEventDesc
-        );
+        return (l10n.tooltipEventTitle, l10n.tooltipEventDesc);
       case MapNodeType.boss:
-        return (
-          l10n.tooltipBossTitle,
-          l10n.tooltipBossDesc
-        );
+        return (l10n.tooltipBossTitle, l10n.tooltipBossDesc);
     }
   }
 
@@ -140,22 +122,22 @@ class _MapNodeWidgetState extends State<MapNodeWidget> {
                       color: widget.isCurrent
                           ? Colors.yellow
                           : (_isHovered && widget.isAvailable
-                              ? Colors.white
-                              : (widget.isAvailable
-                                  ? color
-                                  : color.withAlpha(128))),
+                                ? Colors.white
+                                : (widget.isAvailable
+                                      ? color
+                                      : color.withAlpha(128))),
                       width: widget.isCurrent || _isHovered ? 4 : 2,
                     ),
-                    boxShadow: (widget.isCurrent ||
-                            (_isHovered && widget.isAvailable))
+                    boxShadow:
+                        (widget.isCurrent || (_isHovered && widget.isAvailable))
                         ? [
-                          BoxShadow(
-                            color: (widget.isCurrent ? Colors.yellow : color)
-                                .withAlpha(128),
-                            blurRadius: _isHovered ? 20 : 15,
-                            spreadRadius: _isHovered ? 4 : 2,
-                          ),
-                        ]
+                            BoxShadow(
+                              color: (widget.isCurrent ? Colors.yellow : color)
+                                  .withAlpha(128),
+                              blurRadius: _isHovered ? 20 : 15,
+                              spreadRadius: _isHovered ? 4 : 2,
+                            ),
+                          ]
                         : [],
                   ),
                   child: Icon(
