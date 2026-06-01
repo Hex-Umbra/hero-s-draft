@@ -142,8 +142,72 @@ class HeroMiniStatsPanel extends ConsumerWidget {
               ],
             ),
           ),
+          const SizedBox(height: 10),
+          Container(
+            width: 165,
+            height: 1,
+            color: const Color(0xFFD2B48C).withAlpha(80),
+          ),
+          const SizedBox(height: 8),
+          // Jauge d'XP
+          _buildXpBar(context, stats, locale),
         ],
       ),
+    );
+  }
+
+  Widget _buildXpBar(BuildContext context, dynamic stats, String locale) {
+    final double progress = stats.xpToNextLevel > 0
+        ? (stats.xp / stats.xpToNextLevel).clamp(0.0, 1.0)
+        : 0.0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'XP: ${stats.xp}/${stats.xpToNextLevel}',
+              style: const TextStyle(
+                color: Color(0xFFE8D5B5),
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.amber.withAlpha(40),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: Colors.amber.withAlpha(120), width: 0.5),
+              ),
+              child: Text(
+                locale == 'fr' ? 'Niv. ${stats.level}' : 'Lvl. ${stats.level}',
+                style: const TextStyle(
+                  color: Colors.amberAccent,
+                  fontSize: 9,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: SizedBox(
+            height: 6,
+            width: 165,
+            child: LinearProgressIndicator(
+              value: progress,
+              backgroundColor: Colors.black38,
+              valueColor: const AlwaysStoppedAnimation<Color>(Colors.amberAccent),
+            ),
+          ),
+        ),
+      ],
     );
   }
 

@@ -169,7 +169,9 @@ class EnemyIntentsPanel extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          name,
+                          locale == 'fr'
+                              ? '$name (Niv. ${enemy.stats.level})'
+                              : '$name (Lvl. ${enemy.stats.level})',
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             color: enemy.isBoss
