@@ -127,7 +127,11 @@ class CombatController extends StateNotifier<CombatState> {
 
     switch (intent.type) {
       case IntentType.attack:
-        runController.takeDamage(intent.value);
+        int dmg = intent.value;
+        if (enemy.stats.statuses.any((s) => s.id == 'freeze')) {
+          dmg = (intent.value * 0.5).round();
+        }
+        runController.takeDamage(dmg);
         break;
       case IntentType.defend:
         final updatedEnemy = enemy.copyWith(
@@ -165,6 +169,7 @@ class CombatController extends StateNotifier<CombatState> {
       int poisonDamage = 0;
       int strengthGain = 0;
       int armorGain = 0;
+      int burnDamage = 0;
 
       for (var status in enemy.stats.statuses) {
         if (status.id == 'poison') {
@@ -173,12 +178,17 @@ class CombatController extends StateNotifier<CombatState> {
           strengthGain += status.value;
         } else if (status.id == 'armor_regen') {
           armorGain += status.value;
+        } else if (status.id == 'burn') {
+          burnDamage += status.value;
         }
       }
 
       EntityStats updatedStats = enemy.stats;
       if (poisonDamage > 0) {
         updatedStats = updatedStats.takeDamage(poisonDamage);
+      }
+      if (burnDamage > 0) {
+        updatedStats = updatedStats.takeDamage(burnDamage);
       }
       if (strengthGain > 0) {
         updatedStats = updatedStats.addStatus(

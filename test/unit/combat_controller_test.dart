@@ -419,5 +419,142 @@ void main() {
         expect(combatController.currentState.selectedEnemyId, isNull);
       },
     );
+
+    test(
+      'Burn, Freeze, and Shock status effects are resolved correctly in combat',
+      () {
+        final combatController = CombatController();
+        final container = ProviderContainer();
+        final runController = container.read(runProvider.notifier);
+        runController.startNewRun(paladinHero);
+
+        final enemy = EnemyInstance(
+          data: goblinData,
+          stats: const EntityStats(
+            maxPv: 20,
+            currentPv: 20,
+            armure: 0,
+            attaque: 5,
+          ),
+          currentIntent: EnemyIntent(type: IntentType.attack, value: 10),
+        );
+
+        combatController.state = CombatState(
+          enemies: [enemy],
+          selectedEnemyId: enemy.id,
+          turnPhase: TurnPhase.player,
+        );
+
+        // 1. SHOCK TEST
+        // Apply shock status with value 4 to the enemy
+        combatController.updateEnemyStats(
+          enemy.id,
+          combatController.currentState.enemies.first.stats.addStatus(
+            const StatusEffect(
+              id: 'shock',
+              name: 'Électrocution',
+              type: StatusType.debuff,
+              value: 4,
+              duration: 2,
+            ),
+          ),
+        );
+
+        // Play a card that deals 6 damage (Strike).
+        // Since strength is 0, base damage = 6. With shock, it should do 6 + 4 = 10 damage.
+        final deckNotifier = DeckNotifier();
+        final strikeCard = CardInstance(
+          data: const CardData(
+            id: 'strike',
+            nameEn: 'Strike',
+            nameFr: 'Frappe',
+            descriptionEn: 'Deals 6 damage.',
+            descriptionFr: 'Inflige 6 dégâts.',
+            cost: 1,
+            type: CardType.attack,
+            category: CardCategory.global,
+            rarity: CardRarity.common,
+            target: CardTarget.singleEnemy,
+            effects: [CardEffect(type: 'damage', value: 6)],
+          ),
+        );
+
+        deckNotifier.initializeStarterDeck([strikeCard]);
+        deckNotifier.initializeCombat();
+        deckNotifier.state = deckNotifier.state.copyWith(hand: [strikeCard]);
+
+        combatController.applyPlayerCardPlay(
+          strikeCard,
+          runController,
+          deckNotifier,
+        );
+
+        // Enemy HP should be 20 - 10 = 10
+        expect(combatController.currentState.enemies.first.stats.currentPv, 10);
+
+        // 2. FREEZE TEST
+        // Add freeze status to the enemy
+        combatController.updateEnemyStats(
+          enemy.id,
+          combatController.currentState.enemies.first.stats.addStatus(
+            const StatusEffect(
+              id: 'freeze',
+              name: 'Gel',
+              type: StatusType.debuff,
+              value: 1,
+              duration: 2,
+            ),
+          ),
+        );
+
+        // Set enemy's intent to Attack 10
+        combatController.state = combatController.state.copyWith(
+          enemies: [
+            combatController.currentState.enemies.first.copyWith(
+              currentIntent: EnemyIntent(type: IntentType.attack, value: 10),
+            ),
+          ],
+        );
+
+        final playerHpBeforeAttack =
+            runController.currentState.heroStats.currentPv; // should be 100
+        combatController.resolveEnemyIntent(enemy.id, runController);
+
+        // Attack damage of 10 should be halved to 5 because of freeze
+        expect(
+          runController.currentState.heroStats.currentPv,
+          playerHpBeforeAttack - 5,
+        );
+
+        // 3. BURN TEST
+        // Add burn status with value 3 to the enemy
+        combatController.updateEnemyStats(
+          enemy.id,
+          combatController.currentState.enemies.first.stats.addStatus(
+            const StatusEffect(
+              id: 'burn',
+              name: 'Brûlure',
+              type: StatusType.debuff,
+              value: 3,
+              duration: 2,
+            ),
+          ),
+        );
+
+        final enemyHpBeforeBurn = combatController
+            .currentState
+            .enemies
+            .first
+            .stats
+            .currentPv; // should be 10
+        combatController.startEnemyTurn(runController);
+
+        // Enemy HP should decrease by 3 due to burn, so 10 - 3 = 7
+        expect(
+          combatController.currentState.enemies.first.stats.currentPv,
+          enemyHpBeforeBurn - 3,
+        );
+      },
+    );
   });
 }

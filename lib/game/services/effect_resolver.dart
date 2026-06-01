@@ -58,6 +58,30 @@ class EffectResolver {
           value: value,
           duration: duration,
         );
+      case 'burn':
+        return StatusEffect(
+          id: 'burn',
+          name: 'Brûlure',
+          type: StatusType.debuff,
+          value: value,
+          duration: duration,
+        );
+      case 'freeze':
+        return StatusEffect(
+          id: 'freeze',
+          name: 'Gel',
+          type: StatusType.debuff,
+          value: value,
+          duration: duration,
+        );
+      case 'shock':
+        return StatusEffect(
+          id: 'shock',
+          name: 'Électrocution',
+          type: StatusType.debuff,
+          value: value,
+          duration: duration,
+        );
       default:
         return null;
     }
@@ -113,6 +137,19 @@ class EffectResolver {
                 scaledValue,
                 runController.currentState.heroStats,
               );
+              final shockStatus = enemy.stats.statuses.firstWhere(
+                (s) => s.id == 'shock',
+                orElse: () => StatusEffect(
+                  id: '',
+                  name: '',
+                  type: StatusType.debuff,
+                  value: 0,
+                  duration: 0,
+                ),
+              );
+              if (shockStatus.id.isNotEmpty) {
+                dmg += shockStatus.value;
+              }
               combatController.updateEnemyStats(
                 selectedEnemyId,
                 enemy.stats.takeDamage(dmg),
@@ -124,9 +161,23 @@ class EffectResolver {
               runController.currentState.heroStats,
             );
             for (var enemy in combatController.currentState.enemies) {
+              int individualDmg = dmg;
+              final shockStatus = enemy.stats.statuses.firstWhere(
+                (s) => s.id == 'shock',
+                orElse: () => StatusEffect(
+                  id: '',
+                  name: '',
+                  type: StatusType.debuff,
+                  value: 0,
+                  duration: 0,
+                ),
+              );
+              if (shockStatus.id.isNotEmpty) {
+                individualDmg += shockStatus.value;
+              }
               combatController.updateEnemyStats(
                 enemy.id,
-                enemy.stats.takeDamage(dmg),
+                enemy.stats.takeDamage(individualDmg),
               );
             }
           }

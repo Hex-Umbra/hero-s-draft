@@ -178,7 +178,8 @@ class CardAnimator {
     Color color,
     VoidCallback onComplete,
   ) {
-    final isAoe = target == null || card.card.data.target == CardTarget.allEnemies;
+    final isAoe =
+        target == null || card.card.data.target == CardTarget.allEnemies;
     final castingPos = Vector2(card.game.size.x / 2, card.game.size.y * 0.45);
     final targetPos = target?.position ?? castingPos;
 
@@ -201,10 +202,7 @@ class CardAnimator {
           Vector2(0, -50),
           EffectController(duration: 0.4, curve: Curves.easeOut),
         ),
-        RotateEffect.by(
-          0.2,
-          EffectController(duration: 0.4, alternate: true),
-        ),
+        RotateEffect.by(0.2, EffectController(duration: 0.4, alternate: true)),
       ]),
       MoveEffect.to(
         targetPos,
@@ -221,11 +219,7 @@ class CardAnimator {
             );
           } else {
             for (final enemy in card.game.enemyCards) {
-              spawnImpactParticles(
-                enemy.position,
-                color: color,
-                count: 20,
-              );
+              spawnImpactParticles(enemy.position, color: color, count: 20);
               enemy.shakeAndFlashAnimation(
                 isPoison: color == const Color(0xFF10B981),
               );
@@ -240,9 +234,12 @@ class CardAnimator {
   }
 
   void _playMeleeAnimation(EnemyCard? target, VoidCallback onComplete) {
-    final isAoe = target == null || card.card.data.target == CardTarget.allEnemies;
+    final isAoe =
+        target == null || card.card.data.target == CardTarget.allEnemies;
     final castingPos = Vector2(card.game.size.x / 2, card.game.size.y * 0.45);
-    final targetPos = target?.position ?? Vector2(card.game.size.x / 2, card.game.size.y * 0.25);
+    final targetPos =
+        target?.position ??
+        Vector2(card.game.size.x / 2, card.game.size.y * 0.25);
     final startPos = isAoe ? castingPos : card.position;
     final anticipationDir = (startPos - targetPos).normalized();
 
@@ -304,7 +301,8 @@ class CardAnimator {
   }
 
   void _playMagicAnimation(EnemyCard? target, VoidCallback onComplete) {
-    final isAoe = target == null || card.card.data.target == CardTarget.allEnemies;
+    final isAoe =
+        target == null || card.card.data.target == CardTarget.allEnemies;
     final castingPos = Vector2(card.game.size.x / 2, card.game.size.y * 0.45);
 
     card.borderPaint.color = Colors.cyanAccent;
