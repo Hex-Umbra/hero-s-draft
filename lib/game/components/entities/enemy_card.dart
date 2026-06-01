@@ -38,6 +38,7 @@ class EnemyCard extends PositionComponent
   bool isSelected = false;
   bool isDead = false;
   bool isPendingDeath = false;
+  EnemyInstance? _pendingVisualInstance;
 
   EnemyCard({required this.instance, required this.onTapEnemy})
     : super(size: Vector2(100, 140));
@@ -241,14 +242,33 @@ class EnemyCard extends PositionComponent
       );
     }
 
-    instance = newInstance;
-    _refreshBadges();
-    buffIndicator.updateStatuses(
-      newStats.statuses.where((s) => s.type == StatusType.buff).toList(),
-    );
-    debuffIndicator.updateStatuses(
-      newStats.statuses.where((s) => s.type == StatusType.debuff).toList(),
-    );
+    if (game.isCardAnimating) {
+      _pendingVisualInstance = newInstance;
+    } else {
+      instance = newInstance;
+      _refreshBadges();
+      buffIndicator.updateStatuses(
+        newStats.statuses.where((s) => s.type == StatusType.buff).toList(),
+      );
+      debuffIndicator.updateStatuses(
+        newStats.statuses.where((s) => s.type == StatusType.debuff).toList(),
+      );
+    }
+  }
+
+  void resolvePendingVisualStats() {
+    if (_pendingVisualInstance != null) {
+      instance = _pendingVisualInstance!;
+      final newStats = stats;
+      _refreshBadges();
+      buffIndicator.updateStatuses(
+        newStats.statuses.where((s) => s.type == StatusType.buff).toList(),
+      );
+      debuffIndicator.updateStatuses(
+        newStats.statuses.where((s) => s.type == StatusType.debuff).toList(),
+      );
+      _pendingVisualInstance = null;
+    }
   }
 
   void shieldHitAnimation() {

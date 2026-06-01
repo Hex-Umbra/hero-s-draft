@@ -161,7 +161,9 @@ class EffectIcon extends PositionComponent with HasPaint {
       canvas.drawPath(flamePath, glowPaint);
       canvas.drawPath(flamePath, fillPaint);
       canvas.drawPath(flamePath, strokePaint);
-    } else if (iconType == 'freeze' || iconType == 'cold' || iconType == 'ice') {
+    } else if (iconType == 'freeze' ||
+        iconType == 'cold' ||
+        iconType == 'ice') {
       glowColor = Colors.lightBlueAccent;
       coreColor = const Color(0xFF0284C7); // Sky blue
       strokeColor = Colors.white;
@@ -195,9 +197,17 @@ class EffectIcon extends PositionComponent with HasPaint {
         canvas.drawLine(Offset.zero, const Offset(0, -16), strokePaint);
         // Little branches
         canvas.drawLine(const Offset(0, -10), const Offset(-5, -13), glowPaint);
-        canvas.drawLine(const Offset(0, -10), const Offset(-5, -13), strokePaint);
+        canvas.drawLine(
+          const Offset(0, -10),
+          const Offset(-5, -13),
+          strokePaint,
+        );
         canvas.drawLine(const Offset(0, -10), const Offset(5, -13), glowPaint);
-        canvas.drawLine(const Offset(0, -10), const Offset(5, -13), strokePaint);
+        canvas.drawLine(
+          const Offset(0, -10),
+          const Offset(5, -13),
+          strokePaint,
+        );
         canvas.restore();
       }
     } else if (iconType == 'shock' || iconType == 'lightning') {

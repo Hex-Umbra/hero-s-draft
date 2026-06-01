@@ -165,4 +165,3 @@ class _StatusIcon extends PositionComponent {
     }
   }
 }
-

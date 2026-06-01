@@ -257,25 +257,34 @@ Flux asynchrone séquentiel avec animations :
 4. **Boucle** sur chaque ennemi : animation d'attaque/buff → `onResolveEnemyIntent(enemyId)` → délai 400ms
 5. `onEndEnemyTurn()` → re-roll intentions, retour phase joueur
 
-### 4.4. Système de Mort Différée Z-Sync (Delayed Entity Destruction)
+### 4.4. Système de Mort et de Stats Différé Z-Sync (Delayed Entity Destruction & Visual Stats Synchronization)
 
-Pour éliminer la condition de concurrence visuelle (race condition) où l'état logique de Riverpod supprime instantanément un ennemi alors que l'animation de la carte Flame est encore en route, le jeu implémente le patron Z-Sync :
+Pour éliminer la condition de concurrence visuelle (race condition) où l'état logique de Riverpod met à jour les statistiques (points de vie, armure, statuts) ou supprime instantanément un ennemi alors que l'animation de la carte Flame est encore en route, le jeu implémente le patron Z-Sync étendu aux attributs visuels :
 
-1. **Drapeaux de Verrouillage d'Animation** :
+1. **Drapeaux et Buffers de Verrouillage** :
    - `game.isCardAnimating` (booléen global) : Flag de verrouillage positionné à `true` dès qu'une carte jouée initie sa phase d'attaque ou de lancer d'effet.
    - `enemyCard.isPendingDeath` (booléen local) : Flag indiquant que l'ennemi a été tué logiquement mais que sa suppression visuelle est mise en attente.
+   - `enemyCard._pendingVisualInstance` (modèle `EnemyInstance?` local) : Buffer stockant l'état des statistiques logiques reçues durant le trajet de la carte afin d'en différer l'affichage HUD.
 
-2. **Interception du Nettoyage Visuel (`_applyCombatState`)** :
+2. **Diffèrement des Statistiques HUD réactives (`updateStats`)** :
+   - Lors de la réception de nouvelles statistiques dans `EnemyCard.updateStats(newInstance)` :
+     - Les effets visuels physiques d'impact (secousses `Curves.elasticOut`, flashes sprite `ColorEffect`, FloatingText, particules de dégâts) sont déclenchés **immédiatement** pour un ressenti dynamique instantané.
+     - Si `game.isCardAnimating == true`, la mise à jour de la barre de vie (`HealthBar`), du badge d'armure (`StatBadge`), et de la liste des icônes de buffs/debuffs est **bloquée** et stockée dans `_pendingVisualInstance`.
+     - Si faux, les badges et jauges sont actualisés de suite.
+
+3. **Interception du Nettoyage Visuel (`_applyCombatState`)** :
    Dans `_applyCombatState`, lors de l'application du delta des ennemis :
    - Si un ennemi visuel Flame n'est plus présent dans la liste des ennemis logiques (Riverpod) :
      - Si `game.isCardAnimating == true`, le composant n'est **PAS** supprimé immédiatement. Il est marqué `isPendingDeath = true` et reste pleinement dessiné sur le board.
-     - Si `game.isCardAnimating == false`, il est supprimé ou anime sa disparition immédiatement (mort passive de début de tour, ex: poison).
+     - Si faux, il est supprimé ou anime sa disparition immédiatement (mort passive de début de tour, ex: poison).
 
-3. **Libération et Résolution Synchrone (`resolvePendingDeaths`)** :
-   - Lorsque l'effet visuel de la carte se termine (impact, secousse, flash de couleur) :
-     - Le callback `onComplete` ou de fin de mouvement de l'effet de carte est déclenché.
+4. **Libération et Résolution Synchrone (`resolvePendingDeaths`)** :
+   - Lorsque l'effet visuel de la carte se termine et impacte sa cible (physiquement ou magiquement) :
+     - Le callback `onComplete` ou de fin de mouvement est déclenché.
      - Il appelle `game.resolvePendingDeaths()`.
-     - Cette méthode bascule `isCardAnimating = false` et cherche toutes les `EnemyCard` ayant `isPendingDeath == true` pour lancer simultanément leur animation de mort (réduction de taille via `ScaleEffect` et fondu d'opacité via `OpacityEffect` de Flame).
+     - Cette méthode bascule `game.isCardAnimating = false`.
+     - Elle parcourt toutes les `EnemyCard` pour appeler `card.resolvePendingVisualStats()` afin d'appliquer l'instance stockée dans `_pendingVisualInstance`, actualiser de façon synchrone les barres de vie, l'armure et les indicateurs à la frame exacte de l'impact visuel.
+     - Elle lance simultanément l'animation de mort (réduction de taille via `ScaleEffect` et fondu d'opacité via `OpacityEffect` de Flame) pour toutes les `EnemyCard` ayant `isPendingDeath == true`.
 
 ---
 

@@ -101,13 +101,14 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Animations de cartes data-driven | `CardData.animation` | Types : melee, magic, buff, poison, fire, ice, lightning |
 | Layout main en arc | `HerosDraftGame._layoutHand()` | Arc circulaire, radius = `size.y * 1.5`, angle adaptatif |
 
-### 💀 Z-Sync Death System (Système de Mort Synchrone)
+### 💀 Z-Sync Death & Stats System (Système de Mort et de Stats Synchronisé)
 
 | Fonctionnalité | Implémentation | Détails |
 |:---|:---|:---|
 | Retardement des morts en combat | `isCardAnimating` & `isPendingDeath` | Deferre le scale-down et fondu de disparition de l'ennemi mort si une carte s'anime |
-| Libération à l'impact | `resolvePendingDeaths()` | Déclenche instantanément la mort de tous les ennemis différés à la complétion du coup |
-| Morts hors combat instantanées | Bypass automatique | Les morts hors combat (poison de début de tour) contournent Z-Sync et se résolvent de suite |
+| Synchronisation des statistiques HUD | `_pendingVisualInstance` & `resolvePendingVisualStats()` | Diffère la diminution visuelle des HP et de l'armure dans le HUD jusqu'à l'instant exact de l'impact de la carte |
+| Libération à l'impact | `resolvePendingDeaths()` | Déclenche instantanément la mort de tous les ennemis différés et applique les stats différées à la complétion du coup |
+| Morts/Stats hors combat instantanées | Bypass automatique | Les morts/stats hors combat (poison de début de tour) contournent Z-Sync et se résolvent de suite |
 
 ### ✨ Statuts Élémentaires (`burn`, `freeze`, `shock`)
 

@@ -22,12 +22,15 @@ L'objectif est d'alimenter de façon exhaustive la "Memory Bank" du projet (situ
    - **Auras de Soin et de Bouclier** : Pour les compétences de soin, émission de 20 particules en croix dorées et vertes (`CrossParticle`) s'élevant depuis la carte du héros (`HeroCard`). Pour les compétences de blocage, affichage d'un dôme de force cyan clignotant (`ShieldDome`) avec des lignes de scan horizontales autour du héros.
    - **Icônes de Statut Vectorielles sur Canvas** : Remplacement des émojis texte dans `effect_icon.dart` par des icônes vectorielles dessinées à la main (bouclier métallique avec contours écusson, épées croisées avec gardes dorées, goutte de poison vert menthe, étoile dorée) avec un effet de lueur floutée (`MaskFilter.blur`).
 
-2. **Système de Mort Synchronisé Z-Sync (Z-Sync Death System)** :
-   - Résolution d'une condition de concurrence (race condition) visuelle où un ennemi mourant s'effaçait instantanément via `_applyCombatState` alors que la carte jouée était encore au milieu de son animation de mêlée ou de projectile, faisant frapper la carte dans le vide.
-   - Introduction des flags d'état `isCardAnimating` dans `HerosDraftGame` et `isPendingDeath` dans `EnemyCard`.
-   - Si un ennemi meurt durant l'animation d'une carte, son animation de disparition est différée. Il est marqué `isPendingDeath = true` et reste affiché solidement pour subir l'impact visuel du coup.
-   - Dès que l'animation de la carte se termine et applique l'impact, son callback `onComplete` appelle `game.resolvePendingDeaths()`, déclenchant l'animation de rétrécissement (shrink) et de fondu (fade-out) de tous les ennemis marqués.
-   - Les morts hors combat (ex: poison en début de tour) contournent ce délai pour s'exécuter instantanément.
+2. **Système de Mort et de Stats Synchronisé Z-Sync (Z-Sync Death & Stats System)** :
+   - **Résolution des Concurrences Visuelles** : Résout la condition de concurrence (race condition) visuelle où un ennemi mourrait ou voyait sa barre de vie se vider instantanément via `_applyCombatState` alors que la carte jouée était encore en train de voyager (animation de mêlée ou projectile), faisant frapper la carte dans le vide ou drainer la vie avant l'impact physique.
+   - **Introduction des Flags d'État** : Utilise `isCardAnimating` dans `HerosDraftGame`, `isPendingDeath` et `_pendingVisualInstance` dans `EnemyCard`.
+   - **Diffèrement de la Mort et des Stats** : Si l'ennemi subit des dégâts ou meurt durant l'animation d'une carte :
+     - Les feedbacks visuels d'impact immédiats (secousses, flashes de couleur, nombres flottants, éclatement de particules physiques) sont déclenchés instantanément pour un ressenti ultra-satisfaisant ("snappiness").
+     - Mais la diminution réelle de la barre de vie (`HealthBar`), du bouclier (`StatBadge` d'armure) et des indicateurs de buff/debuff est temporisée. L'instance mise à jour est stockée dans `_pendingVisualInstance` dans `EnemyCard`.
+     - Si l'ennemi meurt, il est marqué `isPendingDeath = true` et reste pleinement visible.
+   - **Résolution Synchrone à l'Impact** : Dès que l'animation de la carte touche sa cible à 100% de son trajet, son callback `onComplete` appelle `game.resolvePendingDeaths()`. Cette méthode parcourt toutes les `EnemyCard` actives pour appeler `card.resolvePendingVisualStats()` (qui applique l'instance différée, rafraîchit la barre de HP et les badges d'armure) puis déclenche les animations de rétrécissement (shrink) et fondu (fade-out) des ennemis morts.
+   - **Bypass Hors-Combat** : Les modifications de stats hors combat (ex: ticks de poison ou de brûlure au début de tour) contournent ce délai pour s'appliquer instantanément.
 
 3. **Intégration des Statuts Élémentaires (Burn, Freeze, Shock)** :
    - **Brûlure (Burn)** : Résolution au début du tour ennemi via `startEnemyTurn()`, infligeant des dégâts directs à hauteur de la valeur cumulée du statut, similaire au poison.

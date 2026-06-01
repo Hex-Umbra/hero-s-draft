@@ -314,6 +314,12 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   }
 
   void resolvePendingDeaths() {
+    // 1. Resolve pending visual updates for all enemies
+    for (var card in enemyCards) {
+      card.resolvePendingVisualStats();
+    }
+
+    // 2. Resolve pending deaths
     final deadCards = enemyCards.where((c) => c.isPendingDeath).toList();
     if (deadCards.isEmpty) return;
 
