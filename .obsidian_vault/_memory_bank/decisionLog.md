@@ -301,3 +301,40 @@ Pas d'audio. Pas de `flame_audio`, pas de `audioplayers`, pas de `AudioService`.
 ### Conséquences
 - ❌ L'expérience de jeu manque de feedback sensoriel.
 - 📋 **Identifié dans la roadmap** : ajouter `flame_audio`, créer un `AudioService` central.
+
+---
+
+## 💀 ADR-013 : Système de Mort Synchronisée Z-Sync (Z-Sync Death System)
+
+### Statut
+✅ Accepté & Implémenté
+
+### Contexte
+Dans la version initiale, lorsqu'un joueur jouait une carte infligeant des dégâts létaux à un ennemi, l'état Riverpod du combat était immédiatement mis à jour, déclenchant instantanément `_cleanDeadEnemies()` et supprimant l'ennemi de la liste dans le `CombatState`. 
+
+Par conséquent, via le double-buffering dans Flame (`_applyCombatState`), l'entité visuelle `EnemyCard` correspondante était instantanément retirée (ou lançait son effet de disparition) pendant que l'animation physique de la carte (déplacement de mêlée ou projectile) était encore en cours de déplacement. L'impact de la carte frappait ainsi de l'air vide, créant une désynchronisation visuelle majeure (race condition visuelle).
+
+### Décision
+- **Introduire un état de temporisation des morts (Z-Sync)** :
+  - Ajouter un drapeau booléen central `isCardAnimating` dans `HerosDraftGame` pour indiquer qu'une animation de carte de combat est en cours de lecture.
+  - Ajouter un drapeau booléen local `isPendingDeath` dans `EnemyCard`.
+- **Différer le nettoyage visuel** :
+  - Lors de l'application de `_applyCombatState`, si un ennemi présent dans le canvas Flame n'est plus présent dans la liste logique du combat Riverpod (ce qui signifie qu'il est mort), nous vérifions si `game.isCardAnimating` est actif.
+  - Si oui, au lieu de supprimer immédiatement le composant ou de lancer sa disparition normale, l'ennemi est marqué avec `isPendingDeath = true` et reste visible, opaque et interactif sur le board.
+- **Résolution synchrone à l'impact** :
+  - Lorsque l'animation de la carte (physique ou magique) arrive à son terme et applique l'impact visuel (particules, shake, flash), sa méthode `onComplete` appelle `game.resolvePendingDeaths()`.
+  - Cette méthode désactive `isCardAnimating` et déclenche enfin les animations de mort (rétrécissement d'échelle et fondu d'opacité) de toutes les `EnemyCard` marquées en `isPendingDeath`.
+- **Bypass pour le hors-combat** :
+  - Si un ennemi meurt de façon passive sans qu'une carte ne soit activement en train de s'animer (par exemple, les dégâts de poison au début du tour ennemi), le système Z-Sync contourne automatiquement le délai pour appliquer immédiatement la mort visuelle.
+
+### Preuves dans le code
+- `HerosDraftGame.isCardAnimating` (variable d'orchestration).
+- `EnemyCard.isPendingDeath` (état de report de mort).
+- Méthode `HerosDraftGame.resolvePendingDeaths()` qui itère sur les composants enfants de type `EnemyCard` pour lancer leur transition de mort si `isPendingDeath == true`.
+- Callback `onComplete` des effets de mouvement et d'impact dans `CardComponent` ou les orchestrateurs d'animations graphiques de cartes.
+
+### Conséquences
+- ✅ **Game Feel Premium** : Les cartes frappent toujours une cible solide et existante, et l'impact visuel se synchronise parfaitement avec l'éjection de particules vectorielles et le flash du sprite.
+- ✅ **Éradication complète de la race condition visuelle** : Zéro ennemi ne disparaît prématurément avant d'avoir reçu le coup physique.
+- ✅ **Robustesse préservée** : La logique du jeu (Riverpod) reste le maître absolu des calculs de vie et de mort, le moteur Flame gérant uniquement le report temporel de l'affichage visuel de cette mort pour des raisons de synchronisation esthétique.
+- ⚠️ **Rigueur d'implémentation** : Tout nouveau type de carte animée doit impérativement déclarer le début d'une animation en basculant `game.isCardAnimating = true` et appeler `resolvePendingDeaths()` à sa complétion pour libérer les ennemis en attente.

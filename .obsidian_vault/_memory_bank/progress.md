@@ -5,9 +5,9 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 **Métriques du projet** :
 - **~8 200 lignes** de code source dans `lib/` (45 fichiers).
 - **7 fichiers JSON** de données d'assets.
-- **58 tests automatisés** — 100% au vert.
+- **59 tests automatisés** — 100% au vert.
 - **0 erreur, 0 avertissement** via `flutter analyze`.
-- **~107 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
+- **~108 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
 
 ---
 
@@ -79,20 +79,33 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Statuts localisés | `StatusEffectsPanel` | Traduction dynamique depuis identifiants techniques |
 | Langues supportées | `app_en.arb`, `app_fr.arb` | Anglais + Français |
 
-### 🎨 Rendu Unifié et Visual Juice
+### 🎨 Rendu Unifié, Rénovation Premium et Jus Visuel (Visual Juice)
 
 | Fonctionnalité | Implémentation | Détails |
 |:---|:---|:---|
 | `UiCard` unifié | `lib/ui/widgets/ui_card.dart` | Remplace 6 rendus dupliqués, ratio 70/110, gradients par rareté |
-| Tilt organique des cartes | `CardComponent` (DragCallbacks) | Rotation proportionnelle à la vélocité horizontale |
-| Shake d'erreur mana | `CardComponent._shakeAnimation()` | `SequenceEffect` oscillations rapides |
-| Ligne de ciblage réactive | `TargetingLine` | Gradient vert→rouge, pattern pointillé animé, cercles pulsants |
+| Tilt organique des cartes | `CardComponent` (DragCallbacks) | Rotation proportionnelle à la vélocité horizontale au glissement |
+| Shake d'erreur mana | `CardComponent._shakeAnimation()` | `SequenceEffect` oscillations rapides en cas de manque de mana |
+| Courbe de ciblage Bézier | `targeting_line.dart` | Courbe quadratique de Bézier fluide avec pointillés défilants et tête orientée via la tangente |
+| Jus Visuel de Dégâts/Impacts | `CardComponent`, `EnemyCard` | Secousses haute fréquence, rebond élastique (`Curves.elasticOut`), et flashes de sprites (`ColorEffect`) rouges/oranges ou verts |
+| Particules physiques | `spawnDamageParticles` | Éjection radiale de particules de dégâts (12 poison, 15 normal, 25 critiques) |
+| Traînées élémentaires | `CardAnimator`, `RibbonTrail` | Traînées d'étincelles assorties et ruban de traînée tactile selon le type d'effet |
+| Auras de Soin et Bouclier | `CrossParticle`, `ShieldDome` | 20 croix dorées/vertes montantes pour le heal; dôme cyan scanline pulsant pour le blocage |
+| Icônes vectorielles canvas | `effect_icon.dart` | Dessin personnalisé (écu, épées croisées, goutte, étoile) avec flou glow à la main sur canvas |
 | Texte flottant de dégâts | `FloatingText` | `MoveEffect` ascendant + `OpacityEffect` fade, ~1.5s |
 | Animations d'attaque ennemie | `EnemyCard.dashAnimation()` | `MoveEffect` avant/arrière |
 | Barre de vie dynamique | `HealthBar` | Interpolation couleur green→yellow→red, transition animée |
 | Badges de stats vectoriels | `StatBadge` | Dessin custom, pulse de scale au changement |
 | Animations de cartes data-driven | `CardData.animation` | Types : melee, magic, buff, poison, fire, ice, lightning |
 | Layout main en arc | `HerosDraftGame._layoutHand()` | Arc circulaire, radius = `size.y * 1.5`, angle adaptatif |
+
+### 💀 Z-Sync Death System (Système de Mort Synchrone)
+
+| Fonctionnalité | Implémentation | Détails |
+|:---|:---|:---|
+| Retardement des morts en combat | `isCardAnimating` & `isPendingDeath` | Deferre le scale-down et fondu de disparition de l'ennemi mort si une carte s'anime |
+| Libération à l'impact | `resolvePendingDeaths()` | Déclenche instantanément la mort de tous les ennemis différés à la complétion du coup |
+| Morts hors combat instantanées | Bypass automatique | Les morts hors combat (poison de début de tour) contournent Z-Sync et se résolvent de suite |
 
 ### 🧪 Fiabilité et Assurance Qualité
 

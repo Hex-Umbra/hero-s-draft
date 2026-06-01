@@ -257,6 +257,26 @@ Flux asynchrone séquentiel avec animations :
 4. **Boucle** sur chaque ennemi : animation d'attaque/buff → `onResolveEnemyIntent(enemyId)` → délai 400ms
 5. `onEndEnemyTurn()` → re-roll intentions, retour phase joueur
 
+### 4.4. Système de Mort Différée Z-Sync (Delayed Entity Destruction)
+
+Pour éliminer la condition de concurrence visuelle (race condition) où l'état logique de Riverpod supprime instantanément un ennemi alors que l'animation de la carte Flame est encore en route, le jeu implémente le patron Z-Sync :
+
+1. **Drapeaux de Verrouillage d'Animation** :
+   - `game.isCardAnimating` (booléen global) : Flag de verrouillage positionné à `true` dès qu'une carte jouée initie sa phase d'attaque ou de lancer d'effet.
+   - `enemyCard.isPendingDeath` (booléen local) : Flag indiquant que l'ennemi a été tué logiquement mais que sa suppression visuelle est mise en attente.
+
+2. **Interception du Nettoyage Visuel (`_applyCombatState`)** :
+   Dans `_applyCombatState`, lors de l'application du delta des ennemis :
+   - Si un ennemi visuel Flame n'est plus présent dans la liste des ennemis logiques (Riverpod) :
+     - Si `game.isCardAnimating == true`, le composant n'est **PAS** supprimé immédiatement. Il est marqué `isPendingDeath = true` et reste pleinement dessiné sur le board.
+     - Si `game.isCardAnimating == false`, il est supprimé ou anime sa disparition immédiatement (mort passive de début de tour, ex: poison).
+
+3. **Libération et Résolution Synchrone (`resolvePendingDeaths`)** :
+   - Lorsque l'effet visuel de la carte se termine (impact, secousse, flash de couleur) :
+     - Le callback `onComplete` ou de fin de mouvement de l'effet de carte est déclenché.
+     - Il appelle `game.resolvePendingDeaths()`.
+     - Cette méthode bascule `isCardAnimating = false` et cherche toutes les `EnemyCard` ayant `isPendingDeath == true` pour lancer simultanément leur animation de mort (réduction de taille via `ScaleEffect` et fondu d'opacité via `OpacityEffect` de Flame).
+
 ---
 
 ## 5. UI et Composants Graphiques
@@ -329,6 +349,47 @@ radius = size.y * 1.5
 angleStep = max(0.08, (0.4 / count).clamp(0.04, 0.08))  // réduit pour >4 cartes
 center = (width/2, height + radius - height*0.23)
 ```
+
+### 5.7. Courbes de Ciblage Réactives en Bézier Quadratique
+
+La ligne de ciblage rectiligne rigide a été remplacée par une courbe dynamique fluide dans `targeting_line.dart` :
+
+1. **Interpolation Quadratique de Bézier** :
+   La courbe est tracée à l'aide d'un point de départ $P_0$ (la carte sélectionnée), un point d'arrivée $P_2$ (la position actuelle de la souris ou la cible), et un point de contrôle $P_1$ calculé dynamiquement pour générer une cambrure organique :
+   ```dart
+   // Point de contrôle au milieu avec décalage vertical proportionnel
+   final controlPoint = Vector2((start.x + end.x) / 2, min(start.y, end.y) - 180.0);
+   ```
+
+2. **Détail des Pointillés Défilants (Scrolling Dots)** :
+   Au lieu de points fixes, la courbe échantillonne des points le long de $t \in [0.0, 1.0]$. Un offset temporel incrémenté à chaque frame fait défiler des disques pointillés le long des points interpolés. Un fondu d'opacité (fade-in / fade-out) est appliqué aux limites ($t < 0.15$ et $t > 0.85$) pour éviter toute coupure nette des cercles.
+
+3. **Orientation Dynamique de la Flèche (Derivative Tangent)** :
+   Pour que la tête de flèche pointe parfaitement dans la direction de la cible à l'extrémité, l'orientation (angle de rotation) est calculée en dérivant l'équation de Bézier quadratique à $t = 1.0$ (tangente d'arrivée) :
+   $$B'(t) = 2(1-t)(P_1 - P_0) + 2t(P_2 - P_1)$$
+   À $t = 1.0$, le vecteur de direction tangent est exactement $2(P_2 - P_1)$. On en déduit l'angle avec `atan2`.
+
+4. **Couleurs Élémentaires Réactives** :
+   Le tracé de la ligne s'accorde dynamiquement aux éléments des effets de la carte jouée :
+   - Feu (`fire`) : Orange vibrant.
+   - Froid (`ice`) : Cyan électrique.
+   - Poison (`poison`) : Vert émeraude.
+   - Électrique (`lightning`) : Jaune foudre.
+   - Mêlée (`melee`) / Physique : Rouge et blanc classique.
+
+### 5.8. Rendu Vectoriel direct sur Canvas & Auras Sensoriels
+
+1. **Icônes Vectorielles (Canvas Drawing)** :
+   Pour éliminer les émojis texte basse résolution, la classe `EffectIcon` (`lib/ui/widgets/effect_icon.dart`) redessine ses icônes à la main via les fonctions graphiques de l'API Canvas (`Path`, `drawPath`, `drawCircle`) de Flutter, enrichies d'un effet de lueur floutée (`MaskFilter.blur(BlurStyle.normal, 3.5)`) :
+   - **Écu d'Armure** : Un blason métallique avec des contours à double trait et une face interne brillante.
+   - **Épées Croisées** : Deux lames d'acier croisées en diagonale avec des gardes et pommeaux dorés.
+   - **Goutte de Poison** : Une larme vert menthe dessinée avec un chemin de Bézier fluide, dotée d'une double bordure contrastée.
+   - **Étoile de Force** : Une étoile dorée parfaite à cinq branches calculée par trigonométrie radiale.
+
+2. **Auras de Compétences (Spiritual Auras & Trails)** :
+   - **Aura de Soin (Heal Aura)** : Jouer une carte de soin émet 20 particules en forme de croix dorées et vertes (`CrossParticle`) éjectées vers le haut depuis le centre du héros avec un fondu d'opacité linéaire.
+   - **Dôme de Protection (Shield Dome)** : Jouer un effet défensif majeur fait apparaître un demi-dôme cyan translucide et pulsant (`ShieldDome`) centré sur la carte, strié de scanlines techniques horizontales pour donner une impression de champ de force actif.
+   - **Embers & Ribbon Trails** : Le glissement des cartes génère une traînée d'étincelles élémentaires (`Embers`) assortie à la couleur de l'élément de la carte, doublée d'un ruban tactile translucide (`RibbonTrail`) qui suit le tracé du curseur pour un "game feel" Balatro-esque extrêmement satisfaisant.
 
 ---
 
