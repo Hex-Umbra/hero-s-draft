@@ -141,19 +141,8 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                 // Dismiss carousel screen
                 Navigator.of(dialogContext).pop();
 
-                // Proceed with screen transitions
-                if (currentNodeType == MapNodeType.elite) {
-                  final runController = ref.read(runProvider.notifier);
-                  final rng = Random();
-                  ref.read(inventoryProvider.notifier).gainGold(rng.nextInt(15) + 20);
-                  runController.nextLevel();
-                  runController.completeCurrentNode();
-                  Navigator.of(context).pop(); // Return to map
-                } else {
-                  setState(() {
-                    _showDraft = true;
-                  });
-                }
+                // Process XP and progress
+                _resolveCombatProgression();
               },
             );
           },
@@ -167,18 +156,65 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     }
 
     // Fallback if not boss/elite or relics empty
-    if (currentNodeType == MapNodeType.elite) {
-      final runController = ref.read(runProvider.notifier);
-      final rng = Random();
-      ref.read(inventoryProvider.notifier).gainGold(rng.nextInt(15) + 20);
-      runController.nextLevel();
-      runController.completeCurrentNode();
-      Navigator.of(context).pop(); // Return to map
+    _resolveCombatProgression();
+  }
+
+  void _resolveCombatProgression() {
+    final combatState = ref.read(combatProvider);
+    final locale = Localizations.localeOf(context).languageCode;
+
+    // 1. Calculate accumulated XP from all defeated enemies
+    int totalXp = 0;
+    for (var enemy in combatState.enemies) {
+      final double levelMultiplier = 1.0 + 0.10 * (enemy.stats.level - 1);
+      totalXp += (enemy.data.xp * levelMultiplier).round();
+    }
+
+    // 2. Add XP to player and check level up
+    final bool leveledUp = ref.read(runProvider.notifier).gainXp(totalXp);
+
+    // 3. Show notification
+    context.showNotification(
+      '⚔️ ${locale == 'fr' ? 'VICTOIRE ! +$totalXp XP gagnés' : 'VICTORY! +$totalXp XP earned'}',
+      type: NotificationType.success,
+    );
+
+    if (leveledUp) {
+      Future.delayed(const Duration(milliseconds: 800), () {
+        if (mounted) {
+          context.showNotification(
+            '🎉 LEVEL UP !',
+            type: NotificationType.success,
+          );
+          setState(() {
+            _showDraft = true;
+          });
+        }
+      });
     } else {
-      setState(() {
-        _showDraft = true;
+      // No level up, just give default victory gold & return to map
+      Future.delayed(const Duration(milliseconds: 800), () {
+        if (mounted) {
+          _finishCombatWithoutDraft();
+        }
       });
     }
+  }
+
+  void _finishCombatWithoutDraft() {
+    final runController = ref.read(runProvider.notifier);
+    final rng = Random();
+    final currentNodeType = runController.currentState.currentNodeType;
+
+    int goldGained = rng.nextInt(15) + 10;
+    if (currentNodeType == MapNodeType.elite) {
+      goldGained = rng.nextInt(15) + 20;
+    }
+
+    ref.read(inventoryProvider.notifier).gainGold(goldGained);
+    runController.nextLevel();
+    runController.completeCurrentNode();
+    Navigator.of(context).pop(); // Return to map
   }
 
   void _startPlayerNewTurn() {
@@ -234,6 +270,8 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             runState.currentLevel,
             runState.currentNodeType,
             gameData.enemies,
+            playerLevel: runState.heroStats.level,
+            act: runState.act,
           );
 
       ref.read(deckProvider.notifier).initializeCombat();

@@ -24,8 +24,10 @@ class CombatController extends StateNotifier<CombatState> {
   void initializeCombat(
     int level,
     MapNodeType? nodeType,
-    List<EnemyData> availableEnemies,
-  ) {
+    List<EnemyData> availableEnemies, {
+    int playerLevel = 1,
+    int act = 1,
+  }) {
     final enemyDataList = EncounterSystem.generateEnemiesForLevel(
       level,
       availableEnemies,
@@ -36,20 +38,28 @@ class CombatController extends StateNotifier<CombatState> {
         nodeType == MapNodeType.boss || (level > 0 && level % 10 == 0);
     final bool isElite = nodeType == MapNodeType.elite;
 
-    double multiplier = 1.0;
+    // 1. Déterminer le niveau de l'ennemi (minimum 1)
+    int nodeModifier = 0;
     if (isBoss) {
-      multiplier = 3.0;
+      nodeModifier = 2;
     } else if (isElite) {
-      multiplier = 1.5;
+      nodeModifier = 1;
     }
+    final int enemyLevel = max(1, playerLevel + (act - 1) * 2 + nodeModifier);
+
+    // 2. Calculer les multiplicateurs de mise à l'échelle
+    final double nodeMultiplier = isBoss ? 3.0 : (isElite ? 1.5 : 1.0);
+    final double hpMultiplier = (1.0 + 0.12 * (enemyLevel - 1)) * (1.0 + 0.40 * (act - 1)) * nodeMultiplier;
+    final double damageMultiplier = (1.0 + 0.08 * (enemyLevel - 1)) * (1.0 + 0.30 * (act - 1)) * nodeMultiplier;
 
     final List<EnemyInstance> enemies = [];
     for (var data in enemyDataList) {
       final stats = EntityStats(
-        maxPv: (data.maxHp * multiplier).round(),
-        currentPv: (data.maxHp * multiplier).round(),
+        maxPv: (data.maxHp * hpMultiplier).round(),
+        currentPv: (data.maxHp * hpMultiplier).round(),
         armure: 0,
-        attaque: (data.baseDamage * multiplier).round(),
+        attaque: (data.baseDamage * damageMultiplier).round(),
+        level: enemyLevel,
       );
 
       var enemy = EnemyInstance(data: data, stats: stats, isBoss: isBoss);
