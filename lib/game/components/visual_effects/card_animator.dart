@@ -8,6 +8,7 @@ import '../../game_constants.dart';
 import '../entities/enemy_card.dart';
 import '../entities/hero_card.dart';
 import 'slash_effect.dart';
+import '../../../models/data/card_data.dart';
 
 class CardAnimator {
   final CardComponent card;
@@ -177,118 +178,188 @@ class CardAnimator {
     Color color,
     VoidCallback onComplete,
   ) {
-    final targetPos =
-        target?.position ?? card.position + Vector2(0, -card.size.y * 2);
+    final isAoe = target == null || card.card.data.target == CardTarget.allEnemies;
+    final castingPos = Vector2(card.game.size.x / 2, card.game.size.y * 0.45);
+    final targetPos = target?.position ?? castingPos;
 
     card.borderPaint.color = Colors.white;
 
-    card.add(
-      SequenceEffect([
-        CombinedEffect([
-          MoveEffect.by(
-            Vector2(0, -50),
-            EffectController(duration: 0.4, curve: Curves.easeOut),
-          ),
-          RotateEffect.by(
-            0.2,
-            EffectController(duration: 0.4, alternate: true),
-          ),
-        ]),
+    final effects = <Effect>[];
+
+    if (isAoe) {
+      effects.add(
         MoveEffect.to(
-          targetPos,
-          EffectController(duration: 0.2, curve: Curves.easeIn),
+          castingPos,
+          EffectController(duration: 0.3, curve: Curves.easeOutQuad),
         ),
-        ScaleEffect.to(
-          Vector2.all(0.0),
-          EffectController(duration: 0.1),
-          onComplete: () {
-            if (target != null) {
-              spawnImpactParticles(targetPos, color: color, count: 30);
-              target.shakeAndFlashAnimation(
+      );
+    }
+
+    effects.addAll([
+      CombinedEffect([
+        MoveEffect.by(
+          Vector2(0, -50),
+          EffectController(duration: 0.4, curve: Curves.easeOut),
+        ),
+        RotateEffect.by(
+          0.2,
+          EffectController(duration: 0.4, alternate: true),
+        ),
+      ]),
+      MoveEffect.to(
+        targetPos,
+        EffectController(duration: 0.2, curve: Curves.easeIn),
+      ),
+      ScaleEffect.to(
+        Vector2.all(0.0),
+        EffectController(duration: 0.1),
+        onComplete: () {
+          if (target != null) {
+            spawnImpactParticles(targetPos, color: color, count: 30);
+            target.shakeAndFlashAnimation(
+              isPoison: color == const Color(0xFF10B981),
+            );
+          } else {
+            for (final enemy in card.game.enemyCards) {
+              spawnImpactParticles(
+                enemy.position,
+                color: color,
+                count: 20,
+              );
+              enemy.shakeAndFlashAnimation(
                 isPoison: color == const Color(0xFF10B981),
               );
             }
-            onComplete();
-          },
-        ),
-      ]),
-    );
+          }
+          onComplete();
+        },
+      ),
+    ]);
+
+    card.add(SequenceEffect(effects));
   }
 
   void _playMeleeAnimation(EnemyCard? target, VoidCallback onComplete) {
-    final targetPos =
-        target?.position ?? card.position + Vector2(0, -card.size.y * 2);
-    final anticipationDir = (card.position - targetPos).normalized();
+    final isAoe = target == null || card.card.data.target == CardTarget.allEnemies;
+    final castingPos = Vector2(card.game.size.x / 2, card.game.size.y * 0.45);
+    final targetPos = target?.position ?? Vector2(card.game.size.x / 2, card.game.size.y * 0.25);
+    final startPos = isAoe ? castingPos : card.position;
+    final anticipationDir = (startPos - targetPos).normalized();
 
     card.applyFlashVisual();
 
-    card.add(
-      SequenceEffect([
-        MoveEffect.by(
-          anticipationDir * 40,
-          EffectController(duration: 0.1, curve: Curves.easeOut),
-        ),
+    final effects = <Effect>[];
+
+    if (isAoe) {
+      effects.add(
         MoveEffect.to(
-          targetPos,
-          EffectController(duration: 0.15, curve: Curves.easeIn),
+          castingPos,
+          EffectController(duration: 0.25, curve: Curves.easeOutQuad),
         ),
-        ScaleEffect.to(
-          Vector2.all(0.0),
-          EffectController(duration: 0.05),
-          onComplete: () {
-            if (target != null) {
+      );
+    }
+
+    effects.addAll([
+      MoveEffect.by(
+        anticipationDir * 40,
+        EffectController(duration: 0.1, curve: Curves.easeOut),
+      ),
+      MoveEffect.to(
+        targetPos,
+        EffectController(duration: 0.15, curve: Curves.easeIn),
+      ),
+      ScaleEffect.to(
+        Vector2.all(0.0),
+        EffectController(duration: 0.05),
+        onComplete: () {
+          if (target != null) {
+            card.game.add(
+              SlashEffect(
+                position: target.position.clone(),
+                size: target.size * 1.5,
+                color: Colors.redAccent,
+              ),
+            );
+            target.shakeAndFlashAnimation();
+            spawnImpactParticles(target.position, color: Colors.redAccent);
+          } else {
+            for (final enemy in card.game.enemyCards) {
               card.game.add(
                 SlashEffect(
-                  position: target.position.clone(),
-                  size: target.size * 1.5,
+                  position: enemy.position.clone(),
+                  size: enemy.size * 1.5,
                   color: Colors.redAccent,
                 ),
               );
-              target.shakeAndFlashAnimation();
+              enemy.shakeAndFlashAnimation();
+              spawnImpactParticles(enemy.position, color: Colors.redAccent);
             }
+          }
+          onComplete();
+        },
+      ),
+    ]);
 
-            spawnImpactParticles(targetPos, color: Colors.redAccent);
-            onComplete();
-          },
-        ),
-      ]),
-    );
+    card.add(SequenceEffect(effects));
   }
 
   void _playMagicAnimation(EnemyCard? target, VoidCallback onComplete) {
-    final targetPos =
-        target?.position ?? card.position + Vector2(0, -card.size.y * 2);
+    final isAoe = target == null || card.card.data.target == CardTarget.allEnemies;
+    final castingPos = Vector2(card.game.size.x / 2, card.game.size.y * 0.45);
 
     card.borderPaint.color = Colors.cyanAccent;
 
-    card.add(
-      SequenceEffect([
-        MoveEffect.by(
-          Vector2(0, -30),
-          EffectController(duration: 0.3, curve: Curves.easeInOut),
+    final effects = <Effect>[];
+
+    if (isAoe) {
+      effects.add(
+        MoveEffect.to(
+          castingPos,
+          EffectController(duration: 0.3, curve: Curves.easeOutQuad),
         ),
-        ScaleEffect.to(
-          Vector2.all(card.game.scaleFactor * 1.1),
-          EffectController(
-            duration: 0.4,
-            alternate: true,
-            curve: Curves.elasticIn,
-          ),
+      );
+    }
+
+    effects.addAll([
+      MoveEffect.by(
+        Vector2(0, -30),
+        EffectController(duration: 0.3, curve: Curves.easeInOut),
+      ),
+      ScaleEffect.to(
+        Vector2.all(card.game.scaleFactor * 1.1),
+        EffectController(
+          duration: 0.4,
+          alternate: true,
+          curve: Curves.elasticIn,
         ),
-        ScaleEffect.to(
-          Vector2.all(0.0),
-          EffectController(duration: 0.2, curve: Curves.easeIn),
-          onComplete: () {
+      ),
+      ScaleEffect.to(
+        Vector2.all(0.0),
+        EffectController(duration: 0.2, curve: Curves.easeIn),
+        onComplete: () {
+          if (target != null) {
             spawnImpactParticles(
-              targetPos,
+              target.position,
               color: Colors.purpleAccent,
               count: 25,
             );
-            onComplete();
-          },
-        ),
-      ]),
-    );
+            target.shakeAndFlashAnimation();
+          } else {
+            for (final enemy in card.game.enemyCards) {
+              spawnImpactParticles(
+                enemy.position,
+                color: Colors.purpleAccent,
+                count: 20,
+              );
+              enemy.shakeAndFlashAnimation();
+            }
+          }
+          onComplete();
+        },
+      ),
+    ]);
+
+    card.add(SequenceEffect(effects));
   }
 
   void _playBuffAnimation(VoidCallback onComplete) {
