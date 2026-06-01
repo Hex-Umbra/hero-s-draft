@@ -12,6 +12,8 @@ class DraftCardReel extends StatefulWidget {
   final VoidCallback? onTick;
   final VoidCallback? onLand;
 
+  final bool initialLanded;
+
   const DraftCardReel({
     super.key,
     required this.title,
@@ -21,6 +23,7 @@ class DraftCardReel extends StatefulWidget {
     required this.index,
     this.onTick,
     this.onLand,
+    this.initialLanded = false,
   });
 
   @override
@@ -75,6 +78,9 @@ class _DraftCardReelState extends State<DraftCardReel>
 
     final isLegendary = widget.rarity.toUpperCase() == 'LÉGENDAIRE' ||
         widget.rarity.toUpperCase() == 'LEGENDARY';
+    final isMythic = widget.rarity.toUpperCase() == 'MYTHIQUE' ||
+        widget.rarity.toUpperCase() == 'MYTHIC';
+    final isHighRarity = isLegendary || isMythic;
 
     // 1. Initialize random starting cards for the roll
     final random = Random();
@@ -115,33 +121,42 @@ class _DraftCardReelState extends State<DraftCardReel>
       }
     });
 
-    // Start fast rolling immediately
-    _rollController.forward();
-
     // 3. Rarity reveal & flash controller (pop overlay + fade border/shadow)
     _rarityController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 700),
     );
 
-    // 4. Screenshake for legendary choice
+    // 4. Screenshake for high rarity choice
     _shakeController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 100),
     );
-    if (isLegendary) {
+    if (isHighRarity && !widget.initialLanded) {
       _shakeController.repeat(reverse: true);
     }
 
-    // 5. Pulsing golden outer glow for legendary choice
+    // 5. Pulsing outer glow for high rarity choice
     _glowController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 1),
     )..repeat(reverse: true);
 
-    // Staggered landing calculation: staggered lock-in delay based on slot index
-    final int delayMs = 1200 + widget.index * 600 + (isLegendary ? 400 : 0);
-    _landTimer = Timer(Duration(milliseconds: delayMs), _landReel);
+    if (widget.initialLanded) {
+      _currentCardData = {
+        'title': widget.title,
+        'description': widget.description,
+      };
+      _hasLanded = true;
+      _prepareToLand = true;
+      _rarityController.value = 1.0;
+    } else {
+      // Start fast rolling immediately
+      _rollController.forward();
+      // Staggered landing calculation: staggered lock-in delay based on slot index
+      final int delayMs = 1200 + widget.index * 600 + (isMythic ? 800 : (isLegendary ? 400 : 0));
+      _landTimer = Timer(Duration(milliseconds: delayMs), _landReel);
+    }
   }
 
   void _landReel() {
@@ -179,6 +194,9 @@ class _DraftCardReelState extends State<DraftCardReel>
   Widget build(BuildContext context) {
     final isLegendary = widget.rarity.toUpperCase() == 'LÉGENDAIRE' ||
         widget.rarity.toUpperCase() == 'LEGENDARY';
+    final isMythic = widget.rarity.toUpperCase() == 'MYTHIQUE' ||
+        widget.rarity.toUpperCase() == 'MYTHIC';
+    final isHighRarity = isLegendary || isMythic;
 
     // Match rarity color
     Color rarityColor = const Color(0xFF8E8E93);
@@ -193,6 +211,8 @@ class _DraftCardReelState extends State<DraftCardReel>
       rarityColor = const Color(0xFFAF52DE);
     } else if (isLegendary) {
       rarityColor = const Color(0xFFFFCC00);
+    } else if (isMythic) {
+      rarityColor = const Color(0xFFE53E3E);
     }
 
     return AnimatedBuilder(
@@ -203,13 +223,14 @@ class _DraftCardReelState extends State<DraftCardReel>
         _glowController,
       ]),
       builder: (context, child) {
-        // Screenshake translations during fast spin (for legendary)
+        // Screenshake translations during fast spin (for legendary/mythic)
         double shakeX = 0.0;
         double shakeY = 0.0;
-        if (!_hasLanded && isLegendary) {
+        if (!_hasLanded && isHighRarity) {
           final random = Random();
-          shakeX = (random.nextDouble() - 0.5) * 6.0;
-          shakeY = (random.nextDouble() - 0.5) * 6.0;
+          final shakeScale = isMythic ? 12.0 : 6.0;
+          shakeX = (random.nextDouble() - 0.5) * shakeScale;
+          shakeY = (random.nextDouble() - 0.5) * shakeScale;
         }
 
         // Inner roll stack containing outgoing & incoming cards
@@ -309,14 +330,15 @@ class _DraftCardReelState extends State<DraftCardReel>
                     ),
                   ),
                 ),
-              // Golden sparks overlay for locked Legendary choices
-              if (_hasLanded && isLegendary)
+              // sparks overlay for locked high-rarity choices
+              if (_hasLanded && isHighRarity)
                 Positioned.fill(
                   child: IgnorePointer(
                     child: CustomPaint(
                       painter: _SparkPainter(
                         color: rarityColor,
                         progress: _glowController.value,
+                        isMythic: isMythic,
                       ),
                     ),
                   ),
@@ -332,16 +354,21 @@ class _DraftCardReelState extends State<DraftCardReel>
 class _SparkPainter extends CustomPainter {
   final Color color;
   final double progress;
+  final bool isMythic;
 
-  _SparkPainter({required this.color, required this.progress});
+  _SparkPainter({
+    required this.color,
+    required this.progress,
+    this.isMythic = false,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = color.withValues(alpha: 0.3 + 0.5 * (1.0 - progress))
+      ..color = color.withValues(alpha: (isMythic ? 0.4 : 0.3) + (isMythic ? 0.6 : 0.5) * (1.0 - progress))
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.0 + 2.0 * progress
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
+      ..strokeWidth = (isMythic ? 5.0 : 3.0) + (isMythic ? 3.0 : 2.0) * progress
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, isMythic ? 8 : 5);
 
     // Glowing border outline
     final rect = Rect.fromLTWH(-4, -4, size.width + 8, size.height + 8);
@@ -351,6 +378,6 @@ class _SparkPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _SparkPainter oldDelegate) {
-    return oldDelegate.progress != progress;
+    return oldDelegate.progress != progress || oldDelegate.isMythic != isMythic;
   }
 }

@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
@@ -24,6 +25,44 @@ class DraftScreen extends ConsumerStatefulWidget {
 
 class _DraftScreenState extends ConsumerState<DraftScreen> {
   late List<_DraftChoice> _choices;
+  bool _baseCompleted = false;
+  bool _mythicRevealing = false;
+  bool _mythicCompleted = false;
+  int _baseLandedCount = 0;
+  int _mythicLandedCount = 0;
+
+  bool get _hasMythicChoices => _choices.any((c) => c.rarity == RewardRarity.mythic);
+
+  void _onBaseReelLanded() {
+    _baseLandedCount++;
+    if (_baseLandedCount == 3) {
+      if (_hasMythicChoices) {
+        setState(() {
+          _baseCompleted = true;
+          _mythicRevealing = true;
+        });
+      } else {
+        setState(() {
+          _baseCompleted = true;
+        });
+      }
+    }
+  }
+
+  void _onMythicReelLanded() {
+    _mythicLandedCount++;
+    final mythicChoicesCount = _choices.where((c) => c.rarity == RewardRarity.mythic).length;
+    if (_mythicLandedCount == mythicChoicesCount) {
+      Future.delayed(const Duration(milliseconds: 1500), () {
+        if (mounted) {
+          setState(() {
+            _mythicRevealing = false;
+            _mythicCompleted = true;
+          });
+        }
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -34,6 +73,8 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
   String _rarityToString(BuildContext context, RewardRarity rarity) {
     final l10n = AppLocalizations.of(context)!;
     switch (rarity) {
+      case RewardRarity.mythic:
+        return Localizations.localeOf(context).languageCode == 'fr' ? 'MYTHIQUE' : 'MYTHIC';
       case RewardRarity.legendary:
         return l10n.rarityLegendary;
       case RewardRarity.epic:
@@ -84,112 +125,184 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final visibleChoices = _mythicCompleted ? _choices : _choices.sublist(0, 3);
 
-    return Material(
-      color: Colors.black87,
-      child: SafeArea(
-        child: Center(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              bool isPortrait = constraints.maxWidth < 600;
+    return Stack(
+      children: [
+        Material(
+          color: Colors.black87,
+          child: SafeArea(
+            child: Center(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  bool isPortrait = constraints.maxWidth < 600;
 
-              return Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      l10n.combatReward,
-                      style: const TextStyle(
-                        color: Colors.amber,
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      l10n.chooseUpgrade,
-                      style: const TextStyle(color: Colors.white, fontSize: 18),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 30),
-                    if (isPortrait)
-                      Expanded(
-                        child: ListView(
-                          shrinkWrap: true,
-                          children: _choices.map((choice) {
-                            final index = _choices.indexOf(choice);
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 8,
-                                horizontal: 40,
-                              ),
-                              child: Center(
-                                child: ConstrainedBox(
-                                  constraints: const BoxConstraints(
-                                    maxWidth: 160,
+                  return Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          l10n.combatReward,
+                          style: const TextStyle(
+                            color: Colors.amber,
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          l10n.chooseUpgrade,
+                          style: const TextStyle(color: Colors.white, fontSize: 18),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 30),
+                        if (isPortrait)
+                          Expanded(
+                            child: ListView(
+                              shrinkWrap: true,
+                              children: visibleChoices.map((choice) {
+                                final index = _choices.indexOf(choice);
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 8,
+                                    horizontal: 40,
                                   ),
-                                  child: DraftCardReel(
-                                    title: _getChoiceTitle(context, choice),
-                                    description: _getChoiceDescription(
-                                      context,
-                                      choice,
+                                  child: Center(
+                                    child: ConstrainedBox(
+                                      constraints: const BoxConstraints(
+                                        maxWidth: 160,
+                                      ),
+                                      child: DraftCardReel(
+                                        title: _getChoiceTitle(context, choice),
+                                        description: _getChoiceDescription(
+                                          context,
+                                          choice,
+                                        ),
+                                        onTap: () =>
+                                            _onChoiceSelected(context, ref, choice),
+                                        rarity: _rarityToString(
+                                          context,
+                                          choice.rarity,
+                                        ),
+                                        index: index,
+                                        onLand: index < 3 ? _onBaseReelLanded : null,
+                                        initialLanded: index >= 3 ? true : _baseCompleted,
+                                      ),
                                     ),
-                                    onTap: () =>
-                                        _onChoiceSelected(context, ref, choice),
-                                    rarity: _rarityToString(
-                                      context,
-                                      choice.rarity,
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          )
+                        else
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: visibleChoices.map((choice) {
+                              final index = _choices.indexOf(choice);
+                              return Flexible(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                  ),
+                                  child: ConstrainedBox(
+                                    constraints: const BoxConstraints(
+                                      maxWidth: 160,
                                     ),
-                                    index: index,
+                                    child: DraftCardReel(
+                                      title: _getChoiceTitle(context, choice),
+                                      description: _getChoiceDescription(
+                                        context,
+                                        choice,
+                                      ),
+                                      onTap: () =>
+                                          _onChoiceSelected(context, ref, choice),
+                                      rarity: _rarityToString(
+                                        context,
+                                        choice.rarity,
+                                      ),
+                                      index: index,
+                                      onLand: index < 3 ? _onBaseReelLanded : null,
+                                      initialLanded: index >= 3 ? true : _baseCompleted,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            );
-                          }).toList(),
+                              );
+                            }).toList(),
+                          ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+        if (_mythicRevealing)
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withValues(alpha: 0.6),
+              child: BackdropFilter(
+                filter: ui.ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        'RÉCOMPENSE MYTHIQUE DÉCOUVERTE !',
+                        style: TextStyle(
+                          color: Color(0xFFE53E3E),
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 2.0,
+                          shadows: [
+                            Shadow(
+                              color: Color(0xFFE53E3E),
+                              blurRadius: 15,
+                            ),
+                          ],
                         ),
-                      )
-                    else
+                      ),
+                      const SizedBox(height: 40),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: _choices.map((choice) {
-                          final index = _choices.indexOf(choice);
-                          return Flexible(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
+                        children: _choices
+                            .where((c) => c.rarity == RewardRarity.mythic)
+                            .map((choice) {
+                          final mythicIndex = _choices.indexOf(choice);
+                          final relativeIndex = mythicIndex - 3;
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(
+                                maxWidth: 160,
                               ),
-                              child: ConstrainedBox(
-                                constraints: const BoxConstraints(
-                                  maxWidth: 160,
+                              child: DraftCardReel(
+                                title: _getChoiceTitle(context, choice),
+                                description: _getChoiceDescription(
+                                  context,
+                                  choice,
                                 ),
-                                child: DraftCardReel(
-                                  title: _getChoiceTitle(context, choice),
-                                  description: _getChoiceDescription(
-                                    context,
-                                    choice,
-                                  ),
-                                  onTap: () =>
-                                      _onChoiceSelected(context, ref, choice),
-                                  rarity: _rarityToString(
-                                    context,
-                                    choice.rarity,
-                                  ),
-                                  index: index,
+                                onTap: () {},
+                                rarity: _rarityToString(
+                                  context,
+                                  choice.rarity,
                                 ),
+                                index: relativeIndex,
+                                onLand: _onMythicReelLanded,
                               ),
                             ),
                           );
                         }).toList(),
                       ),
-                  ],
+                    ],
+                  ),
                 ),
-              );
-            },
+              ),
+            ),
           ),
-        ),
-      ),
+      ],
     );
   }
 
@@ -288,23 +401,34 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
   }) {
     if (widget.forceLegendary) {
       if (isLevelReward) {
-        return RewardRarity.legendary;
+        return RewardRarity.mythic;
       }
     }
     final rng = Random();
     // Probabilités de base (sur 100)
-    double legendaryChance = isLevelReward ? 0.5 : 1.0;
-    double epicChance = isLevelReward ? 4.5 : 5.0;
-    double rareChance = isLevelReward ? 15.0 : 14.0;
-    double uncommonChance = 20.0;
+    double mythicChance = isLevelReward ? 0.5 : 0.0;
+    double legendaryChance = 2.0;
+    double epicChance = 6.0;
+    double rareChance = 16.0;
+    double uncommonChance = 24.0;
 
     // La chance augmente les probabilités des hautes raretés
+    if (isLevelReward) {
+      mythicChance += luck * 0.15;
+    }
     legendaryChance += luck * 0.5;
     epicChance += luck * 1.5;
     rareChance += luck * 3.0;
     uncommonChance += luck * 4.0;
 
     double roll = rng.nextDouble() * 100;
+
+    if (isLevelReward && roll < mythicChance) {
+      return RewardRarity.mythic;
+    }
+    if (isLevelReward) {
+      roll -= mythicChance;
+    }
 
     if (canBeLegendary && roll < legendaryChance) return RewardRarity.legendary;
     if (!canBeLegendary) {
@@ -416,7 +540,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
     // Chaque récompense légendaire est testée indépendamment
 
     // Trèfle à 4 feuilles
-    if (_rollRarity(luck, isLevelReward: true) == RewardRarity.legendary) {
+    if (_rollRarity(luck, isLevelReward: true) == RewardRarity.mythic) {
       choices.add(
         _DraftChoice(
           'Trèfle à 4 feuilles',
@@ -426,13 +550,13 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
           0,
           0,
           luckBoost: 1,
-          rarity: RewardRarity.legendary,
+          rarity: RewardRarity.mythic,
         ),
       );
     }
 
     // Miroir (Clonage)
-    if (_rollRarity(luck, isLevelReward: true) == RewardRarity.legendary) {
+    if (_rollRarity(luck, isLevelReward: true) == RewardRarity.mythic) {
       choices.add(
         _DraftChoice(
           'Miroir',
@@ -442,7 +566,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
           0,
           0,
           isCloneOption: true,
-          rarity: RewardRarity.legendary,
+          rarity: RewardRarity.mythic,
         ),
       );
     }
@@ -451,7 +575,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
   }
 }
 
-enum RewardRarity { common, uncommon, rare, epic, legendary }
+enum RewardRarity { common, uncommon, rare, epic, legendary, mythic }
 
 class _DraftChoice {
   final String title;

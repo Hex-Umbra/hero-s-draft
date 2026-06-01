@@ -34,6 +34,8 @@ class DraftChoiceCard extends StatelessWidget {
       rarityColor = const Color(0xFFAF52DE); // Epic Purple
     } else if (rarityUpper == 'LÉGENDAIRE' || rarityUpper == 'LEGENDARY') {
       rarityColor = const Color(0xFFFFCC00); // Legendary Gold
+    } else if (rarityUpper == 'MYTHIQUE' || rarityUpper == 'MYTHIC') {
+      rarityColor = const Color(0xFFE53E3E); // Mythic Scarlet Red
     }
 
     // 2. Map Draft Upgrades to intuitive thematic icons/emojis
@@ -53,7 +55,9 @@ class DraftChoiceCard extends StatelessWidget {
       emoji = '🪞'; // Mirror Cloning
     }
 
+    final isMythic = rarityUpper == 'MYTHIQUE' || rarityUpper == 'MYTHIC';
     final isLegendary = rarityUpper == 'LÉGENDAIRE' || rarityUpper == 'LEGENDARY';
+    final isHighRarity = isLegendary || isMythic;
 
     // 3. Smooth interpolation of border & shadow based on showRarity and rarityProgress
     final double actualProgress = showRarity ? rarityProgress : 0.0;
@@ -64,11 +68,11 @@ class DraftChoiceCard extends StatelessWidget {
       actualProgress,
     )!;
 
-    final double borderSize = isLegendary ? (2.0 + 1.0 * actualProgress) : 2.0;
+    final double borderSize = isHighRarity ? (2.0 + (isMythic ? 2.0 : 1.0) * actualProgress) : 2.0;
 
-    final double shadowAlpha = isLegendary ? 0.45 : 0.2;
-    final double shadowBlur = isLegendary ? 20.0 : 8.0;
-    final double shadowSpread = isLegendary ? 3.0 : 1.0;
+    final double shadowAlpha = isMythic ? 0.60 : (isLegendary ? 0.45 : 0.2);
+    final double shadowBlur = isMythic ? 25.0 : (isLegendary ? 20.0 : 8.0);
+    final double shadowSpread = isMythic ? 4.0 : (isLegendary ? 3.0 : 1.0);
 
     return GestureDetector(
       onTap: onTap,

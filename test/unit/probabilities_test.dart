@@ -6,24 +6,27 @@ void main() {
       int luck,
       bool isLevelReward,
     ) {
-      double legendaryChance = isLevelReward
-          ? 0.5 + luck * 0.5
-          : 1.0 + luck * 0.5;
-      double epicChance = isLevelReward ? 4.5 + luck * 1.5 : 5.0 + luck * 1.5;
-      double rareChance = isLevelReward ? 15.0 + luck * 3.0 : 14.0 + luck * 3.0;
-      double uncommonChance = 20.0 + luck * 4.0;
+      double mythicChance = isLevelReward ? 0.5 + luck * 0.15 : 0.0;
+      double legendaryChance = 2.0 + luck * 0.5;
+      double epicChance = 6.0 + luck * 1.5;
+      double rareChance = 16.0 + luck * 3.0;
+      double uncommonChance = 24.0 + luck * 4.0;
 
+      mythicChance = mythicChance.clamp(0.0, 100.0);
       legendaryChance = legendaryChance.clamp(0.0, 100.0);
       epicChance = epicChance.clamp(0.0, 100.0);
       rareChance = rareChance.clamp(0.0, 100.0);
       uncommonChance = uncommonChance.clamp(0.0, 100.0);
 
+      double pMythic = mythicChance;
       double pLeg = legendaryChance;
       double pEpic = epicChance;
       double pRare = rareChance;
       double pUncommon = uncommonChance;
 
-      double sum = pLeg;
+      double sum = pMythic;
+      pLeg = pLeg.clamp(0.0, 100.0 - sum);
+      sum += pLeg;
       pEpic = pEpic.clamp(0.0, 100.0 - sum);
       sum += pEpic;
       pRare = pRare.clamp(0.0, 100.0 - sum);
@@ -33,6 +36,7 @@ void main() {
       double pCommon = (100.0 - sum).clamp(0.0, 100.0);
 
       return {
+        'mythic': pMythic,
         'legendary': pLeg,
         'epic': pEpic,
         'rare': pRare,
@@ -75,11 +79,12 @@ void main() {
       'calculateDraftProbabilities with luck = 0 (isLevelReward = false)',
       () {
         final probs = calculateDraftProbabilities(0, false);
-        expect(probs['legendary'], 1.0);
-        expect(probs['epic'], 5.0);
-        expect(probs['rare'], 14.0);
-        expect(probs['uncommon'], 20.0);
-        expect(probs['common'], 60.0);
+        expect(probs['mythic'], 0.0);
+        expect(probs['legendary'], 2.0);
+        expect(probs['epic'], 6.0);
+        expect(probs['rare'], 16.0);
+        expect(probs['uncommon'], 24.0);
+        expect(probs['common'], 52.0);
 
         final sum = probs.values.reduce((a, b) => a + b);
         expect(sum, closeTo(100.0, 0.01));
@@ -90,11 +95,12 @@ void main() {
       'calculateDraftProbabilities with luck = 5 (isLevelReward = false)',
       () {
         final probs = calculateDraftProbabilities(5, false);
-        expect(probs['legendary'], 3.5);
-        expect(probs['epic'], 12.5);
-        expect(probs['rare'], 29.0);
-        expect(probs['uncommon'], 40.0);
-        expect(probs['common'], 15.0);
+        expect(probs['mythic'], 0.0);
+        expect(probs['legendary'], 4.5);
+        expect(probs['epic'], 13.5);
+        expect(probs['rare'], 31.0);
+        expect(probs['uncommon'], 44.0);
+        expect(probs['common'], 7.0);
 
         final sum = probs.values.reduce((a, b) => a + b);
         expect(sum, closeTo(100.0, 0.01));
@@ -105,11 +111,12 @@ void main() {
       'calculateDraftProbabilities with luck = 0 (isLevelReward = true)',
       () {
         final probs = calculateDraftProbabilities(0, true);
-        expect(probs['legendary'], 0.5);
-        expect(probs['epic'], 4.5);
-        expect(probs['rare'], 15.0);
-        expect(probs['uncommon'], 20.0);
-        expect(probs['common'], 60.0);
+        expect(probs['mythic'], 0.5);
+        expect(probs['legendary'], 2.0);
+        expect(probs['epic'], 6.0);
+        expect(probs['rare'], 16.0);
+        expect(probs['uncommon'], 24.0);
+        expect(probs['common'], 51.5);
 
         final sum = probs.values.reduce((a, b) => a + b);
         expect(sum, closeTo(100.0, 0.01));
