@@ -77,6 +77,7 @@ Tous les contrôleurs héritent de `StateNotifier<T>` et exposent des états imm
 - **Cycle de vie de la run** : `startNewRun(HeroData, PassiveData?)` — génère la carte via `MapGeneratorService`, initialise les stats depuis les données héros, reset l'inventaire (50 or), reset les cooldowns.
 - **Progression** : `travelToNode(nodeId)`, `completeCurrentNode()` (reset armure, clear statuts, avance acte si boss), `advanceToNextWorld()`, `nextLevel()`.
 - **Gestion des ressources** : `consumeResource({mana, hpPercent})` — validation + déduction. `heal(amount)`, `takeDamage(amount)` (délègue à `EntityStats.takeDamage`), `setHeroStats(...)`.
+- **Gestion de l'Expérience (XP)** : `gainXp(int xp)` accumule l'XP de victoire. Calcule le seuil requis via la formule $100 \times 1.5^{\text{level} - 1}$. Gère la cascade de multi-niveaux et conserve le reste d'expérience (`carry-over`) sans perte.
 - **Statistiques permanentes** : `applyHeroStatModifier({maxPvAcc, attackAcc, armorAcc, maxManaAcc, luckAcc})` — modifie les stats permanentes (maxPv soigne le delta).
 - **Statuts** : `addStatus(StatusEffect)`.
 - **Tour de combat** : `startCombat()` (clear statuts, restore mana, reliques `startOfCombat`, TraitSystem) → `startTurn()` (**logique centrale** : restore mana → reliques `startOfTurn` → processing poison/strength_regen/armor_regen → tick durations → tick cooldowns → `TraitSystem.onTurnStart`).
@@ -92,7 +93,7 @@ Tous les contrôleurs héritent de `StateNotifier<T>` et exposent des états imm
 **État `CombatState`** : `enemies` (List\<EnemyInstance\>), `turnPhase` (TurnPhase: player/enemy), `turnCount`, `selectedEnemyId`, `isCombatEnded`, `isVictory`.
 
 **Responsabilités** :
-- **Initialisation** : `initializeCombat(level, nodeType, availableEnemies)` — utilise `EncounterSystem.generateEnemiesForLevel()`, applique multiplicateurs boss (3x HP)/élite (1.5x), roll les intentions initiales.
+- **Initialisation** : `initializeCombat(level, nodeType, availableEnemies)` — calcule le combat level dynamique $EnemyLevel = PlayerLevel + (Act - 1) \times 2 + NodeModifier$, applique multiplicateurs de scaling de caractéristiques (+12% HP/lvl, +8% ATK/lvl), et applique les coefficients boss (3x HP)/élite (1.5x) avant de roll les intentions initiales.
 - **Pipeline de jeu de carte** : `applyPlayerCardPlay(card, RunController, DeckNotifier)` — `EffectResolver.resolveCard()` → `deck.playCard()` → `TraitSystem.onCardPlayed()` → reliques `onCardPlayed` → `_cleanDeadEnemies()`.
 - **Intentions ennemies** : `resolveEnemyIntent(enemyId, RunController)` — switch sur IntentType : attack → `runController.takeDamage`, defend → armure, buff → strength(99 tours), debuffDeck → no-op.
 - **Phases** : `startEnemyTurn(RunController)` — phase enemy, processing poison/regen sur chaque ennemi, tick statuts, clean morts. `endEnemyTurn()` — re-roll toutes les intentions, phase player, incrémente turnCount.
@@ -417,6 +418,34 @@ La ligne de ciblage rectiligne rigide a été remplacée par une courbe dynamiqu
    - **Peintre de Confettis Célébration (`RelicParticlePainter`)** : Un composant `CustomPainter` dessine directement sur Canvas une explosion radiale de particules (confettis rectangulaires rotatifs et étoiles dorées trigonométriques) s'éjectant à haute vélocité depuis le centre lors de l'arrêt du carrousel. Les particules intègrent des forces de gravité, de traînée aérodynamique et de fondu d'opacité graduel pour un rendu organique premium.
    - **Bouton de Collecte Sécurisé (Option A - Confirmation Pattern)** : Afin d'éviter les violations de l'état métier (Riverpod) et les incohérences de données, l'écriture dans l'inventaire via `addRelic` et le déblocage du bouton de validation « Récupérer » ne sont autorisés que lorsque le carrousel s'est immobilisé de façon stable sur sa cible (`isSpinning == false`), respectant le principe de transaction métier propre.
 
+### 5.9. Pattern de Draft Card Reels Staggered et 3D Flip (Interactive Reels Reveal)
+
+Pour augmenter la sensation d'excitation et de "butin" lors de l'acquisition de nouvelles cartes (draft initial ou récompense de victoire), le jeu implémente un spinner interactif type machine à sous :
+
+1. **Structure de Widgets Autonomes (`DraftCardReel`)** :
+   - Le draft instancie 3 widgets `DraftCardReel` autonomes disposés horizontalement.
+   - Chaque rouleau simule un défilement vertical rapide de dos de cartes en boucle.
+
+2. **Révélation Séquentielle Échelonnée (Staggered Stops)** :
+   - Pour créer une tension et rythmer la découverte des cartes, l'arrêt des rouleaux est asynchrone et échelonné :
+     - **Rouleau 1** : Arrêt et flip à **0.8 seconde**.
+     - **Rouleau 2** : Arrêt et flip à **1.4 seconde**.
+     - **Rouleau 3** : Arrêt et flip à **2.0 secondes**.
+   - À la frame exacte de l'arrêt, le dos de carte effectue un flip 3D de 180° sur l'axe Y pour révéler son identité visuelle unifiée (`UiCard`) :
+     ```dart
+     transform: Matrix4.identity()
+       ..setEntry(3, 2, 0.002) // Perspective 3D
+       ..rotateY(angleAnimationValue);
+     ```
+
+3. **Célébration Temporelle des Cartes Rares/Légendaires** :
+   - Si la carte tirée est de rareté **Épique** ou **Légendaire** :
+     - Le temps de défilement est prolongé de **+0.8s** pour maximiser le suspense.
+     - L'arrêt déclenche un effet de secousse de l'écran (`screen-shake`), une explosion de particules d'étoiles dorées sur Canvas et un halo de lumière blanche et dorée en arrière-plan.
+
+4. **Découplage Audio via Callbacks** :
+   - Les callbacks de sound hooks `onTick` (à chaque franchissement d'index de carte) et `onLand` (lors de la stabilisation finale) permettent de câbler proprement le moteur sonore de l'application sans couple visuel.
+
 ---
 
 ## 6. Stratégie de State Management (Riverpod v2.5.1)
@@ -485,10 +514,15 @@ La ligne de ciblage rectiligne rigide a été remplacée par une courbe dynamiqu
        ├→ Phase → player
        └→ turnCount++
 
-5. FIN DE COMBAT
+5. FIN DE COMBAT & TRANSITION DE VICTOIRE
    └→ _cleanDeadEnemies() détecte 0 ennemis
        ├→ isCombatEnded = true, isVictory = true
-       └→ onEnemiesDead callback → UI affiche RewardOverlay
+       └→ onEnemiesDead callback → UI affiche RewardOverlay / Pipeline de Victoire :
+           ├→ Accumule et additionne l'XP gagnée de tous les ennemis (+10% d'XP par niveau de monstre au-dessus du lvl 1)
+           ├→ RunController.gainXp(totalXp)
+           ├→ SI LEVEL UP : Déclenche l'affichage en plein écran de la bannière festive « LEVEL UP ! »
+           │   └→ Redirection du joueur vers l'écran DraftScreen amélioré (cartes proposées de raretés supérieures)
+           └→ SINON : Attribution de l'or de victoire standard et déblocage du voyage sur la carte du monde
 ```
 
 ---

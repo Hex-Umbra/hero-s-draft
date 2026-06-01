@@ -450,3 +450,87 @@ Concevoir un écran de célébration et de tirage interactif en plein écran app
 - ✅ **Game Feel Premium Exceptionnel** : L'effet de suspense de la machine à sous et l'explosion de confettis transforment l'obtention de reliques en un moment de célébration mémorable.
 - ✅ **Respect de l'état logique (ADR-001)** : L'inventaire n'est mis à jour qu'au clic sur « Récupérer », maintenant une cohérence parfaite et empêchant toute perte de données en cas de crash/fermeture intempestive pendant la rotation.
 - ✅ **Architecture Audio Orientée Événements** : Les hooks `onTick` et `onLand` sont prêts pour brancher le système audio de façon propre sans couplage visuel.
+
+---
+
+## 📈 ADR-016 : Système de Progression XP & Échelonnement Dynamique des Ennemis (XP Progression & Enemy Scaling)
+
+### Statut
+✅ Accepté & Implémenté
+
+### Contexte
+Dans la version initiale, le niveau du héros était figé et les ennemis possédaient des statistiques prédéfinies et fixes dans les fichiers JSON. Ce manque de progression à long terme aplatissait l'expérience au cours d'une run, ne proposant aucun sentiment d'évolution ou de montée en puissance. Pour introduire une dimension RPG gratifiante et conserver une tension compétitive croissante tout au long des actes, le jeu nécessitait l'intégration d'un système d'expérience avec des seuils exponentiels et une mise à l'échelle dynamique des caractéristiques des ennemis basée sur le niveau du joueur et la difficulté de la salle de combat.
+
+### Décision
+1. **Courbe d'Expérience Exponentielle** :
+   - Implémenter une formule de progression basée sur des seuils d'expérience exponentiels :
+     $$RequiredXP = 100 \times 1.5^{\text{level} - 1}$$
+   - Concevoir la méthode de gain d'XP (`RunController.gainXp(int xp)`) de sorte qu'elle traite de manière récursive ou itérative les gains d'XP massifs. Si le montant d'XP dépasse plusieurs paliers consécutifs, le héros gagne plusieurs niveaux à la fois tout en conservant et reportant le reliquat d'expérience restant (`XP carry-over`) de façon mathématiquement intègre.
+
+2. **Échelonnement Dynamique des Niveaux de Combat** :
+   - Déterminer le niveau d'un ennemi de façon dynamique selon la formule :
+     $$EnemyLevel = PlayerLevel + (Act - 1) \times 2 + NodeModifier$$
+     - `NodeModifier` vaut `0` pour un combat standard, `+1` pour un combat élite, et `+2` pour un combat de boss de fin d'acte.
+
+3. **Multiplicateurs de Caractéristiques de Combat** :
+   - Mettre à l'échelle dynamiquement les points de vie maximaux et les dégâts de base des monstres lors de l'initialisation du combat dans `CombatController`.
+   - Augmenter les PV max de **+12% par niveau** de monstre supplémentaire au-dessus du niveau 1.
+   - Augmenter l'attaque de base de **+8% par niveau** de monstre supplémentaire au-dessus du niveau 1.
+   - Les formules appliquées sont :
+     - $$ScaledHP = BaseHP \times [1 + (Level - 1) \times 0.12]$$
+     - $$ScaledDamage = BaseDamage \times [1 + (Level - 1) \times 0.08]$$
+
+4. **Visuels et HUD de Progression** :
+   - Intégrer une barre de progression XP dorée permanente sous les mini-statistiques du héros sur la carte du monde (`MapScreen`) pour une visualisation claire.
+   - Suffixer dynamiquement le nom des ennemis par leur niveau calculé dans l'arène de combat Flame (ex : "Squelette (Niv. 3)") afin de signaler immédiatement la dangerosité relative aux joueurs.
+
+### Preuves dans le code
+- `RunController.gainXp(int xp)` : Boucle de consommation d'XP avec augmentation du niveau et report du reliquat.
+- `CombatController.initializeCombat()` : Calcul dynamique du niveau et application des multiplicateurs `1 + (level - 1) * 0.12` pour les HP, et `1 + (level - 1) * 0.08` pour les dégâts.
+- `test/unit/xp_scaling_test.dart` : Suite de tests unitaires validant l'XP cumulée, le carry-over en cascade (multi-levels), et le calcul correct des niveaux de monstres standards, élites et boss.
+
+### Conséquences
+- ✅ **Expérience RPG Profonde** : La boucle d'action devient gratifiante grâce à la montée de niveau et aux bonus de caractéristiques permanentes choisis par le joueur.
+- ✅ **Courbe de Difficulté Équilibrée** : L'adaptation automatique élimine la trivialisation des combats en late-game tout en offrant un défi juste et progressif.
+- ✅ **Absence de bugs de transition** : Les tests unitaires rigoureux sur l'XP prouvent qu'aucune expérience n'est perdue ou dupliquée lors des montées de niveau successives.
+- ⚠️ **Danger de "Soft Lock"** : Si le joueur n'optimise pas son deck (fusions automatiques et forges), la mise à l'échelle des ennemis (+12% HP, +8% ATK) peut rapidement surpasser sa puissance offensive, créant des combats longs et punitifs.
+
+---
+
+## 🎰 ADR-017 : Système Interactif de Révélation de Cartes par Rouleaux 3D (Staggered Draft Slots & Reels)
+
+### Statut
+✅ Accepté & Implémenté
+
+### Contexte
+Lors de la sélection du deck de départ ou de l'obtention de cartes de draft après une victoire, l'affichage instantané et plat des choix de cartes manquait grandement de "game feel", de dynamisme et d'attrait visuel. Pour transformer l'acquisition de nouvelles cartes en un moment fort et tactile à forte récompense émotionnelle, nous souhaitions concevoir un système inspiré des machines à sous, où chaque slot de carte défile verticalement de manière asynchrone avant de se stabiliser par un effet spectaculaire de rotation 3D (Flip).
+
+### Décision
+1. **Composant de Rouleau Individuel (`DraftCardReel`)** :
+   - Remplacer l'affichage brut de cartes par trois widgets `DraftCardReel` autonomes.
+   - Chaque rouleau simule un défilement vertical ultra-rapide de textures de dos de cartes pour évoquer le suspense d'un tirage.
+
+2. **Révélation Séquentielle Échelonnée (Staggered Stoppage)** :
+   - Configurer des délais asynchrones pour l'arrêt de chaque rouleau de gauche à droite afin de rythmer la découverte :
+     - **Rouleau 1** : Arrêt et flip à **0.8 seconde**.
+     - **Rouleau 2** : Arrêt et flip à **1.4 seconde**.
+     - **Rouleau 3** : Arrêt et flip à **2.0 secondes**.
+   - Au moment exact de l'arrêt, la carte effectue une rotation 3D à 180° sur l'axe Y pour révéler son identité visuelle unifiée (`UiCard`).
+
+3. **Célébration Temporelle et Visuelle des Raretés Rares/Légendaires** :
+   - Si une carte sélectionnée par l'algorithme est de rareté **Épique** ou **Légendaire** :
+     - Prolonger délibérément le temps de défilement du rouleau correspondant (+0.8s) pour faire monter le suspense.
+     - À l'arrêt, déclencher un effet de secousse de l'écran (`screen-shake`), une explosion radiale de particules d'étoiles dorées et un halo de lumière éclatant sur canvas en arrière-plan.
+
+4. **Architecture Découplée pour l'Audio (Sound Hooks)** :
+   - Intégrer des rappels audio `onTick` (bruit sec à chaque changement d'index durant la rotation) et `onLand` (son d'impact lourd lors de l'arrêt) pour autoriser un couplage audio réactif sans lier directement le framework sonore à l'UI visuelle.
+
+### Preuves dans le code
+- Widget `DraftCardReel` exploitant un `AnimatedBuilder` pour le flip 3D avec perspective `transform: Matrix4.identity()..setEntry(3, 2, 0.002)..rotateY(...)`.
+- `DraftScreen` qui instancie les reels avec des décalages temporels de défilement configurés.
+- Traitement conditionnel basé sur `CardRarity` pour étendre la durée et émettre des particules de célébration dorées.
+
+### Conséquences
+- ✅ **Visual Juice de Niveau Commercial** : La transition post-combat est transformée en une expérience visuelle mémorable et excitante qui valorise le butin.
+- ✅ **Découplage Technique Sain** : La couche de présentation Flutter gère ses animations de transition de manière isolée, tout en émettant des hooks prêts pour l'audio et alignés avec les conventions architecturales.
+- ⚠️ **Durée du Draft** : La révélation complète requiert un minimum de 2.0 secondes (et plus si célébration légendaire), ce qui peut s'avérer répétitif pour les joueurs aguerris lors de runs successives très rapides. Il est recommandé de conserver ce rythme mais d'analyser la demande des utilisateurs pour un éventuel bouton de raccourci d'affichage immédiat ("Fast Reveal").

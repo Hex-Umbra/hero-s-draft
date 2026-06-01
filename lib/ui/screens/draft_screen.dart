@@ -6,8 +6,7 @@ import '../../game/controllers/run_controller.dart';
 import '../../game/controllers/deck_controller.dart';
 import '../../game/controllers/inventory_controller.dart';
 import '../../models/card_instance.dart';
-import '../../models/data/card_data.dart';
-import '../widgets/ui_card.dart';
+import '../widgets/relic_carousel/draft_card_reel.dart';
 
 class DraftScreen extends ConsumerStatefulWidget {
   final VoidCallback onDraftComplete;
@@ -114,14 +113,19 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
                       Expanded(
                         child: ListView(
                           shrinkWrap: true,
-                          children: _choices
-                              .map(
-                                (choice) => Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 8,
-                                    horizontal: 40,
+                          children: _choices.map((choice) {
+                            final index = _choices.indexOf(choice);
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8,
+                                horizontal: 40,
+                              ),
+                              child: Center(
+                                child: ConstrainedBox(
+                                  constraints: const BoxConstraints(
+                                    maxWidth: 160,
                                   ),
-                                  child: UiCard(
+                                  child: DraftCardReel(
                                     title: _getChoiceTitle(context, choice),
                                     description: _getChoiceDescription(
                                       context,
@@ -133,49 +137,46 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
                                       context,
                                       choice.rarity,
                                     ),
-                                    type: CardType.power,
+                                    index: index,
                                   ),
                                 ),
-                              )
-                              .toList(),
+                              ),
+                            );
+                          }).toList(),
                         ),
                       )
                     else
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: _choices
-                            .map(
-                              (choice) => Flexible(
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
+                        children: _choices.map((choice) {
+                          final index = _choices.indexOf(choice);
+                          return Flexible(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                              ),
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 160,
+                                ),
+                                child: DraftCardReel(
+                                  title: _getChoiceTitle(context, choice),
+                                  description: _getChoiceDescription(
+                                    context,
+                                    choice,
                                   ),
-                                  child: ConstrainedBox(
-                                    constraints: const BoxConstraints(
-                                      maxWidth: 160,
-                                    ),
-                                    child: UiCard(
-                                      title: _getChoiceTitle(context, choice),
-                                      description: _getChoiceDescription(
-                                        context,
-                                        choice,
-                                      ),
-                                      onTap: () => _onChoiceSelected(
-                                        context,
-                                        ref,
-                                        choice,
-                                      ),
-                                      rarity: _rarityToString(
-                                        context,
-                                        choice.rarity,
-                                      ),
-                                      type: CardType.power,
-                                    ),
+                                  onTap: () =>
+                                      _onChoiceSelected(context, ref, choice),
+                                  rarity: _rarityToString(
+                                    context,
+                                    choice.rarity,
                                   ),
+                                  index: index,
                                 ),
                               ),
-                            )
-                            .toList(),
+                            ),
+                          );
+                        }).toList(),
                       ),
                   ],
                 ),

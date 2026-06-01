@@ -5,7 +5,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 **Métriques du projet** :
 - **~8 200 lignes** de code source dans `lib/` (45 fichiers).
 - **7 fichiers JSON** de données d'assets.
-- **60 tests automatisés** — 100% au vert.
+- **65 tests automatisés** — 100% au vert.
 - **0 erreur, 0 avertissement** via `flutter analyze`.
 - **~108 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
 
@@ -23,12 +23,15 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Navigation réactive | `RunController.travelToNode()` | Validation d'accessibilité (connexion au nœud complété ou étage 0) |
 | Caméra centrée | `MapScreen` | Repositionnement et centrage automatique fluide à chaque transition |
 | Widgets dédiés par type | `MapScreen` | Icônes spécifiques (Combat/Élite/Shop/Event/Repos/Boss) + tooltips |
+| Barre d'XP HUD | `MapScreen`, `xp_scaling_test.dart` | Barre de progression d'expérience dorée permanente et badges de niveau sous le HUD |
 
 ### 🧠 Gestion d'État Métier (Riverpod Controllers)
 
 | Fonctionnalité | Controller/Provider | Détails |
 |:---|:---|:---|
-| Logique de Run | `RunController` / `runProvider` | Suivi PV, mana, armorMastery, luck, acte, level, carte, passifs, reliques |
+| Logique de Run | `RunController` / `runProvider` | Suivi PV, mana, armorMastery, luck, acte, level, XP, carte, passifs, reliques |
+| Système de Progression XP | `RunController.gainXp()` | Progression XP exponentielle ($100 \times 1.5^{lvl-1}$), gains multiples et carry-over |
+| Échelonnement Ennemis | `CombatController.initializeCombat()` | Multiplicateurs dynamiques (+12% HP/lvl, +8% ATK/lvl) et calcul de combat level |
 | Logique de Combat | `CombatController` / `combatProvider` | Phases (Player ⇄ Enemy), sélection cible, intentions ennemies (cycliques ou aléatoires), détection mort, victoire/défaite |
 | Piles de Cartes | `DeckNotifier` / `deckProvider` | 5 piles logiques (Master, Draw, Hand, Discard, Exhaust) avec shuffle et gestion complète |
 | Économie et Reliques | `InventoryController` / `inventoryProvider` | Or (initial 50), 12 reliques avec 6 triggers différents, bonus boutique |
@@ -101,6 +104,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Animations de cartes data-driven | `CardData.animation` | Types : melee, magic, buff, poison, fire, ice, lightning |
 | Layout main en arc | `HerosDraftGame._layoutHand()` | Arc circulaire, radius = `size.y * 1.5`, angle adaptatif |
 | Carrousel de reliques interactif | `RelicRewardCarouselOverlay` | Machine à sous PageView viewportFraction (0.85x scale/0.4 opacity sur les côtés, 1.0x/1.0 au centre), décélération cubique, célébration Canvas particles, bouton sécurisé, callbacks audio (`onTick`/`onLand`) |
+| Draft Reels Séquentiels | `DraftCardReel`, `DraftScreen` | Révélation machine à sous vertical spinner (0.8s, 1.4s, 2.0s), 3D flip axe Y, célébration légendaire (screen shake, gold particles, flash) et sound hooks |
 
 ### 💀 Z-Sync Death & Stats System (Système de Mort et de Stats Synchronisé)
 
@@ -123,7 +127,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 
 | Métrique | Valeur | Détails |
 |:---|:---|:---|
-| Tests automatisés | **60** (100% VERT) | Tests unitaires et widget-tests |
+| Tests automatisés | **65** (100% VERT) | Tests unitaires et widget-tests |
 | Couverture estimée | **~15-20%** | Principalement logique/controllers, pas d'UI |
 | Analyse statique | **0 erreur, 0 warning, 0 info** | `flutter analyze` vierge |
 | Linter | `flutter_lints` v6.0.0 | Configuration standard, pas de règles custom |
@@ -177,7 +181,7 @@ Issues du backlog `docs/possible_upgrades/upgrade_ideas.md` (~95 items, ~60% ré
 - [ ] Restrictions de cartes par classe (ex: Berserker ne peut pas utiliser cartes d'armure)
 - [ ] Coût de merge +1 mana par level de carte
 - [ ] Limite de taille de deck (15 max, extensible via récompenses légendaires)
-- [ ] Système XP/level pour gating des récompenses
+- [x] Système XP/level pour gating des récompenses
 - [ ] Statistique de coup critique (dégâts et soins)
 - [ ] Intentions ennemies cachées en late game
 - [ ] Scaling progressif d'armure ennemi par acte

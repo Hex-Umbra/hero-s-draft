@@ -50,8 +50,24 @@ L'objectif est d'alimenter de façon exhaustive la "Memory Bank" du projet (situ
    - Intégration du support multilingue double-champs dans les bases de données JSON (`nameEn`/`nameFr`, `descriptionEn`/`descriptionFr`).
    - Traduction dynamique en temps réel des statuts de combat dans `StatusEffectsPanel`.
 
-6. **Validation, Assurance Qualité et Robustesse** :
-   - Suite de tests unitaire mise à jour et validée : **60 tests unitaires et widget-tests 100% VERT (60 passés avec succès)**.
+6. **Système de Progression XP & Niveaux (XP & Levels Progression System)** :
+   - **Formule de Seuils Exponentiels** : Implémentation de la courbe `100 * 1.5^(level - 1)` dans le `RunController`.
+   - **Gains de Niveaux Multiples & Carry-Over** : La méthode `gainXp` gère le passage fluide de plusieurs niveaux en cascade en conservant parfaitement le reste d'expérience.
+   - **Interface HUD de Progression** : Affichage d'une barre de progression XP dorée et de badges de niveau sous le panel des mini-stats de la carte du monde (`MapScreen`).
+
+7. **Échelonnement Dynamique des Ennemis (Enemy Scaling)** :
+   - **Calcul de Niveau de Combat** : Niveau d'ennemi déterminé par `playerLevel + (act - 1) * 2 + nodeModifier` (Elite : `+1`, Boss : `+2`).
+   - **Scaling Mathématique des Stats** : Multiplicateurs d'HP (`+12% par niveau`) et de dégâts (`+8% par niveau`) appliqués dynamiquement dans `CombatController`.
+   - **Consistance Visuelle** : Intégration du niveau des monstres à côté de leurs noms dans le panel d'intentions Flame (ex : « Slime (Niv. 3) »).
+
+8. **Flux de Victoire & Révélation de Cartes Interactive (Draft Card Reel)** :
+   - **Pattern DraftCardReel Séquentiel** : Remplacement de l'apparition statique du Draft post-combat par un spinner vertical de type machine à sous.
+   - **Révélation Séquentielle 3D** : Révélation des 3 cartes par rotation 3D sur l'axe X avec des retards de stabilisation asynchrones échelonnés (0.8s, 1.4s, 2.0s).
+   - **Célébration Légendaire Épique** : Pour les récompenses légendaires, rallongement du spin, secousses d'écran (screen-shake), auréole dorée de feu de particules et flashes d'impact.
+   - **Pipeline de Transition & Level Up** : À la victoire, cumul de l'XP de tous les ennemis (+10% par niveau de monstre). En cas de montée de niveau, lecture de la bannière festive « LEVEL UP ! » et redirection vers l'écran de draft amélioré, sinon attribution de l'or et progression sur la carte. Câblage de sound hooks (`onTick` / `onLand`).
+
+9. **Validation, Assurance Qualité et Robustesse** :
+   - Suite de tests unitaires et widgets validée : **65 tests unitaires et widget-tests 100% VERT (65 passés avec succès)**.
    - Analyse de code statique parfaite : **0 erreur, 0 warning, 0 info** sous `flutter analyze`.
 
 ---
