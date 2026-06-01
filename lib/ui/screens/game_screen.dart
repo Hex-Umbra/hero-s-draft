@@ -25,6 +25,7 @@ import '../widgets/hud/status_effects_panel.dart';
 import '../widgets/hud/enemy_intents_panel.dart';
 import '../widgets/hud/dialogs/pause_dialog.dart';
 import '../widgets/notification_overlay.dart';
+import '../widgets/relic_carousel/relic_carousel_screen.dart';
 
 class GameScreen extends ConsumerStatefulWidget {
   const GameScreen({super.key});
@@ -95,49 +96,84 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           }
         }
         final chosenRelic = filtered[Random().nextInt(filtered.length)];
-        ref.read(inventoryProvider.notifier).addRelic(chosenRelic);
 
-        // Display snackbar
-        final l10n = AppLocalizations.of(context)!;
-        final locale = Localizations.localeOf(context).languageCode;
-        String rarityStr = '';
-        switch (chosenRelic.rarity) {
-          case RelicRarity.common:
-            rarityStr = l10n.rarityCommon.toUpperCase();
-            break;
-          case RelicRarity.uncommon:
-            rarityStr = l10n.rarityUncommon.toUpperCase();
-            break;
-          case RelicRarity.rare:
-            rarityStr = l10n.rarityRare.toUpperCase();
-            break;
-          case RelicRarity.epic:
-            rarityStr = l10n.rarityEpic.toUpperCase();
-            break;
-          case RelicRarity.legendary:
-            rarityStr = l10n.rarityLegendary.toUpperCase();
-            break;
-        }
+        // Show the premium carousel dialog instead of a direct snackbar
+        showGeneralDialog(
+          context: context,
+          barrierDismissible: false,
+          barrierColor: Colors.black87,
+          transitionDuration: const Duration(milliseconds: 400),
+          pageBuilder: (dialogContext, _, _) {
+            return RelicCarouselScreen(
+              relicPool: relics,
+              wonRelic: chosenRelic,
+              onCollect: () {
+                // Add the relic to inventory upon collecting
+                ref.read(inventoryProvider.notifier).addRelic(chosenRelic);
 
-        context.showNotification(
-          '👑 ${locale == 'fr' ? 'RELIQUE OBTENUE' : 'RELIC OBTAINED'} : ${chosenRelic.emoji} ${chosenRelic.getName(locale)} ($rarityStr)',
-          type: NotificationType.success,
+                // Show localized snackbar confirmation
+                final l10n = AppLocalizations.of(context)!;
+                final locale = Localizations.localeOf(context).languageCode;
+                String rarityStr = '';
+                switch (chosenRelic.rarity) {
+                  case RelicRarity.common:
+                    rarityStr = l10n.rarityCommon.toUpperCase();
+                    break;
+                  case RelicRarity.uncommon:
+                    rarityStr = l10n.rarityUncommon.toUpperCase();
+                    break;
+                  case RelicRarity.rare:
+                    rarityStr = l10n.rarityRare.toUpperCase();
+                    break;
+                  case RelicRarity.epic:
+                    rarityStr = l10n.rarityEpic.toUpperCase();
+                    break;
+                  case RelicRarity.legendary:
+                    rarityStr = l10n.rarityLegendary.toUpperCase();
+                    break;
+                }
+
+                context.showNotification(
+                  '👑 ${locale == 'fr' ? 'RELIQUE OBTENUE' : 'RELIC OBTAINED'} : ${chosenRelic.emoji} ${chosenRelic.getName(locale)} ($rarityStr)',
+                  type: NotificationType.success,
+                );
+
+                // Dismiss carousel screen
+                Navigator.of(dialogContext).pop();
+
+                // Proceed with screen transitions
+                if (currentNodeType == MapNodeType.elite) {
+                  final runController = ref.read(runProvider.notifier);
+                  final rng = Random();
+                  ref.read(inventoryProvider.notifier).gainGold(rng.nextInt(15) + 20);
+                  runController.nextLevel();
+                  runController.completeCurrentNode();
+                  Navigator.of(context).pop(); // Return to map
+                } else {
+                  setState(() {
+                    _showDraft = true;
+                  });
+                }
+              },
+            );
+          },
+          transitionBuilder: (ctx, anim, _, child) => FadeTransition(
+            opacity: anim,
+            child: child,
+          ),
         );
+        return; // Return early, transitions are handled in onCollect callback
       }
     }
 
+    // Fallback if not boss/elite or relics empty
     if (currentNodeType == MapNodeType.elite) {
       final runController = ref.read(runProvider.notifier);
       final rng = Random();
-
-      Future.delayed(const Duration(milliseconds: 1500), () {
-        if (mounted) {
-          ref.read(inventoryProvider.notifier).gainGold(rng.nextInt(15) + 20);
-          runController.nextLevel();
-          runController.completeCurrentNode();
-          Navigator.of(context).pop(); // Retour à la carte
-        }
-      });
+      ref.read(inventoryProvider.notifier).gainGold(rng.nextInt(15) + 20);
+      runController.nextLevel();
+      runController.completeCurrentNode();
+      Navigator.of(context).pop(); // Return to map
     } else {
       setState(() {
         _showDraft = true;

@@ -100,6 +100,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Badges de stats vectoriels | `StatBadge` | Dessin custom, pulse de scale au changement |
 | Animations de cartes data-driven | `CardData.animation` | Types : melee, magic, buff, poison, fire, ice, lightning |
 | Layout main en arc | `HerosDraftGame._layoutHand()` | Arc circulaire, radius = `size.y * 1.5`, angle adaptatif |
+| Carrousel de reliques interactif | `RelicRewardCarouselOverlay` | Machine à sous PageView viewportFraction (0.85x scale/0.4 opacity sur les côtés, 1.0x/1.0 au centre), décélération cubique, célébration Canvas particles, bouton sécurisé, callbacks audio (`onTick`/`onLand`) |
 
 ### 💀 Z-Sync Death & Stats System (Système de Mort et de Stats Synchronisé)
 
@@ -201,7 +202,6 @@ Issues du backlog `docs/possible_upgrades/upgrade_ideas.md` (~95 items, ~60% ré
 - [ ] Divergence de chemins (routes multiples vers boss)
 
 ### UX & Visuel
-- [ ] Animation carrousel pour reliques de boss
 - [ ] Redesign des snackbar/notifications
 - [ ] Redesign descriptions de cartes (icônes-only, descriptions dans tooltips)
 - [ ] Rework forge du feu de camp (choix de forge limités)
