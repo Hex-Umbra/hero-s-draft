@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 class FloatingText extends TextComponent with HasPaint {
   final bool isCritical;
   final bool isUpward;
+  final bool isPoison;
+  final bool isShield;
 
   FloatingText({
     required String text,
@@ -13,6 +15,8 @@ class FloatingText extends TextComponent with HasPaint {
     required Vector2 position,
     this.isCritical = false,
     this.isUpward = true,
+    this.isPoison = false,
+    this.isShield = false,
   }) : super(
          text: text,
          position: position,
@@ -20,10 +24,32 @@ class FloatingText extends TextComponent with HasPaint {
          textRenderer: TextPaint(
            style: TextStyle(
              color: color,
-             fontSize: isCritical ? 32 : 24,
+             fontSize: isCritical ? 36 : (isPoison ? 22 : 26),
              fontWeight: FontWeight.bold,
-             shadows: const [
-               Shadow(color: Colors.black, offset: Offset(1, 1), blurRadius: 2),
+             shadows: [
+               Shadow(
+                 color: Colors.black.withValues(alpha: 0.8),
+                 offset: const Offset(2, 2),
+                 blurRadius: 4,
+               ),
+               if (isCritical)
+                 const Shadow(
+                   color: Colors.orangeAccent,
+                   offset: Offset.zero,
+                   blurRadius: 8,
+                 ),
+               if (isPoison)
+                 const Shadow(
+                   color: Colors.greenAccent,
+                   offset: Offset.zero,
+                   blurRadius: 6,
+                 ),
+               if (isShield)
+                 const Shadow(
+                   color: Colors.cyanAccent,
+                   offset: Offset.zero,
+                   blurRadius: 6,
+                 ),
              ],
            ),
          ),
@@ -70,29 +96,57 @@ class FloatingText extends TextComponent with HasPaint {
     );
 
     // 2. Mouvement (Drift)
-    add(
-      MoveEffect.by(
-        Vector2(driftX, driftY),
-        EffectController(duration: 1.0, curve: Curves.easeOut),
-      ),
-    );
+    if (isPoison) {
+      add(
+        MoveEffect.by(
+          Vector2(0, -90 - random.nextDouble() * 30),
+          EffectController(duration: 1.2, curve: Curves.easeOutQuad),
+        ),
+      );
+    } else if (isShield) {
+      add(
+        MoveEffect.by(
+          Vector2(driftX * 0.5, -40 - random.nextDouble() * 20),
+          EffectController(duration: 1.0, curve: Curves.easeOutQuad),
+        ),
+      );
+    } else {
+      add(
+        MoveEffect.by(
+          Vector2(driftX, driftY),
+          EffectController(duration: 1.0, curve: Curves.easeOutCubic),
+        ),
+      );
+    }
 
     // 3. Fondu (Fade out)
     add(
       OpacityEffect.fadeOut(
-        EffectController(duration: 1.0, curve: Curves.easeIn),
+        EffectController(duration: 1.2, curve: Curves.easeIn),
       ),
     );
 
     if (isCritical) {
       add(
         ScaleEffect.by(
-          Vector2.all(1.2),
+          Vector2.all(1.25),
           EffectController(duration: 0.2, alternate: true),
         ),
       );
     }
 
-    add(RemoveEffect(delay: 1.0));
+    add(RemoveEffect(delay: 1.2));
+  }
+
+  double _time = 0;
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    if (isPoison) {
+      _time += dt;
+      // Add slight horizontal sin wave
+      position.x += sin(_time * 10) * 0.8;
+    }
   }
 }
