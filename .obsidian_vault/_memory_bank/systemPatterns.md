@@ -211,8 +211,8 @@ if weakness status: totalDamage *= 0.75  // Réduction de 25%
 ```
 > **⚠️ Absence notable** : Le statut `vulnerable` n'est PAS pris en compte dans ce calcul malgré sa déclaration dans le système de types.
 
-**Statuts créables** : `poison`, `strength`, `weakness`, `vulnerable`, `strength_regen`, `armor_regen`.
-**Statuts NON gérés** : `burn`, `freeze`, `shock` (absents de `EffectResolver`).
+**Statuts créables et gérés** : `poison`, `strength`, `weakness`, `strength_regen`, `armor_regen`, `burn` (Brûlure), `freeze` (Gel), `shock` (Électrocution).
+**Statut NON géré** : `vulnerable` (déclaré et créable, mais absent de la formule de calcul effectif de `_calculateDamage()`).
 
 ---
 
@@ -437,7 +437,7 @@ La ligne de ciblage rectiligne rigide a été remplacée par une courbe dynamiqu
 
 2. JOUEUR JOUE UNE CARTE
    └→ CombatController.applyPlayerCardPlay(card, runCtrl, deckNotif)
-       ├→ EffectResolver.resolveCard() → consomme mana, applique effets
+       ├→ EffectResolver.resolveCard() → consomme mana, applique effets (dégâts augmentés par le statut `shock` de l'ennemi)
        ├→ DeckNotifier.playCard() → main → défausse (ou exhaust)
        ├→ TraitSystem.onCardPlayed(runCtrl, card)
        ├→ applyRelics(onCardPlayed)
@@ -449,11 +449,11 @@ La ligne de ciblage rectiligne rigide a été remplacée par une courbe dynamiqu
 
 4. PHASE ENNEMIE
    ├→ CombatController.startEnemyTurn()
-   │   ├→ Pour chaque ennemi: process poison/regen, tick statuts
-   │   └→ _cleanDeadEnemies() (morts par poison)
+   │   ├→ Pour chaque ennemi: process poison/regen/burn (Brûlure), tick statuts
+   │   └→ _cleanDeadEnemies() (morts par poison ou brûlure)
    ├→ Pour chaque ennemi vivant:
    │   ├→ Animation (dash/buff)
-   │   └→ resolveEnemyIntent() → dégâts héros / armure / strength
+   │   └→ resolveEnemyIntent() → dégâts héros (divisés par 2 si l'ennemi est sous statut `freeze`) / armure / strength
    └→ CombatController.endEnemyTurn()
        ├→ Re-roll toutes les intentions
        ├→ Phase → player

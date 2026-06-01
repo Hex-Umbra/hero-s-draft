@@ -5,7 +5,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 **Métriques du projet** :
 - **~8 200 lignes** de code source dans `lib/` (45 fichiers).
 - **7 fichiers JSON** de données d'assets.
-- **59 tests automatisés** — 100% au vert.
+- **60 tests automatisés** — 100% au vert.
 - **0 erreur, 0 avertissement** via `flutter analyze`.
 - **~108 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
 
@@ -107,11 +107,19 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Libération à l'impact | `resolvePendingDeaths()` | Déclenche instantanément la mort de tous les ennemis différés à la complétion du coup |
 | Morts hors combat instantanées | Bypass automatique | Les morts hors combat (poison de début de tour) contournent Z-Sync et se résolvent de suite |
 
+### ✨ Statuts Élémentaires (`burn`, `freeze`, `shock`)
+
+| Statut | Implémentation | Effet Mécanique | Résolution |
+|:---|:---|:---|:---|
+| Brûlure (`burn`) | `CombatController.startEnemyTurn()` | Dégâts directs = valeur du statut | Début du tour de l'ennemi ciblé (similaire au poison) |
+| Gel (`freeze`) | `CombatController.resolveEnemyIntent()` | Division par deux (`×0.5` arrondi) des dégâts d'intention d'attaque | Lors de l'attaque de l'ennemi gelé |
+| Électrocution (`shock`) | `EffectResolver.resolveCard()` | Ajoute la valeur du statut aux dégâts subis par l'ennemi | Lors de la résolution d'une carte d'attaque |
+
 ### 🧪 Fiabilité et Assurance Qualité
 
 | Métrique | Valeur | Détails |
 |:---|:---|:---|
-| Tests automatisés | **58** (100% VERT) | Tests unitaires et widget-tests |
+| Tests automatisés | **60** (100% VERT) | Tests unitaires et widget-tests |
 | Couverture estimée | **~15-20%** | Principalement logique/controllers, pas d'UI |
 | Analyse statique | **0 erreur, 0 warning, 0 info** | `flutter analyze` vierge |
 | Linter | `flutter_lints` v6.0.0 | Configuration standard, pas de règles custom |
@@ -129,16 +137,6 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Applicable via `apply_status` | ✅ |
 | **Pris en compte dans `_calculateDamage()`** | ❌ **ABSENT** |
 | **Impact** : Le statut existe visuellement mais n'augmente PAS les dégâts reçus | — |
-
-### ⚠️ Statuts Élémentaires (`burn`, `freeze`, `shock`)
-
-| Aspect | `burn` | `freeze` | `shock` |
-|:---|:---|:---|:---|
-| ID déclaré dans `StatusEffect` | ✅ | ✅ | ✅ |
-| Template d'affichage dans `UiCard._buildDescription()` | ✅ | ✅ | ✅ |
-| Déclaré dans `CardData.effects` (certaines cartes JSON) | ✅ | ✅ | ✅ |
-| **Géré dans `EffectResolver`** | ❌ | ❌ | ❌ |
-| **Logique de tick/damage dans `EntityStats`** | ❌ | ❌ | ❌ |
 
 ### ⚠️ Système Audio
 

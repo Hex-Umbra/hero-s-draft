@@ -29,14 +29,20 @@ L'objectif est d'alimenter de façon exhaustive la "Memory Bank" du projet (situ
    - Dès que l'animation de la carte se termine et applique l'impact, son callback `onComplete` appelle `game.resolvePendingDeaths()`, déclenchant l'animation de rétrécissement (shrink) et de fondu (fade-out) de tous les ennemis marqués.
    - Les morts hors combat (ex: poison en début de tour) contournent ce délai pour s'exécuter instantanément.
 
-3. **Restructuration Globale de la Localisation** :
+3. **Intégration des Statuts Élémentaires (Burn, Freeze, Shock)** :
+   - **Brûlure (Burn)** : Résolution au début du tour ennemi via `startEnemyTurn()`, infligeant des dégâts directs à hauteur de la valeur cumulée du statut, similaire au poison.
+   - **Gel (Freeze)** : Division par deux des dégâts d'attaque prévus dans l'intention de l'ennemi lors de `resolveEnemyIntent()` : `(intent.value * 0.5).round()`.
+   - **Électrocution (Shock)** : Amplification directe des dégâts reçus par l'ennemi lors de la résolution des cartes d'attaque dans `EffectResolver.resolveCard()` : `dmg += shockStatus.value`.
+   - **Support Technique Complet** : Création centralisée dans `EffectResolver._createStatus()`, prise en charge bilingue intégrale et intégration robuste dans le moteur de résolution.
+
+4. **Restructuration Globale de la Localisation** :
    - Migration absolue vers `AppLocalizations` fortement typé pour l'interface UI Flutter.
    - Élimination intégrale des variables `isFr` locales et des chaînes de caractères codées en dur.
    - Intégration du support multilingue double-champs dans les bases de données JSON (`nameEn`/`nameFr`, `descriptionEn`/`descriptionFr`).
    - Traduction dynamique en temps réel des statuts de combat dans `StatusEffectsPanel`.
 
-4. **Validation, Assurance Qualité et Robustesse** :
-   - Suite de tests unitaire mise à jour et validée : **59 tests unitaires et widget-tests 100% VERT (59 passés avec succès)**.
+5. **Validation, Assurance Qualité et Robustesse** :
+   - Suite de tests unitaire mise à jour et validée : **60 tests unitaires et widget-tests 100% VERT (60 passés avec succès)**.
    - Analyse de code statique parfaite : **0 erreur, 0 warning, 0 info** sous `flutter analyze`.
 
 ---

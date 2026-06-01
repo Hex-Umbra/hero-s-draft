@@ -303,6 +303,9 @@ Les combattants accumulent des altérations d'état. Le décompte (`tickStatuses
 | `weakness` | Debuff | Oui | Réduit les dégâts physiques infligés de **25%** (`×0.75`) | Durée -1 chaque tour |
 | `strength_regen` | Buff | Oui | Ajoute sa valeur au statut `strength` au début du tour | Durée -1 chaque tour |
 | `armor_regen` | Buff | Oui | Génère de l'armure = valeur au début du tour | Durée -1 chaque tour |
+| `burn` | Debuff | Oui | Inflige des dégâts directs = valeur au début du tour ennemi | Durée -1 chaque tour |
+| `freeze` | Debuff | Oui | Divise par deux (`×0.5` arrondi) les dégâts offensifs d'intention de l'ennemi | Durée -1 chaque tour |
+| `shock` | Debuff | Oui | Augmente les dégâts d'attaque subis par l'ennemi de la valeur du statut | Durée -1 chaque tour |
 
 ### 4.2. Statuts Partiellement Implémentés
 
@@ -310,15 +313,7 @@ Les combattants accumulent des altérations d'état. Le décompte (`tickStatuses
 |:---|:---:|:---:|:---:|:---|
 | `vulnerable` | Debuff | ✅ Déclaré dans `EffectResolver._createStatus`, affichable | ❌ | **Absent de `_calculateDamage()`** — n'augmente pas les dégâts reçus |
 
-### 4.3. Statuts Non Implémentés (Placeholders)
-
-| Statut (`id`) | Présent dans `UiCard._buildDescription()` | Présent dans `EffectResolver` | Présent dans `StatusEffect` |
-|:---|:---:|:---:|:---:|
-| `burn` | ✅ Affichage textuel | ❌ | ✅ Déclaré comme ID possible |
-| `freeze` | ✅ Affichage textuel | ❌ | ✅ Déclaré comme ID possible |
-| `shock` | ✅ Affichage textuel | ❌ | ✅ Déclaré comme ID possible |
-
-### 4.4. Mécanique de Stacking (`StatusEffect.combine`)
+### 4.3. Mécanique de Stacking (`StatusEffect.combine`)
 
 ```dart
 if (isStackable) {
