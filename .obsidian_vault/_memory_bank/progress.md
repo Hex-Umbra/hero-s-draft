@@ -5,7 +5,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 **Métriques du projet** :
 - **~8 200 lignes** de code source dans `lib/` (45 fichiers).
 - **7 fichiers JSON** de données d'assets.
-- **65 tests automatisés** — 100% au vert.
+- **66 tests automatisés** — 100% au vert.
 - **0 erreur, 0 avertissement** via `flutter analyze`.
 - **~108 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
 
@@ -52,6 +52,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Suppression de carte | `DeckNotifier.removeCardById()` | Oubli au feu de camp : suppression définitive |
 | Draft post-combat | `DraftScreen` | 3 choix de cartes aléatoires après victoire |
 | Draft de départ | `StarterDeckDraftScreen` | Vagues de 3 cartes pour constituer le deck initial |
+| Équilibrage Probabilités | `probabilities_test.dart` | Rééquilibrage exact (Commune 52%/51.5%, Atypique 24%, Rare 16%, Épique 6%, Légendaire 2.0%, Mythique 0.5% au Level Up) |
 
 ### ⚔️ Système de Combat
 
@@ -105,6 +106,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Layout main en arc | `HerosDraftGame._layoutHand()` | Arc circulaire, radius = `size.y * 1.5`, angle adaptatif |
 | Carrousel de reliques interactif | `RelicRewardCarouselOverlay` | Machine à sous PageView viewportFraction (0.85x scale/0.4 opacity sur les côtés, 1.0x/1.0 au centre), décélération cubique, célébration Canvas particles, bouton sécurisé, callbacks audio (`onTick`/`onLand`) |
 | Draft Reels Séquentiels | `DraftCardReel`, `DraftScreen` | Révélation machine à sous vertical spinner (0.8s, 1.4s, 2.0s), 3D flip axe Y, célébration légendaire (screen shake, gold particles, flash) et sound hooks |
+| Rareté Mythique & Alertes | `DraftScreen`, `DraftCardReel` | Rareté rouge sang, alerte cinématique warning 1400ms (laser horizontal, exclamation points `!!!` élastiques), flou d'arrière-plan `BackdropFilter` `8.0px`, spin prolongé `+800ms`, tremblement doublé `12.0` |
 
 ### 💀 Z-Sync Death & Stats System (Système de Mort et de Stats Synchronisé)
 
@@ -127,7 +129,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 
 | Métrique | Valeur | Détails |
 |:---|:---|:---|
-| Tests automatisés | **65** (100% VERT) | Tests unitaires et widget-tests |
+| Tests automatisés | **66** (100% VERT) | Tests unitaires et widget-tests |
 | Couverture estimée | **~15-20%** | Principalement logique/controllers, pas d'UI |
 | Analyse statique | **0 erreur, 0 warning, 0 info** | `flutter analyze` vierge |
 | Linter | `flutter_lints` v6.0.0 | Configuration standard, pas de règles custom |

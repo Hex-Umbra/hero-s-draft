@@ -66,9 +66,17 @@ L'objectif est d'alimenter de façon exhaustive la "Memory Bank" du projet (situ
    - **Célébration Légendaire Épique** : Pour les récompenses légendaires, rallongement du spin, secousses d'écran (screen-shake), auréole dorée de feu de particules et flashes d'impact.
    - **Pipeline de Transition & Level Up** : À la victoire, cumul de l'XP de tous les ennemis (+10% par niveau de monstre). En cas de montée de niveau, lecture de la bannière festive « LEVEL UP ! » et redirection vers l'écran de draft amélioré, sinon attribution de l'or et progression sur la carte. Câblage de sound hooks (`onTick` / `onLand`).
 
-9. **Validation, Assurance Qualité et Robustesse** :
-   - Suite de tests unitaires et widgets validée : **65 tests unitaires et widget-tests 100% VERT (65 passés avec succès)**.
-   - Analyse de code statique parfaite : **0 erreur, 0 warning, 0 info** sous `flutter analyze`.
+9. **Intégration de la Rareté Mythique & Transition d'Alerte Séquentielle (Draft)** :
+   - **Rareté Mythique (Mythic)** : Création d'une rareté ultime de couleur rouge sang (`0xFFE53E3E`) avec une bordure de carte de `4.0` (comparée à `3.0` pour la Légendaire) et des effets d'ombre avec halo rouge vif. Les rouleaux Mythiques en cours de rotation ont des délais asynchrones prolongés (`+800ms`), une amplitude de secousse doublée (`12.0` vs `6.0` pixels), et des contours d'étincelles rouge-néon via un `_SparkPainter` adapté.
+   - **Transition d'Alerte Horizontale (Warning Alert)** : Lors du tirage du Draft, si des cartes Mythiques sont obtenues (Trèfle à quatre feuilles ou Miroir), une transition d'alerte spectaculaire de 1400ms se déclenche après l'arrêt des rouleaux standard : une ligne laser écarlate balaye horizontalement l'écran de gauche à droite en coupant les cartes, tandis que trois points d'exclamation géants `!!!` surgissent au centre en animation élastique avec des ombres doubles (rouge et blanc) et flashent deux fois.
+   - **Floutage d'Arrière-Plan & Révélation (Foreground Overlay)** : Un `BackdropFilter` applique un flou gaussien de `8.0px` sur l'arrière-plan, tandis qu'une bannière rouge clignotante annonce l'apparition Mythique en premier plan. Après stabilisation et révélation des cartes Mythiques, l'overlay s'estompe en fondu (fade-out) après 1.5s pour réintégrer les cartes au Draft standard prêtes pour sélection.
+   - **Rééquilibrage des Probabilités de Draft** :
+     - Tirages standards : Légendaire `2%`, Épique `6%`, Rare `16%`, Atypique `24%`, Commune `52%` (100% exact).
+     - Tirages améliorés / Level Up : Mythique `0.5%`, Légendaire `2.0%`, Épique `6%`, Rare `16%`, Atypique `24%`, Commune `51.5%` (100% exact).
+
+10. **Validation, Assurance Qualité et Robustesse** :
+    - Suite de tests unitaires et widgets validée : **66 tests unitaires et widget-tests 100% VERT (66 passés avec succès)**.
+    - Analyse de code statique parfaite : **0 erreur, 0 warning, 0 info** sous `flutter analyze`.
 
 ---
 

@@ -23,13 +23,15 @@ class DraftScreen extends ConsumerStatefulWidget {
   ConsumerState<DraftScreen> createState() => _DraftScreenState();
 }
 
-class _DraftScreenState extends ConsumerState<DraftScreen> {
+class _DraftScreenState extends ConsumerState<DraftScreen> with TickerProviderStateMixin {
   late List<_DraftChoice> _choices;
   bool _baseCompleted = false;
+  bool _showMythicAlert = false;
   bool _mythicRevealing = false;
   bool _mythicCompleted = false;
   int _baseLandedCount = 0;
   int _mythicLandedCount = 0;
+  late AnimationController _alertController;
 
   bool get _hasMythicChoices => _choices.any((c) => c.rarity == RewardRarity.mythic);
 
@@ -39,8 +41,9 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
       if (_hasMythicChoices) {
         setState(() {
           _baseCompleted = true;
-          _mythicRevealing = true;
+          _showMythicAlert = true;
         });
+        _alertController.forward(from: 0.0);
       } else {
         setState(() {
           _baseCompleted = true;
@@ -68,6 +71,24 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
   void initState() {
     super.initState();
     _choices = _generateChoices();
+    _alertController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    );
+    _alertController.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        setState(() {
+          _showMythicAlert = false;
+          _mythicRevealing = true;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _alertController.dispose();
+    super.dispose();
   }
 
   String _rarityToString(BuildContext context, RewardRarity rarity) {
@@ -241,64 +262,162 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
         ),
         if (_mythicRevealing)
           Positioned.fill(
-            child: Container(
-              color: Colors.black.withValues(alpha: 0.6),
-              child: BackdropFilter(
-                filter: ui.ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text(
-                        'RÉCOMPENSE MYTHIQUE DÉCOUVERTE !',
-                        style: TextStyle(
-                          color: Color(0xFFE53E3E),
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 2.0,
-                          shadows: [
-                            Shadow(
-                              color: Color(0xFFE53E3E),
-                              blurRadius: 15,
-                            ),
-                          ],
+            child: Material(
+              type: MaterialType.transparency,
+              child: Container(
+                color: Colors.black.withValues(alpha: 0.6),
+                child: BackdropFilter(
+                  filter: ui.ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          'RÉCOMPENSE MYTHIQUE DÉCOUVERTE !',
+                          style: TextStyle(
+                            color: Color(0xFFE53E3E),
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 2.0,
+                            shadows: [
+                              Shadow(
+                                color: Color(0xFFE53E3E),
+                                blurRadius: 15,
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 40),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: _choices
-                            .where((c) => c.rarity == RewardRarity.mythic)
-                            .map((choice) {
-                          final mythicIndex = _choices.indexOf(choice);
-                          final relativeIndex = mythicIndex - 3;
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(
-                                maxWidth: 160,
-                              ),
-                              child: DraftCardReel(
-                                title: _getChoiceTitle(context, choice),
-                                description: _getChoiceDescription(
-                                  context,
-                                  choice,
+                        const SizedBox(height: 40),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: _choices
+                              .where((c) => c.rarity == RewardRarity.mythic)
+                              .map((choice) {
+                            final mythicIndex = _choices.indexOf(choice);
+                            final relativeIndex = mythicIndex - 3;
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 160,
                                 ),
-                                onTap: () {},
-                                rarity: _rarityToString(
-                                  context,
-                                  choice.rarity,
+                                child: DraftCardReel(
+                                  title: _getChoiceTitle(context, choice),
+                                  description: _getChoiceDescription(
+                                    context,
+                                    choice,
+                                  ),
+                                  onTap: () {},
+                                  rarity: _rarityToString(
+                                    context,
+                                    choice.rarity,
+                                  ),
+                                  index: relativeIndex,
+                                  onLand: _onMythicReelLanded,
                                 ),
-                                index: relativeIndex,
-                                onLand: _onMythicReelLanded,
                               ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ],
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
+              ),
+            ),
+          ),
+        if (_showMythicAlert)
+          Positioned.fill(
+            child: IgnorePointer(
+              child: AnimatedBuilder(
+                animation: _alertController,
+                builder: (context, child) {
+                  final val = _alertController.value;
+
+                  // Phase 1: Draw line from left to right (0.0 to 0.2) - Twice as fast
+                  double lineWidthPercent = (val / 0.2).clamp(0.0, 1.0);
+
+                  // Phase 2: Exclamation marks scale up elastically (0.2 to 0.6)
+                  double exclamationScale = 0.0;
+                  if (val > 0.2) {
+                    final t = (val - 0.2) / 0.4;
+                    // Elastic ease out
+                    const c4 = (2 * pi) / 3;
+                    exclamationScale = t == 0
+                        ? 0
+                        : t == 1
+                            ? 1
+                            : pow(2, -10 * t) * sin((t * 10 - 0.75) * c4) + 1;
+                    exclamationScale = exclamationScale.clamp(0.0, 1.2);
+                  }
+
+                  // Phase 3: Blinking warning (0.6 to 1.0)
+                  bool isVisible = true;
+                  if (val > 0.6) {
+                    // Blinks twice
+                    final blinkVal = ((val - 0.6) / 0.4 * 6).floor();
+                    isVisible = blinkVal % 2 == 0;
+                  }
+
+                  return Stack(
+                    children: [
+                      // Darken background slightly to increase contrast
+                      Positioned.fill(
+                        child: Container(
+                          color: Colors.black.withValues(alpha: 0.3 * val),
+                        ),
+                      ),
+
+                      // Horizontal Red Line
+                      Center(
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Container(
+                            height: 6,
+                            width: MediaQuery.of(context).size.width * lineWidthPercent,
+                            decoration: BoxDecoration(
+                              color: isVisible ? const Color(0xFFE53E3E) : Colors.transparent,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFFE53E3E).withValues(alpha: 0.8),
+                                  blurRadius: 15,
+                                  spreadRadius: 2,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // Exclamation Points
+                      if (val > 0.2 && isVisible)
+                        Center(
+                          child: Transform.scale(
+                            scale: exclamationScale,
+                            child: const Text(
+                              '!!!',
+                              style: TextStyle(
+                                color: Color(0xFFE53E3E),
+                                fontSize: 64,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 4.0,
+                                shadows: [
+                                  Shadow(
+                                    color: Color(0xFFE53E3E),
+                                    blurRadius: 25,
+                                  ),
+                                  Shadow(
+                                    color: Colors.white,
+                                    blurRadius: 5,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
+                },
               ),
             ),
           ),
