@@ -1,8 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
-import '../../../models/data/card_data.dart';
-import '../../widgets/ui_card.dart';
+import '../draft/draft_choice_card.dart';
 
 // Helper enum to match choice rarity string
 enum DraftChoiceRarity { common, uncommon, rare, epic, legendary }
@@ -256,12 +255,11 @@ class _DraftCardReelState extends State<DraftCardReel>
           cardFace = Transform(
             transform: Matrix4.identity()..rotateX(pi),
             alignment: Alignment.center,
-            child: UiCard(
+            child: DraftChoiceCard(
               title: widget.title,
               description: widget.description,
               onTap: widget.onTap,
               rarity: widget.rarity,
-              type: CardType.power,
             ),
           );
         }
