@@ -49,6 +49,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   TurnPhase currentPhase = TurnPhase.player;
   EnemyCard? selectedEnemy;
   EnemyCard? highlightedEnemy;
+  bool isCardAnimating = false;
 
   final void Function(int) onPlayerTakeDamage;
   final void Function(int) onPlayerHeal;
@@ -296,16 +297,42 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
       handCards.remove(cardComp);
       _layoutHand();
 
+      isCardAnimating = true;
+
       cardComp.playAnimation(
         target,
         onComplete: () {
           cardComp.removeFromParent();
+          isCardAnimating = false;
+          resolvePendingDeaths();
         },
       );
 
       return true;
     }
     return false;
+  }
+
+  void resolvePendingDeaths() {
+    final deadCards = enemyCards.where((c) => c.isPendingDeath).toList();
+    if (deadCards.isEmpty) return;
+
+    for (var card in deadCards) {
+      card.isDead = true;
+      card.add(OpacityEffect.to(0.0, EffectController(duration: 0.4)));
+      card.add(
+        ScaleEffect.to(
+          Vector2.zero(),
+          EffectController(duration: 0.4),
+          onComplete: () {
+            card.removeFromParent();
+          },
+        ),
+      );
+      enemyCards.remove(card);
+    }
+    _repositionEnemies();
+    onEnemiesSpawned?.call();
   }
 
   @override
@@ -454,23 +481,30 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
         .where((c) => !newEnemiesIds.contains(c.id))
         .toList();
 
+    bool immediateRemovals = false;
     for (var card in cardsToRemove) {
-      card.isDead = true;
-      card.add(OpacityEffect.to(0.0, EffectController(duration: 0.4)));
-      card.add(
-        ScaleEffect.to(
-          Vector2.zero(),
-          EffectController(duration: 0.4),
-          onComplete: () {
-            card.removeFromParent();
-          },
-        ),
-      );
-      enemyCards.remove(card);
+      if (isCardAnimating) {
+        card.isPendingDeath = true;
+      } else {
+        card.isDead = true;
+        card.isPendingDeath = true;
+        card.add(OpacityEffect.to(0.0, EffectController(duration: 0.4)));
+        card.add(
+          ScaleEffect.to(
+            Vector2.zero(),
+            EffectController(duration: 0.4),
+            onComplete: () {
+              card.removeFromParent();
+            },
+          ),
+        );
+        enemyCards.remove(card);
+        immediateRemovals = true;
+      }
     }
 
     // 2. Gérer les apparitions ou mises à jour
-    bool listChanged = cardsToRemove.isNotEmpty;
+    bool listChanged = immediateRemovals;
 
     for (var enemyInstance in state.enemies) {
       final existingIndex = enemyCards.indexWhere(

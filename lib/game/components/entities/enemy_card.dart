@@ -37,6 +37,7 @@ class EnemyCard extends PositionComponent
 
   bool isSelected = false;
   bool isDead = false;
+  bool isPendingDeath = false;
 
   EnemyCard({required this.instance, required this.onTapEnemy})
     : super(size: Vector2(100, 140));
