@@ -149,13 +149,20 @@ class _StatusIcon extends PositionComponent {
       case 'vulnerable':
         return '🎯';
       case 'strength_regen':
-        return '🔥';
+        return '✊';
       case 'armor_regen':
         return '🛡️';
       case 'lifesteal':
         return '🧛';
+      case 'burn':
+        return '🔥';
+      case 'freeze':
+        return '❄️';
+      case 'shock':
+        return '⚡';
       default:
         return '✨';
     }
   }
 }
+

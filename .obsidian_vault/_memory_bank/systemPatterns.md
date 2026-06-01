@@ -304,11 +304,16 @@ Pour éliminer la condition de concurrence visuelle (race condition) où l'état
 
 - **Ratio d'aspect** : `70 / 110` constant.
 - **Design** : Gradient de fond basé sur la rareté (grey/green/blue/purple/gold), cristal de mana (haut-gauche), icône de type (haut-droit), barre de nom colorée, badge de level.
-- **`_buildDescription()`** : Parse la liste d'effets et produit une description localisée avec valeurs calculées dynamiquement :
-  ```
-  scaledValue = (baseValue * (1 + (level - 1) * 0.5)).round()
-  ```
-  Gère l'affichage de `burn`, `freeze`, `shock` (même si non implémentés en logique).
+- **`_buildDetailedDescription()`** : Parse la liste d'effets, remplace les placeholders dynamiques selon le niveau, et enrichit systématiquement les statuts d'explications mécaniques détaillées, claires et localisées entre parenthèses :
+  - **poison** : `(Subit des dégâts égaux au Poison au début de son tour, puis la durée diminue)` en FR / `(Takes damage equal to Poison at turn start, then duration decreases)` en EN.
+  - **burn** : `(Subit des dégâts de feu égaux à la Brûlure au début de son tour, puis la valeur diminue de 1)` en FR / `(Takes fire damage equal to Burn at turn start, then the value decreases by 1)` en EN.
+  - **freeze** : `(Réduit les dégâts de la prochaine attaque de l'ennemi de 50%)` en FR / `(Reduces next enemy attack damage by 50%)` en EN.
+  - **shock** : `(Subit des dégâts supplémentaires égaux à l'Électrocution à chaque coup reçu)` en FR / `(Takes extra damage equal to Shock on every hit)` en EN.
+  - **weakness** : `(Réduit les dégâts infligés par l'ennemi de 25%)` en FR / `(Reduces damage dealt by the enemy by 25%)` en EN.
+  - **vulnerable** : `(L'ennemi subit 50% de dégâts supplémentaires)` en FR / `(Enemy takes 50% more damage from attacks)` en EN.
+- **Mappage HUD & Emojis** : Pour préserver la cohérence visuelle absolue :
+  - Les statuts joueurs et ennemis utilisent des émojis unifiés dans `status_indicator.dart` (`burn` 🔥, `freeze` ❄️, `shock` ⚡, `strength_regen` ✊ pour éviter la collision visuelle avec burn).
+  - Les labels linguistiques sont câblés dynamiquement à la volée dans `status_effects_panel.dart`.
 
 ### 5.3. Composants Flame (`lib/game/components/`)
 
@@ -385,6 +390,9 @@ La ligne de ciblage rectiligne rigide a été remplacée par une courbe dynamiqu
    - **Épées Croisées** : Deux lames d'acier croisées en diagonale avec des gardes et pommeaux dorés.
    - **Goutte de Poison** : Une larme vert menthe dessinée avec un chemin de Bézier fluide, dotée d'une double bordure contrastée.
    - **Étoile de Force** : Une étoile dorée parfaite à cinq branches calculée par trigonométrie radiale.
+   - **Brûlure (`burn`)** : Une flamme rouge/orange dynamique et dansante avec des vagues de chaleur ascendantes.
+   - **Gel (`freeze`)** : Un flocon de neige bleu turquoise symétrique à six branches avec des motifs de ramification délicats.
+   - **Électrocution (`shock`)** : Un éclair jaune électrique angulaire, vif et acéré.
 
 2. **Auras de Compétences (Spiritual Auras & Trails)** :
    - **Aura de Soin (Heal Aura)** : Jouer une carte de soin émet 20 particules en forme de croix dorées et vertes (`CrossParticle`) éjectées vers le haut depuis le centre du héros avec un fondu d'opacité linéaire.

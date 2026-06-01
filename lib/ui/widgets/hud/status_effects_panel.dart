@@ -102,6 +102,27 @@ class StatusEffectsPanel extends StatelessWidget {
                   color = Colors.redAccent;
                   label = l10n.statusLifesteal(status.value);
                   break;
+                case 'burn':
+                  icon = Icons.whatshot;
+                  color = Colors.deepOrangeAccent;
+                  label = Localizations.localeOf(context).languageCode == 'fr'
+                      ? 'Brûlure : ${status.value}'
+                      : 'Burn: ${status.value}';
+                  break;
+                case 'freeze':
+                  icon = Icons.ac_unit;
+                  color = Colors.lightBlueAccent;
+                  label = Localizations.localeOf(context).languageCode == 'fr'
+                      ? 'Gel : ${status.value}'
+                      : 'Freeze: ${status.value}';
+                  break;
+                case 'shock':
+                  icon = Icons.flash_on;
+                  color = Colors.yellowAccent;
+                  label = Localizations.localeOf(context).languageCode == 'fr'
+                      ? 'Électrocution : ${status.value}'
+                      : 'Shock: ${status.value}';
+                  break;
                 default:
                   icon = status.type == StatusType.buff
                       ? Icons.arrow_upward

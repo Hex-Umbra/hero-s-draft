@@ -280,14 +280,23 @@ class CardComponent extends PositionComponent
           case 'poison':
             desc +=
                 '• ${getTranslation((l) => l.cardDescStatusPoisonDuration(scaledValue, duration), fallback: 'Applique $scaledValue Poison pendant $duration tours.')}\n';
+            desc += activeLocale == 'fr'
+                ? '  (Subit des dégâts égaux au Poison au début de son tour, puis la durée diminue)\n'
+                : '  (Takes damage equal to Poison at turn start, then duration decreases)\n';
             break;
           case 'weakness':
             desc +=
                 '• ${getTranslation((l) => l.cardDescStatusWeaknessDuration(scaledValue, duration), fallback: 'Applique $scaledValue Faiblesse pendant $duration tours.')}\n';
+            desc += activeLocale == 'fr'
+                ? '  (Réduit les dégâts infligés par l\'ennemi de 25%)\n'
+                : '  (Reduces damage dealt by the enemy by 25%)\n';
             break;
           case 'vulnerable':
             desc +=
                 '• ${getTranslation((l) => l.cardDescStatusVulnerableDuration(scaledValue, duration), fallback: 'Applique $scaledValue Vulnérable pendant $duration tours.')}\n';
+            desc += activeLocale == 'fr'
+                ? '  (L\'ennemi subit 50% de dégâts supplémentaires)\n'
+                : '  (Enemy takes 50% more damage from attacks)\n';
             break;
           case 'strength_regen':
             desc +=
@@ -296,14 +305,23 @@ class CardComponent extends PositionComponent
           case 'burn':
             desc +=
                 '• ${getTranslation((l) => l.cardDescStatusBurnDuration(scaledValue, duration), fallback: 'Applique $scaledValue Brûlure pendant $duration tours.')}\n';
+            desc += activeLocale == 'fr'
+                ? '  (Subit des dégâts de feu égaux à la Brûlure au début de son tour, puis la valeur diminue de 1)\n'
+                : '  (Takes fire damage equal to Burn at turn start, then the value decreases by 1)\n';
             break;
           case 'freeze':
             desc +=
                 '• ${getTranslation((l) => l.cardDescStatusFreezeDuration(scaledValue, duration), fallback: 'Applique $scaledValue Gel pendant $duration tours.')}\n';
+            desc += activeLocale == 'fr'
+                ? '  (Réduit les dégâts de la prochaine attaque de l\'ennemi de 50%)\n'
+                : '  (Reduces next enemy attack damage by 50%)\n';
             break;
           case 'shock':
             desc +=
                 '• ${getTranslation((l) => l.cardDescStatusShockDuration(scaledValue, duration), fallback: 'Applique $scaledValue Électrocution pendant $duration tours.')}\n';
+            desc += activeLocale == 'fr'
+                ? '  (Subit des dégâts supplémentaires égaux à l\'Électrocution à chaque coup reçu)\n'
+                : '  (Takes extra damage equal to Shock on every hit)\n';
             break;
         }
       }

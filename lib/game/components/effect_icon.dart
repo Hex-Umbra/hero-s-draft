@@ -130,6 +130,108 @@ class EffectIcon extends PositionComponent with HasPaint {
       canvas.drawPath(dropPath, glowPaint);
       canvas.drawPath(dropPath, fillPaint);
       canvas.drawPath(dropPath, strokePaint);
+    } else if (iconType == 'burn' || iconType == 'fire') {
+      glowColor = Colors.deepOrangeAccent;
+      coreColor = const Color(0xFFF97316); // Bright orange
+      strokeColor = Colors.white;
+
+      final glowPaint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 5
+        ..color = glowColor.withValues(alpha: opacity)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+
+      final fillPaint = Paint()
+        ..style = PaintingStyle.fill
+        ..color = coreColor.withValues(alpha: opacity);
+
+      final strokePaint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..color = strokeColor.withValues(alpha: opacity);
+
+      final flamePath = Path();
+      flamePath.moveTo(0, 15);
+      flamePath.cubicTo(-10, 15, -15, 8, -10, -2);
+      flamePath.cubicTo(-15, -6, -8, -15, 0, -17);
+      flamePath.cubicTo(2, -10, 8, -6, 5, -2);
+      flamePath.cubicTo(12, 0, 12, 10, 0, 15);
+      flamePath.close();
+
+      canvas.drawPath(flamePath, glowPaint);
+      canvas.drawPath(flamePath, fillPaint);
+      canvas.drawPath(flamePath, strokePaint);
+    } else if (iconType == 'freeze' || iconType == 'cold' || iconType == 'ice') {
+      glowColor = Colors.lightBlueAccent;
+      coreColor = const Color(0xFF0284C7); // Sky blue
+      strokeColor = Colors.white;
+
+      final glowPaint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 5
+        ..color = glowColor.withValues(alpha: opacity)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+
+      final fillPaint = Paint()
+        ..style = PaintingStyle.fill
+        ..color = coreColor.withValues(alpha: opacity);
+
+      final strokePaint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..color = strokeColor.withValues(alpha: opacity);
+
+      // Draw a central snowflake crystal
+      canvas.drawCircle(Offset.zero, 4, glowPaint);
+      canvas.drawCircle(Offset.zero, 4, fillPaint);
+      canvas.drawCircle(Offset.zero, 4, strokePaint);
+
+      // Draw 6 spokes
+      for (int i = 0; i < 6; i++) {
+        canvas.save();
+        canvas.rotate(i * 3.14159 / 3);
+        // Main spoke line
+        canvas.drawLine(Offset.zero, const Offset(0, -16), glowPaint);
+        canvas.drawLine(Offset.zero, const Offset(0, -16), strokePaint);
+        // Little branches
+        canvas.drawLine(const Offset(0, -10), const Offset(-5, -13), glowPaint);
+        canvas.drawLine(const Offset(0, -10), const Offset(-5, -13), strokePaint);
+        canvas.drawLine(const Offset(0, -10), const Offset(5, -13), glowPaint);
+        canvas.drawLine(const Offset(0, -10), const Offset(5, -13), strokePaint);
+        canvas.restore();
+      }
+    } else if (iconType == 'shock' || iconType == 'lightning') {
+      glowColor = Colors.yellowAccent;
+      coreColor = const Color(0xFFFACC15); // Electric gold yellow
+      strokeColor = Colors.white;
+
+      final glowPaint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 5
+        ..color = glowColor.withValues(alpha: opacity)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+
+      final fillPaint = Paint()
+        ..style = PaintingStyle.fill
+        ..color = coreColor.withValues(alpha: opacity);
+
+      final strokePaint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..color = strokeColor.withValues(alpha: opacity);
+
+      final boltPath = Path();
+      boltPath.moveTo(2, -18);
+      boltPath.lineTo(-10, 0);
+      boltPath.lineTo(-2, 0);
+      boltPath.lineTo(-6, 18);
+      boltPath.lineTo(8, -2);
+      boltPath.lineTo(0, -2);
+      boltPath.close();
+
+      canvas.drawPath(boltPath, glowPaint);
+      canvas.drawPath(boltPath, fillPaint);
+      canvas.drawPath(boltPath, strokePaint);
     } else if (iconType == 'buff' || iconType == 'attack_buff') {
       // Crossed swords
       glowColor = Colors.orangeAccent;

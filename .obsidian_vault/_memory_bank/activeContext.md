@@ -35,13 +35,18 @@ L'objectif est d'alimenter de façon exhaustive la "Memory Bank" du projet (situ
    - **Électrocution (Shock)** : Amplification directe des dégâts reçus par l'ennemi lors de la résolution des cartes d'attaque dans `EffectResolver.resolveCard()` : `dmg += shockStatus.value`.
    - **Support Technique Complet** : Création centralisée dans `EffectResolver._createStatus()`, prise en charge bilingue intégrale et intégration robuste dans le moteur de résolution.
 
-4. **Restructuration Globale de la Localisation** :
+4. **Consistance Visuelle des Statuts et Transparence des Infobulles (Tooltip Clarity & Mapping)** :
+   - **Tracés Vectoriels Haute Fidélité** : Implémentation dans `effect_icon.dart` de tracés de canvas vectoriels complexes pour `burn` (flamme rouge/orange avec masque de lueur), `freeze` (flocon de neige bleu symétrique à 6 branches avec lueurs cyan) et `shock` (éclair jaune électrique).
+   - **Mappage de Statuts Emojis et HUD** : Correction du bug d'affichage générique de `burn` en le mappant sur 🔥 dans `status_indicator.dart`, `freeze` sur ❄️, `shock` sur ⚡, et ré-attribution de `strength_regen` vers ✊ (poing) pour lever toute collision visuelle. Câblage dynamique des labels linguistiques à la volée dans `status_effects_panel.dart`.
+   - **Infobulles Explicatives Parentthésées** : Ajout d'explications mécaniques explicites, condensées et localisées dans `_buildDetailedDescription()` (pour `UiCard` et `CardComponent`) détaillant précisément l'impact de chaque statut (poison, burn, freeze, shock, weakness, vulnerable) pour éliminer toute confusion de gameplay.
+
+5. **Restructuration Globale de la Localisation** :
    - Migration absolue vers `AppLocalizations` fortement typé pour l'interface UI Flutter.
    - Élimination intégrale des variables `isFr` locales et des chaînes de caractères codées en dur.
    - Intégration du support multilingue double-champs dans les bases de données JSON (`nameEn`/`nameFr`, `descriptionEn`/`descriptionFr`).
    - Traduction dynamique en temps réel des statuts de combat dans `StatusEffectsPanel`.
 
-5. **Validation, Assurance Qualité et Robustesse** :
+6. **Validation, Assurance Qualité et Robustesse** :
    - Suite de tests unitaire mise à jour et validée : **60 tests unitaires et widget-tests 100% VERT (60 passés avec succès)**.
    - Analyse de code statique parfaite : **0 erreur, 0 warning, 0 info** sous `flutter analyze`.
 

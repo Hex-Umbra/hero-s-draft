@@ -91,7 +91,9 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Particules physiques | `spawnDamageParticles` | Éjection radiale de particules de dégâts (12 poison, 15 normal, 25 critiques) |
 | Traînées élémentaires | `CardAnimator`, `RibbonTrail` | Traînées d'étincelles assorties et ruban de traînée tactile selon le type d'effet |
 | Auras de Soin et Bouclier | `CrossParticle`, `ShieldDome` | 20 croix dorées/vertes montantes pour le heal; dôme cyan scanline pulsant pour le blocage |
-| Icônes vectorielles canvas | `effect_icon.dart` | Dessin personnalisé (écu, épées croisées, goutte, étoile) avec flou glow à la main sur canvas |
+| Icônes vectorielles canvas | `effect_icon.dart` | Dessin personnalisé (écu, épées croisées, goutte, étoile, flamme, flocon de neige, éclair) avec flou glow à la main sur canvas |
+| Clarté des infobulles (Tooltips) | `ui_card.dart`, `card_component.dart` | Explications mécaniques parentthésées et localisées pour tous les statuts (poison, brûlure, gel, élec, faiblesse, vulnérable) |
+| Cohérence visuelle HUD | `status_effects_panel.dart`, `status_indicator.dart` | Mappage complet d'émojis (🔥, ❄️, ⚡, ✊) et d'icônes Flutter harmonisés pour le joueur et les ennemis |
 | Texte flottant de dégâts | `FloatingText` | `MoveEffect` ascendant + `OpacityEffect` fade, ~1.5s |
 | Animations d'attaque ennemie | `EnemyCard.dashAnimation()` | `MoveEffect` avant/arrière |
 | Barre de vie dynamique | `HealthBar` | Interpolation couleur green→yellow→red, transition animée |

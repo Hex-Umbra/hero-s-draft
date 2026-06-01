@@ -305,6 +305,7 @@ class UiCard extends StatelessWidget {
       if (effect.type == 'draw') desc += '${l10n.cardDescDraw(scaledValue)}\n';
       if (effect.type == 'apply_status') {
         final duration = effect.duration ?? 1;
+        final localeCode = Localizations.localeOf(context).languageCode;
         switch (effect.statusId) {
           case 'strength':
             desc += '${l10n.cardDescStatusStrength(scaledValue, duration)}\n';
@@ -315,14 +316,23 @@ class UiCard extends StatelessWidget {
           case 'poison':
             desc +=
                 '${l10n.cardDescStatusPoisonDuration(scaledValue, duration)}\n';
+            desc += localeCode == 'fr'
+                ? '  (Subit des dégâts égaux au Poison au début de son tour, puis la durée diminue)\n'
+                : '  (Takes damage equal to Poison at turn start, then duration decreases)\n';
             break;
           case 'weakness':
             desc +=
                 '${l10n.cardDescStatusWeaknessDuration(scaledValue, duration)}\n';
+            desc += localeCode == 'fr'
+                ? '  (Réduit les dégâts infligés par l\'ennemi de 25%)\n'
+                : '  (Reduces damage dealt by the enemy by 25%)\n';
             break;
           case 'vulnerable':
             desc +=
                 '${l10n.cardDescStatusVulnerableDuration(scaledValue, duration)}\n';
+            desc += localeCode == 'fr'
+                ? '  (L\'ennemi subit 50% de dégâts supplémentaires)\n'
+                : '  (Enemy takes 50% more damage from attacks)\n';
             break;
           case 'strength_regen':
             desc +=
@@ -331,14 +341,23 @@ class UiCard extends StatelessWidget {
           case 'burn':
             desc +=
                 '${l10n.cardDescStatusBurnDuration(scaledValue, duration)}\n';
+            desc += localeCode == 'fr'
+                ? '  (Subit des dégâts de feu égaux à la Brûlure au début de son tour, puis la valeur diminue de 1)\n'
+                : '  (Takes fire damage equal to Burn at turn start, then the value decreases by 1)\n';
             break;
           case 'freeze':
             desc +=
                 '${l10n.cardDescStatusFreezeDuration(scaledValue, duration)}\n';
+            desc += localeCode == 'fr'
+                ? '  (Réduit les dégâts de la prochaine attaque de l\'ennemi de 50%)\n'
+                : '  (Reduces next enemy attack damage by 50%)\n';
             break;
           case 'shock':
             desc +=
                 '${l10n.cardDescStatusShockDuration(scaledValue, duration)}\n';
+            desc += localeCode == 'fr'
+                ? '  (Subit des dégâts supplémentaires égaux à l\'Électrocution à chaque coup reçu)\n'
+                : '  (Takes extra damage equal to Shock on every hit)\n';
             break;
         }
       }
