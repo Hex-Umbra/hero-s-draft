@@ -135,7 +135,7 @@ class HeroCard extends PositionComponent
       _spawnFloatingText(
         '-$lostArmor',
         const Color(0xFF3B82F6), // Technical premium blue
-        Vector2(size.x / 2, size.y - 20),
+        position + Vector2(0, (size.y / 2 - 20) * scale.y),
         isShield: true,
       );
       shieldHitAnimation();
@@ -144,7 +144,7 @@ class HeroCard extends PositionComponent
       _spawnFloatingText(
         '+$gainedArmor',
         Colors.lightBlueAccent,
-        Vector2(size.x / 2, 0),
+        position + Vector2(0, -size.y * scale.y / 2),
       );
     }
 
@@ -160,7 +160,7 @@ class HeroCard extends PositionComponent
       _spawnFloatingText(
         '-$lostHp',
         damageColor,
-        Vector2(size.x / 2, 20),
+        position + Vector2(0, -(size.y / 4) * scale.y),
         isCritical: isCritical,
         isPoison: isPoisonDamage,
       );
@@ -304,7 +304,7 @@ class HeroCard extends PositionComponent
   void _spawnFloatingText(
     String text,
     Color color,
-    Vector2 pos, {
+    Vector2 globalPos, {
     bool isCritical = false,
     bool isPoison = false,
     bool isShield = false,
@@ -312,13 +312,14 @@ class HeroCard extends PositionComponent
     final ft = FloatingText(
       text: text,
       color: color,
-      position: pos,
+      position: globalPos,
       isUpward: true,
       isCritical: isCritical,
       isPoison: isPoison,
       isShield: isShield,
     );
-    add(ft);
+    ft.priority = 200;
+    game.add(ft);
   }
 
   void dashAnimation() {
@@ -340,8 +341,9 @@ class HeroCard extends PositionComponent
     // Faire popper l'icône
     final effectIcon = EffectIcon(
       iconType: iconType,
-      position: Vector2(size.x / 2, 0), // Milieu haut
+      position: position + Vector2(0, -size.y * scale.y / 2),
     );
-    add(effectIcon);
+    effectIcon.priority = 200;
+    game.add(effectIcon);
   }
 }

@@ -297,9 +297,9 @@ class UiCard extends StatelessWidget {
       }
       if (effect.type == 'heal') desc += '${l10n.cardDescHeal(scaledValue)}\n';
       if (effect.type == 'armor')
-        desc += '${l10n.cardDescArmor(scaledValue)}\n';
+        {desc += '${l10n.cardDescArmor(scaledValue)}\n';}
       if (effect.type == 'gain_mana')
-        desc += '${l10n.cardDescGainMana(scaledValue)}\n';
+        {desc += '${l10n.cardDescGainMana(scaledValue)}\n';}
       if (effect.type == 'draw') desc += '${l10n.cardDescDraw(scaledValue)}\n';
       if (effect.type == 'apply_status') {
         final duration = effect.duration ?? 1;

@@ -206,7 +206,7 @@ class EnemyCard extends PositionComponent
       _spawnFloatingText(
         '-$lostArmor',
         const Color(0xFF3B82F6), // Technical premium blue
-        Vector2(size.x / 2, size.y - 20),
+        position + Vector2(0, (size.y / 2 - 20) * scale.y),
         isShield: true,
       );
       shieldHitAnimation();
@@ -224,7 +224,7 @@ class EnemyCard extends PositionComponent
       _spawnFloatingText(
         '-$lostHp',
         damageColor,
-        Vector2(size.x / 2, size.y),
+        position + Vector2(0, (size.y / 2) * scale.y),
         isCritical: isCritical,
         isPoison: isPoisonDamage,
       );
@@ -377,7 +377,7 @@ class EnemyCard extends PositionComponent
   void _spawnFloatingText(
     String text,
     Color color,
-    Vector2 pos, {
+    Vector2 globalPos, {
     bool isCritical = false,
     bool isPoison = false,
     bool isShield = false,
@@ -385,13 +385,14 @@ class EnemyCard extends PositionComponent
     final ft = FloatingText(
       text: text,
       color: color,
-      position: pos,
+      position: globalPos,
       isUpward: false,
       isCritical: isCritical,
       isPoison: isPoison,
       isShield: isShield,
     );
-    add(ft);
+    ft.priority = 200;
+    game.add(ft);
   }
 
   void setSelection(bool selected) {
@@ -485,9 +486,10 @@ class EnemyCard extends PositionComponent
   void buffAnimation(IntentType type) {
     final effectIcon = EffectIcon(
       iconType: type == IntentType.defend ? 'defend' : 'buff',
-      position: Vector2(size.x / 2, 0),
+      position: position + Vector2(0, -size.y * scale.y / 2),
     );
-    add(effectIcon);
+    effectIcon.priority = 200;
+    game.add(effectIcon);
   }
 
   @override
