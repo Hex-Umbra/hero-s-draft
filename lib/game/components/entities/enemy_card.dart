@@ -36,6 +36,7 @@ class EnemyCard extends PositionComponent
   bool get isBoss => instance.isBoss;
 
   bool isSelected = false;
+  bool isDead = false;
 
   EnemyCard({required this.instance, required this.onTapEnemy})
     : super(size: Vector2(100, 140));
@@ -250,6 +251,7 @@ class EnemyCard extends PositionComponent
   }
 
   void shieldHitAnimation() {
+    if (isDead) return;
     removeAll(children.whereType<ScaleEffect>());
     final double baseScale = game.scaleFactor * 1.45 * (isBoss ? 1.25 : 1.0);
 
@@ -289,6 +291,7 @@ class EnemyCard extends PositionComponent
   }
 
   void shakeAndFlashAnimation({bool isPoison = false}) {
+    if (isDead) return;
     final double baseScale = game.scaleFactor * 1.45 * (isBoss ? 1.25 : 1.0);
 
     removeAll(children.whereType<ScaleEffect>());

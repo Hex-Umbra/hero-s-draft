@@ -455,6 +455,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
         .toList();
 
     for (var card in cardsToRemove) {
+      card.isDead = true;
       card.add(OpacityEffect.to(0.0, EffectController(duration: 0.4)));
       card.add(
         ScaleEffect.to(
