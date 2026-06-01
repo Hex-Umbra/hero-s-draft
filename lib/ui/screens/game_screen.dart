@@ -45,8 +45,12 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   bool _showTooltip = false;
   bool _showManaWarning = false;
   int _turnCount = 1;
+  bool _isVictoryHandled = false;
 
   void _handleCombatVictory() {
+    if (_isVictoryHandled) return;
+    _isVictoryHandled = true;
+
     final runState = ref.read(runProvider);
     final currentNodeType = runState.currentNodeType;
 
@@ -421,7 +425,8 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     ref.listen<CombatState>(combatProvider, (previous, next) {
-      if (next.isCombatEnded && next.isVictory) {
+      final wasEnded = previous?.isCombatEnded ?? false;
+      if (next.isCombatEnded && next.isVictory && !wasEnded) {
         _handleCombatVictory();
       }
     });
