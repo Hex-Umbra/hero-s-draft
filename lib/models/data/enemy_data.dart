@@ -8,6 +8,7 @@ class EnemyData {
   final int baseDamage;
   final String spritePath;
   final int tier;
+  final int xp;
   final List<EnemyIntent>? intents;
 
   const EnemyData({
@@ -18,6 +19,7 @@ class EnemyData {
     required this.baseDamage,
     required this.spritePath,
     this.tier = 1,
+    this.xp = 20,
     this.intents,
   });
 
@@ -41,6 +43,7 @@ class EnemyData {
       baseDamage: json['baseDamage'] as int,
       spritePath: json['spritePath'] as String,
       tier: json['tier'] as int? ?? 1,
+      xp: json['xp'] as int? ?? 20,
       intents: parsedIntents,
     );
   }

@@ -9,6 +9,9 @@ class EntityStats {
   final int armorMastery; // Bonus permanent ajouté à chaque gain d'armure
   final int attaque;
   final int luck;
+  final int level;
+  final int xp;
+  final int xpToNextLevel;
   final List<StatusEffect> statuses;
 
   const EntityStats({
@@ -20,6 +23,9 @@ class EntityStats {
     this.armorMastery = 0,
     required this.attaque,
     this.luck = 0,
+    this.level = 1,
+    this.xp = 0,
+    this.xpToNextLevel = 100,
     this.statuses = const [],
   });
 
@@ -32,6 +38,9 @@ class EntityStats {
     int? armorMastery,
     int? attaque,
     int? luck,
+    int? level,
+    int? xp,
+    int? xpToNextLevel,
     List<StatusEffect>? statuses,
   }) {
     return EntityStats(
@@ -43,6 +52,9 @@ class EntityStats {
       armorMastery: armorMastery ?? this.armorMastery,
       attaque: attaque ?? this.attaque,
       luck: luck ?? this.luck,
+      level: level ?? this.level,
+      xp: xp ?? this.xp,
+      xpToNextLevel: xpToNextLevel ?? this.xpToNextLevel,
       statuses: statuses ?? this.statuses,
     );
   }
@@ -64,6 +76,9 @@ class EntityStats {
       armorMastery: json['armorMastery'] as int? ?? 0,
       attaque: json['attaque'] as int,
       luck: json['luck'] as int? ?? 0,
+      level: json['level'] as int? ?? 1,
+      xp: json['xp'] as int? ?? 0,
+      xpToNextLevel: json['xpToNextLevel'] as int? ?? 100,
       statuses: parsedStatuses,
     );
   }
@@ -77,6 +92,9 @@ class EntityStats {
     'armorMastery': armorMastery,
     'attaque': attaque,
     'luck': luck,
+    'level': level,
+    'xp': xp,
+    'xpToNextLevel': xpToNextLevel,
     'statuses': statuses.map((s) => s.toJson()).toList(),
   };
 
