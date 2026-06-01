@@ -201,8 +201,10 @@ class _DraftScreenState extends ConsumerState<DraftScreen> with TickerProviderSt
                                           context,
                                           choice,
                                         ),
-                                        onTap: () =>
-                                            _onChoiceSelected(context, ref, choice),
+                                        onTap: () {
+                                          if (_hasMythicChoices && !_mythicCompleted) return;
+                                          _onChoiceSelected(context, ref, choice);
+                                        },
                                         rarity: _rarityToString(
                                           context,
                                           choice.rarity,
@@ -237,8 +239,10 @@ class _DraftScreenState extends ConsumerState<DraftScreen> with TickerProviderSt
                                         context,
                                         choice,
                                       ),
-                                      onTap: () =>
-                                          _onChoiceSelected(context, ref, choice),
+                                      onTap: () {
+                                        if (_hasMythicChoices && !_mythicCompleted) return;
+                                        _onChoiceSelected(context, ref, choice);
+                                      },
                                       rarity: _rarityToString(
                                         context,
                                         choice.rarity,
