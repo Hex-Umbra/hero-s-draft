@@ -5,6 +5,8 @@ class DraftChoiceCard extends StatelessWidget {
   final String description;
   final String rarity;
   final VoidCallback onTap;
+  final bool showRarity;
+  final double rarityProgress; // 0.0 = Neutral, 1.0 = Fully Rarity-themed
 
   const DraftChoiceCard({
     super.key,
@@ -12,6 +14,8 @@ class DraftChoiceCard extends StatelessWidget {
     required this.description,
     required this.rarity,
     required this.onTap,
+    this.showRarity = true,
+    this.rarityProgress = 1.0,
   });
 
   @override
@@ -51,6 +55,21 @@ class DraftChoiceCard extends StatelessWidget {
 
     final isLegendary = rarityUpper == 'LÉGENDAIRE' || rarityUpper == 'LEGENDARY';
 
+    // 3. Smooth interpolation of border & shadow based on showRarity and rarityProgress
+    final double actualProgress = showRarity ? rarityProgress : 0.0;
+    
+    final Color borderColor = Color.lerp(
+      Colors.white12,
+      rarityColor.withValues(alpha: 0.8),
+      actualProgress,
+    )!;
+
+    final double borderSize = isLegendary ? (2.0 + 1.0 * actualProgress) : 2.0;
+
+    final double shadowAlpha = isLegendary ? 0.45 : 0.2;
+    final double shadowBlur = isLegendary ? 20.0 : 8.0;
+    final double shadowSpread = isLegendary ? 3.0 : 1.0;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -61,33 +80,38 @@ class DraftChoiceCard extends StatelessWidget {
           color: const Color(0xFF2A2A3D),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: rarityColor.withValues(alpha: 0.8),
-            width: isLegendary ? 3.0 : 2.0,
+            color: borderColor,
+            width: borderSize,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: rarityColor.withValues(alpha: isLegendary ? 0.45 : 0.2),
-              blurRadius: isLegendary ? 20 : 8,
-              spreadRadius: isLegendary ? 3 : 1,
-            ),
-          ],
+          boxShadow: actualProgress > 0.01
+              ? [
+                  BoxShadow(
+                    color: rarityColor.withValues(alpha: shadowAlpha * actualProgress),
+                    blurRadius: shadowBlur * actualProgress,
+                    spreadRadius: shadowSpread * actualProgress,
+                  ),
+                ]
+              : [],
         ),
         child: Column(
           children: [
-            // Rarity Badge
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: rarityColor.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                rarity.toUpperCase(),
-                style: TextStyle(
-                  color: rarityColor,
-                  fontSize: 9,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5,
+            // Rarity Badge (Fades in with actualProgress)
+            Opacity(
+              opacity: actualProgress,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: rarityColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  rarity.toUpperCase(),
+                  style: TextStyle(
+                    color: rarityColor,
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
                 ),
               ),
             ),

@@ -3,9 +3,6 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import '../draft/draft_choice_card.dart';
 
-// Helper enum to match choice rarity string
-enum DraftChoiceRarity { common, uncommon, rare, epic, legendary }
-
 class DraftCardReel extends StatefulWidget {
   final String title;
   final String description;
@@ -32,26 +29,45 @@ class DraftCardReel extends StatefulWidget {
 
 class _DraftCardReelState extends State<DraftCardReel>
     with TickerProviderStateMixin {
-  late AnimationController _spinController;
-  late AnimationController _flipController;
+  late AnimationController _rollController;
+  late AnimationController _rarityController;
   late AnimationController _shakeController;
   late AnimationController _glowController;
 
-  bool _isSpinning = true;
-  bool _isFlipped = false;
+  bool _prepareToLand = false;
+  bool _hasLanded = false;
   late Timer _landTimer;
-  late Timer _tickTimer;
 
-  final List<String> _mockTitles = [
-    '???',
-    'PUISSANCE',
-    'DÉFENSE',
-    'CHANCE',
-    'MANA',
-    'FORGE'
+  // Themed upgrade mock data to scroll through during spin phase (neutral / no rarity)
+  final List<Map<String, String>> _mockUpgrades = [
+    {
+      'title': 'Vitalité',
+      'description': '+10 PV Max',
+    },
+    {
+      'title': 'Aiguisage',
+      'description': '+4 Attaque',
+    },
+    {
+      'title': 'Forge d\'Acier',
+      'description': '+2 gains d\'Armure',
+    },
+    {
+      'title': 'Sagesse',
+      'description': '+1 Mana Max',
+    },
+    {
+      'title': 'Trèfle à 4 feuilles',
+      'description': '+1 Chance',
+    },
+    {
+      'title': 'Miroir',
+      'description': 'Cloner une carte',
+    },
   ];
-  String _currentMockTitle = '???';
-  int _mockTitleIndex = 0;
+
+  late Map<String, String> _currentCardData;
+  late Map<String, String> _nextCardData;
 
   @override
   void initState() {
@@ -60,19 +76,55 @@ class _DraftCardReelState extends State<DraftCardReel>
     final isLegendary = widget.rarity.toUpperCase() == 'LÉGENDAIRE' ||
         widget.rarity.toUpperCase() == 'LEGENDARY';
 
-    // Spin speed: rotates mock texts rapidly
-    _spinController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 150),
-    )..repeat();
+    // 1. Initialize random starting cards for the roll
+    final random = Random();
+    _currentCardData = _mockUpgrades[random.nextInt(_mockUpgrades.length)];
+    _nextCardData = _mockUpgrades[random.nextInt(_mockUpgrades.length)];
 
-    // 3D Flip animation
-    _flipController = AnimationController(
+    // 2. Infinite vertical roll controller
+    _rollController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 600),
+      duration: const Duration(milliseconds: 140),
     );
 
-    // Screen-shake for legendary card during its spin
+    _rollController.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        if (!mounted) return;
+
+        if (_prepareToLand && !_hasLanded) {
+          // Landed! Stop the roll, set final stationary state, trigger rarity reveal
+          setState(() {
+            _currentCardData = {
+              'title': widget.title,
+              'description': widget.description,
+            };
+            _hasLanded = true;
+          });
+          _rollController.stop();
+          _shakeController.stop();
+          _triggerRarityReveal();
+        } else if (!_hasLanded) {
+          // Standard infinite mock roll loop
+          setState(() {
+            _currentCardData = _nextCardData;
+            _nextCardData = _mockUpgrades[random.nextInt(_mockUpgrades.length)];
+          });
+          widget.onTick?.call();
+          _rollController.forward(from: 0.0);
+        }
+      }
+    });
+
+    // Start fast rolling immediately
+    _rollController.forward();
+
+    // 3. Rarity reveal & flash controller (pop overlay + fade border/shadow)
+    _rarityController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    );
+
+    // 4. Screenshake for legendary choice
     _shakeController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 100),
@@ -81,48 +133,32 @@ class _DraftCardReelState extends State<DraftCardReel>
       _shakeController.repeat(reverse: true);
     }
 
-    // Glowing golden halo for legendary choice
+    // 5. Pulsing golden outer glow for legendary choice
     _glowController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 1),
     )..repeat(reverse: true);
 
-    // Staggered landing calculation
-    final int delayMs = 1000 + widget.index * 600 + (isLegendary ? 400 : 0);
-
+    // Staggered landing calculation: staggered lock-in delay based on slot index
+    final int delayMs = 1200 + widget.index * 600 + (isLegendary ? 400 : 0);
     _landTimer = Timer(Duration(milliseconds: delayMs), _landReel);
-
-    // Rapid ticks sound hook timer during spin
-    int tickRate = 120;
-    _tickTimer = Timer.periodic(Duration(milliseconds: tickRate), (timer) {
-      if (_isSpinning) {
-        // Change mock title for slot visual feel
-        setState(() {
-          _mockTitleIndex = (_mockTitleIndex + 1) % _mockTitles.length;
-          _currentMockTitle = _mockTitles[_mockTitleIndex];
-        });
-        widget.onTick?.call();
-        debugPrint('🎵 Draft Reel Tick: Index ${widget.index}');
-      } else {
-        timer.cancel();
-      }
-    });
   }
 
   void _landReel() {
     if (!mounted) return;
     setState(() {
-      _isSpinning = false;
+      _prepareToLand = true;
+      // Pre-load the target card as incoming in the final roll cycle
+      _nextCardData = {
+        'title': widget.title,
+        'description': widget.description,
+      };
     });
-    _spinController.stop();
-    _shakeController.stop();
+  }
 
-    // Trigger flip to reveal the card
-    _flipController.forward().then((_) {
+  void _triggerRarityReveal() {
+    _rarityController.forward().then((_) {
       if (mounted) {
-        setState(() {
-          _isFlipped = true;
-        });
         widget.onLand?.call();
         debugPrint('🎉 Draft Reel Land: Index ${widget.index} Revealed!');
       }
@@ -132,9 +168,8 @@ class _DraftCardReelState extends State<DraftCardReel>
   @override
   void dispose() {
     _landTimer.cancel();
-    _tickTimer.cancel();
-    _spinController.dispose();
-    _flipController.dispose();
+    _rollController.dispose();
+    _rarityController.dispose();
     _shakeController.dispose();
     _glowController.dispose();
     super.dispose();
@@ -145,9 +180,9 @@ class _DraftCardReelState extends State<DraftCardReel>
     final isLegendary = widget.rarity.toUpperCase() == 'LÉGENDAIRE' ||
         widget.rarity.toUpperCase() == 'LEGENDARY';
 
-    // Rarity color matching
+    // Match rarity color
     Color rarityColor = const Color(0xFF8E8E93);
-    if (widget.rarity.toUpperCase() == 'HORS CORME' ||
+    if (widget.rarity.toUpperCase() == 'HORS NORME' ||
         widget.rarity.toUpperCase() == 'UNCOMMON' ||
         widget.rarity.toUpperCase() == 'ATYPIQUE') {
       rarityColor = const Color(0xFF34C759);
@@ -161,120 +196,121 @@ class _DraftCardReelState extends State<DraftCardReel>
     }
 
     return AnimatedBuilder(
-      animation: Listenable.merge([_flipController, _shakeController, _glowController]),
+      animation: Listenable.merge([
+        _rollController,
+        _rarityController,
+        _shakeController,
+        _glowController,
+      ]),
       builder: (context, child) {
-        // 1. Calculations for 3D flip rotation
-        final double angle = _flipController.value * pi;
-        final bool showBack = angle < (pi / 2);
-
-        // 2. Calculations for Screenshake translation (during spin)
+        // Screenshake translations during fast spin (for legendary)
         double shakeX = 0.0;
         double shakeY = 0.0;
-        if (_isSpinning && isLegendary) {
+        if (!_hasLanded && isLegendary) {
           final random = Random();
-          shakeX = (random.nextDouble() - 0.5) * 5.0;
-          shakeY = (random.nextDouble() - 0.5) * 5.0;
+          shakeX = (random.nextDouble() - 0.5) * 6.0;
+          shakeY = (random.nextDouble() - 0.5) * 6.0;
         }
 
-        Widget cardFace;
-        if (showBack) {
-          // Spinning / Back mystery card
-          cardFace = Container(
-            width: 160,
-            height: 240,
-            decoration: BoxDecoration(
-              color: isLegendary
-                  ? const Color(0xFF3D3010) // Legendary mystery color
-                  : const Color(0xFF1E1E2C),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: isLegendary
-                    ? rarityColor.withValues(alpha: 0.8)
-                    : Colors.white24,
-                width: isLegendary ? 3.0 : 1.5,
-              ),
-              boxShadow: isLegendary
-                  ? [
-                      BoxShadow(
-                        color: rarityColor.withValues(alpha: 0.3),
-                        blurRadius: 12,
-                        spreadRadius: 2,
-                      )
-                    ]
-                  : [],
-            ),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                // Motion blur lines scrolling vertically during spin
-                if (_isSpinning)
+        // Inner roll stack containing outgoing & incoming cards
+        Widget cardReelContent;
+        if (!_hasLanded) {
+          cardReelContent = ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: SizedBox(
+              width: 160,
+              height: 240,
+              child: Stack(
+                clipBehavior: Clip.hardEdge,
+                children: [
+                  // Outgoing Card (slides down and out)
+                  Positioned(
+                    top: _rollController.value * 240,
+                    left: 0,
+                    right: 0,
+                    child: Opacity(
+                      // Motion blur effect by fading out fast-moving card slightly
+                      opacity: 0.85,
+                      child: DraftChoiceCard(
+                        title: _currentCardData['title']!,
+                        description: _currentCardData['description']!,
+                        rarity: widget.rarity,
+                        onTap: () {},
+                        showRarity: false,
+                      ),
+                    ),
+                  ),
+                  // Incoming Card (slides down and in from top)
+                  Positioned(
+                    top: (_rollController.value - 1.0) * 240,
+                    left: 0,
+                    right: 0,
+                    child: Opacity(
+                      opacity: 0.85,
+                      child: DraftChoiceCard(
+                        title: _nextCardData['title']!,
+                        description: _nextCardData['description']!,
+                        rarity: widget.rarity,
+                        onTap: () {},
+                        showRarity: false,
+                      ),
+                    ),
+                  ),
+                  // Motion blur vertical overlay line streaks
                   Positioned.fill(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
+                    child: IgnorePointer(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: List.generate(5, (index) {
+                        children: List.generate(4, (index) {
                           return Opacity(
-                            opacity: 0.15,
+                            opacity: 0.08,
                             child: Container(
-                              height: 2,
-                              color: isLegendary ? Colors.amber : Colors.white,
+                              height: 3,
+                              color: Colors.white,
                             ),
                           );
                         }),
                       ),
                     ),
                   ),
-                // Glowing text indicator
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      _currentMockTitle,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: isLegendary ? Colors.amberAccent : Colors.white38,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Icon(
-                      Icons.lock_open,
-                      color: Colors.white24,
-                      size: 24,
-                    ),
-                  ],
-                ),
-              ],
+                ],
+              ),
             ),
           );
         } else {
-          // Revealed card
-          cardFace = Transform(
-            transform: Matrix4.identity()..rotateX(pi),
-            alignment: Alignment.center,
-            child: DraftChoiceCard(
-              title: widget.title,
-              description: widget.description,
-              onTap: widget.onTap,
-              rarity: widget.rarity,
-            ),
+          // Stationary fully-revealed card with smooth progressive rarity fade-in
+          cardReelContent = DraftChoiceCard(
+            title: widget.title,
+            description: widget.description,
+            rarity: widget.rarity,
+            onTap: widget.onTap,
+            showRarity: true,
+            rarityProgress: _rarityController.value,
           );
         }
 
         return Transform(
-          transform: Matrix4.translationValues(shakeX, shakeY, 0.0)
-            ..setEntry(3, 2, 0.002) // Perspective factor
-            ..rotateX(angle),
-          alignment: Alignment.center,
+          transform: Matrix4.translationValues(shakeX, shakeY, 0.0),
           child: Stack(
             clipBehavior: Clip.none,
             children: [
-              cardFace,
-              // Golden burning halo sparks overlay for locked Legendary choices
-              if (_isFlipped && isLegendary)
+              cardReelContent,
+              // Dynamic Rarity Flash overlay upon landing (quick bright flash fading out)
+              if (_hasLanded && _rarityController.value < 0.99)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: rarityColor.withValues(
+                          alpha: 0.80 * (1.0 - _rarityController.value),
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                  ),
+                ),
+              // Golden sparks overlay for locked Legendary choices
+              if (_hasLanded && isLegendary)
                 Positioned.fill(
                   child: IgnorePointer(
                     child: CustomPaint(
