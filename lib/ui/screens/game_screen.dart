@@ -165,7 +165,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
     // 1. Calculate accumulated XP from all defeated enemies
     int totalXp = 0;
-    for (var enemy in combatState.enemies) {
+    for (var enemy in combatState.defeatedEnemies) {
       final double levelMultiplier = 1.0 + 0.10 * (enemy.stats.level - 1);
       totalXp += (enemy.data.xp * levelMultiplier).round();
     }

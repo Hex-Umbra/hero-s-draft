@@ -265,11 +265,13 @@ class CombatController extends StateNotifier<CombatState> {
   /// Nettoie les ennemis décédés et met à jour les indicateurs de fin de combat
   void _cleanDeadEnemies(RunController runController) {
     final List<EnemyInstance> remainingEnemies = [];
+    final List<EnemyInstance> newlyKilledEnemies = [];
     int killedCount = 0;
 
     for (var enemy in state.enemies) {
       if (enemy.stats.currentPv <= 0) {
         killedCount++;
+        newlyKilledEnemies.add(enemy);
         runController.onEnemyKilled();
       } else {
         remainingEnemies.add(enemy);
@@ -288,6 +290,7 @@ class CombatController extends StateNotifier<CombatState> {
 
       state = state.copyWith(
         enemies: remainingEnemies,
+        defeatedEnemies: [...state.defeatedEnemies, ...newlyKilledEnemies],
         selectedEnemyId: nextSelected,
         clearSelectedEnemy: nextSelected == null,
         isCombatEnded: isCombatEnded,

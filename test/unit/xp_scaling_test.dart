@@ -127,4 +127,51 @@ void main() {
       expect(combatController.currentState.enemies.first.stats.level, 7);
     });
   });
+
+  group('Defeated Enemies and XP Collection Unit Tests', () {
+    final slimeData = const EnemyData(
+      id: 'slime',
+      maxHp: 20,
+      baseDamage: 5,
+      spritePath: 'slime.png',
+      tier: 1,
+      xp: 30,
+    );
+
+    test('Defeated enemies are recorded in defeatedEnemies list when cleaned', () {
+      final container = ProviderContainer();
+      final runController = container.read(runProvider.notifier);
+      final combatController = CombatController();
+
+      combatController.initializeCombat(
+        1,
+        MapNodeType.combat,
+        [slimeData],
+        playerLevel: 1,
+        act: 1,
+      );
+
+      final initialEnemyCount = combatController.currentState.enemies.length;
+      expect(initialEnemyCount, greaterThan(0));
+      expect(combatController.currentState.defeatedEnemies.length, 0);
+
+      // Set all enemies to 0 PV
+      for (var enemy in combatController.currentState.enemies) {
+        combatController.updateEnemyStats(
+          enemy.id,
+          enemy.stats.copyWith(currentPv: 0),
+        );
+      }
+
+      // Trigger dead enemy cleaning by starting enemy turn
+      combatController.startEnemyTurn(runController);
+
+      // Verify that all enemies have been moved to defeatedEnemies
+      expect(combatController.currentState.enemies.length, 0);
+      expect(combatController.currentState.defeatedEnemies.length, initialEnemyCount);
+      expect(combatController.currentState.defeatedEnemies.first.data.id, 'slime');
+      expect(combatController.currentState.isVictory, isTrue);
+      expect(combatController.currentState.isCombatEnded, isTrue);
+    });
+  });
 }

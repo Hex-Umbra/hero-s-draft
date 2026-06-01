@@ -4,6 +4,7 @@ enum TurnPhase { player, enemy }
 
 class CombatState {
   final List<EnemyInstance> enemies;
+  final List<EnemyInstance> defeatedEnemies;
   final TurnPhase turnPhase;
   final int turnCount;
   final String? selectedEnemyId;
@@ -12,6 +13,7 @@ class CombatState {
 
   const CombatState({
     this.enemies = const [],
+    this.defeatedEnemies = const [],
     this.turnPhase = TurnPhase.player,
     this.turnCount = 1,
     this.selectedEnemyId,
@@ -21,6 +23,7 @@ class CombatState {
 
   CombatState copyWith({
     List<EnemyInstance>? enemies,
+    List<EnemyInstance>? defeatedEnemies,
     TurnPhase? turnPhase,
     int? turnCount,
     String? selectedEnemyId,
@@ -30,6 +33,7 @@ class CombatState {
   }) {
     return CombatState(
       enemies: enemies ?? this.enemies,
+      defeatedEnemies: defeatedEnemies ?? this.defeatedEnemies,
       turnPhase: turnPhase ?? this.turnPhase,
       turnCount: turnCount ?? this.turnCount,
       selectedEnemyId: clearSelectedEnemy
@@ -49,8 +53,17 @@ class CombatState {
           .toList();
     }
 
+    var defeatedEnemiesJson = json['defeatedEnemies'] as List?;
+    List<EnemyInstance> parsedDefeatedEnemies = [];
+    if (defeatedEnemiesJson != null) {
+      parsedDefeatedEnemies = defeatedEnemiesJson
+          .map((e) => EnemyInstance.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
+
     return CombatState(
       enemies: parsedEnemies,
+      defeatedEnemies: parsedDefeatedEnemies,
       turnPhase: TurnPhase.values.firstWhere(
         (e) => e.toString().split('.').last == json['turnPhase'],
         orElse: () => TurnPhase.player,
@@ -64,6 +77,7 @@ class CombatState {
 
   Map<String, dynamic> toJson() => {
     'enemies': enemies.map((e) => e.toJson()).toList(),
+    'defeatedEnemies': defeatedEnemies.map((e) => e.toJson()).toList(),
     'turnPhase': turnPhase.toString().split('.').last,
     'turnCount': turnCount,
     'selectedEnemyId': selectedEnemyId,
