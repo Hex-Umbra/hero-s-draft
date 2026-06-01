@@ -10,8 +10,13 @@ import '../widgets/relic_carousel/draft_card_reel.dart';
 
 class DraftScreen extends ConsumerStatefulWidget {
   final VoidCallback onDraftComplete;
+  final bool forceLegendary;
 
-  const DraftScreen({super.key, required this.onDraftComplete});
+  const DraftScreen({
+    super.key,
+    required this.onDraftComplete,
+    this.forceLegendary = false,
+  });
 
   @override
   ConsumerState<DraftScreen> createState() => _DraftScreenState();
@@ -281,6 +286,11 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
     bool canBeLegendary = true,
     bool isLevelReward = false,
   }) {
+    if (widget.forceLegendary) {
+      if (isLevelReward) {
+        return RewardRarity.legendary;
+      }
+    }
     final rng = Random();
     // Probabilités de base (sur 100)
     double legendaryChance = isLevelReward ? 0.5 : 1.0;
@@ -320,11 +330,22 @@ class _DraftScreenState extends ConsumerState<DraftScreen> {
 
     // 1. Génération des 3 choix standards (Commun à Légendaire)
     final choices = List.generate(3, (index) {
-      RewardRarity rarity = _rollRarity(
-        luck,
-        canBeLegendary: true,
-        isLevelReward: false,
-      );
+      RewardRarity rarity;
+      if (widget.forceLegendary) {
+        if (index == 0) {
+          rarity = RewardRarity.uncommon;
+        } else if (index == 1) {
+          rarity = RewardRarity.epic;
+        } else {
+          rarity = RewardRarity.legendary;
+        }
+      } else {
+        rarity = _rollRarity(
+          luck,
+          canBeLegendary: true,
+          isLevelReward: false,
+        );
+      }
 
       double multiplier = 1.0;
       if (rarity == RewardRarity.uncommon) multiplier = 1.5;

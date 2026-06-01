@@ -90,6 +90,7 @@ class HomeScreen extends ConsumerWidget {
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (context) => DraftScreen(
+                      forceLegendary: true,
                       onDraftComplete: () {
                         Navigator.of(context).pop();
                       },
