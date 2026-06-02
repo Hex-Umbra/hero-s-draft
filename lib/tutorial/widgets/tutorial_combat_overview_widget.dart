@@ -43,6 +43,7 @@ class _TutorialCombatOverviewWidgetState
 
           final width = constraints.maxWidth;
           final height = constraints.maxHeight;
+          final double colWidth = (width - 24 * scale) * 3.0 / 11.0;
 
           return SizedBox(
             width: width,
@@ -116,13 +117,13 @@ class _TutorialCombatOverviewWidgetState
                 ),
 
                 // Floating Annotation Labels
-                // Label 1: Enemy zone (Top Center)
+                // Label 1: Enemy zone (Top Left, aligned to left panel)
                 AnimatedPositioned(
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeOut,
-                  top: _showEnemyLabel ? (height * 0.22).clamp(60.0, 110.0) : (height * 0.18).clamp(50.0, 95.0),
-                  left: 20 * scale,
-                  right: 20 * scale,
+                  top: _showEnemyLabel ? 100 * scale : 90 * scale,
+                  left: 12 * scale,
+                  width: colWidth,
                   child: AnimatedOpacity(
                     opacity: _showEnemyLabel ? 1.0 : 0.0,
                     duration: const Duration(milliseconds: 300),
@@ -136,13 +137,13 @@ class _TutorialCombatOverviewWidgetState
                   ),
                 ),
 
-                // Label 2: Hero card, Hand, and HP (Center/Bottom Center)
+                // Label 2: Hero card, Hand, and HP (Lower Left, aligned to left panel)
                 AnimatedPositioned(
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeOut,
-                  top: _showHeroLabel ? (height * 0.45).clamp(130.0, 210.0) : (height * 0.40).clamp(115.0, 195.0),
-                  left: 20 * scale,
-                  right: 20 * scale,
+                  top: _showHeroLabel ? 175 * scale : 165 * scale,
+                  left: 12 * scale,
+                  width: colWidth,
                   child: AnimatedOpacity(
                     opacity: _showHeroLabel ? 1.0 : 0.0,
                     duration: const Duration(milliseconds: 300),
@@ -156,13 +157,13 @@ class _TutorialCombatOverviewWidgetState
                   ),
                 ),
 
-                // Label 3: Side Panels (Left & Right Column Elements)
+                // Label 3: Side Panels (Lower Right, aligned to right panel)
                 AnimatedPositioned(
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeOut,
-                  bottom: _showHandLabel ? (height * 0.28).clamp(80.0, 140.0) : (height * 0.24).clamp(70.0, 125.0),
-                  left: 20 * scale,
-                  right: 20 * scale,
+                  top: _showHandLabel ? 180 * scale : 170 * scale,
+                  right: 12 * scale,
+                  width: colWidth,
                   child: AnimatedOpacity(
                     opacity: _showHandLabel ? 1.0 : 0.0,
                     duration: const Duration(milliseconds: 300),
@@ -274,7 +275,7 @@ class _TutorialCombatOverviewWidgetState
             ),
           ],
         ),
-        const Spacer(),
+        SizedBox(height: 12 * scale),
         // INTENTIONS ENNEMIES card
         Container(
           width: double.infinity,
@@ -319,7 +320,7 @@ class _TutorialCombatOverviewWidgetState
             ],
           ),
         ),
-        SizedBox(height: 6 * scale),
+        const Spacer(),
         // Défausse Button
         Container(
           padding: EdgeInsets.symmetric(horizontal: 10 * scale, vertical: 6 * scale),
@@ -349,29 +350,29 @@ class _TutorialCombatOverviewWidgetState
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.flash_on, color: Colors.redAccent, size: 11 * scale),
+            Icon(Icons.flash_on, color: Colors.redAccent, size: 10 * scale),
             Text(
               '5',
               style: TextStyle(
                 color: Colors.redAccent,
-                fontSize: 11 * scale,
+                fontSize: 10 * scale,
                 fontWeight: FontWeight.bold,
               ),
             ),
             SizedBox(width: 6 * scale),
-            Icon(Icons.shield, color: Colors.blueAccent, size: 11 * scale),
+            Icon(Icons.shield, color: Colors.blueAccent, size: 10 * scale),
             Text(
               '0',
               style: TextStyle(
                 color: Colors.blueAccent,
-                fontSize: 11 * scale,
+                fontSize: 10 * scale,
                 fontWeight: FontWeight.bold,
               ),
             ),
             SizedBox(width: 8 * scale),
             Container(
-              width: 60 * scale,
-              height: 8 * scale,
+              width: 50 * scale,
+              height: 6 * scale,
               decoration: BoxDecoration(
                 color: Colors.grey.shade800,
                 borderRadius: BorderRadius.circular(3 * scale),
@@ -379,7 +380,7 @@ class _TutorialCombatOverviewWidgetState
               child: Stack(
                 children: [
                   Container(
-                    width: 60 * scale,
+                    width: 50 * scale,
                     decoration: BoxDecoration(
                       color: Colors.redAccent,
                       borderRadius: BorderRadius.circular(3 * scale),
@@ -393,7 +394,7 @@ class _TutorialCombatOverviewWidgetState
               '28/28',
               style: TextStyle(
                 color: Colors.white70,
-                fontSize: 11 * scale,
+                fontSize: 10 * scale,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -402,8 +403,8 @@ class _TutorialCombatOverviewWidgetState
         SizedBox(height: 4 * scale),
         // Card Body
         Container(
-          width: 65 * scale,
-          height: 90 * scale,
+          width: 54 * scale,
+          height: 76 * scale,
           decoration: BoxDecoration(
             color: const Color(0xFF1E293B),
             borderRadius: BorderRadius.circular(5 * scale),
@@ -418,14 +419,14 @@ class _TutorialCombatOverviewWidgetState
               Icon(
                 Icons.pest_control,
                 color: Colors.greenAccent,
-                size: 28 * scale,
+                size: 22 * scale,
               ),
               SizedBox(height: 2 * scale),
               Text(
                 isFrench ? 'Gobelin' : 'Goblin',
                 style: TextStyle(
                   color: Colors.greenAccent.shade100,
-                  fontSize: 11 * scale,
+                  fontSize: 9 * scale,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -438,8 +439,8 @@ class _TutorialCombatOverviewWidgetState
 
   Widget _buildHeroCard(bool isFrench, double scale) {
     return Container(
-      width: 65 * scale,
-      height: 90 * scale,
+      width: 54 * scale,
+      height: 76 * scale,
       decoration: BoxDecoration(
         color: const Color(0xFF1E293B),
         borderRadius: BorderRadius.circular(5 * scale),
@@ -448,13 +449,13 @@ class _TutorialCombatOverviewWidgetState
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.shield, color: Colors.amber, size: 28 * scale),
+          Icon(Icons.shield, color: Colors.amber, size: 22 * scale),
           SizedBox(height: 2 * scale),
           Text(
             isFrench ? 'Héros' : 'Hero',
             style: TextStyle(
               color: Colors.amber,
-              fontSize: 11 * scale,
+              fontSize: 9 * scale,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -480,22 +481,22 @@ class _TutorialCombatOverviewWidgetState
     ];
 
     return SizedBox(
-      height: 60 * scale,
-      width: 220 * scale,
+      height: 48 * scale,
+      width: 160 * scale,
       child: Stack(
         alignment: Alignment.center,
         children: List.generate(5, (index) {
           final double rotation = (index - 2) * 0.08;
-          final double translationX = (index - 2) * 22.0 * scale;
-          final double translationY = (index - 2).abs() * 2.5 * scale;
+          final double translationX = (index - 2) * 16.0 * scale;
+          final double translationY = (index - 2).abs() * 2.0 * scale;
 
           return Transform.translate(
             offset: Offset(translationX, translationY),
             child: Transform.rotate(
               angle: rotation,
               child: Container(
-                width: 36 * scale,
-                height: 52 * scale,
+                width: 28 * scale,
+                height: 40 * scale,
                 decoration: BoxDecoration(
                   color: const Color(0xFF2A2A40),
                   borderRadius: BorderRadius.circular(3 * scale),
@@ -515,7 +516,7 @@ class _TutorialCombatOverviewWidgetState
                     cardNames[index],
                     style: TextStyle(
                       color: Colors.white70,
-                      fontSize: 7.5 * scale,
+                      fontSize: 6.5 * scale,
                       fontWeight: FontWeight.bold,
                     ),
                     textAlign: TextAlign.center,
