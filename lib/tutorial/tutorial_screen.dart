@@ -239,8 +239,10 @@ class _TutorialScreenState extends State<TutorialScreen> {
                                       width: 1.5,
                                     ),
                                   ),
-                                  clipBehavior: Clip.antiAlias,
-                                  child: _buildIllustration(stepType),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(16),
+                                    child: _buildIllustration(stepType),
+                                  ),
                                 );
                               },
                             );
@@ -450,25 +452,29 @@ class _TutorialScreenState extends State<TutorialScreen> {
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 Expanded(
-                                  flex: 5,
+                                  flex: 6,
                                   child: buildIllustrationView(true),
                                 ),
                                 Expanded(
-                                  flex: 5,
+                                  flex: 4,
                                   child: buildTextPanel(true),
                                 ),
                               ],
                             );
                           } else {
+                            // Portrait: give illustration a generous fixed height
+                            // derived from available constraints to avoid over-constraining
+                            // the inner FittedBox widgets. The text panel takes the rest.
+                            final illustrationHeight =
+                                (constraints.maxHeight * 0.58).clamp(280.0, 520.0);
                             return Column(
                               children: [
-                                Expanded(
-                                  flex: 6,
+                                SizedBox(
+                                  height: illustrationHeight,
                                   child: buildIllustrationView(false),
                                 ),
-                                const SizedBox(height: 16),
+                                const SizedBox(height: 12),
                                 Expanded(
-                                  flex: 4,
                                   child: buildTextPanel(false),
                                 ),
                               ],
