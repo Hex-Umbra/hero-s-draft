@@ -67,12 +67,12 @@ const List<TutorialStep> kTutorialSteps = [
     type: TutorialStepType.cards,
   ),
   TutorialStep(
-    titleEn: 'Playing a Card',
-    titleFr: 'Jouer une carte',
+    titleEn: 'Playing Cards',
+    titleFr: 'Jouer des cartes',
     bodyEn:
-        'Let\'s try playing a card! Select the "Basic Strike" card by tapping it, then tap the Slime enemy to attack it and reduce its HP. Remember, cards apply their effects immediately when played.',
+        'Let\'s try playing cards! Select the "Basic Strike" card by tapping it, then tap the Slime enemy to attack it. Next, select the "Defend" card and tap your Hero (the HP/Mana bar) to gain armor. Remember, cards apply their effects immediately.',
     bodyFr:
-        'Essayons de jouer une carte ! Sélectionnez la carte "Frappe Basique" en appuyant dessus, puis appuyez sur le Slime pour l\'attaquer et réduire ses PV. Les cartes appliquent leurs effets immédiatement.',
+        'Essayons de jouer des cartes ! Sélectionnez la carte "Frappe Basique" en appuyant dessus, puis touchez le Slime pour l\'attaquer. Ensuite, sélectionnez la carte "Défense" et touchez votre Héros (la barre de PV/Mana) pour gagner de l\'armure. Les cartes appliquent leurs effets immédiatement.',
     type: TutorialStepType.playCard,
   ),
   TutorialStep(

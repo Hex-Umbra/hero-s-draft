@@ -60,7 +60,8 @@ class _TutorialScreenState extends State<TutorialScreen> {
     switch (step.type) {
       case TutorialStepType.playCard:
         return engine.mockState.enemy != null &&
-            engine.mockState.enemy!.hp < 20;
+            engine.mockState.enemy!.hp < 20 &&
+            engine.mockState.heroArmor > 0;
       case TutorialStepType.merge:
         return engine.mockState.hand.length == 1 &&
             engine.mockState.hand.first.id == 'strike_upgraded';

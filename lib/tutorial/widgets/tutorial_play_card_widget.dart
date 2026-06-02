@@ -60,6 +60,17 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
     final heroArmor = widget.engine.mockState.heroArmor;
     final mana = widget.engine.mockState.heroMana;
 
+    // Filter hand in two phases to guide the player:
+    // Phase 1 (slime has full HP): show only Strike to target the enemy.
+    // Phase 2 (slime took damage): show only Defend to target the hero.
+    final displayedHand = hand.where((card) {
+      if (enemy != null && enemy.hp == 20) {
+        return card.id == 'strike';
+      } else {
+        return card.id == 'defend';
+      }
+    }).toList();
+
     return Center(
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -87,6 +98,7 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
                           // Slime Body
                           GestureDetector(
                             onTap: () {
+                              ScaffoldMessenger.of(context).clearSnackBars();
                               if (_selectedCard == null) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
@@ -101,22 +113,28 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
                                 return;
                               }
 
-                              final success = widget.engine.playCard(_selectedCard!);
-                              if (success) {
-                                if (_selectedCard!.damage > 0) {
+                              if (_selectedCard!.id == 'strike') {
+                                final success = widget.engine.playCard(_selectedCard!);
+                                if (success) {
                                   _triggerFloatingText(
                                     '-${_selectedCard!.damage} HP',
                                     Colors.redAccent,
                                   );
-                                } else if (_selectedCard!.armor > 0) {
-                                  _triggerFloatingText(
-                                    '+${_selectedCard!.armor} 🛡️',
-                                    Colors.blueAccent,
-                                  );
+                                  setState(() {
+                                    _selectedCard = null;
+                                  });
                                 }
-                                setState(() {
-                                  _selectedCard = null;
-                                });
+                              } else if (_selectedCard!.id == 'defend') {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      isFrench
+                                          ? 'La Défense doit être jouée sur vous-même ! Touchez votre Héros.'
+                                          : 'Defense must be played on yourself! Tap your Hero.',
+                                    ),
+                                    duration: const Duration(seconds: 2),
+                                  ),
+                                );
                               }
                             },
                             child: MouseRegion(
@@ -128,11 +146,11 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
                                 padding: EdgeInsets.all(10 * scale),
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: _selectedCard != null
+                                  color: (_selectedCard != null && _selectedCard!.id == 'strike')
                                       ? Colors.redAccent.withValues(alpha: 0.08)
                                       : Colors.transparent,
                                   border: Border.all(
-                                    color: _selectedCard != null
+                                    color: (_selectedCard != null && _selectedCard!.id == 'strike')
                                         ? Colors.redAccent.withValues(alpha: 0.3)
                                         : Colors.transparent,
                                     width: 2 * scale,
@@ -168,6 +186,7 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
                                         color: Colors.white,
                                         fontSize: 11 * scale,
                                         fontWeight: FontWeight.bold,
+                                        letterSpacing: 0.5,
                                       ),
                                     ),
                                     SizedBox(height: 2 * scale),
@@ -241,93 +260,147 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
                   // Mid Part: Hero Stats Mock (Health and Mana)
                   Expanded(
                     flex: 2,
-                    child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 16 * scale),
-                      margin: EdgeInsets.symmetric(vertical: 4 * scale),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1E293B).withValues(alpha: 0.3),
-                        borderRadius: BorderRadius.circular(10 * scale),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          // HP
-                          Row(
-                            children: [
-                              Icon(Icons.favorite, color: Colors.red, size: 14 * scale),
-                              SizedBox(width: 6 * scale),
-                              Text(
-                                'HP: $heroHp/$heroMaxHp',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 10 * scale,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                    child: GestureDetector(
+                      onTap: () {
+                        ScaffoldMessenger.of(context).clearSnackBars();
+                        if (_selectedCard == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                isFrench
+                                    ? 'Sélectionnez d\'abord la carte de Défense en bas !'
+                                    : 'Select the Defend card from the bottom first!',
                               ),
-                              if (heroArmor > 0) ...[
-                                SizedBox(width: 8 * scale),
-                                Container(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 4 * scale,
-                                    vertical: 2 * scale,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.blueAccent,
-                                    borderRadius: BorderRadius.circular(4 * scale),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.shield,
-                                        color: Colors.white,
-                                        size: 10 * scale,
-                                      ),
-                                      SizedBox(width: 2 * scale),
-                                      Text(
-                                        '$heroArmor',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 10 * scale,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ],
+                              duration: const Duration(seconds: 1),
+                            ),
+                          );
+                          return;
+                        }
+
+                        if (_selectedCard!.id == 'defend') {
+                          final success = widget.engine.playCard(_selectedCard!);
+                          if (success) {
+                            _triggerFloatingText(
+                              '+${_selectedCard!.armor} 🛡️',
+                              Colors.blueAccent,
+                            );
+                            setState(() {
+                              _selectedCard = null;
+                            });
+                          }
+                        } else if (_selectedCard!.id == 'strike') {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                isFrench
+                                    ? 'Ne vous attaquez pas vous-même ! Touchez le Slime.'
+                                    : 'Don\'t attack yourself! Tap the Slime.',
+                              ),
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        }
+                      },
+                      child: MouseRegion(
+                        cursor: _selectedCard != null
+                            ? SystemMouseCursors.precise
+                            : SystemMouseCursors.basic,
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: EdgeInsets.symmetric(horizontal: 16 * scale),
+                          margin: EdgeInsets.symmetric(vertical: 4 * scale),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1E293B).withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(10 * scale),
+                            border: Border.all(
+                              color: (_selectedCard != null && _selectedCard!.id == 'defend')
+                                  ? Colors.cyanAccent.withValues(alpha: 0.4)
+                                  : Colors.transparent,
+                              width: 1.5 * scale,
+                            ),
                           ),
-                          // Mana
-                          Row(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                isFrench ? 'MANA : ' : 'MANA: ',
-                                style: TextStyle(
-                                  color: Colors.cyanAccent,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 10 * scale,
-                                ),
-                              ),
+                              // HP
                               Row(
-                                children: List.generate(3, (index) {
-                                  final active = index < mana;
-                                  return Padding(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 1.0 * scale,
+                                children: [
+                                  Icon(Icons.favorite, color: Colors.red, size: 14 * scale),
+                                  SizedBox(width: 6 * scale),
+                                  Text(
+                                    'HP: $heroHp/$heroMaxHp',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10 * scale,
+                                      fontWeight: FontWeight.bold,
                                     ),
-                                    child: Icon(
-                                      Icons.diamond_rounded,
-                                      color: active
-                                          ? Colors.cyanAccent
-                                          : Colors.cyan.withValues(alpha: 0.15),
-                                      size: 13 * scale,
+                                  ),
+                                  if (heroArmor > 0) ...[
+                                    SizedBox(width: 8 * scale),
+                                    Container(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 4 * scale,
+                                        vertical: 2 * scale,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.blueAccent,
+                                        borderRadius: BorderRadius.circular(4 * scale),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.shield,
+                                            color: Colors.white,
+                                            size: 10 * scale,
+                                          ),
+                                          SizedBox(width: 2 * scale),
+                                          Text(
+                                            '$heroArmor',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 10 * scale,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  );
-                                }),
+                                  ],
+                                ],
+                              ),
+                              // Mana
+                              Row(
+                                children: [
+                                  Text(
+                                    isFrench ? 'MANA : ' : 'MANA: ',
+                                    style: TextStyle(
+                                      color: Colors.cyanAccent,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 10 * scale,
+                                    ),
+                                  ),
+                                  Row(
+                                    children: List.generate(3, (index) {
+                                      final active = index < mana;
+                                      return Padding(
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 1.0 * scale,
+                                        ),
+                                        child: Icon(
+                                          Icons.diamond_rounded,
+                                          color: active
+                                              ? Colors.cyanAccent
+                                              : Colors.cyan.withValues(alpha: 0.15),
+                                          size: 13 * scale,
+                                        ),
+                                      );
+                                    }),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
@@ -335,55 +408,82 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
                   // Bottom Part: Hand
                   Expanded(
                     flex: 4,
-                    child: hand.isEmpty
-                        ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (hand.isNotEmpty)
+                          Padding(
+                            padding: EdgeInsets.only(bottom: 6 * scale),
                             child: Text(
-                              isFrench
-                                  ? 'Bien joué ! Appuyez sur SUIVANT.'
-                                  : 'Well played! Tap NEXT to proceed.',
+                              (enemy?.hp ?? 20) == 20
+                                  ? (isFrench
+                                      ? "Étape 1 : Sélectionnez 'Frappe Basique' puis touchez le Slime."
+                                      : "Step 1: Select 'Basic Strike' then tap the Slime.")
+                                  : (isFrench
+                                      ? "Étape 2 : Sélectionnez 'Défense' puis touchez votre Héros (la barre PV/Mana)."
+                                      : "Step 2: Select 'Defend' then tap your Hero (the HP/Mana bar)."),
+                              textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: Colors.amber,
-                                fontSize: 12 * scale,
+                                fontSize: 10 * scale,
                                 fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
                               ),
                             ),
-                          )
-                        : Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: List.generate(hand.length, (index) {
-                              final card = hand[index];
-                              final isSelected = _selectedCard == card;
-                              final title = isFrench ? card.nameFr : card.nameEn;
-
-                              String cardDesc = '';
-                              if (card.id == 'strike') {
-                                cardDesc = isFrench
-                                    ? 'Inflige 6 dégâts.'
-                                    : 'Deals 6 damage.';
-                              } else {
-                                cardDesc = isFrench
-                                    ? 'Gagne 4 armure.'
-                                    : 'Gains 4 armor.';
-                              }
-
-                              return Container(
-                                width: (100 * scale).clamp(70.0, 120.0),
-                                margin: EdgeInsets.symmetric(horizontal: 5 * scale),
-                                child: TutorialUiCard(
-                                  title: title,
-                                  description: cardDesc,
-                                  cost: card.cost,
-                                  type: card.id == 'defend' ? 'skill' : 'attack',
-                                  isSelected: isSelected,
-                                  onTap: () {
-                                    setState(() {
-                                      _selectedCard = isSelected ? null : card;
-                                    });
-                                  },
-                                ),
-                              );
-                            }),
                           ),
+                        Expanded(
+                          child: hand.isEmpty
+                              ? Center(
+                                  child: Text(
+                                    isFrench
+                                        ? 'Bien joué ! Appuyez sur SUIVANT.'
+                                        : 'Well played! Tap NEXT to proceed.',
+                                    style: TextStyle(
+                                      color: Colors.amber,
+                                      fontSize: 12 * scale,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                )
+                              : Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: List.generate(displayedHand.length, (index) {
+                                    final card = displayedHand[index];
+                                    final isSelected = _selectedCard == card;
+                                    final title = isFrench ? card.nameFr : card.nameEn;
+
+                                    String cardDesc = '';
+                                    if (card.id == 'strike') {
+                                      cardDesc = isFrench
+                                          ? 'Inflige 6 dégâts.'
+                                          : 'Deals 6 damage.';
+                                    } else {
+                                      cardDesc = isFrench
+                                          ? 'Gagne 4 armure.'
+                                          : 'Gains 4 armor.';
+                                    }
+
+                                    return Container(
+                                      width: (100 * scale).clamp(70.0, 120.0),
+                                      margin: EdgeInsets.symmetric(horizontal: 5 * scale),
+                                      child: TutorialUiCard(
+                                        title: title,
+                                        description: cardDesc,
+                                        cost: card.cost,
+                                        type: card.id == 'defend' ? 'skill' : 'attack',
+                                        isSelected: isSelected,
+                                        onTap: () {
+                                          setState(() {
+                                            _selectedCard = isSelected ? null : card;
+                                          });
+                                        },
+                                      ),
+                                    );
+                                  }),
+                                ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -394,4 +494,3 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
     );
   }
 }
-
