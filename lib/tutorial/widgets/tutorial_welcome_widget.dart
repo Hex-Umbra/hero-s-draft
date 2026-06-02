@@ -40,7 +40,7 @@ class _TutorialWelcomeWidgetState extends State<TutorialWelcomeWidget>
 
     return Center(
       child: FittedBox(
-        fit: BoxFit.scaleDown,
+        fit: BoxFit.contain,
         child: AnimatedBuilder(
           animation: _animation,
           builder: (context, child) {

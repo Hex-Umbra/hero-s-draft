@@ -63,18 +63,21 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
   Widget build(BuildContext context) {
     final isFrench = Localizations.localeOf(context).languageCode == 'fr';
 
-    return Center(
-      child: FittedBox(
-        fit: BoxFit.contain,
-        child: SizedBox(
-          width: 360,
-          height: 280,
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Expanded(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Calculate dynamic card width and merge slide distance based on screen size
+        final cardWidth = (constraints.maxWidth * 0.24).clamp(80.0, 110.0);
+        final slideDistance = cardWidth * 1.05;
+
+        return Container(
+          width: double.infinity,
+          height: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Center(
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
@@ -84,15 +87,18 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
                           animation: _slideAnimation,
                           builder: (context, child) {
                             return Transform.translate(
-                              offset: Offset((_slideAnimation.value - 1) * 95, 0),
+                              offset: Offset(
+                                (_slideAnimation.value - 1) * slideDistance,
+                                0,
+                              ),
                               child: child,
                             );
                           },
                           child: Opacity(
-                            opacity: 1.0 - _controller.value * 0.5,
-                            child: const SizedBox(
-                              width: 95,
-                              child: TutorialUiCard(
+                            opacity: (1.0 - _controller.value * 0.5).clamp(0.0, 1.0),
+                            child: SizedBox(
+                              width: cardWidth,
+                              child: const TutorialUiCard(
                                 title: 'Frappe',
                                 description: 'Lvl 1',
                                 cost: 1,
@@ -109,15 +115,18 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
                           animation: _slideAnimation,
                           builder: (context, child) {
                             return Transform.translate(
-                              offset: Offset((1 - _slideAnimation.value) * 95, 0),
+                              offset: Offset(
+                                (1 - _slideAnimation.value) * slideDistance,
+                                0,
+                              ),
                               child: child,
                             );
                           },
                           child: Opacity(
-                            opacity: 1.0 - _controller.value * 0.5,
-                            child: const SizedBox(
-                              width: 95,
-                              child: TutorialUiCard(
+                            opacity: (1.0 - _controller.value * 0.5).clamp(0.0, 1.0),
+                            child: SizedBox(
+                              width: cardWidth,
+                              child: const TutorialUiCard(
                                 title: 'Frappe',
                                 description: 'Lvl 1',
                                 cost: 1,
@@ -131,10 +140,10 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
 
                         // Center Card
                         Opacity(
-                          opacity: 1.0 - _controller.value * 0.2,
-                          child: const SizedBox(
-                            width: 95,
-                            child: TutorialUiCard(
+                          opacity: (1.0 - _controller.value * 0.2).clamp(0.0, 1.0),
+                          child: SizedBox(
+                            width: cardWidth,
+                            child: const TutorialUiCard(
                               title: 'Frappe',
                               description: 'Lvl 1',
                               cost: 1,
@@ -165,7 +174,7 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
                                 ),
                               ],
                             ),
-                            width: 110,
+                            width: cardWidth * 1.1,
                             child: TutorialUiCard(
                               title: isFrench ? 'Frappe Niv.2' : 'Strike Lvl 2',
                               description: isFrench
@@ -192,55 +201,55 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
                     ],
                   ),
                 ),
-                const SizedBox(height: 12),
+              ),
+              const SizedBox(height: 16),
 
-                // Action Button
-                if (!_isMerged)
-                  InkWell(
-                    onTap: _runMerge,
-                    borderRadius: BorderRadius.circular(10),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFFD97706), Color(0xFFF59E0B)],
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.amber.withValues(alpha: 0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: Text(
-                        isFrench ? 'Fusionner 🔮' : 'Merge 🔮',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
-                      ),
+              // Action Button or status text
+              if (!_isMerged)
+                InkWell(
+                  onTap: _runMerge,
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
                     ),
-                  )
-                else
-                  Text(
-                    isFrench ? 'Fusion Complétée ! ✨' : 'Merge Complete! ✨',
-                    style: const TextStyle(
-                      color: Colors.amber,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13.5,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFD97706), Color(0xFFF59E0B)],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.amber.withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      isFrench ? 'Fusionner 🔮' : 'Merge 🔮',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13.5,
+                      ),
                     ),
                   ),
-              ],
-            ),
+                )
+              else
+                Text(
+                  isFrench ? 'Fusion Complétée ! ✨' : 'Merge Complete! ✨',
+                  style: const TextStyle(
+                    color: Colors.amber,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+            ],
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../tutorial_engine.dart';
 
 class TutorialMapNode {
-  final Offset position;
+  final Offset relativePosition;
   final String nameEn;
   final String nameFr;
   final String descEn;
@@ -11,7 +11,7 @@ class TutorialMapNode {
   final Color color;
 
   const TutorialMapNode({
-    required this.position,
+    required this.relativePosition,
     required this.nameEn,
     required this.nameFr,
     required this.descEn,
@@ -34,7 +34,7 @@ class _TutorialMapWidgetState extends State<TutorialMapWidget> {
 
   static const List<TutorialMapNode> _nodes = [
     TutorialMapNode(
-      position: Offset(160, 220),
+      relativePosition: Offset(0.5, 0.8),
       nameEn: 'Combat Encounter',
       nameFr: 'Rencontre de Combat',
       descEn: 'Fight base monsters to gain XP and gold.',
@@ -44,7 +44,7 @@ class _TutorialMapWidgetState extends State<TutorialMapWidget> {
       color: Colors.white70,
     ),
     TutorialMapNode(
-      position: Offset(80, 130),
+      relativePosition: Offset(0.25, 0.5),
       nameEn: 'Shop',
       nameFr: 'Boutique',
       descEn: 'Buy new cards, remove cards, or purchase relics.',
@@ -54,7 +54,7 @@ class _TutorialMapWidgetState extends State<TutorialMapWidget> {
       color: Colors.amber,
     ),
     TutorialMapNode(
-      position: Offset(240, 130),
+      relativePosition: Offset(0.75, 0.5),
       nameEn: 'Rest Site',
       nameFr: 'Zone de Repos',
       descEn: 'Heal your HP or forge cards to upgrade them.',
@@ -63,7 +63,7 @@ class _TutorialMapWidgetState extends State<TutorialMapWidget> {
       color: Colors.greenAccent,
     ),
     TutorialMapNode(
-      position: Offset(160, 40),
+      relativePosition: Offset(0.5, 0.2),
       nameEn: 'Elite Combat',
       nameFr: 'Combat Élite',
       descEn: 'Defeat strong foes to claim powerful Relics.',
@@ -78,12 +78,18 @@ class _TutorialMapWidgetState extends State<TutorialMapWidget> {
   Widget build(BuildContext context) {
     final isFrench = Localizations.localeOf(context).languageCode == 'fr';
 
-    return Center(
-      child: FittedBox(
-        fit: BoxFit.contain,
-        child: SizedBox(
-          width: 320,
-          height: 260,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final height = constraints.maxHeight;
+
+        // Ensure we don't have negative or infinite sizing issues
+        final mapWidth = width.isFinite && width > 0 ? width : 320.0;
+        final mapHeight = height.isFinite && height > 0 ? height : 260.0;
+
+        return SizedBox(
+          width: mapWidth,
+          height: mapHeight,
           child: Stack(
             children: [
               // Starry/grid space background simulation
@@ -102,16 +108,27 @@ class _TutorialMapWidgetState extends State<TutorialMapWidget> {
               // Custom painter for node connections
               Positioned.fill(
                 child: IgnorePointer(
-                  child: CustomPaint(painter: MapConnectionsPainter()),
+                  child: CustomPaint(
+                    painter: MapConnectionsPainter(
+                      _nodes.map((node) => Offset(
+                        node.relativePosition.dx * mapWidth,
+                        node.relativePosition.dy * mapHeight,
+                      )).toList(),
+                    ),
+                  ),
                 ),
               ),
 
               // Map Nodes
-              ..._nodes.map((node) {
+              ...List.generate(_nodes.length, (index) {
+                final node = _nodes[index];
                 final isSelected = _selectedNode == node;
+                final nodeX = node.relativePosition.dx * mapWidth;
+                final nodeY = node.relativePosition.dy * mapHeight;
+
                 return Positioned(
-                  left: node.position.dx - 25,
-                  top: node.position.dy - 25,
+                  left: nodeX - 25,
+                  top: nodeY - 25,
                   child: GestureDetector(
                     onTap: () {
                       setState(() {
@@ -178,10 +195,10 @@ class _TutorialMapWidgetState extends State<TutorialMapWidget> {
               Positioned(
                 left: 16,
                 right: 16,
-                top: (_selectedNode != null && _selectedNode!.position.dy > 150)
+                top: (_selectedNode != null && _selectedNode!.relativePosition.dy > 0.5)
                     ? 16
                     : null,
-                bottom: (_selectedNode == null || _selectedNode!.position.dy <= 150)
+                bottom: (_selectedNode == null || _selectedNode!.relativePosition.dy <= 0.5)
                     ? 16
                     : null,
                 child: IgnorePointer(
@@ -200,7 +217,7 @@ class _TutorialMapWidgetState extends State<TutorialMapWidget> {
                               color: const Color(0xFF1E293B).withValues(alpha: 0.95),
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
-                                color: _selectedNode!.color.withValues(alpha: 0.5),
+                                color: _selectedNode!.color.withValues(alpha: 0.55),
                                 width: 1.5,
                               ),
                               boxShadow: [
@@ -254,13 +271,16 @@ class _TutorialMapWidgetState extends State<TutorialMapWidget> {
               ),
             ],
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
 
 class MapConnectionsPainter extends CustomPainter {
+  final List<Offset> points;
+  MapConnectionsPainter(this.points);
+
   @override
   void paint(Canvas canvas, Size size) {
     final pathPaint = Paint()
@@ -268,10 +288,11 @@ class MapConnectionsPainter extends CustomPainter {
       ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke;
 
-    const combat = Offset(160, 220);
-    const shop = Offset(80, 130);
-    const rest = Offset(240, 130);
-    const elite = Offset(160, 40);
+    if (points.length < 4) return;
+    final combat = points[0];
+    final shop = points[1];
+    final rest = points[2];
+    final elite = points[3];
 
     // Draw connection path
     _drawDashedLine(canvas, combat, shop, pathPaint);
@@ -300,7 +321,8 @@ class MapConnectionsPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant MapConnectionsPainter oldDelegate) =>
+      oldDelegate.points != points;
 }
 
 class StarryGridPainter extends CustomPainter {
@@ -319,15 +341,15 @@ class StarryGridPainter extends CustomPainter {
       canvas.drawLine(Offset(0, i), Offset(size.width, i), gridPaint);
     }
 
-    // Draw some random small stars
+    // Draw some random small stars relative to size
     final starPaint = Paint()..color = Colors.white.withValues(alpha: 0.3);
     final points = [
-      const Offset(40, 60),
-      const Offset(280, 80),
-      const Offset(60, 240),
-      const Offset(290, 210),
-      const Offset(110, 160),
-      const Offset(210, 100),
+      Offset(size.width * 0.125, size.height * 0.23),
+      Offset(size.width * 0.875, size.height * 0.3),
+      Offset(size.width * 0.187, size.height * 0.92),
+      Offset(size.width * 0.9, size.height * 0.8),
+      Offset(size.width * 0.34, size.height * 0.61),
+      Offset(size.width * 0.65, size.height * 0.38),
     ];
     for (final pt in points) {
       canvas.drawCircle(pt, 1.5, starPaint);
@@ -337,4 +359,3 @@ class StarryGridPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
-

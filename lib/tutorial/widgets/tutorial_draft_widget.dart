@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../tutorial_engine.dart';
-import 'tutorial_cards_widget.dart'; // Reuses TutorialUiCard
+import '../../ui/widgets/draft/draft_choice_card.dart';
 
 class TutorialDraftWidget extends StatefulWidget {
   final TutorialEngine engine;
@@ -16,28 +16,28 @@ class _TutorialDraftWidgetState extends State<TutorialDraftWidget> {
 
   static const List<Map<String, dynamic>> _choices = [
     {
-      'titleEn': 'Heavy Strike',
-      'titleFr': 'Frappe Lourde',
-      'descEn': 'Deals 12 damage.',
-      'descFr': 'Inflige 12 dégâts.',
-      'cost': 2,
-      'type': 'attack',
+      'titleEn': 'Vitality',
+      'titleFr': 'Vitalité',
+      'descEn': '+15 Max HP',
+      'descFr': '+15 PV Max',
+      'rarityEn': 'Rare',
+      'rarityFr': 'Rare',
     },
     {
-      'titleEn': 'Holy Shield',
-      'titleFr': 'Bouclier Divin',
-      'descEn': 'Gains 8 Armor.',
-      'descFr': 'Gains 8 Armure.',
-      'cost': 1,
-      'type': 'skill',
+      'titleEn': 'Steel Forge',
+      'titleFr': "Forge d'Acier",
+      'descEn': '+4 Armor',
+      'descFr': '+4 Armure',
+      'rarityEn': 'Epic',
+      'rarityFr': 'Épique',
     },
     {
-      'titleEn': 'Adrenaline',
-      'titleFr': 'Adrénaline',
-      'descEn': 'Draw 2 cards, gain 1 mana.',
-      'descFr': 'Piochez 2 cartes, +1 mana.',
-      'cost': 0,
-      'type': 'power',
+      'titleEn': 'Mirror',
+      'titleFr': 'Miroir',
+      'descEn': 'Clone a card from deck',
+      'descFr': 'Dupliquer une carte',
+      'rarityEn': 'Legendary',
+      'rarityFr': 'Légendaire',
     },
   ];
 
@@ -51,110 +51,100 @@ class _TutorialDraftWidgetState extends State<TutorialDraftWidget> {
   Widget build(BuildContext context) {
     final isFrench = Localizations.localeOf(context).languageCode == 'fr';
 
-    return Center(
-      child: FittedBox(
-        fit: BoxFit.contain,
-        child: SizedBox(
-          width: 360,
-          height: 280,
-          child: Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Column(
-              children: [
-                // Header / Instruction
-                Text(
-                  isFrench ? 'Choisissez une récompense :' : 'Choose a reward:',
-                  style: const TextStyle(
-                    color: Colors.amber,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                  ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Calculate responsive size of choice cards
+        final double cardWidth = (constraints.maxWidth * 0.28).clamp(95.0, 150.0);
+        final double cardHeight = cardWidth * 1.45;
+
+        return Container(
+          width: double.infinity,
+          height: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+          child: Column(
+            children: [
+              // Header / Instruction
+              Text(
+                isFrench ? 'Choisissez une récompense :' : 'Choose a reward:',
+                style: const TextStyle(
+                  color: Colors.amber,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  letterSpacing: 0.5,
                 ),
-                const SizedBox(height: 12),
+              ),
+              const SizedBox(height: 12),
 
-                // 3 cards grid/row
-                Expanded(
-                  child: Center(
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      physics: const BouncingScrollPhysics(),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(_choices.length, (index) {
-                          final choice = _choices[index];
-                          final title = isFrench ? choice['titleFr'] : choice['titleEn'];
-                          final desc = isFrench ? choice['descFr'] : choice['descEn'];
-                          final cost = choice['cost'] as int;
-                          final type = choice['type'] as String;
+              // Responsive choices container using Wrap
+              Expanded(
+                child: Center(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: List.generate(_choices.length, (index) {
+                        final choice = _choices[index];
+                        final title = isFrench ? choice['titleFr'] : choice['titleEn'];
+                        final desc = isFrench ? choice['descFr'] : choice['descEn'];
+                        final rarity = isFrench ? choice['rarityFr'] : choice['rarityEn'];
 
-                          final isSelected = _selectedIndex == index;
-                          final isHovered = _hoveredIndex == index;
+                        final isSelected = _selectedIndex == index;
+                        final isHovered = _hoveredIndex == index;
 
-                          // Scale transition
-                          final scale = isSelected ? 1.12 : (isHovered ? 1.05 : 1.0);
+                        final scale = isSelected ? 1.08 : (isHovered ? 1.04 : 1.0);
 
-                          return Container(
-                            width: 100,
-                            margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
-                            child: MouseRegion(
-                              onEnter: (_) => setState(() => _hoveredIndex = index),
-                              onExit: (_) => setState(() => _hoveredIndex = null),
-                              cursor: SystemMouseCursors.click,
-                              child: AnimatedScale(
-                                scale: scale,
-                                duration: const Duration(milliseconds: 200),
-                                curve: Curves.easeOut,
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 200),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(12),
-                                    boxShadow: isSelected
-                                        ? [
-                                            BoxShadow(
-                                              color: Colors.amber.withValues(alpha: 0.4),
-                                              blurRadius: 16,
-                                              spreadRadius: 3,
-                                            ),
-                                          ]
-                                        : [],
-                                  ),
-                                  child: TutorialUiCard(
-                                    title: title,
-                                    description: desc,
-                                    cost: cost,
-                                    type: type,
-                                    isSelected: isSelected,
-                                    onTap: () {
-                                      setState(() {
-                                        _selectedIndex = index;
-                                      });
-                                      widget.engine.mockState.hasDrafted = true;
-                                      widget.engine.playCard(
-                                        const TutorialCard(
-                                          id: 'dummy',
-                                          nameEn: '',
-                                          nameFr: '',
-                                          cost: 0,
-                                          damage: 0,
-                                          armor: 0,
+                        return MouseRegion(
+                          onEnter: (_) => setState(() => _hoveredIndex = index),
+                          onExit: (_) => setState(() => _hoveredIndex = null),
+                          cursor: SystemMouseCursors.click,
+                          child: AnimatedScale(
+                            scale: scale,
+                            duration: const Duration(milliseconds: 200),
+                            curve: Curves.easeOut,
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              width: cardWidth,
+                              height: cardHeight,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: isSelected
+                                    ? [
+                                        BoxShadow(
+                                          color: Colors.amber.withValues(alpha: 0.4),
+                                          blurRadius: 16,
+                                          spreadRadius: 3,
                                         ),
-                                      );
-                                    },
-                                  ),
+                                      ]
+                                    : [],
+                              ),
+                              child: FittedBox(
+                                fit: BoxFit.contain,
+                                child: DraftChoiceCard(
+                                  title: title,
+                                  description: desc,
+                                  rarity: rarity,
+                                  onTap: () {
+                                    setState(() {
+                                      _selectedIndex = index;
+                                    });
+                                    widget.engine.draftReward();
+                                  },
                                 ),
                               ),
                             ),
-                          );
-                        }),
-                      ),
+                          ),
+                        );
+                      }),
                     ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

@@ -32,175 +32,216 @@ class _TutorialRelicsWidgetState extends State<TutorialRelicsWidget> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    widget.engine.resetMockState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isFrench = Localizations.localeOf(context).languageCode == 'fr';
 
-    return Center(
-      child: FittedBox(
-        fit: BoxFit.scaleDown,
-        child: SizedBox(
-          width: 320,
-          height: 240,
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              children: [
-                // Relic display card
-                Expanded(
-                  child: Center(
-                    child: _isCollected
-                        ? Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(
-                                Icons.check_circle_outline_rounded,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Dynamic card sizing for the relic display
+        final double relicCardWidth = (constraints.maxWidth * 0.45).clamp(140.0, 180.0);
+
+        return Container(
+          width: double.infinity,
+          height: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+          child: Column(
+            children: [
+              // Relic display card
+              Expanded(
+                child: Center(
+                  child: _isCollected
+                      ? Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.check_circle_outline_rounded,
+                              color: Colors.amber,
+                              size: 54,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              isFrench ? 'Relique Collectée !' : 'Relic Collected!',
+                              style: const TextStyle(
                                 color: Colors.amber,
-                                size: 48,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
                               ),
-                              const SizedBox(height: 10),
-                              Text(
-                                isFrench ? 'Relique Collectée !' : 'Relic Collected!',
-                                style: const TextStyle(
-                                  color: Colors.amber,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
-                          )
-                        : AnimatedOpacity(
-                            opacity: _relicOpacity,
+                            ),
+                          ],
+                        )
+                      : AnimatedOpacity(
+                          opacity: _relicOpacity,
+                          duration: const Duration(milliseconds: 300),
+                          child: AnimatedScale(
+                            scale: _relicScale,
                             duration: const Duration(milliseconds: 300),
-                            child: AnimatedScale(
-                              scale: _relicScale,
-                              duration: const Duration(milliseconds: 300),
-                              child: Container(
-                                width: 160,
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF1E293B).withValues(alpha: 0.5),
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(
-                                    color: Colors.amber.withValues(alpha: 0.4),
-                                    width: 1.5,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.amber.withValues(alpha: 0.15),
-                                      blurRadius: 12,
-                                      spreadRadius: 1,
-                                    ),
+                            child: Container(
+                              width: relicCardWidth,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 18,
+                              ),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    const Color(0xFF1E293B).withValues(alpha: 0.6),
+                                    const Color(0xFF0F172A).withValues(alpha: 0.6),
                                   ],
                                 ),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    // Icon
-                                    const Icon(
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: Colors.amber.withValues(alpha: 0.5),
+                                  width: 1.5,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.amber.withValues(alpha: 0.15),
+                                    blurRadius: 16,
+                                    spreadRadius: 2,
+                                  ),
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.3),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  // Glowing Relic Icon
+                                  Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: Colors.amber.withValues(alpha: 0.1),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
                                       Icons.shield_outlined,
                                       color: Colors.amber,
-                                      size: 36,
+                                      size: 38,
                                     ),
-                                    const SizedBox(height: 8),
-                                    // Name
-                                    Text(
-                                      isFrench ? 'Talisman de Fer' : 'Iron Talisman',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 13,
-                                      ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  // Relic Name
+                                  Text(
+                                    isFrench ? 'Talisman de Fer' : 'Iron Talisman',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
                                     ),
-                                    const SizedBox(height: 4),
-                                    // Description
-                                    Text(
-                                      isFrench
-                                          ? 'Au début du combat, gagnez 4 Armure.'
-                                          : 'At start of combat, gain 4 Armor.',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        color: Colors.grey.shade400,
-                                        fontSize: 10.5,
-                                        height: 1.25,
-                                      ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 6),
+                                  // Relic Description
+                                  Text(
+                                    isFrench
+                                        ? 'Au début du combat, gagnez 4 Armure.'
+                                        : 'At start of combat, gain 4 Armor.',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: Colors.grey.shade400,
+                                      fontSize: 11,
+                                      height: 1.3,
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
-                  ),
-                ),
-
-                // Rarities Legend
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.black12,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Wrap(
-                    alignment: WrapAlignment.spaceAround,
-                    spacing: 8,
-                    runSpacing: 4,
-                    children: [
-                      _buildRarityBadge(
-                        isFrench ? 'Commun' : 'Common',
-                        Colors.white70,
-                      ),
-                      _buildRarityBadge(
-                        isFrench ? 'Rare' : 'Rare',
-                        Colors.blueAccent,
-                      ),
-                      _buildRarityBadge(
-                        isFrench ? 'Épique' : 'Epic',
-                        Colors.purpleAccent,
-                      ),
-                      _buildRarityBadge(
-                        isFrench ? 'Légendaire' : 'Legendary',
-                        Colors.amber,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 10),
-
-                // Collect button
-                if (!_isCollected)
-                  InkWell(
-                    onTap: _collectRelic,
-                    borderRadius: BorderRadius.circular(10),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: const Color(0xFF1E293B),
-                        border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
-                      ),
-                      child: Text(
-                        isFrench ? 'Collecter 👑' : 'Collect 👑',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12.5,
                         ),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Rarities Legend
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1E293B).withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                ),
+                child: Wrap(
+                  alignment: WrapAlignment.spaceAround,
+                  spacing: 12,
+                  runSpacing: 8,
+                  children: [
+                    _buildRarityBadge(
+                      isFrench ? 'Commun' : 'Common',
+                      Colors.white70,
+                    ),
+                    _buildRarityBadge(
+                      isFrench ? 'Rare' : 'Rare',
+                      Colors.blueAccent,
+                    ),
+                    _buildRarityBadge(
+                      isFrench ? 'Épique' : 'Epic',
+                      Colors.purpleAccent,
+                    ),
+                    _buildRarityBadge(
+                      isFrench ? 'Légendaire' : 'Legendary',
+                      Colors.amber,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Collect button
+              if (!_isCollected)
+                InkWell(
+                  onTap: _collectRelic,
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: const Color(0xFF1E293B),
+                      border: Border.all(
+                        color: Colors.amber.withValues(alpha: 0.4),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.amber.withValues(alpha: 0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      isFrench ? 'Collecter 👑' : 'Collect 👑',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
                       ),
                     ),
                   ),
-              ],
-            ),
+                ),
+            ],
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
   Widget _buildRarityBadge(String label, Color color) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           width: 8,
@@ -212,7 +253,7 @@ class _TutorialRelicsWidgetState extends State<TutorialRelicsWidget> {
           label,
           style: TextStyle(
             color: color.withValues(alpha: 0.8),
-            fontSize: 9,
+            fontSize: 9.5,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -220,4 +261,3 @@ class _TutorialRelicsWidgetState extends State<TutorialRelicsWidget> {
     );
   }
 }
-

@@ -35,154 +35,165 @@ class _TutorialCombatOverviewWidgetState
     final isFrench = Localizations.localeOf(context).languageCode == 'fr';
 
     return Center(
-      child: FittedBox(
-        fit: BoxFit.contain,
-        child: SizedBox(
-          width: 500,
-          height: 350,
-          child: Stack(
-            children: [
-              // Subtly simulated dungeon grid background
-              Positioned.fill(
-                child: CustomPaint(painter: DungeonBackgroundPainter()),
-              ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final double scaleHeight = constraints.maxHeight / 350.0;
+          final double scaleWidth = constraints.maxWidth / 500.0;
+          final double scale = (scaleHeight < scaleWidth ? scaleHeight : scaleWidth).clamp(0.65, 1.4);
 
-              // Act & Level header indicator
-              Positioned(
-                top: 8,
-                left: 12,
-                child: Text(
-                  isFrench ? 'Acte 1 - Niveau : 1' : 'Act 1 - Level: 1',
-                  style: const TextStyle(
-                    color: Colors.amber,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
+          final width = constraints.maxWidth;
+          final height = constraints.maxHeight;
+
+          return SizedBox(
+            width: width,
+            height: height,
+            child: Stack(
+              children: [
+                // Subtly simulated dungeon grid background
+                Positioned.fill(
+                  child: CustomPaint(painter: DungeonBackgroundPainter()),
                 ),
-              ),
 
-              // Main Layout Grid
-              Padding(
-                padding: const EdgeInsets.only(
-                  left: 12,
-                  right: 12,
-                  top: 30,
-                  bottom: 8,
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Left Column: Player effects & Draw pile
-                    Expanded(flex: 3, child: _buildLeftPanel(isFrench)),
-
-                    // Center Column: Enemy Card (top), Hero Card (bottom), Hand & Mana (lowest)
-                    Expanded(
-                      flex: 5,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          // Enemy Zone Card
-                          _buildEnemyCard(isFrench),
-
-                          // Hero Zone Card
-                          _buildHeroCard(isFrench),
-
-                          // Player Hand, Mana, and HP bar
-                          Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              _buildFannedHand(),
-                              const SizedBox(height: 2),
-                              _buildManaCrystals(),
-                              const SizedBox(height: 2),
-                              _buildHealthBar(isFrench),
-                            ],
-                          ),
-                        ],
-                      ),
+                // Act & Level header indicator
+                Positioned(
+                  top: 8 * scale,
+                  left: 12 * scale,
+                  child: Text(
+                    isFrench ? 'Acte 1 - Niveau : 1' : 'Act 1 - Level: 1',
+                    style: TextStyle(
+                      color: Colors.amber,
+                      fontSize: 12 * scale,
+                      fontWeight: FontWeight.bold,
                     ),
-
-                    // Right Column: End Turn, Tour count, Enemy Intentions & Discard pile
-                    Expanded(flex: 3, child: _buildRightPanel(isFrench)),
-                  ],
-                ),
-              ),
-
-              // Floating Annotation Labels
-              // Label 1: Enemy zone (Top Center)
-              AnimatedPositioned(
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeOut,
-                top: _showEnemyLabel ? 80 : 65,
-                left: 20,
-                right: 20,
-                child: AnimatedOpacity(
-                  opacity: _showEnemyLabel ? 1.0 : 0.0,
-                  duration: const Duration(milliseconds: 300),
-                  child: _buildAnnotationBubble(
-                    text: isFrench
-                        ? '1. L\'Ennemi est en haut. Ses intentions et actions sont détaillées à droite.'
-                        : '1. The Enemy is at the top. Their actions and intent are detailed on the right.',
-                    color: Colors.redAccent,
                   ),
                 ),
-              ),
 
-              // Label 2: Hero card, Hand, and HP (Center/Bottom Center)
-              AnimatedPositioned(
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeOut,
-                top: _showHeroLabel ? 160 : 145,
-                left: 20,
-                right: 20,
-                child: AnimatedOpacity(
-                  opacity: _showHeroLabel ? 1.0 : 0.0,
-                  duration: const Duration(milliseconds: 300),
-                  child: _buildAnnotationBubble(
-                    text: isFrench
-                        ? '2. Votre Héros est en bas. Vos cartes, cristaux de Mana et PV sont juste en dessous.'
-                        : '2. Your Hero is below. Your cards, Mana crystals, and HP bar are directly under.',
-                    color: Colors.blueAccent,
+                // Main Layout Grid
+                Padding(
+                  padding: EdgeInsets.only(
+                    left: 12 * scale,
+                    right: 12 * scale,
+                    top: 30 * scale,
+                    bottom: 8 * scale,
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Left Column: Player effects & Draw pile
+                      Expanded(flex: 3, child: _buildLeftPanel(isFrench, scale)),
+
+                      // Center Column: Enemy Card (top), Hero Card (bottom), Hand & Mana (lowest)
+                      Expanded(
+                        flex: 5,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // Enemy Zone Card
+                            _buildEnemyCard(isFrench, scale),
+
+                            // Hero Zone Card
+                            _buildHeroCard(isFrench, scale),
+
+                            // Player Hand, Mana, and HP bar
+                            Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                _buildFannedHand(scale),
+                                SizedBox(height: 2 * scale),
+                                _buildManaCrystals(scale),
+                                SizedBox(height: 2 * scale),
+                                _buildHealthBar(isFrench, scale),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Right Column: End Turn, Tour count, Enemy Intentions & Discard pile
+                      Expanded(flex: 3, child: _buildRightPanel(isFrench, scale)),
+                    ],
                   ),
                 ),
-              ),
 
-              // Label 3: Side Panels (Left & Right Column Elements)
-              AnimatedPositioned(
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeOut,
-                bottom: _showHandLabel ? 110 : 95,
-                left: 20,
-                right: 20,
-                child: AnimatedOpacity(
-                  opacity: _showHandLabel ? 1.0 : 0.0,
+                // Floating Annotation Labels
+                // Label 1: Enemy zone (Top Center)
+                AnimatedPositioned(
                   duration: const Duration(milliseconds: 300),
-                  child: _buildAnnotationBubble(
-                    text: isFrench
-                        ? '3. Les côtés gèrent les effets (gauche), la pioche/défausse et le bouton Fin de Tour (droite).'
-                        : '3. Side columns manage status effects (left), piles, and the End Turn button (right).',
-                    color: Colors.amber,
+                  curve: Curves.easeOut,
+                  top: _showEnemyLabel ? (height * 0.22).clamp(60.0, 110.0) : (height * 0.18).clamp(50.0, 95.0),
+                  left: 20 * scale,
+                  right: 20 * scale,
+                  child: AnimatedOpacity(
+                    opacity: _showEnemyLabel ? 1.0 : 0.0,
+                    duration: const Duration(milliseconds: 300),
+                    child: _buildAnnotationBubble(
+                      text: isFrench
+                          ? '1. L\'Ennemi est en haut. Ses intentions et actions sont détaillées à droite.'
+                          : '1. The Enemy is at the top. Their actions and intent are detailed on the right.',
+                      color: Colors.redAccent,
+                      scale: scale,
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-        ),
+
+                // Label 2: Hero card, Hand, and HP (Center/Bottom Center)
+                AnimatedPositioned(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOut,
+                  top: _showHeroLabel ? (height * 0.45).clamp(130.0, 210.0) : (height * 0.40).clamp(115.0, 195.0),
+                  left: 20 * scale,
+                  right: 20 * scale,
+                  child: AnimatedOpacity(
+                    opacity: _showHeroLabel ? 1.0 : 0.0,
+                    duration: const Duration(milliseconds: 300),
+                    child: _buildAnnotationBubble(
+                      text: isFrench
+                          ? '2. Votre Héros est en bas. Vos cartes, cristaux de Mana et PV sont juste en dessous.'
+                          : '2. Your Hero is below. Your cards, Mana crystals, and HP bar are directly under.',
+                      color: Colors.blueAccent,
+                      scale: scale,
+                    ),
+                  ),
+                ),
+
+                // Label 3: Side Panels (Left & Right Column Elements)
+                AnimatedPositioned(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOut,
+                  bottom: _showHandLabel ? (height * 0.28).clamp(80.0, 140.0) : (height * 0.24).clamp(70.0, 125.0),
+                  left: 20 * scale,
+                  right: 20 * scale,
+                  child: AnimatedOpacity(
+                    opacity: _showHandLabel ? 1.0 : 0.0,
+                    duration: const Duration(milliseconds: 300),
+                    child: _buildAnnotationBubble(
+                      text: isFrench
+                          ? '3. Les côtés gèrent les effets (gauche), la pioche/défausse et le bouton Fin de Tour (droite).'
+                          : '3. Side columns manage status effects (left), piles, and the End Turn button (right).',
+                      color: Colors.amber,
+                      scale: scale,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildLeftPanel(bool isFrench) {
+  Widget _buildLeftPanel(bool isFrench, double scale) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // EFFETS DU JOUEUR card
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          padding: EdgeInsets.symmetric(horizontal: 10 * scale, vertical: 8 * scale),
           decoration: BoxDecoration(
             color: const Color(0xFF0F172A).withValues(alpha: 0.7),
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(6 * scale),
             border: Border.all(color: Colors.cyan.withValues(alpha: 0.3), width: 1),
           ),
           child: Column(
@@ -190,16 +201,16 @@ class _TutorialCombatOverviewWidgetState
             children: [
               Text(
                 isFrench ? '🔵 EFFETS DU JOUEUR' : '🔵 PLAYER EFFECTS',
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.cyanAccent,
-                  fontSize: 9.5,
+                  fontSize: 9.5 * scale,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 5),
+              SizedBox(height: 5 * scale),
               Text(
                 isFrench ? 'Aucun effet actif' : 'No active effects',
-                style: TextStyle(color: Colors.grey.shade400, fontSize: 8.5),
+                style: TextStyle(color: Colors.grey.shade400, fontSize: 8.5 * scale),
               ),
             ],
           ),
@@ -207,17 +218,17 @@ class _TutorialCombatOverviewWidgetState
         const Spacer(),
         // Pioche Button
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          padding: EdgeInsets.symmetric(horizontal: 10 * scale, vertical: 6 * scale),
           decoration: BoxDecoration(
             color: const Color(0xFF1E293B),
-            borderRadius: BorderRadius.circular(4),
-            border: Border.all(color: Colors.white24, width: 0.8),
+            borderRadius: BorderRadius.circular(4 * scale),
+            border: Border.all(color: Colors.white24, width: 0.8 * scale),
           ),
           child: Text(
             isFrench ? 'Pioche: 2' : 'Draw: 2',
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.white70,
-              fontSize: 9.5,
+              fontSize: 9.5 * scale,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -226,7 +237,7 @@ class _TutorialCombatOverviewWidgetState
     );
   }
 
-  Widget _buildRightPanel(bool isFrench) {
+  Widget _buildRightPanel(bool isFrench, double scale) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
@@ -235,29 +246,29 @@ class _TutorialCombatOverviewWidgetState
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: EdgeInsets.symmetric(horizontal: 12 * scale, vertical: 6 * scale),
               decoration: BoxDecoration(
                 color: const Color(0xFF3B82F6),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(10 * scale),
                 boxShadow: [
-                  BoxShadow(color: Colors.blue.withValues(alpha: 0.3), blurRadius: 3),
+                  BoxShadow(color: Colors.blue.withValues(alpha: 0.3), blurRadius: 3 * scale),
                 ],
               ),
               child: Text(
                 isFrench ? '✓ Fin de Tour' : '✓ End Turn',
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white,
-                  fontSize: 10.5,
+                  fontSize: 10.5 * scale,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
-            const SizedBox(height: 4),
+            SizedBox(height: 4 * scale),
             Text(
               isFrench ? 'Tour 1' : 'Turn 1',
               style: TextStyle(
                 color: Colors.grey.shade500,
-                fontSize: 9.5,
+                fontSize: 9.5 * scale,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -267,10 +278,10 @@ class _TutorialCombatOverviewWidgetState
         // INTENTIONS ENNEMIES card
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          padding: EdgeInsets.symmetric(horizontal: 10 * scale, vertical: 6 * scale),
           decoration: BoxDecoration(
             color: const Color(0xFF0F172A).withValues(alpha: 0.7),
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(6 * scale),
             border: Border.all(color: Colors.amber.withValues(alpha: 0.3), width: 1),
           ),
           child: Column(
@@ -278,28 +289,28 @@ class _TutorialCombatOverviewWidgetState
             children: [
               Text(
                 isFrench ? '👁 INTENTIONS ENNEMIES' : '👁 ENEMY INTENTIONS',
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.amber,
-                  fontSize: 9.5,
+                  fontSize: 9.5 * scale,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 4),
+              SizedBox(height: 4 * scale),
               Text(
                 isFrench ? 'Gobelin (Niv. 1)' : 'Goblin (Lvl. 1)',
-                style: const TextStyle(color: Colors.white70, fontSize: 8.5),
+                style: TextStyle(color: Colors.white70, fontSize: 8.5 * scale),
               ),
-              const SizedBox(height: 2),
+              SizedBox(height: 2 * scale),
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.flash_on, color: Colors.amber, size: 10),
-                  const SizedBox(width: 2),
+                  Icon(Icons.flash_on, color: Colors.amber, size: 10 * scale),
+                  SizedBox(width: 2 * scale),
                   Text(
                     isFrench ? 'Attaque Rapide : 5' : 'Quick Attack: 5',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Colors.amber,
-                      fontSize: 8.5,
+                      fontSize: 8.5 * scale,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -308,20 +319,20 @@ class _TutorialCombatOverviewWidgetState
             ],
           ),
         ),
-        const SizedBox(height: 6),
+        SizedBox(height: 6 * scale),
         // Défausse Button
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          padding: EdgeInsets.symmetric(horizontal: 10 * scale, vertical: 6 * scale),
           decoration: BoxDecoration(
             color: const Color(0xFF1E293B),
-            borderRadius: BorderRadius.circular(4),
-            border: Border.all(color: Colors.white24, width: 0.8),
+            borderRadius: BorderRadius.circular(4 * scale),
+            border: Border.all(color: Colors.white24, width: 0.8 * scale),
           ),
           child: Text(
             isFrench ? 'Défausse: 0' : 'Discard: 0',
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.white70,
-              fontSize: 9.5,
+              fontSize: 9.5 * scale,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -330,7 +341,7 @@ class _TutorialCombatOverviewWidgetState
     );
   }
 
-  Widget _buildEnemyCard(bool isFrench) {
+  Widget _buildEnemyCard(bool isFrench, double scale) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -338,83 +349,83 @@ class _TutorialCombatOverviewWidgetState
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.flash_on, color: Colors.redAccent, size: 11),
-            const Text(
+            Icon(Icons.flash_on, color: Colors.redAccent, size: 11 * scale),
+            Text(
               '5',
               style: TextStyle(
                 color: Colors.redAccent,
-                fontSize: 11,
+                fontSize: 11 * scale,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(width: 6),
-            const Icon(Icons.shield, color: Colors.blueAccent, size: 11),
-            const Text(
+            SizedBox(width: 6 * scale),
+            Icon(Icons.shield, color: Colors.blueAccent, size: 11 * scale),
+            Text(
               '0',
               style: TextStyle(
                 color: Colors.blueAccent,
-                fontSize: 11,
+                fontSize: 11 * scale,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: 8 * scale),
             Container(
-              width: 60,
-              height: 8,
+              width: 60 * scale,
+              height: 8 * scale,
               decoration: BoxDecoration(
                 color: Colors.grey.shade800,
-                borderRadius: BorderRadius.circular(3),
+                borderRadius: BorderRadius.circular(3 * scale),
               ),
               child: Stack(
                 children: [
                   Container(
-                    width: 60,
+                    width: 60 * scale,
                     decoration: BoxDecoration(
                       color: Colors.redAccent,
-                      borderRadius: BorderRadius.circular(3),
+                      borderRadius: BorderRadius.circular(3 * scale),
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(width: 6),
-            const Text(
+            SizedBox(width: 6 * scale),
+            Text(
               '28/28',
               style: TextStyle(
                 color: Colors.white70,
-                fontSize: 11,
+                fontSize: 11 * scale,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: 4 * scale),
         // Card Body
         Container(
-          width: 65,
-          height: 90,
+          width: 65 * scale,
+          height: 90 * scale,
           decoration: BoxDecoration(
             color: const Color(0xFF1E293B),
-            borderRadius: BorderRadius.circular(5),
+            borderRadius: BorderRadius.circular(5 * scale),
             border: Border.all(
               color: Colors.greenAccent.withValues(alpha: 0.4),
-              width: 1.2,
+              width: 1.2 * scale,
             ),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
+              Icon(
                 Icons.pest_control,
                 color: Colors.greenAccent,
-                size: 28,
+                size: 28 * scale,
               ),
-              const SizedBox(height: 2),
+              SizedBox(height: 2 * scale),
               Text(
                 isFrench ? 'Gobelin' : 'Goblin',
                 style: TextStyle(
                   color: Colors.greenAccent.shade100,
-                  fontSize: 11,
+                  fontSize: 11 * scale,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -425,25 +436,25 @@ class _TutorialCombatOverviewWidgetState
     );
   }
 
-  Widget _buildHeroCard(bool isFrench) {
+  Widget _buildHeroCard(bool isFrench, double scale) {
     return Container(
-      width: 65,
-      height: 90,
+      width: 65 * scale,
+      height: 90 * scale,
       decoration: BoxDecoration(
         color: const Color(0xFF1E293B),
-        borderRadius: BorderRadius.circular(5),
-        border: Border.all(color: Colors.amber.withValues(alpha: 0.4), width: 1.2),
+        borderRadius: BorderRadius.circular(5 * scale),
+        border: Border.all(color: Colors.amber.withValues(alpha: 0.4), width: 1.2 * scale),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.shield, color: Colors.amber, size: 28),
-          const SizedBox(height: 2),
+          Icon(Icons.shield, color: Colors.amber, size: 28 * scale),
+          SizedBox(height: 2 * scale),
           Text(
             isFrench ? 'Héros' : 'Hero',
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.amber,
-              fontSize: 11,
+              fontSize: 11 * scale,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -452,7 +463,7 @@ class _TutorialCombatOverviewWidgetState
     );
   }
 
-  Widget _buildFannedHand() {
+  Widget _buildFannedHand(double scale) {
     final List<String> cardNames = [
       'Frappe',
       'Rage',
@@ -469,42 +480,42 @@ class _TutorialCombatOverviewWidgetState
     ];
 
     return SizedBox(
-      height: 60,
-      width: 220,
+      height: 60 * scale,
+      width: 220 * scale,
       child: Stack(
         alignment: Alignment.center,
         children: List.generate(5, (index) {
           final double rotation = (index - 2) * 0.08;
-          final double translationX = (index - 2) * 22.0;
-          final double translationY = (index - 2).abs() * 2.5;
+          final double translationX = (index - 2) * 22.0 * scale;
+          final double translationY = (index - 2).abs() * 2.5 * scale;
 
           return Transform.translate(
             offset: Offset(translationX, translationY),
             child: Transform.rotate(
               angle: rotation,
               child: Container(
-                width: 36,
-                height: 52,
+                width: 36 * scale,
+                height: 52 * scale,
                 decoration: BoxDecoration(
                   color: const Color(0xFF2A2A40),
-                  borderRadius: BorderRadius.circular(3),
+                  borderRadius: BorderRadius.circular(3 * scale),
                   border: Border.all(
                     color: cardColors[index].withValues(alpha: 0.6),
-                    width: 0.8,
+                    width: 0.8 * scale,
                   ),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.3),
-                      blurRadius: 1.5,
+                      blurRadius: 1.5 * scale,
                     ),
                   ],
                 ),
                 child: Center(
                   child: Text(
                     cardNames[index],
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Colors.white70,
-                      fontSize: 7.5,
+                      fontSize: 7.5 * scale,
                       fontWeight: FontWeight.bold,
                     ),
                     textAlign: TextAlign.center,
@@ -518,51 +529,51 @@ class _TutorialCombatOverviewWidgetState
     );
   }
 
-  Widget _buildManaCrystals() {
+  Widget _buildManaCrystals(double scale) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: List.generate(3, (index) {
-        return const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 2.0),
-          child: Icon(Icons.diamond, color: Colors.cyanAccent, size: 14),
+        return Padding(
+          padding: EdgeInsets.symmetric(horizontal: 2.0 * scale),
+          child: Icon(Icons.diamond, color: Colors.cyanAccent, size: 14 * scale),
         );
       }),
     );
   }
 
-  Widget _buildHealthBar(bool isFrench) {
+  Widget _buildHealthBar(bool isFrench, double scale) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Icon(Icons.flash_on, color: Colors.redAccent, size: 10),
-        const Text(
+        Icon(Icons.flash_on, color: Colors.redAccent, size: 10 * scale),
+        Text(
           '0',
           style: TextStyle(
             color: Colors.redAccent,
-            fontSize: 10,
+            fontSize: 10 * scale,
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(width: 4),
-        const Icon(Icons.shield, color: Colors.blueAccent, size: 10),
-        const Text(
+        SizedBox(width: 4 * scale),
+        Icon(Icons.shield, color: Colors.blueAccent, size: 10 * scale),
+        Text(
           '0',
           style: TextStyle(
             color: Colors.blueAccent,
-            fontSize: 10,
+            fontSize: 10 * scale,
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(width: 6),
+        SizedBox(width: 6 * scale),
         Container(
-          width: 110,
-          height: 12,
+          width: 110 * scale,
+          height: 12 * scale,
           decoration: BoxDecoration(
             color: Colors.grey.shade800,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(4 * scale),
             border: Border.all(
               color: Colors.greenAccent.withValues(alpha: 0.2),
-              width: 0.8,
+              width: 0.8 * scale,
             ),
           ),
           child: Stack(
@@ -570,15 +581,15 @@ class _TutorialCombatOverviewWidgetState
               Container(
                 decoration: BoxDecoration(
                   color: const Color(0xFF10B981),
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(4 * scale),
                 ),
               ),
               Center(
                 child: Text(
                   isFrench ? '80 / 80 PV' : '80 / 80 HP',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Colors.white,
-                    fontSize: 9,
+                    fontSize: 9 * scale,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -590,25 +601,29 @@ class _TutorialCombatOverviewWidgetState
     );
   }
 
-  Widget _buildAnnotationBubble({required String text, required Color color}) {
+  Widget _buildAnnotationBubble({required String text, required Color color, required double scale}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: 10 * scale, vertical: 6 * scale),
       decoration: BoxDecoration(
         color: const Color(0xFF0F172A).withValues(alpha: 0.95),
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(6 * scale),
         border: Border.all(color: color, width: 1.0),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.3),
-            blurRadius: 3,
-            offset: const Offset(0, 1.5),
+            blurRadius: 3 * scale,
+            offset: Offset(0, 1.5 * scale),
           ),
         ],
       ),
       child: Text(
         text,
         textAlign: TextAlign.center,
-        style: const TextStyle(color: Colors.white, fontSize: 12, height: 1.25),
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: (12 * scale).clamp(9.0, 14.0),
+          height: 1.25,
+        ),
       ),
     );
   }

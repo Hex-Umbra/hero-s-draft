@@ -102,28 +102,28 @@ class _TutorialElementsWidgetState extends State<TutorialElementsWidget> {
     super.dispose();
   }
 
-  Widget _buildSimulationVisual(int index) {
+  Widget _buildSimulationVisual(int index, double scale) {
     switch (index) {
       case 0: // Poison
         return Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.science, color: Colors.greenAccent, size: 14),
-            const SizedBox(width: 4),
+            Icon(Icons.science, color: Colors.greenAccent, size: 14 * scale),
+            SizedBox(width: 4 * scale),
             Text(
               '$_poisonVal',
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.greenAccent,
                 fontWeight: FontWeight.bold,
-                fontSize: 16,
+                fontSize: 16 * scale,
               ),
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: 8 * scale),
             Text(
               '->  -$_poisonVal HP',
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.redAccent,
-                fontSize: 12,
+                fontSize: 12 * scale,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -133,26 +133,26 @@ class _TutorialElementsWidgetState extends State<TutorialElementsWidget> {
         return Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               Icons.local_fire_department,
               color: Colors.orangeAccent,
-              size: 14,
+              size: 14 * scale,
             ),
-            const SizedBox(width: 4),
+            SizedBox(width: 4 * scale),
             Text(
               '$_burnVal',
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.orangeAccent,
                 fontWeight: FontWeight.bold,
-                fontSize: 16,
+                fontSize: 16 * scale,
               ),
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: 8 * scale),
             Text(
               '->  -$_burnVal HP',
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.redAccent,
-                fontSize: 12,
+                fontSize: 12 * scale,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -165,14 +165,14 @@ class _TutorialElementsWidgetState extends State<TutorialElementsWidget> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.hardware_rounded, color: Colors.grey, size: 16),
-              const SizedBox(width: 4),
+              Icon(Icons.hardware_rounded, color: Colors.grey, size: 16 * scale),
+              SizedBox(width: 4 * scale),
               Text(
                 _gelActive ? '10 -> 5 ⚔️' : '10 ⚔️',
                 style: TextStyle(
                   color: _gelActive ? Colors.lightBlueAccent : Colors.white,
                   fontWeight: FontWeight.bold,
-                  fontSize: 13,
+                  fontSize: 13 * scale,
                 ),
               ),
             ],
@@ -182,23 +182,23 @@ class _TutorialElementsWidgetState extends State<TutorialElementsWidget> {
         return Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.flash_on, color: Colors.amberAccent, size: 16),
-            const SizedBox(width: 4),
+            Icon(Icons.flash_on, color: Colors.amberAccent, size: 16 * scale),
+            SizedBox(width: 4 * scale),
             Text(
               'HIT ${_shockHits + 1}',
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
-                fontSize: 12,
+                fontSize: 12 * scale,
               ),
             ),
-            const SizedBox(width: 6),
+            SizedBox(width: 6 * scale),
             Text(
               '+${(_shockHits + 1) * 2} ⚡',
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.amberAccent,
                 fontWeight: FontWeight.bold,
-                fontSize: 12,
+                fontSize: 12 * scale,
               ),
             ),
           ],
@@ -213,100 +213,129 @@ class _TutorialElementsWidgetState extends State<TutorialElementsWidget> {
     final isFrench = Localizations.localeOf(context).languageCode == 'fr';
 
     return Center(
-      child: FittedBox(
-        fit: BoxFit.contain,
-        child: SizedBox(
-          width: 350,
-          height: 300,
-          child: GridView.builder(
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 10,
-              mainAxisSpacing: 10,
-              childAspectRatio: 165 / 140,
-            ),
-            itemCount: _elements.length,
-            itemBuilder: (context, index) {
-              final element = _elements[index];
-              final name = isFrench ? element.nameFr : element.nameEn;
-              final desc = isFrench ? element.descFr : element.descEn;
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final double scaleHeight = constraints.maxHeight / 300.0;
+          final double scaleWidth = constraints.maxWidth / 350.0;
+          final double scale = (scaleHeight < scaleWidth ? scaleHeight : scaleWidth).clamp(0.65, 1.4);
 
-              return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1E293B).withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: element.color.withValues(alpha: 0.3),
-                    width: 1.5,
+          final width = constraints.maxWidth;
+          final height = constraints.maxHeight;
+
+          final double crossAxisSpacing = 10.0 * scale;
+          final double mainAxisSpacing = 10.0 * scale;
+
+          final double itemWidth = (width - crossAxisSpacing) / 2;
+          final double itemHeight = (height - mainAxisSpacing) / 2;
+
+          double childAspectRatio = 165 / 140;
+          if (itemWidth > 0 && itemHeight > 0) {
+            childAspectRatio = itemWidth / itemHeight;
+          }
+
+          return SizedBox(
+            width: width,
+            height: height,
+            child: GridView.builder(
+              padding: EdgeInsets.zero,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: crossAxisSpacing,
+                mainAxisSpacing: mainAxisSpacing,
+                childAspectRatio: childAspectRatio,
+              ),
+              itemCount: _elements.length,
+              itemBuilder: (context, index) {
+                final element = _elements[index];
+                final name = isFrench ? element.nameFr : element.nameEn;
+                final desc = isFrench ? element.descFr : element.descEn;
+
+                return Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 10 * scale,
+                    vertical: 8 * scale,
                   ),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Icon & Name Row
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: element.color.withValues(alpha: 0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(element.icon, color: element.color, size: 22),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            name,
-                            style: TextStyle(
-                              color: element.color,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1E293B).withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(16 * scale),
+                    border: Border.all(
+                      color: element.color.withValues(alpha: 0.3),
+                      width: 1.5 * scale,
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Icon & Name Row
+                      Row(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(6 * scale),
+                            decoration: BoxDecoration(
+                              color: element.color.withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
                             ),
-                            maxLines: 1,
+                            child: Icon(
+                              element.icon,
+                              color: element.color,
+                              size: 22 * scale,
+                            ),
+                          ),
+                          SizedBox(width: 8 * scale),
+                          Expanded(
+                            child: Text(
+                              name,
+                              style: TextStyle(
+                                color: element.color,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13 * scale,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      // Description
+                      Expanded(
+                        child: Center(
+                          child: Text(
+                            desc,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.grey.shade300,
+                              fontSize: 11 * scale,
+                              height: 1.25,
+                            ),
+                            maxLines: 3,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                      ],
-                    ),
+                      ),
 
-                    // Description
-                    Expanded(
-                      child: Center(
-                        child: Text(
-                          desc,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.grey.shade300,
-                            fontSize: 11,
-                            height: 1.25,
-                          ),
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
+                      SizedBox(height: 4 * scale),
+
+                      // Visual Simulation Area
+                      Container(
+                        height: 28 * scale,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.black26,
+                          borderRadius: BorderRadius.circular(8 * scale),
+                        ),
+                        child: Center(
+                          child: _buildSimulationVisual(index, scale),
                         ),
                       ),
-                    ),
-
-                    const SizedBox(height: 4),
-
-                    // Visual Simulation Area
-                    Container(
-                      height: 28,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: Colors.black26,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Center(child: _buildSimulationVisual(index)),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          );
+        },
       ),
     );
   }

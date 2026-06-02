@@ -257,8 +257,6 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                                   return;
                                                 }
                                                 _onChoiceSelected(
-                                                  context,
-                                                  ref,
                                                   choice,
                                                   index,
                                                 );
@@ -347,8 +345,6 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                                 return;
                                               }
                                               _onChoiceSelected(
-                                                context,
-                                                ref,
                                                 choice,
                                                 index,
                                               );
@@ -658,8 +654,6 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
   }
 
   void _onChoiceSelected(
-    BuildContext context,
-    WidgetRef ref,
     _DraftChoice choice,
     int index,
   ) {

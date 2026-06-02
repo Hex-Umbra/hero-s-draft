@@ -209,6 +209,10 @@ class TutorialEngine extends ChangeNotifier {
         mockState.playerXp = 0;
         mockState.playerLevel = 1;
         break;
+      case 11: // Step 12: Draft
+        mockState.playerLevel = 2;
+        mockState.hasDrafted = false;
+        break;
       default:
         break;
     }
@@ -261,6 +265,11 @@ class TutorialEngine extends ChangeNotifier {
         armor: 0,
       ),
     ];
+    notifyListeners();
+  }
+
+  void draftReward() {
+    mockState.hasDrafted = true;
     notifyListeners();
   }
 

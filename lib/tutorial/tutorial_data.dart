@@ -122,9 +122,9 @@ const List<TutorialStep> kTutorialSteps = [
     titleEn: 'Card Fusion',
     titleFr: 'La Fusion de Cartes',
     bodyEn:
-        'When you acquire three identical cards of the same level, they automatically merge into a single upgraded version! Upgraded cards have lower mana costs, higher values, or extra effects. Tap "Merge" to see!',
+        'Card merging is an out-of-combat master deck management action. When you acquire three identical cards of the same level outside of combat, they automatically merge into a single upgraded version! Upgraded cards have lower mana costs, higher values, or extra effects. Tap "Merge" to see!',
     bodyFr:
-        'Lorsque vous possédez trois cartes identiques de même niveau, elles fusionnent automatiquement en une version améliorée ! Les cartes améliorées ont un coût réduit, des valeurs accrues ou des effets bonus. Appuyez sur "Fusionner" !',
+        'La fusion de cartes est une action de gestion du deck principal effectuée hors combat. Lorsque vous obtenez trois cartes identiques de même niveau en dehors des affrontements, elles fusionnent automatiquement en une version améliorée ! Les cartes améliorées ont un coût réduit, des valeurs accrues ou des effets bonus. Appuyez sur "Fusionner" pour voir !',
     type: TutorialStepType.merge,
   ),
   TutorialStep(
@@ -140,9 +140,9 @@ const List<TutorialStep> kTutorialSteps = [
     titleEn: 'Reward Draft',
     titleFr: 'Le Draft de Récompenses',
     bodyEn:
-        'When you level up, you draft a reward! A reel of cards is presented, and you select one to add to your deck or gain a permanent bonus. Try selecting a card in the draft below.',
+        'When you level up, you draft a reward! A selection of options is presented, which include permanent hero stat upgrades (+Max HP, +Atk, etc.) or card cloning (Mirror). Try selecting an option in the draft below.',
     bodyFr:
-        'À chaque niveau gagné, vous draftez une récompense ! Une sélection de cartes s\'affiche, et vous en choisissez une pour l\'ajouter à votre deck ou obtenir un bonus permanent. Essayez de sélectionner une carte ci-dessous.',
+        'À chaque niveau gagné, vous draftez une récompense ! Une sélection d\'options s\'affiche : vous pouvez choisir des améliorations de statistiques permanentes pour votre héros (+PV Max, +Atk, etc.) ou le clonage de cartes (Miroir). Essayez de sélectionner une option ci-dessous.',
     type: TutorialStepType.draft,
   ),
   TutorialStep(
