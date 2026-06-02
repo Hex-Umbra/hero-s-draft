@@ -37,14 +37,16 @@ const List<TutorialStep> kTutorialSteps = [
   TutorialStep(
     titleEn: 'Combat Screen Overview',
     titleFr: 'Le Combat — Vue d\'ensemble',
-    bodyEn: 'When entering combat, the screen is split into three main areas:\n'
-        '• Top: Enemy zone showing their health, armor, and planned intents.\n'
-        '• Middle: Hero info with Health (HP), Armor (Block), and Mana crystals.\n'
-        '• Bottom: Your hand of cards and the End Turn button.',
-    bodyFr: 'En combat, l\'écran est divisé en trois zones principales :\n'
-        '• Haut : Zone ennemie affichant leurs PV, armure et intentions prévues.\n'
-        '• Milieu : Infos du Héros avec les Points de Vie (PV), l\'Armure et le Mana.\n'
-        '• Bas : Votre main de cartes et le bouton Fin de Tour.',
+    bodyEn: 'When entering combat, the screen layout features:\n'
+        '• Center (Vertical Stack): The Enemy card (top) faces your Hero card (bottom) directly.\n'
+        '• Bottom: Your fanned hand of cards, Mana crystals, and your Health bar (HP).\n'
+        '• Left Side: Player active status effects ("Effets du Joueur") and your Draw pile.\n'
+        '• Right Side: End Turn button, current Turn number, Enemy Intentions panel, and Discard pile.',
+    bodyFr: 'En combat, l\'interface présente la disposition suivante :\n'
+        '• Centre (Empilement Vertical) : La carte de l\'Ennemi (en haut) fait face à la carte de votre Héros (en bas).\n'
+        '• Bas : Votre main de cartes en éventail, vos cristaux de Mana et votre barre de Points de Vie (PV).\n'
+        '• Côté Gauche : Le panneau des effets du joueur ("Effets du Joueur") et la Pioche.\n'
+        '• Côté Droit : Le bouton "Fin de Tour", le numéro du Tour, le panneau des intentions ennemies ("Intentions Ennemies") et la Défausse.',
     type: TutorialStepType.combatOverview,
   ),
   TutorialStep(
