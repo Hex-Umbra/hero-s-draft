@@ -79,14 +79,14 @@ class TutorialNodeTypesWidget extends StatelessWidget {
     final isFrench = Localizations.localeOf(context).languageCode == 'fr';
 
     return Padding(
-      padding: const EdgeInsets.all(12.0),
+      padding: const EdgeInsets.all(10.0),
       child: GridView.builder(
-        physics: const BouncingScrollPhysics(),
+        physics: const NeverScrollableScrollPhysics(),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
-          childAspectRatio: 1.35,
+          crossAxisCount: 3,
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 8,
+          childAspectRatio: 1.65,
         ),
         itemCount: _types.length,
         itemBuilder: (context, index) {
@@ -95,10 +95,10 @@ class TutorialNodeTypesWidget extends StatelessWidget {
           final desc = isFrench ? type.descFr : type.descEn;
 
           return Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
             decoration: BoxDecoration(
               color: const Color(0xFF1E293B).withOpacity(0.5),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
               border: Border.all(
                 color: const Color(0xFF334155).withOpacity(0.5),
                 width: 1.2,
@@ -111,21 +111,21 @@ class TutorialNodeTypesWidget extends StatelessWidget {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(4),
+                      padding: const EdgeInsets.all(3),
                       decoration: BoxDecoration(
                         color: type.color.withOpacity(0.1),
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(type.icon, color: type.color, size: 18),
+                      child: Icon(type.icon, color: type.color, size: 15),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 5),
                     Expanded(
                       child: Text(
                         title,
                         style: TextStyle(
                           color: type.color,
                           fontWeight: FontWeight.bold,
-                          fontSize: 13,
+                          fontSize: 11.5,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -133,14 +133,14 @@ class TutorialNodeTypesWidget extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
                 Expanded(
                   child: Text(
                     desc,
                     style: TextStyle(
                       color: Colors.grey.shade400,
-                      fontSize: 10.5,
-                      height: 1.3,
+                      fontSize: 9.5,
+                      height: 1.25,
                     ),
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
