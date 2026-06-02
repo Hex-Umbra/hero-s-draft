@@ -32,6 +32,8 @@ class _DraftScreenState extends ConsumerState<DraftScreen> with TickerProviderSt
   int _baseLandedCount = 0;
   int _mythicLandedCount = 0;
   late AnimationController _alertController;
+  int? _selectedIndex;
+  int? _hoveredIndex;
 
   bool get _hasMythicChoices => _choices.any((c) => c.rarity == RewardRarity.mythic);
 
@@ -195,23 +197,49 @@ class _DraftScreenState extends ConsumerState<DraftScreen> with TickerProviderSt
                                       constraints: const BoxConstraints(
                                         maxWidth: 160,
                                       ),
-                                      child: DraftCardReel(
-                                        title: _getChoiceTitle(context, choice),
-                                        description: _getChoiceDescription(
-                                          context,
-                                          choice,
+                                      child: MouseRegion(
+                                        onEnter: (_) => setState(() => _hoveredIndex = index),
+                                        onExit: (_) => setState(() => _hoveredIndex = null),
+                                        child: AnimatedScale(
+                                          scale: _selectedIndex == index
+                                              ? 1.12
+                                              : (_hoveredIndex == index ? 1.05 : 1.0),
+                                          duration: const Duration(milliseconds: 200),
+                                          curve: Curves.easeOut,
+                                          child: AnimatedContainer(
+                                            duration: const Duration(milliseconds: 200),
+                                            decoration: BoxDecoration(
+                                              borderRadius: BorderRadius.circular(12),
+                                              boxShadow: _selectedIndex == index
+                                                  ? [
+                                                      BoxShadow(
+                                                        color: Colors.amber.withOpacity(0.4),
+                                                        blurRadius: 16,
+                                                        spreadRadius: 3,
+                                                      )
+                                                    ]
+                                                  : [],
+                                            ),
+                                            child: DraftCardReel(
+                                              title: _getChoiceTitle(context, choice),
+                                              description: _getChoiceDescription(
+                                                context,
+                                                choice,
+                                              ),
+                                              onTap: () {
+                                                if (_hasMythicChoices && !_mythicCompleted) return;
+                                                _onChoiceSelected(context, ref, choice, index);
+                                              },
+                                              rarity: _rarityToString(
+                                                context,
+                                                choice.rarity,
+                                              ),
+                                              index: index,
+                                              onLand: index < 3 ? _onBaseReelLanded : null,
+                                              initialLanded: index >= 3 ? true : _baseCompleted,
+                                            ),
+                                          ),
                                         ),
-                                        onTap: () {
-                                          if (_hasMythicChoices && !_mythicCompleted) return;
-                                          _onChoiceSelected(context, ref, choice);
-                                        },
-                                        rarity: _rarityToString(
-                                          context,
-                                          choice.rarity,
-                                        ),
-                                        index: index,
-                                        onLand: index < 3 ? _onBaseReelLanded : null,
-                                        initialLanded: index >= 3 ? true : _baseCompleted,
                                       ),
                                     ),
                                   ),
@@ -233,23 +261,49 @@ class _DraftScreenState extends ConsumerState<DraftScreen> with TickerProviderSt
                                     constraints: const BoxConstraints(
                                       maxWidth: 160,
                                     ),
-                                    child: DraftCardReel(
-                                      title: _getChoiceTitle(context, choice),
-                                      description: _getChoiceDescription(
-                                        context,
-                                        choice,
+                                    child: MouseRegion(
+                                      onEnter: (_) => setState(() => _hoveredIndex = index),
+                                      onExit: (_) => setState(() => _hoveredIndex = null),
+                                      child: AnimatedScale(
+                                        scale: _selectedIndex == index
+                                            ? 1.12
+                                            : (_hoveredIndex == index ? 1.05 : 1.0),
+                                        duration: const Duration(milliseconds: 200),
+                                        curve: Curves.easeOut,
+                                        child: AnimatedContainer(
+                                          duration: const Duration(milliseconds: 200),
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(12),
+                                            boxShadow: _selectedIndex == index
+                                                ? [
+                                                    BoxShadow(
+                                                      color: Colors.amber.withOpacity(0.4),
+                                                      blurRadius: 16,
+                                                      spreadRadius: 3,
+                                                    )
+                                                  ]
+                                                : [],
+                                          ),
+                                          child: DraftCardReel(
+                                            title: _getChoiceTitle(context, choice),
+                                            description: _getChoiceDescription(
+                                              context,
+                                              choice,
+                                            ),
+                                            onTap: () {
+                                              if (_hasMythicChoices && !_mythicCompleted) return;
+                                              _onChoiceSelected(context, ref, choice, index);
+                                            },
+                                            rarity: _rarityToString(
+                                              context,
+                                              choice.rarity,
+                                            ),
+                                            index: index,
+                                            onLand: index < 3 ? _onBaseReelLanded : null,
+                                            initialLanded: index >= 3 ? true : _baseCompleted,
+                                          ),
+                                        ),
                                       ),
-                                      onTap: () {
-                                        if (_hasMythicChoices && !_mythicCompleted) return;
-                                        _onChoiceSelected(context, ref, choice);
-                                      },
-                                      rarity: _rarityToString(
-                                        context,
-                                        choice.rarity,
-                                      ),
-                                      index: index,
-                                      onLand: index < 3 ? _onBaseReelLanded : null,
-                                      initialLanded: index >= 3 ? true : _baseCompleted,
                                     ),
                                   ),
                                 ),
@@ -305,19 +359,45 @@ class _DraftScreenState extends ConsumerState<DraftScreen> with TickerProviderSt
                                 constraints: const BoxConstraints(
                                   maxWidth: 160,
                                 ),
-                                child: DraftCardReel(
-                                  title: _getChoiceTitle(context, choice),
-                                  description: _getChoiceDescription(
-                                    context,
-                                    choice,
+                                child: MouseRegion(
+                                  onEnter: (_) => setState(() => _hoveredIndex = mythicIndex),
+                                  onExit: (_) => setState(() => _hoveredIndex = null),
+                                  child: AnimatedScale(
+                                    scale: _selectedIndex == mythicIndex
+                                        ? 1.12
+                                        : (_hoveredIndex == mythicIndex ? 1.05 : 1.0),
+                                    duration: const Duration(milliseconds: 200),
+                                    curve: Curves.easeOut,
+                                    child: AnimatedContainer(
+                                      duration: const Duration(milliseconds: 200),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(12),
+                                        boxShadow: _selectedIndex == mythicIndex
+                                            ? [
+                                                BoxShadow(
+                                                  color: Colors.amber.withOpacity(0.4),
+                                                  blurRadius: 16,
+                                                  spreadRadius: 3,
+                                                )
+                                              ]
+                                            : [],
+                                      ),
+                                      child: DraftCardReel(
+                                        title: _getChoiceTitle(context, choice),
+                                        description: _getChoiceDescription(
+                                          context,
+                                          choice,
+                                        ),
+                                        onTap: () {},
+                                        rarity: _rarityToString(
+                                          context,
+                                          choice.rarity,
+                                        ),
+                                        index: relativeIndex,
+                                        onLand: _onMythicReelLanded,
+                                      ),
+                                    ),
                                   ),
-                                  onTap: () {},
-                                  rarity: _rarityToString(
-                                    context,
-                                    choice.rarity,
-                                  ),
-                                  index: relativeIndex,
-                                  onLand: _onMythicReelLanded,
                                 ),
                               ),
                             );
@@ -499,22 +579,32 @@ class _DraftScreenState extends ConsumerState<DraftScreen> with TickerProviderSt
     BuildContext context,
     WidgetRef ref,
     _DraftChoice choice,
+    int index,
   ) {
-    if (choice.isCloneOption) {
-      _showCloneModal(context, ref);
-      return;
-    }
+    if (_selectedIndex != null) return;
 
-    final runController = ref.read(runProvider.notifier);
-    runController.applyHeroStatModifier(
-      maxPvAcc: choice.pvBoost,
-      attackAcc: choice.atkBoost,
-      armorAcc: choice.armorBoost,
-      maxManaAcc: choice.manaBoost,
-      luckAcc: choice.luckBoost,
-    );
+    setState(() {
+      _selectedIndex = index;
+    });
 
-    _finishDraft(ref);
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (!mounted) return;
+      if (choice.isCloneOption) {
+        _showCloneModal(context, ref);
+        return;
+      }
+
+      final runController = ref.read(runProvider.notifier);
+      runController.applyHeroStatModifier(
+        maxPvAcc: choice.pvBoost,
+        attackAcc: choice.atkBoost,
+        armorAcc: choice.armorBoost,
+        maxManaAcc: choice.manaBoost,
+        luckAcc: choice.luckBoost,
+      );
+
+      _finishDraft(ref);
+    });
   }
 
   RewardRarity _rollRarity(
