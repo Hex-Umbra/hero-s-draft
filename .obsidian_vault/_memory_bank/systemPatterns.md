@@ -564,11 +564,55 @@ Le codebase utilise exhaustivement des enums pour éliminer les typos et optimis
 
 ### 8.4. Responsivité Dynamique
 
-Formule de mise à l'échelle basée sur la hauteur du viewport :
+Le projet applique deux grandes stratégies complémentaires de responsivité pour gérer les variations de résolutions (mobiles étroits, tablettes, formats de bureau, orientations portrait/paysage) :
+
+#### 8.4.1. Échelonnement Global Flame (ScaleFactor)
+Pour l'arène de combat principale Flame, le redimensionnement utilise une formule dynamique basée sur la hauteur réelle du viewport :
 ```dart
 double get scaleFactor => (size.y / 800).clamp(0.85, 2.5);
 ```
-Tous les composants Flame (cartes 140×196, espacements, arcs) sont multipliés par ce coefficient.
+- **Hauteur de référence** : 800px (résolution portrait mobile standard).
+- **Clamp** : de 0.85 (plancher mobile étroit) à 2.5 (plafond 4K).
+- Tous les composants Flame (cartes, espacements, rayons d'arc de main, positions) sont multipliés par ce coefficient.
+
+#### 8.4.2. Stratégies de Responsivité de l'UI Flutter (Patrons Unifiés)
+Pour l'UI Flutter (notamment le système de tutoriel), quatre patrons majeurs de responsivité sont standardisés et doivent être appliqués :
+
+1. **FittedBox Canvas Scaling Pattern** :
+   - *Problématique* : Les illustrations complexes comportant du positionnement absolu ou des animations vectorielles fines (`Map`, `Combat Overview`, `Play Card`, etc.) subissent des chevauchements ou des yellow-black overflow stripes sur les petits écrans.
+   - *Solution* : Définir l'illustration dans un conteneur rigide `SizedBox` de dimensions de référence (ex. `360x260`) et l'envelopper dans un widget `FittedBox` avec `fit: BoxFit.contain`.
+   - *Code type* :
+     ```dart
+     Widget build(BuildContext context) {
+       return Center(
+         child: FittedBox(
+           fit: BoxFit.contain,
+           child: SizedBox(
+             width: 360,
+             height: 260,
+             child: Stack(
+               children: [ /* composants absolus */ ],
+             ),
+           ),
+         ),
+       );
+     }
+     ```
+
+2. **LayoutBuilder Orientation Split Pattern** :
+   - *Problématique* : Les affichages empilant verticalement des illustrations et des panneaux textuels (comme `TutorialScreen`) provoquent des écrasements verticaux critiques en orientation mobile paysage (hauteur verticale utile < 500px).
+   - *Solution* : Utiliser `LayoutBuilder` pour détecter les dimensions utiles et commuter la structure d'affichage.
+     - *Portrait* (ou largeur < 600px) : Structure `Column` (illustration en haut flex 6, description en bas flex 4).
+     - *Paysage* (largeur > hauteur et hauteur < 500px, ou largeur >= 720px) : Structure `Row` (illustration à gauche flex 5, description à droite flex 5).
+
+3. **Scrollable Container Pattern** :
+   - *Problématique* : Les textes explicatifs dynamiques ou les grilles d'éléments débordent verticalement sur les petits écrans si le défilement est interdit.
+   - *Solution* : Remplacer `NeverScrollableScrollPhysics` par `BouncingScrollPhysics` ou encapsuler les éléments extensibles dans des conteneurs `SingleChildScrollView`.
+
+4. **Wrap and Grid Adaptation Pattern** :
+   - *Problématique* : Les rangées horizontales d'éléments larges (badges de raretés, listes de cartes) causent des débordements horizontaux.
+   - *Solution* : Utiliser `Wrap` (au lieu de `Row`) pour les flux de badges, des scrollviews horizontaux pour les rangées de cartes en main, et réorganiser les grilles d'éléments denses en layouts compacts (ex. grille 3x2 pour les types de nœuds).
+
 
 ---
 
@@ -645,4 +689,12 @@ La classe `TutorialDraftWidget` sert d'implémentation de référence pour le fe
 - **`MouseRegion`** : Détecte les entrées/sorties de souris pour mettre à jour l'index survolé.
 - **`AnimatedScale`** : Applique une transition d'échelle fluide de `1.05x` sur le survol (durée de 200ms).
 - **`AnimatedContainer`** : Met à jour la décoration de bordure et de l'ombre en cas de sélection. Si la carte est sélectionnée, elle scale à `1.12x` et applique un `BoxShadow` doré intense (`Colors.amber` avec un rayon de flou de 16px).
+
+### 9.5. Refonte Responsive et Ciblage Avancé
+
+Dans le cadre des améliorations de la branche `feat/tutorial`, le module de tutoriel a été refactorisé :
+- **Application des Patrons de Responsivité** : Les 13 widgets d'étapes de tutoriel ont été convertis pour utiliser les patrons unifiés de responsivité Flutter UI (FittedBox Canvas pour les illustrations, Wrap pour la légende de reliques, grille compacte 3x2 pour les types de nœuds, et défilement adaptatif avec des scrollviews).
+- **Ciblage Interactif en Deux Phases** : À l'étape 6 (`TutorialPlayCardWidget`), la logique de jeu de cartes impose au joueur de réaliser successivement une action offensive (glisser/déposer la carte d'attaque sur le Slime) puis une action défensive (glisser la carte d'armure sur le Héros). Ce comportement est géré via une machine à états simple (`_targetingPhase`) intégrée au widget.
+- **Info-bulles (Tooltips) de Cartes (Étape 5)** : Le widget `TutorialCardsWidget` utilise de vrais rendus de cartes vectorielles sur Canvas et affiche des infobulles descriptives et localisées (`TutorialTooltip`) lors du survol ou du toucher, évitant ainsi d'encombrer le layout principal tout en clarifiant les règles.
+
 

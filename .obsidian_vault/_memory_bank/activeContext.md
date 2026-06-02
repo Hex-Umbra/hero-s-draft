@@ -6,8 +6,7 @@ Ce document décrit le focus actif du projet, les accomplissements récents, et 
 
 ## 1. Focus Actuel du Projet
 
-Nous réalisons une opération de **reverse engineering technique complet** de l'architecture logicielle, de la gestion d'état, de la responsivité dynamique, de l'internationalisation, et de la dette technique résiduelle de **Hero's Draft**. 
-L'objectif est d'alimenter de façon exhaustive la "Memory Bank" du projet (située dans `.obsidian_vault/_memory_bank/`) pour documenter les mécaniques du jeu sans introduire de modifications de code.
+Après avoir finalisé l'implémentation et la refonte complète de la responsivité du **Système de Tutoriel Autonome** (branche `feat/tutorial`), nous mettons à jour la Memory Bank (située dans `.obsidian_vault/_memory_bank/`) pour documenter ces nouveautés d'intégration et de design responsive de façon exhaustive. Le focus suivant s'oriente vers la préparation des chantiers de refactoring de la Phase 7.
 
 ---
 
@@ -74,10 +73,18 @@ L'objectif est d'alimenter de façon exhaustive la "Memory Bank" du projet (situ
      - Tirages standards : Légendaire `2%`, Épique `6%`, Rare `16%`, Atypique `24%`, Commune `52%` (100% exact).
      - Tirages améliorés / Level Up : Mythique `0.5%`, Légendaire `2.0%`, Épique `6%`, Rare `16%`, Atypique `24%`, Commune `51.5%` (100% exact).
 
- 10. **Système de Tutoriel Autonome (Standalone Tutorial System)** :
+ 10. **Système de Tutoriel Autonome (Standalone Tutorial System) & Refactoring de Responsivité** :
     - **Architecture Isolée** : Module indépendant de 18 fichiers sous `lib/tutorial/` fonctionnant avec son propre `TutorialEngine` (`ChangeNotifier`) et un `TutorialMockState` (PV, mana, cartes et ennemi d'entraînement factices). Pas de dépendance aux providers Riverpod de production.
-    - **13 Étapes Interactives** : Welcome, Map, Node Types, Combat Overview, Cards & Mana, Play Card (toucher pour jouer une carte), Armor & Damage, Status Effects, Enemy Intents, Card Merge, XP & Level Up, Reward Draft, Relics Carousel.
+    - **13 Étapes Interactives** : Welcome, Map, Node Types, Combat Overview, Cards & Mana, Play Card, Armor & Damage, Status Effects, Enemy Intents, Card Merge, XP & Level Up, Reward Draft, Relics Carousel.
     - **Localisation & Persistance** : Traduction double-champs (titleEn/Fr, bodyEn/Fr) dans `TutorialData` résolue selon la locale de l'appareil. Sauvegarde de la complétion via `TutorialProgressService` (`SharedPreferences`) gérant dynamiquement un badge visuel rouge clignotant "NEW" sur le bouton d'accès de l'écran d'accueil (`HomeScreen`).
+    - **Refactoring de Responsivité de Bout en Bout** : Refactoring complet des 13 widgets d'étapes et de `TutorialScreen` pour s'adapter à toutes les résolutions et orientations (mobiles portrait/paysage, web, desktop) en s'appuyant sur :
+      - *FittedBox Canvas* : Encapsulation des illustrations/animations complexes (Map, Combat Overview, Play Card, Merge, Armor) dans un canevas à taille fixe (`SizedBox`) mis à l'échelle via `FittedBox` pour éviter tout débordement.
+      - *LayoutBuilder Orientation Split* : Commutation de la structure de mise en page en mode portrait (Column vertical) ou paysage (Row horizontal) pour utiliser l'espace efficacement.
+      - *Colonnes adaptatives/Wrap* : Utilisation de `Wrap` et de listes déroulantes (ex. grille d'événements à 3x2, main de cartes, choix de cartes de draft, rarities de reliques).
+      - *Conteneurs avec défilement* : Utilisation de `SingleChildScrollView` pour éliminer le rognage visuel.
+    - **Ciblage Interactif en Deux Phases** : Implémentation d'un système interactif avancé à l'étape 6 (Play Card) forçant le joueur à exécuter un ciblage en deux temps (sélectionner le Slime pour l'attaque, puis se cibler soi-même pour la défense).
+    - **Info-bulles (Tooltips) & Icônes Canvas** : Refonte de l'affichage des cartes à l'étape 5 (Cards & Mana) en utilisant les vraies icônes vectorielles dessinées sur Canvas et en intégrant des infobulles descriptives et localisées au survol.
+    - **Poli Visuel du Combat Overview** : Repositionnement des annotations de l'étape 4, alignement avec le layout réel de l'écran de combat, et utilisation de cartes miniatures pour une vue d'ensemble propre.
 
  11. **Poli Visuel du Draft (Hover & Selection Glow Borders)** :
     - Intégration dans `TutorialDraftWidget` et dans les cartes de production de `DraftScreen` d'effets visuels de focus : survol de carte grossissant à `1.05x` (via `AnimatedScale` et `MouseRegion`), et sélection active grossissant la carte à `1.12x` avec lueur dorée (`BoxShadow` couleur ambre intense, flou de 16px).

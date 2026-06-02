@@ -135,6 +135,10 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | 13 Étapes Interactives | `TutorialScreen` & widgets `lib/tutorial/widgets/` | Guidage pas-à-pas interactif couvrant l'ensemble du gameplay de base |
 | i18n Découplée | `TutorialData` | Textes bilingues FR/EN intégrés directement dans les modèles de données locaux |
 | Persistance & Badge "NEW" | `TutorialProgressService`, `HomeScreen` | Sauvegarde de la complétion dans SharedPreferences et affichage d'un badge d'alerte |
+| Refactoring de Responsivité | `LayoutBuilder`, `FittedBox`, `SingleChildScrollView`, `Wrap` | Ajustements automatiques multi-résolutions (mobiles portrait/paysage, web, desktop), orientation split et canevas FittedBox |
+| Ciblage double phase (Étape 6) | `TutorialPlayCardWidget` | Ciblage interactif en deux temps : d'abord l'attaque (slime), puis la défense (self/hero) |
+| Info-bulles & Icônes Canvas (Étape 5) | `TutorialCardsWidget` | Cartes améliorées avec icônes vectorielles réelles dessinées sur Canvas et tooltips descriptifs localisés |
+
 
 ### 🧪 Fiabilité et Assurance Qualité
 

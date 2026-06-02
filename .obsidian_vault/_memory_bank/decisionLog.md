@@ -624,3 +624,57 @@ Mettre en place un pipeline d'animations de focus partagé entre le tutoriel et 
 - ✅ **Amélioration immédiate du game feel** : La sélection devient agréable et offre une rétroaction instantanée sur les intentions de l'utilisateur.
 - ✅ **Accessibilité accrue** : Le contraste visuel de la lueur dorée et l'échelle augmentée identifient sans équivoque la carte cible active.
 
+---
+
+## 📱 ADR-021 : Stratégie de Responsivité Unifiée du Système de Tutoriel (Unified Tutorial Responsiveness Strategy)
+
+### Statut
+✅ Accepté & Implémenté
+
+### Contexte
+Le système de tutoriel original composé de 13 illustrations et interacteurs souffrait de sévères contraintes de mise en page. Sur les écrans de smartphones de faible largeur ou lors de l'utilisation du mode paysage sur mobile (faible hauteur verticale disponible, ~360px), les contraintes fixes de flexibilité et les coordonnées de positionnement absolues provoquaient des erreurs de contraintes de boîte ("Yellow-Black Stripes") et masquaient le texte ou les éléments interactifs.
+
+### Décision
+Établir et appliquer de façon systématique quatre patrons de responsivité à l'échelle de l'ensemble des 13 widgets du tutoriel :
+1. **FittedBox Canvas Scaling Pattern** : Pour les widgets s'appuyant sur des coordonnées de positionnement absolues ou des animations complexes (`Map`, `Combat Overview`, `Play Card`, `Merge`, `Armor`), envelopper le conteneur principal à taille fixe (ex: `SizedBox(width: 360, height: 260)`) dans un widget `FittedBox` configuré avec `fit: BoxFit.contain`. Cela force l'illustration à s'échelonner comme un graphique vectoriel unique proportionnellement à l'espace alloué, éliminant tout overflow.
+2. **LayoutBuilder Orientation Split Pattern** : Structurer la classe principale `TutorialScreen` de sorte qu'elle détecte l'orientation active via un `LayoutBuilder`. Si l'écran est en mode paysage (largeur > hauteur et hauteur < 500px) ou si la largeur dépasse 720px (mode tablette/bureau), diviser l'écran à l'aide d'un `Row` horizontal (50% pour l'illustration interactive à gauche, 50% pour les descriptions textuelles et les boutons à droite) au lieu du split vertical `Column` par défaut qui écrase l'illustration sur les écrans courts.
+3. **Scrollable Container Pattern** : Remplacer l'utilisation de `NeverScrollableScrollPhysics` par `BouncingScrollPhysics` et injecter des conteneurs `SingleChildScrollView` élastiques sur les descriptions ou les grilles pour autoriser l'utilisateur à scroller en cas de réduction drastique de la hauteur d'écran.
+4. **Adaptive Columns & Wraps** : Utiliser le widget `Wrap` (ex. pour la légende des raretés de reliques ou les types de nœuds) et des listes déroulantes horizontales (pour la main de cartes ou les choix de draft) afin que les cellules s'écoulent naturellement en fonction de la largeur disponible. Réorganiser les types de nœuds en grille compacte 3x2.
+
+### Preuves dans le code
+- `lib/tutorial/tutorial_screen.dart` : Exploitation de `LayoutBuilder` et aiguillage vers la structure `Row` ou `Column` selon le ratio d'aspect.
+- `lib/tutorial/widgets/` :
+  - `tutorial_map_widget.dart` et `tutorial_combat_overview_widget.dart` : Utilisation combinée de `SizedBox` de taille de référence et de `FittedBox(fit: BoxFit.contain)`.
+  - `tutorial_node_types_widget.dart` : Grille flexible reconfigurée en 3x2 avec support du défilement.
+  - `tutorial_relics_widget.dart` : Remplacement du layout `Row` horizontal rigide des raretés par un `Wrap` adaptatif.
+
+### Conséquences
+- ✅ **Compatibilité universelle multi-plateforme** : Le tutoriel s'affiche de manière premium sur toutes les résolutions d'écran sans aucun bug visuel ou texte rogné.
+- ✅ **Expérience Mobile Paysage Premium** : Le split horizontal évite l'écrasement vertical des illustrations, préservant la lisibilité sur smartphone tenu à l'horizontale.
+- ⚠️ **Surcharge légère d'encapsulation** : Obligation d'utiliser un gabarit de conteneur virtuel (`SizedBox`) sur les widgets canvas pour assurer la stabilité du `FittedBox`.
+
+---
+
+## ⚔️ ADR-022 : Ciblage Interactif en Deux Phases et Clarté des Info-bulles (Two-Phase Targeting & Canvas Cards Tooltips)
+
+### Statut
+✅ Accepté & Implémenté
+
+### Contexte
+Le système de tutoriel initial possédait des étapes interactives simplifiées qui ne reflétaient pas pleinement la dynamique fine du système de ciblage et de description des effets de statut du jeu de production. L'étape 6 (Play Card) n'illustrait pas les cas de sélection de cibles multiples (ennemi vs héros), et l'étape 5 (Cards & Mana) affichait des descriptions textuelles plates dépourvues des icônes vectorielles et des info-bulles présentes en combat réel.
+
+### Décision
+1. **Interactive Two-Phase Targeting** : À l'étape 6, implémenter une séquence interactive obligeant le joueur à comprendre les deux directions possibles de ciblage. Phase 1 : glisser et déposer la carte d'attaque offensive sur le Slime cible. Phase 2 : glisser la carte d'armure défensive sur le portrait du Héros (soi-même). La progression n'est déverrouillée qu'une fois les deux gestes complétés avec succès.
+2. **True Canvas Vector Icons & Tooltips** : À l'étape 5, refactoriser le rendu des cartes de démonstration en remplaçant les chaînes plates par les vraies icônes vectorielles dessinées sur le Canvas Flutter (Épée, Bouclier, Poison). De plus, intégrer un système de détection de clic/hover qui affiche des info-bulles descriptives localisées détaillant précisément les règles mécaniques de chaque effet de combat.
+3. **Alignement du Combat Overview** : Repositionner et calibrer les lignes d'annotation à l'étape 4 pour qu'elles s'alignent précisément sur les coordonnées du HUD de combat réel.
+
+### Preuves dans le code
+- `lib/tutorial/widgets/tutorial_play_card_widget.dart` : Logique de ciblage intégrant une machine à états locale (Phases de jeu d'attaque puis de défense) avec validation des cibles.
+- `lib/tutorial/widgets/tutorial_cards_widget.dart` : Remplacement des rendus statiques par l'affichage d'icônes Canvas vectorielles et insertion de widgets d'info-bulles tactiles.
+- `lib/tutorial/widgets/tutorial_combat_overview_widget.dart` : Ajustement millimétré des positions absolues des conteneurs d'annotations et réduction de la taille des cartes représentées.
+
+### Conséquences
+- ✅ **Fidélité d'apprentissage optimale** : Le joueur appréhende les gestes complexes de ciblage de production de manière sûre dans un bac à sable isolé.
+- ✅ **Expérience utilisateur immersive** : Les info-bulles et les icônes de haute qualité vectorielle améliorent instantanément la qualité perçue du jeu.
+
+
