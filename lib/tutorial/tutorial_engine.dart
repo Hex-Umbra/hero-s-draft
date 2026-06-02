@@ -56,6 +56,7 @@ class TutorialMockState {
   int playerXp = 0;
   int xpToNextLevel = 100;
   int playerLevel = 1;
+  bool hasDrafted = false;
 
   void reset() {
     heroHp = 80;
@@ -69,6 +70,7 @@ class TutorialMockState {
     playerXp = 0;
     xpToNextLevel = 100;
     playerLevel = 1;
+    hasDrafted = false;
   }
 }
 
