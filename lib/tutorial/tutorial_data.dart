@@ -61,9 +61,13 @@ const List<TutorialStep> kTutorialSteps = [
     titleEn: 'Cards & Mana',
     titleFr: 'Les Cartes & le Mana',
     bodyEn:
-        'To play cards, you must spend Mana crystals (💎). Each card has a cost shown in its top corner. Mana refills completely at the start of your turn. Tap a card to inspect it.',
+        'To play cards, you must spend Mana crystals (💎). Each card has a cost shown as cyan diamonds at the bottom.\n\n'
+        '• **Card Display**: Cards do not show text descriptions inside. Instead, they feature icons representing their effects (e.g. ⚔️ for damage, 🛡️ for armor) with their numeric values.\n'
+        '• **Tooltips**: To read a card\'s detailed description, hover over it with your mouse (on Desktop) or long-press it (on Mobile) to display a Tooltip.',
     bodyFr:
-        'Pour jouer des cartes, vous devez dépenser des cristaux de Mana (💎). Chaque carte a un coût affiché dans son coin supérieur. Le Mana se remplit au début de chaque tour. Appuyez sur une carte pour l\'examiner.',
+        'Pour jouer des cartes, vous devez dépenser des cristaux de Mana (💎). Chaque carte a un coût affiché sous forme de diamants cyan en bas.\n\n'
+        '• **Affichage des cartes** : Les cartes n\'affichent pas de texte explicatif. À la place, elles présentent des icônes représentant leurs effets (ex : ⚔️ pour les dégâts, 🛡️ pour l\'armure) avec leurs valeurs.\n'
+        '• **Tooltips** : Pour lire la description détaillée d\'une carte, survolez-la avec votre souris (sur Ordinateur) ou restez appuyé dessus (sur Mobile) pour faire apparaître une bulle d\'aide.',
     type: TutorialStepType.cards,
   ),
   TutorialStep(

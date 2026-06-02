@@ -472,6 +472,9 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
                                         cost: card.cost,
                                         type: card.id == 'defend' ? 'skill' : 'attack',
                                         isSelected: isSelected,
+                                        damage: card.damage,
+                                        armor: card.armor,
+                                        effectType: card.effectType,
                                         onTap: () {
                                           setState(() {
                                             _selectedCard = isSelected ? null : card;
