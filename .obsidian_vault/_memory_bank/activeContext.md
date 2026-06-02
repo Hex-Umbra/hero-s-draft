@@ -74,9 +74,17 @@ L'objectif est d'alimenter de façon exhaustive la "Memory Bank" du projet (situ
      - Tirages standards : Légendaire `2%`, Épique `6%`, Rare `16%`, Atypique `24%`, Commune `52%` (100% exact).
      - Tirages améliorés / Level Up : Mythique `0.5%`, Légendaire `2.0%`, Épique `6%`, Rare `16%`, Atypique `24%`, Commune `51.5%` (100% exact).
 
-10. **Validation, Assurance Qualité et Robustesse** :
-    - Suite de tests unitaires et widgets validée : **66 tests unitaires et widget-tests 100% VERT (66 passés avec succès)**.
-    - Analyse de code statique parfaite : **0 erreur, 0 warning, 0 info** sous `flutter analyze`.
+ 10. **Système de Tutoriel Autonome (Standalone Tutorial System)** :
+    - **Architecture Isolée** : Module indépendant de 18 fichiers sous `lib/tutorial/` fonctionnant avec son propre `TutorialEngine` (`ChangeNotifier`) et un `TutorialMockState` (PV, mana, cartes et ennemi d'entraînement factices). Pas de dépendance aux providers Riverpod de production.
+    - **13 Étapes Interactives** : Welcome, Map, Node Types, Combat Overview, Cards & Mana, Play Card (toucher pour jouer une carte), Armor & Damage, Status Effects, Enemy Intents, Card Merge, XP & Level Up, Reward Draft, Relics Carousel.
+    - **Localisation & Persistance** : Traduction double-champs (titleEn/Fr, bodyEn/Fr) dans `TutorialData` résolue selon la locale de l'appareil. Sauvegarde de la complétion via `TutorialProgressService` (`SharedPreferences`) gérant dynamiquement un badge visuel rouge clignotant "NEW" sur le bouton d'accès de l'écran d'accueil (`HomeScreen`).
+
+ 11. **Poli Visuel du Draft (Hover & Selection Glow Borders)** :
+    - Intégration dans `TutorialDraftWidget` et dans les cartes de production de `DraftScreen` d'effets visuels de focus : survol de carte grossissant à `1.05x` (via `AnimatedScale` et `MouseRegion`), et sélection active grossissant la carte à `1.12x` avec lueur dorée (`BoxShadow` couleur ambre intense, flou de 16px).
+
+ 12. **Validation, Assurance Qualité et Robustesse** :
+     - Suite de tests unitaires et widgets validée : **74 tests unitaires et widget-tests 100% VERT (74 passés avec succès)** couvrant le `TutorialEngine`, le `TutorialProgressService` et toutes les mécaniques sous-jacentes du jeu.
+     - Analyse de code statique : **0 erreur** sous `flutter analyze` (warnings de dépréciation de l'API Flutter standard restants).
 
 ---
 

@@ -142,7 +142,7 @@ class _TutorialMapWidgetState extends State<TutorialMapWidget> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.black55,
+                  color: Colors.black54,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -223,10 +223,6 @@ class _TutorialMapWidgetState extends State<TutorialMapWidget> {
 class MapConnectionsPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0xFF334155) // Slate blue/grey line
-      ..strokeWidth = 2.5
-      ..style = PaintingStyle.stroke;
 
     final pathPaint = Paint()
       ..color = const Color(0xFF64748B).withOpacity(0.3)

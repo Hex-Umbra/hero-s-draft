@@ -3,11 +3,11 @@
 Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnalités de **Hero's Draft** : opérationnelles, partiellement implémentées, non implémentées, et les chantiers de refactoring prioritaires issus des rapports de dette technique.
 
 **Métriques du projet** :
-- **~8 200 lignes** de code source dans `lib/` (45 fichiers).
+- **~10 200 lignes** de code source dans `lib/` (63 fichiers).
 - **7 fichiers JSON** de données d'assets.
-- **66 tests automatisés** — 100% au vert.
-- **0 erreur, 0 avertissement** via `flutter analyze`.
-- **~108 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
+- **74 tests automatisés** — 100% au vert.
+- **0 erreur** via `flutter analyze`.
+- **~109 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
 
 ---
 
@@ -107,6 +107,8 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Carrousel de reliques interactif | `RelicRewardCarouselOverlay` | Machine à sous PageView viewportFraction (0.85x scale/0.4 opacity sur les côtés, 1.0x/1.0 au centre), décélération cubique, célébration Canvas particles, bouton sécurisé, callbacks audio (`onTick`/`onLand`) |
 | Draft Reels Séquentiels | `DraftCardReel`, `DraftScreen` | Révélation machine à sous vertical spinner (0.8s, 1.4s, 2.0s), 3D flip axe Y, célébration légendaire (screen shake, gold particles, flash) et sound hooks |
 | Rareté Mythique & Alertes | `DraftScreen`, `DraftCardReel` | Rareté rouge sang, alerte cinématique warning 1400ms (laser horizontal, exclamation points `!!!` élastiques), flou d'arrière-plan `BackdropFilter` `8.0px`, spin prolongé `+800ms`, tremblement doublé `12.0` |
+| Poli Visuel du Draft | `DraftScreen`, `TutorialDraftWidget` | Survol de carte à 1.05x (AnimatedScale + MouseRegion) et sélection à 1.12x avec lueur dorée (BoxShadow ambre) |
+
 
 ### 💀 Z-Sync Death & Stats System (Système de Mort et de Stats Synchronisé)
 
@@ -125,13 +127,22 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Gel (`freeze`) | `CombatController.resolveEnemyIntent()` | Division par deux (`×0.5` arrondi) des dégâts d'intention d'attaque | Lors de l'attaque de l'ennemi gelé |
 | Électrocution (`shock`) | `EffectResolver.resolveCard()` | Ajoute la valeur du statut aux dégâts subis par l'ennemi | Lors de la résolution d'une carte d'attaque |
 
+### 🎓 Système de Tutoriel Autonome (Standalone Tutorial)
+
+| Fonctionnalité | Implémentation | Détails |
+|:---|:---|:---|
+| Moteur local | `TutorialEngine`, `TutorialMockState` | ChangeNotifier gérant la progression et un état simulé réinitialisé par étape |
+| 13 Étapes Interactives | `TutorialScreen` & widgets `lib/tutorial/widgets/` | Guidage pas-à-pas interactif couvrant l'ensemble du gameplay de base |
+| i18n Découplée | `TutorialData` | Textes bilingues FR/EN intégrés directement dans les modèles de données locaux |
+| Persistance & Badge "NEW" | `TutorialProgressService`, `HomeScreen` | Sauvegarde de la complétion dans SharedPreferences et affichage d'un badge d'alerte |
+
 ### 🧪 Fiabilité et Assurance Qualité
 
 | Métrique | Valeur | Détails |
 |:---|:---|:---|
-| Tests automatisés | **66** (100% VERT) | Tests unitaires et widget-tests |
-| Couverture estimée | **~15-20%** | Principalement logique/controllers, pas d'UI |
-| Analyse statique | **0 erreur, 0 warning, 0 info** | `flutter analyze` vierge |
+| Tests automatisés | **74** (100% VERT) | Tests unitaires et widget-tests (dont 8 nouveaux tests pour le tutoriel) |
+| Couverture estimée | **~20%** | Principalement logique/controllers, pas d'UI de production |
+| Analyse statique | **0 erreur** | `flutter analyze` sans erreur de compilation |
 | Linter | `flutter_lints` v6.0.0 | Configuration standard, pas de règles custom |
 
 ---
@@ -189,7 +200,7 @@ Issues du backlog `docs/possible_upgrades/upgrade_ideas.md` (~95 items, ~60% ré
 - [ ] Scaling progressif d'armure ennemi par acte
 
 ### Contenu
-- [ ] Tutoriel / système "How-to-play"
+- [x] Tutoriel / système "How-to-play"
 - [ ] Icônes de type de dégâts (feu, glace, poison) sur les descriptions
 - [ ] Rework des cartes élémentaires (certaines status-only, d'autres damage+status)
 - [ ] Nœuds Trésor et Mystère sur la carte

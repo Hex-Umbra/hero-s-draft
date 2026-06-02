@@ -568,6 +568,59 @@ Pour élever le sentiment d'accomplissement et de puissance lors de l'obtention 
 
 ### Conséquences
 - ✅ **Game Feel et Suspension Inégalés** : La dramatisation visuelle de l'obtention d'une carte Mythique crée une forte charge d'adrénaline et de satisfaction pour le joueur.
-- ✅ **Robustesse Mathématique** : Le modèle probabiliste rééquilibré est rigoureusement testé et asserté à la frame près dans les tests automatisés (66/66 au vert).
+- ✅ **Robustesse Mathématique** : Le modèle probabiliste rééquilibré est rigoureusement testé et asserté à la frame près dans les tests automatisés (74/74 au vert).
 - ✅ **Qualité de Rendu Premium** : Le contraste net entre l'arrière-plan flouté sombre et le premier plan écarlate vibrant met en valeur l'identité graphique d'exception de la rareté Mythique.
 - ⚠️ **Rigueur d'Orchestration Visuelle** : L'introduction d'un overlay à fort impact au-dessus des rouleaux standard nécessite des cycles d'animation parfaitement synchronisés pour éviter les chevauchements visuels ou les clics de sélection hâtifs de l'utilisateur pendant le spin. Le bouton de sélection est verrouillé jusqu'à la réintégration complète.
+
+---
+
+## 🎓 ADR-019 : Système de Tutoriel Autonome Isolant la Boucle Principale (Standalone Tutorial System with State Isolation)
+
+### Statut
+✅ Accepté & Implémenté
+
+### Contexte
+L'onboarding des nouveaux joueurs est un aspect crucial pour "Hero's Draft", mais l'arène de combat Flame, les providers Riverpod complexes (RunController, DeckNotifier, etc.) et le chargement de données asynchrones lient fortement l'application à un flux de production stricte. Essayer de greffer un tutoriel guidé sur la boucle de gameplay classique créerait des risques majeurs d'effets de bord, d'effondrement de la run de production, ou de corruption de données. Un sous-système de tutoriel complètement découplé et autonome est nécessaire.
+
+### Décision
+- **Créer un module isolé** sous `lib/tutorial/` regroupant tout le code lié à l'apprentissage (widgets d'étapes, état simulé, moteur de transitions).
+- **Éviter les providers Riverpod de production** : Le tutoriel n'utilise pas `runProvider` ou `deckProvider`. À la place, il repose sur un `TutorialEngine` (`ChangeNotifier` simple) qui encapsule sa propre structure de données d'état `TutorialMockState`.
+- **Réinitialiser l'état par étape** : Au début de chaque étape du PageView, `resetMockState()` est appelé par le moteur pour injecter précisément les cartes en main, les PV, le mana, l'armure et l'ennemi nécessaires à l'exercice d'apprentissage de cette étape.
+- **Utiliser SharedPreferences pour la persistance** : La réussite du tutoriel est tracée de manière persistante par `TutorialProgressService` sous le flag `tutorial_completed`. L'écran `HomeScreen` lit cette donnée pour afficher un badge "NEW" rouge clignotant sur le bouton d'accès.
+
+### Preuves dans le code
+- `lib/tutorial/tutorial_engine.dart` : Classe `TutorialEngine` et `TutorialMockState`.
+- `lib/tutorial/widgets/` : 13 classes widgets représentant les étapes d'apprentissage.
+- `lib/tutorial/tutorial_progress_service.dart` : Persistance via `SharedPreferences`.
+- `lib/ui/screens/home_screen.dart` : Notification visuelle "NEW" dynamique basée sur la complétion.
+
+### Conséquences
+- ✅ **Sécurité et robustesse de la production** : Zéro risque de corrompre l'état de la run principale ou de casser les tests automatisés de production.
+- ✅ **Grande liberté de scénarisation** : Chaque étape est un bac à sable parfait configuré sur mesure.
+- ✅ **Rejouabilité infinie** : Le joueur peut rejouer le tutoriel à tout moment depuis l'écran d'accueil.
+- ⚠️ **Duplication fonctionnelle légère** : Certains composants et modèles ont été recréés sous forme simplifiée (ex: `TutorialCard` vs `CardInstance`), impliquant de répercuter manuellement les changements graphiques si le design global des cartes change radicalement.
+
+---
+
+## 🎨 ADR-020 : Feedback de Focus de Récompenses (Hover & Selection Glow Visual Feedback in Draft Screen)
+
+### Statut
+✅ Accepté & Implémenté
+
+### Contexte
+La sélection de cartes de récompenses dans l'écran de Draft standard et le draft du tutoriel manquait de retour sensoriel et tactile. Le joueur pouvait avoir des difficultés à repérer la carte survolée et celle activement choisie avant confirmation.
+
+### Décision
+Mettre en place un pipeline d'animations de focus partagé entre le tutoriel et le jeu de production :
+- **Survol (Hover)** : Envelopper les cartes de choix dans une `MouseRegion` et appliquer un `AnimatedScale` pour modifier dynamiquement l'échelle à `1.05x` en 200ms lors du survol.
+- **Sélection (Selection)** : En cas de tap ou clic actif, faire grossir la carte sélectionnée à `1.12x` et lui attribuer une surbrillance dorée intense via une décoration `BoxShadow` de couleur `Colors.amber` avec un rayon de flou de 16px et une extension de 3px.
+- **Confirmation Sécurisée** : Conserver la carte en état sélectionné/grossi jusqu'à ce que le joueur appuie sur le bouton de validation de draft pour valider la transition.
+
+### Preuves dans le code
+- `lib/tutorial/widgets/tutorial_draft_widget.dart` : Implémentation complète avec `MouseRegion`, `AnimatedScale`, et lueur dorée BoxShadow.
+- `lib/ui/screens/draft_screen.dart` / `lib/ui/widgets/relic_carousel/draft_card_reel.dart` : Intégration des effets de focus similaires pour le Draft de production.
+
+### Conséquences
+- ✅ **Amélioration immédiate du game feel** : La sélection devient agréable et offre une rétroaction instantanée sur les intentions de l'utilisateur.
+- ✅ **Accessibilité accrue** : Le contraste visuel de la lueur dorée et l'échelle augmentée identifient sans équivoque la carte cible active.
+

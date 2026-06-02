@@ -62,7 +62,6 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
   @override
   Widget build(BuildContext context) {
     final isFrench = Localizations.localeOf(context).languageCode == 'fr';
-    final hand = widget.engine.mockState.hand;
 
     return Center(
       child: Padding(

@@ -151,13 +151,14 @@ class _TutorialDraftWidgetState extends State<TutorialDraftWidget> {
                         ),
                       ),
                     ),
-                  );
-                }),
-              ),
+                  ),
+                );
+              }),
             ),
-          ],
-        ),
-      );
-    }
+          ),
+        ],
+      ),
+    );
   }
 }
+

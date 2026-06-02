@@ -142,8 +142,13 @@ class _TutorialScreenState extends State<TutorialScreen> {
                     height: 300,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: const Color(0xFF1E3A8A).withOpacity(0.15),
-                      blurRadius: 100,
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF1E3A8A).withOpacity(0.15),
+                          blurRadius: 100,
+                          spreadRadius: 30,
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -155,8 +160,13 @@ class _TutorialScreenState extends State<TutorialScreen> {
                     height: 300,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: const Color(0xFFB45309).withOpacity(0.08),
-                      blurRadius: 100,
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFB45309).withOpacity(0.08),
+                          blurRadius: 100,
+                          spreadRadius: 30,
+                        ),
+                      ],
                     ),
                   ),
                 ),
