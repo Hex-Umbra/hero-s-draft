@@ -78,85 +78,87 @@ class TutorialNodeTypesWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final isFrench = Localizations.localeOf(context).languageCode == 'fr';
 
-    return Padding(
-      padding: const EdgeInsets.all(10.0),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final crossAxisCount = constraints.maxWidth < 450 ? 2 : 3;
-          final childAspectRatio = constraints.maxWidth < 450 ? 1.8 : 1.65;
+    return Center(
+      child: FittedBox(
+        fit: BoxFit.contain,
+        child: SizedBox(
+          width: 360,
+          height: 280,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: GridView.builder(
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+                childAspectRatio: 1.8,
+              ),
+              itemCount: _types.length,
+              itemBuilder: (context, index) {
+                final type = _types[index];
+                final title = isFrench ? type.titleFr : type.titleEn;
+                final desc = isFrench ? type.descFr : type.descEn;
 
-          return GridView.builder(
-            physics: const BouncingScrollPhysics(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: crossAxisCount,
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
-              childAspectRatio: childAspectRatio,
-            ),
-            itemCount: _types.length,
-            itemBuilder: (context, index) {
-              final type = _types[index];
-              final title = isFrench ? type.titleFr : type.titleEn;
-              final desc = isFrench ? type.descFr : type.descEn;
-
-              return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1E293B).withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: const Color(0xFF334155).withValues(alpha: 0.5),
-                    width: 1.2,
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1E293B).withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: const Color(0xFF334155).withValues(alpha: 0.5),
+                      width: 1.2,
+                    ),
                   ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(3),
-                          decoration: BoxDecoration(
-                            color: type.color.withValues(alpha: 0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(type.icon, color: type.color, size: 15),
-                        ),
-                        const SizedBox(width: 5),
-                        Expanded(
-                          child: Text(
-                            title,
-                            style: TextStyle(
-                              color: type.color,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 11.5,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: type.color.withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                            child: Icon(type.icon, color: type.color, size: 22),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Expanded(
-                      child: Text(
-                        desc,
-                        style: TextStyle(
-                          color: Colors.grey.shade400,
-                          fontSize: 9.5,
-                          height: 1.25,
-                        ),
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              title,
+                              style: TextStyle(
+                                color: type.color,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13.5,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
-        },
+                      const SizedBox(height: 6),
+                      Expanded(
+                        child: Text(
+                          desc,
+                          style: TextStyle(
+                            color: Colors.grey.shade400,
+                            fontSize: 11.5,
+                            height: 1.25,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
       ),
     );
   }

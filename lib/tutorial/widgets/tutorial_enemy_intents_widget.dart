@@ -83,8 +83,8 @@ class _TutorialEnemyIntentsWidgetState
       child: FittedBox(
         fit: BoxFit.contain,
         child: SizedBox(
-          width: 330,
-          height: 230,
+          width: 380,
+          height: 280,
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Column(
@@ -96,21 +96,21 @@ class _TutorialEnemyIntentsWidgetState
                     const Icon(
                       Icons.remove_red_eye_outlined,
                       color: Colors.amberAccent,
-                      size: 14,
+                      size: 18,
                     ),
                     const SizedBox(width: 6),
                     Text(
                       isFrench ? 'INTENTIONS ENNEMIES' : 'ENEMY INTENTIONS',
                       style: const TextStyle(
                         color: Colors.amberAccent,
-                        fontSize: 11,
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1.0,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
 
                 // Horizontal view of intents
                 Row(
@@ -131,7 +131,7 @@ class _TutorialEnemyIntentsWidgetState
                           duration: const Duration(milliseconds: 200),
                           margin: const EdgeInsets.symmetric(horizontal: 3),
                           padding: const EdgeInsets.symmetric(
-                            vertical: 6,
+                            vertical: 8,
                             horizontal: 2,
                           ),
                           decoration: BoxDecoration(
@@ -157,16 +157,16 @@ class _TutorialEnemyIntentsWidgetState
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(intent.icon, color: intent.color, size: 16),
+                              Icon(intent.icon, color: intent.color, size: 22),
                               const SizedBox(height: 4),
                               FittedBox(
                                 fit: BoxFit.scaleDown,
                                 child: Text(
-                                  label.split(' ')[0],
+                                  label,
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     color: intent.color,
-                                    fontSize: 9,
+                                    fontSize: 10,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -178,7 +178,7 @@ class _TutorialEnemyIntentsWidgetState
                     );
                   }),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
 
                 // Detail display card
                 if (_selectedIntentIndex >= 0 &&
@@ -202,9 +202,9 @@ class _TutorialEnemyIntentsWidgetState
                               Icon(
                                 _intents[_selectedIntentIndex].icon,
                                 color: _intents[_selectedIntentIndex].color,
-                                size: 14,
+                                size: 18,
                               ),
-                              const SizedBox(width: 6),
+                              const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
                                   isFrench
@@ -213,7 +213,7 @@ class _TutorialEnemyIntentsWidgetState
                                   style: TextStyle(
                                     color: _intents[_selectedIntentIndex].color,
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 11.5,
+                                    fontSize: 13.5,
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -221,7 +221,7 @@ class _TutorialEnemyIntentsWidgetState
                               ),
                             ],
                           ),
-                          const Divider(color: Colors.white10, height: 8),
+                          const Divider(color: Colors.white10, height: 10),
                           Expanded(
                             child: SingleChildScrollView(
                               physics: const BouncingScrollPhysics(),
@@ -231,7 +231,7 @@ class _TutorialEnemyIntentsWidgetState
                                     : _intents[_selectedIntentIndex].descEn,
                                 style: TextStyle(
                                   color: Colors.grey.shade300,
-                                  fontSize: 10.5,
+                                  fontSize: 12,
                                   height: 1.35,
                                 ),
                               ),

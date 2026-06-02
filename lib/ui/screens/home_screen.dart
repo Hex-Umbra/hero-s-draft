@@ -100,7 +100,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             borderRadius: BorderRadius.circular(10),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.redAccent.withOpacity(0.5),
+                                color: Colors.redAccent.withValues(alpha: 0.5),
                                 blurRadius: 4,
                                 spreadRadius: 1,
                               ),
@@ -147,3 +147,4 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 }
+

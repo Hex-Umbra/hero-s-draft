@@ -30,7 +30,7 @@ class TutorialUiCard extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
           decoration: BoxDecoration(
             color: const Color(0xFF1E293B),
             border: Border.all(
@@ -63,7 +63,7 @@ class TutorialUiCard extends StatelessWidget {
           textAlign: TextAlign.center,
           style: const TextStyle(
             color: Colors.white,
-            fontSize: 10,
+            fontSize: 12,
             fontWeight: FontWeight.bold,
             letterSpacing: 0.5,
           ),
@@ -85,7 +85,7 @@ class TutorialUiCard extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.grey.shade300,
-                      fontSize: 8.5,
+                      fontSize: 10.5,
                       height: 1.15,
                     ),
                   ),
@@ -101,7 +101,7 @@ class TutorialUiCard extends StatelessWidget {
                     child: Icon(
                       Icons.diamond_rounded,
                       color: Colors.cyanAccent,
-                      size: 11,
+                      size: 13,
                     ),
                   ),
                 ),
@@ -138,111 +138,120 @@ class _TutorialCardsWidgetState extends State<TutorialCardsWidget> {
     final hand = widget.engine.mockState.hand;
     final mana = widget.engine.mockState.heroMana;
 
-    return Padding(
-      padding: const EdgeInsets.all(12.0),
-      child: Column(
-        children: [
-          // Mana crystals row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                isFrench ? 'MANA : ' : 'MANA: ',
-                style: const TextStyle(
-                  color: Colors.cyanAccent,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                  letterSpacing: 1.0,
+    return Center(
+      child: FittedBox(
+        fit: BoxFit.contain,
+        child: SizedBox(
+          width: 360,
+          height: 280,
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              children: [
+                // Mana crystals row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      isFrench ? 'MANA : ' : 'MANA: ',
+                      style: const TextStyle(
+                        color: Colors.cyanAccent,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                    Row(
+                      children: List.generate(3, (index) {
+                        final active = index < mana;
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                          child: Icon(
+                            Icons.diamond_rounded,
+                            color: active
+                                ? Colors.cyanAccent
+                                : Colors.cyan.withValues(alpha: 0.2),
+                            size: 20,
+                          ),
+                        );
+                      }),
+                    ),
+                  ],
                 ),
-              ),
-              Row(
-                children: List.generate(3, (index) {
-                  final active = index < mana;
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 2.0),
-                    child: Icon(
-                      Icons.diamond_rounded,
-                      color: active
-                          ? Colors.cyanAccent
-                          : Colors.cyan.withValues(alpha: 0.2),
-                      size: 20,
+                const SizedBox(height: 12),
+
+                // Horizontal view of hand cards
+                Expanded(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(hand.length, (index) {
+                        final card = hand[index];
+                        final isSelected = _selectedCardIndex == index;
+                        final title = isFrench ? card.nameFr : card.nameEn;
+
+                        // Simple text descriptions for mockup
+                        String cardDesc = '';
+                        if (card.id == 'strike') {
+                          cardDesc = isFrench ? 'Inflige 6 dégâts.' : 'Deals 6 damage.';
+                        } else if (card.id == 'defend') {
+                          cardDesc = isFrench ? 'Gagne 4 armure.' : 'Gains 4 armor.';
+                        } else {
+                          cardDesc = isFrench
+                              ? 'Inflige 10 dégâts et brûle.'
+                              : 'Deals 10 damage & burns.';
+                        }
+
+                        return Container(
+                          width: 110,
+                          margin: const EdgeInsets.symmetric(horizontal: 5),
+                          child: TutorialUiCard(
+                            title: title,
+                            description: cardDesc,
+                            cost: card.cost,
+                            type: card.id == 'defend' ? 'skill' : 'attack',
+                            isSelected: isSelected,
+                            onTap: () {
+                              setState(() {
+                                _selectedCardIndex = index;
+                              });
+                            },
+                          ),
+                        );
+                      }),
                     ),
-                  );
-                }),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
+                  ),
+                ),
+                const SizedBox(height: 12),
 
-          // Horizontal view of hand cards
-          Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(hand.length, (index) {
-                  final card = hand[index];
-                  final isSelected = _selectedCardIndex == index;
-                  final title = isFrench ? card.nameFr : card.nameEn;
-
-                  // Simple text descriptions for mockup
-                  String cardDesc = '';
-                  if (card.id == 'strike') {
-                    cardDesc = isFrench ? 'Inflige 6 dégâts.' : 'Deals 6 damage.';
-                  } else if (card.id == 'defend') {
-                    cardDesc = isFrench ? 'Gagne 4 armure.' : 'Gains 4 armor.';
-                  } else {
-                    cardDesc = isFrench
-                        ? 'Inflige 10 dégâts et brûle.'
-                        : 'Deals 10 damage & burns.';
-                  }
-
-                  return Container(
-                    width: 85,
-                    margin: const EdgeInsets.symmetric(horizontal: 5),
-                    child: TutorialUiCard(
-                      title: title,
-                      description: cardDesc,
-                      cost: card.cost,
-                      type: card.id == 'defend' ? 'skill' : 'attack',
-                      isSelected: isSelected,
-                      onTap: () {
-                        setState(() {
-                          _selectedCardIndex = index;
-                        });
-                      },
+                // Detail box
+                if (_selectedCardIndex >= 0 && _selectedCardIndex < hand.length)
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1E293B).withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.cyan.withValues(alpha: 0.2)),
                     ),
-                  );
-                }),
-              ),
+                    child: Text(
+                      isFrench
+                          ? 'Chaque cristal 💎 vaut 1 mana. La carte sélectionnée coûte ${hand[_selectedCardIndex].cost} mana.'
+                          : 'Each crystal 💎 counts as 1 mana. The selected card costs ${hand[_selectedCardIndex].cost} mana.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.grey.shade300,
+                        fontSize: 11,
+                        height: 1.3,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
-          const SizedBox(height: 12),
-
-          // Detail box
-          if (_selectedCardIndex >= 0 && _selectedCardIndex < hand.length)
-            Container(
-              padding: const EdgeInsets.all(8),
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: const Color(0xFF1E293B).withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.cyan.withValues(alpha: 0.2)),
-              ),
-              child: Text(
-                isFrench
-                    ? 'Chaque cristal 💎 vaut 1 mana. La carte sélectionnée coûte ${hand[_selectedCardIndex].cost} mana.'
-                    : 'Each crystal 💎 counts as 1 mana. The selected card costs ${hand[_selectedCardIndex].cost} mana.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.grey.shade300,
-                  fontSize: 11,
-                  height: 1.3,
-                ),
-              ),
-            ),
-        ],
+        ),
       ),
     );
   }

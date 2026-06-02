@@ -234,7 +234,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                                   ? [
                                                       BoxShadow(
                                                         color: Colors.amber
-                                                            .withOpacity(0.4),
+                                                            .withValues(alpha: 0.4),
                                                         blurRadius: 16,
                                                         spreadRadius: 3,
                                                       ),
@@ -325,7 +325,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                                 ? [
                                                     BoxShadow(
                                                       color: Colors.amber
-                                                          .withOpacity(0.4),
+                                                          .withValues(alpha: 0.4),
                                                       blurRadius: 16,
                                                       spreadRadius: 3,
                                                     ),
@@ -450,7 +450,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                                 ? [
                                                     BoxShadow(
                                                       color: Colors.amber
-                                                          .withOpacity(0.4),
+                                                          .withValues(alpha: 0.4),
                                                       blurRadius: 16,
                                                       spreadRadius: 3,
                                                     ),
@@ -891,3 +891,4 @@ class _DraftChoice {
     this.rarity = RewardRarity.common,
   });
 }
+

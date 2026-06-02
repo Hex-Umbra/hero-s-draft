@@ -67,8 +67,8 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
       child: FittedBox(
         fit: BoxFit.contain,
         child: SizedBox(
-          width: 320,
-          height: 240,
+          width: 360,
+          height: 280,
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Column(
@@ -84,14 +84,14 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
                           animation: _slideAnimation,
                           builder: (context, child) {
                             return Transform.translate(
-                              offset: Offset(_slideAnimation.value * 85, 0),
+                              offset: Offset((_slideAnimation.value - 1) * 95, 0),
                               child: child,
                             );
                           },
                           child: Opacity(
                             opacity: 1.0 - _controller.value * 0.5,
                             child: const SizedBox(
-                              width: 80,
+                              width: 95,
                               child: TutorialUiCard(
                                 title: 'Frappe',
                                 description: 'Lvl 1',
@@ -109,14 +109,14 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
                           animation: _slideAnimation,
                           builder: (context, child) {
                             return Transform.translate(
-                              offset: Offset(-_slideAnimation.value * 85, 0),
+                              offset: Offset((1 - _slideAnimation.value) * 95, 0),
                               child: child,
                             );
                           },
                           child: Opacity(
                             opacity: 1.0 - _controller.value * 0.5,
                             child: const SizedBox(
-                              width: 80,
+                              width: 95,
                               child: TutorialUiCard(
                                 title: 'Frappe',
                                 description: 'Lvl 1',
@@ -133,7 +133,7 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
                         Opacity(
                           opacity: 1.0 - _controller.value * 0.2,
                           child: const SizedBox(
-                            width: 80,
+                            width: 95,
                             child: TutorialUiCard(
                               title: 'Frappe',
                               description: 'Lvl 1',
@@ -165,7 +165,7 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
                                 ),
                               ],
                             ),
-                            width: 95,
+                            width: 110,
                             child: TutorialUiCard(
                               title: isFrench ? 'Frappe Niv.2' : 'Strike Lvl 2',
                               description: isFrench
@@ -246,4 +246,3 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
 
   static void _dummyTap() {}
 }
-

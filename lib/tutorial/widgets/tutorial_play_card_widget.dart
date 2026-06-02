@@ -209,7 +209,7 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
                             top: 30 + _floatingYOffset,
                             child: AnimatedOpacity(
                               duration: const Duration(milliseconds: 700),
-                              opacity: _showFloatingText ? 0.0 : 1.0,
+                              opacity: _floatingYOffset == 0.0 ? 1.0 : 0.0,
                               child: Text(
                                 _floatingText,
                                 style: TextStyle(
@@ -360,7 +360,7 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
                             }
 
                             return Container(
-                              width: 85,
+                              width: 100,
                               margin: const EdgeInsets.symmetric(horizontal: 5),
                               child: TutorialUiCard(
                                 title: title,

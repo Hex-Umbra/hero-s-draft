@@ -314,46 +314,71 @@ class _TutorialScreenState extends State<TutorialScreen> {
 
                                   // Progress indicators & Next button
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
-                                      // Steps Indicator Dots
-                                      Row(
-                                        children: List.generate(
-                                          kTutorialSteps.length,
-                                          (index) {
-                                            final isActive =
-                                                index == _engine.currentStepIndex;
-                                            return AnimatedContainer(
-                                              duration: const Duration(
-                                                milliseconds: 200,
+                                      // Back Button (only if currentStepIndex > 0)
+                                      if (_engine.currentStepIndex > 0)
+                                        IconButton(
+                                          onPressed: () => _engine.prevStep(),
+                                          icon: const Icon(
+                                            Icons.arrow_back_ios_new,
+                                            color: Colors.grey,
+                                            size: 16,
+                                          ),
+                                          tooltip: isFrench ? 'Précédent' : 'Previous',
+                                          padding: const EdgeInsets.all(8),
+                                          constraints: const BoxConstraints(),
+                                        )
+                                      else
+                                        const SizedBox(width: 32),
+                                      const SizedBox(width: 8),
+
+                                      // Steps Indicator Dots (Centered & Scrollable if needed)
+                                      Expanded(
+                                        child: Center(
+                                          child: SingleChildScrollView(
+                                            scrollDirection: Axis.horizontal,
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: List.generate(
+                                                kTutorialSteps.length,
+                                                (index) {
+                                                  final isActive =
+                                                      index == _engine.currentStepIndex;
+                                                  return AnimatedContainer(
+                                                    duration: const Duration(
+                                                      milliseconds: 200,
+                                                    ),
+                                                    margin: const EdgeInsets.symmetric(
+                                                      horizontal: 2.5,
+                                                    ),
+                                                    width: isActive ? 10 : 5,
+                                                    height: 5,
+                                                    decoration: BoxDecoration(
+                                                      color: isActive
+                                                          ? Colors.amber
+                                                          : Colors.grey.shade600,
+                                                      borderRadius: BorderRadius.circular(
+                                                        10,
+                                                      ),
+                                                      boxShadow: isActive
+                                                          ? [
+                                                              BoxShadow(
+                                                                color: Colors.amber
+                                                                    .withValues(alpha: 0.5),
+                                                                blurRadius: 4,
+                                                                spreadRadius: 1,
+                                                              ),
+                                                            ]
+                                                          : null,
+                                                    ),
+                                                  );
+                                                },
                                               ),
-                                              margin: const EdgeInsets.symmetric(
-                                                horizontal: 2.5,
-                                              ),
-                                              width: isActive ? 10 : 5,
-                                              height: 5,
-                                              decoration: BoxDecoration(
-                                                color: isActive
-                                                    ? Colors.amber
-                                                    : Colors.grey.shade600,
-                                                borderRadius: BorderRadius.circular(
-                                                  10,
-                                                ),
-                                                boxShadow: isActive
-                                                    ? [
-                                                        BoxShadow(
-                                                          color: Colors.amber
-                                                              .withValues(alpha: 0.5),
-                                                          blurRadius: 4,
-                                                          spreadRadius: 1,
-                                                        ),
-                                                      ]
-                                                    : null,
-                                              ),
-                                            );
-                                          },
+                                            ),
+                                          ),
                                         ),
                                       ),
+                                      const SizedBox(width: 8),
 
                                       // Action / Next Button
                                       InkWell(

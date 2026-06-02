@@ -38,8 +38,8 @@ class _TutorialCombatOverviewWidgetState
       child: FittedBox(
         fit: BoxFit.contain,
         child: SizedBox(
-          width: 360,
-          height: 250,
+          width: 500,
+          height: 350,
           child: Stack(
             children: [
               // Subtly simulated dungeon grid background
@@ -55,7 +55,7 @@ class _TutorialCombatOverviewWidgetState
                   isFrench ? 'Acte 1 - Niveau : 1' : 'Act 1 - Level: 1',
                   style: const TextStyle(
                     color: Colors.amber,
-                    fontSize: 9,
+                    fontSize: 12,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -66,7 +66,7 @@ class _TutorialCombatOverviewWidgetState
                 padding: const EdgeInsets.only(
                   left: 12,
                   right: 12,
-                  top: 22,
+                  top: 30,
                   bottom: 8,
                 ),
                 child: Row(
@@ -113,7 +113,7 @@ class _TutorialCombatOverviewWidgetState
               AnimatedPositioned(
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeOut,
-                top: _showEnemyLabel ? 55 : 40,
+                top: _showEnemyLabel ? 80 : 65,
                 left: 20,
                 right: 20,
                 child: AnimatedOpacity(
@@ -132,7 +132,7 @@ class _TutorialCombatOverviewWidgetState
               AnimatedPositioned(
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeOut,
-                top: _showHeroLabel ? 115 : 100,
+                top: _showHeroLabel ? 160 : 145,
                 left: 20,
                 right: 20,
                 child: AnimatedOpacity(
@@ -151,7 +151,7 @@ class _TutorialCombatOverviewWidgetState
               AnimatedPositioned(
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeOut,
-                bottom: _showHandLabel ? 80 : 65,
+                bottom: _showHandLabel ? 110 : 95,
                 left: 20,
                 right: 20,
                 child: AnimatedOpacity(
@@ -179,7 +179,7 @@ class _TutorialCombatOverviewWidgetState
         // EFFETS DU JOUEUR card
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           decoration: BoxDecoration(
             color: const Color(0xFF0F172A).withValues(alpha: 0.7),
             borderRadius: BorderRadius.circular(6),
@@ -192,14 +192,14 @@ class _TutorialCombatOverviewWidgetState
                 isFrench ? '🔵 EFFETS DU JOUEUR' : '🔵 PLAYER EFFECTS',
                 style: const TextStyle(
                   color: Colors.cyanAccent,
-                  fontSize: 6.5,
+                  fontSize: 9.5,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 3),
+              const SizedBox(height: 5),
               Text(
                 isFrench ? 'Aucun effet actif' : 'No active effects',
-                style: TextStyle(color: Colors.grey.shade400, fontSize: 6),
+                style: TextStyle(color: Colors.grey.shade400, fontSize: 8.5),
               ),
             ],
           ),
@@ -207,7 +207,7 @@ class _TutorialCombatOverviewWidgetState
         const Spacer(),
         // Pioche Button
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
             color: const Color(0xFF1E293B),
             borderRadius: BorderRadius.circular(4),
@@ -217,7 +217,7 @@ class _TutorialCombatOverviewWidgetState
             isFrench ? 'Pioche: 2' : 'Draw: 2',
             style: const TextStyle(
               color: Colors.white70,
-              fontSize: 6.5,
+              fontSize: 9.5,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -235,7 +235,7 @@ class _TutorialCombatOverviewWidgetState
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: const Color(0xFF3B82F6),
                 borderRadius: BorderRadius.circular(10),
@@ -247,17 +247,17 @@ class _TutorialCombatOverviewWidgetState
                 isFrench ? '✓ Fin de Tour' : '✓ End Turn',
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 7.5,
+                  fontSize: 10.5,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 4),
             Text(
               isFrench ? 'Tour 1' : 'Turn 1',
               style: TextStyle(
                 color: Colors.grey.shade500,
-                fontSize: 6.5,
+                fontSize: 9.5,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -267,7 +267,7 @@ class _TutorialCombatOverviewWidgetState
         // INTENTIONS ENNEMIES card
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
             color: const Color(0xFF0F172A).withValues(alpha: 0.7),
             borderRadius: BorderRadius.circular(6),
@@ -280,25 +280,26 @@ class _TutorialCombatOverviewWidgetState
                 isFrench ? '👁 INTENTIONS ENNEMIES' : '👁 ENEMY INTENTIONS',
                 style: const TextStyle(
                   color: Colors.amber,
-                  fontSize: 6.5,
+                  fontSize: 9.5,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 4),
               Text(
                 isFrench ? 'Gobelin (Niv. 1)' : 'Goblin (Lvl. 1)',
-                style: const TextStyle(color: Colors.white70, fontSize: 6),
+                style: const TextStyle(color: Colors.white70, fontSize: 8.5),
               ),
+              const SizedBox(height: 2),
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.flash_on, color: Colors.amber, size: 7),
-                  const SizedBox(width: 1),
+                  const Icon(Icons.flash_on, color: Colors.amber, size: 10),
+                  const SizedBox(width: 2),
                   Text(
                     isFrench ? 'Attaque Rapide : 5' : 'Quick Attack: 5',
                     style: const TextStyle(
                       color: Colors.amber,
-                      fontSize: 6,
+                      fontSize: 8.5,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -307,10 +308,10 @@ class _TutorialCombatOverviewWidgetState
             ],
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 6),
         // Défausse Button
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
             color: const Color(0xFF1E293B),
             borderRadius: BorderRadius.circular(4),
@@ -320,7 +321,7 @@ class _TutorialCombatOverviewWidgetState
             isFrench ? 'Défausse: 0' : 'Discard: 0',
             style: const TextStyle(
               color: Colors.white70,
-              fontSize: 6.5,
+              fontSize: 9.5,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -337,29 +338,29 @@ class _TutorialCombatOverviewWidgetState
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.flash_on, color: Colors.redAccent, size: 8),
+            const Icon(Icons.flash_on, color: Colors.redAccent, size: 11),
             const Text(
               '5',
               style: TextStyle(
                 color: Colors.redAccent,
-                fontSize: 8,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(width: 4),
-            const Icon(Icons.shield, color: Colors.blueAccent, size: 8),
-            const Text(
-              '0',
-              style: TextStyle(
-                color: Colors.blueAccent,
-                fontSize: 8,
+                fontSize: 11,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(width: 6),
+            const Icon(Icons.shield, color: Colors.blueAccent, size: 11),
+            const Text(
+              '0',
+              style: TextStyle(
+                color: Colors.blueAccent,
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(width: 8),
             Container(
-              width: 44,
-              height: 5,
+              width: 60,
+              height: 8,
               decoration: BoxDecoration(
                 color: Colors.grey.shade800,
                 borderRadius: BorderRadius.circular(3),
@@ -367,7 +368,7 @@ class _TutorialCombatOverviewWidgetState
               child: Stack(
                 children: [
                   Container(
-                    width: 44,
+                    width: 60,
                     decoration: BoxDecoration(
                       color: Colors.redAccent,
                       borderRadius: BorderRadius.circular(3),
@@ -376,22 +377,22 @@ class _TutorialCombatOverviewWidgetState
                 ],
               ),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: 6),
             const Text(
               '28/28',
               style: TextStyle(
                 color: Colors.white70,
-                fontSize: 7.5,
+                fontSize: 11,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: 4),
         // Card Body
         Container(
-          width: 42,
-          height: 58,
+          width: 65,
+          height: 90,
           decoration: BoxDecoration(
             color: const Color(0xFF1E293B),
             borderRadius: BorderRadius.circular(5),
@@ -406,14 +407,14 @@ class _TutorialCombatOverviewWidgetState
               const Icon(
                 Icons.pest_control,
                 color: Colors.greenAccent,
-                size: 18,
+                size: 28,
               ),
-              const SizedBox(height: 1),
+              const SizedBox(height: 2),
               Text(
                 isFrench ? 'Gobelin' : 'Goblin',
                 style: TextStyle(
                   color: Colors.greenAccent.shade100,
-                  fontSize: 7,
+                  fontSize: 11,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -426,8 +427,8 @@ class _TutorialCombatOverviewWidgetState
 
   Widget _buildHeroCard(bool isFrench) {
     return Container(
-      width: 42,
-      height: 58,
+      width: 65,
+      height: 90,
       decoration: BoxDecoration(
         color: const Color(0xFF1E293B),
         borderRadius: BorderRadius.circular(5),
@@ -436,13 +437,13 @@ class _TutorialCombatOverviewWidgetState
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.shield, color: Colors.amber, size: 18),
-          const SizedBox(height: 1),
+          const Icon(Icons.shield, color: Colors.amber, size: 28),
+          const SizedBox(height: 2),
           Text(
             isFrench ? 'Héros' : 'Hero',
             style: const TextStyle(
               color: Colors.amber,
-              fontSize: 7,
+              fontSize: 11,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -468,22 +469,22 @@ class _TutorialCombatOverviewWidgetState
     ];
 
     return SizedBox(
-      height: 38,
-      width: 140,
+      height: 60,
+      width: 220,
       child: Stack(
         alignment: Alignment.center,
         children: List.generate(5, (index) {
           final double rotation = (index - 2) * 0.08;
-          final double translationX = (index - 2) * 15.0;
-          final double translationY = (index - 2).abs() * 1.5;
+          final double translationX = (index - 2) * 22.0;
+          final double translationY = (index - 2).abs() * 2.5;
 
           return Transform.translate(
             offset: Offset(translationX, translationY),
             child: Transform.rotate(
               angle: rotation,
               child: Container(
-                width: 24,
-                height: 34,
+                width: 36,
+                height: 52,
                 decoration: BoxDecoration(
                   color: const Color(0xFF2A2A40),
                   borderRadius: BorderRadius.circular(3),
@@ -503,7 +504,7 @@ class _TutorialCombatOverviewWidgetState
                     cardNames[index],
                     style: const TextStyle(
                       color: Colors.white70,
-                      fontSize: 4.5,
+                      fontSize: 7.5,
                       fontWeight: FontWeight.bold,
                     ),
                     textAlign: TextAlign.center,
@@ -522,8 +523,8 @@ class _TutorialCombatOverviewWidgetState
       mainAxisSize: MainAxisSize.min,
       children: List.generate(3, (index) {
         return const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 1.5),
-          child: Icon(Icons.diamond, color: Colors.cyanAccent, size: 9),
+          padding: EdgeInsets.symmetric(horizontal: 2.0),
+          child: Icon(Icons.diamond, color: Colors.cyanAccent, size: 14),
         );
       }),
     );
@@ -533,29 +534,29 @@ class _TutorialCombatOverviewWidgetState
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Icon(Icons.flash_on, color: Colors.redAccent, size: 7),
+        const Icon(Icons.flash_on, color: Colors.redAccent, size: 10),
         const Text(
           '0',
           style: TextStyle(
             color: Colors.redAccent,
-            fontSize: 7,
+            fontSize: 10,
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(width: 3),
-        const Icon(Icons.shield, color: Colors.blueAccent, size: 7),
+        const SizedBox(width: 4),
+        const Icon(Icons.shield, color: Colors.blueAccent, size: 10),
         const Text(
           '0',
           style: TextStyle(
             color: Colors.blueAccent,
-            fontSize: 7,
+            fontSize: 10,
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(width: 5),
+        const SizedBox(width: 6),
         Container(
-          width: 76,
-          height: 8,
+          width: 110,
+          height: 12,
           decoration: BoxDecoration(
             color: Colors.grey.shade800,
             borderRadius: BorderRadius.circular(4),
@@ -577,7 +578,7 @@ class _TutorialCombatOverviewWidgetState
                   isFrench ? '80 / 80 PV' : '80 / 80 HP',
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 5.5,
+                    fontSize: 9,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -591,7 +592,7 @@ class _TutorialCombatOverviewWidgetState
 
   Widget _buildAnnotationBubble({required String text, required Color color}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: const Color(0xFF0F172A).withValues(alpha: 0.95),
         borderRadius: BorderRadius.circular(6),
@@ -607,7 +608,7 @@ class _TutorialCombatOverviewWidgetState
       child: Text(
         text,
         textAlign: TextAlign.center,
-        style: const TextStyle(color: Colors.white, fontSize: 9, height: 1.2),
+        style: const TextStyle(color: Colors.white, fontSize: 12, height: 1.25),
       ),
     );
   }

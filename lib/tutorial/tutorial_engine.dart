@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'tutorial_data.dart';
 
 class TutorialCard {
   final String id;
@@ -80,10 +81,10 @@ class TutorialEngine extends ChangeNotifier {
 
   int get currentStepIndex => _currentStepIndex;
 
-  bool get isLastStep => _currentStepIndex == 12;
+  bool get isLastStep => _currentStepIndex == kTutorialSteps.length - 1;
 
   void nextStep() {
-    if (_currentStepIndex < 12) {
+    if (_currentStepIndex < kTutorialSteps.length - 1) {
       _currentStepIndex++;
       resetMockState();
       notifyListeners();
