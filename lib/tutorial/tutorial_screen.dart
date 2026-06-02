@@ -59,7 +59,8 @@ class _TutorialScreenState extends State<TutorialScreen> {
     final step = kTutorialSteps[engine.currentStepIndex];
     switch (step.type) {
       case TutorialStepType.playCard:
-        return engine.mockState.enemy != null && engine.mockState.enemy!.hp < 20;
+        return engine.mockState.enemy != null &&
+            engine.mockState.enemy!.hp < 20;
       case TutorialStepType.merge:
         return engine.mockState.hand.length == 1 &&
             engine.mockState.hand.first.id == 'strike_upgraded';
@@ -127,7 +128,9 @@ class _TutorialScreenState extends State<TutorialScreen> {
           animation: _engine,
           builder: (context, _) {
             final currentStep = kTutorialSteps[_engine.currentStepIndex];
-            final stepTitle = isFrench ? currentStep.titleFr : currentStep.titleEn;
+            final stepTitle = isFrench
+                ? currentStep.titleFr
+                : currentStep.titleEn;
             final stepBody = isFrench ? currentStep.bodyFr : currentStep.bodyEn;
             final isComplete = _isStepActionComplete(_engine);
 
@@ -176,7 +179,10 @@ class _TutorialScreenState extends State<TutorialScreen> {
                   children: [
                     // Header row (with skip option)
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -206,180 +212,246 @@ class _TutorialScreenState extends State<TutorialScreen> {
                       ),
                     ),
 
-                    // Top 60%: Illustration Widget View
+                    // Main Content: Responsive layout builder
                     Expanded(
-                      flex: 6,
-                      child: PageView.builder(
-                        controller: _pageController,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: kTutorialSteps.length,
-                        itemBuilder: (context, index) {
-                          final stepType = kTutorialSteps[index].type;
-                          return Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 16),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF131A2D),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: const Color(0xFF1E293B),
-                                width: 1.5,
-                              ),
-                            ),
-                            clipBehavior: Clip.antiAlias,
-                            child: _buildIllustration(stepType),
-                          );
-                        },
-                      ),
-                    ),
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final isLandscape = constraints.maxWidth > constraints.maxHeight && constraints.maxHeight < 500 || constraints.maxWidth >= 720;
 
-                    const SizedBox(height: 16),
-
-                    // Bottom 40%: Text panel + Buttons
-                    Expanded(
-                      flex: 4,
-                      child: Container(
-                        margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF131A2D).withOpacity(0.9),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: isComplete
-                                ? Colors.amber.withOpacity(0.3)
-                                : const Color(0xFF1E293B),
-                            width: 1.5,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.4),
-                              blurRadius: 15,
-                              offset: const Offset(0, 5),
-                            )
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Step Title
-                            AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 200),
-                              child: Text(
-                                stepTitle,
-                                key: ValueKey<int>(_engine.currentStepIndex),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-
-                            // Step Body Text
-                            Expanded(
-                              child: SingleChildScrollView(
-                                physics: const BouncingScrollPhysics(),
-                                child: AnimatedSwitcher(
-                                  duration: const Duration(milliseconds: 200),
-                                  child: Text(
-                                    stepBody,
-                                    key: ValueKey<int>(_engine.currentStepIndex),
-                                    style: TextStyle(
-                                      color: Colors.grey.shade300,
-                                      fontSize: 13.5,
-                                      height: 1.45,
+                          Widget buildIllustrationView(bool isLand) {
+                            return PageView.builder(
+                              controller: _pageController,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: kTutorialSteps.length,
+                              itemBuilder: (context, index) {
+                                final stepType = kTutorialSteps[index].type;
+                                return Container(
+                                  margin: EdgeInsets.only(
+                                    left: 16,
+                                    right: isLand ? 8 : 16,
+                                    bottom: isLand ? 16 : 0,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF131A2D),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: const Color(0xFF1E293B),
+                                      width: 1.5,
                                     ),
                                   ),
-                                ),
+                                  clipBehavior: Clip.antiAlias,
+                                  child: _buildIllustration(stepType),
+                                );
+                              },
+                            );
+                          }
+
+                          Widget buildTextPanel(bool isLand) {
+                            return Container(
+                              margin: EdgeInsets.only(
+                                left: isLand ? 8 : 16,
+                                right: 16,
+                                bottom: 16,
                               ),
-                            ),
-                            const SizedBox(height: 12),
-
-                            // Progress indicators & Next button
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                // Steps Indicator Dots
-                                Row(
-                                  children: List.generate(
-                                    kTutorialSteps.length,
-                                    (index) {
-                                      final isActive = index == _engine.currentStepIndex;
-                                      return AnimatedContainer(
-                                        duration: const Duration(milliseconds: 200),
-                                        margin: const EdgeInsets.symmetric(horizontal: 2.5),
-                                        width: isActive ? 10 : 5,
-                                        height: 5,
-                                        decoration: BoxDecoration(
-                                          color: isActive
-                                              ? Colors.amber
-                                              : Colors.grey.shade600,
-                                          borderRadius: BorderRadius.circular(10),
-                                          boxShadow: isActive
-                                              ? [
-                                                  BoxShadow(
-                                                    color: Colors.amber.withOpacity(0.5),
-                                                    blurRadius: 4,
-                                                    spreadRadius: 1,
-                                                  )
-                                                ]
-                                              : null,
-                                        ),
-                                      );
-                                    },
-                                  ),
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF131A2D).withOpacity(0.9),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: isComplete
+                                      ? Colors.amber.withOpacity(0.3)
+                                      : const Color(0xFF1E293B),
+                                  width: 1.5,
                                 ),
-
-                                // Action / Next Button
-                                InkWell(
-                                  onTap: isComplete ? () => _handleNext(isComplete) : null,
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: AnimatedContainer(
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.4),
+                                    blurRadius: 15,
+                                    offset: const Offset(0, 5),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Step Title
+                                  AnimatedSwitcher(
                                     duration: const Duration(milliseconds: 200),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 24,
-                                      vertical: 12,
+                                    child: Text(
+                                      stepTitle,
+                                      key: ValueKey<int>(_engine.currentStepIndex),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 0.5,
+                                      ),
                                     ),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(12),
-                                      gradient: isComplete
-                                          ? const LinearGradient(
-                                              colors: [Color(0xFFD97706), Color(0xFFF59E0B)],
-                                            )
-                                          : null,
-                                      color: isComplete ? null : const Color(0xFF1E293B),
-                                      boxShadow: isComplete
-                                          ? [
-                                              BoxShadow(
-                                                color: Colors.amber.withOpacity(0.3),
-                                                blurRadius: 8,
-                                                offset: const Offset(0, 3),
-                                              )
-                                            ]
-                                          : null,
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        _engine.isLastStep
-                                            ? (isFrench ? 'TERMINER' : 'FINISH')
-                                            : (isComplete
-                                                ? (isFrench ? 'SUIVANT' : 'NEXT')
-                                                : (isFrench ? 'AGIR' : 'ACTION')),
-                                        style: TextStyle(
-                                          color: isComplete ? Colors.white : Colors.grey.shade500,
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.bold,
-                                          letterSpacing: 1.0,
+                                  ),
+                                  const SizedBox(height: 8),
+
+                                  // Step Body Text
+                                  Expanded(
+                                    child: SingleChildScrollView(
+                                      physics: const BouncingScrollPhysics(),
+                                      child: AnimatedSwitcher(
+                                        duration: const Duration(milliseconds: 200),
+                                        child: Text(
+                                          stepBody,
+                                          key: ValueKey<int>(
+                                            _engine.currentStepIndex,
+                                          ),
+                                          style: TextStyle(
+                                            color: Colors.grey.shade300,
+                                            fontSize: 13.5,
+                                            height: 1.45,
+                                          ),
                                         ),
                                       ),
                                     ),
                                   ),
+                                  const SizedBox(height: 12),
+
+                                  // Progress indicators & Next button
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      // Steps Indicator Dots
+                                      Row(
+                                        children: List.generate(
+                                          kTutorialSteps.length,
+                                          (index) {
+                                            final isActive =
+                                                index == _engine.currentStepIndex;
+                                            return AnimatedContainer(
+                                              duration: const Duration(
+                                                milliseconds: 200,
+                                              ),
+                                              margin: const EdgeInsets.symmetric(
+                                                horizontal: 2.5,
+                                              ),
+                                              width: isActive ? 10 : 5,
+                                              height: 5,
+                                              decoration: BoxDecoration(
+                                                color: isActive
+                                                    ? Colors.amber
+                                                    : Colors.grey.shade600,
+                                                borderRadius: BorderRadius.circular(
+                                                  10,
+                                                ),
+                                                boxShadow: isActive
+                                                    ? [
+                                                        BoxShadow(
+                                                          color: Colors.amber
+                                                              .withOpacity(0.5),
+                                                          blurRadius: 4,
+                                                          spreadRadius: 1,
+                                                        ),
+                                                      ]
+                                                    : null,
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+
+                                      // Action / Next Button
+                                      InkWell(
+                                        onTap: isComplete
+                                            ? () => _handleNext(isComplete)
+                                            : null,
+                                        borderRadius: BorderRadius.circular(12),
+                                        child: AnimatedContainer(
+                                          duration: const Duration(milliseconds: 200),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 24,
+                                            vertical: 12,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(12),
+                                            gradient: isComplete
+                                                ? const LinearGradient(
+                                                    colors: [
+                                                      Color(0xFFD97706),
+                                                      Color(0xFFF59E0B),
+                                                    ],
+                                                  )
+                                                : null,
+                                            color: isComplete
+                                                ? null
+                                                : const Color(0xFF1E293B),
+                                            boxShadow: isComplete
+                                                ? [
+                                                    BoxShadow(
+                                                      color: Colors.amber.withOpacity(
+                                                        0.3,
+                                                      ),
+                                                      blurRadius: 8,
+                                                      offset: const Offset(0, 3),
+                                                    ),
+                                                  ]
+                                                : null,
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              _engine.isLastStep
+                                                  ? (isFrench ? 'TERMINER' : 'FINISH')
+                                                  : (isComplete
+                                                        ? (isFrench
+                                                              ? 'SUIVANT'
+                                                              : 'NEXT')
+                                                        : (isFrench
+                                                              ? 'AGIR'
+                                                              : 'ACTION')),
+                                              style: TextStyle(
+                                                color: isComplete
+                                                    ? Colors.white
+                                                    : Colors.grey.shade500,
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.bold,
+                                                letterSpacing: 1.0,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+
+                          if (isLandscape) {
+                            return Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Expanded(
+                                  flex: 5,
+                                  child: buildIllustrationView(true),
+                                ),
+                                Expanded(
+                                  flex: 5,
+                                  child: buildTextPanel(true),
                                 ),
                               ],
-                            ),
-                          ],
-                        ),
+                            );
+                          } else {
+                            return Column(
+                              children: [
+                                Expanded(
+                                  flex: 6,
+                                  child: buildIllustrationView(false),
+                                ),
+                                const SizedBox(height: 16),
+                                Expanded(
+                                  flex: 4,
+                                  child: buildTextPanel(false),
+                                ),
+                              ],
+                            );
+                          }
+                        },
                       ),
                     ),
                   ],

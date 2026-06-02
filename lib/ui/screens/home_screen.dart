@@ -91,7 +91,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         right: -10,
                         top: -8,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.redAccent,
                             borderRadius: BorderRadius.circular(10),
@@ -100,7 +103,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 color: Colors.redAccent.withOpacity(0.5),
                                 blurRadius: 4,
                                 spreadRadius: 1,
-                              )
+                              ),
                             ],
                           ),
                           child: const Text(

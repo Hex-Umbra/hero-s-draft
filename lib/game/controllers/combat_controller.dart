@@ -49,8 +49,14 @@ class CombatController extends StateNotifier<CombatState> {
 
     // 2. Calculer les multiplicateurs de mise à l'échelle
     final double nodeMultiplier = isBoss ? 3.0 : (isElite ? 1.5 : 1.0);
-    final double hpMultiplier = (1.0 + 0.12 * (enemyLevel - 1)) * (1.0 + 0.40 * (act - 1)) * nodeMultiplier;
-    final double damageMultiplier = (1.0 + 0.08 * (enemyLevel - 1)) * (1.0 + 0.30 * (act - 1)) * nodeMultiplier;
+    final double hpMultiplier =
+        (1.0 + 0.12 * (enemyLevel - 1)) *
+        (1.0 + 0.40 * (act - 1)) *
+        nodeMultiplier;
+    final double damageMultiplier =
+        (1.0 + 0.08 * (enemyLevel - 1)) *
+        (1.0 + 0.30 * (act - 1)) *
+        nodeMultiplier;
 
     final List<EnemyInstance> enemies = [];
     for (var data in enemyDataList) {

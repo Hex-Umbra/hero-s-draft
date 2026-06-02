@@ -61,169 +61,189 @@ class _TutorialArmorWidgetState extends State<TutorialArmorWidget> {
         _leftShowDamage = false;
         _rightShowDamage = false;
       });
-    });
-  }
-
-  @override
+    });  @override
   Widget build(BuildContext context) {
     final isFrench = Localizations.localeOf(context).languageCode == 'fr';
 
-    return Padding(
-      padding: const EdgeInsets.all(12.0),
-      child: Column(
-        children: [
-          // Split comparison layout
-          Expanded(
-            child: Row(
+    return Center(
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: SizedBox(
+          width: 320,
+          height: 250,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
               children: [
-                // Left Panel: No Armor
+                // Split comparison layout
                 Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1E293B).withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.redAccent.withOpacity(0.15)),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          isFrench ? 'SANS ARMURE' : 'NO ARMOR',
-                          style: const TextStyle(
-                            color: Colors.redAccent,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                            letterSpacing: 1.0,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Stack(
-                          alignment: Alignment.center,
-                          clipBehavior: Clip.none,
-                          children: [
-                            const Icon(
-                              Icons.accessibility_new_rounded,
-                              size: 48,
-                              color: Colors.grey,
+                  child: Row(
+                    children: [
+                      // Left Panel: No Armor
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1E293B).withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.redAccent.withOpacity(0.15),
                             ),
-                            if (_leftShowDamage)
-                              AnimatedPositioned(
-                                duration: const Duration(milliseconds: 800),
-                                curve: Curves.easeOutQuad,
-                                top: _leftDamageY,
-                                child: const Text(
-                                  '-10 HP',
-                                  style: TextStyle(
-                                    color: Colors.redAccent,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                  ),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                isFrench ? 'SANS ARMURE' : 'NO ARMOR',
+                                style: const TextStyle(
+                                  color: Colors.redAccent,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 11,
+                                  letterSpacing: 1.0,
                                 ),
                               ),
-                          ],
+                              const SizedBox(height: 12),
+                              Stack(
+                                alignment: Alignment.center,
+                                clipBehavior: Clip.none,
+                                children: [
+                                  const Icon(
+                                    Icons.accessibility_new_rounded,
+                                    size: 40,
+                                    color: Colors.grey,
+                                  ),
+                                  if (_leftShowDamage)
+                                    AnimatedPositioned(
+                                      duration: const Duration(milliseconds: 800),
+                                      curve: Curves.easeOutQuad,
+                                      top: _leftDamageY,
+                                      child: const Text(
+                                        '-10 HP',
+                                        style: TextStyle(
+                                          color: Colors.redAccent,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              // HP bar
+                              _buildHealthBar(
+                                'HP',
+                                _leftHp,
+                                _leftMaxHp,
+                                Colors.redAccent,
+                              ),
+                              const SizedBox(height: 6),
+                              // Armor display (0)
+                              _buildArmorBadge(_leftArmor),
+                            ],
+                          ),
                         ),
-                        const SizedBox(height: 16),
-                        // HP bar
-                        _buildHealthBar('HP', _leftHp, _leftMaxHp, Colors.redAccent),
-                        const SizedBox(height: 8),
-                        // Armor display (0)
-                        _buildArmorBadge(_leftArmor),
-                      ],
-                    ),
+                      ),
+
+                      const SizedBox(width: 10),
+
+                      // Right Panel: With Armor
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1E293B).withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.blueAccent.withOpacity(0.15),
+                            ),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                isFrench ? 'AVEC ARMURE' : 'WITH ARMOR',
+                                style: const TextStyle(
+                                  color: Colors.blueAccent,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 11,
+                                  letterSpacing: 1.0,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Stack(
+                                alignment: Alignment.center,
+                                clipBehavior: Clip.none,
+                                children: [
+                                  const Icon(
+                                    Icons.shield_rounded,
+                                    size: 40,
+                                    color: Colors.blueAccent,
+                                  ),
+                                  if (_rightShowDamage)
+                                    AnimatedPositioned(
+                                      duration: const Duration(milliseconds: 800),
+                                      curve: Curves.easeOutQuad,
+                                      top: _rightDamageY,
+                                      child: Text(
+                                        isFrench
+                                            ? '-4 Armure\n-6 HP'
+                                            : '-4 Armor\n-6 HP',
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          color: Colors.cyanAccent,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 11,
+                                          height: 1.1,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              // HP bar
+                              _buildHealthBar(
+                                'HP',
+                                _rightHp,
+                                _rightMaxHp,
+                                Colors.redAccent,
+                              ),
+                              const SizedBox(height: 6),
+                              // Armor display
+                              _buildArmorBadge(_rightArmor),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+                const SizedBox(height: 10),
 
-                const SizedBox(width: 12),
-
-                // Right Panel: With Armor
-                Expanded(
+                // Simulation Button
+                InkWell(
+                  onTap: _runSimulation,
+                  borderRadius: BorderRadius.circular(10),
                   child: Container(
-                    padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1E293B).withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.blueAccent.withOpacity(0.15)),
+                      borderRadius: BorderRadius.circular(10),
+                      color: const Color(0xFF1E293B),
+                      border: Border.all(color: Colors.amber.withOpacity(0.3)),
                     ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          isFrench ? 'AVEC ARMURE' : 'WITH ARMOR',
-                          style: const TextStyle(
-                            color: Colors.blueAccent,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                            letterSpacing: 1.0,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Stack(
-                          alignment: Alignment.center,
-                          clipBehavior: Clip.none,
-                          children: [
-                            const Icon(
-                              Icons.shield_rounded,
-                              size: 48,
-                              color: Colors.blueAccent,
-                            ),
-                            if (_rightShowDamage)
-                              AnimatedPositioned(
-                                duration: const Duration(milliseconds: 800),
-                                curve: Curves.easeOutQuad,
-                                top: _rightDamageY,
-                                child: Text(
-                                  isFrench
-                                      ? '-4 Armure\n-6 HP'
-                                      : '-4 Armor\n-6 HP',
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                    color: Colors.cyanAccent,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
-                                    height: 1.1,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        // HP bar
-                        _buildHealthBar('HP', _rightHp, _rightMaxHp, Colors.redAccent),
-                        const SizedBox(height: 8),
-                        // Armor display
-                        _buildArmorBadge(_rightArmor),
-                      ],
+                    child: Text(
+                      isFrench ? 'Voir la différence ⚡' : 'See the difference ⚡',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                      ),
                     ),
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 12),
-
-          // Simulation Button
-          InkWell(
-            onTap: _runSimulation,
-            borderRadius: BorderRadius.circular(10),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                color: const Color(0xFF1E293B),
-                border: Border.all(color: Colors.amber.withOpacity(0.3)),
-              ),
-              child: Text(
-                isFrench ? 'Voir la différence ⚡' : 'See the difference ⚡',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -236,8 +256,22 @@ class _TutorialArmorWidgetState extends State<TutorialArmorWidget> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label, style: const TextStyle(color: Colors.white60, fontSize: 10, fontWeight: FontWeight.bold)),
-            Text('$value/$max', style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white60,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              '$value/$max',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 4),

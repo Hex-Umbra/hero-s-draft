@@ -38,7 +38,9 @@ class _RelicCarouselScreenState extends State<RelicCarouselScreen> {
     super.initState();
 
     // Generate pool of relics excluding the winning one to avoid premature duplication during spin
-    final otherRelics = widget.relicPool.where((r) => r.id != widget.wonRelic.id).toList();
+    final otherRelics = widget.relicPool
+        .where((r) => r.id != widget.wonRelic.id)
+        .toList();
     final random = Random();
 
     // Populate carousel items
@@ -87,20 +89,22 @@ class _RelicCarouselScreenState extends State<RelicCarouselScreen> {
   void _startSpin() {
     Future.delayed(const Duration(milliseconds: 600), () {
       if (!mounted) return;
-      _pageController.animateToPage(
-        _targetIndex,
-        duration: const Duration(milliseconds: 4000),
-        curve: Curves.easeOutCubic,
-      ).then((_) {
-        if (mounted) {
-          setState(() {
-            _isWon = true;
+      _pageController
+          .animateToPage(
+            _targetIndex,
+            duration: const Duration(milliseconds: 4000),
+            curve: Curves.easeOutCubic,
+          )
+          .then((_) {
+            if (mounted) {
+              setState(() {
+                _isWon = true;
+              });
+              // Trigger land sound hook!
+              widget.onLand?.call();
+              debugPrint('🎉 Relic Carousel Hook: onLand (Winner locked!)');
+            }
           });
-          // Trigger land sound hook!
-          widget.onLand?.call();
-          debugPrint('🎉 Relic Carousel Hook: onLand (Winner locked!)');
-        }
-      });
     });
   }
 
@@ -148,9 +152,7 @@ class _RelicCarouselScreenState extends State<RelicCarouselScreen> {
         children: [
           // Background Blur & Dark overlay
           Positioned.fill(
-            child: Container(
-              color: Colors.black.withValues(alpha: 0.85),
-            ),
+            child: Container(color: Colors.black.withValues(alpha: 0.85)),
           ),
 
           // Core UI Container
@@ -199,7 +201,8 @@ class _RelicCarouselScreenState extends State<RelicCarouselScreen> {
                 height: 350,
                 child: PageView.builder(
                   controller: _pageController,
-                  physics: const NeverScrollableScrollPhysics(), // Managed only by script
+                  physics:
+                      const NeverScrollableScrollPhysics(), // Managed only by script
                   itemCount: _carouselItems.length,
                   itemBuilder: (context, index) {
                     final relic = _carouselItems[index];
@@ -271,7 +274,7 @@ class _ParticlePainter extends CustomPainter {
   final List<_Particle> particles;
 
   _ParticlePainter({required this.color})
-      : particles = List.generate(40, (index) => _Particle(color));
+    : particles = List.generate(40, (index) => _Particle(color));
 
   @override
   void paint(Canvas canvas, Size size) {

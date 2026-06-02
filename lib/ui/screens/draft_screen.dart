@@ -23,7 +23,8 @@ class DraftScreen extends ConsumerStatefulWidget {
   ConsumerState<DraftScreen> createState() => _DraftScreenState();
 }
 
-class _DraftScreenState extends ConsumerState<DraftScreen> with TickerProviderStateMixin {
+class _DraftScreenState extends ConsumerState<DraftScreen>
+    with TickerProviderStateMixin {
   late List<_DraftChoice> _choices;
   bool _baseCompleted = false;
   bool _showMythicAlert = false;
@@ -35,7 +36,8 @@ class _DraftScreenState extends ConsumerState<DraftScreen> with TickerProviderSt
   int? _selectedIndex;
   int? _hoveredIndex;
 
-  bool get _hasMythicChoices => _choices.any((c) => c.rarity == RewardRarity.mythic);
+  bool get _hasMythicChoices =>
+      _choices.any((c) => c.rarity == RewardRarity.mythic);
 
   void _onBaseReelLanded() {
     _baseLandedCount++;
@@ -56,7 +58,9 @@ class _DraftScreenState extends ConsumerState<DraftScreen> with TickerProviderSt
 
   void _onMythicReelLanded() {
     _mythicLandedCount++;
-    final mythicChoicesCount = _choices.where((c) => c.rarity == RewardRarity.mythic).length;
+    final mythicChoicesCount = _choices
+        .where((c) => c.rarity == RewardRarity.mythic)
+        .length;
     if (_mythicLandedCount == mythicChoicesCount) {
       Future.delayed(const Duration(milliseconds: 1500), () {
         if (mounted) {
@@ -97,7 +101,9 @@ class _DraftScreenState extends ConsumerState<DraftScreen> with TickerProviderSt
     final l10n = AppLocalizations.of(context)!;
     switch (rarity) {
       case RewardRarity.mythic:
-        return Localizations.localeOf(context).languageCode == 'fr' ? 'MYTHIQUE' : 'MYTHIC';
+        return Localizations.localeOf(context).languageCode == 'fr'
+            ? 'MYTHIQUE'
+            : 'MYTHIC';
       case RewardRarity.legendary:
         return l10n.rarityLegendary;
       case RewardRarity.epic:
@@ -177,7 +183,10 @@ class _DraftScreenState extends ConsumerState<DraftScreen> with TickerProviderSt
                         const SizedBox(height: 10),
                         Text(
                           l10n.chooseUpgrade,
-                          style: const TextStyle(color: Colors.white, fontSize: 18),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                          ),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 30),
@@ -198,45 +207,72 @@ class _DraftScreenState extends ConsumerState<DraftScreen> with TickerProviderSt
                                         maxWidth: 160,
                                       ),
                                       child: MouseRegion(
-                                        onEnter: (_) => setState(() => _hoveredIndex = index),
-                                        onExit: (_) => setState(() => _hoveredIndex = null),
+                                        onEnter: (_) => setState(
+                                          () => _hoveredIndex = index,
+                                        ),
+                                        onExit: (_) => setState(
+                                          () => _hoveredIndex = null,
+                                        ),
                                         child: AnimatedScale(
                                           scale: _selectedIndex == index
                                               ? 1.12
-                                              : (_hoveredIndex == index ? 1.05 : 1.0),
-                                          duration: const Duration(milliseconds: 200),
+                                              : (_hoveredIndex == index
+                                                    ? 1.05
+                                                    : 1.0),
+                                          duration: const Duration(
+                                            milliseconds: 200,
+                                          ),
                                           curve: Curves.easeOut,
                                           child: AnimatedContainer(
-                                            duration: const Duration(milliseconds: 200),
+                                            duration: const Duration(
+                                              milliseconds: 200,
+                                            ),
                                             decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.circular(12),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
                                               boxShadow: _selectedIndex == index
                                                   ? [
                                                       BoxShadow(
-                                                        color: Colors.amber.withOpacity(0.4),
+                                                        color: Colors.amber
+                                                            .withOpacity(0.4),
                                                         blurRadius: 16,
                                                         spreadRadius: 3,
-                                                      )
+                                                      ),
                                                     ]
                                                   : [],
                                             ),
                                             child: DraftCardReel(
-                                              title: _getChoiceTitle(context, choice),
-                                              description: _getChoiceDescription(
+                                              title: _getChoiceTitle(
                                                 context,
                                                 choice,
                                               ),
+                                              description:
+                                                  _getChoiceDescription(
+                                                    context,
+                                                    choice,
+                                                  ),
                                               onTap: () {
-                                                if (_hasMythicChoices && !_mythicCompleted) return;
-                                                _onChoiceSelected(context, ref, choice, index);
+                                                if (_hasMythicChoices &&
+                                                    !_mythicCompleted)
+                                                  return;
+                                                _onChoiceSelected(
+                                                  context,
+                                                  ref,
+                                                  choice,
+                                                  index,
+                                                );
                                               },
                                               rarity: _rarityToString(
                                                 context,
                                                 choice.rarity,
                                               ),
                                               index: index,
-                                              onLand: index < 3 ? _onBaseReelLanded : null,
-                                              initialLanded: index >= 3 ? true : _baseCompleted,
+                                              onLand: index < 3
+                                                  ? _onBaseReelLanded
+                                                  : null,
+                                              initialLanded: index >= 3
+                                                  ? true
+                                                  : _baseCompleted,
                                             ),
                                           ),
                                         ),
@@ -262,45 +298,70 @@ class _DraftScreenState extends ConsumerState<DraftScreen> with TickerProviderSt
                                       maxWidth: 160,
                                     ),
                                     child: MouseRegion(
-                                      onEnter: (_) => setState(() => _hoveredIndex = index),
-                                      onExit: (_) => setState(() => _hoveredIndex = null),
+                                      onEnter: (_) =>
+                                          setState(() => _hoveredIndex = index),
+                                      onExit: (_) =>
+                                          setState(() => _hoveredIndex = null),
                                       child: AnimatedScale(
                                         scale: _selectedIndex == index
                                             ? 1.12
-                                            : (_hoveredIndex == index ? 1.05 : 1.0),
-                                        duration: const Duration(milliseconds: 200),
+                                            : (_hoveredIndex == index
+                                                  ? 1.05
+                                                  : 1.0),
+                                        duration: const Duration(
+                                          milliseconds: 200,
+                                        ),
                                         curve: Curves.easeOut,
                                         child: AnimatedContainer(
-                                          duration: const Duration(milliseconds: 200),
+                                          duration: const Duration(
+                                            milliseconds: 200,
+                                          ),
                                           decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(12),
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
                                             boxShadow: _selectedIndex == index
                                                 ? [
                                                     BoxShadow(
-                                                      color: Colors.amber.withOpacity(0.4),
+                                                      color: Colors.amber
+                                                          .withOpacity(0.4),
                                                       blurRadius: 16,
                                                       spreadRadius: 3,
-                                                    )
+                                                    ),
                                                   ]
                                                 : [],
                                           ),
                                           child: DraftCardReel(
-                                            title: _getChoiceTitle(context, choice),
+                                            title: _getChoiceTitle(
+                                              context,
+                                              choice,
+                                            ),
                                             description: _getChoiceDescription(
                                               context,
                                               choice,
                                             ),
                                             onTap: () {
-                                              if (_hasMythicChoices && !_mythicCompleted) return;
-                                              _onChoiceSelected(context, ref, choice, index);
+                                              if (_hasMythicChoices &&
+                                                  !_mythicCompleted)
+                                                return;
+                                              _onChoiceSelected(
+                                                context,
+                                                ref,
+                                                choice,
+                                                index,
+                                              );
                                             },
                                             rarity: _rarityToString(
                                               context,
                                               choice.rarity,
                                             ),
                                             index: index,
-                                            onLand: index < 3 ? _onBaseReelLanded : null,
-                                            initialLanded: index >= 3 ? true : _baseCompleted,
+                                            onLand: index < 3
+                                                ? _onBaseReelLanded
+                                                : null,
+                                            initialLanded: index >= 3
+                                                ? true
+                                                : _baseCompleted,
                                           ),
                                         ),
                                       ),
@@ -338,10 +399,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen> with TickerProviderSt
                             fontWeight: FontWeight.bold,
                             letterSpacing: 2.0,
                             shadows: [
-                              Shadow(
-                                color: Color(0xFFE53E3E),
-                                blurRadius: 15,
-                              ),
+                              Shadow(color: Color(0xFFE53E3E), blurRadius: 15),
                             ],
                           ),
                         ),
@@ -351,57 +409,76 @@ class _DraftScreenState extends ConsumerState<DraftScreen> with TickerProviderSt
                           children: _choices
                               .where((c) => c.rarity == RewardRarity.mythic)
                               .map((choice) {
-                            final mythicIndex = _choices.indexOf(choice);
-                            final relativeIndex = mythicIndex - 3;
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
-                              child: ConstrainedBox(
-                                constraints: const BoxConstraints(
-                                  maxWidth: 160,
-                                ),
-                                child: MouseRegion(
-                                  onEnter: (_) => setState(() => _hoveredIndex = mythicIndex),
-                                  onExit: (_) => setState(() => _hoveredIndex = null),
-                                  child: AnimatedScale(
-                                    scale: _selectedIndex == mythicIndex
-                                        ? 1.12
-                                        : (_hoveredIndex == mythicIndex ? 1.05 : 1.0),
-                                    duration: const Duration(milliseconds: 200),
-                                    curve: Curves.easeOut,
-                                    child: AnimatedContainer(
-                                      duration: const Duration(milliseconds: 200),
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(12),
-                                        boxShadow: _selectedIndex == mythicIndex
-                                            ? [
-                                                BoxShadow(
-                                                  color: Colors.amber.withOpacity(0.4),
-                                                  blurRadius: 16,
-                                                  spreadRadius: 3,
-                                                )
-                                              ]
-                                            : [],
+                                final mythicIndex = _choices.indexOf(choice);
+                                final relativeIndex = mythicIndex - 3;
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                  ),
+                                  child: ConstrainedBox(
+                                    constraints: const BoxConstraints(
+                                      maxWidth: 160,
+                                    ),
+                                    child: MouseRegion(
+                                      onEnter: (_) => setState(
+                                        () => _hoveredIndex = mythicIndex,
                                       ),
-                                      child: DraftCardReel(
-                                        title: _getChoiceTitle(context, choice),
-                                        description: _getChoiceDescription(
-                                          context,
-                                          choice,
+                                      onExit: (_) =>
+                                          setState(() => _hoveredIndex = null),
+                                      child: AnimatedScale(
+                                        scale: _selectedIndex == mythicIndex
+                                            ? 1.12
+                                            : (_hoveredIndex == mythicIndex
+                                                  ? 1.05
+                                                  : 1.0),
+                                        duration: const Duration(
+                                          milliseconds: 200,
                                         ),
-                                        onTap: () {},
-                                        rarity: _rarityToString(
-                                          context,
-                                          choice.rarity,
+                                        curve: Curves.easeOut,
+                                        child: AnimatedContainer(
+                                          duration: const Duration(
+                                            milliseconds: 200,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                            boxShadow:
+                                                _selectedIndex == mythicIndex
+                                                ? [
+                                                    BoxShadow(
+                                                      color: Colors.amber
+                                                          .withOpacity(0.4),
+                                                      blurRadius: 16,
+                                                      spreadRadius: 3,
+                                                    ),
+                                                  ]
+                                                : [],
+                                          ),
+                                          child: DraftCardReel(
+                                            title: _getChoiceTitle(
+                                              context,
+                                              choice,
+                                            ),
+                                            description: _getChoiceDescription(
+                                              context,
+                                              choice,
+                                            ),
+                                            onTap: () {},
+                                            rarity: _rarityToString(
+                                              context,
+                                              choice.rarity,
+                                            ),
+                                            index: relativeIndex,
+                                            onLand: _onMythicReelLanded,
+                                          ),
                                         ),
-                                        index: relativeIndex,
-                                        onLand: _onMythicReelLanded,
                                       ),
                                     ),
                                   ),
-                                ),
-                              ),
-                            );
-                          }).toList(),
+                                );
+                              })
+                              .toList(),
                         ),
                       ],
                     ),
@@ -430,8 +507,8 @@ class _DraftScreenState extends ConsumerState<DraftScreen> with TickerProviderSt
                     exclamationScale = t == 0
                         ? 0
                         : t == 1
-                            ? 1
-                            : pow(2, -10 * t) * sin((t * 10 - 0.75) * c4) + 1;
+                        ? 1
+                        : pow(2, -10 * t) * sin((t * 10 - 0.75) * c4) + 1;
                     exclamationScale = exclamationScale.clamp(0.0, 1.2);
                   }
 
@@ -458,12 +535,18 @@ class _DraftScreenState extends ConsumerState<DraftScreen> with TickerProviderSt
                           alignment: Alignment.centerLeft,
                           child: Container(
                             height: 6,
-                            width: MediaQuery.of(context).size.width * lineWidthPercent,
+                            width:
+                                MediaQuery.of(context).size.width *
+                                lineWidthPercent,
                             decoration: BoxDecoration(
-                              color: isVisible ? const Color(0xFFE53E3E) : Colors.transparent,
+                              color: isVisible
+                                  ? const Color(0xFFE53E3E)
+                                  : Colors.transparent,
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFFE53E3E).withValues(alpha: 0.8),
+                                  color: const Color(
+                                    0xFFE53E3E,
+                                  ).withValues(alpha: 0.8),
                                   blurRadius: 15,
                                   spreadRadius: 2,
                                 ),
@@ -490,10 +573,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen> with TickerProviderSt
                                     color: Color(0xFFE53E3E),
                                     blurRadius: 25,
                                   ),
-                                  Shadow(
-                                    color: Colors.white,
-                                    blurRadius: 5,
-                                  ),
+                                  Shadow(color: Colors.white, blurRadius: 5),
                                 ],
                               ),
                             ),
@@ -677,11 +757,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen> with TickerProviderSt
           rarity = RewardRarity.legendary;
         }
       } else {
-        rarity = _rollRarity(
-          luck,
-          canBeLegendary: true,
-          isLevelReward: false,
-        );
+        rarity = _rollRarity(luck, canBeLegendary: true, isLevelReward: false);
       }
 
       double multiplier = 1.0;

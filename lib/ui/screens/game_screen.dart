@@ -150,10 +150,8 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               },
             );
           },
-          transitionBuilder: (ctx, anim, _, child) => FadeTransition(
-            opacity: anim,
-            child: child,
-          ),
+          transitionBuilder: (ctx, anim, _, child) =>
+              FadeTransition(opacity: anim, child: child),
         );
         return; // Return early, transitions are handled in onCollect callback
       }

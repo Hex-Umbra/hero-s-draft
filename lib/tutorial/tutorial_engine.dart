@@ -104,16 +104,52 @@ class TutorialEngine extends ChangeNotifier {
       case 4: // Step 5: Cards & Mana
         mockState.heroMana = 3;
         mockState.hand = [
-          const TutorialCard(id: 'strike', nameEn: 'Basic Strike', nameFr: 'Frappe Basique', cost: 1, damage: 6, armor: 0),
-          const TutorialCard(id: 'defend', nameEn: 'Defend', nameFr: 'Défense', cost: 1, damage: 0, armor: 4),
-          const TutorialCard(id: 'fireball', nameEn: 'Fireball', nameFr: 'Boule de Feu', cost: 2, damage: 10, armor: 0, effectType: 'fire'),
+          const TutorialCard(
+            id: 'strike',
+            nameEn: 'Basic Strike',
+            nameFr: 'Frappe Basique',
+            cost: 1,
+            damage: 6,
+            armor: 0,
+          ),
+          const TutorialCard(
+            id: 'defend',
+            nameEn: 'Defend',
+            nameFr: 'Défense',
+            cost: 1,
+            damage: 0,
+            armor: 4,
+          ),
+          const TutorialCard(
+            id: 'fireball',
+            nameEn: 'Fireball',
+            nameFr: 'Boule de Feu',
+            cost: 2,
+            damage: 10,
+            armor: 0,
+            effectType: 'fire',
+          ),
         ];
         break;
       case 5: // Step 6: Play Card
         mockState.heroMana = 3;
         mockState.hand = [
-          const TutorialCard(id: 'strike', nameEn: 'Basic Strike', nameFr: 'Frappe Basique', cost: 1, damage: 6, armor: 0),
-          const TutorialCard(id: 'defend', nameEn: 'Defend', nameFr: 'Défense', cost: 1, damage: 0, armor: 4),
+          const TutorialCard(
+            id: 'strike',
+            nameEn: 'Basic Strike',
+            nameFr: 'Frappe Basique',
+            cost: 1,
+            damage: 6,
+            armor: 0,
+          ),
+          const TutorialCard(
+            id: 'defend',
+            nameEn: 'Defend',
+            nameFr: 'Défense',
+            cost: 1,
+            damage: 0,
+            armor: 4,
+          ),
         ];
         mockState.enemy = TutorialEnemy(
           nameEn: 'Tutorial Slime',
@@ -142,9 +178,30 @@ class TutorialEngine extends ChangeNotifier {
         break;
       case 9: // Step 10: Merge
         mockState.hand = [
-          const TutorialCard(id: 'strike_1', nameEn: 'Basic Strike Lvl 1', nameFr: 'Frappe Basique Niv.1', cost: 1, damage: 6, armor: 0),
-          const TutorialCard(id: 'strike_2', nameEn: 'Basic Strike Lvl 1', nameFr: 'Frappe Basique Niv.1', cost: 1, damage: 6, armor: 0),
-          const TutorialCard(id: 'strike_3', nameEn: 'Basic Strike Lvl 1', nameFr: 'Frappe Basique Niv.1', cost: 1, damage: 6, armor: 0),
+          const TutorialCard(
+            id: 'strike_1',
+            nameEn: 'Basic Strike Lvl 1',
+            nameFr: 'Frappe Basique Niv.1',
+            cost: 1,
+            damage: 6,
+            armor: 0,
+          ),
+          const TutorialCard(
+            id: 'strike_2',
+            nameEn: 'Basic Strike Lvl 1',
+            nameFr: 'Frappe Basique Niv.1',
+            cost: 1,
+            damage: 6,
+            armor: 0,
+          ),
+          const TutorialCard(
+            id: 'strike_3',
+            nameEn: 'Basic Strike Lvl 1',
+            nameFr: 'Frappe Basique Niv.1',
+            cost: 1,
+            damage: 6,
+            armor: 0,
+          ),
         ];
         break;
       case 10: // Step 11: XP
@@ -194,7 +251,14 @@ class TutorialEngine extends ChangeNotifier {
 
   void mergeCards() {
     mockState.hand = [
-      const TutorialCard(id: 'strike_upgraded', nameEn: 'Basic Strike Lvl 2', nameFr: 'Frappe Basique Niv.2', cost: 1, damage: 9, armor: 0),
+      const TutorialCard(
+        id: 'strike_upgraded',
+        nameEn: 'Basic Strike Lvl 2',
+        nameFr: 'Frappe Basique Niv.2',
+        cost: 1,
+        damage: 9,
+        armor: 0,
+      ),
     ];
     notifyListeners();
   }

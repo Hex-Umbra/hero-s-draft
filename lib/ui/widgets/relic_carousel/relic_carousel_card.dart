@@ -85,7 +85,9 @@ class RelicCarouselCard extends StatelessWidget {
           height: 320,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: isFocused ? const Color(0xFF2A2A3D) : const Color(0xFF1E1E2C),
+            color: isFocused
+                ? const Color(0xFF2A2A3D)
+                : const Color(0xFF1E1E2C),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: isFocused
@@ -111,7 +113,10 @@ class RelicCarouselCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: rarityColor.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(6),
@@ -127,7 +132,10 @@ class RelicCarouselCard extends StatelessWidget {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: triggerColor.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(6),

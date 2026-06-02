@@ -23,7 +23,7 @@ class DraftChoiceCard extends StatelessWidget {
     // 1. Determine rarity color matching the game's theme
     Color rarityColor = const Color(0xFF8E8E93); // Common Gray
     final rarityUpper = rarity.toUpperCase();
-    
+
     if (rarityUpper == 'HORS NORME' ||
         rarityUpper == 'UNCOMMON' ||
         rarityUpper == 'ATYPIQUE') {
@@ -43,11 +43,13 @@ class DraftChoiceCard extends StatelessWidget {
     final titleUpper = title.toUpperCase();
     if (titleUpper.contains('VITALIT') || titleUpper.contains('VITALITY')) {
       emoji = '❤️'; // Vitality / HP
-    } else if (titleUpper.contains('AIGUIS') || titleUpper.contains('SHARPEN')) {
+    } else if (titleUpper.contains('AIGUIS') ||
+        titleUpper.contains('SHARPEN')) {
       emoji = '⚔️'; // Attack Power
     } else if (titleUpper.contains('FORGE')) {
       emoji = '🛡️'; // Armor Mastery
-    } else if (titleUpper.contains('SAGESSE') || titleUpper.contains('WISDOM')) {
+    } else if (titleUpper.contains('SAGESSE') ||
+        titleUpper.contains('WISDOM')) {
       emoji = '🔮'; // Mana Max
     } else if (titleUpper.contains('TRÈFLE') || titleUpper.contains('CLOVER')) {
       emoji = '🍀'; // Luck Boost
@@ -56,19 +58,22 @@ class DraftChoiceCard extends StatelessWidget {
     }
 
     final isMythic = rarityUpper == 'MYTHIQUE' || rarityUpper == 'MYTHIC';
-    final isLegendary = rarityUpper == 'LÉGENDAIRE' || rarityUpper == 'LEGENDARY';
+    final isLegendary =
+        rarityUpper == 'LÉGENDAIRE' || rarityUpper == 'LEGENDARY';
     final isHighRarity = isLegendary || isMythic;
 
     // 3. Smooth interpolation of border & shadow based on showRarity and rarityProgress
     final double actualProgress = showRarity ? rarityProgress : 0.0;
-    
+
     final Color borderColor = Color.lerp(
       Colors.white12,
       rarityColor.withValues(alpha: 0.8),
       actualProgress,
     )!;
 
-    final double borderSize = isHighRarity ? (2.0 + (isMythic ? 2.0 : 1.0) * actualProgress) : 2.0;
+    final double borderSize = isHighRarity
+        ? (2.0 + (isMythic ? 2.0 : 1.0) * actualProgress)
+        : 2.0;
 
     final double shadowAlpha = isMythic ? 0.60 : (isLegendary ? 0.45 : 0.2);
     final double shadowBlur = isMythic ? 25.0 : (isLegendary ? 20.0 : 8.0);
@@ -83,14 +88,13 @@ class DraftChoiceCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: const Color(0xFF2A2A3D),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: borderColor,
-            width: borderSize,
-          ),
+          border: Border.all(color: borderColor, width: borderSize),
           boxShadow: actualProgress > 0.01
               ? [
                   BoxShadow(
-                    color: rarityColor.withValues(alpha: shadowAlpha * actualProgress),
+                    color: rarityColor.withValues(
+                      alpha: shadowAlpha * actualProgress,
+                    ),
                     blurRadius: shadowBlur * actualProgress,
                     spreadRadius: shadowSpread * actualProgress,
                   ),
@@ -103,7 +107,10 @@ class DraftChoiceCard extends StatelessWidget {
             Opacity(
               opacity: actualProgress,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: rarityColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(6),
@@ -121,10 +128,7 @@ class DraftChoiceCard extends StatelessWidget {
             ),
             const Spacer(),
             // Large Upgrade Icon
-            Text(
-              emoji,
-              style: const TextStyle(fontSize: 48),
-            ),
+            Text(emoji, style: const TextStyle(fontSize: 48)),
             const Spacer(),
             // Upgrade Title
             Text(

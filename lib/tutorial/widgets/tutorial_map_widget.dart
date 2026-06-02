@@ -38,7 +38,8 @@ class _TutorialMapWidgetState extends State<TutorialMapWidget> {
       nameEn: 'Combat Encounter',
       nameFr: 'Rencontre de Combat',
       descEn: 'Fight base monsters to gain XP and gold.',
-      descFr: 'Affrontez des monstres de base pour gagner de l\'XP et de l\'or.',
+      descFr:
+          'Affrontez des monstres de base pour gagner de l\'XP et de l\'or.',
       icon: Icons.flash_on,
       color: Colors.white70,
     ),
@@ -47,7 +48,8 @@ class _TutorialMapWidgetState extends State<TutorialMapWidget> {
       nameEn: 'Shop',
       nameFr: 'Boutique',
       descEn: 'Buy new cards, remove cards, or purchase relics.',
-      descFr: 'Achetez de nouvelles cartes, retirez-en ou procurez-vous des reliques.',
+      descFr:
+          'Achetez de nouvelles cartes, retirez-en ou procurez-vous des reliques.',
       icon: Icons.shopping_cart_outlined,
       color: Colors.amber,
     ),
@@ -65,7 +67,8 @@ class _TutorialMapWidgetState extends State<TutorialMapWidget> {
       nameEn: 'Elite Combat',
       nameFr: 'Combat Élite',
       descEn: 'Defeat strong foes to claim powerful Relics.',
-      descFr: 'Battez des ennemis redoutables pour obtenir de puissantes Reliques.',
+      descFr:
+          'Battez des ennemis redoutables pour obtenir de puissantes Reliques.',
       icon: Icons.warning_amber_rounded,
       color: Colors.redAccent,
     ),
@@ -75,163 +78,184 @@ class _TutorialMapWidgetState extends State<TutorialMapWidget> {
   Widget build(BuildContext context) {
     final isFrench = Localizations.localeOf(context).languageCode == 'fr';
 
-    return Stack(
-      children: [
-        // Starry/grid space background simulation
-        Positioned.fill(
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () {
-              setState(() {
-                _selectedNode = null;
-              });
-            },
-            child: CustomPaint(
-              painter: StarryGridPainter(),
-            ),
-          ),
-        ),
-
-        // Custom painter for node connections
-        Positioned.fill(
-          child: IgnorePointer(
-            child: CustomPaint(
-              painter: MapConnectionsPainter(),
-            ),
-          ),
-        ),
-
-        // Map Nodes
-        ..._nodes.map((node) {
-          final isSelected = _selectedNode == node;
-          return Positioned(
-            left: node.position.dx - 25,
-            top: node.position.dy - 25,
-            child: GestureDetector(
-              onTap: () {
-                setState(() {
-                  _selectedNode = isSelected ? null : node;
-                });
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: isSelected ? const Color(0xFF2A2A40) : const Color(0xFF131A2D),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: isSelected ? Colors.yellow : node.color,
-                    width: isSelected ? 3.5 : 2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: (isSelected ? Colors.yellow : node.color).withOpacity(0.3),
-                      blurRadius: isSelected ? 12 : 6,
-                      spreadRadius: isSelected ? 3 : 1,
-                    )
-                  ],
-                ),
-                child: Icon(
-                  node.icon,
-                  color: node.color,
-                  size: 26,
+    return Center(
+      child: FittedBox(
+        fit: BoxFit.contain,
+        child: SizedBox(
+          width: 320,
+          height: 260,
+          child: Stack(
+            children: [
+              // Starry/grid space background simulation
+              Positioned.fill(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () {
+                    setState(() {
+                      _selectedNode = null;
+                    });
+                  },
+                  child: CustomPaint(painter: StarryGridPainter()),
                 ),
               ),
-            ),
-          );
-        }),
 
-        // Instruction Tip
-        if (_selectedNode == null)
-          Positioned(
-            bottom: 12,
-            left: 0,
-            right: 0,
-            child: IgnorePointer(
-              child: Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.black54,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    isFrench ? '💡 Touchez un nœud pour voir l\'effet' : '💡 Tap a node to inspect its effect',
-                    style: TextStyle(
-                      color: Colors.grey.shade400,
-                      fontSize: 12,
-                    ),
-                  ),
+              // Custom painter for node connections
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: CustomPaint(painter: MapConnectionsPainter()),
                 ),
               ),
-            ),
-          ),
 
-        // Glassmorphic Tooltip Panel
-        Positioned(
-          left: 16,
-          right: 16,
-          top: (_selectedNode != null && _selectedNode!.position.dy > 150) ? 16 : null,
-          bottom: (_selectedNode == null || _selectedNode!.position.dy <= 150) ? 16 : null,
-          child: IgnorePointer(
-            ignoring: true,
-            child: AnimatedOpacity(
-              opacity: _selectedNode != null ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 200),
-              child: _selectedNode == null
-                  ? const SizedBox.shrink()
-                  : Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              // Map Nodes
+              ..._nodes.map((node) {
+                final isSelected = _selectedNode == node;
+                return Positioned(
+                  left: node.position.dx - 25,
+                  top: node.position.dy - 25,
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedNode = isSelected ? null : node;
+                      });
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: 50,
+                      height: 50,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1E293B).withOpacity(0.95),
-                        borderRadius: BorderRadius.circular(10),
+                        color: isSelected
+                            ? const Color(0xFF2A2A40)
+                            : const Color(0xFF131A2D),
+                        shape: BoxShape.circle,
                         border: Border.all(
-                          color: _selectedNode!.color.withOpacity(0.5),
-                          width: 1.5,
+                          color: isSelected ? Colors.yellow : node.color,
+                          width: isSelected ? 3.5 : 2,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
-                          )
+                            color: (isSelected ? Colors.yellow : node.color)
+                                .withOpacity(0.3),
+                            blurRadius: isSelected ? 12 : 6,
+                            spreadRadius: isSelected ? 3 : 1,
+                          ),
                         ],
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(_selectedNode!.icon, color: _selectedNode!.color, size: 16),
-                              const SizedBox(width: 8),
-                              Text(
-                                isFrench ? _selectedNode!.nameFr : _selectedNode!.nameEn,
-                                style: TextStyle(
-                                  color: _selectedNode!.color,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            isFrench ? _selectedNode!.descFr : _selectedNode!.descEn,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 11.5,
-                              height: 1.3,
-                            ),
-                          ),
-                        ],
+                      child: Icon(node.icon, color: node.color, size: 26),
+                    ),
+                  ),
+                );
+              }),
+
+              // Instruction Tip
+              if (_selectedNode == null)
+                Positioned(
+                  bottom: 12,
+                  left: 0,
+                  right: 0,
+                  child: IgnorePointer(
+                    child: Center(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black54,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          isFrench
+                              ? '💡 Touchez un nœud pour voir l\'effet'
+                              : '💡 Tap a node to inspect its effect',
+                          style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
+                        ),
                       ),
                     ),
-            ),
+                  ),
+                ),
+
+              // Glassmorphic Tooltip Panel
+              Positioned(
+                left: 16,
+                right: 16,
+                top: (_selectedNode != null && _selectedNode!.position.dy > 150)
+                    ? 16
+                    : null,
+                bottom: (_selectedNode == null || _selectedNode!.position.dy <= 150)
+                    ? 16
+                    : null,
+                child: IgnorePointer(
+                  ignoring: true,
+                  child: AnimatedOpacity(
+                    opacity: _selectedNode != null ? 1.0 : 0.0,
+                    duration: const Duration(milliseconds: 200),
+                    child: _selectedNode == null
+                        ? const SizedBox.shrink()
+                        : Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF1E293B).withOpacity(0.95),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: _selectedNode!.color.withOpacity(0.5),
+                                width: 1.5,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(
+                                      _selectedNode!.icon,
+                                      color: _selectedNode!.color,
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      isFrench
+                                          ? _selectedNode!.nameFr
+                                          : _selectedNode!.nameEn,
+                                      style: TextStyle(
+                                        color: _selectedNode!.color,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  isFrench
+                                      ? _selectedNode!.descFr
+                                      : _selectedNode!.descEn,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 11.5,
+                                    height: 1.3,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
-      ],
+      ),
     );
   }
 }
@@ -239,7 +263,6 @@ class _TutorialMapWidgetState extends State<TutorialMapWidget> {
 class MapConnectionsPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-
     final pathPaint = Paint()
       ..color = const Color(0xFF64748B).withOpacity(0.3)
       ..strokeWidth = 1.5
@@ -264,7 +287,10 @@ class MapConnectionsPainter extends CustomPainter {
     int dashCount = (distance / (dashWidth + dashSpace)).floor();
     for (int i = 0; i < dashCount; i++) {
       double startPercent = (i * (dashWidth + dashSpace)) / distance;
-      double endPercent = (startPercent + (dashWidth / distance)).clamp(0.0, 1.0);
+      double endPercent = (startPercent + (dashWidth / distance)).clamp(
+        0.0,
+        1.0,
+      );
       canvas.drawLine(
         Offset.lerp(p1, p2, startPercent)!,
         Offset.lerp(p1, p2, endPercent)!,

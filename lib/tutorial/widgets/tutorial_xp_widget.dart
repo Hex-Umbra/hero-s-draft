@@ -52,124 +52,149 @@ class _TutorialXpWidgetState extends State<TutorialXpWidget> {
       alignment: Alignment.center,
       children: [
         // Main view content
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Hero Level Badge
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.amber.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.amber, width: 1.5),
-                ),
-                child: Text(
-                  isFrench ? 'Niveau : ${state.playerLevel}' : 'Level: ${state.playerLevel}',
-                  style: const TextStyle(
-                    color: Colors.amber,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // XP Progress Bar
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        isFrench ? 'EXPÉRIENCE' : 'EXPERIENCE',
+        Center(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: SizedBox(
+              width: 300,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Hero Level Badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.amber, width: 1.5),
+                      ),
+                      child: Text(
+                        isFrench
+                            ? 'Niveau : ${state.playerLevel}'
+                            : 'Level: ${state.playerLevel}',
                         style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 10,
+                          color: Colors.amber,
                           fontWeight: FontWeight.bold,
+                          fontSize: 16,
                         ),
                       ),
-                      Text(
-                        '${state.playerXp}/${state.xpToNextLevel} XP',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Container(
-                    height: 14,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: Colors.black26,
-                      borderRadius: BorderRadius.circular(7),
-                      border: Border.all(color: Colors.white10),
                     ),
-                    child: Stack(
+                    const SizedBox(height: 24),
+
+                    // XP Progress Bar
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(7),
-                          ),
-                          child: FractionallySizedBox(
-                            alignment: Alignment.centerLeft,
-                            widthFactor: progress,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [Colors.purpleAccent, Colors.blueAccent],
-                                ),
-                                borderRadius: BorderRadius.circular(7),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              isFrench ? 'EXPÉRIENCE' : 'EXPERIENCE',
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
+                            Text(
+                              '${state.playerXp}/${state.xpToNextLevel} XP',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Container(
+                          height: 14,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: Colors.black26,
+                            borderRadius: BorderRadius.circular(7),
+                            border: Border.all(color: Colors.white10),
+                          ),
+                          child: Stack(
+                            children: [
+                              AnimatedContainer(
+                                duration: const Duration(milliseconds: 300),
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(7),
+                                ),
+                                child: FractionallySizedBox(
+                                  alignment: Alignment.centerLeft,
+                                  widthFactor: progress,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(
+                                        colors: [
+                                          Colors.purpleAccent,
+                                          Colors.blueAccent,
+                                        ],
+                                      ),
+                                      borderRadius: BorderRadius.circular(7),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
-              // Action button
-              if (state.playerLevel == 1)
-                InkWell(
-                  onTap: () => widget.engine.gainXp(35),
-                  borderRadius: BorderRadius.circular(10),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      color: const Color(0xFF1E293B),
-                      border: Border.all(color: Colors.purpleAccent.withOpacity(0.3)),
-                    ),
-                    child: Text(
-                      isFrench ? 'Battre un Ennemi (+35 XP) ⚔️' : 'Defeat an Enemy (+35 XP) ⚔️',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12.5,
+                    // Action button
+                    if (state.playerLevel == 1)
+                      InkWell(
+                        onTap: () => widget.engine.gainXp(35),
+                        borderRadius: BorderRadius.circular(10),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            color: const Color(0xFF1E293B),
+                            border: Border.all(
+                              color: Colors.purpleAccent.withOpacity(0.3),
+                            ),
+                          ),
+                          child: Text(
+                            isFrench
+                                ? 'Battre un Ennemi (+35 XP) ⚔️'
+                                : 'Defeat an Enemy (+35 XP) ⚔️',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12.5,
+                            ),
+                          ),
+                        ),
+                      )
+                    else
+                      Text(
+                        isFrench
+                            ? 'Passage de niveau atteint ! 🎉'
+                            : 'Level Up Achieved! 🎉',
+                        style: const TextStyle(
+                          color: Colors.amber,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
                       ),
-                    ),
-                  ),
-                )
-              else
-                Text(
-                  isFrench ? 'Passage de niveau atteint ! 🎉' : 'Level Up Achieved! 🎉',
-                  style: const TextStyle(
-                    color: Colors.amber,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                  ),
+                  ],
                 ),
-            ],
+              ),
+            ),
           ),
         ),
 
@@ -184,13 +209,13 @@ class _TutorialXpWidgetState extends State<TutorialXpWidget> {
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeOutBack,
                   builder: (context, scale, child) {
-                    return Transform.scale(
-                      scale: scale,
-                      child: child,
-                    );
+                    return Transform.scale(scale: scale, child: child);
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 16,
+                    ),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
                         colors: [Color(0xFFD97706), Color(0xFFF59E0B)],
@@ -201,7 +226,7 @@ class _TutorialXpWidgetState extends State<TutorialXpWidget> {
                           color: Colors.amber.withOpacity(0.4),
                           blurRadius: 15,
                           spreadRadius: 2,
-                        )
+                        ),
                       ],
                     ),
                     child: Text(

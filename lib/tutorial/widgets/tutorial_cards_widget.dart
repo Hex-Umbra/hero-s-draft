@@ -55,19 +55,22 @@ class TutorialUiCard extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Title
-              Text(
-                title.toUpperCase(),
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
+      // Title
+      FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Text(
+          title.toUpperCase(),
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
               // Separator
               Container(
                 height: 1,
@@ -159,7 +162,9 @@ class _TutorialCardsWidgetState extends State<TutorialCardsWidget> {
                     padding: const EdgeInsets.symmetric(horizontal: 2.0),
                     child: Icon(
                       Icons.diamond_rounded,
-                      color: active ? Colors.cyanAccent : Colors.cyan.withOpacity(0.2),
+                      color: active
+                          ? Colors.cyanAccent
+                          : Colors.cyan.withOpacity(0.2),
                       size: 20,
                     ),
                   );
@@ -171,39 +176,46 @@ class _TutorialCardsWidgetState extends State<TutorialCardsWidget> {
 
           // Horizontal view of hand cards
           Expanded(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: List.generate(hand.length, (index) {
-                final card = hand[index];
-                final isSelected = _selectedCardIndex == index;
-                final title = isFrench ? card.nameFr : card.nameEn;
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(hand.length, (index) {
+                  final card = hand[index];
+                  final isSelected = _selectedCardIndex == index;
+                  final title = isFrench ? card.nameFr : card.nameEn;
 
-                // Simple text descriptions for mockup
-                String cardDesc = '';
-                if (card.id == 'strike') {
-                  cardDesc = isFrench ? 'Inflige 6 dégâts.' : 'Deals 6 damage.';
-                } else if (card.id == 'defend') {
-                  cardDesc = isFrench ? 'Gagne 4 armure.' : 'Gains 4 armor.';
-                } else {
-                  cardDesc = isFrench ? 'Inflige 10 dégâts et brûle.' : 'Deals 10 damage & burns.';
-                }
+                  // Simple text descriptions for mockup
+                  String cardDesc = '';
+                  if (card.id == 'strike') {
+                    cardDesc = isFrench ? 'Inflige 6 dégâts.' : 'Deals 6 damage.';
+                  } else if (card.id == 'defend') {
+                    cardDesc = isFrench ? 'Gagne 4 armure.' : 'Gains 4 armor.';
+                  } else {
+                    cardDesc = isFrench
+                        ? 'Inflige 10 dégâts et brûle.'
+                        : 'Deals 10 damage & burns.';
+                  }
 
-                return SizedBox(
-                  width: 90,
-                  child: TutorialUiCard(
-                    title: title,
-                    description: cardDesc,
-                    cost: card.cost,
-                    type: card.id == 'defend' ? 'skill' : 'attack',
-                    isSelected: isSelected,
-                    onTap: () {
-                      setState(() {
-                        _selectedCardIndex = index;
-                      });
-                    },
-                  ),
-                );
-              }),
+                  return Container(
+                    width: 85,
+                    margin: const EdgeInsets.symmetric(horizontal: 5),
+                    child: TutorialUiCard(
+                      title: title,
+                      description: cardDesc,
+                      cost: card.cost,
+                      type: card.id == 'defend' ? 'skill' : 'attack',
+                      isSelected: isSelected,
+                      onTap: () {
+                        setState(() {
+                          _selectedCardIndex = index;
+                        });
+                      },
+                    ),
+                  );
+                }),
+              ),
             ),
           ),
           const SizedBox(height: 12),

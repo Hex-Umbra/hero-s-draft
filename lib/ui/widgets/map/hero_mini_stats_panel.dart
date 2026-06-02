@@ -181,7 +181,10 @@ class HeroMiniStatsPanel extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: Colors.amber.withAlpha(40),
                 borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: Colors.amber.withAlpha(120), width: 0.5),
+                border: Border.all(
+                  color: Colors.amber.withAlpha(120),
+                  width: 0.5,
+                ),
               ),
               child: Text(
                 locale == 'fr' ? 'Niv. ${stats.level}' : 'Lvl. ${stats.level}',
@@ -203,7 +206,9 @@ class HeroMiniStatsPanel extends ConsumerWidget {
             child: LinearProgressIndicator(
               value: progress,
               backgroundColor: Colors.black38,
-              valueColor: const AlwaysStoppedAnimation<Color>(Colors.amberAccent),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                Colors.amberAccent,
+              ),
             ),
           ),
         ),

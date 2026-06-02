@@ -43,30 +43,12 @@ class _DraftCardReelState extends State<DraftCardReel>
 
   // Themed upgrade mock data to scroll through during spin phase (neutral / no rarity)
   final List<Map<String, String>> _mockUpgrades = [
-    {
-      'title': 'Vitalité',
-      'description': '+10 PV Max',
-    },
-    {
-      'title': 'Aiguisage',
-      'description': '+4 Attaque',
-    },
-    {
-      'title': 'Forge d\'Acier',
-      'description': '+2 gains d\'Armure',
-    },
-    {
-      'title': 'Sagesse',
-      'description': '+1 Mana Max',
-    },
-    {
-      'title': 'Trèfle à 4 feuilles',
-      'description': '+1 Chance',
-    },
-    {
-      'title': 'Miroir',
-      'description': 'Cloner une carte',
-    },
+    {'title': 'Vitalité', 'description': '+10 PV Max'},
+    {'title': 'Aiguisage', 'description': '+4 Attaque'},
+    {'title': 'Forge d\'Acier', 'description': '+2 gains d\'Armure'},
+    {'title': 'Sagesse', 'description': '+1 Mana Max'},
+    {'title': 'Trèfle à 4 feuilles', 'description': '+1 Chance'},
+    {'title': 'Miroir', 'description': 'Cloner une carte'},
   ];
 
   late Map<String, String> _currentCardData;
@@ -76,9 +58,11 @@ class _DraftCardReelState extends State<DraftCardReel>
   void initState() {
     super.initState();
 
-    final isLegendary = widget.rarity.toUpperCase() == 'LÉGENDAIRE' ||
+    final isLegendary =
+        widget.rarity.toUpperCase() == 'LÉGENDAIRE' ||
         widget.rarity.toUpperCase() == 'LEGENDARY';
-    final isMythic = widget.rarity.toUpperCase() == 'MYTHIQUE' ||
+    final isMythic =
+        widget.rarity.toUpperCase() == 'MYTHIQUE' ||
         widget.rarity.toUpperCase() == 'MYTHIC';
     final isHighRarity = isLegendary || isMythic;
 
@@ -154,7 +138,10 @@ class _DraftCardReelState extends State<DraftCardReel>
       // Start fast rolling immediately
       _rollController.forward();
       // Staggered landing calculation: staggered lock-in delay based on slot index
-      final int delayMs = 1200 + widget.index * 600 + (isMythic ? 800 : (isLegendary ? 400 : 0));
+      final int delayMs =
+          1200 +
+          widget.index * 600 +
+          (isMythic ? 800 : (isLegendary ? 400 : 0));
       _landTimer = Timer(Duration(milliseconds: delayMs), _landReel);
     }
   }
@@ -192,9 +179,11 @@ class _DraftCardReelState extends State<DraftCardReel>
 
   @override
   Widget build(BuildContext context) {
-    final isLegendary = widget.rarity.toUpperCase() == 'LÉGENDAIRE' ||
+    final isLegendary =
+        widget.rarity.toUpperCase() == 'LÉGENDAIRE' ||
         widget.rarity.toUpperCase() == 'LEGENDARY';
-    final isMythic = widget.rarity.toUpperCase() == 'MYTHIQUE' ||
+    final isMythic =
+        widget.rarity.toUpperCase() == 'MYTHIQUE' ||
         widget.rarity.toUpperCase() == 'MYTHIC';
     final isHighRarity = isLegendary || isMythic;
 
@@ -285,10 +274,7 @@ class _DraftCardReelState extends State<DraftCardReel>
                         children: List.generate(4, (index) {
                           return Opacity(
                             opacity: 0.08,
-                            child: Container(
-                              height: 3,
-                              color: Colors.white,
-                            ),
+                            child: Container(height: 3, color: Colors.white),
                           );
                         }),
                       ),
@@ -365,7 +351,10 @@ class _SparkPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = color.withValues(alpha: (isMythic ? 0.4 : 0.3) + (isMythic ? 0.6 : 0.5) * (1.0 - progress))
+      ..color = color.withValues(
+        alpha:
+            (isMythic ? 0.4 : 0.3) + (isMythic ? 0.6 : 0.5) * (1.0 - progress),
+      )
       ..style = PaintingStyle.stroke
       ..strokeWidth = (isMythic ? 5.0 : 3.0) + (isMythic ? 3.0 : 2.0) * progress
       ..maskFilter = MaskFilter.blur(BlurStyle.normal, isMythic ? 8 : 5);
