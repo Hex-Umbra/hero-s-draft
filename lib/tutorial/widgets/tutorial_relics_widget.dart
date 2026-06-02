@@ -78,15 +78,15 @@ class _TutorialRelicsWidgetState extends State<TutorialRelicsWidget> {
                                 width: 160,
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF1E293B).withOpacity(0.5),
+                                  color: const Color(0xFF1E293B).withValues(alpha: 0.5),
                                   borderRadius: BorderRadius.circular(16),
                                   border: Border.all(
-                                    color: Colors.amber.withOpacity(0.4),
+                                    color: Colors.amber.withValues(alpha: 0.4),
                                     width: 1.5,
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.amber.withOpacity(0.15),
+                                      color: Colors.amber.withValues(alpha: 0.15),
                                       blurRadius: 12,
                                       spreadRadius: 1,
                                     ),
@@ -179,7 +179,7 @@ class _TutorialRelicsWidgetState extends State<TutorialRelicsWidget> {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(10),
                         color: const Color(0xFF1E293B),
-                        border: Border.all(color: Colors.amber.withOpacity(0.3)),
+                        border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
                       ),
                       child: Text(
                         isFrench ? 'Collecter 👑' : 'Collect 👑',
@@ -211,7 +211,7 @@ class _TutorialRelicsWidgetState extends State<TutorialRelicsWidget> {
         Text(
           label,
           style: TextStyle(
-            color: color.withOpacity(0.8),
+            color: color.withValues(alpha: 0.8),
             fontSize: 9,
             fontWeight: FontWeight.bold,
           ),
@@ -220,3 +220,4 @@ class _TutorialRelicsWidgetState extends State<TutorialRelicsWidget> {
     );
   }
 }
+

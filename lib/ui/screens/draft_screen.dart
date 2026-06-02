@@ -253,8 +253,9 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                                   ),
                                               onTap: () {
                                                 if (_hasMythicChoices &&
-                                                    !_mythicCompleted)
+                                                    !_mythicCompleted) {
                                                   return;
+                                                }
                                                 _onChoiceSelected(
                                                   context,
                                                   ref,
@@ -342,8 +343,9 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                             ),
                                             onTap: () {
                                               if (_hasMythicChoices &&
-                                                  !_mythicCompleted)
+                                                  !_mythicCompleted) {
                                                 return;
+                                              }
                                               _onChoiceSelected(
                                                 context,
                                                 ref,

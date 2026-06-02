@@ -181,9 +181,9 @@ class _TutorialCombatOverviewWidgetState
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
           decoration: BoxDecoration(
-            color: const Color(0xFF0F172A).withOpacity(0.7),
+            color: const Color(0xFF0F172A).withValues(alpha: 0.7),
             borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: Colors.cyan.withOpacity(0.3), width: 1),
+            border: Border.all(color: Colors.cyan.withValues(alpha: 0.3), width: 1),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -240,7 +240,7 @@ class _TutorialCombatOverviewWidgetState
                 color: const Color(0xFF3B82F6),
                 borderRadius: BorderRadius.circular(10),
                 boxShadow: [
-                  BoxShadow(color: Colors.blue.withOpacity(0.3), blurRadius: 3),
+                  BoxShadow(color: Colors.blue.withValues(alpha: 0.3), blurRadius: 3),
                 ],
               ),
               child: Text(
@@ -269,9 +269,9 @@ class _TutorialCombatOverviewWidgetState
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
           decoration: BoxDecoration(
-            color: const Color(0xFF0F172A).withOpacity(0.7),
+            color: const Color(0xFF0F172A).withValues(alpha: 0.7),
             borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: Colors.amber.withOpacity(0.3), width: 1),
+            border: Border.all(color: Colors.amber.withValues(alpha: 0.3), width: 1),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -396,7 +396,7 @@ class _TutorialCombatOverviewWidgetState
             color: const Color(0xFF1E293B),
             borderRadius: BorderRadius.circular(5),
             border: Border.all(
-              color: Colors.greenAccent.withOpacity(0.4),
+              color: Colors.greenAccent.withValues(alpha: 0.4),
               width: 1.2,
             ),
           ),
@@ -431,7 +431,7 @@ class _TutorialCombatOverviewWidgetState
       decoration: BoxDecoration(
         color: const Color(0xFF1E293B),
         borderRadius: BorderRadius.circular(5),
-        border: Border.all(color: Colors.amber.withOpacity(0.4), width: 1.2),
+        border: Border.all(color: Colors.amber.withValues(alpha: 0.4), width: 1.2),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -488,12 +488,12 @@ class _TutorialCombatOverviewWidgetState
                   color: const Color(0xFF2A2A40),
                   borderRadius: BorderRadius.circular(3),
                   border: Border.all(
-                    color: cardColors[index].withOpacity(0.6),
+                    color: cardColors[index].withValues(alpha: 0.6),
                     width: 0.8,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
+                      color: Colors.black.withValues(alpha: 0.3),
                       blurRadius: 1.5,
                     ),
                   ],
@@ -560,7 +560,7 @@ class _TutorialCombatOverviewWidgetState
             color: Colors.grey.shade800,
             borderRadius: BorderRadius.circular(4),
             border: Border.all(
-              color: Colors.greenAccent.withOpacity(0.2),
+              color: Colors.greenAccent.withValues(alpha: 0.2),
               width: 0.8,
             ),
           ),
@@ -593,12 +593,12 @@ class _TutorialCombatOverviewWidgetState
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F172A).withOpacity(0.95),
+        color: const Color(0xFF0F172A).withValues(alpha: 0.95),
         borderRadius: BorderRadius.circular(6),
         border: Border.all(color: color, width: 1.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
+            color: Colors.black.withValues(alpha: 0.3),
             blurRadius: 3,
             offset: const Offset(0, 1.5),
           ),
@@ -622,7 +622,7 @@ class DungeonBackgroundPainter extends CustomPainter {
 
     // Draw grid lines
     final gridPaint = Paint()
-      ..color = const Color(0xFF1E293B).withOpacity(0.15)
+      ..color = const Color(0xFF1E293B).withValues(alpha: 0.15)
       ..strokeWidth = 1.0;
 
     const double step = 30.0;
@@ -637,3 +637,4 @@ class DungeonBackgroundPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
+

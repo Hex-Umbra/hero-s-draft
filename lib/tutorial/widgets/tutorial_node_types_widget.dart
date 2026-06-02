@@ -102,10 +102,10 @@ class TutorialNodeTypesWidget extends StatelessWidget {
               return Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1E293B).withOpacity(0.5),
+                  color: const Color(0xFF1E293B).withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: const Color(0xFF334155).withOpacity(0.5),
+                    color: const Color(0xFF334155).withValues(alpha: 0.5),
                     width: 1.2,
                   ),
                 ),
@@ -118,7 +118,7 @@ class TutorialNodeTypesWidget extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(3),
                           decoration: BoxDecoration(
-                            color: type.color.withOpacity(0.1),
+                            color: type.color.withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(type.icon, color: type.color, size: 15),
@@ -161,3 +161,4 @@ class TutorialNodeTypesWidget extends StatelessWidget {
     );
   }
 }
+

@@ -18,3 +18,4 @@ class TutorialProgressService {
     await prefs.setBool(_tutorialCompletedKey, false);
   }
 }
+

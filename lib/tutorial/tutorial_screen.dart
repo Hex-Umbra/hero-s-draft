@@ -147,7 +147,7 @@ class _TutorialScreenState extends State<TutorialScreen> {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF1E3A8A).withOpacity(0.15),
+                          color: const Color(0xFF1E3A8A).withValues(alpha: 0.15),
                           blurRadius: 100,
                           spreadRadius: 30,
                         ),
@@ -165,7 +165,7 @@ class _TutorialScreenState extends State<TutorialScreen> {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFB45309).withOpacity(0.08),
+                          color: const Color(0xFFB45309).withValues(alpha: 0.08),
                           blurRadius: 100,
                           spreadRadius: 30,
                         ),
@@ -255,17 +255,17 @@ class _TutorialScreenState extends State<TutorialScreen> {
                               ),
                               padding: const EdgeInsets.all(20),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF131A2D).withOpacity(0.9),
+                                color: const Color(0xFF131A2D).withValues(alpha: 0.9),
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
                                   color: isComplete
-                                      ? Colors.amber.withOpacity(0.3)
+                                      ? Colors.amber.withValues(alpha: 0.3)
                                       : const Color(0xFF1E293B),
                                   width: 1.5,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.4),
+                                    color: Colors.black.withValues(alpha: 0.4),
                                     blurRadius: 15,
                                     offset: const Offset(0, 5),
                                   ),
@@ -343,7 +343,7 @@ class _TutorialScreenState extends State<TutorialScreen> {
                                                     ? [
                                                         BoxShadow(
                                                           color: Colors.amber
-                                                              .withOpacity(0.5),
+                                                              .withValues(alpha: 0.5),
                                                           blurRadius: 4,
                                                           spreadRadius: 1,
                                                         ),
@@ -383,9 +383,7 @@ class _TutorialScreenState extends State<TutorialScreen> {
                                             boxShadow: isComplete
                                                 ? [
                                                     BoxShadow(
-                                                      color: Colors.amber.withOpacity(
-                                                        0.3,
-                                                      ),
+                                                      color: Colors.amber.withValues(alpha: 0.3),
                                                       blurRadius: 8,
                                                       offset: const Offset(0, 3),
                                                     ),
@@ -464,3 +462,4 @@ class _TutorialScreenState extends State<TutorialScreen> {
     );
   }
 }
+

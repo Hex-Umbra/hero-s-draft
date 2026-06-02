@@ -69,7 +69,7 @@ class _TutorialXpWidgetState extends State<TutorialXpWidget> {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.amber.withOpacity(0.1),
+                        color: Colors.amber.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(color: Colors.amber, width: 1.5),
                       ),
@@ -165,7 +165,7 @@ class _TutorialXpWidgetState extends State<TutorialXpWidget> {
                             borderRadius: BorderRadius.circular(10),
                             color: const Color(0xFF1E293B),
                             border: Border.all(
-                              color: Colors.purpleAccent.withOpacity(0.3),
+                              color: Colors.purpleAccent.withValues(alpha: 0.3),
                             ),
                           ),
                           child: Text(
@@ -223,7 +223,7 @@ class _TutorialXpWidgetState extends State<TutorialXpWidget> {
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.amber.withOpacity(0.4),
+                          color: Colors.amber.withValues(alpha: 0.4),
                           blurRadius: 15,
                           spreadRadius: 2,
                         ),
@@ -247,3 +247,4 @@ class _TutorialXpWidgetState extends State<TutorialXpWidget> {
     );
   }
 }
+

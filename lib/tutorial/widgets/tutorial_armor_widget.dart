@@ -11,11 +11,11 @@ class TutorialArmorWidget extends StatefulWidget {
 
 class _TutorialArmorWidgetState extends State<TutorialArmorWidget> {
   int _leftHp = 80;
-  int _leftMaxHp = 80;
+  final int _leftMaxHp = 80;
   int _leftArmor = 0;
 
   int _rightHp = 80;
-  int _rightMaxHp = 80;
+  final int _rightMaxHp = 80;
   int _rightArmor = 4;
 
   bool _leftShowDamage = false;
@@ -61,7 +61,10 @@ class _TutorialArmorWidgetState extends State<TutorialArmorWidget> {
         _leftShowDamage = false;
         _rightShowDamage = false;
       });
-    });  @override
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isFrench = Localizations.localeOf(context).languageCode == 'fr';
 
@@ -84,10 +87,10 @@ class _TutorialArmorWidgetState extends State<TutorialArmorWidget> {
                         child: Container(
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF1E293B).withOpacity(0.3),
+                            color: const Color(0xFF1E293B).withValues(alpha: 0.3),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: Colors.redAccent.withOpacity(0.15),
+                              color: Colors.redAccent.withValues(alpha: 0.15),
                             ),
                           ),
                           child: Column(
@@ -130,7 +133,7 @@ class _TutorialArmorWidgetState extends State<TutorialArmorWidget> {
                               ),
                               const SizedBox(height: 12),
                               // HP bar
-                              _buildHealthBar(
+                              buildHealthBar(
                                 'HP',
                                 _leftHp,
                                 _leftMaxHp,
@@ -138,7 +141,7 @@ class _TutorialArmorWidgetState extends State<TutorialArmorWidget> {
                               ),
                               const SizedBox(height: 6),
                               // Armor display (0)
-                              _buildArmorBadge(_leftArmor),
+                              buildArmorBadge(_leftArmor),
                             ],
                           ),
                         ),
@@ -151,10 +154,10 @@ class _TutorialArmorWidgetState extends State<TutorialArmorWidget> {
                         child: Container(
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF1E293B).withOpacity(0.3),
+                            color: const Color(0xFF1E293B).withValues(alpha: 0.3),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: Colors.blueAccent.withOpacity(0.15),
+                              color: Colors.blueAccent.withValues(alpha: 0.15),
                             ),
                           ),
                           child: Column(
@@ -201,7 +204,7 @@ class _TutorialArmorWidgetState extends State<TutorialArmorWidget> {
                               ),
                               const SizedBox(height: 12),
                               // HP bar
-                              _buildHealthBar(
+                              buildHealthBar(
                                 'HP',
                                 _rightHp,
                                 _rightMaxHp,
@@ -209,7 +212,7 @@ class _TutorialArmorWidgetState extends State<TutorialArmorWidget> {
                               ),
                               const SizedBox(height: 6),
                               // Armor display
-                              _buildArmorBadge(_rightArmor),
+                              buildArmorBadge(_rightArmor),
                             ],
                           ),
                         ),
@@ -228,7 +231,7 @@ class _TutorialArmorWidgetState extends State<TutorialArmorWidget> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(10),
                       color: const Color(0xFF1E293B),
-                      border: Border.all(color: Colors.amber.withOpacity(0.3)),
+                      border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
                     ),
                     child: Text(
                       isFrench ? 'Voir la différence ⚡' : 'See the difference ⚡',
@@ -248,7 +251,7 @@ class _TutorialArmorWidgetState extends State<TutorialArmorWidget> {
     );
   }
 
-  Widget _buildHealthBar(String label, int value, int max, Color color) {
+  Widget buildHealthBar(String label, int value, int max, Color color) {
     double percent = (value / max).clamp(0.0, 1.0);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -308,13 +311,13 @@ class _TutorialArmorWidgetState extends State<TutorialArmorWidget> {
     );
   }
 
-  Widget _buildArmorBadge(int armor) {
+  Widget buildArmorBadge(int armor) {
     final active = armor > 0;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: active ? Colors.blueAccent : Colors.grey.withOpacity(0.1),
+        color: active ? Colors.blueAccent : Colors.grey.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Row(
@@ -339,3 +342,4 @@ class _TutorialArmorWidgetState extends State<TutorialArmorWidget> {
     );
   }
 }
+

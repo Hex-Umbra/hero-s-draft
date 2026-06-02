@@ -105,7 +105,7 @@ class _TutorialDraftWidgetState extends State<TutorialDraftWidget> {
                               boxShadow: isSelected
                                   ? [
                                       BoxShadow(
-                                        color: Colors.amber.withOpacity(0.4),
+                                        color: Colors.amber.withValues(alpha: 0.4),
                                         blurRadius: 16,
                                         spreadRadius: 3,
                                       ),
@@ -149,3 +149,4 @@ class _TutorialDraftWidgetState extends State<TutorialDraftWidget> {
     );
   }
 }
+

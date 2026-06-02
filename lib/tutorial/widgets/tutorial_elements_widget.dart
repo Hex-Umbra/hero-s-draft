@@ -120,7 +120,7 @@ class _TutorialElementsWidgetState extends State<TutorialElementsWidget> {
             ),
             const SizedBox(width: 8),
             Text(
-              '->  -${_poisonVal} HP',
+              '->  -$_poisonVal HP',
               style: const TextStyle(
                 color: Colors.redAccent,
                 fontSize: 12,
@@ -149,7 +149,7 @@ class _TutorialElementsWidgetState extends State<TutorialElementsWidget> {
             ),
             const SizedBox(width: 8),
             Text(
-              '->  -${_burnVal} HP',
+              '->  -$_burnVal HP',
               style: const TextStyle(
                 color: Colors.redAccent,
                 fontSize: 12,
@@ -233,10 +233,10 @@ class _TutorialElementsWidgetState extends State<TutorialElementsWidget> {
                 margin: const EdgeInsets.only(right: 10),
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1E293B).withOpacity(0.5),
+                  color: const Color(0xFF1E293B).withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: element.color.withOpacity(0.3),
+                    color: element.color.withValues(alpha: 0.3),
                     width: 1.5,
                   ),
                 ),
@@ -247,7 +247,7 @@ class _TutorialElementsWidgetState extends State<TutorialElementsWidget> {
                     Container(
                       padding: const EdgeInsets.all(5),
                       decoration: BoxDecoration(
-                        color: element.color.withOpacity(0.1),
+                        color: element.color.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(element.icon, color: element.color, size: 20),
@@ -300,3 +300,4 @@ class _TutorialElementsWidgetState extends State<TutorialElementsWidget> {
     );
   }
 }
+

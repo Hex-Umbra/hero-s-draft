@@ -93,7 +93,7 @@ class _TutorialWelcomeWidgetState extends State<TutorialWelcomeWidget>
                   borderRadius: BorderRadius.circular(1.5),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.amber.withOpacity(0.5),
+                      color: Colors.amber.withValues(alpha: 0.5),
                       blurRadius: 5,
                     ),
                   ],
@@ -119,3 +119,4 @@ class _TutorialWelcomeWidgetState extends State<TutorialWelcomeWidget>
     );
   }
 }
+

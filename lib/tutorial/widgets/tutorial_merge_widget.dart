@@ -159,7 +159,7 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
                             decoration: BoxDecoration(
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.amber.withOpacity(0.4),
+                                  color: Colors.amber.withValues(alpha: 0.4),
                                   blurRadius: 20,
                                   spreadRadius: 4,
                                 ),
@@ -184,7 +184,7 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
                         Positioned.fill(
                           child: Container(
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.9),
+                              color: Colors.white.withValues(alpha: 0.9),
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
@@ -211,7 +211,7 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.amber.withOpacity(0.3),
+                            color: Colors.amber.withValues(alpha: 0.3),
                             blurRadius: 8,
                             offset: const Offset(0, 3),
                           ),
@@ -246,3 +246,4 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
 
   static void _dummyTap() {}
 }
+

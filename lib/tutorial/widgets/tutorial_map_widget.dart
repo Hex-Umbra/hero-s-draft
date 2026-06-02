@@ -134,7 +134,7 @@ class _TutorialMapWidgetState extends State<TutorialMapWidget> {
                         boxShadow: [
                           BoxShadow(
                             color: (isSelected ? Colors.yellow : node.color)
-                                .withOpacity(0.3),
+                                .withValues(alpha: 0.3),
                             blurRadius: isSelected ? 12 : 6,
                             spreadRadius: isSelected ? 3 : 1,
                           ),
@@ -197,15 +197,15 @@ class _TutorialMapWidgetState extends State<TutorialMapWidget> {
                               vertical: 10,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF1E293B).withOpacity(0.95),
+                              color: const Color(0xFF1E293B).withValues(alpha: 0.95),
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
-                                color: _selectedNode!.color.withOpacity(0.5),
+                                color: _selectedNode!.color.withValues(alpha: 0.5),
                                 width: 1.5,
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.3),
+                                  color: Colors.black.withValues(alpha: 0.3),
                                   blurRadius: 8,
                                   offset: const Offset(0, 3),
                                 ),
@@ -264,7 +264,7 @@ class MapConnectionsPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final pathPaint = Paint()
-      ..color = const Color(0xFF64748B).withOpacity(0.3)
+      ..color = const Color(0xFF64748B).withValues(alpha: 0.3)
       ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke;
 
@@ -308,7 +308,7 @@ class StarryGridPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     // Draw background grid lines (very subtle)
     final gridPaint = Paint()
-      ..color = const Color(0xFF1E293B).withOpacity(0.2)
+      ..color = const Color(0xFF1E293B).withValues(alpha: 0.2)
       ..strokeWidth = 1.0;
 
     const double step = 40.0;
@@ -320,7 +320,7 @@ class StarryGridPainter extends CustomPainter {
     }
 
     // Draw some random small stars
-    final starPaint = Paint()..color = Colors.white.withOpacity(0.3);
+    final starPaint = Paint()..color = Colors.white.withValues(alpha: 0.3);
     final points = [
       const Offset(40, 60),
       const Offset(280, 80),
@@ -337,3 +337,4 @@ class StarryGridPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
+

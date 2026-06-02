@@ -41,12 +41,12 @@ class TutorialUiCard extends StatelessWidget {
             boxShadow: [
               if (isSelected)
                 BoxShadow(
-                  color: typeColor.withOpacity(0.4),
+                  color: typeColor.withValues(alpha: 0.4),
                   blurRadius: 12,
                   spreadRadius: 2,
                 ),
               BoxShadow(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
@@ -75,7 +75,7 @@ class TutorialUiCard extends StatelessWidget {
               Container(
                 height: 1,
                 width: 30,
-                color: typeColor.withOpacity(0.5),
+                color: typeColor.withValues(alpha: 0.5),
               ),
               // Description
               Expanded(
@@ -164,7 +164,7 @@ class _TutorialCardsWidgetState extends State<TutorialCardsWidget> {
                       Icons.diamond_rounded,
                       color: active
                           ? Colors.cyanAccent
-                          : Colors.cyan.withOpacity(0.2),
+                          : Colors.cyan.withValues(alpha: 0.2),
                       size: 20,
                     ),
                   );
@@ -226,9 +226,9 @@ class _TutorialCardsWidgetState extends State<TutorialCardsWidget> {
               padding: const EdgeInsets.all(8),
               width: double.infinity,
               decoration: BoxDecoration(
-                color: const Color(0xFF1E293B).withOpacity(0.5),
+                color: const Color(0xFF1E293B).withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.cyan.withOpacity(0.2)),
+                border: Border.all(color: Colors.cyan.withValues(alpha: 0.2)),
               ),
               child: Text(
                 isFrench
@@ -247,3 +247,4 @@ class _TutorialCardsWidgetState extends State<TutorialCardsWidget> {
     );
   }
 }
+

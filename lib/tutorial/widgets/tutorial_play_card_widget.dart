@@ -122,11 +122,11 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: _selectedCard != null
-                                    ? Colors.redAccent.withOpacity(0.08)
+                                    ? Colors.redAccent.withValues(alpha: 0.08)
                                     : Colors.transparent,
                                 border: Border.all(
                                   color: _selectedCard != null
-                                      ? Colors.redAccent.withOpacity(0.3)
+                                      ? Colors.redAccent.withValues(alpha: 0.3)
                                       : Colors.transparent,
                                   width: 2,
                                 ),
@@ -238,7 +238,7 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     margin: const EdgeInsets.symmetric(vertical: 4),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1E293B).withOpacity(0.3),
+                      color: const Color(0xFF1E293B).withValues(alpha: 0.3),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Row(
@@ -312,7 +312,7 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
                                     Icons.diamond_rounded,
                                     color: active
                                         ? Colors.cyanAccent
-                                        : Colors.cyan.withOpacity(0.15),
+                                        : Colors.cyan.withValues(alpha: 0.15),
                                     size: 13,
                                   ),
                                 );
@@ -386,3 +386,4 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
     );
   }
 }
+

@@ -136,19 +136,19 @@ class _TutorialEnemyIntentsWidgetState
                           ),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? intent.color.withOpacity(0.18)
-                                : intent.color.withOpacity(0.04),
+                                ? intent.color.withValues(alpha: 0.18)
+                                : intent.color.withValues(alpha: 0.04),
                             borderRadius: BorderRadius.circular(6),
                             border: Border.all(
                               color: isSelected
                                   ? intent.color
-                                  : intent.color.withOpacity(0.3),
+                                  : intent.color.withValues(alpha: 0.3),
                               width: isSelected ? 1.5 : 1.0,
                             ),
                             boxShadow: isSelected
                                 ? [
                                     BoxShadow(
-                                      color: intent.color.withOpacity(0.2),
+                                      color: intent.color.withValues(alpha: 0.2),
                                       blurRadius: 4,
                                     )
                                   ]
@@ -188,12 +188,10 @@ class _TutorialEnemyIntentsWidgetState
                       width: double.infinity,
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1E293B).withOpacity(0.4),
+                        color: const Color(0xFF1E293B).withValues(alpha: 0.4),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: _intents[_selectedIntentIndex].color.withOpacity(
-                            0.2,
-                          ),
+                          color: _intents[_selectedIntentIndex].color.withValues(alpha: 0.2),
                         ),
                       ),
                       child: Column(
@@ -251,3 +249,4 @@ class _TutorialEnemyIntentsWidgetState
     );
   }
 }
+
