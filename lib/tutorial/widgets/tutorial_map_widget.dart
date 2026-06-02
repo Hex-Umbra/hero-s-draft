@@ -79,15 +79,25 @@ class _TutorialMapWidgetState extends State<TutorialMapWidget> {
       children: [
         // Starry/grid space background simulation
         Positioned.fill(
-          child: CustomPaint(
-            painter: StarryGridPainter(),
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              setState(() {
+                _selectedNode = null;
+              });
+            },
+            child: CustomPaint(
+              painter: StarryGridPainter(),
+            ),
           ),
         ),
 
         // Custom painter for node connections
         Positioned.fill(
-          child: CustomPaint(
-            painter: MapConnectionsPainter(),
+          child: IgnorePointer(
+            child: CustomPaint(
+              painter: MapConnectionsPainter(),
+            ),
           ),
         ),
 
@@ -138,18 +148,20 @@ class _TutorialMapWidgetState extends State<TutorialMapWidget> {
             bottom: 12,
             left: 0,
             right: 0,
-            child: Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.black54,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  isFrench ? '💡 Tappez sur un nœud pour voir l\'effet' : '💡 Tap a node to inspect its effect',
-                  style: TextStyle(
-                    color: Colors.grey.shade400,
-                    fontSize: 12,
+            child: IgnorePointer(
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    isFrench ? '💡 Touchez un nœud pour voir l\'effet' : '💡 Tap a node to inspect its effect',
+                    style: TextStyle(
+                      color: Colors.grey.shade400,
+                      fontSize: 12,
+                    ),
                   ),
                 ),
               ),
@@ -160,59 +172,63 @@ class _TutorialMapWidgetState extends State<TutorialMapWidget> {
         Positioned(
           left: 16,
           right: 16,
-          top: 16,
-          child: AnimatedOpacity(
-            opacity: _selectedNode != null ? 1.0 : 0.0,
-            duration: const Duration(milliseconds: 200),
-            child: _selectedNode == null
-                ? const SizedBox.shrink()
-                : Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1E293B).withOpacity(0.95),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: _selectedNode!.color.withOpacity(0.5),
-                        width: 1.5,
+          top: (_selectedNode != null && _selectedNode!.position.dy > 150) ? 16 : null,
+          bottom: (_selectedNode == null || _selectedNode!.position.dy <= 150) ? 16 : null,
+          child: IgnorePointer(
+            ignoring: true,
+            child: AnimatedOpacity(
+              opacity: _selectedNode != null ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 200),
+              child: _selectedNode == null
+                  ? const SizedBox.shrink()
+                  : Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1E293B).withOpacity(0.95),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: _selectedNode!.color.withOpacity(0.5),
+                          width: 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          )
+                        ],
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.3),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        )
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(_selectedNode!.icon, color: _selectedNode!.color, size: 18),
-                            const SizedBox(width: 8),
-                            Text(
-                              isFrench ? _selectedNode!.nameFr : _selectedNode!.nameEn,
-                              style: TextStyle(
-                                color: _selectedNode!.color,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(_selectedNode!.icon, color: _selectedNode!.color, size: 16),
+                              const SizedBox(width: 8),
+                              Text(
+                                isFrench ? _selectedNode!.nameFr : _selectedNode!.nameEn,
+                                style: TextStyle(
+                                  color: _selectedNode!.color,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          isFrench ? _selectedNode!.descFr : _selectedNode!.descEn,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12.5,
-                            height: 1.35,
+                            ],
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 4),
+                          Text(
+                            isFrench ? _selectedNode!.descFr : _selectedNode!.descEn,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11.5,
+                              height: 1.3,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
+            ),
           ),
         ),
       ],
