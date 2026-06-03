@@ -395,7 +395,7 @@
   "restCampRemoveTitle": "REMOVE A CARD",
   "restCampRemoveSubtitle": "Choose a card to permanently remove from your deck.",
   "draftDeckTitle": "DECK CONSTITUTION",
-  "draftDeckSubtitle": "Select exactly 5 global cards from the 10 offered to launch the run.",
+  "draftDeckSubtitle": "Select exactly 5 global cards to build your starting deck and launch the run.",
   "draftDeckSelectedCount": "Selected cards: {count} / 5",
   "@draftDeckSelectedCount": {
     "placeholders": {

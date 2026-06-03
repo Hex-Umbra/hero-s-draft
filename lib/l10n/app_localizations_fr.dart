@@ -594,7 +594,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get draftDeckSubtitle =>
-      'Sélectionnez précisément 5 cartes globales parmi les 10 proposées pour lancer la run.';
+      'Sélectionnez précisément 5 cartes globales pour constituer votre deck de départ et lancer la run.';
 
   @override
   String draftDeckSelectedCount(int count) {

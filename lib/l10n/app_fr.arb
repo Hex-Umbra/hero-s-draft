@@ -168,7 +168,7 @@
   "restCampRemoveTitle": "OUBLIER UNE CARTE",
   "restCampRemoveSubtitle": "Choisissez une carte à retirer définitivement de votre deck.",
   "draftDeckTitle": "CONSTITUTION DU DECK",
-  "draftDeckSubtitle": "Sélectionnez précisément 5 cartes globales parmi les 10 proposées pour lancer la run.",
+  "draftDeckSubtitle": "Sélectionnez précisément 5 cartes globales pour constituer votre deck de départ et lancer la run.",
   "draftDeckSelectedCount": "Cartes sélectionnées : {count} / 5",
   "draftDeckProceed": "ENTRER DANS L'UMBRA",
   "draftDeckSnackbarMax": "Vous pouvez sélectionner jusqu'à 5 cartes maximum.",

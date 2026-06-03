@@ -1073,7 +1073,7 @@ abstract class AppLocalizations {
   /// No description provided for @draftDeckSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Select exactly 5 global cards from the 10 offered to launch the run.'**
+  /// **'Select exactly 5 global cards to build your starting deck and launch the run.'**
   String get draftDeckSubtitle;
 
   /// No description provided for @draftDeckSelectedCount.
