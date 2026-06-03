@@ -39,24 +39,27 @@ class CombatController extends StateNotifier<CombatState> {
     final bool isElite = nodeType == MapNodeType.elite;
 
     // 1. Déterminer le niveau de l'ennemi (minimum 1)
+    // nodeModifier réduit pour ne pas sur-pénaliser le joueur en early game
     int nodeModifier = 0;
     if (isBoss) {
-      nodeModifier = 2;
+      nodeModifier = 1; // était 2 — réduit pour adoucir le scaling de niveau
     } else if (isElite) {
-      nodeModifier = 1;
+      nodeModifier = 0; // était 1 — le multiplicateur suffit à distinguer l'élite
     }
     final int enemyLevel = max(1, playerLevel + (act - 1) * 2 + nodeModifier);
 
     // 2. Calculer les multiplicateurs de mise à l'échelle
-    final double nodeMultiplier = isBoss ? 3.0 : (isElite ? 1.5 : 1.0);
+    // HP et dégâts sont désormais séparés : le boss est tanky mais moins létal
+    final double bossHpMultiplier  = isBoss ? 2.0 : (isElite ? 1.3 : 1.0);
+    final double bossDmgMultiplier = isBoss ? 1.5 : (isElite ? 1.15 : 1.0);
     final double hpMultiplier =
         (1.0 + 0.06 * (enemyLevel - 1)) *
         (1.0 + 0.20 * (act - 1)) *
-        nodeMultiplier;
+        bossHpMultiplier;
     final double damageMultiplier =
         (1.0 + 0.04 * (enemyLevel - 1)) *
         (1.0 + 0.15 * (act - 1)) *
-        nodeMultiplier;
+        bossDmgMultiplier;
 
     final List<EnemyInstance> enemies = [];
     for (var data in enemyDataList) {

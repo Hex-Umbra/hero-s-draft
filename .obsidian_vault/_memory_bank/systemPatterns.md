@@ -94,7 +94,7 @@ Tous les contrôleurs héritent de `StateNotifier<T>` et exposent des états imm
 **État `CombatState`** : `enemies` (List\<EnemyInstance\>), `turnPhase` (TurnPhase: player/enemy), `turnCount`, `selectedEnemyId`, `isCombatEnded`, `isVictory`.
 
 **Responsabilités** :
-- **Initialisation** : `initializeCombat(level, nodeType, availableEnemies)` — calcule le combat level dynamique $EnemyLevel = PlayerLevel + (Act - 1) \times 2 + NodeModifier$, applique multiplicateurs de scaling de caractéristiques (+12% HP/lvl, +8% ATK/lvl), et applique les coefficients boss (3x HP)/élite (1.5x) avant de roll les intentions initiales.
+- **Initialisation** : `initializeCombat(level, nodeType, availableEnemies)` — calcule le combat level dynamique $EnemyLevel = PlayerLevel + (Act - 1) \times 2 + NodeModifier$, applique les multiplicateurs de scaling de caractéristiques (+6% HP/lvl, +4% ATK/lvl et +20% HP/acte, +15% ATK/acte), et applique les coefficients boss (3x HP)/élite (1.5x) avant de roll les intentions initiales.
 - **Pipeline de jeu de carte** : `applyPlayerCardPlay(card, RunController, DeckNotifier)` — `EffectResolver.resolveCard()` → `deck.playCard()` → `TraitSystem.onCardPlayed()` → reliques `onCardPlayed` → `_cleanDeadEnemies()`.
 - **Intentions ennemies** : `resolveEnemyIntent(enemyId, RunController)` — switch sur IntentType : attack → `runController.takeDamage`, defend → armure, buff → strength(99 tours), debuffDeck → no-op.
 - **Phases** : `startEnemyTurn(RunController)` — phase enemy, processing poison/regen sur chaque ennemi, tick statuts, clean morts. `endEnemyTurn()` — re-roll toutes les intentions, phase player, incrémente turnCount.
@@ -210,11 +210,12 @@ Les ennemis sont piochés aléatoirement dans le pool disponible (doublons possi
 ```dart
 totalDamage = baseDamage + attackerStats.effectiveAttaque
 if weakness status: totalDamage *= 0.75  // Réduction de 25%
+if critical hit roll succeeds (random(100) < effectiveCritChance):
+  totalDamage *= critMultiplier          // Amplification coup critique (x1.5 par défaut)
 ```
-> **⚠️ Absence notable** : Le statut `vulnerable` n'est PAS pris en compte dans ce calcul malgré sa déclaration dans le système de types.
+> **Note sur la vulnérabilité** : Le statut `vulnerable` est appliqué sur la cible au moment de la résolution de l'effet dans `resolveCard()`, amplifiant les dégâts finaux de $+50\%$ (`dmg = (dmg * 1.5).round()`).
 
-**Statuts créables et gérés** : `poison`, `strength`, `weakness`, `strength_regen`, `armor_regen`, `burn` (Brûlure), `freeze` (Gel), `shock` (Électrocution).
-**Statut NON géré** : `vulnerable` (déclaré et créable, mais absent de la formule de calcul effectif de `_calculateDamage()`).
+**Statuts créables et gérés** : `poison`, `strength`, `weakness`, `strength_regen`, `armor_regen`, `burn` (Brûlure), `freeze` (Gel), `shock` (Électrocution), `vulnerable` (Vulnérable), `crit_chance` (Chance de critique temporaire).
 
 ---
 
@@ -493,7 +494,7 @@ Pour augmenter la sensation d'excitation et de "butin" lors de l'acquisition de 
 
 2. JOUEUR JOUE UNE CARTE
    └→ CombatController.applyPlayerCardPlay(card, runCtrl, deckNotif)
-       ├→ EffectResolver.resolveCard() → consomme mana, applique effets (dégâts augmentés par le statut `shock` de l'ennemi)
+       ├→ EffectResolver.resolveCard() → consomme mana, applique effets (dégâts augmentés par shock/vulnerable, jet de coup critique pour dégâts/soins)
        ├→ DeckNotifier.playCard() → main → défausse (ou exhaust)
        ├→ TraitSystem.onCardPlayed(runCtrl, card)
        ├→ applyRelics(onCardPlayed)
@@ -509,7 +510,7 @@ Pour augmenter la sensation d'excitation et de "butin" lors de l'acquisition de 
    │   └→ _cleanDeadEnemies() (morts par poison ou brûlure)
    ├→ Pour chaque ennemi vivant:
    │   ├→ Animation (dash/buff)
-   │   └→ resolveEnemyIntent() → dégâts héros (divisés par 2 si l'ennemi est sous statut `freeze`) / armure / strength
+   │   └→ resolveEnemyIntent() → dégâts héros (divisés par 2 si gelé, augmentés par vulnerable, jet de coup critique) / armure / strength
    └→ CombatController.endEnemyTurn()
        ├→ Re-roll toutes les intentions
        ├→ Phase → player

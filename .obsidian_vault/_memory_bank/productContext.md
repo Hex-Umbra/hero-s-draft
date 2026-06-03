@@ -142,15 +142,22 @@ La fusion de cartes 3-en-1 est gérée par `DeckNotifier.mergeCards(selectedIds,
 
 **4 ennemis** définis dans `enemies.json` :
 
-| ID | Nom | HP | Dégâts Base | Tier | Pattern d'Intentions |
-|:---|:---|:---|:---|:---|:---|
-| `slime` | Slime | 18 | 4 | 1 | [attack:4] — attaque unique répétée |
-| `gobelin` | Gobelin | 28 | 5 | 1 | [attack:5] — attaque unique |
-| `squelette` | Squelette | 22 | 8 | 2 | [attack:8, attack:10] — cycle 2 attaques |
-| `orc` | Orc Furieux | 50 | 8 | 3 | [attack:8, buff:2, attack:12] — cycle 3 phases |
+| ID | Nom | HP | Dégâts Base | Tier | Pattern d'Intentions | Crit Chance |
+|:---|:---|:---|:---|:---|:---|:---|
+| `slime` | Slime | 18 | 4 | 1 | [attack:4] — attaque unique répétée | 5% |
+| `gobelin` | Gobelin | 28 | 5 | 1 | [attack:5] — attaque unique | 10% |
+| `squelette` | Squelette | 22 | 8 | 2 | [attack:8, attack:10] — cycle 2 attaques | 10% |
+| `orc` | Orc Furieux | 50 | 8 | 3 | [attack:8, buff:2, attack:12] — cycle 3 phases | 15% |
 
 **Scaling de combat** (`CombatController.initializeCombat`) :
-| Type | Multiplicateur HP | Multiplicateur Attaque | Nombre |
+Le niveau d'un ennemi ($EnemyLevel$) est calculé comme suit : $EnemyLevel = \max(1, PlayerLevel + (Act - 1) \times 2 + NodeModifier)$, où $NodeModifier$ est de $+2$ pour un Boss et $+1$ pour un Élite.
+Les multiplicateurs de caractéristiques appliqués aux statistiques de base de l'ennemi sont :
+- **Multiplicateur HP** : $(1.0 + 0.06 \times (EnemyLevel - 1)) \times (1.0 + 0.20 \times (Act - 1)) \times NodeMultiplier$
+- **Multiplicateur Dégâts** : $(1.0 + 0.04 \times (EnemyLevel - 1)) \times (1.0 + 0.15 \times (Act - 1)) \times NodeMultiplier$
+
+Où $NodeMultiplier$ vaut $3.0$ pour un Boss, $1.5$ pour un Élite, et $1.0$ sinon.
+
+| Type | Multiplicateur HP de Base | Multiplicateur Attaque de Base | Nombre |
 |:---|:---|:---|:---|
 | Normal (level ≤5) | ×1.0 | ×1.0 | 1-2 |
 | Normal (level >5) | ×1.0 | ×1.0 | 1-3 |
@@ -315,6 +322,28 @@ Le système de draft (que ce soit pour le draft de récompense de combat dans `D
 - **Survol (Hover)** : Le passage du curseur sur une carte déclenche un gonflement d'échelle fluide à `1.05x` (`AnimatedScale` combiné à un `MouseRegion`) pour indiquer sa mise au point.
 - **Sélection (Selection)** : Cliquer/taper sur une carte de récompense la sélectionne activement, ce qui la fait grossir à `1.12x` et projette un halo lumineux doré tout autour de la carte (`BoxShadow` couleur ambre `Colors.amber` avec un rayon de flou de 16px et une extension de 3px).
 - **Consistance** : Ces animations de scale et de lueur partagent la même identité visuelle pour assurer la cohérence entre la phase d'apprentissage guidée et les combats réels du jeu.
+
+### 3.11. 🎯 Système de Coup Critique (Critical Hit System)
+
+Le coup critique introduit un élément probabiliste d'amplification des effets offensifs et curatifs du joueur et des ennemis :
+- **Attributs Fondamentaux** (`EntityStats`) :
+  - `critChance` : Le taux de base (en %) pour déclencher un coup critique (défaut: `0`).
+  - `critMultiplier` : Le coefficient de multiplication des dégâts ou des soins (défaut: `1.5`).
+- **Calcul en Combat** :
+  - La chance critique effective est calculée dynamiquement par le getter `effectiveCritChance` qui combine `critChance` permanente et les éventuels bonus temporaires issus du statut `crit_chance`.
+- **Mécanismes d'Impact** :
+  - **Dégâts des Cartes** (`EffectResolver._calculateDamage`) : Les attaques physiques ou magiques du joueur ont une probabilité égale à `effectiveCritChance` de voir leurs dégâts totaux multipliés par `critMultiplier` (arrondi).
+  - **Soins des Cartes** (`EffectResolver.resolveCard` case 'heal') : Les soins appliqués au héros ont une chance de coup critique qui multiplie le soin par `critMultiplier`.
+  - **Dégâts des Ennemis** (`CombatController.resolveEnemyIntent` case 'attack') : Les attaques d'intentions des ennemis effectuent également un jet de critique basé sur leur propre `effectiveCritChance`, multipliant les dégâts infligés au héros par leur `critMultiplier`.
+  - **Compétences Héroïques (Skills)** (`HerosDraftGame.executeSkill`) : Les compétences actives du héros (de zone, ciblées, ou perçantes) effectuent également un jet critique pour multiplier leurs dégâts.
+- **Récompenses de Draft de Niveau (Level Up)** :
+  - **Précision** : Augmente de façon permanente `critChance` (de +1% à +5% selon la rareté de la récompense).
+  - **Férocité** : Augmente de façon permanente `critMultiplier` (en ajoutant de +0.10 à +0.50 au multiplicateur via l'accumulateur `critDamageAcc`).
+- **Éléments de Données & Reliques** :
+  - Les ennemis dans `enemies.json` possèdent des chances de critiques de base distinctes (slime: 5%, gobelin: 10%, squelette: 10%, orc furieux: 15%).
+  - Deux nouvelles reliques spécifiques aux critiques ont été intégrées dans `relics.json` via l'effet `gain_crit` :
+    - *Focus Lens* (`critical_lens`, Rare, trigger: `startOfCombat`) : confère un buff temporaire de $+15\%$ de critique en combat.
+    - *Lucky Charm* (`lucky_charm`, Uncommon, trigger: `startOfRun`) : confère un bonus permanent de $+10\%$ de critique pour toute la run.
 
 ---
 
