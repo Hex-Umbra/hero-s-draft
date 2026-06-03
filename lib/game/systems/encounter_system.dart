@@ -92,8 +92,7 @@ class EncounterSystem {
   }) {
     if (availableEnemies.isEmpty) return [];
 
-    final bool isBoss =
-        nodeType == MapNodeType.boss || (level > 0 && level % 10 == 0);
+    final bool isBoss = nodeType == MapNodeType.boss || (nodeType == null && level > 0 && level % 10 == 0);
     final bool isElite = nodeType == MapNodeType.elite;
 
     // 1. Calculate player power, expected power, base budget

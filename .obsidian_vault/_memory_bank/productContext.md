@@ -157,6 +157,15 @@ Les multiplicateurs de caractéristiques appliqués aux statistiques de base de 
 
 Où $NodeMultiplier$ vaut $3.0$ pour un Boss, $1.5$ pour un Élite, et $1.0$ sinon.
 
+> [!IMPORTANT]
+> **Règle de Détermination de Boss (`isBoss`)** :
+> Un ennemi ou un combat est classifié comme de type Boss si et seulement si :
+> 1. Le nœud de la carte est explicitement de type Boss (`nodeType == MapNodeType.boss`).
+> 2. Le type de nœud n'est pas spécifié/null (`nodeType == null`) **ET** le niveau/floor de la run est supérieur à 0 et divisible par 10 (`level > 0 && level % 10 == 0`).
+> 
+> *Raison de la correction* : Auparavant, toute rencontre au floor 10 (ou multiple de 10) était tagguée comme Boss, même si le joueur se trouvait sur un nœud de combat standard (`MapNodeType.combat`), appliquant à tort un multiplicateur massif de statistiques ($3.0 \times$ HP / $2.0 \times$ Dégâts). La correction garantit que les modificateurs de boss ne s'appliquent pas aux nœuds de combat classiques, préservant ainsi l'équilibrage de la courbe de difficulté.
+
+
 | Type | Multiplicateur HP de Base | Multiplicateur Attaque de Base | Nombre |
 |:---|:---|:---|:---|
 | Normal (level ≤5) | ×1.0 | ×1.0 | 1-2 |

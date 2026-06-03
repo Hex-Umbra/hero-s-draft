@@ -108,6 +108,59 @@ void main() {
       expect(enemies, isNotEmpty);
     });
 
+    test('isBoss calculation logic in generateEnemiesForLevel and CombatController', () {
+      final combatController = CombatController();
+
+      // Case 1: Node type is combat, level is 10 (multiple of 10)
+      // Since node type is explicitly MapNodeType.combat, isBoss should be false.
+      combatController.initializeCombat(
+        10,
+        MapNodeType.combat,
+        [slimeData],
+        playerLevel: 1,
+        act: 1,
+        playerMaxHp: 100,
+        playerAttaque: 0,
+        playerMaxMana: 3,
+        playerRelicsCount: 0,
+      );
+      expect(combatController.currentState.enemies.isNotEmpty, isTrue);
+      expect(combatController.currentState.enemies.every((e) => e.isBoss), isFalse);
+
+      // Case 2: Node type is null, level is 10 (multiple of 10)
+      // Since node type is null and level is 10, isBoss should be true.
+      combatController.initializeCombat(
+        10,
+        null,
+        [slimeData],
+        playerLevel: 1,
+        act: 1,
+        playerMaxHp: 100,
+        playerAttaque: 0,
+        playerMaxMana: 3,
+        playerRelicsCount: 0,
+      );
+      expect(combatController.currentState.enemies.isNotEmpty, isTrue);
+      expect(combatController.currentState.enemies.every((e) => e.isBoss), isTrue);
+
+      // Case 3: Node type is boss, level is 9 (not multiple of 10)
+      // Since node type is MapNodeType.boss, isBoss should be true.
+      combatController.initializeCombat(
+        9,
+        MapNodeType.boss,
+        [slimeData],
+        playerLevel: 1,
+        act: 1,
+        playerMaxHp: 100,
+        playerAttaque: 0,
+        playerMaxMana: 3,
+        playerRelicsCount: 0,
+      );
+      expect(combatController.currentState.enemies.isNotEmpty, isTrue);
+      expect(combatController.currentState.enemies.every((e) => e.isBoss), isTrue);
+    });
+
+
     test('CombatController splits active and pending reserve enemies (wave reserve)', () {
       final combatController = CombatController();
 

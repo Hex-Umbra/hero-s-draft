@@ -45,8 +45,7 @@ class CombatController extends StateNotifier<CombatState> {
       playerRelicsCount: playerRelicsCount,
     );
 
-    final bool isBoss =
-        nodeType == MapNodeType.boss || (level > 0 && level % 10 == 0);
+    final bool isBoss = nodeType == MapNodeType.boss || (nodeType == null && level > 0 && level % 10 == 0);
     final bool isElite = nodeType == MapNodeType.elite;
 
     final int enemyLevel = EncounterSystem.getEnemyLevel(

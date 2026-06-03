@@ -61,10 +61,11 @@ Le focus actuel s'oriente vers la préparation des prochaines étapes de refacto
    - Mise en œuvre d'un algorithme d'équilibrage hybride (DDA amorti à 0.5) comparant `PlayerPower` et `ExpectedPower` pour ajuster le `FinalBudget` de menace.
    - Intégration du système de `CombatRating` dynamique des ennemis (prenant en compte le scaling HP, dégâts, tier et chance critique).
    - Développement du système de réserve `pendingEnemies` (limité à 5 slots actifs) avec réapprovisionnement automatique lors des éliminations et condition de victoire étendue.
+   - Correction de la logique de détermination de Boss (`isBoss`) : Restriction de la vérification par floor (divisible par 10) aux cas où le type de nœud n'est pas spécifié, évitant ainsi le scaling erroné de boss lors des combats classiques du floor 10.
    - Validation complète du comportement des vagues et de la répartition budgétaire via des tests unitaires automatisés.
 
 9. **Assurance Qualité et Robustesse** :
-   - **Tests automatisés** unitaires et d'intégration validés avec succès (dont tests du générateur, du système de vagues et du nouveau logger), portant le total à **84 tests** (100% verts).
+   - **Tests automatisés** unitaires et d'intégration validés avec succès (dont tests du générateur, du système de vagues, de la correction `isBoss` et du nouveau logger), portant le total à **85 tests** (100% verts).
    - Analyse de code statique : **0 erreur** sous `flutter analyze`.
 
 10. **Isolation de la Journalisation du Combat (`CombatDebugLogger`)** :

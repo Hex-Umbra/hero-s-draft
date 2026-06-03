@@ -5,7 +5,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 **Métriques du projet** :
 - **~10 350 lignes** de code source dans `lib/` (64 fichiers).
 - **8 fichiers JSON** de données d'assets.
-- **84 tests automatisés** — 100% au vert.
+- **85 tests automatisés** — 100% au vert.
 - **0 erreur** via `flutter analyze`.
 - **~110 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
 
@@ -147,7 +147,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 
 | Métrique | Valeur | Détails |
 |:---|:---|:---|
-| Tests automatisés | **84** (100% VERT) | Tests unitaires, widget-tests et tests d'intégration (dont forge découplée, tutoriel autonome, équilibrage hybride, réserve de combat et journalisation mathématique) |
+| Tests automatisés | **85** (100% VERT) | Tests unitaires, widget-tests et tests d'intégration (dont forge découplée, tutoriel autonome, équilibrage hybride, réserve de combat, correction isBoss et journalisation mathématique) |
 | Couverture estimée | **~22%** | Logique/controllers, moteur tutoriel, forge, pas d'UI de production |
 | Analyse statique | **0 erreur** | `flutter analyze` sans erreur de compilation |
 | Linter | `flutter_lints` v6.0.0 | Configuration standard, pas de règles custom |
