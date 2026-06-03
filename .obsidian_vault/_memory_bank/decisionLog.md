@@ -893,18 +893,26 @@ Dans les versions précédentes, la composition des rencontres de combat et le n
    - Si le générateur `EncounterSystem` produit plus de 5 ennemis, les 5 premiers sont instanciés sur le plateau (`enemies` dans `CombatState`), et les suivants sont sérialisés dans la file d'attente de réserve (`pendingEnemies`).
    - À chaque mort d'un ennemi actif, `CombatController._cleanDeadEnemies()` extrait automatiquement le premier élément de `pendingEnemies` pour l'ajouter à `enemies`, et effectue immédiatement son premier tirage d'intention de combat (`_rollIntent`).
    - La condition de victoire du combat est validée uniquement lorsque `enemies` **ET** `pendingEnemies` sont vides.
+5. **Isolation de la Journalisation Mathématique (`CombatDebugLogger`)** :
+   - Isoler toute la logique de construction textuelle des formules et du scaling des ennemis dans une classe de service dédiée, `CombatDebugLogger`.
+   - **Responsabilité Unique (SRP)** : Le contrôleur `CombatController` doit se concentrer exclusivement sur les transitions d'état logique de combat et la coordination des vagues. Il ne doit pas être encombré par le formatage de chaînes, les codes ANSI ou les buffers d'affichage.
+   - **Toggling & Performance en Production** : En mode production (release), les logs détaillés de la DDA sont désactivés par une garde `if (!kDebugMode) return;` dans le service, éliminant tout coût CPU ou allocations inutiles associés au formatage de chaînes complexes.
 
 ### Preuves dans le code
 - `lib/game/systems/encounter_system.dart` : Méthode `generateEnemiesForLevel` calculant les formules de `PlayerPower`, `ExpectedPower`, `PowerModifier`, `FinalBudget` et calculant individuellement la `CombatRating` ajustée de chaque ennemi lors du tirage.
 - `lib/game/controllers/combat_controller.dart` :
   - `initializeCombat()` : répartition initiale des ennemis scalés entre le board actif `enemies` (limité à 5) et la file de réserve `pendingEnemies`.
   - `_cleanDeadEnemies()` : transition synchrone des ennemis de `pendingEnemies` vers `enemies`, rolling d'intention et vérification combinée des deux listes pour lever le flag `isVictory`.
+  - Appelle `CombatDebugLogger.logCombatInitialization(...)` à la fin de l'initialisation.
+- `lib/game/services/combat_debug_logger.dart` : Classe de service formatant les logs avec codes couleurs ANSI et bordures de boîtes, encapsulée sous `kDebugMode`.
 - `lib/models/data/combat_state.dart` : Ajout et sérialisation/désérialisation du champ `pendingEnemies`.
 - `test/unit/combat_difficulty_test.dart` (ou tests similaires dans `test/unit/combat_controller_test.dart`) : Suite de tests automatisés validant le respect du budget de menace, le plafonnement à 5 slots actifs, le transfert automatique de la réserve lors de la mort d'un ennemi, et l'ajustement dynamique du modificateur de puissance.
+- `test/unit/combat_debug_logger_test.dart` : Test unitaire du service de journalisation pour s'assurer que l'appel ne lève aucune exception dans divers scénarios de données.
 
 ### Conséquences
 - ✅ **Rythme de jeu adapté et stimulant** : Le jeu adapte intelligemment le nombre et la puissance des menaces à la composition du deck du joueur. Un deck sur-optimisé fera face à des vagues de monstres plus nombreuses ou plus puissantes, tandis qu'un joueur en difficulté verra la menace stabilisée.
 - ✅ **Respect de l'espace de rendu Flame** : La limite stricte de 5 ennemis actifs garantit une présentation claire, évite tout bug visuel d'empilement sur smartphone portrait/paysage, et assure des performances constantes à 60 FPS sur l'arène graphique.
 - ✅ **Pérennité du Game Progression** : L'amortissement de $0.5$ de la DDA préserve le sentiment de satisfaction de la progression (les builds puissants roulent toujours plus facilement sur le jeu que les builds faibles, mais le défi reste présent).
-- ✅ **Validation par tests automatisés** : 82/82 tests au vert, confirmant que le flow logique de la file de réserve, les transitions d'intentions et l'algorithme de génération de budget respectent rigoureusement les invariants métier.
+- ✅ **Séparation propre et maintenabilité** : La logique de log est isolée. Si l'on souhaite changer le format de log ou la couleur ANSI, on modifie uniquement `CombatDebugLogger`.
+- ✅ **Validation par tests automatisés** : 84/84 tests au vert, confirmant que le flow logique de la file de réserve, les transitions d'intentions, l'algorithme de génération de budget, et le nouveau logger respectent rigoureusement les invariants métier.
 

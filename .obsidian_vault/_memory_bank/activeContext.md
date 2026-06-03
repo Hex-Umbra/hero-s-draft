@@ -6,11 +6,7 @@ Ce document décrit le focus actif du projet, les accomplissements récents, et 
 
 ## 1. Focus Actuel du Projet
 
-Le projet vient de finaliser un sprint d'implémentation centré sur l'équilibrage de la courbe de difficulté et le système de vagues de combat :
-1. **Équilibrage Hybride (DDA)** : Formule comparant la puissance réelle du joueur (`PlayerPower`) à la puissance théorique attendue (`ExpectedPower`) pour calculer un budget de menace de combat dynamique.
-2. **Score de Menace (`CombatRating`)** : Évaluation individuelle des monstres après scaling de leurs HP, attaque, et coup critique.
-3. **Réserve de Vagues (`pendingEnemies`)** : Limitation à 5 slots d'ennemis actifs sur le board Flame, avec transfert automatique de la réserve lors d'éliminations.
-Toutes les modifications ont été validées via des tests unitaires et d'intégration robustes.
+Le projet vient de finaliser l'isolation de la logique de journalisation avec l'implémentation du service `CombatDebugLogger`, déchargeant `CombatController` de la responsabilité de mise en forme des calculs complexes de DDA. 
 
 Le focus actuel s'oriente vers la préparation des prochaines étapes de refactoring technique de la Phase 4 (Sauvegarde, parallélisation I/O, audio).
 
@@ -68,8 +64,13 @@ Le focus actuel s'oriente vers la préparation des prochaines étapes de refacto
    - Validation complète du comportement des vagues et de la répartition budgétaire via des tests unitaires automatisés.
 
 9. **Assurance Qualité et Robustesse** :
-   - **Tests automatisés** unitaires et d'intégration validés avec succès (dont tests du générateur et du système de vagues).
+   - **Tests automatisés** unitaires et d'intégration validés avec succès (dont tests du générateur, du système de vagues et du nouveau logger), portant le total à **84 tests** (100% verts).
    - Analyse de code statique : **0 erreur** sous `flutter analyze`.
+
+10. **Isolation de la Journalisation du Combat (`CombatDebugLogger`)** :
+    - Découplage complet de la journalisation mathématique d'initialisation de combat en extrayant ces fonctions de `CombatController` vers `CombatDebugLogger`.
+    - Stylisation de la console de débogage à l'aide de bordures en boîte ANSI et de codes de couleurs ANSI pour mettre en valeur les statistiques du joueur, les formules calculées de la DDA, les détails du scaling et les attributs finaux des ennemis.
+    - Encapsulation des instructions de log dans des vérifications de mode débogage (`kDebugMode`) pour éviter toute surcharge d'allocation de mémoire en production.
 
 ---
 
