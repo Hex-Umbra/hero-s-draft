@@ -1,4 +1,3 @@
-// ignore_for_file: avoid_print
 import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/entity_stats.dart';
@@ -10,6 +9,7 @@ import '../../../models/data/enemy_data.dart';
 import '../../../models/data/relic_data.dart';
 import '../../../models/status_effect.dart';
 import '../../../models/map_node.dart';
+import '../services/combat_debug_logger.dart';
 import '../systems/encounter_system.dart';
 import '../systems/trait_system.dart';
 import '../services/effect_resolver.dart';
@@ -89,36 +89,28 @@ class CombatController extends StateNotifier<CombatState> {
     }
     final double finalBudget = baseBudget * powerModifier * nodeMultiplier;
 
-    print("=== COMBAT INITIALIZATION MATHEMATICS ===");
-    print("Player Level: $playerLevel, Act: $act, Node Type: ${nodeType ?? 'normal'}");
-    print("Player Max HP: $playerMaxHp, Attack: $playerAttaque, Max Mana: $playerMaxMana, Relics Count: $playerRelicsCount");
-    print("PlayerPower formula: maxHP + (attaque * 10) + (maxMana * 15) + (relicsCount * 5)");
-    print("PlayerPower calculation: $playerMaxHp + ($playerAttaque * 10) + ($playerMaxMana * 15) + ($playerRelicsCount * 5) = $playerPower");
-    print("ExpectedPower formula: 145 + [(playerLevel - 1) * 15] + [(act - 1) * 20]");
-    print("ExpectedPower calculation: 145 + [($playerLevel - 1) * 15] + [($act - 1) * 20] = $expectedPower");
-    print("BaseBudget formula: 40 + [(playerLevel - 1) * 10] + [(act - 1) * 25]");
-    print("BaseBudget calculation: 40 + [($playerLevel - 1) * 10] + [($act - 1) * 25] = $baseBudget");
-    print("PowerRatio calculation: PlayerPower / ExpectedPower = $playerPower / $expectedPower = $powerRatio");
-    print("PowerModifier formula: 1.0 + (PowerRatio - 1.0) * 0.5");
-    print("PowerModifier calculation: 1.0 + ($powerRatio - 1.0) * 0.5 = $powerModifier");
-    print("NodeMultiplier: $nodeMultiplier (Boss = 2.0, Elite = 1.5, Normal = 1.0)");
-    print("FinalBudget formula: BaseBudget * PowerModifier * NodeMultiplier");
-    print("FinalBudget calculation: $baseBudget * $powerModifier * $nodeMultiplier = $finalBudget");
-    print("Enemy Level calculation: max(1, playerLevel + (act - 1) * 2 + nodeModifier) = $enemyLevel");
-    print("HP scaling multiplier: $hpMultiplier");
-    print("Damage scaling multiplier: $damageMultiplier");
-    print("Generated Enemy Data count: ${enemyDataList.length}");
-    for (var data in enemyDataList) {
-      final rating = EncounterSystem.calculateCombatRating(
-        data: data,
-        enemyLevel: enemyLevel,
-        act: act,
-        isBoss: isBoss,
-        isElite: isElite,
-      );
-      print(" - Enemy: ${data.nameEn} (Tier: ${data.tier}), HP scaled: ${(data.maxHp * hpMultiplier).round()}, Damage scaled: ${(data.baseDamage * damageMultiplier).round()}, CombatRating: $rating");
-    }
-    print("=========================================");
+    CombatDebugLogger.logCombatInitialization(
+      playerLevel: playerLevel,
+      act: act,
+      nodeType: nodeType,
+      playerMaxHp: playerMaxHp,
+      playerAttaque: playerAttaque,
+      playerMaxMana: playerMaxMana,
+      playerRelicsCount: playerRelicsCount,
+      playerPower: playerPower,
+      expectedPower: expectedPower,
+      baseBudget: baseBudget,
+      powerRatio: powerRatio,
+      powerModifier: powerModifier,
+      nodeMultiplier: nodeMultiplier,
+      finalBudget: finalBudget,
+      enemyLevel: enemyLevel,
+      hpMultiplier: hpMultiplier,
+      damageMultiplier: damageMultiplier,
+      enemyDataList: enemyDataList,
+      isBoss: isBoss,
+      isElite: isElite,
+    );
 
     final List<EnemyInstance> allEnemyInstances = [];
     for (var data in enemyDataList) {
