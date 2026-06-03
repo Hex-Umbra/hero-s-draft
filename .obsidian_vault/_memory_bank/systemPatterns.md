@@ -697,4 +697,101 @@ Dans le cadre des améliorations de la branche `feat/tutorial`, le module de tut
 - **Ciblage Interactif en Deux Phases** : À l'étape 6 (`TutorialPlayCardWidget`), la logique de jeu de cartes impose au joueur de réaliser successivement une action offensive (glisser/déposer la carte d'attaque sur le Slime) puis une action défensive (glisser la carte d'armure sur le Héros). Ce comportement est géré via une machine à états simple (`_targetingPhase`) intégrée au widget.
 - **Info-bulles (Tooltips) de Cartes (Étape 5)** : Le widget `TutorialCardsWidget` utilise de vrais rendus de cartes vectorielles sur Canvas et affiche des infobulles descriptives et localisées (`TutorialTooltip`) lors du survol ou du toucher, évitant ainsi d'encombrer le layout principal tout en clarifiant les règles.
 
+---
 
+## 10. Architecture du Système de Forge et de Fusion de Cartes (Forge & Card Merge Technical Design)
+
+Le système de Forge et de Fusion offre une progression non-linéaire des cartes en séparant proprement la logique métier (calculs de probabilités, relances et consolidation) du rendu visuel de l'interface utilisateur.
+
+### 10.1. Modélisation et Résolution de la Forge (`ForgeUpgradeDialog`)
+
+Le dialogue de forge `ForgeUpgradeDialog` (affiché via `RestScreen`) manipule des structures éphémères représentant les choix d'améliorations avant validation finale :
+
+1. **Représentation des Améliorations** :
+   Les améliorations de forge sont représentées sous forme de chaînes formatées `"upgradeId:tier"` stockées dans la liste `CardInstance.forgeUpgrades` (ex: `["sharp:2", "quick:1"]`).
+   
+2. **Génération Probabiliste des Options** :
+   À l'initialisation de la forge pour une carte donnée, la classe `ForgeSlot` génère de 1 à 5 options indépendantes (tirages de Bernoulli successifs) :
+   - Slot 1 : $100\%$ (Garanti)
+   - Slot 2 : $50\%$
+   - Slot 3 : $25\%$
+   - Slot 4 : $10\%$
+   - Slot 5 : $2\%$
+
+3. **Filtrage des Pools par Rareté (Clamping)** :
+   Chaque slot valide tire une amélioration depuis l'un des trois pools exclusifs de rareté :
+   - **Pool Commun (`common`)** : Statuts offensifs de base (brûlure `burning`, gel `freezing`, électrocution `shocking` limités aux cartes de type `attack`) ou bonus statistiques simples (`sharp` pour dégâts, `hardened` pour armure).
+   - **Pool Atypique (`uncommon`)** : Amélioration de pioche (`quick`).
+   - **Pool Rare (`rare`)** : Réduction permanente de coût mana (`eco`) ou effet persistant `enduring` (qui désactive `isExhaust: true`), réservé aux cartes non-pouvoir exhaustibles.
+   
+   Le tirage probabiliste d'un pool dépend de la rareté de la carte :
+   - Carte Commune : $100\%$ Commun.
+   - Carte Atypique : $80\%$ Commun, $20\%$ Atypique.
+   - Carte Rare : $60\%$ Commun, $30\%$ Atypique, $10\%$ Rare.
+   - Carte Épique : $40\%$ Commun, $40\%$ Atypique, $20\%$ Rare.
+   - Carte Légendaire : $20\%$ Commun, $50\%$ Atypique, $30\%$ Rare.
+
+4. **Résolution du Tier** :
+   Chaque amélioration se voit attribuer un Tier (I, II ou III) selon une distribution de probabilité pondérée :
+   - Tier I : $80\%$
+   - Tier II : $15\%$
+   - Tier III : $5\%$
+
+5. **Coût exponentiel et Reroll individuel** :
+   Le joueur peut relancer individuellement les options proposées pour chaque slot en dépensant de l'or de l'inventaire via `InventoryController`. Le coût en or d'une relance est exponentiel et calculé localement sur chaque slot :
+   $$\text{Coût Reroll} = \text{round}(20 \times 1.25^n)$$
+   où $n$ représente le nombre total de relances appliquées sur ce slot spécifique.
+
+```mermaid
+graph TD
+    Start[Ouvrir RestScreen -> Option Forge] --> SelectCard[Sélectionner Carte]
+    SelectCard --> Dialog[Ouvrir ForgeUpgradeDialog]
+    Dialog --> GenSlots[Générer 1 à 5 Slots]
+    GenSlots --> RollSlots[Tirer Upgrade & Tier par Slot]
+    RollSlots --> Loop[Afficher Options de Forge]
+    Loop --> Reroll[Clic Reroll Slot i]
+    Reroll --> Cost[Calculer Coût: 20 * 1.25^n]
+    Cost --> CheckGold{Assez d'Or ?}
+    CheckGold -- Oui --> SpendGold[Consommer Or via InventoryProvider]
+    SpendGold --> RollAgain[Re-tirer Upgrade Slot i]
+    RollAgain --> Loop
+    CheckGold -- Non --> Alert[Désactiver bouton Reroll]
+    Loop --> SelectUpgrade[Sélectionner Option & Valider]
+    SelectUpgrade --> Apply[Ajouter upgradeId:tier à la carte]
+    Apply --> End[Sauvegarder dans DeckProvider]
+```
+
+### 10.2. Fusion Interactive et Consolidation des Upgrades (`DeckNotifier.mergeCards`)
+
+La fusion interactive permet au joueur de fusionner 3 exemplaires d'une carte à la même rareté vers la rareté supérieure tout en préservant leurs améliorations :
+
+1. **Validation 3→1** :
+   La méthode `mergeCards` de `DeckNotifier` reçoit les identifiants uniques des 3 cartes sélectionnées. Elle valide que ces 3 cartes existent dans le deck, partagent le même `baseCardId` et ont la même rareté courante.
+
+2. **Consolidation des Upgrades** :
+   Le système rassemble toutes les améliorations de forge des 3 cartes consommées. Si plusieurs cartes possèdent la même amélioration (même ID d'upgrade), leurs Tiers sont cumulés (ex: `sharp:1` + `sharp:2` = `sharp:3`). Les améliorations uniques sont simplement copiées.
+
+3. **Capacité Limite par Rareté** :
+   Chaque palier de rareté possède une capacité d'amélioration maximale :
+   $$\text{Capacité} = baseMaxForgeUpgrades + rarityIndex$$
+   - Commune ($rarityIndex=0$) : 2 upgrades max.
+   - Légendaire ($rarityIndex=4$) : 6 upgrades max.
+   
+   Si la liste des améliorations consolidées dépasse la capacité de la rareté supérieure ciblée par la fusion, l'interface utilisateur impose un choix d'héritage interactif pour sélectionner précisément les upgrades à conserver.
+
+4. **Modificateurs de Rareté** :
+   Lors de la résolution d'une carte en combat (`EffectResolver`), les valeurs de base (dégâts, blocage) sont multipliées par un coefficient lié à sa rareté active, remplaçant la progression par niveau numérique. Les upgrades de forge (ex. ajouter +X dégâts par Tier de `sharp`) s'additionnent ensuite au résultat mis à l'échelle.
+
+```mermaid
+graph TD
+    SelectMerge[Sélectionner 3 Cartes Identiques] --> CheckRarity{Même Rareté ?}
+    CheckRarity -- Oui --> Consolidate[Cumuler Upgrades & Additionner Tiers]
+    CheckRarity -- Non --> Fail[Erreur de Validation]
+    Consolidate --> CheckCap{Nb Upgrades > Capacité Rareté + 1 ?}
+    CheckCap -- Oui --> UIInherit[Afficher Choix d'Héritage Interactif]
+    UIInherit --> Clamped[Filtrer Upgrades Choisis]
+    CheckCap -- Non --> Save[Garder tous les Upgrades]
+    Clamped --> AddMerged[Retirer 3 cartes / Ajouter 1 carte Rarity+1]
+    Save --> AddMerged
+    AddMerged --> DeckUpdate[Notifier DeckProvider & Sauvegarder]
+```

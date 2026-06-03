@@ -677,4 +677,94 @@ Le système de tutoriel initial possédait des étapes interactives simplifiées
 - ✅ **Fidélité d'apprentissage optimale** : Le joueur appréhende les gestes complexes de ciblage de production de manière sûre dans un bac à sable isolé.
 - ✅ **Expérience utilisateur immersive** : Les info-bulles et les icônes de haute qualité vectorielle améliorent instantanément la qualité perçue du jeu.
 
+---
 
+## ⚔️ ADR-023 : Système de Statuts Élémentaires Riches & Vulnérabilité Universelle
+
+### Statut
+✅ Accepté & Implémenté
+
+### Contexte
+Les combats tactiques manquaient d'altérations d'état dynamiques et de synergies élémentaires. Les effets de statut initiaux étaient soit trop basiques, soit limités aux forces et armures. Pour offrir des opportunités de build plus poussées (jeux basés sur le temps, le burst ou le contrôle), il était nécessaire d'introduire des effets élémentaires riches et une gestion propre de la vulnérabilité affectant toutes les entités en jeu.
+
+### Décision
+1. **Brûlure (`burn`)** : Inflige des dégâts au début du tour de la cible. Le tick applique des dégâts physiques équivalents à l'intensité accumulée, puis décrémente l'intensité et la durée de 1.
+2. **Gel (`freeze`)** : Réduit de 50% (arrondi) les dégâts de la prochaine attaque de la cible, puis consomme immédiatement la durée du gel.
+3. **Électrocution (`shock`)** : Fonctionne comme un amplificateur de dégâts cumulatif flat. À chaque attaque directe subie par la cible, la valeur cumulée du statut est ajoutée aux dégâts infligés.
+4. **Vulnérabilité (`vulnerable`)** : Multiplicateur universel de dégâts. Toute attaque directe subie par une entité sous vulnérabilité inflige 50% de dégâts supplémentaires. Cet effet est symétrique (affecte autant le Héros que les Ennemis).
+5. **Découplage Logique** : Câbler la totalité de ces règles dans `CombatController` et `EffectResolver` de manière autonome, garantissant la testabilité unitaire sans nécessiter le moteur graphique Flame.
+
+### Preuves dans le code
+- `lib/game/services/effect_resolver.dart` : Prise en compte de la vulnérabilité et de l'électrocution (`shock`) dans le calcul dynamique des dégâts finaux d'une attaque.
+- `lib/game/controllers/combat_controller.dart` : Ticks de brûlure résolus au début du tour et application des réductions de dégâts liées au gel.
+- `test/unit/combat_controller_test.dart` et `test/unit/effect_resolver_test.dart` : Tests unitaires vérifiant la conformité des ticks et des réductions/amplifications.
+
+### Conséquences
+- ✅ **Diversité des builds** : Permet au joueur de construire des archétypes viables orientés Gel (contrôle défensif) ou Électrocution/Vulnérabilité (burst agressif).
+- ✅ **Double tranchant** : L'universalité de la vulnérabilité force le joueur à surveiller ses propres débuffs sous peine de subir des attaques dévastatrices.
+
+---
+
+## ⚔️ ADR-024 : Progression par Rareté Dynamique et Fusion Interactive (3→1)
+
+### Statut
+✅ Accepté & Implémenté
+
+### Contexte
+Le système de progression initial reposait sur un niveau numérique de cartes peu évocateur. Pour renforcer l'aspect roguelike deckbuilder traditionnel et donner de la valeur aux doublons de cartes obtenus en récompense, le jeu avait besoin d'un mécanisme de rareté dynamique et d'une fusion interactive de cartes.
+
+### Décision
+1. **Rareté Dynamique** : Abandonner le concept de niveau numérique au profit d'une progression par rareté : `common` (Commune) → `uncommon` (Atypique) → `rare` (Rare) → `epic` (Épique) → `legendary` (Légendaire). Un multiplicateur de rareté spécifique applique un échelonnement proportionnel aux dégâts et armures de base de la carte.
+2. **Fusion Interactive** : Intégrer dans le deck une mécanique de fusion demandant exactement 3 exemplaires identiques d'une carte à la même rareté. La fusion consomme ces 3 cartes et produit une carte unique de la rareté directement supérieure.
+3. **Consolidation d'Upgrades** : Cumuler les améliorations de forge des cartes consommées lors de la fusion en additionnant les Tiers des améliorations de même ID (ex: deux upgrades `sharp:1` fusionnent en un unique `sharp:2`).
+4. **Contrainte de Capacité** : Tronquer la liste des upgrades cumulés pour respecter la capacité maximale de la nouvelle rareté (`baseMaxForgeUpgrades + rarityIndex`). Fournir une interface de choix interactif pour décider des améliorations héritées.
+5. **Équilibrage de Cartes Clés** : Rééquilibrer plusieurs cartes pour qu'elles s'adaptent harmonieusement au flux de rareté et d'upgrades :
+   - `holy_shield` : Dotée du mot-clé `isExhaust: true` pour éviter le spam défensif infini.
+   - `warcry` : Dégâts de zone (AoE) couplés à un gain d'armure modéré.
+   - `mana_surge` : Gain de 1 mana, pioche 1, et épuisement (`isExhaust: true`).
+   - `concentration` : Pioche 2, coût 0, et épuisement.
+   - `poison_stab` : Dégâts ciblés avec application directe de poison.
+
+### Preuves dans le code
+- `lib/game/controllers/deck_controller.dart` : Méthode `mergeCards()` gérant la validation des 3 IDs, le retrait des cartes du deck principal, le calcul de la rareté supérieure, la consolidation des Tiers d'upgrades et le clamp à la capacité maximale.
+- `assets/data/cards.json` : Structure JSON mise à jour avec les attributs de rareté et les configurations d'équilibrage.
+- `test/unit/deck_controller_test.dart` : Validation de la fusion 3→1 et de la conservation/limitation des upgrades.
+
+### Conséquences
+- ✅ **Valorisation des récompenses** : Le joueur est ravi de recevoir des doublons de cartes car ils lui permettent de monter son deck en rareté.
+- ✅ **Conservation d'investissement** : Fusionner des cartes déjà améliorées à la forge ne fait pas perdre l'investissement en or grâce au cumul de Tiers.
+
+---
+
+## ⚔️ ADR-025 : Système de Forge Découplé et Probabiliste
+
+### Statut
+✅ Accepté & Implémenté
+
+### Contexte
+L'amélioration des cartes au feu de camp manquait d'aléa et de choix stratégiques significatifs. Proposer des choix d'améliorations fixes et illimités rendait la forge monotone. Un système roguelike robuste exigeait des options aléatoires limitées par la rareté de la carte, des probabilités de slots d'options variables et un coût de relance exponentiel.
+
+### Décision
+1. **Capacité Maximale Scalée** : Restreindre le nombre maximum d'améliorations de forge toléré sur une carte à la valeur `baseMaxForgeUpgrades + rarityIndex`.
+2. **Génération Probabiliste de Slots** : À chaque ouverture de la forge pour une carte, le nombre d'options d'upgrades disponibles (1 à 5) est déterminé aléatoirement. Chaque slot a une chance indépendante d'apparaître :
+   - Slot 1 : 100%
+   - Slot 2 : 50%
+   - Slot 3 : 25%
+   - Slot 4 : 10%
+   - Slot 5 : 2%
+3. **Pools Clamps par Rareté** : Classer les upgrades par niveaux de rareté :
+   - *Common Pool* (Dégâts `sharp`, Armure `hardened`, et effets de statut `burning`, `freezing`, `shocking` limités aux cartes Attaque).
+   - *Uncommon Pool* (Pioche `quick`).
+   - *Rare Pool* (Économe en mana `eco`, et persistant `enduring` - retirant l'épuisement `exhaust` - réservé aux cartes non-pouvoir qui s'épuisent).
+4. **Pondération et Distribution** : Assigner la probabilité d'apparition des pools selon la rareté de la carte (ex : une carte rare a de meilleures chances de tirer des options peu communes ou rares). Déterminer le Tier de l'upgrade (de I à III) via des jets pondérés : Tier I (80%), Tier II (15%), Tier III (5%).
+5. **Relance Exponentielle Individuelle** : Permettre au joueur de relancer le tirage d'un slot spécifique en dépensant de l'or de l'inventaire. Le coût augmente exponentiellement par slot selon la formule $20 \times 1.25^n$ (arrondi) où $n$ est le nombre de relances subies par ce slot.
+6. **Intégration d'Écran** : Modéliser le système de slots indépendamment de l'UI et l'intégrer dans le widget dialog `ForgeUpgradeDialog` appelé depuis l'écran de feu de camp `RestScreen`.
+
+### Preuves dans le code
+- `lib/ui/widgets/forge_upgrade_dialog.dart` : Classe `ForgeSlot` portant la formule `(20 * pow(1.25, rerollsCount)).round()`, méthodes `_generateInitialSlots`, `_rollSlotUpgrade`, et `_rerollSlot` consommant l'or de `inventoryProvider`.
+- `test/unit/decoupled_forge_test.dart` : Suite complète de tests unitaires simulant des centaines de tirages pour valider les chances d'ouverture de slots, la clampabilité des pools et le coût de reroll.
+
+### Conséquences
+- ✅ **Suspense et rejouabilité** : Le joueur espère obtenir de nombreux slots ou un upgrade Rare puissant (comme `enduring` pour pérenniser un sort de soin).
+- ✅ **Arbitrage financier** : Introduit un arbitrage crucial sur l'or : faut-il relancer un slot de forge ou économiser pour la boutique ?
+- ⚠️ **Dépendance à la chance** : Un joueur malchanceux peut n'avoir qu'un seul slot d'option disponible, bien que compensé par la possibilité de reroll.

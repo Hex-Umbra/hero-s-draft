@@ -36,8 +36,8 @@ La progression dans **Hero's Draft** est structurée autour d'une boucle classiq
   3 choix de cartes post-victoire
        │
        ▼
-[Évaluation Auto-Merge]
-  3× cartes identiques (même ID + Level) → 1× carte Level+1
+[Évaluation Auto-Merge (3→1)]
+  3× cartes identiques (même rareté) → 1× carte de rareté supérieure (upgrades cumulés)
        │
        ▼
 [Passage à l'Étage Suivant] ── Si Boss complété → Acte+1 → Nouvelle carte
@@ -119,24 +119,15 @@ Trois classes de héros définis dans `heroes.json` :
 - `effects` : List\<CardEffect\> avec `type`, `value`, `statusId?`, `duration?`
 - `heroClass?` : null (global) ou "paladin"/"berserker"/"mage"
 
-### 2.4. Mécanique d'Auto-Merge
+### 2.4. Progression de Rareté Dynamique et Fusion Interactive
 
-Gérée par `DeckNotifier.mergeCards(cardId, level)` :
-1. Scanne le `masterDeck` pour 3 exemplaires ayant le **même `baseCardId` ET le même `level`**.
-2. Supprime les 3 copies.
-3. Ajoute 1 copie à `level + 1`.
+La progression des cartes s'effectue via des raretés dynamiques (`common` → `uncommon` → `rare` → `epic` → `legendary`), chacune appliquant un coefficient multiplicateur sur les statistiques de base de dégâts et d'armure de la carte.
 
-L'échelonnement des effets par niveau suit la formule :
-```
-scaledValue = baseValue * (1 + (level - 1) * 0.5)
-```
-
-| Level | Multiplicateur | Exemple (6 dégâts base) |
-|:---|:---|:---|
-| 1 | ×1.0 | 6 |
-| 2 | ×1.5 | 9 |
-| 3 | ×2.0 | 12 |
-| 4 | ×2.5 | 15 |
+La fusion de cartes 3-en-1 est gérée par `DeckNotifier.mergeCards(selectedIds, inheritedUpgrades)` :
+1. Le joueur sélectionne 3 exemplaires d'une carte ayant la même rareté active.
+2. Les 3 copies sont supprimées du `masterDeck`.
+3. Une nouvelle copie de rareté directement supérieure est ajoutée au `masterDeck`.
+4. **Héritage des Améliorations de Forge** : Les upgrades de même ID voient leurs Tiers additionnés (ex: deux upgrades `sharp:1` fusionnent en un unique `sharp:2`). Le nombre d'améliorations final est limité par la capacité maximale de la nouvelle rareté (`baseMaxForgeUpgrades + rarityIndex`). Le joueur choisit de manière interactive les upgrades qu'il souhaite hériter en cas de dépassement de la capacité.
 
 ### 2.5. Bestiaire
 
@@ -269,12 +260,33 @@ Cinq piles logiques gérées par `DeckNotifier` :
 | Uncommon | 20% | +3.0% |
 | Common | Reste | — |
 
-### 3.7. 🏕️ Feu de Camp (Campfire)
+### 3.7. 🏕️ Feu de Camp / Repos (`RestScreen`)
 
-Trois options dans `CampfireScreen` :
+Trois options interactives s'offrent au joueur sur l'écran `RestScreen` :
 1. **Repos** : Soigne 30% du HP maximum.
-2. **Forge** : Sélectionne une carte du deck pour la monter de level (+1).
-3. **Oubli** : Sélectionne une carte pour la supprimer définitivement du deck.
+2. **Forge** : Ouvre la boîte de dialogue `ForgeUpgradeDialog` pour appliquer des améliorations probabilistes permanentes à une carte, consommant de l'or.
+3. **Oubli** : Sélectionne une carte pour la supprimer définitivement du Master Deck.
+
+---
+
+### 3.10. 🔨 Système de Forge Découplé
+
+La forge permet d'ajouter des améliorations permanentes (upgrades) aux cartes du Master Deck en échange d'or :
+- **Limite de Capacité** : Une carte peut accueillir au maximum $baseMaxForgeUpgrades + rarityIndex$ améliorations (la capacité augmente avec la rareté de la carte).
+- **Génération Probabiliste de Slots** : À chaque entrée en forge pour une carte, 1 à 5 slots d'options d'upgrades sont générés indépendamment selon les chances suivantes :
+  - Slot 1 : 100%
+  - Slot 2 : 50%
+  - Slot 3 : 25%
+  - Slot 4 : 10%
+  - Slot 5 : 2%
+- **Pools d'Améliorations Clamps** : Les améliorations proposées sont tirées depuis des pools liés à la rareté de la carte :
+  - *Common* : Améliorations de stats (`sharp` pour les dégâts, `hardened` pour l'armure) et statuts élémentaires (`burning`, `freezing`, `shocking`) limités aux cartes Attaque.
+  - *Uncommon* : Pioche de cartes supplémentaires (`quick`).
+  - *Rare* : Gains de mana (`eco`) et retrait d'épuisement (`enduring` persistant, retirant `exhaust`), réservé aux cartes non-pouvoir exhaustibles.
+- **Pondération et Tiers** : Le tirage des pools est pondéré par l'index de rareté de la carte. Les Tiers des upgrades suivent la distribution : Tier I (80%), Tier II (15%), Tier III (5%).
+- **Relance Individuelle (Reroll)** : Le joueur peut relancer le tirage d'un slot spécifique. Le coût augmente exponentiellement par slot :
+  $$\text{Coût} = \text{round}(20 \times 1.25^n)$$
+  où $n$ est le nombre de relances déjà appliquées à ce slot. Consomme l'or de l'inventaire via `inventoryProvider`.
 
 ### 3.8. 🛒 Boutique (Shop)
 
@@ -310,15 +322,13 @@ Les combattants accumulent des altérations d'état. Le décompte (`tickStatuses
 | `weakness` | Debuff | Oui | Réduit les dégâts physiques infligés de **25%** (`×0.75`) | Durée -1 chaque tour |
 | `strength_regen` | Buff | Oui | Ajoute sa valeur au statut `strength` au début du tour | Durée -1 chaque tour |
 | `armor_regen` | Buff | Oui | Génère de l'armure = valeur au début du tour | Durée -1 chaque tour |
-| `burn` | Debuff | Oui | Inflige des dégâts directs = valeur au début du tour ennemi | Durée -1 chaque tour |
-| `freeze` | Debuff | Oui | Divise par deux (`×0.5` arrondi) les dégâts offensifs d'intention de l'ennemi | Durée -1 chaque tour |
-| `shock` | Debuff | Oui | Augmente les dégâts d'attaque subis par l'ennemi de la valeur du statut | Durée -1 chaque tour |
+| `burn` | Debuff | Oui | Inflige des dégâts de feu = valeur active au début du tour. Le tick réduit la valeur et la durée de 1. | Durée -1 chaque tour |
+| `freeze` | Debuff | Oui | Réduit les dégâts offensifs du prochain coup de l'ennemi de **50%** et décrémente immédiatement la durée du gel. | Durée -1 chaque tour |
+| `shock` | Debuff | Oui | Ajoute sa valeur active cumulée à tout dégât d'attaque direct subi par la cible. | Durée -1 chaque tour |
+| `vulnerable` | Debuff | Oui | Augmente universellement tous les dégâts reçus de **50%** (arrondi). Affecte autant le Héros que les Ennemis. | Durée -1 chaque tour |
 
 ### 4.2. Statuts Partiellement Implémentés
-
-| Statut (`id`) | Type | Présent UI | Présent Logique | Lacune |
-|:---|:---:|:---:|:---:|:---|
-| `vulnerable` | Debuff | ✅ Déclaré dans `EffectResolver._createStatus`, affichable | ❌ | **Absent de `_calculateDamage()`** — n'augmente pas les dégâts reçus |
+Aucun. Tous les statuts décrits ci-dessus sont 100% implémentés et opérationnels dans le calcul des dégâts.
 
 ### 4.3. Mécanique de Stacking (`StatusEffect.combine`)
 
@@ -435,7 +445,7 @@ Le tutoriel se présente sous la forme d'un `PageView` non-swipeable, où la pro
 7. **Dégâts & Armure (Armor & Damage)** : Démo comparative. Le joueur subit des dégâts avec et sans armure pour voir l'impact visuel de l'absorption par l'armure.
 8. **Statuts Élémentaires (Status Effects)** : Galerie interactive détaillant le Poison, la Brûlure, le Gel, et l'Électrocution.
 9. **Intentions Ennemies (Enemy Intents)** : Décryptage des icônes d'intentions affichées au-dessus des ennemis (Attaque, Défense, Buff).
-10. **Fusion de Cartes (Merge)** : Démo interactive du merge automatique. Le joueur fusionne 3 cartes identiques de niveau 1 pour obtenir une version renforcée de niveau 2.
+10. **Fusion de Cartes (Merge)** : Démo interactive de la fusion 3-en-1. Le joueur fusionne 3 cartes identiques pour obtenir une version de rareté supérieure avec transfert d'améliorations.
 11. **XP & Niveaux (XP & Level Up)** : Accumulation d'expérience interactive jusqu'au passage de niveau du héros.
 12. **Draft (Reward Draft)** : Simulation de draft de fin de combat avec effets de survol/sélection dorée et scale-up (identique au jeu de production).
 13. **Reliques (Relics Carousel)** : Présentation des reliques passives de combat avec défilement de carrousel.
