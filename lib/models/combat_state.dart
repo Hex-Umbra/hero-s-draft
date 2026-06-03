@@ -4,6 +4,7 @@ enum TurnPhase { player, enemy }
 
 class CombatState {
   final List<EnemyInstance> enemies;
+  final List<EnemyInstance> pendingEnemies;
   final List<EnemyInstance> defeatedEnemies;
   final TurnPhase turnPhase;
   final int turnCount;
@@ -13,6 +14,7 @@ class CombatState {
 
   const CombatState({
     this.enemies = const [],
+    this.pendingEnemies = const [],
     this.defeatedEnemies = const [],
     this.turnPhase = TurnPhase.player,
     this.turnCount = 1,
@@ -23,6 +25,7 @@ class CombatState {
 
   CombatState copyWith({
     List<EnemyInstance>? enemies,
+    List<EnemyInstance>? pendingEnemies,
     List<EnemyInstance>? defeatedEnemies,
     TurnPhase? turnPhase,
     int? turnCount,
@@ -33,6 +36,7 @@ class CombatState {
   }) {
     return CombatState(
       enemies: enemies ?? this.enemies,
+      pendingEnemies: pendingEnemies ?? this.pendingEnemies,
       defeatedEnemies: defeatedEnemies ?? this.defeatedEnemies,
       turnPhase: turnPhase ?? this.turnPhase,
       turnCount: turnCount ?? this.turnCount,
@@ -53,6 +57,14 @@ class CombatState {
           .toList();
     }
 
+    var pendingEnemiesJson = json['pendingEnemies'] as List?;
+    List<EnemyInstance> parsedPendingEnemies = [];
+    if (pendingEnemiesJson != null) {
+      parsedPendingEnemies = pendingEnemiesJson
+          .map((e) => EnemyInstance.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
+
     var defeatedEnemiesJson = json['defeatedEnemies'] as List?;
     List<EnemyInstance> parsedDefeatedEnemies = [];
     if (defeatedEnemiesJson != null) {
@@ -63,6 +75,7 @@ class CombatState {
 
     return CombatState(
       enemies: parsedEnemies,
+      pendingEnemies: parsedPendingEnemies,
       defeatedEnemies: parsedDefeatedEnemies,
       turnPhase: TurnPhase.values.firstWhere(
         (e) => e.toString().split('.').last == json['turnPhase'],
@@ -77,6 +90,7 @@ class CombatState {
 
   Map<String, dynamic> toJson() => {
     'enemies': enemies.map((e) => e.toJson()).toList(),
+    'pendingEnemies': pendingEnemies.map((e) => e.toJson()).toList(),
     'defeatedEnemies': defeatedEnemies.map((e) => e.toJson()).toList(),
     'turnPhase': turnPhase.toString().split('.').last,
     'turnCount': turnCount,

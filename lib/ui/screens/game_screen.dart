@@ -274,6 +274,10 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             gameData.enemies,
             playerLevel: runState.heroStats.level,
             act: runState.act,
+            playerMaxHp: runState.heroStats.maxPv,
+            playerAttaque: runState.heroStats.attaque,
+            playerMaxMana: runState.heroStats.maxMana,
+            playerRelicsCount: ref.read(inventoryProvider).relics.length,
           );
 
       ref.read(deckProvider.notifier).initializeCombat();
