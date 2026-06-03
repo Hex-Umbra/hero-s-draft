@@ -81,18 +81,18 @@ void main() {
         expect(combatController.currentState.turnPhase, TurnPhase.player);
         expect(combatController.currentState.isCombatEnded, isFalse);
 
-        // Elite Node (Enemy Lvl 2: HP Multiplier = 1.12 * 1.5 = 1.68)
+        // Elite Node (Enemy Lvl 2: HP Multiplier = 1.06 * 1.5 = 1.59)
         combatController.initializeCombat(1, MapNodeType.elite, [goblinData]);
         final eliteGoblin = combatController.currentState.enemies.first;
-        expect(eliteGoblin.stats.maxPv, 34); // 20 * 1.68 = 33.6 -> 34
-        expect(eliteGoblin.stats.attaque, 8); // 5 * 1.62 = 8.1 -> 8
+        expect(eliteGoblin.stats.maxPv, 32); // 20 * 1.59 = 31.8 -> 32
+        expect(eliteGoblin.stats.attaque, 8); // 5 * 1.56 = 7.8 -> 8
 
-        // Boss Node (Enemy Lvl 3: HP Multiplier = 1.24 * 3.0 = 3.72)
+        // Boss Node (Enemy Lvl 3: HP Multiplier = 1.12 * 3.0 = 3.36)
         combatController.initializeCombat(1, MapNodeType.boss, [goblinData]);
         expect(combatController.currentState.enemies.length, 1);
         final bossGoblin = combatController.currentState.enemies.first;
-        expect(bossGoblin.stats.maxPv, 74); // 20 * 3.72 = 74.4 -> 74
-        expect(bossGoblin.stats.attaque, 17); // 5 * 3.48 = 17.4 -> 17
+        expect(bossGoblin.stats.maxPv, 67); // 20 * 3.36 = 67.2 -> 67
+        expect(bossGoblin.stats.attaque, 16); // 5 * 3.24 = 16.2 -> 16
       },
     );
 
