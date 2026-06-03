@@ -123,9 +123,9 @@ void main() {
           act: 1,
         );
         expect(combatController.currentState.enemies.first.stats.level, 3);
-        // HP multiplier = (1.0 + 0.12 * (3-1)) * 1.5 = 1.24 * 1.5 = 1.86
-        // maxPv = (20 * 1.86).round() = 37
-        expect(combatController.currentState.enemies.first.stats.maxPv, 37);
+        // HP multiplier = (1.0 + 0.06 * (3-1)) * 1.5 = 1.12 * 1.5 = 1.68
+        // maxPv = (20 * 1.68).round() = 34
+        expect(combatController.currentState.enemies.first.stats.maxPv, 34);
 
         // Case 3: Player Lvl 3, Act 2, Boss Combat -> Enemy Lvl 7 (playerLvl 3 + actMod (2-1)*2=2 + bossMod 2)
         combatController.initializeCombat(

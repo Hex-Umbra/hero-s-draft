@@ -672,6 +672,22 @@ class AppLocalizationsFr extends AppLocalizations {
       'Cloner une carte au choix parmi 3 cartes aléatoires de votre deck';
 
   @override
+  String get draftChoicePrecision => 'Précision';
+
+  @override
+  String draftChoicePrecisionDesc(int amount) {
+    return '+$amount% de chance de Critique';
+  }
+
+  @override
+  String get draftChoiceFerocity => 'Férocité';
+
+  @override
+  String draftChoiceFerocityDesc(int amount) {
+    return '+$amount% de dégâts de Critique';
+  }
+
+  @override
   String statusPoison(int value) {
     return 'Poison : $value';
   }

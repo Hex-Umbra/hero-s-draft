@@ -191,6 +191,8 @@ class RunController extends StateNotifier<RunState> {
     int armorAcc = 0,
     int maxManaAcc = 0,
     int luckAcc = 0,
+    int critChanceAcc = 0,
+    double critDamageAcc = 0.0,
   }) {
     final currentStats = state.heroStats;
     final newMaxPv = currentStats.maxPv + maxPvAcc;
@@ -216,6 +218,8 @@ class RunController extends StateNotifier<RunState> {
         attaque: currentStats.attaque + attackAcc,
         armorMastery: currentStats.armorMastery + armorAcc,
         luck: currentStats.luck + luckAcc,
+        critChance: currentStats.critChance + critChanceAcc,
+        critMultiplier: currentStats.critMultiplier + critDamageAcc,
       ),
     );
   }
@@ -335,6 +339,21 @@ class RunController extends StateNotifier<RunState> {
           state = state.copyWith(
             heroStats: state.heroStats.copyWith(
               luck: state.heroStats.luck + relic.value,
+            ),
+          );
+        }
+        break;
+      case 'gain_crit':
+        if (relic.trigger == RelicTrigger.startOfRun) {
+          applyHeroStatModifier(critChanceAcc: relic.value);
+        } else {
+          addStatus(
+            StatusEffect(
+              id: 'crit_chance',
+              name: 'Critique (Relique)',
+              type: StatusType.buff,
+              value: relic.value,
+              duration: 99, // 99 tours (durée du combat)
             ),
           );
         }

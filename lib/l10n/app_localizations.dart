@@ -1190,6 +1190,30 @@ abstract class AppLocalizations {
   /// **'Clone a card chosen from 3 random cards in your deck'**
   String get draftChoiceMirrorDesc;
 
+  /// No description provided for @draftChoicePrecision.
+  ///
+  /// In en, this message translates to:
+  /// **'Precision'**
+  String get draftChoicePrecision;
+
+  /// No description provided for @draftChoicePrecisionDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'+{amount}% Crit Chance'**
+  String draftChoicePrecisionDesc(int amount);
+
+  /// No description provided for @draftChoiceFerocity.
+  ///
+  /// In en, this message translates to:
+  /// **'Ferocity'**
+  String get draftChoiceFerocity;
+
+  /// No description provided for @draftChoiceFerocityDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'+{amount}% Crit Damage'**
+  String draftChoiceFerocityDesc(int amount);
+
   /// No description provided for @statusPoison.
   ///
   /// In en, this message translates to:

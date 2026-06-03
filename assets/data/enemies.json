@@ -8,6 +8,7 @@
     "spritePath": "enemy_slime.png",
     "tier": 1,
     "xp": 25,
+    "critChance": 5,
     "intents": [
       { "type": "attack", "value": 4 }
     ]
@@ -21,6 +22,7 @@
     "spritePath": "enemy_goblin.png",
     "tier": 1,
     "xp": 35,
+    "critChance": 10,
     "intents": [
       { "type": "attack", "value": 5 }
     ]
@@ -34,6 +36,7 @@
     "spritePath": "enemy_skeleton.png",
     "tier": 2,
     "xp": 50,
+    "critChance": 10,
     "intents": [
       { "type": "attack", "value": 8 },
       { "type": "attack", "value": 10 }
@@ -48,6 +51,7 @@
     "spritePath": "enemy_orc.png",
     "tier": 3,
     "xp": 100,
+    "critChance": 15,
     "intents": [
       { "type": "attack", "value": 8 },
       { "type": "buff", "value": 2 },

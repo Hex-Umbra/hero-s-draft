@@ -455,6 +455,20 @@
   },
   "draftChoiceMirror": "Mirror",
   "draftChoiceMirrorDesc": "Clone a card chosen from 3 random cards in your deck",
+  "draftChoicePrecision": "Precision",
+  "draftChoicePrecisionDesc": "+{amount}% Crit Chance",
+  "@draftChoicePrecisionDesc": {
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "draftChoiceFerocity": "Ferocity",
+  "draftChoiceFerocityDesc": "+{amount}% Crit Damage",
+  "@draftChoiceFerocityDesc": {
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
   "statusPoison": "Poison: {value}",
   "@statusPoison": {
     "placeholders": {

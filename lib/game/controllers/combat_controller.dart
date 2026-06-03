@@ -50,12 +50,12 @@ class CombatController extends StateNotifier<CombatState> {
     // 2. Calculer les multiplicateurs de mise à l'échelle
     final double nodeMultiplier = isBoss ? 3.0 : (isElite ? 1.5 : 1.0);
     final double hpMultiplier =
-        (1.0 + 0.12 * (enemyLevel - 1)) *
-        (1.0 + 0.40 * (act - 1)) *
+        (1.0 + 0.06 * (enemyLevel - 1)) *
+        (1.0 + 0.20 * (act - 1)) *
         nodeMultiplier;
     final double damageMultiplier =
-        (1.0 + 0.08 * (enemyLevel - 1)) *
-        (1.0 + 0.30 * (act - 1)) *
+        (1.0 + 0.04 * (enemyLevel - 1)) *
+        (1.0 + 0.15 * (act - 1)) *
         nodeMultiplier;
 
     final List<EnemyInstance> enemies = [];
@@ -66,6 +66,7 @@ class CombatController extends StateNotifier<CombatState> {
         armure: 0,
         attaque: (data.baseDamage * damageMultiplier).round(),
         level: enemyLevel,
+        critChance: data.critChance,
       );
 
       var enemy = EnemyInstance(data: data, stats: stats, isBoss: isBoss);
@@ -152,6 +153,12 @@ class CombatController extends StateNotifier<CombatState> {
         // Apply vulnerable multiplier if hero has vulnerable status
         if (runController.currentState.heroStats.statuses.any((s) => s.id == 'vulnerable')) {
           dmg = (dmg * 1.5).round();
+        }
+
+        // Roll enemy crit check
+        final random = Random();
+        if (random.nextInt(100) < enemy.stats.effectiveCritChance) {
+          dmg = (dmg * enemy.stats.critMultiplier).round();
         }
 
         runController.takeDamage(dmg);

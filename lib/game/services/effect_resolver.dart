@@ -1,3 +1,4 @@
+import 'dart:math';
 import '../../models/card_instance.dart';
 import '../../models/data/card_data.dart';
 import '../../models/status_effect.dart';
@@ -282,7 +283,13 @@ class EffectResolver {
           }
           break;
         case 'heal':
-          runController.heal(scaledValue);
+          int healVal = scaledValue;
+          final heroStats = runController.currentState.heroStats;
+          final random = Random();
+          if (random.nextInt(100) < heroStats.effectiveCritChance) {
+            healVal = (healVal * heroStats.critMultiplier).round();
+          }
+          runController.heal(healVal);
           break;
         case 'armor':
           final currentStats = runController.currentState.heroStats;
@@ -342,6 +349,11 @@ class EffectResolver {
         .toList();
     if (weakness.isNotEmpty) {
       totalDamage = (totalDamage * 0.75).round();
+    }
+
+    final random = Random();
+    if (random.nextInt(100) < attackerStats.effectiveCritChance) {
+      totalDamage = (totalDamage * attackerStats.critMultiplier).round();
     }
 
     return totalDamage;
