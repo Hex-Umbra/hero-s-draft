@@ -68,15 +68,15 @@ double get scaleFactor => (size.y / 800).clamp(0.85, 2.5);
 Les données de jeu (cartes, ennemis, héros, reliques, événements, passifs, compétences) pourraient être définies directement dans le code Dart ou dans des fichiers de données externes.
 
 ### Décision
-- Définir **100% du contenu de jeu** dans des fichiers JSON stockés dans `assets/data/` (7 fichiers).
-- Chaque fichier JSON a un modèle Dart correspondant dans `lib/models/data/` avec une factory `fromJson()`.
+- Définir **100% du contenu de jeu** dans des fichiers JSON stockés dans `assets/data/` (8 fichiers).
+- Chaque fichier JSON a un modèle Dart correspondant dans `lib/models/data/` (les cartes globales et de classe partagent le modèle `CardData`) avec une factory `fromJson()`.
 - Le chargement est centralisé dans `GameDataService.loadAll()` qui produit un `GameDataRegistry` immutable.
 - Le registre est exposé via un `FutureProvider<GameDataRegistry>` (`gameDataLoaderProvider`).
 
 ### Preuves dans le code
-- 7 fichiers JSON : `cards.json` (23 cartes), `enemies.json` (4 ennemis), `heroes.json` (3 héros), `skills.json` (6 compétences), `events.json` (2 événements), `passives.json` (3 passifs), `relics.json` (12 reliques).
-- 8 modèles Data avec `fromJson()` : `CardData`, `EnemyData`, `HeroData`, `SkillData`, `EventData`, `PassiveData`, `RelicData`, `GameDataRegistry`.
-- `GameDataService.loadAll()` utilise `Future.wait()` pour charger les 7 fichiers en parallèle.
+- 8 fichiers JSON : `cards.json` (15 cartes globales), `hero_cards.json` (6 cartes spécifiques de classe), `enemies.json` (4 ennemis), `heroes.json` (3 héros), `skills.json` (6 compétences), `events.json` (2 événements), `passives.json` (3 passifs), `relics.json` (12 reliques).
+- 8 modèles Data principaux avec `fromJson()` : `CardData`, `EnemyData`, `HeroData`, `SkillData`, `EventData`, `PassiveData`, `RelicData`, `GameDataRegistry`.
+- `GameDataService.loadAll()` utilise `Future.wait()` pour charger les 8 fichiers en parallèle.
 
 ### Conséquences
 - ✅ **Modding** : Modification des valeurs ou équilibrage instantané sans toucher au code.
@@ -677,4 +677,234 @@ Le système de tutoriel initial possédait des étapes interactives simplifiées
 - ✅ **Fidélité d'apprentissage optimale** : Le joueur appréhende les gestes complexes de ciblage de production de manière sûre dans un bac à sable isolé.
 - ✅ **Expérience utilisateur immersive** : Les info-bulles et les icônes de haute qualité vectorielle améliorent instantanément la qualité perçue du jeu.
 
+---
+
+## ⚔️ ADR-023 : Système de Statuts Élémentaires Riches & Vulnérabilité Universelle
+
+### Statut
+✅ Accepté & Implémenté
+
+### Contexte
+Les combats tactiques manquaient d'altérations d'état dynamiques et de synergies élémentaires. Les effets de statut initiaux étaient soit trop basiques, soit limités aux forces et armures. Pour offrir des opportunités de build plus poussées (jeux basés sur le temps, le burst ou le contrôle), il était nécessaire d'introduire des effets élémentaires riches et une gestion propre de la vulnérabilité affectant toutes les entités en jeu.
+
+### Décision
+1. **Brûlure (`burn`)** : Inflige des dégâts au début du tour de la cible. Le tick applique des dégâts physiques équivalents à l'intensité accumulée, puis décrémente l'intensité et la durée de 1.
+2. **Gel (`freeze`)** : Réduit de 50% (arrondi) les dégâts de la prochaine attaque de la cible, puis consomme immédiatement la durée du gel.
+3. **Électrocution (`shock`)** : Fonctionne comme un amplificateur de dégâts cumulatif flat. À chaque attaque directe subie par la cible, la valeur cumulée du statut est ajoutée aux dégâts infligés.
+4. **Vulnérabilité (`vulnerable`)** : Multiplicateur universel de dégâts. Toute attaque directe subie par une entité sous vulnérabilité inflige 50% de dégâts supplémentaires. Cet effet est symétrique (affecte autant le Héros que les Ennemis).
+5. **Découplage Logique** : Câbler la totalité de ces règles dans `CombatController` et `EffectResolver` de manière autonome, garantissant la testabilité unitaire sans nécessiter le moteur graphique Flame.
+
+### Preuves dans le code
+- `lib/game/services/effect_resolver.dart` : Prise en compte de la vulnérabilité et de l'électrocution (`shock`) dans le calcul dynamique des dégâts finaux d'une attaque.
+- `lib/game/controllers/combat_controller.dart` : Ticks de brûlure résolus au début du tour et application des réductions de dégâts liées au gel.
+- `test/unit/combat_controller_test.dart` et `test/unit/effect_resolver_test.dart` : Tests unitaires vérifiant la conformité des ticks et des réductions/amplifications.
+
+### Conséquences
+- ✅ **Diversité des builds** : Permet au joueur de construire des archétypes viables orientés Gel (contrôle défensif) ou Électrocution/Vulnérabilité (burst agressif).
+- ✅ **Double tranchant** : L'universalité de la vulnérabilité force le joueur à surveiller ses propres débuffs sous peine de subir des attaques dévastatrices.
+
+---
+
+## ⚔️ ADR-024 : Progression par Rareté Dynamique et Fusion Interactive (3→1)
+
+### Statut
+✅ Accepté & Implémenté
+
+### Contexte
+Le système de progression initial reposait sur un niveau numérique de cartes peu évocateur. Pour renforcer l'aspect roguelike deckbuilder traditionnel et donner de la valeur aux doublons de cartes obtenus en récompense, le jeu avait besoin d'un mécanisme de rareté dynamique et d'une fusion interactive de cartes.
+
+### Décision
+1. **Rareté Dynamique** : Abandonner le concept de niveau numérique au profit d'une progression par rareté : `common` (Commune) → `uncommon` (Atypique) → `rare` (Rare) → `epic` (Épique) → `legendary` (Légendaire). Un multiplicateur de rareté spécifique applique un échelonnement proportionnel aux dégâts et armures de base de la carte.
+2. **Fusion Interactive** : Intégrer dans le deck une mécanique de fusion demandant exactement 3 exemplaires identiques d'une carte à la même rareté. La fusion consomme ces 3 cartes et produit une carte unique de la rareté directement supérieure.
+3. **Consolidation d'Upgrades** : Cumuler les améliorations de forge des cartes consommées lors de la fusion en additionnant les Tiers des améliorations de même ID (ex: deux upgrades `sharp:1` fusionnent en un unique `sharp:2`).
+4. **Contrainte de Capacité** : Tronquer la liste des upgrades cumulés pour respecter la capacité maximale de la nouvelle rareté (`baseMaxForgeUpgrades + rarityIndex`). Fournir une interface de choix interactif pour décider des améliorations héritées.
+5. **Équilibrage de Cartes Clés** : Rééquilibrer plusieurs cartes pour qu'elles s'adaptent harmonieusement au flux de rareté et d'upgrades :
+   - `holy_shield` : Dotée du mot-clé `isExhaust: true` pour éviter le spam défensif infini.
+   - `warcry` : Dégâts de zone (AoE) couplés à un gain d'armure modéré.
+   - `mana_surge` : Gain de 1 mana, pioche 1, et épuisement (`isExhaust: true`).
+   - `concentration` : Pioche 2, coût 0, et épuisement.
+   - `poison_stab` : Dégâts ciblés avec application directe de poison.
+
+### Preuves dans le code
+- `lib/game/controllers/deck_controller.dart` : Méthode `mergeCards()` gérant la validation des 3 IDs, le retrait des cartes du deck principal, le calcul de la rareté supérieure, la consolidation des Tiers d'upgrades et le clamp à la capacité maximale.
+- `assets/data/cards.json` : Structure JSON mise à jour avec les attributs de rareté et les configurations d'équilibrage.
+- `test/unit/deck_controller_test.dart` : Validation de la fusion 3→1 et de la conservation/limitation des upgrades.
+
+### Conséquences
+- ✅ **Valorisation des récompenses** : Le joueur est ravi de recevoir des doublons de cartes car ils lui permettent de monter son deck en rareté.
+- ✅ **Conservation d'investissement** : Fusionner des cartes déjà améliorées à la forge ne fait pas perdre l'investissement en or grâce au cumul de Tiers.
+
+---
+
+## ⚔️ ADR-025 : Système de Forge Découplé et Probabiliste
+
+### Statut
+✅ Accepté & Implémenté
+
+### Contexte
+L'amélioration des cartes au feu de camp manquait d'aléa et de choix stratégiques significatifs. Proposer des choix d'améliorations fixes et illimités rendait la forge monotone. Un système roguelike robuste exigeait des options aléatoires limitées par la rareté de la carte, des probabilités de slots d'options variables et un coût de relance exponentiel.
+
+### Décision
+1. **Capacité Maximale Scalée** : Restreindre le nombre maximum d'améliorations de forge toléré sur une carte à la valeur `baseMaxForgeUpgrades + rarityIndex`.
+2. **Génération Probabiliste de Slots** : À chaque ouverture de la forge pour une carte, le nombre d'options d'upgrades disponibles (1 à 5) est déterminé aléatoirement. Chaque slot a une chance indépendante d'apparaître :
+   - Slot 1 : 100%
+   - Slot 2 : 50%
+   - Slot 3 : 25%
+   - Slot 4 : 10%
+   - Slot 5 : 2%
+3. **Pools Clamps par Rareté** : Classer les upgrades par niveaux de rareté :
+   - *Common Pool* (Dégâts `sharp`, Armure `hardened`, et effets de statut `burning`, `freezing`, `shocking` limités aux cartes Attaque).
+   - *Uncommon Pool* (Pioche `quick`).
+   - *Rare Pool* (Économe en mana `eco`, et persistant `enduring` - retirant l'épuisement `exhaust` - réservé aux cartes non-pouvoir qui s'épuisent).
+4. **Pondération et Distribution** : Assigner la probabilité d'apparition des pools selon la rareté de la carte (ex : une carte rare a de meilleures chances de tirer des options peu communes ou rares). Déterminer le Tier de l'upgrade (de I à III) via des jets pondérés : Tier I (80%), Tier II (15%), Tier III (5%).
+5. **Relance Exponentielle Individuelle** : Permettre au joueur de relancer le tirage d'un slot spécifique en dépensant de l'or de l'inventaire. Le coût augmente exponentiellement par slot selon la formule $20 \times 1.25^n$ (arrondi) où $n$ est le nombre de relances subies par ce slot.
+6. **Intégration d'Écran** : Modéliser le système de slots indépendamment de l'UI et l'intégrer dans le widget dialog `ForgeUpgradeDialog` appelé depuis l'écran de feu de camp `RestScreen`.
+
+### Preuves dans le code
+- `lib/ui/widgets/forge_upgrade_dialog.dart` : Classe `ForgeSlot` portant la formule `(20 * pow(1.25, rerollsCount)).round()`, méthodes `_generateInitialSlots`, `_rollSlotUpgrade`, et `_rerollSlot` consommant l'or de `inventoryProvider`.
+- `test/unit/decoupled_forge_test.dart` : Suite complète de tests unitaires simulant des centaines de tirages pour valider les chances d'ouverture de slots, la clampabilité des pools et le coût de reroll.
+
+### Conséquences
+- ✅ **Suspense et rejouabilité** : Le joueur espère obtenir de nombreux slots ou un upgrade Rare puissant (comme `enduring` pour pérenniser un sort de soin).
+- ✅ **Arbitrage financier** : Introduit un arbitrage crucial sur l'or : faut-il relancer un slot de forge ou économiser pour la boutique ?
+- ⚠️ **Dépendance à la chance** : Un joueur malchanceux peut n'avoir qu'un seul slot d'option disponible, bien que compensé par la possibilité de reroll.
+
+---
+
+## 🃏 ADR-026 : Isolation des Cartes de Classe "Unique" et Standardisation du Draft Initial (Class Card Isolation & Starter Draft Overhaul)
+
+### Statut
+✅ Accepté & Implémenté
+
+### Contexte
+Les cartes de classe initiales (`holy_shield`, `smite`, `reckless_strike`, `rage_form`, `magic_missile`, `mana_surge`) étaient mélangées dans `cards.json` avec les cartes neutres globales. Ce couplage nuisait à l'identité stratégique de chaque héros, car les cartes spécifiques apparaissaient de manière confuse dans les tables d'acquisition ou de boutique, et les mécaniques de fusions n'étaient pas adaptées à des sorts de classe intrinsèques. De plus, l'écran `StarterDeckDraftScreen` original reposait sur une sélection aléatoire par vagues de 3 cartes qui nuisait à l'arbitrage tactique initial du joueur.
+
+### Décision
+1. **Séparation des JSON de cartes** : Extraire toutes les cartes spécifiques de classe de `cards.json` vers `assets/data/hero_cards.json`.
+2. **Introduction de la Rareté `unique`** : Créer le type de rareté `unique` dans l'enum `CardRarity`. Les cartes uniques possèdent une valeur de multiplicateur fixe à `1.0` (définie dans `card_instance.dart`) et une limite de forge `baseMaxForgeUpgrades` bloquée à 5.
+3. **Verrouillage Métier de la Fusion & Obtention** : Empêcher explicitement la fusion de cartes de rareté `unique` en désactivant le bouton correspondant dans l'UI et en levant une erreur dans `deck_controller.dart`. Filtrer également ces cartes pour qu'elles ne soient jamais proposées en boutique ou en draft après un combat.
+4. **Liaison Dynamique Héros-Skills** : Structurer `heroes.json` avec l'intégration du champ `"skills"` qui contient les identifiants de cartes de départ uniques. Implémenter l'extension `HeroSkillsLink` et sa méthode `getHeroCards(gameData)` pour charger dynamiquement ces cartes basées sur les compétences du héros.
+5. **Standardisation Globale & VPM** : Passer toutes les cartes globales de `cards.json` à la rareté `common`. Rééquilibrer leurs statistiques fondamentales pour les stabiliser autour de ratios de Valeur Par Mana (VPM) justes et équitables (ex: `heal_potion` coût 1, heal 4, exhaust; `iron_wall` coût 2, 10 block; `heavy_strike` coût 2, 12 dmg).
+6. **Refonte et Stabilisation de l'écran `StarterDeckDraftScreen`** : Remplacer l'ancien système de draft par vagues par une grille affichant l'intégralité du catalogue des 15 cartes globales. Le joueur sélectionne de manière totalement libre exactement 5 cartes globales de départ parmi le pool complet (la logique intermédiaire consistant à restreindre le choix à un sous-ensemble aléatoire de 10 cartes a été complètement supprimée). Les cartes de classe uniques obtenues via `getHeroCards()` sont ajoutées automatiquement au deck initial. Les descriptions de localisation `draftDeckSubtitle` ont été révisées et corrigées en français/anglais, et les importations et méthodes mathématiques inutilisées (`dart:math` et `_rollRarity`) ont été supprimées.
+
+### Preuves dans le code
+- Fichier `assets/data/hero_cards.json` contenant les 6 cartes spécifiques.
+- Fichier `assets/data/cards.json` contenant les 15 cartes globales rééquilibrées.
+- Enum `CardRarity` étendu avec `unique`.
+- Code de validation de merge dans `deck_controller.dart` qui rejette les cartes `unique`.
+- Méthode `HeroSkillsLink.getHeroCards(gameData)` dans `lib/models/data/hero_data.dart` (ou extension équivalente).
+- Grille de sélection interactive et validation de la taille de sélection (exactement 5) dans `StarterDeckDraftScreen`.
+- Fichiers `app_en.arb` et `app_fr.arb` modifiant la clé `draftDeckSubtitle` pour supprimer l'ancienne mention d'une sélection "parmi les 10 proposées".
+- Nettoyage du code de `starter_deck_draft_screen.dart` avec retrait des fonctions probabilistes inutilisées.
+- Validation de la suite complète de 78 tests automatisés après mise à jour des mocks de tests unitaires/widgets pour s'adapter à la grille globale étendue.
+
+### Conséquences
+- ✅ **Renforcement de l'identité des Héros** : Chaque classe démarre avec des compétences fortes, stables et caractéristiques qui ne diluent pas son identité au fil des fusions.
+- ✅ **Pouvoir de Décision Initial accru** : Le joueur compose consciemment sa stratégie de départ parmi les cartes globales sans subir l'aléa du tirage.
+- ✅ **Coût de Maintenance Réduit** : La distinction nette entre le pool global et le pool de classe facilite l'implémentation de futurs héros et cartes sans perturber le système d'acquisition général.
+- ⚠️ **Évolution Statique de Classe** : N'étant pas fusionnables, les cartes uniques de classe ne s'améliorent que via les slots probabilistes de la Forge, accentuant l'importance stratégique des feux de camp.
+- ✅ **Vérification Intègre & Cohérence** : Tous les 78 tests automatisés passent avec succès, et le linter est vierge sous `dart analyze`. Les descriptions de l'interface et les comportements du code sont en parfaite adéquation.
+
+---
+
+## 🎯 ADR-027 : Système de Coup Critique et Rééquilibrage du Scaling Ennemi (Critical Hit System & Enemy Scaling Tuning)
+
+### Statut
+✅ Accepté & Implémenté
+
+### Contexte
+Le gameplay de combat de *Hero's Draft* manquait d'une composante d'incertitude positive (chance/opportunités tactiques) pour le joueur ainsi que d'une gestion plus fine et équilibrée de la difficulté progressive. Les multiplicateurs de caractéristiques de niveau des ennemis d'origine (+12% HP/lvl, +8% ATK/lvl) rendaient le late game exponentiellement punitif, tandis que l'absence de coups critiques réduisait la variété des builds possibles (comme des archétypes basés sur la chance). De plus, l'affichage HUD n'était pas dimensionné pour intégrer ces nouvelles statistiques de combat.
+
+### Décision
+1. **Rework du Scaling Ennemi** :
+   - Réduire le coefficient de niveau de PV des ennemis de `0.12` à `0.06` et le coefficient d'acte de `0.40` à `0.20` dans `CombatController.initializeCombat`.
+   - Réduire le coefficient de niveau des dégâts des ennemis de `0.08` à `0.04` et le coefficient d'acte de `0.30` à `0.15`.
+   - Ces modifications aplatissent la courbe de difficulté pour la rendre plus fluide tout en préservant le défi stratégique.
+2. **Architecture du Coup Critique** :
+   - Ajouter les propriétés `critChance` (taux en %, défaut 0) et `critMultiplier` (multiplicateur de dégâts, défaut x1.5) au modèle d'attributs de combat `EntityStats`.
+   - Intégrer la notion de chance de critique effective (`effectiveCritChance`) qui additionne les statistiques permanentes et les altérations de statut temporaires de critique.
+   - Enregistrer des chances de critique de base dans `enemies.json` pour tous les types d'ennemis (Slime: 5%, Gobelin: 10%, Squelette: 10%, Orc Furieux: 15%).
+3. **Application du Pipeline de Critique** :
+   - Dégâts physiques/magiques des cartes du joueur (`EffectResolver._calculateDamage`) : Effectuer un jet aléatoire (0-99) face aux chances effectives et multiplier les dégâts par `critMultiplier` en cas de réussite.
+   - Soins des cartes du joueur (`EffectResolver.resolveCard`) : Jet critique appliquant le multiplicateur aux PV soignés.
+   - Dégâts des intentions ennemies (`CombatController.resolveEnemyIntent`) : Jet critique appliquant le multiplicateur aux dégâts d'attaque infligés au héros.
+   - Compétences actives de classe du héros (`HerosDraftGame.executeSkill`) : Jet critique sur les compétences ciblées, de zone (AoE), ou perçantes.
+4. **Intégration du Draft de Level Up et i18n** :
+   - Étendre le pool de récompenses de montée de niveau pour proposer les choix :
+     - **Précision** (augmente `critChance` de +1% à +5% selon la rareté du draft).
+     - **Férocité** (augmente `critMultiplier` de +0.10 à +0.50 via `critDamageAcc` selon la rareté du draft).
+   - Localiser proprement ces choix dans `app_en.arb` et `app_fr.arb` (`draftChoicePrecisionTitle`, `draftChoicePrecisionDesc`, `draftChoiceFerocityTitle`, `draftChoiceFerocityDesc`).
+5. **Ajout de Reliques Orientées Critique** :
+   - Ajouter deux nouvelles reliques dans `relics.json` exploitant l'effet `gain_crit` :
+     - *Focus Lens* (`critical_lens`, Rare, trigger: `startOfCombat`) : confère un buff temporaire de $+15\%$ de critique en combat.
+     - *Lucky Charm* (`lucky_charm`, Uncommon, trigger: `startOfRun`) : confère un bonus permanent de $+10\%$ de critique pour toute la run.
+6. **Redesign de la Grille des Statistiques (StatsDialog)** :
+   - Réorganiser l'affichage du dialogue de statistiques `StatsDialog` (lors du clic sur le profil du héros sur la carte) en une grille compacte et structurée en 2x2.
+   - Les quatre zones affichent de manière alignée : Attaque / Armure en haut, et Précision (Chance Critique) / Férocité (Multiplicateur) en bas.
+
+### Preuves dans le code
+- Modifications de `EntityStats.dart` pour stocker `critChance` et `critMultiplier`.
+- Formules de scaling révisées dans `CombatController.initializeCombat`.
+- Logique de lancer aléatoire et d'amplification dans `EffectResolver._calculateDamage`, `EffectResolver.resolveCard` (soin), `CombatController.resolveEnemyIntent` (attaque ennemie), et `HerosDraftGame.executeSkill` (compétences).
+- Nouvelles clés de traduction dans `app_en.arb`/`app_fr.arb` et sélection correspondante dans `DraftScreen`.
+- Fichier `relics.json` mis à jour avec `critical_lens` et `lucky_charm` et traitement associé dans `RunController.applyRelicEffect`.
+- Layout grid 2x2 dans `lib/ui/widgets/map/dialogs/stats_dialog.dart`.
+- Passage réussi de tous les 82 tests unitaires et widget-tests de la suite automatisée.
+
+### Conséquences
+- ✅ **Builds Variés et Synergies** : Ouvre la voie à des builds basés sur la Chance (Luck) et les Critiques en sélectionnant des reliques critiques et en choisissant Précision/Férocité lors des montées de niveau.
+- ✅ **Rythme de Difficulté Lissé** : Évite le pic de dégâts et de PV insurmontables pour les héros à l'Acte 2 ou Acte 3, rendant la progression plus agréable.
+- ✅ **HUD Mieux Organisé** : Le dialogue de statistiques affiche clairement les attributs offensifs de critique sans encombrer l'écran principal.
+- ⚠️ **Part de Hasard Accrue** : Les combats peuvent basculer sur un coup critique chanceux du joueur (ou malchanceux de l'ennemi), ce qui augmente la tension mais peut légèrement frustrer en cas de coup critique subi inattendu.
+- ✅ **Vérification Intègre & Cohérence** : Tous les 82 tests automatisés passent avec succès, et le linter est vierge sous `dart analyze`. Les descriptions de l'interface et les comportements du code sont en parfaite adéquation.
+
+---
+
+## ⚔️ ADR-028 : Équilibrage Hybride de la Difficulté et Système de Réserve de Vagues (Hybrid Difficulty Balancing & Wave Reserve System)
+
+### Statut
+✅ Accepté & Implémenté
+
+### Contexte
+Dans les versions précédentes, la composition des rencontres de combat et le nombre d'ennemis sur le plateau étaient statiques ou faiblement liés à la progression réelle du joueur. Cela entraînait deux problèmes majeurs de game design et de performance :
+1. **Écarts de difficulté** : Les joueurs optimisant fortement leur deck (fusions de raretés élevées, forges optimisées) trivialisaient rapidement le jeu. À l'inverse, les joueurs moins chanceux ou moins expérimentés faisaient face à des pics de difficulté brutaux.
+2. **Surcharge visuelle du board (Flame)** : La génération d'un nombre important d'ennemis (plus de 3 ou 4) saturait le plateau de rendu mobile, provoquait des chevauchements visuels inacceptables pour les `PositionComponent` de Flame, et compliquait le ciblage tactile.
+
+### Décision
+1. **Implémentation d'une DDA Hybride (Dynamic Difficulty Adjustment)** :
+   - Évaluer la puissance réelle actuelle du joueur via ses attributs permanents et reliques :
+     $$\text{PlayerPower} = \text{maxHP} + (\text{attaque} \times 10.0) + (\text{maxMana} \times 15.0) + (\text{relicsCount} \times 5.0)$$
+   - Définir la puissance théorique attendue à ce stade de la partie :
+     $$\text{ExpectedPower} = 145.0 + ((\text{playerLevel} - 1) \times 15.0) + ((\text{act} - 1) \times 20.0)$$
+   - Introduire un amortissement strict de $0.5$ sur l'écart de puissance pour atténuer les corrections et éviter les fluctuations brutales de budget de menace :
+     $$\text{PowerRatio} = \frac{\text{PlayerPower}}{\text{ExpectedPower}}$$
+     $$\text{PowerModifier} = 1.0 + (\text{PowerRatio} - 1.0) \times 0.5$$
+2. **Budget de Menace de Combat (`FinalBudget`)** :
+   - Calculer le budget de base lié au niveau et à l'acte :
+     $$\text{BaseBudget} = 40.0 + ((\text{playerLevel} - 1) \times 10.0) + ((\text{act} - 1) \times 25.0)$$
+   - Ajuster ce budget par le modificateur de puissance amorti et le type de nœud (Normal 1.0, Élite 1.5, Boss 2.0) :
+     $$\text{FinalBudget} = \text{BaseBudget} \times \text{PowerModifier} \times \text{NodeMultiplier}$$
+3. **Score individuel de Menace (`CombatRating`)** :
+   - Assigner à chaque ennemi une valeur de menace recalculée dynamiquement en fonction de ses statistiques réelles après scaling (incluant le multiplicateur de PV, d'attaque et son taux de critique de base) :
+     $$\text{CombatRating} = (\text{tier} \times 10.0) + \text{HP\_Scalé} + \text{Armure\_Scalée} + \text{Dégâts\_Scalés} \times \left(1.0 + \frac{\text{critChance}}{100.0}\right)$$
+   - Sélectionner les ennemis séquentiellement par tirage aléatoire sous contrainte de budget restant, avec un fallback automatique sur le plus petit monstre disponible pour garantir au moins un ennemi si le budget final est extrêmement restreint.
+4. **Système de Réserve de Vagues (limite de 5 ennemis actifs)** :
+   - Limiter le nombre de monstres actifs sur le board Flame à **5 au maximum**.
+   - Si le générateur `EncounterSystem` produit plus de 5 ennemis, les 5 premiers sont instanciés sur le plateau (`enemies` dans `CombatState`), et les suivants sont sérialisés dans la file d'attente de réserve (`pendingEnemies`).
+   - À chaque mort d'un ennemi actif, `CombatController._cleanDeadEnemies()` extrait automatiquement le premier élément de `pendingEnemies` pour l'ajouter à `enemies`, et effectue immédiatement son premier tirage d'intention de combat (`_rollIntent`).
+   - La condition de victoire du combat est validée uniquement lorsque `enemies` **ET** `pendingEnemies` sont vides.
+
+### Preuves dans le code
+- `lib/game/systems/encounter_system.dart` : Méthode `generateEnemiesForLevel` calculant les formules de `PlayerPower`, `ExpectedPower`, `PowerModifier`, `FinalBudget` et calculant individuellement la `CombatRating` ajustée de chaque ennemi lors du tirage.
+- `lib/game/controllers/combat_controller.dart` :
+  - `initializeCombat()` : répartition initiale des ennemis scalés entre le board actif `enemies` (limité à 5) et la file de réserve `pendingEnemies`.
+  - `_cleanDeadEnemies()` : transition synchrone des ennemis de `pendingEnemies` vers `enemies`, rolling d'intention et vérification combinée des deux listes pour lever le flag `isVictory`.
+- `lib/models/data/combat_state.dart` : Ajout et sérialisation/désérialisation du champ `pendingEnemies`.
+- `test/unit/combat_difficulty_test.dart` (ou tests similaires dans `test/unit/combat_controller_test.dart`) : Suite de tests automatisés validant le respect du budget de menace, le plafonnement à 5 slots actifs, le transfert automatique de la réserve lors de la mort d'un ennemi, et l'ajustement dynamique du modificateur de puissance.
+
+### Conséquences
+- ✅ **Rythme de jeu adapté et stimulant** : Le jeu adapte intelligemment le nombre et la puissance des menaces à la composition du deck du joueur. Un deck sur-optimisé fera face à des vagues de monstres plus nombreuses ou plus puissantes, tandis qu'un joueur en difficulté verra la menace stabilisée.
+- ✅ **Respect de l'espace de rendu Flame** : La limite stricte de 5 ennemis actifs garantit une présentation claire, évite tout bug visuel d'empilement sur smartphone portrait/paysage, et assure des performances constantes à 60 FPS sur l'arène graphique.
+- ✅ **Pérennité du Game Progression** : L'amortissement de $0.5$ de la DDA préserve le sentiment de satisfaction de la progression (les builds puissants roulent toujours plus facilement sur le jeu que les builds faibles, mais le défi reste présent).
+- ✅ **Validation par tests automatisés** : 82/82 tests au vert, confirmant que le flow logique de la file de réserve, les transitions d'intentions et l'algorithme de génération de budget respectent rigoureusement les invariants métier.
 

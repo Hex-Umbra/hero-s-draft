@@ -81,18 +81,18 @@ void main() {
         expect(combatController.currentState.turnPhase, TurnPhase.player);
         expect(combatController.currentState.isCombatEnded, isFalse);
 
-        // Elite Node (Enemy Lvl 2: HP Multiplier = 1.12 * 1.5 = 1.68)
+        // Elite Node (Enemy Lvl 2: HP Multiplier = 1.06 * 1.5 = 1.59)
         combatController.initializeCombat(1, MapNodeType.elite, [goblinData]);
         final eliteGoblin = combatController.currentState.enemies.first;
-        expect(eliteGoblin.stats.maxPv, 34); // 20 * 1.68 = 33.6 -> 34
-        expect(eliteGoblin.stats.attaque, 8); // 5 * 1.62 = 8.1 -> 8
+        expect(eliteGoblin.stats.maxPv, 32); // 20 * 1.59 = 31.8 -> 32
+        expect(eliteGoblin.stats.attaque, 8); // 5 * 1.56 = 7.8 -> 8
 
-        // Boss Node (Enemy Lvl 3: HP Multiplier = 1.24 * 3.0 = 3.72)
+        // Boss Node (Enemy Lvl 3: HP Multiplier = 1.12 * 3.0 = 3.36)
         combatController.initializeCombat(1, MapNodeType.boss, [goblinData]);
         expect(combatController.currentState.enemies.length, 1);
         final bossGoblin = combatController.currentState.enemies.first;
-        expect(bossGoblin.stats.maxPv, 74); // 20 * 3.72 = 74.4 -> 74
-        expect(bossGoblin.stats.attaque, 17); // 5 * 3.48 = 17.4 -> 17
+        expect(bossGoblin.stats.maxPv, 67); // 20 * 3.36 = 67.2 -> 67
+        expect(bossGoblin.stats.attaque, 16); // 5 * 3.24 = 16.2 -> 16
       },
     );
 
@@ -526,7 +526,74 @@ void main() {
           playerHpBeforeAttack - 5,
         );
 
-        // 3. BURN TEST
+        // Verify that freeze duration decreased by 1 (was 2, now 1)
+        expect(
+          combatController.currentState.enemies.first.stats.statuses.firstWhere((s) => s.id == 'freeze').duration,
+          1,
+        );
+
+        // 3. VULNERABLE TEST (Enemy to Player)
+        // Reset player HP to 100
+        runController.setHeroStats(currentPv: 100);
+        // Add vulnerable status to hero
+        runController.addStatus(
+          const StatusEffect(
+            id: 'vulnerable',
+            name: 'Vulnérable',
+            type: StatusType.debuff,
+            value: 1,
+            duration: 2,
+          ),
+        );
+        // Enemy attacks with 10. Halved to 5 because of freeze (which is now at duration 1),
+        // then multiplied by 1.5 because of vulnerable: 5 * 1.5 = 7.5 -> 8.
+        final playerHpBeforeVulnerableAttack =
+            runController.currentState.heroStats.currentPv; // 100
+        combatController.resolveEnemyIntent(enemy.id, runController);
+
+        expect(
+          runController.currentState.heroStats.currentPv,
+          playerHpBeforeVulnerableAttack - 8,
+        );
+
+        // Verify that freeze status is now removed because its duration dropped to 0
+        expect(
+          combatController.currentState.enemies.first.stats.statuses.any((s) => s.id == 'freeze'),
+          isFalse,
+        );
+
+        // 4. VULNERABLE TEST (Player to Enemy)
+        // Reset enemy HP to 20 and clear existing statuses (like shock)
+        combatController.updateEnemyStats(
+          enemy.id,
+          combatController.currentState.enemies.first.stats.copyWith(currentPv: 20, statuses: []),
+        );
+        // Add vulnerable status to enemy
+        combatController.updateEnemyStats(
+          enemy.id,
+          combatController.currentState.enemies.first.stats.addStatus(
+            const StatusEffect(
+              id: 'vulnerable',
+              name: 'Vulnérable',
+              type: StatusType.debuff,
+              value: 1,
+              duration: 2,
+            ),
+          ),
+        );
+        // Play a card that deals 6 damage (Strike).
+        // Since strength is 0, base damage = 6.
+        // Enemy has vulnerable, so damage should be 6 * 1.5 = 9.
+        deckNotifier.state = deckNotifier.state.copyWith(hand: [strikeCard]);
+        combatController.applyPlayerCardPlay(
+          strikeCard,
+          runController,
+          deckNotifier,
+        );
+        // Enemy HP should be 20 - 9 = 11.
+        expect(combatController.currentState.enemies.first.stats.currentPv, 11);
+
+        // 5. BURN TEST
         // Add burn status with value 3 to the enemy
         combatController.updateEnemyStats(
           enemy.id,
@@ -546,10 +613,10 @@ void main() {
             .enemies
             .first
             .stats
-            .currentPv; // should be 10
+            .currentPv; // should be 11
         combatController.startEnemyTurn(runController);
 
-        // Enemy HP should decrease by 3 due to burn, so 10 - 3 = 7
+        // Enemy HP should decrease by 3 due to burn, so 11 - 3 = 8
         expect(
           combatController.currentState.enemies.first.stats.currentPv,
           enemyHpBeforeBurn - 3,

@@ -19,7 +19,7 @@ La progression dans **Hero's Draft** est structurée autour d'une boucle classiq
        │
        ▼
 [Draft Deck Initial (StarterDeckDraftScreen)]
-  Constitution du deck : vagues de 3 cartes à choisir
+  Constitution du deck : choix de 5 cartes globales + cartes de classe uniques chargées via compétences
        │
        ▼
 [Carte Stratégique (MapScreen)] ◄─── Graphe Acyclique Dirigé (10 étages)
@@ -36,8 +36,8 @@ La progression dans **Hero's Draft** est structurée autour d'une boucle classiq
   3 choix de cartes post-victoire
        │
        ▼
-[Évaluation Auto-Merge]
-  3× cartes identiques (même ID + Level) → 1× carte Level+1
+[Évaluation Auto-Merge (3→1)]
+  3× cartes identiques (même rareté) → 1× carte de rareté supérieure (upgrades cumulés)
        │
        ▼
 [Passage à l'Étage Suivant] ── Si Boss complété → Acte+1 → Nouvelle carte
@@ -99,11 +99,19 @@ Trois classes de héros définis dans `heroes.json` :
 
 ### 2.3. Catalogue de Cartes
 
-**23 cartes** définies dans `cards.json`, réparties en :
-- **15 cartes globales** (neutres, accessibles à tous les héros)
-- **2 cartes Paladin** (`holy_shield`, `smite`)
-- **2 cartes Berserker** (`reckless_strike`, `rage_form`)
-- **2 cartes Mage** (`magic_missile`, `mana_surge`)
+Le catalogue de cartes comprend un total de **21 cartes** réparties sur deux fichiers d'assets distincts :
+- **15 cartes globales (neutres)** définies dans `assets/data/cards.json`.
+- **6 cartes de classe spécifiques** définies dans `assets/data/hero_cards.json` (2 par classe : `holy_shield` et `smite` pour le Paladin, `reckless_strike` et `rage_form` pour le Berserker, `magic_missile` et `mana_surge` pour le Mage).
+
+### Règles Métier et Équilibrage des Cartes
+- **Rareté Unique pour les cartes de classe** : Les 6 cartes de classe ont la rareté `unique` (définie dans l'enum `CardRarity`). Le multiplicateur de statistiques de base de cette rareté est de `1.0` (défini dans `card_instance.dart`).
+- **Capacité de Forge Fixe** : Les cartes de classe possèdent un maximum d'upgrades `baseMaxForgeUpgrades` fixé à 5.
+- **Interdiction de Fusion & Achat** : Les cartes uniques ne peuvent pas être fusionnées (bouton grisé dans l'UI et validation bloquée dans `deck_controller.dart`). De plus, elles n'apparaissent pas dans les tirages de récompenses post-combat (draft) ou en boutique pendant la run.
+- **Association par les compétences (Skills)** : Le fichier `heroes.json` associe chaque héros à ses cartes de classe de départ par le champ `"skills"`. La méthode d'extension `HeroSkillsLink.getHeroCards(gameData)` résout dynamiquement ces cartes basées sur les compétences du héros.
+- **Harmonisation des Cartes Globales** : Toutes les cartes globales du fichier `cards.json` possèdent la rareté de base `common` et ont été rééquilibrées autour de ratios de Valeur Par Mana (VPM) standardisés :
+  - `heal_potion` : Coût 1 mana, Soin 4, Épuisement (`isExhaust: true`).
+  - `iron_wall` : Coût 2 mana, Blocage 10.
+  - `heavy_strike` : Coût 2 mana, Dégâts 12.
 
 **Types d'effets utilisés** : `damage`, `armor`, `draw`, `heal`, `apply_status`, `gain_mana`.
 
@@ -113,49 +121,82 @@ Trois classes de héros définis dans `heroes.json` :
 - `id`, `nameEn`/`nameFr`, `descriptionEn`/`descriptionFr`, `cost` (0-3 mana)
 - `type` : attack, skill, power, status
 - `category` : global, characterSpecific
-- `rarity` : common, uncommon, rare, epic, legendary
+- `rarity` : common, uncommon, rare, epic, legendary, unique
 - `target` : singleEnemy, allEnemies, self, none
 - `isExhaust` : boolean (carte épuisée après usage)
 - `effects` : List\<CardEffect\> avec `type`, `value`, `statusId?`, `duration?`
 - `heroClass?` : null (global) ou "paladin"/"berserker"/"mage"
 
-### 2.4. Mécanique d'Auto-Merge
+### 2.4. Progression de Rareté Dynamique et Fusion Interactive
 
-Gérée par `DeckNotifier.mergeCards(cardId, level)` :
-1. Scanne le `masterDeck` pour 3 exemplaires ayant le **même `baseCardId` ET le même `level`**.
-2. Supprime les 3 copies.
-3. Ajoute 1 copie à `level + 1`.
+La progression des cartes s'effectue via des raretés dynamiques (`common` → `uncommon` → `rare` → `epic` → `legendary`), chacune appliquant un coefficient multiplicateur sur les statistiques de base de dégâts et d'armure de la carte.
 
-L'échelonnement des effets par niveau suit la formule :
-```
-scaledValue = baseValue * (1 + (level - 1) * 0.5)
-```
-
-| Level | Multiplicateur | Exemple (6 dégâts base) |
-|:---|:---|:---|
-| 1 | ×1.0 | 6 |
-| 2 | ×1.5 | 9 |
-| 3 | ×2.0 | 12 |
-| 4 | ×2.5 | 15 |
+La fusion de cartes 3-en-1 est gérée par `DeckNotifier.mergeCards(selectedIds, inheritedUpgrades)` :
+1. Le joueur sélectionne 3 exemplaires d'une carte ayant la même rareté active.
+2. Les 3 copies sont supprimées du `masterDeck`.
+3. Une nouvelle copie de rareté directement supérieure est ajoutée au `masterDeck`.
+4. **Héritage des Améliorations de Forge** : Les upgrades de même ID voient leurs Tiers additionnés (ex: deux upgrades `sharp:1` fusionnent en un unique `sharp:2`). Le nombre d'améliorations final est limité par la capacité maximale de la nouvelle rareté (`baseMaxForgeUpgrades + rarityIndex`). Le joueur choisit de manière interactive les upgrades qu'il souhaite hériter en cas de dépassement de la capacité.
+5. **Restriction de la Rareté Unique** : Les cartes de rareté `unique` (de classe) ne peuvent pas être fusionnées. La logique de fusion est bloquée dans `deck_controller.dart` et l'interface utilisateur n'affiche pas l'option de fusion pour ces cartes.
 
 ### 2.5. Bestiaire
 
 **4 ennemis** définis dans `enemies.json` :
 
-| ID | Nom | HP | Dégâts Base | Tier | Pattern d'Intentions |
-|:---|:---|:---|:---|:---|:---|
-| `slime` | Slime | 18 | 4 | 1 | [attack:4] — attaque unique répétée |
-| `gobelin` | Gobelin | 28 | 5 | 1 | [attack:5] — attaque unique |
-| `squelette` | Squelette | 22 | 8 | 2 | [attack:8, attack:10] — cycle 2 attaques |
-| `orc` | Orc Furieux | 50 | 8 | 3 | [attack:8, buff:2, attack:12] — cycle 3 phases |
+| ID | Nom | HP | Dégâts Base | Tier | Pattern d'Intentions | Crit Chance |
+|:---|:---|:---|:---|:---|:---|:---|
+| `slime` | Slime | 18 | 4 | 1 | [attack:4] — attaque unique répétée | 5% |
+| `gobelin` | Gobelin | 28 | 5 | 1 | [attack:5] — attaque unique | 10% |
+| `squelette` | Squelette | 22 | 8 | 2 | [attack:8, attack:10] — cycle 2 attaques | 10% |
+| `orc` | Orc Furieux | 50 | 8 | 3 | [attack:8, buff:2, attack:12] — cycle 3 phases | 15% |
 
 **Scaling de combat** (`CombatController.initializeCombat`) :
-| Type | Multiplicateur HP | Multiplicateur Attaque | Nombre |
+Le niveau d'un ennemi ($EnemyLevel$) est calculé comme suit : $EnemyLevel = \max(1, PlayerLevel + (Act - 1) \times 2 + NodeModifier)$, où $NodeModifier$ est de $+2$ pour un Boss et $+1$ pour un Élite.
+Les multiplicateurs de caractéristiques appliqués aux statistiques de base de l'ennemi sont :
+- **Multiplicateur HP** : $(1.0 + 0.06 \times (EnemyLevel - 1)) \times (1.0 + 0.20 \times (Act - 1)) \times NodeMultiplier$
+- **Multiplicateur Dégâts** : $(1.0 + 0.04 \times (EnemyLevel - 1)) \times (1.0 + 0.15 \times (Act - 1)) \times NodeMultiplier$
+
+Où $NodeMultiplier$ vaut $3.0$ pour un Boss, $1.5$ pour un Élite, et $1.0$ sinon.
+
+| Type | Multiplicateur HP de Base | Multiplicateur Attaque de Base | Nombre |
 |:---|:---|:---|:---|
 | Normal (level ≤5) | ×1.0 | ×1.0 | 1-2 |
 | Normal (level >5) | ×1.0 | ×1.0 | 1-3 |
 | Élite | ×1.5 | ×1.5 | 2-3 |
 | Boss | ×3.0 | ×2.0 | 1 |
+
+### 2.6. Équilibrage Hybride, Budget de Menace et Réserve de Vagues
+
+Pour offrir un défi adapté aux choix stratégiques du joueur tout en évitant la trivialisation ou le blocage, le jeu utilise un système d'équilibrage hybride :
+
+1. **Mécanique de Difficulté Dynamique (DDA Hybride)** :
+   La difficulté ajuste la composition des combats selon un budget de menace calculé en comparant la puissance réelle du joueur avec celle théoriquement attendue :
+   - **Puissance Réelle du Joueur (`PlayerPower`)** : Évaluée en agrégeant ses PV max, son attaque permanente, son mana maximum et son nombre de reliques :
+     $$\text{PlayerPower} = \text{maxHP} + (\text{attaque} \times 10) + (\text{maxMana} \times 15) + (\text{relicsCount} \times 5)$$
+   - **Puissance Attendue (`ExpectedPower`)** : Modèle de progression théorique basé sur le niveau du joueur et l'acte en cours :
+     $$\text{ExpectedPower} = 145 + [(\text{playerLevel} - 1) \times 15] + [(\text{act} - 1) \times 20]$$
+   - **Ajustement Amorti (`PowerModifier`)** : Un ratio de puissance amorti à $0.5$ pour éviter les sauts brusques de difficulté :
+     $$\text{PowerRatio} = \frac{\text{PlayerPower}}{\text{ExpectedPower}}$$
+     $$\text{PowerModifier} = 1.0 + (\text{PowerRatio} - 1.0) \times 0.5$$
+
+2. **Budget de Menace du Combat (`FinalBudget`)** :
+   Le budget théorique de base (`BaseBudget`) augmente avec le niveau du joueur et l'acte :
+   $$\text{BaseBudget} = 40 + [(\text{playerLevel} - 1) \times 10] + [(\text{act} - 1) \times 25]$$
+   Le budget final alloué au combat combine le budget de base, le modificateur de puissance dynamique, et un multiplicateur lié au type de nœud :
+   $$\text{FinalBudget} = \text{BaseBudget} \times \text{PowerModifier} \times \text{NodeMultiplier}$$
+   *(Avec `NodeMultiplier` = 1.0 pour un combat normal, 1.5 pour un combat élite, et 2.0 pour un boss)*
+
+3. **Système de Score de Menace (`CombatRating`)** :
+   Chaque ennemi est doté d'une valeur de menace dynamique reflétant sa puissance réelle après application des multiplicateurs de scaling (niveau, acte, modificateur de nœud) :
+   $$\text{CombatRating} = (\text{tier} \times 10) + \text{HP\_Scalé} + \text{Armure\_Scalée} + \text{Dégâts\_Scalés} \times \left(1.0 + \frac{\text{critChance}}{100.0}\right)$$
+   Le générateur choisit des candidats aléatoires dont la `CombatRating` est inférieure ou égale au budget restant, et déduit cette note du budget jusqu'à ce que plus aucun ennemi disponible ne rentre dans l'enveloppe budgétaire. Un fallback garantit au moins un ennemi si le budget est trop faible.
+
+4. **Système de Réserve de Vagues (`pendingEnemies`)** :
+   Pour éviter de surcharger le board visuel de Flame et limiter les calculs de ciblage, le nombre d'ennemis actifs affichés simultanément est limité à **5 slots maximum**.
+   - Si le budget de menace permet de générer plus de 5 ennemis, les 5 premiers sont instanciés en tant qu'ennemis actifs sur le board (`enemies`), tandis que le reste est placé dans une file d'attente de réserve (`pendingEnemies`).
+   - Lorsqu'un ennemi actif meurt en combat, le système vérifie s'il y a des ennemis en réserve. Si c'est le cas et que le nombre d'ennemis actifs est inférieur à 5, le premier ennemi de la file de réserve est immédiatement extrait, transféré sur le board actif, et doté de sa première intention de combat.
+   - Le combat ne se termine par une victoire que lorsque la liste des ennemis actifs **ET** la liste de réserve sont entièrement vides.
+
+---
 
 ---
 
@@ -269,12 +310,33 @@ Cinq piles logiques gérées par `DeckNotifier` :
 | Uncommon | 20% | +3.0% |
 | Common | Reste | — |
 
-### 3.7. 🏕️ Feu de Camp (Campfire)
+### 3.7. 🏕️ Feu de Camp / Repos (`RestScreen`)
 
-Trois options dans `CampfireScreen` :
+Trois options interactives s'offrent au joueur sur l'écran `RestScreen` :
 1. **Repos** : Soigne 30% du HP maximum.
-2. **Forge** : Sélectionne une carte du deck pour la monter de level (+1).
-3. **Oubli** : Sélectionne une carte pour la supprimer définitivement du deck.
+2. **Forge** : Ouvre la boîte de dialogue `ForgeUpgradeDialog` pour appliquer des améliorations probabilistes permanentes à une carte, consommant de l'or.
+3. **Oubli** : Sélectionne une carte pour la supprimer définitivement du Master Deck.
+
+---
+
+### 3.10. 🔨 Système de Forge Découplé
+
+La forge permet d'ajouter des améliorations permanentes (upgrades) aux cartes du Master Deck en échange d'or :
+- **Limite de Capacité** : Une carte peut accueillir au maximum $baseMaxForgeUpgrades + rarityIndex$ améliorations (la capacité augmente avec la rareté de la carte).
+- **Génération Probabiliste de Slots** : À chaque entrée en forge pour une carte, 1 à 5 slots d'options d'upgrades sont générés indépendamment selon les chances suivantes :
+  - Slot 1 : 100%
+  - Slot 2 : 50%
+  - Slot 3 : 25%
+  - Slot 4 : 10%
+  - Slot 5 : 2%
+- **Pools d'Améliorations Clamps** : Les améliorations proposées sont tirées depuis des pools liés à la rareté de la carte :
+  - *Common* : Améliorations de stats (`sharp` pour les dégâts, `hardened` pour l'armure) et statuts élémentaires (`burning`, `freezing`, `shocking`) limités aux cartes Attaque.
+  - *Uncommon* : Pioche de cartes supplémentaires (`quick`).
+  - *Rare* : Gains de mana (`eco`) et retrait d'épuisement (`enduring` persistant, retirant `exhaust`), réservé aux cartes non-pouvoir exhaustibles.
+- **Pondération et Tiers** : Le tirage des pools est pondéré par l'index de rareté de la carte. Les Tiers des upgrades suivent la distribution : Tier I (80%), Tier II (15%), Tier III (5%).
+- **Relance Individuelle (Reroll)** : Le joueur peut relancer le tirage d'un slot spécifique. Le coût augmente exponentiellement par slot :
+  $$\text{Coût} = \text{round}(20 \times 1.25^n)$$
+  où $n$ est le nombre de relances déjà appliquées à ce slot. Consomme l'or de l'inventaire via `inventoryProvider`.
 
 ### 3.8. 🛒 Boutique (Shop)
 
@@ -295,6 +357,28 @@ Le système de draft (que ce soit pour le draft de récompense de combat dans `D
 - **Sélection (Selection)** : Cliquer/taper sur une carte de récompense la sélectionne activement, ce qui la fait grossir à `1.12x` et projette un halo lumineux doré tout autour de la carte (`BoxShadow` couleur ambre `Colors.amber` avec un rayon de flou de 16px et une extension de 3px).
 - **Consistance** : Ces animations de scale et de lueur partagent la même identité visuelle pour assurer la cohérence entre la phase d'apprentissage guidée et les combats réels du jeu.
 
+### 3.11. 🎯 Système de Coup Critique (Critical Hit System)
+
+Le coup critique introduit un élément probabiliste d'amplification des effets offensifs et curatifs du joueur et des ennemis :
+- **Attributs Fondamentaux** (`EntityStats`) :
+  - `critChance` : Le taux de base (en %) pour déclencher un coup critique (défaut: `0`).
+  - `critMultiplier` : Le coefficient de multiplication des dégâts ou des soins (défaut: `1.5`).
+- **Calcul en Combat** :
+  - La chance critique effective est calculée dynamiquement par le getter `effectiveCritChance` qui combine `critChance` permanente et les éventuels bonus temporaires issus du statut `crit_chance`.
+- **Mécanismes d'Impact** :
+  - **Dégâts des Cartes** (`EffectResolver._calculateDamage`) : Les attaques physiques ou magiques du joueur ont une probabilité égale à `effectiveCritChance` de voir leurs dégâts totaux multipliés par `critMultiplier` (arrondi).
+  - **Soins des Cartes** (`EffectResolver.resolveCard` case 'heal') : Les soins appliqués au héros ont une chance de coup critique qui multiplie le soin par `critMultiplier`.
+  - **Dégâts des Ennemis** (`CombatController.resolveEnemyIntent` case 'attack') : Les attaques d'intentions des ennemis effectuent également un jet de critique basé sur leur propre `effectiveCritChance`, multipliant les dégâts infligés au héros par leur `critMultiplier`.
+  - **Compétences Héroïques (Skills)** (`HerosDraftGame.executeSkill`) : Les compétences actives du héros (de zone, ciblées, ou perçantes) effectuent également un jet critique pour multiplier leurs dégâts.
+- **Récompenses de Draft de Niveau (Level Up)** :
+  - **Précision** : Augmente de façon permanente `critChance` (de +1% à +5% selon la rareté de la récompense).
+  - **Férocité** : Augmente de façon permanente `critMultiplier` (en ajoutant de +0.10 à +0.50 au multiplicateur via l'accumulateur `critDamageAcc`).
+- **Éléments de Données & Reliques** :
+  - Les ennemis dans `enemies.json` possèdent des chances de critiques de base distinctes (slime: 5%, gobelin: 10%, squelette: 10%, orc furieux: 15%).
+  - Deux nouvelles reliques spécifiques aux critiques ont été intégrées dans `relics.json` via l'effet `gain_crit` :
+    - *Focus Lens* (`critical_lens`, Rare, trigger: `startOfCombat`) : confère un buff temporaire de $+15\%$ de critique en combat.
+    - *Lucky Charm* (`lucky_charm`, Uncommon, trigger: `startOfRun`) : confère un bonus permanent de $+10\%$ de critique pour toute la run.
+
 ---
 
 ## 4. Altérations d'État & Statuts (Status Effects)
@@ -310,15 +394,13 @@ Les combattants accumulent des altérations d'état. Le décompte (`tickStatuses
 | `weakness` | Debuff | Oui | Réduit les dégâts physiques infligés de **25%** (`×0.75`) | Durée -1 chaque tour |
 | `strength_regen` | Buff | Oui | Ajoute sa valeur au statut `strength` au début du tour | Durée -1 chaque tour |
 | `armor_regen` | Buff | Oui | Génère de l'armure = valeur au début du tour | Durée -1 chaque tour |
-| `burn` | Debuff | Oui | Inflige des dégâts directs = valeur au début du tour ennemi | Durée -1 chaque tour |
-| `freeze` | Debuff | Oui | Divise par deux (`×0.5` arrondi) les dégâts offensifs d'intention de l'ennemi | Durée -1 chaque tour |
-| `shock` | Debuff | Oui | Augmente les dégâts d'attaque subis par l'ennemi de la valeur du statut | Durée -1 chaque tour |
+| `burn` | Debuff | Oui | Inflige des dégâts de feu = valeur active au début du tour. Le tick réduit la valeur et la durée de 1. | Durée -1 chaque tour |
+| `freeze` | Debuff | Oui | Réduit les dégâts offensifs du prochain coup de l'ennemi de **50%** et décrémente immédiatement la durée du gel. | Durée -1 chaque tour |
+| `shock` | Debuff | Oui | Ajoute sa valeur active cumulée à tout dégât d'attaque direct subi par la cible. | Durée -1 chaque tour |
+| `vulnerable` | Debuff | Oui | Augmente universellement tous les dégâts reçus de **50%** (arrondi). Affecte autant le Héros que les Ennemis. | Durée -1 chaque tour |
 
 ### 4.2. Statuts Partiellement Implémentés
-
-| Statut (`id`) | Type | Présent UI | Présent Logique | Lacune |
-|:---|:---:|:---:|:---:|:---|
-| `vulnerable` | Debuff | ✅ Déclaré dans `EffectResolver._createStatus`, affichable | ❌ | **Absent de `_calculateDamage()`** — n'augmente pas les dégâts reçus |
+Aucun. Tous les statuts décrits ci-dessus sont 100% implémentés et opérationnels dans le calcul des dégâts.
 
 ### 4.3. Mécanique de Stacking (`StatusEffect.combine`)
 
@@ -382,7 +464,7 @@ assets/data/*.json  →  rootBundle.loadString()  →  jsonDecode()
     →  *.fromJson()  →  GameDataRegistry  →  gameDataLoaderProvider (FutureProvider)
 ```
 
-`GameDataService.loadAll()` charge les 7 fichiers JSON via `Future.wait()` (chargement parallèle).
+`GameDataService.loadAll()` charge les 8 fichiers JSON via `Future.wait()` (chargement parallèle).
 
 ### 7.2. Graphe de Relations entre Modèles
 
@@ -435,7 +517,7 @@ Le tutoriel se présente sous la forme d'un `PageView` non-swipeable, où la pro
 7. **Dégâts & Armure (Armor & Damage)** : Démo comparative. Le joueur subit des dégâts avec et sans armure pour voir l'impact visuel de l'absorption par l'armure.
 8. **Statuts Élémentaires (Status Effects)** : Galerie interactive détaillant le Poison, la Brûlure, le Gel, et l'Électrocution.
 9. **Intentions Ennemies (Enemy Intents)** : Décryptage des icônes d'intentions affichées au-dessus des ennemis (Attaque, Défense, Buff).
-10. **Fusion de Cartes (Merge)** : Démo interactive du merge automatique. Le joueur fusionne 3 cartes identiques de niveau 1 pour obtenir une version renforcée de niveau 2.
+10. **Fusion de Cartes (Merge)** : Démo interactive de la fusion 3-en-1. Le joueur fusionne 3 cartes identiques pour obtenir une version de rareté supérieure avec transfert d'améliorations.
 11. **XP & Niveaux (XP & Level Up)** : Accumulation d'expérience interactive jusqu'au passage de niveau du héros.
 12. **Draft (Reward Draft)** : Simulation de draft de fin de combat avec effets de survol/sélection dorée et scale-up (identique au jeu de production).
 13. **Reliques (Relics Carousel)** : Présentation des reliques passives de combat avec défilement de carrousel.

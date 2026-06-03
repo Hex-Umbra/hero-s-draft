@@ -109,7 +109,9 @@ class DeckNotifier extends StateNotifier<DeckState> {
     if (index != -1) {
       final cardToPlay = currentHand.removeAt(index);
 
-      if (cardToPlay.data.type == CardType.power || cardToPlay.data.isExhaust) {
+      final isExhausted = cardToPlay.data.isExhaust && !cardToPlay.forgeUpgrades.contains('enduring:1');
+
+      if (cardToPlay.data.type == CardType.power || isExhausted) {
         currentExhaustPile.add(cardToPlay);
       } else {
         currentDiscardPile.add(cardToPlay);
@@ -128,23 +130,59 @@ class DeckNotifier extends StateNotifier<DeckState> {
     state = state.copyWith(masterDeck: [...state.masterDeck, newCard]);
   }
 
-  /// Fusionne 3 cartes identiques en une carte de niveau supérieur
-  void mergeCards(String cardId, int level) {
+  /// Fusionne 3 cartes identiques en une carte de rareté supérieure
+  void mergeCards(List<String> selectedIds, List<String> inheritedUpgrades) {
+    if (selectedIds.length != 3) return;
     var currentMasterDeck = List<CardInstance>.from(state.masterDeck);
 
-    // Trouve les 3 exemplaires
-    var duplicates = currentMasterDeck
-        .where((c) => c.data.id == cardId && c.level == level)
-        .toList();
+    final List<CardInstance> selectedCards = [];
+    for (var id in selectedIds) {
+      final cardIdx = currentMasterDeck.indexWhere((c) => c.uniqueId == id);
+      if (cardIdx != -1) {
+        selectedCards.add(currentMasterDeck[cardIdx]);
+      }
+    }
 
-    if (duplicates.length >= 3) {
-      // Retire les 3 exemplaires (en utilisant uniqueId pour être sûr)
-      final idsToRemove = duplicates.take(3).map((c) => c.uniqueId).toSet();
-      currentMasterDeck.removeWhere((c) => idsToRemove.contains(c.uniqueId));
+    if (selectedCards.length == 3) {
+      if (selectedCards.any((c) => c.rarity == CardRarity.unique)) {
+        return;
+      }
+      final baseCardData = selectedCards[0].data;
+      final rarity = selectedCards[0].rarity;
 
-      // Ajoute la carte de niveau supérieur
+      // Retire les 3 exemplaires
+      currentMasterDeck.removeWhere((c) => selectedIds.contains(c.uniqueId));
+
+      // Détermine la rareté suivante
+      final nextRarityIndex = min(rarity.index + 1, CardRarity.values.length - 1);
+      final nextRarity = CardRarity.values[nextRarityIndex];
+
+      // Auto-fusionne les upgrades identiques (cumul des tiers)
+      final Map<String, int> consolidatedMap = {};
+      for (var upgrade in inheritedUpgrades) {
+        final parts = upgrade.split(':');
+        if (parts.length != 2) continue;
+        final id = parts[0];
+        final tier = int.tryParse(parts[1]) ?? 0;
+        if (tier <= 0) continue;
+        consolidatedMap[id] = (consolidatedMap[id] ?? 0) + tier;
+      }
+
+      var finalUpgrades = consolidatedMap.entries.map((e) => '${e.key}:${e.value}').toList();
+
+      // Limite à la capacité de la rareté supérieure
+      final capacity = baseCardData.baseMaxForgeUpgrades + nextRarityIndex;
+      if (finalUpgrades.length > capacity) {
+        finalUpgrades = finalUpgrades.sublist(0, capacity);
+      }
+
+      // Ajoute la carte de rareté supérieure avec les upgrades finalisés
       currentMasterDeck.add(
-        CardInstance(data: duplicates[0].data, level: level + 1),
+        CardInstance(
+          data: baseCardData,
+          rarity: nextRarity,
+          forgeUpgrades: finalUpgrades,
+        ),
       );
 
       state = state.copyWith(masterDeck: currentMasterDeck);
@@ -158,12 +196,26 @@ class DeckNotifier extends StateNotifier<DeckState> {
     state = state.copyWith(masterDeck: currentMasterDeck);
   }
 
-  /// Améliore une carte (niveau +1) définitivement (Forge)
+  /// Améliore une carte définitivement (Forge) en augmentant sa rareté
   void upgradeCard(String uniqueId) {
     state = state.copyWith(
       masterDeck: state.masterDeck.map((c) {
         if (c.uniqueId == uniqueId) {
-          return c.copyWith(level: c.level + 1);
+          final nextRarityIndex = min(c.rarity.index + 1, CardRarity.values.length - 1);
+          return c.copyWith(rarity: CardRarity.values[nextRarityIndex]);
+        }
+        return c;
+      }).toList(),
+    );
+  }
+
+  /// Ajoute une amélioration de forge à une carte spécifique du Master Deck
+  void addForgeUpgrade(String uniqueId, String upgrade) {
+    state = state.copyWith(
+      masterDeck: state.masterDeck.map((c) {
+        if (c.uniqueId == uniqueId) {
+          final updatedUpgrades = List<String>.from(c.forgeUpgrades)..add(upgrade);
+          return c.copyWith(forgeUpgrades: updatedUpgrades);
         }
         return c;
       }).toList(),

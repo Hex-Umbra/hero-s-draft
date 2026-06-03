@@ -1,0 +1,152 @@
+[
+  {
+    "id": "holy_shield",
+    "name_en": "Holy Shield",
+    "name_fr": "Bouclier Sacré",
+    "description_en": "Gain 8 Block and heal 2 HP.",
+    "description_fr": "Donne 8 d'Armure et soigne 2 PV.",
+    "cost": 1,
+    "type": "skill",
+    "category": "characterSpecific",
+    "heroClass": "paladin",
+    "rarity": "unique",
+    "target": "self",
+    "animation": "buff",
+    "isExhaust": true,
+    "effects": [
+      {
+        "type": "armor",
+        "value": 8
+      },
+      {
+        "type": "heal",
+        "value": 2
+      }
+    ],
+    "baseMaxForgeUpgrades": 5
+  },
+  {
+    "id": "smite",
+    "name_en": "Smite",
+    "name_fr": "Châtiment",
+    "description_en": "Deal 6 damage and gain 4 Block.",
+    "description_fr": "Inflige 6 dégâts et donne 4 d'Armure.",
+    "cost": 1,
+    "type": "attack",
+    "category": "characterSpecific",
+    "heroClass": "paladin",
+    "rarity": "unique",
+    "target": "singleEnemy",
+    "animation": "melee",
+    "effects": [
+      {
+        "type": "damage",
+        "value": 6
+      },
+      {
+        "type": "armor",
+        "value": 4
+      }
+    ],
+    "baseMaxForgeUpgrades": 5
+  },
+  {
+    "id": "reckless_strike",
+    "name_en": "Reckless Strike",
+    "name_fr": "Frappe Téméraire",
+    "description_en": "Deal 15 damage.",
+    "description_fr": "Inflige 15 dégâts.",
+    "cost": 2,
+    "type": "attack",
+    "category": "characterSpecific",
+    "heroClass": "berserker",
+    "rarity": "unique",
+    "target": "singleEnemy",
+    "animation": "melee",
+    "effects": [
+      {
+        "type": "damage",
+        "value": 15
+      }
+    ],
+    "baseMaxForgeUpgrades": 5
+  },
+  {
+    "id": "rage_form",
+    "name_en": "Rage Stance",
+    "name_fr": "Posture de Rage",
+    "description_en": "Apply 2 Strength this turn. Draw 1 card.",
+    "description_fr": "Applique 2 Force ce tour-ci. Pioche 1 carte.",
+    "cost": 1,
+    "type": "skill",
+    "category": "characterSpecific",
+    "heroClass": "berserker",
+    "rarity": "unique",
+    "target": "self",
+    "animation": "buff",
+    "effects": [
+      {
+        "type": "apply_status",
+        "statusId": "strength",
+        "value": 2,
+        "duration": 1
+      },
+      {
+        "type": "draw",
+        "value": 1
+      }
+    ],
+    "baseMaxForgeUpgrades": 5
+  },
+  {
+    "id": "magic_missile",
+    "name_en": "Magic Missile",
+    "name_fr": "Projectile Magique",
+    "description_en": "Deal 5 damage and draw 1 card.",
+    "description_fr": "Inflige 5 dégâts et pioche 1 carte.",
+    "cost": 1,
+    "type": "attack",
+    "category": "characterSpecific",
+    "heroClass": "mage",
+    "rarity": "unique",
+    "target": "singleEnemy",
+    "animation": "magic",
+    "effects": [
+      {
+        "type": "damage",
+        "value": 5
+      },
+      {
+        "type": "draw",
+        "value": 1
+      }
+    ],
+    "baseMaxForgeUpgrades": 5
+  },
+  {
+    "id": "mana_surge",
+    "name_en": "Mana Surge",
+    "name_fr": "Surtension de Mana",
+    "description_en": "Gain 1 Mana and draw 1 card.",
+    "description_fr": "Gagne 1 Mana et pioche 1 carte.",
+    "cost": 0,
+    "type": "skill",
+    "category": "characterSpecific",
+    "heroClass": "mage",
+    "rarity": "unique",
+    "target": "self",
+    "animation": "buff",
+    "isExhaust": true,
+    "effects": [
+      {
+        "type": "gain_mana",
+        "value": 1
+      },
+      {
+        "type": "draw",
+        "value": 1
+      }
+    ],
+    "baseMaxForgeUpgrades": 5
+  }
+]

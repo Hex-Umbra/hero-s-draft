@@ -81,6 +81,7 @@ class EnemyInstance {
       'baseDamage': data.baseDamage,
       'spritePath': data.spritePath,
       'tier': data.tier,
+      'critChance': data.critChance,
       'intents': data.intents?.map((i) => i.toJson()).toList(),
     },
     'stats': stats.toJson(),

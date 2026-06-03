@@ -17,9 +17,9 @@ void main() {
   final mockCards = [
     // Global cards for selection
     const CardData(
-      id: 'slash',
-      nameEn: 'Slash',
-      nameFr: 'Entaille',
+      id: 'slash_1',
+      nameEn: 'Slash 1',
+      nameFr: 'Entaille 1',
       descriptionEn: 'Deal 6 damage',
       descriptionFr: 'Inflige 6 dégâts',
       cost: 1,
@@ -30,9 +30,113 @@ void main() {
       effects: [],
     ),
     const CardData(
-      id: 'shield',
-      nameEn: 'Shield',
-      nameFr: 'Bouclier',
+      id: 'slash_2',
+      nameEn: 'Slash 2',
+      nameFr: 'Entaille 2',
+      descriptionEn: 'Deal 6 damage',
+      descriptionFr: 'Inflige 6 dégâts',
+      cost: 1,
+      type: CardType.attack,
+      category: CardCategory.global,
+      rarity: CardRarity.common,
+      target: CardTarget.singleEnemy,
+      effects: [],
+    ),
+    const CardData(
+      id: 'slash_3',
+      nameEn: 'Slash 3',
+      nameFr: 'Entaille 3',
+      descriptionEn: 'Deal 6 damage',
+      descriptionFr: 'Inflige 6 dégâts',
+      cost: 1,
+      type: CardType.attack,
+      category: CardCategory.global,
+      rarity: CardRarity.common,
+      target: CardTarget.singleEnemy,
+      effects: [],
+    ),
+    const CardData(
+      id: 'slash_4',
+      nameEn: 'Slash 4',
+      nameFr: 'Entaille 4',
+      descriptionEn: 'Deal 6 damage',
+      descriptionFr: 'Inflige 6 dégâts',
+      cost: 1,
+      type: CardType.attack,
+      category: CardCategory.global,
+      rarity: CardRarity.common,
+      target: CardTarget.singleEnemy,
+      effects: [],
+    ),
+    const CardData(
+      id: 'slash_5',
+      nameEn: 'Slash 5',
+      nameFr: 'Entaille 5',
+      descriptionEn: 'Deal 6 damage',
+      descriptionFr: 'Inflige 6 dégâts',
+      cost: 1,
+      type: CardType.attack,
+      category: CardCategory.global,
+      rarity: CardRarity.common,
+      target: CardTarget.singleEnemy,
+      effects: [],
+    ),
+    const CardData(
+      id: 'shield_1',
+      nameEn: 'Shield 1',
+      nameFr: 'Bouclier 1',
+      descriptionEn: 'Gain 5 armor',
+      descriptionFr: 'Gagne 5 armure',
+      cost: 1,
+      type: CardType.skill,
+      category: CardCategory.global,
+      rarity: CardRarity.common,
+      target: CardTarget.self,
+      effects: [],
+    ),
+    const CardData(
+      id: 'shield_2',
+      nameEn: 'Shield 2',
+      nameFr: 'Bouclier 2',
+      descriptionEn: 'Gain 5 armor',
+      descriptionFr: 'Gagne 5 armure',
+      cost: 1,
+      type: CardType.skill,
+      category: CardCategory.global,
+      rarity: CardRarity.common,
+      target: CardTarget.self,
+      effects: [],
+    ),
+    const CardData(
+      id: 'shield_3',
+      nameEn: 'Shield 3',
+      nameFr: 'Bouclier 3',
+      descriptionEn: 'Gain 5 armor',
+      descriptionFr: 'Gagne 5 armure',
+      cost: 1,
+      type: CardType.skill,
+      category: CardCategory.global,
+      rarity: CardRarity.common,
+      target: CardTarget.self,
+      effects: [],
+    ),
+    const CardData(
+      id: 'shield_4',
+      nameEn: 'Shield 4',
+      nameFr: 'Bouclier 4',
+      descriptionEn: 'Gain 5 armor',
+      descriptionFr: 'Gagne 5 armure',
+      cost: 1,
+      type: CardType.skill,
+      category: CardCategory.global,
+      rarity: CardRarity.common,
+      target: CardTarget.self,
+      effects: [],
+    ),
+    const CardData(
+      id: 'shield_5',
+      nameEn: 'Shield 5',
+      nameFr: 'Bouclier 5',
       descriptionEn: 'Gain 5 armor',
       descriptionFr: 'Gagne 5 armure',
       cost: 1,
@@ -72,6 +176,7 @@ void main() {
     luck: 0,
     armorMastery: 0,
     passiveTrait: 'regenArmor',
+    skills: ['holy_shield'],
   );
 
   final mockPassive = const PassiveData(
@@ -134,10 +239,8 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    // Since our pool generates 10 cards from the available mock global cards (Slash & Shield),
-    // and can have max 2 copies of any card:
-    // With only 2 global cards, the generator will fill the 10 slots using the attempts fallback
-    // which results in multiple copies of Slash and Shield in the pool (e.g. 5 of Slash and 5 of Shield).
+    // Since our pool now directly contains all global non-status cards:
+    // With 10 mock global cards, the generator will show exactly those 10 cards.
     // Let's verify that 10 cards are shown in the grid.
     expect(find.byType(UiCard), findsNWidgets(10));
 
@@ -178,10 +281,10 @@ void main() {
     // The first card should be the class specific card
     expect(deckState.masterDeck[0].data.id, 'holy_shield');
 
-    // The other 5 cards should be Slash or Shield
+    // The other 5 cards should be Slash or Shield variants
     for (int i = 1; i < 6; i++) {
       final id = deckState.masterDeck[i].data.id;
-      expect(id == 'slash' || id == 'shield', isTrue);
+      expect(id.startsWith('slash') || id.startsWith('shield'), isTrue);
     }
     container.dispose();
   });

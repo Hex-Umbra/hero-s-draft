@@ -125,6 +125,8 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
     if (choice.title == 'Sagesse') return l10n.draftChoiceWisdom;
     if (choice.title == 'Trèfle à 4 feuilles') return l10n.draftChoiceClover;
     if (choice.title == 'Miroir') return l10n.draftChoiceMirror;
+    if (choice.title == 'Précision') return l10n.draftChoicePrecision;
+    if (choice.title == 'Férocité') return l10n.draftChoiceFerocity;
     return choice.title;
   }
 
@@ -147,6 +149,12 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
     }
     if (choice.title == 'Miroir') {
       return l10n.draftChoiceMirrorDesc;
+    }
+    if (choice.title == 'Précision') {
+      return l10n.draftChoicePrecisionDesc(choice.critChanceBoost);
+    }
+    if (choice.title == 'Férocité') {
+      return l10n.draftChoiceFerocityDesc((choice.critDamageBoost * 100).round());
     }
     return choice.description;
   }
@@ -631,14 +639,18 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                         style: const TextStyle(color: Colors.amber),
                       ),
                       subtitle: Text(
-                        l10n.levelLabel(card.level),
+                        card.rarity.name.toUpperCase(),
                         style: const TextStyle(color: Colors.white70),
                       ),
                       onTap: () {
                         ref
                             .read(deckProvider.notifier)
                             .addCardToMasterDeck(
-                              CardInstance(data: card.data, level: card.level),
+                              CardInstance(
+                                data: card.data,
+                                rarity: card.rarity,
+                                forgeUpgrades: List.from(card.forgeUpgrades),
+                              ),
                             );
                         Navigator.of(ctx).pop();
                         _finishDraft(ref);
@@ -677,6 +689,8 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
         armorAcc: choice.armorBoost,
         maxManaAcc: choice.manaBoost,
         luckAcc: choice.luckBoost,
+        critChanceAcc: choice.critChanceBoost,
+        critDamageAcc: choice.critDamageBoost,
       );
 
       _finishDraft(ref);
@@ -762,7 +776,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
       if (rarity == RewardRarity.epic) multiplier = 3.0;
       if (rarity == RewardRarity.legendary) multiplier = 4.0;
 
-      int type = rng.nextInt(4);
+      int type = rng.nextInt(6);
       if (type == 0) {
         int boost = (5 * multiplier).round();
         return _DraftChoice(
@@ -805,18 +819,80 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
           rarity: rarity,
         );
       }
-
-      // type == 3 : Sagesse (Mana)
-      // On utilise les mêmes multiplicateurs pour rester cohérent
-      int boost = (1 * multiplier).round();
-      if (boost < 1) boost = 1;
+      if (type == 3) {
+        // type == 3 : Sagesse (Mana)
+        // On utilise les mêmes multiplicateurs pour rester cohérent
+        int boost = (1 * multiplier).round();
+        if (boost < 1) boost = 1;
+        return _DraftChoice(
+          'Sagesse',
+          '+$boost Mana Max',
+          0,
+          0,
+          0,
+          boost,
+          rarity: rarity,
+        );
+      }
+      if (type == 4) {
+        int boost;
+        switch (rarity) {
+          case RewardRarity.common:
+            boost = 1;
+            break;
+          case RewardRarity.uncommon:
+            boost = 2;
+            break;
+          case RewardRarity.rare:
+            boost = 3;
+            break;
+          case RewardRarity.epic:
+            boost = 4;
+            break;
+          case RewardRarity.legendary:
+          case RewardRarity.mythic:
+            boost = 5;
+            break;
+        }
+        return _DraftChoice(
+          'Précision',
+          '+$boost% de chance de Critique',
+          0,
+          0,
+          0,
+          0,
+          critChanceBoost: boost,
+          rarity: rarity,
+        );
+      }
+      // type == 5 : Férocité
+      double boost;
+      switch (rarity) {
+        case RewardRarity.common:
+          boost = 0.10;
+          break;
+        case RewardRarity.uncommon:
+          boost = 0.20;
+          break;
+        case RewardRarity.rare:
+          boost = 0.30;
+          break;
+        case RewardRarity.epic:
+          boost = 0.40;
+          break;
+        case RewardRarity.legendary:
+        case RewardRarity.mythic:
+          boost = 0.50;
+          break;
+      }
       return _DraftChoice(
-        'Sagesse',
-        '+$boost Mana Max',
+        'Férocité',
+        '+${(boost * 100).round()}% de dégâts de Critique',
         0,
         0,
         0,
-        boost,
+        0,
+        critDamageBoost: boost,
         rarity: rarity,
       );
     });
@@ -872,6 +948,8 @@ class _DraftChoice {
   final int luckBoost;
   final bool isCloneOption;
   final RewardRarity rarity;
+  final int critChanceBoost;
+  final double critDamageBoost;
 
   _DraftChoice(
     this.title,
@@ -883,6 +961,8 @@ class _DraftChoice {
     this.luckBoost = 0,
     this.isCloneOption = false,
     this.rarity = RewardRarity.common,
+    this.critChanceBoost = 0,
+    this.critDamageBoost = 0.0,
   });
 }
 

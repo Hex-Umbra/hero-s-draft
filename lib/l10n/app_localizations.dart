@@ -1073,7 +1073,7 @@ abstract class AppLocalizations {
   /// No description provided for @draftDeckSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Select exactly 5 global cards from the 10 offered to launch the run.'**
+  /// **'Select exactly 5 global cards to build your starting deck and launch the run.'**
   String get draftDeckSubtitle;
 
   /// No description provided for @draftDeckSelectedCount.
@@ -1189,6 +1189,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clone a card chosen from 3 random cards in your deck'**
   String get draftChoiceMirrorDesc;
+
+  /// No description provided for @draftChoicePrecision.
+  ///
+  /// In en, this message translates to:
+  /// **'Precision'**
+  String get draftChoicePrecision;
+
+  /// No description provided for @draftChoicePrecisionDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'+{amount}% Crit Chance'**
+  String draftChoicePrecisionDesc(int amount);
+
+  /// No description provided for @draftChoiceFerocity.
+  ///
+  /// In en, this message translates to:
+  /// **'Ferocity'**
+  String get draftChoiceFerocity;
+
+  /// No description provided for @draftChoiceFerocityDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'+{amount}% Crit Damage'**
+  String draftChoiceFerocityDesc(int amount);
 
   /// No description provided for @statusPoison.
   ///

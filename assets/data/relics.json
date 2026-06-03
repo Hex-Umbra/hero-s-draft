@@ -142,5 +142,29 @@
     "value": 1,
     "rarity": "epic",
     "emoji": "⚡"
+  },
+  {
+    "id": "critical_lens",
+    "name_en": "Focus Lens",
+    "name_fr": "Lentille de Focalisation",
+    "description_en": "Gain 15 Critical Hit Chance at the start of combat.",
+    "description_fr": "Gagne 15 de chance de coup critique au début du combat.",
+    "trigger": "startOfCombat",
+    "effectType": "gain_crit",
+    "value": 15,
+    "rarity": "rare",
+    "emoji": "🎯"
+  },
+  {
+    "id": "lucky_charm",
+    "name_en": "Lucky Charm",
+    "name_fr": "Porte-bonheur",
+    "description_en": "+10 Critical Hit Chance permanently for the entire run.",
+    "description_fr": "+10 de chance de coup critique de manière permanente pour toute la run.",
+    "trigger": "startOfRun",
+    "effectType": "gain_crit",
+    "value": 10,
+    "rarity": "uncommon",
+    "emoji": "🧿"
   }
 ]

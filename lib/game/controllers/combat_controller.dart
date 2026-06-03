@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/entity_stats.dart';
@@ -27,38 +28,99 @@ class CombatController extends StateNotifier<CombatState> {
     List<EnemyData> availableEnemies, {
     int playerLevel = 1,
     int act = 1,
+    int playerMaxHp = 100,
+    int playerAttaque = 0,
+    int playerMaxMana = 3,
+    int playerRelicsCount = 0,
   }) {
     final enemyDataList = EncounterSystem.generateEnemiesForLevel(
       level,
       availableEnemies,
       nodeType: nodeType,
+      playerLevel: playerLevel,
+      act: act,
+      playerMaxHp: playerMaxHp,
+      playerAttaque: playerAttaque,
+      playerMaxMana: playerMaxMana,
+      playerRelicsCount: playerRelicsCount,
     );
 
     final bool isBoss =
         nodeType == MapNodeType.boss || (level > 0 && level % 10 == 0);
     final bool isElite = nodeType == MapNodeType.elite;
 
-    // 1. Déterminer le niveau de l'ennemi (minimum 1)
-    int nodeModifier = 0;
+    final int enemyLevel = EncounterSystem.getEnemyLevel(
+      playerLevel: playerLevel,
+      act: act,
+      isBoss: isBoss,
+      isElite: isElite,
+    );
+
+    final double hpMultiplier = EncounterSystem.getHpMultiplier(
+      enemyLevel: enemyLevel,
+      act: act,
+      isBoss: isBoss,
+      isElite: isElite,
+    );
+
+    final double damageMultiplier = EncounterSystem.getDamageMultiplier(
+      enemyLevel: enemyLevel,
+      act: act,
+      isBoss: isBoss,
+      isElite: isElite,
+    );
+
+    // Detailed debug prints with mathematical calculations and formulas
+    final double playerPower = playerMaxHp +
+        (playerAttaque * 10.0) +
+        (playerMaxMana * 15.0) +
+        (playerRelicsCount * 5.0);
+    final double expectedPower =
+        145.0 + ((playerLevel - 1) * 15.0) + ((act - 1) * 20.0);
+    final double baseBudget =
+        40.0 + ((playerLevel - 1) * 10.0) + ((act - 1) * 25.0);
+    final double powerRatio = playerPower / expectedPower;
+    final double powerModifier = 1.0 + (powerRatio - 1.0) * 0.5;
+    double nodeMultiplier = 1.0;
     if (isBoss) {
-      nodeModifier = 2;
+      nodeMultiplier = 2.0;
     } else if (isElite) {
-      nodeModifier = 1;
+      nodeMultiplier = 1.5;
     }
-    final int enemyLevel = max(1, playerLevel + (act - 1) * 2 + nodeModifier);
+    final double finalBudget = baseBudget * powerModifier * nodeMultiplier;
 
-    // 2. Calculer les multiplicateurs de mise à l'échelle
-    final double nodeMultiplier = isBoss ? 3.0 : (isElite ? 1.5 : 1.0);
-    final double hpMultiplier =
-        (1.0 + 0.12 * (enemyLevel - 1)) *
-        (1.0 + 0.40 * (act - 1)) *
-        nodeMultiplier;
-    final double damageMultiplier =
-        (1.0 + 0.08 * (enemyLevel - 1)) *
-        (1.0 + 0.30 * (act - 1)) *
-        nodeMultiplier;
+    print("=== COMBAT INITIALIZATION MATHEMATICS ===");
+    print("Player Level: $playerLevel, Act: $act, Node Type: ${nodeType ?? 'normal'}");
+    print("Player Max HP: $playerMaxHp, Attack: $playerAttaque, Max Mana: $playerMaxMana, Relics Count: $playerRelicsCount");
+    print("PlayerPower formula: maxHP + (attaque * 10) + (maxMana * 15) + (relicsCount * 5)");
+    print("PlayerPower calculation: $playerMaxHp + ($playerAttaque * 10) + ($playerMaxMana * 15) + ($playerRelicsCount * 5) = $playerPower");
+    print("ExpectedPower formula: 145 + [(playerLevel - 1) * 15] + [(act - 1) * 20]");
+    print("ExpectedPower calculation: 145 + [($playerLevel - 1) * 15] + [($act - 1) * 20] = $expectedPower");
+    print("BaseBudget formula: 40 + [(playerLevel - 1) * 10] + [(act - 1) * 25]");
+    print("BaseBudget calculation: 40 + [($playerLevel - 1) * 10] + [($act - 1) * 25] = $baseBudget");
+    print("PowerRatio calculation: PlayerPower / ExpectedPower = $playerPower / $expectedPower = $powerRatio");
+    print("PowerModifier formula: 1.0 + (PowerRatio - 1.0) * 0.5");
+    print("PowerModifier calculation: 1.0 + ($powerRatio - 1.0) * 0.5 = $powerModifier");
+    print("NodeMultiplier: $nodeMultiplier (Boss = 2.0, Elite = 1.5, Normal = 1.0)");
+    print("FinalBudget formula: BaseBudget * PowerModifier * NodeMultiplier");
+    print("FinalBudget calculation: $baseBudget * $powerModifier * $nodeMultiplier = $finalBudget");
+    print("Enemy Level calculation: max(1, playerLevel + (act - 1) * 2 + nodeModifier) = $enemyLevel");
+    print("HP scaling multiplier: $hpMultiplier");
+    print("Damage scaling multiplier: $damageMultiplier");
+    print("Generated Enemy Data count: ${enemyDataList.length}");
+    for (var data in enemyDataList) {
+      final rating = EncounterSystem.calculateCombatRating(
+        data: data,
+        enemyLevel: enemyLevel,
+        act: act,
+        isBoss: isBoss,
+        isElite: isElite,
+      );
+      print(" - Enemy: ${data.nameEn} (Tier: ${data.tier}), HP scaled: ${(data.maxHp * hpMultiplier).round()}, Damage scaled: ${(data.baseDamage * damageMultiplier).round()}, CombatRating: $rating");
+    }
+    print("=========================================");
 
-    final List<EnemyInstance> enemies = [];
+    final List<EnemyInstance> allEnemyInstances = [];
     for (var data in enemyDataList) {
       final stats = EntityStats(
         maxPv: (data.maxHp * hpMultiplier).round(),
@@ -66,16 +128,30 @@ class CombatController extends StateNotifier<CombatState> {
         armure: 0,
         attaque: (data.baseDamage * damageMultiplier).round(),
         level: enemyLevel,
+        critChance: data.critChance,
       );
 
       var enemy = EnemyInstance(data: data, stats: stats, isBoss: isBoss);
+      allEnemyInstances.add(enemy);
+    }
 
-      enemy = _rollIntent(enemy);
-      enemies.add(enemy);
+    final List<EnemyInstance> activeEnemies = [];
+    final List<EnemyInstance> pendingEnemies = [];
+
+    for (int i = 0; i < allEnemyInstances.length; i++) {
+      var enemy = allEnemyInstances[i];
+      if (i < 5) {
+        enemy = _rollIntent(enemy);
+        activeEnemies.add(enemy);
+      } else {
+        pendingEnemies.add(enemy);
+      }
     }
 
     state = CombatState(
-      enemies: enemies,
+      enemies: activeEnemies,
+      pendingEnemies: pendingEnemies,
+      defeatedEnemies: const [],
       turnPhase: TurnPhase.player,
       turnCount: 1,
       selectedEnemyId: null,
@@ -144,10 +220,37 @@ class CombatController extends StateNotifier<CombatState> {
     switch (intent.type) {
       case IntentType.attack:
         int dmg = intent.value;
-        if (enemy.stats.statuses.any((s) => s.id == 'freeze')) {
+        final hasFreeze = enemy.stats.statuses.any((s) => s.id == 'freeze');
+        if (hasFreeze) {
           dmg = (intent.value * 0.5).round();
         }
+
+        // Apply vulnerable multiplier if hero has vulnerable status
+        if (runController.currentState.heroStats.statuses.any((s) => s.id == 'vulnerable')) {
+          dmg = (dmg * 1.5).round();
+        }
+
+        // Roll enemy crit check
+        final random = Random();
+        if (random.nextInt(100) < enemy.stats.effectiveCritChance) {
+          dmg = (dmg * enemy.stats.critMultiplier).round();
+        }
+
         runController.takeDamage(dmg);
+
+        if (hasFreeze) {
+          final updatedStatuses = enemy.stats.statuses.map((s) {
+            if (s.id == 'freeze') {
+              return s.copyWith(duration: s.duration - 1);
+            }
+            return s;
+          }).where((s) => s.duration > 0).toList();
+
+          final updatedEnemy = enemy.copyWith(
+            stats: enemy.stats.copyWith(statuses: updatedStatuses),
+          );
+          _updateEnemy(updatedEnemy);
+        }
         break;
       case IntentType.defend:
         final updatedEnemy = enemy.copyWith(
@@ -285,17 +388,27 @@ class CombatController extends StateNotifier<CombatState> {
     }
 
     if (killedCount > 0) {
+      final List<EnemyInstance> nextPending = List.from(state.pendingEnemies);
+      for (int i = 0; i < killedCount; i++) {
+        if (remainingEnemies.length < 5 && nextPending.isNotEmpty) {
+          var incoming = nextPending.removeAt(0);
+          incoming = _rollIntent(incoming);
+          remainingEnemies.add(incoming);
+        }
+      }
+
       String? nextSelected = state.selectedEnemyId;
       if (nextSelected != null &&
           !remainingEnemies.any((e) => e.id == nextSelected)) {
         nextSelected = null;
       }
 
-      final bool isCombatEnded = remainingEnemies.isEmpty;
+      final bool isCombatEnded = remainingEnemies.isEmpty && nextPending.isEmpty;
       final bool isVictory = isCombatEnded;
 
       state = state.copyWith(
         enemies: remainingEnemies,
+        pendingEnemies: nextPending,
         defeatedEnemies: [...state.defeatedEnemies, ...newlyKilledEnemies],
         selectedEnemyId: nextSelected,
         clearSelectedEnemy: nextSelected == null,

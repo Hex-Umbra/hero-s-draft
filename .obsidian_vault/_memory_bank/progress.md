@@ -3,11 +3,11 @@
 Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnalités de **Hero's Draft** : opérationnelles, partiellement implémentées, non implémentées, et les chantiers de refactoring prioritaires issus des rapports de dette technique.
 
 **Métriques du projet** :
-- **~10 200 lignes** de code source dans `lib/` (63 fichiers).
-- **7 fichiers JSON** de données d'assets.
-- **74 tests automatisés** — 100% au vert.
+- **~10 350 lignes** de code source dans `lib/` (64 fichiers).
+- **8 fichiers JSON** de données d'assets.
+- **82 tests automatisés** — 100% au vert.
 - **0 erreur** via `flutter analyze`.
-- **~109 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
+- **~110 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
 
 ---
 
@@ -43,15 +43,15 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 
 | Fonctionnalité | Implémentation | Détails |
 |:---|:---|:---|
-| Auto-Merge (3→1) | `DeckNotifier.mergeCards()` | 3 copies même ID + level → 1 copie level+1 |
-| Échelonnement par Level | `EffectResolver.resolveCard()` | `scaledValue = baseValue * (1 + (level-1) * 0.5)` |
-| Catalogue complet | `cards.json` | 23 cartes : 15 globales + 2 Paladin + 2 Berserker + 2 Mage |
+| Auto-Merge (3→1) | `DeckNotifier.mergeCards()` | 3 copies même ID + rareté → 1 copie rareté supérieure (cumul des Tiers, clamp à la capacité). Les cartes de rareté `unique` (classe) ne peuvent pas être fusionnées (désactivé). |
+| Rareté Dynamique | `EffectResolver.resolveCard()` | Progression par rareté (common → legendary) avec coefficients. La rareté `unique` (cartes de classe) est fixée à un multiplicateur de 1.0. |
+| Catalogue complet | `cards.json` & `hero_cards.json` | 21 cartes équilibrées : 15 globales (communes) dans cards.json + 6 de classe (unique) dans hero_cards.json |
 | Types d'effets | `EffectResolver`, `CardEffect` | damage, heal, armor, draw, gain_mana, apply_status |
-| Exhaust mécanique | `DeckNotifier.playCard()` | Cartes Power et `isExhaust` → pile d'épuisement |
-| Upgrade mécanique | `DeckNotifier.upgradeCard()` | Forge au feu de camp : level+1 permanent |
-| Suppression de carte | `DeckNotifier.removeCardById()` | Oubli au feu de camp : suppression définitive |
-| Draft post-combat | `DraftScreen` | 3 choix de cartes aléatoires après victoire |
-| Draft de départ | `StarterDeckDraftScreen` | Vagues de 3 cartes pour constituer le deck initial |
+| Exhaust mécanique | `DeckNotifier.playCard()` | Cartes Power et `isExhaust` → pile d'épuisement (sauf si upgrade `enduring`) |
+| Upgrade de Forge | `DeckNotifier.addForgeUpgrade()` | Ajout d'améliorations (stats, statuts, pioche, enduring). Les cartes uniques ont un maximum d'upgrades fixé à 5. |
+| Suppression de carte | `DeckNotifier.removeCardById()` | Oubli au feu de camp (`RestScreen`) : suppression définitive |
+| Draft post-combat | `DraftScreen` | 3 choix de cartes aléatoires après victoire (les cartes uniques de classe sont exclues) |
+| Draft de départ | `StarterDeckDraftScreen` | Sélection de 5 cartes globales directly depuis la grille complète des 15 cartes globales (suppression du pool de 10 cartes aléatoires) + cartes de classe uniques résolues via compétences |
 | Équilibrage Probabilités | `probabilities_test.dart` | Rééquilibrage exact (Commune 52%/51.5%, Atypique 24%, Rare 16%, Épique 6%, Légendaire 2.0%, Mythique 0.5% au Level Up) |
 
 ### ⚔️ Système de Combat
@@ -65,6 +65,8 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Phase ennemie séquentielle | `HerosDraftGame._enemyRipostePhase()` | Résolution intent par intent avec animations (délais 400-600ms) |
 | Statuts de combat | `EntityStats.addStatus()`, `tickStatuses()` | Stacking, tick durée, processing poison/regen |
 | Nettoyage des morts | `CombatController._cleanDeadEnemies()` | Auto-sélection prochain ennemi, trigger reliques `onEnemyKilled` |
+| Difficulté Hybride & Budget | `EncounterSystem`, `CombatController` | Formule DDA amortie (damping 0.5) comparant la puissance du joueur à la puissance attendue, et calcul du budget final avec multiplicateurs de nœud |
+| Réserve de vagues d'ennemis | `CombatController`, `CombatState` | Limite de 5 ennemis actifs, débordement dans `pendingEnemies`, alimentation automatique au fil des éliminations |
 
 ### 🏆 Système de Passifs et Traits de Héros
 
@@ -119,13 +121,14 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Libération à l'impact | `resolvePendingDeaths()` | Déclenche instantanément la mort de tous les ennemis différés et applique les stats différées à la complétion du coup |
 | Morts/Stats hors combat instantanées | Bypass automatique | Les morts/stats hors combat (poison de début de tour) contournent Z-Sync et se résolvent de suite |
 
-### ✨ Statuts Élémentaires (`burn`, `freeze`, `shock`)
+### ✨ Statuts Élémentaires & Vulnérabilité (`burn`, `freeze`, `shock`, `vulnerable`)
 
 | Statut | Implémentation | Effet Mécanique | Résolution |
 |:---|:---|:---|:---|
-| Brûlure (`burn`) | `CombatController.startEnemyTurn()` | Dégâts directs = valeur du statut | Début du tour de l'ennemi ciblé (similaire au poison) |
-| Gel (`freeze`) | `CombatController.resolveEnemyIntent()` | Division par deux (`×0.5` arrondi) des dégâts d'intention d'attaque | Lors de l'attaque de l'ennemi gelé |
-| Électrocution (`shock`) | `EffectResolver.resolveCard()` | Ajoute la valeur du statut aux dégâts subis par l'ennemi | Lors de la résolution d'une carte d'attaque |
+| Brûlure (`burn`) | `CombatController.startEnemyTurn()` | Dégâts directs = valeur du statut (décrémente intensité/durée de 1) | Début du tour de la cible (joueur ou ennemi) |
+| Gel (`freeze`) | `CombatController.resolveEnemyIntent()` | Division par deux (`×0.5` arrondi) de l'attaque, décrémente immédiatement la durée | Lors de l'attaque de l'entité gelée |
+| Électrocution (`shock`) | `EffectResolver.resolveCard()` | Ajoute la valeur cumulée du statut aux dégâts directs subis | Lors de la résolution d'une attaque directe subie |
+| Vulnérabilité (`vulnerable`) | `EffectResolver.resolveCard()` | Augmente de 50% tous les dégâts d'attaque reçus | Universel (affecte aussi bien le héros que les ennemis) |
 
 ### 🎓 Système de Tutoriel Autonome (Standalone Tutorial)
 
@@ -144,24 +147,14 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 
 | Métrique | Valeur | Détails |
 |:---|:---|:---|
-| Tests automatisés | **74** (100% VERT) | Tests unitaires et widget-tests (dont 8 nouveaux tests pour le tutoriel) |
-| Couverture estimée | **~20%** | Principalement logique/controllers, pas d'UI de production |
+| Tests automatisés | **82** (100% VERT) | Tests unitaires, widget-tests et tests d'intégration (dont forge découplée, tutoriel autonome, équilibrage hybride et réserve de combat) |
+| Couverture estimée | **~22%** | Logique/controllers, moteur tutoriel, forge, pas d'UI de production |
 | Analyse statique | **0 erreur** | `flutter analyze` sans erreur de compilation |
 | Linter | `flutter_lints` v6.0.0 | Configuration standard, pas de règles custom |
 
 ---
 
 ## 2. Fonctionnalités Partiellement Implémentées (Dette Métier)
-
-### ⚠️ Statut `vulnerable`
-
-| Aspect | État |
-|:---|:---|
-| Déclaré dans `StatusType` et `EffectResolver._createStatus()` | ✅ |
-| Affichable dans l'UI (`StatusEffectsPanel`) | ✅ |
-| Applicable via `apply_status` | ✅ |
-| **Pris en compte dans `_calculateDamage()`** | ❌ **ABSENT** |
-| **Impact** : Le statut existe visuellement mais n'augmente PAS les dégâts reçus | — |
 
 ### ⚠️ Système Audio
 
@@ -206,7 +199,7 @@ Issues du backlog `docs/possible_upgrades/upgrade_ideas.md` (~95 items, ~60% ré
 ### Contenu
 - [x] Tutoriel / système "How-to-play"
 - [ ] Icônes de type de dégâts (feu, glace, poison) sur les descriptions
-- [ ] Rework des cartes élémentaires (certaines status-only, d'autres damage+status)
+- [x] Rework des cartes élémentaires (certaines status-only, d'autres damage+status)
 - [ ] Nœuds Trésor et Mystère sur la carte
 - [ ] Rencontre d'échange de reliques (3 reliques → 1 rareté supérieure)
 - [ ] Onglet Reliques dans le dictionnaire
@@ -225,7 +218,7 @@ Issues du backlog `docs/possible_upgrades/upgrade_ideas.md` (~95 items, ~60% ré
 ### UX & Visuel
 - [ ] Redesign des snackbar/notifications
 - [ ] Redesign descriptions de cartes (icônes-only, descriptions dans tooltips)
-- [ ] Rework forge du feu de camp (choix de forge limités)
+- [x] Rework forge du feu de camp (choix de forge limités)
 - [ ] Synergies reliques avec cartes début/fin de tour
 
 ### Système

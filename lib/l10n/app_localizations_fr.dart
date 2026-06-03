@@ -594,7 +594,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get draftDeckSubtitle =>
-      'Sélectionnez précisément 5 cartes globales parmi les 10 proposées pour lancer la run.';
+      'Sélectionnez précisément 5 cartes globales pour constituer votre deck de départ et lancer la run.';
 
   @override
   String draftDeckSelectedCount(int count) {
@@ -670,6 +670,22 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get draftChoiceMirrorDesc =>
       'Cloner une carte au choix parmi 3 cartes aléatoires de votre deck';
+
+  @override
+  String get draftChoicePrecision => 'Précision';
+
+  @override
+  String draftChoicePrecisionDesc(int amount) {
+    return '+$amount% de chance de Critique';
+  }
+
+  @override
+  String get draftChoiceFerocity => 'Férocité';
+
+  @override
+  String draftChoiceFerocityDesc(int amount) {
+    return '+$amount% de dégâts de Critique';
+  }
 
   @override
   String statusPoison(int value) {

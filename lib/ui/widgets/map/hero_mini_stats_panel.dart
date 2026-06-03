@@ -142,6 +142,13 @@ class HeroMiniStatsPanel extends ConsumerWidget {
               ],
             ),
           ),
+          const SizedBox(height: 6),
+          // Critique
+          _buildMiniStatRow(
+            icon: Icons.bolt_outlined,
+            iconColor: Colors.redAccent,
+            value: '${stats.critChance}% ${locale == 'fr' ? 'Critique' : 'Crit'} (x${stats.critMultiplier.toStringAsFixed(1)})',
+          ),
           const SizedBox(height: 10),
           Container(
             width: 165,

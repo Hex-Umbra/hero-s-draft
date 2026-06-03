@@ -118,5 +118,107 @@ void main() {
         isTrue,
       );
     });
+
+    test('mergeCards successfully upgrades rarity and merges forge upgrades', () {
+      final notifier = DeckNotifier();
+      final baseCardData = const CardData(
+        id: 'strike',
+        nameEn: 'Strike',
+        nameFr: 'Frappe',
+        descriptionEn: 'd',
+        descriptionFr: 'd',
+        cost: 1,
+        type: CardType.attack,
+        category: CardCategory.global,
+        rarity: CardRarity.common,
+        target: CardTarget.singleEnemy,
+        effects: [],
+        baseMaxForgeUpgrades: 1,
+      );
+
+      final card1 = CardInstance(
+        data: baseCardData,
+        rarity: CardRarity.common,
+        forgeUpgrades: ['sharp:1', 'hardened:1'],
+      );
+      final card2 = CardInstance(
+        data: baseCardData,
+        rarity: CardRarity.common,
+        forgeUpgrades: ['sharp:1'],
+      );
+      final card3 = CardInstance(
+        data: baseCardData,
+        rarity: CardRarity.common,
+        forgeUpgrades: [],
+      );
+
+      notifier.initializeStarterDeck([card1, card2, card3]);
+
+      // Merge the 3 cards
+      // The capacity of next rarity (Uncommon) is baseMaxForgeUpgrades (1) + nextRarityIndex (1) = 2.
+      // Inherited list has ['sharp:1', 'hardened:1', 'sharp:1'].
+      // Auto-fusion should consolidate them to ['sharp:2', 'hardened:1'] (2 upgrades).
+      notifier.mergeCards(
+        [card1.uniqueId, card2.uniqueId, card3.uniqueId],
+        ['sharp:1', 'hardened:1', 'sharp:1'],
+      );
+
+      expect(notifier.state.masterDeck.length, 1);
+      final mergedCard = notifier.state.masterDeck.first;
+      expect(mergedCard.rarity, CardRarity.uncommon);
+      expect(mergedCard.forgeUpgrades.length, 2);
+      expect(mergedCard.forgeUpgrades.contains('sharp:2'), isTrue);
+      expect(mergedCard.forgeUpgrades.contains('hardened:1'), isTrue);
+    });
+
+    test('mergeCards limits upgrades to the capacity of the next rarity level', () {
+      final notifier = DeckNotifier();
+      final baseCardData = const CardData(
+        id: 'strike',
+        nameEn: 'Strike',
+        nameFr: 'Frappe',
+        descriptionEn: 'd',
+        descriptionFr: 'd',
+        cost: 1,
+        type: CardType.attack,
+        category: CardCategory.global,
+        rarity: CardRarity.common,
+        target: CardTarget.singleEnemy,
+        effects: [],
+        baseMaxForgeUpgrades: 1,
+      );
+
+      final card1 = CardInstance(
+        data: baseCardData,
+        rarity: CardRarity.common,
+        forgeUpgrades: ['sharp:1'],
+      );
+      final card2 = CardInstance(
+        data: baseCardData,
+        rarity: CardRarity.common,
+        forgeUpgrades: ['hardened:1'],
+      );
+      final card3 = CardInstance(
+        data: baseCardData,
+        rarity: CardRarity.common,
+        forgeUpgrades: ['quick:1'],
+      );
+
+      notifier.initializeStarterDeck([card1, card2, card3]);
+
+      // Merge cards. Next rarity is Uncommon, capacity = 2.
+      // We pass 3 upgrades: ['sharp:1', 'hardened:1', 'quick:1'].
+      // Since capacity is 2, it should limit to 2 upgrades.
+      notifier.mergeCards(
+        [card1.uniqueId, card2.uniqueId, card3.uniqueId],
+        ['sharp:1', 'hardened:1', 'quick:1'],
+      );
+
+      expect(notifier.state.masterDeck.length, 1);
+      final mergedCard = notifier.state.masterDeck.first;
+      expect(mergedCard.rarity, CardRarity.uncommon);
+      // Upgrades should be limited to 2
+      expect(mergedCard.forgeUpgrades.length, 2);
+    });
   });
 }

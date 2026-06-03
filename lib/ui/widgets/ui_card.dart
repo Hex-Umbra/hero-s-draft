@@ -16,6 +16,8 @@ class UiCard extends StatelessWidget {
   final String? target;
   final int? cost;
   final int? level;
+  final double rarityMultiplier;
+  final List<String> forgeUpgrades;
   final List<CardEffect>? effects;
   final CardType? type;
   final bool isExhaust;
@@ -31,6 +33,8 @@ class UiCard extends StatelessWidget {
     this.target,
     this.cost,
     this.level,
+    this.rarityMultiplier = 1.0,
+    this.forgeUpgrades = const [],
     this.effects,
     this.type,
     this.isExhaust = false,
@@ -178,11 +182,26 @@ class UiCard extends StatelessWidget {
     }
 
     final List<Widget> badges = [];
+    int extraDamage = 0;
+    int extraArmor = 0;
+    for (var upgrade in forgeUpgrades) {
+      final parts = upgrade.split(':');
+      if (parts.length != 2) continue;
+      final id = parts[0];
+      final k = int.tryParse(parts[1]) ?? 0;
+      if (k <= 0) continue;
+      if (id == 'sharp') extraDamage += 2 * k;
+      if (id == 'hardened') extraArmor += 2 * k;
+    }
+
     for (int i = 0; i < effects!.length; i++) {
       final effect = effects![i];
-      final currentLevel = level ?? 1;
-      final scaledValue = (effect.value * (1 + (currentLevel - 1) * 0.5))
-          .round();
+      int scaledValue = (effect.value * rarityMultiplier).round();
+      if (effect.type == 'damage') {
+        scaledValue += extraDamage;
+      } else if (effect.type == 'armor') {
+        scaledValue += extraArmor;
+      }
       final visuals = _getEffectVisuals(effect);
 
       final effectMainRow = Row(
@@ -282,12 +301,30 @@ class UiCard extends StatelessWidget {
       desc += '[$typeStr]\n';
     }
 
-    if (level == null || effects == null || effects!.isEmpty) {
+    if (effects == null || effects!.isEmpty) {
       return desc + description;
     }
 
+    int extraDamage = 0;
+    int extraArmor = 0;
+    for (var upgrade in forgeUpgrades) {
+      final parts = upgrade.split(':');
+      if (parts.length != 2) continue;
+      final id = parts[0];
+      final k = int.tryParse(parts[1]) ?? 0;
+      if (k <= 0) continue;
+      if (id == 'sharp') extraDamage += 2 * k;
+      if (id == 'hardened') extraArmor += 2 * k;
+    }
+
     for (var effect in effects!) {
-      final scaledValue = (effect.value * (1 + (level! - 1) * 0.5)).round();
+      int scaledValue = (effect.value * rarityMultiplier).round();
+      if (effect.type == 'damage') {
+        scaledValue += extraDamage;
+      } else if (effect.type == 'armor') {
+        scaledValue += extraArmor;
+      }
+
       if (effect.type == 'damage') {
         if (target == 'Tous les ennemis' || target == 'allEnemies') {
           desc += '${l10n.cardDescDamageAll(scaledValue)}\n';
@@ -361,6 +398,45 @@ class UiCard extends StatelessWidget {
             break;
         }
       }
+    }
+
+    final List<String> upgradeDescs = [];
+    final activeLocale = Localizations.localeOf(context).languageCode;
+    for (var upgrade in forgeUpgrades) {
+      final parts = upgrade.split(':');
+      if (parts.length != 2) continue;
+      final id = parts[0];
+      final k = int.tryParse(parts[1]) ?? 0;
+      if (k <= 0) continue;
+      switch (id) {
+        case 'sharp':
+          upgradeDescs.add(activeLocale == 'fr' ? 'Tranchant $k (+${2 * k} Dégâts)' : 'Sharp $k (+${2 * k} Damage)');
+          break;
+        case 'hardened':
+          upgradeDescs.add(activeLocale == 'fr' ? 'Endurci $k (+${2 * k} Armure)' : 'Hardened $k (+${2 * k} Armor)');
+          break;
+        case 'quick':
+          upgradeDescs.add(activeLocale == 'fr' ? 'Véloce $k (+$k Carte(s) piochée(s))' : 'Quick $k (+$k Card(s) drawn)');
+          break;
+        case 'eco':
+          upgradeDescs.add(activeLocale == 'fr' ? 'Économe $k (+$k Mana)' : 'Eco $k (+$k Mana)');
+          break;
+        case 'burning':
+          upgradeDescs.add(activeLocale == 'fr' ? 'Brûlant $k (Applique $k Brûlure)' : 'Burning $k (Apply $k Burn)');
+          break;
+        case 'freezing':
+          upgradeDescs.add(activeLocale == 'fr' ? 'Congelant $k (Applique $k Gel)' : 'Freezing $k (Apply $k Freeze)');
+          break;
+        case 'shocking':
+          upgradeDescs.add(activeLocale == 'fr' ? 'Surchargé $k (Applique $k Électrocution)' : 'Shocking $k (Apply $k Shock)');
+          break;
+        case 'enduring':
+          upgradeDescs.add(activeLocale == 'fr' ? 'Persistant' : 'Enduring');
+          break;
+      }
+    }
+    if (upgradeDescs.isNotEmpty) {
+      desc += '\n⚙️ Upgrades:\n${upgradeDescs.map((u) => '• $u').join('\n')}\n';
     }
 
     return desc.isNotEmpty ? desc.trim() : description;

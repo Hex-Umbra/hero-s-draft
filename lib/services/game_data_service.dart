@@ -19,6 +19,7 @@ final gameDataLoaderProvider = FutureProvider<GameDataRegistry>((ref) async {
     rootBundle.loadString('assets/data/events.json'),
     rootBundle.loadString('assets/data/passives.json'),
     rootBundle.loadString('assets/data/relics.json'),
+    rootBundle.loadString('assets/data/hero_cards.json'),
   ]);
 
   final enemiesList = jsonDecode(results[0]) as List;
@@ -28,6 +29,12 @@ final gameDataLoaderProvider = FutureProvider<GameDataRegistry>((ref) async {
   final eventsList = jsonDecode(results[4]) as List;
   final passivesList = jsonDecode(results[5]) as List;
   final relicsList = jsonDecode(results[6]) as List;
+  final heroCardsList = jsonDecode(results[7]) as List;
+
+  final allCards = [
+    ...cardsList,
+    ...heroCardsList,
+  ];
 
   return GameDataRegistry(
     enemies: enemiesList
@@ -39,7 +46,7 @@ final gameDataLoaderProvider = FutureProvider<GameDataRegistry>((ref) async {
     skills: skillsList
         .map((e) => SkillData.fromJson(e as Map<String, dynamic>))
         .toList(),
-    cards: cardsList
+    cards: allCards
         .map((e) => CardData.fromJson(e as Map<String, dynamic>))
         .toList(),
     events: eventsList

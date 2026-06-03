@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
@@ -21,7 +22,7 @@ class DeckScreen extends ConsumerWidget {
     // Grouper les cartes pour identifier les fusions possibles
     final Map<String, List<CardInstance>> groups = {};
     for (var card in masterDeck) {
-      final key = '${card.data.id}_${card.level}';
+      final key = '${card.data.id}_${card.rarity.name}';
       groups.putIfAbsent(key, () => []).add(card);
     }
 
@@ -76,14 +77,12 @@ class DeckScreen extends ConsumerWidget {
                                 description: card.data.getDescription(locale),
                                 cost: card.data.cost,
                                 target: _getTargetLabel(l10n, card.data.target),
-                                level: card.level,
+                                rarityMultiplier: card.rarityMultiplier,
+                                forgeUpgrades: card.forgeUpgrades,
                                 effects: card.data.effects,
                                 type: card.data.type,
                                 isExhaust: card.data.isExhaust,
-                                rarity: l10n.rarityLevel(
-                                  _getRarityLabel(context, card.data.rarity),
-                                  card.level,
-                                ),
+                                rarity: _getRarityLabel(context, card.rarity),
                               ),
                               Positioned(
                                 top: 5,
@@ -108,7 +107,9 @@ class DeckScreen extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        if (canMerge && allowMerge)
+                        if (card.rarity == CardRarity.unique)
+                          const SizedBox.shrink()
+                        else if (canMerge && allowMerge)
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.green,
@@ -119,7 +120,7 @@ class DeckScreen extends ConsumerWidget {
                               ),
                             ),
                             onPressed: () {
-                              _confirmMerge(context, ref, card);
+                              _confirmMerge(context, ref, card, cardList);
                             },
                             child: Text(
                               l10n.mergeLabel(3),
@@ -171,6 +172,8 @@ class DeckScreen extends ConsumerWidget {
         return l10n.rarityEpic;
       case CardRarity.legendary:
         return l10n.rarityLegendary;
+      case CardRarity.unique:
+        return 'Unique';
     }
   }
 
@@ -187,50 +190,255 @@ class DeckScreen extends ConsumerWidget {
     }
   }
 
-  void _confirmMerge(BuildContext context, WidgetRef ref, CardInstance card) {
+  void _confirmMerge(BuildContext context, WidgetRef ref, CardInstance card, List<CardInstance> duplicates) async {
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).languageCode;
     final cardName = card.data.getName(locale);
 
-    showDialog(
+    final merged = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => _MergeDialog(duplicates: duplicates, ref: ref),
+    );
+
+    if (merged == true) {
+      if (context.mounted) {
+        final nextRarityIndex = min(card.rarity.index + 1, CardRarity.values.length - 1);
+        context.showNotification(
+          l10n.deckMergeSuccess(cardName, nextRarityIndex + 1),
+          type: NotificationType.success,
+        );
+      }
+    }
+  }
+}
+
+class _MergeDialog extends StatefulWidget {
+  final List<CardInstance> duplicates;
+  final WidgetRef ref;
+
+  const _MergeDialog({
+    required this.duplicates,
+    required this.ref,
+  });
+
+  @override
+  State<_MergeDialog> createState() => _MergeDialogState();
+}
+
+class _MergeDialogState extends State<_MergeDialog> {
+  final Set<String> _selectedCardIds = {};
+  int _step = 1;
+  List<CardInstance> _selectedCards = [];
+  List<String> _consolidatedUpgrades = [];
+  final Set<String> _chosenUpgrades = {};
+  late int _capacity;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.duplicates.length == 3) {
+      _selectedCardIds.addAll(widget.duplicates.map((c) => c.uniqueId));
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _proceedToUpgrades();
+      });
+    }
+  }
+
+  void _proceedToUpgrades() {
+    _selectedCards = widget.duplicates.where((c) => _selectedCardIds.contains(c.uniqueId)).toList();
+    if (_selectedCards.length != 3) return;
+
+    final firstCard = _selectedCards[0];
+    final nextRarityIndex = min(firstCard.rarity.index + 1, CardRarity.values.length - 1);
+    _capacity = firstCard.data.baseMaxForgeUpgrades + nextRarityIndex;
+
+    final Map<String, int> consolidatedMap = {};
+    for (var card in _selectedCards) {
+      for (var upgrade in card.forgeUpgrades) {
+        final parts = upgrade.split(':');
+        if (parts.length != 2) continue;
+        final id = parts[0];
+        final tier = int.tryParse(parts[1]) ?? 0;
+        if (tier <= 0) continue;
+        consolidatedMap[id] = (consolidatedMap[id] ?? 0) + tier;
+      }
+    }
+
+    _consolidatedUpgrades = [];
+    consolidatedMap.forEach((id, tier) {
+      _consolidatedUpgrades.add('$id:$tier');
+    });
+
+    if (_consolidatedUpgrades.length <= _capacity) {
+      _performMerge(_consolidatedUpgrades);
+    } else {
+      setState(() {
+        _step = 2;
+      });
+    }
+  }
+
+  void _performMerge(List<String> upgrades) {
+    widget.ref.read(deckProvider.notifier).mergeCards(
+      _selectedCards.map((c) => c.uniqueId).toList(),
+      upgrades,
+    );
+    Navigator.of(context).pop(true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
+
+    if (_step == 1) {
+      return AlertDialog(
         backgroundColor: const Color(0xFF2A2A3D),
         title: Text(
           l10n.confirmMerge,
           style: const TextStyle(color: Colors.white),
         ),
-        content: Text(
-          l10n.deckMergeConfirm(cardName, card.level, card.level + 1),
-          style: const TextStyle(color: Colors.white70),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Sélectionnez exactement 3 cartes à fusionner (Sélectionné: ${_selectedCardIds.length}/3)',
+                style: const TextStyle(color: Colors.white70),
+              ),
+              const SizedBox(height: 12),
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: widget.duplicates.length,
+                  itemBuilder: (context, index) {
+                    final card = widget.duplicates[index];
+                    final isSelected = _selectedCardIds.contains(card.uniqueId);
+                    final upgradesText = card.forgeUpgrades.isEmpty
+                        ? '(Sans amélioration)'
+                        : card.forgeUpgrades.join(', ');
+                    return CheckboxListTile(
+                      title: Text(
+                        '${card.data.getName(locale)} (${card.rarity.name.toUpperCase()})',
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                      subtitle: Text(
+                        'Forge: $upgradesText',
+                        style: const TextStyle(color: Colors.white54),
+                      ),
+                      value: isSelected,
+                      activeColor: Colors.green,
+                      checkColor: Colors.black,
+                      onChanged: (val) {
+                        setState(() {
+                          if (val == true) {
+                            if (_selectedCardIds.length < 3) {
+                              _selectedCardIds.add(card.uniqueId);
+                            }
+                          } else {
+                            _selectedCardIds.remove(card.uniqueId);
+                          }
+                        });
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
+            onPressed: () => Navigator.of(context).pop(),
             child: Text(
               l10n.cancel,
               style: const TextStyle(color: Colors.white54),
             ),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-            onPressed: () {
-              ref
-                  .read(deckProvider.notifier)
-                  .mergeCards(card.data.id, card.level);
-              Navigator.of(ctx).pop();
-              context.showNotification(
-                l10n.deckMergeSuccess(cardName, card.level + 1),
-                type: NotificationType.success,
-              );
-            },
-            child: Text(
-              l10n.merge,
-              style: const TextStyle(color: Colors.white),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _selectedCardIds.length == 3 ? Colors.green : Colors.grey,
             ),
+            onPressed: _selectedCardIds.length == 3 ? _proceedToUpgrades : null,
+            child: const Text('Continuer'),
           ),
         ],
-      ),
-    );
+      );
+    } else {
+      return AlertDialog(
+        backgroundColor: const Color(0xFF2A2A3D),
+        title: const Text(
+          'Capacité de Forge Dépassée',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'La rareté supérieure ne supporte que $_capacity améliorations.\nChoisissez lesquelles conserver (Sélectionné: ${_chosenUpgrades.length}/$_capacity) :',
+                style: const TextStyle(color: Colors.white70),
+              ),
+              const SizedBox(height: 12),
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: _consolidatedUpgrades.length,
+                  itemBuilder: (context, index) {
+                    final upgrade = _consolidatedUpgrades[index];
+                    final parts = upgrade.split(':');
+                    final id = parts[0];
+                    final tier = parts[1];
+                    final isSelected = _chosenUpgrades.contains(upgrade);
+                    return CheckboxListTile(
+                      title: Text(
+                        '${id.toUpperCase()} (Niveau $tier)',
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                      value: isSelected,
+                      activeColor: Colors.green,
+                      checkColor: Colors.black,
+                      onChanged: (val) {
+                        setState(() {
+                          if (val == true) {
+                            if (_chosenUpgrades.length < _capacity) {
+                              _chosenUpgrades.add(upgrade);
+                            }
+                          } else {
+                            _chosenUpgrades.remove(upgrade);
+                          }
+                        });
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(
+              l10n.cancel,
+              style: const TextStyle(color: Colors.white54),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _chosenUpgrades.length <= _capacity ? Colors.green : Colors.grey,
+            ),
+            onPressed: _chosenUpgrades.isNotEmpty && _chosenUpgrades.length <= _capacity ? () {
+              _performMerge(_chosenUpgrades.toList());
+            } : null,
+            child: const Text('Fusionner'),
+          ),
+        ],
+      );
+    }
   }
 }

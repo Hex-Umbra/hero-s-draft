@@ -632,6 +632,10 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
         int dmg =
             (_currentState!.effectiveAttaque * (skill.effectValue / 100.0))
                 .round();
+        final random = Random();
+        if (random.nextInt(100) < _currentState!.heroStats.effectiveCritChance) {
+          dmg = (dmg * _currentState!.heroStats.critMultiplier).round();
+        }
         if (dmg < 1) dmg = 1;
         for (var enemy in enemyCards.toList()) {
           onUpdateEnemyStats(enemy.id, enemy.stats.takeDamage(dmg));
@@ -640,12 +644,20 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
         int dmg =
             (_currentState!.effectiveAttaque * (skill.effectValue / 100.0))
                 .round();
+        final random = Random();
+        if (random.nextInt(100) < _currentState!.heroStats.effectiveCritChance) {
+          dmg = (dmg * _currentState!.heroStats.critMultiplier).round();
+        }
         onUpdateEnemyStats(
           selectedEnemy!.id,
           selectedEnemy!.stats.takeDamage(dmg),
         );
       } else if (skill.effectType == 'damage_pierce') {
         int dmg = _currentState!.effectiveAttaque;
+        final random = Random();
+        if (random.nextInt(100) < _currentState!.heroStats.effectiveCritChance) {
+          dmg = (dmg * _currentState!.heroStats.critMultiplier).round();
+        }
         int stolenArmor =
             (selectedEnemy!.stats.armure * (skill.effectValue / 100.0)).round();
         int newPv = selectedEnemy!.stats.currentPv - dmg;

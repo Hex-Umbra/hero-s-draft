@@ -91,14 +91,14 @@ Tous les contrôleurs héritent de `StateNotifier<T>` et exposent des états imm
 
 **Provider** : `StateNotifierProvider<CombatController, CombatState>` — standalone (pas de Ref).
 
-**État `CombatState`** : `enemies` (List\<EnemyInstance\>), `turnPhase` (TurnPhase: player/enemy), `turnCount`, `selectedEnemyId`, `isCombatEnded`, `isVictory`.
+**État `CombatState`** : `enemies` (List\<EnemyInstance\> actifs, max 5 slots), `pendingEnemies` (List\<EnemyInstance\> en réserve), `defeatedEnemies` (List\<EnemyInstance\> éliminés), `turnPhase` (TurnPhase: player/enemy), `turnCount`, `selectedEnemyId`, `isCombatEnded`, `isVictory`.
 
 **Responsabilités** :
-- **Initialisation** : `initializeCombat(level, nodeType, availableEnemies)` — calcule le combat level dynamique $EnemyLevel = PlayerLevel + (Act - 1) \times 2 + NodeModifier$, applique multiplicateurs de scaling de caractéristiques (+12% HP/lvl, +8% ATK/lvl), et applique les coefficients boss (3x HP)/élite (1.5x) avant de roll les intentions initiales.
+- **Initialisation** : `initializeCombat(...)` — Génère la liste totale des ennemis via `EncounterSystem.generateEnemiesForLevel()`. Instancie les stats des ennemis en appliquant les multiplicateurs de niveau (+6% HP/lvl, +4% ATK/lvl) et d'acte (+20% HP/acte, +15% ATK/acte), ainsi que les modificateurs de nœuds (3x HP/2x ATK pour boss, 1.5x pour élite). Les 5 premiers ennemis sont placés dans `enemies` (câblés avec une intention de départ), les suivants sont placés dans `pendingEnemies`.
 - **Pipeline de jeu de carte** : `applyPlayerCardPlay(card, RunController, DeckNotifier)` — `EffectResolver.resolveCard()` → `deck.playCard()` → `TraitSystem.onCardPlayed()` → reliques `onCardPlayed` → `_cleanDeadEnemies()`.
 - **Intentions ennemies** : `resolveEnemyIntent(enemyId, RunController)` — switch sur IntentType : attack → `runController.takeDamage`, defend → armure, buff → strength(99 tours), debuffDeck → no-op.
-- **Phases** : `startEnemyTurn(RunController)` — phase enemy, processing poison/regen sur chaque ennemi, tick statuts, clean morts. `endEnemyTurn()` — re-roll toutes les intentions, phase player, incrémente turnCount.
-- **Nettoyage** : `_cleanDeadEnemies()` — filtre HP ≤ 0, `runController.onEnemyKilled()` par kill (→ reliques), auto-sélection du prochain ennemi, flags `isCombatEnded`/`isVictory`.
+- **Phases** : `startEnemyTurn(RunController)` — phase enemy, processing poison/regen/burn sur chaque ennemi actif, tick statuts, clean morts. `endEnemyTurn()` — re-roll toutes les intentions pour les ennemis actifs, phase player, incrémente turnCount.
+- **Nettoyage et Renforcement** : `_cleanDeadEnemies(RunController)` — Filtre les ennemis actifs décédés (HP ≤ 0) et les déplace dans `defeatedEnemies` en appelant `RunController.onEnemyKilled()` (déclencheurs de reliques). Pour chaque ennemi mort, si `enemies.length < 5` et que `pendingEnemies` n'est pas vide, transfère le premier ennemi en attente de la réserve vers le board actif (et lance `_rollIntent` sur lui). Met à jour la sélection de cible et prononce la victoire uniquement si les listes active (`enemies`) et de réserve (`pendingEnemies`) sont toutes deux vides.
 
 **Logique de roll d'intentions** (`_rollIntent`) :
 - Si l'ennemi a des `intents` prédéfinis : cycle séquentiel (modulo length, via `intentStep`).
@@ -154,21 +154,56 @@ Tous les contrôleurs héritent de `StateNotifier<T>` et exposent des états imm
 
 ## 3. Systèmes Transversaux (`lib/game/systems/`)
 
-### 3.1. `EncounterSystem` — Générateur de Combats
+### 3.1. `EncounterSystem` — Générateur de Combats & Courbes d'Équilibrage
 
-**Type** : Classe statique utilitaire (pas de provider, pas d'état).
+**Type** : Classe statique utilitaire (sans état, appelée lors de l'initialisation du combat).
 
-**Méthode** : `static generateEnemiesForLevel(int level, List<EnemyData> availableEnemies, {MapNodeType? nodeType}) → List<EnemyData>`
+**Méthode** :
+```dart
+static List<EnemyData> generateEnemiesForLevel(
+  int level,
+  List<EnemyData> availableEnemies, {
+  MapNodeType? nodeType,
+  int playerLevel = 1,
+  int act = 1,
+  int playerMaxHp = 100,
+  int playerAttaque = 0,
+  int playerMaxMana = 3,
+  int playerRelicsCount = 0,
+})
+```
 
-**Logique de dimensionnement** :
-| Type de nœud | Nombre d'ennemis | Multiplicateur Stats |
-|:---|:---|:---|
-| Boss | Toujours 1 | 3.0× HP, 2.0× attack |
-| Élite | 2-3 | 1.5× HP, 1.5× attack |
-| Combat (level ≤5) | 1-2 | 1.0× (base) |
-| Combat (level >5) | 1-3 | 1.0× (base) |
+**Logique de Dimensionnement et Algorithme d'Équilibrage** :
+1. **Évaluation de la Puissance Réelle du Joueur (`PlayerPower`)** :
+   $$\text{PlayerPower} = \text{playerMaxHp} + (\text{playerAttaque} \times 10.0) + (\text{playerMaxMana} \times 15.0) + (\text{playerRelicsCount} \times 5.0)$$
+2. **Puissance Théorique Attendue (`ExpectedPower`)** :
+   $$\text{ExpectedPower} = 145.0 + ((\text{playerLevel} - 1) \times 15.0) + ((\text{act} - 1) \times 20.0)$$
+3. **Budget de Base théorique (`BaseBudget`)** :
+   $$\text{BaseBudget} = 40.0 + ((\text{playerLevel} - 1) \times 10.0) + ((\text{act} - 1) \times 25.0)$$
+4. **Calcul du Budget Final (`FinalBudget`)** :
+   Le ratio de puissance est pondéré par un facteur d'amortissement de $0.5$ pour stabiliser la courbe :
+   $$\text{PowerRatio} = \frac{\text{PlayerPower}}{\text{ExpectedPower}}$$
+   $$\text{PowerModifier} = 1.0 + (\text{PowerRatio} - 1.0) \times 0.5$$
+   $$\text{FinalBudget} = \text{BaseBudget} \times \text{PowerModifier} \times \text{NodeMultiplier}$$
+   *(Avec `NodeMultiplier` = 1.0 pour normal, 1.5 pour élite, 2.0 pour boss)*
 
-Les ennemis sont piochés aléatoirement dans le pool disponible (doublons possibles). Le scaling par level est appliqué dans `CombatController.initializeCombat()`.
+5. **Formule du Niveau Ennemi (`getEnemyLevel`)** :
+   $$EnemyLevel = \max(1, PlayerLevel + (Act - 1) \times 2 + NodeModifier)$$
+   *(Avec `NodeModifier` = 0 pour normal, 1 pour élite, 2 pour boss)*
+
+6. **Formule du CombatRating de l'Ennemi** :
+   Le coût de menace de chaque type d'ennemi est évalué à l'aide de ses statistiques simulées mises à l'échelle pour le niveau de combat :
+   $$\text{CombatRating} = (\text{tier} \times 10.0) + \text{HP\_Scalé} + \text{Armure\_Scalée} + \text{Dégâts\_Scalés} \times \left(1.0 + \frac{\text{critChance}}{100.0}\right)$$
+   Où :
+   - $$\text{HP\_Scalé} = \text{round}(\text{maxHp} \times \text{HpMultiplier})$$ avec $\text{HpMultiplier} = (1.0 + 0.06 \times (EnemyLevel - 1)) \times (1.0 + 0.20 \times (Act - 1)) \times NodeMultiplier$
+   - $$\text{Dégâts\_Scalés} = \text{round}(\text{baseDamage} \times \text{DamageMultiplier})$$ avec $\text{DamageMultiplier} = (1.0 + 0.04 \times (EnemyLevel - 1)) \times (1.0 + 0.15 \times (Act - 1)) \times NodeMultiplier$
+
+7. **Sélection Procédurale par Budget** :
+   - Initialise `remainingBudget = FinalBudget`.
+   - Boucle tant que le budget est positif et que la limite de 10 monstres (actifs + réserve) n'est pas atteinte.
+   - Filtre les candidats dont le `CombatRating` individuel est inférieur ou égal à `remainingBudget`.
+   - Si des candidats existent, tire aléatoirement l'un d'eux, l'ajoute au combat et déduit sa valeur du budget.
+   - **Fallback** : Si aucun monstre ne rentre (budget insuffisant pour le plus petit monstre), ajoute d'office le monstre au plus petit `CombatRating` pour garantir au moins une menace.
 
 ### 3.2. `TraitSystem` — Passifs de Héros
 
@@ -210,11 +245,12 @@ Les ennemis sont piochés aléatoirement dans le pool disponible (doublons possi
 ```dart
 totalDamage = baseDamage + attackerStats.effectiveAttaque
 if weakness status: totalDamage *= 0.75  // Réduction de 25%
+if critical hit roll succeeds (random(100) < effectiveCritChance):
+  totalDamage *= critMultiplier          // Amplification coup critique (x1.5 par défaut)
 ```
-> **⚠️ Absence notable** : Le statut `vulnerable` n'est PAS pris en compte dans ce calcul malgré sa déclaration dans le système de types.
+> **Note sur la vulnérabilité** : Le statut `vulnerable` est appliqué sur la cible au moment de la résolution de l'effet dans `resolveCard()`, amplifiant les dégâts finaux de $+50\%$ (`dmg = (dmg * 1.5).round()`).
 
-**Statuts créables et gérés** : `poison`, `strength`, `weakness`, `strength_regen`, `armor_regen`, `burn` (Brûlure), `freeze` (Gel), `shock` (Électrocution).
-**Statut NON géré** : `vulnerable` (déclaré et créable, mais absent de la formule de calcul effectif de `_calculateDamage()`).
+**Statuts créables et gérés** : `poison`, `strength`, `weakness`, `strength_regen`, `armor_regen`, `burn` (Brûlure), `freeze` (Gel), `shock` (Électrocution), `vulnerable` (Vulnérable), `crit_chance` (Chance de critique temporaire).
 
 ---
 
@@ -298,7 +334,7 @@ Pour éliminer la condition de concurrence visuelle (race condition) où l'état
 |:---|:---|:---|:---|
 | `HomeScreen` | `ConsumerWidget` | `ref.watch(gameDataLoaderProvider)` | Écran d'accueil, chargement données, boutons "New Game" / "Dictionary" |
 | `HeroSelectionScreen` | `ConsumerWidget` | `ref.watch(gameDataLoaderProvider)` | Affiche 3 héros, déclenche `startNewRun()` |
-| `StarterDeckDraftScreen` | `ConsumerStatefulWidget` | `ref.read(deckProvider.notifier)` | Vagues de 3 cartes, construction du deck initial via `UiCard` |
+| `StarterDeckDraftScreen` | `ConsumerStatefulWidget` | `ref.watch(gameDataLoaderProvider)`, `ref.read(deckProvider.notifier)` | Grille de sélection de 5 cartes globales parmi le catalogue complet (sans limitation de pool de 10 cartes) + cartes de classe uniques chargées via compétences |
 | `MapScreen` | `ConsumerStatefulWidget` | `ref.watch(runProvider)`, `ref.watch(inventoryProvider)` | **God Class (2471 lignes)** — CustomPainter, pan/zoom, tooltips, légende, validation, navigation |
 | `GameScreen` | `ConsumerStatefulWidget` | Tous les providers | **God Class (1667 lignes)** — embed `GameWidget<HerosDraftGame>`, 5 overlays privés, orchestration combat |
 | `ShopScreen` | `ConsumerWidget` | `ref.watch(inventoryProvider)` | Achat cartes/reliques via `UiCard` |
@@ -462,7 +498,7 @@ Pour augmenter la sensation d'excitation et de "butin" lors de l'acquisition de 
 | `skillProvider` | `StateNotifierProvider<SkillController, SkillState>` | `SkillState` | Non | Cooldowns des 2 compétences héroïques |
 | `eventProvider` | `StateNotifierProvider<EventController, EventState>` | `EventState` | Non | Événement narratif actif, choix sélectionné |
 | `shopProvider` | `StateNotifierProvider<ShopController, ShopState>` | `ShopState` | Non | Cartes en vente, état d'achat heal |
-| `gameDataLoaderProvider` | `FutureProvider<GameDataRegistry>` | `GameDataRegistry` | Non | Chargement asynchrone des 7 JSON d'assets |
+| `gameDataLoaderProvider` | `FutureProvider<GameDataRegistry>` | `GameDataRegistry` | Non | Chargement asynchrone des 8 JSON d'assets |
 
 ### 6.2. Principes Appliqués
 
@@ -493,11 +529,11 @@ Pour augmenter la sensation d'excitation et de "butin" lors de l'acquisition de 
 
 2. JOUEUR JOUE UNE CARTE
    └→ CombatController.applyPlayerCardPlay(card, runCtrl, deckNotif)
-       ├→ EffectResolver.resolveCard() → consomme mana, applique effets (dégâts augmentés par le statut `shock` de l'ennemi)
+       ├→ EffectResolver.resolveCard() → consomme mana, applique effets (dégâts augmentés par shock/vulnerable, jet de coup critique pour dégâts/soins)
        ├→ DeckNotifier.playCard() → main → défausse (ou exhaust)
        ├→ TraitSystem.onCardPlayed(runCtrl, card)
        ├→ applyRelics(onCardPlayed)
-       └→ _cleanDeadEnemies() → onEnemyKilled() → reliques
+       └→ _cleanDeadEnemies() → onEnemyKilled() → si ennemis actifs < 5 et réserve non vide, transfère le premier ennemi de pendingEnemies vers enemies et roule son intention.
 
 3. FIN DE TOUR JOUEUR
    └→ HerosDraftGame.executeTurn()
@@ -506,12 +542,12 @@ Pour augmenter la sensation d'excitation et de "butin" lors de l'acquisition de 
 4. PHASE ENNEMIE
    ├→ CombatController.startEnemyTurn()
    │   ├→ Pour chaque ennemi: process poison/regen/burn (Brûlure), tick statuts
-   │   └→ _cleanDeadEnemies() (morts par poison ou brûlure)
-   ├→ Pour chaque ennemi vivant:
+   │   └→ _cleanDeadEnemies() (morts par poison ou brûlure, avec transfert de réserve si nécessaire)
+   ├→ Pour chaque ennemi actif vivant:
    │   ├→ Animation (dash/buff)
-   │   └→ resolveEnemyIntent() → dégâts héros (divisés par 2 si l'ennemi est sous statut `freeze`) / armure / strength
+   │   └→ resolveEnemyIntent() → dégâts héros (divisés par 2 si gelé, augmentés par vulnerable, jet de coup critique) / armure / strength
    └→ CombatController.endEnemyTurn()
-       ├→ Re-roll toutes les intentions
+       ├→ Re-roll toutes les intentions pour les ennemis actifs
        ├→ Phase → player
        └→ turnCount++
 
@@ -697,4 +733,101 @@ Dans le cadre des améliorations de la branche `feat/tutorial`, le module de tut
 - **Ciblage Interactif en Deux Phases** : À l'étape 6 (`TutorialPlayCardWidget`), la logique de jeu de cartes impose au joueur de réaliser successivement une action offensive (glisser/déposer la carte d'attaque sur le Slime) puis une action défensive (glisser la carte d'armure sur le Héros). Ce comportement est géré via une machine à états simple (`_targetingPhase`) intégrée au widget.
 - **Info-bulles (Tooltips) de Cartes (Étape 5)** : Le widget `TutorialCardsWidget` utilise de vrais rendus de cartes vectorielles sur Canvas et affiche des infobulles descriptives et localisées (`TutorialTooltip`) lors du survol ou du toucher, évitant ainsi d'encombrer le layout principal tout en clarifiant les règles.
 
+---
 
+## 10. Architecture du Système de Forge et de Fusion de Cartes (Forge & Card Merge Technical Design)
+
+Le système de Forge et de Fusion offre une progression non-linéaire des cartes en séparant proprement la logique métier (calculs de probabilités, relances et consolidation) du rendu visuel de l'interface utilisateur.
+
+### 10.1. Modélisation et Résolution de la Forge (`ForgeUpgradeDialog`)
+
+Le dialogue de forge `ForgeUpgradeDialog` (affiché via `RestScreen`) manipule des structures éphémères représentant les choix d'améliorations avant validation finale :
+
+1. **Représentation des Améliorations** :
+   Les améliorations de forge sont représentées sous forme de chaînes formatées `"upgradeId:tier"` stockées dans la liste `CardInstance.forgeUpgrades` (ex: `["sharp:2", "quick:1"]`).
+   
+2. **Génération Probabiliste des Options** :
+   À l'initialisation de la forge pour une carte donnée, la classe `ForgeSlot` génère de 1 à 5 options indépendantes (tirages de Bernoulli successifs) :
+   - Slot 1 : $100\%$ (Garanti)
+   - Slot 2 : $50\%$
+   - Slot 3 : $25\%$
+   - Slot 4 : $10\%$
+   - Slot 5 : $2\%$
+
+3. **Filtrage des Pools par Rareté (Clamping)** :
+   Chaque slot valide tire une amélioration depuis l'un des trois pools exclusifs de rareté :
+   - **Pool Commun (`common`)** : Statuts offensifs de base (brûlure `burning`, gel `freezing`, électrocution `shocking` limités aux cartes de type `attack`) ou bonus statistiques simples (`sharp` pour dégâts, `hardened` pour armure).
+   - **Pool Atypique (`uncommon`)** : Amélioration de pioche (`quick`).
+   - **Pool Rare (`rare`)** : Réduction permanente de coût mana (`eco`) ou effet persistant `enduring` (qui désactive `isExhaust: true`), réservé aux cartes non-pouvoir exhaustibles.
+   
+   Le tirage probabiliste d'un pool dépend de la rareté de la carte :
+   - Carte Commune : $100\%$ Commun.
+   - Carte Atypique : $80\%$ Commun, $20\%$ Atypique.
+   - Carte Rare : $60\%$ Commun, $30\%$ Atypique, $10\%$ Rare.
+   - Carte Épique : $40\%$ Commun, $40\%$ Atypique, $20\%$ Rare.
+   - Carte Légendaire : $20\%$ Commun, $50\%$ Atypique, $30\%$ Rare.
+
+4. **Résolution du Tier** :
+   Chaque amélioration se voit attribuer un Tier (I, II ou III) selon une distribution de probabilité pondérée :
+   - Tier I : $80\%$
+   - Tier II : $15\%$
+   - Tier III : $5\%$
+
+5. **Coût exponentiel et Reroll individuel** :
+   Le joueur peut relancer individuellement les options proposées pour chaque slot en dépensant de l'or de l'inventaire via `InventoryController`. Le coût en or d'une relance est exponentiel et calculé localement sur chaque slot :
+   $$\text{Coût Reroll} = \text{round}(20 \times 1.25^n)$$
+   où $n$ représente le nombre total de relances appliquées sur ce slot spécifique.
+
+```mermaid
+graph TD
+    Start[Ouvrir RestScreen -> Option Forge] --> SelectCard[Sélectionner Carte]
+    SelectCard --> Dialog[Ouvrir ForgeUpgradeDialog]
+    Dialog --> GenSlots[Générer 1 à 5 Slots]
+    GenSlots --> RollSlots[Tirer Upgrade & Tier par Slot]
+    RollSlots --> Loop[Afficher Options de Forge]
+    Loop --> Reroll[Clic Reroll Slot i]
+    Reroll --> Cost[Calculer Coût: 20 * 1.25^n]
+    Cost --> CheckGold{Assez d'Or ?}
+    CheckGold -- Oui --> SpendGold[Consommer Or via InventoryProvider]
+    SpendGold --> RollAgain[Re-tirer Upgrade Slot i]
+    RollAgain --> Loop
+    CheckGold -- Non --> Alert[Désactiver bouton Reroll]
+    Loop --> SelectUpgrade[Sélectionner Option & Valider]
+    SelectUpgrade --> Apply[Ajouter upgradeId:tier à la carte]
+    Apply --> End[Sauvegarder dans DeckProvider]
+```
+
+### 10.2. Fusion Interactive et Consolidation des Upgrades (`DeckNotifier.mergeCards`)
+
+La fusion interactive permet au joueur de fusionner 3 exemplaires d'une carte à la même rareté vers la rareté supérieure tout en préservant leurs améliorations :
+
+1. **Validation 3→1** :
+   La méthode `mergeCards` de `DeckNotifier` reçoit les identifiants uniques des 3 cartes sélectionnées. Elle valide que ces 3 cartes existent dans le deck, partagent le même `baseCardId` et ont la même rareté courante.
+
+2. **Consolidation des Upgrades** :
+   Le système rassemble toutes les améliorations de forge des 3 cartes consommées. Si plusieurs cartes possèdent la même amélioration (même ID d'upgrade), leurs Tiers sont cumulés (ex: `sharp:1` + `sharp:2` = `sharp:3`). Les améliorations uniques sont simplement copiées.
+
+3. **Capacité Limite par Rareté** :
+   Chaque palier de rareté possède une capacité d'amélioration maximale :
+   $$\text{Capacité} = baseMaxForgeUpgrades + rarityIndex$$
+   - Commune ($rarityIndex=0$) : 2 upgrades max.
+   - Légendaire ($rarityIndex=4$) : 6 upgrades max.
+   
+   Si la liste des améliorations consolidées dépasse la capacité de la rareté supérieure ciblée par la fusion, l'interface utilisateur impose un choix d'héritage interactif pour sélectionner précisément les upgrades à conserver.
+
+4. **Modificateurs de Rareté** :
+   Lors de la résolution d'une carte en combat (`EffectResolver`), les valeurs de base (dégâts, blocage) sont multipliées par un coefficient lié à sa rareté active, remplaçant la progression par niveau numérique. Les upgrades de forge (ex. ajouter +X dégâts par Tier de `sharp`) s'additionnent ensuite au résultat mis à l'échelle.
+
+```mermaid
+graph TD
+    SelectMerge[Sélectionner 3 Cartes Identiques] --> CheckRarity{Même Rareté ?}
+    CheckRarity -- Oui --> Consolidate[Cumuler Upgrades & Additionner Tiers]
+    CheckRarity -- Non --> Fail[Erreur de Validation]
+    Consolidate --> CheckCap{Nb Upgrades > Capacité Rareté + 1 ?}
+    CheckCap -- Oui --> UIInherit[Afficher Choix d'Héritage Interactif]
+    UIInherit --> Clamped[Filtrer Upgrades Choisis]
+    CheckCap -- Non --> Save[Garder tous les Upgrades]
+    Clamped --> AddMerged[Retirer 3 cartes / Ajouter 1 carte Rarity+1]
+    Save --> AddMerged
+    AddMerged --> DeckUpdate[Notifier DeckProvider & Sauvegarder]
+```

@@ -12,6 +12,8 @@ class EntityStats {
   final int level;
   final int xp;
   final int xpToNextLevel;
+  final int critChance;
+  final double critMultiplier;
   final List<StatusEffect> statuses;
 
   const EntityStats({
@@ -26,6 +28,8 @@ class EntityStats {
     this.level = 1,
     this.xp = 0,
     this.xpToNextLevel = 100,
+    this.critChance = 0,
+    this.critMultiplier = 1.5,
     this.statuses = const [],
   });
 
@@ -41,6 +45,8 @@ class EntityStats {
     int? level,
     int? xp,
     int? xpToNextLevel,
+    int? critChance,
+    double? critMultiplier,
     List<StatusEffect>? statuses,
   }) {
     return EntityStats(
@@ -55,6 +61,8 @@ class EntityStats {
       level: level ?? this.level,
       xp: xp ?? this.xp,
       xpToNextLevel: xpToNextLevel ?? this.xpToNextLevel,
+      critChance: critChance ?? this.critChance,
+      critMultiplier: critMultiplier ?? this.critMultiplier,
       statuses: statuses ?? this.statuses,
     );
   }
@@ -79,6 +87,8 @@ class EntityStats {
       level: json['level'] as int? ?? 1,
       xp: json['xp'] as int? ?? 0,
       xpToNextLevel: json['xpToNextLevel'] as int? ?? 100,
+      critChance: json['critChance'] as int? ?? 0,
+      critMultiplier: (json['critMultiplier'] as num?)?.toDouble() ?? 1.5,
       statuses: parsedStatuses,
     );
   }
@@ -95,6 +105,8 @@ class EntityStats {
     'level': level,
     'xp': xp,
     'xpToNextLevel': xpToNextLevel,
+    'critChance': critChance,
+    'critMultiplier': critMultiplier,
     'statuses': statuses.map((s) => s.toJson()).toList(),
   };
 
@@ -115,8 +127,16 @@ class EntityStats {
   /// Décrémente la durée des statuts et supprime ceux expirés
   EntityStats tickStatuses() {
     List<StatusEffect> newStatuses = statuses
-        .map((s) => s.copyWith(duration: s.duration - 1))
-        .where((s) => s.duration > 0)
+        .map((s) {
+          if (s.id == 'burn') {
+            return s.copyWith(
+              value: s.value - 1,
+              duration: s.duration - 1,
+            );
+          }
+          return s.copyWith(duration: s.duration - 1);
+        })
+        .where((s) => s.duration > 0 && (s.id != 'burn' || s.value > 0))
         .toList();
 
     return copyWith(statuses: newStatuses);
@@ -131,6 +151,16 @@ class EntityStats {
       }
     }
     return attaque + bonus;
+  }
+
+  int get effectiveCritChance {
+    int bonus = 0;
+    for (var status in statuses) {
+      if (status.id == 'crit_chance') {
+        bonus += status.value;
+      }
+    }
+    return critChance + bonus;
   }
 
   EntityStats takeDamage(int amount) {

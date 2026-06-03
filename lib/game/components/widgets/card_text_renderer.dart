@@ -122,10 +122,26 @@ class CardTextRenderer {
       badges.clear();
       final heroAttack = card.game.heroCard?.stats.effectiveAttaque ?? 0;
 
+      int extraDamage = 0;
+      int extraArmor = 0;
+      for (var upgrade in card.card.forgeUpgrades) {
+        final parts = upgrade.split(':');
+        if (parts.length != 2) continue;
+        final id = parts[0];
+        final k = int.tryParse(parts[1]) ?? 0;
+        if (k <= 0) continue;
+        if (id == 'sharp') extraDamage += 2 * k;
+        if (id == 'hardened') extraArmor += 2 * k;
+      }
+
       for (int i = 0; i < card.card.data.effects.length; i++) {
         final effect = card.card.data.effects[i];
-        final scaledValue = (effect.value * (1 + (card.card.level - 1) * 0.5))
-            .round();
+        int scaledValue = (effect.value * card.card.rarityMultiplier).round();
+        if (effect.type == 'damage') {
+          scaledValue += extraDamage;
+        } else if (effect.type == 'armor') {
+          scaledValue += extraArmor;
+        }
 
         int valueToDisplay = scaledValue;
         if (effect.type == 'damage') {
@@ -380,9 +396,26 @@ class CardTextRenderer {
     String desc = '';
     final heroAttack = card.game.heroCard?.stats.effectiveAttaque ?? 0;
 
+    int extraDamage = 0;
+    int extraArmor = 0;
+    for (var upgrade in card.card.forgeUpgrades) {
+      final parts = upgrade.split(':');
+      if (parts.length != 2) continue;
+      final id = parts[0];
+      final k = int.tryParse(parts[1]) ?? 0;
+      if (k <= 0) continue;
+      if (id == 'sharp') extraDamage += 2 * k;
+      if (id == 'hardened') extraArmor += 2 * k;
+    }
+
     for (var effect in card.card.data.effects) {
-      final scaledValue = (effect.value * (1 + (card.card.level - 1) * 0.5))
-          .round();
+      int scaledValue = (effect.value * card.card.rarityMultiplier).round();
+      if (effect.type == 'damage') {
+        scaledValue += extraDamage;
+      } else if (effect.type == 'armor') {
+        scaledValue += extraArmor;
+      }
+
       if (effect.type == 'damage') {
         final totalDmg = scaledValue + heroAttack;
         if (card.card.data.target == CardTarget.allEnemies) {
@@ -454,6 +487,46 @@ class CardTextRenderer {
     if (desc.isEmpty) {
       desc = card.card.data.getDescription(card.activeLocale);
     }
+
+    final List<String> upgradeDescs = [];
+    final activeLocale = card.activeLocale;
+    for (var upgrade in card.card.forgeUpgrades) {
+      final parts = upgrade.split(':');
+      if (parts.length != 2) continue;
+      final id = parts[0];
+      final k = int.tryParse(parts[1]) ?? 0;
+      if (k <= 0) continue;
+      switch (id) {
+        case 'sharp':
+          upgradeDescs.add(activeLocale == 'fr' ? 'Tranchant $k (+${2 * k} Dégâts)' : 'Sharp $k (+${2 * k} Damage)');
+          break;
+        case 'hardened':
+          upgradeDescs.add(activeLocale == 'fr' ? 'Endurci $k (+${2 * k} Armure)' : 'Hardened $k (+${2 * k} Armor)');
+          break;
+        case 'quick':
+          upgradeDescs.add(activeLocale == 'fr' ? 'Véloce $k (+$k Carte(s) piochée(s))' : 'Quick $k (+$k Card(s) drawn)');
+          break;
+        case 'eco':
+          upgradeDescs.add(activeLocale == 'fr' ? 'Économe $k (+$k Mana)' : 'Eco $k (+$k Mana)');
+          break;
+        case 'burning':
+          upgradeDescs.add(activeLocale == 'fr' ? 'Brûlant $k (Applique $k Brûlure)' : 'Burning $k (Apply $k Burn)');
+          break;
+        case 'freezing':
+          upgradeDescs.add(activeLocale == 'fr' ? 'Congelant $k (Applique $k Gel)' : 'Freezing $k (Apply $k Freeze)');
+          break;
+        case 'shocking':
+          upgradeDescs.add(activeLocale == 'fr' ? 'Surchargé $k (Applique $k Électrocution)' : 'Shocking $k (Apply $k Shock)');
+          break;
+        case 'enduring':
+          upgradeDescs.add(activeLocale == 'fr' ? 'Persistant' : 'Enduring');
+          break;
+      }
+    }
+    if (upgradeDescs.isNotEmpty) {
+      desc += '\n⚙️ Upgrades:\n${upgradeDescs.map((u) => '• $u').join('\n')}\n';
+    }
+
     return desc.trim();
   }
 

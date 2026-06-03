@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
@@ -8,6 +7,7 @@ import '../../models/card_instance.dart';
 import '../../models/data/card_data.dart';
 import '../../models/data/hero_data.dart';
 import '../../models/data/passive_data.dart';
+import '../../models/data/hero_skills_link.dart';
 import '../../services/game_data_service.dart';
 import '../widgets/ui_card.dart';
 import 'map_screen.dart';
@@ -53,89 +53,9 @@ class _StarterDeckDraftScreenState
         )
         .toList();
 
-    if (globalCards.isEmpty) {
-      _draftPool = [];
-      return;
-    }
-
-    final rng = Random();
-    final List<CardData> pool = [];
-    final Map<String, int> cardCounts = {};
-
-    // 2. Tirer 10 cartes en respectant les raretés
-    for (int i = 0; i < 10; i++) {
-      CardData? chosenCard;
-      int attempts = 0;
-
-      while (chosenCard == null && attempts < 50) {
-        attempts++;
-        final rarity = _rollRarity(rng);
-
-        // Filtrer les cartes globales de cette rareté
-        var matchingCards = globalCards
-            .where((c) => c.rarity == rarity)
-            .toList();
-
-        // Si aucune carte de cette rareté n'existe, on tente les raretés inférieures en cascade
-        if (matchingCards.isEmpty) {
-          final fallbackOrder = [
-            CardRarity.epic,
-            CardRarity.rare,
-            CardRarity.uncommon,
-            CardRarity.common,
-          ];
-          for (var fallbackRarity in fallbackOrder) {
-            matchingCards = globalCards
-                .where((c) => c.rarity == fallbackRarity)
-                .toList();
-            if (matchingCards.isNotEmpty) break;
-          }
-        }
-
-        if (matchingCards.isNotEmpty) {
-          final card = matchingCards[rng.nextInt(matchingCards.length)];
-          final currentCount = cardCounts[card.id] ?? 0;
-
-          // Règle du doublon max (pas plus de 2 copies d'une même carte dans le pool)
-          if (currentCount < 2) {
-            chosenCard = card;
-            cardCounts[card.id] = currentCount + 1;
-          }
-        }
-      }
-
-      // Si après 50 essais on n'a rien trouvé, on prend n'importe quelle carte globale existante
-      if (chosenCard == null && globalCards.isNotEmpty) {
-        final card = globalCards[rng.nextInt(globalCards.length)];
-        chosenCard = card;
-        cardCounts[card.id] = (cardCounts[card.id] ?? 0) + 1;
-      }
-
-      if (chosenCard != null) {
-        pool.add(chosenCard);
-      }
-    }
-
     setState(() {
-      _draftPool = pool;
+      _draftPool = globalCards;
     });
-  }
-
-  CardRarity _rollRarity(Random rng) {
-    final double roll = rng.nextDouble() * 100.0;
-
-    // Seuils validés :
-    // Commun : 60% (0.0 -> 60.0)
-    // Peu Commun : 20% (60.0 -> 80.0)
-    // Rare : 14% (80.0 -> 94.0)
-    // Épique : 5% (94.0 -> 99.0)
-    // Légendaire : 1% (99.0 -> 100.0)
-
-    if (roll < 60.0) return CardRarity.common;
-    if (roll < 80.0) return CardRarity.uncommon;
-    if (roll < 94.0) return CardRarity.rare;
-    if (roll < 99.0) return CardRarity.epic;
-    return CardRarity.legendary;
   }
 
   void _toggleCardSelection(int index) {
@@ -161,14 +81,7 @@ class _StarterDeckDraftScreenState
 
     final gameData = ref.read(gameDataLoaderProvider).requireValue;
 
-    // 1. Récupérer toutes les cartes de classe du personnage (cartes persos auto-ajoutées)
-    final classCards = gameData.cards
-        .where(
-          (c) =>
-              c.category == CardCategory.characterSpecific &&
-              c.heroClass == widget.playerClass.id,
-        )
-        .toList();
+    final classCards = widget.playerClass.getHeroCards(gameData);
 
     // 2. Assembler le deck de départ (5 choisies + N de classe auto-ajoutées)
     final List<CardInstance> finalDeck = [];
@@ -213,6 +126,8 @@ class _StarterDeckDraftScreenState
         return l10n.rarityEpic;
       case CardRarity.legendary:
         return l10n.rarityLegendary;
+      case CardRarity.unique:
+        return 'Unique';
     }
   }
 

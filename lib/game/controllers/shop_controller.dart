@@ -21,6 +21,8 @@ class ShopController extends StateNotifier<ShopState> {
       case CardRarity.epic:
       case CardRarity.legendary:
         return 100;
+      case CardRarity.unique:
+        return 999;
     }
   }
 
@@ -154,7 +156,11 @@ class ShopController extends StateNotifier<ShopState> {
   ) {
     if (inventoryController.spendGold(price)) {
       deckNotifier.addCardToMasterDeck(
-        CardInstance(data: card.data, level: card.level),
+        CardInstance(
+          data: card.data,
+          rarity: card.rarity,
+          forgeUpgrades: List.from(card.forgeUpgrades),
+        ),
       );
       return true;
     }

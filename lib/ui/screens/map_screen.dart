@@ -166,7 +166,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   bool _checkCanMerge(List<CardInstance> masterDeck) {
     final Map<String, int> counts = {};
     for (var card in masterDeck) {
-      final key = '${card.data.id}_${card.level}';
+      final key = '${card.data.id}_${card.rarity.name}';
       counts[key] = (counts[key] ?? 0) + 1;
       if (counts[key]! >= 3) return true;
     }

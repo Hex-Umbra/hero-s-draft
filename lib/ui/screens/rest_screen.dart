@@ -4,8 +4,10 @@ import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../game/controllers/run_controller.dart';
 import '../../game/controllers/deck_controller.dart';
 import '../../models/card_instance.dart';
+import '../../models/data/card_data.dart';
 import '../widgets/ui_card.dart';
 import '../widgets/notification_overlay.dart';
+import '../widgets/forge_upgrade_dialog.dart';
 
 class RestScreen extends ConsumerStatefulWidget {
   const RestScreen({super.key});
@@ -44,18 +46,41 @@ class _RestScreenState extends ConsumerState<RestScreen> {
     );
 
     if (selectedCard != null) {
-      ref.read(deckProvider.notifier).upgradeCard(selectedCard.uniqueId);
+      final rarityIndex = selectedCard.rarity.index;
+      final totalMaxForgeUpgrades = selectedCard.data.baseMaxForgeUpgrades + rarityIndex;
+      if (selectedCard.forgeUpgrades.length >= totalMaxForgeUpgrades) {
+        if (mounted) {
+          context.showNotification(
+            locale == 'fr'
+                ? "Cette carte a atteint sa capacité maximale d'améliorations de forge !"
+                : "This card has reached its maximum forge upgrades capacity!",
+            type: NotificationType.error,
+          );
+        }
+        return;
+      }
 
-      setState(() {
-        _actionTaken = true;
-      });
+      if (!mounted) return;
+      final selectedUpgrade = await showDialog<String>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => ForgeUpgradeDialog(card: selectedCard),
+      );
 
-      if (mounted) {
-        final cardName = selectedCard.data.getName(locale);
-        context.showNotification(
-          l10n.restCampSnackbarForge(cardName, selectedCard.level + 1),
-          type: NotificationType.warning,
-        );
+      if (selectedUpgrade != null) {
+        setState(() {
+          _actionTaken = true;
+        });
+
+        if (mounted) {
+          final cardName = selectedCard.data.getName(locale);
+          context.showNotification(
+            locale == 'fr'
+                ? "$cardName a reçu l'amélioration !"
+                : "$cardName was upgraded!",
+            type: NotificationType.warning,
+          );
+        }
       }
     }
   }
@@ -89,7 +114,6 @@ class _RestScreenState extends ConsumerState<RestScreen> {
     required String title,
     required String subtitle,
   }) {
-    final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).languageCode;
     return showModalBottomSheet<CardInstance>(
       context: context,
@@ -136,11 +160,12 @@ class _RestScreenState extends ConsumerState<RestScreen> {
                             title: card.data.getName(locale),
                             description: card.data.getDescription(locale),
                             cost: card.data.cost,
-                            level: card.level,
                             effects: card.data.effects,
                             type: card.data.type,
                             isExhaust: card.data.isExhaust,
-                            rarity: l10n.levelLabel(card.level),
+                            rarity: _getRarityLabel(context, card.rarity),
+                            forgeUpgrades: card.forgeUpgrades,
+                            rarityMultiplier: card.rarityMultiplier,
                           ),
                         );
                       },
@@ -271,6 +296,24 @@ class _RestScreenState extends ConsumerState<RestScreen> {
         ),
       ),
     );
+  }
+
+  String _getRarityLabel(BuildContext context, CardRarity rarity) {
+    final l10n = AppLocalizations.of(context)!;
+    switch (rarity) {
+      case CardRarity.common:
+        return l10n.rarityCommon;
+      case CardRarity.uncommon:
+        return l10n.rarityUncommon;
+      case CardRarity.rare:
+        return l10n.rarityRare;
+      case CardRarity.epic:
+        return l10n.rarityEpic;
+      case CardRarity.legendary:
+        return l10n.rarityLegendary;
+      case CardRarity.unique:
+        return 'Unique';
+    }
   }
 }
 

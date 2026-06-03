@@ -221,7 +221,11 @@ class StatsDialog extends ConsumerWidget {
                             : "On passive armor",
                       ),
                     ),
-                    const SizedBox(width: 12),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
                     Expanded(
                       child: _buildCompactStatCard(
                         icon: const Icon(
@@ -234,6 +238,19 @@ class StatsDialog extends ConsumerWidget {
                         subtitle: locale == 'fr'
                             ? 'Loot & Événements'
                             : 'Loot & Events',
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildCompactStatCard(
+                        icon: const Icon(
+                          Icons.bolt_outlined,
+                          color: Colors.redAccent,
+                          size: 16,
+                        ),
+                        title: locale == 'fr' ? 'Critique' : 'Critique',
+                        value: '${stats.critChance}%',
+                        subtitle: 'x${stats.critMultiplier.toStringAsFixed(1)}',
                       ),
                     ),
                   ],
