@@ -21,6 +21,8 @@ class ShopController extends StateNotifier<ShopState> {
       case CardRarity.epic:
       case CardRarity.legendary:
         return 100;
+      case CardRarity.unique:
+        return 999;
     }
   }
 

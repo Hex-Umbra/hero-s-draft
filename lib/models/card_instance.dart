@@ -32,6 +32,8 @@ class CardInstance {
         return 1.6;
       case CardRarity.legendary:
         return 2.0;
+      case CardRarity.unique:
+        return 1.0;
     }
   }
 

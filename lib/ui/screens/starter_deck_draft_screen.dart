@@ -8,6 +8,7 @@ import '../../models/card_instance.dart';
 import '../../models/data/card_data.dart';
 import '../../models/data/hero_data.dart';
 import '../../models/data/passive_data.dart';
+import '../../models/data/hero_skills_link.dart';
 import '../../services/game_data_service.dart';
 import '../widgets/ui_card.dart';
 import 'map_screen.dart';
@@ -161,14 +162,7 @@ class _StarterDeckDraftScreenState
 
     final gameData = ref.read(gameDataLoaderProvider).requireValue;
 
-    // 1. Récupérer toutes les cartes de classe du personnage (cartes persos auto-ajoutées)
-    final classCards = gameData.cards
-        .where(
-          (c) =>
-              c.category == CardCategory.characterSpecific &&
-              c.heroClass == widget.playerClass.id,
-        )
-        .toList();
+    final classCards = widget.playerClass.getHeroCards(gameData);
 
     // 2. Assembler le deck de départ (5 choisies + N de classe auto-ajoutées)
     final List<CardInstance> finalDeck = [];
@@ -213,6 +207,8 @@ class _StarterDeckDraftScreenState
         return l10n.rarityEpic;
       case CardRarity.legendary:
         return l10n.rarityLegendary;
+      case CardRarity.unique:
+        return 'Unique';
     }
   }
 

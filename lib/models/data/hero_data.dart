@@ -11,6 +11,7 @@ class HeroData {
   final int luck;
   final int armorMastery;
   final String? passiveTrait;
+  final List<String> skills;
 
   const HeroData({
     required this.id,
@@ -25,6 +26,7 @@ class HeroData {
     this.luck = 0,
     this.armorMastery = 0,
     this.passiveTrait,
+    this.skills = const [],
   });
 
   String getName(String locale) => locale == 'fr' ? nameFr : nameEn;
@@ -56,6 +58,10 @@ class HeroData {
       luck: json['luck'] as int? ?? 0,
       armorMastery: json['armorMastery'] as int? ?? 0,
       passiveTrait: json['passiveTrait'] as String?,
+      skills: (json['skills'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
     );
   }
 }

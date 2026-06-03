@@ -72,6 +72,7 @@ void main() {
     luck: 0,
     armorMastery: 0,
     passiveTrait: 'regenArmor',
+    skills: ['holy_shield'],
   );
 
   final mockPassive = const PassiveData(

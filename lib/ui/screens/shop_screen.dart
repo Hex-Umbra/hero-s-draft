@@ -227,6 +227,8 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
         return l10n.rarityEpic;
       case CardRarity.legendary:
         return l10n.rarityLegendary;
+      case CardRarity.unique:
+        return 'Unique';
     }
   }
 

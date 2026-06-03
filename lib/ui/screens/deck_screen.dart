@@ -107,7 +107,9 @@ class DeckScreen extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        if (canMerge && allowMerge)
+                        if (card.rarity == CardRarity.unique)
+                          const SizedBox.shrink()
+                        else if (canMerge && allowMerge)
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.green,
@@ -170,6 +172,8 @@ class DeckScreen extends ConsumerWidget {
         return l10n.rarityEpic;
       case CardRarity.legendary:
         return l10n.rarityLegendary;
+      case CardRarity.unique:
+        return 'Unique';
     }
   }
 

@@ -2,7 +2,7 @@ enum CardType { attack, skill, power, status }
 
 enum CardCategory { global, characterSpecific }
 
-enum CardRarity { common, uncommon, rare, epic, legendary }
+enum CardRarity { common, uncommon, rare, epic, legendary, unique }
 
 enum CardTarget { singleEnemy, allEnemies, self, none }
 

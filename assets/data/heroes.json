@@ -10,7 +10,8 @@
     "maxMana": 3,
     "baseDamage": 5,
     "luck": 0,
-    "passiveTrait": "regenArmor"
+    "passiveTrait": "regenArmor",
+    "skills": ["holy_shield", "smite"]
   },
   {
     "id": "berserker",
@@ -23,7 +24,8 @@
     "maxMana": 3,
     "baseDamage": 15,
     "luck": 0,
-    "passiveTrait": "berserkerArmor"
+    "passiveTrait": "berserkerArmor",
+    "skills": ["reckless_strike", "rage_form"]
   },
   {
     "id": "mage",
@@ -36,6 +38,7 @@
     "maxMana": 3,
     "baseDamage": 10,
     "luck": 0,
-    "passiveTrait": "spellArmor"
+    "passiveTrait": "spellArmor",
+    "skills": ["magic_missile", "mana_surge"]
   }
 ]

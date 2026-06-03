@@ -144,6 +144,9 @@ class DeckNotifier extends StateNotifier<DeckState> {
     }
 
     if (selectedCards.length == 3) {
+      if (selectedCards.any((c) => c.rarity == CardRarity.unique)) {
+        return;
+      }
       final baseCardData = selectedCards[0].data;
       final rarity = selectedCards[0].rarity;
 

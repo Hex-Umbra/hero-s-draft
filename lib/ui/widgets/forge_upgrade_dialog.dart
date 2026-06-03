@@ -322,6 +322,8 @@ class _ForgeUpgradeDialogState extends ConsumerState<ForgeUpgradeDialog> {
         return l10n.rarityEpic;
       case CardRarity.legendary:
         return l10n.rarityLegendary;
+      case CardRarity.unique:
+        return 'Unique';
     }
   }
 

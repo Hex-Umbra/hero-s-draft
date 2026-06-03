@@ -244,6 +244,8 @@ class CardDictionaryScreen extends ConsumerWidget {
         return l10n.rarityEpic;
       case CardRarity.legendary:
         return l10n.rarityLegendary;
+      case CardRarity.unique:
+        return 'Unique';
     }
   }
 
