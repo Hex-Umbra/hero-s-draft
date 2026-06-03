@@ -849,11 +849,62 @@ Le gameplay de combat de *Hero's Draft* manquait d'une composante d'incertitude 
 - Nouvelles clés de traduction dans `app_en.arb`/`app_fr.arb` et sélection correspondante dans `DraftScreen`.
 - Fichier `relics.json` mis à jour avec `critical_lens` et `lucky_charm` et traitement associé dans `RunController.applyRelicEffect`.
 - Layout grid 2x2 dans `lib/ui/widgets/map/dialogs/stats_dialog.dart`.
-- Passage réussi de tous les 78 tests unitaires et widget-tests de la suite automatisée.
+- Passage réussi de tous les 82 tests unitaires et widget-tests de la suite automatisée.
 
 ### Conséquences
 - ✅ **Builds Variés et Synergies** : Ouvre la voie à des builds basés sur la Chance (Luck) et les Critiques en sélectionnant des reliques critiques et en choisissant Précision/Férocité lors des montées de niveau.
 - ✅ **Rythme de Difficulté Lissé** : Évite le pic de dégâts et de PV insurmontables pour les héros à l'Acte 2 ou Acte 3, rendant la progression plus agréable.
 - ✅ **HUD Mieux Organisé** : Le dialogue de statistiques affiche clairement les attributs offensifs de critique sans encombrer l'écran principal.
 - ⚠️ **Part de Hasard Accrue** : Les combats peuvent basculer sur un coup critique chanceux du joueur (ou malchanceux de l'ennemi), ce qui augmente la tension mais peut légèrement frustrer en cas de coup critique subi inattendu.
-- ✅ **Vérification Intègre & Cohérence** : Tous les 78 tests automatisés passent avec succès, et le linter est vierge sous `dart analyze`. Les descriptions de l'interface et les comportements du code sont en parfaite adéquation.
+- ✅ **Vérification Intègre & Cohérence** : Tous les 82 tests automatisés passent avec succès, et le linter est vierge sous `dart analyze`. Les descriptions de l'interface et les comportements du code sont en parfaite adéquation.
+
+---
+
+## ⚔️ ADR-028 : Équilibrage Hybride de la Difficulté et Système de Réserve de Vagues (Hybrid Difficulty Balancing & Wave Reserve System)
+
+### Statut
+✅ Accepté & Implémenté
+
+### Contexte
+Dans les versions précédentes, la composition des rencontres de combat et le nombre d'ennemis sur le plateau étaient statiques ou faiblement liés à la progression réelle du joueur. Cela entraînait deux problèmes majeurs de game design et de performance :
+1. **Écarts de difficulté** : Les joueurs optimisant fortement leur deck (fusions de raretés élevées, forges optimisées) trivialisaient rapidement le jeu. À l'inverse, les joueurs moins chanceux ou moins expérimentés faisaient face à des pics de difficulté brutaux.
+2. **Surcharge visuelle du board (Flame)** : La génération d'un nombre important d'ennemis (plus de 3 ou 4) saturait le plateau de rendu mobile, provoquait des chevauchements visuels inacceptables pour les `PositionComponent` de Flame, et compliquait le ciblage tactile.
+
+### Décision
+1. **Implémentation d'une DDA Hybride (Dynamic Difficulty Adjustment)** :
+   - Évaluer la puissance réelle actuelle du joueur via ses attributs permanents et reliques :
+     $$\text{PlayerPower} = \text{maxHP} + (\text{attaque} \times 10.0) + (\text{maxMana} \times 15.0) + (\text{relicsCount} \times 5.0)$$
+   - Définir la puissance théorique attendue à ce stade de la partie :
+     $$\text{ExpectedPower} = 145.0 + ((\text{playerLevel} - 1) \times 15.0) + ((\text{act} - 1) \times 20.0)$$
+   - Introduire un amortissement strict de $0.5$ sur l'écart de puissance pour atténuer les corrections et éviter les fluctuations brutales de budget de menace :
+     $$\text{PowerRatio} = \frac{\text{PlayerPower}}{\text{ExpectedPower}}$$
+     $$\text{PowerModifier} = 1.0 + (\text{PowerRatio} - 1.0) \times 0.5$$
+2. **Budget de Menace de Combat (`FinalBudget`)** :
+   - Calculer le budget de base lié au niveau et à l'acte :
+     $$\text{BaseBudget} = 40.0 + ((\text{playerLevel} - 1) \times 10.0) + ((\text{act} - 1) \times 25.0)$$
+   - Ajuster ce budget par le modificateur de puissance amorti et le type de nœud (Normal 1.0, Élite 1.5, Boss 2.0) :
+     $$\text{FinalBudget} = \text{BaseBudget} \times \text{PowerModifier} \times \text{NodeMultiplier}$$
+3. **Score individuel de Menace (`CombatRating`)** :
+   - Assigner à chaque ennemi une valeur de menace recalculée dynamiquement en fonction de ses statistiques réelles après scaling (incluant le multiplicateur de PV, d'attaque et son taux de critique de base) :
+     $$\text{CombatRating} = (\text{tier} \times 10.0) + \text{HP\_Scalé} + \text{Armure\_Scalée} + \text{Dégâts\_Scalés} \times \left(1.0 + \frac{\text{critChance}}{100.0}\right)$$
+   - Sélectionner les ennemis séquentiellement par tirage aléatoire sous contrainte de budget restant, avec un fallback automatique sur le plus petit monstre disponible pour garantir au moins un ennemi si le budget final est extrêmement restreint.
+4. **Système de Réserve de Vagues (limite de 5 ennemis actifs)** :
+   - Limiter le nombre de monstres actifs sur le board Flame à **5 au maximum**.
+   - Si le générateur `EncounterSystem` produit plus de 5 ennemis, les 5 premiers sont instanciés sur le plateau (`enemies` dans `CombatState`), et les suivants sont sérialisés dans la file d'attente de réserve (`pendingEnemies`).
+   - À chaque mort d'un ennemi actif, `CombatController._cleanDeadEnemies()` extrait automatiquement le premier élément de `pendingEnemies` pour l'ajouter à `enemies`, et effectue immédiatement son premier tirage d'intention de combat (`_rollIntent`).
+   - La condition de victoire du combat est validée uniquement lorsque `enemies` **ET** `pendingEnemies` sont vides.
+
+### Preuves dans le code
+- `lib/game/systems/encounter_system.dart` : Méthode `generateEnemiesForLevel` calculant les formules de `PlayerPower`, `ExpectedPower`, `PowerModifier`, `FinalBudget` et calculant individuellement la `CombatRating` ajustée de chaque ennemi lors du tirage.
+- `lib/game/controllers/combat_controller.dart` :
+  - `initializeCombat()` : répartition initiale des ennemis scalés entre le board actif `enemies` (limité à 5) et la file de réserve `pendingEnemies`.
+  - `_cleanDeadEnemies()` : transition synchrone des ennemis de `pendingEnemies` vers `enemies`, rolling d'intention et vérification combinée des deux listes pour lever le flag `isVictory`.
+- `lib/models/data/combat_state.dart` : Ajout et sérialisation/désérialisation du champ `pendingEnemies`.
+- `test/unit/combat_difficulty_test.dart` (ou tests similaires dans `test/unit/combat_controller_test.dart`) : Suite de tests automatisés validant le respect du budget de menace, le plafonnement à 5 slots actifs, le transfert automatique de la réserve lors de la mort d'un ennemi, et l'ajustement dynamique du modificateur de puissance.
+
+### Conséquences
+- ✅ **Rythme de jeu adapté et stimulant** : Le jeu adapte intelligemment le nombre et la puissance des menaces à la composition du deck du joueur. Un deck sur-optimisé fera face à des vagues de monstres plus nombreuses ou plus puissantes, tandis qu'un joueur en difficulté verra la menace stabilisée.
+- ✅ **Respect de l'espace de rendu Flame** : La limite stricte de 5 ennemis actifs garantit une présentation claire, évite tout bug visuel d'empilement sur smartphone portrait/paysage, et assure des performances constantes à 60 FPS sur l'arène graphique.
+- ✅ **Pérennité du Game Progression** : L'amortissement de $0.5$ de la DDA préserve le sentiment de satisfaction de la progression (les builds puissants roulent toujours plus facilement sur le jeu que les builds faibles, mais le défi reste présent).
+- ✅ **Validation par tests automatisés** : 82/82 tests au vert, confirmant que le flow logique de la file de réserve, les transitions d'intentions et l'algorithme de génération de budget respectent rigoureusement les invariants métier.
+

@@ -5,7 +5,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 **Métriques du projet** :
 - **~10 350 lignes** de code source dans `lib/` (64 fichiers).
 - **8 fichiers JSON** de données d'assets.
-- **78 tests automatisés** — 100% au vert.
+- **82 tests automatisés** — 100% au vert.
 - **0 erreur** via `flutter analyze`.
 - **~110 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
 
@@ -65,6 +65,8 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Phase ennemie séquentielle | `HerosDraftGame._enemyRipostePhase()` | Résolution intent par intent avec animations (délais 400-600ms) |
 | Statuts de combat | `EntityStats.addStatus()`, `tickStatuses()` | Stacking, tick durée, processing poison/regen |
 | Nettoyage des morts | `CombatController._cleanDeadEnemies()` | Auto-sélection prochain ennemi, trigger reliques `onEnemyKilled` |
+| Difficulté Hybride & Budget | `EncounterSystem`, `CombatController` | Formule DDA amortie (damping 0.5) comparant la puissance du joueur à la puissance attendue, et calcul du budget final avec multiplicateurs de nœud |
+| Réserve de vagues d'ennemis | `CombatController`, `CombatState` | Limite de 5 ennemis actifs, débordement dans `pendingEnemies`, alimentation automatique au fil des éliminations |
 
 ### 🏆 Système de Passifs et Traits de Héros
 
@@ -145,7 +147,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 
 | Métrique | Valeur | Détails |
 |:---|:---|:---|
-| Tests automatisés | **78** (100% VERT) | Tests unitaires, widget-tests et tests d'intégration (dont forge découplée et tutoriel autonome) |
+| Tests automatisés | **82** (100% VERT) | Tests unitaires, widget-tests et tests d'intégration (dont forge découplée, tutoriel autonome, équilibrage hybride et réserve de combat) |
 | Couverture estimée | **~22%** | Logique/controllers, moteur tutoriel, forge, pas d'UI de production |
 | Analyse statique | **0 erreur** | `flutter analyze` sans erreur de compilation |
 | Linter | `flutter_lints` v6.0.0 | Configuration standard, pas de règles custom |

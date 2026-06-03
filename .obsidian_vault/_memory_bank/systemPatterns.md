@@ -91,14 +91,14 @@ Tous les contrôleurs héritent de `StateNotifier<T>` et exposent des états imm
 
 **Provider** : `StateNotifierProvider<CombatController, CombatState>` — standalone (pas de Ref).
 
-**État `CombatState`** : `enemies` (List\<EnemyInstance\>), `turnPhase` (TurnPhase: player/enemy), `turnCount`, `selectedEnemyId`, `isCombatEnded`, `isVictory`.
+**État `CombatState`** : `enemies` (List\<EnemyInstance\> actifs, max 5 slots), `pendingEnemies` (List\<EnemyInstance\> en réserve), `defeatedEnemies` (List\<EnemyInstance\> éliminés), `turnPhase` (TurnPhase: player/enemy), `turnCount`, `selectedEnemyId`, `isCombatEnded`, `isVictory`.
 
 **Responsabilités** :
-- **Initialisation** : `initializeCombat(level, nodeType, availableEnemies)` — calcule le combat level dynamique $EnemyLevel = PlayerLevel + (Act - 1) \times 2 + NodeModifier$, applique les multiplicateurs de scaling de caractéristiques (+6% HP/lvl, +4% ATK/lvl et +20% HP/acte, +15% ATK/acte), et applique les coefficients boss (3x HP)/élite (1.5x) avant de roll les intentions initiales.
+- **Initialisation** : `initializeCombat(...)` — Génère la liste totale des ennemis via `EncounterSystem.generateEnemiesForLevel()`. Instancie les stats des ennemis en appliquant les multiplicateurs de niveau (+6% HP/lvl, +4% ATK/lvl) et d'acte (+20% HP/acte, +15% ATK/acte), ainsi que les modificateurs de nœuds (3x HP/2x ATK pour boss, 1.5x pour élite). Les 5 premiers ennemis sont placés dans `enemies` (câblés avec une intention de départ), les suivants sont placés dans `pendingEnemies`.
 - **Pipeline de jeu de carte** : `applyPlayerCardPlay(card, RunController, DeckNotifier)` — `EffectResolver.resolveCard()` → `deck.playCard()` → `TraitSystem.onCardPlayed()` → reliques `onCardPlayed` → `_cleanDeadEnemies()`.
 - **Intentions ennemies** : `resolveEnemyIntent(enemyId, RunController)` — switch sur IntentType : attack → `runController.takeDamage`, defend → armure, buff → strength(99 tours), debuffDeck → no-op.
-- **Phases** : `startEnemyTurn(RunController)` — phase enemy, processing poison/regen sur chaque ennemi, tick statuts, clean morts. `endEnemyTurn()` — re-roll toutes les intentions, phase player, incrémente turnCount.
-- **Nettoyage** : `_cleanDeadEnemies()` — filtre HP ≤ 0, `runController.onEnemyKilled()` par kill (→ reliques), auto-sélection du prochain ennemi, flags `isCombatEnded`/`isVictory`.
+- **Phases** : `startEnemyTurn(RunController)` — phase enemy, processing poison/regen/burn sur chaque ennemi actif, tick statuts, clean morts. `endEnemyTurn()` — re-roll toutes les intentions pour les ennemis actifs, phase player, incrémente turnCount.
+- **Nettoyage et Renforcement** : `_cleanDeadEnemies(RunController)` — Filtre les ennemis actifs décédés (HP ≤ 0) et les déplace dans `defeatedEnemies` en appelant `RunController.onEnemyKilled()` (déclencheurs de reliques). Pour chaque ennemi mort, si `enemies.length < 5` et que `pendingEnemies` n'est pas vide, transfère le premier ennemi en attente de la réserve vers le board actif (et lance `_rollIntent` sur lui). Met à jour la sélection de cible et prononce la victoire uniquement si les listes active (`enemies`) et de réserve (`pendingEnemies`) sont toutes deux vides.
 
 **Logique de roll d'intentions** (`_rollIntent`) :
 - Si l'ennemi a des `intents` prédéfinis : cycle séquentiel (modulo length, via `intentStep`).
@@ -154,21 +154,56 @@ Tous les contrôleurs héritent de `StateNotifier<T>` et exposent des états imm
 
 ## 3. Systèmes Transversaux (`lib/game/systems/`)
 
-### 3.1. `EncounterSystem` — Générateur de Combats
+### 3.1. `EncounterSystem` — Générateur de Combats & Courbes d'Équilibrage
 
-**Type** : Classe statique utilitaire (pas de provider, pas d'état).
+**Type** : Classe statique utilitaire (sans état, appelée lors de l'initialisation du combat).
 
-**Méthode** : `static generateEnemiesForLevel(int level, List<EnemyData> availableEnemies, {MapNodeType? nodeType}) → List<EnemyData>`
+**Méthode** :
+```dart
+static List<EnemyData> generateEnemiesForLevel(
+  int level,
+  List<EnemyData> availableEnemies, {
+  MapNodeType? nodeType,
+  int playerLevel = 1,
+  int act = 1,
+  int playerMaxHp = 100,
+  int playerAttaque = 0,
+  int playerMaxMana = 3,
+  int playerRelicsCount = 0,
+})
+```
 
-**Logique de dimensionnement** :
-| Type de nœud | Nombre d'ennemis | Multiplicateur Stats |
-|:---|:---|:---|
-| Boss | Toujours 1 | 3.0× HP, 2.0× attack |
-| Élite | 2-3 | 1.5× HP, 1.5× attack |
-| Combat (level ≤5) | 1-2 | 1.0× (base) |
-| Combat (level >5) | 1-3 | 1.0× (base) |
+**Logique de Dimensionnement et Algorithme d'Équilibrage** :
+1. **Évaluation de la Puissance Réelle du Joueur (`PlayerPower`)** :
+   $$\text{PlayerPower} = \text{playerMaxHp} + (\text{playerAttaque} \times 10.0) + (\text{playerMaxMana} \times 15.0) + (\text{playerRelicsCount} \times 5.0)$$
+2. **Puissance Théorique Attendue (`ExpectedPower`)** :
+   $$\text{ExpectedPower} = 145.0 + ((\text{playerLevel} - 1) \times 15.0) + ((\text{act} - 1) \times 20.0)$$
+3. **Budget de Base théorique (`BaseBudget`)** :
+   $$\text{BaseBudget} = 40.0 + ((\text{playerLevel} - 1) \times 10.0) + ((\text{act} - 1) \times 25.0)$$
+4. **Calcul du Budget Final (`FinalBudget`)** :
+   Le ratio de puissance est pondéré par un facteur d'amortissement de $0.5$ pour stabiliser la courbe :
+   $$\text{PowerRatio} = \frac{\text{PlayerPower}}{\text{ExpectedPower}}$$
+   $$\text{PowerModifier} = 1.0 + (\text{PowerRatio} - 1.0) \times 0.5$$
+   $$\text{FinalBudget} = \text{BaseBudget} \times \text{PowerModifier} \times \text{NodeMultiplier}$$
+   *(Avec `NodeMultiplier` = 1.0 pour normal, 1.5 pour élite, 2.0 pour boss)*
 
-Les ennemis sont piochés aléatoirement dans le pool disponible (doublons possibles). Le scaling par level est appliqué dans `CombatController.initializeCombat()`.
+5. **Formule du Niveau Ennemi (`getEnemyLevel`)** :
+   $$EnemyLevel = \max(1, PlayerLevel + (Act - 1) \times 2 + NodeModifier)$$
+   *(Avec `NodeModifier` = 0 pour normal, 1 pour élite, 2 pour boss)*
+
+6. **Formule du CombatRating de l'Ennemi** :
+   Le coût de menace de chaque type d'ennemi est évalué à l'aide de ses statistiques simulées mises à l'échelle pour le niveau de combat :
+   $$\text{CombatRating} = (\text{tier} \times 10.0) + \text{HP\_Scalé} + \text{Armure\_Scalée} + \text{Dégâts\_Scalés} \times \left(1.0 + \frac{\text{critChance}}{100.0}\right)$$
+   Où :
+   - $$\text{HP\_Scalé} = \text{round}(\text{maxHp} \times \text{HpMultiplier})$$ avec $\text{HpMultiplier} = (1.0 + 0.06 \times (EnemyLevel - 1)) \times (1.0 + 0.20 \times (Act - 1)) \times NodeMultiplier$
+   - $$\text{Dégâts\_Scalés} = \text{round}(\text{baseDamage} \times \text{DamageMultiplier})$$ avec $\text{DamageMultiplier} = (1.0 + 0.04 \times (EnemyLevel - 1)) \times (1.0 + 0.15 \times (Act - 1)) \times NodeMultiplier$
+
+7. **Sélection Procédurale par Budget** :
+   - Initialise `remainingBudget = FinalBudget`.
+   - Boucle tant que le budget est positif et que la limite de 10 monstres (actifs + réserve) n'est pas atteinte.
+   - Filtre les candidats dont le `CombatRating` individuel est inférieur ou égal à `remainingBudget`.
+   - Si des candidats existent, tire aléatoirement l'un d'eux, l'ajoute au combat et déduit sa valeur du budget.
+   - **Fallback** : Si aucun monstre ne rentre (budget insuffisant pour le plus petit monstre), ajoute d'office le monstre au plus petit `CombatRating` pour garantir au moins une menace.
 
 ### 3.2. `TraitSystem` — Passifs de Héros
 
@@ -498,7 +533,7 @@ Pour augmenter la sensation d'excitation et de "butin" lors de l'acquisition de 
        ├→ DeckNotifier.playCard() → main → défausse (ou exhaust)
        ├→ TraitSystem.onCardPlayed(runCtrl, card)
        ├→ applyRelics(onCardPlayed)
-       └→ _cleanDeadEnemies() → onEnemyKilled() → reliques
+       └→ _cleanDeadEnemies() → onEnemyKilled() → si ennemis actifs < 5 et réserve non vide, transfère le premier ennemi de pendingEnemies vers enemies et roule son intention.
 
 3. FIN DE TOUR JOUEUR
    └→ HerosDraftGame.executeTurn()
@@ -507,12 +542,12 @@ Pour augmenter la sensation d'excitation et de "butin" lors de l'acquisition de 
 4. PHASE ENNEMIE
    ├→ CombatController.startEnemyTurn()
    │   ├→ Pour chaque ennemi: process poison/regen/burn (Brûlure), tick statuts
-   │   └→ _cleanDeadEnemies() (morts par poison ou brûlure)
-   ├→ Pour chaque ennemi vivant:
+   │   └→ _cleanDeadEnemies() (morts par poison ou brûlure, avec transfert de réserve si nécessaire)
+   ├→ Pour chaque ennemi actif vivant:
    │   ├→ Animation (dash/buff)
    │   └→ resolveEnemyIntent() → dégâts héros (divisés par 2 si gelé, augmentés par vulnerable, jet de coup critique) / armure / strength
    └→ CombatController.endEnemyTurn()
-       ├→ Re-roll toutes les intentions
+       ├→ Re-roll toutes les intentions pour les ennemis actifs
        ├→ Phase → player
        └→ turnCount++
 

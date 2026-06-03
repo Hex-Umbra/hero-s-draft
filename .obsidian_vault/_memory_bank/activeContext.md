@@ -6,12 +6,13 @@ Ce document décrit le focus actif du projet, les accomplissements récents, et 
 
 ## 1. Focus Actuel du Projet
 
-Le projet vient de finaliser un sprint d'implémentation centré sur l'équilibrage du catalogue de cartes, la refonte de la constitution du deck de départ et des corrections de stabilité associées :
-1. **Refactoring des Cartes de Classe "Unique"** : Isolation des cartes de classe spécifiques dans un fichier dédié `hero_cards.json` sous la rareté `unique` (multiplicateur 1.0, non-fusionnables, non-disponibles en récompense/boutique) et liaison via le champ `"skills"` dans `heroes.json`.
-2. **Standardisation Globale & VPM (Valeur Par Mana)** : Conversion de toutes les cartes globales de `cards.json` en rareté `common` et rééquilibrage de leurs statistiques autour de ratios standardisés.
-3. **Refonte & Stabilisation du Draft Initial** : Nouvelle interface de grille dans `StarterDeckDraftScreen` permettant la sélection libre de 5 cartes globales parmi le catalogue complet (sans restriction de tirage aléatoire de 10 cartes). Les descriptions de localisation ont été corrigées en français/anglais, et les 78 tests unitaires et widget-tests ont été validés avec succès.
+Le projet vient de finaliser un sprint d'implémentation centré sur l'équilibrage de la courbe de difficulté et le système de vagues de combat :
+1. **Équilibrage Hybride (DDA)** : Formule comparant la puissance réelle du joueur (`PlayerPower`) à la puissance théorique attendue (`ExpectedPower`) pour calculer un budget de menace de combat dynamique.
+2. **Score de Menace (`CombatRating`)** : Évaluation individuelle des monstres après scaling de leurs HP, attaque, et coup critique.
+3. **Réserve de Vagues (`pendingEnemies`)** : Limitation à 5 slots d'ennemis actifs sur le board Flame, avec transfert automatique de la réserve lors d'éliminations.
+Toutes les modifications ont été validées via des tests unitaires et d'intégration robustes.
 
-Le focus actuel s'oriente vers la préparation des prochaines étapes de refactoring technique et l'implémentation des nouveaux chantiers de la roadmap.
+Le focus actuel s'oriente vers la préparation des prochaines étapes de refactoring technique de la Phase 4 (Sauvegarde, parallélisation I/O, audio).
 
 ---
 
@@ -60,8 +61,14 @@ Le focus actuel s'oriente vers la préparation des prochaines étapes de refacto
    - 13 étapes interactives adaptées aux smartphones portrait/paysage, web, et desktop via des structures responsives unifiées (`LayoutBuilder`, `FittedBox`, `SingleChildScrollView`, `Wrap`).
    - Ciblage double phase interactif et infobulles explicatives localisées.
 
-8. **Assurance Qualité et Robustesse** :
-   - **78 tests automatisés** unitaires, d'intégration, et widget-tests 100% verts (tous passés avec succès).
+8. **Équilibrage de la Courbe de Difficulté et Vagues de Combat** :
+   - Mise en œuvre d'un algorithme d'équilibrage hybride (DDA amorti à 0.5) comparant `PlayerPower` et `ExpectedPower` pour ajuster le `FinalBudget` de menace.
+   - Intégration du système de `CombatRating` dynamique des ennemis (prenant en compte le scaling HP, dégâts, tier et chance critique).
+   - Développement du système de réserve `pendingEnemies` (limité à 5 slots actifs) avec réapprovisionnement automatique lors des éliminations et condition de victoire étendue.
+   - Validation complète du comportement des vagues et de la répartition budgétaire via des tests unitaires automatisés.
+
+9. **Assurance Qualité et Robustesse** :
+   - **Tests automatisés** unitaires et d'intégration validés avec succès (dont tests du générateur et du système de vagues).
    - Analyse de code statique : **0 erreur** sous `flutter analyze`.
 
 ---
