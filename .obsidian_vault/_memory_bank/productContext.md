@@ -19,7 +19,7 @@ La progression dans **Hero's Draft** est structurée autour d'une boucle classiq
        │
        ▼
 [Draft Deck Initial (StarterDeckDraftScreen)]
-  Constitution du deck : vagues de 3 cartes à choisir
+  Constitution du deck : choix de 5 cartes globales + cartes de classe uniques chargées via compétences
        │
        ▼
 [Carte Stratégique (MapScreen)] ◄─── Graphe Acyclique Dirigé (10 étages)
@@ -99,11 +99,19 @@ Trois classes de héros définis dans `heroes.json` :
 
 ### 2.3. Catalogue de Cartes
 
-**23 cartes** définies dans `cards.json`, réparties en :
-- **15 cartes globales** (neutres, accessibles à tous les héros)
-- **2 cartes Paladin** (`holy_shield`, `smite`)
-- **2 cartes Berserker** (`reckless_strike`, `rage_form`)
-- **2 cartes Mage** (`magic_missile`, `mana_surge`)
+Le catalogue de cartes comprend un total de **21 cartes** réparties sur deux fichiers d'assets distincts :
+- **15 cartes globales (neutres)** définies dans `assets/data/cards.json`.
+- **6 cartes de classe spécifiques** définies dans `assets/data/hero_cards.json` (2 par classe : `holy_shield` et `smite` pour le Paladin, `reckless_strike` et `rage_form` pour le Berserker, `magic_missile` et `mana_surge` pour le Mage).
+
+### Règles Métier et Équilibrage des Cartes
+- **Rareté Unique pour les cartes de classe** : Les 6 cartes de classe ont la rareté `unique` (définie dans l'enum `CardRarity`). Le multiplicateur de statistiques de base de cette rareté est de `1.0` (défini dans `card_instance.dart`).
+- **Capacité de Forge Fixe** : Les cartes de classe possèdent un maximum d'upgrades `baseMaxForgeUpgrades` fixé à 5.
+- **Interdiction de Fusion & Achat** : Les cartes uniques ne peuvent pas être fusionnées (bouton grisé dans l'UI et validation bloquée dans `deck_controller.dart`). De plus, elles n'apparaissent pas dans les tirages de récompenses post-combat (draft) ou en boutique pendant la run.
+- **Association par les compétences (Skills)** : Le fichier `heroes.json` associe chaque héros à ses cartes de classe de départ par le champ `"skills"`. La méthode d'extension `HeroSkillsLink.getHeroCards(gameData)` résout dynamiquement ces cartes basées sur les compétences du héros.
+- **Harmonisation des Cartes Globales** : Toutes les cartes globales du fichier `cards.json` possèdent la rareté de base `common` et ont été rééquilibrées autour de ratios de Valeur Par Mana (VPM) standardisés :
+  - `heal_potion` : Coût 1 mana, Soin 4, Épuisement (`isExhaust: true`).
+  - `iron_wall` : Coût 2 mana, Blocage 10.
+  - `heavy_strike` : Coût 2 mana, Dégâts 12.
 
 **Types d'effets utilisés** : `damage`, `armor`, `draw`, `heal`, `apply_status`, `gain_mana`.
 
@@ -113,7 +121,7 @@ Trois classes de héros définis dans `heroes.json` :
 - `id`, `nameEn`/`nameFr`, `descriptionEn`/`descriptionFr`, `cost` (0-3 mana)
 - `type` : attack, skill, power, status
 - `category` : global, characterSpecific
-- `rarity` : common, uncommon, rare, epic, legendary
+- `rarity` : common, uncommon, rare, epic, legendary, unique
 - `target` : singleEnemy, allEnemies, self, none
 - `isExhaust` : boolean (carte épuisée après usage)
 - `effects` : List\<CardEffect\> avec `type`, `value`, `statusId?`, `duration?`
@@ -128,6 +136,7 @@ La fusion de cartes 3-en-1 est gérée par `DeckNotifier.mergeCards(selectedIds,
 2. Les 3 copies sont supprimées du `masterDeck`.
 3. Une nouvelle copie de rareté directement supérieure est ajoutée au `masterDeck`.
 4. **Héritage des Améliorations de Forge** : Les upgrades de même ID voient leurs Tiers additionnés (ex: deux upgrades `sharp:1` fusionnent en un unique `sharp:2`). Le nombre d'améliorations final est limité par la capacité maximale de la nouvelle rareté (`baseMaxForgeUpgrades + rarityIndex`). Le joueur choisit de manière interactive les upgrades qu'il souhaite hériter en cas de dépassement de la capacité.
+5. **Restriction de la Rareté Unique** : Les cartes de rareté `unique` (de classe) ne peuvent pas être fusionnées. La logique de fusion est bloquée dans `deck_controller.dart` et l'interface utilisateur n'affiche pas l'option de fusion pour ces cartes.
 
 ### 2.5. Bestiaire
 
@@ -392,7 +401,7 @@ assets/data/*.json  →  rootBundle.loadString()  →  jsonDecode()
     →  *.fromJson()  →  GameDataRegistry  →  gameDataLoaderProvider (FutureProvider)
 ```
 
-`GameDataService.loadAll()` charge les 7 fichiers JSON via `Future.wait()` (chargement parallèle).
+`GameDataService.loadAll()` charge les 8 fichiers JSON via `Future.wait()` (chargement parallèle).
 
 ### 7.2. Graphe de Relations entre Modèles
 

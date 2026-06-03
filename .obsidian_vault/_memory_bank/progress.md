@@ -4,7 +4,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 
 **Métriques du projet** :
 - **~10 350 lignes** de code source dans `lib/` (64 fichiers).
-- **7 fichiers JSON** de données d'assets.
+- **8 fichiers JSON** de données d'assets.
 - **78 tests automatisés** — 100% au vert.
 - **0 erreur** via `flutter analyze`.
 - **~110 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
@@ -43,15 +43,15 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 
 | Fonctionnalité | Implémentation | Détails |
 |:---|:---|:---|
-| Auto-Merge (3→1) | `DeckNotifier.mergeCards()` | 3 copies même ID + rareté → 1 copie rareté supérieure (cumul des Tiers d'upgrades identiques et clamp à la capacité de la nouvelle rareté) |
-| Rareté Dynamique | `EffectResolver.resolveCard()` | Progression par rareté (common → legendary) avec coefficients multiplicateurs scaling les stats de dégâts/armure |
-| Catalogue complet | `cards.json` | 23 cartes équilibrées : 15 globales + 2 Paladin + 2 Berserker + 2 Mage |
+| Auto-Merge (3→1) | `DeckNotifier.mergeCards()` | 3 copies même ID + rareté → 1 copie rareté supérieure (cumul des Tiers, clamp à la capacité). Les cartes de rareté `unique` (classe) ne peuvent pas être fusionnées (désactivé). |
+| Rareté Dynamique | `EffectResolver.resolveCard()` | Progression par rareté (common → legendary) avec coefficients. La rareté `unique` (cartes de classe) est fixée à un multiplicateur de 1.0. |
+| Catalogue complet | `cards.json` & `hero_cards.json` | 21 cartes équilibrées : 15 globales (communes) dans cards.json + 6 de classe (unique) dans hero_cards.json |
 | Types d'effets | `EffectResolver`, `CardEffect` | damage, heal, armor, draw, gain_mana, apply_status |
 | Exhaust mécanique | `DeckNotifier.playCard()` | Cartes Power et `isExhaust` → pile d'épuisement (sauf si upgrade `enduring`) |
-| Upgrade de Forge | `DeckNotifier.addForgeUpgrade()` | Ajout d'améliorations de forge aléatoires (stats, statuts, pioche, mana, enduring) sur les cartes |
+| Upgrade de Forge | `DeckNotifier.addForgeUpgrade()` | Ajout d'améliorations (stats, statuts, pioche, enduring). Les cartes uniques ont un maximum d'upgrades fixé à 5. |
 | Suppression de carte | `DeckNotifier.removeCardById()` | Oubli au feu de camp (`RestScreen`) : suppression définitive |
-| Draft post-combat | `DraftScreen` | 3 choix de cartes aléatoires après victoire |
-| Draft de départ | `StarterDeckDraftScreen` | Vagues de 3 cartes pour constituer le deck initial |
+| Draft post-combat | `DraftScreen` | 3 choix de cartes aléatoires après victoire (les cartes uniques de classe sont exclues) |
+| Draft de départ | `StarterDeckDraftScreen` | Sélection de 5 cartes globales dans la grille complète + cartes de classe uniques résolues via compétences |
 | Équilibrage Probabilités | `probabilities_test.dart` | Rééquilibrage exact (Commune 52%/51.5%, Atypique 24%, Rare 16%, Épique 6%, Légendaire 2.0%, Mythique 0.5% au Level Up) |
 
 ### ⚔️ Système de Combat
