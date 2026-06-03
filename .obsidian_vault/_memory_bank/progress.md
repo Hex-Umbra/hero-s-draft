@@ -51,7 +51,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Upgrade de Forge | `DeckNotifier.addForgeUpgrade()` | Ajout d'améliorations (stats, statuts, pioche, enduring). Les cartes uniques ont un maximum d'upgrades fixé à 5. |
 | Suppression de carte | `DeckNotifier.removeCardById()` | Oubli au feu de camp (`RestScreen`) : suppression définitive |
 | Draft post-combat | `DraftScreen` | 3 choix de cartes aléatoires après victoire (les cartes uniques de classe sont exclues) |
-| Draft de départ | `StarterDeckDraftScreen` | Sélection de 5 cartes globales dans la grille complète + cartes de classe uniques résolues via compétences |
+| Draft de départ | `StarterDeckDraftScreen` | Sélection de 5 cartes globales directly depuis la grille complète des 15 cartes globales (suppression du pool de 10 cartes aléatoires) + cartes de classe uniques résolues via compétences |
 | Équilibrage Probabilités | `probabilities_test.dart` | Rééquilibrage exact (Commune 52%/51.5%, Atypique 24%, Rare 16%, Épique 6%, Légendaire 2.0%, Mythique 0.5% au Level Up) |
 
 ### ⚔️ Système de Combat

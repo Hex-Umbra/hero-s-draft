@@ -6,12 +6,12 @@ Ce document décrit le focus actif du projet, les accomplissements récents, et 
 
 ## 1. Focus Actuel du Projet
 
-Le projet vient de finaliser un sprint d'implémentation centré sur l'équilibrage du catalogue de cartes et la refonte de la constitution du deck de départ :
+Le projet vient de finaliser un sprint d'implémentation centré sur l'équilibrage du catalogue de cartes, la refonte de la constitution du deck de départ et des corrections de stabilité associées :
 1. **Refactoring des Cartes de Classe "Unique"** : Isolation des cartes de classe spécifiques dans un fichier dédié `hero_cards.json` sous la rareté `unique` (multiplicateur 1.0, non-fusionnables, non-disponibles en récompense/boutique) et liaison via le champ `"skills"` dans `heroes.json`.
 2. **Standardisation Globale & VPM (Valeur Par Mana)** : Conversion de toutes les cartes globales de `cards.json` en rareté `common` et rééquilibrage de leurs statistiques autour de ratios standardisés.
-3. **Refonte du Draft Initial** : Nouvelle interface de grille dans `StarterDeckDraftScreen` permettant la sélection libre de 5 cartes globales parmi le catalogue complet pour composer le deck de départ, combinées aux cartes de classe spécifiques chargées dynamiquement.
+3. **Refonte & Stabilisation du Draft Initial** : Nouvelle interface de grille dans `StarterDeckDraftScreen` permettant la sélection libre de 5 cartes globales parmi le catalogue complet (sans restriction de tirage aléatoire de 10 cartes). Les descriptions de localisation ont été corrigées en français/anglais, et les 78 tests unitaires et widget-tests ont été validés avec succès.
 
-Le focus actuel s'oriente vers la stabilisation globale, la validation des 78 tests unitaires/widgets (tous verts) et la préparation des prochaines étapes de refactoring technique.
+Le focus actuel s'oriente vers la préparation des prochaines étapes de refactoring technique et l'implémentation des nouveaux chantiers de la roadmap.
 
 ---
 
@@ -31,9 +31,10 @@ Le focus actuel s'oriente vers la stabilisation globale, la validation des 78 te
      - `iron_wall` : Coût 2 mana, Blocage 10.
      - `heavy_strike` : Coût 2 mana, Dégâts 12.
 
-3. **Overhaul de l'Écran de Draft Initial (`StarterDeckDraftScreen`)** :
-   - Remplacement de l'ancien système de sélection par vagues par une grille affichant le catalogue complet des 15 cartes globales.
-   - Le joueur choisit exactement 5 cartes globales de départ.
+3. **Overhaul de l'Écran de Draft Initial (`StarterDeckDraftScreen`) & Corrections** :
+   - Chargement direct de l'intégralité du catalogue des 15 cartes globales pour le choix initial (suppression totale de la logique de pool intermédiaire de 10 cartes tirées au hasard).
+   - Retrait des importations et méthodes inutilisées (`dart:math` et `_rollRarity`).
+   - Mise à jour des chaînes de localisation `draftDeckSubtitle` dans `app_en.arb` et `app_fr.arb` pour refléter la sélection libre des 5 cartes de départ (suppression de la mention "parmi les 10 proposées").
    - Les cartes uniques de classe du héros choisi sont automatiquement résolues via l'extension `getHeroCards(gameData)` et ajoutées pour constituer le deck de départ final.
 
 4. **Intégration et Résolution des Effets Élémentaires & Vulnérabilité (Axe 1 - Précédent)** :
