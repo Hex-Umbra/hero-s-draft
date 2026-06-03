@@ -631,14 +631,18 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                         style: const TextStyle(color: Colors.amber),
                       ),
                       subtitle: Text(
-                        l10n.levelLabel(card.level),
+                        card.rarity.name.toUpperCase(),
                         style: const TextStyle(color: Colors.white70),
                       ),
                       onTap: () {
                         ref
                             .read(deckProvider.notifier)
                             .addCardToMasterDeck(
-                              CardInstance(data: card.data, level: card.level),
+                              CardInstance(
+                                data: card.data,
+                                rarity: card.rarity,
+                                forgeUpgrades: List.from(card.forgeUpgrades),
+                              ),
                             );
                         Navigator.of(ctx).pop();
                         _finishDraft(ref);

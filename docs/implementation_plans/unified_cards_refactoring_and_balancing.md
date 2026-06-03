@@ -1,6 +1,6 @@
 # Plan d'Implémentation Unifié - Refactoring de la Rareté, Équilibrage des Cartes & Système de Forge
 
-Ce document définit un plan d'implémentation complet et harmonisé pour les systèmes de combat et de cartes de *Hero's Draft*. Il combine l'activation des effets élémentaires, le refactoring de la rareté dynamique, l'application des rééquilibrages de cartes et la refonte complète du système de la Forge.
+Ce document définit un plan d'implémentation complet et harmonisé pour les systèmes de combat et de cartes de *Hero's Draft*. Il combine l'activation des effets élémentaires, le refactoring de la rareté dynamique (sans niveaux), l'application des rééquilibrages de cartes et la refonte complète du système de la Forge avec un mécanisme roguelike de sélection individuelle, de fusion d'améliorations, de tirage probabiliste et de relance.
 
 ---
 
@@ -37,15 +37,15 @@ Les statuts élémentaires (`burn`, `freeze`, `shock`) et le statut standard `vu
 
 ---
 
-## 🧠 2. Axe 2 : Système de Rareté Dynamique & Fusion Dual-Path
+## 🧠 2. Axe 2 : Rareté Dynamique & Système de Fusion (Merge) Interactif
 
-La rareté d'une carte n'est plus statique et liée à son modèle de base (`CardData.rarity`), mais devient une propriété d'instance (`CardInstance.rarity`).
+Le concept de **niveau de carte** (Lvl 1, 2, 3) est **complètement abandonné**. La rareté d'une carte devient l'unique facteur d'évolution et de multiplication statistique d'une instance.
 
-### A. Rareté comme Multiplicateur de Statistique (Stats de base)
-Chaque carte possède des effets dont la valeur s'adapte à sa rareté et à son niveau :
-$$\text{scaledValue} = \text{round}\left(\text{baseValue} \times \text{rarityMultiplier} \times \left(1 + (\text{level} - 1) \times 0.5\right)\right)$$
+### A. Rareté comme Multiplicateur de Statistique
+Chaque carte possède des effets dont la valeur s'adapte directement à sa rareté d'instance :
+$$\text{scaledValue} = \text{round}\left(\text{baseValue} \times \text{rarityMultiplier}\right)$$
 
-| Rareté | Multiplicateur |
+| Rareté d'instance | Multiplicateur |
 | :--- | :---: |
 | **Commun (Common)** | `1.0x` |
 | **Peu Commun (Uncommon)** | `1.2x` |
@@ -53,115 +53,137 @@ $$\text{scaledValue} = \text{round}\left(\text{baseValue} \times \text{rarityMul
 | **Épique (Epic)** | `1.6x` |
 | **Légendaire (Legendary)** | `2.0x` |
 
-### B. Double Voie de Fusion (Merge) dans [deck_controller.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/game/controllers/deck_controller.dart)
-Le niveau d'une carte augmente **uniquement via fusion** (la Forge ne permet plus de monter le niveau directement, éliminant le risque de sur-optimisation gratuite).
-1. **Fusion de Niveau (Forge)** : Si le joueur fusionne 3 exemplaires de **même Rareté** et de **même Niveau** (inférieur à 3), la carte résultante passe au **Niveau + 1** (la rareté reste identique).
-2. **Fusion de Rareté (Évolution)** : Si le joueur réunit 3 exemplaires de **Niveau 3** (Max) d'une **même Rareté**, ils fusionnent pour donner 1 exemplaire de **Niveau 1** de la **Rareté supérieure** (ex: Commun Lvl 3 x3 ➔ Peu Commun Lvl 1 x1).
-* *Note sur les améliorations* : Lors d'une fusion, la carte résultante hérite des améliorations de forge appliquées aux cartes d'origine (jusqu'à sa limite maximale de capacité).
+### B. Choix des Cartes à Fusionner (Merge Interactif)
+Le joueur n'est plus forcé de fusionner n'importe quelles cartes automatiquement. Dans `DeckScreen`, cliquer sur le bouton de fusion d'un type de carte et d'une rareté :
+1. **Dialogue de Sélection** : Affiche la liste de tous les exemplaires disponibles de cette carte à cette rareté, détaillant leurs améliorations de forge. Le joueur **coche précisément les 3 cartes** qu'il souhaite sacrifier pour la fusion.
+
+### C. Fusion Automatique & Choix des Améliorations héritées
+Lorsque 3 cartes sont fusionnées pour donner 1 carte de rareté supérieure :
+1. **Auto-Fusion des Bonus Identiques (Cumul des stats)** :
+   * Si plusieurs cartes parmi les 3 choisies possèdent la même amélioration (ex: deux cartes avec l'amélioration `sharp:1`), ces améliorations **fusionnent automatiquement en une amélioration de niveau supérieur** (ex: `sharp:2`), ne consommant qu'**une seule fente** sur la nouvelle carte.
+   * *Règles d'évolution par palier ($k$)* :
+     * `sharp:k` (Tranchant $k$) $\rightarrow$ $+2 \times k$ Dégâts.
+     * `hardened:k` (Endurci $k$) $\rightarrow$ $+2 \times k$ Armure.
+     * `quick:k` (Véloce $k$) $\rightarrow$ Pioche $+k$ cartes.
+     * `eco:k` (Économe $k$) $\rightarrow$ $+k$ Mana à la pose.
+     * `burning:k` / `freezing:k` / `shocking:k` $\rightarrow$ Applique statut élémentaire de valeur $k$.
+2. **Choix de l'Héritage** :
+   * Les améliorations uniques et auto-fusionnées sont rassemblées.
+   * Si le nombre total d'améliorations résultantes est inférieur ou égal à la capacité de la rareté supérieure (ex: 2 fentes pour Peu Commun, 3 pour Rare), la carte hérite de **toutes** les améliorations.
+   * Si ce nombre dépasse la capacité, un dialogue s'ouvre présentant la liste des améliorations consolidées. Le joueur **sélectionne quelles améliorations il souhaite conserver** pour la nouvelle carte, dans la limite de sa capacité de fentes. Les autres sont abandonnées.
 
 ---
 
-## 🛠️ 3. Axe 3 : Nouveau Système de Forge Découplé
+## 🛠️ 3. Axe 3 : Système de Forge Découplé & Mécaniques Détaillées
 
-La Forge ne permet plus de monter les niveaux des cartes. Elle offre désormais des **bonifications uniques et variées** pour rendre chaque carte unique, sous contrainte d'une limite d'améliorations.
+La Forge n'augmente plus les statistiques de niveau des cartes. Elle sert uniquement à appliquer des **améliorations (bonifications) uniques et personnalisées** sur des fentes limitées.
 
-### A. Capacité d'Améliorations à la Forge
-Chaque carte possède une capacité maximale d'améliorations de forge qui dépend de sa rareté actuelle et d'une limite de base définie dans le JSON :
-$$\text{maxForgeUpgrades} = \text{baseMaxForgeUpgrades} + \text{rarityIndex}$$
+### A. Capacité Limite d'Améliorations
+Le nombre maximum d'améliorations (slots de forge) applicables à une instance de carte est dynamique et calculé comme suit :
+$$\text{totalMaxForgeUpgrades} = \text{baseMaxForgeUpgrades} + \text{rarityIndex}$$
+* **`baseMaxForgeUpgrades`** est défini dans le fichier JSON pour chaque carte (par défaut `1`).
+* **`rarityIndex`** correspond à l'index de la rareté actuelle de l'instance de la carte (Commun = 0, Peu Commun = 1, Rare = 2, Épique = 3, Légendaire = 4).
+* *Contrainte* : Si la carte a déjà rempli tous ses slots disponibles (ex: possède déjà 1 amélioration au stade Commun), le bouton d'amélioration à la Forge pour cette carte est verrouillé.
 
-| Rareté actuelle | Bonus de Capacité | Capacité Totale (si base = 1) |
-| :--- | :---: | :---: |
-| **Commun (Common)** | `+0` | `1` |
-| **Peu Commun (Uncommon)** | `+1` | `2` |
-| **Rare** | `+2` | `3` |
-| **Épique (Epic)** | `+3` | `4` |
-| **Légendaire (Legendary)** | `+4` | `5` |
+### B. Pools d'Améliorations par Rareté (Équilibrage)
+Les améliorations sont regroupées en pools débloqués par la rareté de la carte sélectionnée :
+1. **Pool Commun (Toutes Raretés)** :
+   * **Tranchant (`sharp`)** : Ajoute $+2$ Dégâts directs par niveau de palier (ex: sharp:1 = +2, sharp:2 = +4).
+   * **Endurci (`hardened`)** : Ajoute $+2$ Armure par niveau de palier (ex: hardened:1 = +2, hardened:2 = +4).
+   * **Brûlant (`burning`)** : Applique statut Brûlure (+1 valeur, +1 durée par palier) (cartes d'Attaque uniquement).
+   * **Congelant (`freezing`)** : Applique statut Gel (+1 valeur, +1 durée par palier) (cartes d'Attaque uniquement).
+   * **Surchargé (`shocking`)** : Applique statut Électrocution (+1 valeur, +1 durée par palier) (cartes d'Attaque uniquement).
+2. **Pool Peu Commun (Rareté $\ge$ Peu Commun)** :
+   * Contient les options du pool Commun, plus :
+   * **Véloce (`quick`)** : Pioche $+1$ carte lors du jeu (par niveau de palier).
+3. **Pool Rare (Rareté $\ge$ Rare)** :
+   * Contient les options des pools précédents, plus :
+   * **Économe (`eco`)** : Restitue $+1$ cristal de Mana lors du jeu (par niveau de palier).
+   * **Persistant (`enduring`)** : Force `isExhaust = false` pour la carte (palier unique, applicable uniquement sur les cartes possédant `isExhaust: true` d'origine et excluant les cartes de type `power`).
 
-### B. Options d'Améliorations Variées (Effets Additionnels)
-Lorsqu'un joueur choisit d'améliorer une carte à la Forge, le jeu lui propose **3 options aléatoires** parmi celles qui sont compatibles avec sa carte :
+* *Règle d'Unicité* : Une carte ne peut pas posséder deux fois la même amélioration.
 
-1. **Tranchant (Sharp)** : Ajoute `+2 Dégâts` (uniquement sur les cartes infligeant des dégâts).
-2. **Endurci (Hardened)** : Ajoute `+2 Armure` (uniquement sur les cartes octroyant de l'armure).
-3. **Véloce (Quick)** : Piochez 1 carte supplémentaire lors du jeu de cette carte.
-4. **Économe (Eco)** : Restitue 1 point de Mana lors du jeu de cette carte.
-5. **Persistant (Enduring)** : La carte perd l'effet d'épuisement (`isExhaust: false` forcé, uniquement pour les cartes ayant `isExhaust: true` d'origine et hors cartes Pouvoir).
-6. **Brûlant (Burning)** : Applique 1 Brûlure (valeur 1, durée 1) (uniquement sur cartes d'Attaque).
-7. **Congelant (Freezing)** : Applique 1 Gel (valeur 1, durée 1) (uniquement sur cartes d'Attaque).
-8. **Surchargé (Shocking)** : Applique 1 Électrocution (valeur 1, durée 1) (uniquement sur cartes d'Attaque).
+### C. Tirage Probabiliste Roguelike
+Lorsqu'un joueur choisit d'améliorer une carte à la Forge, les propositions sont générées via trois couches successives de probabilités :
+
+1. **Génération Probabiliste des Emplacements d'Options (1 à 5 options)** :
+   * Le jeu détermine quels emplacements d'option apparaissent selon des probabilités indépendantes :
+     * **Option 1** : `100%` (garantie, toujours au moins 1 option proposée).
+     * **Option 2** : `50%` de chance.
+     * **Option 3** : `25%` de chance.
+     * **Option 4** : `10%` de chance.
+     * **Option 5** : `2%` de chance.
+2. **Tirage Pondéré du Pool d'Améliorations (Selon Rareté de la carte)** :
+   * Pour chaque emplacement activé, la rareté du bonus proposé est tirée avec les poids suivants (clamped selon la rareté maximum débloquée par la carte) :
+     * **Sur carte Commune** : `100%` Commun.
+     * **Sur carte Peu Commune** : `75%` Commun / `25%` Peu Commun.
+     * **Sur carte Rare ou supérieure** : `65%` Commun / `25%` Peu Commun / `10%` Rare.
+   * Une fois le pool déterminé, une amélioration compatible et disponible y est tirée de manière équiprobable.
+3. **Tirage Pondéré du Tier de Départ (Valeur du Bonus)** :
+   * Pour les améliorations compatibles multi-paliers (ex: `sharp`, `hardened`, `quick`, `eco`, etc.), le tier de départ $k$ de l'option tirée est déterminé par le jet suivant :
+     * **Tier I** (Standard — `80%` de chance) $\rightarrow$ `"id:1"` (ex: +2 dégâts, +1 pioche).
+     * **Tier II** (Amélioré — `15%` de chance) $\rightarrow$ `"id:2"` (ex: +4 dégâts, +2 pioches).
+     * **Tier III** (Légendaire — `5%` de chance) $\rightarrow$ `"id:3"` (ex: +6 dégâts, +3 pioches).
+   * Les améliorations à palier unique (comme `enduring`) restent à 1.
+
+### D. Relance (Re-roll) Individuelle des Fentes d'Option
+Chaque fente d'option active dispose de son propre bouton **Relancer** indépendant :
+* **Calcul du Coût Autonome** : Le coût de relance augmente de **25% cumulatifs** par emplacement, basé uniquement sur le nombre de relances effectuées sur cet emplacement spécifique :
+  $$\text{coût}_i = \text{round}\left(20 \times 1.25^{n_i}\right)$$
+  * $i$ : index de l'option (1 à 5).
+  * $n_i$ : nombre de relances effectuées sur la fente $i$ (commence à 0, coût de départ = 20 Or).
+* **Comportement UI & Inventaire** :
+  * Si l'Or du joueur (suivi via `inventoryProvider`) est insuffisant pour la fente $i$, son bouton Relancer est grisé.
+  * Cliquer sur le bouton déduit l'or, incrémente $n_i$, et génère une nouvelle option aléatoire pour la fente $i$ (en re-roulant son pool, son type et son tier) sans altérer les autres fentes actives.
 
 ---
 
 ## ⚖️ 4. Équilibrage des Cartes de Base (cards.json)
 
-Les cartes ciblées reçoivent les ajustements de base suivants, qui se combineront ensuite avec les multiplicateurs de rareté et les améliorations de la forge :
-
-1. **`holy_shield`** (Paladin - Rare de base) :
-   * **Coût** : 1 | **Effets** : 8 Armure, 2 Soin | **Modif** : Ajout de `"isExhaust": true`
-   * *Synergie Forge* : Le joueur peut choisir d'appliquer l'amélioration de forge **Persistant** (Enduring) pour supprimer cet Exhaust, rendant la carte infiniment jouable dans un combat au prix d'une fente d'amélioration.
-2. **`warcry`** (Global - Épique de base) :
-   * **Coût** : 2 | **Effets** : 4 Dégâts de zone (AOE), 4 Armure.
-3. **`mana_surge`** (Mage - Peu Commun de base) :
-   * **Coût** : 0 | **Effets** : Gain de 1 Mana, Pioche 1 carte | **Modif** : `"isExhaust": true`
-4. **`concentration`** (Global - Commun de base) :
-   * **Coût** : 0 | **Effets** : Pioche 2 cartes | **Modif** : `"isExhaust": true`
-5. **`poison_stab`** (Global - Commun de base) :
-   * **Coût** : 1 | **Effets** : 5 Dégâts directs, 4 Poison (durée 3).
+1. **`holy_shield`** (Paladin - Rare) : Cost 1, 8 Block, 2 Heal, starts with `"isExhaust": true`. (Can remove exhaust at Forge with *Persistant*).
+2. **`warcry`** (Global - Epic) : Cost 2, 4 AOE damage, 4 Block.
+3. **`mana_surge`** (Mage - Uncommon) : Cost 0, 1 Mana, 1 Draw, `"isExhaust": true`.
+4. **`concentration`** (Global - Common) : Cost 0, 2 Draw, `"isExhaust": true`.
+5. **`poison_stab`** (Global - Common) : Cost 1, 5 direct damage, 4 Poison (duration 3).
 
 ---
 
 ## 📂 5. Modifications Logiques et Modèles du Code
 
-### Modèle `CardData` (`lib/models/data/card_data.dart`)
-* Ajouter le champ `final int maxForgeUpgrades;` (par défaut `1`).
-* Charger ce champ depuis le constructeur et `fromJson`.
-
 ### Modèle `CardInstance` (`lib/models/card_instance.dart`)
-* Ajouter les champs :
-  * `CardRarity rarity;` (dynamique, par défaut `data.rarity`).
-  * `final List<String> forgeUpgrades;` (liste des identifiants d'améliorations appliquées).
-* Mettre à jour `copyWith` et les constructeurs.
-* Ajouter le getter de capacité :
-  ```dart
-  int get totalMaxForgeUpgrades => data.maxForgeUpgrades + rarity.index;
-  ```
+* Supprimer `int level`.
+* Ajouter `CardRarity rarity;` et `List<String> forgeUpgrades;` (stockant les chaînes `"id:tier"`).
+* Getter `totalMaxForgeUpgrades` et calcul de capacité de fentes.
 
 ### Résolution des Effets (`lib/game/services/effect_resolver.dart`)
-* Intégrer les bonus de forge appliqués à l'instance de carte jouée :
-  * Si `forgeUpgrades` contient `'sharp'` : ajouter 2 aux dégâts.
-  * Si `forgeUpgrades` contains `'hardened'` : ajouter 2 à l'armure.
-  * Si `forgeUpgrades` contains `'quick'` : déclencher une pioche : `deckController.drawCards(1)`.
-  * Si `forgeUpgrades` contains `'eco'` : ajouter 1 mana : `runController.gainResource(mana: 1)`.
-  * Si `forgeUpgrades` contains `'burning'`, `'freezing'`, `'shocking'` : appliquer le statut correspondant sur la cible.
+* Formule : `scaledValue = (baseValue * rarityMultiplier).round();`.
+* Parser le format `"id:tier"` lors de la pose d'une carte :
+  * Si `"sharp:k"` : ajouter $+2 \times k$ aux dégâts.
+  * Si `"hardened:k"` : ajouter $+2 \times k$ à l'armure.
+  * Si `"quick:k"` : piocher $k$ cartes.
+  * Si `"eco:k"` : ajouter $k$ mana.
+  * Si `"burning:k"` / `"freezing:k"` / `"shocking:k"` : appliquer le statut élémentaire correspondant de valeur $k$.
 
 ### Contrôleur de Deck (`lib/game/controllers/deck_controller.dart`)
-* Dans `playCard` :
-  * Si la carte possède l'amélioration `'enduring'`, forcer `isExhaust = false` lors du traitement (sauf type `power`).
-* Dans `mergeCards` :
-  * Regrouper par ID, niveau ET rareté.
-  * Fusion de Rareté : 3 cartes de Niveau 3 d'une Rareté R ➔ 1 carte de Niveau 1 de Rareté R+1.
-  * Transférer et fusionner les améliorations de forge des anciennes cartes vers la nouvelle (dans la limite de sa capacité maximale).
-* Ajouter une méthode `applyForgeUpgrade(String uniqueId, String upgradeId)` pour appliquer l'amélioration choisie.
+* Dans `playCard` : non-exhaust si la carte contient `"enduring:1"`.
+* Modifier `mergeCards` pour accepter une liste de 3 `uniqueId` sélectionnés, et une liste d'améliorations choisies à conserver.
+* Gérer l'auto-fusion dans le contrôleur : grouper les améliorations par ID et sommer leurs tiers $k$.
 
-### Écran de la Forge (`lib/ui/screens/rest_screen.dart`)
-* Remplacer l'amélioration automatique de niveau (`_upgradeCard`) par une sélection d'options :
-  1. Le joueur choisit sa carte.
-  2. Si `forgeUpgrades.length >= totalMaxForgeUpgrades`, afficher un message d'avertissement.
-  3. Sinon, générer 3 options d'améliorations aléatoires compatibles (en excluant les doublons et les améliorations invalides pour le type de carte).
-  4. Afficher un dialogue de sélection.
-  5. Une fois choisie, appeler `deckNotifier.applyForgeUpgrade(...)`.
-
-### Rendu de la description des cartes (`lib/ui/widgets/ui_card.dart` & `lib/game/components/card_component.dart`)
-* Dynamiquement concaténer à la description textuelle les bonus appliqués (ex: `+2 Dégâts (Tranchant)`, `Pioche +1 (Véloce)`).
+### Écran de la Fusion (`lib/ui/screens/deck_screen.dart`)
+* Modifier la confirmation de merge :
+  * Ouvrir un modal de sélection permettant de cocher exactement 3 exemplaires du même ID et même rareté.
+  * Après sélection, calculer les améliorations auto-fusionnées et consolidated.
+  * Si la capacité de la rareté supérieure est dépassée, afficher un écran de sélection pour choisir les bonus à conserver.
+  * Appeler le notifier pour exécuter la fusion.
 
 ---
 
 ## 🧪 6. Plan de Test et de Validation
 
-1. **Vérification Statique** : `dart analyze` pour éliminer tout avertissement.
+1. **Vérification Statique** : `dart analyze`.
 2. **Tests Unitaires** :
-   * Tester la fusion de Rareté (Commun Lvl 3 x3 ➔ Peu Commun Lvl 1).
-   * Tester la limite `totalMaxForgeUpgrades` pour s'assurer qu'un joueur ne peut pas outrepasser la capacité de forge.
-   * Tester l'application des effets de forge en combat (`sharp`, `eco`, etc.).
+   * Tester la fusion probabiliste et l'auto-fusion des améliorations (ex: deux `"sharp:1"` devenant un `"sharp:2"`).
+   * Tester le choix interactif d'héritage d'améliorations lors d'un merge en surcharge de capacité.
 3. **Tests Manuels** :
-   * Visiter le feu de camp, forger une carte et valider que 3 options variées sont bien proposées.
-   * Jouer la carte modifiée et vérifier l'application effective du bonus en combat.
+   * Effectuer un merge dans le deck, sélectionner 3 cartes spécifiques et choisir ses améliorations.
+   * Vérifier l'application en combat des tiers cumulés d'améliorations (ex: Tranchant II inflige bien +4 dégâts).

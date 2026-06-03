@@ -85,12 +85,13 @@
     "name_fr": "Concentration",
     "description_en": "Draw 2 cards.",
     "description_fr": "Pioche 2 cartes.",
-    "cost": 1,
+    "cost": 0,
     "type": "skill",
     "category": "global",
     "rarity": "common",
     "target": "self",
     "animation": "buff",
+    "isExhaust": true,
     "effects": [
       {
         "type": "draw",
@@ -185,7 +186,7 @@
     "name_fr": "Cri de Guerre",
     "description_en": "Deal 4 damage to all enemies and gain 4 Block.",
     "description_fr": "Inflige 4 dégâts à tous les ennemis et gagne 4 d'Armure.",
-    "cost": 1,
+    "cost": 2,
     "type": "attack",
     "category": "global",
     "rarity": "epic",
@@ -248,8 +249,8 @@
     "id": "poison_stab",
     "name_en": "Poison Stab",
     "name_fr": "Coup Empoisonné",
-    "description_en": "Deal 5 damage. Apply 3 Poison.",
-    "description_fr": "Inflige 5 dégâts. Applique 3 Poison.",
+    "description_en": "Deal 5 damage. Apply 4 Poison.",
+    "description_fr": "Inflige 5 dégâts. Applique 4 Poison.",
     "cost": 1,
     "type": "attack",
     "category": "global",
@@ -264,7 +265,7 @@
       {
         "type": "apply_status",
         "statusId": "poison",
-        "value": 3,
+        "value": 4,
         "duration": 3
       }
     ]
@@ -377,6 +378,7 @@
     "rarity": "rare",
     "target": "self",
     "animation": "buff",
+    "isExhaust": true,
     "effects": [
       {
         "type": "armor",
@@ -486,8 +488,8 @@
     "id": "mana_surge",
     "name_en": "Mana Surge",
     "name_fr": "Surtension de Mana",
-    "description_en": "Gain 2 Mana this turn.",
-    "description_fr": "Gagne 2 cristaux de Mana ce tour-ci.",
+    "description_en": "Gain 1 Mana and draw 1 card.",
+    "description_fr": "Gagne 1 Mana et pioche 1 carte.",
     "cost": 0,
     "type": "skill",
     "category": "characterSpecific",
@@ -499,7 +501,11 @@
     "effects": [
       {
         "type": "gain_mana",
-        "value": 2
+        "value": 1
+      },
+      {
+        "type": "draw",
+        "value": 1
       }
     ]
   }

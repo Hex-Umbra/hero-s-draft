@@ -167,8 +167,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                   description: card.data.getDescription(locale),
                   cost: card.data.cost,
                   effects: card.data.effects,
-                  level: card.level,
-                  rarity: l10n.levelLabel(card.level),
+                  rarity: _getRarityLabel(card.rarity, l10n),
                   target: _getTargetLabel(card.data.target, l10n),
                   type: card.data.type,
                   isExhaust: card.data.isExhaust,
@@ -278,7 +277,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                         style: const TextStyle(color: Colors.amber),
                       ),
                       subtitle: Text(
-                        l10n.levelLabel(card.level),
+                        _getRarityLabel(card.rarity, l10n),
                         style: const TextStyle(color: Colors.white70),
                       ),
                       onTap: () {

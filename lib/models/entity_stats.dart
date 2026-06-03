@@ -115,8 +115,16 @@ class EntityStats {
   /// Décrémente la durée des statuts et supprime ceux expirés
   EntityStats tickStatuses() {
     List<StatusEffect> newStatuses = statuses
-        .map((s) => s.copyWith(duration: s.duration - 1))
-        .where((s) => s.duration > 0)
+        .map((s) {
+          if (s.id == 'burn') {
+            return s.copyWith(
+              value: s.value - 1,
+              duration: s.duration - 1,
+            );
+          }
+          return s.copyWith(duration: s.duration - 1);
+        })
+        .where((s) => s.duration > 0 && (s.id != 'burn' || s.value > 0))
         .toList();
 
     return copyWith(statuses: newStatuses);

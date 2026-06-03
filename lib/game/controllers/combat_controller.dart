@@ -144,10 +144,31 @@ class CombatController extends StateNotifier<CombatState> {
     switch (intent.type) {
       case IntentType.attack:
         int dmg = intent.value;
-        if (enemy.stats.statuses.any((s) => s.id == 'freeze')) {
+        final hasFreeze = enemy.stats.statuses.any((s) => s.id == 'freeze');
+        if (hasFreeze) {
           dmg = (intent.value * 0.5).round();
         }
+
+        // Apply vulnerable multiplier if hero has vulnerable status
+        if (runController.currentState.heroStats.statuses.any((s) => s.id == 'vulnerable')) {
+          dmg = (dmg * 1.5).round();
+        }
+
         runController.takeDamage(dmg);
+
+        if (hasFreeze) {
+          final updatedStatuses = enemy.stats.statuses.map((s) {
+            if (s.id == 'freeze') {
+              return s.copyWith(duration: s.duration - 1);
+            }
+            return s;
+          }).where((s) => s.duration > 0).toList();
+
+          final updatedEnemy = enemy.copyWith(
+            stats: enemy.stats.copyWith(statuses: updatedStatuses),
+          );
+          _updateEnemy(updatedEnemy);
+        }
         break;
       case IntentType.defend:
         final updatedEnemy = enemy.copyWith(

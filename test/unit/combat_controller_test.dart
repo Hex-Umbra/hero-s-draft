@@ -526,7 +526,74 @@ void main() {
           playerHpBeforeAttack - 5,
         );
 
-        // 3. BURN TEST
+        // Verify that freeze duration decreased by 1 (was 2, now 1)
+        expect(
+          combatController.currentState.enemies.first.stats.statuses.firstWhere((s) => s.id == 'freeze').duration,
+          1,
+        );
+
+        // 3. VULNERABLE TEST (Enemy to Player)
+        // Reset player HP to 100
+        runController.setHeroStats(currentPv: 100);
+        // Add vulnerable status to hero
+        runController.addStatus(
+          const StatusEffect(
+            id: 'vulnerable',
+            name: 'Vulnérable',
+            type: StatusType.debuff,
+            value: 1,
+            duration: 2,
+          ),
+        );
+        // Enemy attacks with 10. Halved to 5 because of freeze (which is now at duration 1),
+        // then multiplied by 1.5 because of vulnerable: 5 * 1.5 = 7.5 -> 8.
+        final playerHpBeforeVulnerableAttack =
+            runController.currentState.heroStats.currentPv; // 100
+        combatController.resolveEnemyIntent(enemy.id, runController);
+
+        expect(
+          runController.currentState.heroStats.currentPv,
+          playerHpBeforeVulnerableAttack - 8,
+        );
+
+        // Verify that freeze status is now removed because its duration dropped to 0
+        expect(
+          combatController.currentState.enemies.first.stats.statuses.any((s) => s.id == 'freeze'),
+          isFalse,
+        );
+
+        // 4. VULNERABLE TEST (Player to Enemy)
+        // Reset enemy HP to 20 and clear existing statuses (like shock)
+        combatController.updateEnemyStats(
+          enemy.id,
+          combatController.currentState.enemies.first.stats.copyWith(currentPv: 20, statuses: []),
+        );
+        // Add vulnerable status to enemy
+        combatController.updateEnemyStats(
+          enemy.id,
+          combatController.currentState.enemies.first.stats.addStatus(
+            const StatusEffect(
+              id: 'vulnerable',
+              name: 'Vulnérable',
+              type: StatusType.debuff,
+              value: 1,
+              duration: 2,
+            ),
+          ),
+        );
+        // Play a card that deals 6 damage (Strike).
+        // Since strength is 0, base damage = 6.
+        // Enemy has vulnerable, so damage should be 6 * 1.5 = 9.
+        deckNotifier.state = deckNotifier.state.copyWith(hand: [strikeCard]);
+        combatController.applyPlayerCardPlay(
+          strikeCard,
+          runController,
+          deckNotifier,
+        );
+        // Enemy HP should be 20 - 9 = 11.
+        expect(combatController.currentState.enemies.first.stats.currentPv, 11);
+
+        // 5. BURN TEST
         // Add burn status with value 3 to the enemy
         combatController.updateEnemyStats(
           enemy.id,
@@ -546,10 +613,10 @@ void main() {
             .enemies
             .first
             .stats
-            .currentPv; // should be 10
+            .currentPv; // should be 11
         combatController.startEnemyTurn(runController);
 
-        // Enemy HP should decrease by 3 due to burn, so 10 - 3 = 7
+        // Enemy HP should decrease by 3 due to burn, so 11 - 3 = 8
         expect(
           combatController.currentState.enemies.first.stats.currentPv,
           enemyHpBeforeBurn - 3,

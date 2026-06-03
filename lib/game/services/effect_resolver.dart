@@ -119,10 +119,103 @@ class EffectResolver {
 
     runController.consumeResource(mana: card.currentCost);
 
+    int extraDamage = 0;
+    int extraArmor = 0;
+    int extraDraw = 0;
+    int extraMana = 0;
+    int elementBurn = 0;
+    int elementFreeze = 0;
+    int elementShock = 0;
+
+    for (var upgrade in card.forgeUpgrades) {
+      final parts = upgrade.split(':');
+      if (parts.length != 2) continue;
+      final id = parts[0];
+      final k = int.tryParse(parts[1]) ?? 0;
+      if (k <= 0) continue;
+      switch (id) {
+        case 'sharp':
+          extraDamage += 2 * k;
+          break;
+        case 'hardened':
+          extraArmor += 2 * k;
+          break;
+        case 'quick':
+          extraDraw += k;
+          break;
+        case 'eco':
+          extraMana += k;
+          break;
+        case 'burning':
+          elementBurn += k;
+          break;
+        case 'freezing':
+          elementFreeze += k;
+          break;
+        case 'shocking':
+          elementShock += k;
+          break;
+      }
+    }
+
+    if (extraDraw > 0) {
+      deckController.drawCards(extraDraw);
+    }
+    if (extraMana > 0) {
+      final currentMana = runController.currentState.heroStats.currentMana;
+      runController.setHeroStats(currentMana: currentMana + extraMana);
+    }
+
+    // Apply elemental statuses if this is an Attack card
+    if (card.data.type == CardType.attack) {
+      final List<StatusEffect> extraStatuses = [];
+      if (elementBurn > 0) {
+        final st = _createStatus('burn', elementBurn, elementBurn);
+        if (st != null) extraStatuses.add(st);
+      }
+      if (elementFreeze > 0) {
+        final st = _createStatus('freeze', elementFreeze, elementFreeze);
+        if (st != null) extraStatuses.add(st);
+      }
+      if (elementShock > 0) {
+        final st = _createStatus('shock', elementShock, elementShock);
+        if (st != null) extraStatuses.add(st);
+      }
+
+      if (extraStatuses.isNotEmpty) {
+        if (card.data.target == CardTarget.singleEnemy && selectedEnemyId != null) {
+          final enemyIndex = combatController.currentState.enemies
+              .indexWhere((e) => e.id == selectedEnemyId);
+          if (enemyIndex != -1) {
+            final enemy = combatController.currentState.enemies[enemyIndex];
+            combatController.updateEnemyStats(
+              enemy.id,
+              enemy.stats.copyWith(
+                statuses: [...enemy.stats.statuses, ...extraStatuses],
+              ),
+            );
+          }
+        } else if (card.data.target == CardTarget.allEnemies) {
+          for (var enemy in combatController.currentState.enemies) {
+            combatController.updateEnemyStats(
+              enemy.id,
+              enemy.stats.copyWith(
+                statuses: [...enemy.stats.statuses, ...extraStatuses],
+              ),
+            );
+          }
+        }
+      }
+    }
+
     for (var effect in card.data.effects) {
       final int baseValue = effect.value;
-      final int scaledValue = (baseValue * (1 + (card.level - 1) * 0.5))
-          .round();
+      int scaledValue = (baseValue * card.rarityMultiplier).round();
+      if (effect.type == 'damage') {
+        scaledValue += extraDamage;
+      } else if (effect.type == 'armor') {
+        scaledValue += extraArmor;
+      }
 
       switch (effect.type) {
         case 'damage':
@@ -150,6 +243,9 @@ class EffectResolver {
               if (shockStatus.id.isNotEmpty) {
                 dmg += shockStatus.value;
               }
+              if (enemy.stats.statuses.any((s) => s.id == 'vulnerable')) {
+                dmg = (dmg * 1.5).round();
+              }
               combatController.updateEnemyStats(
                 selectedEnemyId,
                 enemy.stats.takeDamage(dmg),
@@ -174,6 +270,9 @@ class EffectResolver {
               );
               if (shockStatus.id.isNotEmpty) {
                 individualDmg += shockStatus.value;
+              }
+              if (enemy.stats.statuses.any((s) => s.id == 'vulnerable')) {
+                individualDmg = (individualDmg * 1.5).round();
               }
               combatController.updateEnemyStats(
                 enemy.id,

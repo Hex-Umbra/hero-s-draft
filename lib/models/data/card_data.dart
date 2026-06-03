@@ -45,6 +45,7 @@ class CardData {
   final String? animation; // Type d'animation (ex: 'melee', 'magic', 'buff')
   final bool isExhaust;
   final List<CardEffect> effects;
+  final int baseMaxForgeUpgrades;
 
   const CardData({
     required this.id,
@@ -62,6 +63,7 @@ class CardData {
     this.animation,
     this.isExhaust = false,
     required this.effects,
+    this.baseMaxForgeUpgrades = 1,
   });
 
   String getName(String locale) => locale == 'fr' ? nameFr : nameEn;
@@ -109,6 +111,7 @@ class CardData {
               ?.map((e) => CardEffect.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
+      baseMaxForgeUpgrades: json['baseMaxForgeUpgrades'] as int? ?? 1,
     );
   }
 }

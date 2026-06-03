@@ -238,8 +238,25 @@ class CardComponent extends PositionComponent
 
     final heroAttack = game.heroCard?.stats.effectiveAttaque ?? 0;
 
+    int extraDamage = 0;
+    int extraArmor = 0;
+    for (var upgrade in card.forgeUpgrades) {
+      final parts = upgrade.split(':');
+      if (parts.length != 2) continue;
+      final id = parts[0];
+      final k = int.tryParse(parts[1]) ?? 0;
+      if (k <= 0) continue;
+      if (id == 'sharp') extraDamage += 2 * k;
+      if (id == 'hardened') extraArmor += 2 * k;
+    }
+
     for (var effect in card.data.effects) {
-      final scaledValue = (effect.value * (1 + (card.level - 1) * 0.5)).round();
+      int scaledValue = (effect.value * card.rarityMultiplier).round();
+      if (effect.type == 'damage') {
+        scaledValue += extraDamage;
+      } else if (effect.type == 'armor') {
+        scaledValue += extraArmor;
+      }
       if (effect.type == 'damage') {
         final totalDmg = scaledValue + heroAttack;
         if (card.data.target == CardTarget.allEnemies) {
