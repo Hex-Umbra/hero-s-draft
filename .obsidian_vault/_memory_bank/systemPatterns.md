@@ -18,7 +18,7 @@ graph TD
     end
 
     subgraph "Couche Métier — Riverpod (Cerveau)"
-        RVP["RunController / DeckNotifier<br/>CombatController / InventoryController<br/>SkillController / EventController / ShopController"]
+        RVP["RunController / DeckNotifier<br/>CombatController / InventoryController<br/>SkillController / EventController / ShopController<br/>RewardController"]
         ER["EffectResolver<br/>(résolution d'effets)"]
         TS["TraitSystem<br/>(passifs héros)"]
         ES["EncounterSystem<br/>(génération combats)"]
@@ -51,7 +51,7 @@ graph TD
 | Rendu Flame | `lib/game/heros_draft_game.dart` | `HerosDraftGame` — orchestrateur Flame | ~775 |
 | Rendu Flame | `lib/game/components/` | `card_component.dart` (~1031), `targeting_line.dart`, `entities/` (5 fichiers) | ~2500 |
 | Constantes | `lib/game/game_constants.dart` | `GameConstants` — z-index, tailles, badges | ~30 |
-| Contrôleurs | `lib/game/controllers/` | `run_controller.dart`, `combat_controller.dart`, `deck_controller.dart`, `inventory_controller.dart`, `skill_controller.dart`, `event_controller.dart`, `shop_controller.dart` | ~2000 |
+| Contrôleurs | `lib/game/controllers/` | `run_controller.dart`, `combat_controller.dart`, `deck_controller.dart`, `inventory_controller.dart`, `skill_controller.dart`, `event_controller.dart`, `shop_controller.dart`, `reward_controller.dart` | ~2250 |
 | Systèmes | `lib/game/systems/` | `encounter_system.dart`, `trait_system.dart` | ~200 |
 | Services (jeu) | `lib/game/services/` | `effect_resolver.dart` (~250), `combat_debug_logger.dart` (~120) | ~370 |
 | Services (app) | `lib/services/` | `game_data_service.dart`, `map_generator_service.dart` | ~250 |
@@ -60,7 +60,7 @@ graph TD
 | UI Écrans | `lib/ui/screens/` | 10 écrans (`home_screen`, `hero_selection_screen`, `starter_deck_draft_screen`, `map_screen`, `game_screen`, `shop_screen`, `event_screen`, `campfire_screen`, `draft_screen`, `dictionary_screen`) | ~5500 |
 | UI Widgets | `lib/ui/widgets/` | `ui_card.dart`, `status_effects_panel.dart` | ~400 |
 | Système Tutoriel | `lib/tutorial/` | `tutorial_engine.dart`, `tutorial_screen.dart`, widgets d'étapes (18 fichiers) | ~2000 |
-| **Total estimé** | | **~64 fichiers** | **~10320** |
+| **Total estimé** | | **~65 fichiers** | **~10600** |
 
 ---
 
@@ -155,6 +155,24 @@ Tous les contrôleurs héritent de `StateNotifier<T>` et exposent des états imm
 **État** : `skill1Cooldown`, `skill2Cooldown` (int).
 
 **Responsabilités** : `tickCooldowns()` (décrémente de 1, min 0), `triggerSkill1(cd, {mana, hpPercent})` / `triggerSkill2()` — vérifie cooldown, consomme ressources via runProvider, active le cooldown. `resetCooldowns()`.
+
+### 2.8. `RewardController` (`rewardProvider`) — Pilote des Récompenses de Combat
+
+**Provider** : `StateNotifierProvider<RewardController, RewardState>` — détient `Ref ref`.
+
+**État `RewardState`** : `goldGained` (int), `xpGained` (int), `rolledRelic` (RelicData?), `rolledCards` (List\<CardData\>), `isGoldXpCollected` (bool), `isRelicCollected` (bool), `isRelicSkipped` (bool), `isCardsProcessed` (bool), `selectedCards` (List\<CardData\>), `isResolved` (bool).
+
+**Responsabilités** :
+- **Initialisation** : `handleVictory(...)` — Déclenché lors de la victoire. 
+  - Somme l'XP de base de chaque ennemi battu, indexé sur son niveau : `(enemy.data.xp * levelMultiplier).round()` où `levelMultiplier = 1.0 + 0.10 * (enemy.stats.level - 1)`. Double le gain total si le nœud est configuré avec `bossRewardType == BossRewardType.doubleXp`.
+  - Somme l'or de base de chaque ennemi battu (`enemies.json`) avec le même coefficient de niveau : `(enemy.data.gold * levelMultiplier).round()`.
+  - Effectue le tirage de Reliques si combat de type Élite ou Boss. Si le nœud présente `bossRewardType == BossRewardType.improvedRelic`, exclut les reliques de rareté commune et améliore les probabilités globales de tirage (Legendary 15%, Epic 30%, Rare 35%, Uncommon 20%, ajustées par `luck`).
+  - Génère 3 choix de cartes globales de butin si `bossRewardType == BossRewardType.cards`.
+- **Collecte & Résolution** :
+  - `collectGoldAndXp()` : Crédite l'or accumulé à `InventoryController` et l'XP à `RunController` (détermine si le héros monte de niveau).
+  - `collectRelic()` / `skipRelic()` : Ajoute ou ignore la relique de l'inventaire.
+  - `chooseCards(cards)` / `skipCards()` : Ajoute les cartes choisies dans le master deck via `DeckNotifier` ou ignore le tirage.
+  - La méthode interne `_checkResolution()` marque l'état global `isResolved` à vrai une fois que toutes les récompenses valides ont été collectées ou sautées.
 
 ---
 
@@ -546,6 +564,7 @@ Pour augmenter la sensation d'excitation et de "butin" lors de l'acquisition de 
 | `skillProvider` | `StateNotifierProvider<SkillController, SkillState>` | `SkillState` | Non | Cooldowns des 2 compétences héroïques |
 | `eventProvider` | `StateNotifierProvider<EventController, EventState>` | `EventState` | Non | Événement narratif actif, choix sélectionné |
 | `shopProvider` | `StateNotifierProvider<ShopController, ShopState>` | `ShopState` | Non | Cartes en vente, état d'achat heal |
+| `rewardProvider` | `StateNotifierProvider<RewardController, RewardState>` | `RewardState` | Non | Butins post-combat (or, XP, reliques, cartes) |
 | `gameDataLoaderProvider` | `FutureProvider<GameDataRegistry>` | `GameDataRegistry` | Non | Chargement asynchrone des 8 JSON d'assets |
 
 ### 6.2. Principes Appliqués
@@ -602,12 +621,14 @@ Pour augmenter la sensation d'excitation et de "butin" lors de l'acquisition de 
 5. FIN DE COMBAT & TRANSITION DE VICTOIRE
    └→ _cleanDeadEnemies() détecte 0 ennemis
        ├→ isCombatEnded = true, isVictory = true
-       └→ onEnemiesDead callback → UI affiche RewardOverlay / Pipeline de Victoire :
-           ├→ Accumule et additionne l'XP gagnée de tous les ennemis (+10% d'XP par niveau de monstre au-dessus du lvl 1)
-           ├→ RunController.gainXp(totalXp)
+       └→ onEnemiesDead callback → UI (GameScreen) délègue la gestion des récompenses à RewardController :
+           ├→ RewardController.handleVictory() : calcule l'XP et l'or de façon unifiée (scaling par niveau de monstre de +10% par niveau), et résout les tirages de reliques ou de cartes selon bossRewardType.
+           ├→ Le joueur clique pour récupérer l'XP et l'or : RewardController.collectGoldAndXp()
            ├→ SI LEVEL UP : Déclenche l'affichage en plein écran de la bannière festive « LEVEL UP ! »
-           │   └→ Redirection du joueur vers l'écran DraftScreen amélioré (cartes proposées de raretés supérieures)
-           └→ SINON : Attribution de l'or de victoire standard et déblocage du voyage sur la carte du monde
+           │   └→ Redirection du joueur vers l'écran DraftScreen amélioré (sélection de récompense de niveau)
+           ├→ SI BOSS/ELITE : Affichage séquentiel du carrousel de relique (collecte/skip gérés par RewardController)
+           ├→ SI BOSS (type cards) : Affichage séquentiel du dialogue de draft de cartes (choix/skip gérés par RewardController)
+           └→ Une fois isResolved = true : Déblocage du voyage et retour sur la carte du monde
 ```
 
 ---

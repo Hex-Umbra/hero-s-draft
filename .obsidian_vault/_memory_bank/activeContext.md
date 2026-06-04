@@ -4,7 +4,7 @@ Ce document décrit le focus actif du projet, les accomplissements récents, et 
 
 ## 1. Focus Actuel du Projet
 
-Le projet vient de finaliser la mise en œuvre de la génération procédurale robuste de la carte du monde (Section 5) et le polissage de l'UI responsive et adaptative en combat (Section 6). L'ensemble des 100 tests unitaires et d'intégration passe au vert avec 0 avertissement.
+Le projet vient de finaliser le refactoring des récompenses des nœuds de Boss et des drops d'or des ennemis (Version 0.0.94), séparant proprement la logique métier de l'UI et renforçant la typisation des données. L'ensemble des 100 tests unitaires et d'intégration passe au vert avec 0 avertissement.
 
 Le focus actuel s'oriente vers la préparation des prochaines étapes de refactoring technique de la Phase 4 (Sauvegarde, parallélisation I/O, audio).
 
@@ -86,6 +86,14 @@ Le focus actuel s'oriente vers la préparation des prochaines étapes de refacto
     - Découplage complet de la journalisation mathématique d'initialisation de combat en extrayant ces fonctions de `CombatController` vers `CombatDebugLogger`.
     - Stylisation de la console de débogage à l'aide de bordures en boîte ANSI et de codes de couleurs ANSI pour mettre en valeur les statistiques du joueur, les formules calculées de la DDA, les détails du scaling et les attributs finaux des ennemis.
     - Encapsulation des instructions de log dans des vérifications de mode débogage (`kDebugMode`) pour éviter toute surcharge d'allocation de mémoire en production.
+
+13. **Refactoring des Récompenses de Boss et Drops d'Or (Version 0.0.94)** :
+    - **Refactoring architectural** : Centralisation complète du pipeline de calcul et de distribution de récompenses post-combat (XP, or, reliques, choix de cartes) dans un nouveau contrôleur Riverpod dédié `RewardController` (`rewardProvider`), isolant la logique métier des vues.
+    - **Butin d'Or des Ennemis** : Ajout du champ `gold` à `EnemyData` et `EnemyInstance`. Les montants d'or initiaux sont configurés dans `enemies.json` (slime: 10, gobelin: 12, squelette: 15, orc: 25).
+    - **Scaling d'Or de combat** : L'or de victoire est maintenant mis à l'échelle dynamiquement selon le niveau de l'ennemi en combat à l'aide de la formule multiplicative `(enemy.data.gold * levelMultiplier).round()`, où `levelMultiplier = 1.0 + 0.10 * (enemy.stats.level - 1)`.
+    - **Typage des Récompenses de Boss** : Introduction de l'enum `BossRewardType` (`cards`, `doubleXp`, `improvedRelic`) et d'un champ typé `bossRewardType` dans `MapNode` pour remplacer les heuristiques textuelles fragiles basées sur le nom ou les coordonnées du nœud.
+    - **Génération Procédurale** : `MapGeneratorService` attribue explicitement le type de récompense de Boss selon la position horizontale `x` à l'étage final (x=0: cards, x=1: doubleXp, x=2: improvedRelic).
+    - **Découplage UI** : `MapNodeWidget` lit le `bossRewardType` fortement typé plutôt que de parser des coordonnées sous forme de chaînes de caractères. `GameScreen` délègue les écrans de reliques et les dialogues de draft de façon coordonnée via le `rewardProvider`, et le gain d'or aléatoire codé en dur a été supprimé de `DraftScreen`.
 
 ---
 

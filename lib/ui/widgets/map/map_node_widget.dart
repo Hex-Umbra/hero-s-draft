@@ -44,16 +44,12 @@ class _MapNodeWidgetState extends State<MapNodeWidget> {
       case MapNodeType.event:
         return (l10n.tooltipEventTitle, l10n.tooltipEventDesc);
       case MapNodeType.boss:
-        final parts = widget.node.id.split('_');
-        if (parts.length >= 3) {
-          final xIndex = int.tryParse(parts[2]);
-          if (xIndex == 0) {
-            return (l10n.legendBossCards, l10n.tooltipBossDesc);
-          } else if (xIndex == 1) {
-            return (l10n.legendBossXp, l10n.tooltipBossDesc);
-          } else if (xIndex == 2) {
-            return (l10n.legendBossRelic, l10n.tooltipBossDesc);
-          }
+        if (widget.node.bossRewardType == BossRewardType.cards) {
+          return (l10n.legendBossCards, l10n.tooltipBossDesc);
+        } else if (widget.node.bossRewardType == BossRewardType.doubleXp) {
+          return (l10n.legendBossXp, l10n.tooltipBossDesc);
+        } else if (widget.node.bossRewardType == BossRewardType.improvedRelic) {
+          return (l10n.legendBossRelic, l10n.tooltipBossDesc);
         }
         return (l10n.tooltipBossTitle, l10n.tooltipBossDesc);
     }
@@ -87,22 +83,15 @@ class _MapNodeWidgetState extends State<MapNodeWidget> {
         color = Colors.blueAccent;
         break;
       case MapNodeType.boss:
-        final parts = widget.node.id.split('_');
-        if (parts.length >= 3) {
-          final xIndex = int.tryParse(parts[2]);
-          if (xIndex == 0) {
-            icon = Icons.style;
-            color = Colors.orangeAccent;
-          } else if (xIndex == 1) {
-            icon = Icons.auto_awesome;
-            color = Colors.cyanAccent;
-          } else if (xIndex == 2) {
-            icon = Icons.diamond;
-            color = Colors.deepPurpleAccent;
-          } else {
-            icon = Icons.dangerous;
-            color = Colors.purpleAccent;
-          }
+        if (widget.node.bossRewardType == BossRewardType.cards) {
+          icon = Icons.style;
+          color = Colors.orangeAccent;
+        } else if (widget.node.bossRewardType == BossRewardType.doubleXp) {
+          icon = Icons.auto_awesome;
+          color = Colors.cyanAccent;
+        } else if (widget.node.bossRewardType == BossRewardType.improvedRelic) {
+          icon = Icons.diamond;
+          color = Colors.deepPurpleAccent;
         } else {
           icon = Icons.dangerous;
           color = Colors.purpleAccent;

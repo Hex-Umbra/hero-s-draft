@@ -3,11 +3,11 @@
 Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnalités de **Hero's Draft** : opérationnelles, partiellement implémentées, non implémentées, et les chantiers de refactoring prioritaires issus des rapports de dette technique.
 
 **Métriques du projet** :
-- **~10 350 lignes** de code source dans `lib/` (64 fichiers).
+- **~10 600 lignes** de code source dans `lib/` (65 fichiers).
 - **8 fichiers JSON** de données d'assets.
 - **100 tests automatisés** — 100% au vert.
 - **0 erreur** via `flutter analyze`.
-- **~110 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
+- **~111 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
 
 ---
 
@@ -23,7 +23,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Anti-répétition de chemins | `MapGeneratorService._optimizeMapTypes` | Algorithme interdisant 3 nœuds Élite ou Repos consécutifs sur un même chemin |
 | Chokepoints structurels forcés | `MapGeneratorService` | Étage 5 Élite forcé (1 nœud), Étage 8 Repos forcé (repos garanti avant boss) |
 | Embranchement de Boss multiples | `MapGeneratorService` / `EncounterSystem` | Étage 9 (Boss) présente 3 nœuds de boss distincts avec récompenses de combat uniques déterminées par leur position |
-| Récompenses de Boss uniques | `GameScreen` | Récompense par position x (x=0: choix de 1-3 cartes, x=1: double XP, x=2: relique améliorée garantie min. Atypique) |
+| Récompenses de Boss uniques | `GameScreen`, `MapNode`, `RewardController` | Récompenses typées bossRewardType par position x (x=0: cards, x=1: doubleXp, x=2: improvedRelic), gérées par RewardController |
 | Correction d'orphelins | `MapGeneratorService` (Phase 2 câblage) | Garantie que tout nœud a au moins 1 connexion entrante |
 | Navigation réactive | `RunController.travelToNode()` | Validation d'accessibilité (connexion au nœud complété ou étage 0) |
 | Caméra centrée | `MapScreen` | Repositionnement et centrage automatique fluide à chaque transition |
@@ -43,6 +43,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Compétences | `SkillController` / `skillProvider` | 2 compétences par héros, cooldowns, consommation de ressources |
 | Événements | `EventController` / `eventProvider` | 2 événements narratifs à choix multiples, résolution d'actions, roll de rareté relique |
 | Boutique | `ShopController` / `shopProvider` | Achat/purge/clone cartes, soin, expansion, reroll |
+| Récompenses de Victoire | `RewardController` / `rewardProvider` | Or, XP (multipliés par bossRewardType), tirage de relique (improvedRelic exclut les communes), et draft de cartes |
 
 ### 🃏 Système de Cartes et Deck
 
@@ -269,7 +270,7 @@ Basé sur les rapports de dette technique (`technical_debt_report_Opus4.6.md`, 4
 | Important | Magic constants | 100+ valeurs codées en dur | Extraire dans `GameConstants` étendu |
 | Important | `EffectResolver` pattern | Classe statique avec switch géant | Migrer vers Strategy/Command pattern |
 | Important | Logique dans Flame | `executeSkill()` calcule des dégâts dans `HerosDraftGame` | Déplacer vers un controller dédié |
-| Moyen | Logique dans UI | Shop/event/heal/reward dans les écrans | Déplacer vers controllers |
+| Moyen | Logique dans UI | Shop/event/heal dans les écrans (Reward déplacé vers RewardController en v0.0.94) | Déplacer vers controllers |
 
 ### 🔵 Phase 4 — Long Terme (Semaines 7+)
 

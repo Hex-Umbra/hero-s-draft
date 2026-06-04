@@ -2,6 +2,8 @@ import 'package:flame/extensions.dart';
 
 enum MapNodeType { combat, elite, shop, rest, event, boss }
 
+enum BossRewardType { cards, doubleXp, improvedRelic }
+
 class MapNode {
   final String id;
   MapNodeType type;
@@ -9,6 +11,7 @@ class MapNode {
   final Vector2 position;
   bool isCompleted;
   final String? bossEnemyId;
+  final BossRewardType? bossRewardType;
 
   MapNode({
     required this.id,
@@ -17,6 +20,7 @@ class MapNode {
     required this.position,
     this.isCompleted = false,
     this.bossEnemyId,
+    this.bossRewardType,
   });
 
   Map<String, dynamic> toJson() {
@@ -27,6 +31,7 @@ class MapNode {
       'position': [position.x, position.y],
       'isCompleted': isCompleted,
       'bossEnemyId': bossEnemyId,
+      'bossRewardType': bossRewardType?.name,
     };
   }
 
@@ -41,6 +46,9 @@ class MapNode {
       ),
       isCompleted: json['isCompleted'] as bool? ?? false,
       bossEnemyId: json['bossEnemyId'] as String?,
+      bossRewardType: json['bossRewardType'] == null
+          ? null
+          : BossRewardType.values.firstWhere((e) => e.name == json['bossRewardType']),
     );
   }
 }

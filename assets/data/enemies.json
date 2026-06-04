@@ -9,6 +9,7 @@
     "tier": 1,
     "xp": 25,
     "critChance": 5,
+    "gold": 10,
     "intents": [
       { "type": "attack", "value": 4 }
     ]
@@ -23,6 +24,7 @@
     "tier": 1,
     "xp": 35,
     "critChance": 10,
+    "gold": 12,
     "intents": [
       { "type": "attack", "value": 5 }
     ]
@@ -37,6 +39,7 @@
     "tier": 2,
     "xp": 50,
     "critChance": 10,
+    "gold": 15,
     "intents": [
       { "type": "attack", "value": 8 },
       { "type": "attack", "value": 10 }
@@ -52,6 +55,7 @@
     "tier": 3,
     "xp": 100,
     "critChance": 15,
+    "gold": 25,
     "intents": [
       { "type": "attack", "value": 8 },
       { "type": "buff", "value": 2 },

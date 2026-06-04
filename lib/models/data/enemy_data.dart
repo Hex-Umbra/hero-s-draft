@@ -10,6 +10,7 @@ class EnemyData {
   final int tier;
   final int xp;
   final int critChance;
+  final int gold;
   final List<EnemyIntent>? intents;
 
   const EnemyData({
@@ -22,6 +23,7 @@ class EnemyData {
     this.tier = 1,
     this.xp = 20,
     this.critChance = 0,
+    this.gold = 10,
     this.intents,
   });
 
@@ -47,6 +49,7 @@ class EnemyData {
       tier: json['tier'] as int? ?? 1,
       xp: json['xp'] as int? ?? 20,
       critChance: json['critChance'] as int? ?? 0,
+      gold: json['gold'] as int? ?? 10,
       intents: parsedIntents,
     );
   }

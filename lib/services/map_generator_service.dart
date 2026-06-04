@@ -32,6 +32,7 @@ class MapGeneratorService {
         final id = 'node_${y}_$x';
         MapNodeType type = _getRandomNodeType(y, floors);
         String? bossEnemyId;
+        BossRewardType? bossRewardType;
 
         // Force structure rules
         if (y == 5) {
@@ -42,6 +43,13 @@ class MapGeneratorService {
           type = MapNodeType.rest;
         } else if (y == floors - 1) {
           type = MapNodeType.boss;
+          if (x == 0) {
+            bossRewardType = BossRewardType.cards;
+          } else if (x == 1) {
+            bossRewardType = BossRewardType.doubleXp;
+          } else if (x == 2) {
+            bossRewardType = BossRewardType.improvedRelic;
+          }
         }
 
         // Spread nodes horizontally
@@ -55,6 +63,7 @@ class MapGeneratorService {
             connections: [],
             position: Vector2(posX, posY),
             bossEnemyId: bossEnemyId,
+            bossRewardType: bossRewardType,
           ),
         );
       }
