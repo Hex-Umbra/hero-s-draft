@@ -162,6 +162,7 @@ class _RestScreenState extends ConsumerState<RestScreen> {
                             cost: card.data.cost,
                             effects: card.data.effects,
                             type: card.data.type,
+                            targetType: card.data.target,
                             isExhaust: card.data.isExhaust,
                             rarity: _getRarityLabel(context, card.rarity),
                             forgeUpgrades: card.forgeUpgrades,

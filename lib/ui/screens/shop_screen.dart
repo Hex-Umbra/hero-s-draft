@@ -170,6 +170,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                   rarity: _getRarityLabel(card.rarity, l10n),
                   target: _getTargetLabel(card.data.target, l10n),
                   type: card.data.type,
+                  targetType: card.data.target,
                   isExhaust: card.data.isExhaust,
                   onTap: () {
                     final shopController = ref.read(shopProvider.notifier);
@@ -731,6 +732,9 @@ class _ShopCardItemState extends State<_ShopCardItem> {
                       level: 1,
                       rarity: widget.rarityLabel,
                       target: widget.targetLabel,
+                      type: widget.card.type,
+                      targetType: widget.card.target,
+                      isExhaust: widget.card.isExhaust,
                       onTap: widget.onPressed,
                     ),
                   );

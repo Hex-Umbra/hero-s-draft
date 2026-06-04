@@ -81,6 +81,7 @@ class DeckScreen extends ConsumerWidget {
                                 forgeUpgrades: card.forgeUpgrades,
                                 effects: card.data.effects,
                                 type: card.data.type,
+                                targetType: card.data.target,
                                 isExhaust: card.data.isExhaust,
                                 rarity: _getRarityLabel(context, card.rarity),
                               ),

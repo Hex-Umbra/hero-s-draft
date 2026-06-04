@@ -17,7 +17,16 @@ class PlayerHealthBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final textScaler = MediaQuery.textScalerOf(context);
+    final double screenWidth = MediaQuery.of(context).size.width;
+
+    // Calculate adaptive values
+    final double textScaleFactor = textScaler.scale(1.0);
+    final double healthBarHeight = (26.0 * textScaleFactor).clamp(20.0, 40.0);
+    final double healthBarWidth = (screenWidth * 0.26).clamp(120.0, 300.0);
+    final double fontSize = (16.0 * textScaleFactor).clamp(12.0, 22.0);
+    final double healthFontSize = (13.0 * textScaleFactor).clamp(10.0, 18.0);
+    final double iconSize = (20.0 * textScaleFactor).clamp(16.0, 28.0);
 
     return Row(
       children: [
@@ -26,8 +35,11 @@ class PlayerHealthBar extends StatelessWidget {
           flex: 1,
           child: Align(
             alignment: Alignment.centerRight,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
+            child: Wrap(
+              alignment: WrapAlignment.end,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 14.0,
+              runSpacing: 4.0,
               children: [
                 // Dégâts d'Attaque (Rouge Gradient, sans fond)
                 ShaderMask(
@@ -40,20 +52,19 @@ class PlayerHealthBar extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const SwordIcon(size: 20, color: Colors.white),
+                      SwordIcon(size: iconSize, color: Colors.white),
                       const SizedBox(width: 4),
                       Text(
                         '$effectiveAttaque',
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                          fontSize: fontSize,
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 14),
 
                 // Armure (Bleu Gradient, sans fond, toujours affiché)
                 ShaderMask(
@@ -66,30 +77,30 @@ class PlayerHealthBar extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.shield, color: Colors.white, size: 20),
+                      Icon(Icons.shield, color: Colors.white, size: iconSize),
                       const SizedBox(width: 4),
                       Text(
                         '$armure',
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                          fontSize: fontSize,
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 14), // Espacement avec la barre de vie
               ],
             ),
           ),
         ),
+        const SizedBox(width: 14), // Espacement avec la barre de vie
 
-        // 2. Barre de vie progressive centrée (Largeur fixe de 26% de l'écran)
+        // 2. Barre de vie progressive centrée
         SizedBox(
-          width: screenWidth * 0.26,
+          width: healthBarWidth,
           child: Container(
-            height: 26,
+            height: healthBarHeight,
             decoration: BoxDecoration(
               color: Colors.black54,
               borderRadius: BorderRadius.circular(12),
@@ -160,11 +171,11 @@ class PlayerHealthBar extends StatelessWidget {
                   Center(
                     child: Text(
                       '$currentPv / $maxPv PV',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                        shadows: [
+                        fontSize: healthFontSize,
+                        shadows: const [
                           Shadow(
                             color: Colors.black54,
                             offset: Offset(1, 1),

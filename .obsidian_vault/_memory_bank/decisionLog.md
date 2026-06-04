@@ -849,14 +849,14 @@ Le gameplay de combat de *Hero's Draft* manquait d'une composante d'incertitude 
 - Nouvelles clés de traduction dans `app_en.arb`/`app_fr.arb` et sélection correspondante dans `DraftScreen`.
 - Fichier `relics.json` mis à jour avec `critical_lens` et `lucky_charm` et traitement associé dans `RunController.applyRelicEffect`.
 - Layout grid 2x2 dans `lib/ui/widgets/map/dialogs/stats_dialog.dart`.
-- Passage réussi de tous les 82 tests unitaires et widget-tests de la suite automatisée.
+- Passage réussi de tous les 100 tests unitaires et widget-tests de la suite automatisée.
 
 ### Conséquences
 - ✅ **Builds Variés et Synergies** : Ouvre la voie à des builds basés sur la Chance (Luck) et les Critiques en sélectionnant des reliques critiques et en choisissant Précision/Férocité lors des montées de niveau.
 - ✅ **Rythme de Difficulté Lissé** : Évite le pic de dégâts et de PV insurmontables pour les héros à l'Acte 2 ou Acte 3, rendant la progression plus agréable.
 - ✅ **HUD Mieux Organisé** : Le dialogue de statistiques affiche clairement les attributs offensifs de critique sans encombrer l'écran principal.
 - ⚠️ **Part de Hasard Accrue** : Les combats peuvent basculer sur un coup critique chanceux du joueur (ou malchanceux de l'ennemi), ce qui augmente la tension mais peut légèrement frustrer en cas de coup critique subi inattendu.
-- ✅ **Vérification Intègre & Cohérence** : Tous les 82 tests automatisés passent avec succès, et le linter est vierge sous `dart analyze`. Les descriptions de l'interface et les comportements du code sont en parfaite adéquation.
+- ✅ **Vérification Intègre & Cohérence** : Tous les 100 tests automatisés passent avec succès, et le linter est vierge sous `dart analyze`. Les descriptions de l'interface et les comportements du code sont en parfaite adéquation.
 
 ---
 
@@ -923,5 +923,89 @@ Dans les versions précédentes, la composition des rencontres de combat et le n
 - ✅ **Pérennité du Game Progression** : L'amortissement de $0.5$ de la DDA préserve le sentiment de satisfaction de la progression (les builds puissants roulent toujours plus facilement sur le jeu que les builds faibles, mais le défi reste présent).
 - ✅ **Séparation propre et maintenabilité** : La logique de log est isolée. Si l'on souhaite changer le format de log ou la couleur ANSI, on modifie uniquement `CombatDebugLogger`.
 - ✅ **Cohérence de la Difficulté sur les Combats Multiples de 10** : Grâce à la correction `isBoss`, le joueur ne fait plus face à des pics de difficulté monstrueux injustifiés sur les nœuds de combat ordinaires situés au niveau 10.
-- ✅ **Validation par tests automatisés** : 85/85 tests au vert, confirmant que le flow logique de la file de réserve, les transitions d'intentions, l'algorithme de génération de budget, la condition `isBoss` et le nouveau logger respectent rigoureusement les invariants métier.
+- ✅ **Validation par tests automatisés** : 100/100 tests au vert, confirmant que le flow logique de la file de réserve, les transitions d'intentions, l'algorithme de génération de budget, la condition `isBoss` et le nouveau logger respectent rigoureusement les invariants métier.
+
+---
+
+## 🗺️ ADR-029 : Génération Procédurale Avancée avec Quotas et Anti-Répétition (Advanced Map Generation Constraints)
+
+### Statut
+✅ Accepté & Implémenté
+
+### Contexte
+La génération de la carte du monde procédurale sous forme de DAG pouvait dans certains cas générer des parcours trop faciles, répétitifs ou déséquilibrés. Par exemple, un joueur pouvait traverser un chemin contenant 4 combats d'élites d'affilée ou aucun feu de camp (Rest) pour se soigner avant un combat majeur. Il était indispensable de rajouter des contraintes algorithmiques strictes pour équilibrer la répartition des types de salles et de forcer des chokepoints structurels, tout en gérant 3 boss uniques à la fin de l'Acte avec des récompenses spécifiques.
+
+### Décision
+1. **Solver par Quotas de Nœuds** :
+   - Définir des quotas stricts pour chaque type de nœud dans `GameConstants.nodeQuotas` :
+     - Combat : 12-22
+     - Élite : 3-6
+     - Repos : 3-6
+     - Boutique (Shop) : 2-5
+     - Événement (Event) : 4-9
+   - Exécuter une passe d'optimisation `_balanceQuotas` après la génération du graphe pour réallouer les types de nœuds excédentaires vers les types déficitaires.
+2. **Contrainte Anti-Répétition de Chemin** :
+   - Parcourir récursivement les chemins possibles du graphe (`_hasThreeConsecutive` et `_getChainOfThree`) pour détecter si un type de nœud Élite ou Repos apparaît 3 fois consécutivement.
+   - Si une violation est détectée, remplacer l'un des nœuds de la chaîne par un type alternatif (Combat, Shop ou Event) afin de garantir qu'aucun chemin ne contienne 3 Élites ou 3 Repos consécutifs.
+3. **Chokepoints Structurels Forcés** :
+   - **Étage 5** : Forcer la largeur de l'étage à 1 seul nœud et forcer son type à Élite pour créer un combat de mi-parcours obligatoire pour tous les chemins.
+   - **Étage 8** : Forcer tous les nœuds générés pour cet étage à être de type Repos (Rest), assurant ainsi une halte obligatoire et salutaire juste avant le combat de Boss.
+4. **Trilogie de Boss Distincts (Étage 9)** :
+   - Configurer 3 nœuds de Boss distincts à l'étage 9, chacun correspondant à un monstre spécifique avec son identifiant propre :
+     - **Démon** (`boss_card_giver`) : 130 HP, 14 ATK.
+     - **Dragon** (`boss_xp_multiplier`) : 150 HP, 15 ATK.
+     - **Liche** (`boss_relic_improved`) : 120 HP, 12 ATK.
+5. **Mécanique de Récompenses de Boss Thématiques** :
+   - À la défaite d'un Boss, déclencher des récompenses spécifiques selon son identifiant :
+     - **Dragon** : Multiplier l'XP totale de combat par 2.
+     - **Démon** : Afficher un dialogue interactif présentant 3 cartes aléatoires et permettant au joueur d'en choisir entre 1 et 3 à ajouter dans son deck.
+     - **Liche** : Garantir un tirage de relique de rareté supérieure (Exclure Common, minimum Uncommon, avec des chances accrues pour Epic/Legendary : Legendary 15%, Epic 30%, Rare 35%, Uncommon 20%).
+
+### Preuves dans le code
+- `MapGeneratorService.generateMap` : Implémentation des règles d'étages (y == 5, y == floors-2, y == floors-1).
+- `MapGeneratorService._optimizeMapTypes` et `_balanceQuotas` : Application itérative du solver de quotas et de l'anti-répétition.
+- `EncounterSystem.generateEnemiesForLevel` : Instanciation des caractéristiques des boss Démon, Dragon et Liche.
+- `GameScreen._handleCombatVictory` et `_resolveCombatProgression` : Traitement conditionnel des gains d'XP multipliés, de l'obtention de relique sans commune (Liche), et affichage du dialogue interactif de choix de cartes (Démon).
+- Tests unitaires et widget-tests validés à 100%.
+
+### Conséquences
+- ✅ **Rythme de jeu équilibré et tactique** : L'interdiction des suites infinies d'Élites ou l'absence de Repos évite les situations de défaite inévitable ("soft lock").
+- ✅ **Variété tactique de fin de partie** : La présence de 3 boss distincts à l'étage 9 et leurs récompenses variées encouragent les joueurs à adapter leur itinéraire en fonction de leurs besoins (XP vs Cartes vs Reliques).
+- ✅ **Robustesse algorithmique** : L'optimisation par solver garantit le respect des quotas sur toutes les cartes générées.
+
+---
+
+## 🎨 ADR-030 : Polissage de l'UI de Combat Responsive et Signalétique de Ciblage Localisée (Combat UI Polish & Sizing)
+
+### Statut
+✅ Accepté & Implémenté
+
+### Contexte
+L'arène de combat Flame et l'interface utilisateur Flutter (HUD) présentaient des problèmes d'affichage sur des terminaux aux rapports d'aspect variés. Le HUD joueur de combat (Mana, PV, Armure) subissait parfois des chevauchements ou des troncatures. De plus, la signalétique de ciblage des cartes (Single Target, AoE, Self) n'était pas bilingue et risquait de déborder sur les petits écrans. Enfin, les cartes d'ennemis sur le plateau Flame possédaient une taille uniforme ne reflétant pas leur dangerosité relative, et l'accès au deck ou aux reliques depuis la carte du monde manquait de repères visuels clairs.
+
+### Décision
+1. **HUD de Combat Responsive Clamped** :
+   - Rendre le panneau de statistiques du joueur et des compétences réactif à la hauteur et à la largeur de l'écran en utilisant `MediaQuery` et des facteurs de mise à l'échelle.
+   - Appliquer des contraintes de clamping sur les hauteurs et largeurs des conteneurs pour préserver la lisibilité sans clipping sur les tablettes et les mobiles étroits.
+2. **Badges de Ciblage de Cartes FittedBox Wrapped** :
+   - Ajouter un badge visuel sur la face avant de chaque carte unifiée `UiCard` indiquant son mode de ciblage (`_resolveTarget`).
+   - Mapper les types d'effets pour obtenir un label textuel bilingue ('Cible unique', 'Tous les ennemis', 'Soi-même' en français / 'Single Target', 'All Enemies', 'Self' en anglais).
+   - Envelopper le texte du badge dans un composant `FittedBox` pour forcer la mise à l'échelle automatique du texte et interdire tout débordement en dehors du badge physique.
+3. **Badges et Indicateurs de Navigation sur la Carte** :
+   - Ajouter un badge d'inventaire dynamique sur le bouton Reliques de la `MapScreen` montrant en temps réel le nombre de reliques collectées.
+   - Intégrer un badge numérique sur le bouton Deck de la carte, affichant à tout moment le nombre actuel de cartes dans le master deck du joueur.
+4. **Scaling Échelle des Ennemis** :
+   - Modifier l'échelle visuelle (`scale`) des cartes d'ennemis (`EnemyCard`) en fonction de leur niveau de menace et de leur type (Elite ou Boss) pour donner une impression de grandeur et de puissance relative sur le plateau Flame.
+
+### Preuves dans le code
+- `GameScreen` : Layouts flexibles du HUD utilisant des contraintes proportionnelles aux dimensions de l'écran.
+- `UiCard._resolveTarget` et `_buildTargetIcon` : Construction dynamique des icônes et textes bilingues de ciblage enveloppés de `FittedBox`.
+- `MapScreen` : Badge numérique sur le bouton reliques (`relics.length`) et badge numérique sur le bouton de deck (`deck.length`).
+- `EnemyCard` : Application de facteurs de scale personnalisés lors de l'initialisation du composant graphique.
+- Validation complète et absence totale d'erreurs statiques sous `dart analyze`.
+
+### Conséquences
+- ✅ **Lisibilité universelle** : L'adaptation responsive assure un rendu professionnel et sans clipping sur l'ensemble de la gamme d'appareils testés.
+- ✅ **Guidage utilisateur amélioré** : Les badges bilingues de ciblage et les indicateurs d'inventaire guident immédiatement le joueur sur les actions possibles.
+- ✅ **Game Feel Premium** : Le scaling des sprites d'ennemis renforce visuellement la structure dramatique des rencontres de combat.
 

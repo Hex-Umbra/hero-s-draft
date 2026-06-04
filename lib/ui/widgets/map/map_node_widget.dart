@@ -32,6 +32,26 @@ class _MapNodeWidgetState extends State<MapNodeWidget> {
   bool _isHovered = false;
 
   (String, String) _getTooltipData(AppLocalizations l10n) {
+    if (widget.node.type == MapNodeType.boss && widget.node.bossEnemyId != null) {
+      final isFr = Localizations.localeOf(context).languageCode == 'fr';
+      if (widget.node.bossEnemyId == 'boss_card_giver') {
+        return (
+          isFr ? "BOSS : DÉMON" : "BOSS: DEMON",
+          isFr ? "Récompense : 1 à 3 cartes au choix" : "Reward: 1 to 3 cards of choice"
+        );
+      } else if (widget.node.bossEnemyId == 'boss_xp_multiplier') {
+        return (
+          isFr ? "BOSS : DRAGON" : "BOSS: DRAGON",
+          isFr ? "Récompense : XP Double" : "Reward: Double XP"
+        );
+      } else if (widget.node.bossEnemyId == 'boss_relic_improved') {
+        return (
+          isFr ? "BOSS : LICHE" : "BOSS: LICH",
+          isFr ? "Récompense : Relique Améliorée" : "Reward: Improved Relic"
+        );
+      }
+    }
+
     switch (widget.node.type) {
       case MapNodeType.combat:
         return (l10n.tooltipCombatTitle, l10n.tooltipCombatDesc);

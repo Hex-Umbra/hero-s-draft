@@ -117,6 +117,7 @@ class CardDictionaryScreen extends ConsumerWidget {
                     target: _getTargetLabel(context, card.target),
                     cost: card.cost,
                     type: card.type,
+                    targetType: card.target,
                     isExhaust: card.isExhaust,
                     effects: card.effects,
                   );
