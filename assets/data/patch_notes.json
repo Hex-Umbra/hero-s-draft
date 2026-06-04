@@ -31,6 +31,13 @@
         ]
       },
       {
+        "category": "Corrections",
+        "emoji": "🐛",
+        "entries": [
+          "Correction d'un problème où le tirage de relique s'activait incorrectement sur les boss proposant d'autres types de récompenses."
+        ]
+      },
+      {
         "category": "Technique",
         "emoji": "🔧",
         "entries": [

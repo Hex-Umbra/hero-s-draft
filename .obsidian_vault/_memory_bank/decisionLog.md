@@ -1075,15 +1075,23 @@ Pour finaliser le refactoring des récompenses post-combat initié dans la versi
    - Si la chance Commune atteint 0.0% (à l'Acte 5), commencer à diminuer la chance d'Atypique (Uncommon) de **10% par acte** à partir de sa base maximale de `(20.0 / 85.0) * 90.0` : `baseUncommonChance = max(0.0, maxUncommonBase - (act - 5) * 10.0)`.
    - Distribuer proportionnellement cette réduction de Uncommon (soit `90.0 - baseUncommonChance`) vers Rare et Epic selon leurs parts relatives de base (35/65, 30/65).
    - Logique de tirage cumulée intégrée au sein de `RewardController`.
+4. **Correction du Tirage de Relique pour Boss 1 et Boss 2** :
+   - Restreindre le tirage de relique dans le pipeline de récompenses aux seuls nœuds Élite ou Boss de type `BossRewardType.improvedRelic` (Boss 3).
+   - Précédemment, la condition vérifiait simplement si le nœud était de type `MapNodeType.boss` sans valider son `bossRewardType`, ce qui faisait que Boss 1 (choix de cartes) et Boss 2 (Double XP & Or) tiraient et attribuaient par erreur une relique au joueur.
+   - Corriger cette logique à la ligne 100 (lignes 100-101) de `lib/game/controllers/reward_controller.dart` :
+     ```dart
+     if (currentNode.type == MapNodeType.elite || (currentNode.type == MapNodeType.boss && isImprovedRelic)) {
+     ```
 
 ### Preuves dans le code
 - `lib/ui/screens/boss_card_draft_screen.dart` : Création de la vue GridView responsive, de la gestion de sélection multiple avec validation (compteur fixe à 3) et du bouton de confirmation.
-- `lib/game/controllers/reward_controller.dart` : Calcul conditionnel des chances de reliques Boss 3 (`isImprovedRelic`) indexé sur l'Act et application de `totalXp *= 2` et `totalGold *= 2` pour Boss 2.
+- `lib/game/controllers/reward_controller.dart` : Calcul conditionnel des chances de reliques Boss 3 (`isImprovedRelic`) indexé sur l'Act, restriction du tirage de relique aux seuls nœuds Élite ou Boss 3 (ligne 100), et application de `totalXp *= 2` et `totalGold *= 2` pour Boss 2.
 - `lib/ui/widgets/map/map_legend.dart` & `lib/ui/widgets/map/map_node_widget.dart` : Affichage localisé des tooltips et légende ("Boss (XP & Or x2)" / "Boss (2x XP & Gold)").
 
 ### Conséquences
 - ✅ **Game Feel Premium** : Le joueur fait face à des opportunités de choix marquantes pour le Boss 1, à une économie relancée pour le Boss 2, et à des drops haut de gamme cohérents avec l'Acte pour le Boss 3.
-- ✅ **Absence de Regression Technique** : Intégration transparente au sein du `RewardController` existant.
+- ✅ **Correction de la Distribution de Butin** : Éradication du bug de distribution indue de reliques sur les Boss 1 et 2, garantissant l'intégrité de l'économie des récompenses de fin d'acte et l'alignement sur les spécifications de design initiales.
+- ✅ **Absence de Régression Technique** : Intégration transparente au sein du `RewardController` existant.
 - ✅ **Respect de la Règle i18n** : Traduction intégrale des dialogues et tooltips.
 
 

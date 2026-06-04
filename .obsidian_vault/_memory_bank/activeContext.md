@@ -98,6 +98,7 @@ Le focus actuel s'oriente désormais vers la préparation et l'exécution des pr
       - Uncommon diminue de 10% par acte de sa base max (`maxUncommonBase - (act - 5) * 10.0`) dès que la chance Commune tombe à 0% (à l'Act 5).
       - Redistribution proportionnelle de la réduction vers les chances de base Rare et Épique.
       - Logique de tirage cumulé implémentée dans `RewardController`.
+    - **Correction du Tirage de Relique des Boss** : Correction d'une régression à la ligne 100 de `lib/game/controllers/reward_controller.dart` pour restreindre strictement le tirage d'une relique aux nœuds Élite ou aux nœuds Boss de type `BossRewardType.improvedRelic` (Boss 3 / position droite x=2). Cela empêche le Boss 1 (Cartes / position gauche x=0) et le Boss 2 (Double XP & Or / position centrale x=1) d'attribuer par erreur une relique en plus de leurs récompenses thématiques respectives.
     - **Génération Procédurale** : `MapGeneratorService` attribue explicitement le type de récompense de Boss selon la position horizontale `x` à l'étage final (x=0: cards, x=1: doubleXp, x=2: improvedRelic) sous forme d'enum `BossRewardType`.
     - **Découplage UI** : `MapNodeWidget` lit le `bossRewardType` fortement typé plutôt que de parser des coordonnées sous forme de chaînes de caractères. `GameScreen` délègue les écrans de reliques et les dialogues de draft de façon coordonnée via le `rewardProvider`, et le gain d'or aléatoire codé en dur a été supprimé de `DraftScreen`.
 

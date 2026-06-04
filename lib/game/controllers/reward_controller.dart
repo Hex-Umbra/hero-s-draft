@@ -97,10 +97,10 @@ class RewardController extends StateNotifier<RewardState> {
 
     // 3. Roll Relic
     RelicData? rolledRelic;
-    if (currentNode.type == MapNodeType.boss || currentNode.type == MapNodeType.elite) {
+    final bool isImprovedRelic = currentNode.bossRewardType == BossRewardType.improvedRelic;
+    if (currentNode.type == MapNodeType.elite || (currentNode.type == MapNodeType.boss && isImprovedRelic)) {
       if (allRelics.isNotEmpty) {
         final rand = Random().nextDouble() * 100;
-        final bool isImprovedRelic = currentNode.bossRewardType == BossRewardType.improvedRelic;
         final double legChance;
         final double epicChance;
         final double rareChance;
