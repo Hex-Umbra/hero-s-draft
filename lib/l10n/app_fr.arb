@@ -46,7 +46,9 @@
   "legendShop": "Boutique Marchand",
   "legendRest": "Camp de Repos",
   "legendEvent": "Événement Inconnu",
-  "legendBoss": "Combat de Boss",
+  "legendBossCards": "Boss Démon (Cartes)",
+  "legendBossXp": "Boss Dragon (XP x2)",
+  "legendBossRelic": "Boss Liche (Relique)",
 
   "tooltipCombatTitle": "Combat Normal",
   "tooltipCombatDesc": "Affrontez un monstre standard pour gagner des cartes et de l'or.",
