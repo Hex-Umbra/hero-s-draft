@@ -20,6 +20,7 @@ class UiCard extends StatelessWidget {
   final List<String> forgeUpgrades;
   final List<CardEffect>? effects;
   final CardType? type;
+  final CardTarget? targetType;
   final bool isExhaust;
   final bool isSelected;
   final bool isGrayedOut;
@@ -37,11 +38,97 @@ class UiCard extends StatelessWidget {
     this.forgeUpgrades = const [],
     this.effects,
     this.type,
+    this.targetType,
     this.isExhaust = false,
     this.isSelected = false,
     this.isGrayedOut = false,
     this.onTap,
   });
+
+  CardTarget? _resolveTarget() {
+    if (targetType != null) return targetType;
+    if (target == null) return null;
+    final t = target!.toLowerCase();
+    if (t.contains('single') || t.contains('unique') || t == 'singleenemy') {
+      return CardTarget.singleEnemy;
+    }
+    if (t.contains('all') || t.contains('tous') || t == 'allenemies') {
+      return CardTarget.allEnemies;
+    }
+    if (t.contains('self') || t.contains('soi')) {
+      return CardTarget.self;
+    }
+    if (t.contains('none') || t.contains('aucun')) {
+      return CardTarget.none;
+    }
+    return null;
+  }
+
+  Widget _buildTargetIcon(BuildContext context) {
+    final resolved = _resolveTarget();
+    if (resolved == null || resolved == CardTarget.none) {
+      return const SizedBox.shrink();
+    }
+
+    final String emoji;
+    final String label;
+    final Color badgeColor;
+
+    final locale = Localizations.localeOf(context).languageCode;
+
+    switch (resolved) {
+      case CardTarget.singleEnemy:
+        emoji = '🎯';
+        label = locale == 'fr' ? 'Cible unique' : 'Single Target';
+        badgeColor = Colors.redAccent.withAlpha(50);
+        break;
+      case CardTarget.allEnemies:
+        emoji = '💥';
+        label = locale == 'fr' ? 'Tous les ennemis' : 'All Enemies';
+        badgeColor = Colors.orangeAccent.withAlpha(50);
+        break;
+      case CardTarget.self:
+        emoji = '🛡️';
+        label = locale == 'fr' ? 'Soi-même' : 'Self';
+        badgeColor = Colors.blueAccent.withAlpha(50);
+        break;
+      case CardTarget.none:
+        return const SizedBox.shrink();
+    }
+
+    return Tooltip(
+      message: label,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+        decoration: BoxDecoration(
+          color: badgeColor,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: Colors.white24, width: 0.5),
+        ),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                emoji,
+                style: const TextStyle(fontSize: 10),
+              ),
+              const SizedBox(width: 2),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 8,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   String _determineDamageType() {
     final lowerTitle = title.toLowerCase();
@@ -164,20 +251,32 @@ class UiCard extends StatelessWidget {
   }
 
   Widget _buildCompactDescription(BuildContext context) {
+    final targetWidget = _buildTargetIcon(context);
+    final hasTarget = targetWidget is! SizedBox;
+
     if (effects == null || effects!.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4.0),
-        child: Text(
-          description,
-          style: const TextStyle(
-            color: Colors.white70,
-            fontSize: 9,
-            height: 1.2,
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (hasTarget) ...[
+            targetWidget,
+            const SizedBox(height: 6),
+          ],
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+            child: Text(
+              description,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 9,
+                height: 1.2,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 4,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
-          textAlign: TextAlign.center,
-          maxLines: 4,
-          overflow: TextOverflow.ellipsis,
-        ),
+        ],
       );
     }
 
@@ -275,12 +374,21 @@ class UiCard extends StatelessWidget {
       }
     }
 
-    return Wrap(
-      alignment: WrapAlignment.center,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      spacing: 4,
-      runSpacing: 4,
-      children: badges,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (hasTarget) ...[
+          targetWidget,
+          const SizedBox(height: 6),
+        ],
+        Wrap(
+          alignment: WrapAlignment.center,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 4,
+          runSpacing: 4,
+          children: badges,
+        ),
+      ],
     );
   }
 

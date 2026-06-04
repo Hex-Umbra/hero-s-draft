@@ -5,7 +5,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 **Métriques du projet** :
 - **~10 350 lignes** de code source dans `lib/` (64 fichiers).
 - **8 fichiers JSON** de données d'assets.
-- **85 tests automatisés** — 100% au vert.
+- **100 tests automatisés** — 100% au vert.
 - **0 erreur** via `flutter analyze`.
 - **~110 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
 
@@ -19,6 +19,11 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 |:---|:---|:---|
 | Graphe Acyclique Dirigé (DAG) | `MapGeneratorService`, `MapNode` | 10 étages, largeur 2-5 nœuds, chokepoint étage 5, repos garanti étage 8, boss unique étage 9 |
 | Distribution probabiliste des nœuds | `MapGeneratorService._randomNodeType()` | 60% combat, 15% event, 10% shop, 10% rest, 5% elite |
+| Quotas équilibrés (Solver) | `MapGeneratorService._balanceQuotas` | Répartition des types de nœuds : Combat (12-22), Élite (3-6), Repos (3-6), Shop (2-5), Event (4-9) |
+| Anti-répétition de chemins | `MapGeneratorService._optimizeMapTypes` | Algorithme interdisant 3 nœuds Élite ou Repos consécutifs sur un même chemin |
+| Chokepoints structurels forcés | `MapGeneratorService` | Étage 5 Élite forcé (1 nœud), Étage 8 Repos forcé (repos garanti avant boss) |
+| Embranchement de Boss multiples | `MapGeneratorService` / `EncounterSystem` | Étage 9 (Boss) présente 3 Boss distincts (Démon, Dragon, Liche) avec des combats et des récompenses spécifiques |
+| Récompenses de Boss uniques | `GameScreen` | Dragon (2x XP), Démon (Dialogue de choix de 1-3 cartes), Liche (Relique améliorée garantie min. Atypique) |
 | Correction d'orphelins | `MapGeneratorService` (Phase 2 câblage) | Garantie que tout nœud a au moins 1 connexion entrante |
 | Navigation réactive | `RunController.travelToNode()` | Validation d'accessibilité (connexion au nœud complété ou étage 0) |
 | Caméra centrée | `MapScreen` | Repositionnement et centrage automatique fluide à chaque transition |
@@ -110,6 +115,10 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Draft Reels Séquentiels | `DraftCardReel`, `DraftScreen` | Révélation machine à sous vertical spinner (0.8s, 1.4s, 2.0s), 3D flip axe Y, célébration légendaire (screen shake, gold particles, flash) et sound hooks |
 | Rareté Mythique & Alertes | `DraftScreen`, `DraftCardReel` | Rareté rouge sang, alerte cinématique warning 1400ms (laser horizontal, exclamation points `!!!` élastiques), flou d'arrière-plan `BackdropFilter` `8.0px`, spin prolongé `+800ms`, tremblement doublé `12.0` |
 | Poli Visuel du Draft | `DraftScreen`, `TutorialDraftWidget` | Survol de carte à 1.05x (AnimatedScale + MouseRegion) et sélection à 1.12x avec lueur dorée (BoxShadow ambre) |
+| HUD de Combat Responsive | `GameScreen` | Redimensionnement et mise à l'échelle automatique de la hauteur/largeur du HUD avec clamps de sécurité pour prévenir le clipping |
+| Badges de Ciblage de Cartes | `UiCard` / `GameScreen` | Badges de ciblage animés (Single, AoE, Self) avec support bilingue ('Cible unique', 'Tous les ennemis', 'Soi-même'), enveloppés de `FittedBox` |
+| Badges d'inventaire sur la Carte | `MapScreen` | Compteur numérique sur le bouton des Reliques et badge numérique sur le bouton du Deck affichant la taille du master deck |
+| Scaling Échelle Ennemis | `EnemyCard` | Facteurs d'échelle visuelle progressifs sur les sprites des ennemis pour refléter leur puissance relative |
 
 
 ### 💀 Z-Sync Death & Stats System (Système de Mort et de Stats Synchronisé)
@@ -147,7 +156,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 
 | Métrique | Valeur | Détails |
 |:---|:---|:---|
-| Tests automatisés | **85** (100% VERT) | Tests unitaires, widget-tests et tests d'intégration (dont forge découplée, tutoriel autonome, équilibrage hybride, réserve de combat, correction isBoss et journalisation mathématique) |
+| Tests automatisés | **100** (100% VERT) | Tests unitaires, widget-tests et tests d'intégration (dont génération de carte avec anti-répétition et quotas, responsivité du HUD de combat, badges de ciblage, badge de taille de deck, et scaling dynamique des caractéristiques/sprites des ennemis) |
 | Couverture estimée | **~22%** | Logique/controllers, moteur tutoriel, forge, pas d'UI de production |
 | Analyse statique | **0 erreur** | `flutter analyze` sans erreur de compilation |
 | Linter | `flutter_lints` v6.0.0 | Configuration standard, pas de règles custom |
@@ -211,9 +220,9 @@ Issues du backlog `docs/possible_upgrades/upgrade_ideas.md` (~95 items, ~60% ré
 - [ ] Menu de patch notes sur l'écran d'accueil
 
 ### Carte & Navigation
-- [ ] Contraintes de génération (pas 3 nœuds identiques consécutifs)
+- [x] Contraintes de génération (pas 3 nœuds identiques consécutifs)
 - [ ] Randomisation du deck de départ avec pools par classe
-- [ ] Divergence de chemins (routes multiples vers boss)
+- [x] Divergence de chemins (routes multiples vers boss)
 
 ### UX & Visuel
 - [ ] Redesign des snackbar/notifications

@@ -60,11 +60,11 @@ Le service statique `MapGeneratorService.generateMap({floors = 10, maxWidth = 5}
 | Étage | Contrainte |
 |:---|:---|
 | 0 | 100% Combat (entrée obligatoire) |
-| 5 | **Chokepoint** : exactement 1 nœud, type = `elite` OU `rest` (50/50) |
-| 8 (`floors-2`) | 100% `rest` (repos garanti avant boss) |
-| 9 (`floors-1`) | Exactement 1 nœud `boss` |
+| 5 | **Chokepoint** : exactement 1 nœud de type `elite` |
+| 8 (`floors-2`) | 100% `rest` (tous les nœuds de l'étage 8 sont de type repos) |
+| 9 (`floors-1`) | 3 nœuds de type `boss` distincts (permettant un choix de Boss : Démon, Dragon ou Liche) |
 
-**Distribution probabiliste** (pour les étages 1-4, 6-7) :
+**Distribution probabiliste initiale** (pour les étages 1-4, 6-7) :
 | Type de Nœud | Probabilité |
 |:---|:---|
 | Combat standard | 60% |
@@ -77,6 +77,20 @@ Le service statique `MapGeneratorService.generateMap({floors = 10, maxWidth = 5}
 - Pour chaque nœud de l'étage `y`, calcule un index de base proportionnel dans l'étage `y+1`.
 - Connecte à 1 ou 2 nœuds (offset -1, 0, ou +1 par rapport à la base).
 - **Garantie d'accessibilité** : Vérifie que chaque nœud de `nextFloor` est ciblé par au moins un nœud de `currentFloor`. Sinon, connecte la source proportionnellement la plus proche.
+
+**Phase 3 — Optimisations et Contraintes Algorithmiques** :
+- **Solver de Quotas de Nœuds** (`_balanceQuotas`) : Ajuste itérativement les types de nœuds générés pour respecter les quotas globaux de la carte :
+  - Combat : 12 à 22 nœuds
+  - Élite : 3 à 6 nœuds
+  - Repos : 3 à 6 nœuds
+  - Boutique (Shop) : 2 à 5 nœuds
+  - Événement (Event) : 4 à 9 nœuds
+- **Algorithme Anti-Répétition de Chemin** (`_hasThreeConsecutive`) : Parcourt tous les chemins du graphe de l'entrée aux boss. Garantit qu'aucun chemin ne comporte 3 nœuds consécutifs du type Élite ou du type Repos. Si une violation est détectée, le troisième nœud est converti en un type alternatif (Combat, Boutique ou Événement).
+
+**Mécanique de Récompenses Spécifiques des Boss (Étage 9)** :
+- **Dragon** (`boss_xp_multiplier`) : Multiplie par 2 toute l'expérience (XP) cumulée par le joueur lors du combat.
+- **Démon** (`boss_card_giver`) : Présente un dialogue interactif affichant 3 cartes globales aléatoires, permettant au joueur d'en sélectionner entre 1 et 3 pour les ajouter gratuitement à son deck.
+- **Liche** (`boss_relic_improved`) : Garantit l'obtention d'une relique de rareté supérieure (minimum Uncommon, excluant totalement les communes). Les chances de rareté sont : Legendary 15%, Epic 30%, Rare 35%, Uncommon 20%.
 
 **Modèle `MapNode`** : `id` (ex: "node_0_0"), `type` (MapNodeType), `connections` (List\<String\>), `position` (Vector2 Flame), `isCompleted` (bool mutable).
 

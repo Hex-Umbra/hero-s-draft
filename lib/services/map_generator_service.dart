@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flame/extensions.dart';
 import '../models/map_node.dart';
+import '../game/game_constants.dart';
 
 class MapGeneratorService {
   static final Random _random = Random();
@@ -22,24 +23,28 @@ class MapGeneratorService {
         rowWidth = 1;
       }
 
-      // Special case: Boss floor always has 1 node
+      // Special case: Boss floor always has 3 nodes
       if (y == floors - 1) {
-        rowWidth = 1;
+        rowWidth = 3;
       }
 
       for (int x = 0; x < rowWidth; x++) {
         final id = 'node_${y}_$x';
         MapNodeType type = _getRandomNodeType(y, floors);
+        String? bossEnemyId;
 
         // Force structure rules
         if (y == 5) {
-          // Chokepoint is either Elite or Rest
-          type = _random.nextBool() ? MapNodeType.elite : MapNodeType.rest;
+          // Chokepoint is always Elite
+          type = MapNodeType.elite;
         } else if (y == floors - 2) {
           // Guaranteed Rest before boss
           type = MapNodeType.rest;
         } else if (y == floors - 1) {
           type = MapNodeType.boss;
+          if (x == 0) bossEnemyId = 'boss_card_giver';
+          if (x == 1) bossEnemyId = 'boss_xp_multiplier';
+          if (x == 2) bossEnemyId = 'boss_relic_improved';
         }
 
         // Spread nodes horizontally
@@ -49,9 +54,10 @@ class MapGeneratorService {
         floorNodes.add(
           MapNode(
             id: id,
-            type: y == floors - 1 ? MapNodeType.boss : type,
+            type: type,
             connections: [],
             position: Vector2(posX, posY),
+            bossEnemyId: bossEnemyId,
           ),
         );
       }
@@ -108,6 +114,9 @@ class MapGeneratorService {
       }
     }
 
+    // Balance quotas and apply anti-repetition rules
+    _optimizeMapTypes(allNodes, floors);
+
     return allNodes;
   }
 
@@ -120,5 +129,234 @@ class MapGeneratorService {
     if (r < 0.85) return MapNodeType.shop; // 10% Shop
     if (r < 0.95) return MapNodeType.rest; // 10% Rest
     return MapNodeType.elite; // 5% Elite
+  }
+
+  static void _optimizeMapTypes(List<MapNode> allNodes, int floors) {
+    for (int iter = 0; iter < 15; iter++) {
+      _balanceQuotas(allNodes, floors);
+
+      bool changedAny = false;
+      for (var node in allNodes) {
+        if (node.type == MapNodeType.elite || node.type == MapNodeType.rest) {
+          if (_hasThreeConsecutive(node, allNodes, node.type, 1)) {
+            final chain = _getChainOfThree(node, allNodes, node.type);
+            for (var chainNode in chain) {
+              final y = int.parse(chainNode.id.split('_')[1]);
+              if (y != 0 && y != 5 && y != floors - 2 && y != floors - 1) {
+                final choices = [MapNodeType.combat, MapNodeType.shop, MapNodeType.event];
+                chainNode.type = choices[_random.nextInt(choices.length)];
+                changedAny = true;
+                break;
+              }
+            }
+            if (changedAny) break;
+          }
+        }
+      }
+
+      if (!changedAny) break;
+    }
+    _balanceQuotas(allNodes, floors);
+  }
+
+  static void _balanceQuotas(List<MapNode> allNodes, int floors) {
+    for (int attempt = 0; attempt < 100; attempt++) {
+      final Map<MapNodeType, int> counts = {
+        MapNodeType.combat: 0,
+        MapNodeType.elite: 0,
+        MapNodeType.rest: 0,
+        MapNodeType.shop: 0,
+        MapNodeType.event: 0,
+        MapNodeType.boss: 0,
+      };
+      for (var node in allNodes) {
+        counts[node.type] = (counts[node.type] ?? 0) + 1;
+      }
+
+      MapNodeType? deficientType;
+      for (var entry in GameConstants.nodeQuotas.entries) {
+        final type = entry.key;
+        final min = entry.value.min;
+        if ((counts[type] ?? 0) < min) {
+          deficientType = type;
+          break;
+        }
+      }
+
+      if (deficientType != null) {
+        MapNode? candidate;
+        // First try to find a candidate that does not create a 3-consecutive path
+        for (var node in allNodes) {
+          final y = int.parse(node.id.split('_')[1]);
+          if (y == 0 || y == 5 || y == floors - 2 || y == floors - 1) continue;
+
+          final currentType = node.type;
+          final currentMin = GameConstants.nodeQuotas[currentType]?.min ?? 0;
+          if ((counts[currentType] ?? 0) > currentMin) {
+            final originalType = node.type;
+            node.type = deficientType;
+            bool createsViolation = false;
+            if (deficientType == MapNodeType.elite || deficientType == MapNodeType.rest) {
+              for (var n in allNodes) {
+                if (n.type == deficientType) {
+                  if (_hasThreeConsecutive(n, allNodes, deficientType, 1)) {
+                    createsViolation = true;
+                    break;
+                  }
+                }
+              }
+            }
+            node.type = originalType;
+
+            if (!createsViolation) {
+              candidate = node;
+              break;
+            }
+          }
+        }
+
+        // Fallback: if no candidate avoids violation, take any valid candidate to satisfy quota
+        if (candidate == null) {
+          for (var node in allNodes) {
+            final y = int.parse(node.id.split('_')[1]);
+            if (y == 0 || y == 5 || y == floors - 2 || y == floors - 1) continue;
+
+            final currentType = node.type;
+            final currentMin = GameConstants.nodeQuotas[currentType]?.min ?? 0;
+            if ((counts[currentType] ?? 0) > currentMin) {
+              candidate = node;
+              break;
+            }
+          }
+        }
+
+        if (candidate != null) {
+          candidate.type = deficientType;
+          continue;
+        } else {
+          break;
+        }
+      }
+
+      MapNodeType? excessiveType;
+      for (var entry in GameConstants.nodeQuotas.entries) {
+        final type = entry.key;
+        final max = entry.value.max;
+        if ((counts[type] ?? 0) > max) {
+          excessiveType = type;
+          break;
+        }
+      }
+
+      if (excessiveType != null) {
+        MapNode? candidate;
+        MapNodeType? targetType;
+
+        for (var entry in GameConstants.nodeQuotas.entries) {
+          final type = entry.key;
+          final max = entry.value.max;
+          if ((counts[type] ?? 0) < max && type != excessiveType) {
+            targetType = type;
+            break;
+          }
+        }
+
+        if (targetType != null) {
+          // First try to find a candidate that does not create a 3-consecutive path
+          for (var node in allNodes) {
+            final y = int.parse(node.id.split('_')[1]);
+            if (y == 0 || y == 5 || y == floors - 2 || y == floors - 1) continue;
+            if (node.type == excessiveType) {
+              final originalType = node.type;
+              node.type = targetType;
+              bool createsViolation = false;
+              if (targetType == MapNodeType.elite || targetType == MapNodeType.rest) {
+                for (var n in allNodes) {
+                  if (n.type == targetType) {
+                    if (_hasThreeConsecutive(n, allNodes, targetType, 1)) {
+                      createsViolation = true;
+                      break;
+                    }
+                  }
+                }
+              }
+              node.type = originalType;
+
+              if (!createsViolation) {
+                candidate = node;
+                break;
+              }
+            }
+          }
+
+          // Fallback: if no candidate avoids violation, take any valid candidate to balance quota
+          if (candidate == null) {
+            for (var node in allNodes) {
+              final y = int.parse(node.id.split('_')[1]);
+              if (y == 0 || y == 5 || y == floors - 2 || y == floors - 1) continue;
+              if (node.type == excessiveType) {
+                candidate = node;
+                break;
+              }
+            }
+          }
+        }
+
+        if (candidate != null && targetType != null) {
+          candidate.type = targetType;
+          continue;
+        } else {
+          break;
+        }
+      }
+
+      break;
+    }
+  }
+
+  static bool _hasThreeConsecutive(
+    MapNode node,
+    List<MapNode> allNodes,
+    MapNodeType targetType,
+    int currentChainLength,
+  ) {
+    if (node.type != targetType) {
+      return false;
+    }
+    if (currentChainLength == 3) {
+      return true;
+    }
+
+    final predecessors = allNodes.where((n) => n.connections.contains(node.id)).toList();
+    for (var pred in predecessors) {
+      if (pred.type == targetType) {
+        if (_hasThreeConsecutive(pred, allNodes, targetType, currentChainLength + 1)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  static List<MapNode> _getChainOfThree(
+    MapNode node,
+    List<MapNode> allNodes,
+    MapNodeType targetType,
+  ) {
+    List<MapNode> chain = [node];
+    var predecessors = allNodes
+        .where((n) => n.connections.contains(node.id) && n.type == targetType)
+        .toList();
+    if (predecessors.isNotEmpty) {
+      var pred = predecessors.first;
+      chain.add(pred);
+      var predPredecessors = allNodes
+          .where((n) => n.connections.contains(pred.id) && n.type == targetType)
+          .toList();
+      if (predPredecessors.isNotEmpty) {
+        chain.add(predPredecessors.first);
+      }
+    }
+    return chain;
   }
 }

@@ -551,13 +551,32 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   void _repositionEnemies() {
     if (enemyCards.isEmpty) return;
 
-    double spacing = (size.x * 0.8) / (enemyCards.length + 1);
-    spacing = spacing.clamp(120, 250);
+    final int count = enemyCards.length;
+    double scaleMultiplier = 1.0;
 
-    double startX = (size.x / 2) - ((enemyCards.length - 1) * (spacing / 2));
+    if (count > 3) {
+      scaleMultiplier = (3.0 / count).clamp(0.65, 1.0);
+    }
+
+    final double cardBaseWidth = 100.0 * scaleFactor * 1.45;
+    final double totalEstimatedWidth = count * cardBaseWidth * scaleMultiplier * 1.25;
+    final double maxAvailableWidth = size.x * 0.9;
+    if (totalEstimatedWidth > maxAvailableWidth) {
+      final double widthRatio = maxAvailableWidth / totalEstimatedWidth;
+      scaleMultiplier = (scaleMultiplier * widthRatio).clamp(0.5, 1.0);
+    }
+
+    for (var enemy in enemyCards) {
+      enemy.scaleMultiplier = scaleMultiplier;
+    }
+
+    double spacing = (size.x * 0.8) / (count + 1);
+    spacing = spacing.clamp(80.0 * scaleMultiplier, 250.0 * scaleMultiplier);
+
+    double startX = (size.x / 2) - ((count - 1) * (spacing / 2));
     double posY = size.y * 0.21;
 
-    for (int i = 0; i < enemyCards.length; i++) {
+    for (int i = 0; i < count; i++) {
       enemyCards[i].position = Vector2(startX + (i * spacing), posY);
     }
   }

@@ -260,26 +260,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     MaterialPageRoute(builder: (context) => const DeckScreen()),
                   );
                 },
-                icon: Stack(
-                  children: [
-                    const Icon(Icons.style, color: Color(0xFF4A3728), size: 20),
-                    if (canMerge)
-                      Positioned(
-                        right: 0,
-                        top: 0,
-                        child: Container(
-                          padding: const EdgeInsets.all(2),
-                          decoration: const BoxDecoration(
-                            color: Colors.red,
-                            shape: BoxShape.circle,
-                          ),
-                          constraints: const BoxConstraints(
-                            minWidth: 8,
-                            minHeight: 8,
-                          ),
-                        ),
-                      ),
-                  ],
+                icon: Badge(
+                  isLabelVisible: canMerge,
+                  child: const Icon(Icons.style, color: Color(0xFF4A3728), size: 20),
                 ),
                 label: Text(
                   canMerge ? 'DECK (!)' : l10n.myDeck.toUpperCase(),

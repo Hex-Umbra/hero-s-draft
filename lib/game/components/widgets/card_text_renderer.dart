@@ -33,8 +33,11 @@ class CardTextRenderer {
   late TextPainter bgIconPainter;
   late TextPainter rarityPainter;
   TextPainter? manaPainter;
+  TextPainter? targetPainter;
 
   CardTextRenderer(this.card);
+
+  double get opacity => card.opacity;
 
   void refreshVisuals(double opacity, bool isFlashing, bool isCancelling) {
     final int alpha = (opacity * 255).toInt();
@@ -67,6 +70,47 @@ class CardTextRenderer {
       typeLabelColor = typeLabelColor.withAlpha(cancelAlpha);
       rarityColor = rarityColor.withAlpha(cancelAlpha);
       manaColor = manaColor.withAlpha(cancelAlpha);
+    }
+
+    // Configurer le style de ciblage
+    final target = card.card.data.target;
+    if (target != CardTarget.none) {
+      String emoji = '';
+      String label = '';
+      switch (target) {
+        case CardTarget.singleEnemy:
+          emoji = '🎯';
+          label = card.activeLocale == 'fr' ? 'Cible unique' : 'Single Target';
+          break;
+        case CardTarget.allEnemies:
+          emoji = '💥';
+          label = card.activeLocale == 'fr' ? 'Tous' : 'All';
+          break;
+        case CardTarget.self:
+          emoji = '🛡️';
+          label = card.activeLocale == 'fr' ? 'Soi-même' : 'Self';
+          break;
+        default:
+          break;
+      }
+
+      Color tColor = isFlashing
+          ? Colors.transparent
+          : Colors.white.withAlpha(alpha);
+
+      targetPainter = TextPainter(
+        text: TextSpan(
+          text: '$emoji $label'.toUpperCase(),
+          style: TextStyle(
+            color: tColor,
+            fontSize: 7.5,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+    } else {
+      targetPainter = null;
     }
 
     namePainter = TextPainter(
@@ -561,11 +605,13 @@ class CardTextRenderer {
       Offset(size.x / 2 - rarityPainter.width / 2, 42),
     );
 
+    double currentY = 62.0;
+
     // Badge Usage Unique (fixe)
     if (card.card.data.isExhaust || card.card.data.type == CardType.power) {
       final badgeWidth = usagePainter.width + 12;
       final badgeRect = Rect.fromCenter(
-        center: Offset(size.x / 2, 62),
+        center: Offset(size.x / 2, currentY),
         width: badgeWidth,
         height: 14,
       );
@@ -577,7 +623,45 @@ class CardTextRenderer {
         canvas,
         Offset(
           size.x / 2 - usagePainter.width / 2,
-          62 - usagePainter.height / 2,
+          currentY - usagePainter.height / 2,
+        ),
+      );
+      currentY += 16.0;
+    }
+
+    // Badge de ciblage
+    if (targetPainter != null) {
+      final target = card.card.data.target;
+      Color badgeColor = Colors.grey;
+      switch (target) {
+        case CardTarget.singleEnemy:
+          badgeColor = Colors.redAccent;
+          break;
+        case CardTarget.allEnemies:
+          badgeColor = Colors.orangeAccent;
+          break;
+        case CardTarget.self:
+          badgeColor = Colors.blueAccent;
+          break;
+        default:
+          break;
+      }
+
+      final badgeWidth = targetPainter!.width + 10;
+      final badgeRect = Rect.fromCenter(
+        center: Offset(size.x / 2, currentY),
+        width: badgeWidth,
+        height: 12,
+      );
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(badgeRect, const Radius.circular(4)),
+        Paint()..color = badgeColor.withAlpha((180 * opacity).toInt()),
+      );
+      targetPainter!.paint(
+        canvas,
+        Offset(
+          size.x / 2 - targetPainter!.width / 2,
+          currentY - targetPainter!.height / 2,
         ),
       );
     }

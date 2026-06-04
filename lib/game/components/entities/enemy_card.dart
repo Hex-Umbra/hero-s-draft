@@ -40,6 +40,16 @@ class EnemyCard extends PositionComponent
   bool isPendingDeath = false;
   EnemyInstance? _pendingVisualInstance;
 
+  double _scaleMultiplier = 1.0;
+  double get scaleMultiplier => _scaleMultiplier;
+  set scaleMultiplier(double value) {
+    if (_scaleMultiplier == value) return;
+    _scaleMultiplier = value;
+    scale = Vector2.all(baseScale);
+  }
+
+  double get baseScale => game.scaleFactor * 1.45 * (isBoss ? 1.25 : 1.0) * _scaleMultiplier;
+
   EnemyCard({required this.instance, required this.onTapEnemy})
     : super(size: Vector2(100, 140));
 
@@ -47,8 +57,8 @@ class EnemyCard extends PositionComponent
   Future<void> onLoad() async {
     anchor = Anchor.center;
 
-    // Appliquer l'échelle initiale (Agrandie pour le terrain et Boss proportionnel)
-    scale = Vector2.all(game.scaleFactor * 1.45 * (isBoss ? 1.25 : 1.0));
+    // Appliquer l'échelle initiale
+    scale = Vector2.all(baseScale);
 
     String spriteName = data.spritePath;
     if (spriteName.isEmpty) spriteName = 'enemy_goblin.png';
@@ -145,8 +155,8 @@ class EnemyCard extends PositionComponent
   @override
   void onGameResize(Vector2 size) {
     super.onGameResize(size);
-    // Mettre à jour l'échelle lors du redimensionnement (Agrandie pour le terrain et Boss proportionnel)
-    scale = Vector2.all(game.scaleFactor * 1.45 * (isBoss ? 1.25 : 1.0));
+    // Mettre à jour l'échelle lors du redimensionnement
+    scale = Vector2.all(baseScale);
   }
 
   String get activeLocale {
@@ -274,17 +284,17 @@ class EnemyCard extends PositionComponent
   void shieldHitAnimation() {
     if (isDead) return;
     removeAll(children.whereType<ScaleEffect>());
-    final double baseScale = game.scaleFactor * 1.45 * (isBoss ? 1.25 : 1.0);
+    final double bScale = baseScale;
 
     // Bump d'échelle pour l'armure
     add(
       SequenceEffect([
         ScaleEffect.to(
-          Vector2.all(baseScale * 1.08),
+          Vector2.all(bScale * 1.08),
           EffectController(duration: 0.06, curve: Curves.easeOut),
         ),
         ScaleEffect.to(
-          Vector2.all(baseScale),
+          Vector2.all(bScale),
           EffectController(duration: 0.2, curve: Curves.easeIn),
           onComplete: () {
             _refreshBorderVisuals();
@@ -313,7 +323,7 @@ class EnemyCard extends PositionComponent
 
   void shakeAndFlashAnimation({bool isPoison = false}) {
     if (isDead) return;
-    final double baseScale = game.scaleFactor * 1.45 * (isBoss ? 1.25 : 1.0);
+    final double bScale = baseScale;
 
     removeAll(children.whereType<ScaleEffect>());
     sprite.removeAll(sprite.children.whereType<ColorEffect>());
@@ -322,11 +332,11 @@ class EnemyCard extends PositionComponent
     add(
       SequenceEffect([
         ScaleEffect.to(
-          Vector2.all(baseScale * (isPoison ? 1.12 : 1.22)),
+          Vector2.all(bScale * (isPoison ? 1.12 : 1.22)),
           EffectController(duration: 0.08, curve: Curves.easeOut),
         ),
         ScaleEffect.to(
-          Vector2.all(baseScale),
+          Vector2.all(bScale),
           EffectController(duration: 0.35, curve: Curves.elasticOut),
         ),
       ]),

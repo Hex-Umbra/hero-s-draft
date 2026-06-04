@@ -4,10 +4,11 @@ enum MapNodeType { combat, elite, shop, rest, event, boss }
 
 class MapNode {
   final String id;
-  final MapNodeType type;
+  MapNodeType type;
   final List<String> connections;
   final Vector2 position;
   bool isCompleted;
+  final String? bossEnemyId;
 
   MapNode({
     required this.id,
@@ -15,6 +16,7 @@ class MapNode {
     required this.connections,
     required this.position,
     this.isCompleted = false,
+    this.bossEnemyId,
   });
 
   Map<String, dynamic> toJson() {
@@ -24,6 +26,7 @@ class MapNode {
       'connections': connections,
       'position': [position.x, position.y],
       'isCompleted': isCompleted,
+      'bossEnemyId': bossEnemyId,
     };
   }
 
@@ -37,6 +40,8 @@ class MapNode {
         (json['position'] as List)[1] as double,
       ),
       isCompleted: json['isCompleted'] as bool? ?? false,
+      bossEnemyId: json['bossEnemyId'] as String?,
     );
   }
 }
+

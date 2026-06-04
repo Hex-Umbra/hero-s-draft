@@ -62,10 +62,29 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         final luck = runState.heroStats.luck;
         final rand = Random().nextDouble() * 100;
 
-        final double legChance = 1.0 + luck * 0.5;
-        final double epicChance = 5.0 + luck * 1.0;
-        final double rareChance = 14.0 + luck * 2.0;
-        final double uncommonChance = 20.0 + luck * 3.0;
+        final currentNode = runState.mapNodes.firstWhere(
+          (n) => n.id == runState.currentNodeId,
+          orElse: () => runState.mapNodes.first,
+        );
+        final bool isImprovedRelic = currentNode.bossEnemyId == 'boss_relic_improved';
+
+        final double legChance;
+        final double epicChance;
+        final double rareChance;
+        final double uncommonChance;
+
+        if (isImprovedRelic) {
+          // No common relic, minimum Uncommon. Increased chances for Legendary/Epic.
+          legChance = 15.0 + luck * 0.5;
+          epicChance = 30.0 + luck * 1.0;
+          rareChance = 35.0 + luck * 2.0;
+          uncommonChance = 20.0 + luck * 3.0; // The rest goes to Uncommon (total is 100% since no Common is allowed)
+        } else {
+          legChance = 1.0 + luck * 0.5;
+          epicChance = 5.0 + luck * 1.0;
+          rareChance = 14.0 + luck * 2.0;
+          uncommonChance = 20.0 + luck * 3.0;
+        }
 
         RelicRarity rarity;
         double roll = rand;
@@ -81,10 +100,15 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               rarity = RelicRarity.rare;
             } else {
               roll -= rareChance;
-              if (roll < uncommonChance) {
+              if (isImprovedRelic) {
+                // If it is improved relic, it's guaranteed at least Uncommon
                 rarity = RelicRarity.uncommon;
               } else {
-                rarity = RelicRarity.common;
+                if (roll < uncommonChance) {
+                  rarity = RelicRarity.uncommon;
+                } else {
+                  rarity = RelicRarity.common;
+                }
               }
             }
           }
@@ -163,7 +187,13 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
   void _resolveCombatProgression() {
     final combatState = ref.read(combatProvider);
-    final locale = Localizations.localeOf(context).languageCode;
+    final runState = ref.read(runProvider);
+    final currentNode = runState.mapNodes.firstWhere(
+      (n) => n.id == runState.currentNodeId,
+      orElse: () => runState.mapNodes.first,
+    );
+    final bool isCardGiver = currentNode.bossEnemyId == 'boss_card_giver';
+    final bool isXpMultiplier = currentNode.bossEnemyId == 'boss_xp_multiplier';
 
     // 1. Calculate accumulated XP from all defeated enemies
     int totalXp = 0;
@@ -172,6 +202,21 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       totalXp += (enemy.data.xp * levelMultiplier).round();
     }
 
+    if (isXpMultiplier) {
+      totalXp *= 2;
+    }
+
+    if (isCardGiver) {
+      _showBossCardGiverDialog(context, () {
+        _finishResolveCombatProgression(totalXp);
+      });
+    } else {
+      _finishResolveCombatProgression(totalXp);
+    }
+  }
+
+  void _finishResolveCombatProgression(int totalXp) {
+    final locale = Localizations.localeOf(context).languageCode;
     // 2. Add XP to player and check level up
     final bool leveledUp = ref.read(runProvider.notifier).gainXp(totalXp);
 
@@ -201,6 +246,170 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         }
       });
     }
+  }
+
+  void _showBossCardGiverDialog(BuildContext context, VoidCallback onComplete) {
+    final gameData = ref.read(gameDataLoaderProvider).requireValue;
+    final allCards = gameData.cards;
+
+    // Choose 3 distinct random cards from the pool
+    final random = Random();
+    final List<CardData> selectedThree = [];
+    if (allCards.isNotEmpty) {
+      final pool = List<CardData>.from(allCards);
+      for (int i = 0; i < 3; i++) {
+        if (pool.isEmpty) break;
+        final idx = random.nextInt(pool.length);
+        selectedThree.add(pool.removeAt(idx));
+      }
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            final isFr = Localizations.localeOf(context).languageCode == 'fr';
+            final Set<CardData> selected = {};
+
+            return AlertDialog(
+              backgroundColor: const Color(0xFFF4ECD8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: const BorderSide(color: Color(0xFF8B4513), width: 2),
+              ),
+              title: Text(
+                isFr ? "Récompense de Boss : Choix de Cartes" : "Boss Reward: Card Choice",
+                style: const TextStyle(
+                  color: Color(0xFF8B4513),
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      isFr
+                          ? "Choisissez entre 1 et 3 cartes à ajouter à votre deck :"
+                          : "Choose between 1 and 3 cards to add to your deck:",
+                      style: const TextStyle(color: Color(0xFF4A3728), fontSize: 16),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 20),
+                    // Cards display
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      alignment: WrapAlignment.center,
+                      children: selectedThree.map((cardData) {
+                        final isSelected = selected.contains(cardData);
+                        return InkWell(
+                          onTap: () {
+                            setState(() {
+                              if (isSelected) {
+                                selected.remove(cardData);
+                              } else {
+                                selected.add(cardData);
+                              }
+                            });
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            width: 140,
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: isSelected ? Colors.amber.withAlpha(50) : Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: isSelected ? Colors.amber : Colors.grey,
+                                width: isSelected ? 3 : 1.5,
+                              ),
+                              boxShadow: isSelected
+                                  ? [BoxShadow(color: Colors.amber.withAlpha(100), blurRadius: 8, spreadRadius: 2)]
+                                  : [],
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // Title / Name
+                                Text(
+                                  cardData.getName(isFr ? 'fr' : 'en'),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF4A3728),
+                                    fontSize: 14,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 6),
+                                // Cost
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blueAccent,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    '${cardData.cost} Mana',
+                                    style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                // Description
+                                Text(
+                                  cardData.getDescription(isFr ? 'fr' : 'en'),
+                                  style: const TextStyle(color: Colors.black54, fontSize: 11),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 4,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                Center(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF8B4513),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    onPressed: (selected.isNotEmpty && selected.length <= 3)
+                        ? () {
+                            // Add selected cards to deck
+                            for (var cardData in selected) {
+                              ref.read(deckProvider.notifier).addCardToMasterDeck(
+                                    CardInstance(data: cardData),
+                                  );
+                            }
+                            Navigator.of(dialogContext).pop();
+                            onComplete();
+                          }
+                        : null,
+                    child: Text(
+                      isFr ? "Confirmer" : "Confirm",
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   void _finishCombatWithoutDraft() {
@@ -265,6 +474,11 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       ref.read(runProvider.notifier).startCombat();
 
       final runState = ref.read(runProvider);
+      final currentNode = runState.mapNodes.firstWhere(
+        (n) => n.id == runState.currentNodeId,
+        orElse: () => runState.mapNodes.first,
+      );
+      final bossEnemyId = currentNode.bossEnemyId;
       final gameData = ref.read(gameDataLoaderProvider).requireValue;
       ref
           .read(combatProvider.notifier)
@@ -278,6 +492,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             playerAttaque: runState.heroStats.attaque,
             playerMaxMana: runState.heroStats.maxMana,
             playerRelicsCount: ref.read(inventoryProvider).relics.length,
+            bossEnemyId: bossEnemyId,
           );
 
       ref.read(deckProvider.notifier).initializeCombat();
@@ -448,6 +663,13 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       isCompleted = currentNode.isCompleted;
     } catch (_) {}
 
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final bool isMobile = screenWidth < 600;
+    final double textScaleFactor = MediaQuery.textScalerOf(context).scale(1.0);
+    final double baseHudHeight = isMobile ? 100.0 : 88.0;
+    final double hudHeight = (baseHudHeight * textScaleFactor).clamp(88.0, 140.0);
+    final double hudWidth = isMobile ? screenWidth * 0.90 : screenWidth * 0.52;
+
     return PopScope(
       canPop: isCompleted || runState.isDead,
       child: Scaffold(
@@ -594,14 +816,12 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                       left: 0,
                       right: 0,
                       child: SizedBox(
-                        height: 88,
+                        height: hudHeight,
                         child: Stack(
                           alignment: Alignment.center,
                           children: [
                             SizedBox(
-                              width:
-                                  MediaQuery.of(context).size.width *
-                                  0.52, // Élargi pour accueillir les stats sans tasser la barre de vie
+                              width: hudWidth,
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [

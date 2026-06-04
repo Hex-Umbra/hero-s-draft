@@ -12,18 +12,26 @@ class ManaIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    double baseSize = 24.0;
+    if (maxMana > 5) {
+      baseSize = (24.0 * 5 / maxMana).clamp(12.0, 24.0);
+    }
+
+    return Wrap(
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 4.0,
+      runSpacing: 4.0,
       children: List.generate(maxMana, (index) {
         final isActive = index < currentMana;
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4.0),
+          padding: const EdgeInsets.symmetric(horizontal: 2.0),
           child: Icon(
             Icons.diamond,
             color: isActive ? Colors.cyanAccent : Colors.white24,
-            size: 24,
+            size: baseSize,
             shadows: isActive
-                ? [const Shadow(color: Colors.cyanAccent, blurRadius: 8)]
+                ? [Shadow(color: Colors.cyanAccent, blurRadius: baseSize / 3)]
                 : null,
           ),
         );

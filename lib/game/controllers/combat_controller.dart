@@ -32,6 +32,7 @@ class CombatController extends StateNotifier<CombatState> {
     int playerAttaque = 0,
     int playerMaxMana = 3,
     int playerRelicsCount = 0,
+    String? bossEnemyId,
   }) {
     final enemyDataList = EncounterSystem.generateEnemiesForLevel(
       level,
@@ -43,6 +44,7 @@ class CombatController extends StateNotifier<CombatState> {
       playerAttaque: playerAttaque,
       playerMaxMana: playerMaxMana,
       playerRelicsCount: playerRelicsCount,
+      bossEnemyId: bossEnemyId,
     );
 
     final bool isBoss = nodeType == MapNodeType.boss || (nodeType == null && level > 0 && level % 10 == 0);

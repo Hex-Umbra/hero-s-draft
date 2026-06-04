@@ -285,6 +285,7 @@ class _StarterDeckDraftScreenState
                                     rarity: _getRarityLabel(card.rarity),
                                     target: _getTargetLabel(card.target),
                                     type: card.type,
+                                    targetType: card.target,
                                     isExhaust: card.isExhaust,
                                     isSelected: isSelected,
                                   ),

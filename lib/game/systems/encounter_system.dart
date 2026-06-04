@@ -1,6 +1,7 @@
 import 'dart:math';
 import '../../models/data/enemy_data.dart';
 import '../../models/map_node.dart';
+import '../../models/enemy_intent.dart';
 
 class EncounterSystem {
   static final Random _rng = Random();
@@ -89,11 +90,72 @@ class EncounterSystem {
     int playerAttaque = 0,
     int playerMaxMana = 3,
     int playerRelicsCount = 0,
+    String? bossEnemyId,
   }) {
     if (availableEnemies.isEmpty) return [];
 
     final bool isBoss = nodeType == MapNodeType.boss || (nodeType == null && level > 0 && level % 10 == 0);
     final bool isElite = nodeType == MapNodeType.elite;
+
+    if (isBoss && bossEnemyId != null) {
+      final String nameEn;
+      final String nameFr;
+      final String spritePath;
+      final int maxHp;
+      final int baseDamage;
+      final List<EnemyIntent> intents;
+
+      if (bossEnemyId == 'boss_relic_improved') {
+        nameEn = 'Lich';
+        nameFr = 'Liche';
+        spritePath = 'enemy_skeleton.png';
+        maxHp = 120;
+        baseDamage = 12;
+        intents = [
+          EnemyIntent(type: IntentType.attack, value: 12),
+          EnemyIntent(type: IntentType.buff, value: 3),
+          EnemyIntent(type: IntentType.attack, value: 15),
+        ];
+      } else if (bossEnemyId == 'boss_xp_multiplier') {
+        nameEn = 'Dragon';
+        nameFr = 'Dragon';
+        spritePath = 'enemy_orc.png';
+        maxHp = 150;
+        baseDamage = 15;
+        intents = [
+          EnemyIntent(type: IntentType.attack, value: 15),
+          EnemyIntent(type: IntentType.buff, value: 4),
+          EnemyIntent(type: IntentType.attack, value: 20),
+        ];
+      } else { // boss_card_giver
+        nameEn = 'Demon';
+        nameFr = 'Démon';
+        spritePath = 'enemy_goblin.png';
+        maxHp = 130;
+        baseDamage = 14;
+        intents = [
+          EnemyIntent(type: IntentType.attack, value: 14),
+          EnemyIntent(type: IntentType.defend, value: 10),
+          EnemyIntent(type: IntentType.attack, value: 18),
+        ];
+      }
+
+      return [
+        EnemyData(
+          id: bossEnemyId,
+          nameEn: nameEn,
+          nameFr: nameFr,
+          maxHp: maxHp,
+          baseDamage: baseDamage,
+          spritePath: spritePath,
+          tier: 4,
+          xp: 200,
+          critChance: 15,
+          intents: intents,
+        ),
+      ];
+    }
+
 
     // 1. Calculate player power, expected power, base budget
     final double playerPower = playerMaxHp +

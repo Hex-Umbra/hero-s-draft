@@ -433,6 +433,7 @@ class _ForgeUpgradeDialogState extends ConsumerState<ForgeUpgradeDialog> {
                                   cost: widget.card.data.cost,
                                   effects: widget.card.data.effects,
                                   type: widget.card.data.type,
+                                  targetType: widget.card.data.target,
                                   isExhaust: widget.card.data.isExhaust,
                                   rarity: _getRarityLabel(context, widget.card.rarity),
                                   forgeUpgrades: widget.card.forgeUpgrades,

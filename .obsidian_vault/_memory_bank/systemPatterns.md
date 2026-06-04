@@ -217,7 +217,28 @@ static List<EnemyData> generateEnemiesForLevel(
    - Si des candidats existent, tire aléatoirement l'un d'eux, l'ajoute au combat et déduit sa valeur du budget.
    - **Fallback** : Si aucun monstre ne rentre (budget insuffisant pour le plus petit monstre), ajoute d'office le monstre au plus petit `CombatRating` pour garantir au moins une menace.
 
-### 3.2. `TraitSystem` — Passifs de Héros
+### 3.2. `MapGeneratorService` — Générateur de Graphe de Carte du Monde (DAG World Map)
+
+**Type** : Service statique utilitaire (`lib/services/map_generator_service.dart`).
+
+**Responsabilités** :
+1. **Génération de la topologie en DAG** (`generateMap`) :
+   - Génère un graphe acyclique dirigé de 10 étages (`floors = 10`), avec une largeur fluctuant de 2 à 5 nœuds (`maxWidth = 5`).
+   - Câble séquentiellement les connexions de l'étage `y` vers l'étage `y+1` avec des offsets indexés de $-1$, $0$, $+1$.
+   - **Passe de correction d'orphelins** : Parcourt tous les nœuds de l'étage suivant et connecte de force une source s'ils ne sont pas ciblés.
+2. **Contraintes structurelles forcées** :
+   - Étage 0 : Forcé à Combat standard.
+   - Étage 5 : Forcé à 1 seul nœud (chokepoint) de type Élite.
+   - Étage 8 : Tous les nœuds sont obligatoirement de type Repos (Rest).
+   - Étage 9 (Boss) : Génère précisément 3 boss distincts (Démon, Dragon, Liche) pour permettre au joueur de choisir son adversaire final.
+3. **Solver de Quotas (`_balanceQuotas`)** :
+   - Itère sur les nœuds de la carte pour réallouer les types de nœuds afin de respecter les limites globales configurées dans `GameConstants.nodeQuotas` (Combat: 12-22, Elite: 3-6, Rest: 3-6, Shop: 2-5, Event: 4-9).
+4. **Algorithme Anti-Répétition de Chemin (`_hasThreeConsecutive` / `_getChainOfThree`)** :
+   - Parcourt récursivement tous les chemins valides menant de l'étage d'entrée (0) aux boss (étage 9).
+   - Détecte toute chaîne de 3 nœuds consécutifs du type Élite ou Repos.
+   - Corrige les violations en convertissant le 3ème nœud de la suite en Combat, Shop ou Event, et répète la validation jusqu'à ce que plus aucun chemin ne contrevienne à la règle.
+
+### 3.3. `TraitSystem` — Passifs de Héros
 
 **Type** : Classe statique utilitaire.
 
@@ -230,7 +251,7 @@ static List<EnemyData> generateEnemiesForLevel(
 
 **Couplage** : Tous les gains d'armure incluent systématiquement le bonus `armorMastery`.
 
-### 3.3. `EffectResolver` — Résolution d'Effets de Cartes
+### 3.4. `EffectResolver` — Résolution d'Effets de Cartes
 
 **Type** : Classe statique utilitaire (`lib/game/services/effect_resolver.dart`).
 
@@ -264,7 +285,7 @@ if critical hit roll succeeds (random(100) < effectiveCritChance):
 
 **Statuts créables et gérés** : `poison`, `strength`, `weakness`, `strength_regen`, `armor_regen`, `burn` (Brûlure), `freeze` (Gel), `shock` (Électrocution), `vulnerable` (Vulnérable), `crit_chance` (Chance de critique temporaire).
 
-### 3.4. `CombatDebugLogger` — Service de Journalisation Mathématique du Combat
+### 3.5. `CombatDebugLogger` — Service de Journalisation Mathématique du Combat
 
 **Type** : Service de journalisation dédié (`lib/game/services/combat_debug_logger.dart`).
 
