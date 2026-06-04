@@ -14,6 +14,7 @@ import '../../game/systems/trait_system.dart';
 import 'draft_screen.dart';
 import 'class_selection_screen.dart';
 import 'deck_screen.dart';
+import 'boss_card_draft_screen.dart';
 import '../../services/game_data_service.dart';
 import '../../models/card_instance.dart';
 import '../../models/data/relic_data.dart';
@@ -63,6 +64,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       allRelics: gameData.relics,
       allCards: gameData.cards,
       luck: runState.heroStats.luck,
+      act: runState.act,
     );
 
     _presentNextReward();
@@ -82,7 +84,15 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
     // 2. Present Cards if any and not processed yet
     if (rewardState.rolledCards.isNotEmpty && !rewardState.isCardsProcessed) {
-      _showBossCardChoiceDialog(rewardState.rolledCards);
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => const BossCardDraftScreen(),
+        ),
+      ).then((_) {
+        if (mounted) {
+          _presentNextReward();
+        }
+      });
       return;
     }
 
@@ -165,146 +175,6 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       },
       transitionBuilder: (ctx, anim, _, child) =>
           FadeTransition(opacity: anim, child: child),
-    );
-  }
-
-  void _showBossCardChoiceDialog(List<CardData> rolledCards) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            final isFr = Localizations.localeOf(context).languageCode == 'fr';
-            final Set<CardData> selected = {};
-
-            return AlertDialog(
-              backgroundColor: const Color(0xFFF4ECD8),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: const BorderSide(color: Color(0xFF8B4513), width: 2),
-              ),
-              title: Text(
-                isFr ? "Récompense de Boss : Choix de Cartes" : "Boss Reward: Card Choice",
-                style: const TextStyle(
-                  color: Color(0xFF8B4513),
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              content: SizedBox(
-                width: double.maxFinite,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      isFr
-                          ? "Choisissez entre 1 et 3 cartes à ajouter à votre deck :"
-                          : "Choose between 1 and 3 cards to add to your deck:",
-                      style: const TextStyle(color: Color(0xFF4A3728), fontSize: 16),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 20),
-                    Wrap(
-                      spacing: 12,
-                      runSpacing: 12,
-                      alignment: WrapAlignment.center,
-                      children: rolledCards.map((cardData) {
-                        final isSelected = selected.contains(cardData);
-                        return InkWell(
-                          onTap: () {
-                            setState(() {
-                              if (isSelected) {
-                                selected.remove(cardData);
-                              } else {
-                                selected.add(cardData);
-                              }
-                            });
-                          },
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            width: 140,
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: isSelected ? Colors.amber.withAlpha(50) : Colors.white,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: isSelected ? Colors.amber : Colors.grey,
-                                width: isSelected ? 3 : 1.5,
-                              ),
-                              boxShadow: isSelected
-                                  ? [BoxShadow(color: Colors.amber.withAlpha(100), blurRadius: 8, spreadRadius: 2)]
-                                  : [],
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  cardData.getName(isFr ? 'fr' : 'en'),
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF4A3728),
-                                    fontSize: 14,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 6),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: Colors.blueAccent,
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: Text(
-                                    '${cardData.cost} Mana',
-                                    style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  cardData.getDescription(isFr ? 'fr' : 'en'),
-                                  style: const TextStyle(color: Colors.black54, fontSize: 11),
-                                  textAlign: TextAlign.center,
-                                  maxLines: 4,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                Center(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF8B4513),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    onPressed: (selected.isNotEmpty && selected.length <= 3)
-                        ? () {
-                            ref.read(rewardProvider.notifier).chooseCards(selected.toList());
-                            Navigator.of(dialogContext).pop();
-                            _presentNextReward();
-                          }
-                        : null,
-                    child: Text(
-                      isFr ? "Confirmer" : "Confirm",
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
-        );
-      },
     );
   }
 

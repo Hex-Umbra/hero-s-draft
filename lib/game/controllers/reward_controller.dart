@@ -73,6 +73,7 @@ class RewardController extends StateNotifier<RewardState> {
     required List<RelicData> allRelics,
     required List<CardData> allCards,
     required int luck,
+    required int act,
   }) {
     // 1. Calculate XP from defeated enemies
     int totalXp = 0;
@@ -90,6 +91,9 @@ class RewardController extends StateNotifier<RewardState> {
       final double levelMultiplier = 1.0 + 0.10 * (enemy.stats.level - 1);
       totalGold += (enemy.data.gold * levelMultiplier).round();
     }
+    if (currentNode.bossRewardType == BossRewardType.doubleXp) {
+      totalGold *= 2;
+    }
 
     // 3. Roll Relic
     RelicData? rolledRelic;
@@ -103,10 +107,27 @@ class RewardController extends StateNotifier<RewardState> {
         final double uncommonChance;
 
         if (isImprovedRelic) {
-          legChance = 15.0 + luck * 0.5;
-          epicChance = 30.0 + luck * 1.0;
-          rareChance = 35.0 + luck * 2.0;
-          uncommonChance = 20.0 + luck * 3.0;
+          legChance = 10.0 + luck * 0.5;
+          final double commonChance = max(0.0, 40.0 - (act - 1) * 10.0);
+          if (commonChance > 0.0) {
+            final double baseRemaining = 90.0 - commonChance;
+            uncommonChance = (20.0 / 85.0) * baseRemaining + luck * 3.0;
+            rareChance = (35.0 / 85.0) * baseRemaining + luck * 2.0;
+            epicChance = (30.0 / 85.0) * baseRemaining + luck * 1.0;
+          } else {
+            final double maxUncommonBase = (20.0 / 85.0) * 90.0;
+            final double baseUncommonChance = max(0.0, maxUncommonBase - (act - 5) * 10.0);
+            if (baseUncommonChance > 0.0) {
+              final double baseRemaining = 90.0 - baseUncommonChance;
+              rareChance = (35.0 / 65.0) * baseRemaining + luck * 2.0;
+              epicChance = (30.0 / 65.0) * baseRemaining + luck * 1.0;
+              uncommonChance = baseUncommonChance + luck * 3.0;
+            } else {
+              rareChance = (35.0 / 65.0) * 90.0 + luck * 2.0;
+              epicChance = (30.0 / 65.0) * 90.0 + luck * 1.0;
+              uncommonChance = 0.0;
+            }
+          }
         } else {
           legChance = 1.0 + luck * 0.5;
           epicChance = 5.0 + luck * 1.0;
@@ -118,27 +139,14 @@ class RewardController extends StateNotifier<RewardState> {
         double roll = rand;
         if (roll < legChance) {
           rarity = RelicRarity.legendary;
+        } else if (roll < legChance + epicChance) {
+          rarity = RelicRarity.epic;
+        } else if (roll < legChance + epicChance + rareChance) {
+          rarity = RelicRarity.rare;
+        } else if (roll < legChance + epicChance + rareChance + uncommonChance) {
+          rarity = RelicRarity.uncommon;
         } else {
-          roll -= legChance;
-          if (roll < epicChance) {
-            rarity = RelicRarity.epic;
-          } else {
-            roll -= epicChance;
-            if (roll < rareChance) {
-              rarity = RelicRarity.rare;
-            } else {
-              roll -= rareChance;
-              if (isImprovedRelic) {
-                rarity = RelicRarity.uncommon;
-              } else {
-                if (roll < uncommonChance) {
-                  rarity = RelicRarity.uncommon;
-                } else {
-                  rarity = RelicRarity.common;
-                }
-              }
-            }
-          }
+          rarity = RelicRarity.common;
         }
 
         var filtered = allRelics.where((r) => r.rarity == rarity).toList();
@@ -154,14 +162,8 @@ class RewardController extends StateNotifier<RewardState> {
 
     // 4. Roll Cards
     List<CardData> rolledCards = [];
-    if (currentNode.bossRewardType == BossRewardType.cards && allCards.isNotEmpty) {
-      final pool = List<CardData>.from(allCards);
-      final random = Random();
-      for (int i = 0; i < 3; i++) {
-        if (pool.isEmpty) break;
-        final idx = random.nextInt(pool.length);
-        rolledCards.add(pool.removeAt(idx));
-      }
+    if (currentNode.bossRewardType == BossRewardType.cards) {
+      rolledCards = allCards.where((c) => c.type != CardType.status).toList();
     }
 
     state = RewardState(

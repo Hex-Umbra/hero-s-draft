@@ -164,10 +164,25 @@ Tous les contrôleurs héritent de `StateNotifier<T>` et exposent des états imm
 
 **Responsabilités** :
 - **Initialisation** : `handleVictory(...)` — Déclenché lors de la victoire. 
-  - Somme l'XP de base de chaque ennemi battu, indexé sur son niveau : `(enemy.data.xp * levelMultiplier).round()` où `levelMultiplier = 1.0 + 0.10 * (enemy.stats.level - 1)`. Double le gain total si le nœud est configuré avec `bossRewardType == BossRewardType.doubleXp`.
-  - Somme l'or de base de chaque ennemi battu (`enemies.json`) avec le même coefficient de niveau : `(enemy.data.gold * levelMultiplier).round()`.
-  - Effectue le tirage de Reliques si combat de type Élite ou Boss. Si le nœud présente `bossRewardType == BossRewardType.improvedRelic`, exclut les reliques de rareté commune et améliore les probabilités globales de tirage (Legendary 15%, Epic 30%, Rare 35%, Uncommon 20%, ajustées par `luck`).
-  - Génère 3 choix de cartes globales de butin si `bossRewardType == BossRewardType.cards`.
+  - Somme l'XP de base de chaque ennemi battu, indexé sur son niveau : `(enemy.data.xp * levelMultiplier).round()` où `levelMultiplier = 1.0 + 0.10 * (enemy.stats.level - 1)`. Double le gain total d'XP si le nœud est configuré avec `bossRewardType == BossRewardType.doubleXp`.
+  - Somme l'or de base de chaque ennemi battu (`enemies.json`) avec le même coefficient de niveau : `(enemy.data.gold * levelMultiplier).round()`. Double le gain total d'Or si le nœud est configuré avec `bossRewardType == BossRewardType.doubleXp`.
+  - **Tirage de Reliques Boss 3 (`improvedRelic`)** : Effectue le tirage de Reliques si combat de type Élite ou Boss. Si le nœud présente `bossRewardType == BossRewardType.improvedRelic`, les probabilités de drop sont dynamiques et calculées par Act :
+    - La chance Légendaire de base est fixée à **10.0%** (augmentable via la chance `luck` du joueur : `legChance = 10.0 + luck * 0.5`).
+    - La chance Commune de base démarre à **40.0%** et diminue de **10% par acte** : `commonChance = max(0.0, 40.0 - (act - 1) * 10.0)`.
+    - Si `commonChance > 0.0` (Actes 1 à 4) : la portion de probabilité restante (90.0 - `commonChance`) est répartie proportionnellement entre Atypique (Uncommon), Rare et Épique :
+      - `uncommonChance = (20.0 / 85.0) * baseRemaining + luck * 3.0`
+      - `rareChance = (35.0 / 85.0) * baseRemaining + luck * 2.0`
+      - `epicChance = (30.0 / 85.0) * baseRemaining + luck * 1.0`
+    - Si `commonChance == 0.0` (Acte 5+) : la chance d'Atypique de base commence à décroître de **10% par acte** à partir de sa base max théorique : `baseUncommonChance = max(0.0, maxUncommonBase - (act - 5) * 10.0)` où `maxUncommonBase = (20.0 / 85.0) * 90.0`.
+      - Si `baseUncommonChance > 0.0` (Actes 5 à 7), la portion restante (90.0 - `baseUncommonChance`) est répartie entre Rare et Épique :
+        - `rareChance = (35.0 / 65.0) * baseRemaining + luck * 2.0`
+        - `epicChance = (30.0 / 65.0) * baseRemaining + luck * 1.0`
+        - `uncommonChance = baseUncommonChance + luck * 3.0`
+      - Si `baseUncommonChance == 0.0` (Acte 8+) : Uncommon tombe à 0%, et la totalité des chances restantes (90.0%) est partagée entre Rare et Épique :
+        - `rareChance = (35.0 / 65.0) * 90.0 + luck * 2.0`
+        - `epicChance = (30.0 / 65.0) * 90.0 + luck * 1.0`
+        - `uncommonChance = 0.0`
+  - **Tirage de Cartes Boss 1 (`cards`)** : Génère le pool de draft de cartes à partir de toutes les cartes globales à l'exclusion des cartes status (`allCards.where((c) => c.type != CardType.status).toList()`).
 - **Collecte & Résolution** :
   - `collectGoldAndXp()` : Crédite l'or accumulé à `InventoryController` et l'XP à `RunController` (détermine si le héros monte de niveau).
   - `collectRelic()` / `skipRelic()` : Ajoute ou ignore la relique de l'inventaire.
@@ -407,6 +422,7 @@ Pour éliminer la condition de concurrence visuelle (race condition) où l'état
 | `EventScreen` | `ConsumerWidget` | `ref.watch(runProvider)` | Événements narratifs à choix branchus |
 | `CampfireScreen` | `ConsumerWidget` | `ref.watch(runProvider)`, `ref.watch(deckProvider)` | Repos (heal 30%), Forge (level up), Oubli (suppression) |
 | `DraftScreen` | `ConsumerStatefulWidget` | `ref.read(deckProvider.notifier)` | Draft post-combat : 3 choix de cartes |
+| `BossCardDraftScreen` | `ConsumerStatefulWidget` | `ref.read(rewardProvider.notifier)` | Draft post-combat Boss 1 : sélection forcée de précisément 3 cartes parmi le catalogue de cartes globales non-status |
 | `DictionaryScreen` | `ConsumerWidget` | `ref.watch(gameDataLoaderProvider)` | Catalogue filtrable de toutes les cartes |
 
 **Pattern de navigation** : 100% via `Navigator.of(context).push(MaterialPageRoute(...))` — aucun routeur centralisé.

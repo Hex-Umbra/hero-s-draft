@@ -100,7 +100,7 @@ class MapLegend extends StatelessWidget {
           LegendItem(
             icon: Icons.auto_awesome,
             color: Colors.cyanAccent,
-            label: l10n.legendBossXp,
+            label: Localizations.localeOf(context).languageCode == 'fr' ? "Boss (XP & Or x2)" : "Boss (2x XP & Gold)",
           ),
           LegendItem(
             icon: Icons.diamond,

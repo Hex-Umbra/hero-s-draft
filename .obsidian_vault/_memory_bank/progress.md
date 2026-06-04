@@ -23,7 +23,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Anti-répétition de chemins | `MapGeneratorService._optimizeMapTypes` | Algorithme interdisant 3 nœuds Élite ou Repos consécutifs sur un même chemin |
 | Chokepoints structurels forcés | `MapGeneratorService` | Étage 5 Élite forcé (1 nœud), Étage 8 Repos forcé (repos garanti avant boss) |
 | Embranchement de Boss multiples | `MapGeneratorService` / `EncounterSystem` | Étage 9 (Boss) présente 3 nœuds de boss distincts avec récompenses de combat uniques déterminées par leur position |
-| Récompenses de Boss uniques | `GameScreen`, `MapNode`, `RewardController` | Récompenses typées bossRewardType par position x (x=0: cards, x=1: doubleXp, x=2: improvedRelic), gérées par RewardController |
+| Récompenses de Boss uniques | `GameScreen`, `MapNode`, `RewardController`, `BossCardDraftScreen` | Boss 1 (x=0) : sélection forcée de 3 cartes via BossCardDraftScreen. Boss 2 (x=1) : XP/Or doublés. Boss 3 (x=2) : relic drop dynamique par Act dans RewardController. |
 | Correction d'orphelins | `MapGeneratorService` (Phase 2 câblage) | Garantie que tout nœud a au moins 1 connexion entrante |
 | Navigation réactive | `RunController.travelToNode()` | Validation d'accessibilité (connexion au nœud complété ou étage 0) |
 | Caméra centrée | `MapScreen` | Repositionnement et centrage automatique fluide à chaque transition |
@@ -43,7 +43,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Compétences | `SkillController` / `skillProvider` | 2 compétences par héros, cooldowns, consommation de ressources |
 | Événements | `EventController` / `eventProvider` | 2 événements narratifs à choix multiples, résolution d'actions, roll de rareté relique |
 | Boutique | `ShopController` / `shopProvider` | Achat/purge/clone cartes, soin, expansion, reroll |
-| Récompenses de Victoire | `RewardController` / `rewardProvider` | Or, XP (multipliés par bossRewardType), tirage de relique (improvedRelic exclut les communes), et draft de cartes |
+| Récompenses de Victoire | `RewardController` / `rewardProvider` | Or, XP (doublés pour doubleXp), tirage de relique (improvedRelic avec chances dynamiques par Act excluant les communes), et draft de cartes (standard ou boss) |
 
 ### 🃏 Système de Cartes et Deck
 

@@ -47,7 +47,8 @@ class _MapNodeWidgetState extends State<MapNodeWidget> {
         if (widget.node.bossRewardType == BossRewardType.cards) {
           return (l10n.legendBossCards, l10n.tooltipBossDesc);
         } else if (widget.node.bossRewardType == BossRewardType.doubleXp) {
-          return (l10n.legendBossXp, l10n.tooltipBossDesc);
+          final isFr = Localizations.localeOf(context).languageCode == 'fr';
+          return (isFr ? "Boss (XP & Or x2)" : "Boss (2x XP & Gold)", l10n.tooltipBossDesc);
         } else if (widget.node.bossRewardType == BossRewardType.improvedRelic) {
           return (l10n.legendBossRelic, l10n.tooltipBossDesc);
         }

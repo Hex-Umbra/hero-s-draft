@@ -1049,4 +1049,41 @@ Auparavant, le calcul et l'attribution des récompenses post-combat (XP, or, rel
 - ✅ **Testabilité Accrue** : Possibilité de tester la validité des calculs de butins, de drops d'or et de tirages de reliques par de simples tests unitaires Riverpod sans monter d'arbre de widgets.
 - ✅ **Économie de Combat Cohérente** : Les gains d'or sont désormais directement proportionnels au niveau et à la difficulté des ennemis vaincus, évitant les anomalies de progression.
 
+---
+
+## 🏆 ADR-032 : Finalisation du Refactoring des Récompenses de Boss (Boss Rewards Finalization)
+
+### Statut
+✅ Accepté & Implémenté
+
+### Contexte
+Pour finaliser le refactoring des récompenses post-combat initié dans la version 0.0.94, il était nécessaire d'intégrer pleinement les comportements et mécaniques propres aux 3 boss thématiques situés à l'étage 9 de la carte. Précédemment, les récompenses n'offraient pas le niveau d'interactivité requis (les tirages de cartes de boss n'avaient pas d'écran dédié et les probabilités de reliques étaient fixes). Le but était de concevoir un écran de sélection de cartes complet et obligatoire pour le Boss 1, de doubler les récompenses d'or et d'XP pour le Boss 2, et de concevoir une progression probabiliste de drop de relique dynamique selon l'acte en cours pour le Boss 3.
+
+### Décision
+1. **Écran de Draft Dédié pour Boss 1 (`BossCardDraftScreen`)** :
+   - Créer `BossCardDraftScreen` dans `lib/ui/screens/boss_card_draft_screen.dart` s'appuyant sur le widget unifié `UiCard` contraint dans des dimensions fixes de `140x220`.
+   - Charger toutes les cartes globales à l'exception des cartes status (`CardType.status`) pour composer le pool.
+   - Forcer le joueur à sélectionner **exactement 3 cartes** avant d'activer le bouton de validation (« Confirmer la sélection »).
+   - Intégrer cet écran via des redirections de navigation appropriées depuis `GameScreen`.
+2. **Doublement Récompenses Boss 2** :
+   - Doubler à la fois l'Or et l'XP de combat calculés lors de la victoire contre le boss du nœud central (x=1) dans `RewardController`.
+   - Mettre à jour les tooltips dans `MapNodeWidget` et les étiquettes de légende de `MapLegend` en français ("Boss (XP & Or x2)") et en anglais ("Boss (2x XP & Gold)").
+3. **Chances de Reliques Évolutives Boss 3** :
+   - Fixer la chance de base Légendaire à **10.0%** (uniquement scalable par la statistique de Chance/Luck du joueur).
+   - Diminuer la chance Commune de base démarrant à **40.0%** de **10% par acte** : `commonChance = max(0.0, 40.0 - (act - 1) * 10.0)`.
+   - Distribuer proportionnellement la baisse de chance Commune (soit `90.0 - commonChance`) entre Uncommon, Rare, et Epic selon leurs parts relatives (respectivement 20/85, 35/85, 30/85), plus le bonus de luck.
+   - Si la chance Commune atteint 0.0% (à l'Acte 5), commencer à diminuer la chance d'Atypique (Uncommon) de **10% par acte** à partir de sa base maximale de `(20.0 / 85.0) * 90.0` : `baseUncommonChance = max(0.0, maxUncommonBase - (act - 5) * 10.0)`.
+   - Distribuer proportionnellement cette réduction de Uncommon (soit `90.0 - baseUncommonChance`) vers Rare et Epic selon leurs parts relatives de base (35/65, 30/65).
+   - Logique de tirage cumulée intégrée au sein de `RewardController`.
+
+### Preuves dans le code
+- `lib/ui/screens/boss_card_draft_screen.dart` : Création de la vue GridView responsive, de la gestion de sélection multiple avec validation (compteur fixe à 3) et du bouton de confirmation.
+- `lib/game/controllers/reward_controller.dart` : Calcul conditionnel des chances de reliques Boss 3 (`isImprovedRelic`) indexé sur l'Act et application de `totalXp *= 2` et `totalGold *= 2` pour Boss 2.
+- `lib/ui/widgets/map/map_legend.dart` & `lib/ui/widgets/map/map_node_widget.dart` : Affichage localisé des tooltips et légende ("Boss (XP & Or x2)" / "Boss (2x XP & Gold)").
+
+### Conséquences
+- ✅ **Game Feel Premium** : Le joueur fait face à des opportunités de choix marquantes pour le Boss 1, à une économie relancée pour le Boss 2, et à des drops haut de gamme cohérents avec l'Acte pour le Boss 3.
+- ✅ **Absence de Regression Technique** : Intégration transparente au sein du `RewardController` existant.
+- ✅ **Respect de la Règle i18n** : Traduction intégrale des dialogues et tooltips.
+
 
