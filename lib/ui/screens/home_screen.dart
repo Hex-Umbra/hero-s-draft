@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'class_selection_screen.dart';
 import 'card_dictionary_screen.dart';
+import 'patch_notes_screen.dart';
 import '../../tutorial/tutorial_screen.dart';
 import '../../tutorial/tutorial_progress_service.dart';
 
@@ -139,6 +140,41 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: const Text(
                 'DICTIONNAIRE',
                 style: TextStyle(color: Colors.white, fontSize: 18),
+              ),
+            ),
+            const SizedBox(height: 20),
+            OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 40,
+                  vertical: 15,
+                ),
+                side: const BorderSide(
+                  color: Colors.amberAccent,
+                  width: 1.5,
+                ),
+              ),
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const PatchNotesScreen(),
+                  ),
+                );
+              },
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Icon(
+                    Icons.article_outlined,
+                    color: Colors.amberAccent,
+                    size: 18,
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    'PATCH NOTES',
+                    style: TextStyle(color: Colors.amberAccent, fontSize: 18),
+                  ),
+                ],
               ),
             ),
           ],

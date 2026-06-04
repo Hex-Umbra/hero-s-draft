@@ -1,0 +1,135 @@
+[
+  {
+    "version": "0.0.93",
+    "date": "2026-06-04",
+    "title": "La Grande Refonte",
+    "sections": [
+      {
+        "category": "Nouvelles Fonctionnalités",
+        "emoji": "✨",
+        "entries": [
+          "La carte de run génère désormais 3 chemins divergents menant chacun à un nœud de boss avec une récompense distincte.",
+          "Trois récompenses de boss uniques : doubler l'expérience gagnée, choisir librement 1 à 3 cartes parmi toutes les cartes disponibles, ou recevoir une relique de rareté garantie Peu Commune ou supérieure.",
+          "Goulot d'étranglement Elite forcé au Sol 5 : un unique nœud Elite doit être traversé avant de progresser.",
+          "Le nœud précédant le boss est toujours un nœud de Repos pour permettre de récupérer avant l'affrontement final.",
+          "Badges de ciblage sur les cartes indiquant la portée de l'effet : cible unique, tous les ennemis, ou soi-même.",
+          "Nouvelle section Patch Notes accessible depuis le menu principal."
+        ]
+      },
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "HUD de combat responsive : la hauteur et la largeur s'adaptent à la taille de l'écran et au facteur d'agrandissement du texte.",
+          "Anti-répétition sur la carte : aucun chemin ne peut contenir 3 nœuds Elite ou 3 nœuds de Repos consécutifs.",
+          "Quotas de types de nœuds équilibrés (Combat: 12-22, Elite: 3-6, Repos: 3-6, Boutique: 2-5, Événement: 4-9).",
+          "Positionnement des ennemis en combat amélioré : les cartes ennemies sont espacées et redimensionnées dynamiquement pour ne plus se chevaucher.",
+          "Mise à l'échelle dynamique des ennemis selon la taille de l'écran, avec recalcul automatique lors d'un redimensionnement."
+        ]
+      },
+      {
+        "category": "Corrections",
+        "emoji": "🐛",
+        "entries": [
+          "Correction d'un débordement de texte sur les cartes à petits écrans.",
+          "Correction du badge 'NEW' du tutoriel qui ne disparaissait pas après complétion.",
+          "Divers correctifs de stabilité et de performance."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "0.0.4",
+    "date": "2026-05-15",
+    "title": "Système de Fusion & Équilibrage",
+    "sections": [
+      {
+        "category": "Nouvelles Fonctionnalités",
+        "emoji": "✨",
+        "entries": [
+          "Système de fusion de cartes entièrement revu (Overhauled).",
+          "Nouveau système de progression par classes avec compétences débloquables.",
+          "Ajout des reliques légendaires avec effets passifs puissants.",
+          "Événements aléatoires enrichis avec de nouveaux choix narratifs."
+        ]
+      },
+      {
+        "category": "Équilibrage",
+        "emoji": "⚖️",
+        "entries": [
+          "Rééquilibrage complet des ennemis selon le sol et la difficulté.",
+          "Coûts de mana ajustés pour de nombreuses cartes de dégâts.",
+          "Scaling des boss en fin de run revu à la hausse."
+        ]
+      },
+      {
+        "category": "Corrections",
+        "emoji": "🐛",
+        "entries": [
+          "Correction d'un crash lors de l'utilisation de certaines cartes de statut.",
+          "Correction du système de bouclier qui n'était pas réinitialisé correctement entre les combats."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "0.0.3",
+    "date": "2026-04-20",
+    "title": "Carte & Exploration",
+    "sections": [
+      {
+        "category": "Nouvelles Fonctionnalités",
+        "emoji": "✨",
+        "entries": [
+          "Génération procédurale de la carte de run avec plusieurs chemins.",
+          "Nœuds de repos : récupération de HP ou suppression de carte.",
+          "Nœuds de boutique : acheter et supprimer des cartes.",
+          "Nœuds d'événements aléatoires avec choix et conséquences."
+        ]
+      },
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "Interface de sélection de classe entièrement refaite.",
+          "Tutoriel interactif ajouté pour les nouveaux joueurs.",
+          "Dictionnaire de cartes accessible depuis le menu principal."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "0.0.2",
+    "date": "2026-03-10",
+    "title": "Combat & Deck",
+    "sections": [
+      {
+        "category": "Nouvelles Fonctionnalités",
+        "emoji": "✨",
+        "entries": [
+          "Système de combat tour par tour complet.",
+          "Pioche, main et défausse fonctionnels.",
+          "Première version du draft de cartes après combat.",
+          "Effets de statut : Poison, Brûlure, Bouclier, Vulnérable."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "0.0.1",
+    "date": "2026-02-01",
+    "title": "MVP Initial",
+    "sections": [
+      {
+        "category": "Lancement",
+        "emoji": "🚀",
+        "entries": [
+          "Première version jouable de Hero's Draft.",
+          "3 classes de héros : Guerrier, Mage, Berserker.",
+          "Système de cartes de base avec attaque et défense.",
+          "Ennemis de base et premier boss."
+        ]
+      }
+    ]
+  }
+]
