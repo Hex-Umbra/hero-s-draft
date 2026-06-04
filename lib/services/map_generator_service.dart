@@ -42,9 +42,6 @@ class MapGeneratorService {
           type = MapNodeType.rest;
         } else if (y == floors - 1) {
           type = MapNodeType.boss;
-          if (x == 0) bossEnemyId = 'boss_card_giver';
-          if (x == 1) bossEnemyId = 'boss_xp_multiplier';
-          if (x == 2) bossEnemyId = 'boss_relic_improved';
         }
 
         // Spread nodes horizontally
