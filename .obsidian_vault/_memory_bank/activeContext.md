@@ -16,11 +16,11 @@ Le focus actuel s'oriente vers la préparation des prochaines étapes de refacto
    - **Algorithme anti-répétition de chemin** : Garantit de manière stricte qu'aucun chemin dans le graphe ne contient 3 nœuds consécutifs du même type (Élite ou Repos).
    - **Quotas de types de nœuds (Solver)** : Maintient un équilibre statistique optimal sur l'ensemble de la carte : Combat (12-22), Élite (3-6), Repos (3-6), Shop (2-5), Event (4-9).
    - **Chokepoints structurels forcés** : Étage 5 (chokepoint à 1 nœud de type Élite) et Étage 8 (tous les nœuds sont obligatoirement de type Repos, garantissant une pause avant les boss).
-   - **Branchements de Boss multiples** : Étage 9 présente 3 Boss distincts (Démon, Dragon, Liche) avec des patterns d'intentions spécifiques et des combats sur mesure.
-   - **Récompenses de Boss thématiques** :
-     - **Dragon** : Multiplie par 2 l'expérience globale accumulée lors de la victoire.
-     - **Démon** : Ouvre un dialogue interactif permettant d'ajouter entre 1 et 3 cartes gratuites dans le deck.
-     - **Liche** : Garantie de butin de relique premium améliorée (minimum Uncommon, avec des chances de tirage Legendary et Epic accrues).
+   - **Branchements de Boss multiples** : L'étage 9 présente 3 nœuds de boss distincts différenciés par leur position horizontale pour offrir des récompenses de combat uniques.
+   - **Récompenses de Boss thématiques basées sur la position** :
+     - **Position gauche (x = 0)** : Offre un dialogue interactif permettant d'ajouter entre 1 et 3 cartes gratuites dans le deck (icône Cartes).
+     - **Position centrale (x = 1)** : Multiplie par 2 l'expérience globale accumulée lors de la victoire (icône Magie/XP).
+     - **Position droite (x = 2)** : Garantie de butin de relique premium améliorée (minimum Uncommon, avec des chances de tirage Legendary et Epic accrues, icône Diamant).
 
 2. **Polissage et Responsivité en Combat (Section 6)** :
    - **HUD Responsive** : Adaptabilité complète de la hauteur et de la largeur du panneau de combat avec clamps de sécurité pour toutes les tailles d'écran (mobiles, desktop, web).

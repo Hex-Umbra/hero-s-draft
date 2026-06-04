@@ -66,7 +66,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           (n) => n.id == runState.currentNodeId,
           orElse: () => runState.mapNodes.first,
         );
-        final bool isImprovedRelic = currentNode.bossEnemyId == 'boss_relic_improved';
+        final parts = currentNode.id.split('_');
+        final int nodeX = parts.length >= 3 ? (int.tryParse(parts[2]) ?? -1) : -1;
+        final bool isImprovedRelic = currentNode.type == MapNodeType.boss && nodeX == 2;
 
         final double legChance;
         final double epicChance;
@@ -192,8 +194,10 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       (n) => n.id == runState.currentNodeId,
       orElse: () => runState.mapNodes.first,
     );
-    final bool isCardGiver = currentNode.bossEnemyId == 'boss_card_giver';
-    final bool isXpMultiplier = currentNode.bossEnemyId == 'boss_xp_multiplier';
+    final parts = currentNode.id.split('_');
+    final int nodeX = parts.length >= 3 ? (int.tryParse(parts[2]) ?? -1) : -1;
+    final bool isCardGiver = currentNode.type == MapNodeType.boss && nodeX == 0;
+    final bool isXpMultiplier = currentNode.type == MapNodeType.boss && nodeX == 1;
 
     // 1. Calculate accumulated XP from all defeated enemies
     int totalXp = 0;

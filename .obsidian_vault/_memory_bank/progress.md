@@ -22,8 +22,8 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Quotas équilibrés (Solver) | `MapGeneratorService._balanceQuotas` | Répartition des types de nœuds : Combat (12-22), Élite (3-6), Repos (3-6), Shop (2-5), Event (4-9) |
 | Anti-répétition de chemins | `MapGeneratorService._optimizeMapTypes` | Algorithme interdisant 3 nœuds Élite ou Repos consécutifs sur un même chemin |
 | Chokepoints structurels forcés | `MapGeneratorService` | Étage 5 Élite forcé (1 nœud), Étage 8 Repos forcé (repos garanti avant boss) |
-| Embranchement de Boss multiples | `MapGeneratorService` / `EncounterSystem` | Étage 9 (Boss) présente 3 Boss distincts (Démon, Dragon, Liche) avec des combats et des récompenses spécifiques |
-| Récompenses de Boss uniques | `GameScreen` | Dragon (2x XP), Démon (Dialogue de choix de 1-3 cartes), Liche (Relique améliorée garantie min. Atypique) |
+| Embranchement de Boss multiples | `MapGeneratorService` / `EncounterSystem` | Étage 9 (Boss) présente 3 nœuds de boss distincts avec récompenses de combat uniques déterminées par leur position |
+| Récompenses de Boss uniques | `GameScreen` | Récompense par position x (x=0: choix de 1-3 cartes, x=1: double XP, x=2: relique améliorée garantie min. Atypique) |
 | Correction d'orphelins | `MapGeneratorService` (Phase 2 câblage) | Garantie que tout nœud a au moins 1 connexion entrante |
 | Navigation réactive | `RunController.travelToNode()` | Validation d'accessibilité (connexion au nœud complété ou étage 0) |
 | Caméra centrée | `MapScreen` | Repositionnement et centrage automatique fluide à chaque transition |

@@ -62,7 +62,7 @@ Le service statique `MapGeneratorService.generateMap({floors = 10, maxWidth = 5}
 | 0 | 100% Combat (entrée obligatoire) |
 | 5 | **Chokepoint** : exactement 1 nœud de type `elite` |
 | 8 (`floors-2`) | 100% `rest` (tous les nœuds de l'étage 8 sont de type repos) |
-| 9 (`floors-1`) | 3 nœuds de type `boss` distincts (permettant un choix de Boss : Démon, Dragon ou Liche) |
+| 9 (`floors-1`) | 3 nœuds de type `boss` distincts (permettant un choix de Boss par récompense selon la position x) |
 
 **Distribution probabiliste initiale** (pour les étages 1-4, 6-7) :
 | Type de Nœud | Probabilité |
@@ -87,10 +87,10 @@ Le service statique `MapGeneratorService.generateMap({floors = 10, maxWidth = 5}
   - Événement (Event) : 4 à 9 nœuds
 - **Algorithme Anti-Répétition de Chemin** (`_hasThreeConsecutive`) : Parcourt tous les chemins du graphe de l'entrée aux boss. Garantit qu'aucun chemin ne comporte 3 nœuds consécutifs du type Élite ou du type Repos. Si une violation est détectée, le troisième nœud est converti en un type alternatif (Combat, Boutique ou Événement).
 
-**Mécanique de Récompenses Spécifiques des Boss (Étage 9)** :
-- **Dragon** (`boss_xp_multiplier`) : Multiplie par 2 toute l'expérience (XP) cumulée par le joueur lors du combat.
-- **Démon** (`boss_card_giver`) : Présente un dialogue interactif affichant 3 cartes globales aléatoires, permettant au joueur d'en sélectionner entre 1 et 3 pour les ajouter gratuitement à son deck.
-- **Liche** (`boss_relic_improved`) : Garantit l'obtention d'une relique de rareté supérieure (minimum Uncommon, excluant totalement les communes). Les chances de rareté sont : Legendary 15%, Epic 30%, Rare 35%, Uncommon 20%.
+**Mécanique de Récompenses Spécifiques des Boss (Étage 9) selon la position** :
+- **Position gauche (x = 0)** : Présente un dialogue interactif affichant 3 cartes globales aléatoires, permettant au joueur d'en sélectionner entre 1 et 3 pour les ajouter gratuitement à son deck (icône Cartes).
+- **Position centrale (x = 1)** : Multiplie par 2 toute l'expérience (XP) cumulée par le joueur lors du combat (icône Magie/XP).
+- **Position droite (x = 2)** : Garantit l'obtention d'une relique de rareté supérieure (minimum Uncommon, excluant totalement les communes, icône Diamant). Les chances de rareté sont : Legendary 15%, Epic 30%, Rare 35%, Uncommon 20%.
 
 **Modèle `MapNode`** : `id` (ex: "node_0_0"), `type` (MapNodeType), `connections` (List\<String\>), `position` (Vector2 Flame), `isCompleted` (bool mutable).
 

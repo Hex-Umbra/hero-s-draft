@@ -79,9 +79,9 @@
   "legendShop": "Merchant Shop",
   "legendRest": "Rest Camp",
   "legendEvent": "Unknown Event",
-  "legendBossCards": "Boss Demon (Cards)",
-  "legendBossXp": "Boss Dragon (x2 XP)",
-  "legendBossRelic": "Boss Lich (Relic)",
+  "legendBossCards": "Boss (Cards Reward)",
+  "legendBossXp": "Boss (Double XP)",
+  "legendBossRelic": "Boss (Relic Reward)",
 
   "tooltipCombatTitle": "Normal Combat",
   "tooltipCombatDesc": "Face a standard monster to earn cards and gold.",

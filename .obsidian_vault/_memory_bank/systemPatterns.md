@@ -230,7 +230,7 @@ static List<EnemyData> generateEnemiesForLevel(
    - Étage 0 : Forcé à Combat standard.
    - Étage 5 : Forcé à 1 seul nœud (chokepoint) de type Élite.
    - Étage 8 : Tous les nœuds sont obligatoirement de type Repos (Rest).
-   - Étage 9 (Boss) : Génère précisément 3 boss distincts (Démon, Dragon, Liche) pour permettre au joueur de choisir son adversaire final.
+   - Étage 9 (Boss) : Génère précisément 3 nœuds de boss pour permettre au joueur de choisir son adversaire final et sa récompense associée selon la position horizontale (x = 0, 1, 2).
 3. **Solver de Quotas (`_balanceQuotas`)** :
    - Itère sur les nœuds de la carte pour réallouer les types de nœuds afin de respecter les limites globales configurées dans `GameConstants.nodeQuotas` (Combat: 12-22, Elite: 3-6, Rest: 3-6, Shop: 2-5, Event: 4-9).
 4. **Algorithme Anti-Répétition de Chemin (`_hasThreeConsecutive` / `_getChainOfThree`)** :

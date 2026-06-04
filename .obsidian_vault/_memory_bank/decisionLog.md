@@ -951,21 +951,18 @@ La génération de la carte du monde procédurale sous forme de DAG pouvait dans
    - **Étage 5** : Forcer la largeur de l'étage à 1 seul nœud et forcer son type à Élite pour créer un combat de mi-parcours obligatoire pour tous les chemins.
    - **Étage 8** : Forcer tous les nœuds générés pour cet étage à être de type Repos (Rest), assurant ainsi une halte obligatoire et salutaire juste avant le combat de Boss.
 4. **Trilogie de Boss Distincts (Étage 9)** :
-   - Configurer 3 nœuds de Boss distincts à l'étage 9, chacun correspondant à un monstre spécifique avec son identifiant propre :
-     - **Démon** (`boss_card_giver`) : 130 HP, 14 ATK.
-     - **Dragon** (`boss_xp_multiplier`) : 150 HP, 15 ATK.
-     - **Liche** (`boss_relic_improved`) : 120 HP, 12 ATK.
-5. **Mécanique de Récompenses de Boss Thématiques** :
-   - À la défaite d'un Boss, déclencher des récompenses spécifiques selon son identifiant :
-     - **Dragon** : Multiplier l'XP totale de combat par 2.
-     - **Démon** : Afficher un dialogue interactif présentant 3 cartes aléatoires et permettant au joueur d'en choisir entre 1 et 3 à ajouter dans son deck.
-     - **Liche** : Garantir un tirage de relique de rareté supérieure (Exclure Common, minimum Uncommon, avec des chances accrues pour Epic/Legendary : Legendary 15%, Epic 30%, Rare 35%, Uncommon 20%).
+   - Configurer 3 nœuds de Boss distincts à l'étage 9, différenciés uniquement par leur position horizontale (`x` index) pour offrir des récompenses de combat uniques. Les boss sont générés de manière procédurale et mis à l'échelle via l'algorithme d'équilibrage du CombatRating de façon standardisée sans utiliser d'identifiants ou d'entités boss hardcodés.
+5. **Mécanique de Récompenses de Boss Thématiques basées sur la Position** :
+   - À la défaite d'un Boss, déclencher des récompenses spécifiques selon la position horizontale (`x` index) du nœud du boss :
+     - **Position gauche (x = 0)** : Dialogue interactif affichant 3 cartes globales aléatoires, permettant au joueur d'en sélectionner entre 1 et 3 pour les ajouter gratuitement à son deck (icône Cartes).
+     - **Position centrale (x = 1)** : Multiplie par 2 toute l'expérience (XP) cumulée par le joueur lors du combat (icône Magie/XP).
+     - **Position droite (x = 2)** : Garantit l'obtention d'une relique de rareté supérieure (minimum Uncommon, excluant totalement les communes, icône Diamant). Les chances de rareté sont : Legendary 15%, Epic 30%, Rare 35%, Uncommon 20%.
 
 ### Preuves dans le code
 - `MapGeneratorService.generateMap` : Implémentation des règles d'étages (y == 5, y == floors-2, y == floors-1).
 - `MapGeneratorService._optimizeMapTypes` et `_balanceQuotas` : Application itérative du solver de quotas et de l'anti-répétition.
-- `EncounterSystem.generateEnemiesForLevel` : Instanciation des caractéristiques des boss Démon, Dragon et Liche.
-- `GameScreen._handleCombatVictory` et `_resolveCombatProgression` : Traitement conditionnel des gains d'XP multipliés, de l'obtention de relique sans commune (Liche), et affichage du dialogue interactif de choix de cartes (Démon).
+- `MapNodeWidget` : Attribution dynamique de l'icône, de la couleur et de l'info-bulle en fonction de la position horizontale `xIndex` de l'ID du nœud de boss.
+- `GameScreen._handleCombatVictory` et `_resolveCombatProgression` : Analyse de l'identifiant du nœud pour en extraire l'index de position horizontale `nodeX` afin de déterminer la récompense (choix de cartes pour x = 0, double XP pour x = 1, relique améliorée pour x = 2).
 - Tests unitaires et widget-tests validés à 100%.
 
 ### Conséquences
