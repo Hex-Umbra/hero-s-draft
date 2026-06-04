@@ -96,8 +96,20 @@ class _MapNodeWidgetState extends State<MapNodeWidget> {
         color = Colors.blueAccent;
         break;
       case MapNodeType.boss:
-        icon = Icons.dangerous;
-        color = Colors.purpleAccent;
+        // Differentiate boss icons by reward type
+        if (widget.node.bossEnemyId == 'boss_card_giver') {
+          icon = Icons.style; // Cards reward
+          color = Colors.orangeAccent;
+        } else if (widget.node.bossEnemyId == 'boss_xp_multiplier') {
+          icon = Icons.auto_awesome; // XP reward
+          color = Colors.cyanAccent;
+        } else if (widget.node.bossEnemyId == 'boss_relic_improved') {
+          icon = Icons.diamond; // Relic reward
+          color = Colors.deepPurpleAccent;
+        } else {
+          icon = Icons.dangerous;
+          color = Colors.purpleAccent;
+        }
         break;
     }
 

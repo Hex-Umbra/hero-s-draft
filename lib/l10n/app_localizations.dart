@@ -368,11 +368,23 @@ abstract class AppLocalizations {
   /// **'Unknown Event'**
   String get legendEvent;
 
-  /// No description provided for @legendBoss.
+  /// No description provided for @legendBossCards.
   ///
   /// In en, this message translates to:
-  /// **'Boss Combat'**
-  String get legendBoss;
+  /// **'Boss Demon (Cards)'**
+  String get legendBossCards;
+
+  /// No description provided for @legendBossXp.
+  ///
+  /// In en, this message translates to:
+  /// **'Boss Dragon (x2 XP)'**
+  String get legendBossXp;
+
+  /// No description provided for @legendBossRelic.
+  ///
+  /// In en, this message translates to:
+  /// **'Boss Lich (Relic)'**
+  String get legendBossRelic;
 
   /// No description provided for @tooltipCombatTitle.
   ///
