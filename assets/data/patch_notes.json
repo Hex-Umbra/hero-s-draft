@@ -25,7 +25,8 @@
         "category": "Équilibrage",
         "emoji": "⚖️",
         "entries": [
-          "Rééquilibrage de la répartition globale des raretés avec l'ajout de 4 nouvelles reliques communes (Pierre à aiguiser, Bottes de cuir, Pièce de chance, Bandage) pour dynamiser le début de partie."
+          "Rééquilibrage de la répartition globale des raretés avec l'ajout de 4 nouvelles reliques communes (Pierre à aiguiser, Bottes de cuir, Pièce de chance, Bandage) pour dynamiser le début de partie.",
+          "Les reliques affectant les statistiques d'attaque et de critique (Pierre à aiguiser, Lame Maudite, Lentille de Focalisation) modifient désormais ces statistiques de manière permanente pour toute la run au lieu d'être de simples buffs de combat."
         ]
       }
     ]

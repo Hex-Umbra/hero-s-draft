@@ -1128,7 +1128,9 @@ La version 0.0.94 de Hero's Draft comportait un ensemble de 14 reliques, ce qui 
      - **Encensoir** (`incense_burner`) : Utilise des charges persistantes (`incense_charge` de durée 99) incrémentées au début de chaque tour. À 4 charges, reset et confère +8 Armure.
 5. **Persistance de l'Armure et Synergies** :
    - Le jeu conservant l'Armure d'un tour à l'autre (l'Armure ne decay pas en fin de tour dans Hero's Draft), la Maîtrise d'Armure conférée par le Kunaï et l'armure brute de l'Encensoir s'avèrent particulièrement puissantes pour les builds défensifs.
-6. **Mise à jour du Dictionnaire de Reliques (bilingue)** :
+6. **Statistiques Permanentes de Run vs Buffs de Combat** :
+   - Afin de rationaliser les effets agissant sur les statistiques du joueur (Force/Attaque, Chances de Critique), les reliques d'ajustement de statistiques fixes de début de combat (comme *Pierre à aiguiser*, *Lame Maudite*, *Lentille de Focalisation*) ont été converties pour agir à l'échelle de toute la run (déclencheur `startOfRun`). Cela permet à ces bonus de modifier directement et de manière permanente la fiche de personnage globale plutôt que de polluer le panneau des statuts de combat sous forme de buffs de 99 tours. Les gains d'Armure et de Mana au combat (ressources éphémères) conservent leur déclencheur `startOfCombat`.
+7. **Mise à jour du Dictionnaire de Reliques (bilingue)** :
    - Adapter `DictionaryScreen` (`card_dictionary_screen.dart`) pour mapper et traduire les nouveaux types de déclencheurs (`onAttackPlayed` → "At Play (Attack)" / "Jouer (Attaque)", etc.) sous forme de badges de couleurs spécifiques.
 
 ### Preuves dans le code

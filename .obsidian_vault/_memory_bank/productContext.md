@@ -292,13 +292,13 @@ Cinq piles logiques gérées par `DeckNotifier` :
 | ID | Nom | Rareté | Trigger | Effet | Valeur | Description |
 |:---|:---|:---|:---|:---|:---|:---|
 | `iron_talisman` | Talisman de Fer | Common | startOfTurn | gain_armor | 2 | Gagne 2 points d'Armure au début de chaque tour. |
-| `whetstone` | Pierre à aiguiser | Common | startOfCombat | gain_strength | 1 | Gagne 1 Force au début du combat. |
+| `whetstone` | Pierre à aiguiser | Common | startOfRun | gain_strength | 1 | +1 Force de manière permanente pour toute la run. |
 | `leather_boots` | Bottes en cuir | Common | startOfCombat | gain_armor | 3 | Gagne 3 points d'Armure au début du combat. |
 | `lucky_coin` | Pièce de chance | Common | startOfRun | gain_crit | 5 | +5 de chance de coup critique de manière permanente pour toute la run. |
 | `bandage` | Bandage de voyage | Common | endOfTurn | heal | 1 | Restaure 1 PV à la fin de chaque tour. |
 | `ancestral_shield` | Bouclier Ancestral | Uncommon | startOfCombat | gain_armor | 5 | Gagne 5 points d'Armure au début du combat. |
 | `protection_rune` | Rune de Protection | Uncommon | endOfTurn | gain_armor | 3 | Gagne 3 points d'Armure à la fin de chaque tour. |
-| `cursed_blade` | Lame Maudite | Uncommon | startOfCombat | gain_strength | 2 | Gagne 2 Force au début du combat (Buff de 99 tours). |
+| `cursed_blade` | Lame Maudite | Uncommon | startOfRun | gain_strength | 2 | +2 Force de manière permanente pour toute la run. |
 | `vampiric_fang` | Croc Vampirique | Uncommon | onEnemyKilled | heal | 8 | Restaure 8 PV chaque fois qu'un ennemi meurt. |
 | `lucky_charm` | Porte-bonheur | Uncommon | startOfRun | gain_crit | 10 | +10% de chance de critique de manière permanente pour toute la run. |
 | `pen_nib` | Plume de scribe | Uncommon | onCardPlayed | charge_strength_turn | 3 | Toutes les 5 cartes jouées, gagne 3 Force pour le tour en cours. |
@@ -306,7 +306,7 @@ Cinq piles logiques gérées par `DeckNotifier` :
 | `mana_crystal` | Cristal de Mana | Rare | startOfCombat | gain_mana | 1 | Gagne 1 Mana au début du combat (tour 1 uniquement). |
 | `spirit_essence` | Essence Spirituelle | Rare | onEnemyKilled | gain_mana | 1 | Gagne 1 Mana chaque fois qu'un ennemi meurt. |
 | `regen_ring` | Anneau Régenérant | Rare | endOfTurn | heal | 2 | Restaure 2 PV à la fin de chaque tour. |
-| `critical_lens` | Lentille de Focalisation | Rare | startOfCombat | gain_crit | 15 | Gagne 15% de chance de critique au début du combat (Buff de 99 tours). |
+| `critical_lens` | Lentille de Focalisation | Rare | startOfRun | gain_crit | 15 | +15% de chance de critique de manière permanente pour toute la run. |
 | `kunai` | Croc Kunaï | Rare | onAttackPlayed | charge_armor_mastery_combat | 1 | Toutes les 3 attaques jouées dans un tour, gagne 1 Maîtrise d'Armure pour le combat. |
 | `shuriken` | Shuriken | Rare | onAttackPlayed | charge_strength_combat | 1 | Toutes les 3 attaques jouées dans un tour, gagne 1 Force pour le combat. |
 | `incense_burner` | Encensoir | Rare | startOfTurn | charge_armor_turn | 8 | Tous les 4 tours, gagne 8 points d'Armure. |
