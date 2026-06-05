@@ -64,8 +64,8 @@
     "id": "sweep",
     "name_en": "Sweep",
     "name_fr": "Balayage",
-    "description_en": "Deal 5 damage to all enemies.",
-    "description_fr": "Inflige 5 dégâts à tous les ennemis.",
+    "description_en": "Deal 3 damage to all enemies.",
+    "description_fr": "Inflige 3 dégâts à tous les ennemis.",
     "cost": 1,
     "type": "attack",
     "category": "global",
@@ -75,7 +75,7 @@
     "effects": [
       {
         "type": "damage",
-        "value": 5
+        "value": 3
       }
     ]
   },
@@ -103,8 +103,8 @@
     "id": "heal_potion",
     "name_en": "Healing Potion",
     "name_fr": "Potion de Soin",
-    "description_en": "Heal 4 HP.",
-    "description_fr": "Soigne 4 PV.",
+    "description_en": "Heal 3 HP.",
+    "description_fr": "Soigne 3 PV.",
     "cost": 1,
     "type": "skill",
     "category": "global",
@@ -115,7 +115,7 @@
     "effects": [
       {
         "type": "heal",
-        "value": 4
+        "value": 3
       }
     ]
   },
@@ -184,8 +184,8 @@
     "id": "warcry",
     "name_en": "Warcry",
     "name_fr": "Cri de Guerre",
-    "description_en": "Deal 3 damage to all enemies and gain 3 Block.",
-    "description_fr": "Inflige 3 dégâts à tous les ennemis et gagne 3 d'Armure.",
+    "description_en": "Deal 4 damage to all enemies and gain 4 Block.",
+    "description_fr": "Inflige 4 dégâts à tous les ennemis et gagne 4 d'Armure.",
     "cost": 2,
     "type": "attack",
     "category": "global",
@@ -195,11 +195,11 @@
     "effects": [
       {
         "type": "damage",
-        "value": 3
+        "value": 4
       },
       {
         "type": "armor",
-        "value": 3
+        "value": 4
       }
     ]
   },
@@ -207,8 +207,8 @@
     "id": "demon_form",
     "name_en": "Demon Form",
     "name_fr": "Forme Démoniaque",
-    "description_en": "Gain 2 Strength for 3 turns.",
-    "description_fr": "Gagne 2 Force pendant 3 tours.",
+    "description_en": "Gain 2 Strength for 4 turns.",
+    "description_fr": "Gagne 2 Force pendant 4 tours.",
     "cost": 2,
     "type": "power",
     "category": "global",
@@ -220,7 +220,7 @@
         "type": "apply_status",
         "statusId": "strength",
         "value": 2,
-        "duration": 3
+        "duration": 4
       }
     ]
   },
@@ -228,8 +228,8 @@
     "id": "metallicize",
     "name_en": "Metallicize",
     "name_fr": "Métallisation",
-    "description_en": "For 3 turns, gain 2 Block at start of turn.",
-    "description_fr": "Pendant 3 tours, gagne 2 Armure au début du tour.",
+    "description_en": "For 2 turns, gain 2 Block at start of turn.",
+    "description_fr": "Pendant 2 tours, gagne 2 Armure au début du tour.",
     "cost": 1,
     "type": "power",
     "category": "global",
@@ -241,7 +241,7 @@
         "type": "apply_status",
         "statusId": "armor_regen",
         "value": 2,
-        "duration": 3
+        "duration": 2
       }
     ]
   },
@@ -249,8 +249,8 @@
     "id": "poison_stab",
     "name_en": "Poison Stab",
     "name_fr": "Coup Empoisonné",
-    "description_en": "Deal 5 damage. Apply 4 Poison.",
-    "description_fr": "Inflige 5 dégâts. Applique 4 Poison.",
+    "description_en": "Deal 3 damage. Apply 1 Poison.",
+    "description_fr": "Inflige 3 dégâts. Applique 1 Poison.",
     "cost": 1,
     "type": "attack",
     "category": "global",
@@ -260,13 +260,13 @@
     "effects": [
       {
         "type": "damage",
-        "value": 5
+        "value": 3
       },
       {
         "type": "apply_status",
         "statusId": "poison",
-        "value": 4,
-        "duration": 3
+        "value": 1,
+        "duration": 2
       }
     ]
   },
@@ -324,8 +324,8 @@
     "id": "thunder_clap",
     "name_en": "Thunderclap",
     "name_fr": "Coup de Tonnerre",
-    "description_en": "Deal 3 damage. Apply 1 Shock.",
-    "description_fr": "Inflige 3 dégâts. Applique 1 Électrocution.",
+    "description_en": "Deal 4 damage. Apply 1 Shock.",
+    "description_fr": "Inflige 4 dégâts. Applique 1 Électrocution.",
     "cost": 1,
     "type": "attack",
     "category": "global",
@@ -335,7 +335,7 @@
     "effects": [
       {
         "type": "damage",
-        "value": 3
+        "value": 4
       },
       {
         "type": "apply_status",

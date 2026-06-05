@@ -371,19 +371,19 @@ abstract class AppLocalizations {
   /// No description provided for @legendBossCards.
   ///
   /// In en, this message translates to:
-  /// **'Boss Demon (Cards)'**
+  /// **'Boss (Cards Reward)'**
   String get legendBossCards;
 
   /// No description provided for @legendBossXp.
   ///
   /// In en, this message translates to:
-  /// **'Boss Dragon (x2 XP)'**
+  /// **'Boss (Double XP)'**
   String get legendBossXp;
 
   /// No description provided for @legendBossRelic.
   ///
   /// In en, this message translates to:
-  /// **'Boss Lich (Relic)'**
+  /// **'Boss (Relic Reward)'**
   String get legendBossRelic;
 
   /// No description provided for @tooltipCombatTitle.

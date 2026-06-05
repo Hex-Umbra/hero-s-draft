@@ -32,26 +32,6 @@ class _MapNodeWidgetState extends State<MapNodeWidget> {
   bool _isHovered = false;
 
   (String, String) _getTooltipData(AppLocalizations l10n) {
-    if (widget.node.type == MapNodeType.boss && widget.node.bossEnemyId != null) {
-      final isFr = Localizations.localeOf(context).languageCode == 'fr';
-      if (widget.node.bossEnemyId == 'boss_card_giver') {
-        return (
-          isFr ? "BOSS : DÉMON" : "BOSS: DEMON",
-          isFr ? "Récompense : 1 à 3 cartes au choix" : "Reward: 1 to 3 cards of choice"
-        );
-      } else if (widget.node.bossEnemyId == 'boss_xp_multiplier') {
-        return (
-          isFr ? "BOSS : DRAGON" : "BOSS: DRAGON",
-          isFr ? "Récompense : XP Double" : "Reward: Double XP"
-        );
-      } else if (widget.node.bossEnemyId == 'boss_relic_improved') {
-        return (
-          isFr ? "BOSS : LICHE" : "BOSS: LICH",
-          isFr ? "Récompense : Relique Améliorée" : "Reward: Improved Relic"
-        );
-      }
-    }
-
     switch (widget.node.type) {
       case MapNodeType.combat:
         return (l10n.tooltipCombatTitle, l10n.tooltipCombatDesc);
@@ -64,6 +44,14 @@ class _MapNodeWidgetState extends State<MapNodeWidget> {
       case MapNodeType.event:
         return (l10n.tooltipEventTitle, l10n.tooltipEventDesc);
       case MapNodeType.boss:
+        if (widget.node.bossRewardType == BossRewardType.cards) {
+          return (l10n.legendBossCards, l10n.tooltipBossDesc);
+        } else if (widget.node.bossRewardType == BossRewardType.doubleXp) {
+          final isFr = Localizations.localeOf(context).languageCode == 'fr';
+          return (isFr ? "Boss (XP & Or x2)" : "Boss (2x XP & Gold)", l10n.tooltipBossDesc);
+        } else if (widget.node.bossRewardType == BossRewardType.improvedRelic) {
+          return (l10n.legendBossRelic, l10n.tooltipBossDesc);
+        }
         return (l10n.tooltipBossTitle, l10n.tooltipBossDesc);
     }
   }
@@ -96,15 +84,14 @@ class _MapNodeWidgetState extends State<MapNodeWidget> {
         color = Colors.blueAccent;
         break;
       case MapNodeType.boss:
-        // Differentiate boss icons by reward type
-        if (widget.node.bossEnemyId == 'boss_card_giver') {
-          icon = Icons.style; // Cards reward
+        if (widget.node.bossRewardType == BossRewardType.cards) {
+          icon = Icons.style;
           color = Colors.orangeAccent;
-        } else if (widget.node.bossEnemyId == 'boss_xp_multiplier') {
-          icon = Icons.auto_awesome; // XP reward
+        } else if (widget.node.bossRewardType == BossRewardType.doubleXp) {
+          icon = Icons.auto_awesome;
           color = Colors.cyanAccent;
-        } else if (widget.node.bossEnemyId == 'boss_relic_improved') {
-          icon = Icons.diamond; // Relic reward
+        } else if (widget.node.bossRewardType == BossRewardType.improvedRelic) {
+          icon = Icons.diamond;
           color = Colors.deepPurpleAccent;
         } else {
           icon = Icons.dangerous;

@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,17 +7,18 @@ import '../../game/controllers/run_controller.dart';
 import '../../game/controllers/deck_controller.dart';
 import '../../game/controllers/combat_controller.dart';
 import '../../game/controllers/inventory_controller.dart';
+import '../../game/controllers/reward_controller.dart';
 import '../../models/combat_state.dart';
 import '../../game/services/effect_resolver.dart';
 import '../../game/systems/trait_system.dart';
 import 'draft_screen.dart';
 import 'class_selection_screen.dart';
 import 'deck_screen.dart';
+import 'boss_card_draft_screen.dart';
 import '../../services/game_data_service.dart';
 import '../../models/card_instance.dart';
 import '../../models/data/relic_data.dart';
 import '../../models/data/card_data.dart';
-import '../../models/map_node.dart';
 import '../widgets/hud/player_health_bar.dart';
 import '../widgets/hud/mana_indicator.dart';
 import '../widgets/hud/status_effects_panel.dart';
@@ -52,380 +52,137 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     _isVictoryHandled = true;
 
     final runState = ref.read(runProvider);
-    final currentNodeType = runState.currentNodeType;
-
-    if (currentNodeType == MapNodeType.boss ||
-        currentNodeType == MapNodeType.elite) {
-      final gameData = ref.read(gameDataLoaderProvider).requireValue;
-      final relics = gameData.relics;
-      if (relics.isNotEmpty) {
-        final luck = runState.heroStats.luck;
-        final rand = Random().nextDouble() * 100;
-
-        final currentNode = runState.mapNodes.firstWhere(
-          (n) => n.id == runState.currentNodeId,
-          orElse: () => runState.mapNodes.first,
-        );
-        final bool isImprovedRelic = currentNode.bossEnemyId == 'boss_relic_improved';
-
-        final double legChance;
-        final double epicChance;
-        final double rareChance;
-        final double uncommonChance;
-
-        if (isImprovedRelic) {
-          // No common relic, minimum Uncommon. Increased chances for Legendary/Epic.
-          legChance = 15.0 + luck * 0.5;
-          epicChance = 30.0 + luck * 1.0;
-          rareChance = 35.0 + luck * 2.0;
-          uncommonChance = 20.0 + luck * 3.0; // The rest goes to Uncommon (total is 100% since no Common is allowed)
-        } else {
-          legChance = 1.0 + luck * 0.5;
-          epicChance = 5.0 + luck * 1.0;
-          rareChance = 14.0 + luck * 2.0;
-          uncommonChance = 20.0 + luck * 3.0;
-        }
-
-        RelicRarity rarity;
-        double roll = rand;
-        if (roll < legChance) {
-          rarity = RelicRarity.legendary;
-        } else {
-          roll -= legChance;
-          if (roll < epicChance) {
-            rarity = RelicRarity.epic;
-          } else {
-            roll -= epicChance;
-            if (roll < rareChance) {
-              rarity = RelicRarity.rare;
-            } else {
-              roll -= rareChance;
-              if (isImprovedRelic) {
-                // If it is improved relic, it's guaranteed at least Uncommon
-                rarity = RelicRarity.uncommon;
-              } else {
-                if (roll < uncommonChance) {
-                  rarity = RelicRarity.uncommon;
-                } else {
-                  rarity = RelicRarity.common;
-                }
-              }
-            }
-          }
-        }
-
-        var filtered = relics.where((r) => r.rarity == rarity).toList();
-        if (filtered.isEmpty) {
-          filtered = relics
-              .where((r) => r.rarity == RelicRarity.common)
-              .toList();
-          if (filtered.isEmpty) {
-            filtered = relics;
-          }
-        }
-        final chosenRelic = filtered[Random().nextInt(filtered.length)];
-
-        // Show the premium carousel dialog instead of a direct snackbar
-        showGeneralDialog(
-          context: context,
-          barrierDismissible: false,
-          barrierColor: Colors.black87,
-          transitionDuration: const Duration(milliseconds: 400),
-          pageBuilder: (dialogContext, _, _) {
-            return RelicCarouselScreen(
-              relicPool: relics,
-              wonRelic: chosenRelic,
-              onCollect: () {
-                // Add the relic to inventory upon collecting
-                ref.read(inventoryProvider.notifier).addRelic(chosenRelic);
-
-                // Show localized snackbar confirmation
-                final l10n = AppLocalizations.of(context)!;
-                final locale = Localizations.localeOf(context).languageCode;
-                String rarityStr = '';
-                switch (chosenRelic.rarity) {
-                  case RelicRarity.common:
-                    rarityStr = l10n.rarityCommon.toUpperCase();
-                    break;
-                  case RelicRarity.uncommon:
-                    rarityStr = l10n.rarityUncommon.toUpperCase();
-                    break;
-                  case RelicRarity.rare:
-                    rarityStr = l10n.rarityRare.toUpperCase();
-                    break;
-                  case RelicRarity.epic:
-                    rarityStr = l10n.rarityEpic.toUpperCase();
-                    break;
-                  case RelicRarity.legendary:
-                    rarityStr = l10n.rarityLegendary.toUpperCase();
-                    break;
-                }
-
-                context.showNotification(
-                  '👑 ${locale == 'fr' ? 'RELIQUE OBTENUE' : 'RELIC OBTAINED'} : ${chosenRelic.emoji} ${chosenRelic.getName(locale)} ($rarityStr)',
-                  type: NotificationType.success,
-                );
-
-                // Dismiss carousel screen
-                Navigator.of(dialogContext).pop();
-
-                // Process XP and progress
-                _resolveCombatProgression();
-              },
-            );
-          },
-          transitionBuilder: (ctx, anim, _, child) =>
-              FadeTransition(opacity: anim, child: child),
-        );
-        return; // Return early, transitions are handled in onCollect callback
-      }
-    }
-
-    // Fallback if not boss/elite or relics empty
-    _resolveCombatProgression();
-  }
-
-  void _resolveCombatProgression() {
-    final combatState = ref.read(combatProvider);
-    final runState = ref.read(runProvider);
+    final gameData = ref.read(gameDataLoaderProvider).requireValue;
     final currentNode = runState.mapNodes.firstWhere(
       (n) => n.id == runState.currentNodeId,
       orElse: () => runState.mapNodes.first,
     );
-    final bool isCardGiver = currentNode.bossEnemyId == 'boss_card_giver';
-    final bool isXpMultiplier = currentNode.bossEnemyId == 'boss_xp_multiplier';
 
-    // 1. Calculate accumulated XP from all defeated enemies
-    int totalXp = 0;
-    for (var enemy in combatState.defeatedEnemies) {
-      final double levelMultiplier = 1.0 + 0.10 * (enemy.stats.level - 1);
-      totalXp += (enemy.data.xp * levelMultiplier).round();
-    }
-
-    if (isXpMultiplier) {
-      totalXp *= 2;
-    }
-
-    if (isCardGiver) {
-      _showBossCardGiverDialog(context, () {
-        _finishResolveCombatProgression(totalXp);
-      });
-    } else {
-      _finishResolveCombatProgression(totalXp);
-    }
-  }
-
-  void _finishResolveCombatProgression(int totalXp) {
-    final locale = Localizations.localeOf(context).languageCode;
-    // 2. Add XP to player and check level up
-    final bool leveledUp = ref.read(runProvider.notifier).gainXp(totalXp);
-
-    // 3. Show notification
-    context.showNotification(
-      '⚔️ ${locale == 'fr' ? 'VICTOIRE ! +$totalXp XP gagnés' : 'VICTORY! +$totalXp XP earned'}',
-      type: NotificationType.success,
+    ref.read(rewardProvider.notifier).handleVictory(
+      defeatedEnemies: ref.read(combatProvider).defeatedEnemies,
+      currentNode: currentNode,
+      allRelics: gameData.relics,
+      allCards: gameData.cards,
+      luck: runState.heroStats.luck,
+      act: runState.act,
     );
 
-    if (leveledUp) {
-      Future.delayed(const Duration(milliseconds: 800), () {
+    _presentNextReward();
+  }
+
+  void _presentNextReward() {
+    if (!mounted) return;
+    final rewardState = ref.read(rewardProvider);
+
+    // 1. Present Relic if any and not processed yet
+    if (rewardState.rolledRelic != null &&
+        !rewardState.isRelicCollected &&
+        !rewardState.isRelicSkipped) {
+      _showRelicCarouselDialog(rewardState.rolledRelic!);
+      return;
+    }
+
+    // 2. Present Cards if any and not processed yet
+    if (rewardState.rolledCards.isNotEmpty && !rewardState.isCardsProcessed) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => const BossCardDraftScreen(),
+        ),
+      ).then((_) {
         if (mounted) {
-          context.showNotification(
-            '🎉 LEVEL UP !',
-            type: NotificationType.success,
-          );
-          setState(() {
-            _showDraft = true;
-          });
+          _presentNextReward();
         }
       });
-    } else {
-      // No level up, just give default victory gold & return to map
-      Future.delayed(const Duration(milliseconds: 800), () {
-        if (mounted) {
-          _finishCombatWithoutDraft();
-        }
-      });
+      return;
+    }
+
+    // 3. Process Gold and XP
+    if (!rewardState.isGoldXpCollected) {
+      final leveledUp = ref.read(rewardProvider.notifier).collectGoldAndXp();
+      final locale = Localizations.localeOf(context).languageCode;
+      
+      context.showNotification(
+        '⚔️ ${locale == 'fr' ? 'VICTOIRE ! +${rewardState.goldGained} Or et +${rewardState.xpGained} XP gagnés' : 'VICTORY! +${rewardState.goldGained} Gold and +${rewardState.xpGained} XP earned'}',
+        type: NotificationType.success,
+      );
+
+      if (leveledUp) {
+        Future.delayed(const Duration(milliseconds: 800), () {
+          if (mounted) {
+            context.showNotification(
+              '🎉 LEVEL UP !',
+              type: NotificationType.success,
+            );
+            setState(() {
+              _showDraft = true;
+            });
+          }
+        });
+      } else {
+        Future.delayed(const Duration(milliseconds: 800), () {
+          if (mounted) {
+            _completeAndExitCombat();
+          }
+        });
+      }
     }
   }
 
-  void _showBossCardGiverDialog(BuildContext context, VoidCallback onComplete) {
+  void _showRelicCarouselDialog(RelicData rolledRelic) {
     final gameData = ref.read(gameDataLoaderProvider).requireValue;
-    final allCards = gameData.cards;
-
-    // Choose 3 distinct random cards from the pool
-    final random = Random();
-    final List<CardData> selectedThree = [];
-    if (allCards.isNotEmpty) {
-      final pool = List<CardData>.from(allCards);
-      for (int i = 0; i < 3; i++) {
-        if (pool.isEmpty) break;
-        final idx = random.nextInt(pool.length);
-        selectedThree.add(pool.removeAt(idx));
-      }
-    }
-
-    showDialog(
+    showGeneralDialog(
       context: context,
       barrierDismissible: false,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            final isFr = Localizations.localeOf(context).languageCode == 'fr';
-            final Set<CardData> selected = {};
+      barrierColor: Colors.black87,
+      transitionDuration: const Duration(milliseconds: 400),
+      pageBuilder: (dialogContext, _, _) {
+        return RelicCarouselScreen(
+          relicPool: gameData.relics,
+          wonRelic: rolledRelic,
+          onCollect: () {
+            ref.read(rewardProvider.notifier).collectRelic();
 
-            return AlertDialog(
-              backgroundColor: const Color(0xFFF4ECD8),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: const BorderSide(color: Color(0xFF8B4513), width: 2),
-              ),
-              title: Text(
-                isFr ? "Récompense de Boss : Choix de Cartes" : "Boss Reward: Card Choice",
-                style: const TextStyle(
-                  color: Color(0xFF8B4513),
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              content: SizedBox(
-                width: double.maxFinite,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      isFr
-                          ? "Choisissez entre 1 et 3 cartes à ajouter à votre deck :"
-                          : "Choose between 1 and 3 cards to add to your deck:",
-                      style: const TextStyle(color: Color(0xFF4A3728), fontSize: 16),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 20),
-                    // Cards display
-                    Wrap(
-                      spacing: 12,
-                      runSpacing: 12,
-                      alignment: WrapAlignment.center,
-                      children: selectedThree.map((cardData) {
-                        final isSelected = selected.contains(cardData);
-                        return InkWell(
-                          onTap: () {
-                            setState(() {
-                              if (isSelected) {
-                                selected.remove(cardData);
-                              } else {
-                                selected.add(cardData);
-                              }
-                            });
-                          },
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            width: 140,
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: isSelected ? Colors.amber.withAlpha(50) : Colors.white,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: isSelected ? Colors.amber : Colors.grey,
-                                width: isSelected ? 3 : 1.5,
-                              ),
-                              boxShadow: isSelected
-                                  ? [BoxShadow(color: Colors.amber.withAlpha(100), blurRadius: 8, spreadRadius: 2)]
-                                  : [],
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                // Title / Name
-                                Text(
-                                  cardData.getName(isFr ? 'fr' : 'en'),
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF4A3728),
-                                    fontSize: 14,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 6),
-                                // Cost
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: Colors.blueAccent,
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: Text(
-                                    '${cardData.cost} Mana',
-                                    style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                // Description
-                                Text(
-                                  cardData.getDescription(isFr ? 'fr' : 'en'),
-                                  style: const TextStyle(color: Colors.black54, fontSize: 11),
-                                  textAlign: TextAlign.center,
-                                  maxLines: 4,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                Center(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF8B4513),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    onPressed: (selected.isNotEmpty && selected.length <= 3)
-                        ? () {
-                            // Add selected cards to deck
-                            for (var cardData in selected) {
-                              ref.read(deckProvider.notifier).addCardToMasterDeck(
-                                    CardInstance(data: cardData),
-                                  );
-                            }
-                            Navigator.of(dialogContext).pop();
-                            onComplete();
-                          }
-                        : null,
-                    child: Text(
-                      isFr ? "Confirmer" : "Confirm",
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
-                  ),
-                ),
-              ],
+            final l10n = AppLocalizations.of(context)!;
+            final locale = Localizations.localeOf(context).languageCode;
+            String rarityStr = '';
+            switch (rolledRelic.rarity) {
+              case RelicRarity.common:
+                rarityStr = l10n.rarityCommon.toUpperCase();
+                break;
+              case RelicRarity.uncommon:
+                rarityStr = l10n.rarityUncommon.toUpperCase();
+                break;
+              case RelicRarity.rare:
+                rarityStr = l10n.rarityRare.toUpperCase();
+                break;
+              case RelicRarity.epic:
+                rarityStr = l10n.rarityEpic.toUpperCase();
+                break;
+              case RelicRarity.legendary:
+                rarityStr = l10n.rarityLegendary.toUpperCase();
+                break;
+            }
+
+            context.showNotification(
+              '👑 ${locale == 'fr' ? 'RELIQUE OBTENUE' : 'RELIC OBTAINED'} : ${rolledRelic.emoji} ${rolledRelic.getName(locale)} ($rarityStr)',
+              type: NotificationType.success,
             );
+
+            Navigator.of(dialogContext).pop();
+            _presentNextReward();
           },
         );
       },
+      transitionBuilder: (ctx, anim, _, child) =>
+          FadeTransition(opacity: anim, child: child),
     );
   }
 
-  void _finishCombatWithoutDraft() {
+  void _completeAndExitCombat() {
     final runController = ref.read(runProvider.notifier);
-    final rng = Random();
-    final currentNodeType = runController.currentState.currentNodeType;
-
-    int goldGained = rng.nextInt(15) + 10;
-    if (currentNodeType == MapNodeType.elite) {
-      goldGained = rng.nextInt(15) + 20;
-    }
-
-    ref.read(inventoryProvider.notifier).gainGold(goldGained);
     runController.nextLevel();
     runController.completeCurrentNode();
-    Navigator.of(context).pop(); // Return to map
+    Navigator.of(context).pop();
   }
 
   void _startPlayerNewTurn() {

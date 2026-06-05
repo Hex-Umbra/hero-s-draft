@@ -1,7 +1,6 @@
 import 'dart:math';
 import '../../models/data/enemy_data.dart';
 import '../../models/map_node.dart';
-import '../../models/enemy_intent.dart';
 
 class EncounterSystem {
   static final Random _rng = Random();
@@ -28,8 +27,9 @@ class EncounterSystem {
     required int act,
     required bool isBoss,
     required bool isElite,
+    bool isCustomBoss = false,
   }) {
-    final double bossHpMultiplier = isBoss ? 3.0 : (isElite ? 1.5 : 1.0);
+    final double bossHpMultiplier = isBoss ? (isCustomBoss ? 1.0 : 3.0) : (isElite ? 1.5 : 1.0);
     return (1.0 + 0.06 * (enemyLevel - 1)) *
         (1.0 + 0.20 * (act - 1)) *
         bossHpMultiplier;
@@ -41,8 +41,9 @@ class EncounterSystem {
     required int act,
     required bool isBoss,
     required bool isElite,
+    bool isCustomBoss = false,
   }) {
-    final double bossDmgMultiplier = isBoss ? 3.0 : (isElite ? 1.5 : 1.0);
+    final double bossDmgMultiplier = isBoss ? (isCustomBoss ? 1.0 : 3.0) : (isElite ? 1.5 : 1.0);
     return (1.0 + 0.04 * (enemyLevel - 1)) *
         (1.0 + 0.15 * (act - 1)) *
         bossDmgMultiplier;
@@ -56,11 +57,14 @@ class EncounterSystem {
     required bool isBoss,
     required bool isElite,
   }) {
+    final bool isCustomBoss = data.id.startsWith('boss_');
+
     final double hpMultiplier = getHpMultiplier(
       enemyLevel: enemyLevel,
       act: act,
       isBoss: isBoss,
       isElite: isElite,
+      isCustomBoss: isCustomBoss,
     );
 
     final double damageMultiplier = getDamageMultiplier(
@@ -68,6 +72,7 @@ class EncounterSystem {
       act: act,
       isBoss: isBoss,
       isElite: isElite,
+      isCustomBoss: isCustomBoss,
     );
 
     final int hpScale = (data.maxHp * hpMultiplier).round();
@@ -97,64 +102,7 @@ class EncounterSystem {
     final bool isBoss = nodeType == MapNodeType.boss || (nodeType == null && level > 0 && level % 10 == 0);
     final bool isElite = nodeType == MapNodeType.elite;
 
-    if (isBoss && bossEnemyId != null) {
-      final String nameEn;
-      final String nameFr;
-      final String spritePath;
-      final int maxHp;
-      final int baseDamage;
-      final List<EnemyIntent> intents;
 
-      if (bossEnemyId == 'boss_relic_improved') {
-        nameEn = 'Lich';
-        nameFr = 'Liche';
-        spritePath = 'enemy_skeleton.png';
-        maxHp = 120;
-        baseDamage = 12;
-        intents = [
-          EnemyIntent(type: IntentType.attack, value: 12),
-          EnemyIntent(type: IntentType.buff, value: 3),
-          EnemyIntent(type: IntentType.attack, value: 15),
-        ];
-      } else if (bossEnemyId == 'boss_xp_multiplier') {
-        nameEn = 'Dragon';
-        nameFr = 'Dragon';
-        spritePath = 'enemy_orc.png';
-        maxHp = 150;
-        baseDamage = 15;
-        intents = [
-          EnemyIntent(type: IntentType.attack, value: 15),
-          EnemyIntent(type: IntentType.buff, value: 4),
-          EnemyIntent(type: IntentType.attack, value: 20),
-        ];
-      } else { // boss_card_giver
-        nameEn = 'Demon';
-        nameFr = 'Démon';
-        spritePath = 'enemy_goblin.png';
-        maxHp = 130;
-        baseDamage = 14;
-        intents = [
-          EnemyIntent(type: IntentType.attack, value: 14),
-          EnemyIntent(type: IntentType.defend, value: 10),
-          EnemyIntent(type: IntentType.attack, value: 18),
-        ];
-      }
-
-      return [
-        EnemyData(
-          id: bossEnemyId,
-          nameEn: nameEn,
-          nameFr: nameFr,
-          maxHp: maxHp,
-          baseDamage: baseDamage,
-          spritePath: spritePath,
-          tier: 4,
-          xp: 200,
-          critChance: 15,
-          intents: intents,
-        ),
-      ];
-    }
 
 
     // 1. Calculate player power, expected power, base budget

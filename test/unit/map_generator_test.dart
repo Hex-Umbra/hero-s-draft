@@ -15,20 +15,14 @@ void main() {
       expect(floors.length, 10);
     });
 
-    test('boss nodes are at the top (last floor), rowWidth is 3, and they have correct boss IDs', () {
+    test('boss nodes are at the top (last floor), rowWidth is 3, and they have no boss IDs', () {
       final nodes = MapGeneratorService.generateMap(floors: 10, maxWidth: 5);
 
       final bossNodes = nodes.where((n) => n.type == MapNodeType.boss).toList();
       expect(bossNodes.length, 3);
 
-      final bossIds = bossNodes.map((n) => n.bossEnemyId).toSet();
-      expect(bossIds, {
-        'boss_card_giver',
-        'boss_xp_multiplier',
-        'boss_relic_improved',
-      });
-
       for (var bossNode in bossNodes) {
+        expect(bossNode.bossEnemyId, isNull);
         // posY for floor 9 is 0
         expect(bossNode.position.y, 0.0);
         expect(bossNode.connections.isEmpty, true);

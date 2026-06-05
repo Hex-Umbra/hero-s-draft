@@ -951,21 +951,18 @@ La génération de la carte du monde procédurale sous forme de DAG pouvait dans
    - **Étage 5** : Forcer la largeur de l'étage à 1 seul nœud et forcer son type à Élite pour créer un combat de mi-parcours obligatoire pour tous les chemins.
    - **Étage 8** : Forcer tous les nœuds générés pour cet étage à être de type Repos (Rest), assurant ainsi une halte obligatoire et salutaire juste avant le combat de Boss.
 4. **Trilogie de Boss Distincts (Étage 9)** :
-   - Configurer 3 nœuds de Boss distincts à l'étage 9, chacun correspondant à un monstre spécifique avec son identifiant propre :
-     - **Démon** (`boss_card_giver`) : 130 HP, 14 ATK.
-     - **Dragon** (`boss_xp_multiplier`) : 150 HP, 15 ATK.
-     - **Liche** (`boss_relic_improved`) : 120 HP, 12 ATK.
-5. **Mécanique de Récompenses de Boss Thématiques** :
-   - À la défaite d'un Boss, déclencher des récompenses spécifiques selon son identifiant :
-     - **Dragon** : Multiplier l'XP totale de combat par 2.
-     - **Démon** : Afficher un dialogue interactif présentant 3 cartes aléatoires et permettant au joueur d'en choisir entre 1 et 3 à ajouter dans son deck.
-     - **Liche** : Garantir un tirage de relique de rareté supérieure (Exclure Common, minimum Uncommon, avec des chances accrues pour Epic/Legendary : Legendary 15%, Epic 30%, Rare 35%, Uncommon 20%).
+   - Configurer 3 nœuds de Boss distincts à l'étage 9, différenciés uniquement par leur position horizontale (`x` index) pour offrir des récompenses de combat uniques. Les boss sont générés de manière procédurale et mis à l'échelle via l'algorithme d'équilibrage du CombatRating de façon standardisée sans utiliser d'identifiants ou d'entités boss hardcodés.
+5. **Mécanique de Récompenses de Boss Thématiques basées sur la Position** :
+   - À la défaite d'un Boss, déclencher des récompenses spécifiques selon la position horizontale (`x` index) du nœud du boss :
+     - **Position gauche (x = 0)** : Dialogue interactif affichant 3 cartes globales aléatoires, permettant au joueur d'en sélectionner entre 1 et 3 pour les ajouter gratuitement à son deck (icône Cartes).
+     - **Position centrale (x = 1)** : Multiplie par 2 toute l'expérience (XP) cumulée par le joueur lors du combat (icône Magie/XP).
+     - **Position droite (x = 2)** : Garantit l'obtention d'une relique de rareté supérieure (minimum Uncommon, excluant totalement les communes, icône Diamant). Les chances de rareté sont : Legendary 15%, Epic 30%, Rare 35%, Uncommon 20%.
 
 ### Preuves dans le code
 - `MapGeneratorService.generateMap` : Implémentation des règles d'étages (y == 5, y == floors-2, y == floors-1).
 - `MapGeneratorService._optimizeMapTypes` et `_balanceQuotas` : Application itérative du solver de quotas et de l'anti-répétition.
-- `EncounterSystem.generateEnemiesForLevel` : Instanciation des caractéristiques des boss Démon, Dragon et Liche.
-- `GameScreen._handleCombatVictory` et `_resolveCombatProgression` : Traitement conditionnel des gains d'XP multipliés, de l'obtention de relique sans commune (Liche), et affichage du dialogue interactif de choix de cartes (Démon).
+- `MapNodeWidget` : Attribution dynamique de l'icône, de la couleur et de l'info-bulle en fonction de la position horizontale `xIndex` de l'ID du nœud de boss.
+- `GameScreen._handleCombatVictory` et `_resolveCombatProgression` : Analyse de l'identifiant du nœud pour en extraire l'index de position horizontale `nodeX` afin de déterminer la récompense (choix de cartes pour x = 0, double XP pour x = 1, relique améliorée pour x = 2).
 - Tests unitaires et widget-tests validés à 100%.
 
 ### Conséquences
@@ -1008,4 +1005,93 @@ L'arène de combat Flame et l'interface utilisateur Flutter (HUD) présentaient 
 - ✅ **Lisibilité universelle** : L'adaptation responsive assure un rendu professionnel et sans clipping sur l'ensemble de la gamme d'appareils testés.
 - ✅ **Guidage utilisateur amélioré** : Les badges bilingues de ciblage et les indicateurs d'inventaire guident immédiatement le joueur sur les actions possibles.
 - ✅ **Game Feel Premium** : Le scaling des sprites d'ennemis renforce visuellement la structure dramatique des rencontres de combat.
+
+---
+
+## 🪙 ADR-031 : Centralisation des Récompenses de Combat et Refactoring du Gain d'Or (Combat Reward Centralization & Gold Drops)
+
+### Statut
+✅ Accepté & Implémenté
+
+### Contexte
+Auparavant, le calcul et l'attribution des récompenses post-combat (XP, or, reliques et tirages de cartes) étaient intégrés directement au sein des classes de l'interface utilisateur (`GameScreen` et `DraftScreen`). Cette structure violait le principe de séparation des responsabilités, rendant l'interface lourde, difficile à tester et sujette aux régressions. De plus, les drops d'or des ennemis étaient calculés de manière aléatoire et codés en dur lors du draft de fin de combat, et le type de récompense de Boss à l'étage 9 était résolu par une analyse textuelle de l'identifiant du nœud (`id.endsWith('_0')`), ce qui était fragile et limitait l'évolutivité.
+
+### Décision
+1. **Ajout et Scaling du Butin d'Or des Ennemis** :
+   - Ajouter la propriété `gold` au modèle `EnemyData` (avec une valeur par défaut de 10) et au modèle runtime `EnemyInstance`.
+   - Définir l'or de base spécifique à chaque monstre dans `enemies.json` (slime: 10, gobelin: 12, squelette: 15, orc furieux: 25).
+   - Mettre à l'échelle l'or gagné lors de la victoire en utilisant la même formule progressive que pour l'XP : `(baseGold * levelMultiplier).round()` où `levelMultiplier = 1.0 + 0.10 * (enemy.stats.level - 1)`.
+2. **Typage Fort des Récompenses de Boss** :
+   - Introduire l'énumération `BossRewardType { cards, doubleXp, improvedRelic }` pour modéliser proprement les récompenses uniques de fin d'acte.
+   - Ajouter le champ optionnel `bossRewardType` au modèle de données `MapNode` avec support complet de sa sérialisation/désérialisation JSON.
+   - Lors de la génération procédurale dans `MapGeneratorService`, assigner explicitement `bossRewardType` aux nœuds de l'étage final (étage 9) en se basant sur leur position horizontale `x` (0: `cards`, 1: `doubleXp`, 2: `improvedRelic`).
+3. **Création du Contrôleur de Récompenses (`RewardController`)** :
+   - Introduire `RewardController` (`rewardProvider`), un `StateNotifier` centralisant l'état d'attribution post-combat (`RewardState`).
+   - Gérer de manière isolée le calcul unifié des gains (XP doublée pour `doubleXp`, or scalé, et jets de relique de rareté supérieure pour `improvedRelic` excluant les reliques communes).
+   - Encapsuler les méthodes de validation de collecte et d'omission : `collectGoldAndXp()`, `collectRelic()`, `skipRelic()`, `chooseCards()`, `skipCards()`.
+   - Maintenir le drapeau d'état global `isResolved` pour coordonner la fin de la séquence de victoire.
+4. **Découplage et Nettoyage de l'UI** :
+   - Modifier `MapNodeWidget` pour lire directement le type fortement typé `node.bossRewardType` à la place du parsing de chaîne de coordonnées.
+   - Refactoriser `GameScreen` pour déléguer les calculs et le séquençage visuel des récompenses (relique, draft de cartes, montées de niveau et transition de retour) au `rewardProvider`.
+   - Supprimer le gain d'or aléatoire codé en dur qui persistait dans `DraftScreen._finishDraft`.
+
+### Preuves dans le code
+- `lib/models/data/enemy_data.dart` et `lib/models/map_node.dart` : ajout des attributs et mise à jour de `fromJson`/`toJson`.
+- `assets/data/enemies.json` : définition de la propriété `"gold"` pour chaque ennemi.
+- `lib/services/map_generator_service.dart` : attribution de `bossRewardType` lors de la construction de la carte.
+- `lib/game/controllers/reward_controller.dart` : implémentation complète du contrôleur et de son état immuable.
+- `lib/ui/widgets/map/map_node_widget.dart`, `lib/ui/screens/game_screen.dart` et `lib/ui/screens/draft_screen.dart` : intégration des flux de récompenses par delegation au provider.
+- Validation statique vierge sous `dart analyze` et passage des 100 tests unitaires et widget-tests de la suite de tests.
+
+### Conséquences
+- ✅ **Séparation Métier / Rendu nette** : La logique de récompenses n'encombre plus les vues UI, ce qui facilite grandement la maintenance.
+- ✅ **Robustesse et Évolutivité** : Remplacement des parsing fragiles par des types et propriétés forts. L'ajout de nouvelles récompenses de carte ou d'événements s'en trouve simplifié.
+- ✅ **Testabilité Accrue** : Possibilité de tester la validité des calculs de butins, de drops d'or et de tirages de reliques par de simples tests unitaires Riverpod sans monter d'arbre de widgets.
+- ✅ **Économie de Combat Cohérente** : Les gains d'or sont désormais directement proportionnels au niveau et à la difficulté des ennemis vaincus, évitant les anomalies de progression.
+
+---
+
+## 🏆 ADR-032 : Finalisation du Refactoring des Récompenses de Boss (Boss Rewards Finalization)
+
+### Statut
+✅ Accepté & Implémenté
+
+### Contexte
+Pour finaliser le refactoring des récompenses post-combat initié dans la version 0.0.94, il était nécessaire d'intégrer pleinement les comportements et mécaniques propres aux 3 boss thématiques situés à l'étage 9 de la carte. Précédemment, les récompenses n'offraient pas le niveau d'interactivité requis (les tirages de cartes de boss n'avaient pas d'écran dédié et les probabilités de reliques étaient fixes). Le but était de concevoir un écran de sélection de cartes complet et obligatoire pour le Boss 1, de doubler les récompenses d'or et d'XP pour le Boss 2, et de concevoir une progression probabiliste de drop de relique dynamique selon l'acte en cours pour le Boss 3.
+
+### Décision
+1. **Écran de Draft Dédié pour Boss 1 (`BossCardDraftScreen`)** :
+   - Créer `BossCardDraftScreen` dans `lib/ui/screens/boss_card_draft_screen.dart` s'appuyant sur le widget unifié `UiCard` contraint dans des dimensions fixes de `140x220`.
+   - Charger toutes les cartes globales à l'exception des cartes status (`CardType.status`) pour composer le pool.
+   - Forcer le joueur à sélectionner **exactement 3 cartes** avant d'activer le bouton de validation (« Confirmer la sélection »).
+   - Intégrer cet écran via des redirections de navigation appropriées depuis `GameScreen`.
+2. **Doublement Récompenses Boss 2** :
+   - Doubler à la fois l'Or et l'XP de combat calculés lors de la victoire contre le boss du nœud central (x=1) dans `RewardController`.
+   - Mettre à jour les tooltips dans `MapNodeWidget` et les étiquettes de légende de `MapLegend` en français ("Boss (XP & Or x2)") et en anglais ("Boss (2x XP & Gold)").
+3. **Chances de Reliques Évolutives Boss 3** :
+   - Fixer la chance de base Légendaire à **10.0%** (uniquement scalable par la statistique de Chance/Luck du joueur).
+   - Diminuer la chance Commune de base démarrant à **40.0%** de **10% par acte** : `commonChance = max(0.0, 40.0 - (act - 1) * 10.0)`.
+   - Distribuer proportionnellement la baisse de chance Commune (soit `90.0 - commonChance`) entre Uncommon, Rare, et Epic selon leurs parts relatives (respectivement 20/85, 35/85, 30/85), plus le bonus de luck.
+   - Si la chance Commune atteint 0.0% (à l'Acte 5), commencer à diminuer la chance d'Atypique (Uncommon) de **10% par acte** à partir de sa base maximale de `(20.0 / 85.0) * 90.0` : `baseUncommonChance = max(0.0, maxUncommonBase - (act - 5) * 10.0)`.
+   - Distribuer proportionnellement cette réduction de Uncommon (soit `90.0 - baseUncommonChance`) vers Rare et Epic selon leurs parts relatives de base (35/65, 30/65).
+   - Logique de tirage cumulée intégrée au sein de `RewardController`.
+4. **Correction du Tirage de Relique pour Boss 1 et Boss 2** :
+   - Restreindre le tirage de relique dans le pipeline de récompenses aux seuls nœuds Élite ou Boss de type `BossRewardType.improvedRelic` (Boss 3).
+   - Précédemment, la condition vérifiait simplement si le nœud était de type `MapNodeType.boss` sans valider son `bossRewardType`, ce qui faisait que Boss 1 (choix de cartes) et Boss 2 (Double XP & Or) tiraient et attribuaient par erreur une relique au joueur.
+   - Corriger cette logique à la ligne 100 (lignes 100-101) de `lib/game/controllers/reward_controller.dart` :
+     ```dart
+     if (currentNode.type == MapNodeType.elite || (currentNode.type == MapNodeType.boss && isImprovedRelic)) {
+     ```
+
+### Preuves dans le code
+- `lib/ui/screens/boss_card_draft_screen.dart` : Création de la vue GridView responsive, de la gestion de sélection multiple avec validation (compteur fixe à 3) et du bouton de confirmation.
+- `lib/game/controllers/reward_controller.dart` : Calcul conditionnel des chances de reliques Boss 3 (`isImprovedRelic`) indexé sur l'Act, restriction du tirage de relique aux seuls nœuds Élite ou Boss 3 (ligne 100), et application de `totalXp *= 2` et `totalGold *= 2` pour Boss 2.
+- `lib/ui/widgets/map/map_legend.dart` & `lib/ui/widgets/map/map_node_widget.dart` : Affichage localisé des tooltips et légende ("Boss (XP & Or x2)" / "Boss (2x XP & Gold)").
+
+### Conséquences
+- ✅ **Game Feel Premium** : Le joueur fait face à des opportunités de choix marquantes pour le Boss 1, à une économie relancée pour le Boss 2, et à des drops haut de gamme cohérents avec l'Acte pour le Boss 3.
+- ✅ **Correction de la Distribution de Butin** : Éradication du bug de distribution indue de reliques sur les Boss 1 et 2, garantissant l'intégrité de l'économie des récompenses de fin d'acte et l'alignement sur les spécifications de design initiales.
+- ✅ **Absence de Régression Technique** : Intégration transparente au sein du `RewardController` existant.
+- ✅ **Respect de la Règle i18n** : Traduction intégrale des dialogues et tooltips.
+
 

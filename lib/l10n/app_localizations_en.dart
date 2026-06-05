@@ -156,13 +156,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get legendEvent => 'Unknown Event';
 
   @override
-  String get legendBossCards => 'Boss Demon (Cards)';
+  String get legendBossCards => 'Boss (Cards Reward)';
 
   @override
-  String get legendBossXp => 'Boss Dragon (x2 XP)';
+  String get legendBossXp => 'Boss (Double XP)';
 
   @override
-  String get legendBossRelic => 'Boss Lich (Relic)';
+  String get legendBossRelic => 'Boss (Relic Reward)';
 
   @override
   String get tooltipCombatTitle => 'Normal Combat';

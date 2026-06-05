@@ -4,9 +4,9 @@ Ce document décrit le focus actif du projet, les accomplissements récents, et 
 
 ## 1. Focus Actuel du Projet
 
-Le projet vient de finaliser la mise en œuvre de la génération procédurale robuste de la carte du monde (Section 5) et le polissage de l'UI responsive et adaptative en combat (Section 6). L'ensemble des 100 tests unitaires et d'intégration passe au vert avec 0 avertissement.
+Le projet vient de finaliser le refactoring et la finalisation des récompenses des nœuds de Boss ainsi que des drops d'or des ennemis (Version 0.0.94). Cette étape sépare proprement la logique métier de l'UI, renforce la typisation des données et implémente des logiques de récompenses thématiques pour chaque Boss de l'étage 9. L'ensemble des 100 tests unitaires et d'intégration passe au vert avec 0 avertissement.
 
-Le focus actuel s'oriente vers la préparation des prochaines étapes de refactoring technique de la Phase 4 (Sauvegarde, parallélisation I/O, audio).
+Le focus actuel s'oriente désormais vers la préparation et l'exécution des prochaines étapes de refactoring technique de la Phase 4 (Persistance/Sauvegarde automatique, parallélisation I/O, infrastructure audioFlame).
 
 ---
 
@@ -16,11 +16,11 @@ Le focus actuel s'oriente vers la préparation des prochaines étapes de refacto
    - **Algorithme anti-répétition de chemin** : Garantit de manière stricte qu'aucun chemin dans le graphe ne contient 3 nœuds consécutifs du même type (Élite ou Repos).
    - **Quotas de types de nœuds (Solver)** : Maintient un équilibre statistique optimal sur l'ensemble de la carte : Combat (12-22), Élite (3-6), Repos (3-6), Shop (2-5), Event (4-9).
    - **Chokepoints structurels forcés** : Étage 5 (chokepoint à 1 nœud de type Élite) et Étage 8 (tous les nœuds sont obligatoirement de type Repos, garantissant une pause avant les boss).
-   - **Branchements de Boss multiples** : Étage 9 présente 3 Boss distincts (Démon, Dragon, Liche) avec des patterns d'intentions spécifiques et des combats sur mesure.
-   - **Récompenses de Boss thématiques** :
-     - **Dragon** : Multiplie par 2 l'expérience globale accumulée lors de la victoire.
-     - **Démon** : Ouvre un dialogue interactif permettant d'ajouter entre 1 et 3 cartes gratuites dans le deck.
-     - **Liche** : Garantie de butin de relique premium améliorée (minimum Uncommon, avec des chances de tirage Legendary et Epic accrues).
+   - **Branchements de Boss multiples** : L'étage 9 présente 3 nœuds de boss distincts différenciés par leur position horizontale pour offrir des récompenses de combat uniques.
+   - **Récompenses de Boss thématiques basées sur la position** :
+     - **Position gauche (x = 0)** : Offre un dialogue interactif permettant d'ajouter entre 1 et 3 cartes gratuites dans le deck (icône Cartes).
+     - **Position centrale (x = 1)** : Multiplie par 2 l'expérience globale accumulée lors de la victoire (icône Magie/XP).
+     - **Position droite (x = 2)** : Garantie de butin de relique premium améliorée (minimum Uncommon, avec des chances de tirage Legendary et Epic accrues, icône Diamant).
 
 2. **Polissage et Responsivité en Combat (Section 6)** :
    - **HUD Responsive** : Adaptabilité complète de la hauteur et de la largeur du panneau de combat avec clamps de sécurité pour toutes les tailles d'écran (mobiles, desktop, web).
@@ -86,6 +86,21 @@ Le focus actuel s'oriente vers la préparation des prochaines étapes de refacto
     - Découplage complet de la journalisation mathématique d'initialisation de combat en extrayant ces fonctions de `CombatController` vers `CombatDebugLogger`.
     - Stylisation de la console de débogage à l'aide de bordures en boîte ANSI et de codes de couleurs ANSI pour mettre en valeur les statistiques du joueur, les formules calculées de la DDA, les détails du scaling et les attributs finaux des ennemis.
     - Encapsulation des instructions de log dans des vérifications de mode débogage (`kDebugMode`) pour éviter toute surcharge d'allocation de mémoire en production.
+
+13. **Refactoring et Finalisation des Récompenses de Boss (Version 0.0.94)** :
+    - **Séparation et Centralisation Métier** : Centralisation complète du pipeline de calcul et de distribution de récompenses post-combat (XP, or, reliques, choix de cartes) dans un nouveau contrôleur Riverpod dédié `RewardController` (`rewardProvider`), isolant la logique métier des vues.
+    - **Butin d'Or des Ennemis** : Ajout du champ `gold` à `EnemyData` et `EnemyInstance`. Les montants d'or initiaux sont configurés dans `enemies.json` (slime: 10, gobelin: 12, squelette: 15, orc: 25) et mis à l'échelle dynamiquement : `(enemy.data.gold * levelMultiplier).round()`.
+    - **Boss 1 (Card Draft Screen)** : Création de `BossCardDraftScreen` (`boss_card_draft_screen.dart`) pour la position gauche (x=0). Affiche toutes les cartes globales non-status avec le widget standard `UiCard` sous une taille fixe contrainte (`140x220`). Le joueur est contraint de sélectionner précisément 3 cartes pour confirmer. Câblé avec la navigation de `GameScreen`.
+    - **Boss 2 (Double XP & Gold)** : Doublement de l'Or et de l'XP de combat à la défaite du boss central (x=1) dans `RewardController`. Les tooltips de `MapNodeWidget` et la légende `MapLegend` affichent "Boss (XP & Or x2)" / "Boss (2x XP & Gold)".
+    - **Boss 3 (Reliques Dynamiques)** : Pour le boss de droite (x=2), distribution évolutive des reliques :
+      - Base Légendaire fixe à 10% (uniquement scalable via player luck).
+      - Commune démarre à 40% et diminue de 10% par acte (`max(0.0, 40.0 - (act - 1) * 10.0)`).
+      - Uncommon diminue de 10% par acte de sa base max (`maxUncommonBase - (act - 5) * 10.0`) dès que la chance Commune tombe à 0% (à l'Act 5).
+      - Redistribution proportionnelle de la réduction vers les chances de base Rare et Épique.
+      - Logique de tirage cumulé implémentée dans `RewardController`.
+    - **Correction du Tirage de Relique des Boss** : Correction d'une régression à la ligne 100 de `lib/game/controllers/reward_controller.dart` pour restreindre strictement le tirage d'une relique aux nœuds Élite ou aux nœuds Boss de type `BossRewardType.improvedRelic` (Boss 3 / position droite x=2). Cela empêche le Boss 1 (Cartes / position gauche x=0) et le Boss 2 (Double XP & Or / position centrale x=1) d'attribuer par erreur une relique en plus de leurs récompenses thématiques respectives.
+    - **Génération Procédurale** : `MapGeneratorService` attribue explicitement le type de récompense de Boss selon la position horizontale `x` à l'étage final (x=0: cards, x=1: doubleXp, x=2: improvedRelic) sous forme d'enum `BossRewardType`.
+    - **Découplage UI** : `MapNodeWidget` lit le `bossRewardType` fortement typé plutôt que de parser des coordonnées sous forme de chaînes de caractères. `GameScreen` délègue les écrans de reliques et les dialogues de draft de façon coordonnée via le `rewardProvider`, et le gain d'or aléatoire codé en dur a été supprimé de `DraftScreen`.
 
 ---
 

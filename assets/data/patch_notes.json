@@ -1,5 +1,59 @@
 [
   {
+    "version": "0.0.94",
+    "date": "2026-06-04",
+    "title": "Or et Butin des Boss",
+    "sections": [
+      {
+        "category": "Nouvelles Fonctionnalités",
+        "emoji": "✨",
+        "entries": [
+          "Les ennemis laissent désormais tomber de l'or après leur défaite, avec un montant de base propre à chaque type d'adversaire.",
+          "Les trois nœuds de boss de fin de run proposent désormais des récompenses fixes et uniques (choix de cartes bonus, expérience doublée ou relique de rareté Peu Commune minimum garantie) au lieu d'un butin aléatoire.",
+          "Nouvel écran de draft de cartes de boss en plein écran permettant de sélectionner exactement 3 cartes parmi l'ensemble du grimoire du jeu pour enrichir son deck."
+        ]
+      },
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "L'interface visuelle des nœuds de boss a été améliorée : les icônes, les couleurs et les infobulles indiquent désormais précisément le type de récompense offert.",
+          "Mise à jour de la légende et des infobulles de la carte pour afficher 'Boss (XP & Or x2)' à la place de l'ancien libellé."
+        ]
+      },
+      {
+        "category": "Équilibrage",
+        "emoji": "⚖️",
+        "entries": [
+          "L'or obtenu sur les ennemis augmente dynamiquement avec leur niveau, en utilisant le même multiplicateur de progression que l'expérience de combat.",
+          "Le boss de récompense d'expérience (Boss 2) double désormais également la quantité d'or obtenue à la fin du combat.",
+          "Ajustement dynamique du taux de drop du boss relique (Boss 3) par acte : le taux de communes commence à 40% et baisse de 10% par acte. Une fois à 0% (Acte 5), le taux d'inhabituelles baisse de 10% par acte, redistribuant ces baisses vers les reliques Rares et Épiques. Le taux de reliques légendaires de base reste fixé à 10%.",
+          "Réduction des dégâts de la carte de zone \"Balayage\" de 5 à 3 points.",
+          "Réduction du soin apporté par la \"Potion de Soin\" de 4 à 3 PV.",
+          "Augmentation des dégâts de zone et de l'armure de la carte \"Cri de Guerre\" de 3 à 4 points.",
+          "Augmentation de la durée du bonus de force de la carte \"Forme Démoniaque\" de 3 à 4 tours.",
+          "Ajustement de la durée de l'armure temporaire fournie par \"Métallisation\" de 3 à 2 tours.",
+          "Refonte de la carte \"Coup Empoisonné\" : inflige désormais 3 dégâts directs et applique 1 Poison pendant 2 tours.",
+          "Augmentation des dégâts directs de la carte \"Coup de Tonnerre\" de 3 à 4 points."
+        ]
+      },
+      {
+        "category": "Corrections",
+        "emoji": "🐛",
+        "entries": [
+          "Correction d'un problème où le tirage de relique s'activait incorrectement sur les boss proposant d'autres types de récompenses."
+        ]
+      },
+      {
+        "category": "Technique",
+        "emoji": "🔧",
+        "entries": [
+          "Centralisation du système de distribution des récompenses de victoire afin de garantir une attribution fiable et sans bug."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.0.93",
     "date": "2026-06-04",
     "title": "La Grande Refonte",

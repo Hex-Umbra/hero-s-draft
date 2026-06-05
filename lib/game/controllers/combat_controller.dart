@@ -115,11 +115,27 @@ class CombatController extends StateNotifier<CombatState> {
 
     final List<EnemyInstance> allEnemyInstances = [];
     for (var data in enemyDataList) {
+      final bool isCustomBoss = data.id.startsWith('boss_');
+      final double enemyHpMultiplier = EncounterSystem.getHpMultiplier(
+        enemyLevel: enemyLevel,
+        act: act,
+        isBoss: isBoss,
+        isElite: isElite,
+        isCustomBoss: isCustomBoss,
+      );
+      final double enemyDamageMultiplier = EncounterSystem.getDamageMultiplier(
+        enemyLevel: enemyLevel,
+        act: act,
+        isBoss: isBoss,
+        isElite: isElite,
+        isCustomBoss: isCustomBoss,
+      );
+
       final stats = EntityStats(
-        maxPv: (data.maxHp * hpMultiplier).round(),
-        currentPv: (data.maxHp * hpMultiplier).round(),
+        maxPv: (data.maxHp * enemyHpMultiplier).round(),
+        currentPv: (data.maxHp * enemyHpMultiplier).round(),
         armure: 0,
-        attaque: (data.baseDamage * damageMultiplier).round(),
+        attaque: (data.baseDamage * enemyDamageMultiplier).round(),
         level: enemyLevel,
         critChance: data.critChance,
       );
