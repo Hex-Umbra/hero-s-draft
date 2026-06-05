@@ -1,5 +1,36 @@
 [
   {
+    "version": "0.0.95",
+    "date": "2026-06-05",
+    "title": "L'Éveil des Reliques",
+    "sections": [
+      {
+        "category": "Nouvelles Fonctionnalités",
+        "emoji": "✨",
+        "entries": [
+          "Ajout de 10 nouvelles reliques uniques pour diversifier vos stratégies et enrichir vos parties.",
+          "Introduction de reliques à charges (Kunaï, Shuriken, Plume de Scribe, Encensoir) accumulant des bonus en combat avant de déclencher des effets puissants.",
+          "Nouveaux mécanismes d'activation de reliques déclenchés spécifiquement en jouant des cartes d'Attaque, de Compétence ou de Pouvoir.",
+          "Ajout de la Couronne des Rois, permettant d'augmenter de façon permanente votre Mana maximum pour toute la durée de la partie."
+        ]
+      },
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "Mise à jour du dictionnaire des reliques pour afficher correctement les nouveaux types de déclencheurs et faciliter la lecture."
+        ]
+      },
+      {
+        "category": "Équilibrage",
+        "emoji": "⚖️",
+        "entries": [
+          "Rééquilibrage de la répartition globale des raretés avec l'ajout de 4 nouvelles reliques communes (Pierre à aiguiser, Bottes de cuir, Pièce de chance, Bandage) pour dynamiser le début de partie."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.0.94",
     "date": "2026-06-04",
     "title": "Or et Butin des Boss",
