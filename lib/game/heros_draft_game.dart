@@ -554,25 +554,34 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
     final int count = enemyCards.length;
     double scaleMultiplier = 1.0;
 
-    if (count > 3) {
-      scaleMultiplier = (3.0 / count).clamp(0.65, 1.0);
-    }
+    // 1. Calculer l'espace requis de base par carte (corps de la carte + espace pour les indicateurs de stat/buffs)
+    // Une carte fait 100 de large. Avec les indicateurs à gauche (-36) et à droite (+104), 
+    // la largeur visuelle locale est d'environ 170.
+    final double visualWidthPerEnemy = (100.0 + 70.0) * scaleFactor * 1.45;
 
-    final double cardBaseWidth = 100.0 * scaleFactor * 1.45;
-    final double totalEstimatedWidth = count * cardBaseWidth * scaleMultiplier * 1.25;
-    final double maxAvailableWidth = size.x * 0.9;
+    // 2. Estimer la largeur totale nécessaire sans réduction d'échelle
+    double totalEstimatedWidth = count * visualWidthPerEnemy;
+    final double maxAvailableWidth = size.x * 0.95; // Utiliser jusqu'à 95% de la largeur de l'écran
+
+    // Si ça dépasse, on ajuste le scaleMultiplier
     if (totalEstimatedWidth > maxAvailableWidth) {
-      final double widthRatio = maxAvailableWidth / totalEstimatedWidth;
-      scaleMultiplier = (scaleMultiplier * widthRatio).clamp(0.5, 1.0);
+      scaleMultiplier = (maxAvailableWidth / totalEstimatedWidth).clamp(0.4, 1.0);
     }
 
+    // Appliquer le scaleMultiplier aux cartes
     for (var enemy in enemyCards) {
       enemy.scaleMultiplier = scaleMultiplier;
     }
 
-    double spacing = (size.x * 0.8) / (count + 1);
-    spacing = spacing.clamp(80.0 * scaleMultiplier, 250.0 * scaleMultiplier);
+    // 3. Calculer l'espacement optimal entre les centres
+    // Pour éviter le chevauchement, l'espacement minimum doit être proportionnel à l'échelle finale
+    final double minSpacing = 165.0 * scaleFactor * 1.45 * scaleMultiplier;
+    final double maxSpacing = 280.0 * scaleFactor * 1.45 * scaleMultiplier;
 
+    double spacing = (size.x * 0.85) / (count + 1);
+    spacing = spacing.clamp(minSpacing, maxSpacing);
+
+    // Ajuster le point de départ pour centrer le groupe
     double startX = (size.x / 2) - ((count - 1) * (spacing / 2));
     double posY = size.y * 0.21;
 

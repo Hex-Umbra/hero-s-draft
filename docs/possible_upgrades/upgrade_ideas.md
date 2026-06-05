@@ -93,8 +93,8 @@
 - Au fur et a mesure de la run, ou pour des ennemis spécifiques, cacher les intentions
 - ~~Changer le système de noeud de la map actuellement pour proposer plusieurs divergences de chemins vers plsuieurs finalités différentes (plusieurs type de boss différents a la fin, le joueur choisira donc lequel il voudra combattre en choisissant le bon chemin). Comme par exemple: 3 chemins différents pour 3 récompenses différentes.~~ 
 - ~~Sur la map empêcher la génération du même noeud l'un après l'autre sur la route (exemple: ne pas avoir 3 élites d'affilés, ou 3 repos d'affilés, etc.), également mettre un nombre maximum et minimum de chaque type de noeud sur la route (sauf pour les noeuds de combat qui n'aura ni maximum ni minimum)~~
-- de la même manière qu'on a un badge pour afficher le nombre de reliques dans la toolbar sur l'écran de la map, on vas rajouter la même chose sur le bouton "mon deck" pour afficher le nombre total de cartes.
-- Sur certains écrans les cartes ennemis sont trop proche l'une de l'autre, ce qui fait chevaucher les stats, buffs et debuffs des ennemis.
+- ~~de la même manière qu'on a un badge pour afficher le nombre de reliques dans la toolbar sur l'écran de la map, on vas rajouter la même chose sur le bouton "mon deck" pour afficher le nombre total de cartes.~~
+- ~~Sur certains écrans les cartes ennemis sont trop proche l'une de l'autre, ce qui fait chevaucher les stats, buffs et debuffs des ennemis.~~
 - ~~Bien afficher tout les tooltip des cartes a jouer en combat comme lesquels touches plusieurs ennemis, lesquels touches un ennemis unique (comme une icone en dessous de l'icone d'attaque et de la valeur des dégats comme on a pour le nombre de tours en dessous des types d'effets élémentaires)~~
 - Faire une vérification complète de l'équilibrage des reliques et revoir la logique de quand agis une relique, certains ne sont pas logique comme recevoir du mana au début d'un tour
 
