@@ -260,9 +260,45 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     MaterialPageRoute(builder: (context) => const DeckScreen()),
                   );
                 },
-                icon: Badge(
-                  isLabelVisible: canMerge,
-                  child: const Icon(Icons.style, color: Color(0xFF4A3728), size: 20),
+                icon: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    const Icon(Icons.style, color: Color(0xFF4A3728), size: 20),
+                    if (deckState.masterDeck.isNotEmpty)
+                      Positioned(
+                        right: -6,
+                        top: -6,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 1,
+                          ),
+                          decoration: BoxDecoration(
+                            color: canMerge
+                                ? const Color(0xFFD32F2F)
+                                : const Color(0xFF8B4513),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: const Color(0xFFE8D5B5),
+                              width: 1,
+                            ),
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 14,
+                            minHeight: 14,
+                          ),
+                          child: Text(
+                            '${deckState.masterDeck.length}',
+                            style: const TextStyle(
+                              color: Color(0xFFE8D5B5),
+                              fontSize: 8.5,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
                 label: Text(
                   canMerge ? 'DECK (!)' : l10n.myDeck.toUpperCase(),
