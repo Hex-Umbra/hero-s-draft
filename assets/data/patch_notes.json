@@ -27,7 +27,14 @@
         "entries": [
           "L'or obtenu sur les ennemis augmente dynamiquement avec leur niveau, en utilisant le même multiplicateur de progression que l'expérience de combat.",
           "Le boss de récompense d'expérience (Boss 2) double désormais également la quantité d'or obtenue à la fin du combat.",
-          "Ajustement dynamique du taux de drop du boss relique (Boss 3) par acte : le taux de communes commence à 40% et baisse de 10% par acte. Une fois à 0% (Acte 5), le taux d'inhabituelles baisse de 10% par acte, redistribuant ces baisses vers les reliques Rares et Épiques. Le taux de reliques légendaires de base reste fixé à 10%."
+          "Ajustement dynamique du taux de drop du boss relique (Boss 3) par acte : le taux de communes commence à 40% et baisse de 10% par acte. Une fois à 0% (Acte 5), le taux d'inhabituelles baisse de 10% par acte, redistribuant ces baisses vers les reliques Rares et Épiques. Le taux de reliques légendaires de base reste fixé à 10%.",
+          "Réduction des dégâts de la carte de zone \"Balayage\" de 5 à 3 points.",
+          "Réduction du soin apporté par la \"Potion de Soin\" de 4 à 3 PV.",
+          "Augmentation des dégâts de zone et de l'armure de la carte \"Cri de Guerre\" de 3 à 4 points.",
+          "Augmentation de la durée du bonus de force de la carte \"Forme Démoniaque\" de 3 à 4 tours.",
+          "Ajustement de la durée de l'armure temporaire fournie par \"Métallisation\" de 3 à 2 tours.",
+          "Refonte de la carte \"Coup Empoisonné\" : inflige désormais 3 dégâts directs et applique 1 Poison pendant 2 tours.",
+          "Augmentation des dégâts directs de la carte \"Coup de Tonnerre\" de 3 à 4 points."
         ]
       },
       {
