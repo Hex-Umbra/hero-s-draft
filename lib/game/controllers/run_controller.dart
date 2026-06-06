@@ -99,7 +99,7 @@ class RunController extends StateNotifier<RunState> {
 
   /// Démarre une nouvelle partie avec la classe choisie
   void startNewRun(HeroData chosenClass, [PassiveData? activePassive]) {
-    final generatedMap = MapGeneratorService.generateMap();
+    final generatedMap = MapGeneratorService.generateMap(act: 1);
     state = RunState(
       currentLevel: 1,
       act: 1,
@@ -163,12 +163,12 @@ class RunController extends StateNotifier<RunState> {
     }
   }
 
-  /// Avance au monde suivant (boucle de jeu)
   void advanceToNextWorld() {
-    final newMap = MapGeneratorService.generateMap();
+    final nextAct = state.act + 1;
+    final newMap = MapGeneratorService.generateMap(act: nextAct);
     state = state.copyWith(
       mapNodes: newMap,
-      act: state.act + 1,
+      act: nextAct,
       resetCurrentNode: true, // Reset la position pour le nouveau monde
     );
   }
@@ -479,6 +479,34 @@ class RunController extends StateNotifier<RunState> {
         }
         break;
     }
+  }
+
+  void removeRelicEffect(RelicData relic) {
+    if (relic.trigger == RelicTrigger.startOfRun) {
+      switch (relic.effectType) {
+        case 'gain_mana':
+          applyHeroStatModifier(maxManaAcc: -relic.value);
+          break;
+        case 'gain_strength':
+          applyHeroStatModifier(attackAcc: -relic.value);
+          break;
+        case 'gain_luck':
+          applyHeroStatModifier(luckAcc: -relic.value);
+          break;
+        case 'gain_crit':
+          applyHeroStatModifier(critChanceAcc: -relic.value);
+          break;
+      }
+    }
+  }
+
+  void exchangeRelics(List<RelicData> sacrificed, RelicData gained) {
+    for (var relic in sacrificed) {
+      removeRelicEffect(relic);
+    }
+    final sacrificedIds = sacrificed.map((r) => r.id).toList();
+    ref.read(inventoryProvider.notifier).removeRelics(sacrificedIds);
+    ref.read(inventoryProvider.notifier).addRelic(gained);
   }
 
   void startCombat() {

@@ -9,7 +9,7 @@ class MapGeneratorService {
   /// Generates a procedural map as a Directed Acyclic Graph.
   /// [floors] is the height of the map.
   /// [maxWidth] is the maximum number of nodes per floor.
-  static List<MapNode> generateMap({int floors = 10, int maxWidth = 5}) {
+  static List<MapNode> generateMap({int floors = 10, int maxWidth = 5, int act = 1}) {
     List<MapNode> allNodes = [];
     List<List<MapNode>> nodesByFloor = [];
 
@@ -122,6 +122,22 @@ class MapGeneratorService {
 
     // Balance quotas and apply anti-repetition rules
     _optimizeMapTypes(allNodes, floors);
+
+    if (act >= 5 && (act % 5 == 0 || _random.nextDouble() < 0.10)) {
+      final eligibleNodes = allNodes.where((node) {
+        final parts = node.id.split('_');
+        if (parts.length >= 2) {
+          final y = int.tryParse(parts[1]);
+          return y != null && (y == 2 || y == 3 || y == 4 || y == 6 || y == 7);
+        }
+        return false;
+      }).toList();
+
+      if (eligibleNodes.isNotEmpty) {
+        final chosenNode = eligibleNodes[_random.nextInt(eligibleNodes.length)];
+        chosenNode.type = MapNodeType.relicExchange;
+      }
+    }
 
     return allNodes;
   }

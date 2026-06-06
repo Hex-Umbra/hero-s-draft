@@ -29,6 +29,17 @@ class InventoryController extends StateNotifier<InventoryState> {
     state = state.copyWith(bonusShopCards: state.bonusShopCards + 1);
   }
 
+  void removeRelics(List<String> relicIds) {
+    final List<RelicData> newRelics = List.from(state.relics);
+    for (final id in relicIds) {
+      final index = newRelics.indexWhere((r) => r.id == id);
+      if (index != -1) {
+        newRelics.removeAt(index);
+      }
+    }
+    state = state.copyWith(relics: newRelics);
+  }
+
   void reset({
     int initialGold = 50,
     List<RelicData> initialRelics = const [],

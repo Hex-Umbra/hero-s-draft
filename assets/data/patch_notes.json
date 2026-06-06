@@ -11,7 +11,9 @@
           "Ajout de 10 nouvelles reliques uniques pour diversifier vos stratégies et enrichir vos parties.",
           "Introduction de reliques à charges (Kunaï, Shuriken, Plume de Scribe, Encensoir) accumulant des bonus en combat avant de déclencher des effets puissants.",
           "Nouveaux mécanismes d'activation de reliques déclenchés spécifiquement en jouant des cartes d'Attaque, de Compétence ou de Pouvoir.",
-          "Ajout de la Couronne des Rois, permettant d'augmenter de façon permanente votre Mana maximum pour toute la durée de la partie."
+          "Ajout de la Couronne des Rois, permettant d'augmenter de façon permanente votre Mana maximum pour toute la durée de la partie.",
+          "Introduction du nœud Autel d'Échange de Reliques (🔄) sur la carte, permettant d'échanger trois reliques contre une de rareté supérieure.",
+          "Nouvel écran d'échange interactif avec un aperçu de la relique proposée et une sélection visuelle des objets à sacrifier."
         ]
       },
       {
@@ -26,7 +28,9 @@
         "emoji": "⚖️",
         "entries": [
           "Rééquilibrage de la répartition globale des raretés avec l'ajout de 4 nouvelles reliques communes (Pierre à aiguiser, Bottes de cuir, Pièce de chance, Bandage) pour dynamiser le début de partie.",
-          "Les reliques affectant les statistiques d'attaque et de critique (Pierre à aiguiser, Lame Maudite, Lentille de Focalisation) modifient désormais ces statistiques de manière permanente pour toute la run au lieu d'être de simples buffs de combat."
+          "Les reliques affectant les statistiques d'attaque et de critique (Pierre à aiguiser, Lame Maudite, Lentille de Focalisation) modifient désormais ces statistiques de manière permanente pour toute la run au lieu d'être de simples buffs de combat.",
+          "L'Autel d'Échange de Reliques apparaît à partir de l'Acte 5, avec une présence garantie tous les 5 actes et 10% de chances d'apparaître sur les autres actes.",
+          "Pondération ajustée pour les offres de l'Autel : 40% Peu Commune, 35% Rare, 20% Épique et 5% Légendaire."
         ]
       }
     ]

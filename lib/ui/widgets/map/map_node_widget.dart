@@ -43,6 +43,14 @@ class _MapNodeWidgetState extends State<MapNodeWidget> {
         return (l10n.tooltipRestTitle, l10n.tooltipRestDesc);
       case MapNodeType.event:
         return (l10n.tooltipEventTitle, l10n.tooltipEventDesc);
+      case MapNodeType.relicExchange:
+        final isFr = Localizations.localeOf(context).languageCode == 'fr';
+        return (
+          isFr ? "Autel des Reliques" : "Relic Shrine",
+          isFr
+              ? "Échangez 3 de vos reliques contre une relique de rareté supérieure."
+              : "Exchange 3 of your relics for a higher rarity relic."
+        );
       case MapNodeType.boss:
         if (widget.node.bossRewardType == BossRewardType.cards) {
           return (l10n.legendBossCards, l10n.tooltipBossDesc);
@@ -82,6 +90,10 @@ class _MapNodeWidgetState extends State<MapNodeWidget> {
       case MapNodeType.event:
         icon = Icons.help_outline;
         color = Colors.blueAccent;
+        break;
+      case MapNodeType.relicExchange:
+        icon = Icons.refresh;
+        color = Colors.tealAccent;
         break;
       case MapNodeType.boss:
         if (widget.node.bossRewardType == BossRewardType.cards) {
@@ -159,13 +171,22 @@ class _MapNodeWidgetState extends State<MapNodeWidget> {
                           ]
                         : [],
                   ),
-                  child: Icon(
-                    icon,
-                    color: widget.isAvailable || widget.isCurrent
-                        ? color
-                        : color.withAlpha(128),
-                    size: _isHovered && widget.isAvailable ? 42 : 35,
-                  ),
+                  child: widget.node.type == MapNodeType.relicExchange
+                      ? Center(
+                          child: Text(
+                            '🔄',
+                            style: TextStyle(
+                              fontSize: _isHovered && widget.isAvailable ? 38 : 32,
+                            ),
+                          ),
+                        )
+                      : Icon(
+                          icon,
+                          color: widget.isAvailable || widget.isCurrent
+                              ? color
+                              : color.withAlpha(128),
+                          size: _isHovered && widget.isAvailable ? 42 : 35,
+                        ),
                 ),
               ),
               if (widget.node.isCompleted)

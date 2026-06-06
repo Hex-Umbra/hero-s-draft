@@ -2,14 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 
 class LegendItem extends StatelessWidget {
-  final IconData icon;
-  final Color color;
+  final IconData? icon;
+  final Color? color;
+  final String? emoji;
   final String label;
 
   const LegendItem({
     super.key,
-    required this.icon,
-    required this.color,
+    this.icon,
+    this.color,
+    this.emoji,
     required this.label,
   });
 
@@ -20,7 +22,19 @@ class LegendItem extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: color, size: 20),
+          if (emoji != null)
+            SizedBox(
+              width: 20,
+              height: 20,
+              child: Center(
+                child: Text(
+                  emoji!,
+                  style: const TextStyle(fontSize: 14),
+                ),
+              ),
+            )
+          else if (icon != null)
+            Icon(icon!, color: color, size: 20),
           const SizedBox(width: 8),
           Text(
             label,
@@ -90,6 +104,12 @@ class MapLegend extends StatelessWidget {
             icon: Icons.help_outline,
             color: Colors.blueAccent,
             label: l10n.legendEvent,
+          ),
+          LegendItem(
+            emoji: '🔄',
+            label: Localizations.localeOf(context).languageCode == 'fr'
+                ? "Autel des Reliques"
+                : "Relic Shrine",
           ),
           const Divider(color: Colors.white24, height: 12),
           LegendItem(

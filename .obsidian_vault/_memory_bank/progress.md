@@ -5,7 +5,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 **Métriques du projet** :
 - **~10 600 lignes** de code source dans `lib/` (65 fichiers).
 - **8 fichiers JSON** de données d'assets.
-- **100 tests automatisés** — 100% au vert.
+- **103 tests automatisés** — 100% au vert.
 - **0 erreur** via `flutter analyze`.
 - **~111 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
 
@@ -27,8 +27,9 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Correction d'orphelins | `MapGeneratorService` (Phase 2 câblage) | Garantie que tout nœud a au moins 1 connexion entrante |
 | Navigation réactive | `RunController.travelToNode()` | Validation d'accessibilité (connexion au nœud complété ou étage 0) |
 | Caméra centrée | `MapScreen` | Repositionnement et centrage automatique fluide à chaque transition |
-| Widgets dédiés par type | `MapScreen` | Icônes spécifiques (Combat/Élite/Shop/Event/Repos/Boss) + tooltips |
+| Widgets dédiés par type | `MapScreen` | Icônes spécifiques (Combat/Élite/Shop/Event/Repos/Boss/Exchange) + tooltips |
 | Barre d'XP HUD | `MapScreen`, `xp_scaling_test.dart` | Barre de progression d'expérience dorée permanente et badges de niveau sous le HUD |
+| Rencontre d'Échange de Reliques | `MapGeneratorService`, `InventoryController`, `RunController`, `RelicExchangeScreen` | Autel d'échange de reliques (nœud relicExchange, emoji 🔄). Apparaît Acte 5+ (100% tous les 5 actes, 10% sinon, étage 2/3/4/6/7). Offre déterministe par seeded random. Échange 3 reliques de rareté R-1 contre 1 de rareté R proposée. |
 
 ### 🧠 Gestion d'État Métier (Riverpod Controllers)
 
@@ -215,7 +216,7 @@ Issues du backlog `docs/possible_upgrades/upgrade_ideas.md` (~95 items, ~60% ré
 - [ ] Icônes de type de dégâts (feu, glace, poison) sur les descriptions
 - [x] Rework des cartes élémentaires (certaines status-only, d'autres damage+status)
 - [ ] Nœuds Trésor et Mystère sur la carte
-- [ ] Rencontre d'échange de reliques (3 reliques → 1 rareté supérieure)
+- [x] Rencontre d'échange de reliques (3 reliques → 1 rareté supérieure) (v0.0.96)
 - [ ] Onglet Reliques dans le dictionnaire
 
 ### Méta-Progression
