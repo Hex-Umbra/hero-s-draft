@@ -5,6 +5,9 @@ enum RelicTrigger {
   endOfTurn,
   onCardPlayed,
   onEnemyKilled,
+  onAttackPlayed,
+  onSkillPlayed,
+  onPowerPlayed,
 }
 
 enum RelicRarity { common, uncommon, rare, epic, legendary }

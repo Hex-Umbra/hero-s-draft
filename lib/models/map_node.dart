@@ -1,6 +1,6 @@
 import 'package:flame/extensions.dart';
 
-enum MapNodeType { combat, elite, shop, rest, event, boss }
+enum MapNodeType { combat, elite, shop, rest, event, boss, relicExchange }
 
 enum BossRewardType { cards, doubleXp, improvedRelic }
 

@@ -5,7 +5,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 **Métriques du projet** :
 - **~10 600 lignes** de code source dans `lib/` (65 fichiers).
 - **8 fichiers JSON** de données d'assets.
-- **100 tests automatisés** — 100% au vert.
+- **103 tests automatisés** — 100% au vert.
 - **0 erreur** via `flutter analyze`.
 - **~111 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
 
@@ -27,8 +27,9 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Correction d'orphelins | `MapGeneratorService` (Phase 2 câblage) | Garantie que tout nœud a au moins 1 connexion entrante |
 | Navigation réactive | `RunController.travelToNode()` | Validation d'accessibilité (connexion au nœud complété ou étage 0) |
 | Caméra centrée | `MapScreen` | Repositionnement et centrage automatique fluide à chaque transition |
-| Widgets dédiés par type | `MapScreen` | Icônes spécifiques (Combat/Élite/Shop/Event/Repos/Boss) + tooltips |
+| Widgets dédiés par type | `MapScreen` | Icônes spécifiques (Combat/Élite/Shop/Event/Repos/Boss/Exchange) + tooltips |
 | Barre d'XP HUD | `MapScreen`, `xp_scaling_test.dart` | Barre de progression d'expérience dorée permanente et badges de niveau sous le HUD |
+| Rencontre d'Échange de Reliques | `MapGeneratorService`, `InventoryController`, `RunController`, `RelicExchangeScreen` | Autel d'échange de reliques (nœud relicExchange, emoji 🔄). Apparaît Acte 5+ (100% tous les 5 actes, 10% sinon, étage 2/3/4/6/7). Offre déterministe par seeded random. Échange 3 reliques de rareté R-1 contre 1 de rareté R proposée. |
 
 ### 🧠 Gestion d'État Métier (Riverpod Controllers)
 
@@ -39,7 +40,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Échelonnement Ennemis | `CombatController.initializeCombat()` | Multiplicateurs dynamiques (+12% HP/lvl, +8% ATK/lvl) et calcul de combat level |
 | Logique de Combat | `CombatController` / `combatProvider` | Phases (Player ⇄ Enemy), sélection cible, intentions ennemies (cycliques ou aléatoires), détection mort, victoire/défaite |
 | Piles de Cartes | `DeckNotifier` / `deckProvider` | 5 piles logiques (Master, Draw, Hand, Discard, Exhaust) avec shuffle et gestion complète |
-| Économie et Reliques | `InventoryController` / `inventoryProvider` | Or (initial 50), 12 reliques avec 6 triggers différents, bonus boutique |
+| Économie et Reliques | `InventoryController` / `inventoryProvider` | Or (initial 50), 24 reliques (communes rééquilibrées) avec 9 triggers différents, système de charges, bonus boutique |
 | Compétences | `SkillController` / `skillProvider` | 2 compétences par héros, cooldowns, consommation de ressources |
 | Événements | `EventController` / `eventProvider` | 2 événements narratifs à choix multiples, résolution d'actions, roll de rareté relique |
 | Boutique | `ShopController` / `shopProvider` | Achat/purge/clone cartes, soin, expansion, reroll |
@@ -80,7 +81,8 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 |:---|:---|:---|
 | Passifs data-driven | `passives.json` → `TraitSystem` | 3 passifs liés aux héros par `HeroData.passiveTrait` |
 | Triggers multiples | `TraitSystem.onTurnStart/onTurnEnd/onCardPlayed` | Logique spécifique par effectType (`gain_armor`, `berserker_armor`, `spell_armor`) |
-| Reliques à triggers | `RunController.applyRelics(trigger)` | 6 types de triggers : startOfRun, startOfCombat, startOfTurn, endOfTurn, onCardPlayed, onEnemyKilled |
+| Reliques à triggers | `RunController.applyRelics(trigger)` | 9 types de triggers : startOfRun, startOfCombat, startOfTurn, endOfTurn, onCardPlayed, onAttackPlayed, onSkillPlayed, onPowerPlayed, onEnemyKilled |
+| Reliques à charges | `RunController.applyRelicEffect()` | Croc Kunaï, Shuriken, Plume de Scribe, Encensoir avec compteurs/charges visuels (StatusEffects) |
 
 ### 🈳 Internationalisation (i18n)
 
@@ -204,6 +206,9 @@ Issues du backlog `docs/possible_upgrades/upgrade_ideas.md` (~95 items, ~60% ré
 - [x] Système XP/level pour gating des récompenses
 - [ ] Statistique de coup critique (dégâts et soins)
 - [ ] Intentions ennemies cachées en late game
+- [x] Rééquilibrage des reliques communes (Whetstone, Leather Boots, Lucky Coin, Bandage) pour le pool de départ (v0.0.95)
+- [x] Reliques à charge / compteur (Kunaï, Shuriken, Plume de Scribe, Encensoir) (v0.0.95)
+- [x] Déclencheurs par type de carte joué (onAttackPlayed, onSkillPlayed, onPowerPlayed) (v0.0.95)
 - [ ] Scaling progressif d'armure ennemi par acte
 
 ### Contenu
@@ -211,7 +216,7 @@ Issues du backlog `docs/possible_upgrades/upgrade_ideas.md` (~95 items, ~60% ré
 - [ ] Icônes de type de dégâts (feu, glace, poison) sur les descriptions
 - [x] Rework des cartes élémentaires (certaines status-only, d'autres damage+status)
 - [ ] Nœuds Trésor et Mystère sur la carte
-- [ ] Rencontre d'échange de reliques (3 reliques → 1 rareté supérieure)
+- [x] Rencontre d'échange de reliques (3 reliques → 1 rareté supérieure) (v0.0.96)
 - [ ] Onglet Reliques dans le dictionnaire
 
 ### Méta-Progression

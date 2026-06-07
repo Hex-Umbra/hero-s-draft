@@ -99,7 +99,7 @@ class RunController extends StateNotifier<RunState> {
 
   /// Démarre une nouvelle partie avec la classe choisie
   void startNewRun(HeroData chosenClass, [PassiveData? activePassive]) {
-    final generatedMap = MapGeneratorService.generateMap();
+    final generatedMap = MapGeneratorService.generateMap(act: 1);
     state = RunState(
       currentLevel: 1,
       act: 1,
@@ -163,12 +163,12 @@ class RunController extends StateNotifier<RunState> {
     }
   }
 
-  /// Avance au monde suivant (boucle de jeu)
   void advanceToNextWorld() {
-    final newMap = MapGeneratorService.generateMap();
+    final nextAct = state.act + 1;
+    final newMap = MapGeneratorService.generateMap(act: nextAct);
     state = state.copyWith(
       mapNodes: newMap,
-      act: state.act + 1,
+      act: nextAct,
       resetCurrentNode: true, // Reset la position pour le nouveau monde
     );
   }
@@ -267,12 +267,13 @@ class RunController extends StateNotifier<RunState> {
   }
 
   /// Modifie la valeur exacte d'un champ sans affecter les max (pour la récupération d'armure par ex)
-  void setHeroStats({int? currentPv, int? armure, int? currentMana}) {
+  void setHeroStats({int? currentPv, int? armure, int? currentMana, int? armorMastery}) {
     state = state.copyWith(
       heroStats: state.heroStats.copyWith(
         currentPv: currentPv ?? state.heroStats.currentPv,
         armure: armure ?? state.heroStats.armure,
         currentMana: currentMana ?? state.heroStats.currentMana,
+        armorMastery: armorMastery ?? state.heroStats.armorMastery,
       ),
     );
   }
@@ -304,11 +305,15 @@ class RunController extends StateNotifier<RunState> {
   void applyRelicEffect(RelicData relic) {
     switch (relic.effectType) {
       case 'gain_mana':
-        state = state.copyWith(
-          heroStats: state.heroStats.copyWith(
-            currentMana: state.heroStats.currentMana + relic.value,
-          ),
-        );
+        if (relic.trigger == RelicTrigger.startOfRun) {
+          applyHeroStatModifier(maxManaAcc: relic.value);
+        } else {
+          state = state.copyWith(
+            heroStats: state.heroStats.copyWith(
+              currentMana: state.heroStats.currentMana + relic.value,
+            ),
+          );
+        }
         break;
       case 'gain_armor':
         state = state.copyWith(
@@ -361,7 +366,147 @@ class RunController extends StateNotifier<RunState> {
       case 'heal':
         heal(relic.value);
         break;
+      case 'charge_armor_mastery_combat':
+        final existing = state.heroStats.statuses.where((s) => s.id == 'kunai_charge');
+        final int newVal = (existing.isEmpty ? 0 : existing.first.value) + 1;
+        if (newVal >= 3) {
+          final updatedStatuses = state.heroStats.statuses.where((s) => s.id != 'kunai_charge').toList();
+          state = state.copyWith(
+            heroStats: state.heroStats.copyWith(
+              statuses: updatedStatuses,
+            ),
+          );
+          setHeroStats(armorMastery: state.heroStats.armorMastery + relic.value);
+        } else {
+          addStatus(
+            const StatusEffect(
+              id: 'kunai_charge',
+              name: 'Charge Kunaï',
+              type: StatusType.buff,
+              value: 1,
+              duration: 1,
+              isStackable: true,
+            ),
+          );
+        }
+        break;
+      case 'charge_strength_combat':
+        final existing = state.heroStats.statuses.where((s) => s.id == 'shuriken_charge');
+        final int newVal = (existing.isEmpty ? 0 : existing.first.value) + 1;
+        if (newVal >= 3) {
+          final updatedStatuses = state.heroStats.statuses.where((s) => s.id != 'shuriken_charge').toList();
+          state = state.copyWith(
+            heroStats: state.heroStats.copyWith(
+              statuses: updatedStatuses,
+            ),
+          );
+          addStatus(
+            StatusEffect(
+              id: 'strength',
+              name: 'Force (Relique)',
+              type: StatusType.buff,
+              value: relic.value,
+              duration: 99,
+            ),
+          );
+        } else {
+          addStatus(
+            const StatusEffect(
+              id: 'shuriken_charge',
+              name: 'Charge Shuriken',
+              type: StatusType.buff,
+              value: 1,
+              duration: 1,
+              isStackable: true,
+            ),
+          );
+        }
+        break;
+      case 'charge_strength_turn':
+        final existing = state.heroStats.statuses.where((s) => s.id == 'pen_nib_charge');
+        final int newVal = (existing.isEmpty ? 0 : existing.first.value) + 1;
+        if (newVal >= 5) {
+          final updatedStatuses = state.heroStats.statuses.where((s) => s.id != 'pen_nib_charge').toList();
+          state = state.copyWith(
+            heroStats: state.heroStats.copyWith(
+              statuses: updatedStatuses,
+            ),
+          );
+          addStatus(
+            StatusEffect(
+              id: 'strength',
+              name: 'Force (Relique)',
+              type: StatusType.buff,
+              value: relic.value,
+              duration: 1,
+            ),
+          );
+        } else {
+          addStatus(
+            const StatusEffect(
+              id: 'pen_nib_charge',
+              name: 'Charge Plume',
+              type: StatusType.buff,
+              value: 1,
+              duration: 99,
+              isStackable: true,
+            ),
+          );
+        }
+        break;
+      case 'charge_armor_turn':
+        final existing = state.heroStats.statuses.where((s) => s.id == 'incense_charge');
+        final int newVal = (existing.isEmpty ? 0 : existing.first.value) + 1;
+        if (newVal >= 4) {
+          final updatedStatuses = state.heroStats.statuses.where((s) => s.id != 'incense_charge').toList();
+          state = state.copyWith(
+            heroStats: state.heroStats.copyWith(
+              statuses: updatedStatuses,
+            ),
+          );
+          setHeroStats(armure: state.heroStats.armure + relic.value);
+        } else {
+          addStatus(
+            const StatusEffect(
+              id: 'incense_charge',
+              name: 'Charge Encensoir',
+              type: StatusType.buff,
+              value: 1,
+              duration: 99,
+              isStackable: true,
+            ),
+          );
+        }
+        break;
     }
+  }
+
+  void removeRelicEffect(RelicData relic) {
+    if (relic.trigger == RelicTrigger.startOfRun) {
+      switch (relic.effectType) {
+        case 'gain_mana':
+          applyHeroStatModifier(maxManaAcc: -relic.value);
+          break;
+        case 'gain_strength':
+          applyHeroStatModifier(attackAcc: -relic.value);
+          break;
+        case 'gain_luck':
+          applyHeroStatModifier(luckAcc: -relic.value);
+          break;
+        case 'gain_crit':
+          applyHeroStatModifier(critChanceAcc: -relic.value);
+          break;
+      }
+    }
+  }
+
+  void exchangeRelics(List<RelicData> sacrificed, RelicData gained) {
+    for (var relic in sacrificed) {
+      removeRelicEffect(relic);
+    }
+    final sacrificedIds = sacrificed.map((r) => r.id).toList();
+    ref.read(inventoryProvider.notifier).removeRelics(sacrificedIds);
+    ref.read(inventoryProvider.notifier).addRelic(gained);
   }
 
   void startCombat() {

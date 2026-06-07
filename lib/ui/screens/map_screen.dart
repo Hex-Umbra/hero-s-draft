@@ -10,6 +10,7 @@ import 'shop_screen.dart';
 import 'deck_screen.dart';
 import 'rest_screen.dart';
 import 'event_screen.dart';
+import 'relic_exchange_screen.dart';
 import '../../models/card_instance.dart';
 import '../../game/controllers/deck_controller.dart';
 import '../widgets/map/map_connection_painter.dart';
@@ -636,6 +637,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
         break;
       case MapNodeType.event:
         destination = const EventScreen();
+        break;
+      case MapNodeType.relicExchange:
+        destination = RelicExchangeScreen(node: node);
         break;
     }
 

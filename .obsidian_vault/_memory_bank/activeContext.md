@@ -4,9 +4,9 @@ Ce document décrit le focus actif du projet, les accomplissements récents, et 
 
 ## 1. Focus Actuel du Projet
 
-Le projet vient de finaliser le refactoring et la finalisation des récompenses des nœuds de Boss ainsi que des drops d'or des ennemis (Version 0.0.94). Cette étape sépare proprement la logique métier de l'UI, renforce la typisation des données et implémente des logiques de récompenses thématiques pour chaque Boss de l'étage 9. L'ensemble des 100 tests unitaires et d'intégration passe au vert avec 0 avertissement.
+Le projet vient de finaliser l'implémentation de la rencontre d'échange de reliques (Autel d'Échange de Reliques, Version 0.0.96), permettant de sacrifier 3 reliques d'une rareté donnée pour acquérir 1 relique de rareté supérieure proposée par un autel mystique. Cet ajout intègre des règles de génération procédurales spécifiques à partir de l'Acte 5, un algorithme d'offre déterministe par seeded random, et l'inversion d'effets statistiques permanents en cas de sacrifice. L'ensemble des 103 tests unitaires et d'intégration passe toujours au vert.
 
-Le focus actuel s'oriente désormais vers la préparation et l'exécution des prochaines étapes de refactoring technique de la Phase 4 (Persistance/Sauvegarde automatique, parallélisation I/O, infrastructure audioFlame).
+Le focus actuel se tourne vers la mise en œuvre de la Phase 7 de la roadmap technique (Autosave/Persistance, parallélisation I/O, et intégration audio).
 
 ---
 
@@ -79,28 +79,43 @@ Le focus actuel s'oriente désormais vers la préparation et l'exécution des pr
     - Validation complète du comportement des vagues et de la répartition budgétaire via des tests unitaires automatisés.
 
 11. **Assurance Qualité et Robustesse** :
-    - **Tests automatisés** unitaires et d'intégration validés avec succès (dont tests du générateur, du système de vagues, de la correction `isBoss` et du nouveau logger), portant le total à **100 tests** (100% verts).
+    - **Tests automatisés** unitaires et d'intégration validés avec succès, maintenant les tests du générateur, du système de vagues, de la correction `isBoss` et du nouveau logger, portant le total à **103 tests** (100% verts).
     - Analyse de code statique : **0 erreur** sous `flutter analyze`.
 
 12. **Isolation de la Journalisation du Combat (`CombatDebugLogger`)** :
     - Découplage complet de la journalisation mathématique d'initialisation de combat en extrayant ces fonctions de `CombatController` vers `CombatDebugLogger`.
-    - Stylisation de la console de débogage à l'aide de bordures en boîte ANSI et de codes de couleurs ANSI pour mettre en valeur les statistiques du joueur, les formules calculées de la DDA, les détails du scaling et les attributs finaux des ennemis.
+    - Stylisation de la console de débogage à l'aide de bordures en boîte ANSI et de codes de couleurs ANSI.
     - Encapsulation des instructions de log dans des vérifications de mode débogage (`kDebugMode`) pour éviter toute surcharge d'allocation de mémoire en production.
 
 13. **Refactoring et Finalisation des Récompenses de Boss (Version 0.0.94)** :
-    - **Séparation et Centralisation Métier** : Centralisation complète du pipeline de calcul et de distribution de récompenses post-combat (XP, or, reliques, choix de cartes) dans un nouveau contrôleur Riverpod dédié `RewardController` (`rewardProvider`), isolant la logique métier des vues.
-    - **Butin d'Or des Ennemis** : Ajout du champ `gold` à `EnemyData` et `EnemyInstance`. Les montants d'or initiaux sont configurés dans `enemies.json` (slime: 10, gobelin: 12, squelette: 15, orc: 25) et mis à l'échelle dynamiquement : `(enemy.data.gold * levelMultiplier).round()`.
-    - **Boss 1 (Card Draft Screen)** : Création de `BossCardDraftScreen` (`boss_card_draft_screen.dart`) pour la position gauche (x=0). Affiche toutes les cartes globales non-status avec le widget standard `UiCard` sous une taille fixe contrainte (`140x220`). Le joueur est contraint de sélectionner précisément 3 cartes pour confirmer. Câblé avec la navigation de `GameScreen`.
-    - **Boss 2 (Double XP & Gold)** : Doublement de l'Or et de l'XP de combat à la défaite du boss central (x=1) dans `RewardController`. Les tooltips de `MapNodeWidget` et la légende `MapLegend` affichent "Boss (XP & Or x2)" / "Boss (2x XP & Gold)".
-    - **Boss 3 (Reliques Dynamiques)** : Pour le boss de droite (x=2), distribution évolutive des reliques :
-      - Base Légendaire fixe à 10% (uniquement scalable via player luck).
-      - Commune démarre à 40% et diminue de 10% par acte (`max(0.0, 40.0 - (act - 1) * 10.0)`).
-      - Uncommon diminue de 10% par acte de sa base max (`maxUncommonBase - (act - 5) * 10.0`) dès que la chance Commune tombe à 0% (à l'Act 5).
-      - Redistribution proportionnelle de la réduction vers les chances de base Rare et Épique.
-      - Logique de tirage cumulé implémentée dans `RewardController`.
-    - **Correction du Tirage de Relique des Boss** : Correction d'une régression à la ligne 100 de `lib/game/controllers/reward_controller.dart` pour restreindre strictement le tirage d'une relique aux nœuds Élite ou aux nœuds Boss de type `BossRewardType.improvedRelic` (Boss 3 / position droite x=2). Cela empêche le Boss 1 (Cartes / position gauche x=0) et le Boss 2 (Double XP & Or / position centrale x=1) d'attribuer par erreur une relique en plus de leurs récompenses thématiques respectives.
-    - **Génération Procédurale** : `MapGeneratorService` attribue explicitement le type de récompense de Boss selon la position horizontale `x` à l'étage final (x=0: cards, x=1: doubleXp, x=2: improvedRelic) sous forme d'enum `BossRewardType`.
-    - **Découplage UI** : `MapNodeWidget` lit le `bossRewardType` fortement typé plutôt que de parser des coordonnées sous forme de chaînes de caractères. `GameScreen` délègue les écrans de reliques et les dialogues de draft de façon coordonnée via le `rewardProvider`, et le gain d'or aléatoire codé en dur a été supprimé de `DraftScreen`.
+    - **Séparation et Centralisation Métier** : Centralisation complète du pipeline de récompenses post-combat dans un nouveau contrôleur Riverpod dédié `RewardController` (`rewardProvider`), isolant la logique métier des vues.
+    - **Butin d'Or des Ennemis** : Ajout du champ `gold` à `EnemyData` et `EnemyInstance`. Les montants d'or initiaux sont configurés dans `enemies.json` et mis à l'échelle : `(enemy.data.gold * levelMultiplier).round()`.
+    - **Boss 1 (Card Draft Screen)** : Création de `BossCardDraftScreen` pour le boss de gauche (x=0) sélectionnant précisément 3 cartes globales non-status.
+    - **Boss 2 (Double XP & Gold)** : Doublement de l'Or et de l'XP de combat à la défaite du boss central (x=1) dans `RewardController`.
+    - **Boss 3 (Reliques Dynamiques)** : Pour le boss de droite (x=2), distribution évolutive des reliques (minimum Uncommon, chances de tirage Legendary et Epic accrues proportionnellement par Acte).
+    - **Correction du Tirage de Relique des Boss** : Correction d'une régression dans `RewardController` pour restreindre le tirage d'une relique aux nœuds Élite ou aux nœuds Boss de type `improvedRelic` (x=2), évitant des reliques indues sur les boss x=0 et x=1.
+    - **Génération Procédurale** : `MapGeneratorService` attribue explicitement le type de récompense de Boss selon la position horizontale `x` à l'étage final sous forme d'enum `BossRewardType`.
+    - **Découplage UI** : `MapNodeWidget` lit le `bossRewardType` fortement typé plutôt que de parser des coordonnées de chaînes. `GameScreen` délègue les écrans de reliques et de dialogues de draft via le `rewardProvider`.
+
+14. **Rééquilibrage des Reliques, Déclencheurs de Type de Carte et Système de Charges (Version 0.0.95)** :
+    - **Intégration de 10 Nouvelles Reliques** : Ajout de 4 communes (Whetstone, Leather Boots, Lucky Coin, Travel Bandage), 4 rares (Kunai, Shuriken, Incense Burner), 1 atypique (Pen Nib) et 1 légendaire (Crown of Kings) dans `relics.json`, portant le total à 24 reliques et équilibrant les choix.
+    - **Mana Permanent et de Combat** : Implémentation du gain de Mana permanent via la relique légendaire *Couronne des Rois* (+1 Max Mana permanent à l'échelle de la run) et de Mana de départ via la relique épique *Plume de Phénix* (+2 Mana au début du combat).
+    - **Déclencheurs par Type de Carte** : Implémentation de triggers ciblés `onAttackPlayed`, `onSkillPlayed` et `onPowerPlayed` dans `RelicTrigger`, dispatchés dans `CombatController.applyPlayerCardPlay` en fonction du type de carte joué.
+    - **Reliques à Charges / Compteurs** : Logique de compteurs de combat codée dans `RunController.applyRelicEffect` à l'aide de buffs temporaires ou durables empilables :
+      - *Croc Kunaï* (Kunaï) : Accumule des charges de tour (`kunai_charge`). À 3 attaques jouées dans le même tour, reset les charges et octroie +1 Maîtrise d'Armure permanente pour le combat.
+      - *Shuriken* : Accumule des charges de tour (`shuriken_charge`). À 3 attaques jouées dans le tour, reset les charges et confère +1 Force permanente pour le combat.
+      - *Plume de Scribe* (Pen Nib) : Accumule des charges persistantes (`pen_nib_charge`). Au bout de 5 cartes jouées, reset et donne +3 Force temporaire pour le tour actuel.
+      - *Encensoir* : Accumule des charges persistantes (`incense_charge`) à chaque tour. Tous les 4 tours, reset les charges et donne +8 points d'Armure.
+    - **Dictionnaire des Reliques Bilingue** : Mise à jour de `DictionaryScreen` (`card_dictionary_screen.dart`) pour supporter et localiser correctement les badges textuels de ces nouveaux triggers en français et en anglais.
+    - **Validation Technique** : Analyse statique passée sans erreur (`dart analyze`) et suite complète de 103 tests validée à 100% verte.
+
+ 15. **Rencontre d'Échange de Reliques (Version 0.0.96)** :
+     - **Nouveau nœud d'échange** : Implémentation du type de nœud `MapNodeType.relicExchange` (emoji `🔄`).
+     - **Règles de génération procédurales** : Apparaît à partir de l'Acte 5. Garanti à 100% tous les 5 actes (Acte 5, 10, etc.), avec 10% de chances d'apparaître pour les autres actes. Positionné aléatoirement sur un étage intermédiaire (étages 2, 3, 4, 6 ou 7) afin d'éviter les chokepoints et haltes obligatoires.
+     - **Offre déterministe par Seeded Random** : Tirage de la relique offerte basé sur une graine calculée via `(node.id.hashCode ^ act).abs()`. La relique offerte exclut la rareté `Common` (car sans rareté inférieure à sacrifier) et répartit les chances entre `Uncommon` (40%), `Rare` (35%), `Epic` (20%) et `Legendary` (5%).
+     - **Transaction 3-pour-1 et inversion des statistiques** : Permet au joueur de sacrifier 3 reliques de rareté $R-1$ pour obtenir la relique gagnée de rareté $R$. Inversion et soustraction correcte des statistiques de run acquises (comme Force, Chance, Mana, PV max) lors du sacrifice des reliques concernées.
+     - **Interface utilisateur immersive (`RelicExchangeScreen`)** : Thème d'autel magique en parchemin proposant une grille de sélection interactive (lueur dorée de sélection) des reliques requises, avec validation par transaction sécurisée ou possibilité de refuser et quitter sans échange.
+     - **Fiabilité** : Ajout de tests unitaires complets dans `relic_exchange_test.dart` (validation topologique de génération de carte par Act et logique de transaction/inversion d'effets permanents), portant le total à **103 tests** (100% verts).
 
 ---
 

@@ -5,6 +5,7 @@ import '../../../models/card_instance.dart';
 import '../../../models/combat_state.dart';
 import '../../../models/enemy_instance.dart';
 import '../../../models/enemy_intent.dart';
+import '../../../models/data/card_data.dart';
 import '../../../models/data/enemy_data.dart';
 import '../../../models/data/relic_data.dart';
 import '../../../models/status_effect.dart';
@@ -211,6 +212,13 @@ class CombatController extends StateNotifier<CombatState> {
 
       // 4. Déclencher les reliques liées aux cartes jouées
       runController.applyRelics(RelicTrigger.onCardPlayed);
+      if (card.data.type == CardType.attack) {
+        runController.applyRelics(RelicTrigger.onAttackPlayed);
+      } else if (card.data.type == CardType.skill) {
+        runController.applyRelics(RelicTrigger.onSkillPlayed);
+      } else if (card.data.type == CardType.power) {
+        runController.applyRelics(RelicTrigger.onPowerPlayed);
+      }
 
       // 5. Nettoyer les morts
       _cleanDeadEnemies(runController);
