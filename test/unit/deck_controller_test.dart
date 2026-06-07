@@ -1,14 +1,26 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
 
 void main() {
   group('DeckNotifier Tests', () {
+    late ProviderContainer container;
+    late DeckNotifier notifier;
+
+    setUp(() {
+      container = ProviderContainer();
+      notifier = container.read(deckProvider.notifier);
+    });
+
+    tearDown(() {
+      container.dispose();
+    });
+
     test(
       'drawCards draws up to active drawPile size mid-turn and does not shuffle discard',
       () {
-        final notifier = DeckNotifier();
         final cardA = CardInstance(
           data: const CardData(
             id: 'strike',
@@ -63,7 +75,6 @@ void main() {
     );
 
     test('shuffleDiscardIntoDraw manually merges discard into draw pile', () {
-      final notifier = DeckNotifier();
       final cardA = CardInstance(
         data: const CardData(
           id: 'strike',
@@ -120,7 +131,6 @@ void main() {
     });
 
     test('mergeCards successfully upgrades rarity and merges forge upgrades', () {
-      final notifier = DeckNotifier();
       final baseCardData = const CardData(
         id: 'strike',
         nameEn: 'Strike',
@@ -172,7 +182,6 @@ void main() {
     });
 
     test('mergeCards limits upgrades to the capacity of the next rarity level', () {
-      final notifier = DeckNotifier();
       final baseCardData = const CardData(
         id: 'strike',
         nameEn: 'Strike',

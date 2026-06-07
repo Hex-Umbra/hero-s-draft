@@ -6,8 +6,11 @@ import '../../models/data/relic_data.dart';
 import 'run_controller.dart';
 import 'inventory_controller.dart';
 
-class EventController extends StateNotifier<EventState> {
-  EventController() : super(const EventState());
+class EventController extends Notifier<EventState> {
+  @override
+  EventState build() {
+    return const EventState();
+  }
 
   /// Sélectionne un événement aléatoire parmi la liste disponible
   void initializeEvent(List<EventData> events) {
@@ -43,16 +46,15 @@ class EventController extends StateNotifier<EventState> {
   /// Retourne la relique obtenue si le choix comprenait une action 'gain_relic', sinon null.
   RelicData? selectChoice(
     EventChoice choice,
-    RunController runController,
-    InventoryController inventoryController,
     List<RelicData> allRelics, {
     double? mockRoll, // Permet d'injecter un jet de dé fixe pour les tests
-    int?
-    mockRelicIndex, // Permet d'injecter l'index de sélection de relique pour les tests
+    int? mockRelicIndex, // Permet d'injecter l'index de sélection de relique pour les tests
   }) {
     state = state.copyWith(selectedChoice: choice, isResolved: true);
 
     RelicData? chosenRelic;
+    final runController = ref.read(runProvider.notifier);
+    final inventoryController = ref.read(inventoryProvider.notifier);
 
     for (var action in choice.actions) {
       switch (action.type) {
@@ -131,6 +133,4 @@ class EventController extends StateNotifier<EventState> {
   }
 }
 
-final eventProvider = StateNotifierProvider<EventController, EventState>((ref) {
-  return EventController();
-});
+final eventProvider = NotifierProvider<EventController, EventState>(EventController.new);

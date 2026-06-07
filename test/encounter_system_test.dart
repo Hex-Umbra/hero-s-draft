@@ -109,7 +109,8 @@ void main() {
     });
 
     test('isBoss calculation logic in generateEnemiesForLevel and CombatController', () {
-      final combatController = CombatController();
+      final container = ProviderContainer();
+      final combatController = container.read(combatProvider.notifier);
 
       // Case 1: Node type is combat, level is 10 (multiple of 10)
       // Since node type is explicitly MapNodeType.combat, isBoss should be false.
@@ -162,7 +163,8 @@ void main() {
 
 
     test('CombatController splits active and pending reserve enemies (wave reserve)', () {
-      final combatController = CombatController();
+      final container = ProviderContainer();
+      final combatController = container.read(combatProvider.notifier);
 
       combatController.initializeCombat(
         1,
@@ -183,8 +185,8 @@ void main() {
     });
 
     test('Wave replenishment pulls from reserve when active enemies are defeated', () {
-      final combatController = CombatController();
       final container = ProviderContainer();
+      final combatController = container.read(combatProvider.notifier);
       final runController = container.read(runProvider.notifier);
       runController.startNewRun(paladinHero);
 
@@ -225,7 +227,7 @@ void main() {
       );
 
       // Trigger cleanDeadEnemies by starting enemy turn
-      combatController.startEnemyTurn(runController);
+      combatController.startEnemyTurn();
 
       // Since active_1 was defeated, it should be in defeatedEnemies,
       // and reserve_1 (first in pending list) should be pulled into enemies!
@@ -254,7 +256,7 @@ void main() {
         const EntityStats(maxPv: 28, currentPv: 0, armure: 0, attaque: 5),
       );
 
-      combatController.startEnemyTurn(runController);
+      combatController.startEnemyTurn();
 
       // Both active_2 and reserve_1 died. Since reserve_2 is in pending,
       // reserve_2 should be pulled, and the combat should NOT be ended yet.
@@ -268,7 +270,7 @@ void main() {
         'reserve_2',
         const EntityStats(maxPv: 28, currentPv: 0, armure: 0, attaque: 5),
       );
-      combatController.startEnemyTurn(runController);
+      combatController.startEnemyTurn();
 
       // All enemies dead and no pending. Victory!
       expect(combatController.currentState.enemies.isEmpty, isTrue);

@@ -72,30 +72,28 @@ class RunState {
   }
 }
 
-class RunController extends StateNotifier<RunState> {
-  final Ref ref;
-
+class RunController extends Notifier<RunState> {
   RunState get currentState => state;
 
-  RunController(this.ref)
-    : super(
-        RunState(
-          currentLevel: 1,
-          act: 1,
-          heroClassId: 'paladin',
-          passiveTrait: 'regenArmor',
-          activePassive: PassiveData.fallback('regenArmor'),
-          heroStats: const EntityStats(
-            maxPv: 100,
-            currentPv: 100,
-            maxMana: 3,
-            currentMana: 3,
-            armure: 0,
-            attaque: 0, // Force de base à 0
-            luck: 0,
-          ),
-        ),
-      );
+  @override
+  RunState build() {
+    return RunState(
+      currentLevel: 1,
+      act: 1,
+      heroClassId: 'paladin',
+      passiveTrait: 'regenArmor',
+      activePassive: PassiveData.fallback('regenArmor'),
+      heroStats: const EntityStats(
+        maxPv: 100,
+        currentPv: 100,
+        maxMana: 3,
+        currentMana: 3,
+        armure: 0,
+        attaque: 0, // Force de base à 0
+        luck: 0,
+      ),
+    );
+  }
 
   /// Démarre une nouvelle partie avec la classe choisie
   void startNewRun(HeroData chosenClass, [PassiveData? activePassive]) {
@@ -637,6 +635,4 @@ class RunController extends StateNotifier<RunState> {
   }
 }
 
-final runProvider = StateNotifierProvider<RunController, RunState>((ref) {
-  return RunController(ref);
-});
+final runProvider = NotifierProvider<RunController, RunState>(RunController.new);

@@ -66,11 +66,11 @@ graph TD
 
 ## 2. Rôle des Contrôleurs (`lib/game/controllers/`)
 
-Tous les contrôleurs héritent de `StateNotifier<T>` et exposent des états immuables (pattern `copyWith`). Ils constituent la **source unique de vérité** du jeu.
+Tous les contrôleurs héritent de `Notifier<T>` (Riverpod 2.x) et exposent des états immuables (pattern `copyWith`). Ils constituent la **source unique de vérité** du jeu. Les contrôleurs sont découplés : plutôt que de recevoir des références à d'autres contrôleurs via leur constructeur, ils accèdent à l'état global et aux autres contrôleurs via la propriété `ref` (ex: `ref.read(inventoryProvider.notifier)`) en interne. Cela élimine les constructeurs complexes et évite les dépendances circulaires au démarrage.
 
 ### 2.1. `RunController` (`runProvider`) — Superviseur Global
 
-**Provider** : `StateNotifierProvider<RunController, RunState>` — détient `Ref ref`.
+**Provider** : `NotifierProvider<RunController, RunState>`
 
 **État `RunState`** : `currentLevel`, `act`, `heroStats` (EntityStats), `heroClassId`, `mapNodes` (List\<MapNode\>), `currentNodeId`, `passiveTrait`, `activePassive` (PassiveData?).
 
@@ -89,7 +89,7 @@ Tous les contrôleurs héritent de `StateNotifier<T>` et exposent des états imm
 
 ### 2.2. `CombatController` (`combatProvider`) — Pilote de Combat
 
-**Provider** : `StateNotifierProvider<CombatController, CombatState>` — standalone (pas de Ref).
+**Provider** : `NotifierProvider<CombatController, CombatState>`
 
 **État `CombatState`** : `enemies` (List\<EnemyInstance\> actifs, max 5 slots), `pendingEnemies` (List\<EnemyInstance\> en réserve), `defeatedEnemies` (List\<EnemyInstance\> éliminés), `turnPhase` (TurnPhase: player/enemy), `turnCount`, `selectedEnemyId`, `isCombatEnded`, `isVictory`.
 
@@ -112,11 +112,12 @@ Tous les contrôleurs héritent de `StateNotifier<T>` et exposent des états imm
 
 ### 2.3. `DeckNotifier` (`deckProvider`) — Maître du Deck
 
-**Provider** : `StateNotifierProvider<DeckNotifier, DeckState>` — standalone.
+**Provider** : `NotifierProvider<DeckNotifier, DeckState>`
 
 **État `DeckState`** : `masterDeck`, `drawPile`, `hand`, `discardPile`, `exhaustPile` (toutes `List<CardInstance>`).
 
 **Responsabilités** :
+- **Immuabilité stricte de `CardInstance`** : Le modèle `CardInstance` est garanti immuable (tous les attributs sont `final`, et `forgeUpgrades` est verrouillé dans `List<String>.unmodifiable`). Toutes les mutations temporaires ou permanentes se font via son pattern `copyWith` pour assurer l'intégrité de l'état.
 - **Cycle de vie** : `clearDeck()`, `initializeStarterDeck(cards)`, `initializeCombat()` (masterDeck → drawPile shuffle, clear piles).
 - **Mécanique de pioche** : `drawCards(amount)` — pioche min(amount, drawPile.length). **Pas de reshuffle automatique** : `shuffleDiscardIntoDraw()` doit être appelé séparément.
 - **Jeu de carte** : `playCard(card)` — retire de la main. Cartes Power ou `isExhaust` → exhaustPile; autres → discardPile.
@@ -126,7 +127,7 @@ Tous les contrôleurs héritent de `StateNotifier<T>` et exposent des états imm
 
 ### 2.4. `EventController` (`eventProvider`)
 
-**Provider** : `StateNotifierProvider<EventController, EventState>` — standalone.
+**Provider** : `NotifierProvider<EventController, EventState>`
 
 **Responsabilités** : `initializeEvent(events)` (pick aléatoire), `selectChoice(choice, RunController, InventoryController, allRelics)` — résout les actions séquentiellement : `gain_gold`, `spend_gold`, `take_damage`, `heal`, `gain_max_hp`, `gain_strength`, `gain_relic`.
 
@@ -134,7 +135,7 @@ Tous les contrôleurs héritent de `StateNotifier<T>` et exposent des états imm
 
 ### 2.5. `ShopController` (`shopProvider`)
 
-**Provider** : `StateNotifierProvider<ShopController, ShopState>` — standalone.
+**Provider** : `NotifierProvider<ShopController, ShopState>`
 
 **Responsabilités** : `initializeShop(allCards, bonusShopCards)` (filtre cartes status, shuffle, prend 3+bonus), `buyCard()`, `buyHeal()` (une seule fois par visite), `expandShop()` (bonus permanent via inventaire), `rerollCards()`, `purgeCard()` (suppression permanente), `cloneCard()` (duplication même level).
 
@@ -142,7 +143,7 @@ Tous les contrôleurs héritent de `StateNotifier<T>` et exposent des états imm
 
 ### 2.6. `InventoryController` (`inventoryProvider`)
 
-**Provider** : `StateNotifierProvider<InventoryController, InventoryState>` — détient `Ref ref`.
+**Provider** : `NotifierProvider<InventoryController, InventoryState>`
 
 **État** : `gold`, `relics` (List\<RelicData\>), `bonusShopCards`.
 
@@ -150,7 +151,7 @@ Tous les contrôleurs héritent de `StateNotifier<T>` et exposent des états imm
 
 ### 2.7. `SkillController` (`skillProvider`)
 
-**Provider** : `StateNotifierProvider<SkillController, SkillState>` — détient `Ref ref`.
+**Provider** : `NotifierProvider<SkillController, SkillState>`
 
 **État** : `skill1Cooldown`, `skill2Cooldown` (int).
 
@@ -158,7 +159,7 @@ Tous les contrôleurs héritent de `StateNotifier<T>` et exposent des états imm
 
 ### 2.8. `RewardController` (`rewardProvider`) — Pilote des Récompenses de Combat
 
-**Provider** : `StateNotifierProvider<RewardController, RewardState>` — détient `Ref ref`.
+**Provider** : `NotifierProvider<RewardController, RewardState>`
 
 **État `RewardState`** : `goldGained` (int), `xpGained` (int), `rolledRelic` (RelicData?), `rolledCards` (List\<CardData\>), `isGoldXpCollected` (bool), `isRelicCollected` (bool), `isRelicSkipped` (bool), `isCardsProcessed` (bool), `selectedCards` (List\<CardData\>), `isResolved` (bool).
 
@@ -573,21 +574,23 @@ Pour augmenter la sensation d'excitation et de "butin" lors de l'acquisition de 
 
 | Provider | Type | État | Auto-Dispose | Rôle |
 |:---|:---|:---|:---|:---|
-| `runProvider` | `StateNotifierProvider<RunController, RunState>` | `RunState` | Non | Progression globale, stats héros, carte, reliques |
-| `deckProvider` | `StateNotifierProvider<DeckNotifier, DeckState>` | `DeckState` | Non | 5 piles de cartes, merge, upgrade |
-| `combatProvider` | `StateNotifierProvider<CombatController, CombatState>` | `CombatState` | Non | Combat actif, ennemis, phases, intentions |
-| `inventoryProvider` | `StateNotifierProvider<InventoryController, InventoryState>` | `InventoryState` | Non | Or, reliques, bonus boutique |
-| `skillProvider` | `StateNotifierProvider<SkillController, SkillState>` | `SkillState` | Non | Cooldowns des 2 compétences héroïques |
-| `eventProvider` | `StateNotifierProvider<EventController, EventState>` | `EventState` | Non | Événement narratif actif, choix sélectionné |
-| `shopProvider` | `StateNotifierProvider<ShopController, ShopState>` | `ShopState` | Non | Cartes en vente, état d'achat heal |
-| `rewardProvider` | `StateNotifierProvider<RewardController, RewardState>` | `RewardState` | Non | Butins post-combat (or, XP, reliques, cartes) |
+| `runProvider` | `NotifierProvider<RunController, RunState>` | `RunState` | Non | Progression globale, stats héros, carte, reliques |
+| `deckProvider` | `NotifierProvider<DeckNotifier, DeckState>` | `DeckState` | Non | 5 piles de cartes, merge, upgrade |
+| `combatProvider` | `NotifierProvider<CombatController, CombatState>` | `CombatState` | Non | Combat actif, ennemis, phases, intentions |
+| `inventoryProvider` | `NotifierProvider<InventoryController, InventoryState>` | `InventoryState` | Non | Or, reliques, bonus boutique |
+| `skillProvider` | `NotifierProvider<SkillController, SkillState>` | `SkillState` | Non | Cooldowns des 2 compétences héroïques |
+| `eventProvider` | `NotifierProvider<EventController, EventState>` | `EventState` | Non | Événement narratif actif, choix sélectionné |
+| `shopProvider` | `NotifierProvider<ShopController, ShopState>` | `ShopState` | Non | Cartes en vente, état d'achat heal |
+| `rewardProvider` | `NotifierProvider<RewardController, RewardState>` | `RewardState` | Non | Butins post-combat (or, XP, reliques, cartes) |
 | `gameDataLoaderProvider` | `FutureProvider<GameDataRegistry>` | `GameDataRegistry` | Non | Chargement asynchrone des 8 JSON d'assets |
 
 ### 6.2. Principes Appliqués
 
-1. **Immuabilité d'état** : Tous les `StateNotifier` émettent de nouveaux objets state via `copyWith()`. Les listes sont recréées (pas de mutation in-place).
-2. **Pas de logique dans les vues** : Les écrans UI consomment l'état via `ref.watch()` et déclenchent les mutations via `ref.read(provider.notifier).method()`.
-3. **Providers non auto-disposed** : Tous les providers persistent entre les écrans pour conserver la progression de la run.
+1. **Immuabilité d'état** : Tous les contrôleurs `Notifier` émettent de nouveaux objets d'état via `state = state.copyWith(...)`. Les listes et collections internes sont recréées à chaque modification (pas de mutation directe in-place) afin de garantir la réactivité de Riverpod et d'éviter les bugs de cache d'état.
+2. **Découplage Interne et ref.read** : Au lieu d'injecter des dépendances via des paramètres de constructeur, les contrôleurs accèdent les uns aux autres à l'aide de `ref.read` en interne (par exemple, `ref.read(runProvider.notifier)` au sein de `CombatController`). Cela résout les problèmes de dépendances circulaires lors de l'initialisation des providers et allège considérablement la signature des contrôleurs.
+3. **Immuabilité Stricte de `CardInstance`** : Les instances de cartes sont garanties 100% immuables. Tous les attributs sont marqués `final`. Les listes d'améliorations de la forge (`forgeUpgrades`) sont converties en listes non modifiables (`List<String>.unmodifiable`) lors de l'instanciation de `CardInstance`. Toute mutation donne obligatoirement lieu à une nouvelle carte via l'appel à `copyWith`.
+4. **Pas de logique dans les vues** : Les widgets et écrans UI observent l'état via `ref.watch(provider)` pour reconstruire l'interface de manière réactive, et délèguent toutes les actions logiques en invoquant les méthodes des contrôleurs via `ref.read(provider.notifier).method()`.
+5. **Providers persistants** : Tous les providers de run et de combat sont configurés sans `autoDispose` pour maintenir l'état du jeu à travers les transitions d'écrans du cycle de vie de l'application.
 
 ### 6.3. Sérialisation
 

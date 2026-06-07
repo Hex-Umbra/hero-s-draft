@@ -4,9 +4,9 @@ Ce document décrit le focus actif du projet, les accomplissements récents, et 
 
 ## 1. Focus Actuel du Projet
 
-Le projet vient de finaliser l'implémentation de la rencontre d'échange de reliques (Autel d'Échange de Reliques, Version 0.0.96), permettant de sacrifier 3 reliques d'une rareté donnée pour acquérir 1 relique de rareté supérieure proposée par un autel mystique. Cet ajout intègre des règles de génération procédurales spécifiques à partir de l'Acte 5, un algorithme d'offre déterministe par seeded random, et l'inversion d'effets statistiques permanents en cas de sacrifice. L'ensemble des 103 tests unitaires et d'intégration passe toujours au vert.
+Le projet vient de finaliser la migration de son architecture globale (Version 0.0.97 : Modernisation Architecturale & Découplage). Cette mise à jour remplace le pattern legacy `StateNotifier` par les classes modernes `Notifier` et `NotifierProvider` de Riverpod 2.x, renforce l'immuabilité stricte du modèle `CardInstance`, découple totalement les contrôleurs (qui s'appellent désormais en interne via `ref.read` sans injection par constructeur), et assainit le moteur de jeu Flame en externalisant la logique des compétences (`executeSkill`) dans `CombatController`. L'ensemble des 104 tests unitaires et d'intégration passe toujours au vert.
 
-Le focus actuel se tourne vers la mise en œuvre de la Phase 7 de la roadmap technique (Autosave/Persistance, parallélisation I/O, et intégration audio).
+Le focus actuel se tourne vers les étapes restantes de la Phase 7 de la roadmap technique (Autosave/Persistance, parallélisation I/O dans `GameDataService`, et intégration audio).
 
 ---
 
@@ -79,7 +79,7 @@ Le focus actuel se tourne vers la mise en œuvre de la Phase 7 de la roadmap tec
     - Validation complète du comportement des vagues et de la répartition budgétaire via des tests unitaires automatisés.
 
 11. **Assurance Qualité et Robustesse** :
-    - **Tests automatisés** unitaires et d'intégration validés avec succès, maintenant les tests du générateur, du système de vagues, de la correction `isBoss` et du nouveau logger, portant le total à **103 tests** (100% verts).
+    - **Tests automatisés** unitaires et d'intégration validés avec succès, maintenant les tests du générateur, du système de vagues, de la correction `isBoss` et du nouveau logger, portant le total à **104 tests** (100% verts).
     - Analyse de code statique : **0 erreur** sous `flutter analyze`.
 
 12. **Isolation de la Journalisation du Combat (`CombatDebugLogger`)** :
@@ -107,7 +107,7 @@ Le focus actuel se tourne vers la mise en œuvre de la Phase 7 de la roadmap tec
       - *Plume de Scribe* (Pen Nib) : Accumule des charges persistantes (`pen_nib_charge`). Au bout de 5 cartes jouées, reset et donne +3 Force temporaire pour le tour actuel.
       - *Encensoir* : Accumule des charges persistantes (`incense_charge`) à chaque tour. Tous les 4 tours, reset les charges et donne +8 points d'Armure.
     - **Dictionnaire des Reliques Bilingue** : Mise à jour de `DictionaryScreen` (`card_dictionary_screen.dart`) pour supporter et localiser correctement les badges textuels de ces nouveaux triggers en français et en anglais.
-    - **Validation Technique** : Analyse statique passée sans erreur (`dart analyze`) et suite complète de 103 tests validée à 100% verte.
+    - **Validation Technique** : Analyse statique passée sans erreur (`dart analyze`) et suite complète de 104 tests validée à 100% verte.
 
  15. **Rencontre d'Échange de Reliques (Version 0.0.96)** :
      - **Nouveau nœud d'échange** : Implémentation du type de nœud `MapNodeType.relicExchange` (emoji `🔄`).
@@ -115,7 +115,13 @@ Le focus actuel se tourne vers la mise en œuvre de la Phase 7 de la roadmap tec
      - **Offre déterministe par Seeded Random** : Tirage de la relique offerte basé sur une graine calculée via `(node.id.hashCode ^ act).abs()`. La relique offerte exclut la rareté `Common` (car sans rareté inférieure à sacrifier) et répartit les chances entre `Uncommon` (40%), `Rare` (35%), `Epic` (20%) et `Legendary` (5%).
      - **Transaction 3-pour-1 et inversion des statistiques** : Permet au joueur de sacrifier 3 reliques de rareté $R-1$ pour obtenir la relique gagnée de rareté $R$. Inversion et soustraction correcte des statistiques de run acquises (comme Force, Chance, Mana, PV max) lors du sacrifice des reliques concernées.
      - **Interface utilisateur immersive (`RelicExchangeScreen`)** : Thème d'autel magique en parchemin proposant une grille de sélection interactive (lueur dorée de sélection) des reliques requises, avec validation par transaction sécurisée ou possibilité de refuser et quitter sans échange.
-     - **Fiabilité** : Ajout de tests unitaires complets dans `relic_exchange_test.dart` (validation topologique de génération de carte par Act et logique de transaction/inversion d'effets permanents), portant le total à **103 tests** (100% verts).
+     - **Fiabilité** : Ajout de tests unitaires complets dans `relic_exchange_test.dart` (validation topologique de génération de carte par Act et logique de transaction/inversion d'effets permanents), portant le total à **104 tests** (100% verts).
+
+ 16. **Modernisation Architecturale & Découplage (Version 0.0.97)** :
+     - **Migration vers Notifier** : Remplacement global du pattern legacy `StateNotifier` et `StateNotifierProvider` par les classes modernes `Notifier` et `NotifierProvider` de Riverpod 2.x.
+     - **Découplage des contrôleurs** : Élimination complète des paramètres de constructeur injectant des `Ref` ou d'autres contrôleurs. Utilisation directe de `ref.read` de manière interne pour la communication inter-contrôleurs, éliminant les couplages rigides et les dépendances circulaires au démarrage.
+     - **Immuabilité stricte de `CardInstance`** : Conversion systématique des listes d'améliorations de la forge (`forgeUpgrades`) en listes non modifiables via `List.unmodifiable(...)` à l'instanciation de `CardInstance`, garantissant qu'aucune carte en main ou dans le deck ne soit altérée silencieusement.
+     - **Externalisation de la logique Flame** : Extraction complète de la logique métier de calcul des compétences (`executeSkill`) du moteur de jeu Flame (`heros_draft_game.dart`) vers `CombatController` (Riverpod), garantissant que le moteur de rendu Flame reste purement passif et découplé des calculs de dégâts ou de vol d'armure.
 
 ---
 

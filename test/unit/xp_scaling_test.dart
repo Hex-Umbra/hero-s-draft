@@ -98,7 +98,8 @@ void main() {
     test(
       'Enemy level calculates correctly based on player level, act and node type',
       () {
-        final combatController = CombatController();
+        final container = ProviderContainer();
+        final combatController = container.read(combatProvider.notifier);
 
         // Case 1: Player Lvl 1, Act 1, Normal Combat -> Enemy Lvl 1
         combatController.initializeCombat(
@@ -154,8 +155,7 @@ void main() {
       'Defeated enemies are recorded in defeatedEnemies list when cleaned',
       () {
         final container = ProviderContainer();
-        final runController = container.read(runProvider.notifier);
-        final combatController = CombatController();
+        final combatController = container.read(combatProvider.notifier);
 
         combatController.initializeCombat(
           1,
@@ -178,7 +178,7 @@ void main() {
         }
 
         // Trigger dead enemy cleaning by starting enemy turn
-        combatController.startEnemyTurn(runController);
+        combatController.startEnemyTurn();
 
         // Verify that all enemies have been moved to defeatedEnemies
         expect(combatController.currentState.enemies.length, 0);

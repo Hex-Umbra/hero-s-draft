@@ -5,9 +5,9 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 **Métriques du projet** :
 - **~10 600 lignes** de code source dans `lib/` (65 fichiers).
 - **8 fichiers JSON** de données d'assets.
-- **103 tests automatisés** — 100% au vert.
+- **104 tests automatisés** — 100% au vert.
 - **0 erreur** via `flutter analyze`.
-- **~111 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
+- **~112 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
 
 ---
 
@@ -35,6 +35,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 
 | Fonctionnalité | Controller/Provider | Détails |
 |:---|:---|:---|
+| Modernisation Riverpod | `Tous les Providers` | Migration vers `Notifier` et `NotifierProvider` de Riverpod 2.x, communication inter-contrôleurs interne via `ref.read` sans injection par constructeur, et immuabilité stricte de `CardInstance` (v0.0.97) |
 | Logique de Run | `RunController` / `runProvider` | Suivi PV, mana, armorMastery, luck, acte, level, XP, carte, passifs, reliques |
 | Système de Progression XP | `RunController.gainXp()` | Progression XP exponentielle ($100 \times 1.5^{lvl-1}$), gains multiples et carry-over |
 | Échelonnement Ennemis | `CombatController.initializeCombat()` | Multiplicateurs dynamiques (+12% HP/lvl, +8% ATK/lvl) et calcul de combat level |
@@ -159,7 +160,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 
 | Métrique | Valeur | Détails |
 |:---|:---|:---|
-| Tests automatisés | **100** (100% VERT) | Tests unitaires, widget-tests et tests d'intégration (dont génération de carte avec anti-répétition et quotas, responsivité du HUD de combat, badges de ciblage, badge de taille de deck, et scaling dynamique des caractéristiques/sprites des ennemis) |
+| Tests automatisés | **104** (100% VERT) | Tests unitaires, widget-tests et tests d'intégration (dont génération de carte avec anti-répétition et quotas, responsivité du HUD de combat, badges de ciblage, badge de taille de deck, et scaling dynamique des caractéristiques/sprites des ennemis) |
 | Couverture estimée | **~22%** | Logique/controllers, moteur tutoriel, forge, pas d'UI de production |
 | Analyse statique | **0 erreur** | `flutter analyze` sans erreur de compilation |
 | Linter | `flutter_lints` v6.0.0 | Configuration standard, pas de règles custom |
@@ -251,7 +252,7 @@ Basé sur les rapports de dette technique (`technical_debt_report_Opus4.6.md`, 4
 | Priorité | Chantier | Problème | Solution | Fichiers |
 |:---|:---|:---|:---|:---|
 | Critique | Typage des modèles | `==`/`hashCode` absents sur 12 modèles, `Map<String, dynamic>` non typés | Ajouter `freezed` ou implémenter manuellement | `lib/models/` (11 fichiers) |
-| Critique | Immuabilité réelle des listes | Listes mutables dans états "immuables" | `List.unmodifiable()` systématique | Tous les controllers |
+| Critique | Immuabilité réelle des listes | Listes mutables dans états "immuables" | ✅ List.unmodifiable() et final dans CardInstance (v0.0.97) | Tous les controllers |
 | Critique | Validation des entrées | `gainGold(-50)` fonctionne, HP peut dépasser maxHP | Ajouter validation dans chaque mutation | `run_controller.dart`, `inventory_controller.dart` |
 | Important | Error handling I/O | Aucun `try-catch` dans `GameDataService` | Wrapping avec fallbacks gracieux | `game_data_service.dart` |
 | Important | Design System | Pas de `AppColors`, `AppTextStyles` — 100+ magic constants | Créer `lib/ui/theme/` | Nouveau fichier |
@@ -274,7 +275,7 @@ Basé sur les rapports de dette technique (`technical_debt_report_Opus4.6.md`, 4
 | Important | Couverture tests | ~15-20% estimée | Atteindre ≥50%, ajouter widget tests UI |
 | Important | Magic constants | 100+ valeurs codées en dur | Extraire dans `GameConstants` étendu |
 | Important | `EffectResolver` pattern | Classe statique avec switch géant | Migrer vers Strategy/Command pattern |
-| Important | Logique dans Flame | `executeSkill()` calcule des dégâts dans `HerosDraftGame` | Déplacer vers un controller dédié |
+| Important | Logique dans Flame | `executeSkill()` calcule des dégâts dans `HerosDraftGame` | ✅ Déplacé vers CombatController (v0.0.97) |
 | Moyen | Logique dans UI | Shop/event/heal dans les écrans (Reward déplacé vers RewardController en v0.0.94) | Déplacer vers controllers |
 
 ### 🔵 Phase 4 — Long Terme (Semaines 7+)

@@ -28,15 +28,11 @@ class _EventScreenState extends ConsumerState<EventScreen> {
 
   void _handleChoice(EventChoice choice) {
     final gameData = ref.read(gameDataLoaderProvider).requireValue;
-    final runController = ref.read(runProvider.notifier);
-    final inventoryController = ref.read(inventoryProvider.notifier);
 
     final chosenRelic = ref
         .read(eventProvider.notifier)
         .selectChoice(
           choice,
-          runController,
-          inventoryController,
           gameData.relics,
         );
 

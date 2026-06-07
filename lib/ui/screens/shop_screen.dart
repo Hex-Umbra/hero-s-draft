@@ -37,14 +37,10 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
 
   void _buyCard(CardData card, int price) {
     final shopController = ref.read(shopProvider.notifier);
-    final inventoryController = ref.read(inventoryProvider.notifier);
-    final deckNotifier = ref.read(deckProvider.notifier);
 
     if (shopController.buyCard(
       card,
       price,
-      inventoryController,
-      deckNotifier,
     )) {
       final locale = Localizations.localeOf(context).languageCode;
       context.showNotification(
@@ -61,8 +57,6 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
 
   void _buyHeal(int price, int amount) {
     final shopController = ref.read(shopProvider.notifier);
-    final inventoryController = ref.read(inventoryProvider.notifier);
-    final runController = ref.read(runProvider.notifier);
     final currentPv = ref.read(runProvider).heroStats.currentPv;
     final maxPv = ref.read(runProvider).heroStats.maxPv;
 
@@ -77,8 +71,6 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     if (shopController.buyHeal(
       price,
       amount,
-      inventoryController,
-      runController,
     )) {
       context.showNotification(
         AppLocalizations.of(context)!.healApplied,
@@ -94,10 +86,9 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
 
   void _expandShop(int price) {
     final shopController = ref.read(shopProvider.notifier);
-    final inventoryController = ref.read(inventoryProvider.notifier);
     final gameData = ref.read(gameDataLoaderProvider).requireValue;
 
-    if (shopController.expandShop(price, gameData.cards, inventoryController)) {
+    if (shopController.expandShop(price, gameData.cards)) {
       context.showNotification(
         AppLocalizations.of(context)!.shopExpanded,
         type: NotificationType.success,
@@ -112,7 +103,6 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
 
   void _rerollCards(int price) {
     final shopController = ref.read(shopProvider.notifier);
-    final inventoryController = ref.read(inventoryProvider.notifier);
     final gameData = ref.read(gameDataLoaderProvider).requireValue;
     final inventoryState = ref.read(inventoryProvider);
 
@@ -120,7 +110,6 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
       price,
       gameData.cards,
       inventoryState.bonusShopCards,
-      inventoryController,
     )) {
       context.showNotification(
         AppLocalizations.of(context)!.shopRerolled,
@@ -174,16 +163,10 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                   isExhaust: card.data.isExhaust,
                   onTap: () {
                     final shopController = ref.read(shopProvider.notifier);
-                    final inventoryController = ref.read(
-                      inventoryProvider.notifier,
-                    );
-                    final deckNotifier = ref.read(deckProvider.notifier);
 
                     if (shopController.purgeCard(
                       price,
                       card,
-                      inventoryController,
-                      deckNotifier,
                     )) {
                       Navigator.of(ctx).pop();
                       context.showNotification(
@@ -285,16 +268,10 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                       ),
                       onTap: () {
                         final shopController = ref.read(shopProvider.notifier);
-                        final inventoryController = ref.read(
-                          inventoryProvider.notifier,
-                        );
-                        final deckNotifier = ref.read(deckProvider.notifier);
 
                         if (shopController.cloneCard(
                           price,
                           card,
-                          inventoryController,
-                          deckNotifier,
                         )) {
                           Navigator.of(ctx).pop();
                           context.showNotification(

@@ -7,8 +7,11 @@ import 'run_controller.dart';
 import 'deck_controller.dart';
 import 'inventory_controller.dart';
 
-class ShopController extends StateNotifier<ShopState> {
-  ShopController() : super(const ShopState());
+class ShopController extends Notifier<ShopState> {
+  @override
+  ShopState build() {
+    return const ShopState();
+  }
 
   /// Helper pour calculer le prix d'une carte selon sa rareté
   static int getCardPrice(CardRarity rarity) {
@@ -48,12 +51,9 @@ class ShopController extends StateNotifier<ShopState> {
   }
 
   /// Achète une carte spécifique de la boutique
-  bool buyCard(
-    CardData card,
-    int price,
-    InventoryController inventoryController,
-    DeckNotifier deckNotifier,
-  ) {
+  bool buyCard(CardData card, int price) {
+    final inventoryController = ref.read(inventoryProvider.notifier);
+    final deckNotifier = ref.read(deckProvider.notifier);
     if (inventoryController.spendGold(price)) {
       state = state.copyWith(
         cardsForSale: state.cardsForSale.where((c) => c.id != card.id).toList(),
@@ -66,14 +66,11 @@ class ShopController extends StateNotifier<ShopState> {
   }
 
   /// Achète un soin dans la boutique
-  bool buyHeal(
-    int price,
-    int amount,
-    InventoryController inventoryController,
-    RunController runController,
-  ) {
+  bool buyHeal(int price, int amount) {
     if (state.purchasedHeal) return false;
 
+    final inventoryController = ref.read(inventoryProvider.notifier);
+    final runController = ref.read(runProvider.notifier);
     if (inventoryController.spendGold(price)) {
       runController.heal(amount);
       state = state.copyWith(purchasedHeal: true);
@@ -83,11 +80,8 @@ class ShopController extends StateNotifier<ShopState> {
   }
 
   /// Achète une expansion de boutique pour ajouter une carte au stock
-  bool expandShop(
-    int price,
-    List<CardData> allCards,
-    InventoryController inventoryController,
-  ) {
+  bool expandShop(int price, List<CardData> allCards) {
+    final inventoryController = ref.read(inventoryProvider.notifier);
     if (inventoryController.spendGold(price)) {
       inventoryController.buyShopExpansion();
 
@@ -110,12 +104,8 @@ class ShopController extends StateNotifier<ShopState> {
   }
 
   /// Renouvelle l'ensemble des cartes en vente contre paiement
-  bool rerollCards(
-    int price,
-    List<CardData> allCards,
-    int bonusShopCards,
-    InventoryController inventoryController,
-  ) {
+  bool rerollCards(int price, List<CardData> allCards, int bonusShopCards) {
+    final inventoryController = ref.read(inventoryProvider.notifier);
     if (inventoryController.spendGold(price)) {
       final eligibleCards = allCards
           .where((c) => c.type != CardType.status)
@@ -134,12 +124,9 @@ class ShopController extends StateNotifier<ShopState> {
   }
 
   /// Retire définitivement une carte du deck contre paiement
-  bool purgeCard(
-    int price,
-    CardInstance card,
-    InventoryController inventoryController,
-    DeckNotifier deckNotifier,
-  ) {
+  bool purgeCard(int price, CardInstance card) {
+    final inventoryController = ref.read(inventoryProvider.notifier);
+    final deckNotifier = ref.read(deckProvider.notifier);
     if (inventoryController.spendGold(price)) {
       deckNotifier.removeCardFromMasterDeck(card);
       return true;
@@ -148,12 +135,9 @@ class ShopController extends StateNotifier<ShopState> {
   }
 
   /// Duplique une carte sélectionnée contre paiement
-  bool cloneCard(
-    int price,
-    CardInstance card,
-    InventoryController inventoryController,
-    DeckNotifier deckNotifier,
-  ) {
+  bool cloneCard(int price, CardInstance card) {
+    final inventoryController = ref.read(inventoryProvider.notifier);
+    final deckNotifier = ref.read(deckProvider.notifier);
     if (inventoryController.spendGold(price)) {
       deckNotifier.addCardToMasterDeck(
         CardInstance(
@@ -168,6 +152,4 @@ class ShopController extends StateNotifier<ShopState> {
   }
 }
 
-final shopProvider = StateNotifierProvider<ShopController, ShopState>((ref) {
-  return ShopController();
-});
+final shopProvider = NotifierProvider<ShopController, ShopState>(ShopController.new);

@@ -4,9 +4,9 @@ import 'data/card_data.dart';
 class CardInstance {
   final String uniqueId;
   final CardData data;
-  CardRarity rarity;
-  List<String> forgeUpgrades;
-  int? temporaryCost;
+  final CardRarity rarity;
+  final List<String> forgeUpgrades;
+  final int? temporaryCost;
 
   CardInstance({
     String? uniqueId,
@@ -16,7 +16,9 @@ class CardInstance {
     this.temporaryCost,
   })  : uniqueId = uniqueId ?? const Uuid().v4(),
         rarity = rarity ?? data.rarity,
-        forgeUpgrades = forgeUpgrades ?? [];
+        forgeUpgrades = forgeUpgrades != null
+            ? List<String>.unmodifiable(forgeUpgrades)
+            : const <String>[];
 
   int get currentCost => temporaryCost ?? data.cost;
 
@@ -43,13 +45,14 @@ class CardInstance {
     CardRarity? rarity,
     List<String>? forgeUpgrades,
     int? temporaryCost,
+    bool clearTemporaryCost = false,
   }) {
     return CardInstance(
       uniqueId: uniqueId ?? this.uniqueId,
       data: data ?? this.data,
       rarity: rarity ?? this.rarity,
       forgeUpgrades: forgeUpgrades ?? this.forgeUpgrades,
-      temporaryCost: temporaryCost ?? this.temporaryCost,
+      temporaryCost: clearTemporaryCost ? null : (temporaryCost ?? this.temporaryCost),
     );
   }
 }
