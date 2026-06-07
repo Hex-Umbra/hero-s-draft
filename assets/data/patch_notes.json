@@ -1,5 +1,87 @@
 [
   {
+    "version": "0.0.99",
+    "date": "2026-06-07",
+    "title": "Fondations du Design",
+    "sections": [
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "La typographie de l'interface est désormais homogène dans tous les menus, avec des polices bien calibrées pour les titres, sous-titres et étiquettes.",
+          "Les boîtes de dialogue (reliques, statistiques, etc.) affichent un style plus cohérent avec des coins arrondis standardisés et une présentation épurée."
+        ]
+      },
+      {
+        "category": "Corrections",
+        "emoji": "🐛",
+        "entries": [
+          "Correction d'un débordement visuel sur les boutons de la boutique n'affichant qu'un coût en or sans texte : le contenu reste désormais proprement contenu dans le bouton."
+        ]
+      },
+      {
+        "category": "Technique",
+        "emoji": "🔧",
+        "entries": [
+          "Centralisation de toutes les palettes de couleurs de l'interface (thème sombre, parchemin, raretés, statistiques) dans un référentiel commun pour faciliter les évolutions visuelles futures.",
+          "Standardisation des espacements de l'interface via un système de tailles prédéfinies, garantissant une cohérence visuelle sur tous les écrans.",
+          "La couleur associée à la rareté d'une relique ou d'une carte est désormais calculée en un seul endroit, éliminant les duplications de code entre les différents menus."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "0.0.98",
+    "date": "2026-06-07",
+    "title": "Fluidité & Impacts",
+    "sections": [
+      {
+        "category": "Nouvelles Fonctionnalités",
+        "emoji": "✨",
+        "entries": [
+          "Nouvelle animation organique de pioche : les cartes glissent, s'agrandissent et pivotent de manière dynamique depuis la pioche vers votre main."
+        ]
+      },
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "Optimisation du rendu du texte de combat et des icônes pour augmenter significativement la fluidité de l'affichage et éliminer les saccades lors des transitions de transparence.",
+          "Synchronisation précise des impacts de combat : les nombres de dégâts, flashs, secousses d'écran et effets de particules se déclenchent désormais exactement lors de l'impact physique de la carte."
+        ]
+      },
+      {
+        "category": "Corrections",
+        "emoji": "🐛",
+        "entries": [
+          "Suppression des effets visuels d'impact qui se déclenchaient en double lors de l'utilisation d'une carte."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "0.0.97",
+    "date": "2026-06-07",
+    "title": "Modernisation Technique",
+    "sections": [
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "Sécurisation de la détection des attributs des cartes pour éliminer les bugs visuels sur leurs statistiques."
+        ]
+      },
+      {
+        "category": "Technique",
+        "emoji": "🔧",
+        "entries": [
+          "Modernisation de l'architecture de la logique de jeu afin d'améliorer la stabilité globale et de faciliter l'ajout de futurs contenus.",
+          "Centralisation et standardisation de toute la logique de calcul de combat (dégâts, coups critiques, boucliers) pour des effets de cartes plus fiables."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.0.95",
     "date": "2026-06-05",
     "title": "L'Éveil des Reliques",

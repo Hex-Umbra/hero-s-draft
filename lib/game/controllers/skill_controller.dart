@@ -2,10 +2,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/skill_state.dart';
 import 'run_controller.dart';
 
-class SkillController extends StateNotifier<SkillState> {
-  final Ref ref;
-
-  SkillController(this.ref) : super(const SkillState());
+class SkillController extends Notifier<SkillState> {
+  @override
+  SkillState build() {
+    return const SkillState();
+  }
 
   void tickCooldowns() {
     state = SkillState(
@@ -39,6 +40,4 @@ class SkillController extends StateNotifier<SkillState> {
   }
 }
 
-final skillProvider = StateNotifierProvider<SkillController, SkillState>((ref) {
-  return SkillController(ref);
-});
+final skillProvider = NotifierProvider<SkillController, SkillState>(SkillController.new);

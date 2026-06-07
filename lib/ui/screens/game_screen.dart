@@ -297,7 +297,6 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       },
       onPlayCard: (card, target) {
         final runController = ref.read(runProvider.notifier);
-        final deckController = ref.read(deckProvider.notifier);
         final combatController = ref.read(combatProvider.notifier);
         final previousMana = runController.currentState.heroStats.currentMana;
 
@@ -322,8 +321,6 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
         combatController.applyPlayerCardPlay(
           card,
-          runController,
-          deckController,
         );
 
         if (runController.currentState.heroStats.currentMana > 0) {
@@ -348,12 +345,12 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       onResolveEnemyIntent: (enemyId) {
         ref
             .read(combatProvider.notifier)
-            .resolveEnemyIntent(enemyId, ref.read(runProvider.notifier));
+            .resolveEnemyIntent(enemyId);
       },
       onStartEnemyTurn: () {
         ref
             .read(combatProvider.notifier)
-            .startEnemyTurn(ref.read(runProvider.notifier));
+            .startEnemyTurn();
       },
       onEndEnemyTurn: () {
         ref.read(combatProvider.notifier).endEnemyTurn();
@@ -364,6 +361,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       },
       onUpdateEnemyStats: (enemyId, stats) {
         ref.read(combatProvider.notifier).updateEnemyStats(enemyId, stats);
+      },
+      onExecuteSkill: (skill, targetEnemyId) {
+        ref.read(combatProvider.notifier).executeSkill(skill, targetEnemyId: targetEnemyId);
       },
       onEnemiesSpawned: () {
         if (mounted) {

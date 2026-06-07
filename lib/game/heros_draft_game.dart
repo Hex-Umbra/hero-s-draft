@@ -70,6 +70,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   final void Function() onEndEnemyTurn;
   final void Function(String? enemyId) onSelectEnemy;
   final void Function(String enemyId, EntityStats stats) onUpdateEnemyStats;
+  final void Function(SkillData skill, String? targetEnemyId) onExecuteSkill;
 
   HerosDraftGame({
     required this.onPlayerTakeDamage,
@@ -88,6 +89,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
     required this.onEndEnemyTurn,
     required this.onSelectEnemy,
     required this.onUpdateEnemyStats,
+    required this.onExecuteSkill,
     this.onEnemiesSpawned,
   });
 
@@ -391,6 +393,8 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
 
     for (var c in cardsToAdd) {
       final cardComp = CardComponent(c);
+      cardComp.position = Vector2(40, size.y - 40);
+      cardComp.scale = Vector2.zero();
       handCards.add(cardComp);
       add(cardComp);
     }
@@ -433,13 +437,43 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
 
       if (card.isDragging) continue;
 
+      final Vector2 targetPos;
+      final double targetAngle = angle;
+      final Vector2 targetScale;
+
       if (card == focusedCard) {
-        card.position = Vector2(x, y) + Vector2(0, -60);
-        card.angle = angle;
+        targetPos = Vector2(x, y) + Vector2(0, -60);
+        targetScale = Vector2.all(scaleFactor * 0.88 * 1.25);
+      } else if (card == hoveredCard) {
+        targetPos = Vector2(x, y);
+        targetScale = Vector2.all(scaleFactor * 0.88 * 1.2);
       } else {
-        card.position = Vector2(x, y);
-        card.angle = angle;
+        targetPos = Vector2(x, y);
+        targetScale = Vector2.all(scaleFactor * 0.88);
       }
+
+      card.removeAll(card.children.whereType<MoveEffect>());
+      card.removeAll(card.children.whereType<RotateEffect>());
+      card.removeAll(card.children.whereType<ScaleEffect>());
+
+      card.add(
+        MoveEffect.to(
+          targetPos,
+          EffectController(duration: 0.35, curve: Curves.easeOutCubic),
+        ),
+      );
+      card.add(
+        RotateEffect.to(
+          targetAngle,
+          EffectController(duration: 0.35, curve: Curves.easeOutCubic),
+        ),
+      );
+      card.add(
+        ScaleEffect.to(
+          targetScale,
+          EffectController(duration: 0.35, curve: Curves.easeOutCubic),
+        ),
+      );
 
       if (card != hoveredCard && card != focusedCard) {
         card.priority = card.basePriority;
@@ -656,51 +690,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
       heroCard?.dashAnimation();
       await Future.delayed(const Duration(milliseconds: 200));
 
-      if (skill.effectType == 'damage_aoe') {
-        int dmg =
-            (_currentState!.effectiveAttaque * (skill.effectValue / 100.0))
-                .round();
-        final random = Random();
-        if (random.nextInt(100) < _currentState!.heroStats.effectiveCritChance) {
-          dmg = (dmg * _currentState!.heroStats.critMultiplier).round();
-        }
-        if (dmg < 1) dmg = 1;
-        for (var enemy in enemyCards.toList()) {
-          onUpdateEnemyStats(enemy.id, enemy.stats.takeDamage(dmg));
-        }
-      } else if (skill.effectType == 'damage_targeted') {
-        int dmg =
-            (_currentState!.effectiveAttaque * (skill.effectValue / 100.0))
-                .round();
-        final random = Random();
-        if (random.nextInt(100) < _currentState!.heroStats.effectiveCritChance) {
-          dmg = (dmg * _currentState!.heroStats.critMultiplier).round();
-        }
-        onUpdateEnemyStats(
-          selectedEnemy!.id,
-          selectedEnemy!.stats.takeDamage(dmg),
-        );
-      } else if (skill.effectType == 'damage_pierce') {
-        int dmg = _currentState!.effectiveAttaque;
-        final random = Random();
-        if (random.nextInt(100) < _currentState!.heroStats.effectiveCritChance) {
-          dmg = (dmg * _currentState!.heroStats.critMultiplier).round();
-        }
-        int stolenArmor =
-            (selectedEnemy!.stats.armure * (skill.effectValue / 100.0)).round();
-        int newPv = selectedEnemy!.stats.currentPv - dmg;
-        int newArm = selectedEnemy!.stats.armure - stolenArmor;
-        if (newPv < 0) newPv = 0;
-        if (newArm < 0) newArm = 0;
-
-        onUpdateEnemyStats(
-          selectedEnemy!.id,
-          selectedEnemy!.stats.copyWith(currentPv: newPv, armure: newArm),
-        );
-        if (stolenArmor > 0) {
-          onPlayerGainArmor(stolenArmor);
-        }
-      }
+      onExecuteSkill(skill, selectedEnemy?.id);
 
       // La riposte est déclenchée après l'effet visuel et la mise à jour Riverpod
       await Future.delayed(const Duration(milliseconds: 400));
@@ -713,7 +703,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
       await _enemyRipostePhase();
     } else {
       if (skill.effectType == 'armor_buff') {
-        onPlayerGainArmor(skill.effectValue);
+        onExecuteSkill(skill, null);
       } else if (skill.effectType == 'attack_buff') {
         onTriggerAttackBuff();
       } else if (skill.effectType == 'lifesteal_buff') {

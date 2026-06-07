@@ -5,6 +5,8 @@ import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'ui/screens/splash_screen.dart';
 import 'ui/widgets/notification_overlay.dart';
 
+import 'ui/theme/app_theme.dart';
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const ProviderScope(child: HerosDraftApp()));
@@ -17,9 +19,7 @@ class HerosDraftApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
-      theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: const Color(0xFF1E1E2C),
-      ),
+      theme: AppTheme.darkNeonTheme,
       debugShowCheckedModeBanner: false,
       localizationsDelegates: const [
         AppLocalizations.delegate,

@@ -1,6 +1,9 @@
-import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:roguelike_card_game/l10n/app_localizations.dart';
+import 'package:roguelike_card_game/models/data/model_extensions.dart';
+import 'package:roguelike_card_game/ui/widgets/game_dialog.dart';
+import 'package:roguelike_card_game/ui/widgets/game_button.dart';
 import '../../game/controllers/run_controller.dart';
 import '../../game/controllers/deck_controller.dart';
 import '../../game/controllers/shop_controller.dart';
@@ -37,14 +40,10 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
 
   void _buyCard(CardData card, int price) {
     final shopController = ref.read(shopProvider.notifier);
-    final inventoryController = ref.read(inventoryProvider.notifier);
-    final deckNotifier = ref.read(deckProvider.notifier);
 
     if (shopController.buyCard(
       card,
       price,
-      inventoryController,
-      deckNotifier,
     )) {
       final locale = Localizations.localeOf(context).languageCode;
       context.showNotification(
@@ -61,8 +60,6 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
 
   void _buyHeal(int price, int amount) {
     final shopController = ref.read(shopProvider.notifier);
-    final inventoryController = ref.read(inventoryProvider.notifier);
-    final runController = ref.read(runProvider.notifier);
     final currentPv = ref.read(runProvider).heroStats.currentPv;
     final maxPv = ref.read(runProvider).heroStats.maxPv;
 
@@ -77,8 +74,6 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     if (shopController.buyHeal(
       price,
       amount,
-      inventoryController,
-      runController,
     )) {
       context.showNotification(
         AppLocalizations.of(context)!.healApplied,
@@ -94,10 +89,9 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
 
   void _expandShop(int price) {
     final shopController = ref.read(shopProvider.notifier);
-    final inventoryController = ref.read(inventoryProvider.notifier);
     final gameData = ref.read(gameDataLoaderProvider).requireValue;
 
-    if (shopController.expandShop(price, gameData.cards, inventoryController)) {
+    if (shopController.expandShop(price, gameData.cards)) {
       context.showNotification(
         AppLocalizations.of(context)!.shopExpanded,
         type: NotificationType.success,
@@ -112,7 +106,6 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
 
   void _rerollCards(int price) {
     final shopController = ref.read(shopProvider.notifier);
-    final inventoryController = ref.read(inventoryProvider.notifier);
     final gameData = ref.read(gameDataLoaderProvider).requireValue;
     final inventoryState = ref.read(inventoryProvider);
 
@@ -120,7 +113,6 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
       price,
       gameData.cards,
       inventoryState.bonusShopCards,
-      inventoryController,
     )) {
       context.showNotification(
         AppLocalizations.of(context)!.shopRerolled,
@@ -143,107 +135,72 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     showDialog(
       context: context,
       builder: (ctx) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF2A2A3D),
+        return GameDialog(
           title: Text(
             l10n.chooseCardToPurge,
-            style: const TextStyle(color: Colors.white),
           ),
-          content: SizedBox(
-            width: double.maxFinite,
-            height: 500,
-            child: GridView.builder(
-              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 200,
-                childAspectRatio: 0.65,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
-              ),
-              itemCount: masterDeck.length,
-              itemBuilder: (context, index) {
-                final card = masterDeck[index];
-                return UiCard(
-                  title: card.data.getName(locale),
-                  description: card.data.getDescription(locale),
-                  cost: card.data.cost,
-                  effects: card.data.effects,
-                  rarity: _getRarityLabel(card.rarity, l10n),
-                  target: _getTargetLabel(card.data.target, l10n),
-                  type: card.data.type,
-                  targetType: card.data.target,
-                  isExhaust: card.data.isExhaust,
-                  onTap: () {
-                    final shopController = ref.read(shopProvider.notifier);
-                    final inventoryController = ref.read(
-                      inventoryProvider.notifier,
-                    );
-                    final deckNotifier = ref.read(deckProvider.notifier);
+          content: Material(
+            color: Colors.transparent,
+            child: SizedBox(
+              width: double.maxFinite,
+              height: 500,
+              child: GridView.builder(
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 200,
+                  childAspectRatio: 0.65,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
+                ),
+                itemCount: masterDeck.length,
+                itemBuilder: (context, index) {
+                  final card = masterDeck[index];
+                  return UiCard(
+                    title: card.data.getName(locale),
+                    description: card.data.getDescription(locale),
+                    cost: card.data.cost,
+                    effects: card.data.effects,
+                    rarity: card.rarity.getLabel(l10n),
+                    target: card.data.target.getLabel(l10n),
+                    type: card.data.type,
+                    targetType: card.data.target,
+                    isExhaust: card.data.isExhaust,
+                    onTap: () {
+                      final shopController = ref.read(shopProvider.notifier);
 
-                    if (shopController.purgeCard(
-                      price,
-                      card,
-                      inventoryController,
-                      deckNotifier,
-                    )) {
-                      Navigator.of(ctx).pop();
-                      context.showNotification(
-                        l10n.cardPurged,
-                        type: NotificationType.success,
-                      );
-                    } else {
-                      Navigator.of(ctx).pop();
-                      context.showNotification(
-                        l10n.notEnoughGold,
-                        type: NotificationType.error,
-                      );
-                    }
-                  },
-                );
-              },
+                      if (shopController.purgeCard(
+                        price,
+                        card,
+                      )) {
+                        Navigator.of(ctx).pop();
+                        context.showNotification(
+                          l10n.cardPurged,
+                          type: NotificationType.success,
+                        );
+                      } else {
+                        Navigator.of(ctx).pop();
+                        context.showNotification(
+                          l10n.notEnoughGold,
+                          type: NotificationType.error,
+                        );
+                      }
+                    },
+                  );
+                },
+              ),
             ),
           ),
           actions: [
-            TextButton(
+            GameButton(
+              text: l10n.cancel,
+              baseColor: Colors.white70,
               onPressed: () => Navigator.of(ctx).pop(),
-              child: Text(
-                l10n.cancel,
-                style: const TextStyle(color: Colors.white70),
-              ),
+              height: 40,
+              width: 100,
             ),
           ],
         );
       },
     );
-  }
-
-  String _getRarityLabel(CardRarity rarity, AppLocalizations l10n) {
-    switch (rarity) {
-      case CardRarity.common:
-        return l10n.rarityCommon;
-      case CardRarity.uncommon:
-        return l10n.rarityUncommon;
-      case CardRarity.rare:
-        return l10n.rarityRare;
-      case CardRarity.epic:
-        return l10n.rarityEpic;
-      case CardRarity.legendary:
-        return l10n.rarityLegendary;
-      case CardRarity.unique:
-        return 'Unique';
-    }
-  }
-
-  String _getTargetLabel(CardTarget target, AppLocalizations l10n) {
-    switch (target) {
-      case CardTarget.singleEnemy:
-        return l10n.targetSingleEnemy;
-      case CardTarget.allEnemies:
-        return l10n.targetAllEnemies;
-      case CardTarget.self:
-        return l10n.targetSelf;
-      case CardTarget.none:
-        return l10n.targetNone;
-    }
   }
 
   void _showCloneModal(int price) {
@@ -263,64 +220,59 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     showDialog(
       context: context,
       builder: (ctx) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF2A2A3D),
+        return GameDialog(
           title: Text(
             l10n.chooseCardToClone,
-            style: const TextStyle(color: Colors.white),
           ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: options
-                  .map(
-                    (card) => ListTile(
-                      title: Text(
-                        card.data.getName(locale),
-                        style: const TextStyle(color: Colors.amber),
-                      ),
-                      subtitle: Text(
-                        _getRarityLabel(card.rarity, l10n),
-                        style: const TextStyle(color: Colors.white70),
-                      ),
-                      onTap: () {
-                        final shopController = ref.read(shopProvider.notifier);
-                        final inventoryController = ref.read(
-                          inventoryProvider.notifier,
-                        );
-                        final deckNotifier = ref.read(deckProvider.notifier);
+          content: Material(
+            color: Colors.transparent,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: options
+                    .map(
+                      (card) => ListTile(
+                        title: Text(
+                          card.data.getName(locale),
+                          style: const TextStyle(color: Colors.amber),
+                        ),
+                        subtitle: Text(
+                          card.rarity.getLabel(l10n),
+                          style: const TextStyle(color: Colors.white70),
+                        ),
+                        onTap: () {
+                          final shopController = ref.read(shopProvider.notifier);
 
-                        if (shopController.cloneCard(
-                          price,
-                          card,
-                          inventoryController,
-                          deckNotifier,
-                        )) {
-                          Navigator.of(ctx).pop();
-                          context.showNotification(
-                            l10n.cardCloned,
-                            type: NotificationType.success,
-                          );
-                        } else {
-                          Navigator.of(ctx).pop();
-                          context.showNotification(
-                            l10n.notEnoughGold,
-                            type: NotificationType.error,
-                          );
-                        }
-                      },
-                    ),
-                  )
-                  .toList(),
+                          if (shopController.cloneCard(
+                            price,
+                            card,
+                          )) {
+                            Navigator.of(ctx).pop();
+                            context.showNotification(
+                              l10n.cardCloned,
+                              type: NotificationType.success,
+                            );
+                          } else {
+                            Navigator.of(ctx).pop();
+                            context.showNotification(
+                              l10n.notEnoughGold,
+                              type: NotificationType.error,
+                            );
+                          }
+                        },
+                      ),
+                    )
+                    .toList(),
+              ),
             ),
           ),
           actions: [
-            TextButton(
+            GameButton(
+              text: l10n.cancel,
+              baseColor: Colors.white70,
               onPressed: () => Navigator.of(ctx).pop(),
-              child: Text(
-                l10n.cancel,
-                style: const TextStyle(color: Colors.white70),
-              ),
+              height: 40,
+              width: 100,
             ),
           ],
         );
@@ -415,22 +367,16 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                                   children: shopState.cardsForSale.map((card) {
                                     final int price =
                                         ShopController.getCardPrice(
-                                          card.rarity,
-                                        );
+                                      card.rarity,
+                                    );
                                     final bool canAfford =
                                         inventoryState.gold >= price;
                                     return _ShopCardItem(
                                       card: card,
                                       price: price,
                                       onPressed: () => _buyCard(card, price),
-                                      rarityLabel: _getRarityLabel(
-                                        card.rarity,
-                                        l10n,
-                                      ),
-                                      targetLabel: _getTargetLabel(
-                                        card.target,
-                                        l10n,
-                                      ),
+                                      rarityLabel: card.rarity.getLabel(l10n),
+                                      targetLabel: card.target.getLabel(l10n),
                                       canAfford: canAfford,
                                     );
                                   }).toList(),
@@ -520,23 +466,15 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                         ),
                       ),
                       const SizedBox(height: 20),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          backgroundColor: Colors.blueAccent,
-                          foregroundColor: Colors.white,
-                        ),
+                      GameButton(
+                        text: l10n.leaveShop,
                         onPressed: () {
                           ref.read(runProvider.notifier).completeCurrentNode();
                           Navigator.of(context).pop();
                         },
-                        child: Text(
-                          l10n.leaveShop,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        baseColor: Colors.blueAccent,
+                        height: 54,
+                        fontSize: 18,
                       ),
                     ],
                   ),
@@ -635,40 +573,15 @@ class _ShopServiceWidgetState extends State<_ShopServiceWidget> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                ElevatedButton.icon(
+                GameButton(
+                  text: '',
+                  goldCost: widget.price,
                   onPressed: widget.onPressed,
-                  icon: const Icon(
-                    Icons.monetization_on,
-                    color: Colors.amber,
-                    size: 12,
-                  ),
-                  label: Text(
-                    '${widget.price}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: widget.onPressed == null
-                        ? Colors.grey
-                        : (widget.canAfford
-                              ? (_isHovered
-                                    ? Colors.green.shade700
-                                    : Colors.green.shade900)
-                              : (_isHovered
-                                    ? Colors.red.shade700
-                                    : Colors.red.shade900)),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 4,
-                      vertical: 2,
-                    ),
-                    minimumSize: const Size(double.infinity, 28),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
+                  baseColor: widget.onPressed == null
+                      ? Colors.grey
+                      : (widget.canAfford ? Colors.green : Colors.red),
+                  height: 32,
+                  fontSize: 12,
                 ),
               ],
             ),
@@ -741,42 +654,13 @@ class _ShopCardItemState extends State<_ShopCardItem> {
                 },
               ),
               const SizedBox(height: 8),
-              ElevatedButton.icon(
+              GameButton(
+                text: '',
+                goldCost: widget.price,
                 onPressed: widget.onPressed,
-                icon: const Icon(
-                  Icons.monetization_on,
-                  color: Colors.amber,
-                  size: 14,
-                ),
-                label: Text(
-                  '${widget.price}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: widget.canAfford
-                      ? (_isHovered
-                            ? Colors.green.shade700
-                            : Colors.green.shade900)
-                      : (_isHovered
-                            ? Colors.red.shade700
-                            : Colors.red.shade900),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 4,
-                  ),
-                  minimumSize: const Size(60, 32),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    side: BorderSide(
-                      color: _isHovered ? Colors.amber : Colors.transparent,
-                      width: 1,
-                    ),
-                  ),
-                ),
+                baseColor: widget.canAfford ? Colors.green : Colors.red,
+                height: 32,
+                fontSize: 12,
               ),
             ],
           ),

@@ -42,14 +42,7 @@ class EffectIcon extends PositionComponent with HasPaint {
 
   @override
   void render(Canvas canvas) {
-    // TextComponent / PositionComponent opacity handling with saveLayer for clean fade out
-    if (opacity < 1) {
-      canvas.saveLayer(size.toRect(), paint);
-      _drawVector(canvas);
-      canvas.restore();
-    } else {
-      _drawVector(canvas);
-    }
+    _drawVector(canvas);
     super.render(canvas);
   }
 

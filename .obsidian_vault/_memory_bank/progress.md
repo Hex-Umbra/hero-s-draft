@@ -3,11 +3,11 @@
 Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnalités de **Hero's Draft** : opérationnelles, partiellement implémentées, non implémentées, et les chantiers de refactoring prioritaires issus des rapports de dette technique.
 
 **Métriques du projet** :
-- **~10 600 lignes** de code source dans `lib/` (65 fichiers).
+- **~11 000 lignes** de code source dans `lib/` (68 fichiers, module `lib/ui/theme/` ajouté).
 - **8 fichiers JSON** de données d'assets.
-- **103 tests automatisés** — 100% au vert.
+- **104 tests automatisés** — 100% au vert.
 - **0 erreur** via `flutter analyze`.
-- **~111 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
+- **~115 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
 
 ---
 
@@ -35,6 +35,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 
 | Fonctionnalité | Controller/Provider | Détails |
 |:---|:---|:---|
+| Modernisation Riverpod | `Tous les Providers` | Migration vers `Notifier` et `NotifierProvider` de Riverpod 2.x, communication inter-contrôleurs interne via `ref.read` sans injection par constructeur, et immuabilité stricte de `CardInstance` (v0.0.97) |
 | Logique de Run | `RunController` / `runProvider` | Suivi PV, mana, armorMastery, luck, acte, level, XP, carte, passifs, reliques |
 | Système de Progression XP | `RunController.gainXp()` | Progression XP exponentielle ($100 \times 1.5^{lvl-1}$), gains multiples et carry-over |
 | Échelonnement Ennemis | `CombatController.initializeCombat()` | Multiplicateurs dynamiques (+12% HP/lvl, +8% ATK/lvl) et calcul de combat level |
@@ -98,6 +99,10 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Fonctionnalité | Implémentation | Détails |
 |:---|:---|:---|
 | `UiCard` unifié | `lib/ui/widgets/ui_card.dart` | Remplace 6 rendus dupliqués, ratio 70/110, gradients par rareté |
+| Système de Design Centralisé | `lib/ui/theme/app_colors.dart`, `app_spacing.dart`, `app_theme.dart` | `AppColors` (Neon Dark + Parchemin + stats + raretés + sémantiques), `AppSpacing` (EdgeInsets helpers), `AppTheme` (ThemeData complet dark/light) — v0.0.99 |
+| Extensions Enum Rareté | `CardRarity.color`, `RelicRarity.color` (extensions Dart) | Getter `.color` centralisé sur les enums de rareté de cartes et reliques, remplace les switch-case dispersés — v0.0.99 |
+| Correction `GameButton` overflow | `lib/ui/widgets/game_button.dart` | Résolution du bug `RenderFlex` overflow sur les boutons or-seulement (icône sans libellé) — v0.0.99 |
+| Refactoring `RelicsDialog` | `lib/ui/widgets/relics_dialog.dart` | Remplacement d'un `switch` de 19 lignes par `.color` via extension `RelicRarity` — v0.0.99 |
 | Tilt organique des cartes | `CardComponent` (DragCallbacks) | Rotation proportionnelle à la vélocité horizontale au glissement |
 | Shake d'erreur mana | `CardComponent._shakeAnimation()` | `SequenceEffect` oscillations rapides en cas de manque de mana |
 | Courbe de ciblage Bézier | `targeting_line.dart` | Courbe quadratique de Bézier fluide avec pointillés défilants et tête orientée via la tangente |
@@ -122,6 +127,10 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Badges de Ciblage de Cartes | `UiCard` / `GameScreen` | Badges de ciblage animés (Single, AoE, Self) avec support bilingue ('Cible unique', 'Tous les ennemis', 'Soi-même'), enveloppés de `FittedBox` |
 | Badges d'inventaire sur la Carte | `MapScreen` | Compteur numérique sur le bouton des Reliques et badge numérique sur le bouton du Deck affichant la taille du master deck |
 | Scaling Échelle Ennemis | `EnemyCard` | Facteurs d'échelle visuelle progressifs sur les sprites des ennemis pour refléter leur puissance relative |
+| Optimisations de Rendu GPU | `FloatingText`, `EffectIcon` | Élimination des appels GPU lents/redondants `saveLayer` au profit d'un dessin direct sur canvas (v0.0.98) |
+| Caching CPU & Opacité Textes | `CardComponent`, `TextPainter` | Caching des layouts de texte complexes et utilisation conditionnelle de `saveLayer` uniquement si `opacity < 1.0` (v0.0.98) |
+| Transition Organique de Pioche | `HerosDraftGame`, `CardComponent` | Spawning des cartes à la pioche `Vector2(40, size.y - 40)` avec glissement, scale et rotation asynchrones vers la main (v0.0.98) |
+| Synchro d'Impact & Anti-Double | `EnemyCard`, `CardAnimator` | Dégâts et effets d'impact (flashs, tremblements, particules) différés jusqu'à la collision physique réelle; suppression des doublons (v0.0.98) |
 
 
 ### 💀 Z-Sync Death & Stats System (Système de Mort et de Stats Synchronisé)
@@ -132,6 +141,8 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Synchronisation des statistiques HUD | `_pendingVisualInstance` & `resolvePendingVisualStats()` | Diffère la diminution visuelle des HP et de l'armure dans le HUD jusqu'à l'instant exact de l'impact de la carte |
 | Libération à l'impact | `resolvePendingDeaths()` | Déclenche instantanément la mort de tous les ennemis différés et applique les stats différées à la complétion du coup |
 | Morts/Stats hors combat instantanées | Bypass automatique | Les morts/stats hors combat (poison de début de tour) contournent Z-Sync et se résolvent de suite |
+| Deferral Visuel Complet d'Impact | `EnemyCard.updateStats()` | Retarde l'apparition des tremblements, flashs de sprite, particules et FloatingText jusqu'à l'impact de la carte de combat (v0.0.98) |
+| Nettoyage de Double Réaction | `CardAnimator` | Suppression des doubles déclenchements pour éviter de lancer plusieurs fois les animations d'impact (v0.0.98) |
 
 ### ✨ Statuts Élémentaires & Vulnérabilité (`burn`, `freeze`, `shock`, `vulnerable`)
 
@@ -159,7 +170,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 
 | Métrique | Valeur | Détails |
 |:---|:---|:---|
-| Tests automatisés | **100** (100% VERT) | Tests unitaires, widget-tests et tests d'intégration (dont génération de carte avec anti-répétition et quotas, responsivité du HUD de combat, badges de ciblage, badge de taille de deck, et scaling dynamique des caractéristiques/sprites des ennemis) |
+| Tests automatisés | **104** (100% VERT) | Tests unitaires, widget-tests et tests d'intégration (dont génération de carte avec anti-répétition et quotas, responsivité du HUD de combat, badges de ciblage, badge de taille de deck, et scaling dynamique des caractéristiques/sprites des ennemis) |
 | Couverture estimée | **~22%** | Logique/controllers, moteur tutoriel, forge, pas d'UI de production |
 | Analyse statique | **0 erreur** | `flutter analyze` sans erreur de compilation |
 | Linter | `flutter_lints` v6.0.0 | Configuration standard, pas de règles custom |
@@ -251,10 +262,10 @@ Basé sur les rapports de dette technique (`technical_debt_report_Opus4.6.md`, 4
 | Priorité | Chantier | Problème | Solution | Fichiers |
 |:---|:---|:---|:---|:---|
 | Critique | Typage des modèles | `==`/`hashCode` absents sur 12 modèles, `Map<String, dynamic>` non typés | Ajouter `freezed` ou implémenter manuellement | `lib/models/` (11 fichiers) |
-| Critique | Immuabilité réelle des listes | Listes mutables dans états "immuables" | `List.unmodifiable()` systématique | Tous les controllers |
+| Critique | Immuabilité réelle des listes | Listes mutables dans états "immuables" | ✅ List.unmodifiable() et final dans CardInstance (v0.0.97) | Tous les controllers |
 | Critique | Validation des entrées | `gainGold(-50)` fonctionne, HP peut dépasser maxHP | Ajouter validation dans chaque mutation | `run_controller.dart`, `inventory_controller.dart` |
 | Important | Error handling I/O | Aucun `try-catch` dans `GameDataService` | Wrapping avec fallbacks gracieux | `game_data_service.dart` |
-| Important | Design System | Pas de `AppColors`, `AppTextStyles` — 100+ magic constants | Créer `lib/ui/theme/` | Nouveau fichier |
+| Important | Design System | ~~Pas de `AppColors`, `AppTextStyles` — 100+ magic constants~~ | ✅ `AppColors`, `AppSpacing`, `AppTheme` créés dans `lib/ui/theme/` + extensions enum rareté (v0.0.99) | `lib/ui/theme/` |
 | Moyen | Lookup O(1) | `GameDataRegistry` utilise `List` avec O(n) | Migrer vers `Map<String, T>` | `game_data_registry.dart` |
 
 ### 🟡 Phase 2 — Décomposition God Classes (Semaines 3-4)
@@ -274,7 +285,7 @@ Basé sur les rapports de dette technique (`technical_debt_report_Opus4.6.md`, 4
 | Important | Couverture tests | ~15-20% estimée | Atteindre ≥50%, ajouter widget tests UI |
 | Important | Magic constants | 100+ valeurs codées en dur | Extraire dans `GameConstants` étendu |
 | Important | `EffectResolver` pattern | Classe statique avec switch géant | Migrer vers Strategy/Command pattern |
-| Important | Logique dans Flame | `executeSkill()` calcule des dégâts dans `HerosDraftGame` | Déplacer vers un controller dédié |
+| Important | Logique dans Flame | `executeSkill()` calcule des dégâts dans `HerosDraftGame` | ✅ Déplacé vers CombatController (v0.0.97) |
 | Moyen | Logique dans UI | Shop/event/heal dans les écrans (Reward déplacé vers RewardController en v0.0.94) | Déplacer vers controllers |
 
 ### 🔵 Phase 4 — Long Terme (Semaines 7+)

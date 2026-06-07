@@ -206,10 +206,7 @@ class EnemyCard extends PositionComponent
     );
   }
 
-  void updateStats(EnemyInstance newInstance) {
-    final oldStats = stats;
-    final newStats = newInstance.stats;
-
+  void _triggerHitReactions(EntityStats oldStats, EntityStats newStats) {
     final isEnemyTurnPhase = game.currentPhase == TurnPhase.enemy;
     final hadPoison = oldStats.statuses.any((s) => s.id == 'poison');
     final isPoisonDamage = isEnemyTurnPhase && hadPoison;
@@ -251,31 +248,34 @@ class EnemyCard extends PositionComponent
         count: isCritical ? 25 : (isPoisonDamage ? 12 : 15),
       );
     }
+  }
 
+  void updateStats(EnemyInstance newInstance) {
     if (game.isCardAnimating) {
       _pendingVisualInstance = newInstance;
     } else {
+      _triggerHitReactions(stats, newInstance.stats);
       instance = newInstance;
       _refreshBadges();
       buffIndicator.updateStatuses(
-        newStats.statuses.where((s) => s.type == StatusType.buff).toList(),
+        instance.stats.statuses.where((s) => s.type == StatusType.buff).toList(),
       );
       debuffIndicator.updateStatuses(
-        newStats.statuses.where((s) => s.type == StatusType.debuff).toList(),
+        instance.stats.statuses.where((s) => s.type == StatusType.debuff).toList(),
       );
     }
   }
 
   void resolvePendingVisualStats() {
     if (_pendingVisualInstance != null) {
+      _triggerHitReactions(stats, _pendingVisualInstance!.stats);
       instance = _pendingVisualInstance!;
-      final newStats = stats;
       _refreshBadges();
       buffIndicator.updateStatuses(
-        newStats.statuses.where((s) => s.type == StatusType.buff).toList(),
+        instance.stats.statuses.where((s) => s.type == StatusType.buff).toList(),
       );
       debuffIndicator.updateStatuses(
-        newStats.statuses.where((s) => s.type == StatusType.debuff).toList(),
+        instance.stats.statuses.where((s) => s.type == StatusType.debuff).toList(),
       );
       _pendingVisualInstance = null;
     }

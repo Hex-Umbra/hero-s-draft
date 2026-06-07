@@ -35,8 +35,11 @@ class DeckState {
   }
 }
 
-class DeckNotifier extends StateNotifier<DeckState> {
-  DeckNotifier() : super(const DeckState());
+class DeckNotifier extends Notifier<DeckState> {
+  @override
+  DeckState build() {
+    return const DeckState();
+  }
 
   /// Vide complètement le deck (pour une nouvelle run)
   void clearDeck() {
@@ -235,6 +238,4 @@ class DeckNotifier extends StateNotifier<DeckState> {
   }
 }
 
-final deckProvider = StateNotifierProvider<DeckNotifier, DeckState>((ref) {
-  return DeckNotifier();
-});
+final deckProvider = NotifierProvider<DeckNotifier, DeckState>(DeckNotifier.new);

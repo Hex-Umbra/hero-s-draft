@@ -118,8 +118,6 @@ void main() {
 
         eventController.selectChoice(
           choice,
-          runController,
-          inventoryController,
           [],
         );
 
@@ -139,8 +137,6 @@ void main() {
 
       eventController.selectChoice(
         choice,
-        runController,
-        inventoryController,
         [],
       );
 
@@ -157,8 +153,6 @@ void main() {
         // This should pick a Legendary relic from our pool
         final chosen = eventController.selectChoice(
           choice,
-          runController,
-          inventoryController,
           testRelicPool,
           mockRoll: 0.5,
         );
@@ -178,8 +172,6 @@ void main() {
       // Roll is 50.0, which is > any high rarity chance, so it should fallback to common
       final chosen = eventController.selectChoice(
         choice,
-        runController,
-        inventoryController,
         testRelicPool,
         mockRoll: 50.0,
       );

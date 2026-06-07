@@ -3,10 +3,11 @@ import '../../models/inventory_state.dart';
 import '../../models/data/relic_data.dart';
 import 'run_controller.dart';
 
-class InventoryController extends StateNotifier<InventoryState> {
-  final Ref ref;
-
-  InventoryController(this.ref) : super(const InventoryState());
+class InventoryController extends Notifier<InventoryState> {
+  @override
+  InventoryState build() {
+    return const InventoryState();
+  }
 
   void gainGold(int amount) {
     state = state.copyWith(gold: state.gold + amount);
@@ -54,6 +55,4 @@ class InventoryController extends StateNotifier<InventoryState> {
 }
 
 final inventoryProvider =
-    StateNotifierProvider<InventoryController, InventoryState>((ref) {
-      return InventoryController(ref);
-    });
+    NotifierProvider<InventoryController, InventoryState>(InventoryController.new);

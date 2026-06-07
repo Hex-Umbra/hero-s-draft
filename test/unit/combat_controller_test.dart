@@ -13,6 +13,7 @@ import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/status_effect.dart';
 import 'package:roguelike_card_game/models/map_node.dart';
 import 'package:roguelike_card_game/models/entity_stats.dart';
+import 'package:roguelike_card_game/models/data/skill_data.dart';
 
 void main() {
   group('CombatController Tests', () {
@@ -59,7 +60,8 @@ void main() {
     test(
       'initializeCombat sets state, scales hp/attack for standard/elite/boss nodes, and rolls first intent',
       () {
-        final combatController = CombatController();
+        final container = ProviderContainer();
+        final combatController = container.read(combatProvider.notifier);
 
         // Standard Node
         combatController.initializeCombat(1, MapNodeType.combat, [goblinData]);
@@ -97,7 +99,8 @@ void main() {
     );
 
     test('selectEnemy updates targeted enemy and handles null selection', () {
-      final combatController = CombatController();
+      final container = ProviderContainer();
+      final combatController = container.read(combatProvider.notifier);
 
       final enemy1 = EnemyInstance(
         data: goblinData,
@@ -135,8 +138,8 @@ void main() {
     });
 
     test('resolveEnemyIntent applies intent effects to the player and self', () {
-      final combatController = CombatController();
       final container = ProviderContainer();
+      final combatController = container.read(combatProvider.notifier);
       final runController = container.read(runProvider.notifier);
       runController.startNewRun(paladinHero);
 
@@ -164,7 +167,7 @@ void main() {
 
       final playerHpBefore =
           runController.currentState.heroStats.currentPv; // 100
-      combatController.resolveEnemyIntent(enemy.id, runController);
+      combatController.resolveEnemyIntent(enemy.id);
 
       // Player HP should decrease by 5
       expect(
@@ -181,7 +184,7 @@ void main() {
       expect(updatedEnemy.stats.armure, 0);
 
       // Apply defense intent
-      combatController.resolveEnemyIntent(updatedEnemy.id, runController);
+      combatController.resolveEnemyIntent(updatedEnemy.id);
       final defendedEnemy = combatController.currentState.enemies.first;
       // Enemy armor should increase by 6
       expect(defendedEnemy.stats.armure, 6);
@@ -190,8 +193,8 @@ void main() {
     test(
       'startEnemyTurn ticks statuses (Poison) on all enemies and cleans up dead ones',
       () {
-        final combatController = CombatController();
         final container = ProviderContainer();
+        final combatController = container.read(combatProvider.notifier);
         final runController = container.read(runProvider.notifier);
         runController.startNewRun(paladinHero);
 
@@ -253,7 +256,7 @@ void main() {
         expect(combatController.currentState.enemies[1].stats.currentPv, 30);
 
         // Act
-        combatController.startEnemyTurn(runController);
+        combatController.startEnemyTurn();
 
         // Assert: Orc should be dead (cleared), goblin should take 3 poison damage (current HP: 17)
         expect(combatController.currentState.enemies.length, 1);
@@ -277,9 +280,11 @@ void main() {
     test(
       'applyPlayerCardPlay plays Strike card, consumes mana, resolves damage, and cleans dead enemies',
       () {
-        final combatController = CombatController();
         final container = ProviderContainer();
+        final combatController = container.read(combatProvider.notifier);
         final runController = container.read(runProvider.notifier);
+        final deckNotifier = container.read(deckProvider.notifier);
+
         runController.startNewRun(paladinHero);
 
         // Inject +5 strength to player hero to test force bonus scaling (Strike 6 + 5 = 11 dmg)
@@ -292,8 +297,6 @@ void main() {
             duration: 99,
           ),
         );
-
-        final deckNotifier = DeckNotifier();
 
         final enemy = EnemyInstance(
           data: goblinData,
@@ -337,8 +340,6 @@ void main() {
         // Play strike: hero effectiveAttaque is 5, card damage is 6, total damage is 6 + 5 = 11.
         combatController.applyPlayerCardPlay(
           strikeCard,
-          runController,
-          deckNotifier,
         );
 
         expect(
@@ -357,8 +358,6 @@ void main() {
         // Play strike again: HP 9 - 11 <= 0. Enemy should die, combat should end.
         combatController.applyPlayerCardPlay(
           strikeCard,
-          runController,
-          deckNotifier,
         );
 
         expect(combatController.currentState.enemies.isEmpty, isTrue);
@@ -370,8 +369,8 @@ void main() {
     test(
       'initializeCombat has null selectedEnemyId and does not auto-select on enemy death',
       () {
-        final combatController = CombatController();
         final container = ProviderContainer();
+        final combatController = container.read(combatProvider.notifier);
         final runController = container.read(runProvider.notifier);
         runController.startNewRun(paladinHero);
 
@@ -411,9 +410,7 @@ void main() {
           actualEnemy1Id,
           const EntityStats(maxPv: 20, currentPv: 0, armure: 0, attaque: 5),
         );
-        combatController.startEnemyTurn(
-          runController,
-        ); // This will clean up dead enemies (enemy1)
+        combatController.startEnemyTurn(); // This will clean up dead enemies (enemy1)
 
         // enemy1 is dead, selectedEnemyId should now be null, NOT fallback to enemy2
         expect(combatController.currentState.selectedEnemyId, isNull);
@@ -423,9 +420,11 @@ void main() {
     test(
       'Burn, Freeze, and Shock status effects are resolved correctly in combat',
       () {
-        final combatController = CombatController();
         final container = ProviderContainer();
+        final combatController = container.read(combatProvider.notifier);
         final runController = container.read(runProvider.notifier);
+        final deckNotifier = container.read(deckProvider.notifier);
+
         runController.startNewRun(paladinHero);
 
         final enemy = EnemyInstance(
@@ -462,7 +461,6 @@ void main() {
 
         // Play a card that deals 6 damage (Strike).
         // Since strength is 0, base damage = 6. With shock, it should do 6 + 4 = 10 damage.
-        final deckNotifier = DeckNotifier();
         final strikeCard = CardInstance(
           data: const CardData(
             id: 'strike',
@@ -485,8 +483,6 @@ void main() {
 
         combatController.applyPlayerCardPlay(
           strikeCard,
-          runController,
-          deckNotifier,
         );
 
         // Enemy HP should be 20 - 10 = 10
@@ -518,7 +514,7 @@ void main() {
 
         final playerHpBeforeAttack =
             runController.currentState.heroStats.currentPv; // should be 100
-        combatController.resolveEnemyIntent(enemy.id, runController);
+        combatController.resolveEnemyIntent(enemy.id);
 
         // Attack damage of 10 should be halved to 5 because of freeze
         expect(
@@ -549,7 +545,7 @@ void main() {
         // then multiplied by 1.5 because of vulnerable: 5 * 1.5 = 7.5 -> 8.
         final playerHpBeforeVulnerableAttack =
             runController.currentState.heroStats.currentPv; // 100
-        combatController.resolveEnemyIntent(enemy.id, runController);
+        combatController.resolveEnemyIntent(enemy.id);
 
         expect(
           runController.currentState.heroStats.currentPv,
@@ -587,8 +583,6 @@ void main() {
         deckNotifier.state = deckNotifier.state.copyWith(hand: [strikeCard]);
         combatController.applyPlayerCardPlay(
           strikeCard,
-          runController,
-          deckNotifier,
         );
         // Enemy HP should be 20 - 9 = 11.
         expect(combatController.currentState.enemies.first.stats.currentPv, 11);
@@ -614,7 +608,7 @@ void main() {
             .first
             .stats
             .currentPv; // should be 11
-        combatController.startEnemyTurn(runController);
+        combatController.startEnemyTurn();
 
         // Enemy HP should decrease by 3 due to burn, so 11 - 3 = 8
         expect(
@@ -623,5 +617,105 @@ void main() {
         );
       },
     );
+
+    test('executeSkill resolves damage_aoe, damage_targeted, damage_pierce, and armor_buff correctly', () {
+      final container = ProviderContainer();
+      final combatController = container.read(combatProvider.notifier);
+      final runController = container.read(runProvider.notifier);
+      runController.startNewRun(paladinHero);
+      runController.state = runController.state.copyWith(
+        heroStats: runController.state.heroStats.copyWith(attaque: 5),
+      );
+
+      final enemy1 = EnemyInstance(
+        data: goblinData,
+        stats: const EntityStats(
+          maxPv: 20,
+          currentPv: 20,
+          armure: 10,
+          attaque: 5,
+        ),
+      );
+      final enemy2 = EnemyInstance(
+        data: orcData,
+        stats: const EntityStats(
+          maxPv: 30,
+          currentPv: 30,
+          armure: 0,
+          attaque: 8,
+        ),
+      );
+
+      combatController.state = CombatState(
+        enemies: [enemy1, enemy2],
+        selectedEnemyId: enemy1.id,
+        turnPhase: TurnPhase.player,
+      );
+
+      // 1. damage_aoe test
+      // Hero base damage is 5 (effectiveAttaque = 5 since strength is 0)
+      // effectValue = 200 (i.e. 200% scaling -> 5 * 2.0 = 10 damage)
+      final aoeSkill = const SkillData(
+        id: 'aoe_test',
+        name: 'AOE Test',
+        manaCost: 0,
+        effectType: 'damage_aoe',
+        effectValue: 200,
+      );
+
+      combatController.executeSkill(aoeSkill);
+      // Enemy 2 has 30 HP, 0 armor. 30 - 10 = 20.
+      expect(combatController.currentState.enemies[1].stats.currentPv, 20);
+
+      // 2. damage_targeted test
+      // Target enemy 1 (which has 10 armor and 20 HP originally).
+      // aoe skill did 10 damage: takeDamage(10) -> armor becomes 0, PV remains 20.
+      // Now, let's do a targeted skill on enemy1: 100% scaling -> 5 damage.
+      final targetedSkill = const SkillData(
+        id: 'targeted_test',
+        name: 'Targeted Test',
+        manaCost: 0,
+        effectType: 'damage_targeted',
+        effectValue: 100,
+      );
+      combatController.executeSkill(targetedSkill, targetEnemyId: enemy1.id);
+      // enemy1 has 0 armor, 20 HP. -5 damage -> 15 HP.
+      expect(combatController.currentState.enemies[0].stats.currentPv, 15);
+
+      // 3. damage_pierce test
+      // Deals effectiveAttaque (5 damage) and steals effectValue% armor (50% armor)
+      // Let's first set enemy1 armor to 10
+      combatController.updateEnemyStats(
+        enemy1.id,
+        combatController.currentState.enemies[0].stats.copyWith(armure: 10),
+      );
+      final pierceSkill = const SkillData(
+        id: 'pierce_test',
+        name: 'Pierce Test',
+        manaCost: 0,
+        effectType: 'damage_pierce',
+        effectValue: 50,
+      );
+      final heroArmorBefore = runController.currentState.heroStats.armure;
+      combatController.executeSkill(pierceSkill, targetEnemyId: enemy1.id);
+      // Stolen armor: 10 * 50% = 5.
+      // Enemy armor: 10 - 5 = 5.
+      // Enemy HP: 15 - 5 = 10.
+      expect(combatController.currentState.enemies[0].stats.armure, 5);
+      expect(combatController.currentState.enemies[0].stats.currentPv, 10);
+      expect(runController.currentState.heroStats.armure, heroArmorBefore + 5);
+
+      // 4. armor_buff test
+      final armorBuffSkill = const SkillData(
+        id: 'armor_test',
+        name: 'Armor Test',
+        manaCost: 0,
+        effectType: 'armor_buff',
+        effectValue: 8,
+      );
+      final heroArmorBeforeBuff = runController.currentState.heroStats.armure;
+      combatController.executeSkill(armorBuffSkill);
+      expect(runController.currentState.heroStats.armure, heroArmorBeforeBuff + 8);
+    });
   });
 }

@@ -62,10 +62,11 @@ class RewardState {
   }
 }
 
-class RewardController extends StateNotifier<RewardState> {
-  final Ref ref;
-
-  RewardController(this.ref) : super(const RewardState());
+class RewardController extends Notifier<RewardState> {
+  @override
+  RewardState build() {
+    return const RewardState();
+  }
 
   void handleVictory({
     required List<EnemyInstance> defeatedEnemies,
@@ -240,6 +241,4 @@ class RewardController extends StateNotifier<RewardState> {
   }
 }
 
-final rewardProvider = StateNotifierProvider<RewardController, RewardState>((ref) {
-  return RewardController(ref);
-});
+final rewardProvider = NotifierProvider<RewardController, RewardState>(RewardController.new);

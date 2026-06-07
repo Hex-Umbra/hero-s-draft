@@ -14,11 +14,15 @@ import '../services/combat_debug_logger.dart';
 import '../systems/encounter_system.dart';
 import '../systems/trait_system.dart';
 import '../services/effect_resolver.dart';
+import '../../../models/data/skill_data.dart';
 import 'run_controller.dart';
 import 'deck_controller.dart';
 
-class CombatController extends StateNotifier<CombatState> {
-  CombatController() : super(const CombatState());
+class CombatController extends Notifier<CombatState> {
+  @override
+  CombatState build() {
+    return const CombatState();
+  }
 
   CombatState get currentState => state;
 
@@ -188,12 +192,80 @@ class CombatController extends StateNotifier<CombatState> {
     );
   }
 
+  /// Résout les calculs et l'application d'un Skill (compétence héroïque)
+  void executeSkill(SkillData skill, {String? targetEnemyId}) {
+    final runController = ref.read(runProvider.notifier);
+    final heroStats = runController.currentState.heroStats;
+    final effectiveAttaque = runController.currentState.effectiveAttaque;
+
+    if (skill.effectType == 'damage_aoe') {
+      int dmg = (effectiveAttaque * (skill.effectValue / 100.0)).round();
+      final random = Random();
+      if (random.nextInt(100) < heroStats.effectiveCritChance) {
+        dmg = (dmg * heroStats.critMultiplier).round();
+      }
+      if (dmg < 1) dmg = 1;
+
+      state = state.copyWith(
+        enemies: state.enemies.map((enemy) {
+          return enemy.copyWith(stats: enemy.stats.takeDamage(dmg));
+        }).toList(),
+      );
+      _cleanDeadEnemies();
+    } else if (skill.effectType == 'damage_targeted' && targetEnemyId != null) {
+      int dmg = (effectiveAttaque * (skill.effectValue / 100.0)).round();
+      final random = Random();
+      if (random.nextInt(100) < heroStats.effectiveCritChance) {
+        dmg = (dmg * heroStats.critMultiplier).round();
+      }
+      if (dmg < 1) dmg = 1;
+
+      state = state.copyWith(
+        enemies: state.enemies.map((enemy) {
+          if (enemy.id != targetEnemyId) return enemy;
+          return enemy.copyWith(stats: enemy.stats.takeDamage(dmg));
+        }).toList(),
+      );
+      _cleanDeadEnemies();
+    } else if (skill.effectType == 'damage_pierce' && targetEnemyId != null) {
+      int dmg = effectiveAttaque;
+      final random = Random();
+      if (random.nextInt(100) < heroStats.effectiveCritChance) {
+        dmg = (dmg * heroStats.critMultiplier).round();
+      }
+
+      final enemyIndex = state.enemies.indexWhere((e) => e.id == targetEnemyId);
+      if (enemyIndex != -1) {
+        final enemy = state.enemies[enemyIndex];
+        int stolenArmor = (enemy.stats.armure * (skill.effectValue / 100.0)).round();
+        int newPv = enemy.stats.currentPv - dmg;
+        int newArm = enemy.stats.armure - stolenArmor;
+        if (newPv < 0) newPv = 0;
+        if (newArm < 0) newArm = 0;
+
+        state = state.copyWith(
+          enemies: state.enemies.map((e) {
+            if (e.id != targetEnemyId) return e;
+            return e.copyWith(
+              stats: e.stats.copyWith(currentPv: newPv, armure: newArm),
+            );
+          }).toList(),
+        );
+        if (stolenArmor > 0) {
+          runController.setHeroStats(armure: heroStats.armure + stolenArmor);
+        }
+        _cleanDeadEnemies();
+      }
+    } else if (skill.effectType == 'armor_buff') {
+      runController.setHeroStats(armure: heroStats.armure + skill.effectValue);
+    }
+  }
+
   /// Applique le jeu d'une carte par le joueur
-  void applyPlayerCardPlay(
-    CardInstance card,
-    RunController runController,
-    DeckNotifier deckController,
-  ) {
+  void applyPlayerCardPlay(CardInstance card) {
+    final runController = ref.read(runProvider.notifier);
+    final deckController = ref.read(deckProvider.notifier);
+
     // 1. Résolution des effets
     final success = EffectResolver.resolveCard(
       card,
@@ -221,12 +293,13 @@ class CombatController extends StateNotifier<CombatState> {
       }
 
       // 5. Nettoyer les morts
-      _cleanDeadEnemies(runController);
+      _cleanDeadEnemies();
     }
   }
 
   /// Applique l'effet de l'intention d'un ennemi
-  void resolveEnemyIntent(String enemyId, RunController runController) {
+  void resolveEnemyIntent(String enemyId) {
+    final runController = ref.read(runProvider.notifier);
     final index = state.enemies.indexWhere((e) => e.id == enemyId);
     if (index == -1) return;
     final enemy = state.enemies[index];
@@ -297,7 +370,7 @@ class CombatController extends StateNotifier<CombatState> {
   }
 
   /// Début du tour de l'ennemi (application des statuts autonomes)
-  void startEnemyTurn(RunController runController) {
+  void startEnemyTurn() {
     state = state.copyWith(turnPhase: TurnPhase.enemy);
 
     final List<EnemyInstance> updatedEnemies = [];
@@ -352,7 +425,7 @@ class CombatController extends StateNotifier<CombatState> {
     state = state.copyWith(enemies: updatedEnemies);
 
     // Nettoyer les morts (par exemple à cause du poison de début de tour)
-    _cleanDeadEnemies(runController);
+    _cleanDeadEnemies();
   }
 
   /// Fin de la phase ennemie : roll intents et retour au joueur
@@ -389,7 +462,8 @@ class CombatController extends StateNotifier<CombatState> {
   }
 
   /// Nettoie les ennemis décédés et met à jour les indicateurs de fin de combat
-  void _cleanDeadEnemies(RunController runController) {
+  void _cleanDeadEnemies() {
+    final runController = ref.read(runProvider.notifier);
     final List<EnemyInstance> remainingEnemies = [];
     final List<EnemyInstance> newlyKilledEnemies = [];
     int killedCount = 0;
@@ -475,8 +549,4 @@ class CombatController extends StateNotifier<CombatState> {
   }
 }
 
-final combatProvider = StateNotifierProvider<CombatController, CombatState>((
-  ref,
-) {
-  return CombatController();
-});
+final combatProvider = NotifierProvider<CombatController, CombatState>(CombatController.new);

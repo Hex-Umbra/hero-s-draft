@@ -9,6 +9,10 @@ class FloatingText extends TextComponent with HasPaint {
   final bool isPoison;
   final bool isShield;
 
+  final Color baseColor;
+  final List<Shadow> baseShadows;
+  double _opacity = 1.0;
+
   FloatingText({
     required String text,
     required Color color,
@@ -17,7 +21,33 @@ class FloatingText extends TextComponent with HasPaint {
     this.isUpward = true,
     this.isPoison = false,
     this.isShield = false,
-  }) : super(
+  }) : baseColor = color,
+       baseShadows = [
+         Shadow(
+           color: Colors.black.withValues(alpha: 0.8),
+           offset: const Offset(2, 2),
+           blurRadius: 4,
+         ),
+         if (isCritical)
+           const Shadow(
+             color: Colors.orangeAccent,
+             offset: Offset.zero,
+             blurRadius: 8,
+           ),
+         if (isPoison)
+           const Shadow(
+             color: Colors.greenAccent,
+             offset: Offset.zero,
+             blurRadius: 6,
+           ),
+         if (isShield)
+           const Shadow(
+             color: Colors.cyanAccent,
+             offset: Offset.zero,
+             blurRadius: 6,
+           ),
+       ],
+       super(
          text: text,
          position: position,
          anchor: Anchor.center,
@@ -56,17 +86,31 @@ class FloatingText extends TextComponent with HasPaint {
        );
 
   @override
-  void render(Canvas canvas) {
-    // TextComponent ne supporte pas l'opacité nativement via OpacityEffect
-    // sans utiliser un saveLayer ou modifier le textRenderer.
-    // L'utilisation de saveLayer ici permet à l'OpacityEffect de fonctionner.
-    if (opacity < 1) {
-      canvas.saveLayer(size.toRect(), paint);
-      super.render(canvas);
-      canvas.restore();
-    } else {
-      super.render(canvas);
-    }
+  double get opacity => _opacity;
+
+  @override
+  set opacity(double value) {
+    if (_opacity == value) return;
+    _opacity = value;
+    paint.color = paint.color.withValues(alpha: value);
+    _updateTextStyle();
+  }
+
+  void _updateTextStyle() {
+    textRenderer = TextPaint(
+      style: TextStyle(
+        color: baseColor.withValues(alpha: _opacity),
+        fontSize: isCritical ? 36 : (isPoison ? 22 : 26),
+        fontWeight: FontWeight.bold,
+        shadows: baseShadows.map((shadow) {
+          return Shadow(
+            color: shadow.color.withValues(alpha: shadow.color.a * _opacity),
+            offset: shadow.offset,
+            blurRadius: shadow.blurRadius,
+          );
+        }).toList(),
+      ),
+    );
   }
 
   @override

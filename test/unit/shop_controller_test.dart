@@ -81,7 +81,7 @@ void main() {
       shopController = container.read(shopProvider.notifier);
       runController = container.read(runProvider.notifier);
       inventoryController = container.read(inventoryProvider.notifier);
-      deckNotifier = DeckNotifier();
+      deckNotifier = container.read(deckProvider.notifier);
 
       // Démarrer une run (initialise l'or à 50)
       runController.startNewRun(dummyHero);
@@ -111,8 +111,6 @@ void main() {
         final success = shopController.buyCard(
           cardToBuy,
           price,
-          inventoryController,
-          deckNotifier,
         );
 
         expect(success, true);
@@ -138,8 +136,6 @@ void main() {
       final success = shopController.buyCard(
         cardToBuy,
         100, // Prix rare
-        inventoryController,
-        deckNotifier,
       );
 
       expect(success, false);
@@ -149,8 +145,6 @@ void main() {
       final tryAgain = shopController.buyCard(
         cardToBuy,
         100,
-        inventoryController,
-        deckNotifier,
       );
       expect(tryAgain, false);
       expect(shopController.state.cardsForSale.contains(cardToBuy), true);
@@ -165,8 +159,6 @@ void main() {
       final success = shopController.buyHeal(
         30,
         30,
-        inventoryController,
-        runController,
       );
 
       expect(success, true);
@@ -178,8 +170,6 @@ void main() {
       final success2 = shopController.buyHeal(
         30,
         30,
-        inventoryController,
-        runController,
       );
       expect(success2, false);
       expect(runController.state.heroStats.currentPv, 90); // inchangé
@@ -196,7 +186,6 @@ void main() {
         final success = shopController.expandShop(
           10,
           testCardPool,
-          inventoryController,
         );
 
         expect(success, true);
@@ -213,7 +202,6 @@ void main() {
         15,
         testCardPool,
         0,
-        inventoryController,
       );
 
       expect(success, true);
@@ -230,8 +218,6 @@ void main() {
       final success = shopController.purgeCard(
         75,
         cardToPurge,
-        inventoryController,
-        deckNotifier,
       );
 
       expect(success, true);
@@ -247,8 +233,6 @@ void main() {
       final success = shopController.cloneCard(
         50,
         cardToClone,
-        inventoryController,
-        deckNotifier,
       );
 
       expect(success, true);

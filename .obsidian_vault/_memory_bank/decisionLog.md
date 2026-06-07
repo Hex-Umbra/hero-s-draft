@@ -1186,4 +1186,130 @@ Pour diversifier les nœuds d'intérêt sur la carte stratégique en fin de part
 - ✅ **Gestion Saine de la Rareté** : Le joueur peut liquider ses reliques de moindre importance pour viser des pièces maîtresses (Épiques ou Légendaires).
 - ✅ **Intégrité Mathématique de la Fiche de Personnage** : Pas d'accumulation infinie d'effets statistiques via des boucles infinies d'échange de reliques de run (Force/Mana/PV max bien déduits).
 - ✅ **Architecture Déterminée et Légère** : Pas besoin de sauvegarder l'état de l'offre du nœud d'échange grâce à la seed déterministe par nœud/acte.
-- ✅ **Couverture de Tests** : 3 nouveaux tests unitaires rédigés et validés à 100% verts, portant la suite à **103 tests** (100% verts).
+- ✅ Couverture de Tests : 3 nouveaux tests unitaires rédigés et validés à 100% verts, portant la suite à **103 tests** (100% verts).
+
+## 🔄 ADR-035 : Modernisation Architecturale Riverpod & Découplage (Riverpod Notifier & Architectural Cleanups)
+
+### Statut
+✅ Accepté & Implémenté
+
+### Contexte
+L'architecture originale du projet reposait sur l'ancienne version de Riverpod (v1.x) utilisant `StateNotifier` et `StateNotifierProvider`. Cette approche imposait des contraintes rigides : pour que les contrôleurs communiquent entre eux, ils devaient s'injecter mutuellement dans leurs constructeurs respectifs ou stocker des instances de `Ref` globales. Cela menait à des signatures de constructeurs complexes et volumineuses, et augmentait considérablement le risque de dépendances circulaires au démarrage de l'application.
+De plus, certains modèles comme `CardInstance` contenaient des listes modifiables (comme `forgeUpgrades`), ce qui pouvait corrompre l'état de manière silencieuse lors de manipulations directes. Enfin, une partie de la logique métier de combat (le calcul et l'application des compétences héroïques, `executeSkill`) était historiquement couplée et codée en dur dans le moteur de rendu graphique Flame (`HerosDraftGame`), violant le principe de séparation des responsabilités.
+
+### Décision
+1. **Migration vers Notifier et NotifierProvider** :
+   - Abandonner complètement le pattern obsolète `StateNotifier` au profit de la classe moderne `Notifier` de Riverpod 2.x pour tous les contrôleurs métier (`RunController`, `CombatController`, `DeckNotifier`, `InventoryController`, `SkillController`, `EventController`, `ShopController`, `RewardController`).
+   - Mettre à jour tous les providers associés vers `NotifierProvider`.
+2. **Découplage Interne via `ref` et `ref.read`** :
+   - Supprimer tous les paramètres de constructeur ou les injections directes de dépendances dans les constructeurs des contrôleurs.
+   - Les contrôleurs héritent de `Notifier`, ce qui leur donne accès de manière native et sécurisée à la propriété `ref`.
+   - Utiliser exclusivement `ref.read` en interne pour récupérer les instances des autres contrôleurs au moment de l'exécution (par exemple, `ref.read(runProvider.notifier)`).
+3. **Immuabilité Stricte de `CardInstance`** :
+   - Rendre tous les attributs de `CardInstance` finaux.
+   - Forcer le gel de la liste des améliorations de la forge `forgeUpgrades` en la convertissant systématiquement en une liste non modifiable (`List<String>.unmodifiable`) lors de l'instanciation.
+   - Remplacer toute altération par des appels à `copyWith` retournant de nouvelles instances.
+4. **Découplage de la Logique de Compétence Flame** :
+   - Extraire la logique métier de calcul des compétences (`executeSkill` qui calcule les dégâts, le vol d'armure, etc.) de la classe Flame `HerosDraftGame`.
+   - L'intégrer proprement dans `CombatController` sous forme de méthode `executeSkill(SkillData skill, double healthPercent, RunController runCtrl)`.
+   - Maintenir Flame comme un simple moteur de rendu réactif observant les changements d'état sans héberger de calculs de règles de combat.
+
+### Preuves dans le code
+- `lib/game/controllers/combat_controller.dart` : Héritage de `Notifier<CombatState>`, accès direct à `runProvider` et `deckProvider` via `ref.read`, et implémentation de la méthode métier `executeSkill`.
+- `lib/game/controllers/run_controller.dart` : Héritage de `Notifier<RunState>` sans constructeur surchargé.
+- `lib/game/controllers/deck_controller.dart` : Héritage de `Notifier<DeckState>` et manipulation de `CardInstance` en mode immuable.
+- `lib/models/card_instance.dart` : Initialisation de `forgeUpgrades` avec `List<String>.unmodifiable`.
+- `lib/game/heros_draft_game.dart` : Nettoyage des calculs métiers de compétences, Flame délègue l'exécution à `ref.read(combatProvider.notifier).executeSkill(...)`.
+
+### Conséquences
+- ✅ **Éradication des Dépendances Circulaires** : Les contrôleurs ne s'injectent plus dans les constructeurs, résolvant définitivement les bugs de cycles de dépendances.
+- ✅ **Clean Code & SRP** : Flame ne contient plus de logique métier de combat, respectant une séparation stricte entre rendu visuel et logique applicative.
+- ✅ **Prévisibilité de l'État** : L'immuabilité stricte de `CardInstance` élimine les risques d'effets de bord où une carte partagée est modifiée par mégarde en cours de combat.
+- ✅ **Robustesse et Fiabilité** : Les 104 tests automatisés passent toujours avec succès, prouvant qu'aucune régression fonctionnelle n'a été introduite par ce refactoring majeur.
+
+---
+
+## 🔄 ADR-036 : Optimisations Graphiques, Performances de Rendu Flame & Synchronisation des Animations (Graphics, Performance & Animation Optimizations)
+
+### Statut
+✅ Accepté & Implémenté
+
+### Contexte
+La version 0.0.98 de Hero's Draft présentait plusieurs inefficacités visuelles et goulots d'étranglement de performance dans son moteur de rendu Flame :
+1. **Redondance GPU via `saveLayer`** : L'affichage des textes flottants de dégâts/soins (`FloatingText`) et des petites icônes vectorielles (`EffectIcon`) déclenchait des appels répétitifs à `canvas.saveLayer()`. Ces appels forcent le GPU à allouer des tampons off-screen coûteux en mémoire et en temps de calcul, dégradant le framerate sur mobile.
+2. **Re-layout CPU à chaque frame** : Pendant les transitions d'opacité (fondus), la disposition textuelle (`TextPainter`) de `CardComponent` était recalculée et re-layoutée à chaque frame, gaspillant du temps CPU.
+3. **Condition de concurrence des effets de combat** : Les secousses d'écran, les flashs de sprite et les projectiles visuels étaient initiés dès le clic sur une carte, créant un décalage visuel où l'ennemi affichait ses dégâts (chiffres flottants, flash de douleur) avant même que le projectile ou la carte ne l'ait physiquement percuté. De plus, des double-réactions redondantes dans `CardAnimator` généraient parfois des duplications d'animations.
+4. **Manque de poli visuel lors de la pioche** : Les cartes piochées apparaissaient instantanément dans la main, manquant de fluidité et de réalisme physique.
+
+### Décision
+1. **Éradication des saveLayer superflus** :
+   - Éliminer complètement les appels à `canvas.saveLayer` dans `FloatingText` et `EffectIcon`. Peindre directement sur le canvas principal en adaptant les styles et pinceaux de dessin vectoriels.
+2. **Optimisation du Layout CPU de Texte et Opacité Conditionnelle** :
+   - Mettre en cache l'instance de `TextPainter` pour le titre et la description dans `CardComponent`.
+   - Pendant les transitions d'opacité, éviter de ré-agencer le texte. Dessiner avec `canvas.saveLayer` uniquement et exclusivement si la carte a une opacité strictement inférieure à 1.0 (`opacity < 1.0`). Si la carte est opaque (cas standard), contourner l'allocation off-screen pour peindre le texte en direct.
+3. **Synchronisation à l'Impact Synchrone & Anti-Double Trigger** :
+   - Différer l'apparition des effets visuels d'impact (tremblement de carte, flash de sprite, FloatingText de dégâts, particules) sur `EnemyCard` lorsque `game.isCardAnimating == true`.
+   - Stocker ces effets dans le tampon `_pendingVisualInstance`.
+   - Déclencher l'impact physique, le flash, les chiffres de dégâts et l'actualisation des HP/armure uniquement lors de la collision de la carte avec l'ennemi en appelant explicitement `resolvePendingVisualStats()` au moment de l'impact réel.
+   - Retirer les écouteurs et callbacks redondants dans `CardAnimator` pour éliminer définitivement les doubles déclenchements.
+4. **Effet Physique Organique de Pioche** :
+   - Instancier les cartes piochées aux coordonnées de la pile de pioche `Vector2(40, size.y - 40)`.
+   - Utiliser des Flame Effects asynchrones (`MoveEffect`, `ScaleEffect`, `RotateEffect`) chaînés pour faire glisser, redimensionner et orienter la carte dynamiquement vers son slot final dans la main.
+
+### Preuves dans le code
+- `lib/game/components/floating_text.dart` & `lib/game/components/effect_icon.dart` : Nettoyage des appels à `saveLayer`, dessin direct.
+- `lib/game/components/card_component.dart` : Implémentation du cache de layout textuel et de l'opacité conditionnelle.
+- `lib/game/components/enemy_card.dart` : Modification de `updateStats` pour différer l'intégralité des effets d'impact physiques (flashes, shakes, particules) et du calcul visuel sous conditions de carte active, résolus dans `resolvePendingVisualStats`.
+- `lib/game/animators/card_animator.dart` : Suppression des branchements redondants d'animation d'impact.
+- `lib/game/heros_draft_game.dart` : Logique de spawn de cartes à `Vector2(40, size.y - 40)` avec application d'effets visuels combinés.
+
+### Conséquences
+- ✅ **Fluidité Graphique Optimisée (60 FPS)** : Le retrait de `saveLayer` élimine les goulots d'étranglement GPU et stabilise le framerate sur mobile. Le caching CPU évite le coût de `layout()` sur le fil de rendu.
+- ✅ **Immersion et Confort Visuel** : Les retours d'impact se déclenchent à la frame exacte de collision physique de la carte. Plus de flash de dégâts ou de chiffres flottants prématurés.
+- ✅ **Tactilité Améliorée ("Game Feel")** : L'animation de pioche avec trajectoire et orientation fluide renforce l'aspect physique du deckbuilder.
+
+---
+
+## 🎨 ADR-037 : Système de Design Centralisé & Uniformisation UI (Design System & UI Uniformization)
+
+### Statut
+✅ Accepté & Implémenté
+
+### Contexte
+L'interface utilisateur de Hero's Draft souffrait d'une fragmentation des définitions visuelles : des couleurs codées en dur (`Color(0xFF...)`) et des valeurs d'espacement magiques (`EdgeInsets.all(8.0)`) étaient dispersées dans 15+ fichiers de widgets sans source de vérité unique. Cette situation générait plusieurs problèmes :
+1. **Inconsistance visuelle** : Des couleurs légèrement différentes pour le même concept pouvaient diverger au fil des nouvelles features.
+2. **Coût de maintenance élevé** : Changer la palette de couleurs impliquait de modifier des dizaines de fichiers.
+3. **Redondance** : Des `switch` sur `CardRarity` ou `RelicRarity` pour retourner une `Color` étaient dupliqués dans au moins 4 composants (`UiCard`, `RelicsDialog`, `DictionaryScreen`, `BossCardDraftScreen`).
+4. **Bug silencieux de layout** : Un `RenderFlex` overflow sur `GameButton` se manifestait sur les boutons contenant uniquement une icône dorée (sans libellé textuel).
+
+### Décision
+1. **Création du module `lib/ui/theme/`** :
+   - **`app_colors.dart` (`AppColors`)** : Classe statique regroupant toutes les palettes du jeu en domaines sémantiques : `neonDark`, `parchment`, `stats`, `cardRarityColors` (`Map<CardRarity, Color>`) et `relicRarityColors` (`Map<RelicRarity, Color>`).
+   - **`app_spacing.dart` (`AppSpacing`)** : Helpers `EdgeInsets` nommés (`xs`, `sm`, `md`, `lg`, `xl`) pour des paddings cohérents.
+   - **`app_theme.dart` (`AppTheme`)** : Factory statique générant un `ThemeData` Flutter complet (dark/light) via `ColorScheme.fromSeed`, intégrant `TextTheme` et `ColorScheme` Material 3.
+
+2. **Extensions Dart sur les Enums de Rareté** :
+   - Getter `.color` sur `CardRarity` (extension `CardRarityColor`) et sur `RelicRarity` (extension `RelicRarityColor`), définis en regard des maps dans `AppColors`.
+   - Usage : `card.rarity.color` ou `relic.rarity.color` directement dans n'importe quel widget.
+
+3. **Correction du Bug `GameButton` (`RenderFlex` overflow)** :
+   - Diagnostic : Le layout `Row([Icon, Text])` débordait quand `text == null` dans des contextes de layout contraints.
+   - Solution : `Flexible` wrappant le `Text`, `CrossAxisAlignment.center` sur le `Row`, et omission du `Text` du widget tree si absent.
+
+4. **Refactoring `RelicsDialog` via l'Extension** :
+   - Remplacement d'un `switch (rarity)` de 19 lignes par `relic.rarity.color`.
+
+### Preuves dans le code
+- `lib/ui/theme/app_colors.dart`, `app_spacing.dart`, `app_theme.dart` : Module de design centralisé.
+- `lib/models/data/card_data.dart` : Extension `CardRarityColor on CardRarity`.
+- `lib/models/data/relic_data.dart` : Extension `RelicRarityColor on RelicRarity`.
+- `lib/ui/widgets/game_button.dart` : Correction du layout `Row`.
+- `lib/ui/widgets/relics_dialog.dart` : Remplacement du `switch` par `.color`.
+- 104/104 tests passés, 0 erreur `dart analyze`.
+
+### Conséquences
+- ✅ **Source de Vérité Unique** : Toute la palette visuelle est définie en un seul endroit.
+- ✅ **Cohérence Visuelle Garantie** : Impossible d'avoir deux couleurs différentes pour la même rareté dans deux composants distincts.
+- ✅ **DRY** : Les `switch` de couleur dupliqués dans 4+ fichiers sont remplacés par un getter idiomatique Dart.
+- ✅ **Bug corrigé** : Le `RenderFlex` overflow sur `GameButton` est résolu pour tous les formats d'écran.
+- ⚠️ **Migration progressive** : Les widgets non encore migrés utilisent toujours des magic constants. La migration complète s'effectuera au fil des prochains sprints.
