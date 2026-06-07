@@ -123,6 +123,10 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Badges de Ciblage de Cartes | `UiCard` / `GameScreen` | Badges de ciblage animés (Single, AoE, Self) avec support bilingue ('Cible unique', 'Tous les ennemis', 'Soi-même'), enveloppés de `FittedBox` |
 | Badges d'inventaire sur la Carte | `MapScreen` | Compteur numérique sur le bouton des Reliques et badge numérique sur le bouton du Deck affichant la taille du master deck |
 | Scaling Échelle Ennemis | `EnemyCard` | Facteurs d'échelle visuelle progressifs sur les sprites des ennemis pour refléter leur puissance relative |
+| Optimisations de Rendu GPU | `FloatingText`, `EffectIcon` | Élimination des appels GPU lents/redondants `saveLayer` au profit d'un dessin direct sur canvas (v0.0.98) |
+| Caching CPU & Opacité Textes | `CardComponent`, `TextPainter` | Caching des layouts de texte complexes et utilisation conditionnelle de `saveLayer` uniquement si `opacity < 1.0` (v0.0.98) |
+| Transition Organique de Pioche | `HerosDraftGame`, `CardComponent` | Spawning des cartes à la pioche `Vector2(40, size.y - 40)` avec glissement, scale et rotation asynchrones vers la main (v0.0.98) |
+| Synchro d'Impact & Anti-Double | `EnemyCard`, `CardAnimator` | Dégâts et effets d'impact (flashs, tremblements, particules) différés jusqu'à la collision physique réelle; suppression des doublons (v0.0.98) |
 
 
 ### 💀 Z-Sync Death & Stats System (Système de Mort et de Stats Synchronisé)
@@ -133,6 +137,8 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Synchronisation des statistiques HUD | `_pendingVisualInstance` & `resolvePendingVisualStats()` | Diffère la diminution visuelle des HP et de l'armure dans le HUD jusqu'à l'instant exact de l'impact de la carte |
 | Libération à l'impact | `resolvePendingDeaths()` | Déclenche instantanément la mort de tous les ennemis différés et applique les stats différées à la complétion du coup |
 | Morts/Stats hors combat instantanées | Bypass automatique | Les morts/stats hors combat (poison de début de tour) contournent Z-Sync et se résolvent de suite |
+| Deferral Visuel Complet d'Impact | `EnemyCard.updateStats()` | Retarde l'apparition des tremblements, flashs de sprite, particules et FloatingText jusqu'à l'impact de la carte de combat (v0.0.98) |
+| Nettoyage de Double Réaction | `CardAnimator` | Suppression des doubles déclenchements pour éviter de lancer plusieurs fois les animations d'impact (v0.0.98) |
 
 ### ✨ Statuts Élémentaires & Vulnérabilité (`burn`, `freeze`, `shock`, `vulnerable`)
 

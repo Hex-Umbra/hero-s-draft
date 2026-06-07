@@ -1,5 +1,56 @@
 [
   {
+    "version": "0.0.98",
+    "date": "2026-06-07",
+    "title": "Fluidité & Impacts",
+    "sections": [
+      {
+        "category": "Nouvelles Fonctionnalités",
+        "emoji": "✨",
+        "entries": [
+          "Nouvelle animation organique de pioche : les cartes glissent, s'agrandissent et pivotent de manière dynamique depuis la pioche vers votre main."
+        ]
+      },
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "Optimisation du rendu du texte de combat et des icônes pour augmenter significativement la fluidité de l'affichage et éliminer les saccades lors des transitions de transparence.",
+          "Synchronisation précise des impacts de combat : les nombres de dégâts, flashs, secousses d'écran et effets de particules se déclenchent désormais exactement lors de l'impact physique de la carte."
+        ]
+      },
+      {
+        "category": "Corrections",
+        "emoji": "🐛",
+        "entries": [
+          "Suppression des effets visuels d'impact qui se déclenchaient en double lors de l'utilisation d'une carte."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "0.0.97",
+    "date": "2026-06-07",
+    "title": "Modernisation Technique",
+    "sections": [
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "Sécurisation de la détection des attributs des cartes pour éliminer les bugs visuels sur leurs statistiques."
+        ]
+      },
+      {
+        "category": "Technique",
+        "emoji": "🔧",
+        "entries": [
+          "Modernisation de l'architecture de la logique de jeu afin d'améliorer la stabilité globale et de faciliter l'ajout de futurs contenus.",
+          "Centralisation et standardisation de toute la logique de calcul de combat (dégâts, coups critiques, boucliers) pour des effets de cartes plus fiables."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.0.95",
     "date": "2026-06-05",
     "title": "L'Éveil des Reliques",

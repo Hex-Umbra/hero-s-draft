@@ -212,19 +212,6 @@ class CardAnimator {
         Vector2.all(0.0),
         EffectController(duration: 0.1),
         onComplete: () {
-          if (target != null) {
-            spawnImpactParticles(targetPos, color: color, count: 30);
-            target.shakeAndFlashAnimation(
-              isPoison: color == const Color(0xFF10B981),
-            );
-          } else {
-            for (final enemy in card.game.enemyCards) {
-              spawnImpactParticles(enemy.position, color: color, count: 20);
-              enemy.shakeAndFlashAnimation(
-                isPoison: color == const Color(0xFF10B981),
-              );
-            }
-          }
           onComplete();
         },
       ),
@@ -277,8 +264,6 @@ class CardAnimator {
                 color: Colors.redAccent,
               ),
             );
-            target.shakeAndFlashAnimation();
-            spawnImpactParticles(target.position, color: Colors.redAccent);
           } else {
             for (final enemy in card.game.enemyCards) {
               card.game.add(
@@ -288,8 +273,6 @@ class CardAnimator {
                   color: Colors.redAccent,
                 ),
               );
-              enemy.shakeAndFlashAnimation();
-              spawnImpactParticles(enemy.position, color: Colors.redAccent);
             }
           }
           onComplete();
@@ -335,23 +318,6 @@ class CardAnimator {
         Vector2.all(0.0),
         EffectController(duration: 0.2, curve: Curves.easeIn),
         onComplete: () {
-          if (target != null) {
-            spawnImpactParticles(
-              target.position,
-              color: Colors.purpleAccent,
-              count: 25,
-            );
-            target.shakeAndFlashAnimation();
-          } else {
-            for (final enemy in card.game.enemyCards) {
-              spawnImpactParticles(
-                enemy.position,
-                color: Colors.purpleAccent,
-                count: 20,
-              );
-              enemy.shakeAndFlashAnimation();
-            }
-          }
           onComplete();
         },
       ),

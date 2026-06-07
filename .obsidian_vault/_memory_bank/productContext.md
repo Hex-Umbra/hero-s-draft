@@ -447,6 +447,15 @@ Le coup critique introduit un élément probabiliste d'amplification des effets 
     - *Focus Lens* (`critical_lens`, Rare, trigger: `startOfCombat`) : confère un buff temporaire de $+15\%$ de critique en combat.
     - *Lucky Charm* (`lucky_charm`, Uncommon, trigger: `startOfRun`) : confère un bonus permanent de $+10\%$ de critique pour toute la run.
 
+
+### 3.12. 🎨 Optimisations Visuelles, Fluidité & Animations de Combat
+
+Le moteur graphique Flame intègre des optimisations avancées pour stabiliser le framerate à 60 FPS et maximiser la sensation tactile du jeu :
+- **Optimisation GPU (Dessin Direct)** : Les textes de combat (`FloatingText`) et icônes d'effets (`EffectIcon`) sont dessinés sans aucun appel coûteux à `canvas.saveLayer()`, évitant les surcoûts d'allocation GPU off-screen.
+- **Optimisation CPU (Cache de Disposition)** : Les composants textuels (`TextPainter`) de `CardComponent` sont mis en cache et ne subissent pas de re-layout pendant les animations. L'opacité est appliquée via `saveLayer` uniquement et conditionnellement lorsque `opacity < 1.0`.
+- **Physique de la Pioche** : Les cartes tirées apparaissent à l'emplacement de la pioche `Vector2(40, size.y - 40)` et effectuent des transitions physiques fluides (glissement, mise à l'échelle, rotation) vers la main.
+- **Synchronisation Synchrone d'Impact** : Pour un game feel immersif, l'ennemi ciblé ne subit ses effets visuels d'impact (flash de douleur, secousse, FloatingText, émission de particules) qu'au moment précis de la collision de la carte de combat. Les réactions redondantes ont été épurées de `CardAnimator` pour éliminer tout double-déclenchement.
+
 ---
 
 ## 4. Altérations d'État & Statuts (Status Effects)

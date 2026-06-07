@@ -386,11 +386,10 @@ Pour éliminer la condition de concurrence visuelle (race condition) où l'état
    - `enemyCard.isPendingDeath` (booléen local) : Flag indiquant que l'ennemi a été tué logiquement mais que sa suppression visuelle est mise en attente.
    - `enemyCard._pendingVisualInstance` (modèle `EnemyInstance?` local) : Buffer stockant l'état des statistiques logiques reçues durant le trajet de la carte afin d'en différer l'affichage HUD.
 
-2. **Diffèrement des Statistiques HUD réactives (`updateStats`)** :
+2. **Diffèrement des Statistiques HUD & Effets d'Impact (`updateStats`)** :
    - Lors de la réception de nouvelles statistiques dans `EnemyCard.updateStats(newInstance)` :
-     - Les effets visuels physiques d'impact (secousses `Curves.elasticOut`, flashes sprite `ColorEffect`, FloatingText, particules de dégâts) sont déclenchés **immédiatement** pour un ressenti dynamique instantané.
-     - Si `game.isCardAnimating == true`, la mise à jour de la barre de vie (`HealthBar`), du badge d'armure (`StatBadge`), et de la liste des icônes de buffs/debuffs est **bloquée** et stockée dans `_pendingVisualInstance`.
-     - Si faux, les badges et jauges sont actualisés de suite.
+     - Si `game.isCardAnimating == true`, la mise à jour de la barre de vie (`HealthBar`), du badge d'armure (`StatBadge`), de la liste des icônes de buffs/debuffs ainsi que **l'intégralité des effets visuels d'impact** (secousses `Curves.elasticOut`, flashes sprite `ColorEffect`, `FloatingText` de dégâts, et éjection de particules `spawnDamageParticles`) sont **différés** et stockés dans `_pendingVisualInstance`.
+     - Si `game.isCardAnimating == false` (dégâts passifs comme le poison ou la brûlure), les indicateurs et effets d'impact physiques sont appliqués et déclenchés immédiatement.
 
 3. **Interception du Nettoyage Visuel (`_applyCombatState`)** :
    Dans `_applyCombatState`, lors de l'application du delta des ennemis :
@@ -398,13 +397,14 @@ Pour éliminer la condition de concurrence visuelle (race condition) où l'état
      - Si `game.isCardAnimating == true`, le composant n'est **PAS** supprimé immédiatement. Il est marqué `isPendingDeath = true` et reste pleinement dessiné sur le board.
      - Si faux, il est supprimé ou anime sa disparition immédiatement (mort passive de début de tour, ex: poison).
 
-4. **Libération et Résolution Synchrone (`resolvePendingDeaths`)** :
+4. **Libération et Résolution Synchrone à l'Impact (`resolvePendingDeaths`)** :
    - Lorsque l'effet visuel de la carte se termine et impacte sa cible (physiquement ou magiquement) :
-     - Le callback `onComplete` ou de fin de mouvement est déclenché.
-     - Il appelle `game.resolvePendingDeaths()`.
+     - Le callback d'impact est déclenché sur la cible.
+     - Il appelle `card.resolvePendingVisualStats()` : cela applique le `_pendingVisualInstance` mis en réserve, actualise de façon synchrone les barres de vie, l'armure, les icônes de statuts, **ET** déclenche à cet instant précis les effets visuels physiques d'impact (secousses, flashes, particules, et damage numbers).
+     - Le callback de fin de mouvement de la carte appelle `game.resolvePendingDeaths()`.
      - Cette méthode bascule `game.isCardAnimating = false`.
-     - Elle parcourt toutes les `EnemyCard` pour appeler `card.resolvePendingVisualStats()` afin d'appliquer l'instance stockée dans `_pendingVisualInstance`, actualiser de façon synchrone les barres de vie, l'armure et les indicateurs à la frame exacte de l'impact visuel.
      - Elle lance simultanément l'animation de mort (réduction de taille via `ScaleEffect` et fondu d'opacité via `OpacityEffect` de Flame) pour toutes les `EnemyCard` ayant `isPendingDeath == true`.
+     - Les réactions dupliquées ont été nettoyées de `CardAnimator` pour prévenir tout double déclenchement visuel.
 
 ---
 
@@ -565,6 +565,23 @@ Pour augmenter la sensation d'excitation et de "butin" lors de l'acquisition de 
 
 4. **Découplage Audio via Callbacks** :
    - Les callbacks de sound hooks `onTick` (à chaque franchissement d'index de carte) et `onLand` (lors de la stabilisation finale) permettent de câbler proprement le moteur sonore de l'application sans couple visuel.
+
+### 5.10. Optimisations de Rendu GPU/CPU & Effet Physique de Pioche
+
+Afin de garantir un framerate stable de 60 FPS sur mobile et d'assurer un "game feel" fluide, les optimisations suivantes ont été intégrées :
+
+1. **Élimination de saveLayer GPU** :
+   - Les appels à `canvas.saveLayer()` sont extrêmement coûteux en GPU car ils allouent des tampons off-screen.
+   - Les composants `FloatingText` et `EffectIcon` ont été restructurés pour dessiner directement sur le canvas principal sans faire d'appels à `saveLayer` redondants.
+
+2. **Mise en cache CPU (Text Painters) dans CardComponent** :
+   - Les calculs de disposition (`TextPainter.layout`) consomment du CPU de façon significative.
+   - Le texte des cartes est mis en cache sous forme de layout stable dans `CardComponent`. Pendant les animations de transition d'opacité, le texte n'est pas ré-aligné ni ré-agencé.
+   - L'opacité est gérée via `canvas.saveLayer()` uniquement de manière conditionnelle si l'opacité est strictement inférieure à 1.0 (`opacity < 1.0`). Si la carte est pleinement opaque, le texte est dessiné sans aucun buffer off-screen.
+
+3. **Transition Physique Organique de la Pioche** :
+   - Lors du tirage d'une carte, celle-ci apparaît physiquement au niveau des coordonnées de la pile de pioche (`Vector2(40, size.y - 40)`).
+   - Une série de Flame Effects asynchrones (déplacement `MoveEffect`, redimensionnement `ScaleEffect`, rotation `RotateEffect`) déplace et oriente dynamiquement la carte vers son slot assigné dans la main en arc de cercle, évitant l'apparition instantanée et statique.
 
 ---
 

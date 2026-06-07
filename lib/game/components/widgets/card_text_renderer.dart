@@ -655,7 +655,7 @@ class CardTextRenderer {
       );
       canvas.drawRRect(
         RRect.fromRectAndRadius(badgeRect, const Radius.circular(4)),
-        Paint()..color = badgeColor.withAlpha((180 * opacity).toInt()),
+        Paint()..color = badgeColor.withAlpha(180),
       );
       targetPainter!.paint(
         canvas,

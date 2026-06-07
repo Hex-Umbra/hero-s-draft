@@ -42,7 +42,6 @@ class CardComponent extends PositionComponent
   set opacity(double value) {
     if (_opacity == value) return;
     _opacity = value;
-    refreshVisuals();
   }
 
   bool get canAfford {
@@ -129,7 +128,7 @@ class CardComponent extends PositionComponent
   }
 
   void refreshVisuals() {
-    textRenderer.refreshVisuals(opacity, isFlashing, isCancelling);
+    textRenderer.refreshVisuals(1.0, isFlashing, isCancelling);
   }
 
   @override
@@ -421,6 +420,14 @@ class CardComponent extends PositionComponent
 
   @override
   void render(Canvas canvas) {
+    final bool useSaveLayer = opacity < 1.0;
+    if (useSaveLayer) {
+      canvas.saveLayer(
+        size.toRect(),
+        Paint()..color = Colors.white.withValues(alpha: opacity),
+      );
+    }
+
     final rect = size.toRect();
     final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(12));
     final typeColor = getTypeColor();
@@ -463,6 +470,10 @@ class CardComponent extends PositionComponent
     }
 
     super.render(canvas);
+
+    if (useSaveLayer) {
+      canvas.restore();
+    }
   }
 
   @override

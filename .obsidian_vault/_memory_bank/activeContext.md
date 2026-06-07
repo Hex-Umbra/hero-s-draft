@@ -4,9 +4,9 @@ Ce document décrit le focus actif du projet, les accomplissements récents, et 
 
 ## 1. Focus Actuel du Projet
 
-Le projet vient de finaliser la migration de son architecture globale (Version 0.0.97 : Modernisation Architecturale & Découplage). Cette mise à jour remplace le pattern legacy `StateNotifier` par les classes modernes `Notifier` et `NotifierProvider` de Riverpod 2.x, renforce l'immuabilité stricte du modèle `CardInstance`, découple totalement les contrôleurs (qui s'appellent désormais en interne via `ref.read` sans injection par constructeur), et assainit le moteur de jeu Flame en externalisant la logique des compétences (`executeSkill`) dans `CombatController`. L'ensemble des 104 tests unitaires et d'intégration passe toujours au vert.
+Le projet vient de finaliser l'optimisation des performances graphiques de Flame et la synchronisation des animations de combat (Version 0.0.98 : Optimisations Graphiques & Fluidité des Animations). Cette mise à jour élimine les allocations GPU coûteuses (`saveLayer`), met en cache les calculs de texte complexes, aligne visuellement les impacts des cartes avec la logique de combat, et enrichit l'effet de pioche par une transition physique fluide.
 
-Le focus actuel se tourne vers les étapes restantes de la Phase 7 de la roadmap technique (Autosave/Persistance, parallélisation I/O dans `GameDataService`, et intégration audio).
+Le focus actuel se tourne désormais vers les étapes restantes de la Phase 7 de la roadmap technique (Autosave/Persistance, parallélisation I/O dans `GameDataService`, et intégration audio).
 
 ---
 
@@ -122,6 +122,15 @@ Le focus actuel se tourne vers les étapes restantes de la Phase 7 de la roadmap
      - **Découplage des contrôleurs** : Élimination complète des paramètres de constructeur injectant des `Ref` ou d'autres contrôleurs. Utilisation directe de `ref.read` de manière interne pour la communication inter-contrôleurs, éliminant les couplages rigides et les dépendances circulaires au démarrage.
      - **Immuabilité stricte de `CardInstance`** : Conversion systématique des listes d'améliorations de la forge (`forgeUpgrades`) en listes non modifiables via `List.unmodifiable(...)` à l'instanciation de `CardInstance`, garantissant qu'aucune carte en main ou dans le deck ne soit altérée silencieusement.
      - **Externalisation de la logique Flame** : Extraction complète de la logique métier de calcul des compétences (`executeSkill`) du moteur de jeu Flame (`heros_draft_game.dart`) vers `CombatController` (Riverpod), garantissant que le moteur de rendu Flame reste purement passif et découplé des calculs de dégâts ou de vol d'armure.
+
+ 17. **Optimisations Graphiques, Performances & Animations Fluides (Version 0.0.98)** :
+     - **Performances de Rendu Flame** : Élimination des appels GPU lents/redondants `saveLayer()` dans `FloatingText` et `EffectIcon` pour peindre directement sur le canvas principal.
+     - **Mise en Cache CPU des Layouts** : Caching des `TextPainter` dans `CardComponent` pour éviter les calculs coûteux de layout textuel à chaque frame lors des transitions d'opacité. Utilisation de `saveLayer` uniquement sous condition stricte (`opacity < 1.0`).
+     - **Synchronisation Synchrone à l'Impact** : Report des secousses, flashs, animations de particules, et modifications de points de vie dans `EnemyCard` au moment de la collision réelle de la carte de combat (en appelant `resolvePendingVisualStats` à l'impact).
+     - **Prévention des Doubles Déclenchements** : Retrait des réactions redondantes dans `CardAnimator` pour éliminer les bugs d'animation d'impact double.
+     - **Transition Organique de Pioche** : Les cartes tirées apparaissent à la coordonnée de la pioche `Vector2(40, size.y - 40)` et glissent, pivotent et s'adaptent à l'échelle via des Flame Effects jusqu'à leur position finale dans l'arc circulaire de la main.
+
+---
 
 ---
 

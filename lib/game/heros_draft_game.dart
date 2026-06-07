@@ -393,6 +393,8 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
 
     for (var c in cardsToAdd) {
       final cardComp = CardComponent(c);
+      cardComp.position = Vector2(40, size.y - 40);
+      cardComp.scale = Vector2.zero();
       handCards.add(cardComp);
       add(cardComp);
     }
@@ -435,13 +437,43 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
 
       if (card.isDragging) continue;
 
+      final Vector2 targetPos;
+      final double targetAngle = angle;
+      final Vector2 targetScale;
+
       if (card == focusedCard) {
-        card.position = Vector2(x, y) + Vector2(0, -60);
-        card.angle = angle;
+        targetPos = Vector2(x, y) + Vector2(0, -60);
+        targetScale = Vector2.all(scaleFactor * 0.88 * 1.25);
+      } else if (card == hoveredCard) {
+        targetPos = Vector2(x, y);
+        targetScale = Vector2.all(scaleFactor * 0.88 * 1.2);
       } else {
-        card.position = Vector2(x, y);
-        card.angle = angle;
+        targetPos = Vector2(x, y);
+        targetScale = Vector2.all(scaleFactor * 0.88);
       }
+
+      card.removeAll(card.children.whereType<MoveEffect>());
+      card.removeAll(card.children.whereType<RotateEffect>());
+      card.removeAll(card.children.whereType<ScaleEffect>());
+
+      card.add(
+        MoveEffect.to(
+          targetPos,
+          EffectController(duration: 0.35, curve: Curves.easeOutCubic),
+        ),
+      );
+      card.add(
+        RotateEffect.to(
+          targetAngle,
+          EffectController(duration: 0.35, curve: Curves.easeOutCubic),
+        ),
+      );
+      card.add(
+        ScaleEffect.to(
+          targetScale,
+          EffectController(duration: 0.35, curve: Curves.easeOutCubic),
+        ),
+      );
 
       if (card != hoveredCard && card != focusedCard) {
         card.priority = card.basePriority;
