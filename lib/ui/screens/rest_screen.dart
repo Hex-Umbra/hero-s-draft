@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
+import 'package:roguelike_card_game/models/data/model_extensions.dart';
+import 'package:roguelike_card_game/ui/theme/app_spacing.dart';
+import 'package:roguelike_card_game/ui/widgets/game_button.dart';
 import '../../game/controllers/run_controller.dart';
 import '../../game/controllers/deck_controller.dart';
 import '../../models/card_instance.dart';
-import '../../models/data/card_data.dart';
 import '../widgets/ui_card.dart';
 import '../widgets/notification_overlay.dart';
 import '../widgets/forge_upgrade_dialog.dart';
@@ -47,7 +49,8 @@ class _RestScreenState extends ConsumerState<RestScreen> {
 
     if (selectedCard != null) {
       final rarityIndex = selectedCard.rarity.index;
-      final totalMaxForgeUpgrades = selectedCard.data.baseMaxForgeUpgrades + rarityIndex;
+      final totalMaxForgeUpgrades =
+          selectedCard.data.baseMaxForgeUpgrades + rarityIndex;
       if (selectedCard.forgeUpgrades.length >= totalMaxForgeUpgrades) {
         if (mounted) {
           context.showNotification(
@@ -115,6 +118,7 @@ class _RestScreenState extends ConsumerState<RestScreen> {
     required String subtitle,
   }) {
     final locale = Localizations.localeOf(context).languageCode;
+    final l10n = AppLocalizations.of(context)!;
     return showModalBottomSheet<CardInstance>(
       context: context,
       isScrollControlled: true,
@@ -122,7 +126,7 @@ class _RestScreenState extends ConsumerState<RestScreen> {
       builder: (context) {
         return Container(
           height: MediaQuery.of(context).size.height * 0.8,
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.md),
           child: Column(
             children: [
               Text(
@@ -133,12 +137,12 @@ class _RestScreenState extends ConsumerState<RestScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 8),
+              AppSpacing.heightSm,
               Text(
                 subtitle,
                 style: const TextStyle(color: Colors.white70, fontSize: 14),
               ),
-              const Divider(color: Colors.white24, height: 32),
+              const Divider(color: Colors.white24, height: AppSpacing.xl),
               Expanded(
                 child: Consumer(
                   builder: (context, ref, child) {
@@ -146,11 +150,11 @@ class _RestScreenState extends ConsumerState<RestScreen> {
                     return GridView.builder(
                       gridDelegate:
                           const SliverGridDelegateWithMaxCrossAxisExtent(
-                            maxCrossAxisExtent: 180,
-                            childAspectRatio: 0.6,
-                            crossAxisSpacing: 10,
-                            mainAxisSpacing: 10,
-                          ),
+                        maxCrossAxisExtent: 180,
+                        childAspectRatio: 0.6,
+                        crossAxisSpacing: AppSpacing.sm,
+                        mainAxisSpacing: AppSpacing.sm,
+                      ),
                       itemCount: deck.length,
                       itemBuilder: (context, index) {
                         final card = deck[index];
@@ -164,7 +168,7 @@ class _RestScreenState extends ConsumerState<RestScreen> {
                             type: card.data.type,
                             targetType: card.data.target,
                             isExhaust: card.data.isExhaust,
-                            rarity: _getRarityLabel(context, card.rarity),
+                            rarity: card.rarity.getLabel(l10n),
                             forgeUpgrades: card.forgeUpgrades,
                             rarityMultiplier: card.rarityMultiplier,
                           ),
@@ -203,7 +207,7 @@ class _RestScreenState extends ConsumerState<RestScreen> {
               end: Alignment.bottomCenter,
               colors: [
                 Colors.black,
-                const Color(0xFF1A0A00).withAlpha(180), // Ambiance feu de camp
+                const Color(0xFF1A0A00).withAlpha(180),
                 Colors.black,
               ],
             ),
@@ -218,7 +222,7 @@ class _RestScreenState extends ConsumerState<RestScreen> {
                     color: Colors.orangeAccent,
                     size: 80,
                   ),
-                  const SizedBox(height: 20),
+                  AppSpacing.heightMd,
                   Text(
                     l10n.restCampTitle,
                     style: const TextStyle(
@@ -228,7 +232,7 @@ class _RestScreenState extends ConsumerState<RestScreen> {
                       letterSpacing: 4,
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  AppSpacing.heightSm,
                   Text(
                     l10n.restCampSubtitle,
                     style: TextStyle(
@@ -237,7 +241,7 @@ class _RestScreenState extends ConsumerState<RestScreen> {
                       fontStyle: FontStyle.italic,
                     ),
                   ),
-                  const SizedBox(height: 60),
+                  AppSpacing.heightXxl,
                   if (!_actionTaken) ...[
                     _RestOption(
                       icon: Icons.favorite,
@@ -248,7 +252,7 @@ class _RestScreenState extends ConsumerState<RestScreen> {
                       onTap: _heal,
                       color: Colors.greenAccent,
                     ),
-                    const SizedBox(height: 20),
+                    AppSpacing.heightMd,
                     _RestOption(
                       icon: Icons.auto_fix_high,
                       title: l10n.restCampForge,
@@ -256,7 +260,7 @@ class _RestScreenState extends ConsumerState<RestScreen> {
                       onTap: _upgradeCard,
                       color: Colors.amberAccent,
                     ),
-                    const SizedBox(height: 20),
+                    AppSpacing.heightMd,
                     _RestOption(
                       icon: Icons.delete_sweep,
                       title: l10n.restCampRemove,
@@ -270,24 +274,13 @@ class _RestScreenState extends ConsumerState<RestScreen> {
                       color: Colors.green,
                       size: 100,
                     ),
-                    const SizedBox(height: 30),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white12,
-                        side: const BorderSide(color: Colors.white54),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 40,
-                          vertical: 20,
-                        ),
-                      ),
+                    AppSpacing.heightLg,
+                    GameButton(
+                      text: l10n.restCampProceed,
                       onPressed: _leave,
-                      child: Text(
-                        l10n.restCampProceed,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      baseColor: Colors.white70,
+                      height: 54,
+                      width: 220,
                     ),
                   ],
                 ],
@@ -298,27 +291,9 @@ class _RestScreenState extends ConsumerState<RestScreen> {
       ),
     );
   }
-
-  String _getRarityLabel(BuildContext context, CardRarity rarity) {
-    final l10n = AppLocalizations.of(context)!;
-    switch (rarity) {
-      case CardRarity.common:
-        return l10n.rarityCommon;
-      case CardRarity.uncommon:
-        return l10n.rarityUncommon;
-      case CardRarity.rare:
-        return l10n.rarityRare;
-      case CardRarity.epic:
-        return l10n.rarityEpic;
-      case CardRarity.legendary:
-        return l10n.rarityLegendary;
-      case CardRarity.unique:
-        return 'Unique';
-    }
-  }
 }
 
-class _RestOption extends StatelessWidget {
+class _RestOption extends StatefulWidget {
   final IconData icon;
   final String title;
   final String description;
@@ -334,47 +309,76 @@ class _RestOption extends StatelessWidget {
   });
 
   @override
+  State<_RestOption> createState() => _RestOptionState();
+}
+
+class _RestOptionState extends State<_RestOption> {
+  bool _isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 320,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(15),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white.withAlpha(10),
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      cursor: SystemMouseCursors.click,
+      child: AnimatedScale(
+        scale: _isHovered ? 1.03 : 1.0,
+        duration: const Duration(milliseconds: 150),
+        child: SizedBox(
+          width: 320,
+          child: InkWell(
+            onTap: widget.onTap,
             borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: color.withAlpha(100), width: 2),
-          ),
-          child: Row(
-            children: [
-              Icon(icon, color: color, size: 40),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        color: color,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      description,
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
+            child: Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: _isHovered
+                    ? widget.color.withValues(alpha: 0.15)
+                    : Colors.white.withAlpha(10),
+                borderRadius: BorderRadius.circular(15),
+                border: Border.all(
+                  color: _isHovered ? widget.color : widget.color.withAlpha(100),
+                  width: 2,
                 ),
+                boxShadow: [
+                  if (_isHovered)
+                    BoxShadow(
+                      color: widget.color.withValues(alpha: 0.2),
+                      blurRadius: 8,
+                      spreadRadius: 1,
+                    ),
+                ],
               ),
-            ],
+              child: Row(
+                children: [
+                  Icon(widget.icon, color: widget.color, size: 40),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.title,
+                          style: TextStyle(
+                            color: widget.color,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        AppSpacing.heightXs,
+                        Text(
+                          widget.description,
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),

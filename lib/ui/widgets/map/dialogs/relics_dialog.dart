@@ -2,9 +2,10 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
+import 'package:roguelike_card_game/models/data/model_extensions.dart';
+import 'package:roguelike_card_game/ui/widgets/game_dialog.dart';
 import '../../../../game/controllers/inventory_controller.dart';
 import '../../../../models/data/relic_data.dart';
-import '../../blur_wrapper.dart';
 
 class RelicsDialog extends ConsumerWidget {
   const RelicsDialog({super.key});
@@ -33,7 +34,6 @@ class RelicsDialog extends ConsumerWidget {
     final inventoryState = ref.watch(inventoryProvider);
     final relics = inventoryState.relics;
 
-    // Regroupement des reliques par doublon (stacking)
     final Map<String, int> relicCounts = {};
     final Map<String, RelicData> relicMap = {};
     for (var r in relics) {
@@ -45,142 +45,111 @@ class RelicsDialog extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).languageCode;
 
-    return BlurWrapper(
-      sigma: 8,
-      child: Center(
-        child: Container(
-          width: min(MediaQuery.of(context).size.width * 0.9, 850),
-          height: min(MediaQuery.of(context).size.height * 0.85, 650),
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: const Color(0xFF1E1E2C),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: Colors.amberAccent.withValues(alpha: 0.3),
-              width: 2,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.amberAccent.withValues(alpha: 0.1),
-                blurRadius: 30,
-                spreadRadius: 5,
-              ),
-            ],
+    return GameDialog(
+      glowColor: Colors.amberAccent,
+      maxWidth: min(MediaQuery.of(context).size.width * 0.9, 850),
+      title: Row(
+        children: [
+          const Icon(
+            Icons.inventory_2,
+            color: Colors.amber,
+            size: 32,
           ),
-          child: Material(
-            color: Colors.transparent,
+          const SizedBox(width: 12),
+          Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.inventory_2,
-                      color: Colors.amber,
-                      size: 32,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.relicInventory.toUpperCase(),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1.1,
-                            ),
-                          ),
-                          Text(
-                            locale == 'fr'
-                                ? 'Objets magiques passifs en votre possession'
-                                : 'Passive magical items in your possession',
-                            style: const TextStyle(
-                              color: Colors.white60,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white70),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                  ],
+                Text(
+                  l10n.relicInventory.toUpperCase(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.1,
+                  ),
                 ),
-                const Divider(color: Colors.white12, height: 24),
-                Expanded(
-                  child: relics.isEmpty
-                      ? Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.workspace_premium_outlined,
-                              size: 72,
-                              color: Colors.white.withValues(alpha: 0.1),
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              l10n.emptyInventory,
-                              style: const TextStyle(
-                                color: Colors.white60,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 32.0,
-                              ),
-                              child: Text(
-                                locale == 'fr'
-                                    ? 'Triomphez des monstres Élites ou explorez la Boutique pour acquérir des Reliques et obtenir de précieux effets passifs.'
-                                    : 'Defeat Elite monsters or explore the Shop to acquire Relics and obtain precious passive effects.',
-                                style: const TextStyle(
-                                  color: Colors.white38,
-                                  fontSize: 12,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                          ],
-                        )
-                      : LayoutBuilder(
-                          builder: (context, constraints) {
-                            final double availableWidth = constraints.maxWidth;
-                            // Une relique prend exactement la moitié de la largeur disponible (2 colonnes) avec un espacement de 16px
-                            final double cardWidth = (availableWidth - 16) / 2;
-                            const double cardHeight = 110;
-
-                            return SingleChildScrollView(
-                              child: Wrap(
-                                spacing: 16,
-                                runSpacing: 16,
-                                children: uniqueIds.map((id) {
-                                  final relic = relicMap[id]!;
-                                  final count = relicCounts[id]!;
-                                  return SizedBox(
-                                    width: cardWidth,
-                                    height: cardHeight,
-                                    child: _buildRelicCard(
-                                      context,
-                                      relic,
-                                      count,
-                                    ),
-                                  );
-                                }).toList(),
-                              ),
-                            );
-                          },
-                        ),
+                Text(
+                  locale == 'fr'
+                      ? 'Objets magiques passifs en votre possession'
+                      : 'Passive magical items in your possession',
+                  style: const TextStyle(
+                    color: Colors.white60,
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),
           ),
+        ],
+      ),
+      content: Material(
+        color: Colors.transparent,
+        child: SizedBox(
+          height: min(MediaQuery.of(context).size.height * 0.55, 450),
+          child: relics.isEmpty
+              ? Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.workspace_premium_outlined,
+                      size: 72,
+                      color: Colors.white.withValues(alpha: 0.1),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      l10n.emptyInventory,
+                      style: const TextStyle(
+                        color: Colors.white60,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32.0,
+                      ),
+                      child: Text(
+                        locale == 'fr'
+                            ? 'Triomphez des monstres Élites ou explorez la Boutique pour acquérir des Reliques et obtenir de précieux effets passifs.'
+                            : 'Defeat Elite monsters or explore the Shop to acquire Relics and obtain precious passive effects.',
+                        style: const TextStyle(
+                          color: Colors.white38,
+                          fontSize: 12,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                )
+              : LayoutBuilder(
+                  builder: (context, constraints) {
+                    final double availableWidth = constraints.maxWidth;
+                    final double cardWidth = (availableWidth - 16) / 2;
+                    const double cardHeight = 110;
+
+                    return SingleChildScrollView(
+                      child: Wrap(
+                        spacing: 16,
+                        runSpacing: 16,
+                        children: uniqueIds.map((id) {
+                          final relic = relicMap[id]!;
+                          final count = relicCounts[id]!;
+                          return SizedBox(
+                            width: cardWidth,
+                            height: cardHeight,
+                            child: _buildRelicCard(
+                              context,
+                              relic,
+                              count,
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    );
+                  },
+                ),
         ),
       ),
     );
@@ -231,30 +200,8 @@ class RelicsDialog extends ConsumerWidget {
         break;
     }
 
-    Color rarityColor = Colors.grey;
-    String rarityText = l10n.rarityCommon;
-    switch (relic.rarity) {
-      case RelicRarity.common:
-        rarityColor = const Color(0xFF8E8E93);
-        rarityText = l10n.rarityCommon.toUpperCase();
-        break;
-      case RelicRarity.uncommon:
-        rarityColor = const Color(0xFF34C759);
-        rarityText = l10n.rarityUncommon.toUpperCase();
-        break;
-      case RelicRarity.rare:
-        rarityColor = const Color(0xFF007AFF);
-        rarityText = l10n.rarityRare.toUpperCase();
-        break;
-      case RelicRarity.epic:
-        rarityColor = const Color(0xFFAF52DE);
-        rarityText = l10n.rarityEpic.toUpperCase();
-        break;
-      case RelicRarity.legendary:
-        rarityColor = const Color(0xFFFFCC00);
-        rarityText = l10n.rarityLegendary.toUpperCase();
-        break;
-    }
+    Color rarityColor = relic.rarity.color;
+    String rarityText = relic.rarity.getLabel(l10n).toUpperCase();
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

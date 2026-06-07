@@ -2,10 +2,10 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
+import 'package:roguelike_card_game/ui/widgets/game_dialog.dart';
 import '../../../../game/controllers/run_controller.dart';
 import '../../../../models/data/passive_data.dart';
 import '../../../../services/game_data_service.dart';
-import '../../blur_wrapper.dart';
 import '../../sword_icon.dart';
 
 class StatsDialog extends ConsumerWidget {
@@ -63,246 +63,221 @@ class StatsDialog extends ConsumerWidget {
 
     final stats = runState.heroStats;
 
-    return BlurWrapper(
-      sigma: 8,
-      child: Center(
-        child: Container(
-          width: min(MediaQuery.of(context).size.width * 0.85, 500),
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: const Color(0xFF1E1E2C),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: classColor.withValues(alpha: 0.3),
-              width: 2,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: classColor.withValues(alpha: 0.15),
-                blurRadius: 30,
-                spreadRadius: 5,
-              ),
-            ],
-          ),
-          child: Material(
-            color: Colors.transparent,
+    return GameDialog(
+      glowColor: classColor,
+      maxWidth: min(MediaQuery.of(context).size.width * 0.85, 500),
+      title: Row(
+        children: [
+          Icon(classIcon, color: classColor, size: 36),
+          const SizedBox(width: 12),
+          Expanded(
             child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Icon(classIcon, color: classColor, size: 36),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            heroData.getName(locale).toUpperCase(),
-                            style: TextStyle(
-                              color: classColor,
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1.2,
-                            ),
-                          ),
-                          Text(
-                            l10n.actLevel(runState.act, runState.currentLevel),
-                            style: const TextStyle(
-                              color: Colors.white60,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white70),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                  ],
-                ),
-                const Divider(color: Colors.white12, height: 24),
                 Text(
-                  l10n.heroStatsTitle.toUpperCase(),
-                  style: const TextStyle(
-                    color: Colors.amberAccent,
-                    fontSize: 12,
+                  heroData.getName(locale).toUpperCase(),
+                  style: TextStyle(
+                    color: classColor,
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    letterSpacing: 1.0,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                _buildStatRow(
-                  context,
-                  icon: Icons.favorite,
-                  iconColor: Colors.redAccent,
-                  label: l10n.tooltipHpTitle,
-                  value: '${stats.currentPv} / ${stats.maxPv}',
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Container(
-                      height: 12,
-                      decoration: BoxDecoration(
-                        color: Colors.black26,
-                        border: Border.all(color: Colors.white10, width: 0.5),
-                      ),
-                      child: FractionallySizedBox(
-                        alignment: Alignment.centerLeft,
-                        widthFactor: stats.maxPv > 0
-                            ? (stats.currentPv / stats.maxPv).clamp(0.0, 1.0)
-                            : 0,
-                        child: Container(
-                          decoration: const BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Color(0xFF1E824C),
-                                Color(0xFF27AE60),
-                                Color(0xFF58D68D),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
+                    letterSpacing: 1.2,
                   ),
                 ),
-                const SizedBox(height: 14),
-                _buildStatRow(
-                  context,
-                  icon: Icons.diamond_rounded,
-                  iconColor: Colors.cyanAccent,
-                  label: l10n.tooltipManaTitle,
-                  value:
-                      '${stats.maxMana} ${locale == 'fr' ? 'Cristaux' : 'Crystals'}',
-                  child: Row(
-                    children: List.generate(
-                      stats.maxMana,
-                      (i) => Padding(
-                        padding: const EdgeInsets.only(right: 4.0),
-                        child: Icon(
-                          Icons.diamond_rounded,
-                          color: i < stats.currentMana
-                              ? Colors.cyanAccent
-                              : Colors.white12,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildCompactStatCard(
-                        icon: SwordIcon(size: 16, color: Colors.orangeAccent),
-                        title: locale == 'fr' ? 'Attaque' : 'Attack',
-                        value: '${stats.attaque}',
-                        subtitle: locale == 'fr'
-                            ? 'Dégâts de base'
-                            : 'Base damage',
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildCompactStatCard(
-                        icon: const Icon(
-                          Icons.shield_outlined,
-                          color: Colors.lightBlueAccent,
-                          size: 16,
-                        ),
-                        title: locale == 'fr' ? 'Maîtrise' : 'Mastery',
-                        value: '+${stats.armorMastery}',
-                        subtitle: locale == 'fr'
-                            ? "Sur l'Armure Passive"
-                            : "On passive armor",
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildCompactStatCard(
-                        icon: const Icon(
-                          Icons.casino_outlined,
-                          color: Colors.amberAccent,
-                          size: 16,
-                        ),
-                        title: locale == 'fr' ? 'Chance' : 'Luck',
-                        value: '${stats.luck}',
-                        subtitle: locale == 'fr'
-                            ? 'Loot & Événements'
-                            : 'Loot & Events',
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildCompactStatCard(
-                        icon: const Icon(
-                          Icons.bolt_outlined,
-                          color: Colors.redAccent,
-                          size: 16,
-                        ),
-                        title: locale == 'fr' ? 'Critique' : 'Critique',
-                        value: '${stats.critChance}%',
-                        subtitle: 'x${stats.critMultiplier.toStringAsFixed(1)}',
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.cyanAccent.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: Colors.cyanAccent.withValues(alpha: 0.2),
-                      width: 1.0,
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.shield,
-                            size: 18,
-                            color: Colors.cyanAccent,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '${l10n.classPassive.toUpperCase()} : $traitName',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.cyanAccent,
-                              letterSpacing: 0.8,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        traitDesc,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.cyanAccent.withValues(alpha: 0.8),
-                          height: 1.3,
-                        ),
-                      ),
-                    ],
+                Text(
+                  l10n.actLevel(runState.act, runState.currentLevel),
+                  style: const TextStyle(
+                    color: Colors.white60,
+                    fontSize: 14,
                   ),
                 ),
               ],
             ),
           ),
+        ],
+      ),
+      content: Material(
+        color: Colors.transparent,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              l10n.heroStatsTitle.toUpperCase(),
+              style: const TextStyle(
+                color: Colors.amberAccent,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.0,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            _buildStatRow(
+              context,
+              icon: Icons.favorite,
+              iconColor: Colors.redAccent,
+              label: l10n.tooltipHpTitle,
+              value: '${stats.currentPv} / ${stats.maxPv}',
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: Colors.black26,
+                    border: Border.all(color: Colors.white10, width: 0.5),
+                  ),
+                  child: FractionallySizedBox(
+                    alignment: Alignment.centerLeft,
+                    widthFactor: stats.maxPv > 0
+                        ? (stats.currentPv / stats.maxPv).clamp(0.0, 1.0)
+                        : 0,
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Color(0xFF1E824C),
+                            Color(0xFF27AE60),
+                            Color(0xFF58D68D),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            _buildStatRow(
+              context,
+              icon: Icons.diamond_rounded,
+              iconColor: Colors.cyanAccent,
+              label: l10n.tooltipManaTitle,
+              value:
+                  '${stats.maxMana} ${locale == 'fr' ? 'Cristaux' : 'Crystals'}',
+              child: Row(
+                children: List.generate(
+                  stats.maxMana,
+                  (i) => Padding(
+                    padding: const EdgeInsets.only(right: 4.0),
+                    child: Icon(
+                      Icons.diamond_rounded,
+                      color: i < stats.currentMana
+                          ? Colors.cyanAccent
+                          : Colors.white12,
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildCompactStatCard(
+                    icon: SwordIcon(size: 16, color: Colors.orangeAccent),
+                    title: locale == 'fr' ? 'Attaque' : 'Attack',
+                    value: '${stats.attaque}',
+                    subtitle: locale == 'fr' ? 'Dégâts de base' : 'Base damage',
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildCompactStatCard(
+                    icon: const Icon(
+                      Icons.shield_outlined,
+                      color: Colors.lightBlueAccent,
+                      size: 16,
+                    ),
+                    title: locale == 'fr' ? 'Maîtrise' : 'Mastery',
+                    value: '+${stats.armorMastery}',
+                    subtitle:
+                        locale == 'fr' ? "Sur l'Armure Passive" : "On passive armor",
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildCompactStatCard(
+                    icon: const Icon(
+                      Icons.casino_outlined,
+                      color: Colors.amberAccent,
+                      size: 16,
+                    ),
+                    title: locale == 'fr' ? 'Chance' : 'Luck',
+                    value: '${stats.luck}',
+                    subtitle: locale == 'fr'
+                        ? 'Loot & Événements'
+                        : 'Loot & Events',
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildCompactStatCard(
+                    icon: const Icon(
+                      Icons.bolt_outlined,
+                      color: Colors.redAccent,
+                      size: 16,
+                    ),
+                    title: locale == 'fr' ? 'Critique' : 'Critique',
+                    value: '${stats.critChance}%',
+                    subtitle: 'x${stats.critMultiplier.toStringAsFixed(1)}',
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.cyanAccent.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: Colors.cyanAccent.withValues(alpha: 0.2),
+                  width: 1.0,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.shield,
+                        size: 18,
+                        color: Colors.cyanAccent,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '${l10n.classPassive.toUpperCase()} : $traitName',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.cyanAccent,
+                            letterSpacing: 0.8,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    traitDesc,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.cyanAccent.withValues(alpha: 0.8),
+                      height: 1.3,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

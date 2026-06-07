@@ -1,5 +1,36 @@
 [
   {
+    "version": "0.0.99",
+    "date": "2026-06-07",
+    "title": "Fondations du Design",
+    "sections": [
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "La typographie de l'interface est désormais homogène dans tous les menus, avec des polices bien calibrées pour les titres, sous-titres et étiquettes.",
+          "Les boîtes de dialogue (reliques, statistiques, etc.) affichent un style plus cohérent avec des coins arrondis standardisés et une présentation épurée."
+        ]
+      },
+      {
+        "category": "Corrections",
+        "emoji": "🐛",
+        "entries": [
+          "Correction d'un débordement visuel sur les boutons de la boutique n'affichant qu'un coût en or sans texte : le contenu reste désormais proprement contenu dans le bouton."
+        ]
+      },
+      {
+        "category": "Technique",
+        "emoji": "🔧",
+        "entries": [
+          "Centralisation de toutes les palettes de couleurs de l'interface (thème sombre, parchemin, raretés, statistiques) dans un référentiel commun pour faciliter les évolutions visuelles futures.",
+          "Standardisation des espacements de l'interface via un système de tailles prédéfinies, garantissant une cohérence visuelle sur tous les écrans.",
+          "La couleur associée à la rareté d'une relique ou d'une carte est désormais calculée en un seul endroit, éliminant les duplications de code entre les différents menus."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.0.98",
     "date": "2026-06-07",
     "title": "Fluidité & Impacts",

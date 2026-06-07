@@ -2,8 +2,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
+import 'package:roguelike_card_game/ui/widgets/game_dialog.dart';
 import '../../../../game/controllers/run_controller.dart';
-import '../../blur_wrapper.dart';
 
 class ProbabilitiesDialog extends ConsumerWidget {
   const ProbabilitiesDialog({super.key});
@@ -31,9 +31,7 @@ class ProbabilitiesDialog extends ConsumerWidget {
     int luck,
     bool isLevelReward,
   ) {
-    double legendaryChance = isLevelReward
-        ? 0.5 + luck * 0.5
-        : 1.0 + luck * 0.5;
+    double legendaryChance = isLevelReward ? 0.5 + luck * 0.5 : 1.0 + luck * 0.5;
     double epicChance = isLevelReward ? 4.5 + luck * 1.5 : 5.0 + luck * 1.5;
     double rareChance = isLevelReward ? 15.0 + luck * 3.0 : 14.0 + luck * 3.0;
     double uncommonChance = 20.0 + luck * 4.0;
@@ -113,247 +111,218 @@ class ProbabilitiesDialog extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).languageCode;
 
-    return BlurWrapper(
-      sigma: 8,
-      child: Center(
-        child: Container(
-          width: min(MediaQuery.of(context).size.width * 0.9, 650),
-          height: min(MediaQuery.of(context).size.height * 0.85, 750),
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: const Color(0xFF1E1E2C),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: Colors.amberAccent.withValues(alpha: 0.3),
-              width: 2,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.amberAccent.withValues(alpha: 0.15),
-                blurRadius: 30,
-                spreadRadius: 5,
-              ),
-            ],
+    return GameDialog(
+      glowColor: Colors.amberAccent,
+      maxWidth: min(MediaQuery.of(context).size.width * 0.9, 650),
+      title: Row(
+        children: [
+          const Icon(
+            Icons.casino_outlined,
+            color: Colors.amberAccent,
+            size: 36,
           ),
-          child: Material(
-            color: Colors.transparent,
+          const SizedBox(width: 12),
+          Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.casino_outlined,
-                      color: Colors.amberAccent,
-                      size: 36,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.luckPercentageTitle.toUpperCase(),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1.1,
-                            ),
-                          ),
-                          Text(
-                            locale == 'fr'
-                                ? 'Ajustement en temps réel basé sur votre statistique de Chance'
-                                : 'Real-time adjustments based on your Luck statistic',
-                            style: const TextStyle(
-                              color: Colors.white60,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white70),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                  ],
-                ),
-                const Divider(color: Colors.white12, height: 24),
-                Center(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.amberAccent.withAlpha(20),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: Colors.amberAccent.withAlpha(60),
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.casino,
-                          color: Colors.amberAccent,
-                          size: 28,
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          l10n.currentLuck(luck),
-                          style: const TextStyle(
-                            color: Colors.amberAccent,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ],
-                    ),
+                Text(
+                  l10n.luckPercentageTitle.toUpperCase(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.1,
                   ),
                 ),
-                const SizedBox(height: 20),
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        _buildProbabilitySectionCard(
-                          title: locale == 'fr'
-                              ? 'Draft standard de récompenses'
-                              : 'Standard Reward Draft',
-                          subtitle: locale == 'fr'
-                              ? "Chances d'obtenir chaque rareté de carte/stat en fin de combat standard"
-                              : "Chances of getting each card/stat rarity at the end of standard combat",
-                          icon: Icons.style_outlined,
-                          accentColor: Colors.cyanAccent,
-                          rows: [
-                            _buildProbabilityRow(
-                              rarityName: l10n.rarityLegendary,
-                              color: Colors.amber,
-                              basePercent: baseDraftStd['legendary']!,
-                              currentPercent: curDraftStd['legendary']!,
-                            ),
-                            _buildProbabilityRow(
-                              rarityName: l10n.rarityEpic,
-                              color: Colors.purpleAccent,
-                              basePercent: baseDraftStd['epic']!,
-                              currentPercent: curDraftStd['epic']!,
-                            ),
-                            _buildProbabilityRow(
-                              rarityName: l10n.rarityRare,
-                              color: Colors.blueAccent,
-                              basePercent: baseDraftStd['rare']!,
-                              currentPercent: curDraftStd['rare']!,
-                            ),
-                            _buildProbabilityRow(
-                              rarityName: l10n.rarityUncommon,
-                              color: Colors.greenAccent,
-                              basePercent: baseDraftStd['uncommon']!,
-                              currentPercent: curDraftStd['uncommon']!,
-                            ),
-                            _buildProbabilityRow(
-                              rarityName: l10n.rarityCommon,
-                              color: Colors.grey,
-                              basePercent: baseDraftStd['common']!,
-                              currentPercent: curDraftStd['common']!,
-                            ),
-                          ],
-                        ),
-                        _buildProbabilitySectionCard(
-                          title: locale == 'fr'
-                              ? 'Récompense de niveau'
-                              : 'Level Reward',
-                          subtitle: locale == 'fr'
-                              ? "Chances d'obtenir chaque rareté d'option lors de la montée de niveau (Trèfle / Miroir)"
-                              : "Chances of getting each option rarity when leveling up (Clover / Mirror)",
-                          icon: Icons.auto_awesome_outlined,
-                          accentColor: Colors.lightGreenAccent,
-                          rows: [
-                            _buildProbabilityRow(
-                              rarityName: l10n.rarityLegendary,
-                              color: Colors.amber,
-                              basePercent: baseDraftLeg['legendary']!,
-                              currentPercent: curDraftLeg['legendary']!,
-                            ),
-                            _buildProbabilityRow(
-                              rarityName: l10n.rarityEpic,
-                              color: Colors.purpleAccent,
-                              basePercent: baseDraftLeg['epic']!,
-                              currentPercent: curDraftLeg['epic']!,
-                            ),
-                            _buildProbabilityRow(
-                              rarityName: l10n.rarityRare,
-                              color: Colors.blueAccent,
-                              basePercent: baseDraftLeg['rare']!,
-                              currentPercent: curDraftLeg['rare']!,
-                            ),
-                            _buildProbabilityRow(
-                              rarityName: l10n.rarityUncommon,
-                              color: Colors.greenAccent,
-                              basePercent: baseDraftLeg['uncommon']!,
-                              currentPercent: curDraftLeg['uncommon']!,
-                            ),
-                            _buildProbabilityRow(
-                              rarityName: l10n.rarityCommon,
-                              color: Colors.grey,
-                              basePercent: baseDraftLeg['common']!,
-                              currentPercent: curDraftLeg['common']!,
-                            ),
-                          ],
-                        ),
-                        _buildProbabilitySectionCard(
-                          title: locale == 'fr'
-                              ? 'Butin de Reliques'
-                              : 'Relic Loot',
-                          subtitle: locale == 'fr'
-                              ? "Chances d'apparition des reliques par rareté (Boss, Élites & Événements)"
-                              : "Relic drop rates by rarity (Boss, Elites & Events)",
-                          icon: Icons.emoji_events_outlined,
-                          accentColor: Colors.amber,
-                          rows: [
-                            _buildProbabilityRow(
-                              rarityName: l10n.rarityLegendary,
-                              color: Colors.amber,
-                              basePercent: baseRelics['legendary']!,
-                              currentPercent: curRelics['legendary']!,
-                            ),
-                            _buildProbabilityRow(
-                              rarityName: l10n.rarityEpic,
-                              color: Colors.purpleAccent,
-                              basePercent: baseRelics['epic']!,
-                              currentPercent: curRelics['epic']!,
-                            ),
-                            _buildProbabilityRow(
-                              rarityName: l10n.rarityRare,
-                              color: Colors.blueAccent,
-                              basePercent: baseRelics['rare']!,
-                              currentPercent: curRelics['rare']!,
-                            ),
-                            _buildProbabilityRow(
-                              rarityName: l10n.rarityUncommon,
-                              color: Colors.greenAccent,
-                              basePercent: baseRelics['uncommon']!,
-                              currentPercent: curRelics['uncommon']!,
-                            ),
-                            _buildProbabilityRow(
-                              rarityName: l10n.rarityCommon,
-                              color: Colors.grey,
-                              basePercent: baseRelics['common']!,
-                              currentPercent: curRelics['common']!,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                Text(
+                  locale == 'fr'
+                      ? 'Ajustement en temps réel basé sur votre statistique de Chance'
+                      : 'Real-time adjustments based on your Luck statistic',
+                  style: const TextStyle(
+                    color: Colors.white60,
+                    fontSize: 12,
                   ),
                 ),
               ],
             ),
           ),
+        ],
+      ),
+      content: Material(
+        color: Colors.transparent,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.amberAccent.withAlpha(20),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Colors.amberAccent.withAlpha(60),
+                    width: 1.5,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.casino,
+                      color: Colors.amberAccent,
+                      size: 28,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      l10n.currentLuck(luck),
+                      style: const TextStyle(
+                        color: Colors.amberAccent,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              height: min(MediaQuery.of(context).size.height * 0.45, 450),
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    _buildProbabilitySectionCard(
+                      title: locale == 'fr'
+                          ? 'Draft standard de récompenses'
+                          : 'Standard Reward Draft',
+                      subtitle: locale == 'fr'
+                          ? "Chances d'obtenir chaque rareté de carte/stat en fin de combat standard"
+                          : "Chances of getting each card/stat rarity at the end of standard combat",
+                      icon: Icons.style_outlined,
+                      accentColor: Colors.cyanAccent,
+                      rows: [
+                        _buildProbabilityRow(
+                          rarityName: l10n.rarityLegendary,
+                          color: Colors.amber,
+                          basePercent: baseDraftStd['legendary']!,
+                          currentPercent: curDraftStd['legendary']!,
+                        ),
+                        _buildProbabilityRow(
+                          rarityName: l10n.rarityEpic,
+                          color: Colors.purpleAccent,
+                          basePercent: baseDraftStd['epic']!,
+                          currentPercent: curDraftStd['epic']!,
+                        ),
+                        _buildProbabilityRow(
+                          rarityName: l10n.rarityRare,
+                          color: Colors.blueAccent,
+                          basePercent: baseDraftStd['rare']!,
+                          currentPercent: curDraftStd['rare']!,
+                        ),
+                        _buildProbabilityRow(
+                          rarityName: l10n.rarityUncommon,
+                          color: Colors.greenAccent,
+                          basePercent: baseDraftStd['uncommon']!,
+                          currentPercent: curDraftStd['uncommon']!,
+                        ),
+                        _buildProbabilityRow(
+                          rarityName: l10n.rarityCommon,
+                          color: Colors.grey,
+                          basePercent: baseDraftStd['common']!,
+                          currentPercent: curDraftStd['common']!,
+                        ),
+                      ],
+                    ),
+                    _buildProbabilitySectionCard(
+                      title: locale == 'fr' ? 'Récompense de niveau' : 'Level Reward',
+                      subtitle: locale == 'fr'
+                          ? "Chances d'obtenir chaque rareté d'option lors de la montée de niveau (Trèfle / Miroir)"
+                          : "Chances of getting each option rarity when leveling up (Clover / Mirror)",
+                      icon: Icons.auto_awesome_outlined,
+                      accentColor: Colors.lightGreenAccent,
+                      rows: [
+                        _buildProbabilityRow(
+                          rarityName: l10n.rarityLegendary,
+                          color: Colors.amber,
+                          basePercent: baseDraftLeg['legendary']!,
+                          currentPercent: curDraftLeg['legendary']!,
+                        ),
+                        _buildProbabilityRow(
+                          rarityName: l10n.rarityEpic,
+                          color: Colors.purpleAccent,
+                          basePercent: baseDraftLeg['epic']!,
+                          currentPercent: curDraftLeg['epic']!,
+                        ),
+                        _buildProbabilityRow(
+                          rarityName: l10n.rarityRare,
+                          color: Colors.blueAccent,
+                          basePercent: baseDraftLeg['rare']!,
+                          currentPercent: curDraftLeg['rare']!,
+                        ),
+                        _buildProbabilityRow(
+                          rarityName: l10n.rarityUncommon,
+                          color: Colors.greenAccent,
+                          basePercent: baseDraftLeg['uncommon']!,
+                          currentPercent: curDraftLeg['uncommon']!,
+                        ),
+                        _buildProbabilityRow(
+                          rarityName: l10n.rarityCommon,
+                          color: Colors.grey,
+                          basePercent: baseDraftLeg['common']!,
+                          currentPercent: curDraftLeg['common']!,
+                        ),
+                      ],
+                    ),
+                    _buildProbabilitySectionCard(
+                      title: locale == 'fr' ? 'Butin de Reliques' : 'Relic Loot',
+                      subtitle: locale == 'fr'
+                          ? "Chances d'apparition des reliques par rareté (Boss, Élites & Événements)"
+                          : "Relic drop rates by rarity (Boss, Elites & Events)",
+                      icon: Icons.emoji_events_outlined,
+                      accentColor: Colors.amber,
+                      rows: [
+                        _buildProbabilityRow(
+                          rarityName: l10n.rarityLegendary,
+                          color: Colors.amber,
+                          basePercent: baseRelics['legendary']!,
+                          currentPercent: curRelics['legendary']!,
+                        ),
+                        _buildProbabilityRow(
+                          rarityName: l10n.rarityEpic,
+                          color: Colors.purpleAccent,
+                          basePercent: baseRelics['epic']!,
+                          currentPercent: curRelics['epic']!,
+                        ),
+                        _buildProbabilityRow(
+                          rarityName: l10n.rarityRare,
+                          color: Colors.blueAccent,
+                          basePercent: baseRelics['rare']!,
+                          currentPercent: curRelics['rare']!,
+                        ),
+                        _buildProbabilityRow(
+                          rarityName: l10n.rarityUncommon,
+                          color: Colors.greenAccent,
+                          basePercent: baseRelics['uncommon']!,
+                          currentPercent: curRelics['uncommon']!,
+                        ),
+                        _buildProbabilityRow(
+                          rarityName: l10n.rarityCommon,
+                          color: Colors.grey,
+                          basePercent: baseRelics['common']!,
+                          currentPercent: curRelics['common']!,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -2,6 +2,9 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
+import 'package:roguelike_card_game/models/data/model_extensions.dart';
+import 'package:roguelike_card_game/ui/widgets/game_dialog.dart';
+import 'package:roguelike_card_game/ui/widgets/game_button.dart';
 import '../../game/controllers/deck_controller.dart';
 import '../../models/card_instance.dart';
 import '../../models/data/card_data.dart';
@@ -53,8 +56,7 @@ class DeckScreen extends ConsumerWidget {
               Expanded(
                 child: GridView.builder(
                   gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent:
-                        200, // Doublé pour un affichage plus clair
+                    maxCrossAxisExtent: 200,
                     childAspectRatio: 0.6,
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
@@ -76,14 +78,14 @@ class DeckScreen extends ConsumerWidget {
                                 title: card.data.getName(locale),
                                 description: card.data.getDescription(locale),
                                 cost: card.data.cost,
-                                target: _getTargetLabel(l10n, card.data.target),
+                                target: card.data.target.getLabel(l10n),
                                 rarityMultiplier: card.rarityMultiplier,
                                 forgeUpgrades: card.forgeUpgrades,
                                 effects: card.data.effects,
                                 type: card.data.type,
                                 targetType: card.data.target,
                                 isExhaust: card.data.isExhaust,
-                                rarity: _getRarityLabel(context, card.rarity),
+                                rarity: card.rarity.getLabel(l10n),
                               ),
                               Positioned(
                                 top: 5,
@@ -160,38 +162,12 @@ class DeckScreen extends ConsumerWidget {
     );
   }
 
-  String _getRarityLabel(BuildContext context, CardRarity rarity) {
-    final l10n = AppLocalizations.of(context)!;
-    switch (rarity) {
-      case CardRarity.common:
-        return l10n.rarityCommon;
-      case CardRarity.uncommon:
-        return l10n.rarityUncommon;
-      case CardRarity.rare:
-        return l10n.rarityRare;
-      case CardRarity.epic:
-        return l10n.rarityEpic;
-      case CardRarity.legendary:
-        return l10n.rarityLegendary;
-      case CardRarity.unique:
-        return 'Unique';
-    }
-  }
-
-  String _getTargetLabel(AppLocalizations l10n, CardTarget target) {
-    switch (target) {
-      case CardTarget.singleEnemy:
-        return l10n.targetSingleEnemy;
-      case CardTarget.allEnemies:
-        return l10n.targetAllEnemies;
-      case CardTarget.self:
-        return l10n.targetSelf;
-      case CardTarget.none:
-        return l10n.targetNone;
-    }
-  }
-
-  void _confirmMerge(BuildContext context, WidgetRef ref, CardInstance card, List<CardInstance> duplicates) async {
+  void _confirmMerge(
+    BuildContext context,
+    WidgetRef ref,
+    CardInstance card,
+    List<CardInstance> duplicates,
+  ) async {
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).languageCode;
     final cardName = card.data.getName(locale);
@@ -203,7 +179,8 @@ class DeckScreen extends ConsumerWidget {
 
     if (merged == true) {
       if (context.mounted) {
-        final nextRarityIndex = min(card.rarity.index + 1, CardRarity.values.length - 1);
+        final nextRarityIndex =
+            min(card.rarity.index + 1, CardRarity.values.length - 1);
         context.showNotification(
           l10n.deckMergeSuccess(cardName, nextRarityIndex + 1),
           type: NotificationType.success,
@@ -246,11 +223,14 @@ class _MergeDialogState extends State<_MergeDialog> {
   }
 
   void _proceedToUpgrades() {
-    _selectedCards = widget.duplicates.where((c) => _selectedCardIds.contains(c.uniqueId)).toList();
+    _selectedCards = widget.duplicates
+        .where((c) => _selectedCardIds.contains(c.uniqueId))
+        .toList();
     if (_selectedCards.length != 3) return;
 
     final firstCard = _selectedCards[0];
-    final nextRarityIndex = min(firstCard.rarity.index + 1, CardRarity.values.length - 1);
+    final nextRarityIndex =
+        min(firstCard.rarity.index + 1, CardRarity.values.length - 1);
     _capacity = firstCard.data.baseMaxForgeUpgrades + nextRarityIndex;
 
     final Map<String, int> consolidatedMap = {};
@@ -293,14 +273,13 @@ class _MergeDialogState extends State<_MergeDialog> {
     final locale = Localizations.localeOf(context).languageCode;
 
     if (_step == 1) {
-      return AlertDialog(
-        backgroundColor: const Color(0xFF2A2A3D),
+      return GameDialog(
+        glowColor: Colors.green,
         title: Text(
           l10n.confirmMerge,
-          style: const TextStyle(color: Colors.white),
         ),
-        content: SizedBox(
-          width: double.maxFinite,
+        content: Material(
+          color: Colors.transparent,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -351,31 +330,30 @@ class _MergeDialogState extends State<_MergeDialog> {
           ),
         ),
         actions: [
-          TextButton(
+          GameButton(
+            text: l10n.cancel,
+            baseColor: Colors.white70,
             onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              l10n.cancel,
-              style: const TextStyle(color: Colors.white54),
-            ),
+            height: 38,
+            fontSize: 14,
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _selectedCardIds.length == 3 ? Colors.green : Colors.grey,
-            ),
+          GameButton(
+            text: 'Continuer',
             onPressed: _selectedCardIds.length == 3 ? _proceedToUpgrades : null,
-            child: const Text('Continuer'),
+            baseColor: Colors.green,
+            height: 38,
+            fontSize: 14,
           ),
         ],
       );
     } else {
-      return AlertDialog(
-        backgroundColor: const Color(0xFF2A2A3D),
+      return GameDialog(
+        glowColor: Colors.orange,
         title: const Text(
           'Capacité de Forge Dépassée',
-          style: TextStyle(color: Colors.white),
         ),
-        content: SizedBox(
-          width: double.maxFinite,
+        content: Material(
+          color: Colors.transparent,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -422,21 +400,24 @@ class _MergeDialogState extends State<_MergeDialog> {
           ),
         ),
         actions: [
-          TextButton(
+          GameButton(
+            text: l10n.cancel,
+            baseColor: Colors.white70,
             onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              l10n.cancel,
-              style: const TextStyle(color: Colors.white54),
-            ),
+            height: 38,
+            fontSize: 14,
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _chosenUpgrades.length <= _capacity ? Colors.green : Colors.grey,
-            ),
-            onPressed: _chosenUpgrades.isNotEmpty && _chosenUpgrades.length <= _capacity ? () {
-              _performMerge(_chosenUpgrades.toList());
-            } : null,
-            child: const Text('Fusionner'),
+          GameButton(
+            text: 'Fusionner',
+            onPressed: _chosenUpgrades.isNotEmpty &&
+                    _chosenUpgrades.length <= _capacity
+                ? () {
+                    _performMerge(_chosenUpgrades.toList());
+                  }
+                : null,
+            baseColor: Colors.green,
+            height: 38,
+            fontSize: 14,
           ),
         ],
       );

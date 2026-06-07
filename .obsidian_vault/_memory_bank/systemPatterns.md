@@ -1047,3 +1047,69 @@ graph TD
   - Permet la sélection interactive de 3 reliques avec retour visuel (glow doré pour les reliques sélectionnées).
   - Le bouton de transaction n'est cliquable qu'une fois 3 reliques sélectionnées.
   - Le bouton "Quitter" permet de continuer la run sans faire d'échange.
+
+---
+
+## 13. Système de Design Centralisé & Tokens UI (Design System, v0.0.99)
+
+Le sprint v0.0.99 a introduit un **système de design centralisé** dans le module `lib/ui/theme/`, éliminant les magic constants dispersées dans les 15+ fichiers de widgets et standardisant l'identité visuelle du jeu.
+
+### 13.1. Module `lib/ui/theme/`
+
+Le module regroupe trois fichiers complémentaires :
+
+| Fichier | Classe | Responsabilité |
+|:---|:---|:---|
+| `app_colors.dart` | `AppColors` | Toutes les couleurs du jeu (Neon Dark, Parchemin, stats sémantiques, raretés cartes/reliques) |
+| `app_spacing.dart` | `AppSpacing` | Helpers d'`EdgeInsets` et de padding standardisés |
+| `app_theme.dart` | `AppTheme` | Factory de `ThemeData` Flutter complet (dark/light, polices, couleurs primaires, styles de texte) |
+
+### 13.2. Palettes de Couleurs (`AppColors`)
+
+`AppColors` structure les couleurs en domaines sémantiques distincts :
+- **Neon Dark** : Couleurs de base de l'interface sombre (fond, surface, texte, accents neon).
+- **Parchemin** : Couleurs de l'ambiance carte/parchemin médiéval (fond brun, dorure, texte sépia).
+- **Stats sémantiques** : Couleurs HP, Mana, Armure, Critique (identiques dans tout le jeu).
+- **Raretés de cartes** : Chaque `CardRarity` (Common, Uncommon, Rare, Epic, Legendary) possède une couleur canonique.
+- **Raretés de reliques** : Chaque `RelicRarity` possède une couleur canonique distincte des cartes.
+
+### 13.3. Extensions Dart sur les Enums de Rareté
+
+Pour supprimer les `switch` redondants, des **extensions Dart** ajoutent un getter `.color` sur les deux enums de rareté :
+
+```dart
+// Sur CardRarity
+extension CardRarityColor on CardRarity {
+  Color get color => AppColors.cardRarityColors[this]!;
+}
+
+// Sur RelicRarity
+extension RelicRarityColor on RelicRarity {
+  Color get color => AppColors.relicRarityColors[this]!;
+}
+```
+
+**Avant (pattern à bannir)** :
+```dart
+Color _getRelicColor(RelicRarity rarity) {
+  switch (rarity) {
+    case RelicRarity.common: return Colors.grey;
+    case RelicRarity.uncommon: return Colors.green;
+    case RelicRarity.rare: return Colors.blue;
+    case RelicRarity.epic: return Colors.purple;
+    case RelicRarity.legendary: return Colors.orange;
+  }
+}
+```
+
+**Après (pattern à adopter)** :
+```dart
+// Directement dans le widget :
+color: relic.rarity.color
+```
+
+### 13.4. Règles de Contribution
+
+- **Aucune magic constant** dans les widgets. Toute couleur, espacement ou style de texte doit provenir de `AppColors`, `AppSpacing` ou `AppTheme`.
+- **Toute nouvelle rareté** (de carte ou de relique) doit être ajoutée simultanément dans les maps de `AppColors` et dans les extensions d'enum correspondantes.
+- **Les tokens de design ne dépendent d'aucun provider Riverpod**. Ils sont purement statiques et instanciables sans contexte d'application.

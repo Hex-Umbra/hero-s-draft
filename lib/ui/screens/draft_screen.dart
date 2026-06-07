@@ -3,6 +3,9 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
+import 'package:roguelike_card_game/models/data/model_extensions.dart';
+import 'package:roguelike_card_game/ui/theme/app_spacing.dart';
+import 'package:roguelike_card_game/ui/widgets/game_dialog.dart';
 import '../../game/controllers/run_controller.dart';
 import '../../game/controllers/deck_controller.dart';
 import '../../models/card_instance.dart';
@@ -57,9 +60,8 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
 
   void _onMythicReelLanded() {
     _mythicLandedCount++;
-    final mythicChoicesCount = _choices
-        .where((c) => c.rarity == RewardRarity.mythic)
-        .length;
+    final mythicChoicesCount =
+        _choices.where((c) => c.rarity == RewardRarity.mythic).length;
     if (_mythicLandedCount == mythicChoicesCount) {
       Future.delayed(const Duration(milliseconds: 1500), () {
         if (mounted) {
@@ -153,7 +155,8 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
       return l10n.draftChoicePrecisionDesc(choice.critChanceBoost);
     }
     if (choice.title == 'Férocité') {
-      return l10n.draftChoiceFerocityDesc((choice.critDamageBoost * 100).round());
+      return l10n.draftChoiceFerocityDesc(
+          (choice.critDamageBoost * 100).round());
     }
     return choice.description;
   }
@@ -174,7 +177,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                   bool isPortrait = constraints.maxWidth < 600;
 
                   return Padding(
-                    padding: const EdgeInsets.all(20.0),
+                    padding: const EdgeInsets.all(AppSpacing.md),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -187,7 +190,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                           ),
                           textAlign: TextAlign.center,
                         ),
-                        const SizedBox(height: 10),
+                        AppSpacing.heightSm,
                         Text(
                           l10n.chooseUpgrade,
                           style: const TextStyle(
@@ -196,7 +199,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                           ),
                           textAlign: TextAlign.center,
                         ),
-                        const SizedBox(height: 30),
+                        AppSpacing.heightXl,
                         if (isPortrait)
                           Expanded(
                             child: ListView(
@@ -205,8 +208,8 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                 final index = _choices.indexOf(choice);
                                 return Padding(
                                   padding: const EdgeInsets.symmetric(
-                                    vertical: 8,
-                                    horizontal: 40,
+                                    vertical: AppSpacing.sm,
+                                    horizontal: AppSpacing.xxl,
                                   ),
                                   child: Center(
                                     child: ConstrainedBox(
@@ -224,8 +227,8 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                           scale: _selectedIndex == index
                                               ? 1.12
                                               : (_hoveredIndex == index
-                                                    ? 1.05
-                                                    : 1.0),
+                                                  ? 1.05
+                                                  : 1.0),
                                           duration: const Duration(
                                             milliseconds: 200,
                                           ),
@@ -241,7 +244,8 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                                   ? [
                                                       BoxShadow(
                                                         color: Colors.amber
-                                                            .withValues(alpha: 0.4),
+                                                            .withValues(
+                                                                alpha: 0.4),
                                                         blurRadius: 16,
                                                         spreadRadius: 3,
                                                       ),
@@ -255,9 +259,9 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                               ),
                                               description:
                                                   _getChoiceDescription(
-                                                    context,
-                                                    choice,
-                                                  ),
+                                                context,
+                                                choice,
+                                              ),
                                               onTap: () {
                                                 if (_hasMythicChoices &&
                                                     !_mythicCompleted) {
@@ -297,7 +301,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                               return Flexible(
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
+                                    horizontal: AppSpacing.sm,
                                   ),
                                   child: ConstrainedBox(
                                     constraints: const BoxConstraints(
@@ -312,8 +316,8 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                         scale: _selectedIndex == index
                                             ? 1.12
                                             : (_hoveredIndex == index
-                                                  ? 1.05
-                                                  : 1.0),
+                                                ? 1.05
+                                                : 1.0),
                                         duration: const Duration(
                                           milliseconds: 200,
                                         ),
@@ -330,7 +334,8 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                                 ? [
                                                     BoxShadow(
                                                       color: Colors.amber
-                                                          .withValues(alpha: 0.4),
+                                                          .withValues(
+                                                              alpha: 0.4),
                                                       blurRadius: 16,
                                                       spreadRadius: 3,
                                                     ),
@@ -408,82 +413,80 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                             ],
                           ),
                         ),
-                        const SizedBox(height: 40),
+                        AppSpacing.heightXxl,
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: _choices
                               .where((c) => c.rarity == RewardRarity.mythic)
                               .map((choice) {
-                                final mythicIndex = _choices.indexOf(choice);
-                                final relativeIndex = mythicIndex - 3;
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
+                            final mythicIndex = _choices.indexOf(choice);
+                            final relativeIndex = mythicIndex - 3;
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.md,
+                              ),
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 160,
+                                ),
+                                child: MouseRegion(
+                                  onEnter: (_) => setState(
+                                    () => _hoveredIndex = mythicIndex,
                                   ),
-                                  child: ConstrainedBox(
-                                    constraints: const BoxConstraints(
-                                      maxWidth: 160,
+                                  onExit: (_) =>
+                                      setState(() => _hoveredIndex = null),
+                                  child: AnimatedScale(
+                                    scale: _selectedIndex == mythicIndex
+                                        ? 1.12
+                                        : (_hoveredIndex == mythicIndex
+                                            ? 1.05
+                                            : 1.0),
+                                    duration: const Duration(
+                                      milliseconds: 200,
                                     ),
-                                    child: MouseRegion(
-                                      onEnter: (_) => setState(
-                                        () => _hoveredIndex = mythicIndex,
+                                    curve: Curves.easeOut,
+                                    child: AnimatedContainer(
+                                      duration: const Duration(
+                                        milliseconds: 200,
                                       ),
-                                      onExit: (_) =>
-                                          setState(() => _hoveredIndex = null),
-                                      child: AnimatedScale(
-                                        scale: _selectedIndex == mythicIndex
-                                            ? 1.12
-                                            : (_hoveredIndex == mythicIndex
-                                                  ? 1.05
-                                                  : 1.0),
-                                        duration: const Duration(
-                                          milliseconds: 200,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(
+                                          12,
                                         ),
-                                        curve: Curves.easeOut,
-                                        child: AnimatedContainer(
-                                          duration: const Duration(
-                                            milliseconds: 200,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                            boxShadow:
-                                                _selectedIndex == mythicIndex
-                                                ? [
-                                                    BoxShadow(
-                                                      color: Colors.amber
-                                                          .withValues(alpha: 0.4),
-                                                      blurRadius: 16,
-                                                      spreadRadius: 3,
-                                                    ),
-                                                  ]
-                                                : [],
-                                          ),
-                                          child: DraftCardReel(
-                                            title: _getChoiceTitle(
-                                              context,
-                                              choice,
-                                            ),
-                                            description: _getChoiceDescription(
-                                              context,
-                                              choice,
-                                            ),
-                                            onTap: () {},
-                                            rarity: _rarityToString(
-                                              context,
-                                              choice.rarity,
-                                            ),
-                                            index: relativeIndex,
-                                            onLand: _onMythicReelLanded,
-                                          ),
+                                        boxShadow: _selectedIndex == mythicIndex
+                                            ? [
+                                                BoxShadow(
+                                                  color: Colors.amber
+                                                      .withValues(alpha: 0.4),
+                                                  blurRadius: 16,
+                                                  spreadRadius: 3,
+                                                ),
+                                              ]
+                                            : [],
+                                      ),
+                                      child: DraftCardReel(
+                                        title: _getChoiceTitle(
+                                          context,
+                                          choice,
                                         ),
+                                        description: _getChoiceDescription(
+                                          context,
+                                          choice,
+                                        ),
+                                        onTap: () {},
+                                        rarity: _rarityToString(
+                                          context,
+                                          choice.rarity,
+                                        ),
+                                        index: relativeIndex,
+                                        onLand: _onMythicReelLanded,
                                       ),
                                     ),
                                   ),
-                                );
-                              })
-                              .toList(),
+                                ),
+                              ),
+                            );
+                          }).toList(),
                         ),
                       ],
                     ),
@@ -500,48 +503,39 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                 builder: (context, child) {
                   final val = _alertController.value;
 
-                  // Phase 1: Draw line from left to right (0.0 to 0.2) - Twice as fast
                   double lineWidthPercent = (val / 0.2).clamp(0.0, 1.0);
 
-                  // Phase 2: Exclamation marks scale up elastically (0.2 to 0.6)
                   double exclamationScale = 0.0;
                   if (val > 0.2) {
                     final t = (val - 0.2) / 0.4;
-                    // Elastic ease out
                     const c4 = (2 * pi) / 3;
                     exclamationScale = t == 0
                         ? 0
                         : t == 1
-                        ? 1
-                        : pow(2, -10 * t) * sin((t * 10 - 0.75) * c4) + 1;
+                            ? 1
+                            : pow(2, -10 * t) * sin((t * 10 - 0.75) * c4) + 1;
                     exclamationScale = exclamationScale.clamp(0.0, 1.2);
                   }
 
-                  // Phase 3: Blinking warning (0.6 to 1.0)
                   bool isVisible = true;
                   if (val > 0.6) {
-                    // Blinks twice
                     final blinkVal = ((val - 0.6) / 0.4 * 6).floor();
                     isVisible = blinkVal % 2 == 0;
                   }
 
                   return Stack(
                     children: [
-                      // Darken background slightly to increase contrast
                       Positioned.fill(
                         child: Container(
                           color: Colors.black.withValues(alpha: 0.3 * val),
                         ),
                       ),
-
-                      // Horizontal Red Line
                       Center(
                         child: Align(
                           alignment: Alignment.centerLeft,
                           child: Container(
                             height: 6,
-                            width:
-                                MediaQuery.of(context).size.width *
+                            width: MediaQuery.of(context).size.width *
                                 lineWidthPercent,
                             decoration: BoxDecoration(
                               color: isVisible
@@ -549,9 +543,8 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                   : Colors.transparent,
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(
-                                    0xFFE53E3E,
-                                  ).withValues(alpha: 0.8),
+                                  color: const Color(0xFFE53E3E)
+                                      .withValues(alpha: 0.8),
                                   blurRadius: 15,
                                   spreadRadius: 2,
                                 ),
@@ -560,8 +553,6 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                           ),
                         ),
                       ),
-
-                      // Exclamation Points
                       if (val > 0.2 && isVisible)
                         Center(
                           child: Transform.scale(
@@ -606,7 +597,6 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).languageCode;
 
-    // Choisir 3 cartes aléatoires
     masterDeck.shuffle();
     final options = masterDeck.take(3).toList();
 
@@ -619,42 +609,42 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
       context: context,
       barrierDismissible: false,
       builder: (ctx) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF2A2A3D),
+        return GameDialog(
+          showCloseButton: false,
           title: Text(
             l10n.chooseCardToClone,
-            style: const TextStyle(color: Colors.white),
           ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: options
-                  .map(
-                    (card) => ListTile(
-                      title: Text(
-                        card.data.getName(locale),
-                        style: const TextStyle(color: Colors.amber),
+          content: Material(
+            color: Colors.transparent,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: options
+                    .map(
+                      (card) => ListTile(
+                        title: Text(
+                          card.data.getName(locale),
+                          style: const TextStyle(color: Colors.amber),
+                        ),
+                        subtitle: Text(
+                          card.rarity.getLabel(l10n).toUpperCase(),
+                          style: const TextStyle(color: Colors.white70),
+                        ),
+                        onTap: () {
+                          ref.read(deckProvider.notifier).addCardToMasterDeck(
+                                CardInstance(
+                                  data: card.data,
+                                  rarity: card.rarity,
+                                  forgeUpgrades: List.from(card.forgeUpgrades),
+                                ),
+                              );
+                          Navigator.of(ctx).pop();
+                          _finishDraft(ref);
+                        },
                       ),
-                      subtitle: Text(
-                        card.rarity.name.toUpperCase(),
-                        style: const TextStyle(color: Colors.white70),
-                      ),
-                      onTap: () {
-                        ref
-                            .read(deckProvider.notifier)
-                            .addCardToMasterDeck(
-                              CardInstance(
-                                data: card.data,
-                                rarity: card.rarity,
-                                forgeUpgrades: List.from(card.forgeUpgrades),
-                              ),
-                            );
-                        Navigator.of(ctx).pop();
-                        _finishDraft(ref);
-                      },
-                    ),
-                  )
-                  .toList(),
+                    )
+                    .toList(),
+              ),
             ),
           ),
         );
@@ -705,14 +695,12 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
       }
     }
     final rng = Random();
-    // Probabilités de base (sur 100)
     double mythicChance = isLevelReward ? 0.5 : 0.0;
     double legendaryChance = 2.0;
     double epicChance = 6.0;
     double rareChance = 16.0;
     double uncommonChance = 24.0;
 
-    // La chance augmente les probabilités des hautes raretés
     if (isLevelReward) {
       mythicChance += luck * 0.15;
     }
@@ -732,7 +720,6 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
 
     if (canBeLegendary && roll < legendaryChance) return RewardRarity.legendary;
     if (!canBeLegendary) {
-      // Si on ne peut pas être légendaire, on décale le roll pour ignorer la tranche légendaire
       roll = (rng.nextDouble() * (100 - legendaryChance)) + legendaryChance;
     } else {
       roll -= legendaryChance;
@@ -752,7 +739,6 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
     final runState = ref.read(runProvider);
     final luck = runState.heroStats.luck;
 
-    // 1. Génération des 3 choix standards (Commun à Légendaire)
     final choices = List.generate(3, (index) {
       RewardRarity rarity;
       if (widget.forceLegendary) {
@@ -799,12 +785,10 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
         );
       }
       if (type == 2) {
-        // Maîtrise d'Armure (Bonus permanent sur les gains passifs uniquement)
-        // Les valeurs sont plus petites car c'est un bonus cumulatif puissant
         double masteryMultiplier = 1.0;
-        if (rarity == RewardRarity.uncommon) masteryMultiplier = 2.0; // +2
-        if (rarity == RewardRarity.rare) masteryMultiplier = 3.0; // +3
-        if (rarity == RewardRarity.epic) masteryMultiplier = 5.0; // +5
+        if (rarity == RewardRarity.uncommon) masteryMultiplier = 2.0;
+        if (rarity == RewardRarity.rare) masteryMultiplier = 3.0;
+        if (rarity == RewardRarity.epic) masteryMultiplier = 5.0;
         int boost = (1 * masteryMultiplier).round();
         return _DraftChoice(
           'Forge d\'Acier',
@@ -817,8 +801,6 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
         );
       }
       if (type == 3) {
-        // type == 3 : Sagesse (Mana)
-        // On utilise les mêmes multiplicateurs pour rester cohérent
         int boost = (1 * multiplier).round();
         if (boost < 1) boost = 1;
         return _DraftChoice(
@@ -862,7 +844,6 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
           rarity: rarity,
         );
       }
-      // type == 5 : Férocité
       double boost;
       switch (rarity) {
         case RewardRarity.common:
@@ -894,10 +875,6 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
       );
     });
 
-    // 2. Tirage des récompenses Légendaires (En bonus, en plus des 3 choix)
-    // Chaque récompense légendaire est testée indépendamment
-
-    // Trèfle à 4 feuilles
     if (_rollRarity(luck, isLevelReward: true) == RewardRarity.mythic) {
       choices.add(
         _DraftChoice(
@@ -913,7 +890,6 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
       );
     }
 
-    // Miroir (Clonage)
     if (_rollRarity(luck, isLevelReward: true) == RewardRarity.mythic) {
       choices.add(
         _DraftChoice(
@@ -962,4 +938,3 @@ class _DraftChoice {
     this.critDamageBoost = 0.0,
   });
 }
-

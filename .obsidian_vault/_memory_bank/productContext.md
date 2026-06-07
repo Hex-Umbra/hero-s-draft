@@ -604,3 +604,49 @@ Le tutoriel se présente sous la forme d'un `PageView` non-swipeable, où la pro
 - **i18n Intégrée** : Pour respecter les règles de bilinguisme, le modèle `TutorialStepData` intègre ses propres champs doublés (`titleEn`/`titleFr`, `bodyEn`/`bodyFr`). La sélection de la langue est résolue dynamiquement à l'affichage via `Localizations.localeOf(context).languageCode`.
 - **Persistance (`SharedPreferences`)** : L'état de complétion du tutoriel est stocké par le service `TutorialProgressService` sous la clé `tutorial_completed`.
 - **Badge "NEW" sur l'Accueil** : L'écran d'accueil (`HomeScreen`) affiche un badge "NEW" rouge et brillant à côté du bouton "TUTORIEL" tant que le joueur ne l'a pas terminé. Une fois le tutoriel complété au moins une fois, le badge disparaît définitivement. Le tutoriel reste rejouable à l'infini pour réviser les bases.
+
+---
+
+## 9. Sprint de Consolidation Architecturale & Qualité Visuelle (v0.0.97 → v0.0.99)
+
+Ce sprint tri-phase constitue un investissement majeur dans la **qualité technique** et la **maintenabilité à long terme** du projet, sans ajout de features gameplay. Chaque phase a été validée avec 104/104 tests au vert et 0 erreur `dart analyze`.
+
+### 9.1. Option A — Modernisation Architecturale (v0.0.97)
+
+**Impact produit** : Réduction de la dette technique critique. Les contrôleurs métier (8+) migrent de `StateNotifier` vers `Notifier`, ce qui supprime les constructeurs à injection massive et les risques de cycles de dépendances. `CardInstance` devient strictement immuable.
+
+**Portée technique** :
+- `RunController`, `CombatController`, `DeckNotifier`, `InventoryController`, `SkillController`, `EventController`, `ShopController`, `RewardController` → héritage de `Notifier<T>`.
+- `CardInstance.forgeUpgrades` → `List<String>.unmodifiable` avec pattern `copyWith`.
+- Logique `executeSkill` extraite de `HerosDraftGame` vers `CombatController`.
+
+### 9.2. Option B — Performance & Animations (v0.0.98)
+
+**Impact produit** : Fluidité et "game feel" améliorés, notamment sur mobile. Les animations de combat sont synchronisées à la frame d'impact réelle, et la pioche devient physiquement satisfaisante.
+
+**Portée technique** :
+- `FloatingText` & `EffectIcon` : suppression des `saveLayer` → peindre direct.
+- `CardComponent` : caching `TextPainter`, `saveLayer` conditionnel (`opacity < 1.0`).
+- `EnemyCard` : buffer `_pendingVisualInstance`, déclenchement sur `resolvePendingVisualStats()`.
+- `CardAnimator` : suppression des branches de double-déclenchement.
+- Spawn pioche à `Vector2(40, size.y - 40)` + Flame Effects chaînés.
+
+### 9.3. Option C — Système de Design & Uniformisation UI (v0.0.99)
+
+**Impact produit** : Cohérence visuelle garantie à l'échelle de toute l'application. Les couleurs de rareté, les espacements et la typographie sont maintenant gérés depuis une source de vérité unique. Un bug de layout `GameButton` est résolu.
+
+**Portée technique** :
+- Module `lib/ui/theme/` : `AppColors`, `AppSpacing`, `AppTheme`.
+- Extensions `CardRarityColor` et `RelicRarityColor` sur les enums de rareté.
+- Correction `GameButton` : `Flexible` + omission `Text` si null.
+- `RelicsDialog` : `switch` de 19 lignes → `.color`.
+
+### 9.4. Invariants de Qualité Post-Sprint
+
+| Invariant | Valeur |
+|:---|:---|
+| Tests automatisés | 104/104 ✅ |
+| Erreurs `dart analyze` | 0 ✅ |
+| Pattern Riverpod | `Notifier<T>` (v2.x) pour tous les contrôleurs |
+| Source de vérité couleurs | `AppColors` (aucune magic constant dans les widgets) |
+| Immuabilité des modèles | `CardInstance` : tous attributs `final` + `List.unmodifiable` |

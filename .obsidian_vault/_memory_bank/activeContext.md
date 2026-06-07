@@ -4,7 +4,11 @@ Ce document décrit le focus actif du projet, les accomplissements récents, et 
 
 ## 1. Focus Actuel du Projet
 
-Le projet vient de finaliser l'optimisation des performances graphiques de Flame et la synchronisation des animations de combat (Version 0.0.98 : Optimisations Graphiques & Fluidité des Animations). Cette mise à jour élimine les allocations GPU coûteuses (`saveLayer`), met en cache les calculs de texte complexes, aligne visuellement les impacts des cartes avec la logique de combat, et enrichit l'effet de pioche par une transition physique fluide.
+Le projet vient de finaliser le **Sprint de Consolidation Architecturale & Qualité Visuelle**, couvrant trois options complémentaires :
+
+- **v0.0.97 — Modernisation Architecturale** : Migration complète de 8+ contrôleurs Riverpod de `StateNotifier` vers le pattern `Notifier`, immuabilité stricte de `CardInstance` via `List.unmodifiable`, et externalisation de la logique de compétences hors de Flame vers `CombatController`.
+- **v0.0.98 — Performance & Animations** : Optimisation GPU/CPU (élimination des `saveLayer` superflus dans `FloatingText` et `EffectIcon`, caching des `TextPainter`), animation organique de pioche, synchronisation synchrone des impacts de combat, et prévention du double-trigger dans `CardAnimator`.
+- **v0.0.99 — Système de Design & Uniformisation UI** : Centralisation des tokens de design (`AppColors`, `AppSpacing`, `AppTheme`), extensions Dart sur les enums de rareté (`CardRarity.color`, `RelicRarity.color`), correction du bug `RenderFlex` overflow sur `GameButton`, et refactoring de `RelicsDialog` via les extensions de rareté centralisées.
 
 Le focus actuel se tourne désormais vers les étapes restantes de la Phase 7 de la roadmap technique (Autosave/Persistance, parallélisation I/O dans `GameDataService`, et intégration audio).
 
@@ -130,7 +134,12 @@ Le focus actuel se tourne désormais vers les étapes restantes de la Phase 7 de
      - **Prévention des Doubles Déclenchements** : Retrait des réactions redondantes dans `CardAnimator` pour éliminer les bugs d'animation d'impact double.
      - **Transition Organique de Pioche** : Les cartes tirées apparaissent à la coordonnée de la pioche `Vector2(40, size.y - 40)` et glissent, pivotent et s'adaptent à l'échelle via des Flame Effects jusqu'à leur position finale dans l'arc circulaire de la main.
 
----
+ 18. **Système de Design & Uniformisation UI (Version 0.0.99)** :
+     - **Tokens de Design Centralisés** : Création du module `lib/ui/theme/` regroupant `AppColors` (palettes Neon Dark + Parchemin + couleurs sémantiques de stats, de raretés de cartes et de reliques), `AppSpacing` (helpers `EdgeInsets` standardisés), et `AppTheme` (génération d'un `ThemeData` complet dark/light avec polices, couleurs primaires et styles de texte cohérents).
+     - **Extensions Dart sur les Enums de Rareté** : Ajout d'un getter `.color` centralisé sur `CardRarity` et `RelicRarity` via des extensions Dart, remplaçant les switch-case dispersés par un accès direct (`card.rarity.color`, `relic.rarity.color`).
+     - **Correction `GameButton` (RenderFlex overflow)** : Résolution d'un bug d'overflow sur les boutons contenant uniquement une icône dorée sans libellé textuel, rendu stable sur tous les rapports d'aspect.
+     - **Refactoring `RelicsDialog`** : Remplacement d'un bloc `switch` de 19 lignes par un appel unique `.color` via l'extension `RelicRarity`, rendant le composant concis, lisible et auto-documenté.
+     - **Validation** : 104/104 tests passés, 0 erreurs d'analyse.
 
 ---
 

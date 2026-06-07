@@ -3,11 +3,11 @@
 Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnalités de **Hero's Draft** : opérationnelles, partiellement implémentées, non implémentées, et les chantiers de refactoring prioritaires issus des rapports de dette technique.
 
 **Métriques du projet** :
-- **~10 600 lignes** de code source dans `lib/` (65 fichiers).
+- **~11 000 lignes** de code source dans `lib/` (68 fichiers, module `lib/ui/theme/` ajouté).
 - **8 fichiers JSON** de données d'assets.
 - **104 tests automatisés** — 100% au vert.
 - **0 erreur** via `flutter analyze`.
-- **~112 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
+- **~115 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
 
 ---
 
@@ -99,6 +99,10 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Fonctionnalité | Implémentation | Détails |
 |:---|:---|:---|
 | `UiCard` unifié | `lib/ui/widgets/ui_card.dart` | Remplace 6 rendus dupliqués, ratio 70/110, gradients par rareté |
+| Système de Design Centralisé | `lib/ui/theme/app_colors.dart`, `app_spacing.dart`, `app_theme.dart` | `AppColors` (Neon Dark + Parchemin + stats + raretés + sémantiques), `AppSpacing` (EdgeInsets helpers), `AppTheme` (ThemeData complet dark/light) — v0.0.99 |
+| Extensions Enum Rareté | `CardRarity.color`, `RelicRarity.color` (extensions Dart) | Getter `.color` centralisé sur les enums de rareté de cartes et reliques, remplace les switch-case dispersés — v0.0.99 |
+| Correction `GameButton` overflow | `lib/ui/widgets/game_button.dart` | Résolution du bug `RenderFlex` overflow sur les boutons or-seulement (icône sans libellé) — v0.0.99 |
+| Refactoring `RelicsDialog` | `lib/ui/widgets/relics_dialog.dart` | Remplacement d'un `switch` de 19 lignes par `.color` via extension `RelicRarity` — v0.0.99 |
 | Tilt organique des cartes | `CardComponent` (DragCallbacks) | Rotation proportionnelle à la vélocité horizontale au glissement |
 | Shake d'erreur mana | `CardComponent._shakeAnimation()` | `SequenceEffect` oscillations rapides en cas de manque de mana |
 | Courbe de ciblage Bézier | `targeting_line.dart` | Courbe quadratique de Bézier fluide avec pointillés défilants et tête orientée via la tangente |
@@ -261,7 +265,7 @@ Basé sur les rapports de dette technique (`technical_debt_report_Opus4.6.md`, 4
 | Critique | Immuabilité réelle des listes | Listes mutables dans états "immuables" | ✅ List.unmodifiable() et final dans CardInstance (v0.0.97) | Tous les controllers |
 | Critique | Validation des entrées | `gainGold(-50)` fonctionne, HP peut dépasser maxHP | Ajouter validation dans chaque mutation | `run_controller.dart`, `inventory_controller.dart` |
 | Important | Error handling I/O | Aucun `try-catch` dans `GameDataService` | Wrapping avec fallbacks gracieux | `game_data_service.dart` |
-| Important | Design System | Pas de `AppColors`, `AppTextStyles` — 100+ magic constants | Créer `lib/ui/theme/` | Nouveau fichier |
+| Important | Design System | ~~Pas de `AppColors`, `AppTextStyles` — 100+ magic constants~~ | ✅ `AppColors`, `AppSpacing`, `AppTheme` créés dans `lib/ui/theme/` + extensions enum rareté (v0.0.99) | `lib/ui/theme/` |
 | Moyen | Lookup O(1) | `GameDataRegistry` utilise `List` avec O(n) | Migrer vers `Map<String, T>` | `game_data_registry.dart` |
 
 ### 🟡 Phase 2 — Décomposition God Classes (Semaines 3-4)
