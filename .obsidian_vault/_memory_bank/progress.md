@@ -3,11 +3,12 @@
 Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnalités de **Hero's Draft** : opérationnelles, partiellement implémentées, non implémentées, et les chantiers de refactoring prioritaires issus des rapports de dette technique.
 
 **Métriques du projet** :
-- **~11 000 lignes** de code source dans `lib/` (68 fichiers, module `lib/ui/theme/` ajouté).
+- **~11 200 lignes** de code source dans `lib/` (69 fichiers, modules `lib/ui/theme/` et `lib/ui/widgets/hud/` ajoutés).
 - **8 fichiers JSON** de données d'assets.
 - **104 tests automatisés** — 100% au vert.
 - **0 erreur** via `flutter analyze`.
-- **~115 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
+- **~116 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
+- **Version actuelle** : v0.1.00 — Sprint UX Combat & Rendu HP Dual-Bar.
 
 ---
 
@@ -131,6 +132,10 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Caching CPU & Opacité Textes | `CardComponent`, `TextPainter` | Caching des layouts de texte complexes et utilisation conditionnelle de `saveLayer` uniquement si `opacity < 1.0` (v0.0.98) |
 | Transition Organique de Pioche | `HerosDraftGame`, `CardComponent` | Spawning des cartes à la pioche `Vector2(40, size.y - 40)` avec glissement, scale et rotation asynchrones vers la main (v0.0.98) |
 | Synchro d'Impact & Anti-Double | `EnemyCard`, `CardAnimator` | Dégâts et effets d'impact (flashs, tremblements, particules) différés jusqu'à la collision physique réelle; suppression des doublons (v0.0.98) |
+| Blocage de Pioche (Input Blocking) | `CardComponent`, `HerosDraftGame` | Protection contre les clics ou glissements prématurés durant la pioche via le drapeau `isEnteringHand` (v0.1.00) |
+| Tooltips de Combat Ciblés | `ui_card.dart`, `card_component.dart` | Affichage sélectif sur focus de carte, auto-masquage au jeu ou changement de phase, et injection formatée des upgrades de forge (v0.1.00) |
+| Rendu d'Étoiles de Forge | `card_text_renderer.dart`, `ui_card.dart` | Représentation visuelle des upgrades sous forme d'étoiles dorées (pleines/vides) proportionnelle à la capacité de la carte (v0.1.00) |
+| Jauge HP Double-Transition | `PlayerHealthBar` | Refactorisation en StatefulWidget animée par TweenAnimationBuilder (500ms, easeOutCubic) avec jauge secondaire rouge/orange lagging sous les dégâts et snap direct au soin (v0.1.00) |
 
 
 ### 💀 Z-Sync Death & Stats System (Système de Mort et de Stats Synchronisé)

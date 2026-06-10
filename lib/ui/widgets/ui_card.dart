@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../models/data/card_data.dart';
-import 'sword_icon.dart';
 
 class _UiCardEffectVisuals {
   final IconData icon;
@@ -25,6 +24,7 @@ class UiCard extends StatelessWidget {
   final bool isSelected;
   final bool isGrayedOut;
   final VoidCallback? onTap;
+  final int baseMaxForgeUpgrades;
 
   const UiCard({
     super.key,
@@ -43,6 +43,7 @@ class UiCard extends StatelessWidget {
     this.isSelected = false,
     this.isGrayedOut = false,
     this.onTap,
+    this.baseMaxForgeUpgrades = 1,
   });
 
   CardTarget? _resolveTarget() {
@@ -119,7 +120,7 @@ class UiCard extends StatelessWidget {
                 label,
                 style: const TextStyle(
                   color: Colors.white70,
-                  fontSize: 8,
+                  fontSize: 7.0,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -268,7 +269,7 @@ class UiCard extends StatelessWidget {
               description,
               style: const TextStyle(
                 color: Colors.white70,
-                fontSize: 9,
+                fontSize: 8.0,
                 height: 1.2,
               ),
               textAlign: TextAlign.center,
@@ -309,14 +310,14 @@ class UiCard extends StatelessWidget {
           Icon(
             visuals.icon,
             color: visuals.color,
-            size: 25, // Reduced by 1/4 (from 33)
+            size: 22.0,
           ),
           const SizedBox(width: 4),
           Text(
             '$scaledValue',
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 18, // Reduced from 22
+              fontSize: 15.0,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -365,7 +366,7 @@ class UiCard extends StatelessWidget {
               '|',
               style: TextStyle(
                 color: Colors.white24,
-                fontSize: 20, // Reduced from 24
+                fontSize: 15.0,
                 fontWeight: FontWeight.w200,
               ),
             ),
@@ -643,18 +644,6 @@ class UiCard extends StatelessWidget {
             ),
             child: Stack(
               children: [
-                // Motif de fond subtil selon le type
-                Positioned.fill(
-                  child: Opacity(
-                    opacity: 0.05,
-                    child: type == CardType.attack
-                        ? const Center(
-                            child: SwordIcon(size: 80, color: Colors.white),
-                          )
-                        : Icon(_getTypeIcon(), size: 80, color: Colors.white),
-                  ),
-                ),
-
                 // Titre (Fixé en haut)
                 Positioned(
                   top: 10,
@@ -664,7 +653,7 @@ class UiCard extends StatelessWidget {
                     title.toUpperCase(),
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 12,
+                      fontSize: 10.5,
                       fontWeight: FontWeight.w900,
                       letterSpacing: 0.5,
                     ),
@@ -675,7 +664,7 @@ class UiCard extends StatelessWidget {
 
                 // Ligne de séparation
                 Positioned(
-                  top: 28,
+                  top: 26,
                   left: 0,
                   right: 0,
                   child: Center(
@@ -690,14 +679,14 @@ class UiCard extends StatelessWidget {
                 // Rareté
                 if (rarity != null)
                   Positioned(
-                    top: 36,
+                    top: 32,
                     left: 0,
                     right: 0,
                     child: Text(
                       rarity!.toUpperCase(),
                       style: TextStyle(
                         color: _getRarityColor(context, rarity!),
-                        fontSize: 9,
+                        fontSize: 7.0,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1.2,
                       ),
@@ -705,10 +694,34 @@ class UiCard extends StatelessWidget {
                     ),
                   ),
 
+                // Étoiles de Forge
+                if (rarity != null)
+                  Positioned(
+                    top: 42,
+                    left: 0,
+                    right: 0,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(
+                        baseMaxForgeUpgrades + _getRarityIndex(context),
+                        (index) => Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 0.5),
+                          child: Icon(
+                            index < forgeUpgrades.length
+                                ? Icons.star
+                                : Icons.star_border,
+                            color: Colors.amber,
+                            size: 8,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
                 // Badge Usage Unique
                 if (isExhaust || type == CardType.power)
                   Positioned(
-                    top: 50,
+                    top: 54,
                     left: 0,
                     right: 0,
                     child: Center(
@@ -725,7 +738,7 @@ class UiCard extends StatelessWidget {
                           l10n.oncePlayed.toUpperCase(),
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 8,
+                            fontSize: 7.0,
                             fontWeight: FontWeight.w900,
                           ),
                         ),
@@ -735,8 +748,8 @@ class UiCard extends StatelessWidget {
 
                 // Description (Centrée verticalement)
                 Positioned(
-                  top: 68,
-                  bottom: 40,
+                  top: 70,
+                  bottom: 38,
                   left: 8,
                   right: 8,
                   child: Center(child: _buildCompactDescription(context)),
@@ -745,7 +758,7 @@ class UiCard extends StatelessWidget {
                 // Cristaux de Mana (En bas au centre)
                 if (cost != null && cost! > 0)
                   Positioned(
-                    bottom: 22,
+                    bottom: 20,
                     left: 0,
                     right: 0,
                     child: Row(
@@ -773,7 +786,7 @@ class UiCard extends StatelessWidget {
                     _getTypeLabel(context).toUpperCase(),
                     style: TextStyle(
                       color: typeColor.withAlpha(180),
-                      fontSize: 8,
+                      fontSize: 7.0,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1.0,
                     ),
@@ -786,21 +799,6 @@ class UiCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  IconData _getTypeIcon() {
-    switch (type) {
-      case CardType.attack:
-        return Icons.hardware_rounded;
-      case CardType.skill:
-        return Icons.shield_rounded;
-      case CardType.power:
-        return Icons.auto_fix_high_rounded;
-      case CardType.status:
-        return Icons.warning_rounded;
-      default:
-        return Icons.help_outline;
-    }
   }
 
   String _getTypeLabel(BuildContext context) {
@@ -846,5 +844,38 @@ class UiCard extends StatelessWidget {
       return Colors.white70;
     }
     return Colors.white54;
+  }
+
+  int _getRarityIndex(BuildContext context) {
+    if (rarity == null) return 0;
+    final l10n = AppLocalizations.of(context)!;
+    final r = rarity!.toLowerCase();
+    if (r == l10n.rarityLegendary.toLowerCase() ||
+        r.contains('legendary') ||
+        r.contains('légendaire')) {
+      return 4;
+    }
+    if (r == l10n.rarityEpic.toLowerCase() ||
+        r.contains('epic') ||
+        r.contains('épique')) {
+      return 3;
+    }
+    if (r == l10n.rarityRare.toLowerCase() || r.contains('rare')) {
+      return 2;
+    }
+    if (r == l10n.rarityUncommon.toLowerCase() ||
+        r.contains('uncommon') ||
+        r.contains('peu commun')) {
+      return 1;
+    }
+    if (r == l10n.rarityCommon.toLowerCase() ||
+        r.contains('common') ||
+        r.contains('commun')) {
+      return 0;
+    }
+    if (r.contains('unique')) {
+      return 5;
+    }
+    return 0;
   }
 }

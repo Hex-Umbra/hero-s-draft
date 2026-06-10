@@ -1113,3 +1113,50 @@ color: relic.rarity.color
 - **Aucune magic constant** dans les widgets. Toute couleur, espacement ou style de texte doit provenir de `AppColors`, `AppSpacing` ou `AppTheme`.
 - **Toute nouvelle rareté** (de carte ou de relique) doit être ajoutée simultanément dans les maps de `AppColors` et dans les extensions d'enum correspondantes.
 - **Les tokens de design ne dépendent d'aucun provider Riverpod**. Ils sont purement statiques et instanciables sans contexte d'application.
+
+---
+
+## 14. Architecture d'Amélioration de l'Interface & Cartes (UX Combat) (v0.1.00)
+
+Le sprint v0.1.00 introduit de nouveaux patrons d'interaction et de rendu pour l'interface de combat (Flame et Flutter).
+
+### 14.1. Verrouillage Tactile Temporaire lors du Dealing (Input Blocking)
+
+Pour éviter les race conditions d'interactions (comme le fait de survoler, cliquer ou glisser une carte en train d'être distribuée depuis la pioche, ce qui provoquait des sauts physiques ou des désalignements de l'arc de la main), un patron de verrouillage a été mis en œuvre :
+1. **Drapeau d'état** : `CardComponent` possède le drapeau public `isEnteringHand`.
+2. **Garde d'interaction** : Les méthodes d'entrée de `CardComponent` (`onTapDown`, `onDragStart`, `onHoverEnter`, `onHoverExit`, `onDragUpdate`) effectuent une garde directe :
+   ```dart
+   if (isEnteringHand || isPlayed) return;
+   ```
+3. **Orchestration de la Pioche** : Lors de la pioche dans `HerosDraftGame._applyDeckState()`, les nouvelles cartes sont instanciées avec `isEnteringHand = true`.
+4. **Ralentissement de Transition** : Dans `_layoutHand()`, la durée du `MoveEffect` est portée à `0.7s` (au lieu de `0.35s` pour le tri standard) pour donner une impression de distribution fluide et majestueuse. Un callback `onComplete` réinitialise `card.isEnteringHand = false` lorsque le glissement se termine, rendant la carte de nouveau interactive.
+
+### 14.2. Affichage Ciblé des Infobulles de Combat (Focused Tooltips)
+
+Afin d'éviter l'encombrement de l'écran par des infobulles intempestives lors du simple glissement de la souris, le système de tooltips a été restreint :
+- **Sélection Active uniquement** : Les rappels `onShowTooltip`/`onHideTooltip` ne sont plus déclenchés au simple survol de la souris en combat. Ils sont uniquement lancés lorsque le joueur clique activement sur une carte pour la focaliser ou initier un ciblage.
+- **Auto-masquage** : Le tooltip est automatiquement masqué lorsque la carte est jouée, désélectionnée (clic dans le vide), ou lorsque la phase du combat change.
+- **Formatage des Upgrades** : Le descriptif de l'infobulle appelle `_buildDetailedDescription()` qui concatène proprement la liste des améliorations de forge sous la forme d'une liste à puces en bas du texte.
+
+### 14.3. Rendu d'Étoiles de Forge (Upgrade Progress Stars)
+
+Pour matérialiser visuellement le niveau de forge de chaque carte sans surcharger son illustration :
+- **Calcul du Ratio** : La carte affiche un nombre d'étoiles proportionnel à sa capacité maximale :
+  - Nombre d'étoiles total = $\text{Capacité} = baseMaxForgeUpgrades + rarityIndex$
+  - Nombre d'étoiles dorées pleines = `card.forgeUpgrades.length`
+  - Le reliquat de la capacité est dessiné sous forme d'étoiles vides.
+- **Rendu Unifié (Flame & Flutter)** :
+  - Dans `card_text_renderer.dart` (Flame) : Une boucle dessine des étoiles dorées vectorielles via l'API Canvas sous le label de rareté.
+  - Dans `ui_card.dart` (Flutter) : Une rangée d'icônes `Icons.star` / `Icons.star_border` dorées est insérée de manière dynamique dans l'arbre de widgets.
+
+### 14.4. Double Jauge de Transition (HP Dual-Bar Animation)
+
+Pour fournir un feedback d'impact clair tout en conservant une traînée persistante sous les dégâts subis :
+- **Modèle Double-Jauge** : La barre de vie comporte une jauge avant-plan (verte/jaune/rouge représentant la vie instantanée) et une jauge arrière-plan (rouge/orange représentant la vie précédente avant transition).
+- **Interpolation lagging (Dégâts)** :
+  - La jauge verte d'avant-plan chute instantanément pour donner une sensation d'impact immédiate.
+  - La jauge rouge d'arrière-plan descend lentement via un `TweenAnimationBuilder` configuré sur une durée de `500ms` avec la courbe de décélération progressive `Curves.easeOutCubic`.
+- **Alignement instantané (Soin)** :
+  - La jauge verte d'avant-plan augmente de manière animée et progressive pour signifier la guérison.
+  - La jauge rouge d'arrière-plan s'aligne immédiatement sur la jauge verte pour éviter tout effet de traînée inverse inesthétique.
+- **Gestion d'État** : `PlayerHealthBar` est convertie de `StatelessWidget` en `StatefulWidget` pour retenir localement le ratio de PV précédent (`_oldRatio`) et le comparer au nouveau ratio cible (`_targetRatio`) à chaque reconstruction de l'arbre.

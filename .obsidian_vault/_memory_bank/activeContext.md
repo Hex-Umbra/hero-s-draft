@@ -4,11 +4,11 @@ Ce document décrit le focus actif du projet, les accomplissements récents, et 
 
 ## 1. Focus Actuel du Projet
 
-Le projet vient de finaliser le **Sprint de Consolidation Architecturale & Qualité Visuelle**, couvrant trois options complémentaires :
+Le projet vient de finaliser le **Sprint d'Amélioration de l'Interface & Cartes à Jouer (UX Combat)** :
 
-- **v0.0.97 — Modernisation Architecturale** : Migration complète de 8+ contrôleurs Riverpod de `StateNotifier` vers le pattern `Notifier`, immuabilité stricte de `CardInstance` via `List.unmodifiable`, et externalisation de la logique de compétences hors de Flame vers `CombatController`.
-- **v0.0.98 — Performance & Animations** : Optimisation GPU/CPU (élimination des `saveLayer` superflus dans `FloatingText` et `EffectIcon`, caching des `TextPainter`), animation organique de pioche, synchronisation synchrone des impacts de combat, et prévention du double-trigger dans `CardAnimator`.
-- **v0.0.99 — Système de Design & Uniformisation UI** : Centralisation des tokens de design (`AppColors`, `AppSpacing`, `AppTheme`), extensions Dart sur les enums de rareté (`CardRarity.color`, `RelicRarity.color`), correction du bug `RenderFlex` overflow sur `GameButton`, et refactoring de `RelicsDialog` via les extensions de rareté centralisées.
+- **v0.1.00 — UX Combat & Rendu HP Dual-Bar** : Blocage temporaire et ralentissement de l'animation (0.7s) lors de la pioche des cartes, affichage ciblé et enrichissement des tooltips avec les upgrades de forge, polissage graphique et réduction des tailles de polices sur les cartes (Flame et Flutter), et implémentation d'une double barre de vie réactive (red/orange lag bar) pour le HUD joueur.
+
+Il a également récemment finalisé le **Sprint de Consolidation Architecturale & Qualité Visuelle** (v0.0.97 à v0.0.99).
 
 Le focus actuel se tourne désormais vers les étapes restantes de la Phase 7 de la roadmap technique (Autosave/Persistance, parallélisation I/O dans `GameDataService`, et intégration audio).
 
@@ -140,6 +140,13 @@ Le focus actuel se tourne désormais vers les étapes restantes de la Phase 7 de
      - **Correction `GameButton` (RenderFlex overflow)** : Résolution d'un bug d'overflow sur les boutons contenant uniquement une icône dorée sans libellé textuel, rendu stable sur tous les rapports d'aspect.
      - **Refactoring `RelicsDialog`** : Remplacement d'un bloc `switch` de 19 lignes par un appel unique `.color` via l'extension `RelicRarity`, rendant le composant concis, lisible et auto-documenté.
      - **Validation** : 104/104 tests passés, 0 erreurs d'analyse.
+
+ 19. **Interface & Cartes à Jouer (UX Combat - Section 1 - Version 0.1.00)** :
+     - **Blocage de la Pioche** : Les cartes en cours de distribution depuis la pioche vers la main sont temporairement non-interactables (`isEnteringHand = true` bloquant le survol, glissement et clic) et bénéficient d'une animation ralentie à `0.7s` (au lieu de `0.35s`) pour un rendu fluide et serein.
+     - **Contrôle et Contenu des Tooltips** : Les tooltips d'explication de combat ne s'affichent désormais que lorsqu'une carte est activement sélectionnée (focalisée) en combat et se masquent automatiquement lors du désélectionnement ou du jeu. Les descriptions détaillent de manière formatée l'intégralité des améliorations de forge appliquées.
+     - **Polissage des Cartes (Flame & Flutter)** : Retrait des icônes vectorielles translucides en arrière-plan pour réduire le bruit visuel. Diminution des tailles de police de 10% à 20% pour une meilleure lisibilité. Intégration d'un indicateur sous forme d'étoiles dorées (remplies/vides) représentant les upgrades appliqués par rapport à la capacité maximale sous le label de rareté.
+     - **Barre de Vie Premium (HUD Joueur)** : Refactorisation de `PlayerHealthBar` en `StatefulWidget` avec transition `TweenAnimationBuilder` (500ms, `Curves.easeOutCubic`). Sous l'effet des dégâts, la barre verte principale diminue instantanément alors qu'une barre de fond rouge/orange descend lentement. En cas de soin, la barre verte remonte de manière fluide tandis que la barre rouge la suit instantanément.
+     - **Validation** : Tous les tests de la suite automatisée (104/104 verts) passent avec succès, et le linter est vierge sous `dart analyze`.
 
 ---
 

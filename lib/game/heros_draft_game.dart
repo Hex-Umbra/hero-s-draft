@@ -154,6 +154,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
       }
       targetingLine.hide();
       _clearTargetHighlights();
+      onHideTooltip();
     }
 
     focusedCard = card;
@@ -179,6 +180,10 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
       }
       targetingLine.color = focusedCard!.getElementalColor();
       _applyTargetHighlights(focusedCard!.card.data.target);
+      onShowTooltip(
+        focusedCard!.card.data.getName(focusedCard!.activeLocale),
+        focusedCard!.buildDetailedDescription(),
+      );
     }
   }
 
@@ -393,6 +398,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
 
     for (var c in cardsToAdd) {
       final cardComp = CardComponent(c);
+      cardComp.isEnteringHand = true;
       cardComp.position = Vector2(40, size.y - 40);
       cardComp.scale = Vector2.zero();
       handCards.add(cardComp);
@@ -452,6 +458,8 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
         targetScale = Vector2.all(scaleFactor * 0.88);
       }
 
+      final double duration = card.isEnteringHand ? 0.7 : 0.35;
+
       card.removeAll(card.children.whereType<MoveEffect>());
       card.removeAll(card.children.whereType<RotateEffect>());
       card.removeAll(card.children.whereType<ScaleEffect>());
@@ -459,19 +467,22 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
       card.add(
         MoveEffect.to(
           targetPos,
-          EffectController(duration: 0.35, curve: Curves.easeOutCubic),
+          EffectController(duration: duration, curve: Curves.easeOutCubic),
         ),
       );
       card.add(
         RotateEffect.to(
           targetAngle,
-          EffectController(duration: 0.35, curve: Curves.easeOutCubic),
+          EffectController(duration: duration, curve: Curves.easeOutCubic),
         ),
       );
       card.add(
         ScaleEffect.to(
           targetScale,
-          EffectController(duration: 0.35, curve: Curves.easeOutCubic),
+          EffectController(duration: duration, curve: Curves.easeOutCubic),
+          onComplete: card.isEnteringHand ? () {
+            card.isEnteringHand = false;
+          } : null,
         ),
       );
 

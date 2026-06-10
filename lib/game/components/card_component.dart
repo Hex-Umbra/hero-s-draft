@@ -35,6 +35,7 @@ class CardComponent extends PositionComponent
   bool isCancelling = false;
   bool isHoveringCancelZone = false;
   bool isPlayed = false;
+  bool isEnteringHand = false;
 
   bool get _isSelected => game.focusedCard == this;
 
@@ -131,24 +132,7 @@ class CardComponent extends PositionComponent
     textRenderer.refreshVisuals(1.0, isFlashing, isCancelling);
   }
 
-  @override
-  void onLongTapDown(TapDownEvent event) {
-    if (isPlayed) return;
-    game.onShowTooltip(
-      card.data.getName(activeLocale),
-      _buildDetailedDescription(),
-    );
-  }
-
-  @override
-  void onTapUp(TapUpEvent event) {
-    game.onHideTooltip();
-  }
-
-  @override
-  void onTapCancel(TapCancelEvent event) {
-    game.onHideTooltip();
-  }
+  // Tooltip callbacks removed because tooltips are managed by focus change in game.
 
   String _determineDamageType() {
     final lowerTitle =
@@ -213,7 +197,7 @@ class CardComponent extends PositionComponent
     }
   }
 
-  String _buildDetailedDescription() {
+  String buildDetailedDescription() {
     String desc = '';
 
     final elementalType = _determineDamageType();
@@ -342,6 +326,63 @@ class CardComponent extends PositionComponent
         }
       }
     }
+
+    if (card.forgeUpgrades.isNotEmpty) {
+      desc += '\n\n${activeLocale == 'fr' ? '=== AMÉLIORATIONS DE LA FORGE ===' : '=== FORGE UPGRADES ==='}';
+      for (var upgrade in card.forgeUpgrades) {
+        final parts = upgrade.split(':');
+        final id = parts[0];
+        final tierStr = parts.length > 1 ? parts[1] : '1';
+        final tier = int.tryParse(tierStr) ?? 1;
+        final isFr = activeLocale == 'fr';
+        
+        String upgName = '';
+        String upgDesc = '';
+        
+        switch (id) {
+          case 'sharp':
+            upgName = isFr ? 'Tranchant $tier' : 'Sharp $tier';
+            final val = 2 * tier;
+            upgDesc = isFr ? '+$val Dégâts sur la carte' : '+$val Damage on the card';
+            break;
+          case 'hardened':
+            upgName = isFr ? 'Endurci $tier' : 'Hardened $tier';
+            final val = 2 * tier;
+            upgDesc = isFr ? '+$val Armure sur la carte' : '+$val Block on the card';
+            break;
+          case 'burning':
+            upgName = isFr ? 'Brûlant $tier' : 'Burning $tier';
+            upgDesc = isFr ? 'Applique $tier Brûlure' : 'Applies $tier Burn';
+            break;
+          case 'freezing':
+            upgName = isFr ? 'Congelant $tier' : 'Freezing $tier';
+            upgDesc = isFr ? 'Applique $tier Gel' : 'Applies $tier Freeze';
+            break;
+          case 'shocking':
+            upgName = isFr ? 'Surchargé $tier' : 'Shocking $tier';
+            upgDesc = isFr ? 'Applique $tier Électrocution' : 'Applies $tier Shock';
+            break;
+          case 'quick':
+            upgName = isFr ? 'Véloce $tier' : 'Quick $tier';
+            upgDesc = isFr ? 'Pioche +$tier carte(s)' : 'Draw +$tier card(s)';
+            break;
+          case 'eco':
+            upgName = isFr ? 'Économe $tier' : 'Eco $tier';
+            upgDesc = isFr ? 'Gagne +$tier Mana à l\'utilisation' : 'Gains +$tier Mana on play';
+            break;
+          case 'enduring':
+            upgName = isFr ? 'Persistant' : 'Enduring';
+            upgDesc = isFr ? 'Retire Épuisement (Exhaust)' : 'Removes Exhaust';
+            break;
+          default:
+            upgName = id;
+            upgDesc = '';
+        }
+        
+        desc += '\n• $upgName : $upgDesc';
+      }
+    }
+
     return desc.trim();
   }
 
@@ -373,14 +414,14 @@ class CardComponent extends PositionComponent
 
   @override
   void onHoverEnter() {
-    if (isPlayed) return;
+    if (isEnteringHand || isPlayed) return;
     if (isDragging) return;
     game.setHoveredCard(this);
   }
 
   @override
   void onHoverExit() {
-    if (isPlayed) return;
+    if (isEnteringHand || isPlayed) return;
     if (isDragging) return;
     if (game.hoveredCard == this) {
       game.setHoveredCard(null);
@@ -478,7 +519,7 @@ class CardComponent extends PositionComponent
 
   @override
   void onTapDown(TapDownEvent event) {
-    if (isPlayed) return;
+    if (isEnteringHand || isPlayed) return;
     super.onTapDown(event);
     if (game.focusedCard == this) {
       game.setFocusedCard(null);
@@ -498,7 +539,7 @@ class CardComponent extends PositionComponent
 
   @override
   void onDragStart(DragStartEvent event) {
-    if (isPlayed) return;
+    if (isEnteringHand || isPlayed) return;
     super.onDragStart(event);
 
     isDragging = true;
@@ -528,7 +569,7 @@ class CardComponent extends PositionComponent
 
   @override
   void onDragUpdate(DragUpdateEvent event) {
-    if (isPlayed) return;
+    if (isEnteringHand || isPlayed) return;
     if (!isDragging) return;
 
     position += event.canvasDelta;

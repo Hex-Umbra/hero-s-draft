@@ -1,5 +1,25 @@
 [
   {
+    "version": "0.1.0",
+    "date": "2026-06-10",
+    "title": "Clarté Visuelle & Fluidité de Combat",
+    "sections": [
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "Les cartes piochées s'animent de manière plus fluide et bloquent toute interaction avant d'être correctement placées dans votre main.",
+          "Les infobulles s'affichent uniquement lorsque vous sélectionnez une carte en combat et se masquent automatiquement dès qu'elle est jouée ou désélectionnée.",
+          "Les infobulles détaillent désormais la liste complète de toutes les améliorations appliquées à la forge pour chaque carte.",
+          "Une ligne d'étoiles dorées s'affiche sous la rareté des cartes pour indiquer le nombre d'améliorations de forge appliquées par rapport à leur limite.",
+          "Les icônes transparentes en arrière-plan des cartes ont été retirées et la taille des textes a été réduite pour améliorer la lisibilité globale.",
+          "La barre de vie du joueur dispose d'une nouvelle animation de dégâts à double jauge où une barre rouge fluide suit la baisse instantanée de santé.",
+          "Les effets de soin remplissent désormais la barre de vie de façon progressive et fluide."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.0.99",
     "date": "2026-06-07",
     "title": "Fondations du Design",

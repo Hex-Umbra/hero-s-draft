@@ -30,8 +30,8 @@ class CardTextRenderer {
   final List<BadgePainters> badges = [];
   late TextPainter usagePainter;
   late TextPainter typePainter;
-  late TextPainter bgIconPainter;
   late TextPainter rarityPainter;
+  late TextPainter starsPainter;
   TextPainter? manaPainter;
   TextPainter? targetPainter;
 
@@ -62,6 +62,9 @@ class CardTextRenderer {
     Color manaColor = isFlashing
         ? Colors.transparent
         : Colors.cyanAccent.withAlpha(alpha);
+    Color starColor = isFlashing
+        ? Colors.transparent
+        : Colors.amber.withAlpha(alpha);
 
     if (isCancelling) {
       final cancelAlpha = (alpha * 0.6).toInt();
@@ -70,6 +73,7 @@ class CardTextRenderer {
       typeLabelColor = typeLabelColor.withAlpha(cancelAlpha);
       rarityColor = rarityColor.withAlpha(cancelAlpha);
       manaColor = manaColor.withAlpha(cancelAlpha);
+      starColor = starColor.withAlpha(cancelAlpha);
     }
 
     // Configurer le style de ciblage
@@ -103,7 +107,7 @@ class CardTextRenderer {
           text: '$emoji $label'.toUpperCase(),
           style: TextStyle(
             color: tColor,
-            fontSize: 7.5,
+            fontSize: 7.0,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -118,7 +122,7 @@ class CardTextRenderer {
         text: card.card.data.getName(card.activeLocale).toUpperCase(),
         style: TextStyle(
           color: nameColor,
-          fontSize: 12,
+          fontSize: 10.5,
           fontWeight: FontWeight.w900,
           letterSpacing: 0.5,
         ),
@@ -139,7 +143,7 @@ class CardTextRenderer {
           text: fullManaString,
           style: TextStyle(
             color: manaColor,
-            fontSize: 16,
+            fontSize: 15.0,
             fontFamily: Icons.diamond_rounded.fontFamily,
             package: Icons.diamond_rounded.fontPackage,
             letterSpacing: 2.0,
@@ -155,7 +159,7 @@ class CardTextRenderer {
       descPainter = TextPainter(
         text: TextSpan(
           text: card.card.data.getDescription(card.activeLocale),
-          style: TextStyle(color: descColor, fontSize: 9, height: 1.2),
+          style: TextStyle(color: descColor, fontSize: 8.0, height: 1.2),
         ),
         textDirection: TextDirection.ltr,
         textAlign: TextAlign.center,
@@ -202,7 +206,7 @@ class CardTextRenderer {
                 text: String.fromCharCode(visuals.icon.codePoint),
                 style: TextStyle(
                   color: iconColor,
-                  fontSize: 27,
+                  fontSize: 22.0,
                   fontFamily: 'MaterialIcons',
                 ),
               ),
@@ -210,7 +214,7 @@ class CardTextRenderer {
                 text: ' $valueToDisplay',
                 style: TextStyle(
                   color: Colors.white.withAlpha(alpha),
-                  fontSize: 18,
+                  fontSize: 15.0,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -255,7 +259,7 @@ class CardTextRenderer {
               text: '  |  ',
               style: TextStyle(
                 color: Colors.white24.withAlpha(alpha),
-                fontSize: 18,
+                fontSize: 15.0,
                 fontWeight: FontWeight.w200,
               ),
             ),
@@ -280,7 +284,7 @@ class CardTextRenderer {
             .toUpperCase(),
         style: TextStyle(
           color: usageColor,
-          fontSize: 8,
+          fontSize: 7.0,
           fontWeight: FontWeight.w900,
         ),
       ),
@@ -292,7 +296,7 @@ class CardTextRenderer {
         text: card.getTypeLabel().toUpperCase(),
         style: TextStyle(
           color: typeLabelColor,
-          fontSize: 8,
+          fontSize: 7.0,
           fontWeight: FontWeight.bold,
           letterSpacing: 1.0,
         ),
@@ -331,7 +335,7 @@ class CardTextRenderer {
         text: rarityLabel.toUpperCase(),
         style: TextStyle(
           color: rarityColor,
-          fontSize: 8,
+          fontSize: 7.0,
           fontWeight: FontWeight.bold,
           letterSpacing: 1.2,
         ),
@@ -339,15 +343,22 @@ class CardTextRenderer {
       textDirection: TextDirection.ltr,
     )..layout();
 
-    final iconData = card.getTypeIconData();
-    bgIconPainter = TextPainter(
+    final int totalLimit = card.card.data.baseMaxForgeUpgrades + card.card.rarity.index;
+    final int appliedUpgradesCount = card.card.forgeUpgrades.length;
+    final starString = List.generate(totalLimit, (index) {
+      return index < appliedUpgradesCount
+          ? String.fromCharCode(Icons.star.codePoint)
+          : String.fromCharCode(Icons.star_border.codePoint);
+    }).join(' ');
+
+    starsPainter = TextPainter(
       text: TextSpan(
-        text: String.fromCharCode(iconData.codePoint),
+        text: starString,
         style: TextStyle(
-          color: Colors.white.withAlpha((alpha * 0.05).toInt()),
-          fontSize: 80,
-          fontFamily: iconData.fontFamily,
-          package: iconData.fontPackage,
+          color: starColor,
+          fontSize: 8.0,
+          fontFamily: Icons.star.fontFamily,
+          package: Icons.star.fontPackage,
         ),
       ),
       textDirection: TextDirection.ltr,
@@ -577,15 +588,6 @@ class CardTextRenderer {
   void render(Canvas canvas, Vector2 size) {
     final typeColor = card.getTypeColor();
 
-    // Icône de fond subtile
-    bgIconPainter.paint(
-      canvas,
-      Offset(
-        size.x / 2 - bgIconPainter.width / 2,
-        size.y / 2 - bgIconPainter.height / 2,
-      ),
-    );
-
     // Titre (centré, fixe en haut)
     namePainter.paint(canvas, Offset(size.x / 2 - namePainter.width / 2, 14));
 
@@ -602,10 +604,16 @@ class CardTextRenderer {
     // Rareté (fixe sous la ligne)
     rarityPainter.paint(
       canvas,
-      Offset(size.x / 2 - rarityPainter.width / 2, 42),
+      Offset(size.x / 2 - rarityPainter.width / 2, 40),
     );
 
-    double currentY = 62.0;
+    // Etoiles d'améliorations (juste sous la rareté)
+    starsPainter.paint(
+      canvas,
+      Offset(size.x / 2 - starsPainter.width / 2, 50),
+    );
+
+    double currentY = 66.0;
 
     // Badge Usage Unique (fixe)
     if (card.card.data.isExhaust || card.card.data.type == CardType.power) {

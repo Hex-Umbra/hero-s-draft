@@ -455,6 +455,10 @@ Le moteur graphique Flame intègre des optimisations avancées pour stabiliser l
 - **Optimisation CPU (Cache de Disposition)** : Les composants textuels (`TextPainter`) de `CardComponent` sont mis en cache et ne subissent pas de re-layout pendant les animations. L'opacité est appliquée via `saveLayer` uniquement et conditionnellement lorsque `opacity < 1.0`.
 - **Physique de la Pioche** : Les cartes tirées apparaissent à l'emplacement de la pioche `Vector2(40, size.y - 40)` et effectuent des transitions physiques fluides (glissement, mise à l'échelle, rotation) vers la main.
 - **Synchronisation Synchrone d'Impact** : Pour un game feel immersif, l'ennemi ciblé ne subit ses effets visuels d'impact (flash de douleur, secousse, FloatingText, émission de particules) qu'au moment précis de la collision de la carte de combat. Les réactions redondantes ont été épurées de `CardAnimator` pour éliminer tout double-déclenchement.
+- **Blocage Tactile de Pioche (v0.1.00)** : Durant la distribution des cartes, le drapeau `isEnteringHand = true` bloque tous les callbacks d'interaction (`onTapDown`, `onDragStart`, `onHoverEnter`, `onHoverExit`, `onDragUpdate`) et la durée de transition est portée à `0.7s`. Le drapeau est réinitialisé à `false` via un callback `onComplete`.
+- **Tooltips sur Focus Uniquement (v0.1.00)** : Les infobulles de cartes ne s'affichent que lors d'une sélection active (focus). `_buildDetailedDescription()` est enrichie pour lister les améliorations de forge appliquées. L'auto-masquage survient au jeu, à la défocalisation ou au changement de phase.
+- **Rénovation Esthétique des Cartes (v0.1.00)** : Suppression des icônes de fond translucides (Flame : `bgIconPainter`; Flutter : icônes `Center`). Réduction proportionnelle des polices de 10%-20%. Indicateur d'étoiles dorées (pleines/vides) représentant le ratio d'upgrades de forge appliqués par rapport à la capacité maximale `baseMaxForgeUpgrades + rarityIndex`.
+- **Double Jauge de Vie Animée — HP Dual-Bar (v0.1.00)** : `PlayerHealthBar` est convertie en `StatefulWidget` avec un `TweenAnimationBuilder` (500ms, `Curves.easeOutCubic`). Sous l'effet des dégâts, la jauge verte d'avant-plan chute instantanément tandis que la jauge rouge d'arrière-plan descend en traînant. En cas de soin, la jauge verte monte de façon animée et la jauge rouge s'y aligne instantanément.
 
 ---
 
@@ -650,3 +654,25 @@ Ce sprint tri-phase constitue un investissement majeur dans la **qualité techni
 | Pattern Riverpod | `Notifier<T>` (v2.x) pour tous les contrôleurs |
 | Source de vérité couleurs | `AppColors` (aucune magic constant dans les widgets) |
 | Immuabilité des modèles | `CardInstance` : tous attributs `final` + `List.unmodifiable` |
+
+---
+
+## 10. Sprint d'Amélioration de l'Interface & Cartes (UX Combat) (v0.1.00)
+
+Ce sprint cible l'optimisation visuelle et tactile du combat pour élever le niveau d'immersion et de satisfaction sensorielle.
+
+### 10.1. Impact Produit
+
+- **Fluidité de Pioche** : Protection contre les clics ou glissements prématurés durant la pioche, garantissant un comportement sans à-coups ni instabilités physiques.
+- **Transparence Tactique** : Présentation directe et contextualisée des améliorations (upgrades de forge) appliquées aux cartes en combat, permettant des choix informés.
+- **Clarté Visuelle Rénovée** : Élimination du bruit visuel causé par les icônes de fond translucides et les tailles de police trop imposantes sur les cartes Flame et Flutter. Indication élégante du niveau d'upgrade de la carte via des badges d'étoiles.
+- **Game Feel Premium (HUD)** : Transformation de la simple barre de vie statique du héros en une jauge double-niveau interactive et dynamique, améliorant le feedback émotionnel lors des dégâts reçus ou des soins appliqués.
+
+### 10.2. Portée Technique
+
+- **Verrouillage Tactile de Pioche** : Introduction d'un drapeau `isEnteringHand` dans `CardComponent` qui filtre les callbacks de survol, glissement et clic. La durée de distribution est portée à `0.7s` dans `_layoutHand` avant d'être réalignée à `0.35s` après complétion.
+- **Exhibition Sélective des Tooltips** : Raccordement du cycle de vie des infobulles aux seuls événements de focus sur la carte en combat. Enrichissement de la description textuelle par une liste mise en forme des upgrades de forge actifs.
+- **Rénovation Esthétique des Cartes** :
+  - **Flame** : Retrait du dessin de fond dans `card_text_renderer.dart`, diminution des polices et dessin vectoriel d'étoiles dorées proportionnelles à `card.forgeUpgrades.length`.
+  - **Flutter** : Retrait de l'icône centrale translucide et réduction des polices dans `ui_card.dart`. Rendu d'une rangée d'étoiles dorées sous le label de rareté avec ajustement des offsets.
+- **Double Jauge de Vie Animée (HP Dual-Bar)** : Conversion de `PlayerHealthBar` en `StatefulWidget`. Câblage d'un `TweenAnimationBuilder` (500ms, `Curves.easeOutCubic`) animant la différence de ratio entre les PV actuels et les PV précédents sous forme d'une jauge secondaire rouge/orange qui glisse lentement en arrière-plan sous les dégâts. En cas de soin, la jauge verte augmente de suite de manière fluide et la barre rouge s'y aligne instantanément.
