@@ -58,7 +58,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   final void Function(int) onEnemyDebuffDeck;
   final void Function() onTurnEnded;
   final void Function(TurnPhase) onPhaseChanged;
-  final void Function(String title, String description) onShowTooltip;
+  final void Function(String title, String description, CardType? cardType) onShowTooltip;
   final void Function() onHideTooltip;
   final bool Function(CardInstance, EnemyCard?) onPlayCard;
   final VoidCallback? onEnemiesSpawned;
@@ -183,6 +183,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
       onShowTooltip(
         focusedCard!.card.data.getName(focusedCard!.activeLocale),
         focusedCard!.buildDetailedDescription(),
+        focusedCard!.card.data.type,
       );
     }
   }
