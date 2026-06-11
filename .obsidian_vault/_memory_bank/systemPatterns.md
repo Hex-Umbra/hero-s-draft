@@ -844,62 +844,74 @@ Dans le cadre des améliorations de la branche `feat/tutorial`, le module de tut
 
 Le système de Forge et de Fusion offre une progression non-linéaire des cartes en séparant proprement la logique métier (calculs de probabilités, relances et consolidation) du rendu visuel de l'interface utilisateur.
 
-### 10.1. Modélisation et Résolution de la Forge (`ForgeUpgradeDialog`)
+### 10.1. Modélisation et Résolution de la Forge (`ForgeUpgradeDialog` v2)
 
-Le dialogue de forge `ForgeUpgradeDialog` (affiché via `RestScreen`) manipule des structures éphémères représentant les choix d'améliorations avant validation finale :
+Le dialogue de forge `ForgeUpgradeDialog` (affiché via `RestScreen`) a été refactorisé sous forme d'écran complet pour intégrer une persistance anti-exploit, un filtrage sémantique des upgrades et l'achat progressif de slots supplémentaires :
 
-1. **Représentation des Améliorations** :
-   Les améliorations de forge sont représentées sous forme de chaînes formatées `"upgradeId:tier"` stockées dans la liste `CardInstance.forgeUpgrades` (ex: `["sharp:2", "quick:1"]`).
-   
-2. **Génération Probabiliste des Options** :
-   À l'initialisation de la forge pour une carte donnée, la classe `ForgeSlot` génère de 1 à 5 options indépendantes (tirages de Bernoulli successifs) :
-   - Slot 1 : $100\%$ (Garanti)
-   - Slot 2 : $50\%$
-   - Slot 3 : $25\%$
-   - Slot 4 : $10\%$
-   - Slot 5 : $2\%$
+1. **Représentation et Persistance de Session (`RunState`)** :
+   Les choix générés pour une carte et les achats de slots sont persistés de manière immuable au niveau du state global Riverpod :
+   - `RunState.forgeSlots` (List\<String\>) : Liste des upgrades générés pour la session active sous le format `"upgradeId:tier"`.
+   - `RunState.forgeTargetCardId` (String?) : Identifiant unique de la carte concernée par la forge active.
+   - `RunState.bonusForgeSlots` (int) : Nombre de fentes bonus achetées (initialement 0, capé à 4).
+   - `RunNotifier.setForgeSession(String cardId, List<String> slots)` : Persiste la session en cours.
+   - `RunNotifier.clearForgeSession()` : Réinitialise la session.
+   - `RunNotifier.buyBonusForgeSlot()` : Gère l'achat progressif (dépense $50 \rightarrow 80 \rightarrow 120 \rightarrow 175$ Or, incrémente `bonusForgeSlots`, retourne un booléen de statut).
 
-3. **Filtrage des Pools par Rareté (Clamping)** :
-   Chaque slot valide tire une amélioration depuis l'un des trois pools exclusifs de rareté :
-   - **Pool Commun (`common`)** : Statuts offensifs de base (brûlure `burning`, gel `freezing`, électrocution `shocking` limités aux cartes de type `attack`) ou bonus statistiques simples (`sharp` pour dégâts, `hardened` pour armure).
-   - **Pool Atypique (`uncommon`)** : Amélioration de pioche (`quick`).
-   - **Pool Rare (`rare`)** : Réduction permanente de coût mana (`eco`) ou effet persistant `enduring` (qui désactive `isExhaust: true`), réservé aux cartes non-pouvoir exhaustibles.
-   
-   Le tirage probabiliste d'un pool dépend de la rareté de la carte :
-   - Carte Commune : $100\%$ Commun.
-   - Carte Atypique : $80\%$ Commun, $20\%$ Atypique.
-   - Carte Rare : $60\%$ Commun, $30\%$ Atypique, $10\%$ Rare.
-   - Carte Épique : $40\%$ Commun, $40\%$ Atypique, $20\%$ Rare.
-   - Carte Légendaire : $20\%$ Commun, $50\%$ Atypique, $30\%$ Rare.
+2. **Logique d'Anti-Exploit (`initState`)** :
+   Pour éviter que le joueur ne réinitialise les options proposées gratuitement en fermant et rouvrant la forge, le cycle de chargement effectue une vérification :
+   - Au lancement du dialogue, si `runState.forgeTargetCardId == card.uniqueId`, le widget charge les fentes stockées dans `runState.forgeSlots` sans effectuer de nouveau tirage.
+   - Sinon, le widget génère une nouvelle liste d'upgrades (avec $1\text{ à }5$ slots de base + `bonusForgeSlots` slots déjà achetés) et appelle immédiatement `RunNotifier.setForgeSession()` pour verrouiller le tirage.
+   - L'effacement de la session (`clearForgeSession()`) n'est déclenché que lors d'un choix d'upgrade réussi, ou lors de la sortie définitive du camp de repos via `RestScreen._leave()`.
 
-4. **Résolution du Tier** :
-   Chaque amélioration se voit attribuer un Tier (I, II ou III) selon une distribution de probabilité pondérée :
-   - Tier I : $80\%$
-   - Tier II : $15\%$
-   - Tier III : $5\%$
+3. **Filtrage Intelligent des Upgrades par Type de Carte** :
+   Pour éliminer les upgrades incohérents, la méthode `_getEligibleUpgradesForPool()` filtre le catalogue d'upgrades :
+   - `CardType.skill` : Exclut tous les upgrades offensifs physiques (`sharp`) ou élémentaires (`burning`, `freezing`, `shocking`).
+   - `CardType.power` : Filtre le pool pour ne conserver que les upgrades utilitaires (`eco`, `quick`, `enduring`).
+   - `CardType.attack` : Donne accès au pool complet sans restriction.
 
-5. **Coût exponentiel et Reroll individuel** :
-   Le joueur peut relancer individuellement les options proposées pour chaque slot en dépensant de l'or de l'inventaire via `InventoryController`. Le coût en or d'une relance est exponentiel et calculé localement sur chaque slot :
-   $$\text{Coût Reroll} = \text{round}(20 \times 1.25^n)$$
-   où $n$ représente le nombre total de relances appliquées sur ce slot spécifique.
+4. **Achat de Fentes Progressives (Buy Slots)** :
+   Le bouton d'achat en bas du `ListView` permet d'acquérir de nouvelles fentes d'upgrades en cours de session :
+   - Le coût progressif ($50 \rightarrow 80 \rightarrow 120 \rightarrow 175$ Or) est lu depuis `bonusForgeSlots`.
+   - En cas d'achat valide (or suffisant et `bonusForgeSlots < 4`), le widget appelle `buyBonusForgeSlot()`, tire une nouvelle option filtrée, et l'ajoute dynamiquement à la liste active via `setForgeSession()`.
+
+5. **Design Plein Écran Responsive** :
+   L'interface utilise `Dialog.fullscreen` pour s'adapter à toutes les résolutions :
+   - **Desktop Layout (`Row`)** : Colonne de gauche affichant le visuel de la carte sélectionnée avec ses étoiles d'upgrade dorées. Colonne de droite affichant une liste scrollable (`ListView`) des slots d'upgrades disposés verticalement.
+   - **Mobile Layout (`Column`)** : Empilement vertical fluide avec le visuel de la carte en haut et la liste scrollable des slots en bas, évitant tout overflow.
 
 ```mermaid
 graph TD
     Start[Ouvrir RestScreen -> Option Forge] --> SelectCard[Sélectionner Carte]
     SelectCard --> Dialog[Ouvrir ForgeUpgradeDialog]
-    Dialog --> GenSlots[Générer 1 à 5 Slots]
-    GenSlots --> RollSlots[Tirer Upgrade & Tier par Slot]
-    RollSlots --> Loop[Afficher Options de Forge]
+    Dialog --> CheckExploit{runState.forgeTargetCardId == card.uniqueId ?}
+    CheckExploit -- Oui (Anti-Exploit) --> LoadSession[Recharger slots depuis runState.forgeSlots]
+    CheckExploit -- Non --> GenBase[Tirer 1 à 5 slots de base + bonusForgeSlots]
+    GenBase --> FilterTypes[Appliquer filtrage sémantique par CardType]
+    FilterTypes --> SaveSession[Sauvegarder session via setForgeSession]
+    LoadSession --> Loop[Afficher Options de Forge]
+    SaveSession --> Loop
     Loop --> Reroll[Clic Reroll Slot i]
-    Reroll --> Cost[Calculer Coût: 20 * 1.25^n]
-    Cost --> CheckGold{Assez d'Or ?}
-    CheckGold -- Oui --> SpendGold[Consommer Or via InventoryProvider]
-    SpendGold --> RollAgain[Re-tirer Upgrade Slot i]
-    RollAgain --> Loop
-    CheckGold -- Non --> Alert[Désactiver bouton Reroll]
+    Reroll --> CostReroll[Calculer Coût: 20 * 1.25^n]
+    CostReroll --> CheckGoldReroll{Assez d'Or ?}
+    CheckGoldReroll -- Oui --> SpendGoldR[Consommer Or via InventoryProvider]
+    SpendGoldR --> RollAgain[Re-tirer Upgrade Slot i]
+    RollAgain --> UpdateSession[Mettre à jour runState.forgeSlots]
+    UpdateSession --> Loop
+    CheckGoldReroll -- Non --> DisableReroll[Grise bouton Reroll]
+    Loop --> BuySlot[Clic Acheter Fente]
+    BuySlot --> CostSlot[Calculer Coût Progressive: 50/80/120/175]
+    CostSlot --> CheckGoldSlot{Assez d'Or & Slots < 5 ?}
+    CheckGoldSlot -- Oui --> BuySuccess[Appelle buyBonusForgeSlot & Consomme Or]
+    BuySuccess --> RollNewSlot[Tirer un slot additionnel filtré]
+    RollNewSlot --> UpdateSession
+    CheckGoldSlot -- Non --> DisableBuySlot[Grise bouton Achat]
     Loop --> SelectUpgrade[Sélectionner Option & Valider]
     SelectUpgrade --> Apply[Ajouter upgradeId:tier à la carte]
-    Apply --> End[Sauvegarder dans DeckProvider]
+    Apply --> SaveDeck[Sauvegarder dans DeckProvider]
+    SaveDeck --> ClearSession[Appeler clearForgeSession]
+    ClearSession --> End[Fermer Dialog & Revenir au RestScreen]
+    Loop --> CloseDialog[Quitter sans Choisir]
+    CloseDialog --> EndDialog[Fermer Dialog - Conserve forgeTargetCardId pour RestScreen.leave]
 ```
 
 ### 10.2. Fusion Interactive et Consolidation des Upgrades (`DeckNotifier.mergeCards`)

@@ -3,12 +3,12 @@
 Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnalités de **Hero's Draft** : opérationnelles, partiellement implémentées, non implémentées, et les chantiers de refactoring prioritaires issus des rapports de dette technique.
 
 **Métriques du projet** :
-- **~11 200 lignes** de code source dans `lib/` (69 fichiers, modules `lib/ui/theme/` et `lib/ui/widgets/hud/` ajoutés).
+- **~11 400 lignes** de code source dans `lib/` (70 fichiers).
 - **8 fichiers JSON** de données d'assets.
-- **104 tests automatisés** — 100% au vert.
+- **106 tests automatisés** — 100% au vert.
 - **0 erreur** via `flutter analyze`.
-- **~116 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
-- **Version actuelle** : v0.1.00 — Sprint UX Combat & Rendu HP Dual-Bar.
+- **~117 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
+- **Version actuelle** : v0.2.00 — Sprint Forge v2 & Améliorations UX.
 
 ---
 
@@ -38,6 +38,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 |:---|:---|:---|
 | Modernisation Riverpod | `Tous les Providers` | Migration vers `Notifier` et `NotifierProvider` de Riverpod 2.x, communication inter-contrôleurs interne via `ref.read` sans injection par constructeur, et immuabilité stricte de `CardInstance` (v0.0.97) |
 | Logique de Run | `RunController` / `runProvider` | Suivi PV, mana, armorMastery, luck, acte, level, XP, carte, passifs, reliques |
+| Persistance Forge v2 | `RunController` / `runProvider` | Sauvegarde anti-exploit de la session de forge active (`forgeSlots`, `forgeTargetCardId`) et gestion des slots bonus achetés avec coût progressif (v0.2.00) |
 | Système de Progression XP | `RunController.gainXp()` | Progression XP exponentielle ($100 \times 1.5^{lvl-1}$), gains multiples et carry-over |
 | Échelonnement Ennemis | `CombatController.initializeCombat()` | Multiplicateurs dynamiques (+12% HP/lvl, +8% ATK/lvl) et calcul de combat level |
 | Logique de Combat | `CombatController` / `combatProvider` | Phases (Player ⇄ Enemy), sélection cible, intentions ennemies (cycliques ou aléatoires), détection mort, victoire/défaite |
@@ -58,6 +59,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Types d'effets | `EffectResolver`, `CardEffect` | damage, heal, armor, draw, gain_mana, apply_status |
 | Exhaust mécanique | `DeckNotifier.playCard()` | Cartes Power et `isExhaust` → pile d'épuisement (sauf si upgrade `enduring`) |
 | Upgrade de Forge | `DeckNotifier.addForgeUpgrade()` | Ajout d'améliorations (stats, statuts, pioche, enduring). Les cartes uniques ont un maximum d'upgrades fixé à 5. |
+| Forge v2 (Refonte) | `ForgeUpgradeDialog` | Dialog.fullscreen responsive, filtrage intelligent selon le type (`skill` sans offensif, `power` utilitaire uniquement), achat de slots additionnels progressifs (v0.2.00) |
 | Suppression de carte | `DeckNotifier.removeCardById()` | Oubli au feu de camp (`RestScreen`) : suppression définitive |
 | Draft post-combat | `DraftScreen` | 3 choix de cartes aléatoires après victoire (les cartes uniques de classe sont exclues) |
 | Draft de départ | `StarterDeckDraftScreen` | Sélection de 5 cartes globales directly depuis la grille complète des 15 cartes globales (suppression du pool de 10 cartes aléatoires) + cartes de classe uniques résolues via compétences |
@@ -175,8 +177,8 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 
 | Métrique | Valeur | Détails |
 |:---|:---|:---|
-| Tests automatisés | **104** (100% VERT) | Tests unitaires, widget-tests et tests d'intégration (dont génération de carte avec anti-répétition et quotas, responsivité du HUD de combat, badges de ciblage, badge de taille de deck, et scaling dynamique des caractéristiques/sprites des ennemis) |
-| Couverture estimée | **~22%** | Logique/controllers, moteur tutoriel, forge, pas d'UI de production |
+| Tests automatisés | **106** (100% VERT) | Tests unitaires, widget-tests et tests d'intégration (dont persistance et coûts progressifs de forge, génération de carte avec anti-répétition, responsivité du HUD de combat, et scaling dynamique des ennemis) |
+| Couverture estimée | **23%** | Logique/controllers, moteur tutoriel, forge, pas d'UI de production |
 | Analyse statique | **0 erreur** | `flutter analyze` sans erreur de compilation |
 | Linter | `flutter_lints` v6.0.0 | Configuration standard, pas de règles custom |
 

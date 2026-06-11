@@ -1372,3 +1372,49 @@ Quatre problèmes d'expérience utilisateur distincts avaient été identifiés 
 - ✅ **Architecture Préservée (ADR-001)** : Toute la logique de ratio HP reste dans les providers Riverpod (`runProvider`). `PlayerHealthBar` ne fait qu'observer et animer. `CardComponent` n'héberge aucune logique de calcul.
 - ⚠️ **Cohérence Duale Flame/Flutter** : La réduction de polices et le rendu d'étoiles étant implémentés en parallèle dans `card_text_renderer.dart` (canvas Flame) et `ui_card.dart` (widgets Flutter), toute modification future des tailles ou du style des étoiles devra être propagée dans les deux systèmes de rendu simultanément.
 
+---
+
+## 🛠️ ADR-039 : Système de Forge v2 — Anti-Exploit, Filtrage Typé, Achat Progressif et Layout Plein Écran
+
+### Statut
+✅ Accepté & Implémenté (v0.2.00)
+
+### Contexte
+La version initiale du système de forge souffrait de plusieurs limitations ergonomiques et de failles d'exploitation logique :
+1. **Faille d'exploitation (Save Scumming)** : Les options d'améliorations de forge étaient générées aléatoirement à chaque ouverture de la boîte de dialogue. Un joueur pouvait donc fermer le dialogue sans effectuer d'amélioration, puis le rouvrir à l'infini pour réinitialiser le tirage jusqu'à obtenir les options optimales.
+2. **Pollution du pool d'améliorations** : Toutes les cartes accédaient au même pool d'upgrades global. Les cartes de type *Skill* (comme la *Potion de soin*) ou *Power* (comme la *Forme de rage*) se voyaient proposer des bonus offensifs physiques ou élémentaires (`sharp`, `burning`, etc.) inadaptés à leur rôle.
+3. **Absence de progression et de débouché économique** : Les joueurs ne pouvaient pas étendre leur capacité de choix lors d'une session de forge, limitant les choix tactiques alors même qu'ils accumulaient d'importantes quantités d'or.
+4. **Ergonomie dégradée sur petits écrans** : L'ancien popup de forge s'affichait mal sur mobile portrait/paysage, tronquant les listes d'options et créant des débordements visuels (`RenderFlex` overflow).
+
+### Décision
+1. **Anti-Exploit par Session Persistée** :
+   - Sauvegarder la session active en persistant `forgeSlots` (liste d'upgrades sous format `id:tier`) et `forgeTargetCardId` (identifiant unique de la carte forgée) dans le `RunState` (Riverpod).
+   - Lors de l'ouverture du dialogue, si `forgeTargetCardId == card.uniqueId`, le système restaure les slots stockés. Sinon, il effectue un nouveau tirage et appelle `setForgeSession()` pour le figer.
+   - Effacer la session via `clearForgeSession()` uniquement sur réussite d'amélioration ou à la sortie définitive du camp de repos (`RestScreen._leave()`).
+2. **Filtrage Intelligent Typé (Type-Safe Pools)** :
+   - Restreindre le pool d'upgrades éligibles selon la catégorie de carte dans `ForgeUpgradeDialog` :
+     - Les cartes `skill` excluent les améliorations offensives (`sharp`, `burning`, `freezing`, `shocking`).
+     - Les cartes `power` n'autorisent que les améliorations utilitaires (`eco`, `quick`, `enduring`).
+     - Les cartes `attack` conservent l'accès au pool complet d'upgrades.
+3. **Achat de Fentes Progressif (Buy Slots)** :
+   - Ajouter un attribut `bonusForgeSlots` dans `RunState` représentant le nombre de fentes achetées.
+   - Permettre l'achat dynamique de slots supplémentaires (capé à 4 achats bonus, soit 5 slots de forge au total) avec une tarification progressive : 50 → 80 → 120 → 175 Or.
+   - Mettre en place un bouton d'achat dynamique grisé ou désactivé si l'or du joueur est insuffisant ou si la capacité maximale de 5 slots est atteinte.
+4. **Refonte Responsive Plein Écran** :
+   - Remplacer l'overlay hérité par un dialogue plein écran (`Dialog.fullscreen`).
+   - Adopter une structure responsive : disposition en deux colonnes (`Row`) sur desktop avec visuel de carte à gauche et upgrades scrollables à droite, et disposition verticale empilée (`Column`) sur mobile avec une liste scrollable (`ListView`).
+
+### Preuves dans le code
+- `lib/game/controllers/run_controller.dart` : Ajout de `forgeSlots`, `forgeTargetCardId` et `bonusForgeSlots` à `RunState`. Implémentation des méthodes `setForgeSession`, `clearForgeSession` et `buyBonusForgeSlot`.
+- `lib/ui/widgets/forge_upgrade_dialog.dart` : Logique de vérification anti-exploit au `initState`, implémentation de `_getEligibleUpgradesForPool`, intégration de `Dialog.fullscreen`, structure adaptative `Row`/`Column` responsive, et bouton `_BuySlotButton` réactif.
+- `lib/ui/screens/rest_screen.dart` : Appel à `clearForgeSession` lors du départ du camp de repos dans `_leave()`.
+- `test/unit/run_controller_test.dart` : Ajout de tests unitaires couvrant la persistance, le nettoyage, et la validation de l'achat de slots bonus.
+
+### Conséquences
+- ✅ **Élimination de la Triche** : Le comportement de "save scumming" local est éradiqué ; le tirage est persistant et conservé au travers des ouvertures/fermetures de dialogues.
+- ✅ **Cohérence Thématique de Deck-Building** : Les cartes de type *Skill* et *Power* conservent des pools d'upgrades cohérents avec leur rôle logique, améliorant la satisfaction et l'intérêt stratégique des choix de forge.
+- ✅ **Nouveau Débouché Économique** : L'achat de fentes progressives offre un excellent évier à or ("gold sink") pour le milieu/fin de run, valorisant l'accumulation d'or et augmentant la liberté de personnalisation des cartes clés.
+- ✅ **Ergonomie et Poli Visuel Premium** : La mise en œuvre de `Dialog.fullscreen` combinée au layout responsive supprime tout risque de clipping ou d'overflow sur mobile comme sur desktop, tout en mettant la carte modifiée au premier plan.
+- ✅ **Garantie Fonctionnelle Continue** : L'ajout de tests unitaires dédiés porte la suite automatisée à **106 tests** au vert à 100%, garantissant l'intégrité de la logique métier.
+- ⚠️ **Rigueur de Nettoyage de Session** : Il est impératif de s'assurer que `clearForgeSession()` soit appelé à chaque transition de nœud pour éviter de transporter des résidus de tirage ou de carte cible vers les nœuds de feu de camp suivants. (Garantie actuelle par RestScreen).
+

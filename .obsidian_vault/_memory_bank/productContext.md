@@ -387,24 +387,39 @@ Trois options interactives s'offrent au joueur sur l'écran `RestScreen` :
 
 ---
 
-### 3.10. 🔨 Système de Forge Découplé
+### 3.10. 🔨 Système de Forge Découplé (Forge v2)
 
-La forge permet d'ajouter des améliorations permanentes (upgrades) aux cartes du Master Deck en échange d'or :
-- **Limite de Capacité** : Une carte peut accueillir au maximum $baseMaxForgeUpgrades + rarityIndex$ améliorations (la capacité augmente avec la rareté de la carte).
-- **Génération Probabiliste de Slots** : À chaque entrée en forge pour une carte, 1 à 5 slots d'options d'upgrades sont générés indépendamment selon les chances suivantes :
-  - Slot 1 : 100%
+La forge permet d'ajouter des améliorations permanentes (upgrades) aux cartes du Master Deck en échange d'or. Elle intègre un ensemble de règles de protection et de confort utilisateur révisées en version v0.2.00 :
+- **Limite de Capacité** : Une carte peut accueillir au maximum $baseMaxForgeUpgrades + rarityIndex$ améliorations (la capacité augmente avec la rareté de la carte). Les cartes uniques de classe ont une limite fixe de 5 améliorations.
+- **Génération Probabiliste de Slots de Base** : À chaque session d'ouverture pour une carte donnée, le système génère de 1 à 5 slots d'options d'upgrades indépendants (tirages de Bernoulli successifs) selon les chances suivantes :
+  - Slot 1 : 100% (Garanti)
   - Slot 2 : 50%
   - Slot 3 : 25%
   - Slot 4 : 10%
   - Slot 5 : 2%
-- **Pools d'Améliorations Clamps** : Les améliorations proposées sont tirées depuis des pools liés à la rareté de la carte :
-  - *Common* : Améliorations de stats (`sharp` pour les dégâts, `hardened` pour l'armure) et statuts élémentaires (`burning`, `freezing`, `shocking`) limités aux cartes Attaque.
+- **Anti-Exploit de Reroll Sauvage (Session Persistence)** : Afin d'éviter que le joueur ne contourne le coût des relances ou ne force de meilleures options en fermant et rouvrant simplement la forge, la session de forge active est persistée dans `RunState` (`forgeSlots` contenant les options tirées formatées `id:tier`, et `forgeTargetCardId` contenant l'identifiant unique de la carte ciblée).
+  - Si le joueur ouvre la forge sur une carte et que `runState.forgeTargetCardId == card.uniqueId`, le dialogue charge immédiatement les fentes préalablement générées et sauvegardées.
+  - Si la carte est différente ou s'il n'y a pas de session active, un nouveau tirage est effectué et immédiatement sauvegardé via `RunNotifier.setForgeSession()`.
+  - La session n'est effacée (via `clearForgeSession()`) qu'après validation d'une amélioration ou lors du départ définitif du camp de repos (`RestScreen`).
+- **Filtrage Intelligent par Type de Carte** : Les améliorations proposées sont filtrées en amont selon le type de carte pour éviter les tirages aberrants ou inutiles :
+  - *skill* (Compétence) : Exclut toutes les options offensives de dégâts physiques (`sharp`) ou élémentaires (`burning`, `freezing`, `shocking`).
+  - *power* (Pouvoir) : Autorise uniquement les améliorations utilitaires (`eco` pour la réduction de coût mana, `quick` pour piocher une carte, et `enduring` pour retirer l'effet d'épuisement).
+  - *attack* (Attaque) : Conserve l'accès au pool complet de toutes les améliorations (stats physiques, élémentaires, pioche, réduction de coût, enduring).
+- **Pools d'Améliorations Clamps par Rareté** : Les améliorations proposées sont tirées depuis des pools liés à la rareté de la carte :
+  - *Common* : Améliorations de stats (`sharp`, `hardened`) et statuts élémentaires (`burning`, `freezing`, `shocking` - réservés aux attaques).
   - *Uncommon* : Pioche de cartes supplémentaires (`quick`).
-  - *Rare* : Gains de mana (`eco`) et retrait d'épuisement (`enduring` persistant, retirant `exhaust`), réservé aux cartes non-pouvoir exhaustibles.
-- **Pondération et Tiers** : Le tirage des pools est pondéré par l'index de rareté de la carte. Les Tiers des upgrades suivent la distribution : Tier I (80%), Tier II (15%), Tier III (5%).
-- **Relance Individuelle (Reroll)** : Le joueur peut relancer le tirage d'un slot spécifique. Le coût augmente exponentiellement par slot :
+  - *Rare* : Gains de mana (`eco`) et retrait d'épuisement (`enduring` persistant), réservé aux cartes non-pouvoir exhaustibles.
+- **Pondération des Tiers** : Le tirage des pools est pondéré par l'index de rareté de la carte. Les Tiers des upgrades suivent la distribution : Tier I (80%), Tier II (15%), Tier III (5%).
+- **Relance Individuelle (Reroll)** : Le joueur peut relancer le tirage d'un slot spécifique. Le coût en or augmente exponentiellement par slot :
   $$\text{Coût} = \text{round}(20 \times 1.25^n)$$
   où $n$ est le nombre de relances déjà appliquées à ce slot. Consomme l'or de l'inventaire via `inventoryProvider`.
+- **Achat de Fentes Progressives (Buy Slots)** : Le joueur peut étendre sa grille d'options en achetant des fentes bonus additionnelles (champ `bonusForgeSlots` de `RunState`).
+  - Capacité maximale : Capée à 4 fentes bonus achetées (soit un maximum de 5 slots affichés au total).
+  - Tarification progressive en or : $50 \rightarrow 80 \rightarrow 120 \rightarrow 175$ Or.
+  - Le bouton d'achat en bas de la liste est désactivé si l'or disponible est insuffisant ou si la capacité maximale de 5 slots est atteinte.
+- **Rendu Plein Écran & UI Responsive** : Le dialogue de forge (`ForgeUpgradeDialog`) a été converti en interface plein écran réactive (`Dialog.fullscreen`) :
+  - Desktop : Disposition en colonnes jumelles (`Row`), affichant le visuel de la carte sélectionnée avec ses étoiles à gauche, et le panneau de défilement scrollable (`ListView`) contenant les slots d'amélioration et le bouton d'achat à droite.
+  - Mobile : Empilement vertical fluide (`Column`) assurant un scroll confortable et empêchant tout débordement (RenderFlex overflow).
 
 ### 3.8. 🛒 Boutique (Shop)
 

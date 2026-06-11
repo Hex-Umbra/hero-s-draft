@@ -1,5 +1,34 @@
 [
   {
+    "version": "0.1.2",
+    "date": "2026-06-11",
+    "title": "La Refonte de la Forge",
+    "sections": [
+      {
+        "category": "Nouvelles Fonctionnalités",
+        "emoji": "✨",
+        "entries": [
+          "Vous pouvez désormais acheter jusqu'à 4 fentes d'amélioration supplémentaires à la forge pour élargir vos choix, avec un coût en or progressif."
+        ]
+      },
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "Le menu de la forge a été entièrement repensé avec un affichage plein écran responsive, s'adaptant confortablement sur PC (double colonne) comme sur mobile (défilement vertical).",
+          "Les choix d'améliorations de cartes sont désormais plus intelligents et adaptés : les cartes de Compétence n'affichent plus d'effets offensifs, et les cartes de Pouvoir ne proposent que des effets utilitaires."
+        ]
+      },
+      {
+        "category": "Corrections",
+        "emoji": "🐛",
+        "entries": [
+          "Correction d'une faille qui permettait de réinitialiser gratuitement les améliorations proposées à la forge en fermant et en rouvrant simplement le menu."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.1.0",
     "date": "2026-06-10",
     "title": "Clarté Visuelle & Fluidité de Combat",

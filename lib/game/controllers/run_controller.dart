@@ -20,6 +20,9 @@ class RunState {
   final String? currentNodeId;
   final String? passiveTrait; // Trait passif du héros (ex: regenArmor)
   final PassiveData? activePassive; // Passif dynamique du héros
+  final List<String> forgeSlots;
+  final String? forgeTargetCardId;
+  final int bonusForgeSlots;
 
   bool get isBossLevel => currentLevel > 0 && currentLevel % 10 == 0;
   bool get isDead => heroStats.currentPv <= 0;
@@ -44,6 +47,9 @@ class RunState {
     this.currentNodeId,
     this.passiveTrait,
     this.activePassive,
+    this.forgeSlots = const [],
+    this.forgeTargetCardId,
+    this.bonusForgeSlots = 0,
   });
 
   RunState copyWith({
@@ -56,6 +62,10 @@ class RunState {
     bool resetCurrentNode = false,
     String? passiveTrait,
     PassiveData? activePassive,
+    List<String>? forgeSlots,
+    String? forgeTargetCardId,
+    bool resetForgeTargetCardId = false,
+    int? bonusForgeSlots,
   }) {
     return RunState(
       currentLevel: currentLevel ?? this.currentLevel,
@@ -68,6 +78,11 @@ class RunState {
           : (currentNodeId ?? this.currentNodeId),
       passiveTrait: passiveTrait ?? this.passiveTrait,
       activePassive: activePassive ?? this.activePassive,
+      forgeSlots: forgeSlots ?? this.forgeSlots,
+      forgeTargetCardId: resetForgeTargetCardId
+          ? null
+          : (forgeTargetCardId ?? this.forgeTargetCardId),
+      bonusForgeSlots: bonusForgeSlots ?? this.bonusForgeSlots,
     );
   }
 }
@@ -632,6 +647,33 @@ class RunController extends Notifier<RunState> {
         ),
       ),
     );
+  }
+
+  void setForgeSession(String cardId, List<String> slots) {
+    state = state.copyWith(
+      forgeTargetCardId: cardId,
+      forgeSlots: slots,
+    );
+  }
+
+  void clearForgeSession() {
+    state = state.copyWith(
+      resetForgeTargetCardId: true,
+      forgeSlots: const [],
+    );
+  }
+
+  bool buyBonusForgeSlot() {
+    if (state.bonusForgeSlots >= 4) return false;
+    final costs = [50, 80, 120, 175];
+    final cost = costs[state.bonusForgeSlots];
+    final success = ref.read(inventoryProvider.notifier).spendGold(cost);
+    if (!success) return false;
+
+    state = state.copyWith(
+      bonusForgeSlots: state.bonusForgeSlots + 1,
+    );
+    return true;
   }
 }
 

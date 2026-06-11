@@ -115,3 +115,5 @@
 - [ ] Dans le menu du shop, modifier l'affichage des cartes de la colonne "Cartes a vendre", actuellement toutes les cartes apapraissent avec le même style, un fond bleu plutot qu'un style associé au type de carte come on aurait dans le dictionnaire ou encore en combat
 - [ ] Pour les cartes de rareté "Unique", on vas modifier son interface pour qu'elle soit différente des cartes normales, indiquer clairement au joueur que ce sont les carte de type héros. On vas également rajouter un onglet dans le menu dictionnaire pour afficher toutes les cartes de héros, groupé par héros.
 - [ ] En combat, quand le joueur perd des hp, rajouter une animation smooth sur la barre de vie pour afficher la perte de points de vie
+---
+- [ ] Actuellement les ennemis n'apparaissent que maximum par 2, revoir les formules et comment les ennemis sont "spawner" quand un le joueur appuie sur un nœud combat
