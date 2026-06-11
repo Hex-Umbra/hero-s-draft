@@ -568,7 +568,19 @@ class UiCard extends StatelessWidget {
   }
 
   Color _getBackgroundColor() {
-    return isGrayedOut ? const Color(0xFF1A1A1A) : const Color(0xFF2A2A3D);
+    if (isGrayedOut) return const Color(0xFF1A1A1A);
+    switch (type) {
+      case CardType.attack:
+        return const Color(0xFF4A1D1D);
+      case CardType.skill:
+        return const Color(0xFF173D29);
+      case CardType.power:
+        return const Color(0xFF2A1C3B);
+      case CardType.status:
+        return const Color(0xFF2D2D2D);
+      default:
+        return const Color(0xFF2A2A3D);
+    }
   }
 
   @override

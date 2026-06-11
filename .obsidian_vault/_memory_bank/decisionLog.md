@@ -1418,3 +1418,130 @@ La version initiale du système de forge souffrait de plusieurs limitations ergo
 - ✅ **Garantie Fonctionnelle Continue** : L'ajout de tests unitaires dédiés porte la suite automatisée à **106 tests** au vert à 100%, garantissant l'intégrité de la logique métier.
 - ⚠️ **Rigueur de Nettoyage de Session** : Il est impératif de s'assurer que `clearForgeSession()` soit appelé à chaque transition de nœud pour éviter de transporter des résidus de tirage ou de carte cible vers les nœuds de feu de camp suivants. (Garantie actuelle par RestScreen).
 
+---
+
+## 🎨 ADR-040 : Harmonie Visuelle & Améliorations de Boutique (Visual Harmony & Shop Improvements)
+
+### Statut
+✅ Accepté & Implémenté (v0.1.3)
+
+### Contexte
+La version 0.1.3 a introduit des améliorations axées sur l'ergonomie, la clarté visuelle et l'équilibrage de la boutique ("Shop & Economy") :
+1. **Exclusion des cartes de rareté unique de la boutique** : Les cartes de rareté `unique` (les cartes de classe des héros) sont conçues pour être acquises via le draft de départ ou la forge, afin de préserver l'équilibre et de forcer des choix d'amélioration stratégiques. Elles risquaient cependant d'apparaître dans les pools de cartes proposés à la vente dans la boutique, créant des déséquilibres d'acquisition (Item #103).
+2. **Identification visuelle lente en main/boutique** : Auparavant, les cartes de tous types (Attaque, Compétence, Pouvoir, Statut) partageaient le même arrière-plan générique sombre, ce qui ralentissait l'identification à la volée. L'UX en combat et dans la boutique exigeait une différenciation sémantique plus claire (Item #115).
+3. **Erreurs de mise en page en boutique** : L'affichage des cartes en vente dans la boutique souffrait de défauts d'alignement ou d'overflow sur différents facteurs de forme, nécessitant un réalignement propre sous forme de grille uniforme et fluide (Item #99).
+
+### Décision
+1. **Exclusion des cartes uniques de la boutique** :
+   - Mettre à jour la méthode helper `_getEligibleCards` dans `ShopController` pour filtrer à la fois les cartes de type `status` et celles de rareté `CardRarity.unique`.
+   - Garantir que lors de l'initialisation initiale (`initializeShop`), du renouvellement (`rerollCards`), ou de l'expansion de boutique (`expandShop`), aucune carte de classe unique ne soit tirée au sort.
+2. **Coloration d'arrière-plan par type dans `UiCard`** :
+   - Ajouter la méthode helper `_getTypeColor()` renvoyant les couleurs d'accent de type : `Colors.redAccent` (Attaque), `Colors.blueAccent` (Compétence), `Colors.amber` (Pouvoir), `Colors.blueGrey` (Statut).
+   - Ajouter la méthode helper `_getBackgroundColor()` renvoyant les couleurs de fond associées : `Color(0xFF4A1D1D)` (Attaque), `Color(0xFF173D29)` (Compétence), `Color(0xFF2A1C3B)` (Pouvoir), `Color(0xFF2D2D2D)` (Statut), et `Color(0xFF2A2A3D)` par défaut.
+   - Rendre le fond du widget de carte dynamique en passant un dégradé `LinearGradient` basé sur le `bgColor` et `bgColor.withAlpha(200)` au conteneur principal. Le contour (`border`) prend la couleur d'accent du type.
+3. **Mise en page stable de la boutique (Wrap Grid)** :
+   - Remplacer les dispositions rigides ou floues par un conteneur `Wrap` avec un espacement défini (`spacing: 12`, `runSpacing: 20`) dans `ShopScreen` pour présenter le catalogue des cartes en vente.
+   - Envelopper chaque composant de carte (`_ShopCardItem`) dans un `SizedBox` de largeur fixe `150` pour imposer des dimensions de grille rigoureuses et une répartition adaptative sans overflow.
+
+### Preuves dans le code
+- `lib/game/controllers/shop_controller.dart` : Filtre `c.rarity != CardRarity.unique` appliqué au pool global de cartes de la boutique.
+- `lib/ui/widgets/ui_card.dart` : Méthodes `_getTypeColor` et `_getBackgroundColor` câblées au build de `UiCard`.
+- `lib/ui/screens/shop_screen.dart` : Utilisation de `Wrap` et `SizedBox(width: 150)` pour le positionnement harmonieux en grille.
+- **Vérification** : `dart analyze` exempt d'erreurs, suite de 106 tests automatisés validée verte.
+
+### Conséquences
+- ✅ **Respect du Gameplay System** : Les cartes spécifiques à un héros ne polluent plus le pool de la boutique, renforçant la spécificité des mécaniques de forge et de fusion de départ.
+- ✅ **Confort de Lecture Amélioré (Cognitive Load Reduction)** : Les couleurs de fond thématiques permettent une identification immédiate du type de carte, rendant le combat et le choix d'achat plus fluides et rapides.
+- ✅ **Grid Layout Impeccable** : Le comportement adaptatif du Wrap élimine tout risque d'overflow horizontal ou vertical sur mobile ou desktop, avec des cartes parfaitement alignées dans leur contrainte SizedBox.
+
+---
+
+## 🗺️ ADR-041 : Système de Level Up Différé sur la Carte & Bloquant (Deferred Level Up & Interaction Blocking on Map)
+
+### Statut
+✅ Accepté & Implémenté (v0.1.4)
+
+### Contexte
+Dans l'implémentation précédente, lorsqu'un joueur passait un niveau (gain d'XP post-combat), l'écran de draft (`DraftScreen`) s'affichait instantanément sous forme d'un overlay par-dessus le combat. Ce flux créait des conflits visuels avec les transitions de fin de combat, forçait le joueur à faire un choix de carte avant même de voir le récapitulatif global des gains (or, reliques, etc.), et encombrait le cycle de vie du `GameScreen`.
+
+### Décision
+Déporter le déclenchement du Draft de montée de niveau sur la carte du monde (`MapScreen`) de manière différée et bloquante :
+1. **Suivi d'État Métier (`pendingDrafts`)** :
+   - Ajouter un entier `pendingDrafts` dans `RunState`.
+   - Lors d'une montée de niveau dans `RunController.gainXp(int xp)`, au lieu d'ouvrir directement un écran, incrémenter `pendingDrafts`.
+   - Fournir les méthodes `decrementPendingDrafts()` et `resetPendingDrafts()` dans le contrôleur.
+2. **Découplage de fin de combat** :
+   - Modifier `GameScreen` pour que la fin de combat (`_presentNextReward` / `_completeAndExitCombat`) ignore l'affichage immédiat du draft et renvoie le joueur directement à la carte.
+   - Retirer le composant `DraftScreen` des overlays du jeu de combat.
+3. **Overlay d'Alerte Bloquant sur la Carte (`MapScreen`)** :
+   - Si `runState.pendingDrafts > 0`, afficher un overlay d'animation "LEVEL UP !" recouvrant tout l'écran de la carte.
+   - Bloquer la navigation et les clics sur tous les nœuds de la carte tant que `pendingDrafts` n'est pas résolu.
+   - Un clic sur l'overlay "LEVEL UP !" pousse l'écran de draft standard (`DraftScreen`) via le routeur. Lorsque le draft se termine (choix d'une carte ou passe), `decrementPendingDrafts()` est appelée, et si le compteur descend à 0, l'overlay est masqué, rendant les nœuds de la carte à nouveau interactifs.
+
+### Preuves dans le code
+- `lib/game/controllers/run_controller.dart` : Ajout et gestion du champ `pendingDrafts` dans `RunState` et `RunController`.
+- `lib/ui/screens/map_screen.dart` : Affichage conditionnel de l'overlay `LevelUpOverlay`, interdiction de clic sur les nœuds, et transition vers `DraftScreen`.
+- `lib/ui/screens/game_screen.dart` : Retrait de l'overlay de draft et routage de sortie directe sur montée de niveau.
+- `lib/ui/screens/draft_screen.dart` : Retrait de l'appel direct à `nextLevel` (désormais géré lors de la sortie du nœud de combat).
+
+### Conséquences
+- ✅ **Rythme de Jeu Naturel** : La transition de fin de combat est plus fluide. Le joueur retourne d'abord à la carte, visualise sa position, puis est célébré avec sa montée de niveau.
+- ✅ **Gestion des Niveaux Multiples** : Si le joueur gagne plusieurs niveaux d'un coup (combat de boss), `pendingDrafts` s'incrémente plusieurs fois, et l'overlay réapparaîtra séquentiellement sur la carte pour proposer autant de tirages de draft que nécessaire.
+- ✅ **Stabilité des États** : L'état du combat est entièrement purgé avant le draft, réduisant les risques d'incohérence mémoire.
+
+---
+
+## 🎡 ADR-042 : Protection Anti-Spoil dans le Carrousel de Reliques & Décoration Dynamique (Relic Carousel Rarity Masking & Polish)
+
+### Statut
+✅ Accepté & Implémenté (v0.1.4)
+
+### Contexte
+Le système de carrousel de récompense de reliques (`RelicRewardCarouselOverlay`) simule une machine à sous pour introduire du suspense. Cependant, dans la version précédente, les cartes du carrousel affichaient dès le départ la couleur de leur rareté, le nom réel de la relique et ses badges d'effets/déclencheurs. Cela gâchait l'effet de surprise ("spoil"), car le joueur devinait instantanément la relique cible et sa rareté pendant le spin.
+
+### Décision
+Mettre en place un masquage d'informations tant que le carrousel tourne :
+1. **État local de Masquage (`isWon`)** :
+   - Passer un paramètre booléen `isWon` à `RelicCarouselCard`.
+   - Tant que `isWon` est faux (le carrousel est en cours de spin) :
+     - La bordure et l'arrière-plan de la carte de relique sont grisés/neutres (`AppColors.neutralGrey`).
+     - Les badges de rareté et de déclencheur affichent textuellement « ??? » sur fond gris neutre.
+     - Le titre de rareté de l'en-tête supérieur du dialogue est masqué.
+2. **Animation de Révélation au Point d'Arrêt** :
+   - Lorsque le carrousel ralentit et s'immobilise sur le gagnant, le drapeau `isWon` passe à vrai.
+   - Les vraies couleurs de rareté de la carte s'allument avec un effet de lueur.
+   - Le texte de description, le nom réel (coloré selon la rareté) et les badges techniques de déclencheurs sont révélés de manière dynamique.
+   - L'en-tête supérieur de la page s'anime pour afficher fièrement la rareté correspondante.
+
+### Preuves dans le code
+- `lib/ui/widgets/relic_carousel/relic_carousel_card.dart` : Rendu conditionnel basé sur `isWon`, utilisation d'une bordure grise neutre si faux, affichage de "???" pour les badges, et coloration textuelle du nom selon la rareté si vrai.
+- `lib/ui/widgets/relic_carousel/relic_carousel_screen.dart` : Masquage du sous-titre de rareté en cours de rotation, activation progressive à la complétion.
+
+### Conséquences
+- ✅ **Suspense Décuplé** : Le joueur assiste à un défilement de silhouettes grises anonymes et ne découvre la relique exacte et sa valeur qu'à la frame précise de l'arrêt, maximisant le plaisir de la récompense.
+- ✅ **Clarté UX** : L'accentuation par couleur de rareté uniquement sur l'objet gagné clarifie visuellement la transaction.
+
+---
+
+## 🗺️ ADR-043 : Génération Dynamique du Goulot d'Étranglement Central (Dynamic Central Chokepoint Generation)
+
+### Statut
+✅ Accepté & Implémenté (v0.1.4)
+
+### Contexte
+L'algorithme de génération de carte procedural (`MapGeneratorService`) forçait un nœud unique de type Combat Élite au niveau 5 (chokepoint obligatoire). Cette valeur était codée en dur (`y == 5`), ce qui empêchait de modifier la hauteur globale de la carte (`floors`) pour des besoins de gameplay (ex: tutoriel court de 4 étages ou runs étendues de 15 étages).
+
+### Décision
+Calculer le goulot d'étranglement central de manière dynamique :
+- Déterminer l'étage du milieu par la division entière de la hauteur totale : `middleFloor = floors ~/ 2`.
+- Appliquer ce `middleFloor` dynamique dans `generateMap` pour forcer le chokepoint Élite unique.
+- Adapter les fonctions de validation de quotas (`_balanceQuotas`) et d'anti-répétition (`_optimizeMapTypes` / `_hasThreeConsecutive`) pour exclure et protéger cet étage dynamique.
+
+### Preuves dans le code
+- `lib/services/map_generator_service.dart` : Remplacement de la constante `5` par `middleFloor` calculé via `floors ~/ 2` dans toutes les passes de traitement (génération, quotas, optimisation).
+
+### Conséquences
+- ✅ **Flexibilité Dimensionnelle** : Le moteur supporte désormais n'importe quelle taille de carte sans planter ni générer des topologies orphelines, tout en garantissant un affrontement Élite à mi-chemin.
+
+
+

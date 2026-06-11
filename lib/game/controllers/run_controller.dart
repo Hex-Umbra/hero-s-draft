@@ -23,6 +23,7 @@ class RunState {
   final List<String> forgeSlots;
   final String? forgeTargetCardId;
   final int bonusForgeSlots;
+  final int pendingDrafts; // Nombre de drafts de montée de niveau en attente
 
   bool get isBossLevel => currentLevel > 0 && currentLevel % 10 == 0;
   bool get isDead => heroStats.currentPv <= 0;
@@ -50,6 +51,7 @@ class RunState {
     this.forgeSlots = const [],
     this.forgeTargetCardId,
     this.bonusForgeSlots = 0,
+    this.pendingDrafts = 0,
   });
 
   RunState copyWith({
@@ -66,6 +68,7 @@ class RunState {
     String? forgeTargetCardId,
     bool resetForgeTargetCardId = false,
     int? bonusForgeSlots,
+    int? pendingDrafts,
   }) {
     return RunState(
       currentLevel: currentLevel ?? this.currentLevel,
@@ -83,6 +86,7 @@ class RunState {
           ? null
           : (forgeTargetCardId ?? this.forgeTargetCardId),
       bonusForgeSlots: bonusForgeSlots ?? this.bonusForgeSlots,
+      pendingDrafts: pendingDrafts ?? this.pendingDrafts,
     );
   }
 }
@@ -107,6 +111,7 @@ class RunController extends Notifier<RunState> {
         attaque: 0, // Force de base à 0
         luck: 0,
       ),
+      pendingDrafts: 0,
     );
   }
 
@@ -132,6 +137,7 @@ class RunController extends Notifier<RunState> {
       ),
       mapNodes: generatedMap,
       currentNodeId: null,
+      pendingDrafts: 0,
     );
 
     // Réinitialise l'inventaire avec 50 d'or de départ
@@ -248,6 +254,7 @@ class RunController extends Notifier<RunState> {
     int currentLevel = currentStats.level;
     int currentXpToNext = currentStats.xpToNextLevel;
     bool leveledUp = false;
+    int levelsGained = 0;
 
     while (newXp >= currentXpToNext) {
       newXp -= currentXpToNext;
@@ -255,6 +262,7 @@ class RunController extends Notifier<RunState> {
       // Formule d'XP requise pour le nouveau niveau: 100 * (1.5 ^ (level - 1))
       currentXpToNext = (100 * pow(1.5, currentLevel - 1)).round();
       leveledUp = true;
+      levelsGained++;
     }
 
     state = state.copyWith(
@@ -263,9 +271,20 @@ class RunController extends Notifier<RunState> {
         xp: newXp,
         xpToNextLevel: currentXpToNext,
       ),
+      pendingDrafts: state.pendingDrafts + levelsGained,
     );
 
     return leveledUp;
+  }
+
+  void decrementPendingDrafts() {
+    if (state.pendingDrafts > 0) {
+      state = state.copyWith(pendingDrafts: state.pendingDrafts - 1);
+    }
+  }
+
+  void resetPendingDrafts() {
+    state = state.copyWith(pendingDrafts: 0);
   }
 
   /// Applique un soin en jeu

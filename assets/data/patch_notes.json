@@ -1,5 +1,51 @@
 [
   {
+    "version": "0.1.4",
+    "date": "2026-06-11",
+    "title": "La Voie de l'Éveil",
+    "sections": [
+      {
+        "category": "Nouvelles Fonctionnalités",
+        "emoji": "✨",
+        "entries": [
+          "Les choix de cartes liés à une montée de niveau (drafts) sont désormais différés et s'effectuent directement depuis la carte de progression au lieu d'interrompre la fin du combat.",
+          "Ajout d'un nouvel overlay animé plein écran (« LEVEL UP ! ») s'affichant sur la carte lorsque vous gagnez un ou plusieurs niveaux."
+        ]
+      },
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "L'interaction avec la carte de progression est désormais bloquée tant que vous n'avez pas sélectionné toutes vos récompenses de niveau en attente.",
+          "L'animation de la roulette de reliques a été peaufinée : les couleurs et les détails de la relique restent masqués sous un aspect gris neutre pendant la rotation, puis sont révélés à l'arrêt.",
+          "La structure de la carte s'adapte dorénavant de manière dynamique pour garantir qu'un unique combat d'Élite se trouve toujours exactement au milieu de votre progression."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "0.1.3",
+    "date": "2026-06-11",
+    "title": "Harmonie Visuelle & Améliorations de Boutique",
+    "sections": [
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "L'apparence visuelle des cartes a été enrichie avec des couleurs d'arrière-plan distinctes selon leur type (Attaque, Compétence, Pouvoir ou Statut) pour une identification plus rapide.",
+          "L'affichage des cartes en vente dans la boutique a été amélioré sous forme de grille uniforme, offrant une présentation plus claire et structurée."
+        ]
+      },
+      {
+        "category": "Équilibrage",
+        "emoji": "⚖️",
+        "entries": [
+          "Les cartes de rareté Unique ne sont désormais plus proposées dans la boutique, que ce soit lors de l'affichage initial, d'un renouvellement ou d'une extension de l'offre."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.1.2",
     "date": "2026-06-11",
     "title": "La Refonte de la Forge",

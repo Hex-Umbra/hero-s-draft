@@ -586,8 +586,6 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
   }
 
   void _finishDraft(WidgetRef ref) {
-    final runController = ref.read(runProvider.notifier);
-    runController.nextLevel();
     widget.onDraftComplete();
   }
 

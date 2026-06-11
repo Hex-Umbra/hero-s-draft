@@ -85,6 +85,12 @@ class RelicCarouselCard extends StatelessWidget {
         break;
     }
 
+    final displayRarityColor = isWon ? rarityColor : const Color(0xFF8E8E93);
+    final displayRarityText = isWon ? rarityText : '???';
+
+    final displayTriggerColor = isWon ? triggerColor : const Color(0xFF8E8E93);
+    final displayTriggerText = isWon ? triggerText : '???';
+
     return AnimatedOpacity(
       duration: const Duration(milliseconds: 300),
       opacity: isFocused ? 1.0 : 0.4,
@@ -103,14 +109,16 @@ class RelicCarouselCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: isFocused
-                  ? rarityColor.withValues(alpha: isWon ? 0.9 : 0.6)
-                  : rarityColor.withValues(alpha: 0.25),
+                  ? displayRarityColor.withValues(alpha: isWon ? 0.9 : 0.4)
+                  : const Color(0xFF8E8E93).withValues(alpha: 0.25),
               width: isFocused && isWon ? 3.0 : 2.0,
             ),
             boxShadow: isFocused
                 ? [
                     BoxShadow(
-                      color: rarityColor.withValues(alpha: isWon ? 0.4 : 0.15),
+                      color: isWon
+                          ? displayRarityColor.withValues(alpha: 0.4)
+                          : Colors.black.withValues(alpha: 0.2),
                       blurRadius: isWon ? 25 : 12,
                       spreadRadius: isWon ? 4 : 1,
                     ),
@@ -130,13 +138,13 @@ class RelicCarouselCard extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: rarityColor.withValues(alpha: 0.12),
+                      color: displayRarityColor.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      rarityText,
+                      displayRarityText,
                       style: TextStyle(
-                        color: rarityColor,
+                        color: displayRarityColor,
                         fontSize: 9,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 0.5,
@@ -149,13 +157,13 @@ class RelicCarouselCard extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: triggerColor.withValues(alpha: 0.12),
+                      color: displayTriggerColor.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      triggerText,
+                      displayTriggerText,
                       style: TextStyle(
-                        color: triggerColor,
+                        color: displayTriggerColor,
                         fontSize: 9,
                         fontWeight: FontWeight.bold,
                       ),
@@ -181,8 +189,8 @@ class RelicCarouselCard extends StatelessWidget {
               Text(
                 relic.getName(locale),
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: isWon ? displayRarityColor : Colors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -197,7 +205,7 @@ class RelicCarouselCard extends StatelessWidget {
                 child: SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
                   child: Text(
-                    relic.getDescription(locale),
+                    isWon ? relic.getDescription(locale) : '???',
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       color: Colors.white70,

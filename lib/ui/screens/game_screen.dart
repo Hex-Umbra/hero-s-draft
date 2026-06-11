@@ -11,7 +11,6 @@ import '../../game/controllers/reward_controller.dart';
 import '../../models/combat_state.dart';
 import '../../game/services/effect_resolver.dart';
 import '../../game/systems/trait_system.dart';
-import 'draft_screen.dart';
 import 'class_selection_screen.dart';
 import 'deck_screen.dart';
 import 'boss_card_draft_screen.dart';
@@ -36,7 +35,7 @@ class GameScreen extends ConsumerStatefulWidget {
 
 class _GameScreenState extends ConsumerState<GameScreen> {
   late HerosDraftGame _game;
-  bool _showDraft = false;
+  final bool _showDraft = false;
   String? _phaseBannerText;
   bool _showPhaseBanner = false;
 
@@ -107,24 +106,16 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       );
 
       if (leveledUp) {
-        Future.delayed(const Duration(milliseconds: 800), () {
-          if (mounted) {
-            context.showNotification(
-              '🎉 LEVEL UP !',
-              type: NotificationType.success,
-            );
-            setState(() {
-              _showDraft = true;
-            });
-          }
-        });
-      } else {
-        Future.delayed(const Duration(milliseconds: 800), () {
-          if (mounted) {
-            _completeAndExitCombat();
-          }
-        });
+        context.showNotification(
+          '🎉 LEVEL UP !',
+          type: NotificationType.success,
+        );
       }
+      Future.delayed(const Duration(milliseconds: 800), () {
+        if (mounted) {
+          _completeAndExitCombat();
+        }
+      });
     }
   }
 
@@ -439,18 +430,6 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             SafeArea(
               child: Stack(
                 children: [
-                  if (_showDraft)
-                    Positioned.fill(
-                      child: DraftScreen(
-                        onDraftComplete: () {
-                          setState(() {
-                            _showDraft = false;
-                          });
-                          ref.read(runProvider.notifier).completeCurrentNode();
-                          Navigator.of(context).pop(); // Retour à la carte
-                        },
-                      ),
-                    ),
 
                   if (!_showDraft && runState.isDead)
                     Positioned.fill(

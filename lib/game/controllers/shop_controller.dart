@@ -29,11 +29,17 @@ class ShopController extends Notifier<ShopState> {
     }
   }
 
+  List<CardData> _getEligibleCards(List<CardData> allCards) {
+    return allCards
+        .where((c) =>
+            c.type != CardType.status &&
+            c.rarity != CardRarity.unique)
+        .toList();
+  }
+
   /// Initialise la boutique avec une sélection aléatoire de cartes de jeu
   void initializeShop(List<CardData> allCards, int bonusShopCards) {
-    final List<CardData> eligibleCards = allCards
-        .where((c) => c.type != CardType.status)
-        .toList();
+    final List<CardData> eligibleCards = _getEligibleCards(allCards);
 
     if (eligibleCards.isEmpty) {
       state = const ShopState(cardsForSale: [], purchasedHeal: false);
@@ -85,9 +91,7 @@ class ShopController extends Notifier<ShopState> {
     if (inventoryController.spendGold(price)) {
       inventoryController.buyShopExpansion();
 
-      final eligibleCards = allCards
-          .where((c) => c.type != CardType.status)
-          .toList();
+      final eligibleCards = _getEligibleCards(allCards);
       final existingIds = state.cardsForSale.map((c) => c.id).toSet();
       final available = eligibleCards
           .where((c) => !existingIds.contains(c.id))
@@ -107,9 +111,7 @@ class ShopController extends Notifier<ShopState> {
   bool rerollCards(int price, List<CardData> allCards, int bonusShopCards) {
     final inventoryController = ref.read(inventoryProvider.notifier);
     if (inventoryController.spendGold(price)) {
-      final eligibleCards = allCards
-          .where((c) => c.type != CardType.status)
-          .toList();
+      final eligibleCards = _getEligibleCards(allCards);
 
       if (eligibleCards.isEmpty) return true;
 

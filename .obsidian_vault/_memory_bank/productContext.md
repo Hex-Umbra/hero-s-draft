@@ -23,24 +23,20 @@ La progression dans **Hero's Draft** est structurée autour d'une boucle classiq
        │
        ▼
 [Carte Stratégique (MapScreen)] ◄─── Graphe Acyclique Dirigé (10 étages)
-  Types de nœuds : Combat / Élite / Shop / Événement / Repos / Boss / Relic Exchange (🔄)
+  │   ▲ (Si pendingDrafts > 0 : Overlay Level Up bloquant → DraftScreen)
+  │   │
+  ├─► [Écrans Spécifiques] : Boutique (ShopScreen), Feu de Camp (CampfireScreen), Événement (EventScreen)
+  │
+  └─► [Combat (GameScreen)]
         │
-       ├─────────────────────────┐
-       ▼                         ▼
-[Combat (GameScreen)]      [Écrans Spécifiques]
- Flame Canvas + HUD         ├─ Boutique (ShopScreen)
-       │                     ├─ Feu de Camp (CampfireScreen)
-       │                     └─ Événement (EventScreen)
-       ▼
-[Draft de Récompense (DraftScreen)]
-  3 choix de cartes post-victoire
-       │
-       ▼
-[Évaluation Auto-Merge (3→1)]
-  3× cartes identiques (même rareté) → 1× carte de rareté supérieure (upgrades cumulés)
-       │
-       ▼
-[Passage à l'Étage Suivant] ── Si Boss complété → Acte+1 → Nouvelle carte
+        ▼
+      [Draft de Récompense (DraftScreen)] (Choix de carte de combat normal)
+        │
+        ▼
+      [Évaluation Auto-Merge (3→1)] (Fusion 3× identiques → 1× de rareté supérieure)
+        │
+        ▼
+      [Retour à la Carte (MapScreen)] (Si montée de niveau : pendingDrafts > 0)
 ```
 
 ---
@@ -60,7 +56,7 @@ Le service statique `MapGeneratorService.generateMap({floors = 10, maxWidth = 5}
 | Étage | Contrainte |
 |:---|:---|
 | 0 | 100% Combat (entrée obligatoire) |
-| 5 | **Chokepoint** : exactement 1 nœud de type `elite` |
+| `floors ~/ 2` (ex: 5) | **Chokepoint** : exactement 1 nœud de type `elite` (étage central dynamique) |
 | 8 (`floors-2`) | 100% `rest` (tous les nœuds de l'étage 8 sont de type repos) |
 | 9 (`floors-1`) | 3 nœuds de type `boss` distincts (permettant un choix de Boss par récompense selon la position x) |
 
@@ -435,10 +431,12 @@ Gérée par `ShopController` :
 
 ### 3.9. 🃏 Poli Visuel et Sélection de Récompenses (Draft Screen Polish)
 
-Le système de draft (que ce soit pour le draft de récompense de combat dans `DraftScreen` ou dans le module d'apprentissage du tutoriel `TutorialDraftWidget`) intègre un feedback visuel et tactile premium pour guider les sélections du joueur :
+Le système de draft (que ce soit pour le draft de récompense de combat dans `DraftScreen`, le draft de montée de niveau sur la carte du monde, ou le module d'apprentissage du tutoriel `TutorialDraftWidget`) intègre un feedback visuel et tactile premium pour guider les sélections du joueur :
 - **Survol (Hover)** : Le passage du curseur sur une carte déclenche un gonflement d'échelle fluide à `1.05x` (`AnimatedScale` combiné à un `MouseRegion`) pour indiquer sa mise au point.
 - **Sélection (Selection)** : Cliquer/taper sur une carte de récompense la sélectionne activement, ce qui la fait grossir à `1.12x` et projette un halo lumineux doré tout autour de la carte (`BoxShadow` couleur ambre `Colors.amber` avec un rayon de flou de 16px et une extension de 3px).
 - **Consistance** : Ces animations de scale et de lueur partagent la même identité visuelle pour assurer la cohérence entre la phase d'apprentissage guidée et les combats réels du jeu.
+- **Draft de Level Up Différé** : En cas de montée de niveau en combat, l'ouverture du draft est différée. Elle est matérialisée par un overlay d'animation plein écran « LEVEL UP ! » sur la carte du monde (`MapScreen`). Cet overlay bloque toute interaction avec les nœuds de la carte et, lors d'un clic, redirige le joueur vers le `DraftScreen` via une route de navigation classique.
+- **Protection Anti-Spoil de la Roulette de Reliques** : Pendant la rotation du carrousel de récompense (`RelicRewardCarouselOverlay`), les cartes de reliques sont présentées sous un aspect gris neutre et anonyme. Les badges de rareté et de déclencheurs affichent « ??? ». Une fois le carrousel arrêté sur la relique cible, l'état bascule (`isWon = true`), révélant les vraies couleurs et badges, colorant le nom de la relique selon sa rareté et affichant le titre de rareté dans l'en-tête supérieur avec un effet de lueur.
 
 ### 3.11. 🎯 Système de Coup Critique (Critical Hit System)
 
