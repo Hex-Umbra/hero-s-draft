@@ -134,6 +134,6 @@
 - [ ] Revoir comment la stats de mastery scales et améliore les passifs de maitrise d'armure selon les classes.
 - [ ] Rajouter plus d'intents et de type d'attaque aux ennemis.
 - [ ] Dans le menu du nœud de repos, plus particulièrement l'option de forge. Quand on ouvre le menu pour améliorer une carte, il y a un bouton "annuler" pour revenir en arrière, cependant cela ne renvoie pas vers la page de choix des cartes mais vers le menu du nœud de repos. 
-- [ ] Voir pourquoi l'amélioration de donner de l'armure de la forge sur une carte de type attaque ne fonctionne pas
-- [ ] Voir pourquoi l'effet de freeze n'applique pas correctement son effet et pourquoi le 50% n'est pas fonctionnel.
+- [x] Voir pourquoi l'amélioration de donner de l'armure de la forge sur une carte de type attaque ne fonctionne pas
+- [x] Voir pourquoi l'effet de freeze n'applique pas correctement son effet et pourquoi le 50% n'est pas fonctionnel.
 - [ ] Dans le menu de la boutique, le "shop", modifier le menu qui s'ouvre pour l'option "miroir magique" pour afficher les cartes et leur interfaces (les 3 cartes aléatoires) plutôt que simplement avoir leur titre 
