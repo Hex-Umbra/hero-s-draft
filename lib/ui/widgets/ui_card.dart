@@ -1,3 +1,4 @@
+import 'dart:math' show max, cos, sin;
 import 'package:flutter/material.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../models/data/card_data.dart';
@@ -17,6 +18,7 @@ class UiCard extends StatelessWidget {
   final int? level;
   final double rarityMultiplier;
   final List<String> forgeUpgrades;
+  final int baseMaxForgeUpgrades;
   final List<CardEffect>? effects;
   final CardType? type;
   final CardTarget? targetType;
@@ -24,7 +26,6 @@ class UiCard extends StatelessWidget {
   final bool isSelected;
   final bool isGrayedOut;
   final VoidCallback? onTap;
-  final int baseMaxForgeUpgrades;
 
   const UiCard({
     super.key,
@@ -36,6 +37,7 @@ class UiCard extends StatelessWidget {
     this.level,
     this.rarityMultiplier = 1.0,
     this.forgeUpgrades = const [],
+    this.baseMaxForgeUpgrades = 1,
     this.effects,
     this.type,
     this.targetType,
@@ -43,7 +45,6 @@ class UiCard extends StatelessWidget {
     this.isSelected = false,
     this.isGrayedOut = false,
     this.onTap,
-    this.baseMaxForgeUpgrades = 1,
   });
 
   CardTarget? _resolveTarget() {
@@ -65,71 +66,8 @@ class UiCard extends StatelessWidget {
     return null;
   }
 
-  Widget _buildTargetIcon(BuildContext context) {
-    final resolved = _resolveTarget();
-    if (resolved == null || resolved == CardTarget.none) {
-      return const SizedBox.shrink();
-    }
-
-    final String emoji;
-    final String label;
-    final Color badgeColor;
-
-    final locale = Localizations.localeOf(context).languageCode;
-
-    switch (resolved) {
-      case CardTarget.singleEnemy:
-        emoji = '🎯';
-        label = locale == 'fr' ? 'Cible unique' : 'Single Target';
-        badgeColor = Colors.redAccent.withAlpha(50);
-        break;
-      case CardTarget.allEnemies:
-        emoji = '💥';
-        label = locale == 'fr' ? 'Tous les ennemis' : 'All Enemies';
-        badgeColor = Colors.orangeAccent.withAlpha(50);
-        break;
-      case CardTarget.self:
-        emoji = '🛡️';
-        label = locale == 'fr' ? 'Soi-même' : 'Self';
-        badgeColor = Colors.blueAccent.withAlpha(50);
-        break;
-      case CardTarget.none:
-        return const SizedBox.shrink();
-    }
-
-    return Tooltip(
-      message: label,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-        decoration: BoxDecoration(
-          color: badgeColor,
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: Colors.white24, width: 0.5),
-        ),
-        child: FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                emoji,
-                style: const TextStyle(fontSize: 10),
-              ),
-              const SizedBox(width: 2),
-              Text(
-                label,
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 7.0,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  // Les badges textuels de ciblage ont été supprimés pour réduire la pollution visuelle.
+  // Le ciblage multi-cible est désormais représenté par le doublement de l'icône d'effet.
 
   String _determineDamageType() {
     final lowerTitle = title.toLowerCase();
@@ -252,32 +190,20 @@ class UiCard extends StatelessWidget {
   }
 
   Widget _buildCompactDescription(BuildContext context) {
-    final targetWidget = _buildTargetIcon(context);
-    final hasTarget = targetWidget is! SizedBox;
-
     if (effects == null || effects!.isEmpty) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (hasTarget) ...[
-            targetWidget,
-            const SizedBox(height: 6),
-          ],
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4.0),
-            child: Text(
-              description,
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 8.0,
-                height: 1.2,
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 4,
-              overflow: TextOverflow.ellipsis,
-            ),
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4.0),
+        child: Text(
+          description,
+          style: const TextStyle(
+            color: Colors.white70,
+            fontSize: 7,
+            height: 1.2,
           ),
-        ],
+          textAlign: TextAlign.center,
+          maxLines: 4,
+          overflow: TextOverflow.ellipsis,
+        ),
       );
     }
 
@@ -294,33 +220,78 @@ class UiCard extends StatelessWidget {
       if (id == 'hardened') extraArmor += 2 * k;
     }
 
+    final isAllEnemies = _resolveTarget() == CardTarget.allEnemies;
+
     for (int i = 0; i < effects!.length; i++) {
       final effect = effects![i];
-      int scaledValue = (effect.value * rarityMultiplier).round();
+      int baseValue = (effect.value * rarityMultiplier).round();
+      int bonusValue = 0;
       if (effect.type == 'damage') {
-        scaledValue += extraDamage;
+        bonusValue = extraDamage;
       } else if (effect.type == 'armor') {
-        scaledValue += extraArmor;
+        bonusValue = extraArmor;
       }
       final visuals = _getEffectVisuals(effect);
+      final isPlayerEffect = effect.type == 'armor' ||
+          effect.type == 'heal' ||
+          effect.type == 'gain_mana' ||
+          effect.type == 'draw' ||
+          (effect.type == 'apply_status' &&
+              (effect.statusId == 'strength' ||
+                  effect.statusId == 'strength_regen' ||
+                  effect.statusId == 'armor_regen'));
+      final shouldDouble = isAllEnemies && !isPlayerEffect;
 
       final effectMainRow = Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            visuals.icon,
-            color: visuals.color,
-            size: 22.0,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            '$scaledValue',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 15.0,
-              fontWeight: FontWeight.bold,
+          if (shouldDouble) ...[
+            Icon(
+              visuals.icon,
+              color: visuals.color,
+              size: 19,
             ),
-          ),
+            const SizedBox(width: 1),
+            Icon(
+              visuals.icon,
+              color: visuals.color,
+              size: 19,
+            ),
+          ] else ...[
+            Icon(
+              visuals.icon,
+              color: visuals.color,
+              size: 19,
+            ),
+          ],
+          const SizedBox(width: 4),
+          if (bonusValue > 0) ...[
+            Text(
+              '$baseValue',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              ' +$bonusValue🔨',
+              style: const TextStyle(
+                color: Colors.amber,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ] else ...[
+            Text(
+              '${baseValue + bonusValue}',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ],
       );
 
@@ -338,14 +309,14 @@ class UiCard extends StatelessWidget {
                 const Icon(
                   Icons.timer_outlined,
                   color: Colors.white60,
-                  size: 10,
+                  size: 8,
                 ),
                 const SizedBox(width: 2),
                 Text(
                   '$duration',
                   style: const TextStyle(
                     color: Colors.white60,
-                    fontSize: 10,
+                    fontSize: 8,
                     fontWeight: FontWeight.bold,
                     height: 1.0,
                   ),
@@ -366,7 +337,7 @@ class UiCard extends StatelessWidget {
               '|',
               style: TextStyle(
                 color: Colors.white24,
-                fontSize: 15.0,
+                fontSize: 15,
                 fontWeight: FontWeight.w200,
               ),
             ),
@@ -375,21 +346,12 @@ class UiCard extends StatelessWidget {
       }
     }
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (hasTarget) ...[
-          targetWidget,
-          const SizedBox(height: 6),
-        ],
-        Wrap(
-          alignment: WrapAlignment.center,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          spacing: 4,
-          runSpacing: 4,
-          children: badges,
-        ),
-      ],
+    return Wrap(
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 4,
+      runSpacing: 4,
+      children: badges,
     );
   }
 
@@ -573,9 +535,9 @@ class UiCard extends StatelessWidget {
       case CardType.attack:
         return const Color(0xFF4A1D1D);
       case CardType.skill:
-        return const Color(0xFF173D29);
+        return const Color(0xFF152A4A);
       case CardType.power:
-        return const Color(0xFF2A1C3B);
+        return const Color(0xFF453215);
       case CardType.status:
         return const Color(0xFF2D2D2D);
       default:
@@ -588,6 +550,69 @@ class UiCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final typeColor = _getTypeColor();
     final bgColor = _getBackgroundColor();
+    final rarityColor = rarity != null ? _getRarityColor(context, rarity!) : Colors.white70;
+
+    final rarityIndex = _getRarityIndex(context);
+    final totalSlots = baseMaxForgeUpgrades + rarityIndex;
+    final filledSlots = forgeUpgrades.length;
+    final emptySlots = max(0, totalSlots - filledSlots);
+
+    final runeSocketsRow = SizedBox(
+      width: 45.0,
+      child: Wrap(
+        alignment: WrapAlignment.center,
+        runAlignment: WrapAlignment.center,
+        spacing: 2.0,
+        runSpacing: 2.0,
+        children: [
+          ...forgeUpgrades.map((upgrade) => Container(
+                width: 7.0,
+                height: 7.0,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.black45,
+                  border: Border.all(
+                    color: Colors.cyanAccent.withValues(alpha: 0.8),
+                    width: 0.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.cyanAccent.withValues(alpha: 0.3),
+                      blurRadius: 1.5,
+                      spreadRadius: 0.25,
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: FittedBox(
+                    child: Text(
+                      _getRuneEmoji(upgrade),
+                      style: const TextStyle(fontSize: 4.5),
+                    ),
+                  ),
+                ),
+              )),
+          ...List.generate(
+            emptySlots,
+            (index) => Container(
+              width: 7.0,
+              height: 7.0,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.05),
+                border: Border.all(
+                  color: Colors.white24,
+                  width: 0.5,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    final showBadge = isExhaust || type == CardType.power;
+    final descriptionTop = showBadge ? 52.0 : 40.0;
 
     return AspectRatio(
       aspectRatio: 70 / 110,
@@ -597,7 +622,7 @@ class UiCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: const Color(0xFF1E1E2C).withAlpha(245),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: typeColor, width: 1.5),
+          border: Border.all(color: rarityColor, width: 1.5),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withAlpha(185),
@@ -628,185 +653,162 @@ class UiCard extends StatelessWidget {
         ),
         child: GestureDetector(
           onTap: onTap,
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [bgColor, bgColor.withAlpha(200)],
-              ),
-              border: Border.all(
-                color: isSelected ? Colors.white : typeColor,
-                width: isSelected ? 3.0 : 2.0,
-              ),
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                if (isSelected)
-                  BoxShadow(
-                    color: typeColor.withAlpha(200),
-                    blurRadius: 15,
-                    spreadRadius: 4,
-                  ),
-                BoxShadow(
-                  color: Colors.black.withAlpha(150),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Stack(
-              children: [
-                // Titre (Fixé en haut)
-                Positioned(
-                  top: 10,
-                  left: 8,
-                  right: 8,
-                  child: Text(
-                    title.toUpperCase(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.5,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              // Card body (clipped to rounded rect)
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    if (isSelected)
+                      BoxShadow(
+                        color: rarityColor.withValues(alpha: 0.4),
+                        blurRadius: 15,
+                        spreadRadius: 4,
+                      ),
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
                     ),
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                  ),
+                  ],
                 ),
-
-                // Ligne de séparation
-                Positioned(
-                  top: 26,
-                  left: 0,
-                  right: 0,
-                  child: Center(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: PolychromaticBorder(
+                    rarityColor: rarityColor,
+                    isSelected: isSelected,
                     child: Container(
-                      height: 1.5,
-                      width: 40,
-                      color: typeColor.withAlpha(100),
+                      decoration: BoxDecoration(
+                        color: bgColor,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          // Titre, Ligne de Séparateur, Rareté et Rune Sockets groupés
+                          Positioned(
+                            top: 10,
+                            left: 8,
+                            right: 8,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  title.toUpperCase(),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 0.5,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                ),
+                                const SizedBox(height: 3),
+                                Center(
+                                  child: Container(
+                                    height: 1.5,
+                                    width: 30,
+                                    color: typeColor.withValues(alpha: 0.3),
+                                  ),
+                                ),
+                                const SizedBox(height: 3),
+                                runeSocketsRow,
+                                if (showBadge) ...[
+                                  const SizedBox(height: 3),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 4.5,
+                                      vertical: 1.5,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.redAccent.withValues(alpha: 0.8),
+                                      borderRadius: BorderRadius.circular(3),
+                                    ),
+                                    child: Text(
+                                      l10n.oncePlayed.toUpperCase(),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 6,
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+
+                          // Description (Centrée verticalement)
+                          Positioned(
+                            top: descriptionTop,
+                            bottom: 22,
+                            left: 8,
+                            right: 8,
+                            child: Center(child: _buildCompactDescription(context)),
+                          ),
+
+                          // Type Label (Fixé tout en bas)
+                          Positioned(
+                            bottom: 6,
+                            left: 0,
+                            right: 0,
+                            child: Text(
+                              _getTypeLabel(context).toUpperCase(),
+                              style: TextStyle(
+                                color: typeColor.withValues(alpha: 0.7),
+                                fontSize: 6,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.0,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
+              ),
 
-                // Rareté
-                if (rarity != null)
-                  Positioned(
-                    top: 32,
-                    left: 0,
-                    right: 0,
-                    child: Text(
-                      rarity!.toUpperCase(),
-                      style: TextStyle(
-                        color: _getRarityColor(context, rarity!),
-                        fontSize: 7.0,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.2,
+              // Circular Mana Medallion — outside ClipRRect so it's never cropped
+              if (cost != null)
+                Positioned(
+                  top: -6,
+                  left: -6,
+                  child: Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: const Color(0xFF0D1B2A),
+                      border: Border.all(
+                        color: Colors.cyanAccent,
+                        width: 1.5,
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-
-                // Étoiles de Forge
-                if (rarity != null)
-                  Positioned(
-                    top: 42,
-                    left: 0,
-                    right: 0,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(
-                        baseMaxForgeUpgrades + _getRarityIndex(context),
-                        (index) => Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 0.5),
-                          child: Icon(
-                            index < forgeUpgrades.length
-                                ? Icons.star
-                                : Icons.star_border,
-                            color: Colors.amber,
-                            size: 8,
-                          ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.cyanAccent.withValues(alpha: 0.4),
+                          blurRadius: 4,
+                          spreadRadius: 0.5,
                         ),
-                      ),
+                      ],
                     ),
-                  ),
-
-                // Badge Usage Unique
-                if (isExhaust || type == CardType.power)
-                  Positioned(
-                    top: 54,
-                    left: 0,
-                    right: 0,
                     child: Center(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.redAccent.withAlpha(200),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          l10n.oncePlayed.toUpperCase(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 7.0,
-                            fontWeight: FontWeight.w900,
-                          ),
+                      child: Text(
+                        '$cost',
+                        style: const TextStyle(
+                          color: Colors.cyanAccent,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
                   ),
-
-                // Description (Centrée verticalement)
-                Positioned(
-                  top: 70,
-                  bottom: 38,
-                  left: 8,
-                  right: 8,
-                  child: Center(child: _buildCompactDescription(context)),
                 ),
-
-                // Cristaux de Mana (En bas au centre)
-                if (cost != null && cost! > 0)
-                  Positioned(
-                    bottom: 20,
-                    left: 0,
-                    right: 0,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(
-                        cost!,
-                        (index) => const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 1.0),
-                          child: Icon(
-                            Icons.diamond_rounded,
-                            color: Colors.cyanAccent,
-                            size: 14,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                // Type Label (Fixé tout en bas)
-                Positioned(
-                  bottom: 6,
-                  left: 0,
-                  right: 0,
-                  child: Text(
-                    _getTypeLabel(context).toUpperCase(),
-                    style: TextStyle(
-                      color: typeColor.withAlpha(180),
-                      fontSize: 7.0,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.0,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ],
-            ),
+            ],
           ),
         ),
       ),
@@ -889,5 +891,221 @@ class UiCard extends StatelessWidget {
       return 5;
     }
     return 0;
+  }
+
+  String _getRuneEmoji(String upgrade) {
+    final id = upgrade.split(':')[0];
+    switch (id) {
+      case 'sharp':
+        return '⚔️';
+      case 'hardened':
+        return '🛡️';
+      case 'quick':
+        return '🪶';
+      case 'eco':
+        return '💎';
+      case 'burning':
+        return '🔥';
+      case 'freezing':
+        return '❄️';
+      case 'shocking':
+        return '⚡';
+      case 'enduring':
+        return '⏳';
+      default:
+        return '🔮';
+    }
+  }
+}
+
+class PolychromaticBorder extends StatefulWidget {
+  final Widget child;
+  final Color rarityColor;
+  final bool isSelected;
+
+  const PolychromaticBorder({
+    super.key,
+    required this.child,
+    required this.rarityColor,
+    required this.isSelected,
+  });
+
+  @override
+  State<PolychromaticBorder> createState() => _PolychromaticBorderState();
+}
+
+class _PolychromaticBorderState extends State<PolychromaticBorder>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  bool _isHovered = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) {
+        setState(() {
+          _isHovered = true;
+        });
+        _controller.repeat();
+      },
+      onExit: (_) {
+        setState(() {
+          _isHovered = false;
+        });
+        _controller.stop();
+      },
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          return CustomPaint(
+            foregroundPainter: _PolychromaticBorderPainter(
+              animationValue: _controller.value,
+              rarityColor: widget.rarityColor,
+              isSelected: widget.isSelected,
+              isHovered: _isHovered,
+            ),
+            child: child,
+          );
+        },
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+class _PolychromaticBorderPainter extends CustomPainter {
+  final double animationValue;
+  final Color rarityColor;
+  final bool isSelected;
+  final bool isHovered;
+
+  _PolychromaticBorderPainter({
+    required this.animationValue,
+    required this.rarityColor,
+    required this.isSelected,
+    required this.isHovered,
+  });
+
+  List<Color> _getRarityShineColors(Color baseColor) {
+    final hsv = HSVColor.fromColor(baseColor);
+    if (hsv.saturation < 0.15 || hsv.value < 0.15) {
+      return [
+        baseColor,
+        Colors.white,
+        const Color(0xFFE0E0E0),
+        const Color(0xFFBDBDBD),
+        Colors.white,
+        baseColor,
+      ];
+    }
+    final hue = hsv.hue;
+    if (hue >= 340 || hue < 20) {
+      return [
+        baseColor,
+        Colors.orangeAccent,
+        Colors.red,
+        Colors.pinkAccent,
+        baseColor,
+      ];
+    } else if (hue >= 20 && hue < 50) {
+      return [
+        baseColor,
+        Colors.amber,
+        Colors.yellow,
+        Colors.deepOrange,
+        baseColor,
+      ];
+    } else if (hue >= 50 && hue < 70) {
+      return [
+        baseColor,
+        Colors.lightGreenAccent,
+        Colors.yellowAccent,
+        Colors.amberAccent,
+        baseColor,
+      ];
+    } else if (hue >= 70 && hue < 165) {
+      return [
+        baseColor,
+        Colors.limeAccent,
+        Colors.tealAccent,
+        Colors.green,
+        baseColor,
+      ];
+    } else if (hue >= 165 && hue < 200) {
+      return [
+        baseColor,
+        Colors.cyanAccent,
+        Colors.blueAccent,
+        Colors.tealAccent,
+        baseColor,
+      ];
+    } else if (hue >= 200 && hue < 260) {
+      return [
+        baseColor,
+        Colors.cyan,
+        Colors.indigoAccent,
+        Colors.blue,
+        baseColor,
+      ];
+    } else {
+      return [
+        baseColor,
+        Colors.pinkAccent,
+        Colors.deepPurpleAccent,
+        Colors.purple,
+        baseColor,
+      ];
+    }
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(12));
+    final paint = Paint()
+      ..style = PaintingStyle.stroke;
+
+    if (isHovered) {
+      paint.strokeWidth = 3.0;
+      final colors = _getRarityShineColors(rarityColor);
+      final angle = animationValue * 2 * 3.141592653589793;
+      final cosVal = cos(angle);
+      final sinVal = sin(angle);
+      paint.shader = LinearGradient(
+        begin: Alignment(cosVal, sinVal),
+        end: Alignment(-cosVal, -sinVal),
+        colors: colors,
+      ).createShader(rect);
+    } else {
+      paint.strokeWidth = isSelected ? 2.5 : 1.5;
+      paint.color = isSelected
+          ? Colors.white.withValues(alpha: 0.8)
+          : rarityColor.withValues(alpha: 0.5);
+    }
+
+    canvas.drawRRect(rrect, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _PolychromaticBorderPainter oldDelegate) {
+    return oldDelegate.animationValue != animationValue ||
+        oldDelegate.rarityColor != rarityColor ||
+        oldDelegate.isSelected != isSelected ||
+        oldDelegate.isHovered != isHovered;
   }
 }

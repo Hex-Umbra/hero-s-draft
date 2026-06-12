@@ -57,7 +57,7 @@ class DeckScreen extends ConsumerWidget {
                 child: GridView.builder(
                   gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                     maxCrossAxisExtent: 200,
-                    childAspectRatio: 0.6,
+                    childAspectRatio: 70 / 110,
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
                   ),
@@ -81,6 +81,7 @@ class DeckScreen extends ConsumerWidget {
                                 target: card.data.target.getLabel(l10n),
                                 rarityMultiplier: card.rarityMultiplier,
                                 forgeUpgrades: card.forgeUpgrades,
+                                baseMaxForgeUpgrades: card.data.baseMaxForgeUpgrades,
                                 effects: card.data.effects,
                                 type: card.data.type,
                                 targetType: card.data.target,

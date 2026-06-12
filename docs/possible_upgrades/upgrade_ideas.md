@@ -117,3 +117,4 @@
 - [ ] En combat, quand le joueur perd des hp, rajouter une animation smooth sur la barre de vie pour afficher la perte de points de vie
 ---
 - [ ] Actuellement les ennemis n'apparaissent que maximum par 2, revoir les formules et comment les ennemis sont "spawner" quand un le joueur appuie sur un nœud combat
+- [ ] Enlever les cartes de rareté "Unique"

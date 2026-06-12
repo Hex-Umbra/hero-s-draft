@@ -187,7 +187,7 @@ class _BossCardDraftScreenState extends ConsumerState<BossCardDraftScreen> {
                     : GridView.builder(
                         gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                           maxCrossAxisExtent: 160,
-                          childAspectRatio: 140 / 220,
+                          childAspectRatio: 70 / 110,
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
                         ),
@@ -196,12 +196,9 @@ class _BossCardDraftScreenState extends ConsumerState<BossCardDraftScreen> {
                           final card = draftPool[index];
                           final isSelected = _selectedCards.contains(card);
 
-                          return SizedBox(
-                            width: 140,
-                            height: 220,
-                            child: Stack(
-                              children: [
-                                UiCard(
+                          return Stack(
+                            children: [
+                              UiCard(
                                   title: card.getName(locale),
                                   description: card.getDescription(locale),
                                   cost: card.cost,
@@ -213,6 +210,7 @@ class _BossCardDraftScreenState extends ConsumerState<BossCardDraftScreen> {
                                   targetType: card.target,
                                   isExhaust: card.isExhaust,
                                   isSelected: isSelected,
+                                  baseMaxForgeUpgrades: card.baseMaxForgeUpgrades,
                                   onTap: () => _toggleCardSelection(card),
                                 ),
                                 // Indicateur Checkmark
@@ -246,9 +244,8 @@ class _BossCardDraftScreenState extends ConsumerState<BossCardDraftScreen> {
                                     ),
                                   ),
                               ],
-                            ),
-                          );
-                        },
+                            );
+                          },
                       ),
               ),
               const SizedBox(height: 20),

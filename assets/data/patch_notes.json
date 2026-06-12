@@ -1,5 +1,34 @@
 [
   {
+    "version": "0.1.5",
+    "date": "2026-06-12",
+    "title": "Refonte Esthétique des Cartes",
+    "sections": [
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "L'interface visuelle des cartes a été entièrement refondue avec un style premium « glassmorphic » (effet de verre dépoli), et les bordures ainsi que les lueurs et ombres de sélection adoptent désormais la couleur de rareté au lieu de celle du type de carte pour un rendu visuel plus épuré et premium.",
+          "Le coût en mana est désormais présenté dans un médaillon circulaire flottant en haut à gauche, standardisant l'affichage entre les menus et le combat.",
+          "Les étoiles d'amélioration de la forge sont remplacées par des emplacements de runes circulaires épurés qui affichent un symbole distinct selon le bonus appliqué.",
+          "La taille globale des cartes a été réduite d'environ 25% afin d'offrir une disposition plus compacte et lisible sur tous les écrans.",
+          "L'icône en filigrane en arrière-plan des cartes a été supprimée et les mentions textuelles explicites de rareté ainsi que les badges de ciblage ont été retirés pour optimiser la lisibilité.",
+          "Pour les cartes ciblant tous les ennemis, seules les icônes des effets visant les adversaires (comme les dégâts ou le poison) sont doublées, tandis que les effets appliqués au joueur (armure, soin, mana, pioche) restent simples pour éviter toute ambiguïté.",
+          "Les emplacements de runes de la forge sont désormais répartis sur des rangées de 5 fentes maximum afin d'éviter tout débordement d'affichage sur les cartes dotées de nombreux emplacements, comme les cartes de rareté Unique qui en possèdent 10.",
+          "Les cartes de combat disposent désormais de couleurs d'arrière-plan spécifiques à leur type (Attaque, Compétence, Pouvoir ou Statut) durant les affrontements pour faciliter leur identification visuelle.",
+          "Ajout d'un effet brillant polychromatique (foil) dynamique sur la bordure des cartes lors du survol de la souris, avec un élargissement de la bordure pour un rendu plus premium."
+        ]
+      },
+      {
+        "category": "Technique",
+        "emoji": "🔧",
+        "entries": [
+          "Mise à jour des tests d'interface pour valider la suppression des badges de ciblage et le bon fonctionnement du doublement dynamique des icônes d'effet."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.1.4",
     "date": "2026-06-11",
     "title": "La Voie de l'Éveil",
