@@ -133,6 +133,7 @@ class UiCard extends StatelessWidget {
                     rarityColor: rarityColor,
                     isUnique: rarity != null && rarity!.toLowerCase().contains('unique'),
                     isSelected: isSelected,
+                    upgradeCount: forgeUpgrades.length,
                     child: Container(
                       decoration: BoxDecoration(
                         color: bgColor,

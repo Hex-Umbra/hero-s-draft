@@ -4,8 +4,9 @@ Ce document décrit le focus actif du projet, les accomplissements récents, et 
 
 ## 1. Focus Actuel du Projet
 
-Le projet a récemment finalisé la **Décomposition de la God Class UiCard (v0.2.01)**, le **Sprint de Refonte Esthétique des Cartes (v0.1.5)**, le **Sprint du Système de Forge v2 (v0.2.00)**, le **Sprint Map, Draft & Progression (v0.1.4)** et le **Sprint Boutique & Économie (v0.1.3)** :
+Le projet a récemment finalisé la **Bordure Foil Progressif Unique (v0.2.02)**, la **Décomposition de la God Class UiCard (v0.2.01)**, le **Sprint de Refonte Esthétique des Cartes (v0.1.5)**, le **Sprint du Système de Forge v2 (v0.2.00)**, le **Sprint Map, Draft & Progression (v0.1.4)** et le **Sprint Boutique & Économie (v0.1.3)** :
 
+- **v0.2.02 — Effet Foil Progressif Unique** : Ajout d'un système dynamique de couleurs de bordure polychromatique pour les cartes de classe `unique` au survol de la souris. Le nombre de couleurs affichées (de 1 à 10) augmente avec le nombre d'upgrades de la carte (upgradeCount), créant une progression chromatique fluide (effet métallisé/foil) de plus en plus riche à mesure que le joueur forge la carte.
 - **v0.2.01 — Décomposition et Découplage de UiCard (SRP)** : Refactoring complet de la god class `UiCard` de 1136 lignes en divisant ses responsabilités dans un sous-dossier `ui_card/` (widgets autonomes `CardManaMedallion`, `CardRuneSockets`, `CardCompactDescription`, `PolychromaticBorder`, et module utilitaire `ui_card_helpers.dart`). La classe principale est simplifiée à ~175 lignes et les 107 tests passent au vert sans régression.
 - **v0.1.5 — Refonte Esthétique des Cartes** : Refonte visuelle complète en style premium glassmorphic, médaillon de coût standardisé, fentes de runes (rune sockets) dynamiques et multi-rangées (max 5 fentes par rangée avec retour à la ligne automatique via `Wrap` en Flutter et Canvas en Flame), réduction d'échelle de 25%, suppression du filigrane (watermark) arrière-plan et des badges textuels de ciblage, doublement raffiné des icônes d'action pour représenter la portée multicible (effets ennemis doublés, effets joueur simples), et **effet de surbrillance polychromatique (foil) dynamique au survol de la souris** avec élargissement de la bordure.
 - **v0.2.00 — Forge v2 : Anti-Exploit, Filtrage Typé, Achat Progressif et Layout Plein Écran** : Remplacement du dialogue de forge hérité par un écran plein écran responsive (`Dialog.fullscreen`), persistance de session anti-exploit dans `RunState` (`forgeSlots` et `forgeTargetCardId`) réinitialisée uniquement sur réussite ou sortie de RestScreen, filtrage sémantique intelligent selon le type de carte (`skill` exclut les offensifs, `power` restreint aux utilitaires), intégration d'un bouton d'achat progressif de slots ($50 \rightarrow 80 \rightarrow 120 \rightarrow 175$ Or) avec validation de solde/capacité, et ajout de tests unitaires dédiés (107 tests au total).
@@ -17,7 +18,13 @@ Le focus actuel se tourne désormais vers les étapes restantes de la Phase 7 de
 
 ## 2. Accomplissements Récents
 
-1. **Décomposition de la God Class UiCard (Version v0.2.01)** :
+1. **Effet de Bordure Foil Progressif pour les Cartes Uniques (Version v0.2.02)** :
+   - **Calcul Dynamique** : Intégration de `upgradeCount: forgeUpgrades.length` passé du widget `UiCard` au composant `PolychromaticBorder`.
+   - **Échelle Chromatique** : Utilisation d'un pool ordonné de 10 couleurs (Unique/Gold, Common, Uncommon, Rare, Epic, Legendary, Red, Yellow, Cyan, Pink) dont le sous-ensemble sélectionné augmente dynamiquement selon `upgradeCount`.
+   - **Garantie de Fluidité** : Duplication automatique de la couleur de départ à la fin pour un bouclage sans couture du gradient tournant.
+   - **Tests & Analyse** : Zéro problème d'analyse statique et passage des 107 tests.
+
+2. **Décomposition de la God Class UiCard (Version v0.2.01)** :
    - **Découplage SRP** : Refactoring de `UiCard` (1136 lignes) pour isoler les responsabilités et respecter les patterns Flutter.
    - **Création du sous-dossier `ui_card/`** contenant les sous-composants isolés : `CardManaMedallion`, `CardRuneSockets`, `CardCompactDescription`, `PolychromaticBorder`, et `ui_card_helpers.dart`.
    - **Simplification de UiCard** : Réduction du fichier d'assemblage principal à ~175 lignes de composition pure.

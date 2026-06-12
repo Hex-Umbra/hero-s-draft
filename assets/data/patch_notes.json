@@ -16,14 +16,16 @@
           "Pour les cartes ciblant tous les ennemis, seules les icônes des effets visant les adversaires (comme les dégâts ou le poison) sont doublées, tandis que les effets appliqués au joueur (armure, soin, mana, pioche) restent simples pour éviter toute ambiguïté.",
           "Les emplacements de runes de la forge sont désormais répartis sur des rangées de 5 fentes maximum afin d'éviter tout débordement d'affichage sur les cartes dotées de nombreux emplacements, comme les cartes de rareté Unique qui en possèdent 10.",
           "Les cartes de combat disposent désormais de couleurs d'arrière-plan spécifiques à leur type (Attaque, Compétence, Pouvoir ou Statut) durant les affrontements pour faciliter leur identification visuelle.",
-          "Ajout d'un effet brillant polychromatique (foil) dynamique sur la bordure des cartes lors du survol de la souris, avec un élargissement de la bordure pour un rendu plus premium."
+          "Ajout d'un effet brillant polychromatique (foil) dynamique sur la bordure des cartes lors du survol de la souris, avec un élargissement de la bordure pour un rendu plus premium.",
+          "L'effet brillant polychromatique sur les bordures des cartes de rareté Unique s'enrichit désormais de manière progressive à chaque rune d'amélioration appliquée, évoluant d'un éclat d'or pur de base vers un arc-en-ciel complet de dix couleurs."
         ]
       },
       {
         "category": "Technique",
         "emoji": "🔧",
         "entries": [
-          "Mise à jour des tests d'interface pour valider la suppression des badges de ciblage et le bon fonctionnement du doublement dynamique des icônes d'effet."
+          "Mise à jour des tests d'interface pour valider la suppression des badges de ciblage et le bon fonctionnement du doublement dynamique des icônes d'effet.",
+          "Réorganisation de la structure interne des cartes de l'interface en extrayant les responsabilités dans des sous-modules spécialisés afin d'améliorer la modularité et la maintenance du projet."
         ]
       }
     ]

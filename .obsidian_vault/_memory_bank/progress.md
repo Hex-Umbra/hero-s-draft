@@ -7,8 +7,8 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 - **8 fichiers JSON** de données d'assets.
 - **107 tests automatisés** — 100% au vert.
 - **0 erreur** via `flutter analyze`.
-- **~118 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
-- **Version actuelle** : v0.2.01 — Décomposition de UiCard (Sprint Forge v2.00 inclus).
+- **~119 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
+- **Version actuelle** : v0.2.02 — Effet Foil Progressif Unique.
 
 ---
 
@@ -55,6 +55,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Fonctionnalité | Implémentation | Détails |
 |:---|:---|:---|
 | Auto-Merge (3→1) | `DeckNotifier.mergeCards()` | 3 copies même ID + rareté → 1 copie rareté supérieure (cumul des Tiers, clamp à la capacité). Les cartes de rareté `unique` (classe) ne peuvent pas être fusionnées (désactivé). |
+| Foil Unique Progressif | `PolychromaticBorder`, `UiCard` | Rendu de la bordure polychromatique brillante au survol de la souris dont le nombre de couleurs (de 1 à 10) augmente avec les upgrades (v0.2.02) |
 | Rareté Dynamique | `EffectResolver.resolveCard()` | Progression par rareté (common → legendary) avec coefficients. La rareté `unique` (cartes de classe) est fixée à un multiplicateur de 1.0. |
 | Catalogue complet | `cards.json` & `hero_cards.json` | 21 cartes équilibrées : 15 globales (communes) dans cards.json + 6 de classe (unique) dans hero_cards.json |
 | Types d'effets | `EffectResolver`, `CardEffect` | damage, heal, armor, draw, gain_mana, apply_status |

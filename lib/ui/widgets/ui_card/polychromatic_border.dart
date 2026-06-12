@@ -6,6 +6,7 @@ class PolychromaticBorder extends StatefulWidget {
   final Color rarityColor;
   final bool isSelected;
   final bool isUnique;
+  final int upgradeCount;
 
   const PolychromaticBorder({
     super.key,
@@ -13,6 +14,7 @@ class PolychromaticBorder extends StatefulWidget {
     required this.rarityColor,
     required this.isSelected,
     this.isUnique = false,
+    this.upgradeCount = 0,
   });
 
   @override
@@ -64,6 +66,7 @@ class _PolychromaticBorderState extends State<PolychromaticBorder>
               isSelected: widget.isSelected,
               isHovered: _isHovered,
               isUnique: widget.isUnique,
+              upgradeCount: widget.upgradeCount,
             ),
             child: child,
           );
@@ -80,6 +83,7 @@ class _PolychromaticBorderPainter extends CustomPainter {
   final bool isSelected;
   final bool isHovered;
   final bool isUnique;
+  final int upgradeCount;
 
   _PolychromaticBorderPainter({
     required this.animationValue,
@@ -87,22 +91,27 @@ class _PolychromaticBorderPainter extends CustomPainter {
     required this.isSelected,
     required this.isHovered,
     this.isUnique = false,
+    this.upgradeCount = 0,
   });
 
   List<Color> _getRarityShineColors(Color baseColor) {
-    // Rareté Unique → arc-en-ciel complet
+    // Rareté Unique → arc-en-ciel complet basé sur l'upgradeCount
     if (isUnique) {
-      return [
-        Colors.red,
-        Colors.orangeAccent,
-        Colors.yellow,
+      final pool = [
+        baseColor,
+        Colors.white70,
         Colors.greenAccent,
-        Colors.cyanAccent,
         Colors.blueAccent,
         Colors.purpleAccent,
-        Colors.pinkAccent,
+        Colors.orangeAccent,
         Colors.red,
+        Colors.yellow,
+        Colors.cyan,
+        Colors.pink,
       ];
+      final count = (upgradeCount + 1).clamp(1, pool.length);
+      final colors = pool.sublist(0, count);
+      return [...colors, colors.first];
     }
     final hsv = HSVColor.fromColor(baseColor);
     if (hsv.saturation < 0.15 || hsv.value < 0.15) {
@@ -209,6 +218,7 @@ class _PolychromaticBorderPainter extends CustomPainter {
         oldDelegate.rarityColor != rarityColor ||
         oldDelegate.isSelected != isSelected ||
         oldDelegate.isUnique != isUnique ||
+        oldDelegate.upgradeCount != upgradeCount ||
         oldDelegate.isHovered != isHovered;
   }
 }
