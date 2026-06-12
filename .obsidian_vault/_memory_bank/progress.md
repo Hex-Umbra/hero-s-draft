@@ -5,10 +5,10 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 **Métriques du projet** :
 - **~11 400 lignes** de code source dans `lib/` (70 fichiers).
 - **8 fichiers JSON** de données d'assets.
-- **106 tests automatisés** — 100% au vert.
+- **107 tests automatisés** — 100% au vert.
 - **0 erreur** via `flutter analyze`.
-- **~117 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
-- **Version actuelle** : v0.1.5 — Refonte Esthétique des Cartes (Sprint Forge v2.00 inclus).
+- **~118 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
+- **Version actuelle** : v0.2.01 — Décomposition de UiCard (Sprint Forge v2.00 inclus).
 
 ---
 
@@ -293,6 +293,7 @@ Basé sur les rapports de dette technique (`technical_debt_report_Opus4.6.md`, 4
 | Critique | `map_screen.dart` | **2 471 lignes**, 10+ responsabilités | Extraire `MapPainter`, `MapNodeWidget`, `MapLegend`, `MapTooltip`, `MapController` | 2471 → ~400 lignes |
 | Critique | `game_screen.dart` | **1 667 lignes**, 5 overlays privés | Extraire `PauseOverlay`, `RewardOverlay`, `DeathOverlay`, `VictoryOverlay`, `HudPanel`, `CombatOrchestrator` | 1667 → ~500 lignes |
 | Critique | `card_component.dart` | **1 031 lignes**, render + drag + targeting + animation + tooltip | Extraire `CardRenderer`, `CardAnimationController`, `CardInteractionHandler` | 1031 → ~300 lignes |
+| Important | `ui_card.dart` | **1 136 lignes**, god component UI/logic/painting | ✅ Refactorisé en extrayant les sous-widgets dans `ui_card/` (v0.2.01) | 1136 → ~175 lignes |
 | Important | `heros_draft_game.dart` | **775 lignes**, 18 callbacks constructeur | Extraire layout, sync, factories | 775 → ~400 lignes |
 | Important | `stat_badge.dart` | **720 lignes**, 5 classes, recreate all children à chaque update | Extraire classes, optimiser update | Performance + lisibilité |
 
@@ -354,6 +355,7 @@ Issus de `docs/analysis_reports/6_analyse_game_balance.md` (documentés, non cor
 
 | Version | Date | Titre | Description des changements clés |
 |:---|:---|:---|:---|
+| **v0.2.01** | 2026-06-12 | Décomposition de UiCard (SRP) | Refactoring de la god class `UiCard` (1136 lignes) en extrayant ses sous-widgets (`CardManaMedallion`, `CardRuneSockets`, `CardCompactDescription`) et ses helpers (`ui_card_helpers.dart`) dans un sous-dossier `ui_card/` dédié, garantissant la cohésion, respectant le principe de responsabilité unique (SRP) et la structure du framework Flutter. |
 | **v0.1.5** | 2026-06-12 | Refonte Esthétique des Cartes | Layout glassmorphic unifié, médaillon standardisé de coût, fentes d'améliorations (rune sockets) avec retour à la ligne automatique par rangées de 5 (rows of 5) pour éviter tout débordement, réduction d'échelle de 25%, suppression du filigrane et des badges textuels de ciblage (remplacés par des doublements d'icônes d'effet pour la portée multicible ciblant les ennemis), retrait complet des labels textuels de rareté (remplacés par l'identification pure via la couleur des bordures et par halo de surbrillance lumineux/glowing shadows en cas de sélection), et mise à jour des cartes de combat (Flame) pour utiliser des couleurs d'arrière-plan spécifiques à leur type (type-specific background colors) identiques à celles des menus. |
 | **v0.2.00** | 2026-06-11 | Forge v2 : Anti-Exploit, Filtrage Typé, Achat Progressif | Écran forge responsive plein écran, persistance session anti-exploit, fentes d'upgrades progressives, filtrage typé. |
 | **v0.1.4** | 2026-06-11 | Map, Draft & Progression | Level Up différé sur la carte (MapScreen), protection anti-spoil du carrousel de reliques, chokepoint élite central calculé dynamiquement. |

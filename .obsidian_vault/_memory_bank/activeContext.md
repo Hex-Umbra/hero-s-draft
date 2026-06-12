@@ -4,8 +4,9 @@ Ce document décrit le focus actif du projet, les accomplissements récents, et 
 
 ## 1. Focus Actuel du Projet
 
-Le projet a récemment finalisé le **Sprint de Refonte Esthétique des Cartes (v0.1.5)**, le **Sprint du Système de Forge v2 (v0.2.00)**, le **Sprint Map, Draft & Progression (v0.1.4)** et le **Sprint Boutique & Économie (v0.1.3)** :
+Le projet a récemment finalisé la **Décomposition de la God Class UiCard (v0.2.01)**, le **Sprint de Refonte Esthétique des Cartes (v0.1.5)**, le **Sprint du Système de Forge v2 (v0.2.00)**, le **Sprint Map, Draft & Progression (v0.1.4)** et le **Sprint Boutique & Économie (v0.1.3)** :
 
+- **v0.2.01 — Décomposition et Découplage de UiCard (SRP)** : Refactoring complet de la god class `UiCard` de 1136 lignes en divisant ses responsabilités dans un sous-dossier `ui_card/` (widgets autonomes `CardManaMedallion`, `CardRuneSockets`, `CardCompactDescription`, `PolychromaticBorder`, et module utilitaire `ui_card_helpers.dart`). La classe principale est simplifiée à ~175 lignes et les 107 tests passent au vert sans régression.
 - **v0.1.5 — Refonte Esthétique des Cartes** : Refonte visuelle complète en style premium glassmorphic, médaillon de coût standardisé, fentes de runes (rune sockets) dynamiques et multi-rangées (max 5 fentes par rangée avec retour à la ligne automatique via `Wrap` en Flutter et Canvas en Flame), réduction d'échelle de 25%, suppression du filigrane (watermark) arrière-plan et des badges textuels de ciblage, doublement raffiné des icônes d'action pour représenter la portée multicible (effets ennemis doublés, effets joueur simples), et **effet de surbrillance polychromatique (foil) dynamique au survol de la souris** avec élargissement de la bordure.
 - **v0.2.00 — Forge v2 : Anti-Exploit, Filtrage Typé, Achat Progressif et Layout Plein Écran** : Remplacement du dialogue de forge hérité par un écran plein écran responsive (`Dialog.fullscreen`), persistance de session anti-exploit dans `RunState` (`forgeSlots` et `forgeTargetCardId`) réinitialisée uniquement sur réussite ou sortie de RestScreen, filtrage sémantique intelligent selon le type de carte (`skill` exclut les offensifs, `power` restreint aux utilitaires), intégration d'un bouton d'achat progressif de slots ($50 \rightarrow 80 \rightarrow 120 \rightarrow 175$ Or) avec validation de solde/capacité, et ajout de tests unitaires dédiés (107 tests au total).
 - **v0.1.4 — Map, Draft & Progression** : Implémentation du Level Up différé sur la carte (Map Screen) via `pendingDrafts` bloquant la carte (Item #95), polissage de la roulette de reliques (masquage/révélation de la rareté et des déclencheurs, Item #121), et génération dynamique du nœud d'élite central (division entière, Item #97).
@@ -16,7 +17,14 @@ Le focus actuel se tourne désormais vers les étapes restantes de la Phase 7 de
 
 ## 2. Accomplissements Récents
 
-1. **Refonte Esthétique des Cartes (Version v0.1.5)** :
+1. **Décomposition de la God Class UiCard (Version v0.2.01)** :
+   - **Découplage SRP** : Refactoring de `UiCard` (1136 lignes) pour isoler les responsabilités et respecter les patterns Flutter.
+   - **Création du sous-dossier `ui_card/`** contenant les sous-composants isolés : `CardManaMedallion`, `CardRuneSockets`, `CardCompactDescription`, `PolychromaticBorder`, et `ui_card_helpers.dart`.
+   - **Simplification de UiCard** : Réduction du fichier d'assemblage principal à ~175 lignes de composition pure.
+   - **Intégrité de l'API** : Conservation stricte du constructeur pour éviter toute modification des imports externes.
+   - **Vérification** : Validation réussie de l'intégralité des 107 tests automatisés du projet.
+
+2. **Refonte Esthétique des Cartes (Version v0.1.5)** :
    - **Style Premium Glassmorphic** : Refonte visuelle complète utilisant un effet de verre dépoli semi-transparent (`BackdropFilter` avec un flou de 10px) combinant des dégradés subtils (`0.6` d'opacité en haut, `0.2` en bas) et des bordures affinées (épaisseur de `1.5` en temps normal et `2.5` en cas de sélection) avec un liseré semi-transparent (`0.5` d'opacité).
    - **Effet Polychromatique au Survol (Hover Foil)** : Ajout d'un effet arc-en-ciel tournant / balayant animé en temps réel sur la bordure de la carte lors du survol de la souris. L'épaisseur de la bordure augmente à `3.0` (sur `UiCard` Flutter) ou `3.5` (sur `CardComponent` Flame) lors du survol pour sublimer l'effet. Cet effet a été implémenté en double : via un `CustomPainter` et `AnimationController` pour les cartes Flutter, et via un shader de gradient linéaire orienté dynamiquement en fonction d'un accumulateur temporel pour les cartes Flame en combat.
    - **Médaillon de Coût Standardisé** : Remplacement des cristaux de mana inférieurs ou des affichages dispersés par un médaillon circulaire flottant en haut à gauche (rayon de 12px, centré à `[6, 6]`), de couleur sombre (`0xFF0D1B2A`), orné d'une bordure et d'un ombrage cyan brillant. Ce médaillon est identique entre la couche Flame en combat et les widgets Flutter.

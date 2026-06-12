@@ -430,7 +430,17 @@ Pour éliminer la condition de concurrence visuelle (race condition) où l'état
 
 ### 5.2. Widget `UiCard` (`lib/ui/widgets/ui_card.dart`)
 
-**Composant UI maître unifié** — remplace 6 implémentations dupliquées.
+**Composant UI maître unifié et décomposé (v0.2.01)** — remplace 6 implémentations dupliquées et applique le principe de responsabilité unique (SRP).
+
+Pour éviter le pattern anti-pattern de la God Class et structurer proprement le code, le composant `UiCard` (initialement >1100 lignes) a été divisé en sous-widgets et utilitaires spécialisés sous le dossier `lib/ui/widgets/ui_card/` :
+- **`UiCard`** : Classe façade principale, qui assemble le layout global et gère les interactions (`GestureDetector`, `Tooltip`).
+- **`ui_card_helpers.dart`** : Module purement logique regroupant l'analyse des cibles (`resolveTarget`), l'analyse élémentaire (`determineDamageType`), la configuration visuelle des effets (`getEffectVisuals`), le code couleur du type de carte et du fond (`getCardTypeColor`, `getCardBackgroundColor`), les couleurs et indices de rareté, et la construction verbeuse des descriptions bilingues des infobulles (`buildDetailedDescription`).
+- **`polychromatic_border.dart`** : Widget stateful (`PolychromaticBorder` et son painter) prenant en charge l'animation d'effet foil polychromatique au survol de la souris.
+- **`card_mana_medallion.dart`** : Widget autonome layout-agnostique dessinant le médaillon circulaire flottant affichant le coût en mana.
+- **`card_rune_sockets.dart`** : Widget de rendu et d'agencement multi-lignes (Wrapping) pour les fentes d'upgrades de la forge.
+- **`card_compact_description.dart`** : Widget de mise en forme des badges d'effets visuels et des modificateurs de forge sur la face avant de la carte.
+
+Le comportement et les caractéristiques visuelles restent inchangés :
 
 - **Ratio d'aspect** : `70 / 110` constant.
 - **Style Glassmorphic** : Utilise un `BackdropFilter` (flou gaussien de 10px) avec un arrière-plan semi-transparent (dégradé linéaire vertical d'opacité `0.6` à `0.2`) et une bordure fine de `1.5` (`2.5` si sélectionné, opacité `0.5` de typeColor) pour un rendu moderne et épuré. Le motif en filigrane (watermark) en arrière-plan a été retiré.
