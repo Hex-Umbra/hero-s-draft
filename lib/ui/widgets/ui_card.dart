@@ -678,6 +678,7 @@ class UiCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                   child: PolychromaticBorder(
                     rarityColor: rarityColor,
+                    isUnique: rarity != null && rarity!.toLowerCase().contains('unique'),
                     isSelected: isSelected,
                     child: Container(
                       decoration: BoxDecoration(
@@ -834,6 +835,9 @@ class UiCard extends StatelessWidget {
   Color _getRarityColor(BuildContext context, String rarity) {
     final l10n = AppLocalizations.of(context)!;
     final r = rarity.toLowerCase();
+    if (r.contains('unique')) {
+      return const Color(0xFFFFD700); // Gold pur — rareté Unique
+    }
     if (r == l10n.rarityLegendary.toLowerCase() ||
         r.contains('legendary') ||
         r.contains('légendaire')) {
@@ -922,12 +926,14 @@ class PolychromaticBorder extends StatefulWidget {
   final Widget child;
   final Color rarityColor;
   final bool isSelected;
+  final bool isUnique;
 
   const PolychromaticBorder({
     super.key,
     required this.child,
     required this.rarityColor,
     required this.isSelected,
+    this.isUnique = false,
   });
 
   @override
@@ -978,6 +984,7 @@ class _PolychromaticBorderState extends State<PolychromaticBorder>
               rarityColor: widget.rarityColor,
               isSelected: widget.isSelected,
               isHovered: _isHovered,
+              isUnique: widget.isUnique,
             ),
             child: child,
           );
@@ -993,15 +1000,31 @@ class _PolychromaticBorderPainter extends CustomPainter {
   final Color rarityColor;
   final bool isSelected;
   final bool isHovered;
+  final bool isUnique;
 
   _PolychromaticBorderPainter({
     required this.animationValue,
     required this.rarityColor,
     required this.isSelected,
     required this.isHovered,
+    this.isUnique = false,
   });
 
   List<Color> _getRarityShineColors(Color baseColor) {
+    // Rareté Unique → arc-en-ciel complet
+    if (isUnique) {
+      return [
+        Colors.red,
+        Colors.orangeAccent,
+        Colors.yellow,
+        Colors.greenAccent,
+        Colors.cyanAccent,
+        Colors.blueAccent,
+        Colors.purpleAccent,
+        Colors.pinkAccent,
+        Colors.red,
+      ];
+    }
     final hsv = HSVColor.fromColor(baseColor);
     if (hsv.saturation < 0.15 || hsv.value < 0.15) {
       return [
@@ -1106,6 +1129,7 @@ class _PolychromaticBorderPainter extends CustomPainter {
     return oldDelegate.animationValue != animationValue ||
         oldDelegate.rarityColor != rarityColor ||
         oldDelegate.isSelected != isSelected ||
+        oldDelegate.isUnique != isUnique ||
         oldDelegate.isHovered != isHovered;
   }
 }

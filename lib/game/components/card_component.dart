@@ -131,6 +131,7 @@ class CardComponent extends PositionComponent
 
   Color getRarityColor() {
     final r = card.data.rarity.name.toLowerCase();
+    if (r.contains('unique')) return const Color(0xFFFFD700);
     if (r.contains('legendary')) return Colors.orangeAccent;
     if (r.contains('epic')) return Colors.purpleAccent;
     if (r.contains('rare')) return Colors.blueAccent;
@@ -139,6 +140,20 @@ class CardComponent extends PositionComponent
   }
 
   List<Color> _getRarityShineColors() {
+    // Rareté Unique → arc-en-ciel complet
+    if (card.data.rarity.name.toLowerCase().contains('unique')) {
+      return [
+        Colors.red,
+        Colors.orangeAccent,
+        Colors.yellow,
+        Colors.greenAccent,
+        Colors.cyanAccent,
+        Colors.blueAccent,
+        Colors.purpleAccent,
+        Colors.pinkAccent,
+        Colors.red,
+      ];
+    }
     final baseColor = getRarityColor();
     final hsv = HSVColor.fromColor(baseColor);
     if (hsv.saturation < 0.15 || hsv.value < 0.15) {
