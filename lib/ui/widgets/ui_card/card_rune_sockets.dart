@@ -21,7 +21,7 @@ class CardRuneSockets extends StatelessWidget {
     final emptySlots = max(0, totalSlots - filledSlots);
 
     return SizedBox(
-      width: 45.0,
+      width: 58.0,
       child: Wrap(
         alignment: WrapAlignment.center,
         runAlignment: WrapAlignment.center,
@@ -29,8 +29,8 @@ class CardRuneSockets extends StatelessWidget {
         runSpacing: 2.0,
         children: [
           ...forgeUpgrades.map((upgrade) => Container(
-                width: 7.0,
-                height: 7.0,
+                width: 10.0,
+                height: 10.0,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.black45,
@@ -50,7 +50,7 @@ class CardRuneSockets extends StatelessWidget {
                   child: FittedBox(
                     child: Text(
                       getRuneEmoji(upgrade),
-                      style: const TextStyle(fontSize: 4.5),
+                      style: const TextStyle(fontSize: 7.0),
                     ),
                   ),
                 ),
@@ -58,8 +58,8 @@ class CardRuneSockets extends StatelessWidget {
           ...List.generate(
             emptySlots,
             (index) => Container(
-              width: 7.0,
-              height: 7.0,
+              width: 10.0,
+              height: 10.0,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.white.withValues(alpha: 0.05),

@@ -11,8 +11,8 @@ class CardManaMedallion extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 24,
-      height: 24,
+      width: 30,
+      height: 30,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: const Color(0xFF0D1B2A),
@@ -33,7 +33,7 @@ class CardManaMedallion extends StatelessWidget {
           '$cost',
           style: const TextStyle(
             color: Colors.cyanAccent,
-            fontSize: 11,
+            fontSize: 13,
             fontWeight: FontWeight.bold,
           ),
         ),

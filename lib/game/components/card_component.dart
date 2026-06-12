@@ -256,6 +256,64 @@ class CardComponent extends PositionComponent
   String buildDetailedDescription() {
     String desc = '';
 
+    // Prepend card details header matching the menu tooltip style
+    String details = '';
+
+    // 1. Target Type
+    final targetHeader = activeLocale == 'fr' ? '🎯 Cible : ' : '🎯 Target: ';
+    String targetText = '';
+    switch (card.data.target) {
+      case CardTarget.singleEnemy:
+        targetText = getTranslation((l) => l.targetSingleEnemy, fallback: 'Single enemy');
+        break;
+      case CardTarget.allEnemies:
+        targetText = getTranslation((l) => l.targetAllEnemies, fallback: 'All enemies');
+        break;
+      case CardTarget.self:
+        targetText = getTranslation((l) => l.targetSelf, fallback: 'Self');
+        break;
+      case CardTarget.none:
+        targetText = getTranslation((l) => l.targetNone, fallback: 'None');
+        break;
+    }
+    details += '$targetHeader$targetText\n';
+
+    // 2. Rarity
+    final rarityHeader = activeLocale == 'fr' ? '💎 Rareté : ' : '💎 Rarity: ';
+    String rarityText = '';
+    switch (card.data.rarity) {
+      case CardRarity.common:
+        rarityText = getTranslation((l) => l.rarityCommon, fallback: 'Common');
+        break;
+      case CardRarity.uncommon:
+        rarityText = getTranslation((l) => l.rarityUncommon, fallback: 'Uncommon');
+        break;
+      case CardRarity.rare:
+        rarityText = getTranslation((l) => l.rarityRare, fallback: 'Rare');
+        break;
+      case CardRarity.epic:
+        rarityText = getTranslation((l) => l.rarityEpic, fallback: 'Epic');
+        break;
+      case CardRarity.legendary:
+        rarityText = getTranslation((l) => l.rarityLegendary, fallback: 'Legendary');
+        break;
+      case CardRarity.unique:
+        rarityText = activeLocale == 'fr' ? 'Unique' : 'Unique';
+        break;
+    }
+    details += '$rarityHeader$rarityText\n';
+
+    // 3. Type
+    final typeHeader = activeLocale == 'fr' ? '🏷️ Type : ' : '🏷️ Type: ';
+    final typeText = getTypeLabel();
+    details += '$typeHeader$typeText\n';
+
+    // 4. Cost
+    final costHeader = activeLocale == 'fr' ? '⚡ Coût : ' : '⚡ Cost: ';
+    details += '$costHeader${card.currentCost} Mana\n';
+
+    desc += '$details\n';
+
     final elementalType = _determineDamageType();
     if (card.data.effects.isNotEmpty && elementalType != 'physical') {
       final typeStr = elementalType == 'fire'

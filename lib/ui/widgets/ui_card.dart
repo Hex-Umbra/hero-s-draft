@@ -100,6 +100,10 @@ class UiCard extends StatelessWidget {
                 forgeUpgrades: forgeUpgrades,
                 effects: effects,
                 target: target,
+                targetType: targetType,
+                rarity: rarity,
+                type: type,
+                cost: cost,
               ),
             ),
           ],
@@ -244,8 +248,8 @@ class UiCard extends StatelessWidget {
               // Circular Mana Medallion — outside ClipRRect so it's never cropped
               if (cost != null)
                 Positioned(
-                  top: -6,
-                  left: -6,
+                  top: -9,
+                  left: -9,
                   child: CardManaMedallion(cost: cost!),
                 ),
             ],

@@ -17,7 +17,8 @@
           "Les emplacements de runes de la forge sont désormais répartis sur des rangées de 5 fentes maximum afin d'éviter tout débordement d'affichage sur les cartes dotées de nombreux emplacements, comme les cartes de rareté Unique qui en possèdent 10.",
           "Les cartes de combat disposent désormais de couleurs d'arrière-plan spécifiques à leur type (Attaque, Compétence, Pouvoir ou Statut) durant les affrontements pour faciliter leur identification visuelle.",
           "Ajout d'un effet brillant polychromatique (foil) dynamique sur la bordure des cartes lors du survol de la souris, avec un élargissement de la bordure pour un rendu plus premium.",
-          "L'effet brillant polychromatique sur les bordures des cartes de rareté Unique s'enrichit désormais de manière progressive à chaque rune d'amélioration appliquée, évoluant d'un éclat d'or pur de base vers un arc-en-ciel complet de dix couleurs."
+          "L'effet brillant polychromatique sur les bordures des cartes de rareté Unique s'enrichit désormais de manière progressive à chaque rune d'amélioration appliquée, évoluant d'un éclat d'or pur de base vers un arc-en-ciel complet de dix couleurs.",
+          "Les infobulles des cartes détaillent désormais tous les attributs de la carte (coût en mana, rareté, type) et écrivent explicitement le type de cible (par exemple 'Cible unique') afin de guider clairement le joueur."
         ]
       },
       {

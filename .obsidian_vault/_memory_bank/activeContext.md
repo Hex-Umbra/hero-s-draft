@@ -4,8 +4,9 @@ Ce document décrit le focus actif du projet, les accomplissements récents, et 
 
 ## 1. Focus Actuel du Projet
 
-Le projet a récemment finalisé la **Bordure Foil Progressif Unique (v0.2.02)**, la **Décomposition de la God Class UiCard (v0.2.01)**, le **Sprint de Refonte Esthétique des Cartes (v0.1.5)**, le **Sprint du Système de Forge v2 (v0.2.00)**, le **Sprint Map, Draft & Progression (v0.1.4)** et le **Sprint Boutique & Économie (v0.1.3)** :
+Le projet a récemment finalisé le **Polissage Dimensionnel des Cartes en Menu (v0.2.03)**, la **Bordure Foil Progressif Unique (v0.2.02)**, la **Décomposition de la God Class UiCard (v0.2.01)**, le **Sprint de Refonte Esthétique des Cartes (v0.1.5)**, le **Sprint du Système de Forge v2 (v0.2.00)**, le **Sprint Map, Draft & Progression (v0.1.4)** et le **Sprint Boutique & Économie (v0.1.3)** :
 
+- **v0.2.03 — Polissage Dimensionnel des Cartes en Menu** : Agrandissement visuel des composants de carte hors-combat (widgets Flutter uniquement) avec des fentes de runes élargies à 10px (au lieu de 7px) et un médaillon de coût mana agrandi à 30px (au lieu de 24px) avec ajustement de sa position pour rester aligné, garantissant une meilleure lisibilité dans la boutique, le dictionnaire et les drafts.
 - **v0.2.02 — Effet Foil Progressif Unique** : Ajout d'un système dynamique de couleurs de bordure polychromatique pour les cartes de classe `unique` au survol de la souris. Le nombre de couleurs affichées (de 1 à 10) augmente avec le nombre d'upgrades de la carte (upgradeCount), créant une progression chromatique fluide (effet métallisé/foil) de plus en plus riche à mesure que le joueur forge la carte.
 - **v0.2.01 — Décomposition et Découplage de UiCard (SRP)** : Refactoring complet de la god class `UiCard` de 1136 lignes en divisant ses responsabilités dans un sous-dossier `ui_card/` (widgets autonomes `CardManaMedallion`, `CardRuneSockets`, `CardCompactDescription`, `PolychromaticBorder`, et module utilitaire `ui_card_helpers.dart`). La classe principale est simplifiée à ~175 lignes et les 107 tests passent au vert sans régression.
 - **v0.1.5 — Refonte Esthétique des Cartes** : Refonte visuelle complète en style premium glassmorphic, médaillon de coût standardisé, fentes de runes (rune sockets) dynamiques et multi-rangées (max 5 fentes par rangée avec retour à la ligne automatique via `Wrap` en Flutter et Canvas en Flame), réduction d'échelle de 25%, suppression du filigrane (watermark) arrière-plan et des badges textuels de ciblage, doublement raffiné des icônes d'action pour représenter la portée multicible (effets ennemis doublés, effets joueur simples), et **effet de surbrillance polychromatique (foil) dynamique au survol de la souris** avec élargissement de la bordure.
@@ -190,6 +191,24 @@ Le focus actuel se tourne désormais vers les étapes restantes de la Phase 7 de
     - **Polissage des Cartes (Flame & Flutter)** : Retrait des icônes vectorielles translucides en arrière-plan pour réduire le bruit visuel. Diminution des tailles de police de 10% à 20% pour une meilleure lisibilité. Intégration d'un indicateur sous forme d'étoiles dorées (remplies/vides) représentant les upgrades appliqués par rapport à la capacité maximale sous le label de rareté.
     - **Barre de Vie Premium (HUD Joueur)** : Refactorisation de `PlayerHealthBar` en `StatefulWidget` avec transition `TweenAnimationBuilder` (500ms, `Curves.easeOutCubic`). Sous l'effet des dégâts, la barre verte principale diminue instantanément alors qu'une barre de fond rouge/orange descend lentement. En cas de soin, la barre verte remonte de manière fluide tandis que la barre rouge la suit instantanément.
     - **Validation** : Tous les tests de la suite automatisée (104/104 verts) passent avec succès, et le linter est vierge sous `dart analyze`.
+
+24. **Refactoring de UiCard (SRP - Version 0.2.01)** :
+    - **Décomposition SRP** : Refactorisation de la god class `UiCard` (1136 lignes) en extrayant ses composants métiers et graphiques dans `lib/ui/widgets/ui_card/` (`CardManaMedallion`, `CardRuneSockets`, `CardCompactDescription`) et ses helpers d'affichage dans `ui_card_helpers.dart`.
+    - **Interface unifiée** : Simplification de `UiCard` en un conteneur d'assemblage propre d'environ 175 lignes.
+
+25. **Bordure Foil Progressif Unique (Version 0.2.02)** :
+    - **Sheen Foil Dynamique** : Implémentation dans `PolychromaticBorder` d'une bordure brillante et animée exclusive aux cartes de rareté `Unique` (cartes de classe).
+    - **Échelle d'upgrades** : Nombre de couleurs de gradient déterminé dynamiquement par `upgradeCount + 1` (de 1 à 10 couleurs, en bouclant le gradient).
+
+26. **Polissage des Dimensions en Menu (Version 0.2.03)** :
+    - **Forge Rune Sockets** : Diamètre des fentes de runes augmenté de 7px à 10px et élargissement de la contrainte pour assurer une lisibilité nette sans overflow.
+    - **Mana Medallion** : Taille du médaillon de mana à 30px (font size 13) avec offset à [-9, -9] pour conserver le centrage précis à [6, 6] dans l'angle de la carte.
+    - **Ciblage de l'Interface** : Modifié uniquement pour les menus Flutter (UiCard), laissant intact le rendu de combat (Flame).
+
+27. **Enrichissement des Tooltips (Version 0.2.04)** :
+    - **Détails de Cartes Complets** : Ajout systématique du type de cible (Target), de la rareté (Rarity), du type de carte (Type) et du coût en mana (Cost) sur les tooltips.
+    - **Cible Écrite Explicite** : Permet au joueur d'avoir le type de cible écrit en toutes lettres (ex : "Slime (Cible unique)") pour lever toute ambiguïté visuelle.
+    - **Support Bilingue & Combat** : Implémenté sur les infobulles de combat (Flame `CardComponent`) et de menu (Flutter `UiCard`).
 
 ---
 

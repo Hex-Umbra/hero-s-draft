@@ -8,7 +8,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 - **107 tests automatisés** — 100% au vert.
 - **0 erreur** via `flutter analyze`.
 - **~119 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
-- **Version actuelle** : v0.2.02 — Effet Foil Progressif Unique.
+- **Version actuelle** : v0.2.04 — Enrichissement des Tooltips de Cartes.
 
 ---
 
@@ -356,6 +356,9 @@ Issus de `docs/analysis_reports/6_analyse_game_balance.md` (documentés, non cor
 
 | Version | Date | Titre | Description des changements clés |
 |:---|:---|:---|:---|
+| **v0.2.04** | 2026-06-12 | Enrichissement des Tooltips de Cartes | Ajout de tous les détails (type de cible écrit explicitement, rareté, type de carte, coût mana) dans les tooltips en combat (Flame CardComponent) et menus (Flutter UiCard) en français et anglais. |
+| **v0.2.03** | 2026-06-12 | Polissage Dimensionnel des Cartes en Menu | Agrandissement des fentes de runes à 10px (visibilité des emojis d'upgrades) et agrandissement du médaillon de coût mana à 30px (ajustement offset [-9, -9]) uniquement sur les menus (Flutter). |
+| **v0.2.02** | 2026-06-12 | Bordure Foil Progressif Unique | Rendu de la bordure polychromatique brillante au survol de la souris dont le nombre de couleurs (de 1 à 10) augmente avec le nombre d'upgrades (upgradeCount) de la carte Unique. |
 | **v0.2.01** | 2026-06-12 | Décomposition de UiCard (SRP) | Refactoring de la god class `UiCard` (1136 lignes) en extrayant ses sous-widgets (`CardManaMedallion`, `CardRuneSockets`, `CardCompactDescription`) et ses helpers (`ui_card_helpers.dart`) dans un sous-dossier `ui_card/` dédié, garantissant la cohésion, respectant le principe de responsabilité unique (SRP) et la structure du framework Flutter. |
 | **v0.1.5** | 2026-06-12 | Refonte Esthétique des Cartes | Layout glassmorphic unifié, médaillon standardisé de coût, fentes d'améliorations (rune sockets) avec retour à la ligne automatique par rangées de 5 (rows of 5) pour éviter tout débordement, réduction d'échelle de 25%, suppression du filigrane et des badges textuels de ciblage (remplacés par des doublements d'icônes d'effet pour la portée multicible ciblant les ennemis), retrait complet des labels textuels de rareté (remplacés par l'identification pure via la couleur des bordures et par halo de surbrillance lumineux/glowing shadows en cas de sélection), et mise à jour des cartes de combat (Flame) pour utiliser des couleurs d'arrière-plan spécifiques à leur type (type-specific background colors) identiques à celles des menus. |
 | **v0.2.00** | 2026-06-11 | Forge v2 : Anti-Exploit, Filtrage Typé, Achat Progressif | Écran forge responsive plein écran, persistance session anti-exploit, fentes d'upgrades progressives, filtrage typé. |

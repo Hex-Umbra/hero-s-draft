@@ -293,11 +293,75 @@ String buildDetailedDescription(
   required List<String> forgeUpgrades,
   List<CardEffect>? effects,
   String? target,
+  CardTarget? targetType,
+  String? rarity,
+  CardType? type,
+  int? cost,
 }) {
   final l10n = AppLocalizations.of(context)!;
 
+  // Format Card Details header
+  final activeLocale = Localizations.localeOf(context).languageCode;
+  String details = '';
+
+  // 1. Target Type
+  final resolvedTarget = resolveTarget(targetType, target);
+  if (resolvedTarget != null) {
+    final targetHeader = activeLocale == 'fr' ? '🎯 Cible : ' : '🎯 Target: ';
+    String targetText = '';
+    switch (resolvedTarget) {
+      case CardTarget.singleEnemy:
+        targetText = l10n.targetSingleEnemy;
+        break;
+      case CardTarget.allEnemies:
+        targetText = l10n.targetAllEnemies;
+        break;
+      case CardTarget.self:
+        targetText = l10n.targetSelf;
+        break;
+      case CardTarget.none:
+        targetText = l10n.targetNone;
+        break;
+    }
+    details += '$targetHeader$targetText\n';
+  }
+
+  // 2. Rarity
+  if (rarity != null) {
+    final rarityHeader = activeLocale == 'fr' ? '💎 Rareté : ' : '💎 Rarity: ';
+    String rarityText = rarity;
+    final r = rarity.toLowerCase();
+    if (r.contains('unique')) {
+      rarityText = activeLocale == 'fr' ? 'Unique' : 'Unique';
+    } else if (r == l10n.rarityLegendary.toLowerCase() || r.contains('legendary') || r.contains('légendaire')) {
+      rarityText = l10n.rarityLegendary;
+    } else if (r == l10n.rarityEpic.toLowerCase() || r.contains('epic') || r.contains('épique')) {
+      rarityText = l10n.rarityEpic;
+    } else if (r == l10n.rarityRare.toLowerCase() || r.contains('rare')) {
+      rarityText = l10n.rarityRare;
+    } else if (r == l10n.rarityUncommon.toLowerCase() || r.contains('uncommon') || r.contains('peu commun')) {
+      rarityText = l10n.rarityUncommon;
+    } else if (r == l10n.rarityCommon.toLowerCase() || r.contains('common') || r.contains('commun')) {
+      rarityText = l10n.rarityCommon;
+    }
+    details += '$rarityHeader$rarityText\n';
+  }
+
+  // 3. Type
+  if (type != null) {
+    final typeHeader = activeLocale == 'fr' ? '🏷️ Type : ' : '🏷️ Type: ';
+    final typeText = getCardTypeLabel(context, type);
+    details += '$typeHeader$typeText\n';
+  }
+
+  // 4. Cost
+  if (cost != null) {
+    final costHeader = activeLocale == 'fr' ? '⚡ Coût : ' : '⚡ Cost: ';
+    details += '$costHeader$cost Mana\n';
+  }
+
   // Add elemental header if applicable
-  String desc = '';
+  String desc = details.isNotEmpty ? '$details\n' : '';
   final elementalType = determineDamageType(title, effects);
   if (effects != null && effects.isNotEmpty && elementalType != 'physical') {
     final typeStr = elementalType == 'fire'
@@ -410,7 +474,6 @@ String buildDetailedDescription(
   }
 
   final List<String> upgradeDescs = [];
-  final activeLocale = Localizations.localeOf(context).languageCode;
   for (var upgrade in forgeUpgrades) {
     final parts = upgrade.split(':');
     if (parts.length != 2) continue;
