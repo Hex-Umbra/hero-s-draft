@@ -328,7 +328,7 @@ String buildDetailedDescription(
 
   // 2. Rarity
   if (rarity != null) {
-    final rarityHeader = activeLocale == 'fr' ? '💎 Rareté : ' : '💎 Rarity: ';
+    final rarityHeader = activeLocale == 'fr' ? '⚡ Rareté : ' : '⚡ Rarity: ';
     String rarityText = rarity;
     final r = rarity.toLowerCase();
     if (r.contains('unique')) {
@@ -356,7 +356,7 @@ String buildDetailedDescription(
 
   // 4. Cost
   if (cost != null) {
-    final costHeader = activeLocale == 'fr' ? '⚡ Coût : ' : '⚡ Cost: ';
+    final costHeader = activeLocale == 'fr' ? '💎 Coût : ' : '💎 Cost: ';
     details += '$costHeader$cost Mana\n';
   }
 
