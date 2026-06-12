@@ -4,8 +4,9 @@ Ce document décrit le focus actif du projet, les accomplissements récents, et 
 
 ## 1. Focus Actuel du Projet
 
-Le projet a récemment finalisé le **Polissage Dimensionnel des Cartes en Menu (v0.2.03)**, la **Bordure Foil Progressif Unique (v0.2.02)**, la **Décomposition de la God Class UiCard (v0.2.01)**, le **Sprint de Refonte Esthétique des Cartes (v0.1.5)**, le **Sprint du Système de Forge v2 (v0.2.00)**, le **Sprint Map, Draft & Progression (v0.1.4)** et le **Sprint Boutique & Économie (v0.1.3)** :
+Le projet a récemment finalisé les **Ajustements du Gel et de la Forge (v0.1.6)**, le **Polissage Dimensionnel des Cartes en Menu (v0.2.03)**, la **Bordure Foil Progressif Unique (v0.2.02)**, la **Décomposition de la God Class UiCard (v0.2.01)**, le **Sprint de Refonte Esthétique des Cartes (v0.1.5)**, le **Sprint du Système de Forge v2 (v0.2.00)**, le **Sprint Map, Draft & Progression (v0.1.4)** et le **Sprint Boutique & Économie (v0.1.3)** :
 
+- **v0.1.6 — Ajustements du Gel et de la Forge** : Résolution du bug où l'amélioration d'armure `hardened` appliquée aux cartes d'attaque n'octroyait aucun bouclier au joueur. Rectification du comportement du statut de gel (`freeze`) pour empêcher son expiration prématurée au début du tour ennemi (persistance jusqu'à l'action d'attaque) et intégration de la réduction de 50% de dégâts directement dans l'intention d'attaque affichée.
 - **v0.2.03 — Polissage Dimensionnel des Cartes en Menu** : Agrandissement visuel des composants de carte hors-combat (widgets Flutter uniquement) avec des fentes de runes élargies à 10px (au lieu de 7px) et un médaillon de coût mana agrandi à 30px (au lieu de 24px) avec ajustement de sa position pour rester aligné, garantissant une meilleure lisibilité dans la boutique, le dictionnaire et les drafts.
 - **v0.2.02 — Effet Foil Progressif Unique** : Ajout d'un système dynamique de couleurs de bordure polychromatique pour les cartes de classe `unique` au survol de la souris. Le nombre de couleurs affichées (de 1 à 10) augmente avec le nombre d'upgrades de la carte (upgradeCount), créant une progression chromatique fluide (effet métallisé/foil) de plus en plus riche à mesure que le joueur forge la carte.
 - **v0.2.01 — Décomposition et Découplage de UiCard (SRP)** : Refactoring complet de la god class `UiCard` de 1136 lignes en divisant ses responsabilités dans un sous-dossier `ui_card/` (widgets autonomes `CardManaMedallion`, `CardRuneSockets`, `CardCompactDescription`, `PolychromaticBorder`, et module utilitaire `ui_card_helpers.dart`). La classe principale est simplifiée à ~175 lignes et les 107 tests passent au vert sans régression.
@@ -19,7 +20,14 @@ Le focus actuel se tourne désormais vers les étapes restantes de la Phase 7 de
 
 ## 2. Accomplissements Récents
 
-1. **Effet de Bordure Foil Progressif pour les Cartes Uniques (Version v0.2.02)** :
+1. **Ajustements du Gel et de la Forge (Version v0.1.6)** :
+   - **Correction Forge Hardened** : Modification d' `EffectResolver.resolveCard` pour appliquer directement l'armure de forge (`extraArmor`) au héros via `runController.setHeroStats()` si la carte d'attaque jouée ne dispose pas d'effet natif d'armure.
+   - **Persistance du Gel (`freeze`)** : Modification de la méthode `tickStatuses()` d' `EntityStats` pour ignorer le statut de gel, empêchant sa dissipation prématurée au début du tour ennemi.
+   - **Intention Visuelle Adaptée** : Mise à jour du getter `effectiveIntent` dans `EnemyInstance` pour diviser par deux (arrondi au plus proche) la valeur des dégâts d'intention affichée à l'écran lorsque l'ennemi subit l'altération de gel.
+   - **Consommation de l'Effet** : Ajustement de `resolveEnemyIntent` dans `CombatController` pour décrémenter le compteur de tours de gel de 1 après la résolution de l'attaque sans appliquer de réduction supplémentaire.
+   - **Tests unitaires et Statiques** : Passage réussi des tests unitaires simulés et linter Flutter validé à 100% vert.
+
+2. **Effet de Bordure Foil Progressif pour les Cartes Uniques (Version v0.2.02)** :
    - **Calcul Dynamique** : Intégration de `upgradeCount: forgeUpgrades.length` passé du widget `UiCard` au composant `PolychromaticBorder`.
    - **Échelle Chromatique** : Utilisation d'un pool ordonné de 10 couleurs (Unique/Gold, Common, Uncommon, Rare, Epic, Legendary, Red, Yellow, Cyan, Pink) dont le sous-ensemble sélectionné augmente dynamiquement selon `upgradeCount`.
    - **Garantie de Fluidité** : Duplication automatique de la couleur de départ à la fin pour un bouclage sans couture du gradient tournant.
@@ -205,10 +213,11 @@ Le focus actuel se tourne désormais vers les étapes restantes de la Phase 7 de
     - **Mana Medallion** : Taille du médaillon de mana à 30px (font size 13) avec offset à [-9, -9] pour conserver le centrage précis à [6, 6] dans l'angle de la carte.
     - **Ciblage de l'Interface** : Modifié uniquement pour les menus Flutter (UiCard), laissant intact le rendu de combat (Flame).
 
-27. **Enrichissement des Tooltips (Version 0.2.04)** :
+27. **Enrichissement des Tooltips & Foil de Combat (Version 0.2.04)** :
     - **Détails de Cartes Complets** : Ajout systématique du type de cible (Target), de la rareté (Rarity), du type de carte (Type) et du coût en mana (Cost) sur les tooltips.
     - **Cible Écrite Explicite** : Permet au joueur d'avoir le type de cible écrit en toutes lettres (ex : "Slime (Cible unique)") pour lever toute ambiguïté visuelle.
     - **Support Bilingue & Combat** : Implémenté sur les infobulles de combat (Flame `CardComponent`) et de menu (Flutter `UiCard`).
+    - **Foil en Combat** : Application du même effet brillant polychromatique (foil) progressif en combat basé sur `card.forgeUpgrades.length` pour les cartes de rareté `Unique`.
 
 ---
 

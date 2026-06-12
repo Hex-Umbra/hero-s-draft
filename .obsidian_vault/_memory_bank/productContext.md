@@ -495,7 +495,7 @@ Les combattants accumulent des altérations d'état. Le décompte (`tickStatuses
 | `strength_regen` | Buff | Oui | Ajoute sa valeur au statut `strength` au début du tour | Durée -1 chaque tour |
 | `armor_regen` | Buff | Oui | Génère de l'armure = valeur au début du tour | Durée -1 chaque tour |
 | `burn` | Debuff | Oui | Inflige des dégâts de feu = valeur active au début du tour. Le tick réduit la valeur et la durée de 1. | Durée -1 chaque tour |
-| `freeze` | Debuff | Oui | Réduit les dégâts offensifs du prochain coup de l'ennemi de **50%** et décrémente immédiatement la durée du gel. | Durée -1 chaque tour |
+| `freeze` | Debuff | Oui | Réduit les dégâts de la prochaine attaque de l'ennemi de **50%** (calculé dans l'intention affichée). Ne se dissipe plus en début de tour mais après la résolution de son action d'attaque. | Durée décrémentée après l'action d'attaque |
 | `shock` | Debuff | Oui | Ajoute sa valeur active cumulée à tout dégât d'attaque direct subi par la cible. | Durée -1 chaque tour |
 | `vulnerable` | Debuff | Oui | Augmente universellement tous les dégâts reçus de **50%** (arrondi). Affecte autant le Héros que les Ennemis. | Durée -1 chaque tour |
 

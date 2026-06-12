@@ -124,7 +124,7 @@
 - [ ] En combat les cartes de type dégâts ont des chances de critiques. Il faudrait un indicateur visuelle pour bien montrer que l'attaque lancé viens de crit.
 	- [ ] Toujours en combat et pour le visuelle, il faudrait améliorer l'affichage des nombres de dégâts pris ou de bonus pris pour qu'ils soient plus esthétique ainsi que plus visuelle 
 	- [ ] Pour la barre de vie du joueur réduire la vitesse a laquelle l'animation de la barre de vie se réduit
-- [ ] Sur le tooltip de la carte afficher toute les détails de la carte dont le type de cible écrit pour indiquer au joueur clairement si le visuelle n'est pas assez indicatif
+- [x] Sur le tooltip de la carte afficher toute les détails de la carte dont le type de cible écrit pour indiquer au joueur clairement si le visuelle n'est pas assez indicatif
 - [x] Augmenter la taille du médaillon de mana située en haut a gauche des cartes a jouer UNIQUEMENT dans les menus, pas besoin de modifier l'affichage pour les cartes en combat.
 - [ ] Dans le nœud de type "Rencontre", l'une des rencontre blesse le joueur de -15hp pour lui donner +1 d'attaque, cependant il n'y a pas de vérification au préalable sur les hp du joueur pour savoir ou non s'il peut prendre l'option. Actuellement même avec moins d'hp, il peut quand même prendre le deal sans conséquence et dès qu'il lance un noeud de type "Combat" l'écran de "Mort" s'affiche car il n'as pas les hp nécessaire.
 - [ ] Revoir en profondeur le systèmes des rencontres pour proposer de nouvelles rencontres et surtout équilibrer les options ainsi que les diversifier.

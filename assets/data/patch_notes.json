@@ -1,5 +1,21 @@
 [
   {
+    "version": "0.1.6",
+    "date": "2026-06-12",
+    "title": "Ajustements du Gel et de la Forge",
+    "sections": [
+      {
+        "category": "Corrections",
+        "emoji": "🐛",
+        "entries": [
+          "Correction d'un problème où l'amélioration d'armure de la forge appliquée sur les cartes d'attaque n'octroyait aucun bouclier au joueur en combat.",
+          "Le statut de gel ne se dissipe plus prématurément au début du tour des ennemis et reste actif jusqu'à ce qu'ils terminent leur action offensive.",
+          "L'affichage des intentions d'attaque des ennemis affectés par le gel intègre désormais directement la réduction de moitié de leurs dégâts."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.1.5",
     "date": "2026-06-12",
     "title": "Refonte Esthétique des Cartes",

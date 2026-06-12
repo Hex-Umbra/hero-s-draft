@@ -140,19 +140,25 @@ class CardComponent extends PositionComponent
   }
 
   List<Color> _getRarityShineColors() {
-    // Rareté Unique → arc-en-ciel complet
+    // Rareté Unique → arc-en-ciel progressif basé sur le nombre d'upgrades
     if (card.data.rarity.name.toLowerCase().contains('unique')) {
-      return [
-        Colors.red,
-        Colors.orangeAccent,
-        Colors.yellow,
+      final baseColor = getRarityColor();
+      final pool = [
+        baseColor,
+        Colors.white70,
         Colors.greenAccent,
-        Colors.cyanAccent,
         Colors.blueAccent,
         Colors.purpleAccent,
-        Colors.pinkAccent,
+        Colors.orangeAccent,
         Colors.red,
+        Colors.yellow,
+        Colors.cyan,
+        Colors.pink,
       ];
+      final upgradeCount = card.forgeUpgrades.length;
+      final count = (upgradeCount + 1).clamp(1, pool.length);
+      final colors = pool.sublist(0, count);
+      return [...colors, colors.first];
     }
     final baseColor = getRarityColor();
     final hsv = HSVColor.fromColor(baseColor);

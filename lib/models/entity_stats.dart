@@ -128,6 +128,9 @@ class EntityStats {
   EntityStats tickStatuses() {
     List<StatusEffect> newStatuses = statuses
         .map((s) {
+          if (s.id == 'freeze') {
+            return s;
+          }
           if (s.id == 'burn') {
             return s.copyWith(
               value: s.value - 1,
