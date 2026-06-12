@@ -371,14 +371,17 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                                     );
                                     final bool canAfford =
                                         inventoryState.gold >= price;
-                                    return _ShopCardItem(
-                                      card: card,
-                                      price: price,
-                                      onPressed: () => _buyCard(card, price),
-                                      rarityLabel: card.rarity.getLabel(l10n),
-                                      targetLabel: card.target.getLabel(l10n),
-                                      canAfford: canAfford,
-                                    );
+                                      return SizedBox(
+                                        width: 150,
+                                        child: _ShopCardItem(
+                                          card: card,
+                                          price: price,
+                                          onPressed: () => _buyCard(card, price),
+                                          rarityLabel: card.rarity.getLabel(l10n),
+                                          targetLabel: card.target.getLabel(l10n),
+                                          canAfford: canAfford,
+                                        ),
+                                      );
                                   }).toList(),
                                 ),
                               ),

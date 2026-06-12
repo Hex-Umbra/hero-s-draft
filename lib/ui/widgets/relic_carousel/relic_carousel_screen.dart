@@ -160,22 +160,23 @@ class _RelicCarouselScreenState extends State<RelicCarouselScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // Header
-              AnimatedOpacity(
-                duration: const Duration(milliseconds: 600),
-                opacity: _isWon ? 1.0 : 0.6,
-                child: Column(
-                  children: [
-                    Text(
-                      locale == 'fr' ? 'RÉCOMPENSE DE RELIQUE' : 'RELIC REWARD',
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 3.0,
-                      ),
+              // Header
+              Column(
+                children: [
+                  Text(
+                    locale == 'fr' ? 'RÉCOMPENSE DE RELIQUE' : 'RELIC REWARD',
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 3.0,
                     ),
-                    const SizedBox(height: 8),
-                    Text(
+                  ),
+                  const SizedBox(height: 8),
+                  AnimatedOpacity(
+                    duration: const Duration(milliseconds: 600),
+                    opacity: _isWon ? 1.0 : 0.0,
+                    child: Text(
                       rarityText.toUpperCase(),
                       style: TextStyle(
                         color: rarityColor,
@@ -190,8 +191,8 @@ class _RelicCarouselScreenState extends State<RelicCarouselScreen> {
                         ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
 
               const SizedBox(height: 48),

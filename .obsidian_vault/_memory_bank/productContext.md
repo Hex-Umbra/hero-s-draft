@@ -23,24 +23,20 @@ La progression dans **Hero's Draft** est structurée autour d'une boucle classiq
        │
        ▼
 [Carte Stratégique (MapScreen)] ◄─── Graphe Acyclique Dirigé (10 étages)
-  Types de nœuds : Combat / Élite / Shop / Événement / Repos / Boss / Relic Exchange (🔄)
+  │   ▲ (Si pendingDrafts > 0 : Overlay Level Up bloquant → DraftScreen)
+  │   │
+  ├─► [Écrans Spécifiques] : Boutique (ShopScreen), Feu de Camp (CampfireScreen), Événement (EventScreen)
+  │
+  └─► [Combat (GameScreen)]
         │
-       ├─────────────────────────┐
-       ▼                         ▼
-[Combat (GameScreen)]      [Écrans Spécifiques]
- Flame Canvas + HUD         ├─ Boutique (ShopScreen)
-       │                     ├─ Feu de Camp (CampfireScreen)
-       │                     └─ Événement (EventScreen)
-       ▼
-[Draft de Récompense (DraftScreen)]
-  3 choix de cartes post-victoire
-       │
-       ▼
-[Évaluation Auto-Merge (3→1)]
-  3× cartes identiques (même rareté) → 1× carte de rareté supérieure (upgrades cumulés)
-       │
-       ▼
-[Passage à l'Étage Suivant] ── Si Boss complété → Acte+1 → Nouvelle carte
+        ▼
+      [Draft de Récompense (DraftScreen)] (Choix de carte de combat normal)
+        │
+        ▼
+      [Évaluation Auto-Merge (3→1)] (Fusion 3× identiques → 1× de rareté supérieure)
+        │
+        ▼
+      [Retour à la Carte (MapScreen)] (Si montée de niveau : pendingDrafts > 0)
 ```
 
 ---
@@ -60,7 +56,7 @@ Le service statique `MapGeneratorService.generateMap({floors = 10, maxWidth = 5}
 | Étage | Contrainte |
 |:---|:---|
 | 0 | 100% Combat (entrée obligatoire) |
-| 5 | **Chokepoint** : exactement 1 nœud de type `elite` |
+| `floors ~/ 2` (ex: 5) | **Chokepoint** : exactement 1 nœud de type `elite` (étage central dynamique) |
 | 8 (`floors-2`) | 100% `rest` (tous les nœuds de l'étage 8 sont de type repos) |
 | 9 (`floors-1`) | 3 nœuds de type `boss` distincts (permettant un choix de Boss par récompense selon la position x) |
 
@@ -387,24 +383,39 @@ Trois options interactives s'offrent au joueur sur l'écran `RestScreen` :
 
 ---
 
-### 3.10. 🔨 Système de Forge Découplé
+### 3.10. 🔨 Système de Forge Découplé (Forge v2)
 
-La forge permet d'ajouter des améliorations permanentes (upgrades) aux cartes du Master Deck en échange d'or :
-- **Limite de Capacité** : Une carte peut accueillir au maximum $baseMaxForgeUpgrades + rarityIndex$ améliorations (la capacité augmente avec la rareté de la carte).
-- **Génération Probabiliste de Slots** : À chaque entrée en forge pour une carte, 1 à 5 slots d'options d'upgrades sont générés indépendamment selon les chances suivantes :
-  - Slot 1 : 100%
+La forge permet d'ajouter des améliorations permanentes (upgrades) aux cartes du Master Deck en échange d'or. Elle intègre un ensemble de règles de protection et de confort utilisateur révisées en version v0.2.00 :
+- **Limite de Capacité** : Une carte peut accueillir au maximum $baseMaxForgeUpgrades + rarityIndex$ améliorations (la capacité augmente avec la rareté de la carte). Les cartes uniques de classe ont une limite fixe de 5 améliorations.
+- **Génération Probabiliste de Slots de Base** : À chaque session d'ouverture pour une carte donnée, le système génère de 1 à 5 slots d'options d'upgrades indépendants (tirages de Bernoulli successifs) selon les chances suivantes :
+  - Slot 1 : 100% (Garanti)
   - Slot 2 : 50%
   - Slot 3 : 25%
   - Slot 4 : 10%
   - Slot 5 : 2%
-- **Pools d'Améliorations Clamps** : Les améliorations proposées sont tirées depuis des pools liés à la rareté de la carte :
-  - *Common* : Améliorations de stats (`sharp` pour les dégâts, `hardened` pour l'armure) et statuts élémentaires (`burning`, `freezing`, `shocking`) limités aux cartes Attaque.
+- **Anti-Exploit de Reroll Sauvage (Session Persistence)** : Afin d'éviter que le joueur ne contourne le coût des relances ou ne force de meilleures options en fermant et rouvrant simplement la forge, la session de forge active est persistée dans `RunState` (`forgeSlots` contenant les options tirées formatées `id:tier`, et `forgeTargetCardId` contenant l'identifiant unique de la carte ciblée).
+  - Si le joueur ouvre la forge sur une carte et que `runState.forgeTargetCardId == card.uniqueId`, le dialogue charge immédiatement les fentes préalablement générées et sauvegardées.
+  - Si la carte est différente ou s'il n'y a pas de session active, un nouveau tirage est effectué et immédiatement sauvegardé via `RunNotifier.setForgeSession()`.
+  - La session n'est effacée (via `clearForgeSession()`) qu'après validation d'une amélioration ou lors du départ définitif du camp de repos (`RestScreen`).
+- **Filtrage Intelligent par Type de Carte** : Les améliorations proposées sont filtrées en amont selon le type de carte pour éviter les tirages aberrants ou inutiles :
+  - *skill* (Compétence) : Exclut toutes les options offensives de dégâts physiques (`sharp`) ou élémentaires (`burning`, `freezing`, `shocking`).
+  - *power* (Pouvoir) : Autorise uniquement les améliorations utilitaires (`eco` pour la réduction de coût mana, `quick` pour piocher une carte, et `enduring` pour retirer l'effet d'épuisement).
+  - *attack* (Attaque) : Conserve l'accès au pool complet de toutes les améliorations (stats physiques, élémentaires, pioche, réduction de coût, enduring).
+- **Pools d'Améliorations Clamps par Rareté** : Les améliorations proposées sont tirées depuis des pools liés à la rareté de la carte :
+  - *Common* : Améliorations de stats (`sharp`, `hardened`) et statuts élémentaires (`burning`, `freezing`, `shocking` - réservés aux attaques).
   - *Uncommon* : Pioche de cartes supplémentaires (`quick`).
-  - *Rare* : Gains de mana (`eco`) et retrait d'épuisement (`enduring` persistant, retirant `exhaust`), réservé aux cartes non-pouvoir exhaustibles.
-- **Pondération et Tiers** : Le tirage des pools est pondéré par l'index de rareté de la carte. Les Tiers des upgrades suivent la distribution : Tier I (80%), Tier II (15%), Tier III (5%).
-- **Relance Individuelle (Reroll)** : Le joueur peut relancer le tirage d'un slot spécifique. Le coût augmente exponentiellement par slot :
+  - *Rare* : Gains de mana (`eco`) et retrait d'épuisement (`enduring` persistant), réservé aux cartes non-pouvoir exhaustibles.
+- **Pondération des Tiers** : Le tirage des pools est pondéré par l'index de rareté de la carte. Les Tiers des upgrades suivent la distribution : Tier I (80%), Tier II (15%), Tier III (5%).
+- **Relance Individuelle (Reroll)** : Le joueur peut relancer le tirage d'un slot spécifique. Le coût en or augmente exponentiellement par slot :
   $$\text{Coût} = \text{round}(20 \times 1.25^n)$$
   où $n$ est le nombre de relances déjà appliquées à ce slot. Consomme l'or de l'inventaire via `inventoryProvider`.
+- **Achat de Fentes Progressives (Buy Slots)** : Le joueur peut étendre sa grille d'options en achetant des fentes bonus additionnelles (champ `bonusForgeSlots` de `RunState`).
+  - Capacité maximale : Capée à 4 fentes bonus achetées (soit un maximum de 5 slots affichés au total).
+  - Tarification progressive en or : $50 \rightarrow 80 \rightarrow 120 \rightarrow 175$ Or.
+  - Le bouton d'achat en bas de la liste est désactivé si l'or disponible est insuffisant ou si la capacité maximale de 5 slots est atteinte.
+- **Rendu Plein Écran & UI Responsive** : Le dialogue de forge (`ForgeUpgradeDialog`) a été converti en interface plein écran réactive (`Dialog.fullscreen`) :
+  - Desktop : Disposition en colonnes jumelles (`Row`), affichant le visuel de la carte sélectionnée avec ses étoiles à gauche, et le panneau de défilement scrollable (`ListView`) contenant les slots d'amélioration et le bouton d'achat à droite.
+  - Mobile : Empilement vertical fluide (`Column`) assurant un scroll confortable et empêchant tout débordement (RenderFlex overflow).
 
 ### 3.8. 🛒 Boutique (Shop)
 
@@ -420,10 +431,12 @@ Gérée par `ShopController` :
 
 ### 3.9. 🃏 Poli Visuel et Sélection de Récompenses (Draft Screen Polish)
 
-Le système de draft (que ce soit pour le draft de récompense de combat dans `DraftScreen` ou dans le module d'apprentissage du tutoriel `TutorialDraftWidget`) intègre un feedback visuel et tactile premium pour guider les sélections du joueur :
+Le système de draft (que ce soit pour le draft de récompense de combat dans `DraftScreen`, le draft de montée de niveau sur la carte du monde, ou le module d'apprentissage du tutoriel `TutorialDraftWidget`) intègre un feedback visuel et tactile premium pour guider les sélections du joueur :
 - **Survol (Hover)** : Le passage du curseur sur une carte déclenche un gonflement d'échelle fluide à `1.05x` (`AnimatedScale` combiné à un `MouseRegion`) pour indiquer sa mise au point.
 - **Sélection (Selection)** : Cliquer/taper sur une carte de récompense la sélectionne activement, ce qui la fait grossir à `1.12x` et projette un halo lumineux doré tout autour de la carte (`BoxShadow` couleur ambre `Colors.amber` avec un rayon de flou de 16px et une extension de 3px).
 - **Consistance** : Ces animations de scale et de lueur partagent la même identité visuelle pour assurer la cohérence entre la phase d'apprentissage guidée et les combats réels du jeu.
+- **Draft de Level Up Différé** : En cas de montée de niveau en combat, l'ouverture du draft est différée. Elle est matérialisée par un overlay d'animation plein écran « LEVEL UP ! » sur la carte du monde (`MapScreen`). Cet overlay bloque toute interaction avec les nœuds de la carte et, lors d'un clic, redirige le joueur vers le `DraftScreen` via une route de navigation classique.
+- **Protection Anti-Spoil de la Roulette de Reliques** : Pendant la rotation du carrousel de récompense (`RelicRewardCarouselOverlay`), les cartes de reliques sont présentées sous un aspect gris neutre et anonyme. Les badges de rareté et de déclencheurs affichent « ??? ». Une fois le carrousel arrêté sur la relique cible, l'état bascule (`isWon = true`), révélant les vraies couleurs et badges, colorant le nom de la relique selon sa rareté et affichant le titre de rareté dans l'en-tête supérieur avec un effet de lueur.
 
 ### 3.11. 🎯 Système de Coup Critique (Critical Hit System)
 
@@ -455,6 +468,10 @@ Le moteur graphique Flame intègre des optimisations avancées pour stabiliser l
 - **Optimisation CPU (Cache de Disposition)** : Les composants textuels (`TextPainter`) de `CardComponent` sont mis en cache et ne subissent pas de re-layout pendant les animations. L'opacité est appliquée via `saveLayer` uniquement et conditionnellement lorsque `opacity < 1.0`.
 - **Physique de la Pioche** : Les cartes tirées apparaissent à l'emplacement de la pioche `Vector2(40, size.y - 40)` et effectuent des transitions physiques fluides (glissement, mise à l'échelle, rotation) vers la main.
 - **Synchronisation Synchrone d'Impact** : Pour un game feel immersif, l'ennemi ciblé ne subit ses effets visuels d'impact (flash de douleur, secousse, FloatingText, émission de particules) qu'au moment précis de la collision de la carte de combat. Les réactions redondantes ont été épurées de `CardAnimator` pour éliminer tout double-déclenchement.
+- **Blocage Tactile de Pioche (v0.1.00)** : Durant la distribution des cartes, le drapeau `isEnteringHand = true` bloque tous les callbacks d'interaction (`onTapDown`, `onDragStart`, `onHoverEnter`, `onHoverExit`, `onDragUpdate`) et la durée de transition est portée à `0.7s`. Le drapeau est réinitialisé à `false` via un callback `onComplete`.
+- **Tooltips sur Focus Uniquement (v0.1.00)** : Les infobulles de cartes ne s'affichent que lors d'une sélection active (focus). `_buildDetailedDescription()` est enrichie pour lister les améliorations de forge appliquées. L'auto-masquage survient au jeu, à la défocalisation ou au changement de phase.
+- **Rénovation Esthétique des Cartes (v0.1.00)** : Suppression des icônes de fond translucides (Flame : `bgIconPainter`; Flutter : icônes `Center`). Réduction proportionnelle des polices de 10%-20%. Indicateur d'étoiles dorées (pleines/vides) représentant le ratio d'upgrades de forge appliqués par rapport à la capacité maximale `baseMaxForgeUpgrades + rarityIndex`.
+- **Double Jauge de Vie Animée — HP Dual-Bar (v0.1.00)** : `PlayerHealthBar` est convertie en `StatefulWidget` avec un `TweenAnimationBuilder` (500ms, `Curves.easeOutCubic`). Sous l'effet des dégâts, la jauge verte d'avant-plan chute instantanément tandis que la jauge rouge d'arrière-plan descend en traînant. En cas de soin, la jauge verte monte de façon animée et la jauge rouge s'y aligne instantanément.
 
 ---
 
@@ -650,3 +667,25 @@ Ce sprint tri-phase constitue un investissement majeur dans la **qualité techni
 | Pattern Riverpod | `Notifier<T>` (v2.x) pour tous les contrôleurs |
 | Source de vérité couleurs | `AppColors` (aucune magic constant dans les widgets) |
 | Immuabilité des modèles | `CardInstance` : tous attributs `final` + `List.unmodifiable` |
+
+---
+
+## 10. Sprint d'Amélioration de l'Interface & Cartes (UX Combat) (v0.1.00)
+
+Ce sprint cible l'optimisation visuelle et tactile du combat pour élever le niveau d'immersion et de satisfaction sensorielle.
+
+### 10.1. Impact Produit
+
+- **Fluidité de Pioche** : Protection contre les clics ou glissements prématurés durant la pioche, garantissant un comportement sans à-coups ni instabilités physiques.
+- **Transparence Tactique** : Présentation directe et contextualisée des améliorations (upgrades de forge) appliquées aux cartes en combat, permettant des choix informés.
+- **Clarté Visuelle Rénovée** : Élimination du bruit visuel causé par les icônes de fond translucides et les tailles de police trop imposantes sur les cartes Flame et Flutter. Indication élégante du niveau d'upgrade de la carte via des badges d'étoiles.
+- **Game Feel Premium (HUD)** : Transformation de la simple barre de vie statique du héros en une jauge double-niveau interactive et dynamique, améliorant le feedback émotionnel lors des dégâts reçus ou des soins appliqués.
+
+### 10.2. Portée Technique
+
+- **Verrouillage Tactile de Pioche** : Introduction d'un drapeau `isEnteringHand` dans `CardComponent` qui filtre les callbacks de survol, glissement et clic. La durée de distribution est portée à `0.7s` dans `_layoutHand` avant d'être réalignée à `0.35s` après complétion.
+- **Exhibition Sélective des Tooltips** : Raccordement du cycle de vie des infobulles aux seuls événements de focus sur la carte en combat. Enrichissement de la description textuelle par une liste mise en forme des upgrades de forge actifs.
+- **Rénovation Esthétique des Cartes** :
+  - **Flame** : Retrait du dessin de fond dans `card_text_renderer.dart`, diminution des polices et dessin vectoriel d'étoiles dorées proportionnelles à `card.forgeUpgrades.length`.
+  - **Flutter** : Retrait de l'icône centrale translucide et réduction des polices dans `ui_card.dart`. Rendu d'une rangée d'étoiles dorées sous le label de rareté avec ajustement des offsets.
+- **Double Jauge de Vie Animée (HP Dual-Bar)** : Conversion de `PlayerHealthBar` en `StatefulWidget`. Câblage d'un `TweenAnimationBuilder` (500ms, `Curves.easeOutCubic`) animant la différence de ratio entre les PV actuels et les PV précédents sous forme d'une jauge secondaire rouge/orange qui glisse lentement en arrière-plan sous les dégâts. En cas de soin, la jauge verte augmente de suite de manière fluide et la barre rouge s'y aligne instantanément.

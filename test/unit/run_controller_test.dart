@@ -176,5 +176,67 @@ void main() {
         expect(runController.state.heroStats.armure, 4);
       },
     );
+
+    test('Forge session: setForgeSession and clearForgeSession work correctly', () {
+      final container = ProviderContainer();
+      final runController = container.read(runProvider.notifier);
+
+      expect(runController.state.forgeTargetCardId, null);
+      expect(runController.state.forgeSlots, isEmpty);
+
+      runController.setForgeSession('card_abc', ['sharp:2', 'eco:1']);
+      expect(runController.state.forgeTargetCardId, 'card_abc');
+      expect(runController.state.forgeSlots, ['sharp:2', 'eco:1']);
+
+      runController.clearForgeSession();
+      expect(runController.state.forgeTargetCardId, null);
+      expect(runController.state.forgeSlots, isEmpty);
+    });
+
+    test('buyBonusForgeSlot checks progressive cost and gold limits', () {
+      final container = ProviderContainer();
+      final runController = container.read(runProvider.notifier);
+      final inventoryController = container.read(inventoryProvider.notifier);
+
+      // Reset inventory with 0 gold first
+      inventoryController.reset(initialGold: 0);
+
+      // Attempt to buy with 0 gold -> returns false, slots remain 0
+      bool success = runController.buyBonusForgeSlot();
+      expect(success, false);
+      expect(runController.state.bonusForgeSlots, 0);
+
+      // Add gold for the first slot (cost: 50)
+      inventoryController.gainGold(50);
+      success = runController.buyBonusForgeSlot();
+      expect(success, true);
+      expect(runController.state.bonusForgeSlots, 1);
+      expect(container.read(inventoryProvider).gold, 0); // spent all 50
+
+      // Add gold for the second slot (cost: 80)
+      inventoryController.gainGold(80);
+      success = runController.buyBonusForgeSlot();
+      expect(success, true);
+      expect(runController.state.bonusForgeSlots, 2);
+      expect(container.read(inventoryProvider).gold, 0); // spent all 80
+
+      // Add gold for third and fourth slots (costs: 120 + 175 = 295)
+      inventoryController.gainGold(295);
+      
+      success = runController.buyBonusForgeSlot(); // 3rd slot (cost 120)
+      expect(success, true);
+      expect(runController.state.bonusForgeSlots, 3);
+
+      success = runController.buyBonusForgeSlot(); // 4th slot (cost 175)
+      expect(success, true);
+      expect(runController.state.bonusForgeSlots, 4);
+      expect(container.read(inventoryProvider).gold, 0); // spent all gold
+
+      // 5th slot purchase attempt (cap at 4 bonus slots total)
+      inventoryController.gainGold(1000); // Plenty of gold
+      success = runController.buyBonusForgeSlot();
+      expect(success, false); // Capped at 4 bonus slots (5 total slots)
+      expect(runController.state.bonusForgeSlots, 4);
+    });
   });
 }

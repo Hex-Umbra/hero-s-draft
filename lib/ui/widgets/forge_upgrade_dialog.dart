@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../game/controllers/deck_controller.dart';
 import '../../game/controllers/inventory_controller.dart';
+import '../../game/controllers/run_controller.dart';
 import '../../models/card_instance.dart';
 import '../../models/data/card_data.dart';
 import '../../models/data/model_extensions.dart';
 import '../../l10n/app_localizations.dart';
-import 'game_dialog.dart';
 import 'game_button.dart';
 import 'ui_card.dart';
 
@@ -47,7 +47,32 @@ class _ForgeUpgradeDialogState extends ConsumerState<ForgeUpgradeDialog> {
     final rarityIndex = widget.card.rarity.index;
     _totalMaxForgeUpgrades =
         widget.card.data.baseMaxForgeUpgrades + rarityIndex;
-    _slots = _generateInitialSlots(widget.card);
+
+    final runState = ref.read(runProvider);
+    if (runState.forgeTargetSessions.containsKey(widget.card.uniqueId)) {
+      _slots = [];
+      final savedSlots = runState.forgeTargetSessions[widget.card.uniqueId]!;
+      for (int i = 0; i < savedSlots.length; i++) {
+        final s = savedSlots[i];
+        final parts = s.split(':');
+        final id = parts[0];
+        final tier = parts.length > 1 ? parts[1] : '1';
+        final rerolls = parts.length > 2 ? (int.tryParse(parts[2]) ?? 0) : 0;
+        _slots.add(ForgeSlot(
+          index: i,
+          upgrade: '$id:$tier',
+          rerollsCount: rerolls,
+        ));
+      }
+    } else {
+      _slots = _generateInitialSlots(widget.card);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(runProvider.notifier).setForgeSession(
+          widget.card.uniqueId,
+          _slots.map((s) => '${s.upgrade}:${s.rerollsCount}').toList(),
+        );
+      });
+    }
   }
 
   List<String> _getEligibleUpgradesForPool(CardInstance card, String poolName) {
@@ -82,12 +107,23 @@ class _ForgeUpgradeDialogState extends ConsumerState<ForgeUpgradeDialog> {
       final alreadyHas = card.forgeUpgrades.any((u) => u.split(':')[0] == id);
       if (alreadyHas) continue;
 
+      // Card type specific exclusions:
+      if (card.data.type == CardType.skill) {
+        if (id == 'sharp' || id == 'burning' || id == 'freezing' || id == 'shocking') {
+          continue;
+        }
+      }
+      if (card.data.type == CardType.power) {
+        if (id != 'eco' && id != 'quick' && id != 'enduring') {
+          continue;
+        }
+      }
+
       if ((id == 'burning' || id == 'freezing' || id == 'shocking') &&
           card.data.type != CardType.attack) {
         continue;
       }
-      if (id == 'enduring' &&
-          (!card.data.isExhaust || card.data.type == CardType.power)) {
+      if (id == 'enduring' && !card.data.isExhaust) {
         continue;
       }
 
@@ -189,6 +225,16 @@ class _ForgeUpgradeDialogState extends ConsumerState<ForgeUpgradeDialog> {
       excludedIds.add(upg.split(':')[0]);
     }
 
+    // Add existing bonus slots
+    final runState = ref.read(runProvider);
+    final bonusCount = runState.bonusForgeSlots;
+    for (int i = 0; i < bonusCount; i++) {
+      final upg = _rollSlotUpgrade(card, excludedIds);
+      final newIndex = slots.isEmpty ? 0 : slots.map((s) => s.index).reduce(max) + 1;
+      slots.add(ForgeSlot(index: newIndex, upgrade: upg));
+      excludedIds.add(upg.split(':')[0]);
+    }
+
     return slots;
   }
 
@@ -209,12 +255,35 @@ class _ForgeUpgradeDialogState extends ConsumerState<ForgeUpgradeDialog> {
         _slots[slotIdx].rerollsCount += 1;
       }
     });
+
+    ref.read(runProvider.notifier).setForgeSession(
+      widget.card.uniqueId,
+      _slots.map((s) => '${s.upgrade}:${s.rerollsCount}').toList(),
+    );
+  }
+
+  void _onBuySlotTapped() {
+    final success = ref.read(runProvider.notifier).buyBonusForgeSlot();
+    if (!success) return;
+
+    setState(() {
+      final excludedIds = _slots.map((s) => s.upgrade.split(':')[0]).toList();
+      final newUpgrade = _rollSlotUpgrade(widget.card, excludedIds);
+      final newIndex = _slots.isEmpty ? 0 : _slots.map((s) => s.index).reduce(max) + 1;
+      _slots.add(ForgeSlot(index: newIndex, upgrade: newUpgrade));
+    });
+
+    ref.read(runProvider.notifier).setForgeSession(
+      widget.card.uniqueId,
+      _slots.map((s) => '${s.upgrade}:${s.rerollsCount}').toList(),
+    );
   }
 
   void _selectUpgrade(String upgrade) {
     ref
         .read(deckProvider.notifier)
         .addForgeUpgrade(widget.card.uniqueId, upgrade);
+    ref.read(runProvider.notifier).clearForgeSession();
     Navigator.of(context).pop(upgrade);
   }
 
@@ -328,296 +397,419 @@ class _ForgeUpgradeDialogState extends ConsumerState<ForgeUpgradeDialog> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final currentGold = ref.watch(inventoryProvider).gold;
-    final locale = Localizations.localeOf(context).languageCode;
-    final l10n = AppLocalizations.of(context)!;
+  Widget _buildSlotRow(ForgeSlot slot, int currentGold) {
+    final upgradeId = slot.upgrade.split(':')[0];
+    final upgradeColor = _getUpgradeColor(upgradeId);
+    final upgradeIcon = _getUpgradeIcon(upgradeId);
+    final upgradeName = _getUpgradeName(slot.upgrade);
+    final upgradeDesc = _getUpgradeDescription(slot.upgrade);
+    final rerollCost = slot.rerollCost;
+    final canAffordReroll = currentGold >= rerollCost;
 
-    return GameDialog(
-      glowColor: Colors.amber,
-      maxWidth: 750,
-      title: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withAlpha(8),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: upgradeColor.withAlpha(60),
+          width: 1.5,
+        ),
+      ),
+      child: Row(
         children: [
-          Text(
-            _getTranslation('FORGE UPGRADE', 'AMÉLIORATION FORGE'),
-            style: const TextStyle(
-              color: Colors.amber,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 2,
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: upgradeColor.withAlpha(20),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: upgradeColor.withAlpha(100),
+              ),
+            ),
+            child: Icon(
+              upgradeIcon,
+              color: upgradeColor,
+              size: 24,
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.black38,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.amberAccent.withValues(alpha: 0.4)),
-            ),
-            child: Row(
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.monetization_on, color: Colors.amber, size: 20),
-                const SizedBox(width: 6),
                 Text(
-                  '$currentGold',
-                  style: const TextStyle(
-                    color: Colors.white,
+                  upgradeName,
+                  style: TextStyle(
+                    color: upgradeColor,
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  upgradeDesc,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12,
                   ),
                 ),
               ],
             ),
           ),
-        ],
-      ),
-      subtitle: Text(
-        _getTranslation(
-          'Select an upgrade slot or reroll options',
-          'Choisissez une amélioration ou relancez les options',
-        ),
-      ),
-      content: Material(
-        color: Colors.transparent,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final isVertical = constraints.maxWidth < 600;
-                final content = [
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
+          const SizedBox(width: 8),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              InkWell(
+                onTap: canAffordReroll
+                    ? () => _rerollSlot(slot.index, rerollCost)
+                    : null,
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: canAffordReroll
+                        ? Colors.orangeAccent.withAlpha(20)
+                        : Colors.white10,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: canAffordReroll
+                          ? Colors.orangeAccent.withAlpha(120)
+                          : Colors.white24,
+                    ),
+                  ),
+                  child: Row(
                     children: [
-                      SizedBox(
-                        width: 170,
-                        child: UiCard(
-                          title: widget.card.data.getName(locale),
-                          description: widget.card.data.getDescription(locale),
-                          cost: widget.card.data.cost,
-                          effects: widget.card.data.effects,
-                          type: widget.card.data.type,
-                          targetType: widget.card.data.target,
-                          isExhaust: widget.card.data.isExhaust,
-                          rarity: widget.card.rarity.getLabel(l10n),
-                          forgeUpgrades: widget.card.forgeUpgrades,
-                          rarityMultiplier: widget.card.rarityMultiplier,
-                        ),
+                      Icon(
+                        Icons.autorenew,
+                        color: canAffordReroll
+                            ? Colors.orangeAccent
+                            : Colors.white30,
+                        size: 14,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(width: 4),
                       Text(
-                        _getTranslation('CAPACITY', 'CAPACITÉ'),
-                        style: const TextStyle(
-                          color: Colors.white60,
-                          fontSize: 12,
+                        '$rerollCost',
+                        style: TextStyle(
+                          color: canAffordReroll
+                              ? Colors.white
+                              : Colors.white30,
                           fontWeight: FontWeight.bold,
-                          letterSpacing: 1.5,
+                          fontSize: 12,
                         ),
-                      ),
-                      const SizedBox(height: 6),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: List.generate(_totalMaxForgeUpgrades, (i) {
-                          final isUsed = i < widget.card.forgeUpgrades.length;
-                          return Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 4),
-                            child: Icon(
-                              isUsed ? Icons.star : Icons.star_border,
-                              color: isUsed ? Colors.amber : Colors.white24,
-                              size: 20,
-                              shadows: isUsed
-                                  ? [
-                                      const Shadow(
-                                        color: Colors.amberAccent,
-                                        blurRadius: 8,
-                                      )
-                                    ]
-                                  : null,
-                            ),
-                          );
-                        }),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${widget.card.forgeUpgrades.length} / $_totalMaxForgeUpgrades ${_getTranslation('Upgrades', 'Améliorations')}',
-                        style: const TextStyle(color: Colors.white70, fontSize: 12),
                       ),
                     ],
                   ),
-                  if (!isVertical) const SizedBox(width: 32),
-                  if (isVertical)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                      child: Divider(color: Colors.white12),
-                    ),
-                  Expanded(
-                    flex: isVertical ? 0 : 1,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          _getTranslation('AVAILABLE FORGE SLOTS', 'OFFRES DE LA FORGE'),
-                          style: const TextStyle(
-                            color: Colors.amber,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        ..._slots.map((slot) {
-                          final upgradeId = slot.upgrade.split(':')[0];
-                          final upgradeColor = _getUpgradeColor(upgradeId);
-                          final upgradeIcon = _getUpgradeIcon(upgradeId);
-                          final upgradeName = _getUpgradeName(slot.upgrade);
-                          final upgradeDesc = _getUpgradeDescription(slot.upgrade);
-                          final rerollCost = slot.rerollCost;
-                          final canAffordReroll = currentGold >= rerollCost;
+                ),
+              ),
+              const SizedBox(width: 8),
+              GameButton(
+                text: _getTranslation('Forge', 'Forger'),
+                onPressed: () => _selectUpgrade(slot.upgrade),
+                baseColor: upgradeColor,
+                height: 36,
+                fontSize: 13,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withAlpha(8),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: upgradeColor.withAlpha(60),
-                                width: 1.5,
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: upgradeColor.withAlpha(20),
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: upgradeColor.withAlpha(100),
-                                    ),
-                                  ),
-                                  child: Icon(
-                                    upgradeIcon,
-                                    color: upgradeColor,
-                                    size: 24,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        upgradeName,
-                                        style: TextStyle(
-                                          color: upgradeColor,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        upgradeDesc,
-                                        style: const TextStyle(
-                                          color: Colors.white70,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    InkWell(
-                                      onTap: canAffordReroll
-                                          ? () => _rerollSlot(slot.index, rerollCost)
-                                          : null,
-                                      borderRadius: BorderRadius.circular(12),
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 10,
-                                          vertical: 8,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: canAffordReroll
-                                              ? Colors.orangeAccent.withAlpha(20)
-                                              : Colors.white10,
-                                          borderRadius: BorderRadius.circular(12),
-                                          border: Border.all(
-                                            color: canAffordReroll
-                                                ? Colors.orangeAccent.withAlpha(120)
-                                                : Colors.white24,
-                                          ),
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            Icon(
-                                              Icons.autorenew,
-                                              color: canAffordReroll
-                                                  ? Colors.orangeAccent
-                                                  : Colors.white30,
-                                              size: 14,
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              '$rerollCost',
-                                              style: TextStyle(
-                                                color: canAffordReroll
-                                                    ? Colors.white
-                                                    : Colors.white30,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 12,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    GameButton(
-                                      text: _getTranslation('Forge', 'Forger'),
-                                      onPressed: () => _selectUpgrade(slot.upgrade),
-                                      baseColor: upgradeColor,
-                                      height: 36,
-                                      fontSize: 13,
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          );
-                        }),
-                      ],
-                    ),
-                  ),
-                ];
+  Widget _buildBuySlotButton(bool canBuySlot, bool hasEnoughGold, int nextCost, int currentBonusSlots) {
+    final bool isEnabled = canBuySlot && hasEnoughGold;
+    final isFr = Localizations.localeOf(context).languageCode == 'fr';
 
-                if (isVertical) {
-                  return Column(
-                    children: content.cast<Widget>(),
-                  );
-                } else {
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: content.cast<Widget>(),
-                  );
-                }
-              },
+    String buttonText;
+    if (currentBonusSlots >= 4 || _slots.length >= 5) {
+      buttonText = isFr
+          ? 'Capacité maximale atteinte (5 slots)'
+          : 'Maximum capacity reached (5 slots)';
+    } else {
+      buttonText = isFr
+          ? 'Acheter une fente supplémentaire ($nextCost Or)'
+          : 'Buy an additional slot ($nextCost Gold)';
+    }
+
+    return InkWell(
+      onTap: isEnabled ? _onBuySlotTapped : null,
+      borderRadius: BorderRadius.circular(16),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+        decoration: BoxDecoration(
+          color: isEnabled
+              ? Colors.amber.withAlpha(25)
+              : Colors.white.withAlpha(10),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isEnabled
+                ? Colors.amber.withAlpha(150)
+                : Colors.white12,
+            width: 1.5,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.add_circle_outline,
+              color: isEnabled ? Colors.amber : Colors.white30,
+              size: 20,
             ),
-            const SizedBox(height: 24),
-            GameButton(
-              text: _getTranslation('Cancel', 'Annuler'),
-              onPressed: () => Navigator.of(context).pop(),
-              baseColor: Colors.white70,
-              height: 40,
-              width: 120,
+            const SizedBox(width: 10),
+            Text(
+              buttonText,
+              style: TextStyle(
+                color: isEnabled ? Colors.white : Colors.white30,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final runState = ref.watch(runProvider);
+    final currentGold = ref.watch(inventoryProvider).gold;
+    final locale = Localizations.localeOf(context).languageCode;
+    final l10n = AppLocalizations.of(context)!;
+
+    final bonusCount = runState.bonusForgeSlots;
+    final nextCost = bonusCount < 4 ? [50, 80, 120, 175][bonusCount] : 0;
+    final canBuySlot = bonusCount < 4 && _slots.length < 5;
+    final hasEnoughGold = currentGold >= nextCost;
+
+    return Dialog.fullscreen(
+      backgroundColor: const Color(0xFF0D0D1A),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.black,
+                const Color(0xFF1E1000).withAlpha(180),
+                Colors.black,
+              ],
+            ),
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // HEADER
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _getTranslation('FORGE UPGRADE', 'AMÉLIORATION FORGE'),
+                            style: const TextStyle(
+                              color: Colors.amber,
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 2,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _getTranslation(
+                              'Select an upgrade slot or reroll options',
+                              'Choisissez une amélioration ou relancez les options',
+                            ),
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.black38,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.amberAccent.withAlpha(100)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.monetization_on, color: Colors.amber, size: 24),
+                            const SizedBox(width: 8),
+                            Text(
+                              '$currentGold',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  const Divider(color: Colors.white24, height: 1),
+                  const SizedBox(height: 24),
+
+                  // MAIN RESPONSIVE CONTENT
+                  Expanded(
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final isDesktop = constraints.maxWidth >= 720;
+
+                        // Left panel: Card + capacity info
+                        final cardPanel = SizedBox(
+                          width: isDesktop ? 240 : double.infinity,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SizedBox(
+                                width: 170,
+                                child: UiCard(
+                                  title: widget.card.data.getName(locale),
+                                  description: widget.card.data.getDescription(locale),
+                                  cost: widget.card.data.cost,
+                                  effects: widget.card.data.effects,
+                                  type: widget.card.data.type,
+                                  targetType: widget.card.data.target,
+                                  isExhaust: widget.card.data.isExhaust,
+                                  rarity: widget.card.rarity.getLabel(l10n),
+                                  forgeUpgrades: widget.card.forgeUpgrades,
+                                  rarityMultiplier: widget.card.rarityMultiplier,
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              Text(
+                                _getTranslation('CAPACITY', 'CAPACITÉ'),
+                                style: const TextStyle(
+                                  color: Colors.white60,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1.5,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: List.generate(_totalMaxForgeUpgrades, (i) {
+                                  final isUsed = i < widget.card.forgeUpgrades.length;
+                                  return Container(
+                                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                                    child: Icon(
+                                      isUsed ? Icons.star : Icons.star_border,
+                                      color: isUsed ? Colors.amber : Colors.white24,
+                                      size: 20,
+                                      shadows: isUsed
+                                          ? [
+                                              const Shadow(
+                                                color: Colors.amberAccent,
+                                                blurRadius: 8,
+                                              )
+                                            ]
+                                          : null,
+                                    ),
+                                  );
+                                }),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                '${widget.card.forgeUpgrades.length} / $_totalMaxForgeUpgrades ${_getTranslation('Upgrades', 'Améliorations')}',
+                                style: const TextStyle(color: Colors.white70, fontSize: 13),
+                              ),
+                            ],
+                          ),
+                        );
+
+                        // Right panel: Scrollable list of options + Buy slot button
+                        final listPanel = Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 12.0),
+                                child: Text(
+                                  _getTranslation('AVAILABLE FORGE SLOTS', 'OFFRES DE LA FORGE'),
+                                  style: const TextStyle(
+                                    color: Colors.amber,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    letterSpacing: 1.2,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: ListView(
+                                  children: [
+                                    ..._slots.map((slot) => _buildSlotRow(slot, currentGold)),
+                                    const SizedBox(height: 16),
+                                    _buildBuySlotButton(canBuySlot, hasEnoughGold, nextCost, runState.bonusForgeSlots),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+
+                        if (isDesktop) {
+                          return Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              cardPanel,
+                              const SizedBox(width: 48),
+                              listPanel,
+                            ],
+                          );
+                        } else {
+                          return Column(
+                            children: [
+                              cardPanel,
+                              const SizedBox(height: 24),
+                              const Divider(color: Colors.white12),
+                              const SizedBox(height: 12),
+                              listPanel,
+                            ],
+                          );
+                        }
+                      },
+                    ),
+                  ),
+
+                  // FOOTER / ACTIONS
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      GameButton(
+                        text: _getTranslation('Cancel', 'Annuler'),
+                        onPressed: () => Navigator.of(context).pop(),
+                        baseColor: Colors.white70,
+                        height: 44,
+                        width: 140,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );

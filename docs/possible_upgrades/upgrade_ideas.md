@@ -98,7 +98,7 @@
 - [ ] Au fur et a mesure de la run, ou pour des ennemis spécifiques, cacher les intentions
 - [ ] Avec le refactoring, les cartes qui apparaissent dans la colonne "Carte à vendre" apparaissent en ligne 1 a 1, il faut modifier cela pour les faire apparaitre en colonne (4 colonnes qui wrap s'il le faut)
 - [ ] Rajouter un menu de debug qui peut être ouvert a n'importe quel comment avec un set de commande spécifique
-- [ ] En combat, on a une animation qui fait apparaitre les cartes a jouer depuis le menu de pioche, si le joueur place sa souris a coté du badge de pioche sur le "chemin" de l'animation, alors les cartes reste là où est la souris, l'animation se termine quand on sélectionne une carte pour la jouer, il faudrait que pendant l'naimation elles ne soient pas sélectionnable ou qu'on puisse pas interagir avec tant que l'animation n'est pas terminé. On vas également ralentir l'animation pour bien voir les cartes aller de la "Pioche" vers la "Main"
+- [x] En combat, on a une animation qui fait apparaitre les cartes a jouer depuis le menu de pioche, si le joueur place sa souris a coté du badge de pioche sur le "chemin" de l'animation, alors les cartes reste là où est la souris, l'animation se termine quand on sélectionne une carte pour la jouer, il faudrait que pendant l'naimation elles ne soient pas sélectionnable ou qu'on puisse pas interagir avec tant que l'animation n'est pas terminé. On vas également ralentir l'animation pour bien voir les cartes aller de la "Pioche" vers la "Main"
 - [ ] On vas modifier le menu de forge pour avoir un aspect plus esthétique au menu tout en gardant la cohérence visuelle du projet. Il faut que le menu puisse être scrollable
 - [ ] Enlever la possibilité d'acheter les cartes uniques des personnage dans le shop, ces cartes la ne devrait pas être achetable, donc il faut les enlever du pool du shop.
 - [ ] Diminuer le scaling des dégâts des ennemis
@@ -115,3 +115,5 @@
 - [ ] Dans le menu du shop, modifier l'affichage des cartes de la colonne "Cartes a vendre", actuellement toutes les cartes apapraissent avec le même style, un fond bleu plutot qu'un style associé au type de carte come on aurait dans le dictionnaire ou encore en combat
 - [ ] Pour les cartes de rareté "Unique", on vas modifier son interface pour qu'elle soit différente des cartes normales, indiquer clairement au joueur que ce sont les carte de type héros. On vas également rajouter un onglet dans le menu dictionnaire pour afficher toutes les cartes de héros, groupé par héros.
 - [ ] En combat, quand le joueur perd des hp, rajouter une animation smooth sur la barre de vie pour afficher la perte de points de vie
+---
+- [ ] Actuellement les ennemis n'apparaissent que maximum par 2, revoir les formules et comment les ennemis sont "spawner" quand un le joueur appuie sur un nœud combat

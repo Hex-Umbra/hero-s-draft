@@ -1,5 +1,100 @@
 [
   {
+    "version": "0.1.4",
+    "date": "2026-06-11",
+    "title": "La Voie de l'Éveil",
+    "sections": [
+      {
+        "category": "Nouvelles Fonctionnalités",
+        "emoji": "✨",
+        "entries": [
+          "Les choix de cartes liés à une montée de niveau (drafts) sont désormais différés et s'effectuent directement depuis la carte de progression au lieu d'interrompre la fin du combat.",
+          "Ajout d'un nouvel overlay animé plein écran (« LEVEL UP ! ») s'affichant sur la carte lorsque vous gagnez un ou plusieurs niveaux."
+        ]
+      },
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "L'interaction avec la carte de progression est désormais bloquée tant que vous n'avez pas sélectionné toutes vos récompenses de niveau en attente.",
+          "L'animation de la roulette de reliques a été peaufinée : les couleurs et les détails de la relique restent masqués sous un aspect gris neutre pendant la rotation, puis sont révélés à l'arrêt.",
+          "La structure de la carte s'adapte dorénavant de manière dynamique pour garantir qu'un unique combat d'Élite se trouve toujours exactement au milieu de votre progression."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "0.1.3",
+    "date": "2026-06-11",
+    "title": "Harmonie Visuelle & Améliorations de Boutique",
+    "sections": [
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "L'apparence visuelle des cartes a été enrichie avec des couleurs d'arrière-plan distinctes selon leur type (Attaque, Compétence, Pouvoir ou Statut) pour une identification plus rapide.",
+          "L'affichage des cartes en vente dans la boutique a été amélioré sous forme de grille uniforme, offrant une présentation plus claire et structurée."
+        ]
+      },
+      {
+        "category": "Équilibrage",
+        "emoji": "⚖️",
+        "entries": [
+          "Les cartes de rareté Unique ne sont désormais plus proposées dans la boutique, que ce soit lors de l'affichage initial, d'un renouvellement ou d'une extension de l'offre."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "0.1.2",
+    "date": "2026-06-11",
+    "title": "La Refonte de la Forge",
+    "sections": [
+      {
+        "category": "Nouvelles Fonctionnalités",
+        "emoji": "✨",
+        "entries": [
+          "Vous pouvez désormais acheter jusqu'à 4 fentes d'amélioration supplémentaires à la forge pour élargir vos choix, avec un coût en or progressif."
+        ]
+      },
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "Le menu de la forge a été entièrement repensé avec un affichage plein écran responsive, s'adaptant confortablement sur PC (double colonne) comme sur mobile (défilement vertical).",
+          "Les choix d'améliorations de cartes sont désormais plus intelligents et adaptés : les cartes de Compétence n'affichent plus d'effets offensifs, et les cartes de Pouvoir ne proposent que des effets utilitaires."
+        ]
+      },
+      {
+        "category": "Corrections",
+        "emoji": "🐛",
+        "entries": [
+          "Correction d'une faille qui permettait de réinitialiser gratuitement les améliorations proposées à la forge en fermant et en rouvrant simplement le menu."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "0.1.0",
+    "date": "2026-06-10",
+    "title": "Clarté Visuelle & Fluidité de Combat",
+    "sections": [
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "Les cartes piochées s'animent de manière plus fluide et bloquent toute interaction avant d'être correctement placées dans votre main.",
+          "Les infobulles s'affichent uniquement lorsque vous sélectionnez une carte en combat et se masquent automatiquement dès qu'elle est jouée ou désélectionnée.",
+          "Les infobulles détaillent désormais la liste complète de toutes les améliorations appliquées à la forge pour chaque carte.",
+          "Une ligne d'étoiles dorées s'affiche sous la rareté des cartes pour indiquer le nombre d'améliorations de forge appliquées par rapport à leur limite.",
+          "Les icônes transparentes en arrière-plan des cartes ont été retirées et la taille des textes a été réduite pour améliorer la lisibilité globale.",
+          "La barre de vie du joueur dispose d'une nouvelle animation de dégâts à double jauge où une barre rouge fluide suit la baisse instantanée de santé.",
+          "Les effets de soin remplissent désormais la barre de vie de façon progressive et fluide."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.0.99",
     "date": "2026-06-07",
     "title": "Fondations du Design",

@@ -72,13 +72,13 @@ Tous les contrôleurs héritent de `Notifier<T>` (Riverpod 2.x) et exposent des 
 
 **Provider** : `NotifierProvider<RunController, RunState>`
 
-**État `RunState`** : `currentLevel`, `act`, `heroStats` (EntityStats), `heroClassId`, `mapNodes` (List\<MapNode\>), `currentNodeId`, `passiveTrait`, `activePassive` (PassiveData?).
+**État `RunState`** : `currentLevel`, `act`, `heroStats` (EntityStats), `heroClassId`, `mapNodes` (List\<MapNode\>), `currentNodeId`, `passiveTrait`, `activePassive` (PassiveData?), `pendingDrafts` (int).
 
 **Responsabilités** :
-- **Cycle de vie de la run** : `startNewRun(HeroData, PassiveData?)` — génère la carte via `MapGeneratorService`, initialise les stats depuis les données héros, reset l'inventaire (50 or), reset les cooldowns.
-- **Progression** : `travelToNode(nodeId)`, `completeCurrentNode()` (reset armure, clear statuts, avance acte si boss), `advanceToNextWorld()`, `nextLevel()`.
+- **Cycle de vie de la run** : `startNewRun(HeroData, PassiveData?)` — génère la carte via `MapGeneratorService`, initialise les stats depuis les données héros, reset l'inventaire (50 or), reset les cooldowns, initialise `pendingDrafts` à 0.
+- **Progression** : `travelToNode(nodeId)`, `completeCurrentNode()` (reset armure, clear statuts, avance acte si boss), `advanceToNextWorld()`, `nextLevel()`, `decrementPendingDrafts()`, `resetPendingDrafts()`.
 - **Gestion des ressources** : `consumeResource({mana, hpPercent})` — validation + déduction. `heal(amount)`, `takeDamage(amount)` (délègue à `EntityStats.takeDamage`), `setHeroStats(...)`.
-- **Gestion de l'Expérience (XP)** : `gainXp(int xp)` accumule l'XP de victoire. Calcule le seuil requis via la formule $100 \times 1.5^{\text{level} - 1}$. Gère la cascade de multi-niveaux et conserve le reste d'expérience (`carry-over`) sans perte.
+- **Gestion de l'Expérience (XP)** : `gainXp(int xp)` accumule l'XP de victoire. Calcule le seuil requis via la formule $100 \times 1.5^{\text{level} - 1}$. Gère la cascade de multi-niveaux, conserve le reste d'expérience (`carry-over`) sans perte, et incrémente `pendingDrafts` à chaque gain de niveau.
 - **Statistiques permanentes** : `applyHeroStatModifier({maxPvAcc, attackAcc, armorAcc, maxManaAcc, luckAcc})` — modifie les stats permanentes (maxPv soigne le delta).
 - **Statuts** : `addStatus(StatusEffect)`.
 - **Tour de combat** : `startCombat()` (clear statuts, restore mana, reliques `startOfCombat`, TraitSystem) → `startTurn()` (**logique centrale** : restore mana → reliques `startOfTurn` → processing poison/strength_regen/armor_regen → tick durations → tick cooldowns → `TraitSystem.onTurnStart`).
@@ -261,10 +261,10 @@ static List<EnemyData> generateEnemiesForLevel(
    - Câble séquentiellement les connexions de l'étage `y` vers l'étage `y+1` avec des offsets indexés de $-1$, $0$, $+1$.
    - **Passe de correction d'orphelins** : Parcourt tous les nœuds de l'étage suivant et connecte de force une source s'ils ne sont pas ciblés.
 2. **Contraintes structurelles forcées** :
-   - Étage 0 : Forcé à Combat standard.
-   - Étage 5 : Forcé à 1 seul nœud (chokepoint) de type Élite.
-   - Étage 8 : Tous les nœuds sont obligatoirement de type Repos (Rest).
-   - Étage 9 (Boss) : Génère précisément 3 nœuds de boss pour permettre au joueur de choisir son adversaire final et sa récompense associée selon la position horizontale (x = 0, 1, 2).
+   - Étage 0 : Forced to standard combat.
+   - Étage du milieu (`middleFloor = floors ~/ 2`) : Forced to exactly 1 node (chokepoint) of type Élite, enabling dynamic map sizing support.
+   - Étage `floors-2` (repos garanti) : All nodes are forced to type Repos (Rest).
+   - Étage `floors-1` (Boss) : Generates exactly 3 boss nodes depending on the final act requirements.
 3. **Solver de Quotas (`_balanceQuotas`)** :
    - Itère sur les nœuds de la carte pour réallouer les types de nœuds afin de respecter les limites globales configurées dans `GameConstants.nodeQuotas` (Combat: 12-22, Elite: 3-6, Rest: 3-6, Shop: 2-5, Event: 4-9).
 4. **Algorithme Anti-Répétition de Chemin (`_hasThreeConsecutive` / `_getChainOfThree`)** :
@@ -417,8 +417,8 @@ Pour éliminer la condition de concurrence visuelle (race condition) où l'état
 | `HomeScreen` | `ConsumerWidget` | `ref.watch(gameDataLoaderProvider)` | Écran d'accueil, chargement données, boutons "New Game" / "Dictionary" |
 | `HeroSelectionScreen` | `ConsumerWidget` | `ref.watch(gameDataLoaderProvider)` | Affiche 3 héros, déclenche `startNewRun()` |
 | `StarterDeckDraftScreen` | `ConsumerStatefulWidget` | `ref.watch(gameDataLoaderProvider)`, `ref.read(deckProvider.notifier)` | Grille de sélection de 5 cartes globales parmi le catalogue complet (sans limitation de pool de 10 cartes) + cartes de classe uniques chargées via compétences |
-| `MapScreen` | `ConsumerStatefulWidget` | `ref.watch(runProvider)`, `ref.watch(inventoryProvider)` | **God Class (2471 lignes)** — CustomPainter, pan/zoom, tooltips, légende, validation, navigation |
-| `GameScreen` | `ConsumerStatefulWidget` | Tous les providers | **God Class (1667 lignes)** — embed `GameWidget<HerosDraftGame>`, 5 overlays privés, orchestration combat |
+| `MapScreen` | `ConsumerStatefulWidget` | `ref.watch(runProvider)`, `ref.watch(inventoryProvider)` | **God Class (2471 lignes)** — CustomPainter, pan/zoom, tooltips, légende, validation, navigation, et overlay plein écran « LEVEL UP ! » bloquant (redirection vers `DraftScreen` via route standard si `pendingDrafts > 0`). |
+| `GameScreen` | `ConsumerStatefulWidget` | Tous les providers | **God Class (1667 lignes)** — embed `GameWidget<HerosDraftGame>`, overlays privés (sans draft), orchestration combat, sortie directe sur level up. |
 | `ShopScreen` | `ConsumerWidget` | `ref.watch(inventoryProvider)` | Achat cartes/reliques via `UiCard` |
 | `EventScreen` | `ConsumerWidget` | `ref.watch(runProvider)` | Événements narratifs à choix branchus |
 | `CampfireScreen` | `ConsumerWidget` | `ref.watch(runProvider)`, `ref.watch(deckProvider)` | Repos (heal 30%), Forge (level up), Oubli (suppression) |
@@ -537,6 +537,7 @@ La ligne de ciblage rectiligne rigide a été remplacée par une courbe dynamiqu
    - **Décélération Cubique Physique** : Le défilement automatique rapide de type machine à sous décélère de manière progressive en appliquant une transition `animateToPage` guidée par `Curves.easeOutCubic` sur 4,0 secondes. Les callbacks `onTick` (à chaque franchissement d'index visuel) et `onLand` (à la stabilisation finale sur la relique cible) découplent proprement les animations visuelles des futurs effets sonores (Sound Hooks).
    - **Peintre de Confettis Célébration (`RelicParticlePainter`)** : Un composant `CustomPainter` dessine directement sur Canvas une explosion radiale de particules (confettis rectangulaires rotatifs et étoiles dorées trigonométriques) s'éjectant à haute vélocité depuis le centre lors de l'arrêt du carrousel. Les particules intègrent des forces de gravité, de traînée aérodynamique et de fondu d'opacité graduel pour un rendu organique premium.
    - **Bouton de Collecte Sécurisé (Option A - Confirmation Pattern)** : Afin d'éviter les violations de l'état métier (Riverpod) et les incohérences de données, l'écriture dans l'inventaire via `addRelic` et le déblocage du bouton de validation « Récupérer » ne sont autorisés que lorsque le carrousel s'est immobilisé de façon stable sur sa cible (`isSpinning == false`), respectant le principe de transaction métier propre.
+   - **Protection Anti-Spoil & Masquage de Rareté** : Lors du spin du carrousel (`isWon == false`), toutes les cartes masquent leurs véritables visuels, affichant des bordures et fonds gris neutres. Les badges techniques de rareté et de déclencheurs indiquent « ??? ». Le sous-titre de rareté dans l'en-tête supérieur est également masqué. À l'arrêt, le basculement à `isWon == true` révèle les couleurs d'origine, le nom coloré, les déclencheurs et déclenche une lueur thématique avec animation de l'en-tête.
 
 ### 5.9. Pattern de Draft Card Reels Staggered et 3D Flip (Interactive Reels Reveal)
 
@@ -844,62 +845,74 @@ Dans le cadre des améliorations de la branche `feat/tutorial`, le module de tut
 
 Le système de Forge et de Fusion offre une progression non-linéaire des cartes en séparant proprement la logique métier (calculs de probabilités, relances et consolidation) du rendu visuel de l'interface utilisateur.
 
-### 10.1. Modélisation et Résolution de la Forge (`ForgeUpgradeDialog`)
+### 10.1. Modélisation et Résolution de la Forge (`ForgeUpgradeDialog` v2)
 
-Le dialogue de forge `ForgeUpgradeDialog` (affiché via `RestScreen`) manipule des structures éphémères représentant les choix d'améliorations avant validation finale :
+Le dialogue de forge `ForgeUpgradeDialog` (affiché via `RestScreen`) a été refactorisé sous forme d'écran complet pour intégrer une persistance anti-exploit, un filtrage sémantique des upgrades et l'achat progressif de slots supplémentaires :
 
-1. **Représentation des Améliorations** :
-   Les améliorations de forge sont représentées sous forme de chaînes formatées `"upgradeId:tier"` stockées dans la liste `CardInstance.forgeUpgrades` (ex: `["sharp:2", "quick:1"]`).
-   
-2. **Génération Probabiliste des Options** :
-   À l'initialisation de la forge pour une carte donnée, la classe `ForgeSlot` génère de 1 à 5 options indépendantes (tirages de Bernoulli successifs) :
-   - Slot 1 : $100\%$ (Garanti)
-   - Slot 2 : $50\%$
-   - Slot 3 : $25\%$
-   - Slot 4 : $10\%$
-   - Slot 5 : $2\%$
+1. **Représentation et Persistance de Session (`RunState`)** :
+   Les choix générés pour une carte et les achats de slots sont persistés de manière immuable au niveau du state global Riverpod :
+   - `RunState.forgeSlots` (List\<String\>) : Liste des upgrades générés pour la session active sous le format `"upgradeId:tier"`.
+   - `RunState.forgeTargetCardId` (String?) : Identifiant unique de la carte concernée par la forge active.
+   - `RunState.bonusForgeSlots` (int) : Nombre de fentes bonus achetées (initialement 0, capé à 4).
+   - `RunNotifier.setForgeSession(String cardId, List<String> slots)` : Persiste la session en cours.
+   - `RunNotifier.clearForgeSession()` : Réinitialise la session.
+   - `RunNotifier.buyBonusForgeSlot()` : Gère l'achat progressif (dépense $50 \rightarrow 80 \rightarrow 120 \rightarrow 175$ Or, incrémente `bonusForgeSlots`, retourne un booléen de statut).
 
-3. **Filtrage des Pools par Rareté (Clamping)** :
-   Chaque slot valide tire une amélioration depuis l'un des trois pools exclusifs de rareté :
-   - **Pool Commun (`common`)** : Statuts offensifs de base (brûlure `burning`, gel `freezing`, électrocution `shocking` limités aux cartes de type `attack`) ou bonus statistiques simples (`sharp` pour dégâts, `hardened` pour armure).
-   - **Pool Atypique (`uncommon`)** : Amélioration de pioche (`quick`).
-   - **Pool Rare (`rare`)** : Réduction permanente de coût mana (`eco`) ou effet persistant `enduring` (qui désactive `isExhaust: true`), réservé aux cartes non-pouvoir exhaustibles.
-   
-   Le tirage probabiliste d'un pool dépend de la rareté de la carte :
-   - Carte Commune : $100\%$ Commun.
-   - Carte Atypique : $80\%$ Commun, $20\%$ Atypique.
-   - Carte Rare : $60\%$ Commun, $30\%$ Atypique, $10\%$ Rare.
-   - Carte Épique : $40\%$ Commun, $40\%$ Atypique, $20\%$ Rare.
-   - Carte Légendaire : $20\%$ Commun, $50\%$ Atypique, $30\%$ Rare.
+2. **Logique d'Anti-Exploit (`initState`)** :
+   Pour éviter que le joueur ne réinitialise les options proposées gratuitement en fermant et rouvrant la forge, le cycle de chargement effectue une vérification :
+   - Au lancement du dialogue, si `runState.forgeTargetCardId == card.uniqueId`, le widget charge les fentes stockées dans `runState.forgeSlots` sans effectuer de nouveau tirage.
+   - Sinon, le widget génère une nouvelle liste d'upgrades (avec $1\text{ à }5$ slots de base + `bonusForgeSlots` slots déjà achetés) et appelle immédiatement `RunNotifier.setForgeSession()` pour verrouiller le tirage.
+   - L'effacement de la session (`clearForgeSession()`) n'est déclenché que lors d'un choix d'upgrade réussi, ou lors de la sortie définitive du camp de repos via `RestScreen._leave()`.
 
-4. **Résolution du Tier** :
-   Chaque amélioration se voit attribuer un Tier (I, II ou III) selon une distribution de probabilité pondérée :
-   - Tier I : $80\%$
-   - Tier II : $15\%$
-   - Tier III : $5\%$
+3. **Filtrage Intelligent des Upgrades par Type de Carte** :
+   Pour éliminer les upgrades incohérents, la méthode `_getEligibleUpgradesForPool()` filtre le catalogue d'upgrades :
+   - `CardType.skill` : Exclut tous les upgrades offensifs physiques (`sharp`) ou élémentaires (`burning`, `freezing`, `shocking`).
+   - `CardType.power` : Filtre le pool pour ne conserver que les upgrades utilitaires (`eco`, `quick`, `enduring`).
+   - `CardType.attack` : Donne accès au pool complet sans restriction.
 
-5. **Coût exponentiel et Reroll individuel** :
-   Le joueur peut relancer individuellement les options proposées pour chaque slot en dépensant de l'or de l'inventaire via `InventoryController`. Le coût en or d'une relance est exponentiel et calculé localement sur chaque slot :
-   $$\text{Coût Reroll} = \text{round}(20 \times 1.25^n)$$
-   où $n$ représente le nombre total de relances appliquées sur ce slot spécifique.
+4. **Achat de Fentes Progressives (Buy Slots)** :
+   Le bouton d'achat en bas du `ListView` permet d'acquérir de nouvelles fentes d'upgrades en cours de session :
+   - Le coût progressif ($50 \rightarrow 80 \rightarrow 120 \rightarrow 175$ Or) est lu depuis `bonusForgeSlots`.
+   - En cas d'achat valide (or suffisant et `bonusForgeSlots < 4`), le widget appelle `buyBonusForgeSlot()`, tire une nouvelle option filtrée, et l'ajoute dynamiquement à la liste active via `setForgeSession()`.
+
+5. **Design Plein Écran Responsive** :
+   L'interface utilise `Dialog.fullscreen` pour s'adapter à toutes les résolutions :
+   - **Desktop Layout (`Row`)** : Colonne de gauche affichant le visuel de la carte sélectionnée avec ses étoiles d'upgrade dorées. Colonne de droite affichant une liste scrollable (`ListView`) des slots d'upgrades disposés verticalement.
+   - **Mobile Layout (`Column`)** : Empilement vertical fluide avec le visuel de la carte en haut et la liste scrollable des slots en bas, évitant tout overflow.
 
 ```mermaid
 graph TD
     Start[Ouvrir RestScreen -> Option Forge] --> SelectCard[Sélectionner Carte]
     SelectCard --> Dialog[Ouvrir ForgeUpgradeDialog]
-    Dialog --> GenSlots[Générer 1 à 5 Slots]
-    GenSlots --> RollSlots[Tirer Upgrade & Tier par Slot]
-    RollSlots --> Loop[Afficher Options de Forge]
+    Dialog --> CheckExploit{runState.forgeTargetCardId == card.uniqueId ?}
+    CheckExploit -- Oui (Anti-Exploit) --> LoadSession[Recharger slots depuis runState.forgeSlots]
+    CheckExploit -- Non --> GenBase[Tirer 1 à 5 slots de base + bonusForgeSlots]
+    GenBase --> FilterTypes[Appliquer filtrage sémantique par CardType]
+    FilterTypes --> SaveSession[Sauvegarder session via setForgeSession]
+    LoadSession --> Loop[Afficher Options de Forge]
+    SaveSession --> Loop
     Loop --> Reroll[Clic Reroll Slot i]
-    Reroll --> Cost[Calculer Coût: 20 * 1.25^n]
-    Cost --> CheckGold{Assez d'Or ?}
-    CheckGold -- Oui --> SpendGold[Consommer Or via InventoryProvider]
-    SpendGold --> RollAgain[Re-tirer Upgrade Slot i]
-    RollAgain --> Loop
-    CheckGold -- Non --> Alert[Désactiver bouton Reroll]
+    Reroll --> CostReroll[Calculer Coût: 20 * 1.25^n]
+    CostReroll --> CheckGoldReroll{Assez d'Or ?}
+    CheckGoldReroll -- Oui --> SpendGoldR[Consommer Or via InventoryProvider]
+    SpendGoldR --> RollAgain[Re-tirer Upgrade Slot i]
+    RollAgain --> UpdateSession[Mettre à jour runState.forgeSlots]
+    UpdateSession --> Loop
+    CheckGoldReroll -- Non --> DisableReroll[Grise bouton Reroll]
+    Loop --> BuySlot[Clic Acheter Fente]
+    BuySlot --> CostSlot[Calculer Coût Progressive: 50/80/120/175]
+    CostSlot --> CheckGoldSlot{Assez d'Or & Slots < 5 ?}
+    CheckGoldSlot -- Oui --> BuySuccess[Appelle buyBonusForgeSlot & Consomme Or]
+    BuySuccess --> RollNewSlot[Tirer un slot additionnel filtré]
+    RollNewSlot --> UpdateSession
+    CheckGoldSlot -- Non --> DisableBuySlot[Grise bouton Achat]
     Loop --> SelectUpgrade[Sélectionner Option & Valider]
     SelectUpgrade --> Apply[Ajouter upgradeId:tier à la carte]
-    Apply --> End[Sauvegarder dans DeckProvider]
+    Apply --> SaveDeck[Sauvegarder dans DeckProvider]
+    SaveDeck --> ClearSession[Appeler clearForgeSession]
+    ClearSession --> End[Fermer Dialog & Revenir au RestScreen]
+    Loop --> CloseDialog[Quitter sans Choisir]
+    CloseDialog --> EndDialog[Fermer Dialog - Conserve forgeTargetCardId pour RestScreen.leave]
 ```
 
 ### 10.2. Fusion Interactive et Consolidation des Upgrades (`DeckNotifier.mergeCards`)
@@ -1113,3 +1126,50 @@ color: relic.rarity.color
 - **Aucune magic constant** dans les widgets. Toute couleur, espacement ou style de texte doit provenir de `AppColors`, `AppSpacing` ou `AppTheme`.
 - **Toute nouvelle rareté** (de carte ou de relique) doit être ajoutée simultanément dans les maps de `AppColors` et dans les extensions d'enum correspondantes.
 - **Les tokens de design ne dépendent d'aucun provider Riverpod**. Ils sont purement statiques et instanciables sans contexte d'application.
+
+---
+
+## 14. Architecture d'Amélioration de l'Interface & Cartes (UX Combat) (v0.1.00)
+
+Le sprint v0.1.00 introduit de nouveaux patrons d'interaction et de rendu pour l'interface de combat (Flame et Flutter).
+
+### 14.1. Verrouillage Tactile Temporaire lors du Dealing (Input Blocking)
+
+Pour éviter les race conditions d'interactions (comme le fait de survoler, cliquer ou glisser une carte en train d'être distribuée depuis la pioche, ce qui provoquait des sauts physiques ou des désalignements de l'arc de la main), un patron de verrouillage a été mis en œuvre :
+1. **Drapeau d'état** : `CardComponent` possède le drapeau public `isEnteringHand`.
+2. **Garde d'interaction** : Les méthodes d'entrée de `CardComponent` (`onTapDown`, `onDragStart`, `onHoverEnter`, `onHoverExit`, `onDragUpdate`) effectuent une garde directe :
+   ```dart
+   if (isEnteringHand || isPlayed) return;
+   ```
+3. **Orchestration de la Pioche** : Lors de la pioche dans `HerosDraftGame._applyDeckState()`, les nouvelles cartes sont instanciées avec `isEnteringHand = true`.
+4. **Ralentissement de Transition** : Dans `_layoutHand()`, la durée du `MoveEffect` est portée à `0.7s` (au lieu de `0.35s` pour le tri standard) pour donner une impression de distribution fluide et majestueuse. Un callback `onComplete` réinitialise `card.isEnteringHand = false` lorsque le glissement se termine, rendant la carte de nouveau interactive.
+
+### 14.2. Affichage Ciblé des Infobulles de Combat (Focused Tooltips)
+
+Afin d'éviter l'encombrement de l'écran par des infobulles intempestives lors du simple glissement de la souris, le système de tooltips a été restreint :
+- **Sélection Active uniquement** : Les rappels `onShowTooltip`/`onHideTooltip` ne sont plus déclenchés au simple survol de la souris en combat. Ils sont uniquement lancés lorsque le joueur clique activement sur une carte pour la focaliser ou initier un ciblage.
+- **Auto-masquage** : Le tooltip est automatiquement masqué lorsque la carte est jouée, désélectionnée (clic dans le vide), ou lorsque la phase du combat change.
+- **Formatage des Upgrades** : Le descriptif de l'infobulle appelle `_buildDetailedDescription()` qui concatène proprement la liste des améliorations de forge sous la forme d'une liste à puces en bas du texte.
+
+### 14.3. Rendu d'Étoiles de Forge (Upgrade Progress Stars)
+
+Pour matérialiser visuellement le niveau de forge de chaque carte sans surcharger son illustration :
+- **Calcul du Ratio** : La carte affiche un nombre d'étoiles proportionnel à sa capacité maximale :
+  - Nombre d'étoiles total = $\text{Capacité} = baseMaxForgeUpgrades + rarityIndex$
+  - Nombre d'étoiles dorées pleines = `card.forgeUpgrades.length`
+  - Le reliquat de la capacité est dessiné sous forme d'étoiles vides.
+- **Rendu Unifié (Flame & Flutter)** :
+  - Dans `card_text_renderer.dart` (Flame) : Une boucle dessine des étoiles dorées vectorielles via l'API Canvas sous le label de rareté.
+  - Dans `ui_card.dart` (Flutter) : Une rangée d'icônes `Icons.star` / `Icons.star_border` dorées est insérée de manière dynamique dans l'arbre de widgets.
+
+### 14.4. Double Jauge de Transition (HP Dual-Bar Animation)
+
+Pour fournir un feedback d'impact clair tout en conservant une traînée persistante sous les dégâts subis :
+- **Modèle Double-Jauge** : La barre de vie comporte une jauge avant-plan (verte/jaune/rouge représentant la vie instantanée) et une jauge arrière-plan (rouge/orange représentant la vie précédente avant transition).
+- **Interpolation lagging (Dégâts)** :
+  - La jauge verte d'avant-plan chute instantanément pour donner une sensation d'impact immédiate.
+  - La jauge rouge d'arrière-plan descend lentement via un `TweenAnimationBuilder` configuré sur une durée de `500ms` avec la courbe de décélération progressive `Curves.easeOutCubic`.
+- **Alignement instantané (Soin)** :
+  - La jauge verte d'avant-plan augmente de manière animée et progressive pour signifier la guérison.
+  - La jauge rouge d'arrière-plan s'aligne immédiatement sur la jauge verte pour éviter tout effet de traînée inverse inesthétique.
+- **Gestion d'État** : `PlayerHealthBar` est convertie de `StatelessWidget` en `StatefulWidget` pour retenir localement le ratio de PV précédent (`_oldRatio`) et le comparer au nouveau ratio cible (`_targetRatio`) à chaque reconstruction de l'arbre.

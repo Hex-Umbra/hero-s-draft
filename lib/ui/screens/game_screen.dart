@@ -11,7 +11,6 @@ import '../../game/controllers/reward_controller.dart';
 import '../../models/combat_state.dart';
 import '../../game/services/effect_resolver.dart';
 import '../../game/systems/trait_system.dart';
-import 'draft_screen.dart';
 import 'class_selection_screen.dart';
 import 'deck_screen.dart';
 import 'boss_card_draft_screen.dart';
@@ -36,13 +35,28 @@ class GameScreen extends ConsumerStatefulWidget {
 
 class _GameScreenState extends ConsumerState<GameScreen> {
   late HerosDraftGame _game;
-  bool _showDraft = false;
+  final bool _showDraft = false;
   String? _phaseBannerText;
   bool _showPhaseBanner = false;
 
   String? _tooltipTitle;
   String? _tooltipDescription;
+  CardType? _tooltipCardType;
   bool _showTooltip = false;
+
+  Color _getTooltipBorderColor() {
+    if (_tooltipCardType == null) return Colors.blueAccent;
+    switch (_tooltipCardType!) {
+      case CardType.attack:
+        return Colors.redAccent;
+      case CardType.skill:
+        return Colors.blueAccent;
+      case CardType.power:
+        return Colors.amber;
+      case CardType.status:
+        return Colors.blueGrey;
+    }
+  }
   bool _showManaWarning = false;
   int _turnCount = 1;
   bool _isVictoryHandled = false;
@@ -107,24 +121,16 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       );
 
       if (leveledUp) {
-        Future.delayed(const Duration(milliseconds: 800), () {
-          if (mounted) {
-            context.showNotification(
-              '🎉 LEVEL UP !',
-              type: NotificationType.success,
-            );
-            setState(() {
-              _showDraft = true;
-            });
-          }
-        });
-      } else {
-        Future.delayed(const Duration(milliseconds: 800), () {
-          if (mounted) {
-            _completeAndExitCombat();
-          }
-        });
+        context.showNotification(
+          '🎉 LEVEL UP !',
+          type: NotificationType.success,
+        );
       }
+      Future.delayed(const Duration(milliseconds: 800), () {
+        if (mounted) {
+          _completeAndExitCombat();
+        }
+      });
     }
   }
 
@@ -283,10 +289,11 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       onEnemyKilled: () {
         ref.read(runProvider.notifier).onEnemyKilled();
       },
-      onShowTooltip: (title, description) {
+      onShowTooltip: (title, description, cardType) {
         setState(() {
           _tooltipTitle = title;
           _tooltipDescription = description;
+          _tooltipCardType = cardType;
           _showTooltip = true;
         });
       },
@@ -439,18 +446,6 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             SafeArea(
               child: Stack(
                 children: [
-                  if (_showDraft)
-                    Positioned.fill(
-                      child: DraftScreen(
-                        onDraftComplete: () {
-                          setState(() {
-                            _showDraft = false;
-                          });
-                          ref.read(runProvider.notifier).completeCurrentNode();
-                          Navigator.of(context).pop(); // Retour à la carte
-                        },
-                      ),
-                    ),
 
                   if (!_showDraft && runState.isDead)
                     Positioned.fill(
@@ -804,54 +799,66 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                     ),
 
                   // Tooltip Overlay
-                  if (_showTooltip)
-                    Positioned(
-                      left: 40,
-                      right: 40,
-                      bottom: 220,
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 270,
+                    child: AnimatedOpacity(
+                      opacity: _showTooltip ? 1.0 : 0.0,
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeInOut,
                       child: IgnorePointer(
-                        child: Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF2A2A3D).withAlpha(240),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: Colors.blueAccent,
-                              width: 2,
+                        ignoring: !_showTooltip,
+                        child: Center(
+                          child: Container(
+                            constraints: const BoxConstraints(maxWidth: 300),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
                             ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withAlpha(100),
-                                blurRadius: 10,
-                                spreadRadius: 5,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF1E1E2C).withAlpha(245),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: _getTooltipBorderColor(),
+                                width: 1.5,
                               ),
-                            ],
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _tooltipTitle ?? '',
-                                style: const TextStyle(
-                                  color: Colors.blueAccent,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withAlpha(185),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 6),
                                 ),
-                              ),
-                              const Divider(color: Colors.white24),
-                              Text(
-                                _tooltipDescription ?? '',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
+                              ],
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  (_tooltipTitle ?? '').toUpperCase(),
+                                  style: TextStyle(
+                                    color: _getTooltipBorderColor(),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                              ),
-                            ],
+                                const SizedBox(height: 8),
+                                Text(
+                                  _tooltipDescription ?? '',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    height: 1.3,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
                     ),
+                  ),
                 ],
               ),
             ),

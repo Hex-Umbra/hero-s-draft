@@ -3,11 +3,12 @@
 Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnalités de **Hero's Draft** : opérationnelles, partiellement implémentées, non implémentées, et les chantiers de refactoring prioritaires issus des rapports de dette technique.
 
 **Métriques du projet** :
-- **~11 000 lignes** de code source dans `lib/` (68 fichiers, module `lib/ui/theme/` ajouté).
+- **~11 400 lignes** de code source dans `lib/` (70 fichiers).
 - **8 fichiers JSON** de données d'assets.
-- **104 tests automatisés** — 100% au vert.
+- **106 tests automatisés** — 100% au vert.
 - **0 erreur** via `flutter analyze`.
-- **~115 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
+- **~117 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
+- **Version actuelle** : v0.2.00 — Sprint Forge v2 & Améliorations UX.
 
 ---
 
@@ -17,12 +18,13 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 
 | Fonctionnalité | Fichiers Clés | Détails |
 |:---|:---|:---|
-| Graphe Acyclique Dirigé (DAG) | `MapGeneratorService`, `MapNode` | 10 étages, largeur 2-5 nœuds, chokepoint étage 5, repos garanti étage 8, boss unique étage 9 |
+| Graphe Acyclique Dirigé (DAG) | `MapGeneratorService`, `MapNode` | 10 étages (paramétrable), largeur 2-5 nœuds, chokepoint étage central dynamique, repos garanti étage `floors-2`, boss unique étage final |
 | Distribution probabiliste des nœuds | `MapGeneratorService._randomNodeType()` | 60% combat, 15% event, 10% shop, 10% rest, 5% elite |
 | Quotas équilibrés (Solver) | `MapGeneratorService._balanceQuotas` | Répartition des types de nœuds : Combat (12-22), Élite (3-6), Repos (3-6), Shop (2-5), Event (4-9) |
 | Anti-répétition de chemins | `MapGeneratorService._optimizeMapTypes` | Algorithme interdisant 3 nœuds Élite ou Repos consécutifs sur un même chemin |
-| Chokepoints structurels forcés | `MapGeneratorService` | Étage 5 Élite forcé (1 nœud), Étage 8 Repos forcé (repos garanti avant boss) |
-| Embranchement de Boss multiples | `MapGeneratorService` / `EncounterSystem` | Étage 9 (Boss) présente 3 nœuds de boss distincts avec récompenses de combat uniques déterminées par leur position |
+| Chokepoints structurels forcés | `MapGeneratorService` | Étage central dynamique (`floors ~/ 2`) Élite forcé (1 nœud), Étage `floors-2` Repos forcé (repos garanti avant boss) |
+| Level Up différé sur la Carte | `RunController`, `MapScreen`, `GameScreen` | Les gains de niveau incrémentent `pendingDrafts` au lieu d'ouvrir le draft en combat. Un overlay bloquant « LEVEL UP ! » s'affiche sur la carte, forçant le joueur à effectuer ses choix de draft avant de naviguer. |
+| Embranchement de Boss multiples | `MapGeneratorService` / `EncounterSystem` | Étage final (Boss) présente 3 nœuds de boss distincts avec récompenses de combat uniques déterminées par leur position |
 | Récompenses de Boss uniques | `GameScreen`, `MapNode`, `RewardController`, `BossCardDraftScreen` | Boss 1 (x=0) : sélection forcée de 3 cartes via BossCardDraftScreen. Boss 2 (x=1) : XP/Or doublés. Boss 3 (x=2) : relic drop dynamique par Act dans RewardController. |
 | Correction d'orphelins | `MapGeneratorService` (Phase 2 câblage) | Garantie que tout nœud a au moins 1 connexion entrante |
 | Navigation réactive | `RunController.travelToNode()` | Validation d'accessibilité (connexion au nœud complété ou étage 0) |
@@ -37,6 +39,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 |:---|:---|:---|
 | Modernisation Riverpod | `Tous les Providers` | Migration vers `Notifier` et `NotifierProvider` de Riverpod 2.x, communication inter-contrôleurs interne via `ref.read` sans injection par constructeur, et immuabilité stricte de `CardInstance` (v0.0.97) |
 | Logique de Run | `RunController` / `runProvider` | Suivi PV, mana, armorMastery, luck, acte, level, XP, carte, passifs, reliques |
+| Persistance Forge v2 | `RunController` / `runProvider` | Sauvegarde anti-exploit de la session de forge active (`forgeSlots`, `forgeTargetCardId`) et gestion des slots bonus achetés avec coût progressif (v0.2.00) |
 | Système de Progression XP | `RunController.gainXp()` | Progression XP exponentielle ($100 \times 1.5^{lvl-1}$), gains multiples et carry-over |
 | Échelonnement Ennemis | `CombatController.initializeCombat()` | Multiplicateurs dynamiques (+12% HP/lvl, +8% ATK/lvl) et calcul de combat level |
 | Logique de Combat | `CombatController` / `combatProvider` | Phases (Player ⇄ Enemy), sélection cible, intentions ennemies (cycliques ou aléatoires), détection mort, victoire/défaite |
@@ -44,7 +47,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Économie et Reliques | `InventoryController` / `inventoryProvider` | Or (initial 50), 24 reliques (communes rééquilibrées) avec 9 triggers différents, système de charges, bonus boutique |
 | Compétences | `SkillController` / `skillProvider` | 2 compétences par héros, cooldowns, consommation de ressources |
 | Événements | `EventController` / `eventProvider` | 2 événements narratifs à choix multiples, résolution d'actions, roll de rareté relique |
-| Boutique | `ShopController` / `shopProvider` | Achat/purge/clone cartes, soin, expansion, reroll |
+| Boutique | `ShopController` / `shopProvider` | Achat/purge/clone cartes, soin, expansion, reroll, exclusion logique des cartes de rareté unique (v0.1.3) |
 | Récompenses de Victoire | `RewardController` / `rewardProvider` | Or, XP (doublés pour doubleXp), tirage de relique (improvedRelic avec chances dynamiques par Act excluant les communes), et draft de cartes (standard ou boss) |
 
 ### 🃏 Système de Cartes et Deck
@@ -57,6 +60,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Types d'effets | `EffectResolver`, `CardEffect` | damage, heal, armor, draw, gain_mana, apply_status |
 | Exhaust mécanique | `DeckNotifier.playCard()` | Cartes Power et `isExhaust` → pile d'épuisement (sauf si upgrade `enduring`) |
 | Upgrade de Forge | `DeckNotifier.addForgeUpgrade()` | Ajout d'améliorations (stats, statuts, pioche, enduring). Les cartes uniques ont un maximum d'upgrades fixé à 5. |
+| Forge v2 (Refonte) | `ForgeUpgradeDialog` | Dialog.fullscreen responsive, filtrage intelligent selon le type (`skill` sans offensif, `power` utilitaire uniquement), achat de slots additionnels progressifs (v0.2.00) |
 | Suppression de carte | `DeckNotifier.removeCardById()` | Oubli au feu de camp (`RestScreen`) : suppression définitive |
 | Draft post-combat | `DraftScreen` | 3 choix de cartes aléatoires après victoire (les cartes uniques de classe sont exclues) |
 | Draft de départ | `StarterDeckDraftScreen` | Sélection de 5 cartes globales directly depuis la grille complète des 15 cartes globales (suppression du pool de 10 cartes aléatoires) + cartes de classe uniques résolues via compétences |
@@ -131,6 +135,13 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Caching CPU & Opacité Textes | `CardComponent`, `TextPainter` | Caching des layouts de texte complexes et utilisation conditionnelle de `saveLayer` uniquement si `opacity < 1.0` (v0.0.98) |
 | Transition Organique de Pioche | `HerosDraftGame`, `CardComponent` | Spawning des cartes à la pioche `Vector2(40, size.y - 40)` avec glissement, scale et rotation asynchrones vers la main (v0.0.98) |
 | Synchro d'Impact & Anti-Double | `EnemyCard`, `CardAnimator` | Dégâts et effets d'impact (flashs, tremblements, particules) différés jusqu'à la collision physique réelle; suppression des doublons (v0.0.98) |
+| Blocage de Pioche (Input Blocking) | `CardComponent`, `HerosDraftGame` | Protection contre les clics ou glissements prématurés durant la pioche via le drapeau `isEnteringHand` (v0.1.00) |
+| Tooltips de Combat Ciblés | `ui_card.dart`, `card_component.dart` | Affichage sélectif sur focus de carte, auto-masquage au jeu ou changement de phase, et injection formatée des upgrades de forge (v0.1.00) |
+| Rendu d'Étoiles de Forge | `card_text_renderer.dart`, `ui_card.dart` | Représentation visuelle des upgrades sous forme d'étoiles dorées (pleines/vides) proportionnelle à la capacité de la carte (v0.1.00) |
+| Jauge HP Double-Transition | `PlayerHealthBar` | Refactorisation en StatefulWidget animée par TweenAnimationBuilder (500ms, easeOutCubic) avec jauge secondaire rouge/orange lagging sous les dégâts et snap direct au soin (v0.1.00) |
+| Grille de Boutique | `ShopScreen` / `shop_screen.dart` | Disposition en Wrap avec contrainte de taille SizedBox de 150 par carte pour une grille stable (v0.1.3) |
+| Couleur par type de carte | `UiCard` / `ui_card.dart` | Code couleur d'arrière-plan distinct sémantique (rouge=attack, vert=skill, violet=power, gris=status) et accentuation des contours (v0.1.3) |
+| Masquage Anti-Spoil de Relique | `RelicRewardCarouselOverlay`, `RelicCarouselCard` | Affichage en gris neutre et anonyme des cartes avec badges « ??? » pendant le spin. Révélation complète des couleurs et déclencheurs à l'arrêt (v0.1.4) |
 
 
 ### 💀 Z-Sync Death & Stats System (Système de Mort et de Stats Synchronisé)
@@ -170,8 +181,8 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 
 | Métrique | Valeur | Détails |
 |:---|:---|:---|
-| Tests automatisés | **104** (100% VERT) | Tests unitaires, widget-tests et tests d'intégration (dont génération de carte avec anti-répétition et quotas, responsivité du HUD de combat, badges de ciblage, badge de taille de deck, et scaling dynamique des caractéristiques/sprites des ennemis) |
-| Couverture estimée | **~22%** | Logique/controllers, moteur tutoriel, forge, pas d'UI de production |
+| Tests automatisés | **106** (100% VERT) | Tests unitaires, widget-tests et tests d'intégration (dont persistance et coûts progressifs de forge, génération de carte avec anti-répétition, responsivité du HUD de combat, et scaling dynamique des ennemis) |
+| Couverture estimée | **23%** | Logique/controllers, moteur tutoriel, forge, pas d'UI de production |
 | Analyse statique | **0 erreur** | `flutter analyze` sans erreur de compilation |
 | Linter | `flutter_lints` v6.0.0 | Configuration standard, pas de règles custom |
 
@@ -214,13 +225,15 @@ Issues du backlog `docs/possible_upgrades/upgrade_ideas.md` (~95 items, ~60% ré
 - [ ] Restrictions de cartes par classe (ex: Berserker ne peut pas utiliser cartes d'armure)
 - [ ] Coût de merge +1 mana par level de carte
 - [ ] Limite de taille de deck (15 max, extensible via récompenses légendaires)
-- [x] Système XP/level pour gating des récompenses
-- [ ] Statistique de coup critique (dégâts et soins)
+- [x] Système XP/level pour gating des récompenses (v0.0.95)
+- [x] Statistique de coup critique (dégâts et soins) (v0.0.94 / ADR-027)
+- [x] Level Up différé et bloquant sur la carte (v0.1.4)
 - [ ] Intentions ennemies cachées en late game
 - [x] Rééquilibrage des reliques communes (Whetstone, Leather Boots, Lucky Coin, Bandage) pour le pool de départ (v0.0.95)
 - [x] Reliques à charge / compteur (Kunaï, Shuriken, Plume de Scribe, Encensoir) (v0.0.95)
 - [x] Déclencheurs par type de carte joué (onAttackPlayed, onSkillPlayed, onPowerPlayed) (v0.0.95)
 - [ ] Scaling progressif d'armure ennemi par acte
+- [x] Exclusion des cartes uniques de classe du pool de la boutique (v0.1.3)
 
 ### Contenu
 - [x] Tutoriel / système "How-to-play"
@@ -238,6 +251,7 @@ Issues du backlog `docs/possible_upgrades/upgrade_ideas.md` (~95 items, ~60% ré
 
 ### Carte & Navigation
 - [x] Contraintes de génération (pas 3 nœuds identiques consécutifs)
+- [x] Génération dynamique de l'étage d'élite central (chokepoint) (v0.1.4)
 - [ ] Randomisation du deck de départ avec pools par classe
 - [x] Divergence de chemins (routes multiples vers boss)
 
@@ -245,6 +259,9 @@ Issues du backlog `docs/possible_upgrades/upgrade_ideas.md` (~95 items, ~60% ré
 - [ ] Redesign des snackbar/notifications
 - [ ] Redesign descriptions de cartes (icônes-only, descriptions dans tooltips)
 - [x] Rework forge du feu de camp (choix de forge limités)
+- [x] Rendu de la boutique en grille Wrap/SizedBox pour éviter les overflows (v0.1.3)
+- [x] Code couleur d'arrière-plan par type de carte (Attaque, Compétence, Pouvoir, Statut) dans UiCard (v0.1.3)
+- [x] Masquage anti-spoil / protection de rareté dans le carrousel de reliques (v0.1.4)
 - [ ] Synergies reliques avec cartes début/fin de tour
 
 ### Système
@@ -329,3 +346,25 @@ Issus de `docs/analysis_reports/6_analyse_game_balance.md` (documentés, non cor
 | Backlog d'upgrades | `docs/possible_upgrades/upgrade_ideas.md` | 95 items, ~60% réalisés |
 | Phases implémentées | `docs/implementation_plans/done/` | 22 fichiers de phases complétées |
 | Leçons apprises | `docs/lessons/` | `flame_riverpod_sync.md`, `state_immutability.md` |
+
+---
+
+## 7. Historique des Releases (Release History)
+
+| Version | Date | Titre | Description des changements clés |
+|:---|:---|:---|:---|
+| **v0.2.00** | 2026-06-11 | Forge v2 : Anti-Exploit, Filtrage Typé, Achat Progressif | Écran forge responsive plein écran, persistance session anti-exploit, fentes d'upgrades progressives, filtrage typé. |
+| **v0.1.4** | 2026-06-11 | Map, Draft & Progression | Level Up différé sur la carte (MapScreen), protection anti-spoil du carrousel de reliques, chokepoint élite central calculé dynamiquement. |
+| **v0.1.3** | 2026-06-11 | Harmonie Visuelle & Améliorations de Boutique | Exclusion des cartes uniques de la boutique, arrière-plans colorés par type de carte dans UiCard, grille Wrap/SizedBox pour la boutique. |
+| **v0.1.00** | 2026-06-10 | Clarté Visuelle & Fluidité de Combat | Input blocking pendant la pioche, tooltips focus-only, étoiles d'upgrades, jauge HP dual-bar animée. |
+| **v0.0.99** | 2026-06-07 | Fondations du Design | Uniformisation typographique, corrections d'overflows, palette de couleurs centralisée. |
+| **v0.0.98** | 2026-06-07 | Fluidité & Impacts | Animations de pioche organiques, synchro précise des impacts en combat, corrections d'animation. |
+| **v0.0.97** | 2026-06-07 | Modernisation Technique | Migration Notifier/NotifierProvider, découplage des contrôleurs, immuabilité de CardInstance. |
+| **v0.0.95** | 2026-06-05 | L'Éveil des Reliques | 10 nouvelles reliques, triggers par type de carte, charges persistantes, autel d'échange de reliques. |
+| **v0.0.94** | 2026-06-04 | Or et Butin des Boss | Or post-combat, récompenses de boss fixes selon position, écran de draft de boss. |
+| **v0.0.93** | 2026-06-04 | La Grande Refonte | Chemins de run multiples divergés, quotas équilibrés, anti-répétition de chemins. |
+| **v0.0.4** | 2026-05-15 | Système de Fusion & Équilibrage | Fusion de cartes v1, progression classes, reliques légendaires, événements. |
+| **v0.0.3** | 2026-04-20 | Carte & Exploration | Carte procédurale simple, boutique v1, repos, dictionnaire. |
+| **v0.0.2** | 2026-03-10 | Combat & Deck | MVP combat, pioche, main, défausse, altérations élémentaires de base. |
+| **v0.0.1** | 2026-02-01 | MVP Initial | Lancement avec 3 classes de base, cartes de base attaque et défense. |
+

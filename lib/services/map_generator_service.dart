@@ -12,6 +12,7 @@ class MapGeneratorService {
   static List<MapNode> generateMap({int floors = 10, int maxWidth = 5, int act = 1}) {
     List<MapNode> allNodes = [];
     List<List<MapNode>> nodesByFloor = [];
+    final middleFloor = floors ~/ 2;
 
     // 1. Create nodes for each floor
     for (int y = 0; y < floors; y++) {
@@ -19,7 +20,7 @@ class MapGeneratorService {
       int rowWidth = 2 + _random.nextInt(maxWidth - 1); // 2 to maxWidth nodes
 
       // Special case: Chokepoint at middle floor
-      if (y == 5) {
+      if (y == middleFloor) {
         rowWidth = 1;
       }
 
@@ -35,7 +36,7 @@ class MapGeneratorService {
         BossRewardType? bossRewardType;
 
         // Force structure rules
-        if (y == 5) {
+        if (y == middleFloor) {
           // Chokepoint is always Elite
           type = MapNodeType.elite;
         } else if (y == floors - 2) {
@@ -164,7 +165,8 @@ class MapGeneratorService {
             final chain = _getChainOfThree(node, allNodes, node.type);
             for (var chainNode in chain) {
               final y = int.parse(chainNode.id.split('_')[1]);
-              if (y != 0 && y != 5 && y != floors - 2 && y != floors - 1) {
+              final middleFloor = floors ~/ 2;
+              if (y != 0 && y != middleFloor && y != floors - 2 && y != floors - 1) {
                 final choices = [MapNodeType.combat, MapNodeType.shop, MapNodeType.event];
                 chainNode.type = choices[_random.nextInt(choices.length)];
                 changedAny = true;
@@ -210,7 +212,8 @@ class MapGeneratorService {
         // First try to find a candidate that does not create a 3-consecutive path
         for (var node in allNodes) {
           final y = int.parse(node.id.split('_')[1]);
-          if (y == 0 || y == 5 || y == floors - 2 || y == floors - 1) continue;
+          final middleFloor = floors ~/ 2;
+          if (y == 0 || y == middleFloor || y == floors - 2 || y == floors - 1) continue;
 
           final currentType = node.type;
           final currentMin = GameConstants.nodeQuotas[currentType]?.min ?? 0;
@@ -241,7 +244,8 @@ class MapGeneratorService {
         if (candidate == null) {
           for (var node in allNodes) {
             final y = int.parse(node.id.split('_')[1]);
-            if (y == 0 || y == 5 || y == floors - 2 || y == floors - 1) continue;
+            final middleFloor = floors ~/ 2;
+            if (y == 0 || y == middleFloor || y == floors - 2 || y == floors - 1) continue;
 
             final currentType = node.type;
             final currentMin = GameConstants.nodeQuotas[currentType]?.min ?? 0;
@@ -287,7 +291,8 @@ class MapGeneratorService {
           // First try to find a candidate that does not create a 3-consecutive path
           for (var node in allNodes) {
             final y = int.parse(node.id.split('_')[1]);
-            if (y == 0 || y == 5 || y == floors - 2 || y == floors - 1) continue;
+            final middleFloor = floors ~/ 2;
+            if (y == 0 || y == middleFloor || y == floors - 2 || y == floors - 1) continue;
             if (node.type == excessiveType) {
               final originalType = node.type;
               node.type = targetType;
@@ -315,7 +320,8 @@ class MapGeneratorService {
           if (candidate == null) {
             for (var node in allNodes) {
               final y = int.parse(node.id.split('_')[1]);
-              if (y == 0 || y == 5 || y == floors - 2 || y == floors - 1) continue;
+              final middleFloor = floors ~/ 2;
+              if (y == 0 || y == middleFloor || y == floors - 2 || y == floors - 1) continue;
               if (node.type == excessiveType) {
                 candidate = node;
                 break;

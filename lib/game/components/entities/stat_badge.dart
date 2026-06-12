@@ -466,7 +466,7 @@ class StatBadge extends PositionComponent
   @override
   void onLongTapDown(TapDownEvent event) {
     final tooltipData = _getTooltipData();
-    game.onShowTooltip(tooltipData.$1, tooltipData.$2);
+    game.onShowTooltip(tooltipData.$1, tooltipData.$2, null);
   }
 
   @override
