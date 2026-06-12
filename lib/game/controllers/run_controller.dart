@@ -22,6 +22,7 @@ class RunState {
   final PassiveData? activePassive; // Passif dynamique du héros
   final List<String> forgeSlots;
   final String? forgeTargetCardId;
+  final Map<String, List<String>> forgeTargetSessions;
   final int bonusForgeSlots;
   final int pendingDrafts; // Nombre de drafts de montée de niveau en attente
 
@@ -50,6 +51,7 @@ class RunState {
     this.activePassive,
     this.forgeSlots = const [],
     this.forgeTargetCardId,
+    this.forgeTargetSessions = const {},
     this.bonusForgeSlots = 0,
     this.pendingDrafts = 0,
   });
@@ -67,6 +69,8 @@ class RunState {
     List<String>? forgeSlots,
     String? forgeTargetCardId,
     bool resetForgeTargetCardId = false,
+    Map<String, List<String>>? forgeTargetSessions,
+    bool resetForgeTargetSessions = false,
     int? bonusForgeSlots,
     int? pendingDrafts,
   }) {
@@ -85,6 +89,9 @@ class RunState {
       forgeTargetCardId: resetForgeTargetCardId
           ? null
           : (forgeTargetCardId ?? this.forgeTargetCardId),
+      forgeTargetSessions: resetForgeTargetSessions
+          ? const {}
+          : (forgeTargetSessions ?? this.forgeTargetSessions),
       bonusForgeSlots: bonusForgeSlots ?? this.bonusForgeSlots,
       pendingDrafts: pendingDrafts ?? this.pendingDrafts,
     );
@@ -669,7 +676,10 @@ class RunController extends Notifier<RunState> {
   }
 
   void setForgeSession(String cardId, List<String> slots) {
+    final updated = Map<String, List<String>>.from(state.forgeTargetSessions);
+    updated[cardId] = slots;
     state = state.copyWith(
+      forgeTargetSessions: updated,
       forgeTargetCardId: cardId,
       forgeSlots: slots,
     );
@@ -679,6 +689,7 @@ class RunController extends Notifier<RunState> {
     state = state.copyWith(
       resetForgeTargetCardId: true,
       forgeSlots: const [],
+      resetForgeTargetSessions: true,
     );
   }
 

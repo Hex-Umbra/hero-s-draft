@@ -49,10 +49,11 @@ class _ForgeUpgradeDialogState extends ConsumerState<ForgeUpgradeDialog> {
         widget.card.data.baseMaxForgeUpgrades + rarityIndex;
 
     final runState = ref.read(runProvider);
-    if (runState.forgeTargetCardId == widget.card.uniqueId) {
+    if (runState.forgeTargetSessions.containsKey(widget.card.uniqueId)) {
       _slots = [];
-      for (int i = 0; i < runState.forgeSlots.length; i++) {
-        final s = runState.forgeSlots[i];
+      final savedSlots = runState.forgeTargetSessions[widget.card.uniqueId]!;
+      for (int i = 0; i < savedSlots.length; i++) {
+        final s = savedSlots[i];
         final parts = s.split(':');
         final id = parts[0];
         final tier = parts.length > 1 ? parts[1] : '1';

@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
-import 'package:roguelike_card_game/models/data/model_extensions.dart';
 import 'package:roguelike_card_game/ui/theme/app_spacing.dart';
 import 'package:roguelike_card_game/ui/widgets/game_button.dart';
 import '../../game/controllers/run_controller.dart';
 import '../../game/controllers/deck_controller.dart';
 import '../../models/card_instance.dart';
-import '../widgets/ui_card.dart';
 import '../widgets/notification_overlay.dart';
-import '../widgets/forge_upgrade_dialog.dart';
+import 'rest_card_selection_screen.dart';
 
 class RestScreen extends ConsumerStatefulWidget {
   const RestScreen({super.key});
@@ -42,48 +40,31 @@ class _RestScreenState extends ConsumerState<RestScreen> {
   void _upgradeCard() async {
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).languageCode;
-    final selectedCard = await _showCardSelector(
-      title: l10n.restCampForgeTitle,
-      subtitle: l10n.restCampForgeSubtitle,
+
+    final result = await Navigator.of(context).push<Map<String, dynamic>>(
+      MaterialPageRoute(
+        builder: (context) => RestCardSelectionScreen(
+          title: l10n.restCampForgeTitle,
+          subtitle: l10n.restCampForgeSubtitle,
+          isForge: true,
+        ),
+      ),
     );
 
-    if (selectedCard != null) {
-      final rarityIndex = selectedCard.rarity.index;
-      final totalMaxForgeUpgrades =
-          selectedCard.data.baseMaxForgeUpgrades + rarityIndex;
-      if (selectedCard.forgeUpgrades.length >= totalMaxForgeUpgrades) {
-        if (mounted) {
-          context.showNotification(
-            locale == 'fr'
-                ? "Cette carte a atteint sa capacité maximale d'améliorations de forge !"
-                : "This card has reached its maximum forge upgrades capacity!",
-            type: NotificationType.error,
-          );
-        }
-        return;
-      }
+    if (result != null) {
+      final card = result['card'] as CardInstance;
+      setState(() {
+        _actionTaken = true;
+      });
 
-      if (!mounted) return;
-      final selectedUpgrade = await showDialog<String>(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => ForgeUpgradeDialog(card: selectedCard),
-      );
-
-      if (selectedUpgrade != null) {
-        setState(() {
-          _actionTaken = true;
-        });
-
-        if (mounted) {
-          final cardName = selectedCard.data.getName(locale);
-          context.showNotification(
-            locale == 'fr'
-                ? "$cardName a reçu l'amélioration !"
-                : "$cardName was upgraded!",
-            type: NotificationType.warning,
-          );
-        }
+      if (mounted) {
+        final cardName = card.data.getName(locale);
+        context.showNotification(
+          locale == 'fr'
+              ? "$cardName a reçu l'amélioration !"
+              : "$cardName was upgraded!",
+          type: NotificationType.warning,
+        );
       }
     }
   }
@@ -91,9 +72,14 @@ class _RestScreenState extends ConsumerState<RestScreen> {
   void _removeCard() async {
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).languageCode;
-    final selectedCard = await _showCardSelector(
-      title: l10n.restCampRemoveTitle,
-      subtitle: l10n.restCampRemoveSubtitle,
+    final selectedCard = await Navigator.of(context).push<CardInstance>(
+      MaterialPageRoute(
+        builder: (context) => RestCardSelectionScreen(
+          title: l10n.restCampRemoveTitle,
+          subtitle: l10n.restCampRemoveSubtitle,
+          isForge: false,
+        ),
+      ),
     );
 
     if (selectedCard != null) {
@@ -111,78 +97,6 @@ class _RestScreenState extends ConsumerState<RestScreen> {
         );
       }
     }
-  }
-
-  Future<CardInstance?> _showCardSelector({
-    required String title,
-    required String subtitle,
-  }) {
-    final locale = Localizations.localeOf(context).languageCode;
-    final l10n = AppLocalizations.of(context)!;
-    return showModalBottomSheet<CardInstance>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: const Color(0xFF1E1E2C),
-      builder: (context) {
-        return Container(
-          height: MediaQuery.of(context).size.height * 0.8,
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  color: Colors.amber,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              AppSpacing.heightSm,
-              Text(
-                subtitle,
-                style: const TextStyle(color: Colors.white70, fontSize: 14),
-              ),
-              const Divider(color: Colors.white24, height: AppSpacing.xl),
-              Expanded(
-                child: Consumer(
-                  builder: (context, ref, child) {
-                    final deck = ref.watch(deckProvider).masterDeck;
-                    return GridView.builder(
-                      gridDelegate:
-                          const SliverGridDelegateWithMaxCrossAxisExtent(
-                        maxCrossAxisExtent: 180,
-                        childAspectRatio: 0.6,
-                        crossAxisSpacing: AppSpacing.sm,
-                        mainAxisSpacing: AppSpacing.sm,
-                      ),
-                      itemCount: deck.length,
-                      itemBuilder: (context, index) {
-                        final card = deck[index];
-                        return GestureDetector(
-                          onTap: () => Navigator.of(context).pop(card),
-                          child: UiCard(
-                            title: card.data.getName(locale),
-                            description: card.data.getDescription(locale),
-                            cost: card.data.cost,
-                            effects: card.data.effects,
-                            type: card.data.type,
-                            targetType: card.data.target,
-                            isExhaust: card.data.isExhaust,
-                            rarity: card.rarity.getLabel(l10n),
-                            forgeUpgrades: card.forgeUpgrades,
-                            rarityMultiplier: card.rarityMultiplier,
-                          ),
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
   }
 
   void _leave() {
