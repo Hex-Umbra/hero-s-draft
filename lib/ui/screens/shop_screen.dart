@@ -164,6 +164,9 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                     type: card.data.type,
                     targetType: card.data.target,
                     isExhaust: card.data.isExhaust,
+                    baseMaxForgeUpgrades: card.data.baseMaxForgeUpgrades,
+                    forgeUpgrades: card.forgeUpgrades,
+                    rarityMultiplier: card.rarityMultiplier,
                     onTap: () {
                       final shopController = ref.read(shopProvider.notifier);
 
@@ -639,19 +642,22 @@ class _ShopCardItemState extends State<_ShopCardItem> {
                   final locale = Localizations.localeOf(context).languageCode;
                   return SizedBox(
                     width: 150,
-                    height: 220,
-                    child: UiCard(
-                      title: widget.card.getName(locale),
-                      description: widget.card.getDescription(locale),
-                      cost: widget.card.cost,
-                      effects: widget.card.effects,
-                      level: 1,
-                      rarity: widget.rarityLabel,
-                      target: widget.targetLabel,
-                      type: widget.card.type,
-                      targetType: widget.card.target,
-                      isExhaust: widget.card.isExhaust,
-                      onTap: widget.onPressed,
+                    child: AspectRatio(
+                      aspectRatio: 70 / 110,
+                      child: UiCard(
+                        title: widget.card.getName(locale),
+                        description: widget.card.getDescription(locale),
+                        cost: widget.card.cost,
+                        effects: widget.card.effects,
+                        level: 1,
+                        rarity: widget.rarityLabel,
+                        target: widget.targetLabel,
+                        type: widget.card.type,
+                        targetType: widget.card.target,
+                        isExhaust: widget.card.isExhaust,
+                        baseMaxForgeUpgrades: widget.card.baseMaxForgeUpgrades,
+                        onTap: widget.onPressed,
+                      ),
                     ),
                   );
                 },

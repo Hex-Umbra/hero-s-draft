@@ -159,7 +159,7 @@ class RestCardSelectionScreen extends ConsumerWidget {
                     : GridView.builder(
                         gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
                           maxCrossAxisExtent: isMobile ? 140 : 180,
-                          childAspectRatio: 0.6,
+                          childAspectRatio: 70 / 110,
                           crossAxisSpacing: isMobile ? 8 : 16,
                           mainAxisSpacing: isMobile ? 8 : 16,
                         ),
@@ -178,6 +178,7 @@ class RestCardSelectionScreen extends ConsumerWidget {
                               isExhaust: card.data.isExhaust,
                               rarity: card.rarity.getLabel(l10n),
                               forgeUpgrades: card.forgeUpgrades,
+                              baseMaxForgeUpgrades: card.data.baseMaxForgeUpgrades,
                               rarityMultiplier: card.rarityMultiplier,
                             ),
                           );

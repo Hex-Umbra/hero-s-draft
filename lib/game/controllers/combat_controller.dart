@@ -311,9 +311,6 @@ class CombatController extends Notifier<CombatState> {
       case IntentType.attack:
         int dmg = intent.value;
         final hasFreeze = enemy.stats.statuses.any((s) => s.id == 'freeze');
-        if (hasFreeze) {
-          dmg = (intent.value * 0.5).round();
-        }
 
         // Apply vulnerable multiplier if hero has vulnerable status
         if (runController.currentState.heroStats.statuses.any((s) => s.id == 'vulnerable')) {

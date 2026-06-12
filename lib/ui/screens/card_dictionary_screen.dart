@@ -103,7 +103,7 @@ class CardDictionaryScreen extends ConsumerWidget {
                 gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                   maxCrossAxisExtent:
                       200, // Doublé pour un affichage plus clair
-                  childAspectRatio: 0.7,
+                  childAspectRatio: 70 / 110,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
                 ),
@@ -120,6 +120,7 @@ class CardDictionaryScreen extends ConsumerWidget {
                     targetType: card.target,
                     isExhaust: card.isExhaust,
                     effects: card.effects,
+                    baseMaxForgeUpgrades: card.baseMaxForgeUpgrades,
                   );
                 },
               ),

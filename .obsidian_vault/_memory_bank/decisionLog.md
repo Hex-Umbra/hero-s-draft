@@ -1437,7 +1437,7 @@ La version 0.1.3 a introduit des améliorations axées sur l'ergonomie, la clart
    - Garantir que lors de l'initialisation initiale (`initializeShop`), du renouvellement (`rerollCards`), ou de l'expansion de boutique (`expandShop`), aucune carte de classe unique ne soit tirée au sort.
 2. **Coloration d'arrière-plan par type dans `UiCard`** :
    - Ajouter la méthode helper `_getTypeColor()` renvoyant les couleurs d'accent de type : `Colors.redAccent` (Attaque), `Colors.blueAccent` (Compétence), `Colors.amber` (Pouvoir), `Colors.blueGrey` (Statut).
-   - Ajouter la méthode helper `_getBackgroundColor()` renvoyant les couleurs de fond associées : `Color(0xFF4A1D1D)` (Attaque), `Color(0xFF173D29)` (Compétence), `Color(0xFF2A1C3B)` (Pouvoir), `Color(0xFF2D2D2D)` (Statut), et `Color(0xFF2A2A3D)` par défaut.
+   - Ajouter la méthode helper `_getBackgroundColor()` renvoyant les couleurs de fond associées : `Color(0xFF4A1D1D)` (Attaque), `Color(0xFF152A4A)` (Compétence), `Color(0xFF453215)` (Pouvoir), `Color(0xFF2D2D2D)` (Statut), et `Color(0xFF2A2A3D)` par défaut.
    - Rendre le fond du widget de carte dynamique en passant un dégradé `LinearGradient` basé sur le `bgColor` et `bgColor.withAlpha(200)` au conteneur principal. Le contour (`border`) prend la couleur d'accent du type.
 3. **Mise en page stable de la boutique (Wrap Grid)** :
    - Remplacer les dispositions rigides ou floues par un conteneur `Wrap` avec un espacement défini (`spacing: 12`, `runSpacing: 20`) dans `ShopScreen` pour présenter le catalogue des cartes en vente.
@@ -1542,6 +1542,176 @@ Calculer le goulot d'étranglement central de manière dynamique :
 
 ### Conséquences
 - ✅ **Flexibilité Dimensionnelle** : Le moteur supporte désormais n'importe quelle taille de carte sans planter ni générer des topologies orphelines, tout en garantissant un affrontement Élite à mi-chemin.
+
+---
+
+## 🃏 ADR-044 : Refonte Visuelle et Structurelle des Cartes (Unified Glassmorphic Card UI)
+
+### Statut
+✅ Accepté & Implémenté (v0.1.5)
+
+### Contexte
+L'interface visuelle d'un jeu de cartes comme Hero's Draft est cruciale pour le game feel et la clarté tactique. La version précédente souffrait de plusieurs limitations :
+1. Les cartes possédaient un motif en filigrane (watermark) en arrière-plan et des badges de ciblage textuels encombrants (Single target, All enemies, Self), ce qui surchargeait visuellement l'interface et limitait la lisibilité des descriptions.
+2. Les améliorations de forge étaient représentées par des étoiles dorées basiques, ne donnant aucune indication sur la nature de l'upgrade appliqué.
+3. Le coût en mana était affiché sous forme de cristaux ou de gemmes positionnés de manière incohérente entre le moteur Flame et les widgets de l'interface Flutter (UiCard).
+4. La taille des cartes était trop grande, provoquant des encombrements d'écran sur les petites résolutions.
+5. Les labels textuels indiquant explicitement la rareté de la carte (ex: "COMMUNE", "LÉGENDAIRE") encombraient la face avant de la carte, alors que la couleur de la carte devrait suffire à communiquer cette information de manière immédiate et intuitive.
+
+### Décision
+Mettre en œuvre une refonte visuelle majeure et unifiée pour le rendu des cartes dans les couches Flutter (`UiCard`) et Flame (`CardComponent` et `CardTextRenderer`) :
+1. **Style Glassmorphic Unifié** :
+   - Application d'un arrière-plan semi-transparent avec dégradé vertical (opacité `0.6` en haut à `0.2` en bas) et floutage d'arrière-plan de 10px (`BackdropFilter` et `ImageFilter.blur`).
+   - Lissage des bordures avec une épaisseur fine (de `1.5` à `2.5` si sélectionné) et une opacité réduite (`0.5` de la couleur du type de carte) pour un style moderne.
+   - Suppression totale du filigrane (watermark) arrière-plan.
+2. **Médaillon de Coût Mana Standardisé** :
+   - Affichage du coût dans un cercle de rayon 12px positionné dans le coin supérieur gauche, de couleur sombre (`0xFF0D1B2A`), orné d'un liseré et d'un halo de lueur cyan. Standardisé à l'identique entre le moteur Flame et les widgets Flutter.
+3. **Fentes de Runes (Rune Sockets) avec Retour à la Ligne** :
+   - Remplacement des étoiles dorées par des emplacements circulaires représentant la capacité de forge (`baseMaxForgeUpgrades + rarityIndex`).
+   - Chaque emplacement vide est un cercle blanc translucide (`0.05` d'opacité).
+   - Les upgrades appliqués affichent l'émoji/rune correspondant à l'amélioration (⚔️ pour `sharp`, 🛡️ pour `hardened`, 🔥 pour `burning`, etc.), rendant les cartes auto-documentées visuellement.
+   - **Retour à la ligne automatique (Multi-row Wrapping)** : Pour éviter que les fentes ne dépassent de la largeur de la carte (notamment pour les cartes de haute rareté et les cartes uniques qui peuvent avoir jusqu'à 5+ upgrades), les sockets sont disposés sur plusieurs lignes avec un maximum de 5 fentes par rangée.
+     - **Couche UI (Flutter `UiCard`)** : Utilisation d'un widget `Wrap` à espacement défini (`spacing: 2.0`, `runSpacing: 2.0`) contraint à l'intérieur d'une `SizedBox` de largeur fixe `45.0` pixels, forçant un wrap automatique au-delà de 5 fentes (`5 * 7px + 4 * 2px = 43px`).
+     - **Couche Rendu (Flame `CardTextRenderer`)** : Calcul manuel de positionnement sur Canvas à l'aide d'une boucle imbriquée (`numRows = (totalSlots + 4) ~/ 5` et `maxSlotsPerRow = 5`) pour centrer chaque ligne horizontalement et les empiler verticalement en décalant l'ordonnée Y de `16` pixels (`socketDiameter 14.0 + spacing 2.0`) par rangée.
+4. **Réduction d'Échelle de 25%** :
+   - Dimensions réduites à `140 × 196` (ratio `70/110`) dans `GameConstants` pour offrir une disposition plus compacte.
+5. **Suppression des Badges de Ciblage & Doublement d'Icônes** :
+   - Retrait des badges textuels de ciblage (Single target, All enemies, Self) pour alléger l'UI.
+   - **Remplacés par des indicateurs double-icône (double-icon indicators)** : Pour les cartes ciblant tous les ennemis, le doublement d'icône d'effet s'applique uniquement aux effets offensifs ou destinés à l'ennemi (ex: double icône d'épée ⚔️⚔️ pour les dégâts AoE, ou doublement d'icônes de débuffs). En revanche, les effets ciblant le joueur/héros (tels que le gain d'armure, de soin, de mana, la pioche, ou les buffs de statut comme `strength`, `strength_regen` et `armor_regen`) restent représentés par une icône simple, puisqu'ils ne ciblent pas individuellement chaque ennemi.
+6. **Suppression du Label de Rareté & Identification par Code Couleur et Halo (Color-Coded Rarity & Glow)** :
+   - Retrait complet de l'affichage textuel de la rareté (ex: "Commune", "Rare", "Légendaire") sur la face avant de la carte.
+   - La rareté est communiquée de façon purement visuelle via la couleur de sa bordure fine (`rarityColor.withValues(alpha: 0.5)`) et par un halo de surbrillance/glow radial coloré (`rarityColor.withValues(alpha: 0.4)` avec un rayon de flou de 15px et de diffusion de 4px) lorsque la carte est activement sélectionnée (`isSelected == true`).
+   - Encadrement de l'infobulle (tooltip) de combat par une bordure reprenant la couleur de la rareté de la carte avec une épaisseur de `1.5` pour lier sémantiquement l'infobulle à la carte.
+7. **Couleurs d'Arrière-Plan Typées pour le Rendu Combat (Flame)** :
+   - Les cartes de combat dans l'arène de jeu (Flame `CardComponent`) ont été mises à jour pour utiliser des couleurs d'arrière-plan thématiques spécifiques à leur type (type-specific background colors), calquant le style des cartes de menu (`UiCard`) : rouge sombre (`0xFF4A1D1D`) pour les attaques, bleu marine profond (`0xFF152A4A`) pour les compétences, bronze sombre (`0xFF453215`) pour les pouvoirs et gris sombre (`0xFF2D2D2D`) pour les statuts.
+8. **Mise à Jour des Tests** :
+   - Réécriture des tests d'interface dans `hud_and_targeting_badge_test.dart` pour s'assurer que les anciens badges textuels n'apparaissent plus, valider le doublement des icônes d'action pour la portée multicible sur les effets offensifs, et confirmer le maintien d'une icône simple pour les effets bénéfiques au joueur.
+
+### Preuves dans le code
+- `lib/ui/widgets/ui_card.dart` : Rendu du gradient glassmorphic, médaillon flottant en haut à gauche, `runeSocketsRow` remplaçant les étoiles, suppression de `_buildTargetIcon` et implémentation du doublement filtré de `visuals.icon` si `isAllEnemies == true` et que `!isPlayerEffect` est vrai. Utilisation de `rarityColor` pour les bordures, le glow de sélection, et la bordure du tooltip, sans rendu textuel du paramètre `rarity`.
+- `lib/game/components/card_component.dart` : Rendu sur canvas Flame de la bordure fine (`rarityColor.withValues(alpha: 0.5)`) et du halo de sélection (`glowPaint..color = rarityColor.withValues(alpha: 0.4)..maskFilter = MaskFilter.blur(BlurStyle.outer, 8)`), sans appel de texte de rareté dans `CardTextRenderer`, et implémentation de `getBackgroundColor()` associant chaque type de carte à son code couleur sombre.
+- `lib/game/components/widgets/card_text_renderer.dart` : Rendu vectoriel sur canvas Flame reproduisant fidèlement le médaillon mana (cercle 12px, cyan border), la ligne de rune sockets sur plusieurs rangées avec retour à la ligne (wrapping) par rangées de 5 (décalage vertical de 16 pixels), et le doublement sélectif des icônes de statut/dégâts (filtré par `!isPlayerEffect`).
+- `test/widget/hud_and_targeting_badge_test.dart` : Assertions sur `findsNothing` pour les badges textuels, `findsNWidgets(2)` pour les effets offensifs AoE et `findsOneWidget` pour les effets appliqués au joueur sur la même carte.
+
+### Conséquences
+- ✅ **Expérience Esthétique Premium** : Le design glassmorphic et le médaillon cyan procurent un game feel plus propre et professionnel.
+- ✅ **Lisibilité Accrue & Précision Tactique** : La suppression du filigrane, des badges textuels de ciblage et des labels de rareté textuels réduit considérablement le bruit visuel et simplifie l'assimilation des informations de la carte.
+- ✅ **Identification Sémantique Instantanée** : L'utilisation de codes couleur de rareté pour la bordure, le halo de sélection et l'infobulle permet d'identifier immédiatement la valeur d'une carte sans avoir recours à du texte.
+- ✅ **Auto-Documentation Graphique & Zéro Débordement (Wrapping)** : L'affichage des runes d'améliorations (émojis) avec wrapping automatique par rangées de 5 (rows of 5) permet d'identifier les upgrades appliqués de manière ordonnée sans déborder des contours de la carte, même pour les cartes uniques hautement améliorées.
+- ✅ **Grid Layout Stable & Uniformité Totale** : La réduction d'échelle élimine le risque d'overflow ou d'encombrement graphique sur petit écran, tandis que l'application des couleurs de fond typées sur les cartes Flame en combat garantit l'alignement graphique avec les menus Flutter.
+
+---
+
+## 🛠️ ADR-045 : Décomposition et Découplage de la God Class `UiCard` (UiCard Decomposition & Decoupling)
+
+### Statut
+✅ Accepté & Implémenté (v0.2.01)
+
+### Contexte
+Le widget `UiCard` (`lib/ui/widgets/ui_card.dart`) est central pour l'affichage de toutes les cartes à jouer dans l'interface Flutter (menus, boutique, draft, dictionnaire). En raison des refontes esthétiques successives (v0.1.5), ce widget a accumulé de nombreuses responsabilités :
+1. Analyse et parsing de la cible de la carte (`_resolveTarget`).
+2. Résolution dynamique du type d'élément et des dégâts (`_determineDamageType`).
+3. Mappage des icônes et couleurs d'effets (`_getEffectVisuals`).
+4. Formatage et mise en page complexe de la description abrégée sous forme de badges (`_buildCompactDescription`).
+5. Construction verbeuse de la description textuelle multilingue pour les infobulles / tooltips (`_buildDetailedDescription`).
+6. Rendu visuel direct des fentes de runes, du médaillon de mana, et du type de carte.
+7. Rendu et gestion d'animation personnalisée de la bordure polychromatique brillante au survol (`PolychromaticBorder` et son painter).
+
+Cette concentration de logique et d'affichage au sein d'un seul fichier de plus de 1130 lignes violait le principe de responsabilité unique (SRP), créait une forte dette technique ("god component"), et rendait le composant difficile à maintenir et à faire évoluer.
+
+### Décision
+Décomposer et découpler `UiCard` en extrayant ses sous-composants visuels et ses fonctions logiques pures dans un sous-dossier dédié `lib/ui/widgets/ui_card/` :
+1. **Création de `ui_card_helpers.dart`** : Centralisation de l'ensemble des fonctions pures et des mappages de données (résolution de cible, détection d'élément, couleur des types, couleurs de rareté, emojis de runes, et construction du texte détaillé pour le tooltip) afin d'isoler la logique du cycle de vie des widgets.
+2. **Création de `polychromatic_border.dart`** : Encapsulation de la bordure animée (`PolychromaticBorder` et `_PolychromaticBorderPainter`), retirant la gestion du ticker de la classe principale.
+3. **Création de `card_mana_medallion.dart`** : Extraction de l'indicateur circulaire de coût sous forme de widget autonome layout-agnostique.
+4. **Création de `card_rune_sockets.dart`** : Extraction du widget de gestion et d'agencement multi-lignes des emplacements d'upgrades.
+5. **Création de `card_compact_description.dart`** : Extraction du layout d'affichage abrégé des effets et des modificateurs de forge sous forme de widget dédié.
+6. **Simplification de `ui_card.dart`** : Le widget principal sert de couche d'assemblage et de composition ("facade") pour ces sous-widgets. Son code est réduit de plus de 80% (de 1136 à ~175 lignes).
+7. **Préservation de l'Interface Publique** : Conservation de l'exactitude du constructeur de `UiCard` et de ses paramètres originaux pour éviter toute modification des fichiers externes (boutique, draft, dictionnaire) qui l'instancient.
+
+### Preuves dans le code
+- `lib/ui/widgets/ui_card.dart` : Importe et compose `PolychromaticBorder`, `CardManaMedallion`, `CardRuneSockets` et `CardCompactDescription`. Le fichier ne contient plus aucune méthode de rendu privée ni calcul d'icône.
+- `lib/ui/widgets/ui_card/` : Dossier contenant les 5 nouveaux fichiers extraits et découplés de manière modulaire.
+- `test/widget/hud_and_targeting_badge_test.dart` et `test/widget/shop_screen_test.dart` : Passent sans modification des tests unitaires ni des widgets, prouvant le respect total de l'interface d'instanciation de `UiCard`.
+
+### Conséquences
+- ✅ **Respect du Single Responsibility Principle (SRP)** : Chaque sous-composant gère sa propre structure et logique, réduisant la complexité cognitive.
+- ✅ **Facilité de Maintenance** : Le code de `UiCard` est réduit à ~175 lignes claires et lisibles. Toute modification future de l'affichage du coût, des sockets ou de la description se fera dans un fichier dédié.
+- ✅ **Testabilité Accrue** : Les fonctions d'aide de `ui_card_helpers.dart` sont pures et isolées, facilitant leur test unitaire direct.
+- ✅ **Zéro Régression** : La compatibilité de la signature du constructeur a garanti une intégration sans impact sur les 107 tests existants de l'application.
+
+---
+
+## 🛠️ ADR-046 : Effet de Bordure Foil Progressif pour les Cartes Uniques (Progressive Unique Card Border Foil Effect)
+
+### Statut
+✅ Accepté & Implémenté (v0.2.02)
+
+### Contexte
+Les cartes de classe uniques dans *Hero's Draft* représentent des éléments précieux du deck du joueur. Pour valoriser visuellement l'accumulation d'améliorations de forge appliquées à ces cartes de classe uniques, nous souhaitions introduire un effet visuel dynamique (foil / polychromatique) qui s'enrichit et progresse au fur et à mesure que la carte reçoit des runes de forge.
+
+### Décision
+Modifier le composant de bordure polychromatique (`PolychromaticBorder`) et le widget `UiCard` pour injecter dynamiquement le nombre d'améliorations appliquées à la carte (`forgeUpgrades.length`) et adapter la palette de couleurs de l'effet de balayage arc-en-ciel :
+1. **Passage de `upgradeCount`** : Modifier le widget `UiCard` pour qu'il calcule `upgradeCount = forgeUpgrades.length` et le passe au composant `PolychromaticBorder`.
+2. **Acceptation de `upgradeCount`** : Ajouter la propriété `upgradeCount` (valeur par défaut `0`) dans `PolychromaticBorder` et son painter associé `_PolychromaticBorderPainter` pour assurer une rétrocompatibilité complète avec les composants existants.
+3. **Calcul Dynamique des Couleurs** : Dans `_PolychromaticBorderPainter._getRarityShineColors`, lorsque la carte est `unique`, définir un pool de 10 couleurs distinctes ordonnées :
+   - Couleur de base Unique (Gold / `#FFD700`)
+   - Couleur Commune (`Colors.white70`)
+   - Couleur Atypique (`Colors.greenAccent`)
+   - Couleur Rare (`Colors.blueAccent`)
+   - Couleur Épique (`Colors.purpleAccent`)
+   - Couleur Légendaire (`Colors.orangeAccent`)
+   - Rouge (`Colors.red`)
+   - Jaune (`Colors.yellow`)
+   - Cyan (`Colors.cyan`)
+   - Rose (`Colors.pink`)
+4. **Calcul de la Sélection** : Sélectionner dynamiquement un sous-ensemble de taille `(upgradeCount + 1).clamp(1, 10)` à partir de ce pool.
+5. **Bouclage Seamless** : S'assurer que le premier élément sélectionné est répété à la fin du tableau pour garantir un fondu de gradient linéaire tournant parfaitement fluide.
+6. **Mise à jour de `shouldRepaint`** : Ajouter la vérification `oldDelegate.upgradeCount != upgradeCount` pour forcer le repeint du CustomPainter lorsque le nombre d'améliorations change.
+
+### Preuves dans le code
+- `lib/ui/widgets/ui_card.dart` : Instancie `PolychromaticBorder` avec `upgradeCount: forgeUpgrades.length`.
+- `lib/ui/widgets/ui_card/polychromatic_border.dart` : Intègre la logique de pool progressif de 10 couleurs, de clamp de sélection et de duplication de fin.
+- `dart analyze` : Renvoie `No issues found!`.
+- `flutter test` : Valide l'intégralité des 107 tests existants au vert.
+
+### Conséquences
+- ✅ **Feedback Visuel de Puissance** : Le joueur constate l'impact immédiat et la rareté de ses runes de forge à travers l'apparition progressive de nouvelles teintes chromatiques au survol de la carte (d'un simple halo doré à 0 upgrade vers un arc-en-ciel complet et vibrant à 5+ upgrades).
+- ✅ **Modularité Intacte** : La logique esthétique reste isolée au sein de `PolychromaticBorder` sans alourdir le widget parent `UiCard`.
+- ✅ **Rétrocompatibilité Totale** : La valeur par défaut de `upgradeCount = 0` permet l'utilisation du composant sur des cartes n'ayant pas d'améliorations ou n'exposant pas cette propriété sans provoquer d'erreurs d'initialisation.
+
+---
+
+## 🛠️ ADR-047 : Résolution des Armures de Forge sur Attaque et Persistance/Visualisation du Gel (v0.1.6)
+
+### Statut
+✅ Accepté & Implémenté (v0.1.6)
+
+### Contexte
+1. L'amélioration d'armure de la forge (`hardened`), lorsqu'elle est appliquée à des cartes d'attaque (qui ne possèdent pas d'effet d'armure natif dans leurs `CardEffect`), ne produisait aucun bouclier en combat car la logique de résolution n'augmentait l'armure du héros que si la carte contenait déjà un effet d'armure natif.
+2. Le statut de gel (`freeze`), destiné à diviser par deux les dégâts de la prochaine attaque de l'ennemi, expirait prématurément au début du tour de l'ennemi lors du déclenchement de `tickStatuses()`, avant que celui-ci ne puisse exécuter son action d'attaque.
+3. L'affichage des intentions d'attaque de l'ennemi ne reflétait pas visuellement la réduction de 50% des dégâts lorsque celui-ci était gelé, créant une incohérence entre les dégâts affichés dans le HUD et les dégâts réellement subis par le héros à l'impact.
+
+### Décision
+1. **Application Directe d'Armure** : Modifier `EffectResolver.resolveCard` pour vérifier si la carte jouée possède de l'armure additionnelle issue de la forge (`extraArmor > 0`) et ne contient aucun effet d'armure natif. Si c'est le cas, appliquer directement cette `extraArmor` aux statistiques d'armure du héros via `runController.setHeroStats()`.
+2. **Exemption du Gel au Début du Tour** : Modifier `tickStatuses()` dans `EntityStats` pour ignorer le statut `freeze`, lui évitant ainsi d'être décrémenté et dissipé au début du tour ennemi.
+3. **Calcul Visuel de l'Intention Gelée** : Mettre à jour le getter `effectiveIntent` dans `EnemyInstance` pour diviser par deux (avec arrondi au plus proche) la valeur des dégâts de l'intention offensive lorsque l'ennemi possède le statut `freeze`.
+4. **Consommation de l'Effet post-attaque** : Ajuster `resolveEnemyIntent` dans `CombatController` pour décrémenter de 1 la durée du statut de gel après la résolution de l'attaque de l'ennemi (puisqu'il a consommé son action offensive sous gel) tout en veillant à ne pas appliquer à nouveau la réduction de 50% (l'intention ayant déjà été pré-réduite par `effectiveIntent`).
+
+### Preuves dans le code
+- `lib/game/services/effect_resolver.dart` : Résolution directe d'armure si `extraArmor > 0` et absence d'effet d'armure.
+- `lib/models/entity_stats.dart` : Ignorance du statut `freeze` dans la méthode `tickStatuses()`.
+- `lib/models/enemy_instance.dart` : Division par deux de l'intention de dégâts d'attaque dans `effectiveIntent` si l'ennemi est gelé.
+- `lib/game/controllers/combat_controller.dart` : Retrait de la double réduction dans `resolveEnemyIntent` et décrémentation de la durée du gel après l'action de l'ennemi.
+
+### Conséquences
+- ✅ **Comportement Fiable de la Forge** : Les joueurs peuvent désormais forger des cartes d'attaque avec de l'armure et bénéficier correctement de cette protection en combat.
+- ✅ **Tactique du Gel Préservée** : Le gel réduit de manière effective la prochaine action offensive de l'ennemi au lieu d'expirer dans le vide au début de son tour.
+- ✅ **Lisibilité de l'Intention** : La signalétique des intentions affiche en temps réel les dégâts exacts que le joueur subira (tenant compte du gel), améliorant la prise de décision stratégique.
+- ✅ **Tests & Qualité** : Les 107 tests du projet s'exécutent avec succès et l'analyse statique de compilation est vierge.
+
+
+
 
 
 

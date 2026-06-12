@@ -257,7 +257,7 @@ class _StarterDeckDraftScreenState
                     : GridView.builder(
                         gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
                           maxCrossAxisExtent: isMobile ? 140 : 180,
-                          childAspectRatio: 0.65,
+                          childAspectRatio: 70 / 110,
                           crossAxisSpacing: isMobile ? 8 : 16,
                           mainAxisSpacing: isMobile ? 8 : 16,
                         ),
@@ -288,6 +288,7 @@ class _StarterDeckDraftScreenState
                                     targetType: card.target,
                                     isExhaust: card.isExhaust,
                                     isSelected: isSelected,
+                                    baseMaxForgeUpgrades: card.baseMaxForgeUpgrades,
                                   ),
                                   // Indicateur Checkmark
                                   if (isSelected)

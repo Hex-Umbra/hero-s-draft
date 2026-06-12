@@ -20,11 +20,15 @@ class EnemyInstance {
           : 1.0;
       final int scaledValue = (intent.value * spawnMultiplier).round();
       final int inBattleBonus = stats.effectiveAttaque - stats.attaque;
+      int finalValue = (stats.effectiveAttaque > (scaledValue + inBattleBonus))
+          ? stats.effectiveAttaque
+          : (scaledValue + inBattleBonus);
+      if (stats.statuses.any((s) => s.id == 'freeze')) {
+        finalValue = (finalValue * 0.5).round();
+      }
       return EnemyIntent(
         type: intent.type,
-        value: (stats.effectiveAttaque > (scaledValue + inBattleBonus))
-            ? stats.effectiveAttaque
-            : (scaledValue + inBattleBonus),
+        value: finalValue,
       );
     }
     return intent;

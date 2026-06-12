@@ -337,6 +337,13 @@ class EffectResolver {
           break;
       }
     }
+
+    final hasArmorEffect = card.data.effects.any((e) => e.type == 'armor');
+    if (!hasArmorEffect && extraArmor > 0) {
+      final currentStats = runController.currentState.heroStats;
+      runController.setHeroStats(armure: currentStats.armure + extraArmor);
+    }
+
     return true;
   }
 

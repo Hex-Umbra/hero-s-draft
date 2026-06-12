@@ -30,7 +30,6 @@ class CardTextRenderer {
   final List<BadgePainters> badges = [];
   late TextPainter usagePainter;
   late TextPainter typePainter;
-  late TextPainter rarityPainter;
   late TextPainter starsPainter;
   TextPainter? manaPainter;
   TextPainter? targetPainter;
@@ -56,66 +55,9 @@ class CardTextRenderer {
     Color typeLabelColor = isFlashing
         ? Colors.transparent
         : typeColor.withAlpha((alpha * 0.7).toInt());
-    Color rarityColor = isFlashing
-        ? Colors.transparent
-        : card.getRarityColor().withAlpha(alpha);
-    Color manaColor = isFlashing
-        ? Colors.transparent
-        : Colors.cyanAccent.withAlpha(alpha);
-    Color starColor = isFlashing
-        ? Colors.transparent
-        : Colors.amber.withAlpha(alpha);
 
-    if (isCancelling) {
-      final cancelAlpha = (alpha * 0.6).toInt();
-      nameColor = nameColor.withAlpha(cancelAlpha);
-      descColor = descColor.withAlpha(cancelAlpha);
-      typeLabelColor = typeLabelColor.withAlpha(cancelAlpha);
-      rarityColor = rarityColor.withAlpha(cancelAlpha);
-      manaColor = manaColor.withAlpha(cancelAlpha);
-      starColor = starColor.withAlpha(cancelAlpha);
-    }
-
-    // Configurer le style de ciblage
-    final target = card.card.data.target;
-    if (target != CardTarget.none) {
-      String emoji = '';
-      String label = '';
-      switch (target) {
-        case CardTarget.singleEnemy:
-          emoji = '🎯';
-          label = card.activeLocale == 'fr' ? 'Cible unique' : 'Single Target';
-          break;
-        case CardTarget.allEnemies:
-          emoji = '💥';
-          label = card.activeLocale == 'fr' ? 'Tous' : 'All';
-          break;
-        case CardTarget.self:
-          emoji = '🛡️';
-          label = card.activeLocale == 'fr' ? 'Soi-même' : 'Self';
-          break;
-        default:
-          break;
-      }
-
-      Color tColor = isFlashing
-          ? Colors.transparent
-          : Colors.white.withAlpha(alpha);
-
-      targetPainter = TextPainter(
-        text: TextSpan(
-          text: '$emoji $label'.toUpperCase(),
-          style: TextStyle(
-            color: tColor,
-            fontSize: 7.0,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        textDirection: TextDirection.ltr,
-      )..layout();
-    } else {
-      targetPainter = null;
-    }
+    // Les badges textuels de ciblage ont été supprimés.
+    targetPainter = null;
 
     namePainter = TextPainter(
       text: TextSpan(
@@ -131,29 +73,8 @@ class CardTextRenderer {
       textAlign: TextAlign.center,
     )..layout(maxWidth: card.size.x - 24);
 
-    if (card.card.currentCost > 0) {
-      final manaString = String.fromCharCode(Icons.diamond_rounded.codePoint);
-      String fullManaString = '';
-      for (int i = 0; i < card.card.currentCost; i++) {
-        fullManaString += manaString;
-      }
-
-      manaPainter = TextPainter(
-        text: TextSpan(
-          text: fullManaString,
-          style: TextStyle(
-            color: manaColor,
-            fontSize: 15.0,
-            fontFamily: Icons.diamond_rounded.fontFamily,
-            package: Icons.diamond_rounded.fontPackage,
-            letterSpacing: 2.0,
-          ),
-        ),
-        textDirection: TextDirection.ltr,
-      )..layout();
-    } else {
-      manaPainter = null;
-    }
+    // Les cristaux de mana en bas ont été supprimés en faveur du médaillon de mana.
+    manaPainter = null;
 
     if (card.card.data.effects.isEmpty) {
       descPainter = TextPainter(
@@ -182,6 +103,8 @@ class CardTextRenderer {
         if (id == 'hardened') extraArmor += 2 * k;
       }
 
+      final isAllEnemies = card.card.data.target == CardTarget.allEnemies;
+
       for (int i = 0; i < card.card.data.effects.length; i++) {
         final effect = card.card.data.effects[i];
         int scaledValue = (effect.value * card.card.rarityMultiplier).round();
@@ -199,22 +122,51 @@ class CardTextRenderer {
         final visuals = _getEffectVisuals(effect);
         final iconColor = visuals.color.withAlpha(alpha);
 
+        final isPlayerEffect = effect.type == 'armor' ||
+            effect.type == 'heal' ||
+            effect.type == 'gain_mana' ||
+            effect.type == 'draw' ||
+            (effect.type == 'apply_status' &&
+                (effect.statusId == 'strength' ||
+                    effect.statusId == 'strength_regen' ||
+                    effect.statusId == 'armor_regen'));
+        final shouldDouble = isAllEnemies && !isPlayerEffect;
+
         final iconAndValuePainter = TextPainter(
           text: TextSpan(
             children: [
-              TextSpan(
-                text: String.fromCharCode(visuals.icon.codePoint),
-                style: TextStyle(
-                  color: iconColor,
-                  fontSize: 22.0,
-                  fontFamily: 'MaterialIcons',
+              if (shouldDouble) ...[
+                TextSpan(
+                  text: String.fromCharCode(visuals.icon.codePoint),
+                  style: TextStyle(
+                    color: iconColor,
+                    fontSize: 19.0,
+                    fontFamily: 'MaterialIcons',
+                  ),
                 ),
-              ),
+                TextSpan(
+                  text: String.fromCharCode(visuals.icon.codePoint),
+                  style: TextStyle(
+                    color: iconColor,
+                    fontSize: 19.0,
+                    fontFamily: 'MaterialIcons',
+                  ),
+                ),
+              ] else ...[
+                TextSpan(
+                  text: String.fromCharCode(visuals.icon.codePoint),
+                  style: TextStyle(
+                    color: iconColor,
+                    fontSize: 19.0,
+                    fontFamily: 'MaterialIcons',
+                  ),
+                ),
+              ],
               TextSpan(
                 text: ' $valueToDisplay',
                 style: TextStyle(
                   color: Colors.white.withAlpha(alpha),
-                  fontSize: 15.0,
+                  fontSize: 12.0,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -233,7 +185,7 @@ class CardTextRenderer {
                   text: String.fromCharCode(Icons.timer_outlined.codePoint),
                   style: TextStyle(
                     color: Colors.white60.withAlpha(alpha),
-                    fontSize: 10,
+                    fontSize: 8,
                     fontFamily: Icons.timer_outlined.fontFamily,
                     package: Icons.timer_outlined.fontPackage,
                   ),
@@ -242,7 +194,7 @@ class CardTextRenderer {
                   text: ' $duration',
                   style: TextStyle(
                     color: Colors.white60.withAlpha(alpha),
-                    fontSize: 10,
+                    fontSize: 8,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -304,63 +256,11 @@ class CardTextRenderer {
       textDirection: TextDirection.ltr,
     )..layout();
 
-    final rarityName = card.card.data.rarity.name.toLowerCase();
-    String rarityLabel = card.card.data.rarity.name;
-    if (rarityName.contains('legendary')) {
-      rarityLabel = card.getTranslation(
-        (l) => l.rarityLegendary,
-        fallback: 'LÉGENDAIRE',
-      );
-    } else if (rarityName.contains('epic')) {
-      rarityLabel = card.getTranslation(
-        (l) => l.rarityEpic,
-        fallback: 'ÉPIQUE',
-      );
-    } else if (rarityName.contains('rare')) {
-      rarityLabel = card.getTranslation((l) => l.rarityRare, fallback: 'RARE');
-    } else if (rarityName.contains('uncommon')) {
-      rarityLabel = card.getTranslation(
-        (l) => l.rarityUncommon,
-        fallback: 'PEU COMMUN',
-      );
-    } else if (rarityName.contains('common')) {
-      rarityLabel = card.getTranslation(
-        (l) => l.rarityCommon,
-        fallback: 'COMMUN',
-      );
-    }
 
-    rarityPainter = TextPainter(
-      text: TextSpan(
-        text: rarityLabel.toUpperCase(),
-        style: TextStyle(
-          color: rarityColor,
-          fontSize: 7.0,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 1.2,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
 
-    final int totalLimit = card.card.data.baseMaxForgeUpgrades + card.card.rarity.index;
-    final int appliedUpgradesCount = card.card.forgeUpgrades.length;
-    final starString = List.generate(totalLimit, (index) {
-      return index < appliedUpgradesCount
-          ? String.fromCharCode(Icons.star.codePoint)
-          : String.fromCharCode(Icons.star_border.codePoint);
-    }).join(' ');
-
+    // L'ancien starsPainter n'est plus utilisé en combat au profit du dessin manuel des rune sockets.
     starsPainter = TextPainter(
-      text: TextSpan(
-        text: starString,
-        style: TextStyle(
-          color: starColor,
-          fontSize: 8.0,
-          fontFamily: Icons.star.fontFamily,
-          package: Icons.star.fontPackage,
-        ),
-      ),
+      text: const TextSpan(text: ''),
       textDirection: TextDirection.ltr,
     )..layout();
   }
@@ -475,66 +375,66 @@ class CardTextRenderer {
         final totalDmg = scaledValue + heroAttack;
         if (card.card.data.target == CardTarget.allEnemies) {
           desc +=
-              '${card.getTranslation((l) => l.cardDescDamageAll(totalDmg), fallback: 'Inflige $totalDmg dégâts à tous les ennemis.')}\n';
+              '${card.getTranslation((l) => l.cardDescDamageAll(totalDmg), fallback: "Inflige $totalDmg dégâts à tous les ennemis.")}\n';
         } else {
           desc +=
-              '${card.getTranslation((l) => l.cardDescDamage(totalDmg), fallback: 'Inflige $totalDmg dégâts.')}\n';
+              '${card.getTranslation((l) => l.cardDescDamage(totalDmg), fallback: "Inflige $totalDmg dégâts.")}\n';
         }
       }
       if (effect.type == 'heal') {
         desc +=
-            '${card.getTranslation((l) => l.cardDescHeal(scaledValue), fallback: 'Soigne $scaledValue PV.')}\n';
+            '${card.getTranslation((l) => l.cardDescHeal(scaledValue), fallback: "Soigne $scaledValue PV.")}\n';
       }
       if (effect.type == 'armor') {
         desc +=
-            '${card.getTranslation((l) => l.cardDescArmor(scaledValue), fallback: 'Donne $scaledValue Armure.')}\n';
+            '${card.getTranslation((l) => l.cardDescArmor(scaledValue), fallback: "Donne $scaledValue Armure.")}\n';
       }
       if (effect.type == 'gain_mana') {
         desc +=
-            '${card.getTranslation((l) => l.cardDescGainMana(scaledValue), fallback: 'Gagne $scaledValue Mana.')}\n';
+            '${card.getTranslation((l) => l.cardDescGainMana(scaledValue), fallback: "Gagne $scaledValue Mana.")}\n';
       }
       if (effect.type == 'draw') {
         desc +=
-            '${card.getTranslation((l) => l.cardDescDraw(scaledValue), fallback: 'Pioche $scaledValue cartes.')}\n';
+            '${card.getTranslation((l) => l.cardDescDraw(scaledValue), fallback: "Pioche $scaledValue cartes.")}\n';
       }
       if (effect.type == 'apply_status') {
         final duration = effect.duration ?? 1;
         switch (effect.statusId) {
           case 'strength':
             desc +=
-                '${card.getTranslation((l) => l.cardDescStatusStrength(scaledValue, duration), fallback: 'Gagne $scaledValue ATK pendant $duration tours.')}\n';
+                '${card.getTranslation((l) => l.cardDescStatusStrength(scaledValue, duration), fallback: "Gagne $scaledValue ATK pendant $duration tours.")}\n';
             break;
           case 'armor_regen':
             desc +=
-                '${card.getTranslation((l) => l.cardDescStatusArmorRegen(scaledValue, duration), fallback: 'Pendant $duration tours, gagne $scaledValue Armure au début du tour.')}\n';
+                '${card.getTranslation((l) => l.cardDescStatusArmorRegen(scaledValue, duration), fallback: "Pendant $duration tours, gagne $scaledValue Armure au début du tour.")}\n';
             break;
           case 'poison':
             desc +=
-                '${card.getTranslation((l) => l.cardDescStatusPoisonDuration(scaledValue, duration), fallback: 'Applique $scaledValue Poison pendant $duration tours.')}\n';
+                '${card.getTranslation((l) => l.cardDescStatusPoisonDuration(scaledValue, duration), fallback: "Applique $scaledValue Poison pendant $duration tours.")}\n';
             break;
           case 'weakness':
             desc +=
-                '${card.getTranslation((l) => l.cardDescStatusWeaknessDuration(scaledValue, duration), fallback: 'Applique $scaledValue Faiblesse pendant $duration tours.')}\n';
+                '${card.getTranslation((l) => l.cardDescStatusWeaknessDuration(scaledValue, duration), fallback: "Applique $scaledValue Faiblesse pendant $duration tours.")}\n';
             break;
           case 'vulnerable':
             desc +=
-                '${card.getTranslation((l) => l.cardDescStatusVulnerableDuration(scaledValue, duration), fallback: 'Applique $scaledValue Vulnérable pendant $duration tours.')}\n';
+                '${card.getTranslation((l) => l.cardDescStatusVulnerableDuration(scaledValue, duration), fallback: "Applique $scaledValue Vulnérable pendant $duration tours.")}\n';
             break;
           case 'strength_regen':
             desc +=
-                '${card.getTranslation((l) => l.cardDescStatusStrengthRegen(scaledValue, duration), fallback: 'Gagne $scaledValue Éveil d\'Attaque pendant $duration tours.')}\n';
+                '${card.getTranslation((l) => l.cardDescStatusStrengthRegen(scaledValue, duration), fallback: "Gagne $scaledValue Éveil d'Attaque pendant $duration tours.")}\n';
             break;
           case 'burn':
             desc +=
-                '${card.getTranslation((l) => l.cardDescStatusBurnDuration(scaledValue, duration), fallback: 'Applique $scaledValue Brûlure pendant $duration tours.')}\n';
+                '${card.getTranslation((l) => l.cardDescStatusBurnDuration(scaledValue, duration), fallback: "Applique $scaledValue Brûlure pendant $duration tours.")}\n';
             break;
           case 'freeze':
             desc +=
-                '${card.getTranslation((l) => l.cardDescStatusFreezeDuration(scaledValue, duration), fallback: 'Applique $scaledValue Gel pendant $duration tours.')}\n';
+                '${card.getTranslation((l) => l.cardDescStatusFreezeDuration(scaledValue, duration), fallback: "Applique $scaledValue Gel pendant $duration tours.")}\n';
             break;
           case 'shock':
             desc +=
-                '${card.getTranslation((l) => l.cardDescStatusShockDuration(scaledValue, duration), fallback: 'Applique $scaledValue Électrocution pendant $duration tours.')}\n';
+                '${card.getTranslation((l) => l.cardDescStatusShockDuration(scaledValue, duration), fallback: "Applique $scaledValue Électrocution pendant $duration tours.")}\n';
             break;
         }
       }
@@ -579,7 +479,7 @@ class CardTextRenderer {
       }
     }
     if (upgradeDescs.isNotEmpty) {
-      desc += '\n⚙️ Upgrades:\n${upgradeDescs.map((u) => '• $u').join('\n')}\n';
+      desc += '\n⚙️ Upgrades:\n${upgradeDescs.map((u) => "• $u").join('\n')}\n';
     }
 
     return desc.trim();
@@ -587,92 +487,121 @@ class CardTextRenderer {
 
   void render(Canvas canvas, Vector2 size) {
     final typeColor = card.getTypeColor();
+    final double spacing = 6.0;
 
     // Titre (centré, fixe en haut)
-    namePainter.paint(canvas, Offset(size.x / 2 - namePainter.width / 2, 14));
+    double currentY = 10.0;
+    namePainter.paint(canvas, Offset(size.x / 2 - namePainter.width / 2, currentY));
+    currentY += namePainter.height + spacing;
 
-    // Ligne séparatrice (fixe)
+    // Ligne séparatrice
     final linePaint = Paint()
-      ..color = typeColor.withAlpha(100)
+      ..color = typeColor.withValues(alpha: 0.3 * opacity)
       ..strokeWidth = 1.5;
     canvas.drawLine(
-      Offset(size.x / 2 - 20, 32),
-      Offset(size.x / 2 + 20, 32),
+      Offset(size.x / 2 - 20, currentY),
+      Offset(size.x / 2 + 20, currentY),
       linePaint,
     );
+    currentY += 1.5 + spacing;
 
-    // Rareté (fixe sous la ligne)
-    rarityPainter.paint(
-      canvas,
-      Offset(size.x / 2 - rarityPainter.width / 2, 40),
-    );
 
-    // Etoiles d'améliorations (juste sous la rareté)
-    starsPainter.paint(
-      canvas,
-      Offset(size.x / 2 - starsPainter.width / 2, 50),
-    );
 
-    double currentY = 66.0;
+    // Rune sockets row instead of stars
+    final int baseMaxForgeUpgrades = card.card.data.baseMaxForgeUpgrades;
+    final int rarityIndex = card.card.rarity.index;
+    final int totalSlots = baseMaxForgeUpgrades + rarityIndex;
+    final int appliedUpgradesCount = card.card.forgeUpgrades.length;
+
+    final double socketDiameter = 14.0;
+    final double socketRadius = 7.0;
+    final double socketSpacing = 2.0;
+    const int maxSlotsPerRow = 5;
+    final int numRows = totalSlots == 0 ? 0 : (totalSlots + maxSlotsPerRow - 1) ~/ maxSlotsPerRow;
+
+    for (int r = 0; r < numRows; r++) {
+      final int rowStartIndex = r * maxSlotsPerRow;
+      final int rowEndIndex = (rowStartIndex + maxSlotsPerRow < totalSlots)
+          ? rowStartIndex + maxSlotsPerRow
+          : totalSlots;
+      final int rowSlotsCount = rowEndIndex - rowStartIndex;
+      final double rowWidth = rowSlotsCount * socketDiameter + (rowSlotsCount - 1) * socketSpacing;
+      final double startX = size.x / 2 - rowWidth / 2;
+      final double socketsY = currentY + socketRadius + r * (socketDiameter + socketSpacing);
+
+      for (int i = 0; i < rowSlotsCount; i++) {
+        final int globalIndex = rowStartIndex + i;
+        final double centerX = startX + i * (socketDiameter + socketSpacing) + socketRadius;
+        if (globalIndex < appliedUpgradesCount) {
+          // Filled socket
+          final socketBgPaint = Paint()
+            ..color = Colors.black45.withValues(alpha: opacity)
+            ..style = PaintingStyle.fill;
+          canvas.drawCircle(Offset(centerX, socketsY), socketRadius, socketBgPaint);
+
+          final socketBorderPaint = Paint()
+            ..color = Colors.cyanAccent.withValues(alpha: 0.8 * opacity)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 0.5;
+          canvas.drawCircle(Offset(centerX, socketsY), socketRadius, socketBorderPaint);
+
+          final emoji = _getRuneEmoji(card.card.forgeUpgrades[globalIndex]);
+          final emojiPainter = TextPainter(
+            text: TextSpan(
+              text: emoji,
+              style: const TextStyle(fontSize: 8.0),
+            ),
+            textDirection: TextDirection.ltr,
+          )..layout();
+          emojiPainter.paint(
+            canvas,
+            Offset(centerX - emojiPainter.width / 2, socketsY - emojiPainter.height / 2),
+          );
+        } else {
+          // Empty socket
+          final emptyBgPaint = Paint()
+            ..color = Colors.white.withValues(alpha: 0.05 * opacity)
+            ..style = PaintingStyle.fill;
+          canvas.drawCircle(Offset(centerX, socketsY), socketRadius, emptyBgPaint);
+
+          final emptyBorderPaint = Paint()
+            ..color = Colors.white24.withValues(alpha: opacity)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 0.5;
+          canvas.drawCircle(Offset(centerX, socketsY), socketRadius, emptyBorderPaint);
+        }
+      }
+    }
+
+    if (numRows > 0) {
+      currentY += (numRows * socketDiameter + (numRows - 1) * socketSpacing) + spacing;
+    } else {
+      currentY += spacing;
+    }
 
     // Badge Usage Unique (fixe)
-    if (card.card.data.isExhaust || card.card.data.type == CardType.power) {
+    final showExhaustBadge = card.card.data.isExhaust || card.card.data.type == CardType.power;
+    if (showExhaustBadge) {
       final badgeWidth = usagePainter.width + 12;
       final badgeRect = Rect.fromCenter(
-        center: Offset(size.x / 2, currentY),
+        center: Offset(size.x / 2, currentY + 7),
         width: badgeWidth,
         height: 14,
       );
       canvas.drawRRect(
         RRect.fromRectAndRadius(badgeRect, const Radius.circular(4)),
-        Paint()..color = Colors.redAccent.withAlpha(200),
+        Paint()..color = Colors.redAccent.withValues(alpha: 0.8 * opacity),
       );
       usagePainter.paint(
         canvas,
         Offset(
           size.x / 2 - usagePainter.width / 2,
-          currentY - usagePainter.height / 2,
-        ),
-      );
-      currentY += 16.0;
-    }
-
-    // Badge de ciblage
-    if (targetPainter != null) {
-      final target = card.card.data.target;
-      Color badgeColor = Colors.grey;
-      switch (target) {
-        case CardTarget.singleEnemy:
-          badgeColor = Colors.redAccent;
-          break;
-        case CardTarget.allEnemies:
-          badgeColor = Colors.orangeAccent;
-          break;
-        case CardTarget.self:
-          badgeColor = Colors.blueAccent;
-          break;
-        default:
-          break;
-      }
-
-      final badgeWidth = targetPainter!.width + 10;
-      final badgeRect = Rect.fromCenter(
-        center: Offset(size.x / 2, currentY),
-        width: badgeWidth,
-        height: 12,
-      );
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(badgeRect, const Radius.circular(4)),
-        Paint()..color = badgeColor.withAlpha(180),
-      );
-      targetPainter!.paint(
-        canvas,
-        Offset(
-          size.x / 2 - targetPainter!.width / 2,
-          currentY - targetPainter!.height / 2,
+          currentY + 7 - usagePainter.height / 2,
         ),
       );
     }
+
+    // Le badge de ciblage textuel a été supprimé.
 
     // Description (centrée parfaitement sur la carte)
     if (descPainter != null) {
@@ -735,15 +664,60 @@ class CardTextRenderer {
       }
     }
 
-    // Cristaux de Mana (En bas au centre)
-    if (manaPainter != null) {
-      manaPainter!.paint(
-        canvas,
-        Offset(size.x / 2 - manaPainter!.width / 2, 150),
-      );
-    }
+    // Circular Mana Medallion (Top-Left Overlapping) - radius 12, center (6, 6)
+    final cost = card.card.currentCost;
+    final medallionPaint = Paint()
+      ..color = const Color(0xFF0D1B2A).withValues(alpha: opacity)
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(const Offset(6, 6), 12.0, medallionPaint);
+
+    final medallionBorderPaint = Paint()
+      ..color = Colors.cyanAccent.withValues(alpha: 0.8 * opacity)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    canvas.drawCircle(const Offset(6, 6), 12.0, medallionBorderPaint);
+
+    final costPainter = TextPainter(
+      text: TextSpan(
+        text: '$cost',
+        style: TextStyle(
+          color: Colors.cyanAccent.withValues(alpha: opacity),
+          fontSize: 11.0,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    costPainter.paint(
+      canvas,
+      Offset(6.0 - costPainter.width / 2, 6.0 - costPainter.height / 2),
+    );
 
     // Type Label (tout en bas)
     typePainter.paint(canvas, Offset(size.x / 2 - typePainter.width / 2, 175));
+  }
+
+  String _getRuneEmoji(String upgrade) {
+    final id = upgrade.split(':')[0];
+    switch (id) {
+      case 'sharp':
+        return '⚔️';
+      case 'hardened':
+        return '🛡️';
+      case 'quick':
+        return '🪶';
+      case 'eco':
+        return '💎';
+      case 'burning':
+        return '🔥';
+      case 'freezing':
+        return '❄️';
+      case 'shocking':
+        return '⚡';
+      case 'enduring':
+        return '⏳';
+      default:
+        return '🔮';
+    }
   }
 }

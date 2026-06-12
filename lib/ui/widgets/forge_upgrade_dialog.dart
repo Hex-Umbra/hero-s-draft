@@ -693,6 +693,7 @@ class _ForgeUpgradeDialogState extends ConsumerState<ForgeUpgradeDialog> {
                                   isExhaust: widget.card.data.isExhaust,
                                   rarity: widget.card.rarity.getLabel(l10n),
                                   forgeUpgrades: widget.card.forgeUpgrades,
+                                  baseMaxForgeUpgrades: widget.card.data.baseMaxForgeUpgrades,
                                   rarityMultiplier: widget.card.rarityMultiplier,
                                 ),
                               ),
@@ -707,27 +708,57 @@ class _ForgeUpgradeDialogState extends ConsumerState<ForgeUpgradeDialog> {
                                 ),
                               ),
                               const SizedBox(height: 6),
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: List.generate(_totalMaxForgeUpgrades, (i) {
-                                  final isUsed = i < widget.card.forgeUpgrades.length;
-                                  return Container(
-                                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                                    child: Icon(
-                                      isUsed ? Icons.star : Icons.star_border,
-                                      color: isUsed ? Colors.amber : Colors.white24,
-                                      size: 20,
-                                      shadows: isUsed
-                                          ? [
-                                              const Shadow(
-                                                color: Colors.amberAccent,
-                                                blurRadius: 8,
-                                              )
-                                            ]
-                                          : null,
+                              SizedBox(
+                                width: 120.0,
+                                child: Wrap(
+                                  alignment: WrapAlignment.center,
+                                  runAlignment: WrapAlignment.center,
+                                  spacing: 6.0,
+                                  runSpacing: 6.0,
+                                  children: [
+                                    ...widget.card.forgeUpgrades.map((upgrade) => Container(
+                                          width: 18.0,
+                                          height: 18.0,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: Colors.black45,
+                                            border: Border.all(
+                                              color: Colors.cyanAccent,
+                                              width: 1.0,
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.cyanAccent.withValues(alpha: 0.4),
+                                                blurRadius: 3.0,
+                                              ),
+                                            ],
+                                          ),
+                                          child: Center(
+                                            child: FittedBox(
+                                              child: Text(
+                                                _getRuneEmoji(upgrade),
+                                                style: const TextStyle(fontSize: 11.0),
+                                              ),
+                                            ),
+                                          ),
+                                        )),
+                                    ...List.generate(
+                                      max(0, _totalMaxForgeUpgrades - widget.card.forgeUpgrades.length),
+                                      (index) => Container(
+                                        width: 18.0,
+                                        height: 18.0,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Colors.white.withValues(alpha: 0.05),
+                                          border: Border.all(
+                                            color: Colors.white24,
+                                            width: 1.0,
+                                          ),
+                                        ),
+                                      ),
                                     ),
-                                  );
-                                }),
+                                  ],
+                                ),
                               ),
                               const SizedBox(height: 6),
                               Text(
@@ -813,5 +844,29 @@ class _ForgeUpgradeDialogState extends ConsumerState<ForgeUpgradeDialog> {
         ),
       ),
     );
+  }
+
+  String _getRuneEmoji(String upgrade) {
+    final id = upgrade.split(':')[0];
+    switch (id) {
+      case 'sharp':
+        return '⚔️';
+      case 'hardened':
+        return '🛡️';
+      case 'quick':
+        return '🪶';
+      case 'eco':
+        return '💎';
+      case 'burning':
+        return '🔥';
+      case 'freezing':
+        return '❄️';
+      case 'shocking':
+        return '⚡';
+      case 'enduring':
+        return '⏳';
+      default:
+        return '🔮';
+    }
   }
 }

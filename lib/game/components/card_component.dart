@@ -1,4 +1,4 @@
-import 'dart:ui' as ui;
+import 'dart:math' as math;
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/effects.dart';
@@ -68,7 +68,17 @@ class CardComponent extends PositionComponent
   }
 
   Color getBackgroundColor() {
-    return isCancelling ? const Color(0xFF1A1A1A) : const Color(0xFF2A2A3D);
+    if (isCancelling) return const Color(0xFF1A1A1A);
+    switch (card.data.type) {
+      case CardType.attack:
+        return const Color(0xFF4A1D1D);
+      case CardType.skill:
+        return const Color(0xFF152A4A);
+      case CardType.power:
+        return const Color(0xFF453215);
+      case CardType.status:
+        return const Color(0xFF2D2D2D);
+    }
   }
 
   IconData getTypeIconData() {
@@ -121,11 +131,63 @@ class CardComponent extends PositionComponent
 
   Color getRarityColor() {
     final r = card.data.rarity.name.toLowerCase();
+    if (r.contains('unique')) return const Color(0xFFFFD700);
     if (r.contains('legendary')) return Colors.orangeAccent;
     if (r.contains('epic')) return Colors.purpleAccent;
     if (r.contains('rare')) return Colors.blueAccent;
     if (r.contains('uncommon')) return Colors.greenAccent;
     return Colors.white70;
+  }
+
+  List<Color> _getRarityShineColors() {
+    // Rareté Unique → arc-en-ciel progressif basé sur le nombre d'upgrades
+    if (card.data.rarity.name.toLowerCase().contains('unique')) {
+      final baseColor = getRarityColor();
+      final pool = [
+        baseColor,
+        Colors.white70,
+        Colors.greenAccent,
+        Colors.blueAccent,
+        Colors.purpleAccent,
+        Colors.orangeAccent,
+        Colors.red,
+        Colors.yellow,
+        Colors.cyan,
+        Colors.pink,
+      ];
+      final upgradeCount = card.forgeUpgrades.length;
+      final count = (upgradeCount + 1).clamp(1, pool.length);
+      final colors = pool.sublist(0, count);
+      return [...colors, colors.first];
+    }
+    final baseColor = getRarityColor();
+    final hsv = HSVColor.fromColor(baseColor);
+    if (hsv.saturation < 0.15 || hsv.value < 0.15) {
+      return [
+        baseColor,
+        Colors.white,
+        const Color(0xFFE0E0E0),
+        const Color(0xFFBDBDBD),
+        Colors.white,
+        baseColor,
+      ];
+    }
+    final hue = hsv.hue;
+    if (hue >= 340 || hue < 20) {
+      return [baseColor, Colors.orangeAccent, Colors.red, Colors.pinkAccent, baseColor];
+    } else if (hue >= 20 && hue < 50) {
+      return [baseColor, Colors.amber, Colors.yellow, Colors.deepOrange, baseColor];
+    } else if (hue >= 50 && hue < 70) {
+      return [baseColor, Colors.lightGreenAccent, Colors.yellowAccent, Colors.amberAccent, baseColor];
+    } else if (hue >= 70 && hue < 165) {
+      return [baseColor, Colors.limeAccent, Colors.tealAccent, Colors.green, baseColor];
+    } else if (hue >= 165 && hue < 200) {
+      return [baseColor, Colors.cyanAccent, Colors.blueAccent, Colors.tealAccent, baseColor];
+    } else if (hue >= 200 && hue < 260) {
+      return [baseColor, Colors.cyan, Colors.indigoAccent, Colors.blue, baseColor];
+    } else {
+      return [baseColor, Colors.pinkAccent, Colors.deepPurpleAccent, Colors.purple, baseColor];
+    }
   }
 
   void refreshVisuals() {
@@ -199,6 +261,64 @@ class CardComponent extends PositionComponent
 
   String buildDetailedDescription() {
     String desc = '';
+
+    // Prepend card details header matching the menu tooltip style
+    String details = '';
+
+    // 1. Target Type
+    final targetHeader = activeLocale == 'fr' ? '🎯 Cible : ' : '🎯 Target: ';
+    String targetText = '';
+    switch (card.data.target) {
+      case CardTarget.singleEnemy:
+        targetText = getTranslation((l) => l.targetSingleEnemy, fallback: 'Single enemy');
+        break;
+      case CardTarget.allEnemies:
+        targetText = getTranslation((l) => l.targetAllEnemies, fallback: 'All enemies');
+        break;
+      case CardTarget.self:
+        targetText = getTranslation((l) => l.targetSelf, fallback: 'Self');
+        break;
+      case CardTarget.none:
+        targetText = getTranslation((l) => l.targetNone, fallback: 'None');
+        break;
+    }
+    details += '$targetHeader$targetText\n';
+
+    // 2. Rarity
+    final rarityHeader = activeLocale == 'fr' ? '💎 Rareté : ' : '💎 Rarity: ';
+    String rarityText = '';
+    switch (card.data.rarity) {
+      case CardRarity.common:
+        rarityText = getTranslation((l) => l.rarityCommon, fallback: 'Common');
+        break;
+      case CardRarity.uncommon:
+        rarityText = getTranslation((l) => l.rarityUncommon, fallback: 'Uncommon');
+        break;
+      case CardRarity.rare:
+        rarityText = getTranslation((l) => l.rarityRare, fallback: 'Rare');
+        break;
+      case CardRarity.epic:
+        rarityText = getTranslation((l) => l.rarityEpic, fallback: 'Epic');
+        break;
+      case CardRarity.legendary:
+        rarityText = getTranslation((l) => l.rarityLegendary, fallback: 'Legendary');
+        break;
+      case CardRarity.unique:
+        rarityText = activeLocale == 'fr' ? 'Unique' : 'Unique';
+        break;
+    }
+    details += '$rarityHeader$rarityText\n';
+
+    // 3. Type
+    final typeHeader = activeLocale == 'fr' ? '🏷️ Type : ' : '🏷️ Type: ';
+    final typeText = getTypeLabel();
+    details += '$typeHeader$typeText\n';
+
+    // 4. Cost
+    final costHeader = activeLocale == 'fr' ? '⚡ Coût : ' : '⚡ Cost: ';
+    details += '$costHeader${card.currentCost} Mana\n';
+
+    desc += '$details\n';
 
     final elementalType = _determineDamageType();
     if (card.data.effects.isNotEmpty && elementalType != 'physical') {
@@ -393,6 +513,7 @@ class CardComponent extends PositionComponent
   bool isDragging = false;
   double _targetTilt = 0;
   RibbonTrail? _activeTrail;
+  double _foilTime = 0.0;
 
   @override
   bool isHovered = false;
@@ -438,6 +559,9 @@ class CardComponent extends PositionComponent
       animator.spawnTrailParticles();
       _activeTrail?.addPoint(position);
     }
+    if (game.hoveredCard == this) {
+      _foilTime += dt * 3.0;
+    }
   }
 
   @override
@@ -471,28 +595,44 @@ class CardComponent extends PositionComponent
 
     final rect = size.toRect();
     final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(12));
-    final typeColor = getTypeColor();
     final bgColor = getBackgroundColor();
+    final rarityColor = getRarityColor();
 
-    // Fond avec Gradient
+    // Fond plein (non transparent)
     final Paint bgPaint = Paint();
     if (isFlashing) {
       bgPaint.color = Colors.white;
     } else {
-      bgPaint.shader = ui.Gradient.linear(Offset.zero, Offset(0, size.y), [
-        bgColor,
-        bgColor.withAlpha(200),
-      ]);
+      bgPaint.color = bgColor;
     }
     canvas.drawRRect(rrect, bgPaint);
 
-    // Bordure
-    final Paint bPaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = _isSelected ? 3.0 : 2.0
-      ..color = _isSelected ? Colors.white : typeColor;
+    // Bordure fine
+    final Paint bPaint = Paint()..style = PaintingStyle.stroke;
 
-    if (isFlashing) bPaint.color = Colors.white;
+    final bool isHovered = game.hoveredCard == this;
+    if (isHovered && !isFlashing) {
+      bPaint.strokeWidth = 3.5;
+      final colors = _getRarityShineColors();
+      final angle = _foilTime;
+      final cosVal = math.cos(angle);
+      final sinVal = math.sin(angle);
+      bPaint.shader = LinearGradient(
+        begin: Alignment(cosVal, sinVal),
+        end: Alignment(-cosVal, -sinVal),
+        colors: colors,
+      ).createShader(rect);
+    } else {
+      bPaint.strokeWidth = _isSelected ? 2.5 : 1.5;
+      if (isFlashing) {
+        bPaint.color = Colors.white;
+      } else {
+        bPaint.color = _isSelected
+            ? Colors.white.withValues(alpha: 0.8)
+            : rarityColor.withValues(alpha: 0.5);
+      }
+    }
+
     canvas.drawRRect(rrect, bPaint);
 
     // Halo de sélection (Glow)
@@ -500,7 +640,7 @@ class CardComponent extends PositionComponent
       final Paint glowPaint = Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 4.0
-        ..color = typeColor.withAlpha(150)
+        ..color = rarityColor.withValues(alpha: 0.4)
         ..maskFilter = const MaskFilter.blur(BlurStyle.outer, 8);
       canvas.drawRRect(rrect, glowPaint);
     }

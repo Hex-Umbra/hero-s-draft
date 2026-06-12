@@ -5,10 +5,10 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 **Métriques du projet** :
 - **~11 400 lignes** de code source dans `lib/` (70 fichiers).
 - **8 fichiers JSON** de données d'assets.
-- **106 tests automatisés** — 100% au vert.
+- **107 tests automatisés** — 100% au vert.
 - **0 erreur** via `flutter analyze`.
-- **~117 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
-- **Version actuelle** : v0.2.00 — Sprint Forge v2 & Améliorations UX.
+- **~119 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
+- **Version actuelle** : v0.2.04 — Enrichissement des Tooltips de Cartes.
 
 ---
 
@@ -55,6 +55,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Fonctionnalité | Implémentation | Détails |
 |:---|:---|:---|
 | Auto-Merge (3→1) | `DeckNotifier.mergeCards()` | 3 copies même ID + rareté → 1 copie rareté supérieure (cumul des Tiers, clamp à la capacité). Les cartes de rareté `unique` (classe) ne peuvent pas être fusionnées (désactivé). |
+| Foil Unique Progressif | `PolychromaticBorder`, `UiCard` | Rendu de la bordure polychromatique brillante au survol de la souris dont le nombre de couleurs (de 1 à 10) augmente avec les upgrades (v0.2.02) |
 | Rareté Dynamique | `EffectResolver.resolveCard()` | Progression par rareté (common → legendary) avec coefficients. La rareté `unique` (cartes de classe) est fixée à un multiplicateur de 1.0. |
 | Catalogue complet | `cards.json` & `hero_cards.json` | 21 cartes équilibrées : 15 globales (communes) dans cards.json + 6 de classe (unique) dans hero_cards.json |
 | Types d'effets | `EffectResolver`, `CardEffect` | damage, heal, armor, draw, gain_mana, apply_status |
@@ -102,7 +103,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 
 | Fonctionnalité | Implémentation | Détails |
 |:---|:---|:---|
-| `UiCard` unifié | `lib/ui/widgets/ui_card.dart` | Remplace 6 rendus dupliqués, ratio 70/110, gradients par rareté |
+| `UiCard` unifié | `lib/ui/widgets/ui_card.dart` | Remplace 6 rendus dupliqués, style glassmorphic (BackdropFilter 10px), coût en médaillon standardisé, fentes de runes, retrait filigrane & badges de ciblage, doublement d'icônes multicibles |
 | Système de Design Centralisé | `lib/ui/theme/app_colors.dart`, `app_spacing.dart`, `app_theme.dart` | `AppColors` (Neon Dark + Parchemin + stats + raretés + sémantiques), `AppSpacing` (EdgeInsets helpers), `AppTheme` (ThemeData complet dark/light) — v0.0.99 |
 | Extensions Enum Rareté | `CardRarity.color`, `RelicRarity.color` (extensions Dart) | Getter `.color` centralisé sur les enums de rareté de cartes et reliques, remplace les switch-case dispersés — v0.0.99 |
 | Correction `GameButton` overflow | `lib/ui/widgets/game_button.dart` | Résolution du bug `RenderFlex` overflow sur les boutons or-seulement (icône sans libellé) — v0.0.99 |
@@ -128,7 +129,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Rareté Mythique & Alertes | `DraftScreen`, `DraftCardReel` | Rareté rouge sang, alerte cinématique warning 1400ms (laser horizontal, exclamation points `!!!` élastiques), flou d'arrière-plan `BackdropFilter` `8.0px`, spin prolongé `+800ms`, tremblement doublé `12.0` |
 | Poli Visuel du Draft | `DraftScreen`, `TutorialDraftWidget` | Survol de carte à 1.05x (AnimatedScale + MouseRegion) et sélection à 1.12x avec lueur dorée (BoxShadow ambre) |
 | HUD de Combat Responsive | `GameScreen` | Redimensionnement et mise à l'échelle automatique de la hauteur/largeur du HUD avec clamps de sécurité pour prévenir le clipping |
-| Badges de Ciblage de Cartes | `UiCard` / `GameScreen` | Badges de ciblage animés (Single, AoE, Self) avec support bilingue ('Cible unique', 'Tous les ennemis', 'Soi-même'), enveloppés de `FittedBox` |
+| Badges de Ciblage Remplacés | `UiCard` / `GameScreen` / `CardTextRenderer` | Suppression complète des badges textuels de ciblage (Single target, All enemies, Self), remplacés par des doublements d'icônes d'action multicibles (double-icon indicators) pour les seuls effets ciblant les ennemis (les effets joueur restent avec une icône simple) (v0.1.5) |
 | Badges d'inventaire sur la Carte | `MapScreen` | Compteur numérique sur le bouton des Reliques et badge numérique sur le bouton du Deck affichant la taille du master deck |
 | Scaling Échelle Ennemis | `EnemyCard` | Facteurs d'échelle visuelle progressifs sur les sprites des ennemis pour refléter leur puissance relative |
 | Optimisations de Rendu GPU | `FloatingText`, `EffectIcon` | Élimination des appels GPU lents/redondants `saveLayer` au profit d'un dessin direct sur canvas (v0.0.98) |
@@ -137,10 +138,11 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Synchro d'Impact & Anti-Double | `EnemyCard`, `CardAnimator` | Dégâts et effets d'impact (flashs, tremblements, particules) différés jusqu'à la collision physique réelle; suppression des doublons (v0.0.98) |
 | Blocage de Pioche (Input Blocking) | `CardComponent`, `HerosDraftGame` | Protection contre les clics ou glissements prématurés durant la pioche via le drapeau `isEnteringHand` (v0.1.00) |
 | Tooltips de Combat Ciblés | `ui_card.dart`, `card_component.dart` | Affichage sélectif sur focus de carte, auto-masquage au jeu ou changement de phase, et injection formatée des upgrades de forge (v0.1.00) |
-| Rendu d'Étoiles de Forge | `card_text_renderer.dart`, `ui_card.dart` | Représentation visuelle des upgrades sous forme d'étoiles dorées (pleines/vides) proportionnelle à la capacité de la carte (v0.1.00) |
+| Fentes de Runes (Rune Sockets) | `card_text_renderer.dart`, `ui_card.dart` | Remplacement des étoiles d'upgrades par des sockets de runes (⚔️, 🛡️, 🔥) avec retour à la ligne automatique (wrapping) par rangées de 5 (rows of 5) sur le layout de carte pour éviter tout overflow visuel (v0.1.5) |
+| Rareté Visuelle sans Texte | `ui_card.dart`, `card_component.dart` | Retrait des labels textuels de rareté de la face avant des cartes; identification pure par la couleur des bordures et par halo lumineux (glowing shadows/radial glow) lors des sélections (v0.1.5) |
 | Jauge HP Double-Transition | `PlayerHealthBar` | Refactorisation en StatefulWidget animée par TweenAnimationBuilder (500ms, easeOutCubic) avec jauge secondaire rouge/orange lagging sous les dégâts et snap direct au soin (v0.1.00) |
 | Grille de Boutique | `ShopScreen` / `shop_screen.dart` | Disposition en Wrap avec contrainte de taille SizedBox de 150 par carte pour une grille stable (v0.1.3) |
-| Couleur par type de carte | `UiCard` / `ui_card.dart` | Code couleur d'arrière-plan distinct sémantique (rouge=attack, vert=skill, violet=power, gris=status) et accentuation des contours (v0.1.3) |
+| Couleur par type de carte | `UiCard` / `CardComponent` | Code couleur d'arrière-plan distinct sémantique (rouge=attack, vert=skill, violet=power, gris=status) et bordure d'accent appliqué aux cartes de menu (`UiCard` - v0.1.3) et étendu aux cartes de combat Flame (`CardComponent` - v0.1.5) |
 | Masquage Anti-Spoil de Relique | `RelicRewardCarouselOverlay`, `RelicCarouselCard` | Affichage en gris neutre et anonyme des cartes avec badges « ??? » pendant le spin. Révélation complète des couleurs et déclencheurs à l'arrêt (v0.1.4) |
 
 
@@ -292,6 +294,7 @@ Basé sur les rapports de dette technique (`technical_debt_report_Opus4.6.md`, 4
 | Critique | `map_screen.dart` | **2 471 lignes**, 10+ responsabilités | Extraire `MapPainter`, `MapNodeWidget`, `MapLegend`, `MapTooltip`, `MapController` | 2471 → ~400 lignes |
 | Critique | `game_screen.dart` | **1 667 lignes**, 5 overlays privés | Extraire `PauseOverlay`, `RewardOverlay`, `DeathOverlay`, `VictoryOverlay`, `HudPanel`, `CombatOrchestrator` | 1667 → ~500 lignes |
 | Critique | `card_component.dart` | **1 031 lignes**, render + drag + targeting + animation + tooltip | Extraire `CardRenderer`, `CardAnimationController`, `CardInteractionHandler` | 1031 → ~300 lignes |
+| Important | `ui_card.dart` | **1 136 lignes**, god component UI/logic/painting | ✅ Refactorisé en extrayant les sous-widgets dans `ui_card/` (v0.2.01) | 1136 → ~175 lignes |
 | Important | `heros_draft_game.dart` | **775 lignes**, 18 callbacks constructeur | Extraire layout, sync, factories | 775 → ~400 lignes |
 | Important | `stat_badge.dart` | **720 lignes**, 5 classes, recreate all children à chaque update | Extraire classes, optimiser update | Performance + lisibilité |
 
@@ -353,6 +356,12 @@ Issus de `docs/analysis_reports/6_analyse_game_balance.md` (documentés, non cor
 
 | Version | Date | Titre | Description des changements clés |
 |:---|:---|:---|:---|
+| **v0.2.04** | 2026-06-12 | Enrichissement des Tooltips de Cartes | Ajout de tous les détails (type de cible écrit explicitement, rareté, type de carte, coût mana) dans les tooltips en combat (Flame CardComponent) et menus (Flutter UiCard) en français et anglais. |
+| **v0.2.03** | 2026-06-12 | Polissage Dimensionnel des Cartes en Menu | Agrandissement des fentes de runes à 10px (visibilité des emojis d'upgrades) et agrandissement du médaillon de coût mana à 30px (ajustement offset [-9, -9]) uniquement sur les menus (Flutter). |
+| **v0.2.02** | 2026-06-12 | Bordure Foil Progressif Unique | Rendu de la bordure polychromatique brillante au survol de la souris dont le nombre de couleurs (de 1 à 10) augmente avec le nombre d'upgrades (upgradeCount) de la carte Unique. |
+| **v0.2.01** | 2026-06-12 | Décomposition de UiCard (SRP) | Refactoring de la god class `UiCard` (1136 lignes) en extrayant ses sous-widgets (`CardManaMedallion`, `CardRuneSockets`, `CardCompactDescription`) et ses helpers (`ui_card_helpers.dart`) dans un sous-dossier `ui_card/` dédié, garantissant la cohésion, respectant le principe de responsabilité unique (SRP) et la structure du framework Flutter. |
+| **v0.1.6** | 2026-06-12 | Ajustements du Gel et de la Forge | Résolution du bug d'armure de forge (hardened) sur les cartes d'attaque (application directe au héros), persistance du statut de gel (freeze) en début de tour ennemi et affichage de la réduction de 50% de dégâts directement dans l'intention de combat. |
+| **v0.1.5** | 2026-06-12 | Refonte Esthétique des Cartes | Layout glassmorphic unifié, médaillon standardisé de coût, fentes d'améliorations (rune sockets) avec retour à la ligne automatique par rangées de 5 (rows of 5) pour éviter tout débordement, réduction d'échelle de 25%, suppression du filigrane et des badges textuels de ciblage (remplacés par des doublements d'icônes d'effet pour la portée multicible ciblant les ennemis), retrait complet des labels textuels de rareté (remplacés par l'identification pure via la couleur des bordures et par halo de surbrillance lumineux/glowing shadows en cas de sélection), et mise à jour des cartes de combat (Flame) pour utiliser des couleurs d'arrière-plan spécifiques à leur type (type-specific background colors) identiques à celles des menus. |
 | **v0.2.00** | 2026-06-11 | Forge v2 : Anti-Exploit, Filtrage Typé, Achat Progressif | Écran forge responsive plein écran, persistance session anti-exploit, fentes d'upgrades progressives, filtrage typé. |
 | **v0.1.4** | 2026-06-11 | Map, Draft & Progression | Level Up différé sur la carte (MapScreen), protection anti-spoil du carrousel de reliques, chokepoint élite central calculé dynamiquement. |
 | **v0.1.3** | 2026-06-11 | Harmonie Visuelle & Améliorations de Boutique | Exclusion des cartes uniques de la boutique, arrière-plans colorés par type de carte dans UiCard, grille Wrap/SizedBox pour la boutique. |

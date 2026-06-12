@@ -37,15 +37,45 @@ void main() {
       );
     }
 
-    testWidgets('renders Single Target badge in English', (WidgetTester tester) async {
+    Widget buildTestCardWithEffects({
+      required String title,
+      required CardTarget targetType,
+      required List<CardEffect> effects,
+    }) {
+      return MaterialApp(
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [Locale('en', ''), Locale('fr', '')],
+        home: Scaffold(
+          body: Center(
+            child: SizedBox(
+              width: 140,
+              height: 196,
+              child: UiCard(
+                title: title,
+                description: 'Test description',
+                targetType: targetType,
+                effects: effects,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    testWidgets('does not render targeting badges for single target in English', (WidgetTester tester) async {
       await tester.pumpWidget(buildTestCard(title: 'Strike', targetType: CardTarget.singleEnemy));
       await tester.pumpAndSettle();
 
-      expect(find.text('🎯'), findsOneWidget);
-      expect(find.text('Single Target'), findsOneWidget);
+      expect(find.text('🎯'), findsNothing);
+      expect(find.text('Single Target'), findsNothing);
     });
 
-    testWidgets('renders Cible unique badge in French', (WidgetTester tester) async {
+    testWidgets('does not render targeting badges for single target in French', (WidgetTester tester) async {
       await tester.pumpWidget(buildTestCard(
         title: 'Frappe',
         targetType: CardTarget.singleEnemy,
@@ -53,19 +83,19 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      expect(find.text('🎯'), findsOneWidget);
-      expect(find.text('Cible unique'), findsOneWidget);
+      expect(find.text('🎯'), findsNothing);
+      expect(find.text('Cible unique'), findsNothing);
     });
 
-    testWidgets('renders All Enemies badge in English', (WidgetTester tester) async {
+    testWidgets('does not render targeting badges for all enemies in English', (WidgetTester tester) async {
       await tester.pumpWidget(buildTestCard(title: 'Swipe', targetType: CardTarget.allEnemies));
       await tester.pumpAndSettle();
 
-      expect(find.text('💥'), findsOneWidget);
-      expect(find.text('All Enemies'), findsOneWidget);
+      expect(find.text('💥'), findsNothing);
+      expect(find.text('All Enemies'), findsNothing);
     });
 
-    testWidgets('renders Tous les ennemis badge in French', (WidgetTester tester) async {
+    testWidgets('does not render targeting badges for all enemies in French', (WidgetTester tester) async {
       await tester.pumpWidget(buildTestCard(
         title: 'Balayage',
         targetType: CardTarget.allEnemies,
@@ -73,37 +103,53 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      expect(find.text('💥'), findsOneWidget);
-      expect(find.text('Tous les ennemis'), findsOneWidget);
+      expect(find.text('💥'), findsNothing);
+      expect(find.text('Tous les ennemis'), findsNothing);
     });
 
-    testWidgets('renders Self badge in English', (WidgetTester tester) async {
+    testWidgets('does not render targeting badges for self', (WidgetTester tester) async {
       await tester.pumpWidget(buildTestCard(title: 'Defend', targetType: CardTarget.self));
       await tester.pumpAndSettle();
 
-      expect(find.text('🛡️'), findsOneWidget);
-      expect(find.text('Self'), findsOneWidget);
+      expect(find.text('🛡️'), findsNothing);
+      expect(find.text('Self'), findsNothing);
     });
 
-    testWidgets('renders Soi-même badge in French', (WidgetTester tester) async {
-      await tester.pumpWidget(buildTestCard(
-        title: 'Défense',
-        targetType: CardTarget.self,
-        locale: const Locale('fr', ''),
+    testWidgets('renders single effect icon for single target card', (WidgetTester tester) async {
+      await tester.pumpWidget(buildTestCardWithEffects(
+        title: 'Strike',
+        targetType: CardTarget.singleEnemy,
+        effects: const [CardEffect(type: 'damage', value: 6)],
       ));
       await tester.pumpAndSettle();
 
-      expect(find.text('🛡️'), findsOneWidget);
-      expect(find.text('Soi-même'), findsOneWidget);
+      expect(find.byIcon(Icons.hardware_rounded), findsOneWidget);
     });
 
-    testWidgets('does not render targeting badge for none target', (WidgetTester tester) async {
-      await tester.pumpWidget(buildTestCard(title: 'Meditate', targetType: CardTarget.none));
+    testWidgets('renders doubled effect icons for all enemies card', (WidgetTester tester) async {
+      await tester.pumpWidget(buildTestCardWithEffects(
+        title: 'Swipe',
+        targetType: CardTarget.allEnemies,
+        effects: const [CardEffect(type: 'damage', value: 6)],
+      ));
       await tester.pumpAndSettle();
 
-      expect(find.text('🎯'), findsNothing);
-      expect(find.text('💥'), findsNothing);
-      expect(find.text('🛡️'), findsNothing);
+      expect(find.byIcon(Icons.hardware_rounded), findsNWidgets(2));
+    });
+
+    testWidgets('renders doubled damage icon and single armor icon for all enemies card with both effects (e.g. Warcry)', (WidgetTester tester) async {
+      await tester.pumpWidget(buildTestCardWithEffects(
+        title: 'Warcry',
+        targetType: CardTarget.allEnemies,
+        effects: const [
+          CardEffect(type: 'damage', value: 6),
+          CardEffect(type: 'armor', value: 4),
+        ],
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.hardware_rounded), findsNWidgets(2));
+      expect(find.byIcon(Icons.shield_rounded), findsOneWidget);
     });
   });
 
