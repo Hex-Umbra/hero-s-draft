@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/effects.dart';
@@ -12,6 +11,8 @@ import 'entities/enemy_card.dart';
 import 'visual_effects/ribbon_trail.dart';
 import 'widgets/card_text_renderer.dart';
 import 'visual_effects/card_animator.dart';
+import 'widgets/card_renderer.dart';
+import 'widgets/card_interaction_handler.dart';
 
 class CardComponent extends PositionComponent
     with
@@ -29,6 +30,8 @@ class CardComponent extends PositionComponent
 
   late final CardTextRenderer textRenderer;
   late final CardAnimator animator;
+  late final CardRenderer renderer;
+  late final CardInteractionHandler interactionHandler;
 
   // État visuel actuel (exposé aux classes d'accompagnement)
   bool isFlashing = false;
@@ -37,7 +40,7 @@ class CardComponent extends PositionComponent
   bool isPlayed = false;
   bool isEnteringHand = false;
 
-  bool get _isSelected => game.focusedCard == this;
+  bool get isSelected => game.focusedCard == this;
 
   @override
   set opacity(double value) {
@@ -139,7 +142,7 @@ class CardComponent extends PositionComponent
     return Colors.white70;
   }
 
-  List<Color> _getRarityShineColors() {
+  List<Color> getRarityShineColors() {
     // Rareté Unique → arc-en-ciel progressif basé sur le nombre d'upgrades
     if (card.data.rarity.name.toLowerCase().contains('unique')) {
       final baseColor = getRarityColor();
@@ -193,8 +196,6 @@ class CardComponent extends PositionComponent
   void refreshVisuals() {
     textRenderer.refreshVisuals(1.0, isFlashing, isCancelling);
   }
-
-  // Tooltip callbacks removed because tooltips are managed by focus change in game.
 
   String _determineDamageType() {
     final lowerTitle =
@@ -511,9 +512,9 @@ class CardComponent extends PositionComponent
   int basePriority = 10;
 
   bool isDragging = false;
-  double _targetTilt = 0;
-  RibbonTrail? _activeTrail;
-  double _foilTime = 0.0;
+  double targetTilt = 0;
+  RibbonTrail? activeTrail;
+  double foilTime = 0.0;
 
   @override
   bool isHovered = false;
@@ -531,36 +532,28 @@ class CardComponent extends PositionComponent
     anchor = Anchor.center;
     textRenderer = CardTextRenderer(this);
     animator = CardAnimator(this);
+    renderer = CardRenderer(this);
+    interactionHandler = CardInteractionHandler(this);
   }
 
   @override
-  void onHoverEnter() {
-    if (isEnteringHand || isPlayed) return;
-    if (isDragging) return;
-    game.setHoveredCard(this);
-  }
+  void onHoverEnter() => interactionHandler.onHoverEnter();
 
   @override
-  void onHoverExit() {
-    if (isEnteringHand || isPlayed) return;
-    if (isDragging) return;
-    if (game.hoveredCard == this) {
-      game.setHoveredCard(null);
-    }
-  }
+  void onHoverExit() => interactionHandler.onHoverExit();
 
   @override
   void update(double dt) {
     super.update(dt);
     if (isDragging) {
-      angle += (_targetTilt - angle) * 15 * dt;
-      _targetTilt += (0 - _targetTilt) * 5 * dt;
+      angle += (targetTilt - angle) * 15 * dt;
+      targetTilt += (0 - targetTilt) * 5 * dt;
 
       animator.spawnTrailParticles();
-      _activeTrail?.addPoint(position);
+      activeTrail?.addPoint(position);
     }
     if (game.hoveredCard == this) {
-      _foilTime += dt * 3.0;
+      foilTime += dt * 3.0;
     }
   }
 
@@ -584,91 +577,14 @@ class CardComponent extends PositionComponent
   }
 
   @override
-  void render(Canvas canvas) {
-    final bool useSaveLayer = opacity < 1.0;
-    if (useSaveLayer) {
-      canvas.saveLayer(
-        size.toRect(),
-        Paint()..color = Colors.white.withValues(alpha: opacity),
-      );
-    }
+  void render(Canvas canvas) => renderer.render(canvas);
 
-    final rect = size.toRect();
-    final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(12));
-    final bgColor = getBackgroundColor();
-    final rarityColor = getRarityColor();
-
-    // Fond plein (non transparent)
-    final Paint bgPaint = Paint();
-    if (isFlashing) {
-      bgPaint.color = Colors.white;
-    } else {
-      bgPaint.color = bgColor;
-    }
-    canvas.drawRRect(rrect, bgPaint);
-
-    // Bordure fine
-    final Paint bPaint = Paint()..style = PaintingStyle.stroke;
-
-    final bool isHovered = game.hoveredCard == this;
-    if (isHovered && !isFlashing) {
-      bPaint.strokeWidth = 3.5;
-      final colors = _getRarityShineColors();
-      final angle = _foilTime;
-      final cosVal = math.cos(angle);
-      final sinVal = math.sin(angle);
-      bPaint.shader = LinearGradient(
-        begin: Alignment(cosVal, sinVal),
-        end: Alignment(-cosVal, -sinVal),
-        colors: colors,
-      ).createShader(rect);
-    } else {
-      bPaint.strokeWidth = _isSelected ? 2.5 : 1.5;
-      if (isFlashing) {
-        bPaint.color = Colors.white;
-      } else {
-        bPaint.color = _isSelected
-            ? Colors.white.withValues(alpha: 0.8)
-            : rarityColor.withValues(alpha: 0.5);
-      }
-    }
-
-    canvas.drawRRect(rrect, bPaint);
-
-    // Halo de sélection (Glow)
-    if (_isSelected && !isFlashing) {
-      final Paint glowPaint = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 4.0
-        ..color = rarityColor.withValues(alpha: 0.4)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.outer, 8);
-      canvas.drawRRect(rrect, glowPaint);
-    }
-
-    // Dessin manuel des textes délégué
-    if (!isFlashing) {
-      textRenderer.render(canvas, size);
-    }
-
+  void superRender(Canvas canvas) {
     super.render(canvas);
-
-    if (useSaveLayer) {
-      canvas.restore();
-    }
   }
 
   @override
-  void onTapDown(TapDownEvent event) {
-    if (isEnteringHand || isPlayed) return;
-    super.onTapDown(event);
-    if (game.focusedCard == this) {
-      game.setFocusedCard(null);
-    } else {
-      game.setFocusedCard(this);
-    }
-    refreshVisuals();
-    event.continuePropagation = false;
-  }
+  void onTapDown(TapDownEvent event) => interactionHandler.onTapDown(event);
 
   void clearEffects() {
     final effects = children.whereType<Effect>().toList();
@@ -679,132 +595,26 @@ class CardComponent extends PositionComponent
 
   @override
   void onDragStart(DragStartEvent event) {
-    if (isEnteringHand || isPlayed) return;
     super.onDragStart(event);
-
-    isDragging = true;
-    _targetTilt = 0;
-
-    _activeTrail = RibbonTrail(
-      priority: priority - 1,
-      glowColor: getElementalColor(),
-      coreColor: Colors.white,
-    );
-    game.add(_activeTrail!);
-
-    if (game.focusedCard == this) {
-      game.setFocusedCard(null);
-    }
-    if (game.hoveredCard == this) {
-      game.setHoveredCard(null);
-    }
-
-    clearEffects();
-    priority = 200;
-
-    angle = 0;
-    scale = Vector2.all(game.scaleFactor * 0.88 * 1.25);
-    refreshVisuals();
+    interactionHandler.onDragStart(event);
   }
 
   @override
   void onDragUpdate(DragUpdateEvent event) {
-    if (isEnteringHand || isPlayed) return;
-    if (!isDragging) return;
-
-    position += event.canvasDelta;
-    _targetTilt = (event.canvasDelta.x * 0.08).clamp(-0.4, 0.4);
-
-    bool isInCancelZone = position.y > game.size.y * 0.68;
-    if (isInCancelZone != isHoveringCancelZone) {
-      isHoveringCancelZone = isInCancelZone;
-      _applyCancelZoneFeedback(isHoveringCancelZone);
-    }
-
-    if (card.data.target == CardTarget.singleEnemy) {
-      EnemyCard? hoveredEnemy = isHoveringCancelZone
-          ? null
-          : _findHoveredEnemy(position);
-      game.highlightEnemy(hoveredEnemy);
-    }
-  }
-
-  void _applyCancelZoneFeedback(bool cancelling) {
-    clearEffects();
-    isCancelling = cancelling;
-
-    if (cancelling) {
-      add(ScaleEffect.to(Vector2.all(0.9), EffectController(duration: 0.1)));
-    } else {
-      add(ScaleEffect.to(Vector2.all(1.25), EffectController(duration: 0.1)));
-    }
-    refreshVisuals();
+    super.onDragUpdate(event);
+    interactionHandler.onDragUpdate(event);
   }
 
   @override
   void onDragEnd(DragEndEvent event) {
-    if (isPlayed) return;
     super.onDragEnd(event);
-    if (!isDragging) return;
-
-    isDragging = false;
-    _targetTilt = 0;
-    game.setFocusedCard(null);
-
-    _activeTrail?.stop();
-    _activeTrail = null;
-
-    if (isHoveringCancelZone) {
-      animator.returnToHand();
-      game.highlightEnemy(null);
-      return;
-    }
-
-    if (!canAfford) {
-      animator.shakeAnimation();
-      animator.returnToHand();
-      game.highlightEnemy(null);
-      return;
-    }
-
-    EnemyCard? targetedEnemy;
-    if (card.data.target == CardTarget.singleEnemy) {
-      targetedEnemy = game.highlightedEnemy;
-    }
-
-    bool played = game.tryPlayCard(this, targetedEnemy);
-
-    if (!played) {
-      animator.returnToHand();
-    }
-
-    game.highlightEnemy(null);
+    interactionHandler.onDragEnd(event);
   }
 
   @override
   void onDragCancel(DragCancelEvent event) {
-    if (isPlayed) return;
     super.onDragCancel(event);
-    if (!isDragging) return;
-
-    isDragging = false;
-    _targetTilt = 0;
-    game.setFocusedCard(null);
-
-    _activeTrail?.stop();
-    _activeTrail = null;
-
-    animator.returnToHand();
-    game.highlightEnemy(null);
-  }
-
-  EnemyCard? _findHoveredEnemy(Vector2 canvasPos) {
-    for (var enemy in game.enemyCards) {
-      if (enemy.containsPoint(canvasPos)) {
-        return enemy;
-      }
-    }
-    return null;
+    interactionHandler.onDragCancel(event);
   }
 
   void shakeAnimation() {

@@ -2,6 +2,9 @@
 
 Ce document synthétise la boucle de gameplay (Core Loop) de **Hero's Draft**, son économie, ses systèmes de progression procédurale, ses règles métier fondamentales, et le schéma complet des données de jeu.
 
+> [!NOTE]
+> **Architecture d'Exécution** : Afin de garantir la robustesse et l'évolutivité de ces règles métier, les contrôleurs principaux (`RunController` et `CombatController`) ainsi que les composants graphiques majeurs (`HerosDraftGame` et `CardComponent`) sont structurés en tant que **façades**. Ils délèguent l'exécution de leurs règles spécifiques à des sous-gestionnaires et sous-systèmes spécialisés décrits dans le [[systemPatterns|document d'Architecture]].
+
 ---
 
 ## 1. Boucle de Gameplay Principale (Core Loop)

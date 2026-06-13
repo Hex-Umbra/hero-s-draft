@@ -1,5 +1,22 @@
 [
   {
+    "version": "0.3.0",
+    "date": "2026-06-13",
+    "title": "Refactoring Architectural - Phase 2",
+    "sections": [
+      {
+        "category": "Technique",
+        "emoji": "🔧",
+        "entries": [
+          "Décomposition du moteur de rendu Flame `HerosDraftGame` en quatre sous-systèmes spécialisés (`state_sync_system`, `card_animation_system`, `combat_visual_system` et `layout_system`) pour optimiser la boucle de mise à jour et la lisibilité.",
+          "Séparation des responsabilités du composant de carte `CardComponent` en extrayant le rendu 2D dans `CardRenderer` et la gestion des interactions (tactile, glisser-déposer, survol) dans `CardInteractionHandler`.",
+          "Restructuration de la logique de progression avec la décomposition de `RunController` en sous-gestionnaires spécialisés pour les statistiques, la carte, la persistance et l'or.",
+          "Modularisation de la logique de combat en isolant le traitement des altérations d'état et le déroulement séquentiel des phases de tour."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.2.0",
     "date": "2026-06-13",
     "title": "Centralisation et Harmonisation",

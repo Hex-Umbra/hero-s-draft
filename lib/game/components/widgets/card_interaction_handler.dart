@@ -1,0 +1,162 @@
+import 'package:flame/components.dart';
+import 'package:flame/effects.dart';
+import 'package:flame/events.dart';
+import 'package:flutter/material.dart';
+import '../card_component.dart';
+import '../entities/enemy_card.dart';
+import '../../../models/data/card_data.dart';
+import '../visual_effects/ribbon_trail.dart';
+
+class CardInteractionHandler {
+  final CardComponent cardComponent;
+
+  CardInteractionHandler(this.cardComponent);
+
+  void onHoverEnter() {
+    if (cardComponent.isEnteringHand || cardComponent.isPlayed) return;
+    if (cardComponent.isDragging) return;
+    cardComponent.game.setHoveredCard(cardComponent);
+  }
+
+  void onHoverExit() {
+    if (cardComponent.isEnteringHand || cardComponent.isPlayed) return;
+    if (cardComponent.isDragging) return;
+    if (cardComponent.game.hoveredCard == cardComponent) {
+      cardComponent.game.setHoveredCard(null);
+    }
+  }
+
+  void onTapDown(TapDownEvent event) {
+    if (cardComponent.isEnteringHand || cardComponent.isPlayed) return;
+    if (cardComponent.game.focusedCard == cardComponent) {
+      cardComponent.game.setFocusedCard(null);
+    } else {
+      cardComponent.game.setFocusedCard(cardComponent);
+    }
+    cardComponent.refreshVisuals();
+    event.continuePropagation = false;
+  }
+
+  void onDragStart(DragStartEvent event) {
+    if (cardComponent.isEnteringHand || cardComponent.isPlayed) return;
+
+    cardComponent.isDragging = true;
+    cardComponent.targetTilt = 0;
+
+    cardComponent.activeTrail = RibbonTrail(
+      priority: cardComponent.priority - 1,
+      glowColor: cardComponent.getElementalColor(),
+      coreColor: Colors.white,
+    );
+    cardComponent.game.add(cardComponent.activeTrail!);
+
+    if (cardComponent.game.focusedCard == cardComponent) {
+      cardComponent.game.setFocusedCard(null);
+    }
+    if (cardComponent.game.hoveredCard == cardComponent) {
+      cardComponent.game.setHoveredCard(null);
+    }
+
+    cardComponent.clearEffects();
+    cardComponent.priority = 200;
+
+    cardComponent.angle = 0;
+    cardComponent.scale = Vector2.all(cardComponent.game.scaleFactor * 0.88 * 1.25);
+    cardComponent.refreshVisuals();
+  }
+
+  void onDragUpdate(DragUpdateEvent event) {
+    if (cardComponent.isEnteringHand || cardComponent.isPlayed) return;
+    if (!cardComponent.isDragging) return;
+
+    cardComponent.position += event.canvasDelta;
+    cardComponent.targetTilt = (event.canvasDelta.x * 0.08).clamp(-0.4, 0.4);
+
+    bool isInCancelZone = cardComponent.position.y > cardComponent.game.size.y * 0.68;
+    if (isInCancelZone != cardComponent.isHoveringCancelZone) {
+      cardComponent.isHoveringCancelZone = isInCancelZone;
+      applyCancelZoneFeedback(cardComponent.isHoveringCancelZone);
+    }
+
+    if (cardComponent.card.data.target == CardTarget.singleEnemy) {
+      EnemyCard? hoveredEnemy = cardComponent.isHoveringCancelZone
+          ? null
+          : findHoveredEnemy(cardComponent.position);
+      cardComponent.game.highlightEnemy(hoveredEnemy);
+    }
+  }
+
+  void applyCancelZoneFeedback(bool cancelling) {
+    cardComponent.clearEffects();
+    cardComponent.isCancelling = cancelling;
+
+    if (cancelling) {
+      cardComponent.add(ScaleEffect.to(Vector2.all(0.9), EffectController(duration: 0.1)));
+    } else {
+      cardComponent.add(ScaleEffect.to(Vector2.all(1.25), EffectController(duration: 0.1)));
+    }
+    cardComponent.refreshVisuals();
+  }
+
+  void onDragEnd(DragEndEvent event) {
+    if (cardComponent.isPlayed) return;
+    if (!cardComponent.isDragging) return;
+
+    cardComponent.isDragging = false;
+    cardComponent.targetTilt = 0;
+    cardComponent.game.setFocusedCard(null);
+
+    cardComponent.activeTrail?.stop();
+    cardComponent.activeTrail = null;
+
+    if (cardComponent.isHoveringCancelZone) {
+      cardComponent.animator.returnToHand();
+      cardComponent.game.highlightEnemy(null);
+      return;
+    }
+
+    if (!cardComponent.canAfford) {
+      cardComponent.animator.shakeAnimation();
+      cardComponent.animator.returnToHand();
+      cardComponent.game.highlightEnemy(null);
+      return;
+    }
+
+    EnemyCard? targetedEnemy;
+    if (cardComponent.card.data.target == CardTarget.singleEnemy) {
+      targetedEnemy = cardComponent.game.highlightedEnemy;
+    }
+
+    bool played = cardComponent.game.tryPlayCard(cardComponent, targetedEnemy);
+
+    if (!played) {
+      cardComponent.animator.returnToHand();
+    }
+
+    cardComponent.game.highlightEnemy(null);
+  }
+
+  void onDragCancel(DragCancelEvent event) {
+    if (cardComponent.isPlayed) return;
+    if (!cardComponent.isDragging) return;
+
+    cardComponent.isDragging = false;
+    cardComponent.targetTilt = 0;
+    cardComponent.game.setFocusedCard(null);
+
+    cardComponent.activeTrail?.stop();
+    cardComponent.activeTrail = null;
+
+    cardComponent.animator.returnToHand();
+    cardComponent.game.highlightEnemy(null);
+  }
+
+  EnemyCard? findHoveredEnemy(Vector2 canvasPos) {
+    for (var enemy in cardComponent.game.enemyCards) {
+      if (enemy.containsPoint(canvasPos)) {
+        return enemy;
+      }
+    }
+    return null;
+  }
+}
