@@ -1822,6 +1822,36 @@ Modifier le composant de bordure polychromatique (`PolychromaticBorder`) et le w
 - ✅ **Cohérence Métier Restaurée** : Les cartes de classe conservent leur exclusivité. Un joueur Paladin n'aura aucun risque de se voir proposer des cartes de Mage ou de Berserker après avoir vaincu le premier boss.
 - ✅ **Contrôle de l'Équilibrage** : Le pool de drafts de boss reste sain et équilibré avec les 15 cartes globales neutres uniquement.
 
+---
+
+## 🪞 ADR-052 : Amélioration Visuelle et Responsivité de l'Option de Clonage "Magic Mirror" dans la Boutique (v0.1.7)
+
+### Statut
+✅ Accepté & Implémenté (v0.1.7)
+
+### Contexte
+1. L'option de service Magic Mirror (permettant de cloner une carte parmi 3 tirées aléatoirement du deck) utilisait précédemment une disposition visuelle simplifiée pour présenter les choix de cartes. Cette présentation sommaire omettait des informations fondamentales de la carte, telles que sa rareté, ses upgrades de forge actifs, son coût en mana standardisé, son type de ciblage ou sa description complète d'effets, nuisant à l'ergonomie générale.
+2. L'interface n'offrait pas de feedback visuel réactif (comme un zoom ou un halo lumineux de rareté/surbrillance) lors du survol de la souris sur les cartes clonables.
+3. Les dialogues standard (`GameDialog`) présentaient une largeur maximale par défaut trop étroite pour afficher confortablement 3 choix de cartes côte à côte. Sans un mécanisme de défilement ou une contrainte de largeur assouplie, l'affichage risquait de provoquer des débordements (RenderFlex overflow) sur les écrans étroits (mobiles portrait) ou d'être trop resserré.
+
+### Décision
+1. **Intégration Unifiée de `UiCard`** : Remplacer l'affichage simplifié de la carte à cloner par l'utilisation directe du widget standardisé `UiCard` au sein d'un composant interne `_CloneCardItem`. Ce widget est alimenté par l'ensemble des données réelles de la carte (`title`, `description`, `cost` de combat, `effects`, `rarity` localisée, `target`, `type`, `isExhaust`, `forgeUpgrades` et `rarityMultiplier`).
+2. **Gestion Dynamique du Survol** : Envelopper chaque `_CloneCardItem` dans un widget `MouseRegion` et un `AnimatedScale`. Lors du survol (`onEnter`), l'échelle de la carte augmente de manière fluide à `1.05` sur 200ms et le flag `isSelected` du widget `UiCard` est passé à `true`, ce qui active automatiquement les ombres lumineuses (radial glow shadow) et l'effet foil tournant sur la bordure de la carte selon sa rareté.
+3. **Conteneur Horizontal Adaptatif** : Envelopper la ligne (`Row`) de choix de cartes dans un widget `SingleChildScrollView` avec `scrollDirection: Axis.horizontal` pour permettre un défilement propre si la largeur de l'écran est insuffisante pour afficher les 3 options simultanément.
+4. **Élargissement Responsive du Dialogue** : Introduire la propriété optionnelle `maxWidth` dans `GameDialog` et la fixer à `550` pour le dialogue de clonage afin de donner l'espace nécessaire à l'affichage des 3 choix de cartes de largeur unitaire `140`.
+
+### Preuves dans le code
+- `lib/ui/screens/shop_screen.dart` :
+  - Modification de `_showCloneModal(int price)` pour utiliser `GameDialog(maxWidth: 550, ...)` avec un enfant `SingleChildScrollView` et `Row`.
+  - Implémentation du widget d'état privé `_CloneCardItem` et `_CloneCardItemState` gérant le `MouseRegion`, `AnimatedScale`, `InkWell` et instanciant `UiCard` avec tous ses paramètres dynamiques.
+- `lib/ui/widgets/game_dialog.dart` : Ajout de la propriété `maxWidth` (valeur par défaut `500`) pour permettre aux modals spécifiques de demander un élargissement contrôlé de leur conteneur.
+
+### Conséquences
+- ✅ **Expérience Utilisateur Premium (Juice & Feedback)** : La sélection d'une carte à cloner bénéficie désormais de la même qualité visuelle premium glassmorphic, avec ses runes et son halo de rareté foil, que le reste du jeu. Le survol réactif à la souris renforce le plaisir d'interaction.
+- ✅ **Responsivité et Robustesse UI** : Le défilement horizontal et l'élargissement ciblé préviennent tout overflow graphique tout en conservant une mise en page aérée sur desktop et web.
+- ✅ **Cohérence de Design (DRY)** : Réutilisation du composant `UiCard` découpé au lieu d'une duplication partielle de code visuel.
+
+
 
 
 

@@ -13,7 +13,8 @@
           "Le déclenchement visuel des effets de coup critique est désormais basé sur les véritables calculs de combat et non plus sur un seuil de dégâts arbitraire.",
           "L'impact visuel des coups critiques a été intensifié avec un tremblement de carte plus prononcé, un flash doré vif et une explosion de particules enrichie.",
           "La jauge de vie du joueur se vide désormais plus lentement lors des dégâts pour mieux apprécier l'impact des coups reçus, tandis que les animations de soin restent rapides et réactives.",
-          "Les particules du carrousel de tirage de reliques s'animent désormais vers l'extérieur avec des effets de gravité et de friction, puis s'estompent progressivement au lieu de se figer à l'écran."
+          "Les particules du carrousel de tirage de reliques s'animent désormais vers l'extérieur avec des effets de gravité et de friction, puis s'estompent progressivement au lieu de se figer à l'écran.",
+          "L'option « Miroir Magique » dans la boutique affiche désormais l'interface visuelle complète des 3 cartes proposées pour le clonage, avec leurs raretés, couleurs, et fentes de runes de forge, plutôt qu'une simple liste textuelle."
         ]
       },
       {

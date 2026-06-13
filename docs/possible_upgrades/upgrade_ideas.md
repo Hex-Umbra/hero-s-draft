@@ -117,9 +117,9 @@
 - [x] En combat, quand le joueur perd des hp, rajouter une animation smooth sur la barre de vie pour afficher la perte de points de vie
 ---
 - [ ] Actuellement les ennemis n'apparaissent que maximum par 2, revoir les formules et comment les ennemis sont "spawner" quand un le joueur appuie sur un nœud combat
-- [ ] Enlever les cartes de rareté "Unique" dans le menu de sélection de carte après avoir vaincu le boss qui ouvre ce menu en récompense. Actuellement le joueur peut obtenir toutes les cartes peut importe la catégorie.
-- [ ] Fixer la relique "Kunai", actuellement le bonus de maitrise qu'elle offre au joueur est permanent au lieu d'être fixé au combat en cours. Vérifier les autres reliques du même type pour éviter que l'effet se répète sur d'autres reliques.
-- [ ] Modifier l'effet de particules a la fin de l'animation de carousel pour le tirage d'une reliques. Quand l'animation se termine pour afficher sur quel reliques le joueur est tombé, les particules se fige et cela fait un effet non esthétiques. 
+- [x] Enlever les cartes de rareté "Unique" dans le menu de sélection de carte après avoir vaincu le boss qui ouvre ce menu en récompense. Actuellement le joueur peut obtenir toutes les cartes peut importe la catégorie.
+- [x] Fixer la relique "Kunai", actuellement le bonus de maitrise qu'elle offre au joueur est permanent au lieu d'être fixé au combat en cours. Vérifier les autres reliques du même type pour éviter que l'effet se répète sur d'autres reliques.
+- [x] Modifier l'effet de particules a la fin de l'animation de carousel pour le tirage d'une reliques. Quand l'animation se termine pour afficher sur quel reliques le joueur est tombé, les particules se fige et cela fait un effet non esthétiques. 
 - [x] Augmenter le diamètre des slots de forge pour afficher les améliorations d'une carte dans les menus d'affichage de cartes 
 - [x] En combat les cartes de type dégâts ont des chances de critiques. Il faudrait un indicateur visuelle pour bien montrer que l'attaque lancé viens de crit.
 	- [x] Toujours en combat et pour le visuelle, il faudrait améliorer l'affichage des nombres de dégâts pris ou de bonus pris pour qu'ils soient plus esthétique ainsi que plus visuelle 
@@ -136,4 +136,4 @@
 - [ ] Dans le menu du nœud de repos, plus particulièrement l'option de forge. Quand on ouvre le menu pour améliorer une carte, il y a un bouton "annuler" pour revenir en arrière, cependant cela ne renvoie pas vers la page de choix des cartes mais vers le menu du nœud de repos. 
 - [x] Voir pourquoi l'amélioration de donner de l'armure de la forge sur une carte de type attaque ne fonctionne pas
 - [x] Voir pourquoi l'effet de freeze n'applique pas correctement son effet et pourquoi le 50% n'est pas fonctionnel.
-- [ ] Dans le menu de la boutique, le "shop", modifier le menu qui s'ouvre pour l'option "miroir magique" pour afficher les cartes et leur interfaces (les 3 cartes aléatoires) plutôt que simplement avoir leur titre 
+- [x] Dans le menu de la boutique, le "shop", modifier le menu qui s'ouvre pour l'option "miroir magique" pour afficher les cartes et leur interfaces (les 3 cartes aléatoires) plutôt que simplement avoir leur titre 

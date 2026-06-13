@@ -10,6 +10,7 @@ import '../../game/controllers/shop_controller.dart';
 import '../../game/controllers/inventory_controller.dart';
 import '../../services/game_data_service.dart';
 import '../../models/data/card_data.dart';
+import '../../models/card_instance.dart';
 import '../widgets/ui_card.dart';
 import '../widgets/notification_overlay.dart';
 
@@ -217,55 +218,56 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
       return;
     }
 
-    final locale = Localizations.localeOf(context).languageCode;
     final l10n = AppLocalizations.of(context)!;
 
     showDialog(
       context: context,
       builder: (ctx) {
         return GameDialog(
+          maxWidth: 550,
           title: Text(
             l10n.chooseCardToClone,
           ),
           content: Material(
             color: Colors.transparent,
             child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: options
-                    .map(
-                      (card) => ListTile(
-                        title: Text(
-                          card.data.getName(locale),
-                          style: const TextStyle(color: Colors.amber),
-                        ),
-                        subtitle: Text(
-                          card.rarity.getLabel(l10n),
-                          style: const TextStyle(color: Colors.white70),
-                        ),
-                        onTap: () {
-                          final shopController = ref.read(shopProvider.notifier);
+              scrollDirection: Axis.horizontal,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: options.map((card) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                      child: SizedBox(
+                        width: 140,
+                        child: _CloneCardItem(
+                          card: card,
+                          onPressed: () {
+                            final shopController = ref.read(shopProvider.notifier);
 
-                          if (shopController.cloneCard(
-                            price,
-                            card,
-                          )) {
-                            Navigator.of(ctx).pop();
-                            context.showNotification(
-                              l10n.cardCloned,
-                              type: NotificationType.success,
-                            );
-                          } else {
-                            Navigator.of(ctx).pop();
-                            context.showNotification(
-                              l10n.notEnoughGold,
-                              type: NotificationType.error,
-                            );
-                          }
-                        },
+                            if (shopController.cloneCard(
+                              price,
+                              card,
+                            )) {
+                              Navigator.of(ctx).pop();
+                              context.showNotification(
+                                l10n.cardCloned,
+                                type: NotificationType.success,
+                              );
+                            } else {
+                              Navigator.of(ctx).pop();
+                              context.showNotification(
+                                l10n.notEnoughGold,
+                                type: NotificationType.error,
+                              );
+                            }
+                          },
+                        ),
                       ),
-                    )
-                    .toList(),
+                    );
+                  }).toList(),
+                ),
               ),
             ),
           ),
@@ -678,3 +680,66 @@ class _ShopCardItemState extends State<_ShopCardItem> {
     );
   }
 }
+
+class _CloneCardItem extends StatefulWidget {
+  final CardInstance card;
+  final VoidCallback onPressed;
+
+  const _CloneCardItem({
+    required this.card,
+    required this.onPressed,
+  });
+
+  @override
+  State<_CloneCardItem> createState() => _CloneCardItemState();
+}
+
+class _CloneCardItemState extends State<_CloneCardItem> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      cursor: SystemMouseCursors.click,
+      child: AnimatedScale(
+        scale: _isHovered ? 1.05 : 1.0,
+        duration: const Duration(milliseconds: 200),
+        child: InkWell(
+          onTap: widget.onPressed,
+          borderRadius: BorderRadius.circular(12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AspectRatio(
+                aspectRatio: 70 / 110,
+                child: UiCard(
+                  title: widget.card.data.getName(locale),
+                  description: widget.card.data.getDescription(locale),
+                  cost: widget.card.currentCost,
+                  effects: widget.card.data.effects,
+                  level: 1,
+                  rarity: widget.card.rarity.getLabel(l10n),
+                  target: widget.card.data.target.getLabel(l10n),
+                  type: widget.card.data.type,
+                  targetType: widget.card.data.target,
+                  isExhaust: widget.card.data.isExhaust,
+                  isSelected: _isHovered,
+                  forgeUpgrades: widget.card.forgeUpgrades,
+                  baseMaxForgeUpgrades: widget.card.data.baseMaxForgeUpgrades,
+                  rarityMultiplier: widget.card.rarityMultiplier,
+                  onTap: widget.onPressed,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
