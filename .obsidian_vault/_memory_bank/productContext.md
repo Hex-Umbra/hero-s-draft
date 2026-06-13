@@ -116,7 +116,7 @@ Le catalogue de cartes comprend un total de **21 cartes** réparties sur deux fi
 ### Règles Métier et Équilibrage des Cartes
 - **Rareté Unique pour les cartes de classe** : Les 6 cartes de classe ont la rareté `unique` (définie dans l'enum `CardRarity`). Le multiplicateur de statistiques de base de cette rareté est de `1.0` (défini dans `card_instance.dart`).
 - **Capacité de Forge Fixe** : Les cartes de classe possèdent un maximum d'upgrades `baseMaxForgeUpgrades` fixé à 5.
-- **Interdiction de Fusion & Achat** : Les cartes uniques ne peuvent pas être fusionnées (bouton grisé dans l'UI et validation bloquée dans `deck_controller.dart`). De plus, elles n'apparaissent pas dans les tirages de récompenses post-combat (draft) ou en boutique pendant la run.
+- **Interdiction de Fusion & Achat** : Les cartes uniques ne peuvent pas être fusionnées (bouton grisé dans l'UI et validation bloquée dans `deck_controller.dart`). De plus, elles n'apparaissent pas dans les tirages de récompenses post-combat (draft), dans le menu de sélection de cartes post-boss, ou en boutique pendant la run, afin de garantir un contrôle strict des récompenses de classe.
 - **Association par les compétences (Skills)** : Le fichier `heroes.json` associe chaque héros à ses cartes de classe de départ par le champ `"skills"`. La méthode d'extension `HeroSkillsLink.getHeroCards(gameData)` résout dynamiquement ces cartes basées sur les compétences du héros.
 - **Harmonisation des Cartes Globales** : Toutes les cartes globales du fichier `cards.json` possèdent la rareté de base `common` et ont été rééquilibrées autour de ratios de Valeur Par Mana (VPM) standardisés :
   - `heal_potion` : Coût 1 mana, Soin 4, Épuisement (`isExhaust: true`).
@@ -265,7 +265,7 @@ if (armure >= amount) {
 }
 ```
 
-**Maîtrise d'Armure (`armorMastery`)** : Statistique cumulative et permanente. Tous les gains d'armure dans `RunController` et `TraitSystem` ajoutent systématiquement `armorMastery` au montant.
+**Maîtrise d'Armure (`armorMastery`)** : Statistique cumulative et permanente. Tous les gains d'armure dans `RunController` et `TraitSystem` ajoutent systématiquement l'Armor Mastery effective (obtenue via le getter dynamique `effectiveArmorMastery` sur `EntityStats`, qui combine la base `armorMastery` et les bonus temporaires de combat issus du statut `'armor_mastery'`) au montant.
 
 **Persistance** : L'armure accumulée est **transitoire** — remise à 0 à la fin de chaque combat (`completeCurrentNode()`). La Maîtrise d'Armure reste permanente.
 
@@ -347,7 +347,7 @@ Cinq piles logiques gérées par `DeckNotifier` :
 
 **Système de Charges (Reliques Actives)** :
 Les reliques à charges accumulent des compteurs représentés par des effets de statut temporaires ou de combat sur le Héros. Une fois le seuil de charges atteint, le compteur est réinitialisé et l'effet bénéfique s'applique :
-- **Kunaï** (`kunai`) : Génère `kunai_charge` (durée 1, donc réinitialisé à chaque tour). À 3 charges, reset et ajoute +1 Maîtrise d'Armure permanente pour le combat (`armorMastery`).
+- **Kunaï** (`kunai`) : Génère `kunai_charge` (durée 1, donc réinitialisé à chaque tour). À 3 charges, reset et ajoute +1 Maîtrise d'Armure pour le combat via le statut temporaire `'armor_mastery'` (durée 99).
 - **Shuriken** (`shuriken`) : Génère `shuriken_charge` (durée 1). À 3 charges, reset et ajoute +1 Force permanente pour le combat (`strength` de 99 tours).
 - **Plume de Scribe** (`pen_nib`) : Génère `pen_nib_charge` (durée 99). À 5 charges, reset et ajoute +3 Force temporaire pour le tour en cours (`strength` de 1 tour).
 - **Encensoir** (`incense_burner`) : Génère `incense_charge` (durée 99). À 4 charges, reset et octroie +8 points d'Armure.
@@ -444,8 +444,9 @@ Le coup critique introduit un élément probabiliste d'amplification des effets 
 - **Attributs Fondamentaux** (`EntityStats`) :
   - `critChance` : Le taux de base (en %) pour déclencher un coup critique (défaut: `0`).
   - `critMultiplier` : Le coefficient de multiplication des dégâts ou des soins (défaut: `1.5`).
-- **Calcul en Combat** :
+- **Calcul en Combat & État Déterministe (v0.1.7)** :
   - La chance critique effective est calculée dynamiquement par le getter `effectiveCritChance` qui combine `critChance` permanente et les éventuels bonus temporaires issus du statut `crit_chance`.
+  - **Suivi d'État Précis** : Au lieu de se baser sur des seuils de dégâts arbitraires lors de l'affichage, l'état de coup critique est formellement propagé et suivi au niveau du modèle d'état (`EntityStats.lastActionWasCrit`). Ce flag booléen est calculé lors des jets de dés en phase métier (`EffectResolver` et `CombatController`) et stocké temporairement dans les statistiques de l'entité, permettant à la couche de rendu Flame d'obtenir une source de vérité absolue pour déclencher les effets esthétiques associés.
 - **Mécanismes d'Impact** :
   - **Dégâts des Cartes** (`EffectResolver._calculateDamage`) : Les attaques physiques ou magiques du joueur ont une probabilité égale à `effectiveCritChance` de voir leurs dégâts totaux multipliés par `critMultiplier` (arrondi).
   - **Soins des Cartes** (`EffectResolver.resolveCard` case 'heal') : Les soins appliqués au héros ont une chance de coup critique qui multiplie le soin par `critMultiplier`.
@@ -477,7 +478,10 @@ Le moteur graphique Flame intègre des optimisations avancées pour stabiliser l
   - **Réduction de 25% & Suppression du Filigrane** : Sizing des cartes réduit à `140 × 196` (aspect ratio `70/110`) et suppression des filigranes décoratifs d'arrière-plan pour optimiser l'espace et clarifier les textes.
   - **Simplification du Ciblage & Icônes Doublées (Raffiné)** : Suppression des badges textuels de ciblage (Cible unique, Tous, Soi) pour libérer de l'espace. Le ciblage multicible (`allEnemies`) est signifié de manière graphique en doublant les icônes d'effets offensifs ou destinés aux ennemis (ex: ⚔️⚔️ pour les dégâts AoE, ou double icône de débuff). Les effets bénéfiques pour le joueur (gain d'armure, soin, mana, pioche, ou buffs de force/régénération) sur ces mêmes cartes ne sont jamais doublés et conservent une icône simple.
   - **Suppression du label de rareté & Identification par la Couleur/Halo** : Retrait des labels textuels de rareté de la face avant de la carte. La couleur canonique de la rareté de la carte (`card.rarity.color`) est appliquée dynamiquement sur le contour de la carte (`rarityColor.withValues(alpha: 0.5)`), sous forme de halo radial de surbrillance (`rarityColor.withValues(alpha: 0.4)` de rayon de flou 15px et de diffusion 4px) à l'arrière-plan lorsque la carte est sélectionnée, et sur le contour de son infobulle (`Border.all(color: rarityColor, width: 1.5)`), garantissant une identification immédiate de sa rareté sans surcharge textuelle.
-- **Double Jauge de Vie Animée — HP Dual-Bar (v0.1.00)** : `PlayerHealthBar` est convertie en `StatefulWidget` avec un `TweenAnimationBuilder` (500ms, `Curves.easeOutCubic`). Sous l'effet des dégâts, la jauge verte d'avant-plan chute instantanément tandis que la jauge rouge d'arrière-plan descend en traînant. En cas de soin, la jauge verte monte de façon animée et la jauge rouge s'y aligne instantanément.
+- **Textes Flottants Premium & Néon (v0.1.7)** : Les nombres flottants de dégâts et d'effets (`FloatingText`) disposent d'ombres néon colorées thématiques (orange/rouge pour les critiques, vert clair pour le poison, cyan/bleu pour le bouclier) dessinées directement sur le Canvas. À l'apparition, ils effectuent une légère rotation aléatoire (entre -0.15 et +0.15 radians) pour un effet dynamique. Les coups critiques affichent le préfixe `"💥 CRIT "` avec un corps de texte agrandi à 36 (au lieu de 26) et suivent un effet d'échelle séquentiel élastique (pop initial à 1.5x via `Curves.elasticOut`, réduction à 1.15x via `Curves.easeOut`, puis pulsation infinie alternée entre 1.15x et 1.3x).
+- **Double Jauge de Vie Animée et Décélération (v0.1.7)** : `PlayerHealthBar` utilise un `TweenAnimationBuilder` et un `AnimatedBuilder` pour animer les jauges d'avant-plan (jauge verte de PV instantanés) et d'arrière-plan (jauge rouge/orange de catch-up).
+  - *Dégâts* : La jauge verte chute instantanément, tandis que la jauge rouge de catch-up descend avec une animation de décélération progressive ralentie à **1200ms** utilisant la courbe `Curves.easeOut`, permettant de mieux apprécier et ressentir la violence des coups subis.
+  - *Soin* : La jauge rouge de catch-up s'aligne instantanément sur le nouveau niveau de PV, tandis que la jauge verte d'avant-plan augmente de façon animée en **500ms** pour donner un sentiment de régénération progressive et fluide.
 
 ---
 

@@ -1,5 +1,39 @@
 [
   {
+    "version": "0.1.7",
+    "date": "2026-06-13",
+    "title": "L'Éclat des Combats",
+    "sections": [
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "Les nombres flottants de dégâts et d'effets en combat ont été embellis avec des ombres néon colorées et des symboles descriptifs (💥 pour les coups critiques, 🧪 pour le poison et 🛡️ pour le bouclier).",
+          "Les textes flottants intègrent une rotation aléatoire à leur apparition, ainsi qu'un effet d'échelle élastique et pulsant pour les coups critiques.",
+          "Le déclenchement visuel des effets de coup critique est désormais basé sur les véritables calculs de combat et non plus sur un seuil de dégâts arbitraire.",
+          "L'impact visuel des coups critiques a été intensifié avec un tremblement de carte plus prononcé, un flash doré vif et une explosion de particules enrichie.",
+          "La jauge de vie du joueur se vide désormais plus lentement lors des dégâts pour mieux apprécier l'impact des coups reçus, tandis que les animations de soin restent rapides et réactives.",
+          "Les particules du carrousel de tirage de reliques s'animent désormais vers l'extérieur avec des effets de gravité et de friction, puis s'estompent progressivement au lieu de se figer à l'écran."
+        ]
+      },
+      {
+        "category": "Corrections",
+        "emoji": "🐛",
+        "entries": [
+          "Le bonus de Maîtrise de l'armure octroyé par la relique « Croc Kunaï » est désormais temporaire et dure uniquement pour le combat en cours, plutôt que de modifier définitivement les statistiques de base du héros.",
+          "Les cartes de rareté « Unique » sont désormais exclues des récompenses de cartes proposées après avoir vaincu un boss."
+        ]
+      },
+      {
+        "category": "Technique",
+        "emoji": "🔧",
+        "entries": [
+          "Refonte du système de combat pour propager et suivre l'état de coup critique à travers toutes les étapes de calcul de dégâts et de soin."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.1.6",
     "date": "2026-06-12",
     "title": "Ajustements du Gel et de la Forge",

@@ -227,10 +227,11 @@ class EffectResolver {
             );
             if (enemyIndex != -1) {
               final enemy = combatController.currentState.enemies[enemyIndex];
-              int dmg = _calculateDamage(
+              final (dmg, isCrit) = _calculateDamage(
                 scaledValue,
                 runController.currentState.heroStats,
               );
+              int finalDmg = dmg;
               final shockStatus = enemy.stats.statuses.firstWhere(
                 (s) => s.id == 'shock',
                 orElse: () => StatusEffect(
@@ -242,18 +243,18 @@ class EffectResolver {
                 ),
               );
               if (shockStatus.id.isNotEmpty) {
-                dmg += shockStatus.value;
+                finalDmg += shockStatus.value;
               }
               if (enemy.stats.statuses.any((s) => s.id == 'vulnerable')) {
-                dmg = (dmg * 1.5).round();
+                finalDmg = (finalDmg * 1.5).round();
               }
               combatController.updateEnemyStats(
                 selectedEnemyId,
-                enemy.stats.takeDamage(dmg),
+                enemy.stats.takeDamage(finalDmg, isCrit: isCrit),
               );
             }
           } else if (card.data.target == CardTarget.allEnemies) {
-            int dmg = _calculateDamage(
+            final (dmg, isCrit) = _calculateDamage(
               scaledValue,
               runController.currentState.heroStats,
             );
@@ -277,7 +278,7 @@ class EffectResolver {
               }
               combatController.updateEnemyStats(
                 enemy.id,
-                enemy.stats.takeDamage(individualDmg),
+                enemy.stats.takeDamage(individualDmg, isCrit: isCrit),
               );
             }
           }
@@ -286,10 +287,12 @@ class EffectResolver {
           int healVal = scaledValue;
           final heroStats = runController.currentState.heroStats;
           final random = Random();
+          bool isCrit = false;
           if (random.nextInt(100) < heroStats.effectiveCritChance) {
             healVal = (healVal * heroStats.critMultiplier).round();
+            isCrit = true;
           }
-          runController.heal(healVal);
+          runController.heal(healVal, isCrit: isCrit);
           break;
         case 'armor':
           final currentStats = runController.currentState.heroStats;
@@ -348,7 +351,7 @@ class EffectResolver {
   }
 
   /// Calcule les dégâts finaux (influencé par la force et les debuffs)
-  static int _calculateDamage(int baseDamage, EntityStats attackerStats) {
+  static (int damage, bool isCrit) _calculateDamage(int baseDamage, EntityStats attackerStats) {
     int totalDamage = baseDamage + attackerStats.effectiveAttaque;
 
     final weakness = attackerStats.statuses
@@ -359,10 +362,12 @@ class EffectResolver {
     }
 
     final random = Random();
+    bool isCrit = false;
     if (random.nextInt(100) < attackerStats.effectiveCritChance) {
       totalDamage = (totalDamage * attackerStats.critMultiplier).round();
+      isCrit = true;
     }
 
-    return totalDamage;
+    return (totalDamage, isCrit);
   }
 }

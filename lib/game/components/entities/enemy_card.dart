@@ -224,11 +224,11 @@ class EnemyCard extends PositionComponent
 
     if (newStats.currentPv < oldStats.currentPv) {
       final lostHp = oldStats.currentPv - newStats.currentPv;
-      final isCritical = lostHp >= 15;
+      final isCritical = newStats.lastActionWasCrit;
       final damageColor = isPoisonDamage
           ? const Color(0xFF10B981) // Bright neon poison emerald
           : (isCritical
-                ? const Color(0xFFEF4444)
+                ? const Color(0xFFF59E0B)
                 : const Color(0xFFF87171)); // Dynamic red levels
 
       _spawnFloatingText(
@@ -240,12 +240,12 @@ class EnemyCard extends PositionComponent
       );
 
       // Feedback visuel d'impact premium
-      shakeAndFlashAnimation(isPoison: isPoisonDamage);
+      shakeAndFlashAnimation(isPoison: isPoisonDamage, isCritical: isCritical);
 
       // Particules d'éclatement
       spawnDamageParticles(
         color: damageColor,
-        count: isCritical ? 25 : (isPoisonDamage ? 12 : 15),
+        count: isCritical ? 35 : (isPoisonDamage ? 12 : 15),
       );
     }
   }
@@ -321,7 +321,7 @@ class EnemyCard extends PositionComponent
     }
   }
 
-  void shakeAndFlashAnimation({bool isPoison = false}) {
+  void shakeAndFlashAnimation({bool isPoison = false, bool isCritical = false}) {
     if (isDead) return;
     final double bScale = baseScale;
 
@@ -329,10 +329,11 @@ class EnemyCard extends PositionComponent
     sprite.removeAll(sprite.children.whereType<ColorEffect>());
 
     // 1. Sleek Scale Bump (Springy / Elastic Out)
+    final double bumpMultiplier = isCritical ? 1.45 : (isPoison ? 1.12 : 1.22);
     add(
       SequenceEffect([
         ScaleEffect.to(
-          Vector2.all(bScale * (isPoison ? 1.12 : 1.22)),
+          Vector2.all(bScale * bumpMultiplier),
           EffectController(duration: 0.08, curve: Curves.easeOut),
         ),
         ScaleEffect.to(
@@ -344,8 +345,9 @@ class EnemyCard extends PositionComponent
 
     // 2. High-frequency Shake
     final rand = Random();
-    final shakeIntensity = isPoison ? 8.0 : 18.0;
-    for (int i = 0; i < 5; i++) {
+    final shakeIntensity = isCritical ? 28.0 : (isPoison ? 8.0 : 18.0);
+    final shakeCount = isCritical ? 8 : 5;
+    for (int i = 0; i < shakeCount; i++) {
       add(
         MoveEffect.by(
           Vector2(
@@ -358,17 +360,17 @@ class EnemyCard extends PositionComponent
     }
 
     // 3. Dynamic color tint on the sprite
-    final flashColor = isPoison ? const Color(0xFF10B981) : Colors.redAccent;
+    final flashColor = isCritical ? const Color(0xFFF59E0B) : (isPoison ? const Color(0xFF10B981) : Colors.redAccent);
     sprite.add(
       SequenceEffect([
         ColorEffect(
           flashColor,
           EffectController(duration: 0.1),
-          opacityTo: 0.75,
+          opacityTo: isCritical ? 0.85 : 0.75,
         ),
         ColorEffect(
           flashColor,
-          EffectController(duration: 0.25, curve: Curves.easeIn),
+          EffectController(duration: isCritical ? 0.35 : 0.25, curve: Curves.easeIn),
           opacityTo: 0.0,
         ),
       ]),

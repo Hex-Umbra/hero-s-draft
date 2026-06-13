@@ -25,17 +25,26 @@ class RelicCarouselScreen extends StatefulWidget {
   State<RelicCarouselScreen> createState() => _RelicCarouselScreenState();
 }
 
-class _RelicCarouselScreenState extends State<RelicCarouselScreen> {
+class _RelicCarouselScreenState extends State<RelicCarouselScreen> with SingleTickerProviderStateMixin {
   late PageController _pageController;
   late List<RelicData> _carouselItems;
   final int _targetIndex = 22; // Index where the winning relic will sit
   int _focusedIndex = 0;
   bool _isWon = false;
   int _lastTickedPage = 0;
+  AnimationController? _particleAnimationController;
+  List<_Particle> _particles = [];
 
   @override
   void initState() {
     super.initState();
+
+    _particleAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    )..addListener(() {
+        setState(() {});
+      });
 
     // Generate pool of relics excluding the winning one to avoid premature duplication during spin
     final otherRelics = widget.relicPool
@@ -97,9 +106,23 @@ class _RelicCarouselScreenState extends State<RelicCarouselScreen> {
           )
           .then((_) {
             if (mounted) {
+              final random = Random();
               setState(() {
                 _isWon = true;
+                _particles = List.generate(55, (index) {
+                  final angle = random.nextDouble() * 2 * pi;
+                  final speed = 150.0 + random.nextDouble() * 350.0;
+                  final size = 3.0 + random.nextDouble() * 5.0;
+                  final initialOpacity = 0.6 + random.nextDouble() * 0.4;
+                  return _Particle(
+                    angle: angle,
+                    speed: speed,
+                    size: size,
+                    initialOpacity: initialOpacity,
+                  );
+                });
               });
+              _particleAnimationController?.forward(from: 0.0);
               // Trigger land sound hook!
               widget.onLand?.call();
               debugPrint('🎉 Relic Carousel Hook: onLand (Winner locked!)');
@@ -112,6 +135,7 @@ class _RelicCarouselScreenState extends State<RelicCarouselScreen> {
   void dispose() {
     _pageController.removeListener(_onScroll);
     _pageController.dispose();
+    _particleAnimationController?.dispose();
     super.dispose();
   }
 
@@ -261,7 +285,11 @@ class _RelicCarouselScreenState extends State<RelicCarouselScreen> {
             IgnorePointer(
               child: CustomPaint(
                 size: Size.infinite,
-                painter: _ParticlePainter(color: rarityColor),
+                painter: _ParticlePainter(
+                  color: rarityColor,
+                  particles: _particles,
+                  progress: _particleAnimationController?.value ?? 0.0,
+                ),
               ),
             ),
         ],
@@ -273,44 +301,64 @@ class _RelicCarouselScreenState extends State<RelicCarouselScreen> {
 class _ParticlePainter extends CustomPainter {
   final Color color;
   final List<_Particle> particles;
+  final double progress;
 
-  _ParticlePainter({required this.color})
-    : particles = List.generate(40, (index) => _Particle(color));
+  _ParticlePainter({
+    required this.color,
+    required this.particles,
+    required this.progress,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     for (var particle in particles) {
-      particle.draw(canvas, center);
+      particle.draw(canvas, center, progress, color);
     }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _ParticlePainter oldDelegate) {
+    return oldDelegate.progress != progress ||
+        oldDelegate.color != color ||
+        oldDelegate.particles != particles;
+  }
 }
 
 class _Particle {
-  late Offset offset;
-  late double size;
-  late Color color;
-  late double opacity;
+  final double angle;
+  final double speed;
+  final double size;
+  final double initialOpacity;
 
-  _Particle(Color baseColor) {
-    final random = Random();
-    final angle = random.nextDouble() * 2 * pi;
-    final distance = 120.0 + random.nextDouble() * 180.0;
-    offset = Offset(cos(angle) * distance, sin(angle) * distance);
-    size = 3.0 + random.nextDouble() * 6.0;
-    color = baseColor;
-    opacity = 0.3 + random.nextDouble() * 0.7;
-  }
+  _Particle({
+    required this.angle,
+    required this.speed,
+    required this.size,
+    required this.initialOpacity,
+  });
 
-  void draw(Canvas canvas, Offset center) {
+  void draw(Canvas canvas, Offset center, double progress, Color baseColor) {
+    // Apply drag to radial speed
+    // progress goes from 0.0 to 1.0
+    // Distance from center:
+    final double distance = speed * progress * (1.0 - 0.5 * progress);
+    
+    // Gravity pulls downwards
+    final double gravity = 250.0;
+    final double gravityY = gravity * progress * progress;
+    
+    final double x = cos(angle) * distance;
+    final double y = sin(angle) * distance + gravityY;
+    
+    // Fade opacity to 0
+    final double currentOpacity = (initialOpacity * (1.0 - progress)).clamp(0.0, 1.0);
+    
     final paint = Paint()
-      ..color = color.withValues(alpha: opacity)
+      ..color = baseColor.withValues(alpha: currentOpacity)
       ..style = PaintingStyle.fill
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
 
-    canvas.drawCircle(center + offset, size, paint);
+    canvas.drawCircle(center + Offset(x, y), size, paint);
   }
 }

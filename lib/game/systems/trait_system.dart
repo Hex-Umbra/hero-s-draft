@@ -20,12 +20,12 @@ class TraitSystem {
         final armorGain = multiplier * passive.value;
         if (armorGain > 0) {
           controller.setHeroStats(
-            armure: stats.armure + armorGain + stats.armorMastery,
+            armure: stats.armure + armorGain + stats.effectiveArmorMastery,
           );
         }
       } else if (passive.effectType == 'gain_armor') {
         controller.setHeroStats(
-          armure: stats.armure + passive.value + stats.armorMastery,
+          armure: stats.armure + passive.value + stats.effectiveArmorMastery,
         );
       }
     }
@@ -41,7 +41,7 @@ class TraitSystem {
     if (passive.trigger == RelicTrigger.endOfTurn) {
       if (passive.effectType == 'gain_armor') {
         controller.setHeroStats(
-          armure: stats.armure + passive.value + stats.armorMastery,
+          armure: stats.armure + passive.value + stats.effectiveArmorMastery,
         );
       }
     }
@@ -58,7 +58,7 @@ class TraitSystem {
       if (passive.effectType == 'spell_armor') {
         if (card.data.type == CardType.skill) {
           controller.setHeroStats(
-            armure: stats.armure + passive.value + stats.armorMastery,
+            armure: stats.armure + passive.value + stats.effectiveArmorMastery,
           );
         }
       }

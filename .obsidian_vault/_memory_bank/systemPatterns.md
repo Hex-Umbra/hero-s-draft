@@ -707,13 +707,13 @@ Le codebase utilise exhaustivement des enums pour éliminer les typos et optimis
 |:---|:---|:---|
 | `CardType` | `card_data.dart` | `attack`, `skill`, `power`, `status` |
 | `CardCategory` | `card_data.dart` | `global`, `characterSpecific` |
-| `CardRarity` | `card_data.dart` | `common`, `uncommon`, `rare`, `epic`, `legendary` |
+| `CardRarity` | `card_data.dart` | `common`, `uncommon`, `rare`, `epic`, `legendary`, `unique` |
 | `CardTarget` | `card_data.dart` | `singleEnemy`, `allEnemies`, `self`, `none` |
 | `MapNodeType` | `map_node.dart` | `combat`, `elite`, `shop`, `rest`, `event`, `boss` |
 | `IntentType` | `enemy_intent.dart` | `attack`, `defend`, `buff`, `debuffDeck` |
 | `StatusType` | `status_effect.dart` | `buff`, `debuff` |
 | `TurnPhase` | `combat_state.dart` | `player`, `enemy` |
-| `RelicTrigger` | `relic_data.dart` | `startOfRun`, `startOfCombat`, `startOfTurn`, `endOfTurn`, `onCardPlayed`, `onEnemyKilled` |
+| `RelicTrigger` | `relic_data.dart` | `startOfRun`, `startOfCombat`, `startOfTurn`, `endOfTurn`, `onCardPlayed`, `onAttackPlayed`, `onSkillPlayed`, `onPowerPlayed`, `onEnemyKilled` |
 | `RelicRarity` | `relic_data.dart` | `common`, `uncommon`, `rare`, `epic`, `legendary` |
 
 ### 8.3. Principes de Code Documentés
@@ -1181,14 +1181,37 @@ Pour matérialiser visuellement le niveau de forge de chaque carte sans surcharg
   - Dans `card_text_renderer.dart` (Flame) : Une boucle dessine des étoiles dorées vectorielles via l'API Canvas sous le label de rareté.
   - Dans `ui_card.dart` (Flutter) : Une rangée d'icônes `Icons.star` / `Icons.star_border` dorées est insérée de manière dynamique dans l'arbre de widgets.
 
-### 14.4. Double Jauge de Transition (HP Dual-Bar Animation)
+### 14.4. Double Jauge de Transition et Décélération (HP Dual-Bar Animation & Deceleration) (v0.1.7)
 
 Pour fournir un feedback d'impact clair tout en conservant une traînée persistante sous les dégâts subis :
 - **Modèle Double-Jauge** : La barre de vie comporte une jauge avant-plan (verte/jaune/rouge représentant la vie instantanée) et une jauge arrière-plan (rouge/orange représentant la vie précédente avant transition).
-- **Interpolation lagging (Dégâts)** :
+- **Interpolation lagging de Dégâts (Ralentie à 1200ms)** :
   - La jauge verte d'avant-plan chute instantanément pour donner une sensation d'impact immédiate.
-  - La jauge rouge d'arrière-plan descend lentement via un `TweenAnimationBuilder` configuré sur une durée de `500ms` avec la courbe de décélération progressive `Curves.easeOutCubic`.
-- **Alignement instantané (Soin)** :
-  - La jauge verte d'avant-plan augmente de manière animée et progressive pour signifier la guérison.
-  - La jauge rouge d'arrière-plan s'aligne immédiatement sur la jauge verte pour éviter tout effet de traînée inverse inesthétique.
-- **Gestion d'État** : `PlayerHealthBar` est convertie de `StatelessWidget` en `StatefulWidget` pour retenir localement le ratio de PV précédent (`_oldRatio`) et le comparer au nouveau ratio cible (`_targetRatio`) à chaque reconstruction de l'arbre.
+  - La jauge rouge de catch-up d'arrière-plan descend plus lentement via une animation d'une durée portée à **1200ms** (au lieu de 500ms initialement) avec la courbe de décélération progressive `Curves.easeOut`. Cette décélération prolongée permet au joueur de mieux ressentir et quantifier la violence des dégâts reçus.
+- **Alignement instantané de Soin (Snappy)** :
+  - La jauge verte d'avant-plan augmente de manière animée et progressive en **500ms** pour signifier la guérison.
+  - La jauge rouge d'arrière-plan s'aligne immédiatement sur le nouveau montant de PV pour éviter tout effet de traînée inverse inesthétique.
+- **Gestion d'État** : `PlayerHealthBar` est un `StatefulWidget` qui écoute les modifications de `currentPv` et de `maxPv`. Elle reconfigure dynamiquement la durée de l'animation lors du `didUpdateWidget` selon que la valeur de PV augmente (soin) ou diminue (dégâts), et anime les ratios calculés via un `AnimatedBuilder`.
+
+### 14.5. Textes Flottants Premium & Effets Néon (Premium Neon Floating Text) (v0.1.7)
+
+Les textes flottants de dégâts et d'effets de combat (`FloatingText`) ont été restructurés et enrichis pour améliorer le jus visuel (visual juice) en combat :
+1. **Ombres Néon Colorées Thématiques** : Chaque type d'effet applique un ensemble de filtres d'ombres néon cumulés via l'attribut `shadows` du `TextStyle` (dessinés sans `saveLayer` pour de meilleures performances CPU/GPU) :
+   - *Coup Critique* : Lueur néon intense orange et rouge (`Colors.orangeAccent` blur 8, `Colors.redAccent` blur 16, ainsi qu'une ombre noire portée blur 4).
+   - *Poison* : Lueur toxique verte et vert clair (`Colors.greenAccent` blur 6, `Colors.lightGreenAccent` blur 12).
+   - *Bouclier/Armure* : Lueur de barrière cyan et bleue (`Colors.cyanAccent` blur 6, `Colors.blueAccent` blur 12).
+2. **Signalétique Symbolique & Sizing** :
+   - Les coups critiques prépendent le symbole `"💥 CRIT "` et affichent un corps de texte agrandi à 36 (contre 26 pour les dégâts normaux).
+   - Le poison prépende l'icône de fiole `"🧪 "` et affiche un corps de texte de 22.
+   - Les gains d'armure prépendent le bouclier `"🛡️ "` et affichent un corps de texte de 26.
+3. **Trajectoire Organique & Rotation Aléatoire** :
+   - À sa naissance (`onLoad`), chaque texte flottant subit un effet de rotation aléatoire (`RotateEffect.to`) de faible amplitude (entre -0.15 et +0.15 radians) sur 150ms pour casser la rigidité de l'affichage.
+   - Il subit un déplacement en arc de cercle (`MoveEffect.by`) incluant un balayage latéral aléatoire (drift) et une dérive verticale.
+   - Pour le poison, une oscillation sinusoïdale horizontale additionnelle (`sin(time * 10) * 0.8`) est injectée dans la méthode `update` pour simuler une traînée toxique gazeuse flottante.
+4. **Cinématique de Pop d'Échelle de Critique (Elastic Animation Sequence)** :
+   - Contrairement aux textes standard qui effectuent un pop de rebond classique (`Curves.bounceOut`), les critiques subissent une séquence complexe d'effets d'échelle (`SequenceEffect`) :
+     1. Un gonflement rapide et surdimensionné à 1.5x via `Curves.elasticOut` (durée 350ms) pour l'effet de punch.
+     2. Un amortissement léger ramenant l'échelle à 1.15x via `Curves.easeOut` (durée 150ms).
+     3. Une animation de pulsation infinie alternée (`alternate: true`, `infinite: true`) oscillant entre 1.15x et 1.3x toutes les 300ms pour maintenir le focus visuel sur le critique.
+5. **Cycle de Vie & Fondu** :
+   - L'ensemble du composant s'estompe via un fondu de transparence (`OpacityEffect.fadeOut` en 1.2s via `Curves.easeIn`) et est retiré automatiquement de l'arène de jeu Flame via un `RemoveEffect(delay: 1.2)`.

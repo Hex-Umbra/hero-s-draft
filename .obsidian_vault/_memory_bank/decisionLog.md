@@ -1710,6 +1710,119 @@ Modifier le composant de bordure polychromatique (`PolychromaticBorder`) et le w
 - ✅ **Lisibilité de l'Intention** : La signalétique des intentions affiche en temps réel les dégâts exacts que le joueur subira (tenant compte du gel), améliorant la prise de décision stratégique.
 - ✅ **Tests & Qualité** : Les 107 tests du projet s'exécutent avec succès et l'analyse statique de compilation est vierge.
 
+---
+
+## 🎨 ADR-048 : État Critique Déterministe, Nombres Flottants Néon et Décélération de Jauge HP (v0.1.7)
+
+### Statut
+✅ Accepté & Implémenté (v0.1.7)
+
+### Contexte
+1. L'ancien déclenchement des effets visuels de coup critique en combat reposait sur un calcul imprécis ou des seuils de dégâts arbitraires dans la couche de rendu. Il n'y avait pas de propagation déterministe de l'état "critique" depuis la logique de calcul de combat vers la couche Flame.
+2. Les textes flottants d'effets et de dégâts (`FloatingText`) manquaient d'identité graphique et de dynamisme. Les critiques, le poison et le bouclier n'avaient pas de style distinctif en dehors de la valeur textuelle brute.
+3. L'animation de dégâts de la jauge de vie du joueur (`PlayerHealthBar`) descendait trop rapidement (500ms), ce qui masquait l'intensité et le choc visuel des attaques subies lors des affrontements tendus.
+
+### Décision
+1. **Propagation de l'État Critique Déterministe** : Intégrer un champ booléen `lastActionWasCrit` dans le modèle d'état `EntityStats`. Ce flag est résolu à chaque calcul offensif ou curatif dans `EffectResolver` ou `CombatController` (grâce à des jets de chance critique) et stocké dans l'état Riverpod. Les composants Flame s'y synchronisent via `newStats.lastActionWasCrit` pour déclencher les tremblements prononcés (magnitude 28.0), les flashs dorés (`0xFFF59E0B`) et les 35 particules.
+2. **Textes Flottants Premium & Néon** : Refondre `FloatingText` pour supporter :
+   - *Ombres Néon Thématiques* : Orange/Rouge brillant pour critique, Vert pour poison, Cyan/Bleu pour bouclier.
+   - *Rotation & Trajectoire* : Une rotation aléatoire de départ ($\pm 0.15$ rad) et une dérive en arc. Le poison bénéficie en plus d'une oscillation sinusoïdale horizontale dans sa méthode `update` pour simuler un gaz.
+   - *Séquence d'Échelle de Critique* : Un effet séquentiel (`SequenceEffect`) composé d'un pop élastique initial à 1.5x (`Curves.elasticOut` en 350ms), d'une redescente à 1.15x, puis d'une pulsation de zoom/dézoom infinie (1.15x ⇄ 1.3x en 300ms) pour attirer l'attention du joueur.
+   - *Préfixes Textuels* : Ajout automatique de `"💥 CRIT "`, `"🧪 "` ou `"🛡️ "` et calibrage de la taille de police (36 critique, 22 poison, 26 armure).
+3. **Décélération de Jauge HP sous Dégâts** : Paramétrer dynamiquement la durée et la courbe d'animation de `PlayerHealthBar` dans `didUpdateWidget()`. Sous dégâts, la jauge verte descend instantanément tandis que la jauge rouge de catch-up met désormais **1200ms** à se vider avec une courbe de décélération `Curves.easeOut` pour matérialiser la gravité du coup. Pour le soin, la jauge rouge s'aligne immédiatement et la jauge verte remonte de manière fluide en **500ms**.
+
+### Preuves dans le code
+- `lib/models/entity_stats.dart` : Intégration de `lastActionWasCrit` dans les schémas JSON et la méthode `copyWith`.
+- `lib/game/components/entities/hero_card.dart` & `enemy_card.dart` : Synchronisation et déclenchement d'animations enrichies si `newStats.lastActionWasCrit` est vrai.
+- `lib/game/components/floating_text.dart` : Ombres thématiques complexes, préfixes, rotation, cinématique d'échelle séquentielle pour critique, et oscillation sinusoïdale pour poison.
+- `lib/ui/widgets/hud/player_health_bar.dart` : Alternance de durée (1200ms dégâts vs 500ms soin) et gestion de courbe `Curves.easeOut`.
+
+### Conséquences
+- ✅ **Respect de l'Architecture Découplée (ADR-001)** : La logique de calcul des critiques reste à 100% dans la couche métier (Riverpod). La vue (Flame) est passive et se contente de réagir au flag d'état propagé.
+- ✅ **Ressenti Tactile Décuplé (Visual Juice)** : L'élasticité et les ombres néon des critiques ainsi que la traînée de dégâts ralentie de la jauge HP confèrent un impact dramatique et gratifiant aux combats.
+- ✅ **Maintenance & Robustesse** : Les 107 tests du projet continuent de s'exécuter sans aucune régression.
+
+---
+
+## 🛡️ ADR-049 : Correction de la Relique Croc Kunaï (v0.1.7)
+
+### Statut
+✅ Accepté & Implémenté (v0.1.7)
+
+### Contexte
+1. La relique Croc Kunaï (qui octroie +1 Maîtrise d'Armure toutes les 3 attaques jouées dans un tour) présentait un bug critique : son application altérait directement et définitivement la statistique `armorMastery` permanente du héros dans `RunState`. Cela entraînait une persistance anormale du bonus à l'issue du combat, faussant la courbe de puissance de l'armure pour le reste de la run.
+2. Il manquait un mécanisme propre pour appliquer et agréger des bonus temporaires ou combat-longs de Maîtrise d'Armure sans modifier les attributs fondamentaux de la run.
+
+### Décision
+1. **Altération sous forme de StatusEffect** : Modifier le déclenchement de l'effet dans `RunController.applyRelicEffect` pour la clé `'charge_armor_mastery_combat'`. Au lieu de modifier la statistique permanente, le reset de la charge Kunaï applique désormais un `StatusEffect` avec l'identifiant `'armor_mastery'`, un type `StatusType.buff`, une valeur correspondant à `relic.value` (généralement 1) et une durée de 99 tours (couvrant l'intégralité du combat).
+2. **Getter dynamique d'Armor Mastery** : Introduire une propriété calculée (getter) `effectiveArmorMastery` dans le modèle `EntityStats`. Ce getter parcourt la liste des statuts actifs, somme les valeurs des statuts ayant l'ID `'armor_mastery'`, et ajoute ce cumul à la valeur de base `armorMastery`.
+3. **Substitution des calculs d'Armure** : Remplacer l'accès direct à la statistique brute `armorMastery` par le nouveau getter `effectiveArmorMastery` dans `RunController.addArmor()` et dans le système de passifs `TraitSystem` lors de la résolution de l'armure.
+
+### Preuves dans le code
+- `lib/models/entity_stats.dart` : Ajout du getter dynamique `effectiveArmorMastery` parcourant la liste `statuses`.
+- `lib/game/controllers/run_controller.dart` : Remplacement de l'altération de stat brute par l'appel à `addStatus` d'un effet `'armor_mastery'` de 99 tours, et utilisation de `effectiveArmorMastery` pour le calcul de gain d'armure.
+- `lib/game/systems/trait_system.dart` : Utilisation de `effectiveArmorMastery` dans les calculs de gains d'armure basés sur les passifs de classe (Berserker, Mage, Paladin).
+
+### Conséquences
+- ✅ **Intégrité de la Progression** : Le bonus de Maîtrise d'Armure octroyé par le Croc Kunaï est correctement confiné à la durée du combat actuel. Les statistiques du héros redeviennent nominales dès le combat résolu.
+- ✅ **Structure Générique de Buffs** : Le pattern de statut d'armure temporaire est réutilisable pour d'autres reliques ou compétences futures.
+- ✅ **Robustesse** : La validation des 107 tests du projet passe sans régression.
+
+---
+
+## 🎨 ADR-050 : Animation Dynamique des Particules du Carrousel de Reliques (v0.1.7)
+
+### Statut
+✅ Accepté & Implémenté (v0.1.7)
+
+### Contexte
+1. L'overlay de carrousel de reliques (`RelicRewardCarouselOverlay` / `RelicCarouselScreen`) comportait une célébration visuelle de victoire générant des particules dessinées sur Canvas. Cependant, à la fin de la rotation (onLand), ces particules étaient figées/immobiles à l'écran car aucun mécanisme d'animation temporelle n'actualisait leur position et leur opacité à chaque frame.
+2. L'absence de mouvement brisait le ressenti de jus visuel ("visual juice") recherché pour cette transition critique.
+
+### Décision
+1. **Contrôle via AnimationController** : Intégrer un `AnimationController` dédié nommé `_particleAnimationController` avec une durée de 1800ms dans `RelicCarouselScreenState`. Un écouteur (`addListener`) y est rattaché pour déclencher un `setState` à chaque rafraîchissement d'écran.
+2. **Initialisation des Particules** : À l'instant exact où le carrousel s'immobilise sur la relique gagnante (`onLand`), peupler la liste de 55 particules avec des angles aléatoires ($0 \rightarrow 2\pi$), des vitesses initiales radiales ($150 \rightarrow 500$), des tailles ($3 \rightarrow 8$px) et des opacités de départ ($0.6 \rightarrow 1.0$). Lancer immédiatement le contrôleur via `_particleAnimationController.forward(from: 0.0)`.
+3. **Formules de Physique Canvas** : Dans la méthode `draw` de la classe `_Particle`, appliquer les paramètres physiques suivants interpolés par la progression du contrôleur (allant de 0.0 à 1.0) :
+   - *Friction/Traînée* : `final double distance = speed * progress * (1.0 - 0.5 * progress)` limitant la distance radiale finale.
+   - *Gravité* : `final double gravityY = 250.0 * progress * progress` tirant les particules vers le bas.
+   - *Fondu d'Opacité* : `final double currentOpacity = (initialOpacity * (1.0 - progress)).clamp(0.0, 1.0)`.
+4. **IgnorePointer & CustomPaint** : Dessiner l'overlay de particules à l'aide d'un widget `CustomPaint` enveloppé dans un `IgnorePointer` pour ne pas intercepter les interactions utilisateur sur l'écran.
+
+### Preuves dans le code
+- `lib/ui/widgets/relic_carousel/relic_carousel_screen.dart` : Définition de `_particleAnimationController`, instanciation de la liste de particules dans `_startSpin().then()`, et implémentation de la physique dans `_Particle.draw()`.
+
+### Conséquences
+- ✅ **Sensation Premium Renforcée** : L'explosion de confettis/particules de couleur de rareté est fluide, dynamique, et retombe élégamment vers le bas de l'écran tout en s'estompant.
+- ✅ **Respect du Cycle de Vie** : Le contrôleur est correctement libéré via `dispose()` pour éviter toute fuite de mémoire.
+
+---
+
+## 🃏 ADR-051 : Filtrage des Cartes de Rareté Unique dans les Récompenses de Boss (v0.1.7)
+
+### Statut
+✅ Accepté & Implémenté (v0.1.7)
+
+### Contexte
+1. Lors de l'implémentation de la récompense de cartes du Boss 1 (position x=0) via `BossCardDraftScreen`, les cartes étaient générées par `RewardController` en tirant depuis `allCards` sans filtrage de rareté spécifique.
+2. Les cartes spécifiques de classe (ex: *Bouclier Saint*, *Fureur*) ayant été déplacées de `cards.json` à `hero_cards.json` avec la rareté `unique`, ces cartes étaient tirées à tort dans le draft de cartes globales, permettant à un joueur de collecter des cartes d'autres classes ou de briser la restriction de gating de classe.
+
+### Décision
+1. **Filtrage des Unique dans le RewardController** : Modifier la méthode d'initialisation de récompense `RewardController.initializeReward()`. Pour le cas de récompense `BossRewardType.cards` (Boss x=0), ajouter un filtre restrictif lors de l'extraction des cartes disponibles :
+   ```dart
+   rolledCards = allCards
+       .where((c) => c.type != CardType.status && c.rarity != CardRarity.unique)
+       .toList();
+   ```
+2. **Alignement des Pools** : Garantir que les cartes de rareté `unique` restent réservées à l'attribution initiale (starter decks via compétences) ou à des systèmes explicitement liés à la classe choisie, les excluant du pool de cartes globales proposées post-combat de boss.
+
+### Preuves dans le code
+- `lib/game/controllers/reward_controller.dart` : Ajout de la clause `c.rarity != CardRarity.unique` dans la méthode de roll des récompenses du boss de cartes.
+
+### Conséquences
+- ✅ **Cohérence Métier Restaurée** : Les cartes de classe conservent leur exclusivité. Un joueur Paladin n'aura aucun risque de se voir proposer des cartes de Mage ou de Berserker après avoir vaincu le premier boss.
+- ✅ **Contrôle de l'Équilibrage** : Le pool de drafts de boss reste sain et équilibré avec les 15 cartes globales neutres uniquement.
+
+
 
 
 

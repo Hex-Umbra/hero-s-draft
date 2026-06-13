@@ -8,7 +8,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 - **107 tests automatisés** — 100% au vert.
 - **0 erreur** via `flutter analyze`.
 - **~119 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
-- **Version actuelle** : v0.2.04 — Enrichissement des Tooltips de Cartes.
+- **Version actuelle** : v0.1.7 — L'Éclat des Combats.
 
 ---
 
@@ -25,7 +25,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Chokepoints structurels forcés | `MapGeneratorService` | Étage central dynamique (`floors ~/ 2`) Élite forcé (1 nœud), Étage `floors-2` Repos forcé (repos garanti avant boss) |
 | Level Up différé sur la Carte | `RunController`, `MapScreen`, `GameScreen` | Les gains de niveau incrémentent `pendingDrafts` au lieu d'ouvrir le draft en combat. Un overlay bloquant « LEVEL UP ! » s'affiche sur la carte, forçant le joueur à effectuer ses choix de draft avant de naviguer. |
 | Embranchement de Boss multiples | `MapGeneratorService` / `EncounterSystem` | Étage final (Boss) présente 3 nœuds de boss distincts avec récompenses de combat uniques déterminées par leur position |
-| Récompenses de Boss uniques | `GameScreen`, `MapNode`, `RewardController`, `BossCardDraftScreen` | Boss 1 (x=0) : sélection forcée de 3 cartes via BossCardDraftScreen. Boss 2 (x=1) : XP/Or doublés. Boss 3 (x=2) : relic drop dynamique par Act dans RewardController. |
+| Récompenses de Boss uniques | `GameScreen`, `MapNode`, `RewardController`, `BossCardDraftScreen` | Boss 1 (x=0) : sélection forcée de 3 cartes via BossCardDraftScreen (les cartes uniques de classe y sont exclues). Boss 2 (x=1) : XP/Or doublés. Boss 3 (x=2) : relic drop dynamique par Act dans RewardController. |
 | Correction d'orphelins | `MapGeneratorService` (Phase 2 câblage) | Garantie que tout nœud a au moins 1 connexion entrante |
 | Navigation réactive | `RunController.travelToNode()` | Validation d'accessibilité (connexion au nœud complété ou étage 0) |
 | Caméra centrée | `MapScreen` | Repositionnement et centrage automatique fluide à chaque transition |
@@ -118,7 +118,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Icônes vectorielles canvas | `effect_icon.dart` | Dessin personnalisé (écu, épées croisées, goutte, étoile, flamme, flocon de neige, éclair) avec flou glow à la main sur canvas |
 | Clarté des infobulles (Tooltips) | `ui_card.dart`, `card_component.dart` | Explications mécaniques parentthésées et localisées pour tous les statuts (poison, brûlure, gel, élec, faiblesse, vulnérable) |
 | Cohérence visuelle HUD | `status_effects_panel.dart`, `status_indicator.dart` | Mappage complet d'émojis (🔥, ❄️, ⚡, ✊) et d'icônes Flutter harmonisés pour le joueur et les ennemis |
-| Texte flottant de dégâts | `FloatingText` | `MoveEffect` ascendant + `OpacityEffect` fade, ~1.5s |
+| Texte flottant de dégâts | `FloatingText` | Textes néon thématiques (💥 critique, 🧪 poison, 🛡️ armure), rotation à la naissance, trajectoire de drift, oscillation sinusoïdale (poison), et cinématique d'échelle élastique/pulsation infinie sur critique (v0.1.7) |
 | Animations d'attaque ennemie | `EnemyCard.dashAnimation()` | `MoveEffect` avant/arrière |
 | Barre de vie dynamique | `HealthBar` | Interpolation couleur green→yellow→red, transition animée |
 | Badges de stats vectoriels | `StatBadge` | Dessin custom, pulse de scale au changement |
@@ -140,7 +140,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Tooltips de Combat Ciblés | `ui_card.dart`, `card_component.dart` | Affichage sélectif sur focus de carte, auto-masquage au jeu ou changement de phase, et injection formatée des upgrades de forge (v0.1.00) |
 | Fentes de Runes (Rune Sockets) | `card_text_renderer.dart`, `ui_card.dart` | Remplacement des étoiles d'upgrades par des sockets de runes (⚔️, 🛡️, 🔥) avec retour à la ligne automatique (wrapping) par rangées de 5 (rows of 5) sur le layout de carte pour éviter tout overflow visuel (v0.1.5) |
 | Rareté Visuelle sans Texte | `ui_card.dart`, `card_component.dart` | Retrait des labels textuels de rareté de la face avant des cartes; identification pure par la couleur des bordures et par halo lumineux (glowing shadows/radial glow) lors des sélections (v0.1.5) |
-| Jauge HP Double-Transition | `PlayerHealthBar` | Refactorisation en StatefulWidget animée par TweenAnimationBuilder (500ms, easeOutCubic) avec jauge secondaire rouge/orange lagging sous les dégâts et snap direct au soin (v0.1.00) |
+| Jauge HP Double-Transition | `PlayerHealthBar` | Refactorisation en StatefulWidget animée par TweenAnimationBuilder avec jauge secondaire rouge/orange lagging (décélération à 1200ms easeOut sous dégâts) et snap direct/remontée progressive (500ms) au soin (v0.1.7) |
 | Grille de Boutique | `ShopScreen` / `shop_screen.dart` | Disposition en Wrap avec contrainte de taille SizedBox de 150 par carte pour une grille stable (v0.1.3) |
 | Couleur par type de carte | `UiCard` / `CardComponent` | Code couleur d'arrière-plan distinct sémantique (rouge=attack, vert=skill, violet=power, gris=status) et bordure d'accent appliqué aux cartes de menu (`UiCard` - v0.1.3) et étendu aux cartes de combat Flame (`CardComponent` - v0.1.5) |
 | Masquage Anti-Spoil de Relique | `RelicRewardCarouselOverlay`, `RelicCarouselCard` | Affichage en gris neutre et anonyme des cartes avec badges « ??? » pendant le spin. Révélation complète des couleurs et déclencheurs à l'arrêt (v0.1.4) |
@@ -356,6 +356,7 @@ Issus de `docs/analysis_reports/6_analyse_game_balance.md` (documentés, non cor
 
 | Version | Date | Titre | Description des changements clés |
 |:---|:---|:---|:---|
+| **v0.1.7** | 2026-06-13 | L'Éclat des Combats | Embellissement des textes flottants thématiques avec ombres néon et symboles descriptifs, rotation de naissance, et cinématique d'échelle élastique suivie d'une pulsation infinie sur critique. Déclenchement visuel des critiques basé sur la propagation de l'état `lastActionWasCrit` calculé en phase métier (déterministe). Renforcement des impacts (tremblement accru, flash doré, 35 particules). Décélération de la jauge HP de catch-up (1200ms easeOut sous dégâts) pour mieux ressentir la violence des coups. **Incorpore également** : le fix de la relique Croc Kunaï (combat-long `'armor_mastery'` StatusEffect avec getter dynamique `effectiveArmorMastery`), l'animation dynamique des particules Canvas du carrousel de reliques (via `AnimationController` Flutter avec gravité, friction et fade), et l'exclusion des cartes de rareté unique dans les récompenses de cartes post-boss (x=0). |
 | **v0.2.04** | 2026-06-12 | Enrichissement des Tooltips de Cartes | Ajout de tous les détails (type de cible écrit explicitement, rareté, type de carte, coût mana) dans les tooltips en combat (Flame CardComponent) et menus (Flutter UiCard) en français et anglais. |
 | **v0.2.03** | 2026-06-12 | Polissage Dimensionnel des Cartes en Menu | Agrandissement des fentes de runes à 10px (visibilité des emojis d'upgrades) et agrandissement du médaillon de coût mana à 30px (ajustement offset [-9, -9]) uniquement sur les menus (Flutter). |
 | **v0.2.02** | 2026-06-12 | Bordure Foil Progressif Unique | Rendu de la bordure polychromatique brillante au survol de la souris dont le nombre de couleurs (de 1 à 10) augmente avec le nombre d'upgrades (upgradeCount) de la carte Unique. |

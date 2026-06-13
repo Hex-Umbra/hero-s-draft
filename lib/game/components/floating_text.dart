@@ -24,31 +24,49 @@ class FloatingText extends TextComponent with HasPaint {
   }) : baseColor = color,
        baseShadows = [
          Shadow(
-           color: Colors.black.withValues(alpha: 0.8),
+           color: Colors.black.withValues(alpha: 0.9),
            offset: const Offset(2, 2),
            blurRadius: 4,
          ),
-         if (isCritical)
+         if (isCritical) ...[
            const Shadow(
              color: Colors.orangeAccent,
              offset: Offset.zero,
              blurRadius: 8,
            ),
-         if (isPoison)
+           const Shadow(
+             color: Colors.redAccent,
+             offset: Offset.zero,
+             blurRadius: 16,
+           ),
+         ],
+         if (isPoison) ...[
            const Shadow(
              color: Colors.greenAccent,
              offset: Offset.zero,
              blurRadius: 6,
            ),
-         if (isShield)
+           const Shadow(
+             color: Colors.lightGreenAccent,
+             offset: Offset.zero,
+             blurRadius: 12,
+           ),
+         ],
+         if (isShield) ...[
            const Shadow(
              color: Colors.cyanAccent,
              offset: Offset.zero,
              blurRadius: 6,
            ),
+           const Shadow(
+             color: Colors.blueAccent,
+             offset: Offset.zero,
+             blurRadius: 12,
+           ),
+         ],
        ],
        super(
-         text: text,
+         text: '${isCritical ? "💥 CRIT " : (isPoison ? "🧪 " : (isShield ? "🛡️ " : ""))}$text',
          position: position,
          anchor: Anchor.center,
          textRenderer: TextPaint(
@@ -58,28 +76,46 @@ class FloatingText extends TextComponent with HasPaint {
              fontWeight: FontWeight.bold,
              shadows: [
                Shadow(
-                 color: Colors.black.withValues(alpha: 0.8),
+                 color: Colors.black.withValues(alpha: 0.9),
                  offset: const Offset(2, 2),
                  blurRadius: 4,
                ),
-               if (isCritical)
+               if (isCritical) ...[
                  const Shadow(
                    color: Colors.orangeAccent,
                    offset: Offset.zero,
                    blurRadius: 8,
                  ),
-               if (isPoison)
+                 const Shadow(
+                   color: Colors.redAccent,
+                   offset: Offset.zero,
+                   blurRadius: 16,
+                 ),
+               ],
+               if (isPoison) ...[
                  const Shadow(
                    color: Colors.greenAccent,
                    offset: Offset.zero,
                    blurRadius: 6,
                  ),
-               if (isShield)
+                 const Shadow(
+                   color: Colors.lightGreenAccent,
+                   offset: Offset.zero,
+                   blurRadius: 12,
+                 ),
+               ],
+               if (isShield) ...[
                  const Shadow(
                    color: Colors.cyanAccent,
                    offset: Offset.zero,
                    blurRadius: 6,
                  ),
+                 const Shadow(
+                   color: Colors.blueAccent,
+                   offset: Offset.zero,
+                   blurRadius: 12,
+                 ),
+               ],
              ],
            ),
          ),
@@ -122,6 +158,15 @@ class FloatingText extends TextComponent with HasPaint {
     // Initialisation de l'échelle pour l'effet "pop"
     scale = Vector2.all(0.1);
 
+    // Rotation aléatoire subtile sur la naissance
+    final double randomRotation = (random.nextDouble() - 0.5) * 0.3; // entre -0.15 et 0.15 rad
+    add(
+      RotateEffect.to(
+        randomRotation,
+        EffectController(duration: 0.15, curve: Curves.easeOut),
+      ),
+    );
+
     // Trajectoire aléatoire en arc de cercle
     final double driftX = (random.nextDouble() - 0.5) * 80; // Entre -40 et 40
     double driftY =
@@ -131,13 +176,32 @@ class FloatingText extends TextComponent with HasPaint {
       driftY = -driftY; // Inverser pour aller vers le haut
     }
 
-    // 1. Effet de Pop (Agrandissement rapide)
-    add(
-      ScaleEffect.to(
-        Vector2.all(1.0),
-        EffectController(duration: 0.15, curve: Curves.bounceOut),
-      ),
-    );
+    // 1. Effet d'Échelle (Pop ou Critique Punchy)
+    if (isCritical) {
+      add(
+        SequenceEffect([
+          ScaleEffect.to(
+            Vector2.all(1.5),
+            EffectController(duration: 0.35, curve: Curves.elasticOut),
+          ),
+          ScaleEffect.to(
+            Vector2.all(1.15),
+            EffectController(duration: 0.15, curve: Curves.easeOut),
+          ),
+          ScaleEffect.to(
+            Vector2.all(1.3),
+            EffectController(duration: 0.3, alternate: true, infinite: true),
+          ),
+        ]),
+      );
+    } else {
+      add(
+        ScaleEffect.to(
+          Vector2.all(1.0),
+          EffectController(duration: 0.15, curve: Curves.bounceOut),
+        ),
+      );
+    }
 
     // 2. Mouvement (Drift)
     if (isPoison) {
@@ -169,15 +233,6 @@ class FloatingText extends TextComponent with HasPaint {
         EffectController(duration: 1.2, curve: Curves.easeIn),
       ),
     );
-
-    if (isCritical) {
-      add(
-        ScaleEffect.by(
-          Vector2.all(1.25),
-          EffectController(duration: 0.2, alternate: true),
-        ),
-      );
-    }
 
     add(RemoveEffect(delay: 1.2));
   }

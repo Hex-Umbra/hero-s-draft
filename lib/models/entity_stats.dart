@@ -15,6 +15,7 @@ class EntityStats {
   final int critChance;
   final double critMultiplier;
   final List<StatusEffect> statuses;
+  final bool lastActionWasCrit;
 
   const EntityStats({
     required this.maxPv,
@@ -31,6 +32,7 @@ class EntityStats {
     this.critChance = 0,
     this.critMultiplier = 1.5,
     this.statuses = const [],
+    this.lastActionWasCrit = false,
   });
 
   EntityStats copyWith({
@@ -48,6 +50,7 @@ class EntityStats {
     int? critChance,
     double? critMultiplier,
     List<StatusEffect>? statuses,
+    bool? lastActionWasCrit,
   }) {
     return EntityStats(
       maxPv: maxPv ?? this.maxPv,
@@ -64,6 +67,7 @@ class EntityStats {
       critChance: critChance ?? this.critChance,
       critMultiplier: critMultiplier ?? this.critMultiplier,
       statuses: statuses ?? this.statuses,
+      lastActionWasCrit: lastActionWasCrit ?? this.lastActionWasCrit,
     );
   }
 
@@ -90,6 +94,7 @@ class EntityStats {
       critChance: json['critChance'] as int? ?? 0,
       critMultiplier: (json['critMultiplier'] as num?)?.toDouble() ?? 1.5,
       statuses: parsedStatuses,
+      lastActionWasCrit: json['lastActionWasCrit'] as bool? ?? false,
     );
   }
 
@@ -108,6 +113,7 @@ class EntityStats {
     'critChance': critChance,
     'critMultiplier': critMultiplier,
     'statuses': statuses.map((s) => s.toJson()).toList(),
+    'lastActionWasCrit': lastActionWasCrit,
   };
 
   /// Ajoute ou combine un effet de statut
@@ -145,6 +151,16 @@ class EntityStats {
     return copyWith(statuses: newStatuses);
   }
 
+  int get effectiveArmorMastery {
+    int bonus = 0;
+    for (var status in statuses) {
+      if (status.id == 'armor_mastery') {
+        bonus += status.value;
+      }
+    }
+    return armorMastery + bonus;
+  }
+
   /// Calcule l'attaque effective en prenant en compte les buffs de force
   int get effectiveAttaque {
     int bonus = 0;
@@ -166,8 +182,8 @@ class EntityStats {
     return critChance + bonus;
   }
 
-  EntityStats takeDamage(int amount) {
-    if (amount <= 0) return this;
+  EntityStats takeDamage(int amount, {bool isCrit = false}) {
+    if (amount <= 0) return copyWith(lastActionWasCrit: isCrit);
 
     // 2. Absorption via Armure
     int damageAfterArmor = amount - armure;
@@ -185,6 +201,6 @@ class EntityStats {
 
     if (newPv < 0) newPv = 0;
 
-    return copyWith(armure: newArmor, currentPv: newPv);
+    return copyWith(armure: newArmor, currentPv: newPv, lastActionWasCrit: isCrit);
   }
 }

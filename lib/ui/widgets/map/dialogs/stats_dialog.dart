@@ -190,7 +190,7 @@ class StatsDialog extends ConsumerWidget {
                       size: 16,
                     ),
                     title: locale == 'fr' ? 'Maîtrise' : 'Mastery',
-                    value: '+${stats.armorMastery}',
+                    value: '+${stats.effectiveArmorMastery}',
                     subtitle:
                         locale == 'fr' ? "Sur l'Armure Passive" : "On passive armor",
                   ),

@@ -295,31 +295,41 @@ class RunController extends Notifier<RunState> {
   }
 
   /// Applique un soin en jeu
-  void heal(int amount) {
+  void heal(int amount, {bool isCrit = false}) {
     int newPv = (state.heroStats.currentPv + amount).clamp(
       0,
       state.heroStats.maxPv,
     );
     state = state.copyWith(
-      heroStats: state.heroStats.copyWith(currentPv: newPv),
+      heroStats: state.heroStats.copyWith(
+        currentPv: newPv,
+        lastActionWasCrit: isCrit,
+      ),
     );
   }
 
   /// Modifie la valeur exacte d'un champ sans affecter les max (pour la récupération d'armure par ex)
-  void setHeroStats({int? currentPv, int? armure, int? currentMana, int? armorMastery}) {
+  void setHeroStats({
+    int? currentPv,
+    int? armure,
+    int? currentMana,
+    int? armorMastery,
+    bool? lastActionWasCrit,
+  }) {
     state = state.copyWith(
       heroStats: state.heroStats.copyWith(
         currentPv: currentPv ?? state.heroStats.currentPv,
         armure: armure ?? state.heroStats.armure,
         currentMana: currentMana ?? state.heroStats.currentMana,
         armorMastery: armorMastery ?? state.heroStats.armorMastery,
+        lastActionWasCrit: lastActionWasCrit ?? false,
       ),
     );
   }
 
   /// Subit des dégâts
-  void takeDamage(int amount) {
-    state = state.copyWith(heroStats: state.heroStats.takeDamage(amount));
+  void takeDamage(int amount, {bool isCrit = false}) {
+    state = state.copyWith(heroStats: state.heroStats.takeDamage(amount, isCrit: isCrit));
   }
 
   /// Applique un effet de statut
@@ -415,7 +425,15 @@ class RunController extends Notifier<RunState> {
               statuses: updatedStatuses,
             ),
           );
-          setHeroStats(armorMastery: state.heroStats.armorMastery + relic.value);
+          addStatus(
+            StatusEffect(
+              id: 'armor_mastery',
+              name: 'Maîtrise d\'Armure (Relique)',
+              type: StatusType.buff,
+              value: relic.value,
+              duration: 99,
+            ),
+          );
         } else {
           addStatus(
             const StatusEffect(

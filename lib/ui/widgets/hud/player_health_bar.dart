@@ -67,6 +67,7 @@ class _PlayerHealthBarState extends State<PlayerHealthBar>
 
       if (newPv < activeGreen) {
         // Damage: green drops instantly, catchUp animates down
+        _controller.duration = const Duration(milliseconds: 1200);
         _greenStart = newPv;
         _greenEnd = newPv;
 
@@ -74,6 +75,7 @@ class _PlayerHealthBarState extends State<PlayerHealthBar>
         _catchUpEnd = newPv;
       } else {
         // Healing: catchUp jumps instantly, green animates up
+        _controller.duration = const Duration(milliseconds: 500);
         _catchUpStart = newPv;
         _catchUpEnd = newPv;
 
@@ -81,6 +83,8 @@ class _PlayerHealthBarState extends State<PlayerHealthBar>
         _greenEnd = newPv;
       }
       _controller.forward(from: 0.0);
+    } else {
+      _controller.duration = const Duration(milliseconds: 500);
     }
   }
 

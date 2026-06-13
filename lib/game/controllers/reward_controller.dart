@@ -164,7 +164,9 @@ class RewardController extends Notifier<RewardState> {
     // 4. Roll Cards
     List<CardData> rolledCards = [];
     if (currentNode.bossRewardType == BossRewardType.cards) {
-      rolledCards = allCards.where((c) => c.type != CardType.status).toList();
+      rolledCards = allCards
+          .where((c) => c.type != CardType.status && c.rarity != CardRarity.unique)
+          .toList();
     }
 
     state = RewardState(

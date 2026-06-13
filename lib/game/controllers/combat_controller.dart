@@ -201,37 +201,43 @@ class CombatController extends Notifier<CombatState> {
     if (skill.effectType == 'damage_aoe') {
       int dmg = (effectiveAttaque * (skill.effectValue / 100.0)).round();
       final random = Random();
+      bool isCrit = false;
       if (random.nextInt(100) < heroStats.effectiveCritChance) {
         dmg = (dmg * heroStats.critMultiplier).round();
+        isCrit = true;
       }
       if (dmg < 1) dmg = 1;
 
       state = state.copyWith(
         enemies: state.enemies.map((enemy) {
-          return enemy.copyWith(stats: enemy.stats.takeDamage(dmg));
+          return enemy.copyWith(stats: enemy.stats.takeDamage(dmg, isCrit: isCrit));
         }).toList(),
       );
       _cleanDeadEnemies();
     } else if (skill.effectType == 'damage_targeted' && targetEnemyId != null) {
       int dmg = (effectiveAttaque * (skill.effectValue / 100.0)).round();
       final random = Random();
+      bool isCrit = false;
       if (random.nextInt(100) < heroStats.effectiveCritChance) {
         dmg = (dmg * heroStats.critMultiplier).round();
+        isCrit = true;
       }
       if (dmg < 1) dmg = 1;
 
       state = state.copyWith(
         enemies: state.enemies.map((enemy) {
           if (enemy.id != targetEnemyId) return enemy;
-          return enemy.copyWith(stats: enemy.stats.takeDamage(dmg));
+          return enemy.copyWith(stats: enemy.stats.takeDamage(dmg, isCrit: isCrit));
         }).toList(),
       );
       _cleanDeadEnemies();
     } else if (skill.effectType == 'damage_pierce' && targetEnemyId != null) {
       int dmg = effectiveAttaque;
       final random = Random();
+      bool isCrit = false;
       if (random.nextInt(100) < heroStats.effectiveCritChance) {
         dmg = (dmg * heroStats.critMultiplier).round();
+        isCrit = true;
       }
 
       final enemyIndex = state.enemies.indexWhere((e) => e.id == targetEnemyId);
@@ -247,7 +253,11 @@ class CombatController extends Notifier<CombatState> {
           enemies: state.enemies.map((e) {
             if (e.id != targetEnemyId) return e;
             return e.copyWith(
-              stats: e.stats.copyWith(currentPv: newPv, armure: newArm),
+              stats: e.stats.copyWith(
+                currentPv: newPv,
+                armure: newArm,
+                lastActionWasCrit: isCrit,
+              ),
             );
           }).toList(),
         );
@@ -319,11 +329,13 @@ class CombatController extends Notifier<CombatState> {
 
         // Roll enemy crit check
         final random = Random();
+        bool isCrit = false;
         if (random.nextInt(100) < enemy.stats.effectiveCritChance) {
           dmg = (dmg * enemy.stats.critMultiplier).round();
+          isCrit = true;
         }
 
-        runController.takeDamage(dmg);
+        runController.takeDamage(dmg, isCrit: isCrit);
 
         if (hasFreeze) {
           final updatedStatuses = enemy.stats.statuses.map((s) {

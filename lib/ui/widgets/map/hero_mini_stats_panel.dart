@@ -105,7 +105,7 @@ class HeroMiniStatsPanel extends ConsumerWidget {
             icon: Icons.shield_outlined,
             iconColor: Colors.lightBlueAccent,
             value:
-                '+${stats.armorMastery} ${locale == 'fr' ? 'Maîtrise' : 'Mastery'}',
+                '+${stats.effectiveArmorMastery} ${locale == 'fr' ? 'Maîtrise' : 'Mastery'}',
           ),
           const SizedBox(height: 6),
           // Chance
