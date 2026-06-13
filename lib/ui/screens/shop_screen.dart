@@ -633,48 +633,44 @@ class _ShopCardItemState extends State<_ShopCardItem> {
       child: AnimatedScale(
         scale: _isHovered ? 1.05 : 1.0,
         duration: const Duration(milliseconds: 200),
-        child: InkWell(
-          onTap: widget.onPressed,
-          borderRadius: BorderRadius.circular(12),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Builder(
-                builder: (context) {
-                  final locale = Localizations.localeOf(context).languageCode;
-                  return SizedBox(
-                    width: 150,
-                    child: AspectRatio(
-                      aspectRatio: 70 / 110,
-                      child: UiCard(
-                        title: widget.card.getName(locale),
-                        description: widget.card.getDescription(locale),
-                        cost: widget.card.cost,
-                        effects: widget.card.effects,
-                        level: 1,
-                        rarity: widget.rarityLabel,
-                        target: widget.targetLabel,
-                        type: widget.card.type,
-                        targetType: widget.card.target,
-                        isExhaust: widget.card.isExhaust,
-                        baseMaxForgeUpgrades: widget.card.baseMaxForgeUpgrades,
-                        onTap: widget.onPressed,
-                      ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Builder(
+              builder: (context) {
+                final locale = Localizations.localeOf(context).languageCode;
+                return SizedBox(
+                  width: 150,
+                  child: AspectRatio(
+                    aspectRatio: 70 / 110,
+                    child: UiCard(
+                      title: widget.card.getName(locale),
+                      description: widget.card.getDescription(locale),
+                      cost: widget.card.cost,
+                      effects: widget.card.effects,
+                      level: 1,
+                      rarity: widget.rarityLabel,
+                      target: widget.targetLabel,
+                      type: widget.card.type,
+                      targetType: widget.card.target,
+                      isExhaust: widget.card.isExhaust,
+                      baseMaxForgeUpgrades: widget.card.baseMaxForgeUpgrades,
+                      onTap: widget.onPressed,
                     ),
-                  );
-                },
-              ),
-              const SizedBox(height: 8),
-              GameButton(
-                text: '',
-                goldCost: widget.price,
-                onPressed: widget.onPressed,
-                baseColor: widget.canAfford ? Colors.green : Colors.red,
-                height: 32,
-                fontSize: 12,
-              ),
-            ],
-          ),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 8),
+            GameButton(
+              text: '',
+              goldCost: widget.price,
+              onPressed: widget.onPressed,
+              baseColor: widget.canAfford ? Colors.green : Colors.red,
+              height: 32,
+              fontSize: 12,
+            ),
+          ],
         ),
       ),
     );
@@ -709,33 +705,24 @@ class _CloneCardItemState extends State<_CloneCardItem> {
       child: AnimatedScale(
         scale: _isHovered ? 1.05 : 1.0,
         duration: const Duration(milliseconds: 200),
-        child: InkWell(
-          onTap: widget.onPressed,
-          borderRadius: BorderRadius.circular(12),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AspectRatio(
-                aspectRatio: 70 / 110,
-                child: UiCard(
-                  title: widget.card.data.getName(locale),
-                  description: widget.card.data.getDescription(locale),
-                  cost: widget.card.currentCost,
-                  effects: widget.card.data.effects,
-                  level: 1,
-                  rarity: widget.card.rarity.getLabel(l10n),
-                  target: widget.card.data.target.getLabel(l10n),
-                  type: widget.card.data.type,
-                  targetType: widget.card.data.target,
-                  isExhaust: widget.card.data.isExhaust,
-                  isSelected: _isHovered,
-                  forgeUpgrades: widget.card.forgeUpgrades,
-                  baseMaxForgeUpgrades: widget.card.data.baseMaxForgeUpgrades,
-                  rarityMultiplier: widget.card.rarityMultiplier,
-                  onTap: widget.onPressed,
-                ),
-              ),
-            ],
+        child: AspectRatio(
+          aspectRatio: 70 / 110,
+          child: UiCard(
+            title: widget.card.data.getName(locale),
+            description: widget.card.data.getDescription(locale),
+            cost: widget.card.currentCost,
+            effects: widget.card.data.effects,
+            level: 1,
+            rarity: widget.card.rarity.getLabel(l10n),
+            target: widget.card.data.target.getLabel(l10n),
+            type: widget.card.data.type,
+            targetType: widget.card.data.target,
+            isExhaust: widget.card.data.isExhaust,
+            isSelected: _isHovered,
+            forgeUpgrades: widget.card.forgeUpgrades,
+            baseMaxForgeUpgrades: widget.card.data.baseMaxForgeUpgrades,
+            rarityMultiplier: widget.card.rarityMultiplier,
+            onTap: widget.onPressed,
           ),
         ),
       ),
