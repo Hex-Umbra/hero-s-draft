@@ -31,6 +31,7 @@ class _RelicCarouselScreenState extends State<RelicCarouselScreen> with SingleTi
   final int _targetIndex = 22; // Index where the winning relic will sit
   int _focusedIndex = 0;
   bool _isWon = false;
+  bool _collected = false;
   int _lastTickedPage = 0;
   AnimationController? _particleAnimationController;
   List<_Particle> _particles = [];
@@ -265,7 +266,14 @@ class _RelicCarouselScreenState extends State<RelicCarouselScreen> with SingleTi
                       elevation: 8,
                       shadowColor: rarityColor.withValues(alpha: 0.4),
                     ),
-                    onPressed: _isWon ? widget.onCollect : null,
+                    onPressed: (_isWon && !_collected)
+                        ? () {
+                            setState(() {
+                              _collected = true;
+                            });
+                            widget.onCollect();
+                          }
+                        : null,
                     child: Text(
                       locale == 'fr' ? '✨ RÉCUPÉRER ✨' : '✨ COLLECT ✨',
                       style: const TextStyle(
