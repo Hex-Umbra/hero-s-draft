@@ -1,5 +1,22 @@
 [
   {
+    "version": "0.2.0",
+    "date": "2026-06-13",
+    "title": "Centralisation et Harmonisation",
+    "sections": [
+      {
+        "category": "Technique",
+        "emoji": "🔧",
+        "entries": [
+          "Mise en place d'un pipeline de calcul de dégâts unifié, garantissant que les effets de faiblesse, coups critiques, chocs et vulnérabilité s'appliquent de manière rigoureusement identique pour le héros et pour ses adversaires.",
+          "Sécurisation et stabilisation majeure du jeu grâce à l'immuabilité des données clés (statistiques d'entités, état du combat et instances d'ennemis), empêchant les comportements imprévus et les désynchronisations.",
+          "Centralisation de tous les délais des phases de combat (déplacements, ripostes, résolutions d'intentions) pour un déroulement des affrontements plus fluide et homogène.",
+          "Standardisation des tailles, durées d'apparition et comportements physiques des textes flottants (dégâts, soins, effets de poison et de bouclier) afin d'assurer une parfaite cohérence visuelle."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.1.8",
     "date": "2026-06-13",
     "title": "La Fin de l'Armure Éternelle",

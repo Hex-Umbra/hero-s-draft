@@ -8,7 +8,7 @@ import 'package:roguelike_card_game/models/enemy_intent.dart';
 void main() {
   group('EntityStats & StatusEffect', () {
     test('takeDamage applies to armor first then PV', () {
-      var stats = const EntityStats(
+      var stats = EntityStats(
         maxPv: 100,
         currentPv: 100,
         maxMana: 10,
@@ -24,7 +24,7 @@ void main() {
     });
 
     test('addStatus applies buff and tickStatuses reduces duration', () {
-      var stats = const EntityStats(
+      var stats = EntityStats(
         maxPv: 100,
         currentPv: 100,
         maxMana: 10,
@@ -71,7 +71,7 @@ void main() {
     });
 
     test('effectiveAttaque calculates base + strength', () {
-      var stats = const EntityStats(
+      var stats = EntityStats(
         maxPv: 100,
         currentPv: 100,
         maxMana: 10,
@@ -97,7 +97,7 @@ void main() {
 
     test('EnemyInstance effectiveIntent scales attack with current stats', () {
       var enemy = EnemyInstance(
-        stats: const EntityStats(
+        stats: EntityStats(
           maxPv: 20,
           currentPv: 20,
           armure: 0,
@@ -178,7 +178,7 @@ void main() {
         // Simulate an elite enemy spawned with a multiplier of 2.25
         // JSON baseDamage = 8. Spawns with stats.attaque = 18.
         var eliteEnemy = EnemyInstance(
-          stats: const EntityStats(
+          stats: EntityStats(
             maxPv: 50,
             currentPv: 50,
             armure: 0,

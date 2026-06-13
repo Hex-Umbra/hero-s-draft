@@ -53,7 +53,7 @@ graph TD
 | Constantes | `lib/game/game_constants.dart` | `GameConstants` — z-index, tailles, badges | ~30 |
 | Contrôleurs | `lib/game/controllers/` | `run_controller.dart`, `combat_controller.dart`, `deck_controller.dart`, `inventory_controller.dart`, `skill_controller.dart`, `event_controller.dart`, `shop_controller.dart`, `reward_controller.dart` | ~2250 |
 | Systèmes | `lib/game/systems/` | `encounter_system.dart`, `trait_system.dart` | ~200 |
-| Services (jeu) | `lib/game/services/` | `effect_resolver.dart` (~250), `combat_debug_logger.dart` (~120) | ~370 |
+| Services (jeu) | `lib/game/services/` | `effect_resolver.dart` (~250), `combat_debug_logger.dart` (~120), `damage_pipeline.dart` (~60) | ~430 |
 | Services (app) | `lib/services/` | `game_data_service.dart`, `map_generator_service.dart` | ~250 |
 | Modèles Data | `lib/models/data/` | 8 fichiers (`card_data.dart`, `enemy_data.dart`, `hero_data.dart`, `skill_data.dart`, `event_data.dart`, `passive_data.dart`, `relic_data.dart`, `game_data_registry.dart`) | ~800 |
 | Modèles Runtime | `lib/models/` | 11 fichiers (instances, états, status) | ~600 |
@@ -190,6 +190,11 @@ Tous les contrôleurs héritent de `Notifier<T>` (Riverpod 2.x) et exposent des 
   - `chooseCards(cards)` / `skipCards()` : Ajoute les cartes choisies dans le master deck via `DeckNotifier` ou ignore le tirage.
   - La méthode interne `_checkResolution()` marque l'état global `isResolved` à vrai une fois que toutes les récompenses valides ont été collectées ou sautées.
 
+### 2.5. Immutabilité Stricte des Modèles d'État
+Afin de garantir la robustesse du flux de données unidirectionnel imposé par Riverpod, les modèles d'état de combat essentiels (`EntityStats`, `CombatState`, `EnemyInstance`) sont explicitement marqués avec l'annotation `@immutable` (importée de `package:meta/meta.dart`).
+
+De plus, pour empêcher toute altération accidentelle par référence directe (mutation latérale de listes de statuts ou d'instances d'ennemis), leurs listes internes sont encapsulées dans des instances de `List.unmodifiable` lors de l'instanciation et au sein de la méthode `copyWith`. Toute tentative d'altération directe lève immédiatement une exception à l'exécution, forçant le passage exclusif par les Notifiers et `copyWith`.
+
 ---
 
 ## 3. Systèmes Transversaux (`lib/game/systems/`)
@@ -308,14 +313,16 @@ static List<EnemyData> generateEnemiesForLevel(
    | 3 | ×2.0 |
 4. Dispatch par type d'effet : `damage`, `heal`, `armor`, `gain_mana`, `draw`, `apply_status`.
 
-#### `_calculateDamage(int baseDamage, EntityStats attackerStats) → int`
-```dart
-totalDamage = baseDamage + attackerStats.effectiveAttaque
-if weakness status: totalDamage *= 0.75  // Réduction de 25%
-if critical hit roll succeeds (random(100) < effectiveCritChance):
-  totalDamage *= critMultiplier          // Amplification coup critique (x1.5 par défaut)
-```
-> **Note sur la vulnérabilité** : Le statut `vulnerable` est appliqué sur la cible au moment de la résolution de l'effet dans `resolveCard()`, amplifiant les dégâts finaux de $+50\%$ (`dmg = (dmg * 1.5).round()`).
+#### `DamagePipeline.calculate`
+Le calcul des dégâts physiques, magiques et des intentions d'attaques ennemies est entièrement délégué à la méthode statique unifiée `DamagePipeline.calculate(int initialDamage, EntityStats attackerStats, EntityStats defenderStats)` dans `lib/game/services/damage_pipeline.dart`. 
+
+Le calcul s'exécute selon les étapes logiques strictes suivantes :
+1. **Faiblesse (Attaquant)** : Dégâts réduits de 25% (multiplication par `0.75` puis arrondi) si le statut `weakness` est présent sur l'attaquant.
+2. **Coup Critique** : Jet probabiliste basé sur `effectiveCritChance` de l'attaquant. En cas de succès, dégâts multipliés par `critMultiplier` de l'attaquant et assignation à `true` de `lastActionWasCrit` sur l'attaquant pour guider le rendu des tremblements, flashs et particules de la couche Flame.
+3. **Choc (Défenseur)** : Ajout de la valeur brute cumulée du statut `shock` sur le défenseur.
+4. **Vulnérabilité (Défenseur)** : Dégâts augmentés de 50% (multiplication par `1.5` puis arrondi) si le statut `vulnerable` est présent sur le défenseur.
+
+Il retourne un tuple `(int finalDamage, bool isCrit)`.
 
 **Statuts créables et gérés** : `poison`, `strength`, `weakness`, `strength_regen`, `armor_regen`, `burn` (Brûlure), `freeze` (Gel), `shock` (Électrocution), `vulnerable` (Vulnérable), `crit_chance` (Chance de critique temporaire).
 

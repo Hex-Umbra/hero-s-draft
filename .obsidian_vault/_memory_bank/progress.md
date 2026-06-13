@@ -7,8 +7,8 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 - **8 fichiers JSON** de données d'assets.
 - **107 tests automatisés** — 100% au vert.
 - **0 erreur** via `flutter analyze`.
-- **~119 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
-- **Version actuelle** : v0.1.7 — L'Éclat des Combats.
+- **~120 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
+- **Version actuelle** : v0.1.9 — Centralisation et Harmonisation.
 
 ---
 
@@ -283,8 +283,9 @@ Basé sur les rapports de dette technique (`technical_debt_report_Opus4.6.md`, 4
 | Priorité | Chantier | Problème | Solution | Fichiers |
 |:---|:---|:---|:---|:---|
 | Critique | Typage des modèles | `==`/`hashCode` absents sur 12 modèles, `Map<String, dynamic>` non typés | Ajouter `freezed` ou implémenter manuellement | `lib/models/` (11 fichiers) |
-| Critique | Immuabilité réelle des listes | Listes mutables dans états "immuables" | ✅ List.unmodifiable() et final dans CardInstance (v0.0.97) | Tous les controllers |
+| Critique | Immuabilité réelle des listes | Listes mutables dans états "immuables" | ✅ List.unmodifiable() et @immutable dans `EntityStats`, `CombatState` et `EnemyInstance` (v0.1.9) | `lib/models/` |
 | Critique | Validation des entrées | `gainGold(-50)` fonctionne, HP peut dépasser maxHP | Ajouter validation dans chaque mutation | `run_controller.dart`, `inventory_controller.dart` |
+| Important | Centralisation des dégâts | Calculs de dégâts physiques et magiques dispersés (`EffectResolver`, `CombatController`) | ✅ Unifié via le service `DamagePipeline` centralisé (v0.1.9) | `lib/game/services/damage_pipeline.dart` |
 | Important | Error handling I/O | Aucun `try-catch` dans `GameDataService` | Wrapping avec fallbacks gracieux | `game_data_service.dart` |
 | Important | Design System | ~~Pas de `AppColors`, `AppTextStyles` — 100+ magic constants~~ | ✅ `AppColors`, `AppSpacing`, `AppTheme` créés dans `lib/ui/theme/` + extensions enum rareté (v0.0.99) | `lib/ui/theme/` |
 | Moyen | Lookup O(1) | `GameDataRegistry` utilise `List` avec O(n) | Migrer vers `Map<String, T>` | `game_data_registry.dart` |
@@ -305,7 +306,7 @@ Basé sur les rapports de dette technique (`technical_debt_report_Opus4.6.md`, 4
 | Priorité | Chantier | Problème | Solution |
 |:---|:---|:---|:---|
 | Important | Couverture tests | ~15-20% estimée | Atteindre ≥50%, ajouter widget tests UI |
-| Important | Magic constants | 100+ valeurs codées en dur | Extraire dans `GameConstants` étendu |
+| Important | Magic constants | 100+ valeurs codées en dur | ✅ Délais de combat et configurations de floating text extraits dans `GameConstants` (v0.1.9) |
 | Important | `EffectResolver` pattern | Classe statique avec switch géant | Migrer vers Strategy/Command pattern |
 | Important | Logique dans Flame | `executeSkill()` calcule des dégâts dans `HerosDraftGame` | ✅ Déplacé vers CombatController (v0.0.97) |
 | Moyen | Logique dans UI | Shop/event/heal dans les écrans (Reward déplacé vers RewardController en v0.0.94) | Déplacer vers controllers |
@@ -358,6 +359,7 @@ Issus de `docs/analysis_reports/6_analyse_game_balance.md` (documentés, non cor
 
 | Version | Date | Titre | Description des changements clés |
 |:---|:---|:---|:---|
+| **v0.1.9** | 2026-06-13 | Refactoring & Centralisation | Centralisation de tous les délais de combat et des paramètres de FloatingText dans `GameConstants` pour supprimer les nombres magiques ; sécurisation du flux d'état via `@immutable` et `List.unmodifiable` sur les modèles clés (`EntityStats`, `CombatState`, `EnemyInstance`) ; et unification des calculs de dégâts via le service centralisé `DamagePipeline.calculate`. |
 | **v0.1.8** | 2026-06-13 | Transition Fluide de Tour | Réinitialisation de l'armure du joueur à 0 au début de son tour (dans `RunController`) pour éviter le cumul infini inter-tours de l'armure. Ajout d'un drapeau transitoire `suppressArmorChangeAnimation` dans `HeroCard` activé lors de la transition de tour par `game_screen.dart` pour masquer les popups négatifs d'armure ("-X") et l'animation d'impact de bouclier, évitant un faux feedback visuel de dégâts reçus. |
 | **v0.1.7** | 2026-06-13 | L'Éclat des Combats | Embellissement des textes flottants thématiques avec ombres néon et symboles descriptifs, rotation de naissance, et cinématique d'échelle élastique suivie d'une pulsation infinie sur critique. Déclenchement visuel des critiques basé sur la propagation de l'état `lastActionWasCrit` calculé en phase métier (déterministe). Renforcement des impacts (tremblement accru, flash doré, 35 particules). Décélération de la jauge HP de catch-up (1200ms easeOut sous dégâts) pour mieux ressentir la violence des coups. **Incorpore également** : le fix de la relique Croc Kunaï (combat-long `'armor_mastery'` StatusEffect avec getter dynamique `effectiveArmorMastery`), l'animation dynamique des particules Canvas du carrousel de reliques (via `AnimationController` Flutter avec gravité, friction et fade), l'exclusion des cartes de rareté unique dans les récompenses de cartes post-boss (x=0), l'amélioration visuelle du clonage Magic Mirror en boutique (affichage de l'interface `UiCard` complète avec runes de forge, rareté, effets de survol réactifs et boîte de dialogue responsive élargie à `maxWidth: 550` avec scroll horizontal), la protection anti-exploit de caching de `cloneOptions` pour le Magic Mirror, et le verrouillage dynamique (désactivation) des boutons de services de la boutique en cas de solde d'or insuffisant. |
 | **v0.2.04** | 2026-06-12 | Enrichissement des Tooltips de Cartes | Ajout de tous les détails (type de cible écrit explicitement, rareté, type de carte, coût mana) dans les tooltips en combat (Flame CardComponent) et menus (Flutter UiCard) en français et anglais. |

@@ -700,12 +700,12 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
       currentPhase = TurnPhase.enemy;
 
       heroCard?.dashAnimation();
-      await Future.delayed(const Duration(milliseconds: 200));
+      await Future.delayed(const Duration(milliseconds: GameConstants.combatDelayHeroDashMs));
 
       onExecuteSkill(skill, selectedEnemy?.id);
 
       // La riposte est déclenchée après l'effet visuel et la mise à jour Riverpod
-      await Future.delayed(const Duration(milliseconds: 400));
+      await Future.delayed(const Duration(milliseconds: GameConstants.combatDelayAfterSkillMs));
       if (enemyCards.isEmpty) {
         onEnemiesDead();
         currentPhase = TurnPhase.player;
@@ -726,13 +726,13 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
 
   Future<void> _enemyRipostePhase() async {
     onPhaseChanged(TurnPhase.enemy);
-    await Future.delayed(const Duration(milliseconds: 600));
+    await Future.delayed(const Duration(milliseconds: GameConstants.combatDelayEnemyTurnStartMs));
 
     // 1. Début de tour des ennemis (Poison, Tick de buffs, etc. résolu dans Riverpod)
     onStartEnemyTurn();
 
     // Laisser le temps aux animations de ticks (ex: poison) avant les attaques
-    await Future.delayed(const Duration(milliseconds: 400));
+    await Future.delayed(const Duration(milliseconds: GameConstants.combatDelayAfterTicksMs));
 
     // Riposte des Ennemis (Séquentielle)
     final activeEnemies = List<EnemyCard>.from(enemyCards);
@@ -748,15 +748,15 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
         enemy.buffAnimation(intent.type);
       }
 
-      await Future.delayed(const Duration(milliseconds: 200));
+      await Future.delayed(const Duration(milliseconds: GameConstants.combatDelayEnemyDashMs));
 
       // Résoudre l'intention dans Riverpod
       onResolveEnemyIntent(enemy.id);
 
-      await Future.delayed(const Duration(milliseconds: 400));
+      await Future.delayed(const Duration(milliseconds: GameConstants.combatDelayAfterIntentResolveMs));
     }
 
-    await Future.delayed(const Duration(milliseconds: 300));
+    await Future.delayed(const Duration(milliseconds: GameConstants.combatDelayEnemyTurnEndMs));
 
     // 2. Fin de tour ennemi dans Riverpod (roll intents, repasse le tour au joueur)
     onEndEnemyTurn();

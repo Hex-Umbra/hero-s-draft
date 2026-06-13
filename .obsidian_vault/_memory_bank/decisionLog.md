@@ -1891,7 +1891,93 @@ Modifier le composant de bordure polychromatique (`PolychromaticBorder`) et le w
 - ✅ **Clarté Visuelle & Propreté des Transitions** : Les tours commencent sereinement sans faux popups négatifs ni animations d'impact parasites. La transition de tour est esthétique et fluide.
 - ✅ **Robustesse et Qualité du Code** : La modification respecte le découplage MVC/Flux. Les tests automatisés continuent de passer avec succès (108/108 tests valides) et le linter est impeccable.
 
+---
 
+## 🛠️ ADR-054 : Centralisation et Harmonisation des Constantes (v0.1.9)
+
+### Statut
+✅ Accepté & Implémenté (v0.1.9)
+
+### Contexte
+1. De nombreux délais temporels liés au déroulement des phases de combat (timing après dash, riposte, résolution des intentions, ticks de statut) étaient codés en dur avec des `Duration(milliseconds: ...)` au sein du orchestrateur de jeu `HerosDraftGame`.
+2. Les configurations visuelles et physiques de l'affichage des textes flottants (`FloatingText`), comme les tailles de police pour les différents types de texte (dégâts, critique, poison, bouclier), les durées d'animations (fondu, échelle, dérive, suppression) et les calculs physiques de drift (angle de rotation de naissance, vitesse de dérive X, drift Y d'oscillation), étaient également codés en dur avec des magic numbers.
+3. Ces valeurs disséminées nuisaient à la maintenance à long terme, rendant difficile l'ajustement global de la vitesse de jeu ou de la physique des textes flottants de dégâts.
+
+### Décision
+1. **Centralisation dans `GameConstants`** : Regrouper toutes les constantes concernées au sein de `lib/game/game_constants.dart` sous la forme de champs statiques typés et documentés (ex: `combatDelayHeroDashMs`, `floatingTextFontSizeCrit`, etc.).
+2. **Refactoring de `HerosDraftGame`** : Remplacer toutes les instanciations de `Duration` utilisant des valeurs entières littérales dans le code de combat par des références aux constantes de délais de `GameConstants`.
+3. **Refactoring de `FloatingText`** : Remplacer l'intégralité des nombres magiques de taille, durée, et drift par les nouvelles constantes de `GameConstants`, standardisant ainsi les trajectoires et l'affichage visuel des nombres flottants.
+
+### Preuves dans le code
+- [game_constants.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/game/game_constants.dart) : Déclaration et documentation détaillée des constantes sous `GameConstants`.
+- [floating_text.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/game/components/floating_text.dart) : Utilisation des constantes `GameConstants.floatingText*`.
+- [heros_draft_game.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/game/heros_draft_game.dart) : Utilisation des constantes `GameConstants.combatDelay*Ms`.
+
+### Conséquences
+- ✅ **Éradication de la Dette Technique (Nombres Magiques)** : Disparition complète des valeurs littérales en dur liées aux timings de combat et à l'affichage des textes flottants, améliorant drastiquement la maintenabilité et la lisibilité du code.
+- ✅ **Facilité d'Ajustement du Gameplay** : La modification globale du rythme du jeu (vitesse des tours, durée des ripostes) ou du rendu visuel des dégâts se fait désormais en un point unique (`GameConstants`).
+- ✅ **Homogénéité Visuelle** : Uniformisation parfaite des trajectoires et des tailles des textes de dégâts.
+- ✅ **Zéro Régression** : Les tests unitaires (108/108) passent sans modification de comportement fonctionnel et `dart analyze` ne signale aucune erreur.
+
+---
+
+## 🔒 ADR-055 : Immutabilité Stricte des Modèles d'État (v0.1.9)
+
+### Statut
+✅ Accepté & Implémenté (v0.1.9)
+
+### Contexte
+1. L'utilisation de Riverpod pour la gestion globale de l'état repose sur des données immuables. Si des listes ou des objets imbriqués dans l'état sont mutables, des modifications directes de données peuvent se produire de manière indésirable sans déclencher la mise à jour des widgets à l'écran, rompant le cycle de rendu Flutter/Riverpod.
+2. Les modèles d'état `EntityStats`, `CombatState` et `EnemyInstance` contenaient des listes (comme `statuses` et `enemies`) qui pouvaient être altérées par référence directe.
+3. Il était nécessaire de sécuriser ces modèles pour interdire les mutations directes et renforcer la conformité du code avec le paradigme immuable.
+
+### Décision
+1. **Annotation @immutable** : Ajouter l'import `package:meta/meta.dart` et annoter les classes `EntityStats`, `CombatState` et `EnemyInstance` avec `@immutable`.
+2. **Encapsulation des listes** : Remplacer l'instanciation simple des listes internes par `List.unmodifiable(...)` dans le constructeur et lors de l'appel à la méthode `copyWith`. Toute altération directe lève désormais une exception.
+3. **Mise à jour des constructeurs** : Convertir les constructeurs de `EntityStats` et `CombatState` pour qu'ils ne soient plus `const` puisque `List.unmodifiable` est exécuté à l'exécution.
+
+### Preuves dans le code
+- [entity_stats.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/models/entity_stats.dart) : Ajout de `@immutable` et `List.unmodifiable(statuses)`.
+- [combat_state.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/models/combat_state.dart) : Ajout de `@immutable` et `List.unmodifiable` pour `enemies`, `pendingEnemies`, et `defeatedEnemies`.
+- [enemy_instance.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/models/enemy_instance.dart) : Ajout de `@immutable`.
+
+### Conséquences
+- ✅ **Sécurisation du State Riverpod** : Plus aucune altération d'état non détectée ne peut se produire sur les entités de combat.
+- ✅ **Respect Strict du Flux Unidirectionnel** : Les modifications se font uniquement via `copyWith` et les Notifiers associés.
+- ✅ **Code Léger** : Aucune dépendance sur du code généré complexe (pas de `freezed` ni de build_runner requis pour le moment).
+- ✅ **Zéro Régression** : Les 108 tests unitaires de non-régression s'exécutent avec succès.
+
+---
+
+## ⚔️ ADR-056 : Centralisation du Calcul des Dégâts via un Pipeline Unique (v0.1.9)
+
+### Statut
+✅ Accepté & Implémenté (v0.1.9)
+
+### Contexte
+1. Les calculs de dégâts (physiques, magiques, compétences, intentions de monstres) étaient dispersés dans le code entre `EffectResolver` (pour les cartes de combat) et `CombatController` (pour les intentions des ennemis et les compétences du héros).
+2. Cette duplication présentait un risque élevé de désynchronisation des modificateurs d'état lors des calculs (par exemple, des différences dans l'application de la faiblesse, de la vulnérabilité, du choc, ou des calculs de coup critique).
+3. Il était indispensable d'unifier ce calcul sous un service unique afin de garantir que les règles de calcul de combat restent prévisibles, centralisées et faciles à équilibrer ou modifier à l'avenir.
+
+### Décision
+1. **Création de DamagePipeline** : Définir un service centralisé `DamagePipeline.calculate` (`lib/game/services/damage_pipeline.dart`) qui prend en charge toutes les étapes logiques de calcul de combat :
+   - Étape 1 : Application de la réduction de 25% de dégâts si l'attaquant possède le statut `weakness`.
+   - Étape 2 : Jet de coup critique basé sur `effectiveCritChance` de l'attaquant. Si réussi, application du multiplicateur `critMultiplier` et enregistrement du flag `lastActionWasCrit` sur l'attaquant (nécessaire pour les animations Flame).
+   - Étape 3 : Ajout de la valeur de débuff `shock` accumulée par le défenseur.
+   - Étape 4 : Application du bonus de dégâts de 50% si le défenseur possède le statut `vulnerable`.
+2. **Refactoring des Appelants** : Remplacer les calculs dispersés dans `CombatController.executeSkill`, `CombatController.resolveEnemyIntent` et `EffectResolver._calculateDamage` par un appel unique à `DamagePipeline.calculate`.
+3. **Garantie DRY** : Suppression complète des switches et logiques de statuts dupliquées pour le calcul de dégâts.
+
+### Preuves dans le code
+- [damage_pipeline.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/game/services/damage_pipeline.dart) : Création de la classe avec sa logique métier en 4 étapes.
+- [combat_controller.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/game/controllers/combat_controller.dart) : Utilisation du pipeline pour calculer les dégâts reçus ou infligés.
+- [effect_resolver.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/game/services/effect_resolver.dart) : Suppression du calcul local au profit de l'appel au pipeline centralisé.
+
+### Conséquences
+- ✅ **Calculs de Combat Garantis Homogènes** : Le héros et les monstres sont soumis aux mêmes règles et mécaniques, sans dérive de calcul possible.
+- ✅ **Facilité d'Équilibrage** : La modification d'un coefficient ou l'ajout d'une nouvelle règle de calcul de dégâts globale s'effectue en une seule ligne de code.
+- ✅ **Lisibilité Accrue** : Réduction sensible de la taille de `EffectResolver` et de `CombatController` grâce à l'externalisation de la formule mathématique.
+- ✅ **Zéro Régression** : Tous les tests unitaires et d'intégration existants (108) passent sans anomalie.
 
 
 

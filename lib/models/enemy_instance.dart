@@ -1,8 +1,10 @@
+import 'package:meta/meta.dart';
 import 'package:uuid/uuid.dart';
 import 'entity_stats.dart';
 import 'data/enemy_data.dart';
 import 'enemy_intent.dart';
 
+@immutable
 class EnemyInstance {
   final String id;
   final EnemyData data;

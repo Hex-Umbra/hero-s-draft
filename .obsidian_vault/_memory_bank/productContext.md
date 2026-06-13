@@ -273,19 +273,26 @@ if (armure >= amount) {
 - **Fin de Combat** : L'armure restante est également remise à 0 à la fin de chaque combat (`completeCurrentNode()`).
 - **Maîtrise d'Armure** : La Maîtrise d'Armure (`effectiveArmorMastery`), quant à elle, reste persistante tout au long de la partie ou du combat selon son origine.
 
-### 3.3. ⚔️ Pipeline de Dégâts
+### 3.3. ⚔️ Pipeline de Dégâts Centralisé
 
-**Dégâts du joueur** (`EffectResolver._calculateDamage`) :
-```
-Dégâts Finaux = (Dégâts base carte + effectiveAttaque) × Modificateur Faiblesse
-```
-Où :
-- `effectiveAttaque` = `attaque` permanente + Σ valeurs status `strength` actifs.
-- **Faiblesse** : Si l'attaquant possède le statut `weakness`, les dégâts sont multipliés par **0.75** (réduction de 25%, arrondi).
+Le calcul de tous les dégâts physiques et magiques du jeu (cartes offensives du joueur, intentions d'attaque des ennemis et compétences de classe héroïques) est unifié sous un pipeline de calcul unique représenté par le service `DamagePipeline.calculate` (`lib/game/services/damage_pipeline.dart`).
 
-**Dégâts ennemis** (`CombatController.resolveEnemyIntent`) :
-- Attack : `runController.takeDamage(intent.value)` — valeur brute de l'intention.
-- `effectiveIntent` (getter sur `EnemyInstance`) : scale la valeur d'attaque en fonction du ratio `baseDamage` du spawn et du bonus `strength` de l'ennemi.
+Le calcul s'exécute de façon déterministe selon les étapes successives suivantes :
+
+1. **Calcul des Dégâts Initiaux** : Combinaison des dégâts de base (de la carte, de la compétence ou de l'intention d'attaque) avec la force (`strength`) active de l'attaquant :
+   $$\text{Dégâts Initiaux} = \text{Dégâts de base} + \text{Force}$$
+2. **Faiblesse (Attaquant)** : Si l'attaquant possède l'altération d'état `weakness`, les dégâts sont réduits de **25%** (multiplication par `0.75` puis arrondi).
+3. **Jet de Coup Critique (Attaquant)** : Effectue un jet probabiliste basé sur la chance de coup critique effective (`effectiveCritChance`) de l'attaquant. S'il réussit :
+   - Les dégâts sont multipliés par le multiplicateur de critique de l'attaquant (`critMultiplier`, par défaut `1.5`).
+   - Le drapeau d'état temporaire `lastActionWasCrit` est assigné à `true` sur les statistiques de l'attaquant (`EntityStats`), servant de source de vérité pour déclencher les tremblements de caméra renforcés, les flashs dorés et les animations de particules physiques sur la couche graphique Flame.
+4. **Choc (Défenseur)** : Si le défenseur subit le statut `shock`, la valeur cumulée de ce débuff est directement ajoutée aux dégâts :
+   $$\text{Dégâts} = \text{Dégâts} + \text{Valeur de Choc}$$
+5. **Vulnérabilité (Défenseur)** : Si le défenseur possède l'altération `vulnerable`, tous les dégâts reçus sont amplifiés de **50%** (multiplication par `1.5` puis arrondi).
+
+Ce pipeline de calcul centralisé élimine toute duplication mathématique ou risque de divergence entre les dégâts infligés par le joueur et ceux portés par les ennemis.
+
+**Intention d'Attaque Visuelle Ennemie** :
+Le getter `effectiveIntent` sur `EnemyInstance` simule l'étape de Faiblesse et de Force (et du Gel s'il est présent) pour afficher à l'écran l'intention exacte de dégâts que subira le joueur au tour suivant, lui permettant d'anticiper la valeur précise de bouclier nécessaire.
 
 ### 3.4. 🃏 Système de Piles de Cartes
 

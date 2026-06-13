@@ -109,7 +109,7 @@ class RunController extends Notifier<RunState> {
       heroClassId: 'paladin',
       passiveTrait: 'regenArmor',
       activePassive: PassiveData.fallback('regenArmor'),
-      heroStats: const EntityStats(
+      heroStats: EntityStats(
         maxPv: 100,
         currentPv: 100,
         maxMana: 3,

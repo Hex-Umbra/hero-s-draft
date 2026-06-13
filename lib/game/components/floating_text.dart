@@ -2,6 +2,8 @@ import 'dart:math';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flutter/material.dart';
+import '../game_constants.dart';
+
 
 class FloatingText extends TextComponent with HasPaint {
   final bool isCritical;
@@ -72,7 +74,11 @@ class FloatingText extends TextComponent with HasPaint {
          textRenderer: TextPaint(
            style: TextStyle(
              color: color,
-             fontSize: isCritical ? 36 : (isPoison ? 22 : 26),
+             fontSize: isCritical
+                 ? GameConstants.floatingTextFontSizeCritical
+                 : (isPoison
+                     ? GameConstants.floatingTextFontSizePoison
+                     : GameConstants.floatingTextFontSizeStandard),
              fontWeight: FontWeight.bold,
              shadows: [
                Shadow(
@@ -136,7 +142,11 @@ class FloatingText extends TextComponent with HasPaint {
     textRenderer = TextPaint(
       style: TextStyle(
         color: baseColor.withValues(alpha: _opacity),
-        fontSize: isCritical ? 36 : (isPoison ? 22 : 26),
+        fontSize: isCritical
+            ? GameConstants.floatingTextFontSizeCritical
+            : (isPoison
+                ? GameConstants.floatingTextFontSizePoison
+                : GameConstants.floatingTextFontSizeStandard),
         fontWeight: FontWeight.bold,
         shadows: baseShadows.map((shadow) {
           return Shadow(
@@ -159,18 +169,18 @@ class FloatingText extends TextComponent with HasPaint {
     scale = Vector2.all(0.1);
 
     // Rotation aléatoire subtile sur la naissance
-    final double randomRotation = (random.nextDouble() - 0.5) * 0.3; // entre -0.15 et 0.15 rad
+    final double randomRotation = (random.nextDouble() - 0.5) * GameConstants.floatingTextRotationFactor;
     add(
       RotateEffect.to(
         randomRotation,
-        EffectController(duration: 0.15, curve: Curves.easeOut),
+        EffectController(duration: GameConstants.floatingTextDurationBirthRotation, curve: Curves.easeOut),
       ),
     );
 
     // Trajectoire aléatoire en arc de cercle
-    final double driftX = (random.nextDouble() - 0.5) * 80; // Entre -40 et 40
+    final double driftX = (random.nextDouble() - 0.5) * GameConstants.floatingTextDriftXMax;
     double driftY =
-        60 + random.nextDouble() * 40; // Base positive (vers le bas)
+        GameConstants.floatingTextDriftYStandardBase + random.nextDouble() * GameConstants.floatingTextDriftYStandardRandomRange; // Base positive (vers le bas)
 
     if (isUpward) {
       driftY = -driftY; // Inverser pour aller vers le haut
@@ -182,15 +192,15 @@ class FloatingText extends TextComponent with HasPaint {
         SequenceEffect([
           ScaleEffect.to(
             Vector2.all(1.5),
-            EffectController(duration: 0.35, curve: Curves.elasticOut),
+            EffectController(duration: GameConstants.floatingTextDurationCritInitialPop, curve: Curves.elasticOut),
           ),
           ScaleEffect.to(
             Vector2.all(1.15),
-            EffectController(duration: 0.15, curve: Curves.easeOut),
+            EffectController(duration: GameConstants.floatingTextDurationCritInitialReturn, curve: Curves.easeOut),
           ),
           ScaleEffect.to(
             Vector2.all(1.3),
-            EffectController(duration: 0.3, alternate: true, infinite: true),
+            EffectController(duration: GameConstants.floatingTextDurationCritPulse, alternate: true, infinite: true),
           ),
         ]),
       );
@@ -198,7 +208,7 @@ class FloatingText extends TextComponent with HasPaint {
       add(
         ScaleEffect.to(
           Vector2.all(1.0),
-          EffectController(duration: 0.15, curve: Curves.bounceOut),
+          EffectController(duration: GameConstants.floatingTextDurationStandardBounce, curve: Curves.bounceOut),
         ),
       );
     }
@@ -207,22 +217,22 @@ class FloatingText extends TextComponent with HasPaint {
     if (isPoison) {
       add(
         MoveEffect.by(
-          Vector2(0, -90 - random.nextDouble() * 30),
-          EffectController(duration: 1.2, curve: Curves.easeOutQuad),
+          Vector2(0, GameConstants.floatingTextDriftYPoisonBase - random.nextDouble() * GameConstants.floatingTextDriftYPoisonRandomRange),
+          EffectController(duration: GameConstants.floatingTextDurationDriftPoison, curve: Curves.easeOutQuad),
         ),
       );
     } else if (isShield) {
       add(
         MoveEffect.by(
-          Vector2(driftX * 0.5, -40 - random.nextDouble() * 20),
-          EffectController(duration: 1.0, curve: Curves.easeOutQuad),
+          Vector2(driftX * GameConstants.floatingTextDriftXShieldMultiplier, GameConstants.floatingTextDriftYShieldBase - random.nextDouble() * GameConstants.floatingTextDriftYShieldRandomRange),
+          EffectController(duration: GameConstants.floatingTextDurationDriftShield, curve: Curves.easeOutQuad),
         ),
       );
     } else {
       add(
         MoveEffect.by(
           Vector2(driftX, driftY),
-          EffectController(duration: 1.0, curve: Curves.easeOutCubic),
+          EffectController(duration: GameConstants.floatingTextDurationDriftStandard, curve: Curves.easeOutCubic),
         ),
       );
     }
@@ -230,11 +240,11 @@ class FloatingText extends TextComponent with HasPaint {
     // 3. Fondu (Fade out)
     add(
       OpacityEffect.fadeOut(
-        EffectController(duration: 1.2, curve: Curves.easeIn),
+        EffectController(duration: GameConstants.floatingTextDurationFadeOut, curve: Curves.easeIn),
       ),
     );
 
-    add(RemoveEffect(delay: 1.2));
+    add(RemoveEffect(delay: GameConstants.floatingTextDurationRemoveDelay));
   }
 
   double _time = 0;

@@ -2,10 +2,10 @@ import 'dart:math';
 import '../../models/card_instance.dart';
 import '../../models/data/card_data.dart';
 import '../../models/status_effect.dart';
-import '../../models/entity_stats.dart';
 import '../controllers/run_controller.dart';
 import '../controllers/deck_controller.dart';
 import '../controllers/combat_controller.dart';
+import 'damage_pipeline.dart';
 
 class EffectResolver {
   /// Helper pour créer un StatusEffect à partir des données de la carte
@@ -227,55 +227,23 @@ class EffectResolver {
             );
             if (enemyIndex != -1) {
               final enemy = combatController.currentState.enemies[enemyIndex];
-              final (dmg, isCrit) = _calculateDamage(
-                scaledValue,
-                runController.currentState.heroStats,
+              final (finalDmg, isCrit) = DamagePipeline.calculate(
+                initialDamage: scaledValue + runController.currentState.heroStats.effectiveAttaque,
+                attackerStats: runController.currentState.heroStats,
+                defenderStats: enemy.stats,
               );
-              int finalDmg = dmg;
-              final shockStatus = enemy.stats.statuses.firstWhere(
-                (s) => s.id == 'shock',
-                orElse: () => StatusEffect(
-                  id: '',
-                  name: '',
-                  type: StatusType.debuff,
-                  value: 0,
-                  duration: 0,
-                ),
-              );
-              if (shockStatus.id.isNotEmpty) {
-                finalDmg += shockStatus.value;
-              }
-              if (enemy.stats.statuses.any((s) => s.id == 'vulnerable')) {
-                finalDmg = (finalDmg * 1.5).round();
-              }
               combatController.updateEnemyStats(
                 selectedEnemyId,
                 enemy.stats.takeDamage(finalDmg, isCrit: isCrit),
               );
             }
           } else if (card.data.target == CardTarget.allEnemies) {
-            final (dmg, isCrit) = _calculateDamage(
-              scaledValue,
-              runController.currentState.heroStats,
-            );
             for (var enemy in combatController.currentState.enemies) {
-              int individualDmg = dmg;
-              final shockStatus = enemy.stats.statuses.firstWhere(
-                (s) => s.id == 'shock',
-                orElse: () => StatusEffect(
-                  id: '',
-                  name: '',
-                  type: StatusType.debuff,
-                  value: 0,
-                  duration: 0,
-                ),
+              final (individualDmg, isCrit) = DamagePipeline.calculate(
+                initialDamage: scaledValue + runController.currentState.heroStats.effectiveAttaque,
+                attackerStats: runController.currentState.heroStats,
+                defenderStats: enemy.stats,
               );
-              if (shockStatus.id.isNotEmpty) {
-                individualDmg += shockStatus.value;
-              }
-              if (enemy.stats.statuses.any((s) => s.id == 'vulnerable')) {
-                individualDmg = (individualDmg * 1.5).round();
-              }
               combatController.updateEnemyStats(
                 enemy.id,
                 enemy.stats.takeDamage(individualDmg, isCrit: isCrit),
@@ -350,24 +318,4 @@ class EffectResolver {
     return true;
   }
 
-  /// Calcule les dégâts finaux (influencé par la force et les debuffs)
-  static (int damage, bool isCrit) _calculateDamage(int baseDamage, EntityStats attackerStats) {
-    int totalDamage = baseDamage + attackerStats.effectiveAttaque;
-
-    final weakness = attackerStats.statuses
-        .where((s) => s.id == 'weakness')
-        .toList();
-    if (weakness.isNotEmpty) {
-      totalDamage = (totalDamage * 0.75).round();
-    }
-
-    final random = Random();
-    bool isCrit = false;
-    if (random.nextInt(100) < attackerStats.effectiveCritChance) {
-      totalDamage = (totalDamage * attackerStats.critMultiplier).round();
-      isCrit = true;
-    }
-
-    return (totalDamage, isCrit);
-  }
 }

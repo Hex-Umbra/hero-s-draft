@@ -17,11 +17,12 @@ import '../services/effect_resolver.dart';
 import '../../../models/data/skill_data.dart';
 import 'run_controller.dart';
 import 'deck_controller.dart';
+import '../services/damage_pipeline.dart';
 
 class CombatController extends Notifier<CombatState> {
   @override
   CombatState build() {
-    return const CombatState();
+    return CombatState();
   }
 
   CombatState get currentState => state;
@@ -199,50 +200,39 @@ class CombatController extends Notifier<CombatState> {
     final effectiveAttaque = runController.currentState.effectiveAttaque;
 
     if (skill.effectType == 'damage_aoe') {
-      int dmg = (effectiveAttaque * (skill.effectValue / 100.0)).round();
-      final random = Random();
-      bool isCrit = false;
-      if (random.nextInt(100) < heroStats.effectiveCritChance) {
-        dmg = (dmg * heroStats.critMultiplier).round();
-        isCrit = true;
-      }
-      if (dmg < 1) dmg = 1;
-
       state = state.copyWith(
         enemies: state.enemies.map((enemy) {
+          final (dmg, isCrit) = DamagePipeline.calculate(
+            initialDamage: (effectiveAttaque * (skill.effectValue / 100.0)).round(),
+            attackerStats: heroStats,
+            defenderStats: enemy.stats,
+          );
           return enemy.copyWith(stats: enemy.stats.takeDamage(dmg, isCrit: isCrit));
         }).toList(),
       );
       _cleanDeadEnemies();
     } else if (skill.effectType == 'damage_targeted' && targetEnemyId != null) {
-      int dmg = (effectiveAttaque * (skill.effectValue / 100.0)).round();
-      final random = Random();
-      bool isCrit = false;
-      if (random.nextInt(100) < heroStats.effectiveCritChance) {
-        dmg = (dmg * heroStats.critMultiplier).round();
-        isCrit = true;
-      }
-      if (dmg < 1) dmg = 1;
-
       state = state.copyWith(
         enemies: state.enemies.map((enemy) {
           if (enemy.id != targetEnemyId) return enemy;
+          final (dmg, isCrit) = DamagePipeline.calculate(
+            initialDamage: (effectiveAttaque * (skill.effectValue / 100.0)).round(),
+            attackerStats: heroStats,
+            defenderStats: enemy.stats,
+          );
           return enemy.copyWith(stats: enemy.stats.takeDamage(dmg, isCrit: isCrit));
         }).toList(),
       );
       _cleanDeadEnemies();
     } else if (skill.effectType == 'damage_pierce' && targetEnemyId != null) {
-      int dmg = effectiveAttaque;
-      final random = Random();
-      bool isCrit = false;
-      if (random.nextInt(100) < heroStats.effectiveCritChance) {
-        dmg = (dmg * heroStats.critMultiplier).round();
-        isCrit = true;
-      }
-
       final enemyIndex = state.enemies.indexWhere((e) => e.id == targetEnemyId);
       if (enemyIndex != -1) {
         final enemy = state.enemies[enemyIndex];
+        final (dmg, isCrit) = DamagePipeline.calculate(
+          initialDamage: effectiveAttaque,
+          attackerStats: heroStats,
+          defenderStats: enemy.stats,
+        );
         int stolenArmor = (enemy.stats.armure * (skill.effectValue / 100.0)).round();
         int newPv = enemy.stats.currentPv - dmg;
         int newArm = enemy.stats.armure - stolenArmor;
@@ -319,21 +309,13 @@ class CombatController extends Notifier<CombatState> {
 
     switch (intent.type) {
       case IntentType.attack:
-        int dmg = intent.value;
         final hasFreeze = enemy.stats.statuses.any((s) => s.id == 'freeze');
 
-        // Apply vulnerable multiplier if hero has vulnerable status
-        if (runController.currentState.heroStats.statuses.any((s) => s.id == 'vulnerable')) {
-          dmg = (dmg * 1.5).round();
-        }
-
-        // Roll enemy crit check
-        final random = Random();
-        bool isCrit = false;
-        if (random.nextInt(100) < enemy.stats.effectiveCritChance) {
-          dmg = (dmg * enemy.stats.critMultiplier).round();
-          isCrit = true;
-        }
+        final (dmg, isCrit) = DamagePipeline.calculate(
+          initialDamage: intent.value,
+          attackerStats: enemy.stats,
+          defenderStats: runController.currentState.heroStats,
+        );
 
         runController.takeDamage(dmg, isCrit: isCrit);
 
