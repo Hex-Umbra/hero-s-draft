@@ -152,6 +152,16 @@ class ShopController extends Notifier<ShopState> {
     }
     return false;
   }
+
+  /// Définit les options persistantes pour le clonage de cartes
+  void setCloneOptions(List<CardInstance> options) {
+    state = state.copyWith(cloneOptions: options);
+  }
+
+  /// Nettoie les options de clonage
+  void clearCloneOptions() {
+    state = state.copyWith(cloneOptions: const []);
+  }
 }
 
 final shopProvider = NotifierProvider<ShopController, ShopState>(ShopController.new);

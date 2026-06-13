@@ -208,11 +208,18 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
   }
 
   void _showCloneModal(int price) {
-    final deckState = ref.read(deckProvider);
-    final masterDeck = List.of(deckState.masterDeck);
+    final shopState = ref.read(shopProvider);
+    List<CardInstance> options = shopState.cloneOptions;
 
-    masterDeck.shuffle();
-    final options = masterDeck.take(3).toList();
+    if (options.isEmpty) {
+      final deckState = ref.read(deckProvider);
+      final masterDeck = List.of(deckState.masterDeck);
+      masterDeck.shuffle();
+      options = masterDeck.take(3).toList();
+      if (options.isNotEmpty) {
+        ref.read(shopProvider.notifier).setCloneOptions(options);
+      }
+    }
 
     if (options.isEmpty) {
       return;
@@ -285,6 +292,8 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     );
   }
 
+
+
   @override
   Widget build(BuildContext context) {
     final runState = ref.watch(runProvider);
@@ -296,6 +305,11 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
 
     return PopScope(
       canPop: true,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          ref.read(shopProvider.notifier).clearCloneOptions();
+        }
+      },
       child: Scaffold(
         backgroundColor: const Color(0xFF1E1E2C),
         appBar: AppBar(
@@ -423,7 +437,9 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                                 title: l10n.shopReroll,
                                 description: l10n.shopRerollDesc,
                                 price: 15,
-                                onPressed: () => _rerollCards(15),
+                                onPressed: inventoryState.gold >= 15
+                                    ? () => _rerollCards(15)
+                                    : null,
                                 buttonColor: Colors.teal.shade800,
                                 canAfford: inventoryState.gold >= 15,
                               ),
@@ -433,11 +449,13 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                                 title: l10n.healingPotion,
                                 description: l10n.restoresHp(healAmount),
                                 price: healPrice,
-                                onPressed: shopState.purchasedHeal
+                                onPressed: shopState.purchasedHeal ||
+                                        inventoryState.gold < healPrice
                                     ? null
                                     : () => _buyHeal(healPrice, healAmount),
                                 buttonColor: Colors.green.shade800,
-                                canAfford: inventoryState.gold >= healPrice,
+                                canAfford: inventoryState.gold >= healPrice &&
+                                    !shopState.purchasedHeal,
                               ),
                               _ShopServiceWidget(
                                 icon: Icons.delete_forever,
@@ -445,7 +463,9 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                                 title: l10n.shopPurge,
                                 description: l10n.shopPurgeDesc,
                                 price: 75,
-                                onPressed: () => _showRemovalModal(75),
+                                onPressed: inventoryState.gold >= 75
+                                    ? () => _showRemovalModal(75)
+                                    : null,
                                 buttonColor: Colors.red.shade800,
                                 canAfford: inventoryState.gold >= 75,
                               ),
@@ -455,7 +475,9 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                                 title: l10n.shopExpand,
                                 description: l10n.shopExpandDesc,
                                 price: 100,
-                                onPressed: () => _expandShop(100),
+                                onPressed: inventoryState.gold >= 100
+                                    ? () => _expandShop(100)
+                                    : null,
                                 buttonColor: Colors.amber.shade800,
                                 canAfford: inventoryState.gold >= 100,
                               ),
@@ -465,7 +487,9 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                                 title: l10n.shopClone,
                                 description: l10n.shopCloneDesc,
                                 price: 150,
-                                onPressed: () => _showCloneModal(150),
+                                onPressed: inventoryState.gold >= 150
+                                    ? () => _showCloneModal(150)
+                                    : null,
                                 buttonColor: Colors.blue.shade800,
                                 canAfford: inventoryState.gold >= 150,
                               ),
@@ -526,12 +550,13 @@ class _ShopServiceWidgetState extends State<_ShopServiceWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isEnabled = widget.onPressed != null;
     return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      cursor: SystemMouseCursors.click,
+      onEnter: isEnabled ? (_) => setState(() => _isHovered = true) : null,
+      onExit: isEnabled ? (_) => setState(() => _isHovered = false) : null,
+      cursor: isEnabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
       child: AnimatedScale(
-        scale: _isHovered ? 1.05 : 1.0,
+        scale: _isHovered && isEnabled ? 1.05 : 1.0,
         duration: const Duration(milliseconds: 200),
         child: InkWell(
           onTap: widget.onPressed,
@@ -541,28 +566,32 @@ class _ShopServiceWidgetState extends State<_ShopServiceWidget> {
             height: 170,
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Colors.black45,
+              color: isEnabled ? Colors.black45 : Colors.black26,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: _isHovered
+                color: _isHovered && isEnabled
                     ? Colors.amber.withValues(alpha: 0.5)
                     : Colors.white10,
-                width: _isHovered ? 2 : 1,
+                width: _isHovered && isEnabled ? 2 : 1,
               ),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Icon(widget.icon, color: widget.iconColor, size: 28),
+                Icon(
+                  widget.icon,
+                  color: isEnabled ? widget.iconColor : widget.iconColor.withValues(alpha: 0.3),
+                  size: 28,
+                ),
                 const SizedBox(height: 8),
                 Text(
                   widget.title,
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: isEnabled ? Colors.white : Colors.white30,
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
                   ),
@@ -573,8 +602,8 @@ class _ShopServiceWidgetState extends State<_ShopServiceWidget> {
                     child: Text(
                       widget.description,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.white70,
+                      style: TextStyle(
+                        color: isEnabled ? Colors.white70 : Colors.white24,
                         fontSize: 10,
                       ),
                     ),

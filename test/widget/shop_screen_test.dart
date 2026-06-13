@@ -11,6 +11,9 @@ import 'package:roguelike_card_game/models/data/hero_data.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
+import 'package:roguelike_card_game/game/controllers/shop_controller.dart';
+import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
+import 'package:roguelike_card_game/models/card_instance.dart';
 
 void main() {
   final mockCards = [
@@ -187,7 +190,112 @@ void main() {
       // There should still be 4 cards on the shelf
       expect(find.byType(UiCard), findsNWidgets(4));
 
-      container.dispose();
+      // Pump to let any notification timers expire
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+
+  testWidgets(
+    'ShopScreen Magic Mirror clones/caches options and clears them on deactivate',
+    (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1200, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      final container = ProviderContainer(
+        overrides: [gameDataLoaderProvider.overrideWith((ref) => mockRegistry)],
+      );
+      addTearDown(container.dispose);
+
+      final runNotifier = container.read(runProvider.notifier);
+      runNotifier.startNewRun(mockHero);
+      container.read(inventoryProvider.notifier).reset(initialGold: 200);
+
+      final deckNotifier = container.read(deckProvider.notifier);
+      deckNotifier.addCardToMasterDeck(CardInstance(data: mockCards[0]));
+      deckNotifier.addCardToMasterDeck(CardInstance(data: mockCards[1]));
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('en', ''), Locale('fr', '')],
+            locale: const Locale('fr', ''),
+            home: Builder(
+              builder: (context) {
+                return ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (context) => const ShopScreen()),
+                    );
+                  },
+                  child: const Text('Open Shop'),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Open shop screen
+      await tester.tap(find.text('Open Shop'));
+      await tester.pumpAndSettle();
+
+      // Verify cloneOptions in shopProvider is empty initially
+      expect(container.read(shopProvider).cloneOptions, isEmpty);
+
+      // Tap Mirror Clone option ('Miroir Magique') to open the modal
+      final cloneButton = find.text('Miroir Magique');
+      await tester.tap(cloneButton);
+      await tester.pumpAndSettle();
+
+      // Now options should be populated in ShopState
+      final options1 = container.read(shopProvider).cloneOptions;
+      expect(options1, isNotEmpty);
+
+      // Close the modal by tapping cancel
+      final cancelButton = find.text('Annuler');
+      await tester.tap(cancelButton);
+      await tester.pumpAndSettle();
+
+      // Open the modal again
+      await tester.tap(cloneButton);
+      await tester.pumpAndSettle();
+
+      // Options should remain identical (caching / anti-exploit)
+      final options2 = container.read(shopProvider).cloneOptions;
+      expect(options2, equals(options1));
+
+      // Close the modal again
+      await tester.tap(cancelButton);
+      await tester.pumpAndSettle();
+
+      // Now leave the shop (which pops ShopScreen and deactivates it)
+      final leaveButton = find.text('Quitter la boutique');
+      await tester.tap(leaveButton);
+      await tester.pumpAndSettle();
+
+      // Verify we are back to the home screen
+      expect(find.text('Open Shop'), findsOneWidget);
+
+      // Verify cloneOptions is cleared upon ShopScreen deactivation
+      expect(container.read(shopProvider).cloneOptions, isEmpty);
+
+      // Pump to let any notification timers expire
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpWidget(const SizedBox());
     },
   );
 }
