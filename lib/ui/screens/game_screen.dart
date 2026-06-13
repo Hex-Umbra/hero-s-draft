@@ -644,26 +644,30 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                         child: ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blueAccent,
+                            foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
-                          onPressed: () {
-                            setState(() {
-                              _showManaWarning = false;
-                            });
-                            TraitSystem.onTurnEnd(
-                              ref.read(runProvider.notifier),
-                            );
-                            ref
-                                .read(runProvider.notifier)
-                                .applyRelics(RelicTrigger.endOfTurn);
-                            ref.read(deckProvider.notifier).discardHand();
-                            _game.executeTurn();
-                          },
-                          icon: const Icon(Icons.check, color: Colors.white),
+                          onPressed: (combatState.turnPhase == TurnPhase.player &&
+                                  _game.currentPhase == TurnPhase.player &&
+                                  !_game.isCardAnimating)
+                              ? () {
+                                  setState(() {
+                                    _showManaWarning = false;
+                                  });
+                                  TraitSystem.onTurnEnd(
+                                    ref.read(runProvider.notifier),
+                                  );
+                                  ref
+                                      .read(runProvider.notifier)
+                                      .applyRelics(RelicTrigger.endOfTurn);
+                                  ref.read(deckProvider.notifier).discardHand();
+                                  _game.executeTurn();
+                                }
+                              : null,
+                          icon: const Icon(Icons.check),
                           label: Text(
                             l10n.endTurn,
                             style: const TextStyle(
-                              color: Colors.white,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
