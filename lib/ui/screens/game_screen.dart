@@ -196,6 +196,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       _showManaWarning = false;
       _turnCount++;
     });
+    _game.heroCard?.suppressArmorChangeAnimation = true;
     ref.read(runProvider.notifier).startTurn();
     final deckNotifier = ref.read(deckProvider.notifier);
     if (ref.read(deckProvider).drawPile.length < 5) {

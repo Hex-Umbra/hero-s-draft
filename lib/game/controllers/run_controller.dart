@@ -582,9 +582,12 @@ class RunController extends Notifier<RunState> {
   }
 
   void startTurn() {
-    // 1. Restaurer le Mana à sa valeur maximale (ne se cumule pas d'un tour à l'autre)
+    // 1. Restaurer le Mana à sa valeur maximale (ne se cumule pas d'un tour à l'autre) et reset l'armure
     state = state.copyWith(
-      heroStats: state.heroStats.copyWith(currentMana: state.heroStats.maxMana),
+      heroStats: state.heroStats.copyWith(
+        armure: 0,
+        currentMana: state.heroStats.maxMana,
+      ),
     );
 
     // 2. Déclencher les reliques de début de tour (qui peuvent maintenant rajouter du mana par-dessus)

@@ -16,6 +16,7 @@ class HeroCard extends PositionComponent
   EntityStats stats;
   int bonusAttack;
   final String imagePath;
+  bool suppressArmorChangeAnimation = false;
 
   late final RectangleComponent borderInfo;
   late final SpriteComponent sprite;
@@ -130,22 +131,24 @@ class HeroCard extends PositionComponent
     final hadPoison = oldStats.statuses.any((s) => s.id == 'poison');
     final isPoisonDamage = isPlayerTurnPhase && hadPoison;
 
-    if (newStats.armure < oldStats.armure) {
-      final lostArmor = oldStats.armure - newStats.armure;
-      _spawnFloatingText(
-        '-$lostArmor',
-        const Color(0xFF3B82F6), // Technical premium blue
-        position + Vector2(0, (size.y / 2 - 20) * scale.y),
-        isShield: true,
-      );
-      shieldHitAnimation();
-    } else if (newStats.armure > oldStats.armure) {
-      final gainedArmor = newStats.armure - oldStats.armure;
-      _spawnFloatingText(
-        '+$gainedArmor',
-        Colors.lightBlueAccent,
-        position + Vector2(0, -size.y * scale.y / 2),
-      );
+    if (!suppressArmorChangeAnimation) {
+      if (newStats.armure < oldStats.armure) {
+        final lostArmor = oldStats.armure - newStats.armure;
+        _spawnFloatingText(
+          '-$lostArmor',
+          const Color(0xFF3B82F6), // Technical premium blue
+          position + Vector2(0, (size.y / 2 - 20) * scale.y),
+          isShield: true,
+        );
+        shieldHitAnimation();
+      } else if (newStats.armure > oldStats.armure) {
+        final gainedArmor = newStats.armure - oldStats.armure;
+        _spawnFloatingText(
+          '+$gainedArmor',
+          Colors.lightBlueAccent,
+          position + Vector2(0, -size.y * scale.y / 2),
+        );
+      }
     }
 
     if (newStats.currentPv < oldStats.currentPv) {
@@ -177,6 +180,7 @@ class HeroCard extends PositionComponent
 
     stats = newStats;
     this.bonusAttack = bonusAttack;
+    suppressArmorChangeAnimation = false;
   }
 
   void shieldHitAnimation() {

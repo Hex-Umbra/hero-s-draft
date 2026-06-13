@@ -1,5 +1,21 @@
 [
   {
+    "version": "0.1.8",
+    "date": "2026-06-13",
+    "title": "La Fin de l'Armure Éternelle",
+    "sections": [
+      {
+        "category": "Corrections",
+        "emoji": "🐛",
+        "entries": [
+          "L'armure du joueur est désormais réinitialisée à 0 au début de chaque tour, empêchant ainsi l'accumulation infinie de boucliers entre les manches.",
+          "Les reliques et les effets de statut s'activant au début du tour (comme la régénération d'armure) s'appliquent désormais correctement après cette réinitialisation.",
+          "La transition visuelle lors de la réinitialisation de l'armure s'effectue de manière fluide et discrète, sans déclencher de popups de perte de bouclier ou d'animations de dégâts."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.1.7",
     "date": "2026-06-13",
     "title": "L'Éclat des Combats",
