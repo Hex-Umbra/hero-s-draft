@@ -53,9 +53,6 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   EnemyCard? highlightedEnemy;
   bool isCardAnimating = false;
 
-  final void Function(int) onPlayerTakeDamage;
-  final void Function(int) onPlayerHeal;
-  final void Function(int) onPlayerGainArmor;
   final void Function() onEnemiesDead;
   final void Function(int) onEnemyDebuffDeck;
   final void Function() onTurnEnded;
@@ -74,9 +71,6 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   final void Function(SkillData skill, String? targetEnemyId) onExecuteSkill;
 
   HerosDraftGame({
-    required this.onPlayerTakeDamage,
-    required this.onPlayerHeal,
-    required this.onPlayerGainArmor,
     required this.onEnemiesDead,
     required this.onEnemyDebuffDeck,
     required this.onTurnEnded,

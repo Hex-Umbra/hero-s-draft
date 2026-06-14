@@ -1,17 +1,21 @@
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flutter/material.dart';
+import 'base_visual_effect.dart';
 
-class SlashEffect extends PositionComponent with HasPaint {
+class SlashEffect extends BaseVisualEffect {
   final Color color;
   final double thickness;
 
   SlashEffect({
-    required Vector2 position,
-    required Vector2 size,
+    required super.position,
+    required super.size,
     this.color = Colors.red,
     this.thickness = 8.0,
-  }) : super(position: position, size: size, anchor: Anchor.center);
+  }) : super(
+          anchor: Anchor.center,
+          duration: 0.3,
+        );
 
   @override
   Future<void> onLoad() async {
@@ -37,7 +41,6 @@ class SlashEffect extends PositionComponent with HasPaint {
           ),
           OpacityEffect.to(0.0, EffectController(duration: 0.2)),
         ]),
-        RemoveEffect(),
       ]),
     );
   }

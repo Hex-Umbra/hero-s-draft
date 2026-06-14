@@ -4,19 +4,32 @@ Ce document décrit le focus actif du projet, les accomplissements récents, et 
 
 ## 1. Focus Actuel du Projet
 
-Le projet vient de finaliser le sprint majeur **Refactoring Phase 3 — Unification de l'UI** :
-- **Composants UI Communs & Unifiés** : Centralisation des arrière-plans (`dark`, `parchment`, `none`), de la `SafeArea` et du `PopScope` via `ScreenScaffold`. Standardisation des en-têtes d'écrans avec `PageHeader` et affichage uniforme de l'or avec `GoldIndicator`.
-- **Méthodes d'Usine `UiCard`** : Intégration de `UiCard.fromInstance` et `UiCard.fromData` pour simplifier radicalement l'instanciation des cartes dans l'ensemble de l'UI et éliminer le code verbeux de mapping.
-- **Découpage du Dialogue de Forge Monolithique** : Allègement de `forge_upgrade_dialog.dart` (gain de plus de 250 lignes) en extrayant ses responsabilités visuelles dans des composants isolés (`forge_card_preview.dart`, `forge_slot_row.dart`, `forge_buy_slot_button.dart`).
-- **Standardisation des Drafts** : Création de `CardDraftLayout` et factorisation complète de `boss_card_draft_screen.dart` et `starter_deck_draft_screen.dart`.
-- **Refactoring Global des Écrans** : Harmonisation de 9 écrans majeurs du jeu pour éradiquer les structures de scaffold et de gradient dupliquées.
-- **Validation Strict** : Exécution de l'ensemble de la suite de tests (108/108 passés au vert) et correction de tous les avertissements ou erreurs via `dart analyze` (0 erreur, 0 avertissement).
+Le projet vient de finaliser le sprint d'**Harmonisation Post-Refactoring de l'Architecture** (Version v0.2.4) :
+- **Harmonisation UI** : Migration de `ClassSelectionScreen` vers les composants unifiés de la charte graphique (`ScreenScaffold` et `PageHeader`).
+- **Architecture Flame** : Remontée de la logique d'`updateStats` et de déclenchement visuel d'impacts dans la classe commune `CombatEntity`, nettoyant `HeroCard` et `EnemyCard`.
+- **Riverpodisation d'EffectRegistry** : Création du provider `effectRegistryProvider` pour éliminer l'état statique global mutable d'`EffectRegistry` et nettoyage de callbacks obsolètes de `HerosDraftGame`.
+- **Attribut floor Explicite** : Intégration de `floor` dans `MapNode` pour supprimer le parsing d'ID de chaîne fragile.
+- **Validation Stricte** : 0 erreur et 0 avertissement avec `dart analyze` ; 100% de réussite de la suite de tests (108/108).
 
 Le focus se tourne désormais vers les étapes suivantes de la roadmap technique : la persistance I/O (Sauvegarde de partie via `shared_preferences`), l'implémentation audio complète, la décomposition des écrans complexes restants (`MapScreen` et `GameScreen`), et l'amélioration de la couverture des tests.
 
 ## 2. Accomplissements Récents
 
-1. **Refactoring Phase 3 — Unification de l'UI (Complété - Version v0.2.2)** :
+1. **Harmonisation Post-Refactoring de l'Architecture (Complété - Version v0.2.4)** :
+   - **Harmonisation UI de ClassSelectionScreen** : Remplacement de l'ancien Scaffold/AppBar par les widgets standardisés de l'infrastructure (`ScreenScaffold` et `PageHeader`) pour harmoniser l'arrière-plan dégradé.
+   - **Déduplication de code CombatEntity** : Centralisation de la logique de détection de modification de statistiques et de création d'animations d'impacts dans la classe de base commune Flame `CombatEntity`, éliminant la duplication logicielle résiduelle dans `HeroCard` et `EnemyCard`.
+   - **Riverpodisation d'EffectRegistry** : Instanciation propre sans état statique mutable exposée par le provider `effectRegistryProvider` injecté à `EffectResolver.resolveCard`, et suppression de 3 callbacks orphelins de `HerosDraftGame`.
+   - **Attribut floor de MapNode** : Ajout du champ `floor` avec désérialisation rétrocompatible, éradiquant les expressions `split('_')[1]` éparpillées.
+   - **Zéro Régression** : L'analyse statique du projet est vierge de toute erreur ou avertissement et tous les 108 tests unitaires sont au vert.
+
+2. **Refactoring Phase 4 — Architecture & Patterns (Complété - Version v0.2.3)** :
+   - **Découpage Procedural de la Carte** : Algorithme monolithique divisé en 4 modules dédiés (`MapNodeGenerator`, `MapConnectionBuilder`, `MapValidator`, `MapContentPlacer`), facilitant la maintenance et l'évolution de la carte stratégique.
+   - **Strategy Pattern pour les Effets de Cartes** : Création de l'interface `EffectStrategy` et du registre `EffectRegistry` gérant 6 stratégies concrètes (`Damage`, `Heal`, `Armor`, `GainMana`, `Draw`, `ApplyStatus`), rendant `EffectResolver` propre et extensible.
+   - **Composant Commun Flame `CombatEntity`** : Centralisation des animations communes (secousses, flashs colorés, particules, dash) éliminant plus de 300 lignes de code dupliqué dans `HeroCard` et `EnemyCard`.
+   - **Cycle de vie Unifié `BaseVisualEffect`** : Encapsulation du retrait automatique (`RemoveEffect`) et des callbacks optionnels de fin, appliqué à `SlashEffect` et `ShieldDome`.
+   - **Thème Visual Design & Diagnostic Data** : Ajout de `GameThemeExtension` pour regrouper les couleurs gameplay (raretés, stats, lueurs néon) et sécurisation du chargement JSON dans `GameDataService` avec alertes explicites.
+
+2. **Refactoring Phase 3 — Unification de l'UI (Complété - Version v0.2.2)** :
    - **Centralisation du Scaffold (`ScreenScaffold`)** : Unification des styles d'arrière-plan du jeu (dégradé sombre de combat/menus et texture parchemin de la carte/échanges) et gestion propre du cycle de vie des retours arrière via `PopScope`.
    - **En-têtes d'Écrans Homogènes (`PageHeader`)** : Remplacement des AppBar ad-hoc par une structure unifiée gérant le bouton retour standardisé, le titre stylisé et les actions transversales.
    - **Badge d'Or Uniforme (`GoldIndicator`)** : Intégration de l'affichage de l'or connecté à l'état de l'inventaire en haut des écrans Boutique, Forge et Carte.

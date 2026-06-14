@@ -2084,9 +2084,154 @@ La classe racine du moteur Flame `HerosDraftGame` gérait de façon centralisée
 ### Conséquences
 - ✅ **Élimination de la Duplication Visuelle (DRY)** : Les arrière-plans, les en-têtes et les structures de pages sont partagés, éliminant des centaines de lignes répétitives.
 - ✅ **Séparation des Responsabilités (SRP)** : Le dialogue de la forge a été allégé de plus de 250 lignes et ne gère plus que l'orchestration logique et Riverpod.
+- ✅ **Élimination de la Duplication Visuelle (DRY)** : Les arrière-plans, les en-têtes et les structures de pages sont partagés, éliminant des centaines de lignes répétitives.
+- ✅ **Séparation des Responsabilités (SRP)** : Le dialogue de la forge a été allégé de plus de 250 lignes et ne gère plus que l'orchestration logique et Riverpod.
 - ✅ **Simplicité d'Usage** : L'instanciation de `UiCard` est immédiate grâce aux factories, sécurisant les mappings.
 - ✅ **Cooptation des Écrans de Draft** : Une seule grille responsive gère les différents drafts, rendant les corrections ou ajustements futurs instantanés.
 - ✅ **Zéro Régression** : Les 108 tests unitaires du projet s'exécutent avec succès et l'analyse statique de compilation est vierge.
+
+---
+
+## 🗺️ ADR-060 : Décomposition modulaire de la génération procédurale de la carte (v0.2.3)
+
+### Statut
+✅ Accepté & Implémenté (v0.2.3)
+
+### Contexte
+L'algorithme de génération procédurale de la carte strategique dans `MapGeneratorService` était monolithique et complexe. Il prenait en charge à la fois la création brute des nœuds, le câblage Directed Acyclic Graph (DAG), la vérification des quotas, l'application de l'algorithme anti-répétition de chemin, et le placement des événements spéciaux. Cela rendait le code difficile à lire, tester et faire évoluer.
+
+### Décision
+Découper la logique de `MapGeneratorService` en 4 sous-services spécialisés et isolés situés sous `lib/services/map/` :
+1. `MapNodeGenerator` : Instancie les nœuds et définit leurs types par défaut selon l'étage.
+2. `MapConnectionBuilder` : Établit les connexions géométriques sous forme de Directed Acyclic Graph (DAG) entre étages.
+3. `MapValidator` : Valide et ajuste les quotas minimum/maximum de nœuds par type et applique la règle anti-répétition de chemin.
+4. `MapContentPlacer` : Applique les règles de placement d'événements spécifiques (échange de reliques).
+
+Faire de `MapGeneratorService` un simple orchestrateur sans logique algorithmique interne.
+
+### Preuves dans le code
+- [map_generator_service.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/services/map_generator_service.dart) orchestrant simplement les appels aux 4 sous-services.
+- Le sous-répertoire `lib/services/map/` contenant les 4 fichiers des services extraits.
+
+### Conséquences
+- ✅ **Respect de la Responsabilité Unique (SRP)** : Les responsabilités sont isolées dans des fichiers distincts faciles à comprendre.
+- ✅ **Testabilité Accrue** : Il est désormais plus aisé d'écrire des tests spécifiques pour la validation ou le placement sans instancier toute la chaîne de génération.
+
+---
+
+## 🧠 ADR-061 : Strategy Pattern pour la résolution des effets de cartes (v0.2.3)
+
+### Statut
+✅ Accepté & Implémenté (v0.2.3)
+
+### Contexte
+Dans `EffectResolver`, la résolution des effets de cartes reposait sur un switch/case monolithique géant. L'ajout ou la modification d'effets (dégâts, soin, armure, pioche, mana, statut) nécessitait d'étendre ce switch, augmentant la complexité cyclomatique et le risque de régression à chaque sprint.
+
+### Décision
+- Introduire le **Strategy Pattern** pour la résolution des effets.
+- Créer une interface `EffectStrategy` et un registre `EffectRegistry` sous `lib/game/services/effects/`.
+- Implémenter 6 classes de stratégies concrètes, chacune prenant en charge une responsabilité spécifique :
+  - `DamageEffectStrategy` (dégâts physiques/magiques, multi-cibles, et statuts associés).
+  - `HealEffectStrategy` (soins avec gestion des coups critiques).
+  - `ArmorEffectStrategy` (génération d'armure avec Armor Mastery).
+  - `GainManaEffectStrategy` (restauration ou surcapacité temporaire).
+  - `DrawEffectStrategy` (pioche de cartes).
+  - `ApplyStatusEffectStrategy` (application d'effets de statut sur la cible ou sur soi).
+- Faire de `EffectResolver` un simple routeur déléguant dynamiquement à l' `EffectRegistry`.
+
+### Preuves dans le code
+- `lib/game/services/effects/effect_strategy.dart` (interface).
+- `lib/game/services/effects/effect_registry.dart` (registre).
+- Fichiers sous `lib/game/services/effects/strategies/` pour les 6 implémentations concrètes.
+- `lib/game/services/effect_resolver.dart` allégé qui redirige vers le registre.
+
+### Conséquences
+- ✅ **Extensibilité Facile (Open/Closed Principle)** : L'ajout d'un nouvel effet consiste à créer une nouvelle classe implémentant `EffectStrategy` et à l'enregistrer dans `EffectRegistry`, sans modifier le reste du système.
+- ✅ **Lisibilité et SRP** : Chaque effet a son propre fichier de logique propre et isolé.
+
+---
+
+## 🎨 ADR-062 : Abstractions Graphiques Communes dans Flame (CombatEntity & BaseVisualEffect) (v0.2.3)
+
+### Statut
+✅ Accepté & Implémenté (v0.2.3)
+
+### Contexte
+1. Les composants `HeroCard` et `EnemyCard` de Flame dupliquaient massivement leur logique d'animation (secousses de dégâts, flashs colorés, dash d'attaque, éjection de particules), entraînant une dette technique de duplication (>300 lignes).
+2. Les composants d'effets visuels comme `SlashEffect` et `ShieldDome` (dans `card_animator.dart`) géraient leur propre cycle de vie et leur auto-destruction de manière inconsistante.
+
+### Décision
+- **Classe de base `CombatEntity`** : Créer une classe de base abstraite `CombatEntity extends PositionComponent` sous `lib/game/components/entities/` pour y centraliser les comportements visuels et animations communes (`shakeAndFlashAnimation`, `spawnDamageParticles`, `dashAnimation`, `shieldHitAnimation`). Faire hériter `HeroCard` et `EnemyCard` de cette classe.
+- **Classe de base `BaseVisualEffect`** : Créer une classe de base `BaseVisualEffect extends PositionComponent` sous `lib/game/components/visual_effects/` gérant une durée de vie (`duration`), un retrait automatique du parent via `RemoveEffect(delay: duration)`, et un callback de fin optionnel `onComplete`. Faire hériter `SlashEffect` et `ShieldDome` de cette classe.
+
+### Preuves dans le code
+- `lib/game/components/entities/combat_entity.dart`.
+- `lib/game/components/visual_effects/base_visual_effect.dart`.
+- Modifications de `hero_card.dart`, `enemy_card.dart`, `slash_effect.dart` et `card_animator.dart` pour s'appuyer sur ces abstractions.
+
+### Conséquences
+- ✅ **DRY (Don't Repeat Yourself)** : Réduction importante du code dupliqué (~300 lignes retirées) et centralisation des correctifs d'animations.
+- ✅ **Gestion du cycle de vie des effets visuels** : Élimination des fuites mémoire potentielles (leak d'entités non supprimées du canvas) grâce à la gestion systématique de `RemoveEffect` dans `BaseVisualEffect`.
+
+---
+
+## 🎨 ADR-063 : Extension de Thème pour Jetons Gameplay & Diagnostic de Diagnostic Data (v0.2.3)
+
+### Statut
+✅ Accepté & Implémenté (v0.2.3)
+
+### Contexte
+1. Bien que le design system `AppColors` de la version v0.0.99 ait centralisé les couleurs, il manquait d'intégration avec le pipeline standard de thèmes Flutter, obligeant à importer `AppColors` directement plutôt que d'utiliser `Theme.of(context)`.
+2. Le service de chargement de données `GameDataService` lisait les JSONs bruts sans try/catch verbeux en cas d'erreur de formatage, provoquant des crashs silencieux de l'application difficiles à déboguer lors des modifications de data par le game design.
+
+### Décision
+- **Extension de Thème `GameThemeExtension`** : Créer `GameThemeExtension` héritant de `ThemeExtension` contenant les couleurs de raretés de cartes, de statistiques de combat et de néons. L'enregistrer dans `AppTheme` pour les modes clair/sombre.
+- **Diagnostics I/O robustes** : Ajouter des blocs try/catch verbeux dans `GameDataService` lors du parsing de chaque fichier JSON, produisant un log explicite identifiant le fichier exact en cas d'échec de parsing.
+
+### Preuves dans le code
+- [game_theme_extension.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/ui/theme/game_theme_extension.dart).
+- Intégration dans `lib/ui/theme/app_theme.dart`.
+- Blocs try/catch explicites dans `lib/services/game_data_service.dart`.
+
+### Conséquences
+- ✅ **Intégration Standard Flutter** : L'accès aux couleurs du gameplay se fait de manière idiomatique via `Theme.of(context)`.
+- ✅ **Débogage Instantané** : En cas d'erreur de formatage dans les JSONs de cartes ou de reliques, le développeur ou game designer identifie immédiatement la source dans la console de diagnostic.
+
+---
+
+## 🛠️ ADR-064 : Harmonisation de l'Architecture — Abstractions Flame, Riverpodisation du Registry et Simplification du Modèle de Carte (v0.2.4)
+
+### Statut
+✅ Accepté & Implémenté (v0.2.4)
+
+### Contexte
+Suite à l'audit du refactoring de la dette technique globale, quatre axes d'amélioration ont été identifiés pour parfaire l'extensibilité et la robustesse de la base de code :
+1. `ClassSelectionScreen` n'utilisait pas encore l'infrastructure de Scaffold unifiée, provoquant des duplications visuelles d'AppBar et de décors.
+2. Le code d'update et de détection graphique de changement de statistiques était en partie dupliqué entre `HeroCard` et `EnemyCard`, n'exploitant pas pleinement la classe parente `CombatEntity`.
+3. Le registre d'effets `EffectRegistry` comportait un état statique global mutable non conforme aux concepts de Riverpod, et des callbacks orphelins inutilisés existaient encore dans `HerosDraftGame`.
+4. L'extraction de l'étage actuel d'un nœud de carte (`MapNode`) reposait sur des opérations de split de chaînes sur son ID (`id.split('_')[1]`), ce qui était fragile et sujet aux régressions.
+
+### Décision
+1. **Harmonisation UI de la Sélection de Classe** : Migrer `ClassSelectionScreen` pour s'appuyer sur `ScreenScaffold` (fond dégradé sombre) et `PageHeader` (sans bouton retour car écran d'accueil de sélection), éliminant l'AppBar et le Scaffold dupliqués.
+2. **Centralisation dans CombatEntity (Flame)** : Remonter la méthode de détection des changements de statistiques `triggerHitReactions` et d'instanciation des popups `spawnFloatingText` dans la classe commune `CombatEntity`. `HeroCard` et `EnemyCard` redéfinissent `updateStats` en appelant la méthode héritée, éliminant toute duplication de logique visuelle.
+3. **Riverpodisation d'EffectRegistry & Nettoyage** : Rendre la classe `EffectRegistry` non-statique et l'exposer via `effectRegistryProvider` (créé sous `lib/game/services/effects/effect_strategy.dart`). Transmettre l'instance du registre en paramètre à `EffectResolver.resolveCard` et l'injecter via `ref.read` dans `CombatController`. Nettoyer les constructeurs et instanciations de `HerosDraftGame` et `GameScreen` de tous les callbacks obsolètes d'armure, dégâts et soins.
+4. **Attribut floor Explicite sur MapNode** : Ajouter un champ `floor` de type `int` à `MapNode`. Configurer son constructeur `fromJson` pour qu'il extrait le floor avec `json['floor'] ?? int.parse(id.split('_')[1])` (rétrocompatibilité). Remplacer les expressions `id.split('_')[1]` par un appel direct à `node.floor` dans l'ensemble de la base de code.
+
+### Preuves dans le code
+- [class_selection_screen.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/ui/screens/class_selection_screen.dart) : Migration sous `ScreenScaffold` et `PageHeader`.
+- [combat_entity.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/game/components/entities/combat_entity.dart) : Centralisation d' `updateStats` via `triggerHitReactions`.
+- [hero_card.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/game/components/entities/hero_card.dart) & [enemy_card.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/game/components/entities/enemy_card.dart) : Appels d'update délégués à `triggerHitReactions`.
+- [effect_strategy.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/game/services/effects/effect_strategy.dart) : Fournit `effectRegistryProvider`.
+- [effect_resolver.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/game/services/effect_resolver.dart) & [combat_controller.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/game/controllers/combat_controller.dart) : Utilisation du provider et transmission du registre.
+- [map_node.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/models/map_node.dart) : Ajout de l'attribut `floor` et logique de fallback `fromJson`.
+- [map_node_generator.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/services/map/map_node_generator.dart), [map_content_placer.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/services/map/map_content_placer.dart), [map_validator.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/services/map/map_validator.dart), [map_screen.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/ui/screens/map_screen.dart) : Remplacement du split par l'appel direct à `node.floor`.
+
+### Conséquences
+- ✅ **Code Propre (DRY & SRP)** : Plus de 100 lignes dupliquées de logique d'impact et de transition visuelle ont été éliminées de `HeroCard` et `EnemyCard`.
+- ✅ **Sécurité et Robustesse** : Le typage fort de `floor` remplace les splits de chaînes, réduisant les risques d'exceptions de parsing lors des manipulations géométriques de la carte.
+- ✅ **Conformité Riverpod** : L'état statique global mutable de la classe stratégie est éliminé. Le cycle de vie des registries est géré de manière propre et déclarative par le conteneur Riverpod.
+- ✅ **Qualité Garantie** : 0 erreur `dart analyze` et passage des 108 tests unitaires.
+
 
 
 

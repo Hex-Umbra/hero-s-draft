@@ -13,6 +13,7 @@ import '../services/combat_debug_logger.dart';
 import '../systems/encounter_system.dart';
 import '../systems/trait_system.dart';
 import '../services/effect_resolver.dart';
+import '../services/effects/effect_strategy.dart';
 import '../../../models/data/skill_data.dart';
 import 'run_controller.dart';
 import 'deck_controller.dart';
@@ -273,6 +274,7 @@ class CombatController extends Notifier<CombatState> {
   void applyPlayerCardPlay(CardInstance card) {
     final runController = ref.read(runProvider.notifier);
     final deckController = ref.read(deckProvider.notifier);
+    final registry = ref.read(effectRegistryProvider);
 
     // 1. Résolution des effets
     final success = EffectResolver.resolveCard(
@@ -281,6 +283,7 @@ class CombatController extends Notifier<CombatState> {
       deckController,
       this,
       state.selectedEnemyId,
+      registry,
     );
 
     if (success) {

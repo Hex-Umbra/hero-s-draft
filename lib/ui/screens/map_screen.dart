@@ -100,12 +100,12 @@ class _MapScreenState extends ConsumerState<MapScreen>
     bool foundPath = false;
 
     // Optimisation : seuls les noeuds de l'étage précédent peuvent être parents
-    final targetFloor = int.parse(targetId.split('_')[1]);
+    final targetNode = allNodes.firstWhere((n) => n.id == targetId);
+    final targetFloor = targetNode.floor;
     if (targetFloor == 0) return false;
 
     final parents = allNodes.where((n) {
-      final nFloor = int.parse(n.id.split('_')[1]);
-      return nFloor == targetFloor - 1 && n.connections.contains(targetId);
+      return n.floor == targetFloor - 1 && n.connections.contains(targetId);
     });
 
     for (var parent in parents) {

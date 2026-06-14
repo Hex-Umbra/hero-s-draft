@@ -8,7 +8,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 - **108 tests automatisés** — 100% au vert.
 - **0 erreur** via `flutter analyze`.
 - **~122 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
-- **Version actuelle** : v0.2.2 — Unification de l'UI (Phase 3).
+- **Version actuelle** : v0.2.4 — Harmonisation Post-Refactoring de l'Architecture.
 
 ---
 
@@ -293,8 +293,8 @@ Basé sur les rapports de dette technique (`technical_debt_report_Opus4.6.md`, 4
 | Critique | Immuabilité réelle des listes | Listes mutables dans états "immuables" | ✅ List.unmodifiable() et @immutable dans `EntityStats`, `CombatState` et `EnemyInstance` (v0.1.9) | `lib/models/` |
 | Critique | Validation des entrées | `gainGold(-50)` fonctionne, HP peut dépasser maxHP | Ajouter validation dans chaque mutation | `run_controller.dart`, `inventory_controller.dart` |
 | Important | Centralisation des dégâts | Calculs de dégâts physiques et magiques dispersés (`EffectResolver`, `CombatController`) | ✅ Unifié via le service `DamagePipeline` centralisé (v0.1.9) | `lib/game/services/damage_pipeline.dart` |
-| Important | Error handling I/O | Aucun `try-catch` dans `GameDataService` | Wrapping avec fallbacks gracieux | `game_data_service.dart` |
-| Important | Design System | ~~Pas de `AppColors`, `AppTextStyles` — 100+ magic constants~~ | ✅ `AppColors`, `AppSpacing`, `AppTheme` créés dans `lib/ui/theme/` + extensions enum rareté (v0.0.99) | `lib/ui/theme/` |
+| Important | Error handling I/O | Aucun `try-catch` dans `GameDataService` | ✅ Sécurisé avec des try/catch détaillés de diagnostic (v0.2.3) | `lib/services/game_data_service.dart` |
+| Important | Design System | ~~Pas de `AppColors`, `AppTextStyles` — 100+ magic constants~~ | ✅ `AppColors`, `AppSpacing`, `AppTheme` créés dans `lib/ui/theme/` + extensions enum rareté (v0.0.99) et `GameThemeExtension` (v0.2.3) | `lib/ui/theme/` |
 | Moyen | Lookup O(1) | `GameDataRegistry` utilise `List` avec O(n) | Migrer vers `Map<String, T>` | `game_data_registry.dart` |
 
 ### 🟡 Phase 2 — Décomposition God Classes (Semaines 3-4)
@@ -314,7 +314,7 @@ Basé sur les rapports de dette technique (`technical_debt_report_Opus4.6.md`, 4
 |:---|:---|:---|:---|
 | Important | Couverture tests | ~15-20% estimée | Atteindre ≥50%, ajouter widget tests UI |
 | Important | Magic constants | 100+ valeurs codées en dur | ✅ Délais de combat et configurations de floating text extraits dans `GameConstants` (v0.1.9) |
-| Important | `EffectResolver` pattern | Classe statique avec switch géant | Migrer vers Strategy/Command pattern |
+| Important | `EffectResolver` pattern | Classe statique avec switch géant | ✅ Refactoré avec le registre `EffectRegistry` et le Strategy Pattern (v0.2.3) |
 | Important | Logique dans Flame | `executeSkill()` calcule des dégâts dans `HerosDraftGame` | ✅ Déplacé vers CombatController (v0.0.97) |
 | Moyen | Logique dans UI | Shop/event/heal dans les écrans (Reward déplacé vers RewardController en v0.0.94) | Déplacer vers controllers |
 
@@ -366,6 +366,8 @@ Issus de `docs/analysis_reports/6_analyse_game_balance.md` (documentés, non cor
 
 | Version | Date | Titre | Description des changements clés |
 |:---|:---|:---|:---|
+| **v0.2.4** | 2026-06-14 | Harmonisation de l'Architecture | Harmonisation Post-Refactoring de l'Architecture : Migration de `ClassSelectionScreen` sous `ScreenScaffold` et `PageHeader` ; remontée de la logique d'`updateStats` et des réactions d'impacts visuels dans `CombatEntity` (Flame), nettoyant `HeroCard` et `EnemyCard` ; riverpodisation d'`EffectRegistry` via le provider `effectRegistryProvider` (sans mutable statique global) et passage à `EffectResolver.resolveCard` ; nettoyage de callbacks obsolètes de `HerosDraftGame` ; et ajout du champ `floor` explicite dans `MapNode` pour supprimer le parsing d'ID de chaîne. |
+| **v0.2.3** | 2026-06-14 | Architecture & Patterns | Refactoring Phase 4 : Découpage procédural de `MapGeneratorService` en 4 sous-services (`MapNodeGenerator`, `MapConnectionBuilder`, `MapValidator`, `MapContentPlacer`) ; refactorisation d'`EffectResolver` avec le Strategy Pattern (`EffectStrategy` et `EffectRegistry`) ; abstractions Flame `CombatEntity` (pour unifier `HeroCard`/`EnemyCard`) et `BaseVisualEffect` (pour unifier `SlashEffect`/`ShieldDome`) ; centralisation de la thématique via `GameThemeExtension` et try/catch détaillés de diagnostic dans `GameDataService`. Zéro erreur et 108 tests unitaires au vert. |
 | **v0.2.2** | 2026-06-14 | Unification de l'UI & Composants Communs | Refactoring Phase 3 : Centralisation des arrière-plans, SafeArea et PopScope dans `ScreenScaffold` ; standardisation des en-têtes avec `PageHeader` et de l'affichage de l'or avec `GoldIndicator` ; factories `UiCard.fromInstance` et `UiCard.fromData` ; découpage modulaire de la forge (`ForgeCardPreview`, `ForgeSlotRow`, `ForgeBuySlotButton`) ; et structure de mise en page commune `CardDraftLayout`. Zéro régression et 108 tests unitaires au vert. |
 | **v0.2.10** | 2026-06-13 | Décomposition des God Classes | Refactoring Phase 2 : Décomposition de `RunController` (en 4 managers spécialisés), `CombatController` (en 2 processeurs spécialisés), `HerosDraftGame` (en 4 sous-systèmes Flame : `StateSync`, `CardAnimation`, `CombatVisual`, `Layout`), et `CardComponent` (délégation à `CardRenderer` pour le dessin Canvas et `CardInteractionHandler` pour les gestes). Préservation des signatures d'API et 108 tests unitaires 100% au vert. |
 | **v0.1.9** | 2026-06-13 | Refactoring & Centralisation | Centralisation de tous les délais de combat et des paramètres de FloatingText dans `GameConstants` pour supprimer les nombres magiques ; sécurisation du flux d'état via `@immutable` et `List.unmodifiable` sur les modèles clés (`EntityStats`, `CombatState`, `EnemyInstance`) ; et unification des calculs de dégâts via le service centralisé `DamagePipeline.calculate`. |

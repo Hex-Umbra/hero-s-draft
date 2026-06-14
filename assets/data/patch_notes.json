@@ -1,5 +1,53 @@
 [
   {
+    "version": "0.2.4",
+    "date": "2026-06-14",
+    "title": "Harmonisation et Finitions",
+    "sections": [
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "L'écran de sélection de votre héros a été modernisé avec un arrière-plan harmonisé et un nouvel en-tête de page pour une navigation plus claire.",
+          "Les effets visuels et les textes flottants (gains de vie, perte de boucliers, tremblements) lors des affrontements sont désormais mieux synchronisés et plus fluides."
+        ]
+      },
+      {
+        "category": "Corrections",
+        "emoji": "🐛",
+        "entries": [
+          "Sécurisation du suivi des étages sur la carte d'aventure pour garantir un enchaînement de la progression sans anomalie.",
+          "Stabilisation et fiabilisation du déclenchement des effets spéciaux de cartes durant les combats."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "0.2.3",
+    "date": "2026-06-14",
+    "title": "Fluidité des Effets et de la Carte",
+    "sections": [
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "La génération de la carte du monde est désormais plus fiable et équilibrée grâce à une réorganisation complète des règles de création procédurale.",
+          "Les animations et effets visuels de combat (secousses, flashs, explosions de particules et charges) ont été unifiés pour offrir des affrontements plus fluides et percutants.",
+          "Le cycle de vie et la disparition des effets visuels temporaires, comme les dômes de bouclier, ont été fluidifiés pour une meilleure lisibilité en jeu.",
+          "L'ambiance visuelle bénéficie d'une meilleure intégration des couleurs thématiques liées aux raretés, aux statistiques et aux reflets néons."
+        ]
+      },
+      {
+        "category": "Technique",
+        "emoji": "🔧",
+        "entries": [
+          "La résolution des effets de cartes a été entièrement restructurée pour faciliter l'ajout de futures cartes et garantir un comportement plus robuste.",
+          "La détection des erreurs de données lors du lancement du jeu a été renforcée afin d'identifier et de résoudre immédiatement d'éventuels problèmes de chargement."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.2.2",
     "date": "2026-06-14",
     "title": "Unification Visuelle et Ergonomie",

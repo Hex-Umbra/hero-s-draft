@@ -1,15 +1,16 @@
-import 'dart:math';
+
 import '../../models/card_instance.dart';
 import '../../models/data/card_data.dart';
 import '../../models/status_effect.dart';
 import '../controllers/run_controller.dart';
 import '../controllers/deck_controller.dart';
 import '../controllers/combat_controller.dart';
-import 'damage_pipeline.dart';
+import 'effects/effect_strategy.dart';
 
 class EffectResolver {
+
   /// Helper pour créer un StatusEffect à partir des données de la carte
-  static StatusEffect? _createStatus(String statusId, int value, int duration) {
+  static StatusEffect? createStatus(String statusId, int value, int duration) {
     switch (statusId) {
       case 'poison':
         return StatusEffect(
@@ -113,6 +114,7 @@ class EffectResolver {
     DeckNotifier deckController,
     CombatController combatController,
     String? selectedEnemyId,
+    EffectRegistry registry,
   ) {
     if (!canPlayCard(card, runController.currentState, selectedEnemyId)) {
       return false;
@@ -171,15 +173,15 @@ class EffectResolver {
     if (card.data.type == CardType.attack) {
       final List<StatusEffect> extraStatuses = [];
       if (elementBurn > 0) {
-        final st = _createStatus('burn', elementBurn, elementBurn);
+        final st = createStatus('burn', elementBurn, elementBurn);
         if (st != null) extraStatuses.add(st);
       }
       if (elementFreeze > 0) {
-        final st = _createStatus('freeze', elementFreeze, elementFreeze);
+        final st = createStatus('freeze', elementFreeze, elementFreeze);
         if (st != null) extraStatuses.add(st);
       }
       if (elementShock > 0) {
-        final st = _createStatus('shock', elementShock, elementShock);
+        final st = createStatus('shock', elementShock, elementShock);
         if (st != null) extraStatuses.add(st);
       }
 
@@ -218,94 +220,17 @@ class EffectResolver {
         scaledValue += extraArmor;
       }
 
-      switch (effect.type) {
-        case 'damage':
-          if (card.data.target == CardTarget.singleEnemy &&
-              selectedEnemyId != null) {
-            final enemyIndex = combatController.currentState.enemies.indexWhere(
-              (e) => e.id == selectedEnemyId,
-            );
-            if (enemyIndex != -1) {
-              final enemy = combatController.currentState.enemies[enemyIndex];
-              final (finalDmg, isCrit) = DamagePipeline.calculate(
-                initialDamage: scaledValue + runController.currentState.heroStats.effectiveAttaque,
-                attackerStats: runController.currentState.heroStats,
-                defenderStats: enemy.stats,
-              );
-              combatController.updateEnemyStats(
-                selectedEnemyId,
-                enemy.stats.takeDamage(finalDmg, isCrit: isCrit),
-              );
-            }
-          } else if (card.data.target == CardTarget.allEnemies) {
-            for (var enemy in combatController.currentState.enemies) {
-              final (individualDmg, isCrit) = DamagePipeline.calculate(
-                initialDamage: scaledValue + runController.currentState.heroStats.effectiveAttaque,
-                attackerStats: runController.currentState.heroStats,
-                defenderStats: enemy.stats,
-              );
-              combatController.updateEnemyStats(
-                enemy.id,
-                enemy.stats.takeDamage(individualDmg, isCrit: isCrit),
-              );
-            }
-          }
-          break;
-        case 'heal':
-          int healVal = scaledValue;
-          final heroStats = runController.currentState.heroStats;
-          final random = Random();
-          bool isCrit = false;
-          if (random.nextInt(100) < heroStats.effectiveCritChance) {
-            healVal = (healVal * heroStats.critMultiplier).round();
-            isCrit = true;
-          }
-          runController.heal(healVal, isCrit: isCrit);
-          break;
-        case 'armor':
-          final currentStats = runController.currentState.heroStats;
-          runController.setHeroStats(armure: currentStats.armure + scaledValue);
-          break;
-        case 'gain_mana':
-          final currentMana = runController.currentState.heroStats.currentMana;
-          runController.setHeroStats(currentMana: currentMana + scaledValue);
-          break;
-        case 'draw':
-          deckController.drawCards(scaledValue);
-          break;
-        case 'apply_status':
-          if (effect.statusId != null) {
-            final status = _createStatus(
-              effect.statusId!,
-              scaledValue,
-              effect.duration ?? 1,
-            );
-            if (status != null) {
-              if (card.data.target == CardTarget.singleEnemy &&
-                  selectedEnemyId != null) {
-                final enemyIndex = combatController.currentState.enemies
-                    .indexWhere((e) => e.id == selectedEnemyId);
-                if (enemyIndex != -1) {
-                  final enemy =
-                      combatController.currentState.enemies[enemyIndex];
-                  combatController.updateEnemyStats(
-                    selectedEnemyId,
-                    enemy.stats.addStatus(status),
-                  );
-                }
-              } else if (card.data.target == CardTarget.allEnemies) {
-                for (var enemy in combatController.currentState.enemies) {
-                  combatController.updateEnemyStats(
-                    enemy.id,
-                    enemy.stats.addStatus(status),
-                  );
-                }
-              } else if (card.data.target == CardTarget.self) {
-                runController.addStatus(status);
-              }
-            }
-          }
-          break;
+      final strategy = registry.get(effect.type);
+      if (strategy != null) {
+        strategy.resolve(
+          card: card,
+          effect: effect,
+          scaledValue: scaledValue,
+          runController: runController,
+          deckController: deckController,
+          combatController: combatController,
+          selectedEnemyId: selectedEnemyId,
+        );
       }
     }
 
@@ -317,5 +242,4 @@ class EffectResolver {
 
     return true;
   }
-
 }

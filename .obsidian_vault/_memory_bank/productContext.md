@@ -48,7 +48,11 @@ La progression dans **Hero's Draft** est structurée autour d'une boucle classiq
 
 ### 2.1. Génération Procédurale de Carte (`MapGeneratorService`)
 
-Le service statique `MapGeneratorService.generateMap({floors = 10, maxWidth = 5})` génère un **Graphe Acyclique Dirigé (DAG)**.
+Le service statique `MapGeneratorService.generateMap({floors = 10, maxWidth = 5})` orchestre la génération d'un **Graphe Acyclique Dirigé (DAG)** en déléguant ses étapes à 4 sous-services spécifiques situés sous `lib/services/map/` :
+- **`MapNodeGenerator`** (Phase 1) : Instancie les nœuds et définit leurs types par défaut selon l'étage.
+- **`MapConnectionBuilder`** (Phase 2) : Établit les liaisons (Directed Acyclic Graph) entre les étages successifs.
+- **`MapValidator`** (Phase 3) : Valide et ajuste les quotas minimum/maximum de nœuds par type, et applique la règle anti-répétition de chemin (maximum 2 nœuds Repos ou Élite consécutifs).
+- **`MapContentPlacer`** (Phase 4) : Gère le placement conditionnel d'événements ou de nœuds spéciaux (comme l'échange de reliques).
 
 **Phase 1 — Création des nœuds** :
 - Itère de l'étage 0 à `floors-1` (0 à 9).

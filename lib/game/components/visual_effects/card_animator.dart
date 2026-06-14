@@ -8,6 +8,7 @@ import '../../game_constants.dart';
 import '../entities/enemy_card.dart';
 import '../entities/hero_card.dart';
 import 'slash_effect.dart';
+import 'base_visual_effect.dart';
 import '../../../models/data/card_data.dart';
 
 class CardAnimator {
@@ -476,15 +477,14 @@ class CrossParticle extends Particle {
   }
 }
 
-class ShieldDome extends PositionComponent with HasPaint {
+class ShieldDome extends BaseVisualEffect {
   final HeroCard hero;
   double _time = 0;
-  final double duration;
 
-  ShieldDome({required this.hero, required this.duration})
-    : super(priority: hero.priority + 5) {
-    add(RemoveEffect(delay: duration));
-  }
+  ShieldDome({required this.hero, required super.duration})
+    : super(
+        priority: hero.priority + 5,
+      );
 
   @override
   void update(double dt) {
