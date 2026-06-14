@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../models/data/card_data.dart';
+import '../../models/card_instance.dart';
+import '../../models/data/model_extensions.dart';
 import 'ui_card/ui_card_helpers.dart';
 import 'ui_card/polychromatic_border.dart';
 import 'ui_card/card_mana_medallion.dart';
@@ -44,6 +46,68 @@ class UiCard extends StatelessWidget {
     this.isGrayedOut = false,
     this.onTap,
   });
+
+  factory UiCard.fromInstance({
+    Key? key,
+    required CardInstance card,
+    required String locale,
+    required AppLocalizations l10n,
+    bool isSelected = false,
+    bool isGrayedOut = false,
+    VoidCallback? onTap,
+  }) {
+    return UiCard(
+      key: key,
+      title: card.data.getName(locale),
+      description: card.data.getDescription(locale),
+      rarity: card.rarity.getLabel(l10n),
+      target: card.data.target.getLabel(l10n),
+      cost: card.currentCost,
+      level: 1,
+      rarityMultiplier: card.rarityMultiplier,
+      forgeUpgrades: card.forgeUpgrades,
+      baseMaxForgeUpgrades: card.data.baseMaxForgeUpgrades,
+      effects: card.data.effects,
+      type: card.data.type,
+      targetType: card.data.target,
+      isExhaust: card.data.isExhaust,
+      isSelected: isSelected,
+      isGrayedOut: isGrayedOut,
+      onTap: onTap,
+    );
+  }
+
+  factory UiCard.fromData({
+    Key? key,
+    required CardData card,
+    required String locale,
+    required AppLocalizations l10n,
+    double rarityMultiplier = 1.0,
+    List<String> forgeUpgrades = const [],
+    bool isSelected = false,
+    bool isGrayedOut = false,
+    VoidCallback? onTap,
+  }) {
+    return UiCard(
+      key: key,
+      title: card.getName(locale),
+      description: card.getDescription(locale),
+      rarity: card.rarity.getLabel(l10n),
+      target: card.target.getLabel(l10n),
+      cost: card.cost,
+      level: 1,
+      rarityMultiplier: rarityMultiplier,
+      forgeUpgrades: forgeUpgrades,
+      baseMaxForgeUpgrades: card.baseMaxForgeUpgrades,
+      effects: card.effects,
+      type: card.type,
+      targetType: card.target,
+      isExhaust: card.isExhaust,
+      isSelected: isSelected,
+      isGrayedOut: isGrayedOut,
+      onTap: onTap,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

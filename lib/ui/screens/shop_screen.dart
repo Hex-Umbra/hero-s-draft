@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
-import 'package:roguelike_card_game/models/data/model_extensions.dart';
 import 'package:roguelike_card_game/ui/widgets/game_dialog.dart';
 import 'package:roguelike_card_game/ui/widgets/game_button.dart';
 import '../../game/controllers/run_controller.dart';
@@ -13,6 +12,9 @@ import '../../models/data/card_data.dart';
 import '../../models/card_instance.dart';
 import '../widgets/ui_card.dart';
 import '../widgets/notification_overlay.dart';
+import '../widgets/screen_scaffold.dart';
+import '../widgets/page_header.dart';
+import '../widgets/gold_indicator.dart';
 
 class ShopScreen extends ConsumerStatefulWidget {
   const ShopScreen({super.key});
@@ -155,19 +157,10 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                 itemCount: masterDeck.length,
                 itemBuilder: (context, index) {
                   final card = masterDeck[index];
-                  return UiCard(
-                    title: card.data.getName(locale),
-                    description: card.data.getDescription(locale),
-                    cost: card.data.cost,
-                    effects: card.data.effects,
-                    rarity: card.rarity.getLabel(l10n),
-                    target: card.data.target.getLabel(l10n),
-                    type: card.data.type,
-                    targetType: card.data.target,
-                    isExhaust: card.data.isExhaust,
-                    baseMaxForgeUpgrades: card.data.baseMaxForgeUpgrades,
-                    forgeUpgrades: card.forgeUpgrades,
-                    rarityMultiplier: card.rarityMultiplier,
+                  return UiCard.fromInstance(
+                    card: card,
+                    locale: locale,
+                    l10n: l10n,
                     onTap: () {
                       final shopController = ref.read(shopProvider.notifier);
 
@@ -292,8 +285,6 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     );
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     final runState = ref.watch(runProvider);
@@ -303,6 +294,15 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     final int healAmount = (runState.heroStats.maxPv * 0.3).round();
     final l10n = AppLocalizations.of(context)!;
 
+    final appBar = PageHeader(
+      title: l10n.shop,
+      showBackButton: false,
+      isParchment: false,
+      actions: const [
+        GoldIndicator(isParchment: false),
+      ],
+    );
+
     return PopScope(
       canPop: true,
       onPopInvokedWithResult: (didPop, result) {
@@ -310,209 +310,171 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
           ref.read(shopProvider.notifier).clearCloneOptions();
         }
       },
-      child: Scaffold(
-        backgroundColor: const Color(0xFF1E1E2C),
-        appBar: AppBar(
-          title: Text(
-            l10n.shop,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          backgroundColor: Colors.black45,
-          elevation: 0,
-          actions: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.monetization_on,
-                    color: Colors.amber,
-                    size: 24,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${inventoryState.gold}',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.amber,
+      child: ScreenScaffold(
+        backgroundType: ScreenBackgroundType.dark,
+        appBar: appBar,
+        body: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Main Section (75%) - Cards for Sale
+              Expanded(
+                flex: 3,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      l10n.cardsForSale,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-          automaticallyImplyLeading: false,
-        ),
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Main Section (75%) - Cards for Sale
-                Expanded(
-                  flex: 3,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        l10n.cardsForSale,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Expanded(
-                        child: shopState.cardsForSale.isEmpty
-                            ? Center(
-                                child: Text(
-                                  l10n.noCardsInStock,
-                                  style: const TextStyle(
-                                    color: Colors.white54,
-                                    fontSize: 18,
-                                  ),
+                    const SizedBox(height: 20),
+                    Expanded(
+                      child: shopState.cardsForSale.isEmpty
+                          ? Center(
+                              child: Text(
+                                l10n.noCardsInStock,
+                                style: const TextStyle(
+                                  color: Colors.white54,
+                                  fontSize: 18,
                                 ),
-                              )
-                            : SingleChildScrollView(
-                                child: Wrap(
-                                  spacing: 12,
-                                  runSpacing: 20,
-                                  children: shopState.cardsForSale.map((card) {
-                                    final int price =
-                                        ShopController.getCardPrice(
-                                      card.rarity,
+                              ),
+                            )
+                          : SingleChildScrollView(
+                              child: Wrap(
+                                spacing: 12,
+                                runSpacing: 20,
+                                children: shopState.cardsForSale.map((card) {
+                                  final int price =
+                                      ShopController.getCardPrice(
+                                    card.rarity,
+                                  );
+                                  final bool canAfford =
+                                      inventoryState.gold >= price;
+                                    return SizedBox(
+                                      width: 150,
+                                      child: _ShopCardItem(
+                                        card: card,
+                                        price: price,
+                                        onPressed: () => _buyCard(card, price),
+                                        canAfford: canAfford,
+                                      ),
                                     );
-                                    final bool canAfford =
-                                        inventoryState.gold >= price;
-                                      return SizedBox(
-                                        width: 150,
-                                        child: _ShopCardItem(
-                                          card: card,
-                                          price: price,
-                                          onPressed: () => _buyCard(card, price),
-                                          rarityLabel: card.rarity.getLabel(l10n),
-                                          targetLabel: card.target.getLabel(l10n),
-                                          canAfford: canAfford,
-                                        ),
-                                      );
-                                  }).toList(),
-                                ),
+                                }).toList(),
                               ),
-                      ),
-                    ],
-                  ),
+                            ),
+                    ),
+                  ],
                 ),
-                const VerticalDivider(color: Colors.white24, width: 40),
-                // Sidebar Section (25%) - Services
-                Expanded(
-                  flex: 1,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        l10n.services,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
+              ),
+              const VerticalDivider(color: Colors.white24, width: 40),
+              // Sidebar Section (25%) - Services
+              Expanded(
+                flex: 1,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      l10n.services,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Wrap(
+                          spacing: 8,
+                          runSpacing: 12,
+                          alignment: WrapAlignment.center,
+                          children: [
+                            _ShopServiceWidget(
+                              icon: Icons.refresh,
+                              iconColor: Colors.tealAccent,
+                              title: l10n.shopReroll,
+                              description: l10n.shopRerollDesc,
+                              price: 15,
+                              onPressed: inventoryState.gold >= 15
+                                  ? () => _rerollCards(15)
+                                  : null,
+                              buttonColor: Colors.teal.shade800,
+                              canAfford: inventoryState.gold >= 15,
+                            ),
+                            _ShopServiceWidget(
+                              icon: Icons.local_hospital,
+                              iconColor: Colors.greenAccent,
+                              title: l10n.healingPotion,
+                              description: l10n.restoresHp(healAmount),
+                              price: healPrice,
+                              onPressed: shopState.purchasedHeal ||
+                                      inventoryState.gold < healPrice
+                                  ? null
+                                  : () => _buyHeal(healPrice, healAmount),
+                              buttonColor: Colors.green.shade800,
+                              canAfford: inventoryState.gold >= healPrice &&
+                                  !shopState.purchasedHeal,
+                            ),
+                            _ShopServiceWidget(
+                              icon: Icons.delete_forever,
+                              iconColor: Colors.redAccent,
+                              title: l10n.shopPurge,
+                              description: l10n.shopPurgeDesc,
+                              price: 75,
+                              onPressed: inventoryState.gold >= 75
+                                  ? () => _showRemovalModal(75)
+                                  : null,
+                              buttonColor: Colors.red.shade800,
+                              canAfford: inventoryState.gold >= 75,
+                            ),
+                            _ShopServiceWidget(
+                              icon: Icons.add_shopping_cart,
+                              iconColor: Colors.amberAccent,
+                              title: l10n.shopExpand,
+                              description: l10n.shopExpandDesc,
+                              price: 100,
+                              onPressed: inventoryState.gold >= 100
+                                  ? () => _expandShop(100)
+                                  : null,
+                              buttonColor: Colors.amber.shade800,
+                              canAfford: inventoryState.gold >= 100,
+                            ),
+                            _ShopServiceWidget(
+                              icon: Icons.content_copy,
+                              iconColor: Colors.blueAccent,
+                              title: l10n.shopClone,
+                              description: l10n.shopCloneDesc,
+                              price: 150,
+                              onPressed: inventoryState.gold >= 150
+                                  ? () => _showCloneModal(150)
+                                  : null,
+                              buttonColor: Colors.blue.shade800,
+                              canAfford: inventoryState.gold >= 150,
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 20),
-                      Expanded(
-                        child: SingleChildScrollView(
-                          child: Wrap(
-                            spacing: 8,
-                            runSpacing: 12,
-                            alignment: WrapAlignment.center,
-                            children: [
-                              _ShopServiceWidget(
-                                icon: Icons.refresh,
-                                iconColor: Colors.tealAccent,
-                                title: l10n.shopReroll,
-                                description: l10n.shopRerollDesc,
-                                price: 15,
-                                onPressed: inventoryState.gold >= 15
-                                    ? () => _rerollCards(15)
-                                    : null,
-                                buttonColor: Colors.teal.shade800,
-                                canAfford: inventoryState.gold >= 15,
-                              ),
-                              _ShopServiceWidget(
-                                icon: Icons.local_hospital,
-                                iconColor: Colors.greenAccent,
-                                title: l10n.healingPotion,
-                                description: l10n.restoresHp(healAmount),
-                                price: healPrice,
-                                onPressed: shopState.purchasedHeal ||
-                                        inventoryState.gold < healPrice
-                                    ? null
-                                    : () => _buyHeal(healPrice, healAmount),
-                                buttonColor: Colors.green.shade800,
-                                canAfford: inventoryState.gold >= healPrice &&
-                                    !shopState.purchasedHeal,
-                              ),
-                              _ShopServiceWidget(
-                                icon: Icons.delete_forever,
-                                iconColor: Colors.redAccent,
-                                title: l10n.shopPurge,
-                                description: l10n.shopPurgeDesc,
-                                price: 75,
-                                onPressed: inventoryState.gold >= 75
-                                    ? () => _showRemovalModal(75)
-                                    : null,
-                                buttonColor: Colors.red.shade800,
-                                canAfford: inventoryState.gold >= 75,
-                              ),
-                              _ShopServiceWidget(
-                                icon: Icons.add_shopping_cart,
-                                iconColor: Colors.amberAccent,
-                                title: l10n.shopExpand,
-                                description: l10n.shopExpandDesc,
-                                price: 100,
-                                onPressed: inventoryState.gold >= 100
-                                    ? () => _expandShop(100)
-                                    : null,
-                                buttonColor: Colors.amber.shade800,
-                                canAfford: inventoryState.gold >= 100,
-                              ),
-                              _ShopServiceWidget(
-                                icon: Icons.content_copy,
-                                iconColor: Colors.blueAccent,
-                                title: l10n.shopClone,
-                                description: l10n.shopCloneDesc,
-                                price: 150,
-                                onPressed: inventoryState.gold >= 150
-                                    ? () => _showCloneModal(150)
-                                    : null,
-                                buttonColor: Colors.blue.shade800,
-                                canAfford: inventoryState.gold >= 150,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      GameButton(
-                        text: l10n.leaveShop,
-                        onPressed: () {
-                          ref.read(runProvider.notifier).completeCurrentNode();
-                          Navigator.of(context).pop();
-                        },
-                        baseColor: Colors.blueAccent,
-                        height: 54,
-                        fontSize: 18,
-                      ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 20),
+                    GameButton(
+                      text: l10n.leaveShop,
+                      onPressed: () {
+                        ref.read(runProvider.notifier).completeCurrentNode();
+                        Navigator.of(context).pop();
+                      },
+                      baseColor: Colors.blueAccent,
+                      height: 54,
+                      fontSize: 18,
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -633,16 +595,12 @@ class _ShopCardItem extends StatefulWidget {
   final CardData card;
   final int price;
   final VoidCallback onPressed;
-  final String rarityLabel;
-  final String targetLabel;
   final bool canAfford;
 
   const _ShopCardItem({
     required this.card,
     required this.price,
     required this.onPressed,
-    required this.rarityLabel,
-    required this.targetLabel,
     required this.canAfford,
   });
 
@@ -668,22 +626,15 @@ class _ShopCardItemState extends State<_ShopCardItem> {
             Builder(
               builder: (context) {
                 final locale = Localizations.localeOf(context).languageCode;
+                final l10n = AppLocalizations.of(context)!;
                 return SizedBox(
                   width: 150,
                   child: AspectRatio(
                     aspectRatio: 70 / 110,
-                    child: UiCard(
-                      title: widget.card.getName(locale),
-                      description: widget.card.getDescription(locale),
-                      cost: widget.card.cost,
-                      effects: widget.card.effects,
-                      level: 1,
-                      rarity: widget.rarityLabel,
-                      target: widget.targetLabel,
-                      type: widget.card.type,
-                      targetType: widget.card.target,
-                      isExhaust: widget.card.isExhaust,
-                      baseMaxForgeUpgrades: widget.card.baseMaxForgeUpgrades,
+                    child: UiCard.fromData(
+                      card: widget.card,
+                      locale: locale,
+                      l10n: l10n,
                       onTap: widget.onPressed,
                     ),
                   ),
@@ -736,21 +687,11 @@ class _CloneCardItemState extends State<_CloneCardItem> {
         duration: const Duration(milliseconds: 200),
         child: AspectRatio(
           aspectRatio: 70 / 110,
-          child: UiCard(
-            title: widget.card.data.getName(locale),
-            description: widget.card.data.getDescription(locale),
-            cost: widget.card.currentCost,
-            effects: widget.card.data.effects,
-            level: 1,
-            rarity: widget.card.rarity.getLabel(l10n),
-            target: widget.card.data.target.getLabel(l10n),
-            type: widget.card.data.type,
-            targetType: widget.card.data.target,
-            isExhaust: widget.card.data.isExhaust,
+          child: UiCard.fromInstance(
+            card: widget.card,
+            locale: locale,
+            l10n: l10n,
             isSelected: _isHovered,
-            forgeUpgrades: widget.card.forgeUpgrades,
-            baseMaxForgeUpgrades: widget.card.data.baseMaxForgeUpgrades,
-            rarityMultiplier: widget.card.rarityMultiplier,
             onTap: widget.onPressed,
           ),
         ),
@@ -758,4 +699,3 @@ class _CloneCardItemState extends State<_CloneCardItem> {
     );
   }
 }
-

@@ -8,7 +8,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 - **108 tests automatisés** — 100% au vert.
 - **0 erreur** via `flutter analyze`.
 - **~122 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
-- **Version actuelle** : v0.2.10 — Décomposition des God Classes (Phase 2).
+- **Version actuelle** : v0.2.2 — Unification de l'UI (Phase 3).
 
 ---
 
@@ -106,7 +106,12 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 |:---|:---|:---|
 | Modularité Rendu Flame | `lib/game/systems/` | `HerosDraftGame` restructuré en façade légère déléguant à 4 sous-systèmes autonomes : `StateSyncSystem`, `CardAnimationSystem`, `CombatVisualSystem`, et `LayoutSystem`. |
 | Modularité CardComponent | `lib/game/components/widgets/` | `CardComponent` décomposé en façade déléguant le rendu Canvas à `CardRenderer` et la gestion des gestes/survol à `CardInteractionHandler`. |
-| `UiCard` unifié | `lib/ui/widgets/ui_card.dart` | Remplace 6 rendus dupliqués, style glassmorphic (BackdropFilter 10px), coût en médaillon standardisé, fentes de runes, retrait filigrane & badges de ciblage, doublement d'icônes multicibles |
+| `ScreenScaffold` unifié | `lib/ui/widgets/screen_scaffold.dart` | Centralise les arrière-plans (`dark`, `parchment`, `none`), la `SafeArea` et le `PopScope` (v0.2.2) |
+| En-tête standardisée `PageHeader` | `lib/ui/widgets/page_header.dart` | PreferredSizeWidget gérant uniformément le retour arrière, le titre et les actions (v0.2.2) |
+| Indicateur d'or unifié | `lib/ui/widgets/gold_indicator.dart` | Badge d'or connecté à l'état de l'inventaire avec style adaptatif (v0.2.2) |
+| Découpage de la Forge | `lib/ui/widgets/forge/` | Scission de `forge_upgrade_dialog.dart` en composants isolés : preview, slot row, buy button (v0.2.2) |
+| Layout de Draft unifié | `lib/ui/widgets/draft/` | Structure commune de draft avec grille responsive, utilisée par Boss/Starter drafts (v0.2.2) |
+| `UiCard` unifié | `lib/ui/widgets/ui_card.dart` | Remplace 6 rendus dupliqués, style glassmorphic, runes sockets, constructeurs d'usine `fromInstance` et `fromData` (v0.2.2) |
 | Système de Design Centralisé | `lib/ui/theme/app_colors.dart`, `app_spacing.dart`, `app_theme.dart` | `AppColors` (Neon Dark + Parchemin + stats + raretés + sémantiques), `AppSpacing` (EdgeInsets helpers), `AppTheme` (ThemeData complet dark/light) — v0.0.99 |
 | Extensions Enum Rareté | `CardRarity.color`, `RelicRarity.color` (extensions Dart) | Getter `.color` centralisé sur les enums de rareté de cartes et reliques, remplace les switch-case dispersés — v0.0.99 |
 | Correction `GameButton` overflow | `lib/ui/widgets/game_button.dart` | Résolution du bug `RenderFlex` overflow sur les boutons or-seulement (icône sans libellé) — v0.0.99 |
@@ -361,6 +366,7 @@ Issus de `docs/analysis_reports/6_analyse_game_balance.md` (documentés, non cor
 
 | Version | Date | Titre | Description des changements clés |
 |:---|:---|:---|:---|
+| **v0.2.2** | 2026-06-14 | Unification de l'UI & Composants Communs | Refactoring Phase 3 : Centralisation des arrière-plans, SafeArea et PopScope dans `ScreenScaffold` ; standardisation des en-têtes avec `PageHeader` et de l'affichage de l'or avec `GoldIndicator` ; factories `UiCard.fromInstance` et `UiCard.fromData` ; découpage modulaire de la forge (`ForgeCardPreview`, `ForgeSlotRow`, `ForgeBuySlotButton`) ; et structure de mise en page commune `CardDraftLayout`. Zéro régression et 108 tests unitaires au vert. |
 | **v0.2.10** | 2026-06-13 | Décomposition des God Classes | Refactoring Phase 2 : Décomposition de `RunController` (en 4 managers spécialisés), `CombatController` (en 2 processeurs spécialisés), `HerosDraftGame` (en 4 sous-systèmes Flame : `StateSync`, `CardAnimation`, `CombatVisual`, `Layout`), et `CardComponent` (délégation à `CardRenderer` pour le dessin Canvas et `CardInteractionHandler` pour les gestes). Préservation des signatures d'API et 108 tests unitaires 100% au vert. |
 | **v0.1.9** | 2026-06-13 | Refactoring & Centralisation | Centralisation de tous les délais de combat et des paramètres de FloatingText dans `GameConstants` pour supprimer les nombres magiques ; sécurisation du flux d'état via `@immutable` et `List.unmodifiable` sur les modèles clés (`EntityStats`, `CombatState`, `EnemyInstance`) ; et unification des calculs de dégâts via le service centralisé `DamagePipeline.calculate`. |
 | **v0.1.8** | 2026-06-13 | Transition Fluide de Tour | Réinitialisation de l'armure du joueur à 0 au début de son tour (dans `RunController`) pour éviter le cumul infini inter-tours de l'armure. Ajout d'un drapeau transitoire `suppressArmorChangeAnimation` dans `HeroCard` activé lors de la transition de tour par `game_screen.dart` pour masquer les popups négatifs d'armure ("-X") et l'animation d'impact de bouclier, évitant un faux feedback visuel de dégâts reçus. |

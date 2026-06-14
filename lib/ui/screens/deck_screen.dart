@@ -2,7 +2,6 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
-import 'package:roguelike_card_game/models/data/model_extensions.dart';
 import 'package:roguelike_card_game/ui/widgets/game_dialog.dart';
 import 'package:roguelike_card_game/ui/widgets/game_button.dart';
 import '../../game/controllers/deck_controller.dart';
@@ -10,6 +9,8 @@ import '../../models/card_instance.dart';
 import '../../models/data/card_data.dart';
 import '../widgets/ui_card.dart';
 import '../widgets/notification_overlay.dart';
+import '../widgets/screen_scaffold.dart';
+import '../widgets/page_header.dart';
 
 class DeckScreen extends ConsumerWidget {
   final bool allowMerge;
@@ -29,135 +30,120 @@ class DeckScreen extends ConsumerWidget {
       groups.putIfAbsent(key, () => []).add(card);
     }
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF1E1E2C),
-      appBar: AppBar(
-        title: Text(
-          l10n.myDeck,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: Colors.black45,
-        elevation: 0,
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                l10n.deckTotalCards(masterDeck.length),
-                style: const TextStyle(color: Colors.white70, fontSize: 16),
-              ),
-              const SizedBox(height: 20),
-              Expanded(
-                child: GridView.builder(
-                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent: 200,
-                    childAspectRatio: 70 / 110,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                  ),
-                  itemCount: groups.keys.length,
-                  itemBuilder: (context, index) {
-                    final key = groups.keys.elementAt(index);
-                    final cardList = groups[key]!;
-                    final card = cardList.first;
-                    final count = cardList.length;
-                    final canMerge = count >= 3;
+    final appBar = PageHeader(
+      title: l10n.myDeck,
+      showBackButton: true,
+      isParchment: false,
+    );
 
-                    return Column(
-                      children: [
-                        Expanded(
-                          child: Stack(
-                            children: [
-                              UiCard(
-                                title: card.data.getName(locale),
-                                description: card.data.getDescription(locale),
-                                cost: card.data.cost,
-                                target: card.data.target.getLabel(l10n),
-                                rarityMultiplier: card.rarityMultiplier,
-                                forgeUpgrades: card.forgeUpgrades,
-                                baseMaxForgeUpgrades: card.data.baseMaxForgeUpgrades,
-                                effects: card.data.effects,
-                                type: card.data.type,
-                                targetType: card.data.target,
-                                isExhaust: card.data.isExhaust,
-                                rarity: card.rarity.getLabel(l10n),
-                              ),
-                              Positioned(
-                                top: 5,
-                                right: 5,
-                                child: Container(
-                                  padding: const EdgeInsets.all(6),
-                                  decoration: const BoxDecoration(
-                                    color: Colors.amber,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Text(
-                                    'x$count',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black,
-                                      fontSize: 11,
-                                    ),
+    return ScreenScaffold(
+      backgroundType: ScreenBackgroundType.dark,
+      appBar: appBar,
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.deckTotalCards(masterDeck.length),
+              style: const TextStyle(color: Colors.white70, fontSize: 16),
+            ),
+            const SizedBox(height: 20),
+            Expanded(
+              child: GridView.builder(
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 200,
+                  childAspectRatio: 70 / 110,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                ),
+                itemCount: groups.keys.length,
+                itemBuilder: (context, index) {
+                  final key = groups.keys.elementAt(index);
+                  final cardList = groups[key]!;
+                  final card = cardList.first;
+                  final count = cardList.length;
+                  final canMerge = count >= 3;
+
+                  return Column(
+                    children: [
+                      Expanded(
+                        child: Stack(
+                          children: [
+                            UiCard.fromInstance(
+                              card: card,
+                              locale: locale,
+                              l10n: l10n,
+                            ),
+                            Positioned(
+                              top: 5,
+                              right: 5,
+                              child: Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: const BoxDecoration(
+                                  color: Colors.amber,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Text(
+                                  'x$count',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                    fontSize: 11,
                                   ),
                                 ),
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 8),
-                        if (card.rarity == CardRarity.unique)
-                          const SizedBox.shrink()
-                        else if (canMerge && allowMerge)
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
+                      ),
+                      const SizedBox(height: 8),
+                      if (card.rarity == CardRarity.unique)
+                        const SizedBox.shrink()
+                      else if (canMerge && allowMerge)
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
                             ),
-                            onPressed: () {
-                              _confirmMerge(context, ref, card, cardList);
-                            },
-                            child: Text(
-                              l10n.mergeLabel(3),
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          )
-                        else if (canMerge && !allowMerge)
-                          Text(
-                            l10n.mergePossible,
+                          ),
+                          onPressed: () {
+                            _confirmMerge(context, ref, card, cardList);
+                          },
+                          child: Text(
+                            l10n.mergeLabel(3),
                             style: const TextStyle(
-                              color: Colors.orangeAccent,
-                              fontSize: 10,
+                              fontSize: 11,
                               fontWeight: FontWeight.bold,
                             ),
-                          )
-                        else
-                          Text(
-                            l10n.mergeMoreRequired(3 - count),
-                            style: const TextStyle(
-                              color: Colors.white54,
-                              fontSize: 10,
-                            ),
                           ),
-                      ],
-                    );
-                  },
-                ),
+                        )
+                      else if (canMerge && !allowMerge)
+                        Text(
+                          l10n.mergePossible,
+                          style: const TextStyle(
+                            color: Colors.orangeAccent,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )
+                      else
+                        Text(
+                          l10n.mergeMoreRequired(3 - count),
+                          style: const TextStyle(
+                            color: Colors.white54,
+                            fontSize: 10,
+                          ),
+                        ),
+                    ],
+                  );
+                },
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

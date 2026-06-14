@@ -6,10 +6,11 @@ import '../../game/controllers/inventory_controller.dart';
 import '../../game/controllers/run_controller.dart';
 import '../../models/card_instance.dart';
 import '../../models/data/card_data.dart';
-import '../../models/data/model_extensions.dart';
 import '../../l10n/app_localizations.dart';
 import 'game_button.dart';
-import 'ui_card.dart';
+import 'forge/forge_card_preview.dart';
+import 'forge/forge_slot_row.dart';
+import 'forge/forge_buy_slot_button.dart';
 
 class ForgeSlot {
   final int index;
@@ -292,290 +293,18 @@ class _ForgeUpgradeDialogState extends ConsumerState<ForgeUpgradeDialog> {
     return locale == 'fr' ? fr : en;
   }
 
-  String _getUpgradeName(String upgrade) {
-    final parts = upgrade.split(':');
-    final id = parts[0];
-    final tier = parts.length > 1 ? parts[1] : '1';
+
+  String _getBuySlotButtonText(bool canBuySlot, int nextCost, int currentBonusSlots) {
     final isFr = Localizations.localeOf(context).languageCode == 'fr';
-
-    switch (id) {
-      case 'sharp':
-        return isFr ? 'Tranchant $tier' : 'Sharp $tier';
-      case 'hardened':
-        return isFr ? 'Endurci $tier' : 'Hardened $tier';
-      case 'burning':
-        return isFr ? 'Brûlant $tier' : 'Burning $tier';
-      case 'freezing':
-        return isFr ? 'Congelant $tier' : 'Freezing $tier';
-      case 'shocking':
-        return isFr ? 'Surchargé $tier' : 'Shocking $tier';
-      case 'quick':
-        return isFr ? 'Véloce $tier' : 'Quick $tier';
-      case 'eco':
-        return isFr ? 'Économe $tier' : 'Eco $tier';
-      case 'enduring':
-        return isFr ? 'Persistant' : 'Enduring';
-      default:
-        return id;
-    }
-  }
-
-  String _getUpgradeDescription(String upgrade) {
-    final parts = upgrade.split(':');
-    final id = parts[0];
-    final tierStr = parts.length > 1 ? parts[1] : '1';
-    final tier = int.tryParse(tierStr) ?? 1;
-    final isFr = Localizations.localeOf(context).languageCode == 'fr';
-
-    switch (id) {
-      case 'sharp':
-        final val = 2 * tier;
-        return isFr ? '+$val Dégâts sur la carte' : '+$val Damage on the card';
-      case 'hardened':
-        final val = 2 * tier;
-        return isFr ? '+$val Armure sur la carte' : '+$val Block on the card';
-      case 'burning':
-        return isFr ? 'Applique $tier Brûlure' : 'Applies $tier Burn';
-      case 'freezing':
-        return isFr ? 'Applique $tier Gel' : 'Applies $tier Freeze';
-      case 'shocking':
-        return isFr ? 'Applique $tier Électrocution' : 'Applies $tier Shock';
-      case 'quick':
-        return isFr ? 'Pioche +$tier carte(s)' : 'Draw +$tier card(s)';
-      case 'eco':
-        return isFr ? 'Gagne +$tier Mana à l\'utilisation' : 'Gains +$tier Mana on play';
-      case 'enduring':
-        return isFr ? 'Retire Épuisement (Exhaust)' : 'Removes Exhaust';
-      default:
-        return '';
-    }
-  }
-
-  IconData _getUpgradeIcon(String id) {
-    switch (id) {
-      case 'sharp':
-        return Icons.hardware_rounded;
-      case 'hardened':
-        return Icons.shield_rounded;
-      case 'burning':
-        return Icons.local_fire_department_rounded;
-      case 'freezing':
-        return Icons.ac_unit_rounded;
-      case 'shocking':
-        return Icons.flash_on_rounded;
-      case 'quick':
-        return Icons.style_rounded;
-      case 'eco':
-        return Icons.diamond_rounded;
-      case 'enduring':
-        return Icons.hourglass_bottom_rounded;
-      default:
-        return Icons.help_outline;
-    }
-  }
-
-  Color _getUpgradeColor(String id) {
-    switch (id) {
-      case 'sharp':
-        return Colors.redAccent;
-      case 'hardened':
-        return Colors.blueAccent;
-      case 'burning':
-        return Colors.orangeAccent;
-      case 'freezing':
-        return Colors.lightBlueAccent;
-      case 'shocking':
-        return Colors.amberAccent;
-      case 'quick':
-        return Colors.amber;
-      case 'eco':
-        return Colors.cyanAccent;
-      case 'enduring':
-        return Colors.greenAccent;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  Widget _buildSlotRow(ForgeSlot slot, int currentGold) {
-    final upgradeId = slot.upgrade.split(':')[0];
-    final upgradeColor = _getUpgradeColor(upgradeId);
-    final upgradeIcon = _getUpgradeIcon(upgradeId);
-    final upgradeName = _getUpgradeName(slot.upgrade);
-    final upgradeDesc = _getUpgradeDescription(slot.upgrade);
-    final rerollCost = slot.rerollCost;
-    final canAffordReroll = currentGold >= rerollCost;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white.withAlpha(8),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: upgradeColor.withAlpha(60),
-          width: 1.5,
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: upgradeColor.withAlpha(20),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: upgradeColor.withAlpha(100),
-              ),
-            ),
-            child: Icon(
-              upgradeIcon,
-              color: upgradeColor,
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  upgradeName,
-                  style: TextStyle(
-                    color: upgradeColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  upgradeDesc,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              InkWell(
-                onTap: canAffordReroll
-                    ? () => _rerollSlot(slot.index, rerollCost)
-                    : null,
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: canAffordReroll
-                        ? Colors.orangeAccent.withAlpha(20)
-                        : Colors.white10,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: canAffordReroll
-                          ? Colors.orangeAccent.withAlpha(120)
-                          : Colors.white24,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.autorenew,
-                        color: canAffordReroll
-                            ? Colors.orangeAccent
-                            : Colors.white30,
-                        size: 14,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '$rerollCost',
-                        style: TextStyle(
-                          color: canAffordReroll
-                              ? Colors.white
-                              : Colors.white30,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              GameButton(
-                text: _getTranslation('Forge', 'Forger'),
-                onPressed: () => _selectUpgrade(slot.upgrade),
-                baseColor: upgradeColor,
-                height: 36,
-                fontSize: 13,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBuySlotButton(bool canBuySlot, bool hasEnoughGold, int nextCost, int currentBonusSlots) {
-    final bool isEnabled = canBuySlot && hasEnoughGold;
-    final isFr = Localizations.localeOf(context).languageCode == 'fr';
-
-    String buttonText;
     if (currentBonusSlots >= 4 || _slots.length >= 5) {
-      buttonText = isFr
+      return isFr
           ? 'Capacité maximale atteinte (5 slots)'
           : 'Maximum capacity reached (5 slots)';
     } else {
-      buttonText = isFr
+      return isFr
           ? 'Acheter une fente supplémentaire ($nextCost Or)'
           : 'Buy an additional slot ($nextCost Gold)';
     }
-
-    return InkWell(
-      onTap: isEnabled ? _onBuySlotTapped : null,
-      borderRadius: BorderRadius.circular(16),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-        decoration: BoxDecoration(
-          color: isEnabled
-              ? Colors.amber.withAlpha(25)
-              : Colors.white.withAlpha(10),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isEnabled
-                ? Colors.amber.withAlpha(150)
-                : Colors.white12,
-            width: 1.5,
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.add_circle_outline,
-              color: isEnabled ? Colors.amber : Colors.white30,
-              size: 20,
-            ),
-            const SizedBox(width: 10),
-            Text(
-              buttonText,
-              style: TextStyle(
-                color: isEnabled ? Colors.white : Colors.white30,
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   @override
@@ -649,7 +378,7 @@ class _ForgeUpgradeDialogState extends ConsumerState<ForgeUpgradeDialog> {
                           border: Border.all(color: Colors.amberAccent.withAlpha(100)),
                         ),
                         child: Row(
-                          children: [
+                           children: [
                             const Icon(Icons.monetization_on, color: Colors.amber, size: 24),
                             const SizedBox(width: 8),
                             Text(
@@ -678,94 +407,11 @@ class _ForgeUpgradeDialogState extends ConsumerState<ForgeUpgradeDialog> {
                         // Left panel: Card + capacity info
                         final cardPanel = SizedBox(
                           width: isDesktop ? 240 : double.infinity,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              SizedBox(
-                                width: 170,
-                                child: UiCard(
-                                  title: widget.card.data.getName(locale),
-                                  description: widget.card.data.getDescription(locale),
-                                  cost: widget.card.data.cost,
-                                  effects: widget.card.data.effects,
-                                  type: widget.card.data.type,
-                                  targetType: widget.card.data.target,
-                                  isExhaust: widget.card.data.isExhaust,
-                                  rarity: widget.card.rarity.getLabel(l10n),
-                                  forgeUpgrades: widget.card.forgeUpgrades,
-                                  baseMaxForgeUpgrades: widget.card.data.baseMaxForgeUpgrades,
-                                  rarityMultiplier: widget.card.rarityMultiplier,
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-                              Text(
-                                _getTranslation('CAPACITY', 'CAPACITÉ'),
-                                style: const TextStyle(
-                                  color: Colors.white60,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 1.5,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              SizedBox(
-                                width: 120.0,
-                                child: Wrap(
-                                  alignment: WrapAlignment.center,
-                                  runAlignment: WrapAlignment.center,
-                                  spacing: 6.0,
-                                  runSpacing: 6.0,
-                                  children: [
-                                    ...widget.card.forgeUpgrades.map((upgrade) => Container(
-                                          width: 18.0,
-                                          height: 18.0,
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            color: Colors.black45,
-                                            border: Border.all(
-                                              color: Colors.cyanAccent,
-                                              width: 1.0,
-                                            ),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.cyanAccent.withValues(alpha: 0.4),
-                                                blurRadius: 3.0,
-                                              ),
-                                            ],
-                                          ),
-                                          child: Center(
-                                            child: FittedBox(
-                                              child: Text(
-                                                _getRuneEmoji(upgrade),
-                                                style: const TextStyle(fontSize: 11.0),
-                                              ),
-                                            ),
-                                          ),
-                                        )),
-                                    ...List.generate(
-                                      max(0, _totalMaxForgeUpgrades - widget.card.forgeUpgrades.length),
-                                      (index) => Container(
-                                        width: 18.0,
-                                        height: 18.0,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: Colors.white.withValues(alpha: 0.05),
-                                          border: Border.all(
-                                            color: Colors.white24,
-                                            width: 1.0,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                '${widget.card.forgeUpgrades.length} / $_totalMaxForgeUpgrades ${_getTranslation('Upgrades', 'Améliorations')}',
-                                style: const TextStyle(color: Colors.white70, fontSize: 13),
-                              ),
-                            ],
+                          child: ForgeCardPreview(
+                            card: widget.card,
+                            totalMaxForgeUpgrades: _totalMaxForgeUpgrades,
+                            locale: locale,
+                            l10n: l10n,
                           ),
                         );
 
@@ -789,9 +435,20 @@ class _ForgeUpgradeDialogState extends ConsumerState<ForgeUpgradeDialog> {
                               Expanded(
                                 child: ListView(
                                   children: [
-                                    ..._slots.map((slot) => _buildSlotRow(slot, currentGold)),
+                                    ..._slots.map((slot) => ForgeSlotRow(
+                                          slot: slot,
+                                          currentGold: currentGold,
+                                          locale: locale,
+                                          l10n: l10n,
+                                          onReroll: () => _rerollSlot(slot.index, slot.rerollCost),
+                                          onSelect: () => _selectUpgrade(slot.upgrade),
+                                        )),
                                     const SizedBox(height: 16),
-                                    _buildBuySlotButton(canBuySlot, hasEnoughGold, nextCost, runState.bonusForgeSlots),
+                                    ForgeBuySlotButton(
+                                      isEnabled: canBuySlot && hasEnoughGold,
+                                      text: _getBuySlotButtonText(canBuySlot, nextCost, runState.bonusForgeSlots),
+                                      onPressed: _onBuySlotTapped,
+                                    ),
                                   ],
                                 ),
                               ),
@@ -844,29 +501,5 @@ class _ForgeUpgradeDialogState extends ConsumerState<ForgeUpgradeDialog> {
         ),
       ),
     );
-  }
-
-  String _getRuneEmoji(String upgrade) {
-    final id = upgrade.split(':')[0];
-    switch (id) {
-      case 'sharp':
-        return '⚔️';
-      case 'hardened':
-        return '🛡️';
-      case 'quick':
-        return '🪶';
-      case 'eco':
-        return '💎';
-      case 'burning':
-        return '🔥';
-      case 'freezing':
-        return '❄️';
-      case 'shocking':
-        return '⚡';
-      case 'enduring':
-        return '⏳';
-      default:
-        return '🔮';
-    }
   }
 }

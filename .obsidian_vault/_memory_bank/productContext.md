@@ -427,9 +427,13 @@ La forge permet d'ajouter des améliorations permanentes (upgrades) aux cartes d
   - Capacité maximale : Capée à 4 fentes bonus achetées (soit un maximum de 5 slots affichés au total).
   - Tarification progressive en or : $50 \rightarrow 80 \rightarrow 120 \rightarrow 175$ Or.
   - Le bouton d'achat en bas de la liste est désactivé si l'or disponible est insuffisant ou si la capacité maximale de 5 slots est atteinte.
-- **Rendu Plein Écran & UI Responsive** : Le dialogue de forge (`ForgeUpgradeDialog`) a été converti en interface plein écran réactive (`Dialog.fullscreen`) :
-  - Desktop : Disposition en colonnes jumelles (`Row`), affichant le visuel de la carte sélectionnée avec ses étoiles à gauche, et le panneau de défilement scrollable (`ListView`) contenant les slots d'amélioration et le bouton d'achat à droite.
+- **Architecture Modulaire & UI Responsive (v0.2.2)** : Le dialogue de forge (`ForgeUpgradeDialog`) a été converti en interface plein écran réactive (`Dialog.fullscreen`) et découpé selon le principe de responsabilité unique (SRP) :
+  - **`ForgeCardPreview`** : Affiche le visuel de la carte sélectionnée avec son coût en mana, sa description dynamique et ses runes d'amélioration à gauche (sur Desktop) ou en haut (sur Mobile).
+  - **`ForgeSlotRow`** : Ligne d'option d'amélioration gérant le bouton de forge, le coût de relance et le bouton de reroll.
+  - **`ForgeBuySlotButton`** : Bouton d'achat de slots bonus en bas de la liste d'options.
+  - Desktop : Disposition en colonnes jumelles (`Row`) avec aperçu de carte à gauche et panneau de défilement scrollable (`ListView`) contenant les slots d'amélioration et le bouton d'achat à droite.
   - Mobile : Empilement vertical fluide (`Column`) assurant un scroll confortable et empêchant tout débordement (RenderFlex overflow).
+
 
 ### 3.8. 🛒 Boutique (Shop)
 
@@ -713,3 +717,24 @@ Ce sprint cible l'optimisation visuelle et tactile du combat pour élever le niv
   - **Flame** : Retrait du dessin de fond dans `card_text_renderer.dart`, diminution des polices et dessin vectoriel d'étoiles dorées proportionnelles à `card.forgeUpgrades.length`.
   - **Flutter** : Retrait de l'icône centrale translucide et réduction des polices dans `ui_card.dart`. Rendu d'une rangée d'étoiles dorées sous le label de rareté avec ajustement des offsets.
 - **Double Jauge de Vie Animée (HP Dual-Bar)** : Conversion de `PlayerHealthBar` en `StatefulWidget`. Câblage d'un `TweenAnimationBuilder` (500ms, `Curves.easeOutCubic`) animant la différence de ratio entre les PV actuels et les PV précédents sous forme d'une jauge secondaire rouge/orange qui glisse lentement en arrière-plan sous les dégâts. En cas de soin, la jauge verte augmente de suite de manière fluide et la barre rouge s'y aligne instantanément.
+
+---
+
+## 11. Sprint d'Unification de l'UI & Composants Communs (v0.2.2)
+
+Ce sprint standardise l'ensemble des interfaces de menus et de progression du jeu, éliminant la duplication de code et garantissant une cohérence visuelle stricte.
+
+### 11.1. Impact Produit
+- **Harmonisation Visuelle Immédiate** : Centralisation de tous les décors d'arrière-plan (dégradé sombre pour les menus/combats et parchemin historique pour la carte et les échanges) sous une infrastructure commune.
+- **Expérience Utilisateur Unifiée** : Standardisation du cycle de vie de la navigation (gestion des retours physiques arrière via `PopScope`) et présentation d'un en-tête d'écran homogène incluant le solde d'or du joueur.
+- **Grille de Sélection Cohérente** : Intégration d'un layout partagé pour tous les drafts de cartes (Starter Deck et Boss Rewards) avec une mise en page fluide et adaptative.
+- **Allègement de la Forge** : Simplification fonctionnelle du dialogue de forge, le recentrant sur l'orchestration logique et améliorant la responsivité globale du système sur mobile et desktop.
+
+### 11.2. Portée Technique
+- **`ScreenScaffold`** : Composant centralisant le Scaffold, la gestion thématique des arrière-plans (`dark`, `parchment`, `none`), la `SafeArea` et la prévention des retours physiques arrière accidentels.
+- **`PageHeader`** : En-tête standardisé qui s'adapte visuellement au thème de fond, exposant le titre, le bouton de retour arrière stylisé et les actions transversales.
+- **`GoldIndicator`** : Badge d'or universel, branché de façon autonome sur `inventoryProvider`, qui ajuste son contraste et ses teintes selon le support.
+- **`CardDraftLayout`** : Widget de mise en page réutilisable pour la sélection interactive de cartes, uniformisant les grilles de cartes et les boutons de confirmation.
+- **Décomposition Modulaire de la Forge** : Division de la logique monolithique en 3 composants distincts : `ForgeCardPreview` (rendu carte et jauges de runes), `ForgeSlotRow` (actions et boutons de reroll d'une ligne d'amélioration), et `ForgeBuySlotButton` (extension de capacité).
+- **Factories `UiCard`** : Simplification drastique de la création des widgets Flutter de cartes avec les constructeurs nommés `UiCard.fromInstance` et `UiCard.fromData`.
+

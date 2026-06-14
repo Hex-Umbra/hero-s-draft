@@ -4,17 +4,27 @@ Ce document décrit le focus actif du projet, les accomplissements récents, et 
 
 ## 1. Focus Actuel du Projet
 
-Le projet vient de finaliser le sprint majeur **Refactoring Phase 2 — Décomposition des God Classes** :
-- **Décomposition des Contrôleurs Globaux** : Réduction de la taille et de la complexité de `RunController` et `CombatController` en extrayant leurs logiques métiers dans des sous-gestionnaires spécialisés sous `lib/game/controllers/run/` et `lib/game/controllers/combat/`.
-- **Modularité du Rendu Flame** : Allègement de l'orchestrateur Flame `HerosDraftGame` en déléguant le rendu, la synchronisation Riverpod, la disposition en arc des cartes et le repositionnement des ennemis à 4 composants sous-systèmes dans `lib/game/systems/`.
-- **Modularité de CardComponent** : Découplage de `CardComponent` en confiant son dessin Canvas à `CardRenderer` et ses gestes/interactions physiques à `CardInteractionHandler`.
+Le projet vient de finaliser le sprint majeur **Refactoring Phase 3 — Unification de l'UI** :
+- **Composants UI Communs & Unifiés** : Centralisation des arrière-plans (`dark`, `parchment`, `none`), de la `SafeArea` et du `PopScope` via `ScreenScaffold`. Standardisation des en-têtes d'écrans avec `PageHeader` et affichage uniforme de l'or avec `GoldIndicator`.
+- **Méthodes d'Usine `UiCard`** : Intégration de `UiCard.fromInstance` et `UiCard.fromData` pour simplifier radicalement l'instanciation des cartes dans l'ensemble de l'UI et éliminer le code verbeux de mapping.
+- **Découpage du Dialogue de Forge Monolithique** : Allègement de `forge_upgrade_dialog.dart` (gain de plus de 250 lignes) en extrayant ses responsabilités visuelles dans des composants isolés (`forge_card_preview.dart`, `forge_slot_row.dart`, `forge_buy_slot_button.dart`).
+- **Standardisation des Drafts** : Création de `CardDraftLayout` et factorisation complète de `boss_card_draft_screen.dart` et `starter_deck_draft_screen.dart`.
+- **Refactoring Global des Écrans** : Harmonisation de 9 écrans majeurs du jeu pour éradiquer les structures de scaffold et de gradient dupliquées.
 - **Validation Strict** : Exécution de l'ensemble de la suite de tests (108/108 passés au vert) et correction de tous les avertissements ou erreurs via `dart analyze` (0 erreur, 0 avertissement).
 
-Le focus se tourne désormais vers les étapes suivantes de la roadmap technique : la persistance I/O (Sauvegarde de partie via `shared_preferences`), l'implémentation audio complète, la décomposition des écrans complexes (`MapScreen` et `GameScreen`), et l'amélioration de la couverture des tests.
+Le focus se tourne désormais vers les étapes suivantes de la roadmap technique : la persistance I/O (Sauvegarde de partie via `shared_preferences`), l'implémentation audio complète, la décomposition des écrans complexes restants (`MapScreen` et `GameScreen`), et l'amélioration de la couverture des tests.
 
 ## 2. Accomplissements Récents
 
-1. **Refactoring Phase 2 — Décomposition des God Classes (Complété)** :
+1. **Refactoring Phase 3 — Unification de l'UI (Complété - Version v0.2.2)** :
+   - **Centralisation du Scaffold (`ScreenScaffold`)** : Unification des styles d'arrière-plan du jeu (dégradé sombre de combat/menus et texture parchemin de la carte/échanges) et gestion propre du cycle de vie des retours arrière via `PopScope`.
+   - **En-têtes d'Écrans Homogènes (`PageHeader`)** : Remplacement des AppBar ad-hoc par une structure unifiée gérant le bouton retour standardisé, le titre stylisé et les actions transversales.
+   - **Badge d'Or Uniforme (`GoldIndicator`)** : Intégration de l'affichage de l'or connecté à l'état de l'inventaire en haut des écrans Boutique, Forge et Carte.
+   - **Modularisation de la Forge** : Scission du dialogue de forge monolithique en sous-composants unitaires sous `lib/ui/widgets/forge/` pour respecter le principe de responsabilité unique (SRP).
+   - **Factorisation du Draft de Cartes** : Structure de mise en page commune (`CardDraftLayout`) avec grille responsive et indicateurs de sélection unifiés pour les drafts de boss et de starter.
+   - **Nettoyage de 9 Écrans** : Migration des écrans clés vers la nouvelle architecture unifiée de l'UI sans régression visuelle ou logique.
+
+2. **Refactoring Phase 2 — Décomposition des God Classes (Complété - Version v0.2.1)** :
    - **Contrôleur de Run Facade** : `RunController` réorganisé pour déléguer à `PlayerStatsManager` (stats, XP, HP, mana, buffs), `MapProgressionManager` (déplacements, complétions, actes), `RunPersistenceManager` (sauvegarde) et `GoldManager` (or, forge slots).
    - **Contrôleur de Combat Facade** : `CombatController` réorganisé pour déléguer à `StatusEffectProcessor` (résolution unifiée des statuts poison, brûlure, force, armure joueur/ennemis) et `TurnPhaseManager` (ripostes, transitions de tours).
    - **Systèmes Flame Spécialisés** : Division de `HerosDraftGame` en 4 composants Flame indépendants : `StateSyncSystem` (synchronisation des états Riverpod), `CardAnimationSystem` (inclinaison, zoom, focus, pioche), `CombatVisualSystem` (Bézier ciblage, explosions de particules, dômes), et `LayoutSystem` (layouts arc de main, repositionnement ennemis).
