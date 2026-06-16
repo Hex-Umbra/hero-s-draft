@@ -4,18 +4,21 @@ Ce document décrit le focus actif du projet, les accomplissements récents, et 
 
 ## 1. Focus Actuel du Projet
 
-Le projet vient de finaliser le sprint d'**Harmonisation Post-Refactoring de l'Architecture** (Version v0.2.4) :
-- **Harmonisation UI** : Migration de `ClassSelectionScreen` vers les composants unifiés de la charte graphique (`ScreenScaffold` et `PageHeader`).
-- **Architecture Flame** : Remontée de la logique d'`updateStats` et de déclenchement visuel d'impacts dans la classe commune `CombatEntity`, nettoyant `HeroCard` et `EnemyCard`.
-- **Riverpodisation d'EffectRegistry** : Création du provider `effectRegistryProvider` pour éliminer l'état statique global mutable d'`EffectRegistry` et nettoyage de callbacks obsolètes de `HerosDraftGame`.
-- **Attribut floor Explicite** : Intégration de `floor` dans `MapNode` pour supprimer le parsing d'ID de chaîne fragile.
+Le projet a résolu l'activation tardive du bouton "Fin de Tour" en combat (Version v0.2.5) :
+- **Synchronisation synchrone de la phase de tour** : Forçage immédiat de `_game.currentPhase = TurnPhase.player;` dans la méthode `_startPlayerNewTurn()` de `game_screen.dart`.
+- **Résolution du bug d'inactivité transitoire** : Le bouton redevient réactif dès le début du tour du joueur en évitant d'attendre la frame suivante de Flame, tout en conservant la protection anti-spam lors du passage du tour à l'ennemi.
 - **Validation Stricte** : 0 erreur et 0 avertissement avec `dart analyze` ; 100% de réussite de la suite de tests (108/108).
 
 Le focus se tourne désormais vers les étapes suivantes de la roadmap technique : la persistance I/O (Sauvegarde de partie via `shared_preferences`), l'implémentation audio complète, la décomposition des écrans complexes restants (`MapScreen` et `GameScreen`), et l'amélioration de la couverture des tests.
 
 ## 2. Accomplissements Récents
 
-1. **Harmonisation Post-Refactoring de l'Architecture (Complété - Version v0.2.4)** :
+1. **Correction du Bouton de Fin de Tour (Complété - Version v0.2.5)** :
+   - **Mise à jour synchrone de l'état Flame** : Résolution du problème d'inactivité transitoire du bouton de fin de tour en combat en synchronisant explicitement `_game.currentPhase = TurnPhase.player;` lors du démarrage du tour du joueur dans `game_screen.dart` (`_startPlayerNewTurn`).
+   - **Protection Anti-Spam intacte** : Le clic initial désactive instantanément le bouton pour empêcher le spam, tandis que le retour au tour joueur réactive le bouton immédiatement.
+   - **Zéro Régression** : Analyse statique vierge et tous les tests de la suite automatisée (108/108) au vert.
+
+2. **Harmonisation Post-Refactoring de l'Architecture (Complété - Version v0.2.4)** :
    - **Harmonisation UI de ClassSelectionScreen** : Remplacement de l'ancien Scaffold/AppBar par les widgets standardisés de l'infrastructure (`ScreenScaffold` et `PageHeader`) pour harmoniser l'arrière-plan dégradé.
    - **Déduplication de code CombatEntity** : Centralisation de la logique de détection de modification de statistiques et de création d'animations d'impacts dans la classe de base commune Flame `CombatEntity`, éliminant la duplication logicielle résiduelle dans `HeroCard` et `EnemyCard`.
    - **Riverpodisation d'EffectRegistry** : Instanciation propre sans état statique mutable exposée par le provider `effectRegistryProvider` injecté à `EffectResolver.resolveCard`, et suppression de 3 callbacks orphelins de `HerosDraftGame`.

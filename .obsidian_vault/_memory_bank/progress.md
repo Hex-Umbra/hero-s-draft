@@ -7,8 +7,8 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 - **8 fichiers JSON** de données d'assets.
 - **108 tests automatisés** — 100% au vert.
 - **0 erreur** via `flutter analyze`.
-- **~122 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
-- **Version actuelle** : v0.2.4 — Harmonisation Post-Refactoring de l'Architecture.
+- **~123 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
+- **Version actuelle** : v0.2.5 — Correction du Bouton de Fin de Tour.
 
 ---
 
@@ -75,6 +75,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Absorption armure | `EntityStats.takeDamage()` | Armure absorbe en priorité, reste → PV |
 | Armure + Mastery | `RunController.addArmor()`, `TraitSystem` | Tous les gains d'armure incluent `armorMastery` |
 | Reset d'armure par tour | `RunController.startTurn()`, `HeroCard` | L'armure du joueur est remise à 0 au début de son tour, avec suppression visuelle transitoire des animations via `suppressArmorChangeAnimation` |
+| Synchronisation Fin de Tour | `game_screen.dart` | Assignation synchrone `_game.currentPhase = TurnPhase.player` dans `_startPlayerNewTurn()` pour éliminer l'inactivité transitoire du bouton (v0.2.5) |
 | Intentions ennemies | `CombatController._rollIntent()` | Cycle séquentiel (prédéfinis) ou aléatoire (60% atk, 25% def, 15% buff) |
 | Phase ennemie séquentielle | `HerosDraftGame._enemyRipostePhase()` | Résolution intent par intent avec animations (délais 400-600ms) |
 | Statuts de combat | `EntityStats.addStatus()`, `tickStatuses()` | Stacking, tick durée, processing poison/regen |
