@@ -494,6 +494,12 @@ abstract class AppLocalizations {
   /// **'No mana left.\nEnd your turn?'**
   String get manaWarning;
 
+  /// No description provided for @remainingManaWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Mana remaining.\nEnd your turn?'**
+  String get remainingManaWarning;
+
   /// No description provided for @turnCount.
   ///
   /// In en, this message translates to:

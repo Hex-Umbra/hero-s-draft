@@ -69,6 +69,7 @@
   "noStatusActive": "Aucun effet actif",
   "waitingIntents": "En attente...",
   "manaWarning": "Plus de mana.\nTerminer le tour ?",
+  "remainingManaWarning": "Mana restant.\nTerminer le tour ?",
   "turnCount": "Tour {count}",
   "pauseTitle": "PAUSE",
   "backToMainMenu": "Retour au Menu Principal",

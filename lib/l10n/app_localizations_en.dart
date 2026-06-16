@@ -226,6 +226,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get manaWarning => 'No mana left.\nEnd your turn?';
 
   @override
+  String get remainingManaWarning => 'Mana remaining.\nEnd your turn?';
+
+  @override
   String turnCount(int count) {
     return 'Turn $count';
   }

@@ -5,6 +5,13 @@
     "title": "Correction du Bouton de Fin de Tour",
     "sections": [
       {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "Ajout d'une confirmation de fin de tour si le joueur possède encore du mana afin d'éviter les actions involontaires."
+        ]
+      },
+      {
         "category": "Corrections",
         "emoji": "🐛",
         "entries": [

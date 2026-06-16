@@ -4,16 +4,22 @@ Ce document décrit le focus actif du projet, les accomplissements récents, et 
 
 ## 1. Focus Actuel du Projet
 
-Le projet a résolu l'activation tardive du bouton "Fin de Tour" en combat (Version v0.2.5) :
-- **Synchronisation synchrone de la phase de tour** : Forçage immédiat de `_game.currentPhase = TurnPhase.player;` dans la méthode `_startPlayerNewTurn()` de `game_screen.dart`.
-- **Résolution du bug d'inactivité transitoire** : Le bouton redevient réactif dès le début du tour du joueur en évitant d'attendre la frame suivante de Flame, tout en conservant la protection anti-spam lors du passage du tour à l'ennemi.
+Le projet a implémenté la double confirmation de fin de tour avec du mana restant (Version v0.2.6) :
+- **Sécurisation de la fin de tour** : Ajout d'une étape de validation si le joueur possède encore du mana (`currentMana > 0`). Le premier clic sur "Fin de tour" affiche une alerte ("Mana restant. Terminer le tour ?"), et le second clic valide la fin du tour.
+- **Réinitialisation intelligente** : L'état d'alerte et de confirmation est automatiquement réinitialisé lorsque le joueur joue une carte ou qu'un nouveau tour commence.
 - **Validation Stricte** : 0 erreur et 0 avertissement avec `dart analyze` ; 100% de réussite de la suite de tests (108/108).
 
 Le focus se tourne désormais vers les étapes suivantes de la roadmap technique : la persistance I/O (Sauvegarde de partie via `shared_preferences`), l'implémentation audio complète, la décomposition des écrans complexes restants (`MapScreen` et `GameScreen`), et l'amélioration de la couverture des tests.
 
 ## 2. Accomplissements Récents
 
-1. **Correction du Bouton de Fin de Tour (Complété - Version v0.2.5)** :
+1. **Double Confirmation de Fin de Tour avec Mana Restant (Complété - Version v0.2.6)** :
+   - **Validation double clic** : Ajout d'une variable d'état local `_showRemainingManaWarning` dans `game_screen.dart` déclenchée si le mana du héros est supérieur à 0 lors du clic.
+   - **Interactivité dynamique** : Réinitialisation immédiate du warning lors de l'exécution de `onPlayCard` ou du passage à un nouveau tour (`_startPlayerNewTurn()`).
+   - **Localisation bilingue** : Ajout de la clé `remainingManaWarning` dans `app_en.arb` et `app_fr.arb`.
+   - **Zéro Régression** : Analyse statique vierge et suite de tests validée avec 100% de réussite.
+
+2. **Correction du Bouton de Fin de Tour (Complété - Version v0.2.5)** :
    - **Mise à jour synchrone de l'état Flame** : Résolution du problème d'inactivité transitoire du bouton de fin de tour en combat en synchronisant explicitement `_game.currentPhase = TurnPhase.player;` lors du démarrage du tour du joueur dans `game_screen.dart` (`_startPlayerNewTurn`).
    - **Protection Anti-Spam intacte** : Le clic initial désactive instantanément le bouton pour empêcher le spam, tandis que le retour au tour joueur réactive le bouton immédiatement.
    - **Zéro Régression** : Analyse statique vierge et tous les tests de la suite automatisée (108/108) au vert.

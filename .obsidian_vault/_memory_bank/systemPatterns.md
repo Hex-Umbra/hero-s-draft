@@ -760,8 +760,14 @@ Pour éradiquer la duplication massive de code UI et uniformiser l'expérience v
        └→ _cleanDeadEnemies() → onEnemyKilled() → si ennemis actifs < 5 et réserve non vide, transfère le premier ennemi de pendingEnemies vers enemies et roule son intention.
 
 3. FIN DE TOUR JOUEUR
-   └→ HerosDraftGame.executeTurn()
-       └→ _enemyRipostePhase()
+   └→ Clic sur le bouton de fin de tour (GameScreen)
+       ├→ Validation de confirmation (s'il reste du mana et que `_showRemainingManaWarning` est à false, l'avertissement de mana restant est affiché et le clic est intercepté)
+       └→ Validation finale (si le mana est égal à 0 ou qu'il s'agit du second clic consécutif confirmant la fin de tour) :
+           ├→ TraitSystem.onTurnEnd(ref.read(runProvider.notifier))
+           ├→ ref.read(runProvider.notifier).applyRelics(RelicTrigger.endOfTurn)
+           ├→ ref.read(deckProvider.notifier).discardHand()
+           └→ HerosDraftGame.executeTurn()
+               └→ _enemyRipostePhase()
 
 4. PHASE ENNEMIE
    ├→ CombatController.startEnemyTurn()
