@@ -264,18 +264,6 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     });
 
     _game = HerosDraftGame(
-      onPlayerTakeDamage: (dmg) {
-        ref.read(runProvider.notifier).takeDamage(dmg);
-      },
-      onPlayerHeal: (heal) {
-        ref.read(runProvider.notifier).heal(heal);
-      },
-      onPlayerGainArmor: (armor) {
-        final currentArmor = ref.read(runProvider).heroStats.armure;
-        ref
-            .read(runProvider.notifier)
-            .setHeroStats(armure: currentArmor + armor);
-      },
       onEnemiesDead: _handleCombatVictory,
       onEnemyDebuffDeck: (count) {
         // Logique retirée car la carte "Blessure" de test a été supprimée
@@ -380,6 +368,11 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               setState(() {});
             }
           });
+        }
+      },
+      onAnimationStateChanged: () {
+        if (mounted) {
+          setState(() {});
         }
       },
     );

@@ -7,6 +7,8 @@ import 'card_dictionary_screen.dart';
 import 'starter_deck_draft_screen.dart';
 import '../widgets/sword_icon.dart';
 import '../../models/data/passive_data.dart';
+import '../widgets/screen_scaffold.dart';
+import '../widgets/page_header.dart';
 
 class ClassSelectionScreen extends ConsumerWidget {
   const ClassSelectionScreen({super.key});
@@ -19,11 +21,11 @@ class ClassSelectionScreen extends ConsumerWidget {
     final bool isMobile = MediaQuery.of(context).size.width < 600;
     final l10n = AppLocalizations.of(context)!;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.selectClass),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+    return ScreenScaffold(
+      backgroundType: ScreenBackgroundType.dark,
+      appBar: PageHeader(
+        title: l10n.selectClass,
+        showBackButton: false,
         actions: [
           IconButton(
             icon: const Icon(Icons.menu_book),
@@ -39,29 +41,27 @@ class ClassSelectionScreen extends ConsumerWidget {
           const SizedBox(width: 10),
         ],
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.all(isMobile ? 10 : 20),
-          child: GridView.builder(
-            gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: isMobile
-                  ? 200
-                  : 400, // Divise par deux sur mobile pour afficher 2 colonnes réduites
-              childAspectRatio: isMobile
-                  ? 0.68
-                  : 0.75, // Plus haute sur mobile pour donner plus d'espace vertical
-              crossAxisSpacing: isMobile ? 10 : 20,
-              mainAxisSpacing: isMobile ? 10 : 20,
-            ),
-            itemCount: classes.length,
-            itemBuilder: (context, index) {
-              return _InteractiveClassCard(
-                playerClass: classes[index],
-                ref: ref,
-                isMobile: isMobile,
-              );
-            },
+      body: Padding(
+        padding: EdgeInsets.all(isMobile ? 10 : 20),
+        child: GridView.builder(
+          gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: isMobile
+                ? 200
+                : 400, // Divise par deux sur mobile pour afficher 2 colonnes réduites
+            childAspectRatio: isMobile
+                ? 0.68
+                : 0.75, // Plus haute sur mobile pour donner plus d'espace vertical
+            crossAxisSpacing: isMobile ? 10 : 20,
+            mainAxisSpacing: isMobile ? 10 : 20,
           ),
+          itemCount: classes.length,
+          itemBuilder: (context, index) {
+            return _InteractiveClassCard(
+              playerClass: classes[index],
+              ref: ref,
+              isMobile: isMobile,
+            );
+          },
         ),
       ),
     );

@@ -8,6 +8,7 @@ import '../../game/controllers/deck_controller.dart';
 import '../../models/card_instance.dart';
 import '../widgets/notification_overlay.dart';
 import 'rest_card_selection_screen.dart';
+import '../widgets/screen_scaffold.dart';
 
 class RestScreen extends ConsumerStatefulWidget {
   const RestScreen({super.key});
@@ -111,97 +112,80 @@ class _RestScreenState extends ConsumerState<RestScreen> {
     final runState = ref.watch(runProvider);
     final heroStats = runState.heroStats;
 
-    return PopScope(
+    return ScreenScaffold(
+      backgroundType: ScreenBackgroundType.dark,
       canPop: _actionTaken,
-      child: Scaffold(
-        backgroundColor: const Color(0xFF0D0D1A),
-        body: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.black,
-                const Color(0xFF1A0A00).withAlpha(180),
-                Colors.black,
-              ],
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.nightlight_round,
+              color: Colors.orangeAccent,
+              size: 80,
             ),
-          ),
-          child: SafeArea(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.nightlight_round,
-                    color: Colors.orangeAccent,
-                    size: 80,
-                  ),
-                  AppSpacing.heightMd,
-                  Text(
-                    l10n.restCampTitle,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 4,
-                    ),
-                  ),
-                  AppSpacing.heightSm,
-                  Text(
-                    l10n.restCampSubtitle,
-                    style: TextStyle(
-                      color: Colors.white.withAlpha(150),
-                      fontSize: 16,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                  AppSpacing.heightXxl,
-                  if (!_actionTaken) ...[
-                    _RestOption(
-                      icon: Icons.favorite,
-                      title: l10n.restCampRest,
-                      description: l10n.restCampRestDesc(
-                        (heroStats.maxPv * 0.3).round(),
-                      ),
-                      onTap: _heal,
-                      color: Colors.greenAccent,
-                    ),
-                    AppSpacing.heightMd,
-                    _RestOption(
-                      icon: Icons.auto_fix_high,
-                      title: l10n.restCampForge,
-                      description: l10n.restCampForgeDesc,
-                      onTap: _upgradeCard,
-                      color: Colors.amberAccent,
-                    ),
-                    AppSpacing.heightMd,
-                    _RestOption(
-                      icon: Icons.delete_sweep,
-                      title: l10n.restCampRemove,
-                      description: l10n.restCampRemoveDesc,
-                      onTap: _removeCard,
-                      color: Colors.redAccent,
-                    ),
-                  ] else ...[
-                    const Icon(
-                      Icons.check_circle_outline,
-                      color: Colors.green,
-                      size: 100,
-                    ),
-                    AppSpacing.heightLg,
-                    GameButton(
-                      text: l10n.restCampProceed,
-                      onPressed: _leave,
-                      baseColor: Colors.white70,
-                      height: 54,
-                      width: 220,
-                    ),
-                  ],
-                ],
+            AppSpacing.heightMd,
+            Text(
+              l10n.restCampTitle,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 4,
               ),
             ),
-          ),
+            AppSpacing.heightSm,
+            Text(
+              l10n.restCampSubtitle,
+              style: TextStyle(
+                color: Colors.white.withAlpha(150),
+                fontSize: 16,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+            AppSpacing.heightXxl,
+            if (!_actionTaken) ...[
+              _RestOption(
+                icon: Icons.favorite,
+                title: l10n.restCampRest,
+                description: l10n.restCampRestDesc(
+                  (heroStats.maxPv * 0.3).round(),
+                ),
+                onTap: _heal,
+                color: Colors.greenAccent,
+              ),
+              AppSpacing.heightMd,
+              _RestOption(
+                icon: Icons.auto_fix_high,
+                title: l10n.restCampForge,
+                description: l10n.restCampForgeDesc,
+                onTap: _upgradeCard,
+                color: Colors.amberAccent,
+              ),
+              AppSpacing.heightMd,
+              _RestOption(
+                icon: Icons.delete_sweep,
+                title: l10n.restCampRemove,
+                description: l10n.restCampRemoveDesc,
+                onTap: _removeCard,
+                color: Colors.redAccent,
+              ),
+            ] else ...[
+              const Icon(
+                Icons.check_circle_outline,
+                color: Colors.green,
+                size: 100,
+              ),
+              AppSpacing.heightLg,
+              GameButton(
+                text: l10n.restCampProceed,
+                onPressed: _leave,
+                baseColor: Colors.white70,
+                height: 54,
+                width: 220,
+              ),
+            ],
+          ],
         ),
       ),
     );

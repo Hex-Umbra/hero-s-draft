@@ -1,7 +1,9 @@
+import 'package:meta/meta.dart';
 import 'enemy_instance.dart';
 
 enum TurnPhase { player, enemy }
 
+@immutable
 class CombatState {
   final List<EnemyInstance> enemies;
   final List<EnemyInstance> pendingEnemies;
@@ -12,16 +14,18 @@ class CombatState {
   final bool isCombatEnded;
   final bool isVictory;
 
-  const CombatState({
-    this.enemies = const [],
-    this.pendingEnemies = const [],
-    this.defeatedEnemies = const [],
+  CombatState({
+    List<EnemyInstance> enemies = const [],
+    List<EnemyInstance> pendingEnemies = const [],
+    List<EnemyInstance> defeatedEnemies = const [],
     this.turnPhase = TurnPhase.player,
     this.turnCount = 1,
     this.selectedEnemyId,
     this.isCombatEnded = false,
     this.isVictory = false,
-  });
+  })  : enemies = List.unmodifiable(enemies),
+        pendingEnemies = List.unmodifiable(pendingEnemies),
+        defeatedEnemies = List.unmodifiable(defeatedEnemies);
 
   CombatState copyWith({
     List<EnemyInstance>? enemies,

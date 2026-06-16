@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
+import 'game_theme_extension.dart';
 
 class AppTheme {
   AppTheme._();
@@ -9,6 +10,9 @@ class AppTheme {
       scaffoldBackgroundColor: AppColors.darkBg,
       cardColor: AppColors.darkSurface,
       dividerColor: AppColors.darkBorder,
+      extensions: [
+        GameThemeExtension.dark(),
+      ],
       colorScheme: const ColorScheme.dark(
         primary: AppColors.neonBlue,
         secondary: AppColors.neonPurple,
@@ -66,6 +70,9 @@ class AppTheme {
       scaffoldBackgroundColor: AppColors.parchmentBg,
       cardColor: AppColors.parchmentSurface,
       dividerColor: AppColors.parchmentBorder,
+      extensions: [
+        GameThemeExtension.light(),
+      ],
       colorScheme: const ColorScheme.light(
         primary: AppColors.borderParchment,
         secondary: AppColors.neonGold,

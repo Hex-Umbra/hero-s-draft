@@ -1,11 +1,9 @@
-import 'dart:math';
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flame/game.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/events.dart';
-import 'package:flutter/material.dart' hide Image, PointerMoveEvent;
 import 'components/card_component.dart';
 import 'components/entities/hero_card.dart';
 import 'components/entities/enemy_card.dart';
@@ -23,6 +21,11 @@ import 'controllers/deck_controller.dart';
 import '../models/enemy_intent.dart';
 import '../models/combat_state.dart';
 
+import 'systems/state_sync_system.dart';
+import 'systems/card_animation_system.dart';
+import 'systems/combat_visual_system.dart';
+import 'systems/layout_system.dart';
+
 class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   List<EnemyData> availableEnemies = [];
   List<HeroData> availableHeroes = [];
@@ -32,28 +35,24 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   CardComponent? hoveredCard;
   CardComponent? focusedCard;
 
-  late final TargetingLine targetingLine;
+  StateSyncSystem? stateSyncSystem;
+  CardAnimationSystem? cardAnimationSystem;
+  CombatVisualSystem? combatVisualSystem;
+  LayoutSystem? layoutSystem;
+
+  TargetingLine get targetingLine => combatVisualSystem!.targetingLine;
   Vector2 _lastPointerPos = Vector2.zero();
 
   double get scaleFactor => (size.y / 800).clamp(0.85, 2.5);
 
-  RunState? _currentState;
-  RunState? get currentRunState => _currentState;
-  RunState? _nextState;
-  DeckState? _nextDeckState;
-
-  CombatState? _currentCombatState;
-  CombatState? get currentCombatState => _currentCombatState;
-  CombatState? _nextCombatState;
+  RunState? get currentRunState => stateSyncSystem?.currentState;
+  CombatState? get currentCombatState => stateSyncSystem?.currentCombatState;
 
   TurnPhase currentPhase = TurnPhase.player;
   EnemyCard? selectedEnemy;
   EnemyCard? highlightedEnemy;
   bool isCardAnimating = false;
 
-  final void Function(int) onPlayerTakeDamage;
-  final void Function(int) onPlayerHeal;
-  final void Function(int) onPlayerGainArmor;
   final void Function() onEnemiesDead;
   final void Function(int) onEnemyDebuffDeck;
   final void Function() onTurnEnded;
@@ -64,18 +63,15 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   final VoidCallback? onEnemiesSpawned;
   final void Function() onEnemyKilled;
 
-  // Nouveaux callbacks de découplage Riverpod combat - Étape 4
   final void Function(String enemyId) onResolveEnemyIntent;
   final void Function() onStartEnemyTurn;
   final void Function() onEndEnemyTurn;
   final void Function(String? enemyId) onSelectEnemy;
   final void Function(String enemyId, EntityStats stats) onUpdateEnemyStats;
   final void Function(SkillData skill, String? targetEnemyId) onExecuteSkill;
+  final VoidCallback? onAnimationStateChanged;
 
   HerosDraftGame({
-    required this.onPlayerTakeDamage,
-    required this.onPlayerHeal,
-    required this.onPlayerGainArmor,
     required this.onEnemiesDead,
     required this.onEnemyDebuffDeck,
     required this.onTurnEnded,
@@ -91,130 +87,21 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
     required this.onUpdateEnemyStats,
     required this.onExecuteSkill,
     this.onEnemiesSpawned,
+    this.onAnimationStateChanged,
   });
 
   void setHoveredCard(CardComponent? card) {
-    if (hoveredCard == card) return;
-
-    if (hoveredCard != null && hoveredCard != focusedCard) {
-      hoveredCard!.isHovered = false;
-      hoveredCard!.priority = hoveredCard!.basePriority;
-      hoveredCard!.removeAll(hoveredCard!.children.whereType<Effect>());
-      hoveredCard!.refreshVisuals();
-      if (!hoveredCard!.isDragging) {
-        hoveredCard!.add(
-          ScaleEffect.to(
-            Vector2.all(scaleFactor * 0.88),
-            EffectController(duration: 0.1, curve: Curves.easeIn),
-          ),
-        );
-      }
-    }
-
-    hoveredCard = card;
-
-    if (hoveredCard != null && hoveredCard != focusedCard) {
-      hoveredCard!.isHovered = true;
-      hoveredCard!.priority = GameConstants.priorityCardHovered;
-      hoveredCard!.removeAll(hoveredCard!.children.whereType<Effect>());
-      hoveredCard!.refreshVisuals();
-      if (!hoveredCard!.isDragging) {
-        hoveredCard!.add(
-          ScaleEffect.to(
-            Vector2.all(scaleFactor * 0.88 * 1.2),
-            EffectController(duration: 0.1, curve: Curves.easeOut),
-          ),
-        );
-      }
-    }
+    cardAnimationSystem?.setHoveredCard(card);
   }
 
   void setFocusedCard(CardComponent? card) {
-    if (focusedCard == card) return;
-
-    if (focusedCard != null) {
-      final oldFocused = focusedCard!;
-      oldFocused.isHovered = false;
-      oldFocused.priority = oldFocused.basePriority;
-      oldFocused.removeAll(oldFocused.children.whereType<Effect>());
-      oldFocused.refreshVisuals();
-      if (!oldFocused.isDragging) {
-        oldFocused.add(
-          MoveEffect.to(
-            oldFocused.originalPosition,
-            EffectController(duration: 0.15, curve: Curves.easeIn),
-          ),
-        );
-        oldFocused.add(
-          ScaleEffect.to(
-            Vector2.all(scaleFactor * 0.88),
-            EffectController(duration: 0.15, curve: Curves.easeIn),
-          ),
-        );
-      }
-      targetingLine.hide();
-      _clearTargetHighlights();
-      onHideTooltip();
-    }
-
-    focusedCard = card;
-
-    if (focusedCard != null) {
-      focusedCard!.isHovered = true;
-      focusedCard!.priority = GameConstants.priorityCardFocused;
-      focusedCard!.removeAll(focusedCard!.children.whereType<Effect>());
-      focusedCard!.refreshVisuals();
-      if (!focusedCard!.isDragging) {
-        focusedCard!.add(
-          MoveEffect.to(
-            focusedCard!.originalPosition + Vector2(0, -60),
-            EffectController(duration: 0.2, curve: Curves.easeOut),
-          ),
-        );
-        focusedCard!.add(
-          ScaleEffect.to(
-            Vector2.all(scaleFactor * 0.88 * 1.25),
-            EffectController(duration: 0.2, curve: Curves.easeOut),
-          ),
-        );
-      }
-      targetingLine.color = focusedCard!.getElementalColor();
-      _applyTargetHighlights(focusedCard!.card.data.target);
-      onShowTooltip(
-        focusedCard!.card.data.getName(focusedCard!.activeLocale),
-        focusedCard!.buildDetailedDescription(),
-        focusedCard!.card.data.type,
-      );
-    }
-  }
-
-  void _clearTargetHighlights() {
-    for (var enemy in enemyCards) {
-      enemy.setHighlight(false);
-    }
-    heroCard?.setHighlight(false);
-  }
-
-  void _applyTargetHighlights(CardTarget target) {
-    if (target == CardTarget.singleEnemy || target == CardTarget.allEnemies) {
-      for (var enemy in enemyCards) {
-        enemy.setHighlight(true);
-      }
-    } else if (target == CardTarget.self) {
-      heroCard?.setHighlight(true);
-    }
+    cardAnimationSystem?.setFocusedCard(card);
   }
 
   @override
   void onPointerMove(PointerMoveEvent event) {
     _lastPointerPos = event.localPosition;
-
-    if (focusedCard != null && !focusedCard!.isDragging) {
-      targetingLine.updatePoints(
-        focusedCard!.position + Vector2(0, -40),
-        _lastPointerPos,
-      );
-    }
+    combatVisualSystem?.updatePointer(_lastPointerPos);
   }
 
   @override
@@ -227,8 +114,19 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   Future<void> onLoad() async {
     await super.onLoad();
 
-    targetingLine = TargetingLine();
-    add(targetingLine..priority = GameConstants.priorityTargetingLine);
+    final system = StateSyncSystem();
+    stateSyncSystem = system;
+    final animSys = CardAnimationSystem();
+    cardAnimationSystem = animSys;
+    final visualSys = CombatVisualSystem();
+    combatVisualSystem = visualSys;
+    final laySys = LayoutSystem();
+    layoutSystem = laySys;
+
+    await add(system);
+    await add(animSys);
+    await add(visualSys);
+    await add(laySys);
 
     final List<String> imagesToPreload = ['bg_dungeon.png'];
 
@@ -283,9 +181,9 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
       heroCard!.position = Vector2(size.x / 2, size.y * 0.51);
     }
     if (enemyCards.isNotEmpty) {
-      _repositionEnemies();
+      repositionEnemies();
     }
-    _layoutHand();
+    layoutHand();
 
     children.whereType<SpriteComponent>().forEach((bg) {
       if (bg.priority == GameConstants.priorityBackground) bg.size = size;
@@ -303,15 +201,17 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   bool tryPlayCard(dynamic cardComp, EnemyCard? target) {
     if (cardComp is CardComponent && onPlayCard(cardComp.card, target)) {
       handCards.remove(cardComp);
-      _layoutHand();
+      layoutHand();
 
       isCardAnimating = true;
+      onAnimationStateChanged?.call();
 
       cardComp.playAnimation(
         target,
         onComplete: () {
           cardComp.removeFromParent();
           isCardAnimating = false;
+          onAnimationStateChanged?.call();
           resolvePendingDeaths();
         },
       );
@@ -322,12 +222,10 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   }
 
   void resolvePendingDeaths() {
-    // 1. Resolve pending visual updates for all enemies
     for (var card in enemyCards) {
       card.resolvePendingVisualStats();
     }
 
-    // 2. Resolve pending deaths
     final deadCards = enemyCards.where((c) => c.isPendingDeath).toList();
     if (deadCards.isEmpty) return;
 
@@ -345,7 +243,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
       );
       enemyCards.remove(card);
     }
-    _repositionEnemies();
+    repositionEnemies();
     onEnemiesSpawned?.call();
   }
 
@@ -353,292 +251,32 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   Color backgroundColor() => const Color(0xFF1E1E2C);
 
   void syncState(RunState state) {
-    _nextState = state;
+    stateSyncSystem?.nextState = state;
   }
 
   void syncDeck(DeckState deckState) {
-    _nextDeckState = deckState;
+    stateSyncSystem?.nextDeckState = deckState;
   }
 
   void syncCombat(CombatState combatState) {
-    _nextCombatState = combatState;
+    stateSyncSystem?.nextCombatState = combatState;
   }
 
-  @override
-  void update(double dt) {
-    super.update(dt);
-    if (_nextState != null && hasLayout) {
-      _applyState(_nextState!);
-      _nextState = null;
-    }
-    if (_nextDeckState != null && hasLayout) {
-      _applyDeckState(_nextDeckState!);
-      _nextDeckState = null;
-    }
-    if (_nextCombatState != null && hasLayout) {
-      _applyCombatState(_nextCombatState!);
-      _nextCombatState = null;
-    }
+  void layoutHand() {
+    layoutSystem?.layoutHand();
   }
 
-  void _applyDeckState(DeckState deck) {
-    final newHandIds = deck.hand.map((c) => c.uniqueId).toSet();
-    final cardsToRemove = handCards
-        .where((c) => !newHandIds.contains(c.card.uniqueId))
-        .toList();
-
-    for (var c in cardsToRemove) {
-      c.removeFromParent();
-      handCards.remove(c);
-    }
-
-    final currentHandIds = handCards.map((c) => c.card.uniqueId).toSet();
-    final cardsToAdd = deck.hand
-        .where((c) => !currentHandIds.contains(c.uniqueId))
-        .toList();
-
-    for (var c in cardsToAdd) {
-      final cardComp = CardComponent(c);
-      cardComp.isEnteringHand = true;
-      cardComp.position = Vector2(40, size.y - 40);
-      cardComp.scale = Vector2.zero();
-      handCards.add(cardComp);
-      add(cardComp);
-    }
-
-    if (cardsToRemove.isNotEmpty || cardsToAdd.isNotEmpty) {
-      _layoutHand();
-    }
+  void repositionEnemies() {
+    layoutSystem?.repositionEnemies();
   }
 
-  void _layoutHand() {
-    if (handCards.isEmpty) return;
-
-    final int count = handCards.length;
-    final double radius = size.y * 1.5;
-
-    double angleStep = 0.08;
-    if (count > 4) {
-      angleStep = (0.4 / count).clamp(0.04, 0.08);
-    }
-
-    final double totalAngle = (count - 1) * angleStep;
-    final double startAngle = -totalAngle / 2;
-
-    final Vector2 centerPoint = Vector2(
-      size.x / 2,
-      size.y + radius - (size.y * 0.23),
-    );
-
-    for (int i = 0; i < count; i++) {
-      final card = handCards[i];
-      card.basePriority = 10 + i;
-
-      final double angle = startAngle + (i * angleStep);
-
-      final double x = centerPoint.x + radius * sin(angle);
-      final double y = centerPoint.y - radius * cos(angle);
-
-      card.originalPosition = Vector2(x, y);
-      card.originalAngle = angle;
-
-      if (card.isDragging) continue;
-
-      final Vector2 targetPos;
-      final double targetAngle = angle;
-      final Vector2 targetScale;
-
-      if (card == focusedCard) {
-        targetPos = Vector2(x, y) + Vector2(0, -60);
-        targetScale = Vector2.all(scaleFactor * 0.88 * 1.25);
-      } else if (card == hoveredCard) {
-        targetPos = Vector2(x, y);
-        targetScale = Vector2.all(scaleFactor * 0.88 * 1.2);
-      } else {
-        targetPos = Vector2(x, y);
-        targetScale = Vector2.all(scaleFactor * 0.88);
-      }
-
-      final double duration = card.isEnteringHand ? 0.7 : 0.35;
-
-      card.removeAll(card.children.whereType<MoveEffect>());
-      card.removeAll(card.children.whereType<RotateEffect>());
-      card.removeAll(card.children.whereType<ScaleEffect>());
-
-      card.add(
-        MoveEffect.to(
-          targetPos,
-          EffectController(duration: duration, curve: Curves.easeOutCubic),
-        ),
-      );
-      card.add(
-        RotateEffect.to(
-          targetAngle,
-          EffectController(duration: duration, curve: Curves.easeOutCubic),
-        ),
-      );
-      card.add(
-        ScaleEffect.to(
-          targetScale,
-          EffectController(duration: duration, curve: Curves.easeOutCubic),
-          onComplete: card.isEnteringHand ? () {
-            card.isEnteringHand = false;
-          } : null,
-        ),
-      );
-
-      if (card != hoveredCard && card != focusedCard) {
-        card.priority = card.basePriority;
-      }
-    }
-  }
-
-  void _applyState(RunState state) {
-    _currentState = state;
-
-    int bonusAtt = state.effectiveAttaque - state.heroStats.attaque;
-
-    if (heroCard == null) {
-      String imagePath = 'hero_paladin.png';
-      if (availableHeroes.isNotEmpty) {
-        final heroData = availableHeroes.firstWhere(
-          (h) => h.id == state.heroClassId,
-          orElse: () => availableHeroes.first,
-        );
-        imagePath = heroData.iconPath;
-      }
-
-      heroCard = HeroCard(
-        state.heroStats,
-        bonusAttack: bonusAtt,
-        imagePath: imagePath,
-      );
-      heroCard!.position = Vector2(size.x / 2, size.y * 0.51);
-      add(heroCard!);
-    } else {
-      heroCard!.updateStats(state.heroStats, bonusAttack: bonusAtt);
-    }
-
-    for (var card in handCards) {
-      card.refreshVisuals();
-    }
-  }
-
-  void _applyCombatState(CombatState state) {
-    currentPhase = state.turnPhase;
-
-    // 1. Gérer les disparitions (morts)
-    final newEnemiesIds = state.enemies.map((e) => e.id).toSet();
-    final cardsToRemove = enemyCards
-        .where((c) => !newEnemiesIds.contains(c.id))
-        .toList();
-
-    bool immediateRemovals = false;
-    for (var card in cardsToRemove) {
-      if (isCardAnimating) {
-        card.isPendingDeath = true;
-      } else {
-        card.isDead = true;
-        card.isPendingDeath = true;
-        card.add(OpacityEffect.to(0.0, EffectController(duration: 0.4)));
-        card.add(
-          ScaleEffect.to(
-            Vector2.zero(),
-            EffectController(duration: 0.4),
-            onComplete: () {
-              card.removeFromParent();
-            },
-          ),
-        );
-        enemyCards.remove(card);
-        immediateRemovals = true;
-      }
-    }
-
-    // 2. Gérer les apparitions ou mises à jour
-    bool listChanged = immediateRemovals;
-
-    for (var enemyInstance in state.enemies) {
-      final existingIndex = enemyCards.indexWhere(
-        (c) => c.id == enemyInstance.id,
-      );
-      if (existingIndex != -1) {
-        enemyCards[existingIndex].updateStats(enemyInstance);
-      } else {
-        final enemyCard = EnemyCard(
-          instance: enemyInstance,
-          onTapEnemy: _handlePlayerTargeting,
-        );
-        enemyCards.add(enemyCard);
-        add(enemyCard);
-        listChanged = true;
-      }
-    }
-
-    // 3. Repositionner si la liste a changé
-    if (listChanged) {
-      _repositionEnemies();
-      onEnemiesSpawned?.call();
-    }
-
-    // 4. Synchroniser la sélection visuelle
-    selectedEnemy = null;
-    for (var card in enemyCards) {
-      final isSelected = card.id == state.selectedEnemyId;
-      card.setSelection(isSelected);
-      if (isSelected) {
-        selectedEnemy = card;
-      }
-    }
-
-    _currentCombatState = state;
-  }
-
-  void _repositionEnemies() {
-    if (enemyCards.isEmpty) return;
-
-    final int count = enemyCards.length;
-    double scaleMultiplier = 1.0;
-
-    // 1. Calculer l'espace requis de base par carte (corps de la carte + espace pour les indicateurs de stat/buffs)
-    // Une carte fait 100 de large. Avec les indicateurs à gauche (-36) et à droite (+104), 
-    // la largeur visuelle locale est d'environ 170.
-    final double visualWidthPerEnemy = (100.0 + 70.0) * scaleFactor * 1.45;
-
-    // 2. Estimer la largeur totale nécessaire sans réduction d'échelle
-    double totalEstimatedWidth = count * visualWidthPerEnemy;
-    final double maxAvailableWidth = size.x * 0.95; // Utiliser jusqu'à 95% de la largeur de l'écran
-
-    // Si ça dépasse, on ajuste le scaleMultiplier
-    if (totalEstimatedWidth > maxAvailableWidth) {
-      scaleMultiplier = (maxAvailableWidth / totalEstimatedWidth).clamp(0.4, 1.0);
-    }
-
-    // Appliquer le scaleMultiplier aux cartes
-    for (var enemy in enemyCards) {
-      enemy.scaleMultiplier = scaleMultiplier;
-    }
-
-    // 3. Calculer l'espacement optimal entre les centres
-    // Pour éviter le chevauchement, l'espacement minimum doit être proportionnel à l'échelle finale
-    final double minSpacing = 165.0 * scaleFactor * 1.45 * scaleMultiplier;
-    final double maxSpacing = 280.0 * scaleFactor * 1.45 * scaleMultiplier;
-
-    double spacing = (size.x * 0.85) / (count + 1);
-    spacing = spacing.clamp(minSpacing, maxSpacing);
-
-    // Ajuster le point de départ pour centrer le groupe
-    double startX = (size.x / 2) - ((count - 1) * (spacing / 2));
-    double posY = size.y * 0.21;
-
-    for (int i = 0; i < count; i++) {
-      enemyCards[i].position = Vector2(startX + (i * spacing), posY);
-    }
+  void handlePlayerTargeting(EnemyCard target) {
+    _handlePlayerTargeting(target);
   }
 
   void _handlePlayerTargeting(EnemyCard target) {
-    if (_currentState == null ||
-        _currentState!.isDead ||
+    if (currentRunState == null ||
+        currentRunState!.isDead ||
         currentPhase != TurnPhase.player) {
       return;
     }
@@ -662,8 +300,8 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
 
   Future<void> executeTurn() async {
     if (currentPhase != TurnPhase.player ||
-        _currentState == null ||
-        _currentState!.isDead) {
+        currentRunState == null ||
+        currentRunState!.isDead) {
       return;
     }
 
@@ -684,8 +322,8 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
     required void Function() onTriggerLifesteal,
   }) async {
     if (currentPhase != TurnPhase.player ||
-        _currentState == null ||
-        _currentState!.isDead) {
+        currentRunState == null ||
+        currentRunState!.isDead) {
       return;
     }
 
@@ -700,12 +338,11 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
       currentPhase = TurnPhase.enemy;
 
       heroCard?.dashAnimation();
-      await Future.delayed(const Duration(milliseconds: 200));
+      await Future.delayed(const Duration(milliseconds: GameConstants.combatDelayHeroDashMs));
 
       onExecuteSkill(skill, selectedEnemy?.id);
 
-      // La riposte est déclenchée après l'effet visuel et la mise à jour Riverpod
-      await Future.delayed(const Duration(milliseconds: 400));
+      await Future.delayed(const Duration(milliseconds: GameConstants.combatDelayAfterSkillMs));
       if (enemyCards.isEmpty) {
         onEnemiesDead();
         currentPhase = TurnPhase.player;
@@ -726,18 +363,15 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
 
   Future<void> _enemyRipostePhase() async {
     onPhaseChanged(TurnPhase.enemy);
-    await Future.delayed(const Duration(milliseconds: 600));
+    await Future.delayed(const Duration(milliseconds: GameConstants.combatDelayEnemyTurnStartMs));
 
-    // 1. Début de tour des ennemis (Poison, Tick de buffs, etc. résolu dans Riverpod)
     onStartEnemyTurn();
 
-    // Laisser le temps aux animations de ticks (ex: poison) avant les attaques
-    await Future.delayed(const Duration(milliseconds: 400));
+    await Future.delayed(const Duration(milliseconds: GameConstants.combatDelayAfterTicksMs));
 
-    // Riposte des Ennemis (Séquentielle)
     final activeEnemies = List<EnemyCard>.from(enemyCards);
     for (var enemy in activeEnemies) {
-      if (_currentState == null || _currentState!.isDead) break;
+      if (currentRunState == null || currentRunState!.isDead) break;
 
       final intent = enemy.effectiveIntent;
       if (intent == null) continue;
@@ -748,22 +382,27 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
         enemy.buffAnimation(intent.type);
       }
 
-      await Future.delayed(const Duration(milliseconds: 200));
+      await Future.delayed(const Duration(milliseconds: GameConstants.combatDelayEnemyDashMs));
 
-      // Résoudre l'intention dans Riverpod
       onResolveEnemyIntent(enemy.id);
 
-      await Future.delayed(const Duration(milliseconds: 400));
+      await Future.delayed(const Duration(milliseconds: GameConstants.combatDelayAfterIntentResolveMs));
     }
 
-    await Future.delayed(const Duration(milliseconds: 300));
+    await Future.delayed(const Duration(milliseconds: GameConstants.combatDelayEnemyTurnEndMs));
 
-    // 2. Fin de tour ennemi dans Riverpod (roll intents, repasse le tour au joueur)
     onEndEnemyTurn();
   }
 
   void resetEnemies() {
-    _currentState = null;
-    _currentCombatState = null;
+    stateSyncSystem?.currentState = null;
+    stateSyncSystem?.currentCombatState = null;
+  }
+
+  @override
+  void onRemove() {
+    stateSyncSystem?.currentState = null;
+    stateSyncSystem?.currentCombatState = null;
+    super.onRemove();
   }
 }

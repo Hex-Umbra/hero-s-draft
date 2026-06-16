@@ -1,7 +1,8 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../widgets/screen_scaffold.dart';
+import '../widgets/page_header.dart';
 
 // ---------------------------------------------------------------------------
 // Data models
@@ -78,38 +79,15 @@ class _PatchNotesScreenState extends State<PatchNotesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF0D0D1A),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white70),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.article_outlined, color: Colors.amberAccent, size: 22),
-            const SizedBox(width: 8),
-            ShaderMask(
-              shaderCallback: (bounds) => const LinearGradient(
-                colors: [Color(0xFFFFD54F), Color(0xFFFFAB40)],
-              ).createShader(bounds),
-              child: const Text(
-                'PATCH NOTES',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
-                  letterSpacing: 3,
-                ),
-              ),
-            ),
-          ],
-        ),
-        centerTitle: true,
-      ),
+    final appBar = PageHeader(
+      title: 'Patch Notes',
+      showBackButton: true,
+      isParchment: false,
+    );
+
+    return ScreenScaffold(
+      backgroundType: ScreenBackgroundType.dark,
+      appBar: appBar,
       body: FutureBuilder<List<_PatchVersion>>(
         future: _patchNotesFuture,
         builder: (context, snapshot) {

@@ -2,6 +2,9 @@
 
 Ce document synthétise la boucle de gameplay (Core Loop) de **Hero's Draft**, son économie, ses systèmes de progression procédurale, ses règles métier fondamentales, et le schéma complet des données de jeu.
 
+> [!NOTE]
+> **Architecture d'Exécution** : Afin de garantir la robustesse et l'évolutivité de ces règles métier, les contrôleurs principaux (`RunController` et `CombatController`) ainsi que les composants graphiques majeurs (`HerosDraftGame` et `CardComponent`) sont structurés en tant que **façades**. Ils délèguent l'exécution de leurs règles spécifiques à des sous-gestionnaires et sous-systèmes spécialisés décrits dans le [[systemPatterns|document d'Architecture]].
+
 ---
 
 ## 1. Boucle de Gameplay Principale (Core Loop)
@@ -45,7 +48,11 @@ La progression dans **Hero's Draft** est structurée autour d'une boucle classiq
 
 ### 2.1. Génération Procédurale de Carte (`MapGeneratorService`)
 
-Le service statique `MapGeneratorService.generateMap({floors = 10, maxWidth = 5})` génère un **Graphe Acyclique Dirigé (DAG)**.
+Le service statique `MapGeneratorService.generateMap({floors = 10, maxWidth = 5})` orchestre la génération d'un **Graphe Acyclique Dirigé (DAG)** en déléguant ses étapes à 4 sous-services spécifiques situés sous `lib/services/map/` :
+- **`MapNodeGenerator`** (Phase 1) : Instancie les nœuds et définit leurs types par défaut selon l'étage.
+- **`MapConnectionBuilder`** (Phase 2) : Établit les liaisons (Directed Acyclic Graph) entre les étages successifs.
+- **`MapValidator`** (Phase 3) : Valide et ajuste les quotas minimum/maximum de nœuds par type, et applique la règle anti-répétition de chemin (maximum 2 nœuds Repos ou Élite consécutifs).
+- **`MapContentPlacer`** (Phase 4) : Gère le placement conditionnel d'événements ou de nœuds spéciaux (comme l'échange de reliques).
 
 **Phase 1 — Création des nœuds** :
 - Itère de l'étage 0 à `floors-1` (0 à 9).
@@ -273,19 +280,26 @@ if (armure >= amount) {
 - **Fin de Combat** : L'armure restante est également remise à 0 à la fin de chaque combat (`completeCurrentNode()`).
 - **Maîtrise d'Armure** : La Maîtrise d'Armure (`effectiveArmorMastery`), quant à elle, reste persistante tout au long de la partie ou du combat selon son origine.
 
-### 3.3. ⚔️ Pipeline de Dégâts
+### 3.3. ⚔️ Pipeline de Dégâts Centralisé
 
-**Dégâts du joueur** (`EffectResolver._calculateDamage`) :
-```
-Dégâts Finaux = (Dégâts base carte + effectiveAttaque) × Modificateur Faiblesse
-```
-Où :
-- `effectiveAttaque` = `attaque` permanente + Σ valeurs status `strength` actifs.
-- **Faiblesse** : Si l'attaquant possède le statut `weakness`, les dégâts sont multipliés par **0.75** (réduction de 25%, arrondi).
+Le calcul de tous les dégâts physiques et magiques du jeu (cartes offensives du joueur, intentions d'attaque des ennemis et compétences de classe héroïques) est unifié sous un pipeline de calcul unique représenté par le service `DamagePipeline.calculate` (`lib/game/services/damage_pipeline.dart`).
 
-**Dégâts ennemis** (`CombatController.resolveEnemyIntent`) :
-- Attack : `runController.takeDamage(intent.value)` — valeur brute de l'intention.
-- `effectiveIntent` (getter sur `EnemyInstance`) : scale la valeur d'attaque en fonction du ratio `baseDamage` du spawn et du bonus `strength` de l'ennemi.
+Le calcul s'exécute de façon déterministe selon les étapes successives suivantes :
+
+1. **Calcul des Dégâts Initiaux** : Combinaison des dégâts de base (de la carte, de la compétence ou de l'intention d'attaque) avec la force (`strength`) active de l'attaquant :
+   $$\text{Dégâts Initiaux} = \text{Dégâts de base} + \text{Force}$$
+2. **Faiblesse (Attaquant)** : Si l'attaquant possède l'altération d'état `weakness`, les dégâts sont réduits de **25%** (multiplication par `0.75` puis arrondi).
+3. **Jet de Coup Critique (Attaquant)** : Effectue un jet probabiliste basé sur la chance de coup critique effective (`effectiveCritChance`) de l'attaquant. S'il réussit :
+   - Les dégâts sont multipliés par le multiplicateur de critique de l'attaquant (`critMultiplier`, par défaut `1.5`).
+   - Le drapeau d'état temporaire `lastActionWasCrit` est assigné à `true` sur les statistiques de l'attaquant (`EntityStats`), servant de source de vérité pour déclencher les tremblements de caméra renforcés, les flashs dorés et les animations de particules physiques sur la couche graphique Flame.
+4. **Choc (Défenseur)** : Si le défenseur subit le statut `shock`, la valeur cumulée de ce débuff est directement ajoutée aux dégâts :
+   $$\text{Dégâts} = \text{Dégâts} + \text{Valeur de Choc}$$
+5. **Vulnérabilité (Défenseur)** : Si le défenseur possède l'altération `vulnerable`, tous les dégâts reçus sont amplifiés de **50%** (multiplication par `1.5` puis arrondi).
+
+Ce pipeline de calcul centralisé élimine toute duplication mathématique ou risque de divergence entre les dégâts infligés par le joueur et ceux portés par les ennemis.
+
+**Intention d'Attaque Visuelle Ennemie** :
+Le getter `effectiveIntent` sur `EnemyInstance` simule l'étape de Faiblesse et de Force (et du Gel s'il est présent) pour afficher à l'écran l'intention exacte de dégâts que subira le joueur au tour suivant, lui permettant d'anticiper la valeur précise de bouclier nécessaire.
 
 ### 3.4. 🃏 Système de Piles de Cartes
 
@@ -417,9 +431,13 @@ La forge permet d'ajouter des améliorations permanentes (upgrades) aux cartes d
   - Capacité maximale : Capée à 4 fentes bonus achetées (soit un maximum de 5 slots affichés au total).
   - Tarification progressive en or : $50 \rightarrow 80 \rightarrow 120 \rightarrow 175$ Or.
   - Le bouton d'achat en bas de la liste est désactivé si l'or disponible est insuffisant ou si la capacité maximale de 5 slots est atteinte.
-- **Rendu Plein Écran & UI Responsive** : Le dialogue de forge (`ForgeUpgradeDialog`) a été converti en interface plein écran réactive (`Dialog.fullscreen`) :
-  - Desktop : Disposition en colonnes jumelles (`Row`), affichant le visuel de la carte sélectionnée avec ses étoiles à gauche, et le panneau de défilement scrollable (`ListView`) contenant les slots d'amélioration et le bouton d'achat à droite.
+- **Architecture Modulaire & UI Responsive (v0.2.2)** : Le dialogue de forge (`ForgeUpgradeDialog`) a été converti en interface plein écran réactive (`Dialog.fullscreen`) et découpé selon le principe de responsabilité unique (SRP) :
+  - **`ForgeCardPreview`** : Affiche le visuel de la carte sélectionnée avec son coût en mana, sa description dynamique et ses runes d'amélioration à gauche (sur Desktop) ou en haut (sur Mobile).
+  - **`ForgeSlotRow`** : Ligne d'option d'amélioration gérant le bouton de forge, le coût de relance et le bouton de reroll.
+  - **`ForgeBuySlotButton`** : Bouton d'achat de slots bonus en bas de la liste d'options.
+  - Desktop : Disposition en colonnes jumelles (`Row`) avec aperçu de carte à gauche et panneau de défilement scrollable (`ListView`) contenant les slots d'amélioration et le bouton d'achat à droite.
   - Mobile : Empilement vertical fluide (`Column`) assurant un scroll confortable et empêchant tout débordement (RenderFlex overflow).
+
 
 ### 3.8. 🛒 Boutique (Shop)
 
@@ -703,3 +721,24 @@ Ce sprint cible l'optimisation visuelle et tactile du combat pour élever le niv
   - **Flame** : Retrait du dessin de fond dans `card_text_renderer.dart`, diminution des polices et dessin vectoriel d'étoiles dorées proportionnelles à `card.forgeUpgrades.length`.
   - **Flutter** : Retrait de l'icône centrale translucide et réduction des polices dans `ui_card.dart`. Rendu d'une rangée d'étoiles dorées sous le label de rareté avec ajustement des offsets.
 - **Double Jauge de Vie Animée (HP Dual-Bar)** : Conversion de `PlayerHealthBar` en `StatefulWidget`. Câblage d'un `TweenAnimationBuilder` (500ms, `Curves.easeOutCubic`) animant la différence de ratio entre les PV actuels et les PV précédents sous forme d'une jauge secondaire rouge/orange qui glisse lentement en arrière-plan sous les dégâts. En cas de soin, la jauge verte augmente de suite de manière fluide et la barre rouge s'y aligne instantanément.
+
+---
+
+## 11. Sprint d'Unification de l'UI & Composants Communs (v0.2.2)
+
+Ce sprint standardise l'ensemble des interfaces de menus et de progression du jeu, éliminant la duplication de code et garantissant une cohérence visuelle stricte.
+
+### 11.1. Impact Produit
+- **Harmonisation Visuelle Immédiate** : Centralisation de tous les décors d'arrière-plan (dégradé sombre pour les menus/combats et parchemin historique pour la carte et les échanges) sous une infrastructure commune.
+- **Expérience Utilisateur Unifiée** : Standardisation du cycle de vie de la navigation (gestion des retours physiques arrière via `PopScope`) et présentation d'un en-tête d'écran homogène incluant le solde d'or du joueur.
+- **Grille de Sélection Cohérente** : Intégration d'un layout partagé pour tous les drafts de cartes (Starter Deck et Boss Rewards) avec une mise en page fluide et adaptative.
+- **Allègement de la Forge** : Simplification fonctionnelle du dialogue de forge, le recentrant sur l'orchestration logique et améliorant la responsivité globale du système sur mobile et desktop.
+
+### 11.2. Portée Technique
+- **`ScreenScaffold`** : Composant centralisant le Scaffold, la gestion thématique des arrière-plans (`dark`, `parchment`, `none`), la `SafeArea` et la prévention des retours physiques arrière accidentels.
+- **`PageHeader`** : En-tête standardisé qui s'adapte visuellement au thème de fond, exposant le titre, le bouton de retour arrière stylisé et les actions transversales.
+- **`GoldIndicator`** : Badge d'or universel, branché de façon autonome sur `inventoryProvider`, qui ajuste son contraste et ses teintes selon le support.
+- **`CardDraftLayout`** : Widget de mise en page réutilisable pour la sélection interactive de cartes, uniformisant les grilles de cartes et les boutons de confirmation.
+- **Décomposition Modulaire de la Forge** : Division de la logique monolithique en 3 composants distincts : `ForgeCardPreview` (rendu carte et jauges de runes), `ForgeSlotRow` (actions et boutons de reroll d'une ligne d'amélioration), et `ForgeBuySlotButton` (extension de capacité).
+- **Factories `UiCard`** : Simplification drastique de la création des widgets Flutter de cartes avec les constructeurs nommés `UiCard.fromInstance` et `UiCard.fromData`.
+

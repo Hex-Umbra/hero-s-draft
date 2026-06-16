@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "possible_upgrades/upgrade_ideas.md",
+                "file": "analysis_reports/technical_debt_report_Opus4.6_13-06-2026.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "upgrade_ideas"
+              "title": "technical_debt_report_Opus4.6_13-06-2026"
             }
           }
         ]
@@ -185,6 +185,7 @@
   },
   "active": "6048763fa6a2382d",
   "lastOpenFiles": [
+    "possible_upgrades/upgrade_ideas.md",
     "analysis_reports/technical_debt_report_Opus4.6_13-06-2026.md",
     "possible_upgrades/analysis_reports_idee_regroupee_ideas_10-06-2026.md",
     "analysis_reports/dette_technique_rapport_Gemini3.5_5_07-06-2026.md"

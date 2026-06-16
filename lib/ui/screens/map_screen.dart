@@ -22,6 +22,8 @@ import '../widgets/map/dialogs/stats_dialog.dart';
 import '../widgets/map/dialogs/relics_dialog.dart';
 import '../widgets/map/dialogs/probabilities_dialog.dart';
 import '../widgets/map/hero_mini_stats_panel.dart';
+import '../widgets/screen_scaffold.dart';
+import '../widgets/gold_indicator.dart';
 
 class MapScreen extends ConsumerStatefulWidget {
   const MapScreen({super.key});
@@ -98,12 +100,12 @@ class _MapScreenState extends ConsumerState<MapScreen>
     bool foundPath = false;
 
     // Optimisation : seuls les noeuds de l'étage précédent peuvent être parents
-    final targetFloor = int.parse(targetId.split('_')[1]);
+    final targetNode = allNodes.firstWhere((n) => n.id == targetId);
+    final targetFloor = targetNode.floor;
     if (targetFloor == 0) return false;
 
     final parents = allNodes.where((n) {
-      final nFloor = int.parse(n.id.split('_')[1]);
-      return nFloor == targetFloor - 1 && n.connections.contains(targetId);
+      return n.floor == targetFloor - 1 && n.connections.contains(targetId);
     });
 
     for (var parent in parents) {
@@ -229,8 +231,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
     final l10n = AppLocalizations.of(context)!;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFE8D5B5), // Fond parchemin clair
+    return ScreenScaffold(
+      backgroundType: ScreenBackgroundType.parchment,
       appBar: AppBar(
         title: Text(
           '${l10n.worldMap} - Acte ${runState.act}',
@@ -239,10 +241,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: const Color(
-          0xFFD2B48C,
-        ).withAlpha(200), // Tan translucide
-        elevation: 2,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         centerTitle: true,
         leadingWidth: 430,
         leading: SingleChildScrollView(
@@ -431,28 +431,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
             ],
           ),
         ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.monetization_on,
-                  color: Color(0xFF8B4513),
-                  size: 24,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  '${inventoryState.gold}',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF8B4513),
-                  ),
-                ),
-              ],
-            ),
-          ),
+        actions: const [
+          GoldIndicator(isParchment: true),
         ],
       ),
       body: Stack(

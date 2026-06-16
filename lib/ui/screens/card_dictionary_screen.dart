@@ -5,6 +5,7 @@ import '../../services/game_data_service.dart';
 import '../../models/data/card_data.dart';
 import '../../models/data/relic_data.dart';
 import '../widgets/ui_card.dart';
+import '../widgets/screen_scaffold.dart';
 
 class CardDictionaryScreen extends ConsumerWidget {
   const CardDictionaryScreen({super.key});
@@ -15,35 +16,40 @@ class CardDictionaryScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).languageCode;
 
+    final appBar = AppBar(
+      title: Text(
+        (locale == 'fr' ? 'Dictionnaire' : 'Dictionary').toUpperCase(),
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 2.0,
+          fontSize: 20,
+        ),
+      ),
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      centerTitle: true,
+      bottom: TabBar(
+        indicatorColor: Colors.amber,
+        labelColor: Colors.amber,
+        unselectedLabelColor: Colors.white60,
+        labelStyle: const TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 16,
+        ),
+        unselectedLabelStyle: const TextStyle(fontSize: 14),
+        tabs: [
+          Tab(text: locale == 'fr' ? 'Cartes' : 'Cards'),
+          Tab(text: l10n.relics),
+        ],
+      ),
+    );
+
     return DefaultTabController(
       length: 2,
-      child: Scaffold(
-        backgroundColor: const Color(0xFF1E1E2C),
-        appBar: AppBar(
-          title: Text(
-            locale == 'fr' ? 'Dictionnaire' : 'Dictionary',
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          backgroundColor: Colors.black45,
-          elevation: 0,
-          bottom: TabBar(
-            indicatorColor: Colors.amber,
-            labelColor: Colors.amber,
-            unselectedLabelColor: Colors.white60,
-            labelStyle: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
-            unselectedLabelStyle: const TextStyle(fontSize: 14),
-            tabs: [
-              Tab(text: locale == 'fr' ? 'Cartes' : 'Cards'),
-              Tab(text: l10n.relics),
-            ],
-          ),
-        ),
+      child: ScreenScaffold(
+        backgroundType: ScreenBackgroundType.dark,
+        appBar: appBar,
         body: gameDataAsync.when(
           data: (gameData) {
             return TabBarView(
@@ -72,6 +78,7 @@ class CardDictionaryScreen extends ConsumerWidget {
     List<CardData> allCards,
     String locale,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     // Grouper par type pour la clarté
     final Map<CardType, List<CardData>> groupedCards = {};
     for (var card in allCards) {
@@ -101,8 +108,7 @@ class CardDictionaryScreen extends ConsumerWidget {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                  maxCrossAxisExtent:
-                      200, // Doublé pour un affichage plus clair
+                  maxCrossAxisExtent: 200,
                   childAspectRatio: 70 / 110,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
@@ -110,17 +116,10 @@ class CardDictionaryScreen extends ConsumerWidget {
                 itemCount: group.value.length,
                 itemBuilder: (context, index) {
                   final card = group.value[index];
-                  return UiCard(
-                    title: card.getName(locale),
-                    description: card.getDescription(locale),
-                    rarity: _getRarityLabel(context, card.rarity),
-                    target: _getTargetLabel(context, card.target),
-                    cost: card.cost,
-                    type: card.type,
-                    targetType: card.target,
-                    isExhaust: card.isExhaust,
-                    effects: card.effects,
-                    baseMaxForgeUpgrades: card.baseMaxForgeUpgrades,
+                  return UiCard.fromData(
+                    card: card,
+                    locale: locale,
+                    l10n: l10n,
                   );
                 },
               ),
@@ -230,38 +229,6 @@ class CardDictionaryScreen extends ConsumerWidget {
         return '${l10n.cardTypePower.toUpperCase()}S';
       case CardType.status:
         return l10n.statusCurses;
-    }
-  }
-
-  String _getRarityLabel(BuildContext context, CardRarity rarity) {
-    final l10n = AppLocalizations.of(context)!;
-    switch (rarity) {
-      case CardRarity.common:
-        return l10n.rarityCommon;
-      case CardRarity.uncommon:
-        return l10n.rarityUncommon;
-      case CardRarity.rare:
-        return l10n.rarityRare;
-      case CardRarity.epic:
-        return l10n.rarityEpic;
-      case CardRarity.legendary:
-        return l10n.rarityLegendary;
-      case CardRarity.unique:
-        return 'Unique';
-    }
-  }
-
-  String _getTargetLabel(BuildContext context, CardTarget target) {
-    final l10n = AppLocalizations.of(context)!;
-    switch (target) {
-      case CardTarget.singleEnemy:
-        return l10n.targetSingleEnemy;
-      case CardTarget.allEnemies:
-        return l10n.targetAllEnemies;
-      case CardTarget.self:
-        return l10n.targetSelf;
-      case CardTarget.none:
-        return l10n.targetNone;
     }
   }
 }

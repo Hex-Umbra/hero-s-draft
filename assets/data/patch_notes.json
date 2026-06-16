@@ -1,5 +1,114 @@
 [
   {
+    "version": "0.2.4",
+    "date": "2026-06-14",
+    "title": "Harmonisation et Finitions",
+    "sections": [
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "L'écran de sélection de votre héros a été modernisé avec un arrière-plan harmonisé et un nouvel en-tête de page pour une navigation plus claire.",
+          "Les effets visuels et les textes flottants (gains de vie, perte de boucliers, tremblements) lors des affrontements sont désormais mieux synchronisés et plus fluides."
+        ]
+      },
+      {
+        "category": "Corrections",
+        "emoji": "🐛",
+        "entries": [
+          "Sécurisation du suivi des étages sur la carte d'aventure pour garantir un enchaînement de la progression sans anomalie.",
+          "Stabilisation et fiabilisation du déclenchement des effets spéciaux de cartes durant les combats."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "0.2.3",
+    "date": "2026-06-14",
+    "title": "Fluidité des Effets et de la Carte",
+    "sections": [
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "La génération de la carte du monde est désormais plus fiable et équilibrée grâce à une réorganisation complète des règles de création procédurale.",
+          "Les animations et effets visuels de combat (secousses, flashs, explosions de particules et charges) ont été unifiés pour offrir des affrontements plus fluides et percutants.",
+          "Le cycle de vie et la disparition des effets visuels temporaires, comme les dômes de bouclier, ont été fluidifiés pour une meilleure lisibilité en jeu.",
+          "L'ambiance visuelle bénéficie d'une meilleure intégration des couleurs thématiques liées aux raretés, aux statistiques et aux reflets néons."
+        ]
+      },
+      {
+        "category": "Technique",
+        "emoji": "🔧",
+        "entries": [
+          "La résolution des effets de cartes a été entièrement restructurée pour faciliter l'ajout de futures cartes et garantir un comportement plus robuste.",
+          "La détection des erreurs de données lors du lancement du jeu a été renforcée afin d'identifier et de résoudre immédiatement d'éventuels problèmes de chargement."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "0.2.2",
+    "date": "2026-06-14",
+    "title": "Unification Visuelle et Ergonomie",
+    "sections": [
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "Harmonisation visuelle complète des décors d'arrière-plan avec un nouveau système d'écrans unifié (dégradé sombre et texture parchemin).",
+          "Nouvelle barre d'en-tête standardisée sur tous les menus pour une navigation et un retour arrière simplifiés.",
+          "Affichage de l'or unifié et connecté directement à votre inventaire en haut des écrans de la boutique, de la forge et de la carte.",
+          "Interface de draft de cartes (deck de départ et récompenses de boss) modernisée pour offrir une meilleure lisibilité et des indicateurs de sélection plus nets.",
+          "Refonte et mise en page épurée de la majorité des écrans du jeu (Dictionnaire, Repos, Événement, Échange de reliques) pour un rendu visuel plus cohérent."
+        ]
+      },
+      {
+        "category": "Technique",
+        "emoji": "🔧",
+        "entries": [
+          "Restructuration majeure du code de l'interface utilisateur pour réduire la duplication et optimiser le chargement des pages.",
+          "Simplification de la création des cartes de jeu dans l'interface, garantissant un affichage cohérent et sans bug de leurs statistiques.",
+          "Modularisation du menu de la forge pour une structure plus propre et des transitions de fenêtres plus fluides."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "0.2.1",
+    "date": "2026-06-13",
+    "title": "Refactoring Architectural - Phase 2",
+    "sections": [
+      {
+        "category": "Technique",
+        "emoji": "🔧",
+        "entries": [
+          "Décomposition du moteur de rendu Flame `HerosDraftGame` en quatre sous-systèmes spécialisés (`state_sync_system`, `card_animation_system`, `combat_visual_system` et `layout_system`) pour optimiser la boucle de mise à jour et la lisibilité.",
+          "Séparation des responsabilités du composant de carte `CardComponent` en extrayant le rendu 2D dans `CardRenderer` et la gestion des interactions (tactile, glisser-déposer, survol) dans `CardInteractionHandler`.",
+          "Restructuration de la logique de progression avec la décomposition de `RunController` en sous-gestionnaires spécialisés pour les statistiques, la carte, la persistance et l'or.",
+          "Modularisation de la logique de combat en isolant le traitement des altérations d'état et le déroulement séquentiel des phases de tour."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "0.2.0",
+    "date": "2026-06-13",
+    "title": "Centralisation et Harmonisation",
+    "sections": [
+      {
+        "category": "Technique",
+        "emoji": "🔧",
+        "entries": [
+          "Mise en place d'un pipeline de calcul de dégâts unifié, garantissant que les effets de faiblesse, coups critiques, chocs et vulnérabilité s'appliquent de manière rigoureusement identique pour le héros et pour ses adversaires.",
+          "Sécurisation et stabilisation majeure du jeu grâce à l'immuabilité des données clés (statistiques d'entités, état du combat et instances d'ennemis), empêchant les comportements imprévus et les désynchronisations.",
+          "Centralisation de tous les délais des phases de combat (déplacements, ripostes, résolutions d'intentions) pour un déroulement des affrontements plus fluide et homogène.",
+          "Standardisation des tailles, durées d'apparition et comportements physiques des textes flottants (dégâts, soins, effets de poison et de bouclier) afin d'assurer une parfaite cohérence visuelle."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.1.8",
     "date": "2026-06-13",
     "title": "La Fin de l'Armure Éternelle",

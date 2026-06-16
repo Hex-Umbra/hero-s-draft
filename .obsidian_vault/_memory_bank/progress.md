@@ -3,12 +3,12 @@
 Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnalités de **Hero's Draft** : opérationnelles, partiellement implémentées, non implémentées, et les chantiers de refactoring prioritaires issus des rapports de dette technique.
 
 **Métriques du projet** :
-- **~11 400 lignes** de code source dans `lib/` (70 fichiers).
+- **~11 400 lignes** de code source dans `lib/` (~77 fichiers).
 - **8 fichiers JSON** de données d'assets.
-- **107 tests automatisés** — 100% au vert.
+- **108 tests automatisés** — 100% au vert.
 - **0 erreur** via `flutter analyze`.
-- **~119 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
-- **Version actuelle** : v0.1.7 — L'Éclat des Combats.
+- **~122 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
+- **Version actuelle** : v0.2.4 — Harmonisation Post-Refactoring de l'Architecture.
 
 ---
 
@@ -38,11 +38,11 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Fonctionnalité | Controller/Provider | Détails |
 |:---|:---|:---|
 | Modernisation Riverpod | `Tous les Providers` | Migration vers `Notifier` et `NotifierProvider` de Riverpod 2.x, communication inter-contrôleurs interne via `ref.read` sans injection par constructeur, et immuabilité stricte de `CardInstance` (v0.0.97) |
-| Logique de Run | `RunController` / `runProvider` | Suivi PV, mana, armorMastery, luck, acte, level, XP, carte, passifs, reliques |
+| Logique de Run (Façade) | `RunController` / `runProvider` | Suivi de la run. Délègue à `PlayerStatsManager` (stats, XP, buffs, statuts), `MapProgressionManager` (navigation, complétion, actes), `RunPersistenceManager` (chargement/sauvegarde) et `GoldManager` (or, forge slots). |
+| Logique de Combat (Façade) | `CombatController` / `combatProvider` | Pilotage de combat. Délègue à `StatusEffectProcessor` (résolution autonome et unifiée des statuts) et `TurnPhaseManager` (transitions, ripostes, fin de tour). |
 | Persistance Forge v2 | `RunController` / `runProvider` | Sauvegarde anti-exploit de la session de forge active (`forgeSlots`, `forgeTargetCardId`) et gestion des slots bonus achetés avec coût progressif (v0.2.00) |
-| Système de Progression XP | `RunController.gainXp()` | Progression XP exponentielle ($100 \times 1.5^{lvl-1}$), gains multiples et carry-over |
+| Système de Progression XP | `RunController.gainXp()` / `PlayerStatsManager` | Progression XP exponentielle ($100 \times 1.5^{lvl-1}$), gains multiples et carry-over |
 | Échelonnement Ennemis | `CombatController.initializeCombat()` | Multiplicateurs dynamiques (+12% HP/lvl, +8% ATK/lvl) et calcul de combat level |
-| Logique de Combat | `CombatController` / `combatProvider` | Phases (Player ⇄ Enemy), sélection cible, intentions ennemies (cycliques ou aléatoires), détection mort, victoire/défaite |
 | Piles de Cartes | `DeckNotifier` / `deckProvider` | 5 piles logiques (Master, Draw, Hand, Discard, Exhaust) avec shuffle et gestion complète |
 | Économie et Reliques | `InventoryController` / `inventoryProvider` | Or (initial 50), 24 reliques (communes rééquilibrées) avec 9 triggers différents, système de charges, bonus boutique |
 | Compétences | `SkillController` / `skillProvider` | 2 compétences par héros, cooldowns, consommation de ressources |
@@ -104,12 +104,19 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 
 | Fonctionnalité | Implémentation | Détails |
 |:---|:---|:---|
-| `UiCard` unifié | `lib/ui/widgets/ui_card.dart` | Remplace 6 rendus dupliqués, style glassmorphic (BackdropFilter 10px), coût en médaillon standardisé, fentes de runes, retrait filigrane & badges de ciblage, doublement d'icônes multicibles |
+| Modularité Rendu Flame | `lib/game/systems/` | `HerosDraftGame` restructuré en façade légère déléguant à 4 sous-systèmes autonomes : `StateSyncSystem`, `CardAnimationSystem`, `CombatVisualSystem`, et `LayoutSystem`. |
+| Modularité CardComponent | `lib/game/components/widgets/` | `CardComponent` décomposé en façade déléguant le rendu Canvas à `CardRenderer` et la gestion des gestes/survol à `CardInteractionHandler`. |
+| `ScreenScaffold` unifié | `lib/ui/widgets/screen_scaffold.dart` | Centralise les arrière-plans (`dark`, `parchment`, `none`), la `SafeArea` et le `PopScope` (v0.2.2) |
+| En-tête standardisée `PageHeader` | `lib/ui/widgets/page_header.dart` | PreferredSizeWidget gérant uniformément le retour arrière, le titre et les actions (v0.2.2) |
+| Indicateur d'or unifié | `lib/ui/widgets/gold_indicator.dart` | Badge d'or connecté à l'état de l'inventaire avec style adaptatif (v0.2.2) |
+| Découpage de la Forge | `lib/ui/widgets/forge/` | Scission de `forge_upgrade_dialog.dart` en composants isolés : preview, slot row, buy button (v0.2.2) |
+| Layout de Draft unifié | `lib/ui/widgets/draft/` | Structure commune de draft avec grille responsive, utilisée par Boss/Starter drafts (v0.2.2) |
+| `UiCard` unifié | `lib/ui/widgets/ui_card.dart` | Remplace 6 rendus dupliqués, style glassmorphic, runes sockets, constructeurs d'usine `fromInstance` et `fromData` (v0.2.2) |
 | Système de Design Centralisé | `lib/ui/theme/app_colors.dart`, `app_spacing.dart`, `app_theme.dart` | `AppColors` (Neon Dark + Parchemin + stats + raretés + sémantiques), `AppSpacing` (EdgeInsets helpers), `AppTheme` (ThemeData complet dark/light) — v0.0.99 |
 | Extensions Enum Rareté | `CardRarity.color`, `RelicRarity.color` (extensions Dart) | Getter `.color` centralisé sur les enums de rareté de cartes et reliques, remplace les switch-case dispersés — v0.0.99 |
 | Correction `GameButton` overflow | `lib/ui/widgets/game_button.dart` | Résolution du bug `RenderFlex` overflow sur les boutons or-seulement (icône sans libellé) — v0.0.99 |
 | Refactoring `RelicsDialog` | `lib/ui/widgets/relics_dialog.dart` | Remplacement d'un `switch` de 19 lignes par `.color` via extension `RelicRarity` — v0.0.99 |
-| Tilt organique des cartes | `CardComponent` (DragCallbacks) | Rotation proportionnelle à la vélocité horizontale au glissement |
+| Tilt organique des cartes | `CardComponent` / `CardAnimationSystem` | Rotation proportionnelle à la vélocité horizontale au glissement |
 | Shake d'erreur mana | `CardComponent._shakeAnimation()` | `SequenceEffect` oscillations rapides en cas de manque de mana |
 | Courbe de ciblage Bézier | `targeting_line.dart` | Courbe quadratique de Bézier fluide avec pointillés défilants et tête orientée via la tangente |
 | Jus Visuel de Dégâts/Impacts | `CardComponent`, `EnemyCard` | Secousses haute fréquence, rebond élastique (`Curves.elasticOut`), et flashes de sprites (`ColorEffect`) rouges/oranges ou verts |
@@ -283,10 +290,11 @@ Basé sur les rapports de dette technique (`technical_debt_report_Opus4.6.md`, 4
 | Priorité | Chantier | Problème | Solution | Fichiers |
 |:---|:---|:---|:---|:---|
 | Critique | Typage des modèles | `==`/`hashCode` absents sur 12 modèles, `Map<String, dynamic>` non typés | Ajouter `freezed` ou implémenter manuellement | `lib/models/` (11 fichiers) |
-| Critique | Immuabilité réelle des listes | Listes mutables dans états "immuables" | ✅ List.unmodifiable() et final dans CardInstance (v0.0.97) | Tous les controllers |
+| Critique | Immuabilité réelle des listes | Listes mutables dans états "immuables" | ✅ List.unmodifiable() et @immutable dans `EntityStats`, `CombatState` et `EnemyInstance` (v0.1.9) | `lib/models/` |
 | Critique | Validation des entrées | `gainGold(-50)` fonctionne, HP peut dépasser maxHP | Ajouter validation dans chaque mutation | `run_controller.dart`, `inventory_controller.dart` |
-| Important | Error handling I/O | Aucun `try-catch` dans `GameDataService` | Wrapping avec fallbacks gracieux | `game_data_service.dart` |
-| Important | Design System | ~~Pas de `AppColors`, `AppTextStyles` — 100+ magic constants~~ | ✅ `AppColors`, `AppSpacing`, `AppTheme` créés dans `lib/ui/theme/` + extensions enum rareté (v0.0.99) | `lib/ui/theme/` |
+| Important | Centralisation des dégâts | Calculs de dégâts physiques et magiques dispersés (`EffectResolver`, `CombatController`) | ✅ Unifié via le service `DamagePipeline` centralisé (v0.1.9) | `lib/game/services/damage_pipeline.dart` |
+| Important | Error handling I/O | Aucun `try-catch` dans `GameDataService` | ✅ Sécurisé avec des try/catch détaillés de diagnostic (v0.2.3) | `lib/services/game_data_service.dart` |
+| Important | Design System | ~~Pas de `AppColors`, `AppTextStyles` — 100+ magic constants~~ | ✅ `AppColors`, `AppSpacing`, `AppTheme` créés dans `lib/ui/theme/` + extensions enum rareté (v0.0.99) et `GameThemeExtension` (v0.2.3) | `lib/ui/theme/` |
 | Moyen | Lookup O(1) | `GameDataRegistry` utilise `List` avec O(n) | Migrer vers `Map<String, T>` | `game_data_registry.dart` |
 
 ### 🟡 Phase 2 — Décomposition God Classes (Semaines 3-4)
@@ -295,9 +303,9 @@ Basé sur les rapports de dette technique (`technical_debt_report_Opus4.6.md`, 4
 |:---|:---|:---|:---|:---|
 | Critique | `map_screen.dart` | **2 471 lignes**, 10+ responsabilités | Extraire `MapPainter`, `MapNodeWidget`, `MapLegend`, `MapTooltip`, `MapController` | 2471 → ~400 lignes |
 | Critique | `game_screen.dart` | **1 667 lignes**, 5 overlays privés | Extraire `PauseOverlay`, `RewardOverlay`, `DeathOverlay`, `VictoryOverlay`, `HudPanel`, `CombatOrchestrator` | 1667 → ~500 lignes |
-| Critique | `card_component.dart` | **1 031 lignes**, render + drag + targeting + animation + tooltip | Extraire `CardRenderer`, `CardAnimationController`, `CardInteractionHandler` | 1031 → ~300 lignes |
+| Critique | `card_component.dart` | ~~**1 031 lignes**, render + drag + targeting + animation + tooltip~~ | ✅ Décomposé en `CardRenderer` (Canvas) et `CardInteractionHandler` (Gestes) | ~150 lignes |
 | Important | `ui_card.dart` | **1 136 lignes**, god component UI/logic/painting | ✅ Refactorisé en extrayant les sous-widgets dans `ui_card/` (v0.2.01) | 1136 → ~175 lignes |
-| Important | `heros_draft_game.dart` | **775 lignes**, 18 callbacks constructeur | Extraire layout, sync, factories | 775 → ~400 lignes |
+| Important | `heros_draft_game.dart` | ~~**775 lignes**, 18 callbacks constructeur~~ | ✅ Décomposé en 4 sous-systèmes : `StateSync`, `CardAnimation`, `CombatVisual`, `Layout` | ~400 lignes |
 | Important | `stat_badge.dart` | **720 lignes**, 5 classes, recreate all children à chaque update | Extraire classes, optimiser update | Performance + lisibilité |
 
 ### 🟢 Phase 3 — Qualité (Semaines 5-6)
@@ -305,8 +313,8 @@ Basé sur les rapports de dette technique (`technical_debt_report_Opus4.6.md`, 4
 | Priorité | Chantier | Problème | Solution |
 |:---|:---|:---|:---|
 | Important | Couverture tests | ~15-20% estimée | Atteindre ≥50%, ajouter widget tests UI |
-| Important | Magic constants | 100+ valeurs codées en dur | Extraire dans `GameConstants` étendu |
-| Important | `EffectResolver` pattern | Classe statique avec switch géant | Migrer vers Strategy/Command pattern |
+| Important | Magic constants | 100+ valeurs codées en dur | ✅ Délais de combat et configurations de floating text extraits dans `GameConstants` (v0.1.9) |
+| Important | `EffectResolver` pattern | Classe statique avec switch géant | ✅ Refactoré avec le registre `EffectRegistry` et le Strategy Pattern (v0.2.3) |
 | Important | Logique dans Flame | `executeSkill()` calcule des dégâts dans `HerosDraftGame` | ✅ Déplacé vers CombatController (v0.0.97) |
 | Moyen | Logique dans UI | Shop/event/heal dans les écrans (Reward déplacé vers RewardController en v0.0.94) | Déplacer vers controllers |
 
@@ -358,6 +366,11 @@ Issus de `docs/analysis_reports/6_analyse_game_balance.md` (documentés, non cor
 
 | Version | Date | Titre | Description des changements clés |
 |:---|:---|:---|:---|
+| **v0.2.4** | 2026-06-14 | Harmonisation de l'Architecture | Harmonisation Post-Refactoring de l'Architecture : Migration de `ClassSelectionScreen` sous `ScreenScaffold` et `PageHeader` ; remontée de la logique d'`updateStats` et des réactions d'impacts visuels dans `CombatEntity` (Flame), nettoyant `HeroCard` et `EnemyCard` ; riverpodisation d'`EffectRegistry` via le provider `effectRegistryProvider` (sans mutable statique global) et passage à `EffectResolver.resolveCard` ; nettoyage de callbacks obsolètes de `HerosDraftGame` ; et ajout du champ `floor` explicite dans `MapNode` pour supprimer le parsing d'ID de chaîne. |
+| **v0.2.3** | 2026-06-14 | Architecture & Patterns | Refactoring Phase 4 : Découpage procédural de `MapGeneratorService` en 4 sous-services (`MapNodeGenerator`, `MapConnectionBuilder`, `MapValidator`, `MapContentPlacer`) ; refactorisation d'`EffectResolver` avec le Strategy Pattern (`EffectStrategy` et `EffectRegistry`) ; abstractions Flame `CombatEntity` (pour unifier `HeroCard`/`EnemyCard`) et `BaseVisualEffect` (pour unifier `SlashEffect`/`ShieldDome`) ; centralisation de la thématique via `GameThemeExtension` et try/catch détaillés de diagnostic dans `GameDataService`. Zéro erreur et 108 tests unitaires au vert. |
+| **v0.2.2** | 2026-06-14 | Unification de l'UI & Composants Communs | Refactoring Phase 3 : Centralisation des arrière-plans, SafeArea et PopScope dans `ScreenScaffold` ; standardisation des en-têtes avec `PageHeader` et de l'affichage de l'or avec `GoldIndicator` ; factories `UiCard.fromInstance` et `UiCard.fromData` ; découpage modulaire de la forge (`ForgeCardPreview`, `ForgeSlotRow`, `ForgeBuySlotButton`) ; et structure de mise en page commune `CardDraftLayout`. Zéro régression et 108 tests unitaires au vert. |
+| **v0.2.10** | 2026-06-13 | Décomposition des God Classes | Refactoring Phase 2 : Décomposition de `RunController` (en 4 managers spécialisés), `CombatController` (en 2 processeurs spécialisés), `HerosDraftGame` (en 4 sous-systèmes Flame : `StateSync`, `CardAnimation`, `CombatVisual`, `Layout`), et `CardComponent` (délégation à `CardRenderer` pour le dessin Canvas et `CardInteractionHandler` pour les gestes). Préservation des signatures d'API et 108 tests unitaires 100% au vert. |
+| **v0.1.9** | 2026-06-13 | Refactoring & Centralisation | Centralisation de tous les délais de combat et des paramètres de FloatingText dans `GameConstants` pour supprimer les nombres magiques ; sécurisation du flux d'état via `@immutable` et `List.unmodifiable` sur les modèles clés (`EntityStats`, `CombatState`, `EnemyInstance`) ; et unification des calculs de dégâts via le service centralisé `DamagePipeline.calculate`. |
 | **v0.1.8** | 2026-06-13 | Transition Fluide de Tour | Réinitialisation de l'armure du joueur à 0 au début de son tour (dans `RunController`) pour éviter le cumul infini inter-tours de l'armure. Ajout d'un drapeau transitoire `suppressArmorChangeAnimation` dans `HeroCard` activé lors de la transition de tour par `game_screen.dart` pour masquer les popups négatifs d'armure ("-X") et l'animation d'impact de bouclier, évitant un faux feedback visuel de dégâts reçus. |
 | **v0.1.7** | 2026-06-13 | L'Éclat des Combats | Embellissement des textes flottants thématiques avec ombres néon et symboles descriptifs, rotation de naissance, et cinématique d'échelle élastique suivie d'une pulsation infinie sur critique. Déclenchement visuel des critiques basé sur la propagation de l'état `lastActionWasCrit` calculé en phase métier (déterministe). Renforcement des impacts (tremblement accru, flash doré, 35 particules). Décélération de la jauge HP de catch-up (1200ms easeOut sous dégâts) pour mieux ressentir la violence des coups. **Incorpore également** : le fix de la relique Croc Kunaï (combat-long `'armor_mastery'` StatusEffect avec getter dynamique `effectiveArmorMastery`), l'animation dynamique des particules Canvas du carrousel de reliques (via `AnimationController` Flutter avec gravité, friction et fade), l'exclusion des cartes de rareté unique dans les récompenses de cartes post-boss (x=0), l'amélioration visuelle du clonage Magic Mirror en boutique (affichage de l'interface `UiCard` complète avec runes de forge, rareté, effets de survol réactifs et boîte de dialogue responsive élargie à `maxWidth: 550` avec scroll horizontal), la protection anti-exploit de caching de `cloneOptions` pour le Magic Mirror, et le verrouillage dynamique (désactivation) des boutons de services de la boutique en cas de solde d'or insuffisant. |
 | **v0.2.04** | 2026-06-12 | Enrichissement des Tooltips de Cartes | Ajout de tous les détails (type de cible écrit explicitement, rareté, type de carte, coût mana) dans les tooltips en combat (Flame CardComponent) et menus (Flutter UiCard) en français et anglais. |

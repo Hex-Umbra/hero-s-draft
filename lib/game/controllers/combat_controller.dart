@@ -8,23 +8,33 @@ import '../../../models/enemy_intent.dart';
 import '../../../models/data/card_data.dart';
 import '../../../models/data/enemy_data.dart';
 import '../../../models/data/relic_data.dart';
-import '../../../models/status_effect.dart';
 import '../../../models/map_node.dart';
 import '../services/combat_debug_logger.dart';
 import '../systems/encounter_system.dart';
 import '../systems/trait_system.dart';
 import '../services/effect_resolver.dart';
+import '../services/effects/effect_strategy.dart';
 import '../../../models/data/skill_data.dart';
 import 'run_controller.dart';
 import 'deck_controller.dart';
+import '../services/damage_pipeline.dart';
+import 'combat/turn_phase_manager.dart';
 
 class CombatController extends Notifier<CombatState> {
+  late final TurnPhaseManager _turnPhaseManager;
+
   @override
   CombatState build() {
-    return const CombatState();
+    _turnPhaseManager = TurnPhaseManager(this, ref);
+    return CombatState();
   }
 
   CombatState get currentState => state;
+
+  /// Permet aux managers de mettre à jour l'état du combat
+  void updateState(CombatState newState) {
+    state = newState;
+  }
 
   /// Génère les ennemis via EncounterSystem et initialise l'état du combat
   void initializeCombat(
@@ -155,7 +165,7 @@ class CombatController extends Notifier<CombatState> {
     for (int i = 0; i < allEnemyInstances.length; i++) {
       var enemy = allEnemyInstances[i];
       if (i < 5) {
-        enemy = _rollIntent(enemy);
+        enemy = rollIntent(enemy);
         activeEnemies.add(enemy);
       } else {
         pendingEnemies.add(enemy);
@@ -199,50 +209,39 @@ class CombatController extends Notifier<CombatState> {
     final effectiveAttaque = runController.currentState.effectiveAttaque;
 
     if (skill.effectType == 'damage_aoe') {
-      int dmg = (effectiveAttaque * (skill.effectValue / 100.0)).round();
-      final random = Random();
-      bool isCrit = false;
-      if (random.nextInt(100) < heroStats.effectiveCritChance) {
-        dmg = (dmg * heroStats.critMultiplier).round();
-        isCrit = true;
-      }
-      if (dmg < 1) dmg = 1;
-
       state = state.copyWith(
         enemies: state.enemies.map((enemy) {
+          final (dmg, isCrit) = DamagePipeline.calculate(
+            initialDamage: (effectiveAttaque * (skill.effectValue / 100.0)).round(),
+            attackerStats: heroStats,
+            defenderStats: enemy.stats,
+          );
           return enemy.copyWith(stats: enemy.stats.takeDamage(dmg, isCrit: isCrit));
         }).toList(),
       );
-      _cleanDeadEnemies();
+      cleanDeadEnemies();
     } else if (skill.effectType == 'damage_targeted' && targetEnemyId != null) {
-      int dmg = (effectiveAttaque * (skill.effectValue / 100.0)).round();
-      final random = Random();
-      bool isCrit = false;
-      if (random.nextInt(100) < heroStats.effectiveCritChance) {
-        dmg = (dmg * heroStats.critMultiplier).round();
-        isCrit = true;
-      }
-      if (dmg < 1) dmg = 1;
-
       state = state.copyWith(
         enemies: state.enemies.map((enemy) {
           if (enemy.id != targetEnemyId) return enemy;
+          final (dmg, isCrit) = DamagePipeline.calculate(
+            initialDamage: (effectiveAttaque * (skill.effectValue / 100.0)).round(),
+            attackerStats: heroStats,
+            defenderStats: enemy.stats,
+          );
           return enemy.copyWith(stats: enemy.stats.takeDamage(dmg, isCrit: isCrit));
         }).toList(),
       );
-      _cleanDeadEnemies();
+      cleanDeadEnemies();
     } else if (skill.effectType == 'damage_pierce' && targetEnemyId != null) {
-      int dmg = effectiveAttaque;
-      final random = Random();
-      bool isCrit = false;
-      if (random.nextInt(100) < heroStats.effectiveCritChance) {
-        dmg = (dmg * heroStats.critMultiplier).round();
-        isCrit = true;
-      }
-
       final enemyIndex = state.enemies.indexWhere((e) => e.id == targetEnemyId);
       if (enemyIndex != -1) {
         final enemy = state.enemies[enemyIndex];
+        final (dmg, isCrit) = DamagePipeline.calculate(
+          initialDamage: effectiveAttaque,
+          attackerStats: heroStats,
+          defenderStats: enemy.stats,
+        );
         int stolenArmor = (enemy.stats.armure * (skill.effectValue / 100.0)).round();
         int newPv = enemy.stats.currentPv - dmg;
         int newArm = enemy.stats.armure - stolenArmor;
@@ -264,7 +263,7 @@ class CombatController extends Notifier<CombatState> {
         if (stolenArmor > 0) {
           runController.setHeroStats(armure: heroStats.armure + stolenArmor);
         }
-        _cleanDeadEnemies();
+        cleanDeadEnemies();
       }
     } else if (skill.effectType == 'armor_buff') {
       runController.setHeroStats(armure: heroStats.armure + skill.effectValue);
@@ -275,6 +274,7 @@ class CombatController extends Notifier<CombatState> {
   void applyPlayerCardPlay(CardInstance card) {
     final runController = ref.read(runProvider.notifier);
     final deckController = ref.read(deckProvider.notifier);
+    final registry = ref.read(effectRegistryProvider);
 
     // 1. Résolution des effets
     final success = EffectResolver.resolveCard(
@@ -283,6 +283,7 @@ class CombatController extends Notifier<CombatState> {
       deckController,
       this,
       state.selectedEnemyId,
+      registry,
     );
 
     if (success) {
@@ -303,151 +304,23 @@ class CombatController extends Notifier<CombatState> {
       }
 
       // 5. Nettoyer les morts
-      _cleanDeadEnemies();
+      cleanDeadEnemies();
     }
   }
 
   /// Applique l'effet de l'intention d'un ennemi
   void resolveEnemyIntent(String enemyId) {
-    final runController = ref.read(runProvider.notifier);
-    final index = state.enemies.indexWhere((e) => e.id == enemyId);
-    if (index == -1) return;
-    final enemy = state.enemies[index];
-
-    final intent = enemy.effectiveIntent;
-    if (intent == null) return;
-
-    switch (intent.type) {
-      case IntentType.attack:
-        int dmg = intent.value;
-        final hasFreeze = enemy.stats.statuses.any((s) => s.id == 'freeze');
-
-        // Apply vulnerable multiplier if hero has vulnerable status
-        if (runController.currentState.heroStats.statuses.any((s) => s.id == 'vulnerable')) {
-          dmg = (dmg * 1.5).round();
-        }
-
-        // Roll enemy crit check
-        final random = Random();
-        bool isCrit = false;
-        if (random.nextInt(100) < enemy.stats.effectiveCritChance) {
-          dmg = (dmg * enemy.stats.critMultiplier).round();
-          isCrit = true;
-        }
-
-        runController.takeDamage(dmg, isCrit: isCrit);
-
-        if (hasFreeze) {
-          final updatedStatuses = enemy.stats.statuses.map((s) {
-            if (s.id == 'freeze') {
-              return s.copyWith(duration: s.duration - 1);
-            }
-            return s;
-          }).where((s) => s.duration > 0).toList();
-
-          final updatedEnemy = enemy.copyWith(
-            stats: enemy.stats.copyWith(statuses: updatedStatuses),
-          );
-          _updateEnemy(updatedEnemy);
-        }
-        break;
-      case IntentType.defend:
-        final updatedEnemy = enemy.copyWith(
-          stats: enemy.stats.copyWith(
-            armure: enemy.stats.armure + intent.value,
-          ),
-        );
-        _updateEnemy(updatedEnemy);
-        break;
-      case IntentType.buff:
-        final updatedEnemy = enemy.copyWith(
-          stats: enemy.stats.addStatus(
-            StatusEffect(
-              id: 'strength',
-              name: 'Attaque',
-              type: StatusType.buff,
-              value: intent.value,
-              duration: 99,
-            ),
-          ),
-        );
-        _updateEnemy(updatedEnemy);
-        break;
-      case IntentType.debuffDeck:
-        break;
-    }
+    _turnPhaseManager.resolveEnemyIntent(enemyId);
   }
 
   /// Début du tour de l'ennemi (application des statuts autonomes)
   void startEnemyTurn() {
-    state = state.copyWith(turnPhase: TurnPhase.enemy);
-
-    final List<EnemyInstance> updatedEnemies = [];
-    for (var enemy in state.enemies) {
-      int poisonDamage = 0;
-      int strengthGain = 0;
-      int armorGain = 0;
-      int burnDamage = 0;
-
-      for (var status in enemy.stats.statuses) {
-        if (status.id == 'poison') {
-          poisonDamage += status.value;
-        } else if (status.id == 'strength_regen') {
-          strengthGain += status.value;
-        } else if (status.id == 'armor_regen') {
-          armorGain += status.value;
-        } else if (status.id == 'burn') {
-          burnDamage += status.value;
-        }
-      }
-
-      EntityStats updatedStats = enemy.stats;
-      if (poisonDamage > 0) {
-        updatedStats = updatedStats.takeDamage(poisonDamage);
-      }
-      if (burnDamage > 0) {
-        updatedStats = updatedStats.takeDamage(burnDamage);
-      }
-      if (strengthGain > 0) {
-        updatedStats = updatedStats.addStatus(
-          StatusEffect(
-            id: 'strength',
-            name: 'Attaque',
-            type: StatusType.buff,
-            value: strengthGain,
-            duration: 1,
-          ),
-        );
-      }
-      if (armorGain > 0) {
-        updatedStats = updatedStats.copyWith(
-          armure: updatedStats.armure + armorGain,
-        );
-      }
-
-      // Tick statuts
-      updatedStats = updatedStats.tickStatuses();
-
-      updatedEnemies.add(enemy.copyWith(stats: updatedStats));
-    }
-
-    state = state.copyWith(enemies: updatedEnemies);
-
-    // Nettoyer les morts (par exemple à cause du poison de début de tour)
-    _cleanDeadEnemies();
+    _turnPhaseManager.startEnemyTurn();
   }
 
   /// Fin de la phase ennemie : roll intents et retour au joueur
   void endEnemyTurn() {
-    final List<EnemyInstance> rolledEnemies = state.enemies
-        .map((enemy) => _rollIntent(enemy))
-        .toList();
-
-    state = state.copyWith(
-      enemies: rolledEnemies,
-      turnPhase: TurnPhase.player,
-      turnCount: state.turnCount + 1,
-    );
+    _turnPhaseManager.endEnemyTurn();
   }
 
   /// Décrémente la durée des statuts de l'ennemi
@@ -465,13 +338,13 @@ class CombatController extends Notifier<CombatState> {
     state = state.copyWith(
       enemies: state.enemies.map((enemy) {
         if (enemy.id != enemyId) return enemy;
-        return _rollIntent(enemy);
+        return rollIntent(enemy);
       }).toList(),
     );
   }
 
   /// Nettoie les ennemis décédés et met à jour les indicateurs de fin de combat
-  void _cleanDeadEnemies() {
+  void cleanDeadEnemies() {
     final runController = ref.read(runProvider.notifier);
     final List<EnemyInstance> remainingEnemies = [];
     final List<EnemyInstance> newlyKilledEnemies = [];
@@ -492,7 +365,7 @@ class CombatController extends Notifier<CombatState> {
       for (int i = 0; i < killedCount; i++) {
         if (remainingEnemies.length < 5 && nextPending.isNotEmpty) {
           var incoming = nextPending.removeAt(0);
-          incoming = _rollIntent(incoming);
+          incoming = rollIntent(incoming);
           remainingEnemies.add(incoming);
         }
       }
@@ -519,7 +392,7 @@ class CombatController extends Notifier<CombatState> {
   }
 
   /// Met à jour l'instance interne d'un ennemi
-  void _updateEnemy(EnemyInstance updatedEnemy) {
+  void updateEnemy(EnemyInstance updatedEnemy) {
     state = state.copyWith(
       enemies: state.enemies
           .map((e) => e.id == updatedEnemy.id ? updatedEnemy : e)
@@ -528,7 +401,7 @@ class CombatController extends Notifier<CombatState> {
   }
 
   /// Calcule l'intention suivante d'un ennemi
-  EnemyInstance _rollIntent(EnemyInstance enemy) {
+  EnemyInstance rollIntent(EnemyInstance enemy) {
     final data = enemy.data;
     EnemyIntent nextIntent;
     int nextStep = enemy.intentStep;

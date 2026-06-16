@@ -104,7 +104,7 @@ void main() {
 
       final enemy1 = EnemyInstance(
         data: goblinData,
-        stats: const EntityStats(
+        stats: EntityStats(
           maxPv: 20,
           currentPv: 20,
           armure: 0,
@@ -113,7 +113,7 @@ void main() {
       );
       final enemy2 = EnemyInstance(
         data: orcData,
-        stats: const EntityStats(
+        stats: EntityStats(
           maxPv: 30,
           currentPv: 30,
           armure: 0,
@@ -145,7 +145,7 @@ void main() {
 
       final enemy = EnemyInstance(
         data: goblinData,
-        stats: const EntityStats(
+        stats: EntityStats(
           maxPv: 20,
           currentPv: 20,
           armure: 0,
@@ -200,7 +200,7 @@ void main() {
 
         final enemy1 = EnemyInstance(
           data: goblinData,
-          stats: const EntityStats(
+          stats: EntityStats(
             maxPv: 20,
             currentPv: 20,
             armure: 0,
@@ -209,7 +209,7 @@ void main() {
         );
         final enemy2 = EnemyInstance(
           data: orcData,
-          stats: const EntityStats(
+          stats: EntityStats(
             maxPv: 30,
             currentPv: 30,
             armure: 0,
@@ -300,7 +300,7 @@ void main() {
 
         final enemy = EnemyInstance(
           data: goblinData,
-          stats: const EntityStats(
+          stats: EntityStats(
             maxPv: 20,
             currentPv: 20,
             armure: 0,
@@ -376,7 +376,7 @@ void main() {
 
         final enemy1 = EnemyInstance(
           data: goblinData,
-          stats: const EntityStats(
+          stats: EntityStats(
             maxPv: 20,
             currentPv: 20,
             armure: 0,
@@ -385,7 +385,7 @@ void main() {
         );
         final enemy2 = EnemyInstance(
           data: orcData,
-          stats: const EntityStats(
+          stats: EntityStats(
             maxPv: 30,
             currentPv: 30,
             armure: 0,
@@ -408,7 +408,7 @@ void main() {
         // Kill enemy1
         combatController.updateEnemyStats(
           actualEnemy1Id,
-          const EntityStats(maxPv: 20, currentPv: 0, armure: 0, attaque: 5),
+          EntityStats(maxPv: 20, currentPv: 0, armure: 0, attaque: 5),
         );
         combatController.startEnemyTurn(); // This will clean up dead enemies (enemy1)
 
@@ -429,7 +429,7 @@ void main() {
 
         final enemy = EnemyInstance(
           data: goblinData,
-          stats: const EntityStats(
+          stats: EntityStats(
             maxPv: 20,
             currentPv: 20,
             armure: 0,
@@ -629,7 +629,7 @@ void main() {
 
       final enemy1 = EnemyInstance(
         data: goblinData,
-        stats: const EntityStats(
+        stats: EntityStats(
           maxPv: 20,
           currentPv: 20,
           armure: 10,
@@ -638,7 +638,7 @@ void main() {
       );
       final enemy2 = EnemyInstance(
         data: orcData,
-        stats: const EntityStats(
+        stats: EntityStats(
           maxPv: 30,
           currentPv: 30,
           armure: 0,

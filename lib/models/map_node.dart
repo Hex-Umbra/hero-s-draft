@@ -6,6 +6,7 @@ enum BossRewardType { cards, doubleXp, improvedRelic }
 
 class MapNode {
   final String id;
+  final int floor;
   MapNodeType type;
   final List<String> connections;
   final Vector2 position;
@@ -15,6 +16,7 @@ class MapNode {
 
   MapNode({
     required this.id,
+    required this.floor,
     required this.type,
     required this.connections,
     required this.position,
@@ -26,6 +28,7 @@ class MapNode {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'floor': floor,
       'type': type.name,
       'connections': connections,
       'position': [position.x, position.y],
@@ -38,6 +41,7 @@ class MapNode {
   factory MapNode.fromJson(Map<String, dynamic> json) {
     return MapNode(
       id: json['id'] as String,
+      floor: json['floor'] as int? ?? int.parse((json['id'] as String).split('_')[1]),
       type: MapNodeType.values.firstWhere((e) => e.name == json['type']),
       connections: List<String>.from(json['connections'] as List),
       position: Vector2(

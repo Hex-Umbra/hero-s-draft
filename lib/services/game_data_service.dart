@@ -10,26 +10,63 @@ import '../models/data/passive_data.dart';
 import '../models/data/relic_data.dart';
 import '../models/data/game_data_registry.dart';
 
+Future<List<dynamic>> _loadJsonList(String path) async {
+  try {
+    final String content = await rootBundle.loadString(path);
+    final decoded = jsonDecode(content);
+    if (decoded is! List) {
+      throw FormatException('Le fichier JSON doit être une liste à la racine.');
+    }
+    return decoded;
+  } catch (e, stack) {
+    throw Exception('Erreur de chargement/décodage pour le fichier "$path": $e\n$stack');
+  }
+}
+
+List<T> _mapList<T>(
+  List<dynamic> list,
+  T Function(Map<String, dynamic>) fromJson,
+  String modelName,
+) {
+  final List<T> result = [];
+  for (int i = 0; i < list.length; i++) {
+    final item = list[i];
+    if (item is! Map<String, dynamic>) {
+      throw Exception(
+        'L\'élément à l\'index $i pour le modèle "$modelName" n\'est pas un Map<String, dynamic>. Reçu: $item',
+      );
+    }
+    try {
+      result.add(fromJson(item));
+    } catch (e, stack) {
+      throw Exception(
+        'Erreur de parsing dans le modèle "$modelName" à l\'index $i (données: $item): $e\n$stack',
+      );
+    }
+  }
+  return result;
+}
+
 final gameDataLoaderProvider = FutureProvider<GameDataRegistry>((ref) async {
-  final results = await Future.wait([
-    rootBundle.loadString('assets/data/enemies.json'),
-    rootBundle.loadString('assets/data/heroes.json'),
-    rootBundle.loadString('assets/data/skills.json'),
-    rootBundle.loadString('assets/data/cards.json'),
-    rootBundle.loadString('assets/data/events.json'),
-    rootBundle.loadString('assets/data/passives.json'),
-    rootBundle.loadString('assets/data/relics.json'),
-    rootBundle.loadString('assets/data/hero_cards.json'),
+  final List<List<dynamic>> results = await Future.wait([
+    _loadJsonList('assets/data/enemies.json'),
+    _loadJsonList('assets/data/heroes.json'),
+    _loadJsonList('assets/data/skills.json'),
+    _loadJsonList('assets/data/cards.json'),
+    _loadJsonList('assets/data/events.json'),
+    _loadJsonList('assets/data/passives.json'),
+    _loadJsonList('assets/data/relics.json'),
+    _loadJsonList('assets/data/hero_cards.json'),
   ]);
 
-  final enemiesList = jsonDecode(results[0]) as List;
-  final heroesList = jsonDecode(results[1]) as List;
-  final skillsList = jsonDecode(results[2]) as List;
-  final cardsList = jsonDecode(results[3]) as List;
-  final eventsList = jsonDecode(results[4]) as List;
-  final passivesList = jsonDecode(results[5]) as List;
-  final relicsList = jsonDecode(results[6]) as List;
-  final heroCardsList = jsonDecode(results[7]) as List;
+  final enemiesList = results[0];
+  final heroesList = results[1];
+  final skillsList = results[2];
+  final cardsList = results[3];
+  final eventsList = results[4];
+  final passivesList = results[5];
+  final relicsList = results[6];
+  final heroCardsList = results[7];
 
   final allCards = [
     ...cardsList,
@@ -37,26 +74,12 @@ final gameDataLoaderProvider = FutureProvider<GameDataRegistry>((ref) async {
   ];
 
   return GameDataRegistry(
-    enemies: enemiesList
-        .map((e) => EnemyData.fromJson(e as Map<String, dynamic>))
-        .toList(),
-    heroes: heroesList
-        .map((e) => HeroData.fromJson(e as Map<String, dynamic>))
-        .toList(),
-    skills: skillsList
-        .map((e) => SkillData.fromJson(e as Map<String, dynamic>))
-        .toList(),
-    cards: allCards
-        .map((e) => CardData.fromJson(e as Map<String, dynamic>))
-        .toList(),
-    events: eventsList
-        .map((e) => EventData.fromJson(e as Map<String, dynamic>))
-        .toList(),
-    passives: passivesList
-        .map((e) => PassiveData.fromJson(e as Map<String, dynamic>))
-        .toList(),
-    relics: relicsList
-        .map((e) => RelicData.fromJson(e as Map<String, dynamic>))
-        .toList(),
+    enemies: _mapList(enemiesList, EnemyData.fromJson, 'EnemyData'),
+    heroes: _mapList(heroesList, HeroData.fromJson, 'HeroData'),
+    skills: _mapList(skillsList, SkillData.fromJson, 'SkillData'),
+    cards: _mapList(allCards, CardData.fromJson, 'CardData'),
+    events: _mapList(eventsList, EventData.fromJson, 'EventData'),
+    passives: _mapList(passivesList, PassiveData.fromJson, 'PassiveData'),
+    relics: _mapList(relicsList, RelicData.fromJson, 'RelicData'),
   );
 });

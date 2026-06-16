@@ -48,52 +48,71 @@ graph TD
 | Couche | Répertoire | Fichiers clés | ~Lignes |
 |:---|:---|:---|:---|
 | Entrée | `lib/main.dart` | `HerosDraftApp` (ConsumerWidget, ProviderScope, MaterialApp) | ~40 |
-| Rendu Flame | `lib/game/heros_draft_game.dart` | `HerosDraftGame` — orchestrateur Flame | ~775 |
-| Rendu Flame | `lib/game/components/` | `card_component.dart` (~1031), `targeting_line.dart`, `entities/` (5 fichiers) | ~2500 |
-| Constantes | `lib/game/game_constants.dart` | `GameConstants` — z-index, tailles, badges | ~30 |
-| Contrôleurs | `lib/game/controllers/` | `run_controller.dart`, `combat_controller.dart`, `deck_controller.dart`, `inventory_controller.dart`, `skill_controller.dart`, `event_controller.dart`, `shop_controller.dart`, `reward_controller.dart` | ~2250 |
-| Systèmes | `lib/game/systems/` | `encounter_system.dart`, `trait_system.dart` | ~200 |
-| Services (jeu) | `lib/game/services/` | `effect_resolver.dart` (~250), `combat_debug_logger.dart` (~120) | ~370 |
-| Services (app) | `lib/services/` | `game_data_service.dart`, `map_generator_service.dart` | ~250 |
+| Rendu Flame | `lib/game/heros_draft_game.dart` | `HerosDraftGame` — orchestrateur Flame, s'appuie sur 4 systèmes de rendu | ~400 |
+| Rendu Flame | `lib/game/components/` | `card_component.dart` (~150), `targeting_line.dart`, `entities/combat_entity.dart` (nouveau), `entities/` (5 fichiers), `visual_effects/base_visual_effect.dart` (nouveau), `widgets/` | ~2600 |
+| Constantes | `lib/game/game_constants.dart` | `GameConstants` — z-index, tailles, badges, délais de combat, config textes flottants | ~60 |
+| Contrôleurs | `lib/game/controllers/` | `run_controller.dart` et `combat_controller.dart` (façades), `deck_controller.dart`, `inventory_controller.dart`, `skill_controller.dart`, `event_controller.dart`, `shop_controller.dart`, `reward_controller.dart`, plus les sous-dossiers `run/` (4 fichiers) et `combat/` (2 fichiers) | ~2300 |
+| Systèmes | `lib/game/systems/` | `encounter_system.dart`, `trait_system.dart`, et les 4 systèmes Flame (`state_sync_system.dart`, `card_animation_system.dart`, `combat_visual_system.dart`, `layout_system.dart`) | ~800 |
+| Services (jeu) | `lib/game/services/` | `effect_resolver.dart` (~100), `effects/` (Strategy interfaces et 6 stratégies - nouveau), `combat_debug_logger.dart` (~120), `damage_pipeline.dart` (~60) | ~600 |
+| Services (app) | `lib/services/` | `game_data_service.dart`, `map_generator_service.dart`, `map/` (4 sous-services - nouveau) | ~350 |
 | Modèles Data | `lib/models/data/` | 8 fichiers (`card_data.dart`, `enemy_data.dart`, `hero_data.dart`, `skill_data.dart`, `event_data.dart`, `passive_data.dart`, `relic_data.dart`, `game_data_registry.dart`) | ~800 |
 | Modèles Runtime | `lib/models/` | 11 fichiers (instances, états, status) | ~600 |
 | UI Écrans | `lib/ui/screens/` | 10 écrans (`home_screen`, `hero_selection_screen`, `starter_deck_draft_screen`, `map_screen`, `game_screen`, `shop_screen`, `event_screen`, `campfire_screen`, `draft_screen`, `dictionary_screen`) | ~5500 |
-| UI Widgets | `lib/ui/widgets/` | `ui_card.dart`, `status_effects_panel.dart` | ~400 |
+| UI Widgets | `lib/ui/widgets/` | `ui_card.dart`, `status_effects_panel.dart`, et le sous-dossier `ui_card/` (5 fichiers) | ~1100 |
 | Système Tutoriel | `lib/tutorial/` | `tutorial_engine.dart`, `tutorial_screen.dart`, widgets d'étapes (18 fichiers) | ~2000 |
-| **Total estimé** | | **~65 fichiers** | **~10600** |
+| **Total estimé** | | **~77 fichiers** | **~11400** |
 
 ---
 
-## 2. Rôle des Contrôleurs (`lib/game/controllers/`)
+## 2. Rôle des Contrôleurs et Architecture Modulaire (`lib/game/controllers/`)
 
 Tous les contrôleurs héritent de `Notifier<T>` (Riverpod 2.x) et exposent des états immuables (pattern `copyWith`). Ils constituent la **source unique de vérité** du jeu. Les contrôleurs sont découplés : plutôt que de recevoir des références à d'autres contrôleurs via leur constructeur, ils accèdent à l'état global et aux autres contrôleurs via la propriété `ref` (ex: `ref.read(inventoryProvider.notifier)`) en interne. Cela élimine les constructeurs complexes et évite les dépendances circulaires au démarrage.
 
-### 2.1. `RunController` (`runProvider`) — Superviseur Global
+Dans le cadre du refactoring de la Phase 2, les contrôleurs les plus monolithiques (`RunController` et `CombatController`) ont été transformés en **façades légères**. Ils délèguent leurs responsabilités à des gestionnaires spécifiques isolés dans des sous-dossiers dédiés afin de respecter le principe de responsabilité unique (SRP).
+
+### 2.1. `RunController` (`runProvider`) — Superviseur Global (Façade)
 
 **Provider** : `NotifierProvider<RunController, RunState>`
 
-**État `RunState`** : `currentLevel`, `act`, `heroStats` (EntityStats), `heroClassId`, `mapNodes` (List\<MapNode\>), `currentNodeId`, `passiveTrait`, `activePassive` (PassiveData?), `pendingDrafts` (int).
+**État `RunState`** : `currentLevel`, `act`, `heroStats` (EntityStats), `heroClassId`, `mapNodes` (List\<MapNode\>), `currentNodeId`, `passiveTrait`, `activePassive` (PassiveData?), `pendingDrafts` (int), `bonusForgeSlots` (int), `forgeSlots` (List\<String\>), `forgeTargetCardId` (String?).
 
-**Responsabilités** :
-- **Cycle de vie de la run** : `startNewRun(HeroData, PassiveData?)` — génère la carte via `MapGeneratorService`, initialise les stats depuis les données héros, reset l'inventaire (50 or), reset les cooldowns, initialise `pendingDrafts` à 0.
-- **Progression** : `travelToNode(nodeId)`, `completeCurrentNode()` (reset armure, clear statuts, avance acte si boss), `advanceToNextWorld()`, `nextLevel()`, `decrementPendingDrafts()`, `resetPendingDrafts()`.
-- **Gestion des ressources** : `consumeResource({mana, hpPercent})` — validation + déduction. `heal(amount)`, `takeDamage(amount)` (délègue à `EntityStats.takeDamage`), `setHeroStats(...)`.
-- **Gestion de l'Expérience (XP)** : `gainXp(int xp)` accumule l'XP de victoire. Calcule le seuil requis via la formule $100 \times 1.5^{\text{level} - 1}$. Gère la cascade de multi-niveaux, conserve le reste d'expérience (`carry-over`) sans perte, et incrémente `pendingDrafts` à chaque gain de niveau.
-- **Statistiques permanentes** : `applyHeroStatModifier({maxPvAcc, attackAcc, armorAcc, maxManaAcc, luckAcc})` — modifie les stats permanentes (maxPv soigne le delta).
-- **Statuts** : `addStatus(StatusEffect)`.
-- **Tour de combat** : `startCombat()` (clear statuts, restore mana, reliques `startOfCombat`, TraitSystem) → `startTurn()` (**logique centrale** : restore mana → reliques `startOfTurn` → processing poison/strength_regen/armor_regen → tick durations → tick cooldowns → `TraitSystem.onTurnStart`).
-- **Système de reliques** : `applyRelics(RelicTrigger)` — lit l'inventaire, applique les reliques matchant le trigger. `applyRelicEffect(RelicData)` — switch sur effectType : `gain_mana`, `gain_armor` (+armorMastery), `gain_strength`, `gain_luck`, `heal`.
-- **Buffs de compétences** : `applyAttackBuff(duration)` — ajoute strength = 15% de maxPv. `applyLifestealBuff(duration)`.
+**Organisation Modulaire** :
+`RunController` délègue l'ensemble de ses traitements logiques à quatre gestionnaires spécialisés instanciés à sa création :
+- **`PlayerStatsManager`** (`lib/game/controllers/run/player_stats_manager.dart`) :
+  - Gère les points de vie, le mana, l'armure et les altérations d'état temporaires du héros.
+  - Traite l'application des soins (`heal`), des dégâts directs (`takeDamage`) et l'application des modificateurs de statistiques permanents (`applyHeroStatModifier`).
+  - Gère le système d'Expérience (XP) et les montées de niveau : accumule l'XP de victoire, calcule le seuil requis ($100 \times 1.5^{\text{level} - 1}$), traite la montée en niveau en cascade (multi-levels) et gère le report du reste d'expérience (`carry-over`) sans perte tout en incrémentant `pendingDrafts`.
+- **`MapProgressionManager`** (`lib/game/controllers/run/map_progression_manager.dart`) :
+  - Gère le déplacement vers un nœud de la carte stratégique (`travelToNode`) et valide son accessibilité.
+  - Gère la complétion du nœud actuel (`completeCurrentNode`) : réinitialise l'armure à 0, nettoie les statuts temporaires, et gère le passage à l'acte suivant (en déclenchant la génération d'une nouvelle carte via `MapGeneratorService`).
+- **`RunPersistenceManager`** (`lib/game/controllers/run/run_persistence_manager.dart`) :
+  - Gère la sérialisation, la sauvegarde et le chargement de l'état global du run dans le stockage persistant (préparé pour s'intégrer avec `SharedPreferences`).
+- **`GoldManager`** (`lib/game/controllers/run/gold_manager.dart`) :
+  - Gère les transactions d'or (gains, dépenses, validation de solde).
+  - Gère la facturation progressive pour l'achat de fentes bonus de forge ($50 \rightarrow 80 \rightarrow 120 \rightarrow 175$ Or).
+
+**Tour de combat** : `startCombat()` (initialise le combat, applique les reliques `startOfCombat` et les passifs) → `startTurn()` (réinitialise l'armure à 0 → restaure le mana → applique les reliques et statuts de début de tour, ex: `armor_regen`, `strength_regen` → décrémente les durées de statuts et cooldowns de compétences).
+
+**Système de reliques** : Délègue à `PlayerStatsManager` l'application des effets de reliques selon le trigger (`applyRelics`, `applyRelicEffect`).
 
 **Interactions** : Lit `inventoryProvider` (reliques), `skillProvider.notifier` (cooldowns). Muté par `CombatController`, `EventController`, `ShopController`, `TraitSystem`, `EffectResolver`.
 
-### 2.2. `CombatController` (`combatProvider`) — Pilote de Combat
+---
+
+### 2.2. `CombatController` (`combatProvider`) — Pilote de Combat (Façade)
 
 **Provider** : `NotifierProvider<CombatController, CombatState>`
 
 **État `CombatState`** : `enemies` (List\<EnemyInstance\> actifs, max 5 slots), `pendingEnemies` (List\<EnemyInstance\> en réserve), `defeatedEnemies` (List\<EnemyInstance\> éliminés), `turnPhase` (TurnPhase: player/enemy), `turnCount`, `selectedEnemyId`, `isCombatEnded`, `isVictory`.
 
-**Responsabilités** :
+**Organisation Modulaire** :
+`CombatController` délègue ses principales étapes de traitement logique à deux processeurs spécialisés :
+- **`StatusEffectProcessor`** (`lib/game/controllers/combat/status_effect_processor.dart`) :
+  - Centralise le calcul et le traitement autonome des altérations d'état (Poison, Brûlure, Régénération de Force, Régénération d'Armure) appliquées à la fois au joueur et à l'ensemble des ennemis actifs de manière unifiée en début de phase de tour.
+- **`TurnPhaseManager`** (`lib/game/controllers/combat/turn_phase_manager.dart`) :
+  - Gère la transition entre les phases (Joueur ⇄ Ennemi), l'orchestration séquentielle des actions de riposte ennemie et la fin de tour.
+
+**Responsabilités directes** :
 - **Initialisation** : `initializeCombat(...)` — Génère la liste totale des ennemis via `EncounterSystem.generateEnemiesForLevel()`. Instancie les stats des ennemis en appliquant les multiplicateurs de niveau (+6% HP/lvl, +4% ATK/lvl) et d'acte (+20% HP/acte, +15% ATK/acte), ainsi que les modificateurs de nœuds (3x HP/2x ATK pour boss, 1.5x pour élite). Les 5 premiers ennemis sont placés dans `enemies` (câblés avec une intention de départ), les suivants sont placés dans `pendingEnemies`. 
   
   Le calcul pour déterminer si le combat est un boss s'appuie sur la correction de garde `isBoss` :
@@ -102,13 +121,14 @@ Tous les contrôleurs héritent de `Notifier<T>` (Riverpod 2.x) et exposent des 
   ```
   Cela évite de classifier faussement un combat standard se trouvant à un étage multiple de 10 comme un boss (le test `level % 10 == 0` n'est activé en secours que si le `nodeType` est non défini).
 - **Pipeline de jeu de carte** : `applyPlayerCardPlay(card, RunController, DeckNotifier)` — `EffectResolver.resolveCard()` → `deck.playCard()` → `TraitSystem.onCardPlayed()` → reliques `onCardPlayed` → `_cleanDeadEnemies()`.
-- **Intentions ennemies** : `resolveEnemyIntent(enemyId, RunController)` — switch sur IntentType : attack → `runController.takeDamage`, defend → armure, buff → strength(99 tours), debuffDeck → no-op.
-- **Phases** : `startEnemyTurn(RunController)` — phase enemy, processing poison/regen/burn sur chaque ennemi actif, tick statuts, clean morts. `endEnemyTurn()` — re-roll toutes les intentions pour les ennemis actifs, phase player, incrémente turnCount.
+- **Intentions ennemies** : `resolveEnemyIntent(enemyId, RunController)` — switch sur IntentType : attack → `runController.takeDamage`, defend → armure, buff → strength(99 tours), debuffDeck → no-op. Les dégâts d'intentions affichés tiennent compte des réductions du gel (50% de réduction cumulable).
 - **Nettoyage et Renforcement** : `_cleanDeadEnemies(RunController)` — Filtre les ennemis actifs décédés (HP ≤ 0) et les déplace dans `defeatedEnemies` en appelant `RunController.onEnemyKilled()` (déclencheurs de reliques). Pour chaque ennemi mort, si `enemies.length < 5` et que `pendingEnemies` n'est pas vide, transfère le premier ennemi en attente de la réserve vers le board actif (et lance `_rollIntent` sur lui). Met à jour la sélection de cible et prononce la victoire uniquement si les listes active (`enemies`) et de réserve (`pendingEnemies`) sont toutes deux vides.
 
 **Logique de roll d'intentions** (`_rollIntent`) :
 - Si l'ennemi a des `intents` prédéfinis : cycle séquentiel (modulo length, via `intentStep`).
 - Sinon aléatoire : 60% attack (baseDamage), 25% defend (5-10 armure), 15% buff (+2 strength).
+
+---
 
 ### 2.3. `DeckNotifier` (`deckProvider`) — Maître du Deck
 
@@ -189,6 +209,11 @@ Tous les contrôleurs héritent de `Notifier<T>` (Riverpod 2.x) et exposent des 
   - `collectRelic()` / `skipRelic()` : Ajoute ou ignore la relique de l'inventaire.
   - `chooseCards(cards)` / `skipCards()` : Ajoute les cartes choisies dans le master deck via `DeckNotifier` ou ignore le tirage.
   - La méthode interne `_checkResolution()` marque l'état global `isResolved` à vrai une fois que toutes les récompenses valides ont été collectées ou sautées.
+
+### 2.5. Immutabilité Stricte des Modèles d'État
+Afin de garantir la robustesse du flux de données unidirectionnel imposé par Riverpod, les modèles d'état de combat essentiels (`EntityStats`, `CombatState`, `EnemyInstance`) sont explicitement marqués avec l'annotation `@immutable` (importée de `package:meta/meta.dart`).
+
+De plus, pour empêcher toute altération accidentelle par référence directe (mutation latérale de listes de statuts ou d'instances d'ennemis), leurs listes internes sont encapsulées dans des instances de `List.unmodifiable` lors de l'instanciation et au sein de la méthode `copyWith`. Toute tentative d'altération directe lève immédiatement une exception à l'exécution, forçant le passage exclusif par les Notifiers et `copyWith`.
 
 ---
 
@@ -295,27 +320,30 @@ static List<EnemyData> generateEnemiesForLevel(
 - Vérifie : mana suffisant (≥ `currentCost`), carte non-status, carte ciblée → `selectedEnemyId` requis.
 
 #### `resolveCard(CardInstance, RunController, DeckNotifier, CombatController, String?) → bool`
-1. Déduit le coût en mana.
-2. Itère sur `cardData.effects` (List\<CardEffect\>).
-3. Pour chaque effet, calcule la valeur mise à l'échelle :
-   ```
-   scaledValue = baseValue * (1 + (level - 1) * 0.5)
-   ```
-   | Level | Multiplicateur |
-   |:---|:---|
-   | 1 | ×1.0 |
-   | 2 | ×1.5 |
-   | 3 | ×2.0 |
-4. Dispatch par type d'effet : `damage`, `heal`, `armor`, `gain_mana`, `draw`, `apply_status`.
+1. Déduit le coût en mana de la carte.
+2. Itère sur la liste des effets `cardData.effects` (List\<CardEffect\>).
+3. Calcule la valeur mise à l'échelle pour chaque effet selon le niveau de la carte :
+   $$scaledValue = baseValue \times (1 + (level - 1) \times 0.5)$$
+4. Délègue l'exécution de l'effet à la stratégie correspondante enregistrée dans l' **`EffectRegistry`** sous `lib/game/services/effects/` :
+   - **Strategy Pattern (Extensibilité)** : Au lieu d'un switch/case monolithique, le système instancie des classes implémentant l'interface `EffectStrategy`.
+   - **6 Stratégies Spécifiques** :
+     - `DamageEffectStrategy` : Gère le calcul des dégâts physiques/magiques (via `DamagePipeline`), l'application aux cibles (mono ou multi-ennemis) et les statuts associés.
+     - `HealEffectStrategy` : Gère les soins prodigués avec prise en compte des chances critiques.
+     - `ArmorEffectStrategy` : Traite la génération d'armure intégrant la Maîtrise d'Armure effective.
+     - `GainManaEffectStrategy` : Gère les gains de mana (restauration ou surcapacité temporaire).
+     - `DrawEffectStrategy` : Déclenche la pioche de cartes dans le deck.
+     - `ApplyStatusEffectStrategy` : Gère l'application d'effets de statut (buffs/debuffs) sur soi ou sur la cible.
 
-#### `_calculateDamage(int baseDamage, EntityStats attackerStats) → int`
-```dart
-totalDamage = baseDamage + attackerStats.effectiveAttaque
-if weakness status: totalDamage *= 0.75  // Réduction de 25%
-if critical hit roll succeeds (random(100) < effectiveCritChance):
-  totalDamage *= critMultiplier          // Amplification coup critique (x1.5 par défaut)
-```
-> **Note sur la vulnérabilité** : Le statut `vulnerable` est appliqué sur la cible au moment de la résolution de l'effet dans `resolveCard()`, amplifiant les dégâts finaux de $+50\%$ (`dmg = (dmg * 1.5).round()`).
+#### `DamagePipeline.calculate`
+Le calcul des dégâts physiques, magiques et des intentions d'attaques ennemies est entièrement délégué à la méthode statique unifiée `DamagePipeline.calculate(int initialDamage, EntityStats attackerStats, EntityStats defenderStats)` dans `lib/game/services/damage_pipeline.dart`. 
+
+Le calcul s'exécute selon les étapes logiques strictes suivantes :
+1. **Faiblesse (Attaquant)** : Dégâts réduits de 25% (multiplication par `0.75` puis arrondi) si le statut `weakness` est présent sur l'attaquant.
+2. **Coup Critique** : Jet probabiliste basé sur `effectiveCritChance` de l'attaquant. En cas de succès, dégâts multipliés par `critMultiplier` de l'attaquant et assignation à `true` de `lastActionWasCrit` sur l'attaquant pour guider le rendu des tremblements, flashs et particules de la couche Flame.
+3. **Choc (Défenseur)** : Ajout de la valeur brute cumulée du statut `shock` sur le défenseur.
+4. **Vulnérabilité (Défenseur)** : Dégâts augmentés de 50% (multiplication par `1.5` puis arrondi) si le statut `vulnerable` est présent sur le défenseur.
+
+Il retourne un tuple `(int finalDamage, bool isCrit)`.
 
 **Statuts créables et gérés** : `poison`, `strength`, `weakness`, `strength_regen`, `armor_regen`, `burn` (Brûlure), `freeze` (Gel), `shock` (Électrocution), `vulnerable` (Vulnérable), `crit_chance` (Chance de critique temporaire).
 
@@ -333,6 +361,23 @@ if critical hit roll succeeds (random(100) < effectiveCritChance):
 2. **📊 Formules et Calculs (DDA)** : Formule et évaluation de `PlayerPower`, `ExpectedPower`, `BaseBudget`, `PowerRatio`, `PowerModifier` et `FinalBudget`.
 3. **⚙️ Détails du Scaling** : Niveau calculé des ennemis, multiplicateurs de HP et de dégâts appliqués.
 4. **👾 Liste des Ennemis Générés** : Nom (EN), Tier, HP finaux après scaling, Dégâts finaux après scaling, et `CombatRating` calculé.
+
+### 3.6. Systèmes de Jeu et Rendu Flame (`lib/game/systems/`)
+
+Afin de décomposer la classe monolithique de rendu `HerosDraftGame`, ses tâches de synchronisation et de gestion d'animations/visuels de combat ont été isolées dans des composants de systèmes autonomes enregistrés auprès de Flame :
+
+- **`StateSyncSystem`** (`state_sync_system.dart`) :
+  - Composant gérant la réception et l'application synchrone séquentielle des états Riverpod (`RunState`, `DeckState`, `CombatState`) sur le thread Flame.
+  - Évite les collisions d'états graphiques en sérialisant l'application des données Riverpod pendant les phases critiques d'animations ou de transitions.
+- **`CardAnimationSystem`** (`card_animation_system.dart`) :
+  - Gère les animations physiques et graphiques des cartes en main (effets visuels de zoom, d'inclinaison dynamique/tilt au drag, de translation de pioche, de tremblements de mana insuffisant).
+  - Centralise l'état visuel du survol (`hover`) et de focalisation.
+- **`CombatVisualSystem`** (`combat_visual_system.dart`) :
+  - Gère le tracé des effets graphiques de combat, notamment la ligne de ciblage Bézier quadratique réactive et texturée (`TargetingLine`).
+  - Gère l'apparition d'effets visuels lors des résolutions de dégâts ou d'utilisation de compétences (flashes sprite, explosions de particules Canvas, dômes de bouclier).
+- **`LayoutSystem`** (`layout_system.dart`) :
+  - Calcule dynamiquement l'agencement géométrique des cartes dans la main du joueur en arc de cercle (`layoutHand`).
+  - Gère le repositionnement automatique et adaptatif des ennemis actifs sur le board (`repositionEnemies`) selon leur nombre (de 1 à 5).
 
 ---
 
@@ -415,16 +460,16 @@ Pour éliminer la condition de concurrence visuelle (race condition) où l'état
 | Écran | Classe | Pattern | Responsabilité |
 |:---|:---|:---|:---|
 | `HomeScreen` | `ConsumerWidget` | `ref.watch(gameDataLoaderProvider)` | Écran d'accueil, chargement données, boutons "New Game" / "Dictionary" |
-| `HeroSelectionScreen` | `ConsumerWidget` | `ref.watch(gameDataLoaderProvider)` | Affiche 3 héros, déclenche `startNewRun()` |
-| `StarterDeckDraftScreen` | `ConsumerStatefulWidget` | `ref.watch(gameDataLoaderProvider)`, `ref.read(deckProvider.notifier)` | Grille de sélection de 5 cartes globales parmi le catalogue complet (sans limitation de pool de 10 cartes) + cartes de classe uniques chargées via compétences |
-| `MapScreen` | `ConsumerStatefulWidget` | `ref.watch(runProvider)`, `ref.watch(inventoryProvider)` | **God Class (2471 lignes)** — CustomPainter, pan/zoom, tooltips, légende, validation, navigation, et overlay plein écran « LEVEL UP ! » bloquant (redirection vers `DraftScreen` via route standard si `pendingDrafts > 0`). |
+| `ClassSelectionScreen` | `ConsumerWidget` | `ref.watch(gameDataLoaderProvider)` | Affiche 3 héros sous `ScreenScaffold` (mode sombre) et `PageHeader`, déclenche `startNewRun()` |
+| `StarterDeckDraftScreen` | `ConsumerStatefulWidget` | `ref.watch(gameDataLoaderProvider)`, `ref.read(deckProvider.notifier)` | Choix initial de 5 cartes globales parmi le catalogue complet via `CardDraftLayout` et `UiCard.fromData` + cartes de classe uniques résolues via compétences |
+| `MapScreen` | `ConsumerStatefulWidget` | `ref.watch(runProvider)`, `ref.watch(inventoryProvider)` | **God Class (2471 lignes)** — CustomPainter, pan/zoom, navigation sous `ScreenScaffold` (mode parchemin) et `GoldIndicator` (mode parchemin), overlay bloquant « LEVEL UP ! ». |
 | `GameScreen` | `ConsumerStatefulWidget` | Tous les providers | **God Class (1667 lignes)** — embed `GameWidget<HerosDraftGame>`, overlays privés (sans draft), orchestration combat, sortie directe sur level up. |
-| `ShopScreen` | `ConsumerWidget` | `ref.watch(inventoryProvider)` | Achat cartes/reliques via `UiCard` |
-| `EventScreen` | `ConsumerWidget` | `ref.watch(runProvider)` | Événements narratifs à choix branchus |
-| `CampfireScreen` | `ConsumerWidget` | `ref.watch(runProvider)`, `ref.watch(deckProvider)` | Repos (heal 30%), Forge (level up), Oubli (suppression) |
-| `DraftScreen` | `ConsumerStatefulWidget` | `ref.read(deckProvider.notifier)` | Draft post-combat : 3 choix de cartes |
-| `BossCardDraftScreen` | `ConsumerStatefulWidget` | `ref.read(rewardProvider.notifier)` | Draft post-combat Boss 1 : sélection forcée de précisément 3 cartes parmi le catalogue de cartes globales non-status |
-| `DictionaryScreen` | `ConsumerWidget` | `ref.watch(gameDataLoaderProvider)` | Catalogue filtrable de toutes les cartes |
+| `ShopScreen` | `ConsumerWidget` | `ref.watch(inventoryProvider)` | Achat/purge de cartes et reliques thématiques sous `ScreenScaffold` (mode sombre), `PageHeader`, `GoldIndicator` et `UiCard.fromData`/`fromInstance`. |
+| `EventScreen` | `ConsumerWidget` | `ref.watch(runProvider)` | Événements narratifs à choix branchus affichés sous `ScreenScaffold` (mode sombre) et `PageHeader`. |
+| `RestScreen` | `ConsumerWidget` | `ref.watch(runProvider)`, `ref.watch(deckProvider)` | Feu de camp sous `ScreenScaffold` (mode sombre) et `PageHeader` : Soin (30%), Forge (upgrade via `ForgeUpgradeDialog`), Oubli. |
+| `DraftScreen` | `ConsumerStatefulWidget` | `ref.read(deckProvider.notifier)` | Draft post-combat : 3 choix de cartes (utilise `ScreenScaffold` et `PageHeader`). |
+| `BossCardDraftScreen` | `ConsumerStatefulWidget` | `ref.read(rewardProvider.notifier)` | Draft post-boss de gauche (x=0) sous `CardDraftLayout` et `UiCard.fromData` : sélection de 3 cartes globales non-status. |
+| `DictionaryScreen` | `ConsumerWidget` | `ref.watch(gameDataLoaderProvider)` | Catalogue filtrable de toutes les cartes et reliques affiché sous `ScreenScaffold` (mode sombre), `PageHeader` et `UiCard.fromData`. |
 
 **Pattern de navigation** : 100% via `Navigator.of(context).push(MaterialPageRoute(...))` — aucun routeur centralisé.
 
@@ -466,13 +511,37 @@ Le comportement et les caractéristiques visuelles restent inchangés :
 
 | Composant | Héritage | Rôle | Priorité Z |
 |:---|:---|:---|:---|
-| `CardComponent` | `PositionComponent` + `DragCallbacks` + `HoverCallbacks` | Carte en main : tilt organique au drag, `TargetingLine` réactive, shake si mana insuffisant | base=10+index, hover=100, focused=150, dragging=500 |
+| `CardComponent` | `PositionComponent` + `DragCallbacks` + `HoverCallbacks` | Carte en main : façade déléguant son rendu à `CardRenderer` et ses gestes à `CardInteractionHandler` | base=10+index, hover=100, focused=150, dragging=500 |
 | `TargetingLine` | `PositionComponent` | Arc de ciblage : gradient vert→rouge, pattern pointillé animé, cercles pulsants sur cibles valides | 300 |
-| `EnemyCard` | `PositionComponent` + `TapCallbacks` | Entité ennemie : barre de vie, badges stats, indicateur d'intention, bordure pulsante si ciblé, `dashAnimation()` | 20 |
-| `HeroCard` | `PositionComponent` | Entité héros : portrait, `HealthBar`, `StatBadge` (armure/mana), icônes de statuts | 10 |
+| `EnemyCard` | `CombatEntity` + `TapCallbacks` | Entité ennemie : barre de vie, badges stats, indicateur d'intention, bordure pulsante si ciblé, hérite des animations de combat communes | 20 |
+| `HeroCard` | `CombatEntity` | Entité héros : portrait, `HealthBar`, `StatBadge` (armure/mana), icônes de statuts, hérite des animations de combat communes | 10 |
 | `FloatingText` | `PositionComponent` | Texte flottant de dégâts/soins : `MoveEffect` ascendant + `OpacityEffect` fade, auto-suppression ~1.5s | — |
 | `HealthBar` | `PositionComponent` | Barre HP horizontale : interpolation green→yellow→red, transition animée | — |
 | `StatBadge` | `PositionComponent` | Badge vectoriel custom : icône bouclier/cristal, valeur numérique, pulse de scale au changement | — |
+| `SlashEffect` | `BaseVisualEffect` | Effet visuel d'entaille à l'impact physique, durée et suppression automatique | — |
+
+**Décomposition de `CardComponent`** :
+Afin de nettoyer la classe `CardComponent` de ses centaines de lignes de dessin 2D et de gestion bas niveau des gestes, elle a été divisée en trois responsabilités :
+- **`CardComponent`** (`card_component.dart`) :
+  - Classe façade principale qui coordonne les initialisations et les interactions de haut niveau (callbacks de jeu, effets de shake).
+- **`CardRenderer`** (`widgets/card_renderer.dart`) :
+  - Encapsule tout le dessin 2D de la face avant de la carte (fond avec coins arrondis, dégradés selon le type de carte, liseré et halo de rareté de carte, effet foil polychromatique rotatif pour la rareté `unique`, et dessin des fentes de runes de forge avec wrapping Canvas).
+  - Délègue le dessin des textes à `CardTextRenderer`.
+- **`CardInteractionHandler`** (`widgets/card_interaction_handler.dart`) :
+  - Centralise la gestion des gestes du pointeur : détection du survol (`hover`), calcul du glissement (`drag`), détection d'entrée dans la zone d'annulation (`cancel zone`) et détection de survol d'un ennemi pour ciblage.
+
+### 5.3.1. Abstractions Graphiques Communes (CombatEntity & BaseVisualEffect)
+
+Pour éliminer la duplication de code d'animation et normaliser le cycle de vie des effets visuels Flame, deux classes de base ont été introduites :
+- **`CombatEntity`** (`lib/game/components/entities/combat_entity.dart` - `abstract class CombatEntity extends PositionComponent`) :
+  - Centralise les animations communes aux entités de combat (`HeroCard` et `EnemyCard`).
+  - Gère : secousses de dégâts (`shakeAndFlashAnimation`), flash coloré sur sprite (rouge pour dégâts, vert pour soins, jaune pour critiques), jet de particules de sang ou d'éther (`spawnDamageParticles`), animation de ruée offensive (`dashAnimation`), et animation d'impact de bouclier (`shieldHitAnimation`).
+  - Centralise la détection des changements de statistiques (HP, armure) et le déclenchement des retours visuels (floating text orienté haut/bas, secousses, particules) via `triggerHitReactions(EntityStats oldStats, EntityStats newStats, {bool suppressArmorChange = false})` et `spawnFloatingText`.
+  - Élimine la duplication de code résiduelle dans le code de rendu d'entité en permettant à `HeroCard` et `EnemyCard` de déléguer leur méthode `updateStats` à `triggerHitReactions`.
+- **`BaseVisualEffect`** (`lib/game/components/visual_effects/base_visual_effect.dart` - `class BaseVisualEffect extends PositionComponent`) :
+  - Centralise la gestion du cycle de vie des effets visuels.
+  - Exécute un auto-nettoyage via `RemoveEffect(delay: duration)` et expose un callback optionnel `onComplete` appelé à la fin de la transition.
+  - Sert de classe parente pour `SlashEffect` et `ShieldDome` (dans `card_animator.dart`), assurant un nettoyage systématique du canvas de rendu.
 
 ### 5.4. Constantes de Z-Indexing (`GameConstants`)
 
@@ -603,6 +672,34 @@ Afin de garantir un framerate stable de 60 FPS sur mobile et d'assurer un "game 
    - Lors du tirage d'une carte, celle-ci apparaît physiquement au niveau des coordonnées de la pile de pioche (`Vector2(40, size.y - 40)`).
    - Une série de Flame Effects asynchrones (déplacement `MoveEffect`, redimensionnement `ScaleEffect`, rotation `RotateEffect`) déplace et oriente dynamiquement la carte vers son slot assigné dans la main en arc de cercle, évitant l'apparition instantanée et statique.
 
+### 5.11. Unification UI et Composants Communs (v0.2.2)
+
+Pour éradiquer la duplication massive de code UI et uniformiser l'expérience visuelle, la Phase 3 a introduit un ensemble de composants d'infrastructure réutilisables :
+
+1. **`ScreenScaffold` (`lib/ui/widgets/screen_scaffold.dart`)** :
+   - Encapsule le widget `Scaffold` standard.
+   - Propose un enum `ScreenBackgroundType` (`dark` pour les ambiances de combat/menus avec un dégradé subtil, `parchment` pour une texture papier de la carte/autels, `none` pour la transparence).
+   - Intègre de manière transparente la gestion de `SafeArea` et de `PopScope` (cycle de vie des retours arrière sur mobile) de manière paramétrable.
+
+2. **`PageHeader` (`lib/ui/widgets/page_header.dart`)** :
+   - Implémente `PreferredSizeWidget` pour s'insérer en tant qu'appBar ou s'utiliser directement dans le corps d'une page.
+   - Gère un bouton de retour arrière stylisé et standardisé (`Icons.arrow_back_ios_new`), un titre soigné, et une liste d'actions (boutons ou indicateurs).
+   - Ajuste dynamiquement sa couleur d'accent (texte et boutons de retour) selon le type de fond (parchemin foncé vs dégradé sombre).
+
+3. **`GoldIndicator` (`lib/ui/widgets/gold_indicator.dart`)** :
+   - Badge d'affichage de l'or connecté à l'état global du run via Riverpod (`inventoryProvider`).
+   - Adapte ses couleurs et contrastes selon qu'il est rendu sur fond parchemin ou sur fond sombre.
+
+4. **`CardDraftLayout` (`lib/ui/widgets/draft/card_draft_layout.dart`)** :
+   - Structure de mise en page commune pour les phases de draft de cartes.
+   - Gère le titre principal, les compteurs de sélection (ex: "Sélectionné : X / Y"), les boutons de validation désactivables et une grille adaptative pour les cartes.
+
+5. **Découpage de la Forge (`lib/ui/widgets/forge/`)** :
+   - La boîte de dialogue de forge monolithique a été scindée en sous-composants unitaires pour respecter SRP :
+     - `ForgeCardPreview` : Rendu de la carte en cours d'amélioration et de sa jauge de slots de runes.
+     - `ForgeSlotRow` : Ligne d'amélioration individuelle avec bouton d'achat ("Forger") et reroll.
+     - `ForgeBuySlotButton` : Bouton d'achat de slots d'améliorations supplémentaires.
+
 ---
 
 ## 6. Stratégie de State Management (Riverpod v2.5.1)
@@ -619,6 +716,7 @@ Afin de garantir un framerate stable de 60 FPS sur mobile et d'assurer un "game 
 | `eventProvider` | `NotifierProvider<EventController, EventState>` | `EventState` | Non | Événement narratif actif, choix sélectionné |
 | `shopProvider` | `NotifierProvider<ShopController, ShopState>` | `ShopState` | Non | Cartes en vente, état d'achat heal |
 | `rewardProvider` | `NotifierProvider<RewardController, RewardState>` | `RewardState` | Non | Butins post-combat (or, XP, reliques, cartes) |
+| `effectRegistryProvider` | `Provider<EffectRegistry>` | `EffectRegistry` | Non | Registre d'effets Riverpodisé instanciant les 6 stratégies concrètes d'effets |
 | `gameDataLoaderProvider` | `FutureProvider<GameDataRegistry>` | `GameDataRegistry` | Non | Chargement asynchrone des 8 JSON d'assets |
 
 ### 6.2. Principes Appliqués
@@ -628,6 +726,9 @@ Afin de garantir un framerate stable de 60 FPS sur mobile et d'assurer un "game 
 3. **Immuabilité Stricte de `CardInstance`** : Les instances de cartes sont garanties 100% immuables. Tous les attributs sont marqués `final`. Les listes d'améliorations de la forge (`forgeUpgrades`) sont converties en listes non modifiables (`List<String>.unmodifiable`) lors de l'instanciation de `CardInstance`. Toute mutation donne obligatoirement lieu à une nouvelle carte via l'appel à `copyWith`.
 4. **Pas de logique dans les vues** : Les widgets et écrans UI observent l'état via `ref.watch(provider)` pour reconstruire l'interface de manière réactive, et délèguent toutes les actions logiques en invoquant les méthodes des contrôleurs via `ref.read(provider.notifier).method()`.
 5. **Providers persistants** : Tous les providers de run et de combat sont configurés sans `autoDispose` pour maintenir l'état du jeu à travers les transitions d'écrans du cycle de vie de l'application.
+6. **Riverpodisation de l'EffectRegistry** : Pour supprimer l'état statique global mutable d'`EffectRegistry`, celui-ci est désormais instancié de manière immutable et exposé par le provider `effectRegistryProvider`. Ce registre de stratégies concrètes d'effets est dynamiquement passé à `EffectResolver.resolveCard` à chaque exécution de carte.
+7. **Suppression des Callbacks Obsolètes** : Les callbacks orphelins de `HerosDraftGame` (`onPlayerTakeDamage`, `onPlayerHeal`, `onPlayerGainArmor`) ont été entièrement nettoyés de l'instanciation de `HerosDraftGame` dans `GameScreen` pour respecter les principes de découplage de Riverpod.
+
 
 ### 6.3. Sérialisation
 
@@ -1140,7 +1241,15 @@ Color _getRelicColor(RelicRarity rarity) {
 color: relic.rarity.color
 ```
 
-### 13.4. Règles de Contribution
+### 13.4. Extension de Thème Flutter (GameThemeExtension)
+
+Pour permettre l'accès typé et centralisé aux jetons visuels spécifiques au gameplay via le `BuildContext` standard de Flutter (ex: `Theme.of(context).extension<GameThemeExtension>()`), une extension de thème a été introduite :
+- **`game_theme_extension.dart`** (`lib/ui/theme/game_theme_extension.dart`) :
+  - Contient les couleurs des raretés de cartes, les couleurs des statistiques de combat (HP, Mana, Armure, Force, etc.) et les lueurs néon de l'interface.
+  - Implémente les méthodes `copyWith` et `lerp` requises par la classe de base `ThemeExtension` de Flutter pour des transitions de thèmes fluides.
+  - Enregistrée au sein d' `AppTheme` dans les thèmes clairs (`ThemeData.light()`) et sombres (`ThemeData.dark()`), garantissant que ces jetons graphiques s'adaptent et s'harmonisent avec le mode graphique sélectionné.
+
+### 13.5. Règles de Contribution
 
 - **Aucune magic constant** dans les widgets. Toute couleur, espacement ou style de texte doit provenir de `AppColors`, `AppSpacing` ou `AppTheme`.
 - **Toute nouvelle rareté** (de carte ou de relique) doit être ajoutée simultanément dans les maps de `AppColors` et dans les extensions d'enum correspondantes.
@@ -1215,3 +1324,18 @@ Les textes flottants de dégâts et d'effets de combat (`FloatingText`) ont ét�
      3. Une animation de pulsation infinie alternée (`alternate: true`, `infinite: true`) oscillant entre 1.15x et 1.3x toutes les 300ms pour maintenir le focus visuel sur le critique.
 5. **Cycle de Vie & Fondu** :
    - L'ensemble du composant s'estompe via un fondu de transparence (`OpacityEffect.fadeOut` en 1.2s via `Curves.easeIn`) et est retiré automatiquement de l'arène de jeu Flame via un `RemoveEffect(delay: 1.2)`.
+
+### 14.6. Attribut floor Explicite de MapNode (v0.2.4)
+
+Afin de sécuriser l'évaluation de l'étage actuel d'un nœud et d'éradiquer les expressions fragiles basées sur le découpage de son ID de type chaîne (`id.split('_')[1]`), l'attribut `floor` a été introduit :
+- **Attribut Explicite** : `final int floor;` a été ajouté au modèle `MapNode` sous `lib/models/map_node.dart`.
+- **Désérialisation Rétrocompatible** : Le constructeur `fromJson` récupère `json['floor'] ?? int.parse(id.split('_')[1])` pour garantir le fonctionnement avec d'anciennes sauvegardes persistantes sérialisées ne comportant pas encore ce champ.
+- **Sécurisation de la Logique de Navigation** : Les fichiers `MapContentPlacer`, `MapValidator`, `MapScreen` et `MapNodeGenerator` ont été modifiés pour utiliser directement `node.floor` au lieu de parser l'identifiant.
+
+### 14.7. Harmonisation Post-Refactoring de l'Architecture (v0.2.4)
+
+L'étape d'harmonisation a permis d'unifier l'expérience UI, de découpler les registries et d'éliminer la duplication logique restante :
+1. **Harmonisation UI** : Migration complète de `ClassSelectionScreen` vers les composants unifiés de la charte graphique (`ScreenScaffold` et `PageHeader`), éliminant l'ancien Scaffold et l'AppBar dupliqués.
+2. **Déduplication Graphique dans Flame** : Déplacement et centralisation de la détection de changement de statistiques (`updateStats`), d'affichage des textes flottants (`spawnFloatingText`) et des secousses dans `CombatEntity`, nettoyant `HeroCard` et `EnemyCard`.
+3. **Riverpodisation d'EffectRegistry** : Migration d'`EffectRegistry` pour être fourni par `effectRegistryProvider`. La méthode `EffectResolver.resolveCard` prend maintenant l'instance fournie en paramètre. Nettoyage de tous les callbacks orphelins inutilisés dans `HerosDraftGame`.
+

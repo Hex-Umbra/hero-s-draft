@@ -1,5 +1,7 @@
+import 'package:meta/meta.dart';
 import 'status_effect.dart';
 
+@immutable
 class EntityStats {
   final int maxPv;
   final int currentPv;
@@ -17,7 +19,7 @@ class EntityStats {
   final List<StatusEffect> statuses;
   final bool lastActionWasCrit;
 
-  const EntityStats({
+  EntityStats({
     required this.maxPv,
     required this.currentPv,
     this.maxMana = 0,
@@ -31,9 +33,9 @@ class EntityStats {
     this.xpToNextLevel = 100,
     this.critChance = 0,
     this.critMultiplier = 1.5,
-    this.statuses = const [],
+    List<StatusEffect> statuses = const [],
     this.lastActionWasCrit = false,
-  });
+  }) : statuses = List.unmodifiable(statuses);
 
   EntityStats copyWith({
     int? maxPv,

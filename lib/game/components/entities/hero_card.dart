@@ -2,27 +2,35 @@ import 'dart:math';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
-import 'package:flame/effects.dart';
-import 'package:flame/particles.dart';
 import '../../../models/entity_stats.dart';
-import '../../../models/combat_state.dart';
-import '../floating_text.dart';
 import '../effect_icon.dart';
-import '../../heros_draft_game.dart';
 import '../../../models/data/card_data.dart';
+import 'combat_entity.dart';
 
-class HeroCard extends PositionComponent
-    with TapCallbacks, HasGameReference<HerosDraftGame> {
+class HeroCard extends CombatEntity with TapCallbacks {
   EntityStats stats;
   int bonusAttack;
   final String imagePath;
   bool suppressArmorChangeAnimation = false;
 
+  @override
+  bool get isPlayer => true;
+
+  @override
   late final RectangleComponent borderInfo;
+  @override
   late final SpriteComponent sprite;
 
   HeroCard(this.stats, {this.bonusAttack = 0, required this.imagePath})
     : super(size: Vector2(120, 160));
+
+  @override
+  double get entityBaseScale => game.scaleFactor * 1.3;
+
+  @override
+  void refreshBorderVisuals() {
+    _refreshBorderVisuals();
+  }
 
   bool _isHighlighted = false;
   double _glowOpacity = 1.0;
@@ -125,88 +133,11 @@ class HeroCard extends PositionComponent
   }
 
   void updateStats(EntityStats newStats, {int bonusAttack = 0}) {
-    final oldStats = stats;
-
-    final isPlayerTurnPhase = game.currentPhase == TurnPhase.player;
-    final hadPoison = oldStats.statuses.any((s) => s.id == 'poison');
-    final isPoisonDamage = isPlayerTurnPhase && hadPoison;
-
-    if (!suppressArmorChangeAnimation) {
-      if (newStats.armure < oldStats.armure) {
-        final lostArmor = oldStats.armure - newStats.armure;
-        _spawnFloatingText(
-          '-$lostArmor',
-          const Color(0xFF3B82F6), // Technical premium blue
-          position + Vector2(0, (size.y / 2 - 20) * scale.y),
-          isShield: true,
-        );
-        shieldHitAnimation();
-      } else if (newStats.armure > oldStats.armure) {
-        final gainedArmor = newStats.armure - oldStats.armure;
-        _spawnFloatingText(
-          '+$gainedArmor',
-          Colors.lightBlueAccent,
-          position + Vector2(0, -size.y * scale.y / 2),
-        );
-      }
-    }
-
-    if (newStats.currentPv < oldStats.currentPv) {
-      final lostHp = oldStats.currentPv - newStats.currentPv;
-      final isCritical = newStats.lastActionWasCrit;
-      final damageColor = isPoisonDamage
-          ? const Color(0xFF10B981) // Poison neon green
-          : (isCritical
-                ? const Color(0xFFF59E0B)
-                : const Color(0xFFF87171)); // Red spectrum
-
-      _spawnFloatingText(
-        '-$lostHp',
-        damageColor,
-        position + Vector2(0, -(size.y / 4) * scale.y),
-        isCritical: isCritical,
-        isPoison: isPoisonDamage,
-      );
-
-      // Visual animations feedback
-      shakeAndFlashAnimation(isPoison: isPoisonDamage, isCritical: isCritical);
-
-      // Spawn particles
-      spawnDamageParticles(
-        color: damageColor,
-        count: isCritical ? 35 : (isPoisonDamage ? 12 : 15),
-      );
-    }
+    triggerHitReactions(stats, newStats, suppressArmorChange: suppressArmorChangeAnimation);
 
     stats = newStats;
     this.bonusAttack = bonusAttack;
     suppressArmorChangeAnimation = false;
-  }
-
-  void shieldHitAnimation() {
-    removeAll(children.whereType<ScaleEffect>());
-    final double baseScale = game.scaleFactor * 1.3;
-
-    // Bump d'échelle pour l'armure
-    add(
-      SequenceEffect([
-        ScaleEffect.to(
-          Vector2.all(baseScale * 1.08),
-          EffectController(duration: 0.06, curve: Curves.easeOut),
-        ),
-        ScaleEffect.to(
-          Vector2.all(baseScale),
-          EffectController(duration: 0.2, curve: Curves.easeIn),
-          onComplete: () {
-            _refreshBorderVisuals();
-          },
-        ),
-      ]),
-    );
-
-    // Bordure bleu cyan temporaire
-    borderInfo.paint.color = Colors.cyanAccent;
-    borderInfo.paint.strokeWidth = _isHighlighted ? 6 : 4;
   }
 
   void _refreshBorderVisuals() {
@@ -217,130 +148,6 @@ class HeroCard extends PositionComponent
       borderInfo.paint.color = Colors.white;
       borderInfo.paint.strokeWidth = 2;
     }
-  }
-
-  void shakeAndFlashAnimation({bool isPoison = false, bool isCritical = false}) {
-    final double baseScale = game.scaleFactor * 1.3;
-
-    removeAll(children.whereType<ScaleEffect>());
-    sprite.removeAll(sprite.children.whereType<ColorEffect>());
-
-    // 1. Sleek Scale Bump (Elastic Out)
-    final double bumpMultiplier = isCritical ? 1.45 : (isPoison ? 1.12 : 1.22);
-    add(
-      SequenceEffect([
-        ScaleEffect.to(
-          Vector2.all(baseScale * bumpMultiplier),
-          EffectController(duration: 0.08, curve: Curves.easeOut),
-        ),
-        ScaleEffect.to(
-          Vector2.all(baseScale),
-          EffectController(duration: 0.35, curve: Curves.elasticOut),
-        ),
-      ]),
-    );
-
-    // 2. High-frequency Shake
-    final rand = Random();
-    final shakeIntensity = isCritical ? 28.0 : (isPoison ? 8.0 : 18.0);
-    final shakeCount = isCritical ? 8 : 5;
-    for (int i = 0; i < shakeCount; i++) {
-      add(
-        MoveEffect.by(
-          Vector2(
-            (rand.nextDouble() - 0.5) * shakeIntensity,
-            (rand.nextDouble() - 0.5) * shakeIntensity,
-          ),
-          EffectController(duration: 0.025, alternate: true),
-        ),
-      );
-    }
-
-    // 3. Decoupled Color Tint on sprite
-    final flashColor = isCritical ? const Color(0xFFF59E0B) : (isPoison ? const Color(0xFF10B981) : Colors.redAccent);
-    sprite.add(
-      SequenceEffect([
-        ColorEffect(
-          flashColor,
-          EffectController(duration: 0.1),
-          opacityTo: isCritical ? 0.85 : 0.75,
-        ),
-        ColorEffect(
-          flashColor,
-          EffectController(duration: isCritical ? 0.35 : 0.25, curve: Curves.easeIn),
-          opacityTo: 0.0,
-        ),
-      ]),
-    );
-  }
-
-  void spawnDamageParticles({required Color color, required int count}) {
-    final rand = Random();
-    final centerPos = position.clone();
-
-    game.add(
-      ParticleSystemComponent(
-        particle: Particle.generate(
-          count: count,
-          lifespan: 0.6,
-          generator: (i) {
-            final angle = rand.nextDouble() * 2 * pi;
-            final targetOffset =
-                Vector2(cos(angle), sin(angle)) * (40 + rand.nextDouble() * 60);
-
-            return MovingParticle(
-              curve: Curves.easeOutCubic,
-              from: centerPos,
-              to: centerPos + targetOffset,
-              child: ScaledParticle(
-                child: CircleParticle(
-                  radius: 1.5 + rand.nextDouble() * 2.0,
-                  paint: Paint()
-                    ..color = color.withValues(alpha: 0.95)
-                    ..style = PaintingStyle.fill,
-                ),
-              ),
-            );
-          },
-        ),
-      )..priority = priority + 10,
-    );
-  }
-
-  void _spawnFloatingText(
-    String text,
-    Color color,
-    Vector2 globalPos, {
-    bool isCritical = false,
-    bool isPoison = false,
-    bool isShield = false,
-  }) {
-    final ft = FloatingText(
-      text: text,
-      color: color,
-      position: globalPos,
-      isUpward: true,
-      isCritical: isCritical,
-      isPoison: isPoison,
-      isShield: isShield,
-    );
-    ft.priority = 200;
-    game.add(ft);
-  }
-
-  void dashAnimation() {
-    add(
-      SequenceEffect([
-        MoveEffect.by(
-          Vector2(0, -50),
-          EffectController(duration: 0.1, curve: Curves.easeOut),
-        ),
-        MoveEffect.by(
-          Vector2(0, 50),
-          EffectController(duration: 0.15, curve: Curves.bounceOut),
-        ),
-      ]),
-    );
   }
 
   void buffAnimation(String iconType) {
