@@ -370,6 +370,11 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           });
         }
       },
+      onAnimationStateChanged: () {
+        if (mounted) {
+          setState(() {});
+        }
+      },
     );
   }
 

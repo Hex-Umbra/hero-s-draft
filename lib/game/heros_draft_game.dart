@@ -35,18 +35,18 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   CardComponent? hoveredCard;
   CardComponent? focusedCard;
 
-  late final StateSyncSystem stateSyncSystem;
-  late final CardAnimationSystem cardAnimationSystem;
-  late final CombatVisualSystem combatVisualSystem;
-  late final LayoutSystem layoutSystem;
+  StateSyncSystem? stateSyncSystem;
+  CardAnimationSystem? cardAnimationSystem;
+  CombatVisualSystem? combatVisualSystem;
+  LayoutSystem? layoutSystem;
 
-  TargetingLine get targetingLine => combatVisualSystem.targetingLine;
+  TargetingLine get targetingLine => combatVisualSystem!.targetingLine;
   Vector2 _lastPointerPos = Vector2.zero();
 
   double get scaleFactor => (size.y / 800).clamp(0.85, 2.5);
 
-  RunState? get currentRunState => stateSyncSystem.currentState;
-  CombatState? get currentCombatState => stateSyncSystem.currentCombatState;
+  RunState? get currentRunState => stateSyncSystem?.currentState;
+  CombatState? get currentCombatState => stateSyncSystem?.currentCombatState;
 
   TurnPhase currentPhase = TurnPhase.player;
   EnemyCard? selectedEnemy;
@@ -69,6 +69,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   final void Function(String? enemyId) onSelectEnemy;
   final void Function(String enemyId, EntityStats stats) onUpdateEnemyStats;
   final void Function(SkillData skill, String? targetEnemyId) onExecuteSkill;
+  final VoidCallback? onAnimationStateChanged;
 
   HerosDraftGame({
     required this.onEnemiesDead,
@@ -86,20 +87,21 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
     required this.onUpdateEnemyStats,
     required this.onExecuteSkill,
     this.onEnemiesSpawned,
+    this.onAnimationStateChanged,
   });
 
   void setHoveredCard(CardComponent? card) {
-    cardAnimationSystem.setHoveredCard(card);
+    cardAnimationSystem?.setHoveredCard(card);
   }
 
   void setFocusedCard(CardComponent? card) {
-    cardAnimationSystem.setFocusedCard(card);
+    cardAnimationSystem?.setFocusedCard(card);
   }
 
   @override
   void onPointerMove(PointerMoveEvent event) {
     _lastPointerPos = event.localPosition;
-    combatVisualSystem.updatePointer(_lastPointerPos);
+    combatVisualSystem?.updatePointer(_lastPointerPos);
   }
 
   @override
@@ -112,15 +114,19 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   Future<void> onLoad() async {
     await super.onLoad();
 
-    stateSyncSystem = StateSyncSystem();
-    cardAnimationSystem = CardAnimationSystem();
-    combatVisualSystem = CombatVisualSystem();
-    layoutSystem = LayoutSystem();
+    final system = StateSyncSystem();
+    stateSyncSystem = system;
+    final animSys = CardAnimationSystem();
+    cardAnimationSystem = animSys;
+    final visualSys = CombatVisualSystem();
+    combatVisualSystem = visualSys;
+    final laySys = LayoutSystem();
+    layoutSystem = laySys;
 
-    await add(stateSyncSystem);
-    await add(cardAnimationSystem);
-    await add(combatVisualSystem);
-    await add(layoutSystem);
+    await add(system);
+    await add(animSys);
+    await add(visualSys);
+    await add(laySys);
 
     final List<String> imagesToPreload = ['bg_dungeon.png'];
 
@@ -198,12 +204,14 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
       layoutHand();
 
       isCardAnimating = true;
+      onAnimationStateChanged?.call();
 
       cardComp.playAnimation(
         target,
         onComplete: () {
           cardComp.removeFromParent();
           isCardAnimating = false;
+          onAnimationStateChanged?.call();
           resolvePendingDeaths();
         },
       );
@@ -243,23 +251,23 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   Color backgroundColor() => const Color(0xFF1E1E2C);
 
   void syncState(RunState state) {
-    stateSyncSystem.nextState = state;
+    stateSyncSystem?.nextState = state;
   }
 
   void syncDeck(DeckState deckState) {
-    stateSyncSystem.nextDeckState = deckState;
+    stateSyncSystem?.nextDeckState = deckState;
   }
 
   void syncCombat(CombatState combatState) {
-    stateSyncSystem.nextCombatState = combatState;
+    stateSyncSystem?.nextCombatState = combatState;
   }
 
   void layoutHand() {
-    layoutSystem.layoutHand();
+    layoutSystem?.layoutHand();
   }
 
   void repositionEnemies() {
-    layoutSystem.repositionEnemies();
+    layoutSystem?.repositionEnemies();
   }
 
   void handlePlayerTargeting(EnemyCard target) {
@@ -387,7 +395,14 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   }
 
   void resetEnemies() {
-    stateSyncSystem.currentState = null;
-    stateSyncSystem.currentCombatState = null;
+    stateSyncSystem?.currentState = null;
+    stateSyncSystem?.currentCombatState = null;
+  }
+
+  @override
+  void onRemove() {
+    stateSyncSystem?.currentState = null;
+    stateSyncSystem?.currentCombatState = null;
+    super.onRemove();
   }
 }
