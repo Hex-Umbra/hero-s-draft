@@ -25,7 +25,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Chokepoints structurels forcés | `MapGeneratorService` | Étage central dynamique (`floors ~/ 2`) Élite forcé (1 nœud), Étage `floors-2` Repos forcé (repos garanti avant boss) |
 | Level Up différé sur la Carte | `RunController`, `MapScreen`, `GameScreen` | Les gains de niveau incrémentent `pendingDrafts` au lieu d'ouvrir le draft en combat. Un overlay bloquant « LEVEL UP ! » s'affiche sur la carte, forçant le joueur à effectuer ses choix de draft avant de naviguer. |
 | Embranchement de Boss multiples | `MapGeneratorService` / `EncounterSystem` | Étage final (Boss) presents 3 nœuds de boss distincts avec récompenses de combat uniques déterminées par leur position |
-| Récompenses de Boss uniques | `GameScreen`, `MapNode`, `RewardController`, `BossCardDraftScreen` | Boss 1 (x=0) : sélection forcée de 3 cartes via BossCardDraftScreen (les cartes uniques de classe y sont exclues). Boss 2 (x=1) : XP/Or doublés. Boss 3 (x=2) : relic drop dynamique par Act dans RewardController. |
+| Récompenses de Boss uniques | `GameScreen`, `MapNode`, `RewardController`, `BossCardDraftScreen` | Boss 1 (x=0) : clonage de 2 cartes parmi 5 cartes aléatoires proposées du deck du joueur. Boss 2 (x=1) : XP/Or triplés (x3) + 1 carte aléatoire du jeu (hors uniques et statuts). Boss 3 (x=2) : relic drop dynamique par Act dans RewardController. |
 | Correction d'orphelins | `MapGeneratorService` (Phase 2 câblage) | Garantie que tout nœud a au moins 1 connexion entrante |
 | Navigation réactive | `RunController.travelToNode()` | Validation d'accessibilité (connexion au nœud complété ou étage 0) |
 | Caméra centrée | `MapScreen` | Repositionnement et centrage automatique fluide à chaque transition |
@@ -48,7 +48,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Compétences | `SkillController` / `skillProvider` | 2 compétences par héros, cooldowns, consommation de ressources |
 | Événements | `EventController` / `eventProvider` | 2 événements narratifs à choix multiples, résolution d'actions, roll de rareté relique |
 | Boutique | `ShopController` / `shopProvider` | Achat/purge/clone cartes, soin, expansion, reroll, exclusion logique des cartes de rareté unique (v0.1.3), désactivation des services si or insuffisant et modal Magic Mirror amélioré avec UiCard complète, défilement horizontal et caching anti-exploit `cloneOptions` (v0.1.7) |
-| Récompenses de Victoire | `RewardController` / `rewardProvider` | Or, XP (doublés for doubleXp), tirage de relique (improvedRelic avec chances dynamiques par Act excluant les communes), et draft de cartes (standard ou boss) |
+| Récompenses de Victoire | `RewardController` / `rewardProvider` | Or, XP (triplés pour le boss central), tirage de relique (improvedRelic avec chances dynamiques par Act excluant les communes), et draft/clonage de cartes |
 
 ### 🃏 Système de Cartes et Deck
 

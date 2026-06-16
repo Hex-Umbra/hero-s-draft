@@ -133,9 +133,9 @@ Le focus se tourne désormais vers les étapes suivantes de la roadmap technique
    - **Chokepoints structurels forcés** : Étage central dynamique (`floors ~/ 2`, soit chokepoint à 1 nœud de type Élite) et Étage `floors-2` (tous les nœuds sont obligatoirement de type Repos, garantissant une pause avant les boss).
    - **Branchements de Boss multiples** : L'étage final présente 3 nœuds de boss distincts différenciés par leur position horizontale pour offrir des récompenses de combat uniques.
    - **Récompenses de Boss thématiques basées sur la position** :
-     - **Position gauche (x = 0)** : Offre un dialogue interactif permettant d'ajouter entre 1 et 3 cartes gratuites dans le deck (icône Cartes).
-     - **Position centrale (x = 1)** : Multiplie par 2 l'expérience globale accumulée lors de la victoire (icône Magie/XP).
-     - **Position droite (x = 2)** : Garantie de butin de relique premium améliorée (minimum Uncommon, avec des chances de tirage Legendary et Epic accrues, icône Diamant).
+     - **Position gauche (x = 0)** : Permet de sélectionner 5 cartes de son deck et d'en cloner 2 (icône Cartes).
+     - **Position centrale (x = 1)** : Triple (x3) l'or et l'expérience de combat accumulés, et offre une carte aléatoire du jeu hors uniques et statuts (icône Magie/XP).
+     - **Position droite (x = 2)** : Garantie de butin de relique premium améliorée (minimum Uncommon, chances de tirage Legendary et Epic accrues proportionnellement par Acte).
 
 6. **Polissage et Responsivité en Combat (Section 6)** :
    - **HUD Responsive** : Adaptabilité complète de la hauteur et de la largeur du panneau de combat avec clamps de sécurité pour toutes les tailles d'écran (mobiles, desktop, web).
@@ -205,8 +205,8 @@ Le focus se tourne désormais vers les étapes suivantes de la roadmap technique
 17. **Refactoring et Finalisation des Récompenses de Boss (Version 0.0.94)** :
     - **Séparation et Centralisation Métier** : Centralisation complète du pipeline de récompenses post-combat dans un nouveau contrôleur Riverpod dédié `RewardController` (`rewardProvider`), isolant la logique métier des vues.
     - **Butin d'Or des Ennemis** : Ajout du champ `gold` à `EnemyData` et `EnemyInstance`. Les montants d'or initiaux sont configurés dans `enemies.json` et mis à l'échelle : `(enemy.data.gold * levelMultiplier).round()`.
-    - **Boss 1 (Card Draft Screen)** : Création de `BossCardDraftScreen` pour le boss de gauche (x=0) sélectionnant précisément 3 cartes globales non-status.
-    - **Boss 2 (Double XP & Gold)** : Doublement de l'Or et de l'XP de combat à la défaite du boss central (x=1) dans `RewardController`.
+    - **Boss 1 (Card Draft / Clonage)** : Refonte pour proposer 5 cartes aléatoires du deck du joueur afin d'en cloner 2.
+    - **Boss 2 (Triple XP & Gold + Carte Aléatoire)** : Triplement (x3) de l'Or et de l'XP de combat à la défaite du boss central (x=1), avec ajout d'une carte aléatoire du jeu (hors uniques de classe et statuts).
     - **Boss 3 (Reliques Dynamiques)** : Pour le boss de droite (x=2), distribution évolutive des reliques (minimum Uncommon, chances de tirage Legendary et Epic accrues proportionnellement par Acte).
     - **Correction du Tirage de Relique des Boss** : Correction d'une régression dans `RewardController` pour restreindre le tirage d'une relique aux nœuds Élite ou aux nœuds Boss de type `improvedRelic` (x=2), évitant des reliques indues sur les boss x=0 et x=1.
     - **Génération Procédurale** : `MapGeneratorService` attribue explicitement le type de récompense de Boss selon la position horizontale `x` à l'étage final sous forme d'enum `BossRewardType`.

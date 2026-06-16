@@ -91,8 +91,8 @@ Le service statique `MapGeneratorService.generateMap({floors = 10, maxWidth = 5}
 - **Algorithme Anti-Répétition de Chemin** (`_hasThreeConsecutive`) : Parcourt tous les chemins du graphe de l'entrée aux boss. Garantit qu'aucun chemin ne comporte 3 nœuds consécutifs du type Élite ou du type Repos. Si une violation est détectée, le troisième nœud est converti en un type alternatif (Combat, Boutique ou Événement).
 
 **Mécanique de Récompenses Spécifiques des Boss (Étage 9) selon la position** :
-- **Position gauche (x = 0)** : Présente un dialogue interactif affichant 3 cartes globales aléatoires, permettant au joueur d'en sélectionner entre 1 et 3 pour les ajouter gratuitement à son deck (icône Cartes).
-- **Position centrale (x = 1)** : Multiplie par 2 toute l'expérience (XP) cumulée par le joueur lors du combat (icône Magie/XP).
+- **Position gauche (x = 0)** : Permet au joueur de sélectionner 5 cartes aléatoires de son propre deck actuel et d'en choisir 2 pour les cloner (icône Cartes).
+- **Position centrale (x = 1)** : Triple (x3) l'or et l'expérience globale (XP) accumulés lors de la victoire, et octroie en plus au joueur une carte aléatoire tirée du jeu entier (excluant les cartes uniques de classe et les cartes de statut) (icône Magie/XP).
 - **Position droite (x = 2)** : Garantit l'obtention d'une relique de rareté supérieure (minimum Uncommon, excluant totalement les communes, icône Diamant). Les chances de rareté sont : Legendary 15%, Epic 30%, Rare 35%, Uncommon 20%.
 
 **Modèle `MapNode`** : `id` (ex: "node_0_0"), `type` (MapNodeType), `connections` (List\<String\>), `position` (Vector2 Flame), `isCompleted` (bool mutable).

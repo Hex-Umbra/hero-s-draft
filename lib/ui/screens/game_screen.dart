@@ -121,6 +121,14 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         type: NotificationType.success,
       );
 
+      if (rewardState.rolledBonusCard != null) {
+        final bonusCardName = locale == 'fr' ? rewardState.rolledBonusCard!.nameFr : rewardState.rolledBonusCard!.nameEn;
+        context.showNotification(
+          '🎁 ${locale == 'fr' ? 'Carte Bonus obtenue : $bonusCardName' : 'Bonus Card obtained: $bonusCardName'}',
+          type: NotificationType.success,
+        );
+      }
+
       if (leveledUp) {
         context.showNotification(
           '🎉 LEVEL UP !',
