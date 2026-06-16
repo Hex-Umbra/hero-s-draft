@@ -185,8 +185,8 @@ Dans le cadre du refactoring de la Phase 2, les contrôleurs les plus monolithiq
 
 **Responsabilités** :
 - **Initialisation** : `handleVictory(...)` — Déclenché lors de la victoire. 
-  - Somme l'XP de base de chaque ennemi battu, indexé sur son niveau : `(enemy.data.xp * levelMultiplier).round()` où `levelMultiplier = 1.0 + 0.10 * (enemy.stats.level - 1)`. Double le gain total d'XP si le nœud est configuré avec `bossRewardType == BossRewardType.doubleXp`.
-  - Somme l'or de base de chaque ennemi battu (`enemies.json`) avec le même coefficient de niveau : `(enemy.data.gold * levelMultiplier).round()`. Double le gain total d'Or si le nœud est configuré avec `bossRewardType == BossRewardType.doubleXp`.
+  - Somme l'XP de base de chaque ennemi battu, indexé sur son niveau : `(enemy.data.xp * levelMultiplier).round()` où `levelMultiplier = 1.0 + 0.10 * (enemy.stats.level - 1)`. Triple (x3) le gain total d'XP si le nœud est de type boss central (`bossRewardType == BossRewardType.doubleXp`), et attribue en plus une carte aléatoire du jeu hors uniques et statuts.
+  - Somme l'or de base de chaque ennemi battu (`enemies.json`) avec le même coefficient de niveau : `(enemy.data.gold * levelMultiplier).round()`. Triple (x3) le gain total d'Or si le nœud est de type boss central (`bossRewardType == BossRewardType.doubleXp`).
   - **Tirage de Reliques Boss 3 (`improvedRelic`)** : Effectue le tirage de Reliques si combat de type Élite ou Boss. Si le nœud présente `bossRewardType == BossRewardType.improvedRelic`, les probabilités de drop sont dynamiques et calculées par Act :
     - La chance Légendaire de base est fixée à **10.0%** (augmentable via la chance `luck` du joueur : `legChance = 10.0 + luck * 0.5`).
     - La chance Commune de base démarre à **40.0%** et diminue de **10% par acte** : `commonChance = max(0.0, 40.0 - (act - 1) * 10.0)`.
@@ -203,7 +203,7 @@ Dans le cadre du refactoring de la Phase 2, les contrôleurs les plus monolithiq
         - `rareChance = (35.0 / 65.0) * 90.0 + luck * 2.0`
         - `epicChance = (30.0 / 65.0) * 90.0 + luck * 1.0`
         - `uncommonChance = 0.0`
-  - **Tirage de Cartes Boss 1 (`cards`)** : Génère le pool de draft de cartes à partir de toutes les cartes globales à l'exclusion des cartes status (`allCards.where((c) => c.type != CardType.status).toList()`).
+  - **Tirage de Cartes Boss 1 (`cards`)** : Propose 5 cartes aléatoires du deck actuel du joueur, lui permettant de choisir 2 d'entre elles pour les cloner (copier).
 - **Collecte & Résolution** :
   - `collectGoldAndXp()` : Crédite l'or accumulé à `InventoryController` et l'XP à `RunController` (détermine si le héros monte de niveau).
   - `collectRelic()` / `skipRelic()` : Ajoute ou ignore la relique de l'inventaire.
@@ -468,7 +468,7 @@ Pour éliminer la condition de concurrence visuelle (race condition) où l'état
 | `EventScreen` | `ConsumerWidget` | `ref.watch(runProvider)` | Événements narratifs à choix branchus affichés sous `ScreenScaffold` (mode sombre) et `PageHeader`. |
 | `RestScreen` | `ConsumerWidget` | `ref.watch(runProvider)`, `ref.watch(deckProvider)` | Feu de camp sous `ScreenScaffold` (mode sombre) et `PageHeader` : Soin (30%), Forge (upgrade via `ForgeUpgradeDialog`), Oubli. |
 | `DraftScreen` | `ConsumerStatefulWidget` | `ref.read(deckProvider.notifier)` | Draft post-combat : 3 choix de cartes (utilise `ScreenScaffold` et `PageHeader`). |
-| `BossCardDraftScreen` | `ConsumerStatefulWidget` | `ref.read(rewardProvider.notifier)` | Draft post-boss de gauche (x=0) sous `CardDraftLayout` et `UiCard.fromData` : sélection de 3 cartes globales non-status. |
+| `BossCardDraftScreen` | `ConsumerStatefulWidget` | `ref.read(rewardProvider.notifier)` | Écran de sélection post-boss de gauche (x=0) sous `CardDraftLayout` et `UiCard.fromData` : affiche 5 cartes aléatoires du deck du joueur pour en cloner 2. |
 | `DictionaryScreen` | `ConsumerWidget` | `ref.watch(gameDataLoaderProvider)` | Catalogue filtrable de toutes les cartes et reliques affiché sous `ScreenScaffold` (mode sombre), `PageHeader` et `UiCard.fromData`. |
 
 **Pattern de navigation** : 100% via `Navigator.of(context).push(MaterialPageRoute(...))` — aucun routeur centralisé.

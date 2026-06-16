@@ -13,14 +13,15 @@ class RewardState {
   final int goldGained;
   final int xpGained;
   final RelicData? rolledRelic;
-  final List<CardData> rolledCards;
+  final List<CardInstance> rolledCards;
   
   final bool isGoldXpCollected;
   final bool isRelicCollected;
   final bool isRelicSkipped;
   final bool isCardsProcessed;
-  final List<CardData> selectedCards;
+  final List<CardInstance> selectedCards;
   final bool isResolved;
+  final CardData? rolledBonusCard;
 
   const RewardState({
     this.goldGained = 0,
@@ -33,19 +34,21 @@ class RewardState {
     this.isCardsProcessed = false,
     this.selectedCards = const [],
     this.isResolved = false,
+    this.rolledBonusCard,
   });
 
   RewardState copyWith({
     int? goldGained,
     int? xpGained,
     RelicData? rolledRelic,
-    List<CardData>? rolledCards,
+    List<CardInstance>? rolledCards,
     bool? isGoldXpCollected,
     bool? isRelicCollected,
     bool? isRelicSkipped,
     bool? isCardsProcessed,
-    List<CardData>? selectedCards,
+    List<CardInstance>? selectedCards,
     bool? isResolved,
+    CardData? rolledBonusCard,
   }) {
     return RewardState(
       goldGained: goldGained ?? this.goldGained,
@@ -58,6 +61,7 @@ class RewardState {
       isCardsProcessed: isCardsProcessed ?? this.isCardsProcessed,
       selectedCards: selectedCards ?? this.selectedCards,
       isResolved: isResolved ?? this.isResolved,
+      rolledBonusCard: rolledBonusCard ?? this.rolledBonusCard,
     );
   }
 }
@@ -83,7 +87,7 @@ class RewardController extends Notifier<RewardState> {
       totalXp += (enemy.data.xp * levelMultiplier).round();
     }
     if (currentNode.bossRewardType == BossRewardType.doubleXp) {
-      totalXp *= 2;
+      totalXp *= 3;
     }
 
     // 2. Calculate Gold from defeated enemies
@@ -93,7 +97,7 @@ class RewardController extends Notifier<RewardState> {
       totalGold += (enemy.data.gold * levelMultiplier).round();
     }
     if (currentNode.bossRewardType == BossRewardType.doubleXp) {
-      totalGold *= 2;
+      totalGold *= 3;
     }
 
     // 3. Roll Relic
@@ -162,11 +166,32 @@ class RewardController extends Notifier<RewardState> {
     }
 
     // 4. Roll Cards
-    List<CardData> rolledCards = [];
+    List<CardInstance> rolledCards = [];
     if (currentNode.bossRewardType == BossRewardType.cards) {
-      rolledCards = allCards
+      final playerDeck = ref.read(deckProvider).masterDeck;
+      if (playerDeck.isNotEmpty) {
+        final random = Random();
+        final List<CardInstance> candidates = List<CardInstance>.from(playerDeck);
+        candidates.shuffle(random);
+        final toTake = min(5, candidates.length);
+        for (int i = 0; i < toTake; i++) {
+          rolledCards.add(CardInstance(
+            data: candidates[i].data,
+            rarity: candidates[i].rarity,
+            forgeUpgrades: candidates[i].forgeUpgrades,
+          ));
+        }
+      }
+    }
+
+    CardData? rolledBonusCard;
+    if (currentNode.bossRewardType == BossRewardType.doubleXp) {
+      final validCards = allCards
           .where((c) => c.type != CardType.status && c.rarity != CardRarity.unique)
           .toList();
+      if (validCards.isNotEmpty) {
+        rolledBonusCard = validCards[Random().nextInt(validCards.length)];
+      }
     }
 
     state = RewardState(
@@ -180,6 +205,7 @@ class RewardController extends Notifier<RewardState> {
       isCardsProcessed: false,
       selectedCards: const [],
       isResolved: false,
+      rolledBonusCard: rolledBonusCard,
     );
   }
 
@@ -188,6 +214,10 @@ class RewardController extends Notifier<RewardState> {
 
     ref.read(inventoryProvider.notifier).gainGold(state.goldGained);
     final leveledUp = ref.read(runProvider.notifier).gainXp(state.xpGained);
+
+    if (state.rolledBonusCard != null) {
+      ref.read(deckProvider.notifier).addCardToMasterDeck(CardInstance(data: state.rolledBonusCard!));
+    }
 
     state = state.copyWith(isGoldXpCollected: true);
     _checkResolution();
@@ -210,11 +240,15 @@ class RewardController extends Notifier<RewardState> {
     _checkResolution();
   }
 
-  void chooseCards(List<CardData> cards) {
+  void chooseCards(List<CardInstance> cards) {
     if (state.isCardsProcessed) return;
 
     for (var card in cards) {
-      ref.read(deckProvider.notifier).addCardToMasterDeck(CardInstance(data: card));
+      ref.read(deckProvider.notifier).addCardToMasterDeck(CardInstance(
+        data: card.data,
+        rarity: card.rarity,
+        forgeUpgrades: card.forgeUpgrades,
+      ));
     }
     state = state.copyWith(
       isCardsProcessed: true,

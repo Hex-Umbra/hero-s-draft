@@ -2,13 +2,21 @@
   {
     "version": "0.2.5",
     "date": "2026-06-16",
-    "title": "Correction du Bouton de Fin de Tour",
+    "title": "Fin de Tour et Récompenses de Boss",
     "sections": [
       {
         "category": "Améliorations",
         "emoji": "⚡",
         "entries": [
-          "Ajout d'une confirmation de fin de tour si le joueur possède encore du mana afin d'éviter les actions involontaires."
+          "Ajout d'une confirmation de fin de tour si le joueur possède encore du mana afin d'éviter les actions involontaires.",
+          "La sélection de cartes de boss permet désormais de dupliquer 2 cartes de votre deck actuel (tirées parmi 5 candidats aléatoires) tout en conservant leur niveau d'amélioration et leur rareté, au lieu de choisir parmi des cartes entièrement aléatoires."
+        ]
+      },
+      {
+        "category": "Équilibrage",
+        "emoji": "⚖️",
+        "entries": [
+          "La récompense de boss doublant les gains a été grandement améliorée : elle triple désormais l'or et l'expérience obtenus (gains x3) et vous offre également une carte bonus aléatoire ajoutée directement à votre deck."
         ]
       },
       {

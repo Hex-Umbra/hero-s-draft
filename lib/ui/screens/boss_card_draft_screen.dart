@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../game/controllers/reward_controller.dart';
-import '../../models/data/card_data.dart';
+import '../../models/card_instance.dart';
 import '../widgets/ui_card.dart';
 import '../widgets/notification_overlay.dart';
 import '../widgets/draft/card_draft_layout.dart';
@@ -15,19 +15,19 @@ class BossCardDraftScreen extends ConsumerStatefulWidget {
 }
 
 class _BossCardDraftScreenState extends ConsumerState<BossCardDraftScreen> {
-  final Set<CardData> _selectedCards = {};
+  final Set<CardInstance> _selectedCards = {};
 
-  void _toggleCardSelection(CardData card) {
+  void _toggleCardSelection(CardInstance card) {
     final isFr = Localizations.localeOf(context).languageCode == 'fr';
     setState(() {
       if (_selectedCards.contains(card)) {
         _selectedCards.remove(card);
       } else {
-        if (_selectedCards.length < 3) {
+        if (_selectedCards.length < 2) {
           _selectedCards.add(card);
         } else {
           context.showNotification(
-            isFr ? "Vous ne pouvez sélectionner que 3 cartes maximum." : "You can only select up to 3 cards.",
+            isFr ? "Vous ne pouvez sélectionner que 2 cartes maximum." : "You can only select up to 2 cards.",
             type: NotificationType.warning,
           );
         }
@@ -36,7 +36,7 @@ class _BossCardDraftScreenState extends ConsumerState<BossCardDraftScreen> {
   }
 
   void _confirmSelection() {
-    if (_selectedCards.length != 3) return;
+    if (_selectedCards.length != 2) return;
 
     ref.read(rewardProvider.notifier).chooseCards(_selectedCards.toList());
     Navigator.of(context).pop();
@@ -51,16 +51,16 @@ class _BossCardDraftScreenState extends ConsumerState<BossCardDraftScreen> {
     final rewardState = ref.watch(rewardProvider);
     final draftPool = rewardState.rolledCards;
 
-    final isConfirmEnabled = _selectedCards.length == 3;
+    final isConfirmEnabled = _selectedCards.length == 2;
 
     return CardDraftLayout(
       title: isFr ? "SÉLECTION DE CARTES DE BOSS" : "BOSS CARD SELECTION",
       subtitle: isFr
-          ? "Choisissez précisément 3 cartes à ajouter à votre deck permanent."
-          : "Choose exactly 3 cards to add to your permanent deck.",
+          ? "Choisissez précisément 2 cartes à ajouter à votre deck permanent."
+          : "Choose exactly 2 cards to add to your permanent deck.",
       cardCountText: isFr
-          ? "Cartes sélectionnées : ${_selectedCards.length} / 3"
-          : "Selected cards: ${_selectedCards.length} / 3",
+          ? "Cartes sélectionnées : ${_selectedCards.length} / 2"
+          : "Selected cards: ${_selectedCards.length} / 2",
       confirmButtonText: isFr ? "CONFIRMER LA SÉLECTION" : "CONFIRM SELECTION",
       onConfirm: _confirmSelection,
       isConfirmEnabled: isConfirmEnabled,
@@ -83,7 +83,7 @@ class _BossCardDraftScreenState extends ConsumerState<BossCardDraftScreen> {
 
                 return Stack(
                   children: [
-                    UiCard.fromData(
+                    UiCard.fromInstance(
                       card: card,
                       locale: locale,
                       l10n: l10n,
