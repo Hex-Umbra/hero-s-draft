@@ -1,5 +1,22 @@
 [
   {
+    "version": "0.2.6",
+    "date": "2026-06-16",
+    "title": "Spawn des Ennemis et Équilibrage du Scaling",
+    "sections": [
+      {
+        "category": "Équilibrage",
+        "emoji": "⚖️",
+        "entries": [
+          "Ajustement du coût de combat des ennemis : le poids de leurs points de vie a été réduit tandis que celui de leurs dégâts a été augmenté dans le calcul de leur coût de combat. Cela permet de générer des groupes d'ennemis plus nombreux (jusqu'à plus de deux adversaires simultanés) pour un même budget.",
+          "Prise en compte du deck du joueur : la taille de votre deck principal est désormais intégrée dans l'estimation de votre puissance de combat (+2 par carte), ajustant dynamiquement le budget de combat pour un défi plus adapté.",
+          "Bonus de budget par Acte : un bonus fixe est ajouté au budget de combat à chaque acte supplémentaire au-delà de l'Acte 1 afin d'encourager des rencontres plus riches en ennemis.",
+          "Scaling accru à partir de l'Acte 2 : la difficulté générale s'intensifie plus rapidement. La croissance par acte passe de +20% à +35% pour les points de vie des monstres, et de +15% à +25% pour leurs dégâts."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.2.5",
     "date": "2026-06-16",
     "title": "Fin de Tour et Récompenses de Boss",

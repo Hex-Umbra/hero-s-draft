@@ -31,7 +31,7 @@ class EncounterSystem {
   }) {
     final double bossHpMultiplier = isBoss ? (isCustomBoss ? 1.0 : 3.0) : (isElite ? 1.5 : 1.0);
     return (1.0 + 0.06 * (enemyLevel - 1)) *
-        (1.0 + 0.20 * (act - 1)) *
+        (1.0 + 0.35 * (act - 1)) *
         bossHpMultiplier;
   }
 
@@ -45,7 +45,7 @@ class EncounterSystem {
   }) {
     final double bossDmgMultiplier = isBoss ? (isCustomBoss ? 1.0 : 3.0) : (isElite ? 1.5 : 1.0);
     return (1.0 + 0.04 * (enemyLevel - 1)) *
-        (1.0 + 0.15 * (act - 1)) *
+        (1.0 + 0.25 * (act - 1)) *
         bossDmgMultiplier;
   }
 
@@ -76,13 +76,9 @@ class EncounterSystem {
     );
 
     final int hpScale = (data.maxHp * hpMultiplier).round();
-    const int armureScale = 0;
     final int damageScale = (data.baseDamage * damageMultiplier).round();
 
-    return (data.tier * 10.0) +
-        hpScale +
-        armureScale +
-        damageScale * (1.0 + data.critChance / 100.0);
+    return (data.tier * 15.0) + (hpScale / 4.0) + (damageScale * 2.0) * (1.0 + data.critChance / 100.0);
   }
 
   static List<EnemyData> generateEnemiesForLevel(
@@ -95,10 +91,11 @@ class EncounterSystem {
     int playerAttaque = 0,
     int playerMaxMana = 3,
     int playerRelicsCount = 0,
+    int playerCardsCount = 0,
     String? bossEnemyId,
   }) {
     if (availableEnemies.isEmpty) return [];
-
+ 
     final bool isBoss = nodeType == MapNodeType.boss || (nodeType == null && level > 0 && level % 10 == 0);
     final bool isElite = nodeType == MapNodeType.elite;
 
@@ -109,7 +106,8 @@ class EncounterSystem {
     final double playerPower = playerMaxHp +
         (playerAttaque * 10.0) +
         (playerMaxMana * 15.0) +
-        (playerRelicsCount * 5.0);
+        (playerRelicsCount * 5.0) +
+        (playerCardsCount * 2.0);
 
     final double expectedPower =
         145.0 + ((playerLevel - 1) * 15.0) + ((act - 1) * 20.0);
@@ -130,7 +128,7 @@ class EncounterSystem {
     }
 
     // 4. Final budget
-    final double finalBudget = baseBudget * powerModifier * nodeMultiplier;
+    final double finalBudget = baseBudget * powerModifier * nodeMultiplier + (act - 1) * 10.0;
 
     // Determine enemy level for combat rating calculation
     final int enemyLevel = getEnemyLevel(

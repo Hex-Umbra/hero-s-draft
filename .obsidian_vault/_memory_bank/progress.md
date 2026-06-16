@@ -8,7 +8,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 - **108 tests automatisés** — 100% au vert.
 - **0 erreur** via `flutter analyze`.
 - **~124 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
-- **Version actuelle** : v0.2.6 — Double Confirmation de Fin de Tour avec Mana Restant.
+- **Version actuelle** : v0.2.7 — Révision du Scaling et du Spawn des Ennemis.
 
 ---
 
@@ -369,6 +369,9 @@ Issus de `docs/analysis_reports/6_analyse_game_balance.md` (documentés, non cor
 
 | Version | Date | Titre | Description des changements clés |
 |:---|:---|:---|:---|
+| **v0.2.7** | 2026-06-16 | Révision du Scaling et du Spawn des Ennemis | Révision des formules de génération des combats et de scaling de difficulté. Prise en compte du nombre de cartes du deck (`playerCardsCount * 2.0`) dans la puissance estimée du joueur. Ajustement du calcul du Combat Rating des ennemis (division par 4 des PV de base, multiplication par 2 des dégâts) pour encourager le spawn de plus d'ennemis. Augmentation des coefficients de croissance par acte (HP passe de 20% à 35%, dégâts de 15% à 25%). |
+| **v0.2.6** | 2026-06-16 | Double Confirmation de Fin de Tour | Ajout d'une double confirmation sur le bouton de fin de tour en cas de mana restant. Affiche un avertissement localized et réclame un deuxième clic pour valider. Se réinitialise automatiquement au début de chaque tour ou dès qu'une carte est jouée. |
+| **v0.2.5** | 2026-06-16 | Correction Bouton Fin De Tour | Résolution du problème d'inactivité du bouton de fin de tour après avoir joué une carte en synchronisant explicitement la phase du tour dans la méthode de démarrage du tour joueur. |
 | **v0.2.4** | 2026-06-14 | Harmonisation de l'Architecture | Harmonisation Post-Refactoring de l'Architecture : Migration de `ClassSelectionScreen` sous `ScreenScaffold` et `PageHeader` ; remontée de la logique d'`updateStats` et des réactions d'impacts visuels dans `CombatEntity` (Flame), nettoyant `HeroCard` et `EnemyCard` ; riverpodisation d'`EffectRegistry` via le provider `effectRegistryProvider` (sans mutable statique global) et passage à `EffectResolver.resolveCard` ; nettoyage de callbacks obsolètes de `HerosDraftGame` ; et ajout du champ `floor` explicite dans `MapNode` pour supprimer le parsing d'ID de chaîne. |
 | **v0.2.3** | 2026-06-14 | Architecture & Patterns | Refactoring Phase 4 : Découpage procédural de `MapGeneratorService` en 4 sous-services (`MapNodeGenerator`, `MapConnectionBuilder`, `MapValidator`, `MapContentPlacer`) ; refactorisation d'`EffectResolver` avec le Strategy Pattern (`EffectStrategy` et `EffectRegistry`) ; abstractions Flame `CombatEntity` (pour unifier `HeroCard`/`EnemyCard`) et `BaseVisualEffect` (pour unifier `SlashEffect`/`ShieldDome`) ; centralisation de la thématique via `GameThemeExtension` et try/catch détaillés de diagnostic dans `GameDataService`. Zéro erreur et 108 tests unitaires au vert. |
 | **v0.2.2** | 2026-06-14 | Unification de l'UI & Composants Communs | Refactoring Phase 3 : Centralisation des arrière-plans, SafeArea et PopScope dans `ScreenScaffold` ; standardisation des en-têtes avec `PageHeader` et de l'affichage de l'or avec `GoldIndicator` ; factories `UiCard.fromInstance` et `UiCard.fromData` ; découpage modulaire de la forge (`ForgeCardPreview`, `ForgeSlotRow`, `ForgeBuySlotButton`) ; et structure de mise en page commune `CardDraftLayout`. Zéro régression et 108 tests unitaires au vert. |

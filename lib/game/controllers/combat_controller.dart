@@ -47,6 +47,7 @@ class CombatController extends Notifier<CombatState> {
     int playerAttaque = 0,
     int playerMaxMana = 3,
     int playerRelicsCount = 0,
+    int playerCardsCount = 0,
     String? bossEnemyId,
   }) {
     final enemyDataList = EncounterSystem.generateEnemiesForLevel(
@@ -59,6 +60,7 @@ class CombatController extends Notifier<CombatState> {
       playerAttaque: playerAttaque,
       playerMaxMana: playerMaxMana,
       playerRelicsCount: playerRelicsCount,
+      playerCardsCount: playerCardsCount,
       bossEnemyId: bossEnemyId,
     );
 

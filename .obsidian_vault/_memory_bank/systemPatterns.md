@@ -113,7 +113,7 @@ Dans le cadre du refactoring de la Phase 2, les contrôleurs les plus monolithiq
   - Gère la transition entre les phases (Joueur ⇄ Ennemi), l'orchestration séquentielle des actions de riposte ennemie et la fin de tour.
 
 **Responsabilités directes** :
-- **Initialisation** : `initializeCombat(...)` — Génère la liste totale des ennemis via `EncounterSystem.generateEnemiesForLevel()`. Instancie les stats des ennemis en appliquant les multiplicateurs de niveau (+6% HP/lvl, +4% ATK/lvl) et d'acte (+20% HP/acte, +15% ATK/acte), ainsi que les modificateurs de nœuds (3x HP/2x ATK pour boss, 1.5x pour élite). Les 5 premiers ennemis sont placés dans `enemies` (câblés avec une intention de départ), les suivants sont placés dans `pendingEnemies`. 
+- **Initialisation** : `initializeCombat(...)` — Génère la liste totale des ennemis via `EncounterSystem.generateEnemiesForLevel()`. Instancie les stats des ennemis en appliquant les multiplicateurs de niveau (+6% HP/lvl, +4% ATK/lvl) et d'acte (+35% HP/acte, +25% ATK/acte), ainsi que les modificateurs de nœuds (3x HP/2x ATK pour boss, 1.5x pour élite). Les 5 premiers ennemis sont placés dans `enemies` (câblés avec une intention de départ), les suivants sont placés dans `pendingEnemies`. 
   
   Le calcul pour déterminer si le combat est un boss s'appuie sur la correction de garde `isBoss` :
   ```dart
@@ -235,21 +235,22 @@ static List<EnemyData> generateEnemiesForLevel(
   int playerAttaque = 0,
   int playerMaxMana = 3,
   int playerRelicsCount = 0,
+  int playerCardsCount = 0,
 })
 ```
 
 **Logique de Dimensionnement et Algorithme d'Équilibrage** :
 1. **Évaluation de la Puissance Réelle du Joueur (`PlayerPower`)** :
-   $$\text{PlayerPower} = \text{playerMaxHp} + (\text{playerAttaque} \times 10.0) + (\text{playerMaxMana} \times 15.0) + (\text{playerRelicsCount} \times 5.0)$$
+   $$\text{PlayerPower} = \text{playerMaxHp} + (\text{playerAttaque} \times 10.0) + (\text{playerMaxMana} \times 15.0) + (\text{playerRelicsCount} \times 5.0) + (\text{playerCardsCount} \times 2.0)$$
 2. **Puissance Théorique Attendue (`ExpectedPower`)** :
    $$\text{ExpectedPower} = 145.0 + ((\text{playerLevel} - 1) \times 15.0) + ((\text{act} - 1) \times 20.0)$$
 3. **Budget de Base théorique (`BaseBudget`)** :
    $$\text{BaseBudget} = 40.0 + ((\text{playerLevel} - 1) \times 10.0) + ((\text{act} - 1) \times 25.0)$$
 4. **Calcul du Budget Final (`FinalBudget`)** :
-   Le ratio de puissance est pondéré par un facteur d'amortissement de $0.5$ pour stabiliser la courbe :
+   Le ratio de puissance est pondéré par un facteur d'amortissement de $0.5$ pour stabiliser la courbe, et un bonus fixe de $+10.0$ par acte supplémentaire au-delà de l'acte 1 est appliqué :
    $$\text{PowerRatio} = \frac{\text{PlayerPower}}{\text{ExpectedPower}}$$
    $$\text{PowerModifier} = 1.0 + (\text{PowerRatio} - 1.0) \times 0.5$$
-   $$\text{FinalBudget} = \text{BaseBudget} \times \text{PowerModifier} \times \text{NodeMultiplier}$$
+   $$\text{FinalBudget} = (\text{BaseBudget} \times \text{PowerModifier} \times \text{NodeMultiplier}) + ((\text{act} - 1) \times 10.0)$$
    *(Avec `NodeMultiplier` = 1.0 pour normal, 1.5 pour élite, 2.0 pour boss)*
 
 5. **Formule du Niveau Ennemi (`getEnemyLevel`)** :
@@ -263,11 +264,11 @@ static List<EnemyData> generateEnemiesForLevel(
    Si `isBoss` est vrai, `NodeModifier` est de `2` et `NodeMultiplier` de `2.0` (pour le budget) ou `3.0` (pour HP de base) et `2.0` (pour l'attaque de base). Si `isElite` est vrai (`nodeType == MapNodeType.elite`), `NodeModifier` est de `1` et `NodeMultiplier` de `1.5`. Sinon, ils valent respectivement `0` et `1.0`.
 
 6. **Formule du CombatRating de l'Ennemi** :
-   Le coût de menace de chaque type d'ennemi est évalué à l'aide de ses statistiques simulées mises à l'échelle pour le niveau de combat :
-   $$\text{CombatRating} = (\text{tier} \times 10.0) + \text{HP\_Scalé} + \text{Armure\_Scalée} + \text{Dégâts\_Scalés} \times \left(1.0 + \frac{\text{critChance}}{100.0}\right)$$
+   Le coût de menace de chaque type d'ennemi est évalué à l'aide de ses statistiques simulées mises à l'échelle pour le niveau de combat, en atténuant l'impact des PV bruts (divisé par 4) et en augmentant l'impact des dégâts (multiplié par 2) pour favoriser l'apparition de groupes d'ennemis :
+   $$\text{CombatRating} = (\text{tier} \times 15.0) + \frac{\text{HP\_Scalé}}{4.0} + (\text{Dégâts\_Scalés} \times 2.0) \times \left(1.0 + \frac{\text{critChance}}{100.0}\right)$$
    Où :
-   - $$\text{HP\_Scalé} = \text{round}(\text{maxHp} \times \text{HpMultiplier})$$ avec $\text{HpMultiplier} = (1.0 + 0.06 \times (EnemyLevel - 1)) \times (1.0 + 0.20 \times (Act - 1)) \times NodeMultiplier$
-   - $$\text{Dégâts\_Scalés} = \text{round}(\text{baseDamage} \times \text{DamageMultiplier})$$ avec $\text{DamageMultiplier} = (1.0 + 0.04 \times (EnemyLevel - 1)) \times (1.0 + 0.15 \times (Act - 1)) \times NodeMultiplier$
+   - $$\text{HP\_Scalé} = \text{round}(\text{maxHp} \times \text{HpMultiplier})$$ avec $\text{HpMultiplier} = (1.0 + 0.06 \times (EnemyLevel - 1)) \times (1.0 + 0.35 \times (Act - 1)) \times NodeMultiplier$
+   - $$\text{Dégâts\_Scalés} = \text{round}(\text{baseDamage} \times \text{DamageMultiplier})$$ avec $\text{DamageMultiplier} = (1.0 + 0.04 \times (EnemyLevel - 1)) \times (1.0 + 0.25 \times (Act - 1)) \times NodeMultiplier$
 
 7. **Sélection Procédurale par Budget** :
    - Initialise `remainingBudget = FinalBudget`.

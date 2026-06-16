@@ -4,16 +4,24 @@ Ce document décrit le focus actif du projet, les accomplissements récents, et 
 
 ## 1. Focus Actuel du Projet
 
-Le projet a implémenté la double confirmation de fin de tour avec du mana restant (Version v0.2.6) :
-- **Sécurisation de la fin de tour** : Ajout d'une étape de validation si le joueur possède encore du mana (`currentMana > 0`). Le premier clic sur "Fin de tour" affiche une alerte ("Mana restant. Terminer le tour ?"), et le second clic valide la fin du tour.
-- **Réinitialisation intelligente** : L'état d'alerte et de confirmation est automatiquement réinitialisé lorsque le joueur joue une carte ou qu'un nouveau tour commence.
+Le projet a révisé les formules de génération des combats et de scaling de difficulté (Version v0.2.7) :
+- **Prise en compte du Deck** : Intégration du nombre de cartes du deck du joueur dans le calcul de sa puissance estimée (`playerCardsCount * 2.0`).
+- **Plus d'ennemis simultanés** : Réduction du poids des points de vie de base (HP/4) et augmentation du poids des dégâts (Dégâts*2) dans le calcul du Combat Rating des ennemis pour favoriser les combats en surnombre plutôt qu'un unique ennemi sac à PV.
+- **Bonus de Budget par Acte** : Ajout d'un bonus fixe au budget final selon l'acte en cours (`+10.0` par acte au-delà de l'acte 1) pour élargir l'enveloppe et permettre plus d'ennemis.
+- **Scaling accru à partir de l'Acte 2** : Les coefficients de croissance par acte pour les PV (de 20% à 35%) et les dégâts (de 15% à 25%) des ennemis ont été augmentés.
 - **Validation Stricte** : 0 erreur et 0 avertissement avec `dart analyze` ; 100% de réussite de la suite de tests (108/108).
 
 Le focus se tourne désormais vers les étapes suivantes de la roadmap technique : la persistance I/O (Sauvegarde de partie via `shared_preferences`), l'implémentation audio complète, la décomposition des écrans complexes restants (`MapScreen` et `GameScreen`), et l'amélioration de la couverture des tests.
 
 ## 2. Accomplissements Récents
 
-1. **Double Confirmation de Fin de Tour avec Mana Restant (Complété - Version v0.2.6)** :
+1. **Révision du Scaling et du Spawn des Ennemis (Complété - Version v0.2.7)** :
+   - **Formule de Combat Rating révisée** : Modification du calcul du coût de menace des ennemis pour atténuer le poids des PV bruts (divisés par 4.0) au profit des dégâts, permettant d'avoir plus d'ennemis pour un même budget.
+   - **Couplage Deck & Puissance joueur** : Transmission du nombre de cartes du deck principal (`playerCardsCount`) depuis `game_screen.dart` via `CombatController` vers `EncounterSystem.generateEnemiesForLevel` pour ajuster plus finement le budget du combat.
+   - **Difficulte accrue à partir de l'Acte 2** : Passage des ratios de croissance par acte à 35% pour les PV et 25% pour les dégâts.
+   - **Validation unitaire** : Mise à jour des valeurs du test de calcul du Combat Rating dans `encounter_system_test.dart` et validation de la suite de tests (108/108 au vert).
+
+2. **Double Confirmation de Fin de Tour avec Mana Restant (Complété - Version v0.2.6)** :
    - **Validation double clic** : Ajout d'une variable d'état local `_showRemainingManaWarning` dans `game_screen.dart` déclenchée si le mana du héros est supérieur à 0 lors du clic.
    - **Interactivité dynamique** : Réinitialisation immédiate du warning lors de l'exécution de `onPlayCard` ou du passage à un nouveau tour (`_startPlayerNewTurn()`).
    - **Localisation bilingue** : Ajout de la clé `remainingManaWarning` dans `app_en.arb` et `app_fr.arb`.

@@ -61,7 +61,7 @@ void main() {
       // damageMultiplier = (1.0 + 0.04 * 0) * (1.0 + 0.15 * 0) * 1.0 = 1.0
       // hpScale = 18 * 1.0 = 18
       // damageScale = 4 * 1.0 = 4
-      // Rating = (tier 1 * 10.0) + 18 + 0 + 4 * (1.0 + 5 / 100) = 10 + 18 + 0 + 4 * 1.05 = 28 + 4.2 = 32.2
+      // Rating = (tier 1 * 15.0) + (18 / 4.0) + 0 + (4 * 2.0) * (1.0 + 5 / 100) = 15 + 4.5 + 8.4 = 27.9
       final rating = EncounterSystem.calculateCombatRating(
         data: slimeData,
         enemyLevel: 1,
@@ -69,7 +69,7 @@ void main() {
         isBoss: false,
         isElite: false,
       );
-      expect(rating, closeTo(32.2, 0.01));
+      expect(rating, closeTo(27.9, 0.01));
     });
 
     test('generateEnemiesForLevel respects budget strictly', () {
