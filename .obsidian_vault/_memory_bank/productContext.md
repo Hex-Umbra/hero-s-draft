@@ -258,6 +258,7 @@ L'Autel d'Échange de Reliques est un type de nœud spécifique sur la carte str
 - **Coût des cartes** : Chaque carte a un coût de 0 à 3 cristaux. `canPlayCard()` vérifie `currentMana >= card.currentCost`.
 - **Coût temporaire** : `CardInstance.temporaryCost` peut override le coût de base (non utilisé activement).
 - **Compétences** : Les skills héroïques ont leurs propres coûts mana (3 à 8), consommés via `SkillController.triggerSkill()` → `RunController.consumeResource()`.
+- **Avertissement de Mana Restant (Double Confirmation)** : Si le joueur tente de terminer son tour alors qu'il possède encore du mana (`currentMana > 0`), un avertissement interactif s'affiche ("Mana restant. Terminer le tour ?") au-dessus du bouton de fin de tour. Un second clic consécutif est alors nécessaire pour forcer le passage du tour. Toute action de jeu de carte effectuée par la suite ou le début d'un nouveau tour réinitialise cette confirmation (nécessitant à nouveau deux clics).
 
 ### 3.2. 🛡️ Gestion de l'Armure
 

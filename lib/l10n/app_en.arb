@@ -108,6 +108,7 @@
   "noStatusActive": "No active effect",
   "waitingIntents": "Waiting...",
   "manaWarning": "No mana left.\nEnd your turn?",
+  "remainingManaWarning": "Mana remaining.\nEnd your turn?",
   "turnCount": "Turn {count}",
   "@turnCount": {
     "placeholders": {

@@ -58,6 +58,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     }
   }
   bool _showManaWarning = false;
+  bool _showRemainingManaWarning = false;
   int _turnCount = 1;
   bool _isVictoryHandled = false;
 
@@ -194,8 +195,10 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   void _startPlayerNewTurn() {
     setState(() {
       _showManaWarning = false;
+      _showRemainingManaWarning = false;
       _turnCount++;
     });
+    _game.currentPhase = TurnPhase.player;
     _game.heroCard?.suppressArmorChangeAnimation = true;
     ref.read(runProvider.notifier).startTurn();
     final deckNotifier = ref.read(deckProvider.notifier);
@@ -318,6 +321,10 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         combatController.applyPlayerCardPlay(
           card,
         );
+
+        setState(() {
+          _showRemainingManaWarning = false;
+        });
 
         if (runController.currentState.heroStats.currentMana > 0) {
           setState(() {
@@ -627,6 +634,41 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                       ),
                     ),
 
+                  // Avertissement "Mana restant" placé au-dessus du bouton de Fin de Tour
+                  if (!runState.isDead && !_showDraft && _showRemainingManaWarning)
+                    Positioned(
+                      right: 20,
+                      top: MediaQuery.of(context).size.height / 2 - 85,
+                      child: Container(
+                        width: 170,
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1E1E2C).withAlpha(245),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.amberAccent.withAlpha(200),
+                            width: 1.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withAlpha(150),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          l10n.remainingManaWarning,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+
                   // Bouton Fin de Tour (Milieu Droite)
                   if (!runState.isDead && !_showDraft)
                     Positioned(
@@ -644,8 +686,17 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                                   _game.currentPhase == TurnPhase.player &&
                                   !_game.isCardAnimating)
                               ? () {
+                                  final currentMana = runState.heroStats.currentMana;
+                                  if (currentMana > 0 && !_showRemainingManaWarning) {
+                                    setState(() {
+                                      _showRemainingManaWarning = true;
+                                      _showManaWarning = false;
+                                    });
+                                    return;
+                                  }
                                   setState(() {
                                     _showManaWarning = false;
+                                    _showRemainingManaWarning = false;
                                   });
                                   TraitSystem.onTurnEnd(
                                     ref.read(runProvider.notifier),

@@ -227,6 +227,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get manaWarning => 'Plus de mana.\nTerminer le tour ?';
 
   @override
+  String get remainingManaWarning => 'Mana restant.\nTerminer le tour ?';
+
+  @override
   String turnCount(int count) {
     return 'Tour $count';
   }

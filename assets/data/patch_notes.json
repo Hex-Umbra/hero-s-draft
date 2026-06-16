@@ -1,5 +1,26 @@
 [
   {
+    "version": "0.2.5",
+    "date": "2026-06-16",
+    "title": "Correction du Bouton de Fin de Tour",
+    "sections": [
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "Ajout d'une confirmation de fin de tour si le joueur possède encore du mana afin d'éviter les actions involontaires."
+        ]
+      },
+      {
+        "category": "Corrections",
+        "emoji": "🐛",
+        "entries": [
+          "Correction d'un problème où le bouton de fin de tour restait parfois inactif ou devenait inutilisable après avoir joué une carte lors d'un combat."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.2.4",
     "date": "2026-06-14",
     "title": "Harmonisation et Finitions",

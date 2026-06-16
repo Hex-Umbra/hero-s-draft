@@ -7,8 +7,8 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 - **8 fichiers JSON** de données d'assets.
 - **108 tests automatisés** — 100% au vert.
 - **0 erreur** via `flutter analyze`.
-- **~122 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
-- **Version actuelle** : v0.2.4 — Harmonisation Post-Refactoring de l'Architecture.
+- **~124 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
+- **Version actuelle** : v0.2.6 — Double Confirmation de Fin de Tour avec Mana Restant.
 
 ---
 
@@ -24,7 +24,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Anti-répétition de chemins | `MapGeneratorService._optimizeMapTypes` | Algorithme interdisant 3 nœuds Élite ou Repos consécutifs sur un même chemin |
 | Chokepoints structurels forcés | `MapGeneratorService` | Étage central dynamique (`floors ~/ 2`) Élite forcé (1 nœud), Étage `floors-2` Repos forcé (repos garanti avant boss) |
 | Level Up différé sur la Carte | `RunController`, `MapScreen`, `GameScreen` | Les gains de niveau incrémentent `pendingDrafts` au lieu d'ouvrir le draft en combat. Un overlay bloquant « LEVEL UP ! » s'affiche sur la carte, forçant le joueur à effectuer ses choix de draft avant de naviguer. |
-| Embranchement de Boss multiples | `MapGeneratorService` / `EncounterSystem` | Étage final (Boss) présente 3 nœuds de boss distincts avec récompenses de combat uniques déterminées par leur position |
+| Embranchement de Boss multiples | `MapGeneratorService` / `EncounterSystem` | Étage final (Boss) presents 3 nœuds de boss distincts avec récompenses de combat uniques déterminées par leur position |
 | Récompenses de Boss uniques | `GameScreen`, `MapNode`, `RewardController`, `BossCardDraftScreen` | Boss 1 (x=0) : sélection forcée de 3 cartes via BossCardDraftScreen (les cartes uniques de classe y sont exclues). Boss 2 (x=1) : XP/Or doublés. Boss 3 (x=2) : relic drop dynamique par Act dans RewardController. |
 | Correction d'orphelins | `MapGeneratorService` (Phase 2 câblage) | Garantie que tout nœud a au moins 1 connexion entrante |
 | Navigation réactive | `RunController.travelToNode()` | Validation d'accessibilité (connexion au nœud complété ou étage 0) |
@@ -48,7 +48,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Compétences | `SkillController` / `skillProvider` | 2 compétences par héros, cooldowns, consommation de ressources |
 | Événements | `EventController` / `eventProvider` | 2 événements narratifs à choix multiples, résolution d'actions, roll de rareté relique |
 | Boutique | `ShopController` / `shopProvider` | Achat/purge/clone cartes, soin, expansion, reroll, exclusion logique des cartes de rareté unique (v0.1.3), désactivation des services si or insuffisant et modal Magic Mirror amélioré avec UiCard complète, défilement horizontal et caching anti-exploit `cloneOptions` (v0.1.7) |
-| Récompenses de Victoire | `RewardController` / `rewardProvider` | Or, XP (doublés pour doubleXp), tirage de relique (improvedRelic avec chances dynamiques par Act excluant les communes), et draft de cartes (standard ou boss) |
+| Récompenses de Victoire | `RewardController` / `rewardProvider` | Or, XP (doublés for doubleXp), tirage de relique (improvedRelic avec chances dynamiques par Act excluant les communes), et draft de cartes (standard ou boss) |
 
 ### 🃏 Système de Cartes et Deck
 
@@ -75,6 +75,9 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Absorption armure | `EntityStats.takeDamage()` | Armure absorbe en priorité, reste → PV |
 | Armure + Mastery | `RunController.addArmor()`, `TraitSystem` | Tous les gains d'armure incluent `armorMastery` |
 | Reset d'armure par tour | `RunController.startTurn()`, `HeroCard` | L'armure du joueur est remise à 0 au début de son tour, avec suppression visuelle transitoire des animations via `suppressArmorChangeAnimation` |
+| Synchronisation Fin de Tour | `game_screen.dart` | Assignation synchrone `_game.currentPhase = TurnPhase.player` dans `_startPlayerNewTurn()` pour éliminer l'inactivité transitoire du bouton (v0.2.5) |
+| Double Confirmation Fin de Tour | `game_screen.dart` | Demande de confirmation et affichage d'un avertissement ("Mana restant. Terminer le tour ?") s'il reste du mana. Nécessite deux clics consécutifs pour terminer le tour, réinitialisé si le joueur joue une carte ou à chaque début de tour (v0.2.6) |ArmorChangeAnimation` |
+| Synchronisation Fin de Tour | `game_screen.dart` | Assignation synchrone `_game.currentPhase = TurnPhase.player` dans `_startPlayerNewTurn()` pour éliminer l'inactivité transitoire du bouton (v0.2.5) |
 | Intentions ennemies | `CombatController._rollIntent()` | Cycle séquentiel (prédéfinis) ou aléatoire (60% atk, 25% def, 15% buff) |
 | Phase ennemie séquentielle | `HerosDraftGame._enemyRipostePhase()` | Résolution intent par intent avec animations (délais 400-600ms) |
 | Statuts de combat | `EntityStats.addStatus()`, `tickStatuses()` | Stacking, tick durée, processing poison/regen |

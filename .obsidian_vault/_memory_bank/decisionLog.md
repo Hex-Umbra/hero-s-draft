@@ -16,16 +16,18 @@ Dans les jeux intégrant des moteurs de rendu interactifs comme Flame, il est co
 - **Exclure toute logique métier du moteur Flame** : les contrôleurs Riverpod (`RunController`, `DeckNotifier`, `CombatController`, `InventoryController`, `SkillController`, `EventController`, `ShopController`) sont la source unique de vérité.
 - **Rendre Flame réactif et passif** : il observe l'état Riverpod via un pattern de **double-buffering** (`_nextState`, `_nextDeckState`, `_nextCombatState`) appliqué dans `HerosDraftGame.update(dt)` par diffing visuel.
 - **Limiter les interactions Flame à des callbacks** : 18 callbacks fortement typés (ex: `onPlayCard`, `onSelectEnemy`, `onResolveEnemyIntent`) injectés via le constructeur de `HerosDraftGame`.
+- **Synchronisation Synchrone Transitoire** : Pour les transitions d'état réactives très sensibles au timing utilisateur (comme l'état actif/inactif du bouton de fin de tour), forcer de manière synchrone et directe la valeur dans le moteur Flame (par exemple `_game.currentPhase = TurnPhase.player;` dans `_startPlayerNewTurn()`) plutôt que d'attendre la mise à jour asynchrone au tick suivant de Flame.
 
 ### Preuves dans le code
 - `HerosDraftGame` (775 lignes) contient uniquement de la logique de rendu, layout, et animation — pas de calcul de dégâts ni de gestion d'état.
 - Tous les `StateNotifier` dans `lib/game/controllers/` fonctionnent indépendamment de Flame.
 - `EffectResolver` est une classe statique pure sans dépendance Flame.
+- `game_screen.dart` (`_startPlayerNewTurn()`) synchronise de manière synchrone `_game.currentPhase = TurnPhase.player;` pour réactiver immédiatement le bouton Fin de Tour (v0.2.5).
 
 ### Conséquences
 - ✅ **Tests unitaires purs** : 58 tests au vert sans instancier le moteur graphique.
 - ✅ **Éradication des bugs de désynchronisation** entre affichage et valeurs logiques.
-- ⚠️ **Rigueur nécessaire** : Le pattern de buffering peut manquer des changements d'état si plusieurs mutations surviennent dans une même frame (identifié dans `docs/lessons/flame_riverpod_sync.md`).
+- ⚠️ **Rigueur nécessaire** : Le pattern de buffering peut manquer des changements d'état si plusieurs mutations surviennent dans une même frame (identifié dans `docs/lessons/flame_riverpod_sync.md`). Pour contourner cela sur les éléments d'interface UI critiques, une mise à jour synchrone directe sur l'instance de `_game` doit être appliquée lors du cycle de vie du Widget parent.
 - ⚠️ **Violation partielle** : `HerosDraftGame.executeSkill()` contient encore de la logique de calcul de dégâts (damage_aoe, damage_targeted, armor_buff) — identifiée comme dette technique dans le rapport Opus 4.6.
 
 ---
@@ -2231,6 +2233,61 @@ Suite à l'audit du refactoring de la dette technique globale, quatre axes d'am�
 - ✅ **Sécurité et Robustesse** : Le typage fort de `floor` remplace les splits de chaînes, réduisant les risques d'exceptions de parsing lors des manipulations géométriques de la carte.
 - ✅ **Conformité Riverpod** : L'état statique global mutable de la classe stratégie est éliminé. Le cycle de vie des registries est géré de manière propre et déclarative par le conteneur Riverpod.
 - ✅ **Qualité Garantie** : 0 erreur `dart analyze` et passage des 108 tests unitaires.
+
+---
+
+## 🧭 ADR-028 : Synchronisation Synchrone du Bouton Fin de Tour
+
+### Statut
+✅ Accepté & Implémenté (v0.2.5)
+
+### Contexte
+Lors du combat, le bouton de fin de tour utilise une triple validation : l'état Riverpod (`combatState.turnPhase == TurnPhase.player`), l'état de phase local de Flame (`_game.currentPhase == TurnPhase.player`) et l'absence d'animation de cartes (`!_game.isCardAnimating`).
+Lorsqu'il clique sur "Fin de Tour", `HerosDraftGame` passe immédiatement `currentPhase` à `TurnPhase.enemy` pour empêcher le spam. À la fin du tour ennemi, l'état Riverpod repassait immédiatement à `TurnPhase.player`, mais le widget se reconstruisait avant que Flame ne fasse son tick de frame suivant. Cela causait une désynchronisation transitoire de phase désactivant le bouton ("null") à la reconstruction de la vue pour le nouveau tour.
+
+### Décision
+- Forcer de manière synchrone et explicite l'état `_game.currentPhase = TurnPhase.player;` dans la méthode `_startPlayerNewTurn()` de `game_screen.dart` lors du déclenchement du tour joueur.
+- Conserver la logique de protection contre le double-clic lors de la transition vers le tour de l'ennemi.
+
+### Preuves dans le code
+- [game_screen.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/ui/screens/game_screen.dart) (`_startPlayerNewTurn()`) :
+  ```dart
+  _game.currentPhase = TurnPhase.player;
+  ```
+
+### Conséquences
+- ✅ **Expérience utilisateur fluide** : Le bouton de fin de tour redevient immédiatement actif et cliquable dès le début du tour du joueur.
+- ✅ **Sécurité anti-spam préservée** : Le bouton se désactive instantanément dès le premier clic pour la transition vers le tour ennemi.
+- ✅ **Zéro Régression** : Les tests unitaires (108/108) et l'analyse statique restent 100% verts.
+
+---
+
+## 🛡️ ADR-065 : Double Confirmation de Fin de Tour avec Mana Restant (v0.2.6)
+
+### Statut
+✅ Accepté & Implémenté (v0.2.6)
+
+### Contexte
+Dans les jeux de cartes et roguelike deckbuilders, passer son tour accidentellement alors qu'il reste de l'énergie ou des cristaux de mana non consommés est une source majeure de frustration pour le joueur. Auparavant, le clic sur le bouton "Fin de tour" passait le tour instantanément s'il restait du mana, sans aucune garde-fou.
+
+### Décision
+- Introduire une garde-fou d'avertissement ("remainingManaWarning") lorsque le joueur tente de finir son tour alors que son mana actuel est supérieur à 0.
+- Implémenter ce garde-fou sous la forme d'un panneau d'avertissement affiché au-dessus du bouton de fin de tour.
+- Demander une double confirmation : le premier clic intercepte l'action et affiche l'alerte locale, et le second clic consécutif valide définitivement la fin du tour.
+- Réinitialiser cet état d'avertissement de manière dynamique si le joueur décide de jouer une carte (`onPlayCard`), ou lorsqu'un nouveau tour joueur débute (`_startPlayerNewTurn()`), pour éviter d'exiger une double confirmation inutile s'il a consommé tout son mana par la suite.
+
+### Preuves dans le code
+- [app_en.arb](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/l10n/app_en.arb) & [app_fr.arb](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/l10n/app_fr.arb) : Ajout de la clé bilingue `remainingManaWarning`.
+- [game_screen.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/ui/screens/game_screen.dart) :
+  - Ajout de la variable d'état local `bool _showRemainingManaWarning = false;`.
+  - Intégration de la logique de validation et de double clic dans le callback `onPressed` du bouton de fin de tour.
+  - Réinitialisation de `_showRemainingManaWarning` dans `_startPlayerNewTurn()` et `onPlayCard`.
+
+### Conséquences
+- ✅ **Sécurité UX accrue** : Élimination des passes de tour involontaires avec du mana disponible.
+- ✅ **Comportement intuitif** : Le message d'avertissement s'affiche au même emplacement que l'avertissement de mana vide, offrant une cohérence visuelle.
+- ✅ **Zéro Régression** : La suite de tests unitaires (108/108) et l'analyse statique du linter sont validées avec succès.
+
 
 
 
