@@ -55,4 +55,22 @@ class CardInstance {
       temporaryCost: clearTemporaryCost ? null : (temporaryCost ?? this.temporaryCost),
     );
   }
+
+  factory CardInstance.fromJson(Map<String, dynamic> json) {
+    return CardInstance(
+      uniqueId: json['uniqueId'] as String?,
+      data: CardData.fromJson(json['data'] as Map<String, dynamic>),
+      rarity: CardRarity.values.firstWhere((e) => e.name == json['rarity']),
+      forgeUpgrades: (json['forgeUpgrades'] as List<dynamic>?)?.map((e) => e as String).toList(),
+      temporaryCost: json['temporaryCost'] as int?,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'uniqueId': uniqueId,
+        'data': data.toJson(),
+        'rarity': rarity.name,
+        'forgeUpgrades': forgeUpgrades,
+        if (temporaryCost != null) 'temporaryCost': temporaryCost,
+      };
 }

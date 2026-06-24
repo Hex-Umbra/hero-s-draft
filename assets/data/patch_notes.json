@@ -1,5 +1,28 @@
 [
   {
+    "version": "0.2.8",
+    "date": "2026-06-24",
+    "title": "Progression de la Boutique et Miroir",
+    "sections": [
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "Les cartes proposées dans la boutique s'adaptent désormais à la progression de votre aventure, offrant des raretés plus élevées et des améliorations de forge aléatoires au fil des actes.",
+          "L'affichage des cartes en vente reflète désormais leur état réel, affichant clairement leur couleur de rareté et leurs emplacements de runes de forge directement sur les étals."
+        ]
+      },
+      {
+        "category": "Équilibrage",
+        "emoji": "⚖️",
+        "entries": [
+          "Le prix d'achat des cartes s'ajuste dynamiquement en fonction de leur rareté finale et du nombre d'améliorations de forge qu'elles possèdent.",
+          "Le coût d'utilisation du Miroir Magique double désormais à chaque clonage successif dans la même boutique, et se réinitialise à son tarif de base de 150 pièces d'or lorsque vous la quittez."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.2.7",
     "date": "2026-06-24",
     "title": "Résolution des Clés Dupliquées de Notifications",

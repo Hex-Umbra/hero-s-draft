@@ -27,6 +27,13 @@ class CardEffect {
       duration: json['duration'] as int?,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'type': type,
+        'value': value,
+        if (statusId != null) 'statusId': statusId,
+        if (duration != null) 'duration': duration,
+      };
 }
 
 class CardData {
@@ -114,4 +121,23 @@ class CardData {
       baseMaxForgeUpgrades: json['baseMaxForgeUpgrades'] as int? ?? 1,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name_en': nameEn,
+        'name_fr': nameFr,
+        'description_en': descriptionEn,
+        'description_fr': descriptionFr,
+        'cost': cost,
+        'type': type.name,
+        'category': category.name,
+        if (heroClass != null) 'heroClass': heroClass,
+        'rarity': rarity.name,
+        'target': target.name,
+        if (spritePath != null) 'spritePath': spritePath,
+        if (animation != null) 'animation': animation,
+        'isExhaust': isExhaust,
+        'effects': effects.map((e) => e.toJson()).toList(),
+        'baseMaxForgeUpgrades': baseMaxForgeUpgrades,
+      };
 }

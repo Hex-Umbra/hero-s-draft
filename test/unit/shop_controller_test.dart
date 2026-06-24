@@ -105,7 +105,7 @@ void main() {
       () {
         shopController.initializeShop(testCardPool, 0);
         final cardToBuy = shopController.state.cardsForSale.first;
-        final price = ShopController.getCardPrice(cardToBuy.rarity);
+        final price = ShopController.getCardPrice(cardToBuy);
         final initialGold = inventoryController.state.gold;
 
         final success = shopController.buyCard(
@@ -117,7 +117,7 @@ void main() {
         expect(inventoryController.state.gold, initialGold - price);
         expect(shopController.state.cardsForSale.contains(cardToBuy), false);
         expect(
-          deckNotifier.state.masterDeck.any((c) => c.data.id == cardToBuy.id),
+          deckNotifier.state.masterDeck.any((c) => c.data.id == cardToBuy.data.id),
           true,
         );
       },
@@ -127,7 +127,7 @@ void main() {
       shopController.initializeShop(testCardPool, 0);
       final cardToBuy = shopController.state.cardsForSale.firstWhere(
         (c) => c.rarity == CardRarity.rare,
-        orElse: () => testCardPool[2],
+        orElse: () => CardInstance(data: testCardPool[2]),
       );
 
       // Mettre l'or à 0
@@ -141,13 +141,13 @@ void main() {
       expect(success, false);
       expect(inventoryController.state.gold, 0);
       // Reste dans la boutique si l'achat a échoué (s'il y était initialement)
-      shopController.initializeShop([cardToBuy], 0);
+      shopController.initializeShop([cardToBuy.data], 0);
       final tryAgain = shopController.buyCard(
         cardToBuy,
         100,
       );
       expect(tryAgain, false);
-      expect(shopController.state.cardsForSale.contains(cardToBuy), true);
+      expect(shopController.state.cardsForSale.any((c) => c.data.id == cardToBuy.data.id), true);
     });
 
     test('buyHeal heals the hero and blocks further heal purchases', () {
@@ -190,7 +190,7 @@ void main() {
 
         expect(success, true);
         expect(inventoryController.state.bonusShopCards, 1);
-        // Contient maintenant 4 cartes (la 4ème du pool a été ajoutée)
+        // Contient maintenant 4 cartes
         expect(shopController.state.cardsForSale.length, 4);
       },
     );
@@ -230,16 +230,51 @@ void main() {
       deckNotifier.initializeStarterDeck([cardToClone]);
       expect(deckNotifier.state.masterDeck.length, 1);
 
+      // Le prix de base est maintenant de 150 Or, donnons 100 Or de plus (100 de base + 100 = 200 Or)
+      inventoryController.gainGold(100);
+
       final success = shopController.cloneCard(
-        50,
         cardToClone,
       );
 
       expect(success, true);
-      expect(inventoryController.state.gold, 50); // 100 - 50 = 50
+      expect(inventoryController.state.gold, 50); // 200 - 150 = 50
       expect(deckNotifier.state.masterDeck.length, 2);
       expect(deckNotifier.state.masterDeck[0].data.id, testCardPool[0].id);
       expect(deckNotifier.state.masterDeck[1].data.id, testCardPool[0].id);
+    });
+
+    test('cloneCard price doubles on subsequent purchases and resets on clearCloneOptions', () {
+      final cardToClone = CardInstance(data: testCardPool[0]);
+      deckNotifier.initializeStarterDeck([cardToClone]);
+
+      // Prix initial est 150 Or. Donnons-nous beaucoup d'or pour pouvoir faire plusieurs achats.
+      inventoryController.gainGold(2000); // 100 + 2000 = 2100 Or
+
+      expect(shopController.state.clonePrice, 150);
+
+      // Premier clone
+      var success = shopController.cloneCard(cardToClone);
+      expect(success, true);
+      expect(shopController.state.clonePrice, 300);
+      expect(shopController.state.clonePurchasedCount, 1);
+
+      // Deuxième clone
+      success = shopController.cloneCard(cardToClone);
+      expect(success, true);
+      expect(shopController.state.clonePrice, 600);
+      expect(shopController.state.clonePurchasedCount, 2);
+
+      // Troisième clone
+      success = shopController.cloneCard(cardToClone);
+      expect(success, true);
+      expect(shopController.state.clonePrice, 1200);
+      expect(shopController.state.clonePurchasedCount, 3);
+
+      // Réinitialisation de la boutique (sortie du shop)
+      shopController.clearCloneOptions();
+      expect(shopController.state.clonePrice, 150);
+      expect(shopController.state.clonePurchasedCount, 0);
     });
   });
 }

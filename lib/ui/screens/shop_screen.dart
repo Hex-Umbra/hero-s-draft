@@ -8,7 +8,6 @@ import '../../game/controllers/deck_controller.dart';
 import '../../game/controllers/shop_controller.dart';
 import '../../game/controllers/inventory_controller.dart';
 import '../../services/game_data_service.dart';
-import '../../models/data/card_data.dart';
 import '../../models/card_instance.dart';
 import '../widgets/ui_card.dart';
 import '../widgets/notification_overlay.dart';
@@ -41,7 +40,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     }
   }
 
-  void _buyCard(CardData card, int price) {
+  void _buyCard(CardInstance card, int price) {
     final shopController = ref.read(shopProvider.notifier);
 
     if (shopController.buyCard(
@@ -50,7 +49,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     )) {
       final locale = Localizations.localeOf(context).languageCode;
       context.showNotification(
-        AppLocalizations.of(context)!.purchased(card.getName(locale)),
+        AppLocalizations.of(context)!.purchased(card.data.getName(locale)),
         type: NotificationType.success,
       );
     } else {
@@ -200,7 +199,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     );
   }
 
-  void _showCloneModal(int price) {
+  void _showCloneModal() {
     final shopState = ref.read(shopProvider);
     List<CardInstance> options = shopState.cloneOptions;
 
@@ -247,7 +246,6 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                             final shopController = ref.read(shopProvider.notifier);
 
                             if (shopController.cloneCard(
-                              price,
                               card,
                             )) {
                               Navigator.of(ctx).pop();
@@ -351,7 +349,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                                 children: shopState.cardsForSale.map((card) {
                                   final int price =
                                       ShopController.getCardPrice(
-                                    card.rarity,
+                                    card,
                                   );
                                   final bool canAfford =
                                       inventoryState.gold >= price;
@@ -449,12 +447,12 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                               iconColor: Colors.blueAccent,
                               title: l10n.shopClone,
                               description: l10n.shopCloneDesc,
-                              price: 150,
-                              onPressed: inventoryState.gold >= 150
-                                  ? () => _showCloneModal(150)
+                              price: shopState.clonePrice,
+                              onPressed: inventoryState.gold >= shopState.clonePrice
+                                  ? () => _showCloneModal()
                                   : null,
                               buttonColor: Colors.blue.shade800,
-                              canAfford: inventoryState.gold >= 150,
+                              canAfford: inventoryState.gold >= shopState.clonePrice,
                             ),
                           ],
                         ),
@@ -592,7 +590,7 @@ class _ShopServiceWidgetState extends State<_ShopServiceWidget> {
 }
 
 class _ShopCardItem extends StatefulWidget {
-  final CardData card;
+  final CardInstance card;
   final int price;
   final VoidCallback onPressed;
   final bool canAfford;
@@ -631,7 +629,7 @@ class _ShopCardItemState extends State<_ShopCardItem> {
                   width: 150,
                   child: AspectRatio(
                     aspectRatio: 70 / 110,
-                    child: UiCard.fromData(
+                    child: UiCard.fromInstance(
                       card: widget.card,
                       locale: locale,
                       l10n: l10n,
