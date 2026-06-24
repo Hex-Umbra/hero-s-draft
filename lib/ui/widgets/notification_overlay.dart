@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -20,12 +21,14 @@ class GameNotification {
 
 class NotificationNotifier extends StateNotifier<List<GameNotification>> {
   final Map<String, Timer> _timers = {};
+  static final Random _random = Random();
 
   NotificationNotifier() : super([]);
 
   void show(String message, {NotificationType type = NotificationType.info}) {
+    final String uniqueId = "${DateTime.now().microsecondsSinceEpoch}_${_random.nextInt(100000)}";
     final notification = GameNotification(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: uniqueId,
       message: message,
       type: type,
     );
