@@ -1,5 +1,19 @@
 [
   {
+    "version": "0.2.7",
+    "date": "2026-06-24",
+    "title": "Résolution des Clés Dupliquées de Notifications",
+    "sections": [
+      {
+        "category": "Corrections",
+        "emoji": "🐛",
+        "entries": [
+          "Correction d'un problème qui provoquait parfois un blocage ou un plantage du jeu lors de l'apparition simultanée de plusieurs notifications (par exemple, lors de l'application rapide de plusieurs effets ou bonus/malus). Les notifications génèrent désormais un identifiant unique robuste, évitant tout conflit d'affichage."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.2.6",
     "date": "2026-06-16",
     "title": "Spawn des Ennemis et Équilibrage du Scaling",

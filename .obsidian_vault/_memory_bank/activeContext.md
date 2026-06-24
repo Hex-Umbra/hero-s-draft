@@ -4,18 +4,18 @@ Ce document décrit le focus actif du projet, les accomplissements récents, et 
 
 ## 1. Focus Actuel du Projet
 
-Le projet a révisé les formules de génération des combats et de scaling de difficulté (Version v0.2.7) :
-- **Prise en compte du Deck** : Intégration du nombre de cartes du deck du joueur dans le calcul de sa puissance estimée (`playerCardsCount * 2.0`).
-- **Plus d'ennemis simultanés** : Réduction du poids des points de vie de base (HP/4) et augmentation du poids des dégâts (Dégâts*2) dans le calcul du Combat Rating des ennemis pour favoriser les combats en surnombre plutôt qu'un unique ennemi sac à PV.
-- **Bonus de Budget par Acte** : Ajout d'un bonus fixe au budget final selon l'acte en cours (`+10.0` par acte au-delà de l'acte 1) pour élargir l'enveloppe et permettre plus d'ennemis.
-- **Scaling accru à partir de l'Acte 2** : Les coefficients de croissance par acte pour les PV (de 20% à 35%) et les dégâts (de 15% à 25%) des ennemis ont été augmentés.
-- **Validation Stricte** : 0 erreur et 0 avertissement avec `dart analyze` ; 100% de réussite de la suite de tests (108/108).
+Le projet a résolu un problème critique de crash de l'UI de combat (Version v0.2.8) lié à des clés dupliquées dans le système de notifications simultanées. 
 
 Le focus se tourne désormais vers les étapes suivantes de la roadmap technique : la persistance I/O (Sauvegarde de partie via `shared_preferences`), l'implémentation audio complète, la décomposition des écrans complexes restants (`MapScreen` et `GameScreen`), et l'amélioration de la couverture des tests.
 
 ## 2. Accomplissements Récents
 
-1. **Révision du Scaling et du Spawn des Ennemis (Complété - Version v0.2.7)** :
+1. **Résolution du Bug de Clés Dupliquées dans l'Overlay de Notification (Complété - Version v0.2.8)** :
+   - **Génération d'ID unique robuste** : Modification de `NotificationNotifier.show` dans `lib/ui/widgets/notification_overlay.dart` pour combiner le timestamp en microsecondes (`DateTime.now().microsecondsSinceEpoch`) et un suffixe aléatoire (`Random.nextInt(100000)`).
+   - **Éradication des collisions** : Cette modification élimine les collisions d'identifiants (clés dupliquées dans l'arbre de widgets Flutter) lorsque plusieurs notifications sont déclenchées simultanément (par exemple, lors de l'application synchrone de multiples statuts ou effets de début de tour).
+   - **Validation de l'analyse** : Zéro erreur et zéro avertissement avec `dart analyze`, garantissant la propreté du code.
+
+2. **Révision du Scaling et du Spawn des Ennemis (Complété - Version v0.2.7)** :
    - **Formule de Combat Rating révisée** : Modification du calcul du coût de menace des ennemis pour atténuer le poids des PV bruts (divisés par 4.0) au profit des dégâts, permettant d'avoir plus d'ennemis pour un même budget.
    - **Couplage Deck & Puissance joueur** : Transmission du nombre de cartes du deck principal (`playerCardsCount`) depuis `game_screen.dart` via `CombatController` vers `EncounterSystem.generateEnemiesForLevel` pour ajuster plus finement le budget du combat.
    - **Difficulte accrue à partir de l'Acte 2** : Passage des ratios de croissance par acte à 35% pour les PV et 25% pour les dégâts.
