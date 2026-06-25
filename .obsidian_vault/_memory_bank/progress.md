@@ -8,7 +8,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 - **108 tests automatisés** — 100% au vert.
 - **0 erreur** via `flutter analyze`.
 - **~125 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
-- **Version actuelle** : v0.2.8 — Résolution du Bug de Clés Dupliquées.
+- **Version actuelle** : v0.3.0 — Refonte, Équilibrage et Enrichissement Visuel des Rencontres.
 
 ---
 
@@ -369,6 +369,8 @@ Issus de `docs/analysis_reports/6_analyse_game_balance.md` (documentés, non cor
 
 | Version | Date | Titre | Description des changements clés |
 |:---|:---|:---|:---|
+| **v0.3.0** | 2026-06-25 | Refonte et Validation du Système d'Événements | Enrichissement visuel et narratif du système de rencontres avec 5 événements bilingues configurés dans `events.json`. Conception d'un Safety Gate de validation d'éligibilité (`isSelectable`) bloquant les options en cas d'or insuffisant, de dégâts létaux (`currentHp <= damage`), ou de réduction de PV Max létale. Rendu visuel d'en-tête (PV et Or réactifs) et intégration de badges compacts directement dans les boutons de choix d'options avec transition d'échelle animée après résolution. |
+| **v0.2.9** | 2026-06-25 | Équilibrage Boutique et Miroir Magique | Vente de cartes modélisée par instances réelles (`CardInstance`) affichant leurs sockets de runes et raretés dynamiques via `UiCard.fromInstance`. Tarification dynamique (+20 Or par upgrade de forge). Scaling de raretés et d'upgrades par Acte. Nerf anti-exploit du Miroir Magique doublant son coût à chaque achat ($150 \rightarrow 300 \rightarrow 600 \dots$ Or) avec réinitialisation à 150 Or en sortie de session. |
 | **v0.2.8** | 2026-06-24 | Résolution du Bug de Clés Dupliquées | Résolution de l'erreur "Duplicate keys found" dans l'overlay de notification en combinant le timestamp en microsecondes avec un suffixe pseudo-aléatoire généré par une instance statique unique de `Random`. Garantit des identifiants uniques stables pour toutes les notifications simultanées. |
 | **v0.2.7** | 2026-06-16 | Révision du Scaling et du Spawn des Ennemis | Révision des formules de génération des combats et de scaling de difficulté. Prise en compte du nombre de cartes du deck (`playerCardsCount * 2.0`) dans la puissance estimée du joueur. Ajustement du calcul du Combat Rating des ennemis (division par 4 des PV de base, multiplication par 2 des dégâts) pour encourager le spawn de plus d'ennemis. Augmentation des coefficients de croissance par acte (HP passe de 20% à 35%, dégâts de 15% à 25%). |
 | **v0.2.6** | 2026-06-16 | Double Confirmation de Fin de Tour | Ajout d'une double confirmation sur le bouton de fin de tour en cas de mana restant. Affiche un avertissement localized et réclame un deuxième clic pour valider. Se réinitialise automatiquement au début de chaque tour ou dès qu'une carte est jouée. |

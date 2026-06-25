@@ -1,5 +1,35 @@
 [
   {
+    "version": "3.0.0",
+    "date": "2026-06-25",
+    "title": "L'Art des Rencontres Narratives",
+    "sections": [
+      {
+        "category": "Nouvelles Fonctionnalités",
+        "emoji": "✨",
+        "entries": [
+          "Ajout de cinq rencontres narratives complexes et inédites (l'Autel Mystérieux, le Marchand Gobelin, la Fontaine Bénie, le Tombeau Oublié et le Feu de Camp Abandonné) offrant de multiples choix stratégiques rédigés en français et en anglais."
+        ]
+      },
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "Sécurisation des choix de dialogue : les options d'événements qui infligent des dégâts mortels ou des pertes de statistiques supérieures à vos ressources actuelles sont désormais automatiquement bloquées afin d'éviter une défaite accidentelle.",
+          "Intégration de badges indicateurs colorés sous chaque option pour afficher instantanément l'impact de vos choix (cœurs pour la santé, pièces pour l'or, étoiles pour les reliques, éclairs pour les modificateurs d'attaque).",
+          "Modernisation de l'écran d'événement avec des boutons d'options inéligibles élégamment grisés et désactivés."
+        ]
+      },
+      {
+        "category": "Technique",
+        "emoji": "🔧",
+        "entries": [
+          "Mise en place d'un système de validation dynamique des choix d'événements et renforcement de la suite de tests unitaires pour garantir la stabilité du jeu."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.2.8",
     "date": "2026-06-24",
     "title": "Progression de la Boutique et Miroir",

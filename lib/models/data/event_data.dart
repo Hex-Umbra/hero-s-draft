@@ -63,6 +63,34 @@ class EventChoice {
   String getResultText(String locale) =>
       locale == 'fr' ? resultTextFr : resultTextEn;
 
+  bool isSelectable(int currentHp, int currentGold, int currentMaxHp) {
+    for (final action in actions) {
+      if (action.type == 'take_damage') {
+        final damage = action.value is int
+            ? action.value as int
+            : int.tryParse(action.value.toString()) ?? 0;
+        if (currentHp <= damage) {
+          return false;
+        }
+      } else if (action.type == 'spend_gold') {
+        final cost = action.value is int
+            ? action.value as int
+            : int.tryParse(action.value.toString()) ?? 0;
+        if (currentGold < cost) {
+          return false;
+        }
+      } else if (action.type == 'gain_max_hp') {
+        final val = action.value is int
+            ? action.value as int
+            : int.tryParse(action.value.toString()) ?? 0;
+        if (val < 0 && currentMaxHp <= -val) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
   factory EventChoice.fromJson(Map<String, dynamic> json) {
     final tEn = json['text_en'] as String? ?? json['text'] as String? ?? '';
     final tFr = json['text_fr'] as String? ?? json['text'] as String? ?? '';
