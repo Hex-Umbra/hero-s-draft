@@ -13,7 +13,15 @@ Le focus se tourne désormais vers les étapes suivantes de la roadmap technique
 1. **Résolution du Bug de Clés Dupliquées dans l'Overlay de Notification (Complété - Version v0.2.8)** :
    - **Génération d'ID unique robuste** : Modification de `NotificationNotifier.show` dans `lib/ui/widgets/notification_overlay.dart` pour combiner le timestamp en microsecondes (`DateTime.now().microsecondsSinceEpoch`) et un suffixe aléatoire (`Random.nextInt(100000)`).
    - **Éradication des collisions** : Cette modification élimine les collisions d'identifiants (clés dupliquées dans l'arbre de widgets Flutter) lorsque plusieurs notifications sont déclenchées simultanément (par exemple, lors de l'application synchrone de multiples statuts ou effets de début de tour).
-   - **Validation de l'analyse** : Zéro erreur et zéro avertissement avec `dart analyze`, garantissant la propreté du code.
+   - **Validation de l'analyse** : Zéro erreur et zéro avertissement avec `dart analyze`, garantissant la prorepré du code.
+
+2. **Équilibrage, Scaling de Boutique et Nerf du Miroir Magique (Complété - Version v0.2.9)** :
+   - **Modélisation par instances de cartes (`CardInstance`)** : Remplacement des cartes statiques `CardData` en vente par des instances réelles `CardInstance` dans `ShopState`. Le widget de rendu `UiCard.fromInstance` affiche désormais de manière exhaustive leurs rune sockets de forge et leur couleur/halo de rareté dynamique dans la grille de vente.
+   - **Tarification dynamique organique** : Le coût des cartes en boutique s'ajuste dynamiquement selon leur rareté (Commun: 25 Or, Peu Commun: 50 Or, Rare: 100 Or, Épique: 150 Or, Légendaire: 200 Or) combiné à un surcoût de +20 Or par amélioration de forge présente.
+   - **Scaling de rareté et d'upgrades par Acte** : Conception d'une formule adaptative procédurale selon l'Acte actuel : probabilité linéaire accrue de cartes de rareté élevée, et chances croissantes à partir de l'Acte 2 d'obtenir des cartes pré-améliorées avec des runes compatibles à leur type.
+   - **Équilibrage du Miroir Magique (Nerf)** : Pour éviter le clonage infini de cartes sur-puissantes, le prix du clonage double géométriquement à chaque achat au sein de la même boutique ($150 \rightarrow 300 \rightarrow 600 \rightarrow 1200 \dots$ Or).
+   - **Réinitialisation automatique** : Remise à zéro automatique du compteur d'achats `clonePurchasedCount` et réinitialisation du prix à sa base de 150 Or dès que le joueur quitte la boutique (via `clearCloneOptions`).
+   - **Intégrité statique** : Analyse du code vierge de toute erreur sous `dart analyze` et passage au vert de 100% des tests unitaires de la suite.
 
 2. **Révision du Scaling et du Spawn des Ennemis (Complété - Version v0.2.7)** :
    - **Formule de Combat Rating révisée** : Modification du calcul du coût de menace des ennemis pour atténuer le poids des PV bruts (divisés par 4.0) au profit des dégâts, permettant d'avoir plus d'ennemis pour un même budget.
