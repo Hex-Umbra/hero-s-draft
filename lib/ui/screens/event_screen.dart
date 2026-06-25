@@ -204,6 +204,99 @@ class _EventScreenState extends ConsumerState<EventScreen> {
     );
   }
 
+  Widget _buildCompactActionBadge(BuildContext context, EventAction action) {
+    IconData icon;
+    Color iconColor;
+    Color textColor;
+    Color bgColor;
+    String text;
+
+    final l10n = AppLocalizations.of(context)!;
+
+    switch (action.type) {
+      case 'gain_gold':
+        icon = Icons.monetization_on;
+        iconColor = Colors.amber;
+        textColor = Colors.greenAccent;
+        bgColor = Colors.green.withValues(alpha: 0.08);
+        text = l10n.eventGainGold(action.value);
+        break;
+      case 'spend_gold':
+        icon = Icons.monetization_on;
+        iconColor = Colors.amber;
+        textColor = Colors.redAccent;
+        bgColor = Colors.red.withValues(alpha: 0.08);
+        text = l10n.eventSpendGold(action.value);
+        break;
+      case 'take_damage':
+        icon = Icons.favorite_border;
+        iconColor = Colors.redAccent;
+        textColor = Colors.redAccent;
+        bgColor = Colors.red.withValues(alpha: 0.08);
+        text = l10n.eventLoseHp(action.value);
+        break;
+      case 'heal':
+        icon = Icons.favorite;
+        iconColor = Colors.greenAccent;
+        textColor = Colors.greenAccent;
+        bgColor = Colors.green.withValues(alpha: 0.08);
+        text = l10n.eventGainHp(action.value);
+        break;
+      case 'gain_max_hp':
+        icon = Icons.add_box;
+        iconColor = Colors.pinkAccent;
+        textColor = Colors.pinkAccent;
+        bgColor = Colors.pink.withValues(alpha: 0.08);
+        text = l10n.eventGainMaxHp(action.value);
+        break;
+      case 'gain_strength':
+        icon = Icons.bolt;
+        iconColor = Colors.orangeAccent;
+        textColor = Colors.orangeAccent;
+        bgColor = Colors.orange.withValues(alpha: 0.08);
+        text = l10n.eventGainAttack(action.value);
+        break;
+      case 'gain_relic':
+        icon = Icons.auto_awesome;
+        iconColor = Colors.purpleAccent;
+        textColor = Colors.purpleAccent;
+        bgColor = Colors.purple.withValues(alpha: 0.08);
+        text = l10n.eventGainRelic;
+        break;
+      default:
+        icon = Icons.help_outline;
+        iconColor = Colors.white54;
+        textColor = Colors.white70;
+        bgColor = Colors.white.withAlpha(10);
+        text = '${action.type}: ${action.value}';
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: textColor.withAlpha(60), width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: iconColor, size: 14),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: TextStyle(
+              color: textColor,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final eventState = ref.watch(eventProvider);
@@ -427,13 +520,19 @@ class _EventScreenState extends ConsumerState<EventScreen> {
             const SizedBox(height: 40),
             if (!eventState.isResolved)
               ...activeEvent.choices.map(
-                (choice) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: _EventOptionButton(
-                    text: choice.getText(locale),
-                    onPressed: () => _handleChoice(choice),
-                  ),
-                ),
+                (choice) {
+                  final isSelectable = choice.isSelectable(currentPv, gold, maxPv);
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _EventOptionButton(
+                      text: choice.getText(locale),
+                      onPressed: isSelectable ? () => _handleChoice(choice) : null,
+                      badges: choice.actions
+                          .map((action) => _buildCompactActionBadge(context, action))
+                          .toList(),
+                    ),
+                  );
+                },
               )
             else
               _EventOptionButton(
@@ -450,39 +549,76 @@ class _EventScreenState extends ConsumerState<EventScreen> {
 
 class _EventOptionButton extends StatelessWidget {
   final String text;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final bool highlight;
+  final List<Widget>? badges;
 
   const _EventOptionButton({
     required this.text,
-    required this.onPressed,
+    this.onPressed,
     this.highlight = false,
+    this.badges,
   });
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: highlight ? Colors.white12 : Colors.black45,
-          foregroundColor: Colors.white,
-          side: BorderSide(
-            color: highlight ? Colors.blueAccent : Colors.white24,
-            width: 1.5,
+    final bool isEnabled = onPressed != null;
+
+    // Détermination des couleurs selon l'état
+    final Color bgColor = isEnabled
+        ? (highlight ? Colors.white12 : Colors.black45)
+        : Colors.black.withValues(alpha: 0.2);
+    final Color borderColor = isEnabled
+        ? (highlight ? Colors.blueAccent : Colors.white24)
+        : Colors.white10;
+    final Color textColor = isEnabled
+        ? Colors.white
+        : Colors.white38;
+
+    return Opacity(
+      opacity: isEnabled ? 1.0 : 0.55,
+      child: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: bgColor,
+            foregroundColor: textColor,
+            disabledBackgroundColor: bgColor,
+            disabledForegroundColor: textColor,
+            side: BorderSide(
+              color: borderColor,
+              width: 1.5,
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            elevation: isEnabled ? 4 : 0,
+            shadowColor: highlight ? Colors.blueAccent.withAlpha(50) : Colors.black38,
           ),
-          padding: const EdgeInsets.symmetric(vertical: 18),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-        onPressed: onPressed,
-        child: Text(
-          text,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: highlight ? FontWeight.bold : FontWeight.normal,
+          onPressed: onPressed,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                text,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: highlight || isEnabled ? FontWeight.bold : FontWeight.normal,
+                  color: textColor,
+                ),
+              ),
+              if (badges != null && badges!.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: badges!,
+                ),
+              ],
+            ],
           ),
         ),
       ),

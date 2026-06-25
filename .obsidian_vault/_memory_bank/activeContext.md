@@ -4,13 +4,20 @@ Ce document décrit le focus actif du projet, les accomplissements récents, et 
 
 ## 1. Focus Actuel du Projet
 
-Le projet a résolu un problème critique de crash de l'UI de combat (Version v0.2.8) lié à des clés dupliquées dans le système de notifications simultanées. 
+Le projet a résolu le crash de l'UI de combat (v0.2.8), équilibré la boutique (v0.2.9) et finalisé la refonte complète du système de rencontres/événements avec validation de sécurité et richesse visuelle (v0.3.0).
 
-Le focus se tourne désormais vers les étapes suivantes de la roadmap technique : la persistance I/O (Sauvegarde de partie via `shared_preferences`), l'implémentation audio complète, la décomposition des écrans complexes restants (`MapScreen` et `GameScreen`), et l'amélioration de la couverture des tests.
+Le focus se tourne désormais vers les étapes clés suivantes de la roadmap technique : la persistance I/O (Autosave via `shared_preferences` pour sauvegarder et reprendre les runs), l'intégration audio complète (`flame_audio`), le découpage modulaire des écrans complexes restants (`MapScreen` et `GameScreen`), et l'amélioration de la couverture de tests.
 
 ## 2. Accomplissements Récents
 
-1. **Résolution du Bug de Clés Dupliquées dans l'Overlay de Notification (Complété - Version v0.2.8)** :
+1. **Refonte, Équilibrage et Enrichissement Visuel du Système d'Événements (Complété - Version v0.3.0)** :
+   - **5 Événements Bilingues Complets** : Écriture et intégration de 5 rencontres immersives dans `events.json` (L'Autel Mystérieux, Le Marchand Fugitif, La Fontaine Bénie, Le Tombeau Oublié, Le Feu de Camp Abandonné) disposant de clés de localisation exhaustives en français et en anglais (`_fr`/`_en`).
+   - **Validation d'Éligibilité des Choix (Safety Gate)** : Conception et implémentation de la logique d'éligibilité `isSelectable` dans `EventChoice` pour désactiver réactivement les boutons d'options en cas de coût en or insuffisant, de dégâts mortels immédiats (`currentHp <= damage`), ou de perte létale de PV max, éliminant les morts accidentelles ou les transactions invalides.
+   - **Badges Visuels Intégrés** : Création de badges d'actions compacts insérés directement sous le texte des boutons de choix pour identifier instantanément les coûts et bénéfices (PV, PV Max, Or, Force, Reliques).
+   - **Interface Immersive & Animations** : Ajout d'une barre de statistiques en direct (PV et Or) en haut de `EventScreen`, et intégration d'un volet d'effets appliqués animé en échelle élastique (`TweenAnimationBuilder`) à la résolution du choix.
+   - **Intégrité et Assurance Qualité** : Le projet compile parfaitement avec 0 erreur sous `dart analyze` et la totalité de la suite de tests automatisés est validée avec succès.
+
+2. **Équilibrage, Scaling de Boutique et Nerf du Miroir Magique (Complété - Version v0.2.9)** :
    - **Génération d'ID unique robuste** : Modification de `NotificationNotifier.show` dans `lib/ui/widgets/notification_overlay.dart` pour combiner le timestamp en microsecondes (`DateTime.now().microsecondsSinceEpoch`) et un suffixe aléatoire (`Random.nextInt(100000)`).
    - **Éradication des collisions** : Cette modification élimine les collisions d'identifiants (clés dupliquées dans l'arbre de widgets Flutter) lorsque plusieurs notifications sont déclenchées simultanément (par exemple, lors de l'application synchrone de multiples statuts ou effets de début de tour).
    - **Validation de l'analyse** : Zéro erreur et zéro avertissement avec `dart analyze`, garantissant la prorepré du code.

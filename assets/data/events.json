@@ -43,32 +43,146 @@
     "description_fr": "Un petit gobelin portant un sac énorme court vers vous. 'S'il vous plaît ! Je suis poursuivi ! Achetez quelque chose vite !'",
     "choices": [
       {
-        "text_en": "Buy a mysterious bag (-40 Gold, +80 Gold or -20 HP)",
-        "text_fr": "Acheter un sac mystérieux (-40 Or, +80 Or ou -20 PV)",
-        "result_text_en": "You open the bag... it's a purse full of stolen gold coins!",
-        "result_text_fr": "Vous ouvrez le sac... c'est une bourse pleine de pièces d'or dérobées !",
+        "text_en": "Buy a mysterious relic (-40 Gold, +1 Relic)",
+        "text_fr": "Acheter une relique mystérieuse (-40 Or, +1 Relique)",
+        "result_text_en": "You buy a strange object from his sack. He thanks you warmly and runs away.",
+        "result_text_fr": "Vous achetez un objet étrange dans son sac. Il vous remercie chaleureusement et s'enfuit.",
         "actions": [
           { "type": "spend_gold", "value": 40 },
-          { "type": "gain_gold", "value": 80 }
+          { "type": "gain_relic", "value": 1 }
         ]
       },
       {
-        "text_en": "Rob the goblin (+50 Gold, -10 HP)",
-        "text_fr": "Voler le gobelin (+50 Or, -10 PV)",
+        "text_en": "Rob the goblin (+50 Gold, -12 HP)",
+        "text_fr": "Voler le gobelin (+50 Or, -12 PV)",
         "result_text_en": "The goblin scratches you before fleeing, dropping a few coins.",
         "result_text_fr": "Le gobelin vous griffe avant de s'enfuir en laissant tomber quelques pièces.",
         "actions": [
           { "type": "gain_gold", "value": 50 },
-          { "type": "take_damage", "value": 10 }
+          { "type": "take_damage", "value": 12 }
         ]
       },
       {
-        "text_en": "Help him hide (+1 random Relic)",
-        "text_fr": "L'aider à se cacher (+1 Relique aléatoire)",
-        "result_text_en": "To thank you, he hands you an old amulet before disappearing into the bushes.",
-        "result_text_fr": "Pour vous remercier, il vous tend une vieille amulette avant de disparaître dans les buissons.",
+        "text_en": "Help him hide (-15 HP, +1 Relic)",
+        "text_fr": "L'aider à se cacher (-15 PV, +1 Relique)",
+        "result_text_en": "You draw the attention of his pursuers and take some hits, but to thank you, he hands you an old amulet.",
+        "result_text_fr": "Vous attirez l'attention de ses poursuivants et subissez quelques coups, mais pour vous remercier, il vous tend une vieille amulette.",
         "actions": [
-          { "type": "gain_relic", "value": "test_relic" }
+          { "type": "take_damage", "value": 15 },
+          { "type": "gain_relic", "value": 1 }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "blessed_fountain",
+    "title_en": "The Blessed Fountain",
+    "title_fr": "La Fontaine Bénie",
+    "description_en": "You find a crystal-clear fountain adorned with angel statues. The water seems to radiate a gentle warmth.",
+    "description_fr": "Vous découvrez une fontaine d'eau cristalline ornée de statues d'anges. L'eau semble irradier une douce chaleur.",
+    "choices": [
+      {
+        "text_en": "Drink the blessed water (+25 HP)",
+        "text_fr": "Boire l'eau bénie (+25 PV)",
+        "result_text_en": "The water tastes sweet and pure. Your wounds heal instantly.",
+        "result_text_fr": "L'eau a un goût doux et pur. Vos blessures guérissent instantanément.",
+        "actions": [
+          { "type": "heal", "value": 25 }
+        ]
+      },
+      {
+        "text_en": "Purify your mind (-12 Max HP, +1 Attack)",
+        "text_fr": "Purifier son esprit (-12 PV Max, +1 Attaque)",
+        "result_text_en": "You plunge your head into the fountain. The pain is intense, but your mind becomes incredibly sharp.",
+        "result_text_fr": "Vous plongez votre tête dans la fontaine. La douleur est vive, mais votre esprit devient incroyablement aiguisé.",
+        "actions": [
+          { "type": "gain_max_hp", "value": -12 },
+          { "type": "gain_strength", "value": 1 }
+        ]
+      },
+      {
+        "text_en": "Toss a coin into the fountain (-20 Gold, +8 Max HP)",
+        "text_fr": "Jeter une pièce dans la fontaine (-20 Or, +8 PV Max)",
+        "result_text_en": "The coin sparkles as it sinks. You feel a permanent blessing washing over you.",
+        "result_text_fr": "La pièce scintille en coulant. Vous sentez une bénédiction permanente vous envahir.",
+        "actions": [
+          { "type": "spend_gold", "value": 20 },
+          { "type": "gain_max_hp", "value": 8 }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "forgotten_tomb",
+    "title_en": "The Forgotten Tomb",
+    "title_fr": "Le Tombeau Oublié",
+    "description_en": "A half-open crypt reveals a dusty tomb. An aura of ancient wealth and danger emanates from the dark sarcophagus.",
+    "description_fr": "Une crypte entrouverte révèle un tombeau poussiéreux. Une aura de richesse ancienne et de danger émane du sombre sarcophage.",
+    "choices": [
+      {
+        "text_en": "Plunder the sarcophagus (+100 Gold, -18 HP)",
+        "text_fr": "Piller le sarcophage (+100 Or, -18 PV)",
+        "result_text_en": "You force the lid open and grab the gold, triggering a poison needle trap.",
+        "result_text_fr": "Vous forcez le couvercle et attrapez l'or, ce qui déclenche un piège à aiguille empoisonnée.",
+        "actions": [
+          { "type": "gain_gold", "value": 100 },
+          { "type": "take_damage", "value": 18 }
+        ]
+      },
+      {
+        "text_en": "Inspect the wall engravings (+10 Max HP)",
+        "text_fr": "Inspecter les gravures murales (+10 PV Max)",
+        "result_text_en": "Reading the ancient inscriptions fills you with vitality and resilience.",
+        "result_text_fr": "La lecture des inscriptions anciennes vous remplit de vitalité et de résilience.",
+        "actions": [
+          { "type": "gain_max_hp", "value": 10 }
+        ]
+      },
+      {
+        "text_en": "Respect the dead (+15 Gold)",
+        "text_fr": "Respecter le repos des morts (+15 Or)",
+        "result_text_en": "You bow in respect. As you lift your head, you notice some loose coins on the floor.",
+        "result_text_fr": "Vous vous inclinez en signe de respect. En relevant la tête, vous remarquez des pièces éparpillées sur le sol.",
+        "actions": [
+          { "type": "gain_gold", "value": 15 }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "abandoned_camp",
+    "title_en": "The Abandoned Camp",
+    "title_fr": "Le Feu de Camp Abandonné",
+    "description_en": "Embers still smoke in this deserted camp. The former occupants seem to have fled in a hurry, leaving some belongings behind.",
+    "description_fr": "Des braises fument encore dans ce campement déserté. Les anciens occupants semblent être partis précipitamment, laissant quelques affaires.",
+    "choices": [
+      {
+        "text_en": "Rummage through remaining bags (-10 HP, +1 Relic)",
+        "text_fr": "Fouiller les sacs restants (-10 PV, +1 Relique)",
+        "result_text_en": "While searching the bags, you get bitten by a venomous spider, but find a valuable relic.",
+        "result_text_fr": "En fouillant les sacs, vous vous faites mordre par une araignée venimeuse, mais trouvez une relique de valeur.",
+        "actions": [
+          { "type": "take_damage", "value": 10 },
+          { "type": "gain_relic", "value": 1 }
+        ]
+      },
+      {
+        "text_en": "Rest by the fire (+15 HP)",
+        "text_fr": "Se reposer près du feu (+15 PV)",
+        "result_text_en": "You spend a peaceful moment warming yourself, restoring some health.",
+        "result_text_fr": "Vous passez un moment paisible à vous réchauffer, ce qui restaure une partie de votre santé.",
+        "actions": [
+          { "type": "heal", "value": 15 }
+        ]
+      },
+      {
+        "text_en": "Purchase left-behind provisions (-25 Gold, +30 HP)",
+        "text_fr": "Consommer les provisions abandonnées (-25 Or, +30 PV)",
+        "result_text_en": "You leave some gold in an honest-box and eat the well-preserved rations.",
+        "result_text_fr": "Vous laissez de l'or dans une boîte honnête et mangez les rations bien conservées.",
+        "actions": [
+          { "type": "spend_gold", "value": 25 },
+          { "type": "heal", "value": 30 }
         ]
       }
     ]
