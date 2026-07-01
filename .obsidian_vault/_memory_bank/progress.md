@@ -3,12 +3,12 @@
 Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnalités de **Hero's Draft** : opérationnelles, partiellement implémentées, non implémentées, et les chantiers de refactoring prioritaires issus des rapports de dette technique.
 
 **Métriques du projet** :
-- **~11 400 lignes** de code source dans `lib/` (~77 fichiers).
-- **8 fichiers JSON** de données d'assets.
-- **108 tests automatisés** — 100% au vert.
+- **~11 600 lignes** de code source dans `lib/` (~79 fichiers).
+- **9 fichiers JSON** de données d'assets.
+- **112 tests automatisés** — 100% au vert.
 - **0 erreur** via `flutter analyze`.
-- **~125 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
-- **Version actuelle** : v3.0.1 — Clarté du Mana des Reliques.
+- **~126 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
+- **Version actuelle** : v3.1.0 — Forge de Fusion et Forge Data-Driven.
 
 ---
 
@@ -32,6 +32,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Widgets dédiés par type | `MapScreen` | Icônes spécifiques (Combat/Élite/Shop/Event/Repos/Boss/Exchange) + tooltips |
 | Barre d'XP HUD | `MapScreen`, `xp_scaling_test.dart` | Barre de progression d'expérience dorée permanente et badges de niveau sous le HUD |
 | Rencontre d'Échange de Reliques | `MapGeneratorService`, `InventoryController`, `RunController`, `RelicExchangeScreen` | Autel d'échange de reliques (nœud relicExchange, emoji 🔄). Apparaît Acte 5+ (100% tous les 5 actes, 10% sinon, étage 2/3/4/6/7). Offre déterministe par seeded random. Échange 3 reliques de rareté R-1 contre 1 de rareté R proposée. |
+| Nœud Forge de Fusion | `MapGeneratorService`, `MapContentPlacer`, `MapNodeWidget` | Nouveau nœud `forgeFusion` (emoji ⚙️/layers_rounded). Placé procéduralement avec 25% de probabilité par carte/map sur les étages intermédiaires 3 à 7. |
 
 ### 🧠 Gestion d'État Métier (Riverpod Controllers)
 
@@ -49,6 +50,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Événements | `EventController` / `eventProvider` | 2 événements narratifs à choix multiples, résolution d'actions, roll de rareté relique |
 | Boutique | `ShopController` / `shopProvider` | Achat/purge/clone, soin, expansion, reroll. Caching anti-exploit `cloneOptions` (v0.1.7). Vente par instances réelles (`CardInstance`) affichant les runes, scaling de rareté et d'upgrades par Acte, prix dynamique des cartes (+20 Or/upgrade), et coût du Miroir Magique qui double par achat et se reset en quittant (v0.2.9) |
 | Récompenses de Victoire | `RewardController` / `rewardProvider` | Or, XP (triplés pour le boss central), tirage de relique (improvedRelic avec chances dynamiques par Act excluant les communes), et draft/clonage de cartes |
+| Logique de Fusion | `DeckNotifier`, `InventoryController` | Fusion d'améliorations identiques, déduction d'or ($80 \times (N-1)$ Or) et mise à jour de la carte modifiée dans le deck via `setForgeUpgrades` |
 
 ### 🃏 Système de Cartes et Deck
 
@@ -60,8 +62,8 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Catalogue complet | `cards.json` & `hero_cards.json` | 21 cartes équilibrées : 15 globales (communes) dans cards.json + 6 de classe (unique) dans hero_cards.json |
 | Types d'effets | `EffectResolver`, `CardEffect` | damage, heal, armor, draw, gain_mana, apply_status |
 | Exhaust mécanique | `DeckNotifier.playCard()` | Cartes Power et `isExhaust` → pile d'épuisement (sauf si upgrade `enduring`) |
-| Upgrade de Forge | `DeckNotifier.addForgeUpgrade()` | Ajout d'améliorations (stats, statuts, pioche, enduring). Les cartes uniques ont un maximum d'upgrades fixé à 5. |
-| Forge v2 (Refonte) | `ForgeUpgradeDialog` | Dialog.fullscreen responsive, filtrage intelligent selon le type (`skill` sans offensif, `power` utilitaire uniquement), achat de slots additionnels progressifs (v0.2.00) |
+| Upgrade de Forge | `DeckNotifier.addForgeUpgrade()`, `ForgeUpgradeData` | Améliorations de stats/pioche/mana/durée pilotées par `forge_upgrades.json` (data-driven). Cumulables sans limite d'épuisement (alreadyHas retiré). |
+| Forge v2.5 & Fusion | `ForgeUpgradeDialog`, `ForgeFusionScreen` | Écrans plein écran responsives. Forge classique avec tirage pondéré et achat de slots bonus. Forge de fusion pour combiner des runes identiques. |
 | Suppression de carte | `DeckNotifier.removeCardById()` | Oubli au feu de camp (`RestScreen`) : suppression définitive |
 | Draft post-combat | `DraftScreen` | 3 choix de cartes aléatoires après victoire (les cartes uniques de classe sont exclues) |
 | Draft de départ | `StarterDeckDraftScreen` | Sélection de 5 cartes globales directly depuis la grille complète des 15 cartes globales (suppression du pool de 10 cartes aléatoires) + cartes de classe uniques résolues via compétences |
@@ -370,6 +372,7 @@ Issus de `docs/analysis_reports/6_analyse_game_balance.md` (documentés, non cor
 
 | Version | Date | Titre | Description des changements clés |
 |:---|:---|:---|:---|
+| **v3.1.0** | 2026-07-01 | Forge de Fusion et Forge Data-Driven | Introduction du nœud Forge de Fusion (`MapNodeType.forgeFusion` à 25% de chance) sur les étages 3 à 7. Écran `ForgeFusionScreen` permettant d'unifier les runes identiques d'une carte pour un coût de 80 Or par fusion. Remplacement des upgrades codés en dur par une structure data-driven déclarative (`forge_upgrades.json` + `ForgeUpgradeData`). Suppression du filtre `alreadyHas` pour autoriser le cumul de runes identiques et additionner leurs effets en combat. Écriture de tests unitaires (112 tests réussis, 0 erreur). |
 | **v0.3.0** | 2026-06-25 | Refonte et Validation du Système d'Événements | Enrichissement visuel et narratif du système de rencontres avec 5 événements bilingues configurés dans `events.json`. Conception d'un Safety Gate de validation d'éligibilité (`isSelectable`) bloquant les options en cas d'or insuffisant, de dégâts létaux (`currentHp <= damage`), ou de réduction de PV Max létale. Rendu visuel d'en-tête (PV et Or réactifs) et intégration de badges compacts directement dans les boutons de choix d'options avec transition d'échelle animée après résolution. |
 | **v0.2.9** | 2026-06-25 | Équilibrage Boutique et Miroir Magique | Vente de cartes modélisée par instances réelles (`CardInstance`) affichant leurs sockets de runes et raretés dynamiques via `UiCard.fromInstance`. Tarification dynamique (+20 Or par upgrade de forge). Scaling de raretés et d'upgrades par Acte. Nerf anti-exploit du Miroir Magique doublant son coût à chaque achat ($150 \rightarrow 300 \rightarrow 600 \dots$ Or) avec réinitialisation à 150 Or en sortie de session. |
 | **v0.2.8** | 2026-06-24 | Résolution du Bug de Clés Dupliquées | Résolution de l'erreur "Duplicate keys found" dans l'overlay de notification en combinant le timestamp en microsecondes avec un suffixe pseudo-aléatoire généré par une instance statique unique de `Random`. Garantit des identifiants uniques stables pour toutes les notifications simultanées. |

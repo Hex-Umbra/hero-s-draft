@@ -1,6 +1,7 @@
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import '../../../models/data/card_data.dart';
+import '../../../models/data/forge_upgrade_data.dart';
 import '../card_component.dart';
 
 class _RendererEffectVisuals {
@@ -99,8 +100,10 @@ class CardTextRenderer {
         final id = parts[0];
         final k = int.tryParse(parts[1]) ?? 0;
         if (k <= 0) continue;
-        if (id == 'sharp') extraDamage += 2 * k;
-        if (id == 'hardened') extraArmor += 2 * k;
+        final upgradeData = ForgeUpgradeData.getById(id);
+        final multiplier = upgradeData?.valueMultiplier ?? 1;
+        if (id == 'sharp') extraDamage += multiplier * k;
+        if (id == 'hardened') extraArmor += multiplier * k;
       }
 
       final isAllEnemies = card.card.data.target == CardTarget.allEnemies;
@@ -699,25 +702,7 @@ class CardTextRenderer {
 
   String _getRuneEmoji(String upgrade) {
     final id = upgrade.split(':')[0];
-    switch (id) {
-      case 'sharp':
-        return '⚔️';
-      case 'hardened':
-        return '🛡️';
-      case 'quick':
-        return '🪶';
-      case 'eco':
-        return '💎';
-      case 'burning':
-        return '🔥';
-      case 'freezing':
-        return '❄️';
-      case 'shocking':
-        return '⚡';
-      case 'enduring':
-        return '⏳';
-      default:
-        return '🔮';
-    }
+    final upgradeData = ForgeUpgradeData.getById(id);
+    return upgradeData?.emoji ?? '🔮';
   }
 }

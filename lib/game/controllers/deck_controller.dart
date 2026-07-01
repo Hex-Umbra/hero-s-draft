@@ -225,6 +225,18 @@ class DeckNotifier extends Notifier<DeckState> {
     );
   }
 
+  /// Met à jour les runes d'une carte après fusion
+  void setForgeUpgrades(String uniqueId, List<String> upgrades) {
+    state = state.copyWith(
+      masterDeck: state.masterDeck.map((c) {
+        if (c.uniqueId == uniqueId) {
+          return c.copyWith(forgeUpgrades: upgrades);
+        }
+        return c;
+      }).toList(),
+    );
+  }
+
   /// Retire une carte spécifique du Master Deck (ex: Boutique)
   void removeCardFromMasterDeck(CardInstance cardToRemove) {
     removeCardById(cardToRemove.uniqueId);

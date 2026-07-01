@@ -55,12 +55,12 @@ graph TD
 | Systèmes | `lib/game/systems/` | `encounter_system.dart`, `trait_system.dart`, et les 4 systèmes Flame (`state_sync_system.dart`, `card_animation_system.dart`, `combat_visual_system.dart`, `layout_system.dart`) | ~800 |
 | Services (jeu) | `lib/game/services/` | `effect_resolver.dart` (~100), `effects/` (Strategy interfaces et 6 stratégies - nouveau), `combat_debug_logger.dart` (~120), `damage_pipeline.dart` (~60) | ~600 |
 | Services (app) | `lib/services/` | `game_data_service.dart`, `map_generator_service.dart`, `map/` (4 sous-services - nouveau) | ~350 |
-| Modèles Data | `lib/models/data/` | 8 fichiers (`card_data.dart`, `enemy_data.dart`, `hero_data.dart`, `skill_data.dart`, `event_data.dart`, `passive_data.dart`, `relic_data.dart`, `game_data_registry.dart`) | ~800 |
+| Modèles Data | `lib/models/data/` | 9 fichiers (`card_data.dart`, `enemy_data.dart`, `hero_data.dart`, `skill_data.dart`, `event_data.dart`, `passive_data.dart`, `relic_data.dart`, `forge_upgrade_data.dart`, `game_data_registry.dart`) | ~850 |
 | Modèles Runtime | `lib/models/` | 11 fichiers (instances, états, status) | ~600 |
-| UI Écrans | `lib/ui/screens/` | 10 écrans (`home_screen`, `hero_selection_screen`, `starter_deck_draft_screen`, `map_screen`, `game_screen`, `shop_screen`, `event_screen`, `campfire_screen`, `draft_screen`, `dictionary_screen`) | ~5500 |
+| UI Écrans | `lib/ui/screens/` | 11 écrans (`home_screen`, `hero_selection_screen`, `starter_deck_draft_screen`, `map_screen`, `game_screen`, `shop_screen`, `event_screen`, `campfire_screen`, `draft_screen`, `dictionary_screen`, `forge_fusion_screen`) | ~5700 |
 | UI Widgets | `lib/ui/widgets/` | `ui_card.dart`, `status_effects_panel.dart`, et le sous-dossier `ui_card/` (5 fichiers) | ~1100 |
 | Système Tutoriel | `lib/tutorial/` | `tutorial_engine.dart`, `tutorial_screen.dart`, widgets d'étapes (18 fichiers) | ~2000 |
-| **Total estimé** | | **~77 fichiers** | **~11400** |
+| **Total estimé** | | **~79 fichiers** | **~11600** |
 
 ---
 
@@ -356,6 +356,7 @@ static List<EnemyData> generateEnemiesForLevel(
    - Étage du milieu (`middleFloor = floors ~/ 2`) : Forced to exactly 1 node (chokepoint) of type Élite, enabling dynamic map sizing support.
    - Étage `floors-2` (repos garanti) : All nodes are forced to type Repos (Rest).
    - Étage `floors-1` (Boss) : Generates exactly 3 boss nodes depending on the final act requirements.
+   - **Forge de Fusion** : `MapContentPlacer` place un nœud `MapNodeType.forgeFusion` avec 25% de probabilité par carte/map, choisi de façon aléatoire sur un étage intermédiaire entre les étages 3 et 7.
 3. **Solver de Quotas (`_balanceQuotas`)** :
    - Itère sur les nœuds de la carte pour réallouer les types de nœuds afin de respecter les limites globales configurées dans `GameConstants.nodeQuotas` (Combat: 12-22, Elite: 3-6, Rest: 3-6, Shop: 2-5, Event: 4-9).
 4. **Algorithme Anti-Répétition de Chemin (`_hasThreeConsecutive` / `_getChainOfThree`)** :
@@ -444,6 +445,27 @@ Afin de décomposer la classe monolithique de rendu `HerosDraftGame`, ses tâche
 - **`LayoutSystem`** (`layout_system.dart`) :
   - Calcule dynamiquement l'agencement géométrique des cartes dans la main du joueur en arc de cercle (`layoutHand`).
   - Gère le repositionnement automatique et adaptatif des ennemis actifs sur le board (`repositionEnemies`) selon leur nombre (de 1 à 5).
+
+### 3.7. Logique de Forge Data-Driven & Forge de Fusion
+
+#### 3.7.1. Gestion des Données de Forge
+- **Déclaration JSON (`forge_upgrades.json`)** : Les améliorations, descriptions, types de cartes éligibles, poids de tirage par rareté et multiplicateurs de tier sont externalisés.
+- **Modèle et Registre (`ForgeUpgradeData`)** : Parser JSON avec registre d'accès statique `getById(id)` pour résoudre les données d'upgrades depuis n'importe quel point de rendu graphique sans avoir à passer par le state.
+- **Chargement asynchrone** : Pris en charge par `GameDataService` lors de la phase de chargement initial et mis à la disposition du jeu dans l'instance globale de `GameDataRegistry`.
+
+#### 3.7.2. Logique Métier de Fusion (`ForgeFusionScreen`)
+- **Éligibilité** : Filtrage du deck principal pour identifier les cartes possédant au moins 2 runes identiques (même ID).
+- **Calcul du Coût** : Géré dans l'interface métier de l'écran par la formule $80 \times (N - 1)$ Or.
+- **Routage et Navigation** : `MapScreen` intercepte l'entrée du joueur dans le nœud `MapNodeType.forgeFusion` et le redirige vers `ForgeFusionScreen`.
+- **Application des Changements** :
+  1. Le joueur choisit les runes à fusionner.
+  2. L'or est débité via `inventoryProvider.notifier.spendGold(...)`.
+  3. Les améliorations de la carte sont remplacées dans l'état immuable du deck via `deckProvider.notifier.setForgeUpgrades(uniqueId, upgrades)`.
+
+#### 3.7.3. Logique de Tirage et Affichage de Forge
+- **Logique de non-épuisement** : Les dialogues de forge classique (`ForgeUpgradeDialog`) et les générateurs de boutique (`ShopController`) n'excluent plus les upgrades possédés via `alreadyHas` pour autoriser le cumul de runes identiques.
+- **Sélection Pondérée** : Le choix probabiliste des slots utilise une sélection pondérée basée sur les poids déclarés dans le JSON en fonction de la rareté de la carte.
+- **Rendu Dynamique et Traduction** : `ForgeSlotRow`, `CardTextRenderer` et `DeckScreen` résolvent dynamiquement les icônes, les libellés localisés et les cumuls d'effets en combat à partir du registre `ForgeUpgradeData.getById`.
 
 ---
 

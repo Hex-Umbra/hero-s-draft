@@ -12,7 +12,7 @@ import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 final mockGameDataLoaderProvider = FutureProvider<GameDataRegistry>((
   ref,
 ) async {
-  return const GameDataRegistry(
+  return GameDataRegistry(
     enemies: [],
     heroes: [],
     skills: [],
@@ -20,6 +20,7 @@ final mockGameDataLoaderProvider = FutureProvider<GameDataRegistry>((
     events: [],
     passives: [],
     relics: [],
+    forgeUpgrades: [],
   );
 });
 

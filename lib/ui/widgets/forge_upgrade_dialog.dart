@@ -6,6 +6,8 @@ import '../../game/controllers/inventory_controller.dart';
 import '../../game/controllers/run_controller.dart';
 import '../../models/card_instance.dart';
 import '../../models/data/card_data.dart';
+import '../../models/data/game_data_registry.dart';
+import '../../models/data/forge_upgrade_data.dart';
 import '../../l10n/app_localizations.dart';
 import 'game_button.dart';
 import 'forge/forge_card_preview.dart';
@@ -77,58 +79,24 @@ class _ForgeUpgradeDialogState extends ConsumerState<ForgeUpgradeDialog> {
   }
 
   List<String> _getEligibleUpgradesForPool(CardInstance card, String poolName) {
-    List<String> poolUpgrades;
-    if (poolName == 'common') {
-      poolUpgrades = ['sharp', 'hardened', 'burning', 'freezing', 'shocking'];
-    } else if (poolName == 'uncommon') {
-      poolUpgrades = [
-        'sharp',
-        'hardened',
-        'burning',
-        'freezing',
-        'shocking',
-        'quick',
-      ];
-    } else {
-      // rare
-      poolUpgrades = [
-        'sharp',
-        'hardened',
-        'burning',
-        'freezing',
-        'shocking',
-        'quick',
-        'eco',
-        'enduring',
-      ];
-    }
+    final registry = GameDataRegistry.instance;
+    if (registry == null) return [];
 
     final eligible = <String>[];
-    for (final id in poolUpgrades) {
-      final alreadyHas = card.forgeUpgrades.any((u) => u.split(':')[0] == id);
-      if (alreadyHas) continue;
+    for (final upgrade in registry.forgeUpgrades) {
+      if (!upgrade.pools.contains(poolName)) continue;
 
       // Card type specific exclusions:
-      if (card.data.type == CardType.skill) {
-        if (id == 'sharp' || id == 'burning' || id == 'freezing' || id == 'shocking') {
-          continue;
-        }
-      }
-      if (card.data.type == CardType.power) {
-        if (id != 'eco' && id != 'quick' && id != 'enduring') {
-          continue;
-        }
-      }
-
-      if ((id == 'burning' || id == 'freezing' || id == 'shocking') &&
-          card.data.type != CardType.attack) {
-        continue;
-      }
-      if (id == 'enduring' && !card.data.isExhaust) {
+      if (upgrade.eligibleCardTypes != null &&
+          !upgrade.eligibleCardTypes!.contains(card.data.type.name)) {
         continue;
       }
 
-      eligible.add(id);
+      if (upgrade.requiresExhaust && !card.data.isExhaust) {
+        continue;
+      }
+
+      eligible.add(upgrade.id);
     }
     return eligible;
   }
@@ -154,23 +122,49 @@ class _ForgeUpgradeDialogState extends ConsumerState<ForgeUpgradeDialog> {
 
     for (int i = startIndex; i < poolOrder.length; i++) {
       final pool = poolOrder[i];
-      final eligible = _getEligibleUpgradesForPool(card, pool)
+      final eligibleIds = _getEligibleUpgradesForPool(card, pool)
           .where((id) => !excludedIdsInCurrentRolls.contains(id))
           .toList();
-      if (eligible.isNotEmpty) {
-        return eligible[rand.nextInt(eligible.length)];
+      if (eligibleIds.isNotEmpty) {
+        return _rollWeighted(eligibleIds, rand);
       }
     }
 
     for (final pool in poolOrder) {
-      final eligible = _getEligibleUpgradesForPool(card, pool)
+      final eligibleIds = _getEligibleUpgradesForPool(card, pool)
           .where((id) => !excludedIdsInCurrentRolls.contains(id))
           .toList();
-      if (eligible.isNotEmpty) {
-        return eligible[rand.nextInt(eligible.length)];
+      if (eligibleIds.isNotEmpty) {
+        return _rollWeighted(eligibleIds, rand);
       }
     }
     return null;
+  }
+
+  String _rollWeighted(List<String> eligibleIds, Random rand) {
+    int totalWeight = 0;
+    final upgrades = <ForgeUpgradeData>[];
+    for (final id in eligibleIds) {
+      final upg = ForgeUpgradeData.getById(id);
+      if (upg != null) {
+        upgrades.add(upg);
+        totalWeight += upg.weight;
+      }
+    }
+
+    if (totalWeight == 0 || upgrades.isEmpty) {
+      return eligibleIds[rand.nextInt(eligibleIds.length)];
+    }
+
+    int choice = rand.nextInt(totalWeight);
+    int currentSum = 0;
+    for (final upg in upgrades) {
+      currentSum += upg.weight;
+      if (choice < currentSum) {
+        return upg.id;
+      }
+    }
+    return upgrades.last.id;
   }
 
   String _rollSlotUpgrade(CardInstance card, List<String> excludedIds) {

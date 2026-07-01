@@ -5,6 +5,7 @@ import 'card_data.dart';
 import 'event_data.dart';
 import 'passive_data.dart';
 import 'relic_data.dart';
+import 'forge_upgrade_data.dart';
 
 class GameDataRegistry {
   final List<EnemyData> enemies;
@@ -14,8 +15,12 @@ class GameDataRegistry {
   final List<EventData> events;
   final List<PassiveData> passives;
   final List<RelicData> relics;
+  final List<ForgeUpgradeData> forgeUpgrades;
 
-  const GameDataRegistry({
+  static GameDataRegistry? _instance;
+  static GameDataRegistry? get instance => _instance;
+
+  GameDataRegistry({
     required this.enemies,
     required this.heroes,
     required this.skills,
@@ -23,5 +28,8 @@ class GameDataRegistry {
     required this.events,
     required this.passives,
     required this.relics,
-  });
+    required this.forgeUpgrades,
+  }) {
+    _instance = this;
+  }
 }

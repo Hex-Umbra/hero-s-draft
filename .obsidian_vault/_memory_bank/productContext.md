@@ -52,7 +52,7 @@ Le service statique `MapGeneratorService.generateMap({floors = 10, maxWidth = 5}
 - **`MapNodeGenerator`** (Phase 1) : Instancie les nœuds et définit leurs types par défaut selon l'étage.
 - **`MapConnectionBuilder`** (Phase 2) : Établit les liaisons (Directed Acyclic Graph) entre les étages successifs.
 - **`MapValidator`** (Phase 3) : Valide et ajuste les quotas minimum/maximum de nœuds par type, et applique la règle anti-répétition de chemin (maximum 2 nœuds Repos ou Élite consécutifs).
-- **`MapContentPlacer`** (Phase 4) : Gère le placement conditionnel d'événements ou de nœuds spéciaux (comme l'échange de reliques).
+- **`MapContentPlacer`** (Phase 4) : Gère le placement conditionnel d'événements ou de nœuds spéciaux (comme l'échange de reliques ou la **Forge de Fusion**).
 
 **Phase 1 — Création des nœuds** :
 - Itère de l'étage 0 à `floors-1` (0 à 9).
@@ -94,6 +94,10 @@ Le service statique `MapGeneratorService.generateMap({floors = 10, maxWidth = 5}
 - **Position gauche (x = 0)** : Permet au joueur de sélectionner 5 cartes aléatoires de son propre deck actuel et d'en choisir 2 pour les cloner (icône Cartes).
 - **Position centrale (x = 1)** : Triple (x3) l'or et l'expérience globale (XP) accumulés lors de la victoire, et octroie en plus au joueur une carte aléatoire tirée du jeu entier (excluant les cartes uniques de classe et les cartes de statut) (icône Magie/XP).
 - **Position droite (x = 2)** : Garantit l'obtention d'une relique de rareté supérieure (minimum Uncommon, excluant totalement les communes, icône Diamant). Les chances de rareté sont : Legendary 15%, Epic 30%, Rare 35%, Uncommon 20%.
+
+**Génération du nœud de la Forge de Fusion (`MapNodeType.forgeFusion`)** :
+- Le nœud spécial `forgeFusion` (icône de fente de fusion `Icons.layers_rounded` violette/fuchsia) a une **probabilité d'apparition de 25% par carte/map**.
+- S'il est généré, il est placé de manière aléatoire sur un étage intermédiaire entre les **étages 3 et 7**, en écrasant un nœud éligible. Cela évite qu'il n'interfère avec les premiers étages d'apprentissage (0 à 2), le nœud de repos obligatoire (étage 8) et les boss (étage 9).
 
 **Modèle `MapNode`** : `id` (ex: "node_0_0"), `type` (MapNodeType), `connections` (List\<String\>), `position` (Vector2 Flame), `isCompleted` (bool mutable).
 
@@ -403,9 +407,13 @@ Trois options interactives s'offrent au joueur sur l'écran `RestScreen` :
 
 ---
 
-### 3.10. 🔨 Système de Forge Découplé (Forge v2)
+### 3.10. 🔨 Système de Forge & Forge de Fusion (Forge v2.5)
 
-La forge permet d'ajouter des améliorations permanentes (upgrades) aux cartes du Master Deck en échange d'or. Elle intègre un ensemble de règles de protection et de confort utilisateur révisées en version v0.2.00 :
+La Forge permet d'ajouter des améliorations permanentes (upgrades) aux cartes du Master Deck en échange d'or. Elle a été étendue pour intégrer un système piloté par les données (data-driven) et un nœud spécial sur la carte : la **Forge de Fusion**.
+
+#### 3.10.1. Forge classique (Améliorations Data-Driven & Cumulables)
+- **Structure pilotée par les données** : Toutes les améliorations de forge sont définies de manière déclarative dans le fichier d'asset `assets/data/forge_upgrades.json` (nom, description bilingue, icône, couleur, poids d'apparition, restrictions et multiplicateurs). Le modèle `ForgeUpgradeData` (`lib/models/data/forge_upgrade_data.dart`) parse ces données et fournit un registre statique `getById(id)` pour un rendu dynamique bilingue unifié.
+- **Cumul et Suppression de l'Épuisement** : La contrainte d'exclusion `alreadyHas` a été supprimée. Un joueur peut désormais obtenir et appliquer plusieurs améliorations identiques (mêmes runes) sur une même carte. Leurs effets se cumulent et s'additionnent directement en combat (géré dynamiquement dans `CardTextRenderer` et `EffectResolver`).
 - **Limite de Capacité & Fentes de Runes (Rune Sockets)** : Une carte peut accueillir au maximum $baseMaxForgeUpgrades + rarityIndex$ améliorations (la capacité augmente avec la rareté de la carte). Les cartes uniques de classe ont une limite fixe de 5 améliorations. Les améliorations de forge sont représentées par des fentes de runes circulaires disposées sur plusieurs rangées (maximum 5 fentes par ligne, avec retour à la ligne automatique géré par `Wrap` en Flutter et par division/coordonnées Canvas en Flame).
 - **Génération Probabiliste de Slots de Base** : À chaque session d'ouverture pour une carte donnée, le système génère de 1 à 5 slots d'options d'upgrades indépendants (tirages de Bernoulli successifs) selon les chances suivantes :
   - Slot 1 : 100% (Garanti)
@@ -421,11 +429,7 @@ La forge permet d'ajouter des améliorations permanentes (upgrades) aux cartes d
   - *skill* (Compétence) : Exclut toutes les options offensives de dégâts physiques (`sharp`) ou élémentaires (`burning`, `freezing`, `shocking`).
   - *power* (Pouvoir) : Autorise uniquement les améliorations utilitaires (`eco` pour la réduction de coût mana, `quick` pour piocher une carte, et `enduring` pour retirer l'effet d'épuisement).
   - *attack* (Attaque) : Conserve l'accès au pool complet de toutes les améliorations (stats physiques, élémentaires, pioche, réduction de coût, enduring).
-- **Pools d'Améliorations Clamps par Rareté** : Les améliorations proposées sont tirées depuis des pools liés à la rareté de la carte :
-  - *Common* : Améliorations de stats (`sharp`, `hardened`) et statuts élémentaires (`burning`, `freezing`, `shocking` - réservés aux attaques).
-  - *Uncommon* : Pioche de cartes supplémentaires (`quick`).
-  - *Rare* : Gains de mana (`eco`) et retrait d'épuisement (`enduring` persistant), réservé aux cartes non-pouvoir exhaustibles.
-- **Pondération des Tiers** : Le tirage des pools est pondéré par l'index de rareté de la carte. Les Tiers des upgrades suivent la distribution : Tier I (80%), Tier II (15%), Tier III (5%).
+- **Sélection Pondérée par Rareté** : Les tirages d'options s'appuient sur un tirage pondéré par poids configuré dans le JSON (`weightCommon`, `weightUncommon`, `weightRare`) selon la rareté de la carte. Les Tiers des upgrades suivent la distribution de probabilité : Tier I (80%), Tier II (15%), Tier III (5%).
 - **Relance Individuelle (Reroll)** : Le joueur peut relancer le tirage d'un slot spécifique. Le coût en or augmente exponentiellement par slot :
   $$\text{Coût} = \text{round}(20 \times 1.25^n)$$
   où $n$ est le nombre de relances déjà appliquées à ce slot. Consomme l'or de l'inventaire via `inventoryProvider`.
@@ -439,6 +443,24 @@ La forge permet d'ajouter des améliorations permanentes (upgrades) aux cartes d
   - **`ForgeBuySlotButton`** : Bouton d'achat de slots bonus en bas de la liste d'options.
   - Desktop : Disposition en colonnes jumelles (`Row`) avec aperçu de carte à gauche et panneau de défilement scrollable (`ListView`) contenant les slots d'amélioration et le bouton d'achat à droite.
   - Mobile : Empilement vertical fluide (`Column`) assurant un scroll confortable et empêchant tout débordement (RenderFlex overflow).
+
+#### 3.10.2. Forge de Fusion (Fusion Forge)
+Le nœud de **Forge de Fusion** (`MapNodeType.forgeFusion`) permet au joueur de combiner les améliorations identiques d'une carte pour cumuler leurs tiers (ex: combiner `sharp:1` et `sharp:2` en un unique `sharp:3` sur la carte).
+- **Règles de Fusion** :
+  - Seules les améliorations de même type (même ID de rune) sur une même carte sont éligibles à la fusion.
+  - Leurs tiers sont additionnés. Exemple : deux runes de dégâts Tier 1 fusionnent en une rune de dégâts Tier 2. Trois runes Tier 1 fusionnent en une rune Tier 3.
+  - Les runes de type `enduring` ne possèdent pas de statistiques cumulables (binaire persistant/exhaust) et sont exclues de la fusion.
+- **Formule du Coût en Or** :
+  La fusion a un coût strict calculé en fonction du nombre de runes fusionnées :
+  $$\text{Coût} = 80 \times (N - 1) \text{ Or}$$
+  Où $N$ est le nombre de runes de même type sélectionnées pour être combinées.
+  - Fusionner 2 runes coûte 80 Or.
+  - Fusionner 3 runes coûte 160 Or.
+- **Interface Utilisateur (`ForgeFusionScreen`)** :
+  - L'écran analyse le deck et n'affiche que les cartes possédant au moins deux améliorations du même type (runes identiques). Si aucune carte n'est éligible, un message de fallback est affiché.
+  - Lors de la sélection d'une carte éligible, l'écran montre son aperçu visuel complet (UiCard) et liste les fusions possibles.
+  - Un bouton de validation applique la fusion, débite l'or via `inventoryProvider.notifier.spendGold(...)` et met à jour le deck via `deckProvider.notifier.setForgeUpgrades(...)`.
+  - Le joueur peut quitter l'atelier à tout moment en cliquant sur le bouton de retour, ce qui finalise le nœud sur la carte.
 
 
 ### 3.8. 🛒 Boutique (Shop)
