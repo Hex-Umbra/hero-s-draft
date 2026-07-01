@@ -111,6 +111,13 @@ class MapLegend extends StatelessWidget {
                 ? "Autel des Reliques"
                 : "Relic Shrine",
           ),
+          LegendItem(
+            icon: Icons.layers_rounded,
+            color: Colors.deepPurpleAccent,
+            label: Localizations.localeOf(context).languageCode == 'fr'
+                ? "Forge de Fusion"
+                : "Fusion Forge",
+          ),
           const Divider(color: Colors.white24, height: 12),
           LegendItem(
             icon: Icons.style,

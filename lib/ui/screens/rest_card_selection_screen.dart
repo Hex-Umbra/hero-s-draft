@@ -52,11 +52,6 @@ class RestCardSelectionScreen extends ConsumerWidget {
             'upgrade': selectedUpgrade,
           });
         }
-      } else {
-        // If the upgrade dialog is cancelled, pop back to the Rest Node menu directly
-        if (context.mounted) {
-          Navigator.of(context).pop(null);
-        }
       }
     } else {
       // Card Removal

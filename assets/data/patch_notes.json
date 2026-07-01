@@ -17,7 +17,15 @@
         "emoji": "⚡",
         "entries": [
           "Retrait de la restriction d'épuisement à la forge : vous pouvez désormais obtenir et cumuler plusieurs fois la même amélioration sur une seule et même carte.",
-          "Intégration d'un système d'améliorations de forge entièrement piloté par les données (data-driven), assurant un tirage pondéré des améliorations plus équilibré, un affichage dynamique et des descriptions multilingues impeccables en combat ainsi que dans votre deck."
+          "Intégration d'un système d'améliorations de forge entièrement piloté par les données (data-driven), assurant un tirage pondéré des améliorations plus équilibré, un affichage dynamique et des descriptions multilingues impeccables en combat ainsi que dans votre deck.",
+          "Ajout de l'icône de la Forge de Fusion dans la légende de la carte pour identifier instantanément ce nouveau lieu d'intérêt lors de votre exploration."
+        ]
+      },
+      {
+        "category": "Corrections",
+        "emoji": "🐛",
+        "entries": [
+          "Correction d'un problème d'expérience utilisateur à la forge du feu de camp : fermer ou annuler l'amélioration d'une carte ne ferme plus brusquement l'écran de sélection, vous permettant de choisir une autre carte."
         ]
       },
       {

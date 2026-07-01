@@ -98,6 +98,7 @@ Le service statique `MapGeneratorService.generateMap({floors = 10, maxWidth = 5}
 **Génération du nœud de la Forge de Fusion (`MapNodeType.forgeFusion`)** :
 - Le nœud spécial `forgeFusion` (icône de fente de fusion `Icons.layers_rounded` violette/fuchsia) a une **probabilité d'apparition de 25% par carte/map**.
 - S'il est généré, il est placé de manière aléatoire sur un étage intermédiaire entre les **étages 3 et 7**, en écrasant un nœud éligible. Cela évite qu'il n'interfère avec les premiers étages d'apprentissage (0 à 2), le nœud de repos obligatoire (étage 8) et les boss (étage 9).
+- Il est explicitement répertorié dans la légende de la carte (`MapLegend`) sous l'icône `Icons.layers_rounded` fuchsia.
 
 **Modèle `MapNode`** : `id` (ex: "node_0_0"), `type` (MapNodeType), `connections` (List\<String\>), `position` (Vector2 Flame), `isCompleted` (bool mutable).
 
@@ -402,7 +403,7 @@ Les reliques à charges accumulent des compteurs représentés par des effets de
 
 Trois options interactives s'offrent au joueur sur l'écran `RestScreen` :
 1. **Repos** : Soigne 30% du HP maximum.
-2. **Forge** : Ouvre la boîte de dialogue `ForgeUpgradeDialog` pour appliquer des améliorations probabilistes permanentes à une carte, consommant de l'or.
+2. **Forge** : Ouvre un écran de sélection de cartes. Lors de la sélection d'une carte, ouvre la boîte de dialogue `ForgeUpgradeDialog` pour appliquer des améliorations probabilistes permanentes, consommant de l'or. **Correction de navigation** : Si le joueur annule la forge (en fermant le dialogue), il est reconduit à l'écran de sélection de cartes pour changer de cible au lieu d'être renvoyé directement au menu du repos.
 3. **Oubli** : Sélectionne une carte pour la supprimer définitivement du Master Deck.
 
 ---

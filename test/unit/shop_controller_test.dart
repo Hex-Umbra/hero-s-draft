@@ -103,6 +103,7 @@ void main() {
     test(
       'buyCard successfully spends gold, removes card from shop, and adds it to deck',
       () {
+        inventoryController.gainGold(500); // Donner de l'or supplémentaire pour ce test
         shopController.initializeShop(testCardPool, 0);
         final cardToBuy = shopController.state.cardsForSale.first;
         final price = ShopController.getCardPrice(cardToBuy);

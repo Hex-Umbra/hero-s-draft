@@ -456,6 +456,7 @@ Afin de décomposer la classe monolithique de rendu `HerosDraftGame`, ses tâche
 #### 3.7.2. Logique Métier de Fusion (`ForgeFusionScreen`)
 - **Éligibilité** : Filtrage du deck principal pour identifier les cartes possédant au moins 2 runes identiques (même ID).
 - **Calcul du Coût** : Géré dans l'interface métier de l'écran par la formule $80 \times (N - 1)$ Or.
+- **Rendu Visuel et Légende** : Le nœud est rendu graphiquement par l'icône `layers_rounded` fuchsia sur la carte (`MapNodeWidget`) et est explicitement listé avec son libellé traduit dans le panneau de légende de la carte (`MapLegend`).
 - **Routage et Navigation** : `MapScreen` intercepte l'entrée du joueur dans le nœud `MapNodeType.forgeFusion` et le redirige vers `ForgeFusionScreen`.
 - **Application des Changements** :
   1. Le joueur choisit les runes à fusionner.
@@ -1077,6 +1078,7 @@ Le dialogue de forge `ForgeUpgradeDialog` (affiché via `RestScreen`) a été re
    - Au lancement du dialogue, si `runState.forgeTargetCardId == card.uniqueId`, le widget charge les fentes stockées dans `runState.forgeSlots` sans effectuer de nouveau tirage.
    - Sinon, le widget génère une nouvelle liste d'upgrades (avec $1\text{ à }5$ slots de base + `bonusForgeSlots` slots déjà achetés) et appelle immédiatement `RunNotifier.setForgeSession()` pour verrouiller le tirage.
    - L'effacement de la session (`clearForgeSession()`) n'est déclenché que lors d'un choix d'upgrade réussi, ou lors de la sortie définitive du camp de repos via `RestScreen._leave()`.
+   - **Navigation d'Annulation** : Si le joueur ferme le dialogue de forge sans effectuer de choix, il retourne à l'écran de sélection des cartes du repos (pour lui permettre de choisir une autre carte à forger) au lieu d'être renvoyé directement au menu principal du feu de camp.
 
 3. **Filtrage Intelligent des Upgrades par Type de Carte** :
    Pour éliminer les upgrades incohérents, la méthode `_getEligibleUpgradesForPool()` filtre le catalogue d'upgrades :
@@ -1126,7 +1128,7 @@ graph TD
     SaveDeck --> ClearSession[Appeler clearForgeSession]
     ClearSession --> End[Fermer Dialog & Revenir au RestScreen]
     Loop --> CloseDialog[Quitter sans Choisir]
-    CloseDialog --> EndDialog[Fermer Dialog - Conserve forgeTargetCardId pour RestScreen.leave]
+    CloseDialog --> EndDialog[Fermer Dialog & Revenir à la Sélection de Cartes]
 ```
 
 ### 10.2. Fusion Interactive et Consolidation des Upgrades (`DeckNotifier.mergeCards`)

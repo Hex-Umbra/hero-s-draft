@@ -26,15 +26,20 @@ Auparavant, le système de la Forge limitait le choix des améliorations (runes)
 3. **Atelier et Nœud de Forge de Fusion** :
    - Ajouter un nouveau type de nœud de carte stratégique `MapNodeType.forgeFusion` (emoji ⚙️/Layers).
    - Configurer le placement procédural du nœud de fusion dans `MapContentPlacer` avec une **probabilité de 25% par carte/map**, choisi aléatoirement sur un étage intermédiaire entre les **étages 3 et 7** (pour ne pas interférer avec le début, la pause obligatoire d'avant-boss ou les boss).
+   - Afficher le nœud dans le panneau de légende de la carte (`MapLegend`) pour assurer l'information du joueur.
    - Créer l'écran `ForgeFusionScreen` permettant au joueur de fusionner ses runes identiques d'une carte (ex: `sharp:1` et `sharp:2` fusionnent en un unique `sharp:3` cumulé).
    - Facturer la fusion à un coût financier strict de :
      $$\text{Coût} = 80 \times (N - 1) \text{ Or}$$
      où $N$ est le nombre de runes fusionnées (ex: 80 Or pour fusionner 2 runes, 160 Or pour 3 runes).
    - Débiter l'or via `inventoryProvider` et mettre à jour le deck via `deckProvider.notifier.setForgeUpgrades(uniqueId, upgrades)`.
 
+4. **Correction de la Navigation au Repos** :
+   - Lors de l'annulation de la forge au feu de camp (fermeture de `ForgeUpgradeDialog` sans sélection), le joueur est reconduit à l'écran de sélection de cartes de repos au lieu d'être renvoyé directement au menu principal du feu de camp, fluidifiant l'expérience de navigation.
+
 ### Preuves dans le code
 - `lib/models/data/forge_upgrade_data.dart` (structure de données).
 - `lib/ui/screens/forge_fusion_screen.dart` (écran de fusion et calcul du coût en Or).
+- `lib/ui/widgets/map/map_legend.dart` (affichage dans la légende de la carte).
 - `lib/services/map/map_content_placer.dart` (placement du nœud à 25% sur étages 3-7).
 - `lib/game/controllers/deck_controller.dart` (`setForgeUpgrades` pour la mise à jour immuable des runes).
 - `test/unit/decoupled_forge_test.dart` (tests unitaires de fusion, cumul et probabilités).
