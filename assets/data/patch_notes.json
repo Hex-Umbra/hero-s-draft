@@ -1,5 +1,35 @@
 [
   {
+    "version": "0.3.2",
+    "date": "2026-07-01",
+    "title": "Forge de Fusion et Runes Libérées",
+    "sections": [
+      {
+        "category": "Nouvelles Fonctionnalités",
+        "emoji": "✨",
+        "entries": [
+          "Introduction de la Forge de Fusion : un nouveau type de nœud fait son apparition sur la carte (avec 25% de probabilité d'apparaître aux étages 3 à 7) vous permettant de fusionner des améliorations identiques sur une carte pour cumuler leurs statistiques contre 80 pièces d'or par fusion.",
+          "Ajout d'un tout nouvel écran dédié à l'atelier de fusion pour visualiser facilement les cartes éligibles et le résultat des fusions d'améliorations."
+        ]
+      },
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "Retrait de la restriction d'épuisement à la forge : vous pouvez désormais obtenir et cumuler plusieurs fois la même amélioration sur une seule et même carte.",
+          "Intégration d'un système d'améliorations de forge entièrement piloté par les données (data-driven), assurant un tirage pondéré des améliorations plus équilibré, un affichage dynamique et des descriptions multilingues impeccables en combat ainsi que dans votre deck."
+        ]
+      },
+      {
+        "category": "Technique",
+        "emoji": "🔧",
+        "entries": [
+          "Mise en place de tests unitaires pour fiabiliser la logique de tirage pondéré et le calcul des fusions d'améliorations de la forge."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.1",
     "date": "2026-07-01",
     "title": "Clarté du Mana des Reliques",

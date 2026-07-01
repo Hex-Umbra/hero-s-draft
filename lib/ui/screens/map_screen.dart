@@ -11,6 +11,7 @@ import 'deck_screen.dart';
 import 'rest_screen.dart';
 import 'event_screen.dart';
 import 'relic_exchange_screen.dart';
+import 'forge_fusion_screen.dart';
 import 'draft_screen.dart';
 import '../../models/card_instance.dart';
 import '../../game/controllers/deck_controller.dart';
@@ -642,6 +643,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
         break;
       case MapNodeType.relicExchange:
         destination = RelicExchangeScreen(node: node);
+        break;
+      case MapNodeType.forgeFusion:
+        destination = const ForgeFusionScreen();
         break;
     }
 

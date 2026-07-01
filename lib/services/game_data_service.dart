@@ -8,6 +8,7 @@ import '../models/data/card_data.dart';
 import '../models/data/event_data.dart';
 import '../models/data/passive_data.dart';
 import '../models/data/relic_data.dart';
+import '../models/data/forge_upgrade_data.dart';
 import '../models/data/game_data_registry.dart';
 
 Future<List<dynamic>> _loadJsonList(String path) async {
@@ -57,6 +58,7 @@ final gameDataLoaderProvider = FutureProvider<GameDataRegistry>((ref) async {
     _loadJsonList('assets/data/passives.json'),
     _loadJsonList('assets/data/relics.json'),
     _loadJsonList('assets/data/hero_cards.json'),
+    _loadJsonList('assets/data/forge_upgrades.json'),
   ]);
 
   final enemiesList = results[0];
@@ -67,6 +69,7 @@ final gameDataLoaderProvider = FutureProvider<GameDataRegistry>((ref) async {
   final passivesList = results[5];
   final relicsList = results[6];
   final heroCardsList = results[7];
+  final forgeUpgradesList = results[8];
 
   final allCards = [
     ...cardsList,
@@ -81,5 +84,6 @@ final gameDataLoaderProvider = FutureProvider<GameDataRegistry>((ref) async {
     events: _mapList(eventsList, EventData.fromJson, 'EventData'),
     passives: _mapList(passivesList, PassiveData.fromJson, 'PassiveData'),
     relics: _mapList(relicsList, RelicData.fromJson, 'RelicData'),
+    forgeUpgrades: _mapList(forgeUpgradesList, ForgeUpgradeData.fromJson, 'ForgeUpgradeData'),
   );
 });

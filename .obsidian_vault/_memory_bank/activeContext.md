@@ -4,31 +4,40 @@ Ce document décrit le focus actif du projet, les accomplissements récents, et 
 
 ## 1. Focus Actuel du Projet
 
-Le projet a finalisé la clarification de l'affichage du mana des reliques (v3.0.1) suite à la refonte complète du système de rencontres/événements (v3.0.0).
+Le projet a finalisé l'introduction de la Forge de Fusion sur la carte ainsi que la réécriture data-driven de la Forge classique (v3.1.0).
 
 Le focus se tourne désormais vers les étapes clés suivantes de la roadmap technique : la persistance I/O (Autosave via `shared_preferences` pour sauvegarder et reprendre les runs), l'intégration audio complète (`flame_audio`), le découpage modulaire des écrans complexes restants (`MapScreen` et `GameScreen`), et l'amélioration de la couverture de tests.
 
 ## 2. Accomplissements Récents
 
-1. **Clarté du Mana des Reliques (Complété - Version v3.0.1)** :
+1. **Forge de Fusion et Améliorations de Forge Pilotées par les Données (Complété - Version v3.1.0)** :
+   - **Atelier de Fusion (Forge de Fusion)** : Implémentation du nouveau type de nœud de carte `MapNodeType.forgeFusion` (avec 25% de probabilité par carte/map, sur les étages intermédiaires 3 à 7) permettant de combiner des améliorations identiques d'une carte pour en cumuler le niveau.
+   - **Tarification de la Fusion** : Intégration d'un coût de fusion calculé dynamiquement de $80 \times (N - 1)$ Or, où $N$ est le nombre de runes identiques fusionnées. Débité via `inventoryProvider` et appliqué via `deckProvider.notifier.setForgeUpgrades`.
+   - **Écran Dédié `ForgeFusionScreen`** : Rendu bilingue réactif analysant le deck pour identifier et proposer uniquement les cartes éligibles disposant d'améliorations cumulables.
+   - **Structure Data-Driven de la Forge** : Définition de toutes les runes de forge dans `assets/data/forge_upgrades.json` (nom, description bilingue, poids, couleur, icône, restrictions) avec modèle `ForgeUpgradeData` exposant un accesseur statique `getById`.
+   - **Cumul de Runes & Non-Épuisement** : Retrait de l'exclusion `alreadyHas` dans `ForgeUpgradeDialog` et `ShopController` pour autoriser le joueur à posséder et cumuler plusieurs runes de même type (effets additionnés en combat).
+   - **Sélection Pondérée** : Tirage des améliorations de la Forge basé sur les poids du JSON (commun, peu commun, rare) selon la rareté de la carte.
+   - **Tests Unitaires et Validation** : Écriture de tests unitaires dédiés dans `decoupled_forge_test.dart` avec validation complète de la fusion, des probabilités et cumuls (112 tests réussis à 100%, 0 erreur sous `dart analyze`).
+
+2. **Clarté du Mana des Reliques (Complété - Version v3.0.1)** :
    - **Calcul Dynamique et Réactif** : Remplacement de l'affichage du mana tronqué à `maxMana` par un calcul dynamique basé sur `max(currentMana, maxMana)` pour gérer sans encombrement le mana additionnel octroyé par les reliques.
    - **Ajustement de Taille Graphique** : Recalcul automatique de `baseSize` en fonction du nombre total de cristaux pour s'adapter dynamiquement sur le HUD et prévenir les débordements (RenderFlex overflow) sur les écrans étroits.
    - **Distinction Visuelle Rétroéclairée** : Les points de mana standard (< `maxMana`) s'affichent sous forme de diamants pleins (actifs en cyan, inactifs en blanc translucide). Les points de mana supplémentaires (>= `maxMana`) s'affichent sous forme de diamants avec uniquement une bordure cyan (avec effet de lueur) et un fond noir, réalisés à l'aide d'un `Stack` comprenant `Icons.diamond` (noir) en arrière-plan et `Icons.diamond_outlined` (cyan) au premier plan.
    - **Intégrité et Validation** : Passage de `dart analyze` (0 erreur) et de l'ensemble de la suite de tests unitaires et widget-tests.
 
-2. **Refonte, Équilibrage et Enrichissement Visuel du Système d'Événements (Complété - Version v3.0.0 / v0.3.0)** :
+3. **Refonte, Équilibrage et Enrichissement Visuel du Système d'Événements (Complété - Version v3.0.0 / v0.3.0)** :
    - **5 Événements Bilingues Complets** : Écriture et intégration de 5 rencontres immersives dans `events.json` (L'Autel Mystérieux, Le Marchand Fugitif, La Fontaine Bénie, Le Tombeau Oublié, Le Feu de Camp Abandonné) disposant de clés de localisation exhaustives en français et en anglais (`_fr`/`_en`).
    - **Validation d'Éligibilité des Choix (Safety Gate)** : Conception et implémentation de la logique d'éligibilité `isSelectable` dans `EventChoice` pour désactiver réactivement les boutons d'options en cas de coût en or insuffisant, de dégâts mortels immédiats (`currentHp <= damage`), ou de perte létale de PV max, éliminant les morts accidentelles ou les transactions invalides.
    - **Badges Visuels Intégrés** : Création de badges d'actions compacts insérés directement sous le texte des boutons de choix pour identifier instantanément les coûts et bénéfices (PV, PV Max, Or, Force, Reliques).
    - **Interface Immersive & Animations** : Ajout d'une barre de statistiques en direct (PV et Or) en haut de `EventScreen`, et intégration d'un volet d'effets appliqués animé en échelle élastique (`TweenAnimationBuilder`) à la résolution du choix.
    - **Intégrité et Assurance Qualité** : Le projet compile parfaitement avec 0 erreur sous `dart analyze` et la totalité de la suite de tests automatisés est validée avec succès.
 
-3. **Résolution des Clés Dupliquées de Notifications (Complété - Version v0.2.8)** :
+4. **Résolution des Clés Dupliquées de Notifications (Complété - Version v0.2.8)** :
    - **Génération d'ID unique robuste** : Modification de `NotificationNotifier.show` dans `lib/ui/widgets/notification_overlay.dart` pour combiner le timestamp en microsecondes (`DateTime.now().microsecondsSinceEpoch`) et un suffixe aléatoire (`Random.nextInt(100000)`).
    - **Éradication des collisions** : Cette modification élimine les collisions d'identifiants (clés dupliquées dans l'arbre de widgets Flutter) lorsque plusieurs notifications sont déclenchées simultanément (par exemple, lors de l'application synchrone de multiples statuts ou effets de début de tour).
    - **Validation de l'analyse** : Zéro erreur et zéro avertissement avec `dart analyze`, garantissant la propreté du code.
 
-4. **Équilibrage, Scaling de Boutique et Nerf du Miroir Magique (Complété - Version v0.2.9)** :
+5. **Équilibrage, Scaling de Boutique et Nerf du Miroir Magique (Complété - Version v0.2.9)** :
    - **Modélisation par instances de cartes (`CardInstance`)** : Remplacement des cartes statiques `CardData` en vente par des instances réelles `CardInstance` dans `ShopState`. Le widget de rendu `UiCard.fromInstance` affiche désormais de manière exhaustive leurs rune sockets de forge et leur couleur/halo de rareté dynamique dans la grille de vente.
    - **Tarification dynamique organique** : Le coût des cartes en boutique s'ajuste dynamiquement selon leur rareté (Commun: 25 Or, Peu Commun: 50 Or, Rare: 100 Or, Épique: 150 Or, Légendaire: 200 Or) combiné à un surcoût de +20 Or par amélioration de forge présente.
    - **Scaling de rareté et d'upgrades par Acte** : Conception d'une formule adaptative procédurale selon l'Acte actuel : probabilité linéaire accrue de cartes de rareté élevée, et chances croissantes à partir de l'Acte 2 d'obtenir des cartes pré-améliorées avec des runes compatibles à leur type.
@@ -36,38 +45,38 @@ Le focus se tourne désormais vers les étapes clés suivantes de la roadmap tec
    - **Réinitialisation automatique** : Remise à zéro automatique du compteur d'achats `clonePurchasedCount` et réinitialisation du prix à sa base de 150 Or dès que le joueur quitte la boutique (via `clearCloneOptions`).
    - **Intégrité statique** : Analyse du code vierge de toute erreur sous `dart analyze` et passage au vert de 100% des tests unitaires de la suite.
 
-5. **Révision du Scaling et du Spawn des Ennemis (Complété - Version v0.2.7)** :
+6. **Révision du Scaling et du Spawn des Ennemis (Complété - Version v0.2.7)** :
    - **Formule de Combat Rating révisée** : Modification du calcul du coût de menace des ennemis pour atténuer le poids des PV bruts (divisés par 4.0) au profit des dégâts, permettant d'avoir plus d'ennemis pour un même budget.
    - **Couplage Deck & Puissance joueur** : Transmission du nombre de cartes du deck principal (`playerCardsCount`) depuis `game_screen.dart` via `CombatController` vers `EncounterSystem.generateEnemiesForLevel` pour ajuster plus finement le budget du combat.
    - **Difficulte accrue à partir de l'Acte 2** : Passage des ratios de croissance par acte à 35% pour les PV et 25% pour les dégâts.
    - **Validation unitaire** : Mise à jour des valeurs du test de calcul du Combat Rating dans `encounter_system_test.dart` et validation de la suite de tests (108/108 au vert).
 
-6. **Double Confirmation de Fin de Tour avec Mana Restant (Complété - Version v0.2.6)** :
+7. **Double Confirmation de Fin de Tour avec Mana Restant (Complété - Version v0.2.6)** :
    - **Validation double clic** : Ajout d'une variable d'état local `_showRemainingManaWarning` dans `game_screen.dart` déclenchée si le mana du héros est supérieur à 0 lors du clic.
    - **Interactivité dynamique** : Réinitialisation immédiate du warning lors de l'exécution de `onPlayCard` ou du passage à un nouveau tour (`_startPlayerNewTurn()`).
    - **Localisation bilingue** : Ajout de la clé `remainingManaWarning` dans `app_en.arb` et `app_fr.arb`.
    - **Zéro Régression** : Analyse statique vierge et suite de tests validée avec 100% de réussite.
 
-7. **Correction du Bouton de Fin de Tour (Complété - Version v0.2.5)** :
+8. **Correction du Bouton de Fin de Tour (Complété - Version v0.2.5)** :
    - **Mise à jour synchrone de l'état Flame** : Résolution du problème d'inactivité transitoire du bouton de fin de tour en combat en synchronisant explicitement `_game.currentPhase = TurnPhase.player;` lors du démarrage du tour du joueur dans `game_screen.dart` (`_startPlayerNewTurn`).
    - **Protection Anti-Spam intacte** : Le clic initial désactive instantanément le bouton pour empêcher le spam, tandis que le retour au tour joueur réactive le bouton immédiatement.
    - **Zéro Régression** : Analyse statique vierge et tous les tests de la suite automatisée (108/108) au vert.
 
-2. **Harmonisation Post-Refactoring de l'Architecture (Complété - Version v0.2.4)** :
+9. **Harmonisation Post-Refactoring de l'Architecture (Complété - Version v0.2.4)** :
    - **Harmonisation UI de ClassSelectionScreen** : Remplacement de l'ancien Scaffold/AppBar par les widgets standardisés de l'infrastructure (`ScreenScaffold` et `PageHeader`) pour harmoniser l'arrière-plan dégradé.
    - **Déduplication de code CombatEntity** : Centralisation de la logique de détection de modification de statistiques et de création d'animations d'impacts dans la classe de base commune Flame `CombatEntity`, éliminant la duplication logicielle résiduelle dans `HeroCard` et `EnemyCard`.
    - **Riverpodisation d'EffectRegistry** : Instanciation propre sans état statique mutable exposée par le provider `effectRegistryProvider` injecté à `EffectResolver.resolveCard`, et suppression de 3 callbacks orphelins de `HerosDraftGame`.
    - **Attribut floor de MapNode** : Ajout du champ `floor` avec désérialisation rétrocompatible, éradiquant les expressions `split('_')[1]` éparpillées.
    - **Zéro Régression** : L'analyse statique du projet est vierge de toute erreur ou avertissement et tous les 108 tests unitaires sont au vert.
 
-2. **Refactoring Phase 4 — Architecture & Patterns (Complété - Version v0.2.3)** :
+10. **Refactoring Phase 4 — Architecture & Patterns (Complété - Version v0.2.3)** :
    - **Découpage Procedural de la Carte** : Algorithme monolithique divisé en 4 modules dédiés (`MapNodeGenerator`, `MapConnectionBuilder`, `MapValidator`, `MapContentPlacer`), facilitant la maintenance et l'évolution de la carte stratégique.
    - **Strategy Pattern pour les Effets de Cartes** : Création de l'interface `EffectStrategy` et du registre `EffectRegistry` gérant 6 stratégies concrètes (`Damage`, `Heal`, `Armor`, `GainMana`, `Draw`, `ApplyStatus`), rendant `EffectResolver` propre et extensible.
    - **Composant Commun Flame `CombatEntity`** : Centralisation des animations communes (secousses, flashs colorés, particules, dash) éliminant plus de 300 lignes de code dupliqué dans `HeroCard` et `EnemyCard`.
    - **Cycle de vie Unifié `BaseVisualEffect`** : Encapsulation du retrait automatique (`RemoveEffect`) et des callbacks optionnels de fin, appliqué à `SlashEffect` et `ShieldDome`.
    - **Thème Visual Design & Diagnostic Data** : Ajout de `GameThemeExtension` pour regrouper les couleurs gameplay (raretés, stats, lueurs néon) et sécurisation du chargement JSON dans `GameDataService` avec alertes explicites.
 
-2. **Refactoring Phase 3 — Unification de l'UI (Complété - Version v0.2.2)** :
+11. **Refactoring Phase 3 — Unification de l'UI (Complété - Version v0.2.2)** :
    - **Centralisation du Scaffold (`ScreenScaffold`)** : Unification des styles d'arrière-plan du jeu (dégradé sombre de combat/menus et texture parchemin de la carte/échanges) et gestion propre du cycle de vie des retours arrière via `PopScope`.
    - **En-têtes d'Écrans Homogènes (`PageHeader`)** : Remplacement des AppBar ad-hoc par une structure unifiée gérant le bouton retour standardisé, le titre stylisé et les actions transversales.
    - **Badge d'Or Uniforme (`GoldIndicator`)** : Intégration de l'affichage de l'or connecté à l'état de l'inventaire en haut des écrans Boutique, Forge et Carte.
@@ -75,26 +84,26 @@ Le focus se tourne désormais vers les étapes clés suivantes de la roadmap tec
    - **Factorisation du Draft de Cartes** : Structure de mise en page commune (`CardDraftLayout`) avec grille responsive et indicateurs de sélection unifiés pour les drafts de boss et de starter.
    - **Nettoyage de 9 Écrans** : Migration des écrans clés vers la nouvelle architecture unifiée de l'UI sans régression visuelle ou logique.
 
-2. **Refactoring Phase 2 — Décomposition des God Classes (Complété - Version v0.2.1)** :
+12. **Refactoring Phase 2 — Décomposition des God Classes (Complété - Version v0.2.1)** :
    - **Contrôleur de Run Facade** : `RunController` réorganisé pour déléguer à `PlayerStatsManager` (stats, XP, HP, mana, buffs), `MapProgressionManager` (déplacements, complétions, actes), `RunPersistenceManager` (sauvegarde) et `GoldManager` (or, forge slots).
    - **Contrôleur de Combat Facade** : `CombatController` réorganisé pour déléguer à `StatusEffectProcessor` (résolution unifiée des statuts poison, brûlure, force, armure joueur/ennemis) et `TurnPhaseManager` (ripostes, transitions de tours).
    - **Systèmes Flame Spécialisés** : Division de `HerosDraftGame` en 4 composants Flame indépendants : `StateSyncSystem` (synchronisation des états Riverpod), `CardAnimationSystem` (inclinaison, zoom, focus, pioche), `CombatVisualSystem` (Bézier ciblage, explosions de particules, dômes), et `LayoutSystem` (layouts arc de main, repositionnement ennemis).
    - **Découplage de CardComponent** : Extraction du dessin Canvas 2D dans `CardRenderer` (runes de forge, halos de rareté, Sheen foil) et des gestes physiques dans `CardInteractionHandler` (hover, drag, cancel zone, ciblage).
    - **Maintien de l'intégrité de l'API** : Toutes les signatures de fonctions et méthodes publiques ont été préservées pour assurer une compatibilité immédiate avec les UI existantes et la suite de tests.
 
-2. **Centralisation, Harmonisation et Refactoring (Version v0.1.9)** :
+13. **Centralisation, Harmonisation et Refactoring (Version v0.1.9)** :
    - **Centralisation des Constantes de Jeu** : Déplacement de tous les délais temporels des phases de combat et des paramètres graphiques (police, échelle, drift, fondu) du texte flottant (`FloatingText`) dans `GameConstants` (`lib/game/game_constants.dart`), éliminant ainsi plus de 100 nombres magiques éparpillés.
    - **Immutabilité des Modèles d'État (Sécurisation)** : Application de l'annotation `@immutable` et de listes non modifiables (`List.unmodifiable` dans les constructeurs et `copyWith`) sur les modèles clés `EntityStats`, `CombatState` et `EnemyInstance`. Les constructeurs `const` incompatibles avec `unmodifiable` ont été convertis.
    - **Pipeline de Dégâts Unifié (`DamagePipeline`)** : Implémentation du service centralisé `DamagePipeline.calculate` (`lib/game/services/damage_pipeline.dart`) qui centralise toute la logique de combat physique et magique : affaiblissement de l'attaquant (-25%), jet de coup critique (avec propagation du flag de critique `lastActionWasCrit` pour Flame), cumul du choc de la cible et amplification de vulnérabilité (+50%). Simplification drastique de `CombatController` et `EffectResolver` qui lui délèguent leurs calculs.
    - **Assurance Qualité & Validation** : Analyse statique via `dart analyze` (0 erreur, 0 avertissement) et passage au vert de la totalité des 108 tests unitaires de la suite automatisée (`flutter test`).
 
-3. **Transition Fluide de Tour & Reset d'Armure (Version v0.1.8)** :
+14. **Transition Fluide de Tour & Reset d'Armure (Version v0.1.8)** :
    - **Reset Systématique de l'Armure** : Modification de la logique de transition de tour dans `RunController.startTurn()` pour mettre à jour l'état du run en remettant à `0` la statistique `armure` avant d'appliquer les reliques et effets de statut liés au début du tour (tels que `armor_regen`). Cela empêche l'immortalité involontaire par cumul continu d'armure.
    - **Contournement des Animations en Début de Tour** : Intégration d'un booléen `suppressArmorChangeAnimation` dans `HeroCard` pour empêcher les effets d'impact graphique (secousse de bouclier `shieldHitAnimation` et popups de perte d'armure) d'apparaître indûment lors du reset automatique de début de tour. Le flag est lu puis réinitialisé à `false` à la fin de la mise à jour des statistiques graphiques.
    - **Contrôle d'État Visuel** : Câblage du flag dans `game_screen.dart` lors de l'appel à `_startPlayerNewTurn()`, garantissant une synchronisation propre entre la transition d'état et le rendu.
    - **Validation de la Suite d'Assurance Qualité** : Passage réussi des 108 tests unitaires de la suite automatisée et validation de la propreté du code via `dart analyze` (linter 100% vert).
 
-4. **L'Éclat des Combats (Version v0.1.7)** :
+15. **L'Éclat des Combats (Version v0.1.7)** :
    - **Textes Flottants Premium & Néon** : Implémentation d'ombres portées et de contours thématiques fluorescents (rouge/orange pour critique, vert pour poison, bleu/cyan pour bouclier). Insertion des préfixes `"💥 CRIT "`, `"🧪 "` et `"🛡️ "` et calibrage de la taille (36, 22, 26).
    - **Cinématique de Pop & Pulsation** : Rotation aléatoire de départ (entre -0.15 et +0.15 rad) sur 150ms. Séquence d'échelle élastique sur critique (1.5x via `Curves.elasticOut` puis 1.15x puis pulsation infinie oscillante 1.15x - 1.3x). Oscillation sinusoïdale horizontale sur le poison.
    - **Déclenchement Critique Déterministe** : Câblage de l'animation de critique sur le flag `lastActionWasCrit` des modèles `EntityStats` calculé côté métier (Riverpod) et non plus sur des seuils de dégâts arbitraires.
@@ -108,27 +117,27 @@ Le focus se tourne désormais vers les étapes clés suivantes de la roadmap tec
    - **Caching Persistant Anti-Exploit du Magic Mirror** : Pour empêcher le joueur d'annuler et de réouvrir le modal de clonage pour forcer un nouveau tirage de cartes (reroll exploit gratuit), les 3 cartes candidates sélectionnées du deck sont stockées de façon persistante dans la liste `cloneOptions` de `ShopState`. Si la liste est déjà peuplée, le modal réutilise la sélection existante sans ré-échantillonner. La liste n'est vidée et réinitialisée que lors d'un nouvel appel à `ShopController.initializeShop` lors du chargement d'un nouveau nœud boutique.
    - **Verrouillage Financier Automatique des Services de Boutique** : Intégration d'un système de gating strict des services (Reroll, Soin, Purge, Expansion, Clonage) dans l'interface de la boutique. Les boutons d'action correspondants sont désactivés (en assignant `onPressed: null`) et l'affichage visuel est mis à jour (`canAfford: false`) dès que le solde du joueur (`inventoryState.gold`) est inférieur au coût fixé pour chaque service, éliminant tout risque de transaction invalide ou de spam.
 
-2. **Ajustements du Gel et de la Forge (Version v0.1.6)** :
+16. **Ajustements du Gel et de la Forge (Version v0.1.6)** :
    - **Correction Forge Hardened** : Modification d' `EffectResolver.resolveCard` pour appliquer directement l'armure de forge (`extraArmor`) au héros via `runController.setHeroStats()` si la carte d'attaque jouée ne dispose pas d'effet natif d'armure.
    - **Persistance du Gel (`freeze`)** : Modification de la méthode `tickStatuses()` d' `EntityStats` pour ignorer le statut de gel, empêchant sa dissipation prématurée au début du tour ennemi.
    - **Intention Visuelle Adaptée** : Mise à jour du getter `effectiveIntent` dans `EnemyInstance` pour diviser par deux (arrondi au plus proche) la valeur des dégâts d'intention affichée à l'écran lorsque l'ennemi subit l'altération de gel.
    - **Consommation de l'Effet** : Ajustement de `resolveEnemyIntent` dans `CombatController` pour décrémenter le compteur de tours de gel de 1 après la résolution de l'attaque sans appliquer de réduction supplémentaire.
    - **Tests unitaires et Statiques** : Passage réussi des tests unitaires simulés et linter Flutter validé à 100% vert.
 
-2. **Effet de Bordure Foil Progressif pour les Cartes Uniques (Version v0.2.02)** :
+17. **Effet de Bordure Foil Progressif pour les Cartes Uniques (Version v0.2.02)** :
    - **Calcul Dynamique** : Intégration de `upgradeCount: forgeUpgrades.length` passé du widget `UiCard` au composant `PolychromaticBorder`.
    - **Échelle Chromatique** : Utilisation d'un pool ordonné de 10 couleurs (Unique/Gold, Common, Uncommon, Rare, Epic, Legendary, Red, Yellow, Cyan, Pink) dont le sous-ensemble sélectionné augmente dynamiquement selon `upgradeCount`.
    - **Garantie de Fluidité** : Duplication automatique de la couleur de départ à la fin pour un bouclage sans couture du gradient tournant.
    - **Tests & Analyse** : Zéro problème d'analyse statique et passage des 107 tests.
 
-2. **Décomposition de la God Class UiCard (Version v0.2.01)** :
+18. **Décomposition de la God Class UiCard (Version v0.2.01)** :
    - **Découplage SRP** : Refactoring de `UiCard` (1136 lignes) pour isoler les responsabilités et respecter les patterns Flutter.
    - **Création du sous-dossier `ui_card/`** contenant les sous-composants isolés : `CardManaMedallion`, `CardRuneSockets`, `CardCompactDescription`, `PolychromaticBorder`, et `ui_card_helpers.dart`.
    - **Simplification de UiCard** : Réduction du fichier d'assemblage principal à ~175 lignes de composition pure.
    - **Intégrité de l'API** : Conservation stricte du constructeur pour éviter toute modification des imports externes.
    - **Vérification** : Validation réussie de l'intégralité des 107 tests automatisés du projet.
 
-2. **Refonte Esthétique des Cartes (Version v0.1.5)** :
+19. **Refonte Esthétique des Cartes (Version v0.1.5)** :
    - **Style Premium Glassmorphic** : Refonte visuelle complète utilisant un effet de verre dépoli semi-transparent (`BackdropFilter` avec un flou de 10px) combinant des dégradés subtils (`0.6` d'opacité en haut, `0.2` en bas) et des bordures affinées (épaisseur de `1.5` en temps normal et `2.5` en cas de sélection) avec un liseré semi-transparent (`0.5` d'opacité).
    - **Effet Polychromatique au Survol (Hover Foil)** : Ajout d'un effet arc-en-ciel tournant / balayant animé en temps réel sur la bordure de la carte lors du survol de la souris. L'épaisseur de la bordure augmente à `3.0` (sur `UiCard` Flutter) ou `3.5` (sur `CardComponent` Flame) lors du survol pour sublimer l'effet. Cet effet a été implémenté en double : via un `CustomPainter` et `AnimationController` pour les cartes Flutter, et via un shader de gradient linéaire orienté dynamiquement en fonction d'un accumulateur temporel pour les cartes Flame en combat.
    - **Médaillon de Coût Standardisé** : Remplacement des cristaux de mana inférieurs ou des affichages dispersés par un médaillon circulaire flottant en haut à gauche (rayon de 12px, centré à `[6, 6]`), de couleur sombre (`0xFF0D1B2A`), orné d'une bordure et d'un ombrage cyan brillant. Ce médaillon est identique entre la couche Flame en combat et les widgets Flutter.

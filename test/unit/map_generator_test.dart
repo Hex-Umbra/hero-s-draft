@@ -180,8 +180,9 @@ void main() {
         };
 
         for (var node in nodes) {
-          if (counts.containsKey(node.type)) {
-            counts[node.type] = counts[node.type]! + 1;
+          final type = node.originalType ?? node.type;
+          if (counts.containsKey(type)) {
+            counts[type] = counts[type]! + 1;
           }
         }
 

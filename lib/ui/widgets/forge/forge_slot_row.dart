@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
+import '../../../models/data/forge_upgrade_data.dart';
 import '../forge_upgrade_dialog.dart'; // Pour ForgeSlot
 import '../game_button.dart';
 
@@ -130,13 +131,75 @@ class ForgeSlotRow extends StatelessWidget {
     }
   }
 
+  Color _getUpgradeColorFromString(String colorStr) {
+    switch (colorStr) {
+      case 'redAccent':
+        return Colors.redAccent;
+      case 'blueAccent':
+        return Colors.blueAccent;
+      case 'orangeAccent':
+        return Colors.orangeAccent;
+      case 'lightBlueAccent':
+        return Colors.lightBlueAccent;
+      case 'amberAccent':
+        return Colors.amberAccent;
+      case 'amber':
+        return Colors.amber;
+      case 'cyanAccent':
+        return Colors.cyanAccent;
+      case 'greenAccent':
+        return Colors.greenAccent;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  IconData _getUpgradeIconFromString(String iconStr) {
+    switch (iconStr) {
+      case 'hardware_rounded':
+        return Icons.hardware_rounded;
+      case 'shield_rounded':
+        return Icons.shield_rounded;
+      case 'local_fire_department_rounded':
+        return Icons.local_fire_department_rounded;
+      case 'ac_unit_rounded':
+        return Icons.ac_unit_rounded;
+      case 'flash_on_rounded':
+        return Icons.flash_on_rounded;
+      case 'style_rounded':
+        return Icons.style_rounded;
+      case 'diamond_rounded':
+        return Icons.diamond_rounded;
+      case 'hourglass_bottom_rounded':
+        return Icons.hourglass_bottom_rounded;
+      default:
+        return Icons.help_outline;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final upgradeId = slot.upgrade.split(':')[0];
-    final upgradeColor = _getUpgradeColor(upgradeId);
-    final upgradeIcon = _getUpgradeIcon(upgradeId);
-    final upgradeName = _getUpgradeName(slot.upgrade);
-    final upgradeDesc = _getUpgradeDescription(slot.upgrade);
+    final parts = slot.upgrade.split(':');
+    final upgradeId = parts[0];
+    final tierStr = parts.length > 1 ? parts[1] : '1';
+    final tier = int.tryParse(tierStr) ?? 1;
+
+    final upgradeData = ForgeUpgradeData.getById(upgradeId);
+
+    // Extraction dynamique avec conservation des fallbacks
+    final upgradeColor = upgradeData != null
+        ? _getUpgradeColorFromString(upgradeData.color)
+        : _getUpgradeColor(upgradeId);
+    final upgradeIcon = upgradeData != null
+        ? _getUpgradeIconFromString(upgradeData.icon)
+        : _getUpgradeIcon(upgradeId);
+    final upgradeName = upgradeData != null
+        ? upgradeData.getName(locale) + (upgradeId == 'enduring' ? '' : ' $tier')
+        : _getUpgradeName(slot.upgrade);
+    final upgradeDesc = upgradeData != null
+        ? upgradeData.getDescription(tier, locale)
+        : _getUpgradeDescription(slot.upgrade);
+
     final rerollCost = slot.rerollCost;
     final canAffordReroll = currentGold >= rerollCost;
 

@@ -107,6 +107,7 @@ void main() {
     events: [],
     passives: [],
     relics: [],
+    forgeUpgrades: [],
   );
 
   testWidgets(

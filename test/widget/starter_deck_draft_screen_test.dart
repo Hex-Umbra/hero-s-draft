@@ -198,6 +198,7 @@ void main() {
     events: [],
     passives: [mockPassive],
     relics: [],
+    forgeUpgrades: [],
   );
 
   testWidgets('StarterDeckDraftScreen allows independent duplicate card selection', (

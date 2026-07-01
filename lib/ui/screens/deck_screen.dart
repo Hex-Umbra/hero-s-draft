@@ -7,6 +7,7 @@ import 'package:roguelike_card_game/ui/widgets/game_button.dart';
 import '../../game/controllers/deck_controller.dart';
 import '../../models/card_instance.dart';
 import '../../models/data/card_data.dart';
+import '../../models/data/forge_upgrade_data.dart';
 import '../widgets/ui_card.dart';
 import '../widgets/notification_overlay.dart';
 import '../widgets/screen_scaffold.dart';
@@ -284,8 +285,16 @@ class _MergeDialogState extends State<_MergeDialog> {
                     final card = widget.duplicates[index];
                     final isSelected = _selectedCardIds.contains(card.uniqueId);
                     final upgradesText = card.forgeUpgrades.isEmpty
-                        ? '(Sans amélioration)'
-                        : card.forgeUpgrades.join(', ');
+                        ? (locale == 'fr' ? '(Sans amélioration)' : '(No upgrade)')
+                        : card.forgeUpgrades.map((u) {
+                            final parts = u.split(':');
+                            final id = parts[0];
+                            final tier = parts.length > 1 ? parts[1] : '1';
+                            final upgradeData = ForgeUpgradeData.getById(id);
+                            return upgradeData != null
+                                ? (id == 'enduring' ? upgradeData.getName(locale) : '${upgradeData.getName(locale)} $tier')
+                                : '$id $tier';
+                          }).join(', ');
                     return CheckboxListTile(
                       title: Text(
                         '${card.data.getName(locale)} (${card.rarity.name.toUpperCase()})',
@@ -359,10 +368,14 @@ class _MergeDialogState extends State<_MergeDialog> {
                     final parts = upgrade.split(':');
                     final id = parts[0];
                     final tier = parts[1];
+                    final upgradeData = ForgeUpgradeData.getById(id);
+                    final displayName = upgradeData != null 
+                        ? (id == 'enduring' ? upgradeData.getName(locale) : '${upgradeData.getName(locale)} (Niveau $tier)')
+                        : '${id.toUpperCase()} (Niveau $tier)';
                     final isSelected = _chosenUpgrades.contains(upgrade);
                     return CheckboxListTile(
                       title: Text(
-                        '${id.toUpperCase()} (Niveau $tier)',
+                        displayName,
                         style: const TextStyle(color: Colors.white),
                       ),
                       value: isSelected,
