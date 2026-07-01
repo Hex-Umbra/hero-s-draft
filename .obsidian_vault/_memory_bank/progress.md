@@ -8,7 +8,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 - **108 tests automatisés** — 100% au vert.
 - **0 erreur** via `flutter analyze`.
 - **~125 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
-- **Version actuelle** : v0.3.0 — Refonte, Équilibrage et Enrichissement Visuel des Rencontres.
+- **Version actuelle** : v3.0.1 — Clarté du Mana des Reliques.
 
 ---
 
@@ -140,6 +140,7 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | Rareté Mythique & Alertes | `DraftScreen`, `DraftCardReel` | Rareté rouge sang, alerte cinématique warning 1400ms (laser horizontal, exclamation points `!!!` élastiques), flou d'arrière-plan `BackdropFilter` `8.0px`, spin prolongé `+800ms`, tremblement doublé `12.0` |
 | Poli Visuel du Draft | `DraftScreen`, `TutorialDraftWidget` | Survol de carte à 1.05x (AnimatedScale + MouseRegion) et sélection à 1.12x avec lueur dorée (BoxShadow ambre) |
 | HUD de Combat Responsive | `GameScreen` | Redimensionnement et mise à l'échelle automatique de la hauteur/largeur du HUD avec clamps de sécurité pour prévenir le clipping |
+| Clarté du Mana des Reliques | `ManaIndicator` | Affichage distinct du mana supplémentaire de relique (cristal vide à bordure cyan et fond noir) avec ajustement automatique de `baseSize` (v3.0.1) |
 | Badges de Ciblage Remplacés | `UiCard` / `GameScreen` / `CardTextRenderer` | Suppression complète des badges textuels de ciblage (Single target, All enemies, Self), remplacés par des doublements d'icônes d'action multicibles (double-icon indicators) pour les seuls effets ciblant les ennemis (les effets joueur restent avec une icône simple) (v0.1.5) |
 | Badges d'inventaire sur la Carte | `MapScreen` | Compteur numérique sur le bouton des Reliques et badge numérique sur le bouton du Deck affichant la taille du master deck |
 | Scaling Échelle Ennemis | `EnemyCard` | Facteurs d'échelle visuelle progressifs sur les sprites des ennemis pour refléter leur puissance relative |

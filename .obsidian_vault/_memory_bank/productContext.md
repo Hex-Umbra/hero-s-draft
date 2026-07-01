@@ -255,6 +255,7 @@ L'Autel d'Échange de Reliques est un type de nœud spécifique sur la carte str
 
 - **Réinitialisation** : Au début de chaque tour (`startTurn()`), le mana actuel est restauré à `maxMana`.
 - **Gains exceptionnels** : Les reliques `gain_mana` et les cartes comme `Focalisation` ajoutent du mana qui peut **temporairement dépasser** le maximum pour le tour en cours.
+- **Affichage Graphique (HUD)** : L'indicateur de mana dans le HUD de combat calcule dynamiquement le nombre total de diamants à dessiner avec `max(currentMana, maxMana)`. Les cristaux d'indices inférieurs à `maxMana` représentent le mana standard (diamant plein cyan si actif, blanc translucide si inactif). Les cristaux d'indices supérieurs ou égaux à `maxMana` représentent le mana supplémentaire (relique) et s'affichent sous forme de diamant vide à bordure cyan et fond noir (Stack d'icônes). La taille de base (`baseSize`) s'ajuste dynamiquement en fonction du nombre de cristaux pour éviter les débordements (RenderFlex overflow) sur le HUD.
 - **Coût des cartes** : Chaque carte a un coût de 0 à 3 cristaux. `canPlayCard()` vérifie `currentMana >= card.currentCost`.
 - **Coût temporaire** : `CardInstance.temporaryCost` peut override le coût de base (non utilisé activement).
 - **Compétences** : Les skills héroïques ont leurs propres coûts mana (3 à 8), consommés via `SkillController.triggerSkill()` → `RunController.consumeResource()`.
