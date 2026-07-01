@@ -4,25 +4,31 @@ Ce document décrit le focus actif du projet, les accomplissements récents, et 
 
 ## 1. Focus Actuel du Projet
 
-Le projet a résolu le crash de l'UI de combat (v0.2.8), équilibré la boutique (v0.2.9) et finalisé la refonte complète du système de rencontres/événements avec validation de sécurité et richesse visuelle (v0.3.0).
+Le projet a finalisé la clarification de l'affichage du mana des reliques (v3.0.1) suite à la refonte complète du système de rencontres/événements (v3.0.0).
 
 Le focus se tourne désormais vers les étapes clés suivantes de la roadmap technique : la persistance I/O (Autosave via `shared_preferences` pour sauvegarder et reprendre les runs), l'intégration audio complète (`flame_audio`), le découpage modulaire des écrans complexes restants (`MapScreen` et `GameScreen`), et l'amélioration de la couverture de tests.
 
 ## 2. Accomplissements Récents
 
-1. **Refonte, Équilibrage et Enrichissement Visuel du Système d'Événements (Complété - Version v0.3.0)** :
+1. **Clarté du Mana des Reliques (Complété - Version v3.0.1)** :
+   - **Calcul Dynamique et Réactif** : Remplacement de l'affichage du mana tronqué à `maxMana` par un calcul dynamique basé sur `max(currentMana, maxMana)` pour gérer sans encombrement le mana additionnel octroyé par les reliques.
+   - **Ajustement de Taille Graphique** : Recalcul automatique de `baseSize` en fonction du nombre total de cristaux pour s'adapter dynamiquement sur le HUD et prévenir les débordements (RenderFlex overflow) sur les écrans étroits.
+   - **Distinction Visuelle Rétroéclairée** : Les points de mana standard (< `maxMana`) s'affichent sous forme de diamants pleins (actifs en cyan, inactifs en blanc translucide). Les points de mana supplémentaires (>= `maxMana`) s'affichent sous forme de diamants avec uniquement une bordure cyan (avec effet de lueur) et un fond noir, réalisés à l'aide d'un `Stack` comprenant `Icons.diamond` (noir) en arrière-plan et `Icons.diamond_outlined` (cyan) au premier plan.
+   - **Intégrité et Validation** : Passage de `dart analyze` (0 erreur) et de l'ensemble de la suite de tests unitaires et widget-tests.
+
+2. **Refonte, Équilibrage et Enrichissement Visuel du Système d'Événements (Complété - Version v3.0.0 / v0.3.0)** :
    - **5 Événements Bilingues Complets** : Écriture et intégration de 5 rencontres immersives dans `events.json` (L'Autel Mystérieux, Le Marchand Fugitif, La Fontaine Bénie, Le Tombeau Oublié, Le Feu de Camp Abandonné) disposant de clés de localisation exhaustives en français et en anglais (`_fr`/`_en`).
    - **Validation d'Éligibilité des Choix (Safety Gate)** : Conception et implémentation de la logique d'éligibilité `isSelectable` dans `EventChoice` pour désactiver réactivement les boutons d'options en cas de coût en or insuffisant, de dégâts mortels immédiats (`currentHp <= damage`), ou de perte létale de PV max, éliminant les morts accidentelles ou les transactions invalides.
    - **Badges Visuels Intégrés** : Création de badges d'actions compacts insérés directement sous le texte des boutons de choix pour identifier instantanément les coûts et bénéfices (PV, PV Max, Or, Force, Reliques).
    - **Interface Immersive & Animations** : Ajout d'une barre de statistiques en direct (PV et Or) en haut de `EventScreen`, et intégration d'un volet d'effets appliqués animé en échelle élastique (`TweenAnimationBuilder`) à la résolution du choix.
    - **Intégrité et Assurance Qualité** : Le projet compile parfaitement avec 0 erreur sous `dart analyze` et la totalité de la suite de tests automatisés est validée avec succès.
 
-2. **Équilibrage, Scaling de Boutique et Nerf du Miroir Magique (Complété - Version v0.2.9)** :
+3. **Résolution des Clés Dupliquées de Notifications (Complété - Version v0.2.8)** :
    - **Génération d'ID unique robuste** : Modification de `NotificationNotifier.show` dans `lib/ui/widgets/notification_overlay.dart` pour combiner le timestamp en microsecondes (`DateTime.now().microsecondsSinceEpoch`) et un suffixe aléatoire (`Random.nextInt(100000)`).
    - **Éradication des collisions** : Cette modification élimine les collisions d'identifiants (clés dupliquées dans l'arbre de widgets Flutter) lorsque plusieurs notifications sont déclenchées simultanément (par exemple, lors de l'application synchrone de multiples statuts ou effets de début de tour).
-   - **Validation de l'analyse** : Zéro erreur et zéro avertissement avec `dart analyze`, garantissant la prorepré du code.
+   - **Validation de l'analyse** : Zéro erreur et zéro avertissement avec `dart analyze`, garantissant la propreté du code.
 
-2. **Équilibrage, Scaling de Boutique et Nerf du Miroir Magique (Complété - Version v0.2.9)** :
+4. **Équilibrage, Scaling de Boutique et Nerf du Miroir Magique (Complété - Version v0.2.9)** :
    - **Modélisation par instances de cartes (`CardInstance`)** : Remplacement des cartes statiques `CardData` en vente par des instances réelles `CardInstance` dans `ShopState`. Le widget de rendu `UiCard.fromInstance` affiche désormais de manière exhaustive leurs rune sockets de forge et leur couleur/halo de rareté dynamique dans la grille de vente.
    - **Tarification dynamique organique** : Le coût des cartes en boutique s'ajuste dynamiquement selon leur rareté (Commun: 25 Or, Peu Commun: 50 Or, Rare: 100 Or, Épique: 150 Or, Légendaire: 200 Or) combiné à un surcoût de +20 Or par amélioration de forge présente.
    - **Scaling de rareté et d'upgrades par Acte** : Conception d'une formule adaptative procédurale selon l'Acte actuel : probabilité linéaire accrue de cartes de rareté élevée, et chances croissantes à partir de l'Acte 2 d'obtenir des cartes pré-améliorées avec des runes compatibles à leur type.
@@ -30,19 +36,19 @@ Le focus se tourne désormais vers les étapes clés suivantes de la roadmap tec
    - **Réinitialisation automatique** : Remise à zéro automatique du compteur d'achats `clonePurchasedCount` et réinitialisation du prix à sa base de 150 Or dès que le joueur quitte la boutique (via `clearCloneOptions`).
    - **Intégrité statique** : Analyse du code vierge de toute erreur sous `dart analyze` et passage au vert de 100% des tests unitaires de la suite.
 
-2. **Révision du Scaling et du Spawn des Ennemis (Complété - Version v0.2.7)** :
+5. **Révision du Scaling et du Spawn des Ennemis (Complété - Version v0.2.7)** :
    - **Formule de Combat Rating révisée** : Modification du calcul du coût de menace des ennemis pour atténuer le poids des PV bruts (divisés par 4.0) au profit des dégâts, permettant d'avoir plus d'ennemis pour un même budget.
    - **Couplage Deck & Puissance joueur** : Transmission du nombre de cartes du deck principal (`playerCardsCount`) depuis `game_screen.dart` via `CombatController` vers `EncounterSystem.generateEnemiesForLevel` pour ajuster plus finement le budget du combat.
    - **Difficulte accrue à partir de l'Acte 2** : Passage des ratios de croissance par acte à 35% pour les PV et 25% pour les dégâts.
    - **Validation unitaire** : Mise à jour des valeurs du test de calcul du Combat Rating dans `encounter_system_test.dart` et validation de la suite de tests (108/108 au vert).
 
-2. **Double Confirmation de Fin de Tour avec Mana Restant (Complété - Version v0.2.6)** :
+6. **Double Confirmation de Fin de Tour avec Mana Restant (Complété - Version v0.2.6)** :
    - **Validation double clic** : Ajout d'une variable d'état local `_showRemainingManaWarning` dans `game_screen.dart` déclenchée si le mana du héros est supérieur à 0 lors du clic.
    - **Interactivité dynamique** : Réinitialisation immédiate du warning lors de l'exécution de `onPlayCard` ou du passage à un nouveau tour (`_startPlayerNewTurn()`).
    - **Localisation bilingue** : Ajout de la clé `remainingManaWarning` dans `app_en.arb` et `app_fr.arb`.
    - **Zéro Régression** : Analyse statique vierge et suite de tests validée avec 100% de réussite.
 
-2. **Correction du Bouton de Fin de Tour (Complété - Version v0.2.5)** :
+7. **Correction du Bouton de Fin de Tour (Complété - Version v0.2.5)** :
    - **Mise à jour synchrone de l'état Flame** : Résolution du problème d'inactivité transitoire du bouton de fin de tour en combat en synchronisant explicitement `_game.currentPhase = TurnPhase.player;` lors du démarrage du tour du joueur dans `game_screen.dart` (`_startPlayerNewTurn`).
    - **Protection Anti-Spam intacte** : Le clic initial désactive instantanément le bouton pour empêcher le spam, tandis que le retour au tour joueur réactive le bouton immédiatement.
    - **Zéro Régression** : Analyse statique vierge et tous les tests de la suite automatisée (108/108) au vert.
