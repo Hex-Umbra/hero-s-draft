@@ -16,7 +16,7 @@ Pour comparer équitablement les cartes, nous établissons un barème de **Valeu
 * **1 Statut appliqué (Poison, Force)** = `1.5 point * valeur * durée` (dégâts/bonus différés)
 
 Le ratio **VPM (Valeur par Mana)** mesure le rendement de la carte : $VPM = \frac{\text{Valeur Standardisée}}{\text{Coût en Mana}}$. Un VPM sain oscille entre **5.0 et 7.0**.
-
+  
 ### A. Analyse des Cartes Globales (Accessibles à tous)
 
 | Nom de la Carte | Type | Coût | Effets & Valeurs | Valeur Standardisée (VS) | VPM Ratio | Évaluation & Rareté |
