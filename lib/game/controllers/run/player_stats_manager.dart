@@ -4,6 +4,7 @@ import '../../../models/status_effect.dart';
 import '../../../models/data/relic_data.dart';
 import '../inventory_controller.dart';
 import '../run_controller.dart';
+import '../checkpoint_controller.dart';
 
 class PlayerStatsManager {
   final RunController controller;
@@ -96,6 +97,7 @@ class PlayerStatsManager {
           pendingDrafts: controller.currentState.pendingDrafts - 1,
         ),
       );
+      ref.read(checkpointProvider.notifier).bump();
     }
   }
 

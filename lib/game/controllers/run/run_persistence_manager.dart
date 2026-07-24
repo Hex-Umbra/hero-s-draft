@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../services/save_service.dart';
 import '../run_controller.dart';
 
 class RunPersistenceManager {
@@ -7,19 +8,12 @@ class RunPersistenceManager {
 
   RunPersistenceManager(this.controller, this.ref);
 
-  /// Sauvegarde la partie en cours
-  Future<void> saveRun() async {
-    // Squelette prêt pour l'intégration de SharedPreferences ou d'une base de données locale
-  }
+  /// Sauvegarde manuelle immédiate de la run en cours
+  Future<void> saveRun() => SaveService.save(ref.read);
 
-  /// Charge une partie sauvegardée
-  Future<RunState?> loadRun() async {
-    // Squelette prêt pour l'intégration de SharedPreferences ou d'une base de données locale
-    return null;
-  }
+  /// Charge la sauvegarde existante, le cas échéant
+  Future<SaveLoadResult> loadRun() => SaveService.load(ref.read);
 
-  /// Supprime la sauvegarde en cours (mort du héros, fin de run)
-  Future<void> clearSavedRun() async {
-    // Squelette prêt pour l'intégration
-  }
+  /// Supprime la sauvegarde en cours (mort du héros)
+  Future<void> clearSavedRun() => SaveService.clear();
 }

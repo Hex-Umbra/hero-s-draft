@@ -4,6 +4,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'ui/screens/splash_screen.dart';
 import 'ui/widgets/notification_overlay.dart';
+import 'game/controllers/checkpoint_controller.dart';
 
 import 'ui/theme/app_theme.dart';
 
@@ -12,11 +13,14 @@ void main() {
   runApp(const ProviderScope(child: HerosDraftApp()));
 }
 
-class HerosDraftApp extends StatelessWidget {
+class HerosDraftApp extends ConsumerWidget {
   const HerosDraftApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Force l'activation de l'écoute d'autosave dès le démarrage de l'app.
+    ref.watch(autosaveOrchestratorProvider);
+
     return MaterialApp(
       onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
       theme: AppTheme.darkNeonTheme,
