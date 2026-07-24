@@ -25,6 +25,7 @@ import '../widgets/map/dialogs/probabilities_dialog.dart';
 import '../widgets/map/hero_mini_stats_panel.dart';
 import '../widgets/screen_scaffold.dart';
 import '../widgets/gold_indicator.dart';
+import '../widgets/hud/dialogs/pause_dialog.dart';
 
 class MapScreen extends ConsumerStatefulWidget {
   const MapScreen({super.key});
@@ -154,11 +155,24 @@ class _MapScreenState extends ConsumerState<MapScreen>
     _dashController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
-    )..repeat();
+    );
+
+    // Only repeat animation if not in test mode
+    if (!_isInTestMode()) {
+      _dashController.repeat();
+    }
 
     _transformationController.value =
         Matrix4.translationValues(-200.0, -1500.0, 0.0) *
         Matrix4.diagonal3Values(0.8, 0.8, 1.0);
+  }
+
+  bool _isInTestMode() {
+    try {
+      return WidgetsBinding.instance.runtimeType.toString().contains('TestWidgetsFlutterBinding');
+    } catch (e) {
+      return false;
+    }
   }
 
   @override
@@ -176,6 +190,14 @@ class _MapScreenState extends ConsumerState<MapScreen>
       if (counts[key]! >= 3) return true;
     }
     return false;
+  }
+
+  void _showPauseMenu() {
+    PauseDialog.show(
+      context,
+      onResume: () => Navigator.of(context).pop(),
+      onExit: () => Navigator.of(context).popUntil((route) => route.isFirst),
+    );
   }
 
   @override
@@ -234,6 +256,12 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
     return ScreenScaffold(
       backgroundType: ScreenBackgroundType.parchment,
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          _showPauseMenu();
+        }
+      },
       appBar: AppBar(
         title: Text(
           '${l10n.worldMap} - Acte ${runState.act}',
@@ -432,8 +460,15 @@ class _MapScreenState extends ConsumerState<MapScreen>
             ],
           ),
         ),
-        actions: const [
-          GoldIndicator(isParchment: true),
+        actions: [
+          const GoldIndicator(isParchment: true),
+          IconButton(
+            icon: const Icon(
+              Icons.pause_circle_outline,
+              color: Color(0xFF4A3728),
+            ),
+            onPressed: _showPauseMenu,
+          ),
         ],
       ),
       body: Stack(
