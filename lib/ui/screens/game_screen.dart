@@ -11,19 +11,19 @@ import '../../game/controllers/reward_controller.dart';
 import '../../models/combat_state.dart';
 import '../../game/services/effect_resolver.dart';
 import '../../game/systems/trait_system.dart';
-import 'class_selection_screen.dart';
-import 'deck_screen.dart';
 import 'boss_card_draft_screen.dart';
 import '../../services/game_data_service.dart';
-import '../../services/save_service.dart';
 import '../../models/card_instance.dart';
 import '../../models/data/relic_data.dart';
 import '../../models/data/card_data.dart';
-import '../widgets/hud/player_health_bar.dart';
-import '../widgets/hud/mana_indicator.dart';
-import '../widgets/hud/status_effects_panel.dart';
-import '../widgets/hud/enemy_intents_panel.dart';
 import '../widgets/hud/dialogs/pause_dialog.dart';
+import '../widgets/hud/death_overlay.dart';
+import '../widgets/hud/combat_top_bar.dart';
+import '../widgets/hud/combat_bottom_hud.dart';
+import '../widgets/hud/turn_control_panel.dart';
+import '../widgets/hud/combat_side_panels.dart';
+import '../widgets/hud/combat_phase_banner.dart';
+import '../widgets/hud/combat_tooltip_overlay.dart';
 import '../widgets/notification_overlay.dart';
 import '../widgets/relic_carousel/relic_carousel_screen.dart';
 
@@ -414,7 +414,6 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     final deckState = ref.watch(deckProvider);
     final combatState = ref.watch(combatProvider);
     final gameData = ref.watch(gameDataLoaderProvider).requireValue;
-    final l10n = AppLocalizations.of(context)!;
 
     ref.listen<CombatState>(combatProvider, (previous, next) {
       final wasEnded = previous?.isCombatEnded ?? false;
@@ -458,469 +457,76 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               child: Stack(
                 children: [
 
-                  if (!_showDraft && runState.isDead)
-                    Positioned.fill(
-                      child: Container(
-                        color: Colors.red.withAlpha(230),
-                        child: Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                l10n.youAreDead,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 40,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.white,
-                                      foregroundColor: Colors.red,
-                                    ),
-                                    onPressed: () async {
-                                      await SaveService.clear();
-                                      if (!context.mounted) return;
-                                      Navigator.of(
-                                        context,
-                                      ).popUntil((route) => route.isFirst);
-                                    },
-                                    child: Text(l10n.mainMenu),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.white,
-                                      foregroundColor: Colors.red,
-                                    ),
-                                    onPressed: () async {
-                                      await SaveService.clear();
-                                      if (!context.mounted) return;
-                                      Navigator.of(context).pushReplacement(
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              const ClassSelectionScreen(),
-                                        ),
-                                      );
-                                    },
-                                    child: Text(l10n.changeClass),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
+                  if (!_showDraft && runState.isDead) const DeathOverlay(),
 
-                  // Bouton Mon Deck (Haut Droite, à côté de Pause)
                   if (!runState.isDead && !_showDraft)
-                    Positioned(
-                      top: 10,
-                      right: 75,
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.style,
-                          color: Colors.amber,
-                          size: 40,
-                        ),
-                        tooltip: l10n.myDeck,
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  const DeckScreen(allowMerge: false),
-                            ),
-                          );
-                        },
-                      ),
+                    CombatTopBar(
+                      act: runState.act,
+                      currentLevel: runState.currentLevel,
+                      onPauseTap: _showPauseMenu,
                     ),
 
-                  // Bouton Pause (Haut Droite)
                   if (!runState.isDead && !_showDraft)
-                    Positioned(
-                      top: 10,
-                      right: 20,
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.pause_circle_outline,
-                          color: Colors.white,
-                          size: 40,
-                        ),
-                        onPressed: _showPauseMenu,
-                      ),
+                    CombatBottomHud(
+                      hudHeight: hudHeight,
+                      hudWidth: hudWidth,
+                      currentMana: runState.heroStats.currentMana,
+                      maxMana: runState.heroStats.maxMana,
+                      currentPv: runState.heroStats.currentPv,
+                      maxPv: runState.heroStats.maxPv,
+                      armure: runState.heroStats.armure,
+                      effectiveAttaque: runState.heroStats.effectiveAttaque,
                     ),
 
-                  // Indicateurs de niveau (Haut Gauche)
                   if (!runState.isDead && !_showDraft)
-                    Positioned(
-                      top: 10,
-                      left: 20,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.actLevel(runState.act, runState.currentLevel),
-                            style: const TextStyle(
-                              color: Colors.amber,
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
+                    TurnControlPanel(
+                      canEndTurn:
+                          combatState.turnPhase == TurnPhase.player &&
+                          _game.currentPhase == TurnPhase.player &&
+                          !_game.isCardAnimating,
+                      onEndTurnTap: () {
+                        final currentMana = runState.heroStats.currentMana;
+                        if (currentMana > 0 && !_showRemainingManaWarning) {
+                          setState(() {
+                            _showRemainingManaWarning = true;
+                            _showManaWarning = false;
+                          });
+                          return;
+                        }
+                        setState(() {
+                          _showManaWarning = false;
+                          _showRemainingManaWarning = false;
+                        });
+                        TraitSystem.onTurnEnd(ref.read(runProvider.notifier));
+                        ref
+                            .read(runProvider.notifier)
+                            .applyRelics(RelicTrigger.endOfTurn);
+                        ref.read(deckProvider.notifier).discardHand();
+                        _game.executeTurn();
+                      },
+                      showManaWarning: _showManaWarning,
+                      showRemainingManaWarning: _showRemainingManaWarning,
+                      turnCount: _turnCount,
                     ),
 
-                  // HUD Bas (Vie + Deck)
                   if (!runState.isDead && !_showDraft)
-                    Positioned(
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      child: SizedBox(
-                        height: hudHeight,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            SizedBox(
-                              width: hudWidth,
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  // Cristaux de Mana
-                                  ManaIndicator(
-                                    currentMana: runState.heroStats.currentMana,
-                                    maxMana: runState.heroStats.maxMana,
-                                  ),
-                                  const SizedBox(height: 4),
-                                  PlayerHealthBar(
-                                    currentPv: runState.heroStats.currentPv,
-                                    maxPv: runState.heroStats.maxPv,
-                                    armure: runState.heroStats.armure,
-                                    effectiveAttaque:
-                                        runState.heroStats.effectiveAttaque,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                  // Avertissement "Plus de mana" placé au-dessus du bouton de Fin de Tour
-                  if (!runState.isDead && !_showDraft && _showManaWarning)
-                    Positioned(
-                      right: 20,
-                      top: MediaQuery.of(context).size.height / 2 - 85,
-                      child: Container(
-                        width: 170,
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF1E1E2C).withAlpha(245),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.cyanAccent.withAlpha(200),
-                            width: 1.5,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withAlpha(150),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Text(
-                          l10n.manaWarning,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                  // Avertissement "Mana restant" placé au-dessus du bouton de Fin de Tour
-                  if (!runState.isDead && !_showDraft && _showRemainingManaWarning)
-                    Positioned(
-                      right: 20,
-                      top: MediaQuery.of(context).size.height / 2 - 85,
-                      child: Container(
-                        width: 170,
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF1E1E2C).withAlpha(245),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.amberAccent.withAlpha(200),
-                            width: 1.5,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withAlpha(150),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Text(
-                          l10n.remainingManaWarning,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                  // Bouton Fin de Tour (Milieu Droite)
-                  if (!runState.isDead && !_showDraft)
-                    Positioned(
-                      right: 20,
-                      top: MediaQuery.of(context).size.height / 2 - 25,
-                      child: SizedBox(
-                        width: 170,
-                        child: ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blueAccent,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                          ),
-                          onPressed: (combatState.turnPhase == TurnPhase.player &&
-                                  _game.currentPhase == TurnPhase.player &&
-                                  !_game.isCardAnimating)
-                              ? () {
-                                  final currentMana = runState.heroStats.currentMana;
-                                  if (currentMana > 0 && !_showRemainingManaWarning) {
-                                    setState(() {
-                                      _showRemainingManaWarning = true;
-                                      _showManaWarning = false;
-                                    });
-                                    return;
-                                  }
-                                  setState(() {
-                                    _showManaWarning = false;
-                                    _showRemainingManaWarning = false;
-                                  });
-                                  TraitSystem.onTurnEnd(
-                                    ref.read(runProvider.notifier),
-                                  );
-                                  ref
-                                      .read(runProvider.notifier)
-                                      .applyRelics(RelicTrigger.endOfTurn);
-                                  ref.read(deckProvider.notifier).discardHand();
-                                  _game.executeTurn();
-                                }
-                              : null,
-                          icon: const Icon(Icons.check),
-                          label: Text(
-                            l10n.endTurn,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                  // Compteur de tour placé juste en dessous du bouton de Fin de Tour
-                  if (!runState.isDead && !_showDraft)
-                    Positioned(
-                      right: 20,
-                      top: MediaQuery.of(context).size.height / 2 + 33,
-                      child: Container(
-                        width: 170,
-                        padding: const EdgeInsets.symmetric(vertical: 6),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF1E1E2C).withAlpha(200),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.white24, width: 1),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withAlpha(80),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Text(
-                          l10n.turnCount(_turnCount),
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                  // Draw Pile (Bas Gauche)
-                  if (!runState.isDead && !_showDraft)
-                    Positioned(
-                      bottom: 20,
-                      left: 20,
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.blueGrey,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          l10n.drawPile(deckState.drawPile.length),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                  // Discard Pile (Bas Droite)
-                  if (!runState.isDead && !_showDraft)
-                    Positioned(
-                      bottom: 20,
-                      right: 20,
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[800],
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          l10n.discardPile(deckState.discardPile.length),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                  // Panneau des Status/Buffs du Joueur (Bas Gauche, au-dessus de la Pioche)
-                  if (!runState.isDead && !_showDraft)
-                    Positioned(
-                      bottom: 80,
-                      left: 20,
-                      child: StatusEffectsPanel(
-                        statuses: runState.heroStats.statuses,
-                      ),
-                    ),
-
-                  // Panneau des Intentions Ennemies (Bas Droite, au-dessus de la Défausse)
-                  if (!runState.isDead &&
-                      !_showDraft &&
-                      combatState.enemies.isNotEmpty)
-                    Positioned(
-                      bottom: 80,
-                      right: 20,
-                      child: EnemyIntentsPanel(enemies: combatState.enemies),
+                    CombatSidePanels(
+                      drawPileCount: deckState.drawPile.length,
+                      discardPileCount: deckState.discardPile.length,
+                      heroStatuses: runState.heroStats.statuses,
+                      enemies: combatState.enemies,
                     ),
 
                   // Phase Banner Overlay (Centre)
                   if (_showPhaseBanner)
-                    IgnorePointer(
-                      child: Center(
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 20,
-                            horizontal: 40,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withAlpha(180),
-                            border: Border.symmetric(
-                              horizontal: BorderSide(
-                                color: Colors.amber.withAlpha(200),
-                                width: 2,
-                              ),
-                            ),
-                          ),
-                          child: Text(
-                            _phaseBannerText ?? '',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 4,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
+                    CombatPhaseBanner(text: _phaseBannerText ?? ''),
 
                   // Tooltip Overlay
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 270,
-                    child: AnimatedOpacity(
-                      opacity: _showTooltip ? 1.0 : 0.0,
-                      duration: const Duration(milliseconds: 200),
-                      curve: Curves.easeInOut,
-                      child: IgnorePointer(
-                        ignoring: !_showTooltip,
-                        child: Center(
-                          child: Container(
-                            constraints: const BoxConstraints(maxWidth: 300),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF1E1E2C).withAlpha(245),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: _getTooltipBorderColor(),
-                                width: 1.5,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withAlpha(185),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 6),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  (_tooltipTitle ?? '').toUpperCase(),
-                                  style: TextStyle(
-                                    color: _getTooltipBorderColor(),
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  _tooltipDescription ?? '',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    height: 1.3,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
+                  CombatTooltipOverlay(
+                    visible: _showTooltip,
+                    title: _tooltipTitle,
+                    description: _tooltipDescription,
+                    borderColor: _getTooltipBorderColor(),
                   ),
                 ],
               ),
