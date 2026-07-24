@@ -410,5 +410,51 @@ void main() {
         5,
       );
     });
+
+    test('calculateBudget includes playerCardsCount in playerPower and the (act-1)*10 bonus in finalBudget', () {
+      final budget = EncounterSystem.calculateBudget(
+        playerLevel: 3,
+        act: 2,
+        playerMaxHp: 100,
+        playerAttaque: 0,
+        playerMaxMana: 3,
+        playerRelicsCount: 2,
+        playerCardsCount: 10,
+        isBoss: false,
+        isElite: true,
+      );
+
+      // playerPower = 100 + (0*10) + (3*15) + (2*5) + (10*2) = 175
+      expect(budget.playerPower, closeTo(175.0, 0.0001));
+      // expectedPower = 145 + (3-1)*15 + (2-1)*20 = 195
+      expect(budget.expectedPower, closeTo(195.0, 0.0001));
+      // baseBudget = 40 + (3-1)*10 + (2-1)*25 = 85
+      expect(budget.baseBudget, closeTo(85.0, 0.0001));
+      // powerRatio = 175/195, powerModifier = 1 + (powerRatio-1)*0.5
+      expect(budget.powerRatio, closeTo(175.0 / 195.0, 0.0001));
+      expect(budget.powerModifier, closeTo(0.9487179487179488, 0.0001));
+      expect(budget.nodeMultiplier, closeTo(1.5, 0.0001));
+      // finalBudget = 85 * 0.9487179487179488 * 1.5 + (2-1)*10 = 130.9615384615385
+      expect(budget.finalBudget, closeTo(130.9615384615385, 0.001));
+    });
+
+    test('calculateBudget matches the zero-cards, act-1 baseline used elsewhere', () {
+      final budget = EncounterSystem.calculateBudget(
+        playerLevel: 1,
+        act: 1,
+        playerMaxHp: 100,
+        playerAttaque: 0,
+        playerMaxMana: 3,
+        playerRelicsCount: 0,
+        playerCardsCount: 0,
+        isBoss: false,
+        isElite: false,
+      );
+      expect(budget.playerPower, closeTo(145.0, 0.0001));
+      expect(budget.expectedPower, closeTo(145.0, 0.0001));
+      expect(budget.baseBudget, closeTo(40.0, 0.0001));
+      expect(budget.nodeMultiplier, closeTo(1.0, 0.0001));
+      expect(budget.finalBudget, closeTo(40.0, 0.0001));
+    });
   });
 }

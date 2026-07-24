@@ -2,6 +2,17 @@ import 'dart:math';
 import '../../models/data/enemy_data.dart';
 import '../../models/map_node.dart';
 
+/// Breakdown of the combat budget calculation — see [EncounterSystem.calculateBudget].
+typedef BudgetBreakdown = ({
+  double playerPower,
+  double expectedPower,
+  double baseBudget,
+  double powerRatio,
+  double powerModifier,
+  double nodeMultiplier,
+  double finalBudget,
+});
+
 class EncounterSystem {
   static final Random _rng = Random();
 
@@ -44,6 +55,58 @@ class EncounterSystem {
   static int getUnlockedTier(int act) {
     final unlocked = 1 + ((act - 1) / _tierUnlockBracketSize).floor();
     return unlocked > maxTierAuthored ? maxTierAuthored : unlocked;
+  }
+
+  /// Computes the combat budget breakdown (player power vs. expected power,
+  /// base/final budget) from player stats and node type. This is the single
+  /// source of truth for these values — callers that only need them for
+  /// display (e.g. the debug logger) must call this rather than
+  /// re-deriving their own copy, to avoid the two calculations drifting.
+  static BudgetBreakdown calculateBudget({
+    required int playerLevel,
+    required int act,
+    required int playerMaxHp,
+    required int playerAttaque,
+    required int playerMaxMana,
+    required int playerRelicsCount,
+    required int playerCardsCount,
+    required bool isBoss,
+    required bool isElite,
+  }) {
+    final double playerPower = playerMaxHp +
+        (playerAttaque * 10.0) +
+        (playerMaxMana * 15.0) +
+        (playerRelicsCount * 5.0) +
+        (playerCardsCount * 2.0);
+
+    final double expectedPower =
+        145.0 + ((playerLevel - 1) * 15.0) + ((act - 1) * 20.0);
+
+    final double baseBudget =
+        40.0 + ((playerLevel - 1) * 10.0) + ((act - 1) * 25.0);
+
+    final double powerRatio = playerPower / expectedPower;
+    final double powerModifier = 1.0 + (powerRatio - 1.0) * 0.5;
+
+    double nodeMultiplier = 1.0;
+    if (isBoss) {
+      nodeMultiplier = 2.0;
+    } else if (isElite) {
+      nodeMultiplier = 1.5;
+    }
+
+    final double finalBudget =
+        baseBudget * powerModifier * nodeMultiplier + (act - 1) * 10.0;
+
+    return (
+      playerPower: playerPower,
+      expectedPower: expectedPower,
+      baseBudget: baseBudget,
+      powerRatio: powerRatio,
+      powerModifier: powerModifier,
+      nodeMultiplier: nodeMultiplier,
+      finalBudget: finalBudget,
+    );
   }
 
   /// Calculates the enemy level based on player level and node type only.
@@ -141,36 +204,17 @@ class EncounterSystem {
     final bool isBoss = nodeType == MapNodeType.boss || (nodeType == null && level > 0 && level % 10 == 0);
     final bool isElite = nodeType == MapNodeType.elite;
 
-
-
-
-    // 1. Calculate player power, expected power, base budget
-    final double playerPower = playerMaxHp +
-        (playerAttaque * 10.0) +
-        (playerMaxMana * 15.0) +
-        (playerRelicsCount * 5.0) +
-        (playerCardsCount * 2.0);
-
-    final double expectedPower =
-        145.0 + ((playerLevel - 1) * 15.0) + ((act - 1) * 20.0);
-
-    final double baseBudget =
-        40.0 + ((playerLevel - 1) * 10.0) + ((act - 1) * 25.0);
-
-    // 2. Power ratio and power modifier
-    final double powerRatio = playerPower / expectedPower;
-    final double powerModifier = 1.0 + (powerRatio - 1.0) * 0.5;
-
-    // 3. Node multiplier
-    double nodeMultiplier = 1.0;
-    if (isBoss) {
-      nodeMultiplier = 2.0;
-    } else if (isElite) {
-      nodeMultiplier = 1.5;
-    }
-
-    // 4. Final budget
-    final double finalBudget = baseBudget * powerModifier * nodeMultiplier + (act - 1) * 10.0;
+    final double finalBudget = calculateBudget(
+      playerLevel: playerLevel,
+      act: act,
+      playerMaxHp: playerMaxHp,
+      playerAttaque: playerAttaque,
+      playerMaxMana: playerMaxMana,
+      playerRelicsCount: playerRelicsCount,
+      playerCardsCount: playerCardsCount,
+      isBoss: isBoss,
+      isElite: isElite,
+    ).finalBudget;
 
     // Determine enemy level for combat rating calculation
     final int enemyLevel = getEnemyLevel(
