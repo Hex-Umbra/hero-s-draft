@@ -1,3 +1,5 @@
+import 'game_data_registry.dart';
+
 enum CardType { attack, skill, power, status }
 
 enum CardCategory { global, characterSpecific }
@@ -140,4 +142,14 @@ class CardData {
         'effects': effects.map((e) => e.toJson()).toList(),
         'baseMaxForgeUpgrades': baseMaxForgeUpgrades,
       };
+
+  static CardData? getById(String id) {
+    final registry = GameDataRegistry.instance;
+    if (registry == null) return null;
+    try {
+      return registry.cards.firstWhere((c) => c.id == id);
+    } catch (_) {
+      return null;
+    }
+  }
 }

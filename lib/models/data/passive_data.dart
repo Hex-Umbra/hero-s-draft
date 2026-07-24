@@ -1,4 +1,5 @@
 import 'relic_data.dart';
+import 'game_data_registry.dart';
 
 class PassiveData {
   final String id;
@@ -47,6 +48,16 @@ class PassiveData {
       effectType: json['effectType'] as String,
       value: json['value'] as int,
     );
+  }
+
+  static PassiveData? getById(String id) {
+    final registry = GameDataRegistry.instance;
+    if (registry == null) return null;
+    try {
+      return registry.passives.firstWhere((p) => p.id == id);
+    } catch (_) {
+      return null;
+    }
   }
 
   static PassiveData fallback(String id) {
