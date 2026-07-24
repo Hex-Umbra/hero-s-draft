@@ -13,7 +13,6 @@ import 'inventory_controller.dart';
 import 'skill_controller.dart';
 import 'run/player_stats_manager.dart';
 import 'run/map_progression_manager.dart';
-import 'run/run_persistence_manager.dart';
 import 'run/gold_manager.dart';
 import 'combat/status_effect_processor.dart';
 
@@ -192,7 +191,6 @@ class RunController extends Notifier<RunState> {
   RunState build() {
     _playerStatsManager = PlayerStatsManager(this, ref);
     _mapProgressionManager = MapProgressionManager(this, ref);
-    RunPersistenceManager(this, ref); // Instancié pour initialisation future
     _goldManager = GoldManager(this, ref);
 
     return RunState(
