@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../game/controllers/run_controller.dart';
@@ -65,7 +66,10 @@ class SaveService {
         throw const FormatException('Unsupported or missing schemaVersion');
       }
       json = decoded;
-    } catch (_) {
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('SaveService.load: corrupted or unsupported save data ($e)');
+      }
       await clear();
       return const SaveLoadResult(success: false);
     }
@@ -91,7 +95,10 @@ class SaveService {
         success: true,
         missingItems: [...invMissing, ...deckMissing, ...runMissing],
       );
-    } catch (_) {
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('SaveService.load: failed to hydrate save data ($e)');
+      }
       await clear();
       return const SaveLoadResult(success: false);
     }

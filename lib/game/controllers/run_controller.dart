@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/entity_stats.dart';
 import '../../models/data/hero_data.dart';
@@ -40,7 +41,12 @@ class RunState {
     if (currentNodeId == null) return null;
     try {
       return mapNodes.firstWhere((n) => n.id == currentNodeId).type;
-    } catch (_) {
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint(
+          'RunState.currentNodeType: currentNodeId "$currentNodeId" not found in mapNodes ($e)',
+        );
+      }
       return null;
     }
   }

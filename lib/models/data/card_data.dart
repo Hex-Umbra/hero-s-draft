@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'game_data_registry.dart';
 
 enum CardType { attack, skill, power, status }
@@ -148,7 +149,10 @@ class CardData {
     if (registry == null) return null;
     try {
       return registry.cards.firstWhere((c) => c.id == id);
-    } catch (_) {
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('CardData.getById: no card found for id "$id" ($e)');
+      }
       return null;
     }
   }

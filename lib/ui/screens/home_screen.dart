@@ -8,6 +8,7 @@ import 'map_screen.dart';
 import '../../tutorial/tutorial_screen.dart';
 import '../../tutorial/tutorial_progress_service.dart';
 import '../../services/save_service.dart';
+import '../widgets/game_dialog.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -36,7 +37,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           .join(', ');
       await showDialog<void>(
         context: context,
-        builder: (dialogContext) => AlertDialog(
+        builder: (dialogContext) => GameDialog(
           title: Text(AppLocalizations.of(context)!.missingItemsTitle),
           content: Text(AppLocalizations.of(context)!.missingItemsMessage(names)),
           actions: [
@@ -59,9 +60,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (hasSave) {
       final confirmed = await showDialog<bool>(
         context: context,
-        builder: (dialogContext) => AlertDialog(
+        builder: (dialogContext) => GameDialog(
           title: Text(AppLocalizations.of(context)!.newGameOverwriteTitle),
           content: Text(AppLocalizations.of(context)!.newGameOverwriteMessage),
+          onClose: () => Navigator.of(dialogContext).pop(false),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),

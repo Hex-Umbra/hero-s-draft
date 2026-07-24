@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'game_data_registry.dart';
 
 enum RelicTrigger {
@@ -74,7 +75,10 @@ class RelicData {
     if (registry == null) return null;
     try {
       return registry.relics.firstWhere((r) => r.id == id);
-    } catch (_) {
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('RelicData.getById: no relic found for id "$id" ($e)');
+      }
       return null;
     }
   }

@@ -1,4 +1,5 @@
 import 'relic_data.dart';
+import 'package:flutter/foundation.dart';
 import 'game_data_registry.dart';
 
 class PassiveData {
@@ -55,7 +56,10 @@ class PassiveData {
     if (registry == null) return null;
     try {
       return registry.passives.firstWhere((p) => p.id == id);
-    } catch (_) {
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('PassiveData.getById: no passive found for id "$id" ($e)');
+      }
       return null;
     }
   }

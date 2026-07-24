@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../../models/map_node.dart';
 
@@ -77,7 +78,9 @@ class MapConnectionPainter extends CustomPainter {
             currentDist += totalDash;
           }
         } catch (e) {
-          // Ignorer si la cible n'existe pas
+          if (kDebugMode) {
+            debugPrint('MapConnectionPainter: connection target not found ($e)');
+          }
         }
       }
     }

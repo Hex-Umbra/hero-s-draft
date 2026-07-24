@@ -52,8 +52,8 @@ class _RestScreenState extends ConsumerState<RestScreen> {
       ),
     );
 
-    if (result != null) {
-      final card = result['card'] as CardInstance;
+    final card = result?['card'] as CardInstance?;
+    if (card != null) {
       setState(() {
         _actionTaken = true;
       });

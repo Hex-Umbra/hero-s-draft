@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'game_data_registry.dart';
 import '../missing_save_item.dart';
 
@@ -87,7 +88,10 @@ class ForgeUpgradeData {
     if (registry == null) return null;
     try {
       return registry.forgeUpgrades.firstWhere((u) => u.id == id);
-    } catch (_) {
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('ForgeUpgradeData.getById: no upgrade found for id "$id" ($e)');
+      }
       return null;
     }
   }

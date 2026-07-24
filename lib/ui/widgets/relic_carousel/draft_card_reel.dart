@@ -39,7 +39,7 @@ class _DraftCardReelState extends State<DraftCardReel>
 
   bool _prepareToLand = false;
   bool _hasLanded = false;
-  late Timer _landTimer;
+  Timer? _landTimer;
 
   // Themed upgrade mock data to scroll through during spin phase (neutral / no rarity)
   final List<Map<String, String>> _mockUpgrades = [
@@ -169,7 +169,7 @@ class _DraftCardReelState extends State<DraftCardReel>
 
   @override
   void dispose() {
-    _landTimer.cancel();
+    _landTimer?.cancel();
     _rollController.dispose();
     _rarityController.dispose();
     _shakeController.dispose();
