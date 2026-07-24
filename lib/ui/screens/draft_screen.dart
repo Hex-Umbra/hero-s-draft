@@ -8,6 +8,7 @@ import 'package:roguelike_card_game/ui/theme/app_spacing.dart';
 import 'package:roguelike_card_game/ui/widgets/game_dialog.dart';
 import '../../game/controllers/run_controller.dart';
 import '../../game/controllers/deck_controller.dart';
+import '../../game/services/level_up_reward_service.dart';
 import '../../models/card_instance.dart';
 import '../widgets/relic_carousel/draft_card_reel.dart';
 
@@ -27,7 +28,7 @@ class DraftScreen extends ConsumerStatefulWidget {
 
 class _DraftScreenState extends ConsumerState<DraftScreen>
     with TickerProviderStateMixin {
-  late List<_DraftChoice> _choices;
+  late List<DraftChoice> _choices;
   bool _baseCompleted = false;
   bool _showMythicAlert = false;
   bool _mythicRevealing = false;
@@ -77,7 +78,10 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
   @override
   void initState() {
     super.initState();
-    _choices = _generateChoices();
+    _choices = LevelUpRewardService.generateChoices(
+      luck: ref.read(runProvider).heroStats.luck,
+      forceLegendary: widget.forceLegendary,
+    );
     _alertController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1400),
@@ -118,47 +122,49 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
     }
   }
 
-  String _getChoiceTitle(BuildContext context, _DraftChoice choice) {
+  String _getChoiceTitle(BuildContext context, DraftChoice choice) {
     final l10n = AppLocalizations.of(context)!;
-    if (choice.title == 'Vitalité') return l10n.draftChoiceVitality;
-    if (choice.title == 'Aiguisage') return l10n.draftChoiceSharpening;
-    if (choice.title == 'Forge d\'Acier') return l10n.draftChoiceSteelForge;
-    if (choice.title == 'Sagesse') return l10n.draftChoiceWisdom;
-    if (choice.title == 'Trèfle à 4 feuilles') return l10n.draftChoiceClover;
-    if (choice.title == 'Miroir') return l10n.draftChoiceMirror;
-    if (choice.title == 'Précision') return l10n.draftChoicePrecision;
-    if (choice.title == 'Férocité') return l10n.draftChoiceFerocity;
-    return choice.title;
+    switch (choice.type) {
+      case LevelUpRewardType.vitality:
+        return l10n.draftChoiceVitality;
+      case LevelUpRewardType.sharpening:
+        return l10n.draftChoiceSharpening;
+      case LevelUpRewardType.steelForge:
+        return l10n.draftChoiceSteelForge;
+      case LevelUpRewardType.wisdom:
+        return l10n.draftChoiceWisdom;
+      case LevelUpRewardType.luckyClover:
+        return l10n.draftChoiceClover;
+      case LevelUpRewardType.mirror:
+        return l10n.draftChoiceMirror;
+      case LevelUpRewardType.precision:
+        return l10n.draftChoicePrecision;
+      case LevelUpRewardType.ferocity:
+        return l10n.draftChoiceFerocity;
+    }
   }
 
-  String _getChoiceDescription(BuildContext context, _DraftChoice choice) {
+  String _getChoiceDescription(BuildContext context, DraftChoice choice) {
     final l10n = AppLocalizations.of(context)!;
-    if (choice.title == 'Vitalité') {
-      return l10n.draftChoiceVitalityDesc(choice.pvBoost);
+    switch (choice.type) {
+      case LevelUpRewardType.vitality:
+        return l10n.draftChoiceVitalityDesc(choice.pvBoost);
+      case LevelUpRewardType.sharpening:
+        return l10n.draftChoiceSharpeningDesc(choice.atkBoost);
+      case LevelUpRewardType.steelForge:
+        return l10n.draftChoiceSteelForgeDesc(choice.armorBoost);
+      case LevelUpRewardType.wisdom:
+        return l10n.draftChoiceWisdomDesc(choice.manaBoost);
+      case LevelUpRewardType.luckyClover:
+        return l10n.draftChoiceCloverDesc(choice.luckBoost);
+      case LevelUpRewardType.mirror:
+        return l10n.draftChoiceMirrorDesc;
+      case LevelUpRewardType.precision:
+        return l10n.draftChoicePrecisionDesc(choice.critChanceBoost);
+      case LevelUpRewardType.ferocity:
+        return l10n.draftChoiceFerocityDesc(
+            (choice.critDamageBoost * 100).round());
     }
-    if (choice.title == 'Aiguisage') {
-      return l10n.draftChoiceSharpeningDesc(choice.atkBoost);
-    }
-    if (choice.title == 'Forge d\'Acier') {
-      return l10n.draftChoiceSteelForgeDesc(choice.armorBoost);
-    }
-    if (choice.title == 'Sagesse') {
-      return l10n.draftChoiceWisdomDesc(choice.manaBoost);
-    }
-    if (choice.title == 'Trèfle à 4 feuilles') {
-      return l10n.draftChoiceCloverDesc(choice.luckBoost);
-    }
-    if (choice.title == 'Miroir') {
-      return l10n.draftChoiceMirrorDesc;
-    }
-    if (choice.title == 'Précision') {
-      return l10n.draftChoicePrecisionDesc(choice.critChanceBoost);
-    }
-    if (choice.title == 'Férocité') {
-      return l10n.draftChoiceFerocityDesc(
-          (choice.critDamageBoost * 100).round());
-    }
-    return choice.description;
   }
 
   @override
@@ -651,7 +657,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
   }
 
   void _onChoiceSelected(
-    _DraftChoice choice,
+    DraftChoice choice,
     int index,
   ) {
     if (_selectedIndex != null) return;
@@ -682,257 +688,4 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
     });
   }
 
-  RewardRarity _rollRarity(
-    int luck, {
-    bool canBeLegendary = true,
-    bool isLevelReward = false,
-  }) {
-    if (widget.forceLegendary) {
-      if (isLevelReward) {
-        return RewardRarity.mythic;
-      }
-    }
-    final rng = Random();
-    double mythicChance = isLevelReward ? 0.5 : 0.0;
-    double legendaryChance = 2.0;
-    double epicChance = 6.0;
-    double rareChance = 16.0;
-    double uncommonChance = 24.0;
-
-    if (isLevelReward) {
-      mythicChance += luck * 0.15;
-    }
-    legendaryChance += luck * 0.5;
-    epicChance += luck * 1.5;
-    rareChance += luck * 3.0;
-    uncommonChance += luck * 4.0;
-
-    double roll = rng.nextDouble() * 100;
-
-    if (isLevelReward && roll < mythicChance) {
-      return RewardRarity.mythic;
-    }
-    if (isLevelReward) {
-      roll -= mythicChance;
-    }
-
-    if (canBeLegendary && roll < legendaryChance) return RewardRarity.legendary;
-    if (!canBeLegendary) {
-      roll = (rng.nextDouble() * (100 - legendaryChance)) + legendaryChance;
-    } else {
-      roll -= legendaryChance;
-    }
-
-    if (roll < epicChance) return RewardRarity.epic;
-    roll -= epicChance;
-    if (roll < rareChance) return RewardRarity.rare;
-    roll -= rareChance;
-    if (roll < uncommonChance) return RewardRarity.uncommon;
-
-    return RewardRarity.common;
-  }
-
-  List<_DraftChoice> _generateChoices() {
-    final rng = Random();
-    final runState = ref.read(runProvider);
-    final luck = runState.heroStats.luck;
-
-    final choices = List.generate(3, (index) {
-      RewardRarity rarity;
-      if (widget.forceLegendary) {
-        if (index == 0) {
-          rarity = RewardRarity.uncommon;
-        } else if (index == 1) {
-          rarity = RewardRarity.epic;
-        } else {
-          rarity = RewardRarity.legendary;
-        }
-      } else {
-        rarity = _rollRarity(luck, canBeLegendary: true, isLevelReward: false);
-      }
-
-      double multiplier = 1.0;
-      if (rarity == RewardRarity.uncommon) multiplier = 1.5;
-      if (rarity == RewardRarity.rare) multiplier = 2.0;
-      if (rarity == RewardRarity.epic) multiplier = 3.0;
-      if (rarity == RewardRarity.legendary) multiplier = 4.0;
-
-      int type = rng.nextInt(6);
-      if (type == 0) {
-        int boost = (5 * multiplier).round();
-        return _DraftChoice(
-          'Vitalité',
-          '+$boost PV Max',
-          boost,
-          0,
-          0,
-          0,
-          rarity: rarity,
-        );
-      }
-      if (type == 1) {
-        int boost = (2 * multiplier).round();
-        return _DraftChoice(
-          'Aiguisage',
-          '+$boost Attaque',
-          0,
-          boost,
-          0,
-          0,
-          rarity: rarity,
-        );
-      }
-      if (type == 2) {
-        double masteryMultiplier = 1.0;
-        if (rarity == RewardRarity.uncommon) masteryMultiplier = 2.0;
-        if (rarity == RewardRarity.rare) masteryMultiplier = 3.0;
-        if (rarity == RewardRarity.epic) masteryMultiplier = 5.0;
-        int boost = (1 * masteryMultiplier).round();
-        return _DraftChoice(
-          'Forge d\'Acier',
-          '+$boost aux gains d\'Armure de votre passif',
-          0,
-          0,
-          boost,
-          0,
-          rarity: rarity,
-        );
-      }
-      if (type == 3) {
-        int boost = (1 * multiplier).round();
-        if (boost < 1) boost = 1;
-        return _DraftChoice(
-          'Sagesse',
-          '+$boost Mana Max',
-          0,
-          0,
-          0,
-          boost,
-          rarity: rarity,
-        );
-      }
-      if (type == 4) {
-        int boost;
-        switch (rarity) {
-          case RewardRarity.common:
-            boost = 1;
-            break;
-          case RewardRarity.uncommon:
-            boost = 2;
-            break;
-          case RewardRarity.rare:
-            boost = 3;
-            break;
-          case RewardRarity.epic:
-            boost = 4;
-            break;
-          case RewardRarity.legendary:
-          case RewardRarity.mythic:
-            boost = 5;
-            break;
-        }
-        return _DraftChoice(
-          'Précision',
-          '+$boost% de chance de Critique',
-          0,
-          0,
-          0,
-          0,
-          critChanceBoost: boost,
-          rarity: rarity,
-        );
-      }
-      double boost;
-      switch (rarity) {
-        case RewardRarity.common:
-          boost = 0.10;
-          break;
-        case RewardRarity.uncommon:
-          boost = 0.20;
-          break;
-        case RewardRarity.rare:
-          boost = 0.30;
-          break;
-        case RewardRarity.epic:
-          boost = 0.40;
-          break;
-        case RewardRarity.legendary:
-        case RewardRarity.mythic:
-          boost = 0.50;
-          break;
-      }
-      return _DraftChoice(
-        'Férocité',
-        '+${(boost * 100).round()}% de dégâts de Critique',
-        0,
-        0,
-        0,
-        0,
-        critDamageBoost: boost,
-        rarity: rarity,
-      );
-    });
-
-    if (_rollRarity(luck, isLevelReward: true) == RewardRarity.mythic) {
-      choices.add(
-        _DraftChoice(
-          'Trèfle à 4 feuilles',
-          '+1 Chance',
-          0,
-          0,
-          0,
-          0,
-          luckBoost: 1,
-          rarity: RewardRarity.mythic,
-        ),
-      );
-    }
-
-    if (_rollRarity(luck, isLevelReward: true) == RewardRarity.mythic) {
-      choices.add(
-        _DraftChoice(
-          'Miroir',
-          'Cloner une carte au choix parmi 3 cartes aléatoires de votre deck',
-          0,
-          0,
-          0,
-          0,
-          isCloneOption: true,
-          rarity: RewardRarity.mythic,
-        ),
-      );
-    }
-
-    return choices;
-  }
-}
-
-enum RewardRarity { common, uncommon, rare, epic, legendary, mythic }
-
-class _DraftChoice {
-  final String title;
-  final String description;
-  final int pvBoost;
-  final int atkBoost;
-  final int armorBoost;
-  final int manaBoost;
-  final int luckBoost;
-  final bool isCloneOption;
-  final RewardRarity rarity;
-  final int critChanceBoost;
-  final double critDamageBoost;
-
-  _DraftChoice(
-    this.title,
-    this.description,
-    this.pvBoost,
-    this.atkBoost,
-    this.armorBoost,
-    this.manaBoost, {
-    this.luckBoost = 0,
-    this.isCloneOption = false,
-    this.rarity = RewardRarity.common,
-    this.critChanceBoost = 0,
-    this.critDamageBoost = 0.0,
-  });
 }
