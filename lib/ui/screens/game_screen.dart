@@ -15,6 +15,7 @@ import 'class_selection_screen.dart';
 import 'deck_screen.dart';
 import 'boss_card_draft_screen.dart';
 import '../../services/game_data_service.dart';
+import '../../services/save_service.dart';
 import '../../models/card_instance.dart';
 import '../../models/data/relic_data.dart';
 import '../../models/data/card_data.dart';
@@ -482,7 +483,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                                       backgroundColor: Colors.white,
                                       foregroundColor: Colors.red,
                                     ),
-                                    onPressed: () {
+                                    onPressed: () async {
+                                      await SaveService.clear();
+                                      if (!context.mounted) return;
                                       Navigator.of(
                                         context,
                                       ).popUntil((route) => route.isFirst);
@@ -495,7 +498,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                                       backgroundColor: Colors.white,
                                       foregroundColor: Colors.red,
                                     ),
-                                    onPressed: () {
+                                    onPressed: () async {
+                                      await SaveService.clear();
+                                      if (!context.mounted) return;
                                       Navigator.of(context).pushReplacement(
                                         MaterialPageRoute(
                                           builder: (context) =>

@@ -1,5 +1,29 @@
 [
   {
+    "version": "0.4.0",
+    "date": "2026-07-24",
+    "title": "La Sauvegarde des Héros",
+    "sections": [
+      {
+        "category": "Nouvelles Fonctionnalités",
+        "emoji": "✨",
+        "entries": [
+          "Votre run est désormais sauvegardée automatiquement à chaque étape clé de votre progression sur la carte : après une victoire en combat, en quittant la boutique, après un repos, à la résolution d'un événement, après une session à la forge de fusion, après un échange de relique, ou après le choix d'une récompense de montée de niveau.",
+          "Un nouveau bouton « Continuer » apparaît sur l'écran d'accueil dès qu'une sauvegarde existe, vous permettant de reprendre votre run exactement là où vous l'aviez laissée, avec votre deck, votre or, vos reliques, vos améliorations de forge et votre position sur la carte parfaitement intacts."
+        ]
+      },
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "Démarrer une nouvelle partie alors qu'une sauvegarde existe affiche désormais une demande de confirmation, afin qu'un clic accidentel ne fasse plus jamais perdre une run en cours.",
+          "Si une mise à jour venait à retirer une carte, une relique ou une amélioration de forge que vous possédiez, le jeu vous indique désormais précisément quel élément a été retiré au moment de charger votre sauvegarde, au lieu de la corrompre ou de refuser de la charger.",
+          "Votre sauvegarde est automatiquement effacée à la mort de votre héros, pour que chaque nouvelle run démarre toujours sur des bases saines."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.2",
     "date": "2026-07-01",
     "title": "Forge de Fusion et Runes Libérées",

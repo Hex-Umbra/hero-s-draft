@@ -866,6 +866,48 @@ abstract class AppLocalizations {
   /// **'Cancel'**
   String get cancel;
 
+  /// No description provided for @continueGame.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get continueGame;
+
+  /// No description provided for @newGameOverwriteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New Game'**
+  String get newGameOverwriteTitle;
+
+  /// No description provided for @newGameOverwriteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'A game is currently in progress. Starting a new one will permanently erase your current progress. Continue?'**
+  String get newGameOverwriteMessage;
+
+  /// No description provided for @newGameOverwriteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Overwrite and continue'**
+  String get newGameOverwriteConfirm;
+
+  /// No description provided for @missingItemsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Save restored'**
+  String get missingItemsTitle;
+
+  /// No description provided for @missingItemsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Some items are no longer available due to an update and have been removed: {items}. Your progress has been kept.'**
+  String missingItemsMessage(Object items);
+
+  /// No description provided for @ok.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get ok;
+
   /// No description provided for @shopExpanded.
   ///
   /// In en, this message translates to:

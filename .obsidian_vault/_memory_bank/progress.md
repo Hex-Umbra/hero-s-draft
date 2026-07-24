@@ -5,14 +5,25 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 **Métriques du projet** :
 - **~11 600 lignes** de code source dans `lib/` (~79 fichiers).
 - **9 fichiers JSON** de données d'assets.
-- **112 tests automatisés** — 100% au vert.
+- **145+ tests automatisés** — 100% au vert (branche `feat/save_run`, +9 fichiers de test dédiés au système de sauvegarde).
 - **0 erreur** via `flutter analyze`.
 - **~126 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
-- **Version actuelle** : v3.1.0 — Forge de Fusion et Forge Data-Driven.
+- **Version actuelle** : v3.2.0 — Système de Sauvegarde et Persistance de Run (Autosave), sur branche `feat/save_run` en attente de merge vers `main`.
 
 ---
 
 ## 1. Fonctionnalités 100% Opérationnelles
+
+### 💾 Système de Sauvegarde et Persistance de Run (Autosave)
+
+| Fonctionnalité | Fichiers Clés | Détails |
+|:---|:---|:---|
+| Autosave à checkpoint carte | `SaveService`, `checkpointProvider`, `autosaveOrchestratorProvider` | Sauvegarde automatique dans `shared_preferences` (slot unique, JSON versionné `schemaVersion`) à chaque nœud résolu (combat, boutique, repos, event, forge fusion, échange de reliques, draft de Level Up différé). Jamais en cours de combat (`CombatState` non sérialisé). |
+| Réhydratation des contrôleurs | `hydrate()` sur `RunController`/`DeckNotifier`/`InventoryController`/`SkillController` | Remplacement intégral de l'état depuis les données chargées, navigation directe vers `MapScreen` en contournant la sélection de classe/draft de départ. |
+| Reprise depuis l'accueil | `HomeScreen` | Bouton "Continuer" (visible si `SaveService.hasSave()`), dialogue de confirmation avant qu'une "Nouvelle Partie" n'écrase une sauvegarde existante. |
+| Dégradation gracieuse du contenu manquant | `MissingSaveItem`, `SaveLoadResult.missingItems` | Carte/relique/passif/upgrade de forge supprimé du catalogue après la sauvegarde : retiré silencieusement de l'état, signalé par son nom (instantané bilingue) dans une boîte de dialogue au chargement. |
+| Sauvegarde corrompue = échec total | `SaveService.load()` | JSON illisible ou `schemaVersion` inconnue → échec propre, clé effacée, `HomeScreen` se comporte comme si aucune sauvegarde n'existait (pas de récupération partielle). |
+| Fin de run | `GameOverScreen` | La sauvegarde est effacée à la mort du héros (seul état de fin de run existant actuellement). |
 
 ### 🗺️ Génération et Progression Procédurale (World Map)
 
@@ -226,11 +237,13 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | `EntityStats` | ✅ | ✅ | ✅ | ❌ |
 | `StatusEffect` | ✅ | ✅ | ✅ | ❌ |
 | `MapNode` | ✅ | ✅ | — | ❌ |
+| `RunState` | ✅ (`fromJsonWithReport`, v3.2.0) | ✅ (v3.2.0) | ✅ | ❌ |
+| `DeckState` | ✅ (`fromJsonWithReport`, v3.2.0) | ✅ (v3.2.0) | ✅ | ❌ |
 | `CardInstance` | ❌ | ❌ | ✅ | ❌ |
 | `EventState` | ❌ | ❌ | ✅ | ❌ |
-| `InventoryState` | ❌ | ❌ | ✅ | ❌ |
+| `InventoryState` | ✅ (`fromJsonWithReport`, v3.2.0) | ✅ (v3.2.0) | ✅ | ❌ |
 | `ShopState` | ❌ | ❌ | ✅ | ❌ |
-| `SkillState` | ❌ | ❌ | ✅ | ❌ |
+| `SkillState` | ✅ (v3.2.0) | ✅ (v3.2.0) | ✅ | ❌ |
 
 ---
 
@@ -328,7 +341,7 @@ Basé sur les rapports de dette technique (`technical_debt_report_Opus4.6.md`, 4
 
 | Priorité | Chantier | Problème | Solution |
 |:---|:---|:---|:---|
-| Critique | Persistance / Sauvegarde | Aucune — RAM uniquement | `SaveService` via `shared_preferences` ou SQLite, auto-save, "Reprendre la partie" |
+| Critique | Persistance / Sauvegarde | ~~Aucune — RAM uniquement~~ | ✅ `SaveService` (`lib/services/save_service.dart`) via `shared_preferences`, autosave à chaque checkpoint carte, bouton "Continuer" sur `HomeScreen` (v3.2.0) — granularité checkpoint carte uniquement, pas de reprise mid-combat (voir ADR-069) |
 | Important | Routage centralisé | 20+ `Navigator.push` hardcodés | `GoRouter` avec routes nommées |
 | Important | Système Audio | Aucun — `// TODO: Audio Hook` | `flame_audio`, `AudioService` central, musiques dynamiques, effets contextuels |
 | Important | Event Bus | 18 callbacks constructeur dans `HerosDraftGame` | Pattern Event Bus pour découpler |
@@ -372,6 +385,7 @@ Issus de `docs/analysis_reports/6_analyse_game_balance.md` (documentés, non cor
 
 | Version | Date | Titre | Description des changements clés |
 |:---|:---|:---|:---|
+| **v3.2.0** | 2026-07-24 | Système de Sauvegarde et Persistance de Run (Autosave) | Résolution du point bloquant de commercialisation ADR-011 : `SaveService` (`shared_preferences`, slot unique, JSON versionné) sauvegardant `RunState`/`DeckState`/`InventoryState`/`SkillState` à chaque checkpoint carte (`checkpointProvider`/`autosaveOrchestratorProvider`), jamais en cours de combat. Bouton "Continuer" et dialogue de confirmation sur `HomeScreen`. Dégradation gracieuse du contenu manquant (cartes/reliques/upgrades/passifs supprimés du catalogue) avec avertissement nommé au joueur. Sauvegarde corrompue traitée comme échec total sans récupération partielle. Sauvegarde effacée à la mort du héros. Suppression du stub mort `RunPersistenceManager`. Voir ADR-069. |
 | **v3.1.0** | 2026-07-01 | Forge de Fusion et Forge Data-Driven | Introduction du nœud Forge de Fusion (`MapNodeType.forgeFusion` à 25% de chance) sur les étages 3 à 7. Écran `ForgeFusionScreen` pour fusionner les runes identiques pour un coût de 80 Or. Remplacement des upgrades codés en dur par une structure data-driven (`forge_upgrades.json` + `ForgeUpgradeData`). Cumul de runes sans épuisement (alreadyHas retiré). Correction de la navigation au repos : annuler la forge ramène à la sélection de cartes au lieu de quitter au menu du repos. Écriture de tests unitaires (112 tests réussis, 0 erreur). |
 | **v0.3.0** | 2026-06-25 | Refonte et Validation du Système d'Événements | Enrichissement visuel et narratif du système de rencontres avec 5 événements bilingues configurés dans `events.json`. Conception d'un Safety Gate de validation d'éligibilité (`isSelectable`) bloquant les options en cas d'or insuffisant, de dégâts létaux (`currentHp <= damage`), ou de réduction de PV Max létale. Rendu visuel d'en-tête (PV et Or réactifs) et intégration de badges compacts directement dans les boutons de choix d'options avec transition d'échelle animée après résolution. |
 | **v0.2.9** | 2026-06-25 | Équilibrage Boutique et Miroir Magique | Vente de cartes modélisée par instances réelles (`CardInstance`) affichant leurs sockets de runes et raretés dynamiques via `UiCard.fromInstance`. Tarification dynamique (+20 Or par upgrade de forge). Scaling de raretés et d'upgrades par Acte. Nerf anti-exploit du Miroir Magique doublant son coût à chaque achat ($150 \rightarrow 300 \rightarrow 600 \dots$ Or) avec réinitialisation à 150 Or en sortie de session. |

@@ -25,6 +25,7 @@ import '../widgets/map/dialogs/probabilities_dialog.dart';
 import '../widgets/map/hero_mini_stats_panel.dart';
 import '../widgets/screen_scaffold.dart';
 import '../widgets/gold_indicator.dart';
+import '../widgets/hud/dialogs/pause_dialog.dart';
 
 class MapScreen extends ConsumerStatefulWidget {
   const MapScreen({super.key});
@@ -178,6 +179,14 @@ class _MapScreenState extends ConsumerState<MapScreen>
     return false;
   }
 
+  void _showPauseMenu() {
+    PauseDialog.show(
+      context,
+      onResume: () => Navigator.of(context).pop(),
+      onExit: () => Navigator.of(context).popUntil((route) => route.isFirst),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final runState = ref.watch(runProvider);
@@ -234,6 +243,12 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
     return ScreenScaffold(
       backgroundType: ScreenBackgroundType.parchment,
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          _showPauseMenu();
+        }
+      },
       appBar: AppBar(
         title: Text(
           '${l10n.worldMap} - Acte ${runState.act}',
@@ -432,8 +447,15 @@ class _MapScreenState extends ConsumerState<MapScreen>
             ],
           ),
         ),
-        actions: const [
-          GoldIndicator(isParchment: true),
+        actions: [
+          const GoldIndicator(isParchment: true),
+          IconButton(
+            icon: const Icon(
+              Icons.pause_circle_outline,
+              color: Color(0xFF4A3728),
+            ),
+            onPressed: _showPauseMenu,
+          ),
         ],
       ),
       body: Stack(

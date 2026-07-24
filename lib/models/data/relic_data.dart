@@ -1,3 +1,5 @@
+import 'game_data_registry.dart';
+
 enum RelicTrigger {
   startOfRun,
   startOfCombat,
@@ -65,5 +67,15 @@ class RelicData {
       rarity: RelicRarity.values.firstWhere((e) => e.name == json['rarity']),
       emoji: json['emoji'] as String? ?? '🪙',
     );
+  }
+
+  static RelicData? getById(String id) {
+    final registry = GameDataRegistry.instance;
+    if (registry == null) return null;
+    try {
+      return registry.relics.firstWhere((r) => r.id == id);
+    } catch (_) {
+      return null;
+    }
   }
 }

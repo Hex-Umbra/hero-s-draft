@@ -3,6 +3,7 @@ import '../../../models/map_node.dart';
 import '../../../services/map_generator_service.dart';
 import '../run_controller.dart';
 import '../skill_controller.dart';
+import '../checkpoint_controller.dart';
 
 class MapProgressionManager {
   final RunController controller;
@@ -41,6 +42,8 @@ class MapProgressionManager {
     if (completedNode != null && completedNode!.type == MapNodeType.boss) {
       advanceToNextWorld();
     }
+
+    ref.read(checkpointProvider.notifier).bump();
   }
 
   void advanceToNextWorld() {

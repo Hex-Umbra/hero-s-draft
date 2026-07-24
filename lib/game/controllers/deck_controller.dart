@@ -2,6 +2,8 @@ import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/card_instance.dart';
 import '../../models/data/card_data.dart';
+import '../../models/missing_save_item.dart';
+import '../../models/data/forge_upgrade_data.dart';
 
 class DeckState {
   final List<CardInstance> masterDeck;
@@ -33,6 +35,72 @@ class DeckState {
       exhaustPile: exhaustPile ?? this.exhaustPile,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'masterDeck': masterDeck.map((c) => c.toJson()).toList(),
+        'drawPile': drawPile.map((c) => c.toJson()).toList(),
+        'hand': hand.map((c) => c.toJson()).toList(),
+        'discardPile': discardPile.map((c) => c.toJson()).toList(),
+        'exhaustPile': exhaustPile.map((c) => c.toJson()).toList(),
+      };
+
+  static (List<CardInstance>, List<MissingSaveItem>) _decodePile(
+    List<dynamic>? rawPile,
+  ) {
+    final kept = <CardInstance>[];
+    final missing = <MissingSaveItem>[];
+
+    for (final entry in (rawPile ?? const [])) {
+      final instance = CardInstance.fromJson(entry as Map<String, dynamic>);
+      final freshData = CardData.getById(instance.data.id);
+      if (freshData == null) {
+        missing.add(
+          MissingSaveItem(
+            id: instance.data.id,
+            nameFr: instance.data.nameFr,
+            nameEn: instance.data.nameEn,
+            category: 'card',
+          ),
+        );
+        continue;
+      }
+      final (validUpgrades, upgradesMissing) =
+          ForgeUpgradeData.filterValidRefs(instance.forgeUpgrades);
+      missing.addAll(upgradesMissing);
+      kept.add(instance.copyWith(data: freshData, forgeUpgrades: validUpgrades));
+    }
+
+    return (kept, missing);
+  }
+
+  static (DeckState, List<MissingSaveItem>) fromJsonWithReport(
+    Map<String, dynamic> json,
+  ) {
+    final missing = <MissingSaveItem>[];
+
+    final (masterDeck, m1) = _decodePile(json['masterDeck'] as List<dynamic>?);
+    final (drawPile, m2) = _decodePile(json['drawPile'] as List<dynamic>?);
+    final (hand, m3) = _decodePile(json['hand'] as List<dynamic>?);
+    final (discardPile, m4) = _decodePile(json['discardPile'] as List<dynamic>?);
+    final (exhaustPile, m5) = _decodePile(json['exhaustPile'] as List<dynamic>?);
+    missing
+      ..addAll(m1)
+      ..addAll(m2)
+      ..addAll(m3)
+      ..addAll(m4)
+      ..addAll(m5);
+
+    return (
+      DeckState(
+        masterDeck: masterDeck,
+        drawPile: drawPile,
+        hand: hand,
+        discardPile: discardPile,
+        exhaustPile: exhaustPile,
+      ),
+      missing,
+    );
+  }
 }
 
 class DeckNotifier extends Notifier<DeckState> {
@@ -44,6 +112,11 @@ class DeckNotifier extends Notifier<DeckState> {
   /// Vide complètement le deck (pour une nouvelle run)
   void clearDeck() {
     state = const DeckState();
+  }
+
+  /// Remplace intégralement l'état par une sauvegarde chargée
+  void hydrate(DeckState savedState) {
+    state = savedState;
   }
 
   /// Initialise le master deck au début d'une run

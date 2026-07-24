@@ -10,4 +10,14 @@ class SkillState {
       skill2Cooldown: skill2Cooldown ?? this.skill2Cooldown,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'skill1Cooldown': skill1Cooldown,
+        'skill2Cooldown': skill2Cooldown,
+      };
+
+  factory SkillState.fromJson(Map<String, dynamic> json) => SkillState(
+        skill1Cooldown: json['skill1Cooldown'] as int? ?? 0,
+        skill2Cooldown: json['skill2Cooldown'] as int? ?? 0,
+      );
 }

@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'class_selection_screen.dart';
 import 'card_dictionary_screen.dart';
 import 'patch_notes_screen.dart';
+import 'map_screen.dart';
 import '../../tutorial/tutorial_screen.dart';
 import '../../tutorial/tutorial_progress_service.dart';
+import '../../services/save_service.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -14,6 +17,73 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
+  Future<void> _continueGame() async {
+    final result = await SaveService.load(ref.read);
+    if (!mounted) return;
+
+    if (!result.success) {
+      // The save was corrupted or unreadable; SaveService.load already
+      // cleared it internally, so simply refresh this screen — the
+      // "Continuer" button will disappear on rebuild.
+      setState(() {});
+      return;
+    }
+
+    if (result.missingItems.isNotEmpty) {
+      final locale = Localizations.localeOf(context).languageCode;
+      final names = result.missingItems
+          .map((m) => locale == 'fr' ? m.nameFr : m.nameEn)
+          .join(', ');
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(AppLocalizations.of(context)!.missingItemsTitle),
+          content: Text(AppLocalizations.of(context)!.missingItemsMessage(names)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(AppLocalizations.of(context)!.ok),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (!mounted) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const MapScreen()),
+    );
+  }
+
+  Future<void> _startNewGame(bool hasSave) async {
+    if (hasSave) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(AppLocalizations.of(context)!.newGameOverwriteTitle),
+          content: Text(AppLocalizations.of(context)!.newGameOverwriteMessage),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(AppLocalizations.of(context)!.cancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(AppLocalizations.of(context)!.newGameOverwriteConfirm),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
+      await SaveService.clear();
+    }
+
+    if (!mounted) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const ClassSelectionScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -36,26 +106,55 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               style: TextStyle(fontSize: 18, color: Colors.white70),
             ),
             const SizedBox(height: 60),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 60,
-                  vertical: 20,
-                ),
-                backgroundColor: Colors.blueAccent,
-                textStyle: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const ClassSelectionScreen(),
-                  ),
+            FutureBuilder<bool>(
+              future: SaveService.hasSave(),
+              builder: (context, snapshot) {
+                final hasSave = snapshot.data ?? false;
+                return Column(
+                  children: [
+                    if (hasSave)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 20),
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 60,
+                              vertical: 20,
+                            ),
+                            backgroundColor: Colors.green,
+                            textStyle: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          onPressed: _continueGame,
+                          child: Text(
+                            AppLocalizations.of(context)!.continueGame,
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 60,
+                          vertical: 20,
+                        ),
+                        backgroundColor: Colors.blueAccent,
+                        textStyle: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      onPressed: () => _startNewGame(hasSave),
+                      child: const Text(
+                        'JOUER',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ],
                 );
               },
-              child: const Text('JOUER', style: TextStyle(color: Colors.white)),
             ),
             const SizedBox(height: 20),
             FutureBuilder<bool>(
@@ -183,4 +282,3 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 }
-

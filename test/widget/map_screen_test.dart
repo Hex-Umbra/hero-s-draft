@@ -24,6 +24,13 @@ final mockGameDataLoaderProvider = FutureProvider<GameDataRegistry>((
   );
 });
 
+// MapScreen's dash-line animation repeats forever, so pumpAndSettle() never
+// terminates here; pump a fixed duration instead to let transitions finish.
+Future<void> _settle(WidgetTester tester) async {
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 500));
+}
+
 void main() {
   testWidgets('MapScreen displays nodes and restricts unavailable nodes', (
     WidgetTester tester,
@@ -93,4 +100,233 @@ void main() {
     expect(container.read(runProvider).currentNodeId, firstFloorNodeId);
     container.dispose();
   });
+
+  testWidgets('MapScreen shows a pause icon that opens the pause dialog', (
+    WidgetTester tester,
+  ) async {
+    final hero = const HeroData(
+      id: 'test_hero',
+      nameEn: 'Test',
+      nameFr: 'Test',
+      descriptionEn: 'Test',
+      descriptionFr: 'Test',
+      iconPath: 'test',
+      maxHp: 10,
+      maxMana: 3,
+      passiveTrait: 'regenArmor',
+      baseDamage: 0,
+    );
+
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    container.read(runProvider.notifier).startNewRun(hero);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('en', ''), Locale('fr', '')],
+          locale: const Locale('fr', ''),
+          home: const MapScreen(),
+        ),
+      ),
+    );
+    await _settle(tester);
+
+    expect(find.byIcon(Icons.pause_circle_outline), findsOneWidget);
+    expect(find.text('PAUSE'), findsNothing);
+
+    await tester.tap(find.byIcon(Icons.pause_circle_outline));
+    await _settle(tester);
+
+    expect(find.text('PAUSE'), findsOneWidget);
+    expect(find.text('Reprendre le Combat'), findsOneWidget);
+    expect(find.text('Retour au Menu Principal'), findsOneWidget);
+  });
+
+  testWidgets('MapScreen pause dialog Resume button closes the dialog', (
+    WidgetTester tester,
+  ) async {
+    final hero = const HeroData(
+      id: 'test_hero',
+      nameEn: 'Test',
+      nameFr: 'Test',
+      descriptionEn: 'Test',
+      descriptionFr: 'Test',
+      iconPath: 'test',
+      maxHp: 10,
+      maxMana: 3,
+      passiveTrait: 'regenArmor',
+      baseDamage: 0,
+    );
+
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    container.read(runProvider.notifier).startNewRun(hero);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('en', ''), Locale('fr', '')],
+          locale: const Locale('fr', ''),
+          home: const MapScreen(),
+        ),
+      ),
+    );
+    await _settle(tester);
+
+    await tester.tap(find.byIcon(Icons.pause_circle_outline));
+    await _settle(tester);
+    expect(find.text('PAUSE'), findsOneWidget);
+
+    await tester.tap(find.text('Reprendre le Combat'));
+    await _settle(tester);
+
+    expect(find.text('PAUSE'), findsNothing);
+    expect(find.byType(MapScreen), findsOneWidget);
+  });
+
+  testWidgets(
+    'MapScreen intercepts the system back gesture and opens the pause dialog instead of closing',
+    (WidgetTester tester) async {
+      final hero = const HeroData(
+        id: 'test_hero',
+        nameEn: 'Test',
+        nameFr: 'Test',
+        descriptionEn: 'Test',
+        descriptionFr: 'Test',
+        iconPath: 'test',
+        maxHp: 10,
+        maxMana: 3,
+        passiveTrait: 'regenArmor',
+        baseDamage: 0,
+      );
+
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      container.read(runProvider.notifier).startNewRun(hero);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('en', ''), Locale('fr', '')],
+            locale: const Locale('fr', ''),
+            home: Scaffold(
+              body: Builder(
+                builder: (context) => ElevatedButton(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const MapScreen()),
+                  ),
+                  child: const Text('Open Map'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await _settle(tester);
+
+      await tester.tap(find.text('Open Map'));
+      await _settle(tester);
+      expect(find.byType(MapScreen), findsOneWidget);
+
+      final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+      final bool popped = await navigator.maybePop();
+      await _settle(tester);
+
+      // PopScope(canPop: false) makes the route's popDisposition
+      // `doNotPop`; maybePop() still returns true in that case (it means
+      // "handled here, don't let the OS close the app"), it does not mean
+      // the route was removed. MapScreen is pushed onto a real stack here
+      // (not used as `home`), so if the pop had actually succeeded, "Open
+      // Map" would be visible again and MapScreen would be gone — proving
+      // this assertion is a genuine check, not a tautology.
+      expect(popped, isTrue);
+      expect(find.byType(MapScreen), findsOneWidget);
+      expect(find.text('Open Map'), findsNothing);
+      expect(find.text('PAUSE'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'MapScreen pause dialog "Back to Main Menu" pops back to the previous screen',
+    (WidgetTester tester) async {
+      final hero = const HeroData(
+        id: 'test_hero',
+        nameEn: 'Test',
+        nameFr: 'Test',
+        descriptionEn: 'Test',
+        descriptionFr: 'Test',
+        iconPath: 'test',
+        maxHp: 10,
+        maxMana: 3,
+        passiveTrait: 'regenArmor',
+        baseDamage: 0,
+      );
+
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      container.read(runProvider.notifier).startNewRun(hero);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('en', ''), Locale('fr', '')],
+            locale: const Locale('fr', ''),
+            home: Scaffold(
+              body: Builder(
+                builder: (context) => ElevatedButton(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const MapScreen()),
+                  ),
+                  child: const Text('Open Map'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await _settle(tester);
+
+      await tester.tap(find.text('Open Map'));
+      await _settle(tester);
+      expect(find.byType(MapScreen), findsOneWidget);
+
+      await tester.tap(find.byIcon(Icons.pause_circle_outline));
+      await _settle(tester);
+
+      await tester.tap(find.text('Retour au Menu Principal'));
+      await _settle(tester);
+
+      expect(find.byType(MapScreen), findsNothing);
+      expect(find.text('Open Map'), findsOneWidget);
+    },
+  );
 }
