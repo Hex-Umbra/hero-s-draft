@@ -1,7 +1,7 @@
 # Scaling de difficulté combat — Conception (documentation, non implémenté)
 
 Date : 2026-07-24
-Statut : **Design validé — aucun code modifié.** Ce document sert de référence pour une future implémentation.
+Statut : **Design validé et implémenté** (voir `docs/superpowers/plans/2026-07-24-combat-difficulty-scaling.md`). Ce document reste la référence pour les valeurs numériques et les décisions de conception.
 
 ## 1. Contexte et problème identifié
 
