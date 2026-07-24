@@ -335,6 +335,13 @@
     }
   },
   "cancel": "Cancel",
+  "continueGame": "Continue",
+  "newGameOverwriteTitle": "New Game",
+  "newGameOverwriteMessage": "A game is currently in progress. Starting a new one will permanently erase your current progress. Continue?",
+  "newGameOverwriteConfirm": "Overwrite and continue",
+  "missingItemsTitle": "Save restored",
+  "missingItemsMessage": "Some items are no longer available due to an update and have been removed: {items}. Your progress has been kept.",
+  "ok": "OK",
   "shopExpanded": "Shop expanded permanently!",
   "shopRerolled": "Cards renewed!",
   "chooseCardToPurge": "Choose a card to purge",

@@ -477,6 +477,30 @@ class AppLocalizationsFr extends AppLocalizations {
   String get cancel => 'Annuler';
 
   @override
+  String get continueGame => 'Continuer';
+
+  @override
+  String get newGameOverwriteTitle => 'Nouvelle Partie';
+
+  @override
+  String get newGameOverwriteMessage =>
+      'Une partie est en cours. La démarrer effacera définitivement votre progression actuelle. Continuer ?';
+
+  @override
+  String get newGameOverwriteConfirm => 'Écraser et continuer';
+
+  @override
+  String get missingItemsTitle => 'Sauvegarde restaurée';
+
+  @override
+  String missingItemsMessage(Object items) {
+    return 'Certains éléments ne sont plus disponibles suite à une mise à jour et ont été retirés : $items. Votre progression a été conservée.';
+  }
+
+  @override
+  String get ok => 'OK';
+
+  @override
   String get shopExpanded => 'Boutique agrandie définitivement !';
 
   @override
