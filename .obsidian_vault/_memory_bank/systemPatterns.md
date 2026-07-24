@@ -51,10 +51,10 @@ graph TD
 | Rendu Flame | `lib/game/heros_draft_game.dart` | `HerosDraftGame` — orchestrateur Flame, s'appuie sur 4 systèmes de rendu | ~400 |
 | Rendu Flame | `lib/game/components/` | `card_component.dart` (~150), `targeting_line.dart`, `entities/combat_entity.dart` (nouveau), `entities/` (5 fichiers), `visual_effects/base_visual_effect.dart` (nouveau), `widgets/` | ~2600 |
 | Constantes | `lib/game/game_constants.dart` | `GameConstants` — z-index, tailles, badges, délais de combat, config textes flottants | ~60 |
-| Contrôleurs | `lib/game/controllers/` | `run_controller.dart` et `combat_controller.dart` (façades), `deck_controller.dart`, `inventory_controller.dart`, `skill_controller.dart`, `event_controller.dart`, `shop_controller.dart`, `reward_controller.dart`, plus les sous-dossiers `run/` (4 fichiers) et `combat/` (2 fichiers) | ~2300 |
+| Contrôleurs | `lib/game/controllers/` | `run_controller.dart` et `combat_controller.dart` (façades), `deck_controller.dart`, `inventory_controller.dart`, `skill_controller.dart`, `event_controller.dart`, `shop_controller.dart`, `reward_controller.dart`, `checkpoint_controller.dart` (nouveau v3.2.0 — `checkpointProvider`/`autosaveOrchestratorProvider`), plus les sous-dossiers `run/` (3 fichiers, `run_persistence_manager.dart` supprimé v3.2.0) et `combat/` (2 fichiers) | ~2300 |
 | Systèmes | `lib/game/systems/` | `encounter_system.dart`, `trait_system.dart`, et les 4 systèmes Flame (`state_sync_system.dart`, `card_animation_system.dart`, `combat_visual_system.dart`, `layout_system.dart`) | ~800 |
 | Services (jeu) | `lib/game/services/` | `effect_resolver.dart` (~100), `effects/` (Strategy interfaces et 6 stratégies - nouveau), `combat_debug_logger.dart` (~120), `damage_pipeline.dart` (~60) | ~600 |
-| Services (app) | `lib/services/` | `game_data_service.dart`, `map_generator_service.dart`, `map/` (4 sous-services - nouveau) | ~350 |
+| Services (app) | `lib/services/` | `game_data_service.dart`, `map_generator_service.dart`, `map/` (4 sous-services - nouveau), `save_service.dart` (nouveau v3.2.0 — `SaveService`, autosave à checkpoint carte) | ~450 |
 | Modèles Data | `lib/models/data/` | 9 fichiers (`card_data.dart`, `enemy_data.dart`, `hero_data.dart`, `skill_data.dart`, `event_data.dart`, `passive_data.dart`, `relic_data.dart`, `forge_upgrade_data.dart`, `game_data_registry.dart`) | ~850 |
 | Modèles Runtime | `lib/models/` | 11 fichiers (instances, états, status) | ~600 |
 | UI Écrans | `lib/ui/screens/` | 11 écrans (`home_screen`, `hero_selection_screen`, `starter_deck_draft_screen`, `map_screen`, `game_screen`, `shop_screen`, `event_screen`, `campfire_screen`, `draft_screen`, `dictionary_screen`, `forge_fusion_screen`) | ~5700 |
@@ -85,8 +85,6 @@ Dans le cadre du refactoring de la Phase 2, les contrôleurs les plus monolithiq
 - **`MapProgressionManager`** (`lib/game/controllers/run/map_progression_manager.dart`) :
   - Gère le déplacement vers un nœud de la carte stratégique (`travelToNode`) et valide son accessibilité.
   - Gère la complétion du nœud actuel (`completeCurrentNode`) : réinitialise l'armure à 0, nettoie les statuts temporaires, et gère le passage à l'acte suivant (en déclenchant la génération d'une nouvelle carte via `MapGeneratorService`).
-- **`RunPersistenceManager`** (`lib/game/controllers/run/run_persistence_manager.dart`) :
-  - Gère la sérialisation, la sauvegarde et le chargement de l'état global du run dans le stockage persistant (préparé pour s'intégrer avec `SharedPreferences`).
 - **`GoldManager`** (`lib/game/controllers/run/gold_manager.dart`) :
   - Gère les transactions d'or (gains, dépenses, validation de solde).
   - Gère la facturation progressive pour l'achat de fentes bonus de forge ($50 \rightarrow 80 \rightarrow 120 \rightarrow 175$ Or).
@@ -96,6 +94,24 @@ Dans le cadre du refactoring de la Phase 2, les contrôleurs les plus monolithiq
 **Système de reliques** : Délègue à `PlayerStatsManager` l'application des effets de reliques selon le trigger (`applyRelics`, `applyRelicEffect`).
 
 **Interactions** : Lit `inventoryProvider` (reliques), `skillProvider.notifier` (cooldowns). Muté par `CombatController`, `EventController`, `ShopController`, `TraitSystem`, `EffectResolver`.
+
+**Réhydratation (`hydrate(RunState)`)** : Depuis la v3.2.0 (Système de Sauvegarde), `RunController` expose `hydrate(RunState savedState)` qui remplace intégralement `state` par une sauvegarde chargée. Appelée exclusivement par `SaveService.load()`, jamais par un flux de jeu normal.
+
+---
+
+### 2.1.bis Persistance de Run — `SaveService`, Checkpoints et Réhydratation (v3.2.0)
+
+Le stub historique `RunPersistenceManager` (ancien 3ᵉ sous-gestionnaire de `RunController`, voir §2.1) a été **supprimé** (code mort une fois `SaveService` câblé directement). La persistance de run est désormais un service transversal indépendant, découplé des écrans et des contrôleurs métier :
+
+- **`SaveService`** (`lib/services/save_service.dart`) : Classe statique (miroir du pattern déjà utilisé par `TutorialProgressService`) sans dépendance Riverpod propre. Sérialise `RunState`, `DeckState`, `InventoryState`, `SkillState` en un unique blob JSON versionné (`schemaVersion`) écrit sous une seule clé `shared_preferences`. Expose `save(RefReader)`, `load(RefReader) -> Future<SaveLoadResult>`, `clear()`, `hasSave()`.
+  - **Typedef `RefReader`** : `T Function<T>(ProviderListenable<T> provider)`. Introduit car `Ref` (Notifier) et `WidgetRef` (widget) ne partagent aucun supertype commun sous Riverpod 2.6.1, et `ProviderContainer` (tests) n'implémente ni l'un ni l'autre — mais les trois exposent la même signature `.read`. Tous les appelants passent un tear-off (`ref.read`, `container.read`), jamais l'objet `ref`/`container` lui-même.
+  - **`SaveLoadResult({success, missingItems})`** : `missingItems` est une `List<MissingSaveItem>` (`lib/models/missing_save_item.dart`) — instantané `{id, nameFr, nameEn, category}` capturé au moment du `save()` pour rester affichable même si l'ID ne se résout plus au chargement.
+- **`checkpointProvider` / `autosaveOrchestratorProvider`** (`lib/game/controllers/checkpoint_controller.dart`) : `checkpointProvider` expose un simple `bump()`. `autosaveOrchestratorProvider` écoute ces `bump()` via `ref.listen` et déclenche `SaveService.save(ref.read)`. Le `bump()` est appelé depuis exactement 2 points du code — `MapProgressionManager.completeCurrentNode()` et `PlayerStatsManager.decrementPendingDrafts()` — plutôt que depuis chacun des 7 écrans de résolution de nœud, car ces 2 méthodes de manager sont déjà le point de passage obligé de tous ces écrans.
+- **`hydrate()` sur chaque Notifier concerné** : `RunController.hydrate()`, `DeckNotifier.hydrate()`, `InventoryController.hydrate()`, `SkillController.hydrate()` remplacent intégralement `state` par les données chargées. Chaque état gagne en parallèle un `toJson()`/`fromJsonWithReport()` (ou `fromJson()` pour `SkillState`, sans référence catalogue).
+- **Résolution de contenu par ID, jamais par valeur embarquée** : `CardData.getById()`, `RelicData.getById()`, `PassiveData.getById()` (ajoutés à leurs modèles respectifs) et `ForgeUpgradeData.filterValidRefs()` re-résolvent systématiquement le contenu catalogué depuis `GameDataRegistry` au chargement — la donnée sérialisée dans la sauvegarde n'est jamais une source de vérité, seul l'ID l'est.
+- **Granularité de sauvegarde = checkpoint carte** : `CombatState` n'est jamais sérialisé. L'autosave n'est déclenché qu'à la résolution d'un nœud (retour sur `MapScreen`), jamais pendant le combat lui-même ni à chaque mutation interne à un nœud (ex : pas de save à chaque achat en boutique, seulement à la sortie).
+
+Détail complet des arbitrages de conception dans `decisionLog.md` (ADR-069) et de la spécification d'origine dans `docs/superpowers/specs/2026-07-23-save-system-design.md`.
 
 ---
 
@@ -548,7 +564,7 @@ Pour éliminer la condition de concurrence visuelle (race condition) où l'état
 
 | Écran | Classe | Pattern | Responsabilité |
 |:---|:---|:---|:---|
-| `HomeScreen` | `ConsumerWidget` | `ref.watch(gameDataLoaderProvider)` | Écran d'accueil, chargement données, boutons "New Game" / "Dictionary" |
+| `HomeScreen` | `ConsumerWidget` | `ref.watch(gameDataLoaderProvider)`, `FutureProvider` sur `SaveService.hasSave()` | Écran d'accueil, chargement données, boutons "New Game" / "Dictionary" et (depuis v3.2.0) "Continuer" conditionnel + dialogues de confirmation d'écrasement et de contenu manquant au chargement |
 | `ClassSelectionScreen` | `ConsumerWidget` | `ref.watch(gameDataLoaderProvider)` | Affiche 3 héros sous `ScreenScaffold` (mode sombre) et `PageHeader`, déclenche `startNewRun()` |
 | `StarterDeckDraftScreen` | `ConsumerStatefulWidget` | `ref.watch(gameDataLoaderProvider)`, `ref.read(deckProvider.notifier)` | Choix initial de 5 cartes globales parmi le catalogue complet via `CardDraftLayout` et `UiCard.fromData` + cartes de classe uniques résolues via compétences |
 | `MapScreen` | `ConsumerStatefulWidget` | `ref.watch(runProvider)`, `ref.watch(inventoryProvider)` | **God Class (2471 lignes)** — CustomPainter, pan/zoom, navigation sous `ScreenScaffold` (mode parchemin) et `GoldIndicator` (mode parchemin), overlay bloquant « LEVEL UP ! ». |

@@ -11,11 +11,16 @@ Ce document synthétise la boucle de gameplay (Core Loop) de **Hero's Draft**, s
 
 La progression dans **Hero's Draft** est structurée autour d'une boucle classique de roguelike deckbuilder enrichie d'une mécanique de draft tactique de héros et de cartes.
 
+> [!IMPORTANT]
+> **Persistance de Run (Autosave, v3.2.0)** : Depuis l'introduction du `SaveService`, l'écran d'accueil (`HomeScreen`) propose un bouton **« Continuer »** (visible uniquement si une sauvegarde valide existe) qui court-circuite entièrement les étapes de Sélection de Classe et de Draft Deck Initial pour reprendre directement sur la `MapScreen`, avec le deck, l'or, les reliques et l'état de forge exacts du dernier checkpoint résolu. Voir §3.12 pour les règles métier détaillées de ce mécanisme.
+
 ```
 [Écran d'Accueil (HomeScreen)]
        │
-       ▼
-[Sélection de Classe (HeroSelectionScreen)]
+       ├─► [Continuer] (si sauvegarde existante) ──────────────────────┐
+       │                                                                │
+       ▼                                                                │
+[Sélection de Classe (HeroSelectionScreen)]                             │
   Paladin (100 HP, 3 Mana, 5 Atk, passif: regenArmor)
   Berserker (80 HP, 3 Mana, 15 Atk, passif: berserkerArmor)
   Mage (60 HP, 3 Mana, 10 Atk, passif: spellArmor)
@@ -23,9 +28,9 @@ La progression dans **Hero's Draft** est structurée autour d'une boucle classiq
        ▼
 [Draft Deck Initial (StarterDeckDraftScreen)]
   Constitution du deck : choix de 5 cartes globales + cartes de classe uniques chargées via compétences
-       │
-       ▼
-[Carte Stratégique (MapScreen)] ◄─── Graphe Acyclique Dirigé (10 étages)
+       │                                                                │
+       ▼                                                                ▼
+[Carte Stratégique (MapScreen)] ◄──────────────────────────────────────┘ ◄─── Graphe Acyclique Dirigé (10 étages)
   │   ▲ (Si pendingDrafts > 0 : Overlay Level Up bloquant → DraftScreen)
   │   │
   ├─► [Écrans Spécifiques] : Boutique (ShopScreen), Feu de Camp (CampfireScreen), Événement (EventScreen)
@@ -536,6 +541,18 @@ Le moteur graphique Flame intègre des optimisations avancées pour stabiliser l
 - **Double Jauge de Vie Animée et Décélération (v0.1.7)** : `PlayerHealthBar` utilise un `TweenAnimationBuilder` et un `AnimatedBuilder` pour animer les jauges d'avant-plan (jauge verte de PV instantanés) et d'arrière-plan (jauge rouge/orange de catch-up).
   - *Dégâts* : La jauge verte chute instantanément, tandis que la jauge rouge de catch-up descend avec une animation de décélération progressive ralentie à **1200ms** utilisant la courbe `Curves.easeOut`, permettant de mieux apprécier et ressentir la violence des coups subis.
   - *Soin* : La jauge rouge de catch-up s'aligne instantanément sur le nouveau niveau de PV, tandis que la jauge verte d'avant-plan augmente de façon animée en **500ms** pour donner un sentiment de régénération progressive et fluide.
+
+### 3.13. 💾 Persistance de Run (Autosave)
+
+Depuis la version v3.2.0, une run n'est plus uniquement une session mémoire volatile : elle est automatiquement sauvegardée à des points d'ancrage précis et peut être reprise après fermeture de l'application.
+
+- **Granularité de sauvegarde = checkpoint carte, jamais mid-combat** : L'autosave se déclenche uniquement au retour effectif sur `MapScreen` après résolution d'un nœud (fin de combat, sortie de boutique/repos/événement/forge de fusion/échange de reliques, sélection de carte lors d'un draft de Level Up différé). `CombatState` et l'état de tour en cours **ne sont jamais sauvegardés** : si l'application est fermée en plein combat, ce combat est simplement rejoué au prochain lancement depuis le dernier checkpoint résolu.
+- **Un seul slot de sauvegarde** : Démarrer une "Nouvelle Partie" alors qu'une sauvegarde existe affiche un dialogue de confirmation avant d'écraser l'ancienne progression.
+- **Reprise depuis l'accueil** : Le bouton **« Continuer »** sur `HomeScreen` (visible uniquement si une sauvegarde valide existe) contourne la Sélection de Classe et le Draft Deck Initial pour renvoyer directement le joueur sur `MapScreen`, avec deck, or, reliques, et état de session de forge restaurés à l'identique du dernier checkpoint.
+- **Dégradation gracieuse du contenu retiré** : Si une carte, une relique, un passif ou un upgrade de forge référencé par une sauvegarde a été supprimé du catalogue par une mise à jour ultérieure du jeu, il est retiré silencieusement de l'état restauré (deck, reliques, ou fentes de forge) — le reste de la run demeure pleinement jouable — et le joueur en est informé nommément par une boîte de dialogue au chargement (ex : *« Certains éléments ne sont plus disponibles suite à une mise à jour : Croc Kunaï, Frappe Rapide. Votre progression a été conservée. »*).
+- **Sauvegarde structurellement corrompue = perte propre, pas de récupération partielle** : Un JSON illisible ou un numéro de schéma de sauvegarde inconnu est traité comme une défaillance totale (pas comme un cas de contenu manquant) : la sauvegarde est effacée et le joueur repart d'une run vierge, plutôt que de risquer un état de run désynchronisé entre ses différentes parties (deck, run, inventaire, compétences).
+- **Fin de run et effacement de la sauvegarde** : La sauvegarde est effacée uniquement à la mort du héros (`GameOverScreen`) — seul état de fin de run existant dans le jeu actuellement (les actes s'enchaînent indéfiniment, il n'existe pas encore d'écran de "victoire finale").
+- **Hors scope actuel** : Reprise exacte en plein combat, sauvegardes multiples (slots), monnaie méta persistante entre runs différentes. Ces trois points restent au backlog produit.
 
 ---
 
