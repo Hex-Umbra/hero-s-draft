@@ -5,6 +5,8 @@ import '../../models/data/relic_data.dart';
 import '../../models/data/passive_data.dart';
 import '../../models/map_node.dart';
 import '../../models/status_effect.dart';
+import '../../models/missing_save_item.dart';
+import '../../models/data/forge_upgrade_data.dart';
 import '../../services/map_generator_service.dart';
 import '../systems/trait_system.dart';
 import 'inventory_controller.dart';
@@ -99,6 +101,83 @@ class RunState {
       bonusForgeSlots: bonusForgeSlots ?? this.bonusForgeSlots,
       pendingDrafts: pendingDrafts ?? this.pendingDrafts,
     );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'currentLevel': currentLevel,
+        'act': act,
+        'heroStats': heroStats.toJson(),
+        'heroClassId': heroClassId,
+        'mapNodes': mapNodes.map((n) => n.toJson()).toList(),
+        'currentNodeId': currentNodeId,
+        'passiveTrait': passiveTrait,
+        'activePassiveId': activePassive?.id,
+        'activePassiveNameFr': activePassive?.nameFr,
+        'activePassiveNameEn': activePassive?.nameEn,
+        'forgeSlots': forgeSlots,
+        'forgeTargetCardId': forgeTargetCardId,
+        'forgeTargetSessions': forgeTargetSessions,
+        'bonusForgeSlots': bonusForgeSlots,
+        'pendingDrafts': pendingDrafts,
+      };
+
+  static (RunState, List<MissingSaveItem>) fromJsonWithReport(
+    Map<String, dynamic> json,
+  ) {
+    final missing = <MissingSaveItem>[];
+
+    final (forgeSlots, forgeSlotsMissing) =
+        ForgeUpgradeData.filterValidRefs(json['forgeSlots'] as List<dynamic>?);
+    missing.addAll(forgeSlotsMissing);
+
+    final rawSessions =
+        json['forgeTargetSessions'] as Map<String, dynamic>? ?? const {};
+    final forgeTargetSessions = <String, List<String>>{};
+    rawSessions.forEach((cardId, refs) {
+      final (upgrades, sessionMissing) =
+          ForgeUpgradeData.filterValidRefs(refs as List<dynamic>?);
+      forgeTargetSessions[cardId] = upgrades;
+      missing.addAll(sessionMissing);
+    });
+
+    final activePassiveId = json['activePassiveId'] as String?;
+    PassiveData? activePassive;
+    if (activePassiveId != null) {
+      activePassive = PassiveData.getById(activePassiveId);
+      if (activePassive == null) {
+        missing.add(
+          MissingSaveItem(
+            id: activePassiveId,
+            nameFr: json['activePassiveNameFr'] as String? ?? activePassiveId,
+            nameEn: json['activePassiveNameEn'] as String? ?? activePassiveId,
+            category: 'passive',
+          ),
+        );
+        activePassive = PassiveData.fallback(
+          json['passiveTrait'] as String? ?? '',
+        );
+      }
+    }
+
+    final run = RunState(
+      currentLevel: json['currentLevel'] as int,
+      act: json['act'] as int? ?? 1,
+      heroStats: EntityStats.fromJson(json['heroStats'] as Map<String, dynamic>),
+      heroClassId: json['heroClassId'] as String,
+      mapNodes: (json['mapNodes'] as List<dynamic>? ?? const [])
+          .map((n) => MapNode.fromJson(n as Map<String, dynamic>))
+          .toList(),
+      currentNodeId: json['currentNodeId'] as String?,
+      passiveTrait: json['passiveTrait'] as String?,
+      activePassive: activePassive,
+      forgeSlots: forgeSlots,
+      forgeTargetCardId: json['forgeTargetCardId'] as String?,
+      forgeTargetSessions: forgeTargetSessions,
+      bonusForgeSlots: json['bonusForgeSlots'] as int? ?? 0,
+      pendingDrafts: json['pendingDrafts'] as int? ?? 0,
+    );
+
+    return (run, missing);
   }
 }
 
