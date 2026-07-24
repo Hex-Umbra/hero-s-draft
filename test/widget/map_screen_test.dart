@@ -24,6 +24,13 @@ final mockGameDataLoaderProvider = FutureProvider<GameDataRegistry>((
   );
 });
 
+// MapScreen's dash-line animation repeats forever, so pumpAndSettle() never
+// terminates here; pump a fixed duration instead to let transitions finish.
+Future<void> _settle(WidgetTester tester) async {
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 500));
+}
+
 void main() {
   testWidgets('MapScreen displays nodes and restricts unavailable nodes', (
     WidgetTester tester,
@@ -130,13 +137,13 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await _settle(tester);
 
     expect(find.byIcon(Icons.pause_circle_outline), findsOneWidget);
     expect(find.text('PAUSE'), findsNothing);
 
     await tester.tap(find.byIcon(Icons.pause_circle_outline));
-    await tester.pumpAndSettle();
+    await _settle(tester);
 
     expect(find.text('PAUSE'), findsOneWidget);
     expect(find.text('Reprendre le Combat'), findsOneWidget);
@@ -179,14 +186,14 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await _settle(tester);
 
     await tester.tap(find.byIcon(Icons.pause_circle_outline));
-    await tester.pumpAndSettle();
+    await _settle(tester);
     expect(find.text('PAUSE'), findsOneWidget);
 
     await tester.tap(find.text('Reprendre le Combat'));
-    await tester.pumpAndSettle();
+    await _settle(tester);
 
     expect(find.text('PAUSE'), findsNothing);
     expect(find.byType(MapScreen), findsOneWidget);
@@ -228,13 +235,17 @@ void main() {
           ),
         ),
       );
-      await tester.pumpAndSettle();
+      await _settle(tester);
 
       final navigator = tester.state<NavigatorState>(find.byType(Navigator));
       final bool popped = await navigator.maybePop();
-      await tester.pumpAndSettle();
+      await _settle(tester);
 
-      expect(popped, isFalse);
+      // PopScope(canPop: false) makes the route's popDisposition
+      // `doNotPop`; maybePop() still returns true in that case (it means
+      // "handled here, don't let the OS close the app"), it does not mean
+      // the route was removed.
+      expect(popped, isTrue);
       expect(find.byType(MapScreen), findsOneWidget);
       expect(find.text('PAUSE'), findsOneWidget);
     },
@@ -285,17 +296,17 @@ void main() {
           ),
         ),
       );
-      await tester.pumpAndSettle();
+      await _settle(tester);
 
       await tester.tap(find.text('Open Map'));
-      await tester.pumpAndSettle();
+      await _settle(tester);
       expect(find.byType(MapScreen), findsOneWidget);
 
       await tester.tap(find.byIcon(Icons.pause_circle_outline));
-      await tester.pumpAndSettle();
+      await _settle(tester);
 
       await tester.tap(find.text('Retour au Menu Principal'));
-      await tester.pumpAndSettle();
+      await _settle(tester);
 
       expect(find.byType(MapScreen), findsNothing);
       expect(find.text('Open Map'), findsOneWidget);

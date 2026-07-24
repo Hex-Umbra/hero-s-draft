@@ -155,24 +155,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
     _dashController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
-    );
-
-    // Only repeat animation if not in test mode
-    if (!_isInTestMode()) {
-      _dashController.repeat();
-    }
+    )..repeat();
 
     _transformationController.value =
         Matrix4.translationValues(-200.0, -1500.0, 0.0) *
         Matrix4.diagonal3Values(0.8, 0.8, 1.0);
-  }
-
-  bool _isInTestMode() {
-    try {
-      return WidgetsBinding.instance.runtimeType.toString().contains('TestWidgetsFlutterBinding');
-    } catch (e) {
-      return false;
-    }
   }
 
   @override
