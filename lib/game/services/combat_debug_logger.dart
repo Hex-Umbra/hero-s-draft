@@ -96,7 +96,7 @@ class CombatDebugLogger {
 
     // Scaling Details Section
     buffer.writeln(buildLine('⚙️  SCALING DETAILS:', prefix: '$bold$yellow', suffix: reset));
-    buffer.writeln(buildLine('  • Enemy Level: max(1, playerLevel + (act - 1) * 2 + nodeModifier) = $enemyLevel'));
+    buffer.writeln(buildLine('  • Enemy Level: max(1, playerLevel + nodeModifier) = $enemyLevel'));
     buffer.writeln(buildLine('  • HP scaling multiplier: $hpMultiplier'));
     buffer.writeln(buildLine('  • Damage scaling multiplier: $damageMultiplier'));
     buffer.writeln(buildLine(''));
