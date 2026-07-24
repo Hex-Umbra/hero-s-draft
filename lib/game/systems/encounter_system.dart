@@ -73,7 +73,7 @@ class EncounterSystem {
   }) {
     final double bossHpMultiplier = isBoss ? (isCustomBoss ? 1.0 : 3.0) : (isElite ? 1.5 : 1.0);
     return (1.0 + 0.06 * (enemyLevel - 1)) *
-        (1.0 + 0.35 * (act - 1)) *
+        getHpActFactor(act) *
         bossHpMultiplier;
   }
 
@@ -87,7 +87,7 @@ class EncounterSystem {
   }) {
     final double bossDmgMultiplier = isBoss ? (isCustomBoss ? 1.0 : 3.0) : (isElite ? 1.5 : 1.0);
     return (1.0 + 0.04 * (enemyLevel - 1)) *
-        (1.0 + 0.25 * (act - 1)) *
+        getDamageActFactor(act) *
         bossDmgMultiplier;
   }
 

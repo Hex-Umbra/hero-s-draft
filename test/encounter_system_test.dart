@@ -280,6 +280,45 @@ void main() {
   });
 
   group('Act bracket factor & tier unlock helpers', () {
+    test('getHpMultiplier no longer double-counts act — act only moves through the bracket factor', () {
+      expect(
+        EncounterSystem.getHpMultiplier(enemyLevel: 1, act: 1, isBoss: false, isElite: false),
+        closeTo(1.0, 0.0001),
+      );
+      expect(
+        EncounterSystem.getHpMultiplier(enemyLevel: 1, act: 6, isBoss: false, isElite: false),
+        closeTo(1.35, 0.0001),
+      );
+    });
+
+    test('getDamageMultiplier no longer double-counts act — act only moves through the bracket factor', () {
+      expect(
+        EncounterSystem.getDamageMultiplier(enemyLevel: 1, act: 1, isBoss: false, isElite: false),
+        closeTo(1.0, 0.0001),
+      );
+      expect(
+        EncounterSystem.getDamageMultiplier(enemyLevel: 1, act: 6, isBoss: false, isElite: false),
+        closeTo(1.25, 0.0001),
+      );
+    });
+
+    test('getHpMultiplier combines enemy level, act bracket and elite multiplier correctly', () {
+      final enemyLevel = EncounterSystem.getEnemyLevel(
+        playerLevel: 3,
+        isBoss: false,
+        isElite: true,
+      );
+      final result = EncounterSystem.getHpMultiplier(
+        enemyLevel: enemyLevel,
+        act: 11,
+        isBoss: false,
+        isElite: true,
+      );
+      // enemyLevel = 3 + 1 (elite) = 4
+      // (1 + 0.06 * 3) * 1.8225 (act 11 bracket factor) * 1.5 (elite) = 3.225825
+      expect(result, closeTo(3.225825, 0.0001));
+    });
+
     test('getHpActFactor ramps gently within a 5-act bracket then jumps geometrically', () {
       expect(EncounterSystem.getHpActFactor(1), closeTo(1.0, 0.0001));
       expect(EncounterSystem.getHpActFactor(5), closeTo(1.2, 0.0001));
