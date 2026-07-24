@@ -90,4 +90,53 @@ void main() {
       expect(PassiveData.getById('does_not_exist'), isNull);
     });
   });
+
+  group('ForgeUpgradeData.filterValidRefs', () {
+    setUp(() {
+      GameDataRegistry(
+        enemies: [],
+        heroes: [],
+        skills: [],
+        cards: [],
+        events: [],
+        passives: [],
+        relics: [],
+        forgeUpgrades: [
+          const ForgeUpgradeData(
+            id: 'enduring',
+            nameEn: 'Enduring',
+            nameFr: 'Increvable',
+            descriptionEn: 'Never exhausts.',
+            descriptionFr: "N'est jamais épuisée.",
+            icon: 'shield_rounded',
+            color: 'blueAccent',
+            pools: ['common'],
+          ),
+        ],
+      );
+    });
+
+    test('keeps refs whose id resolves and drops refs whose id does not', () {
+      final (kept, missing) = ForgeUpgradeData.filterValidRefs([
+        'enduring:1',
+        'removed_upgrade:2',
+      ]);
+
+      expect(kept, ['enduring:1']);
+      expect(missing, [
+        const MissingSaveItem(
+          id: 'removed_upgrade',
+          nameFr: 'removed_upgrade',
+          nameEn: 'removed_upgrade',
+          category: 'forgeUpgrade',
+        ),
+      ]);
+    });
+
+    test('handles a null input list gracefully', () {
+      final (kept, missing) = ForgeUpgradeData.filterValidRefs(null);
+      expect(kept, isEmpty);
+      expect(missing, isEmpty);
+    });
+  });
 }

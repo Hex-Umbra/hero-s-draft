@@ -1,4 +1,5 @@
 import 'game_data_registry.dart';
+import '../missing_save_item.dart';
 
 class ForgeUpgradeData {
   final String id;
@@ -89,5 +90,29 @@ class ForgeUpgradeData {
     } catch (_) {
       return null;
     }
+  }
+
+  static (List<String>, List<MissingSaveItem>) filterValidRefs(
+    List<dynamic>? raw,
+  ) {
+    final kept = <String>[];
+    final missing = <MissingSaveItem>[];
+    for (final entry in (raw ?? const [])) {
+      final ref = entry as String;
+      final id = ref.split(':').first;
+      if (getById(id) != null) {
+        kept.add(ref);
+      } else {
+        missing.add(
+          MissingSaveItem(
+            id: id,
+            nameFr: id,
+            nameEn: id,
+            category: 'forgeUpgrade',
+          ),
+        );
+      }
+    }
+    return (kept, missing);
   }
 }
