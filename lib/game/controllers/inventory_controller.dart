@@ -9,6 +9,11 @@ class InventoryController extends Notifier<InventoryState> {
     return const InventoryState();
   }
 
+  /// Remplace intégralement l'état par une sauvegarde chargée
+  void hydrate(InventoryState savedState) {
+    state = savedState;
+  }
+
   void gainGold(int amount) {
     state = state.copyWith(gold: state.gold + amount);
   }

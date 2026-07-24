@@ -8,6 +8,11 @@ class SkillController extends Notifier<SkillState> {
     return const SkillState();
   }
 
+  /// Remplace intégralement l'état par une sauvegarde chargée
+  void hydrate(SkillState savedState) {
+    state = savedState;
+  }
+
   void tickCooldowns() {
     state = SkillState(
       skill1Cooldown: state.skill1Cooldown > 0 ? state.skill1Cooldown - 1 : 0,

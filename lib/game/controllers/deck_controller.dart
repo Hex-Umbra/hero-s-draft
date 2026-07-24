@@ -114,6 +114,11 @@ class DeckNotifier extends Notifier<DeckState> {
     state = const DeckState();
   }
 
+  /// Remplace intégralement l'état par une sauvegarde chargée
+  void hydrate(DeckState savedState) {
+    state = savedState;
+  }
+
   /// Initialise le master deck au début d'une run
   void initializeStarterDeck(List<CardInstance> initialDeck) {
     state = state.copyWith(masterDeck: initialDeck);

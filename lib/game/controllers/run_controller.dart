@@ -219,6 +219,11 @@ class RunController extends Notifier<RunState> {
     state = newState;
   }
 
+  /// Remplace intégralement l'état par une sauvegarde chargée
+  void hydrate(RunState savedState) {
+    state = savedState;
+  }
+
   /// Démarre une nouvelle partie avec la classe choisie
   void startNewRun(HeroData chosenClass, [PassiveData? activePassive]) {
     final generatedMap = MapGeneratorService.generateMap(act: 1);
