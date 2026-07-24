@@ -308,5 +308,20 @@ void main() {
       expect(EncounterSystem.getUnlockedTier(31), 3);
       expect(EncounterSystem.getUnlockedTier(100), 3);
     });
+
+    test('getEnemyLevel depends only on player level and node type, never on act', () {
+      expect(
+        EncounterSystem.getEnemyLevel(playerLevel: 3, isBoss: false, isElite: false),
+        3,
+      );
+      expect(
+        EncounterSystem.getEnemyLevel(playerLevel: 3, isBoss: false, isElite: true),
+        4,
+      );
+      expect(
+        EncounterSystem.getEnemyLevel(playerLevel: 3, isBoss: true, isElite: false),
+        5,
+      );
+    });
   });
 }

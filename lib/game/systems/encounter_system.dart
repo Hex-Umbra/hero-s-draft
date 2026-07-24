@@ -46,10 +46,11 @@ class EncounterSystem {
     return unlocked > maxTierAuthored ? maxTierAuthored : unlocked;
   }
 
-  /// Calculates the enemy level based on player parameters.
+  /// Calculates the enemy level based on player level and node type only.
+  /// Act no longer contributes here — it is handled exclusively by
+  /// [getHpActFactor]/[getDamageActFactor] to avoid double-counting.
   static int getEnemyLevel({
     required int playerLevel,
-    required int act,
     required bool isBoss,
     required bool isElite,
   }) {
@@ -59,7 +60,7 @@ class EncounterSystem {
     } else if (isElite) {
       nodeModifier = 1;
     }
-    return max(1, playerLevel + (act - 1) * 2 + nodeModifier);
+    return max(1, playerLevel + nodeModifier);
   }
 
   /// Calculates the HP scaling multiplier.
@@ -174,7 +175,6 @@ class EncounterSystem {
     // Determine enemy level for combat rating calculation
     final int enemyLevel = getEnemyLevel(
       playerLevel: playerLevel,
-      act: act,
       isBoss: isBoss,
       isElite: isElite,
     );
