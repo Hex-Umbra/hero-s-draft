@@ -128,7 +128,7 @@ void main() {
         // maxPv = (20 * 1.68).round() = 34
         expect(combatController.currentState.enemies.first.stats.maxPv, 34);
 
-        // Case 3: Player Lvl 3, Act 2, Boss Combat -> Enemy Lvl 7 (playerLvl 3 + actMod (2-1)*2=2 + bossMod 2)
+        // Case 3: Player Lvl 3, Act 2, Boss Combat -> Enemy Lvl 5 (playerLvl 3 + bossMod 2; act no longer contributes to enemy level)
         combatController.initializeCombat(
           1,
           MapNodeType.boss,
@@ -136,7 +136,7 @@ void main() {
           playerLevel: 3,
           act: 2,
         );
-        expect(combatController.currentState.enemies.first.stats.level, 7);
+        expect(combatController.currentState.enemies.first.stats.level, 5);
       },
     );
   });
