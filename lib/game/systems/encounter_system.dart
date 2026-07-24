@@ -189,12 +189,21 @@ class EncounterSystem {
       );
     }
 
+    // Restrict the candidate pool to enemies whose tier is unlocked at this
+    // act. Fall back to the unfiltered list if that would leave nothing to
+    // pick from (e.g. only high-tier content was passed in for a low act).
+    final int unlockedTier = getUnlockedTier(act);
+    final eligibleEnemies =
+        availableEnemies.where((enemy) => enemy.tier <= unlockedTier).toList();
+    final List<EnemyData> enemyPool =
+        eligibleEnemies.isNotEmpty ? eligibleEnemies : availableEnemies;
+
     final List<EnemyData> generatedEnemies = [];
     double remainingBudget = finalBudget;
 
     // Choose enemies without exceeding remaining budget
     while (remainingBudget > 0 && generatedEnemies.length < 10) {
-      final candidates = availableEnemies.where((enemy) {
+      final candidates = enemyPool.where((enemy) {
         final rating = calculateCombatRatingForEnemy(enemy);
         return rating <= remainingBudget;
       }).toList();
@@ -209,14 +218,14 @@ class EncounterSystem {
     }
 
     // Fallback if no enemies could fit into budget: choose the one with the lowest combat rating
-    if (generatedEnemies.isEmpty && availableEnemies.isNotEmpty) {
-      EnemyData lowest = availableEnemies.first;
+    if (generatedEnemies.isEmpty && enemyPool.isNotEmpty) {
+      EnemyData lowest = enemyPool.first;
       double lowestRating = calculateCombatRatingForEnemy(lowest);
-      for (int i = 1; i < availableEnemies.length; i++) {
-        final r = calculateCombatRatingForEnemy(availableEnemies[i]);
+      for (int i = 1; i < enemyPool.length; i++) {
+        final r = calculateCombatRatingForEnemy(enemyPool[i]);
         if (r < lowestRating) {
           lowestRating = r;
-          lowest = availableEnemies[i];
+          lowest = enemyPool[i];
         }
       }
       generatedEnemies.add(lowest);

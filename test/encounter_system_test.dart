@@ -108,6 +108,54 @@ void main() {
       expect(enemies, isNotEmpty);
     });
 
+    test('generateEnemiesForLevel excludes tier 2 enemies before act 11', () {
+      final enemies = EncounterSystem.generateEnemiesForLevel(
+        1,
+        [slimeData, goblinData, squeletteData],
+        nodeType: MapNodeType.combat,
+        playerLevel: 5,
+        act: 10,
+        playerMaxHp: 100,
+        playerAttaque: 0,
+        playerMaxMana: 3,
+        playerRelicsCount: 0,
+      );
+      expect(enemies.any((e) => e.tier > 1), isFalse);
+    });
+
+    test('generateEnemiesForLevel allows tier 2 enemies starting at act 11', () {
+      final enemies = EncounterSystem.generateEnemiesForLevel(
+        1,
+        [squeletteData],
+        nodeType: MapNodeType.combat,
+        playerLevel: 5,
+        act: 11,
+        playerMaxHp: 300,
+        playerAttaque: 0,
+        playerMaxMana: 10,
+        playerRelicsCount: 10,
+      );
+      expect(enemies, isNotEmpty);
+      expect(enemies.every((e) => e.id == 'squelette'), isTrue);
+    });
+
+    test('generateEnemiesForLevel falls back to the full pool if the tier filter would empty it', () {
+      // Only a tier-2 enemy is available, but act 1 only unlocks tier 1 —
+      // must not crash and must not return an empty list.
+      final enemies = EncounterSystem.generateEnemiesForLevel(
+        1,
+        [squeletteData],
+        nodeType: MapNodeType.combat,
+        playerLevel: 5,
+        act: 1,
+        playerMaxHp: 300,
+        playerAttaque: 0,
+        playerMaxMana: 10,
+        playerRelicsCount: 10,
+      );
+      expect(enemies, isNotEmpty);
+    });
+
     test('isBoss calculation logic in generateEnemiesForLevel and CombatController', () {
       final container = ProviderContainer();
       final combatController = container.read(combatProvider.notifier);
