@@ -5,6 +5,47 @@ import '../../models/map_node.dart';
 class EncounterSystem {
   static final Random _rng = Random();
 
+  static const double _hpBracketGrowthRate = 1.35;
+  static const double _dmgBracketGrowthRate = 1.25;
+  static const double _hpIntraBracketStep = 0.05;
+  static const double _dmgIntraBracketStep = 0.03;
+  static const int _actBracketSize = 5;
+  static const int _tierUnlockBracketSize = 10;
+  static const int maxTierAuthored = 3;
+
+  /// Which 5-act difficulty bracket this act falls in (0 for acts 1-5, 1 for acts 6-10, ...).
+  static int getActBracket(int act) => ((act - 1) / _actBracketSize).floor();
+
+  /// Position within the current 5-act bracket (0 to 4).
+  static int getActPositionInBracket(int act) => (act - 1) % _actBracketSize;
+
+  /// Combined act factor for HP: a geometric jump every 5 acts, plus a gentle
+  /// ramp that resets each bracket. Replaces the old direct `(1 + 0.35*(act-1))`
+  /// term, which double-counted the act inside `enemyLevel` as well.
+  static double getHpActFactor(int act) {
+    final bracket = getActBracket(act);
+    final positionInBracket = getActPositionInBracket(act);
+    final bracketMultiplier = pow(_hpBracketGrowthRate, bracket).toDouble();
+    final intraBracketRamp = 1.0 + positionInBracket * _hpIntraBracketStep;
+    return bracketMultiplier * intraBracketRamp;
+  }
+
+  /// Same as [getHpActFactor] but for damage, using the damage-specific rates.
+  static double getDamageActFactor(int act) {
+    final bracket = getActBracket(act);
+    final positionInBracket = getActPositionInBracket(act);
+    final bracketMultiplier = pow(_dmgBracketGrowthRate, bracket).toDouble();
+    final intraBracketRamp = 1.0 + positionInBracket * _dmgIntraBracketStep;
+    return bracketMultiplier * intraBracketRamp;
+  }
+
+  /// Highest enemy tier available at this act: tier 1 through act 10, tier 2
+  /// from act 11, tier 3 from act 21, capped at [maxTierAuthored].
+  static int getUnlockedTier(int act) {
+    final unlocked = 1 + ((act - 1) / _tierUnlockBracketSize).floor();
+    return unlocked > maxTierAuthored ? maxTierAuthored : unlocked;
+  }
+
   /// Calculates the enemy level based on player parameters.
   static int getEnemyLevel({
     required int playerLevel,

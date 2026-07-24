@@ -278,4 +278,35 @@ void main() {
       expect(combatController.currentState.isVictory, isTrue);
     });
   });
+
+  group('Act bracket factor & tier unlock helpers', () {
+    test('getHpActFactor ramps gently within a 5-act bracket then jumps geometrically', () {
+      expect(EncounterSystem.getHpActFactor(1), closeTo(1.0, 0.0001));
+      expect(EncounterSystem.getHpActFactor(5), closeTo(1.2, 0.0001));
+      expect(EncounterSystem.getHpActFactor(6), closeTo(1.35, 0.0001));
+      expect(EncounterSystem.getHpActFactor(10), closeTo(1.62, 0.0001));
+      expect(EncounterSystem.getHpActFactor(11), closeTo(1.8225, 0.0001));
+      expect(EncounterSystem.getHpActFactor(15), closeTo(2.187, 0.0001));
+    });
+
+    test('getDamageActFactor ramps gently within a 5-act bracket then jumps geometrically', () {
+      expect(EncounterSystem.getDamageActFactor(1), closeTo(1.0, 0.0001));
+      expect(EncounterSystem.getDamageActFactor(5), closeTo(1.12, 0.0001));
+      expect(EncounterSystem.getDamageActFactor(6), closeTo(1.25, 0.0001));
+      expect(EncounterSystem.getDamageActFactor(10), closeTo(1.4, 0.0001));
+      expect(EncounterSystem.getDamageActFactor(11), closeTo(1.5625, 0.0001));
+      expect(EncounterSystem.getDamageActFactor(15), closeTo(1.75, 0.0001));
+    });
+
+    test('getUnlockedTier stays at 1 for acts 1-10, unlocks 2 at act 11, unlocks 3 at act 21, then caps', () {
+      expect(EncounterSystem.getUnlockedTier(1), 1);
+      expect(EncounterSystem.getUnlockedTier(10), 1);
+      expect(EncounterSystem.getUnlockedTier(11), 2);
+      expect(EncounterSystem.getUnlockedTier(20), 2);
+      expect(EncounterSystem.getUnlockedTier(21), 3);
+      expect(EncounterSystem.getUnlockedTier(30), 3);
+      expect(EncounterSystem.getUnlockedTier(31), 3);
+      expect(EncounterSystem.getUnlockedTier(100), 3);
+    });
+  });
 }
