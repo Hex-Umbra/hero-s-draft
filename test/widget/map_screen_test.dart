@@ -231,11 +231,24 @@ void main() {
             ],
             supportedLocales: const [Locale('en', ''), Locale('fr', '')],
             locale: const Locale('fr', ''),
-            home: const MapScreen(),
+            home: Scaffold(
+              body: Builder(
+                builder: (context) => ElevatedButton(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const MapScreen()),
+                  ),
+                  child: const Text('Open Map'),
+                ),
+              ),
+            ),
           ),
         ),
       );
       await _settle(tester);
+
+      await tester.tap(find.text('Open Map'));
+      await _settle(tester);
+      expect(find.byType(MapScreen), findsOneWidget);
 
       final navigator = tester.state<NavigatorState>(find.byType(Navigator));
       final bool popped = await navigator.maybePop();
@@ -244,9 +257,13 @@ void main() {
       // PopScope(canPop: false) makes the route's popDisposition
       // `doNotPop`; maybePop() still returns true in that case (it means
       // "handled here, don't let the OS close the app"), it does not mean
-      // the route was removed.
+      // the route was removed. MapScreen is pushed onto a real stack here
+      // (not used as `home`), so if the pop had actually succeeded, "Open
+      // Map" would be visible again and MapScreen would be gone — proving
+      // this assertion is a genuine check, not a tautology.
       expect(popped, isTrue);
       expect(find.byType(MapScreen), findsOneWidget);
+      expect(find.text('Open Map'), findsNothing);
       expect(find.text('PAUSE'), findsOneWidget);
     },
   );
