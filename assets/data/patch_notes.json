@@ -1,5 +1,21 @@
 [
   {
+    "version": "0.4.5",
+    "date": "2026-07-24",
+    "title": "La Difficulté Mieux Maîtrisée",
+    "sections": [
+      {
+        "category": "Équilibrage",
+        "emoji": "⚖️",
+        "entries": [
+          "La difficulté ennemie augmente désormais de façon plus progressive et prévisible au fil de votre progression, corrigeant un problème qui la faisait grimper deux fois plus vite que prévu à mesure que l'aventure avançait.",
+          "Chaque nouveau chapitre de cinq actes marque désormais un cap d'intensité bien plus net, remplaçant l'ancienne montée en puissance effrénée et sans limite des runs les plus longues.",
+          "Les adversaires les plus redoutables, comme le Squelette, ne font désormais leur apparition que plus tard dans l'aventure, aux alentours de l'acte 11 puis de l'acte 21, au lieu de surgir de façon prématurée."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.4.0",
     "date": "2026-07-24",
     "title": "La Sauvegarde des Héros",

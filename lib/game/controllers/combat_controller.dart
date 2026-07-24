@@ -69,7 +69,6 @@ class CombatController extends Notifier<CombatState> {
 
     final int enemyLevel = EncounterSystem.getEnemyLevel(
       playerLevel: playerLevel,
-      act: act,
       isBoss: isBoss,
       isElite: isElite,
     );

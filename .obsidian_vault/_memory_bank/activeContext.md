@@ -4,16 +4,28 @@ Ce document décrit le focus actif du projet, les accomplissements récents, et 
 
 ## 1. Focus Actuel du Projet
 
-Le projet a finalisé le Système de Sauvegarde et Persistance de Run (Autosave, v3.2.0), la dernière brique bloquante identifiée pour une qualité commercialisable (branche `feat/save_run`, 13+ commits, en attente de merge vers `main`).
+Le projet a finalisé la refonte du scaling de difficulté de combat (branche `feature/combat_scaling`, 6 commits, **en attente de merge vers `main`**), corrigeant un bug de double comptage de l'Acte qui provoquait une explosion incontrôlée de la difficulté en mode endless. Le Système de Sauvegarde et Persistance de Run (Autosave, v3.2.0) reste également en attente de merge (branche `feat/save_run`, 13+ commits).
 
-Le focus se tourne désormais vers les étapes clés suivantes de la roadmap technique : l'intégration audio complète (`flame_audio`), le découpage modulaire des écrans complexes restants (`MapScreen` et `GameScreen`), le découplage du routage de navigation, et l'amélioration de la couverture de tests.
+Le focus se tourne désormais vers les étapes clés suivantes de la roadmap technique : l'intégration audio complète (`flame_audio`), le découpage modulaire des écrans complexes restants (`MapScreen` et `GameScreen`), le découplage du routage de navigation, l'amélioration de la couverture de tests, et l'ajout de contenu ennemi tier-1 pour compenser la réduction de variété des Actes 1-10 induite par le nouveau gating strict de tier.
+
+> [!IMPORTANT]
+> **Hors scope de la Refonte du Scaling de Difficulté (branche `feature/combat_scaling`)** : la synchronisation du log de debug (`math_combat.md`) avec le calcul réel (`playerCardsCount`, `+(act-1)*10` manquants dans le log) n'est **pas** corrigée dans cette phase — seule la description textuelle de la formule `enemyLevel` a été mise à jour. Les formules de budget de combat (`ExpectedPower`/`BaseBudget`) et les multiplicateurs boss/élite ne sont pas modifiés. Voir `decisionLog.md` (ADR-070).
 
 > [!IMPORTANT]
 > **Hors scope du Système de Sauvegarde (v3.2.0)** : la reprise en plein combat (`CombatState` n'est jamais sérialisé — granularité checkpoint carte uniquement), les slots de sauvegarde multiples, et la monnaie méta persistante entre runs restent des chantiers non traités. Voir `decisionLog.md` (ADR-069) pour le détail des arbitrages.
 
 ## 2. Accomplissements Récents
 
-1. **Système de Sauvegarde et Persistance de Run — Autosave (Complété - Version v3.2.0)** :
+1. **Refonte du Scaling de Difficulté de Combat — Escalier Géométrique & Déblocage de Tier (Complété - branche `feature/combat_scaling`, en attente de merge)** :
+   - **Bug corrigé — Double Comptage de l'Acte** : `EncounterSystem.getEnemyLevel()` intégrait déjà l'Acte (`playerLevel + (act-1)*2 + nodeModifier`), mais `getHpMultiplier()`/`getDamageMultiplier()` réappliquaient l'Acte une seconde fois via un terme linéaire direct (`1 + 0.35*(act-1)` / `1 + 0.25*(act-1)`, introduit par ADR-066). En mode endless (actes non plafonnés), cela produisait une croissance de puissance ennemie incontrôlée (Acte 25 ≈ x36.5 HP par le seul effet de l'Acte).
+   - **Séparation stricte Niveau ↔ Acte** : `getEnemyLevel()` ne dépend plus que du niveau du joueur et du type de nœud (`max(1, playerLevel + nodeModifier)`) ; l'Acte n'apparaît plus qu'à un seul endroit du calcul, rendant le double comptage structurellement impossible.
+   - **Facteur d'Acte en Escalier Géométrique** : nouvelles fonctions statiques `getActBracket`, `getActPositionInBracket`, `getHpActFactor`, `getDamageActFactor` sur `EncounterSystem` — palier géométrique tous les 5 actes (x1.35 HP / x1.25 Dégâts, composé) avec rampe intra-palier douce (+5%/acte HP, +3%/acte Dégâts) qui se réinitialise à chaque palier.
+   - **Déblocage de Tier d'Ennemi tous les 10 Actes** : `getUnlockedTier(act)` plafonné à `maxTierAuthored = 3`. `generateEnemiesForLevel` filtre le pool d'ennemis disponibles par tier débloqué avant la sélection par budget, avec repli sur le pool complet si le filtre viderait la sélection.
+   - **Trade-off de contenu explicitement validé** : le Squelette (tier 2), auparavant accessible dès l'Acte 2 via la sélection molle par budget, n'est plus disponible avant l'Acte 11. Décision de design consciente créant un item de backlog (davantage d'ennemis tier-1 nécessaires pour les Actes 1-10) — voir `progress.md`.
+   - **Assurance Qualité** : 6 commits TDD (spec → plan à 6 tâches → exécution avec revue à chaque étape), suite de tests complète 201/201 au vert, `dart analyze` propre, revue de code de branche complète passée (3 constats mineurs de documentation/hygiène traités ou classés).
+   - Détail complet dans `decisionLog.md` (ADR-070), spec d'origine dans `docs/superpowers/specs/2026-07-24-combat-difficulty-scaling-design.md`, plan dans `docs/superpowers/plans/2026-07-24-combat-difficulty-scaling.md`.
+
+2. **Système de Sauvegarde et Persistance de Run — Autosave (Complété - Version v3.2.0)** :
    - **`SaveService` (`lib/services/save_service.dart`)** : Service statique (miroir du pattern `TutorialProgressService`) sérialisant `RunState`, `DeckState`, `InventoryState` et `SkillState` en un unique blob JSON versionné (`schemaVersion`) écrit sous une seule clé `shared_preferences`. Expose `save(RefReader)`, `load(RefReader) -> SaveLoadResult`, `clear()`, `hasSave()`.
    - **Granularité Checkpoint Carte (décision de cadrage)** : Autosave déclenché uniquement à la résolution d'un nœud de carte (fin de combat, sortie boutique/repos/event/forge fusion/échange de reliques, draft de Level Up), jamais en cours de combat. `CombatState` n'est jamais sérialisé ; un combat interrompu par la fermeture de l'app est simplement rejoué depuis le dernier checkpoint.
    - **`checkpointProvider` / `autosaveOrchestratorProvider`** (`lib/game/controllers/checkpoint_controller.dart`) : Le premier expose un simple `bump()` appelé par les écrans de nœud résolu ; le second écoute ces `bump()` via `ref.listen` et déclenche `SaveService.save(ref)`, découplant les écrans de la mécanique de sauvegarde elle-même.

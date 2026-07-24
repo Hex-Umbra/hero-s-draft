@@ -176,13 +176,23 @@ La fusion de cartes 3-en-1 est gérée par `DeckNotifier.mergeCards(selectedIds,
 | `squelette` | Squelette | 22 | 8 | 2 | [attack:8, attack:10] — cycle 2 attaques | 10% |
 | `orc` | Orc Furieux | 50 | 8 | 3 | [attack:8, buff:2, attack:12] — cycle 3 phases | 15% |
 
-**Scaling de combat** (`CombatController.initializeCombat`) :
-Le niveau d'un ennemi ($EnemyLevel$) est calculé comme suit : $EnemyLevel = \max(1, PlayerLevel + (Act - 1) \times 2 + NodeModifier)$, où $NodeModifier$ est de $+2$ pour un Boss et $+1$ pour un Élite.
-Les multiplicateurs de caractéristiques appliqués aux statistiques de base de l'ennemi sont :
-- **Multiplicateur HP** : $(1.0 + 0.06 \times (EnemyLevel - 1)) \times (1.0 + 0.35 \times (Act - 1)) \times NodeMultiplier$ (croissance par acte accrue à 35% au lieu de 20%)
-- **Multiplicateur Dégâts** : $(1.0 + 0.04 \times (EnemyLevel - 1)) \times (1.0 + 0.25 \times (Act - 1)) \times NodeMultiplier$ (croissance par acte accrue à 25% au lieu de 15%)
+> [!IMPORTANT]
+> **Refonte du Scaling de Difficulté par Acte — Escalier Géométrique & Déblocage de Tier (branche `feature/combat_scaling`, conçu et implémenté, en attente de merge vers `main`)** :
+> L'ancien système comptait l'Acte **deux fois** : une fois dans `enemyLevel`, une seconde fois directement dans les multiplicateurs HP/Dégâts (introduits par ADR-066), provoquant une explosion de difficulté incontrôlée en mode endless (ex : Acte 25 ≈ x36.5 HP par le seul effet de l'Acte). La correction rend `enemyLevel` **strictement indépendant de l'Acte** — l'Acte n'apparaît plus que dans un facteur d'escalier géométrique dédié, ce qui rend le double comptage impossible par construction plutôt que patché numériquement. Voir `decisionLog.md` (ADR-070) pour l'arbitrage complet et `docs/superpowers/specs/2026-07-24-combat-difficulty-scaling-design.md` pour les valeurs numériques détaillées.
 
-Où $NodeMultiplier$ vaut $3.0$ pour un Boss, $1.5$ pour un Élite, et $1.0$ sinon.
+**Scaling de combat** (`CombatController.initializeCombat` / `EncounterSystem`) :
+- **Niveau d'ennemi** ($EnemyLevel$) : $EnemyLevel = \max(1, PlayerLevel + NodeModifier)$, où $NodeModifier$ est de $+2$ pour un Boss et $+1$ pour un Élite. **L'Acte n'intervient plus dans ce calcul.**
+- **Facteur d'Acte en escalier géométrique** (palier de 5 actes) :
+  - $bracket = \lfloor (Act - 1) / 5 \rfloor$, $positionInBracket = (Act - 1) \bmod 5$
+  - $ActFactor_{HP} = 1.35^{bracket} \times (1 + 0.05 \times positionInBracket)$
+  - $ActFactor_{Dmg} = 1.25^{bracket} \times (1 + 0.03 \times positionInBracket)$
+  - Chaque palier de 5 actes accélère géométriquement (composé), tandis que la rampe intra-palier reste douce (max +20% HP / +12% Dégâts en fin de palier) et **se réinitialise** à chaque nouveau palier.
+- **Multiplicateurs finaux appliqués aux statistiques de base de l'ennemi** :
+  - **Multiplicateur HP** : $(1.0 + 0.06 \times (EnemyLevel - 1)) \times ActFactor_{HP} \times NodeMultiplier$
+  - **Multiplicateur Dégâts** : $(1.0 + 0.04 \times (EnemyLevel - 1)) \times ActFactor_{Dmg} \times NodeMultiplier$
+  - Où $NodeMultiplier$ vaut $3.0$ pour un Boss, $1.5$ pour un Élite, et $1.0$ sinon.
+- **Déblocage de tier d'ennemi tous les 10 actes** : $UnlockedTier = \min(3, 1 + \lfloor (Act - 1)/10 \rfloor)$. Le pool d'ennemis disponibles est filtré à `tier <= UnlockedTier` avant la sélection par budget (repli automatique sur le pool complet si ce filtre viderait la sélection). **Gating strict assumé** : le Squelette (tier 2), auparavant accessible dès l'Acte 2 via la sélection molle par budget, n'est plus disponible avant l'**Acte 11**. Ce compromis de design conscient réduit la variété d'ennemis des Actes 1-10 au roster tier-1 actuel (Slime, Gobelin) jusqu'à l'ajout de nouveaux ennemis tier-1 (voir `progress.md`, backlog Contenu).
+- *Comparaison Acte 25 (effet de l'Acte isolé, niveau joueur constant) : ancien système ≈ x36.5 HP / x18.2 Dégâts (double-compté) → nouveau système ≈ x3.98 HP / x2.73 Dégâts.*
 
 > [!IMPORTANT]
 > **Règle de Détermination de Boss (`isBoss`)** :

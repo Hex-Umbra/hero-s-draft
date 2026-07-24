@@ -5,10 +5,52 @@ import '../../models/map_node.dart';
 class EncounterSystem {
   static final Random _rng = Random();
 
-  /// Calculates the enemy level based on player parameters.
+  static const double _hpBracketGrowthRate = 1.35;
+  static const double _dmgBracketGrowthRate = 1.25;
+  static const double _hpIntraBracketStep = 0.05;
+  static const double _dmgIntraBracketStep = 0.03;
+  static const int _actBracketSize = 5;
+  static const int _tierUnlockBracketSize = 10;
+  static const int maxTierAuthored = 3;
+
+  /// Which 5-act difficulty bracket this act falls in (0 for acts 1-5, 1 for acts 6-10, ...).
+  static int getActBracket(int act) => ((act - 1) / _actBracketSize).floor();
+
+  /// Position within the current 5-act bracket (0 to 4).
+  static int getActPositionInBracket(int act) => (act - 1) % _actBracketSize;
+
+  /// Combined act factor for HP: a geometric jump every 5 acts, plus a gentle
+  /// ramp that resets each bracket. Replaces the old direct `(1 + 0.35*(act-1))`
+  /// term, which double-counted the act inside `enemyLevel` as well.
+  static double getHpActFactor(int act) {
+    final bracket = getActBracket(act);
+    final positionInBracket = getActPositionInBracket(act);
+    final bracketMultiplier = pow(_hpBracketGrowthRate, bracket).toDouble();
+    final intraBracketRamp = 1.0 + positionInBracket * _hpIntraBracketStep;
+    return bracketMultiplier * intraBracketRamp;
+  }
+
+  /// Same as [getHpActFactor] but for damage, using the damage-specific rates.
+  static double getDamageActFactor(int act) {
+    final bracket = getActBracket(act);
+    final positionInBracket = getActPositionInBracket(act);
+    final bracketMultiplier = pow(_dmgBracketGrowthRate, bracket).toDouble();
+    final intraBracketRamp = 1.0 + positionInBracket * _dmgIntraBracketStep;
+    return bracketMultiplier * intraBracketRamp;
+  }
+
+  /// Highest enemy tier available at this act: tier 1 through act 10, tier 2
+  /// from act 11, tier 3 from act 21, capped at [maxTierAuthored].
+  static int getUnlockedTier(int act) {
+    final unlocked = 1 + ((act - 1) / _tierUnlockBracketSize).floor();
+    return unlocked > maxTierAuthored ? maxTierAuthored : unlocked;
+  }
+
+  /// Calculates the enemy level based on player level and node type only.
+  /// Act no longer contributes here — it is handled exclusively by
+  /// [getHpActFactor]/[getDamageActFactor] to avoid double-counting.
   static int getEnemyLevel({
     required int playerLevel,
-    required int act,
     required bool isBoss,
     required bool isElite,
   }) {
@@ -18,7 +60,7 @@ class EncounterSystem {
     } else if (isElite) {
       nodeModifier = 1;
     }
-    return max(1, playerLevel + (act - 1) * 2 + nodeModifier);
+    return max(1, playerLevel + nodeModifier);
   }
 
   /// Calculates the HP scaling multiplier.
@@ -31,7 +73,7 @@ class EncounterSystem {
   }) {
     final double bossHpMultiplier = isBoss ? (isCustomBoss ? 1.0 : 3.0) : (isElite ? 1.5 : 1.0);
     return (1.0 + 0.06 * (enemyLevel - 1)) *
-        (1.0 + 0.35 * (act - 1)) *
+        getHpActFactor(act) *
         bossHpMultiplier;
   }
 
@@ -45,7 +87,7 @@ class EncounterSystem {
   }) {
     final double bossDmgMultiplier = isBoss ? (isCustomBoss ? 1.0 : 3.0) : (isElite ? 1.5 : 1.0);
     return (1.0 + 0.04 * (enemyLevel - 1)) *
-        (1.0 + 0.25 * (act - 1)) *
+        getDamageActFactor(act) *
         bossDmgMultiplier;
   }
 
@@ -133,7 +175,6 @@ class EncounterSystem {
     // Determine enemy level for combat rating calculation
     final int enemyLevel = getEnemyLevel(
       playerLevel: playerLevel,
-      act: act,
       isBoss: isBoss,
       isElite: isElite,
     );
@@ -148,12 +189,21 @@ class EncounterSystem {
       );
     }
 
+    // Restrict the candidate pool to enemies whose tier is unlocked at this
+    // act. Fall back to the unfiltered list if that would leave nothing to
+    // pick from (e.g. only high-tier content was passed in for a low act).
+    final int unlockedTier = getUnlockedTier(act);
+    final eligibleEnemies =
+        availableEnemies.where((enemy) => enemy.tier <= unlockedTier).toList();
+    final List<EnemyData> enemyPool =
+        eligibleEnemies.isNotEmpty ? eligibleEnemies : availableEnemies;
+
     final List<EnemyData> generatedEnemies = [];
     double remainingBudget = finalBudget;
 
     // Choose enemies without exceeding remaining budget
     while (remainingBudget > 0 && generatedEnemies.length < 10) {
-      final candidates = availableEnemies.where((enemy) {
+      final candidates = enemyPool.where((enemy) {
         final rating = calculateCombatRatingForEnemy(enemy);
         return rating <= remainingBudget;
       }).toList();
@@ -168,14 +218,14 @@ class EncounterSystem {
     }
 
     // Fallback if no enemies could fit into budget: choose the one with the lowest combat rating
-    if (generatedEnemies.isEmpty && availableEnemies.isNotEmpty) {
-      EnemyData lowest = availableEnemies.first;
+    if (generatedEnemies.isEmpty && enemyPool.isNotEmpty) {
+      EnemyData lowest = enemyPool.first;
       double lowestRating = calculateCombatRatingForEnemy(lowest);
-      for (int i = 1; i < availableEnemies.length; i++) {
-        final r = calculateCombatRatingForEnemy(availableEnemies[i]);
+      for (int i = 1; i < enemyPool.length; i++) {
+        final r = calculateCombatRatingForEnemy(enemyPool[i]);
         if (r < lowestRating) {
           lowestRating = r;
-          lowest = availableEnemies[i];
+          lowest = enemyPool[i];
         }
       }
       generatedEnemies.add(lowest);

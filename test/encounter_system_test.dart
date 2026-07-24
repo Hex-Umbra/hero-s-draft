@@ -108,6 +108,54 @@ void main() {
       expect(enemies, isNotEmpty);
     });
 
+    test('generateEnemiesForLevel excludes tier 2 enemies before act 11', () {
+      final enemies = EncounterSystem.generateEnemiesForLevel(
+        1,
+        [slimeData, goblinData, squeletteData],
+        nodeType: MapNodeType.combat,
+        playerLevel: 5,
+        act: 10,
+        playerMaxHp: 100,
+        playerAttaque: 0,
+        playerMaxMana: 3,
+        playerRelicsCount: 0,
+      );
+      expect(enemies.any((e) => e.tier > 1), isFalse);
+    });
+
+    test('generateEnemiesForLevel allows tier 2 enemies starting at act 11', () {
+      final enemies = EncounterSystem.generateEnemiesForLevel(
+        1,
+        [squeletteData],
+        nodeType: MapNodeType.combat,
+        playerLevel: 5,
+        act: 11,
+        playerMaxHp: 300,
+        playerAttaque: 0,
+        playerMaxMana: 10,
+        playerRelicsCount: 10,
+      );
+      expect(enemies, isNotEmpty);
+      expect(enemies.every((e) => e.id == 'squelette'), isTrue);
+    });
+
+    test('generateEnemiesForLevel falls back to the full pool if the tier filter would empty it', () {
+      // Only a tier-2 enemy is available, but act 1 only unlocks tier 1 —
+      // must not crash and must not return an empty list.
+      final enemies = EncounterSystem.generateEnemiesForLevel(
+        1,
+        [squeletteData],
+        nodeType: MapNodeType.combat,
+        playerLevel: 5,
+        act: 1,
+        playerMaxHp: 300,
+        playerAttaque: 0,
+        playerMaxMana: 10,
+        playerRelicsCount: 10,
+      );
+      expect(enemies, isNotEmpty);
+    });
+
     test('isBoss calculation logic in generateEnemiesForLevel and CombatController', () {
       final container = ProviderContainer();
       final combatController = container.read(combatProvider.notifier);
@@ -276,6 +324,91 @@ void main() {
       expect(combatController.currentState.enemies.isEmpty, isTrue);
       expect(combatController.currentState.isCombatEnded, isTrue);
       expect(combatController.currentState.isVictory, isTrue);
+    });
+  });
+
+  group('Act bracket factor & tier unlock helpers', () {
+    test('getHpMultiplier no longer double-counts act — act only moves through the bracket factor', () {
+      expect(
+        EncounterSystem.getHpMultiplier(enemyLevel: 1, act: 1, isBoss: false, isElite: false),
+        closeTo(1.0, 0.0001),
+      );
+      expect(
+        EncounterSystem.getHpMultiplier(enemyLevel: 1, act: 6, isBoss: false, isElite: false),
+        closeTo(1.35, 0.0001),
+      );
+    });
+
+    test('getDamageMultiplier no longer double-counts act — act only moves through the bracket factor', () {
+      expect(
+        EncounterSystem.getDamageMultiplier(enemyLevel: 1, act: 1, isBoss: false, isElite: false),
+        closeTo(1.0, 0.0001),
+      );
+      expect(
+        EncounterSystem.getDamageMultiplier(enemyLevel: 1, act: 6, isBoss: false, isElite: false),
+        closeTo(1.25, 0.0001),
+      );
+    });
+
+    test('getHpMultiplier combines enemy level, act bracket and elite multiplier correctly', () {
+      final enemyLevel = EncounterSystem.getEnemyLevel(
+        playerLevel: 3,
+        isBoss: false,
+        isElite: true,
+      );
+      final result = EncounterSystem.getHpMultiplier(
+        enemyLevel: enemyLevel,
+        act: 11,
+        isBoss: false,
+        isElite: true,
+      );
+      // enemyLevel = 3 + 1 (elite) = 4
+      // (1 + 0.06 * 3) * 1.8225 (act 11 bracket factor) * 1.5 (elite) = 3.225825
+      expect(result, closeTo(3.225825, 0.0001));
+    });
+
+    test('getHpActFactor ramps gently within a 5-act bracket then jumps geometrically', () {
+      expect(EncounterSystem.getHpActFactor(1), closeTo(1.0, 0.0001));
+      expect(EncounterSystem.getHpActFactor(5), closeTo(1.2, 0.0001));
+      expect(EncounterSystem.getHpActFactor(6), closeTo(1.35, 0.0001));
+      expect(EncounterSystem.getHpActFactor(10), closeTo(1.62, 0.0001));
+      expect(EncounterSystem.getHpActFactor(11), closeTo(1.8225, 0.0001));
+      expect(EncounterSystem.getHpActFactor(15), closeTo(2.187, 0.0001));
+    });
+
+    test('getDamageActFactor ramps gently within a 5-act bracket then jumps geometrically', () {
+      expect(EncounterSystem.getDamageActFactor(1), closeTo(1.0, 0.0001));
+      expect(EncounterSystem.getDamageActFactor(5), closeTo(1.12, 0.0001));
+      expect(EncounterSystem.getDamageActFactor(6), closeTo(1.25, 0.0001));
+      expect(EncounterSystem.getDamageActFactor(10), closeTo(1.4, 0.0001));
+      expect(EncounterSystem.getDamageActFactor(11), closeTo(1.5625, 0.0001));
+      expect(EncounterSystem.getDamageActFactor(15), closeTo(1.75, 0.0001));
+    });
+
+    test('getUnlockedTier stays at 1 for acts 1-10, unlocks 2 at act 11, unlocks 3 at act 21, then caps', () {
+      expect(EncounterSystem.getUnlockedTier(1), 1);
+      expect(EncounterSystem.getUnlockedTier(10), 1);
+      expect(EncounterSystem.getUnlockedTier(11), 2);
+      expect(EncounterSystem.getUnlockedTier(20), 2);
+      expect(EncounterSystem.getUnlockedTier(21), 3);
+      expect(EncounterSystem.getUnlockedTier(30), 3);
+      expect(EncounterSystem.getUnlockedTier(31), 3);
+      expect(EncounterSystem.getUnlockedTier(100), 3);
+    });
+
+    test('getEnemyLevel depends only on player level and node type, never on act', () {
+      expect(
+        EncounterSystem.getEnemyLevel(playerLevel: 3, isBoss: false, isElite: false),
+        3,
+      );
+      expect(
+        EncounterSystem.getEnemyLevel(playerLevel: 3, isBoss: false, isElite: true),
+        4,
+      );
+      expect(
+        EncounterSystem.getEnemyLevel(playerLevel: 3, isBoss: true, isElite: false),
+        5,
+      );
     });
   });
 }
