@@ -132,7 +132,7 @@ Détail complet des arbitrages de conception dans `decisionLog.md` (ADR-069) et 
 - **Initialisation** : `initializeCombat(...)` — Génère la liste totale des ennemis via `EncounterSystem.generateEnemiesForLevel()`. Instancie les stats des ennemis en appliquant le multiplicateur de niveau (+6% HP/lvl, +4% ATK/lvl) et le **facteur d'Acte en escalier géométrique** (`getHpActFactor`/`getDamageActFactor`, palier de 5 actes — voir §3.1), ainsi que les modificateurs de nœuds (3x HP/2x ATK pour boss, 1.5x pour élite). Les 5 premiers ennemis sont placés dans `enemies` (câblés avec une intention de départ), les suivants sont placés dans `pendingEnemies`.
 
   > [!IMPORTANT]
-  > **Séparation stricte Niveau ↔ Acte (branche `feature/combat_scaling`, en attente de merge — voir ADR-070)** : `EncounterSystem.getEnemyLevel()` ne dépend plus jamais de l'Acte (uniquement du niveau du joueur et du type de nœud). L'Acte n'agit plus que via `getHpActFactor`/`getDamageActFactor`, ce qui rend structurellement impossible le double comptage qui existait auparavant (l'Acte apparaissant à la fois dans `enemyLevel` et dans un terme linéaire direct des multiplicateurs).
+  > **Séparation stricte Niveau ↔ Acte (branche `feature/combat_scaling`, mergée vers `main` — voir ADR-070)** : `EncounterSystem.getEnemyLevel()` ne dépend plus jamais de l'Acte (uniquement du niveau du joueur et du type de nœud). L'Acte n'agit plus que via `getHpActFactor`/`getDamageActFactor`, ce qui rend structurellement impossible le double comptage qui existait auparavant (l'Acte apparaissant à la fois dans `enemyLevel` et dans un terme linéaire direct des multiplicateurs).
   
   Le calcul pour déterminer si le combat est un boss s'appuie sur la correction de garde `isBoss` :
   ```dart
@@ -337,7 +337,7 @@ static List<EnemyData> generateEnemiesForLevel(
    $$\text{FinalBudget} = (\text{BaseBudget} \times \text{PowerModifier} \times \text{NodeMultiplier}) + ((\text{act} - 1) \times 10.0)$$
    *(Avec `NodeMultiplier` = 1.0 pour normal, 1.5 pour élite, 2.0 pour boss)*
 
-5. **Formule du Niveau Ennemi (`getEnemyLevel`)** — *branche `feature/combat_scaling`, en attente de merge (voir ADR-070)* :
+5. **Formule du Niveau Ennemi (`getEnemyLevel`)** — *branche `feature/combat_scaling`, mergée vers `main` (voir ADR-070)* :
    $$EnemyLevel = \max(1, PlayerLevel + NodeModifier)$$
    *(Avec `NodeModifier` = 2 pour boss, 1 pour élite, 0 sinon). L'Acte n'apparaît plus dans cette formule — voir point 5bis.*
 

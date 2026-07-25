@@ -4,10 +4,51 @@ Ce document répertorie sous forme d'**ADR (Architecture Decision Records)** les
 
 ---
 
+## 🐛 ADR-071 : Plafonnement du Nombre d'Ennemis par Acte & Résolution de la Dérive Log/Calcul (branche `feature/combat_scaling`, suite d'ADR-070)
+
+### Statut
+✅ Accepté, Implémenté & **Mergé vers `main`** (branche `feature/combat_scaling`, PR #21, poursuite des commits sur la même branche après le merge initial d'ADR-070 via PR #20, 2026-07-25).
+
+### Contexte
+Après le merge de PR #20 (ADR-070), l'analyse du `combat_math.md` corrigé a révélé deux problèmes restants, tous deux explicitement différés par ADR-070 §6 :
+1. **Dérive log/calcul confirmée** : `combat_controller.dart` dupliquait la formule `playerPower`/`finalBudget` d'`EncounterSystem` à des fins d'affichage seulement, et cette copie avait dérivé — elle omettait `playerCardsCount` dans `playerPower` et le bonus `+(act-1)*10` dans `finalBudget`, sous-estimant le budget réel utilisé pour générer les ennemis (de plus en plus au fil des cartes/actes accumulés).
+2. **Nombre d'ennemis non plafonné de façon cohérente** : une fois le calcul de budget fiabilisé, il est apparu qu'un combat élite en début d'Acte 2 générait légitimement 3 ennemis faibles (Slime + Gobelin + Slime) au lieu d'un ou deux ennemis plus costauds — le multiplicateur de nœud élite (×1.5) combiné au gating strict de tier (ADR-070, tier 2 indisponible avant l'Acte 11) forçait le budget à s'écouler en empilant du tier 1 plutôt qu'en primant des ennemis plus rares.
+
+Design : `docs/superpowers/specs/2026-07-25-enemy-count-scaling-design.md`. Plan : `docs/superpowers/plans/2026-07-25-enemy-count-scaling.md`.
+
+### Décision
+1. **Correction du log** : extraction d'un unique `EncounterSystem.calculateBudget()` utilisé à la fois par la génération réelle d'ennemis et par le log de debug (commit `24d3148`), éliminant structurellement tout risque de dérive future entre les deux.
+2. **Plafond du nombre d'ennemis générés, croissant avec l'Acte, différencié par type de nœud**, ancré à 1 ennemi à l'Acte 1, sans plafond ultime (cohérence avec la philosophie endless d'ADR-070) :
+   - `getMaxEnemiesForNormalCombat(act) = 1 + floor((act-1)/1)` (+1 par acte)
+   - `getMaxEnemiesForElite(act) = 1 + floor((act-1)/2)` (+1 tous les 2 actes)
+   - `getMaxEnemiesForBoss(act) = 1 + floor((act-1)/5)` (+1 tous les 5 actes)
+   - Les trois partagent un helper privé `_maxEnemiesFromStep(act, stepSize)`.
+3. **Câblage minimal dans `generateEnemiesForLevel`** : l'ancienne limite fixe (`generatedEnemies.length < 10`) est remplacée par le plafond act-scaled correspondant au type de nœud. Le budget continue de déterminer *si* le plafond est atteignable ; le plafond n'est qu'une borne supplémentaire.
+4. **Budget non consommé au-delà du plafond est perdu**, sans bonus compensatoire aux ennemis déjà choisis — choix délibéré pour rester simple.
+5. **Application symétrique assumée aux combats normaux** : le signalement initial ne portait que sur les élites/boss, mais le plafond s'applique aussi aux combats normaux (ex : 3 Slimes dès l'Acte 2 sous l'ancien système → plafonné à 2). Décision explicite de cohérence plutôt qu'un correctif ciblé.
+6. **Système de vagues inchangé** (`enemies`/`pendingEnemies`, max 5 actifs) — il absorbe déjà nativement tout total généré au-delà de 5.
+7. **Log de debug étendu** : `getMaxEnemiesFor{NormalCombat,Elite,Boss}(act)` est désormais loggé à côté des lignes de scaling HP/dégâts existantes.
+
+### Preuves dans le code
+- `lib/game/systems/encounter_system.dart` : `_maxEnemiesFromStep`, `getMaxEnemiesForNormalCombat/Elite/Boss`, `calculateBudget()` (source de vérité unique), câblage dans `generateEnemiesForLevel`.
+- `lib/game/controllers/combat_controller.dart` : appel à `EncounterSystem.calculateBudget()` au lieu d'une copie locale de la formule ; log du plafond d'ennemis.
+- `lib/game/services/combat_debug_logger.dart` : ajout de `playerCardsCount` et du terme `+(act-1)*10` dans les lignes de formule affichées ; ajout des lignes de plafond d'ennemis.
+- `test/encounter_system_test.dart`, `test/unit/combat_debug_logger_test.dart` : couverture des helpers de plafond, du budget unifié, et du cas combat normal à l'Acte 3 avec répartition vagues actives/réserve sous le nouveau plafond.
+
+### Conséquences
+- ✅ **Backlog ADR-070 §6 résolu** : le log de debug (`math_combat.md`) reflète désormais exactement le calcul réel de budget — plus de dérive entre le log et le comportement réel du jeu.
+- ✅ **Combats mieux calibrés en début de run** : les élites/boss à faible Acte n'empilent plus artificiellement plusieurs ennemis tier-1 faibles pour épuiser un budget conçu pour un ennemi plus costaud.
+- ✅ **Cohérence structurelle** : le plafond suit la même philosophie "escalier sans limite ultime" que le scaling HP/dégâts d'ADR-070, plutôt qu'une valeur fixe arbitraire (l'ancienne limite de 10).
+- ✅ **Mergé vers `main`** dans la même PR (#21) qui a intégré l'ensemble de la branche `feature/combat_scaling`.
+- ⚠️ **Backlog de contenu tier-1 toujours ouvert** (hérité d'ADR-070, non traité ici) : la variété d'ennemis des Actes 1-10 reste limitée à Slime/Gobelin.
+- ⚠️ **Patch note joueur pas encore rédigé** pour ce volet (contrairement à ADR-070, couvert par la v0.4.5) — à traiter par le sub-agent `patch_notes_writer`.
+
+---
+
 ## ⚔️ ADR-070 : Scaling de Difficulté en Escalier Géométrique & Déblocage de Tier d'Ennemi (branche `feature/combat_scaling`)
 
 ### Statut
-✅ Accepté & Implémenté (branche `feature/combat_scaling`, 6 commits, **en attente de merge vers `main`**) — corrige un bug de régression introduit par ADR-066.
+✅ Accepté, Implémenté & **Mergé vers `main`** (branche `feature/combat_scaling`, PR #20, 6 commits, mergé le 2026-07-25 — livré aux joueurs via le patch note v0.4.5 "La Difficulté Mieux Maîtrisée") — corrige un bug de régression introduit par ADR-066. Poursuivi par ADR-071 (plafonnement du nombre d'ennemis + résolution de la dérive log/calcul), mergé dans la même branche via PR #21.
 
 ### Contexte
 L'analyse des logs de debug de combat (`math_combat.md`) a révélé que `EncounterSystem` comptait l'Acte **deux fois** dans le scaling de puissance des ennemis : une première fois à l'intérieur de `getEnemyLevel()` (`playerLevel + (act - 1) * 2 + nodeModifier`), une seconde fois directement dans `getHpMultiplier()`/`getDamageMultiplier()` (`(1 + 0.35 * (act - 1))` / `(1 + 0.25 * (act - 1))`, coefficients portés à ces valeurs par ADR-066). Le jeu autorisant un nombre d'actes non plafonné (mode endless), ce double comptage devenait rapidement absurde : Acte 25 ≈ x36.5 HP / x18.2 Dégâts par le seul effet de l'Acte, alors que le budget de nombre/variété d'ennemis (`finalBudget`) ne croît que linéairement (+25/acte) et ne compense en rien cette accélération de puissance individuelle. Spec : `docs/superpowers/specs/2026-07-24-combat-difficulty-scaling-design.md`. Plan d'implémentation (6 tâches TDD) : `docs/superpowers/plans/2026-07-24-combat-difficulty-scaling.md`.
@@ -22,7 +63,7 @@ L'analyse des logs de debug de combat (`math_combat.md`) a révélé que `Encoun
 3. **Déblocage de tier d'ennemi tous les 10 actes** : `getUnlockedTier(act) = min(maxTierAuthored, 1 + floor((act-1)/10))` (`maxTierAuthored = 3`). `generateEnemiesForLevel` filtre `availableEnemies` à `tier <= unlockedTier` avant la sélection par budget, avec repli automatique sur le pool complet non filtré si ce filtre viderait la liste de candidats (évite un crash si seul du contenu haut-tier est passé pour un acte bas).
 4. **Gating strict assumé, y compris pour le contenu déjà existant** (décision explicite validée en brainstorming, pas un oversight) : le Squelette (tier 2), auparavant accessible dès l'Acte 2 via la sélection molle par budget/`CombatRating`, ne sera plus disponible avant l'**Acte 11** une fois ce système en place. La montée en gamme des ennemis devient un jalon narratif prévisible plutôt qu'un effet de bord du budget.
 5. **Budget de combat inchangé** : `ExpectedPower`/`BaseBudget` restent strictement linéaires (+20/+25 par acte). Le palier ne s'applique qu'à la puissance individuelle des ennemis (HP/Dégâts), jamais à leur nombre, pour éviter des combats à rallonge en fin de run.
-6. **Hors périmètre, explicitement reporté** : la dérive connue entre `math_combat.md` (log de debug) et le calcul réel utilisé par le jeu (le log omet `playerCardsCount * 2.0` et `+(act-1)*10.0`) n'est **pas** corrigée dans cette phase — seule la description textuelle de la formule `enemyLevel` dans `combat_debug_logger.dart` a été mise à jour pour ne plus mentionner un terme d'Acte qui vient d'être supprimé.
+6. **Hors périmètre à l'origine, résolu ensuite (voir ADR-071)** : la dérive connue entre `math_combat.md` (log de debug) et le calcul réel utilisé par le jeu (le log omettait `playerCardsCount * 2.0` et `+(act-1)*10.0`) n'était **pas** corrigée dans cette phase initiale — seule la description textuelle de la formule `enemyLevel` dans `combat_debug_logger.dart` avait été mise à jour. Cette dérive a été corrigée juste après, avant le merge final de la branche (commit `24d3148`).
 
 > [!IMPORTANT]
 > **Conséquence produit assumée — Backlog de contenu créé** : le gating strict de tier réduit la variété d'ennemis des Actes 1-10 au roster tier-1 actuellement disponible (Slime, Gobelin) jusqu'à ce que davantage d'ennemis tier-1 soient rédigés. Ce n'est pas un oversight mais un compromis de design conscient — voir `progress.md` (backlog Contenu) pour l'item de suivi.
@@ -39,15 +80,15 @@ L'analyse des logs de debug de combat (`math_combat.md`) a révélé que `Encoun
 - ✅ **Double comptage rendu impossible par construction** : l'Acte n'apparaît plus qu'à un seul endroit du calcul (les facteurs de bracket), pas juste corrigé numériquement.
 - ✅ **Zéro régression** : suite de tests complète 201/201 au vert, `dart analyze` propre, revue de code de branche complète passée (3 constats mineurs de documentation/hygiène traités ou classés).
 - ⚠️ **Variété d'ennemis réduite Actes 1-10** : nécessite l'ajout de nouveaux ennemis tier-1 pour maintenir la diversité de combat en début de run (item de backlog créé, non traité dans cette phase).
-- ⚠️ **Pas encore mergé vers `main`** : la branche `feature/combat_scaling` est conservée en l'état à la demande du joueur/mainteneur, en attente de décision de merge — traiter comme "conçu et implémenté" et non "livré aux joueurs" tant que le merge n'a pas eu lieu.
-- ⚠️ **Dérive log/calcul non résolue** : `math_combat.md` continue de sous-estimer légèrement `playerPower`/`finalBudget` réels (bug préexistant, hors périmètre de cette phase, toujours au backlog).
+- ✅ **Mergé vers `main`** : la branche `feature/combat_scaling` a été mergée en deux temps — PR #20 (ce travail) puis PR #21 (travail de suivi, voir ADR-071) — livré aux joueurs (patch note v0.4.5, "La Difficulté Mieux Maîtrisée").
+- ✅ **Dérive log/calcul résolue** dans le prolongement de cette branche, avant le merge final — voir ADR-071.
 
 ---
 
 ## 💾 ADR-069 : Système de Sauvegarde de Run — Checkpoint Carte, `RefReader`, et Dégradation Gracieuse du Contenu Manquant (v3.2.0)
 
 ### Statut
-✅ Accepté & Implémenté (v3.2.0, branche `feat/save_run`, 13+ commits, en attente de merge vers `main`) — **résout ADR-011**.
+✅ Accepté, Implémenté & **Mergé vers `main`** (v3.2.0, branche `feat/save_run`, PR #19, 13+ commits) — **résout ADR-011**.
 
 ### Contexte
 `RunState`, `DeckState`, `InventoryState` et `SkillState` ne vivaient qu'en mémoire dans les `Notifier` Riverpod (cf. ADR-011). Fermer l'application, la mettre en arrière-plan ou un crash entraînait la perte totale d'une run pouvant durer 30 à 60+ minutes sur ~10 étages. Le point d'extension existait déjà mais était un stub vide (`RunPersistenceManager`), et `shared_preferences` était déjà une dépendance du projet (utilisée par `TutorialProgressService`).
@@ -82,7 +123,7 @@ Spec approuvée : `docs/superpowers/specs/2026-07-23-save-system-design.md`. Pla
 - ✅ **Découplage total** : aucun écran de nœud n'a besoin de connaître l'existence du système de sauvegarde, seulement d'appeler `bump()` (indirectement, via les méthodes de manager déjà existantes).
 - ✅ **Robustesse au content drift** : les futurs rééquilibrages ou suppressions de contenu ne peuvent ni corrompre une sauvegarde existante ni surprendre silencieusement le joueur.
 - ⚠️ **Hors scope assumé** : pas de reprise mid-combat, pas de slots multiples, pas de monnaie méta persistante inter-runs — ces trois points restent au backlog.
-- ⚠️ **Vérification manuelle en attente** : les flux UI de mort → clear → pas de bouton Continuer, Continuer → MapScreen, dialogue de contenu manquant, et confirmation d'écrasement n'ont été vérifiés que par tests automatisés, pas par un passage manuel `flutter run` (aucun sous-agent n'a de session interactive) — recommandé avant merge.
+- ⚠️ **Vérification manuelle toujours recommandée** : les flux UI de mort → clear → pas de bouton Continuer, Continuer → MapScreen, dialogue de contenu manquant, et confirmation d'écrasement n'ont été vérifiés que par tests automatisés, pas par un passage manuel `flutter run` (aucun sous-agent n'a de session interactive) — le merge a eu lieu (PR #19) sans que cette vérification manuelle ait été faite entre-temps.
 
 ---
 

@@ -177,7 +177,7 @@ La fusion de cartes 3-en-1 est gérée par `DeckNotifier.mergeCards(selectedIds,
 | `orc` | Orc Furieux | 50 | 8 | 3 | [attack:8, buff:2, attack:12] — cycle 3 phases | 15% |
 
 > [!IMPORTANT]
-> **Refonte du Scaling de Difficulté par Acte — Escalier Géométrique & Déblocage de Tier (branche `feature/combat_scaling`, conçu et implémenté, en attente de merge vers `main`)** :
+> **Refonte du Scaling de Difficulté par Acte — Escalier Géométrique & Déblocage de Tier (branche `feature/combat_scaling`, mergée vers `main` via PR #20, livrée en v0.4.5)** :
 > L'ancien système comptait l'Acte **deux fois** : une fois dans `enemyLevel`, une seconde fois directement dans les multiplicateurs HP/Dégâts (introduits par ADR-066), provoquant une explosion de difficulté incontrôlée en mode endless (ex : Acte 25 ≈ x36.5 HP par le seul effet de l'Acte). La correction rend `enemyLevel` **strictement indépendant de l'Acte** — l'Acte n'apparaît plus que dans un facteur d'escalier géométrique dédié, ce qui rend le double comptage impossible par construction plutôt que patché numériquement. Voir `decisionLog.md` (ADR-070) pour l'arbitrage complet et `docs/superpowers/specs/2026-07-24-combat-difficulty-scaling-design.md` pour les valeurs numériques détaillées.
 
 **Scaling de combat** (`CombatController.initializeCombat` / `EncounterSystem`) :
