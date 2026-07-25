@@ -396,6 +396,30 @@ void main() {
       expect(EncounterSystem.getUnlockedTier(100), 3);
     });
 
+    test('getMaxEnemiesForNormalCombat grows by 1 every act, starting at 1, unbounded', () {
+      expect(EncounterSystem.getMaxEnemiesForNormalCombat(1), 1);
+      expect(EncounterSystem.getMaxEnemiesForNormalCombat(2), 2);
+      expect(EncounterSystem.getMaxEnemiesForNormalCombat(5), 5);
+      expect(EncounterSystem.getMaxEnemiesForNormalCombat(11), 11);
+    });
+
+    test('getMaxEnemiesForElite grows by 1 every 2 acts, starting at 1, unbounded', () {
+      expect(EncounterSystem.getMaxEnemiesForElite(1), 1);
+      expect(EncounterSystem.getMaxEnemiesForElite(2), 1);
+      expect(EncounterSystem.getMaxEnemiesForElite(3), 2);
+      expect(EncounterSystem.getMaxEnemiesForElite(5), 3);
+      expect(EncounterSystem.getMaxEnemiesForElite(6), 3);
+      expect(EncounterSystem.getMaxEnemiesForElite(11), 6);
+    });
+
+    test('getMaxEnemiesForBoss grows by 1 every 5 acts, starting at 1, unbounded', () {
+      expect(EncounterSystem.getMaxEnemiesForBoss(1), 1);
+      expect(EncounterSystem.getMaxEnemiesForBoss(5), 1);
+      expect(EncounterSystem.getMaxEnemiesForBoss(6), 2);
+      expect(EncounterSystem.getMaxEnemiesForBoss(10), 2);
+      expect(EncounterSystem.getMaxEnemiesForBoss(11), 3);
+    });
+
     test('getEnemyLevel depends only on player level and node type, never on act', () {
       expect(
         EncounterSystem.getEnemyLevel(playerLevel: 3, isBoss: false, isElite: false),

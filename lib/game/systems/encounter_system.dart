@@ -57,6 +57,27 @@ class EncounterSystem {
     return unlocked > maxTierAuthored ? maxTierAuthored : unlocked;
   }
 
+  static const int _normalCombatEnemyStep = 1;
+  static const int _eliteEnemyStep = 2;
+  static const int _bossEnemyStep = 5;
+
+  /// Shared step formula: 1 enemy at act 1, +1 every [stepSize] acts,
+  /// unbounded (no ceiling — see spec §3.4 for why this stays safe long-term).
+  static int _maxEnemiesFromStep(int act, int stepSize) =>
+      1 + ((act - 1) / stepSize).floor();
+
+  /// Max enemies generated for a normal combat node: +1 every act.
+  static int getMaxEnemiesForNormalCombat(int act) =>
+      _maxEnemiesFromStep(act, _normalCombatEnemyStep);
+
+  /// Max enemies generated for an elite node: +1 every 2 acts.
+  static int getMaxEnemiesForElite(int act) =>
+      _maxEnemiesFromStep(act, _eliteEnemyStep);
+
+  /// Max enemies generated for a boss node: +1 every 5 acts.
+  static int getMaxEnemiesForBoss(int act) =>
+      _maxEnemiesFromStep(act, _bossEnemyStep);
+
   /// Computes the combat budget breakdown (player power vs. expected power,
   /// base/final budget) from player stats and node type. This is the single
   /// source of truth for these values — callers that only need them for
