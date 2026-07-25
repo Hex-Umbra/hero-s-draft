@@ -108,6 +108,78 @@ void main() {
       expect(enemies, isNotEmpty);
     });
 
+    test('generateEnemiesForLevel caps normal-combat enemy count at getMaxEnemiesForNormalCombat(act)', () {
+      // Deliberately huge player stats so the budget alone would fit far more
+      // than 1 Slime (CR ~27.9 unscaled) — only the new cap should stop it at 1.
+      final enemies = EncounterSystem.generateEnemiesForLevel(
+        1,
+        List.generate(20, (index) => slimeData),
+        nodeType: MapNodeType.combat,
+        playerLevel: 1,
+        act: 1,
+        playerMaxHp: 500,
+        playerAttaque: 20,
+        playerMaxMana: 10,
+        playerRelicsCount: 10,
+        playerCardsCount: 20,
+      );
+      expect(enemies.length, EncounterSystem.getMaxEnemiesForNormalCombat(1));
+      expect(enemies.length, 1);
+    });
+
+    test('generateEnemiesForLevel caps normal-combat enemy count at act 3 (tracks the per-act formula, not just act 1)', () {
+      final enemies = EncounterSystem.generateEnemiesForLevel(
+        1,
+        List.generate(20, (index) => slimeData),
+        nodeType: MapNodeType.combat,
+        playerLevel: 1,
+        act: 3,
+        playerMaxHp: 500,
+        playerAttaque: 20,
+        playerMaxMana: 10,
+        playerRelicsCount: 10,
+        playerCardsCount: 20,
+      );
+      expect(enemies.length, EncounterSystem.getMaxEnemiesForNormalCombat(3));
+      expect(enemies.length, 3);
+    });
+
+    test('generateEnemiesForLevel caps elite enemy count at getMaxEnemiesForElite(act)', () {
+      // Same oversized budget, but at act 3 (elite cap = 2) and node type elite.
+      final enemies = EncounterSystem.generateEnemiesForLevel(
+        1,
+        List.generate(20, (index) => slimeData),
+        nodeType: MapNodeType.elite,
+        playerLevel: 1,
+        act: 3,
+        playerMaxHp: 500,
+        playerAttaque: 20,
+        playerMaxMana: 10,
+        playerRelicsCount: 10,
+        playerCardsCount: 20,
+      );
+      expect(enemies.length, EncounterSystem.getMaxEnemiesForElite(3));
+      expect(enemies.length, 2);
+    });
+
+    test('generateEnemiesForLevel caps boss enemy count at getMaxEnemiesForBoss(act)', () {
+      // Same oversized budget, node type boss, act 1 (boss cap = 1).
+      final enemies = EncounterSystem.generateEnemiesForLevel(
+        1,
+        List.generate(20, (index) => slimeData),
+        nodeType: MapNodeType.boss,
+        playerLevel: 1,
+        act: 1,
+        playerMaxHp: 500,
+        playerAttaque: 20,
+        playerMaxMana: 10,
+        playerRelicsCount: 10,
+        playerCardsCount: 20,
+      );
+      expect(enemies.length, EncounterSystem.getMaxEnemiesForBoss(1));
+      expect(enemies.length, 1);
+    });
+
     test('generateEnemiesForLevel excludes tier 2 enemies before act 11', () {
       final enemies = EncounterSystem.generateEnemiesForLevel(
         1,
@@ -230,6 +302,30 @@ void main() {
       expect(combatController.currentState.enemies.length, lessThanOrEqualTo(5));
       // Remaining generated enemies should be placed in pendingEnemies
       expect(combatController.currentState.enemies.length + combatController.currentState.pendingEnemies.length, greaterThan(0));
+    });
+
+    test('CombatController wave-reserve split still works when the new act-scaled cap allows more than 5 enemies', () {
+      final container = ProviderContainer();
+      final combatController = container.read(combatProvider.notifier);
+
+      // At act 6, normal-combat cap is 6 (getMaxEnemiesForNormalCombat(6) == 6) —
+      // with a big enough budget this should generate more than 5 enemies,
+      // exercising the existing 5-active/reserve split with the new cap logic.
+      combatController.initializeCombat(
+        1,
+        MapNodeType.combat,
+        List.generate(20, (index) => slimeData),
+        playerLevel: 1,
+        act: 6,
+        playerMaxHp: 500,
+        playerAttaque: 20,
+        playerMaxMana: 10,
+        playerRelicsCount: 10,
+        playerCardsCount: 20,
+      );
+
+      expect(combatController.currentState.enemies.length, lessThanOrEqualTo(5));
+      expect(combatController.currentState.pendingEnemies, isNotEmpty);
     });
 
     test('Wave replenishment pulls from reserve when active enemies are defeated', () {
@@ -396,6 +492,30 @@ void main() {
       expect(EncounterSystem.getUnlockedTier(100), 3);
     });
 
+    test('getMaxEnemiesForNormalCombat grows by 1 every act, starting at 1, unbounded', () {
+      expect(EncounterSystem.getMaxEnemiesForNormalCombat(1), 1);
+      expect(EncounterSystem.getMaxEnemiesForNormalCombat(2), 2);
+      expect(EncounterSystem.getMaxEnemiesForNormalCombat(5), 5);
+      expect(EncounterSystem.getMaxEnemiesForNormalCombat(11), 11);
+    });
+
+    test('getMaxEnemiesForElite grows by 1 every 2 acts, starting at 1, unbounded', () {
+      expect(EncounterSystem.getMaxEnemiesForElite(1), 1);
+      expect(EncounterSystem.getMaxEnemiesForElite(2), 1);
+      expect(EncounterSystem.getMaxEnemiesForElite(3), 2);
+      expect(EncounterSystem.getMaxEnemiesForElite(5), 3);
+      expect(EncounterSystem.getMaxEnemiesForElite(6), 3);
+      expect(EncounterSystem.getMaxEnemiesForElite(11), 6);
+    });
+
+    test('getMaxEnemiesForBoss grows by 1 every 5 acts, starting at 1, unbounded', () {
+      expect(EncounterSystem.getMaxEnemiesForBoss(1), 1);
+      expect(EncounterSystem.getMaxEnemiesForBoss(5), 1);
+      expect(EncounterSystem.getMaxEnemiesForBoss(6), 2);
+      expect(EncounterSystem.getMaxEnemiesForBoss(10), 2);
+      expect(EncounterSystem.getMaxEnemiesForBoss(11), 3);
+    });
+
     test('getEnemyLevel depends only on player level and node type, never on act', () {
       expect(
         EncounterSystem.getEnemyLevel(playerLevel: 3, isBoss: false, isElite: false),
@@ -409,6 +529,52 @@ void main() {
         EncounterSystem.getEnemyLevel(playerLevel: 3, isBoss: true, isElite: false),
         5,
       );
+    });
+
+    test('calculateBudget includes playerCardsCount in playerPower and the (act-1)*10 bonus in finalBudget', () {
+      final budget = EncounterSystem.calculateBudget(
+        playerLevel: 3,
+        act: 2,
+        playerMaxHp: 100,
+        playerAttaque: 0,
+        playerMaxMana: 3,
+        playerRelicsCount: 2,
+        playerCardsCount: 10,
+        isBoss: false,
+        isElite: true,
+      );
+
+      // playerPower = 100 + (0*10) + (3*15) + (2*5) + (10*2) = 175
+      expect(budget.playerPower, closeTo(175.0, 0.0001));
+      // expectedPower = 145 + (3-1)*15 + (2-1)*20 = 195
+      expect(budget.expectedPower, closeTo(195.0, 0.0001));
+      // baseBudget = 40 + (3-1)*10 + (2-1)*25 = 85
+      expect(budget.baseBudget, closeTo(85.0, 0.0001));
+      // powerRatio = 175/195, powerModifier = 1 + (powerRatio-1)*0.5
+      expect(budget.powerRatio, closeTo(175.0 / 195.0, 0.0001));
+      expect(budget.powerModifier, closeTo(0.9487179487179488, 0.0001));
+      expect(budget.nodeMultiplier, closeTo(1.5, 0.0001));
+      // finalBudget = 85 * 0.9487179487179488 * 1.5 + (2-1)*10 = 130.9615384615385
+      expect(budget.finalBudget, closeTo(130.9615384615385, 0.001));
+    });
+
+    test('calculateBudget matches the zero-cards, act-1 baseline used elsewhere', () {
+      final budget = EncounterSystem.calculateBudget(
+        playerLevel: 1,
+        act: 1,
+        playerMaxHp: 100,
+        playerAttaque: 0,
+        playerMaxMana: 3,
+        playerRelicsCount: 0,
+        playerCardsCount: 0,
+        isBoss: false,
+        isElite: false,
+      );
+      expect(budget.playerPower, closeTo(145.0, 0.0001));
+      expect(budget.expectedPower, closeTo(145.0, 0.0001));
+      expect(budget.baseBudget, closeTo(40.0, 0.0001));
+      expect(budget.nodeMultiplier, closeTo(1.0, 0.0001));
+      expect(budget.finalBudget, closeTo(40.0, 0.0001));
     });
   });
 }

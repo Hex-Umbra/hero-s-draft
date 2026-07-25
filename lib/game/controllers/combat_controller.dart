@@ -87,24 +87,24 @@ class CombatController extends Notifier<CombatState> {
       isElite: isElite,
     );
 
-    // Detailed debug prints with mathematical calculations and formulas
-    final double playerPower = playerMaxHp +
-        (playerAttaque * 10.0) +
-        (playerMaxMana * 15.0) +
-        (playerRelicsCount * 5.0);
-    final double expectedPower =
-        145.0 + ((playerLevel - 1) * 15.0) + ((act - 1) * 20.0);
-    final double baseBudget =
-        40.0 + ((playerLevel - 1) * 10.0) + ((act - 1) * 25.0);
-    final double powerRatio = playerPower / expectedPower;
-    final double powerModifier = 1.0 + (powerRatio - 1.0) * 0.5;
-    double nodeMultiplier = 1.0;
-    if (isBoss) {
-      nodeMultiplier = 2.0;
-    } else if (isElite) {
-      nodeMultiplier = 1.5;
-    }
-    final double finalBudget = baseBudget * powerModifier * nodeMultiplier;
+    final int maxEnemies = isBoss
+        ? EncounterSystem.getMaxEnemiesForBoss(act)
+        : (isElite ? EncounterSystem.getMaxEnemiesForElite(act) : EncounterSystem.getMaxEnemiesForNormalCombat(act));
+
+    // Detailed debug prints with mathematical calculations and formulas.
+    // Delegates to EncounterSystem.calculateBudget so the displayed values
+    // can never drift from the ones actually used to generate enemyDataList.
+    final budget = EncounterSystem.calculateBudget(
+      playerLevel: playerLevel,
+      act: act,
+      playerMaxHp: playerMaxHp,
+      playerAttaque: playerAttaque,
+      playerMaxMana: playerMaxMana,
+      playerRelicsCount: playerRelicsCount,
+      playerCardsCount: playerCardsCount,
+      isBoss: isBoss,
+      isElite: isElite,
+    );
 
     CombatDebugLogger.logCombatInitialization(
       playerLevel: playerLevel,
@@ -114,16 +114,18 @@ class CombatController extends Notifier<CombatState> {
       playerAttaque: playerAttaque,
       playerMaxMana: playerMaxMana,
       playerRelicsCount: playerRelicsCount,
-      playerPower: playerPower,
-      expectedPower: expectedPower,
-      baseBudget: baseBudget,
-      powerRatio: powerRatio,
-      powerModifier: powerModifier,
-      nodeMultiplier: nodeMultiplier,
-      finalBudget: finalBudget,
+      playerCardsCount: playerCardsCount,
+      playerPower: budget.playerPower,
+      expectedPower: budget.expectedPower,
+      baseBudget: budget.baseBudget,
+      powerRatio: budget.powerRatio,
+      powerModifier: budget.powerModifier,
+      nodeMultiplier: budget.nodeMultiplier,
+      finalBudget: budget.finalBudget,
       enemyLevel: enemyLevel,
       hpMultiplier: hpMultiplier,
       damageMultiplier: damageMultiplier,
+      maxEnemies: maxEnemies,
       enemyDataList: enemyDataList,
       isBoss: isBoss,
       isElite: isElite,
