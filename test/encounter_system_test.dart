@@ -127,6 +127,23 @@ void main() {
       expect(enemies.length, 1);
     });
 
+    test('generateEnemiesForLevel caps normal-combat enemy count at act 3 (tracks the per-act formula, not just act 1)', () {
+      final enemies = EncounterSystem.generateEnemiesForLevel(
+        1,
+        List.generate(20, (index) => slimeData),
+        nodeType: MapNodeType.combat,
+        playerLevel: 1,
+        act: 3,
+        playerMaxHp: 500,
+        playerAttaque: 20,
+        playerMaxMana: 10,
+        playerRelicsCount: 10,
+        playerCardsCount: 20,
+      );
+      expect(enemies.length, EncounterSystem.getMaxEnemiesForNormalCombat(3));
+      expect(enemies.length, 3);
+    });
+
     test('generateEnemiesForLevel caps elite enemy count at getMaxEnemiesForElite(act)', () {
       // Same oversized budget, but at act 3 (elite cap = 2) and node type elite.
       final enemies = EncounterSystem.generateEnemiesForLevel(
@@ -285,6 +302,30 @@ void main() {
       expect(combatController.currentState.enemies.length, lessThanOrEqualTo(5));
       // Remaining generated enemies should be placed in pendingEnemies
       expect(combatController.currentState.enemies.length + combatController.currentState.pendingEnemies.length, greaterThan(0));
+    });
+
+    test('CombatController wave-reserve split still works when the new act-scaled cap allows more than 5 enemies', () {
+      final container = ProviderContainer();
+      final combatController = container.read(combatProvider.notifier);
+
+      // At act 6, normal-combat cap is 6 (getMaxEnemiesForNormalCombat(6) == 6) —
+      // with a big enough budget this should generate more than 5 enemies,
+      // exercising the existing 5-active/reserve split with the new cap logic.
+      combatController.initializeCombat(
+        1,
+        MapNodeType.combat,
+        List.generate(20, (index) => slimeData),
+        playerLevel: 1,
+        act: 6,
+        playerMaxHp: 500,
+        playerAttaque: 20,
+        playerMaxMana: 10,
+        playerRelicsCount: 10,
+        playerCardsCount: 20,
+      );
+
+      expect(combatController.currentState.enemies.length, lessThanOrEqualTo(5));
+      expect(combatController.currentState.pendingEnemies, isNotEmpty);
     });
 
     test('Wave replenishment pulls from reserve when active enemies are defeated', () {
