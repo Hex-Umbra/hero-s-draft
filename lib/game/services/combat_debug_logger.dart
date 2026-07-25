@@ -25,6 +25,7 @@ class CombatDebugLogger {
     required int enemyLevel,
     required double hpMultiplier,
     required double damageMultiplier,
+    required int maxEnemies,
     required List<EnemyData> enemyDataList,
     required bool isBoss,
     required bool isElite,
@@ -100,6 +101,7 @@ class CombatDebugLogger {
     buffer.writeln(buildLine('  • Enemy Level: max(1, playerLevel + nodeModifier) = $enemyLevel'));
     buffer.writeln(buildLine('  • HP scaling multiplier: $hpMultiplier'));
     buffer.writeln(buildLine('  • Damage scaling multiplier: $damageMultiplier'));
+    buffer.writeln(buildLine('  • Max enemies cap (act-scaled): $maxEnemies'));
     buffer.writeln(buildLine(''));
 
     // Generated Enemies Section

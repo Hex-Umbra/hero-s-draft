@@ -87,6 +87,10 @@ class CombatController extends Notifier<CombatState> {
       isElite: isElite,
     );
 
+    final int maxEnemies = isBoss
+        ? EncounterSystem.getMaxEnemiesForBoss(act)
+        : (isElite ? EncounterSystem.getMaxEnemiesForElite(act) : EncounterSystem.getMaxEnemiesForNormalCombat(act));
+
     // Detailed debug prints with mathematical calculations and formulas.
     // Delegates to EncounterSystem.calculateBudget so the displayed values
     // can never drift from the ones actually used to generate enemyDataList.
@@ -121,6 +125,7 @@ class CombatController extends Notifier<CombatState> {
       enemyLevel: enemyLevel,
       hpMultiplier: hpMultiplier,
       damageMultiplier: damageMultiplier,
+      maxEnemies: maxEnemies,
       enemyDataList: enemyDataList,
       isBoss: isBoss,
       isElite: isElite,
