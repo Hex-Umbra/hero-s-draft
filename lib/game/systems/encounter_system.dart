@@ -263,11 +263,15 @@ class EncounterSystem {
     final List<EnemyData> enemyPool =
         eligibleEnemies.isNotEmpty ? eligibleEnemies : availableEnemies;
 
+    final int maxEnemies = isBoss
+        ? getMaxEnemiesForBoss(act)
+        : (isElite ? getMaxEnemiesForElite(act) : getMaxEnemiesForNormalCombat(act));
+
     final List<EnemyData> generatedEnemies = [];
     double remainingBudget = finalBudget;
 
-    // Choose enemies without exceeding remaining budget
-    while (remainingBudget > 0 && generatedEnemies.length < 10) {
+    // Choose enemies without exceeding remaining budget or the act-scaled cap
+    while (remainingBudget > 0 && generatedEnemies.length < maxEnemies) {
       final candidates = enemyPool.where((enemy) {
         final rating = calculateCombatRatingForEnemy(enemy);
         return rating <= remainingBudget;

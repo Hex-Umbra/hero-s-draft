@@ -108,6 +108,61 @@ void main() {
       expect(enemies, isNotEmpty);
     });
 
+    test('generateEnemiesForLevel caps normal-combat enemy count at getMaxEnemiesForNormalCombat(act)', () {
+      // Deliberately huge player stats so the budget alone would fit far more
+      // than 1 Slime (CR ~27.9 unscaled) — only the new cap should stop it at 1.
+      final enemies = EncounterSystem.generateEnemiesForLevel(
+        1,
+        List.generate(20, (index) => slimeData),
+        nodeType: MapNodeType.combat,
+        playerLevel: 1,
+        act: 1,
+        playerMaxHp: 500,
+        playerAttaque: 20,
+        playerMaxMana: 10,
+        playerRelicsCount: 10,
+        playerCardsCount: 20,
+      );
+      expect(enemies.length, EncounterSystem.getMaxEnemiesForNormalCombat(1));
+      expect(enemies.length, 1);
+    });
+
+    test('generateEnemiesForLevel caps elite enemy count at getMaxEnemiesForElite(act)', () {
+      // Same oversized budget, but at act 3 (elite cap = 2) and node type elite.
+      final enemies = EncounterSystem.generateEnemiesForLevel(
+        1,
+        List.generate(20, (index) => slimeData),
+        nodeType: MapNodeType.elite,
+        playerLevel: 1,
+        act: 3,
+        playerMaxHp: 500,
+        playerAttaque: 20,
+        playerMaxMana: 10,
+        playerRelicsCount: 10,
+        playerCardsCount: 20,
+      );
+      expect(enemies.length, EncounterSystem.getMaxEnemiesForElite(3));
+      expect(enemies.length, 2);
+    });
+
+    test('generateEnemiesForLevel caps boss enemy count at getMaxEnemiesForBoss(act)', () {
+      // Same oversized budget, node type boss, act 1 (boss cap = 1).
+      final enemies = EncounterSystem.generateEnemiesForLevel(
+        1,
+        List.generate(20, (index) => slimeData),
+        nodeType: MapNodeType.boss,
+        playerLevel: 1,
+        act: 1,
+        playerMaxHp: 500,
+        playerAttaque: 20,
+        playerMaxMana: 10,
+        playerRelicsCount: 10,
+        playerCardsCount: 20,
+      );
+      expect(enemies.length, EncounterSystem.getMaxEnemiesForBoss(1));
+      expect(enemies.length, 1);
+    });
+
     test('generateEnemiesForLevel excludes tier 2 enemies before act 11', () {
       final enemies = EncounterSystem.generateEnemiesForLevel(
         1,
