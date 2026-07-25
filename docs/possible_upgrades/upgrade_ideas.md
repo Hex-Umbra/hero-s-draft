@@ -145,4 +145,4 @@
 - [ ] Revoir comment la stats de mastery scales et améliore les passifs de maitrise d'armure selon les classes.
 - [ ] Rajouter plus d'intents et de type d'attaque aux ennemis.
 - [ ] Rajouter une animation de fusion entre les cartes a fusionner (Les trois apparaissent en premier plan au centre de l'écran du joueur, les cartes s'agites et bouge frénétiquement dans tout les sens puis se dirige vers le milieu avec un flash sur la carte du milieu, révélant avec un fade in la carte amélioré)
-- [ ] 
+- [ ] Voir ce qui peut être ajouté dans le slogs pour avoir de meilleurs stats sur les performances du jeu (statistiques, fps, perte de fps tout le dashboard pour une inspection complète)
