@@ -180,13 +180,13 @@ void main() {
       expect(enemies.length, 1);
     });
 
-    test('generateEnemiesForLevel excludes tier 2 enemies before act 11', () {
+    test('generateEnemiesForLevel excludes tier 2 enemies before act 6', () {
       final enemies = EncounterSystem.generateEnemiesForLevel(
         1,
         [slimeData, goblinData, squeletteData],
         nodeType: MapNodeType.combat,
         playerLevel: 5,
-        act: 10,
+        act: 5,
         playerMaxHp: 100,
         playerAttaque: 0,
         playerMaxMana: 3,
@@ -195,13 +195,13 @@ void main() {
       expect(enemies.any((e) => e.tier > 1), isFalse);
     });
 
-    test('generateEnemiesForLevel allows tier 2 enemies starting at act 11', () {
+    test('generateEnemiesForLevel allows tier 2 enemies starting at act 6', () {
       final enemies = EncounterSystem.generateEnemiesForLevel(
         1,
         [squeletteData],
         nodeType: MapNodeType.combat,
         playerLevel: 5,
-        act: 11,
+        act: 6,
         playerMaxHp: 300,
         playerAttaque: 0,
         playerMaxMana: 10,
@@ -485,14 +485,14 @@ void main() {
       expect(EncounterSystem.getDamageActFactor(15), closeTo(4.7683715820, 0.0001));
     });
 
-    test('getUnlockedTier stays at 1 for acts 1-10, unlocks 2 at act 11, unlocks 3 at act 21, then caps', () {
+    test('getUnlockedTier stays at 1 for acts 1-5, unlocks 2 at act 6, unlocks 3 at act 11, then caps', () {
       expect(EncounterSystem.getUnlockedTier(1), 1);
-      expect(EncounterSystem.getUnlockedTier(10), 1);
-      expect(EncounterSystem.getUnlockedTier(11), 2);
-      expect(EncounterSystem.getUnlockedTier(20), 2);
-      expect(EncounterSystem.getUnlockedTier(21), 3);
-      expect(EncounterSystem.getUnlockedTier(30), 3);
-      expect(EncounterSystem.getUnlockedTier(31), 3);
+      expect(EncounterSystem.getUnlockedTier(5), 1);
+      expect(EncounterSystem.getUnlockedTier(6), 2);
+      expect(EncounterSystem.getUnlockedTier(10), 2);
+      expect(EncounterSystem.getUnlockedTier(11), 3);
+      expect(EncounterSystem.getUnlockedTier(15), 3);
+      expect(EncounterSystem.getUnlockedTier(16), 3);
       expect(EncounterSystem.getUnlockedTier(100), 3);
     });
 
