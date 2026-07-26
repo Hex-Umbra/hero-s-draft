@@ -1,5 +1,20 @@
 [
   {
+    "version": "0.4.7",
+    "date": "2026-07-26",
+    "title": "L'Équilibre des Effectifs",
+    "sections": [
+      {
+        "category": "Équilibrage",
+        "emoji": "⚖️",
+        "entries": [
+          "Les combats d'élite et de boss en début d'aventure n'alignent plus plusieurs adversaires faibles pour combler leur menace : le nombre d'ennemis affronté reflète désormais mieux le danger réel du combat.",
+          "Le nombre maximum d'ennemis pouvant apparaître dans un même combat augmente désormais progressivement au fil de votre avancée, à un rythme différent selon qu'il s'agisse d'un combat normal, d'une élite ou d'un boss."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.4.6",
     "date": "2026-07-26",
     "title": "Le Défi S'Intensifie",
