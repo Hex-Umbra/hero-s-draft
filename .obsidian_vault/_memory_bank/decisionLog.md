@@ -7,7 +7,7 @@ Ce document répertorie sous forme d'**ADR (Architecture Decision Records)** les
 ## 📈 ADR-072 : Resserrement de la Cadence du Scaling de Difficulté — Palier tous les 2 Actes & Tier tous les 5 Actes (branche `fix/combat_scaling`, suite d'ADR-070/ADR-071)
 
 ### Statut
-✅ Accepté & Implémenté (branche `fix/combat_scaling`, commits `97c5fcb` puis `8bc1920`, 2026-07-26 — design et plan aux commits `940d548`/`0505d89`) — suite de tests complète **211/211** au vert, `dart analyze` propre. **Pas encore mergé vers `main`** ; patch note joueur (v0.4.6) à rédiger par le sub-agent `patch_notes_writer` (dernière tâche du plan, non traitée par cet ADR).
+✅ Accepté & Implémenté (branche `fix/combat_scaling`, commits `97c5fcb` puis `8bc1920`, 2026-07-26 — design et plan aux commits `940d548`/`0505d89`) — suite de tests complète **211/211** au vert, `dart analyze` propre. **Pas encore mergé vers `main`** ; patch note joueur (v0.4.6, « Le Défi S'Intensifie ») rédigé par le sub-agent `patch_notes_writer` — voir `assets/data/patch_notes.json`.
 
 ### Contexte
 Après le merge d'ADR-070/ADR-071 vers `main` (PR #20 + #21, patch note v0.4.5), un retour de playtest externe indique que **le joueur monte en puissance plus vite que les ennemis** : la difficulté reste perçue comme trop facile sur une portion significative de la run, malgré le palier géométrique HP/Dégâts (x1.35/x1.25 tous les 5 actes) et le déblocage de tier tous les 10 actes introduits par ADR-070. Deux options ont été envisagées — nerfer la puissance du joueur, ou accélérer le scaling ennemi en gardant les valeurs numériques actuelles mais en resserrant la cadence des paliers. La seconde a été retenue : l'objectif produit explicite est une **courbe de difficulté exponentielle assumée**, sans plafond ni plateau, cohérente avec la philosophie endless déjà actée par ADR-070/071.
@@ -41,7 +41,7 @@ Design : `docs/superpowers/specs/2026-07-26-difficulty-scaling-acceleration-desi
 - ⚠️ **Fin de run endless plus punitive qu'auparavant, assumée** : à l'Acte 25, le facteur HP (x36.64) redevient proche en magnitude de l'ancien bug de double-comptage d'Acte qu'ADR-070 avait corrigé (~x36.5). C'est un trade-off explicite — l'objectif produit est justement une difficulté qui ne cesse de grimper.
 - ⚠️ **Backlog de contenu tier-1 aggravé** (hérité d'ADR-070, non traité ici) : la fenêtre où seul le tier 1 (Slime, Gobelin) est disponible passe des Actes 1-10 aux Actes 1-5, rendant le besoin de contenu ennemi tier-1 supplémentaire plus pressant — voir `progress.md` (backlog Contenu).
 - ⚠️ **Plafond du nombre d'ennemis (ADR-071) inchangé mais de moins en moins atteignable** en pratique passé l'Acte ~12-15 pour les combats normaux, du fait de l'effet budget-linéaire/coût-exponentiel décrit en Décision §5.
-- ⚠️ **Pas encore mergé vers `main`** au moment de la rédaction de cet ADR ; patch note joueur (v0.4.6) pas encore rédigée — à traiter par le sub-agent `patch_notes_writer` (tâche suivante, hors périmètre de cet ADR).
+- ⚠️ **Pas encore mergé vers `main`** au moment de la rédaction de cet ADR ; patch note joueur (v0.4.6, « Le Défi S'Intensifie ») rédigé depuis par le sub-agent `patch_notes_writer` — voir `assets/data/patch_notes.json`.
 
 ---
 
