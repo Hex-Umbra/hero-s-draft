@@ -82,7 +82,7 @@ Design : `docs/superpowers/specs/2026-07-25-enemy-count-scaling-design.md`. Plan
 - ✅ **Cohérence structurelle** : le plafond suit la même philosophie "escalier sans limite ultime" que le scaling HP/dégâts d'ADR-070, plutôt qu'une valeur fixe arbitraire (l'ancienne limite de 10).
 - ✅ **Mergé vers `main`** dans la même PR (#21) qui a intégré l'ensemble de la branche `feature/combat_scaling`.
 - ⚠️ **Backlog de contenu tier-1 toujours ouvert** (hérité d'ADR-070, non traité ici) : la variété d'ennemis des Actes 1-10 reste limitée à Slime/Gobelin.
-- ⚠️ **Patch note joueur pas encore rédigé** pour ce volet (contrairement à ADR-070, couvert par la v0.4.5) — à traiter par le sub-agent `patch_notes_writer`.
+- ✅ **Patch note joueur rédigé** : v0.4.7 "L'Équilibre des Effectifs" — voir `assets/data/patch_notes.json`.
 
 ---
 
