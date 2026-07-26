@@ -20,17 +20,17 @@ class EncounterSystem {
   static const double _dmgBracketGrowthRate = 1.25;
   static const double _hpIntraBracketStep = 0.05;
   static const double _dmgIntraBracketStep = 0.03;
-  static const int _actBracketSize = 5;
-  static const int _tierUnlockBracketSize = 10;
+  static const int _actBracketSize = 2;
+  static const int _tierUnlockBracketSize = 5;
   static const int maxTierAuthored = 3;
 
-  /// Which 5-act difficulty bracket this act falls in (0 for acts 1-5, 1 for acts 6-10, ...).
+  /// Which 2-act difficulty bracket this act falls in (0 for acts 1-2, 1 for acts 3-4, ...).
   static int getActBracket(int act) => ((act - 1) / _actBracketSize).floor();
 
-  /// Position within the current 5-act bracket (0 to 4).
+  /// Position within the current 2-act bracket (0 to 1).
   static int getActPositionInBracket(int act) => (act - 1) % _actBracketSize;
 
-  /// Combined act factor for HP: a geometric jump every 5 acts, plus a gentle
+  /// Combined act factor for HP: a geometric jump every 2 acts, plus a gentle
   /// ramp that resets each bracket. Replaces the old direct `(1 + 0.35*(act-1))`
   /// term, which double-counted the act inside `enemyLevel` as well.
   static double getHpActFactor(int act) {
@@ -50,8 +50,8 @@ class EncounterSystem {
     return bracketMultiplier * intraBracketRamp;
   }
 
-  /// Highest enemy tier available at this act: tier 1 through act 10, tier 2
-  /// from act 11, tier 3 from act 21, capped at [maxTierAuthored].
+  /// Highest enemy tier available at this act: tier 1 through act 5, tier 2
+  /// from act 6, tier 3 from act 11, capped at [maxTierAuthored].
   static int getUnlockedTier(int act) {
     final unlocked = 1 + ((act - 1) / _tierUnlockBracketSize).floor();
     return unlocked > maxTierAuthored ? maxTierAuthored : unlocked;

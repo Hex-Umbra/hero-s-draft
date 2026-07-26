@@ -51,9 +51,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
 
     if (!mounted) return;
-    Navigator.of(context).push(
+    await Navigator.of(context).push(
       MaterialPageRoute(builder: (context) => const MapScreen()),
     );
+    // The pause menu and the death overlay both return here via
+    // Navigator.popUntil((route) => route.isFirst) rather than recreating
+    // this screen, so the save state must be re-checked on return.
+    if (mounted) setState(() {});
   }
 
   Future<void> _startNewGame(bool hasSave) async {
@@ -81,9 +85,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
 
     if (!mounted) return;
-    Navigator.of(context).push(
+    await Navigator.of(context).push(
       MaterialPageRoute(builder: (context) => const ClassSelectionScreen()),
     );
+    // Same reasoning as _continueGame: refresh save state on return, since
+    // the pause menu / death overlay pop back here without recreating this
+    // screen.
+    if (mounted) setState(() {});
   }
 
   @override

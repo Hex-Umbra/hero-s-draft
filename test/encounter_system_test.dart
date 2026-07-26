@@ -180,13 +180,13 @@ void main() {
       expect(enemies.length, 1);
     });
 
-    test('generateEnemiesForLevel excludes tier 2 enemies before act 11', () {
+    test('generateEnemiesForLevel excludes tier 2 enemies before act 6', () {
       final enemies = EncounterSystem.generateEnemiesForLevel(
         1,
         [slimeData, goblinData, squeletteData],
         nodeType: MapNodeType.combat,
         playerLevel: 5,
-        act: 10,
+        act: 5,
         playerMaxHp: 100,
         playerAttaque: 0,
         playerMaxMana: 3,
@@ -195,13 +195,13 @@ void main() {
       expect(enemies.any((e) => e.tier > 1), isFalse);
     });
 
-    test('generateEnemiesForLevel allows tier 2 enemies starting at act 11', () {
+    test('generateEnemiesForLevel allows tier 2 enemies starting at act 6', () {
       final enemies = EncounterSystem.generateEnemiesForLevel(
         1,
         [squeletteData],
         nodeType: MapNodeType.combat,
         playerLevel: 5,
-        act: 11,
+        act: 6,
         playerMaxHp: 300,
         playerAttaque: 0,
         playerMaxMana: 10,
@@ -430,7 +430,7 @@ void main() {
         closeTo(1.0, 0.0001),
       );
       expect(
-        EncounterSystem.getHpMultiplier(enemyLevel: 1, act: 6, isBoss: false, isElite: false),
+        EncounterSystem.getHpMultiplier(enemyLevel: 1, act: 3, isBoss: false, isElite: false),
         closeTo(1.35, 0.0001),
       );
     });
@@ -441,7 +441,7 @@ void main() {
         closeTo(1.0, 0.0001),
       );
       expect(
-        EncounterSystem.getDamageMultiplier(enemyLevel: 1, act: 6, isBoss: false, isElite: false),
+        EncounterSystem.getDamageMultiplier(enemyLevel: 1, act: 3, isBoss: false, isElite: false),
         closeTo(1.25, 0.0001),
       );
     });
@@ -459,36 +459,40 @@ void main() {
         isElite: true,
       );
       // enemyLevel = 3 + 1 (elite) = 4
-      // (1 + 0.06 * 3) * 1.8225 (act 11 bracket factor) * 1.5 (elite) = 3.225825
-      expect(result, closeTo(3.225825, 0.0001));
+      // (1 + 0.06 * 3) * 4.4840334375 (act 11 bracket factor, 2-act bracket) * 1.5 (elite) = 7.936739184375
+      expect(result, closeTo(7.936739184375, 0.0001));
     });
 
-    test('getHpActFactor ramps gently within a 5-act bracket then jumps geometrically', () {
+    test('getHpActFactor ramps gently within a 2-act bracket then jumps geometrically', () {
       expect(EncounterSystem.getHpActFactor(1), closeTo(1.0, 0.0001));
-      expect(EncounterSystem.getHpActFactor(5), closeTo(1.2, 0.0001));
-      expect(EncounterSystem.getHpActFactor(6), closeTo(1.35, 0.0001));
-      expect(EncounterSystem.getHpActFactor(10), closeTo(1.62, 0.0001));
-      expect(EncounterSystem.getHpActFactor(11), closeTo(1.8225, 0.0001));
-      expect(EncounterSystem.getHpActFactor(15), closeTo(2.187, 0.0001));
+      expect(EncounterSystem.getHpActFactor(2), closeTo(1.05, 0.0001));
+      expect(EncounterSystem.getHpActFactor(3), closeTo(1.35, 0.0001));
+      expect(EncounterSystem.getHpActFactor(5), closeTo(1.8225, 0.0001));
+      expect(EncounterSystem.getHpActFactor(6), closeTo(1.913625, 0.0001));
+      expect(EncounterSystem.getHpActFactor(10), closeTo(3.4875815625, 0.0001));
+      expect(EncounterSystem.getHpActFactor(11), closeTo(4.4840334375, 0.0001));
+      expect(EncounterSystem.getHpActFactor(15), closeTo(8.1721509398, 0.0001));
     });
 
-    test('getDamageActFactor ramps gently within a 5-act bracket then jumps geometrically', () {
+    test('getDamageActFactor ramps gently within a 2-act bracket then jumps geometrically', () {
       expect(EncounterSystem.getDamageActFactor(1), closeTo(1.0, 0.0001));
-      expect(EncounterSystem.getDamageActFactor(5), closeTo(1.12, 0.0001));
-      expect(EncounterSystem.getDamageActFactor(6), closeTo(1.25, 0.0001));
-      expect(EncounterSystem.getDamageActFactor(10), closeTo(1.4, 0.0001));
-      expect(EncounterSystem.getDamageActFactor(11), closeTo(1.5625, 0.0001));
-      expect(EncounterSystem.getDamageActFactor(15), closeTo(1.75, 0.0001));
+      expect(EncounterSystem.getDamageActFactor(2), closeTo(1.03, 0.0001));
+      expect(EncounterSystem.getDamageActFactor(3), closeTo(1.25, 0.0001));
+      expect(EncounterSystem.getDamageActFactor(5), closeTo(1.5625, 0.0001));
+      expect(EncounterSystem.getDamageActFactor(6), closeTo(1.609375, 0.0001));
+      expect(EncounterSystem.getDamageActFactor(10), closeTo(2.5146484375, 0.0001));
+      expect(EncounterSystem.getDamageActFactor(11), closeTo(3.0517578125, 0.0001));
+      expect(EncounterSystem.getDamageActFactor(15), closeTo(4.7683715820, 0.0001));
     });
 
-    test('getUnlockedTier stays at 1 for acts 1-10, unlocks 2 at act 11, unlocks 3 at act 21, then caps', () {
+    test('getUnlockedTier stays at 1 for acts 1-5, unlocks 2 at act 6, unlocks 3 at act 11, then caps', () {
       expect(EncounterSystem.getUnlockedTier(1), 1);
-      expect(EncounterSystem.getUnlockedTier(10), 1);
-      expect(EncounterSystem.getUnlockedTier(11), 2);
-      expect(EncounterSystem.getUnlockedTier(20), 2);
-      expect(EncounterSystem.getUnlockedTier(21), 3);
-      expect(EncounterSystem.getUnlockedTier(30), 3);
-      expect(EncounterSystem.getUnlockedTier(31), 3);
+      expect(EncounterSystem.getUnlockedTier(5), 1);
+      expect(EncounterSystem.getUnlockedTier(6), 2);
+      expect(EncounterSystem.getUnlockedTier(10), 2);
+      expect(EncounterSystem.getUnlockedTier(11), 3);
+      expect(EncounterSystem.getUnlockedTier(15), 3);
+      expect(EncounterSystem.getUnlockedTier(16), 3);
       expect(EncounterSystem.getUnlockedTier(100), 3);
     });
 
