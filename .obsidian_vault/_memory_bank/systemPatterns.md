@@ -129,7 +129,7 @@ Détail complet des arbitrages de conception dans `decisionLog.md` (ADR-069) et 
   - Gère la transition entre les phases (Joueur ⇄ Ennemi), l'orchestration séquentielle des actions de riposte ennemie et la fin de tour.
 
 **Responsabilités directes** :
-- **Initialisation** : `initializeCombat(...)` — Génère la liste totale des ennemis via `EncounterSystem.generateEnemiesForLevel()`. Instancie les stats des ennemis en appliquant le multiplicateur de niveau (+6% HP/lvl, +4% ATK/lvl) et le **facteur d'Acte en escalier géométrique** (`getHpActFactor`/`getDamageActFactor`, palier de 5 actes — voir §3.1), ainsi que les modificateurs de nœuds (3x HP/2x ATK pour boss, 1.5x pour élite). Les 5 premiers ennemis sont placés dans `enemies` (câblés avec une intention de départ), les suivants sont placés dans `pendingEnemies`.
+- **Initialisation** : `initializeCombat(...)` — Génère la liste totale des ennemis via `EncounterSystem.generateEnemiesForLevel()`. Instancie les stats des ennemis en appliquant le multiplicateur de niveau (+6% HP/lvl, +4% ATK/lvl) et le **facteur d'Acte en escalier géométrique** (`getHpActFactor`/`getDamageActFactor`, palier de 2 actes depuis ADR-072 — voir §3.1), ainsi que les modificateurs de nœuds (3x HP/2x ATK pour boss, 1.5x pour élite). Les 5 premiers ennemis sont placés dans `enemies` (câblés avec une intention de départ), les suivants sont placés dans `pendingEnemies`.
 
   > [!IMPORTANT]
   > **Séparation stricte Niveau ↔ Acte (branche `feature/combat_scaling`, mergée vers `main` — voir ADR-070)** : `EncounterSystem.getEnemyLevel()` ne dépend plus jamais de l'Acte (uniquement du niveau du joueur et du type de nœud). L'Acte n'agit plus que via `getHpActFactor`/`getDamageActFactor`, ce qui rend structurellement impossible le double comptage qui existait auparavant (l'Acte apparaissant à la fois dans `enemyLevel` et dans un terme linéaire direct des multiplicateurs).
@@ -347,25 +347,25 @@ static List<EnemyData> generateEnemiesForLevel(
    ```
    Si `isBoss` est vrai, `NodeModifier` est de `2` et `NodeMultiplier` de `2.0` (pour le budget) ou `3.0` (pour HP de base) et `2.0` (pour l'attaque de base). Si `isElite` est vrai (`nodeType == MapNodeType.elite`), `NodeModifier` est de `1` et `NodeMultiplier` de `1.5`. Sinon, ils valent respectivement `0` et `1.0`.
 
-5bis. **Facteur d'Acte en Escalier Géométrique (`getHpActFactor`/`getDamageActFactor`)** — remplace l'ancien terme linéaire direct qui, combiné à l'Acte déjà présent dans `enemyLevel`, provoquait un double comptage (ADR-070) :
+5bis. **Facteur d'Acte en Escalier Géométrique (`getHpActFactor`/`getDamageActFactor`)** — remplace l'ancien terme linéaire direct qui, combiné à l'Acte déjà présent dans `enemyLevel`, provoquait un double comptage (ADR-070) ; cadence resserrée de 5 à 2 actes par ADR-072 (branche `fix/combat_scaling`, pas encore mergée vers `main`) :
    ```dart
-   static int getActBracket(int act) => ((act - 1) / 5).floor();
-   static int getActPositionInBracket(int act) => (act - 1) % 5;
+   static int getActBracket(int act) => ((act - 1) / 2).floor();
+   static int getActPositionInBracket(int act) => (act - 1) % 2;
    static double getHpActFactor(int act) =>
        pow(1.35, getActBracket(act)) * (1.0 + getActPositionInBracket(act) * 0.05);
    static double getDamageActFactor(int act) =>
        pow(1.25, getActBracket(act)) * (1.0 + getActPositionInBracket(act) * 0.03);
    ```
-   Chaque palier de 5 actes multiplie géométriquement (x1.35 HP / x1.25 Dégâts, composé), la rampe intra-palier restant douce (max +20% HP / +12% Dégâts en fin de palier) et se réinitialisant à chaque nouveau palier.
+   Chaque palier de **2 actes** multiplie géométriquement (x1.35 HP / x1.25 Dégâts, composé — bases inchangées depuis ADR-070), la rampe intra-palier restant douce (max +5% HP / +3% Dégâts en fin de palier, un seul acte de ramp désormais) et se réinitialisant à chaque nouveau palier. Trajectoire résultante non plafonnée assumée (ADR-072) : facteur HP ≈ x3.49 à l'Acte 10, ≈ x36.64 à l'Acte 25.
 
-5ter. **Déblocage de Tier d'Ennemi (`getUnlockedTier`)** — tous les 10 actes, plafonné à `maxTierAuthored = 3` :
+5ter. **Déblocage de Tier d'Ennemi (`getUnlockedTier`)** — tous les 5 actes, plafonné à `maxTierAuthored = 3` (cadence resserrée de 10 à 5 actes par ADR-072) :
    ```dart
    static int getUnlockedTier(int act) {
-     final unlocked = 1 + ((act - 1) / 10).floor();
+     final unlocked = 1 + ((act - 1) / 5).floor();
      return unlocked > maxTierAuthored ? maxTierAuthored : unlocked;
    }
    ```
-   `generateEnemiesForLevel` filtre `availableEnemies` à `tier <= unlockedTier` avant la sélection par budget (repli sur le pool complet non filtré si ce filtre viderait la liste de candidats). **Gating strict** : le Squelette (tier 2) n'est plus sélectionnable avant l'Acte 11 (tier 3 avant l'Acte 21).
+   `generateEnemiesForLevel` filtre `availableEnemies` à `tier <= unlockedTier` avant la sélection par budget (repli sur le pool complet non filtré si ce filtre viderait la liste de candidats). **Gating strict** : le Squelette (tier 2) n'est plus sélectionnable avant l'Acte 6 (tier 3 avant l'Acte 11).
 
 6. **Formule du CombatRating de l'Ennemi** :
    Le coût de menace de chaque type d'ennemi est évalué à l'aide de ses statistiques simulées mises à l'échelle pour le niveau de combat, en atténuant l'impact des PV bruts (divisé par 4) et en augmentant l'impact des dégâts (multiplié par 2) pour favoriser l'apparition de groupes d'ennemis :
