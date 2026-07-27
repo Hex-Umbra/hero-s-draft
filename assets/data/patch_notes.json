@@ -11,6 +11,13 @@
           "Les combats d'élite et de boss en début d'aventure n'alignent plus plusieurs adversaires faibles pour combler leur menace : le nombre d'ennemis affronté reflète désormais mieux le danger réel du combat.",
           "Le nombre maximum d'ennemis pouvant apparaître dans un même combat augmente désormais progressivement au fil de votre avancée, à un rythme différent selon qu'il s'agisse d'un combat normal, d'une élite ou d'un boss."
         ]
+      },
+      {
+        "category": "Corrections",
+        "emoji": "🐛",
+        "entries": [
+          "Le bouton « Continuer » de l'écran d'accueil reflète désormais immédiatement l'existence ou non d'une sauvegarde à chaque retour au menu principal, que ce soit après avoir quitté une run en pause ou après une défaite, sans qu'il soit plus nécessaire de redémarrer l'application pour le voir apparaître ou disparaître."
+        ]
       }
     ]
   },
