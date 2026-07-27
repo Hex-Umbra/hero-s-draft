@@ -82,6 +82,47 @@
 
 ---
 
+## Variantes d'Élite Adaptatives *(inspiré Risk of Rain 2)*
+
+> [!NOTE]
+> Terminologie : le jeu a déjà un **Nœud Élite** (type de combat, `MapNodeType.elite`, x1.5 HP/Dégâts). Pour éviter toute confusion, ce système est désigné ici **Variante d'Élite** — un modificateur appliqué à un ennemi individuel, indépendant du type de nœud dans lequel il apparaît.
+
+### Vue d'ensemble
+À chaque ennemi sélectionné par `EncounterSystem.generateEnemiesForLevel`, un jet indépendant (probabilité croissante par palier de difficulté) détermine s'il devient une **Variante d'Élite**. Peut se produire dans **n'importe quel combat** (normal, Nœud Élite, Boss) — s'additionne aux multiplicateurs de nœud existants (1.0 / 1.5 / 3.0) sans les remplacer. Un Nœud Élite contenant lui-même un ennemi tiré en Variante d'Élite est donc possible et assumé.
+
+### Effet sur les stats et le tier
+La Variante d'Élite augmente le budget de menace effectif de l'ennemi (un `tierBoost` dans le calcul de `CombatRating`) **comme si son tier était plus élevé, sans changer son `tier` réellement autorisé** pour la gate de déblocage (`getUnlockedTier`). Un Slime (tier 1) en Variante d'Élite reste éligible même avant le déblocage du tier 2 — il devient juste beaucoup plus dangereux pour son tier d'origine, plutôt que de contourner le gating de contenu.
+
+### Roster d'affixes proposé (mécaniques riches, à la RoR2)
+
+| Affixe | Accent Visuel | Mécanique |
+|:---|:---|:---|
+| **Ardent** | Halo orange/rouge | Applique `burn` cumulatif à chaque attaque ; ses dégâts augmentent progressivement au fil du combat (s'échauffe). |
+| **Foudroyant** | Halo cyan électrique | Charge un orbe d'énergie à chaque attaque encaissée ; à pleine charge, libère une décharge de zone appliquant `shock`. |
+| **Glacial** | Halo blanc-bleuté | Applique `freeze` à chaque attaque ; régénère de l'armure à chaque début de tour (carapace de givre). |
+| **Vampirique** | Halo pourpre sombre | Se soigne d'un pourcentage des dégâts infligés à chaque attaque (vol de vie). |
+| **Parfait** *(ultra-rare)* | Halo prismatique/arc-en-ciel | Combine une version atténuée des 4 effets ci-dessus ; poids de tirage extrêmement faible — miroir direct du Perfected de RoR2, pensé comme le "jackpot" de danger. |
+
+### Modèle de données proposé
+- Nouveau **`assets/data/elite_affixes.json`** → modèle `EliteAffixData` (`id`, `name_fr`/`name_en`, `accentColor`, `tierBoost`, `weight`, effets structurés : `onHit` [statusId, value, duration], `passive` [type, valeur], déclencheur conditionnel [seuil, effet] pour des cas comme Foudroyant).
+- **Nouveau hook générique data-driven côté ennemi** : par analogie avec le système de triggers de reliques déjà existant (`RunController.applyRelics(trigger)`), un système de triggers côté ennemi (`onAttackLanded`, `onDamageTaken`, `onTurnStart`) permettant à un ennemi d'exécuter un effet déclaré en JSON. Aujourd'hui les intentions ennemies ne gèrent que `attack`/`defend`/`buff` (aucune n'applique de statut) — ce hook est une extension réelle de `EnemyIntent`/`CombatController`, réutilisable pour du contenu futur au-delà des seules Variantes d'Élite.
+
+### Courbe de progression
+Calée sur les paliers ADR-072 déjà existants (`EncounterSystem.getActBracket`, palier de 2 actes). Proposition : `getEliteAffixChance(act)` — chance de base faible au palier 0 (Actes 1-2), augmentant par palier, **plafonnée** à un maximum raisonnable (à calibrer, ex. 25-30%) pour ne jamais rendre chaque ennemi élite en fin de run endless.
+
+### Rendu visuel
+Réutilise le pattern déjà validé pour la rareté des cartes (`CardRarity.color`/`RelicRarity.color`, halo lumineux `radial glow`) : un halo/bordure colorée autour de l'`EnemyCard` selon l'affixe assigné. **Aucun nouvel asset image à produire** (contrairement aux Biomes) — c'est un accent de couleur/glow procédural, pas un sprite différent.
+
+### Effort & risque
+**Élevé — le plus gros chantier des ajouts de cette session.** Nécessite (1) un nouveau système de triggers côté ennemi (architecture nouvelle, quoique calquée sur le pattern des reliques), (2) un nouveau modèle de données + JSON, (3) une intégration dans le calcul de `CombatRating`/génération d'ennemis, (4) le rendu visuel du halo par affixe. Chaque affixe "riche" (Foudroyant en particulier, avec sa charge conditionnelle) est une mini-mécanique de combat à concevoir et tester séparément.
+
+### Points ouverts
+- Plafond exact de la chance d'élite en fin de courbe de progression.
+- Faut-il exclure le **Boss de Cycle** (voir `27-07-2026_biomes_finale_sequence_historique_runs_Sonnet5.md`, §2) du tirage de Variante d'Élite pour éviter un cumul de difficulté écrasant ?
+- Nombre d'affixes à livrer en V1 : les 4 affixes communes seules formeraient déjà un socle solide, Parfait pouvant attendre une itération 2.
+
+---
+
 ## Prérequis mécaniques avant implémentation
 
 - **Tiers 4-5** : relever `maxTierAuthored` (actuellement `3` dans `EncounterSystem`) et ajuster `getUnlockedTier`/la cadence de déblocage par acte (actuellement calée sur ADR-072 : tous les 5 actes, plafond 3).
@@ -89,9 +130,11 @@
 - **Dragon Juvénile** (seuil d'enrage) : `EntityStats`/`EnemyInstance` n'ont pas de notion de changement de comportement conditionné au HP restant ; à concevoir également.
 - **Cavalier de la Mort** (dégâts différés type "marque") : à vérifier si réutilisable tel quel via le statut `burn` existant ou si un statut dédié est préférable.
 - Tous les autres concepts (Tiers 1-3, et la majorité du Tier 4) sont réalisables avec les statuts et patterns d'intent déjà en place, sans nouvelle mécanique de combat.
+- **Variantes d'Élite Adaptatives** : nouveau système de triggers côté ennemi (`onAttackLanded`/`onDamageTaken`/`onTurnStart`), nouveau modèle `EliteAffixData` + JSON, intégration dans `calculateCombatRating`/`generateEnemiesForLevel`, rendu de halo coloré sur `EnemyCard`. C'est le chantier le plus lourd des trois axes de ce document.
 
 ## Prochaines étapes possibles
 
-1. Sélectionner un sous-ensemble prioritaire (par ex. les 5 candidats Tier 1, pour adresser directement le backlog ADR-070/072).
-2. Passer par un brainstorm de design dédié (specs `docs/superpowers/specs/`) pour chiffrer les stats (HP, dégâts, `critChance`, pattern d'intents exact) d'un lot retenu.
-3. Rédiger les entrées bilingues (`_fr`/`_en`) dans `assets/data/enemies.json` une fois les stats validées.
+1. Sélectionner un sous-ensemble prioritaire (par ex. les 5 candidats Tier 1, pour adresser directement le backlog ADR-070/072) — le plus léger et le plus urgent des trois axes.
+2. Les **Variantes d'Élite Adaptatives** sont l'axe le plus ambitieux (nouveau système de triggers côté ennemi) : à traiter dans un brainstorm/spec dédié une fois le roster de base (Tiers 1-3) étoffé, plutôt qu'en premier.
+3. Passer le sous-ensemble retenu par un brainstorm de design dédié (specs `docs/superpowers/specs/`) pour chiffrer les stats (HP, dégâts, `critChance`, pattern d'intents exact, et pour les élites : poids de tirage par affixe).
+4. Rédiger les entrées bilingues (`_fr`/`_en`) dans `assets/data/enemies.json` une fois les stats validées.
