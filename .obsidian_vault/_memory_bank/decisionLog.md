@@ -4,10 +4,32 @@ Ce document répertorie sous forme d'**ADR (Architecture Decision Records)** les
 
 ---
 
+## 🐛 ADR-073 : Réactivité du Bouton « Continuer » de `HomeScreen` après Retour via `popUntil` (branche `fix/combat_scaling`)
+
+### Statut
+✅ Accepté, Implémenté & **Mergé vers `main`** (branche `fix/combat_scaling`, commit `17564b4`, mergé aux côtés d'ADR-072 via PR #22, commit de merge `b32e9e9`, 2026-07-26).
+
+### Contexte
+`HomeScreen._continueGame()` et `_startNewGame()` naviguent vers `MapScreen`/`ClassSelectionScreen` via `Navigator.push`, mais les deux points de retour vers l'accueil — le menu pause et l'écran de mort (`GameOverScreen`) — utilisent `Navigator.popUntil((route) => route.isFirst)` plutôt qu'un `push` qui recréerait l'écran. `HomeScreen` ne se reconstruit donc pas à son retour, et son `FutureProvider` sur `SaveService.hasSave()` n'était réévalué qu'à la création initiale du widget. Conséquence : le bouton « Continuer » pouvait afficher un état obsolète — rester visible après une défaite ayant effacé la sauvegarde, ou rester absent après le démarrage d'une nouvelle run — jusqu'à un redémarrage complet de l'application.
+
+### Décision
+`_continueGame()` et `_startNewGame()` attendent désormais (`await`) l'issue de leur `Navigator.push` respectif et appellent `setState(() {})` à son retour, forçant la reconstruction de `HomeScreen` et la réévaluation de `SaveService.hasSave()` quel que soit le chemin de retour emprunté (pop simple depuis un écran poussé, ou `popUntil` depuis la pause/la mort).
+
+### Preuves dans le code
+- `lib/ui/screens/home_screen.dart` : `await Navigator.push(...)` suivi de `setState(() {})` dans `_continueGame()` et `_startNewGame()`.
+- `test/widget/home_screen_save_test.dart` (nouveau, 95 lignes) : couvre la réactivité du bouton après un retour simulé de pause et après une défaite.
+
+### Conséquences
+- ✅ **Bouton « Continuer » toujours synchronisé** avec l'état réel de la sauvegarde, sans nécessiter de redémarrage de l'application.
+- ✅ **Aucune régression** : le chemin de navigation initial (`push`) n'est pas modifié, seule la réaction au retour change.
+- ✅ **Mergé vers `main`** dans la même PR (#22) qu'ADR-072.
+
+---
+
 ## 📈 ADR-072 : Resserrement de la Cadence du Scaling de Difficulté — Palier tous les 2 Actes & Tier tous les 5 Actes (branche `fix/combat_scaling`, suite d'ADR-070/ADR-071)
 
 ### Statut
-✅ Accepté & Implémenté (branche `fix/combat_scaling`, commits `97c5fcb` puis `8bc1920`, 2026-07-26 — design et plan aux commits `940d548`/`0505d89`) — suite de tests complète **211/211** au vert, `dart analyze` propre. **Pas encore mergé vers `main`** ; patch note joueur (v0.4.6, « Le Défi S'Intensifie ») rédigé par le sub-agent `patch_notes_writer` — voir `assets/data/patch_notes.json`.
+✅ Accepté, Implémenté & **Mergé vers `main`** (branche `fix/combat_scaling`, commits `97c5fcb` puis `8bc1920`, 2026-07-26 — design et plan aux commits `940d548`/`0505d89` ; mergé via PR #22, commit de merge `b32e9e9`, 2026-07-26, aux côtés d'ADR-073) — suite de tests complète **211/211** au vert, `dart analyze` propre. Patch note joueur (v0.4.6, « Le Défi S'Intensifie ») rédigé par le sub-agent `patch_notes_writer` — voir `assets/data/patch_notes.json`.
 
 ### Contexte
 Après le merge d'ADR-070/ADR-071 vers `main` (PR #20 + #21, patch note v0.4.5), un retour de playtest externe indique que **le joueur monte en puissance plus vite que les ennemis** : la difficulté reste perçue comme trop facile sur une portion significative de la run, malgré le palier géométrique HP/Dégâts (x1.35/x1.25 tous les 5 actes) et le déblocage de tier tous les 10 actes introduits par ADR-070. Deux options ont été envisagées — nerfer la puissance du joueur, ou accélérer le scaling ennemi en gardant les valeurs numériques actuelles mais en resserrant la cadence des paliers. La seconde a été retenue : l'objectif produit explicite est une **courbe de difficulté exponentielle assumée**, sans plafond ni plateau, cohérente avec la philosophie endless déjà actée par ADR-070/071.
@@ -41,7 +63,7 @@ Design : `docs/superpowers/specs/2026-07-26-difficulty-scaling-acceleration-desi
 - ⚠️ **Fin de run endless plus punitive qu'auparavant, assumée** : à l'Acte 25, le facteur HP (x36.64) redevient proche en magnitude de l'ancien bug de double-comptage d'Acte qu'ADR-070 avait corrigé (~x36.5). C'est un trade-off explicite — l'objectif produit est justement une difficulté qui ne cesse de grimper.
 - ⚠️ **Backlog de contenu tier-1 aggravé** (hérité d'ADR-070, non traité ici) : la fenêtre où seul le tier 1 (Slime, Gobelin) est disponible passe des Actes 1-10 aux Actes 1-5, rendant le besoin de contenu ennemi tier-1 supplémentaire plus pressant — voir `progress.md` (backlog Contenu).
 - ⚠️ **Plafond du nombre d'ennemis (ADR-071) inchangé mais de moins en moins atteignable** en pratique passé l'Acte ~12-15 pour les combats normaux, du fait de l'effet budget-linéaire/coût-exponentiel décrit en Décision §5.
-- ⚠️ **Pas encore mergé vers `main`** au moment de la rédaction de cet ADR ; patch note joueur (v0.4.6, « Le Défi S'Intensifie ») rédigé depuis par le sub-agent `patch_notes_writer` — voir `assets/data/patch_notes.json`.
+- ✅ **Mergé vers `main`** via PR #22 (commit de merge `b32e9e9`, 2026-07-26), aux côtés d'ADR-073 (réactivité du bouton « Continuer » de `HomeScreen`) ; patch note joueur (v0.4.6, « Le Défi S'Intensifie ») rédigé par le sub-agent `patch_notes_writer` — voir `assets/data/patch_notes.json`.
 
 ---
 

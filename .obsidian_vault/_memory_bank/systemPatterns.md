@@ -347,7 +347,7 @@ static List<EnemyData> generateEnemiesForLevel(
    ```
    Si `isBoss` est vrai, `NodeModifier` est de `2` et `NodeMultiplier` de `2.0` (pour le budget) ou `3.0` (pour HP de base) et `2.0` (pour l'attaque de base). Si `isElite` est vrai (`nodeType == MapNodeType.elite`), `NodeModifier` est de `1` et `NodeMultiplier` de `1.5`. Sinon, ils valent respectivement `0` et `1.0`.
 
-5bis. **Facteur d'Acte en Escalier Géométrique (`getHpActFactor`/`getDamageActFactor`)** — remplace l'ancien terme linéaire direct qui, combiné à l'Acte déjà présent dans `enemyLevel`, provoquait un double comptage (ADR-070) ; cadence resserrée de 5 à 2 actes par ADR-072 (branche `fix/combat_scaling`, pas encore mergée vers `main`) :
+5bis. **Facteur d'Acte en Escalier Géométrique (`getHpActFactor`/`getDamageActFactor`)** — remplace l'ancien terme linéaire direct qui, combiné à l'Acte déjà présent dans `enemyLevel`, provoquait un double comptage (ADR-070) ; cadence resserrée de 5 à 2 actes par ADR-072 (branche `fix/combat_scaling`, mergée vers `main` via PR #22) :
    ```dart
    static int getActBracket(int act) => ((act - 1) / 2).floor();
    static int getActPositionInBracket(int act) => (act - 1) % 2;
