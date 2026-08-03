@@ -2,8 +2,8 @@
 
 **Date** : 2026-08-03
 **Statut** : Spec validée, prête pour plan d'implémentation
-**Périmètre** : `.obsidian_vault/`, `docs/`, `CLAUDE.md`, `GEMINI.md`, skill de maintenance documentaire
-**Hors périmètre** : tout fichier de `lib/`, `test/`, `assets/`
+**Périmètre** : `.obsidian_vault/`, `docs/`, `CLAUDE.md`, `GEMINI.md`, et les deux skills rédacteurs de documentation (`memory-bank-sync`, `patch-notes-writer`)
+**Hors périmètre** : tout fichier de `lib/`, `test/`, `assets/` — à l'exception du champ `version:` de `pubspec.yaml` (§5.5)
 
 ---
 
@@ -59,7 +59,25 @@ Cinq roadmaps coexistent : `progress.md` §3 (backlog), `progress.md` §4 (phase
 - `GEMINI.md` est un doublon divergent : il impose un workflow d'agents obligatoire absent de `CLAUDE.md` et présente les dossiers `.agents/orchestrator|worker_m1|…` comme des sous-agents actifs, alors que `CLAUDE.md` les qualifie de répertoires vides. Aucune règle ne dit lequel fait autorité.
 - `.obsidian_vault/business_analyst_product_manager_config.md` est une troisième copie verbatim du prompt du skill, plus un appel `define_subagent` qui n'existe pas dans Claude Code. Idem pour `flutter_game_designer_config.md`.
 
-### 1.6 Ce qui manque au skill actuel
+### 1.6 Le skill `patch_notes_writer` écrit à partir de sources mortes
+
+`.agents/skills/patch_notes_writer.md` ordonne de lire cinq sources « avant d'écrire un mot ». Trois sont inexploitables :
+
+| Source déclarée | État réel (vérifié le 2026-08-03) |
+|:---|:---|
+| `.gemini/antigravity/brain/<id>/implementation_plan.md` | `.gemini/` n'existe pas — vestige d'un workflow Antigravity/Gemini abandonné |
+| `.gemini/antigravity/brain/<id>/walkthrough.md` | N'existe nulle part dans le dépôt |
+| `task.md` (checklist des items `[x]`) | **Existe et est périmé** : checklist « Forge & Fusion » figée au commit `5cf0adb` (ère v3.1.0, 1er juillet) |
+| `.obsidian_vault/_memory_bank/progress.md` + `activeContext.md` | Existe, mais c'est le vault dont §1.1 démontre la dérive |
+| `git diff HEAD~1 --name-only` | Fonctionne, mais ne voit qu'un commit — inutilisable sur une branche de 13 commits comme `feat/save_run` |
+
+Le cas `task.md` est le plus dangereux : ce n'est pas un chemin mort qui échouerait bruyamment, c'est un fichier présent, lisible et faux. Un agent suivant le skill à la lettre rédigerait des patch notes à partir d'une checklist de la Forge datée du 1er juillet.
+
+Que cela ne se soit pas produit tient au fait que les rédactions récentes (v0.4.5 → v0.4.7) ont été pilotées manuellement depuis les vraies sources.
+
+Le reste du skill (schéma JSON, catégories autorisées, règles de rédaction, garde-fous) est solide et nettement mieux écrit que celui du BA/PM : il est repris tel quel.
+
+### 1.7 Ce qui manque au skill de memory bank actuel
 
 | Garantie absente | Conséquence observée |
 |:---|:---|
@@ -112,7 +130,7 @@ Cinq roadmaps coexistent : `progress.md` §3 (backlog), `progress.md` §4 (phase
 
 ---
 
-## 3. Le skill de maintenance
+## 3. Skill 1/2 — `memory-bank-sync` (documentation développeur)
 
 **Emplacement** : `.claude/skills/memory-bank-sync/SKILL.md` — format natif de l'environnement, invocable via `/memory-bank-sync` et auto-déclenchable.
 `.agents/skills/business_analyst_product_manager.md` est **supprimé**, pas conservé en doublon : les trois copies actuelles du même prompt sont précisément le symptôme à éliminer.
@@ -197,11 +215,67 @@ Le skill **ne touche pas** à `assets/data/patch_notes.json` (domaine de `patch_
 
 ---
 
-## 4. Ordre d'exécution de la remise à plat
+## 4. Skill 2/2 — `patch-notes-writer` (documentation joueur)
+
+**Emplacement** : `.claude/skills/patch-notes-writer/SKILL.md`, invocable via `/patch-notes-writer`.
+`.agents/skills/patch_notes_writer.md` est supprimé. `.agents/skills/` ne contient plus alors que `game_designer.md`.
+
+**Frontmatter** :
+
+```yaml
+---
+name: patch-notes-writer
+description: Use after an implementation lands in Hero's Draft to write the player-facing patch note — prepends a new semver entry to assets/data/patch_notes.json and keeps pubspec.yaml in sync. Writes French player-facing prose only, never developer jargon, and never edits existing entries.
+---
+```
+
+### 4.1 Sources réécrites sur ce qui existe réellement
+
+Remplace intégralement le §1 de l'ancien skill (voir §1.6).
+
+| Source | Rôle |
+|:---|:---|
+| `docs/superpowers/plans/<date>-<sujet>.md` | Ce qui était prévu, tâche par tâche |
+| `docs/superpowers/specs/<date>-<sujet>-design.md` | L'intention et les arbitrages |
+| `git log <base>..HEAD --oneline` et `git diff <base>..HEAD --name-only` | Ce qui a réellement été livré, sur toute la branche |
+| `.obsidian_vault/_adr/ADR-0XX-*.md` | Le *pourquoi*, et les trade-offs à ne pas annoncer comme des gains |
+
+**Règle de préséance** : en cas de divergence entre un plan et l'historique git, **git fait foi**. Un plan décrit une intention, un commit décrit un fait.
+
+**Interdiction explicite** : ne jamais lire `task.md` à la racine — fichier périmé conservé pour l'historique (voir §5.5).
+
+### 4.2 Propriété du numéro de version
+
+Le skill qui décide du numéro de version l'écrit **aux deux endroits** :
+
+1. `assets/data/patch_notes.json` — nouvelle entrée en tête du tableau.
+2. `pubspec.yaml` — champ `version:`, aligné sur `<version>+<build>`.
+
+Le garde-fou « ne toucher à aucun autre fichier » de l'ancien skill est assoupli **à ces deux fichiers exactement**, et à aucun autre.
+
+Cette règle ferme définitivement le chantier **P-01** de la roadmap (écart `0.1.0+1` vs `0.4.7`) au lieu de le corriger une seule fois, et supprime la catégorie de bug à la source. Elle est aussi un prérequis strict de **P-04** (le job CI `verify-version` compare le tag git à `pubspec.yaml`).
+
+### 4.3 Ce qui est repris tel quel
+
+Le schéma JSON, les 5 catégories autorisées et leurs emoji, les règles de rédaction (§3.1 à §3.5 de l'ancien skill), le workflow en 6 étapes et les garde-fous (« ne jamais supprimer », « ne jamais modifier une entrée existante », « ne jamais halluciner ») sont conservés à l'identique. Seules les sources (§4.1) et la propriété de la version (§4.2) changent.
+
+### 4.4 Articulation entre les deux skills
+
+| | `patch-notes-writer` | `memory-bank-sync` |
+|:---|:---|:---|
+| Écrit dans | `assets/data/patch_notes.json`, `pubspec.yaml` | `_memory_bank/`, `_adr/`, `docs/ROADMAP.md` |
+| Pour qui | Le joueur | Le développeur et les agents |
+| Registre | Français joueur, zéro jargon | Technique, traçable |
+
+Dépendance unique et à sens unique : **`memory-bank-sync` enregistre la version publiée par `patch-notes-writer`, il ne la décide pas.** L'absence de cette règle est ce qui a produit les trois schémas de version concurrents du §1.3.
+
+---
+
+## 5. Ordre d'exécution de la remise à plat
 
 Principe directeur : **on déplace, on ne résume pas.** Toute ligne retirée d'un fichier vivant se retrouve verbatim dans `_archive/`.
 
-### 4.1 Filet de sécurité — avant toute écriture
+### 5.1 Filet de sécurité — avant toute écriture
 
 1. Branche dédiée `docs/memory-bank-overhaul`.
 2. **Premier commit** : `docs/roadmap_priorisee_31-07-2026.md`, aujourd'hui non suivi par git. Seul fichier du dépôt qu'un `git clean` détruirait, et meilleur document de pilotage du projet.
@@ -209,13 +283,16 @@ Principe directeur : **on déplace, on ne résume pas.** Toute ligne retirée d'
 
 À partir de ce commit, l'information est doublement protégée (git + archive) et toutes les étapes suivantes sont réversibles.
 
-### 4.2 Le skill d'abord
+### 5.2 Les deux skills d'abord
 
-Écrire `.claude/skills/memory-bank-sync/SKILL.md`, supprimer `.agents/skills/business_analyst_product_manager.md`, archiver les deux `.obsidian_vault/*_config.md`.
+1. Écrire `.claude/skills/memory-bank-sync/SKILL.md` (§3), supprimer `.agents/skills/business_analyst_product_manager.md`, archiver les deux `.obsidian_vault/*_config.md`.
+2. Écrire `.claude/skills/patch-notes-writer/SKILL.md` (§4), supprimer `.agents/skills/patch_notes_writer.md`.
 
-L'ordre est intentionnel : la remise à plat devient le premier cas d'usage réel du skill, exécutée sous ses propres règles. Une règle impraticable sur 5 811 lignes se révèle immédiatement.
+L'ordre est intentionnel : la remise à plat devient le premier cas d'usage réel de `memory-bank-sync`, exécutée sous ses propres règles. Une règle impraticable sur 5 811 lignes se révèle immédiatement.
 
-### 4.3 Éclatement du `decisionLog` — étape mécanique
+`patch-notes-writer` n'a pas de patch note à écrire dans ce chantier — aucune de ses étapes n'est visible du joueur. Il est migré ici parce qu'il rédige l'autre moitié de la documentation à partir des mêmes faits, et que laisser ses sources mortes en place (§1.6) rendrait la prochaine rédaction aussi peu fiable qu'aujourd'hui.
+
+### 5.3 Éclatement du `decisionLog` — étape mécanique
 
 Découpe par script sur les titres `^## .* ADR-(\d+)` vers `_adr/ADR-0XX-slug.md`, puis génération de l'index trié.
 
@@ -227,47 +304,53 @@ Contrôles automatiques :
 
 Seule intervention manuelle : renumérotation du doublon en `ADR-074`, avec note d'en-tête expliquant l'opération.
 
-### 4.4 Réécriture des 4 fichiers restants
+### 5.4 Réécriture des 4 fichiers restants
 
 L'ordre conditionne l'absence de perte d'information :
 
-1. **`progress.md`** — il porte les métriques, vérifiées par commande en §4.2. Il redevient la base factuelle. Les dérives du §1.1 et les chemins morts du §1.2 sont corrigés par construction à cette étape.
+1. **`progress.md`** — il porte les métriques, à re-mesurer par commande selon la garantie 1 (§3.1). Il redevient la base factuelle. Les dérives du §1.1 et les chemins morts du §1.2 sont corrigés par construction à cette étape.
 2. **`productContext.md`** puis **`systemPatterns.md`** — purge des sections historiques datées vers l'archive, correction des références, renumérotation des §3.x de `productContext.md`.
 3. **`activeContext.md` en dernier** — il ne peut descendre à 3 livraisons que si `progress.md` et les ADR ont déjà absorbé le reste. Le réduire en premier perdrait de l'information sans nouveau domicile.
 
-### 4.5 Périphérie
+### 5.5 Périphérie
 
 - `git mv docs/roadmap_priorisee_31-07-2026.md docs/ROADMAP.md` (préserve l'historique).
 - `backlog_and_roadmap_report_22072026.md` → `docs/archives/`.
-- `CLAUDE.md` corrigé et complété (§2.3).
+- `task.md` (racine) → `docs/archives/2026-07-01-task-forge-fusion.md`. Il n'est plus une source de personne depuis §4.1 et sa présence à la racine invite à le relire comme s'il était courant.
+- **Resync unique de `pubspec.yaml`** : `0.1.0+1` → `0.4.7+1`, aligné sur `patch_notes.json`. Fermeture du chantier **P-01**, cochée dans `docs/ROADMAP.md` — premier exercice réel de la garantie 6 (§3.6). Au-delà de cette fois, la synchronisation est portée par `patch-notes-writer` (§4.2).
+- `CLAUDE.md` corrigé et complété (§2.3), avec les **deux** skills référencés à leur nouvel emplacement.
 - `GEMINI.md` réduit à un pointeur.
 
-### 4.6 Vérification finale
+### 5.6 Vérification finale
 
 La checklist du §3.7 exécutée sur le résultat, plus `dart analyze` et `flutter test`.
 
-Aucune étape de cette refonte ne touche au code : les deux commandes doivent rendre exactement `0 issue` et `212 tests`. C'est le contrôle qu'aucun fichier source n'a été atteint par erreur.
+Aucune étape de cette refonte ne touche à `lib/`, `test/` ni aux données de jeu : les deux commandes doivent rendre exactement `0 issue` et le même nombre de tests qu'avant. C'est le contrôle qu'aucun fichier source n'a été atteint par erreur.
+
+Le seul fichier non documentaire modifié est `pubspec.yaml` (champ `version:` uniquement, §5.5). Contrôle dédié : `flutter pub get` doit rester silencieux et `git diff pubspec.yaml` ne doit montrer qu'une seule ligne changée.
 
 ---
 
-## 5. Hors périmètre
+## 6. Hors périmètre
 
 | Écart connu | Raison de ne pas le traiter ici |
 |:---|:---|
-| `pubspec.yaml` `0.1.0+1` vs `patch_notes.json` `0.4.7` | C'est **P-01** de la roadmap : un changement de livraison, pas de documentation. Documenté comme écart connu, non corrigé. |
 | Re-priorisation de la roadmap | Datée du 31/07 et solide. On la déplace, on ne la rejuge pas. |
 | Les 8 brainstorms, specs et plans de `docs/` | Bien rangés et à jour, non concernés. |
-| Tout fichier de `lib/`, `test/`, `assets/` | Strictement hors périmètre. |
-| Migration de `.agents/skills/patch_notes_writer.md` vers `.claude/skills/` | Il fonctionne et `CLAUDE.md` le référence à cet emplacement. Le déplacer est une décision distincte, à prendre une fois `memory-bank-sync` éprouvé. **Conséquence assumée : deux conventions d'emplacement coexistent temporairement**, à signaler dans la section « Carte de la documentation » de `CLAUDE.md`. |
+| Tout fichier de `lib/`, `test/`, `assets/` | Strictement hors périmètre. `pubspec.yaml` est la seule exception, champ `version:` uniquement (§5.5). |
+| `.agents/skills/game_designer.md` | Troisième skill du dossier, non concerné par la documentation. Sa migration éventuelle est une décision distincte ; `.agents/skills/` subsiste donc pour lui seul. |
+| Les 10 répertoires vides `.agents/orchestrator|worker_m1|…` | Artefacts d'un workflow multi-agents passé. Les supprimer est sans risque mais sans rapport avec la documentation. |
 
 ---
 
-## 6. Critères de réussite
+## 7. Critères de réussite
 
 1. Le vault total tient sous **1 500 lignes** et est chargeable intégralement par un agent.
 2. Chaque métrique du vault porte une date de vérification et correspond à une commande reproductible.
 3. Aucun chemin cité dans le vault n'est mort (`test -e` sur chacun).
 4. Un seul document répond à « que reste-t-il à faire ? ».
 5. Les numéros d'ADR sont uniques et l'index est trié.
-6. `flutter test` et `dart analyze` rendent **exactement le même résultat qu'avant la refonte** (mesuré à 212 tests et 0 issue le 2026-08-03) — aucune étape ne touchant au code, tout écart signale un fichier source atteint par erreur.
-7. Aucune information n'a disparu : tout ce qui a été retiré est retrouvable verbatim dans `_archive/` ou dans l'historique git.
+6. Les deux skills vivent dans `.claude/skills/`, sont invocables par leur nom, et **chaque source qu'ils déclarent lire existe** (`test -e` sur chacune).
+7. `pubspec.yaml`, `patch_notes.json` et le vault annoncent la même version, et un propriétaire unique est désigné pour l'y maintenir.
+8. `flutter test` et `dart analyze` rendent **exactement le même résultat qu'avant la refonte** (mesuré à 212 tests et 0 issue le 2026-08-03) — aucune étape ne touchant au code, tout écart signale un fichier source atteint par erreur.
+9. Aucune information n'a disparu : tout ce qui a été retiré est retrouvable verbatim dans `_archive/` ou dans l'historique git.
