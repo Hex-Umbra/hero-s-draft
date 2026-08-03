@@ -1,238 +1,155 @@
-# 📊 État du Projet & Progrès (Progress)
+# 📊 État du Projet & Progrès
 
-Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnalités de **Hero's Draft** : opérationnelles, partiellement implémentées, non implémentées, et les chantiers de refactoring prioritaires issus des rapports de dette technique.
+> [!IMPORTANT]
+> **Plafond : 300 lignes.** Ce fichier décrit **ce qui est construit**, jamais ce qui reste à faire — voir `docs/ROADMAP.md`.
 
-**Métriques du projet** :
-- **~11 600 lignes** de code source dans `lib/` (~79 fichiers).
-- **9 fichiers JSON** de données d'assets.
-- **145+ tests automatisés** — 100% au vert (branche `feat/save_run`, +9 fichiers de test dédiés au système de sauvegarde).
-- **0 erreur** via `flutter analyze`.
-- **~126 phases d'implémentation** complétées (historique dans `docs/implementation_plans/done/`).
-- **Version actuelle** : v3.5.1 — Correction de la Réactivité du Bouton « Continuer » de `HomeScreen` (branche `fix/combat_scaling`, PR #22, ADR-073). v3.5.0 (Accélération de la Cadence du Scaling de Difficulté Ennemi, ADR-072), v3.4.0 (Plafonnement du Nombre d'Ennemis par Acte & Résolution de la Dérive Log/Calcul, `feature/combat_scaling`, PR #20 + PR #21) et v3.2.0 (Autosave, `feat/save_run`, PR #19) déjà mergées.
+## Métriques
 
-> [!NOTE]
-> **`fix/combat_scaling` mergée vers `main` via PR #22** (commit de merge `b32e9e9`, 2026-07-26) : suite au retour de playtest signalé après le merge d'ADR-070/071 (le joueur montait en puissance plus vite que les ennemis), la cadence du scaling de difficulté a été resserrée — palier géométrique HP/Dégâts tous les **2 actes** (au lieu de 5) et déblocage de tier tous les **5 actes** (au lieu de 10). Bases numériques, formules de budget et plafond d'ennemis (ADR-071) inchangés. Suite de tests 211/211 au vert, `dart analyze` propre. Patch note joueur v0.4.6 déjà rédigé — voir `assets/data/patch_notes.json`. La même branche/PR inclut également la correction ADR-073 (réactivité du bouton « Continuer » de `HomeScreen`, commit `17564b4`) — voir §1 (Autosave). Voir §1 (Système de Combat), backlog Contenu (§3), historique des releases (§7 — v3.5.0/v3.5.1) et `decisionLog.md` (ADR-070, ADR-071, ADR-072, ADR-073).
+**Vérifié le 2026-08-03**
 
----
-
-## 1. Fonctionnalités 100% Opérationnelles
-
-### 💾 Système de Sauvegarde et Persistance de Run (Autosave)
-
-| Fonctionnalité | Fichiers Clés | Détails |
+| Métrique | Valeur | Commande |
 |:---|:---|:---|
-| Autosave à checkpoint carte | `SaveService`, `checkpointProvider`, `autosaveOrchestratorProvider` | Sauvegarde automatique dans `shared_preferences` (slot unique, JSON versionné `schemaVersion`) à chaque nœud résolu (combat, boutique, repos, event, forge fusion, échange de reliques, draft de Level Up différé). Jamais en cours de combat (`CombatState` non sérialisé). |
-| Réhydratation des contrôleurs | `hydrate()` sur `RunController`/`DeckNotifier`/`InventoryController`/`SkillController` | Remplacement intégral de l'état depuis les données chargées, navigation directe vers `MapScreen` en contournant la sélection de classe/draft de départ. |
-| Reprise depuis l'accueil | `HomeScreen` | Bouton "Continuer" (visible si `SaveService.hasSave()`), dialogue de confirmation avant qu'une "Nouvelle Partie" n'écrase une sauvegarde existante. |
-| Dégradation gracieuse du contenu manquant | `MissingSaveItem`, `SaveLoadResult.missingItems` | Carte/relique/passif/upgrade de forge supprimé du catalogue après la sauvegarde : retiré silencieusement de l'état, signalé par son nom (instantané bilingue) dans une boîte de dialogue au chargement. |
-| Sauvegarde corrompue = échec total | `SaveService.load()` | JSON illisible ou `schemaVersion` inconnue → échec propre, clé effacée, `HomeScreen` se comporte comme si aucune sauvegarde n'existait (pas de récupération partielle). |
-| Fin de run | `GameOverScreen` | La sauvegarde est effacée à la mort du héros (seul état de fin de run existant actuellement). |
-| Réactivité du bouton « Continuer » au retour (ADR-073) | `HomeScreen._continueGame()`/`_startNewGame()` | Les deux méthodes attendent (`await`) leur `Navigator.push` puis appellent `setState(() {})` à son retour, forçant la réévaluation de `SaveService.hasSave()` même quand le retour à l'accueil se fait via `Navigator.popUntil` (menu pause, `GameOverScreen`) plutôt que par un `pop` simple. Corrige un état de bouton obsolète nécessitant auparavant un redémarrage de l'application. |
+| Tests automatisés | 212 au vert | `flutter test` |
+| Analyse statique | 0 erreur (`No issues found!`) | `dart analyze` |
+| Fichiers Dart (`lib/`) | 169 | `find lib -name "*.dart" \| wc -l` |
+| Lignes de code (`lib/`) | 36 343 | `find lib -name "*.dart" -exec cat {} + \| wc -l` |
+| Fichiers de données | 10 | `ls assets/data/*.json \| wc -l` |
+| Version `pubspec.yaml` | 0.1.0+1 | lecture directe |
+| Version joueur | 0.4.7 — 2026-07-26 — « L'Équilibre des Effectifs » | 1ʳᵉ entrée de `assets/data/patch_notes.json` |
 
-### 🗺️ Génération et Progression Procédurale (World Map)
+## 1. Fonctionnalités opérationnelles
 
-| Fonctionnalité | Fichiers Clés | Détails |
+### 💾 Sauvegarde (Autosave)
+
+| Fonctionnalité | Fichiers clés | Détails |
 |:---|:---|:---|
-| Graphe Acyclique Dirigé (DAG) | `MapGeneratorService`, `MapNode` | 10 étages (paramétrable), largeur 2-5 nœuds, chokepoint étage central dynamique, repos garanti étage `floors-2`, boss unique étage final |
-| Distribution probabiliste des nœuds | `MapGeneratorService._randomNodeType()` | 60% combat, 15% event, 10% shop, 10% rest, 5% elite |
-| Quotas équilibrés (Solver) | `MapGeneratorService._balanceQuotas` | Répartition des types de nœuds : Combat (12-22), Élite (3-6), Repos (3-6), Shop (2-5), Event (4-9) |
-| Anti-répétition de chemins | `MapGeneratorService._optimizeMapTypes` | Algorithme interdisant 3 nœuds Élite ou Repos consécutifs sur un même chemin |
-| Chokepoints structurels forcés | `MapGeneratorService` | Étage central dynamique (`floors ~/ 2`) Élite forcé (1 nœud), Étage `floors-2` Repos forcé (repos garanti avant boss) |
-| Level Up différé sur la Carte | `RunController`, `MapScreen`, `GameScreen` | Les gains de niveau incrémentent `pendingDrafts` au lieu d'ouvrir le draft en combat. Un overlay bloquant « LEVEL UP ! » s'affiche sur la carte, forçant le joueur à effectuer ses choix de draft avant de naviguer. |
-| Embranchement de Boss multiples | `MapGeneratorService` / `EncounterSystem` | Étage final (Boss) presents 3 nœuds de boss distincts avec récompenses de combat uniques déterminées par leur position |
-| Récompenses de Boss uniques | `GameScreen`, `MapNode`, `RewardController`, `BossCardDraftScreen` | Boss 1 (x=0) : clonage de 2 cartes parmi 5 cartes aléatoires proposées du deck du joueur. Boss 2 (x=1) : XP/Or triplés (x3) + 1 carte aléatoire du jeu (hors uniques et statuts). Boss 3 (x=2) : relic drop dynamique par Act dans RewardController. |
-| Correction d'orphelins | `MapGeneratorService` (Phase 2 câblage) | Garantie que tout nœud a au moins 1 connexion entrante |
-| Navigation réactive | `RunController.travelToNode()` | Validation d'accessibilité (connexion au nœud complété ou étage 0) |
-| Caméra centrée | `MapScreen` | Repositionnement et centrage automatique fluide à chaque transition |
-| Widgets dédiés par type | `MapScreen` | Icônes spécifiques (Combat/Élite/Shop/Event/Repos/Boss/Exchange) + tooltips |
-| Barre d'XP HUD | `MapScreen`, `xp_scaling_test.dart` | Barre de progression d'expérience dorée permanente et badges de niveau sous le HUD |
-| Rencontre d'Échange de Reliques | `MapGeneratorService`, `InventoryController`, `RunController`, `RelicExchangeScreen` | Autel d'échange de reliques (nœud relicExchange, emoji 🔄). Apparaît Acte 5+ (100% tous les 5 actes, 10% sinon, étage 2/3/4/6/7). Offre déterministe par seeded random. Échange 3 reliques de rareté R-1 contre 1 de rareté R proposée. |
-| Nœud Forge de Fusion | `MapGeneratorService`, `MapContentPlacer`, `MapNodeWidget`, `MapLegend` | Nouveau nœud `forgeFusion` (layers_rounded). Placé procéduralement avec 25% de probabilité par carte/map sur les étages 3 à 7, et affiché dans la légende de la carte. |
+| Autosave à checkpoint carte | `SaveService`, `checkpointProvider`, `autosaveOrchestratorProvider` | `shared_preferences`, slot unique, JSON versionné (`schemaVersion`), à chaque nœud résolu, jamais en cours de combat |
+| Réhydratation des contrôleurs | `RunController.hydrate()`, `DeckNotifier`, `InventoryController`, `SkillController` | Remplacement intégral de l'état depuis les données chargées, navigation directe vers `MapScreen` |
+| Reprise depuis l'accueil | `HomeScreen` | Bouton « Continuer » (si `SaveService.hasSave()`), confirmation avant écrasement ; réactivité après retour via `Navigator.popUntil` corrigée — [ADR-073](../_adr/ADR-073-reactivite-du-bouton-continuer-de-homescreen-apres.md) |
+| Dégradation gracieuse du contenu manquant | `MissingSaveItem`, `SaveLoadResult.missingItems` | Élément supprimé du catalogue depuis la sauvegarde : retiré silencieusement, signalé nommément au chargement |
+| Sauvegarde corrompue = échec total | `SaveService.load()` | JSON illisible ou `schemaVersion` inconnue → échec propre, pas de récupération partielle |
+| Fin de run | `GameOverScreen` | Sauvegarde effacée à la mort du héros |
 
-### 🧠 Gestion d'État Métier (Riverpod Controllers)
+Design complet — [ADR-069](../_adr/ADR-069-systeme-de-sauvegarde-de-run-checkpoint-carte-refr.md).
+
+### 🗺️ Carte du Monde (World Map)
+
+| Fonctionnalité | Fichiers clés | Détails |
+|:---|:---|:---|
+| Graphe Acyclique Dirigé (DAG) | `MapGeneratorService`, `MapNode` | 10 étages, largeur 2-5 nœuds, chokepoint étage central dynamique, repos garanti étage `floors-2`, boss unique étage final |
+| Distribution et quotas équilibrés | `MapGeneratorService._randomNodeType`, `._balanceQuotas` | Probabilités par type (60% combat, 15% event, 10% shop, 10% rest, 5% elite) puis rééquilibrage par quotas |
+| Anti-répétition et chokepoints forcés | `MapGeneratorService._optimizeMapTypes` | Interdit 3 nœuds Élite/Repos consécutifs ; étage central Élite forcé ; étage `floors-2` Repos forcé |
+| Level Up différé sur la carte | `RunController`, `MapScreen`, `GameScreen` | Gains de niveau → `pendingDrafts` ; overlay bloquant « LEVEL UP ! » sur la carte |
+| Embranchement et récompenses de Boss uniques | `MapGeneratorService`/`EncounterSystem`, `RewardController`, `BossCardDraftScreen` | 3 branches de boss distinctes, récompenses différenciées par position (clonage, or/xp triplés, relique) |
+| Rencontre d'Échange de Reliques | `MapGeneratorService`, `InventoryController`, `RelicExchangeScreen` | Nœud `relicExchange` (Acte 5+), offre déterministe par seeded random, échange 3 reliques R-1 → 1 rareté R |
+| Nœud Forge de Fusion | `MapGeneratorService`, `MapContentPlacer`, `MapNodeWidget` | Nœud `forgeFusion`, 25% de probabilité sur les étages 3 à 7 — [ADR-074](../_adr/ADR-074-introduction-de-la-forge-de-fusion-procedurale-et.md) |
+| Navigation et rendu | `RunController.travelToNode()`, `MapScreen` | Validation d'accessibilité, caméra centrée, widgets dédiés par type, barre d'XP HUD |
+
+### 🧠 Contrôleurs (Riverpod)
 
 | Fonctionnalité | Controller/Provider | Détails |
 |:---|:---|:---|
-| Modernisation Riverpod | `Tous les Providers` | Migration vers `Notifier` et `NotifierProvider` de Riverpod 2.x, communication inter-contrôleurs interne via `ref.read` sans injection par constructeur, et immuabilité stricte de `CardInstance` (v0.0.97) |
-| Logique de Run (Façade) | `RunController` / `runProvider` | Suivi de la run. Délègue à `PlayerStatsManager` (stats, XP, buffs, statuts), `MapProgressionManager` (navigation, complétion, actes), `RunPersistenceManager` (chargement/sauvegarde) et `GoldManager` (or, forge slots). |
-| Logique de Combat (Façade) | `CombatController` / `combatProvider` | Pilotage de combat. Délègue à `StatusEffectProcessor` (résolution autonome et unifiée des statuts) et `TurnPhaseManager` (transitions, ripostes, fin de tour). |
-| Persistance Forge v2 | `RunController` / `runProvider` | Sauvegarde anti-exploit de la session de forge active (`forgeSlots`, `forgeTargetCardId`) et gestion des slots bonus achetés avec coût progressif (v0.2.00) |
-| Système de Progression XP | `RunController.gainXp()` / `PlayerStatsManager` | Progression XP exponentielle ($100 \times 1.5^{lvl-1}$), gains multiples et carry-over |
-| Échelonnement Ennemis | `CombatController.initializeCombat()` | Multiplicateurs dynamiques (+12% HP/lvl, +8% ATK/lvl) et calcul de combat level |
-| Piles de Cartes | `DeckNotifier` / `deckProvider` | 5 piles logiques (Master, Draw, Hand, Discard, Exhaust) avec shuffle et gestion complète |
-| Économie et Reliques | `InventoryController` / `inventoryProvider` | Or (initial 50), 24 reliques (communes rééquilibrées) avec 9 triggers différents, système de charges, bonus boutique |
-| Compétences | `SkillController` / `skillProvider` | 2 compétences par héros, cooldowns, consommation de ressources |
-| Événements | `EventController` / `eventProvider` | 2 événements narratifs à choix multiples, résolution d'actions, roll de rareté relique |
-| Boutique | `ShopController` / `shopProvider` | Achat/purge/clone, soin, expansion, reroll. Caching anti-exploit `cloneOptions` (v0.1.7). Vente par instances réelles (`CardInstance`) affichant les runes, scaling de rareté et d'upgrades par Acte, prix dynamique des cartes (+20 Or/upgrade), et coût du Miroir Magique qui double par achat et se reset en quittant (v0.2.9) |
-| Récompenses de Victoire | `RewardController` / `rewardProvider` | Or, XP (triplés pour le boss central), tirage de relique (improvedRelic avec chances dynamiques par Act excluant les communes), et draft/clonage de cartes |
-| Logique de Fusion | `DeckNotifier`, `InventoryController` | Fusion d'améliorations identiques, déduction d'or ($80 \times (N-1)$ Or) et mise à jour de la carte modifiée dans le deck via `setForgeUpgrades` |
+| Modernisation Riverpod | Tous les providers | `Notifier`/`NotifierProvider` Riverpod 2.x, communication inter-contrôleurs via `ref.read`, immuabilité stricte de `CardInstance` |
+| Logique de Run (façade) | `RunController`/`runProvider` | Délègue à `PlayerStatsManager`, `MapProgressionManager`, `GoldManager` (`lib/game/controllers/run/`) ; persistance via `SaveService` et `lib/game/controllers/checkpoint_controller.dart`, `hydrate()` porté par `RunController` lui-même |
+| Logique de Combat (façade) | `CombatController`/`combatProvider` | Délègue à `StatusEffectProcessor` et `TurnPhaseManager` (`lib/game/controllers/combat/`) |
+| Persistance Forge v2 | `RunController`/`runProvider` | Session de forge anti-exploit (`forgeSlots`, `forgeTargetCardId`), slots bonus à coût progressif |
+| Progression XP | `RunController.gainXp()`, `PlayerStatsManager` | Progression exponentielle, gains multiples, carry-over |
+| Échelonnement des ennemis | `CombatController.initializeCombat()` | Multiplicateurs dynamiques par acte — détail en §Combat |
+| Piles de cartes | `DeckNotifier`/`deckProvider` | 5 piles logiques (Master, Draw, Hand, Discard, Exhaust) |
+| Économie, compétences, événements, boutique, récompenses | `InventoryController`, `SkillController`, `EventController`, `ShopController`, `RewardController` | Or/reliques à charges, cooldowns de compétences, résolution d'événements, achat/clone/reroll boutique, tirage post-victoire |
+| Logique de Fusion | `DeckNotifier`, `InventoryController` | Fusion d'améliorations identiques, déduction d'or, mise à jour de la carte via `setForgeUpgrades` |
 
-### 🃏 Système de Cartes et Deck
+### 🃏 Cartes et Deck
 
 | Fonctionnalité | Implémentation | Détails |
 |:---|:---|:---|
-| Auto-Merge (3→1) | `DeckNotifier.mergeCards()` | 3 copies même ID + rareté → 1 copie rareté supérieure (cumul des Tiers, clamp à la capacité). Les cartes de rareté `unique` (classe) ne peuvent pas être fusionnées (désactivé). |
-| Foil Unique Progressif | `PolychromaticBorder`, `UiCard` | Rendu de la bordure polychromatique brillante au survol de la souris dont le nombre de couleurs (de 1 à 10) augmente avec les upgrades (v0.2.02) |
-| Rareté Dynamique | `EffectResolver.resolveCard()` | Progression par rareté (common → legendary) avec coefficients. La rareté `unique` (cartes de classe) est fixée à un multiplicateur de 1.0. |
-| Catalogue complet | `cards.json` & `hero_cards.json` | 21 cartes équilibrées : 15 globales (communes) dans cards.json + 6 de classe (unique) dans hero_cards.json |
-| Types d'effets | `EffectResolver`, `CardEffect` | damage, heal, armor, draw, gain_mana, apply_status |
-| Exhaust mécanique | `DeckNotifier.playCard()` | Cartes Power et `isExhaust` → pile d'épuisement (sauf si upgrade `enduring`) |
-| Upgrade de Forge | `DeckNotifier.addForgeUpgrade()`, `ForgeUpgradeData` | Améliorations de stats/pioche/mana/durée pilotées par `forge_upgrades.json` (data-driven). Cumulables sans limite d'épuisement (alreadyHas retiré). |
-| Forge v2.5 & Fusion | `ForgeUpgradeDialog`, `ForgeFusionScreen` | Écrans plein écran responsives. Forge classique avec tirage pondéré et achat de slots bonus. Forge de fusion pour combiner des runes identiques. |
-| Suppression de carte | `DeckNotifier.removeCardById()` | Oubli au feu de camp (`RestScreen`) : suppression définitive |
-| Draft post-combat | `DraftScreen` | 3 choix de cartes aléatoires après victoire (les cartes uniques de classe sont exclues) |
-| Draft de départ | `StarterDeckDraftScreen` | Sélection de 5 cartes globales directly depuis la grille complète des 15 cartes globales (suppression du pool de 10 cartes aléatoires) + cartes de classe uniques résolues via compétences |
-| Équilibrage Probabilités | `probabilities_test.dart` | Rééquilibrage exact (Commune 52%/51.5%, Atypique 24%, Rare 16%, Épique 6%, Légendaire 2.0%, Mythique 0.5% au Level Up) |
+| Auto-Merge (3→1) | `DeckNotifier.mergeCards()` | 3 copies même ID + rareté → 1 copie rareté supérieure ; cartes `unique` non fusionnables |
+| Foil Unique Progressif | `PolychromaticBorder`, `UiCard` | Bordure polychromatique au survol, nombre de couleurs croissant avec les upgrades |
+| Rareté Dynamique | `EffectResolver.resolveCard()` | Progression par rareté (common → legendary), rareté `unique` fixée à ×1.0 |
+| Catalogue de cartes | `assets/data/cards.json`, `assets/data/hero_cards.json` | 21 cartes : 15 globales (communes) + 6 de classe (unique) |
+| Effets et exhaust | `EffectResolver`, `CardEffect`, `DeckNotifier.playCard()` | damage/heal/armor/draw/gain_mana/apply_status ; Power et `isExhaust` → pile d'épuisement |
+| Forge et Fusion | `DeckNotifier.addForgeUpgrade()`, `ForgeUpgradeDialog`, `ForgeFusionScreen` | Upgrades pilotées par `assets/data/forge_upgrades.json`, cumulables sans limite |
+| Draft (départ, post-combat) et suppression | `DraftScreen`, `StarterDeckDraftScreen`, `DeckNotifier.removeCardById()` | 3 choix post-victoire, 5 cartes globales au départ, oubli au feu de camp |
 
-### ⚔️ Système de Combat
+### ⚔️ Combat
 
 | Fonctionnalité | Implémentation | Détails |
 |:---|:---|:---|
-| Pipeline de dégâts | `EffectResolver._calculateDamage()` | baseDamage + effectiveAttaque, réduction weakness ×0.75 |
-| Absorption armure | `EntityStats.takeDamage()` | Armure absorbe en priorité, reste → PV |
-| Armure + Mastery | `RunController.addArmor()`, `TraitSystem` | Tous les gains d'armure incluent `armorMastery` |
-| Reset d'armure par tour | `RunController.startTurn()`, `HeroCard` | L'armure du joueur est remise à 0 au début de son tour, avec suppression visuelle transitoire des animations via `suppressArmorChangeAnimation` |
-| Synchronisation Fin de Tour | `game_screen.dart` | Assignation synchrone `_game.currentPhase = TurnPhase.player` dans `_startPlayerNewTurn()` pour éliminer l'inactivité transitoire du bouton (v0.2.5) |
-| Double Confirmation Fin de Tour | `game_screen.dart` | Demande de confirmation et affichage d'un avertissement ("Mana restant. Terminer le tour ?") s'il reste du mana. Nécessite deux clics consécutifs pour terminer le tour, réinitialisé si le joueur joue une carte ou à chaque début de tour (v0.2.6) |ArmorChangeAnimation` |
-| Synchronisation Fin de Tour | `game_screen.dart` | Assignation synchrone `_game.currentPhase = TurnPhase.player` dans `_startPlayerNewTurn()` pour éliminer l'inactivité transitoire du bouton (v0.2.5) |
-| Intentions ennemies | `CombatController._rollIntent()` | Cycle séquentiel (prédéfinis) ou aléatoire (60% atk, 25% def, 15% buff) |
-| Phase ennemie séquentielle | `HerosDraftGame._enemyRipostePhase()` | Résolution intent par intent avec animations (délais 400-600ms) |
-| Statuts de combat | `EntityStats.addStatus()`, `tickStatuses()` | Stacking, tick durée, processing poison/regen |
-| Nettoyage des morts | `CombatController._cleanDeadEnemies()` | Auto-sélection prochain ennemi, trigger reliques `onEnemyKilled` |
-| Difficulté Hybride & Budget | `EncounterSystem`, `CombatController` | Formule DDA amortie (damping 0.5) comparant la puissance du joueur à la puissance attendue, et calcul du budget final avec multiplicateurs de nœud |
-| Réserve de vagues d'ennemis | `CombatController`, `CombatState` | Limite de 5 ennemis actifs, débordement dans `pendingEnemies`, alimentation automatique au fil des éliminations |
-| Scaling de Difficulté en Escalier Géométrique (mergé v0.4.5, cadence resserrée par ADR-072) | `EncounterSystem.getHpActFactor/getDamageActFactor/getActBracket` | Corrige le double comptage de l'Acte (`enemyLevel` + terme linéaire direct). L'Acte agit désormais uniquement via un facteur géométrique par palier de **2 actes** (x1.35 HP / x1.25 Dégâts par palier + rampe intra-palier douce réinitialisée à chaque palier, bases inchangées). `enemyLevel` ne dépend plus jamais de l'Acte. Palier resserré de 5 à 2 actes par ADR-072 (branche `fix/combat_scaling`, mergée vers `main` via PR #22). Voir ADR-070, ADR-072. |
-| Déblocage de Tier d'Ennemi tous les 5 Actes (mergé v0.4.5, cadence resserrée par ADR-072) | `EncounterSystem.getUnlockedTier`, `generateEnemiesForLevel` | Filtre le pool d'ennemis disponibles à `tier <= unlockedTier` (tier 2 dès **Acte 6**, tier 3 dès **Acte 11**, plafond 3) avant sélection par budget, avec repli sur le pool complet si le filtre viderait la sélection. Gating strict : le Squelette (tier 2) n'apparaît plus avant l'Acte 6 (auparavant dès l'Acte 2, puis dès l'Acte 11 après ADR-070). Cadence resserrée de 10 à 5 actes par ADR-072 (branche `fix/combat_scaling`, mergée vers `main` via PR #22). Voir ADR-070, ADR-072. |
-| Plafond du Nombre d'Ennemis par Acte (mergé v3.4.0) | `EncounterSystem.getMaxEnemiesForNormalCombat/Elite/Boss`, `calculateBudget()` | Plafonne le nombre d'ennemis générés par combat, croissant avec l'Acte et différencié par type de nœud (+1/acte normal, +1/2 actes élite, +1/5 actes boss, sans plafond ultime), remplaçant l'ancienne limite fixe de 10. Corrige aussi la dérive entre le log de debug et le calcul réel de budget (`playerCardsCount`, `+(act-1)*10` désormais inclus dans les deux via une source unique). Voir ADR-071. |
+| Pipeline de dégâts et armure | `EffectResolver._calculateDamage()`, `EntityStats.takeDamage()`, `RunController.addArmor()` | Armure absorbe en priorité, `armorMastery` sur tout gain d'armure, reset à 0 en début de tour joueur |
+| Fin de tour : synchronisation et double confirmation | `lib/ui/screens/game_screen.dart` | Phase synchronisée à l'entrée du tour joueur ; confirmation supplémentaire si mana restant — [ADR-076](../_adr/ADR-076-synchronisation-synchrone-du-bouton-fin-de-tour.md), [ADR-065](../_adr/ADR-065-double-confirmation-de-fin-de-tour-avec-mana-resta.md) |
+| Intentions ennemies et phase séquentielle | `CombatController._rollIntent()`, `HerosDraftGame._enemyRipostePhase()` | Cycle prédéfini ou aléatoire (60% atk/25% def/15% buff), résolution intent par intent animée |
+| Statuts et nettoyage des morts | `EntityStats.addStatus()`/`.tickStatuses()`, `CombatController._cleanDeadEnemies()` | Stacking, tick de durée, auto-sélection du prochain ennemi, trigger `onEnemyKilled` |
+| Difficulté hybride et réserve d'ennemis | `EncounterSystem`, `CombatController`, `CombatState` | Formule DDA amortie, limite de 5 ennemis actifs avec `pendingEnemies` |
+| Scaling géométrique et déblocage de tier | `EncounterSystem.getHpActFactor`/`.getDamageActFactor`/`.getUnlockedTier` | Palier géométrique HP/Dégâts tous les 2 actes, tier d'ennemi débloqué tous les 5 actes — [ADR-070](../_adr/ADR-070-scaling-de-difficulte-en-escalier-geometrique-debl.md), [ADR-072](../_adr/ADR-072-resserrement-de-la-cadence-du-scaling-de-difficult.md) |
+| Plafond du nombre d'ennemis par acte | `EncounterSystem.getMaxEnemiesForNormalCombat`/`.Elite`/`.Boss` | Croissant avec l'acte, différencié combat/élite/boss — [ADR-071](../_adr/ADR-071-plafonnement-du-nombre-d-ennemis-par-acte-resoluti.md) |
+| Décomposition des écrans de combat/carte | `lib/ui/screens/map_screen.dart` (418 lignes), `lib/ui/screens/game_screen.dart` (555 lignes) | Chantiers de refactoring Phase 2 achevés (god classes historiquement à 2471/1667 lignes) — historique dans `.obsidian_vault/_archive/2026-08-03-progress-historique.md` |
 
-### 🏆 Système de Passifs et Traits de Héros
+### 🏆 Passifs et Traits de Héros
 
 | Fonctionnalité | Implémentation | Détails |
 |:---|:---|:---|
-| Passifs data-driven | `passives.json` → `TraitSystem` | 3 passifs liés aux héros par `HeroData.passiveTrait` |
-| Triggers multiples | `TraitSystem.onTurnStart/onTurnEnd/onCardPlayed` | Logique spécifique par effectType (`gain_armor`, `berserker_armor`, `spell_armor`) |
-| Reliques à triggers | `RunController.applyRelics(trigger)` | 9 types de triggers : startOfRun, startOfCombat, startOfTurn, endOfTurn, onCardPlayed, onAttackPlayed, onSkillPlayed, onPowerPlayed, onEnemyKilled |
-| Reliques à charges | `RunController.applyRelicEffect()` | Croc Kunaï, Shuriken, Plume de Scribe, Encensoir avec compteurs/charges visuels (StatusEffects) |
+| Passifs data-driven | `assets/data/passives.json` → `TraitSystem` | 3 passifs liés aux héros par `HeroData.passiveTrait` |
+| Triggers multiples | `TraitSystem.onTurnStart`/`.onTurnEnd`/`.onCardPlayed` | Logique spécifique par `effectType` (`gain_armor`, `berserker_armor`, `spell_armor`) |
+| Reliques à triggers | `RunController.applyRelics(trigger)` | 9 types de triggers (startOfRun → onEnemyKilled) |
+| Reliques à charges | `RunController.applyRelicEffect()` | Croc Kunaï, Shuriken, Plume de Scribe, Encensoir — compteurs visuels via `StatusEffect` |
 
 ### 🈳 Internationalisation (i18n)
 
 | Fonctionnalité | Implémentation | Détails |
 |:---|:---|:---|
-| UI 100% localisée | `AppLocalizations` (ARB) | Zéro chaîne codée en dur, zéro variable `isFr` |
-| Modèles bilingues | `nameEn`/`nameFr` sur tous les modèles Data | Sauf `SkillData` (champ `name` unique) |
+| UI 100% localisée | `AppLocalizations` (ARB) | Zéro chaîne codée en dur |
+| Modèles bilingues | `nameEn`/`nameFr` | Sauf `SkillData` (champ `name` unique — dette connue) |
 | Statuts localisés | `StatusEffectsPanel` | Traduction dynamique depuis identifiants techniques |
-| Langues supportées | `app_en.arb`, `app_fr.arb` | Anglais + Français |
+| Langues supportées | `app_en.arb`, `app_fr.arb` | Français + Anglais |
 
-### 🎨 Rendu Unifié, Rénovation Premium et Jus Visuel (Visual Juice)
-
-| Fonctionnalité | Implémentation | Détails |
-|:---|:---|:---|
-| Modularité Rendu Flame | `lib/game/systems/` | `HerosDraftGame` restructuré en façade légère déléguant à 4 sous-systèmes autonomes : `StateSyncSystem`, `CardAnimationSystem`, `CombatVisualSystem`, et `LayoutSystem`. |
-| Modularité CardComponent | `lib/game/components/widgets/` | `CardComponent` décomposé en façade déléguant le rendu Canvas à `CardRenderer` et la gestion des gestes/survol à `CardInteractionHandler`. |
-| `ScreenScaffold` unifié | `lib/ui/widgets/screen_scaffold.dart` | Centralise les arrière-plans (`dark`, `parchment`, `none`), la `SafeArea` et le `PopScope` (v0.2.2) |
-| En-tête standardisée `PageHeader` | `lib/ui/widgets/page_header.dart` | PreferredSizeWidget gérant uniformément le retour arrière, le titre et les actions (v0.2.2) |
-| Indicateur d'or unifié | `lib/ui/widgets/gold_indicator.dart` | Badge d'or connecté à l'état de l'inventaire avec style adaptatif (v0.2.2) |
-| Découpage de la Forge | `lib/ui/widgets/forge/` | Scission de `forge_upgrade_dialog.dart` en composants isolés : preview, slot row, buy button (v0.2.2) |
-| Layout de Draft unifié | `lib/ui/widgets/draft/` | Structure commune de draft avec grille responsive, utilisée par Boss/Starter drafts (v0.2.2) |
-| `UiCard` unifié | `lib/ui/widgets/ui_card.dart` | Remplace 6 rendus dupliqués, style glassmorphic, runes sockets, constructeurs d'usine `fromInstance` et `fromData` (v0.2.2) |
-| Système de Design Centralisé | `lib/ui/theme/app_colors.dart`, `app_spacing.dart`, `app_theme.dart` | `AppColors` (Neon Dark + Parchemin + stats + raretés + sémantiques), `AppSpacing` (EdgeInsets helpers), `AppTheme` (ThemeData complet dark/light) — v0.0.99 |
-| Extensions Enum Rareté | `CardRarity.color`, `RelicRarity.color` (extensions Dart) | Getter `.color` centralisé sur les enums de rareté de cartes et reliques, remplace les switch-case dispersés — v0.0.99 |
-| Correction `GameButton` overflow | `lib/ui/widgets/game_button.dart` | Résolution du bug `RenderFlex` overflow sur les boutons or-seulement (icône sans libellé) — v0.0.99 |
-| Refactoring `RelicsDialog` | `lib/ui/widgets/relics_dialog.dart` | Remplacement d'un `switch` de 19 lignes par `.color` via extension `RelicRarity` — v0.0.99 |
-| Tilt organique des cartes | `CardComponent` / `CardAnimationSystem` | Rotation proportionnelle à la vélocité horizontale au glissement |
-| Shake d'erreur mana | `CardComponent._shakeAnimation()` | `SequenceEffect` oscillations rapides en cas de manque de mana |
-| Courbe de ciblage Bézier | `targeting_line.dart` | Courbe quadratique de Bézier fluide avec pointillés défilants et tête orientée via la tangente |
-| Jus Visuel de Dégâts/Impacts | `CardComponent`, `EnemyCard` | Secousses haute fréquence, rebond élastique (`Curves.elasticOut`), et flashes de sprites (`ColorEffect`) rouges/oranges ou verts |
-| Particules physiques | `spawnDamageParticles` | Éjection radiale de particules de dégâts (12 poison, 15 normal, 25 critiques) |
-| Traînées élémentaires | `CardAnimator`, `RibbonTrail` | Traînées d'étincelles assorties et ruban de traînée tactile selon le type d'effet |
-| Auras de Soin et Bouclier | `CrossParticle`, `ShieldDome` | 20 croix dorées/vertes montantes pour le heal; dôme cyan scanline pulsant pour le blocage |
-| Icônes vectorielles canvas | `effect_icon.dart` | Dessin personnalisé (écu, épées croisées, goutte, étoile, flamme, flocon de neige, éclair) avec flou glow à la main sur canvas |
-| Clarté des infobulles (Tooltips) | `ui_card.dart`, `card_component.dart` | Explications mécaniques parentthésées et localisées pour tous les statuts (poison, brûlure, gel, élec, faiblesse, vulnérable) |
-| Cohérence visuelle HUD | `status_effects_panel.dart`, `status_indicator.dart` | Mappage complet d'émojis (🔥, ❄️, ⚡, ✊) et d'icônes Flutter harmonisés pour le joueur et les ennemis |
-| Texte flottant de dégâts | `FloatingText` | Textes néon thématiques (💥 critique, 🧪 poison, 🛡️ armure), rotation à la naissance, trajectoire de drift, oscillation sinusoïdale (poison), et cinématique d'échelle élastique/pulsation infinie sur critique (v0.1.7) |
-| Animations d'attaque ennemie | `EnemyCard.dashAnimation()` | `MoveEffect` avant/arrière |
-| Barre de vie dynamique | `HealthBar` | Interpolation couleur green→yellow→red, transition animée |
-| Badges de stats vectoriels | `StatBadge` | Dessin custom, pulse de scale au changement |
-| Animations de cartes data-driven | `CardData.animation` | Types : melee, magic, buff, poison, fire, ice, lightning |
-| Layout main en arc | `HerosDraftGame._layoutHand()` | Arc circulaire, radius = `size.y * 1.5`, angle adaptatif |
-| Carrousel de reliques interactif | `RelicRewardCarouselOverlay` | Machine à sous PageView viewportFraction (0.85x scale/0.4 opacity sur les côtés, 1.0x/1.0 au centre), décélération cubique, célébration Canvas particles, bouton sécurisé, callbacks audio (`onTick`/`onLand`) |
-| Draft Reels Séquentiels | `DraftCardReel`, `DraftScreen` | Révélation machine à sous vertical spinner (0.8s, 1.4s, 2.0s), 3D flip axe Y, célébration légendaire (screen shake, gold particles, flash) et sound hooks |
-| Rareté Mythique & Alertes | `DraftScreen`, `DraftCardReel` | Rareté rouge sang, alerte cinématique warning 1400ms (laser horizontal, exclamation points `!!!` élastiques), flou d'arrière-plan `BackdropFilter` `8.0px`, spin prolongé `+800ms`, tremblement doublé `12.0` |
-| Poli Visuel du Draft | `DraftScreen`, `TutorialDraftWidget` | Survol de carte à 1.05x (AnimatedScale + MouseRegion) et sélection à 1.12x avec lueur dorée (BoxShadow ambre) |
-| HUD de Combat Responsive | `GameScreen` | Redimensionnement et mise à l'échelle automatique de la hauteur/largeur du HUD avec clamps de sécurité pour prévenir le clipping |
-| Clarté du Mana des Reliques | `ManaIndicator` | Affichage distinct du mana supplémentaire de relique (cristal vide à bordure cyan et fond noir) avec ajustement automatique de `baseSize` (v3.0.1) |
-| Badges de Ciblage Remplacés | `UiCard` / `GameScreen` / `CardTextRenderer` | Suppression complète des badges textuels de ciblage (Single target, All enemies, Self), remplacés par des doublements d'icônes d'action multicibles (double-icon indicators) pour les seuls effets ciblant les ennemis (les effets joueur restent avec une icône simple) (v0.1.5) |
-| Badges d'inventaire sur la Carte | `MapScreen` | Compteur numérique sur le bouton des Reliques et badge numérique sur le bouton du Deck affichant la taille du master deck |
-| Scaling Échelle Ennemis | `EnemyCard` | Facteurs d'échelle visuelle progressifs sur les sprites des ennemis pour refléter leur puissance relative |
-| Optimisations de Rendu GPU | `FloatingText`, `EffectIcon` | Élimination des appels GPU lents/redondants `saveLayer` au profit d'un dessin direct sur canvas (v0.0.98) |
-| Caching CPU & Opacité Textes | `CardComponent`, `TextPainter` | Caching des layouts de texte complexes et utilisation conditionnelle de `saveLayer` uniquement si `opacity < 1.0` (v0.0.98) |
-| Transition Organique de Pioche | `HerosDraftGame`, `CardComponent` | Spawning des cartes à la pioche `Vector2(40, size.y - 40)` avec glissement, scale et rotation asynchrones vers la main (v0.0.98) |
-| Synchro d'Impact & Anti-Double | `EnemyCard`, `CardAnimator` | Dégâts et effets d'impact (flashs, tremblements, particules) différés jusqu'à la collision physique réelle; suppression des doublons (v0.0.98) |
-| Blocage de Pioche (Input Blocking) | `CardComponent`, `HerosDraftGame` | Protection contre les clics ou glissements prématurés durant la pioche via le drapeau `isEnteringHand` (v0.1.00) |
-| Tooltips de Combat Ciblés | `ui_card.dart`, `card_component.dart` | Affichage sélectif sur focus de carte, auto-masquage au jeu ou changement de phase, et injection formatée des upgrades de forge (v0.1.00) |
-| Fentes de Runes (Rune Sockets) | `card_text_renderer.dart`, `ui_card.dart` | Remplacement des étoiles d'upgrades par des sockets de runes (⚔️, 🛡️, 🔥) avec retour à la ligne automatique (wrapping) par rangées de 5 (rows of 5) sur le layout de carte pour éviter tout overflow visuel (v0.1.5) |
-| Rareté Visuelle sans Texte | `ui_card.dart`, `card_component.dart` | Retrait des labels textuels de rareté de la face avant des cartes; identification pure par la couleur des bordures et par halo lumineux (glowing shadows/radial glow) lors des sélections (v0.1.5) |
-| Jauge HP Double-Transition | `PlayerHealthBar` | Refactorisation en StatefulWidget animée par TweenAnimationBuilder avec jauge secondaire rouge/orange lagging (décélération à 1200ms easeOut sous dégâts) et snap direct/remontée progressive (500ms) au soin (v0.1.7) |
-| Grille de Boutique | `ShopScreen` / `shop_screen.dart` | Disposition en Wrap avec contrainte de taille SizedBox de 150 par carte pour une grille stable (v0.1.3) et affichage par instances de cartes (`CardInstance`) via `UiCard.fromInstance` (v0.2.9) |
-| Option Magic Mirror Premium | `ShopScreen` / `_CloneCardItem` | Modal de clonage utilisant le widget `UiCard` complet avec runes, rareté, effets de survol/glow, défilement horizontal et persistance anti-exploit (v0.1.7) combiné au doublement géométrique dynamique du prix (v0.2.9) |
-| Couleur par type de carte | `UiCard` / `CardComponent` | Code couleur d'arrière-plan distinct sémantique (rouge=attack, vert=skill, violet=power, gris=status) et bordure d'accent appliqué aux cartes de menu (`UiCard` - v0.1.3) et étendu aux cartes de combat Flame (`CardComponent` - v0.1.5) |
-| Masquage Anti-Spoil de Relique | `RelicRewardCarouselOverlay`, `RelicCarouselCard` | Affichage en gris neutre et anonyme des cartes avec badges « ??? » pendant le spin. Révélation complète des couleurs et déclencheurs à l'arrêt (v0.1.4) |
-
-
-### 💀 Z-Sync Death & Stats System (Système de Mort et de Stats Synchronisé)
+### 🎨 Rendu, Design System et Jus Visuel
 
 | Fonctionnalité | Implémentation | Détails |
 |:---|:---|:---|
-| Retardement des morts en combat | `isCardAnimating` & `isPendingDeath` | Deferre le scale-down et fondu de disparition de l'ennemi mort si une carte s'anime |
-| Synchronisation des statistiques HUD | `_pendingVisualInstance` & `resolvePendingVisualStats()` | Diffère la diminution visuelle des HP et de l'armure dans le HUD jusqu'à l'instant exact de l'impact de la carte |
-| Libération à l'impact | `resolvePendingDeaths()` | Déclenche instantanément la mort de tous les ennemis différés et applique les stats différées à la complétion du coup |
-| Morts/Stats hors combat instantanées | Bypass automatique | Les morts/stats hors combat (poison de début de tour) contournent Z-Sync et se résolvent de suite |
-| Deferral Visuel Complet d'Impact | `EnemyCard.updateStats()` | Retarde l'apparition des tremblements, flashs de sprite, particules et FloatingText jusqu'à l'impact de la carte de combat (v0.0.98) |
-| Nettoyage de Double Réaction | `CardAnimator` | Suppression des doubles déclenchements pour éviter de lancer plusieurs fois les animations d'impact (v0.0.98) |
+| Modularité Flame et cartes | `lib/game/systems/` (StateSync, CardAnimation, CombatVisual, Layout), `lib/game/components/widgets/` (`CardRenderer`, `CardInteractionHandler`) | `HerosDraftGame` et `CardComponent` en façades déléguant à des sous-systèmes |
+| Système de design centralisé | `AppColors`, `AppSpacing`, `AppTheme` (`lib/ui/theme/`) | Thème dark/light complet, extensions `.color` sur les enums de rareté |
+| Composants UI communs | `ScreenScaffold`, `PageHeader`, `GoldIndicator`, `UiCard` (`lib/ui/widgets/ui_card/`) | Arrière-plans/SafeArea/PopScope centralisés, factories `fromInstance`/`fromData` |
+| Décomposition des god classes UI | `UiCard`, `CardComponent`, `MapScreen`, `GameScreen` | Refactoring Phases 2-3 achevé — historique dans `.obsidian_vault/_archive/2026-08-03-progress-historique.md` |
+| Jus visuel de dégâts et impacts | `CardComponent`, `EnemyCard` | Secousses, rebond élastique, flashes de sprite, particules radiales |
+| Système de mort et de stats synchronisé (Z-Sync) | `isPendingDeath`, `resolvePendingDeaths()` | Diffère morts/stats HUD jusqu'à l'impact réel de la carte animée — [ADR-013](../_adr/ADR-013-systeme-de-mort-et-de-stats-synchronise-z-sync.md) |
+| Texte flottant et HUD | `FloatingText`, `HealthBar`, `StatBadge`, `ManaIndicator` | Textes néon thématiques, jauge HP dual-bar, badges vectoriels |
+| Carrousel de reliques et Draft Reels | `RelicRewardCarouselOverlay`, `DraftCardReel` | Machine à sous PageView, célébration légendaire, masquage anti-spoil |
+| Optimisations de rendu | `FloatingText`, `EffectIcon`, `CardComponent` | Suppression des `saveLayer` redondants, caching des layouts de texte |
+| Tooltips et clarté de ciblage | `UiCard`, `CardComponent` | Doublement d'icônes pour cibles multiples, tooltips localisés focus-only |
+| Layout de main et caméra carte | `HerosDraftGame._layoutHand()`, `MapScreen` | Arc circulaire adaptatif, caméra recentrée à chaque transition |
+| HUD de combat responsive | `GameScreen` | Redimensionnement automatique avec clamps anti-clipping |
 
-### ✨ Statuts Élémentaires & Vulnérabilité (`burn`, `freeze`, `shock`, `vulnerable`)
+### ✨ Statuts Élémentaires et Vulnérabilité
 
 | Statut | Implémentation | Effet Mécanique | Résolution |
 |:---|:---|:---|:---|
-| Brûlure (`burn`) | `CombatController.startEnemyTurn()` | Dégâts directs = valeur du statut (décrémente intensité/durée de 1) | Début du tour de la cible (joueur ou ennemi) |
-| Gel (`freeze`) | `CombatController.resolveEnemyIntent()` | Division par deux (`×0.5` arrondi) de l'attaque, décrémente immédiatement la durée | Lors de l'attaque de l'entité gelée |
-| Électrocution (`shock`) | `EffectResolver.resolveCard()` | Ajoute la valeur cumulée du statut aux dégâts directs subis | Lors de la résolution d'une attaque directe subie |
-| Vulnérabilité (`vulnerable`) | `EffectResolver.resolveCard()` | Augmente de 50% tous les dégâts d'attaque reçus | Universel (affecte aussi bien le héros que les ennemis) |
+| Brûlure (`burn`) | `CombatController.startEnemyTurn()` | Dégâts directs = valeur du statut (décrémente de 1) | Début du tour de la cible |
+| Gel (`freeze`) | `CombatController.resolveEnemyIntent()` | Division par deux de l'attaque, décrémente immédiatement | Attaque de l'entité gelée |
+| Électrocution (`shock`) | `EffectResolver.resolveCard()` | Ajoute la valeur cumulée aux dégâts directs subis | Résolution d'une attaque directe |
+| Vulnérabilité (`vulnerable`) | `EffectResolver.resolveCard()` | +50% sur tous les dégâts d'attaque reçus | Universel (joueur et ennemis) |
 
-### 🎓 Système de Tutoriel Autonome (Standalone Tutorial)
+### 🎓 Tutoriel Autonome
 
 | Fonctionnalité | Implémentation | Détails |
 |:---|:---|:---|
-| Moteur local | `TutorialEngine`, `TutorialMockState` | ChangeNotifier gérant la progression et un état simulé réinitialisé par étape |
-| 13 Étapes Interactives | `TutorialScreen` & widgets `lib/tutorial/widgets/` | Guidage pas-à-pas interactif couvrant l'ensemble du gameplay de base |
-| i18n Découplée | `TutorialData` | Textes bilingues FR/EN intégrés directement dans les modèles de données locaux |
-| Persistance & Badge "NEW" | `TutorialProgressService`, `HomeScreen` | Sauvegarde de la complétion dans SharedPreferences et affichage d'un badge d'alerte |
-| Refactoring de Responsivité | `LayoutBuilder`, `FittedBox`, `SingleChildScrollView`, `Wrap` | Ajustements automatiques multi-résolutions (mobiles portrait/paysage, web, desktop), orientation split et canevas FittedBox |
-| Ciblage double phase (Étape 6) | `TutorialPlayCardWidget` | Ciblage interactif en deux temps : d'abord l'attaque (slime), puis la défense (self/hero) |
-| Info-bulles & Icônes Canvas (Étape 5) | `TutorialCardsWidget` | Cartes améliorées avec icônes vectorielles réelles dessinées sur Canvas et tooltips descriptifs localisés |
+| Moteur local | `TutorialEngine`, `TutorialMockState` | `ChangeNotifier` gérant la progression, état simulé réinitialisé par étape |
+| 13 étapes interactives | `TutorialScreen`, `lib/tutorial/widgets/` | Guidage pas-à-pas couvrant le gameplay de base |
+| Ciblage double phase et info-bulles | `TutorialPlayCardWidget`, `TutorialCardsWidget` | Ciblage en deux temps, icônes vectorielles canvas et tooltips localisés |
+| Persistance et badge « NEW » | `TutorialProgressService`, `HomeScreen` | Complétion sauvegardée en `shared_preferences` |
+| Responsivité | `LayoutBuilder`, `FittedBox`, `Wrap` | Ajustements multi-résolutions (mobile, web, desktop) |
 
-
-### 🧪 Fiabilité et Assurance Qualité
-
-| Métrique | Valeur | Détails |
-|:---|:---|:---|
-| Tests automatisés | **106** (100% VERT) | Tests unitaires, widget-tests et tests d'intégration (dont persistance et coûts progressifs de forge, génération de carte avec anti-répétition, responsivité du HUD de combat, et scaling dynamique des ennemis) |
-| Couverture estimée | **23%** | Logique/controllers, moteur tutoriel, forge, pas d'UI de production |
-| Analyse statique | **0 erreur** | `flutter analyze` sans erreur de compilation |
-| Linter | `flutter_lints` v6.0.0 | Configuration standard, pas de règles custom |
-
----
-
-## 2. Fonctionnalités Partiellement Implémentées (Dette Métier)
+## 2. Dette métier assumée
 
 ### ⚠️ Système Audio
 
 | Aspect | État |
 |:---|:---|
-| Commentaires `// TODO: Audio Hook` | Disséminés dans les fichiers d'effets et interactions |
+| Commentaires `// TODO: Audio Hook` | 1 occurrence mesurée (`lib/game/components/floating_text.dart`) |
 | Dépendance `flame_audio` dans `pubspec.yaml` | ❌ ABSENTE |
 | Service `AudioService` | ❌ ABSENT |
 | Fichiers audio dans `assets/` | ❌ ABSENTS |
+
+Absence délibérée — [ADR-012](../_adr/ADR-012-absence-de-systeme-audio.md).
 
 ### ⚠️ Sérialisation Partielle des Modèles
 
@@ -244,152 +161,32 @@ Ce document dresse l'inventaire technique exhaustif et rigoureux des fonctionnal
 | `EntityStats` | ✅ | ✅ | ✅ | ❌ |
 | `StatusEffect` | ✅ | ✅ | ✅ | ❌ |
 | `MapNode` | ✅ | ✅ | — | ❌ |
-| `RunState` | ✅ (`fromJsonWithReport`, v3.2.0) | ✅ (v3.2.0) | ✅ | ❌ |
-| `DeckState` | ✅ (`fromJsonWithReport`, v3.2.0) | ✅ (v3.2.0) | ✅ | ❌ |
+| `RunState` | ✅ (`fromJsonWithReport`) | ✅ | ✅ | ❌ |
+| `DeckState` | ✅ (`fromJsonWithReport`) | ✅ | ✅ | ❌ |
 | `CardInstance` | ❌ | ❌ | ✅ | ❌ |
 | `EventState` | ❌ | ❌ | ✅ | ❌ |
-| `InventoryState` | ✅ (`fromJsonWithReport`, v3.2.0) | ✅ (v3.2.0) | ✅ | ❌ |
+| `InventoryState` | ✅ (`fromJsonWithReport`) | ✅ | ✅ | ❌ |
 | `ShopState` | ❌ | ❌ | ✅ | ❌ |
-| `SkillState` | ✅ (v3.2.0) | ✅ (v3.2.0) | ✅ | ❌ |
+| `SkillState` | ✅ | ✅ | ✅ | ❌ |
 
----
+## 3. Références documentaires
 
-## 3. Fonctionnalités Non Implémentées (Backlog)
-
-Issues du backlog `docs/possible_upgrades/upgrade_ideas.md` (~95 items, ~60% résolus) :
-
-### Gameplay & Mécanique
-- [ ] Restrictions de cartes par classe (ex: Berserker ne peut pas utiliser cartes d'armure)
-- [ ] Coût de merge +1 mana par level de carte
-- [ ] Limite de taille de deck (15 max, extensible via récompenses légendaires)
-- [x] Système XP/level pour gating des récompenses (v0.0.95)
-- [x] Statistique de coup critique (dégâts et soins) (v0.0.94 / ADR-027)
-- [x] Level Up différé et bloquant sur la carte (v0.1.4)
-- [ ] Intentions ennemies cachées en late game
-- [x] Rééquilibrage des reliques communes (Whetstone, Leather Boots, Lucky Coin, Bandage) pour le pool de départ (v0.0.95)
-- [x] Reliques à charge / compteur (Kunaï, Shuriken, Plume de Scribe, Encensoir) (v0.0.95)
-- [x] Déclencheurs par type de carte joué (onAttackPlayed, onSkillPlayed, onPowerPlayed) (v0.0.95)
-- [ ] Scaling progressif d'armure ennemi par acte
-- [x] Exclusion des cartes uniques de classe du pool de la boutique (v0.1.3)
-
-### Contenu
-- [x] Tutoriel / système "How-to-play"
-- [ ] Icônes de type de dégâts (feu, glace, poison) sur les descriptions
-- [x] Rework des cartes élémentaires (certaines status-only, d'autres damage+status)
-- [ ] Nœuds Trésor et Mystère sur la carte
-- [x] Rencontre d'échange de reliques (3 reliques → 1 rareté supérieure) (v0.0.96)
-- [ ] Onglet Reliques dans le dictionnaire
-- [ ] **Nouveaux ennemis tier-1** pour compenser la réduction de variété des Actes 1-5 (roster actuel : Slime, Gobelin uniquement) causée par le gating strict de tier introduit par la refonte du scaling de difficulté (ADR-070) et aggravée par le resserrement de cadence d'ADR-072 (fenêtre tier-1-only réduite des Actes 1-10 aux Actes 1-5, branche `fix/combat_scaling`). Trade-off de design explicitement validé, pas un oversight — voir `decisionLog.md` (ADR-070, ADR-072) et `activeContext.md`.
-
-### Méta-Progression
-- [ ] Skins de héros débloquables
-- [ ] Monnaie persistante entre les runs
-- [ ] Système d'achievements/trophées
-- [ ] Menu de patch notes sur l'écran d'accueil
-
-### Carte & Navigation
-- [x] Contraintes de génération (pas 3 nœuds identiques consécutifs)
-- [x] Génération dynamique de l'étage d'élite central (chokepoint) (v0.1.4)
-- [ ] Randomisation du deck de départ avec pools par classe
-- [x] Divergence de chemins (routes multiples vers boss)
-
-### UX & Visuel
-- [ ] Redesign des snackbar/notifications
-- [ ] Redesign descriptions de cartes (icônes-only, descriptions dans tooltips)
-- [x] Rework forge du feu de camp (choix de forge limités)
-- [x] Rendu de la boutique en grille Wrap/SizedBox pour éviter les overflows (v0.1.3)
-- [x] Code couleur d'arrière-plan par type de carte (Attaque, Compétence, Pouvoir, Statut) dans UiCard (v0.1.3)
-- [x] Masquage anti-spoil / protection de rareté dans le carrousel de reliques (v0.1.4)
-- [ ] Synergies reliques avec cartes début/fin de tour
-
-### Système
-- [ ] PvP draft mode (théorique)
-- [ ] Boss multi-phases
-
----
-
-## 4. Chantiers de Refactoring Prioritaires (Roadmap Dette Technique)
-
-Basé sur les rapports de dette technique (`technical_debt_report_Opus4.6.md`, 4 rapports Gemini 3.5) et les 4 plans d'implémentation de refactoring.
-
-### 🔴 Phase 1 — Fondations (Semaines 1-2)
-
-| Priorité | Chantier | Problème | Solution | Fichiers |
-|:---|:---|:---|:---|:---|
-| Critique | Typage des modèles | `==`/`hashCode` absents sur 12 modèles, `Map<String, dynamic>` non typés | Ajouter `freezed` ou implémenter manuellement | `lib/models/` (11 fichiers) |
-| Critique | Immuabilité réelle des listes | Listes mutables dans états "immuables" | ✅ List.unmodifiable() et @immutable dans `EntityStats`, `CombatState` et `EnemyInstance` (v0.1.9) | `lib/models/` |
-| Critique | Validation des entrées | `gainGold(-50)` fonctionne, HP peut dépasser maxHP | Ajouter validation dans chaque mutation | `run_controller.dart`, `inventory_controller.dart` |
-| Important | Centralisation des dégâts | Calculs de dégâts physiques et magiques dispersés (`EffectResolver`, `CombatController`) | ✅ Unifié via le service `DamagePipeline` centralisé (v0.1.9) | `lib/game/services/damage_pipeline.dart` |
-| Important | Error handling I/O | Aucun `try-catch` dans `GameDataService` | ✅ Sécurisé avec des try/catch détaillés de diagnostic (v0.2.3) | `lib/services/game_data_service.dart` |
-| Important | Design System | ~~Pas de `AppColors`, `AppTextStyles` — 100+ magic constants~~ | ✅ `AppColors`, `AppSpacing`, `AppTheme` créés dans `lib/ui/theme/` + extensions enum rareté (v0.0.99) et `GameThemeExtension` (v0.2.3) | `lib/ui/theme/` |
-| Moyen | Lookup O(1) | `GameDataRegistry` utilise `List` avec O(n) | Migrer vers `Map<String, T>` | `game_data_registry.dart` |
-
-### 🟡 Phase 2 — Décomposition God Classes (Semaines 3-4)
-
-| Priorité | Chantier | Problème | Solution | Impact |
-|:---|:---|:---|:---|:---|
-| Critique | `map_screen.dart` | **2 471 lignes**, 10+ responsabilités | Extraire `MapPainter`, `MapNodeWidget`, `MapLegend`, `MapTooltip`, `MapController` | 2471 → ~400 lignes |
-| Critique | `game_screen.dart` | **1 667 lignes**, 5 overlays privés | Extraire `PauseOverlay`, `RewardOverlay`, `DeathOverlay`, `VictoryOverlay`, `HudPanel`, `CombatOrchestrator` | 1667 → ~500 lignes |
-| Critique | `card_component.dart` | ~~**1 031 lignes**, render + drag + targeting + animation + tooltip~~ | ✅ Décomposé en `CardRenderer` (Canvas) et `CardInteractionHandler` (Gestes) | ~150 lignes |
-| Important | `ui_card.dart` | **1 136 lignes**, god component UI/logic/painting | ✅ Refactorisé en extrayant les sous-widgets dans `ui_card/` (v0.2.01) | 1136 → ~175 lignes |
-| Important | `heros_draft_game.dart` | ~~**775 lignes**, 18 callbacks constructeur~~ | ✅ Décomposé en 4 sous-systèmes : `StateSync`, `CardAnimation`, `CombatVisual`, `Layout` | ~400 lignes |
-| Important | `stat_badge.dart` | **720 lignes**, 5 classes, recreate all children à chaque update | Extraire classes, optimiser update | Performance + lisibilité |
-
-### 🟢 Phase 3 — Qualité (Semaines 5-6)
-
-| Priorité | Chantier | Problème | Solution |
-|:---|:---|:---|:---|
-| Important | Couverture tests | ~15-20% estimée | Atteindre ≥50%, ajouter widget tests UI |
-| Important | Magic constants | 100+ valeurs codées en dur | ✅ Délais de combat et configurations de floating text extraits dans `GameConstants` (v0.1.9) |
-| Important | `EffectResolver` pattern | Classe statique avec switch géant | ✅ Refactoré avec le registre `EffectRegistry` et le Strategy Pattern (v0.2.3) |
-| Important | Logique dans Flame | `executeSkill()` calcule des dégâts dans `HerosDraftGame` | ✅ Déplacé vers CombatController (v0.0.97) |
-| Moyen | Logique dans UI | Shop/event/heal dans les écrans (Reward déplacé vers RewardController en v0.0.94) | Déplacer vers controllers |
-
-### 🔵 Phase 4 — Long Terme (Semaines 7+)
-
-| Priorité | Chantier | Problème | Solution |
-|:---|:---|:---|:---|
-| Critique | Persistance / Sauvegarde | ~~Aucune — RAM uniquement~~ | ✅ `SaveService` (`lib/services/save_service.dart`) via `shared_preferences`, autosave à chaque checkpoint carte, bouton "Continuer" sur `HomeScreen` (v3.2.0) — granularité checkpoint carte uniquement, pas de reprise mid-combat (voir ADR-069) |
-| Important | Routage centralisé | 20+ `Navigator.push` hardcodés | `GoRouter` avec routes nommées |
-| Important | Système Audio | Aucun — `// TODO: Audio Hook` | `flame_audio`, `AudioService` central, musiques dynamiques, effets contextuels |
-| Important | Event Bus | 18 callbacks constructeur dans `HerosDraftGame` | Pattern Event Bus pour découpler |
-| Moyen | `SkillData` i18n | Champ `name` unique (pas bilingue) | Migrer vers `nameEn`/`nameFr` |
-| Moyen | `MapNode` découplage | Importe `Vector2` de Flame dans le modèle de données | Utiliser des types natifs Dart |
-
----
-
-## 5. Problèmes d'Équilibrage Identifiés
-
-Issus de `docs/analysis_reports/6_analyse_game_balance.md` (documentés, non corrigés) :
-
-| Problème | Impact | Correction Recommandée |
-|:---|:---|:---|
-| Économie de mana brisée | Héros 5-15 mana, cartes 0-3 → mana rarement limitant | Standardiser 3-4 mana/tour OU multiplier HP ennemis ×3-4 |
-| Paladin invulnérable | 20 armure de base rend les ennemis early inoffensifs | Remplacer par passif scalé (+2 armure/tour) |
-| HP ennemis trop bas | Squelette (22 HP) meurt en 1-2 tours | Multiplier HP par 2-3× |
-| `Attaque Rapide` OP | 0 mana, 3 dégâts + 1 pioche = avantage carte gratuit | Supprimer pioche OU ajouter 1 mana de coût |
-| Heal répétable | `Potion de Soin` (2 mana, 8 HP) mine la tension | Rendre les cartes de soin exhaustibles |
-
----
-
-## 6. Références aux Fichiers de Documentation
+**Vérifié le 2026-08-03** — chaque chemin testé avec `test -e`.
 
 | Document | Chemin | Contenu |
 |:---|:---|:---|
-| Rapport dette technique principal | `docs/analysis_reports/technical_debt_report_Opus4.6.md` | 833 lignes, analyse la plus complète |
-| Rapports Gemini 3.5 (×4) | `docs/analysis_reports/dette_technique_rapport_Gemini3.5*.md` | Analyses spécialisées par domaine |
-| Plans de refactoring (×4) | `docs/analysis_reports/26-05-2026_Refactoring_Phase*_implementation_plan.md` | Plans détaillés par phase |
-| Système de récompenses | `docs/reward_and_luck_system.md` | Spécification luck + rareté |
-| Système de passifs | `docs/système_de_passifs.md` | Design document passifs héros |
-| Carte du monde | `docs/world_map_system.md` | Spécification DAG procédural |
-| Stratégie de migration | `docs/stratégies_migrations.md` | Flutter/Flame vs alternatives (Godot recommandé si migration) |
-| Backlog d'upgrades | `docs/possible_upgrades/upgrade_ideas.md` | 95 items, ~60% réalisés |
-| Phases implémentées | `docs/implementation_plans/done/` | 22 fichiers de phases complétées |
-| Leçons apprises | `docs/lessons/` | `flame_riverpod_sync.md`, `state_immutability.md` |
+| Rapport dette technique principal | `docs/analysis_reports/technical_debt_report_Opus4.6.md` | Analyse la plus complète |
+| Rapports dette technique Gemini 3.5 | `docs/analysis_reports/` | 5 rapports dette_technique_rapport_Gemini3.5*.md |
+| Plans de refactoring (historique, chantiers clos) | `docs/analysis_reports/` | 4 plans 26-05-2026_Refactoring_Phase*_implementation_plan.md |
+| Système de récompenses | `docs/archives/reward_and_luck_system.md` | Spécification luck + rareté |
+| Système de passifs | `docs/archives/système_de_passifs.md` | Design document passifs héros |
+| Carte du monde | `docs/archives/world_map_system.md` | Spécification DAG procédural |
+| Stratégie de migration | `docs/archives/stratégies_migrations.md` | Flutter/Flame vs alternatives |
+| Backlog d'upgrades (historique) | `docs/possible_upgrades/upgrade_ideas.md` | Backlog actif désormais dans docs/ROADMAP.md |
+| Phases implémentées | `docs/implementation_plans/done/` | 26 fichiers de phases complétées |
+| Leçons apprises | `docs/lessons/concept_mastery.md`, `docs/lessons/flame_mastery.md`, `docs/lessons/riverpod_mastery.md` | Trois leçons capitalisées |
 
----
-
-## 7. Historique des Releases (Release History)
+## 4. Historique des releases (10 dernières)
 
 | Version | Date | Titre | Description des changements clés |
 |:---|:---|:---|:---|
@@ -398,38 +195,14 @@ Issus de `docs/analysis_reports/6_analyse_game_balance.md` (documentés, non cor
 | **v3.4.0** | 2026-07-25 | Plafonnement du Nombre d'Ennemis par Acte & Résolution de la Dérive Log/Calcul | Suite directe d'ADR-070 sur la même branche `feature/combat_scaling` (mergée avec PR #21) : plafond du nombre d'ennemis générés par combat, croissant avec l'Acte et différencié combat normal/élite/boss (+1/acte, +1/2 actes, +1/5 actes respectivement, sans plafond ultime), remplaçant l'ancienne limite fixe de 10 — empêche l'empilement de plusieurs ennemis tier-1 faibles pour épuiser un budget élite/boss. Corrige aussi la dérive confirmée entre le log de debug (`math_combat.md`) et le calcul réel de budget (`playerCardsCount`, `+(act-1)*10` manquants dans le log) via un unique `EncounterSystem.calculateBudget()`. Voir ADR-071. *(Patch note joueur rédigé — v0.4.7 "L'Équilibre des Effectifs", voir `assets/data/patch_notes.json`.)* |
 | **v3.3.0** | 2026-07-24 | Scaling de Difficulté en Escalier Géométrique & Déblocage de Tier | Correction d'un double comptage de l'Acte dans `EncounterSystem` (`enemyLevel` + terme linéaire direct dans `getHpMultiplier`/`getDamageMultiplier`) qui provoquait une explosion de difficulté incontrôlée en mode endless. `enemyLevel` devient strictement indépendant de l'Acte ; l'Acte agit désormais via un facteur géométrique par palier de 5 actes (`getHpActFactor`/`getDamageActFactor`, x1.35 HP / x1.25 Dégâts par palier + rampe intra-palier douce réinitialisée). Ajout d'un déblocage de tier d'ennemi tous les 10 actes (`getUnlockedTier`, plafond tier 3), gating strict assumé (Squelette/tier 2 non disponible avant l'Acte 11, contre l'Acte 2 auparavant) créant un backlog de contenu tier-1. 6 commits TDD, 201/201 tests au vert, `dart analyze` propre, revue de code de branche complète. Voir ADR-070. Mergé vers `main` (PR #20). |
 | **v3.2.0** | 2026-07-24 | Système de Sauvegarde et Persistance de Run (Autosave) | Résolution du point bloquant de commercialisation ADR-011 : `SaveService` (`shared_preferences`, slot unique, JSON versionné) sauvegardant `RunState`/`DeckState`/`InventoryState`/`SkillState` à chaque checkpoint carte (`checkpointProvider`/`autosaveOrchestratorProvider`), jamais en cours de combat. Bouton "Continuer" et dialogue de confirmation sur `HomeScreen`. Dégradation gracieuse du contenu manquant (cartes/reliques/upgrades/passifs supprimés du catalogue) avec avertissement nommé au joueur. Sauvegarde corrompue traitée comme échec total sans récupération partielle. Sauvegarde effacée à la mort du héros. Suppression du stub mort `RunPersistenceManager`. Voir ADR-069. |
-| **v3.1.0** | 2026-07-01 | Forge de Fusion et Forge Data-Driven | Introduction du nœud Forge de Fusion (`MapNodeType.forgeFusion` à 25% de chance) sur les étages 3 à 7. Écran `ForgeFusionScreen` pour fusionner les runes identiques pour un coût de 80 Or. Remplacement des upgrades codés en dur par une structure data-driven (`forge_upgrades.json` + `ForgeUpgradeData`). Cumul de runes sans épuisement (alreadyHas retiré). Correction de la navigation au repos : annuler la forge ramène à la sélection de cartes au lieu de quitter au menu du repos. Écriture de tests unitaires (112 tests réussis, 0 erreur). |
-| **v0.3.0** | 2026-06-25 | Refonte et Validation du Système d'Événements | Enrichissement visuel et narratif du système de rencontres avec 5 événements bilingues configurés dans `events.json`. Conception d'un Safety Gate de validation d'éligibilité (`isSelectable`) bloquant les options en cas d'or insuffisant, de dégâts létaux (`currentHp <= damage`), ou de réduction de PV Max létale. Rendu visuel d'en-tête (PV et Or réactifs) et intégration de badges compacts directement dans les boutons de choix d'options avec transition d'échelle animée après résolution. |
+| **v3.1.0** | 2026-07-01 | Forge de Fusion et Forge Data-Driven | Introduction du nœud Forge de Fusion (`MapNodeType.forgeFusion` à 25% de chance) sur les étages 3 à 7. Écran `ForgeFusionScreen` pour fusionner les runes identiques pour un coût de 80 Or. Remplacement des upgrades codés en dur par une structure data-driven (`assets/data/forge_upgrades.json` + `ForgeUpgradeData`). Cumul de runes sans épuisement (alreadyHas retiré). Correction de la navigation au repos : annuler la forge ramène à la sélection de cartes au lieu de quitter au menu du repos. Écriture de tests unitaires (112 tests réussis, 0 erreur). |
+| **v0.3.0** | 2026-06-25 | Refonte et Validation du Système d'Événements | Enrichissement visuel et narratif du système de rencontres avec 5 événements bilingues configurés dans `assets/data/events.json`. Conception d'un Safety Gate de validation d'éligibilité (`isSelectable`) bloquant les options en cas d'or insuffisant, de dégâts létaux (`currentHp <= damage`), ou de réduction de PV Max létale. Rendu visuel d'en-tête (PV et Or réactifs) et intégration de badges compacts directement dans les boutons de choix d'options avec transition d'échelle animée après résolution. |
 | **v0.2.9** | 2026-06-25 | Équilibrage Boutique et Miroir Magique | Vente de cartes modélisée par instances réelles (`CardInstance`) affichant leurs sockets de runes et raretés dynamiques via `UiCard.fromInstance`. Tarification dynamique (+20 Or par upgrade de forge). Scaling de raretés et d'upgrades par Acte. Nerf anti-exploit du Miroir Magique doublant son coût à chaque achat ($150 \rightarrow 300 \rightarrow 600 \dots$ Or) avec réinitialisation à 150 Or en sortie de session. |
 | **v0.2.8** | 2026-06-24 | Résolution du Bug de Clés Dupliquées | Résolution de l'erreur "Duplicate keys found" dans l'overlay de notification en combinant le timestamp en microsecondes avec un suffixe pseudo-aléatoire généré par une instance statique unique de `Random`. Garantit des identifiants uniques stables pour toutes les notifications simultanées. |
 | **v0.2.7** | 2026-06-16 | Révision du Scaling et du Spawn des Ennemis | Révision des formules de génération des combats et de scaling de difficulté. Prise en compte du nombre de cartes du deck (`playerCardsCount * 2.0`) dans la puissance estimée du joueur. Ajustement du calcul du Combat Rating des ennemis (division par 4 des PV de base, multiplication par 2 des dégâts) pour encourager le spawn de plus d'ennemis. Augmentation des coefficients de croissance par acte (HP passe de 20% à 35%, dégâts de 15% à 25%). |
-| **v0.2.6** | 2026-06-16 | Double Confirmation de Fin de Tour | Ajout d'une double confirmation sur le bouton de fin de tour en cas de mana restant. Affiche un avertissement localized et réclame un deuxième clic pour valider. Se réinitialise automatiquement au début de chaque tour ou dès qu'une carte est jouée. |
-| **v0.2.5** | 2026-06-16 | Correction Bouton Fin De Tour | Résolution du problème d'inactivité du bouton de fin de tour après avoir joué une carte en synchronisant explicitement la phase du tour dans la méthode de démarrage du tour joueur. |
-| **v0.2.4** | 2026-06-14 | Harmonisation de l'Architecture | Harmonisation Post-Refactoring de l'Architecture : Migration de `ClassSelectionScreen` sous `ScreenScaffold` et `PageHeader` ; remontée de la logique d'`updateStats` et des réactions d'impacts visuels dans `CombatEntity` (Flame), nettoyant `HeroCard` et `EnemyCard` ; riverpodisation d'`EffectRegistry` via le provider `effectRegistryProvider` (sans mutable statique global) et passage à `EffectResolver.resolveCard` ; nettoyage de callbacks obsolètes de `HerosDraftGame` ; et ajout du champ `floor` explicite dans `MapNode` pour supprimer le parsing d'ID de chaîne. |
-| **v0.2.3** | 2026-06-14 | Architecture & Patterns | Refactoring Phase 4 : Découpage procédural de `MapGeneratorService` en 4 sous-services (`MapNodeGenerator`, `MapConnectionBuilder`, `MapValidator`, `MapContentPlacer`) ; refactorisation d'`EffectResolver` avec le Strategy Pattern (`EffectStrategy` et `EffectRegistry`) ; abstractions Flame `CombatEntity` (pour unifier `HeroCard`/`EnemyCard`) et `BaseVisualEffect` (pour unifier `SlashEffect`/`ShieldDome`) ; centralisation de la thématique via `GameThemeExtension` et try/catch détaillés de diagnostic dans `GameDataService`. Zéro erreur et 108 tests unitaires au vert. |
-| **v0.2.2** | 2026-06-14 | Unification de l'UI & Composants Communs | Refactoring Phase 3 : Centralisation des arrière-plans, SafeArea et PopScope dans `ScreenScaffold` ; standardisation des en-têtes avec `PageHeader` et de l'affichage de l'or avec `GoldIndicator` ; factories `UiCard.fromInstance` et `UiCard.fromData` ; découpage modulaire de la forge (`ForgeCardPreview`, `ForgeSlotRow`, `ForgeBuySlotButton`) ; et structure de mise en page commune `CardDraftLayout`. Zéro régression et 108 tests unitaires au vert. |
-| **v0.2.10** | 2026-06-13 | Décomposition des God Classes | Refactoring Phase 2 : Décomposition de `RunController` (en 4 managers spécialisés), `CombatController` (en 2 processeurs spécialisés), `HerosDraftGame` (en 4 sous-systèmes Flame : `StateSync`, `CardAnimation`, `CombatVisual`, `Layout`), et `CardComponent` (délégation à `CardRenderer` pour le dessin Canvas et `CardInteractionHandler` pour les gestes). Préservation des signatures d'API et 108 tests unitaires 100% au vert. |
-| **v0.1.9** | 2026-06-13 | Refactoring & Centralisation | Centralisation de tous les délais de combat et des paramètres de FloatingText dans `GameConstants` pour supprimer les nombres magiques ; sécurisation du flux d'état via `@immutable` et `List.unmodifiable` sur les modèles clés (`EntityStats`, `CombatState`, `EnemyInstance`) ; et unification des calculs de dégâts via le service centralisé `DamagePipeline.calculate`. |
-| **v0.1.8** | 2026-06-13 | Transition Fluide de Tour | Réinitialisation de l'armure du joueur à 0 au début de son tour (dans `RunController`) pour éviter le cumul infini inter-tours de l'armure. Ajout d'un drapeau transitoire `suppressArmorChangeAnimation` dans `HeroCard` activé lors de la transition de tour par `game_screen.dart` pour masquer les popups négatifs d'armure ("-X") et l'animation d'impact de bouclier, évitant un faux feedback visuel de dégâts reçus. |
-| **v0.1.7** | 2026-06-13 | L'Éclat des Combats | Embellissement des textes flottants thématiques avec ombres néon et symboles descriptifs, rotation de naissance, et cinématique d'échelle élastique suivie d'une pulsation infinie sur critique. Déclenchement visuel des critiques basé sur la propagation de l'état `lastActionWasCrit` calculé en phase métier (déterministe). Renforcement des impacts (tremblement accru, flash doré, 35 particules). Décélération de la jauge HP de catch-up (1200ms easeOut sous dégâts) pour mieux ressentir la violence des coups. **Incorpore également** : le fix de la relique Croc Kunaï (combat-long `'armor_mastery'` StatusEffect avec getter dynamique `effectiveArmorMastery`), l'animation dynamique des particules Canvas du carrousel de reliques (via `AnimationController` Flutter avec gravité, friction et fade), l'exclusion des cartes de rareté unique dans les récompenses de cartes post-boss (x=0), l'amélioration visuelle du clonage Magic Mirror en boutique (affichage de l'interface `UiCard` complète avec runes de forge, rareté, effets de survol réactifs et boîte de dialogue responsive élargie à `maxWidth: 550` avec scroll horizontal), la protection anti-exploit de caching de `cloneOptions` pour le Magic Mirror, et le verrouillage dynamique (désactivation) des boutons de services de la boutique en cas de solde d'or insuffisant. |
-| **v0.2.04** | 2026-06-12 | Enrichissement des Tooltips de Cartes | Ajout de tous les détails (type de cible écrit explicitement, rareté, type de carte, coût mana) dans les tooltips en combat (Flame CardComponent) et menus (Flutter UiCard) en français et anglais. |
-| **v0.2.03** | 2026-06-12 | Polissage Dimensionnel des Cartes en Menu | Agrandissement des fentes de runes à 10px (visibilité des emojis d'upgrades) et agrandissement du médaillon de coût mana à 30px (ajustement offset [-9, -9]) uniquement sur les menus (Flutter). |
-| **v0.2.02** | 2026-06-12 | Bordure Foil Progressif Unique | Rendu de la bordure polychromatique brillante au survol de la souris dont le nombre de couleurs (de 1 à 10) augmente avec le nombre d'upgrades (upgradeCount) de la carte Unique. |
-| **v0.2.01** | 2026-06-12 | Décomposition de UiCard (SRP) | Refactoring de la god class `UiCard` (1136 lignes) en extrayant ses sous-widgets (`CardManaMedallion`, `CardRuneSockets`, `CardCompactDescription`) et ses helpers (`ui_card_helpers.dart`) dans un sous-dossier `ui_card/` dédié, garantissant la cohésion, respectant le principe de responsabilité unique (SRP) et la structure du framework Flutter. |
-| **v0.1.6** | 2026-06-12 | Ajustements du Gel et de la Forge | Résolution du bug d'armure de forge (hardened) sur les cartes d'attaque (application directe au héros), persistance du statut de gel (freeze) en début de tour ennemi et affichage de la réduction de 50% de dégâts directement dans l'intention de combat. |
-| **v0.1.5** | 2026-06-12 | Refonte Esthétique des Cartes | Layout glassmorphic unifié, médaillon standardisé de coût, fentes d'améliorations (rune sockets) avec retour à la ligne automatique par rangées de 5 (rows of 5) pour éviter tout débordement, réduction d'échelle de 25%, suppression du filigrane et des badges textuels de ciblage (remplacés par des doublements d'icônes d'effet pour la portée multicible ciblant les ennemis), retrait complet des labels textuels de rareté (remplacés par l'identification pure via la couleur des bordures et par halo de surbrillance lumineux/glowing shadows en cas de sélection), et mise à jour des cartes de combat (Flame) pour utiliser des couleurs d'arrière-plan spécifiques à leur type (type-specific background colors) identiques à celles des menus. |
-| **v0.2.00** | 2026-06-11 | Forge v2 : Anti-Exploit, Filtrage Typé, Achat Progressif | Écran forge responsive plein écran, persistance session anti-exploit, fentes d'upgrades progressives, filtrage typé. |
-| **v0.1.4** | 2026-06-11 | Map, Draft & Progression | Level Up différé sur la carte (MapScreen), protection anti-spoil du carrousel de reliques, chokepoint élite central calculé dynamiquement. |
-| **v0.1.3** | 2026-06-11 | Harmonie Visuelle & Améliorations de Boutique | Exclusion des cartes uniques de la boutique, arrière-plans colorés par type de carte dans UiCard, grille Wrap/SizedBox pour la boutique. |
-| **v0.1.00** | 2026-06-10 | Clarté Visuelle & Fluidité de Combat | Input blocking pendant la pioche, tooltips focus-only, étoiles d'upgrades, jauge HP dual-bar animée. |
-| **v0.0.99** | 2026-06-07 | Fondations du Design | Uniformisation typographique, corrections d'overflows, palette de couleurs centralisée. |
-| **v0.0.98** | 2026-06-07 | Fluidité & Impacts | Animations de pioche organiques, synchro précise des impacts en combat, corrections d'animation. |
-| **v0.0.97** | 2026-06-07 | Modernisation Technique | Migration Notifier/NotifierProvider, découplage des contrôleurs, immuabilité de CardInstance. |
-| **v0.0.95** | 2026-06-05 | L'Éveil des Reliques | 10 nouvelles reliques, triggers par type de carte, charges persistantes, autel d'échange de reliques. |
-| **v0.0.94** | 2026-06-04 | Or et Butin des Boss | Or post-combat, récompenses de boss fixes selon position, écran de draft de boss. |
-| **v0.0.93** | 2026-06-04 | La Grande Refonte | Chemins de run multiples divergés, quotas équilibrés, anti-répétition de chemins. |
-| **v0.0.4** | 2026-05-15 | Système de Fusion & Équilibrage | Fusion de cartes v1, progression classes, reliques légendaires, événements. |
-| **v0.0.3** | 2026-04-20 | Carte & Exploration | Carte procédurale simple, boutique v1, repos, dictionnaire. |
-| **v0.0.2** | 2026-03-10 | Combat & Deck | MVP combat, pioche, main, défausse, altérations élémentaires de base. |
-| **v0.0.1** | 2026-02-01 | MVP Initial | Lancement avec 3 classes de base, cartes de base attaque et défense. |
 
+> [!NOTE]
+> **Écart de schéma de version connu.** L'historique ci-dessus emploie un schéma
+> interne (`v3.x`) distinct de la version joueur de `assets/data/patch_notes.json` (`0.4.x`).
+> Depuis le 2026-08-03, la version de référence est celle de `assets/data/patch_notes.json`,
+> maintenue conjointement avec `pubspec.yaml` par le skill `patch-notes-writer`.
