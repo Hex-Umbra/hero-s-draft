@@ -42,7 +42,16 @@ Cassés par le commit `776eb7a` (« Organisation of docs »), jamais répercuté
 
 ### 1.3 Incohérences structurelles
 
-- **Collision d'ADR** : `ADR-069` désigne deux décisions distinctes — le Système de Sauvegarde (v3.2.0, `decisionLog.md:151`) et la Clarté du Mana des Reliques (v3.0.1, `decisionLog.md:2670`). `ADR-028` est rangé au milieu des ADR-06x (`decisionLog.md:2502`). Aucun index.
+- **Quatre collisions d'ADR**, pas une. `decisionLog.md` contient 77 sections ADR pour seulement 73 numéros distincts (`ADR-001` à `ADR-073`, sans trou) :
+
+  | N° | Entrée A | Entrée B |
+  |:---|:---|:---|
+  | `ADR-028` | Équilibrage Hybride & Réserve de Vagues (l. 1127) | Synchronisation du Bouton Fin de Tour (l. 2502) |
+  | `ADR-067` | Clés Dupliquées de Notification, v0.2.8 (l. 241) | Équilibrage Économie & Miroir Magique, v0.2.9 (l. 2594) |
+  | `ADR-068` | Forge de Fusion, v3.1.0 (l. 193) | Système d'Événements, v0.3.0 (l. 2626) |
+  | `ADR-069` | Système de Sauvegarde, v3.2.0 (l. 151) | Clarté du Mana des Reliques, v3.0.1 (l. 2670) |
+
+  Cause identifiée : le bloc de bas de fichier forme une séquence cohérente (`066`→`067`→`068`→`069` pour v0.2.7→v0.2.9→v0.3.0→v3.0.1) ; les entrées v3.x ajoutées en tête ont réutilisé `067`/`068`/`069` sans consulter le bas du fichier. `ADR-028` (l. 2502) est en outre mal classé, inséré entre `ADR-064` et `ADR-065`. Aucun index n'existe pour rendre ces collisions visibles.
 - **Trois schémas de version simultanés** : `pubspec.yaml` = `0.1.0+1`, `patch_notes.json` = `0.4.7`, vault = `v3.5.1`. L'historique des releases mélange `v3.5.1`, `v0.3.0`, `v0.2.10` (placé au-dessus de `v0.2.2`), `v0.2.04`, `v0.2.00` — non monotone.
 - **`activeContext.md` n'est pas un contexte actif** : 350 de ses 387 lignes sont un journal append-only remontant à v0.2.4 (juin). Quatre items consécutifs numérotés « 2. ». Duplique `progress.md` §7 et `decisionLog.md`.
 - **`productContext.md`** : §3.10 intercalée entre §3.7 et §3.8 ; §9/§10/§11 sont des rapports de sprint historiques (v0.0.97 → v0.2.2), pas du contexte produit.
@@ -85,7 +94,7 @@ Le reste du skill (schéma JSON, catégories autorisées, règles de rédaction,
 | Devoir de vérification | Métriques recopiées du récit, fausses d'un facteur 3 |
 | Mandat de suppression / archivage | Append-only : rien n'a jamais été retiré |
 | Règle de source unique | La règle 4 actuelle **prescrit** la duplication |
-| Protocole de numérotation d'ADR | Collision ADR-069 |
+| Protocole de numérotation d'ADR | 4 collisions : ADR-028, 067, 068, 069 |
 | Conscience de `docs/` hors vault | Specs, plans et brainstorms invisibles |
 | Définition de « terminé » | Dérives jamais détectées |
 
@@ -106,7 +115,20 @@ Le reste du skill (schéma JSON, catégories autorisées, règles de rédaction,
 
 **Éclatement des ADR** : un fichier par ADR dans `.obsidian_vault/_adr/ADR-0XX-slug.md`. `decisionLog.md` devient un index — tableau `N° / titre / date / statut / version / lien`. La traçabilité est intégralement conservée ; elle devient adressable au lieu d'être monolithique.
 
-**Résolution de la collision** : le doublon « Clarté Visuelle du Mana des Reliques en Combat (v3.0.1) » devient **ADR-074**. Vérifié : toutes les références externes à `ADR-069` (dans `activeContext.md`, `progress.md`, `systemPatterns.md`, `docs/roadmap_priorisee_31-07-2026.md`, `docs/possible_upgrades/_archives/`) désignent le système de sauvegarde ; le doublon a zéro référence entrante. `ADR-028`, mal rangé, retrouve sa place par le tri de l'index.
+**Résolution des 4 collisions** — règle d'arbitrage, appliquée dans cet ordre :
+
+1. **L'entrée qui a des références entrantes garde son numéro.** Seul `ADR-069` / Système de Sauvegarde est concerné : 8 références réparties sur 5 fichiers, dont `docs/ROADMAP.md`. Les renuméroter serait le plus coûteux et le plus risqué des choix.
+2. **À défaut, l'entrée la plus ancienne garde son numéro** — c'est elle qui possédait le numéro en premier.
+3. Les entrées renumérotées reçoivent `074`+ **par ordre croissant de ligne** dans le fichier source, et portent une note d'en-tête rappelant leur ancien numéro.
+
+| Entrée renumérotée | Ancien | Nouveau | Motif |
+|:---|:---:|:---:|:---|
+| Forge de Fusion (v3.1.0), l. 193 | `068` | **`ADR-074`** | Aucune référence entrante ; l'entrée v0.3.0 est antérieure |
+| Clés Dupliquées de Notification (v0.2.8), l. 241 | `067` | **`ADR-075`** | Aucune référence entrante ; l'entrée v0.2.9 est antérieure |
+| Synchronisation du Bouton Fin de Tour, l. 2502 | `028` | **`ADR-076`** | Aucune référence entrante ; c'est l'entrée mal classée |
+| Clarté du Mana des Reliques (v3.0.1), l. 2670 | `069` | **`ADR-077`** | Zéro référence entrante, face aux 8 du Système de Sauvegarde (règle 1) |
+
+Résultat : 77 numéros distincts, `ADR-001` à `ADR-077`, sans trou ni doublon. `ADR-028` retrouve sa place par le tri de l'index.
 
 **Archive** : `.obsidian_vault/_archive/2026-08-03-<nom>.md`, horodatée, jamais rechargée, jamais éditée.
 
@@ -298,11 +320,11 @@ Découpe par script sur les titres `^## .* ADR-(\d+)` vers `_adr/ADR-0XX-slug.md
 
 Contrôles automatiques :
 
-- Nombre de fichiers produits = nombre de titres ADR dans la source.
+- Nombre de fichiers produits = **77** = nombre de titres ADR dans la source.
 - Somme des lignes produites ≈ 2 704 (aux séparateurs près).
 - Numéros uniques dans l'index.
 
-Seule intervention manuelle : renumérotation du doublon en `ADR-074`, avec note d'en-tête expliquant l'opération.
+Seule intervention manuelle : renumérotation des **4 doublons** en `ADR-074` à `ADR-077` selon le tableau du §2.1, chacun avec une note d'en-tête rappelant son ancien numéro.
 
 ### 5.4 Réécriture des 4 fichiers restants
 
