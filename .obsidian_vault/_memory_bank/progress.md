@@ -158,6 +158,12 @@ Absence délibérée — [ADR-012](../_adr/ADR-012-absence-de-systeme-audio.md).
 
 ### ⚠️ Sérialisation Partielle des Modèles
 
+**Re-vérifié fichier par fichier le 2026-08-04** — `grep -c "operator ==" <fichier>` et
+`grep -n "fromJson\|toJson" <fichier>` sur chacun des 13 modèles. Les colonnes
+`CardInstance` et `ShopState` étaient fausses avant cette date (leurs `fromJson`/`toJson`
+existent depuis le commit `3b2365c` du 2026-06-24). Seul `EventState` est réellement
+dépourvu de sérialisation.
+
 | Modèle | `fromJson` | `toJson` | `copyWith` | `==`/`hashCode` |
 |:---|:---:|:---:|:---:|:---:|
 | `CombatState` | ✅ | ✅ | ✅ | ❌ |
@@ -168,10 +174,10 @@ Absence délibérée — [ADR-012](../_adr/ADR-012-absence-de-systeme-audio.md).
 | `MapNode` | ✅ | ✅ | — | ❌ |
 | `RunState` | ✅ (`fromJsonWithReport`) | ✅ | ✅ | ❌ |
 | `DeckState` | ✅ (`fromJsonWithReport`) | ✅ | ✅ | ❌ |
-| `CardInstance` | ❌ | ❌ | ✅ | ❌ |
+| `CardInstance` | ✅ | ✅ | ✅ | ❌ |
 | `EventState` | ❌ | ❌ | ✅ | ❌ |
 | `InventoryState` | ✅ (`fromJsonWithReport`) | ✅ | ✅ | ❌ |
-| `ShopState` | ❌ | ❌ | ✅ | ❌ |
+| `ShopState` | ✅ | ✅ | ✅ | ❌ |
 | `SkillState` | ✅ | ✅ | ✅ | ❌ |
 
 ## 3. Références documentaires

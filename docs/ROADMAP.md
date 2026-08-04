@@ -29,14 +29,19 @@
 ## 1. Vue d'ensemble
 
 ```mermaid
-pie title Répartition de l'effort restant estimé (~95 jours)
+pie title Répartition de l'effort restant estimé (~91 jours)
     "S — Fondations bloquantes (11j)" : 11
     "A — Contenu & feel à fort impact (20j)" : 20
     "B — Systèmes structurants (25j)" : 25
     "C — Équilibrage (9j)" : 9
-    "D — Dette technique (16j)" : 16
+    "D — Dette technique (12j)" : 12
     "E — Confort & polish (14j)" : 14
 ```
+
+> [!NOTE]
+> Seul le **Tier D** a été re-vérifié contre le code (le 2026-08-04) ; il est passé de 16 à
+> 12 jours. Les cinq autres tiers portent encore les estimations du 31/07, non re-mesurées.
+> Le Tier S a été ponctuellement recontrôlé à cette date et s'est révélé exact.
 
 **Dépendances structurantes** (ce qui bloque quoi) :
 
@@ -179,26 +184,52 @@ Documentés depuis `6_analyse_game_balance.md`, jamais corrigés : économie de 
 
 ---
 
-## 6. Tier D — Dette technique *(≈ 16 jours)*
+## 6. Tier D — Dette technique *(≈ 12 jours)*
 
 *Aucun apport joueur direct. À intercaler entre les chantiers de contenu, pas à empiler.*
 
+> [!IMPORTANT]
+> **Tier re-vérifié contre le code le 2026-08-04.** La rédaction du 31/07 avait consolidé
+> ce tier depuis `technical_debt_report_Opus4.6.md` sans re-mesurer : **six des huit fiches
+> énonçaient des faits périmés**, dont deux chantiers déjà livrés le 24/07 — soit une
+> semaine *avant* la rédaction. L'ordre interne ci-dessous est celui qui découle des
+> constats re-mesurés, pas de celui du 31/07. Chaque fiche corrigée cite désormais le
+> `fichier:ligne` ou le commit qui l'établit, de sorte que la prochaine relecture puisse
+> la réfuter en une commande.
+
 | ID | Chantier | Effort | Difficulté | Apport |
 |:---|:---|:---:|:---:|:---:|
-| **P-21** | **Couverture de tests → ≥ 50 %** (dont `RewardController`, aujourd'hui à zéro test) | **3-5 j** | ★★★☆☆ | 🔥🔥 |
-| **P-22** | **Typage des modèles** : `==`/`hashCode` sur 12 modèles, `toJson` manquants (`CardInstance`, `EventState`, `ShopState`) | **2-3 j** | ★★★☆☆ | 🔥🔥 |
-| **P-23** | **`draft_screen.dart`** : ids techniques + logique de tirage vers un controller | **1 j** | ★★☆☆☆ | 🔥🔥 |
-| **P-24** | **Routage centralisé** (`GoRouter`, 20+ `Navigator.push` en dur) | **2-3 j** | ★★★★☆ | 🔥 |
-| **P-25** | **7 blocs `catch` silencieux** → logging | **0,5 j** | ★☆☆☆☆ | 🔥 |
-| **P-26** | **Lot d'hygiène** : `GameDataRegistry` en `Map` O(1), `MapNode` découplé de `Vector2`, `SkillData` bilingue | **1 j** | ★★☆☆☆ | 🔥 |
-| **P-27** | **Event Bus** (remplace les callbacks de constructeur de `HerosDraftGame`) | **2-3 j** | ★★★★☆ | 🔥 |
-| **P-28** | **Validation des entrées** (`gainGold(-50)` passe, HP peut dépasser `maxHp`) | **1 j** | ★★☆☆☆ | 🔥 |
+| **P-26** | **Lot d'hygiène** : `GameDataRegistry` en `Map` O(1), `MapNode` découplé de `Vector2`, `SkillData` bilingue | **1 j** | ★★☆☆☆ | 🔥🔥 |
+| **P-22** | **Typage des modèles** : `==`/`hashCode` sur les 13 modèles suivis, sérialisation d'`EventState` | **1,5-2 j** | ★★★☆☆ | 🔥🔥 |
+| **P-27** | **Event Bus** (remplace les 13 callbacks de constructeur de `HerosDraftGame`) | **2-3 j** | ★★★★☆ | 🔥 |
+| **P-21** | **Couverture de tests → ≥ 50 %** — *mesurer avant de chiffrer* | **2-4 j** | ★★★☆☆ | 🔥🔥 |
+| **P-24** | **Routage centralisé** (`GoRouter`, 15 `Navigator.push` en dur) | **2-3 j** | ★★★★☆ | 🔥 |
+| **P-23** | **`draft_screen.dart`** : découpe des 691 lignes | **1 j** | ★★☆☆☆ | 🔥 |
+| **P-28** | **Validation des entrées** (`gainGold(-50)` passe silencieusement) | **0,5 j** | ★★☆☆☆ | 🔥 |
+| **P-25** | **1 bloc `catch` totalement muet** + 8 muets en build release | **0,1 j** *(ou 0,5 j si élargi)* | ★☆☆☆☆ | 🔥 |
 
-### P-23 — Le plus urgent de ce tier malgré sa petite taille
-`draft_screen.dart` utilise des **chaînes littérales françaises comme clés de dispatch i18n** (`if (choice.title == 'Vitalité') return l10n.draftChoiceVitality;`). Une simple correction de faute de frappe fait basculer silencieusement tous les joueurs anglophones sur du texte français brut — sans erreur `dart analyze`, sans test qui casse (le fichier n'est couvert par aucun test). Le fichier réimplémente en prime tout un système de tirage pondéré par la `luck` déjà présent dans `RewardController`, avec risque de divergence silencieuse au prochain rééquilibrage. Une journée pour supprimer une bombe à retardement.
+### P-26 — Devenu le meilleur rapport de ce tier
+Seule fiche du tier dont **les trois constats se vérifient encore intégralement**, et la seule qui contienne une **violation d'une règle explicite du projet** : `SkillData` n'expose qu'un `final String name` (`lib/models/data/skill_data.dart:3`) alors que `CLAUDE.md` impose `_fr`/`_en` sur toute entrée à texte visible. S'y ajoutent `MapNode.position` typé `Vector2` — un modèle de données couplé à un type Flame, contraire à la séparation de couches du même document — et un `GameDataRegistry` composé de huit `List<>` parcourues linéairement à chaque lookup. Un jour, trois dettes réelles, un risque nul.
 
-### P-21 — Note de méthode
-`RewardController` est combat-critique (or, XP, triplement boss, tirage de relique pondéré, exclusion des cartes uniques) et n'a **aucun** test, alors que tous les autres controllers en ont. À traiter en premier dans ce lot. Note : P-02 apporte déjà 6 tests et rend testable la règle de tour, aujourd'hui inécrivable.
+### P-22 — Périmètre réduit de moitié
+Le constat `==`/`hashCode` tient intégralement : **aucun des 13 modèles suivis** n'en possède. En revanche la fiche du 31/07 réclamait un `toJson` pour `CardInstance` et `ShopState` : **les deux en ont un depuis le commit `3b2365c` du 24/06**, plus d'un mois avant la rédaction. Le seul modèle réellement dépourvu de sérialisation est **`EventState`** — ni `toJson` ni `fromJson`. Comme l'autosave se déclenche à la résolution d'un nœud et non pendant un événement, l'absence n'est pas exploitée aujourd'hui ; elle le deviendrait au premier événement multi-étapes.
+
+> [!NOTE]
+> Le tableau colonne par colonne vit dans `.obsidian_vault/_memory_bank/progress.md` §2
+> (« Sérialisation Partielle des Modèles »), re-vérifié le 2026-08-04 — il portait les
+> deux mêmes erreurs et a été corrigé dans la même passe. Ne pas le recopier ici.
+
+### P-21 — La justification d'origine est tombée
+La fiche du 31/07 plaçait ce chantier en tête au motif que `RewardController` n'avait **aucun** test. C'est faux : `test/unit/reward_controller_test.dart` existe, fait 434 lignes, et a été créé par `ec719af` le **24/07**. L'objectif « ≥ 50 % » reste légitime, mais il n'est plus chiffrable sans mesure : lancer `flutter test --coverage` **avant** d'ouvrir le chantier, et re-trancher l'effort à partir du taux réel. Note conservée : P-02 apporte 6 tests et rend testable la règle de tour, aujourd'hui inécrivable.
+
+### P-23 — Rétrogradé : sa « bombe à retardement » a été désamorcée le 24/07
+La fiche du 31/07 en faisait « le plus urgent de ce tier ». Ses trois justifications sont périmées : les clés de dispatch i18n en français ont disparu (le `switch` porte sur l'enum `LevelUpRewardType`), le fichier **est** couvert par `test/widget/draft_screen_test.dart`, et le tirage pondéré par la `luck` a été extrait dans `LevelUpRewardService` par le commit `b5ca823` — daté du **24/07**, lui aussi antérieur à la rédaction. Ne subsiste qu'un fichier de **691 lignes** à découper : utile, sans urgence.
+
+### P-25 — Le chiffre « 7 » ne correspond à aucune lecture
+Sur les 14 blocs `catch` de `lib/`, **un seul est totalement muet** : `lib/ui/screens/game_screen.dart:438` (`} catch (_) {}`). Deux relancent une `Exception` explicite, trois appliquent un repli documenté, et **huit journalisent via `debugPrint` sous garde `kDebugMode`** — donc muets en build release uniquement. D'où les deux chiffrages : 0,1 j pour la seule ligne réellement fautive, 0,5 j si l'on décide de traiter l'observabilité en release comme un chantier à part entière (ce qui est un autre sujet, à trancher avec P-04).
+
+### P-28 — Une moitié du constat est fausse
+`InventoryController.gainGold(int amount)` fait `state.gold + amount` sans aucune validation : `gainGold(-50)` retire bien 50 or silencieusement. **Confirmé.** En revanche « HP peut dépasser `maxHp` » ne tient pas : `PlayerStatsManager.heal()` applique `.clamp(0, maxPv)` (`lib/game/controllers/run/player_stats_manager.dart:112`). Périmètre restant : la validation des montants d'or.
 
 ---
 
@@ -274,7 +305,7 @@ Corrige les règles cassées, comble le trou audio, automatise la distribution. 
 L'ordre compte : P-06 crée `vfx_tokens.dart` dont P-07 dépend ; le prototype de P-08 tranche le pipeline d'assets dont dépendent les sprites de P-05, à lancer en production dès la décision prise. À la sortie de ce jalon, le jeu devrait être nettement plus agréable à jouer sans qu'aucun système n'ait changé de forme.
 
 ### Jalon 3 — Structure *(≈ 11 j)* → P-10, P-11, P-16
-Donne une fin à une run, archive les résultats, puis recalibre l'économie **une fois** que P-02 et le nouveau contenu ont stabilisé la base. Intercaler P-23 et P-25 (1,5 j de dette à faible risque) selon l'humeur.
+Donne une fin à une run, archive les résultats, puis recalibre l'économie **une fois** que P-02 et le nouveau contenu ont stabilisé la base. Intercaler **P-26 et P-25** (1,1 j de dette à faible risque, dont la violation bilingue de `SkillData`) selon l'humeur — c'est le couple qui remplace l'ancienne recommandation « P-23 et P-25 », P-23 ayant été rétrogradé après re-vérification.
 
 **Au-delà** : P-14 (Variantes d'Élite) et P-13 (méta-progression) sont les deux gros morceaux suivants ; P-12 (Biomes) est prêt côté code mais attend 15 illustrations — c'est le seul chantier qu'il est rationnel de lancer *maintenant* côté art, en parallèle de tout le reste.
 
@@ -285,7 +316,7 @@ Donne une fin à une run, archive les résultats, puis recalibre l'économie **u
 1. **Quatre chantiers font l'essentiel de la valeur** : audio (P-03), pioche (P-02), juice (P-07), et une condition de victoire (P-10). Le reste est de l'accumulation.
 2. **Le chemin critique n'est presque jamais le code** — c'est le son (P-03), les sprites (P-05, P-15), les illustrations (P-12) et le playtest de calibration (P-16, P-17). Lancer ces productions en parallèle du développement, pas après.
 3. **P-02 avant tout ajout de contenu**, et **P-16 après P-02**, sinon on calibre deux fois.
-4. La dette technique restante est réelle mais **plus faible que ne le disent les anciens documents** : les deux god classes UI sont déjà résolues et la persistance est livrée.
+4. La dette technique restante est réelle mais **nettement plus faible que ne le disent les anciens documents** : les deux god classes UI sont résolues, la persistance est livrée, et la re-vérification du Tier D le 2026-08-04 a montré que **six de ses huit fiches énonçaient des faits périmés** — deux chantiers y étaient même déjà livrés. Corollaire de méthode : **une fiche de dette non re-mesurée depuis plus d'une semaine doit être re-vérifiée contre le code avant d'être ouverte**, jamais crue sur parole. Les tiers A, B, C et E n'ont pas encore subi ce contrôle.
 
 ---
 

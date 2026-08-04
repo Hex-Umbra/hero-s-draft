@@ -1,4 +1,4 @@
-<!-- last-sync: 2026-08-03 | commit: bfa4592 -->
+<!-- last-sync: 2026-08-04 | commit: 52a18fb -->
 
 # 🧠 Contexte Actuel
 
@@ -7,16 +7,17 @@
 
 ## Focus courant
 
-La branche `docs/memory-bank-overhaul` termine la refonte du memory bank : les
-monolithes restants (`decisionLog.md`, `systemPatterns.md`, `productContext.md`)
-sont déjà compactés en index + fiches (`../_adr/`, `../_patterns/`, `../_rules/`),
-et `activeContext.md` devient à son tour une fenêtre glissante sur 3 livraisons.
-Prochain chantier applicatif une fois la doc stabilisée : Jalon 1 « Socle »
-(P-01, P-02, P-04, P-03) — voir `docs/ROADMAP.md`.
+La refonte du memory bank est mergée (PR #23). Dans sa foulée, le **Tier D de
+`docs/ROADMAP.md` a été re-vérifié contre le code** le 2026-08-04 : six de ses huit
+fiches énonçaient des faits périmés, dont deux chantiers livrés dès le 24/07. Le tier
+a été réécrit et re-ordonné (P-26 en tête), et la même erreur a été corrigée dans le
+tableau de sérialisation de `progress.md` §2. **Les tiers A, B, C et E n'ont pas encore
+subi ce contrôle** — les traiter comme non vérifiés. Prochain chantier applicatif :
+Jalon 1 « Socle » (P-02, P-04, P-03) — voir `docs/ROADMAP.md`.
 
 ## 3 dernières livraisons
 
-1. **Refonte documentaire du memory bank** (2026-08-03, en cours) — `decisionLog.md`
+1. **Refonte documentaire du memory bank** (2026-08-03, mergée via PR #23) — `decisionLog.md`
    (2704 lignes), `systemPatterns.md` (1478) et `productContext.md` (807) sont
    devenus des index adossés à des fiches adressables sous `../_adr/`,
    `../_patterns/` et `../_rules/` ; `progress.md` a été réécrit sur des métriques
