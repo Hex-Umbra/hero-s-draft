@@ -1257,7 +1257,7 @@ Dans la section **Services**, ajouter :
 
 ```markdown
 - **`patch_notes.json` is agent-managed**: never hand-edit it. It is maintained by the `patch-notes-writer` skill (`.claude/skills/patch-notes-writer/SKILL.md`), which prepends a new semver entry, writes player-facing French only, and keeps `pubspec.yaml`'s `version:` field in sync with it. Those two files are its entire scope.
-- **The memory bank is agent-managed**: `.obsidian_vault/_memory_bank/` and `.obsidian_vault/_adr/` are maintained by the `memory-bank-sync` skill (`.claude/skills/memory-bank-sync/SKILL.md`). It re-measures every metric with a command before writing it, enforces per-file line caps, and archives rather than appends. `.obsidian_vault/_archive/` is read-only.
+- **The memory bank is agent-managed**: `.obsidian_vault/_memory_bank/`, `_adr/`, `_rules/` and `_patterns/` are maintained by the `memory-bank-sync` skill (`.claude/skills/memory-bank-sync/SKILL.md`). It re-measures every metric with a command before writing it, enforces per-file line caps, and archives rather than appends. `.obsidian_vault/_archive/` is read-only.
 ```
 
 - [ ] **Étape 3 : Ajouter la section « Carte de la documentation » à `CLAUDE.md`**
@@ -1271,13 +1271,19 @@ One question, one place. Never duplicate a fact across two of these — link ins
 
 | Question | Location |
 |:---|:---|
-| What exists (state, rules, decisions taken) | `.obsidian_vault/_memory_bank/` |
-| Why a decision was taken | `.obsidian_vault/_adr/` (one file per ADR, indexed by `_memory_bank/decisionLog.md`) |
+| Where to start | `.obsidian_vault/_memory_bank/` — five short files, three of them indexes |
+| Why a decision was taken | `.obsidian_vault/_adr/` — one file per ADR, indexed by `_memory_bank/decisionLog.md` |
+| A game rule | `.obsidian_vault/_rules/` — one sheet per system, indexed by `_memory_bank/productContext.md` |
+| An architecture pattern | `.obsidian_vault/_patterns/` — one sheet per area, indexed by `_memory_bank/systemPatterns.md` |
+| What is built, and the project metrics | `_memory_bank/progress.md` — every figure carries the date it was measured |
+| What is being worked on right now | `_memory_bank/activeContext.md` — current focus plus the last three deliveries, nothing older |
 | What is left to do | `docs/ROADMAP.md` — **the single planning source** |
 | What is designed but not built | `docs/superpowers/specs/` and `docs/superpowers/plans/` |
 | What is explored but not decided | `docs/possible_upgrades/` |
 | What the player sees | `assets/data/patch_notes.json` |
 | Frozen history | `.obsidian_vault/_archive/` and `docs/archives/` — read-only |
+
+The three index files are capped and deliberately short: they exist to be read whole, then to point you at the one sheet you actually need. Never inline a sheet's content back into its index.
 
 `CLAUDE.md` is the authoritative agent instruction file for this repository.
 ```
