@@ -49,7 +49,7 @@ The codebase strictly separates three layers — never mix them:
   - `SaveService` (`lib/services/save_service.dart`) — sérialise `RunState`/`DeckState`/`InventoryState`/`SkillState` en un blob JSON versionné sous une clé `shared_preferences` unique. Jamais appelé en cours de combat.
 
 - **UI (Flutter)** — `lib/ui/`
-  - `lib/ui/screens/` — Home, Splash, ClassSelection, Map, Game, Draft, StarterDeckDraft, BossCardDraft, DeckView, Shop, Event, Rest/RestCardSelection, RelicExchange, PatchNotes, CardDictionary.
+  - `lib/ui/screens/` — Home, Splash, ClassSelection, Map, Game, Draft, StarterDeckDraft, BossCardDraft, DeckView, Shop, Event, Rest/RestCardSelection, RelicExchange, PatchNotes, CardDictionary, ForgeFusion.
   - `lib/ui/widgets/` — reusable widgets, grouped by feature (`draft/`, `forge/`, `hud/` incl. `hud/dialogs/`, `map/` incl. `map/dialogs/`, `relic_carousel/`, `ui_card/`).
   - `lib/ui/theme/` — app-wide theme/design tokens (`app_theme.dart`).
   - UI widgets and Flame components must stay decoupled: no Flame references inside UI code, no Flutter widget trees inside Flame components.
