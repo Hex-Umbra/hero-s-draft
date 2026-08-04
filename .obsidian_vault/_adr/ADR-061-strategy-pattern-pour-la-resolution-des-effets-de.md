@@ -20,8 +20,8 @@ Dans `EffectResolver`, la résolution des effets de cartes reposait sur un switc
 
 ### Preuves dans le code
 - `lib/game/services/effects/effect_strategy.dart` (interface).
-- `lib/game/services/effects/effect_registry.dart` (registre).
-- Fichiers sous `lib/game/services/effects/strategies/` pour les 6 implémentations concrètes.
+- `lib/game/services/effects/effect_strategy.dart` (registre `EffectRegistry`, dans le même fichier).
+- `lib/game/services/effects/strategies.dart` pour les 6 implémentations concrètes.
 - `lib/game/services/effect_resolver.dart` allégé qui redirige vers le registre.
 
 ### Conséquences
