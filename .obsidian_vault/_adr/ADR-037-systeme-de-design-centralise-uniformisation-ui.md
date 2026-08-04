@@ -32,7 +32,7 @@ L'interface utilisateur de Hero's Draft souffrait d'une fragmentation des défin
 - `lib/models/data/card_data.dart` : Extension `CardRarityColor on CardRarity`.
 - `lib/models/data/relic_data.dart` : Extension `RelicRarityColor on RelicRarity`.
 - `lib/ui/widgets/game_button.dart` : Correction du layout `Row`.
-- `lib/ui/widgets/relics_dialog.dart` : Remplacement du `switch` par `.color`.
+- `lib/ui/widgets/map/dialogs/relics_dialog.dart` : Remplacement du `switch` par `.color`.
 - 104/104 tests passés, 0 erreur `dart analyze`.
 
 ### Conséquences

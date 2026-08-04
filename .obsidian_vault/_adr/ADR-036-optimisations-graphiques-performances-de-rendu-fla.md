@@ -28,8 +28,8 @@ La version 0.0.98 de Hero's Draft présentait plusieurs inefficacités visuelles
 ### Preuves dans le code
 - `lib/game/components/floating_text.dart` & `lib/game/components/effect_icon.dart` : Nettoyage des appels à `saveLayer`, dessin direct.
 - `lib/game/components/card_component.dart` : Implémentation du cache de layout textuel et de l'opacité conditionnelle.
-- `lib/game/components/enemy_card.dart` : Modification de `updateStats` pour différer l'intégralité des effets d'impact physiques (flashes, shakes, particules) et du calcul visuel sous conditions de carte active, résolus dans `resolvePendingVisualStats`.
-- `lib/game/animators/card_animator.dart` : Suppression des branchements redondants d'animation d'impact.
+- `lib/game/components/entities/enemy_card.dart` : Modification de `updateStats` pour différer l'intégralité des effets d'impact physiques (flashes, shakes, particules) et du calcul visuel sous conditions de carte active, résolus dans `resolvePendingVisualStats`.
+- `lib/game/components/visual_effects/card_animator.dart` : Suppression des branchements redondants d'animation d'impact.
 - `lib/game/heros_draft_game.dart` : Logique de spawn de cartes à `Vector2(40, size.y - 40)` avec application d'effets visuels combinés.
 
 ### Conséquences

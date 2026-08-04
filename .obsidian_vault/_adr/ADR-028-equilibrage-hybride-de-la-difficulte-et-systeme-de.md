@@ -50,7 +50,7 @@ Dans les versions précédentes, la composition des rencontres de combat et le n
   - `_cleanDeadEnemies()` : transition synchrone des ennemis de `pendingEnemies` vers `enemies`, rolling d'intention et vérification combinée des deux listes pour lever le flag `isVictory`.
   - Appelle `CombatDebugLogger.logCombatInitialization(...)` à la fin de l'initialisation.
 - `lib/game/services/combat_debug_logger.dart` : Classe de service formatant les logs avec codes couleurs ANSI et bordures de boîtes, encapsulée sous `kDebugMode`.
-- `lib/models/data/combat_state.dart` : Ajout et sérialisation/désérialisation du champ `pendingEnemies`.
+- `lib/models/combat_state.dart` : Ajout et sérialisation/désérialisation du champ `pendingEnemies`.
 - `test/unit/combat_difficulty_test.dart` (ou tests similaires dans `test/unit/combat_controller_test.dart`) : Suite de tests automatisés validant le respect du budget de menace, le plafonnement à 5 slots actifs, le transfert automatique de la réserve lors de la mort d'un ennemi, et l'ajustement dynamique du modificateur de puissance.
 - `test/encounter_system_test.dart` : Ajout de tests vérifiant la logique `isBoss` sous trois configurations : nœud Combat au niveau 10 (non Boss), nœud Null au niveau 10 (Boss), et nœud Boss au niveau 9 (Boss).
 - `test/unit/combat_debug_logger_test.dart` : Test unitaire du service de journalisation pour s'assurer que l'appel ne lève aucune exception dans divers scénarios de données.

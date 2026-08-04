@@ -1,7 +1,7 @@
 ### 5.8. Rendu Vectoriel direct sur Canvas & Auras Sensoriels
 
 1. **Icônes Vectorielles (Canvas Drawing)** :
-   Pour éliminer les émojis texte basse résolution, la classe `EffectIcon` (`lib/ui/widgets/effect_icon.dart`) redessine ses icônes à la main via les fonctions graphiques de l'API Canvas (`Path`, `drawPath`, `drawCircle`) de Flutter, enrichies d'un effet de lueur floutée (`MaskFilter.blur(BlurStyle.normal, 3.5)`) :
+   Pour éliminer les émojis texte basse résolution, la classe `EffectIcon` (`lib/game/components/effect_icon.dart`) redessine ses icônes à la main via les fonctions graphiques de l'API Canvas (`Path`, `drawPath`, `drawCircle`) de Flutter, enrichies d'un effet de lueur floutée (`MaskFilter.blur(BlurStyle.normal, 3.5)`) :
    - **Écu d'Armure** : Un blason métallique avec des contours à double trait et une face interne brillante.
    - **Épées Croisées** : Deux lames d'acier croisées en diagonale avec des gardes et pommeaux dorés.
    - **Goutte de Poison** : Une larme vert menthe dessinée avec un chemin de Bézier fluide, dotée d'une double bordure contrastée.
