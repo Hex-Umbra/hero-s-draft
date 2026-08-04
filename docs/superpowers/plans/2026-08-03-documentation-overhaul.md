@@ -1344,7 +1344,8 @@ Attendu : `77`, puis ~25, puis ~38.
 - [ ] **Étape 2 : Aucun chemin mort dans tout le vault**
 
 ```bash
-grep -rohE '`[^`]*\.(md|dart|json|yaml)`' .obsidian_vault/_memory_bank/ \
+grep -rohE '`[^`]*\.(md|dart|json|yaml)`' \
+  .obsidian_vault/_memory_bank/ .obsidian_vault/_rules/ .obsidian_vault/_patterns/ .obsidian_vault/_adr/ \
   | tr -d '`' | grep -v '<' | sort -u \
   | while read p; do
       [ -e "$p" ] || [ -e ".obsidian_vault/_memory_bank/$p" ] || echo "CHEMIN MORT: $p"
@@ -1352,6 +1353,26 @@ grep -rohE '`[^`]*\.(md|dart|json|yaml)`' .obsidian_vault/_memory_bank/ \
 ```
 
 Attendu : aucune sortie.
+
+Puis la bijection des trois index avec leurs fiches, dans les deux sens :
+
+```bash
+for d in _adr _rules _patterns; do
+  case $d in
+    _adr) f=decisionLog ;;
+    _rules) f=productContext ;;
+    _patterns) f=systemPatterns ;;
+  esac
+  echo "--- $d ---"
+  grep -oE "\(\.\./$d/[^)]+\)" ".obsidian_vault/_memory_bank/$f.md" \
+    | tr -d '()' | sed "s|^\.\./|.obsidian_vault/|" | sort -u > /tmp/liens.txt
+  ls .obsidian_vault/$d/*.md | sort -u > /tmp/fiches.txt
+  echo "liens sans fiche :"; comm -23 /tmp/liens.txt /tmp/fiches.txt
+  echo "fiches sans lien :"; comm -13 /tmp/liens.txt /tmp/fiches.txt
+done
+```
+
+Attendu : les six listes vides.
 
 - [ ] **Étape 3 : Cohérence des versions**
 
