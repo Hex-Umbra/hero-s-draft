@@ -12,7 +12,7 @@
 - **Diagnostics I/O robustes** : Ajouter des blocs try/catch verbeux dans `GameDataService` lors du parsing de chaque fichier JSON, produisant un log explicite identifiant le fichier exact en cas d'échec de parsing.
 
 ### Preuves dans le code
-- [game_theme_extension.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/ui/theme/game_theme_extension.dart).
+- [game_theme_extension.dart](../../lib/ui/theme/game_theme_extension.dart).
 - Intégration dans `lib/ui/theme/app_theme.dart`.
 - Blocs try/catch explicites dans `lib/services/game_data_service.dart`.
 

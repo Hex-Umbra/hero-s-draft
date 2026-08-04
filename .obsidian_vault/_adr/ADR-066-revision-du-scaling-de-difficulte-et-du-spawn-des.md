@@ -20,14 +20,14 @@ De plus, le budget de combat ne prenait pas en compte la puissance accumulée pa
    - Multiplicateur de Dégâts : croissance par acte de 15% $\rightarrow$ 25%
 
 ### Preuves dans le code
-- [encounter_system.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/game/systems/encounter_system.dart) :
+- [encounter_system.dart](../../lib/game/systems/encounter_system.dart) :
   - Mise à jour de la signature de `generateEnemiesForLevel` pour accepter `playerCardsCount`.
   - Intégration de `playerCardsCount` dans `playerPower`.
   - Application du bonus d'acte sur `finalBudget`.
   - Refonte de `calculateCombatRating` et mise à jour de `getHpMultiplier` et `getDamageMultiplier`.
-- [combat_controller.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/game/controllers/combat_controller.dart) : Réception et transmission de `playerCardsCount` dans `initializeCombat`.
-- [game_screen.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/ui/screens/game_screen.dart) : Passage du paramètre `playerCardsCount` lors de l'initialisation du combat via `ref.read(deckProvider).masterDeck.length`.
-- [encounter_system_test.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/test/encounter_system_test.dart) : Adaptation des assertions de test pour correspondre au nouveau calcul de Combat Rating ( slime : `32.2` $\rightarrow$ `27.9`).
+- [combat_controller.dart](../../lib/game/controllers/combat_controller.dart) : Réception et transmission de `playerCardsCount` dans `initializeCombat`.
+- [game_screen.dart](../../lib/ui/screens/game_screen.dart) : Passage du paramètre `playerCardsCount` lors de l'initialisation du combat via `ref.read(deckProvider).masterDeck.length`.
+- [encounter_system_test.dart](../../test/encounter_system_test.dart) : Adaptation des assertions de test pour correspondre au nouveau calcul de Combat Rating ( slime : `32.2` $\rightarrow$ `27.9`).
 
 ### Conséquences
 - ✅ **Combats tactiques plus variés** : Possibilité accrue de rencontrer plus de deux ennemis simultanément (jusqu'à 5 sur le plateau actif).

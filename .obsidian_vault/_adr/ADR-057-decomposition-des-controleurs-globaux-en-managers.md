@@ -18,10 +18,10 @@ Les contrôleurs `RunController` et `CombatController` constituaient des classes
   2. `TurnPhaseManager` : Orchestre la transition des phases de tour (Joueur / Ennemi) et le déroulement séquentiel de la riposte ennemie.
 
 ### Preuves dans le code
-- [run_controller.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/game/controllers/run_controller.dart) : Instancie les 4 managers et leur délègue ses appels de fonctions.
-- [combat_controller.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/game/controllers/combat_controller.dart) : Délègue le traitement des statuts à `StatusEffectProcessor` et les phases de tours à `TurnPhaseManager`.
-- Sous-dossier [run/](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/game/controllers/run/) : Contient les classes métiers isolées de gestion du run.
-- Sous-dossier [combat/](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/game/controllers/combat/) : Contient les classes métiers de gestion du combat.
+- [run_controller.dart](../../lib/game/controllers/run_controller.dart) : Instancie les 4 managers et leur délègue ses appels de fonctions.
+- [combat_controller.dart](../../lib/game/controllers/combat_controller.dart) : Délègue le traitement des statuts à `StatusEffectProcessor` et les phases de tours à `TurnPhaseManager`.
+- Sous-dossier [run/](../../lib/game/controllers/run/) : Contient les classes métiers isolées de gestion du run.
+- Sous-dossier [combat/](../../lib/game/controllers/combat/) : Contient les classes métiers de gestion du combat.
 
 ### Conséquences
 - ✅ **Respect Strict du Principe de Responsabilité Unique (SRP)** : Chaque fichier possède un domaine logique restreint (stats, progression, or, statuts, phases), simplifiant la lecture.

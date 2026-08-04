@@ -3,7 +3,7 @@
 La progression dans **Hero's Draft** est structurée autour d'une boucle classique de roguelike deckbuilder enrichie d'une mécanique de draft tactique de héros et de cartes.
 
 > [!IMPORTANT]
-> **Persistance de Run (Autosave, v3.2.0)** : Depuis l'introduction du `SaveService`, l'écran d'accueil (`HomeScreen`) propose un bouton **« Continuer »** (visible uniquement si une sauvegarde valide existe) qui court-circuite entièrement les étapes de Sélection de Classe et de Draft Deck Initial pour reprendre directement sur la `MapScreen`, avec le deck, l'or, les reliques et l'état de forge exacts du dernier checkpoint résolu. Voir §3.12 pour les règles métier détaillées de ce mécanisme.
+> **Persistance de Run (Autosave, v3.2.0)** : Depuis l'introduction du `SaveService`, l'écran d'accueil (`HomeScreen`) propose un bouton **« Continuer »** (visible uniquement si une sauvegarde valide existe) qui court-circuite entièrement les étapes de Sélection de Classe et de Draft Deck Initial pour reprendre directement sur la `MapScreen`, avec le deck, l'or, les reliques et l'état de forge exacts du dernier checkpoint résolu. Voir §3.13 pour les règles métier détaillées de ce mécanisme.
 
 ```
 [Écran d'Accueil (HomeScreen)]

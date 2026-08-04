@@ -18,10 +18,10 @@ La classe racine du moteur Flame `HerosDraftGame` gérait de façon centralisée
 - **Conservation de la Façade** : `CardComponent` et `HerosDraftGame` agissent comme des façades de coordination légères associant et délégant aux sous-systèmes et helpers.
 
 ### Preuves dans le code
-- [heros_draft_game.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/game/heros_draft_game.dart) : Nettoyé de ses algorithmes de layout et d'animations, délègue aux 4 sous-systèmes.
-- [card_component.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/game/components/card_component.dart) : Délègue son rendu à `CardRenderer` et ses interactions gestuelles à `CardInteractionHandler`.
-- Sous-dossier [systems/](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/game/systems/) : Contient les 4 sous-systèmes Flame autonomes.
-- [card_renderer.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/game/components/widgets/card_renderer.dart) et [card_interaction_handler.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/game/components/widgets/card_interaction_handler.dart) : Gèrent respectivement le dessin et les gestes.
+- [heros_draft_game.dart](../../lib/game/heros_draft_game.dart) : Nettoyé de ses algorithmes de layout et d'animations, délègue aux 4 sous-systèmes.
+- [card_component.dart](../../lib/game/components/card_component.dart) : Délègue son rendu à `CardRenderer` et ses interactions gestuelles à `CardInteractionHandler`.
+- Sous-dossier [systems/](../../lib/game/systems/) : Contient les 4 sous-systèmes Flame autonomes.
+- [card_renderer.dart](../../lib/game/components/widgets/card_renderer.dart) et [card_interaction_handler.dart](../../lib/game/components/widgets/card_interaction_handler.dart) : Gèrent respectivement le dessin et les gestes.
 
 ### Conséquences
 - ✅ **Rendu et Calculs Découplés** : La structure des classes de rendu Flame est aérée, aisée à comprendre et à faire évoluer sans risquer de perturber la gestion des gestes ou le calcul de géométrie.

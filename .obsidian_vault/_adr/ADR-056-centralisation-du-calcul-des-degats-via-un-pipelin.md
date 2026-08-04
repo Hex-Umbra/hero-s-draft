@@ -18,9 +18,9 @@
 3. **Garantie DRY** : Suppression complète des switches et logiques de statuts dupliquées pour le calcul de dégâts.
 
 ### Preuves dans le code
-- [damage_pipeline.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/game/services/damage_pipeline.dart) : Création de la classe avec sa logique métier en 4 étapes.
-- [combat_controller.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/game/controllers/combat_controller.dart) : Utilisation du pipeline pour calculer les dégâts reçus ou infligés.
-- [effect_resolver.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/game/services/effect_resolver.dart) : Suppression du calcul local au profit de l'appel au pipeline centralisé.
+- [damage_pipeline.dart](../../lib/game/services/damage_pipeline.dart) : Création de la classe avec sa logique métier en 4 étapes.
+- [combat_controller.dart](../../lib/game/controllers/combat_controller.dart) : Utilisation du pipeline pour calculer les dégâts reçus ou infligés.
+- [effect_resolver.dart](../../lib/game/services/effect_resolver.dart) : Suppression du calcul local au profit de l'appel au pipeline centralisé.
 
 ### Conséquences
 - ✅ **Calculs de Combat Garantis Homogènes** : Le héros et les monstres sont soumis aux mêmes règles et mécaniques, sans dérive de calcul possible.

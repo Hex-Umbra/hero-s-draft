@@ -42,7 +42,7 @@ pie title Répartition de l'effort restant estimé (~95 jours)
 
 ```mermaid
 graph TD
-    P01[P-01 pubspec resync] --> P04[P-04 CI/CD]
+    P01["P-01 pubspec resync ✅ clos"] --> P04[P-04 CI/CD]
     P02[P-02 Assainissement pioche] --> B18[Mots-clés de deck]
     P02 --> B19[Effets interactifs]
     P02 --> B20[Malédictions ennemies]
@@ -72,7 +72,7 @@ graph TD
 > [!NOTE]
 > ✅ **Clos le 2026-08-03.** La resynchronisation a été faite, et la propriété du numéro de version est désormais portée par le skill `.claude/skills/patch-notes-writer/SKILL.md`, qui l'écrit simultanément dans `patch_notes.json` et `pubspec.yaml`. L'écart ne peut plus se recreuser.
 
-Cinq minutes de travail, mais **prérequis bloquant strict** de P-04 : le job `verify-version` compare le tag git à `pubspec.yaml` et échoue systématiquement tant que l'écart `0.1.0` / `0.4.7` subsiste. À faire immédiatement, indépendamment du reste.
+*Diagnostic du 31/07/2026, conservé tel quel pour mémoire — le chantier est clos depuis (voir la note ci-dessus) :* « Cinq minutes de travail, mais **prérequis bloquant strict** de P-04 : le job `verify-version` compare le tag git à `pubspec.yaml` et échoue systématiquement tant que l'écart `0.1.0` / `0.4.7` subsiste. À faire immédiatement, indépendamment du reste. »
 
 ### P-02 — Assainissement de la pioche
 **Ce que ça corrige** : `drawCards()` ne remélange jamais la défausse — une carte « Piocher 2 » avec pioche vide ne fait *rien*, silencieusement. Trois cartes du pool et la rune `quick` sont donc non fiables aujourd'hui. S'ajoutent : le seuil de remélange `< 5` qui détruit la capacité à compter son deck (compétence centrale du genre), l'absence de limite de main, un mélange non déterministe qui rend les tests de séquence inécrivables, `_turnCount` dupliqué (bug d'affichage « Tour 1 » sur une partie rechargée), et 4 blocs de code mort (`temporaryCost`, `IntentType.debuffDeck`, `onEnemyDebuffDeck`, deck de secours codé en dur).
@@ -237,7 +237,7 @@ Constats faits en consolidant ce document — **à traiter avant de se fier aux 
 | 1 | `backlog_and_roadmap_report_22072026.md` présente « Persistance / Sauvegarde » comme le Jalon 1 immédiat | Livré en v3.2.0 (ADR-069) le 24/07 | Marquer le rapport comme superseded par ce document |
 | 2 | `progress.md` §4 liste `map_screen.dart` (2 471 lignes) et `game_screen.dart` (1 667 lignes) comme chantiers **critiques** | **418** et **555 lignes** réellement | Retirer de la roadmap de dette — chantier clos le 24/07 |
 | 3 | Métriques de tests contradictoires selon les documents | `progress.md` en-tête : « 145+ » · `progress.md` §Fiabilité : « 106 » · `activeContext.md` : « 211/211 » | Aligner sur une seule source de vérité (P-04 la produira automatiquement) |
-| 4 | `pubspec.yaml` à `0.1.0+1` vs `patch_notes.json` à `0.4.7` | Confirmé | → **P-01** |
+| 4 | `pubspec.yaml` à `0.1.0+1` vs `patch_notes.json` à `0.4.7` | Confirmé | → **P-01** — ✅ clos le 2026-08-03 |
 | 5 | Taux de complétion divergents | Rapport 22/07 : « ~86 % de 146 items » · `progress.md` §3 : « ~60 % de 95 items » | Recompter sur la base de ce document |
 | 6 | Aucun `.github/workflows/` | Confirmé | → **P-04** |
 
@@ -252,7 +252,7 @@ gantt
     title Séquencement proposé — à partir du 31/07/2026
     dateFormat YYYY-MM-DD
     section Jalon 1 — Socle
-    P-01 Resync version           :j1a, 2026-08-01, 1d
+    P-01 Resync version (clos)    :done, j1a, 2026-08-01, 1d
     P-02 Assainissement pioche    :j1b, after j1a, 3d
     P-04 CI/CD                    :j1c, after j1a, 3d
     P-03 Audio                    :j1d, after j1b, 5d
@@ -267,7 +267,7 @@ gantt
     P-16 Refonte probabilités     :j3c, after j3b, 3d
 ```
 
-### Jalon 1 — Socle *(≈ 11 j)* → P-01, P-02, P-04, P-03
+### Jalon 1 — Socle *(≈ 11 j)* → ~~P-01~~ ✅, P-02, P-04, P-03
 Corrige les règles cassées, comble le trou audio, automatise la distribution. **Rien de nouveau n'est ajouté** — c'est délibéré : tout ajout de contenu posé sur la pioche actuelle devra être re-testé après P-02.
 
 ### Jalon 2 — Feel & contenu *(≈ 14 j)* → P-06, P-08 (proto), P-07, P-05

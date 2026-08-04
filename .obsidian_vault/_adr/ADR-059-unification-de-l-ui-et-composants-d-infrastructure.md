@@ -27,12 +27,12 @@
    - Harmoniser 9 écrans majeurs (Dictionary, Deck, Shop, RestCardSelection, PatchNotes, Rest, Event, RelicExchange, Map) pour s'appuyer sur ces widgets communs.
 
 ### Preuves dans le code
-- [screen_scaffold.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/ui/widgets/screen_scaffold.dart) : Classe centralisant le décor et le cycle de vie du Scaffold.
-- [page_header.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/ui/widgets/page_header.dart) : En-tête standardisé.
-- [gold_indicator.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/ui/widgets/gold_indicator.dart) : Badge d'or connecté à l'état.
-- [ui_card.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/ui/widgets/ui_card.dart) : Intégration de `UiCard.fromInstance` et `UiCard.fromData`.
-- [card_draft_layout.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/ui/widgets/draft/card_draft_layout.dart) : Layout de draft partagé.
-- Sous-dossier [forge/](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/ui/widgets/forge/) : Composants visuels extraits de la forge.
+- [screen_scaffold.dart](../../lib/ui/widgets/screen_scaffold.dart) : Classe centralisant le décor et le cycle de vie du Scaffold.
+- [page_header.dart](../../lib/ui/widgets/page_header.dart) : En-tête standardisé.
+- [gold_indicator.dart](../../lib/ui/widgets/gold_indicator.dart) : Badge d'or connecté à l'état.
+- [ui_card.dart](../../lib/ui/widgets/ui_card.dart) : Intégration de `UiCard.fromInstance` et `UiCard.fromData`.
+- [card_draft_layout.dart](../../lib/ui/widgets/draft/card_draft_layout.dart) : Layout de draft partagé.
+- Sous-dossier [forge/](../../lib/ui/widgets/forge/) : Composants visuels extraits de la forge.
 
 ### Conséquences
 - ✅ **Élimination de la Duplication Visuelle (DRY)** : Les arrière-plans, les en-têtes et les structures de pages sont partagés, éliminant des centaines de lignes répétitives.

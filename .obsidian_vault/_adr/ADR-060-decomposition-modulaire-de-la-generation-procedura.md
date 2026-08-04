@@ -16,7 +16,7 @@ Découper la logique de `MapGeneratorService` en 4 sous-services spécialisés e
 Faire de `MapGeneratorService` un simple orchestrateur sans logique algorithmique interne.
 
 ### Preuves dans le code
-- [map_generator_service.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/services/map_generator_service.dart) orchestrant simplement les appels aux 4 sous-services.
+- [map_generator_service.dart](../../lib/services/map_generator_service.dart) orchestrant simplement les appels aux 4 sous-services.
 - Le sous-répertoire `lib/services/map/` contenant les 4 fichiers des services extraits.
 
 ### Conséquences

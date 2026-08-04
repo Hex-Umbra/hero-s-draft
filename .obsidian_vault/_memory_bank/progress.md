@@ -14,8 +14,13 @@
 | Fichiers Dart (`lib/`) | 169 | `find lib -name "*.dart" \| wc -l` |
 | Lignes de code (`lib/`) | 36 343 | `find lib -name "*.dart" -exec cat {} + \| wc -l` |
 | Fichiers de données | 10 | `ls assets/data/*.json \| wc -l` |
-| Version `pubspec.yaml` | 0.1.0+1 | lecture directe |
-| Version joueur | 0.4.7 — 2026-07-26 — « L'Équilibre des Effectifs » | 1ʳᵉ entrée de `assets/data/patch_notes.json` |
+
+> [!NOTE]
+> **La version ne vit pas ici.** La version de référence se lit dans `pubspec.yaml`
+> (champ `version:`) et dans la 1ʳᵉ entrée de `assets/data/patch_notes.json` — les deux
+> sont écrits ensemble par le skill `patch-notes-writer`, seul propriétaire du numéro.
+> La recopier dans ce fichier lui donnerait un second domicile et la ferait diverger
+> au prochain patch note.
 
 ## 1. Fonctionnalités opérationnelles
 
@@ -202,7 +207,10 @@ Absence délibérée — [ADR-012](../_adr/ADR-012-absence-de-systeme-audio.md).
 | **v0.2.7** | 2026-06-16 | Révision du Scaling et du Spawn des Ennemis | Révision des formules de génération des combats et de scaling de difficulté. Prise en compte du nombre de cartes du deck (`playerCardsCount * 2.0`) dans la puissance estimée du joueur. Ajustement du calcul du Combat Rating des ennemis (division par 4 des PV de base, multiplication par 2 des dégâts) pour encourager le spawn de plus d'ennemis. Augmentation des coefficients de croissance par acte (HP passe de 20% à 35%, dégâts de 15% à 25%). |
 
 > [!NOTE]
-> **Écart de schéma de version connu.** L'historique ci-dessus emploie un schéma
-> interne (`v3.x`) distinct de la version joueur de `assets/data/patch_notes.json` (`0.4.x`).
+> **Le schéma `v3.x` est gelé.** L'historique ci-dessus emploie un schéma interne
+> (`v3.x`) distinct de la version joueur de `assets/data/patch_notes.json` (`0.4.x`).
 > Depuis le 2026-08-03, la version de référence est celle de `assets/data/patch_notes.json`,
 > maintenue conjointement avec `pubspec.yaml` par le skill `patch-notes-writer`.
+> **Aucune nouvelle entrée n'emploie le schéma `v3.x`** : les lignes existantes sont
+> conservées telles quelles pour leur valeur historique, et toute ligne ajoutée à ce
+> tableau est clé sur la version publiée dans `assets/data/patch_notes.json`.

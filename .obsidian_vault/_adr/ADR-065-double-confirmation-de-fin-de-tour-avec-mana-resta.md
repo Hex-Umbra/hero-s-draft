@@ -13,8 +13,8 @@ Dans les jeux de cartes et roguelike deckbuilders, passer son tour accidentellem
 - Réinitialiser cet état d'avertissement de manière dynamique si le joueur décide de jouer une carte (`onPlayCard`), ou lorsqu'un nouveau tour joueur débute (`_startPlayerNewTurn()`), pour éviter d'exiger une double confirmation inutile s'il a consommé tout son mana par la suite.
 
 ### Preuves dans le code
-- [app_en.arb](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/l10n/app_en.arb) & [app_fr.arb](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/l10n/app_fr.arb) : Ajout de la clé bilingue `remainingManaWarning`.
-- [game_screen.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/ui/screens/game_screen.dart) :
+- [app_en.arb](../../lib/l10n/app_en.arb) & [app_fr.arb](../../lib/l10n/app_fr.arb) : Ajout de la clé bilingue `remainingManaWarning`.
+- [game_screen.dart](../../lib/ui/screens/game_screen.dart) :
   - Ajout de la variable d'état local `bool _showRemainingManaWarning = false;`.
   - Intégration de la logique de validation et de double clic dans le callback `onPressed` du bouton de fin de tour.
   - Réinitialisation de `_showRemainingManaWarning` dans `_startPlayerNewTurn()` et `onPlayCard`.

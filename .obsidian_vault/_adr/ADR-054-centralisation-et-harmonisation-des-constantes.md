@@ -14,9 +14,9 @@
 3. **Refactoring de `FloatingText`** : Remplacer l'intégralité des nombres magiques de taille, durée, et drift par les nouvelles constantes de `GameConstants`, standardisant ainsi les trajectoires et l'affichage visuel des nombres flottants.
 
 ### Preuves dans le code
-- [game_constants.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/game/game_constants.dart) : Déclaration et documentation détaillée des constantes sous `GameConstants`.
-- [floating_text.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/game/components/floating_text.dart) : Utilisation des constantes `GameConstants.floatingText*`.
-- [heros_draft_game.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/game/heros_draft_game.dart) : Utilisation des constantes `GameConstants.combatDelay*Ms`.
+- [game_constants.dart](../../lib/game/game_constants.dart) : Déclaration et documentation détaillée des constantes sous `GameConstants`.
+- [floating_text.dart](../../lib/game/components/floating_text.dart) : Utilisation des constantes `GameConstants.floatingText*`.
+- [heros_draft_game.dart](../../lib/game/heros_draft_game.dart) : Utilisation des constantes `GameConstants.combatDelay*Ms`.
 
 ### Conséquences
 - ✅ **Éradication de la Dette Technique (Nombres Magiques)** : Disparition complète des valeurs littérales en dur liées aux timings de combat et à l'affichage des textes flottants, améliorant drastiquement la maintenabilité et la lisibilité du code.

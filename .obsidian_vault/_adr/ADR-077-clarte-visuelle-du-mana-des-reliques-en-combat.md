@@ -18,7 +18,7 @@ Dans *Hero's Draft*, certaines reliques (telles que le Cristal de Mana) octroien
 4. **Consommation Prioritaire** : Confirmer que la logique métier de Riverpod consomme le mana supplémentaire de relique de manière transparente et prioritaire lors du jeu de cartes, l'affichage se mettant à jour réactivement.
 
 ### Preuves dans le code
-- [mana_indicator.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/ui/widgets/hud/mana_indicator.dart) :
+- [mana_indicator.dart](../../lib/ui/widgets/hud/mana_indicator.dart) :
   - Utilisation de `max(currentMana, maxMana)` pour déterminer la longueur de la liste d'icônes.
   - Calcul dynamique de `baseSize` (par exemple : `double baseSize = totalIcons > 5 ? (200 / totalIcons).clamp(16.0, 24.0) : 24.0;`).
   - Condition d'affichage :

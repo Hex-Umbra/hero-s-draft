@@ -81,11 +81,19 @@ N'inclus que les catégories ayant au moins une entrée. Ordre imposé : Nouvell
 Tu décides du numéro de version, donc **tu l'écris aux deux endroits** :
 
 1. `assets/data/patch_notes.json` — nouvelle entrée en tête du tableau.
-2. `pubspec.yaml` — champ `version: <version>+<build>`, en incrémentant le build.
+2. `pubspec.yaml` — champ `version: <version>+<build>`.
+
+**Règle du build** : le build **repart à `1`** à chaque nouveau numéro de version. Il ne
+s'incrémente que si tu republies le *même* numéro de version (rebuild sans changement
+de semver), cas qui ne doit pas se produire dans le déroulé normal.
 
 Exemple : entrée `0.4.8` → `version: 0.4.8+1` dans `pubspec.yaml`.
 
-C'est la seule chose qui empêche les deux fichiers de diverger, et le job CI `verify-version` compare le tag git à `pubspec.yaml`.
+C'est la seule chose qui empêche les deux fichiers de diverger. Le job CI `verify-version`
+**prévu par le chantier P-04** de `docs/ROADMAP.md` comparera le tag git à `pubspec.yaml` —
+il n'existe pas encore : `.github/` est absent du dépôt à ce jour. Tant que P-04 n'est pas
+livré, cette double écriture est le **seul** garde-fou, et rien ne la vérifie
+automatiquement.
 
 ## 5. Déroulé
 

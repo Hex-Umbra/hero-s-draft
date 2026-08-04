@@ -24,14 +24,14 @@ Avant cette refonte, le système d'événements ne comprenait que 2 rencontres n
    - Intégrer une barre de statistiques (PV & Or) dynamique en haut de l'écran pour faciliter les comparaisons.
 
 ### Preuves dans le code
-- [event_data.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/models/data/event_data.dart) :
+- [event_data.dart](../../lib/models/data/event_data.dart) :
   - Ajout de la méthode `isSelectable` sur `EventChoice` avec typage dynamique de `action.value` pour supporter les validations financières, de santé et de vitalité maximale.
-- [event_screen.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/ui/screens/event_screen.dart) :
+- [event_screen.dart](../../lib/ui/screens/event_screen.dart) :
   - Câblage de `isSelectable` dans l'arbre de widgets.
   - Implémentation du style de désactivation réactif dans le widget privé `_EventOptionButton`.
   - Conception de `_buildCompactActionBadge` et `_buildActionBadge` pour le rendu visuel thématique et réactif.
   - Ajout des badges en direct pour les PV et l'or en haut de l'écran.
-- [events.json](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/assets/data/events.json) :
+- [events.json](../../assets/data/events.json) :
   - Définition complète des 5 rencontres bilingues structurées et de leurs actions.
 
 ### Conséquences

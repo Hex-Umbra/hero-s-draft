@@ -31,25 +31,25 @@ The codebase strictly separates three layers — never mix them:
 
 - **State & business logic (Riverpod)** — `lib/game/controllers/`
   - `RunController` — run-wide state (health, mana, armor, buffs, map position, relics); split into focused managers under `run/`: `player_stats_manager.dart`, `map_progression_manager.dart`, `gold_manager.dart`.
-  - `DeckController` — hand/draw/discard/exhaust pile management.
+  - `DeckNotifier` (`deck_controller.dart`) — hand/draw/discard/exhaust pile management.
   - `CombatController` — turn flow, enemy intents, damage resolution; split into `combat/status_effect_processor.dart` and `combat/turn_phase_manager.dart`.
   - `RewardController` — post-combat rewards and relic choices.
   - `ShopController` — shop inventory/purchases.
   - `EventController` — random narrative event resolution.
   - `InventoryController` — relic inventory.
   - `SkillController` — hero skill management.
-  - `CheckpointController` (`checkpoint_controller.dart`) — `checkpointProvider` / `autosaveOrchestratorProvider` : déclenche l'autosave à la résolution d'un nœud de carte.
-  - All shared/business state lives in `StateNotifier`s here — never in UI widgets or Flame components, and never as global variables/singletons.
+  - `CheckpointNotifier` (`checkpoint_controller.dart`) — `checkpointProvider` / `autosaveOrchestratorProvider`: triggers the autosave when a map node is resolved.
+  - All shared/business state lives in Riverpod 2.x `Notifier`s here (`extends Notifier<T>`, exposed via `NotifierProvider`) — never in UI widgets or Flame components, and never as global variables/singletons. The migration off `StateNotifier` is complete for the controllers; the only remaining `StateNotifier` is the UI-local toast queue in `lib/ui/widgets/notification_overlay.dart`, which holds no business state. Do not add new ones.
 
 - **Data layer** — `lib/models/data/` holds models mapping 1:1 to the JSON assets (`card_data.dart`, `enemy_data.dart`, `hero_data.dart`, `relic_data.dart`, `skill_data.dart`, `event_data.dart`, `forge_upgrade_data.dart`, etc.), aggregated via `game_data_registry.dart`. `lib/models/` (top level) holds runtime instances/state (`card_instance.dart`, `enemy_instance.dart`, `combat_state.dart`, `status_effect.dart`, etc.).
 
 - **Services** — `lib/services/`
-  - `GameDataService` — async loads and caches all JSON asset data at startup.
+  - `gameDataLoaderProvider` (`game_data_service.dart`) — a `FutureProvider<GameDataRegistry>` that async-loads and caches all JSON asset data at startup. There is no `GameDataService` class; the provider *is* the entry point.
   - `MapGeneratorService` plus `lib/services/map/` (`map_node_generator.dart`, `map_connection_builder.dart`, `map_content_placer.dart`, `map_validator.dart`) — procedural world-map generation, decomposed into generate → connect → place-content → validate stages.
-  - `SaveService` (`lib/services/save_service.dart`) — sérialise `RunState`/`DeckState`/`InventoryState`/`SkillState` en un blob JSON versionné sous une clé `shared_preferences` unique. Jamais appelé en cours de combat.
+  - `SaveService` (`lib/services/save_service.dart`) — serialises `RunState`/`DeckState`/`InventoryState`/`SkillState` into a single versioned JSON blob under one `shared_preferences` key. Never called mid-combat.
 
 - **UI (Flutter)** — `lib/ui/`
-  - `lib/ui/screens/` — Home, Splash, ClassSelection, Map, Game, Draft, StarterDeckDraft, BossCardDraft, DeckView, Shop, Event, Rest/RestCardSelection, RelicExchange, PatchNotes, CardDictionary, ForgeFusion.
+  - `lib/ui/screens/` — Home, Splash, ClassSelection, Map, Game, Draft, StarterDeckDraft, BossCardDraft, Deck (`deck_screen.dart`), Shop, Event, Rest/RestCardSelection, RelicExchange, PatchNotes, CardDictionary, ForgeFusion.
   - `lib/ui/widgets/` — reusable widgets, grouped by feature (`draft/`, `forge/`, `hud/` incl. `hud/dialogs/`, `map/` incl. `map/dialogs/`, `relic_carousel/`, `ui_card/`).
   - `lib/ui/theme/` — app-wide theme/design tokens (`app_theme.dart`).
   - UI widgets and Flame components must stay decoupled: no Flame references inside UI code, no Flutter widget trees inside Flame components.

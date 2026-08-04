@@ -18,9 +18,9 @@ Avant cette version, les cartes proposées à la vente dans la boutique étaient
 5. **Réinitialisation en Sortie de Session** : Remettre le prix du Miroir à sa base de 150 Or et le compteur d'achats `clonePurchasedCount` à 0 dès que le joueur quitte la boutique (via l'action de fermeture ou de réinitialisation de boutique `clearCloneOptions`).
 
 ### Preuves dans le code
-- [shop_state.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/models/shop_state.dart) : stockage de `cardsForSale` en `List<CardInstance>`, ajout de `clonePurchasedCount` et getter `clonePrice`.
-- [shop_controller.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/game/controllers/shop_controller.dart) : calcul dynamique des prix dans `getCardPrice`, génération procédurale des cartes avec raretés/upgrades selon l'Acte dans `_generateShopCardInstance` et `_rollRandomUpgrade`, mise à jour de `buyCard`, `cloneCard` (incrément du compteur) et `clearCloneOptions` (reset du compteur).
-- [shop_screen.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/ui/screens/shop_screen.dart) : modification de `_buyCard` pour recevoir `CardInstance`, utilisation de `UiCard.fromInstance` pour l'affichage visuel, retrait du prix codé en dur au profit de `clonePrice` réactif du state.
+- [shop_state.dart](../../lib/models/shop_state.dart) : stockage de `cardsForSale` en `List<CardInstance>`, ajout de `clonePurchasedCount` et getter `clonePrice`.
+- [shop_controller.dart](../../lib/game/controllers/shop_controller.dart) : calcul dynamique des prix dans `getCardPrice`, génération procédurale des cartes avec raretés/upgrades selon l'Acte dans `_generateShopCardInstance` et `_rollRandomUpgrade`, mise à jour de `buyCard`, `cloneCard` (incrément du compteur) et `clearCloneOptions` (reset du compteur).
+- [shop_screen.dart](../../lib/ui/screens/shop_screen.dart) : modification de `_buyCard` pour recevoir `CardInstance`, utilisation de `UiCard.fromInstance` pour l'affichage visuel, retrait du prix codé en dur au profit de `clonePrice` réactif du state.
 
 ### Conséquences
 - ✅ **Économie plus organique et équilibrée** : La boutique scale naturellement avec le niveau de la run et propose des opportunités stratégiques fortes (cartes déjà améliorées ou rares à prix élevé).

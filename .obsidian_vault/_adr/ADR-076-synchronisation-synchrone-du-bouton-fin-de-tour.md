@@ -15,7 +15,7 @@ Lorsqu'il clique sur "Fin de Tour", `HerosDraftGame` passe immédiatement `curre
 - Conserver la logique de protection contre le double-clic lors de la transition vers le tour de l'ennemi.
 
 ### Preuves dans le code
-- [game_screen.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/ui/screens/game_screen.dart) (`_startPlayerNewTurn()`) :
+- [game_screen.dart](../../lib/ui/screens/game_screen.dart) (`_startPlayerNewTurn()`) :
   ```dart
   _game.currentPhase = TurnPhase.player;
   ```

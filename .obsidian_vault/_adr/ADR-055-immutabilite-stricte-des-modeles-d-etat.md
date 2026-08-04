@@ -14,9 +14,9 @@
 3. **Mise à jour des constructeurs** : Convertir les constructeurs de `EntityStats` et `CombatState` pour qu'ils ne soient plus `const` puisque `List.unmodifiable` est exécuté à l'exécution.
 
 ### Preuves dans le code
-- [entity_stats.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/models/entity_stats.dart) : Ajout de `@immutable` et `List.unmodifiable(statuses)`.
-- [combat_state.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/models/combat_state.dart) : Ajout de `@immutable` et `List.unmodifiable` pour `enemies`, `pendingEnemies`, et `defeatedEnemies`.
-- [enemy_instance.dart](file:///c:/Users/Gpdac/OneDrive/Documents/GameDev%20and%20Godot/Roguelike%20Card%20Game/roguelike_card_game/lib/models/enemy_instance.dart) : Ajout de `@immutable`.
+- [entity_stats.dart](../../lib/models/entity_stats.dart) : Ajout de `@immutable` et `List.unmodifiable(statuses)`.
+- [combat_state.dart](../../lib/models/combat_state.dart) : Ajout de `@immutable` et `List.unmodifiable` pour `enemies`, `pendingEnemies`, et `defeatedEnemies`.
+- [enemy_instance.dart](../../lib/models/enemy_instance.dart) : Ajout de `@immutable`.
 
 ### Conséquences
 - ✅ **Sécurisation du State Riverpod** : Plus aucune altération d'état non détectée ne peut se produire sur les entités de combat.
