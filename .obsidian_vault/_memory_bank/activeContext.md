@@ -17,9 +17,11 @@ Prochain chantier applicatif une fois la doc stabilisée : Jalon 1 « Socle »
 ## 3 dernières livraisons
 
 1. **Refonte documentaire du memory bank** (2026-08-03, en cours) — `decisionLog.md`
-   (2704 → 101 lignes + 77 fiches ADR), `systemPatterns.md` (1478 → 115 lignes +
-   39 fiches), `productContext.md` (807 → 90 lignes + 26 fiches) ; `progress.md`
-   ramené à 208 lignes. Design : `docs/superpowers/specs/2026-08-03-documentation-overhaul-design.md`.
+   (2704 lignes), `systemPatterns.md` (1478) et `productContext.md` (807) sont
+   devenus des index adossés à des fiches adressables sous `../_adr/`,
+   `../_patterns/` et `../_rules/` ; `progress.md` a été réécrit sur des métriques
+   re-mesurées. Pour les tailles courantes, lire les fichiers — ce document ne les
+   réénonce pas. Design : `docs/superpowers/specs/2026-08-03-documentation-overhaul-design.md`.
 2. **Réactivité du bouton « Continuer » de `HomeScreen`** (2026-07-26) — le bouton
    pouvait afficher un état obsolète après un retour via `Navigator.popUntil`
    (pause, défaite) car `HomeScreen` ne se reconstruisait pas et son
