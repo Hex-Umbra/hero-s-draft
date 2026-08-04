@@ -61,6 +61,7 @@ Un dépassement se corrige en **archivant**, jamais en tronquant ni en condensan
 - `activeContext.md` : **FIFO strict à 3 livraisons**. La 4ᵉ pousse la plus ancienne vers `.obsidian_vault/_archive/`.
 - `progress.md`, historique des releases : **10 entrées**. Le reste vers l'archive.
 - Règle générale : *une passe se termine avec autant ou moins de lignes qu'elle n'a commencé, sauf changement structurel du jeu.*
+- Dans un texte conservé pour sa valeur historique (« telles quelles »), seuls les **chemins de fichiers** peuvent être corrigés pour rester résolvables. Les chiffres, les dates et les affirmations restent intouchables.
 
 ## Garantie 4 — Source unique
 
