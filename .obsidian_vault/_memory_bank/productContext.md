@@ -3,11 +3,18 @@
 > [!IMPORTANT]
 > **Plafond : 120 lignes.** Ce fichier est un index, jamais un contenu. Chaque règle métier vit dans sa fiche sous `../_rules/`. Les arbitrages qui les ont produites vivent dans `../_adr/`.
 
-**Vérifié le 2026-08-03** — 26 fiches, découpées depuis un `productContext.md` de 808 lignes.
+**Vérifié le 2026-08-03** — 26 fiches, découpées depuis un `productContext.md` de 807 lignes.
+
+### 1. Boucle de Gameplay Principale (Core Loop)
 
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
 | 1. Boucle de Gameplay Principale (Core Loop) | [01-00-boucle-de-gameplay-principale.md](../_rules/01-00-boucle-de-gameplay-principale.md) | 39 |
+
+### 2. Systèmes de Progression
+
+| Domaine | Fiche | Lignes |
+|:---|:---|---:|
 | 2.1. Génération Procédurale de Carte (`MapGeneratorService`) | [02-1-generation-procedurale-de-carte.md](../_rules/02-1-generation-procedurale-de-carte.md) | 55 |
 | 2.2. Système de Héros | [02-2-systeme-de-heros.md](../_rules/02-2-systeme-de-heros.md) | 16 |
 | 2.3. Catalogue de Cartes | [02-3-catalogue-de-cartes.md](../_rules/02-3-catalogue-de-cartes.md) | 29 |
@@ -15,11 +22,12 @@
 | 2.5. Bestiaire | [02-5-bestiaire.md](../_rules/02-5-bestiaire.md) | 48 |
 | 2.6. Équilibrage Hybride, Budget de Menace et Réserve de Vagues | [02-6-equilibrage-hybride-budget-de-menace-et-reser.md](../_rules/02-6-equilibrage-hybride-budget-de-menace-et-reser.md) | 31 |
 | 2.7. 🔄 Autel d'Échange de Reliques (Relic Exchange Shrine) | [02-7-autel-d-echange-de-reliques.md](../_rules/02-7-autel-d-echange-de-reliques.md) | 24 |
+
+### 3. Règles Métier Majeures
+
+| Domaine | Fiche | Lignes |
+|:---|:---|---:|
 | 3.1. 🔋 Gestion du Mana | [03-1-gestion-du-mana.md](../_rules/03-1-gestion-du-mana.md) | 9 |
-| 3.10. 🃏 Poli Visuel et Sélection de Récompenses (Draft Screen Polish) | [03-10-poli-visuel-et-selection-de-recompenses.md](../_rules/03-10-poli-visuel-et-selection-de-recompenses.md) | 8 |
-| 3.11. 🎯 Système de Coup Critique (Critical Hit System) | [03-11-systeme-de-coup-critique.md](../_rules/03-11-systeme-de-coup-critique.md) | 22 |
-| 3.12. 🎨 Optimisations Visuelles, Fluidité & Animations de Combat | [03-12-optimisations-visuelles-fluidite-animations-d.md](../_rules/03-12-optimisations-visuelles-fluidite-animations-d.md) | 20 |
-| 3.13. 💾 Persistance de Run (Autosave) | [03-13-persistance-de-run.md](../_rules/03-13-persistance-de-run.md) | 11 |
 | 3.2. 🛡️ Gestion de l'Armure | [03-2-gestion-de-l-armure.md](../_rules/03-2-gestion-de-l-armure.md) | 20 |
 | 3.3. ⚔️ Pipeline de Dégâts Centralisé | [03-3-pipeline-de-degats-centralise.md](../_rules/03-3-pipeline-de-degats-centralise.md) | 20 |
 | 3.4. 🃏 Système de Piles de Cartes | [03-4-systeme-de-piles-de-cartes.md](../_rules/03-4-systeme-de-piles-de-cartes.md) | 20 |
@@ -28,10 +36,39 @@
 | 3.7. 🏕️ Feu de Camp / Repos (`RestScreen`) | [03-7-feu-de-camp-repos.md](../_rules/03-7-feu-de-camp-repos.md) | 6 |
 | 3.8. 🔨 Système de Forge & Forge de Fusion (Forge v2.5) | [03-8-systeme-de-forge-forge-de-fusion.md](../_rules/03-8-systeme-de-forge-forge-de-fusion.md) | 54 |
 | 3.9. 🛒 Boutique (Shop) | [03-9-boutique.md](../_rules/03-9-boutique.md) | 18 |
+| 3.10. 🃏 Poli Visuel et Sélection de Récompenses (Draft Screen Polish) | [03-10-poli-visuel-et-selection-de-recompenses.md](../_rules/03-10-poli-visuel-et-selection-de-recompenses.md) | 8 |
+| 3.11. 🎯 Système de Coup Critique (Critical Hit System) | [03-11-systeme-de-coup-critique.md](../_rules/03-11-systeme-de-coup-critique.md) | 22 |
+| 3.12. 🎨 Optimisations Visuelles, Fluidité & Animations de Combat | [03-12-optimisations-visuelles-fluidite-animations-d.md](../_rules/03-12-optimisations-visuelles-fluidite-animations-d.md) | 20 |
+| 3.13. 💾 Persistance de Run (Autosave) | [03-13-persistance-de-run.md](../_rules/03-13-persistance-de-run.md) | 11 |
+
+### 4. Altérations d'État & Statuts (Status Effects)
+
+| Domaine | Fiche | Lignes |
+|:---|:---|---:|
 | 4. Altérations d'État & Statuts (Status Effects) | [04-00-alterations-d-etat-statuts.md](../_rules/04-00-alterations-d-etat-statuts.md) | 32 |
+
+### 5. Compétences Héroïques (Skills)
+
+| Domaine | Fiche | Lignes |
+|:---|:---|---:|
 | 5. Compétences Héroïques (Skills) | [05-00-competences-heroiques.md](../_rules/05-00-competences-heroiques.md) | 14 |
+
+### 6. Économie de Jeu
+
+| Domaine | Fiche | Lignes |
+|:---|:---|---:|
 | 6. Économie de Jeu | [06-00-economie-de-jeu.md](../_rules/06-00-economie-de-jeu.md) | 19 |
+
+### 7. Architecture des Données (100% Data-Driven)
+
+| Domaine | Fiche | Lignes |
+|:---|:---|---:|
 | 7. Architecture des Données (100% Data-Driven) | [07-00-architecture-des-donnees.md](../_rules/07-00-architecture-des-donnees.md) | 36 |
+
+### 8. Système de Tutoriel Autonome (Tutorial System)
+
+| Domaine | Fiche | Lignes |
+|:---|:---|---:|
 | 8. Système de Tutoriel Autonome (Tutorial System) | [08-00-systeme-de-tutoriel-autonome.md](../_rules/08-00-systeme-de-tutoriel-autonome.md) | 33 |
 
 ---
