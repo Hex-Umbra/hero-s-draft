@@ -3,7 +3,7 @@
 **Date de rédaction** : 31 juillet 2026
 **Version du projet au moment de la rédaction** : v3.5.1 (ADR-073) — branche `main`, arbre propre
 **Périmètre** : consolidation de **toutes** les améliorations documentées à ce jour (8 brainstorms de `docs/possible_upgrades/`, `backlog_and_roadmap_report_22072026.md`, `progress.md` §3-§5, `upgrade_ideas.md`, audit de dette non documentée du 24/07)
-**Nature du document** : document de pilotage réutilisable — à relire et re-prioriser périodiquement. Il **remplace** `backlog_and_roadmap_report_22072026.md` comme roadmap de référence (voir §7 pour les raisons).
+**Nature du document** : document de pilotage réutilisable — **source unique du « reste à faire »**. Il remplace `backlog_and_roadmap_report_22072026.md` (archivé), ainsi que les anciens §3 et §4 de `progress.md` (archivés). Maintenu par le skill `memory-bank-sync` : tout chantier livré y est coché dans la même passe.
 
 ---
 
@@ -63,12 +63,15 @@ graph TD
 
 | ID | Chantier | Effort | Difficulté | Apport |
 |:---|:---|:---:|:---:|:---:|
-| **P-01** | **Resynchroniser `pubspec.yaml`** (`0.1.0+1` → `0.4.7+1`) sur `patch_notes.json` | **0,1 j** | ★☆☆☆☆ | 🔥 |
+| ~~**P-01**~~ | ~~**Resynchroniser `pubspec.yaml`** (`0.1.0+1` → `0.4.7+1`) sur `patch_notes.json`~~ ✅ **Livré le 2026-08-03** — désormais maintenu automatiquement par le skill `patch-notes-writer` | — | — | — |
 | **P-02** | **Assainissement du système de pioche** (doc 31/07) | **2-3 j** | ★★★★☆ | 🔥🔥🔥 |
 | **P-03** | **Système audio** (`flame_audio` + `SfxService`, ~15 événements) | **3-5 j** | ★★★☆☆ | 🔥🔥🔥 |
 | **P-04** | **CI/CD GitHub Actions** (`ci.yml` + `release.yml`, 7 jobs) | **1,5-2 j** *(+0,5 j de config externe)* | ★★★☆☆ | 🔥🔥 |
 
 ### P-01 — Resync de version
+> [!NOTE]
+> ✅ **Clos le 2026-08-03.** La resynchronisation a été faite, et la propriété du numéro de version est désormais portée par le skill `.claude/skills/patch-notes-writer/SKILL.md`, qui l'écrit simultanément dans `patch_notes.json` et `pubspec.yaml`. L'écart ne peut plus se recreuser.
+
 Cinq minutes de travail, mais **prérequis bloquant strict** de P-04 : le job `verify-version` compare le tag git à `pubspec.yaml` et échoue systématiquement tant que l'écart `0.1.0` / `0.4.7` subsiste. À faire immédiatement, indépendamment du reste.
 
 ### P-02 — Assainissement de la pioche
