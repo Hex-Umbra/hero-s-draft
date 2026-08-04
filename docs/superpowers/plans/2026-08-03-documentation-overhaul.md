@@ -923,6 +923,9 @@ Trois comportements sont voulus et ne doivent pas être « corrigés » :
 - un numéro non standard (`2.1.bis`) produit sa propre fiche ;
 - une **collision de nom de fichier** lève l'assertion. Elle ne doit pas se produire : deux sections peuvent porter le même numéro, mais leurs titres diffèrent, donc leurs slugs aussi.
 
+> [!IMPORTANT]
+> **Le titre `## N. …` d'une section redécoupée n'atterrit dans aucune fiche** : le garde `if len(pre) > 1` écarte un préambule réduit à sa seule ligne de titre. C'est voulu — une fiche d'une ligne n'aurait pas de sens — mais le titre ne doit pas disparaître pour autant. **Son domicile est l'index** : l'Étape 5 en fait un sous-titre `###` de groupe, repris verbatim. Vérifier explicitement, avant de committer, que chaque titre de section d'origine se retrouve soit en tête d'une fiche, soit en sous-titre de groupe dans l'index.
+
 - [ ] **Étape 3 : Découper**
 
 ```bash
@@ -952,11 +955,15 @@ Structure exacte :
 > [!IMPORTANT]
 > **Plafond : 120 lignes.** Ce fichier est un index, jamais un contenu. Chaque règle métier vit dans sa fiche sous `../_rules/`. Les arbitrages qui les ont produites vivent dans `../_adr/`.
 
-**Vérifié le 2026-08-03** — <N> fiches, découpées depuis un `productContext.md` de 808 lignes.
+**Vérifié le 2026-08-03** — <N> fiches, découpées depuis un `productContext.md` de <lignes réelles mesurées> lignes.
+
+<Un bloc par section `##` d'origine, dans l'ordre numérique des sections :>
+
+### <titre `## N. …` d'origine, texte repris verbatim>
 
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
-<une ligne par fiche, dans l'ordre du nom de fichier ; libellé repris du titre de section ; lien `[nom](../_rules/nom)`>
+<une ligne par fiche du groupe, triée par ordre **numérique** de sous-section (3.2 avant 3.10, jamais l'inverse) ; libellé repris du titre ; lien `[nom](../_rules/nom)`>
 
 ---
 
@@ -1046,7 +1053,7 @@ Même contrôle qu'en Tâche 7 étape 4, avec `_patterns` à la place de `_rules
 
 - [ ] **Étape 5 : Remplacer `systemPatterns.md` par son index**
 
-Même structure qu'en Tâche 7 étape 5, avec :
+Même structure qu'en Tâche 7 étape 5 — **index groupé par section d'origine**, sous-titres `###` repris verbatim, lignes triées par ordre numérique de sous-section — avec :
 
 - titre `# 🏗️ Architecture & Conception — Index` ;
 - plafond **120 lignes** ;
