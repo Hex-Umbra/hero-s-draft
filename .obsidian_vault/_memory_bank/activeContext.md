@@ -8,11 +8,9 @@
 ## Focus courant
 
 La branche `docs/memory-bank-overhaul` termine la refonte du memory bank : les
-monolithes `decisionLog.md`, `systemPatterns.md` et `productContext.md` sont déjà
-compactés vers des index courts adossés à des fiches individuelles (`../_adr/`,
-`../_patterns/`, `../_rules/`), et `activeContext.md` devient à son tour une
-fenêtre glissante sur 3 livraisons plutôt qu'un journal qui s'accumule sans fin.
-La roadmap priorisée du 31/07 est désormais destinée à devenir `docs/ROADMAP.md`.
+monolithes restants (`decisionLog.md`, `systemPatterns.md`, `productContext.md`)
+sont déjà compactés en index + fiches (`../_adr/`, `../_patterns/`, `../_rules/`),
+et `activeContext.md` devient à son tour une fenêtre glissante sur 3 livraisons.
 Prochain chantier applicatif une fois la doc stabilisée : Jalon 1 « Socle »
 (P-01, P-02, P-04, P-03) — voir `docs/ROADMAP.md`.
 
@@ -36,4 +34,4 @@ Prochain chantier applicatif une fois la doc stabilisée : Jalon 1 « Socle »
 
 ## Prochaine étape
 
-Voir `docs/ROADMAP.md` — Jalon 1 « Socle » : P-02, P-04, P-03.
+Voir `docs/ROADMAP.md` — Jalon 1 « Socle » : P-01, P-02, P-04, P-03.
