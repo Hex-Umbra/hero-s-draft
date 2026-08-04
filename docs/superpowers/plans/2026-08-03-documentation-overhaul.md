@@ -16,7 +16,7 @@
 - **Branche** : tout le travail se fait sur `docs/memory-bank-overhaul`. Rien n'est commité sur `main`.
 - **Aucun fichier de `lib/`, `test/` ou `assets/` n'est modifié.** Seule exception autorisée sur tout le plan : le champ `version:` de `pubspec.yaml` (Tâche 10).
 - **On déplace, on ne résume pas** : toute ligne retirée d'un fichier vivant doit exister verbatim dans `.obsidian_vault/_archive/`.
-- **Plafonds de lignes** — `activeContext.md` ≤ 120, `progress.md` ≤ 300, `productContext.md` ≤ 400, `systemPatterns.md` ≤ 400, `decisionLog.md` ≤ 250.
+- **Plafonds de lignes** — `activeContext.md` ≤ 120, `progress.md` ≤ 300, `productContext.md` ≤ 120, `systemPatterns.md` ≤ 120, `decisionLog.md` ≤ 250. Les trois derniers sont des **index** ; leur contenu vit en fiches adressables sous `_adr/`, `_rules/` et `_patterns/`.
 - **Référence temporelle** : les fichiers produits datent du **2026-08-03**.
 - **Mesures de référence prises le 2026-08-03** (à re-mesurer, pas à recopier) : 212 tests au vert, `dart analyze` à 0 issue, 169 fichiers Dart dans `lib/` pour 36 343 lignes, 10 fichiers JSON dans `assets/data/`.
 - **Répertoire de travail des scripts jetables** : `C:\Users\Gpdac\AppData\Local\Temp\claude\C--Users-Gpdac-Documents-GameDev-and-Godot-Roguelike-Card-Game-roguelike-card-game\f035a3db-f1c3-43d5-b643-44499cdeff9a\scratchpad`. Aucun script ne doit être commité dans le dépôt.
@@ -824,21 +824,25 @@ git commit -m "docs: rewrite progress.md on re-measured metrics, archive backlog
 
 ---
 
-## Tâche 7 : Purge de `productContext.md`
+## Tâche 7 : `productContext.md` devient un index de fiches de règles
 
 **Files:**
-- Modify: `.obsidian_vault/_memory_bank/productContext.md`
 - Create: `.obsidian_vault/_archive/2026-08-03-productContext-sprints.md`
+- Create: `.obsidian_vault/_rules/<NN>-<MM>-<slug>.md` (une fiche par système)
+- Modify: `.obsidian_vault/_memory_bank/productContext.md` (remplacé par un index)
 
 **Interfaces:**
-- Consumes: rien.
-- Produces: le fichier de règles métier que `activeContext.md` (Tâche 9) référence au lieu de le paraphraser.
+- Consumes: `.obsidian_vault/_archive/2026-08-03-productContext.md` (copie verbatim de la Tâche 1).
+- Produces: le script `split_vault_doc.py`, réutilisé tel quel par la Tâche 8, et les fiches de règles que `activeContext.md` (Tâche 9) référence sans les paraphraser.
 
-- [ ] **Étape 1 : Extraire les sections de sprint vers l'archive**
+> [!IMPORTANT]
+> **Cette tâche a été redéfinie le 2026-08-04.** Sa version initiale visait un plafond de 400 lignes par simple archivage des §9-11. Mesure faite à l'exécution : ces trois sections ne pèsent que 87 lignes sur 808, laissant 721 lignes de **règles de jeu courantes et valides**. Atteindre 400 aurait exigé d'archiver du contenu vivant, ce que « on déplace, on ne résume pas » interdit. On applique donc le mécanisme déjà éprouvé sur les 77 ADR : index + fiches adressables.
 
-Déplacer verbatim vers `.obsidian_vault/_archive/2026-08-03-productContext-sprints.md` les §9, §10 et §11 de l'archive (« Sprint de Consolidation Architecturale v0.0.97→v0.0.99 », « Sprint d'Amélioration de l'Interface v0.1.00 », « Sprint d'Unification de l'UI v0.2.2 »). Ce sont des rapports historiques, pas du contexte produit.
+- [ ] **Étape 1 : Archiver les sections de sprint et renuméroter les `### 3.x`**
 
-En-tête :
+Déplacer verbatim vers `.obsidian_vault/_archive/2026-08-03-productContext-sprints.md` les §9, §10 et §11 (rapports de sprint v0.0.97 → v0.2.2, 87 lignes).
+
+En-tête du fichier d'archive :
 
 ```markdown
 # Archive — productContext.md, rapports de sprint (2026-08-03)
@@ -846,53 +850,164 @@ En-tête :
 Sections §9 à §11 retirées de `productContext.md` lors de la refonte du 3 août 2026 : rapports de sprint historiques (v0.0.97 → v0.2.2), sans valeur de règle métier courante. Conservées verbatim. **Ne pas éditer.**
 ```
 
-- [ ] **Étape 2 : Renuméroter les sous-sections du §3**
+Puis renuméroter les `### 3.x` dans leur ordre d'apparition physique — `### 3.10` est aujourd'hui intercalée entre `### 3.7` et `### 3.8`. Seul le numéro change ; le titre reste identique. Consigner la table avant→après.
 
-Dans l'ordre actuel du fichier, `### 3.10 Forge` est intercalée entre `### 3.7` et `### 3.8`. Renuméroter les sous-sections du §3 séquentiellement dans leur ordre d'apparition réel, de `3.1` à `3.13`, sans en déplacer aucune.
+- [ ] **Étape 2 : Écrire le script de découpe générique**
 
-- [ ] **Étape 3 : Ajouter l'en-tête de plafond**
+Créer `<scratchpad>/split_vault_doc.py`. Il sert aux Tâches 7 **et** 8 :
 
-Insérer juste après le titre `# 🎯 Contexte Produit & Règles Métier` :
+```python
+import io, os, re, sys, unicodedata
 
-```markdown
-> [!IMPORTANT]
-> **Plafond : 400 lignes.** Ce fichier décrit les **règles du jeu tel qu'il est**. L'historique des sprints est archivé ; les décisions et leurs arbitrages vivent dans `../_adr/`.
+SRC, OUT = sys.argv[1], sys.argv[2]
+MAXLEN = 150
+
+def slug(t):
+    t = re.sub(r"^#+\s*", "", t)
+    t = re.sub(r"^[\d.]+\.?\s*", "", t)
+    t = re.sub(r"`([^`]*)`", r"\1", t)
+    t = re.sub(r"\(.*?\)", "", t)
+    t = unicodedata.normalize("NFKD", t).encode("ascii", "ignore").decode()
+    t = re.sub(r"[^a-zA-Z0-9]+", "-", t).strip("-").lower()
+    return t[:45].rstrip("-") or "section"
+
+def num(t):
+    m = re.match(r"^#+\s*(\d+(?:\.[\dA-Za-z]+)*)\.?\s", t)
+    return m.group(1) if m else None
+
+def trim(b):
+    while b and b[-1].strip() in ("", "---"):
+        b.pop()
+    return b
+
+lines = io.open(SRC, encoding="utf-8").read().split("\n")
+h2 = [i for i, l in enumerate(lines) if re.match(r"^## ", l)]
+assert h2, "aucune section ## dans %s" % SRC
+os.makedirs(OUT, exist_ok=True)
+
+chunks = []
+for k, start in enumerate(h2):
+    end = h2[k + 1] if k + 1 < len(h2) else len(lines)
+    body = trim(lines[start:end])
+    sec = num(lines[start]) or str(k + 1)
+    subs = [j for j in range(1, len(body)) if re.match(r"^### \d+\.[\dA-Za-z]", body[j])]
+    if len(body) <= MAXLEN or not subs:
+        chunks.append((sec, "00", body[0], body))
+        continue
+    pre = trim(body[:subs[0]])
+    if len(pre) > 1:
+        chunks.append((sec, "00", pre[0], pre))
+    for m, s in enumerate(subs):
+        e = subs[m + 1] if m + 1 < len(subs) else len(body)
+        sub = trim(body[s:e])
+        sn = (num(body[s]) or "").split(".", 1)[-1].replace(".", "-") or str(m + 1)
+        chunks.append((sec, sn, sub[0], sub))
+
+seen, manifest = set(), []
+for sec, sub, head, body in chunks:
+    name = "%02d-%s-%s.md" % (int(re.match(r"\d+", sec).group()), sub, slug(head))
+    assert name not in seen, "collision de nom de fichier: %s" % name
+    seen.add(name)
+    io.open(os.path.join(OUT, name), "w", encoding="utf-8", newline="\n").write("\n".join(body) + "\n")
+    manifest.append((name, head, len(body)))
+
+print("fiches: %d" % len(manifest))
+print("plus grande fiche: %d lignes" % max(m[2] for m in manifest))
+for n, h, c in sorted(manifest):
+    print("%5d  %s" % (c, n))
 ```
 
-- [ ] **Étape 4 : Vérifier**
+Trois comportements sont voulus et ne doivent pas être « corrigés » :
+
+- un `###` **non numéroté** (ex. `### Règles Métier et Équilibrage des Cartes` dans §2) reste attaché à la fiche de son grand frère numéroté — c'en est la suite ;
+- un numéro non standard (`2.1.bis`) produit sa propre fiche ;
+- une **collision de nom de fichier** lève l'assertion. Elle ne doit pas se produire : deux sections peuvent porter le même numéro, mais leurs titres diffèrent, donc leurs slugs aussi.
+
+- [ ] **Étape 3 : Découper**
+
+```bash
+export SCRATCH="C:/Users/Gpdac/AppData/Local/Temp/claude/C--Users-Gpdac-Documents-GameDev-and-Godot-Roguelike-Card-Game-roguelike-card-game/f035a3db-f1c3-43d5-b643-44499cdeff9a/scratchpad"
+PYTHONIOENCODING=utf-8 python "$SCRATCH/split_vault_doc.py" .obsidian_vault/_memory_bank/productContext.md .obsidian_vault/_rules
+```
+
+Attendu : environ **25 fiches**, la plus grande sous 150 lignes. Un nombre très différent, ou une fiche au-delà de 150 lignes, signale un découpage manqué : **arrêter et rapporter**.
+
+- [ ] **Étape 4 : Vérifier l'absence de perte**
+
+```bash
+SRC=$(grep -vcE "^\s*(---)?\s*$" .obsidian_vault/_memory_bank/productContext.md)
+OUTC=$(cat .obsidian_vault/_rules/*.md | grep -vcE "^\s*(---)?\s*$")
+echo "source: $SRC  fiches: $OUTC  delta: $((OUTC-SRC))"
+```
+
+Attendu : un delta **négatif et petit**, égal au nombre de lignes non vides de l'en-tête du fichier source (titre, chapeau, éventuel bloc de plafond) qui précèdent la première `##` et n'appartiennent donc à aucune fiche. Le calculer explicitement et vérifier que les deux valeurs coïncident. **Tout écart inexpliqué arrête la tâche.**
+
+- [ ] **Étape 5 : Remplacer `productContext.md` par son index**
+
+Structure exacte :
+
+```markdown
+# 🎯 Contexte Produit & Règles Métier — Index
+
+> [!IMPORTANT]
+> **Plafond : 120 lignes.** Ce fichier est un index, jamais un contenu. Chaque règle métier vit dans sa fiche sous `../_rules/`. Les arbitrages qui les ont produites vivent dans `../_adr/`.
+
+**Vérifié le 2026-08-03** — <N> fiches, découpées depuis un `productContext.md` de 808 lignes.
+
+| Domaine | Fiche | Lignes |
+|:---|:---|---:|
+<une ligne par fiche, dans l'ordre du nom de fichier ; libellé repris du titre de section ; lien `[nom](../_rules/nom)`>
+
+---
+
+## Historique
+
+Les rapports de sprint v0.0.97 → v0.2.2 (anciennes §9 à §11) sont dans `../_archive/2026-08-03-productContext-sprints.md`.
+
+## Renumérotation des `### 3.x` du 2026-08-03
+
+`### 3.10` était intercalée entre `### 3.7` et `### 3.8`. Les sous-sections ont été renumérotées dans leur ordre d'apparition physique.
+
+<table avant→après issue de l'Étape 1>
+```
+
+- [ ] **Étape 6 : Vérifier plafond, liens et bijection**
 
 ```bash
 wc -l .obsidian_vault/_memory_bank/productContext.md
-grep -nE "^### 3\.[0-9]+" .obsidian_vault/_memory_bank/productContext.md
-grep -cE "^## (9|10|11)\." .obsidian_vault/_memory_bank/productContext.md
+ls .obsidian_vault/_rules/*.md | wc -l
+grep -oE "\(\.\./_rules/[^)]+\)" .obsidian_vault/_memory_bank/productContext.md \
+  | tr -d '()' | sed 's|\.\./|.obsidian_vault/|' \
+  | while read p; do [ -e "$p" ] || echo "LIEN MORT: $p"; done
 ```
 
-Attendu : **≤ 400** lignes ; la numérotation `3.x` est strictement croissante ; le dernier compte vaut **0**.
+Attendu : **≤ 120** lignes ; aucun lien mort. Vérifier aussi la réciproque — chaque fiche du dossier a bien une ligne d'index — en comparant les deux listes triées.
 
-- [ ] **Étape 5 : Committer**
+- [ ] **Étape 7 : Committer**
 
 ```bash
-git add .obsidian_vault/_memory_bank/productContext.md .obsidian_vault/_archive/
-git commit -m "docs: trim productContext to current business rules, archive sprint reports"
+git add .obsidian_vault/_memory_bank/productContext.md .obsidian_vault/_rules/ .obsidian_vault/_archive/
+git commit -m "docs: split productContext into addressable rule sheets behind an index"
 ```
 
 ---
 
-## Tâche 8 : Purge de `systemPatterns.md`
+## Tâche 8 : `systemPatterns.md` devient un index de fiches d'architecture
 
 **Files:**
-- Modify: `.obsidian_vault/_memory_bank/systemPatterns.md`
 - Create: `.obsidian_vault/_archive/2026-08-03-systemPatterns-historique.md`
+- Create: `.obsidian_vault/_patterns/<NN>-<MM>-<slug>.md`
+- Modify: `.obsidian_vault/_memory_bank/systemPatterns.md` (remplacé par un index)
 
 **Interfaces:**
-- Consumes: rien.
+- Consumes: `split_vault_doc.py` de la Tâche 7, **réutilisé sans modification**.
 - Produces: la description d'architecture que `CLAUDE.md` (Tâche 11) doit refléter sans la contredire.
 
-- [ ] **Étape 1 : Extraire les sections datées par version vers l'archive**
+- [ ] **Étape 1 : Archiver les sections datées par version**
 
-Déplacer verbatim les sections dont le titre porte un numéro de version (`§13 Design System v0.0.99`, `§14 UX Combat v0.1.00`, et toute autre section suffixée d'une version) vers `.obsidian_vault/_archive/2026-08-03-systemPatterns-historique.md`.
+Déplacer verbatim vers `.obsidian_vault/_archive/2026-08-03-systemPatterns-historique.md` les sections dont le titre porte un numéro de version : `## 13. … (Design System, v0.0.99)` (74 l.) et `## 14. … (UX Combat) (v0.1.00)` (83 l.).
 
-Règle de tri : une section décrit-elle un pattern **encore en vigueur** ? Elle reste, débarrassée de son suffixe de version. Décrit-elle le **déroulé d'un sprint passé** ? Elle part à l'archive.
+Règle de tri, applicable à toute autre section suffixée d'une version : décrit-elle un pattern **encore en vigueur** ? Elle reste, débarrassée de son suffixe de version. Décrit-elle le **déroulé d'un chantier passé** ? Elle part à l'archive.
 
 En-tête :
 
@@ -902,40 +1017,52 @@ En-tête :
 Sections retirées de `systemPatterns.md` lors de la refonte du 3 août 2026 : descriptions de chantiers d'architecture passés, rattachées à une version révolue. Conservées verbatim. **Ne pas éditer.**
 ```
 
-- [ ] **Étape 2 : Vérifier et corriger les faits d'architecture**
+- [ ] **Étape 2 : Corriger les faits d'architecture périmés**
 
 ```bash
 ls lib/game/controllers/run/ lib/game/controllers/combat/ lib/game/controllers/
 grep -n "run_persistence_manager\|RunPersistenceManager" .obsidian_vault/_memory_bank/systemPatterns.md
 ```
 
-Le sous-dossier `run/` contient 3 fichiers, `combat/` en contient 2, et `checkpoint_controller.dart` existe à la racine des contrôleurs. La mention de la suppression de `RunPersistenceManager` reste légitime (elle documente un fait) ; toute présentation de ce fichier comme existant doit disparaître.
+Le sous-dossier `run/` contient 3 fichiers, `combat/` en contient 2, et `checkpoint_controller.dart` existe à la racine des contrôleurs. Mentionner la **suppression** de `RunPersistenceManager` reste légitime — c'est un fait historique. Le présenter comme existant ne l'est pas.
 
-- [ ] **Étape 3 : Ajouter l'en-tête de plafond**
+Comme en Tâche 6 : toute affirmation numérique au présent que vous conservez doit être re-mesurée par commande. Une affirmation invérifiable se retire plutôt que de se recopier.
 
-Insérer juste après le titre `# 🏗️ Architecture & Conception` :
-
-```markdown
-> [!IMPORTANT]
-> **Plafond : 400 lignes.** Ce fichier décrit l'**architecture actuelle**. Les chantiers d'architecture passés sont archivés ; leurs arbitrages vivent dans `../_adr/`.
-```
-
-- [ ] **Étape 4 : Vérifier**
+- [ ] **Étape 3 : Découper avec le script de la Tâche 7**
 
 ```bash
-wc -l .obsidian_vault/_memory_bank/systemPatterns.md
-grep -oE '`lib/[^`]*`' .obsidian_vault/_memory_bank/systemPatterns.md \
-  | tr -d '`' | sort -u \
-  | while read p; do [ -e "$p" ] || echo "CHEMIN MORT: $p"; done
+export SCRATCH="C:/Users/Gpdac/AppData/Local/Temp/claude/C--Users-Gpdac-Documents-GameDev-and-Godot-Roguelike-Card-Game-roguelike-card-game/f035a3db-f1c3-43d5-b643-44499cdeff9a/scratchpad"
+PYTHONIOENCODING=utf-8 python "$SCRATCH/split_vault_doc.py" .obsidian_vault/_memory_bank/systemPatterns.md .obsidian_vault/_patterns
 ```
 
-Attendu : **≤ 400** lignes, et aucun chemin mort.
+Attendu : environ **38 fiches**, la plus grande sous 150 lignes.
 
-- [ ] **Étape 5 : Committer**
+> [!NOTE]
+> `## 2.` contient un `### 2.1.bis` et **deux sous-sections numérotées `### 2.5`** (`ShopController` et `Immutabilité Stricte des Modèles d'État`) — une collision du même type que celle des ADR. Les slugs diffèrent, donc les noms de fichiers aussi : le script ne lèvera pas d'assertion. **Signaler cette collision dans le rapport** : elle est réelle et devra être tranchée, mais pas dans cette tâche.
+
+- [ ] **Étape 4 : Vérifier l'absence de perte**
+
+Même contrôle qu'en Tâche 7 étape 4, avec `_patterns` à la place de `_rules`. Même exigence : delta négatif, petit, et intégralement expliqué par l'en-tête du fichier source.
+
+- [ ] **Étape 5 : Remplacer `systemPatterns.md` par son index**
+
+Même structure qu'en Tâche 7 étape 5, avec :
+
+- titre `# 🏗️ Architecture & Conception — Index` ;
+- plafond **120 lignes** ;
+- fiches sous `../_patterns/` ;
+- une section « Historique » renvoyant à `../_archive/2026-08-03-systemPatterns-historique.md` ;
+- une section « Collision de numérotation constatée » consignant le doublon `### 2.5` relevé à l'Étape 3.
+
+- [ ] **Étape 6 : Vérifier plafond, liens et bijection**
+
+Mêmes commandes qu'en Tâche 7 étape 6, avec `_patterns`. Attendu : **≤ 120** lignes, aucun lien mort, bijection index ↔ fiches dans les deux sens.
+
+- [ ] **Étape 7 : Committer**
 
 ```bash
-git add .obsidian_vault/_memory_bank/systemPatterns.md .obsidian_vault/_archive/
-git commit -m "docs: trim systemPatterns to the architecture in force, archive dated sections"
+git add .obsidian_vault/_memory_bank/systemPatterns.md .obsidian_vault/_patterns/ .obsidian_vault/_archive/
+git commit -m "docs: split systemPatterns into addressable pattern sheets behind an index"
 ```
 
 ---
@@ -1202,7 +1329,17 @@ git commit -m "docs: make CLAUDE.md authoritative with a documentation map, redu
 wc -l .obsidian_vault/_memory_bank/*.md
 ```
 
-Attendu : `activeContext` ≤ 120, `progress` ≤ 300, `productContext` ≤ 400, `systemPatterns` ≤ 400, `decisionLog` ≤ 250, **total < 1 500**.
+Attendu : `activeContext` ≤ 120, `progress` ≤ 300, `productContext` ≤ 120, `systemPatterns` ≤ 120, `decisionLog` ≤ 250, **total < 1 000**.
+
+Puis la contrepartie — le contenu adressé par ces index doit exister :
+
+```bash
+ls .obsidian_vault/_adr/*.md | wc -l
+ls .obsidian_vault/_rules/*.md | wc -l
+ls .obsidian_vault/_patterns/*.md | wc -l
+```
+
+Attendu : `77`, puis ~25, puis ~38.
 
 - [ ] **Étape 2 : Aucun chemin mort dans tout le vault**
 
@@ -1261,7 +1398,7 @@ wc -l .obsidian_vault/_archive/2026-08-03-*.md | tail -1
 git log --oneline main..HEAD
 ```
 
-Attendu : l'archive contient au moins les 5 811 lignes d'origine, plus les sections extraites ; l'historique montre les **13 commits** du chantier (2 en Tâche 1, puis 1 par tâche de 2 à 11), plus un éventuel commit de correctif.
+Attendu : l'archive contient au moins les 5 811 lignes d'origine, plus les sections extraites ; l'historique montre au moins **13 commits** de chantier (2 en Tâche 1, puis au moins 1 par tâche de 2 à 11), plus les commits de correctif issus des tours de revue.
 
 - [ ] **Étape 8 : Les skills sont en place et invocables**
 
@@ -1299,8 +1436,8 @@ git commit -m "docs: fix issues found by the final verification pass"
 | 4 | Éclatement du `decisionLog` | 77 fichiers, 0 doublon, delta de lignes ∈ [0, 12] |
 | 5 | Index ADR | ≤ 250 l., 77 liens valides |
 | 6 | Réécriture de `progress.md` | ≤ 300 l., 0 chemin mort, 0 chiffre périmé |
-| 7 | Purge de `productContext.md` | ≤ 400 l., §3.x croissant, §9-11 absents |
-| 8 | Purge de `systemPatterns.md` | ≤ 400 l., 0 chemin `lib/` mort |
+| 7 | `productContext.md` → index + fiches | ≤ 120 l., ~25 fiches, 0 lien mort, delta explique |
+| 8 | `systemPatterns.md` → index + fiches | ≤ 120 l., ~38 fiches, 0 lien mort, delta explique |
 | 9 | Fenêtre glissante `activeContext.md` | ≤ 120 l., ancre présente, ≤ 3 items |
 | 10 | Roadmap, archives, resync | `pubspec.yaml` : 1 ligne changée, P-01 coché |
 | 11 | `CLAUDE.md` / `GEMINI.md` | 0 chemin mort, 0 `run_persistence_manager` |

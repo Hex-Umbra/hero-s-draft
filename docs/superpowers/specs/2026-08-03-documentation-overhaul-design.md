@@ -108,12 +108,27 @@ Le reste du skill (schéma JSON, catégories autorisées, règles de rédaction,
 |:---|---:|---:|:---|
 | `activeContext.md` | 387 l. | **120 l.** | Focus courant + 3 dernières livraisons max + prochaine étape (lien roadmap) |
 | `progress.md` | 435 l. | **300 l.** | État du construit + métriques datées et vérifiées. Aucune roadmap. 10 dernières releases |
-| `productContext.md` | 807 l. | **400 l.** | Règles métier du jeu tel qu'il est |
-| `systemPatterns.md` | 1 478 l. | **400 l.** | Architecture et conventions actuelles |
-| `decisionLog.md` | 2 704 l. | **250 l.** | Index d'ADR seul |
-| **Total** | **5 811 l.** | **≈ 1 470 l.** | Chargeable intégralement par un agent |
+| `productContext.md` | 807 l. | **120 l.** | **Index** des fiches de règles métier |
+| `systemPatterns.md` | 1 478 l. | **120 l.** | **Index** des fiches d'architecture |
+| `decisionLog.md` | 2 704 l. | **250 l.** | **Index** des ADR |
+| **Total chargé** | **5 811 l.** | **≈ 910 l.** | Chargeable intégralement par un agent |
 
-**Éclatement des ADR** : un fichier par ADR dans `.obsidian_vault/_adr/ADR-0XX-slug.md`. `decisionLog.md` devient un index — tableau `N° / titre / date / statut / version / lien`. La traçabilité est intégralement conservée ; elle devient adressable au lieu d'être monolithique.
+**Un seul mécanisme, appliqué trois fois : index + fiches adressables.**
+
+| Fichier index | Fiches | Granularité |
+|:---|:---|:---|
+| `decisionLog.md` | `.obsidian_vault/_adr/ADR-0XX-<slug>.md` | Une par décision (77) |
+| `productContext.md` | `.obsidian_vault/_rules/<slug>.md` | Une par système de jeu |
+| `systemPatterns.md` | `.obsidian_vault/_patterns/<slug>.md` | Une par domaine d'architecture |
+
+**Règle de découpe uniforme** : découper au niveau `##` ; toute fiche résultante dépassant **150 lignes** est redécoupée au niveau `###`. Mesuré sur les sources : cette règle ne concerne que `productContext` §2 (224 l.) et §3 (297 l.), et `systemPatterns` §2 (237 l.), §3 (210 l.) et §5 (249 l.).
+
+> [!NOTE]
+> **Correction du 2026-08-04.** Les plafonds initiaux de 400 lignes pour `productContext` et `systemPatterns` avaient été posés a priori, sans être dérivés du contenu. Mesure faite à l'exécution : retirer l'historique ne retire que 87 et 157 lignes respectivement, laissant 721 et 1 322 lignes de contenu **courant et valide**. Les atteindre par déplacement aurait exigé d'archiver des règles vivantes, ce que le principe « on déplace, on ne résume pas » interdit. Le pattern index + fiches, déjà éprouvé sur les 77 ADR, atteint réellement l'objectif là où un plafond arbitraire ne le pouvait pas.
+
+La traçabilité est intégralement conservée dans les trois cas ; elle devient adressable au lieu d'être monolithique.
+
+**Index d'ADR** : tableau `N° / titre / statut / version / lien`.
 
 **Résolution des 4 collisions** — règle d'arbitrage, appliquée dans cet ordre :
 
