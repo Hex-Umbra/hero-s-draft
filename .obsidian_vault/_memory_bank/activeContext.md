@@ -1,4 +1,4 @@
-<!-- last-sync: 2026-08-06 | commit: 06c87ab -->
+<!-- last-sync: 2026-08-06 | commit: e8904ba -->
 
 # 🧠 Contexte Actuel
 
@@ -7,16 +7,14 @@
 
 ## Focus courant
 
-**P-02 est livré et mergé** — le moteur de pioche est assaini et la règle de tour a quitté
-`game_screen.dart`. Deux réserves à porter dans la suite :
+**P-02 est clos** — code livré et mergé, playtest de validation passé le 2026-08-06. Le
+moteur de pioche est assaini et la règle de tour a quitté `game_screen.dart`. La base de
+difficulté est donc stable : **P-16 (refonte des probabilités) peut s'ouvrir dessus**, en
+calibrant sur l'état actuel et non sur des chiffres antérieurs au 2026-08-06.
 
-1. **Le playtest de validation n'a pas été fait.** Le remélange à sec change la difficulté
-   ressentie, et c'est le seul point du chantier qu'aucun test ne tranche. **P-16 (refonte
-   des probabilités) ne doit pas démarrer avant** — sinon on calibre sur une base qui bouge
-   encore. Points à observer : `docs/superpowers/plans/2026-08-05-p02-assainissement-pioche.md`
-   §Validation finale.
-2. **Les tiers A, B, C et E de `docs/ROADMAP.md` n'ont toujours pas été re-vérifiés contre
-   le code** — seuls les tiers S et D l'ont été (2026-08-04). Les traiter comme non vérifiés.
+Une réserve subsiste, sans lien avec P-02 : **les tiers A, B, C et E de `docs/ROADMAP.md`
+n'ont toujours pas été re-vérifiés contre le code** — seuls les tiers S et D l'ont été
+(2026-08-04). Les traiter comme non vérifiés.
 
 Prochain chantier applicatif : suite du Jalon 1 « Socle » — P-04 puis P-03.
 

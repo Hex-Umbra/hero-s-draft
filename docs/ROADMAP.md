@@ -69,7 +69,7 @@ graph TD
 | ID | Chantier | Effort | Difficulté | Apport |
 |:---|:---|:---:|:---:|:---:|
 | ~~**P-01**~~ | ~~**Resynchroniser `pubspec.yaml`** (`0.1.0+1` → `0.4.7+1`) sur `patch_notes.json`~~ ✅ **Livré le 2026-08-03** — désormais maintenu automatiquement par le skill `patch-notes-writer` | — | — | — |
-| ~~**P-02**~~ | ~~**Assainissement du système de pioche**~~ ✅ **Livré le 2026-08-06** — voir [ADR-078](../.obsidian_vault/_adr/ADR-078-assainissement-du-systeme-de-pioche-remelange-a-sec.md). ⚠️ **Playtest de validation restant** | — | — | — |
+| ~~**P-02**~~ | ~~**Assainissement du système de pioche**~~ ✅ **Livré et validé le 2026-08-06** (code + playtest) — voir [ADR-078](../.obsidian_vault/_adr/ADR-078-assainissement-du-systeme-de-pioche-remelange-a-sec.md) | — | — | — |
 | **P-03** | **Système audio** (`flame_audio` + `SfxService`, ~15 événements) | **3-5 j** | ★★★☆☆ | 🔥🔥🔥 |
 | **P-04** | **CI/CD GitHub Actions** (`ci.yml` + `release.yml`, 7 jobs) | **1,5-2 j** *(+0,5 j de config externe)* | ★★★☆☆ | 🔥🔥 |
 
@@ -90,10 +90,8 @@ graph TD
 > invisible — la relique livrée (`scholars_satchel`) cible donc `RunState.cardsPerTurn` ;
 > et le chantier a produit **18 tests neufs plus 2 réécrits**, non 6.
 >
-> ⚠️ **Reste à faire : le playtest de validation.** Le remélange à sec change la difficulté
-> ressentie, et c'est le seul point qu'aucun test ne tranche. **P-16 ne doit pas démarrer
-> avant.** Points à observer :
-> `docs/superpowers/plans/2026-08-05-p02-assainissement-pioche.md` §Validation finale.
+> ✅ **Playtest de validation passé le 2026-08-06.** Le chantier est clos : la base de
+> difficulté est désormais stable et **P-16 peut démarrer dessus**.
 
 *Diagnostic du 31/07/2026, conservé tel quel pour mémoire — le chantier est livré depuis (voir la note ci-dessus) :*
 
@@ -194,7 +192,7 @@ Réutilise `onHitEffect`/`evadeChance` de P-05 sans nouveau champ. Trois concept
 
 ### P-16 — Le sujet le plus important de ce tier
 Les runes de forge `eco` et `quick` (regain de mana / pioche à la lecture d'une carte) rendent le mana quasi illimité, alors que c'est la ressource la plus importante du jeu. Cumulé avec la récompense de mana au Level Up disponible jusqu'en légendaire, le joueur perd toute sensation de contrainte. Le chantier consiste à revoir **l'ensemble** des tables de probabilité et le poids des récompenses par rareté — donc à re-calibrer plusieurs systèmes en même temps, d'où ★★★★☆ malgré un code trivial.
-**Interaction connue** : P-02 change la difficulté ressentie via le remélange à sec. ✅ **P-02 est livré depuis le 2026-08-06, mais son playtest de validation ne l'est pas** — la base n'est donc pas encore mesurée. Faire ce playtest avant d'ouvrir P-16, sinon on calibre sur une base qui va bouger.
+**Interaction connue** : P-02 change la difficulté ressentie via le remélange à sec. ✅ **Levée le 2026-08-06** — P-02 est livré et son playtest validé, la base ne bougera donc plus sous P-16. Calibrer sur l'état actuel, pas sur les chiffres antérieurs au 2026-08-06.
 
 ### P-17 — Les cinq classiques
 Documentés depuis `6_analyse_game_balance.md`, jamais corrigés : économie de mana permissive, Paladin quasi invulnérable au début (20 armure de base), HP des sbires trop bas, `Attaque Rapide` gratuite (0 mana → 3 dégâts + 1 pioche), soin répétable. Chacun est une ligne de JSON ; **c'est le playtest de validation qui coûte**. À traiter dans la même passe que P-16 pour ne calibrer qu'une fois.
@@ -332,7 +330,7 @@ Donne une fin à une run, archive les résultats, puis recalibre l'économie **u
 
 1. **Quatre chantiers font l'essentiel de la valeur** : audio (P-03), pioche (~~P-02~~ ✅), juice (P-07), et une condition de victoire (P-10). Le reste est de l'accumulation.
 2. **Le chemin critique n'est presque jamais le code** — c'est le son (P-03), les sprites (P-05, P-15), les illustrations (P-12) et le playtest de calibration (P-16, P-17). Lancer ces productions en parallèle du développement, pas après.
-3. **P-02 avant tout ajout de contenu** ✅ *(livré le 2026-08-06)*, et **P-16 après le playtest de validation de P-02**, sinon on calibre deux fois.
+3. **P-02 avant tout ajout de contenu**, et **P-16 après P-02** — ✅ *les deux conditions sont remplies depuis le 2026-08-06 (code livré, playtest validé)*. P-16 peut désormais s'ouvrir sans risque de calibrer deux fois.
 4. La dette technique restante est réelle mais **nettement plus faible que ne le disent les anciens documents** : les deux god classes UI sont résolues, la persistance est livrée, et la re-vérification du Tier D le 2026-08-04 a montré que **six de ses huit fiches énonçaient des faits périmés** — deux chantiers y étaient même déjà livrés. Corollaire de méthode : **une fiche de dette non re-mesurée depuis plus d'une semaine doit être re-vérifiée contre le code avant d'être ouverte**, jamais crue sur parole. Les tiers A, B, C et E n'ont pas encore subi ce contrôle.
 
 ---
