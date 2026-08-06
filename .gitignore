@@ -46,3 +46,6 @@ app.*.map.json
 
 # Subagent-driven-development scratch workspace (ledgers, briefs, review packages)
 .superpowers/
+
+# Worktrees isolés créés pour l'implémentation d'un chantier
+.claude/worktrees/
