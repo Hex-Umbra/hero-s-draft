@@ -112,5 +112,42 @@ void main() {
       expect(runController.state.heroStats.attaque, 5);
       expect(runController.state.heroStats.luck, 0);
     });
+
+    test('increase_cards_per_turn s\'applique et se retire symétriquement', () {
+      const satchel = RelicData(
+        id: 'scholars_satchel',
+        nameEn: "Scholar's Satchel",
+        nameFr: "Besace de l'Érudit",
+        trigger: RelicTrigger.startOfRun,
+        effectType: 'increase_cards_per_turn',
+        value: 1,
+        rarity: RelicRarity.legendary,
+        emoji: '🎒',
+      );
+      const filler = RelicData(
+        id: 'filler',
+        nameEn: 'Filler',
+        nameFr: 'Bouche-trou',
+        trigger: RelicTrigger.startOfRun,
+        effectType: 'gain_strength',
+        value: 1,
+        rarity: RelicRarity.common,
+        emoji: '⬜',
+      );
+
+      expect(runController.state.cardsPerTurn, 5);
+
+      // `addRelic` déclenche lui-même `applyRelicEffect` sur un `startOfRun`.
+      inventoryController.addRelic(satchel);
+      expect(runController.state.cardsPerTurn, 6);
+
+      // Sacrifice via l'Échange de Reliques : le bonus ne doit pas fuiter.
+      runController.exchangeRelics([satchel], filler);
+      expect(runController.state.cardsPerTurn, 5);
+      expect(
+        inventoryController.state.relics.any((r) => r.id == 'scholars_satchel'),
+        isFalse,
+      );
+    });
   });
 }
