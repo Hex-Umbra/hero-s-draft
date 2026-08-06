@@ -316,6 +316,16 @@ class CombatController extends Notifier<CombatState> {
     _turnPhaseManager.resolveEnemyIntent(enemyId);
   }
 
+  /// Ouvre le combat côté joueur (statuts, mana, reliques, main d'ouverture)
+  void startPlayerCombat() {
+    _turnPhaseManager.startPlayerCombat();
+  }
+
+  /// Ouvre un tour joueur (mana, reliques, statuts, pioche)
+  void startPlayerTurn() {
+    _turnPhaseManager.startPlayerTurn();
+  }
+
   /// Début du tour de l'ennemi (application des statuts autonomes)
   void startEnemyTurn() {
     _turnPhaseManager.startEnemyTurn();

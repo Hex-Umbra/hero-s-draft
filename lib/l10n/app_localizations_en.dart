@@ -58,6 +58,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get enemyTurn => 'ENEMY TURN';
 
   @override
+  String get deckReshuffled => 'Discard pile reshuffled';
+
+  @override
   String get notEnoughGold => 'Not enough gold!';
 
   @override
@@ -349,11 +352,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String intentBuff(int value) {
     return 'Buff Attack: +$value';
-  }
-
-  @override
-  String intentCurse(int value) {
-    return 'Curse: $value';
   }
 
   @override

@@ -54,6 +54,17 @@ class PlayerStatsManager {
     );
   }
 
+  /// Applique un modificateur aux règles de run propres au joueur.
+  /// Distinct d'`applyHeroStatModifier`, qui opère sur `EntityStats` — lequel
+  /// est partagé avec les ennemis et n'a donc pas à porter de notion de deck.
+  void applyRunRuleModifier({int cardsPerTurnAcc = 0}) {
+    controller.updateState(
+      controller.currentState.copyWith(
+        cardsPerTurn: controller.currentState.cardsPerTurn + cardsPerTurnAcc,
+      ),
+    );
+  }
+
   /// Ajoute de l'Expérience au joueur.
   /// Gère les montées de niveaux successives avec conservation de l'XP excédentaire (carry-over).
   /// Retourne [true] si au moins un niveau a été gagné.
@@ -246,6 +257,13 @@ class PlayerStatsManager {
       case 'heal':
         heal(relic.value);
         break;
+      // Cet effectType n'a de sens qu'en `startOfRun` : une variante par combat
+      // ou par tour cumulerait indéfiniment. Aucune garde n'est posée ici, le
+      // contrat étant porté par la donnée (`relics.json`) et par le `case`
+      // symétrique de `removeRelicEffect`.
+      case 'increase_cards_per_turn':
+        applyRunRuleModifier(cardsPerTurnAcc: relic.value);
+        break;
       case 'charge_armor_mastery_combat':
         final existing = controller.currentState.heroStats.statuses.where((s) => s.id == 'kunai_charge');
         final int newVal = (existing.isEmpty ? 0 : existing.first.value) + 1;
@@ -391,6 +409,9 @@ class PlayerStatsManager {
           break;
         case 'gain_crit':
           applyHeroStatModifier(critChanceAcc: -relic.value);
+          break;
+        case 'increase_cards_per_turn':
+          applyRunRuleModifier(cardsPerTurnAcc: -relic.value);
           break;
       }
     }

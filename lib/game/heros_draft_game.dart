@@ -54,8 +54,6 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   bool isCardAnimating = false;
 
   final void Function() onEnemiesDead;
-  final void Function(int) onEnemyDebuffDeck;
-  final void Function() onTurnEnded;
   final void Function(TurnPhase) onPhaseChanged;
   final void Function(String title, String description, CardType? cardType) onShowTooltip;
   final void Function() onHideTooltip;
@@ -73,8 +71,6 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
 
   HerosDraftGame({
     required this.onEnemiesDead,
-    required this.onEnemyDebuffDeck,
-    required this.onTurnEnded,
     required this.onPhaseChanged,
     required this.onShowTooltip,
     required this.onHideTooltip,

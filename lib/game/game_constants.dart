@@ -30,6 +30,11 @@ class GameConstants {
     MapNodeType.event: (min: 4, max: 9),
   };
 
+  // --- DECK RULES ---
+  /// Nombre maximum de cartes en main. Au-delà, la pioche s'interrompt sans
+  /// consommer de carte ni déclencher de remélange (règle « arrêt net »).
+  static const int maxHandSize = 10;
+
   // --- COMBAT TIMINGS (ms) ---
   /// Délai du dash du héros avant d'appliquer les dégâts d'une compétence.
   static const int combatDelayHeroDashMs = 200;

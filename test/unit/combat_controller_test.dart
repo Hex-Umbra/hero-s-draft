@@ -14,6 +14,9 @@ import 'package:roguelike_card_game/models/status_effect.dart';
 import 'package:roguelike_card_game/models/map_node.dart';
 import 'package:roguelike_card_game/models/entity_stats.dart';
 import 'package:roguelike_card_game/models/data/skill_data.dart';
+import 'package:roguelike_card_game/game/game_constants.dart';
+import 'package:roguelike_card_game/game/controllers/inventory_controller.dart';
+import 'package:roguelike_card_game/models/data/relic_data.dart';
 
 void main() {
   group('CombatController Tests', () {
@@ -331,7 +334,7 @@ void main() {
         );
 
         deckNotifier.initializeStarterDeck([strikeCard]);
-        deckNotifier.initializeCombat();
+        deckNotifier.startCombat(handSize: 0, maxHandSize: GameConstants.maxHandSize);
         deckNotifier.state = deckNotifier.state.copyWith(hand: [strikeCard]);
 
         expect(runController.currentState.heroStats.currentMana, 3);
@@ -478,7 +481,7 @@ void main() {
         );
 
         deckNotifier.initializeStarterDeck([strikeCard]);
-        deckNotifier.initializeCombat();
+        deckNotifier.startCombat(handSize: 0, maxHandSize: GameConstants.maxHandSize);
         deckNotifier.state = deckNotifier.state.copyWith(hand: [strikeCard]);
 
         combatController.applyPlayerCardPlay(
@@ -716,6 +719,124 @@ void main() {
       final heroArmorBeforeBuff = runController.currentState.heroStats.armure;
       combatController.executeSkill(armorBuffSkill);
       expect(runController.currentState.heroStats.armure, heroArmorBeforeBuff + 8);
+    });
+  });
+
+  group('CombatController — moitié joueur du cycle de tour', () {
+    // `paladinHero`, `goblinData` et `orcData` sont déclarés à l'intérieur du
+    // groupe `CombatController Tests`. Ce groupe étant un frère, il ne les voit
+    // pas : il déclare donc son propre héros.
+    final paladinHero = HeroData(
+      id: 'paladin',
+      nameEn: 'Paladin',
+      nameFr: 'Paladin',
+      descriptionEn: 'A holy knight',
+      descriptionFr: 'Un saint chevalier',
+      iconPath: 'paladin.png',
+      maxHp: 100,
+      maxMana: 3,
+      baseDamage: 5,
+      luck: 0,
+      armorMastery: 0,
+      passiveTrait: 'regenArmor',
+    );
+
+    const ironTalisman = RelicData(
+      id: 'iron_talisman',
+      nameEn: 'Iron Talisman',
+      nameFr: 'Talisman de Fer',
+      trigger: RelicTrigger.startOfTurn,
+      effectType: 'gain_armor',
+      value: 2,
+      rarity: RelicRarity.common,
+      emoji: '🪙',
+    );
+
+    CardInstance card(String id) => CardInstance(
+          data: CardData(
+            id: id,
+            nameEn: id,
+            nameFr: id,
+            cost: 1,
+            type: CardType.skill,
+            category: CardCategory.global,
+            rarity: CardRarity.common,
+            target: CardTarget.self,
+            effects: const [],
+          ),
+        );
+
+    test('startPlayerTurn exécute la relique startOfTurn ET la pioche', () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final runController = container.read(runProvider.notifier);
+      final deckNotifier = container.read(deckProvider.notifier);
+      final combatController = container.read(combatProvider.notifier);
+
+      runController.startNewRun(paladinHero);
+      container.read(inventoryProvider.notifier).addRelic(ironTalisman);
+      deckNotifier.initializeStarterDeck(List.generate(10, (i) => card('c$i')));
+      deckNotifier.startCombat(handSize: 0, maxHandSize: GameConstants.maxHandSize);
+
+      combatController.startPlayerTurn();
+
+      // Moitié « run » : mana restauré au max et armure de la relique appliquée.
+      expect(runController.currentState.heroStats.currentMana,
+          runController.currentState.heroStats.maxMana);
+      expect(runController.currentState.heroStats.armure, 2);
+      // Moitié « deck » : la main vaut cardsPerTurn.
+      expect(deckNotifier.state.hand.length, 5);
+    });
+
+    test('startPlayerTurn pioche cardsPerTurn, pas 5 en dur', () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final runController = container.read(runProvider.notifier);
+      final deckNotifier = container.read(deckProvider.notifier);
+      final combatController = container.read(combatProvider.notifier);
+
+      runController.startNewRun(paladinHero);
+      runController.applyRunRuleModifier(cardsPerTurnAcc: 1);
+      deckNotifier.initializeStarterDeck(List.generate(10, (i) => card('c$i')));
+      deckNotifier.startCombat(handSize: 0, maxHandSize: GameConstants.maxHandSize);
+
+      combatController.startPlayerTurn();
+
+      expect(deckNotifier.state.hand.length, 6);
+    });
+
+    test('startPlayerCombat ouvre le combat et tire la main de départ', () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final runController = container.read(runProvider.notifier);
+      final deckNotifier = container.read(deckProvider.notifier);
+      final combatController = container.read(combatProvider.notifier);
+
+      runController.startNewRun(paladinHero);
+      deckNotifier.initializeStarterDeck(List.generate(10, (i) => card('c$i')));
+      // Statut résiduel d'un combat précédent : startCombat doit le nettoyer.
+      runController.addStatus(const StatusEffect(
+        id: 'poison',
+        name: 'Poison',
+        type: StatusType.debuff,
+        value: 3,
+        duration: 3,
+      ));
+
+      combatController.startPlayerCombat();
+
+      // Cible le poison plutôt que `isEmpty` : le test resterait vrai si un
+      // passif ou une relique ajoutait un statut au début du combat.
+      expect(
+        runController.currentState.heroStats.statuses
+            .any((s) => s.id == 'poison'),
+        isFalse,
+      );
+      expect(runController.currentState.heroStats.currentMana,
+          runController.currentState.heroStats.maxMana);
+      expect(deckNotifier.state.hand.length, 5);
+      expect(deckNotifier.state.drawPile.length, 5);
+      expect(deckNotifier.state.reshuffleCount, 0);
     });
   });
 }

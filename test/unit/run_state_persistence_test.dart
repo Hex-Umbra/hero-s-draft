@@ -65,6 +65,7 @@ void main() {
           },
           bonusForgeSlots: 1,
           pendingDrafts: 2,
+          cardsPerTurn: 7,
         );
 
     test('toJson/fromJsonWithReport round-trips every field', () {
@@ -86,6 +87,18 @@ void main() {
       expect(restored.bonusForgeSlots, 1);
       expect(restored.pendingDrafts, 2);
       expect(missing, isEmpty);
+    });
+
+    test('cardsPerTurn round-trip et vaut 5 sur une sauvegarde antérieure', () {
+      final json = buildRunState().toJson();
+      expect(json['cardsPerTurn'], 7);
+
+      final (restored, _) = RunState.fromJsonWithReport(json);
+      expect(restored.cardsPerTurn, 7);
+
+      final legacy = Map<String, dynamic>.from(json)..remove('cardsPerTurn');
+      final (restoredLegacy, _) = RunState.fromJsonWithReport(legacy);
+      expect(restoredLegacy.cardsPerTurn, 5);
     });
 
     test('falls back to PassiveData.fallback and reports a missing passive', () {

@@ -27,6 +27,7 @@
   "resumeCombat": "Resume Combat",
   "playerTurn": "PLAYER TURN",
   "enemyTurn": "ENEMY TURN",
+  "deckReshuffled": "Discard pile reshuffled",
   "notEnoughGold": "Not enough gold!",
   "purchased": "Purchased: {item}",
   "@purchased": {
@@ -179,12 +180,6 @@
   },
   "intentBuff": "Buff Attack: +{value}",
   "@intentBuff": {
-    "placeholders": {
-      "value": { "type": "int" }
-    }
-  },
-  "intentCurse": "Curse: {value}",
-  "@intentCurse": {
     "placeholders": {
       "value": { "type": "int" }
     }

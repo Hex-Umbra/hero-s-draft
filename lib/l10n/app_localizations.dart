@@ -188,6 +188,12 @@ abstract class AppLocalizations {
   /// **'ENEMY TURN'**
   String get enemyTurn;
 
+  /// No description provided for @deckReshuffled.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard pile reshuffled'**
+  String get deckReshuffled;
+
   /// No description provided for @notEnoughGold.
   ///
   /// In en, this message translates to:
@@ -715,12 +721,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Buff Attack: +{value}'**
   String intentBuff(int value);
-
-  /// No description provided for @intentCurse.
-  ///
-  /// In en, this message translates to:
-  /// **'Curse: {value}'**
-  String intentCurse(int value);
 
   /// No description provided for @enemyStatsTitle.
   ///

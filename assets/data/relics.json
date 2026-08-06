@@ -286,5 +286,17 @@
     "value": 1,
     "rarity": "legendary",
     "emoji": "👑"
+  },
+  {
+    "id": "scholars_satchel",
+    "name_en": "Scholar's Satchel",
+    "name_fr": "Besace de l'Érudit",
+    "description_en": "Draw 1 additional card at the start of each turn, for the entire run.",
+    "description_fr": "Pioche 1 carte supplémentaire au début de chaque tour, pour toute la run.",
+    "trigger": "startOfRun",
+    "effectType": "increase_cards_per_turn",
+    "value": 1,
+    "rarity": "legendary",
+    "emoji": "🎒"
   }
 ]

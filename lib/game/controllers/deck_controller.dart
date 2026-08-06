@@ -12,12 +12,17 @@ class DeckState {
   final List<CardInstance> discardPile;
   final List<CardInstance> exhaustPile;
 
+  /// Nombre de remélanges défausse → pioche depuis le début du combat.
+  /// Remis à 0 par `startCombat`. Observé par l'UI pour signaler l'événement.
+  final int reshuffleCount;
+
   const DeckState({
     this.masterDeck = const [],
     this.drawPile = const [],
     this.hand = const [],
     this.discardPile = const [],
     this.exhaustPile = const [],
+    this.reshuffleCount = 0,
   });
 
   DeckState copyWith({
@@ -26,6 +31,7 @@ class DeckState {
     List<CardInstance>? hand,
     List<CardInstance>? discardPile,
     List<CardInstance>? exhaustPile,
+    int? reshuffleCount,
   }) {
     return DeckState(
       masterDeck: masterDeck ?? this.masterDeck,
@@ -33,6 +39,7 @@ class DeckState {
       hand: hand ?? this.hand,
       discardPile: discardPile ?? this.discardPile,
       exhaustPile: exhaustPile ?? this.exhaustPile,
+      reshuffleCount: reshuffleCount ?? this.reshuffleCount,
     );
   }
 
@@ -42,6 +49,7 @@ class DeckState {
         'hand': hand.map((c) => c.toJson()).toList(),
         'discardPile': discardPile.map((c) => c.toJson()).toList(),
         'exhaustPile': exhaustPile.map((c) => c.toJson()).toList(),
+        'reshuffleCount': reshuffleCount,
       };
 
   static (List<CardInstance>, List<MissingSaveItem>) _decodePile(
@@ -97,6 +105,7 @@ class DeckState {
         hand: hand,
         discardPile: discardPile,
         exhaustPile: exhaustPile,
+        reshuffleCount: json['reshuffleCount'] as int? ?? 0,
       ),
       missing,
     );
@@ -104,8 +113,11 @@ class DeckState {
 }
 
 class DeckNotifier extends Notifier<DeckState> {
+  late final Random _random;
+
   @override
   DeckState build() {
+    _random = ref.read(deckRandomProvider);
     return const DeckState();
   }
 
@@ -124,41 +136,85 @@ class DeckNotifier extends Notifier<DeckState> {
     state = state.copyWith(masterDeck: initialDeck);
   }
 
-  /// Prépare les piles pour un nouveau combat
-  void initializeCombat() {
-    final newDrawPile = List<CardInstance>.from(state.masterDeck);
-    newDrawPile.shuffle(Random());
+  /// Prépare les piles pour un nouveau combat et tire la main d'ouverture,
+  /// en une seule affectation d'état. La main de départ respecte exactement
+  /// les mêmes invariants que toutes les pioches suivantes.
+  void startCombat({required int handSize, required int maxHandSize}) {
+    final result = _drawInto(
+      draw: List<CardInstance>.from(state.masterDeck)..shuffle(_random),
+      hand: <CardInstance>[],
+      discard: <CardInstance>[],
+      amount: handSize,
+      maxHandSize: maxHandSize,
+      random: _random,
+    );
 
     state = state.copyWith(
-      drawPile: newDrawPile,
-      hand: [],
-      discardPile: [],
+      drawPile: result.draw,
+      hand: result.hand,
+      discardPile: result.discard,
       exhaustPile: [],
+      reshuffleCount: 0,
     );
   }
 
-  /// Pioche [amount] cartes depuis la pioche actuelle uniquement (sans mélange de défausse mid-turn)
-  void drawCards(int amount) {
-    var currentDrawPile = List<CardInstance>.from(state.drawPile);
-    var currentHand = List<CardInstance>.from(state.hand);
+  /// Cœur de la pioche. Fonction pure : ne touche pas à `state`, mute les
+  /// listes qu'on lui passe et rend le nombre de remélanges effectués.
+  ///
+  /// Deux conditions d'arrêt, dans cet ordre :
+  ///  1. la main a atteint [maxHandSize] — on s'arrête sans consommer de carte
+  ///     ni déclencher de remélange ;
+  ///  2. pioche ET défausse vides — le deck est épuisé, sortie propre.
+  static ({
+    List<CardInstance> draw,
+    List<CardInstance> hand,
+    List<CardInstance> discard,
+    int reshuffles,
+  }) _drawInto({
+    required List<CardInstance> draw,
+    required List<CardInstance> hand,
+    required List<CardInstance> discard,
+    required int amount,
+    required int maxHandSize,
+    required Random random,
+  }) {
+    var reshuffles = 0;
 
-    final int toDraw = min(amount, currentDrawPile.length);
-    for (int i = 0; i < toDraw; i++) {
-      currentHand.add(currentDrawPile.removeLast());
+    for (var i = 0; i < amount; i++) {
+      if (hand.length >= maxHandSize) break;
+      if (draw.isEmpty) {
+        if (discard.isEmpty) break;
+        draw
+          ..addAll(discard)
+          ..shuffle(random);
+        discard.clear();
+        reshuffles++;
+      }
+      hand.add(draw.removeLast());
     }
 
-    state = state.copyWith(drawPile: currentDrawPile, hand: currentHand);
+    return (draw: draw, hand: hand, discard: discard, reshuffles: reshuffles);
   }
 
-  /// Mélange la défausse dans la pioche manuellement
-  void shuffleDiscardIntoDraw() {
-    var newDrawPile = List<CardInstance>.from(state.drawPile);
-    var currentDiscardPile = List<CardInstance>.from(state.discardPile);
+  /// Pioche [amount] cartes. Remélange la défausse dans la pioche dès que
+  /// celle-ci est vide, y compris au milieu d'une pioche. Une seule
+  /// affectation de `state`, donc une seule notification Riverpod.
+  void drawCards(int amount, {required int maxHandSize}) {
+    final result = _drawInto(
+      draw: List<CardInstance>.from(state.drawPile),
+      hand: List<CardInstance>.from(state.hand),
+      discard: List<CardInstance>.from(state.discardPile),
+      amount: amount,
+      maxHandSize: maxHandSize,
+      random: _random,
+    );
 
-    newDrawPile.addAll(currentDiscardPile);
-    newDrawPile.shuffle(Random());
-
-    state = state.copyWith(drawPile: newDrawPile, discardPile: []);
+    state = state.copyWith(
+      drawPile: result.draw,
+      hand: result.hand,
+      discardPile: result.discard,
+      reshuffleCount: state.reshuffleCount + result.reshuffles,
+    );
   }
 
   /// Défausse toute la main à la fin du tour
@@ -322,5 +378,10 @@ class DeckNotifier extends Notifier<DeckState> {
     state = state.copyWith(discardPile: currentDiscardPile);
   }
 }
+
+/// Source d'aléatoire de la pioche. Surchargeable en test via
+/// `deckRandomProvider.overrideWithValue(Random(42))` pour rendre les
+/// séquences de pioche reproductibles.
+final deckRandomProvider = Provider<Random>((ref) => Random());
 
 final deckProvider = NotifierProvider<DeckNotifier, DeckState>(DeckNotifier.new);

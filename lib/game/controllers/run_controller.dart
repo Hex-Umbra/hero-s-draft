@@ -32,6 +32,11 @@ class RunState {
   final int bonusForgeSlots;
   final int pendingDrafts; // Nombre de drafts de montée de niveau en attente
 
+  /// Cartes piochées au début de chaque tour, et taille de la main d'ouverture.
+  /// Règle de run propre au joueur : elle n'a pas sa place sur `EntityStats`,
+  /// qui est partagé avec les ennemis.
+  final int cardsPerTurn;
+
   bool get isBossLevel => currentLevel > 0 && currentLevel % 10 == 0;
   bool get isDead => heroStats.currentPv <= 0;
 
@@ -65,6 +70,7 @@ class RunState {
     this.forgeTargetSessions = const {},
     this.bonusForgeSlots = 0,
     this.pendingDrafts = 0,
+    this.cardsPerTurn = 5,
   });
 
   RunState copyWith({
@@ -84,6 +90,7 @@ class RunState {
     bool resetForgeTargetSessions = false,
     int? bonusForgeSlots,
     int? pendingDrafts,
+    int? cardsPerTurn,
   }) {
     return RunState(
       currentLevel: currentLevel ?? this.currentLevel,
@@ -105,6 +112,7 @@ class RunState {
           : (forgeTargetSessions ?? this.forgeTargetSessions),
       bonusForgeSlots: bonusForgeSlots ?? this.bonusForgeSlots,
       pendingDrafts: pendingDrafts ?? this.pendingDrafts,
+      cardsPerTurn: cardsPerTurn ?? this.cardsPerTurn,
     );
   }
 
@@ -124,6 +132,7 @@ class RunState {
         'forgeTargetSessions': forgeTargetSessions,
         'bonusForgeSlots': bonusForgeSlots,
         'pendingDrafts': pendingDrafts,
+        'cardsPerTurn': cardsPerTurn,
       };
 
   static (RunState, List<MissingSaveItem>) fromJsonWithReport(
@@ -180,6 +189,7 @@ class RunState {
       forgeTargetSessions: forgeTargetSessions,
       bonusForgeSlots: json['bonusForgeSlots'] as int? ?? 0,
       pendingDrafts: json['pendingDrafts'] as int? ?? 0,
+      cardsPerTurn: json['cardsPerTurn'] as int? ?? 5,
     );
 
     return (run, missing);
@@ -304,6 +314,11 @@ class RunController extends Notifier<RunState> {
       critChanceAcc: critChanceAcc,
       critDamageAcc: critDamageAcc,
     );
+  }
+
+  /// Applique un modificateur aux règles de run propres au joueur
+  void applyRunRuleModifier({int cardsPerTurnAcc = 0}) {
+    _playerStatsManager.applyRunRuleModifier(cardsPerTurnAcc: cardsPerTurnAcc);
   }
 
   /// Ajoute de l'Expérience au joueur.

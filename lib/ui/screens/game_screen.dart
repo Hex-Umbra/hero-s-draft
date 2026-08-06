@@ -13,7 +13,6 @@ import '../../game/services/effect_resolver.dart';
 import '../../game/systems/trait_system.dart';
 import 'boss_card_draft_screen.dart';
 import '../../services/game_data_service.dart';
-import '../../models/card_instance.dart';
 import '../../models/data/relic_data.dart';
 import '../../models/data/card_data.dart';
 import '../widgets/hud/dialogs/pause_dialog.dart';
@@ -60,7 +59,6 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   }
   bool _showManaWarning = false;
   bool _showRemainingManaWarning = false;
-  int _turnCount = 1;
   bool _isVictoryHandled = false;
 
   void _handleCombatVictory() {
@@ -205,16 +203,10 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     setState(() {
       _showManaWarning = false;
       _showRemainingManaWarning = false;
-      _turnCount++;
     });
     _game.currentPhase = TurnPhase.player;
     _game.heroCard?.suppressArmorChangeAnimation = true;
-    ref.read(runProvider.notifier).startTurn();
-    final deckNotifier = ref.read(deckProvider.notifier);
-    if (ref.read(deckProvider).drawPile.length < 5) {
-      deckNotifier.shuffleDiscardIntoDraw();
-    }
-    deckNotifier.drawCards(5);
+    ref.read(combatProvider.notifier).startPlayerTurn();
   }
 
   @override
@@ -222,32 +214,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     super.initState();
 
     Future.microtask(() {
-      final deck = ref.read(deckProvider);
-
-      if (deck.masterDeck.isEmpty) {
-        final gameData = ref.read(gameDataLoaderProvider).requireValue;
-        final starterCards = [
-          CardInstance(
-            data: gameData.cards.firstWhere((c) => c.id == 'strike_basic'),
-          ),
-          CardInstance(
-            data: gameData.cards.firstWhere((c) => c.id == 'defend_basic'),
-          ),
-          CardInstance(
-            data: gameData.cards.firstWhere((c) => c.id == 'demon_form'),
-          ),
-          CardInstance(
-            data: gameData.cards.firstWhere((c) => c.id == 'metallicize'),
-          ),
-          CardInstance(
-            data: gameData.cards.firstWhere((c) => c.id == 'poison_stab'),
-          ),
-        ];
-
-        ref.read(deckProvider.notifier).initializeStarterDeck(starterCards);
-      }
-
-      ref.read(runProvider.notifier).startCombat();
+      ref.read(combatProvider.notifier).startPlayerCombat();
 
       final runState = ref.read(runProvider);
       final currentNode = runState.mapNodes.firstWhere(
@@ -271,17 +238,10 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             playerCardsCount: ref.read(deckProvider).masterDeck.length,
             bossEnemyId: bossEnemyId,
           );
-
-      ref.read(deckProvider.notifier).initializeCombat();
-      ref.read(deckProvider.notifier).drawCards(5);
     });
 
     _game = HerosDraftGame(
       onEnemiesDead: _handleCombatVictory,
-      onEnemyDebuffDeck: (count) {
-        // Logique retirée car la carte "Blessure" de test a été supprimée
-      },
-      onTurnEnded: _startPlayerNewTurn,
       onPhaseChanged: (phase) {
         final l10n = AppLocalizations.of(context)!;
         _triggerPhaseBanner(
@@ -422,6 +382,15 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       }
     });
 
+    ref.listen<DeckState>(deckProvider, (previous, next) {
+      if (previous != null && next.reshuffleCount > previous.reshuffleCount) {
+        context.showNotification(
+          '🔄 ${AppLocalizations.of(context)!.deckReshuffled}',
+          type: NotificationType.info,
+        );
+      }
+    });
+
     _game.availableEnemies = gameData.enemies;
     _game.availableHeroes = gameData.heroes;
     _game.syncState(runState);
@@ -506,7 +475,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                       },
                       showManaWarning: _showManaWarning,
                       showRemainingManaWarning: _showRemainingManaWarning,
-                      turnCount: _turnCount,
+                      turnCount: combatState.turnCount,
                     ),
 
                   if (!runState.isDead && !_showDraft)

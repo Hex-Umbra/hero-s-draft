@@ -58,6 +58,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get enemyTurn => 'TOUR ENNEMI';
 
   @override
+  String get deckReshuffled => 'Défausse remélangée';
+
+  @override
   String get notEnoughGold => 'Pas assez d\'or !';
 
   @override
@@ -353,11 +356,6 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String intentBuff(int value) {
     return 'Buff Attaque : +$value';
-  }
-
-  @override
-  String intentCurse(int value) {
-    return 'Malédiction : $value';
   }
 
   @override

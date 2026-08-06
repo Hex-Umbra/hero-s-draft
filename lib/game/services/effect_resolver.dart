@@ -6,6 +6,7 @@ import '../controllers/run_controller.dart';
 import '../controllers/deck_controller.dart';
 import '../controllers/combat_controller.dart';
 import 'effects/effect_strategy.dart';
+import '../game_constants.dart';
 
 class EffectResolver {
 
@@ -162,7 +163,7 @@ class EffectResolver {
     }
 
     if (extraDraw > 0) {
-      deckController.drawCards(extraDraw);
+      deckController.drawCards(extraDraw, maxHandSize: GameConstants.maxHandSize);
     }
     if (extraMana > 0) {
       final currentMana = runController.currentState.heroStats.currentMana;
