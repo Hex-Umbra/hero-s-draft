@@ -1,14 +1,25 @@
 ## 7. Flux Complet d'un Tour de Combat
 
 ```
+0. OUVERTURE DU COMBAT (une seule fois, depuis initState de GameScreen)
+   └→ CombatController.startPlayerCombat()   [TurnPhaseManager]
+       ├→ RunController.startCombat()
+       │   ├→ Purge des statuts du combat précédent, mana = maxMana
+       │   ├→ applyRelics(startOfCombat)
+       │   └→ TraitSystem.onTurnStart(runController)   (ex: Berserker)
+       └→ DeckNotifier.startCombat(handSize: cardsPerTurn, maxHandSize: 10)
+
 1. DÉBUT TOUR JOUEUR
-   └→ RunController.startTurn()
-       ├→ Restore mana = maxMana
-       ├→ applyRelics(startOfTurn)
-       ├→ Process statuts: poison (dégâts), strength_regen (→strength), armor_regen (→armure)
-       ├→ tickStatuses() (décrémente durées, supprime expirés)
-       ├→ tickCooldowns() (skill1/skill2 -1)
-       └→ TraitSystem.onTurnStart(runController)
+   └→ CombatController.startPlayerTurn()   [TurnPhaseManager]
+       ├→ RunController.startTurn()
+       │   ├→ Armure remise à 0, restore mana = maxMana
+       │   ├→ applyRelics(startOfTurn)
+       │   ├→ Process statuts: poison (dégâts), strength_regen (→strength), armor_regen (→armure)
+       │   ├→ tickStatuses() (décrémente durées, supprime expirés)
+       │   ├→ tickCooldowns() (skill1/skill2 -1)
+       │   └→ TraitSystem.onTurnStart(runController)
+       └→ DeckNotifier.drawCards(cardsPerTurn, maxHandSize: 10)
+           └→ remélange à sec si la pioche se vide en cours de route
 
 2. JOUEUR JOUE UNE CARTE
    └→ CombatController.applyPlayerCardPlay(card, runCtrl, deckNotif)
@@ -52,3 +63,10 @@
            ├→ SI BOSS (type cards) : Affichage séquentiel du dialogue de draft de cartes (choix/skip gérés par RewardController)
            └→ Une fois isResolved = true : Déblocage du voyage et retour sur la carte du monde
 ```
+
+> [!IMPORTANT]
+> **Les étapes 0 et 1 appartiennent à `TurnPhaseManager`, pas à `GameScreen`.** Le widget
+> ne fait qu'appeler les deux façades et animer le résultat. À l'intérieur de chacune,
+> l'ordre `RunController` **puis** `DeckNotifier` est un invariant : l'inverser décalerait
+> toute relique `startOfTurn` d'un tour entier. Voir
+> [ADR-078](../_adr/ADR-078-assainissement-du-systeme-de-pioche-remelange-a-sec.md).

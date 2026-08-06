@@ -48,7 +48,7 @@ pie title Répartition de l'effort restant estimé (~91 jours)
 ```mermaid
 graph TD
     P01["P-01 pubspec resync ✅ clos"] --> P04[P-04 CI/CD]
-    P02[P-02 Assainissement pioche] --> B18[Mots-clés de deck]
+    P02["P-02 Assainissement pioche ✅ livré"] --> B18[Mots-clés de deck]
     P02 --> B19[Effets interactifs]
     P02 --> B20[Malédictions ennemies]
     P05[P-05 Roster tier-1 + onHitEffect] --> P14[P-14 Variantes d'Élite]
@@ -69,7 +69,7 @@ graph TD
 | ID | Chantier | Effort | Difficulté | Apport |
 |:---|:---|:---:|:---:|:---:|
 | ~~**P-01**~~ | ~~**Resynchroniser `pubspec.yaml`** (`0.1.0+1` → `0.4.7+1`) sur `patch_notes.json`~~ ✅ **Livré le 2026-08-03** — désormais maintenu automatiquement par le skill `patch-notes-writer` | — | — | — |
-| **P-02** | **Assainissement du système de pioche** (doc 31/07) | **2-3 j** | ★★★★☆ | 🔥🔥🔥 |
+| ~~**P-02**~~ | ~~**Assainissement du système de pioche**~~ ✅ **Livré le 2026-08-06** — voir [ADR-078](../.obsidian_vault/_adr/ADR-078-assainissement-du-systeme-de-pioche-remelange-a-sec.md). ⚠️ **Playtest de validation restant** | — | — | — |
 | **P-03** | **Système audio** (`flame_audio` + `SfxService`, ~15 événements) | **3-5 j** | ★★★☆☆ | 🔥🔥🔥 |
 | **P-04** | **CI/CD GitHub Actions** (`ci.yml` + `release.yml`, 7 jobs) | **1,5-2 j** *(+0,5 j de config externe)* | ★★★☆☆ | 🔥🔥 |
 
@@ -80,6 +80,23 @@ graph TD
 *Diagnostic du 31/07/2026, conservé tel quel pour mémoire — le chantier est clos depuis (voir la note ci-dessus) :* « Cinq minutes de travail, mais **prérequis bloquant strict** de P-04 : le job `verify-version` compare le tag git à `pubspec.yaml` et échoue systématiquement tant que l'écart `0.1.0` / `0.4.7` subsiste. À faire immédiatement, indépendamment du reste. »
 
 ### P-02 — Assainissement de la pioche
+> [!NOTE]
+> ✅ **Livré le 2026-08-06** (branche `feat/p02-assainissement-pioche`, 8 commits TDD,
+> 230/230 tests au vert, `dart analyze` propre). Conception et arbitrages :
+> [ADR-078](../.obsidian_vault/_adr/ADR-078-assainissement-du-systeme-de-pioche-remelange-a-sec.md).
+> Deux écarts au diagnostic ci-dessous, tranchés en conception :
+> `maxHandSize` est devenue une **constante** (`GameConstants.maxHandSize = 10`) et non une
+> statistique, l'arithmétique du deck actuel rendant une relique dessus statistiquement
+> invisible — la relique livrée (`scholars_satchel`) cible donc `RunState.cardsPerTurn` ;
+> et le chantier a produit **18 tests neufs plus 2 réécrits**, non 6.
+>
+> ⚠️ **Reste à faire : le playtest de validation.** Le remélange à sec change la difficulté
+> ressentie, et c'est le seul point qu'aucun test ne tranche. **P-16 ne doit pas démarrer
+> avant.** Points à observer :
+> `docs/superpowers/plans/2026-08-05-p02-assainissement-pioche.md` §Validation finale.
+
+*Diagnostic du 31/07/2026, conservé tel quel pour mémoire — le chantier est livré depuis (voir la note ci-dessus) :*
+
 **Ce que ça corrige** : `drawCards()` ne remélange jamais la défausse — une carte « Piocher 2 » avec pioche vide ne fait *rien*, silencieusement. Trois cartes du pool et la rune `quick` sont donc non fiables aujourd'hui. S'ajoutent : le seuil de remélange `< 5` qui détruit la capacité à compter son deck (compétence centrale du genre), l'absence de limite de main, un mélange non déterministe qui rend les tests de séquence inécrivables, `_turnCount` dupliqué (bug d'affichage « Tour 1 » sur une partie rechargée), et 4 blocs de code mort (`temporaryCost`, `IntentType.debuffDeck`, `onEnemyDebuffDeck`, deck de secours codé en dur).
 **Pourquoi si haut** : c'est le socle de tous les axes de profondeur futurs (mots-clés de deck, effets interactifs, malédictions ennemies) — les construire sur les règles actuelles reviendrait à empiler sur du bancal.
 **Risque** : ★★★★☆ car le chantier déplace la pioche hors de `game_screen.dart`, soit le chemin le plus emprunté du jeu. L'ordre relatif `runController.startTurn()` / pioche doit être préservé à l'identique sous peine de décaler les reliques d'un tour. Effet de bord assumé : **la difficulté ressentie change** (remélange à sec) — à re-playtester.
@@ -177,7 +194,7 @@ Réutilise `onHitEffect`/`evadeChance` de P-05 sans nouveau champ. Trois concept
 
 ### P-16 — Le sujet le plus important de ce tier
 Les runes de forge `eco` et `quick` (regain de mana / pioche à la lecture d'une carte) rendent le mana quasi illimité, alors que c'est la ressource la plus importante du jeu. Cumulé avec la récompense de mana au Level Up disponible jusqu'en légendaire, le joueur perd toute sensation de contrainte. Le chantier consiste à revoir **l'ensemble** des tables de probabilité et le poids des récompenses par rareté — donc à re-calibrer plusieurs systèmes en même temps, d'où ★★★★☆ malgré un code trivial.
-**Interaction connue** : P-02 change déjà la difficulté ressentie via le remélange à sec. Faire P-02 **avant** P-16 et re-mesurer, sinon on calibre sur une base qui va bouger.
+**Interaction connue** : P-02 change la difficulté ressentie via le remélange à sec. ✅ **P-02 est livré depuis le 2026-08-06, mais son playtest de validation ne l'est pas** — la base n'est donc pas encore mesurée. Faire ce playtest avant d'ouvrir P-16, sinon on calibre sur une base qui va bouger.
 
 ### P-17 — Les cinq classiques
 Documentés depuis `6_analyse_game_balance.md`, jamais corrigés : économie de mana permissive, Paladin quasi invulnérable au début (20 armure de base), HP des sbires trop bas, `Attaque Rapide` gratuite (0 mana → 3 dégâts + 1 pioche), soin répétable. Chacun est une ligne de JSON ; **c'est le playtest de validation qui coûte**. À traiter dans la même passe que P-16 pour ne calibrer qu'une fois.
@@ -220,7 +237,7 @@ Le constat `==`/`hashCode` tient intégralement : **aucun des 13 modèles suivis
 > deux mêmes erreurs et a été corrigé dans la même passe. Ne pas le recopier ici.
 
 ### P-21 — La justification d'origine est tombée
-La fiche du 31/07 plaçait ce chantier en tête au motif que `RewardController` n'avait **aucun** test. C'est faux : `test/unit/reward_controller_test.dart` existe, fait 434 lignes, et a été créé par `ec719af` le **24/07**. L'objectif « ≥ 50 % » reste légitime, mais il n'est plus chiffrable sans mesure : lancer `flutter test --coverage` **avant** d'ouvrir le chantier, et re-trancher l'effort à partir du taux réel. Note conservée : P-02 apporte 6 tests et rend testable la règle de tour, aujourd'hui inécrivable.
+La fiche du 31/07 plaçait ce chantier en tête au motif que `RewardController` n'avait **aucun** test. C'est faux : `test/unit/reward_controller_test.dart` existe, fait 434 lignes, et a été créé par `ec719af` le **24/07**. L'objectif « ≥ 50 % » reste légitime, mais il n'est plus chiffrable sans mesure : lancer `flutter test --coverage` **avant** d'ouvrir le chantier, et re-trancher l'effort à partir du taux réel. Note conservée : P-02 rend testable la règle de tour, alors inécrivable. ✅ **Fait le 2026-08-06** — le chantier a livré **18 tests neufs et 2 réécrits** (212 → 230), non 6 : le total de départ de ce chantier de couverture est donc à re-mesurer, pas à reprendre d'ici.
 
 ### P-23 — Rétrogradé : sa « bombe à retardement » a été désamorcée le 24/07
 La fiche du 31/07 en faisait « le plus urgent de ce tier ». Ses trois justifications sont périmées : les clés de dispatch i18n en français ont disparu (le `switch` porte sur l'enum `LevelUpRewardType`), le fichier **est** couvert par `test/widget/draft_screen_test.dart`, et le tirage pondéré par la `luck` a été extrait dans `LevelUpRewardService` par le commit `b5ca823` — daté du **24/07**, lui aussi antérieur à la rédaction. Ne subsiste qu'un fichier de **691 lignes** à découper : utile, sans urgence.
@@ -284,7 +301,7 @@ gantt
     dateFormat YYYY-MM-DD
     section Jalon 1 — Socle
     P-01 Resync version (clos)    :done, j1a, 2026-08-01, 1d
-    P-02 Assainissement pioche    :j1b, after j1a, 3d
+    P-02 Assainissement pioche    :done, j1b, after j1a, 3d
     P-04 CI/CD                    :j1c, after j1a, 3d
     P-03 Audio                    :j1d, after j1b, 5d
     section Jalon 2 — Feel & contenu
@@ -298,8 +315,8 @@ gantt
     P-16 Refonte probabilités     :j3c, after j3b, 3d
 ```
 
-### Jalon 1 — Socle *(≈ 11 j)* → ~~P-01~~ ✅, P-02, P-04, P-03
-Corrige les règles cassées, comble le trou audio, automatise la distribution. **Rien de nouveau n'est ajouté** — c'est délibéré : tout ajout de contenu posé sur la pioche actuelle devra être re-testé après P-02.
+### Jalon 1 — Socle *(≈ 11 j)* → ~~P-01~~ ✅, ~~P-02~~ ✅, P-04, P-03
+Corrige les règles cassées, comble le trou audio, automatise la distribution. **Rien de nouveau n'est ajouté** — c'est délibéré : tout ajout de contenu posé sur l'ancienne pioche aurait dû être re-testé après P-02, désormais livré.
 
 ### Jalon 2 — Feel & contenu *(≈ 14 j)* → P-06, P-08 (proto), P-07, P-05
 L'ordre compte : P-06 crée `vfx_tokens.dart` dont P-07 dépend ; le prototype de P-08 tranche le pipeline d'assets dont dépendent les sprites de P-05, à lancer en production dès la décision prise. À la sortie de ce jalon, le jeu devrait être nettement plus agréable à jouer sans qu'aucun système n'ait changé de forme.
@@ -313,9 +330,9 @@ Donne une fin à une run, archive les résultats, puis recalibre l'économie **u
 
 ## 10. Ce qu'il faut retenir
 
-1. **Quatre chantiers font l'essentiel de la valeur** : audio (P-03), pioche (P-02), juice (P-07), et une condition de victoire (P-10). Le reste est de l'accumulation.
+1. **Quatre chantiers font l'essentiel de la valeur** : audio (P-03), pioche (~~P-02~~ ✅), juice (P-07), et une condition de victoire (P-10). Le reste est de l'accumulation.
 2. **Le chemin critique n'est presque jamais le code** — c'est le son (P-03), les sprites (P-05, P-15), les illustrations (P-12) et le playtest de calibration (P-16, P-17). Lancer ces productions en parallèle du développement, pas après.
-3. **P-02 avant tout ajout de contenu**, et **P-16 après P-02**, sinon on calibre deux fois.
+3. **P-02 avant tout ajout de contenu** ✅ *(livré le 2026-08-06)*, et **P-16 après le playtest de validation de P-02**, sinon on calibre deux fois.
 4. La dette technique restante est réelle mais **nettement plus faible que ne le disent les anciens documents** : les deux god classes UI sont résolues, la persistance est livrée, et la re-vérification du Tier D le 2026-08-04 a montré que **six de ses huit fiches énonçaient des faits périmés** — deux chantiers y étaient même déjà livrés. Corollaire de méthode : **une fiche de dette non re-mesurée depuis plus d'une semaine doit être re-vérifiée contre le code avant d'être ouverte**, jamais crue sur parole. Les tiers A, B, C et E n'ont pas encore subi ce contrôle.
 
 ---

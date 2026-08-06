@@ -1,6 +1,6 @@
 ### 3.5. 🎒 Système de Reliques
 
-**24 reliques** définies dans `relics.json` (au lieu de 14 initialement, équilibrant le pool commun), organisées par déclencheurs et types d'effets :
+**25 reliques** définies dans `relics.json` (au lieu de 14 initialement, équilibrant le pool commun), organisées par déclencheurs et types d'effets :
 
 | ID | Nom | Rareté | Trigger | Effet | Valeur | Description |
 |:---|:---|:---|:---|:---|:---|:---|
@@ -28,9 +28,19 @@
 | `phoenix_feather` | Plume de Phénix | Epic | startOfCombat | gain_mana | 2 | Gagne 2 Mana au début du combat. |
 | `fortune_dice` | Dés de Fortune | Legendary | startOfRun | gain_luck | 2 | +2 Chance de manière permanente pour toute la run. |
 | `crown_kings` | Couronne des Rois | Legendary | startOfRun | gain_mana | 1 | Gagne 1 Mana Max de manière permanente au début de la run. |
+| `scholars_satchel` | Besace de l'Érudit | Legendary | startOfRun | increase_cards_per_turn | 1 | Pioche 1 carte supplémentaire au début de chaque tour, pour toute la run. |
+
+> [!NOTE]
+> **`increase_cards_per_turn` est le premier `effectType` qui touche au deck.** Il agit sur
+> `RunState.cardsPerTurn` via `applyRunRuleModifier`, et non sur `EntityStats` — lequel est
+> partagé avec les ennemis, qui n'ont pas de deck. Il n'a de sens qu'en `startOfRun` : une
+> variante par combat ou par tour cumulerait indéfiniment. Sa rareté `legendary` est
+> calibrée sur la Couronne des Rois (+1 Mana Max permanent), le seul autre effet permanent
+> qui modifie une règle de run plutôt qu'une statistique.
+> Voir [ADR-078](../_adr/ADR-078-assainissement-du-systeme-de-pioche-remelange-a-sec.md).
 
 **Cycle de vie des triggers** :
-- `startOfRun` : Appliqué immédiatement à l'ajout (`InventoryController.addRelic()`).
+- `startOfRun` : Appliqué immédiatement à l'ajout (`InventoryController.addRelic()`), et **retiré symétriquement** par `removeRelicEffect()` lors d'un sacrifice à l'Autel d'Échange.
 - `startOfCombat` : Via `RunController.startCombat()`.
 - `startOfTurn` / `endOfTurn` : Via `RunController.startTurn()` / `TraitSystem.onTurnEnd()`.
 - `onCardPlayed` : Via `CombatController.applyPlayerCardPlay()`.

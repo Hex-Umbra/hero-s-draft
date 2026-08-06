@@ -5,10 +5,11 @@ Index des **ADR** (Architecture Decision Records) de **Hero's Draft**. Le corps 
 > [!IMPORTANT]
 > **Plafond : 250 lignes.** Ce fichier est un index, jamais un contenu. Un nouvel ADR prend le numéro `max(index) + 1` lu ici, jamais un numéro deviné.
 
-**Vérifié le 2026-08-03** — 77 décisions, numéros `ADR-001` à `ADR-077`, sans doublon ni trou.
+**Vérifié le 2026-08-06** — 78 décisions, numéros `ADR-001` à `ADR-078`, sans doublon ni trou.
 
 | N° | Décision | Statut | Version | Fichier |
 |:---|:---|:---:|:---:|:---|
+| `ADR-078` | Assainissement du Système de Pioche — Remélange à Sec, Arrêt Net et Règle de Tour hors du Widget (chantier P-02) | ✅ | 0.4.7 | [ADR-078-assainissement-du-systeme-de-pioche-remelange-a-sec.md](../_adr/ADR-078-assainissement-du-systeme-de-pioche-remelange-a-sec.md) |
 | `ADR-077` | Clarté Visuelle du Mana des Reliques en Combat (v3.0.1) | ✅ | v3.0.1 | [ADR-077-clarte-visuelle-du-mana-des-reliques-en-combat.md](../_adr/ADR-077-clarte-visuelle-du-mana-des-reliques-en-combat.md) |
 | `ADR-076` | Synchronisation Synchrone du Bouton Fin de Tour | ✅ | v0.2.5 | [ADR-076-synchronisation-synchrone-du-bouton-fin-de-tour.md](../_adr/ADR-076-synchronisation-synchrone-du-bouton-fin-de-tour.md) |
 | `ADR-075` | Résolution Robuste des Clés Dupliquées dans l'Overlay de Notification (v0.2.8) | ✅ | v0.2.8 | [ADR-075-resolution-robuste-des-cles-dupliquees-dans-l-over.md](../_adr/ADR-075-resolution-robuste-des-cles-dupliquees-dans-l-over.md) |

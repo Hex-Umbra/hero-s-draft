@@ -5,14 +5,15 @@
 
 ## Métriques
 
-**Vérifié le 2026-08-03**
+**Vérifié le 2026-08-06**
 
 | Métrique | Valeur | Commande |
 |:---|:---|:---|
-| Tests automatisés | 212 au vert | `flutter test` |
+| Tests automatisés | 230 au vert | `flutter test` |
+| Fichiers de test | 42 | `find test -name "*.dart" \| wc -l` |
 | Analyse statique | 0 erreur (`No issues found!`) | `dart analyze` |
 | Fichiers Dart (`lib/`) | 169 | `find lib -name "*.dart" \| wc -l` |
-| Lignes de code (`lib/`) | 36 343 | `find lib -name "*.dart" -exec cat {} + \| wc -l` |
+| Lignes de code (`lib/`) | 36 441 | `find lib -name "*.dart" -exec cat {} + \| wc -l` |
 | Fichiers de données | 10 | `ls assets/data/*.json \| wc -l` |
 
 > [!NOTE]
@@ -60,7 +61,7 @@ Design complet — [ADR-069](../_adr/ADR-069-systeme-de-sauvegarde-de-run-checkp
 | Persistance Forge v2 | `RunController`/`runProvider` | Session de forge anti-exploit (`forgeSlots`, `forgeTargetCardId`), slots bonus à coût progressif |
 | Progression XP | `RunController.gainXp()`, `PlayerStatsManager` | Progression exponentielle, gains multiples, carry-over |
 | Échelonnement des ennemis | `CombatController.initializeCombat()` | Multiplicateurs dynamiques par acte — détail en §Combat |
-| Piles de cartes | `DeckNotifier`/`deckProvider` | 5 piles logiques (Master, Draw, Hand, Discard, Exhaust) |
+| Piles de cartes | `DeckNotifier`/`deckProvider` | 5 piles logiques (Master, Draw, Hand, Discard, Exhaust), invariant de conservation asserté ; remélange à sec et arrêt net sur main pleine — [ADR-078](../_adr/ADR-078-assainissement-du-systeme-de-pioche-remelange-a-sec.md) |
 | Économie, compétences, événements, boutique, récompenses | `InventoryController`, `SkillController`, `EventController`, `ShopController`, `RewardController` | Or/reliques à charges, cooldowns de compétences, résolution d'événements, achat/clone/reroll boutique, tirage post-victoire |
 | Logique de Fusion | `DeckNotifier`, `InventoryController` | Fusion d'améliorations identiques, déduction d'or, mise à jour de la carte via `setForgeUpgrades` |
 
@@ -73,6 +74,8 @@ Design complet — [ADR-069](../_adr/ADR-069-systeme-de-sauvegarde-de-run-checkp
 | Rareté Dynamique | `EffectResolver.resolveCard()` | Progression par rareté (common → legendary), rareté `unique` fixée à ×1.0 |
 | Catalogue de cartes | `assets/data/cards.json`, `assets/data/hero_cards.json` | 23 cartes : 17 globales (communes) + 6 de classe (unique) |
 | Effets et exhaust | `EffectResolver`, `CardEffect`, `DeckNotifier.playCard()` | damage/heal/armor/draw/gain_mana/apply_status ; Power et `isExhaust` → pile d'épuisement |
+| Moteur de pioche | `DeckNotifier._drawInto`, `.drawCards`, `.startCombat`, `deckRandomProvider` | Remélange à sec (défausse → pioche uniquement si pioche vide), arrêt net à `GameConstants.maxHandSize` (10), aléatoire injectable pour les tests de séquence, `DeckState.reshuffleCount` observable |
+| Règle de tour joueur | `TurnPhaseManager.startPlayerCombat()`/`.startPlayerTurn()` | Moitié joueur du cycle, symétrique de `startEnemyTurn`/`endEnemyTurn` ; tour 1 et tour N+1 sur le même chemin ; nombre de cartes piochées piloté par `RunState.cardsPerTurn` (défaut 5) |
 | Forge et Fusion | `DeckNotifier.addForgeUpgrade()`, `ForgeUpgradeDialog`, `ForgeFusionScreen` | Upgrades pilotées par `assets/data/forge_upgrades.json`, cumulables sans limite |
 | Draft (départ, post-combat) et suppression | `DraftScreen`, `StarterDeckDraftScreen`, `DeckNotifier.removeCardById()` | 3 choix post-victoire, 5 cartes globales au départ, oubli au feu de camp |
 
@@ -87,7 +90,7 @@ Design complet — [ADR-069](../_adr/ADR-069-systeme-de-sauvegarde-de-run-checkp
 | Difficulté hybride et réserve d'ennemis | `EncounterSystem`, `CombatController`, `CombatState` | Formule DDA amortie, limite de 5 ennemis actifs avec `pendingEnemies` |
 | Scaling géométrique et déblocage de tier | `EncounterSystem.getHpActFactor`/`.getDamageActFactor`/`.getUnlockedTier` | Palier géométrique HP/Dégâts tous les 2 actes, tier d'ennemi débloqué tous les 5 actes — [ADR-070](../_adr/ADR-070-scaling-de-difficulte-en-escalier-geometrique-debl.md), [ADR-072](../_adr/ADR-072-resserrement-de-la-cadence-du-scaling-de-difficult.md) |
 | Plafond du nombre d'ennemis par acte | `EncounterSystem.getMaxEnemiesForNormalCombat`/`.Elite`/`.Boss` | Croissant avec l'acte, différencié combat/élite/boss — [ADR-071](../_adr/ADR-071-plafonnement-du-nombre-d-ennemis-par-acte-resoluti.md) |
-| Décomposition des écrans de combat/carte | `lib/ui/screens/map_screen.dart` (418 lignes), `lib/ui/screens/game_screen.dart` (555 lignes) | Chantiers de refactoring Phase 2 achevés (god classes historiquement à 2471/1667 lignes) — historique dans `.obsidian_vault/_archive/2026-08-03-progress-historique.md` |
+| Décomposition des écrans de combat/carte | `lib/ui/screens/map_screen.dart` (418 lignes), `lib/ui/screens/game_screen.dart` (524 lignes) — **vérifié le 2026-08-06** | Chantiers de refactoring Phase 2 achevés (god classes historiquement à 2471/1667 lignes) — historique dans `.obsidian_vault/_archive/2026-08-03-progress-historique.md`. `game_screen.dart` a encore perdu la règle de tour, le deck de secours et `_turnCount` avec [ADR-078](../_adr/ADR-078-assainissement-du-systeme-de-pioche-remelange-a-sec.md) |
 
 ### 🏆 Passifs et Traits de Héros
 
@@ -201,6 +204,7 @@ dépourvu de sérialisation.
 
 | Version | Date | Titre | Description des changements clés |
 |:---|:---|:---|:---|
+| **0.4.7** | 2026-08-06 | Assainissement du Système de Pioche (P-02) | Le remélange défausse → pioche devient **automatique et à sec** : il n'intervient plus qu'une fois la pioche réellement vide, y compris au milieu d'une pioche. L'ancien seuil `if (drawPile.length < 5)` porté par `game_screen.dart` déclenchait un remélange presque chaque tour et détruisait la capacité à compter son deck ; `shuffleDiscardIntoDraw()` est supprimée. La pioche s'arrête **net** à `GameConstants.maxHandSize` (10) sans consommer de carte ni remélanger. `RunState.cardsPerTurn` (défaut 5) remplace le `5` codé en dur, et `TurnPhaseManager` gagne `startPlayerCombat()`/`startPlayerTurn()` : le tour 1 et le tour N+1 empruntent enfin le même code, et `game_screen.dart` n'anime plus que (perte de `_turnCount` et du deck de secours, 555 → 524 lignes). Aléatoire injectable via `deckRandomProvider`, compteur `DeckState.reshuffleCount` observable et notification joueur. Première relique touchant au deck : `scholars_satchel` (Besace de l'Érudit, legendary, +1 carte/tour), avec `case` symétrique dans `removeRelicEffect`. 6 éléments de code mort supprimés (`temporaryCost`, `IntentType.debuffDeck`, `intentCurse`, `onEnemyDebuffDeck`, `onTurnEnded`, deck de secours). 8 commits TDD, **230/230 tests au vert** (+18 neufs, 2 réécrits), `dart analyze` propre. **Playtest de validation non effectué** — la difficulté ressentie change, P-16 doit attendre. Voir [ADR-078](../_adr/ADR-078-assainissement-du-systeme-de-pioche-remelange-a-sec.md). |
 | **v3.5.1** | 2026-07-26 | Correction de la Réactivité du Bouton « Continuer » (HomeScreen) | `HomeScreen._continueGame()`/`_startNewGame()` naviguent via `Navigator.push`, mais le menu pause et `GameOverScreen` reviennent à l'accueil via `Navigator.popUntil((route) => route.isFirst)`, qui ne reconstruit pas `HomeScreen` ni ne réévalue `SaveService.hasSave()` : le bouton « Continuer » pouvait rester dans un état obsolète jusqu'au redémarrage de l'application. Correctif : les deux méthodes attendent désormais (`await`) leur `Navigator.push` et appellent `setState(() {})` à son retour. Nouveau test `test/widget/home_screen_save_test.dart` (95 lignes). Commit `17564b4`, mergé avec ADR-072 via PR #22. Voir ADR-073. |
 | **v3.5.0** | 2026-07-26 | Accélération de la Cadence du Scaling de Difficulté | Resserrement de la cadence du système introduit par ADR-070/071 suite à un retour de playtest (le joueur montait en puissance plus vite que les ennemis) : le palier géométrique HP/Dégâts (`_actBracketSize`) passe de 5 à 2 actes (bases x1.35 HP / x1.25 Dégâts et rampe intra-palier inchangées) et le déblocage de tier (`_tierUnlockBracketSize`) de 10 à 5 actes (tier 2 dès l'Acte 6, tier 3 dès l'Acte 11). Aucune autre formule modifiée (budget, plafond d'ennemis ADR-071, puissance du joueur). Effet secondaire assumé : fenêtre de contenu tier-1-only resserrée des Actes 1-10 aux Actes 1-5. 2 commits TDD (`97c5fcb`, `8bc1920`), suite de tests complète 211/211 au vert, `dart analyze` propre. Voir ADR-072. *(Branche `fix/combat_scaling` mergée vers `main` via PR #22 ; patch note joueur v0.4.6 rédigé — voir `assets/data/patch_notes.json`.)* |
 | **v3.4.0** | 2026-07-25 | Plafonnement du Nombre d'Ennemis par Acte & Résolution de la Dérive Log/Calcul | Suite directe d'ADR-070 sur la même branche `feature/combat_scaling` (mergée avec PR #21) : plafond du nombre d'ennemis générés par combat, croissant avec l'Acte et différencié combat normal/élite/boss (+1/acte, +1/2 actes, +1/5 actes respectivement, sans plafond ultime), remplaçant l'ancienne limite fixe de 10 — empêche l'empilement de plusieurs ennemis tier-1 faibles pour épuiser un budget élite/boss. Corrige aussi la dérive confirmée entre le log de debug (`math_combat.md`) et le calcul réel de budget (`playerCardsCount`, `+(act-1)*10` manquants dans le log) via un unique `EncounterSystem.calculateBudget()`. Voir ADR-071. *(Patch note joueur rédigé — v0.4.7 "L'Équilibre des Effectifs", voir `assets/data/patch_notes.json`.)* |
@@ -210,7 +214,10 @@ dépourvu de sérialisation.
 | **v0.3.0** | 2026-06-25 | Refonte et Validation du Système d'Événements | Enrichissement visuel et narratif du système de rencontres avec 5 événements bilingues configurés dans `assets/data/events.json`. Conception d'un Safety Gate de validation d'éligibilité (`isSelectable`) bloquant les options en cas d'or insuffisant, de dégâts létaux (`currentHp <= damage`), ou de réduction de PV Max létale. Rendu visuel d'en-tête (PV et Or réactifs) et intégration de badges compacts directement dans les boutons de choix d'options avec transition d'échelle animée après résolution. |
 | **v0.2.9** | 2026-06-25 | Équilibrage Boutique et Miroir Magique | Vente de cartes modélisée par instances réelles (`CardInstance`) affichant leurs sockets de runes et raretés dynamiques via `UiCard.fromInstance`. Tarification dynamique (+20 Or par upgrade de forge). Scaling de raretés et d'upgrades par Acte. Nerf anti-exploit du Miroir Magique doublant son coût à chaque achat ($150 \rightarrow 300 \rightarrow 600 \dots$ Or) avec réinitialisation à 150 Or en sortie de session. |
 | **v0.2.8** | 2026-06-24 | Résolution du Bug de Clés Dupliquées | Résolution de l'erreur "Duplicate keys found" dans l'overlay de notification en combinant le timestamp en microsecondes avec un suffixe pseudo-aléatoire généré par une instance statique unique de `Random`. Garantit des identifiants uniques stables pour toutes les notifications simultanées. |
-| **v0.2.7** | 2026-06-16 | Révision du Scaling et du Spawn des Ennemis | Révision des formules de génération des combats et de scaling de difficulté. Prise en compte du nombre de cartes du deck (`playerCardsCount * 2.0`) dans la puissance estimée du joueur. Ajustement du calcul du Combat Rating des ennemis (division par 4 des PV de base, multiplication par 2 des dégâts) pour encourager le spawn de plus d'ennemis. Augmentation des coefficients de croissance par acte (HP passe de 20% à 35%, dégâts de 15% à 25%). |
+
+Les releases sorties de ce tableau par débordement du plafond FIFO sont conservées
+verbatim sous `.obsidian_vault/_archive/` (`2026-08-06-progress-releases.md` pour la
+dernière rotation).
 
 > [!NOTE]
 > **Le schéma `v3.x` est gelé.** L'historique ci-dessus emploie un schéma interne
