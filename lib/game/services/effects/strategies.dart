@@ -6,6 +6,7 @@ import '../../controllers/deck_controller.dart';
 import '../../controllers/combat_controller.dart';
 import '../damage_pipeline.dart';
 import '../effect_resolver.dart';
+import '../../game_constants.dart';
 import 'effect_strategy.dart';
 
 class DamageEffectStrategy implements EffectStrategy {
@@ -117,7 +118,7 @@ class DrawEffectStrategy implements EffectStrategy {
     required CombatController combatController,
     required String? selectedEnemyId,
   }) {
-    deckController.drawCards(scaledValue);
+    deckController.drawCards(scaledValue, maxHandSize: GameConstants.maxHandSize);
   }
 }
 

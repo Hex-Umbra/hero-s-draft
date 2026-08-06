@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../game/heros_draft_game.dart';
+import '../../game/game_constants.dart';
 import '../../game/controllers/run_controller.dart';
 import '../../game/controllers/deck_controller.dart';
 import '../../game/controllers/combat_controller.dart';
@@ -210,11 +211,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     _game.currentPhase = TurnPhase.player;
     _game.heroCard?.suppressArmorChangeAnimation = true;
     ref.read(runProvider.notifier).startTurn();
-    final deckNotifier = ref.read(deckProvider.notifier);
-    if (ref.read(deckProvider).drawPile.length < 5) {
-      deckNotifier.shuffleDiscardIntoDraw();
-    }
-    deckNotifier.drawCards(5);
+    ref
+        .read(deckProvider.notifier)
+        .drawCards(5, maxHandSize: GameConstants.maxHandSize);
   }
 
   @override
@@ -273,7 +272,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           );
 
       ref.read(deckProvider.notifier).initializeCombat();
-      ref.read(deckProvider.notifier).drawCards(5);
+      ref
+          .read(deckProvider.notifier)
+          .drawCards(5, maxHandSize: GameConstants.maxHandSize);
     });
 
     _game = HerosDraftGame(

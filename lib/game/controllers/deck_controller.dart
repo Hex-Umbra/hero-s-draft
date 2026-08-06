@@ -149,28 +149,63 @@ class DeckNotifier extends Notifier<DeckState> {
     );
   }
 
-  /// Pioche [amount] cartes depuis la pioche actuelle uniquement (sans mélange de défausse mid-turn)
-  void drawCards(int amount) {
-    var currentDrawPile = List<CardInstance>.from(state.drawPile);
-    var currentHand = List<CardInstance>.from(state.hand);
+  /// Cœur de la pioche. Fonction pure : ne touche pas à `state`, mute les
+  /// listes qu'on lui passe et rend le nombre de remélanges effectués.
+  ///
+  /// Deux conditions d'arrêt, dans cet ordre :
+  ///  1. la main a atteint [maxHandSize] — on s'arrête sans consommer de carte
+  ///     ni déclencher de remélange ;
+  ///  2. pioche ET défausse vides — le deck est épuisé, sortie propre.
+  static ({
+    List<CardInstance> draw,
+    List<CardInstance> hand,
+    List<CardInstance> discard,
+    int reshuffles,
+  }) _drawInto({
+    required List<CardInstance> draw,
+    required List<CardInstance> hand,
+    required List<CardInstance> discard,
+    required int amount,
+    required int maxHandSize,
+    required Random random,
+  }) {
+    var reshuffles = 0;
 
-    final int toDraw = min(amount, currentDrawPile.length);
-    for (int i = 0; i < toDraw; i++) {
-      currentHand.add(currentDrawPile.removeLast());
+    for (var i = 0; i < amount; i++) {
+      if (hand.length >= maxHandSize) break;
+      if (draw.isEmpty) {
+        if (discard.isEmpty) break;
+        draw
+          ..addAll(discard)
+          ..shuffle(random);
+        discard.clear();
+        reshuffles++;
+      }
+      hand.add(draw.removeLast());
     }
 
-    state = state.copyWith(drawPile: currentDrawPile, hand: currentHand);
+    return (draw: draw, hand: hand, discard: discard, reshuffles: reshuffles);
   }
 
-  /// Mélange la défausse dans la pioche manuellement
-  void shuffleDiscardIntoDraw() {
-    var newDrawPile = List<CardInstance>.from(state.drawPile);
-    var currentDiscardPile = List<CardInstance>.from(state.discardPile);
+  /// Pioche [amount] cartes. Remélange la défausse dans la pioche dès que
+  /// celle-ci est vide, y compris au milieu d'une pioche. Une seule
+  /// affectation de `state`, donc une seule notification Riverpod.
+  void drawCards(int amount, {required int maxHandSize}) {
+    final result = _drawInto(
+      draw: List<CardInstance>.from(state.drawPile),
+      hand: List<CardInstance>.from(state.hand),
+      discard: List<CardInstance>.from(state.discardPile),
+      amount: amount,
+      maxHandSize: maxHandSize,
+      random: _random,
+    );
 
-    newDrawPile.addAll(currentDiscardPile);
-    newDrawPile.shuffle(_random);
-
-    state = state.copyWith(drawPile: newDrawPile, discardPile: []);
+    state = state.copyWith(
+      drawPile: result.draw,
+      hand: result.hand,
+      discardPile: result.discard,
+      reshuffleCount: state.reshuffleCount + result.reshuffles,
+    );
   }
 
   /// Défausse toute la main à la fin du tour
