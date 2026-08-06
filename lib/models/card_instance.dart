@@ -6,21 +6,19 @@ class CardInstance {
   final CardData data;
   final CardRarity rarity;
   final List<String> forgeUpgrades;
-  final int? temporaryCost;
 
   CardInstance({
     String? uniqueId,
     required this.data,
     CardRarity? rarity,
     List<String>? forgeUpgrades,
-    this.temporaryCost,
   })  : uniqueId = uniqueId ?? const Uuid().v4(),
         rarity = rarity ?? data.rarity,
         forgeUpgrades = forgeUpgrades != null
             ? List<String>.unmodifiable(forgeUpgrades)
             : const <String>[];
 
-  int get currentCost => temporaryCost ?? data.cost;
+  int get currentCost => data.cost;
 
   double get rarityMultiplier {
     switch (rarity) {
@@ -44,15 +42,12 @@ class CardInstance {
     CardData? data,
     CardRarity? rarity,
     List<String>? forgeUpgrades,
-    int? temporaryCost,
-    bool clearTemporaryCost = false,
   }) {
     return CardInstance(
       uniqueId: uniqueId ?? this.uniqueId,
       data: data ?? this.data,
       rarity: rarity ?? this.rarity,
       forgeUpgrades: forgeUpgrades ?? this.forgeUpgrades,
-      temporaryCost: clearTemporaryCost ? null : (temporaryCost ?? this.temporaryCost),
     );
   }
 
@@ -62,7 +57,6 @@ class CardInstance {
       data: CardData.fromJson(json['data'] as Map<String, dynamic>),
       rarity: CardRarity.values.firstWhere((e) => e.name == json['rarity']),
       forgeUpgrades: (json['forgeUpgrades'] as List<dynamic>?)?.map((e) => e as String).toList(),
-      temporaryCost: json['temporaryCost'] as int?,
     );
   }
 
@@ -71,6 +65,5 @@ class CardInstance {
         'data': data.toJson(),
         'rarity': rarity.name,
         'forgeUpgrades': forgeUpgrades,
-        if (temporaryCost != null) 'temporaryCost': temporaryCost,
       };
 }

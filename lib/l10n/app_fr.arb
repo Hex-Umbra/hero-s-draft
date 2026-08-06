@@ -110,7 +110,6 @@
   "intentQuickAttack": "Attaque Rapide : {value}",
   "intentDefend": "Défense : +{value}",
   "intentBuff": "Buff Attaque : +{value}",
-  "intentCurse": "Malédiction : {value}",
   "enemyStatsTitle": "STATS DE L'ENNEMI",
   "enemyStatsDesc": "Santé : {hp}/{maxHp} PV.\nAttaque : {attack}.\nArmure : {armor}.",
   "cardDescDamage": "Inflige {amount} dégâts.",

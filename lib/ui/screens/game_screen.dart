@@ -242,10 +242,6 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
     _game = HerosDraftGame(
       onEnemiesDead: _handleCombatVictory,
-      onEnemyDebuffDeck: (count) {
-        // Logique retirée car la carte "Blessure" de test a été supprimée
-      },
-      onTurnEnded: _startPlayerNewTurn,
       onPhaseChanged: (phase) {
         final l10n = AppLocalizations.of(context)!;
         _triggerPhaseBanner(

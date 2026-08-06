@@ -359,11 +359,6 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String intentCurse(int value) {
-    return 'Malédiction : $value';
-  }
-
-  @override
   String get enemyStatsTitle => 'STATS DE L\'ENNEMI';
 
   @override

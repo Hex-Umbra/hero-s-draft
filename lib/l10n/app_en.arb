@@ -184,12 +184,6 @@
       "value": { "type": "int" }
     }
   },
-  "intentCurse": "Curse: {value}",
-  "@intentCurse": {
-    "placeholders": {
-      "value": { "type": "int" }
-    }
-  },
   "enemyStatsTitle": "ENEMY STATS",
   "enemyStatsDesc": "Health: {hp}/{maxHp} HP.\nAttack: {attack}.\nArmor: {armor}.",
   "@enemyStatsDesc": {

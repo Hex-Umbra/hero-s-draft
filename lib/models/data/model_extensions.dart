@@ -105,8 +105,6 @@ extension IntentTypeExtension on IntentType {
         return l10n.intentDefend(value);
       case IntentType.buff:
         return l10n.intentBuff(value);
-      case IntentType.debuffDeck:
-        return l10n.intentCurse(value);
     }
   }
 }

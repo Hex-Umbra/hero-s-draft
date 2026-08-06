@@ -146,8 +146,6 @@ class TurnPhaseManager {
         );
         controller.updateEnemy(updatedEnemy);
         break;
-      case IntentType.debuffDeck:
-        break;
     }
   }
 }

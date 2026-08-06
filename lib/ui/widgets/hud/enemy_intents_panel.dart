@@ -126,11 +126,6 @@ class EnemyIntentsPanel extends StatelessWidget {
                   color = const Color(0xFFE040FB);
                   label = l10n.intentBuff(intent.value);
                   break;
-                case IntentType.debuffDeck:
-                  icon = Icons.sick;
-                  color = const Color(0xFF69F0AE);
-                  label = l10n.intentCurse(intent.value);
-                  break;
               }
 
               intentWidget = Container(

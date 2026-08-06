@@ -722,12 +722,6 @@ abstract class AppLocalizations {
   /// **'Buff Attack: +{value}'**
   String intentBuff(int value);
 
-  /// No description provided for @intentCurse.
-  ///
-  /// In en, this message translates to:
-  /// **'Curse: {value}'**
-  String intentCurse(int value);
-
   /// No description provided for @enemyStatsTitle.
   ///
   /// In en, this message translates to:
