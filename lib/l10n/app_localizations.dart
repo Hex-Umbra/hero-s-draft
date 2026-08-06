@@ -188,6 +188,12 @@ abstract class AppLocalizations {
   /// **'ENEMY TURN'**
   String get enemyTurn;
 
+  /// No description provided for @deckReshuffled.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard pile reshuffled'**
+  String get deckReshuffled;
+
   /// No description provided for @notEnoughGold.
   ///
   /// In en, this message translates to:

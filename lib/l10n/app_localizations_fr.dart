@@ -58,6 +58,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get enemyTurn => 'TOUR ENNEMI';
 
   @override
+  String get deckReshuffled => 'Défausse remélangée';
+
+  @override
   String get notEnoughGold => 'Pas assez d\'or !';
 
   @override

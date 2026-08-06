@@ -386,6 +386,15 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       }
     });
 
+    ref.listen<DeckState>(deckProvider, (previous, next) {
+      if (previous != null && next.reshuffleCount > previous.reshuffleCount) {
+        context.showNotification(
+          '🔄 ${AppLocalizations.of(context)!.deckReshuffled}',
+          type: NotificationType.info,
+        );
+      }
+    });
+
     _game.availableEnemies = gameData.enemies;
     _game.availableHeroes = gameData.heroes;
     _game.syncState(runState);

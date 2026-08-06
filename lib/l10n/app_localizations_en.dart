@@ -58,6 +58,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get enemyTurn => 'ENEMY TURN';
 
   @override
+  String get deckReshuffled => 'Discard pile reshuffled';
+
+  @override
   String get notEnoughGold => 'Not enough gold!';
 
   @override
