@@ -1,8 +1,24 @@
+import 'dart:math';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
+
+CardInstance _card(String id) => CardInstance(
+      data: CardData(
+        id: id,
+        nameEn: id,
+        nameFr: id,
+        cost: 1,
+        type: CardType.skill,
+        category: CardCategory.global,
+        rarity: CardRarity.common,
+        target: CardTarget.self,
+        effects: const [],
+      ),
+    );
 
 void main() {
   group('DeckNotifier Tests', () {
@@ -228,6 +244,45 @@ void main() {
       expect(mergedCard.rarity, CardRarity.uncommon);
       // Upgrades should be limited to 2
       expect(mergedCard.forgeUpgrades.length, 2);
+    });
+  });
+
+  group('DeckNotifier — aléatoire et compteur de remélange', () {
+    test('deckRandomProvider rend le mélange déterministe', () {
+      final cards = List.generate(10, (i) => _card('c$i'));
+
+      List<String> orderWithSeed(int seed) {
+        final container = ProviderContainer(
+          overrides: [deckRandomProvider.overrideWithValue(Random(seed))],
+        );
+        addTearDown(container.dispose);
+        final notifier = container.read(deckProvider.notifier);
+        notifier.initializeStarterDeck(cards);
+        notifier.initializeCombat();
+        return notifier.state.drawPile.map((c) => c.uniqueId).toList();
+      }
+
+      expect(orderWithSeed(42), equals(orderWithSeed(42)));
+      expect(orderWithSeed(42), isNot(equals(orderWithSeed(7))));
+    });
+
+    test('reshuffleCount vaut 0 par défaut et survit à la sérialisation', () {
+      const state = DeckState(reshuffleCount: 3);
+      final json = state.toJson();
+      expect(json['reshuffleCount'], 3);
+
+      final (restored, missing) = DeckState.fromJsonWithReport(json);
+      expect(restored.reshuffleCount, 3);
+      expect(missing, isEmpty);
+    });
+
+    test('reshuffleCount vaut 0 sur une sauvegarde antérieure à P-02', () {
+      const state = DeckState();
+      final legacy = Map<String, dynamic>.from(state.toJson())
+        ..remove('reshuffleCount');
+
+      final (restored, _) = DeckState.fromJsonWithReport(legacy);
+      expect(restored.reshuffleCount, 0);
     });
   });
 }

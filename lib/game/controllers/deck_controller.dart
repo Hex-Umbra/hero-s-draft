@@ -12,12 +12,17 @@ class DeckState {
   final List<CardInstance> discardPile;
   final List<CardInstance> exhaustPile;
 
+  /// Nombre de remélanges défausse → pioche depuis le début du combat.
+  /// Remis à 0 par `startCombat`. Observé par l'UI pour signaler l'événement.
+  final int reshuffleCount;
+
   const DeckState({
     this.masterDeck = const [],
     this.drawPile = const [],
     this.hand = const [],
     this.discardPile = const [],
     this.exhaustPile = const [],
+    this.reshuffleCount = 0,
   });
 
   DeckState copyWith({
@@ -26,6 +31,7 @@ class DeckState {
     List<CardInstance>? hand,
     List<CardInstance>? discardPile,
     List<CardInstance>? exhaustPile,
+    int? reshuffleCount,
   }) {
     return DeckState(
       masterDeck: masterDeck ?? this.masterDeck,
@@ -33,6 +39,7 @@ class DeckState {
       hand: hand ?? this.hand,
       discardPile: discardPile ?? this.discardPile,
       exhaustPile: exhaustPile ?? this.exhaustPile,
+      reshuffleCount: reshuffleCount ?? this.reshuffleCount,
     );
   }
 
@@ -42,6 +49,7 @@ class DeckState {
         'hand': hand.map((c) => c.toJson()).toList(),
         'discardPile': discardPile.map((c) => c.toJson()).toList(),
         'exhaustPile': exhaustPile.map((c) => c.toJson()).toList(),
+        'reshuffleCount': reshuffleCount,
       };
 
   static (List<CardInstance>, List<MissingSaveItem>) _decodePile(
@@ -97,6 +105,7 @@ class DeckState {
         hand: hand,
         discardPile: discardPile,
         exhaustPile: exhaustPile,
+        reshuffleCount: json['reshuffleCount'] as int? ?? 0,
       ),
       missing,
     );
@@ -104,8 +113,11 @@ class DeckState {
 }
 
 class DeckNotifier extends Notifier<DeckState> {
+  late final Random _random;
+
   @override
   DeckState build() {
+    _random = ref.read(deckRandomProvider);
     return const DeckState();
   }
 
@@ -127,7 +139,7 @@ class DeckNotifier extends Notifier<DeckState> {
   /// Prépare les piles pour un nouveau combat
   void initializeCombat() {
     final newDrawPile = List<CardInstance>.from(state.masterDeck);
-    newDrawPile.shuffle(Random());
+    newDrawPile.shuffle(_random);
 
     state = state.copyWith(
       drawPile: newDrawPile,
@@ -156,7 +168,7 @@ class DeckNotifier extends Notifier<DeckState> {
     var currentDiscardPile = List<CardInstance>.from(state.discardPile);
 
     newDrawPile.addAll(currentDiscardPile);
-    newDrawPile.shuffle(Random());
+    newDrawPile.shuffle(_random);
 
     state = state.copyWith(drawPile: newDrawPile, discardPile: []);
   }
@@ -322,5 +334,10 @@ class DeckNotifier extends Notifier<DeckState> {
     state = state.copyWith(discardPile: currentDiscardPile);
   }
 }
+
+/// Source d'aléatoire de la pioche. Surchargeable en test via
+/// `deckRandomProvider.overrideWithValue(Random(42))` pour rendre les
+/// séquences de pioche reproductibles.
+final deckRandomProvider = Provider<Random>((ref) => Random());
 
 final deckProvider = NotifierProvider<DeckNotifier, DeckState>(DeckNotifier.new);
