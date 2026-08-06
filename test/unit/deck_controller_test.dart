@@ -192,7 +192,9 @@ void main() {
         addTearDown(container.dispose);
         final notifier = container.read(deckProvider.notifier);
         notifier.initializeStarterDeck(cards);
-        notifier.initializeCombat();
+        // handSize: 0 — on veut observer l'ordre brut de la pioche, sans
+        // qu'une main d'ouverture en retire les dernières cartes.
+        notifier.startCombat(handSize: 0, maxHandSize: 10);
         return notifier.state.drawPile.map((c) => c.uniqueId).toList();
       }
 
@@ -331,6 +333,54 @@ void main() {
       notifier.discardHand();
       notifier.drawCards(4, maxHandSize: 10);
       expect(notifier.state.reshuffleCount, 2);
+      expectConservation(notifier.state);
+    });
+
+    test('startCombat constitue la pioche et tire la main d\'ouverture', () {
+      final cards = List.generate(10, (i) => _card('c$i'));
+      notifier.initializeStarterDeck(cards);
+
+      notifier.startCombat(handSize: 5, maxHandSize: 10);
+
+      expect(notifier.state.hand.length, 5);
+      expect(notifier.state.drawPile.length, 5);
+      expect(notifier.state.discardPile, isEmpty);
+      expect(notifier.state.exhaustPile, isEmpty);
+      expect(notifier.state.reshuffleCount, 0);
+      expectConservation(notifier.state);
+    });
+
+    test('startCombat repart d\'un état propre et remet reshuffleCount à 0', () {
+      final cards = List.generate(6, (i) => _card('c$i'));
+      notifier.initializeStarterDeck(cards);
+
+      // État sale hérité d'un combat précédent.
+      notifier.state = notifier.state.copyWith(
+        drawPile: [],
+        hand: cards.sublist(0, 2),
+        discardPile: cards.sublist(2, 4),
+        exhaustPile: cards.sublist(4, 6),
+        reshuffleCount: 4,
+      );
+
+      notifier.startCombat(handSize: 5, maxHandSize: 10);
+
+      expect(notifier.state.hand.length, 5);
+      expect(notifier.state.drawPile.length, 1);
+      expect(notifier.state.discardPile, isEmpty);
+      expect(notifier.state.exhaustPile, isEmpty);
+      expect(notifier.state.reshuffleCount, 0);
+      expectConservation(notifier.state);
+    });
+
+    test('startCombat respecte maxHandSize', () {
+      final cards = List.generate(10, (i) => _card('c$i'));
+      notifier.initializeStarterDeck(cards);
+
+      notifier.startCombat(handSize: 5, maxHandSize: 3);
+
+      expect(notifier.state.hand.length, 3);
+      expect(notifier.state.drawPile.length, 7);
       expectConservation(notifier.state);
     });
   });

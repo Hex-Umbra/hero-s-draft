@@ -14,6 +14,7 @@ import 'package:roguelike_card_game/models/status_effect.dart';
 import 'package:roguelike_card_game/models/map_node.dart';
 import 'package:roguelike_card_game/models/entity_stats.dart';
 import 'package:roguelike_card_game/models/data/skill_data.dart';
+import 'package:roguelike_card_game/game/game_constants.dart';
 
 void main() {
   group('CombatController Tests', () {
@@ -331,7 +332,7 @@ void main() {
         );
 
         deckNotifier.initializeStarterDeck([strikeCard]);
-        deckNotifier.initializeCombat();
+        deckNotifier.startCombat(handSize: 0, maxHandSize: GameConstants.maxHandSize);
         deckNotifier.state = deckNotifier.state.copyWith(hand: [strikeCard]);
 
         expect(runController.currentState.heroStats.currentMana, 3);
@@ -478,7 +479,7 @@ void main() {
         );
 
         deckNotifier.initializeStarterDeck([strikeCard]);
-        deckNotifier.initializeCombat();
+        deckNotifier.startCombat(handSize: 0, maxHandSize: GameConstants.maxHandSize);
         deckNotifier.state = deckNotifier.state.copyWith(hand: [strikeCard]);
 
         combatController.applyPlayerCardPlay(

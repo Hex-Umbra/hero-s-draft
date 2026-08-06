@@ -271,10 +271,10 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             bossEnemyId: bossEnemyId,
           );
 
-      ref.read(deckProvider.notifier).initializeCombat();
-      ref
-          .read(deckProvider.notifier)
-          .drawCards(5, maxHandSize: GameConstants.maxHandSize);
+      ref.read(deckProvider.notifier).startCombat(
+            handSize: 5,
+            maxHandSize: GameConstants.maxHandSize,
+          );
     });
 
     _game = HerosDraftGame(

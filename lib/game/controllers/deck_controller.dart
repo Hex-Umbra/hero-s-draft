@@ -136,16 +136,25 @@ class DeckNotifier extends Notifier<DeckState> {
     state = state.copyWith(masterDeck: initialDeck);
   }
 
-  /// Prépare les piles pour un nouveau combat
-  void initializeCombat() {
-    final newDrawPile = List<CardInstance>.from(state.masterDeck);
-    newDrawPile.shuffle(_random);
+  /// Prépare les piles pour un nouveau combat et tire la main d'ouverture,
+  /// en une seule affectation d'état. La main de départ respecte exactement
+  /// les mêmes invariants que toutes les pioches suivantes.
+  void startCombat({required int handSize, required int maxHandSize}) {
+    final result = _drawInto(
+      draw: List<CardInstance>.from(state.masterDeck)..shuffle(_random),
+      hand: <CardInstance>[],
+      discard: <CardInstance>[],
+      amount: handSize,
+      maxHandSize: maxHandSize,
+      random: _random,
+    );
 
     state = state.copyWith(
-      drawPile: newDrawPile,
-      hand: [],
-      discardPile: [],
+      drawPile: result.draw,
+      hand: result.hand,
+      discardPile: result.discard,
       exhaustPile: [],
+      reshuffleCount: 0,
     );
   }
 
