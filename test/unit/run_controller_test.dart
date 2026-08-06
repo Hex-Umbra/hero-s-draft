@@ -239,4 +239,41 @@ void main() {
       expect(runController.state.bonusForgeSlots, 4);
     });
   });
+
+  group('RunState.cardsPerTurn', () {
+    const dummyHero = HeroData(
+      id: 'paladin',
+      nameEn: 'Paladin',
+      nameFr: 'Paladin',
+      iconPath: 'paladin.png',
+      maxHp: 100,
+      maxMana: 3,
+      baseDamage: 5,
+      luck: 0,
+      armorMastery: 0,
+      passiveTrait: 'regenArmor',
+    );
+
+    test('vaut 5 au démarrage d\'une run', () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final runController = container.read(runProvider.notifier);
+      runController.startNewRun(dummyHero);
+
+      expect(container.read(runProvider).cardsPerTurn, 5);
+    });
+
+    test('applyRunRuleModifier ajoute puis retire symétriquement', () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final runController = container.read(runProvider.notifier);
+      runController.startNewRun(dummyHero);
+
+      runController.applyRunRuleModifier(cardsPerTurnAcc: 1);
+      expect(container.read(runProvider).cardsPerTurn, 6);
+
+      runController.applyRunRuleModifier(cardsPerTurnAcc: -1);
+      expect(container.read(runProvider).cardsPerTurn, 5);
+    });
+  });
 }

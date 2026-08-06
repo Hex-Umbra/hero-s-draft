@@ -54,6 +54,17 @@ class PlayerStatsManager {
     );
   }
 
+  /// Applique un modificateur aux règles de run propres au joueur.
+  /// Distinct d'`applyHeroStatModifier`, qui opère sur `EntityStats` — lequel
+  /// est partagé avec les ennemis et n'a donc pas à porter de notion de deck.
+  void applyRunRuleModifier({int cardsPerTurnAcc = 0}) {
+    controller.updateState(
+      controller.currentState.copyWith(
+        cardsPerTurn: controller.currentState.cardsPerTurn + cardsPerTurnAcc,
+      ),
+    );
+  }
+
   /// Ajoute de l'Expérience au joueur.
   /// Gère les montées de niveaux successives avec conservation de l'XP excédentaire (carry-over).
   /// Retourne [true] si au moins un niveau a été gagné.
