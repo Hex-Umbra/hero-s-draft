@@ -5,18 +5,43 @@
     "title": "L'Équilibre des Effectifs",
     "sections": [
       {
+        "category": "Nouvelles Fonctionnalités",
+        "emoji": "✨",
+        "entries": [
+          "Une nouvelle relique légendaire, la Besace de l'Érudit, vous fait piocher une carte supplémentaire au début de chaque tour, pour toute la durée de votre aventure."
+        ]
+      },
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "Votre défausse retourne désormais dans la pioche dès que celle-ci est épuisée, y compris au beau milieu d'une pioche : une carte qui vous en fait tirer plusieurs ne s'arrête plus à mi-chemin faute de cartes disponibles.",
+          "Un message vous signale le moment où votre défausse est remélangée dans votre pioche."
+        ]
+      },
+      {
         "category": "Équilibrage",
         "emoji": "⚖️",
         "entries": [
           "Les combats d'élite et de boss en début d'aventure n'alignent plus plusieurs adversaires faibles pour combler leur menace : le nombre d'ennemis affronté reflète désormais mieux le danger réel du combat.",
-          "Le nombre maximum d'ennemis pouvant apparaître dans un même combat augmente désormais progressivement au fil de votre avancée, à un rythme différent selon qu'il s'agisse d'un combat normal, d'une élite ou d'un boss."
+          "Le nombre maximum d'ennemis pouvant apparaître dans un même combat augmente désormais progressivement au fil de votre avancée, à un rythme différent selon qu'il s'agisse d'un combat normal, d'une élite ou d'un boss.",
+          "Votre défausse n'est plus remélangée par précaution au début de chaque tour, mais uniquement lorsque votre pioche est réellement vide : vous revoyez vos meilleures cartes moins souvent en début de combat, et l'ordre de votre deck devient plus prévisible sur la fin.",
+          "Votre main ne peut plus dépasser dix cartes. Une fois ce plafond atteint, la pioche s'interrompt sans consommer ni gaspiller la moindre carte."
         ]
       },
       {
         "category": "Corrections",
         "emoji": "🐛",
         "entries": [
-          "Le bouton « Continuer » de l'écran d'accueil reflète désormais immédiatement l'existence ou non d'une sauvegarde à chaque retour au menu principal, que ce soit après avoir quitté une run en pause ou après une défaite, sans qu'il soit plus nécessaire de redémarrer l'application pour le voir apparaître ou disparaître."
+          "Le bouton « Continuer » de l'écran d'accueil reflète désormais immédiatement l'existence ou non d'une sauvegarde à chaque retour au menu principal, que ce soit après avoir quitté une run en pause ou après une défaite, sans qu'il soit plus nécessaire de redémarrer l'application pour le voir apparaître ou disparaître.",
+          "Les cartes qui vous font piocher, comme Concentration, restaient sans le moindre effet lorsque votre pioche était vide : elles puisent désormais dans votre défausse au lieu de se jouer dans le vide."
+        ]
+      },
+      {
+        "category": "Technique",
+        "emoji": "🔧",
+        "entries": [
+          "Le moteur de pioche a été entièrement réécrit : aucune carte ne peut plus se perdre ni se dupliquer entre votre pioche, votre main, votre défausse et vos cartes épuisées, et la règle de début de tour ne dépend plus de l'écran de combat."
         ]
       }
     ]
