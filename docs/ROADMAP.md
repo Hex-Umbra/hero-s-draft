@@ -43,6 +43,13 @@ pie title Répartition de l'effort restant estimé (~91 jours)
 > 12 jours. Les cinq autres tiers portent encore les estimations du 31/07, non re-mesurées.
 > Le Tier S a été ponctuellement recontrôlé à cette date et s'est révélé exact.
 
+> [!WARNING]
+> **Le camembert et le total de ~91 jours sont antérieurs au programme P-40→P-44** (ajouté le
+> 2026-08-07) et ne l'incluent pas. Le solde net n'est pas calculable en l'état : P-41 est chiffré
+> (5-7 j) et P-40 aussi (1-1,5 j), mais **P-42, P-43 et P-44 attendent leur spec**, tandis que P-18
+> et P-20 sortent du Tier C par redistribution. Recalculer l'ensemble à la prochaine passe de
+> re-priorisation, pas avant — un total partiellement mis à jour serait plus trompeur que celui-ci.
+
 **Dépendances structurantes** (ce qui bloque quoi) :
 
 ```mermaid
@@ -58,6 +65,11 @@ graph TD
     P10[P-10 Finale + VictoryScreen] --> P11[P-11 Historique des runs]
     P11 --> P13[P-13 Méta-progression]
     P09[P-09 Boss multi-phases] -.mécanisme de seuil HP réutilisable.-> P10
+    P40[P-40 Nettoyage héros & cartes] -.annule un tiers de.-> P26[P-26 Lot d'hygiène]
+    P41[P-41 Identité de classe] --> P42[P-42 Pools par classe]
+    P42 --> P43[P-43 Économie de deck]
+    P42 --> P44[P-44 Profondeur de cartes]
+    P41 -.pose le seam passiveSlots.-> P13
 ```
 
 ---
@@ -155,6 +167,10 @@ Marqué **priorité haute** dans le rapport du 22/07 et jamais traité. Difficul
 | **P-13** | **Méta-progression** : monnaie persistante inter-runs + boutique de méta-upgrades | **3-5 j** | ★★★☆☆ | 🔥🔥 |
 | **P-14** | **Variantes d'Élite adaptatives** (5 affixes, triggers côté ennemi) | **5-8 j** | ★★★★★ | 🔥🔥🔥 |
 | **P-15** | **Ennemis tiers 2-5** (20 concepts restants) | **3-5 j** *(+ sprites)* | ★★★☆☆ | 🔥🔥 |
+| **P-41** | **Identité de classe** — `statRules`, split des 3 puissances, 9 passifs sélectionnables · [spec](superpowers/specs/2026-08-07-s2-identite-de-classe-design.md) | **5-7 j** | ★★★★☆ | 🔥🔥🔥 |
+| **P-42** | **Pools de cartes par classe** — séparation `unique`/`heroClass`, ~25-30 cartes | *à chiffrer en spec* | ★★★★☆ | 🔥🔥🔥 |
+| **P-43** | **Économie de deck** — récompense de carte, limite de taille, rééquilibrage fusion | *à chiffrer en spec* | ★★★☆☆ | 🔥🔥 |
+| **P-44** | **Profondeur de cartes** — coût 3, `scaleWith`, génération, cible `none`, malédictions | *à chiffrer en spec* | ★★★★☆ | 🔥🔥 |
 
 ### P-10 — Finale de Séquence
 **Le jeu n'a aujourd'hui aucune condition de victoire** : les actes continuent indéfiniment et seule la mort termine une run. Le Portail Final (4ᵉ nœud optionnel à l'étage boss des Actes 5, 10, 15…, inspiré du téléporteur de Risk of Rain 2) donne enfin une sortie propre, sans supprimer l'endless pour qui veut continuer. C'est probablement **le manque de design le plus structurel du jeu actuel**.
@@ -176,6 +192,48 @@ Rien n'existe hors-run aujourd'hui. Gain d'une monnaie à la fin de chaque run p
 ### P-15 — Tiers 2-5
 Réutilise `onHitEffect`/`evadeChance` de P-05 sans nouveau champ. Trois concepts demandent chacun une mécanique inédite et sont à isoler : Chaman Orc (première interaction ennemi → ennemi), Dragon Juvénile (seuil d'enrage — mutualisable avec P-09), Cavalier de la Mort (dégâts différés). Les tiers 4-5 exigent en plus de relever `maxTierAuthored` au-delà de 3.
 
+### P-40 à P-44 — Programme « Identité de classe & catalogue »
+
+> [!IMPORTANT]
+> **Un seul programme en cinq lots, à ne pas ré-ordonner.** Il naît du diagnostic du 05/08
+> ([état des lieux](analysis_reports/05082026_etat_des_lieux_heros_et_cartes_Opus5.md),
+> [brainstorm](analysis_reports/05082026_brainstorm_heros_et_cartes_Opus5.md)), dont le constat
+> central est que *les trois classes ne se distinguent que par les PV et un passif, et que toute
+> « progression » de carte est l'inflation numérique de l'une des 17 communes*. Seul **P-41** est
+> conçu à ce jour ; les trois suivants attendent leur spec.
+
+| Lot | ID | Dépend de |
+|:---|:---|:---|
+| S1 — Nettoyage | **P-40** *(Tier D)* | — |
+| S2 — Identité de classe | **P-41** | — |
+| S3 — Pools de cartes | **P-42** | **P-41** |
+| S4 — Économie de deck | **P-43** | P-42 |
+| S5 — Profondeur de cartes | **P-44** | P-42 |
+
+**Pourquoi P-41 d'abord, et pas P-42.** Ce n'est pas une préférence, c'est une contrainte : une
+seule ligne de `statRules` décide si `iron_wall` et `defend_basic` restent ou non dans le pool du
+Berserker. On ne peut pas écrire les pools de P-42 avant. La réciproque ne tient pas — les neuf
+passifs se conçoivent sans connaître la liste des cartes, et **P-41 se teste seul**, avec le
+catalogue actuel de 23 cartes. Le raisonnement complet est en préambule de la
+[spec de P-41](superpowers/specs/2026-08-07-s2-identite-de-classe-design.md).
+
+**Ce que le programme referme ailleurs dans ce document** — à ne pas traiter deux fois :
+
+| Chantier existant | Effet |
+|:---|:---|
+| **P-18** | Sa moitié « restrictions par classe » devient une conséquence de **P-42** |
+| **P-20** | « Scaling de `mastery` par classe » est absorbé par **P-41** (stats de départ différenciées) |
+| **P-26** | Son tiers « `SkillData` bilingue » est **annulé** par P-40, qui supprime le modèle. ⚠️ Ne pas ouvrir P-26 avant P-40, sous peine de localiser en deux langues un modèle destiné à la suppression |
+| **P-13** | P-41 pose le seam `passiveSlots` que la méta-progression alimentera — mais **P-41 n'en dépend pas** |
+| §7, correctif `unique` | Sa cause exacte et ses trois voies de duplication sont couvertes par P-40 |
+
+**Ce que le programme laisse explicitement à P-16** : le rééquilibrage des valeurs et des paliers
+de rareté des récompenses. P-41 hérite des paliers existants sans en inventer.
+
+**Réserve honnête sur P-42** : c'est le chantier le plus lourd en **contenu** du dépôt — ~25-30
+cartes à écrire, équilibrer, localiser en deux langues et playtester. Le code y est trivial (trois
+prédicats de filtrage), le design ne l'est pas. À assumer comme un engagement de plusieurs sessions.
+
 ---
 
 ## 5. Tier C — Équilibrage *(≈ 9 jours + playtests)*
@@ -186,16 +244,35 @@ Réutilise `onHitEffect`/`evadeChance` de P-05 sans nouveau champ. Trois concept
 |:---|:---|:---:|:---:|:---:|
 | **P-16** | **Refonte globale des probabilités & récompenses** (le mana n'est plus une ressource rare) | **2-3 j** | ★★★★☆ | 🔥🔥🔥 |
 | **P-17** | **Les 5 problèmes d'équilibrage documentés** (mana, Paladin, HP sbires, `Attaque Rapide`, heal) | **1-2 j** | ★★★☆☆ | 🔥🔥 |
-| **P-18** | **Contraintes de deckbuilding** : limite de 15 cartes + coût de merge +1 mana + restrictions par classe | **2-3 j** | ★★★☆☆ | 🔥🔥 |
+| **P-18** | **Contraintes de deckbuilding** : limite de 15 cartes + coût de merge +1 mana + restrictions par classe — ⚠️ **entièrement redistribué** sur P-42 et P-43 *(voir §4)* | — | — | — |
 | **P-19** | **Intentions ennemies cachées** en late game | **1 j** | ★★☆☆☆ | 🔥 |
-| **P-20** | **Scaling de `mastery` par classe** | **1-2 j** | ★★☆☆☆ | 🔥 |
+| **P-20** | **Scaling de `mastery` par classe** — ⚠️ **absorbé par P-41** *(voir §4)* | — | — | — |
 
 ### P-16 — Le sujet le plus important de ce tier
 Les runes de forge `eco` et `quick` (regain de mana / pioche à la lecture d'une carte) rendent le mana quasi illimité, alors que c'est la ressource la plus importante du jeu. Cumulé avec la récompense de mana au Level Up disponible jusqu'en légendaire, le joueur perd toute sensation de contrainte. Le chantier consiste à revoir **l'ensemble** des tables de probabilité et le poids des récompenses par rareté — donc à re-calibrer plusieurs systèmes en même temps, d'où ★★★★☆ malgré un code trivial.
 **Interaction connue** : P-02 change la difficulté ressentie via le remélange à sec. ✅ **Levée le 2026-08-06** — P-02 est livré et son playtest validé, la base ne bougera donc plus sous P-16. Calibrer sur l'état actuel, pas sur les chiffres antérieurs au 2026-08-06.
 
 ### P-17 — Les cinq classiques
+> [!WARNING]
+> **Deux des cinq constats sont faux.** Vérification du 05/08 contre le code : `Attaque Rapide`
+> **coûte 1 mana**, pas 0 (`cards.json`), et le Paladin n'a **aucune armure de base** dans
+> `heroes.json` — son passif donne +2 par tour. Les deux entrées sont héritées de
+> `6_analyse_game_balance.md` sans re-mesure. **Re-vérifier les trois autres avant d'ouvrir le
+> chantier**, comme l'impose le §10.4. Détail en Partie III.C de l'[état des
+> lieux](analysis_reports/05082026_etat_des_lieux_heros_et_cartes_Opus5.md), points 8 et 9.
+
 Documentés depuis `6_analyse_game_balance.md`, jamais corrigés : économie de mana permissive, Paladin quasi invulnérable au début (20 armure de base), HP des sbires trop bas, `Attaque Rapide` gratuite (0 mana → 3 dégâts + 1 pioche), soin répétable. Chacun est une ligne de JSON ; **c'est le playtest de validation qui coûte**. À traiter dans la même passe que P-16 pour ne calibrer qu'une fois.
+
+### P-18 et P-20 — Redistribués sur le programme P-40→P-44
+> [!NOTE]
+> **Aucun des deux n'est annulé — les deux sont déplacés**, et ne doivent plus être ouverts
+> comme chantiers autonomes sous peine de traiter deux fois le même sujet.
+>
+> - **P-18** se scinde : « restrictions par classe » devient une conséquence de **P-42** (les pools
+>   de classe *sont* la restriction) ; « limite de 15 cartes » et « coût de merge +1 mana » relèvent
+>   de **P-43**, qui traite l'économie de deck d'un bloc.
+> - **P-20** est absorbé par **P-41**, dont les stats de départ différenciées (`armorMastery` pour
+>   le Paladin, `critChance` pour le Berserker) sont exactement ce que ce chantier demandait.
 
 ---
 
@@ -214,7 +291,8 @@ Documentés depuis `6_analyse_game_balance.md`, jamais corrigés : économie de 
 
 | ID | Chantier | Effort | Difficulté | Apport |
 |:---|:---|:---:|:---:|:---:|
-| **P-26** | **Lot d'hygiène** : `GameDataRegistry` en `Map` O(1), `MapNode` découplé de `Vector2`, `SkillData` bilingue | **1 j** | ★★☆☆☆ | 🔥🔥 |
+| **P-40** | **Nettoyage héros & cartes** : suppression de la chaîne `skills.json`, 3 bugs confirmés, dérives documentaires — *lot S1 du programme P-40→P-44* | **1-1,5 j** | ★★☆☆☆ | 🔥🔥 |
+| **P-26** | **Lot d'hygiène** : `GameDataRegistry` en `Map` O(1), `MapNode` découplé de `Vector2`, ~~`SkillData` bilingue~~ *(annulé par P-40)* | **1 j** | ★★☆☆☆ | 🔥🔥 |
 | **P-22** | **Typage des modèles** : `==`/`hashCode` sur les 13 modèles suivis, sérialisation d'`EventState` | **1,5-2 j** | ★★★☆☆ | 🔥🔥 |
 | **P-27** | **Event Bus** (remplace les 13 callbacks de constructeur de `HerosDraftGame`) | **2-3 j** | ★★★★☆ | 🔥 |
 | **P-21** | **Couverture de tests → ≥ 50 %** — *mesurer avant de chiffrer* | **2-4 j** | ★★★☆☆ | 🔥🔥 |
@@ -223,8 +301,22 @@ Documentés depuis `6_analyse_game_balance.md`, jamais corrigés : économie de 
 | **P-28** | **Validation des entrées** (`gainGold(-50)` passe silencieusement) | **0,5 j** | ★★☆☆☆ | 🔥 |
 | **P-25** | **1 bloc `catch` totalement muet** + 8 muets en build release | **0,1 j** *(ou 0,5 j si élargi)* | ★☆☆☆☆ | 🔥 |
 
+### P-40 — Nettoyage héros & cartes *(lot S1 du programme P-40→P-44)*
+Trois blocs sans aucune décision de design à prendre, donc exécutable immédiatement et indépendamment de P-41.
+
+1. **Supprimer la chaîne `skills.json`** — 6 entrées de données, `SkillData`, `SkillController`, `SkillState`, les deux `executeSkill` et le champ de sauvegarde. Le système est **inatteignable** : aucun appelant de `_game.executeSkill(...)`, aucun bouton de compétence dans `lib/ui/`. ⚠️ **Ne pas emporter `applyLifestealBuff()`** (`lib/game/controllers/run/player_stats_manager.dart:472`) : elle vit dans `RunController`, pas dans le système de compétences, et P-41 s'en sert.
+2. **Trois bugs confirmés** — la rune `enduring` cassée dès le tier 2 (`'enduring:1'` codé en dur, `deck_controller.dart:188`, alors que la fusion de runes *et* la fusion 3→1 produisent des tiers supérieurs) ; la duplication des cartes `unique` par trois voies de clonage non filtrées ; l'écart de capacité de forge 1 ↔ 10 entre carte commune et carte de classe, où le code contredit `_rules/03-8`.
+3. **Dix dérives documentaires** entre les fiches du vault et le code, listées en Partie III.C de l'[état des lieux](analysis_reports/05082026_etat_des_lieux_heros_et_cartes_Opus5.md) — dont deux entrées **de ce document** (§5, P-17 : « `Attaque Rapide` gratuite » et « Paladin 20 armure de base ») héritées sans re-mesure et fausses. C'est exactement le motif documenté au §10.4 pour le Tier D ; le Tier C n'a pas encore subi ce contrôle.
+
+**Double débloquage** : annule le tiers `SkillData` de P-26, et referme le correctif `unique` du §7.
+
 ### P-26 — Devenu le meilleur rapport de ce tier
-Seule fiche du tier dont **les trois constats se vérifient encore intégralement**, et la seule qui contienne une **violation d'une règle explicite du projet** : `SkillData` n'expose qu'un `final String name` (`lib/models/data/skill_data.dart:3`) alors que `CLAUDE.md` impose `_fr`/`_en` sur toute entrée à texte visible. S'y ajoutent `MapNode.position` typé `Vector2` — un modèle de données couplé à un type Flame, contraire à la séparation de couches du même document — et un `GameDataRegistry` composé de huit `List<>` parcourues linéairement à chaque lookup. Un jour, trois dettes réelles, un risque nul.
+> [!NOTE]
+> **Périmètre réduit d'un tiers depuis le 2026-08-07.** Le volet « `SkillData` bilingue » est
+> **annulé par P-40**, qui supprime le modèle au lieu de le localiser. Ne pas ouvrir P-26 avant
+> P-40. Restent deux dettes sur trois.
+
+Seule fiche du tier dont **les trois constats se vérifiaient encore intégralement** au 2026-08-04, et la seule qui contînt une **violation d'une règle explicite du projet** : `SkillData` n'expose qu'un `final String name` (`lib/models/data/skill_data.dart:3`) alors que `CLAUDE.md` impose `_fr`/`_en` sur toute entrée à texte visible — c'est précisément ce constat que P-40 résout par suppression. S'y ajoutent `MapNode.position` typé `Vector2` — un modèle de données couplé à un type Flame, contraire à la séparation de couches du même document — et un `GameDataRegistry` composé de huit `List<>` parcourues linéairement à chaque lookup. Deux dettes réelles restantes, un risque nul.
 
 ### P-22 — Périmètre réduit de moitié
 Le constat `==`/`hashCode` tient intégralement : **aucun des 13 modèles suivis** n'en possède. En revanche la fiche du 31/07 réclamait un `toJson` pour `CardInstance` et `ShopState` : **les deux en ont un depuis le commit `3b2365c` du 24/06**, plus d'un mois avant la rédaction. Le seul modèle réellement dépourvu de sérialisation est **`EventState`** — ni `toJson` ni `fromJson`. Comme l'autosave se déclenche à la résolution d'un nœud et non pendant un événement, l'absence n'est pas exploitée aujourd'hui ; elle le deviendrait au premier événement multi-étapes.
@@ -267,7 +359,7 @@ Sur les 14 blocs `catch` de `lib/`, **un seul est totalement muet** : `lib/ui/sc
 | **P-39** | **Skins de héros** débloquables | **3 j+** *(art)* | ★★☆☆☆ | 🔥 |
 
 ### Correctifs ponctuels signalés dans `upgrade_ideas.md` (non estimés séparément, ≈ 1,5 j au total)
-- Exclure les cartes de rareté `unique` du menu de draft post-boss (elles ne devraient jamais avoir de copie) — **c'est un bug**, pas une évolution.
+- ~~Exclure les cartes de rareté `unique` du menu de draft post-boss~~ → **repris par P-40**, qui en identifie la cause exacte (le pool source du draft post-boss est devenu *le deck du joueur*, ADR-051 n'a donc pas été supprimé mais contourné) et **deux voies de duplication supplémentaires** : le Miroir Magique de boutique et la récompense « Miroir » de level-up.
 - Vérifier que la règle anti-répétition de nœuds fonctionne réellement, et que les quotas par acte sont respectés.
 - Repositionner la popup d'aperçu des améliorations d'une carte (forge et tous les autres écrans concernés).
 - Mettre `docs/animations/card_animations_system.md` en conformité avec le code (documentation fausse sur 4 points).

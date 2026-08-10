@@ -74,6 +74,7 @@ One question, one place. Never duplicate a fact across two of these — link ins
 | Question | Location |
 |:---|:---|
 | Where to start | `.obsidian_vault/_memory_bank/` — five short files, three of them indexes |
+| Every document written on one subject | `docs/INDEX.md` — thematic index of `docs/`, links only, never facts |
 | Why a decision was taken | `.obsidian_vault/_adr/` — one file per ADR, indexed by `_memory_bank/decisionLog.md` |
 | A game rule | `.obsidian_vault/_rules/` — one sheet per system, indexed by `_memory_bank/productContext.md` |
 | An architecture pattern | `.obsidian_vault/_patterns/` — one sheet per area, indexed by `_memory_bank/systemPatterns.md` |
