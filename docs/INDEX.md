@@ -86,6 +86,7 @@ Chaque sujet suit la même chaîne. Tous les documents n'en parcourent pas tous 
 
 | | Document | Date |
 |:---:|:---|:---|
+| 🔍 | [Structure des nœuds & identité visuelle de la carte](possible_upgrades/11-08-2026_systeme_carte_visuel_et_noeuds_Opus5.md) *(→ P-31, croise P-12 et P-26)* | 11/08/2026 |
 | 🔍 | [Biomes, finale de séquence & historique des runs](possible_upgrades/27-07-2026_biomes_finale_sequence_historique_runs_Sonnet5.md) *(→ P-10, P-11, P-12)* | 27/07/2026 |
 | 📐🔨 | [Menu pause de l'écran carte](superpowers/specs/2026-07-24-map-screen-pause-menu-design.md) · [plan](superpowers/plans/2026-07-24-map-screen-pause-menu.md) | 24/07/2026 |
 | 🗄️ | [Analyse des améliorations de la carte](possible_upgrades/_archives/5_analyse_world_map_improvements.md) · [Système de carte du monde](archives/world_map_system.md) | — |
