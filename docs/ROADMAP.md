@@ -243,7 +243,7 @@ prédicats de filtrage), le design ne l'est pas. À assumer comme un engagement 
 | ID | Chantier | Effort | Difficulté | Apport |
 |:---|:---|:---:|:---:|:---:|
 | **P-16** | **Refonte globale des probabilités & récompenses** (le mana n'est plus une ressource rare) | **2-3 j** | ★★★★☆ | 🔥🔥🔥 |
-| **P-17** | **Les 5 problèmes d'équilibrage documentés** (mana, Paladin, HP sbires, `Attaque Rapide`, heal) | **1-2 j** | ★★★☆☆ | 🔥🔥 |
+| **P-17** | **Problèmes d'équilibrage documentés** — ⚠️ **3 constats sur 5**, aucun re-mesuré *(2 sont faux, voir ci-dessous)* | *à re-chiffrer* | ★★★☆☆ | 🔥🔥 |
 | **P-18** | **Contraintes de deckbuilding** : limite de 15 cartes + coût de merge +1 mana + restrictions par classe — ⚠️ **entièrement redistribué** sur P-42 et P-43 *(voir §4)* | — | — | — |
 | **P-19** | **Intentions ennemies cachées** en late game | **1 j** | ★★☆☆☆ | 🔥 |
 | **P-20** | **Scaling de `mastery` par classe** — ⚠️ **absorbé par P-41** *(voir §4)* | — | — | — |
@@ -252,16 +252,25 @@ prédicats de filtrage), le design ne l'est pas. À assumer comme un engagement 
 Les runes de forge `eco` et `quick` (regain de mana / pioche à la lecture d'une carte) rendent le mana quasi illimité, alors que c'est la ressource la plus importante du jeu. Cumulé avec la récompense de mana au Level Up disponible jusqu'en légendaire, le joueur perd toute sensation de contrainte. Le chantier consiste à revoir **l'ensemble** des tables de probabilité et le poids des récompenses par rareté — donc à re-calibrer plusieurs systèmes en même temps, d'où ★★★★☆ malgré un code trivial.
 **Interaction connue** : P-02 change la difficulté ressentie via le remélange à sec. ✅ **Levée le 2026-08-06** — P-02 est livré et son playtest validé, la base ne bougera donc plus sous P-16. Calibrer sur l'état actuel, pas sur les chiffres antérieurs au 2026-08-06.
 
-### P-17 — Les cinq classiques
+### P-17 — Trois constats, pas cinq
+
 > [!WARNING]
-> **Deux des cinq constats sont faux.** Vérification du 05/08 contre le code : `Attaque Rapide`
-> **coûte 1 mana**, pas 0 (`cards.json`), et le Paladin n'a **aucune armure de base** dans
-> `heroes.json` — son passif donne +2 par tour. Les deux entrées sont héritées de
-> `6_analyse_game_balance.md` sans re-mesure. **Re-vérifier les trois autres avant d'ouvrir le
-> chantier**, comme l'impose le §10.4. Détail en Partie III.C de l'[état des
+> **Deux des cinq constats d'origine sont faux.** Re-vérifiés contre les données le 2026-08-11 :
+> `quick_attack` porte `"cost": 1` dans `assets/data/cards.json`, et `assets/data/heroes.json` ne
+> contient **aucun champ d'armure** — les trois classes n'ont que `maxHp`, `maxMana`, `baseDamage`,
+> `luck`, `passiveTrait` et `skills`. Les deux entrées viennent de `6_analyse_game_balance.md`,
+> reprises sans re-mesure. Détail en Partie III.C de l'[état des
 > lieux](analysis_reports/05082026_etat_des_lieux_heros_et_cartes_Opus5.md), points 8 et 9.
 
-Documentés depuis `6_analyse_game_balance.md`, jamais corrigés : économie de mana permissive, Paladin quasi invulnérable au début (20 armure de base), HP des sbires trop bas, `Attaque Rapide` gratuite (0 mana → 3 dégâts + 1 pioche), soin répétable. Chacun est une ligne de JSON ; **c'est le playtest de validation qui coûte**. À traiter dans la même passe que P-16 pour ne calibrer qu'une fois.
+| # | Constat d'origine | Statut au 2026-08-11 |
+|:---:|:---|:---|
+| 1 | Économie de mana permissive | ⚠️ non re-mesuré — **recouvre P-16**, ne pas traiter deux fois |
+| 2 | ~~Paladin quasi invulnérable (20 armure de base)~~ | ❌ **faux** — aucune armure dans `heroes.json` ; son passif donne +2/tour |
+| 3 | HP des sbires trop bas | ⚠️ non re-mesuré |
+| 4 | ~~`Attaque Rapide` gratuite (0 mana → 3 dégâts + 1 pioche)~~ | ❌ **faux** — `"cost": 1` |
+| 5 | Soin répétable | ⚠️ non re-mesuré |
+
+**Périmètre réel : trois constats, dont aucun n'a été re-mesuré.** Les re-vérifier avant d'ouvrir le chantier, comme l'impose le §10.4 — c'est exactement le motif qui a fait tomber deux des cinq. Chacun reste une ligne de JSON ; **c'est le playtest de validation qui coûte**. À traiter dans la même passe que P-16 pour ne calibrer qu'une fois.
 
 ### P-18 et P-20 — Redistribués sur le programme P-40→P-44
 > [!NOTE]
@@ -348,7 +357,7 @@ Sur les 14 blocs `catch` de `lib/`, **un seul est totalement muet** : `lib/ui/sc
 |:---|:---|:---:|:---:|:---:|
 | **P-29** | **Lot P2 animations** : signature VFX des 6 cartes de classe + différenciation réelle feu/glace/foudre/poison | **4-6 j** | ★★★☆☆ | 🔥🔥 |
 | **P-30** | Menu de **debug** (`add_gold`, `spawn_relic`, `jump_to_floor`…) | **1-2 j** | ★★☆☆☆ | 🔥🔥 |
-| **P-31** | **Nœuds Trésor 💎 & Mystère ❓** sur la carte | **1-2 j** | ★★☆☆☆ | 🔥 |
+| **P-31** | **Nœuds Trésor 💎 & Mystère ❓** sur la carte — ⚠️ **prérequis de rendu**, voir ci-dessous | **1-2 j** *(hors prérequis)* | ★★☆☆☆ | 🔥 |
 | **P-32** | **Historique de notifications** (panneau consultable, type chat) | **1-2 j** | ★★☆☆☆ | 🔥 |
 | **P-33** | **Système d'achievements / trophées** | **2-3 j** | ★★★☆☆ | 🔥 |
 | **P-34** | **Animation de fusion 3→1** (mise en scène de la fusion de cartes) | **1 j** | ★★☆☆☆ | 🔥 |
@@ -357,6 +366,23 @@ Sur les 14 blocs `catch` de `lib/`, **un seul est totalement muet** : `lib/ui/sc
 | **P-37** | **Icônes de type de dégâts** dans les descriptions de cartes | **0,5 j** | ★☆☆☆☆ | 🔥 |
 | **P-38** | **Dashboard de perf** (FPS, drops) dans les logs de debug | **1 j** | ★★☆☆☆ | 🔥 |
 | **P-39** | **Skins de héros** débloquables | **3 j+** *(art)* | ★★☆☆☆ | 🔥 |
+
+### P-31 — Ne pas ouvrir sans lire le prérequis
+
+> [!WARNING]
+> **L'identité visuelle d'un nœud (icône + couleur + libellé) est écrite à quatre endroits**, dont
+> deux `switch` distincts dans le seul `map_node_widget.dart`. Ajouter Trésor et Mystère revient
+> donc à modifier quatre fichiers et à maintenir quatre listes synchronisées à la main.
+>
+> Aggravant, vérifié le 2026-08-11 : `map_legend.dart` **ne référence jamais `MapNodeType`** — il
+> code en dur `Icons.flash_on` / `Colors.white` et consorts. Les widgets de tutoriel
+> (`tutorial_map_widget.dart`, `tutorial_node_types_widget.dart`) font de même. Il n'existe donc
+> **aucun lien de type** entre l'enum et trois de ses quatre rendus : le compilateur ne signalera
+> rien, et un nœud neuf apparaîtra simplement absent de la légende et du tutoriel.
+>
+> Le chiffrage « 1-2 j » de P-31 suppose ce prérequis déjà traité. Analyse complète et pistes de
+> correction : [brainstorm du 11/08](possible_upgrades/11-08-2026_systeme_carte_visuel_et_noeuds_Opus5.md).
+> Le même prérequis conditionne le volet visuel de **P-12** (Biomes).
 
 ### Correctifs ponctuels signalés dans `upgrade_ideas.md` (non estimés séparément, ≈ 1,5 j au total)
 - ~~Exclure les cartes de rareté `unique` du menu de draft post-boss~~ → **repris par P-40**, qui en identifie la cause exacte (le pool source du draft post-boss est devenu *le deck du joueur*, ADR-051 n'a donc pas été supprimé mais contourné) et **deux voies de duplication supplémentaires** : le Miroir Magique de boutique et la récompense « Miroir » de level-up.
