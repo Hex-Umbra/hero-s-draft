@@ -38,7 +38,7 @@ Trois d'entre eux **corrigent ou complètent les documents amont** et sont marqu
 | `PassiveData.fallback()` duplique les 3 passifs en Dart, en plus du JSON | `lib/models/data/passive_data.dart:67-120` |
 | `RelicTrigger` compte 9 valeurs | `lib/models/data/relic_data.dart:5-13` |
 | `onAttackPlayed` / `onSkillPlayed` / `onPowerPlayed` sont dispatchés | `lib/game/controllers/combat_controller.dart:302-306` |
-| …et aucune des 24 reliques ne les consomme | Point A3 du diagnostic du 05/08 |
+| Sur les 25 reliques, **`onSkillPlayed` et `onPowerPlayed` n'ont aucun consommateur** ; `onAttackPlayed` en a **deux** (`kunai`, `shuriken`) | `assets/data/relics.json`, re-mesuré le 2026-08-11 |
 | `effectiveAttaque` n'a que 2 sites de résolution vivants | `lib/game/services/effects/strategies.dart:30` et `:42` |
 | …plus 1 site d'affichage | `lib/game/components/card_component.dart:343` |
 | …plus 1 getter de passe-plat et le système de compétences mort | `run_controller.dart:43` · `combat_controller.dart:212-244` |
@@ -82,7 +82,7 @@ Le code ne le fait qu'aux quatre sites de `TraitSystem` :
 
 | Source de gain d'armure | Site | `armorMastery` appliqué ? |
 |:---|:---|:---:|
-| Passifs | `trait_system.dart:22, 27, 43, 60` | ✅ |
+| Passifs | `trait_system.dart:23, 28, 44, 61` | ✅ |
 | Cartes | `strategies.dart:90` | ❌ |
 | Rune `hardened` | `effect_resolver.dart:241` | ❌ |
 | Reliques | `player_stats_manager.dart:381` | ❌ |
@@ -104,9 +104,10 @@ la question par construction : le bonus est appliqué une fois, au seul point de
 
 Et, en conséquence directe :
 
-- Les triggers orphelins `onSkillPlayed` et `onAttackPlayed` trouvent leurs premiers consommateurs.
-  **Le point A3 du diagnostic se referme à moitié** — `onPowerPlayed` reste sans consommateur
-  (§5.2), et le refermer relève des reliques, pas des passifs.
+- Le trigger orphelin `onSkillPlayed` trouve son premier consommateur (M1). **Le point A3 du
+  diagnostic se referme à moitié** — `onPowerPlayed` reste sans consommateur, et le refermer relève
+  des reliques, pas des passifs. `onAttackPlayed`, lui, n'a jamais été orphelin : `kunai` et
+  `shuriken` l'utilisent déjà, ce qui **prouve le chemin de dispatch** dont B2 et M2 dépendent.
 - Le statut `vulnerable` trouve sa première source (§6, passif M2) — un tiers de l'axe B du brainstorm.
 - `lifesteal` cesse d'être décoratif (§6, passif B2).
 - La divergence `armorMastery` de §1.3 est résolue par construction.
@@ -186,6 +187,12 @@ du jeu actuel** : c'est un refactor à iso-résultat, sur 2 sites de résolution
 Le split ne devient un levier qu'au moment où S3 écrira les premières cartes `skill` offensives.
 Fait après S3, il obligerait à ré-équilibrer une trentaine de cartes. **C'est la fenêtre.**
 
+⚠️ **Deux constructeurs, pas un.** `EntityStats` est construit avec `attaque: 0` à **deux
+endroits** de `RunController` : `build()` (`:224`, l'état initial) et `startNewRun()` (`:258`, le
+démarrage réel). Le split doit traiter les deux, sous peine qu'une partie neuve et une partie
+rechargée n'aient pas la même forme de statistiques. Le troisième chemin, `hydrate()` (`:237`),
+relève de la migration de sauvegarde (§9).
+
 ### 4.2. Les trois stats et leur règle d'attribution
 
 | Stat | S'applique à |
@@ -209,7 +216,7 @@ effectue donc une partie du tri des pools de S3 tout seul.
 ### 4.3. Le trou que ça comble
 
 La valeur d'un statut ne croît aujourd'hui **que** par le multiplicateur de rareté
-(`effect_resolver.dart:216`). Aucune relique, aucune récompense de level-up, aucune rune ne fait
+(`effect_resolver.dart:217`, `(baseValue * card.rarityMultiplier).round()`). Aucune relique, aucune récompense de level-up, aucune rune ne fait
 monter un poison ou une brûlure. Le seul archétype du jeu sans courbe de progression est
 précisément celui de la classe annoncée « Orientée Altération ». `alterationPower` la lui donne.
 
@@ -252,7 +259,7 @@ fois le registre en place.
 |:---|:---|:---|
 | `startOfTurn` | ✅ vivant | P3, B1 |
 | `endOfTurn` | ✅ vivant | P1, M3 |
-| `onAttackPlayed` | ✅ **dispatché, orphelin** | B2, M2 |
+| `onAttackPlayed` | ✅ vivant — `kunai`, `shuriken` | B2, M2 |
 | `onSkillPlayed` | ✅ **dispatché, orphelin** | M1 |
 | `onEnemyKilled` | ✅ vivant | B3 |
 | `onDamageTaken` | ❌ **à créer** | P2 |
@@ -260,10 +267,11 @@ fois le registre en place.
 
 **Deux ajouts moteur seulement** : le trigger `onDamageTaken`, et une facilité de comptage commune
 à M1 et M2 — un compteur remis à zéro en début de tour ou de combat selon la clé. Tout le reste
-réutilise de l'existant, dont deux triggers jusqu'ici inertes.
+réutilise de l'existant, dont un trigger jusqu'ici inerte.
 
-Note : `onCardPlayed` perd son seul consommateur avec la disparition de `spellArmor` (§6), et
-`onPowerPlayed` reste orphelin — aucun des neuf passifs ne s'y adosse.
+Note : `onCardPlayed` perd son seul consommateur côté passif avec la disparition de `spellArmor`
+(§6) — deux reliques l'utilisent encore. `onPowerPlayed` reste le seul trigger sans aucun
+consommateur : aucun des neuf passifs ne s'y adosse.
 
 ### 5.3. Nombre de passifs actifs
 
@@ -366,8 +374,8 @@ rééquilibrage.
 ### 7.2. L'écran de sélection
 
 `class_selection_screen.dart:342` affiche `playerClass.baseDamage` — 5 / 15 / 10 — alors que la run
-démarre à 0 pour tous (`run_controller.dart:250`). **L'écran ment au joueur au moment le plus
-structurant de la run.**
+démarre à 0 pour tous (`run_controller.dart:258`, `attaque: 0 // Force de base à 0`).
+**L'écran ment au joueur au moment le plus structurant de la run.**
 
 `baseDamage` est retiré de `heroes.json` et de `HeroData` : le champ n'a aucun consommateur réel
 côté héros, et le rétablir est explicitement écarté (§10).
