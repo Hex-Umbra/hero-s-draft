@@ -5,7 +5,7 @@ ordre ils ont été écrits. C'est un index de navigation — il ne contient **a
 des liens. Si tu cherches une réponse plutôt qu'un document, la table de `CLAUDE.md` (§Documentation
 Map) t'oriente plus vite.
 
-**Dernière mise à jour** : 2026-08-07
+**Dernière mise à jour** : 2026-08-17
 
 ---
 
@@ -121,7 +121,8 @@ Chaque sujet suit la même chaîne. Tous les documents n'en parcourent pas tous 
 
 | | Document | Date |
 |:---:|:---|:---|
-| 🔍 | [Pipeline CI/CD GitHub Actions](possible_upgrades/30-07-2026_ci_cd_pipeline_github_actions_Sonnet5.md) *(→ P-04)* | 30/07/2026 |
+| 🔍⚠️ | [Pipeline CI/CD GitHub Actions](possible_upgrades/30-07-2026_ci_cd_pipeline_github_actions_Sonnet5.md) *(→ P-04)* — **périmé, ne pas implémenter depuis ce document** : la modification nginx qu'il prescrit casserait le site en production, et son job `build-web` produit une page blanche. Corrigé par la spec ci-dessous (§9). Reste valable pour le *raisonnement*. | 30/07/2026 |
+| 📐 | [P-04 — CI/CD GitHub Actions](superpowers/specs/2026-08-17-p04-ci-cd-github-actions-design.md) | 17/08/2026 |
 | 🗄️ | [Tests manuels — phase 3](tests/phase_3_manual_tests.md) | — |
 
 ## 11. Dette technique & refactoring
