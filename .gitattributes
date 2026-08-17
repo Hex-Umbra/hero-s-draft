@@ -1,0 +1,5 @@
+# Les fichiers consommes par les runners Linux doivent rester en LF.
+# Portee volontairement limitee a .github/ : un `* text=auto` renormaliserait
+# tout le repo Flutter, ce qui n'est pas le sujet de ce chantier.
+.github/scripts/*.sh text eol=lf
+.github/workflows/*.yml text eol=lf
