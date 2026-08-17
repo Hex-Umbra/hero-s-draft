@@ -1,0 +1,99 @@
+name: Release
+
+# Pas de declencheur `push: tags` a ce stade : tant qu'il est absent, ce
+# workflow ne peut pas partir tout seul pendant sa mise au point.
+# Il est ajoute en fin de chantier, une fois la chaine prouvee.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version a publier (X.Y.Z). Vide = deduite du tag cible."
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  verify-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.resolve.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # Deux sources possibles : l'entree manuelle, ou le tag qui a declenche le
+      # run. Dans les deux cas la valeur passe ensuite par le meme garde-fou.
+      - id: resolve
+        run: |
+          set -euo pipefail
+
+          VERSION="${{ inputs.version }}"
+
+          if [[ -z "${VERSION}" ]]; then
+            if [[ "${GITHUB_REF}" != refs/tags/* ]]; then
+              echo "::error::Aucune version fournie et ${GITHUB_REF} n'est pas un tag. Fournis l'entree 'version', ou cible un tag vX.Y.Z."
+              exit 1
+            fi
+            TAG="${GITHUB_REF#refs/tags/}"
+            VERSION="${TAG#v}"
+          fi
+
+          bash .github/scripts/verify_version.sh "${VERSION}"
+
+          echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
+
+  build-web:
+    needs: verify-version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: 3.41.6
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      # --base-href est OBLIGATOIRE : web/index.html contient
+      # <base href="$FLUTTER_BASE_HREF">, qui vaut "/" par defaut. Servi depuis
+      # /v0.4.7/ sans ce flag, l'app chercherait main.dart.js et CanvasKit a la
+      # racine du domaine -> page blanche.
+      - run: flutter build web --release --base-href "/v${{ needs.verify-version.outputs.version }}/"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: web-build
+          path: build/web/
+          retention-days: 7
+
+  build-windows:
+    needs: verify-version
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: 3.41.6
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      - run: flutter build windows --release
+
+      - name: Zip du build
+        shell: pwsh
+        run: |
+          Compress-Archive `
+            -Path "build/windows/x64/runner/Release/*" `
+            -DestinationPath "heros-draft-v${{ needs.verify-version.outputs.version }}-windows.zip"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: windows-build
+          path: heros-draft-*-windows.zip
+          retention-days: 7
