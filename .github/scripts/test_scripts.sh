@@ -80,15 +80,18 @@ echo "release_body.sh"
 BODY="bash .github/scripts/release_body.sh"
 
 assert_exit 0 "s'execute sur les patch notes reelles" ${BODY}
-assert_contains "## L'Équilibre des Effectifs" "reprend le titre en h2" ${BODY}
-assert_contains "### ✨ Nouvelles Fonctionnalités" "rend emoji et categorie en h3" ${BODY}
-assert_contains "- Une nouvelle relique légendaire" "rend les entrees en puces" ${BODY}
-assert_contains "### 🔧 Technique" "rend la derniere section" ${BODY}
+# CR normalization for assert_contains: Windows native jq.exe uses text-mode stdout,
+# converting \n to \r\n. This affects pattern matching on embedded newlines but not
+# grep -c with line anchors.
+assert_contains "## L'Équilibre des Effectifs" "reprend le titre en h2" sh -c "bash .github/scripts/release_body.sh | tr -d '\r'"
+assert_contains "### ✨ Nouvelles Fonctionnalités" "rend emoji et categorie en h3" sh -c "bash .github/scripts/release_body.sh | tr -d '\r'"
+assert_contains "- Une nouvelle relique légendaire" "rend les entrees en puces" sh -c "bash .github/scripts/release_body.sh | tr -d '\r'"
+assert_contains "### 🔧 Technique" "rend la derniere section" sh -c "bash .github/scripts/release_body.sh | tr -d '\r'"
 
 # Une ligne vide doit separer le titre de la premiere section.
 assert_contains "Effectifs
 
-###" "insere une ligne vide apres le titre" ${BODY}
+###" "insere une ligne vide apres le titre" sh -c "bash .github/scripts/release_body.sh | tr -d '\r'"
 
 # Le corps ne doit contenir que l'entree la plus recente.
 if [[ "$(${BODY} 2>/dev/null | grep -c '^## ')" -eq 1 ]]; then

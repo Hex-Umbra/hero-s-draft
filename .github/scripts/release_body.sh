@@ -24,4 +24,4 @@ jq -r '.[0] as $n
   + ( $n.sections
       | map("### \(.emoji) \(.category)\n" + (.entries | map("- \(.)") | join("\n")))
       | join("\n\n") )
-' "${PATCH_NOTES_PATH}" | tr -d '\r'
+' "${PATCH_NOTES_PATH}"
