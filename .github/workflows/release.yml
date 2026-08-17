@@ -25,10 +25,12 @@ jobs:
       # Deux sources possibles : l'entree manuelle, ou le tag qui a declenche le
       # run. Dans les deux cas la valeur passe ensuite par le meme garde-fou.
       - id: resolve
+        env:
+          VERSION_INPUT: ${{ inputs.version }}
         run: |
           set -euo pipefail
 
-          VERSION="${{ inputs.version }}"
+          VERSION="${VERSION_INPUT}"
 
           if [[ -z "${VERSION}" ]]; then
             if [[ "${GITHUB_REF}" != refs/tags/* ]]; then
