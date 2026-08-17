@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# Deux pushes rapproches ne doivent pas produire deux runs concurrents aux
+# resultats entrelaces. Volontairement absent de release.yml : on n'annule
+# jamais un deploiement en cours.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: 3.41.6
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      # --fatal-infos est necessaire : sans lui, `dart analyze` sort en 0 sur les
+      # diagnostics de niveau `info`, et la CI n'appliquerait pas la regle
+      # "zero issue" de CLAUDE.md.
+      - run: dart analyze --fatal-infos
+
+      - run: flutter test
+
+      # Les scripts de release sont utilises par release.yml ; les tester ici
+      # evite qu'ils pourrissent sans que personne s'en apercoive.
+      - run: bash .github/scripts/test_scripts.sh
