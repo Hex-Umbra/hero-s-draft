@@ -75,5 +75,35 @@ assert_exit 0 "accepte 0.4.8 quand les deux fixtures concordent" \
       "PATCH_NOTES_PATH=${FIXTURES}/notes_048.json" ${VERIFY} 0.4.8
 
 echo
+echo "release_body.sh"
+
+BODY="bash .github/scripts/release_body.sh"
+
+assert_exit 0 "s'execute sur les patch notes reelles" ${BODY}
+assert_contains "## L'Équilibre des Effectifs" "reprend le titre en h2" ${BODY}
+assert_contains "### ✨ Nouvelles Fonctionnalités" "rend emoji et categorie en h3" ${BODY}
+assert_contains "- Une nouvelle relique légendaire" "rend les entrees en puces" ${BODY}
+assert_contains "### 🔧 Technique" "rend la derniere section" ${BODY}
+
+# Une ligne vide doit separer le titre de la premiere section.
+assert_contains "Effectifs
+
+###" "insere une ligne vide apres le titre" ${BODY}
+
+# Le corps ne doit contenir que l'entree la plus recente.
+if [[ "$(${BODY} 2>/dev/null | grep -c '^## ')" -eq 1 ]]; then
+  ok "ne rend qu'une seule entree (la plus recente)"
+else
+  nok "ne rend qu'une seule entree (la plus recente)"
+fi
+
+# Cinq sections dans l'entree 0.4.7.
+if [[ "$(${BODY} 2>/dev/null | grep -c '^### ')" -eq 5 ]]; then
+  ok "rend les 5 sections de l'entree 0.4.7"
+else
+  nok "rend les 5 sections de l'entree 0.4.7 (obtenu $(${BODY} 2>/dev/null | grep -c '^### '))"
+fi
+
+echo
 echo "${PASS} ok, ${FAIL} echec(s)"
 [[ "${FAIL}" -eq 0 ]]
