@@ -6,8 +6,10 @@
 #
 # Ce script est LE garde-fou du pipeline de release. La validation de format
 # n'est pas cosmetique : elle empeche une valeur vide ou malformee d'atteindre
-# le `rsync --delete` du job deploy-web, ou elle porterait sur la racine du
-# dossier web au lieu du sous-dossier de version.
+# le `rsync --delete` du job deploy-web. La destination y est ":v${VERSION}/" ;
+# une version vide donnerait ":v/", un dossier frere des versions publiees, pas
+# la racine confinee. Le prefixe "v" litteral de la destination est un verrou
+# de securite independant de ce script : il ne doit pas etre retire.
 #
 # Chemins surchargeables (pour les tests) :
 #   PUBSPEC_PATH      defaut pubspec.yaml

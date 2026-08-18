@@ -425,7 +425,7 @@ Sur un repo public, un tag mutable (`@v3`) laisse le mainteneur — ou quiconque
 
 **« Re-run failed jobs » est sûr sur tous les jobs** — aucun effet de bord destructeur.
 
-**Risque `rsync --delete`, fermé structurellement.** Un chemin cible vide ferait porter le `--delete` sur la racine confinée, effaçant toutes les versions et la page de sélection. Deux verrous : la version est validée `^[0-9]+\.[0-9]+\.[0-9]+$` par `verify-version` avant de pouvoir atteindre ce job, et elle doit déjà correspondre à `pubspec.yaml` **et** à `patch_notes.json`. Une valeur vide ou malformée ne peut pas franchir la première porte.
+**Risque `rsync --delete`, fermé structurellement.** La destination du rsync est `":v${VERSION}/"` : un `VERSION` vide donnerait `:v/`, un dossier frère des versions publiées, jamais la racine confinée elle-même — le préfixe `v` littéral de la destination agit comme un verrou de sécurité indépendant, à ne pas retirer au prétexte qu'il serait cosmétique. `verify-version` ferme le risque en amont : la version est validée `^[0-9]+\.[0-9]+\.[0-9]+$` avant de pouvoir atteindre ce job, et elle doit déjà correspondre à `pubspec.yaml` **et** à `patch_notes.json`. Une valeur vide ou malformée ne peut pas franchir la première porte.
 
 **Limite connue et acceptée** : aucune notification n'existe en v1 (Discord reporté, §1). L'état d'une release se lit dans l'onglet Actions. Acceptable pour les premières releases, qui seront surveillées.
 
