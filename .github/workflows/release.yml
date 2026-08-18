@@ -1,9 +1,8 @@
 name: Release
 
-# Pas de declencheur `push: tags` a ce stade : tant qu'il est absent, ce
-# workflow ne peut pas partir tout seul pendant sa mise au point.
-# Il est ajoute en fin de chantier, une fois la chaine prouvee.
 on:
+  push:
+    tags: ['v*.*.*']
   workflow_dispatch:
     inputs:
       version:
