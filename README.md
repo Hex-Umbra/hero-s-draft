@@ -76,8 +76,10 @@ Grâce à l'architecture Data-Driven, étendre le jeu est trivial :
 2. Committer et pousser sur `main`.
 3. Poser le tag correspondant :
 
+   ```bash
    git tag v0.4.8
    git push origin v0.4.8
+   ```
 
 Le pipeline vérifie que le tag, `pubspec.yaml` et `patch_notes.json`
 concordent, puis déploie le web sur `/v0.4.8/` et publie une pre-release
