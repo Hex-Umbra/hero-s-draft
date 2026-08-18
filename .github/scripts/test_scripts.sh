@@ -41,57 +41,102 @@ assert_contains() {
 
 VERIFY="bash .github/scripts/verify_version.sh"
 
-# Fixtures : un pubspec et des patch notes en 0.4.8, pour isoler chaque comparaison.
-printf 'name: roguelike_card_game\nversion: 0.4.8+1\n' > "${FIXTURES}/pubspec_048.yaml"
-printf '[{"version":"0.4.8","date":"2026-01-01","title":"T","sections":[]}]\n' > "${FIXTURES}/notes_048.json"
+# Attentes derivees des fichiers reels a l'execution -- jamais figees, pour
+# survivre a un bump de version (premiere etape de la procedure de release).
+REAL_VER="$(jq -r '.[0].version' assets/data/patch_notes.json)"
+INCOMPLETE_VER="${REAL_VER%.*}"
+
+# Deux versions synthetiques, sans rapport avec le repo reel, pour tester la
+# logique de desaccord en isolation complete.
+FX_A="9.9.8"
+FX_B="9.9.9"
+
+# Fixtures : paires pubspec/patch-notes isolees du repo reel (sous-dossiers
+# "agree"/"disagree"), plus les cas defensifs (version illisible, JSON
+# invalide). Les patch-notes de fixture sont nommees patch_notes.json comme le
+# fichier reel, pour que le message d'erreur -- qui interpole le chemin --
+# contienne bien cette sous-chaine. Aucune fixture ne depend de la version en
+# cours du repo.
+mkdir -p "${FIXTURES}/agree" "${FIXTURES}/disagree" "${FIXTURES}/no_version" "${FIXTURES}/invalid"
+printf 'name: roguelike_card_game\nversion: %s+1\n' "${FX_A}" > "${FIXTURES}/agree/pubspec.yaml"
+printf '[{"version":"%s","date":"2026-01-01","title":"T","sections":[]}]\n' "${FX_A}" > "${FIXTURES}/agree/patch_notes.json"
+printf '[{"version":"%s","date":"2026-01-01","title":"T","sections":[]}]\n' "${FX_B}" > "${FIXTURES}/disagree/patch_notes.json"
+printf 'name: roguelike_card_game\ndescription: pas de ligne version ici\n' > "${FIXTURES}/no_version/pubspec.yaml"
+printf 'contenu invalide, pas du json {{{' > "${FIXTURES}/invalid/patch_notes.json"
+# ${FIXTURES}/missing/pubspec.yaml et ${FIXTURES}/missing/patch_notes.json ne
+# sont jamais crees : c'est le point des deux tests "introuvable" plus bas.
 
 echo "verify_version.sh"
 
-# --- Cas nominal : les vrais fichiers du repo sont en 0.4.7 ---
-assert_exit 0 "accepte 0.4.7 (pubspec et patch notes reels)" ${VERIFY} 0.4.7
+# --- Cas nominal : les vrais fichiers du repo ---
+assert_exit 0 "accepte ${REAL_VER} (pubspec et patch notes reels)" ${VERIFY} "${REAL_VER}"
 
 # --- Formats invalides ---
-assert_exit 1 "refuse une version absente"        ${VERIFY}
-assert_exit 1 "refuse la chaine vide"             ${VERIFY} ""
-assert_exit 1 "refuse 0.4 (incomplet)"            ${VERIFY} 0.4
-assert_exit 1 "refuse v0.4.7 (prefixe v)"         ${VERIFY} v0.4.7
-assert_exit 1 "refuse 0.4.7-beta (suffixe)"       ${VERIFY} 0.4.7-beta
-assert_exit 1 "refuse 0.4.7+1 (build metadata)"   ${VERIFY} 0.4.7+1
-assert_exit 1 "refuse du texte libre"             ${VERIFY} abc
+assert_exit 1 "refuse une version absente"           ${VERIFY}
+assert_exit 1 "refuse la chaine vide"                ${VERIFY} ""
+assert_exit 1 "refuse X.Y (incomplet)"               ${VERIFY} "${INCOMPLETE_VER}"
+assert_exit 1 "refuse un prefixe v"                  ${VERIFY} "v${REAL_VER}"
+assert_exit 1 "refuse un suffixe -beta"              ${VERIFY} "${REAL_VER}-beta"
+assert_exit 1 "refuse des metadonnees de build (+1)" ${VERIFY} "${REAL_VER}+1"
+assert_exit 1 "refuse du texte libre"                ${VERIFY} abc
 
-# --- Desaccord avec pubspec.yaml ---
-assert_exit 1 "refuse 0.4.8 face au pubspec reel (0.4.7)" ${VERIFY} 0.4.8
-assert_contains "pubspec.yaml" "nomme pubspec.yaml dans l'erreur de desaccord" ${VERIFY} 0.4.8
+# --- Desaccord avec pubspec.yaml, isole sur fixtures (les deux fichiers) ---
+assert_exit 1 "refuse quand seul pubspec diverge" \
+  env "PUBSPEC_PATH=${FIXTURES}/agree/pubspec.yaml" "PATCH_NOTES_PATH=${FIXTURES}/agree/patch_notes.json" ${VERIFY} "${FX_B}"
+assert_contains "pubspec.yaml" "nomme pubspec.yaml dans l'erreur de desaccord" \
+  env "PUBSPEC_PATH=${FIXTURES}/agree/pubspec.yaml" "PATCH_NOTES_PATH=${FIXTURES}/agree/patch_notes.json" ${VERIFY} "${FX_B}"
 
-# --- Desaccord avec patch_notes.json, pubspec neutralise par une fixture ---
+# --- Desaccord avec patch_notes.json, isole sur fixtures (les deux fichiers) ---
 assert_exit 1 "refuse quand seules les patch notes divergent" \
-  env "PUBSPEC_PATH=${FIXTURES}/pubspec_048.yaml" ${VERIFY} 0.4.8
+  env "PUBSPEC_PATH=${FIXTURES}/agree/pubspec.yaml" "PATCH_NOTES_PATH=${FIXTURES}/disagree/patch_notes.json" ${VERIFY} "${FX_A}"
 assert_contains "patch_notes.json" "nomme patch_notes.json dans l'erreur" \
-  env "PUBSPEC_PATH=${FIXTURES}/pubspec_048.yaml" ${VERIFY} 0.4.8
+  env "PUBSPEC_PATH=${FIXTURES}/agree/pubspec.yaml" "PATCH_NOTES_PATH=${FIXTURES}/disagree/patch_notes.json" ${VERIFY} "${FX_A}"
 
 # --- Cas nominal avec les deux fixtures alignees ---
-assert_exit 0 "accepte 0.4.8 quand les deux fixtures concordent" \
-  env "PUBSPEC_PATH=${FIXTURES}/pubspec_048.yaml" \
-      "PATCH_NOTES_PATH=${FIXTURES}/notes_048.json" ${VERIFY} 0.4.8
+assert_exit 0 "accepte ${FX_A} quand les deux fixtures concordent" \
+  env "PUBSPEC_PATH=${FIXTURES}/agree/pubspec.yaml" \
+      "PATCH_NOTES_PATH=${FIXTURES}/agree/patch_notes.json" ${VERIFY} "${FX_A}"
+
+# --- Branches defensives ---
+assert_exit 1 "refuse un PUBSPEC_PATH introuvable" \
+  env "PUBSPEC_PATH=${FIXTURES}/missing/pubspec.yaml" "PATCH_NOTES_PATH=${FIXTURES}/agree/patch_notes.json" ${VERIFY} "${FX_A}"
+assert_exit 1 "refuse un PATCH_NOTES_PATH introuvable" \
+  env "PUBSPEC_PATH=${FIXTURES}/agree/pubspec.yaml" "PATCH_NOTES_PATH=${FIXTURES}/missing/patch_notes.json" ${VERIFY} "${FX_A}"
+assert_exit 1 "refuse un pubspec sans ligne version: exploitable" \
+  env "PUBSPEC_PATH=${FIXTURES}/no_version/pubspec.yaml" "PATCH_NOTES_PATH=${FIXTURES}/agree/patch_notes.json" ${VERIFY} "${FX_A}"
+assert_exit 1 "refuse des patch notes JSON invalides" \
+  env "PUBSPEC_PATH=${FIXTURES}/agree/pubspec.yaml" "PATCH_NOTES_PATH=${FIXTURES}/invalid/patch_notes.json" ${VERIFY} "${FX_A}"
 
 echo
 echo "release_body.sh"
 
 BODY="bash .github/scripts/release_body.sh"
 
+# CR normalization: Windows native jq.exe uses text-mode stdout, converting \n
+# to \r\n. This affects pattern matching on embedded newlines but not grep -c
+# with line anchors. Captured once here, reused below instead of repeating the
+# same "sh -c ... | tr -d '\r'" five times.
+RENDER=(sh -c "bash .github/scripts/release_body.sh | tr -d '\r'")
+
+# Attentes derivees de l'entree la plus recente des vraies patch notes --
+# jamais de titre, de prose ou de nombre de sections fige en dur.
+REAL_TITLE="$(jq -r '.[0].title' assets/data/patch_notes.json)"
+REAL_SECTIONS="$(jq '.[0].sections | length' assets/data/patch_notes.json)"
+FIRST_CATEGORY="$(jq -r '.[0].sections[0].category' assets/data/patch_notes.json)"
+FIRST_EMOJI="$(jq -r '.[0].sections[0].emoji' assets/data/patch_notes.json)"
+FIRST_ENTRY="$(jq -r '.[0].sections[0].entries[0]' assets/data/patch_notes.json)"
+LAST_CATEGORY="$(jq -r '.[0].sections[-1].category' assets/data/patch_notes.json)"
+LAST_EMOJI="$(jq -r '.[0].sections[-1].emoji' assets/data/patch_notes.json)"
+
 assert_exit 0 "s'execute sur les patch notes reelles" ${BODY}
-# CR normalization for assert_contains: Windows native jq.exe uses text-mode stdout,
-# converting \n to \r\n. This affects pattern matching on embedded newlines but not
-# grep -c with line anchors.
-assert_contains "## L'Équilibre des Effectifs" "reprend le titre en h2" sh -c "bash .github/scripts/release_body.sh | tr -d '\r'"
-assert_contains "### ✨ Nouvelles Fonctionnalités" "rend emoji et categorie en h3" sh -c "bash .github/scripts/release_body.sh | tr -d '\r'"
-assert_contains "- Une nouvelle relique légendaire" "rend les entrees en puces" sh -c "bash .github/scripts/release_body.sh | tr -d '\r'"
-assert_contains "### 🔧 Technique" "rend la derniere section" sh -c "bash .github/scripts/release_body.sh | tr -d '\r'"
+assert_contains "## ${REAL_TITLE}" "reprend le titre en h2" "${RENDER[@]}"
+assert_contains "### ${FIRST_EMOJI} ${FIRST_CATEGORY}" "rend emoji et categorie en h3 (premiere section)" "${RENDER[@]}"
+assert_contains "- ${FIRST_ENTRY}" "rend les entrees en puces" "${RENDER[@]}"
+assert_contains "### ${LAST_EMOJI} ${LAST_CATEGORY}" "rend la derniere section" "${RENDER[@]}"
 
 # Une ligne vide doit separer le titre de la premiere section.
-assert_contains "Effectifs
-
-###" "insere une ligne vide apres le titre" sh -c "bash .github/scripts/release_body.sh | tr -d '\r'"
+NEEDLE_BLANK_LINE="$(printf '## %s\n\n### %s %s' "${REAL_TITLE}" "${FIRST_EMOJI}" "${FIRST_CATEGORY}")"
+assert_contains "${NEEDLE_BLANK_LINE}" "insere une ligne vide apres le titre" "${RENDER[@]}"
 
 # Le corps ne doit contenir que l'entree la plus recente.
 if [[ "$(${BODY} 2>/dev/null | grep -c '^## ')" -eq 1 ]]; then
@@ -100,11 +145,12 @@ else
   nok "ne rend qu'une seule entree (la plus recente)"
 fi
 
-# Cinq sections dans l'entree 0.4.7.
-if [[ "$(${BODY} 2>/dev/null | grep -c '^### ')" -eq 5 ]]; then
-  ok "rend les 5 sections de l'entree 0.4.7"
+# Le nombre de sections attendu est celui de l'entree la plus recente,
+# derive a l'execution (REAL_SECTIONS) au lieu d'etre fige en dur.
+if [[ "$(${BODY} 2>/dev/null | grep -c '^### ')" -eq "${REAL_SECTIONS}" ]]; then
+  ok "rend les ${REAL_SECTIONS} sections de l'entree ${REAL_VER}"
 else
-  nok "rend les 5 sections de l'entree 0.4.7 (obtenu $(${BODY} 2>/dev/null | grep -c '^### '))"
+  nok "rend les ${REAL_SECTIONS} sections de l'entree ${REAL_VER} (obtenu $(${BODY} 2>/dev/null | grep -c '^### '))"
 fi
 
 echo
