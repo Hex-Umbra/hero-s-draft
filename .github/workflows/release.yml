@@ -14,6 +14,31 @@ permissions:
   contents: read
 
 jobs:
+  # Un tag peut etre pousse sur n'importe quel commit, y compris un commit qui
+  # n'a jamais transite par un push/PR vers main. ci.yml ne se declenche donc
+  # jamais sur ce chemin : cette porte de qualite est propre a release.yml et
+  # tourne en parallele de verify-version (pas de needs).
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: 3.41.6
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      - run: dart analyze --fatal-infos
+
+      - run: flutter test
+
+      - run: bash .github/scripts/test_scripts.sh
+
   verify-version:
     runs-on: ubuntu-latest
     outputs:
@@ -47,7 +72,7 @@ jobs:
           echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
 
   build-web:
-    needs: verify-version
+    needs: [verify-version, quality]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -75,7 +100,7 @@ jobs:
           retention-days: 7
 
   build-windows:
-    needs: verify-version
+    needs: [verify-version, quality]
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
