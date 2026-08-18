@@ -69,6 +69,26 @@ Grâce à l'architecture Data-Driven, étendre le jeu est trivial :
 
 ---
 
+## Publier une version
+
+1. Faire rédiger les patch notes par le skill `patch-notes-writer` — il écrit
+   l'entrée dans `assets/data/patch_notes.json` et synchronise `pubspec.yaml`.
+2. Committer et pousser sur `main`.
+3. Poser le tag correspondant :
+
+   git tag v0.4.8
+   git push origin v0.4.8
+
+Le pipeline vérifie que le tag, `pubspec.yaml` et `patch_notes.json`
+concordent, puis déploie le web sur `/v0.4.8/` et publie une pre-release
+GitHub avec le build Windows.
+
+En cas d'échec, « Re-run failed jobs » est sûr sur tous les jobs. Si le tag
+lui-même est erroné, le supprimer (`git push --delete origin v0.4.8`), corriger,
+et le reposer.
+
+---
+
 ## 🚀 Roadmap & Status
 
 Le moteur de base et l'architecture complète sont **terminés et fonctionnels** (Phases 1 à 12 validées).
