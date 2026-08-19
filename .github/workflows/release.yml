@@ -168,6 +168,25 @@ jobs:
             web-build/ \
             "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:v${{ needs.verify-version.outputs.version }}/"
 
+  # Un rsync vert prouve que des fichiers sont sur le disque, pas que le jeu se
+  # lance. Ce job fait la difference, et c'est lui qui autorise la suite : ni le
+  # site ni Discord n'annoncent une version qui n'a pas passe cette porte.
+  smoke-test:
+    needs: [verify-version, deploy-web]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+
+      - name: La version deployee repond et porte le bon base href
+        run: |
+          set -euo pipefail
+          bash .github/scripts/smoke_test.sh \
+            "https://heros-draft.vilarserver.com" \
+            "${{ needs.verify-version.outputs.version }}"
+
   release-windows:
     needs: [verify-version, build-windows]
     runs-on: ubuntu-latest
@@ -203,3 +222,47 @@ jobs:
           body_path: RELEASE_BODY.md
           prerelease: true
           files: heros-draft-*-windows.zip
+
+  # Un webhook muet ne doit jamais peindre en rouge une release par ailleurs
+  # parfaite : continue-on-error laisse le job en avertissement sans invalider
+  # le run. `if: success()` limite l'annonce aux releases reussies -- GitHub
+  # envoie deja un e-mail en cas d'echec.
+  notify-discord:
+    needs: [verify-version, smoke-test, release-windows]
+    if: success()
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+
+      # Le payload est construit puis envoye en deux etapes distinctes : le
+      # `cat` rend le JSON lisible dans les logs, donc diagnosticable sans
+      # renvoyer de message. Le webhook, lui, n'apparait jamais dans les logs.
+      - name: Construire le payload
+        run: |
+          set -euo pipefail
+          bash .github/scripts/discord_payload.sh \
+            "${{ needs.verify-version.outputs.version }}" > discord.json
+          cat discord.json
+
+      - name: Envoyer sur Discord
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${DISCORD_WEBHOOK_URL}" ]]; then
+            echo "::error::Le secret DISCORD_WEBHOOK_URL est absent ou vide."
+            exit 1
+          fi
+          CODE="$(curl -sS -o /dev/null -w '%{http_code}' \
+            -X POST -H 'Content-Type: application/json' \
+            --data @discord.json \
+            "${DISCORD_WEBHOOK_URL}")"
+          if [[ "${CODE}" != "204" ]]; then
+            echo "::error::Discord a repondu ${CODE}, attendu 204."
+            exit 1
+          fi
+          echo "Annonce publiee."
