@@ -162,7 +162,7 @@ a { color: var(--y); }
   display: block;
 }
 .card__label { font-family: var(--title); color: var(--y); font-size: 14px; }
-.card__meta  { color: var(--mut); font-size: 17px; margin-top: 9px; }
+.card__meta  { color: var(--mut2); font-size: 17px; margin-top: 9px; }
 .grid--legacy .card { background: var(--dim); }
 .grid--legacy .card__label { color: var(--y2); font-size: 12px; }
 
