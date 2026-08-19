@@ -176,7 +176,7 @@ Auto-hébergées en woff2, sous-ensemble latin, avec `font-display: swap` et une
 | `id` | **Nom du dossier sur le VPS, donc segment d'URL.** Clé primaire, unique. Le lien est `/{id}/` |
 | `label` | Ce que lit le joueur. Découplé de `id` parce que les dossiers legacy s'appellent `v3` |
 | `channel` | `current` \| `stable` \| `legacy`. Pilote le groupement et la mise en vedette |
-| `date` | Date de mise en ligne, ISO. Affichée, et sert au tri |
+| `date` | Date de mise en ligne, ISO, **ou `null`**. Affichée quand elle existe. L'ordre d'affichage est celui du fichier, pas celui des dates : quatorze entrées sur quinze n'en ont aucune (§5.3) |
 | `notes` | Clé de jointure dans `patch_notes.json`, **ou `null`** (§3.3) |
 | `windows` | Une release GitHub existe. L'URL de téléchargement se déduit de `id` |
 
