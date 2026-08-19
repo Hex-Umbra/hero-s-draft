@@ -174,5 +174,54 @@ assert_contains "127.0.0.1:1" "nomme l'URL fautive dans l'erreur" \
   env "SMOKE_ATTEMPTS=1" "SMOKE_DELAY=0" ${SMOKE} "http://127.0.0.1:1" "9.9.9"
 
 echo
+echo "discord_payload.sh"
+
+PAYLOAD="bash .github/scripts/discord_payload.sh"
+
+# Comme pour release_body.sh, la sortie est normalisee une fois : jq natif sous
+# Windows ecrit \r\n. La normalisation est DANS LE HARNAIS, jamais dans le
+# script de production.
+RENDER_PAYLOAD=(sh -c "bash .github/scripts/discord_payload.sh '${REAL_VER}' | tr -d '\r'")
+
+assert_exit 1 "refuse une version absente"        ${PAYLOAD}
+assert_exit 1 "refuse une version non semver"     ${PAYLOAD} "v${REAL_VER}"
+assert_exit 1 "refuse un PATCH_NOTES_PATH introuvable" \
+  env "PATCH_NOTES_PATH=${FIXTURES}/missing/patch_notes.json" ${PAYLOAD} "${REAL_VER}"
+
+assert_exit 0 "s'execute sur les patch notes reelles" ${PAYLOAD} "${REAL_VER}"
+
+# La sortie doit etre du JSON valide -- c'est tout l'interet de passer par jq -n
+# plutot que par une concatenation.
+if ${PAYLOAD} "${REAL_VER}" 2>/dev/null | jq -e . >/dev/null 2>&1; then
+  ok "produit du JSON valide"
+else
+  nok "produit du JSON valide"
+fi
+
+assert_contains "${REAL_TITLE}" "reprend le titre de la patch note" "${RENDER_PAYLOAD[@]}"
+assert_contains "/v${REAL_VER}/" "contient l'URL de jeu" "${RENDER_PAYLOAD[@]}"
+assert_contains "heros-draft-v${REAL_VER}-windows.zip" "contient l'URL du zip" "${RENDER_PAYLOAD[@]}"
+assert_contains "releases/tag/v${REAL_VER}" "contient l'URL de la release" "${RENDER_PAYLOAD[@]}"
+
+# La couleur de la charte, 0xEAF06A.
+if [[ "$(${PAYLOAD} "${REAL_VER}" 2>/dev/null | jq -r '.embeds[0].color')" == "15396970" ]]; then
+  ok "utilise la couleur 0xEAF06A"
+else
+  nok "utilise la couleur 0xEAF06A"
+fi
+
+# Troncature : la description ne doit jamais depasser la limite Discord.
+TRUNCATED="$(env "DESC_LIMIT=80" ${PAYLOAD} "${REAL_VER}" 2>/dev/null | jq -r '.embeds[0].description')"
+if [[ "${#TRUNCATED}" -le 200 && "${TRUNCATED}" == *"release GitHub"* ]]; then
+  ok "tronque la description et renvoie vers la release"
+else
+  nok "tronque la description et renvoie vers la release (longueur ${#TRUNCATED})"
+fi
+
+# Sans troncature, la description porte la premiere entree en entier.
+assert_contains "${FIRST_ENTRY}" "contient la premiere entree des patch notes" \
+  sh -c "bash .github/scripts/discord_payload.sh '${REAL_VER}' | jq -r '.embeds[0].description' | tr -d '\r'"
+
+echo
 echo "${PASS} ok, ${FAIL} echec(s)"
 [[ "${FAIL}" -eq 0 ]]
