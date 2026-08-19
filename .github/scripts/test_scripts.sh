@@ -154,5 +154,25 @@ else
 fi
 
 echo
+echo "smoke_test.sh"
+
+SMOKE="bash .github/scripts/smoke_test.sh"
+
+# Validation d'arguments : aucun de ces cas n'atteint le reseau, ils sortent
+# avant le premier curl.
+assert_exit 1 "refuse une URL de base absente"    ${SMOKE}
+assert_exit 1 "refuse une URL de base vide"       ${SMOKE} "" "${REAL_VER}"
+assert_exit 1 "refuse une version absente"        ${SMOKE} "https://exemple.test"
+assert_exit 1 "refuse une version non semver"     ${SMOKE} "https://exemple.test" "v${REAL_VER}"
+assert_exit 1 "refuse une version incomplete"     ${SMOKE} "https://exemple.test" "${INCOMPLETE_VER}"
+
+# Chemin d'echec reseau, sans internet : le port 1 de la boucle locale refuse
+# la connexion immediatement. Une seule tentative, aucune attente.
+assert_exit 1 "echoue sur un hote injoignable" \
+  env "SMOKE_ATTEMPTS=1" "SMOKE_DELAY=0" ${SMOKE} "http://127.0.0.1:1" "9.9.9"
+assert_contains "127.0.0.1:1" "nomme l'URL fautive dans l'erreur" \
+  env "SMOKE_ATTEMPTS=1" "SMOKE_DELAY=0" ${SMOKE} "http://127.0.0.1:1" "9.9.9"
+
+echo
 echo "${PASS} ok, ${FAIL} echec(s)"
 [[ "${FAIL}" -eq 0 ]]
