@@ -37,6 +37,19 @@ jobs:
 
       - run: flutter test
 
+      # Node est preinstalle sur ubuntu-latest : aucune action tierce
+      # supplementaire a epingler. La version est affichee pour que la moindre
+      # derive de l'image runner soit visible dans les logs.
+      - run: node --version
+
+      # Lance depuis site/ sans argument de chemin : c'est la decouverte par
+      # defaut de Node, qui trouve tout *.test.js de l'arborescence. Passer le
+      # repertoire en argument (`node --test site/_site/js/`) echoue -- Node
+      # tente alors de charger le repertoire comme module d'entree.
+      - name: Tests de la logique du site
+        working-directory: site
+        run: node --test
+
       - run: bash .github/scripts/test_scripts.sh
 
   verify-version:

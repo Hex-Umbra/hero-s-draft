@@ -19,7 +19,7 @@ Quatre raffinements. À valider avant de commencer.
 | # | Spec | Ce plan | Pourquoi |
 |:---:|:---|:---|:---|
 | 1 | Trois modules JS : `data.js`, `render.js`, `main.js` | **Quatre** : `model.js` extrait de `data.js` | `model.js` contient la **jointure** — exactement ce que le §3.3 de la spec identifie comme le piège du chantier. Séparé de tout accès réseau, il devient testable par `node --test` en une seconde. Mélangé au `fetch`, il n'est vérifiable qu'à l'œil dans un navigateur. |
-| 2 | Pas de tests JS mentionnés | `node --test site/_site/js/` ajouté aux deux portes `quality` | Un test qui ne tourne jamais pourrit. **Aucune action tierce nouvelle** : Node est préinstallé sur `ubuntu-latest`, donc aucun SHA supplémentaire à épingler. |
+| 2 | Pas de tests JS mentionnés | `node --test` lancé depuis `site/`, ajouté aux deux portes `quality` | Un test qui ne tourne jamais pourrit. **Aucune action tierce nouvelle** : Node est préinstallé sur `ubuntu-latest`, donc aucun SHA supplémentaire à épingler. |
 | 3 | `<noscript>` avec les liens essentiels | **Repli statique inconditionnel** dans chaque `data-slot`, remplacé par le JS en cas de succès | Strictement supérieur : `<noscript>` ne couvre que « JS désactivé », le repli statique couvre aussi « JS actif mais `fetch` en échec » — le cas réellement probable. Le HTML livré est utilisable tel quel. |
 | 4 | Étape 0 : sonde `rsync` depuis la machine de l'utilisateur | Sonde **depuis GitHub Actions**, via un `site.yml` inerte lancé à la main (Task 10) | `rsync` est **absent de la machine Windows** — vérifié le 19/08. Sans danger : ce chemin n'a aucun `--delete`, un refus de `rrsync` échoue sans rien écrire, et `release.yml` n'appelle pas encore `site.yml` à ce stade. |
 
@@ -1365,7 +1365,7 @@ test('formatDate tolere null et une date invalide', () => {
 - [ ] **Étape 3 : lancer les tests pour vérifier qu'ils échouent**
 
 ```bash
-node --test site/_site/js/
+cd site && node --test
 ```
 
 Attendu : échec au chargement, `Cannot find module .../model.js`.
@@ -1458,7 +1458,7 @@ export function formatDate(iso) {
 - [ ] **Étape 5 : relancer les tests**
 
 ```bash
-node --test site/_site/js/
+cd site && node --test
 ```
 
 Attendu : `pass 16`, `fail 0`.
@@ -1473,7 +1473,13 @@ Dans `.github/workflows/ci.yml`, ajouter après l'étape `flutter test` et avant
       # moindre derive de l'image runner soit visible dans les logs.
       - run: node --version
 
-      - run: node --test site/_site/js/
+      # Lance depuis site/ sans argument de chemin : c'est la decouverte par
+      # defaut de Node, qui trouve tout *.test.js de l'arborescence. Passer le
+      # repertoire en argument (`node --test site/_site/js/`) echoue -- Node
+      # tente alors de charger le repertoire comme module d'entree.
+      - name: Tests de la logique du site
+        working-directory: site
+        run: node --test
 ```
 
 Ajouter **les mêmes deux étapes** au job `quality` de `.github/workflows/release.yml`, au même endroit.
@@ -2137,7 +2143,7 @@ Dans la section « Repo-Specific Conventions », remplacer la phrase décrivant 
 Ajouter également, dans la section « Architecture », après le bloc « UI (Flutter) » :
 
 ```
-- **Site vitrine** — `site/` — site statique servi à la racine du VPS, sans build ni dépendance npm. `site/_site/versions.json` est sa source de vérité ; `site/_site/js/model.js` porte la logique pure et est testé par `node --test site/_site/js/`. Déployé par `.github/workflows/site.yml`, jamais à la main. Aucun lien avec le code du jeu.
+- **Site vitrine** — `site/` — site statique servi à la racine du VPS, sans build ni dépendance npm. `site/_site/versions.json` est sa source de vérité ; `site/_site/js/model.js` porte la logique pure et est testé par `node --test` lancé depuis `site/`. Déployé par `.github/workflows/site.yml`, jamais à la main. Aucun lien avec le code du jeu.
 ```
 
 - [ ] **Étape 3 : mettre à jour la compétence**
@@ -2198,7 +2204,7 @@ Invoquer `patch-notes-writer`. Elle doit désormais toucher **trois** fichiers.
 ```bash
 bash .github/scripts/verify_version.sh 0.4.9
 bash .github/scripts/test_scripts.sh
-node --test site/_site/js/
+cd site && node --test
 ```
 
 Attendu : la ligne de cohérence sur les trois fichiers, `52 ok, 0 echec(s)`, et `pass 16`.
