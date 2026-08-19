@@ -57,7 +57,7 @@ FX_B="9.9.9"
 # fichier reel, pour que le message d'erreur -- qui interpole le chemin --
 # contienne bien cette sous-chaine. Aucune fixture ne depend de la version en
 # cours du repo.
-mkdir -p "${FIXTURES}/agree" "${FIXTURES}/disagree" "${FIXTURES}/no_version" "${FIXTURES}/invalid"
+mkdir -p "${FIXTURES}/agree" "${FIXTURES}/disagree" "${FIXTURES}/no_version" "${FIXTURES}/invalid" "${FIXTURES}/versions"
 printf 'name: roguelike_card_game\nversion: %s+1\n' "${FX_A}" > "${FIXTURES}/agree/pubspec.yaml"
 printf '[{"version":"%s","date":"2026-01-01","title":"T","sections":[]}]\n' "${FX_A}" > "${FIXTURES}/agree/patch_notes.json"
 printf '[{"version":"%s","date":"2026-01-01","title":"T","sections":[]}]\n' "${FX_B}" > "${FIXTURES}/disagree/patch_notes.json"
@@ -65,6 +65,21 @@ printf 'name: roguelike_card_game\ndescription: pas de ligne version ici\n' > "$
 printf 'contenu invalide, pas du json {{{' > "${FIXTURES}/invalid/patch_notes.json"
 # ${FIXTURES}/missing/pubspec.yaml et ${FIXTURES}/missing/patch_notes.json ne
 # sont jamais crees : c'est le point des deux tests "introuvable" plus bas.
+
+# Fixtures versions.json. Le cas nominal correspond a FX_A, comme le couple
+# pubspec/patch-notes du dossier "agree".
+V="${FIXTURES}/versions"
+printf '[{"id":"v%s","label":"%s","channel":"current","date":null,"notes":"%s","windows":true},{"id":"v0.0.1","label":"0.0.1","channel":"stable","date":null,"notes":null,"windows":false}]\n' "${FX_A}" "${FX_A}" "${FX_A}" > "${V}/ok.json"
+printf 'pas du json {{{' > "${V}/invalid.json"
+printf '[{"id":"v0.0.1","label":"0.0.1","channel":"stable","date":null,"notes":null,"windows":false}]\n' > "${V}/no_current.json"
+printf '[{"id":"v%s","label":"a","channel":"current","date":null,"notes":"%s","windows":true},{"id":"v0.0.1","label":"b","channel":"current","date":null,"notes":null,"windows":false}]\n' "${FX_A}" "${FX_A}" > "${V}/two_current.json"
+printf '[{"id":"v0.0.1","label":"x","channel":"current","date":null,"notes":"%s","windows":true}]\n' "${FX_A}" > "${V}/wrong_id.json"
+printf '[{"id":"v%s","label":"x","channel":"current","date":null,"notes":"0.0.1","windows":true}]\n' "${FX_A}" > "${V}/wrong_notes.json"
+printf '[{"id":"v%s","label":"a","channel":"current","date":null,"notes":"%s","windows":true},{"id":"v%s","label":"b","channel":"stable","date":null,"notes":null,"windows":false}]\n' "${FX_A}" "${FX_A}" "${FX_A}" > "${V}/dup_id.json"
+
+# AGREE = le couple pubspec/patch-notes qui concorde sur FX_A. Seul
+# VERSIONS_PATH varie d'une assertion a l'autre.
+AGREE=("PUBSPEC_PATH=${FIXTURES}/agree/pubspec.yaml" "PATCH_NOTES_PATH=${FIXTURES}/agree/patch_notes.json")
 
 echo "verify_version.sh"
 
@@ -93,9 +108,8 @@ assert_contains "patch_notes.json" "nomme patch_notes.json dans l'erreur" \
   env "PUBSPEC_PATH=${FIXTURES}/agree/pubspec.yaml" "PATCH_NOTES_PATH=${FIXTURES}/disagree/patch_notes.json" ${VERIFY} "${FX_A}"
 
 # --- Cas nominal avec les deux fixtures alignees ---
-assert_exit 0 "accepte ${FX_A} quand les deux fixtures concordent" \
-  env "PUBSPEC_PATH=${FIXTURES}/agree/pubspec.yaml" \
-      "PATCH_NOTES_PATH=${FIXTURES}/agree/patch_notes.json" ${VERIFY} "${FX_A}"
+assert_exit 0 "accepte ${FX_A} quand les trois fixtures concordent" \
+  env "${AGREE[@]}" "VERSIONS_PATH=${V}/ok.json" ${VERIFY} "${FX_A}"
 
 # --- Branches defensives ---
 assert_exit 1 "refuse un PUBSPEC_PATH introuvable" \
@@ -106,6 +120,23 @@ assert_exit 1 "refuse un pubspec sans ligne version: exploitable" \
   env "PUBSPEC_PATH=${FIXTURES}/no_version/pubspec.yaml" "PATCH_NOTES_PATH=${FIXTURES}/agree/patch_notes.json" ${VERIFY} "${FX_A}"
 assert_exit 1 "refuse des patch notes JSON invalides" \
   env "PUBSPEC_PATH=${FIXTURES}/agree/pubspec.yaml" "PATCH_NOTES_PATH=${FIXTURES}/invalid/patch_notes.json" ${VERIFY} "${FX_A}"
+
+assert_exit 1 "refuse un VERSIONS_PATH introuvable" \
+  env "${AGREE[@]}" "VERSIONS_PATH=${FIXTURES}/missing/versions.json" ${VERIFY} "${FX_A}"
+assert_exit 1 "refuse un versions.json invalide" \
+  env "${AGREE[@]}" "VERSIONS_PATH=${V}/invalid.json" ${VERIFY} "${FX_A}"
+assert_exit 1 "refuse zero entree current" \
+  env "${AGREE[@]}" "VERSIONS_PATH=${V}/no_current.json" ${VERIFY} "${FX_A}"
+assert_exit 1 "refuse deux entrees current" \
+  env "${AGREE[@]}" "VERSIONS_PATH=${V}/two_current.json" ${VERIFY} "${FX_A}"
+assert_exit 1 "refuse un id current qui ne correspond pas" \
+  env "${AGREE[@]}" "VERSIONS_PATH=${V}/wrong_id.json" ${VERIFY} "${FX_A}"
+assert_exit 1 "refuse un notes current qui ne correspond pas" \
+  env "${AGREE[@]}" "VERSIONS_PATH=${V}/wrong_notes.json" ${VERIFY} "${FX_A}"
+assert_exit 1 "refuse des id dupliques" \
+  env "${AGREE[@]}" "VERSIONS_PATH=${V}/dup_id.json" ${VERIFY} "${FX_A}"
+assert_contains "versions" "nomme le fichier de versions dans l'erreur" \
+  env "${AGREE[@]}" "VERSIONS_PATH=${V}/no_current.json" ${VERIFY} "${FX_A}"
 
 echo
 echo "release_body.sh"

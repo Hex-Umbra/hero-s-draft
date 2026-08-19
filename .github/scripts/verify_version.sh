@@ -14,11 +14,13 @@
 # Chemins surchargeables (pour les tests) :
 #   PUBSPEC_PATH      defaut pubspec.yaml
 #   PATCH_NOTES_PATH  defaut assets/data/patch_notes.json
+#   VERSIONS_PATH     defaut site/_site/versions.json
 
 set -uo pipefail
 
 PUBSPEC_PATH="${PUBSPEC_PATH:-pubspec.yaml}"
 PATCH_NOTES_PATH="${PATCH_NOTES_PATH:-assets/data/patch_notes.json}"
+VERSIONS_PATH="${VERSIONS_PATH:-site/_site/versions.json}"
 
 VERSION="${1-}"
 
@@ -62,4 +64,50 @@ if [[ "${VERSION}" != "${NOTES_VERSION}" ]]; then
   exit 1
 fi
 
-echo "Version ${VERSION} coherente : tag == ${PUBSPEC_PATH} == ${PATCH_NOTES_PATH}[0].version"
+# --- Coherence avec la source de verite du site ---
+#
+# Oublier l'entree versions.json ne produit aucune erreur visible : le site se
+# deploie, s'affiche, et ment simplement sur la version courante. C'est
+# exactement la panne restee silencieuse entre le 18 et le 19/08, ou 0.4.7
+# etait en ligne et jouable pendant que la page d'accueil mettait v0.0.9 en
+# vedette. Ce bloc la transforme en echec de pipeline avant le moindre build.
+
+if [[ ! -f "${VERSIONS_PATH}" ]]; then
+  echo "::error::Fichier introuvable : ${VERSIONS_PATH}"
+  exit 1
+fi
+
+CURRENT_COUNT="$(jq '[.[] | select(.channel == "current")] | length' "${VERSIONS_PATH}" 2>/dev/null)"
+
+if [[ -z "${CURRENT_COUNT}" ]]; then
+  echo "::error::Impossible de lire ${VERSIONS_PATH} (JSON invalide ou fichier vide ?)."
+  exit 1
+fi
+
+if [[ "${CURRENT_COUNT}" != "1" ]]; then
+  echo "::error::${VERSIONS_PATH} contient ${CURRENT_COUNT} entree(s) channel=current, il en faut exactement 1."
+  exit 1
+fi
+
+CURRENT_ID="$(jq -r '.[] | select(.channel == "current") | .id' "${VERSIONS_PATH}")"
+CURRENT_NOTES="$(jq -r '.[] | select(.channel == "current") | .notes' "${VERSIONS_PATH}")"
+
+if [[ "${CURRENT_ID}" != "v${VERSION}" ]]; then
+  echo "::error::${VERSIONS_PATH} : l'entree current a id='${CURRENT_ID}', attendu 'v${VERSION}'. Le skill patch-notes-writer doit ajouter l'entree de cette version et retrograder la precedente en 'stable'."
+  exit 1
+fi
+
+if [[ "${CURRENT_NOTES}" != "${VERSION}" ]]; then
+  echo "::error::${VERSIONS_PATH} : l'entree current a notes='${CURRENT_NOTES}', attendu '${VERSION}'."
+  exit 1
+fi
+
+TOTAL_IDS="$(jq 'length' "${VERSIONS_PATH}")"
+UNIQUE_IDS="$(jq '[.[].id] | unique | length' "${VERSIONS_PATH}")"
+
+if [[ "${TOTAL_IDS}" != "${UNIQUE_IDS}" ]]; then
+  echo "::error::${VERSIONS_PATH} : ${TOTAL_IDS} entrees pour ${UNIQUE_IDS} id distincts. Chaque id est un dossier du VPS, il doit etre unique."
+  exit 1
+fi
+
+echo "Version ${VERSION} coherente : tag == ${PUBSPEC_PATH} == ${PATCH_NOTES_PATH}[0].version == ${VERSIONS_PATH} (current)"
