@@ -122,7 +122,8 @@ Chaque sujet suit la même chaîne. Tous les documents n'en parcourent pas tous 
 | | Document | Date |
 |:---:|:---|:---|
 | 🔍⚠️ | [Pipeline CI/CD GitHub Actions](possible_upgrades/30-07-2026_ci_cd_pipeline_github_actions_Sonnet5.md) *(→ P-04)* — **périmé, ne pas implémenter depuis ce document** : la modification nginx qu'il prescrit casserait le site en production, et son job `build-web` produit une page blanche. Corrigé par la spec ci-dessous (§9). Reste valable pour le *raisonnement*. | 30/07/2026 |
-| 📐🔨 | [P-04 — CI/CD GitHub Actions](superpowers/specs/2026-08-17-p04-ci-cd-github-actions-design.md) · [plan](superpowers/plans/2026-08-17-p04-ci-cd-github-actions.md) | 17/08/2026 |
+| 📐🔨 | [P-04 — CI/CD GitHub Actions](superpowers/specs/2026-08-17-p04-ci-cd-github-actions-design.md) · [plan](superpowers/plans/2026-08-17-p04-ci-cd-github-actions.md) — **livré, en production depuis le 18/08** | 17/08/2026 |
+| 📐 | [P-04 lot 2 — Site vitrine & finalisation du CI/CD](superpowers/specs/2026-08-19-site-vitrine-et-finalisation-ci-cd-design.md) — smoke test, notification Discord, répertoire `site/` piloté par `versions.json` | 19/08/2026 |
 | 🗄️ | [Tests manuels — phase 3](tests/phase_3_manual_tests.md) | — |
 
 ## 11. Dette technique & refactoring
