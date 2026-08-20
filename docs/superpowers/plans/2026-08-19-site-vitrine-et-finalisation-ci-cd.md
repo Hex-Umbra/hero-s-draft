@@ -1865,6 +1865,10 @@ async function renderVersions(versions) {
     blocks.push(grid);
   }
 
+  // Un resultat vide doit laisser le repli statique en place : une page vide
+  // est pire qu'une page perimee.
+  if (blocks.length === 0) return;
+
   target.replaceChildren(...blocks);
 }
 
@@ -1881,6 +1885,8 @@ async function renderNotes(versions) {
     panel.append(noteBlock(note, {}));
     return panel;
   });
+
+  if (blocks.length === 0) return;
 
   target.replaceChildren(...blocks);
 }
