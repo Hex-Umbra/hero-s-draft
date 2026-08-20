@@ -37,6 +37,36 @@ jobs:
 
       - run: flutter test
 
+      # Node est preinstalle sur ubuntu-latest : aucune action tierce
+      # supplementaire a epingler. La version est affichee pour que la moindre
+      # derive de l'image runner soit visible dans les logs.
+      - run: node --version
+
+      # Lance depuis site/ sans argument de chemin : c'est la decouverte par
+      # defaut de Node, qui trouve tout *.test.js de l'arborescence. Passer le
+      # repertoire en argument (`node --test site/_site/js/`) echoue -- Node
+      # tente alors de charger le repertoire comme module d'entree.
+      #
+      # `node --test` sort 0 meme s'il ne decouvre AUCUN fichier de test -- un
+      # renommage de repertoire ou un changement de version de Node modifiant
+      # les motifs de decouverte par defaut ferait passer cette porte au vert
+      # sans avoir rien teste. Le nombre de tests rapporte est donc verifie
+      # explicitement, en plus du code de sortie : c'est la seule porte du
+      # chantier qui echouait ouverte plutot que fermee.
+      - name: Tests de la logique du site
+        working-directory: site
+        run: |
+          set -euo pipefail
+          OUT="$(mktemp)"
+          trap 'rm -f "${OUT}"' EXIT
+          node --test 2>&1 | tee "${OUT}"
+          COUNT="$(grep -oE 'tests [0-9]+$' "${OUT}" | grep -oE '[0-9]+' | tail -1)"
+          if [[ -z "${COUNT}" || "${COUNT}" -eq 0 ]]; then
+            echo "::error::node --test n'a rapporte aucun test execute (0 test detecte). La decouverte automatique ne trouve plus aucun fichier *.test.js : ce gate echouerait silencieusement sans cette verification."
+            exit 1
+          fi
+          echo "node --test a bien execute ${COUNT} test(s)."
+
       - run: bash .github/scripts/test_scripts.sh
 
   verify-version:
@@ -168,6 +198,34 @@ jobs:
             web-build/ \
             "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:v${{ needs.verify-version.outputs.version }}/"
 
+  # Un rsync vert prouve que des fichiers sont sur le disque, pas que le jeu se
+  # lance. Ce job fait la difference, et c'est lui qui autorise la suite : ni le
+  # site ni Discord n'annoncent une version qui n'a pas passe cette porte.
+  smoke-test:
+    needs: [verify-version, deploy-web]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+
+      - name: La version deployee repond et porte le bon base href
+        run: |
+          set -euo pipefail
+          bash .github/scripts/smoke_test.sh \
+            "https://heros-draft.vilarserver.com" \
+            "${{ needs.verify-version.outputs.version }}"
+
+  # Appele en workflow reutilisable plutot que duplique : une seule definition
+  # du deploiement du site, partagee avec le lancement manuel.
+  # `needs: smoke-test` garantit que le site n'annonce jamais une version dont
+  # personne n'a verifie qu'elle se charge.
+  deploy-site:
+    needs: [verify-version, smoke-test]
+    uses: ./.github/workflows/site.yml
+    secrets: inherit
+
   release-windows:
     needs: [verify-version, build-windows]
     runs-on: ubuntu-latest
@@ -203,3 +261,47 @@ jobs:
           body_path: RELEASE_BODY.md
           prerelease: true
           files: heros-draft-*-windows.zip
+
+  # Un webhook muet ne doit jamais peindre en rouge une release par ailleurs
+  # parfaite : continue-on-error laisse le job en avertissement sans invalider
+  # le run. `if: success()` limite l'annonce aux releases reussies -- GitHub
+  # envoie deja un e-mail en cas d'echec.
+  notify-discord:
+    needs: [verify-version, deploy-site, release-windows]
+    if: success()
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+
+      # Le payload est construit puis envoye en deux etapes distinctes : le
+      # `cat` rend le JSON lisible dans les logs, donc diagnosticable sans
+      # renvoyer de message. Le webhook, lui, n'apparait jamais dans les logs.
+      - name: Construire le payload
+        run: |
+          set -euo pipefail
+          bash .github/scripts/discord_payload.sh \
+            "${{ needs.verify-version.outputs.version }}" > discord.json
+          cat discord.json
+
+      - name: Envoyer sur Discord
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${DISCORD_WEBHOOK_URL}" ]]; then
+            echo "::error::Le secret DISCORD_WEBHOOK_URL est absent ou vide."
+            exit 1
+          fi
+          CODE="$(curl -sS -o /dev/null -w '%{http_code}' \
+            -X POST -H 'Content-Type: application/json' \
+            --data @discord.json \
+            "${DISCORD_WEBHOOK_URL}")"
+          if [[ "${CODE}" != "204" ]]; then
+            echo "::error::Discord a repondu ${CODE}, attendu 204."
+            exit 1
+          fi
+          echo "Annonce publiee."

@@ -54,6 +54,8 @@ The codebase strictly separates three layers — never mix them:
   - `lib/ui/theme/` — app-wide theme/design tokens (`app_theme.dart`).
   - UI widgets and Flame components must stay decoupled: no Flame references inside UI code, no Flutter widget trees inside Flame components.
 
+- **Showcase site** — `site/` — a static site served from the VPS root, with no build step and no npm dependency. `site/_site/versions.json` is its source of truth; `site/_site/js/model.js` holds the pure logic and is tested with `node --test` run from `site/`. Deployed by `.github/workflows/site.yml`, never by hand. No link to the game code.
+
 - **Tutorial system** — `lib/tutorial/` (with `widgets/`) — onboarding/tutorial engine, separate from the main game loop.
 
 - **Localization** — dual system:
@@ -92,7 +94,7 @@ The three index files are capped and deliberately short: they exist to be read w
 
 ## Repo-Specific Conventions
 
-- **`patch_notes.json` is agent-managed**: never hand-edit it. It is maintained by the `patch-notes-writer` skill (`.claude/skills/patch-notes-writer/SKILL.md`), which prepends a new semver entry, writes player-facing French only, and keeps `pubspec.yaml`'s `version:` field in sync with it. Those two files are its entire scope.
+- **`patch_notes.json` is agent-managed**: never hand-edit it. It is maintained by the `patch-notes-writer` skill (`.claude/skills/patch-notes-writer/SKILL.md`), which prepends a new semver entry, writes player-facing French only, keeps `pubspec.yaml`'s `version:` field in sync with it, and adds the matching `current` entry to `site/_site/versions.json` while demoting the previous one to `stable`. Those three files carry the version number and must always move together in a single commit: `verify_version.sh` fails the release if any of them disagrees. The skill also refreshes three hardcoded fallback links, in `site/index.html` and `site/versions.html`, to match.
 - **The memory bank is agent-managed**: `.obsidian_vault/_memory_bank/`, `_adr/`, `_rules/` and `_patterns/` are maintained by the `memory-bank-sync` skill (`.claude/skills/memory-bank-sync/SKILL.md`). It re-measures every metric with a command before writing it, enforces per-file line caps, and archives rather than appends. `.obsidian_vault/_archive/` is read-only.
 - **`.agents/`** also defines a `game_designer` skill; other subfolders there (`orchestrator`, `worker_m1`, `auditor_m1`, etc.) are empty run-artifact directories from a past multi-agent workflow, not templates to follow.
 - Favor non-blocking animations in Flame code (`Effect`, `Future.delayed` inside `async` methods) — never block the game loop.

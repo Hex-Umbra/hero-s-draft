@@ -57,7 +57,7 @@ FX_B="9.9.9"
 # fichier reel, pour que le message d'erreur -- qui interpole le chemin --
 # contienne bien cette sous-chaine. Aucune fixture ne depend de la version en
 # cours du repo.
-mkdir -p "${FIXTURES}/agree" "${FIXTURES}/disagree" "${FIXTURES}/no_version" "${FIXTURES}/invalid"
+mkdir -p "${FIXTURES}/agree" "${FIXTURES}/disagree" "${FIXTURES}/no_version" "${FIXTURES}/invalid" "${FIXTURES}/versions"
 printf 'name: roguelike_card_game\nversion: %s+1\n' "${FX_A}" > "${FIXTURES}/agree/pubspec.yaml"
 printf '[{"version":"%s","date":"2026-01-01","title":"T","sections":[]}]\n' "${FX_A}" > "${FIXTURES}/agree/patch_notes.json"
 printf '[{"version":"%s","date":"2026-01-01","title":"T","sections":[]}]\n' "${FX_B}" > "${FIXTURES}/disagree/patch_notes.json"
@@ -65,6 +65,21 @@ printf 'name: roguelike_card_game\ndescription: pas de ligne version ici\n' > "$
 printf 'contenu invalide, pas du json {{{' > "${FIXTURES}/invalid/patch_notes.json"
 # ${FIXTURES}/missing/pubspec.yaml et ${FIXTURES}/missing/patch_notes.json ne
 # sont jamais crees : c'est le point des deux tests "introuvable" plus bas.
+
+# Fixtures versions.json. Le cas nominal correspond a FX_A, comme le couple
+# pubspec/patch-notes du dossier "agree".
+V="${FIXTURES}/versions"
+printf '[{"id":"v%s","label":"%s","channel":"current","date":null,"notes":"%s","windows":true},{"id":"v0.0.1","label":"0.0.1","channel":"stable","date":null,"notes":null,"windows":false}]\n' "${FX_A}" "${FX_A}" "${FX_A}" > "${V}/ok.json"
+printf 'pas du json {{{' > "${V}/invalid.json"
+printf '[{"id":"v0.0.1","label":"0.0.1","channel":"stable","date":null,"notes":null,"windows":false}]\n' > "${V}/no_current.json"
+printf '[{"id":"v%s","label":"a","channel":"current","date":null,"notes":"%s","windows":true},{"id":"v0.0.1","label":"b","channel":"current","date":null,"notes":null,"windows":false}]\n' "${FX_A}" "${FX_A}" > "${V}/two_current.json"
+printf '[{"id":"v0.0.1","label":"x","channel":"current","date":null,"notes":"%s","windows":true}]\n' "${FX_A}" > "${V}/wrong_id.json"
+printf '[{"id":"v%s","label":"x","channel":"current","date":null,"notes":"0.0.1","windows":true}]\n' "${FX_A}" > "${V}/wrong_notes.json"
+printf '[{"id":"v%s","label":"a","channel":"current","date":null,"notes":"%s","windows":true},{"id":"v%s","label":"b","channel":"stable","date":null,"notes":null,"windows":false}]\n' "${FX_A}" "${FX_A}" "${FX_A}" > "${V}/dup_id.json"
+
+# AGREE = le couple pubspec/patch-notes qui concorde sur FX_A. Seul
+# VERSIONS_PATH varie d'une assertion a l'autre.
+AGREE=("PUBSPEC_PATH=${FIXTURES}/agree/pubspec.yaml" "PATCH_NOTES_PATH=${FIXTURES}/agree/patch_notes.json")
 
 echo "verify_version.sh"
 
@@ -93,9 +108,8 @@ assert_contains "patch_notes.json" "nomme patch_notes.json dans l'erreur" \
   env "PUBSPEC_PATH=${FIXTURES}/agree/pubspec.yaml" "PATCH_NOTES_PATH=${FIXTURES}/disagree/patch_notes.json" ${VERIFY} "${FX_A}"
 
 # --- Cas nominal avec les deux fixtures alignees ---
-assert_exit 0 "accepte ${FX_A} quand les deux fixtures concordent" \
-  env "PUBSPEC_PATH=${FIXTURES}/agree/pubspec.yaml" \
-      "PATCH_NOTES_PATH=${FIXTURES}/agree/patch_notes.json" ${VERIFY} "${FX_A}"
+assert_exit 0 "accepte ${FX_A} quand les trois fixtures concordent" \
+  env "${AGREE[@]}" "VERSIONS_PATH=${V}/ok.json" ${VERIFY} "${FX_A}"
 
 # --- Branches defensives ---
 assert_exit 1 "refuse un PUBSPEC_PATH introuvable" \
@@ -106,6 +120,23 @@ assert_exit 1 "refuse un pubspec sans ligne version: exploitable" \
   env "PUBSPEC_PATH=${FIXTURES}/no_version/pubspec.yaml" "PATCH_NOTES_PATH=${FIXTURES}/agree/patch_notes.json" ${VERIFY} "${FX_A}"
 assert_exit 1 "refuse des patch notes JSON invalides" \
   env "PUBSPEC_PATH=${FIXTURES}/agree/pubspec.yaml" "PATCH_NOTES_PATH=${FIXTURES}/invalid/patch_notes.json" ${VERIFY} "${FX_A}"
+
+assert_exit 1 "refuse un VERSIONS_PATH introuvable" \
+  env "${AGREE[@]}" "VERSIONS_PATH=${FIXTURES}/missing/versions.json" ${VERIFY} "${FX_A}"
+assert_exit 1 "refuse un versions.json invalide" \
+  env "${AGREE[@]}" "VERSIONS_PATH=${V}/invalid.json" ${VERIFY} "${FX_A}"
+assert_exit 1 "refuse zero entree current" \
+  env "${AGREE[@]}" "VERSIONS_PATH=${V}/no_current.json" ${VERIFY} "${FX_A}"
+assert_exit 1 "refuse deux entrees current" \
+  env "${AGREE[@]}" "VERSIONS_PATH=${V}/two_current.json" ${VERIFY} "${FX_A}"
+assert_exit 1 "refuse un id current qui ne correspond pas" \
+  env "${AGREE[@]}" "VERSIONS_PATH=${V}/wrong_id.json" ${VERIFY} "${FX_A}"
+assert_exit 1 "refuse un notes current qui ne correspond pas" \
+  env "${AGREE[@]}" "VERSIONS_PATH=${V}/wrong_notes.json" ${VERIFY} "${FX_A}"
+assert_exit 1 "refuse des id dupliques" \
+  env "${AGREE[@]}" "VERSIONS_PATH=${V}/dup_id.json" ${VERIFY} "${FX_A}"
+assert_contains "no_current.json" "nomme le fichier de versions dans l'erreur" \
+  env "${AGREE[@]}" "VERSIONS_PATH=${V}/no_current.json" ${VERIFY} "${FX_A}"
 
 echo
 echo "release_body.sh"
@@ -152,6 +183,75 @@ if [[ "$(${BODY} 2>/dev/null | grep -c '^### ')" -eq "${REAL_SECTIONS}" ]]; then
 else
   nok "rend les ${REAL_SECTIONS} sections de l'entree ${REAL_VER} (obtenu $(${BODY} 2>/dev/null | grep -c '^### '))"
 fi
+
+echo
+echo "smoke_test.sh"
+
+SMOKE="bash .github/scripts/smoke_test.sh"
+
+# Validation d'arguments : aucun de ces cas n'atteint le reseau, ils sortent
+# avant le premier curl.
+assert_exit 1 "refuse une URL de base absente"    ${SMOKE}
+assert_exit 1 "refuse une URL de base vide"       ${SMOKE} "" "${REAL_VER}"
+assert_exit 1 "refuse une version absente"        ${SMOKE} "https://exemple.test"
+assert_exit 1 "refuse une version non semver"     ${SMOKE} "https://exemple.test" "v${REAL_VER}"
+assert_exit 1 "refuse une version incomplete"     ${SMOKE} "https://exemple.test" "${INCOMPLETE_VER}"
+
+# Chemin d'echec reseau, sans internet : le port 1 de la boucle locale refuse
+# la connexion immediatement. Une seule tentative, aucune attente.
+assert_exit 1 "echoue sur un hote injoignable" \
+  env "SMOKE_ATTEMPTS=1" "SMOKE_DELAY=0" ${SMOKE} "http://127.0.0.1:1" "9.9.9"
+assert_contains "127.0.0.1:1" "nomme l'URL fautive dans l'erreur" \
+  env "SMOKE_ATTEMPTS=1" "SMOKE_DELAY=0" ${SMOKE} "http://127.0.0.1:1" "9.9.9"
+
+echo
+echo "discord_payload.sh"
+
+PAYLOAD="bash .github/scripts/discord_payload.sh"
+
+# Comme pour release_body.sh, la sortie est normalisee une fois : jq natif sous
+# Windows ecrit \r\n. La normalisation est DANS LE HARNAIS, jamais dans le
+# script de production.
+RENDER_PAYLOAD=(sh -c "bash .github/scripts/discord_payload.sh '${REAL_VER}' | tr -d '\r'")
+
+assert_exit 1 "refuse une version absente"        ${PAYLOAD}
+assert_exit 1 "refuse une version non semver"     ${PAYLOAD} "v${REAL_VER}"
+assert_exit 1 "refuse un PATCH_NOTES_PATH introuvable" \
+  env "PATCH_NOTES_PATH=${FIXTURES}/missing/patch_notes.json" ${PAYLOAD} "${REAL_VER}"
+
+assert_exit 0 "s'execute sur les patch notes reelles" ${PAYLOAD} "${REAL_VER}"
+
+# La sortie doit etre du JSON valide -- c'est tout l'interet de passer par jq -n
+# plutot que par une concatenation.
+if ${PAYLOAD} "${REAL_VER}" 2>/dev/null | jq -e . >/dev/null 2>&1; then
+  ok "produit du JSON valide"
+else
+  nok "produit du JSON valide"
+fi
+
+assert_contains "${REAL_TITLE}" "reprend le titre de la patch note" "${RENDER_PAYLOAD[@]}"
+assert_contains "/v${REAL_VER}/" "contient l'URL de jeu" "${RENDER_PAYLOAD[@]}"
+assert_contains "heros-draft-v${REAL_VER}-windows.zip" "contient l'URL du zip" "${RENDER_PAYLOAD[@]}"
+assert_contains "releases/tag/v${REAL_VER}" "contient l'URL de la release" "${RENDER_PAYLOAD[@]}"
+
+# La couleur de la charte, 0xEAF06A.
+if [[ "$(${PAYLOAD} "${REAL_VER}" 2>/dev/null | jq -r '.embeds[0].color')" == "15396970" ]]; then
+  ok "utilise la couleur 0xEAF06A"
+else
+  nok "utilise la couleur 0xEAF06A"
+fi
+
+# Troncature : la description ne doit jamais depasser la limite Discord.
+TRUNCATED="$(env "DESC_LIMIT=80" ${PAYLOAD} "${REAL_VER}" 2>/dev/null | jq -r '.embeds[0].description')"
+if [[ "${#TRUNCATED}" -le 200 && "${TRUNCATED}" == *"release GitHub"* ]]; then
+  ok "tronque la description et renvoie vers la release"
+else
+  nok "tronque la description et renvoie vers la release (longueur ${#TRUNCATED})"
+fi
+
+# Sans troncature, la description porte la premiere entree en entier.
+assert_contains "${FIRST_ENTRY}" "contient la premiere entree des patch notes" \
+  sh -c "bash .github/scripts/discord_payload.sh '${REAL_VER}' | jq -r '.embeds[0].description' | tr -d '\r'"
 
 echo
 echo "${PASS} ok, ${FAIL} echec(s)"

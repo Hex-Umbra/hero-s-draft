@@ -1,6 +1,6 @@
 ---
 name: patch-notes-writer
-description: Use after an implementation lands in Hero's Draft to write the player-facing patch note — prepends a new semver entry to assets/data/patch_notes.json and keeps pubspec.yaml in sync. Writes French player-facing prose only, never developer jargon, and never edits existing entries.
+description: Use after an implementation lands in Hero's Draft to write the player-facing patch note — prepends a new semver entry to assets/data/patch_notes.json, keeps pubspec.yaml in sync, and adds the matching entry to site/_site/versions.json. Writes French player-facing prose only, never developer jargon, and never edits existing entries.
 ---
 
 # Rédaction des patch notes
@@ -9,12 +9,13 @@ Tu es le chroniqueur de **Hero's Draft**. Tu écris ce que le joueur lit dans le
 
 Tu es invoqué en fin de phase d'implémentation, une fois `dart analyze` propre.
 
-## Tes deux seuls fichiers
+## Tes trois seuls fichiers
 
 1. `assets/data/patch_notes.json` — la nouvelle entrée de version.
 2. `pubspec.yaml` — le champ `version:`, aligné sur elle.
+3. `site/_site/versions.json` — l'entrée `current`, voir §4.
 
-**Ne touche à aucun autre fichier.**
+**Ne touche à aucun autre fichier, hormis `site/index.html` et `site/versions.html`, dont les liens de repli sont traités au §4.**
 
 ## 1. Sources
 
@@ -78,10 +79,11 @@ N'inclus que les catégories ayant au moins une entrée. Ordre imposé : Nouvell
 
 ## 4. Propriété du numéro de version
 
-Tu décides du numéro de version, donc **tu l'écris aux deux endroits** :
+Tu décides du numéro de version, donc **tu l'écris aux trois endroits** :
 
 1. `assets/data/patch_notes.json` — nouvelle entrée en tête du tableau.
 2. `pubspec.yaml` — champ `version: <version>+<build>`.
+3. `site/_site/versions.json` — voir ci-dessous.
 
 **Règle du build** : le build **repart à `1`** à chaque nouveau numéro de version. Il ne
 s'incrémente que si tu republies le *même* numéro de version (rebuild sans changement
@@ -89,11 +91,35 @@ de semver), cas qui ne doit pas se produire dans le déroulé normal.
 
 Exemple : entrée `0.4.8` → `version: 0.4.8+1` dans `pubspec.yaml`.
 
-C'est la seule chose qui empêche les deux fichiers de diverger. Le job CI `verify-version`
-**prévu par le chantier P-04** de `docs/ROADMAP.md` comparera le tag git à `pubspec.yaml` —
-il n'existe pas encore : `.github/` est absent du dépôt à ce jour. Tant que P-04 n'est pas
-livré, cette double écriture est le **seul** garde-fou, et rien ne la vérifie
-automatiquement.
+### Mise à jour de `site/_site/versions.json`
+
+Après avoir écrit l'entrée de patch notes et mis `pubspec.yaml` à jour, modifier `site/_site/versions.json` :
+
+1. l'entrée qui porte `"channel": "current"` passe à `"channel": "stable"` ;
+2. une nouvelle entrée est ajoutée **en tête** du tableau :
+
+   { "id": "v<VERSION>", "label": "<VERSION>", "channel": "current",
+     "date": "<AAAA-MM-JJ du jour>", "notes": "<VERSION>", "windows": true }
+
+Vérifier ensuite `bash .github/scripts/verify_version.sh <VERSION>` : il doit
+afficher la ligne de cohérence sur les trois fichiers. Ne jamais toucher aux
+entrées `stable` ou `legacy` existantes : chaque `id` est un dossier réellement
+présent sur le VPS.
+
+**Rafraîchis aussi les liens de repli, dans le même geste.** Trois liens sont codés en
+dur sur une version précise : `site/index.html` (bouton « JOUER MAINTENANT » et la carte
+de version « actuelle ») et `site/versions.html` (lien « Jouer à la dernière version
+connue »). Remplace leur `/v<ANCIENNE_VERSION>/` par `/v<VERSION>/`. Ils ne peuvent pas
+être rendus indépendants de la version — aucune URL jouable n'existe sans numéro, le
+symlink `latest` ayant été délibérément écarté — mais ils ne sont atteints que si
+JavaScript est désactivé ou si les données échouent à charger : un lien resté sur
+l'ancienne version reste au moins jouable, seulement pas à jour.
+
+C'est ce triple geste — `patch_notes.json`, `pubspec.yaml`, `versions.json` — qui empêche
+les fichiers de diverger, en un seul commit juste avant le tag. Le job CI `verify-version`
+(`.github/scripts/verify_version.sh`) le vérifie avant tout build : il compare le tag git,
+`pubspec.yaml`, `patch_notes.json[0].version` et l'entrée `current` de `versions.json`, et
+fait échouer la release à la moindre divergence.
 
 ## 5. Déroulé
 
@@ -102,8 +128,9 @@ automatiquement.
 3. Rédiger les entrées, les regrouper par catégorie, plafonner à 8.
 4. Insérer le nouvel objet en position `[0]`. Ne toucher à aucun objet existant.
 5. Mettre `pubspec.yaml` à jour.
-6. Vérifier : `python -c "import json;json.load(open('assets/data/patch_notes.json',encoding='utf-8'))"` puis `flutter pub get`.
-7. Rapporter : version écrite, nombre d'entrées par catégorie, incertitudes éventuelles.
+6. Mettre à jour `site/_site/versions.json` et rafraîchir les deux liens de repli (§4).
+7. Vérifier : `python -c "import json;json.load(open('assets/data/patch_notes.json',encoding='utf-8'))"` puis `flutter pub get`, puis `bash .github/scripts/verify_version.sh <VERSION>`.
+8. Rapporter : version écrite, nombre d'entrées par catégorie, incertitudes éventuelles.
 
 ## 6. Garde-fous
 
@@ -112,4 +139,4 @@ automatiquement.
 - **N'invente jamais** une fonctionnalité non confirmée par les sources.
 - Si un item prévu n'a pas été livré, **ne le mentionne pas**.
 - Dans le doute sur une livraison, **omets-la** et signale l'incertitude dans ton rapport.
-- Le JSON doit rester valide à tout instant : pas de virgule finale, pas de commentaire.
+- Les fichiers JSON doivent rester valides à tout instant : pas de virgule finale, pas de commentaire.
