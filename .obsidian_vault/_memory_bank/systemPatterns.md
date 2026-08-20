@@ -3,7 +3,7 @@
 > [!IMPORTANT]
 > **Plafond : 120 lignes.** Ce fichier est un index, jamais un contenu. Chaque pattern d'architecture vit dans sa fiche sous `../_patterns/`. Les arbitrages qui les ont produits vivent dans `../_adr/`.
 
-**Vérifié le 2026-08-03** — 39 fiches, découpées depuis un `systemPatterns.md` de 1320 lignes (après archivage des §13-14).
+**Vérifié le 2026-08-20** — 40 fiches. Découpage initial depuis un `systemPatterns.md` de 1320 lignes (après archivage des §13-14) ; §15 ajoutée le 2026-08-20.
 
 ### 1. Architecture Globale — Séparation Triangulaire
 
@@ -104,12 +104,14 @@
 |:---|:---|---:|
 | 12. Autel d'Échange de Reliques (`RelicExchangeScreen`) | [12-00-autel-d-echange-de-reliques.md](../_patterns/12-00-autel-d-echange-de-reliques.md) | 47 |
 
+### 15. Chaîne de Release et Site Vitrine (`.github/` et `site/`)
+
+| Domaine | Fiche | Lignes |
+|:---|:---|---:|
+| 15. Chaîne de Release et Site Vitrine (`.github/` et `site/`) | [15-00-chaine-de-release-et-site-vitrine.md](../_patterns/15-00-chaine-de-release-et-site-vitrine.md) | 83 |
+
 ---
 
 ## Historique
 
-Les sections §13 (Design System, v0.0.99) et §14 (UX Combat, v0.1.00) sont dans `../_archive/2026-08-03-systemPatterns-historique.md`.
-
-## Collision de numérotation constatée
-
-`## 2.` porte un `### 2.1.bis` et **deux sous-sections `### 2.5`** (`ShopController` et Immutabilité Stricte des Modèles d'État). Slugs distincts → pas de collision de nom de fichier, mais la numérotation reste à trancher séparément.
+Les sections §13 (Design System, v0.0.99) et §14 (UX Combat, v0.1.00) sont dans `../_archive/2026-08-03-systemPatterns-historique.md` — leurs numéros restent pris, d'où le saut de §12 à §15.

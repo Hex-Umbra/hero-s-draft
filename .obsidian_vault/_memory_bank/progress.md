@@ -5,16 +5,25 @@
 
 ## Métriques
 
-**Vérifié le 2026-08-06**
+**Vérifié le 2026-08-20**
 
 | Métrique | Valeur | Commande |
 |:---|:---|:---|
-| Tests automatisés | 230 au vert | `flutter test` |
+| Tests automatisés (jeu) | 230 au vert | `flutter test` |
 | Fichiers de test | 42 | `find test -name "*.dart" \| wc -l` |
 | Analyse statique | 0 erreur (`No issues found!`) | `dart analyze` |
 | Fichiers Dart (`lib/`) | 169 | `find lib -name "*.dart" \| wc -l` |
 | Lignes de code (`lib/`) | 36 441 | `find lib -name "*.dart" -exec cat {} + \| wc -l` |
 | Fichiers de données | 10 | `ls assets/data/*.json \| wc -l` |
+| Tests de la logique du site | 20 au vert | `cd site && node --test` |
+| Assertions du harnais CI | 55 au vert | `bash .github/scripts/test_scripts.sh` |
+| Fichiers suivis sous `site/` | 16 | `git ls-files site/ \| wc -l` |
+
+> [!NOTE]
+> Les six premières métriques sont **identiques à celles du 2026-08-06**, et c'est un
+> résultat, pas un oubli de mesure : le chantier P-04 n'a touché aucun fichier de `lib/`,
+> `test/` ou `assets/`. Les trois dernières lignes couvrent les surfaces de test nées de
+> ce chantier, qui échappent à `flutter test`.
 
 > [!NOTE]
 > **La version ne vit pas ici.** La version de référence se lit dans `pubspec.yaml`
@@ -146,6 +155,18 @@ Design complet — [ADR-069](../_adr/ADR-069-systeme-de-sauvegarde-de-run-checkp
 | Persistance et badge « NEW » | `TutorialProgressService`, `HomeScreen` | Complétion sauvegardée en `shared_preferences` |
 | Responsivité | `LayoutBuilder`, `FittedBox`, `Wrap` | Ajustements multi-résolutions (mobile, web, desktop) |
 
+### 🚀 Chaîne de Release et Site Vitrine
+
+| Fonctionnalité | Fichiers clés | Détails |
+|:---|:---|:---|
+| Intégration continue | `.github/workflows/ci.yml` | `dart analyze`, `flutter test`, tests JS du site et harnais des scripts sur chaque push et PR |
+| Release déclenchée par tag | `.github/workflows/release.yml` | Neuf jobs sur tag `v*.*.*` : builds web et Windows, déploiements, smoke test, pré-release GitHub, annonce Discord |
+| Garde-fou de version | `.github/scripts/verify_version.sh` | Compare le tag à `pubspec.yaml`, `assets/data/patch_notes.json` et `site/_site/versions.json` **avant tout build** — [ADR-079](../_adr/ADR-079-chaine-de-release-declenchee-par-tag-et-garde-fou.md) |
+| Site vitrine piloté par la donnée | `site/`, `site/_site/versions.json` | Trois pages sans étape de build ni dépendance npm ; jointure version → patch note **déclarée** par le champ `notes`, jamais dérivée de l'`id` — [ADR-080](../_adr/ADR-080-site-vitrine-pilote-par-la-donnee-et-jointure-decl.md) |
+| Déploiement du site | `.github/workflows/site.yml` | rsync vers la racine confinée du VPS ; lançable seul pour une modification de contenu, sans release |
+
+Structure détaillée — [fiche §15](../_patterns/15-00-chaine-de-release-et-site-vitrine.md).
+
 ## 2. Dette métier assumée
 
 ### ⚠️ Système Audio
@@ -185,7 +206,7 @@ dépourvu de sérialisation.
 
 ## 3. Références documentaires
 
-**Vérifié le 2026-08-03** — chaque chemin testé avec `test -e`.
+**Vérifié le 2026-08-20** — chaque chemin testé avec `test -e`, et les trois comptes re-mesurés (5 rapports Gemini, 4 plans de refactoring, 26 phases livrées).
 
 | Document | Chemin | Contenu |
 |:---|:---|:---|
@@ -204,6 +225,7 @@ dépourvu de sérialisation.
 
 | Version | Date | Titre | Description des changements clés |
 |:---|:---|:---|:---|
+| **0.4.8** | 2026-08-20 | La Salle des Archives (P-04) | Chantier **P-04** livré en deux lots, sans que le jeu change : **aucun fichier de `lib/`, `test/` ou `assets/` n'est touché**, et le patch note joueur ne décrit donc que le site. **Lot 1 — chaîne CI/CD** : trois workflows (`ci.yml`, `release.yml` à neuf jobs, `site.yml`), publication réduite à la pose d'un tag `v*.*.*`, garde-fou `verify-version` comparant le tag à `pubspec.yaml`, `patch_notes.json` et `versions.json` **avant tout build**, smoke test HTTP post-déploiement, pré-release GitHub avec le zip Windows, annonce Discord en `continue-on-error`. Toute la logique vit dans cinq scripts shell testables — harnais à **55 assertions**, attentes dérivées à l'exécution par `jq` plutôt que figées. Actions tierces épinglées sur SHA, secrets par `env:` uniquement, accès VPS confiné en écriture seule par `rrsync -wo`. Voir [ADR-079](../_adr/ADR-079-chaine-de-release-declenchee-par-tag-et-garde-fou.md). **Lot 2 — site vitrine** : la page de sélection des versions, jusque-là hors du dépôt et maintenue à la main, devient `site/` — trois pages sans étape de build ni dépendance npm, pilotées par `site/_site/versions.json`, logique pure testée par `node --test` (**20 tests**). La jointure version → patch note passe par un champ `notes` déclaré et nullable, jamais dérivé du nom de dossier : les quatorze dossiers historiques rapportent tous `0.1.0`, et une dérivation aurait produit quatre associations fausses. Voir [ADR-080](../_adr/ADR-080-site-vitrine-pilote-par-la-donnee-et-jointure-decl.md). Enrichissement du 20/08 : les quatorze dates relevées sur l'archive locale des builds, et deux jointures déclarées (`v0.0.5` → note `0.0.4`, `v0.0.9` → note `0.0.93`). |
 | **0.4.7** | 2026-08-06 | Assainissement du Système de Pioche (P-02) | Le remélange défausse → pioche devient **automatique et à sec** : il n'intervient plus qu'une fois la pioche réellement vide, y compris au milieu d'une pioche. L'ancien seuil `if (drawPile.length < 5)` porté par `game_screen.dart` déclenchait un remélange presque chaque tour et détruisait la capacité à compter son deck ; `shuffleDiscardIntoDraw()` est supprimée. La pioche s'arrête **net** à `GameConstants.maxHandSize` (10) sans consommer de carte ni remélanger. `RunState.cardsPerTurn` (défaut 5) remplace le `5` codé en dur, et `TurnPhaseManager` gagne `startPlayerCombat()`/`startPlayerTurn()` : le tour 1 et le tour N+1 empruntent enfin le même code, et `game_screen.dart` n'anime plus que (perte de `_turnCount` et du deck de secours, 555 → 524 lignes). Aléatoire injectable via `deckRandomProvider`, compteur `DeckState.reshuffleCount` observable et notification joueur. Première relique touchant au deck : `scholars_satchel` (Besace de l'Érudit, legendary, +1 carte/tour), avec `case` symétrique dans `removeRelicEffect`. 6 éléments de code mort supprimés (`temporaryCost`, `IntentType.debuffDeck`, `intentCurse`, `onEnemyDebuffDeck`, `onTurnEnded`, deck de secours). 8 commits TDD, **230/230 tests au vert** (+18 neufs, 2 réécrits), `dart analyze` propre, **playtest de validation passé le 2026-08-06**. Voir [ADR-078](../_adr/ADR-078-assainissement-du-systeme-de-pioche-remelange-a-sec.md). |
 | **v3.5.1** | 2026-07-26 | Correction de la Réactivité du Bouton « Continuer » (HomeScreen) | `HomeScreen._continueGame()`/`_startNewGame()` naviguent via `Navigator.push`, mais le menu pause et `GameOverScreen` reviennent à l'accueil via `Navigator.popUntil((route) => route.isFirst)`, qui ne reconstruit pas `HomeScreen` ni ne réévalue `SaveService.hasSave()` : le bouton « Continuer » pouvait rester dans un état obsolète jusqu'au redémarrage de l'application. Correctif : les deux méthodes attendent désormais (`await`) leur `Navigator.push` et appellent `setState(() {})` à son retour. Nouveau test `test/widget/home_screen_save_test.dart` (95 lignes). Commit `17564b4`, mergé avec ADR-072 via PR #22. Voir ADR-073. |
 | **v3.5.0** | 2026-07-26 | Accélération de la Cadence du Scaling de Difficulté | Resserrement de la cadence du système introduit par ADR-070/071 suite à un retour de playtest (le joueur montait en puissance plus vite que les ennemis) : le palier géométrique HP/Dégâts (`_actBracketSize`) passe de 5 à 2 actes (bases x1.35 HP / x1.25 Dégâts et rampe intra-palier inchangées) et le déblocage de tier (`_tierUnlockBracketSize`) de 10 à 5 actes (tier 2 dès l'Acte 6, tier 3 dès l'Acte 11). Aucune autre formule modifiée (budget, plafond d'ennemis ADR-071, puissance du joueur). Effet secondaire assumé : fenêtre de contenu tier-1-only resserrée des Actes 1-10 aux Actes 1-5. 2 commits TDD (`97c5fcb`, `8bc1920`), suite de tests complète 211/211 au vert, `dart analyze` propre. Voir ADR-072. *(Branche `fix/combat_scaling` mergée vers `main` via PR #22 ; patch note joueur v0.4.6 rédigé — voir `assets/data/patch_notes.json`.)* |
@@ -213,10 +235,9 @@ dépourvu de sérialisation.
 | **v3.1.0** | 2026-07-01 | Forge de Fusion et Forge Data-Driven | Introduction du nœud Forge de Fusion (`MapNodeType.forgeFusion` à 25% de chance) sur les étages 3 à 7. Écran `ForgeFusionScreen` pour fusionner les runes identiques pour un coût de 80 Or. Remplacement des upgrades codés en dur par une structure data-driven (`assets/data/forge_upgrades.json` + `ForgeUpgradeData`). Cumul de runes sans épuisement (alreadyHas retiré). Correction de la navigation au repos : annuler la forge ramène à la sélection de cartes au lieu de quitter au menu du repos. Écriture de tests unitaires (112 tests réussis, 0 erreur). |
 | **v0.3.0** | 2026-06-25 | Refonte et Validation du Système d'Événements | Enrichissement visuel et narratif du système de rencontres avec 5 événements bilingues configurés dans `assets/data/events.json`. Conception d'un Safety Gate de validation d'éligibilité (`isSelectable`) bloquant les options en cas d'or insuffisant, de dégâts létaux (`currentHp <= damage`), ou de réduction de PV Max létale. Rendu visuel d'en-tête (PV et Or réactifs) et intégration de badges compacts directement dans les boutons de choix d'options avec transition d'échelle animée après résolution. |
 | **v0.2.9** | 2026-06-25 | Équilibrage Boutique et Miroir Magique | Vente de cartes modélisée par instances réelles (`CardInstance`) affichant leurs sockets de runes et raretés dynamiques via `UiCard.fromInstance`. Tarification dynamique (+20 Or par upgrade de forge). Scaling de raretés et d'upgrades par Acte. Nerf anti-exploit du Miroir Magique doublant son coût à chaque achat ($150 \rightarrow 300 \rightarrow 600 \dots$ Or) avec réinitialisation à 150 Or en sortie de session. |
-| **v0.2.8** | 2026-06-24 | Résolution du Bug de Clés Dupliquées | Résolution de l'erreur "Duplicate keys found" dans l'overlay de notification en combinant le timestamp en microsecondes avec un suffixe pseudo-aléatoire généré par une instance statique unique de `Random`. Garantit des identifiants uniques stables pour toutes les notifications simultanées. |
 
 Les releases sorties de ce tableau par débordement du plafond FIFO sont conservées
-verbatim sous `.obsidian_vault/_archive/` (`2026-08-06-progress-releases.md` pour la
+verbatim sous `.obsidian_vault/_archive/` (`2026-08-20-progress-releases.md` pour la
 dernière rotation).
 
 > [!NOTE]

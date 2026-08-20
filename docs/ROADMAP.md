@@ -54,7 +54,7 @@ pie title Répartition de l'effort restant estimé (~91 jours)
 
 ```mermaid
 graph TD
-    P01["P-01 pubspec resync ✅ clos"] --> P04[P-04 CI/CD]
+    P01["P-01 pubspec resync ✅ clos"] --> P04["P-04 CI/CD ✅ livré"]
     P02["P-02 Assainissement pioche ✅ livré"] --> B18[Mots-clés de deck]
     P02 --> B19[Effets interactifs]
     P02 --> B20[Malédictions ennemies]
@@ -83,7 +83,7 @@ graph TD
 | ~~**P-01**~~ | ~~**Resynchroniser `pubspec.yaml`** (`0.1.0+1` → `0.4.7+1`) sur `patch_notes.json`~~ ✅ **Livré le 2026-08-03** — désormais maintenu automatiquement par le skill `patch-notes-writer` | — | — | — |
 | ~~**P-02**~~ | ~~**Assainissement du système de pioche**~~ ✅ **Livré et validé le 2026-08-06** (code + playtest) — voir [ADR-078](../.obsidian_vault/_adr/ADR-078-assainissement-du-systeme-de-pioche-remelange-a-sec.md) | — | — | — |
 | **P-03** | **Système audio** (`flame_audio` + `SfxService`, ~15 événements) | **3-5 j** | ★★★☆☆ | 🔥🔥🔥 |
-| **P-04** | **CI/CD GitHub Actions** (`ci.yml` + `release.yml`, 7 jobs) | **1,5-2 j** *(+0,5 j de config externe)* | ★★★☆☆ | 🔥🔥 |
+| ~~**P-04**~~ | ~~**CI/CD GitHub Actions**~~ ✅ **Livré le 2026-08-20** en deux lots (chaîne CI/CD puis site vitrine), publié en `0.4.8` — voir [ADR-079](../.obsidian_vault/_adr/ADR-079-chaine-de-release-declenchee-par-tag-et-garde-fou.md) et [ADR-080](../.obsidian_vault/_adr/ADR-080-site-vitrine-pilote-par-la-donnee-et-jointure-decl.md) | — | — | — |
 
 ### P-01 — Resync de version
 > [!NOTE]
@@ -117,8 +117,13 @@ graph TD
 **Difficulté technique modeste** (★★★☆☆) : `flame_audio` + un service central, les points d'accroche existent déjà (`onTick`/`onLand` du carrousel de reliques, hooks du draft). **Le vrai coût est le sourcing** : ~15 bruitages + 4 musiques (menu, carte, combat, boss) à trouver, licencier et calibrer. Prévoir cette part en parallèle du code.
 
 ### P-04 — CI/CD
-Automatise deux workflows manuels chronophages **déjà en place** (déploiement web sur VPS perso, zip Windows partagé aux testeurs) — il n'y a donc pas de coût d'amorçage « canal de distribution à créer ». Applique en prime automatiquement la règle `CLAUDE.md` (`dart analyze` propre) sur chaque push/PR, ce qui prend de la valeur à mesure que du contenu est généré par sub-agents.
-**Attention** : la fragilité est entièrement dans la config externe (4 secrets GitHub, 1 clé SSH dédiée, 1 modification nginx pour le symlink `latest`, 1 webhook Discord), pas dans la logique du pipeline. Valider la clé SSH manuellement **avant** d'en dépendre.
+> [!NOTE]
+> ✅ **Clos le 2026-08-20.** Livré en deux lots : la chaîne CI/CD (trois workflows, garde-fou de version à trois fichiers, smoke test, annonce Discord) puis le site vitrine, publié en `0.4.8`. **Le périmètre a dépassé le chiffrage initial** : remplacer la page de sélection des versions maintenue à la main par un site piloté par la donnée n'était pas prévu au 31/07.
+
+*Diagnostic du 31/07/2026, conservé tel quel pour mémoire — le chantier est clos depuis (voir la note ci-dessus) :* « Automatise deux workflows manuels chronophages **déjà en place** (déploiement web sur VPS perso, zip Windows partagé aux testeurs) — il n'y a donc pas de coût d'amorçage « canal de distribution à créer ». Applique en prime automatiquement la règle `CLAUDE.md` (`dart analyze` propre) sur chaque push/PR, ce qui prend de la valeur à mesure que du contenu est généré par sub-agents. **Attention** : la fragilité est entièrement dans la config externe (4 secrets GitHub, 1 clé SSH dédiée, 1 modification nginx pour le symlink `latest`, 1 webhook Discord), pas dans la logique du pipeline. Valider la clé SSH manuellement **avant** d'en dépendre. »
+
+> [!WARNING]
+> **Deux prérequis de ce diagnostic sont périmés.** Le symlink `latest` a été abandonné au profit de dossiers versionnés explicites listés dans `site/_site/versions.json`, et le webhook Discord a été créé le 2026-08-20. Ne pas les rouvrir en relisant le diagnostic.
 
 ---
 
@@ -400,10 +405,11 @@ Constats faits en consolidant ce document — **à traiter avant de se fier aux 
 |:---:|:---|:---|:---|
 | 1 | `backlog_and_roadmap_report_22072026.md` présente « Persistance / Sauvegarde » comme le Jalon 1 immédiat | Livré en v3.2.0 (ADR-069) le 24/07 | Marquer le rapport comme superseded par ce document |
 | 2 | `progress.md` §4 liste `map_screen.dart` (2 471 lignes) et `game_screen.dart` (1 667 lignes) comme chantiers **critiques** | **418** et **555 lignes** réellement | Retirer de la roadmap de dette — chantier clos le 24/07 |
-| 3 | Métriques de tests contradictoires selon les documents | `progress.md` en-tête : « 145+ » · `progress.md` §Fiabilité : « 106 » · `activeContext.md` : « 211/211 » | Aligner sur une seule source de vérité (P-04 la produira automatiquement) |
+| 3 | Métriques de tests contradictoires selon les documents | `progress.md` en-tête : « 145+ » · `progress.md` §Fiabilité : « 106 » · `activeContext.md` : « 211/211 » | ✅ **Fait le 2026-08-20** — `progress.md` porte la mesure unique, re-mesurée à chaque passe, et `ci.yml` la vérifie à chaque push |
 | 4 | `pubspec.yaml` à `0.1.0+1` vs `patch_notes.json` à `0.4.7` | Confirmé | → **P-01** — ✅ clos le 2026-08-03 |
 | 5 | Taux de complétion divergents | Rapport 22/07 : « ~86 % de 146 items » · `progress.md` §3 : « ~60 % de 95 items » | Recompter sur la base de ce document |
-| 6 | Aucun `.github/workflows/` | Confirmé | → **P-04** |
+| 6 | Aucun `.github/workflows/` | Confirmé | → **P-04** — ✅ clos le 2026-08-20 (trois workflows) |
+| 7 | `systemPatterns.md` : `## 2.` porte un `### 2.1.bis` et **deux** sous-sections `### 2.5` (`ShopController` et Immutabilité Stricte des Modèles d'État) | Constaté le 2026-08-20 | Slugs distincts → aucune collision de nom de fichier, mais la numérotation reste à trancher |
 
 ---
 
@@ -418,7 +424,7 @@ gantt
     section Jalon 1 — Socle
     P-01 Resync version (clos)    :done, j1a, 2026-08-01, 1d
     P-02 Assainissement pioche    :done, j1b, after j1a, 3d
-    P-04 CI/CD                    :j1c, after j1a, 3d
+    P-04 CI/CD                    :done, j1c, after j1a, 3d
     P-03 Audio                    :j1d, after j1b, 5d
     section Jalon 2 — Feel & contenu
     P-06 P0 animations            :j2a, after j1d, 3d
@@ -431,7 +437,7 @@ gantt
     P-16 Refonte probabilités     :j3c, after j3b, 3d
 ```
 
-### Jalon 1 — Socle *(≈ 11 j)* → ~~P-01~~ ✅, ~~P-02~~ ✅, P-04, P-03
+### Jalon 1 — Socle *(≈ 11 j)* → ~~P-01~~ ✅, ~~P-02~~ ✅, ~~P-04~~ ✅, P-03
 Corrige les règles cassées, comble le trou audio, automatise la distribution. **Rien de nouveau n'est ajouté** — c'est délibéré : tout ajout de contenu posé sur l'ancienne pioche aurait dû être re-testé après P-02, désormais livré.
 
 ### Jalon 2 — Feel & contenu *(≈ 14 j)* → P-06, P-08 (proto), P-07, P-05
