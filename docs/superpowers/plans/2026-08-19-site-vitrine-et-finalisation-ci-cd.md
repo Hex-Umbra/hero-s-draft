@@ -2194,13 +2194,13 @@ Puis insérer en tête du fichier :
 Dans la section « Repo-Specific Conventions », remplacer la phrase décrivant le périmètre de `patch-notes-writer` par :
 
 ```
-- **`patch_notes.json` is agent-managed**: never hand-edit it. It is maintained by the `patch-notes-writer` skill (`.claude/skills/patch-notes-writer/SKILL.md`), which prepends a new semver entry, writes player-facing French only, keeps `pubspec.yaml`'s `version:` field in sync with it, and adds the matching `current` entry to `site/_site/versions.json` while demoting the previous one to `stable`. Those three files are its entire scope, and they must always move together in a single commit: `verify_version.sh` fails the release if any of them disagrees.
+- **`patch_notes.json` is agent-managed**: never hand-edit it. It is maintained by the `patch-notes-writer` skill (`.claude/skills/patch-notes-writer/SKILL.md`), which prepends a new semver entry, writes player-facing French only, keeps `pubspec.yaml`'s `version:` field in sync with it, and adds the matching `current` entry to `site/_site/versions.json` while demoting the previous one to `stable`. Those three files carry the version number and must always move together in a single commit: `verify_version.sh` fails the release if any of them disagrees. The skill also refreshes three hardcoded fallback links, in `site/index.html` and `site/versions.html`, to match.
 ```
 
 Ajouter également, dans la section « Architecture », après le bloc « UI (Flutter) » :
 
 ```
-- **Site vitrine** — `site/` — site statique servi à la racine du VPS, sans build ni dépendance npm. `site/_site/versions.json` est sa source de vérité ; `site/_site/js/model.js` porte la logique pure et est testé par `node --test` lancé depuis `site/`. Déployé par `.github/workflows/site.yml`, jamais à la main. Aucun lien avec le code du jeu.
+- **Showcase site** — `site/` — a static site served from the VPS root, with no build step and no npm dependency. `site/_site/versions.json` is its source of truth; `site/_site/js/model.js` holds the pure logic and is tested with `node --test` run from `site/`. Deployed by `.github/workflows/site.yml`, never by hand. No link to the game code.
 ```
 
 - [ ] **Étape 3 : mettre à jour la compétence**
