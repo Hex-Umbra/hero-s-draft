@@ -78,7 +78,7 @@ Conséquence directe sur la conception : `patch_notes.json` contient 34 entrées
 > [!WARNING]
 > Une jointure automatique « nom de dossier → patch note » produirait des associations **fausses** sur quatre entrées et vides sur dix. Le lien doit être **déclaré explicitement** par entrée, et pouvoir être nul. C'est la raison d'être du champ `notes` du §5.
 
-**Suite, 20/08/2026.** Une association a bien été rétablie depuis — non par calcul, mais par déclaration : le dossier `v0.0.5` porte la note `0.0.4`. L'auteur l'a confirmée, et la date la corrobore, la note étant datée du 15/05, jour exact du build de `v0.0.5`. C'est la démonstration en positif du champ `notes` : aucune dérivation depuis l'`id` n'aurait trouvé ce lien, puisqu'elle aurait cherché une note `0.0.5` qui n'existe pas.
+**Suite, 20/08/2026.** Deux associations ont bien été rétablies depuis — non par calcul, mais par déclaration : `v0.0.5` porte la note `0.0.4`, et `v0.0.9` la note `0.0.93`. L'auteur a confirmé les deux, et les dates les corroborent : `0.0.4` est datée du 15/05, jour exact du build de `v0.0.5` ; `0.0.93` du 04/06, trois jours après celui de `v0.0.9`. C'est la démonstration en positif du champ `notes` : aucune dérivation depuis l'`id` n'aurait trouvé ces liens, puisqu'elle aurait cherché des notes `0.0.5` et `0.0.9` qui n'existent pas.
 
 ### 3.4 Un lien vers un dossier inexistant renvoie 500, pas 404
 
@@ -201,7 +201,7 @@ Quinze entrées, écrites une fois :
 | `channel` | Entrées |
 |:---|:---|
 | `current` | `v0.4.7` — `notes: "0.4.7"`, `windows: true` |
-| `stable` | `v0.0.9` à `v0.0.1` — neuf entrées, `windows: false`. Huit ont `notes: null` ; `v0.0.5` porte `notes: "0.0.4"` (§3.3) |
+| `stable` | `v0.0.9` à `v0.0.1` — neuf entrées, `windows: false`. Sept ont `notes: null` ; `v0.0.9` porte `notes: "0.0.93"` et `v0.0.5` `notes: "0.0.4"` (§3.3) |
 | `legacy` | `v5` à `v1` — cinq entrées, `notes: null`, `windows: false` |
 
 `v0.0.9` perd sa vedette au profit de `v0.4.7` : c'est la correction du §3.2.

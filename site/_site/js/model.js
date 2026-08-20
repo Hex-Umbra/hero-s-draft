@@ -35,9 +35,10 @@ export function groupByChannel(versions) {
    notes qui decrivent d'autres builds, et ne trouverait rien pour v0.0.5 a
    v0.0.9 -- absentes de patch_notes.json.
 
-   Le cas v0.0.5 le montre en positif : ce dossier porte bien la note 0.0.4,
-   association connue de l'auteur seul. Aucun calcul sur l'id ne l'aurait
-   trouvee, puisqu'il aurait cherche une note 0.0.5 qui n'existe pas. */
+   Les cas v0.0.5 et v0.0.9 le montrent en positif : ces dossiers portent les
+   notes 0.0.4 et 0.0.93, associations connues de l'auteur seul. Aucun calcul
+   sur l'id ne les aurait trouvees, puisqu'il aurait cherche des notes 0.0.5
+   et 0.0.9 qui n'existent pas. */
 export function noteFor(entry, notes) {
   if (!entry || entry.notes == null || !Array.isArray(notes)) return null;
   return notes.find((n) => n && n.version === entry.notes) ?? null;
