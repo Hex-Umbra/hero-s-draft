@@ -410,14 +410,14 @@ jq -n \
        color: 15396970,
        description: (
          if ($body | length) > $limit
-         then ($body[0:$limit] + "\n\n(...)\n\nNotes completes sur la release GitHub.")
+         then ($body[0:$limit] + "\n\n(...)\n\nNotes complètes sur la release GitHub.")
          else $body
          end
        ),
        fields: [
          { name: "Jouer",        value: ("[Dans le navigateur](" + $play + ")"),   inline: true },
-         { name: "Telecharger",  value: ("[Windows (.zip)](" + $zip + ")"),        inline: true },
-         { name: "Details",      value: ("[Release GitHub](" + $release + ")"),    inline: true }
+         { name: "Télécharger",  value: ("[Windows (.zip)](" + $zip + ")"),        inline: true },
+         { name: "Détails",      value: ("[Release GitHub](" + $release + ")"),    inline: true }
        ]
      }]
    }'
@@ -1064,7 +1064,7 @@ Chaque `[data-slot]` contient un repli **utilisable tel quel**. Le JS le remplac
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Hero's Draft — roguelike deckbuilder</title>
-  <meta name="description" content="Hero's Draft, un roguelike deckbuilder. Jouez dans le navigateur ou telechargez la version Windows.">
+  <meta name="description" content="Hero's Draft, un roguelike deckbuilder. Jouez dans le navigateur ou téléchargez la version Windows.">
   <link rel="stylesheet" href="/_site/style.css">
   <script type="module" src="/_site/js/main.js"></script>
 </head>
@@ -1082,10 +1082,10 @@ Chaque `[data-slot]` contient un repli **utilisable tel quel**. Le JS le remplac
   <header class="hero">
     <h1 class="hero__title">HERO'S DRAFT</h1>
     <p class="hero__kicker">ROGUELIKE DECKBUILDER</p>
-    <p class="hero__pitch">Choisissez votre heros, forgez votre deck run apres run, et affrontez une carte du monde qui ne se repete jamais.</p>
+    <p class="hero__pitch">Choisissez votre héros, forgez votre deck run après run, et affrontez une carte du monde qui ne se répète jamais.</p>
     <div class="cta" data-slot="cta">
       <a class="btn btn--primary" href="/v0.4.7/">JOUER MAINTENANT</a>
-      <a class="btn btn--ghost" href="https://github.com/Hex-Umbra/hero-s-draft/releases">TELECHARGER</a>
+      <a class="btn btn--ghost" href="https://github.com/Hex-Umbra/hero-s-draft/releases">TÉLÉCHARGER</a>
     </div>
   </header>
 
@@ -1094,12 +1094,12 @@ Chaque `[data-slot]` contient un repli **utilisable tel quel**. Le JS le remplac
     <h2 class="section-title">QUOI DE NEUF</h2>
     <section class="panel" data-slot="latest-note">
       <div class="fallback">
-        <p>Les notes de version n'ont pas pu etre chargees.</p>
+        <p>Les notes de version n'ont pas pu être chargées.</p>
         <p><a href="https://github.com/Hex-Umbra/hero-s-draft/releases">Consulter les notes sur GitHub</a></p>
       </div>
     </section>
 
-    <h2 class="section-title">VERSIONS RECENTES</h2>
+    <h2 class="section-title">VERSIONS RÉCENTES</h2>
     <div class="grid" data-slot="recent">
       <a class="card" href="/v0.4.7/">
         <div class="card__label">0.4.7</div>
@@ -1141,13 +1141,13 @@ Chaque `[data-slot]` contient un repli **utilisable tel quel**. Le JS le remplac
   <header class="hero">
     <h1 class="hero__title">VERSIONS</h1>
     <p class="hero__kicker">ARCHIVE JOUABLE</p>
-    <p class="hero__pitch">Chaque version reste en ligne indefiniment. Les prototypes de recherche sont anterieurs au jeu actuel.</p>
+    <p class="hero__pitch">Chaque version reste en ligne indéfiniment. Les prototypes de recherche sont antérieurs au jeu actuel.</p>
   </header>
 
   <main class="wrap" data-slot="versions">
     <div class="fallback">
-      <p>La liste des versions n'a pas pu etre chargee.</p>
-      <p><a href="/v0.4.7/">Jouer a la derniere version connue</a></p>
+      <p>La liste des versions n'a pas pu être chargée.</p>
+      <p><a href="/v0.4.7/">Jouer à la dernière version connue</a></p>
     </div>
   </main>
 
@@ -1186,7 +1186,7 @@ Chaque `[data-slot]` contient un repli **utilisable tel quel**. Le JS le remplac
 
   <main class="wrap" data-slot="notes">
     <div class="fallback">
-      <p>L'historique n'a pas pu etre charge.</p>
+      <p>L'historique n'a pas pu être chargé.</p>
       <p><a href="https://github.com/Hex-Umbra/hero-s-draft/releases">Consulter les notes sur GitHub</a></p>
     </div>
   </main>
@@ -1685,7 +1685,7 @@ export function ctaButtons(current, size) {
   const zip = downloadUrl(current);
   if (zip) {
     const weight = formatBytes(size);
-    const download = link(zip, 'btn btn--ghost', 'TELECHARGER');
+    const download = link(zip, 'btn btn--ghost', 'TÉLÉCHARGER');
     download.append(el('small', null, weight ? `Windows · ${weight}` : 'Windows'));
     fragment.append(download);
   } else {
@@ -1743,7 +1743,7 @@ async function renderHome(versions) {
     if (!note) return;
     slot('latest-note')?.replaceChildren(
       noteBlock(note, {
-        badge: 'DERNIERE VERSION',
+        badge: 'DERNIÈRE VERSION',
         limit: HOME_SECTIONS,
         moreHref: '/notes.html',
         moreLabel: `VOIR TOUTES LES NOTES (${notes.length} VERSIONS) →`,
@@ -2220,6 +2220,15 @@ Vérifier ensuite `bash .github/scripts/verify_version.sh <VERSION>` : il doit
 afficher la ligne de cohérence sur les trois fichiers. Ne jamais toucher aux
 entrées `stable` ou `legacy` existantes : chaque `id` est un dossier réellement
 présent sur le VPS.
+
+**Rafraîchis aussi les liens de repli, dans le même geste.** Trois liens sont codés en
+dur sur une version précise : `site/index.html` (bouton « JOUER MAINTENANT » et la carte
+de version « actuelle ») et `site/versions.html` (lien « Jouer à la dernière version
+connue »). Remplace leur `/v<ANCIENNE_VERSION>/` par `/v<VERSION>/`. Ils ne peuvent pas
+être rendus indépendants de la version — aucune URL jouable n'existe sans numéro, le
+symlink `latest` ayant été délibérément écarté — mais ils ne sont atteints que si
+JavaScript est désactivé ou si les données échouent à charger : un lien resté sur
+l'ancienne version reste au moins jouable, seulement pas à jour.
 ```
 
 - [ ] **Étape 4 : indexer le plan**
@@ -2236,7 +2245,13 @@ Dans `docs/INDEX.md` §10, remplacer la ligne du lot 2 par celle-ci, qui porte l
 bash .github/scripts/verify_version.sh 0.4.8
 ```
 
-Attendu : échec nommant `versions.json` et son entrée `current` — exactement le message que la compétence doit apprendre à éviter.
+Attendu : échec sur `pubspec.yaml`, pas sur `versions.json` :
+
+```
+::error::Version 0.4.8 != pubspec.yaml (0.4.7). Resynchronise pubspec.yaml, puis supprime et repousse le tag.
+```
+
+C'est le comportement correct, pas un défaut du garde-fou : les vérifications s'exécutent dans l'ordre — `pubspec.yaml`, puis `patch_notes.json`, puis `versions.json` — et s'arrêtent à la première divergence rencontrée. Tant que `pubspec.yaml` reste à 0.4.7, la divergence sur `versions.json` que ce garde-fou est censé attraper n'est simplement jamais atteinte par cet appel.
 
 - [ ] **Étape 6 : commit**
 

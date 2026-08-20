@@ -37,7 +37,7 @@ async function renderHome(versions) {
     if (!note) return;
     slot('latest-note')?.replaceChildren(
       noteBlock(note, {
-        badge: 'DERNIERE VERSION',
+        badge: 'DERNIÈRE VERSION',
         limit: HOME_SECTIONS,
         moreHref: '/notes.html',
         moreLabel: `VOIR TOUTES LES NOTES (${notes.length} VERSIONS) →`,

@@ -73,7 +73,7 @@ export function ctaButtons(current, size) {
   const zip = downloadUrl(current);
   if (zip) {
     const weight = formatBytes(size);
-    const download = link(zip, 'btn btn--ghost', 'TELECHARGER');
+    const download = link(zip, 'btn btn--ghost', 'TÉLÉCHARGER');
     download.append(el('small', null, weight ? `Windows · ${weight}` : 'Windows'));
     fragment.append(download);
   } else {

@@ -67,14 +67,14 @@ jq -n \
        color: 15396970,
        description: (
          if ($body | length) > $limit
-         then ($body[0:$limit] + "\n\n(...)\n\nNotes completes sur la release GitHub.")
+         then ($body[0:$limit] + "\n\n(...)\n\nNotes complètes sur la release GitHub.")
          else $body
          end
        ),
        fields: [
          { name: "Jouer",        value: ("[Dans le navigateur](" + $play + ")"),   inline: true },
-         { name: "Telecharger",  value: ("[Windows (.zip)](" + $zip + ")"),        inline: true },
-         { name: "Details",      value: ("[Release GitHub](" + $release + ")"),    inline: true }
+         { name: "Télécharger",  value: ("[Windows (.zip)](" + $zip + ")"),        inline: true },
+         { name: "Détails",      value: ("[Release GitHub](" + $release + ")"),    inline: true }
        ]
      }]
    }'

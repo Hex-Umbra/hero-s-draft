@@ -3,15 +3,20 @@
 
 import { API_URL, notesUrl } from './model.js';
 
-async function fetchJson(url) {
-  const response = await fetch(url, { headers: { Accept: 'application/json' } });
+async function fetchJson(url, options = {}) {
+  const response = await fetch(url, { headers: { Accept: 'application/json' }, ...options });
   if (!response.ok) throw new Error(`${url} a repondu ${response.status}`);
   return response.json();
 }
 
-/** La source de verite du site. Un echec ici laisse le repli statique en place. */
+/** La source de verite du site. Un echec ici laisse le repli statique en place.
+    `cache: 'no-cache'` force une revalidation reseau a chaque visite : nginx ne
+    sert ce fichier qu'avec Last-Modified/ETag, sans Cache-Control ni Expires, donc
+    le navigateur appliquerait sinon une fraicheur heuristique de plusieurs jours et
+    continuerait d'afficher la version precedente apres une release recente. Le cout
+    est une requete conditionnelle, qui repond 304 le plus souvent. */
 export function loadVersions() {
-  return fetchJson('/_site/versions.json');
+  return fetchJson('/_site/versions.json', { cache: 'no-cache' });
 }
 
 /* Les patch notes sont lues dans le dossier de la version courante plutot que

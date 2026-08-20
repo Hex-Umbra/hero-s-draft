@@ -135,7 +135,7 @@ assert_exit 1 "refuse un notes current qui ne correspond pas" \
   env "${AGREE[@]}" "VERSIONS_PATH=${V}/wrong_notes.json" ${VERIFY} "${FX_A}"
 assert_exit 1 "refuse des id dupliques" \
   env "${AGREE[@]}" "VERSIONS_PATH=${V}/dup_id.json" ${VERIFY} "${FX_A}"
-assert_contains "versions" "nomme le fichier de versions dans l'erreur" \
+assert_contains "no_current.json" "nomme le fichier de versions dans l'erreur" \
   env "${AGREE[@]}" "VERSIONS_PATH=${V}/no_current.json" ${VERIFY} "${FX_A}"
 
 echo

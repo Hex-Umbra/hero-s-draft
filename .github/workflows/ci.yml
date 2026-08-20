@@ -46,9 +46,26 @@ jobs:
       # defaut de Node, qui trouve tout *.test.js de l'arborescence. Passer le
       # repertoire en argument (`node --test site/_site/js/`) echoue -- Node
       # tente alors de charger le repertoire comme module d'entree.
+      #
+      # `node --test` sort 0 meme s'il ne decouvre AUCUN fichier de test -- un
+      # renommage de repertoire ou un changement de version de Node modifiant
+      # les motifs de decouverte par defaut ferait passer cette porte au vert
+      # sans avoir rien teste. Le nombre de tests rapporte est donc verifie
+      # explicitement, en plus du code de sortie : c'est la seule porte du
+      # chantier qui echouait ouverte plutot que fermee.
       - name: Tests de la logique du site
         working-directory: site
-        run: node --test
+        run: |
+          set -euo pipefail
+          OUT="$(mktemp)"
+          trap 'rm -f "${OUT}"' EXIT
+          node --test 2>&1 | tee "${OUT}"
+          COUNT="$(grep -oE 'tests [0-9]+$' "${OUT}" | grep -oE '[0-9]+' | tail -1)"
+          if [[ -z "${COUNT}" || "${COUNT}" -eq 0 ]]; then
+            echo "::error::node --test n'a rapporte aucun test execute (0 test detecte). La decouverte automatique ne trouve plus aucun fichier *.test.js : ce gate echouerait silencieusement sans cette verification."
+            exit 1
+          fi
+          echo "node --test a bien execute ${COUNT} test(s)."
 
       # Les scripts de release sont utilises par release.yml ; les tester ici
       # evite qu'ils pourrissent sans que personne s'en apercoive.
