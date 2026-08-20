@@ -110,4 +110,18 @@ if [[ "${TOTAL_IDS}" != "${UNIQUE_IDS}" ]]; then
   exit 1
 fi
 
+# --- Format des dates ---
+#
+# `date` reste nullable par contrat, mais une date PRESENTE et malformee ne
+# leve rien : formatDate() renvoie null et la carte perd sa ligne de meta
+# sans que rien ne le signale. Une faute de frappe effacerait donc en
+# silence l'information qu'elle etait censee porter.
+
+BAD_DATES="$(jq -r '[.[] | select(.date != null and ((.date | tostring) | test("^[0-9]{4}-[0-9]{2}-[0-9]{2}$") | not)) | .id] | join(", ")' "${VERSIONS_PATH}" 2>/dev/null)"
+
+if [[ -n "${BAD_DATES}" ]]; then
+  echo "::error::${VERSIONS_PATH} : date malformee sur ${BAD_DATES}. Attendu AAAA-MM-JJ, ou null."
+  exit 1
+fi
+
 echo "Version ${VERSION} coherente : tag == ${PUBSPEC_PATH} == ${PATCH_NOTES_PATH}[0].version == ${VERSIONS_PATH} (current)"

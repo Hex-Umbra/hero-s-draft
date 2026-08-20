@@ -76,6 +76,8 @@ printf '[{"id":"v%s","label":"a","channel":"current","date":null,"notes":"%s","w
 printf '[{"id":"v0.0.1","label":"x","channel":"current","date":null,"notes":"%s","windows":true}]\n' "${FX_A}" > "${V}/wrong_id.json"
 printf '[{"id":"v%s","label":"x","channel":"current","date":null,"notes":"0.0.1","windows":true}]\n' "${FX_A}" > "${V}/wrong_notes.json"
 printf '[{"id":"v%s","label":"a","channel":"current","date":null,"notes":"%s","windows":true},{"id":"v%s","label":"b","channel":"stable","date":null,"notes":null,"windows":false}]\n' "${FX_A}" "${FX_A}" "${FX_A}" > "${V}/dup_id.json"
+printf '[{"id":"v%s","label":"a","channel":"current","date":null,"notes":"%s","windows":true},{"id":"v0.0.1","label":"b","channel":"stable","date":"05/05/2026","notes":null,"windows":false}]\n' "${FX_A}" "${FX_A}" > "${V}/bad_date.json"
+printf '[{"id":"v%s","label":"a","channel":"current","date":"2026-05-05","notes":"%s","windows":true},{"id":"v0.0.1","label":"b","channel":"stable","date":"2026-06-01","notes":null,"windows":false}]\n' "${FX_A}" "${FX_A}" > "${V}/good_dates.json"
 
 # AGREE = le couple pubspec/patch-notes qui concorde sur FX_A. Seul
 # VERSIONS_PATH varie d'une assertion a l'autre.
@@ -135,6 +137,12 @@ assert_exit 1 "refuse un notes current qui ne correspond pas" \
   env "${AGREE[@]}" "VERSIONS_PATH=${V}/wrong_notes.json" ${VERIFY} "${FX_A}"
 assert_exit 1 "refuse des id dupliques" \
   env "${AGREE[@]}" "VERSIONS_PATH=${V}/dup_id.json" ${VERIFY} "${FX_A}"
+assert_exit 1 "refuse une date presente mais malformee" \
+  env "${AGREE[@]}" "VERSIONS_PATH=${V}/bad_date.json" ${VERIFY} "${FX_A}"
+assert_contains "v0.0.1" "nomme l'entree fautive dans l'erreur de date" \
+  env "${AGREE[@]}" "VERSIONS_PATH=${V}/bad_date.json" ${VERIFY} "${FX_A}"
+assert_exit 0 "accepte des dates ISO sur toutes les entrees" \
+  env "${AGREE[@]}" "VERSIONS_PATH=${V}/good_dates.json" ${VERIFY} "${FX_A}"
 assert_contains "no_current.json" "nomme le fichier de versions dans l'erreur" \
   env "${AGREE[@]}" "VERSIONS_PATH=${V}/no_current.json" ${VERIFY} "${FX_A}"
 

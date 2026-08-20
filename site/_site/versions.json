@@ -19,7 +19,7 @@
     "id": "v0.0.9",
     "label": "0.0.9",
     "channel": "stable",
-    "date": null,
+    "date": "2026-06-01",
     "notes": null,
     "windows": false
   },
@@ -27,7 +27,7 @@
     "id": "v0.0.8",
     "label": "0.0.8",
     "channel": "stable",
-    "date": null,
+    "date": "2026-05-24",
     "notes": null,
     "windows": false
   },
@@ -35,7 +35,7 @@
     "id": "v0.0.7",
     "label": "0.0.7",
     "channel": "stable",
-    "date": null,
+    "date": "2026-05-23",
     "notes": null,
     "windows": false
   },
@@ -43,7 +43,7 @@
     "id": "v0.0.6",
     "label": "0.0.6",
     "channel": "stable",
-    "date": null,
+    "date": "2026-05-19",
     "notes": null,
     "windows": false
   },
@@ -51,7 +51,7 @@
     "id": "v0.0.5",
     "label": "0.0.5",
     "channel": "stable",
-    "date": null,
+    "date": "2026-05-15",
     "notes": null,
     "windows": false
   },
@@ -59,7 +59,7 @@
     "id": "v0.0.4",
     "label": "0.0.4",
     "channel": "stable",
-    "date": null,
+    "date": "2026-05-09",
     "notes": null,
     "windows": false
   },
@@ -67,7 +67,7 @@
     "id": "v0.0.3",
     "label": "0.0.3",
     "channel": "stable",
-    "date": null,
+    "date": "2026-05-07",
     "notes": null,
     "windows": false
   },
@@ -75,7 +75,7 @@
     "id": "v0.0.2",
     "label": "0.0.2",
     "channel": "stable",
-    "date": null,
+    "date": "2026-05-07",
     "notes": null,
     "windows": false
   },
@@ -83,7 +83,7 @@
     "id": "v0.0.1",
     "label": "0.0.1",
     "channel": "stable",
-    "date": null,
+    "date": "2026-05-05",
     "notes": null,
     "windows": false
   },
@@ -91,7 +91,7 @@
     "id": "v5",
     "label": "Prototype V5",
     "channel": "legacy",
-    "date": null,
+    "date": "2026-05-05",
     "notes": null,
     "windows": false
   },
@@ -99,7 +99,7 @@
     "id": "v4",
     "label": "Prototype V4",
     "channel": "legacy",
-    "date": null,
+    "date": "2026-05-05",
     "notes": null,
     "windows": false
   },
@@ -107,7 +107,7 @@
     "id": "v3",
     "label": "Prototype V3",
     "channel": "legacy",
-    "date": null,
+    "date": "2026-05-05",
     "notes": null,
     "windows": false
   },
@@ -115,7 +115,7 @@
     "id": "v2",
     "label": "Prototype V2",
     "channel": "legacy",
-    "date": null,
+    "date": "2026-05-05",
     "notes": null,
     "windows": false
   },
@@ -123,7 +123,7 @@
     "id": "v1",
     "label": "Prototype V1",
     "channel": "legacy",
-    "date": null,
+    "date": "2026-05-05",
     "notes": null,
     "windows": false
   }

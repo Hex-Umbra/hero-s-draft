@@ -176,7 +176,7 @@ Auto-hébergées en woff2, sous-ensemble latin, avec `font-display: swap` et une
 | `id` | **Nom du dossier sur le VPS, donc segment d'URL.** Clé primaire, unique. Le lien est `/{id}/` |
 | `label` | Ce que lit le joueur. Découplé de `id` parce que les dossiers legacy s'appellent `v3` |
 | `channel` | `current` \| `stable` \| `legacy`. Pilote le groupement et la mise en vedette |
-| `date` | Date de mise en ligne, ISO, **ou `null`**. Affichée quand elle existe. L'ordre d'affichage est celui du fichier, pas celui des dates : quatorze entrées sur quinze n'en ont aucune (§5.3) |
+| `date` | Date de mise en ligne, ISO, **ou `null`**. Affichée quand elle existe. L'ordre d'affichage est celui du fichier, pas celui des dates. Le format est vérifié par le garde-fou (§5.4) |
 | `notes` | Clé de jointure dans `patch_notes.json`, **ou `null`** (§3.3) |
 | `windows` | Une release GitHub existe. L'URL de téléchargement se déduit de `id` |
 
@@ -204,18 +204,25 @@ Quinze entrées, écrites une fois :
 
 `v0.0.9` perd sa vedette au profit de `v0.4.7` : c'est la correction du §3.2.
 
-Les dates des quatorze anciennes entrées sont inconnues. Elles seront relevées sur le VPS (`stat` sur chaque dossier) au moment de l'amorçage plutôt qu'inventées ; à défaut, le champ vaut `null` et rien ne s'affiche.
+Les dates des quatorze anciennes entrées ont d'abord valu `null`, puis ont été relevées le 20/08/2026. La source retenue n'est pas le VPS mais l'archive locale des builds (`Prototypes/Web/`), dont les fichiers portent encore l'horodatage de compilation Flutter : dans chaque dossier, `flutter_bootstrap.js`, `main.dart.js`, `version.json` et `.last_build_id` se suivent à la minute, dans l'ordre où Flutter les émet. C'est la date de construction, pas celle d'une copie ultérieure.
+
+Ces dates confirment le §3.3 par un second chemin, indépendant du `version.json` : le dossier `v0.0.1` date du 05/05, quand la patch note `0.0.1` date du 01/02 — trois mois d'écart. Pour `0.0.4`, la note (15/05) est même postérieure au dossier `v0.0.4` (09/05). Joindre sur l'`id` aurait donc bien produit quatre associations fausses, dont une antidatée.
+
+Le champ reste nullable par contrat : une entrée future peut légitimement arriver sans date. C'est le format, et non la présence, que le garde-fou vérifie (§5.4).
 
 ### 5.4 Le garde-fou
 
-`verify_version.sh` gagne quatre assertions sur `site/_site/versions.json`, avec un `VERSIONS_PATH` surchargeable comme les deux chemins existants :
+`verify_version.sh` gagne cinq assertions sur `site/_site/versions.json`, avec un `VERSIONS_PATH` surchargeable comme les deux chemins existants :
 
 1. le fichier est du JSON valide ;
 2. **exactement une** entrée porte `channel: "current"` ;
 3. cette entrée a `id == "v${VERSION}"` **et** `notes == "${VERSION}"` ;
-4. tous les `id` sont uniques.
+4. tous les `id` sont uniques ;
+5. toute `date` **présente** respecte `AAAA-MM-JJ` (une `date` à `null` reste valide).
 
 La cohérence avec `patch_notes.json` est alors transitive : le script vérifie déjà que `patch_notes[0].version == VERSION`, donc l'assertion 3 suffit à garantir que la jointure de l'accueil aboutira.
+
+L'assertion 5 couvre une panne du même genre, un cran plus bas : `formatDate()` renvoie `null` sur une date malformée, la carte perd sa ligne de méta, et rien ne signale que l'information a disparu. Une faute de frappe effacerait donc en silence ce qu'elle était censée porter.
 
 **Ce que ce garde-fou achète.** Oublier l'entrée `versions.json` ne produit aucune erreur visible : le site déploie, s'affiche, et ment simplement sur la version courante — exactement la panne silencieuse du §3.2. Le garde-fou la transforme en échec de pipeline avant le moindre build.
 
