@@ -1,5 +1,29 @@
 [
   {
+    "version": "0.4.8",
+    "date": "2026-08-20",
+    "title": "La Salle des Archives",
+    "sections": [
+      {
+        "category": "Nouvelles Fonctionnalités",
+        "emoji": "✨",
+        "entries": [
+          "Le site du jeu a désormais une véritable page d'accueil : vous y trouvez la dernière version jouable, les nouveautés du moment et un accès direct au téléchargement Windows.",
+          "Une page d'archives réunit toutes les versions encore jouables, de la plus récente aux tout premiers prototypes, chacune restant accessible indéfiniment.",
+          "L'intégralité des notes de version est désormais consultable en ligne, depuis la toute première jusqu'à celle que vous êtes en train de lire.",
+          "Chaque nouvelle version est désormais annoncée automatiquement sur Discord, avec ses notes et les liens pour y jouer ou la télécharger."
+        ]
+      },
+      {
+        "category": "Technique",
+        "emoji": "🔧",
+        "entries": [
+          "Chaque version mise en ligne est désormais vérifiée automatiquement avant d'être annoncée : une version qui ne se lancerait pas ne peut plus passer inaperçue."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.4.7",
     "date": "2026-07-26",
     "title": "L'Équilibre des Effectifs",
