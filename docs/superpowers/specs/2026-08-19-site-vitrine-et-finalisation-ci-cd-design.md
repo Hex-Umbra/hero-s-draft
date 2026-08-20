@@ -63,7 +63,7 @@ La source du site vit dans `../Prototypes/Web/`, **à côté du dépôt et non d
 
 Le pipeline a déployé `/v0.4.7/` le 18/08. La page de sélection n'en parle pas : elle met encore `v0.0.9` en vedette. **La version courante du jeu est en ligne, jouable, et invisible depuis la page d'accueil.** C'est exactement le manque qui déclenche ce chantier.
 
-### 3.3 Les dossiers legacy ne sont joignables à aucune patch note
+### 3.3 Les dossiers legacy ne sont joignables à aucune patch note par calcul
 
 Vérifié en lisant le `version.json` que Flutter écrit dans chaque build :
 
@@ -77,6 +77,8 @@ Conséquence directe sur la conception : `patch_notes.json` contient 34 entrées
 
 > [!WARNING]
 > Une jointure automatique « nom de dossier → patch note » produirait des associations **fausses** sur quatre entrées et vides sur dix. Le lien doit être **déclaré explicitement** par entrée, et pouvoir être nul. C'est la raison d'être du champ `notes` du §5.
+
+**Suite, 20/08/2026.** Une association a bien été rétablie depuis — non par calcul, mais par déclaration : le dossier `v0.0.5` porte la note `0.0.4`. L'auteur l'a confirmée, et la date la corrobore, la note étant datée du 15/05, jour exact du build de `v0.0.5`. C'est la démonstration en positif du champ `notes` : aucune dérivation depuis l'`id` n'aurait trouvé ce lien, puisqu'elle aurait cherché une note `0.0.5` qui n'existe pas.
 
 ### 3.4 Un lien vers un dossier inexistant renvoie 500, pas 404
 
@@ -199,7 +201,7 @@ Quinze entrées, écrites une fois :
 | `channel` | Entrées |
 |:---|:---|
 | `current` | `v0.4.7` — `notes: "0.4.7"`, `windows: true` |
-| `stable` | `v0.0.9` à `v0.0.1` — neuf entrées, `notes: null`, `windows: false` |
+| `stable` | `v0.0.9` à `v0.0.1` — neuf entrées, `windows: false`. Huit ont `notes: null` ; `v0.0.5` porte `notes: "0.0.4"` (§3.3) |
 | `legacy` | `v5` à `v1` — cinq entrées, `notes: null`, `windows: false` |
 
 `v0.0.9` perd sa vedette au profit de `v0.4.7` : c'est la correction du §3.2.
