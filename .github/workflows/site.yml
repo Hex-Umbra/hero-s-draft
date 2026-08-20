@@ -1,0 +1,54 @@
+name: Deploy site
+
+# Ni `push`, ni `pull_request` : le commit de preparation de release modifie
+# versions.json, donc un declencheur `push` annoncerait la nouvelle version
+# AVANT que son dossier existe. Un lien vers un dossier absent renvoie 500 --
+# pas 404 -- a cause du try_files de nginx. `workflow_call` garantit l'ordre.
+on:
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+
+      - uses: webfactory/ssh-agent@e83874834305fe9a4a2997156cb26c5de65a8555 # v0.10.0
+        with:
+          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
+
+      - name: Cle d'hote connue
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          echo "${{ secrets.VPS_KNOWN_HOSTS }}" >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      # AUCUN --delete SUR CE CHEMIN, JAMAIS.
+      #
+      # Contrairement a deploy-web, qui ecrit dans un dossier de version neuf,
+      # ce job ecrit dans la RACINE CONFINEE elle-meme -- la ou vivent les
+      # quinze dossiers de versions. Un --delete les effacerait tous en une
+      # commande. Le cout de son absence est nul : un fichier de site supprime
+      # du depot survit sur le serveur sans que personne ne le reference.
+      #
+      # Trois exclusions, toutes justifiees :
+      #   nginx.reference.conf  document interne, ne doit pas etre servi
+      #   package.json          n'existe que pour que Node lise les .js en ESM
+      #   *.test.js             tests, sans utilite pour un visiteur
+      - name: rsync du site vers la racine du VPS
+        run: |
+          set -euo pipefail
+          rsync -avz \
+            --exclude='nginx.reference.conf' \
+            --exclude='package.json' \
+            --exclude='*.test.js' \
+            site/ \
+            "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:./"
