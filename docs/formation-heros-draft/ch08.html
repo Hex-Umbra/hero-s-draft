@@ -1,0 +1,1836 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Le héros : stats, classes, passifs et progression — Formation Hero's Draft</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<button class="menu-btn" aria-label="Menu">&#9776;</button>
+<div class="layout">
+<aside class="sidebar">
+  <a class="brand" href="index.html">
+    <div class="brand-title">HERO'S DRAFT</div>
+    <div class="brand-sub">Formation complète au projet Flutter</div>
+  </a>
+<nav class="nav">
+<div class="nav-part">Partie 0 — Démarrage</div>
+<a href="ch01.html"><span class="num">01</span><span>Vue d&#x27;ensemble : qu&#x27;est-ce que Hero&#x27;s Draft ?</span></a>
+<div class="nav-part">Partie 1 — Les fondations techniques</div>
+<a href="ch02.html"><span class="num">02</span><span>Dart, le langage — l&#x27;essentiel pour ce projet</span></a>
+<a href="ch03.html"><span class="num">03</span><span>Flutter — widgets, arbre et navigation</span></a>
+<a href="ch04.html"><span class="num">04</span><span>Riverpod — l&#x27;état partagé du jeu</span></a>
+<a href="ch05.html"><span class="num">05</span><span>Flame — le moteur de rendu du combat</span></a>
+<div class="nav-part">Partie 2 — L&#x27;architecture du projet</div>
+<a href="ch06.html"><span class="num">06</span><span>L&#x27;architecture en quatre couches</span></a>
+<a href="ch07.html"><span class="num">07</span><span>La couche de données : un jeu 100 % data-driven</span></a>
+<div class="nav-part">Partie 3 — Les règles du jeu</div>
+<a href="ch08.html" class="active"><span class="num">08</span><span>Le héros : stats, classes, passifs et progression</span></a>
+<a href="ch09.html"><span class="num">09</span><span>Les cartes et le deck</span></a>
+<a href="ch10.html"><span class="num">10</span><span>Le combat : boucle de tour, dégâts et effets</span></a>
+<a href="ch11.html"><span class="num">11</span><span>Les ennemis et la courbe de difficulté</span></a>
+<a href="ch12.html"><span class="num">12</span><span>La carte du monde procédurale</span></a>
+<a href="ch13.html"><span class="num">13</span><span>Les reliques et le système de déclencheurs</span></a>
+<a href="ch14.html"><span class="num">14</span><span>L&#x27;économie : or, boutique, forge et fusion</span></a>
+<a href="ch15.html"><span class="num">15</span><span>Récompenses, chance et probabilités</span></a>
+<a href="ch16.html"><span class="num">16</span><span>Événements, repos et autel des reliques</span></a>
+<div class="nav-part">Partie 4 — L&#x27;interface et le rendu</div>
+<a href="ch17.html"><span class="num">17</span><span>Le pont Flame ↔ Riverpod : l&#x27;écran de combat</span></a>
+<a href="ch18.html"><span class="num">18</span><span>Composants Flame et game feel</span></a>
+<a href="ch19.html"><span class="num">19</span><span>Écrans, navigation et design system</span></a>
+<div class="nav-part">Partie 5 — Qualité et cycle de vie</div>
+<a href="ch20.html"><span class="num">20</span><span>Sauvegarde, localisation et tutoriel</span></a>
+<a href="ch21.html"><span class="num">21</span><span>Tests, outillage, dette technique et évolutions</span></a>
+</nav>
+</aside>
+<main class="main">
+<div class="content">
+<div class="chapter-kicker">Chapitre 08</div>
+<h1>Le héros : stats, classes, passifs et progression</h1>
+<p class="lede">Toutes les statistiques du jeu — héros comme ennemis — passent par une seule classe : <code>EntityStats</code>. Ce chapitre en fait le tour, puis suit le héros du choix de classe jusqu'à la montée de niveau.</p>
+
+<div class="toc">
+  <div class="toc-title">Dans ce chapitre</div>
+  <ol>
+    <li><a href="#s1"><code>EntityStats</code>, la classe partagée</a></li>
+    <li><a href="#s2">Les getters « effectifs »</a></li>
+    <li><a href="#s3"><code>takeDamage</code> : comment l'armure absorbe</a></li>
+    <li><a href="#s4">Les trois classes</a></li>
+    <li><a href="#s5">Les traits passifs</a></li>
+    <li><a href="#s6">Mana et armure : les deux ressources qui se réinitialisent</a></li>
+    <li><a href="#s7">XP, niveaux et drafts en attente</a></li>
+    <li><a href="#s8">Les compétences héroïques</a></li>
+  </ol>
+</div>
+
+<p>
+  Dans un jeu de cartes roguelike, « le héros » n'est pas un objet compliqué. C'est un paquet de
+  nombres : des points de vie, du mana, de l'armure, une attaque, un niveau. Ce paquet de nombres
+  vit dans <code>RunState.heroStats</code>, et il est du type <code>EntityStats</code>.
+</p>
+<p>
+  Le point intéressant — et c'est la décision d'architecture centrale de ce chapitre — c'est que
+  <strong>la même classe décrit aussi les ennemis</strong>. Il n'y a pas de <code>HeroStats</code> et
+  de <code>EnemyStats</code> séparés. Un seul type, deux usages. Cela simplifie énormément le pipeline
+  de dégâts (un attaquant et un défenseur, tous deux des <code>EntityStats</code>), mais impose une
+  discipline : tout ce qui est spécifique au joueur doit être rangé ailleurs.
+</p>
+
+<h2 id="s1">1. <code>EntityStats</code>, la classe partagée</h2>
+
+<p>
+  Le fichier fait environ 210 lignes et se lit d'un trait. Commençons par la déclaration des champs et
+  le constructeur, où sont écrites toutes les valeurs par défaut.
+</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/entity_stats.dart</span><span class="lang">dart</span></div>
+  <pre>@immutable
+class EntityStats {
+  final int maxPv;
+  final int currentPv;
+  final int maxMana;
+  final int currentMana;
+  final int armure;
+  final int armorMastery; // Bonus permanent ajouté à chaque gain d'armure
+  final int attaque;
+  final int luck;
+  final int level;
+  final int xp;
+  final int xpToNextLevel;
+  final int critChance;
+  final double critMultiplier;
+  final List&lt;StatusEffect&gt; statuses;
+  final bool lastActionWasCrit;
+
+  EntityStats({
+    required this.maxPv,
+    required this.currentPv,
+    this.maxMana = 0,
+    this.currentMana = 0,
+    required this.armure,
+    this.armorMastery = 0,
+    required this.attaque,
+    this.luck = 0,
+    this.level = 1,
+    this.xp = 0,
+    this.xpToNextLevel = 100,
+    this.critChance = 0,
+    this.critMultiplier = 1.5,
+    List&lt;StatusEffect&gt; statuses = const [],
+    this.lastActionWasCrit = false,
+  }) : statuses = List.unmodifiable(statuses);</pre>
+</div>
+
+<p>
+  Trois détails de Dart méritent un mot pour un débutant :
+</p>
+<ul>
+  <li>
+    <code>@immutable</code> (du package <code>meta</code>) est une annotation d'analyse : elle indique
+    que tous les champs doivent être <code>final</code>. On ne modifie jamais un <code>EntityStats</code>
+    existant, on en fabrique un nouveau avec <code>copyWith</code>.
+  </li>
+  <li>
+    <code>required this.maxPv</code> : le paramètre est nommé et obligatoire. Les champs sans
+    <code>required</code> ont une valeur par défaut écrite juste après le <code>=</code>.
+  </li>
+  <li>
+    <code>: statuses = List.unmodifiable(statuses)</code> est une <em>liste d'initialisation</em>.
+    Elle s'exécute avant le corps du constructeur et garantit que la liste stockée ne peut plus être
+    modifiée en place — même si l'appelant garde une référence sur la liste d'origine.
+  </li>
+</ul>
+
+<h3>Les 15 champs, un par un</h3>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Champ</th><th>Type</th><th>Défaut</th><th>Rôle</th></tr></thead>
+<tbody>
+<tr><td><code>maxPv</code></td><td><code>int</code></td><td><em>requis</em></td><td>Points de vie maximum. Pour le héros, il vient de <code>heroes.json</code> ; pour un ennemi, du <code>maxHp</code> de <code>enemies.json</code> multiplié par le scaling de rencontre.</td></tr>
+<tr><td><code>currentPv</code></td><td><code>int</code></td><td><em>requis</em></td><td>Points de vie courants. <code>RunState.isDead</code> vaut <code>true</code> dès que <code>currentPv &lt;= 0</code>.</td></tr>
+<tr><td><code>maxMana</code></td><td><code>int</code></td><td><code>0</code></td><td>Mana maximum. Le défaut à 0 est là pour les ennemis, qui n'ont pas de mana. Les trois classes de héros démarrent à 3.</td></tr>
+<tr><td><code>currentMana</code></td><td><code>int</code></td><td><code>0</code></td><td>Mana disponible ce tour. Remis au maximum à chaque début de tour (section 6).</td></tr>
+<tr><td><code>armure</code></td><td><code>int</code></td><td><em>requis</em></td><td>Bouclier temporaire. Absorbé en premier par <code>takeDamage</code>, remis à 0 à chaque début de tour et en fin de nœud.</td></tr>
+<tr><td><code>armorMastery</code></td><td><code>int</code></td><td><code>0</code></td><td>« Bonus permanent ajouté à chaque gain d'armure » (commentaire du code). Il ne donne pas d'armure tout seul : il s'ajoute aux gains d'armure des passifs (section 5).</td></tr>
+<tr><td><code>attaque</code></td><td><code>int</code></td><td><em>requis</em></td><td>Force de base. Pour le héros, elle démarre à <strong>0</strong> et n'augmente que par les drafts, les reliques et les événements.</td></tr>
+<tr><td><code>luck</code></td><td><code>int</code></td><td><code>0</code></td><td>Chance. Ne touche pas au combat : elle est lue par le calcul des raretés (récompenses, draft) et par certains événements (<code>lib/game/controllers/event_controller.dart</code>).</td></tr>
+<tr><td><code>level</code></td><td><code>int</code></td><td><code>1</code></td><td>Niveau de l'entité. Côté ennemi, il sert de multiplicateur d'XP et d'or à la victoire ; côté héros, il pilote le seuil d'XP suivant.</td></tr>
+<tr><td><code>xp</code></td><td><code>int</code></td><td><code>0</code></td><td>Expérience accumulée <em>depuis le dernier niveau</em>, pas depuis le début de la partie : <code>gainXp</code> soustrait le seuil à chaque passage de niveau.</td></tr>
+<tr><td><code>xpToNextLevel</code></td><td><code>int</code></td><td><code>100</code></td><td>Seuil d'XP du niveau courant. Recalculé à chaque montée par <code>(100 * pow(1.5, level - 1)).round()</code>.</td></tr>
+<tr><td><code>critChance</code></td><td><code>int</code></td><td><code>0</code></td><td>Chance de coup critique, exprimée en pourcentage entier. Comparée à <code>Random().nextInt(100)</code> dans <code>DamagePipeline</code>.</td></tr>
+<tr><td><code>critMultiplier</code></td><td><code>double</code></td><td><code>1.5</code></td><td>Multiplicateur appliqué aux dégâts en cas de critique. C'est le seul champ <code>double</code> de la classe.</td></tr>
+<tr><td><code>statuses</code></td><td><code>List&lt;StatusEffect&gt;</code></td><td><code>const []</code></td><td>Buffs et debuffs actifs (force, poison, vulnérabilité, gel…). Stockée en <code>List.unmodifiable</code>.</td></tr>
+<tr><td><code>lastActionWasCrit</code></td><td><code>bool</code></td><td><code>false</code></td><td>Drapeau d'affichage : <code>lib/game/components/entities/combat_entity.dart</code> le lit pour colorer le texte flottant de dégâts en ambre et l'agrandir quand le coup était critique.</td></tr>
+</tbody>
+</table></div>
+
+<div class="box"><div class="box-title">À retenir</div><p>
+  Aucun de ces 15 champs ne parle de cartes, de deck, de main ou de pioche. C'est volontaire : une
+  <code>EntityStats</code> décrit un corps qui prend des coups, pas un joueur qui construit un deck.
+</p></div>
+
+<h3>Une classe, deux usages</h3>
+
+<p>
+  Voici la preuve que la même classe sert des deux côtés. Au moment d'instancier les ennemis, le
+  <code>CombatController</code> construit exactement le même type d'objet que le héros :
+</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/combat_controller.dart</span><span class="lang">dart</span></div>
+  <pre>final stats = EntityStats(
+  maxPv: (data.maxHp * enemyHpMultiplier).round(),
+  currentPv: (data.maxHp * enemyHpMultiplier).round(),
+  armure: 0,
+  attaque: (data.baseDamage * enemyDamageMultiplier).round(),
+  level: enemyLevel,
+  critChance: data.critChance,
+);
+
+var enemy = EnemyInstance(data: data, stats: stats, isBoss: isBoss);</pre>
+</div>
+
+<p>
+  L'ennemi ne passe ni <code>maxMana</code>, ni <code>xp</code>, ni <code>armorMastery</code> : les
+  valeurs par défaut suffisent. C'est précisément à ça que servent les défauts à <code>0</code> vus
+  plus haut. Et comme les deux camps partagent le type, le pipeline de dégâts peut s'écrire une seule
+  fois, avec un <code>attackerStats</code> et un <code>defenderStats</code> interchangeables.
+</p>
+
+<h3>La conséquence : <code>cardsPerTurn</code> n'est pas là</h3>
+
+<p>
+  Le jeu a besoin de savoir combien de cartes le joueur pioche chaque tour. Une relique
+  (<code>increase_cards_per_turn</code>) peut faire monter ce nombre. La tentation naturelle serait de
+  poser un champ <code>cardsPerTurn</code> sur <code>EntityStats</code>, à côté de <code>maxMana</code>.
+  Le projet a explicitement refusé, et l'a écrit noir sur blanc :
+</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  final int pendingDrafts; // Nombre de drafts de montée de niveau en attente
+
+  /// Cartes piochées au début de chaque tour, et taille de la main d'ouverture.
+  /// Règle de run propre au joueur : elle n'a pas sa place sur `EntityStats`,
+  /// qui est partagé avec les ennemis.
+  final int cardsPerTurn;</pre>
+</div>
+
+<p>
+  <code>cardsPerTurn</code> est donc un champ de <code>RunState</code>, avec une valeur par défaut de
+  <code>5</code>. Il a même sa propre méthode de modification, distincte de celle qui touche aux
+  statistiques :
+</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run/player_stats_manager.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Applique un modificateur aux règles de run propres au joueur.
+  /// Distinct d'`applyHeroStatModifier`, qui opère sur `EntityStats` — lequel
+  /// est partagé avec les ennemis et n'a donc pas à porter de notion de deck.
+  void applyRunRuleModifier({int cardsPerTurnAcc = 0}) {
+    controller.updateState(
+      controller.currentState.copyWith(
+        cardsPerTurn: controller.currentState.cardsPerTurn + cardsPerTurnAcc,
+      ),
+    );
+  }</pre>
+</div>
+
+<div class="box ok"><div class="box-title">Bonne pratique</div><p>
+  Quand un type est partagé par deux acteurs, la question à se poser n'est pas « ce champ est-il
+  pratique ici ? » mais « ce champ a-t-il un sens pour <em>les deux</em> ? ». Un ennemi n'a pas de main
+  de cartes : <code>cardsPerTurn</code> n'a donc rien à faire sur <code>EntityStats</code>. Le
+  commentaire du code sert de garde-fou pour les contributions futures.
+</p></div>
+
+<p>
+  Le reste de la classe est de la plomberie classique et parfaitement symétrique : un
+  <code>copyWith</code> qui reprend les 15 champs, un <code>fromJson</code> qui les relit avec les
+  mêmes défauts (<code>json['critMultiplier'] as num?)?.toDouble() ?? 1.5</code>), et un
+  <code>toJson</code> qui les réécrit tous. Cette symétrie est ce qui permet à la sauvegarde de
+  restaurer un héros au champ près.
+</p>
+
+<h2 id="s2">2. Les getters « effectifs »</h2>
+
+<p>
+  Trois statistiques existent en deux versions : la valeur <strong>permanente</strong> stockée dans le
+  champ, et la valeur <strong>effective</strong> qui ajoute les bonus temporaires en cours. Les getters
+  sont écrits sur le même moule.
+</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/entity_stats.dart</span><span class="lang">dart</span></div>
+  <pre>  int get effectiveArmorMastery {
+    int bonus = 0;
+    for (var status in statuses) {
+      if (status.id == 'armor_mastery') {
+        bonus += status.value;
+      }
+    }
+    return armorMastery + bonus;
+  }
+
+  /// Calcule l'attaque effective en prenant en compte les buffs de force
+  int get effectiveAttaque {
+    int bonus = 0;
+    for (var status in statuses) {
+      if (status.id == 'strength') {
+        bonus += status.value;
+      }
+    }
+    return attaque + bonus;
+  }
+
+  int get effectiveCritChance {
+    int bonus = 0;
+    for (var status in statuses) {
+      if (status.id == 'crit_chance') {
+        bonus += status.value;
+      }
+    }
+    return critChance + bonus;
+  }</pre>
+</div>
+
+<p>
+  Le motif est toujours le même : parcourir <code>statuses</code>, additionner les <code>value</code>
+  des statuts dont l'<code>id</code> correspond, et renvoyer <code>champ + bonus</code>. Le mot-clé
+  <code>get</code> déclare un getter : on écrit <code>stats.effectiveAttaque</code> sans parenthèses,
+  comme si c'était un champ, mais le calcul est refait à chaque lecture.
+</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Getter</th><th>Champ de base</th><th>Statut additionné</th><th>Lu par</th></tr></thead>
+<tbody>
+<tr><td><code>effectiveAttaque</code></td><td><code>attaque</code></td><td><code>strength</code></td><td><code>RunState.effectiveAttaque</code>, <code>CombatController.executeSkill</code>, <code>EnemyInstance.effectiveIntent</code></td></tr>
+<tr><td><code>effectiveCritChance</code></td><td><code>critChance</code></td><td><code>crit_chance</code></td><td><code>DamagePipeline.calculate</code></td></tr>
+<tr><td><code>effectiveArmorMastery</code></td><td><code>armorMastery</code></td><td><code>armor_mastery</code></td><td><code>TraitSystem</code> (3 fois), <code>StatsDialog</code>, <code>HeroMiniStatsPanel</code></td></tr>
+</tbody>
+</table></div>
+
+<h3>Pourquoi séparer permanent et temporaire ?</h3>
+
+<p>
+  Parce que les deux ont des durées de vie radicalement différentes, et surtout des règles de
+  nettoyage différentes. Comparez deux façons d'augmenter l'attaque du héros.
+</p>
+
+<p><strong>Permanente</strong> — une récompense de draft, qui doit survivre à tout :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run/player_stats_manager.dart</span><span class="lang">dart</span></div>
+  <pre>    controller.updateState(
+      controller.currentState.copyWith(
+        heroStats: currentStats.copyWith(
+          maxPv: newMaxPv,
+          currentPv: newCurrentPv,
+          maxMana: newMaxMana,
+          currentMana: newCurrentMana,
+          attaque: currentStats.attaque + attackAcc,
+          armorMastery: currentStats.armorMastery + armorAcc,
+          luck: currentStats.luck + luckAcc,
+          critChance: currentStats.critChance + critChanceAcc,
+          critMultiplier: currentStats.critMultiplier + critDamageAcc,
+        ),
+      ),
+    );</pre>
+</div>
+
+<p><strong>Temporaire</strong> — un buff de combat, qui doit expirer :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run/player_stats_manager.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Applique un buff d'attaque pour une durée donnée
+  void applyAttackBuff(int duration) {
+    int bonus = (controller.currentState.heroStats.maxPv * 0.15).round();
+    controller.updateState(
+      controller.currentState.copyWith(
+        heroStats: controller.currentState.heroStats.addStatus(
+          StatusEffect(
+            id: 'strength',
+            name: 'Attaque',
+            type: StatusType.buff,
+            value: bonus,
+            duration: duration,
+          ),
+        ),
+      ),
+    );
+  }</pre>
+</div>
+
+<p>
+  Le premier écrit dans <code>attaque</code> : la valeur est dans la sauvegarde, elle traverse les
+  combats, elle ne disparaît jamais. Le second ajoute un <code>StatusEffect</code> dans
+  <code>statuses</code> : sa <code>duration</code> est décrémentée à chaque tour par
+  <code>tickStatuses()</code>, et surtout la liste entière est <strong>vidée</strong> au début de chaque
+  combat (<code>startCombat()</code>) et à la fin de chaque nœud
+  (<code>completeCurrentNode()</code>). Sans cette séparation, il faudrait retrancher manuellement
+  chaque buff expiré du champ permanent — un bug garanti.
+</p>
+
+<div class="box warn"><div class="box-title">Piège</div><p>
+  L'affichage ne montre pas la même chose selon l'endroit. <code>StatsDialog</code> et
+  <code>HeroMiniStatsPanel</code> affichent <code>stats.attaque</code> (la valeur <em>permanente</em>)
+  mais <code>stats.effectiveArmorMastery</code> (la valeur <em>effective</em>). Ce n'est pas une
+  incohérence gratuite : les panneaux de stats se consultent sur la carte du monde, hors combat, où
+  les buffs de force ont déjà été purgés — alors qu'une relique peut, elle, poser un
+  <code>armor_mastery</code> de longue durée.
+</p></div>
+
+<p>
+  Côté critique, la lecture se fait dans le pipeline de dégâts, sur l'attaquant :
+</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/services/damage_pipeline.dart</span><span class="lang">dart</span></div>
+  <pre>    // 2. Coup critique de l'attaquant : multiplie les dégâts par critMultiplier
+    bool isCrit = false;
+    if (canCrit) {
+      final random = Random();
+      if (random.nextInt(100) &lt; attackerStats.effectiveCritChance) {
+        totalDamage = (totalDamage * attackerStats.critMultiplier).round();
+        isCrit = true;
+      }
+    }</pre>
+</div>
+
+<p>
+  Notez l'asymétrie : c'est <code>effectiveCritChance</code> (avec bonus temporaires) mais
+  <code>critMultiplier</code> brut — il n'existe pas de statut qui augmente le multiplicateur, seuls
+  les drafts le font monter via <code>critDamageAcc</code>.
+</p>
+
+<h2 id="s3">3. <code>takeDamage</code> : comment l'armure absorbe</h2>
+
+<p>
+  C'est la méthode la plus lue du fichier, et la plus courte à comprendre. Elle tient en une quinzaine
+  de lignes.
+</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/entity_stats.dart</span><span class="lang">dart</span></div>
+  <pre>  EntityStats takeDamage(int amount, {bool isCrit = false}) {
+    if (amount &lt;= 0) return copyWith(lastActionWasCrit: isCrit);
+
+    // 2. Absorption via Armure
+    int damageAfterArmor = amount - armure;
+    int newArmor = armure;
+    int newPv = currentPv;
+
+    if (damageAfterArmor &gt; 0) {
+      // L'armure est brisée, le reste va aux PV
+      newArmor = 0;
+      newPv -= damageAfterArmor;
+    } else {
+      // L'armure encaisse tout
+      newArmor -= amount;
+    }
+
+    if (newPv &lt; 0) newPv = 0;
+
+    return copyWith(armure: newArmor, currentPv: newPv, lastActionWasCrit: isCrit);
+  }</pre>
+</div>
+
+<p>L'ordre exact est le suivant :</p>
+<ol>
+  <li>Si <code>amount &lt;= 0</code>, on sort immédiatement — mais en mettant quand même à jour
+  <code>lastActionWasCrit</code>.</li>
+  <li>On calcule <code>damageAfterArmor = amount - armure</code>.</li>
+  <li>Si ce reste est <strong>strictement positif</strong> : l'armure tombe à <code>0</code> et le reste
+  est retiré aux PV.</li>
+  <li>Sinon : les PV ne bougent pas du tout, et l'armure perd exactement <code>amount</code>.</li>
+  <li>Les PV sont bornés en bas à <code>0</code> (jamais de PV négatifs affichés).</li>
+</ol>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 820 330" width="820" role="img" aria-label="Deux cas chiffrés d'absorption de dégâts par l'armure">
+      <rect x="0" y="0" width="820" height="330" fill="#0e1524"/>
+
+      <text x="20" y="28" fill="#f59e0b" font-size="14" font-weight="bold" font-family="ui-monospace, monospace">Cas A — armure 4, 10 dégâts entrants</text>
+
+      <rect x="20" y="44" width="130" height="58" rx="8" fill="#151b2b" stroke="#f87171"/>
+      <text x="85" y="68" fill="#e6ecf5" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">amount = 10</text>
+      <text x="85" y="88" fill="#a7b4c9" font-size="11" text-anchor="middle">dégâts reçus</text>
+
+      <path d="M150 73 L188 73" stroke="#3a4966" stroke-width="2" marker-end="url(#c8-a1)"/>
+
+      <rect x="192" y="44" width="164" height="58" rx="8" fill="#151b2b" stroke="#60a5fa"/>
+      <text x="274" y="66" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">10 − armure 4</text>
+      <text x="274" y="88" fill="#22d3ee" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">= 6</text>
+
+      <path d="M356 73 L394 73" stroke="#3a4966" stroke-width="2" marker-end="url(#c8-a1)"/>
+
+      <rect x="398" y="44" width="150" height="58" rx="8" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="473" y="68" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">reste 6 &gt; 0</text>
+      <text x="473" y="88" fill="#a7b4c9" font-size="11" text-anchor="middle">armure brisée</text>
+
+      <path d="M548 73 L586 73" stroke="#3a4966" stroke-width="2" marker-end="url(#c8-a1)"/>
+
+      <rect x="590" y="40" width="210" height="30" rx="6" fill="#151b2b" stroke="#34d399"/>
+      <text x="695" y="60" fill="#34d399" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">armure = 0</text>
+
+      <rect x="590" y="76" width="210" height="30" rx="6" fill="#151b2b" stroke="#f87171"/>
+      <text x="695" y="96" fill="#f87171" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">currentPv − 6</text>
+
+      <line x1="20" y1="130" x2="800" y2="130" stroke="#3a4966" stroke-width="1" stroke-dasharray="4 4"/>
+
+      <text x="20" y="164" fill="#f59e0b" font-size="14" font-weight="bold" font-family="ui-monospace, monospace">Cas B — armure 12, 10 dégâts entrants</text>
+
+      <rect x="20" y="180" width="130" height="58" rx="8" fill="#151b2b" stroke="#f87171"/>
+      <text x="85" y="204" fill="#e6ecf5" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">amount = 10</text>
+      <text x="85" y="224" fill="#a7b4c9" font-size="11" text-anchor="middle">dégâts reçus</text>
+
+      <path d="M150 209 L188 209" stroke="#3a4966" stroke-width="2" marker-end="url(#c8-a1)"/>
+
+      <rect x="192" y="180" width="164" height="58" rx="8" fill="#151b2b" stroke="#60a5fa"/>
+      <text x="274" y="202" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">10 − armure 12</text>
+      <text x="274" y="224" fill="#22d3ee" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">= −2</text>
+
+      <path d="M356 209 L394 209" stroke="#3a4966" stroke-width="2" marker-end="url(#c8-a1)"/>
+
+      <rect x="398" y="180" width="150" height="58" rx="8" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="473" y="204" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">reste ≤ 0</text>
+      <text x="473" y="224" fill="#a7b4c9" font-size="11" text-anchor="middle">armure tient</text>
+
+      <path d="M548 209 L586 209" stroke="#3a4966" stroke-width="2" marker-end="url(#c8-a1)"/>
+
+      <rect x="590" y="176" width="210" height="30" rx="6" fill="#151b2b" stroke="#34d399"/>
+      <text x="695" y="196" fill="#34d399" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">armure = 12 − 10 = 2</text>
+
+      <rect x="590" y="212" width="210" height="30" rx="6" fill="#151b2b" stroke="#3a4966"/>
+      <text x="695" y="232" fill="#a7b4c9" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">currentPv inchangé</text>
+
+      <rect x="20" y="262" width="780" height="48" rx="8" fill="#151b2b" stroke="#3a4966"/>
+      <text x="34" y="282" fill="#a7b4c9" font-size="12">L'armure ne « déborde » jamais : soit elle est réduite à 0 et le surplus passe aux PV,</text>
+      <text x="34" y="300" fill="#a7b4c9" font-size="12">soit elle absorbe l'intégralité du coup et conserve le reliquat pour le coup suivant.</text>
+
+      <defs><marker id="c8-a1" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0 0 L8 4 L0 8 z" fill="#3a4966"/></marker></defs>
+    </svg>
+  </div>
+  <figcaption>Les deux branches de <code>EntityStats.takeDamage</code>, avec des valeurs chiffrées.</figcaption>
+</figure>
+
+<div class="box rule"><div class="box-title">Règle du jeu</div><p>
+  L'armure est un bouclier <strong>tout ou rien par coup</strong> : elle absorbe la totalité d'une
+  attaque tant qu'elle est supérieure ou égale aux dégâts, mais elle est intégralement consommée dès
+  qu'elle est dépassée. Avoir 12 d'armure face à deux coups de 10 ne protège que du premier
+  (12 → 2, puis 2 d'armure contre 10 dégâts = 8 PV perdus).
+</p></div>
+
+<div class="box"><div class="box-title">À retenir</div><p>
+  <code>takeDamage</code> ne connaît ni les critiques, ni la vulnérabilité, ni la faiblesse. Tous ces
+  modificateurs sont appliqués <em>avant</em>, par <code>DamagePipeline.calculate</code>, qui renvoie un
+  couple <code>(int damage, bool isCrit)</code>. <code>takeDamage</code> ne fait que soustraire, et
+  transporte le drapeau <code>isCrit</code> jusqu'à <code>lastActionWasCrit</code> pour l'animation.
+</p></div>
+
+<h2 id="s4">4. Les trois classes</h2>
+
+<p>
+  Le jeu est <span class="pill a">Données</span> piloté : les classes ne sont pas codées en dur, elles
+  vivent dans <code>assets/data/heroes.json</code>. Voici l'entrée complète du Paladin, la première du
+  fichier.
+</p>
+
+<div class="code" data-lang="json">
+  <div class="code-head"><span class="path">assets/data/heroes.json</span><span class="lang">json</span></div>
+  <pre>{
+  "id": "paladin",
+  "name_en": "Paladin",
+  "name_fr": "Le Paladin",
+  "description_en": "Survival Oriented",
+  "description_fr": "Orienté Survie",
+  "iconPath": "hero_paladin.png",
+  "maxHp": 100,
+  "maxMana": 3,
+  "baseDamage": 5,
+  "luck": 0,
+  "passiveTrait": "regenArmor",
+  "skills": ["holy_shield", "smite"]
+}</pre>
+</div>
+
+<div class="table-wrap"><table>
+<thead><tr><th>id</th><th>Nom FR</th><th>PV max</th><th>Mana max</th><th><code>baseDamage</code></th><th><code>luck</code></th><th>Passif</th><th>Cartes de classe</th></tr></thead>
+<tbody>
+<tr><td><code>paladin</code></td><td>Le Paladin</td><td>100</td><td>3</td><td>5</td><td>0</td><td><code>regenArmor</code></td><td><code>holy_shield</code>, <code>smite</code></td></tr>
+<tr><td><code>berserker</code></td><td>Le Berserker</td><td>80</td><td>3</td><td>15</td><td>0</td><td><code>berserkerArmor</code></td><td><code>reckless_strike</code>, <code>rage_form</code></td></tr>
+<tr><td><code>mage</code></td><td>Le Mage</td><td>60</td><td>3</td><td>10</td><td>0</td><td><code>spellArmor</code></td><td><code>magic_missile</code>, <code>mana_surge</code></td></tr>
+</tbody>
+</table></div>
+
+<p>
+  Les descriptions françaises tiennent en deux mots : « Orienté Survie », « Orienté Dégâts »,
+  « Orienté Altération ». Aucune des trois classes ne déclare de champ <code>armorMastery</code> dans le
+  JSON — le modèle <code>HeroData</code> le lit avec <code>json['armorMastery'] as int? ?? 0</code>, donc
+  <strong>les trois classes démarrent avec 0 de maîtrise d'armure</strong>.
+</p>
+
+<h3><code>startNewRun</code> : ce qui est réellement copié</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Démarre une nouvelle partie avec la classe choisie
+  void startNewRun(HeroData chosenClass, [PassiveData? activePassive]) {
+    final generatedMap = MapGeneratorService.generateMap(act: 1);
+    state = RunState(
+      currentLevel: 1,
+      act: 1,
+      heroClassId: chosenClass.id,
+      passiveTrait: chosenClass.passiveTrait,
+      activePassive:
+          activePassive ?? PassiveData.fallback(chosenClass.passiveTrait ?? ''),
+      heroStats: EntityStats(
+        maxPv: chosenClass.maxHp,
+        currentPv: chosenClass.maxHp,
+        maxMana: chosenClass.maxMana,
+        currentMana: chosenClass.maxMana,
+        armure: 0,
+        armorMastery: chosenClass.armorMastery,
+        attaque: 0, // Force de base à 0
+        luck: chosenClass.luck,
+      ),
+      mapNodes: generatedMap,
+      currentNodeId: null,
+      pendingDrafts: 0,
+    );
+    // ...
+  }</pre>
+</div>
+
+<p>
+  Regardez la ligne <code>attaque: 0, // Force de base à 0</code>. Le champ
+  <code>chosenClass.baseDamage</code> <strong>n'est pas lu ici</strong>. Un Berserker fraîchement créé
+  a donc <code>attaque == 0</code>, exactement comme un Mage et comme un Paladin, malgré les 15 / 10 / 5
+  affichés sur l'écran de sélection.
+</p>
+
+<div class="box danger"><div class="box-title">Point d'attention</div><p>
+  Une recherche sur <code>baseDamage</code> dans <code>lib/</code> donne un seul usage côté héros :
+  <code>lib/ui/screens/class_selection_screen.dart</code> ligne 343, dans un badge d'affichage.
+  Toutes les autres occurrences (<code>combat_controller.dart</code>,
+  <code>encounter_system.dart</code>, <code>enemy_instance.dart</code>) portent sur
+  <code>EnemyData.baseDamage</code>, pas sur <code>HeroData.baseDamage</code>. Autrement dit :
+  <strong>le <code>baseDamage</code> des classes n'a aucun effet en jeu</strong>, il ne sert qu'à
+  peupler l'icône d'épée de la carte de classe.
+</p></div>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/class_selection_screen.dart</span><span class="lang">dart</span></div>
+  <pre>                                      _buildStatBadge(
+                                        SwordIcon(
+                                          size: widget.isMobile ? 14 : 16,
+                                          color: Colors.orangeAccent,
+                                        ),
+                                        '${playerClass.baseDamage}',
+                                      ),</pre>
+</div>
+
+<div class="box warn"><div class="box-title">Piège</div><p>
+  Un joueur qui lit « 15 » sur la carte du Berserker s'attend à frapper plus fort de base. En réalité
+  la différence entre les classes tient aux <strong>PV</strong> (100 / 80 / 60), au
+  <strong>passif</strong> et aux <strong>deux cartes de classe</strong>. La puissance offensive vient
+  ensuite du deck et des drafts, pas de <code>baseDamage</code>.
+</p></div>
+
+<h3>Les six cartes de classe</h3>
+
+<p>
+  Le champ <code>skills</code> de <code>heroes.json</code> ne pointe pas vers des sorts mais vers des
+  <strong>identifiants de cartes</strong>, définis dans <code>assets/data/hero_cards.json</code>. Le
+  chaînage se fait par une extension Dart :
+</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/hero_skills_link.dart</span><span class="lang">dart</span></div>
+  <pre>extension HeroSkillsLink on HeroData {
+  List&lt;CardData&gt; getHeroCards(GameDataRegistry gameData) {
+    return skills
+        .map((skillId) {
+          final matches = gameData.cards.where((c) =&gt; c.id == skillId);
+          return matches.isNotEmpty ? matches.first : null;
+        })
+        .whereType&lt;CardData&gt;()
+        .toList();
+  }
+}</pre>
+</div>
+
+<p>
+  Une <em>extension</em> ajoute des méthodes à un type existant sans le modifier :
+  <code>heroData.getHeroCards(gameData)</code> se lit comme une méthode de <code>HeroData</code>, alors
+  que le code vit dans un autre fichier. Les cartes sont cherchées dans <code>gameData.cards</code>,
+  qui est la concaténation de <code>cards.json</code> et de <code>hero_cards.json</code> faite au
+  chargement (<code>lib/services/game_data_service.dart</code>). Elles sont ensuite ajoutées
+  automatiquement au deck de départ, en plus des 5 cartes choisies par le joueur :
+</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/starter_deck_draft_screen.dart</span><span class="lang">dart</span></div>
+  <pre>    final classCards = widget.playerClass.getHeroCards(gameData);
+
+    // 2. Assembler le deck de départ (5 choisies + N de classe auto-ajoutées)
+    final List&lt;CardInstance&gt; finalDeck = [];
+
+    // Ajouter les cartes spécifiques de classe
+    for (var cardData in classCards) {
+      finalDeck.add(CardInstance(data: cardData));
+    }</pre>
+</div>
+
+<div class="table-wrap"><table>
+<thead><tr><th>id</th><th>Nom FR</th><th>Classe</th><th>Coût</th><th>Type</th><th>Effets exacts</th><th>Exhaust</th></tr></thead>
+<tbody>
+<tr><td><code>holy_shield</code></td><td>Bouclier Sacré</td><td>paladin</td><td>1</td><td><code>skill</code></td><td><code>armor</code> 8 puis <code>heal</code> 2</td><td>oui</td></tr>
+<tr><td><code>smite</code></td><td>Châtiment</td><td>paladin</td><td>1</td><td><code>attack</code></td><td><code>damage</code> 6 puis <code>armor</code> 4</td><td>non</td></tr>
+<tr><td><code>reckless_strike</code></td><td>Frappe Téméraire</td><td>berserker</td><td>2</td><td><code>attack</code></td><td><code>damage</code> 15</td><td>non</td></tr>
+<tr><td><code>rage_form</code></td><td>Posture de Rage</td><td>berserker</td><td>1</td><td><code>skill</code></td><td><code>apply_status</code> <code>strength</code> 2 pour 1 tour, puis <code>draw</code> 1</td><td>non</td></tr>
+<tr><td><code>magic_missile</code></td><td>Projectile Magique</td><td>mage</td><td>1</td><td><code>attack</code></td><td><code>damage</code> 5 puis <code>draw</code> 1</td><td>non</td></tr>
+<tr><td><code>mana_surge</code></td><td>Surtension de Mana</td><td>mage</td><td>0</td><td><code>skill</code></td><td><code>gain_mana</code> 1 puis <code>draw</code> 1</td><td>oui</td></tr>
+</tbody>
+</table></div>
+
+<p>
+  Les six partagent <code>"category": "characterSpecific"</code>, <code>"rarity": "unique"</code> et
+  <code>"baseMaxForgeUpgrades": 5</code>. Voici deux entrées, variantes anglaises retirées pour la
+  lisibilité, qui montrent la forme réelle du fichier :
+</p>
+
+<div class="code" data-lang="json">
+  <div class="code-head"><span class="path">assets/data/hero_cards.json</span><span class="lang">json</span></div>
+  <pre>{
+  "id": "holy_shield",
+  "name_fr": "Bouclier Sacré",
+  "description_fr": "Donne 8 d'Armure et soigne 2 PV.",
+  "cost": 1,
+  "type": "skill",
+  "category": "characterSpecific",
+  "heroClass": "paladin",
+  "rarity": "unique",
+  "target": "self",
+  "animation": "buff",
+  "isExhaust": true,
+  "effects": [
+    { "type": "armor", "value": 8 },
+    { "type": "heal", "value": 2 }
+  ],
+  "baseMaxForgeUpgrades": 5
+},
+{
+  "id": "rage_form",
+  "name_fr": "Posture de Rage",
+  "description_fr": "Applique 2 Force ce tour-ci. Pioche 1 carte.",
+  "cost": 1,
+  "type": "skill",
+  "heroClass": "berserker",
+  "effects": [
+    { "type": "apply_status", "statusId": "strength", "value": 2, "duration": 1 },
+    { "type": "draw", "value": 1 }
+  ]
+}</pre>
+</div>
+
+<div class="box rule"><div class="box-title">Règle du jeu</div><p>
+  <code>rage_form</code> pose un statut <code>strength</code> de valeur 2 et de durée 1. Il alimente
+  donc <code>effectiveAttaque</code> — pas <code>attaque</code> — et disparaît au tick de statuts
+  suivant. C'est exactement la distinction permanent / temporaire de la section 2, vue depuis les
+  données.
+</p></div>
+
+<div class="box"><div class="box-title">À retenir</div><p>
+  Les deux cartes <code>isExhaust: true</code> (<code>holy_shield</code> et <code>mana_surge</code>)
+  sont les deux plus rentables à l'usage unique : 8 d'armure + 2 PV pour 1 mana, et 1 mana + 1 carte
+  pour 0 mana. L'<em>exhaust</em> est le prix de leur efficacité.
+</p></div>
+
+<h2 id="s5">5. Les traits passifs</h2>
+
+<p>
+  Chaque classe embarque un trait passif identifié par <code>passiveTrait</code>. Les trois passifs du
+  jeu tiennent dans un seul fichier — le voici en entier, variantes anglaises retirées pour la
+  lisibilité.
+</p>
+
+<div class="code" data-lang="json">
+  <div class="code-head"><span class="path">assets/data/passives.json</span><span class="lang">json</span></div>
+  <pre>[
+  {
+    "id": "regenArmor",
+    "name_fr": "Régénération d'Armure",
+    "description_fr": "Gagne 2 points d'Armure (+ Maîtrise) automatiquement à la fin de chaque tour.",
+    "trigger": "endOfTurn",
+    "effectType": "gain_armor",
+    "value": 2
+  },
+  {
+    "id": "berserkerArmor",
+    "name_fr": "Armure du Berserker",
+    "description_fr": "Gagne 1 point d'Armure (+ Maîtrise) au début du tour pour chaque tranche de 10 PV manquants.",
+    "trigger": "startOfTurn",
+    "effectType": "berserker_armor",
+    "value": 1
+  },
+  {
+    "id": "spellArmor",
+    "name_fr": "Armure Magique",
+    "description_fr": "Gagne 1 point d'Armure (+ Maîtrise) instantanément chaque fois que vous jouez une carte Compétence.",
+    "trigger": "onCardPlayed",
+    "effectType": "spell_armor",
+    "value": 1
+  }
+]</pre>
+</div>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Passif</th><th>Classe</th><th>Déclencheur</th><th><code>effectType</code></th><th><code>value</code></th><th>Formule exacte du gain d'armure</th></tr></thead>
+<tbody>
+<tr>
+  <td><code>regenArmor</code></td><td>Paladin</td><td><code>endOfTurn</code></td><td><code>gain_armor</code></td><td>2</td>
+  <td><code>armure + 2 + effectiveArmorMastery</code></td>
+</tr>
+<tr>
+  <td><code>berserkerArmor</code></td><td>Berserker</td><td><code>startOfTurn</code></td><td><code>berserker_armor</code></td><td>1</td>
+  <td><code>armure + ((maxPv − currentPv) ~/ 10) × 1 + effectiveArmorMastery</code>, uniquement si le gain est &gt; 0</td>
+</tr>
+<tr>
+  <td><code>spellArmor</code></td><td>Mage</td><td><code>onCardPlayed</code></td><td><code>spell_armor</code></td><td>1</td>
+  <td><code>armure + 1 + effectiveArmorMastery</code>, seulement si <code>card.data.type == CardType.skill</code></td>
+</tr>
+</tbody>
+</table></div>
+
+<p>
+  Les trois passifs partagent le même effet — gagner de l'armure — mais diffèrent par leur moment de
+  déclenchement. Tout le comportement est concentré dans un seul fichier de 68 lignes, avec trois
+  méthodes statiques qui correspondent aux trois <code>trigger</code> possibles.
+</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/trait_system.dart</span><span class="lang">dart</span></div>
+  <pre>class TraitSystem {
+  /// Appelé au début du tour du joueur
+  static void onTurnStart(RunController controller) {
+    final passive =
+        controller.currentState.activePassive ??
+        PassiveData.fallback(controller.currentState.passiveTrait ?? '');
+    final stats = controller.currentState.heroStats;
+
+    if (passive.trigger == RelicTrigger.startOfTurn) {
+      if (passive.effectType == 'berserker_armor') {
+        // Gagne X d'Armure (+Maîtrise) pour chaque tranche de 10 PV manquants
+        final missingHp = stats.maxPv - stats.currentPv;
+        final multiplier = missingHp ~/ 10;
+        final armorGain = multiplier * passive.value;
+        if (armorGain &gt; 0) {
+          controller.setHeroStats(
+            armure: stats.armure + armorGain + stats.effectiveArmorMastery,
+          );
+        }
+      } else if (passive.effectType == 'gain_armor') {
+        controller.setHeroStats(
+          armure: stats.armure + passive.value + stats.effectiveArmorMastery,
+        );
+      }
+    }
+  }</pre>
+</div>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/trait_system.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Appelé à la fin du tour du joueur
+  static void onTurnEnd(RunController controller) {
+    final passive =
+        controller.currentState.activePassive ??
+        PassiveData.fallback(controller.currentState.passiveTrait ?? '');
+    final stats = controller.currentState.heroStats;
+
+    if (passive.trigger == RelicTrigger.endOfTurn) {
+      if (passive.effectType == 'gain_armor') {
+        controller.setHeroStats(
+          armure: stats.armure + passive.value + stats.effectiveArmorMastery,
+        );
+      }
+    }
+  }
+
+  /// Appelé lorsqu'une carte est jouée avec succès
+  static void onCardPlayed(RunController controller, CardInstance card) {
+    final passive =
+        controller.currentState.activePassive ??
+        PassiveData.fallback(controller.currentState.passiveTrait ?? '');
+    final stats = controller.currentState.heroStats;
+
+    if (passive.trigger == RelicTrigger.onCardPlayed) {
+      if (passive.effectType == 'spell_armor') {
+        if (card.data.type == CardType.skill) {
+          controller.setHeroStats(
+            armure: stats.armure + passive.value + stats.effectiveArmorMastery,
+          );
+        }
+      }
+    }
+  }
+}</pre>
+</div>
+
+<p>
+  Notez l'opérateur <code>~/</code> dans <code>missingHp ~/ 10</code> : c'est la division entière de
+  Dart. Un Berserker à 80 PV max et 37 PV courants a 43 PV manquants, donc
+  <code>43 ~/ 10 == 4</code> — soit 4 points d'armure, et non 4,3. Le garde
+  <code>if (armorGain &gt; 0)</code> évite d'appeler <code>setHeroStats</code> pour rien quand le héros
+  est à moins de 10 PV manquants.
+</p>
+
+<h3>Le rôle du <code>+ stats.effectiveArmorMastery</code></h3>
+
+<p>
+  Ce terme apparaît <strong>quatre fois</strong> dans <code>TraitSystem</code>, à chaque gain d'armure
+  passif. C'est le sens exact de « (+ Maîtrise) » dans les descriptions françaises des passifs.
+</p>
+
+<div class="box rule"><div class="box-title">Règle du jeu</div><p>
+  La maîtrise d'armure n'octroie <strong>jamais</strong> d'armure par elle-même : elle majore chaque
+  déclenchement du passif de classe. Un Paladin avec 3 de maîtrise gagne
+  <code>2 + 3 = 5</code> d'armure en fin de tour. Un Berserker avec 3 de maîtrise et 25 PV manquants
+  gagne <code>(25 ~/ 10) × 1 + 3 = 2 + 3 = 5</code> d'armure — le bonus de maîtrise est ajouté
+  <em>une seule fois</em>, pas une fois par tranche.
+</p></div>
+
+<p>
+  Cette maîtrise se gagne au draft. Attention au nommage : dans
+  <code>applyHeroStatModifier</code>, le paramètre s'appelle <code>armorAcc</code> mais il alimente
+  <code>armorMastery</code>, pas <code>armure</code> :
+</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run/player_stats_manager.dart</span><span class="lang">dart</span></div>
+  <pre>          attaque: currentStats.attaque + attackAcc,
+          armorMastery: currentStats.armorMastery + armorAcc,
+          luck: currentStats.luck + luckAcc,</pre>
+</div>
+
+<p>
+  C'est cohérent avec le reste du système : donner de l'<code>armure</code> brute au draft serait
+  inutile, puisqu'elle serait remise à 0 dès le tour suivant (section 6). Seule la maîtrise, qui est
+  permanente, a du sens comme récompense.
+</p>
+
+<h3><code>PassiveData.fallback(id)</code> : la ceinture et les bretelles</h3>
+
+<p>
+  Les trois méthodes de <code>TraitSystem</code> commencent par la même ligne :
+  <code>controller.currentState.activePassive ?? PassiveData.fallback(...)</code>. L'opérateur
+  <code>??</code> signifie « si l'expression de gauche est <code>null</code>, prends celle de droite ».
+  Autrement dit : si le <code>RunState</code> n'a pas de passif chargé, on reconstruit le passif
+  <em>en dur</em>, dans le code.
+</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/passive_data.dart</span><span class="lang">dart</span></div>
+  <pre>  static PassiveData fallback(String id) {
+    switch (id) {
+      case 'regenArmor':
+        return const PassiveData(
+          id: 'regenArmor',
+          nameEn: 'Armor Regeneration',
+          nameFr: "Régénération d'Armure",
+          descriptionEn:
+              'Gain 2 Block (+ Mastery) automatically at the end of each turn.',
+          descriptionFr:
+              "Gagne 2 points d'Armure (+ Maîtrise) automatiquement à la fin de chaque tour.",
+          trigger: RelicTrigger.endOfTurn,
+          effectType: 'gain_armor',
+          value: 2,
+        );
+      // ... berserkerArmor, spellArmor ...
+      default:
+        return const PassiveData(
+          id: 'none',
+          nameEn: 'None',
+          nameFr: 'Aucun',
+          descriptionEn: '',
+          descriptionFr: '',
+          trigger: RelicTrigger.startOfTurn,
+          effectType: 'none',
+          value: 0,
+        );
+    }
+  }</pre>
+</div>
+
+<p>
+  Dupliquer les données JSON dans le code Dart ressemble à une faute. Elle est pourtant assumée, et la
+  raison se voit au chargement d'une sauvegarde. <code>RunState</code> ne sérialise pas l'objet
+  <code>PassiveData</code> complet : il n'écrit que l'identifiant et les deux noms
+  (<code>'activePassiveId'</code>, <code>'activePassiveNameFr'</code>,
+  <code>'activePassiveNameEn'</code>). À la relecture, il faut donc retrouver le passif dans le
+  registre — et ça peut échouer si le contenu du jeu a changé entre-temps.
+</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run_controller.dart</span><span class="lang">dart</span></div>
+  <pre>    final activePassiveId = json['activePassiveId'] as String?;
+    PassiveData? activePassive;
+    if (activePassiveId != null) {
+      activePassive = PassiveData.getById(activePassiveId);
+      if (activePassive == null) {
+        missing.add(
+          MissingSaveItem(
+            id: activePassiveId,
+            nameFr: json['activePassiveNameFr'] as String? ?? activePassiveId,
+            nameEn: json['activePassiveNameEn'] as String? ?? activePassiveId,
+            category: 'passive',
+          ),
+        );
+        activePassive = PassiveData.fallback(
+          json['passiveTrait'] as String? ?? '',
+        );
+      }
+    }</pre>
+</div>
+
+<p>Le scénario couvert est précis :</p>
+<ol>
+  <li>le joueur sauvegarde une partie avec le passif <code>spellArmor</code> ;</li>
+  <li>une mise à jour renomme ou supprime cette entrée de <code>passives.json</code> ;</li>
+  <li>au chargement, <code>PassiveData.getById</code> renvoie <code>null</code> ;</li>
+  <li>l'élément est signalé au joueur via <code>MissingSaveItem</code> ;</li>
+  <li>et <code>fallback</code> fournit malgré tout un passif valide, pour que la partie continue.</li>
+</ol>
+
+<div class="box ok"><div class="box-title">Bonne pratique</div><p>
+  Un <em>fallback</em> codé en dur est acceptable quand il est (a) limité à un petit nombre d'entrées
+  stables, (b) accompagné d'un signalement à l'utilisateur, et (c) le seul moyen d'éviter un crash au
+  chargement. Ici les trois conditions sont réunies. Le cas <code>default</code> renvoie un passif
+  <code>'none'</code> de valeur 0 : inerte, mais non nul — <code>TraitSystem</code> ne plantera jamais.
+</p></div>
+
+<div class="box warn"><div class="box-title">Piège</div><p>
+  <code>PassiveData.fallback</code> sert aussi de valeur initiale hors sauvegarde :
+  <code>RunController.build()</code> démarre sur <code>PassiveData.fallback('regenArmor')</code> et un
+  héros <code>paladin</code> à 100 PV. C'est un état de secours qui n'est jamais joué tel quel —
+  <code>startNewRun</code> le remplace intégralement dès que le joueur valide son deck de départ.
+</p></div>
+
+<h2 id="s6">6. Mana et armure : les deux ressources qui se réinitialisent</h2>
+
+<p>
+  Le héros a deux jauges qui ne se cumulent pas d'un tour à l'autre. Elles sont remises à leur valeur
+  de départ à des moments très précis, et l'ordre de ces remises compte.
+</p>
+
+<h3><code>startCombat()</code> — une fois par combat</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  void startCombat() {
+    // 1. Nettoyage des buffs/debuffs du combat précédent,
+    // et restauration du mana au max (l'armure est remise à 0 en fin de combat dans completeCurrentNode)
+    state = state.copyWith(
+      heroStats: state.heroStats.copyWith(
+        statuses: [],
+        currentMana: state.heroStats.maxMana,
+      ),
+    );
+    // 2. Déclenchement des reliques
+    applyRelics(RelicTrigger.startOfCombat);
+    // 3. Déclenchement des passifs de début de combat/tour pour le tour 1 (ex: Berserker)
+    TraitSystem.onTurnStart(this);
+  }</pre>
+</div>
+
+<p>
+  Trois étapes seulement, et un détail important : <strong><code>startCombat()</code> ne touche pas à
+  l'armure</strong>. Le commentaire explique pourquoi — c'est <code>completeCurrentNode()</code> qui
+  s'en charge à la fin du combat précédent. L'appel final à <code>TraitSystem.onTurnStart</code> est là
+  parce que le premier tour ne passe pas par <code>startTurn()</code> : au montage du
+  <code>GameScreen</code>, seul <code>startPlayerCombat()</code> est appelé. Sans cette ligne, le
+  Berserker n'aurait pas son armure au tour 1.
+</p>
+
+<h3><code>startTurn()</code> — à chaque tour</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  void startTurn() {
+    // 1. Restaurer le Mana à sa valeur maximale (ne se cumule pas d'un tour à l'autre) et reset l'armure
+    state = state.copyWith(
+      heroStats: state.heroStats.copyWith(
+        armure: 0,
+        currentMana: state.heroStats.maxMana,
+      ),
+    );
+
+    // 2. Déclencher les reliques de début de tour (qui peuvent maintenant rajouter du mana par-dessus)
+    applyRelics(RelicTrigger.startOfTurn);
+
+    // 3. Appliquer les effets de début de tour (ex: Poison, Regen) et décrémenter les statuts via le StatusEffectProcessor
+    final updatedStats = StatusEffectProcessor.processPlayerStatuses(state.heroStats);
+    state = state.copyWith(heroStats: updatedStats);
+
+    // 4. Décrémenter les cooldowns via le skill provider
+    ref.read(skillProvider.notifier).tickCooldowns();
+
+    // 5. Déclencher les traits passifs
+    TraitSystem.onTurnStart(this);
+  }</pre>
+</div>
+
+<p>L'ordre exact des cinq étapes, et ce que chacune implique :</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>#</th><th>Étape</th><th>Conséquence</th></tr></thead>
+<tbody>
+<tr><td>1</td><td><code>armure: 0</code> et <code>currentMana: maxMana</code></td><td>L'armure du tour précédent est perdue ; le mana non dépensé est perdu aussi (il est écrasé, pas cumulé).</td></tr>
+<tr><td>2</td><td><code>applyRelics(RelicTrigger.startOfTurn)</code></td><td>Les reliques peuvent ajouter du mana <em>au-dessus</em> du maximum, puisqu'elles passent après la restauration.</td></tr>
+<tr><td>3</td><td><code>StatusEffectProcessor.processPlayerStatuses</code></td><td>Poison infligé, <code>strength_regen</code> et <code>armor_regen</code> appliqués, puis <code>tickStatuses()</code> décrémente toutes les durées.</td></tr>
+<tr><td>4</td><td><code>skillProvider.tickCooldowns()</code></td><td>Les deux cooldowns de compétences descendent d'un cran (jamais en dessous de 0).</td></tr>
+<tr><td>5</td><td><code>TraitSystem.onTurnStart(this)</code></td><td>Le passif <code>startOfTurn</code> (Berserker) s'applique <strong>après</strong> le reset d'armure — sinon son armure serait effacée juste après avoir été gagnée.</td></tr>
+</tbody>
+</table></div>
+
+<p>
+  La pioche n'est pas dans <code>startTurn()</code> : elle est ajoutée par-dessus, dans le
+  <code>TurnPhaseManager</code>, et le commentaire y interdit explicitement d'inverser les deux appels.
+</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/combat/turn_phase_manager.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Ouvre un tour joueur : mana, armure, reliques `startOfTurn`, statuts,
+  /// cooldowns et passifs, puis pioche.
+  ///
+  /// L'ordre est celui d'avant P-02 et doit le rester : inverser les deux
+  /// appels décalerait toute relique `startOfTurn` d'un tour.
+  void startPlayerTurn() {
+    final runController = ref.read(runProvider.notifier);
+
+    runController.startTurn();
+    ref.read(deckProvider.notifier).drawCards(
+          runController.currentState.cardsPerTurn,
+          maxHandSize: GameConstants.maxHandSize,
+        );
+  }</pre>
+</div>
+
+<p>
+  Le même avertissement existe pour l'ouverture de combat, avec la même formulation : « <em>L'ordre est
+  celui d'avant P-02 et doit le rester : <code>startCombat()</code> déclenche les reliques, la pioche
+  vient après.</em> » Piocher avant de restaurer le mana donnerait une main que le joueur ne pourrait
+  pas payer ; déclencher les reliques avant le reset de mana ferait disparaître le mana qu'elles
+  ajoutent.
+</p>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 820 470" width="820" role="img" aria-label="Chronologie d'un tour du héros, de startPlayerTurn à la phase ennemie">
+      <rect x="0" y="0" width="820" height="470" fill="#0e1524"/>
+
+      <rect x="20" y="16" width="350" height="30" rx="6" fill="#1a2540" stroke="#22d3ee"/>
+      <text x="195" y="36" fill="#22d3ee" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">TurnPhaseManager.startPlayerTurn()</text>
+
+      <rect x="20" y="58" width="350" height="44" rx="8" fill="#151b2b" stroke="#3a4966"/>
+      <text x="36" y="76" fill="#f59e0b" font-size="11" font-family="ui-monospace, monospace">1</text>
+      <text x="56" y="76" fill="#e6ecf5" font-size="12" font-family="ui-monospace, monospace">armure = 0</text>
+      <text x="56" y="93" fill="#e6ecf5" font-size="12" font-family="ui-monospace, monospace">currentMana = maxMana</text>
+
+      <path d="M195 102 L195 116" stroke="#3a4966" stroke-width="2" marker-end="url(#c8-a2)"/>
+
+      <rect x="20" y="120" width="350" height="34" rx="8" fill="#151b2b" stroke="#3a4966"/>
+      <text x="36" y="142" fill="#f59e0b" font-size="11" font-family="ui-monospace, monospace">2</text>
+      <text x="56" y="142" fill="#e6ecf5" font-size="12" font-family="ui-monospace, monospace">applyRelics(startOfTurn)</text>
+
+      <path d="M195 154 L195 168" stroke="#3a4966" stroke-width="2" marker-end="url(#c8-a2)"/>
+
+      <rect x="20" y="172" width="350" height="44" rx="8" fill="#151b2b" stroke="#3a4966"/>
+      <text x="36" y="190" fill="#f59e0b" font-size="11" font-family="ui-monospace, monospace">3</text>
+      <text x="56" y="190" fill="#e6ecf5" font-size="12" font-family="ui-monospace, monospace">processPlayerStatuses()</text>
+      <text x="56" y="207" fill="#a7b4c9" font-size="11">poison, regen, puis tickStatuses()</text>
+
+      <path d="M195 216 L195 230" stroke="#3a4966" stroke-width="2" marker-end="url(#c8-a2)"/>
+
+      <rect x="20" y="234" width="350" height="34" rx="8" fill="#151b2b" stroke="#3a4966"/>
+      <text x="36" y="256" fill="#f59e0b" font-size="11" font-family="ui-monospace, monospace">4</text>
+      <text x="56" y="256" fill="#e6ecf5" font-size="12" font-family="ui-monospace, monospace">tickCooldowns()</text>
+
+      <path d="M195 268 L195 282" stroke="#3a4966" stroke-width="2" marker-end="url(#c8-a2)"/>
+
+      <rect x="20" y="286" width="350" height="44" rx="8" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="36" y="304" fill="#f59e0b" font-size="11" font-family="ui-monospace, monospace">5</text>
+      <text x="56" y="304" fill="#a78bfa" font-size="12" font-family="ui-monospace, monospace">TraitSystem.onTurnStart()</text>
+      <text x="56" y="321" fill="#a7b4c9" font-size="11">berserkerArmor : + armure après le reset</text>
+
+      <path d="M195 330 L195 344" stroke="#3a4966" stroke-width="2" marker-end="url(#c8-a2)"/>
+
+      <rect x="20" y="348" width="350" height="34" rx="8" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="195" y="370" fill="#22d3ee" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">drawCards(cardsPerTurn)</text>
+
+      <path d="M370 365 L410 365 L410 90 L446 90" stroke="#3a4966" stroke-width="2" fill="none" marker-end="url(#c8-a2)"/>
+
+      <rect x="450" y="16" width="350" height="30" rx="6" fill="#1a2540" stroke="#34d399"/>
+      <text x="625" y="36" fill="#34d399" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">Phase joueur</text>
+
+      <rect x="450" y="58" width="350" height="44" rx="8" fill="#151b2b" stroke="#3a4966"/>
+      <text x="466" y="76" fill="#e6ecf5" font-size="12">Le joueur joue des cartes (coût en mana)</text>
+      <text x="466" y="93" fill="#a7b4c9" font-size="11" font-family="ui-monospace, monospace">TraitSystem.onCardPlayed → spellArmor</text>
+
+      <path d="M625 102 L625 130" stroke="#3a4966" stroke-width="2" marker-end="url(#c8-a2)"/>
+
+      <rect x="450" y="134" width="350" height="30" rx="6" fill="#1a2540" stroke="#f59e0b"/>
+      <text x="625" y="154" fill="#f59e0b" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">Bouton « Fin de tour »</text>
+
+      <rect x="450" y="176" width="350" height="44" rx="8" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="466" y="194" fill="#a78bfa" font-size="12" font-family="ui-monospace, monospace">TraitSystem.onTurnEnd()</text>
+      <text x="466" y="211" fill="#a7b4c9" font-size="11">regenArmor : + 2 + maîtrise</text>
+
+      <path d="M625 220 L625 234" stroke="#3a4966" stroke-width="2" marker-end="url(#c8-a2)"/>
+
+      <rect x="450" y="238" width="350" height="34" rx="8" fill="#151b2b" stroke="#3a4966"/>
+      <text x="466" y="260" fill="#e6ecf5" font-size="12" font-family="ui-monospace, monospace">applyRelics(endOfTurn)</text>
+
+      <path d="M625 272 L625 286" stroke="#3a4966" stroke-width="2" marker-end="url(#c8-a2)"/>
+
+      <rect x="450" y="290" width="350" height="34" rx="8" fill="#151b2b" stroke="#3a4966"/>
+      <text x="466" y="312" fill="#e6ecf5" font-size="12" font-family="ui-monospace, monospace">discardHand()</text>
+
+      <path d="M625 324 L625 338" stroke="#3a4966" stroke-width="2" marker-end="url(#c8-a2)"/>
+
+      <rect x="450" y="342" width="350" height="46" rx="8" fill="#151b2b" stroke="#f87171"/>
+      <text x="625" y="362" fill="#f87171" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">Phase ennemie</text>
+      <text x="625" y="379" fill="#a7b4c9" font-size="11" text-anchor="middle">l'armure gagnée sert ici, puis retombe à 0</text>
+
+      <rect x="20" y="404" width="780" height="48" rx="8" fill="#151b2b" stroke="#3a4966"/>
+      <text x="34" y="424" fill="#a7b4c9" font-size="12">L'armure du Paladin est gagnée en fin de tour (étape de droite) et protège pendant la riposte ennemie ;</text>
+      <text x="34" y="442" fill="#a7b4c9" font-size="12">celle du Berserker est gagnée à l'étape 5, juste après le reset à 0 de l'étape 1.</text>
+
+      <defs><marker id="c8-a2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0 0 L8 4 L0 8 z" fill="#3a4966"/></marker></defs>
+    </svg>
+  </div>
+  <figcaption>Chronologie complète d'un tour côté héros, du reset d'armure à la phase ennemie.</figcaption>
+</figure>
+
+<div class="box rule"><div class="box-title">Règle du jeu</div><p>
+  Le mana ne se stocke pas : à chaque début de tour, <code>currentMana</code> est <em>écrasé</em> par
+  <code>maxMana</code>. Terminer un tour avec du mana en réserve est une perte sèche — c'est d'ailleurs
+  pourquoi <code>GameScreen</code> affiche un avertissement (<code>_showRemainingManaWarning</code>) et
+  exige un second clic sur « Fin de tour » quand il reste du mana.
+</p></div>
+
+<h3><code>completeCurrentNode()</code> — la fin du nœud</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run/map_progression_manager.dart</span><span class="lang">dart</span></div>
+  <pre>    // Reset de l'armure et nettoyage des statuts à la fin du combat pour préserver les passifs
+    controller.updateState(
+      controller.currentState.copyWith(
+        mapNodes: updatedNodes,
+        heroStats: controller.currentState.heroStats.copyWith(armure: 0, statuses: []),
+      ),
+    );
+
+    if (completedNode != null &amp;&amp; completedNode!.type == MapNodeType.boss) {
+      advanceToNextWorld();
+    }
+
+    ref.read(checkpointProvider.notifier).bump();</pre>
+</div>
+
+<p>
+  C'est ici, et nulle part ailleurs, que le héros repart « propre » vers la carte du monde : armure à
+  0 et liste de statuts vidée. Le commentaire dit « pour préserver les passifs » — comprendre : pour
+  qu'un buff de force gagné au combat précédent ne se cumule pas indéfiniment avec les gains du passif
+  au combat suivant.
+</p>
+
+<p>
+  À côté, <code>nextLevel()</code> — appelé juste avant <code>completeCurrentNode()</code> dans
+  <code>_completeAndExitCombat()</code> — remonte le compteur de niveau de carte, remet le mana au
+  maximum et réinitialise les cooldowns :
+</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run/map_progression_manager.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Avance d'un niveau (après avoir drafté)
+  void nextLevel() {
+    final currentStats = controller.currentState.heroStats;
+    controller.updateState(
+      controller.currentState.copyWith(
+        currentLevel: controller.currentState.currentLevel + 1,
+        heroStats: currentStats.copyWith(currentMana: currentStats.maxMana),
+      ),
+    );
+    // Réinitialise les cooldowns à chaque nouveau niveau
+    ref.read(skillProvider.notifier).resetCooldowns();
+  }</pre>
+</div>
+
+<div class="box warn"><div class="box-title">Piège</div><p>
+  <code>currentLevel</code> (sur <code>RunState</code>) et <code>level</code> (sur
+  <code>EntityStats</code>) sont deux compteurs différents ! Le premier est la profondeur dans l'acte —
+  il pilote <code>isBossLevel</code> (<code>currentLevel % 10 == 0</code>) et le scaling des ennemis.
+  Le second est le niveau d'expérience du héros. Ils avancent à des rythmes indépendants.
+</p></div>
+
+<div class="box warn"><div class="box-title">Piège</div><p>
+  <code>PlayerStatsManager.setHeroStats</code> écrit <code>lastActionWasCrit: lastActionWasCrit ?? false</code>.
+  Comme <code>TraitSystem</code> passe uniquement <code>armure:</code>, chaque déclenchement de passif
+  remet donc le drapeau de critique à <code>false</code>. C'est sans conséquence en pratique (le
+  drapeau ne sert qu'à colorer un texte flottant déjà affiché), mais c'est le genre d'effet de bord
+  qu'un <code>copyWith</code> mal cadré peut introduire.
+</p></div>
+
+<h2 id="s7">7. XP, niveaux et drafts en attente</h2>
+
+<p>
+  L'XP n'est gagnée qu'à la victoire : <code>RewardController.collectGoldAndXp()</code> appelle
+  <code>ref.read(runProvider.notifier).gainXp(state.xpGained)</code>, où <code>xpGained</code> est la
+  somme des <code>enemy.data.xp</code> pondérés par <code>1.0 + 0.10 * (enemy.stats.level - 1)</code>.
+  Tout le calcul de progression tient ensuite dans une seule méthode.
+</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run/player_stats_manager.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Ajoute de l'Expérience au joueur.
+  /// Gère les montées de niveaux successives avec conservation de l'XP excédentaire (carry-over).
+  /// Retourne [true] si au moins un niveau a été gagné.
+  bool gainXp(int amount) {
+    if (amount &lt;= 0) return false;
+
+    var currentStats = controller.currentState.heroStats;
+    int newXp = currentStats.xp + amount;
+    int currentLevel = currentStats.level;
+    int currentXpToNext = currentStats.xpToNextLevel;
+    bool leveledUp = false;
+    int levelsGained = 0;
+
+    while (newXp &gt;= currentXpToNext) {
+      newXp -= currentXpToNext;
+      currentLevel++;
+      // Formule d'XP requise pour le nouveau niveau: 100 * (1.5 ^ (level - 1))
+      currentXpToNext = (100 * pow(1.5, currentLevel - 1)).round();
+      leveledUp = true;
+      levelsGained++;
+    }
+
+    controller.updateState(
+      controller.currentState.copyWith(
+        heroStats: currentStats.copyWith(
+          level: currentLevel,
+          xp: newXp,
+          xpToNextLevel: currentXpToNext,
+        ),
+        pendingDrafts: controller.currentState.pendingDrafts + levelsGained,
+      ),
+    );
+
+    return leveledUp;
+  }</pre>
+</div>
+
+<p>Trois mécanismes cohabitent dans cette boucle :</p>
+<ul>
+  <li>
+    <strong>Le carry-over.</strong> À chaque passage de niveau, on fait <code>newXp -= currentXpToNext</code>
+    au lieu de remettre l'XP à zéro. Le surplus est conservé et compte pour le niveau suivant. Le
+    champ <code>xp</code> représente donc l'XP <em>dans le niveau courant</em>, pas l'XP totale.
+  </li>
+  <li>
+    <strong>Les montées multiples.</strong> C'est une boucle <code>while</code>, pas un <code>if</code> :
+    une grosse récompense peut faire gagner plusieurs niveaux d'un coup.
+  </li>
+  <li>
+    <strong>Le compteur de drafts.</strong> <code>levelsGained</code> est incrémenté à chaque tour de
+    boucle, puis ajouté à <code>pendingDrafts</code>. Un niveau gagné = un draft dû.
+  </li>
+</ul>
+
+<p>
+  La fonction <code>pow</code> vient de <code>dart:math</code> et renvoie un <code>double</code> ;
+  <code>.round()</code> arrondit au plus proche entier (à la moitié, Dart s'éloigne de zéro, donc
+  337,5 devient 338). Voici les dix premiers seuils, calculés avec
+  <code>(100 * pow(1.5, level - 1)).round()</code> :
+</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Niveau</th><th>Valeur brute <code>100 × 1.5^(n−1)</code></th><th><code>xpToNextLevel</code> arrondi</th><th>XP cumulée pour atteindre ce niveau</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>100</td><td><strong>100</strong></td><td>0</td></tr>
+<tr><td>2</td><td>150</td><td><strong>150</strong></td><td>100</td></tr>
+<tr><td>3</td><td>225</td><td><strong>225</strong></td><td>250</td></tr>
+<tr><td>4</td><td>337,5</td><td><strong>338</strong></td><td>475</td></tr>
+<tr><td>5</td><td>506,25</td><td><strong>506</strong></td><td>813</td></tr>
+<tr><td>6</td><td>759,375</td><td><strong>759</strong></td><td>1319</td></tr>
+<tr><td>7</td><td>1139,0625</td><td><strong>1139</strong></td><td>2078</td></tr>
+<tr><td>8</td><td>1708,59375</td><td><strong>1709</strong></td><td>3217</td></tr>
+<tr><td>9</td><td>2562,890625</td><td><strong>2563</strong></td><td>4926</td></tr>
+<tr><td>10</td><td>3844,3359375</td><td><strong>3844</strong></td><td>7489</td></tr>
+</tbody>
+</table></div>
+
+<p>
+  Les trois premiers seuils tombent juste ; à partir du niveau 4, l'arrondi entre en jeu — et il
+  arrondit vers le haut à la moitié exacte (337,5 → 338) comme vers le bas dès qu'il y a un reliquat
+  inférieur (506,25 → 506). La croissance est géométrique de raison 1,5 : chaque niveau coûte 50 % de
+  plus que le précédent.
+</p>
+
+<div class="box rule"><div class="box-title">Règle du jeu</div><p>
+  La barre d'XP du panneau de stats affiche <code>stats.xp / stats.xpToNextLevel</code> — donc la
+  progression <em>dans le niveau courant</em>, pas depuis le début de la partie. Un héros niveau 5 avec
+  « XP : 120/506 » a en réalité accumulé 933 XP au total sur la run.
+</p></div>
+
+<h3>Le verrou : <code>pendingDrafts</code></h3>
+
+<p>
+  Tant qu'un draft est dû, la carte du monde est <strong>intégralement bloquée</strong>. Trois endroits
+  du <code>MapScreen</code> l'imposent, et ils se renforcent mutuellement :
+</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/map_screen.dart</span><span class="lang">dart</span></div>
+  <pre>  bool _isNodeAvailable(
+    MapNode node,
+    List&lt;MapNode&gt; allNodes,
+    String? currentNodeId,
+  ) {
+    final runState = ref.read(runProvider);
+    if (runState.pendingDrafts &gt; 0) return false;
+    // ...
+  }
+
+  void _onNodeTap(BuildContext context, WidgetRef ref, MapNode node) {
+    if (ref.read(runProvider).pendingDrafts &gt; 0) return;
+    ref.read(runProvider.notifier).travelToNode(node.id);
+    // ...
+  }</pre>
+</div>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/map_screen.dart</span><span class="lang">dart</span></div>
+  <pre>          // Overlay de Level Up
+          if (runState.pendingDrafts &gt; 0)
+            LevelUpOverlay(
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) =&gt; DraftScreen(
+                      onDraftComplete: () {
+                        ref.read(runProvider.notifier).decrementPendingDrafts();
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                  ),
+                );
+              },
+            ),</pre>
+</div>
+
+<p>Le verrouillage est donc triple :</p>
+<ol>
+  <li><code>_isNodeAvailable</code> renvoie <code>false</code> pour <em>tous</em> les nœuds — visuellement, plus rien n'est sélectionnable ;</li>
+  <li><code>_onNodeTap</code> sort immédiatement, même si un tap passait malgré tout ;</li>
+  <li>un <code>LevelUpOverlay</code> recouvre l'écran et n'offre qu'une seule action : ouvrir le <code>DraftScreen</code>.</li>
+</ol>
+
+<p>
+  À la fin du draft, <code>decrementPendingDrafts()</code> retire <strong>un seul</strong> draft du
+  compteur — donc si le joueur a gagné trois niveaux d'un coup, l'overlay réapparaît deux fois. La
+  méthode déclenche aussi <code>checkpointProvider.bump()</code>, c'est-à-dire une sauvegarde.
+</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run/player_stats_manager.dart</span><span class="lang">dart</span></div>
+  <pre>  void decrementPendingDrafts() {
+    if (controller.currentState.pendingDrafts &gt; 0) {
+      controller.updateState(
+        controller.currentState.copyWith(
+          pendingDrafts: controller.currentState.pendingDrafts - 1,
+        ),
+      );
+      ref.read(checkpointProvider.notifier).bump();
+    }
+  }</pre>
+</div>
+
+<div class="box rule"><div class="box-title">Règle du jeu</div><p>
+  Un niveau gagné = un draft obligatoire = une progression de carte impossible tant qu'il n'est pas
+  consommé. Le joueur ne peut donc jamais « mettre de côté » ses récompenses de niveau pour plus tard.
+</p></div>
+
+<div class="memo">
+  <div class="card"><h5><code>level</code></h5><p>Niveau d'expérience du héros, sur <code>EntityStats</code>. Fixe le seuil suivant.</p></div>
+  <div class="card"><h5><code>xp</code></h5><p>XP accumulée dans le niveau courant. Remise à zéro par soustraction, jamais par affectation.</p></div>
+  <div class="card"><h5><code>xpToNextLevel</code></h5><p>Recalculé après chaque montée. Défaut 100, croissance ×1,5.</p></div>
+  <div class="card"><h5><code>pendingDrafts</code></h5><p>Sur <code>RunState</code>, pas sur <code>EntityStats</code>. Verrouille la carte tant qu'il est &gt; 0.</p></div>
+</div>
+
+<h2 id="s8">8. Les compétences héroïques</h2>
+
+<p>
+  Le dernier fichier de données du chapitre est <code>assets/data/skills.json</code>. Il contient six
+  entrées, au schéma volontairement minimal — pas de textes bilingues, pas d'icône, juste un coût et
+  un effet. Voici les deux premières :
+</p>
+
+<div class="code" data-lang="json">
+  <div class="code-head"><span class="path">assets/data/skills.json</span><span class="lang">json</span></div>
+  <pre>[
+  {
+    "id": "paladin_shield",
+    "name": "Bouclier",
+    "manaCost": 3,
+    "effectType": "armor_buff",
+    "effectValue": 15
+  },
+  {
+    "id": "paladin_rage",
+    "name": "Rage",
+    "manaCost": 5,
+    "effectType": "attack_buff",
+    "effectValue": 2
+  },
+  ...
+]</pre>
+</div>
+
+<p>Et les six au complet :</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>id</th><th>Nom</th><th><code>manaCost</code></th><th><code>effectType</code></th><th><code>effectValue</code></th><th>Traité par</th></tr></thead>
+<tbody>
+<tr><td><code>paladin_shield</code></td><td>Bouclier</td><td>3</td><td><code>armor_buff</code></td><td>15</td><td><code>CombatController.executeSkill</code></td></tr>
+<tr><td><code>paladin_rage</code></td><td>Rage</td><td>5</td><td><code>attack_buff</code></td><td>2</td><td><code>applyAttackBuff</code> (via un callback)</td></tr>
+<tr><td><code>mage_nova</code></td><td>Nova</td><td>4</td><td><code>damage_aoe</code></td><td>20</td><td><code>CombatController.executeSkill</code></td></tr>
+<tr><td><code>mage_strike</code></td><td>Frappe Foudre</td><td>8</td><td><code>damage_targeted</code></td><td>150</td><td><code>CombatController.executeSkill</code></td></tr>
+<tr><td><code>berserker_leech</code></td><td>Vampirisme</td><td>0</td><td><code>lifesteal_buff</code></td><td>3</td><td><code>applyLifestealBuff</code> (via un callback)</td></tr>
+<tr><td><code>berserker_pierce</code></td><td>Perce-Armure</td><td>3</td><td><code>damage_pierce</code></td><td>15</td><td><code>CombatController.executeSkill</code></td></tr>
+</tbody>
+</table></div>
+
+<p>
+  Le modèle Dart correspondant est aussi simple que le JSON — cinq champs, tous requis :
+</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/skill_data.dart</span><span class="lang">dart</span></div>
+  <pre>class SkillData {
+  final String id;
+  final String name;
+  final int manaCost;
+  final String effectType;
+  final int effectValue;
+
+  const SkillData({
+    required this.id,
+    required this.name,
+    required this.manaCost,
+    required this.effectType,
+    required this.effectValue,
+  });</pre>
+</div>
+
+<h3><code>SkillController</code> et ses deux cooldowns</h3>
+
+<p>
+  Le contrôleur ne connaît pas les compétences : il ne gère que <strong>deux emplacements</strong>,
+  <code>skill1</code> et <code>skill2</code>, chacun avec son compteur de recharge.
+</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/skill_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  void tickCooldowns() {
+    state = SkillState(
+      skill1Cooldown: state.skill1Cooldown &gt; 0 ? state.skill1Cooldown - 1 : 0,
+      skill2Cooldown: state.skill2Cooldown &gt; 0 ? state.skill2Cooldown - 1 : 0,
+    );
+  }
+
+  bool triggerSkill1(int cd, {int mana = 0, int hpPercent = 0}) {
+    if (state.skill1Cooldown &gt; 0) return false;
+    final success = ref
+        .read(runProvider.notifier)
+        .consumeResource(mana: mana, hpPercent: hpPercent);
+    if (!success) return false;
+    state = state.copyWith(skill1Cooldown: cd);
+    return true;
+  }
+
+  void resetCooldowns() {
+    state = const SkillState();
+  }</pre>
+</div>
+
+<p>
+  L'enchaînement est net : on refuse si le cooldown n'est pas écoulé, <em>puis</em> on tente de payer,
+  <em>puis</em> seulement on arme le cooldown. Si <code>consumeResource</code> échoue, la compétence
+  n'est pas mise en recharge — le joueur ne perd rien. <code>resetCooldowns()</code> est appelé au
+  démarrage d'une run (<code>startNewRun</code>) et à chaque nouveau niveau (<code>nextLevel</code>) ;
+  <code>tickCooldowns()</code> est appelé à l'étape 4 de <code>startTurn()</code>.
+</p>
+
+<h3><code>consumeResource</code> : payer en mana ou en PV</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run/player_stats_manager.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Consomme les ressources nécessaires. Retourne false si insuffisant.
+  bool consumeResource({int mana = 0, int hpPercent = 0}) {
+    int hpCost = 0;
+    if (hpPercent &gt; 0) {
+      hpCost = (controller.currentState.heroStats.currentPv * (hpPercent / 100.0)).round();
+      if (hpCost &lt; 1) hpCost = 1;
+      if (controller.currentState.heroStats.currentPv &lt;= hpCost) return false;
+    }
+
+    if (mana &gt; 0 &amp;&amp; controller.currentState.heroStats.currentMana &lt; mana) {
+      return false;
+    }
+
+    controller.updateState(
+      controller.currentState.copyWith(
+        heroStats: controller.currentState.heroStats.copyWith(
+          currentMana: controller.currentState.heroStats.currentMana - mana,
+          currentPv: controller.currentState.heroStats.currentPv - hpCost,
+        ),
+      ),
+    );
+    return true;
+  }</pre>
+</div>
+
+<p>Quatre garde-fous méritent d'être relevés :</p>
+<ul>
+  <li>le coût en PV est un <strong>pourcentage des PV courants</strong>, pas des PV max ;</li>
+  <li>il est plancher à 1 (<code>if (hpCost &lt; 1) hpCost = 1;</code>) : payer en PV coûte toujours au moins 1 PV ;</li>
+  <li>la comparaison <code>currentPv &lt;= hpCost</code> est stricte — une compétence ne peut jamais tuer son lanceur ;</li>
+  <li>les deux vérifications ont lieu <strong>avant</strong> toute écriture : soit tout est payé, soit rien ne bouge.</li>
+</ul>
+
+<h3><code>CombatController.executeSkill</code></h3>
+
+<p>
+  Quatre <code>effectType</code> sur six sont résolus ici. Le cas <code>damage_aoe</code> montre bien la
+  logique : <code>effectValue</code> est interprété comme un <strong>pourcentage de l'attaque
+  effective</strong>, pas comme des dégâts bruts.
+</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/combat_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Résout les calculs et l'application d'un Skill (compétence héroïque)
+  void executeSkill(SkillData skill, {String? targetEnemyId}) {
+    final runController = ref.read(runProvider.notifier);
+    final heroStats = runController.currentState.heroStats;
+    final effectiveAttaque = runController.currentState.effectiveAttaque;
+
+    if (skill.effectType == 'damage_aoe') {
+      state = state.copyWith(
+        enemies: state.enemies.map((enemy) {
+          final (dmg, isCrit) = DamagePipeline.calculate(
+            initialDamage: (effectiveAttaque * (skill.effectValue / 100.0)).round(),
+            attackerStats: heroStats,
+            defenderStats: enemy.stats,
+          );
+          return enemy.copyWith(stats: enemy.stats.takeDamage(dmg, isCrit: isCrit));
+        }).toList(),
+      );
+      cleanDeadEnemies();
+    } else if (skill.effectType == 'damage_targeted' &amp;&amp; targetEnemyId != null) {
+      // ... même calcul, sur un seul ennemi
+    }</pre>
+</div>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/combat_controller.dart</span><span class="lang">dart</span></div>
+  <pre>    } else if (skill.effectType == 'damage_pierce' &amp;&amp; targetEnemyId != null) {
+      // ...
+        int stolenArmor = (enemy.stats.armure * (skill.effectValue / 100.0)).round();
+        int newPv = enemy.stats.currentPv - dmg;
+        int newArm = enemy.stats.armure - stolenArmor;
+        if (newPv &lt; 0) newPv = 0;
+        if (newArm &lt; 0) newArm = 0;
+        // ...
+        if (stolenArmor &gt; 0) {
+          runController.setHeroStats(armure: heroStats.armure + stolenArmor);
+        }
+        cleanDeadEnemies();
+      }
+    } else if (skill.effectType == 'armor_buff') {
+      runController.setHeroStats(armure: heroStats.armure + skill.effectValue);
+    }
+  }</pre>
+</div>
+
+<p>
+  Deux comportements se distinguent des cartes classiques : <code>damage_pierce</code> ignore
+  <code>takeDamage</code> et écrit directement <code>currentPv</code> (l'armure ne protège donc pas), et
+  il <em>vole</em> un pourcentage de l'armure de la cible pour la transférer au héros. Quant à
+  <code>armor_buff</code>, il ajoute <code>effectValue</code> tel quel — 15 points d'armure pour
+  <code>paladin_shield</code>, sans passer par la maîtrise d'armure.
+</p>
+
+<div class="box danger"><div class="box-title">Point d'attention — skills.json et les classes actuelles</div>
+<p>
+  En l'état du dépôt, <code>skills.json</code> ne semble relié à aucune classe jouable. Les faits
+  vérifiés dans le code :
+</p>
+<ul>
+  <li>
+    <code>heroes.json</code> déclare <code>"skills": ["holy_shield", "smite"]</code> pour le Paladin ;
+    or ces identifiants sont ceux de <strong>cartes</strong> de <code>hero_cards.json</code>. Aucun des
+    six ids de <code>skills.json</code> (<code>paladin_shield</code>, <code>mage_nova</code>…)
+    n'apparaît dans <code>heroes.json</code>.
+  </li>
+  <li>
+    <code>HeroSkillsLink.getHeroCards</code> résout ce champ contre <code>gameData.cards</code>
+    (<code>cards.json</code> + <code>hero_cards.json</code>), jamais contre <code>gameData.skills</code>.
+  </li>
+  <li>
+    <code>skills.json</code> est bien chargé et parsé dans <code>GameDataRegistry.skills</code>
+    (<code>lib/services/game_data_service.dart</code>), mais une recherche sur <code>gameData.skills</code>
+    et <code>registry.skills</code> dans <code>lib/ui/</code> ne donne aucun résultat : aucun écran ne
+    lit cette liste.
+  </li>
+  <li>
+    De même, <code>SkillController.triggerSkill1</code> / <code>triggerSkill2</code> et
+    <code>HerosDraftGame.executeSkill</code> ne sont appelés depuis aucun autre fichier de
+    <code>lib/</code>. Le seul appel à <code>CombatController.executeSkill</code> est le branchement du
+    callback <code>onExecuteSkill</code> dans <code>lib/ui/screens/game_screen.dart</code>.
+  </li>
+</ul>
+<p>
+  La lecture prudente : le système de compétences est <strong>entièrement implémenté côté logique et
+  données, mais sans point d'entrée dans l'interface</strong> — le champ <code>skills</code> de
+  <code>heroes.json</code> a visiblement été réaffecté aux cartes de classe. Les cooldowns restent
+  cependant sérialisés (<code>SkillState</code> dans <code>save_service.dart</code>) et testés
+  (<code>test/unit/skill_controller_test.dart</code>), donc la fonctionnalité est vraisemblablement
+  gardée en réserve plutôt qu'abandonnée. Avant toute modification, il faut vérifier soi-même ces
+  points sur la version courante du dépôt.
+</p>
+</div>
+
+<div class="box"><div class="box-title">À retenir</div><p>
+  Le chemin réellement emprunté par le jeu, aujourd'hui, est celui des <strong>cartes</strong> : les
+  effets de <code>hero_cards.json</code> passent par le résolveur d'effets de cartes, et le passif de
+  classe est déclenché par <code>TraitSystem.onCardPlayed</code>. C'est là qu'il faut regarder pour
+  comprendre ce que fait concrètement une classe en combat.
+</p></div>
+
+<h3>Où le héros s'affiche</h3>
+
+<p>
+  Pour finir, deux widgets lisent directement <code>runState.heroStats</code> et servent de
+  référence visuelle à tout ce chapitre :
+</p>
+
+<div class="tree">lib/ui/widgets/map/
+├── <span class="f">hero_mini_stats_panel.dart</span>   <span class="c">// panneau flottant, coin bas-droit de la carte</span>
+└── <span class="d">dialogs/</span>
+    └── <span class="f">stats_dialog.dart</span>        <span class="c">// fiche complète, ouverte par l'icône œil</span>
+</div>
+
+<p>
+  Le mini-panneau affiche PV, mana, attaque, maîtrise, chance, critique, puis une barre d'XP
+  (<code>stats.xp / stats.xpToNextLevel</code>) et un badge « Niv. <code>stats.level</code> ». La fiche
+  complète y ajoute le nom de la classe, l'acte et le niveau de carte, ainsi qu'un encart cyan reprenant
+  le nom et la description du passif — obtenus, là encore, par
+  <code>runState.activePassive ?? PassiveData.fallback(runState.passiveTrait ?? '')</code>.
+</p>
+
+<div class="quiz">
+  <h2>Quiz — vérifiez vos acquis</h2>
+
+  <div class="q" data-answer="1">
+    <p class="q-text">1. Quelle est la valeur par défaut de <code>critMultiplier</code> dans le constructeur d'<code>EntityStats</code> ?</p>
+    <ul class="q-opts">
+      <li><code>1.0</code></li>
+      <li><code>1.5</code></li>
+      <li><code>2.0</code></li>
+      <li>Aucune : le paramètre est <code>required</code></li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>this.critMultiplier = 1.5</code> dans
+    <code>lib/models/entity_stats.dart</code>. C'est le seul champ <code>double</code> de la classe, et
+    <code>fromJson</code> reprend le même défaut avec <code>?? 1.5</code>.</div>
+  </div>
+
+  <div class="q" data-answer="2">
+    <p class="q-text">2. Un héros a 12 d'armure et encaisse un coup de 10 dégâts. Que vaut son armure après <code>takeDamage(10)</code>, et combien de PV perd-il ?</p>
+    <ul class="q-opts">
+      <li>Armure 0, il perd 0 PV</li>
+      <li>Armure 0, il perd 2 PV</li>
+      <li>Armure 2, il perd 0 PV</li>
+      <li>Armure 12, il perd 10 PV</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>damageAfterArmor = 10 - 12 = -2</code>, donc la
+    branche <code>else</code> s'applique : <code>newArmor -= amount</code> soit 12 − 10 = 2, et
+    <code>newPv</code> n'est jamais touché.</div>
+  </div>
+
+  <div class="q" data-answer="3">
+    <p class="q-text">3. Pourquoi <code>cardsPerTurn</code> est-il un champ de <code>RunState</code> et non d'<code>EntityStats</code> ?</p>
+    <ul class="q-opts">
+      <li>Parce que c'est un <code>int</code> et qu'<code>EntityStats</code> n'accepte que des <code>double</code></li>
+      <li>Parce que sa valeur change à chaque tour</li>
+      <li>Parce qu'il n'est pas sauvegardé dans le JSON</li>
+      <li>Parce qu'<code>EntityStats</code> est partagé avec les ennemis, qui n'ont pas de deck</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> le commentaire de <code>run_controller.dart</code> le dit
+    mot pour mot : « Règle de run propre au joueur : elle n'a pas sa place sur <code>EntityStats</code>,
+    qui est partagé avec les ennemis. » Sa valeur par défaut est 5 et il <em>est</em> sérialisé.</div>
+  </div>
+
+  <div class="q" data-answer="0">
+    <p class="q-text">4. Un Berserker (80 PV max) est à 37 PV, avec 0 de maîtrise d'armure et 0 d'armure. Combien d'armure lui donne <code>berserkerArmor</code> au début du tour ?</p>
+    <ul class="q-opts">
+      <li>4</li>
+      <li>5</li>
+      <li>8</li>
+      <li>43</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>missingHp = 80 - 37 = 43</code>, puis
+    <code>43 ~/ 10 = 4</code> (division entière), fois <code>passive.value</code> qui vaut 1, plus
+    <code>effectiveArmorMastery</code> qui vaut 0 : soit 4 points d'armure.</div>
+  </div>
+
+  <div class="q" data-answer="2">
+    <p class="q-text">5. Un héros vient de passer au niveau 5. Que vaut son <code>xpToNextLevel</code> ?</p>
+    <ul class="q-opts">
+      <li>338</li>
+      <li>500</li>
+      <li>506</li>
+      <li>759</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>(100 * pow(1.5, 5 - 1)).round()</code> =
+    <code>(100 × 5,0625).round()</code> = 506. 338 est le seuil du niveau 4 et 759 celui du niveau 6.</div>
+  </div>
+
+  <div class="q" data-answer="3">
+    <p class="q-text">6. Le Berserker affiche <code>"baseDamage": 15</code> dans <code>heroes.json</code>. Quel est l'effet réel de cette valeur en jeu ?</p>
+    <ul class="q-opts">
+      <li>Elle initialise <code>heroStats.attaque</code> à 15 au démarrage de la run</li>
+      <li>Elle sert de plancher de dégâts pour toutes les cartes d'attaque</li>
+      <li>Elle est ajoutée à <code>effectiveAttaque</code> à chaque attaque</li>
+      <li>Aucun : elle n'est lue que pour l'affichage sur l'écran de sélection de classe</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>startNewRun</code> écrit explicitement
+    <code>attaque: 0, // Force de base à 0</code>. Le seul usage de <code>HeroData.baseDamage</code> dans
+    <code>lib/</code> est <code>class_selection_screen.dart</code> ligne 343, dans un badge d'affichage.</div>
+  </div>
+</div>
+
+<div class="pager">
+<a class="prev" href="ch07.html"><div class="dir">&#8592; Chapitre 07</div><div class="ttl">La couche de données : un jeu 100 % data-driven</div></a>
+<a class="next" href="ch09.html"><div class="dir">Chapitre 09 &#8594;</div><div class="ttl">Les cartes et le deck</div></a>
+</div>
+</div>
+</main>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

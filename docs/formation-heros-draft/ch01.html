@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vue d&#x27;ensemble : qu&#x27;est-ce que Hero&#x27;s Draft ? — Formation Hero's Draft</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<button class="menu-btn" aria-label="Menu">&#9776;</button>
+<div class="layout">
+<aside class="sidebar">
+  <a class="brand" href="index.html">
+    <div class="brand-title">HERO'S DRAFT</div>
+    <div class="brand-sub">Formation complète au projet Flutter</div>
+  </a>
+<nav class="nav">
+<div class="nav-part">Partie 0 — Démarrage</div>
+<a href="ch01.html" class="active"><span class="num">01</span><span>Vue d&#x27;ensemble : qu&#x27;est-ce que Hero&#x27;s Draft ?</span></a>
+<div class="nav-part">Partie 1 — Les fondations techniques</div>
+<a href="ch02.html"><span class="num">02</span><span>Dart, le langage — l&#x27;essentiel pour ce projet</span></a>
+<a href="ch03.html"><span class="num">03</span><span>Flutter — widgets, arbre et navigation</span></a>
+<a href="ch04.html"><span class="num">04</span><span>Riverpod — l&#x27;état partagé du jeu</span></a>
+<a href="ch05.html"><span class="num">05</span><span>Flame — le moteur de rendu du combat</span></a>
+<div class="nav-part">Partie 2 — L&#x27;architecture du projet</div>
+<a href="ch06.html"><span class="num">06</span><span>L&#x27;architecture en quatre couches</span></a>
+<a href="ch07.html"><span class="num">07</span><span>La couche de données : un jeu 100 % data-driven</span></a>
+<div class="nav-part">Partie 3 — Les règles du jeu</div>
+<a href="ch08.html"><span class="num">08</span><span>Le héros : stats, classes, passifs et progression</span></a>
+<a href="ch09.html"><span class="num">09</span><span>Les cartes et le deck</span></a>
+<a href="ch10.html"><span class="num">10</span><span>Le combat : boucle de tour, dégâts et effets</span></a>
+<a href="ch11.html"><span class="num">11</span><span>Les ennemis et la courbe de difficulté</span></a>
+<a href="ch12.html"><span class="num">12</span><span>La carte du monde procédurale</span></a>
+<a href="ch13.html"><span class="num">13</span><span>Les reliques et le système de déclencheurs</span></a>
+<a href="ch14.html"><span class="num">14</span><span>L&#x27;économie : or, boutique, forge et fusion</span></a>
+<a href="ch15.html"><span class="num">15</span><span>Récompenses, chance et probabilités</span></a>
+<a href="ch16.html"><span class="num">16</span><span>Événements, repos et autel des reliques</span></a>
+<div class="nav-part">Partie 4 — L&#x27;interface et le rendu</div>
+<a href="ch17.html"><span class="num">17</span><span>Le pont Flame ↔ Riverpod : l&#x27;écran de combat</span></a>
+<a href="ch18.html"><span class="num">18</span><span>Composants Flame et game feel</span></a>
+<a href="ch19.html"><span class="num">19</span><span>Écrans, navigation et design system</span></a>
+<div class="nav-part">Partie 5 — Qualité et cycle de vie</div>
+<a href="ch20.html"><span class="num">20</span><span>Sauvegarde, localisation et tutoriel</span></a>
+<a href="ch21.html"><span class="num">21</span><span>Tests, outillage, dette technique et évolutions</span></a>
+</nav>
+</aside>
+<main class="main">
+<div class="content">
+<div class="chapter-kicker">Chapitre 01</div>
+<h1>Vue d'ensemble : qu'est-ce que Hero's Draft ?</h1>
+<p class="lede">Avant d'ouvrir un seul fichier, comprenons ce que le jeu fait, avec quelles briques il
+est bâti, et où chaque chose se trouve.</p>
+
+<div class="toc">
+  <div class="toc-title">Dans ce chapitre</div>
+  <ol>
+    <li><a href="#s1">Le jeu en trois minutes</a></li>
+    <li><a href="#s2">Une boucle de jeu, du menu au boss</a></li>
+    <li><a href="#s3">La pile technique et pourquoi ces choix</a></li>
+    <li><a href="#s4">L'arborescence du dépôt</a></li>
+    <li><a href="#s5">Le projet en chiffres</a></li>
+    <li><a href="#s6">Installer et lancer le projet</a></li>
+    <li><a href="#s7">Comment lire cette formation</a></li>
+  </ol>
+</div>
+
+<h2 id="s1">1. Le jeu en trois minutes</h2>
+
+<p><strong>Hero's Draft</strong> est un <em>roguelike deckbuilder</em> : un jeu de cartes au tour par
+tour où l'on construit son paquet au fil d'une partie, et où la mort remet tout à zéro.</p>
+
+<p>Une partie — on dira une <strong>run</strong> — se déroule ainsi. Le joueur choisit une classe de
+héros (Paladin, Berserker ou Mage), puis compose un deck de départ en sélectionnant cinq cartes dans un
+pool commun ; les deux cartes propres à sa classe s'ajoutent automatiquement. Il arrive alors sur une
+<strong>carte du monde</strong> générée aléatoirement : un graphe de dix étages, parcouru du bas vers le
+haut, où chaque nœud est une rencontre.</p>
+
+<div class="memo">
+  <div class="card"><h5>Combat</h5><p>Des ennemis, un tour à jouer avec les cartes de sa main et le mana disponible. Butin : or et expérience.</p></div>
+  <div class="card"><h5>Élite</h5><p>Un combat plus dur, qui donne en plus une relique.</p></div>
+  <div class="card"><h5>Boutique</h5><p>Acheter des cartes, un soin, ou supprimer une carte du deck.</p></div>
+  <div class="card"><h5>Repos</h5><p>Se soigner, forger une rune sur une carte, ou en supprimer une.</p></div>
+  <div class="card"><h5>Événement</h5><p>Un texte narratif et trois choix aux conséquences chiffrées.</p></div>
+  <div class="card"><h5>Boss</h5><p>Le dernier étage. Le vaincre fait passer à l'acte suivant, avec une nouvelle carte.</p></div>
+</div>
+
+<p>À cela s'ajoutent deux nœuds spéciaux, plus rares : l'<strong>Autel des reliques</strong>, où l'on
+échange trois reliques contre une plus puissante, et la <strong>Forge de fusion</strong>, où l'on
+compacte les runes d'une carte.</p>
+
+<p>Trois mécaniques structurent la progression :</p>
+
+<ul>
+<li><strong>L'expérience et les niveaux.</strong> Chaque ennemi vaincu donne de l'XP. À chaque niveau, un
+<em>draft</em> propose trois améliorations permanentes (points de vie, attaque, maîtrise d'armure, mana,
+critique…), parfois accompagnées d'un choix mythique.</li>
+<li><strong>La fusion de cartes.</strong> Trois exemplaires identiques d'une carte fusionnent en une
+carte de rareté supérieure, dont les effets sont multipliés.</li>
+<li><strong>Les reliques.</strong> Vingt-cinq objets passifs qui se déclenchent à des moments précis :
+début de run, début de combat, début ou fin de tour, carte jouée, ennemi tué.</li>
+</ul>
+
+<div class="box"><div class="box-title">À retenir</div>
+<p>Le jeu est <strong>100 % data-driven</strong>. Les cartes, les ennemis, les héros, les reliques, les
+événements et les runes de forge sont définis dans des fichiers JSON sous <code>assets/data/</code>.
+Ajouter une carte ne demande pas une ligne de Dart : on duplique une entrée JSON et on la modifie. Ce
+principe traverse tout le projet et explique une grande partie de son architecture.</p></div>
+
+<h2 id="s2">2. Une boucle de jeu, du menu au boss</h2>
+
+<p>Voici le parcours complet, du lancement de l'application à la fin d'un acte. Ce schéma vous servira
+de repère pendant toute la formation : chaque bloc correspond à un ou plusieurs chapitres.</p>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 840 500" width="840" role="img" aria-label="Boucle de jeu complète">
+      <defs>
+        <marker id="c1-a1" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#3a4966"/></marker>
+        <marker id="c1-a2" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#f59e0b"/></marker>
+      </defs>
+
+      <rect x="330" y="14" width="180" height="40" rx="8" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="420" y="39" fill="#e6ecf5" font-size="13" text-anchor="middle">Écran d'accueil</text>
+      <path d="M420 54 L420 78" stroke="#3a4966" stroke-width="2" marker-end="url(#c1-a1)"/>
+
+      <rect x="300" y="82" width="240" height="40" rx="8" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="420" y="107" fill="#e6ecf5" font-size="13" text-anchor="middle">Choix de classe · deck de départ</text>
+      <path d="M420 122 L420 146" stroke="#3a4966" stroke-width="2" marker-end="url(#c1-a1)"/>
+
+      <rect x="286" y="150" width="268" height="52" rx="10" fill="#1b2336" stroke="#f59e0b" stroke-width="2"/>
+      <text x="420" y="172" fill="#f59e0b" font-size="14.5" text-anchor="middle">CARTE DU MONDE</text>
+      <text x="420" y="191" fill="#a7b4c9" font-size="11.5" text-anchor="middle">10 étages · graphe orienté · un acte</text>
+
+      <path d="M286 176 L150 176 L150 232" stroke="#3a4966" stroke-width="2" marker-end="url(#c1-a1)"/>
+      <path d="M554 176 L692 176 L692 232" stroke="#3a4966" stroke-width="2" marker-end="url(#c1-a1)"/>
+      <path d="M360 202 L300 232" stroke="#3a4966" stroke-width="2" marker-end="url(#c1-a1)"/>
+      <path d="M420 202 L420 232" stroke="#3a4966" stroke-width="2" marker-end="url(#c1-a1)"/>
+      <path d="M480 202 L542 232" stroke="#3a4966" stroke-width="2" marker-end="url(#c1-a1)"/>
+
+      <rect x="86" y="236" width="128" height="44" rx="8" fill="#151b2b" stroke="#f87171"/>
+      <text x="150" y="255" fill="#f87171" font-size="12.5" text-anchor="middle">Combat</text>
+      <text x="150" y="271" fill="#6f7d95" font-size="10.5" text-anchor="middle">ch. 10 · 11 · 17</text>
+
+      <rect x="238" y="236" width="124" height="44" rx="8" fill="#151b2b" stroke="#fbbf24"/>
+      <text x="300" y="255" fill="#fbbf24" font-size="12.5" text-anchor="middle">Boutique</text>
+      <text x="300" y="271" fill="#6f7d95" font-size="10.5" text-anchor="middle">ch. 14</text>
+
+      <rect x="360" y="236" width="120" height="44" rx="8" fill="#151b2b" stroke="#34d399"/>
+      <text x="420" y="255" fill="#34d399" font-size="12.5" text-anchor="middle">Repos</text>
+      <text x="420" y="271" fill="#6f7d95" font-size="10.5" text-anchor="middle">ch. 16</text>
+
+      <rect x="484" y="236" width="124" height="44" rx="8" fill="#151b2b" stroke="#60a5fa"/>
+      <text x="546" y="255" fill="#60a5fa" font-size="12.5" text-anchor="middle">Événement</text>
+      <text x="546" y="271" fill="#6f7d95" font-size="10.5" text-anchor="middle">ch. 16</text>
+
+      <rect x="628" y="236" width="128" height="44" rx="8" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="692" y="255" fill="#a78bfa" font-size="12.5" text-anchor="middle">Autel · Forge</text>
+      <text x="692" y="271" fill="#6f7d95" font-size="10.5" text-anchor="middle">ch. 14 · 16</text>
+
+      <path d="M150 280 L150 312 L406 312" stroke="#3a4966" stroke-width="2"/>
+      <path d="M300 280 L300 312" stroke="#3a4966" stroke-width="2"/>
+      <path d="M420 280 L420 312" stroke="#3a4966" stroke-width="2"/>
+      <path d="M546 280 L546 312" stroke="#3a4966" stroke-width="2"/>
+      <path d="M692 280 L692 312 L434 312" stroke="#3a4966" stroke-width="2"/>
+
+      <rect x="286" y="326" width="268" height="46" rx="8" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="420" y="346" fill="#e6ecf5" font-size="13" text-anchor="middle">Récompenses · or · XP · reliques</text>
+      <text x="420" y="363" fill="#6f7d95" font-size="10.5" text-anchor="middle">chapitre 15</text>
+      <path d="M420 312 L420 322" stroke="#3a4966" stroke-width="2" marker-end="url(#c1-a1)"/>
+
+      <path d="M286 349 L200 349 L200 396" stroke="#f59e0b" stroke-width="2" marker-end="url(#c1-a2)"/>
+      <rect x="86" y="400" width="228" height="46" rx="8" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="200" y="420" fill="#f59e0b" font-size="12.5" text-anchor="middle">Niveau gagné → Draft</text>
+      <text x="200" y="437" fill="#6f7d95" font-size="10.5" text-anchor="middle">bloque la carte tant qu'il reste un draft</text>
+      <path d="M200 400 L200 380 L286 380 L286 200" stroke="#f59e0b" stroke-width="1.6" stroke-dasharray="4 3"/>
+
+      <path d="M554 349 L640 349 L640 396" stroke="#3a4966" stroke-width="2" marker-end="url(#c1-a1)"/>
+      <rect x="530" y="400" width="228" height="46" rx="8" fill="#151b2b" stroke="#f87171"/>
+      <text x="644" y="420" fill="#f87171" font-size="12.5" text-anchor="middle">Boss vaincu → acte suivant</text>
+      <text x="644" y="437" fill="#6f7d95" font-size="10.5" text-anchor="middle">nouvelle carte, ennemis plus forts</text>
+      <path d="M644 446 L644 470 L420 470 L420 206" stroke="#f87171" stroke-width="1.6" stroke-dasharray="5 4"/>
+      <text x="420" y="488" fill="#6f7d95" font-size="11" text-anchor="middle">La run continue jusqu'à la mort du héros.</text>
+    </svg>
+  </div>
+  <figcaption>La boucle complète. Les nœuds sans combat ne donnent pas de récompense mais consomment un
+  tour de progression ; le draft de niveau met la carte en pause tant qu'il n'est pas résolu.</figcaption>
+</figure>
+
+<h2 id="s3">3. La pile technique et pourquoi ces choix</h2>
+
+<p>Le projet repose sur quatre briques, chacune avec un rôle bien délimité.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Brique</th><th>Version</th><th>Rôle dans Hero's Draft</th></tr></thead>
+<tbody>
+<tr><td><strong>Flutter</strong></td><td>SDK Dart <code>^3.11.4</code></td><td>Toute l'interface hors combat : menus, carte du monde, boutique, deck, dialogues, HUD posé par-dessus l'arène</td></tr>
+<tr><td><strong>Flame</strong></td><td><code>^1.17.0</code></td><td>Le moteur de jeu 2D. Uniquement l'arène de combat : cartes en main, héros, ennemis, animations, particules</td></tr>
+<tr><td><strong>Riverpod</strong></td><td><code>flutter_riverpod: ^2.5.1</code></td><td>Tout l'état métier : santé, mana, deck, combat, inventaire, progression. Aucune règle du jeu ne vit ailleurs</td></tr>
+<tr><td><strong>shared_preferences</strong></td><td><code>^2.2.0</code></td><td>La persistance : une seule clé, un seul blob JSON versionné</td></tr>
+<tr><td><code>uuid</code></td><td><code>^4.4.0</code></td><td>Identifiants uniques des instances de cartes et d'ennemis</td></tr>
+<tr><td><code>intl</code> + <code>flutter_localizations</code></td><td><code>^0.20.2</code></td><td>Localisation français / anglais de l'interface</td></tr>
+<tr><td><code>meta</code></td><td><code>^1.11.0</code></td><td>L'annotation <code>@immutable</code> sur les classes d'état</td></tr>
+<tr><td><code>flutter_lints</code></td><td><code>^6.0.0</code> (dev)</td><td>Les règles d'analyse statique, via <code>analysis_options.yaml</code></td></tr>
+</tbody>
+</table></div>
+
+<div class="code" data-lang="yaml">
+  <div class="code-head"><span class="path">pubspec.yaml</span><span class="lang">yaml</span></div>
+  <pre>name: roguelike_card_game
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.4.7+1
+
+environment:
+  sdk: ^3.11.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flame: ^1.17.0
+  flutter_riverpod: ^2.5.1
+  uuid: ^4.4.0
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.2
+  shared_preferences: ^2.2.0
+  meta: ^1.11.0
+
+flutter:
+  uses-material-design: true
+  generate: true
+  assets:
+    - assets/data/
+    - assets/images/</pre>
+</div>
+
+<p>La liste est courte, et c'est délibéré. Il n'y a ni générateur de code (<code>freezed</code>,
+<code>json_serializable</code>, <code>riverpod_generator</code>), ni bibliothèque de navigation, ni
+injection de dépendances tierce. Tout le <code>fromJson</code> / <code>toJson</code> est écrit à la main.
+C'est plus verbeux, mais cela veut dire qu'<strong>aucun code n'est généré</strong> : ce que vous lisez
+est ce qui s'exécute, et il n'y a pas d'étape de build supplémentaire.</p>
+
+<div class="box rule"><div class="box-title">La règle d'or du projet</div>
+<p>Trois couches, jamais mélangées :</p>
+<ul>
+<li><span class="pill f">Flame</span> <strong>rend</strong> — les composants lisent l'état et
+l'affichent ; ils ne le modifient jamais.</li>
+<li><span class="pill r">Riverpod</span> <strong>décide</strong> — les contrôleurs portent toutes les
+règles ; ils ne connaissent ni widget ni animation.</li>
+<li><span class="pill g">Flutter</span> <strong>habille</strong> — les widgets affichent et déclenchent ;
+aucune référence à Flame dans <code>lib/ui/</code>, aucun arbre de widgets dans un composant Flame.</li>
+</ul>
+<p>Le chapitre 6 détaille cette séparation, qui est la clé pour se repérer dans le dépôt.</p></div>
+
+<h2 id="s4">4. L'arborescence du dépôt</h2>
+
+<p>Voici la structure de <code>lib/</code>, commentée. Gardez-la sous la main : c'est la carte du
+territoire.</p>
+
+<div class="tree">lib/
+├── <span class="f">main.dart</span>                     <span class="c">// point d'entrée : ProviderScope + MaterialApp</span>
+│
+├── <span class="d">models/</span>                       <span class="c">// LA COUCHE DE DONNÉES</span>
+│   ├── <span class="d">data/</span>                     <span class="c">// miroir 1:1 des fichiers JSON (11 fichiers)</span>
+│   │   ├── <span class="f">card_data.dart</span>        <span class="c">// + CardEffect + 4 enums</span>
+│   │   ├── <span class="f">enemy_data.dart</span>
+│   │   ├── <span class="f">hero_data.dart</span>
+│   │   ├── <span class="f">relic_data.dart</span>       <span class="c">// + RelicTrigger (9 valeurs)</span>
+│   │   ├── <span class="f">event_data.dart</span>       <span class="c">// + EventChoice + EventAction</span>
+│   │   ├── <span class="f">forge_upgrade_data.dart</span>
+│   │   ├── <span class="f">passive_data.dart</span>
+│   │   ├── <span class="f">skill_data.dart</span>
+│   │   └── <span class="f">game_data_registry.dart</span> <span class="c">// agrège tout le catalogue</span>
+│   ├── <span class="f">entity_stats.dart</span>         <span class="c">// LA classe de stats, héros ET ennemis</span>
+│   ├── <span class="f">card_instance.dart</span>        <span class="c">// une carte concrète du deck du joueur</span>
+│   ├── <span class="f">enemy_instance.dart</span>
+│   ├── <span class="f">combat_state.dart</span>
+│   ├── <span class="f">status_effect.dart</span>
+│   ├── <span class="f">map_node.dart</span>
+│   └── ...                        <span class="c">// inventory_state, shop_state, skill_state…</span>
+│
+├── <span class="d">game/</span>                         <span class="c">// L'ÉTAT + LE RENDU DE COMBAT</span>
+│   ├── <span class="f">heros_draft_game.dart</span>     <span class="c">// la classe FlameGame racine</span>
+│   ├── <span class="f">game_constants.dart</span>       <span class="c">// priorités, tailles, délais, quotas</span>
+│   ├── <span class="d">controllers/</span>              <span class="c">// LES CONTRÔLEURS RIVERPOD — le cerveau</span>
+│   │   ├── <span class="f">run_controller.dart</span>       <span class="c">// état de la run (+ run/ : 3 managers)</span>
+│   │   ├── <span class="f">combat_controller.dart</span>    <span class="c">// (+ combat/ : 2 managers)</span>
+│   │   ├── <span class="f">deck_controller.dart</span>      <span class="c">// les 5 piles de cartes</span>
+│   │   ├── <span class="f">reward_controller.dart</span>
+│   │   ├── <span class="f">shop_controller.dart</span>
+│   │   ├── <span class="f">event_controller.dart</span>
+│   │   ├── <span class="f">inventory_controller.dart</span>
+│   │   ├── <span class="f">skill_controller.dart</span>
+│   │   └── <span class="f">checkpoint_controller.dart</span> <span class="c">// déclenche l'autosave</span>
+│   ├── <span class="d">components/</span>               <span class="c">// LES COMPOSANTS FLAME (21 fichiers)</span>
+│   │   ├── <span class="f">card_component.dart</span>
+│   │   ├── <span class="d">entities/</span>            <span class="c">// héros, ennemis, badges, statuts</span>
+│   │   ├── <span class="d">visual_effects/</span>      <span class="c">// traînées, entailles, ciblage</span>
+│   │   └── <span class="d">widgets/</span>             <span class="c">// rendu de carte, barres, icônes</span>
+│   ├── <span class="d">systems/</span>                  <span class="c">// systèmes autonomes</span>
+│   │   ├── <span class="f">encounter_system.dart</span>    <span class="c">// génération et scaling des ennemis</span>
+│   │   ├── <span class="f">trait_system.dart</span>        <span class="c">// passifs de classe</span>
+│   │   ├── <span class="f">layout_system.dart</span>       <span class="c">// éventail de la main, placement</span>
+│   │   ├── <span class="f">state_sync_system.dart</span>   <span class="c">// Riverpod → Flame</span>
+│   │   └── ...
+│   └── <span class="d">services/</span>                 <span class="c">// services de jeu</span>
+│       ├── <span class="f">damage_pipeline.dart</span>     <span class="c">// le calcul de dégâts</span>
+│       ├── <span class="f">effect_resolver.dart</span>     <span class="c">// résolution d'une carte jouée</span>
+│       ├── <span class="d">effects/</span>              <span class="c">// le registre de stratégies d'effet</span>
+│       ├── <span class="f">level_up_reward_service.dart</span>
+│       └── <span class="f">combat_debug_logger.dart</span>
+│
+├── <span class="d">services/</span>                     <span class="c">// SERVICES TRANSVERSES</span>
+│   ├── <span class="f">game_data_service.dart</span>    <span class="c">// gameDataLoaderProvider : charge les 9 JSON</span>
+│   ├── <span class="f">save_service.dart</span>         <span class="c">// sauvegarde / chargement</span>
+│   ├── <span class="f">map_generator_service.dart</span>
+│   └── <span class="d">map/</span>                      <span class="c">// génération en 4 étapes</span>
+│
+├── <span class="d">ui/</span>                           <span class="c">// L'INTERFACE FLUTTER</span>
+│   ├── <span class="d">screens/</span>                  <span class="c">// 17 écrans</span>
+│   ├── <span class="d">widgets/</span>                  <span class="c">// 46 widgets, groupés par fonctionnalité</span>
+│   │   ├── <span class="d">hud/</span> <span class="d">map/</span> <span class="d">draft/</span> <span class="d">forge/</span> <span class="d">ui_card/</span> <span class="d">relic_carousel/</span>
+│   │   └── ...
+│   └── <span class="d">theme/</span>                    <span class="c">// couleurs, espacements, thèmes</span>
+│
+├── <span class="d">tutorial/</span>                     <span class="c">// module autonome, 13 étapes</span>
+└── <span class="d">l10n/</span>                        <span class="c">// fichiers ARB + AppLocalizations généré</span></div>
+
+<p>Hors de <code>lib/</code>, deux dossiers comptent :</p>
+
+<div class="tree">assets/
+├── <span class="d">data/</span>          <span class="c">// 10 fichiers JSON — TOUT le contenu du jeu</span>
+│   ├── <span class="f">cards.json</span>          <span class="c">// 17 cartes globales</span>
+│   ├── <span class="f">hero_cards.json</span>     <span class="c">// 6 cartes de classe</span>
+│   ├── <span class="f">heroes.json</span>         <span class="c">// 3 classes</span>
+│   ├── <span class="f">enemies.json</span>        <span class="c">// 4 ennemis</span>
+│   ├── <span class="f">relics.json</span>         <span class="c">// 25 reliques</span>
+│   ├── <span class="f">events.json</span>         <span class="c">// 5 événements × 3 choix</span>
+│   ├── <span class="f">forge_upgrades.json</span> <span class="c">// 8 runes</span>
+│   ├── <span class="f">passives.json</span>       <span class="c">// 3 traits de classe</span>
+│   ├── <span class="f">skills.json</span>         <span class="c">// 6 compétences</span>
+│   └── <span class="f">patch_notes.json</span>    <span class="c">// géré par un agent, jamais à la main</span>
+└── <span class="d">images/</span>        <span class="c">// 8 PNG : fond de donjon, 3 héros, 4 ennemis</span>
+
+test/             <span class="c">// 43 fichiers de test</span>
+├── <span class="d">unit/</span>          <span class="c">// 25 tests unitaires</span>
+├── <span class="d">widget/</span>        <span class="c">// 15 tests de widget</span>
+└── <span class="d">tutorial/</span>      <span class="c">// 2 tests</span></div>
+
+<h2 id="s5">5. Le projet en chiffres</h2>
+
+<p>Quelques ordres de grandeur, mesurés sur le dépôt (fichiers Dart de <code>lib/</code>, hors
+localisation générée) :</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Dossier</th><th>Fichiers</th><th>Lignes</th><th>Ce qu'on y trouve</th></tr></thead>
+<tbody>
+<tr><td><code>lib/ui/widgets/</code></td><td>46</td><td>8 467</td><td>Widgets réutilisables, HUD, dialogues, carte</td></tr>
+<tr><td><code>lib/ui/screens/</code></td><td>17</td><td>6 851</td><td>Les écrans du jeu</td></tr>
+<tr><td><code>lib/tutorial/</code></td><td>18</td><td>5 186</td><td>Le module de tutoriel, entièrement autonome</td></tr>
+<tr><td><code>lib/game/components/</code></td><td>21</td><td>4 916</td><td>Les composants Flame de l'arène</td></tr>
+<tr><td><code>lib/game/controllers/</code></td><td>14</td><td>3 100</td><td><strong>Toutes les règles du jeu</strong></td></tr>
+<tr><td><code>lib/models/</code> (avec <code>data/</code>)</td><td>23</td><td>1 817</td><td>Modèles de données et d'état</td></tr>
+<tr><td><code>lib/game/services/</code></td><td>7</td><td>948</td><td>Dégâts, effets, récompenses de niveau</td></tr>
+<tr><td><code>lib/game/systems/</code></td><td>6</td><td>821</td><td>Rencontres, passifs, mise en page</td></tr>
+<tr><td><code>lib/services/</code></td><td>7</td><td>690</td><td>Chargement de données, sauvegarde, carte</td></tr>
+<tr><td><code>lib/ui/theme/</code></td><td>4</td><td>341</td><td>Design tokens</td></tr>
+<tr><td><strong>Total <code>lib/</code></strong></td><td><strong>166</strong></td><td><strong>≈ 33 700</strong></td><td></td></tr>
+</tbody>
+</table></div>
+
+<p>Deux observations utiles :</p>
+
+<ul>
+<li><strong>L'interface représente près de la moitié du code.</strong> C'est normal pour un jeu de
+cartes : la logique de combat est simple, c'est sa présentation qui coûte cher.</li>
+<li><strong>Les règles du jeu tiennent en 3 100 lignes.</strong> Si vous ne deviez lire qu'un dossier
+pour comprendre le jeu, ce serait <code>lib/game/controllers/</code>. Les chapitres 8 à 16 en sont
+essentiellement le commentaire.</li>
+</ul>
+
+<h2 id="s6">6. Installer et lancer le projet</h2>
+
+<p>Hero's Draft est un projet Flutter standard. Il n'y a ni script de build maison, ni étape de
+génération de code.</p>
+
+<div class="code" data-lang="bash">
+  <div class="code-head"><span class="path">terminal</span><span class="lang">bash</span></div>
+  <pre># 1. Récupérer les dépendances
+flutter pub get
+
+# 2. Lancer sur l'appareil par défaut
+flutter run
+
+# 3. Lancer toute la suite de tests
+flutter test
+
+# 4. Lancer un seul fichier de test
+flutter test test/unit/combat_controller_test.dart
+
+# 5. Lancer un seul test par son nom
+flutter test --plain-name "description du test"
+
+# 6. Analyse statique — doit être sans aucun problème
+dart analyze
+
+# 7. Construire un binaire
+flutter build &lt;apk|ios|web|windows|macos|linux&gt;</pre>
+</div>
+
+<div class="box warn"><div class="box-title">Convention du dépôt</div>
+<p><code>dart analyze</code> doit renvoyer <strong>zéro problème</strong> avant de considérer un travail
+comme terminé. C'est écrit noir sur blanc dans <code>CLAUDE.md</code>, le fichier d'instructions du
+dépôt. Les règles viennent de <code>package:flutter_lints/flutter.yaml</code> :</p>
+<div class="code" data-lang="yaml">
+  <div class="code-head"><span class="path">analysis_options.yaml</span><span class="lang">yaml</span></div>
+  <pre>include: package:flutter_lints/flutter.yaml</pre>
+</div>
+</div>
+
+<p>Le jeu tourne sur toutes les plateformes Flutter ; les dossiers <code>android/</code>,
+<code>ios/</code>, <code>web/</code>, <code>windows/</code>, <code>macos/</code> et <code>linux/</code>
+sont tous présents. Une version web est déployée automatiquement à chaque tag (voir le chapitre 21).</p>
+
+<h2 id="s7">7. Comment lire cette formation</h2>
+
+<p>Cette formation est conçue pour être lue dans l'ordre, mais chaque chapitre est autonome et cite ses
+sources. Voici la logique du découpage.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Partie</th><th>Chapitres</th><th>Pour qui, pour quoi</th></tr></thead>
+<tbody>
+<tr><td><strong>1. Fondations</strong></td><td>2 à 5</td><td>Dart, Flutter, Riverpod, Flame expliqués <em>à travers le code du projet</em>. Si vous connaissez déjà Flutter, survolez le 2 et le 3, mais lisez le 4 et le 5 : ils décrivent les patrons précis employés ici.</td></tr>
+<tr><td><strong>2. Architecture</strong></td><td>6 et 7</td><td>La séparation en couches et le système data-driven. <strong>Ce sont les deux chapitres à ne pas sauter</strong> : tout le reste en découle.</td></tr>
+<tr><td><strong>3. Règles du jeu</strong></td><td>8 à 16</td><td>Chaque système, formule par formule : héros, cartes, combat, difficulté, carte du monde, reliques, économie, récompenses, événements.</td></tr>
+<tr><td><strong>4. Interface</strong></td><td>17 à 19</td><td>Le pont Flame ↔ Riverpod, le game feel, les écrans et le design system.</td></tr>
+<tr><td><strong>5. Qualité</strong></td><td>20 et 21</td><td>Sauvegarde, localisation, tutoriel, puis tests, publication et dette technique.</td></tr>
+</tbody>
+</table></div>
+
+<div class="memo">
+  <div class="card"><h5>Blocs de code</h5><p>Sauf mention <code>exemple</code> ou <code>illustration</code>, tous les extraits sont copiés verbatim du dépôt, avec leur chemin réel.</p></div>
+  <div class="card"><h5>Encadrés</h5><p>Violet : une règle de jeu. Ambre : un piège courant. Rouge : un point d'attention ou de dette technique. Vert : une bonne pratique.</p></div>
+  <div class="card"><h5>Quiz</h5><p>Chaque chapitre se termine par 5 ou 6 questions. Cliquez sur une réponse pour voir la correction.</p></div>
+  <div class="card"><h5>Navigation</h5><p>Les flèches ← et → du clavier passent au chapitre précédent ou suivant.</p></div>
+</div>
+
+<div class="box ok"><div class="box-title">Si vous voulez juste comprendre le jeu</div>
+<p>Le parcours minimal est : chapitre 6 (architecture) → chapitre 7 (données) → chapitre 9 (cartes) →
+chapitre 10 (combat) → chapitre 12 (carte du monde). Cinq chapitres, et vous saurez modifier le jeu.</p></div>
+
+<div class="quiz">
+  <h2>Quiz — vérifiez vos acquis</h2>
+
+  <div class="q" data-answer="2">
+    <p class="q-text">1. Où sont définies les cartes du jeu ?</p>
+    <ul class="q-opts">
+      <li>Dans <code>lib/models/data/card_data.dart</code>, en dur</li>
+      <li>Dans une base de données SQLite embarquée</li>
+      <li>Dans <code>assets/data/cards.json</code> et <code>hero_cards.json</code></li>
+      <li>Elles sont générées procéduralement au démarrage</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> le jeu est 100 % data-driven.
+    <code>card_data.dart</code> ne contient que le <em>modèle</em> qui sait lire le JSON ; le contenu
+    réel — 17 cartes globales et 6 cartes de classe — vit dans <code>assets/data/</code>.</div>
+  </div>
+
+  <div class="q" data-answer="1">
+    <p class="q-text">2. Quel rôle Flame joue-t-il exactement dans ce projet ?</p>
+    <ul class="q-opts">
+      <li>Il gère toute l'interface, y compris les menus et la boutique</li>
+      <li>Il ne gère que l'arène de combat : cartes en main, héros, ennemis, animations</li>
+      <li>Il gère l'état du jeu et les règles</li>
+      <li>Il sert uniquement à charger les images</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> un unique <code>GameWidget</code> est monté dans
+    <code>game_screen.dart</code>. Tout le reste — menus, carte du monde, boutique, HUD posé par-dessus
+    l'arène — est du Flutter classique.</div>
+  </div>
+
+  <div class="q" data-answer="0">
+    <p class="q-text">3. Combien d'étages compte une carte du monde, et que trouve-t-on au dernier ?</p>
+    <ul class="q-opts">
+      <li>10 étages, dont le dernier contient 3 nœuds Boss</li>
+      <li>5 étages, dont le dernier contient 1 nœud Boss</li>
+      <li>20 étages, sans boss</li>
+      <li>Un nombre aléatoire entre 8 et 15</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>MapGeneratorService.generateMap</code> a
+    <code>floors = 10</code> par défaut, et <code>MapNodeGenerator</code> force
+    <code>rowWidth = 3</code> au dernier étage, avec les trois variantes de récompense de boss.</div>
+  </div>
+
+  <div class="q" data-answer="3">
+    <p class="q-text">4. Quelle commande doit renvoyer zéro problème avant de considérer un travail
+    terminé, selon les conventions du dépôt ?</p>
+    <ul class="q-opts">
+      <li><code>flutter pub get</code></li>
+      <li><code>flutter build web</code></li>
+      <li><code>flutter format .</code></li>
+      <li><code>dart analyze</code></li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>CLAUDE.md</code> l'indique explicitement :
+    <code>dart analyze</code> « must be run and be clean (zero issues) after any code change, before
+    considering work done ».</div>
+  </div>
+
+  <div class="q" data-answer="2">
+    <p class="q-text">5. Dans quel dossier vivent toutes les règles du jeu ?</p>
+    <ul class="q-opts">
+      <li><code>lib/ui/screens/</code></li>
+      <li><code>lib/game/components/</code></li>
+      <li><code>lib/game/controllers/</code></li>
+      <li><code>lib/models/</code></li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> environ 3 100 lignes réparties sur 14 fichiers. Les
+    composants Flame ne font que rendre, les écrans ne font qu'afficher et déclencher, les modèles ne
+    portent que des données.</div>
+  </div>
+</div>
+
+<div class="pager">
+<a class="prev" href="index.html"><div class="dir">&#8592; Sommaire</div><div class="ttl">Table des matières</div></a>
+<a class="next" href="ch02.html"><div class="dir">Chapitre 02 &#8594;</div><div class="ttl">Dart, le langage — l&#x27;essentiel pour ce projet</div></a>
+</div>
+</div>
+</main>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

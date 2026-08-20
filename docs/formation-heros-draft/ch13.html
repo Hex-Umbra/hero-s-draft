@@ -1,0 +1,2111 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Les reliques et le système de déclencheurs — Formation Hero's Draft</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<button class="menu-btn" aria-label="Menu">&#9776;</button>
+<div class="layout">
+<aside class="sidebar">
+  <a class="brand" href="index.html">
+    <div class="brand-title">HERO'S DRAFT</div>
+    <div class="brand-sub">Formation complète au projet Flutter</div>
+  </a>
+<nav class="nav">
+<div class="nav-part">Partie 0 — Démarrage</div>
+<a href="ch01.html"><span class="num">01</span><span>Vue d&#x27;ensemble : qu&#x27;est-ce que Hero&#x27;s Draft ?</span></a>
+<div class="nav-part">Partie 1 — Les fondations techniques</div>
+<a href="ch02.html"><span class="num">02</span><span>Dart, le langage — l&#x27;essentiel pour ce projet</span></a>
+<a href="ch03.html"><span class="num">03</span><span>Flutter — widgets, arbre et navigation</span></a>
+<a href="ch04.html"><span class="num">04</span><span>Riverpod — l&#x27;état partagé du jeu</span></a>
+<a href="ch05.html"><span class="num">05</span><span>Flame — le moteur de rendu du combat</span></a>
+<div class="nav-part">Partie 2 — L&#x27;architecture du projet</div>
+<a href="ch06.html"><span class="num">06</span><span>L&#x27;architecture en quatre couches</span></a>
+<a href="ch07.html"><span class="num">07</span><span>La couche de données : un jeu 100 % data-driven</span></a>
+<div class="nav-part">Partie 3 — Les règles du jeu</div>
+<a href="ch08.html"><span class="num">08</span><span>Le héros : stats, classes, passifs et progression</span></a>
+<a href="ch09.html"><span class="num">09</span><span>Les cartes et le deck</span></a>
+<a href="ch10.html"><span class="num">10</span><span>Le combat : boucle de tour, dégâts et effets</span></a>
+<a href="ch11.html"><span class="num">11</span><span>Les ennemis et la courbe de difficulté</span></a>
+<a href="ch12.html"><span class="num">12</span><span>La carte du monde procédurale</span></a>
+<a href="ch13.html" class="active"><span class="num">13</span><span>Les reliques et le système de déclencheurs</span></a>
+<a href="ch14.html"><span class="num">14</span><span>L&#x27;économie : or, boutique, forge et fusion</span></a>
+<a href="ch15.html"><span class="num">15</span><span>Récompenses, chance et probabilités</span></a>
+<a href="ch16.html"><span class="num">16</span><span>Événements, repos et autel des reliques</span></a>
+<div class="nav-part">Partie 4 — L&#x27;interface et le rendu</div>
+<a href="ch17.html"><span class="num">17</span><span>Le pont Flame ↔ Riverpod : l&#x27;écran de combat</span></a>
+<a href="ch18.html"><span class="num">18</span><span>Composants Flame et game feel</span></a>
+<a href="ch19.html"><span class="num">19</span><span>Écrans, navigation et design system</span></a>
+<div class="nav-part">Partie 5 — Qualité et cycle de vie</div>
+<a href="ch20.html"><span class="num">20</span><span>Sauvegarde, localisation et tutoriel</span></a>
+<a href="ch21.html"><span class="num">21</span><span>Tests, outillage, dette technique et évolutions</span></a>
+</nav>
+</aside>
+<main class="main">
+<div class="content">
+<div class="chapter-kicker">Chapitre 13</div>
+<h1>Les reliques et le système de déclencheurs</h1>
+<p class="lede">Vingt-cinq reliques, neuf moments de déclenchement, un seul aiguillage <code>switch</code>.
+C'est le système le plus simple du jeu à comprendre, et le plus facile à étendre.</p>
+
+<div class="toc">
+  <div class="toc-title">Dans ce chapitre</div>
+  <ol>
+    <li><a href="#s1">Le modèle : <code>RelicData</code>, <code>RelicTrigger</code>, <code>RelicRarity</code></a></li>
+    <li><a href="#s2">Les neuf déclencheurs et leurs points d'appel</a></li>
+    <li><a href="#s3">Le catalogue complet des 25 reliques</a></li>
+    <li><a href="#s4"><code>applyRelicEffect</code> : l'aiguillage</a></li>
+    <li><a href="#s5">Les reliques à charges</a></li>
+    <li><a href="#s6"><code>increase_cards_per_turn</code> et le retrait d'effet</a></li>
+    <li><a href="#s7">L'inventaire : stockage, sauvegarde, reconstruction</a></li>
+    <li><a href="#s8">Passifs de classe et reliques : le même moteur</a></li>
+  </ol>
+</div>
+
+<p>Dans un roguelike de cartes, la relique est l'objet passif par excellence : on la ramasse, on ne
+la joue jamais, et pourtant elle change la partie. Hero's Draft en compte vingt-cinq, décrites dans
+un unique fichier <span class="pill a">Données</span> <code>assets/data/relics.json</code>. Aucune
+d'elles n'a de code dédié. Aucune classe <code>IronTalisman</code>, aucun fichier
+<code>vampiric_fang.dart</code>. Tout passe par un couple de champs texte —
+<code>trigger</code> et <code>effectType</code> — et par un <code>switch</code> de deux cents lignes
+situé dans un seul fichier : <code>lib/game/controllers/run/player_stats_manager.dart</code>.</p>
+
+<p>C'est un exemple presque scolaire de conception <em>data-driven</em>, et c'est pour ça qu'on lui
+consacre un chapitre entier. Une fois que vous aurez compris ce mécanisme, vous saurez ajouter une
+relique au jeu en modifiant une seule ligne de code — parfois zéro.</p>
+
+<div class="box"><div class="box-title">Ce que vous saurez faire à la fin</div>
+<p>Lire une entrée de <code>relics.json</code> et prédire exactement ce qu'elle fera en jeu, savoir
+à quel instant précis de la boucle de combat chaque relique se déclenche, comprendre pourquoi une
+durée de statut de <code>99</code> veut dire « pour tout le combat », et ajouter une nouvelle
+relique en trois étapes.</p></div>
+
+<h2 id="s1">1. Le modèle : <code>RelicData</code>, <code>RelicTrigger</code>, <code>RelicRarity</code></h2>
+
+<p>Tout commence par la donnée. Voici une entrée complète de <code>assets/data/relics.json</code> —
+la première du fichier, le Talisman de Fer. Dix champs, pas un de plus, et ces dix champs suffisent à
+décrire n'importe laquelle des vingt-cinq reliques du jeu.</p>
+
+<div class="code" data-lang="json">
+  <div class="code-head"><span class="path">assets/data/relics.json</span><span class="lang">json</span></div>
+  <pre>  {
+    "id": "iron_talisman",
+    "name_en": "Iron Talisman",
+    "name_fr": "Talisman de Fer",
+    "description_en": "Gain 2 Block at the start of each turn.",
+    "description_fr": "Gagne 2 points d'Armure au début de chaque tour.",
+    "trigger": "startOfTurn",
+    "effectType": "gain_armor",
+    "value": 2,
+    "rarity": "common",
+    "emoji": "🪙"
+  }</pre>
+</div>
+
+<p>Lisez cette entrée comme une phrase : « <strong>quand</strong> <code>startOfTurn</code>,
+<strong>fais</strong> <code>gain_armor</code>, <strong>avec l'intensité</strong> <code>2</code> ».
+Les trois champs <code>trigger</code>, <code>effectType</code> et <code>value</code> forment le
+triplet qui porte toute la mécanique. Les autres champs sont de la présentation : deux noms
+(anglais/français), deux descriptions, une rareté qui pilote la couleur et les tables de butin, et
+un emoji qui sert d'icône.</p>
+
+<h3>Les deux enums</h3>
+
+<p>Le fichier <code>lib/models/data/relic_data.dart</code> déclare d'abord les deux vocabulaires
+fermés du système. Un <span class="pill">enum</span> en Dart, c'est un type dont on énumère toutes
+les valeurs possibles : impossible d'en écrire une autre, et le compilateur vous prévient si vous
+oubliez d'en traiter une dans un <code>switch</code>.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/relic_data.dart</span><span class="lang">dart</span></div>
+  <pre>enum RelicTrigger {
+  startOfRun,
+  startOfCombat,
+  startOfTurn,
+  endOfTurn,
+  onCardPlayed,
+  onEnemyKilled,
+  onAttackPlayed,
+  onSkillPlayed,
+  onPowerPlayed,
+}
+
+enum RelicRarity { common, uncommon, rare, epic, legendary }</pre>
+</div>
+
+<p>Neuf déclencheurs, cinq raretés. Retenez ces deux nombres, ils structurent tout le chapitre.
+Notez aussi que l'enum s'appelle <code>RelicTrigger</code> et non <code>Trigger</code> — un choix
+de nommage qui va nous poser une question intéressante en section 8, quand on découvrira que les
+passifs de classe utilisent le même enum sans être des reliques.</p>
+
+<h3>La classe <code>RelicData</code></h3>
+
+<p>La classe elle-même est un simple porteur de données immuable : tous les champs sont
+<code>final</code>, le constructeur est <code>const</code>. Une <code>RelicData</code> ne change
+jamais après sa création — c'est une fiche descriptive, pas un objet vivant.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/relic_data.dart</span><span class="lang">dart</span></div>
+  <pre>class RelicData {
+  final String id;
+  final String nameEn;
+  final String nameFr;
+  final String descriptionEn;
+  final String descriptionFr;
+  final RelicTrigger trigger;
+  final String effectType; // ex: 'gain_energy', 'gain_strength', 'heal_on_kill'
+  final int value;
+  final RelicRarity rarity;
+  final String emoji;
+
+  const RelicData({
+    required this.id,
+    this.nameEn = '',
+    this.nameFr = '',
+    this.descriptionEn = '',
+    this.descriptionFr = '',
+    required this.trigger,
+    required this.effectType,
+    required this.value,
+    required this.rarity,
+    required this.emoji,
+  });
+
+  String getName(String locale) =&gt; locale == 'fr' ? nameFr : nameEn;
+  String getDescription(String locale) =&gt;
+      locale == 'fr' ? descriptionFr : descriptionEn;</pre>
+</div>
+
+<p>Deux détails à relever tout de suite.</p>
+
+<p><strong>Premier détail : <code>trigger</code> et <code>rarity</code> sont typés, pas
+<code>effectType</code>.</strong> Le trigger est un <code>RelicTrigger</code>, la rareté est une
+<code>RelicRarity</code>, mais l'effet reste une <code>String</code> brute. Ce n'est pas un oubli,
+c'est un arbitrage : le nombre de déclencheurs est stable (on n'en ajoute pas tous les jours),
+tandis que le nombre d'effets grandit à chaque relique originale. En laissant <code>effectType</code>
+en texte libre, on peut inventer <code>charge_armor_mastery_combat</code> dans le JSON sans toucher
+au modèle. Le prix à payer : aucune vérification à la compilation, et une faute de frappe ne se
+manifestera qu'au moment où l'effet ne se produit pas.</p>
+
+<p><strong>Second détail : l'i18n est inline.</strong> Le jeu ne passe pas par les fichiers ARB de
+Flutter pour les noms de reliques ; il embarque les deux langues dans la donnée et choisit avec
+<code>getName(locale)</code>. Voir le chapitre 7 pour la justification de ce choix.</p>
+
+<h3>Le parsing</h3>
+
+<p>La <em>factory</em> <code>fromJson</code> transforme la <code>Map</code> décodée en objet Dart.
+Elle est tolérante sur les noms (elle accepte un <code>name</code> unique si les variantes
+<code>name_en</code>/<code>name_fr</code> manquent) et stricte sur la mécanique.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/relic_data.dart</span><span class="lang">dart</span></div>
+  <pre>  factory RelicData.fromJson(Map&lt;String, dynamic&gt; json) {
+    final nEn = json['name_en'] as String? ?? json['name'] as String? ?? '';
+    final nFr = json['name_fr'] as String? ?? json['name'] as String? ?? '';
+    final dEn =
+        json['description_en'] as String? ??
+        json['description'] as String? ??
+        '';
+    final dFr =
+        json['description_fr'] as String? ??
+        json['description'] as String? ??
+        '';
+
+    return RelicData(
+      id: json['id'] as String,
+      nameEn: nEn,
+      nameFr: nFr,
+      descriptionEn: dEn,
+      descriptionFr: dFr,
+      trigger: RelicTrigger.values.firstWhere((e) =&gt; e.name == json['trigger']),
+      effectType: json['effectType'] as String,
+      value: json['value'] as int,
+      rarity: RelicRarity.values.firstWhere((e) =&gt; e.name == json['rarity']),
+      emoji: json['emoji'] as String? ?? '🪙',
+    );
+  }</pre>
+</div>
+
+<p>La ligne qui mérite votre attention est celle-ci :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">illustration</span><span class="lang">dart</span></div>
+  <pre>trigger: RelicTrigger.values.firstWhere((e) =&gt; e.name == json['trigger']),</pre>
+</div>
+
+<p><code>RelicTrigger.values</code> est la liste des neuf valeurs de l'enum, et <code>e.name</code>
+est leur nom sous forme de chaîne (<code>"startOfTurn"</code>, <code>"onEnemyKilled"</code>…). On
+cherche donc la valeur d'enum dont le nom correspond exactement à la chaîne du JSON. C'est le pont
+entre le monde texte et le monde typé.</p>
+
+<div class="box warn"><div class="box-title">Piège : <code>firstWhere</code> sans <code>orElse</code></div>
+<p>Si vous écrivez <code>"trigger": "startofturn"</code> (minuscule) ou <code>"startOfRound"</code>
+dans le JSON, <code>firstWhere</code> ne trouve rien et lève une <code>StateError</code> :
+<em>No element</em>. Le chargement complet des données du jeu échoue, au démarrage, sur une faute de
+casse. Même chose pour <code>rarity</code>. C'est volontairement strict — mieux vaut un crash
+immédiat au boot qu'une relique silencieusement inerte — mais si un jour vous ouvrez le jeu à des
+mods, c'est le premier endroit à sécuriser avec un <code>orElse</code> et un message clair.</p></div>
+
+<p>Enfin, une méthode statique permet de retrouver une relique par son identifiant. Elle sert
+essentiellement au chargement d'une sauvegarde (section 7).</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/relic_data.dart</span><span class="lang">dart</span></div>
+  <pre>  static RelicData? getById(String id) {
+    final registry = GameDataRegistry.instance;
+    if (registry == null) return null;
+    try {
+      return registry.relics.firstWhere((r) =&gt; r.id == id);
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('RelicData.getById: no relic found for id "$id" ($e)');
+      }
+      return null;
+    }
+  }</pre>
+</div>
+
+<p>Ici, à l'inverse du parsing, le <code>firstWhere</code> est protégé : l'exception est attrapée,
+un message est écrit en debug, et la méthode renvoie <code>null</code>. Le type de retour est
+<code>RelicData?</code> — le point d'interrogation signale à l'appelant qu'il <em>doit</em> gérer
+le cas « pas trouvé ». C'est exactement ce que fait <code>fromJsonWithReport</code>.</p>
+
+<p>Le fichier JSON est chargé par <code>lib/services/game_data_service.dart</code>, ligne 60, en même
+temps que les neuf autres fichiers de données du jeu, puis déposé dans le
+<code>GameDataRegistry</code>.</p>
+
+<h2 id="s2">2. Les neuf déclencheurs et leurs points d'appel</h2>
+
+<p>Un déclencheur ne fait rien tout seul. Quelque part dans le code, à un instant précis, quelqu'un
+doit appeler <code>applyRelics(RelicTrigger.xxx)</code>. La question centrale de ce chapitre est
+donc : <em>qui appelle quoi, et quand ?</em></p>
+
+<p>Le point d'entrée est une méthode de six lignes. C'est le cœur du système, et il tient dans une
+capture d'écran.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run/player_stats_manager.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Déclenche les effets des reliques pour un trigger donné
+  void applyRelics(RelicTrigger trigger) {
+    final relics = ref.read(inventoryProvider).relics;
+    final relevantRelics = relics.where((r) =&gt; r.trigger == trigger).toList();
+    for (var relic in relevantRelics) {
+      applyRelicEffect(relic);
+    }
+  }
+
+  /// Déclenche les reliques d'élimination d'ennemi
+  void onEnemyKilled() {
+    applyRelics(RelicTrigger.onEnemyKilled);
+  }</pre>
+</div>
+
+<p>Trois opérations : on lit la liste des reliques possédées dans l'inventaire, on filtre celles
+dont le <code>trigger</code> correspond, on applique l'effet de chacune. Rien de plus. Aucune
+priorité, aucun tri, aucune notion de « la relique A passe avant la relique B » : l'ordre
+d'application est simplement l'ordre d'acquisition, puisque <code>addRelic</code> ajoute en fin de
+liste.</p>
+
+<div class="box rule"><div class="box-title">Règle du jeu</div>
+<p>Les reliques sont cumulables et <strong>les doublons comptent</strong>. Si vous possédez deux
+Talismans de Fer, la liste contient deux entrées avec le même <code>id</code>, le filtre en retient
+deux, et vous gagnez 4 points d'Armure par tour au lieu de 2. Aucun code n'empêche d'obtenir deux
+fois la même relique.</p></div>
+
+<p>Le <code>RunController</code> expose une façade sur ces méthodes — c'est lui que le reste du jeu
+appelle, jamais le <code>PlayerStatsManager</code> directement.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Déclenche les effets des reliques pour un trigger donné
+  void applyRelics(RelicTrigger trigger) {
+    _playerStatsManager.applyRelics(trigger);
+  }
+
+  /// Déclenche les reliques d'élimination d'ennemi
+  void onEnemyKilled() {
+    _playerStatsManager.onEnemyKilled();
+  }
+
+  void applyRelicEffect(RelicData relic) {
+    _playerStatsManager.applyRelicEffect(relic);
+  }
+
+  void removeRelicEffect(RelicData relic) {
+    _playerStatsManager.removeRelicEffect(relic);
+  }
+
+  void exchangeRelics(List&lt;RelicData&gt; sacrificed, RelicData gained) {
+    _playerStatsManager.exchangeRelics(sacrificed, gained);
+  }</pre>
+</div>
+
+<h3>Le tableau des neuf déclencheurs</h3>
+
+<p>Voici, vérifié appel par appel dans le code, l'inventaire complet des points de déclenchement.
+La colonne « reliques » indique combien des vingt-cinq reliques du JSON utilisent effectivement ce
+déclencheur.</p>
+
+<div class="table-wrap"><table>
+<thead><tr>
+  <th><code>RelicTrigger</code></th>
+  <th>Moment exact dans la partie</th>
+  <th>Fichier et ligne de l'appel</th>
+  <th>Reliques</th>
+</tr></thead>
+<tbody>
+<tr>
+  <td><code>startOfRun</code></td>
+  <td>À l'instant où la relique entre dans l'inventaire (récompense d'élite, événement, échange).
+      <strong>Pas</strong> au démarrage de la run.</td>
+  <td><code>lib/game/controllers/inventory_controller.dart:31</code><br>
+      <span class="pill a">appel direct à <code>applyRelicEffect</code></span></td>
+  <td>9</td>
+</tr>
+<tr>
+  <td><code>startOfCombat</code></td>
+  <td>Étape 2 de <code>startCombat()</code>, après le nettoyage des statuts du combat précédent et
+      la remise du mana au maximum, avant la main d'ouverture.</td>
+  <td><code>lib/game/controllers/run_controller.dart:404</code></td>
+  <td>4</td>
+</tr>
+<tr>
+  <td><code>startOfTurn</code></td>
+  <td>Étape 2 de <code>startTurn()</code>, après la remise à zéro de l'armure et du mana, avant le
+      tick des statuts et la pioche.</td>
+  <td><code>lib/game/controllers/run_controller.dart:419</code></td>
+  <td>3</td>
+</tr>
+<tr>
+  <td><code>endOfTurn</code></td>
+  <td>Au clic du joueur sur « Fin de tour », juste après <code>TraitSystem.onTurnEnd</code> et
+      juste avant la défausse de la main.</td>
+  <td><code>lib/ui/screens/game_screen.dart:473</code></td>
+  <td>3</td>
+</tr>
+<tr>
+  <td><code>onCardPlayed</code></td>
+  <td>Après résolution réussie d'une carte, quel que soit son type.</td>
+  <td><code>lib/game/controllers/combat_controller.dart:301</code></td>
+  <td>2</td>
+</tr>
+<tr>
+  <td><code>onAttackPlayed</code></td>
+  <td>Immédiatement après <code>onCardPlayed</code>, si <code>card.data.type == CardType.attack</code>.</td>
+  <td><code>lib/game/controllers/combat_controller.dart:303</code></td>
+  <td>2</td>
+</tr>
+<tr>
+  <td><code>onSkillPlayed</code></td>
+  <td>Immédiatement après <code>onCardPlayed</code>, si <code>card.data.type == CardType.skill</code>.</td>
+  <td><code>lib/game/controllers/combat_controller.dart:305</code></td>
+  <td><strong>0</strong></td>
+</tr>
+<tr>
+  <td><code>onPowerPlayed</code></td>
+  <td>Immédiatement après <code>onCardPlayed</code>, si <code>card.data.type == CardType.power</code>.</td>
+  <td><code>lib/game/controllers/combat_controller.dart:307</code></td>
+  <td><strong>0</strong></td>
+</tr>
+<tr>
+  <td><code>onEnemyKilled</code></td>
+  <td>Dans <code>cleanDeadEnemies()</code>, une fois par ennemi dont les PV sont tombés à zéro ou
+      moins, avant le remplacement par la file d'attente.</td>
+  <td><code>lib/game/controllers/combat_controller.dart:371</code></td>
+  <td>2</td>
+</tr>
+</tbody>
+</table></div>
+
+<div class="box danger"><div class="box-title">Deux déclencheurs branchés dans le vide</div>
+<p><code>onSkillPlayed</code> et <code>onPowerPlayed</code> sont correctement câblés dans
+<code>CombatController</code>, correctement affichés dans les trois écrans de l'interface — et
+utilisés par <strong>zéro relique</strong> de <code>relics.json</code>. Ce n'est pas un bug : c'est
+de l'infrastructure posée d'avance. Le coût est réel mais faible (deux appels
+<code>applyRelics</code> qui parcourent une liste et n'y trouvent rien), et le jour où vous ajoutez
+une relique « gagne 2 Armure quand vous jouez une Compétence », vous n'écrivez qu'une entrée
+JSON.</p></div>
+
+<h3>Le cas particulier de <code>startOfRun</code></h3>
+
+<p><code>startOfRun</code> est le seul déclencheur qui ne passe jamais par
+<code>applyRelics()</code>. Cherchez dans tout le projet : il n'existe aucun appel
+<code>applyRelics(RelicTrigger.startOfRun)</code>. À la place, l'inventaire appelle directement
+<code>applyRelicEffect</code> au moment de l'acquisition.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/inventory_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  void addRelic(RelicData relic) {
+    state = state.copyWith(relics: [...state.relics, relic]);
+    if (relic.trigger == RelicTrigger.startOfRun) {
+      ref.read(runProvider.notifier).applyRelicEffect(relic);
+    }
+  }</pre>
+</div>
+
+<p>C'est la conséquence logique de ce que fait un effet <code>startOfRun</code> : il modifie une
+statistique <strong>permanente</strong> du héros. On ne l'applique donc qu'une fois, à
+l'acquisition. Si on le rejouait à chaque combat, la Lame Maudite donnerait +2 Force par combat et
+la run deviendrait absurde au bout de dix nœuds.</p>
+
+<div class="box warn"><div class="box-title">Le nom du déclencheur est trompeur</div>
+<p><code>startOfRun</code> se lit « au début de la run », mais le code dit « à l'obtention ».
+La différence compte : une relique <code>startOfRun</code> ramassée au nœud 12 s'applique
+immédiatement, pas rétroactivement, et pas au prochain lancement de partie. Le nom vient de la
+<em>durée</em> de l'effet (« pour toute la run »), pas de son <em>instant</em> d'application.</p></div>
+
+<h3>Chronologie complète</h3>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 840 350" width="840" role="img" aria-label="Chronologie d'un combat montrant les neuf points de déclenchement des reliques et le fichier qui appelle applyRelics à chaque étape">
+      <defs>
+        <marker id="c13-a1" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#3a4966"/>
+        </marker>
+        <marker id="c13-a2" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#f59e0b"/>
+        </marker>
+      </defs>
+
+      <text x="71" y="24" fill="#a7b4c9" font-size="12" text-anchor="middle">hors combat</text>
+      <text x="485" y="24" fill="#a7b4c9" font-size="12" text-anchor="middle">pendant le combat</text>
+      <path d="M140 12 L140 300" stroke="#3a4966" stroke-width="1" stroke-dasharray="4 4"/>
+
+      <rect x="12" y="44" width="118" height="44" rx="8" fill="#151b2b" stroke="#60a5fa"/>
+      <text x="71" y="65" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">startOfRun</text>
+      <text x="71" y="80" fill="#a7b4c9" font-size="10" text-anchor="middle">à l'obtention</text>
+
+      <rect x="150" y="44" width="118" height="44" rx="8" fill="#151b2b" stroke="#f87171"/>
+      <text x="209" y="65" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">startOfCombat</text>
+      <text x="209" y="80" fill="#a7b4c9" font-size="10" text-anchor="middle">statuts vidés</text>
+
+      <rect x="288" y="44" width="118" height="44" rx="8" fill="#151b2b" stroke="#34d399"/>
+      <text x="347" y="65" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">startOfTurn</text>
+      <text x="347" y="80" fill="#a7b4c9" font-size="10" text-anchor="middle">armure remise à 0</text>
+
+      <rect x="426" y="44" width="118" height="104" rx="8" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="485" y="62" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">onCardPlayed</text>
+      <text x="485" y="80" fill="#a7b4c9" font-size="10" text-anchor="middle">puis, selon le type :</text>
+      <text x="485" y="97" fill="#e6ecf5" font-size="10" text-anchor="middle" font-family="ui-monospace, monospace">onAttackPlayed</text>
+      <text x="485" y="112" fill="#e6ecf5" font-size="10" text-anchor="middle" font-family="ui-monospace, monospace">onSkillPlayed</text>
+      <text x="485" y="127" fill="#e6ecf5" font-size="10" text-anchor="middle" font-family="ui-monospace, monospace">onPowerPlayed</text>
+      <text x="485" y="142" fill="#a7b4c9" font-size="9" text-anchor="middle">(les 2 derniers : 0 relique)</text>
+
+      <rect x="564" y="44" width="118" height="44" rx="8" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="623" y="65" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">onEnemyKilled</text>
+      <text x="623" y="80" fill="#a7b4c9" font-size="10" text-anchor="middle">1 fois par mort</text>
+
+      <rect x="702" y="44" width="118" height="44" rx="8" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="761" y="65" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">endOfTurn</text>
+      <text x="761" y="80" fill="#a7b4c9" font-size="10" text-anchor="middle">clic « Fin de tour »</text>
+
+      <path d="M12 200 L826 200" stroke="#3a4966" stroke-width="2" marker-end="url(#c13-a1)"/>
+      <path d="M71 88 L71 194" stroke="#60a5fa" stroke-width="1.5" marker-end="url(#c13-a1)"/>
+      <path d="M209 88 L209 194" stroke="#f87171" stroke-width="1.5" marker-end="url(#c13-a1)"/>
+      <path d="M347 88 L347 194" stroke="#34d399" stroke-width="1.5" marker-end="url(#c13-a1)"/>
+      <path d="M485 148 L485 194" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#c13-a1)"/>
+      <path d="M623 88 L623 194" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#c13-a1)"/>
+      <path d="M761 88 L761 194" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#c13-a1)"/>
+
+      <text x="71" y="222" fill="#a7b4c9" font-size="9.5" text-anchor="middle" font-family="ui-monospace, monospace">inventory_controller</text>
+      <text x="71" y="235" fill="#a7b4c9" font-size="9.5" text-anchor="middle" font-family="ui-monospace, monospace">.dart:31</text>
+
+      <text x="209" y="222" fill="#a7b4c9" font-size="9.5" text-anchor="middle" font-family="ui-monospace, monospace">run_controller</text>
+      <text x="209" y="235" fill="#a7b4c9" font-size="9.5" text-anchor="middle" font-family="ui-monospace, monospace">.dart:404</text>
+
+      <text x="347" y="222" fill="#a7b4c9" font-size="9.5" text-anchor="middle" font-family="ui-monospace, monospace">run_controller</text>
+      <text x="347" y="235" fill="#a7b4c9" font-size="9.5" text-anchor="middle" font-family="ui-monospace, monospace">.dart:419</text>
+
+      <text x="485" y="222" fill="#a7b4c9" font-size="9.5" text-anchor="middle" font-family="ui-monospace, monospace">combat_controller</text>
+      <text x="485" y="235" fill="#a7b4c9" font-size="9.5" text-anchor="middle" font-family="ui-monospace, monospace">.dart:301-307</text>
+
+      <text x="623" y="222" fill="#a7b4c9" font-size="9.5" text-anchor="middle" font-family="ui-monospace, monospace">combat_controller</text>
+      <text x="623" y="235" fill="#a7b4c9" font-size="9.5" text-anchor="middle" font-family="ui-monospace, monospace">.dart:371</text>
+
+      <text x="761" y="222" fill="#a7b4c9" font-size="9.5" text-anchor="middle" font-family="ui-monospace, monospace">game_screen</text>
+      <text x="761" y="235" fill="#a7b4c9" font-size="9.5" text-anchor="middle" font-family="ui-monospace, monospace">.dart:473</text>
+
+      <path d="M761 258 L761 292 L347 292 L347 264" stroke="#f59e0b" stroke-width="1.5" fill="none"
+            stroke-dasharray="5 4" marker-end="url(#c13-a2)"/>
+      <text x="554" y="286" fill="#f59e0b" font-size="10.5" text-anchor="middle">tour suivant : la boucle recommence au début de tour</text>
+
+      <text x="420" y="322" fill="#a7b4c9" font-size="10" text-anchor="middle">Les quatre déclencheurs violets peuvent survenir plusieurs fois par tour ; les autres au plus une fois.</text>
+    </svg>
+  </div>
+  <figcaption>Chronologie d'un combat et points d'appel de <code>applyRelics(...)</code>. Le seul
+  déclencheur situé hors du combat est <code>startOfRun</code>, appliqué au moment où la relique
+  entre dans l'inventaire.</figcaption>
+</figure>
+
+<h3>Les appels, dans le code</h3>
+
+<p>Regardons maintenant les vrais sites d'appel, un par un. D'abord l'ouverture d'un combat et d'un
+tour, dans <code>RunController</code>. Les commentaires numérotés du code disent tout de l'ordre des
+opérations.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  void startCombat() {
+    // 1. Nettoyage des buffs/debuffs du combat précédent,
+    // et restauration du mana au max (l'armure est remise à 0 en fin de combat dans completeCurrentNode)
+    state = state.copyWith(
+      heroStats: state.heroStats.copyWith(
+        statuses: [],
+        currentMana: state.heroStats.maxMana,
+      ),
+    );
+    // 2. Déclenchement des reliques
+    applyRelics(RelicTrigger.startOfCombat);
+    // 3. Déclenchement des passifs de début de combat/tour pour le tour 1 (ex: Berserker)
+    TraitSystem.onTurnStart(this);
+  }
+
+  void startTurn() {
+    // 1. Restaurer le Mana à sa valeur maximale (ne se cumule pas d'un tour à l'autre) et reset l'armure
+    state = state.copyWith(
+      heroStats: state.heroStats.copyWith(
+        armure: 0,
+        currentMana: state.heroStats.maxMana,
+      ),
+    );
+
+    // 2. Déclencher les reliques de début de tour (qui peuvent maintenant rajouter du mana par-dessus)
+    applyRelics(RelicTrigger.startOfTurn);
+
+    // 3. Appliquer les effets de début de tour (ex: Poison, Regen) et décrémenter les statuts via le StatusEffectProcessor
+    final updatedStats = StatusEffectProcessor.processPlayerStatuses(state.heroStats);
+    state = state.copyWith(heroStats: updatedStats);
+
+    // 4. Décrémenter les cooldowns via le skill provider
+    ref.read(skillProvider.notifier).tickCooldowns();
+
+    // 5. Déclencher les traits passifs
+    TraitSystem.onTurnStart(this);
+  }</pre>
+</div>
+
+<div class="box rule"><div class="box-title">Règle du jeu : le mana peut dépasser son maximum</div>
+<p>L'ordre des étapes 1 et 2 de <code>startTurn()</code> est explicitement commenté : « qui peuvent
+maintenant rajouter du mana par-dessus ». Le mana est d'abord remis à <code>maxMana</code>,
+<em>puis</em> les reliques s'ajoutent. La Pierre d'Énergie (<code>startOfTurn</code>,
+<code>gain_mana</code>, valeur 1) vous donne donc <code>maxMana + 1</code> au début de chaque tour.
+Rien dans <code>EntityStats</code> ne borne <code>currentMana</code> à <code>maxMana</code> : le
+dépassement est voulu.</p></div>
+
+<p>L'ordre relatif de ces deux appels est protégé par un commentaire explicite dans le gestionnaire
+de phases, qui orchestre les deux contrôleurs.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/combat/turn_phase_manager.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Ouvre un tour joueur : mana, armure, reliques `startOfTurn`, statuts,
+  /// cooldowns et passifs, puis pioche.
+  ///
+  /// L'ordre est celui d'avant P-02 et doit le rester : inverser les deux
+  /// appels décalerait toute relique `startOfTurn` d'un tour.
+  void startPlayerTurn() {
+    final runController = ref.read(runProvider.notifier);
+
+    runController.startTurn();
+    ref.read(deckProvider.notifier).drawCards(
+          runController.currentState.cardsPerTurn,
+          maxHandSize: GameConstants.maxHandSize,
+        );
+  }</pre>
+</div>
+
+<p>Ensuite, les déclencheurs liés aux cartes. Ils sont tous groupés au même endroit, dans
+<code>applyPlayerCardPlay</code>, et — c'est important — <strong>uniquement si la carte a été
+résolue avec succès</strong>.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/combat_controller.dart</span><span class="lang">dart</span></div>
+  <pre>    if (success) {
+      // 2. Transmettre au deck que la carte est jouée
+      deckController.playCard(card);
+
+      // 3. Déclencher les traits passifs
+      TraitSystem.onCardPlayed(runController, card);
+
+      // 4. Déclencher les reliques liées aux cartes jouées
+      runController.applyRelics(RelicTrigger.onCardPlayed);
+      if (card.data.type == CardType.attack) {
+        runController.applyRelics(RelicTrigger.onAttackPlayed);
+      } else if (card.data.type == CardType.skill) {
+        runController.applyRelics(RelicTrigger.onSkillPlayed);
+      } else if (card.data.type == CardType.power) {
+        runController.applyRelics(RelicTrigger.onPowerPlayed);
+      }
+
+      // 5. Nettoyer les morts
+      cleanDeadEnemies();
+    }</pre>
+</div>
+
+<p>Notez la structure : <code>onCardPlayed</code> est <strong>toujours</strong> déclenché, puis le
+déclencheur spécialisé s'ajoute par-dessus. Une carte d'attaque déclenche donc deux passes :
+<code>onCardPlayed</code> puis <code>onAttackPlayed</code>. Si vous possédez à la fois l'Amulette du
+Mage (<code>onCardPlayed</code>, +1 Armure) et le Shuriken (<code>onAttackPlayed</code>), jouer une
+attaque active les deux.</p>
+
+<p>Enfin, la mort d'un ennemi. Le comptage se fait dans <code>cleanDeadEnemies</code>, appelé après
+chaque carte jouée et après chaque effet susceptible de tuer.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/combat_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Nettoie les ennemis décédés et met à jour les indicateurs de fin de combat
+  void cleanDeadEnemies() {
+    final runController = ref.read(runProvider.notifier);
+    final List&lt;EnemyInstance&gt; remainingEnemies = [];
+    final List&lt;EnemyInstance&gt; newlyKilledEnemies = [];
+    int killedCount = 0;
+
+    for (var enemy in state.enemies) {
+      if (enemy.stats.currentPv &lt;= 0) {
+        killedCount++;
+        newlyKilledEnemies.add(enemy);
+        runController.onEnemyKilled();
+      } else {
+        remainingEnemies.add(enemy);
+      }
+    }
+    // ...</pre>
+</div>
+
+<div class="box rule"><div class="box-title">Règle du jeu : une carte qui tue trois ennemis déclenche trois fois</div>
+<p><code>onEnemyKilled()</code> est appelé <em>dans la boucle</em>, une fois par cadavre. Une carte
+de zone qui achève trois ennemis d'un coup fait donc gagner 3 Mana avec l'Essence Spirituelle, ou
+24 PV avec le Croc Vampirique (8 × 3). C'est aussi vrai pour les morts par poison, puisque
+<code>startEnemyTurn</code> appelle <code>cleanDeadEnemies</code> après avoir appliqué les statuts
+autonomes.</p></div>
+
+<p>Et la fin de tour, qui est le seul déclencheur piloté depuis l'interface plutôt que depuis un
+contrôleur :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>                        TraitSystem.onTurnEnd(ref.read(runProvider.notifier));
+                        ref
+                            .read(runProvider.notifier)
+                            .applyRelics(RelicTrigger.endOfTurn);
+                        ref.read(deckProvider.notifier).discardHand();
+                        _game.executeTurn();</pre>
+</div>
+
+<div class="box danger"><div class="box-title">Dette technique : le déclencheur de fin de tour vit dans le widget</div>
+<p>Les six autres déclencheurs sont appelés depuis la couche « état » (<code>RunController</code>,
+<code>CombatController</code>). <code>endOfTurn</code>, lui, est appelé depuis le
+<code>onEndTurnTap</code> d'un bouton, dans <code>game_screen.dart</code>. Conséquence concrète :
+si un jour le tour se termine autrement que par un clic — un effet « votre tour se termine
+immédiatement », un timer, une fin de tour automatique quand la main est vide — les reliques
+<code>endOfTurn</code> ne se déclencheront pas. Trois reliques sont concernées (Rune de Protection,
+Anneau de Régénération, Bandage de voyage). Le bon geste, si vous reprenez ce code : déplacer ces
+deux lignes dans <code>TurnPhaseManager</code>, à côté de <code>startPlayerTurn</code>.</p></div>
+
+<p>Un dernier détail honnête, découvert en traçant les appels : <code>HerosDraftGame</code> déclare
+un callback <code>final void Function() onEnemyKilled;</code> (ligne 63), que
+<code>game_screen.dart</code> renseigne consciencieusement (lignes 252 à 254) pour appeler
+<code>runController.onEnemyKilled()</code>. Or ce callback n'est <strong>jamais invoqué</strong>
+dans le moteur Flame. Le déclenchement réel passe uniquement par
+<code>cleanDeadEnemies</code>. C'est un vestige : sans lui, les reliques
+<code>onEnemyKilled</code> se déclencheraient deux fois par mort.</p>
+
+<h2 id="s3">3. Le catalogue complet des 25 reliques</h2>
+
+<p>Voici l'intégralité de <code>assets/data/relics.json</code>, regroupée par rareté. Chaque ligne
+se lit directement dans la donnée ; la colonne « effet en clair » traduit le triplet
+<code>trigger</code> / <code>effectType</code> / <code>value</code>.</p>
+
+<div class="table-wrap"><table>
+<thead><tr>
+  <th></th><th>Nom FR</th><th><code>id</code></th><th><code>trigger</code></th>
+  <th><code>effectType</code></th><th><code>value</code></th><th>Effet en clair</th>
+</tr></thead>
+<tbody>
+<tr><td colspan="7"><strong>Commun — 5 reliques</strong></td></tr>
+<tr><td>🪙</td><td>Talisman de Fer</td><td><code>iron_talisman</code></td><td><code>startOfTurn</code></td>
+    <td><code>gain_armor</code></td><td>2</td><td>+2 Armure au début de chaque tour</td></tr>
+<tr><td>🪨</td><td>Pierre à aiguiser</td><td><code>whetstone</code></td><td><code>startOfRun</code></td>
+    <td><code>gain_strength</code></td><td>1</td><td>+1 Force permanente (stat <code>attaque</code>)</td></tr>
+<tr><td>🥾</td><td>Bottes en cuir</td><td><code>leather_boots</code></td><td><code>startOfCombat</code></td>
+    <td><code>gain_armor</code></td><td>3</td><td>+3 Armure au début de chaque combat</td></tr>
+<tr><td>🪙</td><td>Pièce de chance</td><td><code>lucky_coin</code></td><td><code>startOfRun</code></td>
+    <td><code>gain_crit</code></td><td>5</td><td>+5 de chance de critique, permanent</td></tr>
+<tr><td>🩹</td><td>Bandage de voyage</td><td><code>bandage</code></td><td><code>endOfTurn</code></td>
+    <td><code>heal</code></td><td>1</td><td>+1 PV à la fin de chaque tour</td></tr>
+
+<tr><td colspan="7"><strong>Peu commun — 6 reliques</strong></td></tr>
+<tr><td>🛡️</td><td>Bouclier Ancestral</td><td><code>ancestral_shield</code></td><td><code>startOfCombat</code></td>
+    <td><code>gain_armor</code></td><td>5</td><td>+5 Armure au début de chaque combat</td></tr>
+<tr><td>🌀</td><td>Rune de Protection</td><td><code>protection_rune</code></td><td><code>endOfTurn</code></td>
+    <td><code>gain_armor</code></td><td>3</td><td>+3 Armure à la fin de chaque tour</td></tr>
+<tr><td>🗡️</td><td>Lame Maudite</td><td><code>cursed_blade</code></td><td><code>startOfRun</code></td>
+    <td><code>gain_strength</code></td><td>2</td><td>+2 Force permanente (stat <code>attaque</code>)</td></tr>
+<tr><td>🧛</td><td>Croc Vampirique</td><td><code>vampiric_fang</code></td><td><code>onEnemyKilled</code></td>
+    <td><code>heal</code></td><td>8</td><td>+8 PV par ennemi tué</td></tr>
+<tr><td>🧿</td><td>Porte-bonheur</td><td><code>lucky_charm</code></td><td><code>startOfRun</code></td>
+    <td><code>gain_crit</code></td><td>10</td><td>+10 de chance de critique, permanent</td></tr>
+<tr><td>🖋️</td><td>Plume de scribe</td><td><code>pen_nib</code></td><td><code>onCardPlayed</code></td>
+    <td><code>charge_strength_turn</code></td><td>3</td><td>Toutes les 5 cartes jouées : +3 Force pour le tour</td></tr>
+
+<tr><td colspan="7"><strong>Rare — 8 reliques</strong></td></tr>
+<tr><td>📿</td><td>Amulette du Mage</td><td><code>mage_amulet</code></td><td><code>onCardPlayed</code></td>
+    <td><code>gain_armor</code></td><td>1</td><td>+1 Armure par carte jouée</td></tr>
+<tr><td>💎</td><td>Cristal de Mana</td><td><code>mana_crystal</code></td><td><code>startOfCombat</code></td>
+    <td><code>gain_mana</code></td><td>1</td><td>+1 Mana courant au début du combat</td></tr>
+<tr><td>🧪</td><td>Essence Spirituelle</td><td><code>spirit_essence</code></td><td><code>onEnemyKilled</code></td>
+    <td><code>gain_mana</code></td><td>1</td><td>+1 Mana courant par ennemi tué</td></tr>
+<tr><td>💍</td><td>Anneau de Régénération</td><td><code>regen_ring</code></td><td><code>endOfTurn</code></td>
+    <td><code>heal</code></td><td>2</td><td>+2 PV à la fin de chaque tour</td></tr>
+<tr><td>🎯</td><td>Lentille de Focalisation</td><td><code>critical_lens</code></td><td><code>startOfRun</code></td>
+    <td><code>gain_crit</code></td><td>15</td><td>+15 de chance de critique, permanent</td></tr>
+<tr><td>🗡️</td><td>Croc Kunaï</td><td><code>kunai</code></td><td><code>onAttackPlayed</code></td>
+    <td><code>charge_armor_mastery_combat</code></td><td>1</td><td>Toutes les 3 attaques du tour : +1 Maîtrise d'Armure pour le combat</td></tr>
+<tr><td>🥏</td><td>Shuriken</td><td><code>shuriken</code></td><td><code>onAttackPlayed</code></td>
+    <td><code>charge_strength_combat</code></td><td>1</td><td>Toutes les 3 attaques du tour : +1 Force pour le combat</td></tr>
+<tr><td>🏺</td><td>Encensoir</td><td><code>incense_burner</code></td><td><code>startOfTurn</code></td>
+    <td><code>charge_armor_turn</code></td><td>8</td><td>Tous les 4 tours : +8 Armure</td></tr>
+
+<tr><td colspan="7"><strong>Épique — 3 reliques</strong></td></tr>
+<tr><td>🍀</td><td>Trèfle Enchanté</td><td><code>lucky_clover</code></td><td><code>startOfRun</code></td>
+    <td><code>gain_luck</code></td><td>1</td><td>+1 Chance permanente</td></tr>
+<tr><td>⚡</td><td>Pierre d'Énergie</td><td><code>energy_stone</code></td><td><code>startOfTurn</code></td>
+    <td><code>gain_mana</code></td><td>1</td><td>+1 Mana courant au début de chaque tour</td></tr>
+<tr><td>🪶</td><td>Plume de Phénix</td><td><code>phoenix_feather</code></td><td><code>startOfCombat</code></td>
+    <td><code>gain_mana</code></td><td>2</td><td>+2 Mana courant au début du combat</td></tr>
+
+<tr><td colspan="7"><strong>Légendaire — 3 reliques</strong></td></tr>
+<tr><td>🎲</td><td>Dé de Fortune</td><td><code>fortune_dice</code></td><td><code>startOfRun</code></td>
+    <td><code>gain_luck</code></td><td>2</td><td>+2 Chance permanente</td></tr>
+<tr><td>👑</td><td>Couronne des Rois</td><td><code>crown_kings</code></td><td><code>startOfRun</code></td>
+    <td><code>gain_mana</code></td><td>1</td><td>+1 Mana <strong>maximum</strong>, permanent</td></tr>
+<tr><td>🎒</td><td>Besace de l'Érudit</td><td><code>scholars_satchel</code></td><td><code>startOfRun</code></td>
+    <td><code>increase_cards_per_turn</code></td><td>1</td><td>+1 carte piochée par tour, toute la run</td></tr>
+</tbody>
+</table></div>
+
+<h3>Ce que le catalogue raconte</h3>
+
+<p>Le décompte par rareté n'est pas une pyramide régulière :</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Rareté</th><th>Nombre</th><th>Part</th><th>Couleur de l'interface</th></tr></thead>
+<tbody>
+<tr><td><code>common</code></td><td>5</td><td>20 %</td><td><code>0xFF8E8E93</code> — gris</td></tr>
+<tr><td><code>uncommon</code></td><td>6</td><td>24 %</td><td><code>0xFF34C759</code> — vert</td></tr>
+<tr><td><code>rare</code></td><td>8</td><td>32 %</td><td><code>0xFF007AFF</code> — bleu</td></tr>
+<tr><td><code>epic</code></td><td>3</td><td>12 %</td><td><code>0xFFAF52DE</code> — violet</td></tr>
+<tr><td><code>legendary</code></td><td>3</td><td>12 %</td><td><code>0xFFFFCC00</code> — or</td></tr>
+<tr><td><strong>Total</strong></td><td><strong>25</strong></td><td>100 %</td><td></td></tr>
+</tbody>
+</table></div>
+
+<p>Le pic est sur <em>rare</em> (8 reliques), pas sur <em>commun</em>. C'est cohérent avec la table
+de butin de <code>lib/game/controllers/reward_controller.dart</code> : une relique n'est offerte
+que sur un nœud élite ou sur un boss au butin amélioré, et la rareté est tirée avant la relique.
+En tirage standard, la chance de base est de 1 % pour légendaire, 5 % pour épique, 14 % pour rare
+et 20 % pour peu commun, chaque point de Chance ajoutant respectivement +0,5, +1, +2 et +3 points
+de pourcentage. Le reste tombe en commun.</p>
+
+<div class="box"><div class="box-title">Filet de sécurité du tirage</div>
+<p>Une fois la rareté choisie, le contrôleur filtre le catalogue. Si aucune relique de cette rareté
+n'existe, il retombe sur <code>common</code>, et si celle-ci est vide, sur le catalogue entier.
+C'est ce qui protège le jeu si vous supprimez toutes les reliques épiques de
+<code>relics.json</code> : la récompense reste possible au lieu de planter.</p></div>
+
+<p>Côté déclencheurs, la distribution est très déséquilibrée, et c'est instructif :</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th><code>trigger</code></th><th>Reliques</th><th>Lecture</th></tr></thead>
+<tbody>
+<tr><td><code>startOfRun</code></td><td>9</td><td>Le tiers du catalogue. Ce sont les reliques « statistique permanente », les plus simples à équilibrer.</td></tr>
+<tr><td><code>startOfCombat</code></td><td>4</td><td>Bonus d'ouverture, sans effet cumulatif.</td></tr>
+<tr><td><code>startOfTurn</code></td><td>3</td><td>Le moteur économique du combat long.</td></tr>
+<tr><td><code>endOfTurn</code></td><td>3</td><td>Récupération : armure et soins.</td></tr>
+<tr><td><code>onCardPlayed</code></td><td>2</td><td>Récompense les decks à cartes nombreuses et bon marché.</td></tr>
+<tr><td><code>onAttackPlayed</code></td><td>2</td><td>Les deux reliques à charges du ninja.</td></tr>
+<tr><td><code>onEnemyKilled</code></td><td>2</td><td>Récompense les combats à plusieurs ennemis.</td></tr>
+<tr><td><code>onSkillPlayed</code></td><td>0</td><td>Câblé, jamais utilisé.</td></tr>
+<tr><td><code>onPowerPlayed</code></td><td>0</td><td>Câblé, jamais utilisé.</td></tr>
+</tbody>
+</table></div>
+
+<h2 id="s4"><span>4.</span> <code>applyRelicEffect</code> : l'aiguillage</h2>
+
+<p>Nous y voilà. <code>applyRelicEffect</code> est la méthode qui donne un sens à la chaîne
+<code>effectType</code>. C'est un unique <code>switch</code> de onze branches, dans
+<code>lib/game/controllers/run/player_stats_manager.dart</code>, lignes 191 à 397. Il n'existe
+aucun autre endroit du projet où un <code>effectType</code> de relique soit interprété.</p>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 840 330" width="840" role="img" aria-label="Chemin d'exécution depuis applyRelics jusqu'aux trois familles de branches du switch sur effectType">
+      <defs>
+        <marker id="c13-b1" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#3a4966"/>
+        </marker>
+      </defs>
+
+      <rect x="20" y="20" width="270" height="48" rx="8" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="155" y="41" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">applyRelics(RelicTrigger.startOfTurn)</text>
+      <text x="155" y="58" fill="#a7b4c9" font-size="10" text-anchor="middle">appelé par run_controller.dart:419</text>
+
+      <path d="M155 68 L155 96" stroke="#3a4966" stroke-width="2" marker-end="url(#c13-b1)"/>
+
+      <rect x="20" y="102" width="270" height="56" rx="8" fill="#151b2b" stroke="#3a4966"/>
+      <text x="155" y="123" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">relics.where((r) =&gt; r.trigger == trigger)</text>
+      <text x="155" y="141" fill="#a7b4c9" font-size="10" text-anchor="middle">filtre la liste de l'inventaire</text>
+      <text x="155" y="153" fill="#a7b4c9" font-size="10" text-anchor="middle">aucun tri, aucune priorité</text>
+
+      <path d="M155 158 L155 186" stroke="#3a4966" stroke-width="2" marker-end="url(#c13-b1)"/>
+
+      <rect x="20" y="192" width="270" height="48" rx="8" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="155" y="213" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">applyRelicEffect(relic)</text>
+      <text x="155" y="230" fill="#a7b4c9" font-size="10" text-anchor="middle">une fois par relique retenue</text>
+
+      <path d="M290 216 L326 216" stroke="#3a4966" stroke-width="2" marker-end="url(#c13-b1)"/>
+
+      <rect x="332" y="192" width="200" height="48" rx="8" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="432" y="213" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">switch (effectType)</text>
+      <text x="432" y="230" fill="#a7b4c9" font-size="10" text-anchor="middle">11 branches, 1 seul fichier</text>
+
+      <path d="M532 210 L570 210 L570 82 L594 82" stroke="#3a4966" stroke-width="1.5" fill="none" marker-end="url(#c13-b1)"/>
+      <path d="M532 216 L582 216 L582 176 L594 176" stroke="#3a4966" stroke-width="1.5" fill="none" marker-end="url(#c13-b1)"/>
+      <path d="M532 222 L570 222 L570 270 L594 270" stroke="#3a4966" stroke-width="1.5" fill="none" marker-end="url(#c13-b1)"/>
+
+      <rect x="600" y="56" width="220" height="52" rx="8" fill="#151b2b" stroke="#34d399"/>
+      <text x="710" y="76" fill="#e6ecf5" font-size="12" text-anchor="middle">6 effets simples</text>
+      <text x="710" y="94" fill="#a7b4c9" font-size="10" text-anchor="middle" font-family="ui-monospace, monospace">gain_mana · gain_armor · heal …</text>
+
+      <rect x="600" y="150" width="220" height="52" rx="8" fill="#151b2b" stroke="#f87171"/>
+      <text x="710" y="170" fill="#e6ecf5" font-size="12" text-anchor="middle">4 effets à charges</text>
+      <text x="710" y="188" fill="#a7b4c9" font-size="10" text-anchor="middle" font-family="ui-monospace, monospace">charge_strength_combat …</text>
+
+      <rect x="600" y="244" width="220" height="52" rx="8" fill="#151b2b" stroke="#60a5fa"/>
+      <text x="710" y="264" fill="#e6ecf5" font-size="12" text-anchor="middle">1 règle de run</text>
+      <text x="710" y="282" fill="#a7b4c9" font-size="10" text-anchor="middle" font-family="ui-monospace, monospace">increase_cards_per_turn</text>
+
+      <text x="420" y="316" fill="#a7b4c9" font-size="10" text-anchor="middle">Un <tspan font-family="ui-monospace, monospace">effectType</tspan> inconnu ne fait rien : le switch n'a pas de branche default.</text>
+    </svg>
+  </div>
+  <figcaption>Du déclencheur à l'effet : filtrage par <code>trigger</code>, puis aiguillage par
+  <code>effectType</code>. Les onze branches se répartissent en trois familles.</figcaption>
+</figure>
+
+<h3>Les six effets simples</h3>
+
+<p>Six <code>effectType</code> couvrent vingt des vingt-cinq reliques. Ils suivent tous le même
+patron, et ce patron est la clé du système :</p>
+
+<div class="box rule"><div class="box-title">La règle du <code>startOfRun</code></div>
+<p>Dans quatre des six cas simples, la branche commence par tester
+<code>if (relic.trigger == RelicTrigger.startOfRun)</code>. Si oui, on modifie une
+<strong>statistique permanente</strong> du héros via <code>applyHeroStatModifier</code>. Si non, on
+produit un <strong>effet temporaire</strong> : soit un statut de durée 99 (le combat entier), soit
+une valeur instantanée. Le même <code>effectType</code> a donc deux comportements selon le
+déclencheur qui l'accompagne.</p></div>
+
+<p>Voici les trois premières branches, verbatim.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run/player_stats_manager.dart</span><span class="lang">dart</span></div>
+  <pre>  void applyRelicEffect(RelicData relic) {
+    switch (relic.effectType) {
+      case 'gain_mana':
+        if (relic.trigger == RelicTrigger.startOfRun) {
+          applyHeroStatModifier(maxManaAcc: relic.value);
+        } else {
+          controller.updateState(
+            controller.currentState.copyWith(
+              heroStats: controller.currentState.heroStats.copyWith(
+                currentMana: controller.currentState.heroStats.currentMana + relic.value,
+              ),
+            ),
+          );
+        }
+        break;
+      case 'gain_armor':
+        controller.updateState(
+          controller.currentState.copyWith(
+            heroStats: controller.currentState.heroStats.copyWith(
+              armure: controller.currentState.heroStats.armure + relic.value,
+            ),
+          ),
+        );
+        break;
+      case 'gain_strength':
+        if (relic.trigger == RelicTrigger.startOfRun) {
+          applyHeroStatModifier(attackAcc: relic.value);
+        } else {
+          addStatus(
+            StatusEffect(
+              id: 'strength',
+              name: 'Force (Relique)',
+              type: StatusType.buff,
+              value: relic.value,
+              duration: 99, // 99 tours (durée du combat)
+            ),
+          );
+        }
+        break;</pre>
+</div>
+
+<p>Décryptons <code>gain_mana</code>, qui illustre parfaitement la dichotomie. Avec la Couronne des
+Rois (<code>startOfRun</code>), on appelle <code>applyHeroStatModifier(maxManaAcc: 1)</code> : le
+<em>maximum</em> de mana augmente définitivement, et cette méthode ajoute le bonus au mana courant
+en même temps. Avec la Plume de Phénix (<code>startOfCombat</code>), on ajoute simplement 2 au mana
+<em>courant</em>, sans toucher au maximum. La différence en jeu est énorme : la Couronne se
+ressent à chaque tour de chaque combat de la run ; la Plume ne vaut que pour le premier tour du
+combat en cours.</p>
+
+<p><code>gain_armor</code>, lui, n'a pas de branche <code>startOfRun</code> du tout : il ajoute
+toujours de l'armure courante. C'est cohérent avec la donnée — aucune relique ne combine
+<code>startOfRun</code> et <code>gain_armor</code> — mais c'est un contrat non écrit (voir
+l'encadré plus bas).</p>
+
+<p>Et les deux dernières branches simples :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run/player_stats_manager.dart</span><span class="lang">dart</span></div>
+  <pre>      case 'gain_luck':
+        if (relic.trigger == RelicTrigger.startOfRun) {
+          applyHeroStatModifier(luckAcc: relic.value);
+        } else {
+          controller.updateState(
+            controller.currentState.copyWith(
+              heroStats: controller.currentState.heroStats.copyWith(
+                luck: controller.currentState.heroStats.luck + relic.value,
+              ),
+            ),
+          );
+        }
+        break;
+      case 'gain_crit':
+        if (relic.trigger == RelicTrigger.startOfRun) {
+          applyHeroStatModifier(critChanceAcc: relic.value);
+        } else {
+          addStatus(
+            StatusEffect(
+              id: 'crit_chance',
+              name: 'Critique (Relique)',
+              type: StatusType.buff,
+              value: relic.value,
+              duration: 99, // 99 tours (durée du combat)
+            ),
+          );
+        }
+        break;
+      case 'heal':
+        heal(relic.value);
+        break;</pre>
+</div>
+
+<p>Récapitulons les six branches dans un tableau, avec ce qu'elles font <em>vraiment</em> selon le
+déclencheur :</p>
+
+<div class="table-wrap"><table>
+<thead><tr>
+  <th><code>effectType</code></th><th>Si <code>startOfRun</code></th><th>Sinon</th><th>Reliques</th>
+</tr></thead>
+<tbody>
+<tr><td><code>gain_mana</code></td><td><code>maxManaAcc</code> — mana max permanent</td>
+    <td><code>currentMana += value</code> — instantané, peut dépasser le max</td><td>5</td></tr>
+<tr><td><code>gain_armor</code></td><td colspan="2"><em>pas de distinction</em> : <code>armure += value</code>, toujours</td><td>5</td></tr>
+<tr><td><code>gain_strength</code></td><td><code>attackAcc</code> — attaque permanente</td>
+    <td>statut <code>strength</code>, durée 99</td><td>2</td></tr>
+<tr><td><code>gain_luck</code></td><td><code>luckAcc</code> — chance permanente</td>
+    <td><code>luck += value</code> sur la stat, <strong>sans durée</strong></td><td>2</td></tr>
+<tr><td><code>gain_crit</code></td><td><code>critChanceAcc</code> — critique permanent</td>
+    <td>statut <code>crit_chance</code>, durée 99</td><td>3</td></tr>
+<tr><td><code>heal</code></td><td colspan="2"><em>pas de distinction</em> : <code>heal(value)</code>, borné à <code>maxPv</code></td><td>3</td></tr>
+</tbody>
+</table></div>
+
+<div class="box danger"><div class="box-title">Le contrat non écrit de <code>gain_luck</code></div>
+<p>La branche « sinon » de <code>gain_luck</code> écrit directement dans la statistique
+<code>luck</code> de <code>heroStats</code>, sans statut et sans durée. Autrement dit, une relique
+<code>gain_luck</code> déclenchée en <code>startOfTurn</code> ajouterait sa valeur
+<strong>définitivement, à chaque tour</strong> — la Chance exploserait en quelques combats. Le jeu
+n'a pas ce problème parce que les deux seules reliques <code>gain_luck</code> (Trèfle Enchanté, Dé
+de Fortune) sont en <code>startOfRun</code>. Même remarque pour <code>gain_armor</code> et
+<code>heal</code> en <code>startOfRun</code> : l'effet serait appliqué une seule fois à
+l'acquisition et <code>removeRelicEffect</code> ne saurait pas l'annuler. Le contrat est porté par
+la donnée, pas par le code. C'est acceptable dans un projet solo ; c'est le premier endroit à
+tester si l'équipe grandit.</p></div>
+
+<h3>Pourquoi la durée 99 signifie « pour tout le combat »</h3>
+
+<p>Le nombre 99 revient trois fois dans le fichier, toujours avec le même commentaire :
+<code>// 99 tours (durée du combat)</code>. Pour comprendre pourquoi ce n'est pas un « nombre
+magique » douteux mais un idiome parfaitement solide ici, il faut trois faits.</p>
+
+<p><strong>Fait 1 — les statuts perdent 1 de durée par tour.</strong> À l'étape 3 de
+<code>startTurn()</code>, <code>StatusEffectProcessor.processPlayerStatuses</code> se termine par
+un appel à <code>tickStatuses()</code> :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/entity_stats.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Décrémente la durée des statuts et supprime ceux expirés
+  EntityStats tickStatuses() {
+    List&lt;StatusEffect&gt; newStatuses = statuses
+        .map((s) {
+          if (s.id == 'freeze') {
+            return s;
+          }
+          if (s.id == 'burn') {
+            return s.copyWith(
+              value: s.value - 1,
+              duration: s.duration - 1,
+            );
+          }
+          return s.copyWith(duration: s.duration - 1);
+        })
+        .where((s) =&gt; s.duration &gt; 0 &amp;&amp; (s.id != 'burn' || s.value &gt; 0))
+        .toList();
+
+    return copyWith(statuses: newStatuses);
+  }</pre>
+</div>
+
+<p><strong>Fait 2 — le combat remet les statuts à zéro.</strong> La première instruction de
+<code>startCombat()</code> est <code>statuses: []</code>. Aucun statut ne survit d'un combat à
+l'autre, quelle que soit sa durée résiduelle.</p>
+
+<p><strong>Fait 3 — aucun combat ne dure 99 tours.</strong> Le budget de rencontre du chapitre 11
+produit des combats de quelques tours ; 99 est simplement un plafond hors d'atteinte.</p>
+
+<p>Conclusion : un statut de durée 99 posé pendant un combat expire en pratique <em>avec le
+combat</em>, jamais avant. C'est un « pour toujours, borné » — plus sûr qu'une durée infinie,
+puisque même si le nettoyage de <code>startCombat</code> disparaissait un jour, l'effet finirait
+par s'éteindre au lieu de contaminer la run entière.</p>
+
+<div class="box ok"><div class="box-title">Bonne pratique</div>
+<p>Quand vous avez besoin d'un effet « jusqu'à la fin de la scène » dans un système qui ne connaît
+que des durées entières, préférez une <strong>grande durée bornée</strong> à une valeur sentinelle
+comme <code>-1</code> ou <code>null</code>. Une sentinelle oblige chaque site de calcul à connaître
+la convention ; une grande durée traverse tout le code existant sans modification. Le commentaire
+<code>// 99 tours (durée du combat)</code> à côté de la valeur est ce qui rend le procédé lisible
+plutôt que mystérieux.</p></div>
+
+<h2 id="s5"><span>5.</span> Les reliques à charges</h2>
+
+<p>Quatre reliques ne se contentent pas de donner un bonus à chaque déclenchement : elles comptent.
+« Toutes les 3 attaques », « toutes les 5 cartes », « tous les 4 tours ». Ce sont les reliques les
+plus intéressantes du catalogue, et le mécanisme qui les porte mérite d'être compris en détail
+parce qu'il ne coûte <strong>aucune structure de données supplémentaire</strong>.</p>
+
+<p>Voici leurs deux entrées les plus parlantes dans le JSON :</p>
+
+<div class="code" data-lang="json">
+  <div class="code-head"><span class="path">assets/data/relics.json</span><span class="lang">json</span></div>
+  <pre>  {
+    "id": "kunai",
+    "name_fr": "Croc Kunaï",
+    "description_fr": "Toutes les 3 attaques jouées dans un tour, gagne 1 Maîtrise d'Armure pour le combat.",
+    "trigger": "onAttackPlayed",
+    "effectType": "charge_armor_mastery_combat",
+    "value": 1,
+    "rarity": "rare",
+    "emoji": "🗡️"
+  },
+  {
+    "id": "incense_burner",
+    "name_fr": "Encensoir",
+    "description_fr": "Tous les 4 tours, gagne 8 points d'Armure.",
+    "trigger": "startOfTurn",
+    "effectType": "charge_armor_turn",
+    "value": 8,
+    "rarity": "rare",
+    "emoji": "🏺"
+  }</pre>
+</div>
+
+<p>Remarquez ce que le JSON ne dit <strong>pas</strong> : le seuil. Le « 3 » du Kunaï et le « 4 » de
+l'Encensoir n'apparaissent nulle part dans la donnée — ils sont codés en dur dans la branche du
+<code>switch</code>. Le champ <code>value</code> porte l'intensité de la récompense (1 Maîtrise
+d'Armure, 8 Armure), pas le seuil. C'est la limite de ce système : chaque nouveau seuil demande une
+nouvelle branche.</p>
+
+<h3>Le tableau des quatre charges</h3>
+
+<div class="table-wrap"><table>
+<thead><tr>
+  <th>Relique</th><th><code>effectType</code></th><th>Statut compteur</th><th>Seuil</th>
+  <th>Durée du compteur</th><th>Récompense</th>
+</tr></thead>
+<tbody>
+<tr>
+  <td>🗡️ Croc Kunaï</td><td><code>charge_armor_mastery_combat</code></td>
+  <td><code>kunai_charge</code></td><td>3 attaques</td><td><strong>1</strong> — remis à zéro chaque tour</td>
+  <td>statut <code>armor_mastery</code> +1, durée 99</td>
+</tr>
+<tr>
+  <td>🥏 Shuriken</td><td><code>charge_strength_combat</code></td>
+  <td><code>shuriken_charge</code></td><td>3 attaques</td><td><strong>1</strong> — remis à zéro chaque tour</td>
+  <td>statut <code>strength</code> +1, durée 99</td>
+</tr>
+<tr>
+  <td>🖋️ Plume de scribe</td><td><code>charge_strength_turn</code></td>
+  <td><code>pen_nib_charge</code></td><td>5 cartes</td><td><strong>99</strong> — persiste tout le combat</td>
+  <td>statut <code>strength</code> +3, durée <strong>1</strong></td>
+</tr>
+<tr>
+  <td>🏺 Encensoir</td><td><code>charge_armor_turn</code></td>
+  <td><code>incense_charge</code></td><td>4 tours</td><td><strong>99</strong> — persiste tout le combat</td>
+  <td>+8 Armure immédiate (pas de statut)</td>
+</tr>
+</tbody>
+</table></div>
+
+<div class="box"><div class="box-title">La symétrie inversée</div>
+<p>Lisez les colonnes « durée du compteur » et « durée de la récompense » ensemble : les deux
+reliques ninja ont un <strong>compteur éphémère</strong> (1 tour) et une <strong>récompense
+durable</strong> (99, le combat). La Plume de scribe fait exactement l'inverse : compteur durable
+(99), récompense éphémère (1 tour). L'Encensoir accumule sur la durée et paie comptant. Ces deux
+nombres, 1 et 99, encodent tout le design des reliques à charges — il n'y a pas d'autre paramètre.</p></div>
+
+<h3>Le code d'une branche à charges</h3>
+
+<p>Voici la branche du Kunaï, verbatim et complète. Les quatre branches à charges sont bâties sur
+exactement le même squelette ; seuls changent l'identifiant du compteur, le seuil et la
+récompense.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run/player_stats_manager.dart</span><span class="lang">dart</span></div>
+  <pre>      case 'charge_armor_mastery_combat':
+        final existing = controller.currentState.heroStats.statuses.where((s) =&gt; s.id == 'kunai_charge');
+        final int newVal = (existing.isEmpty ? 0 : existing.first.value) + 1;
+        if (newVal &gt;= 3) {
+          final updatedStatuses = controller.currentState.heroStats.statuses.where((s) =&gt; s.id != 'kunai_charge').toList();
+          controller.updateState(
+            controller.currentState.copyWith(
+              heroStats: controller.currentState.heroStats.copyWith(
+                statuses: updatedStatuses,
+              ),
+            ),
+          );
+          addStatus(
+            StatusEffect(
+              id: 'armor_mastery',
+              name: 'Maîtrise d\'Armure (Relique)',
+              type: StatusType.buff,
+              value: relic.value,
+              duration: 99,
+            ),
+          );
+        } else {
+          addStatus(
+            const StatusEffect(
+              id: 'kunai_charge',
+              name: 'Charge Kunaï',
+              type: StatusType.buff,
+              value: 1,
+              duration: 1,
+              isStackable: true,
+            ),
+          );
+        }
+        break;</pre>
+</div>
+
+<p>Lisons-le pas à pas.</p>
+
+<ol>
+  <li><strong>On lit le compteur.</strong> <code>statuses.where((s) =&gt; s.id == 'kunai_charge')</code>
+  cherche le statut compteur parmi les statuts du héros. S'il n'y est pas, la valeur courante vaut 0.</li>
+  <li><strong>On simule l'incrément.</strong> <code>newVal</code> est la valeur qu'<em>aurait</em> le
+  compteur après cette attaque. On teste le seuil <em>avant</em> d'écrire quoi que ce soit.</li>
+  <li><strong>Si le seuil est atteint</strong> (<code>newVal &gt;= 3</code>), on supprime le statut
+  compteur en reconstruisant la liste sans lui, puis on applique la récompense.</li>
+  <li><strong>Sinon</strong>, on ajoute une charge de valeur 1.</li>
+</ol>
+
+<p>Toute l'élégance tient dans l'étape 4 : on n'écrit jamais « le compteur vaut 2 ». On ajoute
+toujours « +1 », et c'est le système de statuts qui fait l'addition.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/entity_stats.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Ajoute ou combine un effet de statut
+  EntityStats addStatus(StatusEffect effect) {
+    final index = statuses.indexWhere((s) =&gt; s.id == effect.id);
+    List&lt;StatusEffect&gt; newStatuses = List.from(statuses);
+
+    if (index != -1) {
+      newStatuses[index] = newStatuses[index].combine(effect);
+    } else {
+      newStatuses.add(effect);
+    }
+
+    return copyWith(statuses: newStatuses);
+  }</pre>
+</div>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/status_effect.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Retourne un nouvel effet combiné si stackable, sinon rafraîchit la durée
+  StatusEffect combine(StatusEffect other) {
+    if (id != other.id) return this;
+    if (isStackable) {
+      return copyWith(
+        value: value + other.value,
+        duration: duration &gt; other.duration
+            ? duration
+            : other.duration, // Ne pas additionner les durées
+      );
+    } else {
+      // Rafraîchit la durée si elle est plus grande
+      return copyWith(
+        duration: other.duration &gt; duration ? other.duration : duration,
+        value: other.value &gt; value ? other.value : value,
+      );
+    }
+  }</pre>
+</div>
+
+<p>C'est ici que <code>isStackable: true</code> prend tout son sens : les valeurs s'additionnent
+(1 + 1 = 2 charges), et la durée prend le <em>maximum</em> des deux — elle ne s'additionne jamais.
+Un compteur de durée 1 réalimenté trois fois dans le même tour reste de durée 1 ; il expirera bien
+au tour suivant.</p>
+
+<div class="box warn"><div class="box-title">Piège : les charges partielles sont perdues</div>
+<p>Le compteur du Kunaï a une durée de 1. Au début du tour suivant, <code>tickStatuses()</code> le
+fait passer à 0 et le filtre <code>where((s) =&gt; s.duration &gt; 0)</code> l'élimine. Concrètement :
+deux attaques au tour 1 puis une attaque au tour 2 ne donnent <strong>rien</strong>. Il faut trois
+attaques <em>dans le même tour</em>. C'est exactement ce que dit la description
+(« Toutes les 3 attaques jouées dans un tour »), mais c'est contre-intuitif en jeu, et ce n'est
+écrit nulle part dans l'interface.</p></div>
+
+<h3>La machine à états du Kunaï</h3>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 840 270" width="840" role="img" aria-label="Machine à états du compteur kunai_charge : trois attaques dans un tour déclenchent la récompense, sinon la charge expire au tour suivant">
+      <defs>
+        <marker id="c13-c1" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#3a4966"/>
+        </marker>
+        <marker id="c13-c2" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#34d399"/>
+        </marker>
+        <marker id="c13-c3" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#f87171"/>
+        </marker>
+      </defs>
+
+      <rect x="20" y="52" width="150" height="56" rx="10" fill="#151b2b" stroke="#3a4966"/>
+      <text x="95" y="76" fill="#e6ecf5" font-size="12" text-anchor="middle">aucune charge</text>
+      <text x="95" y="94" fill="#a7b4c9" font-size="10" text-anchor="middle" font-family="ui-monospace, monospace">statut absent</text>
+
+      <rect x="215" y="52" width="170" height="56" rx="10" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="300" y="76" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">kunai_charge = 1</text>
+      <text x="300" y="94" fill="#a7b4c9" font-size="10" text-anchor="middle" font-family="ui-monospace, monospace">duration: 1</text>
+
+      <rect x="430" y="52" width="170" height="56" rx="10" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="515" y="76" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">kunai_charge = 2</text>
+      <text x="515" y="94" fill="#a7b4c9" font-size="10" text-anchor="middle" font-family="ui-monospace, monospace">duration: 1</text>
+
+      <rect x="645" y="52" width="175" height="56" rx="10" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="732" y="76" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">newVal &gt;= 3</text>
+      <text x="732" y="94" fill="#a7b4c9" font-size="10" text-anchor="middle">seuil atteint</text>
+
+      <path d="M170 80 L209 80" stroke="#3a4966" stroke-width="2" marker-end="url(#c13-c1)"/>
+      <path d="M385 80 L424 80" stroke="#3a4966" stroke-width="2" marker-end="url(#c13-c1)"/>
+      <path d="M600 80 L639 80" stroke="#3a4966" stroke-width="2" marker-end="url(#c13-c1)"/>
+      <text x="190" y="42" fill="#a7b4c9" font-size="10" text-anchor="middle">attaque 1</text>
+      <text x="405" y="42" fill="#a7b4c9" font-size="10" text-anchor="middle">attaque 2</text>
+      <text x="620" y="42" fill="#a7b4c9" font-size="10" text-anchor="middle">attaque 3</text>
+
+      <path d="M732 108 L732 169" stroke="#34d399" stroke-width="2" marker-end="url(#c13-c2)"/>
+
+      <rect x="560" y="175" width="260" height="56" rx="10" fill="#151b2b" stroke="#34d399"/>
+      <text x="690" y="196" fill="#e6ecf5" font-size="10.5" text-anchor="middle" font-family="ui-monospace, monospace">kunai_charge retiré de la liste</text>
+      <text x="690" y="214" fill="#34d399" font-size="10.5" text-anchor="middle" font-family="ui-monospace, monospace">armor_mastery +1 · duration: 99</text>
+
+      <path d="M560 203 L80 203 L80 114" stroke="#34d399" stroke-width="1.5" fill="none" marker-end="url(#c13-c2)"/>
+      <text x="300" y="196" fill="#34d399" font-size="10" text-anchor="middle">le compteur repart de zéro</text>
+
+      <path d="M515 108 L515 148 L118 148 L118 114" stroke="#f87171" stroke-width="1.5" fill="none"
+            stroke-dasharray="5 4" marker-end="url(#c13-c3)"/>
+      <text x="316" y="142" fill="#f87171" font-size="10" text-anchor="middle">fin de tour : tickStatuses() met duration à 0, la charge partielle est perdue</text>
+
+      <text x="420" y="254" fill="#a7b4c9" font-size="10" text-anchor="middle">Le Shuriken suit la même machine (seuil 3) ; la Plume de scribe et l'Encensoir utilisent duration: 99, sans la flèche rouge.</text>
+    </svg>
+  </div>
+  <figcaption>Machine à états du compteur <code>kunai_charge</code>. La flèche verte est le chemin
+  gagnant ; la flèche rouge en pointillés est le chemin perdant, propre aux compteurs de durée 1.</figcaption>
+</figure>
+
+<h3>Une variante : l'Encensoir</h3>
+
+<p>La branche <code>charge_armor_turn</code> montre la seule vraie différence structurelle : la
+récompense n'est pas un statut mais une écriture directe sur l'armure.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run/player_stats_manager.dart</span><span class="lang">dart</span></div>
+  <pre>      case 'charge_armor_turn':
+        final existing = controller.currentState.heroStats.statuses.where((s) =&gt; s.id == 'incense_charge');
+        final int newVal = (existing.isEmpty ? 0 : existing.first.value) + 1;
+        if (newVal &gt;= 4) {
+          final updatedStatuses = controller.currentState.heroStats.statuses.where((s) =&gt; s.id != 'incense_charge').toList();
+          controller.updateState(
+            controller.currentState.copyWith(
+              heroStats: controller.currentState.heroStats.copyWith(
+                statuses: updatedStatuses,
+              ),
+            ),
+          );
+          setHeroStats(armure: controller.currentState.heroStats.armure + relic.value);
+        } else {
+          addStatus(
+            const StatusEffect(
+              id: 'incense_charge',
+              name: 'Charge Encensoir',
+              type: StatusType.buff,
+              value: 1,
+              duration: 99,
+              isStackable: true,
+            ),
+          );
+        }
+        break;</pre>
+</div>
+
+<p>Déroulons un combat avec l'Encensoir, tour par tour. Rappelez-vous que
+<code>applyRelics(startOfTurn)</code> s'exécute à l'étape 2 de <code>startTurn()</code> et que le
+tick des statuts vient à l'étape 3 — le compteur est donc décrémenté dans le tour même où il est
+incrémenté, ce qui est sans conséquence puisque <code>combine</code> le remonte à 99 à chaque
+passage.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Tour</th><th><code>newVal</code></th><th>Action</th><th><code>incense_charge</code> après le tour</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>0 + 1 = 1</td><td>1 &lt; 4 → on pose une charge</td><td>valeur 1, durée 98</td></tr>
+<tr><td>2</td><td>1 + 1 = 2</td><td>2 &lt; 4 → on ajoute une charge</td><td>valeur 2, durée 98</td></tr>
+<tr><td>3</td><td>2 + 1 = 3</td><td>3 &lt; 4 → on ajoute une charge</td><td>valeur 3, durée 98</td></tr>
+<tr><td>4</td><td>3 + 1 = 4</td><td>4 &gt;= 4 → <strong>+8 Armure</strong>, compteur retiré</td><td>absent</td></tr>
+<tr><td>5</td><td>0 + 1 = 1</td><td>le cycle recommence</td><td>valeur 1, durée 98</td></tr>
+</tbody>
+</table></div>
+
+<div class="box warn"><div class="box-title">Piège : l'armure de l'Encensoir arrive après la remise à zéro</div>
+<p>L'étape 1 de <code>startTurn()</code> écrit <code>armure: 0</code>, et l'étape 2 déclenche
+l'Encensoir. Les 8 points d'armure sont donc bien ceux du tour qui commence — ils ne s'ajoutent pas
+à un reliquat du tour précédent, puisqu'il n'y en a jamais. Si vous inversiez ces deux étapes, la
+relique deviendrait invisible : son armure serait effacée juste après avoir été posée. C'est
+précisément le sens de l'avertissement laissé dans <code>turn_phase_manager.dart</code>.</p></div>
+
+<div class="box ok"><div class="box-title">Bonne pratique : le compteur invisible</div>
+<p>Ces quatre reliques n'ont ajouté <strong>aucun champ</strong> à <code>RunState</code>, aucune
+<code>Map&lt;String, int&gt;</code> de compteurs, aucune logique de sauvegarde supplémentaire. Elles
+réutilisent le système de statuts qui existait déjà pour le poison et la force. Bénéfice
+collatéral : les compteurs sont sérialisés automatiquement avec le reste des statuts, et remis à
+zéro automatiquement par le <code>statuses: []</code> de <code>startCombat()</code>. Chercher le
+système existant qui fait déjà 90 % du travail avant d'en écrire un nouveau : c'est le réflexe à
+prendre.</p></div>
+
+<h2 id="s6"><span>6.</span> <code>increase_cards_per_turn</code> et le retrait d'effet</h2>
+
+<p>Il reste une branche : celle de la Besace de l'Érudit, la seule relique qui ne touche ni une
+statistique du héros ni un statut, mais une <strong>règle de la run</strong>.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run/player_stats_manager.dart</span><span class="lang">dart</span></div>
+  <pre>      // Cet effectType n'a de sens qu'en `startOfRun` : une variante par combat
+      // ou par tour cumulerait indéfiniment. Aucune garde n'est posée ici, le
+      // contrat étant porté par la donnée (`relics.json`) et par le `case`
+      // symétrique de `removeRelicEffect`.
+      case 'increase_cards_per_turn':
+        applyRunRuleModifier(cardsPerTurnAcc: relic.value);
+        break;</pre>
+</div>
+
+<p>Ce commentaire de quatre lignes est le plus important du fichier : il documente explicitement un
+contrat que le code ne vérifie pas. Le développeur a vu le risque, l'a évalué, et a choisi de ne pas
+poser de garde — en écrivant pourquoi. C'est très différent d'un oubli.</p>
+
+<p>La méthode appelée est délibérément séparée de <code>applyHeroStatModifier</code> :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run/player_stats_manager.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Applique un modificateur aux règles de run propres au joueur.
+  /// Distinct d'`applyHeroStatModifier`, qui opère sur `EntityStats` — lequel
+  /// est partagé avec les ennemis et n'a donc pas à porter de notion de deck.
+  void applyRunRuleModifier({int cardsPerTurnAcc = 0}) {
+    controller.updateState(
+      controller.currentState.copyWith(
+        cardsPerTurn: controller.currentState.cardsPerTurn + cardsPerTurnAcc,
+      ),
+    );
+  }</pre>
+</div>
+
+<p>La justification est de la bonne architecture : <code>EntityStats</code> décrit une entité de
+combat, joueur <em>ou</em> ennemi. Un ennemi n'a pas de main de cartes ; lui coller un champ
+<code>cardsPerTurn</code> serait une fuite de concept. Le nombre de cartes piochées vit donc dans
+<code>RunState</code>, avec une valeur par défaut de 5 (<code>run_controller.dart:74</code>). Il est
+lu à deux endroits, dans <code>turn_phase_manager.dart</code> : à l'ouverture du combat pour la main
+de départ, et à chaque début de tour pour la pioche — les deux fois plafonnés par
+<code>GameConstants.maxHandSize</code>, qui vaut 10.</p>
+
+<div class="box rule"><div class="box-title">Règle du jeu</div>
+<p>La Besace de l'Érudit fait passer la pioche de 5 à 6 cartes par tour, main d'ouverture comprise,
+pour toute la run. Avec deux Besaces on pioche 7 cartes. Le plafond de main reste 10 : au-delà, les
+cartes piochées en trop sont perdues.</p></div>
+
+<h3><code>removeRelicEffect</code> : annuler, mais pas tout</h3>
+
+<p>Une relique peut sortir de l'inventaire — c'est le rôle du nœud d'échange. Il faut donc savoir
+défaire ce que <code>applyRelicEffect</code> a fait. La méthode symétrique tient en vingt lignes, et
+sa première instruction dit l'essentiel.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run/player_stats_manager.dart</span><span class="lang">dart</span></div>
+  <pre>  void removeRelicEffect(RelicData relic) {
+    if (relic.trigger == RelicTrigger.startOfRun) {
+      switch (relic.effectType) {
+        case 'gain_mana':
+          applyHeroStatModifier(maxManaAcc: -relic.value);
+          break;
+        case 'gain_strength':
+          applyHeroStatModifier(attackAcc: -relic.value);
+          break;
+        case 'gain_luck':
+          applyHeroStatModifier(luckAcc: -relic.value);
+          break;
+        case 'gain_crit':
+          applyHeroStatModifier(critChanceAcc: -relic.value);
+          break;
+        case 'increase_cards_per_turn':
+          applyRunRuleModifier(cardsPerTurnAcc: -relic.value);
+          break;
+      }
+    }
+  }</pre>
+</div>
+
+<p><code>if (relic.trigger == RelicTrigger.startOfRun)</code> : tout le reste ne fait rien. Et c'est
+logique. Que voudrait dire « annuler » le Talisman de Fer ? Son effet n'est pas un état permanent
+qu'on pourrait retrancher, c'est une action répétée à chaque tour. Il suffit de retirer la relique
+de l'inventaire pour que le filtre de <code>applyRelics</code> cesse de la retenir : l'effet
+s'arrête tout seul au prochain déclenchement.</p>
+
+<p>Les cinq <code>case</code> couvrent exactement les cinq <code>effectType</code> qui apparaissent
+en <code>startOfRun</code> dans <code>relics.json</code> : <code>gain_mana</code> (Couronne des
+Rois), <code>gain_strength</code> (Pierre à aiguiser, Lame Maudite), <code>gain_luck</code> (Trèfle,
+Dé), <code>gain_crit</code> (Pièce, Porte-bonheur, Lentille) et
+<code>increase_cards_per_turn</code> (Besace). Les neuf reliques <code>startOfRun</code> sont donc
+toutes réversibles. La symétrie est parfaite — <em>aujourd'hui</em>.</p>
+
+<div class="box danger"><div class="box-title">Dette technique : deux <code>switch</code> à garder synchronisés</div>
+<p><code>applyRelicEffect</code> et <code>removeRelicEffect</code> sont deux <code>switch</code> sur
+une <code>String</code>, dans deux méthodes différentes, sans aucun lien vérifié par le compilateur.
+Le jour où vous ajoutez un <code>effectType</code> permanent (par exemple
+<code>gain_max_hp</code> en <code>startOfRun</code>) et que vous oubliez la branche du retrait, la
+relique deviendra <strong>gratuite</strong> : le joueur la sacrifiera au nœud d'échange en gardant
+son bonus. Aucun test, aucun avertissement de l'analyseur ne vous le signalera. Si vous devez durcir
+un seul point de ce chapitre, c'est celui-là.</p></div>
+
+<h3><code>exchangeRelics</code> : l'orchestration</h3>
+
+<p>Le nœud d'échange offre une relique de rareté N contre trois reliques de rareté N−1. La méthode
+qui applique la transaction fait trois choses, dans cet ordre :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run/player_stats_manager.dart</span><span class="lang">dart</span></div>
+  <pre>  void exchangeRelics(List&lt;RelicData&gt; sacrificed, RelicData gained) {
+    for (var relic in sacrificed) {
+      removeRelicEffect(relic);
+    }
+    final sacrificedIds = sacrificed.map((r) =&gt; r.id).toList();
+    ref.read(inventoryProvider.notifier).removeRelics(sacrificedIds);
+    ref.read(inventoryProvider.notifier).addRelic(gained);
+  }</pre>
+</div>
+
+<ol>
+  <li>Annuler les effets permanents des trois sacrifiées (<code>removeRelicEffect</code> ne fait
+  rien pour celles qui ne sont pas <code>startOfRun</code>).</li>
+  <li>Les retirer de l'inventaire par leurs identifiants.</li>
+  <li>Ajouter la gagnée — ce qui, via <code>addRelic</code>, applique immédiatement son effet si
+  elle est <code>startOfRun</code>.</li>
+</ol>
+
+<p>L'ordre compte. Retirer avant d'annuler fonctionnerait aussi (<code>removeRelicEffect</code>
+travaille sur l'objet <code>RelicData</code> passé, pas sur l'inventaire), mais annuler après avoir
+ajouté la nouvelle relique serait dangereux si les deux touchaient la même statistique. Le code
+choisi — retrancher, puis ajouter — est le plus sûr.</p>
+
+<p>Côté écran, la règle de rareté est portée par une petite fonction de
+<code>lib/ui/screens/relic_exchange_screen.dart</code> :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/relic_exchange_screen.dart</span><span class="lang">dart</span></div>
+  <pre>  RelicRarity _getRequiredSacrificeRarity(RelicRarity offered) {
+    switch (offered) {
+      case RelicRarity.uncommon:
+        return RelicRarity.common;
+      case RelicRarity.rare:
+        return RelicRarity.uncommon;
+      case RelicRarity.epic:
+        return RelicRarity.rare;
+      case RelicRarity.legendary:
+        return RelicRarity.epic;
+      default:
+        return RelicRarity.common;
+    }
+  }</pre>
+</div>
+
+<div class="box rule"><div class="box-title">Règle du jeu : trois pour une</div>
+<p>L'échange coûte exactement trois reliques du cran de rareté inférieur
+(<code>_selectedOriginalIndices.length != 3</code> bloque la validation, et la sélection est
+plafonnée à trois). Avec seulement trois reliques épiques dans le catalogue, obtenir une légendaire
+par échange demande d'en posséder trois — soit la totalité des épiques du jeu, doublons compris.</p></div>
+
+<h2 id="s7"><span>7.</span> L'inventaire : stockage, sauvegarde, reconstruction</h2>
+
+<p>Les reliques ne vivent pas dans <code>RunState</code> mais dans un état séparé,
+<code>InventoryState</code>, exposé par son propre provider Riverpod. C'est un modèle de trois
+champs.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/inventory_state.dart</span><span class="lang">dart</span></div>
+  <pre>class InventoryState {
+  final int gold;
+  final List&lt;RelicData&gt; relics;
+  final int bonusShopCards;
+
+  const InventoryState({
+    this.gold = 0,
+    this.relics = const [],
+    this.bonusShopCards = 0,
+  });
+
+  InventoryState copyWith({
+    int? gold,
+    List&lt;RelicData&gt;? relics,
+    int? bonusShopCards,
+  }) {
+    return InventoryState(
+      gold: gold ?? this.gold,
+      relics: relics ?? this.relics,
+      bonusShopCards: bonusShopCards ?? this.bonusShopCards,
+    );
+  }</pre>
+</div>
+
+<p>Trois champs, trois natures différentes : <code>gold</code> est une ressource dépensable,
+<code>relics</code> est une collection permanente, et <code>bonusShopCards</code> est un compteur
+d'améliorations achetées à la boutique — il élargit l'étal de 3 cartes à
+<code>3 + bonusShopCards</code>. Ils cohabitent parce qu'ils partagent la même durée de vie : celle
+de la run.</p>
+
+<p>Le contrôleur qui les manipule est court, et deux de ses méthodes méritent un examen.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/inventory_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  void addRelic(RelicData relic) {
+    state = state.copyWith(relics: [...state.relics, relic]);
+    if (relic.trigger == RelicTrigger.startOfRun) {
+      ref.read(runProvider.notifier).applyRelicEffect(relic);
+    }
+  }
+
+  void removeRelics(List&lt;String&gt; relicIds) {
+    final List&lt;RelicData&gt; newRelics = List.from(state.relics);
+    for (final id in relicIds) {
+      final index = newRelics.indexWhere((r) =&gt; r.id == id);
+      if (index != -1) {
+        newRelics.removeAt(index);
+      }
+    }
+    state = state.copyWith(relics: newRelics);
+  }</pre>
+</div>
+
+<p><code>addRelic</code> est le point d'entrée unique pour gagner une relique : il est appelé depuis
+la récompense de combat (<code>reward_controller.dart:232</code>), depuis les événements de carte
+(<code>event_controller.dart:127</code>) et depuis l'échange. À chaque fois, l'effet
+<code>startOfRun</code> est appliqué au passage. Rien à faire de plus côté appelant.</p>
+
+<p><code>removeRelics</code> est plus subtil qu'il n'y paraît. Elle prend une liste
+d'<em>identifiants</em>, pas d'objets, et pour chaque identifiant elle supprime
+<strong>un seul exemplaire</strong> — <code>indexWhere</code> renvoie la première correspondance,
+<code>removeAt</code> ne retire que celle-là. C'est exactement le comportement voulu : si vous
+sacrifiez un Talisman de Fer alors que vous en possédez trois, il vous en reste deux. Une
+implémentation naïve avec <code>removeWhere((r) =&gt; relicIds.contains(r.id))</code> vous aurait pris
+les trois.</p>
+
+<div class="box ok"><div class="box-title">Bonne pratique</div>
+<p>Quand une collection peut contenir des doublons signifiants, une suppression « par identité de
+donnée » est presque toujours un bug. Ici, la boucle <code>indexWhere</code> +
+<code>removeAt</code> traduit fidèlement « retire trois jetons de ce type », qui est la sémantique
+du jeu. Le coût est un peu de verbosité ; le bénéfice est l'absence d'une classe entière de
+bugs.</p></div>
+
+<h3>La sérialisation minimaliste</h3>
+
+<p>Vient la sauvegarde. Une <code>RelicData</code> contient dix champs — mais on n'en écrit que
+trois sur le disque.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/inventory_state.dart</span><span class="lang">dart</span></div>
+  <pre>  Map&lt;String, dynamic&gt; toJson() =&gt; {
+        'gold': gold,
+        'relics': relics
+            .map((r) =&gt; {'id': r.id, 'nameFr': r.nameFr, 'nameEn': r.nameEn})
+            .toList(),
+        'bonusShopCards': bonusShopCards,
+      };</pre>
+</div>
+
+<p>Pourquoi ne pas tout écrire ? Parce que <code>relics.json</code> est la <strong>source de
+vérité</strong>. Si vous rééquilibrez le Bouclier Ancestral de 5 à 6 points d'Armure entre deux
+versions du jeu, une sauvegarde qui aurait recopié la valeur 5 continuerait à donner 5 après la
+mise à jour. En ne stockant que l'<code>id</code>, la sauvegarde reste une <em>référence</em>, pas
+une <em>copie</em>. Les statistiques du joueur, elles, sont sauvegardées telles quelles : un bonus
+<code>startOfRun</code> déjà appliqué reste acquis.</p>
+
+<p>Restent <code>nameFr</code> et <code>nameEn</code>, qui semblent contredire ce principe. Ils ne
+sont là que pour un cas : celui où la relique <em>n'existe plus</em>.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/inventory_state.dart</span><span class="lang">dart</span></div>
+  <pre>  static (InventoryState, List&lt;MissingSaveItem&gt;) fromJsonWithReport(
+    Map&lt;String, dynamic&gt; json,
+  ) {
+    final missing = &lt;MissingSaveItem&gt;[];
+    final relics = &lt;RelicData&gt;[];
+
+    for (final entry in (json['relics'] as List&lt;dynamic&gt;? ?? const [])) {
+      final map = entry as Map&lt;String, dynamic&gt;;
+      final id = map['id'] as String;
+      final relic = RelicData.getById(id);
+      if (relic != null) {
+        relics.add(relic);
+      } else {
+        missing.add(
+          MissingSaveItem(
+            id: id,
+            nameFr: map['nameFr'] as String? ?? id,
+            nameEn: map['nameEn'] as String? ?? id,
+            category: 'relic',
+          ),
+        );
+      }
+    }
+
+    return (
+      InventoryState(
+        gold: json['gold'] as int? ?? 0,
+        relics: relics,
+        bonusShopCards: json['bonusShopCards'] as int? ?? 0,
+      ),
+      missing,
+    );
+  }</pre>
+</div>
+
+<p>Le type de retour <code>(InventoryState, List&lt;MissingSaveItem&gt;)</code> est un
+<strong>record</strong> Dart : deux valeurs retournées ensemble, sans créer de classe. L'appelant
+les déballe d'une ligne, dans <code>lib/services/save_service.dart</code> :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/services/save_service.dart</span><span class="lang">dart</span></div>
+  <pre>      final (inventory, invMissing) = InventoryState.fromJsonWithReport(
+        json['inventory'] as Map&lt;String, dynamic&gt;,
+      );
+      final (deck, deckMissing) = DeckState.fromJsonWithReport(
+        json['deck'] as Map&lt;String, dynamic&gt;,
+      );
+      final (run, runMissing) = RunState.fromJsonWithReport(
+        json['run'] as Map&lt;String, dynamic&gt;,
+      );
+
+      read(skillProvider.notifier).hydrate(skills);
+      read(inventoryProvider.notifier).hydrate(inventory);
+      read(deckProvider.notifier).hydrate(deck);
+      read(runProvider.notifier).hydrate(run);
+
+      return SaveLoadResult(
+        success: true,
+        missingItems: [...invMissing, ...deckMissing, ...runMissing],
+      );</pre>
+</div>
+
+<p>Le comportement est ce qu'on appelle une reconstruction <strong>tolérante</strong> : une relique
+supprimée du catalogue ne fait pas échouer le chargement. Elle est simplement absente de
+l'inventaire reconstruit, et son nom — celui qu'elle portait au moment de la sauvegarde — remonte
+dans la liste <code>missingItems</code> pour être affiché au joueur. C'est exactement à ça que
+servent les champs <code>nameFr</code> et <code>nameEn</code> du <code>toJson</code> : donner un
+nom lisible à un objet qui n'existe plus. Sans eux, le rapport dirait « <code>vampiric_fang</code>
+a disparu » au lieu de « Croc Vampirique a disparu ».</p>
+
+<div class="box ok"><div class="box-title">Bonne pratique : échouer partiellement, pas totalement</div>
+<p>La stratégie inverse — « une référence inconnue, donc la sauvegarde est corrompue, on efface » —
+est plus simple à écrire mais brutale pour le joueur, qui perd une run de deux heures parce qu'une
+relique a été renommée. Le patron <code>fromJsonWithReport</code> découple deux questions : « la
+sauvegarde est-elle lisible ? » (oui) et « tout son contenu existe-t-il encore ? » (non, et voici
+la liste). Ce patron est répliqué à l'identique pour le deck, la run et les améliorations de
+forge.</p></div>
+
+<h3>Où les reliques s'affichent</h3>
+
+<p>Trois écrans lisent l'inventaire ou le catalogue et affichent une relique. Ils partagent le même
+besoin — traduire un <code>RelicTrigger</code> et une <code>RelicRarity</code> en libellé coloré —
+et, fait notable, ils le font trois fois.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Fichier</th><th>Rôle</th><th>Particularité</th></tr></thead>
+<tbody>
+<tr>
+  <td><code>lib/ui/widgets/relic_carousel/relic_carousel_card.dart</code></td>
+  <td>Carte animée du carrousel de récompense</td>
+  <td>Tant que <code>isWon</code> est faux, la rareté et le déclencheur sont masqués par
+      <code>'???'</code> et grisés : le suspense est une décision de rendu, pas de logique.</td>
+</tr>
+<tr>
+  <td><code>lib/ui/widgets/map/dialogs/relics_dialog.dart</code></td>
+  <td>Inventaire consultable depuis la carte</td>
+  <td>Agrège les doublons dans une <code>Map&lt;String, int&gt; relicCounts</code> pour afficher
+      « ×2 » au lieu de deux cartes identiques.</td>
+</tr>
+<tr>
+  <td><code>lib/ui/screens/card_dictionary_screen.dart</code></td>
+  <td>Dictionnaire : les 25 reliques, possédées ou non</td>
+  <td>Lit le catalogue du registre, pas l'inventaire.</td>
+</tr>
+</tbody>
+</table></div>
+
+<p>Le carrousel de récompense mérite une note : il construit une liste de 26 cartes dont la
+gagnante est placée à l'index 22 fixe (<code>_targetIndex</code>), les autres étant tirées au hasard
+dans le catalogue <em>en excluant la gagnante</em> — pour éviter qu'elle n'apparaisse pendant la
+rotation et vende la mèche.</p>
+
+<div class="box danger"><div class="box-title">Dette technique : le <code>switch</code> sur <code>RelicTrigger</code> existe en trois exemplaires</div>
+<p>Les trois fichiers du tableau contiennent le <em>même</em> <code>switch (relic.trigger)</code> de
+neuf branches, avec les mêmes couleurs et les mêmes libellés. La rareté, elle, a été factorisée :
+<code>lib/models/data/model_extensions.dart</code> fournit une extension
+<code>RelicRarityExtension</code> avec <code>getLabel(l10n)</code> et <code>color</code>, que
+<code>relics_dialog.dart</code> utilise — mais que les deux autres écrans dupliquent encore à la
+main. La correction est mécanique et sans risque : créer une extension
+<code>RelicTriggerExtension</code> sur le même modèle, et supprimer les trois <code>switch</code>.
+Trois copies, c'est trois occasions d'oublier un déclencheur le jour où l'enum en gagne un
+dixième.</p></div>
+
+<h2 id="s8"><span>8.</span> Passifs de classe et reliques : le même moteur</h2>
+
+<p>Ouvrez <code>lib/models/data/passive_data.dart</code>. La deuxième ligne du fichier est
+<code>import 'relic_data.dart';</code>, et le champ de déclenchement est celui-ci :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/passive_data.dart</span><span class="lang">dart</span></div>
+  <pre>class PassiveData {
+  final String id;
+  final String nameEn;
+  final String nameFr;
+  final String descriptionEn;
+  final String descriptionFr;
+  final RelicTrigger trigger;
+  final String effectType; // ex: 'gain_armor', 'berserker_armor', 'spell_armor'
+  final int value;</pre>
+</div>
+
+<p>Un passif de classe est donc décrit exactement comme une relique : <code>trigger</code>,
+<code>effectType</code>, <code>value</code>. Il lui manque seulement <code>rarity</code> et
+<code>emoji</code>, dont il n'a pas besoin puisqu'on ne le gagne pas — il vient avec la classe du
+héros. Le fichier de données est bâti sur le même moule :</p>
+
+<div class="code" data-lang="json">
+  <div class="code-head"><span class="path">assets/data/passives.json</span><span class="lang">json</span></div>
+  <pre>[
+  {
+    "id": "regenArmor",
+    "name_fr": "Régénération d'Armure",
+    "description_fr": "Gagne 2 points d'Armure (+ Maîtrise) automatiquement à la fin de chaque tour.",
+    "trigger": "endOfTurn",
+    "effectType": "gain_armor",
+    "value": 2
+  },
+  {
+    "id": "berserkerArmor",
+    "name_fr": "Armure du Berserker",
+    "description_fr": "Gagne 1 point d'Armure (+ Maîtrise) au début du tour pour chaque tranche de 10 PV manquants.",
+    "trigger": "startOfTurn",
+    "effectType": "berserker_armor",
+    "value": 1
+  },
+  {
+    "id": "spellArmor",
+    "name_fr": "Armure Magique",
+    "description_fr": "Gagne 1 point d'Armure (+ Maîtrise) instantanément chaque fois que vous jouez une carte Compétence.",
+    "trigger": "onCardPlayed",
+    "effectType": "spell_armor",
+    "value": 1
+  }
+]</pre>
+</div>
+
+<p>Le vocabulaire est partagé — <code>gain_armor</code> apparaît des deux côtés — mais
+l'exécution ne l'est pas du tout. Un passif n'entre <strong>jamais</strong> dans
+<code>applyRelicEffect</code>. Il est traité par une classe entièrement séparée,
+<code>lib/game/systems/trait_system.dart</code>, dont voici la première méthode.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/trait_system.dart</span><span class="lang">dart</span></div>
+  <pre>class TraitSystem {
+  /// Appelé au début du tour du joueur
+  static void onTurnStart(RunController controller) {
+    final passive =
+        controller.currentState.activePassive ??
+        PassiveData.fallback(controller.currentState.passiveTrait ?? '');
+    final stats = controller.currentState.heroStats;
+
+    if (passive.trigger == RelicTrigger.startOfTurn) {
+      if (passive.effectType == 'berserker_armor') {
+        // Gagne X d'Armure (+Maîtrise) pour chaque tranche de 10 PV manquants
+        final missingHp = stats.maxPv - stats.currentPv;
+        final multiplier = missingHp ~/ 10;
+        final armorGain = multiplier * passive.value;
+        if (armorGain &gt; 0) {
+          controller.setHeroStats(
+            armure: stats.armure + armorGain + stats.effectiveArmorMastery,
+          );
+        }
+      } else if (passive.effectType == 'gain_armor') {
+        controller.setHeroStats(
+          armure: stats.armure + passive.value + stats.effectiveArmorMastery,
+        );
+      }
+    }
+  }</pre>
+</div>
+
+<h3>Les deux tableaux de bord, côte à côte</h3>
+
+<div class="table-wrap"><table>
+<thead><tr><th></th><th>Reliques</th><th>Passifs de classe</th></tr></thead>
+<tbody>
+<tr><td>Fichier de données</td><td><code>assets/data/relics.json</code> — 25 entrées</td>
+    <td><code>assets/data/passives.json</code> — 3 entrées</td></tr>
+<tr><td>Modèle</td><td><code>RelicData</code></td><td><code>PassiveData</code></td></tr>
+<tr><td>Enum de déclenchement</td><td colspan="2"><code>RelicTrigger</code> — <strong>partagé</strong></td></tr>
+<tr><td>Combien à la fois ?</td><td>0 à N, cumulables, doublons possibles</td>
+    <td>Exactement 1, déterminé par la classe du héros</td></tr>
+<tr><td>Aiguillage</td><td><code>switch</code> sur <code>effectType</code>,
+    <code>player_stats_manager.dart:191</code></td>
+    <td>Cascades de <code>if</code>, <code>trait_system.dart</code></td></tr>
+<tr><td>Filtrage du déclencheur</td><td>À l'entrée : <code>where((r) =&gt; r.trigger == trigger)</code></td>
+    <td>À l'intérieur : <code>if (passive.trigger == RelicTrigger.startOfTurn)</code></td></tr>
+<tr><td>Déclencheurs utilisés</td><td>7 sur 9</td><td>3 sur 9 : <code>startOfTurn</code>,
+    <code>endOfTurn</code>, <code>onCardPlayed</code></td></tr>
+<tr><td>Maîtrise d'Armure</td><td><strong>Non ajoutée</strong> — <code>armure += value</code></td>
+    <td><strong>Ajoutée</strong> — <code>armure += value + effectiveArmorMastery</code></td></tr>
+<tr><td>Type de carte</td><td>Déclencheurs dédiés (<code>onAttackPlayed</code>…)</td>
+    <td>Testé dans le code : <code>if (card.data.type == CardType.skill)</code></td></tr>
+<tr><td>Valeur de repli</td><td>Aucune — <code>getById</code> renvoie <code>null</code></td>
+    <td><code>PassiveData.fallback(id)</code>, trois passifs codés en dur + un « Aucun »</td></tr>
+<tr><td>Réversible ?</td><td>Oui pour <code>startOfRun</code> (<code>removeRelicEffect</code>)</td>
+    <td>Sans objet — un passif ne se perd pas</td></tr>
+</tbody>
+</table></div>
+
+<div class="box rule"><div class="box-title">Règle du jeu : les passifs profitent de la Maîtrise d'Armure, pas les reliques</div>
+<p>Comparez les deux lignes. Passif : <code>armure + passive.value + stats.effectiveArmorMastery</code>.
+Relique : <code>armure + relic.value</code>. Avec 2 de Maîtrise d'Armure, la Régénération d'Armure
+donne 4 points par fin de tour au lieu de 2, tandis que la Rune de Protection en donne toujours 3.
+Cette différence n'est écrite dans aucune description en jeu, mais elle est bien intentionnelle du
+côté des passifs — la formule est répétée aux trois endroits de <code>TraitSystem</code> et les
+descriptions de <code>passives.json</code> mentionnent explicitement « (+ Maîtrise) ».</p>
+<p>Ironie du système : le Croc Kunaï <em>donne</em> de la Maîtrise d'Armure via un statut
+<code>armor_mastery</code>, que <code>effectiveArmorMastery</code> additionne. Une relique
+alimente donc un bonus dont seuls les passifs bénéficient.</p></div>
+
+<h3>Pourquoi cette duplication ?</h3>
+
+<p>On pourrait vouloir tout fusionner : un seul <code>applyEffect</code> pour les reliques et les
+passifs. Regardons ce qui s'y oppose vraiment.</p>
+
+<div class="memo">
+  <div class="card"><h5>Cardinalité</h5><p>Les reliques sont une liste à filtrer ; le passif est
+  unique et toujours présent. Le code de dispatch n'a pas la même forme.</p></div>
+  <div class="card"><h5>Formules divergentes</h5><p><code>gain_armor</code> ne calcule pas la même
+  chose des deux côtés : la Maîtrise d'Armure entre dans l'une et pas dans l'autre.</p></div>
+  <div class="card"><h5>Granularité du déclencheur</h5><p>Le passif <code>spellArmor</code> teste
+  le type de carte dans le code ; les reliques ont trois déclencheurs dédiés pour ça.</p></div>
+  <div class="card"><h5>Portée de l'effet</h5><p>Une relique peut modifier une statistique
+  permanente et doit savoir se retirer ; un passif ne fait qu'agir dans le combat.</p></div>
+</div>
+
+<p>La conclusion honnête : <strong>l'enum partagé est justifié, la duplication des moteurs
+l'est aussi, et c'est le nom <code>RelicTrigger</code> qui est mal choisi</strong>. Il devrait
+s'appeler <code>GameTrigger</code> ou <code>EffectTrigger</code>. Un développeur qui découvre
+<code>PassiveData</code> et y voit <code>RelicTrigger</code> se demande légitimement s'il vient de
+tomber sur un copier-coller malheureux, alors qu'il s'agit d'un choix délibéré : un vocabulaire
+temporel commun à tout ce qui se déclenche dans le jeu.</p>
+
+<div class="box ok"><div class="box-title">Bonne pratique : nommer d'après le concept, pas d'après le premier usage</div>
+<p><code>RelicTrigger</code> a été nommé quand seules les reliques l'utilisaient. Dès qu'un
+deuxième client est apparu, le nom est devenu un mensonge coûteux — en confusion, pas en bugs.
+Renommer un enum est l'un des refactorings les plus sûrs qui soient (une recherche-remplacement,
+que l'analyseur valide entièrement). Si vous reprenez ce projet, c'est un excellent premier
+commit.</p></div>
+
+<h3>Mode d'emploi : ajouter une nouvelle relique en 3 étapes</h3>
+
+<p>Terminons par le mode d'emploi promis en introduction. Prenons un exemple concret : une relique
+« Grimoire Vorace », peu commune, qui donne 2 points d'Armure chaque fois qu'on joue une carte
+Compétence — donc sur le déclencheur <code>onSkillPlayed</code>, aujourd'hui inutilisé.</p>
+
+<p><strong>Étape 1 — l'entrée JSON.</strong> Ajoutez l'objet à
+<code>assets/data/relics.json</code>. Le déclencheur et l'effet doivent s'écrire exactement comme
+dans le code (attention à la casse).</p>
+
+<div class="code" data-lang="json">
+  <div class="code-head"><span class="path">exemple — relique fictive</span><span class="lang">json</span></div>
+  <pre>  {
+    "id": "voracious_grimoire",
+    "name_en": "Voracious Grimoire",
+    "name_fr": "Grimoire Vorace",
+    "description_en": "Gain 2 Block each time you play a Skill.",
+    "description_fr": "Gagne 2 points d'Armure chaque fois que vous jouez une Compétence.",
+    "trigger": "onSkillPlayed",
+    "effectType": "gain_armor",
+    "value": 2,
+    "rarity": "uncommon",
+    "emoji": "📖"
+  }</pre>
+</div>
+
+<p><strong>Étape 2 — le <code>case</code>, seulement s'il est nouveau.</strong> Ici,
+<code>gain_armor</code> existe déjà : il n'y a <em>rien à écrire</em>. Le déclencheur
+<code>onSkillPlayed</code> est déjà appelé par <code>combat_controller.dart:305</code>, la couleur
+et le libellé sont déjà gérés par les trois écrans. La relique fonctionne dès le rechargement des
+données. Si en revanche vous inventiez un effet inédit — disons
+<code>gain_armor_per_missing_hp</code> — vous ajouteriez une branche dans
+<code>applyRelicEffect</code>, et, <em>si et seulement si</em> l'effet est permanent et destiné à
+<code>startOfRun</code>, la branche symétrique dans <code>removeRelicEffect</code>.</p>
+
+<p><strong>Étape 3 — rien d'autre.</strong> Pas de widget à créer, pas d'enregistrement dans une
+liste, pas de table de butin à mettre à jour : le tirage de récompense filtre le catalogue par
+rareté, votre relique y entre automatiquement. Pas de migration de sauvegarde non plus, puisque seul
+l'<code>id</code> est écrit sur le disque.</p>
+
+<div class="box"><div class="box-title">La checklist en une phrase</div>
+<p>Une entrée dans <code>relics.json</code> avec un <code>trigger</code> valide et un
+<code>effectType</code> déjà connu suffit. Un nouvel <code>effectType</code> coûte une branche dans
+<code>applyRelicEffect</code>, plus une dans <code>removeRelicEffect</code> s'il est permanent. Un
+nouveau <code>trigger</code>, en revanche, coûte cher : une valeur d'enum, un appel
+<code>applyRelics</code> au bon endroit de la boucle de combat, et trois <code>switch</code>
+d'interface à compléter — ce que le compilateur vous rappellera, puisque les <code>switch</code> sur
+enum doivent être exhaustifs.</p></div>
+
+<div class="quiz">
+  <h2>Quiz — vérifiez vos acquis</h2>
+
+  <div class="q" data-answer="1">
+    <p class="q-text">1. Combien d'attaques faut-il jouer <em>dans le même tour</em> pour déclencher
+    le Croc Kunaï, et que gagne-t-on ?</p>
+    <ul class="q-opts">
+      <li>2 attaques, et on gagne 1 point d'Armure immédiat</li>
+      <li>3 attaques, et on gagne un statut <code>armor_mastery</code> de valeur 1 pour tout le combat</li>
+      <li>3 attaques, et on gagne 3 points de Force pour le tour en cours</li>
+      <li>5 attaques, et on gagne 1 Maîtrise d'Armure permanente pour la run</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> la branche <code>charge_armor_mastery_combat</code>
+    de <code>player_stats_manager.dart</code> teste <code>if (newVal &gt;= 3)</code>, puis ajoute un
+    <code>StatusEffect(id: 'armor_mastery', value: relic.value, duration: 99)</code> — soit 1 point,
+    puisque <code>"value": 1</code> dans le JSON, pour la durée du combat. Les 5 cartes et les 3 points
+    de Force sont ceux de la Plume de scribe.</div>
+  </div>
+
+  <div class="q" data-answer="2">
+    <p class="q-text">2. D'où part l'appel <code>applyRelics(RelicTrigger.endOfTurn)</code> ?</p>
+    <ul class="q-opts">
+      <li>De <code>run_controller.dart</code>, dans une méthode <code>endTurn()</code></li>
+      <li>De <code>combat_controller.dart</code>, dans <code>endEnemyTurn()</code></li>
+      <li>De <code>lib/ui/screens/game_screen.dart</code>, dans le <code>onEndTurnTap</code> du bouton de fin de tour</li>
+      <li>De <code>turn_phase_manager.dart</code>, dans <code>startEnemyTurn()</code></li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> c'est le seul des neuf déclencheurs appelé depuis la
+    couche interface, à la ligne 473 de <code>game_screen.dart</code>, juste après
+    <code>TraitSystem.onTurnEnd</code> et juste avant <code>discardHand()</code>. Conséquence : un tour
+    qui se terminerait sans clic ne déclencherait pas les reliques de fin de tour.</div>
+  </div>
+
+  <div class="q" data-answer="3">
+    <p class="q-text">3. Pourquoi les statuts posés par les reliques ont-ils une durée de 99 ?</p>
+    <ul class="q-opts">
+      <li>Parce que 99 est la valeur maximale acceptée par le champ <code>duration</code></li>
+      <li>Parce que les statuts de durée supérieure à 50 ne sont jamais décrémentés</li>
+      <li>Parce que 99 est une valeur sentinelle interprétée comme « infini » par <code>tickStatuses()</code></li>
+      <li>Parce qu'un statut perd 1 de durée par tour, qu'aucun combat n'atteint 99 tours, et que <code>startCombat()</code> vide de toute façon la liste des statuts</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> 99 n'a aucune signification spéciale pour le code —
+    <code>tickStatuses()</code> le décrémente comme n'importe quelle autre durée. C'est un plafond
+    hors d'atteinte, et le nettoyage <code>statuses: []</code> en tête de <code>startCombat()</code>
+    garantit qu'aucun reliquat ne franchit la frontière entre deux combats.</div>
+  </div>
+
+  <div class="q" data-answer="0">
+    <p class="q-text">4. Combien de reliques de <code>relics.json</code> utilisent les déclencheurs
+    <code>onSkillPlayed</code> et <code>onPowerPlayed</code> ?</p>
+    <ul class="q-opts">
+      <li>Aucune : les deux déclencheurs sont câblés dans le code mais inutilisés par les données</li>
+      <li>Une chacun : l'Amulette du Mage et la Plume de scribe</li>
+      <li>Deux chacun, comme <code>onAttackPlayed</code></li>
+      <li>Ils n'existent pas dans l'enum <code>RelicTrigger</code></li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> les deux valeurs existent bien dans l'enum, sont
+    appelées aux lignes 305 et 307 de <code>combat_controller.dart</code> et sont affichées par les
+    trois écrans d'interface — mais aucune des 25 reliques ne les déclare. C'est de l'infrastructure
+    posée d'avance. L'Amulette du Mage et la Plume de scribe sont sur <code>onCardPlayed</code>.</div>
+  </div>
+
+  <div class="q" data-answer="2">
+    <p class="q-text">5. Que fait <code>removeRelicEffect</code> quand on sacrifie un Talisman de Fer
+    (<code>startOfTurn</code>, <code>gain_armor</code>, valeur 2) au nœud d'échange ?</p>
+    <ul class="q-opts">
+      <li>Elle retire 2 points d'Armure au héros</li>
+      <li>Elle retire le statut <code>armor</code> de durée 99 posé par la relique</li>
+      <li>Rien du tout : la méthode ne traite que les reliques dont le <code>trigger</code> est <code>startOfRun</code></li>
+      <li>Elle lève une exception, car <code>gain_armor</code> n'a pas de branche de retrait</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> la méthode s'ouvre sur
+    <code>if (relic.trigger == RelicTrigger.startOfRun)</code> ; tout le reste sort sans rien faire.
+    C'est suffisant : une fois la relique retirée de l'inventaire par <code>removeRelics</code>, le
+    filtre <code>where((r) =&gt; r.trigger == trigger)</code> de <code>applyRelics</code> ne la retient
+    plus et l'effet cesse de lui-même. Les cinq <code>case</code> couvrent uniquement les effets
+    permanents.</div>
+  </div>
+
+  <div class="q" data-answer="1">
+    <p class="q-text">6. Que contient exactement la sauvegarde pour une relique, et pourquoi ?</p>
+    <ul class="q-opts">
+      <li>Les dix champs de <code>RelicData</code>, pour que la sauvegarde soit autonome</li>
+      <li><code>{id, nameFr, nameEn}</code> : l'<code>id</code> sert à retrouver la relique dans <code>relics.json</code>, les deux noms à afficher un message lisible si elle a disparu du catalogue</li>
+      <li>Uniquement l'<code>id</code>, les noms étant reconstruits par <code>AppLocalizations</code></li>
+      <li>L'<code>id</code> et la <code>value</code>, pour figer l'équilibrage au moment de la sauvegarde</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>InventoryState.toJson</code> écrit
+    <code>{'id': r.id, 'nameFr': r.nameFr, 'nameEn': r.nameEn}</code>. L'<code>id</code> est la
+    référence — ce qui permet de rééquilibrer une relique sans casser les sauvegardes. Les deux noms
+    ne servent qu'au cas d'échec : <code>fromJsonWithReport</code> les recopie dans un
+    <code>MissingSaveItem</code> quand <code>RelicData.getById</code> renvoie <code>null</code>.</div>
+  </div>
+</div>
+
+<div class="pager">
+<a class="prev" href="ch12.html"><div class="dir">&#8592; Chapitre 12</div><div class="ttl">La carte du monde procédurale</div></a>
+<a class="next" href="ch14.html"><div class="dir">Chapitre 14 &#8594;</div><div class="ttl">L&#x27;économie : or, boutique, forge et fusion</div></a>
+</div>
+</div>
+</main>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

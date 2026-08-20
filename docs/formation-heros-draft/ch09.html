@@ -1,0 +1,1959 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Les cartes et le deck — Formation Hero's Draft</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<button class="menu-btn" aria-label="Menu">&#9776;</button>
+<div class="layout">
+<aside class="sidebar">
+  <a class="brand" href="index.html">
+    <div class="brand-title">HERO'S DRAFT</div>
+    <div class="brand-sub">Formation complète au projet Flutter</div>
+  </a>
+<nav class="nav">
+<div class="nav-part">Partie 0 — Démarrage</div>
+<a href="ch01.html"><span class="num">01</span><span>Vue d&#x27;ensemble : qu&#x27;est-ce que Hero&#x27;s Draft ?</span></a>
+<div class="nav-part">Partie 1 — Les fondations techniques</div>
+<a href="ch02.html"><span class="num">02</span><span>Dart, le langage — l&#x27;essentiel pour ce projet</span></a>
+<a href="ch03.html"><span class="num">03</span><span>Flutter — widgets, arbre et navigation</span></a>
+<a href="ch04.html"><span class="num">04</span><span>Riverpod — l&#x27;état partagé du jeu</span></a>
+<a href="ch05.html"><span class="num">05</span><span>Flame — le moteur de rendu du combat</span></a>
+<div class="nav-part">Partie 2 — L&#x27;architecture du projet</div>
+<a href="ch06.html"><span class="num">06</span><span>L&#x27;architecture en quatre couches</span></a>
+<a href="ch07.html"><span class="num">07</span><span>La couche de données : un jeu 100 % data-driven</span></a>
+<div class="nav-part">Partie 3 — Les règles du jeu</div>
+<a href="ch08.html"><span class="num">08</span><span>Le héros : stats, classes, passifs et progression</span></a>
+<a href="ch09.html" class="active"><span class="num">09</span><span>Les cartes et le deck</span></a>
+<a href="ch10.html"><span class="num">10</span><span>Le combat : boucle de tour, dégâts et effets</span></a>
+<a href="ch11.html"><span class="num">11</span><span>Les ennemis et la courbe de difficulté</span></a>
+<a href="ch12.html"><span class="num">12</span><span>La carte du monde procédurale</span></a>
+<a href="ch13.html"><span class="num">13</span><span>Les reliques et le système de déclencheurs</span></a>
+<a href="ch14.html"><span class="num">14</span><span>L&#x27;économie : or, boutique, forge et fusion</span></a>
+<a href="ch15.html"><span class="num">15</span><span>Récompenses, chance et probabilités</span></a>
+<a href="ch16.html"><span class="num">16</span><span>Événements, repos et autel des reliques</span></a>
+<div class="nav-part">Partie 4 — L&#x27;interface et le rendu</div>
+<a href="ch17.html"><span class="num">17</span><span>Le pont Flame ↔ Riverpod : l&#x27;écran de combat</span></a>
+<a href="ch18.html"><span class="num">18</span><span>Composants Flame et game feel</span></a>
+<a href="ch19.html"><span class="num">19</span><span>Écrans, navigation et design system</span></a>
+<div class="nav-part">Partie 5 — Qualité et cycle de vie</div>
+<a href="ch20.html"><span class="num">20</span><span>Sauvegarde, localisation et tutoriel</span></a>
+<a href="ch21.html"><span class="num">21</span><span>Tests, outillage, dette technique et évolutions</span></a>
+</nav>
+</aside>
+<main class="main">
+<div class="content">
+<div class="chapter-kicker">Chapitre 09</div>
+<h1>Les cartes et le deck</h1>
+<p class="lede">Une carte du jeu existe sous deux formes : une définition partagée et immuable, et une instance unique posée dans le deck du joueur. Comprendre cette distinction, c'est comprendre tout le deckbuilding.</p>
+
+<div class="toc">
+  <div class="toc-title">Dans ce chapitre</div>
+  <ol>
+    <li><a href="#s1"><code>CardData</code> vs <code>CardInstance</code> — le modèle de données</a></li>
+    <li><a href="#s2">L'anatomie d'une carte dans le JSON</a></li>
+    <li><a href="#s3">Le catalogue complet — 17 cartes globales et 6 cartes de classe</a></li>
+    <li><a href="#s4">Les raretés et le multiplicateur</a></li>
+    <li><a href="#s5">Les cinq piles</a></li>
+    <li><a href="#s6">La pioche, en détail</a></li>
+    <li><a href="#s7">Jouer et épuiser une carte</a></li>
+    <li><a href="#s8">Construire et transformer son deck</a></li>
+  </ol>
+</div>
+
+<h2 id="s1">1. <code>CardData</code> vs <code>CardInstance</code> — le modèle de données</h2>
+
+<p>Posons d'abord le problème. Dans une partie de Hero's Draft, le joueur peut très bien avoir
+<strong>trois « Frappe »</strong> dans son deck. Ces trois cartes portent le même nom, le même coût,
+la même description. Mais l'une a été améliorée à la forge et inflige 2 dégâts de plus, une autre est
+passée de <em>commune</em> à <em>rare</em> après une fusion, et la troisième est restée telle quelle.
+Elles sont donc à la fois identiques et différentes.</p>
+
+<p>Le projet règle ça avec deux classes qui vivent dans deux fichiers distincts :</p>
+
+<div class="memo">
+  <div class="card">
+    <h5>CardData <span class="pill a">Données</span></h5>
+    <p><code>lib/models/data/card_data.dart</code> — la <strong>définition</strong> d'une carte, lue une
+    seule fois depuis le JSON au démarrage. Immuable, partagée, sans identité propre.</p>
+  </div>
+  <div class="card">
+    <h5>CardInstance <span class="pill r">Riverpod</span></h5>
+    <p><code>lib/models/card_instance.dart</code> — un <strong>exemplaire</strong> précis dans la run
+    du joueur. Possède un <code>uniqueId</code>, sa propre rareté et ses propres runes de forge.</p>
+  </div>
+</div>
+
+<p>La règle est simple : <strong>tout ce qui est identique pour toutes les copies</strong> (nom, coût,
+type, cible, liste d'effets de base) vit dans <code>CardData</code>. <strong>Tout ce qui appartient à
+une copie précise</strong> (son identité, sa rareté acquise, ses améliorations) vit dans
+<code>CardInstance</code>. Et <code>CardInstance</code> ne recopie <em>jamais</em> les champs de
+<code>CardData</code> : il garde simplement une référence vers l'objet partagé.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/card_instance.dart</span><span class="lang">dart</span></div>
+  <pre>class CardInstance {
+  final String uniqueId;
+  final CardData data;
+  final CardRarity rarity;
+  final List&lt;String&gt; forgeUpgrades;
+
+  CardInstance({
+    String? uniqueId,
+    required this.data,
+    CardRarity? rarity,
+    List&lt;String&gt;? forgeUpgrades,
+  })  : uniqueId = uniqueId ?? const Uuid().v4(),
+        rarity = rarity ?? data.rarity,
+        forgeUpgrades = forgeUpgrades != null
+            ? List&lt;String&gt;.unmodifiable(forgeUpgrades)
+            : const &lt;String&gt;[];</pre>
+</div>
+
+<p>Trois choses méritent qu'on s'y arrête dans ce constructeur, parce qu'elles sont typiques de Dart :</p>
+
+<ul>
+  <li><strong><code>uniqueId = uniqueId ?? const Uuid().v4()</code></strong> — l'identifiant est
+  optionnel à la construction. Si on ne le fournit pas, le paquet <code>uuid</code> en génère un
+  (UUID v4, aléatoire). C'est ce qui se passe quand une carte est ajoutée au deck : elle reçoit une
+  identité toute neuve. Si on le fournit, c'est qu'on <em>reconstruit</em> une carte existante
+  (chargement d'une sauvegarde, <code>copyWith</code>) et il faut conserver l'identité.</li>
+  <li><strong><code>rarity = rarity ?? data.rarity</code></strong> — la rareté de l'instance retombe
+  par défaut sur celle de la définition. Une carte fraîchement créée hérite de la rareté du JSON ;
+  une carte fusionnée ou améliorée porte une rareté supérieure à celle de sa définition.</li>
+  <li><strong><code>List&lt;String&gt;.unmodifiable(...)</code></strong> — la liste des runes est
+  verrouillée. Impossible de faire <code>card.forgeUpgrades.add('sharp:1')</code> : ça lèverait une
+  <code>UnsupportedError</code> à l'exécution. Pour modifier les runes, il faut passer par le
+  contrôleur du deck, qui crée une <em>nouvelle</em> instance. On y revient en section 8.</li>
+</ul>
+
+<p>La liste par défaut est <code>const &lt;String&gt;[]</code> : une liste vide constante, allouée une
+seule fois pour tout le programme. Sur un deck de trente cartes sans amélioration, ça évite trente
+allocations inutiles.</p>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 820 370" width="820" role="img" aria-label="Une CardData partagée alimente plusieurs CardInstance qui diffèrent par leur uniqueId, leur rareté et leurs runes">
+      <defs>
+        <marker id="c9-1" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#3a4966"/>
+        </marker>
+      </defs>
+      <rect x="0" y="0" width="820" height="370" fill="#0e1524"/>
+
+      <text x="145" y="30" fill="#a7b4c9" font-size="12" text-anchor="middle">assets/data/cards.json</text>
+      <path d="M145 38 L145 106" stroke="#3a4966" stroke-width="2" marker-end="url(#c9-1)"/>
+      <text x="156" y="76" fill="#a7b4c9" font-size="11" font-family="ui-monospace, monospace">chargé 1 fois</text>
+
+      <rect x="30" y="112" width="230" height="132" rx="10" fill="#151b2b" stroke="#f59e0b" stroke-width="2"/>
+      <text x="145" y="138" fill="#f59e0b" font-size="15" text-anchor="middle" font-family="ui-monospace, monospace">CardData</text>
+      <text x="46" y="162" fill="#e6ecf5" font-size="11" font-family="ui-monospace, monospace">id: 'strike_basic'</text>
+      <text x="46" y="181" fill="#e6ecf5" font-size="11" font-family="ui-monospace, monospace">cost: 1</text>
+      <text x="46" y="200" fill="#e6ecf5" font-size="11" font-family="ui-monospace, monospace">effects: [damage 6]</text>
+      <text x="46" y="219" fill="#e6ecf5" font-size="11" font-family="ui-monospace, monospace">rarity: common</text>
+      <text x="46" y="236" fill="#a7b4c9" font-size="10">immuable et partagée</text>
+
+      <text x="145" y="272" fill="#a7b4c9" font-size="12" text-anchor="middle">1 définition</text>
+      <text x="145" y="292" fill="#a7b4c9" font-size="12" text-anchor="middle">N exemplaires</text>
+
+      <path d="M262 150 C 350 150, 380 66, 462 66" stroke="#3a4966" stroke-width="2" fill="none" marker-end="url(#c9-1)"/>
+      <path d="M262 178 C 360 178, 380 178, 462 178" stroke="#3a4966" stroke-width="2" fill="none" marker-end="url(#c9-1)"/>
+      <path d="M262 206 C 350 206, 380 290, 462 290" stroke="#3a4966" stroke-width="2" fill="none" marker-end="url(#c9-1)"/>
+      <text x="360" y="118" fill="#a7b4c9" font-size="10" font-family="ui-monospace, monospace" text-anchor="middle">data:</text>
+
+      <rect x="470" y="30" width="320" height="72" rx="8" fill="#151b2b" stroke="#22d3ee" stroke-width="1.6"/>
+      <text x="482" y="50" fill="#22d3ee" font-size="12" font-family="ui-monospace, monospace">CardInstance</text>
+      <text x="482" y="70" fill="#e6ecf5" font-size="10.5" font-family="ui-monospace, monospace">uniqueId: '9f2c-…'  rarity: common</text>
+      <text x="482" y="89" fill="#e6ecf5" font-size="10.5" font-family="ui-monospace, monospace">forgeUpgrades: []          → 6 dégâts</text>
+
+      <rect x="470" y="142" width="320" height="72" rx="8" fill="#151b2b" stroke="#22d3ee" stroke-width="1.6"/>
+      <text x="482" y="162" fill="#22d3ee" font-size="12" font-family="ui-monospace, monospace">CardInstance</text>
+      <text x="482" y="182" fill="#e6ecf5" font-size="10.5" font-family="ui-monospace, monospace">uniqueId: '41ab-…'  rarity: rare</text>
+      <text x="482" y="201" fill="#e6ecf5" font-size="10.5" font-family="ui-monospace, monospace">forgeUpgrades: ['sharp:1']  → 10 dégâts</text>
+
+      <rect x="470" y="254" width="320" height="72" rx="8" fill="#151b2b" stroke="#22d3ee" stroke-width="1.6"/>
+      <text x="482" y="274" fill="#22d3ee" font-size="12" font-family="ui-monospace, monospace">CardInstance</text>
+      <text x="482" y="294" fill="#e6ecf5" font-size="10.5" font-family="ui-monospace, monospace">uniqueId: 'c70e-…'  rarity: legendary</text>
+      <text x="482" y="313" fill="#e6ecf5" font-size="10.5" font-family="ui-monospace, monospace">forgeUpgrades: ['sharp:2']  → 16 dégâts</text>
+
+      <text x="630" y="352" fill="#a7b4c9" font-size="11" text-anchor="middle">Trois « Frappe » dans le même deck : même définition, trois identités.</text>
+    </svg>
+  </div>
+  <figcaption>Une seule <code>CardData</code> alimente autant de <code>CardInstance</code> que le joueur possède d'exemplaires. Les dégâts affichés sont calculés en section 4.</figcaption>
+</figure>
+
+<p>Le champ <code>data</code> de chaque instance pointe vers <em>le même objet</em> en mémoire. Si vous
+aviez recopié les 16 champs de <code>CardData</code> dans chaque instance, un deck de 30 cartes en
+tiendrait 30 copies, et modifier une définition (par exemple lors d'un rechargement de données)
+demanderait de parcourir tout le deck.</p>
+
+<h3>Sérialisation et rechargement</h3>
+
+<p>Attention toutefois : <code>CardInstance.toJson()</code> sérialise <code>data.toJson()</code> en
+entier dans la sauvegarde. Au rechargement, chaque instance est donc reconstruite avec une
+<code>CardData</code> issue du fichier de sauvegarde, potentiellement périmée. C'est pourquoi
+<code>DeckState._decodePile</code> fait un aller-retour par le registre de données :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/deck_controller.dart</span><span class="lang">dart</span></div>
+  <pre>for (final entry in (rawPile ?? const [])) {
+  final instance = CardInstance.fromJson(entry as Map&lt;String, dynamic&gt;);
+  final freshData = CardData.getById(instance.data.id);
+  if (freshData == null) {
+    missing.add(
+      MissingSaveItem(
+        id: instance.data.id,
+        nameFr: instance.data.nameFr,
+        nameEn: instance.data.nameEn,
+        category: 'card',
+      ),
+    );
+    continue;
+  }
+  final (validUpgrades, upgradesMissing) =
+      ForgeUpgradeData.filterValidRefs(instance.forgeUpgrades);
+  missing.addAll(upgradesMissing);
+  kept.add(instance.copyWith(data: freshData, forgeUpgrades: validUpgrades));
+}</pre>
+</div>
+
+<p>Traduction : on relit l'instance sauvegardée, on récupère la <em>vraie</em> définition à jour via
+<code>CardData.getById(id)</code>, et on la réinjecte avec <code>copyWith(data: freshData)</code>.
+Si la carte n'existe plus dans le JSON (elle a été supprimée entre deux versions du jeu), elle est
+retirée de la pile et signalée dans un rapport <code>MissingSaveItem</code>. Résultat : une
+sauvegarde ancienne ne fige jamais d'anciennes valeurs d'équilibrage, et le chargement ne plante pas.</p>
+
+<div class="box ok">
+  <div class="box-title">Bonne pratique</div>
+  <p>La séparation « définition partagée / instance de run » est le patron de base de tout deckbuilder.
+  On la retrouve à l'identique pour les ennemis (<code>EnemyData</code> / <code>EnemyInstance</code>).
+  Dès qu'un objet du jeu peut exister en plusieurs exemplaires <em>personnalisables</em>, c'est le
+  bon découpage.</p>
+</div>
+
+<h2 id="s2">2. L'anatomie d'une carte dans le JSON</h2>
+
+<p>Hero's Draft est <span class="pill a">100 % data-driven</span> : aucune carte n'est écrite en Dart.
+Les 23 cartes du jeu vivent dans deux fichiers, chargés en parallèle au démarrage par
+<code>gameDataLoaderProvider</code> puis concaténés dans une seule liste :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/services/game_data_service.dart</span><span class="lang">dart</span></div>
+  <pre>final gameDataLoaderProvider = FutureProvider&lt;GameDataRegistry&gt;((ref) async {
+  final List&lt;List&lt;dynamic&gt;&gt; results = await Future.wait([
+    // ...
+    _loadJsonList('assets/data/cards.json'),
+    // ...
+    _loadJsonList('assets/data/hero_cards.json'),
+    _loadJsonList('assets/data/forge_upgrades.json'),
+  ]);
+  // ...
+  final allCards = [
+    ...cardsList,
+    ...heroCardsList,
+  ];
+
+  return GameDataRegistry(
+    // ...
+    cards: _mapList(allCards, CardData.fromJson, 'CardData'),
+    // ...
+  );
+});</pre>
+</div>
+
+<p>Conséquence importante : <code>gameData.cards</code> contient <strong>les 23 cartes</strong>
+(17 globales + 6 de classe). Les écrans qui ne veulent que les cartes globales doivent filtrer
+explicitement sur <code>category</code>, comme on le verra en section 8.</p>
+
+<h3>Les champs de <code>CardData</code></h3>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Champ Dart</th><th>Clé JSON</th><th>Type</th><th>Défaut</th><th>Rôle</th></tr></thead>
+<tbody>
+<tr><td><code>id</code></td><td><code>id</code></td><td><code>String</code></td><td>requis</td><td>Identifiant unique de la définition. Sert de clé partout (<code>getById</code>, sauvegarde, groupement).</td></tr>
+<tr><td><code>nameEn</code></td><td><code>name_en</code></td><td><code>String</code></td><td><code>''</code></td><td>Nom anglais.</td></tr>
+<tr><td><code>nameFr</code></td><td><code>name_fr</code></td><td><code>String</code></td><td><code>''</code></td><td>Nom français.</td></tr>
+<tr><td><code>descriptionEn</code></td><td><code>description_en</code></td><td><code>String</code></td><td><code>''</code></td><td>Description anglaise (repli si aucun effet n'est listé).</td></tr>
+<tr><td><code>descriptionFr</code></td><td><code>description_fr</code></td><td><code>String</code></td><td><code>''</code></td><td>Description française.</td></tr>
+<tr><td><code>cost</code></td><td><code>cost</code></td><td><code>int</code></td><td>requis</td><td>Coût en mana. Ne change jamais, même à haute rareté.</td></tr>
+<tr><td><code>type</code></td><td><code>type</code></td><td><code>CardType</code></td><td>requis</td><td>Attaque, compétence, pouvoir ou statut.</td></tr>
+<tr><td><code>category</code></td><td><code>category</code></td><td><code>CardCategory</code></td><td><code>global</code></td><td>Carte du pool commun ou carte de classe.</td></tr>
+<tr><td><code>heroClass</code></td><td><code>heroClass</code></td><td><code>String?</code></td><td><code>null</code></td><td><code>'paladin'</code>, <code>'berserker'</code> ou <code>'mage'</code> pour les cartes de classe.</td></tr>
+<tr><td><code>rarity</code></td><td><code>rarity</code></td><td><code>CardRarity</code></td><td><code>common</code></td><td>Rareté de base. Sert de valeur initiale à l'instance.</td></tr>
+<tr><td><code>target</code></td><td><code>target</code></td><td><code>CardTarget</code></td><td><code>singleEnemy</code></td><td>Qui la carte vise.</td></tr>
+<tr><td><code>spritePath</code></td><td><code>spritePath</code></td><td><code>String?</code></td><td><code>null</code></td><td>Illustration éventuelle. Aucune carte ne l'utilise aujourd'hui.</td></tr>
+<tr><td><code>animation</code></td><td><code>animation</code></td><td><code>String?</code></td><td><code>null</code></td><td>Nom de l'animation jouée en combat (<code>melee</code>, <code>magic</code>, <code>fire</code>…).</td></tr>
+<tr><td><code>isExhaust</code></td><td><code>isExhaust</code></td><td><code>bool</code></td><td><code>false</code></td><td>La carte part à l'épuisement après avoir été jouée.</td></tr>
+<tr><td><code>effects</code></td><td><code>effects</code></td><td><code>List&lt;CardEffect&gt;</code></td><td>requis (<code>[]</code> si absent)</td><td>Les effets appliqués dans l'ordre du tableau.</td></tr>
+<tr><td><code>baseMaxForgeUpgrades</code></td><td><code>baseMaxForgeUpgrades</code></td><td><code>int</code></td><td><code>1</code></td><td>Nombre de fentes de runes à la rareté la plus basse.</td></tr>
+</tbody>
+</table></div>
+
+<p>Notez la présence d'une valeur par défaut sur presque tous les champs : le JSON reste court, seuls
+les champs qui sortent de l'ordinaire sont écrits. Aucune des 17 cartes globales ne déclare
+<code>baseMaxForgeUpgrades</code> — elles héritent donc toutes de la valeur 1. Les 6 cartes de classe,
+elles, déclarent explicitement <code>5</code>.</p>
+
+<h3>Le parsing défensif</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/card_data.dart</span><span class="lang">dart</span></div>
+  <pre>return CardData(
+  id: json['id'] as String,
+  // ...
+  cost: json['cost'] as int,
+  type: CardType.values.firstWhere((e) =&gt; e.name == json['type']),
+  category: CardCategory.values.firstWhere(
+    (e) =&gt; e.name == json['category'],
+    orElse: () =&gt; CardCategory.global,
+  ),
+  heroClass: json['heroClass'] as String?,
+  rarity: CardRarity.values.firstWhere(
+    (e) =&gt; e.name == json['rarity'],
+    orElse: () =&gt; CardRarity.common,
+  ),
+  target: CardTarget.values.firstWhere(
+    (e) =&gt; e.name == json['target'],
+    orElse: () =&gt; CardTarget.singleEnemy,
+  ),
+  // ...
+  isExhaust: json['isExhaust'] as bool? ?? false,
+  // ...
+  baseMaxForgeUpgrades: json['baseMaxForgeUpgrades'] as int? ?? 1,
+);</pre>
+</div>
+
+<p><code>CardType.values.firstWhere((e) =&gt; e.name == json['type'])</code> est l'idiome Dart standard
+pour convertir une chaîne en valeur d'enum : chaque valeur d'enum expose son nom via
+<code>.name</code>, et on cherche celle qui correspond. Trois des quatre enums fournissent un
+<code>orElse</code> de repli ; <strong><code>type</code> n'en a pas</strong>. Une faute de frappe dans
+<code>"type"</code> lève donc une <code>StateError</code> au chargement — ce qui est volontairement
+brutal, puisque le type d'une carte détermine son comportement entier.</p>
+
+<div class="box warn">
+  <div class="box-title">Piège</div>
+  <p>Cette erreur remonte au démarrage, pas au moment de jouer la carte. Le service de chargement
+  l'enveloppe dans un message explicite qui contient l'index et le contenu de l'entrée fautive :
+  <code>Erreur de parsing dans le modèle "CardData" à l'index i (données: …)</code>. Si l'application
+  refuse de démarrer après une modification du JSON, c'est le premier endroit à regarder.</p>
+</div>
+
+<h3>Les quatre enums</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/card_data.dart</span><span class="lang">dart</span></div>
+  <pre>enum CardType { attack, skill, power, status }
+
+enum CardCategory { global, characterSpecific }
+
+enum CardRarity { common, uncommon, rare, epic, legendary, unique }
+
+enum CardTarget { singleEnemy, allEnemies, self, none }</pre>
+</div>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Enum</th><th>Valeur</th><th>Signification dans le jeu</th></tr></thead>
+<tbody>
+<tr><td rowspan="4"><code>CardType</code></td><td><code>attack</code></td><td>Carte offensive. Seul type qui reçoit les runes élémentaires (<code>burning</code>, <code>freezing</code>, <code>shocking</code>) et qui déclenche les reliques <code>onAttackPlayed</code>. 9 cartes globales, 3 de classe.</td></tr>
+<tr><td><code>skill</code></td><td>Compétence : armure, soin, pioche, mana. 6 cartes globales, 3 de classe.</td></tr>
+<tr><td><code>power</code></td><td>Pouvoir persistant. <strong>Toujours épuisé après avoir été joué</strong>, quelle que soit la valeur de <code>isExhaust</code>. 2 cartes : <code>demon_form</code> et <code>metallicize</code>.</td></tr>
+<tr><td><code>status</code></td><td>Carte parasite. <code>EffectResolver.canPlayCard</code> renvoie <code>false</code> pour ce type : elle est injouable. Aucune carte du JSON n'utilise cette valeur aujourd'hui.</td></tr>
+<tr><td rowspan="2"><code>CardCategory</code></td><td><code>global</code></td><td>Pool commun, proposé à tous les héros. Les 17 cartes de <code>cards.json</code>.</td></tr>
+<tr><td><code>characterSpecific</code></td><td>Réservé à une classe, désigné par <code>heroClass</code>. Les 6 cartes de <code>hero_cards.json</code>.</td></tr>
+<tr><td rowspan="6"><code>CardRarity</code></td><td><code>common</code> (index 0)</td><td>Rareté de départ de toutes les cartes globales.</td></tr>
+<tr><td><code>uncommon</code> (1)</td><td>Atteinte par fusion de 3 communes.</td></tr>
+<tr><td><code>rare</code> (2)</td><td>Fusion de 3 peu communes.</td></tr>
+<tr><td><code>epic</code> (3)</td><td>Fusion de 3 rares.</td></tr>
+<tr><td><code>legendary</code> (4)</td><td>Fusion de 3 épiques. Multiplicateur maximal.</td></tr>
+<tr><td><code>unique</code> (5)</td><td>Réservé aux cartes de classe. <strong>Non fusionnable</strong>, et son multiplicateur vaut 1,0.</td></tr>
+<tr><td rowspan="4"><code>CardTarget</code></td><td><code>singleEnemy</code></td><td>Un ennemi à désigner. Sans cible sélectionnée, la carte est injouable.</td></tr>
+<tr><td><code>allEnemies</code></td><td>Tous les ennemis. L'interface double l'icône d'effet pour le signaler.</td></tr>
+<tr><td><code>self</code></td><td>Le héros lui-même.</td></tr>
+<tr><td><code>none</code></td><td>Aucune cible. Non utilisé par les données actuelles.</td></tr>
+</tbody>
+</table></div>
+
+<h3>La structure <code>CardEffect</code></h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/card_data.dart</span><span class="lang">dart</span></div>
+  <pre>class CardEffect {
+  final String type;
+  final int value;
+  final String? statusId;
+  final int? duration;
+
+  const CardEffect({
+    required this.type,
+    required this.value,
+    this.statusId,
+    this.duration,
+  });
+
+  factory CardEffect.fromJson(Map&lt;String, dynamic&gt; json) {
+    return CardEffect(
+      type: json['type'] as String,
+      value: json['value'] as int,
+      statusId: json['statusId'] as String?,
+      duration: json['duration'] as int?,
+    );
+  }</pre>
+</div>
+
+<p>Quatre champs seulement, dont deux facultatifs. Remarquez que <code>type</code> est une simple
+<code>String</code>, pas un enum : c'est volontaire. Les effets sont résolus par un registre de
+stratégies indexé par cette chaîne (<code>registry.get(effect.type)</code>), ce qui permet d'ajouter
+un nouveau type d'effet sans toucher au modèle de données. Les valeurs utilisées par les 23 cartes
+sont : <code>damage</code>, <code>armor</code>, <code>heal</code>, <code>draw</code>,
+<code>gain_mana</code> et <code>apply_status</code>.</p>
+
+<p><code>statusId</code> et <code>duration</code> ne sont renseignés que pour
+<code>type: "apply_status"</code> : ils indiquent quelle altération appliquer
+(<code>poison</code>, <code>burn</code>, <code>freeze</code>, <code>shock</code>,
+<code>strength</code>, <code>armor_regen</code>…) et pour combien de tours.</p>
+
+<h3>Trois entrées réelles</h3>
+
+<p>Le cas le plus simple du jeu, la « Frappe » de base : un seul effet, une valeur, rien d'autre.</p>
+
+<div class="code" data-lang="json">
+  <div class="code-head"><span class="path">assets/data/cards.json</span><span class="lang">json</span></div>
+  <pre>{
+  "id": "strike_basic",
+  "name_en": "Strike",
+  "name_fr": "Frappe",
+  "description_en": "Deal 6 damage.",
+  "description_fr": "Inflige 6 dégâts.",
+  "cost": 1,
+  "type": "attack",
+  "category": "global",
+  "rarity": "common",
+  "target": "singleEnemy",
+  "animation": "melee",
+  "effects": [
+    {
+      "type": "damage",
+      "value": 6
+    }
+  ]
+}</pre>
+</div>
+
+<p>Une carte à deux effets, dont une altération d'état. L'ordre du tableau <code>effects</code> est
+l'ordre d'application : les 3 dégâts tombent d'abord, le poison ensuite.</p>
+
+<div class="code" data-lang="json">
+  <div class="code-head"><span class="path">assets/data/cards.json</span><span class="lang">json</span></div>
+  <pre>{
+  "id": "poison_stab",
+  "name_en": "Poison Stab",
+  "name_fr": "Coup Empoisonné",
+  "description_en": "Deal 3 damage. Apply 1 Poison.",
+  "description_fr": "Inflige 3 dégâts. Applique 1 Poison.",
+  "cost": 1,
+  "type": "attack",
+  "category": "global",
+  "rarity": "common",
+  "target": "singleEnemy",
+  "animation": "poison",
+  "effects": [
+    {
+      "type": "damage",
+      "value": 3
+    },
+    {
+      "type": "apply_status",
+      "statusId": "poison",
+      "value": 1,
+      "duration": 2
+    }
+  ]
+}</pre>
+</div>
+
+<p>Et une carte de classe, avec les trois champs qui la distinguent : <code>category</code>,
+<code>heroClass</code>, <code>rarity: "unique"</code>, plus un <code>baseMaxForgeUpgrades</code> à 5.</p>
+
+<div class="code" data-lang="json">
+  <div class="code-head"><span class="path">assets/data/hero_cards.json</span><span class="lang">json</span></div>
+  <pre>{
+  "id": "rage_form",
+  "name_en": "Rage Stance",
+  "name_fr": "Posture de Rage",
+  "description_en": "Apply 2 Strength this turn. Draw 1 card.",
+  "description_fr": "Applique 2 Force ce tour-ci. Pioche 1 carte.",
+  "cost": 1,
+  "type": "skill",
+  "category": "characterSpecific",
+  "heroClass": "berserker",
+  "rarity": "unique",
+  "target": "self",
+  "animation": "buff",
+  "effects": [
+    {
+      "type": "apply_status",
+      "statusId": "strength",
+      "value": 2,
+      "duration": 1
+    },
+    {
+      "type": "draw",
+      "value": 1
+    }
+  ],
+  "baseMaxForgeUpgrades": 5
+}</pre>
+</div>
+
+<div class="box">
+  <div class="box-title">À retenir</div>
+  <p>Une carte de classe se reconnaît à quatre marqueurs simultanés : <code>category</code> à
+  <code>characterSpecific</code>, un <code>heroClass</code> renseigné, <code>rarity</code> à
+  <code>unique</code>, et <code>baseMaxForgeUpgrades</code> à 5 au lieu de 1. Les six cartes de
+  <code>hero_cards.json</code> respectent toutes ce gabarit.</p>
+</div>
+
+<h2 id="s3">3. Le catalogue complet</h2>
+
+<p>Voici l'intégralité du contenu des deux fichiers, avec les valeurs exactes du JSON. C'est la table
+de référence à laquelle revenir pour toutes les sections suivantes.</p>
+
+<h3>Les 17 cartes globales — <code>assets/data/cards.json</code></h3>
+
+<p>Toutes sont <code>category: global</code>, <code>rarity: common</code>, et aucune ne déclare
+<code>baseMaxForgeUpgrades</code> (donc 1 fente de rune).</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>id</th><th>Nom (fr)</th><th>Coût</th><th>Type</th><th>Cible</th><th>Animation</th><th>Effets exacts</th><th>Épuisement</th></tr></thead>
+<tbody>
+<tr><td><code>strike_basic</code></td><td>Frappe</td><td>1</td><td>attack</td><td>singleEnemy</td><td><code>melee</code></td><td><code>damage 6</code></td><td>—</td></tr>
+<tr><td><code>defend_basic</code></td><td>Défense</td><td>1</td><td>skill</td><td>self</td><td><code>buff</code></td><td><code>armor 5</code></td><td>—</td></tr>
+<tr><td><code>quick_attack</code></td><td>Attaque Rapide</td><td>1</td><td>attack</td><td>singleEnemy</td><td><code>melee</code></td><td><code>damage 3</code> · <code>draw 1</code></td><td>—</td></tr>
+<tr><td><code>sweep</code></td><td>Balayage</td><td>1</td><td>attack</td><td>allEnemies</td><td><code>magic</code></td><td><code>damage 3</code></td><td>—</td></tr>
+<tr><td><code>concentration</code></td><td>Concentration</td><td>0</td><td>skill</td><td>self</td><td><code>buff</code></td><td><code>draw 2</code></td><td><strong>oui</strong></td></tr>
+<tr><td><code>heal_potion</code></td><td>Potion de Soin</td><td>1</td><td>skill</td><td>self</td><td><code>buff</code></td><td><code>heal 3</code></td><td><strong>oui</strong></td></tr>
+<tr><td><code>iron_wall</code></td><td>Mur de Fer</td><td>2</td><td>skill</td><td>self</td><td><code>buff</code></td><td><code>armor 10</code></td><td>—</td></tr>
+<tr><td><code>heavy_strike</code></td><td>Frappe Lourde</td><td>2</td><td>attack</td><td>singleEnemy</td><td><code>melee</code></td><td><code>damage 12</code></td><td>—</td></tr>
+<tr><td><code>awakening</code></td><td>Éveil</td><td>1</td><td>skill</td><td>self</td><td><code>buff</code></td><td><code>armor 4</code> · <code>draw 1</code></td><td>—</td></tr>
+<tr><td><code>warcry</code></td><td>Cri de Guerre</td><td>2</td><td>attack</td><td>allEnemies</td><td><code>magic</code></td><td><code>damage 4</code> · <code>armor 4</code></td><td>—</td></tr>
+<tr><td><code>demon_form</code></td><td>Forme Démoniaque</td><td>2</td><td><strong>power</strong></td><td>self</td><td><code>buff</code></td><td><code>apply_status strength</code> valeur 2, durée 4</td><td>par le type</td></tr>
+<tr><td><code>metallicize</code></td><td>Métallisation</td><td>1</td><td><strong>power</strong></td><td>self</td><td><code>buff</code></td><td><code>apply_status armor_regen</code> valeur 2, durée 2</td><td>par le type</td></tr>
+<tr><td><code>poison_stab</code></td><td>Coup Empoisonné</td><td>1</td><td>attack</td><td>singleEnemy</td><td><code>poison</code></td><td><code>damage 3</code> · <code>apply_status poison</code> valeur 1, durée 2</td><td>—</td></tr>
+<tr><td><code>fireball</code></td><td>Boule de Feu</td><td>2</td><td>attack</td><td>singleEnemy</td><td><code>fire</code></td><td><code>damage 6</code> · <code>apply_status burn</code> valeur 2, durée 2</td><td>—</td></tr>
+<tr><td><code>ice_bolt</code></td><td>Trait de Glace</td><td>1</td><td>attack</td><td>singleEnemy</td><td><code>ice</code></td><td><code>damage 4</code> · <code>apply_status freeze</code> valeur 1, durée 1</td><td>—</td></tr>
+<tr><td><code>thunder_clap</code></td><td>Coup de Tonnerre</td><td>1</td><td>attack</td><td>singleEnemy</td><td><code>lightning</code></td><td><code>damage 4</code> · <code>apply_status shock</code> valeur 1, durée 1</td><td>—</td></tr>
+<tr><td><code>focus</code></td><td>Focalisation</td><td>0</td><td>skill</td><td>self</td><td><code>buff</code></td><td><code>gain_mana 1</code></td><td><strong>oui</strong></td></tr>
+</tbody>
+</table></div>
+
+<p>Quelques observations utiles pour la suite :</p>
+
+<ul>
+  <li><strong>Répartition des types</strong> : 9 attaques, 6 compétences, 2 pouvoirs. Aucune carte de
+  type <code>status</code>.</li>
+  <li><strong>Répartition des coûts</strong> : 2 cartes à 0 mana (<code>concentration</code> et
+  <code>focus</code>, les deux gratuites étant aussi à épuisement), 10 cartes à 1 mana, 5 cartes à
+  2 mana. Le héros démarre avec 3 de mana par tour, ce qui donne à peu près deux à trois cartes
+  jouées par tour.</li>
+  <li><strong>Répartition des cibles</strong> : 8 <code>self</code>, 7 <code>singleEnemy</code>,
+  2 <code>allEnemies</code>.</li>
+  <li><strong>Animations</strong> : <code>buff</code> (8), <code>melee</code> (3), <code>magic</code>
+  (2), puis une chacune pour <code>poison</code>, <code>fire</code>, <code>ice</code> et
+  <code>lightning</code>. Ce champ ne change rien aux règles : il pilote seulement l'effet visuel
+  côté Flame.</li>
+  <li><strong>Trois cartes à épuisement explicite</strong> : <code>concentration</code>,
+  <code>heal_potion</code>, <code>focus</code>. Les deux <code>power</code> sont épuisées elles aussi,
+  mais par leur type, pas par le drapeau.</li>
+</ul>
+
+<h3>Les 6 cartes de classe — <code>assets/data/hero_cards.json</code></h3>
+
+<p>Toutes sont <code>category: characterSpecific</code>, <code>rarity: unique</code>, et
+<code>baseMaxForgeUpgrades: 5</code>.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>id</th><th>Nom (fr)</th><th>Classe</th><th>Coût</th><th>Type</th><th>Cible</th><th>Animation</th><th>Effets exacts</th><th>Épuisement</th></tr></thead>
+<tbody>
+<tr><td><code>holy_shield</code></td><td>Bouclier Sacré</td><td>paladin</td><td>1</td><td>skill</td><td>self</td><td><code>buff</code></td><td><code>armor 8</code> · <code>heal 2</code></td><td><strong>oui</strong></td></tr>
+<tr><td><code>smite</code></td><td>Châtiment</td><td>paladin</td><td>1</td><td>attack</td><td>singleEnemy</td><td><code>melee</code></td><td><code>damage 6</code> · <code>armor 4</code></td><td>—</td></tr>
+<tr><td><code>reckless_strike</code></td><td>Frappe Téméraire</td><td>berserker</td><td>2</td><td>attack</td><td>singleEnemy</td><td><code>melee</code></td><td><code>damage 15</code></td><td>—</td></tr>
+<tr><td><code>rage_form</code></td><td>Posture de Rage</td><td>berserker</td><td>1</td><td>skill</td><td>self</td><td><code>buff</code></td><td><code>apply_status strength</code> valeur 2, durée 1 · <code>draw 1</code></td><td>—</td></tr>
+<tr><td><code>magic_missile</code></td><td>Projectile Magique</td><td>mage</td><td>1</td><td>attack</td><td>singleEnemy</td><td><code>magic</code></td><td><code>damage 5</code> · <code>draw 1</code></td><td>—</td></tr>
+<tr><td><code>mana_surge</code></td><td>Surtension de Mana</td><td>mage</td><td>0</td><td>skill</td><td>self</td><td><code>buff</code></td><td><code>gain_mana 1</code> · <code>draw 1</code></td><td><strong>oui</strong></td></tr>
+</tbody>
+</table></div>
+
+<p>Chaque classe reçoit exactement deux cartes, et le couplage se fait par le champ
+<code>skills</code> de <code>heroes.json</code> — pas par <code>heroClass</code>, qui n'est là que
+pour la documentation et l'affichage :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/hero_skills_link.dart</span><span class="lang">dart</span></div>
+  <pre>extension HeroSkillsLink on HeroData {
+  List&lt;CardData&gt; getHeroCards(GameDataRegistry gameData) {
+    return skills
+        .map((skillId) {
+          final matches = gameData.cards.where((c) =&gt; c.id == skillId);
+          return matches.isNotEmpty ? matches.first : null;
+        })
+        .whereType&lt;CardData&gt;()
+        .toList();
+  }
+}</pre>
+</div>
+
+<p>C'est une <strong>extension</strong> Dart : elle ajoute une méthode à <code>HeroData</code> sans
+modifier la classe ni en hériter. Le <code>whereType&lt;CardData&gt;()</code> final élimine les
+<code>null</code> et retypera la liste en <code>List&lt;CardData&gt;</code> : si un id de
+<code>skills</code> ne correspond à aucune carte, il est silencieusement ignoré plutôt que de faire
+planter la sélection de classe.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Classe</th><th><code>skills</code> dans <code>heroes.json</code></th><th>PV max</th><th>Mana max</th></tr></thead>
+<tbody>
+<tr><td>Le Paladin</td><td><code>["holy_shield", "smite"]</code></td><td>100</td><td>3</td></tr>
+<tr><td>Le Berserker</td><td><code>["reckless_strike", "rage_form"]</code></td><td>80</td><td>3</td></tr>
+<tr><td>Le Mage</td><td><code>["magic_missile", "mana_surge"]</code></td><td>60</td><td>3</td></tr>
+</tbody>
+</table></div>
+
+<h3>Voir le catalogue dans le jeu</h3>
+
+<p>L'écran dictionnaire affiche exactement ces 23 cartes, groupées par <code>CardType</code> :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/card_dictionary_screen.dart</span><span class="lang">dart</span></div>
+  <pre>// Grouper par type pour la clarté
+final Map&lt;CardType, List&lt;CardData&gt;&gt; groupedCards = {};
+for (var card in allCards) {
+  groupedCards.putIfAbsent(card.type, () =&gt; []).add(card);
+}</pre>
+</div>
+
+<p><code>putIfAbsent(clé, () =&gt; [])</code> est l'idiome Dart pour « crée la liste si elle n'existe pas
+encore, puis rends-la-moi » : une seule consultation de la Map au lieu de deux. Comme le dictionnaire
+travaille sur des <code>CardData</code> et non des <code>CardInstance</code>, il les rend avec
+<code>UiCard.fromData</code>, qui force <code>rarityMultiplier: 1.0</code> et
+<code>forgeUpgrades: const []</code> : le dictionnaire montre donc toujours les <strong>valeurs de
+base</strong>, jamais celles du deck du joueur.</p>
+
+<h2 id="s4">4. Les raretés et le multiplicateur</h2>
+
+<p>Dans Hero's Draft, la rareté n'est pas un badge décoratif : c'est un <strong>coefficient
+multiplicateur</strong> appliqué à toutes les valeurs d'effet de la carte. Il est défini par un simple
+<code>switch</code> sur l'instance :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/card_instance.dart</span><span class="lang">dart</span></div>
+  <pre>int get currentCost =&gt; data.cost;
+
+double get rarityMultiplier {
+  switch (rarity) {
+    case CardRarity.common:
+      return 1.0;
+    case CardRarity.uncommon:
+      return 1.2;
+    case CardRarity.rare:
+      return 1.4;
+    case CardRarity.epic:
+      return 1.6;
+    case CardRarity.legendary:
+      return 2.0;
+    case CardRarity.unique:
+      return 1.0;
+  }
+}</pre>
+</div>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Rareté</th><th>Index</th><th>Multiplicateur</th><th>Gain relatif</th></tr></thead>
+<tbody>
+<tr><td><code>common</code></td><td>0</td><td>1,0</td><td>référence</td></tr>
+<tr><td><code>uncommon</code></td><td>1</td><td>1,2</td><td>+20 %</td></tr>
+<tr><td><code>rare</code></td><td>2</td><td>1,4</td><td>+40 %</td></tr>
+<tr><td><code>epic</code></td><td>3</td><td>1,6</td><td>+60 %</td></tr>
+<tr><td><code>legendary</code></td><td>4</td><td>2,0</td><td>+100 %</td></tr>
+<tr><td><code>unique</code></td><td>5</td><td>1,0</td><td>aucun</td></tr>
+</tbody>
+</table></div>
+
+<p>La progression n'est pas linéaire : les paliers montent de 0,2 en 0,2 jusqu'à l'épique, puis
+sautent directement à 2,0 pour la légendaire. La légendaire vaut donc à elle seule un bond de +40 %,
+autant que les trois premiers paliers réunis. C'est ce qui rend la chaîne complète de fusions
+intéressante.</p>
+
+<p>Le cas <code>unique</code> surprend au premier coup d'œil : la rareté « la plus haute » de l'enum a
+le multiplicateur le plus bas. C'est logique une fois qu'on sait à quoi elle sert : elle marque les
+cartes de classe, dont les valeurs de base sont déjà calibrées (<code>reckless_strike</code> inflige
+15 dégâts contre 6 pour <code>strike_basic</code>) et qui compensent par leurs 5 fentes de runes.
+Elle sert de marqueur « intouchable », pas de niveau de puissance.</p>
+
+<h3>Où le multiplicateur est appliqué</h3>
+
+<p>Un seul endroit fait autorité : la boucle finale de <code>EffectResolver.resolveCard</code>.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/services/effect_resolver.dart</span><span class="lang">dart</span></div>
+  <pre>for (var effect in card.data.effects) {
+  final int baseValue = effect.value;
+  int scaledValue = (baseValue * card.rarityMultiplier).round();
+  if (effect.type == 'damage') {
+    scaledValue += extraDamage;
+  } else if (effect.type == 'armor') {
+    scaledValue += extraArmor;
+  }
+
+  final strategy = registry.get(effect.type);
+  if (strategy != null) {
+    strategy.resolve(
+      card: card,
+      effect: effect,
+      scaledValue: scaledValue,
+      runController: runController,
+      deckController: deckController,
+      combatController: combatController,
+      selectedEnemyId: selectedEnemyId,
+    );
+  }
+}</pre>
+</div>
+
+<p>L'ordre des opérations est capital : on <strong>multiplie d'abord par la rareté, on arrondit,
+puis on ajoute les bonus de forge</strong>. Une rune <code>sharp:1</code> vaut <code>+2</code> dégâts
+en dur (<code>extraDamage += 2 * k</code> dans la boucle de parsing des runes) et ces 2 points ne sont
+pas multipliés par la rareté. Un <code>strike_basic</code> légendaire avec <code>sharp:1</code>
+inflige donc <code>(6 × 2,0).round() + 2 = 14</code>, et non <code>((6 + 2) × 2,0) = 16</code>.</p>
+
+<p><code>.round()</code> en Dart arrondit à l'entier le plus proche, les demis s'éloignant de zéro.
+Comme le résultat est un <code>double</code>, on obtient parfois des surprises agréables :
+<code>6 × 1,6 = 9,6</code> qui remonte à 10.</p>
+
+<h3>Les dégâts effectifs de <code>strike_basic</code></h3>
+
+<p>Base : <code>damage 6</code>. Les colonnes de droite ajoutent les runes après arrondi.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Rareté</th><th>Multiplicateur</th><th>Calcul</th><th>Dégâts</th><th>avec <code>sharp:1</code> (+2)</th><th>avec <code>sharp:2</code> (+4)</th></tr></thead>
+<tbody>
+<tr><td><code>common</code></td><td>1,0</td><td>(6 × 1,0).round()</td><td><strong>6</strong></td><td>8</td><td>10</td></tr>
+<tr><td><code>uncommon</code></td><td>1,2</td><td>(7,2).round()</td><td><strong>7</strong></td><td>9</td><td>11</td></tr>
+<tr><td><code>rare</code></td><td>1,4</td><td>(8,4).round()</td><td><strong>8</strong></td><td>10</td><td>12</td></tr>
+<tr><td><code>epic</code></td><td>1,6</td><td>(9,6).round()</td><td><strong>10</strong></td><td>12</td><td>14</td></tr>
+<tr><td><code>legendary</code></td><td>2,0</td><td>(12,0).round()</td><td><strong>12</strong></td><td>14</td><td>16</td></tr>
+<tr><td><code>unique</code></td><td>1,0</td><td>(6 × 1,0).round()</td><td><strong>6</strong></td><td>8</td><td>10</td></tr>
+</tbody>
+</table></div>
+
+<p>Le même calcul s'applique à tous les types d'effet, y compris ceux qu'on n'attend pas :
+<code>concentration</code> en rareté légendaire pioche <code>(2 × 2,0).round() = 4</code> cartes, et
+<code>poison_stab</code> en épique applique <code>(1 × 1,6).round() = 2</code> de poison. La durée,
+elle, n'est <strong>jamais</strong> mise à l'échelle : <code>effect.duration</code> est transmis tel
+quel à <code>EffectResolver.createStatus</code>.</p>
+
+<div class="box rule">
+  <div class="box-title">Règle du jeu</div>
+  <p>Le coût en mana ne change <strong>jamais</strong> avec la rareté. <code>CardInstance</code>
+  expose <code>int get currentCost =&gt; data.cost;</code> — une redirection pure vers la définition,
+  sans le moindre calcul. Une « Frappe Lourde » légendaire inflige 24 dégâts pour ses 2 mana
+  d'origine. Monter la rareté d'une carte est donc toujours un gain net.</p>
+</div>
+
+<p>C'est <code>currentCost</code>, et non <code>data.cost</code>, qui est consulté au moment de jouer :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/services/effect_resolver.dart</span><span class="lang">dart</span></div>
+  <pre>static bool canPlayCard(
+  CardInstance card,
+  RunState runState,
+  String? selectedEnemyId,
+) {
+  if (runState.heroStats.currentMana &lt; card.currentCost) {
+    return false;
+  }
+  if (card.data.type == CardType.status) {
+    return false;
+  }
+  if (card.data.target == CardTarget.singleEnemy &amp;&amp; selectedEnemyId == null) {
+    return false;
+  }
+  return true;
+}</pre>
+</div>
+
+<p>Passer par un getter plutôt que par <code>data.cost</code> directement est un choix d'architecture :
+le jour où une rune ou une relique doit réduire le coût d'une carte, il n'y a qu'un seul endroit à
+modifier, et tout le jeu suit. Aujourd'hui le getter est une simple redirection, mais le point
+d'extension existe.</p>
+
+<h3>La rareté est aussi visible</h3>
+
+<p>Le nombre de fentes de runes affichées sur une carte dépend directement de sa rareté :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/ui_card/card_rune_sockets.dart</span><span class="lang">dart</span></div>
+  <pre>final totalSlots = baseMaxForgeUpgrades + rarityIndex;
+final filledSlots = forgeUpgrades.length;
+final emptySlots = max(0, totalSlots - filledSlots);</pre>
+</div>
+
+<p>Une carte globale commune affiche <code>1 + 0 = 1</code> fente ; la même carte devenue légendaire en
+affiche <code>1 + 4 = 5</code> ; une carte de classe unique en affiche <code>5 + 5 = 10</code>.
+Le <code>max(0, …)</code> protège l'affichage si une carte porte plus de runes que sa capacité
+théorique — auquel cas on ne dessine simplement aucune fente vide.</p>
+
+<h2 id="s5">5. Les cinq piles</h2>
+
+<p>Tout l'état des cartes tient dans une seule classe immuable, <code>DeckState</code>, exposée par le
+<code>deckProvider</code>. Cinq listes et un compteur :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/deck_controller.dart</span><span class="lang">dart</span></div>
+  <pre>class DeckState {
+  final List&lt;CardInstance&gt; masterDeck;
+  final List&lt;CardInstance&gt; drawPile;
+  final List&lt;CardInstance&gt; hand;
+  final List&lt;CardInstance&gt; discardPile;
+  final List&lt;CardInstance&gt; exhaustPile;
+
+  /// Nombre de remélanges défausse → pioche depuis le début du combat.
+  /// Remis à 0 par `startCombat`. Observé par l'UI pour signaler l'événement.
+  final int reshuffleCount;
+
+  const DeckState({
+    this.masterDeck = const [],
+    this.drawPile = const [],
+    this.hand = const [],
+    this.discardPile = const [],
+    this.exhaustPile = const [],
+    this.reshuffleCount = 0,
+  });</pre>
+</div>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Pile</th><th>Rôle</th><th>Portée</th><th>Qui la remplit</th></tr></thead>
+<tbody>
+<tr><td><code>masterDeck</code></td><td>La collection du joueur : toutes les cartes possédées dans la run, quel que soit l'état du combat.</td><td><strong>Toute la run</strong></td><td>Deck de départ, récompenses, boutique, événements, fusion.</td></tr>
+<tr><td><code>drawPile</code></td><td>La pioche du combat en cours. Copie mélangée du <code>masterDeck</code> au démarrage du combat.</td><td>Un combat</td><td><code>startCombat</code>, puis les remélanges.</td></tr>
+<tr><td><code>hand</code></td><td>Les cartes en main, jouables immédiatement. Plafonnée à <code>maxHandSize = 10</code>.</td><td>Un tour</td><td><code>_drawInto</code>, via <code>startCombat</code> et <code>drawCards</code>.</td></tr>
+<tr><td><code>discardPile</code></td><td>Les cartes jouées et les cartes défaussées en fin de tour. Recyclée dans la pioche quand celle-ci se vide.</td><td>Un combat</td><td><code>playCard</code>, <code>discardHand</code>, <code>addCardToDiscardPile</code>.</td></tr>
+<tr><td><code>exhaustPile</code></td><td>Les cartes retirées du combat : pouvoirs et cartes à épuisement. Elles ne reviennent jamais avant la fin du combat.</td><td>Un combat</td><td><code>playCard</code> uniquement.</td></tr>
+<tr><td><code>reshuffleCount</code></td><td>Compteur de remélanges depuis le début du combat. Sert de signal à l'interface.</td><td>Un combat</td><td><code>drawCards</code> (incrémenté), <code>startCombat</code> (remis à 0).</td></tr>
+</tbody>
+</table></div>
+
+<div class="box rule">
+  <div class="box-title">Règle du jeu</div>
+  <p><code>masterDeck</code> est la <strong>seule pile qui survit à un combat</strong>. Les quatre
+  autres sont des vues temporaires reconstruites à chaque <code>startCombat</code>. Épuiser une carte
+  la retire du combat en cours, pas du deck : elle sera de nouveau dans la pioche au combat suivant.
+  C'est une différence classique avec certains autres deckbuilders où l'épuisement est définitif.</p>
+</div>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 820 460" width="820" role="img" aria-label="Cycle des cartes entre les cinq piles : masterDeck, drawPile, hand, discardPile et exhaustPile">
+      <defs>
+        <marker id="c9-2" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#3a4966"/>
+        </marker>
+        <marker id="c9-3" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#f87171"/>
+        </marker>
+      </defs>
+      <rect x="0" y="0" width="820" height="460" fill="#0e1524"/>
+
+      <rect x="110" y="24" width="230" height="58" rx="9" fill="#151b2b" stroke="#f59e0b" stroke-width="2"/>
+      <text x="225" y="48" fill="#f59e0b" font-size="14" text-anchor="middle" font-family="ui-monospace, monospace">masterDeck</text>
+      <text x="225" y="68" fill="#a7b4c9" font-size="10.5" text-anchor="middle">la collection de la run</text>
+
+      <rect x="110" y="140" width="230" height="58" rx="9" fill="#151b2b" stroke="#60a5fa" stroke-width="2"/>
+      <text x="225" y="164" fill="#60a5fa" font-size="14" text-anchor="middle" font-family="ui-monospace, monospace">drawPile</text>
+      <text x="225" y="184" fill="#a7b4c9" font-size="10.5" text-anchor="middle">on tire par la fin de liste</text>
+
+      <rect x="110" y="256" width="230" height="58" rx="9" fill="#151b2b" stroke="#34d399" stroke-width="2"/>
+      <text x="225" y="280" fill="#34d399" font-size="14" text-anchor="middle" font-family="ui-monospace, monospace">hand</text>
+      <text x="225" y="300" fill="#a7b4c9" font-size="10.5" text-anchor="middle">10 cartes maximum</text>
+
+      <rect x="110" y="372" width="230" height="58" rx="9" fill="#151b2b" stroke="#a78bfa" stroke-width="2"/>
+      <text x="225" y="396" fill="#a78bfa" font-size="14" text-anchor="middle" font-family="ui-monospace, monospace">discardPile</text>
+      <text x="225" y="416" fill="#a7b4c9" font-size="10.5" text-anchor="middle">recyclée à la demande</text>
+
+      <rect x="500" y="372" width="230" height="58" rx="9" fill="#151b2b" stroke="#f87171" stroke-width="2"/>
+      <text x="615" y="396" fill="#f87171" font-size="14" text-anchor="middle" font-family="ui-monospace, monospace">exhaustPile</text>
+      <text x="615" y="416" fill="#a7b4c9" font-size="10.5" text-anchor="middle">sortie du combat</text>
+
+      <path d="M225 84 L225 136" stroke="#3a4966" stroke-width="2" marker-end="url(#c9-2)"/>
+      <text x="238" y="106" fill="#e6ecf5" font-size="10.5" font-family="ui-monospace, monospace">copie + shuffle(_random)</text>
+      <text x="238" y="121" fill="#a7b4c9" font-size="10">au startCombat()</text>
+
+      <path d="M225 200 L225 252" stroke="#3a4966" stroke-width="2" marker-end="url(#c9-2)"/>
+      <text x="238" y="222" fill="#e6ecf5" font-size="10.5" font-family="ui-monospace, monospace">draw.removeLast()</text>
+      <text x="238" y="237" fill="#a7b4c9" font-size="10">_drawInto()</text>
+
+      <path d="M225 316 L225 368" stroke="#3a4966" stroke-width="2" marker-end="url(#c9-2)"/>
+      <text x="238" y="338" fill="#e6ecf5" font-size="10.5" font-family="ui-monospace, monospace">playCard() non épuisée</text>
+      <text x="238" y="353" fill="#a7b4c9" font-size="10">discardHand() en fin de tour</text>
+
+      <path d="M110 401 L64 401 L64 169 L106 169" stroke="#3a4966" stroke-width="2" fill="none" marker-end="url(#c9-2)"/>
+      <text transform="rotate(-90 50 300)" x="50" y="300" fill="#e6ecf5" font-size="11" font-family="ui-monospace, monospace">remélange auto.</text>
+      <text transform="rotate(-90 34 306)" x="34" y="306" fill="#a7b4c9" font-size="10">reshuffleCount++</text>
+
+      <path d="M342 285 C 450 285, 610 300, 613 366" stroke="#f87171" stroke-width="2" fill="none" marker-end="url(#c9-3)"/>
+      <text x="380" y="270" fill="#f87171" font-size="10.5" font-family="ui-monospace, monospace">type == power</text>
+      <text x="380" y="285" fill="#f87171" font-size="10.5" font-family="ui-monospace, monospace">|| isExhaust</text>
+
+      <rect x="440" y="30" width="330" height="170" rx="9" fill="#101827" stroke="#3a4966" stroke-width="1.4" stroke-dasharray="5 4"/>
+      <text x="458" y="54" fill="#e6ecf5" font-size="12" font-family="ui-monospace, monospace">startCombat() remet à zéro :</text>
+      <text x="458" y="76" fill="#a7b4c9" font-size="11" font-family="ui-monospace, monospace">drawPile = masterDeck mélangé</text>
+      <text x="458" y="95" fill="#a7b4c9" font-size="11" font-family="ui-monospace, monospace">hand = main d'ouverture</text>
+      <text x="458" y="114" fill="#a7b4c9" font-size="11" font-family="ui-monospace, monospace">discardPile = []</text>
+      <text x="458" y="133" fill="#a7b4c9" font-size="11" font-family="ui-monospace, monospace">exhaustPile = []</text>
+      <text x="458" y="152" fill="#a7b4c9" font-size="11" font-family="ui-monospace, monospace">reshuffleCount = 0</text>
+      <text x="458" y="180" fill="#f59e0b" font-size="11">Seul masterDeck traverse les combats.</text>
+    </svg>
+  </div>
+  <figcaption>Le cycle de vie d'une carte pendant un combat. La boucle de gauche est le remélange automatique ; la branche rouge est un aller sans retour jusqu'à la fin du combat.</figcaption>
+</figure>
+
+<h3>Une classe d'état immuable</h3>
+
+<p><code>DeckState</code> ne se modifie pas : on en fabrique une copie modifiée avec
+<code>copyWith</code>, et on l'affecte à <code>state</code>. Chaque champ de <code>copyWith</code> est
+un paramètre optionnel qui retombe sur la valeur actuelle :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/deck_controller.dart</span><span class="lang">dart</span></div>
+  <pre>DeckState copyWith({
+  List&lt;CardInstance&gt;? masterDeck,
+  // ... un paramètre optionnel par pile ...
+  int? reshuffleCount,
+}) {
+  return DeckState(
+    masterDeck: masterDeck ?? this.masterDeck,
+    drawPile: drawPile ?? this.drawPile,
+    hand: hand ?? this.hand,
+    discardPile: discardPile ?? this.discardPile,
+    exhaustPile: exhaustPile ?? this.exhaustPile,
+    reshuffleCount: reshuffleCount ?? this.reshuffleCount,
+  );
+}</pre>
+</div>
+
+<p>Côté Riverpod, le contrôleur est un <code>Notifier</code> classique, et l'aléatoire est injecté par
+un provider séparé — un détail qui change tout pour les tests :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/deck_controller.dart</span><span class="lang">dart</span></div>
+  <pre>class DeckNotifier extends Notifier&lt;DeckState&gt; {
+  late final Random _random;
+
+  @override
+  DeckState build() {
+    _random = ref.read(deckRandomProvider);
+    return const DeckState();
+  }
+  // ...
+}
+
+/// Source d'aléatoire de la pioche. Surchargeable en test via
+/// `deckRandomProvider.overrideWithValue(Random(42))` pour rendre les
+/// séquences de pioche reproductibles.
+final deckRandomProvider = Provider&lt;Random&gt;((ref) =&gt; Random());
+
+final deckProvider = NotifierProvider&lt;DeckNotifier, DeckState&gt;(DeckNotifier.new);</pre>
+</div>
+
+<div class="box ok">
+  <div class="box-title">Bonne pratique</div>
+  <p>Ne jamais instancier <code>Random()</code> directement dans une classe de logique. En le passant
+  par un provider, un test peut écrire
+  <code>deckRandomProvider.overrideWithValue(Random(42))</code> et obtenir une séquence de mélanges
+  parfaitement déterministe. C'est ce que fait <code>test/unit/deck_controller_test.dart</code>.</p>
+</div>
+
+<h2 id="s6">6. La pioche, en détail</h2>
+
+<p>Toute la pioche du jeu passe par une seule fonction, <code>_drawInto</code>. Elle est
+<code>static</code>, ne lit ni n'écrit <code>state</code>, et reçoit tout ce dont elle a besoin en
+paramètre — y compris sa source d'aléatoire. C'est le cœur du contrôleur, et c'est vingt lignes.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/deck_controller.dart</span><span class="lang">dart</span></div>
+  <pre>/// Cœur de la pioche. Fonction pure : ne touche pas à `state`, mute les
+/// listes qu'on lui passe et rend le nombre de remélanges effectués.
+///
+/// Deux conditions d'arrêt, dans cet ordre :
+///  1. la main a atteint [maxHandSize] — on s'arrête sans consommer de carte
+///     ni déclencher de remélange ;
+///  2. pioche ET défausse vides — le deck est épuisé, sortie propre.
+static ({
+  List&lt;CardInstance&gt; draw,
+  List&lt;CardInstance&gt; hand,
+  List&lt;CardInstance&gt; discard,
+  int reshuffles,
+}) _drawInto({
+  required List&lt;CardInstance&gt; draw,
+  required List&lt;CardInstance&gt; hand,
+  required List&lt;CardInstance&gt; discard,
+  required int amount,
+  required int maxHandSize,
+  required Random random,
+}) {
+  var reshuffles = 0;
+
+  for (var i = 0; i &lt; amount; i++) {
+    if (hand.length &gt;= maxHandSize) break;
+    if (draw.isEmpty) {
+      if (discard.isEmpty) break;
+      draw
+        ..addAll(discard)
+        ..shuffle(random);
+      discard.clear();
+      reshuffles++;
+    }
+    hand.add(draw.removeLast());
+  }
+
+  return (draw: draw, hand: hand, discard: discard, reshuffles: reshuffles);
+}</pre>
+</div>
+
+<h3>Lecture ligne à ligne</h3>
+
+<p><strong>Le type de retour</strong> est un <em>record</em> Dart 3 à champs nommés :
+<code>({List&lt;CardInstance&gt; draw, List&lt;CardInstance&gt; hand, List&lt;CardInstance&gt; discard, int
+reshuffles})</code>. Un record est un agrégat anonyme, sans classe à déclarer, et on accède aux
+champs par leur nom : <code>result.draw</code>, <code>result.reshuffles</code>. C'est exactement ce
+qu'il faut ici : la fonction doit rendre quatre choses, et créer une classe <code>_DrawResult</code>
+pour trois usages internes serait du bruit.</p>
+
+<p><strong><code>for (var i = 0; i &lt; amount; i++)</code></strong> — une itération par carte demandée.
+Le compteur ne descend jamais : si la boucle sort en avance, les cartes restantes sont simplement
+perdues, pas mises en attente.</p>
+
+<p><strong><code>if (hand.length &gt;= maxHandSize) break;</code></strong> — première condition d'arrêt,
+et elle est testée <em>avant tout le reste</em>. C'est ce qui produit la règle dite d'arrêt net.</p>
+
+<div class="box rule">
+  <div class="box-title">Règle du jeu — l'arrêt net de la pioche</div>
+  <p>Quand la main atteint <code>maxHandSize = 10</code>, la pioche <strong>s'arrête immédiatement</strong> :
+  aucune carte n'est retirée de la pioche, aucune carte n'est défaussée, et surtout <strong>aucun
+  remélange n'est déclenché</strong>. Le test de main pleine est la <em>première</em> ligne de la
+  boucle, avant le test de pioche vide. Un joueur qui a 10 cartes en main et qui joue
+  <code>concentration</code> (pioche 2) ne perd rien de sa pioche : les deux cartes sont simplement
+  jamais tirées.</p>
+</div>
+
+<p>Cet ordre n'est pas anodin. Si les deux <code>if</code> étaient inversés, une pioche demandée
+main pleine viderait la défausse dans la pioche et la mélangerait <em>pour rien</em> — ce qui, en
+plus d'être gratuit, changerait l'ordre des cartes du reste du combat et ferait grimper
+<code>reshuffleCount</code> sans raison visible pour le joueur.</p>
+
+<p><strong><code>if (draw.isEmpty) { if (discard.isEmpty) break; … }</code></strong> — deuxième
+condition d'arrêt, imbriquée. On ne regarde la défausse que si la pioche est vide. Si les deux le
+sont, le deck est épuisé : on sort proprement, sans exception, sans état bancal. Un joueur qui a joué
+toutes ses cartes et les a toutes épuisées finit simplement son tour avec la main qu'il a.</p>
+
+<p><strong>La cascade <code>draw ..addAll(discard) ..shuffle(random);</code></strong> — l'opérateur
+cascade <code>..</code> de Dart enchaîne plusieurs appels sur le même objet sans le répéter. C'est
+équivalent à <code>draw.addAll(discard); draw.shuffle(random);</code>. On verse la défausse dans la
+pioche, on mélange le tout avec la source d'aléatoire injectée, on vide la défausse
+(<code>discard.clear()</code>) et on incrémente le compteur. Puis la boucle <em>continue</em> : le
+remélange se produit au milieu d'une pioche, sans l'interrompre.</p>
+
+<p><strong><code>hand.add(draw.removeLast())</code></strong> — on tire par la <strong>fin</strong> de
+la liste. C'est un choix de performance : sur une <code>List</code> Dart, <code>removeLast()</code>
+est en temps constant, alors que <code>removeAt(0)</code> décale tous les éléments restants. Comme la
+pioche est mélangée, tirer par la fin ou par le début est strictement équivalent en termes de jeu.</p>
+
+<div class="box warn">
+  <div class="box-title">Piège</div>
+  <p><code>_drawInto</code> <strong>mute</strong> les listes qu'on lui passe : <code>hand.add</code>,
+  <code>discard.clear()</code>, <code>draw.removeLast()</code>. Elle n'est « pure » que du point de
+  vue de <code>state</code>. C'est pour cela que les deux appelants lui donnent systématiquement des
+  copies fraîches (<code>List&lt;CardInstance&gt;.from(state.drawPile)</code>) et jamais les listes de
+  l'état. Passer <code>state.hand</code> directement corromprait l'état précédent et casserait la
+  détection de changement de Riverpod.</p>
+</div>
+
+<h3>La main d'ouverture</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/deck_controller.dart</span><span class="lang">dart</span></div>
+  <pre>/// Prépare les piles pour un nouveau combat et tire la main d'ouverture,
+/// en une seule affectation d'état. La main de départ respecte exactement
+/// les mêmes invariants que toutes les pioches suivantes.
+void startCombat({required int handSize, required int maxHandSize}) {
+  final result = _drawInto(
+    draw: List&lt;CardInstance&gt;.from(state.masterDeck)..shuffle(_random),
+    hand: &lt;CardInstance&gt;[],
+    discard: &lt;CardInstance&gt;[],
+    amount: handSize,
+    maxHandSize: maxHandSize,
+    random: _random,
+  );
+
+  state = state.copyWith(
+    drawPile: result.draw,
+    hand: result.hand,
+    discardPile: result.discard,
+    exhaustPile: [],
+    reshuffleCount: 0,
+  );
+}</pre>
+</div>
+
+<p>Trois points à noter :</p>
+
+<ul>
+  <li><code>List&lt;CardInstance&gt;.from(state.masterDeck)..shuffle(_random)</code> — on part d'une
+  <strong>copie</strong> du deck maître, qu'on mélange. Le <code>masterDeck</code> lui-même n'est
+  jamais mélangé ni modifié ; c'est ce qui lui permet de survivre au combat intact.</li>
+  <li>La main et la défausse partent <strong>vides</strong>. La condition « pioche ET défausse vides »
+  s'applique donc dès le premier tour : si le joueur possède moins de cartes que
+  <code>handSize</code>, la boucle s'arrête d'elle-même, sans erreur.</li>
+  <li>La main d'ouverture emprunte <strong>exactement le même chemin</strong> que toutes les autres
+  pioches. Pas de code dupliqué, pas de règle spéciale : le plafond de 10 cartes, la sortie propre
+  sur deck vide, l'ordre des tests, tout est partagé.</li>
+</ul>
+
+<p>Le <code>handSize</code> n'est pas une constante : il vient de l'état de la run.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/combat/turn_phase_manager.dart</span><span class="lang">dart</span></div>
+  <pre>void startPlayerCombat() {
+  final runController = ref.read(runProvider.notifier);
+  final deckController = ref.read(deckProvider.notifier);
+
+  if (kDebugMode &amp;&amp; ref.read(deckProvider).masterDeck.isEmpty) {
+    debugPrint('startPlayerCombat: masterDeck vide — '
+        'StarterDeckDraftScreen a-t-il été court-circuité ?');
+  }
+
+  runController.startCombat();
+  deckController.startCombat(
+    handSize: runController.currentState.cardsPerTurn,
+    maxHandSize: GameConstants.maxHandSize,
+  );
+}
+
+void startPlayerTurn() {
+  final runController = ref.read(runProvider.notifier);
+
+  runController.startTurn();
+  ref.read(deckProvider.notifier).drawCards(
+        runController.currentState.cardsPerTurn,
+        maxHandSize: GameConstants.maxHandSize,
+      );
+}</pre>
+</div>
+
+<p><code>cardsPerTurn</code> vaut <strong>5</strong> par défaut dans <code>RunState</code>, et certaines
+reliques le modifient via <code>applyRunRuleModifier(cardsPerTurnAcc: …)</code>. La même valeur sert
+à la main d'ouverture et à la pioche de chaque début de tour. Quant au plafond, il est unique et
+global :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/game_constants.dart</span><span class="lang">dart</span></div>
+  <pre>// --- DECK RULES ---
+/// Nombre maximum de cartes en main. Au-delà, la pioche s'interrompt sans
+/// consommer de carte ni déclencher de remélange (règle « arrêt net »).
+static const int maxHandSize = 10;</pre>
+</div>
+
+<h3>La pioche en cours de tour</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/deck_controller.dart</span><span class="lang">dart</span></div>
+  <pre>/// Pioche [amount] cartes. Remélange la défausse dans la pioche dès que
+/// celle-ci est vide, y compris au milieu d'une pioche. Une seule
+/// affectation de `state`, donc une seule notification Riverpod.
+void drawCards(int amount, {required int maxHandSize}) {
+  final result = _drawInto(
+    draw: List&lt;CardInstance&gt;.from(state.drawPile),
+    hand: List&lt;CardInstance&gt;.from(state.hand),
+    discard: List&lt;CardInstance&gt;.from(state.discardPile),
+    amount: amount,
+    maxHandSize: maxHandSize,
+    random: _random,
+  );
+
+  state = state.copyWith(
+    drawPile: result.draw,
+    hand: result.hand,
+    discardPile: result.discard,
+    reshuffleCount: state.reshuffleCount + result.reshuffles,
+  );
+}</pre>
+</div>
+
+<p>Trois copies en entrée, un calcul, <strong>une seule affectation de <code>state</code></strong>.
+C'est le point le plus important du fichier, et il mérite qu'on explique pourquoi.</p>
+
+<p>Avec Riverpod, chaque affectation à <code>state</code> déclenche une notification à tous les
+<code>ref.watch(deckProvider)</code> de l'application, donc une reconstruction de widgets. Une
+implémentation naïve qui écrirait <code>state</code> à chaque carte piochée provoquerait, pour une
+pioche de 5 cartes avec un remélange au milieu, six notifications successives — et l'interface
+afficherait fugitivement des états intermédiaires incohérents (une pioche vide, une défausse à moitié
+recyclée). Ici, l'extérieur ne voit qu'une transition atomique : avant la pioche, après la pioche.</p>
+
+<p>Le compteur <code>reshuffleCount</code> est <strong>accumulé</strong>
+(<code>state.reshuffleCount + result.reshuffles</code>) et non remplacé, puisqu'il compte les
+remélanges depuis le début du combat. L'interface l'observe pour déclencher son animation de
+remélange : voir passer le compteur de 0 à 1 suffit à savoir qu'un recyclage a eu lieu, même s'il
+s'est produit au milieu d'une pioche de cinq cartes.</p>
+
+<p>Le même souci de sobriété se retrouve dans <code>discardHand</code>, la méthode qui vide la main en
+fin de tour : elle commence par <code>if (currentHand.isEmpty) return;</code> et sort donc
+<strong>avant toute affectation de <code>state</code></strong> si la main est déjà vide. Pas de
+notification, pas de reconstruction de widgets pour un changement qui n'en est pas un.</p>
+
+<h3>Un exemple chiffré</h3>
+
+<p>Prenons un deck de départ de 7 cartes, <code>cardsPerTurn = 5</code>.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Étape</th><th>drawPile</th><th>hand</th><th>discardPile</th><th>reshuffleCount</th></tr></thead>
+<tbody>
+<tr><td><code>startCombat(handSize: 5)</code></td><td>2</td><td>5</td><td>0</td><td>0</td></tr>
+<tr><td>Le joueur joue 3 cartes (aucune épuisée)</td><td>2</td><td>2</td><td>3</td><td>0</td></tr>
+<tr><td><code>discardHand()</code> en fin de tour</td><td>2</td><td>0</td><td>5</td><td>0</td></tr>
+<tr><td><code>drawCards(5)</code> : 2 cartes tirées, pioche vide, remélange des 5, 3 cartes tirées</td><td>2</td><td>5</td><td>0</td><td><strong>1</strong></td></tr>
+<tr><td>Le joueur joue <code>concentration</code> (épuisée) et <code>quick_attack</code> : <code>draw 2</code> puis <code>draw 1</code></td><td>0 puis remélange</td><td>≤ 10</td><td>—</td><td>1 ou 2</td></tr>
+</tbody>
+</table></div>
+
+<p>Notez la quatrième ligne : le remélange se produit <em>pendant</em> l'appel à
+<code>drawCards(5)</code>, entre la deuxième et la troisième carte, et pourtant l'interface ne reçoit
+qu'une seule notification à la fin.</p>
+
+<h2 id="s7">7. Jouer et épuiser une carte</h2>
+
+<p>Quand le joueur relâche une carte sur une cible valide, <code>CombatController</code> résout
+d'abord les effets, puis — et seulement si la résolution a réussi — informe le deck :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/combat_controller.dart</span><span class="lang">dart</span></div>
+  <pre>// 1. Résolution des effets
+final success = EffectResolver.resolveCard(
+  card,
+  runController,
+  deckController,
+  this,
+  state.selectedEnemyId,
+  registry,
+);
+
+if (success) {
+  // 2. Transmettre au deck que la carte est jouée
+  deckController.playCard(card);
+
+  // 3. Déclencher les traits passifs
+  TraitSystem.onCardPlayed(runController, card);
+
+  // 4. Déclencher les reliques liées aux cartes jouées
+  runController.applyRelics(RelicTrigger.onCardPlayed);</pre>
+</div>
+
+<p>L'ordre a une conséquence directe : si <code>canPlayCard</code> refuse (mana insuffisant, pas de
+cible désignée, carte de type <code>status</code>), <code>resolveCard</code> renvoie
+<code>false</code> et <code>playCard</code> n'est jamais appelée. La carte reste en main.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/deck_controller.dart</span><span class="lang">dart</span></div>
+  <pre>/// Joue une carte : la retire de la main et l'envoie dans la défausse (ou l'épuise si pouvoir)
+void playCard(CardInstance card) {
+  var currentHand = List&lt;CardInstance&gt;.from(state.hand);
+  var currentDiscardPile = List&lt;CardInstance&gt;.from(state.discardPile);
+  var currentExhaustPile = List&lt;CardInstance&gt;.from(state.exhaustPile);
+
+  // Trouver l'index pour ne supprimer qu'un seul exemplaire si doublons (sécurité)
+  final index = currentHand.indexWhere((c) =&gt; c.uniqueId == card.uniqueId);
+
+  if (index != -1) {
+    final cardToPlay = currentHand.removeAt(index);
+
+    final isExhausted = cardToPlay.data.isExhaust &amp;&amp; !cardToPlay.forgeUpgrades.contains('enduring:1');
+
+    if (cardToPlay.data.type == CardType.power || isExhausted) {
+      currentExhaustPile.add(cardToPlay);
+    } else {
+      currentDiscardPile.add(cardToPlay);
+    }
+
+    state = state.copyWith(
+      hand: currentHand,
+      discardPile: currentDiscardPile,
+      exhaustPile: currentExhaustPile,
+    );
+  }
+}</pre>
+</div>
+
+<h3>Pourquoi retirer par <code>uniqueId</code> et non par valeur ?</h3>
+
+<p>La ligne <code>currentHand.indexWhere((c) =&gt; c.uniqueId == card.uniqueId)</code> pourrait être
+remplacée par <code>currentHand.remove(card)</code>. Ce serait un bug, pour deux raisons.</p>
+
+<p><strong>Première raison : <code>CardInstance</code> ne redéfinit ni <code>operator ==</code> ni
+<code>hashCode</code>.</strong> En Dart, l'égalité par défaut est l'<em>identité</em> de l'objet.
+<code>remove(card)</code> ne retirerait donc la carte que si l'appelant passe très exactement
+<strong>la même référence</strong> que celle stockée dans la liste. Or la carte remonte depuis l'UI
+Flame, éventuellement après un <code>copyWith</code> ou une reconstruction : une instance qui décrit
+la même carte mais qui n'est pas le même objet ne serait jamais trouvée, et la carte resterait en
+main après avoir été jouée.</p>
+
+<p><strong>Seconde raison : les doublons.</strong> Même si l'égalité était redéfinie par valeur, un
+joueur peut avoir deux <code>strike_basic</code> communes en main, avec les mêmes champs à
+l'exception de l'<code>uniqueId</code>. Une comparaison par valeur risquerait de retirer la mauvaise —
+ou, pire, l'implémentation d'une future méthode <code>removeWhere</code> les retirerait toutes les
+deux. Le commentaire du code le dit explicitement : « ne supprimer qu'un seul exemplaire si
+doublons ».</p>
+
+<p>L'<code>uniqueId</code> résout les deux problèmes d'un coup : il identifie <em>un</em> exemplaire,
+survit à la sérialisation et aux copies, et <code>removeAt(index)</code> n'enlève qu'une entrée. Et
+si l'index vaut <code>-1</code> (carte absente de la main, par exemple à cause d'un double clic),
+la méthode ne fait <strong>rien du tout</strong> : pas d'affectation de <code>state</code>, donc pas
+de notification inutile.</p>
+
+<h3>L'aiguillage défausse / épuisement</h3>
+
+<p>Deux lignes suffisent à décider du sort de la carte :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/deck_controller.dart</span><span class="lang">dart</span></div>
+  <pre>final isExhausted = cardToPlay.data.isExhaust &amp;&amp; !cardToPlay.forgeUpgrades.contains('enduring:1');
+
+if (cardToPlay.data.type == CardType.power || isExhausted) {
+  currentExhaustPile.add(cardToPlay);
+} else {
+  currentDiscardPile.add(cardToPlay);
+}</pre>
+</div>
+
+<div class="box rule">
+  <div class="box-title">Règle du jeu — l'épuisement</div>
+  <p>Une carte part à l'épuisement si <strong>elle est de type <code>power</code></strong> (sans
+  condition ni échappatoire), <strong>ou</strong> si son <code>isExhaust</code> vaut <code>true</code>
+  <strong>et</strong> qu'elle ne porte pas la rune <code>enduring:1</code>. Dans tous les autres cas,
+  elle rejoint la défausse et pourra être repiochée après un remélange.</p>
+</div>
+
+<p>Le raccourci logique <code>&amp;&amp;</code> se lit ainsi : <code>isExhausted</code> est
+<code>true</code> seulement si la carte est marquée à épuisement <em>et</em> que la rune
+« Persistant » (<code>enduring</code>) est absente. La rune retire donc l'épuisement — c'est
+exactement ce que dit sa description dans <code>forge_upgrades.json</code> : « Retire Épuisement
+(Exhaust) ». Elle n'est proposée qu'aux cartes qui en ont besoin, grâce au drapeau
+<code>"requiresExhaust": true</code> de sa définition.</p>
+
+<p>Notez que le test <code>type == CardType.power</code> est en <strong>première</strong> position du
+<code>||</code> et qu'il ne consulte pas <code>isExhausted</code> : une rune <code>enduring</code>
+posée sur <code>demon_form</code> ne l'empêcherait pas d'être épuisée.</p>
+
+<h3>Les cartes concernées</h3>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Carte</th><th>Fichier</th><th>Type</th><th>Cause de l'épuisement</th><th><code>enduring</code> peut l'annuler</th></tr></thead>
+<tbody>
+<tr><td><code>concentration</code> — Concentration</td><td><code>cards.json</code></td><td>skill</td><td><code>isExhaust: true</code></td><td>oui</td></tr>
+<tr><td><code>heal_potion</code> — Potion de Soin</td><td><code>cards.json</code></td><td>skill</td><td><code>isExhaust: true</code></td><td>oui</td></tr>
+<tr><td><code>focus</code> — Focalisation</td><td><code>cards.json</code></td><td>skill</td><td><code>isExhaust: true</code></td><td>oui</td></tr>
+<tr><td><code>holy_shield</code> — Bouclier Sacré</td><td><code>hero_cards.json</code></td><td>skill</td><td><code>isExhaust: true</code></td><td>oui</td></tr>
+<tr><td><code>mana_surge</code> — Surtension de Mana</td><td><code>hero_cards.json</code></td><td>skill</td><td><code>isExhaust: true</code></td><td>oui</td></tr>
+<tr><td><code>demon_form</code> — Forme Démoniaque</td><td><code>cards.json</code></td><td><strong>power</strong></td><td>le type, quoi qu'il arrive</td><td><strong>non</strong></td></tr>
+<tr><td><code>metallicize</code> — Métallisation</td><td><code>cards.json</code></td><td><strong>power</strong></td><td>le type, quoi qu'il arrive</td><td><strong>non</strong></td></tr>
+</tbody>
+</table></div>
+
+<p>Sept cartes sur vingt-trois quittent donc le combat après un seul usage. Le motif de conception est
+cohérent : ce sont toutes des cartes à effet fort et sans dégâts directs — piocher deux cartes pour
+0 mana, gagner du mana pour 0 mana, se soigner, gagner 2 de Force pendant 4 tours. L'épuisement est
+le prix de leur puissance.</p>
+
+<p>L'interface applique exactement la même règle pour afficher le petit badge rouge d'usage unique
+(<code>l10n.oncePlayed</code>) en haut de la carte :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/ui_card.dart</span><span class="lang">dart</span></div>
+  <pre>final showBadge = isExhaust || type == CardType.power;
+final descriptionTop = showBadge ? 52.0 : 40.0;</pre>
+</div>
+
+<p>Une nuance : le badge se fonde sur <code>isExhaust</code> brut, sans consulter les runes. Une carte
+qui porte <code>enduring:1</code> continue donc d'afficher le badge alors qu'elle ne sera pas
+épuisée. La différence est visible dans l'infobulle, qui liste les runes, mais pas sur la vignette.</p>
+
+<div class="box danger">
+  <div class="box-title">Point d'attention</div>
+  <p>Le test porte sur la chaîne littérale <code>'enduring:1'</code>, pas sur l'identifiant
+  <code>enduring</code>. Or la fusion de cartes consolide les runes en <strong>additionnant les
+  tiers</strong> (section 8). Fusionner trois cartes dont deux portent <code>enduring:1</code> produit
+  une carte avec <code>enduring:2</code> — et <code>forgeUpgrades.contains('enduring:1')</code> vaut
+  alors <code>false</code>. La carte redevient épuisable alors que le joueur a investi deux runes pour
+  l'éviter. Un test sur le préfixe
+  (<code>forgeUpgrades.any((u) =&gt; u.split(':')[0] == 'enduring')</code>) supprimerait ce cas.</p>
+</div>
+
+<h2 id="s8">8. Construire et transformer son deck</h2>
+
+<h3>Le deck de départ</h3>
+
+<p>Avant la première salle, le joueur choisit <strong>5 cartes globales</strong> parmi les 17
+disponibles. Le pool est constitué par filtrage, en excluant les cartes de classe et les cartes de
+statut :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/starter_deck_draft_screen.dart</span><span class="lang">dart</span></div>
+  <pre>void _generateDraftPool() {
+  final gameData = ref.read(gameDataLoaderProvider).requireValue;
+
+  // 1. Filtrer pour n'obtenir que les cartes globales non statut
+  final globalCards = gameData.cards
+      .where(
+        (c) =&gt; c.category == CardCategory.global &amp;&amp; c.type != CardType.status,
+      )
+      .toList();
+
+  setState(() {
+    _draftPool = globalCards;
+  });
+}</pre>
+</div>
+
+<p>Le double filtre est nécessaire parce que <code>gameData.cards</code> contient les 23 cartes, cartes
+de classe comprises. Aujourd'hui le second test (<code>type != CardType.status</code>) ne retire
+rien — aucune carte n'a ce type — mais il protège le jour où des cartes-malédictions seront ajoutées.
+Le pool proposé compte donc exactement 17 cartes, et la sélection est bornée à 5 par
+<code>_toggleCardSelection</code>.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/starter_deck_draft_screen.dart</span><span class="lang">dart</span></div>
+  <pre>void _startAdventure() {
+  if (_selectedIndexes.length != 5) return;
+
+  final gameData = ref.read(gameDataLoaderProvider).requireValue;
+
+  final classCards = widget.playerClass.getHeroCards(gameData);
+
+  // 2. Assembler le deck de départ (5 choisies + N de classe auto-ajoutées)
+  final List&lt;CardInstance&gt; finalDeck = [];
+
+  // Ajouter les cartes spécifiques de classe
+  for (var cardData in classCards) {
+    finalDeck.add(CardInstance(data: cardData));
+  }
+
+  // Ajouter les 5 cartes globales sélectionnées par index
+  final selectedCards = _selectedIndexes
+      .map((idx) =&gt; _draftPool[idx])
+      .toList();
+  for (var cardData in selectedCards) {
+    finalDeck.add(CardInstance(data: cardData));
+  }
+
+  // 3. Initialiser les providers
+  ref.read(deckProvider.notifier).clearDeck();
+  ref
+      .read(runProvider.notifier)
+      .startNewRun(widget.playerClass, widget.passive);
+  ref.read(deckProvider.notifier).initializeStarterDeck(finalDeck);
+  // ...
+}</pre>
+</div>
+
+<p>Le deck de départ compte donc <strong>7 cartes</strong> : les 2 cartes de la classe choisie, ajoutées
+automatiquement et non négociables, puis les 5 cartes globales sélectionnées. Chaque
+<code>CardInstance(data: cardData)</code> sans autre argument reçoit un UUID neuf et hérite de la
+rareté de sa définition — <code>common</code> pour les globales, <code>unique</code> pour les cartes
+de classe.</p>
+
+<p>L'ordre des trois appels finaux compte : <code>clearDeck()</code> remet un <code>DeckState</code>
+vierge (indispensable si le joueur relance une partie sans quitter l'application),
+<code>startNewRun</code> réinitialise les statistiques du héros, et <code>initializeStarterDeck</code>
+pose enfin le deck. Comme cette dernière méthode ne touche que <code>masterDeck</code>, l'appeler
+avant <code>clearDeck()</code> l'effacerait aussitôt.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/deck_controller.dart</span><span class="lang">dart</span></div>
+  <pre>/// Vide complètement le deck (pour une nouvelle run)
+void clearDeck() {
+  state = const DeckState();
+}
+
+// ...
+
+/// Initialise le master deck au début d'une run
+void initializeStarterDeck(List&lt;CardInstance&gt; initialDeck) {
+  state = state.copyWith(masterDeck: initialDeck);
+}</pre>
+</div>
+
+<h3>Les opérations sur le deck maître</h3>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Méthode</th><th>Effet</th><th>Appelée depuis</th></tr></thead>
+<tbody>
+<tr><td><code>addCardToMasterDeck(CardInstance)</code></td><td>Concatène la carte : <code>masterDeck: [...state.masterDeck, newCard]</code>.</td><td><code>reward_controller.dart</code> (carte bonus, draft de récompense), <code>shop_controller.dart</code> (achat, clonage), <code>draft_screen.dart</code>.</td></tr>
+<tr><td><code>removeCardById(String)</code></td><td><code>removeWhere</code> sur l'<code>uniqueId</code>. Ne fait rien si l'id est inconnu.</td><td><code>rest_screen.dart</code> (purge au feu de camp).</td></tr>
+<tr><td><code>removeCardFromMasterDeck(CardInstance)</code></td><td>Simple délégation : <code>removeCardById(cardToRemove.uniqueId)</code>.</td><td><code>shop_controller.dart</code> (purge payante).</td></tr>
+<tr><td><code>upgradeCard(String)</code></td><td>Monte la rareté d'un cran, plafonnée à l'index maximal de l'enum.</td><td><strong>Aucun appelant dans <code>lib/</code></strong> — voir l'encadré ci-dessous.</td></tr>
+<tr><td><code>addForgeUpgrade(String, String)</code></td><td>Ajoute une rune à la liste d'une carte, sans contrôle de capacité ni de doublon.</td><td><code>forge_upgrade_dialog.dart</code>, au feu de camp.</td></tr>
+<tr><td><code>setForgeUpgrades(String, List&lt;String&gt;)</code></td><td>Remplace intégralement la liste des runes d'une carte.</td><td><code>forge_fusion_screen.dart</code> (fusion de deux runes de même id en une rune de tier supérieur).</td></tr>
+<tr><td><code>addCardToDiscardPile(CardInstance)</code></td><td>Injecte une carte directement dans la défausse du combat en cours, sans passer par le <code>masterDeck</code>.</td><td><strong>Aucun appelant dans <code>lib/</code></strong> — point d'extension pour les cartes-blessures.</td></tr>
+<tr><td><code>mergeCards(List&lt;String&gt;, List&lt;String&gt;)</code></td><td>Fusionne 3 exemplaires en 1 de rareté supérieure.</td><td><code>deck_screen.dart</code> via <code>_MergeDialog</code>.</td></tr>
+</tbody>
+</table></div>
+
+<p>Les trois méthodes de modification de carte partagent exactement la même structure : un
+<code>map</code> sur <code>masterDeck</code> qui remplace l'élément ciblé par une copie modifiée et
+laisse tous les autres intacts.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/deck_controller.dart</span><span class="lang">dart</span></div>
+  <pre>/// Améliore une carte définitivement (Forge) en augmentant sa rareté
+void upgradeCard(String uniqueId) {
+  state = state.copyWith(
+    masterDeck: state.masterDeck.map((c) {
+      if (c.uniqueId == uniqueId) {
+        final nextRarityIndex = min(c.rarity.index + 1, CardRarity.values.length - 1);
+        return c.copyWith(rarity: CardRarity.values[nextRarityIndex]);
+      }
+      return c;
+    }).toList(),
+  );
+}
+
+/// Ajoute une amélioration de forge à une carte spécifique du Master Deck
+void addForgeUpgrade(String uniqueId, String upgrade) {
+  state = state.copyWith(
+    masterDeck: state.masterDeck.map((c) {
+      if (c.uniqueId == uniqueId) {
+        final updatedUpgrades = List&lt;String&gt;.from(c.forgeUpgrades)..add(upgrade);
+        return c.copyWith(forgeUpgrades: updatedUpgrades);
+      }
+      return c;
+    }).toList(),
+  );
+}
+
+/// Met à jour les runes d'une carte après fusion
+void setForgeUpgrades(String uniqueId, List&lt;String&gt; upgrades) {
+  state = state.copyWith(
+    masterDeck: state.masterDeck.map((c) {
+      if (c.uniqueId == uniqueId) {
+        return c.copyWith(forgeUpgrades: upgrades);
+      }
+      return c;
+    }).toList(),
+  );
+}</pre>
+</div>
+
+<p>Remarquez <code>List&lt;String&gt;.from(c.forgeUpgrades)..add(upgrade)</code> dans
+<code>addForgeUpgrade</code> : on ne peut pas faire <code>c.forgeUpgrades.add(...)</code> puisque la
+liste est <code>unmodifiable</code>. Il faut copier, ajouter, puis reconstruire l'instance. C'est
+verbeux, mais c'est la contrepartie exacte de l'immutabilité — et la garantie qu'aucun code ne peut
+modifier une carte du deck « par accident » depuis un widget.</p>
+
+<div class="box danger">
+  <div class="box-title">Point d'attention</div>
+  <p>Deux méthodes publiques n'ont aucun appelant dans <code>lib/</code> :
+  <code>upgradeCard</code> et <code>addCardToDiscardPile</code>. Le feu de camp, malgré son nom
+  d'action « améliorer », passe en réalité par <code>RestCardSelectionScreen</code> →
+  <code>ForgeUpgradeDialog</code> → <code>addForgeUpgrade</code> : il pose une rune, il ne monte pas
+  la rareté. La seule voie vers une rareté supérieure aujourd'hui est donc la fusion de trois cartes.
+  Ce n'est pas un bug, mais du code mort à surveiller : il compile, il est testable, et rien ne
+  garantit qu'il reste cohérent avec le reste.</p>
+</div>
+
+<h3>La fusion 3 → 1</h3>
+
+<p>L'écran « Mon Deck » regroupe les cartes avant de les afficher, et c'est la clé de regroupement qui
+définit ce que « trois cartes identiques » veut dire :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/deck_screen.dart</span><span class="lang">dart</span></div>
+  <pre>// Grouper les cartes pour identifier les fusions possibles
+final Map&lt;String, List&lt;CardInstance&gt;&gt; groups = {};
+for (var card in masterDeck) {
+  final key = '${card.data.id}_${card.rarity.name}';
+  groups.putIfAbsent(key, () =&gt; []).add(card);
+}</pre>
+</div>
+
+<p>La clé combine <strong>l'identifiant de la définition et le nom de la rareté de l'instance</strong>,
+par exemple <code>strike_basic_common</code> ou <code>strike_basic_rare</code>. Les conséquences
+pratiques sont importantes :</p>
+
+<ul>
+  <li>Deux <code>strike_basic</code> communes et une <code>strike_basic</code> rare forment
+  <strong>deux groupes</strong> (2 et 1), pas un groupe de 3. On ne peut fusionner que des cartes de
+  <em>même rareté</em>.</li>
+  <li>Les runes de forge <strong>n'entrent pas</strong> dans la clé. Une « Frappe » commune nue et une
+  « Frappe » commune avec <code>sharp:2</code> sont regroupées ensemble, et l'écran n'affiche que la
+  première du groupe (<code>cardList.first</code>) avec un badge <code>x3</code>. Le joueur doit
+  ouvrir la boîte de dialogue pour voir le détail des runes de chaque exemplaire.</li>
+  <li>Le bouton n'apparaît qu'à partir de <code>count &gt;= 3</code>, et jamais pour
+  <code>card.rarity == CardRarity.unique</code> : les cartes de classe sont exclues côté interface
+  aussi.</li>
+</ul>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/deck_controller.dart</span><span class="lang">dart</span></div>
+  <pre>/// Fusionne 3 cartes identiques en une carte de rareté supérieure
+void mergeCards(List&lt;String&gt; selectedIds, List&lt;String&gt; inheritedUpgrades) {
+  if (selectedIds.length != 3) return;
+  var currentMasterDeck = List&lt;CardInstance&gt;.from(state.masterDeck);
+
+  final List&lt;CardInstance&gt; selectedCards = [];
+  for (var id in selectedIds) {
+    final cardIdx = currentMasterDeck.indexWhere((c) =&gt; c.uniqueId == id);
+    if (cardIdx != -1) {
+      selectedCards.add(currentMasterDeck[cardIdx]);
+    }
+  }
+
+  if (selectedCards.length == 3) {
+    if (selectedCards.any((c) =&gt; c.rarity == CardRarity.unique)) {
+      return;
+    }
+    final baseCardData = selectedCards[0].data;
+    final rarity = selectedCards[0].rarity;
+
+    // Retire les 3 exemplaires
+    currentMasterDeck.removeWhere((c) =&gt; selectedIds.contains(c.uniqueId));
+
+    // Détermine la rareté suivante
+    final nextRarityIndex = min(rarity.index + 1, CardRarity.values.length - 1);
+    final nextRarity = CardRarity.values[nextRarityIndex];</pre>
+</div>
+
+<p>La méthode se protège trois fois avant d'agir : exactement 3 identifiants en entrée, les 3 cartes
+doivent être retrouvées dans le deck, et aucune ne doit être <code>unique</code>. Chaque garde est un
+<code>return</code> silencieux : la fusion n'a pas lieu, le deck n'est pas modifié, et aucune
+notification Riverpod n'est émise.</p>
+
+<div class="box rule">
+  <div class="box-title">Règle du jeu — la fusion</div>
+  <p>Trois exemplaires de <strong>même identifiant</strong> et de <strong>même rareté</strong> se
+  fusionnent en un seul, d'une rareté supérieure d'un cran. Les cartes de rareté <code>unique</code>
+  (les 6 cartes de classe) sont refusées. Les runes des trois cartes sont consolidées par
+  <strong>somme des tiers, rune par rune</strong>, puis plafonnées à
+  <code>baseMaxForgeUpgrades + nextRarityIndex</code>. Le deck perd donc deux cartes à chaque
+  fusion — c'est un mécanisme de compression autant que d'amélioration.</p>
+</div>
+
+<h3>La consolidation des runes</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/deck_controller.dart</span><span class="lang">dart</span></div>
+  <pre>    // Auto-fusionne les upgrades identiques (cumul des tiers)
+    final Map&lt;String, int&gt; consolidatedMap = {};
+    for (var upgrade in inheritedUpgrades) {
+      final parts = upgrade.split(':');
+      if (parts.length != 2) continue;
+      final id = parts[0];
+      final tier = int.tryParse(parts[1]) ?? 0;
+      if (tier &lt;= 0) continue;
+      consolidatedMap[id] = (consolidatedMap[id] ?? 0) + tier;
+    }
+
+    var finalUpgrades = consolidatedMap.entries.map((e) =&gt; '${e.key}:${e.value}').toList();
+
+    // Limite à la capacité de la rareté supérieure
+    final capacity = baseCardData.baseMaxForgeUpgrades + nextRarityIndex;
+    if (finalUpgrades.length &gt; capacity) {
+      finalUpgrades = finalUpgrades.sublist(0, capacity);
+    }
+
+    // Ajoute la carte de rareté supérieure avec les upgrades finalisés
+    currentMasterDeck.add(
+      CardInstance(
+        data: baseCardData,
+        rarity: nextRarity,
+        forgeUpgrades: finalUpgrades,
+      ),
+    );
+
+    state = state.copyWith(masterDeck: currentMasterDeck);</pre>
+</div>
+
+<p>Une rune est toujours une chaîne <code>'id:tier'</code> — par exemple <code>'sharp:2'</code>. La
+consolidation en trois temps :</p>
+
+<ol>
+  <li><strong>Découpage</strong> : <code>upgrade.split(':')</code>. Toute entrée qui ne donne pas
+  exactement deux morceaux est ignorée (<code>continue</code>), tout comme un tier non numérique
+  (<code>int.tryParse</code> renvoie <code>null</code>, remplacé par 0) ou nul.</li>
+  <li><strong>Cumul</strong> : <code>consolidatedMap[id] = (consolidatedMap[id] ?? 0) + tier</code>.
+  Trois cartes portant <code>sharp:1</code>, <code>sharp:2</code> et <code>hardened:1</code>
+  produisent <code>{sharp: 3, hardened: 1}</code>, soit deux runes au lieu de trois — et un
+  <code>sharp</code> qui vaut désormais <code>+6</code> dégâts, puisque
+  <code>extraDamage += 2 * k</code>.</li>
+  <li><strong>Plafonnement</strong> : si le nombre de runes distinctes dépasse la capacité de la
+  nouvelle rareté, on tronque avec <code>sublist(0, capacity)</code>.</li>
+</ol>
+
+<p>La capacité suit la même formule que l'affichage des fentes :
+<code>baseCardData.baseMaxForgeUpgrades + nextRarityIndex</code>. Pour une carte globale
+(<code>baseMaxForgeUpgrades = 1</code>) :</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Fusion</th><th><code>nextRarityIndex</code></th><th>Capacité de runes</th><th>Multiplicateur obtenu</th></tr></thead>
+<tbody>
+<tr><td>3 communes → 1 peu commune</td><td>1</td><td>1 + 1 = <strong>2</strong></td><td>1,2</td></tr>
+<tr><td>3 peu communes → 1 rare</td><td>2</td><td>1 + 2 = <strong>3</strong></td><td>1,4</td></tr>
+<tr><td>3 rares → 1 épique</td><td>3</td><td>1 + 3 = <strong>4</strong></td><td>1,6</td></tr>
+<tr><td>3 épiques → 1 légendaire</td><td>4</td><td>1 + 4 = <strong>5</strong></td><td>2,0</td></tr>
+<tr><td>3 légendaires → 1 « unique »</td><td>5</td><td>1 + 5 = <strong>6</strong></td><td><strong>1,0</strong></td></tr>
+</tbody>
+</table></div>
+
+<div class="box danger">
+  <div class="box-title">Point d'attention</div>
+  <p>La dernière ligne du tableau est un piège du calcul <code>min(rarity.index + 1,
+  CardRarity.values.length - 1)</code>. <code>CardRarity.values.length - 1</code> vaut 5, c'est-à-dire
+  <code>unique</code> — une rareté qui n'a jamais été pensée comme un palier de progression et dont le
+  <code>rarityMultiplier</code> retombe à <strong>1,0</strong>. Fusionner trois cartes légendaires
+  (×2,0) produirait donc une carte à ×1,0 : neuf cartes communes converties en une carte de force
+  strictement identique à une commune. La même formule est reprise à l'identique dans
+  <code>upgradeCard</code> et dans <code>deck_screen.dart</code>. Plafonner à
+  <code>CardRarity.legendary.index</code> serait plus sûr.</p>
+</div>
+
+<p>Deuxième point de vigilance, plus discret : <code>mergeCards</code> prend
+<code>baseCardData</code> et <code>rarity</code> depuis <code>selectedCards[0]</code>
+<strong>sans vérifier que les trois cartes ont bien le même <code>data.id</code> ni la même
+rareté</strong>. C'est l'écran qui garantit l'homogénéité, via la clé de regroupement. Un futur
+appelant qui passerait trois <code>uniqueId</code> quelconques obtiendrait une fusion silencieusement
+absurde — trois cartes différentes remplacées par une copie améliorée de la première.</p>
+
+<h3>Le dialogue de fusion</h3>
+
+<p>Côté interface, <code>_MergeDialog</code> refait le même calcul de consolidation <em>avant</em>
+d'appeler le contrôleur, pour savoir s'il doit demander un arbitrage au joueur :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/deck_screen.dart</span><span class="lang">dart</span></div>
+  <pre>final firstCard = _selectedCards[0];
+final nextRarityIndex =
+    min(firstCard.rarity.index + 1, CardRarity.values.length - 1);
+_capacity = firstCard.data.baseMaxForgeUpgrades + nextRarityIndex;
+
+final Map&lt;String, int&gt; consolidatedMap = {};
+// ... même cumul des tiers par identifiant de rune que dans mergeCards ...
+
+_consolidatedUpgrades = [];
+consolidatedMap.forEach((id, tier) {
+  _consolidatedUpgrades.add('$id:$tier');
+});
+
+if (_consolidatedUpgrades.length &lt;= _capacity) {
+  _performMerge(_consolidatedUpgrades);
+} else {
+  setState(() {
+    _step = 2;
+  });
+}</pre>
+</div>
+
+<p>Si tout rentre, la fusion part directement. Sinon, l'écran passe à l'étape 2 et affiche la liste des
+runes consolidées avec des cases à cocher, en limitant la sélection à <code>_capacity</code>. Le
+joueur choisit ce qu'il garde, et la troncature aveugle de <code>sublist(0, capacity)</code> dans le
+contrôleur ne sert plus que de filet de sécurité. Notez que lorsque le groupe compte exactement
+3 cartes, <code>initState</code> les présélectionne toutes et enchaîne directement — la première
+étape est sautée.</p>
+
+<h3>Le rendu d'une carte hors combat</h3>
+
+<p>Toutes ces informations se retrouvent dans un unique widget, <code>UiCard</code>, utilisé par le
+draft de départ, l'écran de deck, la boutique, le dictionnaire et la forge. Il ne dépend d'aucun
+provider : c'est un <code>StatelessWidget</code> qui reçoit des valeurs déjà calculées, ce qui le rend
+utilisable avec une <code>CardData</code> comme avec une <code>CardInstance</code>. Deux constructeurs
+nommés servent d'adaptateurs :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/ui_card.dart</span><span class="lang">dart</span></div>
+  <pre>factory UiCard.fromInstance({
+  Key? key,
+  required CardInstance card,
+  required String locale,
+  required AppLocalizations l10n,
+  // ...
+}) {
+  return UiCard(
+    key: key,
+    title: card.data.getName(locale),
+    description: card.data.getDescription(locale),
+    rarity: card.rarity.getLabel(l10n),
+    target: card.data.target.getLabel(l10n),
+    cost: card.currentCost,
+    level: 1,
+    rarityMultiplier: card.rarityMultiplier,
+    forgeUpgrades: card.forgeUpgrades,
+    baseMaxForgeUpgrades: card.data.baseMaxForgeUpgrades,
+    effects: card.data.effects,
+    type: card.data.type,
+    targetType: card.data.target,
+    isExhaust: card.data.isExhaust,
+    // ...
+  );
+}</pre>
+</div>
+
+<p>On lit dans cette liste toute la répartition des responsabilités du chapitre : <code>rarity</code>,
+<code>rarityMultiplier</code> et <code>forgeUpgrades</code> viennent de l'<strong>instance</strong> ;
+<code>title</code>, <code>description</code>, <code>effects</code>, <code>type</code>,
+<code>target</code>, <code>isExhaust</code> et <code>baseMaxForgeUpgrades</code> viennent de la
+<strong>définition</strong>. Le coût passe par <code>card.currentCost</code>, jamais par
+<code>card.data.cost</code>.</p>
+
+<p>Le sous-widget <code>CardCompactDescription</code> refait alors, en local, le même calcul que
+<code>EffectResolver</code> pour afficher les valeurs réelles :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/ui_card/card_compact_description.dart</span><span class="lang">dart</span></div>
+  <pre>for (int i = 0; i &lt; effects!.length; i++) {
+  final effect = effects![i];
+  int baseValue = (effect.value * rarityMultiplier).round();
+  int bonusValue = 0;
+  if (effect.type == 'damage') {
+    bonusValue = extraDamage;
+  } else if (effect.type == 'armor') {
+    bonusValue = extraArmor;
+  }</pre>
+</div>
+
+<p>Le bonus de forge est affiché séparément, en ambre, sous la forme <code>8 +4</code> au lieu de
+<code>12</code>, pour que le joueur voie d'où vient la puissance de sa carte. Et si la cible est
+<code>allEnemies</code>, l'icône de l'effet est <strong>dessinée deux fois</strong> — un signal visuel
+compact qui évite d'écrire « à tous les ennemis » sur une vignette de 70 × 110 pixels.</p>
+
+<div class="box warn">
+  <div class="box-title">Piège</div>
+  <p>Cette duplication du calcul entre <code>EffectResolver</code> (règle) et
+  <code>CardCompactDescription</code> / <code>buildDetailedDescription</code> (affichage) est une
+  source classique de désynchronisation. Le jour où l'ordre « multiplier puis ajouter » change dans le
+  resolver, il faut penser à corriger les deux widgets — sans quoi la carte affichera un chiffre et en
+  infligera un autre.</p>
+</div>
+
+<div class="box">
+  <div class="box-title">À retenir</div>
+  <p>Le deckbuilding tient en cinq gestes : <strong>choisir</strong> 5 cartes au départ,
+  <strong>ajouter</strong> après chaque combat, <strong>retirer</strong> au feu de camp ou en
+  boutique, <strong>enrichir</strong> de runes à la forge, et <strong>fusionner</strong> 3 exemplaires
+  pour monter d'une rareté. Toutes ces opérations ne touchent qu'au <code>masterDeck</code> ; les
+  quatre autres piles sont recalculées à chaque combat.</p>
+</div>
+
+<div class="quiz">
+  <h2>Quiz — vérifiez vos acquis</h2>
+
+  <div class="q" data-answer="2">
+    <p class="q-text">1. Le joueur pioche alors qu'il a déjà 10 cartes en main et que sa pioche est vide. Que se passe-t-il exactement ?</p>
+    <ul class="q-opts">
+      <li>La défausse est remélangée dans la pioche, puis la pioche est annulée</li>
+      <li>La carte est piochée puis immédiatement défaussée</li>
+      <li>Rien : la boucle sort au premier test, sans consommer de carte ni remélanger</li>
+      <li>Une exception est levée et le tour se termine</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> dans <code>_drawInto</code>
+    (<code>lib/game/controllers/deck_controller.dart</code>), <code>if (hand.length &gt;= maxHandSize)
+    break;</code> est la <em>première</em> ligne de la boucle, avant le test <code>draw.isEmpty</code>.
+    C'est la règle d'arrêt net : aucune carte consommée, aucun remélange,
+    <code>reshuffleCount</code> inchangé. <code>maxHandSize</code> vaut 10
+    (<code>GameConstants.maxHandSize</code>).</div>
+  </div>
+
+  <div class="q" data-answer="1">
+    <p class="q-text">2. Quels dégâts inflige un <code>strike_basic</code> de rareté épique portant la rune <code>sharp:1</code> ?</p>
+    <ul class="q-opts">
+      <li>13 — (6 + 2) × 1,6 arrondi</li>
+      <li>12 — (6 × 1,6).round() = 10, puis +2</li>
+      <li>10 — la rune ne s'applique pas aux attaques</li>
+      <li>9 — 6 × 1,6 tronqué à 9, la rune est déjà comptée</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>EffectResolver.resolveCard</code> calcule
+    <code>scaledValue = (baseValue * card.rarityMultiplier).round()</code> puis ajoute seulement
+    ensuite <code>extraDamage</code>. Épique vaut 1,6 : (6 × 1,6) = 9,6 → 10, et
+    <code>sharp:1</code> ajoute <code>2 * 1 = 2</code>, soit 12. Les bonus de forge ne sont jamais
+    multipliés par la rareté.</div>
+  </div>
+
+  <div class="q" data-answer="3">
+    <p class="q-text">3. Combien de cartes le joueur possède-t-il dans son <code>masterDeck</code> juste après avoir validé l'écran de deck de départ ?</p>
+    <ul class="q-opts">
+      <li>5 — uniquement les cartes globales choisies</li>
+      <li>17 — tout le pool global</li>
+      <li>10 — 5 choisies plus 5 imposées</li>
+      <li>7 — les 2 cartes de la classe plus les 5 cartes globales choisies</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>_startAdventure</code> dans
+    <code>starter_deck_draft_screen.dart</code> ajoute d'abord
+    <code>widget.playerClass.getHeroCards(gameData)</code> — soit les 2 identifiants du champ
+    <code>skills</code> du héros dans <code>heroes.json</code> — puis les 5 cartes globales
+    sélectionnées. Total : 7 <code>CardInstance</code>.</div>
+  </div>
+
+  <div class="q" data-answer="0">
+    <p class="q-text">4. Pourquoi <code>playCard</code> retire-t-elle la carte par <code>uniqueId</code> plutôt qu'avec <code>currentHand.remove(card)</code> ?</p>
+    <ul class="q-opts">
+      <li>Parce que <code>CardInstance</code> ne redéfinit pas <code>operator ==</code> : <code>remove</code> comparerait par identité d'objet et pourrait ne rien retirer</li>
+      <li>Parce que <code>remove</code> n'existe pas sur les <code>List</code> en Dart</li>
+      <li>Parce que <code>remove</code> retirerait la carte de toutes les piles à la fois</li>
+      <li>Parce que <code>uniqueId</code> est plus rapide à comparer qu'un objet entier</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>CardInstance</code>
+    (<code>lib/models/card_instance.dart</code>) n'implémente ni <code>operator ==</code> ni
+    <code>hashCode</code> : l'égalité par défaut de Dart est l'identité de référence. Une instance
+    reconstruite (via <code>copyWith</code> ou <code>fromJson</code>) ne serait donc jamais trouvée.
+    L'<code>indexWhere</code> sur l'<code>uniqueId</code> garantit en plus qu'un seul exemplaire est
+    retiré en cas de doublon.</div>
+  </div>
+
+  <div class="q" data-answer="2">
+    <p class="q-text">5. Quelle carte part à l'épuisement même si elle porte la rune <code>enduring:1</code> ?</p>
+    <ul class="q-opts">
+      <li><code>concentration</code>, parce qu'elle coûte 0 mana</li>
+      <li><code>holy_shield</code>, parce qu'elle est de rareté <code>unique</code></li>
+      <li><code>demon_form</code>, parce qu'elle est de type <code>power</code></li>
+      <li>Aucune : la rune annule toujours l'épuisement</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> la condition est
+    <code>if (cardToPlay.data.type == CardType.power || isExhausted)</code>. Le test du type
+    <code>power</code> est indépendant de <code>isExhausted</code>, donc de la rune. Les deux
+    <code>power</code> du jeu sont <code>demon_form</code> et <code>metallicize</code>.</div>
+  </div>
+
+  <div class="q" data-answer="1">
+    <p class="q-text">6. On fusionne trois « Frappe » peu communes portant respectivement <code>sharp:1</code>, <code>sharp:2</code> et <code>hardened:1</code>. Que contient la carte obtenue ?</p>
+    <ul class="q-opts">
+      <li>Une rare avec <code>sharp:1</code>, <code>sharp:2</code> et <code>hardened:1</code> — les runes sont conservées telles quelles</li>
+      <li>Une rare avec <code>sharp:3</code> et <code>hardened:1</code>, capacité 3</li>
+      <li>Une épique avec <code>sharp:3</code>, car trois cartes font sauter deux paliers</li>
+      <li>Une rare sans aucune rune : la fusion les efface</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>mergeCards</code> additionne les tiers par
+    identifiant de rune (<code>consolidatedMap[id] = (consolidatedMap[id] ?? 0) + tier</code>), d'où
+    <code>sharp:3</code> et <code>hardened:1</code>. La rareté monte d'un seul cran
+    (<code>uncommon</code> index 1 → <code>rare</code> index 2) et la capacité vaut
+    <code>baseMaxForgeUpgrades + nextRarityIndex = 1 + 2 = 3</code> : les deux runes tiennent
+    largement.</div>
+  </div>
+
+</div>
+
+<div class="pager">
+<a class="prev" href="ch08.html"><div class="dir">&#8592; Chapitre 08</div><div class="ttl">Le héros : stats, classes, passifs et progression</div></a>
+<a class="next" href="ch10.html"><div class="dir">Chapitre 10 &#8594;</div><div class="ttl">Le combat : boucle de tour, dégâts et effets</div></a>
+</div>
+</div>
+</main>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,1992 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>La carte du monde procédurale — Formation Hero's Draft</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<button class="menu-btn" aria-label="Menu">&#9776;</button>
+<div class="layout">
+<aside class="sidebar">
+  <a class="brand" href="index.html">
+    <div class="brand-title">HERO'S DRAFT</div>
+    <div class="brand-sub">Formation complète au projet Flutter</div>
+  </a>
+<nav class="nav">
+<div class="nav-part">Partie 0 — Démarrage</div>
+<a href="ch01.html"><span class="num">01</span><span>Vue d&#x27;ensemble : qu&#x27;est-ce que Hero&#x27;s Draft ?</span></a>
+<div class="nav-part">Partie 1 — Les fondations techniques</div>
+<a href="ch02.html"><span class="num">02</span><span>Dart, le langage — l&#x27;essentiel pour ce projet</span></a>
+<a href="ch03.html"><span class="num">03</span><span>Flutter — widgets, arbre et navigation</span></a>
+<a href="ch04.html"><span class="num">04</span><span>Riverpod — l&#x27;état partagé du jeu</span></a>
+<a href="ch05.html"><span class="num">05</span><span>Flame — le moteur de rendu du combat</span></a>
+<div class="nav-part">Partie 2 — L&#x27;architecture du projet</div>
+<a href="ch06.html"><span class="num">06</span><span>L&#x27;architecture en quatre couches</span></a>
+<a href="ch07.html"><span class="num">07</span><span>La couche de données : un jeu 100 % data-driven</span></a>
+<div class="nav-part">Partie 3 — Les règles du jeu</div>
+<a href="ch08.html"><span class="num">08</span><span>Le héros : stats, classes, passifs et progression</span></a>
+<a href="ch09.html"><span class="num">09</span><span>Les cartes et le deck</span></a>
+<a href="ch10.html"><span class="num">10</span><span>Le combat : boucle de tour, dégâts et effets</span></a>
+<a href="ch11.html"><span class="num">11</span><span>Les ennemis et la courbe de difficulté</span></a>
+<a href="ch12.html" class="active"><span class="num">12</span><span>La carte du monde procédurale</span></a>
+<a href="ch13.html"><span class="num">13</span><span>Les reliques et le système de déclencheurs</span></a>
+<a href="ch14.html"><span class="num">14</span><span>L&#x27;économie : or, boutique, forge et fusion</span></a>
+<a href="ch15.html"><span class="num">15</span><span>Récompenses, chance et probabilités</span></a>
+<a href="ch16.html"><span class="num">16</span><span>Événements, repos et autel des reliques</span></a>
+<div class="nav-part">Partie 4 — L&#x27;interface et le rendu</div>
+<a href="ch17.html"><span class="num">17</span><span>Le pont Flame ↔ Riverpod : l&#x27;écran de combat</span></a>
+<a href="ch18.html"><span class="num">18</span><span>Composants Flame et game feel</span></a>
+<a href="ch19.html"><span class="num">19</span><span>Écrans, navigation et design system</span></a>
+<div class="nav-part">Partie 5 — Qualité et cycle de vie</div>
+<a href="ch20.html"><span class="num">20</span><span>Sauvegarde, localisation et tutoriel</span></a>
+<a href="ch21.html"><span class="num">21</span><span>Tests, outillage, dette technique et évolutions</span></a>
+</nav>
+</aside>
+<main class="main">
+<div class="content">
+<div class="chapter-kicker">Chapitre 12</div>
+<h1>La carte du monde procédurale</h1>
+<p class="lede">Chaque acte génère un graphe orienté acyclique de dix étages. Ce chapitre suit
+l'algorithme des quatre étapes qui le construit, puis les règles qui décident où le joueur peut aller.</p>
+
+<div class="toc">
+  <div class="toc-title">Dans ce chapitre</div>
+  <ol>
+    <li><a href="#s1">Le modèle <code>MapNode</code></a></li>
+    <li><a href="#s2">Vue d'ensemble de la génération</a></li>
+    <li><a href="#s3">Étape 1 — fabriquer les nœuds</a></li>
+    <li><a href="#s4">Étape 2 — tisser les connexions</a></li>
+    <li><a href="#s5">Étape 3 — équilibrer les quotas</a></li>
+    <li><a href="#s6">Étape 4 — placer les contenus spéciaux</a></li>
+    <li><a href="#s7">Se déplacer sur la carte</a></li>
+    <li><a href="#s8">Afficher la carte</a></li>
+  </ol>
+</div>
+
+<p>Dans un roguelike, la carte n'est pas un décor : c'est <strong>la structure de décision</strong> du
+jeu. Elle décide combien de combats le joueur devra encaisser avant de trouver une boutique, s'il
+pourra éviter une élite, et à quel moment il aura le droit de se reposer. Si elle est mal générée,
+tout le reste du jeu déraille : un joueur qui tombe sur cinq combats d'affilée sans repos meurt sans
+avoir joué mal.</p>
+
+<p>Hero's Draft ne stocke <em>aucune</em> carte prédéfinie. À chaque nouvel acte, un algorithme
+reconstruit un graphe complet. Le point d'entrée tient en cinquante lignes,
+<code>lib/services/map_generator_service.dart</code>, mais il délègue à quatre classes spécialisées
+qui font chacune un travail bien délimité. Ce chapitre les prend une par une, puis remonte jusqu'à
+l'écran qui affiche le résultat.</p>
+
+<div class="memo">
+  <div class="card"><h5>Un graphe, pas une grille</h5><p>Les nœuds ne sont pas alignés : chaque étage
+  a sa propre largeur, tirée au hasard entre 2 et 5.</p></div>
+  <div class="card"><h5>Dirigé et acyclique</h5><p>Une connexion va toujours de l'étage
+  <code>y</code> vers l'étage <code>y + 1</code>. On ne redescend jamais.</p></div>
+  <div class="card"><h5>Quatre étapes</h5><p>Nœuds, connexions, quotas, contenus spéciaux — dans cet
+  ordre, jamais mélangées.</p></div>
+  <div class="card"><h5>Régénérée par acte</h5><p>Battre un boss détruit la carte courante et en
+  génère une neuve pour l'acte suivant.</p></div>
+</div>
+
+<h2 id="s1">1. Le modèle <code>MapNode</code></h2>
+
+<p>Avant l'algorithme, la donnée. Tout ce que la carte connaît d'un point d'intérêt tient dans une
+seule classe, <code>lib/models/map_node.dart</code>. Elle est volontairement pauvre : pas de logique,
+pas de méthode de gameplay, seulement neuf champs et la sérialisation JSON pour la sauvegarde.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/map_node.dart</span><span class="lang">dart</span></div>
+  <pre>enum MapNodeType { combat, elite, shop, rest, event, boss, relicExchange, forgeFusion }
+
+enum BossRewardType { cards, doubleXp, improvedRelic }
+
+class MapNode {
+  final String id;
+  final int floor;
+  MapNodeType type;
+  final List&lt;String&gt; connections;
+  final Vector2 position;
+  bool isCompleted;
+  final String? bossEnemyId;
+  final BossRewardType? bossRewardType;
+  MapNodeType? originalType;</pre>
+</div>
+
+<p>Regardez attentivement quels champs sont <code>final</code> et lesquels ne le sont pas. En Dart,
+<code>final</code> signifie « assigné une seule fois, à la construction ». Ici, <strong>trois champs
+seulement sont mutables</strong> : <code>type</code>, <code>isCompleted</code> et
+<code>originalType</code>. Ce n'est pas un oubli. Ce sont exactement les trois valeurs que le reste du
+pipeline doit pouvoir réécrire après coup : l'équilibrage des quotas change le <code>type</code>, le
+placement des contenus spéciaux écrit <code>originalType</code> puis change <code>type</code>, et la
+progression du joueur bascule <code>isCompleted</code>.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Champ</th><th>Type Dart</th><th>Mutable ?</th><th>Rôle</th></tr></thead>
+<tbody>
+<tr><td><code>id</code></td><td><code>String</code></td><td>non</td><td>Identifiant unique, de la forme <code>node_&lt;étage&gt;_&lt;index&gt;</code>.</td></tr>
+<tr><td><code>floor</code></td><td><code>int</code></td><td>non</td><td>Numéro d'étage, de 0 (départ) à <code>floors - 1</code> (boss).</td></tr>
+<tr><td><code>type</code></td><td><code>MapNodeType</code></td><td><strong>oui</strong></td><td>Nature du nœud. Réécrit par <code>MapValidator</code> puis par <code>MapContentPlacer</code>.</td></tr>
+<tr><td><code>connections</code></td><td><code>List&lt;String&gt;</code></td><td>non (la liste est <code>final</code>, son contenu non)</td><td>Identifiants des nœuds de l'étage suivant accessibles depuis celui-ci.</td></tr>
+<tr><td><code>position</code></td><td><code>Vector2</code></td><td>non</td><td>Coordonnées de dessin, en pixels, dans un espace de 1000 de large.</td></tr>
+<tr><td><code>isCompleted</code></td><td><code>bool</code></td><td><strong>oui</strong></td><td><code>false</code> par défaut, passé à <code>true</code> par <code>completeCurrentNode()</code>.</td></tr>
+<tr><td><code>bossEnemyId</code></td><td><code>String?</code></td><td>non</td><td>Identifiant d'ennemi imposé pour un boss. Le générateur ne le renseigne jamais (voir plus bas).</td></tr>
+<tr><td><code>bossRewardType</code></td><td><code>BossRewardType?</code></td><td>non</td><td>Type de récompense du boss. Non nul uniquement sur le dernier étage.</td></tr>
+<tr><td><code>originalType</code></td><td><code>MapNodeType?</code></td><td><strong>oui</strong></td><td>Type que le nœud avait avant sa conversion en contenu spécial.</td></tr>
+</tbody>
+</table></div>
+
+<h3>La convention d'identifiant</h3>
+
+<p>L'identifiant n'est pas un UUID ni un compteur global : c'est une <strong>coordonnée déguisée en
+chaîne</strong>. Il est fabriqué à un seul endroit, dans la double boucle du générateur de nœuds.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/services/map/map_node_generator.dart</span><span class="lang">dart</span></div>
+  <pre>for (int x = 0; x &lt; rowWidth; x++) {
+  final id = 'node_${y}_$x';</pre>
+</div>
+
+<p><code>y</code> est l'étage, <code>x</code> l'index horizontal dans la rangée. Le premier nœud du
+premier étage s'appelle donc <code>node_0_0</code>, et le troisième boss <code>node_9_2</code>. Cette
+convention n'est pas décorative : plusieurs endroits du code s'en servent comme d'une information
+métier. Le désérialiseur, par exemple, reconstruit l'étage à partir de l'identifiant si le champ
+<code>floor</code> manque dans une vieille sauvegarde —
+<code>floor: json['floor'] as int? ?? int.parse((json['id'] as String).split('_')[1])</code>.</p>
+
+<p>Et l'interface s'en sert pour reconnaître l'étage de départ sans avoir à parcourir la liste :
+<code>node.id.startsWith('node_0_')</code> apparaît trois fois dans <code>map_screen.dart</code> et une
+fois dans <code>map_path_highlighter.dart</code>. C'est un raccourci commode, mais notez qu'il crée un
+couplage : renommer le préfixe casserait silencieusement la détection de l'étage 0.</p>
+
+<h3>Les huit types de nœuds</h3>
+
+<p>L'enum <code>MapNodeType</code> compte huit valeurs. Six sont produites par le tirage aléatoire ou
+par les règles de structure, deux (<code>relicExchange</code> et <code>forgeFusion</code>) sont
+injectées à la toute fin par le placeur de contenus. Chaque type mène à un écran différent, décidé par
+un <code>switch</code> exhaustif dans <code>_onNodeTap</code>.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Valeur</th><th>Icône (<code>map_node_widget.dart</code>)</th><th>Couleur</th><th>Écran de destination</th></tr></thead>
+<tbody>
+<tr><td><code>combat</code></td><td><code>Icons.flash_on</code></td><td><code>Colors.white70</code></td><td><code>GameScreen()</code></td></tr>
+<tr><td><code>elite</code></td><td><code>Icons.warning_amber_rounded</code></td><td><code>Colors.redAccent</code></td><td><code>GameScreen()</code></td></tr>
+<tr><td><code>shop</code></td><td><code>Icons.shopping_cart_outlined</code></td><td><code>Colors.amber</code></td><td><code>ShopScreen()</code></td></tr>
+<tr><td><code>rest</code></td><td><code>Icons.nightlight_round</code></td><td><code>Colors.greenAccent</code></td><td><code>RestScreen()</code></td></tr>
+<tr><td><code>event</code></td><td><code>Icons.help_outline</code></td><td><code>Colors.blueAccent</code></td><td><code>EventScreen()</code></td></tr>
+<tr><td><code>boss</code></td><td><code>Icons.style</code> / <code>Icons.auto_awesome</code> / <code>Icons.diamond</code> selon <code>bossRewardType</code></td><td><code>orangeAccent</code> / <code>cyanAccent</code> / <code>deepPurpleAccent</code></td><td><code>GameScreen()</code></td></tr>
+<tr><td><code>relicExchange</code></td><td>le caractère <code>🔄</code> affiché en <code>Text</code>, pas une icône</td><td><code>Colors.tealAccent</code> (bordure uniquement)</td><td><code>RelicExchangeScreen(node: node)</code></td></tr>
+<tr><td><code>forgeFusion</code></td><td><code>Icons.layers_rounded</code></td><td><code>Colors.deepPurpleAccent</code></td><td><code>ForgeFusionScreen()</code></td></tr>
+</tbody>
+</table></div>
+
+<p><code>relicExchange</code> est le seul type qui n'affiche pas une <code>Icon</code> : le widget
+teste explicitement ce cas et rend un <code>Text</code> contenant un emoji, dont la taille passe de 32
+à 38 au survol. La couleur <code>tealAccent</code> reste utilisée pour la bordure du cercle.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/map/map_node_widget.dart</span><span class="lang">dart</span></div>
+  <pre>child: widget.node.type == MapNodeType.relicExchange
+    ? Center(
+        child: Text(
+          '🔄',
+          style: TextStyle(
+            fontSize: _isHovered &amp;&amp; widget.isAvailable ? 38 : 32,
+          ),
+        ),
+      )
+    : Icon(
+        icon,
+        color: widget.isAvailable || widget.isCurrent
+            ? color
+            : color.withAlpha(128),
+        size: _isHovered &amp;&amp; widget.isAvailable ? 42 : 35,
+      ),</pre>
+</div>
+
+<p>Notez aussi que <code>RelicExchangeScreen</code> est le seul écran de destination à recevoir le
+nœud en paramètre. Il s'en sert pour dériver une graine stable,
+<code>(widget.node.id.hashCode ^ runState.act).abs()</code>, afin que l'offre de l'autel ne change pas
+si le joueur quitte et revient sur l'écran.</p>
+
+<h3>Un DAG orienté du bas vers le haut</h3>
+
+<p>« DAG » veut dire <em>Directed Acyclic Graph</em> : graphe orienté sans cycle. C'est le
+commentaire même du code : <code>Generates a procedural map as a Directed Acyclic Graph</code>. La
+propriété est garantie par construction, pas par une vérification a posteriori — le constructeur de
+connexions ne relie <strong>jamais</strong> qu'un nœud de l'étage <code>y</code> à un nœud de l'étage
+<code>y + 1</code>. Il est donc impossible de revenir sur ses pas ou de tourner en rond.</p>
+
+<div class="box rule">
+  <div class="box-title">Règle du jeu — la structure imposée</div>
+  <p>Sur une carte de dix étages, quatre étages ne sont jamais aléatoires :</p>
+  <p><strong>Étage 0</strong> — uniquement des combats (le tirage renvoie <code>combat</code> de force
+  quand <code>floor == 0</code>). <strong>Étage 5</strong> (le milieu, <code>floors ~/ 2</code>) — un
+  seul nœud, toujours une Élite : c'est le goulot d'étranglement, tout le monde passe par là.
+  <strong>Étage 8</strong> (<code>floors - 2</code>) — que des Repos, pour souffler avant le boss.
+  <strong>Étage 9</strong> (<code>floors - 1</code>) — exactement trois Boss, un par type de
+  récompense. Le joueur choisit sa récompense en choisissant son boss.</p>
+</div>
+
+<p>Le sens vertical mérite une précision, parce qu'il est contre-intuitif : l'étage 0 est
+<strong>en bas</strong> de l'écran et le boss <strong>en haut</strong>. C'est la formule de position
+qui inverse l'axe, on y revient à la section 3.</p>
+
+<h2 id="s2">2. Vue d'ensemble de la génération</h2>
+
+<p>Le point d'entrée est une méthode statique unique. Elle ne contient aucune logique : elle orchestre
+quatre appels, dans un ordre qui n'est pas interchangeable.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/services/map_generator_service.dart</span><span class="lang">dart</span></div>
+  <pre>class MapGeneratorService {
+  static final Random _random = Random();
+
+  /// Generates a procedural map as a Directed Acyclic Graph.
+  /// [floors] is the height of the map.
+  /// [maxWidth] is the maximum number of nodes per floor.
+  static List&lt;MapNode&gt; generateMap({int floors = 10, int maxWidth = 5, int act = 1}) {
+    final middleFloor = floors ~/ 2;
+
+    // 1. Create nodes for each floor
+    final nodesByFloor = MapNodeGenerator.generateRawNodes(
+      floors: floors,
+      maxWidth: maxWidth,
+      middleFloor: middleFloor,
+      random: _random,
+    );
+
+    // Flatten all nodes
+    List&lt;MapNode&gt; allNodes = [];
+    for (var floor in nodesByFloor) {
+      allNodes.addAll(floor);
+    }
+
+    // 2. Create connections between floors
+    MapConnectionBuilder.buildConnections(
+      nodesByFloor: nodesByFloor,
+      floors: floors,
+      random: _random,
+    );
+
+    // 3. Balance quotas and apply anti-repetition rules
+    MapValidator.optimizeMapTypes(
+      allNodes: allNodes,
+      floors: floors,
+      random: _random,
+    );
+
+    // 4. Place special events
+    MapContentPlacer.placeSpecialEvents(
+      allNodes: allNodes,
+      act: act,
+      random: _random,
+    );
+
+    return allNodes;
+  }
+}</pre>
+</div>
+
+<p>Trois détails de cette méthode valent qu'on s'y arrête.</p>
+
+<p><strong>Le paramètre <code>middleFloor</code> est calculé ici, pas dans les sous-classes.</strong>
+<code>floors ~/ 2</code> est une division entière (l'opérateur <code>~/</code> de Dart) : avec
+<code>floors = 10</code>, elle donne <strong>5</strong>. Cette valeur est passée explicitement au
+générateur de nœuds, mais <code>MapValidator</code>, lui, la <em>recalcule</em> localement quatre fois
+dans son propre fichier. Duplication bénigne aujourd'hui — les deux calculs sont identiques — mais
+c'est le genre de chose qui diverge le jour où quelqu'un change la règle.</p>
+
+<p><strong>La liste plate et la liste par étages pointent sur les mêmes objets.</strong> C'est un
+point fondamental de Dart, et un piège classique pour qui vient d'un langage à valeur. Après
+<code>allNodes.addAll(floor)</code>, on n'a pas copié les nœuds : on a copié des
+<em>références</em>. Quand l'étape 2 ajoute des connexions via <code>nodesByFloor</code>, l'effet est
+immédiatement visible dans <code>allNodes</code>. C'est précisément ce qui permet à l'étape 2 de
+travailler par rangées (elle a besoin de la structure en étages) et aux étapes 3 et 4 de travailler à
+plat (elles ont besoin de compter globalement).</p>
+
+<p><strong>Le <code>Random</code> est statique, partagé, et non initialisé avec une graine.</strong>
+<code>static final Random _random = Random();</code> : une seule instance pour toute la durée de vie de
+l'application, sans <code>seed</code>. Conséquence directe : il n'existe aucun moyen de rejouer une
+carte. Deux parties lancées avec les mêmes réglages donneront deux graphes différents, et un bug de
+génération ne peut pas être reproduit à l'identique.</p>
+
+<div class="box danger">
+  <div class="box-title">Point d'attention — pas de graine, pas de reproductibilité</div>
+  <p>Ajouter un paramètre <code>int? seed</code> à <code>generateMap</code> et construire
+  <code>Random(seed)</code> quand il est fourni coûterait trois lignes, et permettrait à la fois
+  d'écrire des tests déterministes sur la génération et de proposer un mode « graine partagée » aux
+  joueurs. En l'état, tout test sur la carte doit se contenter d'assertions statistiques (« il y a
+  entre 12 et 22 combats ») plutôt que d'égalités exactes.</p>
+</div>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 840 604" width="840" role="img" aria-label="Pipeline de génération de la carte en quatre étapes : nœuds, connexions, quotas, contenus spéciaux">
+      <defs>
+        <marker id="c12-d1-grey" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#3a4966"/>
+        </marker>
+        <marker id="c12-d1-amber" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#f59e0b"/>
+        </marker>
+        <marker id="c12-d1-cyan" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#22d3ee"/>
+        </marker>
+      </defs>
+
+      <rect x="0" y="0" width="840" height="604" fill="#0e1524"/>
+
+      <rect x="250" y="14" width="340" height="46" rx="8" fill="#2a2210" stroke="#f59e0b"/>
+      <text x="420" y="34" fill="#f59e0b" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">generateMap(floors: 10, maxWidth: 5, act: N)</text>
+      <text x="420" y="52" fill="#a7b4c9" font-size="11" text-anchor="middle">middleFloor = floors ~/ 2 = 5</text>
+
+      <path d="M420 60 L420 82" stroke="#f59e0b" stroke-width="2" marker-end="url(#c12-d1-amber)"/>
+
+      <rect x="60" y="86" width="720" height="90" rx="8" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="78" y="108" fill="#22d3ee" font-size="13" font-family="ui-monospace, monospace">1 — MapNodeGenerator.generateRawNodes()</text>
+      <text x="78" y="130" fill="#e6ecf5" font-size="12">Cree 10 rangees de 1 a 5 noeuds, tire un type par noeud, force les etages 0 / 5 / 8 / 9,</text>
+      <text x="78" y="148" fill="#e6ecf5" font-size="12">calcule posX et posY. Aucune connexion a ce stade.</text>
+      <text x="78" y="168" fill="#a7b4c9" font-size="11" font-family="ui-monospace, monospace">sortie : List&lt;List&lt;MapNode&gt;&gt; nodesByFloor</text>
+
+      <path d="M420 176 L420 198" stroke="#3a4966" stroke-width="2" marker-end="url(#c12-d1-grey)"/>
+
+      <rect x="60" y="202" width="720" height="90" rx="8" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="78" y="224" fill="#a78bfa" font-size="13" font-family="ui-monospace, monospace">2 — MapConnectionBuilder.buildConnections()</text>
+      <text x="78" y="246" fill="#e6ecf5" font-size="12">Chaque noeud recoit 1 ou 2 aretes vers l'etage superieur, autour de nextIndexBase.</text>
+      <text x="78" y="264" fill="#e6ecf5" font-size="12">Passe de rattrapage : tout noeud orphelin est raccroche au voisin le plus proche.</text>
+      <text x="78" y="284" fill="#a7b4c9" font-size="11" font-family="ui-monospace, monospace">effet de bord : remplit node.connections</text>
+
+      <path d="M420 292 L420 314" stroke="#3a4966" stroke-width="2" marker-end="url(#c12-d1-grey)"/>
+
+      <rect x="60" y="318" width="720" height="106" rx="8" fill="#151b2b" stroke="#34d399"/>
+      <text x="78" y="340" fill="#34d399" font-size="13" font-family="ui-monospace, monospace">3 — MapValidator.optimizeMapTypes()</text>
+      <text x="78" y="362" fill="#e6ecf5" font-size="12">15 iterations : balanceQuotas() puis correction d'une chaine de 3 Elite / 3 Repos.</text>
+      <text x="78" y="380" fill="#e6ecf5" font-size="12">balanceQuotas() : jusqu'a 100 tentatives, comble les deficits puis rabote les exces.</text>
+      <text x="78" y="398" fill="#e6ecf5" font-size="12">Les etages 0, 5, 8 et 9 sont verrouilles : jamais modifies.</text>
+      <text x="78" y="416" fill="#a7b4c9" font-size="11" font-family="ui-monospace, monospace">effet de bord : reecrit node.type</text>
+
+      <path d="M420 424 L420 446" stroke="#3a4966" stroke-width="2" marker-end="url(#c12-d1-grey)"/>
+
+      <rect x="60" y="450" width="720" height="90" rx="8" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="78" y="472" fill="#f59e0b" font-size="13" font-family="ui-monospace, monospace">4 — MapContentPlacer.placeSpecialEvents()</text>
+      <text x="78" y="494" fill="#e6ecf5" font-size="12">Autel des reliques : acte 5 et plus, etages 2 / 3 / 4 / 6 / 7.</text>
+      <text x="78" y="512" fill="#e6ecf5" font-size="12">Forge de fusion : 25 %, etages 3 a 7, en remplacement d'un combat ou d'un evenement.</text>
+      <text x="78" y="532" fill="#a7b4c9" font-size="11" font-family="ui-monospace, monospace">effet de bord : ecrit originalType, puis reecrit type</text>
+
+      <path d="M420 540 L420 562" stroke="#22d3ee" stroke-width="2" marker-end="url(#c12-d1-cyan)"/>
+
+      <rect x="250" y="566" width="340" height="32" rx="8" fill="#0d2230" stroke="#22d3ee"/>
+      <text x="420" y="587" fill="#22d3ee" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">return List&lt;MapNode&gt; allNodes</text>
+    </svg>
+  </div>
+  <figcaption>Le pipeline complet. Les étapes 2, 3 et 4 ne renvoient rien : elles modifient les nœuds
+  en place, par effet de bord sur les objets créés à l'étape 1.</figcaption>
+</figure>
+
+<p>L'ordre des étapes est contraint par les dépendances. L'étape 3 a besoin des connexions (la règle
+anti-répétition remonte les prédécesseurs, donc les arêtes). L'étape 4 doit passer <em>après</em>
+l'équilibrage, sans quoi les nœuds convertis en <code>relicExchange</code> ou <code>forgeFusion</code>
+seraient recomptés par les quotas — or ces deux types n'ont pas d'entrée dans la table des quotas et
+seraient traités comme des types en excès permanent.</p>
+
+<p>Enfin, notez qui appelle cette méthode : deux endroits, pas un de plus.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run_controller.dart</span><span class="lang">dart</span></div>
+  <pre>/// Démarre une nouvelle partie avec la classe choisie
+void startNewRun(HeroData chosenClass, [PassiveData? activePassive]) {
+  final generatedMap = MapGeneratorService.generateMap(act: 1);
+  // ...
+    mapNodes: generatedMap,
+    currentNodeId: null,</pre>
+</div>
+
+<p>Le second appel est dans <code>advanceToNextWorld()</code>, avec <code>act: nextAct</code>. Le
+paramètre <code>act</code> ne sert qu'à l'étape 4 : il ne change ni la taille, ni la forme, ni la
+difficulté de la carte. La montée en difficulté d'un acte à l'autre est gérée ailleurs, dans le
+système de rencontres.</p>
+
+<h2 id="s3">3. Étape 1 — fabriquer les nœuds</h2>
+
+<p><code>MapNodeGenerator</code> produit une <code>List&lt;List&lt;MapNode&gt;&gt;</code> : une liste
+de rangées. Deux boucles imbriquées, <code>y</code> pour l'étage et <code>x</code> pour la position
+dans la rangée. Commençons par la largeur.</p>
+
+<h3>La largeur d'une rangée</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/services/map/map_node_generator.dart</span><span class="lang">dart</span></div>
+  <pre>for (int y = 0; y &lt; floors; y++) {
+  List&lt;MapNode&gt; floorNodes = [];
+  int rowWidth = 2 + random.nextInt(maxWidth - 1); // 2 to maxWidth nodes
+
+  // Special case: Chokepoint at middle floor
+  if (y == middleFloor) {
+    rowWidth = 1;
+  }
+
+  // Special case: Boss floor always has 3 nodes
+  if (y == floors - 1) {
+    rowWidth = 3;
+  }</pre>
+</div>
+
+<p>Décomposons <code>2 + random.nextInt(maxWidth - 1)</code>. En Dart, <code>nextInt(n)</code> renvoie
+un entier de <code>0</code> inclus à <code>n</code> <strong>exclu</strong>. Avec
+<code>maxWidth = 5</code>, on a <code>nextInt(4)</code>, donc une valeur dans
+<code>{0, 1, 2, 3}</code>, et <code>rowWidth</code> dans <code>{2, 3, 4, 5}</code>. Le commentaire
+« 2 to maxWidth » est donc exact, et les quatre largeurs sont équiprobables (25 % chacune).</p>
+
+<p>Les deux cas particuliers sont écrits en <code>if</code> séparés, pas en <code>else if</code> :
+si un jour <code>middleFloor</code> valait <code>floors - 1</code>, le second gagnerait. Avec
+<code>floors = 10</code>, <code>middleFloor = 5</code> et l'étage boss est le 9 : aucun conflit.</p>
+
+<h3>Le tirage du type</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/services/map/map_node_generator.dart</span><span class="lang">dart</span></div>
+  <pre>static MapNodeType getRandomNodeType(int floor, int totalFloors, Random random) {
+  if (floor == 0) return MapNodeType.combat; // Start with combat
+
+  double r = random.nextDouble();
+  if (r &lt; 0.6) return MapNodeType.combat; // 60% Combat
+  if (r &lt; 0.75) return MapNodeType.event; // 15% Event
+  if (r &lt; 0.85) return MapNodeType.shop; // 10% Shop
+  if (r &lt; 0.95) return MapNodeType.rest; // 10% Rest
+  return MapNodeType.elite; // 5% Elite
+}</pre>
+</div>
+
+<p>C'est le patron classique de la <strong>roulette cumulative</strong> : un seul tirage
+<code>nextDouble()</code> dans <code>[0, 1[</code>, comparé à des seuils croissants. Chaque intervalle
+a une largeur égale à la probabilité du type correspondant. C'est plus rapide et plus lisible que de
+tirer un entier sur 100.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Intervalle de <code>r</code></th><th>Type renvoyé</th><th>Probabilité</th></tr></thead>
+<tbody>
+<tr><td><code>r &lt; 0.6</code></td><td><code>MapNodeType.combat</code></td><td>60 %</td></tr>
+<tr><td><code>0.6 ≤ r &lt; 0.75</code></td><td><code>MapNodeType.event</code></td><td>15 %</td></tr>
+<tr><td><code>0.75 ≤ r &lt; 0.85</code></td><td><code>MapNodeType.shop</code></td><td>10 %</td></tr>
+<tr><td><code>0.85 ≤ r &lt; 0.95</code></td><td><code>MapNodeType.rest</code></td><td>10 %</td></tr>
+<tr><td><code>r ≥ 0.95</code></td><td><code>MapNodeType.elite</code></td><td>5 %</td></tr>
+</tbody>
+</table></div>
+
+<p>Deux remarques honnêtes sur cette fonction. D'abord, le paramètre <code>totalFloors</code> n'est
+<strong>jamais utilisé</strong> dans le corps : il est passé, ignoré, et conservé sans doute pour un
+usage futur (moduler les probabilités selon la hauteur). Ensuite, la fonction est appelée pour
+<em>tous</em> les nœuds, y compris ceux dont le type sera immédiatement écrasé par les règles de
+structure. Le résultat est jeté, mais le tirage a bien consommé une valeur du générateur aléatoire.
+Sans importance ici, mais c'est exactement le genre de détail qui rend une génération non
+reproductible même avec une graine fixe si on refactorise l'ordre des appels.</p>
+
+<h3>Les trois cas forcés</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/services/map/map_node_generator.dart</span><span class="lang">dart</span></div>
+  <pre>// Force structure rules
+if (y == middleFloor) {
+  // Chokepoint is always Elite
+  type = MapNodeType.elite;
+} else if (y == floors - 2) {
+  // Guaranteed Rest before boss
+  type = MapNodeType.rest;
+} else if (y == floors - 1) {
+  type = MapNodeType.boss;
+  if (x == 0) {
+    bossRewardType = BossRewardType.cards;
+  } else if (x == 1) {
+    bossRewardType = BossRewardType.doubleXp;
+  } else if (x == 2) {
+    bossRewardType = BossRewardType.improvedRelic;
+  }
+}</pre>
+</div>
+
+<p>L'étage boss illustre bien la logique de design du jeu : les trois boss sont mécaniquement
+identiques, seule change la <strong>récompense</strong>. L'index horizontal détermine le type, donc
+<code>node_9_0</code> donne toujours des cartes, <code>node_9_1</code> le bonus d'expérience et d'or,
+<code>node_9_2</code> une relique améliorée. Le joueur choisit donc sa récompense en choisissant sa
+colonne — et comme les connexions de l'étage 8 ne mènent pas forcément aux trois, ce choix est
+partiellement contraint par le chemin emprunté plus bas.</p>
+
+<div class="box warn">
+  <div class="box-title">Piège — le nom <code>doubleXp</code> ment</div>
+  <p>Le libellé affiché dans la légende est <code>Boss (XP &amp; Or x2)</code> et l'enum s'appelle
+  <code>doubleXp</code>, mais <code>lib/game/controllers/reward_controller.dart</code> applique
+  <code>totalXp *= 3;</code> et <code>totalGold *= 3;</code>. C'est un triplement, pas un doublement.
+  Ne vous fiez jamais au nom d'une constante quand vous équilibrez : allez lire l'endroit qui
+  l'utilise.</p>
+</div>
+
+<p>Le champ <code>bossEnemyId</code>, lui, est déclaré dans la boucle
+(<code>String? bossEnemyId;</code>), passé au constructeur… et <strong>jamais assigné</strong>. Il
+vaut donc <code>null</code> sur tous les nœuds générés. Ce n'est pas anodin : le côté consommateur
+existe bel et bien, dans <code>lib/ui/screens/game_screen.dart</code>, qui lit
+<code>currentNode.bossEnemyId</code> et le transmet à <code>initializeCombat</code>. Le mécanisme de
+« boss imposé » est donc câblé de bout en bout, mais aucune carte ne l'active aujourd'hui.</p>
+
+<h3>Les coordonnées</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/services/map/map_node_generator.dart</span><span class="lang">dart</span></div>
+  <pre>// Spread nodes horizontally
+final posX = (x + 0.5) * (1000 / rowWidth);
+final posY = (floors - 1 - y) * 200.0; // Bottom to top
+
+floorNodes.add(
+  MapNode(
+    id: id,
+    floor: y,
+    type: type,
+    connections: [],
+    position: Vector2(posX, posY),
+    bossEnemyId: bossEnemyId,
+    bossRewardType: bossRewardType,
+  ),
+);</pre>
+</div>
+
+<p>La formule horizontale mérite d'être comprise plutôt que mémorisée. On dispose d'une largeur totale
+de 1000 pixels. On la découpe en <code>rowWidth</code> tranches égales, chacune large de
+<code>1000 / rowWidth</code>, et on place le nœud <strong>au centre</strong> de sa tranche — c'est le
+rôle du <code>+ 0.5</code>. Résultat : les nœuds sont toujours centrés et régulièrement espacés, quelle
+que soit la largeur de la rangée, sans aucune marge à gérer.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th><code>rowWidth</code></th><th>Pas horizontal</th><th>Positions <code>posX</code></th></tr></thead>
+<tbody>
+<tr><td>1</td><td>1000</td><td>500</td></tr>
+<tr><td>2</td><td>500</td><td>250 · 750</td></tr>
+<tr><td>3</td><td>333,3</td><td>166,7 · 500 · 833,3</td></tr>
+<tr><td>4</td><td>250</td><td>125 · 375 · 625 · 875</td></tr>
+<tr><td>5</td><td>200</td><td>100 · 300 · 500 · 700 · 900</td></tr>
+</tbody>
+</table></div>
+
+<p>La formule verticale, <code>(floors - 1 - y) * 200.0</code>, fait deux choses en même temps. Elle
+espace les étages de 200 pixels, et elle <strong>inverse l'axe</strong> : plus <code>y</code> est
+grand, plus <code>posY</code> est petit. Comme en Flutter l'axe Y descend, un <code>posY</code> faible
+signifie « haut de l'écran ». L'étage 0 se retrouve donc à <code>9 × 200 = 1800</code>, tout en bas, et
+l'étage boss à <code>0</code>, tout en haut. Le joueur gravit visuellement la carte.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Étage <code>y</code></th><th>Largeur</th><th>Type</th><th><code>posY</code></th><th>Verrouillé pour les quotas ?</th></tr></thead>
+<tbody>
+<tr><td>0</td><td>2 à 5</td><td>combat (forcé par le tirage)</td><td>1800</td><td>oui</td></tr>
+<tr><td>1</td><td>2 à 5</td><td>tirage aléatoire</td><td>1600</td><td>non</td></tr>
+<tr><td>2</td><td>2 à 5</td><td>tirage aléatoire</td><td>1400</td><td>non</td></tr>
+<tr><td>3</td><td>2 à 5</td><td>tirage aléatoire</td><td>1200</td><td>non</td></tr>
+<tr><td>4</td><td>2 à 5</td><td>tirage aléatoire</td><td>1000</td><td>non</td></tr>
+<tr><td>5</td><td><strong>1</strong></td><td><strong>elite</strong> (chokepoint)</td><td>800</td><td>oui</td></tr>
+<tr><td>6</td><td>2 à 5</td><td>tirage aléatoire</td><td>600</td><td>non</td></tr>
+<tr><td>7</td><td>2 à 5</td><td>tirage aléatoire</td><td>400</td><td>non</td></tr>
+<tr><td>8</td><td>2 à 5</td><td><strong>rest</strong></td><td>200</td><td>oui</td></tr>
+<tr><td>9</td><td><strong>3</strong></td><td><strong>boss</strong></td><td>0</td><td>oui</td></tr>
+</tbody>
+</table></div>
+
+<p>Faites l'addition : une carte compte au minimum <code>8 × 2 + 1 + 3 = 20</code> nœuds (si les huit
+rangées libres tirent toutes la largeur 2) et au maximum <code>8 × 5 + 1 + 3 = 44</code>. Retenez ces
+deux bornes, elles vont poser un problème à la section 5.</p>
+
+<h2 id="s4">4. Étape 2 — tisser les connexions</h2>
+
+<p>À la sortie de l'étape 1, les nœuds existent mais leur liste <code>connections</code> est vide : la
+carte est un nuage de points. <code>MapConnectionBuilder</code> parcourt les étages deux à deux et
+relie chaque rangée à la suivante.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/services/map/map_connection_builder.dart</span><span class="lang">dart</span></div>
+  <pre>for (int y = 0; y &lt; floors - 1; y++) {
+  List&lt;MapNode&gt; currentFloor = nodesByFloor[y];
+  List&lt;MapNode&gt; nextFloor = nodesByFloor[y + 1];
+
+  for (int i = 0; i &lt; currentFloor.length; i++) {
+    MapNode node = currentFloor[i];
+
+    // Ensure each node has at least one connection
+    // Connect to nodes within a certain range to avoid long horizontal lines
+    int nextIndexBase = (i * nextFloor.length / currentFloor.length).floor();
+
+    // Connect to 1 or 2 nodes in the next floor
+    int numConnections = 1 + random.nextInt(2);
+    Set&lt;int&gt; targets = {};
+
+    for (int j = 0; j &lt; numConnections; j++) {
+      int offset = random.nextInt(3) - 1; // -1, 0, or 1
+      int targetIdx = (nextIndexBase + offset).clamp(
+        0,
+        nextFloor.length - 1,
+      );
+      targets.add(targetIdx);
+    }
+
+    for (int targetIdx in targets) {
+      node.connections.add(nextFloor[targetIdx].id);
+    }
+  }</pre>
+</div>
+
+<p>La boucle externe s'arrête à <code>floors - 1</code> exclu : le dernier étage n'est jamais une
+source. Les trois nœuds boss ont donc une liste <code>connections</code> <strong>vide</strong>, ce qui
+aura une conséquence très concrète sur l'accessibilité (section 7).</p>
+
+<h3><code>nextIndexBase</code> : la projection proportionnelle</h3>
+
+<p>C'est la ligne la plus importante du fichier. Elle répond à la question : « le <code>i</code>-ième
+nœud d'une rangée de <code>n</code> nœuds, à quel nœud d'une rangée de <code>m</code> nœuds
+correspond-il ? » La réponse est une règle de trois, arrondie vers le bas :
+<code>(i × m / n).floor()</code>.</p>
+
+<p>Prenons une rangée de 3 nœuds sous une rangée de 2 :</p>
+
+<div class="code" data-lang="text">
+  <div class="code-head"><span class="path">illustration</span><span class="lang">text</span></div>
+  <pre>currentFloor.length = 3, nextFloor.length = 2
+
+i = 0  ->  (0 * 2 / 3).floor() = (0.000).floor() = 0
+i = 1  ->  (1 * 2 / 3).floor() = (0.667).floor() = 0
+i = 2  ->  (2 * 2 / 3).floor() = (1.333).floor() = 1</pre>
+</div>
+
+<p>Sans cette projection, un nœud de l'index 4 d'une rangée large pourrait se connecter à l'index 4
+d'une rangée étroite qui n'existe pas, ou tirer un trait qui traverse toute la carte à
+l'horizontale — le commentaire du code le dit explicitement : <code>to avoid long horizontal
+lines</code>. Le décalage <code>random.nextInt(3) - 1</code> ajoute ensuite <code>-1</code>,
+<code>0</code> ou <code>+1</code> à cette base, avec des chances égales, puis <code>.clamp(0,
+nextFloor.length - 1)</code> ramène le résultat dans les bornes de la rangée cible.</p>
+
+<div class="box">
+  <div class="box-title">À retenir — pourquoi un <code>Set</code></div>
+  <p><code>Set&lt;int&gt; targets = {}</code> déduplique les cibles. Quand
+  <code>numConnections</code> vaut 2, les deux tirages peuvent produire le même index (par exemple
+  deux fois l'offset 0, ou deux offsets différents ramenés à la même valeur par le
+  <code>clamp</code>). Dans ce cas le <code>Set</code> n'en garde qu'un et le nœud n'a qu'une seule
+  connexion. Autrement dit : <strong>« 1 ou 2 connexions » est une intention, pas une garantie de
+  2</strong> — les nœuds de bord, dont l'offset est souvent écrasé par le <code>clamp</code>, sont
+  statistiquement plus pauvres en arêtes.</p>
+</div>
+
+<h3>La passe de rattrapage</h3>
+
+<p>Le tirage aléatoire ne garantit rien : un nœud de l'étage supérieur peut très bien n'être visé par
+personne. Il serait alors visible sur la carte mais inatteignable — un cul-de-sac inversé. La seconde
+boucle corrige ce cas.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/services/map/map_connection_builder.dart</span><span class="lang">dart</span></div>
+  <pre>  // Ensure every node in nextFloor is reachable
+  for (int j = 0; j &lt; nextFloor.length; j++) {
+    bool reachable = false;
+    for (var node in currentFloor) {
+      if (node.connections.contains(nextFloor[j].id)) {
+        reachable = true;
+        break;
+      }
+    }
+
+    if (!reachable) {
+      // Connect the closest node from current floor
+      int sourceIdx = (j * currentFloor.length / nextFloor.length).floor();
+      currentFloor[sourceIdx].connections.add(nextFloor[j].id);
+    }
+  }</pre>
+</div>
+
+<p>C'est la même règle de trois, mais <strong>dans l'autre sens</strong> : on part de l'index
+<code>j</code> dans la rangée cible et on projette vers la rangée source. Le nœud choisi reçoit une
+arête supplémentaire, qui peut lui en faire trois. Cette passe est ce qui garantit l'invariant central
+du graphe : <strong>tout nœud d'un étage supérieur à 0 a au moins un prédécesseur</strong>, et tout
+nœud d'un étage inférieur au dernier a au moins un successeur. Le graphe est donc entièrement
+connecté de l'étage 0 à l'étage 9, sans îlot.</p>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 870 430" width="870" role="img" aria-label="Petit graphe de trois étages montrant les connexions calculées par nextIndexBase et la passe de rattrapage">
+      <defs>
+        <marker id="c12-d2-grey" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0 0 L8 4 L0 8 z" fill="#3a4966"/>
+        </marker>
+        <marker id="c12-d2-amber" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0 0 L8 4 L0 8 z" fill="#f59e0b"/>
+        </marker>
+      </defs>
+
+      <rect x="0" y="0" width="820" height="430" fill="#0e1524"/>
+
+      <text x="20" y="30" fill="#a7b4c9" font-size="12">Vertical inverse : l'etage 0 est en bas (posY = 400), l'etage 2 en haut (posY = 0).</text>
+
+      <line x1="120" y1="70" x2="700" y2="70" stroke="#1c2740" stroke-width="1" stroke-dasharray="4 5"/>
+      <line x1="120" y1="200" x2="700" y2="200" stroke="#1c2740" stroke-width="1" stroke-dasharray="4 5"/>
+      <line x1="120" y1="330" x2="700" y2="330" stroke="#1c2740" stroke-width="1" stroke-dasharray="4 5"/>
+
+      <text x="30" y="75" fill="#a7b4c9" font-size="12" font-family="ui-monospace, monospace">etage 2</text>
+      <text x="30" y="205" fill="#a7b4c9" font-size="12" font-family="ui-monospace, monospace">etage 1</text>
+      <text x="30" y="335" fill="#a7b4c9" font-size="12" font-family="ui-monospace, monospace">etage 0</text>
+
+      <path d="M210 312 L260 222" stroke="#3a4966" stroke-width="2" marker-end="url(#c12-d2-grey)"/>
+      <path d="M410 312 L272 224" stroke="#3a4966" stroke-width="2" marker-end="url(#c12-d2-grey)"/>
+      <path d="M420 312 L550 224" stroke="#f59e0b" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#c12-d2-amber)"/>
+      <path d="M610 312 L570 222" stroke="#3a4966" stroke-width="2" marker-end="url(#c12-d2-grey)"/>
+
+      <path d="M252 182 L214 92" stroke="#3a4966" stroke-width="2" marker-end="url(#c12-d2-grey)"/>
+      <path d="M266 182 L400 92" stroke="#3a4966" stroke-width="2" marker-end="url(#c12-d2-grey)"/>
+      <path d="M556 182 L418 92" stroke="#3a4966" stroke-width="2" marker-end="url(#c12-d2-grey)"/>
+      <path d="M566 182 L604 92" stroke="#3a4966" stroke-width="2" marker-end="url(#c12-d2-grey)"/>
+
+      <circle cx="210" cy="330" r="22" fill="#151b2b" stroke="#e6ecf5" stroke-width="2"/>
+      <text x="210" y="336" fill="#e6ecf5" font-size="11" text-anchor="middle">CBT</text>
+      <text x="210" y="378" fill="#a7b4c9" font-size="10" text-anchor="middle" font-family="ui-monospace, monospace">node_0_0</text>
+      <text x="210" y="392" fill="#3a4966" font-size="10" text-anchor="middle" font-family="ui-monospace, monospace">base=0</text>
+
+      <circle cx="410" cy="330" r="22" fill="#151b2b" stroke="#e6ecf5" stroke-width="2"/>
+      <text x="410" y="336" fill="#e6ecf5" font-size="11" text-anchor="middle">CBT</text>
+      <text x="410" y="378" fill="#a7b4c9" font-size="10" text-anchor="middle" font-family="ui-monospace, monospace">node_0_1</text>
+      <text x="410" y="392" fill="#3a4966" font-size="10" text-anchor="middle" font-family="ui-monospace, monospace">base=0</text>
+
+      <circle cx="610" cy="330" r="22" fill="#151b2b" stroke="#e6ecf5" stroke-width="2"/>
+      <text x="610" y="336" fill="#e6ecf5" font-size="11" text-anchor="middle">CBT</text>
+      <text x="610" y="378" fill="#a7b4c9" font-size="10" text-anchor="middle" font-family="ui-monospace, monospace">node_0_2</text>
+      <text x="610" y="392" fill="#3a4966" font-size="10" text-anchor="middle" font-family="ui-monospace, monospace">base=1</text>
+
+      <circle cx="260" cy="200" r="22" fill="#151b2b" stroke="#60a5fa" stroke-width="2"/>
+      <text x="260" y="206" fill="#60a5fa" font-size="11" text-anchor="middle">EVT</text>
+      <text x="260" y="248" fill="#a7b4c9" font-size="10" text-anchor="middle" font-family="ui-monospace, monospace">node_1_0</text>
+
+      <circle cx="560" cy="200" r="22" fill="#151b2b" stroke="#f59e0b" stroke-width="2"/>
+      <text x="560" y="206" fill="#f59e0b" font-size="11" text-anchor="middle">SHP</text>
+      <text x="560" y="248" fill="#a7b4c9" font-size="10" text-anchor="middle" font-family="ui-monospace, monospace">node_1_1</text>
+
+      <circle cx="210" cy="70" r="22" fill="#151b2b" stroke="#f87171" stroke-width="2"/>
+      <text x="210" y="76" fill="#f87171" font-size="11" text-anchor="middle">ELT</text>
+      <text x="210" y="118" fill="#a7b4c9" font-size="10" text-anchor="middle" font-family="ui-monospace, monospace">node_2_0</text>
+
+      <circle cx="410" cy="70" r="22" fill="#151b2b" stroke="#34d399" stroke-width="2"/>
+      <text x="410" y="76" fill="#34d399" font-size="11" text-anchor="middle">RST</text>
+      <text x="410" y="118" fill="#a7b4c9" font-size="10" text-anchor="middle" font-family="ui-monospace, monospace">node_2_1</text>
+
+      <circle cx="610" cy="70" r="22" fill="#151b2b" stroke="#e6ecf5" stroke-width="2"/>
+      <text x="610" y="76" fill="#e6ecf5" font-size="11" text-anchor="middle">CBT</text>
+      <text x="610" y="118" fill="#a7b4c9" font-size="10" text-anchor="middle" font-family="ui-monospace, monospace">node_2_2</text>
+
+      <rect x="640" y="404" width="16" height="3" fill="#f59e0b"/>
+      <text x="666" y="410" fill="#a7b4c9" font-size="11">arete ajoutee par la passe de rattrapage</text>
+    </svg>
+  </div>
+  <figcaption>Trois étages, largeurs 3 → 2 → 3. Les bases de projection valent 0, 0 et 1 pour l'étage
+  0. Ici <code>node_1_1</code> n'avait été visé par personne : la passe de rattrapage calcule
+  <code>(1 × 3 / 2).floor() = 1</code> et lui raccroche <code>node_0_1</code> (arête ambre).</figcaption>
+</figure>
+
+<p>Sur ce petit graphe, remarquez que <code>node_0_0</code> et <code>node_0_1</code> mènent tous les
+deux à <code>node_1_0</code>. C'est normal et fréquent : les chemins fusionnent et se rouvrent
+constamment. Sur une vraie carte de dix étages, l'étage 5 fusionne <em>tous</em> les chemins en un
+seul nœud, puis le graphe se rouvre.</p>
+
+<h2 id="s5">5. Étape 3 — équilibrer les quotas</h2>
+
+<p>Avec un tirage à 60 % de combats, une carte brute est presque toujours mauvaise : trop de combats,
+pas assez de boutiques, parfois zéro élite en dehors du chokepoint. L'étape 3 corrige le tirage
+<em>après coup</em>, en réécrivant des types jusqu'à ce que la répartition rentre dans des bornes
+définies à la main.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/game_constants.dart</span><span class="lang">dart</span></div>
+  <pre>// --- MAP GENERATION QUOTAS ---
+static const Map&lt;MapNodeType, ({int min, int max})&gt; nodeQuotas = {
+  MapNodeType.combat: (min: 12, max: 22),
+  MapNodeType.elite: (min: 3, max: 6),
+  MapNodeType.rest: (min: 3, max: 6),
+  MapNodeType.shop: (min: 2, max: 5),
+  MapNodeType.event: (min: 4, max: 9),
+};</pre>
+</div>
+
+<p>La syntaxe <code>({int min, int max})</code> est un <strong>record nommé</strong> de Dart 3 : un
+petit tuple avec des champs étiquetés, sans avoir à déclarer une classe. On y accède avec
+<code>entry.value.min</code> et <code>entry.value.max</code>. C'est exactement l'usage pour lequel les
+records ont été ajoutés au langage : transporter deux valeurs liées sans cérémonie.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Type</th><th>Minimum</th><th>Maximum</th><th>Part sur une carte de 30 nœuds</th></tr></thead>
+<tbody>
+<tr><td><code>combat</code></td><td>12</td><td>22</td><td>40 % à 73 %</td></tr>
+<tr><td><code>elite</code></td><td>3</td><td>6</td><td>10 % à 20 %</td></tr>
+<tr><td><code>rest</code></td><td>3</td><td>6</td><td>10 % à 20 %</td></tr>
+<tr><td><code>shop</code></td><td>2</td><td>5</td><td>7 % à 17 %</td></tr>
+<tr><td><code>event</code></td><td>4</td><td>9</td><td>13 % à 30 %</td></tr>
+<tr><td><code>boss</code></td><td colspan="3">absent de la table — jamais compté ni modifié</td></tr>
+</tbody>
+</table></div>
+
+<p>L'ordre d'écriture de cette <code>Map</code> compte. En Dart, un littéral de <code>Map</code>
+conserve l'ordre d'insertion, et <code>balanceQuotas</code> itère sur
+<code>nodeQuotas.entries</code> en s'arrêtant au <strong>premier</strong> type déficitaire trouvé.
+<code>combat</code> est donc toujours examiné en premier, <code>event</code> en dernier : intervertir
+deux lignes de cette table changerait réellement les cartes produites.</p>
+
+<h3>La boucle principale</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/services/map/map_validator.dart</span><span class="lang">dart</span></div>
+  <pre>static void optimizeMapTypes({
+  required List&lt;MapNode&gt; allNodes,
+  required int floors,
+  required Random random,
+}) {
+  for (int iter = 0; iter &lt; 15; iter++) {
+    balanceQuotas(allNodes: allNodes, floors: floors, random: random);
+
+    bool changedAny = false;
+    for (var node in allNodes) {
+      if (node.type == MapNodeType.elite || node.type == MapNodeType.rest) {
+        if (hasThreeConsecutive(node, allNodes, node.type, 1)) {
+          final chain = getChainOfThree(node, allNodes, node.type);
+          for (var chainNode in chain) {
+            final y = chainNode.floor;
+            final middleFloor = floors ~/ 2;
+            if (y != 0 &amp;&amp; y != middleFloor &amp;&amp; y != floors - 2 &amp;&amp; y != floors - 1) {
+              final choices = [MapNodeType.combat, MapNodeType.shop, MapNodeType.event];
+              chainNode.type = choices[random.nextInt(choices.length)];
+              changedAny = true;
+              break;
+            }
+          }
+          if (changedAny) break;
+        }
+      }
+    }
+
+    if (!changedAny) break;
+  }
+  balanceQuotas(allNodes: allNodes, floors: floors, random: random);
+}</pre>
+</div>
+
+<p>La structure est un cycle <strong>équilibrer puis corriger</strong>, répété au plus 15 fois. À
+chaque tour, on rééquilibre les quotas, puis on cherche <em>une seule</em> violation de la règle
+anti-répétition et on la casse. Les deux <code>break</code> imbriqués font que l'itération s'arrête dès
+la première correction : on ne casse jamais deux chaînes dans le même tour, parce que la première
+correction a pu invalider les quotas et qu'il faut donc repasser par <code>balanceQuotas</code>.</p>
+
+<p>La sortie anticipée <code>if (!changedAny) break;</code> est la condition de convergence : si un
+tour complet ne trouve plus rien à corriger, la carte est bonne, on arrête. Et quel que soit le chemin
+de sortie, un dernier <code>balanceQuotas</code> est exécuté après la boucle — parce que la dernière
+correction anti-répétition a pu, elle aussi, déséquilibrer les compteurs.</p>
+
+<p>Les quatre étages verrouillés apparaissent en clair dans la condition :
+<code>y != 0 &amp;&amp; y != middleFloor &amp;&amp; y != floors - 2 &amp;&amp; y != floors - 1</code>.
+C'est-à-dire les étages 0, 5, 8 et 9. Cette même condition est répétée <strong>quatre fois</strong>
+dans <code>balanceQuotas</code>, à l'identique. C'est la duplication la plus visible du fichier ; une
+petite fonction <code>bool _isLocked(int y, int floors)</code> ferait le travail.</p>
+
+<h3><code>balanceQuotas</code> : combler, puis raboter</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/services/map/map_validator.dart</span><span class="lang">dart</span></div>
+  <pre>for (int attempt = 0; attempt &lt; 100; attempt++) {
+  final Map&lt;MapNodeType, int&gt; counts = {
+    MapNodeType.combat: 0, MapNodeType.elite: 0, MapNodeType.rest: 0,
+    MapNodeType.shop: 0, MapNodeType.event: 0, MapNodeType.boss: 0,
+  };
+  for (var node in allNodes) {
+    counts[node.type] = (counts[node.type] ?? 0) + 1;
+  }
+
+  MapNodeType? deficientType;
+  for (var entry in GameConstants.nodeQuotas.entries) {
+    final type = entry.key;
+    final min = entry.value.min;
+    if ((counts[type] ?? 0) &lt; min) {
+      deficientType = type;
+      break;
+    }
+  }</pre>
+</div>
+
+<p>Chaque tentative recompte tout depuis zéro, puis effectue <strong>au plus une seule
+conversion</strong> avant de repartir avec <code>continue</code>. C'est volontairement naïf — recompter
+40 nœuds cent fois ne coûte rien — mais cela rend l'algorithme facile à suivre : un tour, un
+changement.</p>
+
+<p>La recherche d'un candidat à convertir applique deux filtres. D'abord l'étage ne doit pas être
+verrouillé. Ensuite, et c'est plus subtil, le type actuel du candidat doit être <strong>en
+surnombre</strong> par rapport à son propre minimum : <code>if ((counts[currentType] ?? 0) &gt;
+currentMin)</code>. Sans ce test, combler le déficit d'un type creuserait celui d'un autre et
+l'algorithme oscillerait indéfiniment.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/services/map/map_validator.dart</span><span class="lang">dart</span></div>
+  <pre>final currentType = node.type;
+final currentMin = GameConstants.nodeQuotas[currentType]?.min ?? 0;
+if ((counts[currentType] ?? 0) &gt; currentMin) {
+  final originalType = node.type;
+  node.type = deficientType;
+  bool createsViolation = false;
+  if (deficientType == MapNodeType.elite || deficientType == MapNodeType.rest) {
+    for (var n in allNodes) {
+      if (n.type == deficientType) {
+        if (hasThreeConsecutive(n, allNodes, deficientType, 1)) {
+          createsViolation = true;
+          break;
+        }
+      }
+    }
+  }
+  node.type = originalType;
+
+  if (!createsViolation) {
+    candidate = node;
+    break;
+  }
+}</pre>
+</div>
+
+<p>Voilà un patron qui vaut d'être reconnu : <strong>appliquer, tester, annuler</strong>. On écrit
+provisoirement le nouveau type, on vérifie que la carte reste valide, puis on restaure l'ancien avant
+même d'avoir décidé. Le nœud n'est réellement converti que plus loin, une fois élu candidat
+(<code>candidate.type = deficientType;</code>). C'est une simulation à coût nul, possible uniquement
+parce que <code>type</code> n'est pas <code>final</code>.</p>
+
+<p>La seconde moitié de <code>balanceQuotas</code> est le miroir de la première : on cherche un type en
+<em>excès</em>, on cherche un type d'accueil qui n'a pas encore atteint son maximum
+(<code>counts[type] &lt; max &amp;&amp; type != excessiveType</code>), et on convertit un nœud de l'un
+vers l'autre — toujours avec le même essai-annulation contre la règle des trois d'affilée.</p>
+
+<div class="box danger">
+  <div class="box-title">Point d'attention — le repli qui accepte la violation</div>
+  <p>Les deux moitiés se terminent par un bloc explicite : <code>Fallback: if no candidate avoids
+  violation, take any valid candidate</code>. Autrement dit, <strong>les quotas priment sur la règle
+  anti-répétition</strong>. Comme <code>optimizeMapTypes</code> se termine par un
+  <code>balanceQuotas</code> final dont le résultat n'est plus vérifié, une carte livrée peut contenir
+  trois Repos ou trois Élites d'affilée. C'est rare, mais ce n'est pas impossible — et si vous
+  observez ce cas en jeu, ce n'est pas un bug de tirage, c'est ce repli.</p>
+</div>
+
+<h3>La règle des trois d'affilée</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/services/map/map_validator.dart</span><span class="lang">dart</span></div>
+  <pre>static bool hasThreeConsecutive(
+  MapNode node,
+  List&lt;MapNode&gt; allNodes,
+  MapNodeType targetType,
+  int currentChainLength,
+) {
+  if (node.type != targetType) {
+    return false;
+  }
+  if (currentChainLength == 3) {
+    return true;
+  }
+
+  final predecessors = allNodes.where((n) =&gt; n.connections.contains(node.id)).toList();
+  for (var pred in predecessors) {
+    if (pred.type == targetType) {
+      if (hasThreeConsecutive(pred, allNodes, targetType, currentChainLength + 1)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}</pre>
+</div>
+
+<p>La récursion remonte le graphe <strong>à contre-courant</strong>. Un prédécesseur, c'est n'importe
+quel nœud dont la liste <code>connections</code> contient l'identifiant du nœud courant — et comme les
+arêtes ne vont que vers le haut, un prédécesseur est forcément à l'étage inférieur. Le compteur
+<code>currentChainLength</code> démarre à 1 (le nœud lui-même) et s'incrémente d'un cran par étage
+descendu ; il atteint 3 quand on a trouvé le nœud, son parent et son grand-parent tous du même
+type.</p>
+
+<p>La terminaison est garantie par deux mécanismes indépendants : la profondeur est bornée par la
+condition <code>currentChainLength == 3</code>, et le parcours ne peut de toute façon pas boucler
+puisqu'il descend strictement d'un étage à chaque appel. Pas besoin d'ensemble de nœuds visités.</p>
+
+<p>Il faut bien lire ce que la règle interdit : <strong>trois nœuds du même type sur un même chemin
+du graphe</strong>, pas trois sur trois étages consécutifs. Deux Repos côte à côte sur le même étage
+ne violent rien, tant qu'aucun chemin ne les enfile. Et la règle ne concerne que
+<code>elite</code> et <code>rest</code> : rien n'empêche cinq combats à la suite.</p>
+
+<p><code>getChainOfThree</code> reconstruit la chaîne fautive pour que l'appelant sache quels nœuds
+sont candidats à la correction. Sa logique est délibérément plus simple que celle de
+<code>hasThreeConsecutive</code> : elle prend le <code>first</code> prédécesseur du bon type, deux fois
+de suite, sans exploration. Sur un graphe où plusieurs chaînes se croisent, elle peut donc renvoyer une
+chaîne différente de celle qui a déclenché la détection — l'appelant modifie alors un nœud qui ne
+résout pas forcément la violation détectée. La boucle des 15 itérations rattrape ce cas au tour
+suivant.</p>
+
+<div class="box danger">
+  <div class="box-title">Point d'attention — des quotas parfois mathématiquement impossibles</div>
+  <p>La somme des minimums vaut <code>12 + 3 + 3 + 2 + 4 = 24</code> nœuds non-boss. Or une carte
+  étroite ne compte que 20 nœuds au total, dont 3 boss : il ne reste que <strong>17</strong> nœuds à
+  répartir pour 24 exigés. Dans ce cas, <code>balanceQuotas</code> épuise ses candidats, tombe sur
+  <code>break</code> et rend la main avec des quotas non satisfaits. L'algorithme ne plante pas et ne
+  signale rien — il fait de son mieux. Retenez donc que <code>nodeQuotas</code> est une
+  <em>cible</em>, pas un contrat.</p>
+</div>
+
+<h2 id="s6">6. Étape 4 — placer les contenus spéciaux</h2>
+
+<p>Les deux derniers types de nœuds n'existent pas dans le tirage initial et ne sont pas comptés par
+les quotas. Ils sont greffés à la fin, sur des nœuds déjà validés, par
+<code>MapContentPlacer</code>. C'est le seul endroit du pipeline où le paramètre <code>act</code>
+intervient.</p>
+
+<h3>L'Autel des reliques</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/services/map/map_content_placer.dart</span><span class="lang">dart</span></div>
+  <pre>if (act &gt;= 5 &amp;&amp; (act % 5 == 0 || random.nextDouble() &lt; 0.10)) {
+  final eligibleNodes = allNodes.where((node) {
+    final y = node.floor;
+    return y == 2 || y == 3 || y == 4 || y == 6 || y == 7;
+  }).toList();
+
+  if (eligibleNodes.isNotEmpty) {
+    final chosenNode = eligibleNodes[random.nextInt(eligibleNodes.length)];
+    chosenNode.originalType = chosenNode.type;
+    chosenNode.type = MapNodeType.relicExchange;
+  }
+}</pre>
+</div>
+
+<p>La condition d'entrée se lit en deux temps. Le garde <code>act &gt;= 5</code> est absolu :
+<strong>aucun autel ne peut apparaître aux actes 1 à 4</strong>, quel que soit le tirage. C'est
+cohérent avec la mécanique de l'autel, qui échange trois reliques contre une meilleure : un joueur
+d'acte 2 n'en possède pas encore trois. Ensuite, <code>act % 5 == 0</code> garantit l'autel aux actes
+5, 10, 15… et sinon <code>random.nextDouble() &lt; 0.10</code> lui laisse 10 % de chances d'apparaître
+quand même.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Acte</th><th>Autel garanti ?</th><th>Chance effective</th></tr></thead>
+<tbody>
+<tr><td>1 à 4</td><td>non</td><td>0 % — le garde <code>act &gt;= 5</code> bloque</td></tr>
+<tr><td>5</td><td><strong>oui</strong></td><td>100 % (<code>5 % 5 == 0</code>)</td></tr>
+<tr><td>6, 7, 8, 9</td><td>non</td><td>10 %</td></tr>
+<tr><td>10</td><td><strong>oui</strong></td><td>100 %</td></tr>
+<tr><td>11 et suivants (non multiples de 5)</td><td>non</td><td>10 %</td></tr>
+</tbody>
+</table></div>
+
+<p>Le filtre d'étages, <code>y == 2 || y == 3 || y == 4 || y == 6 || y == 7</code>, est écrit en dur.
+Il évite les quatre étages structurels (0, 5, 8, 9) mais aussi l'étage 1, sans doute pour ne pas
+proposer l'autel trop tôt dans l'acte. Notez ce que le filtre ne fait <strong>pas</strong> : il ne
+regarde pas le type du nœud. Un autel peut donc écraser une boutique, un repos ou même une élite
+tirée au hasard sur ces étages. Un joueur peut ainsi perdre l'unique boutique de sa carte au profit
+de l'autel.</p>
+
+<h3>La Forge de fusion</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/services/map/map_content_placer.dart</span><span class="lang">dart</span></div>
+  <pre>// 25% chance to place a forgeFusion node on floors 3 to 7
+if (random.nextDouble() &lt; 0.25) {
+  final eligibleNodes = allNodes.where((node) {
+    final floor = node.floor;
+    return floor &gt;= 3 &amp;&amp;
+        floor &lt;= 7 &amp;&amp;
+        (node.type == MapNodeType.combat || node.type == MapNodeType.event);
+  }).toList();
+
+  if (eligibleNodes.isNotEmpty) {
+    final chosenNode = eligibleNodes[random.nextInt(eligibleNodes.length)];
+    chosenNode.originalType = chosenNode.type;
+    chosenNode.type = MapNodeType.forgeFusion;
+  }
+}</pre>
+</div>
+
+<p>La forge est plus prudente que l'autel : elle n'écrase qu'un <code>combat</code> ou un
+<code>event</code>. Les types précieux — boutique, repos, élite — sont protégés. Le filtre d'étages
+<code>floor &gt;= 3 &amp;&amp; floor &lt;= 7</code> couvre nominalement cinq étages, mais l'étage 5 est
+le chokepoint et vaut toujours <code>elite</code> : il ne passe donc jamais le test de type. En
+pratique, la forge n'apparaît que sur les <strong>étages 3, 4, 6 et 7</strong>.</p>
+
+<p>L'ordre des deux blocs a un effet concret : l'autel est placé en premier. Si sa cible était un
+combat de l'étage 3, ce nœud devient <code>relicExchange</code> et n'est plus éligible à la forge. Les
+deux contenus spéciaux ne peuvent donc jamais atterrir sur le même nœud.</p>
+
+<div class="box">
+  <div class="box-title">À retenir — combien de nœuds spéciaux au maximum</div>
+  <p>Chaque bloc place <strong>au plus un</strong> nœud, et il n'y a que deux blocs. Une carte
+  contient donc au grand maximum un autel et une forge. À l'acte 5, la configuration la plus riche
+  possible est : un autel garanti, plus une forge avec 25 % de chances.</p>
+</div>
+
+<h3>Le rôle de <code>originalType</code></h3>
+
+<p>Les deux blocs partagent le même geste, dans le même ordre :
+<code>chosenNode.originalType = chosenNode.type;</code> puis
+<code>chosenNode.type = MapNodeType.forgeFusion;</code>. On archive avant d'écraser. <code>originalType</code> conserve donc la mémoire de ce que le nœud
+aurait dû être : un <code>combat</code> devenu forge se souvient qu'il était un combat. L'information
+survit à la sauvegarde, puisque <code>toJson</code> écrit <code>'originalType':
+originalType?.name</code> et que <code>fromJson</code> la relit.</p>
+
+<div class="box danger">
+  <div class="box-title">Point d'attention — un champ écrit mais jamais lu</div>
+  <p>Une recherche sur <code>originalType</code> dans tout <code>lib/</code> ne renvoie que quatre
+  familles d'occurrences : la déclaration dans <code>map_node.dart</code>, la sérialisation JSON, les
+  deux écritures de <code>map_content_placer.dart</code>, et… une variable <strong>locale</strong> du
+  même nom dans <code>map_validator.dart</code>, qui n'a aucun rapport (c'est le
+  <code>final originalType = node.type;</code> du patron appliquer-tester-annuler). <strong>Aucun
+  écran, aucun contrôleur ne lit le champ.</strong> L'information est produite et persistée pour
+  rien.</p>
+  <p>Ce n'est pas forcément à supprimer : le champ prépare des fonctionnalités évidentes — afficher
+  « Forge (anciennement Combat) » dans l'infobulle, ou revenir au contenu d'origine si le joueur
+  refuse l'échange. Mais tant que personne ne le lit, c'est une donnée morte qu'il faut connaître pour
+  ne pas la croire active.</p>
+</div>
+
+<h2 id="s7">7. Se déplacer sur la carte</h2>
+
+<p>La carte générée est stockée dans <code>RunState.mapNodes</code>, et la position du joueur dans un
+simple <code>String? currentNodeId</code>. Toute la progression tient dans quatre méthodes d'un
+manager dédié, <code>lib/game/controllers/run/map_progression_manager.dart</code>, exposées telles
+quelles par <code>RunController</code>.</p>
+
+<h3><code>travelToNode</code> — deux lignes, et un piège</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run/map_progression_manager.dart</span><span class="lang">dart</span></div>
+  <pre>/// Sélectionne un nœud sur la carte et déplace le joueur
+void travelToNode(String nodeId) {
+  controller.updateState(
+    controller.currentState.copyWith(currentNodeId: nodeId),
+  );
+}</pre>
+</div>
+
+<p>C'est tout : on écrit le nouvel identifiant courant. Le point important est <strong>quand</strong>
+cette méthode est appelée. Regardez <code>_onNodeTap</code> : le déplacement est enregistré
+<em>avant</em> même que l'écran de destination soit poussé sur la pile de navigation.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/map_screen.dart</span><span class="lang">dart</span></div>
+  <pre>void _onNodeTap(BuildContext context, WidgetRef ref, MapNode node) {
+  if (ref.read(runProvider).pendingDrafts &gt; 0) return;
+  ref.read(runProvider.notifier).travelToNode(node.id);
+
+  Widget destination;
+  switch (node.type) {
+    case MapNodeType.combat:
+    case MapNodeType.elite:
+    case MapNodeType.boss:
+      destination = const GameScreen();
+      break;
+    case MapNodeType.shop:
+      destination = const ShopScreen();
+      break;
+    // ...
+  }
+
+  Navigator.of(
+    context,
+  ).push(MaterialPageRoute(builder: (context) =&gt; destination));
+}</pre>
+</div>
+
+<p>Le joueur est donc considéré comme « sur » le nœud dès le clic, avant d'avoir joué quoi que ce
+soit. Le pion se déplace, la caméra suit, mais <code>isCompleted</code> vaut toujours
+<code>false</code>. Cet état intermédiaire — présent mais non résolu — est exactement ce que la règle
+d'accessibilité doit gérer.</p>
+
+<p>Remarquez au passage que le <code>switch</code> n'a pas de <code>default</code>. En Dart, sur un
+<code>enum</code>, cela oblige le compilateur à vérifier l'exhaustivité : ajouter une neuvième valeur
+à <code>MapNodeType</code> produirait une erreur de compilation ici, et dans les deux autres
+<code>switch</code> de <code>map_node_widget.dart</code>. C'est un filet de sécurité gratuit — profitez-en
+en évitant les <code>default</code> sur les enums.</p>
+
+<h3><code>completeCurrentNode</code> — le point de bascule</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run/map_progression_manager.dart</span><span class="lang">dart</span></div>
+  <pre>/// Marque le nœud actuel comme complété
+void completeCurrentNode() {
+  if (controller.currentState.currentNodeId == null) return;
+
+  MapNode? completedNode;
+  final updatedNodes = controller.currentState.mapNodes.map((node) {
+    if (node.id == controller.currentState.currentNodeId) {
+      node.isCompleted = true;
+      completedNode = node;
+    }
+    return node;
+  }).toList();
+
+  // Reset de l'armure et nettoyage des statuts à la fin du combat pour préserver les passifs
+  controller.updateState(
+    controller.currentState.copyWith(
+      mapNodes: updatedNodes,
+      heroStats: controller.currentState.heroStats.copyWith(armure: 0, statuses: []),
+    ),
+  );
+
+  if (completedNode != null &amp;&amp; completedNode!.type == MapNodeType.boss) {
+    advanceToNextWorld();
+  }
+
+  ref.read(checkpointProvider.notifier).bump();
+}</pre>
+</div>
+
+<p>Cette méthode fait quatre choses, dans cet ordre :</p>
+
+<ol>
+  <li><strong>Marquer le nœud.</strong> Le <code>map(...)</code> ne crée pas de nouveaux nœuds : il
+  mute <code>node.isCompleted</code> en place et renvoie la même référence. Le <code>.toList()</code>
+  produit une nouvelle <em>liste</em>, ce qui suffit à faire réagir Riverpod, mais les objets sont
+  partagés. C'est cohérent avec le choix de laisser <code>isCompleted</code> mutable, même si un
+  observateur strict de l'immuabilité tiquerait.</li>
+  <li><strong>Nettoyer le héros.</strong> <code>heroStats.copyWith(armure: 0, statuses: [])</code> :
+  l'armure gagnée pendant un combat ne se reporte jamais sur le suivant, et les effets de statut
+  (poison, buffs) sont vidés. Le commentaire précise l'intention : préserver les passifs, qui eux
+  vivent ailleurs.</li>
+  <li><strong>Enchaîner sur l'acte suivant si c'était un boss.</strong> Le test porte sur le type du
+  nœud, capturé dans la fermeture pendant le <code>map</code>.</li>
+  <li><strong>Signaler un point de sauvegarde.</strong> <code>checkpointProvider.notifier.bump()</code>
+  incrémente un simple entier ; un <code>ref.listen</code> déclare ailleurs déclenche
+  <code>SaveService.save</code>. La sauvegarde n'est donc jamais appelée directement par le gameplay,
+  ce qui évite d'avoir à y penser dans chaque écran.</li>
+</ol>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/checkpoint_controller.dart</span><span class="lang">dart</span></div>
+  <pre>class CheckpointNotifier extends Notifier&lt;int&gt; {
+  @override
+  int build() =&gt; 0;
+
+  /// Signale qu'un nœud de la carte vient d'être résolu (combat, boutique,
+  /// repos, event, forge, échange de reliques, ou draft de Level Up).
+  void bump() =&gt; state = state + 1;
+}</pre>
+</div>
+
+<p>Six écrans appellent <code>completeCurrentNode()</code> : <code>game_screen.dart</code>,
+<code>shop_screen.dart</code>, <code>rest_screen.dart</code>, <code>event_screen.dart</code>,
+<code>forge_fusion_screen.dart</code> et <code>relic_exchange_screen.dart</code> (deux fois, selon que
+l'échange a lieu ou non). C'est toujours le bouton « quitter » de l'écran qui déclenche l'appel, jamais
+le retour système.</p>
+
+<h3><code>nextLevel</code> et <code>advanceToNextWorld</code></h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run/map_progression_manager.dart</span><span class="lang">dart</span></div>
+  <pre>void advanceToNextWorld() {
+  final nextAct = controller.currentState.act + 1;
+  final newMap = MapGeneratorService.generateMap(act: nextAct);
+  controller.updateState(
+    controller.currentState.copyWith(
+      mapNodes: newMap,
+      act: nextAct,
+      resetCurrentNode: true, // Reset la position pour le nouveau monde
+    ),
+  );
+}
+
+/// Avance d'un niveau (après avoir drafté)
+void nextLevel() {
+  final currentStats = controller.currentState.heroStats;
+  controller.updateState(
+    controller.currentState.copyWith(
+      currentLevel: controller.currentState.currentLevel + 1,
+      heroStats: currentStats.copyWith(currentMana: currentStats.maxMana),
+    ),
+  );
+  // Réinitialise les cooldowns à chaque nouveau niveau
+  ref.read(skillProvider.notifier).resetCooldowns();
+}</pre>
+</div>
+
+<p><code>advanceToNextWorld</code> détruit tout : nouvelle carte, acte incrémenté, position remise à
+zéro. Le <code>resetCurrentNode: true</code> est un paramètre spécial de <code>copyWith</code>, et il
+faut comprendre pourquoi il existe. La convention habituelle de <code>copyWith</code> — « si
+l'argument est <code>null</code>, garder l'ancienne valeur » — rend impossible de remettre un champ
+nullable à <code>null</code>. Le projet contourne le problème avec un booléen dédié :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run_controller.dart</span><span class="lang">dart</span></div>
+  <pre>currentNodeId: resetCurrentNode
+    ? null
+    : (currentNodeId ?? this.currentNodeId),</pre>
+</div>
+
+<p><code>nextLevel</code>, lui, ne touche pas à la carte : niveau + 1, mana rempli, cooldowns remis à
+zéro. Il est appelé juste avant <code>completeCurrentNode</code> à la fin d'un combat :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>void _completeAndExitCombat() {
+  final runController = ref.read(runProvider.notifier);
+  runController.nextLevel();
+  runController.completeCurrentNode();
+  Navigator.of(context).pop();
+}</pre>
+</div>
+
+<p>L'ordre est important : si c'était un boss, <code>completeCurrentNode</code> va déclencher
+<code>advanceToNextWorld</code> et remplacer la carte. Appeler <code>nextLevel</code> après aurait
+fonctionné aussi, mais on lirait un état déjà à moitié réinitialisé.</p>
+
+<h3><code>_isNodeAvailable</code> : la règle d'accessibilité</h3>
+
+<p>C'est la fonction qui décide, pour chaque nœud affiché, s'il est cliquable, en pleine opacité, et
+avec un curseur « main ». Elle est appelée une fois par nœud à chaque reconstruction de l'écran.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/map_screen.dart</span><span class="lang">dart</span></div>
+  <pre>bool _isNodeAvailable(
+  MapNode node,
+  List&lt;MapNode&gt; allNodes,
+  String? currentNodeId,
+) {
+  final runState = ref.read(runProvider);
+  if (runState.pendingDrafts &gt; 0) return false;
+
+  if (currentNodeId == null) {
+    return node.id.startsWith('node_0_');
+  }
+
+  try {
+    final currentNode = allNodes.firstWhere((n) =&gt; n.id == currentNodeId);
+
+    // Si le nœud actuel n'est pas complété, on ne peut pas avancer.
+    // Seul le nœud actuel lui-même est actif afin de pouvoir y ré-entrer.
+    if (!currentNode.isCompleted) {
+      return node.id == currentNodeId;
+    }
+
+    return currentNode.connections.contains(node.id);
+  } catch (e) {
+    // Cas de repli si le noeud actuel n'est plus dans la liste (ex: changement d'acte mal synchronisé)
+    return node.id.startsWith('node_0_');
+  }
+}</pre>
+</div>
+
+<p>Quatre règles, évaluées dans l'ordre. Prenons-les une par une.</p>
+
+<p><strong>1. <code>pendingDrafts &gt; 0</code> → toute la carte est gelée.</strong>
+<code>pendingDrafts</code> compte les montées de niveau non consommées : chaque niveau gagné donne
+droit à un draft de carte. Tant que le joueur n'a pas fait ses choix, aucun nœud n'est disponible. Ce
+n'est pas la seule barrière — <code>_onNodeTap</code> commence par le même test, et un
+<code>LevelUpOverlay</code> est affiché par-dessus la carte — mais c'est la barrière visuelle : tous
+les nœuds passent à 20 % d'opacité, ce qui rend le blocage évident au lieu d'un clic qui ne fait
+rien.</p>
+
+<p><strong>2. <code>currentNodeId == null</code> → seul l'étage 0 est ouvert.</strong> C'est l'état de
+départ d'un acte, celui que produisent <code>startNewRun</code>
+(<code>currentNodeId: null</code>) et <code>advanceToNextWorld</code>
+(<code>resetCurrentNode: true</code>). Le joueur n'est encore nulle part sur la carte : le pion n'est
+même pas affiché, puisque le <code>Stack</code> ne le construit que <code>if (currentNodeId !=
+null)</code>. Tous les nœuds dont l'identifiant commence par <code>node_0_</code> sont cliquables, et
+le joueur choisit sa colonne de départ.</p>
+
+<p><strong>3. Nœud courant non complété → seul lui-même est actif.</strong> C'est le cas le plus
+subtil, et le commentaire du code l'assume : <em>« Seul le nœud actuel lui-même est actif afin de
+pouvoir y ré-entrer »</em>. Le joueur a cliqué sur un nœud (donc <code>travelToNode</code> a écrit
+<code>currentNodeId</code>) mais n'a pas terminé ce qu'il y avait à faire. Aucun successeur n'est
+ouvert — on ne saute pas une étape — mais le nœud courant reste cliquable pour y revenir.</p>
+
+<p><strong>4. Nœud courant complété → ses successeurs, et rien d'autre.</strong>
+<code>currentNode.connections.contains(node.id)</code>. Notez ce que cette ligne implique : le nœud
+courant lui-même <strong>n'est plus disponible</strong> une fois complété (il n'est pas dans sa propre
+liste de connexions), et aucun nœud d'un étage antérieur ne l'est non plus. Il n'y a pas de retour en
+arrière.</p>
+
+<div class="box warn">
+  <div class="box-title">Piège — on peut re-rentrer dans un nœud non complété</div>
+  <p>Rien n'oblige un écran à appeler <code>completeCurrentNode()</code>. Si le joueur quitte une
+  boutique ou un repos par le geste de retour du système au lieu du bouton « quitter », le nœud reste
+  <code>isCompleted == false</code> alors que <code>currentNodeId</code> pointe déjà dessus. De retour
+  sur la carte, la règle 3 s'applique : <strong>un seul nœud est cliquable, celui où il se
+  trouve</strong>. Le joueur doit le refaire pour continuer.</p>
+  <p>Concrètement, cela veut dire qu'une boutique peut être ré-ouverte et un repos re-consommé tant
+  qu'ils n'ont pas été validés. Ce n'est pas un blocage — le jeu reste jouable — mais c'est une porte
+  d'exploitation à connaître. Le même mécanisme est aussi ce qui sauve la partie après une reprise de
+  sauvegarde en plein milieu d'un nœud : l'état est cohérent, le joueur reprend là où il en
+  était.</p>
+</div>
+
+<p>Le <code>try / catch</code> final mérite un mot. <code>firstWhere</code> lève une
+<code>StateError</code> quand aucun élément ne correspond ; ici, cela signifie que
+<code>currentNodeId</code> désigne un nœud absent de <code>mapNodes</code>. Le commentaire cite le cas
+d'un changement d'acte mal synchronisé. Le repli — rouvrir l'étage 0 — est le bon choix : il rend la
+carte de nouveau jouable plutôt que de la figer sur une exception. Mais notez qu'il est
+<strong>silencieux</strong> : aucun <code>debugPrint</code>, contrairement à
+<code>RunState.currentNodeType</code> qui, lui, journalise le même incident.</p>
+
+<div class="box rule">
+  <div class="box-title">Règle du jeu — comment on quitte un acte</div>
+  <p>Les trois nœuds de l'étage 9 n'ont aucune connexion sortante : la boucle de construction s'arrête
+  à <code>floors - 1</code>. Si l'on s'en tenait à <code>_isNodeAvailable</code>, terminer un boss
+  laisserait le joueur sur une carte où plus rien n'est cliquable. C'est
+  <code>completeCurrentNode</code> qui débloque la situation en appelant
+  <code>advanceToNextWorld</code>, lequel remplace <code>mapNodes</code> et remet
+  <code>currentNodeId</code> à <code>null</code> — ce qui fait retomber la règle 2 et rouvre l'étage 0
+  du nouvel acte. La progression entre actes n'est donc pas une transition d'écran : c'est un simple
+  effet de bord de la complétion d'un nœud.</p>
+</div>
+
+<h2 id="s8">8. Afficher la carte</h2>
+
+<p>Reste à peindre tout cela. <code>lib/ui/screens/map_screen.dart</code> empile un fond de parchemin,
+un <code>CustomPaint</code> pour les arêtes, un widget par nœud, et le pion du joueur — le tout dans
+une zone bien plus grande que l'écran, que l'utilisateur fait défiler.</p>
+
+<h3>Le conteneur et la zone utile</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/map_screen.dart</span><span class="lang">dart</span></div>
+  <pre>child: InteractiveViewer(
+  transformationController: _transformationController,
+  boundaryMargin: const EdgeInsets.all(2000),
+  minScale: 0.1,
+  maxScale: 2.0,
+  scaleEnabled: false,
+  constrained: false,
+  child: Container(
+    width: 3000,
+    height: 5000,
+    padding: const EdgeInsets.symmetric(
+      horizontal: 1000,
+      vertical: 1000,
+    ),</pre>
+</div>
+
+<p>Les chiffres se recoupent parfaitement, et ce n'est pas un hasard. Un <code>Container</code> avec
+une <code>width</code> explicite inclut son <code>padding</code> dans cette largeur. La zone réellement
+disponible pour les enfants vaut donc <code>3000 - 2 × 1000 = 1000</code> de large et
+<code>5000 - 2 × 1000 = 3000</code> de haut. Or 1000, c'est exactement l'étendue horizontale des
+<code>posX</code>, et le <code>CustomPaint</code> déclare <code>size: const Size(1000, 3000)</code>.
+Les 1000 pixels de marge tout autour servent à laisser le joueur faire défiler au-delà du graphe sans
+buter sur un bord net.</p>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 800 430" width="800" role="img" aria-label="Espace de dessin de la carte : conteneur 3000 par 5000 avec 1000 de padding, zone utile 1000 par 3000">
+      <rect x="0" y="0" width="800" height="430" fill="#0e1524"/>
+
+      <rect x="180" y="30" width="360" height="370" fill="#111827" stroke="#3a4966" stroke-dasharray="5 5"/>
+      <text x="360" y="22" fill="#a7b4c9" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">Container 3000 x 5000</text>
+
+      <rect x="300" y="104" width="120" height="222" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="360" y="200" fill="#22d3ee" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">zone utile</text>
+      <text x="360" y="220" fill="#22d3ee" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">1000 x 3000</text>
+      <text x="360" y="244" fill="#a7b4c9" font-size="11" text-anchor="middle">CustomPaint</text>
+      <text x="360" y="258" fill="#a7b4c9" font-size="11" text-anchor="middle">Size(1000, 3000)</text>
+
+      <line x1="180" y1="70" x2="300" y2="70" stroke="#f59e0b" stroke-width="1"/>
+      <line x1="180" y1="66" x2="180" y2="74" stroke="#f59e0b" stroke-width="1"/>
+      <line x1="300" y1="66" x2="300" y2="74" stroke="#f59e0b" stroke-width="1"/>
+      <text x="240" y="62" fill="#f59e0b" font-size="11" text-anchor="middle">1000</text>
+
+      <line x1="420" y1="70" x2="540" y2="70" stroke="#f59e0b" stroke-width="1"/>
+      <line x1="420" y1="66" x2="420" y2="74" stroke="#f59e0b" stroke-width="1"/>
+      <line x1="540" y1="66" x2="540" y2="74" stroke="#f59e0b" stroke-width="1"/>
+      <text x="480" y="62" fill="#f59e0b" font-size="11" text-anchor="middle">1000</text>
+
+      <line x1="252" y1="30" x2="252" y2="104" stroke="#f59e0b" stroke-width="1"/>
+      <line x1="248" y1="30" x2="256" y2="30" stroke="#f59e0b" stroke-width="1"/>
+      <line x1="248" y1="104" x2="256" y2="104" stroke="#f59e0b" stroke-width="1"/>
+      <text x="232" y="72" fill="#f59e0b" font-size="11" text-anchor="end">1000</text>
+
+      <line x1="252" y1="326" x2="252" y2="400" stroke="#f59e0b" stroke-width="1"/>
+      <line x1="248" y1="326" x2="256" y2="326" stroke="#f59e0b" stroke-width="1"/>
+      <line x1="248" y1="400" x2="256" y2="400" stroke="#f59e0b" stroke-width="1"/>
+      <text x="232" y="368" fill="#f59e0b" font-size="11" text-anchor="end">1000</text>
+
+      <circle cx="330" cy="120" r="7" fill="#151b2b" stroke="#a78bfa" stroke-width="2"/>
+      <circle cx="360" cy="120" r="7" fill="#151b2b" stroke="#a78bfa" stroke-width="2"/>
+      <circle cx="390" cy="120" r="7" fill="#151b2b" stroke="#a78bfa" stroke-width="2"/>
+      <text x="446" y="124" fill="#a7b4c9" font-size="11" font-family="ui-monospace, monospace">etage 9 — posY = 0</text>
+
+      <circle cx="345" cy="310" r="7" fill="#151b2b" stroke="#e6ecf5" stroke-width="2"/>
+      <circle cx="375" cy="310" r="7" fill="#151b2b" stroke="#e6ecf5" stroke-width="2"/>
+      <text x="446" y="314" fill="#a7b4c9" font-size="11" font-family="ui-monospace, monospace">etage 0 — posY = 1800</text>
+
+      <text x="20" y="180" fill="#a7b4c9" font-size="11">Les 1000 px de</text>
+      <text x="20" y="196" fill="#a7b4c9" font-size="11">padding autour</text>
+      <text x="20" y="212" fill="#a7b4c9" font-size="11">laissent defiler</text>
+      <text x="20" y="228" fill="#a7b4c9" font-size="11">au-dela du graphe.</text>
+
+      <text x="180" y="422" fill="#3a4966" font-size="11" font-family="ui-monospace, monospace">boundaryMargin: EdgeInsets.all(2000) — encore 2000 px de marge de panoramique</text>
+    </svg>
+  </div>
+  <figcaption>Le graphe occupe 1000 × 1800 pixels au centre d'une zone utile de 1000 × 3000, elle-même
+  entourée de 1000 pixels de padding. Le schéma n'est pas à l'échelle.</figcaption>
+</figure>
+
+<p>Les autres paramètres de l'<code>InteractiveViewer</code> :</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Paramètre</th><th>Valeur</th><th>Effet réel</th></tr></thead>
+<tbody>
+<tr><td><code>constrained</code></td><td><code>false</code></td><td>L'enfant n'est pas forcé à la taille de l'écran. Indispensable ici : sans cela, le <code>Container</code> de 3000 × 5000 serait écrasé aux dimensions de la fenêtre.</td></tr>
+<tr><td><code>boundaryMargin</code></td><td><code>EdgeInsets.all(2000)</code></td><td>Autorise à faire défiler 2000 pixels au-delà des bords de l'enfant, en plus du padding.</td></tr>
+<tr><td><code>scaleEnabled</code></td><td><code>false</code></td><td>Le pincement et le zoom sont désactivés. Le joueur ne peut que déplacer la carte.</td></tr>
+<tr><td><code>minScale</code> / <code>maxScale</code></td><td>0.1 / 2.0</td><td>Bornes de l'échelle. Comme le zoom utilisateur est coupé, elles n'encadrent que ce que le code écrit lui-même dans la matrice.</td></tr>
+</tbody>
+</table></div>
+
+<p>L'échelle effective est fixée par le code, à deux endroits. Dans <code>initState</code> d'abord, une
+valeur initiale grossière :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/map_screen.dart</span><span class="lang">dart</span></div>
+  <pre>_transformationController.value =
+    Matrix4.translationValues(-200.0, -1500.0, 0.0) *
+    Matrix4.diagonal3Values(0.8, 0.8, 1.0);</pre>
+</div>
+
+<p>Puis, dès la première frame, par le recentrage automatique.</p>
+
+<h3>Le recentrage, une fois par acte</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/map_screen.dart</span><span class="lang">dart</span></div>
+  <pre>void _centerCameraIfNeeded(
+  RunState runState,
+  List&lt;MapNode&gt; nodes,
+  String? currentNodeId,
+  Size screenSize,
+) {
+  // Force le re-centrage si on change d'acte ou si on n'a jamais centré
+  if (_lastActCentered == runState.act &amp;&amp;
+      !(currentNodeId == null &amp;&amp; _lastActCentered == null)) {
+    return;
+  }
+
+  MapNode? targetNode;
+  if (currentNodeId != null) {
+    targetNode = nodes.firstWhere(
+      (n) =&gt; n.id == currentNodeId,
+      orElse: () =&gt; nodes.first,
+    );
+  } else {
+    // Pour un nouvel acte, on cible le milieu du premier étage
+    targetNode = nodes.firstWhere(
+      (n) =&gt; n.id.startsWith('node_0_'),
+      orElse: () =&gt; nodes.first,
+    );
+  }</pre>
+</div>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/map_screen.dart</span><span class="lang">dart</span></div>
+  <pre>  double scale = 0.8;
+  double actualX =
+      (currentNodeId != null ? targetNode.position.x : 500.0) +
+      1000; // padding left
+  double actualY = targetNode.position.y + 80.0 + 1000; // padding top + visual Y offset
+
+  double dx = (screenSize.width / 2) - (actualX * scale);
+  double dy = (screenSize.height / 2) - (actualY * scale);
+
+  if (mounted) {
+    setState(() {
+      _transformationController.value =
+          Matrix4.translationValues(dx, dy, 0.0) *
+          Matrix4.diagonal3Values(scale, scale, 1.0);
+      _lastActCentered = runState.act;
+    });
+  }
+}</pre>
+</div>
+
+<p>Le calcul est du placement de caméra classique : on convertit la position du nœud cible en
+coordonnées du conteneur (d'où les <code>+ 1000</code> de padding et le <code>+ 80.0</code> de décalage
+visuel), on la multiplie par l'échelle, et on translate de façon à ce qu'elle tombe au centre de
+l'écran.</p>
+
+<p>Le champ <code>int? _lastActCentered</code> mémorise le dernier acte recentré. La méthode est
+appelée à <strong>chaque</strong> build, via <code>addPostFrameCallback</code>, mais elle sort
+immédiatement si l'acte n'a pas changé. Sans ce garde, la caméra se replacerait de force à chaque
+reconstruction et le joueur ne pourrait littéralement pas déplacer la carte. La conséquence de ce
+choix est visible en jeu : la caméra <strong>ne suit pas</strong> le joueur d'un nœud à l'autre. Elle
+cadre une fois au début de l'acte, et c'est ensuite au joueur de faire défiler.</p>
+
+<p>Notez le cas <code>currentNodeId == null</code> : on cible <code>500.0</code> en dur, c'est-à-dire
+le centre de la largeur de 1000, plutôt que la position du nœud trouvé. C'est cohérent — au début d'un
+acte, on veut voir toute la rangée de départ, pas se coller sur son premier nœud.</p>
+
+<h3>La molette, convertie en défilement vertical</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/map_screen.dart</span><span class="lang">dart</span></div>
+  <pre>Listener(
+  onPointerSignal: (pointerSignal) {
+    if (pointerSignal is PointerScrollEvent) {
+      final matrix = _transformationController.value.clone();
+      final translation = matrix.getTranslation();
+      // vertical scrolling of map screen using mouse wheel
+      final double newY =
+          translation.y - pointerSignal.scrollDelta.dy;
+      matrix.setTranslationRaw(translation.x, newY, translation.z);
+      _transformationController.value = matrix;
+    }
+  },</pre>
+</div>
+
+<p>Par défaut, un <code>InteractiveViewer</code> interprète la molette comme un zoom. Comme
+<code>scaleEnabled</code> vaut <code>false</code>, la molette ne ferait donc rien du tout. Le
+<code>Listener</code> qui l'enveloppe récupère l'événement <code>PointerScrollEvent</code> avant lui et
+le traduit en translation verticale pure : on clone la matrice, on lit sa translation, on soustrait
+<code>scrollDelta.dy</code>, on réécrit. Le <code>clone()</code> est nécessaire — muter directement la
+matrice du contrôleur ne notifierait aucun auditeur.</p>
+
+<div class="box danger">
+  <div class="box-title">Point d'attention — ce défilement ignore les bornes</div>
+  <p>Écrire directement dans <code>_transformationController.value</code> court-circuite la logique de
+  <code>InteractiveViewer</code>, qui n'applique ses contraintes (<code>boundaryMargin</code>,
+  <code>minScale</code>, <code>maxScale</code>) que dans ses propres gestionnaires de gestes. Rien ne
+  borne <code>newY</code> : à la molette, on peut sortir la carte de l'écran bien au-delà de ce qu'un
+  glisser-déposer permettrait. Un <code>clamp</code> sur <code>newY</code>, dérivé de la hauteur du
+  conteneur et de l'échelle, corrigerait le comportement.</p>
+</div>
+
+<h3>Les arêtes en pointillés animés</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/map/map_connection_painter.dart</span><span class="lang">dart</span></div>
+  <pre>final double dashLength = 12.0;
+final double dashSpace = 8.0;
+final double totalDash = dashLength + dashSpace;
+final double phase = animation.value * totalDash * 2;
+
+for (var node in nodes) {
+  for (var targetId in node.connections) {
+    try {
+      final targetNode = nodes.firstWhere((n) =&gt; n.id == targetId);
+      final bool isHighlighted = highlightedConnections.contains((
+        node.id,
+        targetId,
+      ));
+      final paint = isHighlighted ? paintHighlight : paintBase;
+
+      final Offset A = Offset(node.position.x, node.position.y + 80.0);
+      final Offset B = Offset(
+        targetNode.position.x,
+        targetNode.position.y + 80.0,
+      );</pre>
+</div>
+
+<p>L'animation vient d'un <code>AnimationController</code> de 2 secondes en boucle infinie, créé dans
+<code>initState</code> et passé au painter via <code>super(repaint: animation)</code> — ce qui suffit à
+faire repeindre le <code>CustomPaint</code> à chaque frame sans aucun <code>setState</code>.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/map_screen.dart</span><span class="lang">dart</span></div>
+  <pre>_dashController = AnimationController(
+  vsync: this,
+  duration: const Duration(seconds: 2),
+)..repeat();</pre>
+</div>
+
+<p>Le motif fait <code>12 + 8 = 20</code> pixels. La phase parcourt <code>0 → 40</code> pendant les
+deux secondes du cycle, soit deux motifs complets : les tirets défilent donc à un motif par seconde le
+long de chaque arête. Le tracé lui-même n'utilise pas <code>Path</code> : la boucle avance de
+<code>totalDash</code> en <code>totalDash</code> et appelle <code>canvas.drawLine</code> avec des
+extrémités <code>clamp</code>ées entre 0 et la longueur du segment.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/map/map_connection_painter.dart</span><span class="lang">dart</span></div>
+  <pre>// Clamped math-based dashes to prevent WASM path allocation heap leak
+double currentDist = (phase % totalDash) - totalDash;
+while (currentDist &lt; L) {
+  final double start = currentDist.clamp(0.0, L);
+  final double end = (currentDist + dashLength).clamp(0.0, L);
+
+  if (start &lt; end) {
+    canvas.drawLine(
+      Offset(A.dx + ux * start, A.dy + uy * start),
+      Offset(A.dx + ux * end, A.dy + uy * end),
+      paint,
+    );
+  }
+  currentDist += totalDash;
+}</pre>
+</div>
+
+<div class="box ok">
+  <div class="box-title">Bonne pratique — le commentaire qui explique le contournement</div>
+  <p><code>Clamped math-based dashes to prevent WASM path allocation heap leak</code>. L'approche
+  naturelle en Flutter (construire un <code>Path</code> par tiret, à chaque frame, pour chaque arête)
+  provoquait une fuite mémoire à la compilation WebAssembly. Le code trigonométrique brut est moins
+  élégant, mais le commentaire dit <em>pourquoi</em> il existe — sans lui, un développeur bien
+  intentionné « simplifierait » ce bloc et réintroduirait le bug. Écrivez toujours la raison d'un
+  contournement, pas seulement son fonctionnement.</p>
+</div>
+
+<p>Le <code>+ 80.0</code> ajouté à chaque <code>position.y</code> est le même décalage vertical qu'on
+retrouve dans <code>MapNodeWidget</code> (<code>top: widget.node.position.y - 35 + 80.0</code>), dans
+<code>PlayerPawn</code> (<code>top: position.y - 65 + 80.0</code>) et dans le calcul de caméra. C'est
+une constante magique répétée quatre fois dans trois fichiers : la sortir dans
+<code>GameConstants</code> économiserait une soirée de débogage le jour où quelqu'un la change à trois
+endroits sur quatre.</p>
+
+<p>Enfin, le painter enveloppe sa recherche de nœud cible dans un <code>try / catch</code> qui
+journalise en mode debug uniquement : une connexion pointant vers un identifiant inconnu est ignorée
+au lieu de faire planter le rendu. Utile pour survivre au chargement d'une sauvegarde produite par une
+version antérieure du générateur.</p>
+
+<h3>La surbrillance du chemin</h3>
+
+<p>Au survol d'un nœud, la carte illumine tout le trajet qui y mène depuis la position du joueur. Le
+calcul est isolé dans un service sans état,
+<code>lib/game/services/map_path_highlighter.dart</code>.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/services/map_path_highlighter.dart</span><span class="lang">dart</span></div>
+  <pre>static bool findPathToCurrent(
+  String targetId,
+  String? startId,
+  List&lt;MapNode&gt; allNodes,
+  Set&lt;String&gt; pathNodes,
+  Set&lt;(String, String)&gt; pathConnections,
+) {
+  // Si on a atteint le point de départ (ou l'étage 0 si on n'a pas commencé)
+  if (targetId == startId ||
+      (startId == null &amp;&amp; targetId.startsWith('node_0_'))) {
+    pathNodes.add(targetId);
+    return true;
+  }
+
+  // Trouver tous les parents (noeuds de l'étage précédent qui pointent vers targetId)
+  bool foundPath = false;
+
+  // Optimisation : seuls les noeuds de l'étage précédent peuvent être parents
+  final targetNode = allNodes.firstWhere((n) =&gt; n.id == targetId);
+  final targetFloor = targetNode.floor;
+  if (targetFloor == 0) return false;
+
+  final parents = allNodes.where((n) {
+    return n.floor == targetFloor - 1 &amp;&amp; n.connections.contains(targetId);
+  });</pre>
+</div>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/services/map_path_highlighter.dart</span><span class="lang">dart</span></div>
+  <pre>  for (var parent in parents) {
+    if (findPathToCurrent(
+      parent.id,
+      startId,
+      allNodes,
+      pathNodes,
+      pathConnections,
+    )) {
+      pathNodes.add(targetId);
+      pathNodes.add(parent.id);
+      pathConnections.add((parent.id, targetId));
+      foundPath = true;
+    }
+  }
+
+  return foundPath;
+}</pre>
+</div>
+
+<p>C'est une <strong>recherche à rebours</strong>, exactement comme <code>hasThreeConsecutive</code>
+mais sans limite de profondeur : on part du nœud survolé et on remonte de parent en parent vers le nœud
+courant. Deux <code>Set</code> passés en paramètre sont remplis au retour de la récursion — un patron
+d'accumulateur qui évite d'allouer et de fusionner des collections à chaque niveau.</p>
+
+<p>Trois détails importants :</p>
+
+<p><strong>Le cas de base est double.</strong> On s'arrête soit sur <code>startId</code>, soit — si le
+joueur n'a pas encore commencé (<code>startId == null</code>) — sur n'importe quel nœud de l'étage 0.
+Le survol fonctionne donc dès l'arrivée sur un nouvel acte.</p>
+
+<p><strong>La boucle ne s'arrête pas au premier succès.</strong> Elle explore tous les parents et
+accumule toutes les branches qui mènent au départ. Si trois chemins distincts relient le nœud courant
+au nœud survolé, les trois sont surlignés. Ce n'est pas « le » chemin, c'est l'ensemble des
+chemins.</p>
+
+<p><strong>Le type <code>Set&lt;(String, String)&gt;</code>.</strong> Les parenthèses forment un
+<em>record positionnel</em> de Dart 3 — un couple anonyme. Les records ayant une égalité structurelle,
+<code>pathConnections.contains((node.id, targetId))</code> fonctionne dans le painter sans qu'on ait
+eu besoin de déclarer une classe <code>Connection</code> avec ses <code>==</code> et
+<code>hashCode</code>.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/map_screen.dart</span><span class="lang">dart</span></div>
+  <pre>// Si on survole le noeud actuel ou un noeud non atteignable, on ignore
+if (hoveredNodeId == currentNodeId) return;
+
+final Set&lt;String&gt; reachableNodes = {};
+final Set&lt;(String, String)&gt; reachableConnections = {};
+
+// Algorithme de recherche inverse : On part du noeud survolé et on remonte
+// vers le noeud actuel pour voir s'il y a un chemin.
+if (MapPathHighlighter.findPathToCurrent(
+  hoveredNodeId,
+  currentNodeId,
+  nodes,
+  reachableNodes,
+  reachableConnections,
+)) {
+  setState(() {
+    _highlightedNodeIds = reachableNodes;
+    _highlightedConnections = reachableConnections;
+  });
+}</pre>
+</div>
+
+<p>Le <code>setState</code> n'est appelé que si un chemin existe : survoler un nœud inatteignable ne
+provoque aucune reconstruction. La sortie du survol, elle, passe par
+<code>_updateHighlight(null, ...)</code>, qui vide les deux ensembles — et ne fait rien s'ils sont déjà
+vides, évitant un <code>setState</code> inutile par mouvement de souris.</p>
+
+<p>Un point de conception à noter : la surbrillance <strong>ne tient pas compte de
+l'accessibilité</strong>. Survoler un nœud situé quatre étages plus haut illumine tout le trajet, alors
+que <code>_isNodeAvailable</code> ne rendra cliquable que le prochain pas. C'est délibéré — c'est
+précisément l'outil qui permet de planifier son itinéraire — mais cela veut dire que
+<code>_highlightedNodeIds</code> et « nœuds cliquables » sont deux notions distinctes qu'il ne faut pas
+confondre en lisant le code.</p>
+
+<p>Restent deux widgets périphériques. <code>MapLegend</code>, en bas à gauche, liste les dix entrées
+de la légende (les cinq types courants, l'autel, la forge, puis les trois boss séparés par un
+<code>Divider</code>), avec exactement les mêmes icônes et couleurs que <code>MapNodeWidget</code> —
+duplication assumée, mais duplication quand même. Et <code>MapToolbar</code>, logé dans le
+<code>leading</code> de l'<code>AppBar</code> avec un <code>leadingWidth: 430</code> généreux, qui
+donne accès au deck, aux stats, aux reliques et aux probabilités. Son détail le plus utile est le
+badge du deck, qui passe du brun au rouge et affiche <code>DECK (!)</code> dès que trois cartes
+identiques de même rareté sont fusionnables — un test fait par <code>_checkCanMerge</code> directement
+dans l'écran de carte.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/map_screen.dart</span><span class="lang">dart</span></div>
+  <pre>bool _checkCanMerge(List&lt;CardInstance&gt; masterDeck) {
+  final Map&lt;String, int&gt; counts = {};
+  for (var card in masterDeck) {
+    final key = '${card.data.id}_${card.rarity.name}';
+    counts[key] = (counts[key] ?? 0) + 1;
+    if (counts[key]! &gt;= 3) return true;
+  }
+  return false;
+}</pre>
+</div>
+
+<div class="memo">
+  <div class="card"><h5>Quatre étapes, un seul fichier d'entrée</h5><p><code>generateMap</code>
+  orchestre, les quatre classes exécutent. Aucune ne connaît les autres.</p></div>
+  <div class="card"><h5>Les étages 0, 5, 8 et 9 sont sacrés</h5><p>Le validateur les saute
+  systématiquement : la structure du jeu est garantie avant toute optimisation.</p></div>
+  <div class="card"><h5>Les quotas sont une cible</h5><p>Sur une carte étroite, ils sont
+  mathématiquement inatteignables et l'algorithme abandonne en silence.</p></div>
+  <div class="card"><h5>Un nœud non complété enferme</h5><p>Tant que <code>isCompleted</code> est
+  <code>false</code>, seul le nœud courant est cliquable.</p></div>
+</div>
+
+<div class="quiz">
+  <h2>Quiz — vérifiez vos acquis</h2>
+
+  <div class="q" data-answer="1">
+    <p class="q-text">1. Sur une carte générée avec les valeurs par défaut, quel est l'identifiant du
+    nœud goulot d'étranglement, et quel est son type ?</p>
+    <ul class="q-opts">
+      <li><code>node_4_0</code>, toujours un Repos</li>
+      <li><code>node_5_0</code>, toujours une Élite</li>
+      <li><code>node_5_2</code>, toujours un Boss</li>
+      <li><code>node_0_0</code>, toujours un Combat</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>middleFloor = floors ~/ 2 = 10 ~/ 2 = 5</code>.
+    Sur cet étage, <code>MapNodeGenerator</code> force <code>rowWidth = 1</code> (donc un seul index,
+    <code>x = 0</code>) et <code>type = MapNodeType.elite</code>. L'identifiant suit la convention
+    <code>node_&lt;étage&gt;_&lt;index&gt;</code>, soit <code>node_5_0</code>.</div>
+  </div>
+
+  <div class="q" data-answer="2">
+    <p class="q-text">2. Un étage de 3 nœuds surmonte un étage de 2 nœuds. Que vaut
+    <code>nextIndexBase</code> pour le nœud d'index <code>i = 2</code> ?</p>
+    <ul class="q-opts">
+      <li>2 — l'index est conservé tel quel</li>
+      <li>0 — le calcul est arrondi au plus proche</li>
+      <li>1 — <code>(2 × 2 / 3).floor()</code> = <code>(1.333).floor()</code></li>
+      <li>3 — la largeur des deux étages est additionnée</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> la formule de
+    <code>lib/services/map/map_connection_builder.dart</code> est
+    <code>(i * nextFloor.length / currentFloor.length).floor()</code>, soit
+    <code>(2 * 2 / 3).floor() = 1</code>. Un décalage aléatoire de −1, 0 ou +1 est ensuite ajouté puis
+    <code>clamp</code>é entre 0 et <code>nextFloor.length - 1</code>.</div>
+  </div>
+
+  <div class="q" data-answer="0">
+    <p class="q-text">3. Dans <code>GameConstants.nodeQuotas</code>, quelles bornes s'appliquent aux
+    nœuds de type <code>combat</code>, et combien d'itérations <code>optimizeMapTypes</code>
+    effectue-t-il au maximum ?</p>
+    <ul class="q-opts">
+      <li>12 à 22 combats, 15 itérations</li>
+      <li>12 à 22 combats, 100 itérations</li>
+      <li>3 à 6 combats, 15 itérations</li>
+      <li>4 à 9 combats, 25 itérations</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> la table donne
+    <code>MapNodeType.combat: (min: 12, max: 22)</code>. La boucle
+    <code>for (int iter = 0; iter &lt; 15; iter++)</code> d'<code>optimizeMapTypes</code> tourne 15 fois
+    au plus ; c'est <code>balanceQuotas</code>, appelée à l'intérieur, qui fait jusqu'à 100 tentatives.
+    Les bornes 3–6 sont celles des Élites et des Repos, 4–9 celles des événements.</div>
+  </div>
+
+  <div class="q" data-answer="3">
+    <p class="q-text">4. À quelles conditions un Autel des reliques (<code>relicExchange</code>)
+    peut-il apparaître ?</p>
+    <ul class="q-opts">
+      <li>Dès l'acte 1, avec 25 % de chances, sur les étages 3 à 7</li>
+      <li>À partir de l'acte 3, systématiquement, sur n'importe quel étage non verrouillé</li>
+      <li>À partir de l'acte 5, uniquement en remplacement d'un combat ou d'un événement</li>
+      <li>À partir de l'acte 5, garanti tous les 5 actes ou avec 10 % de chances, sur les étages 2, 3, 4, 6 ou 7</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> la condition exacte est
+    <code>act &gt;= 5 &amp;&amp; (act % 5 == 0 || random.nextDouble() &lt; 0.10)</code>, et le filtre
+    d'étages <code>y == 2 || y == 3 || y == 4 || y == 6 || y == 7</code>. Le filtre ne regarde pas le
+    type du nœud : c'est la Forge de fusion (25 %, étages 3 à 7) qui, elle, n'écrase qu'un combat ou un
+    événement.</div>
+  </div>
+
+  <div class="q" data-answer="2">
+    <p class="q-text">5. Le joueur se trouve sur <code>node_3_1</code>, qui n'est pas complété. Quels
+    nœuds <code>_isNodeAvailable</code> déclare-t-il disponibles ?</p>
+    <ul class="q-opts">
+      <li>Les nœuds listés dans <code>node_3_1.connections</code></li>
+      <li>Aucun : la carte est entièrement bloquée</li>
+      <li><code>node_3_1</code> uniquement, afin de pouvoir y ré-entrer</li>
+      <li>Tous les nœuds de l'étage 0</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>if (!currentNode.isCompleted) return node.id ==
+    currentNodeId;</code>. Les successeurs ne s'ouvrent qu'après <code>completeCurrentNode()</code>.
+    Conséquence pratique : quitter une boutique par le retour système sans valider oblige à y
+    rentrer de nouveau.</div>
+  </div>
+
+  <div class="q" data-answer="1">
+    <p class="q-text">6. Le conteneur de la carte fait 3000 × 5000 avec
+    <code>padding: EdgeInsets.symmetric(horizontal: 1000, vertical: 1000)</code>. Quelle est la taille
+    de la zone de dessin réellement disponible, et à quoi correspond-elle ?</p>
+    <ul class="q-opts">
+      <li>3000 × 5000 — le padding s'ajoute à l'extérieur du conteneur</li>
+      <li>1000 × 3000 — exactement la <code>size</code> déclarée par le <code>CustomPaint</code></li>
+      <li>2000 × 4000 — un seul côté de padding est retiré par axe</li>
+      <li>1000 × 1800 — l'étendue exacte du graphe généré</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> en Flutter, la <code>width</code> d'un
+    <code>Container</code> inclut son padding : il reste <code>3000 - 2000 = 1000</code> et
+    <code>5000 - 2000 = 3000</code>. C'est précisément
+    <code>CustomPaint(size: const Size(1000, 3000), ...)</code>. Le graphe lui-même n'occupe que
+    1000 × 1800, puisque <code>posY</code> va de 0 (étage 9) à 1800 (étage 0).</div>
+  </div>
+</div>
+
+<div class="pager">
+<a class="prev" href="ch11.html"><div class="dir">&#8592; Chapitre 11</div><div class="ttl">Les ennemis et la courbe de difficulté</div></a>
+<a class="next" href="ch13.html"><div class="dir">Chapitre 13 &#8594;</div><div class="ttl">Les reliques et le système de déclencheurs</div></a>
+</div>
+</div>
+</main>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

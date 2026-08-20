@@ -1,0 +1,2208 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>L&#x27;économie : or, boutique, forge et fusion — Formation Hero's Draft</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<button class="menu-btn" aria-label="Menu">&#9776;</button>
+<div class="layout">
+<aside class="sidebar">
+  <a class="brand" href="index.html">
+    <div class="brand-title">HERO'S DRAFT</div>
+    <div class="brand-sub">Formation complète au projet Flutter</div>
+  </a>
+<nav class="nav">
+<div class="nav-part">Partie 0 — Démarrage</div>
+<a href="ch01.html"><span class="num">01</span><span>Vue d&#x27;ensemble : qu&#x27;est-ce que Hero&#x27;s Draft ?</span></a>
+<div class="nav-part">Partie 1 — Les fondations techniques</div>
+<a href="ch02.html"><span class="num">02</span><span>Dart, le langage — l&#x27;essentiel pour ce projet</span></a>
+<a href="ch03.html"><span class="num">03</span><span>Flutter — widgets, arbre et navigation</span></a>
+<a href="ch04.html"><span class="num">04</span><span>Riverpod — l&#x27;état partagé du jeu</span></a>
+<a href="ch05.html"><span class="num">05</span><span>Flame — le moteur de rendu du combat</span></a>
+<div class="nav-part">Partie 2 — L&#x27;architecture du projet</div>
+<a href="ch06.html"><span class="num">06</span><span>L&#x27;architecture en quatre couches</span></a>
+<a href="ch07.html"><span class="num">07</span><span>La couche de données : un jeu 100 % data-driven</span></a>
+<div class="nav-part">Partie 3 — Les règles du jeu</div>
+<a href="ch08.html"><span class="num">08</span><span>Le héros : stats, classes, passifs et progression</span></a>
+<a href="ch09.html"><span class="num">09</span><span>Les cartes et le deck</span></a>
+<a href="ch10.html"><span class="num">10</span><span>Le combat : boucle de tour, dégâts et effets</span></a>
+<a href="ch11.html"><span class="num">11</span><span>Les ennemis et la courbe de difficulté</span></a>
+<a href="ch12.html"><span class="num">12</span><span>La carte du monde procédurale</span></a>
+<a href="ch13.html"><span class="num">13</span><span>Les reliques et le système de déclencheurs</span></a>
+<a href="ch14.html" class="active"><span class="num">14</span><span>L&#x27;économie : or, boutique, forge et fusion</span></a>
+<a href="ch15.html"><span class="num">15</span><span>Récompenses, chance et probabilités</span></a>
+<a href="ch16.html"><span class="num">16</span><span>Événements, repos et autel des reliques</span></a>
+<div class="nav-part">Partie 4 — L&#x27;interface et le rendu</div>
+<a href="ch17.html"><span class="num">17</span><span>Le pont Flame ↔ Riverpod : l&#x27;écran de combat</span></a>
+<a href="ch18.html"><span class="num">18</span><span>Composants Flame et game feel</span></a>
+<a href="ch19.html"><span class="num">19</span><span>Écrans, navigation et design system</span></a>
+<div class="nav-part">Partie 5 — Qualité et cycle de vie</div>
+<a href="ch20.html"><span class="num">20</span><span>Sauvegarde, localisation et tutoriel</span></a>
+<a href="ch21.html"><span class="num">21</span><span>Tests, outillage, dette technique et évolutions</span></a>
+</nav>
+</aside>
+<main class="main">
+<div class="content">
+<div class="chapter-kicker">Chapitre 14</div>
+<h1>L'économie : or, boutique, forge et fusion</h1>
+<p class="lede">L'or est la seule monnaie du jeu, et il n'achète que quatre choses : des cartes, de la vie,
+de la place et de la puissance. Voici les barèmes exacts et les algorithmes de tirage.</p>
+
+<div class="toc">
+  <div class="toc-title">Dans ce chapitre</div>
+  <ol>
+    <li><a href="#s1">L'or — d'où il vient, où il part</a></li>
+    <li><a href="#s2">La boutique : inventaire et services</a></li>
+    <li><a href="#s3">Le prix d'une carte</a></li>
+    <li><a href="#s4">Comment la boutique fabrique ses cartes</a></li>
+    <li><a href="#s5">Les huit runes de forge</a></li>
+    <li><a href="#s6">Le tirage pondéré des runes</a></li>
+    <li><a href="#s7">La forge du feu de camp et les slots bonus</a></li>
+    <li><a href="#s8">Les deux fusions</a></li>
+  </ol>
+</div>
+
+<p>Beaucoup de jeux ont trois ou quatre monnaies : de l'or, des gemmes, des fragments, des jetons
+d'événement. Hero's Draft n'en a <strong>qu'une</strong>. Un seul entier, <code>gold</code>, vit dans
+<code>InventoryState</code>, et toutes les dépenses du jeu passent par une seule méthode,
+<code>spendGold</code>. C'est une contrainte de design forte, et elle simplifie énormément le code :
+il n'existe aucun endroit dans le projet où une devise peut être créée ou détruite en douce.</p>
+
+<p>Ce chapitre suit l'or de bout en bout. D'abord sa production (combat, événements, départ de partie),
+puis ses quatre débouchés : la <strong>boutique</strong> (cartes, soin, purge, extension, clonage), la
+<strong>forge du feu de camp</strong> (runes et slots bonus), la <strong>forge de fusion</strong>
+(fusion de runes) et, indirectement, la <strong>fusion de cartes</strong> qui, elle, ne coûte pas d'or
+mais consomme trois exemplaires d'une carte.</p>
+
+<p>Au passage, nous démonterons les deux algorithmes de tirage les plus denses du projet :
+<code>_rollRarity</code> (quelle rareté une carte de boutique reçoit-elle ?) et <code>_rollUpgradeId</code>
++ <code>_rollWeighted</code> (quelle rune tombe, et à quel niveau ?). Ils tiennent tous les deux dans
+<span class="pill r">Riverpod</span> <code>lib/game/controllers/shop_controller.dart</code>, le fichier
+central de ce chapitre.</p>
+
+<div class="box"><div class="box-title">À retenir</div>
+<p>Quatre fichiers portent 95 % de l'économie : <code>lib/game/controllers/shop_controller.dart</code>
+(prix et tirages), <code>lib/models/shop_state.dart</code> (le prix du clonage),
+<code>lib/game/controllers/inventory_controller.dart</code> (le porte-monnaie) et
+<code>lib/game/controllers/run/gold_manager.dart</code> (les slots de forge bonus). Tout le reste n'est
+que de l'interface.</p></div>
+
+<h2 id="s1">1. L'or — d'où il vient, où il part</h2>
+
+<p>Une partie commence avec exactement <strong>50 or</strong>. C'est écrit en dur dans
+<code>startNewRun</code>, la méthode qui remet à zéro l'intégralité de l'état d'une run.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Démarre une nouvelle partie avec la classe choisie
+  void startNewRun(HeroData chosenClass, [PassiveData? activePassive]) {
+    // ...
+    // Réinitialise l'inventaire avec 50 d'or de départ
+    ref
+        .read(inventoryProvider.notifier)
+        .reset(
+          initialGold: 50,
+          initialRelics: const [],
+          initialBonusShopCards: 0,
+        );
+
+    // Réinitialise les cooldowns de sorts
+    ref.read(skillProvider.notifier).resetCooldowns();
+  }</pre>
+</div>
+
+<p>Notez le troisième paramètre : <code>initialBonusShopCards: 0</code>. Les extensions de boutique
+achetées lors de la partie précédente ne sont pas conservées — nous y reviendrons en section 2.</p>
+
+<h3>Le porte-monnaie : deux méthodes, un contrat</h3>
+
+<p>Le <code>InventoryController</code> est un <code>Notifier</code> Riverpod minuscule. Toute
+l'économie repose sur ces deux méthodes de sept lignes :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/inventory_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  void gainGold(int amount) {
+    state = state.copyWith(gold: state.gold + amount);
+  }
+
+  bool spendGold(int amount) {
+    if (state.gold &lt; amount) return false;
+    state = state.copyWith(gold: state.gold - amount);
+    return true;
+  }</pre>
+</div>
+
+<p>Le contrat de <code>spendGold</code> est le point le plus important de tout le chapitre :
+<strong>la vérification et le débit sont dans la même méthode</strong>. Si les fonds sont insuffisants,
+rien n'est débité et la méthode renvoie <code>false</code>. Le solde ne peut donc jamais devenir négatif,
+et il n'existe aucun chemin de code capable d'acheter « à crédit ».</p>
+
+<div class="box rule"><div class="box-title">Règle du jeu</div>
+<p>Aucun achat n'est jamais fait à crédit. Chaque appelant écrit le même motif :
+<code>if (inventoryController.spendGold(price)) { … applique l'effet … }</code>. L'effet n'est appliqué
+que <em>si</em> le paiement a réussi. C'est vrai pour l'achat de carte, le soin, la purge, l'extension,
+le clonage, le reroll de forge, l'achat de slot et la fusion de runes — sans exception.</p></div>
+
+<p>Regardez la structure de <code>buyCard</code> : c'est le patron que vous retrouverez partout.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/shop_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Achète une carte spécifique de la boutique
+  bool buyCard(CardInstance card, int price) {
+    final inventoryController = ref.read(inventoryProvider.notifier);
+    final deckNotifier = ref.read(deckProvider.notifier);
+    if (inventoryController.spendGold(price)) {
+      state = state.copyWith(
+        cardsForSale: state.cardsForSale.where((c) =&gt; c.uniqueId != card.uniqueId).toList(),
+      );
+      deckNotifier.addCardToMasterDeck(card);
+      return true;
+    }
+    return false;
+  }</pre>
+</div>
+
+<p>La carte n'est retirée de l'étal et ajoutée au deck que dans la branche « paiement réussi ». La
+valeur de retour remonte jusqu'à l'écran, qui affiche soit « Acheté ! » soit « Or insuffisant ». Aucun
+état intermédiaire n'existe.</p>
+
+<h3>Le butin de combat</h3>
+
+<p>La deuxième source d'or, et de loin la principale, c'est la victoire au combat. Le calcul vit dans
+<code>RewardController.handleVictory</code>, juste après le calcul de l'XP, et suit exactement la même
+forme :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/reward_controller.dart</span><span class="lang">dart</span></div>
+  <pre>    // 2. Calculate Gold from defeated enemies
+    int totalGold = 0;
+    for (var enemy in defeatedEnemies) {
+      final double levelMultiplier = 1.0 + 0.10 * (enemy.stats.level - 1);
+      totalGold += (enemy.data.gold * levelMultiplier).round();
+    }
+    if (currentNode.bossRewardType == BossRewardType.doubleXp) {
+      totalGold *= 3;
+    }</pre>
+</div>
+
+<p>Trois choses à lire dans ces huit lignes :</p>
+
+<ol>
+  <li>La base est <code>enemy.data.gold</code>, la valeur écrite dans
+  <code>assets/data/enemies.json</code>. Le bestiaire ne compte que quatre entrées.</li>
+  <li>Le multiplicateur de niveau est <strong>linéaire</strong> : <code>1 + 0,10 × (niveau − 1)</code>.
+  Un ennemi de niveau 1 rapporte sa valeur de base, un ennemi de niveau 11 rapporte le double.</li>
+  <li>L'arrondi est fait <strong>par ennemi</strong> (<code>.round()</code> dans la boucle), pas sur le
+  total. Deux gobelins de niveau 4 rapportent <code>round(12 × 1,3) × 2 = 16 × 2 = 32</code>, et non
+  <code>round(24 × 1,3) = 31</code>.</li>
+</ol>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Ennemi</th><th><code>gold</code> de base</th><th>Niveau 1</th><th>Niveau 5 (×1,4)</th><th>Niveau 10 (×1,9)</th><th>Niveau 10, nœud <code>doubleXp</code> (×3)</th></tr></thead>
+<tbody>
+<tr><td><code>slime</code></td><td>10</td><td>10</td><td>14</td><td>19</td><td>57</td></tr>
+<tr><td><code>gobelin</code></td><td>12</td><td>12</td><td>17</td><td>23</td><td>69</td></tr>
+<tr><td><code>squelette</code></td><td>15</td><td>15</td><td>21</td><td>29</td><td>87</td></tr>
+<tr><td><code>orc</code></td><td>25</td><td>25</td><td>35</td><td>48</td><td>144</td></tr>
+</tbody>
+</table></div>
+
+<p>Le <code>×3</code> mérite une explication. <code>BossRewardType</code> est un enum à trois valeurs
+(<code>cards</code>, <code>doubleXp</code>, <code>improvedRelic</code>) tiré au moment de la génération
+du boss. Malgré son nom, <code>doubleXp</code> ne double rien : il <strong>triple</strong> l'XP
+<em>et</em> l'or, et ajoute une carte bonus aléatoire. Un boss composé de deux orcs de niveau 10 sur un
+nœud <code>doubleXp</code> verse donc <code>(48 + 48) × 3 = 288</code> or d'un coup — de quoi acheter
+une carte légendaire et un clonage.</p>
+
+<div class="box warn"><div class="box-title">Piège</div>
+<p>Le nom <code>doubleXp</code> ment : le facteur appliqué est <code>*= 3</code>, à la fois pour l'XP
+(<code>totalXp *= 3</code>) et pour l'or (<code>totalGold *= 3</code>). Si vous ajustez l'équilibrage,
+cherchez la valeur littérale <code>3</code> dans <code>reward_controller.dart</code>, pas le mot
+« double ».</p></div>
+
+<p>L'or n'est pas versé à la fin du combat : il est stocké dans <code>RewardState.goldGained</code> et
+n'atterrit dans l'inventaire que lorsque le joueur <em>ramasse</em> la récompense.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/reward_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  bool collectGoldAndXp() {
+    if (state.isGoldXpCollected) return false;
+
+    ref.read(inventoryProvider.notifier).gainGold(state.goldGained);
+    final leveledUp = ref.read(runProvider.notifier).gainXp(state.xpGained);
+    // ...
+    state = state.copyWith(isGoldXpCollected: true);</pre>
+</div>
+
+<p>Le garde <code>if (state.isGoldXpCollected) return false;</code> est ce qui empêche un double
+ramassage si l'utilisateur tape deux fois sur le bouton.</p>
+
+<h3>Les événements</h3>
+
+<p>La troisième source, marginale mais parfois décisive, ce sont les nœuds d'événement. Les actions
+d'un choix sont interprétées une par une dans <code>EventController.selectChoice</code> :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/event_controller.dart</span><span class="lang">dart</span></div>
+  <pre>    for (var action in choice.actions) {
+      switch (action.type) {
+        case 'gain_gold':
+          inventoryController.gainGold(action.value as int);
+          break;
+        case 'spend_gold':
+          inventoryController.spendGold(action.value as int);
+          break;</pre>
+</div>
+
+<p>Voici les sept actions liées à l'or présentes dans <code>assets/data/events.json</code> :</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Événement</th><th>Choix</th><th>Action</th><th>Montant</th></tr></thead>
+<tbody>
+<tr><td><code>forgotten_tomb</code></td><td>Piller le sarcophage (−18 PV)</td><td><code>gain_gold</code></td><td>+100</td></tr>
+<tr><td><code>goblin_merchant</code></td><td>Voler le gobelin (−12 PV)</td><td><code>gain_gold</code></td><td>+50</td></tr>
+<tr><td><code>forgotten_tomb</code></td><td>Respecter le repos des morts</td><td><code>gain_gold</code></td><td>+15</td></tr>
+<tr><td><code>mysterious_altar</code></td><td>Faire une offrande (+10 PV max)</td><td><code>spend_gold</code></td><td>−50</td></tr>
+<tr><td><code>goblin_merchant</code></td><td>Acheter une relique mystérieuse</td><td><code>spend_gold</code></td><td>−40</td></tr>
+<tr><td><code>abandoned_camp</code></td><td>Consommer les provisions (+30 PV)</td><td><code>spend_gold</code></td><td>−25</td></tr>
+<tr><td><code>blessed_fountain</code></td><td>Jeter une pièce (+8 PV max)</td><td><code>spend_gold</code></td><td>−20</td></tr>
+</tbody>
+</table></div>
+
+<p>Vous avez peut-être tiqué : ici, la valeur de retour de <code>spendGold</code> est
+<strong>ignorée</strong>. Si le joueur n'a pas les 50 or de l'autel, il obtiendrait ses +10 PV max
+gratuitement. Ce n'est pas un bug, parce que le filtre est en amont, dans le modèle de données :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/event_data.dart</span><span class="lang">dart</span></div>
+  <pre>  bool isSelectable(int currentHp, int currentGold, int currentMaxHp) {
+    for (final action in actions) {
+      // ...
+      } else if (action.type == 'spend_gold') {
+        final cost = action.value is int
+            ? action.value as int
+            : int.tryParse(action.value.toString()) ?? 0;
+        if (currentGold &lt; cost) {
+          return false;
+        }
+      }
+      // ...
+    }
+    return true;
+  }</pre>
+</div>
+
+<p>L'écran d'événement appelle <code>choice.isSelectable(currentPv, gold, maxPv)</code> et grise le
+bouton. Le contrôleur peut donc se permettre d'ignorer le booléen — mais c'est une garantie
+<em>d'interface</em>, pas une garantie de modèle.</p>
+
+<div class="box danger"><div class="box-title">Point d'attention</div>
+<p>C'est le seul appel à <code>spendGold</code> du projet dont la valeur de retour est ignorée. Si un
+jour quelqu'un déclenche un événement par script (test, triche de debug, cinématique) sans passer par
+<code>isSelectable</code>, le choix payant deviendra gratuit. Une ligne
+<code>if (!inventoryController.spendGold(...)) break;</code> supprimerait la dette.</p></div>
+
+<h2 id="s2">2. La boutique : inventaire et services</h2>
+
+<p>La boutique est un nœud de carte (<code>MapNodeType.shop</code>) qui ouvre <code>ShopScreen</code>.
+L'écran est coupé en deux : à gauche (75 % de la largeur) les cartes en vente, à droite (25 %) cinq
+services. Les cartes sont générées une seule fois, à l'entrée, par <code>initializeShop</code>.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/shop_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Initialise la boutique avec une sélection aléatoire de cartes de jeu
+  void initializeShop(List&lt;CardData&gt; allCards, int bonusShopCards) {
+    final List&lt;CardData&gt; eligibleCards = _getEligibleCards(allCards);
+
+    if (eligibleCards.isEmpty) {
+      state = const ShopState(cardsForSale: [], purchasedHeal: false);
+      return;
+    }
+
+    final rng = Random();
+    final List&lt;CardData&gt; shuffled = List.from(eligibleCards)..shuffle(rng);
+    final count = min(shuffled.length, 3 + bonusShopCards);
+
+    final int act = ref.read(runProvider).act;
+    final List&lt;CardInstance&gt; generatedInstances = shuffled
+        .take(count)
+        .map((cardData) =&gt; _generateShopCardInstance(cardData, act, rng))
+        .toList();
+
+    state = ShopState(
+      cardsForSale: generatedInstances,
+      purchasedHeal: false,
+      cloneOptions: const [],
+      clonePurchasedCount: 0,
+    );
+  }</pre>
+</div>
+
+<p>L'inventaire fait donc <code>3 + bonusShopCards</code> cartes, plafonné par la taille du pool
+éligible. Le mélange se fait sur les <code>CardData</code> — les « modèles » de cartes — donc deux
+exemplaires de la même carte ne peuvent pas apparaître dans la même boutique. Le pool éligible exclut
+deux catégories :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/shop_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  List&lt;CardData&gt; _getEligibleCards(List&lt;CardData&gt; allCards) {
+    return allCards
+        .where((c) =&gt;
+            c.type != CardType.status &amp;&amp;
+            c.rarity != CardRarity.unique)
+        .toList();
+  }</pre>
+</div>
+
+<p>Les cartes de type <code>status</code> (les malédictions, blessures et autres cartes parasites) et
+les cartes <code>unique</code> ne sont jamais vendues. Avec les 17 cartes de
+<code>assets/data/cards.json</code>, toutes communes et non-status, le pool éligible fait 17 entrées :
+une boutique standard en montre 3.</p>
+
+<h3>Les cinq services et leurs prix</h3>
+
+<p>Les prix des services ne sont pas dans le contrôleur : ils sont écrits <strong>en dur dans le
+widget</strong>, sous forme de littéraux passés à <code>_ShopServiceWidget</code>. En voici deux, dans
+leur forme exacte :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/shop_screen.dart</span><span class="lang">dart</span></div>
+  <pre>                            _ShopServiceWidget(
+                              icon: Icons.refresh,
+                              iconColor: Colors.tealAccent,
+                              title: l10n.shopReroll,
+                              description: l10n.shopRerollDesc,
+                              price: 15,
+                              onPressed: inventoryState.gold &gt;= 15
+                                  ? () =&gt; _rerollCards(15)
+                                  : null,
+                              buttonColor: Colors.teal.shade800,
+                              canAfford: inventoryState.gold &gt;= 15,
+                            ),
+                            _ShopServiceWidget(
+                              icon: Icons.local_hospital,
+                              iconColor: Colors.greenAccent,
+                              title: l10n.healingPotion,
+                              description: l10n.restoresHp(healAmount),
+                              price: healPrice,
+                              onPressed: shopState.purchasedHeal ||
+                                      inventoryState.gold &lt; healPrice
+                                  ? null
+                                  : () =&gt; _buyHeal(healPrice, healAmount),
+                              buttonColor: Colors.green.shade800,
+                              canAfford: inventoryState.gold &gt;= healPrice &amp;&amp;
+                                  !shopState.purchasedHeal,
+                            ),</pre>
+</div>
+
+<p>Les deux variables du soin sont calculées en tête de <code>build</code> :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/shop_screen.dart</span><span class="lang">dart</span></div>
+  <pre>    final int healPrice = 30;
+    final int healAmount = (runState.heroStats.maxPv * 0.3).round();</pre>
+</div>
+
+<p>Voici le tableau complet. Ces cinq lignes sont l'intégralité de ce que l'or peut acheter dans une
+boutique.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Service</th><th>Prix</th><th>Effet</th><th>Méthode appelée</th><th>Limite</th></tr></thead>
+<tbody>
+<tr><td>Reroll de l'étal</td><td><strong>15</strong></td><td>Regénère les <code>3 + bonusShopCards</code> cartes en vente</td><td><code>rerollCards</code></td><td>illimité</td></tr>
+<tr><td>Potion de soin</td><td><strong>30</strong></td><td>Rend <code>round(maxPv × 0,3)</code> PV</td><td><code>buyHeal</code></td><td><strong>une seule fois</strong> par boutique (<code>purchasedHeal</code>)</td></tr>
+<tr><td>Purge d'une carte</td><td><strong>75</strong></td><td>Retire définitivement une carte du master deck</td><td><code>purgeCard</code></td><td>illimité</td></tr>
+<tr><td>Extension de stock</td><td><strong>100</strong></td><td><code>bonusShopCards + 1</code> et ajoute une carte à l'étal courant</td><td><code>expandShop</code></td><td>illimité</td></tr>
+<tr><td>Clonage (Miroir Magique)</td><td><strong><code>150 &lt;&lt; clonePurchasedCount</code></strong></td><td>Duplique une carte du deck, runes comprises</td><td><code>cloneCard</code></td><td>prix doublé à chaque achat</td></tr>
+</tbody>
+</table></div>
+
+<div class="box rule"><div class="box-title">Règle du jeu</div>
+<p>Barème de la boutique : reroll <strong>15</strong>, potion de soin <strong>30</strong> pour 30 % des
+PV max (une seule fois par boutique), purge <strong>75</strong>, extension de stock <strong>100</strong>,
+clonage <strong>150</strong> puis 300, 600, 1 200… Les cartes elles-mêmes sont facturées à part
+(section 3).</p></div>
+
+<h3>Le soin : deux verrous, pas un</h3>
+
+<p>Le soin est le seul service à usage unique. Le verrou est dans le contrôleur, dès la première
+ligne :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/shop_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Achète un soin dans la boutique
+  bool buyHeal(int price, int amount) {
+    if (state.purchasedHeal) return false;
+
+    final inventoryController = ref.read(inventoryProvider.notifier);
+    final runController = ref.read(runProvider.notifier);
+    if (inventoryController.spendGold(price)) {
+      runController.heal(amount);
+      state = state.copyWith(purchasedHeal: true);
+      return true;
+    }
+    return false;
+  }</pre>
+</div>
+
+<p>L'écran ajoute un deuxième garde, qui n'est pas dans le contrôleur : si le héros est déjà à PV max,
+l'achat est refusé <em>avant</em> tout débit, avec une notification dédiée.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/shop_screen.dart</span><span class="lang">dart</span></div>
+  <pre>  void _buyHeal(int price, int amount) {
+    final shopController = ref.read(shopProvider.notifier);
+    final currentPv = ref.read(runProvider).heroStats.currentPv;
+    final maxPv = ref.read(runProvider).heroStats.maxPv;
+
+    if (currentPv &gt;= maxPv) {
+      context.showNotification(
+        AppLocalizations.of(context)!.fullHp,
+        type: NotificationType.warning,
+      );
+      return;
+    }
+    // ...</pre>
+</div>
+
+<p>Ce garde protège le joueur d'un gaspillage : 30 or dépensés pour zéro PV rendu, puisque
+<code>heal</code> plafonne à <code>maxPv</code>. Le <code>purchasedHeal</code> n'est pas consommé non
+plus, donc la potion reste disponible plus tard dans la même boutique.</p>
+
+<h3>Le clonage : un prix qui double</h3>
+
+<p>Le prix du clonage n'est pas un littéral d'interface : c'est un <em>getter</em> de l'état, et il
+utilise un décalage de bits.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/shop_state.dart</span><span class="lang">dart</span></div>
+  <pre>class ShopState {
+  final List&lt;CardInstance&gt; cardsForSale;
+  final bool purchasedHeal;
+  final List&lt;CardInstance&gt; cloneOptions;
+  final int clonePurchasedCount;
+
+  const ShopState({
+    this.cardsForSale = const [],
+    this.purchasedHeal = false,
+    this.cloneOptions = const [],
+    this.clonePurchasedCount = 0,
+  });
+
+  int get clonePrice =&gt; 150 &lt;&lt; clonePurchasedCount;</pre>
+</div>
+
+<p><code>150 &lt;&lt; n</code> se lit « 150 décalé de <em>n</em> bits vers la gauche », ce qui est une
+manière compacte et exacte d'écrire <code>150 × 2ⁿ</code>. Pour un débutant, sachez simplement que le
+décalage à gauche d'un bit multiplie un entier par 2 : c'est le même résultat qu'une multiplication,
+en un seul cycle machine.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Clonage n°</th><th><code>clonePurchasedCount</code></th><th>Expression</th><th>Prix</th></tr></thead>
+<tbody>
+<tr><td>1<sup>er</sup></td><td>0</td><td><code>150 &lt;&lt; 0</code></td><td><strong>150</strong></td></tr>
+<tr><td>2<sup>e</sup></td><td>1</td><td><code>150 &lt;&lt; 1</code></td><td><strong>300</strong></td></tr>
+<tr><td>3<sup>e</sup></td><td>2</td><td><code>150 &lt;&lt; 2</code></td><td><strong>600</strong></td></tr>
+<tr><td>4<sup>e</sup></td><td>3</td><td><code>150 &lt;&lt; 3</code></td><td><strong>1 200</strong></td></tr>
+<tr><td>5<sup>e</sup></td><td>4</td><td><code>150 &lt;&lt; 4</code></td><td><strong>2 400</strong></td></tr>
+</tbody>
+</table></div>
+
+<p>Le clonage duplique la carte <em>instance</em>, avec ses runes, dans une nouvelle instance qui reçoit
+un <code>uniqueId</code> tout neuf (généré par le constructeur de <code>CardInstance</code>) :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/shop_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Duplique une carte sélectionnée contre paiement (Miroir Magique)
+  bool cloneCard(CardInstance card) {
+    final price = state.clonePrice;
+    final inventoryController = ref.read(inventoryProvider.notifier);
+    final deckNotifier = ref.read(deckProvider.notifier);
+    if (inventoryController.spendGold(price)) {
+      deckNotifier.addCardToMasterDeck(
+        CardInstance(
+          data: card.data,
+          rarity: card.rarity,
+          forgeUpgrades: List.from(card.forgeUpgrades),
+        ),
+      );
+      state = state.copyWith(
+        clonePurchasedCount: state.clonePurchasedCount + 1,
+      );
+      return true;
+    }
+    return false;
+  }</pre>
+</div>
+
+<p>Le <code>List.from(card.forgeUpgrades)</code> est important : <code>forgeUpgrades</code> est une
+liste <em>non modifiable</em> dans <code>CardInstance</code>, et la copie garantit que les deux
+exemplaires ne partagent pas la même référence. Cloner une carte légendaire portant trois runes duplique
+donc les trois runes — c'est l'achat le plus puissant du jeu, et c'est pour cela qu'il coûte 150 puis
+double à chaque fois.</p>
+
+<h3>Le compteur remis à zéro à la sortie</h3>
+
+<p>Le joueur ne choisit pas librement la carte à cloner : l'écran tire <strong>trois</strong> cartes au
+hasard dans le master deck et les mémorise dans <code>cloneOptions</code>, pour que la proposition ne
+change pas si l'on ferme et rouvre la fenêtre.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/shop_screen.dart</span><span class="lang">dart</span></div>
+  <pre>  void _showCloneModal() {
+    final shopState = ref.read(shopProvider);
+    List&lt;CardInstance&gt; options = shopState.cloneOptions;
+
+    if (options.isEmpty) {
+      final deckState = ref.read(deckProvider);
+      final masterDeck = List.of(deckState.masterDeck);
+      masterDeck.shuffle();
+      options = masterDeck.take(3).toList();
+      if (options.isNotEmpty) {
+        ref.read(shopProvider.notifier).setCloneOptions(options);
+      }
+    }
+    // ...</pre>
+</div>
+
+<p>Et à la sortie de la boutique, le <code>PopScope</code> nettoie :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/shop_screen.dart</span><span class="lang">dart</span></div>
+  <pre>    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          ref.read(shopProvider.notifier).clearCloneOptions();
+        }
+      },</pre>
+</div>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/shop_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Nettoie les options de clonage et réinitialise le coût du miroir à 0
+  void clearCloneOptions() {
+    state = state.copyWith(
+      cloneOptions: const [],
+      clonePurchasedCount: 0,
+    );
+  }</pre>
+</div>
+
+<p><code>clearCloneOptions()</code> remet <code>clonePurchasedCount</code> à <strong>0</strong> quand on
+quitte la boutique. Conséquence directe : le prix du clonage repart à 150 dans la boutique suivante. La
+progression 150 → 300 → 600 est donc <strong>locale à une visite</strong>, pas globale à la partie.</p>
+
+<div class="box warn"><div class="box-title">Piège</div>
+<p>Ne confondez pas les deux compteurs de la boutique. <code>clonePurchasedCount</code> est remis à zéro
+à chaque sortie (il vit dans <code>ShopState</code>), alors que <code>bonusShopCards</code> est
+<strong>permanent pour toute la run</strong> : il vit dans <code>InventoryState</code> et n'est
+réinitialisé que par <code>startNewRun</code>. Payer 100 or pour une extension est donc un investissement
+sur toutes les boutiques restantes, pas un achat ponctuel.</p></div>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/inventory_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  void buyShopExpansion() {
+    state = state.copyWith(bonusShopCards: state.bonusShopCards + 1);
+  }</pre>
+</div>
+
+<p>L'extension fait deux choses en une : elle incrémente le compteur permanent <em>et</em> ajoute
+immédiatement une carte à l'étal courant, en évitant les doublons de <code>CardData</code> déjà
+présents :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/shop_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Achète une expansion de boutique pour ajouter une carte au stock
+  bool expandShop(int price, List&lt;CardData&gt; allCards) {
+    final inventoryController = ref.read(inventoryProvider.notifier);
+    if (inventoryController.spendGold(price)) {
+      inventoryController.buyShopExpansion();
+
+      final eligibleCards = _getEligibleCards(allCards);
+      final existingIds = state.cardsForSale.map((c) =&gt; c.data.id).toSet();
+      final available = eligibleCards
+          .where((c) =&gt; !existingIds.contains(c.id))
+          .toList();
+
+      if (available.isNotEmpty) {
+        final rng = Random();
+        final newCardData = available[rng.nextInt(available.length)];
+        final int act = ref.read(runProvider).act;
+        final newInstance = _generateShopCardInstance(newCardData, act, rng);
+        state = state.copyWith(cardsForSale: [...state.cardsForSale, newInstance]);
+      }
+      return true;
+    }
+    return false;
+  }</pre>
+</div>
+
+<div class="memo">
+  <div class="card"><h5>15 or</h5><p>Le reroll est le service le moins cher : il regénère tout l'étal, raretés et runes comprises.</p></div>
+  <div class="card"><h5>100 or</h5><p>L'extension est le seul achat de boutique dont l'effet survit à la visite en cours.</p></div>
+  <div class="card"><h5>150 &lt;&lt; n</h5><p>Le clonage double à chaque achat, mais le compteur retombe à zéro à la sortie.</p></div>
+</div>
+
+<h2 id="s3">3. Le prix d'une carte</h2>
+
+<p>Le prix des cartes, lui, n'est pas dans l'interface : c'est une méthode <code>static</code> du
+contrôleur de boutique. Statique, parce qu'elle ne dépend d'aucun état — seulement de la carte qu'on lui
+passe. C'est une fonction pure de 24 lignes.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/shop_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Helper pour calculer le prix d'une carte selon sa rareté et ses upgrades (+20 Or par upgrade)
+  static int getCardPrice(CardInstance card) {
+    int basePrice;
+    switch (card.rarity) {
+      case CardRarity.common:
+        basePrice = 25;
+        break;
+      case CardRarity.uncommon:
+        basePrice = 50;
+        break;
+      case CardRarity.rare:
+        basePrice = 100;
+        break;
+      case CardRarity.epic:
+        basePrice = 150;
+        break;
+      case CardRarity.legendary:
+        basePrice = 200;
+        break;
+      case CardRarity.unique:
+        basePrice = 999;
+        break;
+    }
+    return basePrice + (card.forgeUpgrades.length * 20);
+  }</pre>
+</div>
+
+<p>Deux termes, pas un de plus : un prix de base par rareté, plus <strong>20 or par rune de forge</strong>
+présente sur la carte. Notez bien que c'est le <em>nombre</em> de runes qui compte
+(<code>forgeUpgrades.length</code>), pas leur niveau. Une carte portant <code>sharp:3</code> coûte le même
+supplément qu'une carte portant <code>sharp:1</code> : 20 or.</p>
+
+<div class="table-wrap"><table>
+<thead><tr>
+  <th>Rareté</th><th><code>rarity.index</code></th><th>Prix de base</th>
+  <th>+1 rune</th><th>+2 runes</th><th>+3 runes</th><th>Capacité max de runes<sup>*</sup></th>
+</tr></thead>
+<tbody>
+<tr><td><code>common</code></td><td>0</td><td><strong>25</strong></td><td>45</td><td>65</td><td>85</td><td>1</td></tr>
+<tr><td><code>uncommon</code></td><td>1</td><td><strong>50</strong></td><td>70</td><td>90</td><td>110</td><td>2</td></tr>
+<tr><td><code>rare</code></td><td>2</td><td><strong>100</strong></td><td>120</td><td>140</td><td>160</td><td>3</td></tr>
+<tr><td><code>epic</code></td><td>3</td><td><strong>150</strong></td><td>170</td><td>190</td><td>210</td><td>4</td></tr>
+<tr><td><code>legendary</code></td><td>4</td><td><strong>200</strong></td><td>220</td><td>240</td><td>260</td><td>5</td></tr>
+<tr><td><code>unique</code></td><td>5</td><td><strong>999</strong></td><td>1 019</td><td>1 039</td><td>1 059</td><td>6</td></tr>
+</tbody>
+</table></div>
+
+<p><sup>*</sup> La capacité vaut <code>baseMaxForgeUpgrades + rarity.index</code>. Comme les 17 cartes de
+<code>assets/data/cards.json</code> ont toutes <code>baseMaxForgeUpgrades = 1</code>, la colonne se lit
+directement <code>1 + index</code>. Nous y revenons en section 7.</p>
+
+<div class="box rule"><div class="box-title">Règle du jeu</div>
+<p>Prix d'une carte en boutique : <strong>25 / 50 / 100 / 150 / 200 / 999</strong> selon la rareté
+(commune → unique), plus <strong>20 or par rune de forge</strong>. Une carte rare avec deux runes coûte
+<code>100 + 2 × 20 = 140</code>.</p></div>
+
+<div class="box warn"><div class="box-title">Piège</div>
+<p>Le prix de 999 pour <code>unique</code> est <strong>inatteignable en boutique</strong>. D'un côté,
+<code>_getEligibleCards</code> exclut explicitement <code>CardRarity.unique</code> du pool ; de l'autre,
+<code>_rollRarity</code> plafonne l'augmentation de rareté à <code>legendary</code>. La branche
+<code>case CardRarity.unique: basePrice = 999;</code> n'est donc jamais empruntée par le code de la
+boutique — c'est une garde défensive, utile le jour où l'on affichera le prix d'une carte du deck
+ailleurs dans l'interface.</p></div>
+
+<p>Le prix est recalculé à chaque reconstruction du widget, dans le <code>map</code> qui produit les
+cartes de l'étal :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/shop_screen.dart</span><span class="lang">dart</span></div>
+  <pre>                                children: shopState.cardsForSale.map((card) {
+                                  final int price =
+                                      ShopController.getCardPrice(
+                                    card,
+                                  );
+                                  final bool canAfford =
+                                      inventoryState.gold &gt;= price;
+                                    return SizedBox(
+                                      width: 150,
+                                      child: _ShopCardItem(
+                                        card: card,
+                                        price: price,
+                                        onPressed: () =&gt; _buyCard(card, price),
+                                        canAfford: canAfford,
+                                      ),
+                                    );
+                                }).toList(),</pre>
+</div>
+
+<p>Le bouton passe au vert si <code>canAfford</code>, au rouge sinon — mais il reste
+<strong>cliquable</strong> dans les deux cas. C'est <code>spendGold</code> qui refusera, et l'écran
+affichera « Or insuffisant ». Encore une fois : le contrat du modèle est la seule vraie protection.</p>
+
+<h2 id="s4">4. Comment la boutique fabrique ses cartes</h2>
+
+<p>Nous arrivons au cœur du chapitre. Une carte de boutique n'est pas la copie conforme de son
+<code>CardData</code> : c'est une <code>CardInstance</code> fabriquée à la volée, dont la
+<strong>rareté</strong> et les <strong>runes</strong> sont tirées au sort en fonction de l'acte courant.
+Toute la fabrication tient dans <code>_generateShopCardInstance</code>.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/shop_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Helper privé réalisant la génération complète d'une instance de carte pour la boutique
+  CardInstance _generateShopCardInstance(CardData data, int act, Random rng) {
+    final finalRarity = _rollRarity(data.rarity, act, rng);
+
+    var instance = CardInstance(
+      data: data,
+      rarity: finalRarity,
+    );
+
+    final int rarityIndex = CardRarity.values.indexOf(finalRarity);
+    final int maxUpgrades = data.baseMaxForgeUpgrades + rarityIndex;
+
+    int upgradesToRoll = 0;
+    final rollUpgrade = rng.nextInt(100);
+    if (act == 2) {
+      if (rollUpgrade &lt; 15) {
+        upgradesToRoll = 1;
+      }
+    } else if (act &gt;= 3) {
+      if (rollUpgrade &lt; 10) {
+        upgradesToRoll = 2;
+      } else if (rollUpgrade &lt; 40) {
+        upgradesToRoll = 1;
+      }
+    }
+
+    if (upgradesToRoll &gt; maxUpgrades) {
+      upgradesToRoll = maxUpgrades;
+    }
+
+    if (upgradesToRoll &gt; 0) {
+      final List&lt;String&gt; upgrades = [];
+      for (int i = 0; i &lt; upgradesToRoll; i++) {
+        final newUpgrade = _rollRandomUpgrade(instance, upgrades, rng);
+        upgrades.add(newUpgrade);
+      }
+      instance = instance.copyWith(forgeUpgrades: upgrades);
+    }
+
+    return instance;
+  }</pre>
+</div>
+
+<p>La méthode se lit en quatre temps :</p>
+
+<ol>
+  <li><strong>Rareté</strong> — <code>_rollRarity(data.rarity, act, rng)</code> peut faire monter la
+  carte d'un ou deux crans.</li>
+  <li><strong>Capacité</strong> — <code>maxUpgrades = baseMaxForgeUpgrades + rarityIndex</code>, calculée
+  <em>après</em> le tirage de rareté : monter en rareté augmente la capacité de runes.</li>
+  <li><strong>Nombre de runes</strong> — un seul <code>rng.nextInt(100)</code>, interprété différemment
+  selon l'acte, puis écrêté par la capacité.</li>
+  <li><strong>Tirage des runes</strong> — <code>_rollRandomUpgrade</code> autant de fois que nécessaire,
+  en passant la liste déjà tirée pour éviter les doublons.</li>
+</ol>
+
+<h3>Le tirage de rareté</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/shop_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Helper pour tirer la rareté finale d'une carte selon l'acte
+  CardRarity _rollRarity(CardRarity baseRarity, int act, Random rng) {
+    if (baseRarity == CardRarity.unique) return baseRarity;
+
+    int increase = 0;
+    final roll = rng.nextInt(100);
+    if (act == 1) {
+      if (roll &lt; 10) {
+        increase = 1;
+      }
+    } else if (act == 2) {
+      if (roll &lt; 25) {
+        increase = 1;
+      }
+    } else {
+      if (roll &lt; 10) {
+        increase = 2;
+      } else if (roll &lt; 50) {
+        increase = 1;
+      }
+    }
+
+    if (increase == 0) return baseRarity;
+
+    final rarities = CardRarity.values;
+    int baseIndex = rarities.indexOf(baseRarity);
+    int targetIndex = baseIndex + increase;
+
+    int maxIndex = rarities.indexOf(CardRarity.legendary);
+    if (targetIndex &gt; maxIndex) {
+      targetIndex = maxIndex;
+    }
+
+    return rarities[targetIndex];
+  }</pre>
+</div>
+
+<p>Le motif <code>rng.nextInt(100)</code> puis des seuils <code>&lt;</code> en cascade est le générateur
+de probabilités le plus courant du projet. <code>nextInt(100)</code> renvoie un entier uniforme dans
+<code>[0, 99]</code>, donc « <code>roll &lt; 10</code> » vaut exactement 10 chances sur 100. Attention à
+la lecture des cascades : en acte 3, <code>roll &lt; 50</code> n'est évalué que si
+<code>roll &lt; 10</code> a échoué. Les 40 % de « +1 rareté » correspondent donc aux valeurs 10 à 49.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Acte</th><th>+2 raretés</th><th>+1 rareté</th><th>Inchangée</th><th>Valeurs de <code>roll</code></th></tr></thead>
+<tbody>
+<tr><td>Acte 1</td><td>—</td><td><strong>10 %</strong></td><td>90 %</td><td><code>0–9</code> → +1</td></tr>
+<tr><td>Acte 2</td><td>—</td><td><strong>25 %</strong></td><td>75 %</td><td><code>0–24</code> → +1</td></tr>
+<tr><td>Acte 3 et +</td><td><strong>10 %</strong></td><td><strong>40 %</strong></td><td>50 %</td><td><code>0–9</code> → +2 · <code>10–49</code> → +1</td></tr>
+</tbody>
+</table></div>
+
+<p>Comme les 17 cartes du jeu sont toutes <code>common</code> dans les données, on peut traduire ce
+tableau en raretés réelles. En acte 3, une carte de boutique est commune une fois sur deux, peu commune
+dans 40 % des cas et rare dans 10 % des cas. Elle ne peut pas être épique : il faudrait un
+<code>CardData</code> de base au moins peu commun.</p>
+
+<div class="box rule"><div class="box-title">Règle du jeu</div>
+<p>Le plafond de <code>_rollRarity</code> est <code>legendary</code>, pas <code>unique</code> : la ligne
+<code>int maxIndex = rarities.indexOf(CardRarity.legendary);</code> écrête <code>targetIndex</code>. Une
+carte de base légendaire reste légendaire, quel que soit l'acte.</p></div>
+
+<h3>Le tirage du nombre de runes</h3>
+
+<p>Le deuxième tirage, <code>rollUpgrade</code>, suit exactement le même motif. Il n'y a
+<strong>aucune rune en acte 1</strong> : le bloc <code>if (act == 2) … else if (act &gt;= 3) …</code> ne
+comporte pas de branche pour l'acte 1, donc <code>upgradesToRoll</code> reste à sa valeur initiale, 0.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Acte</th><th>2 runes</th><th>1 rune</th><th>Aucune rune</th><th>Espérance</th></tr></thead>
+<tbody>
+<tr><td>Acte 1</td><td>—</td><td>—</td><td><strong>100 %</strong></td><td>0,00</td></tr>
+<tr><td>Acte 2</td><td>—</td><td><strong>15 %</strong></td><td>85 %</td><td>0,15</td></tr>
+<tr><td>Acte 3 et +</td><td><strong>10 %</strong></td><td><strong>30 %</strong></td><td>60 %</td><td>0,50</td></tr>
+</tbody>
+</table></div>
+
+<p>Attention au dernier écrêtage : <code>if (upgradesToRoll &gt; maxUpgrades) upgradesToRoll = maxUpgrades;</code>.
+Avec <code>baseMaxForgeUpgrades = 1</code> pour toutes les cartes du jeu, une carte restée
+<strong>commune</strong> a une capacité de 1. Les 10 % de « deux runes » de l'acte 3 sont donc ramenés à
+une seule rune une fois sur deux, quand le tirage de rareté n'a rien donné.</p>
+
+<p>Les deux tirages étant indépendants (deux appels distincts à <code>rng.nextInt(100)</code>), on peut
+multiplier les probabilités. En acte 3, la probabilité qu'une carte sorte réellement avec
+<strong>deux</strong> runes vaut :</p>
+
+<div class="code" data-lang="text">
+  <div class="code-head"><span class="path">illustration</span><span class="lang">text</span></div>
+  <pre>P(2 runes affichées) = P(rollUpgrade &lt; 10) × P(rareté ≥ uncommon)
+                     = 0,10 × (0,10 + 0,40)
+                     = 0,05  →  5 % des cartes de boutique en acte 3</pre>
+</div>
+
+<h3>L'arbre de décision complet</h3>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 840 700" width="840" role="img" aria-label="Arbre de décision de la génération d'une carte de boutique : tirage de rareté par acte, calcul de capacité, tirage du nombre de runes, écrêtage">
+      <defs>
+        <marker id="c14-d1-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0 0 L8 4 L0 8 z" fill="#3a4966"/>
+        </marker>
+        <marker id="c14-d1-arrow-amber" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0 0 L8 4 L0 8 z" fill="#f59e0b"/>
+        </marker>
+      </defs>
+      <rect x="0" y="0" width="840" height="700" fill="#0e1524"/>
+
+      <rect x="310" y="16" width="220" height="50" rx="8" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="420" y="38" fill="#e6ecf5" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">_getEligibleCards()</text>
+      <text x="420" y="56" fill="#a7b4c9" font-size="11" text-anchor="middle">ni status, ni unique — mélange, take(3 + bonus)</text>
+
+      <path d="M420 66 L420 94" stroke="#3a4966" stroke-width="2" marker-end="url(#c14-d1-arrow)"/>
+
+      <rect x="270" y="96" width="300" height="46" rx="8" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="420" y="124" fill="#e6ecf5" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">_rollRarity(baseRarity, act, rng)</text>
+
+      <path d="M420 142 L420 162 L145 162 L145 176" stroke="#3a4966" stroke-width="2" fill="none" marker-end="url(#c14-d1-arrow)"/>
+      <path d="M420 142 L420 176" stroke="#3a4966" stroke-width="2" fill="none" marker-end="url(#c14-d1-arrow)"/>
+      <path d="M420 142 L420 162 L695 162 L695 176" stroke="#3a4966" stroke-width="2" fill="none" marker-end="url(#c14-d1-arrow)"/>
+
+      <rect x="20" y="178" width="250" height="92" rx="8" fill="#131a2a" stroke="#3a4966"/>
+      <text x="145" y="202" fill="#f59e0b" font-size="13" text-anchor="middle" font-weight="bold">Acte 1</text>
+      <text x="145" y="226" fill="#e6ecf5" font-size="12" text-anchor="middle">roll &lt; 10 → +1 rareté</text>
+      <text x="145" y="250" fill="#a7b4c9" font-size="12" text-anchor="middle">sinon inchangée (90 %)</text>
+
+      <rect x="295" y="178" width="250" height="92" rx="8" fill="#131a2a" stroke="#3a4966"/>
+      <text x="420" y="202" fill="#f59e0b" font-size="13" text-anchor="middle" font-weight="bold">Acte 2</text>
+      <text x="420" y="226" fill="#e6ecf5" font-size="12" text-anchor="middle">roll &lt; 25 → +1 rareté</text>
+      <text x="420" y="250" fill="#a7b4c9" font-size="12" text-anchor="middle">sinon inchangée (75 %)</text>
+
+      <rect x="570" y="178" width="250" height="92" rx="8" fill="#131a2a" stroke="#3a4966"/>
+      <text x="695" y="202" fill="#f59e0b" font-size="13" text-anchor="middle" font-weight="bold">Acte 3 et +</text>
+      <text x="695" y="226" fill="#e6ecf5" font-size="12" text-anchor="middle">roll &lt; 10 → +2 · &lt; 50 → +1</text>
+      <text x="695" y="250" fill="#a7b4c9" font-size="12" text-anchor="middle">sinon inchangée (50 %)</text>
+
+      <path d="M145 270 L145 288 L300 288 L300 302" stroke="#3a4966" stroke-width="2" fill="none" marker-end="url(#c14-d1-arrow)"/>
+      <path d="M420 270 L420 302" stroke="#3a4966" stroke-width="2" fill="none" marker-end="url(#c14-d1-arrow)"/>
+      <path d="M695 270 L695 288 L540 288 L540 302" stroke="#3a4966" stroke-width="2" fill="none" marker-end="url(#c14-d1-arrow)"/>
+
+      <rect x="190" y="304" width="460" height="46" rx="8" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="420" y="332" fill="#e6ecf5" font-size="13" text-anchor="middle">rareté finale — écrêtée à <tspan font-family="ui-monospace, monospace" fill="#a78bfa">legendary</tspan> (index 4)</text>
+
+      <path d="M420 350 L420 380" stroke="#3a4966" stroke-width="2" marker-end="url(#c14-d1-arrow)"/>
+
+      <rect x="200" y="382" width="440" height="46" rx="8" fill="#151b2b" stroke="#60a5fa"/>
+      <text x="420" y="410" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">maxUpgrades = baseMaxForgeUpgrades + rarityIndex</text>
+
+      <path d="M420 428 L420 458" stroke="#3a4966" stroke-width="2" marker-end="url(#c14-d1-arrow)"/>
+
+      <rect x="290" y="460" width="260" height="46" rx="8" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="420" y="488" fill="#e6ecf5" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">rng.nextInt(100) → nb runes</text>
+
+      <path d="M420 506 L420 524 L145 524 L145 538" stroke="#3a4966" stroke-width="2" fill="none" marker-end="url(#c14-d1-arrow)"/>
+      <path d="M420 506 L420 538" stroke="#3a4966" stroke-width="2" fill="none" marker-end="url(#c14-d1-arrow)"/>
+      <path d="M420 506 L420 524 L695 524 L695 538" stroke="#3a4966" stroke-width="2" fill="none" marker-end="url(#c14-d1-arrow)"/>
+
+      <rect x="20" y="540" width="250" height="72" rx="8" fill="#131a2a" stroke="#3a4966"/>
+      <text x="145" y="564" fill="#f59e0b" font-size="13" text-anchor="middle" font-weight="bold">Acte 1</text>
+      <text x="145" y="590" fill="#a7b4c9" font-size="12" text-anchor="middle">0 rune — toujours</text>
+
+      <rect x="295" y="540" width="250" height="72" rx="8" fill="#131a2a" stroke="#3a4966"/>
+      <text x="420" y="564" fill="#f59e0b" font-size="13" text-anchor="middle" font-weight="bold">Acte 2</text>
+      <text x="420" y="590" fill="#e6ecf5" font-size="12" text-anchor="middle">15 % → 1 rune</text>
+
+      <rect x="570" y="540" width="250" height="72" rx="8" fill="#131a2a" stroke="#3a4966"/>
+      <text x="695" y="564" fill="#f59e0b" font-size="13" text-anchor="middle" font-weight="bold">Acte 3 et +</text>
+      <text x="695" y="590" fill="#e6ecf5" font-size="12" text-anchor="middle">10 % → 2 · 30 % → 1</text>
+
+      <path d="M145 612 L145 628 L300 628 L300 642" stroke="#f59e0b" stroke-width="2" fill="none" marker-end="url(#c14-d1-arrow-amber)"/>
+      <path d="M420 612 L420 642" stroke="#f59e0b" stroke-width="2" fill="none" marker-end="url(#c14-d1-arrow-amber)"/>
+      <path d="M695 612 L695 628 L540 628 L540 642" stroke="#f59e0b" stroke-width="2" fill="none" marker-end="url(#c14-d1-arrow-amber)"/>
+
+      <rect x="170" y="644" width="500" height="46" rx="8" fill="#151b2b" stroke="#34d399"/>
+      <text x="420" y="663" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">min(nb, maxUpgrades) × _rollRandomUpgrade()</text>
+      <text x="420" y="681" fill="#a7b4c9" font-size="11" text-anchor="middle">l'instance finale part sur l'étal, prix = base + 20 × nb runes</text>
+    </svg>
+  </div>
+  <figcaption>Génération d'une carte de boutique : deux tirages indépendants (rareté puis nombre de runes),
+  séparés par le calcul de capacité qui dépend du premier.</figcaption>
+</figure>
+
+<h3>Un exemple complet</h3>
+
+<p>Suivons une <code>Frappe</code> (<code>strike_basic</code>, commune, attaque, 6 dégâts,
+<code>baseMaxForgeUpgrades = 1</code>) tirée dans une boutique de l'acte 3.</p>
+
+<div class="code" data-lang="text">
+  <div class="code-head"><span class="path">illustration</span><span class="lang">text</span></div>
+  <pre>1. _rollRarity(common, act=3, rng)
+   rng.nextInt(100) = 32   →  10 ≤ 32 &lt; 50  →  increase = 1
+   index 0 + 1 = 1         →  finalRarity = uncommon
+
+2. rarityIndex = 1
+   maxUpgrades = 1 (baseMaxForgeUpgrades) + 1 = 2
+
+3. rollUpgrade = rng.nextInt(100) = 6
+   6 &lt; 10  →  upgradesToRoll = 2      (2 ≤ maxUpgrades, pas d'écrêtage)
+
+4. _rollRandomUpgrade × 2  →  ["sharp:1", "burning:2"]
+
+Résultat : Frappe (uncommon) portant 2 runes
+Prix      : 50 + 2 × 20 = 90 or
+Dégâts    : round(6 × 1,2) + 2 × 1 = 7 + 2 = 9, plus 2 Brûlure pendant 2 tours</pre>
+</div>
+
+<p>Le <code>1,2</code> vient de <code>CardInstance.rarityMultiplier</code>, qui vaut 1,0 / 1,2 / 1,4 /
+1,6 / 2,0 pour commune → légendaire. La même <code>Frappe</code>, restée commune et sans rune, aurait
+coûté 25 or et infligé 6 dégâts. C'est toute la valeur ajoutée de la boutique de fin de partie.</p>
+
+<h2 id="s5">5. Les huit runes de forge</h2>
+
+<p>Les « améliorations de forge » — que l'interface appelle des <em>runes</em> — sont décrites dans un
+fichier de données, pas dans du code. Il en existe exactement huit, et elles tiennent en 110 lignes de
+JSON. Voici les trois premières entrées, verbatim :</p>
+
+<div class="code" data-lang="json">
+  <div class="code-head"><span class="path">assets/data/forge_upgrades.json</span><span class="lang">json</span></div>
+  <pre>  {
+    "id": "sharp",
+    "name_en": "Sharp",
+    "name_fr": "Tranchant",
+    "description_en": "+{val} Damage on the card",
+    "description_fr": "+{val} Dégâts sur la carte",
+    "icon": "hardware_rounded",
+    "color": "redAccent",
+    "pools": ["common", "uncommon", "rare"],
+    "eligibleCardTypes": ["attack"],
+    "valueMultiplier": 2,
+    "weight": 100,
+    "emoji": "⚔️"
+  },
+  {
+    "id": "quick",
+    "name_en": "Quick",
+    "name_fr": "Véloce",
+    "description_fr": "Pioche +{tier} carte(s)",
+    "pools": ["uncommon", "rare"],
+    "eligibleCardTypes": ["attack", "skill", "power"],
+    "weight": 60,
+    "emoji": "🪶"
+  },
+  {
+    "id": "enduring",
+    "name_en": "Enduring",
+    "name_fr": "Persistant",
+    "description_fr": "Retire Épuisement (Exhaust)",
+    "pools": ["rare"],
+    "eligibleCardTypes": ["attack", "skill", "power"],
+    "requiresExhaust": true,
+    "weight": 30,
+    "emoji": "⏳"
+  }</pre>
+</div>
+
+<p>Chaque champ pilote une partie précise du système. <code>pools</code> décide dans quels sacs de
+tirage la rune peut apparaître ; <code>eligibleCardTypes</code> filtre par type de carte ;
+<code>requiresExhaust</code> exige que la carte ait le mot-clé Épuisement ; <code>weight</code> est le
+poids dans la roue de la fortune (section 6) ; <code>valueMultiplier</code> ne sert qu'à <em>écrire</em>
+la description. Voici le tableau complet des huit runes.</p>
+
+<div class="table-wrap"><table>
+<thead><tr>
+  <th><code>id</code></th><th>Nom FR</th><th>Effet</th><th><code>pools</code></th>
+  <th><code>eligibleCardTypes</code></th><th><code>valueMultiplier</code></th>
+  <th><code>weight</code></th><th>Emoji</th><th><code>requiresExhaust</code></th>
+</tr></thead>
+<tbody>
+<tr><td><code>sharp</code></td><td>Tranchant</td><td>+2 dégâts par niveau</td>
+    <td>common · uncommon · rare</td><td><code>attack</code></td><td>2</td><td><strong>100</strong></td><td>⚔️</td><td>non</td></tr>
+<tr><td><code>hardened</code></td><td>Endurci</td><td>+2 armure par niveau</td>
+    <td>common · uncommon · rare</td><td><code>attack</code> · <code>skill</code></td><td>2</td><td><strong>100</strong></td><td>🛡️</td><td>non</td></tr>
+<tr><td><code>burning</code></td><td>Brûlant</td><td>Applique Brûlure (valeur = niveau)</td>
+    <td>common · uncommon · rare</td><td><code>attack</code></td><td>1 (défaut)</td><td><strong>80</strong></td><td>🔥</td><td>non</td></tr>
+<tr><td><code>freezing</code></td><td>Congelant</td><td>Applique Gel (valeur = niveau)</td>
+    <td>common · uncommon · rare</td><td><code>attack</code></td><td>1 (défaut)</td><td><strong>80</strong></td><td>❄️</td><td>non</td></tr>
+<tr><td><code>shocking</code></td><td>Surchargé</td><td>Applique Électrocution (valeur = niveau)</td>
+    <td>common · uncommon · rare</td><td><code>attack</code></td><td>1 (défaut)</td><td><strong>80</strong></td><td>⚡</td><td>non</td></tr>
+<tr><td><code>quick</code></td><td>Véloce</td><td>Pioche +1 carte par niveau</td>
+    <td>uncommon · rare</td><td><code>attack</code> · <code>skill</code> · <code>power</code></td><td>1 (défaut)</td><td><strong>60</strong></td><td>🪶</td><td>non</td></tr>
+<tr><td><code>eco</code></td><td>Économe</td><td>Rend +1 mana par niveau à l'utilisation</td>
+    <td>rare</td><td><code>attack</code> · <code>skill</code> · <code>power</code></td><td>1 (défaut)</td><td><strong>40</strong></td><td>💎</td><td>non</td></tr>
+<tr><td><code>enduring</code></td><td>Persistant</td><td>Retire l'Épuisement</td>
+    <td>rare</td><td><code>attack</code> · <code>skill</code> · <code>power</code></td><td>1 (défaut)</td><td><strong>30</strong></td><td>⏳</td><td><strong>oui</strong></td></tr>
+</tbody>
+</table></div>
+
+<p>Le modèle Dart correspondant est un simple <em>data class</em> avec des valeurs par défaut. Notez la
+valeur par défaut de <code>weight</code> — <code>10</code> — qui ne correspond à aucune des huit runes :
+c'est un filet de sécurité si quelqu'un ajoute une entrée JSON sans poids.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/forge_upgrade_data.dart</span><span class="lang">dart</span></div>
+  <pre>  const ForgeUpgradeData({
+    required this.id,
+    required this.nameEn,
+    required this.nameFr,
+    required this.descriptionEn,
+    required this.descriptionFr,
+    required this.icon,
+    required this.color,
+    required this.pools,
+    this.eligibleCardTypes,
+    this.requiresExhaust = false,
+    this.valueMultiplier = 1,
+    this.weight = 10,
+    this.emoji = '🔮',
+  });</pre>
+</div>
+
+<h3>Le format <code>"id:tier"</code></h3>
+
+<p>Une rune posée sur une carte n'est pas un objet : c'est une <strong>chaîne de caractères</strong>
+stockée dans <code>CardInstance.forgeUpgrades</code>, de la forme <code>"identifiant:niveau"</code>.
+Une carte portant <code>["sharp:2", "burning:1"]</code> a un Tranchant de niveau 2 et un Brûlant de
+niveau 1.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/card_instance.dart</span><span class="lang">dart</span></div>
+  <pre>class CardInstance {
+  final String uniqueId;
+  final CardData data;
+  final CardRarity rarity;
+  final List&lt;String&gt; forgeUpgrades;
+
+  CardInstance({
+    String? uniqueId,
+    required this.data,
+    CardRarity? rarity,
+    List&lt;String&gt;? forgeUpgrades,
+  })  : uniqueId = uniqueId ?? const Uuid().v4(),
+        rarity = rarity ?? data.rarity,
+        forgeUpgrades = forgeUpgrades != null
+            ? List&lt;String&gt;.unmodifiable(forgeUpgrades)
+            : const &lt;String&gt;[];</pre>
+</div>
+
+<p>C'est un choix radical : une <code>List&lt;String&gt;</code> plutôt qu'une
+<code>List&lt;ForgeUpgrade&gt;</code>. L'avantage est immédiat pour la sauvegarde — la liste est déjà
+sérialisable en JSON telle quelle, sans <code>toJson</code> dédié. Le coût, c'est qu'il faut
+<code>split(':')</code> partout, et que rien n'empêche une chaîne malformée d'entrer dans la liste. Le
+projet gère ce risque au chargement, avec un filtre :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/forge_upgrade_data.dart</span><span class="lang">dart</span></div>
+  <pre>  static (List&lt;String&gt;, List&lt;MissingSaveItem&gt;) filterValidRefs(
+    List&lt;dynamic&gt;? raw,
+  ) {
+    final kept = &lt;String&gt;[];
+    final missing = &lt;MissingSaveItem&gt;[];
+    for (final entry in (raw ?? const [])) {
+      final ref = entry as String;
+      final id = ref.split(':').first;
+      if (getById(id) != null) {
+        kept.add(ref);
+      } else {
+        missing.add(
+          MissingSaveItem(
+            id: id,
+            nameFr: id,
+            nameEn: id,
+            category: 'forgeUpgrade',
+          ),
+        );
+      }
+    }
+    return (kept, missing);
+  }</pre>
+</div>
+
+<p>À la relecture d'une sauvegarde, toute rune dont l'<code>id</code> n'existe plus dans le JSON est
+retirée du deck et signalée au joueur via <code>MissingSaveItem</code>. C'est ce qui permet de
+supprimer une rune du fichier de données sans casser les parties en cours.</p>
+
+<h3>Comment une rune modifie réellement une carte</h3>
+
+<p>Les runes ne sont jamais appliquées « une fois pour toutes » à la carte : elles sont relues
+<strong>à chaque résolution</strong>, dans <code>EffectResolver.resolveCard</code>. Voici la boucle de
+parsing, verbatim :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/services/effect_resolver.dart</span><span class="lang">dart</span></div>
+  <pre>    int extraDamage = 0;
+    int extraArmor = 0;
+    int extraDraw = 0;
+    int extraMana = 0;
+    int elementBurn = 0;
+    int elementFreeze = 0;
+    int elementShock = 0;
+
+    for (var upgrade in card.forgeUpgrades) {
+      final parts = upgrade.split(':');
+      if (parts.length != 2) continue;
+      final id = parts[0];
+      final k = int.tryParse(parts[1]) ?? 0;
+      if (k &lt;= 0) continue;
+      switch (id) {
+        case 'sharp':
+          extraDamage += 2 * k;
+          break;
+        case 'hardened':
+          extraArmor += 2 * k;
+          break;
+        case 'quick':
+          extraDraw += k;
+          break;
+        case 'eco':
+          extraMana += k;
+          break;
+        case 'burning':
+          elementBurn += k;
+          break;
+        case 'freezing':
+          elementFreeze += k;
+          break;
+        case 'shocking':
+          elementShock += k;
+          break;
+      }
+    }</pre>
+</div>
+
+<p>Trois gardes protègent l'entrée : <code>parts.length != 2</code> ignore les chaînes malformées,
+<code>int.tryParse(...) ?? 0</code> évite l'exception si le niveau n'est pas un nombre, et
+<code>k &lt;= 0</code> ignore les niveaux nuls ou négatifs. Ensuite, les effets sont
+<strong>accumulés</strong> (<code>+=</code>), ce qui signifie que deux runes du même identifiant sur la
+même carte s'additionnent naturellement.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Rune</th><th>Variable accumulée</th><th>Formule</th><th>Où l'effet est consommé</th></tr></thead>
+<tbody>
+<tr><td><code>sharp:k</code></td><td><code>extraDamage</code></td><td><code>+= 2 * k</code></td><td>ajouté à <code>scaledValue</code> des effets de type <code>damage</code></td></tr>
+<tr><td><code>hardened:k</code></td><td><code>extraArmor</code></td><td><code>+= 2 * k</code></td><td>ajouté aux effets <code>armor</code> ; si la carte n'en a aucun, l'armure est ajoutée directement au héros</td></tr>
+<tr><td><code>quick:k</code></td><td><code>extraDraw</code></td><td><code>+= k</code></td><td><code>deckController.drawCards(extraDraw, maxHandSize: …)</code></td></tr>
+<tr><td><code>eco:k</code></td><td><code>extraMana</code></td><td><code>+= k</code></td><td><code>setHeroStats(currentMana: currentMana + extraMana)</code></td></tr>
+<tr><td><code>burning:k</code></td><td><code>elementBurn</code></td><td><code>+= k</code></td><td>statut <code>burn</code>, valeur <em>et</em> durée = <code>k</code> — cartes <code>attack</code> uniquement</td></tr>
+<tr><td><code>freezing:k</code></td><td><code>elementFreeze</code></td><td><code>+= k</code></td><td>statut <code>freeze</code>, valeur et durée = <code>k</code></td></tr>
+<tr><td><code>shocking:k</code></td><td><code>elementShock</code></td><td><code>+= k</code></td><td>statut <code>shock</code>, valeur et durée = <code>k</code></td></tr>
+<tr><td><code>enduring:1</code></td><td>—</td><td>—</td><td>absent de ce <code>switch</code> : traité ailleurs, dans <code>DeckNotifier.playCard</code></td></tr>
+</tbody>
+</table></div>
+
+<p>Le point le moins intuitif du tableau est la ligne des statuts élémentaires : la <strong>valeur et la
+durée sont égales au niveau</strong>. Un <code>burning:2</code> applique donc « 2 Brûlure pendant
+2 tours », pas « 2 Brûlure pendant 1 tour ».</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/services/effect_resolver.dart</span><span class="lang">dart</span></div>
+  <pre>    // Apply elemental statuses if this is an Attack card
+    if (card.data.type == CardType.attack) {
+      final List&lt;StatusEffect&gt; extraStatuses = [];
+      if (elementBurn &gt; 0) {
+        final st = createStatus('burn', elementBurn, elementBurn);
+        if (st != null) extraStatuses.add(st);
+      }
+      if (elementFreeze &gt; 0) {
+        final st = createStatus('freeze', elementFreeze, elementFreeze);
+        if (st != null) extraStatuses.add(st);
+      }
+      if (elementShock &gt; 0) {
+        final st = createStatus('shock', elementShock, elementShock);
+        if (st != null) extraStatuses.add(st);
+      }</pre>
+</div>
+
+<p>La signature de <code>createStatus(statusId, value, duration)</code> reçoit deux fois la même
+variable. Et le tout est enfermé dans <code>if (card.data.type == CardType.attack)</code> : les statuts
+élémentaires ne partent que depuis une carte d'attaque. Le filtre <code>eligibleCardTypes</code> du JSON
+et ce <code>if</code> disent la même chose à deux endroits — le premier empêche la rune d'être
+<em>tirée</em> sur une compétence, le second empêche l'effet de <em>partir</em>.</p>
+
+<p>Enfin, l'ajout de dégâts et d'armure se fait au moment de mettre à l'échelle chaque effet de la
+carte :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/services/effect_resolver.dart</span><span class="lang">dart</span></div>
+  <pre>    for (var effect in card.data.effects) {
+      final int baseValue = effect.value;
+      int scaledValue = (baseValue * card.rarityMultiplier).round();
+      if (effect.type == 'damage') {
+        scaledValue += extraDamage;
+      } else if (effect.type == 'armor') {
+        scaledValue += extraArmor;
+      }
+      // ...
+    }
+
+    final hasArmorEffect = card.data.effects.any((e) =&gt; e.type == 'armor');
+    if (!hasArmorEffect &amp;&amp; extraArmor &gt; 0) {
+      final currentStats = runController.currentState.heroStats;
+      runController.setHeroStats(armure: currentStats.armure + extraArmor);
+    }</pre>
+</div>
+
+<div class="box rule"><div class="box-title">Règle du jeu</div>
+<p>L'ordre de calcul est : <strong>valeur de base × multiplicateur de rareté (arrondi), <em>puis</em>
+ajout des runes</strong>. Une <code>Frappe</code> légendaire (6 dégâts, ×2,0) avec <code>sharp:2</code>
+inflige <code>round(6 × 2,0) + 4 = 16</code> dégâts, et non <code>round((6 + 4) × 2,0) = 20</code>. Les
+runes ne bénéficient jamais du multiplicateur de rareté.</p></div>
+
+<p>Le bloc final mérite qu'on s'y arrête : si la carte n'a <em>aucun</em> effet d'armure, l'armure
+apportée par <code>hardened</code> est ajoutée directement au héros. C'est ce qui rend
+<code>hardened</code> utile sur une attaque pure comme <code>heavy_strike</code> : la rune donne bien
+ses <code>2 × k</code> points d'armure, même si la carte n'a pas de ligne « armure ».</p>
+
+<h3>Le cas particulier de <code>enduring</code></h3>
+
+<p><code>Persistant</code> est la seule rune qui n'apparaît pas dans <code>EffectResolver</code>. Elle
+n'agit pas sur la résolution mais sur la <strong>destination de la carte après avoir été jouée</strong>,
+dans le contrôleur de deck :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/deck_controller.dart</span><span class="lang">dart</span></div>
+  <pre>    if (index != -1) {
+      final cardToPlay = currentHand.removeAt(index);
+
+      final isExhausted = cardToPlay.data.isExhaust &amp;&amp; !cardToPlay.forgeUpgrades.contains('enduring:1');
+
+      if (cardToPlay.data.type == CardType.power || isExhausted) {
+        currentExhaustPile.add(cardToPlay);
+      } else {
+        currentDiscardPile.add(cardToPlay);
+      }</pre>
+</div>
+
+<p>Une carte marquée <code>isExhaust</code> part normalement dans la pile d'épuisement, d'où elle ne
+revient jamais. Avec un <code>enduring:1</code> dans sa liste de runes, elle part dans la défausse et
+sera donc remélangée dans la pioche. Trois cartes du jeu sont concernées :
+<code>concentration</code> (Concentration), <code>heal_potion</code> (Potion de Soin) et
+<code>focus</code> (Focalisation) — les trois seules à avoir <code>isExhaust: true</code> dans
+<code>assets/data/cards.json</code>. C'est aussi pour cela que la rune porte
+<code>requiresExhaust: true</code> : elle serait sans effet ailleurs.</p>
+
+<p>Notez que le test porte sur les cartes de type <code>power</code> <em>avant</em> le
+<code>isExhausted</code> : un pouvoir est toujours épuisé, <code>enduring</code> ou pas. La rune reste
+pourtant tirable sur un pouvoir (<code>eligibleCardTypes</code> contient <code>power</code>) — mais
+aucune carte <code>power</code> du jeu n'a <code>isExhaust: true</code>, donc
+<code>requiresExhaust</code> l'exclut de fait.</p>
+
+<div class="box danger"><div class="box-title">Point d'attention</div>
+<p>Le test est <code>forgeUpgrades.contains('enduring:1')</code> : une <strong>comparaison de chaîne
+exacte</strong>, pas un test sur l'identifiant. Si une carte finit avec <code>'enduring:2'</code> —
+c'est possible, voir la fusion de runes en section 8 — le test échoue et la carte redevient épuisable,
+alors que l'interface affiche toujours la rune Persistant. C'est le bug latent le plus coûteux du
+système de forge. Un <code>forgeUpgrades.any((u) =&gt; u.split(':')[0] == 'enduring')</code> le
+supprimerait.</p></div>
+
+<div class="box danger"><div class="box-title">Point d'attention</div>
+<p>Le facteur 2 de <code>sharp</code> et <code>hardened</code> est écrit <strong>deux fois</strong> :
+dans le JSON (<code>"valueMultiplier": 2</code>, qui sert à composer le texte
+« +{val} Dégâts ») et en dur dans <code>EffectResolver</code> (<code>extraDamage += 2 * k</code>).
+Changer le JSON sans changer le resolver produirait une carte qui <em>annonce</em> +6 dégâts et en
+<em>inflige</em> +4. La donnée pilote l'affichage, le code pilote le jeu.</p></div>
+
+<h2 id="s6">6. Le tirage pondéré des runes</h2>
+
+<p>Nous savons maintenant <em>combien</em> de runes une carte reçoit. Reste la question la plus
+intéressante : <em>lesquelles</em>. Le tirage se fait en trois étages, tous dans
+<code>shop_controller.dart</code> :</p>
+
+<ol>
+  <li><code>_rollUpgradeId</code> choisit un <strong>pool</strong> en fonction de la rareté de la carte,
+  puis descend dans les pools de repli si le pool visé est vide.</li>
+  <li><code>_getEligibleUpgradesForPool</code> filtre le pool par type de carte, par
+  <code>requiresExhaust</code> et par doublons.</li>
+  <li><code>_rollWeighted</code> tire une rune dans la liste filtrée, proportionnellement au champ
+  <code>weight</code>.</li>
+</ol>
+
+<h3>Étage 1 : choisir le pool</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/shop_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Helper privé pour tirer un ID d'upgrade aléatoire compatible
+  String? _rollUpgradeId(CardInstance card, Random rand, List&lt;String&gt; excludedIdsInCurrentRolls) {
+    final r = rand.nextInt(100);
+    String targetPool;
+    if (card.rarity == CardRarity.common) {
+      targetPool = 'common';
+    } else if (card.rarity == CardRarity.uncommon) {
+      targetPool = r &lt; 75 ? 'common' : 'uncommon';
+    } else {
+      targetPool = r &lt; 65 ? 'common' : (r &lt; 90 ? 'uncommon' : 'rare');
+    }
+
+    List&lt;String&gt; poolOrder = ['rare', 'uncommon', 'common'];
+    int startIndex = poolOrder.indexOf(targetPool);
+    if (startIndex == -1) startIndex = 2;
+
+    for (int i = startIndex; i &lt; poolOrder.length; i++) {
+      final pool = poolOrder[i];
+      final eligibleIds = _getEligibleUpgradesForPool(card, pool, excludedIdsInCurrentRolls);
+      if (eligibleIds.isNotEmpty) {
+        return _rollWeighted(eligibleIds, rand);
+      }
+    }
+
+    for (final pool in poolOrder) {
+      final eligibleIds = _getEligibleUpgradesForPool(card, pool, excludedIdsInCurrentRolls);
+      if (eligibleIds.isNotEmpty) {
+        return _rollWeighted(eligibleIds, rand);
+      }
+    }
+    return null;
+  }</pre>
+</div>
+
+<p>La première moitié tire le pool visé. Plus la carte est rare, plus elle a de chances de piocher dans
+un pool de qualité :</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Rareté de la carte</th><th>Pool <code>common</code></th><th>Pool <code>uncommon</code></th><th>Pool <code>rare</code></th><th>Test</th></tr></thead>
+<tbody>
+<tr><td><code>common</code></td><td><strong>100 %</strong></td><td>—</td><td>—</td><td>affectation directe</td></tr>
+<tr><td><code>uncommon</code></td><td><strong>75 %</strong></td><td><strong>25 %</strong></td><td>—</td><td><code>r &lt; 75</code></td></tr>
+<tr><td><code>rare</code>, <code>epic</code>, <code>legendary</code>, <code>unique</code></td><td><strong>65 %</strong></td><td><strong>25 %</strong></td><td><strong>10 %</strong></td><td><code>r &lt; 65</code> puis <code>r &lt; 90</code></td></tr>
+</tbody>
+</table></div>
+
+<p>La seconde moitié est la partie subtile. <code>poolOrder</code> est figé à
+<code>['rare', 'uncommon', 'common']</code>, et la boucle démarre à l'index du pool visé, puis
+<strong>descend</strong>. Autrement dit :</p>
+
+<div class="tree">poolOrder = [ <span class="d">rare</span> , <span class="d">uncommon</span> , <span class="d">common</span> ]
+                0          1            2
+
+targetPool = 'rare'      → startIndex = 0 → essaie rare, puis uncommon, puis common
+targetPool = 'uncommon'  → startIndex = 1 → essaie uncommon, puis common
+targetPool = 'common'    → startIndex = 2 → essaie <span class="c">common uniquement</span>
+</div>
+
+<p>Le repli est donc à sens unique : on ne remonte jamais vers un pool plus rare… sauf si la première
+boucle échoue complètement. Dans ce cas, la seconde boucle rebalaie <strong>tout</strong>
+<code>poolOrder</code> depuis le début, c'est-à-dire en commençant par <code>rare</code>. Ce filet de
+sécurité n'est pas théorique, nous allons le voir.</p>
+
+<h3>Étage 2 : filtrer le pool</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/shop_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Helper pour obtenir les upgrades éligibles selon le pool de rareté et le type de carte
+  List&lt;String&gt; _getEligibleUpgradesForPool(CardInstance card, String poolName, List&lt;String&gt; currentRolls) {
+    final registry = GameDataRegistry.instance;
+    if (registry == null) return [];
+
+    final eligible = &lt;String&gt;[];
+    for (final upgrade in registry.forgeUpgrades) {
+      if (!upgrade.pools.contains(poolName)) continue;
+
+      final alreadyInRolls = currentRolls.any((u) =&gt; u.split(':')[0] == upgrade.id);
+      if (alreadyInRolls) continue;
+
+      // Exclusions spécifiques au type de carte:
+      if (upgrade.eligibleCardTypes != null &amp;&amp;
+          !upgrade.eligibleCardTypes!.contains(card.data.type.name)) {
+        continue;
+      }
+
+      if (upgrade.requiresExhaust &amp;&amp; !card.data.isExhaust) {
+        continue;
+      }
+
+      eligible.add(upgrade.id);
+    }
+    return eligible;
+  }</pre>
+</div>
+
+<p>Quatre filtres en cascade : appartenance au pool, absence de doublon dans le tirage courant, type de
+carte compatible, et Épuisement requis. Le résultat dépend donc du <strong>type</strong> de la carte
+autant que de sa rareté. Voici les listes éligibles réelles, avec la somme des poids :</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Type de carte</th><th>Pool <code>common</code></th><th>Pool <code>uncommon</code></th><th>Pool <code>rare</code></th></tr></thead>
+<tbody>
+<tr><td><code>attack</code></td>
+    <td>sharp 100 · hardened 100 · burning 80 · freezing 80 · shocking 80<br><strong>total 440</strong></td>
+    <td>les 5 précédentes + quick 60<br><strong>total 500</strong></td>
+    <td>les 6 précédentes + eco 40<br><strong>total 540</strong></td></tr>
+<tr><td><code>skill</code></td>
+    <td>hardened 100<br><strong>total 100</strong></td>
+    <td>hardened 100 · quick 60<br><strong>total 160</strong></td>
+    <td>hardened 100 · quick 60 · eco 40<br><strong>total 200</strong> (+ enduring 30 si Épuisement)</td></tr>
+<tr><td><code>power</code></td>
+    <td><strong>aucune</strong></td>
+    <td>quick 60<br><strong>total 60</strong></td>
+    <td>quick 60 · eco 40<br><strong>total 100</strong></td></tr>
+</tbody>
+</table></div>
+
+<div class="box warn"><div class="box-title">Piège</div>
+<p>Regardez la case vide : pour une carte de type <code>power</code>, le pool <code>common</code> est
+<strong>totalement vide</strong> (les cinq runes communes sont réservées aux attaques et aux
+compétences). Une carte <code>power</code> de rareté commune vise donc le pool <code>common</code>,
+n'y trouve rien, sort de la première boucle sans résultat… et tombe dans la <em>seconde</em> boucle, qui
+démarre par le pool <code>rare</code>. Conclusion contre-intuitive : <strong>toute rune posée sur un
+pouvoir vient du pool rare</strong> — Véloce (60/100 = 60 %) ou Économe (40/100 = 40 %). Les deux
+pouvoirs du jeu, <code>demon_form</code> et <code>metallicize</code>, ne peuvent recevoir que ces deux
+runes.</p></div>
+
+<p>Le même raisonnement donne un résultat plus banal pour les compétences : dans le pool
+<code>common</code>, seule <code>hardened</code> est éligible. Une compétence commune reçoit donc
+<strong>toujours</strong> un Endurci. Aucune loterie.</p>
+
+<h3>Étage 3 : la roue de la fortune</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/shop_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  String _rollWeighted(List&lt;String&gt; eligibleIds, Random rand) {
+    int totalWeight = 0;
+    final upgrades = &lt;ForgeUpgradeData&gt;[];
+    for (final id in eligibleIds) {
+      final upg = ForgeUpgradeData.getById(id);
+      if (upg != null) {
+        upgrades.add(upg);
+        totalWeight += upg.weight;
+      }
+    }
+
+    if (totalWeight == 0 || upgrades.isEmpty) {
+      return eligibleIds[rand.nextInt(eligibleIds.length)];
+    }
+
+    int choice = rand.nextInt(totalWeight);
+    int currentSum = 0;
+    for (final upg in upgrades) {
+      currentSum += upg.weight;
+      if (choice &lt; currentSum) {
+        return upg.id;
+      }
+    }
+    return upgrades.last.id;
+  }</pre>
+</div>
+
+<p>C'est l'algorithme de tirage pondéré classique, en deux passes. La première additionne les poids ; la
+seconde tire un nombre dans <code>[0, totalWeight − 1]</code> et avance une somme cumulée jusqu'à la
+dépasser. Imaginez une règle graduée découpée en segments proportionnels aux poids : on lance une
+fléchette et on regarde dans quel segment elle tombe.</p>
+
+<div class="code" data-lang="text">
+  <div class="code-head"><span class="path">illustration</span><span class="lang">text</span></div>
+  <pre>Carte d'attaque, pool common — totalWeight = 440
+
+ 0        100        200      280      360      440
+ |--sharp--|-hardened-|-burning|freezing|shocking|
+    22,7 %    22,7 %    18,2 %   18,2 %   18,2 %
+
+choice = rand.nextInt(440) = 265  →  265 &lt; 280  →  "burning"</pre>
+</div>
+
+<p>Deux détails d'implémentation qui comptent. D'abord, le repli
+<code>if (totalWeight == 0 || upgrades.isEmpty)</code> retombe sur un tirage uniforme : ce cas ne se
+produit que si toutes les runes éligibles ont un poids de 0 ou si le registre est incomplet. Ensuite, le
+<code>return upgrades.last.id</code> final est inatteignable en théorie (la somme cumulée finit toujours
+par dépasser <code>choice</code>) mais indispensable en pratique : Dart exige que toute fonction non
+<code>void</code> retourne quelque chose sur tous les chemins.</p>
+
+<h3>Le niveau de la rune</h3>
+
+<p>Une fois l'identifiant tiré, il ne reste qu'à choisir le niveau. C'est le rôle de
+<code>_rollRandomUpgrade</code>, qui assemble aussi la chaîne finale :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/shop_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Helper privé pour générer un upgrade de forge aléatoire avec son tier
+  String _rollRandomUpgrade(CardInstance card, List&lt;String&gt; existingUpgrades, Random rng) {
+    final excludedIds = existingUpgrades.map((u) =&gt; u.split(':')[0]).toList();
+    String? rolledId = _rollUpgradeId(card, rng, excludedIds);
+    rolledId ??= _rollUpgradeId(card, rng, []);
+    rolledId ??= 'sharp';
+
+    int tier = 1;
+    if (rolledId != 'enduring') {
+      final t = rng.nextInt(100);
+      if (t &lt; 80) {
+        tier = 1;
+      } else if (t &lt; 95) {
+        tier = 2;
+      } else {
+        tier = 3;
+      }
+    }
+    return '$rolledId:$tier';
+  }</pre>
+</div>
+
+<p>Les trois premières lignes forment une cascade de replis élégante, écrite avec l'opérateur
+d'affectation conditionnelle <code>??=</code> (« affecte seulement si la variable est nulle ») : on
+essaie d'abord sans doublon, puis en autorisant les doublons, et en dernier recours on retourne
+<code>'sharp'</code>. La carte reçoit toujours une rune.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Niveau</th><th>Probabilité</th><th>Valeurs de <code>t</code></th><th>Effet d'un <code>sharp</code></th><th>Effet d'un <code>burning</code></th></tr></thead>
+<tbody>
+<tr><td>Niveau 1</td><td><strong>80 %</strong></td><td><code>0–79</code></td><td>+2 dégâts</td><td>1 Brûlure, 1 tour</td></tr>
+<tr><td>Niveau 2</td><td><strong>15 %</strong></td><td><code>80–94</code></td><td>+4 dégâts</td><td>2 Brûlure, 2 tours</td></tr>
+<tr><td>Niveau 3</td><td><strong>5 %</strong></td><td><code>95–99</code></td><td>+6 dégâts</td><td>3 Brûlure, 3 tours</td></tr>
+</tbody>
+</table></div>
+
+<div class="box rule"><div class="box-title">Règle du jeu</div>
+<p>Niveau d'une rune tirée : <strong>80 % niveau 1, 15 % niveau 2, 5 % niveau 3</strong>. Seule
+exception, <code>enduring</code> est <strong>toujours de niveau 1</strong> — le <code>if (rolledId != 'enduring')</code>
+saute complètement le tirage. C'est cohérent avec son effet booléen (on retire l'Épuisement, ou on ne le
+retire pas) et c'est aussi ce qui garantit que la chaîne produite est bien <code>'enduring:1'</code>,
+celle que <code>playCard</code> recherche.</p></div>
+
+<p>On peut maintenant calculer la probabilité complète d'une rune donnée. Prenons une carte
+<strong>d'attaque rare</strong> en boutique, et demandons la probabilité qu'elle reçoive
+<code>Économe</code> :</p>
+
+<div class="code" data-lang="text">
+  <div class="code-head"><span class="path">illustration</span><span class="lang">text</span></div>
+  <pre>eco n'existe que dans le pool 'rare'.
+P(pool rare)          = 10 %                    (carte rare → r ≥ 90)
+P(eco | pool rare)    = 40 / 540 = 7,41 %       (poids 40 sur 540 pour une attaque)
+P(eco)                = 0,10 × 0,0741 = 0,74 %
+
+Et pour Véloce, présent dans deux pools :
+P(quick) = 0,25 × (60/500) + 0,10 × (60/540)
+         = 0,03 + 0,0111 = 4,11 %</pre>
+</div>
+
+<p>Une carte d'attaque rare a donc environ <strong>trois chances sur quatre cents</strong> de sortir avec
+un Économe. Multipliez encore par 5 % si vous le voulez de niveau 3 : c'est le genre d'objet que l'on
+voit une fois toutes les vingt parties.</p>
+
+<h2 id="s7">7. La forge du feu de camp et les slots bonus</h2>
+
+<p>La boutique vend des cartes déjà serties. La <strong>forge</strong>, elle, sertit une carte que vous
+possédez déjà. On y accède depuis un nœud Repos (le feu de camp) : on choisit une carte du deck maître,
+puis un dialogue plein écran propose plusieurs runes et on en garde <strong>une seule</strong>.</p>
+
+<p>Le fichier est <code>lib/ui/widgets/forge_upgrade_dialog.dart</code>. Il commence par un petit modèle
+qui n'existe que le temps de la session de forge :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/forge_upgrade_dialog.dart</span><span class="lang">dart</span></div>
+  <pre>class ForgeSlot {
+  final int index;
+  String upgrade; // e.g. "sharp:2"
+  int rerollsCount; // n_i
+
+  ForgeSlot({
+    required this.index,
+    required this.upgrade,
+    this.rerollsCount = 0,
+  });
+
+  int get rerollCost =&gt; (20 * pow(1.25, rerollsCount)).round();
+}</pre>
+</div>
+
+<p>Chaque fente a donc son <strong>propre compteur de rerolls</strong> et son propre prix. Le coût suit
+une progression géométrique de raison 1,25, arrondie :</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Reroll n°</th><th>1<sup>er</sup></th><th>2<sup>e</sup></th><th>3<sup>e</sup></th><th>4<sup>e</sup></th><th>5<sup>e</sup></th><th>6<sup>e</sup></th><th>7<sup>e</sup></th><th>8<sup>e</sup></th></tr></thead>
+<tbody>
+<tr><td><code>rerollsCount</code></td><td>0</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td></tr>
+<tr><td><strong>Coût (or)</strong></td><td>20</td><td>25</td><td>31</td><td>39</td><td>49</td><td>61</td><td>76</td><td>95</td></tr>
+</tbody>
+</table></div>
+
+<div class="box rule"><div class="box-title">Règle du jeu</div>
+<p>Relancer une fente coûte <code>round(20 × 1,25^n)</code> où <code>n</code> est le nombre de rerolls
+<em>déjà payés sur cette fente précise</em>. Relancer deux fentes une fois chacune coûte donc 40 or,
+alors que relancer deux fois la même fente en coûte 45.</p></div>
+
+<h3>Combien de fentes voit-on ?</h3>
+
+<p>C'est la partie la plus intéressante : le nombre de propositions est lui aussi tiré au sort, par une
+cascade de probabilités décroissantes.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/forge_upgrade_dialog.dart</span><span class="lang">dart</span></div>
+  <pre>List&lt;ForgeSlot&gt; _generateInitialSlots(CardInstance card) {
+  final List&lt;ForgeSlot&gt; slots = [];
+  final List&lt;String&gt; excludedIds = [];
+  final rand = Random();
+
+  final upg1 = _rollSlotUpgrade(card, excludedIds);
+  slots.add(ForgeSlot(index: 0, upgrade: upg1));
+  excludedIds.add(upg1.split(':')[0]);
+
+  if (rand.nextDouble() &lt; 0.50) { /* fente 2 */ }
+  if (rand.nextDouble() &lt; 0.25) { /* fente 3 */ }
+  if (rand.nextDouble() &lt; 0.10) { /* fente 4 */ }
+  if (rand.nextDouble() &lt; 0.02) { /* fente 5 */ }
+
+  // Add existing bonus slots
+  final runState = ref.read(runProvider);
+  final bonusCount = runState.bonusForgeSlots;
+  for (int i = 0; i &lt; bonusCount; i++) {
+    final upg = _rollSlotUpgrade(card, excludedIds);
+    final newIndex = slots.isEmpty ? 0 : slots.map((s) =&gt; s.index).reduce(max) + 1;
+    slots.add(ForgeSlot(index: newIndex, upgrade: upg));
+    excludedIds.add(upg.split(':')[0]);
+  }
+
+  return slots;
+}</pre>
+</div>
+
+<p>Les tirages sont <strong>indépendants</strong> : chaque <code>if</code> est évalué quoi qu'il arrive,
+il n'y a pas de « on s'arrête au premier échec ». On peut donc, en théorie, obtenir la fente 1 et la
+fente 5 sans les fentes 2, 3 et 4. La liste finale est simplement plus ou moins longue.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Fente</th><th>Probabilité d'apparition</th><th>Nombre de fentes attendu</th></tr></thead>
+<tbody>
+<tr><td>1 (garantie)</td><td><strong>100 %</strong></td><td rowspan="5" style="vertical-align:middle">1 + 0,50 + 0,25 + 0,10 + 0,02 = <strong>1,87 fente</strong> en moyenne, hors slots achetés</td></tr>
+<tr><td>2</td><td>50 %</td></tr>
+<tr><td>3</td><td>25 %</td></tr>
+<tr><td>4</td><td>10 %</td></tr>
+<tr><td>5</td><td>2 %</td></tr>
+</tbody>
+</table></div>
+
+<p>Notez le <code>excludedIds</code> qui grossit à chaque fente : <strong>deux fentes ne peuvent jamais
+proposer la même rune</strong> dans la même session. C'est le même mécanisme que dans la boutique, mais
+ici il est appliqué entre les propositions et non entre les runes réellement posées.</p>
+
+<h3>Acheter une fente supplémentaire</h3>
+
+<p>Si aucune proposition ne vous plaît, vous pouvez en acheter une de plus. C'est le seul endroit du jeu
+où l'or achète directement de la variance :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run/gold_manager.dart</span><span class="lang">dart</span></div>
+  <pre>/// Achète un slot de forge bonus si possible. Retourne true si l'achat a réussi.
+bool buyBonusForgeSlot() {
+  if (controller.currentState.bonusForgeSlots &gt;= 4) return false;
+  final costs = [50, 80, 120, 175];
+  final cost = costs[controller.currentState.bonusForgeSlots];
+  final success = ref.read(inventoryProvider.notifier).spendGold(cost);
+  if (!success) return false;
+
+  controller.updateState(
+    controller.currentState.copyWith(
+      bonusForgeSlots: controller.currentState.bonusForgeSlots + 1,
+    ),
+  );
+  return true;
+}</pre>
+</div>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Achat</th><th>1<sup>er</sup></th><th>2<sup>e</sup></th><th>3<sup>e</sup></th><th>4<sup>e</sup></th><th>5<sup>e</sup></th></tr></thead>
+<tbody>
+<tr><td><strong>Coût (or)</strong></td><td>50</td><td>80</td><td>120</td><td>175</td><td>impossible</td></tr>
+<tr><td><strong>Total cumulé</strong></td><td>50</td><td>130</td><td>250</td><td>425</td><td>—</td></tr>
+</tbody>
+</table></div>
+
+<div class="box warn"><div class="box-title">Piège</div>
+<p><code>bonusForgeSlots</code> vit sur <code>RunState</code> : il est <strong>permanent pour toute la
+run</strong>, pas pour une seule session de forge. Acheter la première fente bonus à 50 or au premier
+feu de camp la rend disponible à tous les feux de camp suivants. Deux plafonds se superposent
+cependant, et l'interface les vérifie tous les deux :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/forge_upgrade_dialog.dart</span><span class="lang">dart</span></div>
+  <pre>final bonusCount = runState.bonusForgeSlots;
+final nextCost = bonusCount &lt; 4 ? [50, 80, 120, 175][bonusCount] : 0;
+final canBuySlot = bonusCount &lt; 4 &amp;&amp; _slots.length &lt; 5;</pre>
+</div>
+<p>Autrement dit : au maximum 4 achats sur la run, et jamais plus de <strong>5 fentes affichées
+simultanément</strong>. Si le tirage vous a déjà donné 5 propositions, le bouton d'achat est grisé même
+avec 400 or en poche.</p></div>
+
+<h3>La session de forge survit à la fermeture du dialogue</h3>
+
+<p>Trois champs de <code>RunState</code> servent uniquement à la forge : <code>forgeSlots</code>,
+<code>forgeTargetCardId</code> et <code>forgeTargetSessions</code>. Ils existent pour une raison précise :
+si vous fermez le dialogue et le rouvrez sur la même carte, <strong>vous devez retrouver exactement les
+mêmes propositions</strong> — sinon relancer gratuitement reviendrait à fermer et rouvrir la fenêtre.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/forge_upgrade_dialog.dart</span><span class="lang">dart</span></div>
+  <pre>final runState = ref.read(runProvider);
+if (runState.forgeTargetSessions.containsKey(widget.card.uniqueId)) {
+  _slots = [];
+  final savedSlots = runState.forgeTargetSessions[widget.card.uniqueId]!;
+  for (int i = 0; i &lt; savedSlots.length; i++) {
+    final s = savedSlots[i];
+    final parts = s.split(':');
+    final id = parts[0];
+    final tier = parts.length &gt; 1 ? parts[1] : '1';
+    final rerolls = parts.length &gt; 2 ? (int.tryParse(parts[2]) ?? 0) : 0;
+    _slots.add(ForgeSlot(index: i, upgrade: '$id:$tier', rerollsCount: rerolls));
+  }
+} else {
+  _slots = _generateInitialSlots(widget.card);
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    ref.read(runProvider.notifier).setForgeSession(
+      widget.card.uniqueId,
+      _slots.map((s) =&gt; '${s.upgrade}:${s.rerollsCount}').toList(),
+    );
+  });
+}</pre>
+</div>
+
+<p>L'encodage est une chaîne à trois segments : <code>id:tier:rerolls</code>, par exemple
+<code>"sharp:2:3"</code> pour « Tranchant niveau 2, déjà relancé trois fois ». C'est le même format que
+les runes posées, avec un segment de plus — d'où les <code>parts.length &gt; 2</code> défensifs.</p>
+
+<p>Quand une rune est enfin choisie, la session est effacée :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/forge_upgrade_dialog.dart</span><span class="lang">dart</span></div>
+  <pre>void _selectUpgrade(String upgrade) {
+  ref
+      .read(deckProvider.notifier)
+      .addForgeUpgrade(widget.card.uniqueId, upgrade);
+  ref.read(runProvider.notifier).clearForgeSession();
+  Navigator.of(context).pop(upgrade);
+}</pre>
+</div>
+
+<p>Et <code>RestScreen</code> appelle également <code>clearForgeSession()</code> en quittant le feu de
+camp, pour qu'une session abandonnée ne traîne pas jusqu'au repos suivant.</p>
+
+<div class="box"><div class="box-title">À retenir</div>
+<p>La forge n'ajoute jamais une rune elle-même : c'est <code>DeckNotifier.addForgeUpgrade</code> qui
+écrit dans le deck maître, et le plafond <code>baseMaxForgeUpgrades + rarity.index</code> est vérifié
+en amont par <code>rest_card_selection_screen.dart</code>, avant même d'ouvrir le dialogue.</p></div>
+
+<h2 id="s8">8. Les deux fusions</h2>
+
+<p>Le mot « fusion » désigne deux mécaniques distinctes dans Hero's Draft, et il est facile de les
+confondre. Mettons-les côte à côte.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th></th><th>Fusion de <strong>cartes</strong></th><th>Fusion de <strong>runes</strong></th></tr></thead>
+<tbody>
+<tr><td>Où</td><td>Écran Deck (<code>deck_screen.dart</code>), accessible depuis la barre d'outils de la carte du monde</td><td>Nœud « Forge de fusion » (<code>forge_fusion_screen.dart</code>)</td></tr>
+<tr><td>Ingrédients</td><td>3 cartes de même <code>id</code> <em>et</em> même rareté</td><td>2 runes ou plus de même <code>id</code> sur une même carte</td></tr>
+<tr><td>Coût</td><td>Gratuit (les 3 cartes sont consommées)</td><td><strong>80 × (nombre de runes − 1)</strong> or</td></tr>
+<tr><td>Résultat</td><td>1 carte de rareté supérieure, runes consolidées</td><td>1 rune dont le niveau est la <strong>somme</strong> des niveaux</td></tr>
+<tr><td>Méthode appelée</td><td><code>DeckNotifier.mergeCards</code></td><td><code>DeckNotifier.setForgeUpgrades</code></td></tr>
+</tbody>
+</table></div>
+
+<h3>a) Fusion de cartes : trois deviennent une</h3>
+
+<p>Le regroupement se fait sur une clé composite qui inclut la rareté — trois <em>Frappe</em> communes
+fusionnent, mais deux communes plus une peu commune ne fusionnent pas :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/deck_screen.dart</span><span class="lang">dart</span></div>
+  <pre>final Map&lt;String, List&lt;CardInstance&gt;&gt; groups = {};
+for (var card in masterDeck) {
+  final key = '${card.data.id}_${card.rarity.name}';
+  groups.putIfAbsent(key, () =&gt; []).add(card);
+}</pre>
+</div>
+
+<p>Le cœur de l'opération est dans le contrôleur. Lisez-le en entier, c'est la méthode la plus dense de
+<code>DeckNotifier</code> :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/deck_controller.dart</span><span class="lang">dart</span></div>
+  <pre>if (selectedCards.any((c) =&gt; c.rarity == CardRarity.unique)) {
+  return;
+}
+final baseCardData = selectedCards[0].data;
+final rarity = selectedCards[0].rarity;
+
+// Retire les 3 exemplaires
+currentMasterDeck.removeWhere((c) =&gt; selectedIds.contains(c.uniqueId));
+
+// Détermine la rareté suivante
+final nextRarityIndex = min(rarity.index + 1, CardRarity.values.length - 1);
+final nextRarity = CardRarity.values[nextRarityIndex];
+
+// Auto-fusionne les upgrades identiques (cumul des tiers)
+final Map&lt;String, int&gt; consolidatedMap = {};
+for (var upgrade in inheritedUpgrades) {
+  final parts = upgrade.split(':');
+  if (parts.length != 2) continue;
+  final id = parts[0];
+  final tier = int.tryParse(parts[1]) ?? 0;
+  if (tier &lt;= 0) continue;
+  consolidatedMap[id] = (consolidatedMap[id] ?? 0) + tier;
+}
+
+var finalUpgrades = consolidatedMap.entries.map((e) =&gt; '${e.key}:${e.value}').toList();
+
+// Limite à la capacité de la rareté supérieure
+final capacity = baseCardData.baseMaxForgeUpgrades + nextRarityIndex;
+if (finalUpgrades.length &gt; capacity) {
+  finalUpgrades = finalUpgrades.sublist(0, capacity);
+}</pre>
+</div>
+
+<p>Trois règles à retenir :</p>
+
+<ol>
+<li><strong>Les cartes uniques sont exclues.</strong> Les six cartes de classe ont
+<code>rarity: "unique"</code> et ne fusionnent jamais, quel que soit leur nombre.</li>
+<li><strong>Les runes se consolident par somme des niveaux.</strong> Trois cartes portant respectivement
+<code>sharp:1</code>, <code>sharp:2</code> et <code>hardened:1</code> donnent
+<code>sharp:3</code> + <code>hardened:1</code>.</li>
+<li><strong>La capacité augmente avec la rareté.</strong> Elle vaut
+<code>baseMaxForgeUpgrades + index de la nouvelle rareté</code>. Si les runes consolidées dépassent cette
+capacité, <code>deck_screen.dart</code> ouvre une seconde étape où le joueur choisit lesquelles garder ;
+sinon la fusion se fait directement, sans dialogue supplémentaire.</li>
+</ol>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/deck_screen.dart</span><span class="lang">dart</span></div>
+  <pre>if (_consolidatedUpgrades.length &lt;= _capacity) {
+  _performMerge(_consolidatedUpgrades);
+} else {
+  setState(() {
+    _step = 2;
+  });
+}</pre>
+</div>
+
+<h4>Exemple chiffré</h4>
+
+<div class="code" data-lang="text">
+  <div class="code-head"><span class="path">exemple</span><span class="lang">text</span></div>
+  <pre>3 × "Frappe Lourde" communes, baseMaxForgeUpgrades = 1
+  carte A : sharp:2, hardened:1
+  carte B : sharp:1
+  carte C : burning:1
+
+Consolidation :  sharp:3  ·  hardened:1  ·  burning:1     → 3 runes
+Nouvelle rareté : common (index 0) → uncommon (index 1)
+Capacité        : 1 + 1 = 2 runes
+
+3 > 2  →  étape d'arbitrage : le joueur garde 2 runes sur 3.</pre>
+</div>
+
+<div class="box danger"><div class="box-title">Point d'attention</div>
+<p><code>min(rarity.index + 1, CardRarity.values.length - 1)</code> plafonne à l'<strong>index 5</strong>,
+qui est <code>CardRarity.unique</code> — et non <code>legendary</code>. Or
+<code>CardInstance.rarityMultiplier</code> renvoie <strong>1.0</strong> pour <code>unique</code>, contre
+2.0 pour <code>legendary</code>. Fusionner trois cartes légendaires produit donc une carte « unique »
+dont les valeurs d'effet retombent au niveau d'une commune. La même formule apparaît dans
+<code>mergeCards</code>, dans <code>upgradeCard</code> et dans le message de succès de
+<code>deck_screen.dart</code>.</p></div>
+
+<h3>b) Fusion de runes : le nœud Forge de fusion</h3>
+
+<p>Ce nœud spécial (25 % de chance d'apparaître entre les étages 3 et 7, voir le chapitre 12) ne touche
+pas aux cartes : il compacte les runes <em>d'une même carte</em>. Deux <code>sharp:1</code> occupent deux
+fentes ; un <code>sharp:2</code> n'en occupe qu'une, pour le même effet total.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/forge_fusion_screen.dart</span><span class="lang">dart</span></div>
+  <pre>List&lt;FusionOption&gt; _getFusionsForCard(CardInstance card) {
+  final Map&lt;String, List&lt;String&gt;&gt; groups = {};
+  for (final upg in card.forgeUpgrades) {
+    final id = upg.split(':')[0];
+    groups.putIfAbsent(id, () =&gt; []).add(upg);
+  }
+
+  final fusions = &lt;FusionOption&gt;[];
+  groups.forEach((id, list) {
+    if (list.length &gt;= 2) {
+      int totalTier = 0;
+      for (final upg in list) {
+        final parts = upg.split(':');
+        final tier = parts.length &gt; 1 ? (int.tryParse(parts[1]) ?? 1) : 1;
+        totalTier += tier;
+      }
+      final cost = 80 * (list.length - 1);
+      fusions.add(FusionOption(
+        upgradeId: id, originalUpgrades: list, totalTier: totalTier, cost: cost,
+      ));
+    }
+  });
+  return fusions;
+}</pre>
+</div>
+
+<div class="box rule"><div class="box-title">Règle du jeu</div>
+<p>Coût d'une fusion de runes : <strong>80 × (nombre de runes fusionnées − 1)</strong>.
+Deux runes → 80 or, trois runes → 160 or, quatre runes → 240 or. Le niveau résultant est la
+<strong>somme</strong> des niveaux, sans plafond.</p></div>
+
+<p>L'exécution reconstruit la liste de runes en remplaçant le premier exemplaire par la rune fusionnée
+et en supprimant les autres :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/forge_fusion_screen.dart</span><span class="lang">dart</span></div>
+  <pre>final updatedUpgrades = &lt;String&gt;[];
+bool addedFused = false;
+for (final upg in card.forgeUpgrades) {
+  final id = upg.split(':')[0];
+  if (id == fusion.upgradeId) {
+    if (!addedFused) {
+      updatedUpgrades.add('${fusion.upgradeId}:${fusion.totalTier}');
+      addedFused = true;
+    }
+  } else {
+    updatedUpgrades.add(upg);
+  }
+}
+ref.read(deckProvider.notifier).setForgeUpgrades(card.uniqueId, updatedUpgrades);</pre>
+</div>
+
+<p>Comme <code>CardInstance</code> est immuable, l'écran doit ensuite <strong>relire</strong> l'instance
+fraîche depuis le deck — l'objet qu'il tenait en main est devenu obsolète à l'instant où le contrôleur a
+publié un nouvel état :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/forge_fusion_screen.dart</span><span class="lang">dart</span></div>
+  <pre>final masterDeck = ref.read(deckProvider).masterDeck;
+final updatedCard = masterDeck.firstWhere((c) =&gt; c.uniqueId == card.uniqueId, orElse: () =&gt; card);
+setState(() { _selectedCard = updatedCard; });</pre>
+</div>
+
+<h4>Exemple chiffré</h4>
+
+<div class="code" data-lang="text">
+  <div class="code-head"><span class="path">exemple</span><span class="lang">text</span></div>
+  <pre>Carte "Frappe" légendaire, capacité 1 + 4 = 5 runes
+  runes actuelles : sharp:2 · sharp:1 · hardened:1 · burning:3   (4 fentes occupées)
+
+Fusion proposée : sharp  (2 runes)
+  coût   = 80 × (2 − 1) = 80 or
+  niveau = 2 + 1 = 3
+
+Après paiement :  sharp:3 · hardened:1 · burning:3               (3 fentes occupées)
+Effet inchangé (+6 dégâts), mais 2 fentes libres au lieu de 1.</pre>
+</div>
+
+<div class="box ok"><div class="box-title">Bonne pratique</div>
+<p>L'écran se désélectionne tout seul quand la carte n'a plus de fusion possible, directement dans
+<code>build()</code> : <code>if (_getFusionsForCard(currentCardInDeck).isEmpty) { _selectedCard = null; }</code>.
+C'est une façon simple de garder l'interface cohérente sans dupliquer la condition dans chaque
+gestionnaire d'événement — l'état dérivé est recalculé, jamais mémorisé.</p></div>
+
+<h3>Le circuit complet d'une rune</h3>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 840 320" width="840" role="img" aria-label="Cycle de vie d'une rune de forge">
+      <defs>
+        <marker id="c14-f1" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#3a4966"/></marker>
+      </defs>
+
+      <text x="20" y="24" fill="#a7b4c9" font-size="12" font-family="ui-monospace, monospace">forge_upgrades.json — 8 définitions</text>
+      <rect x="20" y="34" width="180" height="46" rx="8" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="110" y="55" fill="#e6ecf5" font-size="13" text-anchor="middle">Catalogue de runes</text>
+      <text x="110" y="70" fill="#a7b4c9" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">pools · weight · multiplier</text>
+
+      <path d="M200 57 L268 57" stroke="#3a4966" stroke-width="2" marker-end="url(#c14-f1)"/>
+
+      <rect x="272" y="20" width="200" height="74" rx="8" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="372" y="41" fill="#22d3ee" font-size="13" text-anchor="middle">Tirage</text>
+      <text x="372" y="59" fill="#a7b4c9" font-size="11" text-anchor="middle">boutique : _rollRandomUpgrade</text>
+      <text x="372" y="76" fill="#a7b4c9" font-size="11" text-anchor="middle">forge : _rollSlotUpgrade</text>
+
+      <path d="M472 57 L540 57" stroke="#3a4966" stroke-width="2" marker-end="url(#c14-f1)"/>
+
+      <rect x="544" y="24" width="200" height="66" rx="8" fill="#151b2b" stroke="#34d399"/>
+      <text x="644" y="47" fill="#34d399" font-size="13" text-anchor="middle">Rune posée</text>
+      <text x="644" y="68" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">"sharp:2"</text>
+
+      <path d="M644 90 L644 132" stroke="#3a4966" stroke-width="2" marker-end="url(#c14-f1)"/>
+
+      <rect x="500" y="136" width="288" height="62" rx="8" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="644" y="158" fill="#a78bfa" font-size="13" text-anchor="middle">CardInstance.forgeUpgrades</text>
+      <text x="644" y="177" fill="#a7b4c9" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">List&lt;String&gt; immuable, dans le deck maître</text>
+
+      <path d="M500 167 L392 167" stroke="#3a4966" stroke-width="2" marker-end="url(#c14-f1)"/>
+      <rect x="180" y="136" width="208" height="62" rx="8" fill="#151b2b" stroke="#60a5fa"/>
+      <text x="284" y="158" fill="#60a5fa" font-size="13" text-anchor="middle">EffectResolver.resolveCard</text>
+      <text x="284" y="177" fill="#a7b4c9" font-size="11" text-anchor="middle">parse "id:tier" → bonus d'effet</text>
+
+      <path d="M284 198 L284 238" stroke="#3a4966" stroke-width="2" marker-end="url(#c14-f1)"/>
+      <rect x="150" y="242" width="268" height="52" rx="8" fill="#151b2b" stroke="#f87171"/>
+      <text x="284" y="264" fill="#f87171" font-size="13" text-anchor="middle">Effet appliqué en combat</text>
+      <text x="284" y="282" fill="#a7b4c9" font-size="11" text-anchor="middle">+2 dégâts par niveau, +2 armure, +1 pioche…</text>
+
+      <path d="M644 198 L644 238" stroke="#3a4966" stroke-width="2" marker-end="url(#c14-f1)"/>
+      <rect x="500" y="242" width="288" height="52" rx="8" fill="#151b2b" stroke="#fbbf24"/>
+      <text x="644" y="264" fill="#fbbf24" font-size="13" text-anchor="middle">Consolidation</text>
+      <text x="644" y="282" fill="#a7b4c9" font-size="11" text-anchor="middle">fusion de cartes (somme) · fusion de runes (80×(n−1))</text>
+    </svg>
+  </div>
+  <figcaption>Une rune naît d'un tirage pondéré, vit comme une chaîne « id:niveau » dans une instance de
+  carte, est relue à chaque résolution d'effet, et peut être consolidée par l'une des deux fusions.</figcaption>
+</figure>
+
+<div class="quiz">
+  <h2>Quiz — vérifiez vos acquis</h2>
+
+  <div class="q" data-answer="2">
+    <p class="q-text">1. Combien coûte le troisième reroll d'une même fente de forge ?</p>
+    <ul class="q-opts">
+      <li>20 or, le prix est fixe</li>
+      <li>60 or, soit 3 × 20</li>
+      <li>31 or, soit <code>round(20 × 1,25²)</code></li>
+      <li>80 or, comme une fusion de runes</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>ForgeSlot.rerollCost</code> vaut
+    <code>(20 * pow(1.25, rerollsCount)).round()</code>. Au moment du troisième reroll,
+    <code>rerollsCount</code> vaut 2, donc 20 × 1,5625 = 31,25 → <strong>31</strong>. Le compteur est
+    propre à chaque fente.</div>
+  </div>
+
+  <div class="q" data-answer="1">
+    <p class="q-text">2. Quel est le prix du troisième clonage de carte dans une même boutique ?</p>
+    <ul class="q-opts">
+      <li>450 or (150 × 3)</li>
+      <li>600 or (<code>150 &lt;&lt; 2</code>)</li>
+      <li>300 or</li>
+      <li>150 or, le prix ne change pas</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>ShopState.clonePrice</code> vaut
+    <code>150 &lt;&lt; clonePurchasedCount</code>, soit un doublement à chaque achat : 150, 300,
+    <strong>600</strong>, 1 200… Le compteur est remis à zéro par <code>clearCloneOptions()</code>
+    quand on quitte la boutique.</div>
+  </div>
+
+  <div class="q" data-answer="3">
+    <p class="q-text">3. Sur combien de fentes une session de forge démarre-t-elle en moyenne, hors
+    fentes achetées ?</p>
+    <ul class="q-opts">
+      <li>1 exactement — la première est la seule garantie</li>
+      <li>3, une par niveau de rune possible</li>
+      <li>5, le plafond affiché</li>
+      <li>1,87 : la première est garantie, les suivantes ont 50 %, 25 %, 10 % et 2 % de chance</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>_generateInitialSlots</code> ajoute toujours la
+    fente 1, puis évalue quatre tirages indépendants à 0,50 · 0,25 · 0,10 · 0,02. L'espérance vaut donc
+    1 + 0,87 = <strong>1,87 fente</strong>.</div>
+  </div>
+
+  <div class="q" data-answer="0">
+    <p class="q-text">4. Une carte porte <code>burning:2</code> et <code>burning:1</code>. Que coûte
+    leur fusion, et que donne-t-elle ?</p>
+    <ul class="q-opts">
+      <li>80 or, et elle donne <code>burning:3</code></li>
+      <li>160 or, et elle donne <code>burning:3</code></li>
+      <li>80 or, et elle donne <code>burning:2</code> (le niveau le plus haut)</li>
+      <li>Gratuit, la fusion de runes ne coûte rien</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> le coût est <code>80 * (list.length - 1)</code>, soit
+    <strong>80 or</strong> pour deux runes, et <code>totalTier</code> est la <strong>somme</strong> des
+    niveaux, donc <code>burning:3</code>.</div>
+  </div>
+
+  <div class="q" data-answer="2">
+    <p class="q-text">5. Combien coûte une carte rare portant deux runes de forge en boutique ?</p>
+    <ul class="q-opts">
+      <li>100 or — les runes sont offertes</li>
+      <li>120 or</li>
+      <li>140 or</li>
+      <li>200 or</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>ShopController.getCardPrice</code> donne un prix
+    de base de 100 pour une rare, plus <code>card.forgeUpgrades.length * 20</code>, soit
+    100 + 40 = <strong>140 or</strong>.</div>
+  </div>
+
+  <div class="q" data-answer="1">
+    <p class="q-text">6. Pourquoi <code>bonusForgeSlots</code> vit-il sur <code>RunState</code> et non
+    dans l'état local du dialogue de forge ?</p>
+    <ul class="q-opts">
+      <li>Pour pouvoir l'afficher dans la barre d'outils de la carte</li>
+      <li>Parce que l'achat est permanent pour toute la run : la fente reste disponible à tous les feux de camp suivants</li>
+      <li>Parce que le dialogue est reconstruit à chaque image</li>
+      <li>Pour que le prix augmente à chaque combat</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>buyBonusForgeSlot()</code> incrémente
+    <code>bonusForgeSlots</code> sur <code>RunState</code>, qui est sérialisé dans la sauvegarde.
+    L'investissement est donc <strong>permanent sur la run</strong> — et plafonné à 4 achats
+    (50, 80, 120, 175 or).</div>
+  </div>
+</div>
+
+<div class="pager">
+<a class="prev" href="ch13.html"><div class="dir">&#8592; Chapitre 13</div><div class="ttl">Les reliques et le système de déclencheurs</div></a>
+<a class="next" href="ch15.html"><div class="dir">Chapitre 15 &#8594;</div><div class="ttl">Récompenses, chance et probabilités</div></a>
+</div>
+</div>
+</main>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>La couche de données : un jeu 100 % data-driven — Formation Hero's Draft</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<button class="menu-btn" aria-label="Menu">&#9776;</button>
+<div class="layout">
+<aside class="sidebar">
+  <a class="brand" href="index.html">
+    <div class="brand-title">HERO'S DRAFT</div>
+    <div class="brand-sub">Formation complète au projet Flutter</div>
+  </a>
+<nav class="nav">
+<div class="nav-part">Partie 0 — Démarrage</div>
+<a href="ch01.html"><span class="num">01</span><span>Vue d&#x27;ensemble : qu&#x27;est-ce que Hero&#x27;s Draft ?</span></a>
+<div class="nav-part">Partie 1 — Les fondations techniques</div>
+<a href="ch02.html"><span class="num">02</span><span>Dart, le langage — l&#x27;essentiel pour ce projet</span></a>
+<a href="ch03.html"><span class="num">03</span><span>Flutter — widgets, arbre et navigation</span></a>
+<a href="ch04.html"><span class="num">04</span><span>Riverpod — l&#x27;état partagé du jeu</span></a>
+<a href="ch05.html"><span class="num">05</span><span>Flame — le moteur de rendu du combat</span></a>
+<div class="nav-part">Partie 2 — L&#x27;architecture du projet</div>
+<a href="ch06.html"><span class="num">06</span><span>L&#x27;architecture en quatre couches</span></a>
+<a href="ch07.html" class="active"><span class="num">07</span><span>La couche de données : un jeu 100 % data-driven</span></a>
+<div class="nav-part">Partie 3 — Les règles du jeu</div>
+<a href="ch08.html"><span class="num">08</span><span>Le héros : stats, classes, passifs et progression</span></a>
+<a href="ch09.html"><span class="num">09</span><span>Les cartes et le deck</span></a>
+<a href="ch10.html"><span class="num">10</span><span>Le combat : boucle de tour, dégâts et effets</span></a>
+<a href="ch11.html"><span class="num">11</span><span>Les ennemis et la courbe de difficulté</span></a>
+<a href="ch12.html"><span class="num">12</span><span>La carte du monde procédurale</span></a>
+<a href="ch13.html"><span class="num">13</span><span>Les reliques et le système de déclencheurs</span></a>
+<a href="ch14.html"><span class="num">14</span><span>L&#x27;économie : or, boutique, forge et fusion</span></a>
+<a href="ch15.html"><span class="num">15</span><span>Récompenses, chance et probabilités</span></a>
+<a href="ch16.html"><span class="num">16</span><span>Événements, repos et autel des reliques</span></a>
+<div class="nav-part">Partie 4 — L&#x27;interface et le rendu</div>
+<a href="ch17.html"><span class="num">17</span><span>Le pont Flame ↔ Riverpod : l&#x27;écran de combat</span></a>
+<a href="ch18.html"><span class="num">18</span><span>Composants Flame et game feel</span></a>
+<a href="ch19.html"><span class="num">19</span><span>Écrans, navigation et design system</span></a>
+<div class="nav-part">Partie 5 — Qualité et cycle de vie</div>
+<a href="ch20.html"><span class="num">20</span><span>Sauvegarde, localisation et tutoriel</span></a>
+<a href="ch21.html"><span class="num">21</span><span>Tests, outillage, dette technique et évolutions</span></a>
+</nav>
+</aside>
+<main class="main">
+<div class="content">
+<div class="chapter-kicker">Chapitre 07</div>
+<h1>La couche de données : un jeu 100 % data-driven</h1>
+<p class="lede">Pas une seule carte, pas un seul ennemi n'est écrit en Dart. Tout le contenu de Hero's
+Draft vit dans dix fichiers JSON, et ce chapitre explique comment il en sort pour devenir du code.</p>
+
+<div class="toc">
+  <div class="toc-title">Dans ce chapitre</div>
+  <ol>
+    <li><a href="#s1">Ce que « data-driven » veut dire ici</a></li>
+    <li><a href="#s2">Les dix fichiers d'assets</a></li>
+    <li><a href="#s3">Le chargement : gameDataLoaderProvider</a></li>
+    <li><a href="#s4">Le registre et les recherches par identifiant</a></li>
+    <li><a href="#s5">L'anatomie d'un modèle de données</a></li>
+    <li><a href="#s6">La localisation inline du contenu</a></li>
+    <li><a href="#s7">Catalogue contre instances</a></li>
+    <li><a href="#s8">Ajouter du contenu : le mode d'emploi</a></li>
+  </ol>
+</div>
+
+<h2 id="s1">1. Ce que « data-driven » veut dire ici</h2>
+
+<p>L'expression est galvaudée. Dans ce projet elle a un sens très précis et vérifiable : <strong>aucune
+entité de jeu n'est instanciée en dur dans le code</strong>. Il n'existe nulle part une ligne du genre
+<code>final strike = Card(name: 'Frappe', damage: 6);</code>.</p>
+
+<p>À la place, le code contient des <em>modèles</em> — des classes qui savent lire une forme de JSON —
+et le contenu vit dans <code>assets/data/</code>. Les conséquences sont immédiates :</p>
+
+<ul>
+<li>Équilibrer le jeu ne demande pas de savoir programmer. Changer <code>"value": 6</code> en
+<code>"value": 5</code> dans <code>cards.json</code> nerfe la Frappe, partout : en combat, dans la
+boutique, dans les récompenses, dans le dictionnaire.</li>
+<li>Ajouter du contenu ne recompile pas la logique. Une nouvelle relique qui réutilise un déclencheur et
+un type d'effet existants ne demande aucune ligne de Dart.</li>
+<li>Le contenu est <strong>testable comme de la donnée</strong> : on peut vérifier qu'aucune carte n'a de
+coût négatif ou qu'une traduction manque, sans lancer le jeu.</li>
+</ul>
+
+<div class="box rule"><div class="box-title">Le contrat de la couche</div>
+<p>Extrait de <code>CLAUDE.md</code> : « To add or modify cards, enemies, heroes, relics, skills, or
+events: edit the relevant JSON file in <code>assets/data/</code>, following the shape of an existing
+entry. <strong>No business-logic code needs to change for pure content additions.</strong> »</p></div>
+
+<p>Le pacte a une contrepartie : dès qu'on change la <em>forme</em> du JSON — un nouveau champ, un
+renommage — il faut mettre à jour le modèle Dart correspondant dans <code>lib/models/data/</code>. Les
+deux évoluent toujours ensemble.</p>
+
+<h2 id="s2">2. Les dix fichiers d'assets</h2>
+
+<p>Tous sont déclarés dans <code>pubspec.yaml</code> sous <code>assets: - assets/data/</code>, et tous
+ont la même forme : <strong>un tableau JSON à la racine</strong>.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Fichier</th><th>Entrées</th><th>Modèle Dart</th><th>Contenu</th></tr></thead>
+<tbody>
+<tr><td><code>cards.json</code></td><td><strong>17</strong></td><td><code>CardData</code></td><td>Les cartes du pool commun, disponibles pour toutes les classes</td></tr>
+<tr><td><code>hero_cards.json</code></td><td><strong>6</strong></td><td><code>CardData</code></td><td>Les 2 cartes exclusives de chacune des 3 classes</td></tr>
+<tr><td><code>heroes.json</code></td><td><strong>3</strong></td><td><code>HeroData</code></td><td>Paladin, Berserker, Mage</td></tr>
+<tr><td><code>enemies.json</code></td><td><strong>4</strong></td><td><code>EnemyData</code></td><td>Slime, Gobelin, Squelette, Orc Furieux</td></tr>
+<tr><td><code>relics.json</code></td><td><strong>25</strong></td><td><code>RelicData</code></td><td>Les objets passifs, du Talisman de Fer à la Couronne des Rois</td></tr>
+<tr><td><code>events.json</code></td><td><strong>5</strong></td><td><code>EventData</code></td><td>Les nœuds narratifs, 3 choix chacun</td></tr>
+<tr><td><code>forge_upgrades.json</code></td><td><strong>8</strong></td><td><code>ForgeUpgradeData</code></td><td>Les runes de forge : Tranchant, Endurci, Brûlant…</td></tr>
+<tr><td><code>passives.json</code></td><td><strong>3</strong></td><td><code>PassiveData</code></td><td>Les traits de classe</td></tr>
+<tr><td><code>skills.json</code></td><td><strong>6</strong></td><td><code>SkillData</code></td><td>Compétences héroïques (voir la nuance au chapitre 8)</td></tr>
+<tr><td><code>patch_notes.json</code></td><td>—</td><td>aucun</td><td>Historique de versions, lu directement par <code>patch_notes_screen.dart</code></td></tr>
+</tbody>
+</table></div>
+
+<div class="box warn"><div class="box-title">Convention du dépôt</div>
+<p><code>patch_notes.json</code> est le seul fichier de <code>assets/data/</code> qui n'a pas de modèle
+Dart : l'écran le parse avec des classes privées. Il est aussi le seul à être
+<strong>géré par un agent</strong> et à ne jamais devoir être édité à la main — c'est le skill
+<code>patch-notes-writer</code> qui y ajoute une entrée et synchronise le champ <code>version:</code>
+de <code>pubspec.yaml</code>.</p></div>
+
+<h3>Une entrée type</h3>
+
+<p>Voici la première carte du jeu, telle qu'elle est écrite :</p>
+
+<div class="code" data-lang="json">
+  <div class="code-head"><span class="path">assets/data/cards.json</span><span class="lang">json</span></div>
+  <pre>{
+  "id": "strike_basic",
+  "name_en": "Strike",
+  "name_fr": "Frappe",
+  "description_en": "Deal 6 damage.",
+  "description_fr": "Inflige 6 dégâts.",
+  "cost": 1,
+  "type": "attack",
+  "category": "global",
+  "rarity": "common",
+  "target": "singleEnemy",
+  "animation": "melee",
+  "effects": [
+    {
+      "type": "damage",
+      "value": 6
+    }
+  ]
+}</pre>
+</div>
+
+<p>Onze champs, dont six sont des chaînes qui correspondent exactement à des valeurs d'énumération Dart :
+<code>type</code> → <code>CardType.attack</code>, <code>category</code> → <code>CardCategory.global</code>,
+<code>rarity</code> → <code>CardRarity.common</code>, <code>target</code> → <code>CardTarget.singleEnemy</code>.
+Le champ <code>animation</code>, lui, pilote directement la mise en scène côté Flame.</p>
+
+<p>Une carte plus riche, avec deux effets dont l'un applique une altération d'état :</p>
+
+<div class="code" data-lang="json">
+  <div class="code-head"><span class="path">assets/data/cards.json</span><span class="lang">json</span></div>
+  <pre>{
+  "id": "poison_stab",
+  "name_fr": "Coup Empoisonné",
+  "cost": 1,
+  "type": "attack",
+  "target": "singleEnemy",
+  "animation": "poison",
+  "effects": [
+    { "type": "damage", "value": 3 },
+    { "type": "apply_status", "statusId": "poison", "value": 1, "duration": 2 }
+  ]
+}</pre>
+</div>
+
+<p>Un effet est donc un petit objet à quatre champs — <code>type</code>, <code>value</code>, et
+optionnellement <code>statusId</code> et <code>duration</code> — et une carte n'est qu'une liste
+d'effets. Cette uniformité est ce qui rend le résolveur d'effets si simple (chapitre 10).</p>
+
+<h2 id="s3">3. Le chargement : <code>gameDataLoaderProvider</code></h2>
+
+<p>Tout part d'un unique <code>FutureProvider</code>, déclaré dans
+<code>lib/services/game_data_service.dart</code>. C'est le seul endroit du projet qui touche
+<code>rootBundle</code> pour de la donnée de jeu.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/services/game_data_service.dart</span><span class="lang">dart</span></div>
+  <pre>final gameDataLoaderProvider = FutureProvider&lt;GameDataRegistry&gt;((ref) async {
+  final List&lt;List&lt;dynamic&gt;&gt; results = await Future.wait([
+    _loadJsonList('assets/data/enemies.json'),
+    _loadJsonList('assets/data/heroes.json'),
+    _loadJsonList('assets/data/skills.json'),
+    _loadJsonList('assets/data/cards.json'),
+    _loadJsonList('assets/data/events.json'),
+    _loadJsonList('assets/data/passives.json'),
+    _loadJsonList('assets/data/relics.json'),
+    _loadJsonList('assets/data/hero_cards.json'),
+    _loadJsonList('assets/data/forge_upgrades.json'),
+  ]);</pre>
+</div>
+
+<p><code>Future.wait</code> lance les neuf lectures <strong>en parallèle</strong> et attend que toutes
+soient terminées. L'ordre du tableau de résultats correspond exactement à l'ordre des appels, ce qui
+explique l'indexation qui suit.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/services/game_data_service.dart</span><span class="lang">dart</span></div>
+  <pre>  final allCards = [
+    ...cardsList,
+    ...heroCardsList,
+  ];
+
+  return GameDataRegistry(
+    enemies: _mapList(enemiesList, EnemyData.fromJson, 'EnemyData'),
+    heroes: _mapList(heroesList, HeroData.fromJson, 'HeroData'),
+    skills: _mapList(skillsList, SkillData.fromJson, 'SkillData'),
+    cards: _mapList(allCards, CardData.fromJson, 'CardData'),
+    events: _mapList(eventsList, EventData.fromJson, 'EventData'),
+    passives: _mapList(passivesList, PassiveData.fromJson, 'PassiveData'),
+    relics: _mapList(relicsList, RelicData.fromJson, 'RelicData'),
+    forgeUpgrades: _mapList(forgeUpgradesList, ForgeUpgradeData.fromJson, 'ForgeUpgradeData'),
+  );
+});</pre>
+</div>
+
+<div class="box"><div class="box-title">À retenir</div>
+<p>Les cartes globales et les cartes de classe sont <strong>fusionnées en une seule liste</strong>
+<code>registry.cards</code>. Le champ <code>category</code> (<code>global</code> ou
+<code>characterSpecific</code>) est ce qui permet ensuite de les distinguer : le draft de départ ne
+propose que les <code>global</code>, la boutique exclut les raretés <code>unique</code>.</p></div>
+
+<h3>Des erreurs qui disent où chercher</h3>
+
+<p>Deux fonctions utilitaires encadrent la lecture, et toutes deux ont été écrites pour produire des
+messages d'erreur exploitables.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/services/game_data_service.dart</span><span class="lang">dart</span></div>
+  <pre>Future&lt;List&lt;dynamic&gt;&gt; _loadJsonList(String path) async {
+  try {
+    final String content = await rootBundle.loadString(path);
+    final decoded = jsonDecode(content);
+    if (decoded is! List) {
+      throw FormatException('Le fichier JSON doit être une liste à la racine.');
+    }
+    return decoded;
+  } catch (e, stack) {
+    throw Exception('Erreur de chargement/décodage pour le fichier "$path": $e\n$stack');
+  }
+}</pre>
+</div>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/services/game_data_service.dart</span><span class="lang">dart</span></div>
+  <pre>List&lt;T&gt; _mapList&lt;T&gt;(
+  List&lt;dynamic&gt; list,
+  T Function(Map&lt;String, dynamic&gt;) fromJson,
+  String modelName,
+) {
+  final List&lt;T&gt; result = [];
+  for (int i = 0; i &lt; list.length; i++) {
+    final item = list[i];
+    if (item is! Map&lt;String, dynamic&gt;) {
+      throw Exception(
+        'L\'élément à l\'index $i pour le modèle "$modelName" n\'est pas un Map&lt;String, dynamic&gt;. Reçu: $item',
+      );
+    }
+    try {
+      result.add(fromJson(item));
+    } catch (e, stack) {
+      throw Exception(
+        'Erreur de parsing dans le modèle "$modelName" à l\'index $i (données: $item): $e\n$stack',
+      );
+    }
+  }
+  return result;
+}</pre>
+</div>
+
+<div class="box ok"><div class="box-title">Bonne pratique</div>
+<p>Le message d'erreur contient le <strong>nom du modèle</strong>, l'<strong>index de l'entrée</strong>
+et la <strong>donnée fautive</strong>. Une virgule oubliée dans <code>relics.json</code> ne produit pas
+un obscur <code>type 'Null' is not a subtype of type 'String'</code> : elle dit exactement quelle
+entrée relire. C'est peu de code pour beaucoup de temps gagné.</p></div>
+
+<h3>Où le chargement est attendu</h3>
+
+<p>Un seul écran attend réellement le <code>Future</code> : <code>SplashScreen</code>, qui est aussi la
+racine de l'application.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/splash_screen.dart</span><span class="lang">dart</span></div>
+  <pre>final gameData = ref.watch(gameDataLoaderProvider);
+
+return Scaffold(
+  body: Center(
+    child: gameData.when(
+      data: (_) =&gt;
+          const HomeScreen(), // Si les données sont chargées, on affiche l'écran d'accueil
+      loading: () =&gt;
+          const CircularProgressIndicator(), // Pendant le chargement
+      error: (error, stack) =&gt;
+          Text('Erreur de chargement: $error'), // En cas d'erreur
+    ),
+  ),
+);</pre>
+</div>
+
+<p>Tous les autres écrans utilisent ensuite <code>ref.read(gameDataLoaderProvider).requireValue</code>
+sans re-tester l'état asynchrone. C'est un <strong>contrat implicite</strong> : si l'on est passé par le
+splash, la donnée est là.</p>
+
+<div class="box danger"><div class="box-title">Point d'attention</div>
+<p><code>.requireValue</code> lève une exception si le <code>Future</code> n'est pas résolu. Le contrat
+tient parce que <code>SplashScreen</code> est la seule route racine et qu'aucun écran de jeu n'est
+accessible avant. Rien dans le compilateur ne le garantit ; c'est une convention à respecter. Deux
+écrans font exception et gèrent explicitement les trois états :
+<code>relic_exchange_screen.dart</code> et <code>card_dictionary_screen.dart</code>.</p></div>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 840 300" width="840" role="img" aria-label="Chaîne de chargement des données">
+      <defs>
+        <marker id="c7-a1" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#3a4966"/></marker>
+      </defs>
+
+      <rect x="20" y="20" width="170" height="110" rx="8" fill="#0e1524" stroke="#f59e0b"/>
+      <text x="105" y="42" fill="#f59e0b" font-size="12.5" text-anchor="middle">assets/data/</text>
+      <text x="105" y="63" fill="#a7b4c9" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">cards.json</text>
+      <text x="105" y="79" fill="#a7b4c9" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">enemies.json</text>
+      <text x="105" y="95" fill="#a7b4c9" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">relics.json …</text>
+      <text x="105" y="116" fill="#6f7d95" font-size="11" text-anchor="middle">9 fichiers</text>
+
+      <path d="M190 75 L246 75" stroke="#3a4966" stroke-width="2" marker-end="url(#c7-a1)"/>
+
+      <rect x="250" y="26" width="200" height="98" rx="8" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="350" y="48" fill="#22d3ee" font-size="12.5" text-anchor="middle">gameDataLoaderProvider</text>
+      <text x="350" y="68" fill="#a7b4c9" font-size="11" text-anchor="middle">rootBundle.loadString</text>
+      <text x="350" y="84" fill="#a7b4c9" font-size="11" text-anchor="middle">jsonDecode + Future.wait</text>
+      <text x="350" y="102" fill="#a7b4c9" font-size="11" text-anchor="middle">_mapList(…, fromJson, …)</text>
+      <text x="350" y="118" fill="#6f7d95" font-size="10.5" text-anchor="middle">FutureProvider — une seule fois</text>
+
+      <path d="M450 75 L506 75" stroke="#3a4966" stroke-width="2" marker-end="url(#c7-a1)"/>
+
+      <rect x="510" y="26" width="200" height="98" rx="8" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="610" y="48" fill="#a78bfa" font-size="12.5" text-anchor="middle">GameDataRegistry</text>
+      <text x="610" y="68" fill="#a7b4c9" font-size="11" text-anchor="middle">8 listes typées</text>
+      <text x="610" y="86" fill="#a7b4c9" font-size="11" text-anchor="middle">cards · enemies · heroes …</text>
+      <text x="610" y="106" fill="#6f7d95" font-size="10.5" text-anchor="middle">+ static instance</text>
+
+      <path d="M610 124 L610 160" stroke="#3a4966" stroke-width="2" marker-end="url(#c7-a1)"/>
+      <path d="M350 124 L350 160" stroke="#3a4966" stroke-width="2" marker-end="url(#c7-a1)"/>
+
+      <rect x="240" y="164" width="220" height="60" rx="8" fill="#151b2b" stroke="#34d399"/>
+      <text x="350" y="186" fill="#34d399" font-size="12.5" text-anchor="middle">SplashScreen</text>
+      <text x="350" y="205" fill="#a7b4c9" font-size="11" text-anchor="middle">.when(data / loading / error)</text>
+
+      <rect x="500" y="164" width="220" height="60" rx="8" fill="#151b2b" stroke="#34d399"/>
+      <text x="610" y="186" fill="#34d399" font-size="12.5" text-anchor="middle">Tous les autres écrans</text>
+      <text x="610" y="205" fill="#a7b4c9" font-size="11" text-anchor="middle">.requireValue</text>
+
+      <path d="M710 75 L790 75 L790 254 L462 254" stroke="#3a4966" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#c7-a1)"/>
+      <rect x="120" y="234" width="340" height="42" rx="8" fill="#0e1524" stroke="#263048"/>
+      <text x="290" y="252" fill="#a7b4c9" font-size="11.5" text-anchor="middle">CardData.getById · RelicData.getById · PassiveData.getById</text>
+      <text x="290" y="268" fill="#6f7d95" font-size="11" text-anchor="middle">accès statique, sans ref — utilisé au chargement d'une sauvegarde</text>
+    </svg>
+  </div>
+  <figcaption>Une seule lecture disque pour toute la session. Deux voies d'accès ensuite : le provider
+  quand on a un <code>ref</code>, le singleton statique quand on n'en a pas.</figcaption>
+</figure>
+
+<h2 id="s4">4. Le registre et les recherches par identifiant</h2>
+
+<p><code>GameDataRegistry</code> est une classe très simple : huit listes, et un singleton statique
+affecté dans le constructeur.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/game_data_registry.dart</span><span class="lang">dart</span></div>
+  <pre>class GameDataRegistry {
+  final List&lt;EnemyData&gt; enemies;
+  final List&lt;HeroData&gt; heroes;
+  final List&lt;SkillData&gt; skills;
+  final List&lt;CardData&gt; cards;
+  final List&lt;EventData&gt; events;
+  final List&lt;PassiveData&gt; passives;
+  final List&lt;RelicData&gt; relics;
+  final List&lt;ForgeUpgradeData&gt; forgeUpgrades;
+
+  static GameDataRegistry? _instance;
+  static GameDataRegistry? get instance =&gt; _instance;
+
+  GameDataRegistry({ /* ... */ }) {
+    _instance = this;
+  }
+}</pre>
+</div>
+
+<div class="box warn"><div class="box-title">Piège</div>
+<p>Le <code>_instance = this;</code> dans le corps du constructeur est un singleton — et l'architecture
+du projet interdit par ailleurs les variables globales. C'est une <strong>entorse assumée</strong> :
+elle existe pour permettre les recherches par identifiant depuis des endroits où l'on n'a pas de
+<code>ref</code> Riverpod, typiquement la désérialisation d'une sauvegarde.</p></div>
+
+<p>Trois modèles exposent un <code>getById</code> statique construit sur ce singleton, tous sur le même
+moule :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/card_data.dart</span><span class="lang">dart</span></div>
+  <pre>static CardData? getById(String id) {
+  final registry = GameDataRegistry.instance;
+  if (registry == null) return null;
+  try {
+    return registry.cards.firstWhere((c) =&gt; c.id == id);
+  } catch (e) {
+    if (kDebugMode) {
+      debugPrint('CardData.getById: no card found for id "$id" ($e)');
+    }
+    return null;
+  }
+}</pre>
+</div>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Méthode</th><th>Retour</th><th>Utilisée par</th></tr></thead>
+<tbody>
+<tr><td><code>CardData.getById(id)</code></td><td><code>CardData?</code></td><td><code>DeckState._decodePile</code> — recharge la définition fraîche d'une carte sauvegardée</td></tr>
+<tr><td><code>RelicData.getById(id)</code></td><td><code>RelicData?</code></td><td><code>InventoryState.fromJsonWithReport</code> — reconstruit l'inventaire</td></tr>
+<tr><td><code>PassiveData.getById(id)</code></td><td><code>PassiveData?</code></td><td><code>RunState.fromJsonWithReport</code> — retrouve le trait de classe</td></tr>
+<tr><td><code>ForgeUpgradeData.getById(id)</code></td><td><code>ForgeUpgradeData?</code></td><td><code>filterValidRefs</code>, les écrans de forge, l'affichage des runes</td></tr>
+</tbody>
+</table></div>
+
+<p>Toutes renvoient un type <em>nullable</em>, et c'est délibéré : si une carte a été retirée du jeu
+entre deux versions, la sauvegarde qui la référence ne doit pas planter. Le chapitre 20 montre comment
+ce <code>null</code> est transformé en message à l'utilisateur plutôt qu'en crash.</p>
+
+<h2 id="s5">5. L'anatomie d'un modèle de données</h2>
+
+<p>Les onze modèles de <code>lib/models/data/</code> suivent tous la même structure. Prenons
+<code>CardData</code>, le plus complet.</p>
+
+<h3>a) Les énumérations d'abord</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/card_data.dart</span><span class="lang">dart</span></div>
+  <pre>enum CardType { attack, skill, power, status }
+
+enum CardCategory { global, characterSpecific }
+
+enum CardRarity { common, uncommon, rare, epic, legendary, unique }
+
+enum CardTarget { singleEnemy, allEnemies, self, none }</pre>
+</div>
+
+<p>Les noms des valeurs sont <strong>exactement</strong> les chaînes attendues dans le JSON. C'est ce qui
+permet le parsing par <code>firstWhere((e) =&gt; e.name == json['type'])</code>.</p>
+
+<div class="box"><div class="box-title">À retenir</div>
+<p>L'<strong>ordre</strong> de <code>CardRarity</code> n'est pas décoratif : il porte la progression de
+rareté. <code>min(rarity.index + 1, CardRarity.values.length - 1)</code> est la formule de montée en
+rareté utilisée par la fusion. Réordonner cet enum changerait les règles du jeu.</p></div>
+
+<h3>b) Des champs finaux et un constructeur <code>const</code></h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/card_data.dart</span><span class="lang">dart</span></div>
+  <pre>class CardData {
+  final String id;
+  final String nameEn;
+  final String nameFr;
+  final String descriptionEn;
+  final String descriptionFr;
+  final int cost;
+  final CardType type;
+  final CardCategory category;
+  final String? heroClass;
+  final CardRarity rarity;
+  final CardTarget target;
+  final String? spritePath;
+  final String? animation; // Type d'animation (ex: 'melee', 'magic', 'buff')
+  final bool isExhaust;
+  final List&lt;CardEffect&gt; effects;
+  final int baseMaxForgeUpgrades;</pre>
+</div>
+
+<p>Tout est <code>final</code> : une <code>CardData</code> chargée ne change jamais. Elle est partagée
+par toutes les instances de cette carte dans le deck du joueur, donc la muter aurait des effets de bord
+partout.</p>
+
+<h3>c) Une fabrique <code>fromJson</code> tolérante</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/card_data.dart</span><span class="lang">dart</span></div>
+  <pre>factory CardData.fromJson(Map&lt;String, dynamic&gt; json) {
+  final nEn = json['name_en'] as String? ?? json['name'] as String? ?? '';
+  final nFr = json['name_fr'] as String? ?? json['name'] as String? ?? '';
+  // ...
+  return CardData(
+    id: json['id'] as String,
+    cost: json['cost'] as int,
+    type: CardType.values.firstWhere((e) =&gt; e.name == json['type']),
+    category: CardCategory.values.firstWhere(
+      (e) =&gt; e.name == json['category'],
+      orElse: () =&gt; CardCategory.global,
+    ),
+    heroClass: json['heroClass'] as String?,
+    rarity: CardRarity.values.firstWhere(
+      (e) =&gt; e.name == json['rarity'],
+      orElse: () =&gt; CardRarity.common,
+    ),
+    target: CardTarget.values.firstWhere(
+      (e) =&gt; e.name == json['target'],
+      orElse: () =&gt; CardTarget.singleEnemy,
+    ),
+    isExhaust: json['isExhaust'] as bool? ?? false,
+    effects:
+        (json['effects'] as List&lt;dynamic&gt;?)
+            ?.map((e) =&gt; CardEffect.fromJson(e as Map&lt;String, dynamic&gt;))
+            .toList() ??
+        [],
+    baseMaxForgeUpgrades: json['baseMaxForgeUpgrades'] as int? ?? 1,
+  );
+}</pre>
+</div>
+
+<p>Trois techniques de tolérance cohabitent :</p>
+
+<ul>
+<li><strong>Le repli en cascade</strong> <code>json['name_fr'] ?? json['name'] ?? ''</code> : accepte un
+ancien format monolingue.</li>
+<li><strong>Le <code>orElse</code> sur les enums</strong> : une valeur inconnue retombe sur un défaut
+raisonnable au lieu de lever.</li>
+<li><strong>Les valeurs par défaut</strong> <code>?? false</code>, <code>?? 1</code>, <code>?? []</code>
+sur les champs optionnels : ajouter un champ au JSON n'invalide pas les entrées existantes.</li>
+</ul>
+
+<div class="box danger"><div class="box-title">Point d'attention</div>
+<p>Le champ <code>type</code> est le <strong>seul</strong> <code>firstWhere</code> sans
+<code>orElse</code> de ce modèle. Une faute de frappe dans <code>"type"</code> lève donc une exception
+au chargement, là où une faute sur <code>"rarity"</code> passera silencieusement en
+<code>common</code>. Le comportement n'est pas homogène — c'est à savoir en déboguant.</p></div>
+
+<h3>d) Un <code>toJson</code> pour la sauvegarde</h3>
+
+<p><code>CardData</code> est l'un des rares modèles de catalogue à savoir se resérialiser, parce que le
+deck sauvegardé embarque la définition complète de chaque carte :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/card_data.dart</span><span class="lang">dart</span></div>
+  <pre>Map&lt;String, dynamic&gt; toJson() =&gt; {
+      'id': id,
+      'name_en': nameEn,
+      'name_fr': nameFr,
+      'description_en': descriptionEn,
+      'description_fr': descriptionFr,
+      'cost': cost,
+      'type': type.name,
+      'category': category.name,
+      if (heroClass != null) 'heroClass': heroClass,
+      'rarity': rarity.name,
+      'target': target.name,
+      if (spritePath != null) 'spritePath': spritePath,
+      if (animation != null) 'animation': animation,
+      'isExhaust': isExhaust,
+      'effects': effects.map((e) =&gt; e.toJson()).toList(),
+      'baseMaxForgeUpgrades': baseMaxForgeUpgrades,
+    };</pre>
+</div>
+
+<p>Notez les <code>if (x != null)</code> à l'intérieur du littéral de map : c'est la
+<em>collection-if</em> de Dart, qui omet purement et simplement la clé quand la valeur est nulle.</p>
+
+<h2 id="s6">6. La localisation inline du contenu</h2>
+
+<p>Le projet a <strong>deux</strong> systèmes de traduction, et il faut bien les distinguer.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th></th><th>Interface</th><th>Contenu de jeu</th></tr></thead>
+<tbody>
+<tr><td>Où</td><td><code>lib/l10n/app_fr.arb</code> et <code>app_en.arb</code></td><td>Directement dans <code>assets/data/*.json</code></td></tr>
+<tr><td>Forme</td><td>Fichiers ARB, une clé par libellé</td><td>Paires de champs <code>name_fr</code> / <code>name_en</code></td></tr>
+<tr><td>Accès</td><td><code>AppLocalizations.of(context)!.maClé</code></td><td><code>data.getName(locale)</code></td></tr>
+<tr><td>Génération</td><td>Oui — <code>AppLocalizations</code> est généré par Flutter</td><td>Non — c'est de la donnée</td></tr>
+<tr><td>Exemples</td><td>« Continuer », « Fin de tour », « Or »</td><td>« Frappe », « Inflige 6 dégâts. », « Gobelin »</td></tr>
+</tbody>
+</table></div>
+
+<p>Le second est le plus intéressant ici. Chaque modèle porteur de texte expose deux getters :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/card_data.dart</span><span class="lang">dart</span></div>
+  <pre>String getName(String locale) =&gt; locale == 'fr' ? nameFr : nameEn;
+String getDescription(String locale) =&gt;
+    locale == 'fr' ? descriptionFr : descriptionEn;</pre>
+</div>
+
+<p>La règle est donc : <strong>français si la locale est <code>fr</code>, anglais dans tous les autres
+cas</strong>. Il n'y a pas de repli plus subtil, et c'est volontaire — l'anglais sert de langue par
+défaut universelle. Un test le vérifie explicitement :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">test/unit/localization_test.dart</span><span class="lang">dart</span></div>
+  <pre>// Verify fallback behavior on unknown/default locale (falls back to English nameEn/descriptionEn)
+expect(cardData.getName('es'), 'Strike Test');
+expect(cardData.getDescription('de'), 'Deals 6 damage.');</pre>
+</div>
+
+<p>Le même patron se retrouve sur <code>HeroData</code>, <code>EnemyData</code>, <code>RelicData</code>,
+<code>PassiveData</code>, <code>ForgeUpgradeData</code>, ainsi que sur <code>EventData</code>,
+<code>EventChoice</code> — qui ajoutent <code>getTitle</code> et <code>getResultText</code>.</p>
+
+<div class="box rule"><div class="box-title">Règle du dépôt</div>
+<p>« <strong>Every JSON entry with user-facing text must include both <code>_fr</code> and
+<code>_en</code> variants</strong>, and the corresponding Dart model in <code>lib/models/data/</code>
+must be updated whenever a JSON schema changes. » Ajouter une carte sans sa traduction anglaise n'est
+pas une erreur bloquante — le repli renverra une chaîne vide — mais c'est une régression silencieuse.</p></div>
+
+<h3>Un cas particulier : <code>ForgeUpgradeData</code></h3>
+
+<p>Les descriptions de runes sont des <em>gabarits</em> avec des marqueurs, puisque la valeur dépend du
+niveau de la rune :</p>
+
+<div class="code" data-lang="json">
+  <div class="code-head"><span class="path">assets/data/forge_upgrades.json</span><span class="lang">json</span></div>
+  <pre>{
+  "id": "sharp",
+  "name_fr": "Tranchant",
+  "description_fr": "+{val} Dégâts sur la carte",
+  "pools": ["common", "uncommon", "rare"],
+  "eligibleCardTypes": ["attack"],
+  "valueMultiplier": 2,
+  "weight": 100,
+  "emoji": "⚔️"
+}</pre>
+</div>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/forge_upgrade_data.dart</span><span class="lang">dart</span></div>
+  <pre>String getDescription(int tier, String locale) {
+  final template = locale == 'fr' ? descriptionFr : descriptionEn;
+  final val = tier * valueMultiplier;
+  return template
+      .replaceAll('{tier}', tier.toString())
+      .replaceAll('{val}', val.toString());
+}</pre>
+</div>
+
+<p>Deux marqueurs : <code>{tier}</code> pour le niveau brut et <code>{val}</code> pour le niveau
+multiplié par <code>valueMultiplier</code>. Un <code>sharp</code> de niveau 2 affiche donc
+« +4 Dégâts sur la carte ».</p>
+
+<h2 id="s7">7. Catalogue contre instances</h2>
+
+<p>Nous l'avons évoqué au chapitre 6 ; voyons-le concrètement, car c'est la source de confusion la plus
+fréquente pour qui découvre le dépôt.</p>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 840 290" width="840" role="img" aria-label="Une CardData, plusieurs CardInstance">
+      <defs>
+        <marker id="c7-b1" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#3a4966"/></marker>
+      </defs>
+
+      <rect x="30" y="80" width="240" height="120" rx="10" fill="#151b2b" stroke="#f59e0b" stroke-width="2"/>
+      <text x="150" y="106" fill="#f59e0b" font-size="14" text-anchor="middle" font-family="ui-monospace, monospace">CardData</text>
+      <text x="150" y="128" fill="#e6ecf5" font-size="12.5" text-anchor="middle">id: "strike_basic"</text>
+      <text x="150" y="147" fill="#a7b4c9" font-size="12" text-anchor="middle">nameFr: "Frappe" · cost: 1</text>
+      <text x="150" y="165" fill="#a7b4c9" font-size="12" text-anchor="middle">effects: [damage 6]</text>
+      <text x="150" y="188" fill="#6f7d95" font-size="11" text-anchor="middle">UNE seule pour toute la session</text>
+
+      <path d="M270 118 L340 84" stroke="#3a4966" stroke-width="1.8" marker-end="url(#c7-b1)"/>
+      <path d="M270 140 L340 158" stroke="#3a4966" stroke-width="1.8" marker-end="url(#c7-b1)"/>
+      <path d="M270 162 L340 232" stroke="#3a4966" stroke-width="1.8" marker-end="url(#c7-b1)"/>
+
+      <rect x="344" y="24" width="470" height="70" rx="8" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="364" y="46" fill="#a78bfa" font-size="12.5" font-family="ui-monospace, monospace">CardInstance #1</text>
+      <text x="364" y="66" fill="#a7b4c9" font-size="11.5">uniqueId: 8f3c… · rarity: common · forgeUpgrades: []</text>
+      <text x="364" y="84" fill="#6f7d95" font-size="11">dégâts effectifs : 6 × 1,0 = 6</text>
+
+      <rect x="344" y="102" width="470" height="70" rx="8" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="364" y="124" fill="#a78bfa" font-size="12.5" font-family="ui-monospace, monospace">CardInstance #2</text>
+      <text x="364" y="144" fill="#a7b4c9" font-size="11.5">uniqueId: b21a… · rarity: rare · forgeUpgrades: ["sharp:2"]</text>
+      <text x="364" y="162" fill="#6f7d95" font-size="11">dégâts effectifs : round(6 × 1,4) + 4 = 12</text>
+
+      <rect x="344" y="180" width="470" height="70" rx="8" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="364" y="202" fill="#a78bfa" font-size="12.5" font-family="ui-monospace, monospace">CardInstance #3</text>
+      <text x="364" y="222" fill="#a7b4c9" font-size="11.5">uniqueId: 5e07… · rarity: epic · forgeUpgrades: ["burning:1"]</text>
+      <text x="364" y="240" fill="#6f7d95" font-size="11">dégâts effectifs : round(6 × 1,6) = 10 + Brûlure 1</text>
+
+      <text x="420" y="278" fill="#6f7d95" font-size="11.5" text-anchor="middle">Les trois partagent le même objet CardData : le modifier les modifierait toutes.</text>
+    </svg>
+  </div>
+  <figcaption>Une définition, plusieurs instances. La rareté et les runes vivent sur l'instance ; le
+  coût en mana, le type et la cible restent portés par la définition.</figcaption>
+</figure>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/card_instance.dart</span><span class="lang">dart</span></div>
+  <pre>class CardInstance {
+  final String uniqueId;
+  final CardData data;
+  final CardRarity rarity;
+  final List&lt;String&gt; forgeUpgrades;
+
+  CardInstance({
+    String? uniqueId,
+    required this.data,
+    CardRarity? rarity,
+    List&lt;String&gt;? forgeUpgrades,
+  })  : uniqueId = uniqueId ?? const Uuid().v4(),
+        rarity = rarity ?? data.rarity,
+        forgeUpgrades = forgeUpgrades != null
+            ? List&lt;String&gt;.unmodifiable(forgeUpgrades)
+            : const &lt;String&gt;[];
+
+  int get currentCost =&gt; data.cost;</pre>
+</div>
+
+<p>Trois détails à noter :</p>
+
+<ul>
+<li>L'<code>uniqueId</code> est un UUID v4 généré à la création si on n'en fournit pas. C'est lui qui
+permet de retirer <em>une</em> Frappe de la main sans toucher aux autres.</li>
+<li>La rareté de l'instance retombe par défaut sur celle de la définition, mais peut la dépasser — c'est
+ce que fait la fusion.</li>
+<li><code>currentCost</code> renvoie simplement <code>data.cost</code> : dans l'état actuel du jeu,
+<strong>aucune rune ni aucune rareté ne modifie le coût en mana d'une carte</strong>. Le getter existe
+pour rendre cette évolution possible sans changer les appelants.</li>
+</ul>
+
+<p>Le même schéma s'applique aux ennemis : <code>EnemyData</code> décrit le Gobelin, une
+<code>EnemyInstance</code> décrit <em>ce</em> Gobelin-ci, avec son <code>EntityStats</code> mis à
+l'échelle par l'acte et le niveau du joueur.</p>
+
+<h2 id="s8">8. Ajouter du contenu : le mode d'emploi</h2>
+
+<h3>Cas 1 — Une carte qui réutilise des effets existants</h3>
+
+<p>Aucune ligne de Dart. On ajoute une entrée à <code>cards.json</code> :</p>
+
+<div class="code" data-lang="json">
+  <div class="code-head"><span class="path">exemple — à ajouter dans assets/data/cards.json</span><span class="lang">json</span></div>
+  <pre>{
+  "id": "shield_bash",
+  "name_en": "Shield Bash",
+  "name_fr": "Coup de Bouclier",
+  "description_en": "Gain 6 Block and deal 4 damage.",
+  "description_fr": "Gagne 6 d'Armure et inflige 4 dégâts.",
+  "cost": 1,
+  "type": "attack",
+  "category": "global",
+  "rarity": "common",
+  "target": "singleEnemy",
+  "animation": "melee",
+  "effects": [
+    { "type": "armor", "value": 6 },
+    { "type": "damage", "value": 4 }
+  ]
+}</pre>
+</div>
+
+<p>Au prochain lancement, la carte est immédiatement disponible dans le draft de départ, dans la
+boutique, dans le dictionnaire, dans le miroir magique et dans les récompenses de boss. Rien d'autre à
+faire.</p>
+
+<h3>Cas 2 — Un nouvel ennemi</h3>
+
+<div class="code" data-lang="json">
+  <div class="code-head"><span class="path">exemple — à ajouter dans assets/data/enemies.json</span><span class="lang">json</span></div>
+  <pre>{
+  "id": "wolf",
+  "name_en": "Dire Wolf",
+  "name_fr": "Loup Sinistre",
+  "maxHp": 32,
+  "baseDamage": 7,
+  "spritePath": "enemy_wolf.png",
+  "tier": 2,
+  "xp": 45,
+  "critChance": 20,
+  "gold": 18,
+  "intents": [
+    { "type": "attack", "value": 7 },
+    { "type": "attack", "value": 7 },
+    { "type": "buff",   "value": 2 }
+  ]
+}</pre>
+</div>
+
+<p>Là il y a une contrainte supplémentaire : l'image. <code>HerosDraftGame.onLoad</code> lit
+<code>enemies.json</code> et précharge tous les <code>spritePath</code> déclarés. Il faut donc déposer
+<code>assets/images/enemy_wolf.png</code>. Le <code>tier: 2</code> signifie que l'ennemi n'apparaîtra
+qu'à partir de l'acte 6 (chapitre 11).</p>
+
+<h3>Cas 3 — Une relique</h3>
+
+<p>Sans code si le couple <code>trigger</code> / <code>effectType</code> existe déjà :</p>
+
+<div class="code" data-lang="json">
+  <div class="code-head"><span class="path">exemple — à ajouter dans assets/data/relics.json</span><span class="lang">json</span></div>
+  <pre>{
+  "id": "warm_cloak",
+  "name_en": "Warm Cloak",
+  "name_fr": "Cape Chaude",
+  "description_en": "Gain 4 Block at the start of combat.",
+  "description_fr": "Gagne 4 points d'Armure au début du combat.",
+  "trigger": "startOfCombat",
+  "effectType": "gain_armor",
+  "value": 4,
+  "rarity": "common",
+  "emoji": "🧥"
+}</pre>
+</div>
+
+<h3>Ce qui demande du code</h3>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Ajout</th><th>Fichier à modifier</th></tr></thead>
+<tbody>
+<tr><td>Un nouveau <code>effects[].type</code> de carte</td><td><code>lib/game/services/effects/strategies.dart</code> + <code>registry.register(...)</code></td></tr>
+<tr><td>Un nouveau <code>statusId</code></td><td><code>EffectResolver.createStatus</code> + le lecteur correspondant (<code>DamagePipeline</code> ou <code>StatusEffectProcessor</code>)</td></tr>
+<tr><td>Un nouveau <code>effectType</code> de relique</td><td>Un <code>case</code> dans <code>PlayerStatsManager.applyRelicEffect</code></td></tr>
+<tr><td>Un nouveau <code>trigger</code></td><td><code>RelicTrigger</code> + l'appel à <code>applyRelics(...)</code> au bon moment</td></tr>
+<tr><td>Un nouveau champ dans un JSON existant</td><td>Le modèle correspondant de <code>lib/models/data/</code> (<code>fromJson</code> et éventuellement <code>toJson</code>)</td></tr>
+<tr><td>Une nouvelle valeur d'<code>animation</code></td><td><code>CardAnimator.playAnimation</code></td></tr>
+</tbody>
+</table></div>
+
+<div class="box ok"><div class="box-title">Checklist avant de valider un ajout de contenu</div>
+<ol style="margin-bottom:0">
+<li>Les deux variantes <code>_fr</code> et <code>_en</code> sont présentes pour chaque texte visible.</li>
+<li>L'<code>id</code> est unique dans son fichier.</li>
+<li>Les valeurs d'enum (<code>type</code>, <code>rarity</code>, <code>target</code>, <code>trigger</code>) correspondent exactement à un nom d'énumération Dart.</li>
+<li>Si un <code>spritePath</code> ou un <code>iconPath</code> est déclaré, l'image existe dans <code>assets/images/</code>.</li>
+<li><code>flutter test</code> passe, et <code>dart analyze</code> ne remonte rien.</li>
+</ol></div>
+
+<div class="quiz">
+  <h2>Quiz — vérifiez vos acquis</h2>
+
+  <div class="q" data-answer="2">
+    <p class="q-text">1. Combien de fichiers JSON <code>gameDataLoaderProvider</code> charge-t-il, et
+    comment ?</p>
+    <ul class="q-opts">
+      <li>10, un par un, séquentiellement</li>
+      <li>9, séquentiellement</li>
+      <li>9, en parallèle avec <code>Future.wait</code></li>
+      <li>10, en parallèle avec <code>Future.wait</code></li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> neuf fichiers en parallèle.
+    <code>patch_notes.json</code> est le dixième fichier du dossier mais il n'est pas chargé ici : il est
+    lu directement par <code>patch_notes_screen.dart</code> via <code>rootBundle</code>.</div>
+  </div>
+
+  <div class="q" data-answer="0">
+    <p class="q-text">2. Que se passe-t-il si <code>"rarity"</code> contient une valeur inconnue dans
+    <code>cards.json</code> ?</p>
+    <ul class="q-opts">
+      <li>La carte est chargée avec <code>CardRarity.common</code> grâce au <code>orElse</code></li>
+      <li>Le chargement échoue avec une exception</li>
+      <li>La carte est ignorée silencieusement</li>
+      <li>La rareté est déduite du coût en mana</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>rarity</code>, <code>category</code> et
+    <code>target</code> ont un <code>orElse</code> ; seul <code>type</code> n'en a pas et lèvera une
+    exception.</div>
+  </div>
+
+  <div class="q" data-answer="3">
+    <p class="q-text">3. Où vivent les cartes de classe une fois le jeu chargé ?</p>
+    <ul class="q-opts">
+      <li>Dans <code>registry.heroes</code></li>
+      <li>Dans une liste séparée <code>registry.heroCards</code></li>
+      <li>Elles ne sont pas chargées, elles sont créées à la volée</li>
+      <li>Dans <code>registry.cards</code>, fusionnées avec les cartes globales</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>final allCards = [...cardsList, ...heroCardsList];</code>.
+    Le champ <code>category</code> (<code>global</code> / <code>characterSpecific</code>) et la rareté
+    <code>unique</code> permettent ensuite de les filtrer.</div>
+  </div>
+
+  <div class="q" data-answer="1">
+    <p class="q-text">4. Pourquoi <code>CardData.getById</code> passe-t-il par un singleton statique
+    plutôt que par un provider ?</p>
+    <ul class="q-opts">
+      <li>Parce que c'est plus rapide</li>
+      <li>Parce qu'il est appelé depuis la désérialisation d'une sauvegarde, où l'on n'a pas de <code>ref</code></li>
+      <li>Parce que Riverpod ne gère pas les listes</li>
+      <li>Parce que c'est une exigence de Flame</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>DeckState._decodePile</code> et
+    <code>InventoryState.fromJsonWithReport</code> sont des méthodes statiques de classes d'état, sans
+    accès à Riverpod. Le singleton est une entorse assumée à la règle « pas de variable globale ».</div>
+  </div>
+
+  <div class="q" data-answer="2">
+    <p class="q-text">5. Que renvoie <code>getName('es')</code> sur une <code>CardData</code> ?</p>
+    <ul class="q-opts">
+      <li>Une chaîne vide</li>
+      <li>Une exception <code>UnsupportedLocale</code></li>
+      <li>Le nom anglais</li>
+      <li>Le nom français</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>getName(locale) =&gt; locale == 'fr' ? nameFr : nameEn;</code>.
+    L'anglais est le repli universel, et <code>test/unit/localization_test.dart</code> le vérifie
+    explicitement pour <code>'es'</code> et <code>'de'</code>.</div>
+  </div>
+
+  <div class="q" data-answer="0">
+    <p class="q-text">6. Vous ajoutez une carte avec <code>"animation": "shadow"</code>, une valeur qui
+    n'existe pas encore. Que se passe-t-il ?</p>
+    <ul class="q-opts">
+      <li>Elle joue l'animation de mêlée, car le <code>switch</code> de <code>CardAnimator</code> a un <code>default</code></li>
+      <li>Le chargement du JSON échoue</li>
+      <li>La carte est invisible en combat</li>
+      <li>L'application plante au moment de jouer la carte</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>animation</code> est une simple
+    <code>String?</code> côté modèle, sans énumération. Le dispatcher de <code>CardAnimator</code> a un
+    <code>case 'melee': default:</code> qui attrape toutes les valeurs inconnues.</div>
+  </div>
+</div>
+
+<div class="pager">
+<a class="prev" href="ch06.html"><div class="dir">&#8592; Chapitre 06</div><div class="ttl">L&#x27;architecture en quatre couches</div></a>
+<a class="next" href="ch08.html"><div class="dir">Chapitre 08 &#8594;</div><div class="ttl">Le héros : stats, classes, passifs et progression</div></a>
+</div>
+</div>
+</main>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

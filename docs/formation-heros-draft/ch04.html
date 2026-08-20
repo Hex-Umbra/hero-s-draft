@@ -1,0 +1,1718 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Riverpod — l&#x27;état partagé du jeu — Formation Hero's Draft</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<button class="menu-btn" aria-label="Menu">&#9776;</button>
+<div class="layout">
+<aside class="sidebar">
+  <a class="brand" href="index.html">
+    <div class="brand-title">HERO'S DRAFT</div>
+    <div class="brand-sub">Formation complète au projet Flutter</div>
+  </a>
+<nav class="nav">
+<div class="nav-part">Partie 0 — Démarrage</div>
+<a href="ch01.html"><span class="num">01</span><span>Vue d&#x27;ensemble : qu&#x27;est-ce que Hero&#x27;s Draft ?</span></a>
+<div class="nav-part">Partie 1 — Les fondations techniques</div>
+<a href="ch02.html"><span class="num">02</span><span>Dart, le langage — l&#x27;essentiel pour ce projet</span></a>
+<a href="ch03.html"><span class="num">03</span><span>Flutter — widgets, arbre et navigation</span></a>
+<a href="ch04.html" class="active"><span class="num">04</span><span>Riverpod — l&#x27;état partagé du jeu</span></a>
+<a href="ch05.html"><span class="num">05</span><span>Flame — le moteur de rendu du combat</span></a>
+<div class="nav-part">Partie 2 — L&#x27;architecture du projet</div>
+<a href="ch06.html"><span class="num">06</span><span>L&#x27;architecture en quatre couches</span></a>
+<a href="ch07.html"><span class="num">07</span><span>La couche de données : un jeu 100 % data-driven</span></a>
+<div class="nav-part">Partie 3 — Les règles du jeu</div>
+<a href="ch08.html"><span class="num">08</span><span>Le héros : stats, classes, passifs et progression</span></a>
+<a href="ch09.html"><span class="num">09</span><span>Les cartes et le deck</span></a>
+<a href="ch10.html"><span class="num">10</span><span>Le combat : boucle de tour, dégâts et effets</span></a>
+<a href="ch11.html"><span class="num">11</span><span>Les ennemis et la courbe de difficulté</span></a>
+<a href="ch12.html"><span class="num">12</span><span>La carte du monde procédurale</span></a>
+<a href="ch13.html"><span class="num">13</span><span>Les reliques et le système de déclencheurs</span></a>
+<a href="ch14.html"><span class="num">14</span><span>L&#x27;économie : or, boutique, forge et fusion</span></a>
+<a href="ch15.html"><span class="num">15</span><span>Récompenses, chance et probabilités</span></a>
+<a href="ch16.html"><span class="num">16</span><span>Événements, repos et autel des reliques</span></a>
+<div class="nav-part">Partie 4 — L&#x27;interface et le rendu</div>
+<a href="ch17.html"><span class="num">17</span><span>Le pont Flame ↔ Riverpod : l&#x27;écran de combat</span></a>
+<a href="ch18.html"><span class="num">18</span><span>Composants Flame et game feel</span></a>
+<a href="ch19.html"><span class="num">19</span><span>Écrans, navigation et design system</span></a>
+<div class="nav-part">Partie 5 — Qualité et cycle de vie</div>
+<a href="ch20.html"><span class="num">20</span><span>Sauvegarde, localisation et tutoriel</span></a>
+<a href="ch21.html"><span class="num">21</span><span>Tests, outillage, dette technique et évolutions</span></a>
+</nav>
+</aside>
+<main class="main">
+<div class="content">
+<div class="chapter-kicker">Chapitre 04</div>
+<h1>Riverpod — l'état partagé du jeu</h1>
+<p class="lede">Riverpod est le cerveau de Hero's Draft : toute règle du jeu y vit. Ce chapitre explique la bibliothèque puis passe en revue les onze providers du projet.</p>
+<div class="toc">
+  <div class="toc-title">Dans ce chapitre</div>
+  <ol>
+    <li><a href="#s1">Le problème que Riverpod résout</a></li>
+    <li><a href="#s2">Les briques : ProviderScope, Provider, FutureProvider, Notifier</a></li>
+    <li><a href="#s3">Écrire un Notifier</a></li>
+    <li><a href="#s4">Lire un provider : watch, read, listen</a></li>
+    <li><a href="#s5">FutureProvider et le chargement des données</a></li>
+    <li><a href="#s6">Les onze providers de Hero's Draft</a></li>
+    <li><a href="#s7">Composer sans tout casser</a></li>
+    <li><a href="#s8">Effets de bord et orchestration</a></li>
+  </ol>
+</div>
+
+<h2 id="s1">1. Le problème que Riverpod résout</h2>
+<p>
+  Un jeu de cartes roguelike, c'est une longue liste de questions du type « combien de PV a le héros ? »,
+  « combien de cartes reste-t-il dans la pioche ? », « le joueur a-t-il assez d'or ? ». Ces réponses
+  changent en permanence, et surtout : elles sont posées depuis des endroits très éloignés les uns
+  des autres. La barre de vie du HUD, la carte du monde, le moteur <span class="pill f">Flame</span> qui
+  dessine l'arène, la boutique, la sauvegarde… tout le monde a besoin de la même vérité.
+</p>
+
+<h3>Pourquoi pas <code>setState</code> ?</h3>
+<p>
+  Vous avez vu au chapitre précédent que <code>setState</code> est le mécanisme de base de Flutter :
+  il dit à <em>un</em> widget « ton état a changé, redessine-toi ». C'est parfait pour un état
+  purement visuel et purement local. D'ailleurs le projet s'en sert encore, par exemple dans
+  <code>GameScreen</code> pour afficher ou masquer l'avertissement « il te reste du mana » :
+</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>  bool _showManaWarning = false;
+  bool _showRemainingManaWarning = false;
+  bool _isVictoryHandled = false;</pre>
+</div>
+<p>
+  Ces trois booléens ne concernent que cet écran. Personne d'autre n'a besoin de savoir si un
+  bandeau jaune est affiché. Mais essayez d'appliquer la même méthode aux points de vie du héros :
+  il faudrait que <code>GameScreen</code> détienne la valeur, puis la passe en paramètre à
+  <code>CombatBottomHud</code>, qui la passerait à ses enfants, pendant qu'un
+  <em>callback</em> remonterait dans l'autre sens à chaque dégât subi. On appelle ça du
+  <em>prop drilling</em> : on perce un tunnel de paramètres à travers dix widgets pour faire passer
+  une donnée entre deux points qui, eux, sont à dix widgets l'un de l'autre. Et le jour où l'écran
+  de la boutique a lui aussi besoin des PV, il faut recommencer un autre tunnel.
+</p>
+<p>
+  Avec Riverpod, n'importe quel widget de l'arbre demande directement la donnée, sans que ses parents
+  ne soient au courant. Voici le fichier le plus simple du projet qui fait ça : le petit panneau de
+  stats affiché sur la carte du monde.
+</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/map/hero_mini_stats_panel.dart</span><span class="lang">dart</span></div>
+  <pre>class HeroMiniStatsPanel extends ConsumerWidget {
+  const HeroMiniStatsPanel({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final runState = ref.watch(runProvider);
+    final stats = runState.heroStats;
+
+    final locale = Localizations.localeOf(context).languageCode;
+    // ... construit le panneau à partir de `stats`</pre>
+</div>
+<p>
+  Trois choses à retenir de cet extrait, on y reviendra en détail :
+</p>
+<ul>
+  <li>le widget étend <code>ConsumerWidget</code> au lieu de <code>StatelessWidget</code> ;</li>
+  <li>sa méthode <code>build</code> reçoit un paramètre supplémentaire, <code>WidgetRef ref</code> ;</li>
+  <li><code>ref.watch(runProvider)</code> renvoie l'état courant <strong>et</strong> abonne le widget :
+    dès que le héros perd un PV, ce panneau — et lui seul — se reconstruit.</li>
+</ul>
+
+<h3>Pourquoi pas un singleton global ?</h3>
+<p>
+  L'autre réflexe naturel serait d'écrire <code>class GameState { static int heroHp = 100; }</code> et
+  d'y accéder de partout. Ça marche… jusqu'à ce que trois problèmes vous rattrapent :
+</p>
+<div class="memo">
+  <div class="card"><h5>Rien ne prévient l'UI</h5><p>Modifier une variable statique ne redessine aucun widget. Il faudrait recoller un système de notification par-dessus — c'est-à-dire réécrire Riverpod, mal.</p></div>
+  <div class="card"><h5>Pas de remise à zéro</h5><p>Une variable globale vit aussi longtemps que le processus. Entre deux runs, ou entre deux tests, elle garde ses valeurs sales.</p></div>
+  <div class="card"><h5>Impossible à substituer</h5><p>On ne peut pas remplacer un singleton par une version de test sans toucher au code de production.</p></div>
+</div>
+
+<h3>Ce que ça change pour les tests</h3>
+<p>
+  C'est l'argument décisif. Un provider Riverpod n'est pas la donnée : c'est une <em>recette</em> pour
+  fabriquer la donnée. La donnée elle-même vit dans un conteneur, le <code>ProviderContainer</code>.
+  En production, <code>ProviderScope</code> en crée un pour toute l'application. Dans un test, on en
+  crée un à la main, on le pilote, et on le jette. Aucun widget, aucun écran, aucun moteur de rendu.
+</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">exemple</span><span class="lang">dart</span></div>
+  <pre>// Un test peut instancier tout l'état du jeu sans lancer Flutter :
+final container = ProviderContainer();
+addTearDown(container.dispose);
+
+// On appelle une méthode métier...
+container.read(inventoryProvider.notifier).gainGold(120);
+
+// ...et on lit le résultat.
+expect(container.read(inventoryProvider).gold, 120);</pre>
+</div>
+<p>
+  Le même code de contrôleur tourne dans le jeu et dans le test, sans branche <code>if (isTest)</code>,
+  parce qu'il ne dépend jamais d'un <code>BuildContext</code> ni d'un widget. C'est la contrepartie
+  concrète de la règle d'architecture du projet.
+</p>
+<div class="box rule">
+  <div class="box-title">Règle du projet</div>
+  <p>
+    Tout l'état métier vit dans <code>lib/game/controllers/</code>, dans des <code>Notifier</code>
+    Riverpod 2.x exposés par des <code>NotifierProvider</code> — <strong>jamais</strong> dans les
+    widgets, <strong>jamais</strong> dans les composants Flame, <strong>jamais</strong> dans des
+    variables globales ou des singletons. Les composants Flame sont « visuels et réactifs
+    uniquement » : ils lisent l'état Riverpod et le rendent à l'écran, ils ne possèdent aucune
+    logique de jeu.
+  </p>
+</div>
+<p>
+  Cette règle a une conséquence pratique très utile quand vous cherchez un bug : si une valeur du jeu
+  est fausse (des dégâts, un prix, un cooldown), la cause est forcément dans
+  <code>lib/game/controllers/</code> ou dans un service appelé depuis là. Jamais dans un widget.
+</p>
+
+<h2 id="s2">2. Les briques : ProviderScope, Provider, FutureProvider, Notifier</h2>
+<p>
+  Riverpod tient en quatre concepts. Le projet déclare <code>flutter_riverpod: ^2.5.1</code> dans son
+  <code>pubspec.yaml</code> (résolu en 2.6.1), c'est-à-dire la génération « Riverpod 2.x » — celle qui
+  introduit <code>Notifier</code>.
+</p>
+
+<h3>2.1 <code>ProviderScope</code> : le conteneur racine</h3>
+<p>
+  Sans <code>ProviderScope</code>, aucun provider ne peut être lu : c'est le widget qui crée le
+  <code>ProviderContainer</code> dans lequel vivent tous les états. Il est posé une fois pour toutes,
+  tout en haut de l'application.
+</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/main.dart</span><span class="lang">dart</span></div>
+  <pre>void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const ProviderScope(child: HerosDraftApp()));
+}
+
+class HerosDraftApp extends ConsumerWidget {
+  const HerosDraftApp({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Force l'activation de l'écoute d'autosave dès le démarrage de l'app.
+    ref.watch(autosaveOrchestratorProvider);
+
+    return MaterialApp(
+      onGenerateTitle: (context) =&gt; AppLocalizations.of(context)!.appTitle,
+      theme: AppTheme.darkNeonTheme,
+      // ...</pre>
+</div>
+<p>
+  Notez que <code>HerosDraftApp</code> est déjà un <code>ConsumerWidget</code> : la toute première
+  chose que fait l'application, avant même de construire le <code>MaterialApp</code>, est de réveiller
+  le provider d'autosauvegarde. On expliquera pourquoi en section 8.
+</p>
+
+<h3>2.2 <code>Provider</code> : une valeur calculée une fois</h3>
+<p>
+  Le <code>Provider</code> tout court expose une valeur immuable, construite à la première lecture puis
+  mise en cache. On s'en sert pour les objets « outils » : un registre, une dépendance injectable.
+  Dans Hero's Draft, il y en a trois. Le plus parlant est le registre des effets de carte.
+</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/services/effects/effect_strategy.dart</span><span class="lang">dart</span></div>
+  <pre>final effectRegistryProvider = Provider&lt;EffectRegistry&gt;((ref) {
+  final registry = EffectRegistry();
+  registry.register('damage', DamageEffectStrategy());
+  registry.register('heal', HealEffectStrategy());
+  registry.register('armor', ArmorEffectStrategy());
+  registry.register('gain_mana', GainManaEffectStrategy());
+  registry.register('draw', DrawEffectStrategy());
+  registry.register('apply_status', ApplyStatusEffectStrategy());
+  return registry;
+});</pre>
+</div>
+<p>
+  Ce provider ne change jamais d'état : il assemble six stratégies une seule fois et les rend
+  disponibles au reste du jeu. On y revient en section 7.
+</p>
+
+<h3>2.3 <code>FutureProvider</code> : une valeur asynchrone</h3>
+<p>
+  Quand la valeur demande une opération asynchrone — lire des fichiers, appeler le réseau — on utilise
+  un <code>FutureProvider</code>. Il ne renvoie pas directement la valeur mais un
+  <code>AsyncValue&lt;T&gt;</code>, un objet qui vaut « en cours », « chargé » ou « en erreur ». Le
+  projet en a exactement un, pour charger les données JSON du jeu. Toute la section 5 lui est consacrée.
+</p>
+
+<h3>2.4 <code>Notifier</code> + <code>NotifierProvider</code> : un état qui évolue</h3>
+<p>
+  C'est la brique centrale du projet. Un <code>Notifier&lt;T&gt;</code> est une classe qui détient un
+  état de type <code>T</code> et expose des méthodes pour le modifier ; le
+  <code>NotifierProvider</code> l'expose au reste de l'application. Le plus court du projet, dans
+  <code>checkpoint_controller.dart</code>, tient en une dizaine de lignes :
+</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/checkpoint_controller.dart</span><span class="lang">dart</span></div>
+  <pre>class CheckpointNotifier extends Notifier&lt;int&gt; {
+  @override
+  int build() =&gt; 0;
+
+  /// Signale qu'un nœud de la carte vient d'être résolu (combat, boutique,
+  /// repos, event, forge, échange de reliques, ou draft de Level Up).
+  void bump() =&gt; state = state + 1;
+}
+
+final checkpointProvider =
+    NotifierProvider&lt;CheckpointNotifier, int&gt;(CheckpointNotifier.new);</pre>
+</div>
+<p>
+  Tout est là : l'état est un simple <code>int</code>, <code>build()</code> donne sa valeur initiale,
+  et <code>bump()</code> le fait avancer. Notez la syntaxe <code>CheckpointNotifier.new</code> : ce
+  n'est pas un appel de constructeur, c'est une <em>référence</em> au constructeur. Riverpod l'appellera
+  lui-même, au moment où il en aura besoin — c'est ce qui lui permet de recréer proprement l'état.
+</p>
+
+<h3>2.5 <code>StateNotifier</code> vs <code>Notifier</code> : pourquoi le projet a migré</h3>
+<p>
+  Riverpod 1.x proposait <code>StateNotifier</code>, une classe venue d'un autre paquet
+  (<code>state_notifier</code>). Elle fonctionne, mais elle a deux défauts que <code>Notifier</code>
+  corrige :
+</p>
+<div class="table-wrap"><table>
+<thead><tr><th></th><th><code>StateNotifier</code> (ancien)</th><th><code>Notifier</code> (Riverpod 2.x)</th></tr></thead>
+<tbody>
+<tr><td>État initial</td><td>Passé au constructeur : <code>NotificationNotifier() : super([])</code></td><td>Renvoyé par la méthode <code>build()</code></td></tr>
+<tr><td>Accès à <code>ref</code></td><td>Aucun. Il faut se le faire passer à la main dans le constructeur du provider</td><td><code>ref</code> est un champ de la classe, disponible partout</td></tr>
+<tr><td>Déclaration</td><td><code>StateNotifierProvider&lt;N, T&gt;((ref) =&gt; N())</code></td><td><code>NotifierProvider&lt;N, T&gt;(N.new)</code></td></tr>
+<tr><td>Recréation</td><td>Le provider doit reconstruire l'objet entier</td><td>Riverpod rappelle <code>build()</code>, l'objet est réutilisable</td></tr>
+</tbody>
+</table></div>
+<p>
+  Le point qui compte le plus ici est le deuxième. Dans Hero's Draft, les contrôleurs se parlent en
+  permanence : jouer une carte touche le deck, le combat et le héros. Avoir <code>ref</code> disponible
+  directement dans la classe rend ces appels naturels — vous le verrez dans
+  <code>SkillController</code> en section 3.
+</p>
+<p>
+  La migration des contrôleurs est terminée : les neuf contrôleurs de
+  <code>lib/game/controllers/</code> étendent tous <code>Notifier</code>. Il reste exactement un
+  <code>StateNotifier</code> dans le dépôt, et c'est volontaire.
+</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/notification_overlay.dart</span><span class="lang">dart</span></div>
+  <pre>class NotificationNotifier extends StateNotifier&lt;List&lt;GameNotification&gt;&gt; {
+  final Map&lt;String, Timer&gt; _timers = {};
+  static final Random _random = Random();
+
+  NotificationNotifier() : super([]);
+
+  void show(String message, {NotificationType type = NotificationType.info}) {
+    // ...
+    // Supprime la plus ancienne si le stack dépasse 4 notifications actives
+    if (state.length &gt;= 4) {
+      state = [...state.sublist(1), notification];
+    } else {
+      state = [...state, notification];
+    }
+    // ...
+  }
+}
+
+final notificationProvider =
+    StateNotifierProvider&lt;NotificationNotifier, List&lt;GameNotification&gt;&gt;((ref) {
+      return NotificationNotifier();
+    });</pre>
+</div>
+<p>
+  C'est la file de <em>toasts</em> : les petits bandeaux « VICTOIRE ! », « Deck remélangé », qui
+  s'empilent en haut à gauche, se limitent à quatre à l'écran et disparaissent après 3,5 secondes.
+  Cet état est purement décoratif — il ne contient aucune règle de jeu, il n'est pas sauvegardé, et
+  perdre son contenu ne casse rien. Il n'a d'ailleurs jamais besoin de <code>ref</code> : il ne parle
+  à aucun autre provider. Le migrer n'apporterait rien.
+</p>
+<div class="box">
+  <div class="box-title">À retenir</div>
+  <p>
+    Pour tout nouvel état dans ce projet : <code>Notifier</code> + <code>NotifierProvider</code>.
+    Le <code>StateNotifier</code> de <code>notification_overlay.dart</code> est une exception
+    historique et documentée, pas un modèle à suivre.
+  </p>
+</div>
+
+<h2 id="s3">3. Écrire un Notifier</h2>
+<p>
+  Passons à l'anatomie complète. Un contrôleur du projet suit toujours le même squelette :
+</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">illustration</span><span class="lang">dart</span></div>
+  <pre>class XController extends Notifier&lt;XState&gt; {   // 1. le type de l'état
+  @override
+  XState build() {                            // 2. l'état initial
+    return const XState();
+  }
+
+  void faireQuelqueChose() {
+    state = state.copyWith(champ: nouvelleValeur);   // 3. on remplace l'état
+    ref.read(autreProvider.notifier).reagir();       // 4. on parle aux voisins
+  }
+}
+
+final xProvider = NotifierProvider&lt;XController, XState&gt;(XController.new);</pre>
+</div>
+<ol>
+  <li><strong><code>extends Notifier&lt;XState&gt;</code></strong> — le paramètre générique est le type
+    de l'état exposé. Ici <code>XState</code>, mais ça peut être un <code>int</code>
+    (<code>CheckpointNotifier</code>) ou une <code>List</code>.</li>
+  <li><strong><code>build()</code></strong> — appelée par Riverpod à la première lecture du provider,
+    et jamais avant. Elle renvoie l'état de départ. C'est aussi l'endroit où l'on prépare les
+    dépendances internes (section 7).</li>
+  <li><strong><code>state = ...</code></strong> — la seule façon de notifier. Affecter
+    <code>state</code> déclenche la comparaison avec l'ancienne valeur et prévient tous les abonnés.
+    Il faut donc affecter un <strong>nouvel objet</strong> : muter un champ de l'objet existant ne
+    déclencherait rien.</li>
+  <li><strong><code>ref</code></strong> — disponible directement, sans le déclarer. C'est la porte
+    vers les autres providers.</li>
+</ol>
+
+<h3>3.1 <code>InventoryController</code> en entier</h3>
+<p>
+  Voici le contrôleur d'inventaire, dans son intégralité — le fichier complet fait 65 lignes, imports
+  compris. Il gère l'or, les reliques, et le nombre de cartes bonus en boutique.
+</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/inventory_controller.dart</span><span class="lang">dart</span></div>
+  <pre>class InventoryController extends Notifier&lt;InventoryState&gt; {
+  @override
+  InventoryState build() {
+    return const InventoryState();
+  }
+
+  /// Remplace intégralement l'état par une sauvegarde chargée
+  void hydrate(InventoryState savedState) {
+    state = savedState;
+  }
+
+  void gainGold(int amount) {
+    state = state.copyWith(gold: state.gold + amount);
+  }
+
+  bool spendGold(int amount) {
+    if (state.gold &lt; amount) return false;
+    state = state.copyWith(gold: state.gold - amount);
+    return true;
+  }
+
+  void addRelic(RelicData relic) {
+    state = state.copyWith(relics: [...state.relics, relic]);
+    if (relic.trigger == RelicTrigger.startOfRun) {
+      ref.read(runProvider.notifier).applyRelicEffect(relic);
+    }
+  }
+
+  void buyShopExpansion() {
+    state = state.copyWith(bonusShopCards: state.bonusShopCards + 1);
+  }
+
+  void removeRelics(List&lt;String&gt; relicIds) {
+    final List&lt;RelicData&gt; newRelics = List.from(state.relics);
+    for (final id in relicIds) {
+      final index = newRelics.indexWhere((r) =&gt; r.id == id);
+      if (index != -1) {
+        newRelics.removeAt(index);
+      }
+    }
+    state = state.copyWith(relics: newRelics);
+  }
+
+  void reset({
+    int initialGold = 50,
+    List&lt;RelicData&gt; initialRelics = const [],
+    int initialBonusShopCards = 0,
+  }) {
+    state = InventoryState(
+      gold: initialGold,
+      relics: initialRelics,
+      bonusShopCards: initialBonusShopCards,
+    );
+  }
+}
+
+final inventoryProvider =
+    NotifierProvider&lt;InventoryController, InventoryState&gt;(InventoryController.new);</pre>
+</div>
+<p>Ce fichier illustre quatre habitudes constantes du projet :</p>
+<ul>
+  <li><strong>L'état est immuable.</strong> <code>InventoryState</code> n'a que des champs
+    <code>final</code>. Pour retirer des reliques, <code>removeRelics</code> copie la liste
+    (<code>List.from</code>), la modifie, puis affecte la copie. Modifier
+    <code>state.relics</code> directement ne préviendrait personne — et Riverpod comparerait l'ancien
+    et le nouvel état, verrait le même objet, et n'émettrait aucune notification.</li>
+  <li><strong>Les méthodes renvoient un verdict quand il y a un échec possible.</strong>
+    <code>spendGold</code> renvoie <code>false</code> si l'or est insuffisant, et surtout ne touche
+    pas à l'état dans ce cas. L'appelant décide quoi en faire — c'est la boutique qui affiche
+    « pas assez d'or », pas le contrôleur.</li>
+  <li><strong>Une méthode <code>hydrate</code>.</strong> Elle remplace l'état d'un bloc au chargement
+    d'une sauvegarde. Quatre contrôleurs l'exposent : <code>RunController</code>,
+    <code>DeckNotifier</code>, <code>InventoryController</code> et <code>SkillController</code> —
+    exactement les quatre états sérialisés par <code>SaveService</code> (section 8).</li>
+  <li><strong>Les effets de bord passent par <code>ref</code>.</strong> Dans
+    <code>addRelic</code>, si la relique se déclenche en début de run, l'inventaire demande au
+    <code>RunController</code> d'appliquer son effet. L'inventaire ne sait pas <em>comment</em> une
+    relique modifie les stats du héros ; il sait seulement à qui poser la question.</li>
+</ul>
+
+<h3>3.2 <code>SkillController</code> : quand une action peut échouer</h3>
+<p>
+  Le contrôleur des sorts est encore plus court, mais il montre un aller-retour complet entre deux
+  providers. Le héros a deux sorts, chacun avec un cooldown en tours et un coût (mana ou pourcentage
+  de PV).
+</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/skill_controller.dart</span><span class="lang">dart</span></div>
+  <pre>class SkillController extends Notifier&lt;SkillState&gt; {
+  @override
+  SkillState build() {
+    return const SkillState();
+  }
+
+  /// Remplace intégralement l'état par une sauvegarde chargée
+  void hydrate(SkillState savedState) {
+    state = savedState;
+  }
+
+  void tickCooldowns() {
+    state = SkillState(
+      skill1Cooldown: state.skill1Cooldown &gt; 0 ? state.skill1Cooldown - 1 : 0,
+      skill2Cooldown: state.skill2Cooldown &gt; 0 ? state.skill2Cooldown - 1 : 0,
+    );
+  }
+
+  bool triggerSkill1(int cd, {int mana = 0, int hpPercent = 0}) {
+    if (state.skill1Cooldown &gt; 0) return false;
+    final success = ref
+        .read(runProvider.notifier)
+        .consumeResource(mana: mana, hpPercent: hpPercent);
+    if (!success) return false;
+    state = state.copyWith(skill1Cooldown: cd);
+    return true;
+  }
+
+  // triggerSkill2 est strictement symétrique.
+
+  void resetCooldowns() {
+    state = const SkillState();
+  }
+}
+
+final skillProvider = NotifierProvider&lt;SkillController, SkillState&gt;(SkillController.new);</pre>
+</div>
+<p>
+  Regardez l'ordre des opérations dans <code>triggerSkill1</code>, il est important :
+</p>
+<ol>
+  <li>vérifier le cooldown local — si le sort n'est pas prêt, on sort immédiatement, sans rien toucher ;</li>
+  <li>demander au <code>RunController</code> de consommer les ressources ; c'est <em>lui</em> qui sait
+    si le héros a assez de mana ou de PV ;</li>
+  <li>si le paiement a échoué, on sort — et le cooldown n'est pas armé ;</li>
+  <li>seulement à la fin, on modifie <code>state</code>.</li>
+</ol>
+<p>
+  Autrement dit : <strong>aucune modification d'état avant que toutes les conditions soient
+  validées</strong>. C'est ce qui évite les états incohérents du type « cooldown lancé mais sort non
+  joué ». Le motif se répète partout dans le projet, notamment dans <code>ShopController</code> où
+  chaque achat commence par un <code>spendGold</code> qui peut refuser.
+</p>
+<div class="box warn">
+  <div class="box-title">Piège de débutant</div>
+  <p>
+    <code>state = state</code> ne notifie rien : Riverpod compare l'ancienne et la nouvelle valeur avec
+    <code>==</code> et n'émet que si elles diffèrent. Même piège avec
+    <code>state.relics.add(relic)</code> : la liste change, mais l'objet <code>InventoryState</code>
+    reste identique, donc l'UI ne bouge pas. Il faut toujours reconstruire :
+    <code>state = state.copyWith(relics: [...state.relics, relic])</code>.
+  </p>
+</div>
+
+<h2 id="s4">4. Lire un provider : watch, read, listen</h2>
+<p>
+  Trois verbes, trois usages qui ne sont pas interchangeables. C'est la source d'erreur numéro un
+  chez les débutants Riverpod, donc prenons le temps.
+</p>
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 860 300" width="860" role="img" aria-label="Comparaison entre ref.watch, ref.read et ref.listen">
+      <defs>
+        <marker id="c4-a1" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#22d3ee"/>
+        </marker>
+        <marker id="c4-a2" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#f59e0b"/>
+        </marker>
+        <marker id="c4-a3" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#a78bfa"/>
+        </marker>
+      </defs>
+      <rect x="0" y="0" width="860" height="300" fill="#0e1524"/>
+      <rect x="20" y="16" width="252" height="268" rx="10" fill="#131a2a" stroke="#3a4966"/>
+      <text x="146" y="46" fill="#22d3ee" font-size="16" text-anchor="middle" font-family="ui-monospace, monospace">ref.watch</text>
+      <rect x="48" y="64" width="196" height="38" rx="6" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="146" y="88" fill="#e6ecf5" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">runProvider</text>
+      <path d="M146 102 L146 158" stroke="#22d3ee" stroke-width="2" marker-end="url(#c4-a1)"/>
+      <text x="156" y="134" fill="#a7b4c9" font-size="11">notifie</text>
+      <rect x="48" y="160" width="196" height="38" rx="6" fill="#151b2b" stroke="#3a4966"/>
+      <text x="146" y="184" fill="#e6ecf5" font-size="13" text-anchor="middle">build() rejoué</text>
+      <text x="146" y="228" fill="#a7b4c9" font-size="12" text-anchor="middle">abonnement permanent</text>
+      <text x="146" y="248" fill="#a7b4c9" font-size="12" text-anchor="middle">dans build() uniquement</text>
+      <text x="146" y="270" fill="#34d399" font-size="12" text-anchor="middle">afficher une valeur</text>
+      <rect x="304" y="16" width="252" height="268" rx="10" fill="#131a2a" stroke="#3a4966"/>
+      <text x="430" y="46" fill="#f59e0b" font-size="16" text-anchor="middle" font-family="ui-monospace, monospace">ref.read</text>
+      <rect x="332" y="64" width="196" height="38" rx="6" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="430" y="88" fill="#e6ecf5" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">deckProvider</text>
+      <path d="M430 102 L430 158" stroke="#f59e0b" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#c4-a2)"/>
+      <text x="440" y="134" fill="#a7b4c9" font-size="11">une fois</text>
+      <rect x="332" y="160" width="196" height="38" rx="6" fill="#151b2b" stroke="#3a4966"/>
+      <text x="430" y="184" fill="#e6ecf5" font-size="13" text-anchor="middle">valeur instantanée</text>
+      <text x="430" y="228" fill="#a7b4c9" font-size="12" text-anchor="middle">aucun abonnement</text>
+      <text x="430" y="248" fill="#f87171" font-size="12" text-anchor="middle">jamais dans build()</text>
+      <text x="430" y="270" fill="#34d399" font-size="12" text-anchor="middle">agir sur un clic</text>
+      <rect x="588" y="16" width="252" height="268" rx="10" fill="#131a2a" stroke="#3a4966"/>
+      <text x="714" y="46" fill="#a78bfa" font-size="16" text-anchor="middle" font-family="ui-monospace, monospace">ref.listen</text>
+      <rect x="616" y="64" width="196" height="38" rx="6" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="714" y="88" fill="#e6ecf5" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">combatProvider</text>
+      <path d="M714 102 L714 158" stroke="#a78bfa" stroke-width="2" marker-end="url(#c4-a3)"/>
+      <text x="724" y="128" fill="#a7b4c9" font-size="11">(previous,</text>
+      <text x="724" y="144" fill="#a7b4c9" font-size="11">next)</text>
+      <rect x="616" y="160" width="196" height="38" rx="6" fill="#151b2b" stroke="#3a4966"/>
+      <text x="714" y="184" fill="#e6ecf5" font-size="13" text-anchor="middle">callback exécuté</text>
+      <text x="714" y="228" fill="#a7b4c9" font-size="12" text-anchor="middle">abonné, mais ne rebuild pas</text>
+      <text x="714" y="248" fill="#a7b4c9" font-size="12" text-anchor="middle">déclaré dans build()</text>
+      <text x="714" y="270" fill="#34d399" font-size="12" text-anchor="middle">dialogue, navigation, toast</text>
+    </svg>
+  </div>
+  <figcaption>
+    Les trois façons de consommer un provider. <code>watch</code> et <code>listen</code> se déclarent
+    dans <code>build</code> ; <code>read</code> ne s'y déclare jamais.
+  </figcaption>
+</figure>
+
+<h3>4.1 <code>ref.watch</code> — s'abonner et reconstruire</h3>
+<p>
+  <code>ref.watch(p)</code> renvoie la valeur courante <em>et</em> enregistre une dépendance. À chaque
+  nouvel état, le widget est reconstruit. C'est le mode par défaut pour tout ce qui est affiché.
+  Dans <code>GameScreen</code>, la méthode <code>build</code> commence par quatre <code>watch</code> :
+</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>  @override
+  Widget build(BuildContext context) {
+    final runState = ref.watch(runProvider);
+    final deckState = ref.watch(deckProvider);
+    final combatState = ref.watch(combatProvider);
+    final gameData = ref.watch(gameDataLoaderProvider).requireValue;</pre>
+</div>
+<p>
+  L'écran de combat dépend donc de quatre providers : dès que l'un d'eux change, il se redessine.
+  C'est exactement ce qu'on veut ici — cet écran affiche les PV, le mana, le nombre de cartes en
+  pioche et l'état des ennemis.
+</p>
+<p>
+  Remarquez au passage que <code>GameScreen</code> est un <code>ConsumerStatefulWidget</code> et non un
+  <code>ConsumerWidget</code> : il a besoin d'un <code>initState</code> pour créer l'instance Flame
+  <code>HerosDraftGame</code>, et de <code>setState</code> pour ses booléens purement visuels. Dans un
+  <code>ConsumerState</code>, <code>ref</code> est un champ de la classe : pas besoin de le recevoir en
+  paramètre de <code>build</code>, il est accessible depuis toutes les méthodes.
+</p>
+
+<h3>4.2 <code>ref.read</code> — lire une fois, pour agir</h3>
+<p>
+  <code>ref.read(p)</code> renvoie la valeur courante <strong>sans</strong> s'abonner. On l'utilise
+  dans les gestionnaires d'événements : au moment d'un clic, on veut la valeur d'<em>maintenant</em>,
+  et on ne veut surtout pas que le fait d'avoir cliqué crée un abonnement.
+</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>                      onEndTurnTap: () {
+                        final currentMana = runState.heroStats.currentMana;
+                        if (currentMana &gt; 0 &amp;&amp; !_showRemainingManaWarning) {
+                          // ... premier clic : on avertit qu'il reste du mana
+                          return;
+                        }
+                        // ...
+                        TraitSystem.onTurnEnd(ref.read(runProvider.notifier));
+                        ref
+                            .read(runProvider.notifier)
+                            .applyRelics(RelicTrigger.endOfTurn);
+                        ref.read(deckProvider.notifier).discardHand();
+                        _game.executeTurn();
+                      },</pre>
+</div>
+<p>
+  Ce bouton « fin de tour » enchaîne quatre effets : les traits passifs, les reliques de fin de tour,
+  la défausse de la main, puis le tour des ennemis côté Flame. Aucun de ces appels n'a besoin d'un
+  abonnement.
+</p>
+<div class="box warn">
+  <div class="box-title">Piège : ne jamais <code>ref.read</code> dans <code>build</code></div>
+  <p>
+    <code>ref.read</code> dans <code>build</code> compile, ne plante pas, et produit un bug très
+    difficile à voir : le widget lit une valeur correcte <strong>la première fois</strong>, puis ne se
+    reconstruit plus jamais. L'affichage se fige sur une valeur périmée pendant que le reste de
+    l'écran continue de vivre. Si vous avez besoin d'une valeur pour l'afficher, c'est
+    <code>ref.watch</code>. <code>ref.read</code> appartient aux <em>callbacks</em> :
+    <code>onTap</code>, <code>onPressed</code>, <code>initState</code> (dans un
+    <code>Future.microtask</code>), et aux méthodes des <code>Notifier</code>.
+  </p>
+</div>
+<p>
+  Le projet respecte cette règle, y compris dans le cas délicat de l'initialisation. Dans
+  <code>GameScreen.initState</code>, on doit lancer le combat — mais on ne peut pas modifier un
+  provider pendant la construction d'un widget. La solution employée est de repousser l'appel juste
+  après la première frame :
+</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>  @override
+  void initState() {
+    super.initState();
+
+    Future.microtask(() {
+      ref.read(combatProvider.notifier).startPlayerCombat();
+
+      final runState = ref.read(runProvider);
+      // ...
+      final gameData = ref.read(gameDataLoaderProvider).requireValue;
+      ref
+          .read(combatProvider.notifier)
+          .initializeCombat(
+            runState.currentLevel,
+            runState.currentNodeType,
+            gameData.enemies,
+            // ...
+          );
+    });</pre>
+</div>
+
+<h3>4.3 <code>ref.read(xProvider.notifier)</code> — appeler une méthode</h3>
+<p>
+  Vous avez déjà croisé la syntaxe une dizaine de fois. Elle mérite une explication explicite, parce
+  que c'est là que beaucoup de débutants se perdent. Un <code>NotifierProvider</code> expose
+  <strong>deux</strong> choses :
+</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Expression</th><th>Type obtenu</th><th>Usage</th></tr></thead>
+<tbody>
+<tr><td><code>ref.watch(runProvider)</code></td><td><code>RunState</code></td><td>Lire les données : <code>runState.heroStats.currentPv</code></td></tr>
+<tr><td><code>ref.read(runProvider)</code></td><td><code>RunState</code></td><td>Lire les données une fois, dans un callback</td></tr>
+<tr><td><code>ref.read(runProvider.notifier)</code></td><td><code>RunController</code></td><td>Appeler une méthode : <code>.takeDamage(12)</code></td></tr>
+</tbody>
+</table></div>
+<p>
+  Sans <code>.notifier</code>, on obtient l'état (une donnée figée) ; avec <code>.notifier</code>, on
+  obtient l'objet contrôleur (le comportement). Et on utilise presque toujours <code>read</code> avec
+  <code>.notifier</code> : le contrôleur, lui, ne change pas d'identité quand son état change, donc
+  s'y abonner n'aurait pas de sens.
+</p>
+
+<h3>4.4 <code>ref.listen</code> — réagir à un changement</h3>
+<p>
+  Parfois, il ne faut pas <em>afficher</em> le changement mais <em>y réagir</em> : ouvrir une boîte de
+  dialogue, naviguer, jouer un son, afficher un toast. Faire ça dans <code>build</code> serait une
+  faute — <code>build</code> peut être appelé de nombreuses fois, et doit rester une fonction pure
+  qui ne fait que construire des widgets.
+</p>
+<p>
+  <code>ref.listen</code> résout ça : on le déclare dans <code>build</code>, mais le <em>callback</em>
+  ne se déclenche qu'aux changements réels, avec l'ancienne et la nouvelle valeur. Les deux exemples
+  du projet sont côte à côte :
+</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>    ref.listen&lt;CombatState&gt;(combatProvider, (previous, next) {
+      final wasEnded = previous?.isCombatEnded ?? false;
+      if (next.isCombatEnded &amp;&amp; next.isVictory &amp;&amp; !wasEnded) {
+        _handleCombatVictory();
+      }
+    });
+
+    ref.listen&lt;DeckState&gt;(deckProvider, (previous, next) {
+      if (previous != null &amp;&amp; next.reshuffleCount &gt; previous.reshuffleCount) {
+        context.showNotification(
+          '${AppLocalizations.of(context)!.deckReshuffled}',
+          type: NotificationType.info,
+        );
+      }
+    });</pre>
+</div>
+<p>
+  <strong>Premier listener — la victoire.</strong> <code>_handleCombatVictory()</code> déclenche toute
+  la séquence de récompenses : tirage de relique, écran de draft de cartes, or et XP, puis retour à la
+  carte. Ce n'est pas de l'affichage, c'est de la navigation et de la mutation d'état. Le test
+  <code>next.isCombatEnded &amp;&amp; next.isVictory &amp;&amp; !wasEnded</code> garantit qu'on ne
+  déclenche qu'une seule fois, au moment exact de la <em>transition</em> vers la victoire : si le
+  combat était déjà terminé à l'état précédent, on ne refait rien. La méthode se protège d'ailleurs
+  une deuxième fois avec un drapeau <code>_isVictoryHandled</code>.
+</p>
+<p>
+  <strong>Second listener — le remélange.</strong> C'est le plus instructif, parce qu'il explique un
+  choix de conception dans <code>DeckState</code>.
+</p>
+
+<h3>4.5 Pourquoi <code>reshuffleCount</code> est un compteur</h3>
+<p>
+  Quand la pioche est vide et qu'il faut piocher, le jeu remet la défausse dans la pioche et la
+  mélange. C'est un <strong>événement</strong>, pas un état : ça arrive à un instant précis, puis
+  c'est fini. Or Riverpod ne transporte que des états. Comment faire passer un événement dans un
+  canal qui ne connaît que des valeurs ?
+</p>
+<p>La réponse du projet : un compteur monotone.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/deck_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Nombre de remélanges défausse → pioche depuis le début du combat.
+  /// Remis à 0 par `startCombat`. Observé par l'UI pour signaler l'événement.
+  final int reshuffleCount;</pre>
+</div>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/deck_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  void drawCards(int amount, {required int maxHandSize}) {
+    final result = _drawInto(
+      draw: List&lt;CardInstance&gt;.from(state.drawPile),
+      hand: List&lt;CardInstance&gt;.from(state.hand),
+      discard: List&lt;CardInstance&gt;.from(state.discardPile),
+      amount: amount,
+      maxHandSize: maxHandSize,
+      random: _random,
+    );
+
+    state = state.copyWith(
+      drawPile: result.draw,
+      hand: result.hand,
+      discardPile: result.discard,
+      reshuffleCount: state.reshuffleCount + result.reshuffles,
+    );
+  }</pre>
+</div>
+<p>
+  Un booléen <code>hasReshuffled</code> poserait deux problèmes. D'abord, il faudrait le remettre à
+  <code>false</code> après l'avoir consommé — ce qui veut dire que l'UI devrait écrire dans le
+  contrôleur du deck, une inversion de responsabilité désagréable. Ensuite, deux remélanges
+  consécutifs (possible : <code>_drawInto</code> peut remélanger plusieurs fois dans une seule pioche,
+  et renvoie le nombre exact dans <code>result.reshuffles</code>) donneraient
+  <code>true</code> puis <code>true</code> : le second passerait inaperçu, puisque l'état n'aurait pas
+  changé.
+</p>
+<p>
+  Avec un compteur, la comparaison <code>next.reshuffleCount &gt; previous.reshuffleCount</code> est
+  toujours juste, quel que soit le nombre de remélanges par pioche, et le contrôleur n'a rien à
+  nettoyer. La remise à zéro se fait naturellement au début de chaque combat, dans
+  <code>startCombat</code>.
+</p>
+<div class="box ok">
+  <div class="box-title">Bonne pratique</div>
+  <p>
+    Pour transporter un <em>événement</em> dans un état immuable, préférez un compteur croissant à un
+    booléen. L'observateur compare l'ancien et le nouveau compteur ; personne n'a besoin de remettre
+    de drapeau à zéro, et aucun événement ne peut être avalé.
+  </p>
+</div>
+
+<h2 id="s5">5. FutureProvider et le chargement des données</h2>
+<p>
+  Hero's Draft est 100 % <em>data-driven</em> : les cartes, les ennemis, les héros, les reliques, les
+  événements sont décrits dans des fichiers JSON sous <code>assets/data/</code>, pas dans le code Dart.
+  Il faut donc les lire au démarrage — et lire un fichier est asynchrone.
+</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/services/game_data_service.dart</span><span class="lang">dart</span></div>
+  <pre>final gameDataLoaderProvider = FutureProvider&lt;GameDataRegistry&gt;((ref) async {
+  final List&lt;List&lt;dynamic&gt;&gt; results = await Future.wait([
+    _loadJsonList('assets/data/enemies.json'),
+    _loadJsonList('assets/data/heroes.json'),
+    _loadJsonList('assets/data/skills.json'),
+    _loadJsonList('assets/data/cards.json'),
+    _loadJsonList('assets/data/events.json'),
+    _loadJsonList('assets/data/passives.json'),
+    _loadJsonList('assets/data/relics.json'),
+    _loadJsonList('assets/data/hero_cards.json'),
+    _loadJsonList('assets/data/forge_upgrades.json'),
+  ]);
+  // ...
+  final allCards = [
+    ...cardsList,
+    ...heroCardsList,
+  ];
+
+  return GameDataRegistry(
+    enemies: _mapList(enemiesList, EnemyData.fromJson, 'EnemyData'),
+    heroes: _mapList(heroesList, HeroData.fromJson, 'HeroData'),
+    cards: _mapList(allCards, CardData.fromJson, 'CardData'),
+    // ... skills, events, passives, relics, forgeUpgrades
+  );
+});</pre>
+</div>
+<p>
+  Neuf fichiers, chargés en parallèle avec <code>Future.wait</code>, puis convertis en objets Dart
+  typés et regroupés dans un <code>GameDataRegistry</code>. Deux détails qui comptent :
+</p>
+<ul>
+  <li><code>cards.json</code> et <code>hero_cards.json</code> sont fusionnés en une seule liste
+    (<code>allCards</code>) avant d'être convertis : les cartes de héros vivent dans le même catalogue
+    que les cartes normales.</li>
+  <li>Il n'existe pas de classe <code>GameDataService</code>. Le provider <em>est</em> le point
+    d'entrée — le fichier ne contient que deux fonctions privées d'aide et cette déclaration.</li>
+</ul>
+
+<h3>5.1 <code>AsyncValue</code> et <code>.when</code></h3>
+<p>
+  Un <code>FutureProvider&lt;T&gt;</code> n'expose pas un <code>T</code> mais un
+  <code>AsyncValue&lt;T&gt;</code> : un objet qui représente les trois issues possibles d'une
+  opération asynchrone. La méthode <code>.when</code> vous force à traiter les trois cas — impossible
+  d'oublier la gestion d'erreur.
+</p>
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 860 250" width="860" role="img" aria-label="Cycle de vie du FutureProvider gameDataLoaderProvider">
+      <defs>
+        <marker id="c4-b1" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#3a4966"/>
+        </marker>
+      </defs>
+      <rect x="0" y="0" width="860" height="250" fill="#0e1524"/>
+      <rect x="20" y="80" width="180" height="56" rx="8" fill="#151b2b" stroke="#60a5fa"/>
+      <text x="110" y="104" fill="#e6ecf5" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">SplashScreen</text>
+      <text x="110" y="124" fill="#a7b4c9" font-size="11" text-anchor="middle">ref.watch(...)</text>
+      <path d="M200 108 L272 108" stroke="#3a4966" stroke-width="2" marker-end="url(#c4-b1)"/>
+      <rect x="276" y="30" width="220" height="52" rx="8" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="386" y="52" fill="#f59e0b" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">loading</text>
+      <text x="386" y="70" fill="#a7b4c9" font-size="11" text-anchor="middle">CircularProgressIndicator</text>
+      <rect x="276" y="94" width="220" height="52" rx="8" fill="#151b2b" stroke="#34d399"/>
+      <text x="386" y="116" fill="#34d399" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">data</text>
+      <text x="386" y="134" fill="#a7b4c9" font-size="11" text-anchor="middle">HomeScreen</text>
+      <rect x="276" y="158" width="220" height="52" rx="8" fill="#151b2b" stroke="#f87171"/>
+      <text x="386" y="180" fill="#f87171" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">error</text>
+      <text x="386" y="198" fill="#a7b4c9" font-size="11" text-anchor="middle">Text('Erreur de chargement')</text>
+      <path d="M496 120 L576 120" stroke="#34d399" stroke-width="2" marker-end="url(#c4-b1)"/>
+      <rect x="580" y="64" width="256" height="112" rx="8" fill="#131a2a" stroke="#3a4966"/>
+      <text x="708" y="92" fill="#e6ecf5" font-size="13" text-anchor="middle">Tous les autres écrans</text>
+      <text x="708" y="118" fill="#22d3ee" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">.requireValue</text>
+      <text x="708" y="144" fill="#a7b4c9" font-size="11" text-anchor="middle">le registre est déjà en cache,</text>
+      <text x="708" y="160" fill="#a7b4c9" font-size="11" text-anchor="middle">plus aucun état intermédiaire</text>
+    </svg>
+  </div>
+  <figcaption>
+    Le splash absorbe les trois états du <code>FutureProvider</code> ; en aval, le contrat implicite du
+    projet autorise <code>.requireValue</code>.
+  </figcaption>
+</figure>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/splash_screen.dart</span><span class="lang">dart</span></div>
+  <pre>class SplashScreen extends ConsumerWidget {
+  const SplashScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final gameData = ref.watch(gameDataLoaderProvider);
+
+    return Scaffold(
+      body: Center(
+        child: gameData.when(
+          data: (_) =&gt;
+              const HomeScreen(), // Si les données sont chargées, on affiche l'écran d'accueil
+          loading: () =&gt;
+              const CircularProgressIndicator(), // Pendant le chargement
+          error: (error, stack) =&gt;
+              Text('Erreur de chargement: $error'), // En cas d'erreur
+        ),
+      ),
+    );
+  }
+}</pre>
+</div>
+<p>
+  Trois points à noter. Le <code>ref.watch</code> est bien un <code>watch</code> : le splash doit se
+  reconstruire quand le futur se termine. Le paramètre du cas <code>data</code> est ignoré
+  (<code>(_)</code>) : le splash ne se sert pas des données, il attend seulement qu'elles soient là.
+  Et le <code>FutureProvider</code> ne démarre son chargement qu'à sa première lecture — c'est donc
+  <code>SplashScreen</code> qui, en le <em>watchant</em>, met la machine en route.
+</p>
+
+<h3>5.2 <code>.requireValue</code> et le contrat implicite</h3>
+<p>
+  Une fois le splash passé, écrire un <code>.when</code> à chaque écran serait insupportable : il
+  faudrait gérer un cas « en cours de chargement » qui ne peut plus se produire. Le projet emploie
+  donc <code>.requireValue</code>, qui extrait la valeur et lève une exception si elle n'est pas là.
+</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>  void _handleCombatVictory() {
+    if (_isVictoryHandled) return;
+    _isVictoryHandled = true;
+
+    final runState = ref.read(runProvider);
+    final gameData = ref.read(gameDataLoaderProvider).requireValue;
+    // ...
+
+    ref.read(rewardProvider.notifier).handleVictory(
+      defeatedEnemies: ref.read(combatProvider).defeatedEnemies,
+      currentNode: currentNode,
+      allRelics: gameData.relics,
+      allCards: gameData.cards,
+      luck: runState.heroStats.luck,
+      act: runState.act,
+    );
+
+    _presentNextReward();
+  }</pre>
+</div>
+<p>
+  Le contrat implicite est le suivant : <strong>« si on est passé par le splash, la donnée est
+  là »</strong>. Comme <code>SplashScreen</code> n'affiche <code>HomeScreen</code> que dans la branche
+  <code>data</code>, et que tous les autres écrans sont atteints depuis <code>HomeScreen</code>, aucun
+  écran du jeu ne peut être construit avant la fin du chargement. Et comme un provider Riverpod met sa
+  valeur en cache, la lecture suivante est instantanée : il n'y a pas de second chargement.
+</p>
+<p>
+  Ce contrat est utilisé treize fois dans le code. Deux écrans font toutefois exception et gèrent
+  quand même le cas asynchrone : <code>lib/ui/screens/relic_exchange_screen.dart</code> et
+  <code>lib/ui/screens/card_dictionary_screen.dart</code> repassent par <code>.when</code>, et
+  <code>lib/ui/widgets/map/dialogs/stats_dialog.dart</code> utilise <code>.value</code> avec un test
+  <code>if (gameData == null)</code> qui affiche un indicateur de chargement.
+</p>
+<div class="box danger">
+  <div class="box-title">Point d'attention</div>
+  <p>
+    <code>.requireValue</code> est un contrat non vérifié par le compilateur. Il tient tant que
+    <strong>tout</strong> chemin de navigation passe par le splash. Le jour où quelqu'un ouvre un
+    écran directement — un <em>deep link</em>, une route de debug, un test de widget qui monte
+    <code>ShopScreen</code> isolément — l'application lève une exception au lieu d'afficher un
+    chargement. Dans un test, la parade est de surcharger le provider :
+    <code>gameDataLoaderProvider.overrideWith((ref) async =&gt; unRegistreDeTest)</code>.
+  </p>
+</div>
+
+<h2 id="s6">6. Les onze providers de Hero's Draft</h2>
+<p>
+  Voici l'inventaire complet. Onze providers portent un état du jeu ; trois autres sont des
+  <code>Provider</code> utilitaires (une dépendance injectable, un registre, un orchestrateur), ce qui
+  fait quatorze déclarations au total dans <code>lib/</code>.
+</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Provider</th><th>Type d'état</th><th>Fichier</th><th>Rôle</th><th>Qui l'écrit</th></tr></thead>
+<tbody>
+<tr>
+  <td><code>gameDataLoaderProvider</code></td>
+  <td><code>AsyncValue&lt;GameDataRegistry&gt;</code></td>
+  <td><code>lib/services/game_data_service.dart</code></td>
+  <td>Charge et met en cache les 9 fichiers JSON d'<code>assets/data/</code></td>
+  <td>Personne — lecture seule après chargement</td>
+</tr>
+<tr>
+  <td><code>runProvider</code></td>
+  <td><code>RunState</code></td>
+  <td><code>lib/game/controllers/run_controller.dart</code></td>
+  <td>Stats du héros, acte, niveau, nœuds de la carte, passif, slots de forge, drafts en attente</td>
+  <td>Presque tout le jeu : 18 fichiers appellent <code>runProvider.notifier</code></td>
+</tr>
+<tr>
+  <td><code>deckProvider</code></td>
+  <td><code>DeckState</code></td>
+  <td><code>lib/game/controllers/deck_controller.dart</code></td>
+  <td>Les 5 piles (master, pioche, main, défausse, épuisement) et <code>reshuffleCount</code></td>
+  <td>12 fichiers : combat, récompenses, boutique, écrans de deck et de forge</td>
+</tr>
+<tr>
+  <td><code>deckRandomProvider</code></td>
+  <td><code>Random</code></td>
+  <td><code>lib/game/controllers/deck_controller.dart</code></td>
+  <td>Source d'aléatoire de la pioche, surchargeable en test</td>
+  <td>Personne — <code>Provider</code> en lecture seule</td>
+</tr>
+<tr>
+  <td><code>combatProvider</code></td>
+  <td><code>CombatState</code></td>
+  <td><code>lib/game/controllers/combat_controller.dart</code></td>
+  <td>Ennemis, ennemis vaincus, phase de tour, numéro de tour, cible sélectionnée, fin de combat</td>
+  <td><code>game_screen.dart</code> uniquement</td>
+</tr>
+<tr>
+  <td><code>inventoryProvider</code></td>
+  <td><code>InventoryState</code></td>
+  <td><code>lib/game/controllers/inventory_controller.dart</code></td>
+  <td>Or, reliques possédées, cartes de boutique bonus</td>
+  <td>9 fichiers : events, récompenses, managers de run, boutique, forge, sauvegarde</td>
+</tr>
+<tr>
+  <td><code>shopProvider</code></td>
+  <td><code>ShopState</code></td>
+  <td><code>lib/game/controllers/shop_controller.dart</code></td>
+  <td>Cartes en vente, soin déjà acheté, options de clonage</td>
+  <td><code>shop_screen.dart</code> uniquement</td>
+</tr>
+<tr>
+  <td><code>eventProvider</code></td>
+  <td><code>EventState</code></td>
+  <td><code>lib/game/controllers/event_controller.dart</code></td>
+  <td>Événement narratif actif, choix sélectionné, résolution</td>
+  <td><code>event_screen.dart</code> uniquement</td>
+</tr>
+<tr>
+  <td><code>rewardProvider</code></td>
+  <td><code>RewardState</code></td>
+  <td><code>lib/game/controllers/reward_controller.dart</code></td>
+  <td>Or et XP gagnés, relique tirée, cartes proposées, drapeaux de collecte</td>
+  <td><code>game_screen.dart</code> et <code>boss_card_draft_screen.dart</code></td>
+</tr>
+<tr>
+  <td><code>skillProvider</code></td>
+  <td><code>SkillState</code></td>
+  <td><code>lib/game/controllers/skill_controller.dart</code></td>
+  <td>Cooldowns des deux sorts du héros</td>
+  <td><code>run_controller.dart</code>, <code>map_progression_manager.dart</code>, <code>save_service.dart</code></td>
+</tr>
+<tr>
+  <td><code>checkpointProvider</code></td>
+  <td><code>int</code></td>
+  <td><code>lib/game/controllers/checkpoint_controller.dart</code></td>
+  <td>Compteur de nœuds de carte résolus — le signal d'autosauvegarde</td>
+  <td><code>map_progression_manager.dart</code> et <code>player_stats_manager.dart</code></td>
+</tr>
+<tr>
+  <td><code>autosaveOrchestratorProvider</code></td>
+  <td><code>void</code></td>
+  <td><code>lib/game/controllers/checkpoint_controller.dart</code></td>
+  <td>Écoute <code>checkpointProvider</code> et appelle <code>SaveService.save</code></td>
+  <td>Personne — il n'a pas d'état</td>
+</tr>
+<tr>
+  <td><code>effectRegistryProvider</code></td>
+  <td><code>EffectRegistry</code></td>
+  <td><code>lib/game/services/effects/effect_strategy.dart</code></td>
+  <td>Registre des 6 stratégies d'effet de carte</td>
+  <td>Personne — construit une fois dans le <code>Provider</code></td>
+</tr>
+<tr>
+  <td><code>notificationProvider</code></td>
+  <td><code>List&lt;GameNotification&gt;</code></td>
+  <td><code>lib/ui/widgets/notification_overlay.dart</code></td>
+  <td>File de toasts (4 max, 3,5 s chacun) — le seul <code>StateNotifier</code> restant</td>
+  <td>Via l'extension <code>context.showNotification()</code></td>
+</tr>
+</tbody>
+</table></div>
+
+<h3>6.1 Qui lit qui</h3>
+<p>
+  Le tableau dit qui <em>écrit</em>. Le schéma ci-dessous dit qui <em>lit</em> — c'est-à-dire quels
+  providers un contrôleur consulte depuis ses propres méthodes.
+</p>
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 860 520" width="860" role="img" aria-label="Graphe des dépendances entre les providers de Hero's Draft">
+      <defs>
+        <marker id="c4-c1" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#22d3ee"/>
+        </marker>
+        <marker id="c4-c2" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#f59e0b"/>
+        </marker>
+        <marker id="c4-c3" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#a78bfa"/>
+        </marker>
+        <marker id="c4-c4" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#34d399"/>
+        </marker>
+        <marker id="c4-c5" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#60a5fa"/>
+        </marker>
+      </defs>
+      <rect x="0" y="0" width="860" height="520" fill="#0e1524"/>
+      <text x="26" y="16" fill="#a7b4c9" font-size="11">Contrôleurs de contexte</text>
+      <rect x="26" y="26" width="176" height="46" rx="8" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="114" y="54" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">combatProvider</text>
+      <rect x="242" y="26" width="146" height="46" rx="8" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="315" y="54" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">shopProvider</text>
+      <rect x="428" y="26" width="160" height="46" rx="8" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="508" y="54" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">rewardProvider</text>
+      <rect x="628" y="26" width="150" height="46" rx="8" fill="#151b2b" stroke="#34d399"/>
+      <text x="703" y="54" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">eventProvider</text>
+      <path d="M114 72 L114 190" stroke="#22d3ee" stroke-width="1.6" marker-end="url(#c4-c1)"/>
+      <path d="M160 72 L275 190" stroke="#22d3ee" stroke-width="1.6" marker-end="url(#c4-c1)"/>
+      <path d="M196 72 L438 188" stroke="#22d3ee" stroke-width="1.6" marker-end="url(#c4-c1)"/>
+      <path d="M305 72 L305 190" stroke="#f59e0b" stroke-width="1.6" marker-end="url(#c4-c2)"/>
+      <path d="M350 72 L455 190" stroke="#f59e0b" stroke-width="1.6" marker-end="url(#c4-c2)"/>
+      <path d="M385 72 L648 190" stroke="#f59e0b" stroke-width="1.6" marker-end="url(#c4-c2)"/>
+      <path d="M470 72 L358 190" stroke="#a78bfa" stroke-width="1.6" marker-end="url(#c4-c3)"/>
+      <path d="M505 72 L505 190" stroke="#a78bfa" stroke-width="1.6" marker-end="url(#c4-c3)"/>
+      <path d="M552 72 L668 190" stroke="#a78bfa" stroke-width="1.6" marker-end="url(#c4-c3)"/>
+      <path d="M648 72 L540 190" stroke="#34d399" stroke-width="1.6" marker-end="url(#c4-c4)"/>
+      <path d="M712 72 L722 190" stroke="#34d399" stroke-width="1.6" marker-end="url(#c4-c4)"/>
+      <text x="26" y="184" fill="#a7b4c9" font-size="11">Cœur de la run</text>
+      <rect x="26" y="196" width="176" height="46" rx="8" fill="#131a2a" stroke="#f59e0b" stroke-dasharray="5 4"/>
+      <text x="114" y="217" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">effectRegistry</text>
+      <text x="114" y="233" fill="#a7b4c9" font-size="10" text-anchor="middle">Provider · 6 stratégies</text>
+      <rect x="242" y="196" width="146" height="46" rx="8" fill="#151b2b" stroke="#60a5fa"/>
+      <text x="315" y="224" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">deckProvider</text>
+      <rect x="428" y="196" width="146" height="46" rx="8" fill="#1a2136" stroke="#f87171"/>
+      <text x="501" y="224" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">runProvider</text>
+      <rect x="614" y="196" width="204" height="46" rx="8" fill="#151b2b" stroke="#60a5fa"/>
+      <text x="716" y="224" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">inventoryProvider</text>
+      <path d="M574 208 L608 208" stroke="#f87171" stroke-width="1.6" marker-end="url(#c4-c5)"/>
+      <path d="M614 232 L580 232" stroke="#60a5fa" stroke-width="1.6" marker-end="url(#c4-c5)"/>
+      <path d="M300 242 L322 360" stroke="#60a5fa" stroke-width="1.6" marker-end="url(#c4-c5)"/>
+      <path d="M488 242 L488 360" stroke="#f87171" stroke-width="1.6" marker-end="url(#c4-c5)"/>
+      <path d="M516 366 L516 246" stroke="#60a5fa" stroke-width="1.6" marker-end="url(#c4-c5)"/>
+      <path d="M556 244 L688 362" stroke="#f87171" stroke-width="1.6" marker-end="url(#c4-c5)"/>
+      <rect x="242" y="366" width="178" height="46" rx="8" fill="#131a2a" stroke="#f59e0b" stroke-dasharray="5 4"/>
+      <text x="331" y="387" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">deckRandomProvider</text>
+      <text x="331" y="403" fill="#a7b4c9" font-size="10" text-anchor="middle">Provider · Random()</text>
+      <rect x="440" y="366" width="146" height="46" rx="8" fill="#151b2b" stroke="#60a5fa"/>
+      <text x="513" y="394" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">skillProvider</text>
+      <rect x="630" y="366" width="188" height="46" rx="8" fill="#151b2b" stroke="#60a5fa"/>
+      <text x="724" y="394" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">checkpointProvider</text>
+      <path d="M709 452 L716 416" stroke="#f59e0b" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#c4-c2)"/>
+      <text x="742" y="440" fill="#f59e0b" font-size="10" font-family="ui-monospace, monospace">listen</text>
+      <rect x="600" y="452" width="218" height="46" rx="8" fill="#131a2a" stroke="#f59e0b" stroke-dasharray="5 4"/>
+      <text x="709" y="473" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">autosaveOrchestrator</text>
+      <text x="709" y="489" fill="#a7b4c9" font-size="10" text-anchor="middle">Provider&lt;void&gt;</text>
+      <rect x="26" y="452" width="544" height="46" rx="8" fill="#101728" stroke="#3a4966" stroke-dasharray="3 3"/>
+      <text x="46" y="472" fill="#a7b4c9" font-size="11">gameDataLoaderProvider et notificationProvider : lus uniquement par l'UI,</text>
+      <text x="46" y="488" fill="#a7b4c9" font-size="11">aucun contrôleur ne dépend d'eux.</text>
+    </svg>
+  </div>
+  <figcaption>
+    Qui lit qui. Les traits pleins sont des <code>ref.read</code> effectués dans les méthodes des
+    contrôleurs ; le trait pointillé est le <code>ref.listen</code> de l'orchestrateur d'autosave.
+    Les boîtes en pointillé ambre sont des <code>Provider</code> utilitaires, sans état.
+  </figcaption>
+</figure>
+<p>
+  Deux observations sur ce graphe. D'abord, <code>runProvider</code> est le pivot : six providers le
+  consultent. Ensuite, il y a des <strong>cycles</strong> : <code>runProvider</code> lit
+  <code>inventoryProvider</code> (pour connaître les reliques) et <code>inventoryProvider</code> lit
+  <code>runProvider</code> (pour appliquer l'effet d'une relique gagnée). Même chose avec
+  <code>skillProvider</code>.
+</p>
+<div class="box">
+  <div class="box-title">À retenir</div>
+  <p>
+    Ces cycles sont légaux <strong>parce que ce sont des <code>ref.read</code> ponctuels, faits à
+    l'intérieur des méthodes</strong>, et non des <code>ref.watch</code>. Un <code>ref.watch</code>
+    croisé entre deux providers créerait une dépendance circulaire, que Riverpod détecte et signale
+    par une erreur au démarrage. Dans <code>lib/game/controllers/</code>, il n'y a
+    <strong>aucun</strong> <code>ref.watch</code> : uniquement des <code>ref.read</code>.
+  </p>
+</div>
+
+<h2 id="s7">7. Composer sans tout casser</h2>
+<p>
+  Un contrôleur qui grossit devient un fourre-tout. Le projet emploie deux parades, toutes deux
+  visibles depuis <code>build()</code>.
+</p>
+
+<h3>7.1 Le pattern « Notifier + managers »</h3>
+<p>
+  <code>RunController</code> gère les stats, la progression sur la carte, l'or, les reliques, la
+  forge… Plutôt que d'entasser 1 200 lignes dans une classe, il délègue à trois <em>managers</em>
+  créés dans <code>build()</code> :
+</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run_controller.dart</span><span class="lang">dart</span></div>
+  <pre>class RunController extends Notifier&lt;RunState&gt; {
+  RunState get currentState =&gt; state;
+
+  late final PlayerStatsManager _playerStatsManager;
+  late final MapProgressionManager _mapProgressionManager;
+  late final GoldManager _goldManager;
+
+  @override
+  RunState build() {
+    _playerStatsManager = PlayerStatsManager(this, ref);
+    _mapProgressionManager = MapProgressionManager(this, ref);
+    _goldManager = GoldManager(this, ref);
+
+    return RunState(
+      currentLevel: 1,
+      act: 1,
+      heroClassId: 'paladin',
+      passiveTrait: 'regenArmor',
+      activePassive: PassiveData.fallback('regenArmor'),
+      heroStats: EntityStats(
+        maxPv: 100,
+        currentPv: 100,
+        maxMana: 3,
+        currentMana: 3,
+        armure: 0,
+        attaque: 0, // Force de base à 0
+        luck: 0,
+      ),
+      pendingDrafts: 0,
+    );
+  }
+
+  // Permet aux managers internes de mettre à jour l'état
+  void updateState(RunState newState) {
+    state = newState;
+  }</pre>
+</div>
+<p>
+  Chaque manager reçoit deux choses : <code>this</code> (le contrôleur, pour lire et écrire l'état) et
+  <code>ref</code> (pour parler aux autres providers). Un manager n'est pas un provider : c'est un
+  objet Dart ordinaire, sans magie, qui n'existe qu'à travers son contrôleur.
+</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run/player_stats_manager.dart</span><span class="lang">dart</span></div>
+  <pre>class PlayerStatsManager {
+  final RunController controller;
+  final Ref ref;
+
+  PlayerStatsManager(this.controller, this.ref);
+
+  // ...
+
+  /// Déclenche les effets des reliques pour un trigger donné
+  void applyRelics(RelicTrigger trigger) {
+    final relics = ref.read(inventoryProvider).relics;
+    final relevantRelics = relics.where((r) =&gt; r.trigger == trigger).toList();
+    for (final relic in relevantRelics) {
+      applyRelicEffect(relic);
+    }
+  }</pre>
+</div>
+<p>
+  Le type <code>Ref</code> est le même objet que le <code>ref</code> d'un <code>Notifier</code> : on
+  peut le passer, le stocker, le transmettre. C'est ce qui rend le découpage possible sans
+  multiplier les providers. Le manager de l'or, encore plus court, montre le couple complet
+  « lire l'état + écrire chez le voisin » :
+</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run/gold_manager.dart</span><span class="lang">dart</span></div>
+  <pre>class GoldManager {
+  final RunController controller;
+  final Ref ref;
+
+  GoldManager(this.controller, this.ref);
+
+  /// Achète un slot de forge bonus si possible. Retourne true si l'achat a réussi.
+  bool buyBonusForgeSlot() {
+    if (controller.currentState.bonusForgeSlots &gt;= 4) return false;
+    final costs = [50, 80, 120, 175];
+    final cost = costs[controller.currentState.bonusForgeSlots];
+    final success = ref.read(inventoryProvider.notifier).spendGold(cost);
+    if (!success) return false;
+
+    controller.updateState(
+      controller.currentState.copyWith(
+        bonusForgeSlots: controller.currentState.bonusForgeSlots + 1,
+      ),
+    );
+    return true;
+  }
+}</pre>
+</div>
+<p>
+  Quatre slots de forge bonus maximum, à 50, 80, 120 puis 175 d'or. Et toujours la même discipline :
+  on vérifie la limite, on tente le paiement, et on ne modifie l'état qu'en cas de succès.
+  <code>CombatController</code> applique exactement le même pattern avec un
+  <code>TurnPhaseManager</code> créé dans son propre <code>build()</code>.
+</p>
+<div class="box ok">
+  <div class="box-title">Bonne pratique</div>
+  <p>
+    Un manager n'a pas besoin d'être un provider. S'il n'a pas d'état propre et n'est utilisé que par
+    un seul contrôleur, en faire un objet simple créé dans <code>build()</code> évite de polluer le
+    graphe de providers — tout en gardant l'accès à <code>ref</code>.
+  </p>
+</div>
+
+<h3>7.2 Le pattern « registre de stratégies »</h3>
+<p>
+  Deuxième parade : au lieu d'un <code>switch</code> géant sur le type d'effet d'une carte, on
+  enregistre une classe par type dans un registre — c'est
+  <code>effectRegistryProvider</code>, vu en section 2, qui en assemble les six exemplaires. Toutes
+  respectent le même contrat :
+</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/services/effects/effect_strategy.dart</span><span class="lang">dart</span></div>
+  <pre>abstract class EffectStrategy {
+  void resolve({
+    required CardInstance card,
+    required CardEffect effect,
+    required int scaledValue,
+    required RunController runController,
+    required DeckNotifier deckController,
+    required CombatController combatController,
+    required String? selectedEnemyId,
+  });
+}</pre>
+</div>
+<p>
+  Chaque stratégie reçoit les trois contrôleurs dont elle peut avoir besoin. C'est
+  <code>CombatController</code> qui les rassemble, au moment où une carte est jouée :
+</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/combat_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Applique le jeu d'une carte par le joueur
+  void applyPlayerCardPlay(CardInstance card) {
+    final runController = ref.read(runProvider.notifier);
+    final deckController = ref.read(deckProvider.notifier);
+    final registry = ref.read(effectRegistryProvider);
+
+    // 1. Résolution des effets
+    final success = EffectResolver.resolveCard(
+      card,
+      runController,
+      deckController,
+      this,
+      state.selectedEnemyId,
+      registry,
+    );</pre>
+</div>
+<p>
+  Notez le <code>this</code> en quatrième position : le <code>CombatController</code> se passe
+  lui-même. Les stratégies, elles, ne connaissent pas Riverpod du tout — elles reçoivent des objets et
+  appellent leurs méthodes. Elles sont donc testables sans le moindre <code>ProviderContainer</code>,
+  et le registre reste le seul point de contact avec le graphe de providers.
+</p>
+
+<h3>7.3 <code>deckRandomProvider</code> : injecter l'aléatoire</h3>
+<p>
+  La pioche mélange des cartes. Un mélange, c'est du hasard, et le hasard rend un test inutilisable :
+  la même suite d'actions donne un résultat différent à chaque exécution. La solution : ne pas
+  laisser <code>DeckNotifier</code> créer son <code>Random</code>, mais le lui faire fournir par un
+  provider.
+</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/deck_controller.dart</span><span class="lang">dart</span></div>
+  <pre>/// Source d'aléatoire de la pioche. Surchargeable en test via
+/// `deckRandomProvider.overrideWithValue(Random(42))` pour rendre les
+/// séquences de pioche reproductibles.
+final deckRandomProvider = Provider&lt;Random&gt;((ref) =&gt; Random());
+
+final deckProvider = NotifierProvider&lt;DeckNotifier, DeckState&gt;(DeckNotifier.new);</pre>
+</div>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/deck_controller.dart</span><span class="lang">dart</span></div>
+  <pre>class DeckNotifier extends Notifier&lt;DeckState&gt; {
+  late final Random _random;
+
+  @override
+  DeckState build() {
+    _random = ref.read(deckRandomProvider);
+    return const DeckState();
+  }</pre>
+</div>
+<p>
+  En production, <code>deckRandomProvider</code> fournit un <code>Random()</code> sans graine : le jeu
+  est imprévisible. En test, on remplace la recette avant même que le deck n'existe :
+</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">exemple</span><span class="lang">dart</span></div>
+  <pre>final container = ProviderContainer(
+  overrides: [
+    deckRandomProvider.overrideWithValue(Random(42)),
+  ],
+);
+addTearDown(container.dispose);
+
+// À partir d'ici, tout mélange de la pioche est reproductible :
+// la même graine donne toujours la même séquence de cartes.
+container.read(deckProvider.notifier).startCombat(handSize: 5, maxHandSize: 10);</pre>
+</div>
+<p>
+  C'est le mécanisme de surcharge (<em>override</em>) de Riverpod : au moment de créer le conteneur,
+  on remplace la recette d'un provider par une autre. Tous ceux qui le lisent — ici
+  <code>DeckNotifier</code> — reçoivent la version de test sans le savoir. Et parce que
+  <code>_drawInto</code> reçoit son <code>Random</code> en paramètre et ne touche pas à
+  <code>state</code>, la logique de pioche est une fonction pure, entièrement déterministe une fois la
+  graine fixée.
+</p>
+<div class="box ok">
+  <div class="box-title">Bonne pratique — injection d'aléatoire</div>
+  <p>
+    Tout ce qui est non déterministe (hasard, horloge, réseau, stockage) mérite son propre provider.
+    Un <code>Provider&lt;Random&gt;</code> d'une ligne transforme une fonctionnalité intestable en
+    fonctionnalité vérifiable carte par carte, sans ajouter le moindre paramètre <code>seed</code>
+    aux méthodes métier ni la moindre branche <code>if (isTest)</code>.
+  </p>
+</div>
+<div class="box warn">
+  <div class="box-title">Piège</div>
+  <p>
+    L'injection n'est utile que si <strong>toutes</strong> les sources d'aléatoire passent par un
+    provider. Dans Hero's Draft, seule la pioche est injectée : <code>EventController</code> crée
+    encore ses <code>Random()</code> localement — ses méthodes acceptent en échange des paramètres
+    <code>mockRoll</code> et <code>mockRelicIndex</code> pour rester testables. Deux stratégies
+    différentes pour le même problème ; l'injection par provider est la plus propre des deux.
+  </p>
+</div>
+
+<h2 id="s8">8. Effets de bord et orchestration</h2>
+<p>
+  Reste un cas qu'aucune des briques précédentes ne couvre : « quand X change, fais Y », où Y n'est
+  pas un état mais une action — écrire sur le disque, par exemple. C'est le rôle de
+  l'autosauvegarde.
+</p>
+
+<h3>8.1 Un <code>Provider&lt;void&gt;</code> qui ne fait qu'écouter</h3>
+<p>
+  Le fichier complet tient en 24 lignes, imports compris :
+</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/checkpoint_controller.dart</span><span class="lang">dart</span></div>
+  <pre>import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../services/save_service.dart';
+
+class CheckpointNotifier extends Notifier&lt;int&gt; {
+  @override
+  int build() =&gt; 0;
+
+  /// Signale qu'un nœud de la carte vient d'être résolu (combat, boutique,
+  /// repos, event, forge, échange de reliques, ou draft de Level Up).
+  void bump() =&gt; state = state + 1;
+}
+
+final checkpointProvider =
+    NotifierProvider&lt;CheckpointNotifier, int&gt;(CheckpointNotifier.new);
+
+/// Écoute checkpointProvider et déclenche une sauvegarde à chaque bump().
+/// Doit être lu une fois au démarrage de l'app pour s'activer (voir main.dart).
+final autosaveOrchestratorProvider = Provider&lt;void&gt;((ref) {
+  ref.listen&lt;int&gt;(checkpointProvider, (previous, next) {
+    SaveService.save(ref.read);
+  });
+});</pre>
+</div>
+<p>
+  Le découpage est élégant. D'un côté, un compteur qui ne sait rien de la sauvegarde : il dit
+  seulement « un nœud vient d'être résolu ». De l'autre, un orchestrateur qui ne sait rien du jeu : il
+  écoute le compteur et sauvegarde. Les deux appelants de <code>bump()</code> sont
+  <code>map_progression_manager.dart</code> (à la fin de <code>completeCurrentNode</code>) et
+  <code>player_stats_manager.dart</code> (dans <code>decrementPendingDrafts</code>, après un draft de
+  montée de niveau).
+</p>
+<p>
+  Remarquez que <code>autosaveOrchestratorProvider</code> n'expose <strong>rien</strong> : son type est
+  <code>void</code>. Il n'existe que pour son effet de bord — c'est un branchement, pas une valeur.
+  Et c'est là qu'intervient le point le plus contre-intuitif de tout ce chapitre.
+</p>
+
+<h3>8.2 Pourquoi il faut le <code>ref.watch</code> dans <code>main.dart</code></h3>
+<p>
+  Les providers Riverpod sont <strong>paresseux</strong> : leur fonction de création n'est exécutée
+  qu'à la première lecture. Un provider que personne ne lit n'existe pas — son code ne tourne jamais.
+  Pour un <code>Provider&lt;int&gt;</code>, c'est une optimisation invisible. Pour un provider dont
+  tout l'intérêt est un <code>ref.listen</code>, c'est fatal : si personne ne le lit, le
+  <code>listen</code> n'est jamais installé, et la sauvegarde ne part jamais. Sans erreur, sans
+  avertissement — simplement rien.
+</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/main.dart</span><span class="lang">dart</span></div>
+  <pre>  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Force l'activation de l'écoute d'autosave dès le démarrage de l'app.
+    ref.watch(autosaveOrchestratorProvider);
+
+    return MaterialApp(</pre>
+</div>
+<p>
+  Cette ligne, dont on ignore volontairement la valeur de retour, sert uniquement à <em>allumer</em>
+  le provider. Et c'est bien un <code>watch</code>, pas un <code>read</code>, pour une raison précise :
+  <code>watch</code> établit un abonnement depuis <code>HerosDraftApp</code>, qui est le widget racine
+  et vit aussi longtemps que l'application. Tant que cet abonnement existe, Riverpod garde le provider
+  vivant. Un <code>read</code> ponctuel le créerait aussi, mais sans le maintenir en vie.
+</p>
+<div class="box danger">
+  <div class="box-title">Point d'attention</div>
+  <p>
+    Dans le <em>callback</em>, <code>SaveService.save(ref.read)</code> est appelé sans
+    <code>await</code> — c'est un <code>Future</code> lancé puis oublié. Si l'écriture dans
+    <code>shared_preferences</code> échoue, l'erreur n'est ni interceptée ni remontée : la partie
+    continue en pensant être sauvegardée. Le commentaire de <code>SaveService</code> précise
+    d'ailleurs que la sauvegarde n'est « jamais appelée en plein combat », ce qui limite les dégâts,
+    mais l'absence de gestion d'erreur reste une dette identifiée.
+  </p>
+</div>
+
+<h3>8.3 <code>typedef RefReader</code> : un problème de types bien réel</h3>
+<p>
+  Dernier morceau. <code>SaveService</code> a besoin de lire quatre providers pour les sérialiser, et
+  d'en écrire quatre pour les restaurer. Il est appelé depuis trois contextes différents :
+</p>
+<ul>
+  <li>depuis <code>autosaveOrchestratorProvider</code>, où l'objet disponible est un <code>Ref</code> ;</li>
+  <li>depuis <code>home_screen.dart</code> (bouton « Continuer »), où c'est un <code>WidgetRef</code> ;</li>
+  <li>depuis un test, où ce serait un <code>ProviderContainer</code>.</li>
+</ul>
+<p>
+  Ces trois types exposent tous une méthode <code>read</code> au comportement identique. Mais en
+  riverpod 2.6.1, ils n'ont <strong>aucun supertype commun</strong> : on ne peut pas écrire
+  <code>static Future&lt;void&gt; save(Ref ref)</code> et espérer passer un <code>WidgetRef</code>.
+  La parade du projet est un <code>typedef</code> qui décrit la seule capacité nécessaire :
+</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/services/save_service.dart</span><span class="lang">dart</span></div>
+  <pre>/// The subset of Ref/WidgetRef/ProviderContainer that SaveService needs:
+/// a plain synchronous provider read. Accepting this instead of `Ref`
+/// lets the same code run from a Notifier's `ref`, a widget's `WidgetRef`,
+/// and a bare `ProviderContainer` in tests — none of which share a common
+/// supertype in riverpod 2.6.1, but all of which expose this exact method.
+typedef RefReader = T Function&lt;T&gt;(ProviderListenable&lt;T&gt; provider);</pre>
+</div>
+<p>
+  Ce <code>typedef</code> décrit une fonction <strong>générique</strong> : elle prend un
+  <code>ProviderListenable&lt;T&gt;</code> et rend un <code>T</code>. C'est exactement la signature de
+  <code>Ref.read</code>, de <code>WidgetRef.read</code> et de <code>ProviderContainer.read</code>.
+  Comme en Dart une méthode peut être passée comme valeur (on écrit <code>ref.read</code> sans
+  parenthèses, c'est ce qu'on appelle un <em>tear-off</em>), les trois appelants passent simplement
+  leur méthode :
+</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/services/save_service.dart</span><span class="lang">dart</span></div>
+  <pre>  static Future&lt;void&gt; save(RefReader read) async {
+    final prefs = await SharedPreferences.getInstance();
+    final payload = {
+      'schemaVersion': _schemaVersion,
+      'savedAt': DateTime.now().toIso8601String(),
+      'run': read(runProvider).toJson(),
+      'deck': read(deckProvider).toJson(),
+      'inventory': read(inventoryProvider).toJson(),
+      'skills': read(skillProvider).toJson(),
+    };
+    await prefs.setString(_saveKey, jsonEncode(payload));
+  }</pre>
+</div>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/home_screen.dart</span><span class="lang">dart</span></div>
+  <pre>  Future&lt;void&gt; _continueGame() async {
+    final result = await SaveService.load(ref.read);
+    if (!mounted) return;
+
+    if (!result.success) {
+      // The save was corrupted or unreadable; SaveService.load already
+      // cleared it internally, so simply refresh this screen — the
+      // "Continuer" button will disappear on rebuild.
+      setState(() {});
+      return;
+    }</pre>
+</div>
+<p>
+  À l'intérieur de <code>save</code> et <code>load</code>, <code>read</code> se comporte comme une
+  méthode ordinaire : <code>read(runProvider)</code> renvoie un <code>RunState</code>,
+  <code>read(skillProvider.notifier)</code> renvoie un <code>SkillController</code> sur lequel on
+  appelle <code>hydrate(...)</code>. Le service ignore complètement s'il tourne dans un widget, dans un
+  <code>Notifier</code> ou dans un test.
+</p>
+<div class="box">
+  <div class="box-title">À retenir</div>
+  <p>
+    Quand une API vous impose trois types incompatibles pour une même capacité, ne dupliquez pas le
+    code et n'inventez pas une classe d'adaptation : décrivez la <em>capacité</em> avec un
+    <code>typedef</code> de fonction. C'est du <em>duck typing</em> statique — vérifié par le
+    compilateur, et sans dépendance ajoutée.
+  </p>
+</div>
+<div class="memo">
+  <div class="card"><h5>ProviderScope</h5><p>Posé une fois dans <code>main.dart</code>. Sans lui, aucun provider n'est lisible.</p></div>
+  <div class="card"><h5>build()</h5><p>Renvoie l'état initial et prépare les managers. Appelée à la première lecture, pas avant.</p></div>
+  <div class="card"><h5>state = ...</h5><p>Toujours un nouvel objet. Muter l'ancien ne notifie personne.</p></div>
+  <div class="card"><h5>watch / read / listen</h5><p>Afficher / agir / réagir. <code>read</code> jamais dans <code>build</code>.</p></div>
+  <div class="card"><h5>.notifier</h5><p>Sans lui on obtient l'état, avec lui on obtient le contrôleur et ses méthodes.</p></div>
+  <div class="card"><h5>overrides</h5><p>Remplacer un provider à la création du conteneur : la clé des tests déterministes.</p></div>
+</div>
+
+<div class="quiz">
+  <h2>Quiz — vérifiez vos acquis</h2>
+  <div class="q" data-answer="2">
+    <p class="q-text">1. Quel est le seul <code>StateNotifier</code> encore présent dans Hero's Draft ?</p>
+    <ul class="q-opts">
+      <li><code>CheckpointNotifier</code>, parce que son état est un simple <code>int</code></li>
+      <li><code>DeckNotifier</code>, à cause de son champ <code>late final Random _random</code></li>
+      <li>La file de toasts <code>NotificationNotifier</code> de <code>lib/ui/widgets/notification_overlay.dart</code></li>
+      <li><code>RunController</code>, trop volumineux pour être migré</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> la migration des contrôleurs vers <code>Notifier</code>
+    est terminée ; il ne reste que <code>NotificationNotifier</code>, qui gère la file de toasts
+    (4 notifications maximum, auto-suppression après 3 500 ms). Cet état est purement décoratif, ne
+    contient aucune règle de jeu et n'a jamais besoin de <code>ref</code>.</div>
+  </div>
+  <div class="q" data-answer="1">
+    <p class="q-text">2. Dans <code>DeckState</code>, pourquoi le remélange est-il signalé par un compteur <code>reshuffleCount</code> plutôt que par un booléen ?</p>
+    <ul class="q-opts">
+      <li>Parce que Riverpod ne sait pas comparer des booléens dans <code>ref.listen</code></li>
+      <li>Parce qu'un compteur croissant rend le test <code>next.reshuffleCount &gt; previous.reshuffleCount</code> toujours valide, y compris pour deux remélanges consécutifs, et n'oblige personne à remettre un drapeau à <code>false</code></li>
+      <li>Parce que le nombre de remélanges est affiché dans le HUD de combat</li>
+      <li>Parce que <code>copyWith</code> n'accepte pas de paramètre booléen</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>_drawInto</code> peut remélanger plusieurs fois
+    au cours d'une même pioche et renvoie le nombre exact dans <code>result.reshuffles</code>. Avec un
+    booléen, le second remélange ne changerait pas l'état et passerait inaperçu ; avec un compteur, le
+    <code>ref.listen&lt;DeckState&gt;</code> de <code>game_screen.dart</code> détecte chaque
+    occurrence. La remise à zéro se fait dans <code>startCombat</code>.</div>
+  </div>
+  <div class="q" data-answer="3">
+    <p class="q-text">3. Où et comment <code>autosaveOrchestratorProvider</code> est-il activé ?</p>
+    <ul class="q-opts">
+      <li>Automatiquement, dès que <code>checkpointProvider</code> change</li>
+      <li>Dans <code>SaveService.save</code>, qui l'instancie au premier appel</li>
+      <li>Dans <code>splash_screen.dart</code>, en même temps que le chargement des données</li>
+      <li>Dans <code>lib/main.dart</code>, par un <code>ref.watch(autosaveOrchestratorProvider)</code> au début du <code>build</code> de <code>HerosDraftApp</code></li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> les providers Riverpod sont paresseux — celui qui
+    n'est jamais lu n'exécute jamais son code, donc son <code>ref.listen</code> ne serait jamais
+    installé. Le <code>ref.watch</code> du widget racine le crée et le maintient vivant pendant toute
+    la durée de vie de l'application.</div>
+  </div>
+  <div class="q" data-answer="1">
+    <p class="q-text">4. Comment rendre les séquences de pioche reproductibles dans un test ?</p>
+    <ul class="q-opts">
+      <li>En appelant <code>DeckNotifier.setSeed(42)</code> avant chaque pioche</li>
+      <li>En créant le <code>ProviderContainer</code> avec <code>deckRandomProvider.overrideWithValue(Random(42))</code></li>
+      <li>En passant un paramètre <code>seed:</code> à <code>drawCards</code></li>
+      <li>En remplaçant <code>shuffle()</code> par un tri alphabétique en mode test</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>deckRandomProvider</code> est un
+    <code>Provider&lt;Random&gt;</code> déclaré dans <code>deck_controller.dart</code> précisément pour
+    ça ; <code>DeckNotifier.build()</code> fait <code>_random = ref.read(deckRandomProvider)</code>. La
+    surcharge se déclare à la création du conteneur, avant toute lecture du deck.</div>
+  </div>
+  <div class="q" data-answer="2">
+    <p class="q-text">5. Combien de fichiers JSON <code>gameDataLoaderProvider</code> charge-t-il en parallèle via <code>Future.wait</code> ?</p>
+    <ul class="q-opts">
+      <li>5</li>
+      <li>7</li>
+      <li>9</li>
+      <li>12</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> neuf — <code>enemies</code>, <code>heroes</code>,
+    <code>skills</code>, <code>cards</code>, <code>events</code>, <code>passives</code>,
+    <code>relics</code>, <code>hero_cards</code> et <code>forge_upgrades</code>. Les listes
+    <code>cards</code> et <code>hero_cards</code> sont ensuite fusionnées en un seul catalogue avant
+    d'alimenter le champ <code>cards</code> du <code>GameDataRegistry</code>.</div>
+  </div>
+  <div class="q" data-answer="0">
+    <p class="q-text">6. À quoi sert <code>typedef RefReader = T Function&lt;T&gt;(ProviderListenable&lt;T&gt; provider);</code> dans <code>save_service.dart</code> ?</p>
+    <ul class="q-opts">
+      <li>À accepter indifféremment un <code>Ref</code>, un <code>WidgetRef</code> ou un <code>ProviderContainer</code>, qui n'ont pas de supertype commun en riverpod 2.6.1 mais exposent tous cette méthode <code>read</code></li>
+      <li>À rendre la sauvegarde asynchrone sans utiliser <code>async</code></li>
+      <li>À éviter d'importer <code>flutter_riverpod</code> dans <code>save_service.dart</code></li>
+      <li>À convertir automatiquement les états en JSON</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>SaveService.save</code> est appelé depuis
+    l'orchestrateur d'autosave (un <code>Ref</code>) et <code>SaveService.load</code> depuis
+    <code>home_screen.dart</code> (un <code>WidgetRef</code>) ; un test utiliserait un
+    <code>ProviderContainer</code>. Le <code>typedef</code> décrit la seule capacité partagée — une
+    lecture synchrone de provider — et chaque appelant passe simplement <code>ref.read</code>.</div>
+  </div>
+</div>
+
+<div class="pager">
+<a class="prev" href="ch03.html"><div class="dir">&#8592; Chapitre 03</div><div class="ttl">Flutter — widgets, arbre et navigation</div></a>
+<a class="next" href="ch05.html"><div class="dir">Chapitre 05 &#8594;</div><div class="ttl">Flame — le moteur de rendu du combat</div></a>
+</div>
+</div>
+</main>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,1823 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Les ennemis et la courbe de difficulté — Formation Hero's Draft</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<button class="menu-btn" aria-label="Menu">&#9776;</button>
+<div class="layout">
+<aside class="sidebar">
+  <a class="brand" href="index.html">
+    <div class="brand-title">HERO'S DRAFT</div>
+    <div class="brand-sub">Formation complète au projet Flutter</div>
+  </a>
+<nav class="nav">
+<div class="nav-part">Partie 0 — Démarrage</div>
+<a href="ch01.html"><span class="num">01</span><span>Vue d&#x27;ensemble : qu&#x27;est-ce que Hero&#x27;s Draft ?</span></a>
+<div class="nav-part">Partie 1 — Les fondations techniques</div>
+<a href="ch02.html"><span class="num">02</span><span>Dart, le langage — l&#x27;essentiel pour ce projet</span></a>
+<a href="ch03.html"><span class="num">03</span><span>Flutter — widgets, arbre et navigation</span></a>
+<a href="ch04.html"><span class="num">04</span><span>Riverpod — l&#x27;état partagé du jeu</span></a>
+<a href="ch05.html"><span class="num">05</span><span>Flame — le moteur de rendu du combat</span></a>
+<div class="nav-part">Partie 2 — L&#x27;architecture du projet</div>
+<a href="ch06.html"><span class="num">06</span><span>L&#x27;architecture en quatre couches</span></a>
+<a href="ch07.html"><span class="num">07</span><span>La couche de données : un jeu 100 % data-driven</span></a>
+<div class="nav-part">Partie 3 — Les règles du jeu</div>
+<a href="ch08.html"><span class="num">08</span><span>Le héros : stats, classes, passifs et progression</span></a>
+<a href="ch09.html"><span class="num">09</span><span>Les cartes et le deck</span></a>
+<a href="ch10.html"><span class="num">10</span><span>Le combat : boucle de tour, dégâts et effets</span></a>
+<a href="ch11.html" class="active"><span class="num">11</span><span>Les ennemis et la courbe de difficulté</span></a>
+<a href="ch12.html"><span class="num">12</span><span>La carte du monde procédurale</span></a>
+<a href="ch13.html"><span class="num">13</span><span>Les reliques et le système de déclencheurs</span></a>
+<a href="ch14.html"><span class="num">14</span><span>L&#x27;économie : or, boutique, forge et fusion</span></a>
+<a href="ch15.html"><span class="num">15</span><span>Récompenses, chance et probabilités</span></a>
+<a href="ch16.html"><span class="num">16</span><span>Événements, repos et autel des reliques</span></a>
+<div class="nav-part">Partie 4 — L&#x27;interface et le rendu</div>
+<a href="ch17.html"><span class="num">17</span><span>Le pont Flame ↔ Riverpod : l&#x27;écran de combat</span></a>
+<a href="ch18.html"><span class="num">18</span><span>Composants Flame et game feel</span></a>
+<a href="ch19.html"><span class="num">19</span><span>Écrans, navigation et design system</span></a>
+<div class="nav-part">Partie 5 — Qualité et cycle de vie</div>
+<a href="ch20.html"><span class="num">20</span><span>Sauvegarde, localisation et tutoriel</span></a>
+<a href="ch21.html"><span class="num">21</span><span>Tests, outillage, dette technique et évolutions</span></a>
+</nav>
+</aside>
+<main class="main">
+<div class="content">
+<div class="chapter-kicker">Chapitre 11</div>
+<h1>Les ennemis et la courbe de difficulté</h1>
+<p class="lede">Hero's Draft ne place pas ses ennemis à la main. Chaque combat est acheté avec un budget
+calculé à partir de la puissance réelle du joueur. Ce chapitre démonte la formule, terme par terme.</p>
+
+<div class="toc">
+  <div class="toc-title">Dans ce chapitre</div>
+  <ol>
+    <li><a href="#s1">Les quatre ennemis du bestiaire</a></li>
+    <li><a href="#s2">Le budget de combat</a></li>
+    <li><a href="#s3">Le prix d'un ennemi : le Combat Rating</a></li>
+    <li><a href="#s4">L'algorithme de composition</a></li>
+    <li><a href="#s5">Le nombre d'ennemis</a></li>
+    <li><a href="#s6">Le scaling par acte</a></li>
+    <li><a href="#s7">Niveau d'ennemi, multiplicateurs finaux et boss</a></li>
+    <li><a href="#s8">Lire la difficulté en direct : CombatDebugLogger</a></li>
+  </ol>
+</div>
+
+<p>Dans la plupart des jeux de cartes roguelike, les rencontres sont <em>écrites</em> : un designer
+décide que l'étage 3 contient « deux gobelins et un squelette ». Hero's Draft fait l'inverse. Un seul
+fichier, <span class="pill a">Données</span> <code>lib/game/systems/encounter_system.dart</code>,
+calcule un <strong>budget</strong> en points, attribue un <strong>prix</strong> à chaque ennemi du
+bestiaire, puis dépense le budget jusqu'à épuisement. Aucune rencontre n'est écrite nulle part.</p>
+
+<p>Ce choix a une conséquence directe pour vous : si vous voulez rendre le jeu plus dur ou plus facile,
+vous ne touchez pas à cinquante fichiers de niveau — vous changez une constante. Mais il faut d'abord
+comprendre exactement ce que chaque constante fait. C'est l'objet de ce chapitre.</p>
+
+<h2 id="s1">1. Les quatre ennemis du bestiaire</h2>
+
+<p>Tout part de <code>assets/data/enemies.json</code>. Le fichier est court : quatre entrées, pas une
+de plus. Tout le reste — la variété des combats, la montée en difficulté sur douze actes — est produit
+par des multiplicateurs appliqués à ces quatre archétypes.</p>
+
+<div class="code" data-lang="json">
+  <div class="code-head"><span class="path">assets/data/enemies.json</span><span class="lang">json</span></div>
+  <pre>  {
+    "id": "orc",
+    "name_en": "Furious Orc",
+    "name_fr": "Orc Furieux",
+    "maxHp": 50,
+    "baseDamage": 8,
+    "spritePath": "enemy_orc.png",
+    "tier": 3,
+    "xp": 100,
+    "critChance": 15,
+    "gold": 25,
+    "intents": [
+      { "type": "attack", "value": 8 },
+      { "type": "buff", "value": 2 },
+      { "type": "attack", "value": 12 }
+    ]
+  }</pre>
+</div>
+
+<p>Voici le bestiaire complet, tel qu'il est écrit dans le fichier. Ces valeurs sont les valeurs
+<strong>de base</strong> : ce sont celles de l'acte 1, face à un joueur de niveau 1, sur un nœud de
+combat normal. Partout ailleurs, elles sont multipliées.</p>
+
+<div class="table-wrap"><table>
+<thead><tr>
+  <th><code>id</code></th><th>Nom FR</th><th>Nom EN</th><th><code>maxHp</code></th>
+  <th><code>baseDamage</code></th><th><code>tier</code></th><th><code>xp</code></th>
+  <th><code>critChance</code></th><th><code>gold</code></th><th><code>intents</code></th>
+</tr></thead>
+<tbody>
+<tr><td><code>slime</code></td><td>Slime</td><td>Slime</td><td>18</td><td>4</td><td>1</td><td>25</td><td>5 %</td><td>10</td>
+    <td><code>attack 4</code></td></tr>
+<tr><td><code>gobelin</code></td><td>Gobelin</td><td>Goblin</td><td>28</td><td>5</td><td>1</td><td>35</td><td>10 %</td><td>12</td>
+    <td><code>attack 5</code></td></tr>
+<tr><td><code>squelette</code></td><td>Squelette</td><td>Skeleton</td><td>22</td><td>8</td><td>2</td><td>50</td><td>10 %</td><td>15</td>
+    <td><code>attack 8</code> → <code>attack 10</code></td></tr>
+<tr><td><code>orc</code></td><td>Orc Furieux</td><td>Furious Orc</td><td>50</td><td>8</td><td>3</td><td>100</td><td>15 %</td><td>25</td>
+    <td><code>attack 8</code> → <code>buff 2</code> → <code>attack 12</code></td></tr>
+</tbody>
+</table></div>
+
+<p>Regardez les paires <code>maxHp</code> / <code>baseDamage</code> : elles dessinent quatre rôles
+distincts. Le slime est un sac de frappe inoffensif (18 PV, 4 dégâts). Le gobelin encaisse un peu plus
+mais reste doux. Le squelette est l'inverse du gobelin : moins de PV (22) mais le double de dégâts (8),
+c'est une menace qu'il faut tuer vite. L'orc cumule tout : 50 PV, 8 dégâts, 15 % de critique.</p>
+
+<h3>Le modèle <code>EnemyData</code></h3>
+
+<p>Le JSON est désérialisé dans une classe Dart immuable. Notez les valeurs par défaut : un ennemi qui
+ne déclare pas de <code>tier</code> est considéré tier 1, et un ennemi sans <code>xp</code> vaut 20
+points d'expérience.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/enemy_data.dart</span><span class="lang">dart</span></div>
+  <pre>class EnemyData {
+  final String id;
+  final String nameEn;
+  final String nameFr;
+  final int maxHp;
+  final int baseDamage;
+  final String spritePath;
+  final int tier;
+  final int xp;
+  final int critChance;
+  final int gold;
+  final List&lt;EnemyIntent&gt;? intents;
+
+  const EnemyData({
+    required this.id,
+    this.nameEn = '',
+    this.nameFr = '',
+    required this.maxHp,
+    required this.baseDamage,
+    required this.spritePath,
+    this.tier = 1,
+    this.xp = 20,
+    this.critChance = 0,
+    this.gold = 10,
+    this.intents,
+  });
+
+  String getName(String locale) =&gt; locale == 'fr' ? nameFr : nameEn;</pre>
+</div>
+
+<p>Le champ <code>intents</code> est <strong>nullable</strong> (<code>List&lt;EnemyIntent&gt;?</code>).
+C'est important pour la suite : le jeu a deux comportements selon que ce champ est renseigné ou non.</p>
+
+<h3>Le champ <code>intents</code> : un cycle scripté</h3>
+
+<p>Une <em>intention</em> est ce que l'ennemi annonce qu'il va faire au tour suivant — l'icône affichée
+au-dessus de sa tête. Le type est un simple enum à trois valeurs.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/enemy_intent.dart</span><span class="lang">dart</span></div>
+  <pre>enum IntentType { attack, defend, buff }
+
+class EnemyIntent {
+  final IntentType type;
+  final int value;
+
+  EnemyIntent({required this.type, required this.value});</pre>
+</div>
+
+<p>Quand <code>intents</code> est renseigné, la liste n'est pas tirée au hasard : elle est parcourue
+<strong>en boucle, dans l'ordre</strong>. Un compteur <code>intentStep</code> stocké sur l'instance
+avance d'un cran à chaque tour et repasse à zéro grâce à un modulo.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/combat_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  EnemyInstance rollIntent(EnemyInstance enemy) {
+    final data = enemy.data;
+    EnemyIntent nextIntent;
+    int nextStep = enemy.intentStep;
+
+    if (data.intents != null &amp;&amp; data.intents!.isNotEmpty) {
+      nextIntent = data.intents![enemy.intentStep];
+      nextStep = (enemy.intentStep + 1) % data.intents!.length;
+    } else {
+      final random = Random();
+      final roll = random.nextInt(100);
+
+      if (roll &lt; 60) {
+        nextIntent = EnemyIntent(
+          type: IntentType.attack,
+          value: data.baseDamage,
+        );
+      } else if (roll &lt; 85) {
+        nextIntent = EnemyIntent(
+          type: IntentType.defend,
+          value: 5 + random.nextInt(6),
+        );
+      } else {
+        nextIntent = EnemyIntent(type: IntentType.buff, value: 2);
+      }
+    }
+    return enemy.copyWith(currentIntent: nextIntent, intentStep: nextStep);
+  }</pre>
+</div>
+
+<div class="box rule">
+  <div class="box-title">Règle du jeu — le cycle d'intentions</div>
+  <p>Un ennemi qui déclare des <code>intents</code> est <strong>parfaitement prévisible</strong>.
+  L'Orc Furieux joue toujours <code>attack 8</code>, puis <code>buff 2</code>, puis
+  <code>attack 12</code>, puis recommence. Le joueur qui observe ce cycle sait qu'il doit garder son
+  armure pour le troisième tour. Les quatre ennemis du bestiaire déclarent tous leurs
+  <code>intents</code> : la branche aléatoire (60 % attaque, 25 % défense, 15 % buff) n'est jamais
+  atteinte avec les données actuelles. C'est un filet de sécurité pour du contenu futur.</p>
+</div>
+
+<p>Attention à un piège de lecture : la valeur écrite dans le JSON (<code>value: 12</code> pour l'orc)
+n'est pas la valeur affichée en jeu. Elle est <strong>remise à l'échelle</strong> au moment de
+l'affichage, proportionnellement au multiplicateur de dégâts appliqué au spawn.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/enemy_instance.dart</span><span class="lang">dart</span></div>
+  <pre>  EnemyIntent? get effectiveIntent {
+    final intent = currentIntent;
+    if (intent == null) return null;
+    if (intent.type == IntentType.attack) {
+      final double spawnMultiplier = data.baseDamage &gt; 0
+          ? stats.attaque / data.baseDamage
+          : 1.0;
+      final int scaledValue = (intent.value * spawnMultiplier).round();
+      final int inBattleBonus = stats.effectiveAttaque - stats.attaque;
+      int finalValue = (stats.effectiveAttaque &gt; (scaledValue + inBattleBonus))
+          ? stats.effectiveAttaque
+          : (scaledValue + inBattleBonus);
+      if (stats.statuses.any((s) =&gt; s.id == 'freeze')) {
+        finalValue = (finalValue * 0.5).round();
+      }
+      return EnemyIntent(
+        type: intent.type,
+        value: finalValue,
+      );
+    }
+    return intent;
+  }</pre>
+</div>
+
+<p>Exemple concret : un orc invoqué avec <code>stats.attaque = 14</code> (au lieu de son
+<code>baseDamage</code> de 8) obtient un <code>spawnMultiplier</code> de 14 / 8 = 1,75. Son intention
+<code>attack 12</code> s'affiche donc à 12 × 1,75 = 21. Le <code>buff 2</code>, lui, n'est pas touché :
+seules les intentions de type <code>attack</code> passent par cette remise à l'échelle.</p>
+
+<h3>Le champ <code>tier</code> : un palier de déblocage</h3>
+
+<p><code>tier</code> ne modifie <em>pas</em> les statistiques de l'ennemi. Il joue deux rôles distincts,
+que l'on détaillera aux sections 3 et 7 :</p>
+
+<div class="memo">
+  <div class="card"><h5>Prix plancher</h5><p>Le tier vaut <code>tier × 15</code> points dans le
+  Combat Rating. Un orc coûte 45 points rien que par son tier, avant même de compter ses PV.</p></div>
+  <div class="card"><h5>Verrou de progression</h5><p>Un ennemi n'est éligible que si son tier est
+  débloqué à l'acte courant : tier 1 jusqu'à l'acte 5, tier 2 dès l'acte 6, tier 3 dès l'acte 11.</p></div>
+</div>
+
+<p>Autrement dit, le squelette (tier 2) et l'orc (tier 3) <strong>ne peuvent pas apparaître</strong>
+avant respectivement l'acte 6 et l'acte 11. Sur les cinq premiers actes, le joueur n'affronte que des
+slimes et des gobelins — mais des slimes et des gobelins de plus en plus gros.</p>
+
+<h3>Les champs <code>xp</code> et <code>gold</code></h3>
+
+<p>Ces deux champs ne servent qu'à la victoire. Ils sont multipliés par le niveau de l'ennemi, avec un
+gain de 10 % par niveau au-dessus de 1 :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/reward_controller.dart</span><span class="lang">dart</span></div>
+  <pre>    // 1. Calculate XP from defeated enemies
+    int totalXp = 0;
+    for (var enemy in defeatedEnemies) {
+      final double levelMultiplier = 1.0 + 0.10 * (enemy.stats.level - 1);
+      totalXp += (enemy.data.xp * levelMultiplier).round();
+    }
+    if (currentNode.bossRewardType == BossRewardType.doubleXp) {
+      totalXp *= 3;
+    }
+
+    // 2. Calculate Gold from defeated enemies
+    int totalGold = 0;
+    for (var enemy in defeatedEnemies) {
+      final double levelMultiplier = 1.0 + 0.10 * (enemy.stats.level - 1);
+      totalGold += (enemy.data.gold * levelMultiplier).round();
+    }</pre>
+</div>
+
+<p>Un orc de niveau 5 rapporte donc <code>round(100 × (1 + 0,10 × 4))</code> = 140 XP et
+<code>round(25 × 1,4)</code> = 35 or. Notez que le multiplicateur suit le <strong>niveau de
+l'ennemi</strong> (calculé section 7), pas l'acte : deux orcs identiques croisés à l'acte 2 et à
+l'acte 9 rapportent la même chose si le joueur a le même niveau.</p>
+
+<div class="box danger">
+  <div class="box-title">Dette technique — <code>xp</code> disparaît à la sérialisation</div>
+  <p><code>EnemyInstance.toJson()</code> (dans <code>lib/models/enemy_instance.dart</code>) recopie
+  <code>maxHp</code>, <code>baseDamage</code>, <code>tier</code>, <code>critChance</code>,
+  <code>gold</code> et <code>intents</code>… mais <strong>pas <code>xp</code></strong>. Comme
+  <code>EnemyData.fromJson</code> applique <code>json['xp'] as int? ?? 20</code>, un aller-retour
+  JSON transformerait l'orc à 100 XP en orc à 20 XP. Le bug est aujourd'hui <em>dormant</em> :
+  <code>SaveService</code> ne persiste pas l'état de combat. Il se réveillera le jour où quelqu'un
+  ajoutera la sauvegarde en plein combat.</p>
+</div>
+
+<h2 id="s2">2. Le budget de combat</h2>
+
+<p>On entre dans le cœur du système. La méthode <code>EncounterSystem.calculateBudget</code> répond à
+une seule question : <strong>combien de points de menace ce combat a-t-il le droit de dépenser ?</strong>
+Elle ne choisit aucun ennemi, elle ne connaît même pas le bestiaire. Elle produit sept grandeurs,
+regroupées dans un <em>record</em> Dart nommé.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/encounter_system.dart</span><span class="lang">dart</span></div>
+  <pre>/// Breakdown of the combat budget calculation — see [EncounterSystem.calculateBudget].
+typedef BudgetBreakdown = ({
+  double playerPower,
+  double expectedPower,
+  double baseBudget,
+  double powerRatio,
+  double powerModifier,
+  double nodeMultiplier,
+  double finalBudget,
+});</pre>
+</div>
+
+<p>Un <em>record</em> (syntaxe <code>({ ... })</code>) est un tuple à champs nommés introduit par Dart 3.
+Il évite d'écrire une classe entière pour un simple sac de valeurs de retour. On y accède avec
+<code>budget.finalBudget</code>, exactement comme un champ d'objet, mais sans constructeur ni
+<code>copyWith</code> à maintenir.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/encounter_system.dart</span><span class="lang">dart</span></div>
+  <pre>    final double playerPower = playerMaxHp +
+        (playerAttaque * 10.0) +
+        (playerMaxMana * 15.0) +
+        (playerRelicsCount * 5.0) +
+        (playerCardsCount * 2.0);
+
+    final double expectedPower =
+        145.0 + ((playerLevel - 1) * 15.0) + ((act - 1) * 20.0);
+
+    final double baseBudget =
+        40.0 + ((playerLevel - 1) * 10.0) + ((act - 1) * 25.0);
+
+    final double powerRatio = playerPower / expectedPower;
+    final double powerModifier = 1.0 + (powerRatio - 1.0) * 0.5;
+
+    double nodeMultiplier = 1.0;
+    if (isBoss) {
+      nodeMultiplier = 2.0;
+    } else if (isElite) {
+      nodeMultiplier = 1.5;
+    }
+
+    final double finalBudget =
+        baseBudget * powerModifier * nodeMultiplier + (act - 1) * 10.0;</pre>
+</div>
+
+<h3>Terme 1 — <code>playerPower</code></h3>
+
+<p><code>playerPower = maxHP + attaque×10 + maxMana×15 + reliques×5 + cartes×2</code></p>
+
+<p>C'est une <strong>estimation scalaire de la puissance réelle du joueur</strong>. Les coefficients
+disent ce que le designer considère comme équivalent : un point d'attaque vaut 10 points de vie, un
+point de mana maximum en vaut 15, une relique en vaut 5, une carte en vaut 2. Le mana est la ressource
+la plus chère du modèle — logique, puisqu'il conditionne le nombre de cartes jouables par tour.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Composante</th><th>Coefficient</th><th>Lecture</th></tr></thead>
+<tbody>
+<tr><td><code>playerMaxHp</code></td><td>× 1</td><td>L'unité de référence du modèle.</td></tr>
+<tr><td><code>playerAttaque</code></td><td>× 10</td><td>1 point de force = 10 PV.</td></tr>
+<tr><td><code>playerMaxMana</code></td><td>× 15</td><td>La ressource la mieux valorisée.</td></tr>
+<tr><td><code>playerRelicsCount</code></td><td>× 5</td><td>Compte les reliques, pas leur puissance.</td></tr>
+<tr><td><code>playerCardsCount</code></td><td>× 2</td><td>Compte la taille du deck, pas sa qualité.</td></tr>
+</tbody>
+</table></div>
+
+<div class="box warn">
+  <div class="box-title">Piège — le modèle compte, il n'évalue pas</div>
+  <p>Une relique légendaire et une relique commune pèsent toutes les deux 5 points. Une carte
+  « Frappe » de départ et une carte légendaire pèsent toutes les deux 2 points. Conséquence de jeu :
+  <strong>purger son deck</strong> à la boutique fait <em>baisser</em> le <code>playerPower</code>, donc
+  le budget des combats suivants — alors qu'un deck épuré est objectivement plus fort. C'est un
+  <em>exploit</em> connu de ce type de modèle. À l'inverse, accumuler des cartes faibles gonfle
+  artificiellement la difficulté.</p>
+</div>
+
+<h3>Terme 2 — <code>expectedPower</code></h3>
+
+<p><code>expectedPower = 145 + (playerLevel − 1)×15 + (act − 1)×20</code></p>
+
+<p>C'est la puissance que le joueur <em>devrait</em> avoir à ce stade de la partie. La constante 145
+n'est pas arbitraire : c'est exactement le <code>playerPower</code> produit par les valeurs par défaut
+de <code>generateEnemiesForLevel</code> — <code>playerMaxHp = 100</code>, <code>playerAttaque = 0</code>,
+<code>playerMaxMana = 3</code>, aucune relique, aucune carte, soit 100 + 0 + 45 + 0 + 0 = 145. Le joueur
+de référence à l'acte 1, niveau 1, obtient donc un ratio exactement égal à 1,0.</p>
+
+<p>La courbe attendue croît de 15 points par niveau de héros et de 20 points par acte.</p>
+
+<h3>Terme 3 — <code>baseBudget</code></h3>
+
+<p><code>baseBudget = 40 + (playerLevel − 1)×10 + (act − 1)×25</code></p>
+
+<p>C'est l'enveloppe brute, avant toute correction. 40 points au tout début de la partie — de quoi
+s'offrir un gobelin (33 points, voir section 3) et rien d'autre. La progression par acte (+25) est
+2,5 fois plus rapide que la progression par niveau de héros (+10) : le système considère que traverser
+un acte est un événement plus structurant que gagner un niveau.</p>
+
+<h3>Terme 4 — <code>powerRatio</code></h3>
+
+<p><code>powerRatio = playerPower / expectedPower</code></p>
+
+<p>Un joueur exactement dans la norme donne 1,0. Un joueur qui a bien drafté donne 1,2 ou 1,3. Un joueur
+qui a enchaîné les mauvais choix donne 0,85.</p>
+
+<h3>Terme 5 — <code>powerModifier</code>, l'amortissement de moitié</h3>
+
+<p><code>powerModifier = 1 + (powerRatio − 1) × 0,5</code></p>
+
+<p>C'est la ligne la plus importante du fichier, et la plus facile à mal lire. Elle ne dit pas « la
+difficulté suit la puissance du joueur ». Elle dit : <strong>la difficulté suit la moitié de l'écart à
+la norme</strong>.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th><code>powerRatio</code></th><th>Écart à la norme</th><th><code>powerModifier</code></th><th>Effet sur le budget</th></tr></thead>
+<tbody>
+<tr><td>0,50</td><td>−50 %</td><td>0,75</td><td>−25 %</td></tr>
+<tr><td>0,80</td><td>−20 %</td><td>0,90</td><td>−10 %</td></tr>
+<tr><td>1,00</td><td>0</td><td>1,00</td><td>0</td></tr>
+<tr><td>1,20</td><td>+20 %</td><td>1,10</td><td>+10 %</td></tr>
+<tr><td>1,60</td><td>+60 %</td><td>1,30</td><td>+30 %</td></tr>
+<tr><td>2,00</td><td>+100 %</td><td>1,50</td><td>+50 %</td></tr>
+</tbody>
+</table></div>
+
+<div class="box rule">
+  <div class="box-title">Règle du jeu — la récompense du sur-optimisé</div>
+  <p>Un joueur deux fois plus puissant que la norme n'affronte pas des combats deux fois plus durs,
+  mais seulement 1,5 fois plus durs. <strong>Le sur-investissement reste rentable.</strong> C'est
+  l'intention de game design derrière le facteur 0,5 : un <em>rubber-banding</em> qui empêche la partie
+  de devenir triviale, sans annuler le bénéfice d'un bon draft. Sans l'amortissement (facteur 1,0), un
+  joueur qui double sa puissance retrouverait exactement la même difficulté relative — et le draft
+  n'aurait plus aucun intérêt.</p>
+  <p>Symétriquement, un joueur en difficulté voit son budget baisser, mais deux fois moins vite que sa
+  puissance. Le jeu l'aide un peu, pas complètement : la spirale de la mort reste possible.</p>
+</div>
+
+<p>Une propriété utile : comme <code>playerPower</code> est toujours positif ou nul, le
+<code>powerRatio</code> est ≥ 0, donc <strong><code>powerModifier</code> ne peut jamais descendre
+sous 0,5</strong>. Il n'y a aucun <em>clamp</em> explicite dans le code, mais la borne basse existe
+mathématiquement. En revanche, il n'y a aucune borne haute : un joueur au ratio 5,0 obtiendrait un
+modificateur de 3,0.</p>
+
+<h3>Terme 6 — <code>nodeMultiplier</code></h3>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Type de nœud</th><th><code>nodeMultiplier</code></th><th>Condition dans le code</th></tr></thead>
+<tbody>
+<tr><td>Boss</td><td>2.0</td><td><code>isBoss</code></td></tr>
+<tr><td>Élite</td><td>1.5</td><td><code>isElite</code> (et non boss)</td></tr>
+<tr><td>Normal</td><td>1.0</td><td>valeur initiale</td></tr>
+</tbody>
+</table></div>
+
+<p>L'ordre du <code>if / else if</code> compte : un nœud à la fois boss et élite serait traité comme un
+boss. En pratique <code>MapNodeType</code> est un enum, les deux cas sont exclusifs.</p>
+
+<h3>Terme 7 — <code>finalBudget</code></h3>
+
+<p><code>finalBudget = baseBudget × powerModifier × nodeMultiplier + (act − 1)×10</code></p>
+
+<p>Le détail à ne pas rater : le terme <code>(act − 1)×10</code> est ajouté <strong>après</strong> la
+multiplication par <code>nodeMultiplier</code>. Il n'est donc <em>pas</em> doublé sur un boss. C'est un
+plancher additif par acte, identique quel que soit le type de nœud.</p>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 820 372" width="820" role="img" aria-label="Chaîne de calcul du budget de combat : playerPower et expectedPower donnent powerRatio puis powerModifier, combinés à baseBudget et nodeMultiplier pour produire finalBudget">
+      <rect x="0" y="0" width="820" height="372" fill="#0e1524"/>
+
+      <rect x="20" y="30" width="180" height="54" rx="8" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="110" y="52" fill="#e6ecf5" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">playerPower</text>
+      <text x="110" y="70" fill="#a7b4c9" font-size="11" text-anchor="middle">PV + atk·10 + mana·15 + …</text>
+
+      <rect x="20" y="104" width="180" height="54" rx="8" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="110" y="126" fill="#e6ecf5" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">expectedPower</text>
+      <text x="110" y="144" fill="#a7b4c9" font-size="11" text-anchor="middle">145 + niv·15 + acte·20</text>
+
+      <rect x="250" y="67" width="200" height="54" rx="8" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="350" y="89" fill="#e6ecf5" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">powerRatio</text>
+      <text x="350" y="107" fill="#a7b4c9" font-size="11" text-anchor="middle">playerPower / expectedPower</text>
+
+      <rect x="500" y="67" width="280" height="54" rx="8" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="640" y="89" fill="#e6ecf5" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">powerModifier</text>
+      <text x="640" y="107" fill="#a7b4c9" font-size="11" text-anchor="middle">1 + (ratio − 1) × 0.5   ← amortissement</text>
+
+      <rect x="20" y="210" width="180" height="54" rx="8" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="110" y="232" fill="#e6ecf5" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">baseBudget</text>
+      <text x="110" y="250" fill="#a7b4c9" font-size="11" text-anchor="middle">40 + niv·10 + acte·25</text>
+
+      <rect x="20" y="284" width="180" height="54" rx="8" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="110" y="306" fill="#e6ecf5" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">nodeMultiplier</text>
+      <text x="110" y="324" fill="#a7b4c9" font-size="11" text-anchor="middle">boss 2.0 · élite 1.5 · 1.0</text>
+
+      <rect x="430" y="228" width="350" height="86" rx="10" fill="#16241f" stroke="#34d399" stroke-width="2"/>
+      <text x="605" y="256" fill="#34d399" font-size="14" text-anchor="middle" font-family="ui-monospace, monospace">finalBudget</text>
+      <text x="605" y="278" fill="#e6ecf5" font-size="12" text-anchor="middle">baseBudget × powerModifier × nodeMultiplier</text>
+      <text x="605" y="298" fill="#e6ecf5" font-size="12" text-anchor="middle">+ (act − 1) × 10</text>
+
+      <path d="M200 57 C 228 57, 224 94, 250 94" fill="none" stroke="#3a4966" stroke-width="2" marker-end="url(#c11-a1)"/>
+      <path d="M200 131 C 228 131, 224 94, 250 94" fill="none" stroke="#3a4966" stroke-width="2" marker-end="url(#c11-a1)"/>
+      <path d="M450 94 L500 94" fill="none" stroke="#3a4966" stroke-width="2" marker-end="url(#c11-a1)"/>
+      <path d="M640 121 C 640 180, 605 175, 605 228" fill="none" stroke="#3a4966" stroke-width="2" marker-end="url(#c11-a1)"/>
+      <path d="M200 237 C 320 237, 330 254, 430 254" fill="none" stroke="#3a4966" stroke-width="2" marker-end="url(#c11-a1)"/>
+      <path d="M200 311 C 320 311, 330 290, 430 290" fill="none" stroke="#3a4966" stroke-width="2" marker-end="url(#c11-a1)"/>
+
+      <defs><marker id="c11-a1" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0 0 L8 4 L0 8 z" fill="#3a4966"/></marker></defs>
+    </svg>
+  </div>
+  <figcaption>Les sept grandeurs de <code>calculateBudget</code> et leurs dépendances. Rien ici ne
+  connaît le bestiaire : le budget est calculé avant de savoir quels ennemis existent.</figcaption>
+</figure>
+
+<h3>Exemple chiffré complet</h3>
+
+<p>Prenons un joueur de <strong>niveau 3</strong>, à l'<strong>acte 2</strong>, avec <strong>92 PV
+maximum</strong>, <strong>3 en attaque</strong>, <strong>4 de mana maximum</strong>,
+<strong>2 reliques</strong> et <strong>14 cartes</strong>, qui entre sur un <strong>nœud élite</strong>.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Étape</th><th>Calcul</th><th>Résultat</th></tr></thead>
+<tbody>
+<tr><td><code>playerPower</code></td><td>92 + (3 × 10) + (4 × 15) + (2 × 5) + (14 × 2) = 92 + 30 + 60 + 10 + 28</td><td><strong>220,0</strong></td></tr>
+<tr><td><code>expectedPower</code></td><td>145 + (3 − 1) × 15 + (2 − 1) × 20 = 145 + 30 + 20</td><td><strong>195,0</strong></td></tr>
+<tr><td><code>baseBudget</code></td><td>40 + (3 − 1) × 10 + (2 − 1) × 25 = 40 + 20 + 25</td><td><strong>85,0</strong></td></tr>
+<tr><td><code>powerRatio</code></td><td>220 / 195</td><td><strong>1,128205…</strong></td></tr>
+<tr><td><code>powerModifier</code></td><td>1 + (1,128205 − 1) × 0,5 = 1 + 0,064103</td><td><strong>1,064103</strong></td></tr>
+<tr><td><code>nodeMultiplier</code></td><td>nœud élite</td><td><strong>1,5</strong></td></tr>
+<tr><td>produit intermédiaire</td><td>85 × 1,064103 = 90,4487… puis × 1,5</td><td><strong>135,6731</strong></td></tr>
+<tr><td><code>finalBudget</code></td><td>135,6731 + (2 − 1) × 10</td><td><strong>145,6731</strong></td></tr>
+</tbody>
+</table></div>
+
+<p>Vérification : le joueur est 12,8 % au-dessus de la norme, il ne subit que 6,4 % de budget
+supplémentaire. Sans le bonus élite, le même joueur aurait eu 85 × 1,064103 × 1,0 + 10 = 100,45 points.
+Le nœud élite lui coûte donc 45,2 points de menace supplémentaires.</p>
+
+<div class="box ok">
+  <div class="box-title">Bonne pratique — une seule source de vérité</div>
+  <p>Le commentaire de <code>calculateBudget</code> est explicite : <em>« This is the single source of
+  truth for these values — callers that only need them for display (e.g. the debug logger) must call
+  this rather than re-deriving their own copy, to avoid the two calculations drifting. »</em> On
+  retrouvera cette règle appliquée à la section 8.</p>
+</div>
+
+<h2 id="s3">3. Le prix d'un ennemi : le Combat Rating</h2>
+
+<p>Le budget est une somme d'argent. Il faut maintenant des étiquettes de prix. C'est le rôle de
+<code>calculateCombatRating</code> : convertir un ennemi, dans un contexte donné (acte, niveau, type de
+nœud), en un nombre unique de points de menace.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/encounter_system.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Calculates the combat rating for a given enemy under specific parameters.
+  static double calculateCombatRating({
+    required EnemyData data,
+    required int enemyLevel,
+    required int act,
+    required bool isBoss,
+    required bool isElite,
+  }) {
+    final bool isCustomBoss = data.id.startsWith('boss_');
+
+    final double hpMultiplier = getHpMultiplier(
+      enemyLevel: enemyLevel,
+      act: act,
+      isBoss: isBoss,
+      isElite: isElite,
+      isCustomBoss: isCustomBoss,
+    );
+
+    final double damageMultiplier = getDamageMultiplier(
+      enemyLevel: enemyLevel,
+      act: act,
+      isBoss: isBoss,
+      isElite: isElite,
+      isCustomBoss: isCustomBoss,
+    );
+
+    final int hpScale = (data.maxHp * hpMultiplier).round();
+    final int damageScale = (data.baseDamage * damageMultiplier).round();
+
+    return (data.tier * 15.0) + (hpScale / 4.0) + (damageScale * 2.0) * (1.0 + data.critChance / 100.0);
+  }</pre>
+</div>
+
+<p>La formule finale se lit en trois termes :</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Terme</th><th>Formule</th><th>Ce qu'il capture</th></tr></thead>
+<tbody>
+<tr><td>Prix de tier</td><td><code>tier × 15</code></td><td>Un forfait de rareté : 15, 30 ou 45 points.</td></tr>
+<tr><td>Prix de survie</td><td><code>hpScale / 4</code></td><td>Combien de tours l'ennemi va tenir.</td></tr>
+<tr><td>Prix de menace</td><td><code>damageScale × 2 × (1 + critChance/100)</code></td><td>Combien il fait mal, majoré par les critiques.</td></tr>
+</tbody>
+</table></div>
+
+<div class="box warn">
+  <div class="box-title">Piège — la priorité des opérateurs</div>
+  <p>Écrite en une seule ligne, la formule peut se lire de travers. En Dart comme en maths, la
+  multiplication est prioritaire sur l'addition : <code>(1.0 + critChance / 100.0)</code> multiplie
+  <strong>uniquement</strong> le terme de dégâts, pas la somme entière. Un ennemi à 15 % de critique ne
+  voit pas ses PV ni son tier majorés de 15 % — seulement ses dégâts.</p>
+</div>
+
+<p>Le point clé, souvent mal compris : <code>hpScale</code> et <code>damageScale</code> ne sont
+<strong>pas</strong> les valeurs du JSON. Ce sont les valeurs <em>déjà multipliées</em> par
+<code>getHpMultiplier</code> et <code>getDamageMultiplier</code> — c'est-à-dire par le niveau de
+l'ennemi, le facteur d'acte et le multiplicateur de nœud (sections 6 et 7). Un même ennemi coûte donc
+de plus en plus cher au fil de la partie. Les deux valeurs sont arrondies à l'entier
+(<code>.round()</code>) avant d'entrer dans la formule : le CR se calcule sur les PV et dégâts
+réellement affichés en jeu, pas sur des flottants.</p>
+
+<h3>Le CR des quatre ennemis à l'acte 1, joueur niveau 1, nœud normal</h3>
+
+<p>Dans ce cas de référence, tout se simplifie : <code>enemyLevel = 1</code> donc le terme de niveau
+vaut 1,0 ; <code>getHpActFactor(1) = 1,0</code> et <code>getDamageActFactor(1) = 1,0</code> ; le nœud
+est normal donc le multiplicateur vaut 1,0. Les deux multiplicateurs valent exactement 1,0, et
+<code>hpScale = maxHp</code>, <code>damageScale = baseDamage</code>.</p>
+
+<div class="table-wrap"><table>
+<thead><tr>
+  <th>Ennemi</th><th><code>tier × 15</code></th><th><code>hpScale / 4</code></th>
+  <th><code>damageScale × 2</code></th><th><code>× (1 + crit/100)</code></th><th>Combat Rating</th>
+</tr></thead>
+<tbody>
+<tr><td>Slime</td><td>1 × 15 = 15</td><td>18 / 4 = 4,5</td><td>4 × 2 = 8</td><td>8 × 1,05 = 8,4</td><td><strong>27,9</strong></td></tr>
+<tr><td>Gobelin</td><td>1 × 15 = 15</td><td>28 / 4 = 7,0</td><td>5 × 2 = 10</td><td>10 × 1,10 = 11,0</td><td><strong>33,0</strong></td></tr>
+<tr><td>Squelette</td><td>2 × 15 = 30</td><td>22 / 4 = 5,5</td><td>8 × 2 = 16</td><td>16 × 1,10 = 17,6</td><td><strong>53,1</strong></td></tr>
+<tr><td>Orc</td><td>3 × 15 = 45</td><td>50 / 4 = 12,5</td><td>8 × 2 = 16</td><td>16 × 1,15 = 18,4</td><td><strong>75,9</strong></td></tr>
+</tbody>
+</table></div>
+
+<p>Ces quatre nombres — <strong>27,9 · 33,0 · 53,1 · 75,9</strong> — sont les prix plancher du jeu.
+Rapportez-les au budget de départ (40 points à l'acte 1, niveau 1, nœud normal) : le premier combat de
+la partie peut s'offrir un slime <em>ou</em> un gobelin, et rien de plus. Après un gobelin il reste
+7 points, insuffisants pour quoi que ce soit.</p>
+
+<p>Notez aussi l'effet du forfait de tier. Le squelette n'a que 22 PV — moins que le gobelin — mais son
+tier 2 lui coûte 30 points d'entrée. Il vaut 1,6 fois le gobelin. L'orc, lui, vaut 2,3 gobelins.
+<strong>Le tier est le levier de prix dominant sur les petits ennemis</strong>, et il ne cesse de l'être
+que quand les facteurs d'acte gonflent suffisamment <code>hpScale</code>.</p>
+
+<h2 id="s4">4. L'algorithme de composition</h2>
+
+<p>Budget d'un côté, prix de l'autre : la composition de la rencontre est une boucle d'achat. Elle tient
+en une vingtaine de lignes.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/encounter_system.dart</span><span class="lang">dart</span></div>
+  <pre>    final List&lt;EnemyData&gt; generatedEnemies = [];
+    double remainingBudget = finalBudget;
+
+    // Choose enemies without exceeding remaining budget or the act-scaled cap
+    while (remainingBudget &gt; 0 &amp;&amp; generatedEnemies.length &lt; maxEnemies) {
+      final candidates = enemyPool.where((enemy) {
+        final rating = calculateCombatRatingForEnemy(enemy);
+        return rating &lt;= remainingBudget;
+      }).toList();
+
+      if (candidates.isEmpty) {
+        break;
+      }
+
+      final chosen = candidates[_rng.nextInt(candidates.length)];
+      generatedEnemies.add(chosen);
+      remainingBudget -= calculateCombatRatingForEnemy(chosen);
+    }</pre>
+</div>
+
+<p>Trois observations de lecture :</p>
+
+<ol>
+  <li>La condition de boucle a <strong>deux</strong> gardes : le budget doit rester strictement positif
+  <em>et</em> le nombre d'ennemis doit rester sous <code>maxEnemies</code>. C'est le premier des deux qui
+  saute qui arrête la boucle.</li>
+  <li>Le filtrage <code>rating &lt;= remainingBudget</code> est recalculé <strong>à chaque tour</strong>.
+  Le pool ne rétrécit pas : c'est le budget qui rétrécit, donc la liste des candidats se réduit
+  mécaniquement au fil des achats.</li>
+  <li>Le tirage est <strong>uniforme</strong> : <code>candidates[_rng.nextInt(candidates.length)]</code>.
+  Aucune pondération, aucun poids de rareté. Un slime abordable a exactement la même probabilité d'être
+  choisi qu'un orc abordable.</li>
+</ol>
+
+<div class="box rule">
+  <div class="box-title">Règle du jeu — un biais implicite vers les petits ennemis</div>
+  <p>Le tirage uniforme ne garantit pas des compositions équilibrées, mais il produit un biais
+  intéressant : plus le budget se vide, plus les gros ennemis sortent du filtre, et plus la probabilité
+  de tirer un petit ennemi augmente. Les rencontres tendent donc naturellement vers « un gros +
+  plusieurs petits » plutôt que « plusieurs gros », sans qu'aucune règle ne le dise explicitement.</p>
+</div>
+
+<p>Le <code>_rng</code> est un <code>Random()</code> statique, partagé par toute la classe :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/encounter_system.dart</span><span class="lang">dart</span></div>
+  <pre>class EncounterSystem {
+  static final Random _rng = Random();</pre>
+</div>
+
+<h3>Le repli : ne jamais renvoyer une liste vide</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/encounter_system.dart</span><span class="lang">dart</span></div>
+  <pre>    // Fallback if no enemies could fit into budget: choose the one with the lowest combat rating
+    if (generatedEnemies.isEmpty &amp;&amp; enemyPool.isNotEmpty) {
+      EnemyData lowest = enemyPool.first;
+      double lowestRating = calculateCombatRatingForEnemy(lowest);
+      for (int i = 1; i &lt; enemyPool.length; i++) {
+        final r = calculateCombatRatingForEnemy(enemyPool[i]);
+        if (r &lt; lowestRating) {
+          lowestRating = r;
+          lowest = enemyPool[i];
+        }
+      }
+      generatedEnemies.add(lowest);
+    }
+
+    return generatedEnemies;</pre>
+</div>
+
+<p>Ce repli n'est pas cosmétique. Si la boucle sortait sans avoir rien acheté — budget trop faible pour
+le moins cher des ennemis éligibles — le combat démarrerait avec zéro ennemi. Or la victoire est
+détectée dans <code>cleanDeadEnemies()</code>, à l'intérieur d'un <code>if (killedCount &gt; 0)</code> :
+sans ennemi à tuer, <code>isCombatEnded</code> ne passerait jamais à <code>true</code> et le joueur
+resterait bloqué dans un combat qu'il ne peut pas terminer. <strong>Le repli garantit qu'il y a toujours
+au moins une cible.</strong></p>
+
+<p>Notez aussi la première ligne de <code>generateEnemiesForLevel</code> :
+<code>if (availableEnemies.isEmpty) return [];</code>. Si le bestiaire lui-même est vide, la fonction
+renvoie une liste vide sans passer par le repli — c'est le seul chemin qui produit zéro ennemi.</p>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 820 700" width="820" role="img" aria-label="Organigramme de la boucle de composition : tant que le budget est positif et que le nombre d'ennemis est sous le plafond, filtrer les candidats abordables, en tirer un au hasard et soustraire son coût ; sinon appliquer le repli sur le coût le plus faible">
+      <rect x="0" y="0" width="820" height="700" fill="#0e1524"/>
+
+      <rect x="250" y="16" width="320" height="46" rx="10" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="410" y="38" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">remainingBudget = finalBudget</text>
+      <text x="410" y="54" fill="#a7b4c9" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">generatedEnemies = []</text>
+
+      <polygon points="410,78 590,120 410,162 230,120" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="410" y="114" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">remainingBudget &gt; 0 &amp;&amp;</text>
+      <text x="410" y="132" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">length &lt; maxEnemies ?</text>
+
+      <rect x="250" y="190" width="320" height="46" rx="10" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="410" y="212" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">candidates = enemyPool.where(</text>
+      <text x="410" y="228" fill="#a7b4c9" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">CR(e) &lt;= remainingBudget)</text>
+
+      <polygon points="410,258 556,296 410,334 264,296" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="410" y="300" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">candidates.isEmpty ?</text>
+
+      <rect x="230" y="364" width="360" height="56" rx="10" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="410" y="386" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">chosen = candidates[_rng.nextInt(n)]</text>
+      <text x="410" y="406" fill="#a7b4c9" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">add(chosen) ; remainingBudget -= CR(chosen)</text>
+
+      <polygon points="410,470 545,505 410,540 275,505" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="410" y="509" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">generatedEnemies.isEmpty ?</text>
+
+      <rect x="180" y="565" width="360" height="46" rx="10" fill="#24191b" stroke="#f87171"/>
+      <text x="360" y="586" fill="#f87171" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">repli : lowest = min(CR) du pool</text>
+      <text x="360" y="602" fill="#a7b4c9" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">generatedEnemies.add(lowest)</text>
+
+      <rect x="580" y="565" width="200" height="46" rx="10" fill="#16241f" stroke="#34d399"/>
+      <text x="680" y="593" fill="#34d399" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">return generatedEnemies</text>
+
+      <path d="M410 62 L410 78" stroke="#3a4966" stroke-width="2" marker-end="url(#c11-a2)"/>
+      <path d="M410 162 L410 190" stroke="#3a4966" stroke-width="2" marker-end="url(#c11-a2)"/>
+      <path d="M410 236 L410 258" stroke="#3a4966" stroke-width="2" marker-end="url(#c11-a2)"/>
+      <path d="M410 334 L410 364" stroke="#3a4966" stroke-width="2" marker-end="url(#c11-a2)"/>
+      <path d="M410 420 L410 446 L110 446 L110 120 L230 120" fill="none" stroke="#60a5fa" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#c11-a3)"/>
+      <path d="M590 120 L700 120 L700 505 L545 505" fill="none" stroke="#3a4966" stroke-width="2" marker-end="url(#c11-a2)"/>
+      <path d="M556 296 L700 296" fill="none" stroke="#3a4966" stroke-width="2"/>
+      <circle cx="700" cy="296" r="4" fill="#3a4966"/>
+      <path d="M410 540 L410 565" stroke="#3a4966" stroke-width="2" marker-end="url(#c11-a2)"/>
+      <path d="M540 588 L580 588" stroke="#3a4966" stroke-width="2" marker-end="url(#c11-a2)"/>
+      <path d="M275 505 L150 505 L150 645 L680 645 L680 611" fill="none" stroke="#3a4966" stroke-width="2" marker-end="url(#c11-a2)"/>
+
+      <text x="424" y="188" fill="#34d399" font-size="11" font-family="ui-monospace, monospace">oui</text>
+      <text x="600" y="112" fill="#f87171" font-size="11" font-family="ui-monospace, monospace">non → sortie</text>
+      <text x="424" y="358" fill="#34d399" font-size="11" font-family="ui-monospace, monospace">non</text>
+      <text x="566" y="288" fill="#f87171" font-size="11" font-family="ui-monospace, monospace">oui → break</text>
+      <text x="150" y="440" fill="#60a5fa" font-size="11" font-family="ui-monospace, monospace">itération suivante</text>
+      <text x="424" y="560" fill="#f87171" font-size="11" font-family="ui-monospace, monospace">oui</text>
+      <text x="200" y="498" fill="#34d399" font-size="11" font-family="ui-monospace, monospace">non</text>
+
+      <defs>
+        <marker id="c11-a2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0 0 L8 4 L0 8 z" fill="#3a4966"/></marker>
+        <marker id="c11-a3" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0 0 L8 4 L0 8 z" fill="#60a5fa"/></marker>
+      </defs>
+    </svg>
+  </div>
+  <figcaption>La boucle d'achat de <code>generateEnemiesForLevel</code>. Le chemin bleu pointillé est
+  le retour d'itération ; les deux sorties de boucle convergent vers le test de repli.</figcaption>
+</figure>
+
+<h3>Une composition déroulée pas à pas</h3>
+
+<p>Joueur de <strong>niveau 4</strong>, <strong>acte 3</strong>, 105 PV, 4 en attaque, 4 de mana,
+3 reliques, 17 cartes, sur un <strong>nœud de combat normal</strong>.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Grandeur</th><th>Calcul</th><th>Valeur</th></tr></thead>
+<tbody>
+<tr><td><code>playerPower</code></td><td>105 + 40 + 60 + 15 + 34</td><td>254,0</td></tr>
+<tr><td><code>expectedPower</code></td><td>145 + 45 + 40</td><td>230,0</td></tr>
+<tr><td><code>baseBudget</code></td><td>40 + 30 + 50</td><td>120,0</td></tr>
+<tr><td><code>powerRatio</code></td><td>254 / 230</td><td>1,104348</td></tr>
+<tr><td><code>powerModifier</code></td><td>1 + 0,104348 × 0,5</td><td>1,052174</td></tr>
+<tr><td><code>finalBudget</code></td><td>120 × 1,052174 × 1,0 + 20</td><td><strong>146,2609</strong></td></tr>
+<tr><td><code>maxEnemies</code></td><td>combat normal, acte 3</td><td><strong>3</strong></td></tr>
+<tr><td><code>unlockedTier</code></td><td>acte 3</td><td><strong>1</strong></td></tr>
+</tbody>
+</table></div>
+
+<p>Le tier débloqué vaut 1 : le pool est réduit au slime et au gobelin. Leur CR dans ce contexte
+(<code>enemyLevel = 4</code>, facteurs d'acte 3 : PV × 1,35 et dégâts × 1,25, donc
+<code>hpMultiplier = 1,593</code> et <code>damageMultiplier = 1,4</code>) :</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Ennemi</th><th><code>hpScale</code></th><th><code>damageScale</code></th><th>CR</th><th>Éligible ?</th></tr></thead>
+<tbody>
+<tr><td>Slime</td><td>round(18 × 1,593) = 29</td><td>round(4 × 1,4) = 6</td><td>15 + 7,25 + 12 × 1,05 = <strong>34,85</strong></td><td>oui</td></tr>
+<tr><td>Gobelin</td><td>round(28 × 1,593) = 45</td><td>round(5 × 1,4) = 7</td><td>15 + 11,25 + 14 × 1,10 = <strong>41,65</strong></td><td>oui</td></tr>
+<tr><td>Squelette</td><td>round(22 × 1,593) = 35</td><td>round(8 × 1,4) = 11</td><td>30 + 8,75 + 22 × 1,10 = <strong>62,95</strong></td><td>non — tier 2</td></tr>
+<tr><td>Orc</td><td>round(50 × 1,593) = 80</td><td>round(8 × 1,4) = 11</td><td>45 + 20 + 22 × 1,15 = <strong>90,30</strong></td><td>non — tier 3</td></tr>
+</tbody>
+</table></div>
+
+<p>Déroulé d'un tirage possible (le <code>_rng</code> rend le résultat variable) :</p>
+
+<div class="tree">Budget initial : <span class="f">146,26</span>
+├── itération 1 : candidats = {slime 34,85 ; gobelin 41,65} → tire <span class="d">gobelin</span>  <span class="c">// reste 104,61</span>
+├── itération 2 : candidats = {slime 34,85 ; gobelin 41,65} → tire <span class="d">slime</span>    <span class="c">// reste 69,76</span>
+├── itération 3 : candidats = {slime 34,85 ; gobelin 41,65} → tire <span class="d">gobelin</span>  <span class="c">// reste 28,11</span>
+└── sortie : generatedEnemies.length == maxEnemies (3)      <span class="c">// 28,11 points perdus</span></div>
+
+<p>Ce déroulé illustre le cas le plus fréquent en pratique : <strong>c'est le plafond d'ennemis qui
+arrête la boucle, pas le budget</strong>. 28,11 points restent non dépensés. Le budget n'est vraiment
+contraignant que sur les premiers actes, quand <code>maxEnemies</code> est encore petit et les CR
+proches du budget total.</p>
+
+<h2 id="s5">5. Le nombre d'ennemis</h2>
+
+<p>Le plafond <code>maxEnemies</code> vient d'une formule unique, paramétrée par un « pas » différent
+selon le type de nœud.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/encounter_system.dart</span><span class="lang">dart</span></div>
+  <pre>  static const int _normalCombatEnemyStep = 1;
+  static const int _eliteEnemyStep = 2;
+  static const int _bossEnemyStep = 5;
+
+  /// Shared step formula: 1 enemy at act 1, +1 every [stepSize] acts,
+  /// unbounded (no ceiling — see spec §3.4 for why this stays safe long-term).
+  static int _maxEnemiesFromStep(int act, int stepSize) =&gt;
+      1 + ((act - 1) / stepSize).floor();
+
+  /// Max enemies generated for a normal combat node: +1 every act.
+  static int getMaxEnemiesForNormalCombat(int act) =&gt;
+      _maxEnemiesFromStep(act, _normalCombatEnemyStep);
+
+  /// Max enemies generated for an elite node: +1 every 2 acts.
+  static int getMaxEnemiesForElite(int act) =&gt;
+      _maxEnemiesFromStep(act, _eliteEnemyStep);
+
+  /// Max enemies generated for a boss node: +1 every 5 acts.
+  static int getMaxEnemiesForBoss(int act) =&gt;
+      _maxEnemiesFromStep(act, _bossEnemyStep);</pre>
+</div>
+
+<p><code>_maxEnemiesFromStep(act, stepSize) = 1 + ((act − 1) / stepSize).floor()</code></p>
+
+<p>Un détail Dart qui compte : <code>(act - 1) / stepSize</code> est une division
+<strong>réelle</strong> (l'opérateur <code>/</code> sur deux <code>int</code> renvoie un
+<code>double</code> en Dart, contrairement à Java ou C). C'est le <code>.floor()</code> explicite qui
+tronque. L'équivalent entier direct s'écrirait <code>~/</code>.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Acte</th><th>Combat normal (pas 1)</th><th>Élite (pas 2)</th><th>Boss (pas 5)</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>1</td><td>1</td><td>1</td></tr>
+<tr><td>2</td><td>2</td><td>1</td><td>1</td></tr>
+<tr><td>3</td><td>3</td><td>2</td><td>1</td></tr>
+<tr><td>4</td><td>4</td><td>2</td><td>1</td></tr>
+<tr><td>5</td><td>5</td><td>3</td><td>1</td></tr>
+<tr><td>6</td><td>6</td><td>3</td><td>2</td></tr>
+<tr><td>7</td><td>7</td><td>4</td><td>2</td></tr>
+<tr><td>8</td><td>8</td><td>4</td><td>2</td></tr>
+<tr><td>9</td><td>9</td><td>5</td><td>2</td></tr>
+<tr><td>10</td><td>10</td><td>5</td><td>2</td></tr>
+<tr><td>11</td><td>11</td><td>6</td><td>3</td></tr>
+<tr><td>12</td><td>12</td><td>6</td><td>3</td></tr>
+</tbody>
+</table></div>
+
+<div class="box rule">
+  <div class="box-title">Règle du jeu — trois vitesses, trois intentions</div>
+  <p>Le combat normal grossit vite (un ennemi de plus par acte) : il devient un problème de
+  <em>gestion de foule</em>. L'élite grossit deux fois moins vite : elle reste un affrontement de
+  quelques cibles solides. Le boss grossit cinq fois moins vite : il reste, dans l'esprit, un duel —
+  un boss seul jusqu'à l'acte 5, deux de l'acte 6 à l'acte 10.</p>
+</div>
+
+<p>Le commentaire annonce la formule comme <em>unbounded</em> (« sans plafond »). Ce n'est pas une
+imprécision : rien ne borne <code>maxEnemies</code>. À l'acte 20, un combat normal autoriserait
+20 ennemis. C'est le budget qui devient alors la contrainte réelle — et l'affichage, qui pose sa propre
+limite.</p>
+
+<h3>La limite d'affichage : 5 actifs, le reste en réserve</h3>
+
+<p><code>initializeCombat</code> instancie <em>tous</em> les ennemis générés, puis les répartit en deux
+listes.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/combat_controller.dart</span><span class="lang">dart</span></div>
+  <pre>    final List&lt;EnemyInstance&gt; activeEnemies = [];
+    final List&lt;EnemyInstance&gt; pendingEnemies = [];
+
+    for (int i = 0; i &lt; allEnemyInstances.length; i++) {
+      var enemy = allEnemyInstances[i];
+      if (i &lt; 5) {
+        enemy = rollIntent(enemy);
+        activeEnemies.add(enemy);
+      } else {
+        pendingEnemies.add(enemy);
+      }
+    }</pre>
+</div>
+
+<p>Les cinq premiers passent dans <code>enemies</code> et reçoivent immédiatement une intention. Les
+suivants attendent dans <code>pendingEnemies</code> : ils n'ont pas d'intention, ne sont pas dessinés,
+ne peuvent pas être ciblés. Ils entrent en scène à la mort d'un ennemi actif :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/combat_controller.dart</span><span class="lang">dart</span></div>
+  <pre>    if (killedCount &gt; 0) {
+      final List&lt;EnemyInstance&gt; nextPending = List.from(state.pendingEnemies);
+      for (int i = 0; i &lt; killedCount; i++) {
+        if (remainingEnemies.length &lt; 5 &amp;&amp; nextPending.isNotEmpty) {
+          var incoming = nextPending.removeAt(0);
+          incoming = rollIntent(incoming);
+          remainingEnemies.add(incoming);
+        }
+      }
+      // ...
+      final bool isCombatEnded = remainingEnemies.isEmpty &amp;&amp; nextPending.isEmpty;</pre>
+</div>
+
+<div class="box ok">
+  <div class="box-title">Bonne pratique — découpler la génération et l'affichage</div>
+  <p><code>EncounterSystem</code> ne sait rien de l'écran : il peut proposer douze ennemis sans se
+  soucier de la place disponible. C'est <code>CombatController</code> qui applique la contrainte de
+  rendu (5 emplacements) via une file d'attente. La condition de victoire vérifie explicitement les
+  <strong>deux</strong> listes : <code>remainingEnemies.isEmpty &amp;&amp; nextPending.isEmpty</code>.
+  Oublier le second test aurait donné une victoire prématurée dès que les cinq premiers ennemis
+  tombent.</p>
+</div>
+
+<h2 id="s6">6. Le scaling par acte</h2>
+
+<p>Les quatre ennemis du bestiaire doivent rester crédibles pendant douze actes. Deux fonctions s'en
+chargent, et elles ont une forme particulière : <strong>un saut géométrique tous les deux actes, plus
+une petite rampe à l'intérieur du palier</strong>.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/encounter_system.dart</span><span class="lang">dart</span></div>
+  <pre>  static const double _hpBracketGrowthRate = 1.35;
+  static const double _dmgBracketGrowthRate = 1.25;
+  static const double _hpIntraBracketStep = 0.05;
+  static const double _dmgIntraBracketStep = 0.03;
+  static const int _actBracketSize = 2;
+
+  /// Which 2-act difficulty bracket this act falls in (0 for acts 1-2, 1 for acts 3-4, ...).
+  static int getActBracket(int act) =&gt; ((act - 1) / _actBracketSize).floor();
+
+  /// Position within the current 2-act bracket (0 to 1).
+  static int getActPositionInBracket(int act) =&gt; (act - 1) % _actBracketSize;
+
+  /// Combined act factor for HP: a geometric jump every 2 acts, plus a gentle
+  /// ramp that resets each bracket. Replaces the old direct `(1 + 0.35*(act-1))`
+  /// term, which double-counted the act inside `enemyLevel` as well.
+  static double getHpActFactor(int act) {
+    final bracket = getActBracket(act);
+    final positionInBracket = getActPositionInBracket(act);
+    final bracketMultiplier = pow(_hpBracketGrowthRate, bracket).toDouble();
+    final intraBracketRamp = 1.0 + positionInBracket * _hpIntraBracketStep;
+    return bracketMultiplier * intraBracketRamp;
+  }
+
+  /// Same as [getHpActFactor] but for damage, using the damage-specific rates.
+  static double getDamageActFactor(int act) {
+    final bracket = getActBracket(act);
+    final positionInBracket = getActPositionInBracket(act);
+    final bracketMultiplier = pow(_dmgBracketGrowthRate, bracket).toDouble();
+    final intraBracketRamp = 1.0 + positionInBracket * _dmgIntraBracketStep;
+    return bracketMultiplier * intraBracketRamp;
+  }</pre>
+</div>
+
+<p>La mécanique se lit en deux temps :</p>
+
+<ul>
+  <li><strong>Le palier</strong> — <code>getActBracket(act) = ((act − 1) / 2).floor()</code> : les actes
+  1 et 2 sont dans le palier 0, les actes 3 et 4 dans le palier 1, etc. Le multiplicateur de palier est
+  <code>taux ^ palier</code>, avec un taux de <strong>1,35 pour les PV</strong> et de
+  <strong>1,25 pour les dégâts</strong>.</li>
+  <li><strong>La rampe</strong> — <code>getActPositionInBracket(act) = (act − 1) % 2</code> vaut 0 au
+  premier acte du palier et 1 au second. Elle ajoute <strong>+5 % de PV</strong> et
+  <strong>+3 % de dégâts</strong> au second acte du palier, puis <em>se réinitialise</em> au palier
+  suivant.</li>
+</ul>
+
+<div class="box rule">
+  <div class="box-title">Règle du jeu — un rythme en dents de scie contrôlé</div>
+  <p>Le joueur ressent la structure : le second acte d'un palier est une légère montée (+5 % PV), le
+  passage au palier suivant est une marche nette (×1,35 / 1,05 ≈ ×1,286 par rapport à l'acte
+  précédent). La progression alterne donc « respiration, marche, respiration, marche ». Les PV montent
+  toujours plus vite que les dégâts : les combats s'allongent plus qu'ils ne deviennent létaux, ce qui
+  laisse le temps de jouer son deck.</p>
+</div>
+
+<h3>Les deux facteurs, actes 1 à 10</h3>
+
+<div class="table-wrap"><table>
+<thead><tr>
+  <th>Acte</th><th>Palier</th><th>Position</th>
+  <th><code>getHpActFactor</code></th><th><code>getDamageActFactor</code></th>
+  <th>PV d'un slime (18 base)</th><th>Dégâts d'un slime (4 base)</th>
+</tr></thead>
+<tbody>
+<tr><td>1</td><td>0</td><td>0</td><td>1,0000</td><td>1,0000</td><td>18</td><td>4</td></tr>
+<tr><td>2</td><td>0</td><td>1</td><td>1,0500</td><td>1,0300</td><td>19</td><td>4</td></tr>
+<tr><td>3</td><td>1</td><td>0</td><td>1,3500</td><td>1,2500</td><td>24</td><td>5</td></tr>
+<tr><td>4</td><td>1</td><td>1</td><td>1,4175</td><td>1,2875</td><td>26</td><td>5</td></tr>
+<tr><td>5</td><td>2</td><td>0</td><td>1,8225</td><td>1,5625</td><td>33</td><td>6</td></tr>
+<tr><td>6</td><td>2</td><td>1</td><td>1,9136</td><td>1,6094</td><td>34</td><td>6</td></tr>
+<tr><td>7</td><td>3</td><td>0</td><td>2,4604</td><td>1,9531</td><td>44</td><td>8</td></tr>
+<tr><td>8</td><td>3</td><td>1</td><td>2,5834</td><td>2,0117</td><td>47</td><td>8</td></tr>
+<tr><td>9</td><td>4</td><td>0</td><td>3,3215</td><td>2,4414</td><td>60</td><td>10</td></tr>
+<tr><td>10</td><td>4</td><td>1</td><td>3,4876</td><td>2,5146</td><td>63</td><td>10</td></tr>
+</tbody>
+</table></div>
+
+<p>Les colonnes « slime » supposent un joueur de niveau 1 sur un nœud normal, pour isoler l'effet de
+l'acte seul. À l'acte 10, le slime de départ pèse 63 PV — plus que l'orc original.</p>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 820 380" width="820" role="img" aria-label="Courbes des facteurs d'acte pour les PV et les dégâts, actes 1 à 10, montrant des marches tous les deux actes">
+      <rect x="0" y="0" width="820" height="380" fill="#0e1524"/>
+
+      <line x1="90" y1="300" x2="790" y2="300" stroke="#3a4966" stroke-width="1.5"/>
+      <line x1="90" y1="45" x2="90" y2="300" stroke="#3a4966" stroke-width="1.5"/>
+
+      <line x1="90" y1="230.6" x2="790" y2="230.6" stroke="#22304a" stroke-width="1" stroke-dasharray="3 4"/>
+      <line x1="90" y1="161.1" x2="790" y2="161.1" stroke="#22304a" stroke-width="1" stroke-dasharray="3 4"/>
+      <line x1="90" y1="91.7" x2="790" y2="91.7" stroke="#22304a" stroke-width="1" stroke-dasharray="3 4"/>
+      <text x="80" y="234" fill="#a7b4c9" font-size="11" text-anchor="end">1.0</text>
+      <text x="80" y="165" fill="#a7b4c9" font-size="11" text-anchor="end">2.0</text>
+      <text x="80" y="96" fill="#a7b4c9" font-size="11" text-anchor="end">3.0</text>
+      <text x="80" y="304" fill="#a7b4c9" font-size="11" text-anchor="end">0</text>
+
+      <line x1="203.4" y1="50" x2="203.4" y2="300" stroke="#3a4966" stroke-width="1" stroke-dasharray="2 5"/>
+      <line x1="354.5" y1="50" x2="354.5" y2="300" stroke="#3a4966" stroke-width="1" stroke-dasharray="2 5"/>
+      <line x1="505.6" y1="50" x2="505.6" y2="300" stroke="#3a4966" stroke-width="1" stroke-dasharray="2 5"/>
+      <line x1="656.7" y1="50" x2="656.7" y2="300" stroke="#3a4966" stroke-width="1" stroke-dasharray="2 5"/>
+
+      <polyline points="90,230.6 165.6,227.1 241.1,206.2 316.7,201.6 392.2,173.4 467.8,167.1 543.3,129.1 618.9,120.6 694.4,69.3 770,57.8"
+                fill="none" stroke="#22d3ee" stroke-width="2.5"/>
+      <polyline points="90,230.6 165.6,228.5 241.1,213.2 316.7,210.6 392.2,191.5 467.8,188.2 543.3,164.4 618.9,160.3 694.4,130.5 770,125.4"
+                fill="none" stroke="#f59e0b" stroke-width="2.5"/>
+
+      <circle cx="90" cy="230.6" r="3.5" fill="#22d3ee"/><circle cx="165.6" cy="227.1" r="3.5" fill="#22d3ee"/>
+      <circle cx="241.1" cy="206.2" r="3.5" fill="#22d3ee"/><circle cx="316.7" cy="201.6" r="3.5" fill="#22d3ee"/>
+      <circle cx="392.2" cy="173.4" r="3.5" fill="#22d3ee"/><circle cx="467.8" cy="167.1" r="3.5" fill="#22d3ee"/>
+      <circle cx="543.3" cy="129.1" r="3.5" fill="#22d3ee"/><circle cx="618.9" cy="120.6" r="3.5" fill="#22d3ee"/>
+      <circle cx="694.4" cy="69.3" r="3.5" fill="#22d3ee"/><circle cx="770" cy="57.8" r="3.5" fill="#22d3ee"/>
+
+      <circle cx="90" cy="230.6" r="3.5" fill="#f59e0b"/><circle cx="165.6" cy="228.5" r="3.5" fill="#f59e0b"/>
+      <circle cx="241.1" cy="213.2" r="3.5" fill="#f59e0b"/><circle cx="316.7" cy="210.6" r="3.5" fill="#f59e0b"/>
+      <circle cx="392.2" cy="191.5" r="3.5" fill="#f59e0b"/><circle cx="467.8" cy="188.2" r="3.5" fill="#f59e0b"/>
+      <circle cx="543.3" cy="164.4" r="3.5" fill="#f59e0b"/><circle cx="618.9" cy="160.3" r="3.5" fill="#f59e0b"/>
+      <circle cx="694.4" cy="130.5" r="3.5" fill="#f59e0b"/><circle cx="770" cy="125.4" r="3.5" fill="#f59e0b"/>
+
+      <text x="90" y="320" fill="#a7b4c9" font-size="11" text-anchor="middle">1</text>
+      <text x="165.6" y="320" fill="#a7b4c9" font-size="11" text-anchor="middle">2</text>
+      <text x="241.1" y="320" fill="#a7b4c9" font-size="11" text-anchor="middle">3</text>
+      <text x="316.7" y="320" fill="#a7b4c9" font-size="11" text-anchor="middle">4</text>
+      <text x="392.2" y="320" fill="#a7b4c9" font-size="11" text-anchor="middle">5</text>
+      <text x="467.8" y="320" fill="#a7b4c9" font-size="11" text-anchor="middle">6</text>
+      <text x="543.3" y="320" fill="#a7b4c9" font-size="11" text-anchor="middle">7</text>
+      <text x="618.9" y="320" fill="#a7b4c9" font-size="11" text-anchor="middle">8</text>
+      <text x="694.4" y="320" fill="#a7b4c9" font-size="11" text-anchor="middle">9</text>
+      <text x="770" y="320" fill="#a7b4c9" font-size="11" text-anchor="middle">10</text>
+      <text x="440" y="345" fill="#a7b4c9" font-size="12" text-anchor="middle">acte</text>
+
+      <rect x="560" y="20" width="230" height="24" rx="6" fill="#151b2b" stroke="#3a4966"/>
+      <line x1="574" y1="32" x2="600" y2="32" stroke="#22d3ee" stroke-width="3"/>
+      <text x="606" y="36" fill="#e6ecf5" font-size="11" font-family="ui-monospace, monospace">PV (1.35)</text>
+      <line x1="682" y1="32" x2="708" y2="32" stroke="#f59e0b" stroke-width="3"/>
+      <text x="714" y="36" fill="#e6ecf5" font-size="11" font-family="ui-monospace, monospace">Dmg (1.25)</text>
+
+      <text x="146" y="66" fill="#a7b4c9" font-size="11" text-anchor="middle">palier 0</text>
+      <text x="278" y="66" fill="#a7b4c9" font-size="11" text-anchor="middle">palier 1</text>
+      <text x="430" y="66" fill="#a7b4c9" font-size="11" text-anchor="middle">palier 2</text>
+      <text x="581" y="66" fill="#a7b4c9" font-size="11" text-anchor="middle">palier 3</text>
+      <text x="723" y="66" fill="#a7b4c9" font-size="11" text-anchor="middle">palier 4</text>
+    </svg>
+  </div>
+  <figcaption>Les deux facteurs d'acte. Les traits verticaux marquent les frontières de paliers : à
+  l'intérieur d'un palier la pente est douce, entre deux paliers c'est une marche.</figcaption>
+</figure>
+
+<p>Les ratios d'un acte au suivant confirment l'alternance : <strong>×1,05</strong> (PV) à l'intérieur
+d'un palier, <strong>×1,2857</strong> (soit 1,35 / 1,05) au changement de palier. Pour les dégâts :
+<strong>×1,03</strong> puis <strong>×1,2136</strong> (1,25 / 1,03).</p>
+
+<h3>Pourquoi l'acte a été retiré de <code>getEnemyLevel</code></h3>
+
+<p>Le commentaire de <code>getHpActFactor</code> le dit sans détour :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/encounter_system.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Combined act factor for HP: a geometric jump every 2 acts, plus a gentle
+  /// ramp that resets each bracket. Replaces the old direct `(1 + 0.35*(act-1))`
+  /// term, which double-counted the act inside `enemyLevel` as well.</pre>
+</div>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/encounter_system.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Calculates the enemy level based on player level and node type only.
+  /// Act no longer contributes here — it is handled exclusively by
+  /// [getHpActFactor]/[getDamageActFactor] to avoid double-counting.
+  static int getEnemyLevel({
+    required int playerLevel,
+    required bool isBoss,
+    required bool isElite,
+  }) {</pre>
+</div>
+
+<p>Le problème corrigé était un <strong>double comptage</strong>. Dans l'ancienne version, l'acte
+intervenait à deux endroits <em>multiplicatifs</em> :</p>
+
+<ol>
+  <li>dans <code>enemyLevel</code>, qui incluait un terme d'acte, et qui alimente ensuite le facteur
+  <code>(1 + 0,06 × (niveau − 1))</code> ;</li>
+  <li>dans le facteur d'acte direct <code>(1 + 0,35 × (acte − 1))</code>.</li>
+</ol>
+
+<p>Les deux contributions se multipliaient. À l'acte 5, on ne payait pas « le prix de l'acte 5 » mais
+« le prix de l'acte 5 au carré, en version atténuée » — une explosion silencieuse de la difficulté qui
+ne se voyait dans aucune des deux formules prises isolément. La correction sépare proprement les
+responsabilités :</p>
+
+<div class="memo">
+  <div class="card"><h5><code>getEnemyLevel</code></h5><p>Ne dépend que du <strong>niveau du joueur</strong>
+  et du <strong>type de nœud</strong>. Plus aucune trace de l'acte.</p></div>
+  <div class="card"><h5><code>getHpActFactor</code> / <code>getDamageActFactor</code></h5>
+  <p>Seul endroit du code où l'acte influence les statistiques d'un ennemi.</p></div>
+</div>
+
+<div class="box ok">
+  <div class="box-title">Bonne pratique — une variable, un chemin</div>
+  <p>Quand une même entrée (ici l'acte) alimente deux facteurs qui se multiplient ensuite, la courbe
+  réelle est le produit des deux et devient impossible à raisonner. La règle à retenir :
+  <strong>chaque variable de difficulté ne doit avoir qu'un seul point d'entrée dans la chaîne de
+  calcul.</strong> Le commentaire du code documente explicitement cette décision — c'est ce qui permet
+  de ne pas réintroduire le bug six mois plus tard.</p>
+</div>
+
+<h2 id="s7">7. Niveau d'ennemi, multiplicateurs finaux et boss</h2>
+
+<h3>Le niveau de l'ennemi</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/encounter_system.dart</span><span class="lang">dart</span></div>
+  <pre>    int nodeModifier = 0;
+    if (isBoss) {
+      nodeModifier = 2;
+    } else if (isElite) {
+      nodeModifier = 1;
+    }
+    return max(1, playerLevel + nodeModifier);</pre>
+</div>
+
+<p><code>getEnemyLevel = max(1, playerLevel + nodeModifier)</code>, avec <strong>+2 pour un boss</strong>,
+<strong>+1 pour une élite</strong>, 0 sinon. Le <code>max(1, ...)</code> est une garde défensive : les
+modificateurs étant positifs ou nuls et <code>playerLevel</code> valant au moins 1, elle ne se déclenche
+jamais en pratique.</p>
+
+<h3>Les deux multiplicateurs</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/encounter_system.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Calculates the HP scaling multiplier.
+  static double getHpMultiplier({
+    required int enemyLevel,
+    required int act,
+    required bool isBoss,
+    required bool isElite,
+    bool isCustomBoss = false,
+  }) {
+    final double bossHpMultiplier = isBoss ? (isCustomBoss ? 1.0 : 3.0) : (isElite ? 1.5 : 1.0);
+    return (1.0 + 0.06 * (enemyLevel - 1)) *
+        getHpActFactor(act) *
+        bossHpMultiplier;
+  }
+
+  /// Calculates the damage scaling multiplier.
+  static double getDamageMultiplier({
+    required int enemyLevel,
+    required int act,
+    required bool isBoss,
+    required bool isElite,
+    bool isCustomBoss = false,
+  }) {
+    final double bossDmgMultiplier = isBoss ? (isCustomBoss ? 1.0 : 3.0) : (isElite ? 1.5 : 1.0);
+    return (1.0 + 0.04 * (enemyLevel - 1)) *
+        getDamageActFactor(act) *
+        bossDmgMultiplier;
+  }</pre>
+</div>
+
+<p>Chaque multiplicateur est un produit de trois facteurs indépendants :</p>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 820 300" width="820" role="img" aria-label="Décomposition de getHpMultiplier en trois facteurs multipliés : terme de niveau, facteur d'acte et multiplicateur de nœud">
+      <rect x="0" y="0" width="820" height="300" fill="#0e1524"/>
+
+      <rect x="20" y="60" width="220" height="70" rx="8" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="130" y="88" fill="#a78bfa" font-size="12" text-anchor="middle">terme de niveau</text>
+      <text x="130" y="112" fill="#e6ecf5" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">1 + 0.06 × (niv − 1)</text>
+
+      <text x="258" y="103" fill="#e6ecf5" font-size="20" text-anchor="middle">×</text>
+
+      <rect x="278" y="60" width="220" height="70" rx="8" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="388" y="88" fill="#22d3ee" font-size="12" text-anchor="middle">facteur d'acte</text>
+      <text x="388" y="112" fill="#e6ecf5" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">getHpActFactor(act)</text>
+
+      <text x="516" y="103" fill="#e6ecf5" font-size="20" text-anchor="middle">×</text>
+
+      <rect x="536" y="60" width="244" height="70" rx="8" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="658" y="84" fill="#f59e0b" font-size="12" text-anchor="middle">multiplicateur de nœud</text>
+      <text x="658" y="105" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">boss 3.0 · élite 1.5 · 1.0</text>
+      <text x="658" y="121" fill="#f87171" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">boss custom → 1.0</text>
+
+      <rect x="240" y="190" width="340" height="60" rx="10" fill="#16241f" stroke="#34d399" stroke-width="2"/>
+      <text x="410" y="216" fill="#34d399" font-size="14" text-anchor="middle" font-family="ui-monospace, monospace">getHpMultiplier</text>
+      <text x="410" y="236" fill="#a7b4c9" font-size="11" text-anchor="middle">appliqué à maxHp, puis arrondi (.round())</text>
+
+      <path d="M130 130 C 130 168, 300 160, 330 190" fill="none" stroke="#3a4966" stroke-width="2" marker-end="url(#c11-a4)"/>
+      <path d="M388 130 L400 190" fill="none" stroke="#3a4966" stroke-width="2" marker-end="url(#c11-a4)"/>
+      <path d="M658 130 C 658 168, 510 160, 480 190" fill="none" stroke="#3a4966" stroke-width="2" marker-end="url(#c11-a4)"/>
+
+      <text x="410" y="278" fill="#a7b4c9" font-size="11" text-anchor="middle">getDamageMultiplier suit la même structure : 0.04 par niveau, getDamageActFactor(act), mêmes multiplicateurs de nœud</text>
+
+      <defs><marker id="c11-a4" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0 0 L8 4 L0 8 z" fill="#3a4966"/></marker></defs>
+    </svg>
+  </div>
+  <figcaption>Les trois facteurs de <code>getHpMultiplier</code>. Le terme de niveau progresse de 6 %
+  par niveau pour les PV, de 4 % pour les dégâts.</figcaption>
+</figure>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Facteur</th><th>PV</th><th>Dégâts</th></tr></thead>
+<tbody>
+<tr><td>Niveau</td><td><code>1 + 0,06 × (niveau − 1)</code></td><td><code>1 + 0,04 × (niveau − 1)</code></td></tr>
+<tr><td>Acte</td><td><code>getHpActFactor(act)</code></td><td><code>getDamageActFactor(act)</code></td></tr>
+<tr><td>Nœud</td><td colspan="2">boss 3.0 (ou 1.0 si boss custom) · élite 1.5 · normal 1.0</td></tr>
+</tbody>
+</table></div>
+
+<p>Les PV grimpent plus vite que les dégâts sur les deux axes (6 % contre 4 % par niveau ; 1,35 contre
+1,25 par palier d'acte). C'est cohérent avec l'intention notée à la section 6 : allonger les combats
+plutôt que les rendre expéditifs.</p>
+
+<h3>Exemple : le même orc sur quatre types de nœud</h3>
+
+<p>Joueur de niveau 3, acte 1 (les facteurs d'acte valent donc 1,0, ce qui isole l'effet du nœud) :</p>
+
+<div class="table-wrap"><table>
+<thead><tr>
+  <th>Nœud</th><th><code>enemyLevel</code></th><th><code>getHpMultiplier</code></th>
+  <th><code>getDamageMultiplier</code></th><th>PV de l'orc</th><th>Dégâts de l'orc</th><th>CR de l'orc</th>
+</tr></thead>
+<tbody>
+<tr><td>Normal</td><td>3</td><td>1,12 × 1,0 × 1,0 = 1,12</td><td>1,08</td><td>56</td><td>9</td><td>79,70</td></tr>
+<tr><td>Élite</td><td>4</td><td>1,18 × 1,0 × 1,5 = 1,77</td><td>1,68</td><td>89</td><td>13</td><td>97,15</td></tr>
+<tr><td>Boss générique</td><td>5</td><td>1,24 × 1,0 × 3,0 = 3,72</td><td>3,48</td><td>186</td><td>28</td><td>155,90</td></tr>
+<tr><td>Boss « custom »</td><td>5</td><td>1,24 × 1,0 × 1,0 = 1,24</td><td>1,16</td><td>62</td><td>9</td><td>81,20</td></tr>
+</tbody>
+</table></div>
+
+<div class="box rule">
+  <div class="box-title">Règle du jeu — deux façons de faire un boss</div>
+  <p>Un <strong>boss générique</strong> est un ennemi ordinaire du bestiaire, gonflé ×3 en PV et en
+  dégâts. Un <strong>boss custom</strong> (identifiant préfixé <code>boss_</code>) est un ennemi dont les
+  statistiques sont <em>déjà écrites pour être un boss</em> dans le JSON : le multiplicateur ×3 est donc
+  neutralisé à 1,0 pour ne pas l'appliquer deux fois. Le boss custom garde en revanche son bonus de
+  niveau (+2) et son facteur d'acte.</p>
+</div>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/combat_controller.dart</span><span class="lang">dart</span></div>
+  <pre>    final List&lt;EnemyInstance&gt; allEnemyInstances = [];
+    for (var data in enemyDataList) {
+      final bool isCustomBoss = data.id.startsWith('boss_');
+      final double enemyHpMultiplier = EncounterSystem.getHpMultiplier(
+        enemyLevel: enemyLevel,
+        act: act,
+        isBoss: isBoss,
+        isElite: isElite,
+        isCustomBoss: isCustomBoss,
+      );
+      // ...
+      final stats = EntityStats(
+        maxPv: (data.maxHp * enemyHpMultiplier).round(),
+        currentPv: (data.maxHp * enemyHpMultiplier).round(),
+        armure: 0,
+        attaque: (data.baseDamage * enemyDamageMultiplier).round(),
+        level: enemyLevel,
+        critChance: data.critChance,
+      );
+
+      var enemy = EnemyInstance(data: data, stats: stats, isBoss: isBoss);
+      allEnemyInstances.add(enemy);
+    }</pre>
+</div>
+
+<p>Trois choses à retenir de ce bloc. D'abord, <code>isCustomBoss</code> est déduit du seul préfixe de
+l'identifiant — il n'existe aucun champ <code>isBoss</code> dans le JSON. Ensuite, le
+<code>critChance</code> est recopié tel quel : il n'est jamais multiplié, ni par le niveau, ni par
+l'acte. Enfin, <code>level: enemyLevel</code> est stocké sur les stats de l'instance — c'est ce champ
+que <code>RewardController</code> relira pour calculer l'XP et l'or (section 1).</p>
+
+<div class="box danger">
+  <div class="box-title">Dette technique — la branche « boss custom » est câblée mais non alimentée</div>
+  <p>Aucun des quatre ennemis de <code>assets/data/enemies.json</code> n'a d'identifiant préfixé
+  <code>boss_</code> : <code>isCustomBoss</code> vaut donc <strong>toujours <code>false</code></strong>
+  aujourd'hui. Dans le même esprit, le paramètre <code>bossEnemyId</code> traverse
+  <code>game_screen.dart</code> → <code>initializeCombat</code> → <code>generateEnemiesForLevel</code>
+  sans jamais être lu dans le corps de cette dernière ; et <code>MapNodeGenerator</code> déclare
+  <code>String? bossEnemyId;</code> sans jamais l'affecter. Toute la plomberie des boss scriptés existe,
+  seules les données manquent. Ce n'est pas un bug — c'est une fonctionnalité à moitié posée, à
+  connaître avant de « nettoyer » ces paramètres apparemment morts.</p>
+</div>
+
+<h3>Le déblocage des tiers</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/encounter_system.dart</span><span class="lang">dart</span></div>
+  <pre>  static const int _tierUnlockBracketSize = 5;
+  static const int maxTierAuthored = 3;
+
+  /// Highest enemy tier available at this act: tier 1 through act 5, tier 2
+  /// from act 6, tier 3 from act 11, capped at [maxTierAuthored].
+  static int getUnlockedTier(int act) {
+    final unlocked = 1 + ((act - 1) / _tierUnlockBracketSize).floor();
+    return unlocked &gt; maxTierAuthored ? maxTierAuthored : unlocked;
+  }</pre>
+</div>
+
+<p><code>getUnlockedTier(act) = min(3, 1 + ((act − 1) / 5).floor())</code>. C'est la même formule de pas
+qu'à la section 5, avec un pas de 5 et un plafond.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Actes</th><th>Tier maximum</th><th>Bestiaire accessible</th></tr></thead>
+<tbody>
+<tr><td>1 à 5</td><td>1</td><td>Slime, Gobelin</td></tr>
+<tr><td>6 à 10</td><td>2</td><td>Slime, Gobelin, Squelette</td></tr>
+<tr><td>11 et au-delà</td><td>3</td><td>Slime, Gobelin, Squelette, Orc</td></tr>
+</tbody>
+</table></div>
+
+<p>Le plafond <code>maxTierAuthored = 3</code> est le garde-fou : sans lui, l'acte 16 débloquerait un
+tier 4 qui n'existe dans aucun fichier. La constante dit littéralement « le tier le plus élevé qui a été
+<em>écrit</em> ». Le jour où un ennemi tier 4 est ajouté au JSON, il suffit de passer la constante à 4.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/encounter_system.dart</span><span class="lang">dart</span></div>
+  <pre>    // Restrict the candidate pool to enemies whose tier is unlocked at this
+    // act. Fall back to the unfiltered list if that would leave nothing to
+    // pick from (e.g. only high-tier content was passed in for a low act).
+    final int unlockedTier = getUnlockedTier(act);
+    final eligibleEnemies =
+        availableEnemies.where((enemy) =&gt; enemy.tier &lt;= unlockedTier).toList();
+    final List&lt;EnemyData&gt; enemyPool =
+        eligibleEnemies.isNotEmpty ? eligibleEnemies : availableEnemies;</pre>
+</div>
+
+<div class="box warn">
+  <div class="box-title">Piège — le filtre de tier peut être annulé</div>
+  <p>Si le filtrage vide complètement le pool, le code <strong>revient à la liste non filtrée</strong>
+  (<code>eligibleEnemies.isNotEmpty ? eligibleEnemies : availableEnemies</code>). Autrement dit, le
+  verrou de tier n'est pas une garantie absolue : c'est une préférence. Si un jour un fichier ne
+  contenait que des ennemis tier 3, ils apparaîtraient dès l'acte 1. La logique est la même que pour le
+  repli de la section 4 : mieux vaut un combat trop dur qu'un combat vide et non terminable.</p>
+</div>
+
+<h3>Comment ces paramètres arrivent jusqu'au système</h3>
+
+<p>Toute la chaîne part de l'écran de combat, qui lit l'état Riverpod
+<span class="pill r">Riverpod</span> et le transmet au contrôleur :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>      ref
+          .read(combatProvider.notifier)
+          .initializeCombat(
+            runState.currentLevel,
+            runState.currentNodeType,
+            gameData.enemies,
+            playerLevel: runState.heroStats.level,
+            act: runState.act,
+            playerMaxHp: runState.heroStats.maxPv,
+            playerAttaque: runState.heroStats.attaque,
+            playerMaxMana: runState.heroStats.maxMana,
+            playerRelicsCount: ref.read(inventoryProvider).relics.length,
+            playerCardsCount: ref.read(deckProvider).masterDeck.length,
+            bossEnemyId: bossEnemyId,
+          );</pre>
+</div>
+
+<p>Trois providers différents sont sollicités : <code>runProvider</code> pour le héros et l'acte,
+<code>inventoryProvider</code> pour le <em>nombre</em> de reliques, <code>deckProvider</code> pour la
+<em>taille</em> du deck maître. On retrouve exactement les cinq entrées de <code>playerPower</code>.
+Notez le détail : c'est <code>masterDeck</code> qui est mesuré, c'est-à-dire le deck complet, pas la
+main ni la pioche du combat en cours.</p>
+
+<p>Enfin, le drapeau <code>isBoss</code> a une porte dérobée qu'il faut connaître :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/encounter_system.dart</span><span class="lang">dart</span></div>
+  <pre>    final bool isBoss = nodeType == MapNodeType.boss || (nodeType == null &amp;&amp; level &gt; 0 &amp;&amp; level % 10 == 0);
+    final bool isElite = nodeType == MapNodeType.elite;</pre>
+</div>
+
+<p>Si aucun <code>nodeType</code> n'est fourni (<code>null</code>), le système retombe sur une règle
+historique : tout niveau multiple de 10 est un boss. En jeu, <code>game_screen.dart</code> transmet
+toujours <code>runState.currentNodeType</code>, donc cette branche ne sert qu'aux appels directs — tests
+ou outillage.</p>
+
+<h2 id="s8">8. Lire la difficulté en direct : <code>CombatDebugLogger</code></h2>
+
+<p>Une formule à sept variables est invérifiable à l'œil nu. Le projet embarque donc un traceur dédié :
+<code>lib/game/services/combat_debug_logger.dart</code>. Il n'a qu'une méthode statique,
+<code>logCombatInitialization</code>, appelée par <code>initializeCombat</code> juste avant
+l'instanciation des ennemis.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/services/combat_debug_logger.dart</span><span class="lang">dart</span></div>
+  <pre>    if (!kDebugMode) return;
+
+    // ANSI Escape codes
+    const reset = '\x1B[0m';
+    const bold = '\x1B[1m';
+    const cyan = '\x1B[36m';
+    const yellow = '\x1B[33m';
+    const green = '\x1B[32m';
+    const magenta = '\x1B[35m';
+    const red = '\x1B[31m';
+
+    final nodeTypeString = nodeType?.name ?? 'normal';
+
+    final buffer = StringBuffer();
+
+    // Helper to build a line with fixed width of 76 characters inside borders
+    String buildLine(String content, {String prefix = '', String suffix = ''}) {
+      const totalWidth = 76;
+      final paddedContent = content.padRight(totalWidth);
+      return '$cyan│$reset $prefix$paddedContent$suffix $cyan│$reset';
+    }</pre>
+</div>
+
+<p>Quatre points de conception dans ces quinze lignes :</p>
+
+<ul>
+  <li><strong><code>if (!kDebugMode) return;</code></strong> — <code>kDebugMode</code> vient de
+  <code>package:flutter/foundation.dart</code>. C'est une constante de compilation : en build release,
+  le compilateur Dart élimine tout le corps de la méthode (<em>tree shaking</em>). Le coût en
+  production est nul, y compris celui de construire les chaînes de caractères.</li>
+  <li><strong>Les codes ANSI</strong> colorent la sortie dans un vrai terminal. Dans la console de
+  l'IDE, ils s'affichent parfois tels quels (<code>\x1B[36m</code>) : c'est normal, ce n'est pas un
+  bug.</li>
+  <li><strong><code>StringBuffer</code></strong> plutôt que des concaténations : un seul
+  <code>debugPrint</code> à la fin, donc un bloc atomique qui ne sera pas entrelacé avec d'autres
+  logs.</li>
+  <li><strong><code>buildLine</code></strong> encadre chaque ligne d'un cadre ASCII de 76 caractères
+  utiles. Attention : <code>padRight</code> complète mais ne <em>tronque</em> pas. Les deux lignes de
+  formules les plus longues dépassent le cadre — le bord droit se décale. Cosmétique, mais surprenant
+  la première fois.</li>
+</ul>
+
+<h3>Les quatre sections du rapport</h3>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Section</th><th>Contenu</th></tr></thead>
+<tbody>
+<tr><td><code>PLAYER STATS</code></td><td>Niveau, acte, type de nœud, puis les cinq entrées de <code>playerPower</code>.</td></tr>
+<tr><td><code>FORMULAS &amp; CALCULATIONS</code></td><td>Pour chaque grandeur : la formule littérale, puis la même ligne avec les valeurs substituées et le résultat.</td></tr>
+<tr><td><code>SCALING DETAILS</code></td><td><code>enemyLevel</code>, <code>hpMultiplier</code>, <code>damageMultiplier</code>, <code>maxEnemies</code>.</td></tr>
+<tr><td><code>GENERATED ENEMIES</code></td><td>Une ligne par ennemi retenu : nom anglais, tier, PV, dégâts, Combat Rating.</td></tr>
+</tbody>
+</table></div>
+
+<p>La section <code>FORMULAS</code> a une particularité pédagogique rare : elle imprime la formule
+<em>et</em> sa substitution. Exemple pour <code>playerPower</code> :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/services/combat_debug_logger.dart</span><span class="lang">dart</span></div>
+  <pre>    // PlayerPower
+    buffer.writeln(buildLine('  • PlayerPower formula: maxHP + (attaque * 10) + (maxMana * 15) + (relicsCount * 5) + (cardsCount * 2)'));
+    final pPowerCalc = '    $playerMaxHp + ($playerAttaque * 10) + ($playerMaxMana * 15) + ($playerRelicsCount * 5) + ($playerCardsCount * 2) = $playerPower';
+    buffer.writeln(buildLine(pPowerCalc, prefix: green, suffix: reset));</pre>
+</div>
+
+<h3>Le logger ne recalcule rien (ou presque)</h3>
+
+<p>Le logger reçoit les sept valeurs de budget en paramètres — il ne les dérive pas. C'est
+<code>initializeCombat</code> qui appelle <code>calculateBudget</code> une seule fois et transmet le
+record :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/combat_controller.dart</span><span class="lang">dart</span></div>
+  <pre>    // Detailed debug prints with mathematical calculations and formulas.
+    // Delegates to EncounterSystem.calculateBudget so the displayed values
+    // can never drift from the ones actually used to generate enemyDataList.
+    final budget = EncounterSystem.calculateBudget(
+      playerLevel: playerLevel,
+      act: act,
+      // ...
+      isBoss: isBoss,
+      isElite: isElite,
+    );
+
+    CombatDebugLogger.logCombatInitialization(
+      // ...
+      playerPower: budget.playerPower,
+      expectedPower: budget.expectedPower,
+      baseBudget: budget.baseBudget,
+      powerRatio: budget.powerRatio,
+      powerModifier: budget.powerModifier,
+      nodeMultiplier: budget.nodeMultiplier,
+      finalBudget: budget.finalBudget,
+      // ...
+    );</pre>
+</div>
+
+<div class="box ok">
+  <div class="box-title">Bonne pratique — un log qui ne peut pas mentir</div>
+  <p>La tentation classique est de recopier les formules dans le logger « pour éviter de trimballer
+  sept paramètres ». Six mois plus tard, quelqu'un change <code>0.5</code> en <code>0.6</code> dans
+  <code>EncounterSystem</code> et le log affiche sereinement l'ancienne valeur — on débogue alors une
+  formule qui n'est plus exécutée. Ici, la valeur affichée <strong>est</strong> la valeur utilisée.</p>
+</div>
+
+<h3>Une exception à cette règle : les colonnes HP et Dmg</h3>
+
+<p>La section <code>GENERATED ENEMIES</code> mélange deux sources. Le Combat Rating est
+<em>recalculé</em> sur place par <code>EncounterSystem.calculateCombatRating</code>, tandis que HP et
+Dmg réutilisent les multiplicateurs passés en paramètre :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/services/combat_debug_logger.dart</span><span class="lang">dart</span></div>
+  <pre>    for (var data in enemyDataList) {
+      final rating = EncounterSystem.calculateCombatRating(
+        data: data,
+        enemyLevel: enemyLevel,
+        act: act,
+        isBoss: isBoss,
+        isElite: isElite,
+      );
+      final enemyLine = '  - Enemy: ${data.nameEn} (Tier: ${data.tier}), HP: ${(data.maxHp * hpMultiplier).round()}, Dmg: ${(data.baseDamage * damageMultiplier).round()}, CR: $rating';
+      buffer.writeln(buildLine(enemyLine, prefix: magenta, suffix: reset));
+    }</pre>
+</div>
+
+<p>Or <code>calculateCombatRating</code> commence par
+<code>final bool isCustomBoss = data.id.startsWith('boss_');</code> et propage ce drapeau aux deux
+multiplicateurs. Les <code>hpMultiplier</code> et <code>damageMultiplier</code> reçus en paramètre,
+eux, viennent de ce calcul dans <code>initializeCombat</code> :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/combat_controller.dart</span><span class="lang">dart</span></div>
+  <pre>    final double hpMultiplier = EncounterSystem.getHpMultiplier(
+      enemyLevel: enemyLevel,
+      act: act,
+      isBoss: isBoss,
+      isElite: isElite,
+    );
+
+    final double damageMultiplier = EncounterSystem.getDamageMultiplier(
+      enemyLevel: enemyLevel,
+      act: act,
+      isBoss: isBoss,
+      isElite: isElite,
+    );</pre>
+</div>
+
+<div class="box danger">
+  <div class="box-title">Point d'attention — les colonnes HP et Dmg ignorent <code>isCustomBoss</code></div>
+  <p>L'appel ci-dessus <strong>ne passe pas</strong> <code>isCustomBoss</code> : le paramètre garde sa
+  valeur par défaut <code>false</code>, donc le multiplicateur boss de <strong>3.0</strong> est
+  conservé. Ces deux <code>double</code> servent uniquement au logger. Juste en dessous, la boucle qui
+  crée réellement les <code>EnemyInstance</code> recalcule <code>enemyHpMultiplier</code> et
+  <code>enemyDamageMultiplier</code> <em>avec</em> <code>isCustomBoss</code>.</p>
+  <p>Sur un nœud boss contenant un ennemi préfixé <code>boss_</code> (joueur niveau 3, acte 1, ennemi
+  à 50 PV / 8 dégâts / tier 3 / 15 % crit), la ligne de log afficherait :
+  <code>HP: 186, Dmg: 28, CR: 81.2</code> — alors que l'ennemi réellement créé aurait
+  <strong>62 PV et 9 dégâts</strong>. Les colonnes HP et Dmg sont trois fois trop grandes, tandis que
+  la colonne CR, elle, est correcte. Les trois chiffres d'une même ligne ne décrivent pas le même
+  ennemi.</p>
+  <p>Le bug est <strong>latent</strong> : aucun ennemi de <code>assets/data/enemies.json</code> ne
+  porte aujourd'hui un identifiant <code>boss_</code>, donc les deux calculs coïncident. Il se
+  déclenchera au premier boss scripté ajouté. Correctif : dériver <code>isCustomBoss</code> par ennemi
+  dans la boucle du logger, comme le fait déjà <code>calculateCombatRating</code>.</p>
+</div>
+
+<h3>Un rapport complet, reconstitué</h3>
+
+<p>Voici ce qu'affiche la console pour l'exemple de la section 2 — niveau 3, acte 2, 92 PV, 3 attaque,
+4 mana, 2 reliques, 14 cartes, nœud élite — avec un gobelin tiré par la boucle de composition. Les
+codes ANSI sont retirés pour la lisibilité ; les nombres sont les <code>double</code> Dart bruts, non
+formatés.</p>
+
+<div class="code" data-lang="text">
+  <div class="code-head"><span class="path">sortie console (flutter run, mode debug)</span><span class="lang">text</span></div>
+  <pre>┌──────────────────────────────────────────────────────────────────────────────┐
+│ ⚔️  COMBAT INITIALIZATION MATHEMATICS                                        │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ 👤 PLAYER STATS:                                                             │
+│   • Level: 3    Act: 2    Node Type: elite                                   │
+│   • Max HP: 92   Attack: 3    Max Mana: 4    Relics: 2    Cards: 14          │
+│                                                                              │
+│ 📊 FORMULAS &amp; CALCULATIONS:                                                  │
+│   • PlayerPower formula: maxHP + (attaque * 10) + (maxMana * 15) + (relicsCount * 5) + (cardsCount * 2) │
+│     92 + (3 * 10) + (4 * 15) + (2 * 5) + (14 * 2) = 220.0                    │
+│   • ExpectedPower formula: 145 + [(playerLevel - 1) * 15] + [(act - 1) * 20] │
+│     145 + [(3 - 1) * 15] + [(2 - 1) * 20] = 195.0                            │
+│   • BaseBudget formula: 40 + [(playerLevel - 1) * 10] + [(act - 1) * 25]     │
+│     40 + [(3 - 1) * 10] + [(2 - 1) * 25] = 85.0                              │
+│   • PowerRatio calculation: PlayerPower / ExpectedPower                      │
+│     220.0 / 195.0 = 1.1282051282051282                                       │
+│   • PowerModifier formula: 1.0 + (PowerRatio - 1.0) * 0.5                    │
+│     1.0 + (1.1282051282051282 - 1.0) * 0.5 = 1.064102564102564               │
+│   • NodeMultiplier: 1.5 (Boss = 2.0, Elite = 1.5, Normal = 1.0)              │
+│   • FinalBudget formula: (BaseBudget * PowerModifier * NodeMultiplier) + [(act - 1) * 10] │
+│     (85.0 * 1.064102564102564 * 1.5) + [(2 - 1) * 10] = 145.6730769230769    │
+│                                                                              │
+│ ⚙️  SCALING DETAILS:                                                         │
+│   • Enemy Level: max(1, playerLevel + nodeModifier) = 4                      │
+│   • HP scaling multiplier: 1.8584999999999998                                │
+│   • Damage scaling multiplier: 1.7304000000000004                            │
+│   • Max enemies cap (act-scaled): 1                                          │
+│                                                                              │
+│ 👾 GENERATED ENEMIES (Count: 1):                                             │
+│   - Enemy: Goblin (Tier: 1), HP: 52, Dmg: 9, CR: 47.8                        │
+└──────────────────────────────────────────────────────────────────────────────┘</pre>
+</div>
+
+<p>Tout se recoupe avec les sections précédentes. <code>enemyLevel</code> = 3 + 1 (élite) = 4.
+<code>hpMultiplier</code> = (1 + 0,06 × 3) × 1,05 × 1,5 = 1,18 × 1,05 × 1,5 ≈ 1,8585. Le gobelin passe
+donc de 28 à <code>round(28 × 1,8585)</code> = 52 PV, et de 5 à <code>round(5 × 1,7304)</code> = 9
+dégâts. Son CR vaut 15 + 52/4 + 9 × 2 × 1,10 = 15 + 13 + 19,8 = 47,8. Et
+<code>maxEnemies</code> = 1, parce qu'une élite à l'acte 2 n'a droit qu'à un seul ennemi : la boucle
+s'arrête après un achat, laissant 97,87 points de budget inutilisés.</p>
+
+<div class="box warn">
+  <div class="box-title">Piège — les flottants bruts</div>
+  <p><code>1.8584999999999998</code> au lieu de 1,8585, <code>145.6730769230769</code> au lieu de
+  145,673077 : le logger imprime les <code>double</code> sans formatage. Ce n'est pas une erreur de
+  calcul, c'est la représentation binaire IEEE 754. Ne cherchez pas de bug là-dedans — mais évitez de
+  comparer deux de ces valeurs avec <code>==</code> dans un test : utilisez
+  <code>closeTo(1.8585, 0.0001)</code>.</p>
+</div>
+
+<div class="box rule">
+  <div class="box-title">À retenir — la chaîne complète</div>
+  <p>Stats du joueur → <code>playerPower</code> → ratio à <code>expectedPower</code> → amortissement de
+  moitié → <code>baseBudget</code> × modificateur × multiplicateur de nœud + rampe d'acte =
+  <strong>budget</strong>. En face : bestiaire → filtre de tier → CR de chaque ennemi (tier, PV
+  scalés, dégâts scalés, critique) → boucle d'achat plafonnée par <code>maxEnemies</code> →
+  liste d'ennemis → instanciation avec les multiplicateurs de niveau, d'acte et de nœud → 5 actifs +
+  file d'attente. Une seule ligne de constante à changer suffit à déplacer toute la courbe.</p>
+</div>
+
+<div class="quiz">
+  <h2>Quiz — vérifiez vos acquis</h2>
+
+  <div class="q" data-answer="2">
+    <p class="q-text">1. Un joueur atteint un <code>powerRatio</code> de 1,40. Quel
+    <code>powerModifier</code> le système applique-t-il ?</p>
+    <ul class="q-opts">
+      <li>1,40 — le budget suit exactement la puissance du joueur</li>
+      <li>1,80 — l'écart est doublé pour compenser le sur-investissement</li>
+      <li>1,20 — seule la moitié de l'écart à la norme est répercutée</li>
+      <li>0,70 — le budget est divisé par deux pour rééquilibrer</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>powerModifier = 1.0 + (powerRatio - 1.0) * 0.5</code>
+    dans <code>calculateBudget</code>, soit 1 + 0,40 × 0,5 = 1,20. L'amortissement de moitié fait que le
+    sur-investissement reste rentable pour le joueur.</div>
+  </div>
+
+  <div class="q" data-answer="1">
+    <p class="q-text">2. À l'acte 1, face à un joueur de niveau 1, sur un nœud de combat normal, quel
+    est le Combat Rating du Squelette (22 PV, 8 dégâts, tier 2, 10 % de critique) ?</p>
+    <ul class="q-opts">
+      <li>41,5</li>
+      <li>53,1</li>
+      <li>56,1</li>
+      <li>75,9</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> les deux multiplicateurs valent 1,0 dans ce contexte,
+    donc <code>(2 × 15) + (22 / 4) + (8 × 2) × 1,10</code> = 30 + 5,5 + 17,6 = <strong>53,1</strong>.
+    Attention : le facteur de critique ne multiplie que le terme de dégâts, pas la somme entière.</div>
+  </div>
+
+  <div class="q" data-answer="0">
+    <p class="q-text">3. Combien d'ennemis au maximum un nœud <strong>élite</strong> peut-il générer à
+    l'acte 5 ?</p>
+    <ul class="q-opts">
+      <li>3</li>
+      <li>5</li>
+      <li>2</li>
+      <li>1</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>_maxEnemiesFromStep(5, 2) = 1 + ((5 - 1) / 2).floor()</code>
+    = 1 + 2 = <strong>3</strong>. Un combat normal en autoriserait 5 (pas de 1) et un boss 1 (pas de 5).</div>
+  </div>
+
+  <div class="q" data-answer="3">
+    <p class="q-text">4. Que vaut <code>getHpActFactor(4)</code> ?</p>
+    <ul class="q-opts">
+      <li>1,3500 — le palier 1 sans rampe</li>
+      <li>2,0500 — 1,35 + 0,05 × 4</li>
+      <li>1,8225 — 1,35 au carré</li>
+      <li>1,4175 — 1,35 × 1,05</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> l'acte 4 est dans le palier
+    <code>((4 - 1) / 2).floor()</code> = 1, en position <code>(4 - 1) % 2</code> = 1. Le facteur vaut
+    donc <code>pow(1.35, 1) × (1 + 1 × 0.05)</code> = 1,35 × 1,05 = <strong>1,4175</strong>.</div>
+  </div>
+
+  <div class="q" data-answer="2">
+    <p class="q-text">5. À partir de quel acte l'Orc Furieux (tier 3) peut-il apparaître, et pourquoi le
+    plafond <code>maxTierAuthored = 3</code> existe-t-il ?</p>
+    <ul class="q-opts">
+      <li>Acte 6 ; le plafond empêche les boss d'être trop forts</li>
+      <li>Acte 3 ; le plafond limite le nombre d'ennemis par combat</li>
+      <li>Acte 11 ; le plafond évite de débloquer un tier 4 qui n'existe dans aucun fichier de données</li>
+      <li>Acte 15 ; le plafond correspond au nombre d'actes du jeu</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>getUnlockedTier(act) = 1 + ((act - 1) / 5).floor()</code>
+    atteint 3 à l'acte 11. Sans le plafond, l'acte 16 renverrait 4 et le filtre
+    <code>enemy.tier &lt;= unlockedTier</code> attendrait un contenu tier 4 inexistant.</div>
+  </div>
+
+  <div class="q" data-answer="1">
+    <p class="q-text">6. Dans la section <code>GENERATED ENEMIES</code> du <code>CombatDebugLogger</code>,
+    quelle divergence existe entre les colonnes HP/Dmg et la colonne CR ?</p>
+    <ul class="q-opts">
+      <li>Aucune : les trois valeurs viennent du même appel à <code>calculateCombatRating</code></li>
+      <li>HP et Dmg utilisent des multiplicateurs calculés sans <code>isCustomBoss</code> (donc avec le ×3 boss), alors que le CR le prend en compte</li>
+      <li>Le CR est arrondi à l'entier alors que HP et Dmg restent des <code>double</code></li>
+      <li>HP et Dmg incluent le <code>nodeMultiplier</code> du budget, pas le CR</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>initializeCombat</code> calcule
+    <code>hpMultiplier</code> et <code>damageMultiplier</code> sans passer <code>isCustomBoss</code>
+    (valeur par défaut <code>false</code>, donc multiplicateur boss 3.0), alors que
+    <code>calculateCombatRating</code> le dérive lui-même de <code>data.id.startsWith('boss_')</code>.
+    Sur un boss custom, la ligne afficherait 186 PV au lieu des 62 réellement instanciés.</div>
+  </div>
+</div>
+
+<div class="pager">
+<a class="prev" href="ch10.html"><div class="dir">&#8592; Chapitre 10</div><div class="ttl">Le combat : boucle de tour, dégâts et effets</div></a>
+<a class="next" href="ch12.html"><div class="dir">Chapitre 12 &#8594;</div><div class="ttl">La carte du monde procédurale</div></a>
+</div>
+</div>
+</main>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,2304 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sauvegarde, localisation et tutoriel — Formation Hero's Draft</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<button class="menu-btn" aria-label="Menu">&#9776;</button>
+<div class="layout">
+<aside class="sidebar">
+  <a class="brand" href="index.html">
+    <div class="brand-title">HERO'S DRAFT</div>
+    <div class="brand-sub">Formation complète au projet Flutter</div>
+  </a>
+<nav class="nav">
+<div class="nav-part">Partie 0 — Démarrage</div>
+<a href="ch01.html"><span class="num">01</span><span>Vue d&#x27;ensemble : qu&#x27;est-ce que Hero&#x27;s Draft ?</span></a>
+<div class="nav-part">Partie 1 — Les fondations techniques</div>
+<a href="ch02.html"><span class="num">02</span><span>Dart, le langage — l&#x27;essentiel pour ce projet</span></a>
+<a href="ch03.html"><span class="num">03</span><span>Flutter — widgets, arbre et navigation</span></a>
+<a href="ch04.html"><span class="num">04</span><span>Riverpod — l&#x27;état partagé du jeu</span></a>
+<a href="ch05.html"><span class="num">05</span><span>Flame — le moteur de rendu du combat</span></a>
+<div class="nav-part">Partie 2 — L&#x27;architecture du projet</div>
+<a href="ch06.html"><span class="num">06</span><span>L&#x27;architecture en quatre couches</span></a>
+<a href="ch07.html"><span class="num">07</span><span>La couche de données : un jeu 100 % data-driven</span></a>
+<div class="nav-part">Partie 3 — Les règles du jeu</div>
+<a href="ch08.html"><span class="num">08</span><span>Le héros : stats, classes, passifs et progression</span></a>
+<a href="ch09.html"><span class="num">09</span><span>Les cartes et le deck</span></a>
+<a href="ch10.html"><span class="num">10</span><span>Le combat : boucle de tour, dégâts et effets</span></a>
+<a href="ch11.html"><span class="num">11</span><span>Les ennemis et la courbe de difficulté</span></a>
+<a href="ch12.html"><span class="num">12</span><span>La carte du monde procédurale</span></a>
+<a href="ch13.html"><span class="num">13</span><span>Les reliques et le système de déclencheurs</span></a>
+<a href="ch14.html"><span class="num">14</span><span>L&#x27;économie : or, boutique, forge et fusion</span></a>
+<a href="ch15.html"><span class="num">15</span><span>Récompenses, chance et probabilités</span></a>
+<a href="ch16.html"><span class="num">16</span><span>Événements, repos et autel des reliques</span></a>
+<div class="nav-part">Partie 4 — L&#x27;interface et le rendu</div>
+<a href="ch17.html"><span class="num">17</span><span>Le pont Flame ↔ Riverpod : l&#x27;écran de combat</span></a>
+<a href="ch18.html"><span class="num">18</span><span>Composants Flame et game feel</span></a>
+<a href="ch19.html"><span class="num">19</span><span>Écrans, navigation et design system</span></a>
+<div class="nav-part">Partie 5 — Qualité et cycle de vie</div>
+<a href="ch20.html" class="active"><span class="num">20</span><span>Sauvegarde, localisation et tutoriel</span></a>
+<a href="ch21.html"><span class="num">21</span><span>Tests, outillage, dette technique et évolutions</span></a>
+</nav>
+</aside>
+<main class="main">
+<div class="content">
+<div class="chapter-kicker">Chapitre 20</div>
+<h1>Sauvegarde, localisation et tutoriel</h1>
+<p class="lede">Trois systèmes transverses qui ne touchent pas aux règles du jeu, mais sans lesquels
+une run ne survivrait pas à la fermeture de l'application.</p>
+
+<div class="toc">
+  <div class="toc-title">Dans ce chapitre</div>
+  <ol>
+    <li><a href="#s1">Le contrat de sauvegarde</a></li>
+    <li><a href="#s2">Les points de sauvegarde</a></li>
+    <li><a href="#s3">Le chargement tolérant aux pannes</a></li>
+    <li><a href="#s4">Le patron « re-résoudre plutôt que dupliquer »</a></li>
+    <li><a href="#s5">La localisation, système double</a></li>
+    <li><a href="#s6">Le tutoriel</a></li>
+    <li><a href="#s7">Ce que le tutoriel enseigne, et ses limites</a></li>
+  </ol>
+</div>
+
+<p>Les dix-neuf chapitres précédents ont décrit le jeu : les cartes, les combats, la carte du monde,
+la forge. Tout cela vit en mémoire, dans des <code>Notifier</code> Riverpod. Si l'utilisateur ferme
+l'application, tout disparaît. Ce chapitre s'occupe des trois systèmes qui entourent le jeu sans en
+faire partie :</p>
+
+<ul>
+  <li>la <strong>sauvegarde</strong>, qui écrit l'état de la run sur le disque et sait le relire même
+  quand le jeu a changé entre-temps ;</li>
+  <li>la <strong>localisation</strong>, qui existe en deux exemplaires — un pour l'interface, un pour
+  le contenu du jeu — et qui a de bonnes raisons de ne pas être unifiée ;</li>
+  <li>le <strong>tutoriel</strong>, un module complètement isolé qui rejoue le jeu en carton-pâte
+  sans jamais toucher à l'état réel.</li>
+</ul>
+
+<p>Ces trois systèmes ont un point commun : ils sont <em>transverses</em>. Ils traversent toutes les
+couches de l'application sans appartenir à aucune. C'est exactement le genre de code qui pourrit vite
+si on ne se donne pas des contrats clairs. Regardons ceux qu'a choisis Hero's Draft.</p>
+
+<h2 id="s1">1. Le contrat de sauvegarde</h2>
+
+<p>Le contrat tient en une phrase : <strong>une seule clé, un seul blob JSON, une seule version de
+schéma</strong>. Tout est dans <code>lib/services/save_service.dart</code>, et le fichier fait moins
+de 110 lignes.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/services/save_service.dart</span><span class="lang">dart</span></div>
+  <pre>class SaveService {
+  static const String _saveKey = 'run_save_v1';
+  static const int _schemaVersion = 1;</pre>
+</div>
+
+<p>Deux constantes, et le vocabulaire du chapitre est posé. <code>run_save_v1</code> est le nom de la
+clé dans <code>shared_preferences</code> — le petit magasin clé/valeur persistant que Flutter expose
+sur toutes les plateformes (il s'appuie sur <code>SharedPreferences</code> sur Android,
+<code>NSUserDefaults</code> sur iOS, un fichier JSON sur desktop, <code>localStorage</code> sur le
+web). <code>_schemaVersion = 1</code> est le numéro de format écrit <em>dans</em> le blob.</p>
+
+<p>Notez le <code>v1</code> présent <strong>deux fois</strong> : dans le nom de la clé et dans le
+champ <code>schemaVersion</code>. Ce n'est pas redondant, ce sont deux leviers différents. Changer le
+nom de clé (<code>run_save_v2</code>) rend l'ancienne sauvegarde invisible : elle reste sur le disque,
+elle n'est simplement plus lue. Changer <code>_schemaVersion</code> rend l'ancienne sauvegarde
+<em>détectable et rejetable</em> — on verra en section 3 que le code s'en sert pour l'effacer
+proprement.</p>
+
+<h3>Le payload complet</h3>
+
+<p>Voici la méthode <code>save</code> en entier. C'est le cœur du système : six clés, aucune logique
+conditionnelle, aucune exception attrapée.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/services/save_service.dart</span><span class="lang">dart</span></div>
+  <pre>  static Future&lt;void&gt; save(RefReader read) async {
+    final prefs = await SharedPreferences.getInstance();
+    final payload = {
+      'schemaVersion': _schemaVersion,
+      'savedAt': DateTime.now().toIso8601String(),
+      'run': read(runProvider).toJson(),
+      'deck': read(deckProvider).toJson(),
+      'inventory': read(inventoryProvider).toJson(),
+      'skills': read(skillProvider).toJson(),
+    };
+    await prefs.setString(_saveKey, jsonEncode(payload));
+  }</pre>
+</div>
+
+<p>Lisez-la comme une <strong>déclaration de ce qui compose une run</strong>. Quatre états, pas un de
+plus :</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Clé JSON</th><th>Provider lu</th><th>Contenu</th></tr></thead>
+<tbody>
+<tr><td><code>run</code></td><td><code>runProvider</code></td>
+    <td>Niveau, acte, statistiques du héros, classe, carte du monde complète, nœud courant, trait
+    passif, slots de forge, drafts en attente, cartes piochées par tour</td></tr>
+<tr><td><code>deck</code></td><td><code>deckProvider</code></td>
+    <td>Master deck plus les cinq piles (<code>drawPile</code>, <code>hand</code>,
+    <code>discardPile</code>, <code>exhaustPile</code>) et <code>reshuffleCount</code></td></tr>
+<tr><td><code>inventory</code></td><td><code>inventoryProvider</code></td>
+    <td>Or, reliques possédées, <code>bonusShopCards</code></td></tr>
+<tr><td><code>skills</code></td><td><code>skillProvider</code></td>
+    <td>Les deux cooldowns de compétence (<code>skill1Cooldown</code>, <code>skill2Cooldown</code>)</td></tr>
+<tr><td><code>schemaVersion</code></td><td>—</td><td>Constante <code>1</code></td></tr>
+<tr><td><code>savedAt</code></td><td>—</td><td>Horodatage ISO 8601 de l'écriture</td></tr>
+</tbody>
+</table></div>
+
+<div class="box warn">
+  <div class="box-title">Piège : <code>savedAt</code> est écrit mais jamais lu</div>
+  <p>Cherchez <code>savedAt</code> dans tout <code>lib/</code> : une seule occurrence, celle de
+  l'écriture. Aucun écran n'affiche « dernière sauvegarde : il y a 3 minutes », aucune logique ne
+  compare deux horodatages. C'est un champ de confort posé pour plus tard. Ce n'est pas grave — un
+  champ JSON inutilisé ne coûte rien — mais il ne faut pas croire qu'il fait quelque chose.</p>
+</div>
+
+<h3>Le typedef <code>RefReader</code></h3>
+
+<p>Un détail de signature mérite un arrêt. <code>save</code> ne prend pas un <code>Ref</code>
+Riverpod, ni un <code>WidgetRef</code> : elle prend un <code>RefReader</code>.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/services/save_service.dart</span><span class="lang">dart</span></div>
+  <pre>/// The subset of Ref/WidgetRef/ProviderContainer that SaveService needs:
+/// a plain synchronous provider read. Accepting this instead of `Ref`
+/// lets the same code run from a Notifier's `ref`, a widget's `WidgetRef`,
+/// and a bare `ProviderContainer` in tests — none of which share a common
+/// supertype in riverpod 2.6.1, but all of which expose this exact method.
+typedef RefReader = T Function&lt;T&gt;(ProviderListenable&lt;T&gt; provider);</pre>
+</div>
+
+<p>C'est un <strong>type de fonction générique</strong>. En Dart, <code>typedef</code> peut nommer une
+signature de fonction, et ici la signature est elle-même générique
+(<code>T Function&lt;T&gt;(...)</code>). Traduction : « n'importe quelle fonction qui, pour un type
+<code>T</code> quelconque, prend un provider de <code>T</code> et rend un <code>T</code> ».</p>
+
+<p>Le commentaire explique le vrai motif : dans Riverpod 2.6.1, <code>Ref.read</code>,
+<code>WidgetRef.read</code> et <code>ProviderContainer.read</code> ont exactement la même forme mais
+n'ont <em>aucun ancêtre commun</em>. Accepter le type le plus large aurait forcé à écrire trois
+surcharges. Accepter la <em>capacité</em> plutôt que l'objet règle le problème : à l'appel, on passe
+simplement <code>ref.read</code> (la méthode elle-même, sans parenthèses — un <em>tear-off</em>).</p>
+
+<div class="box ok">
+  <div class="box-title">Bonne pratique — dépendre d'une capacité, pas d'un type</div>
+  <p>Quand un service n'a besoin que d'<em>une</em> méthode d'un gros objet, prenez cette méthode en
+  paramètre plutôt que l'objet. Le service devient testable sans mock : dans un test, on lui passe
+  <code>container.read</code> et c'est terminé. C'est la version Dart du principe de ségrégation des
+  interfaces.</p>
+</div>
+
+<h3>Ce qui n'est PAS sauvegardé</h3>
+
+<p>Le tableau ci-dessus a une lecture en creux, bien plus intéressante. Le jeu déclare huit
+<code>NotifierProvider</code> majeurs ; <code>save</code> n'en lit que quatre. Les quatre autres sont
+volontairement absents.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Provider</th><th>Fichier</th><th>Sauvegardé ?</th><th>Pourquoi</th></tr></thead>
+<tbody>
+<tr><td><code>runProvider</code></td><td><code>run_controller.dart</code></td>
+    <td><strong>Oui</strong></td><td>État durable de la run</td></tr>
+<tr><td><code>deckProvider</code></td><td><code>deck_controller.dart</code></td>
+    <td><strong>Oui</strong></td><td>Le deck est la progression du joueur</td></tr>
+<tr><td><code>inventoryProvider</code></td><td><code>inventory_controller.dart</code></td>
+    <td><strong>Oui</strong></td><td>Or et reliques survivent aux combats</td></tr>
+<tr><td><code>skillProvider</code></td><td><code>skill_controller.dart</code></td>
+    <td><strong>Oui</strong></td><td>Deux entiers, coût nul</td></tr>
+<tr><td><code>combatProvider</code></td><td><code>combat_controller.dart</code></td>
+    <td>Non</td><td>Tour en cours, intentions ennemies, PV des ennemis : éphémère par nature</td></tr>
+<tr><td><code>shopProvider</code></td><td><code>shop_controller.dart</code></td>
+    <td>Non</td><td>Le stock d'une boutique est regénéré à l'entrée du nœud</td></tr>
+<tr><td><code>eventProvider</code></td><td><code>event_controller.dart</code></td>
+    <td>Non</td><td>Un événement narratif est résolu en un écran</td></tr>
+<tr><td><code>rewardProvider</code></td><td><code>reward_controller.dart</code></td>
+    <td>Non</td><td>Les récompenses post-combat sont consommées immédiatement</td></tr>
+</tbody>
+</table></div>
+
+<p>Cette liste n'est pas un oubli, c'est une <strong>décision de granularité</strong>. Hero's Draft
+ne sauvegarde pas « l'instant » : il sauvegarde « le dernier nœud terminé ». Les quatre providers
+absents contiennent tous de l'état <em>intra-nœud</em>.</p>
+
+<div class="box rule">
+  <div class="box-title">Conséquence concrète pour le joueur</div>
+  <p>Fermer l'application <strong>en plein combat</strong> fait perdre le combat en cours. Au
+  redémarrage, « Continuer » recharge l'état tel qu'il était <em>avant</em> d'entrer dans le nœud : le
+  joueur se retrouve sur la carte du monde, avec ses PV et son deck d'avant le combat, et le nœud
+  qu'il était en train de jouer n'est pas marqué comme complété. Il devra le refaire. Aucun progrès
+  n'est corrompu — mais le nœud en cours est perdu.</p>
+</div>
+
+<p>Notez la subtilité : les PV du héros <em>sont</em> dans <code>EntityStats.toJson</code>, avec les
+statuts, l'armure et l'XP. Ils sont donc bien sérialisés. Mais comme la sauvegarde n'est déclenchée
+qu'à la fin d'un nœud (section 2), la valeur écrite sur disque est toujours celle d'une fin de nœud,
+jamais celle du milieu d'un combat. La granularité de <em>déclenchement</em> compte autant que le
+contenu du payload.</p>
+
+<h2 id="s2">2. Les points de sauvegarde</h2>
+
+<p>Question naturelle : qui appelle <code>SaveService.save</code> ? Grepez le projet — la réponse est
+<strong>un seul endroit</strong>, et ce n'est pas un écran.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/checkpoint_controller.dart</span><span class="lang">dart</span></div>
+  <pre>class CheckpointNotifier extends Notifier&lt;int&gt; {
+  @override
+  int build() =&gt; 0;
+
+  /// Signale qu'un nœud de la carte vient d'être résolu (combat, boutique,
+  /// repos, event, forge, échange de reliques, ou draft de Level Up).
+  void bump() =&gt; state = state + 1;
+}
+
+final checkpointProvider =
+    NotifierProvider&lt;CheckpointNotifier, int&gt;(CheckpointNotifier.new);
+
+/// Écoute checkpointProvider et déclenche une sauvegarde à chaque bump().
+/// Doit être lu une fois au démarrage de l'app pour s'activer (voir main.dart).
+final autosaveOrchestratorProvider = Provider&lt;void&gt;((ref) {
+  ref.listen&lt;int&gt;(checkpointProvider, (previous, next) {
+    SaveService.save(ref.read);
+  });
+});</pre>
+</div>
+
+<p>Ce fichier de vingt-trois lignes est un petit chef-d'œuvre de découplage. Décomposons-le.</p>
+
+<h3>Un compteur, pas un événement</h3>
+
+<p><code>CheckpointNotifier</code> est un <code>Notifier&lt;int&gt;</code> dont l'état est
+<strong>un entier qui ne fait que monter</strong>. <code>bump()</code> ne transporte aucune donnée :
+il ne dit pas <em>quel</em> nœud a été terminé, ni <em>quand</em>. Il dit juste « il s'est passé
+quelque chose de sauvegardable ».</p>
+
+<p>Pourquoi un entier plutôt qu'un vrai bus d'événements ? Parce que Riverpod ne notifie ses écouteurs
+que si l'état <strong>change</strong>. Si <code>bump()</code> mettait l'état à <code>true</code>, le
+deuxième <code>bump()</code> ne réveillerait personne : <code>true == true</code>. Un compteur qui
+s'incrémente garantit que chaque appel produit une valeur neuve, donc une notification. C'est le
+patron « ticker » et il est plus court que n'importe quelle alternative.</p>
+
+<h3>Un <code>Provider&lt;void&gt;</code> comme point d'ancrage</h3>
+
+<p><code>autosaveOrchestratorProvider</code> est déclaré <code>Provider&lt;void&gt;</code> : il ne
+produit <em>aucune valeur</em>. Personne ne lira jamais son résultat. Il n'existe que pour ses effets
+de bord — le <code>ref.listen</code> installé dans son corps.</p>
+
+<p><code>ref.listen</code> est le pendant impératif de <code>ref.watch</code> : au lieu de recalculer
+le provider quand la dépendance change, il exécute un <em>callback</em>. Ici le callback ignore
+<code>previous</code> et <code>next</code> et lance simplement la sauvegarde. Il lui passe
+<code>ref.read</code> — le tear-off dont on parlait en section 1.</p>
+
+<div class="box warn">
+  <div class="box-title">Piège : un provider Riverpod est paresseux</div>
+  <p>Un provider qui n'est jamais lu n'est <strong>jamais construit</strong>. Le corps de
+  <code>autosaveOrchestratorProvider</code> ne s'exécute pas tant que personne ne le demande — donc le
+  <code>ref.listen</code> n'est jamais installé, donc rien n'est jamais sauvegardé, et l'application
+  fonctionne parfaitement… jusqu'au premier redémarrage. C'est le genre de bug qu'on ne voit pas en
+  développement.</p>
+</div>
+
+<p>D'où la ligne de <code>main.dart</code>, avec son commentaire explicite :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/main.dart</span><span class="lang">dart</span></div>
+  <pre>class HerosDraftApp extends ConsumerWidget {
+  const HerosDraftApp({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Force l'activation de l'écoute d'autosave dès le démarrage de l'app.
+    ref.watch(autosaveOrchestratorProvider);
+
+    return MaterialApp(
+      onGenerateTitle: (context) =&gt; AppLocalizations.of(context)!.appTitle,
+      // ...</pre>
+</div>
+
+<p><code>ref.watch</code> sur un <code>Provider&lt;void&gt;</code> a l'air absurde — on « observe »
+quelque chose qui vaut toujours <code>null</code>. Mais <code>watch</code> a un second effet, celui
+qui compte ici : il <strong>abonne</strong> le widget au provider, ce qui force sa construction et le
+maintient vivant tant que <code>HerosDraftApp</code> est monté. Comme <code>HerosDraftApp</code> est
+la racine de l'arbre, l'orchestrateur vit aussi longtemps que l'application.</p>
+
+<h3>Les deux appelants de <code>bump()</code></h3>
+
+<p>Deux endroits seulement dans tout <code>lib/</code> appellent <code>bump()</code>. Le premier est
+la fin d'un nœud de carte :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run/map_progression_manager.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Marque le nœud actuel comme complété
+  void completeCurrentNode() {
+    if (controller.currentState.currentNodeId == null) return;
+
+    MapNode? completedNode;
+    final updatedNodes = controller.currentState.mapNodes.map((node) {
+      if (node.id == controller.currentState.currentNodeId) {
+        node.isCompleted = true;
+        completedNode = node;
+      }
+      return node;
+    }).toList();
+
+    // Reset de l'armure et nettoyage des statuts à la fin du combat pour préserver les passifs
+    controller.updateState(
+      controller.currentState.copyWith(
+        mapNodes: updatedNodes,
+        heroStats: controller.currentState.heroStats.copyWith(armure: 0, statuses: []),
+      ),
+    );
+
+    if (completedNode != null &amp;&amp; completedNode!.type == MapNodeType.boss) {
+      advanceToNextWorld();
+    }
+
+    ref.read(checkpointProvider.notifier).bump();
+  }</pre>
+</div>
+
+<p>Observez l'ordre : le <code>bump()</code> est la <strong>dernière</strong> ligne. Le nœud est
+marqué complété, l'armure est remise à zéro, les statuts sont nettoyés, et si c'était un boss on a
+déjà généré la carte du monde suivante — <em>ensuite</em> seulement on sauvegarde. La sauvegarde
+capture donc toujours un état stable, jamais un état à moitié mis à jour.</p>
+
+<p>Le second appelant est la consommation d'un draft de montée de niveau :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run/player_stats_manager.dart</span><span class="lang">dart</span></div>
+  <pre>  void decrementPendingDrafts() {
+    if (controller.currentState.pendingDrafts &gt; 0) {
+      controller.updateState(
+        controller.currentState.copyWith(
+          pendingDrafts: controller.currentState.pendingDrafts - 1,
+        ),
+      );
+      ref.read(checkpointProvider.notifier).bump();
+    }
+  }</pre>
+</div>
+
+<p>Même structure : on modifie l'état, <em>puis</em> on bump. Et le <code>bump()</code> est
+<strong>à l'intérieur du <code>if</code></strong> : si le compteur de drafts est déjà à zéro, rien ne
+change et rien n'est sauvegardé. Pas de sauvegarde à vide.</p>
+
+<p>Pourquoi ce second point de contrôle ? Parce qu'un level up peut arriver au milieu d'un combat et
+mettre plusieurs drafts en attente (<code>pendingDrafts</code>). Le joueur les consomme un par un sur
+des écrans successifs. Sans ce <code>bump()</code>, fermer l'application entre deux drafts ferait
+perdre les choix déjà faits.</p>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 840 500" width="840" role="img" aria-label="Flux de l'autosave : de completeCurrentNode et decrementPendingDrafts jusqu'à shared_preferences">
+      <defs>
+        <marker id="c20-a1" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#3a4966"/>
+        </marker>
+        <marker id="c20-a2" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#a78bfa"/>
+        </marker>
+        <marker id="c20-a3" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#34d399"/>
+        </marker>
+      </defs>
+      <rect x="0" y="0" width="840" height="500" fill="#0e1524"/>
+
+      <rect x="55" y="22" width="300" height="58" rx="8" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="205" y="46" fill="#e6ecf5" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">completeCurrentNode()</text>
+      <text x="205" y="66" fill="#a7b4c9" font-size="11" text-anchor="middle">map_progression_manager.dart</text>
+
+      <rect x="400" y="22" width="300" height="58" rx="8" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="550" y="46" fill="#e6ecf5" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">decrementPendingDrafts()</text>
+      <text x="550" y="66" fill="#a7b4c9" font-size="11" text-anchor="middle">player_stats_manager.dart</text>
+
+      <path d="M205 80 L205 104 L345 104 L345 122" stroke="#3a4966" stroke-width="2" fill="none" marker-end="url(#c20-a1)"/>
+      <path d="M550 80 L550 104 L455 104 L455 122" stroke="#3a4966" stroke-width="2" fill="none" marker-end="url(#c20-a1)"/>
+
+      <rect x="230" y="126" width="340" height="58" rx="8" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="400" y="150" fill="#e6ecf5" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">CheckpointNotifier.bump()</text>
+      <text x="400" y="170" fill="#a7b4c9" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">state = state + 1</text>
+
+      <path d="M400 184 L400 214" stroke="#3a4966" stroke-width="2" fill="none" marker-end="url(#c20-a1)"/>
+
+      <rect x="200" y="218" width="400" height="68" rx="8" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="400" y="242" fill="#e6ecf5" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">autosaveOrchestratorProvider</text>
+      <text x="400" y="262" fill="#a7b4c9" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">ref.listen&lt;int&gt;(checkpointProvider, ...)</text>
+      <text x="400" y="278" fill="#a7b4c9" font-size="10" text-anchor="middle">Provider&lt;void&gt; — aucune valeur produite</text>
+
+      <rect x="20" y="222" width="160" height="60" rx="8" fill="#101728" stroke="#a78bfa" stroke-dasharray="4 3"/>
+      <text x="100" y="244" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">main.dart</text>
+      <text x="100" y="262" fill="#a7b4c9" font-size="10" text-anchor="middle" font-family="ui-monospace, monospace">ref.watch(...)</text>
+      <text x="100" y="276" fill="#a7b4c9" font-size="9" text-anchor="middle">maintient en vie</text>
+      <path d="M180 252 L194 252" stroke="#a78bfa" stroke-width="2" stroke-dasharray="4 3" fill="none" marker-end="url(#c20-a2)"/>
+
+      <path d="M400 286 L400 316" stroke="#3a4966" stroke-width="2" fill="none" marker-end="url(#c20-a1)"/>
+
+      <rect x="230" y="320" width="340" height="58" rx="8" fill="#151b2b" stroke="#34d399"/>
+      <text x="400" y="344" fill="#e6ecf5" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">SaveService.save(ref.read)</text>
+      <text x="400" y="364" fill="#a7b4c9" font-size="10" text-anchor="middle">schemaVersion + savedAt + 4 états</text>
+
+      <rect x="612" y="300" width="208" height="112" rx="8" fill="#101728" stroke="#3a4966"/>
+      <text x="716" y="322" fill="#a7b4c9" font-size="10" text-anchor="middle">lus par read(...)</text>
+      <text x="716" y="342" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">runProvider</text>
+      <text x="716" y="360" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">deckProvider</text>
+      <text x="716" y="378" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">inventoryProvider</text>
+      <text x="716" y="396" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">skillProvider</text>
+      <path d="M570 348 L606 348" stroke="#34d399" stroke-width="2" fill="none" marker-end="url(#c20-a3)"/>
+
+      <path d="M400 378 L400 410" stroke="#3a4966" stroke-width="2" fill="none" marker-end="url(#c20-a1)"/>
+
+      <rect x="180" y="414" width="440" height="62" rx="8" fill="#151b2b" stroke="#60a5fa"/>
+      <text x="400" y="438" fill="#e6ecf5" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">prefs.setString('run_save_v1', jsonEncode(payload))</text>
+      <text x="400" y="460" fill="#a7b4c9" font-size="10" text-anchor="middle">shared_preferences — une seule clé, un seul blob</text>
+    </svg>
+  </div>
+  <figcaption>Le flux complet de l'autosave. Deux appelants, un compteur, un écouteur, quatre lectures
+  de provider, une écriture. Le lien pointillé depuis <code>main.dart</code> ne transporte aucune
+  donnée : il maintient simplement l'orchestrateur en vie.</figcaption>
+</figure>
+
+<div class="box ok">
+  <div class="box-title">Bonne pratique — un seul point d'écriture</div>
+  <p>Aucun écran de jeu n'appelle <code>SaveService.save</code>. Les écrans appellent des méthodes
+  métier (<code>completeCurrentNode</code>, <code>decrementPendingDrafts</code>) qui, elles, bumpent
+  le checkpoint. Résultat : ajouter un nouveau type de nœud ne demande <strong>aucune modification</strong>
+  du système de sauvegarde, tant que le nœud termine par <code>completeCurrentNode()</code>. Le jour
+  où il faudra sauvegarder ailleurs (une base de données, un serveur), on modifie un seul fichier.</p>
+</div>
+
+<h3>Et l'effacement ?</h3>
+
+<p>Trois endroits effacent la sauvegarde, tous via <code>SaveService.clear()</code> :
+<code>home_screen.dart</code> quand on confirme l'écrasement pour une nouvelle partie,
+<code>death_overlay.dart</code> sur les deux boutons de l'écran de mort (« Menu principal » et
+« Changer de classe »), et <code>SaveService.load</code> lui-même en cas de sauvegarde corrompue.
+Une run morte ne laisse aucune trace : c'est un roguelike, la permadeath doit être réelle.</p>
+
+<h2 id="s3">3. Le chargement tolérant aux pannes</h2>
+
+<p>Écrire une sauvegarde est facile. La relire six mois plus tard, après que le jeu a gagné dix cartes
+et en a perdu trois, c'est le vrai problème. Voici <code>load</code> en entier — c'est la méthode la
+plus longue du service, et chaque ligne compte.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/services/save_service.dart</span><span class="lang">dart</span></div>
+  <pre>  static Future&lt;SaveLoadResult&gt; load(RefReader read) async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_saveKey);
+    if (raw == null) {
+      return const SaveLoadResult(success: false);
+    }
+
+    Map&lt;String, dynamic&gt; json;
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map&lt;String, dynamic&gt; ||
+          decoded['schemaVersion'] != _schemaVersion) {
+        throw const FormatException('Unsupported or missing schemaVersion');
+      }
+      json = decoded;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('SaveService.load: corrupted or unsupported save data ($e)');
+      }
+      await clear();
+      return const SaveLoadResult(success: false);
+    }</pre>
+</div>
+
+<p>Premier <code>try/catch</code>. Il couvre trois pannes différentes d'un seul geste :</p>
+
+<ol>
+  <li><strong>Le JSON est illisible.</strong> <code>jsonDecode</code> lève une
+  <code>FormatException</code>. Ça arrive si l'écriture a été coupée (batterie, kill de l'OS).</li>
+  <li><strong>Le JSON est valide mais n'est pas un objet.</strong> Le test
+  <code>decoded is! Map&lt;String, dynamic&gt;</code> attrape le cas où quelqu'un aurait écrit un
+  tableau ou une chaîne sous la même clé.</li>
+  <li><strong>La version de schéma ne correspond pas.</strong> Le test
+  <code>decoded['schemaVersion'] != _schemaVersion</code> couvre à la fois « pas de champ du tout »
+  (<code>null != 1</code>) et « version 2 lue par un binaire v1 » — un cas réel si l'utilisateur
+  réinstalle une version antérieure de l'application.</li>
+</ol>
+
+<p>Les trois convergent vers le même <code>catch</code>, qui fait deux choses : <strong>effacer</strong>
+la sauvegarde et rendre un échec silencieux. Le <code>debugPrint</code> est gardé par
+<code>kDebugMode</code> — une constante de compilation que le compilateur AOT évalue à
+<code>false</code> en release, ce qui permet au <em>tree shaker</em> de supprimer complètement le
+bloc du binaire de production.</p>
+
+<div class="box rule">
+  <div class="box-title">La règle : jamais de sauvegarde zombie</div>
+  <p>Une sauvegarde illisible est <strong>effacée</strong>, pas ignorée. Si on se contentait de rendre
+  <code>false</code>, <code>SaveService.hasSave()</code> continuerait à répondre <code>true</code>
+  (la clé existe toujours), le bouton « Continuer » resterait affiché, et l'utilisateur cliquerait
+  dessus indéfiniment sans rien obtenir. En effaçant, le prochain <code>build</code> de
+  <code>HomeScreen</code> fait disparaître le bouton. L'échec devient visible et cohérent.</p>
+</div>
+
+<h3>Le second <code>try/catch</code> : l'hydratation</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/services/save_service.dart</span><span class="lang">dart</span></div>
+  <pre>    try {
+      final skills = SkillState.fromJson(json['skills'] as Map&lt;String, dynamic&gt;);
+      final (inventory, invMissing) = InventoryState.fromJsonWithReport(
+        json['inventory'] as Map&lt;String, dynamic&gt;,
+      );
+      final (deck, deckMissing) = DeckState.fromJsonWithReport(
+        json['deck'] as Map&lt;String, dynamic&gt;,
+      );
+      final (run, runMissing) = RunState.fromJsonWithReport(
+        json['run'] as Map&lt;String, dynamic&gt;,
+      );
+
+      read(skillProvider.notifier).hydrate(skills);
+      read(inventoryProvider.notifier).hydrate(inventory);
+      read(deckProvider.notifier).hydrate(deck);
+      read(runProvider.notifier).hydrate(run);
+
+      return SaveLoadResult(
+        success: true,
+        missingItems: [...invMissing, ...deckMissing, ...runMissing],
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('SaveService.load: failed to hydrate save data ($e)');
+      }
+      await clear();
+      return const SaveLoadResult(success: false);
+    }
+  }</pre>
+</div>
+
+<p>Trois choses à remarquer.</p>
+
+<p><strong>Un.</strong> Les décodages sont <em>tous</em> faits avant la première hydratation. Ce n'est
+pas cosmétique : si <code>RunState.fromJsonWithReport</code> lève une exception, on n'a encore écrit
+dans <em>aucun</em> provider. Le jeu reste dans son état initial propre au lieu d'être à moitié
+chargé. C'est une transaction manuelle : préparer d'abord, publier ensuite.</p>
+
+<p><strong>Deux.</strong> L'ordre d'hydratation est <code>skills</code> → <code>inventory</code> →
+<code>deck</code> → <code>run</code>, c'est-à-dire du plus simple au plus dépendant. Les compétences
+ne dépendent de rien, l'inventaire des reliques du catalogue, le deck du catalogue de cartes, et la
+run de tout le reste (son passif, ses slots de forge). Écrire le plus dépendant en dernier limite le
+risque qu'un <code>Notifier</code> réagisse à un état incohérent pendant la reconstruction.</p>
+
+<p><strong>Trois.</strong> La syntaxe <code>final (inventory, invMissing) = ...</code> est la
+<strong>déstructuration de records</strong>, arrivée avec Dart 3. La méthode rend un
+<code>(InventoryState, List&lt;MissingSaveItem&gt;)</code> — un couple anonyme, sans avoir besoin de
+déclarer une classe résultat. Idem pour <code>...invMissing</code>, l'opérateur <em>spread</em> qui
+aplatit les trois listes de manquants en une seule.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/services/save_service.dart</span><span class="lang">dart</span></div>
+  <pre>class SaveLoadResult {
+  final bool success;
+  final List&lt;MissingSaveItem&gt; missingItems;
+
+  const SaveLoadResult({required this.success, this.missingItems = const []});
+}</pre>
+</div>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 820 470" width="820" role="img" aria-label="Pipeline de SaveService.load avec ses deux sorties d'échec">
+      <defs>
+        <marker id="c20-b1" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#3a4966"/>
+        </marker>
+        <marker id="c20-b2" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#f87171"/>
+        </marker>
+      </defs>
+      <rect x="0" y="0" width="820" height="470" fill="#0e1524"/>
+
+      <rect x="245" y="20" width="330" height="52" rx="8" fill="#151b2b" stroke="#60a5fa"/>
+      <text x="410" y="42" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">prefs.getString('run_save_v1')</text>
+      <text x="410" y="60" fill="#a7b4c9" font-size="10" text-anchor="middle">null → success: false (aucune sauvegarde)</text>
+
+      <path d="M410 72 L410 100" stroke="#3a4966" stroke-width="2" fill="none" marker-end="url(#c20-b1)"/>
+
+      <rect x="245" y="104" width="330" height="66" rx="8" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="410" y="126" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">try { jsonDecode + schemaVersion == 1 }</text>
+      <text x="410" y="146" fill="#a7b4c9" font-size="10" text-anchor="middle">JSON illisible · pas un Map · mauvaise version</text>
+      <text x="410" y="162" fill="#a7b4c9" font-size="10" text-anchor="middle">→ FormatException</text>
+
+      <path d="M575 137 L640 137" stroke="#f87171" stroke-width="2" fill="none" marker-end="url(#c20-b2)"/>
+      <rect x="644" y="110" width="160" height="54" rx="8" fill="#1b1416" stroke="#f87171"/>
+      <text x="724" y="132" fill="#f87171" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">await clear()</text>
+      <text x="724" y="150" fill="#a7b4c9" font-size="10" text-anchor="middle">success: false</text>
+
+      <path d="M410 170 L410 200" stroke="#3a4966" stroke-width="2" fill="none" marker-end="url(#c20-b1)"/>
+
+      <rect x="245" y="204" width="330" height="66" rx="8" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="410" y="226" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">4 × fromJson / fromJsonWithReport</text>
+      <text x="410" y="246" fill="#a7b4c9" font-size="10" text-anchor="middle">aucun provider touché à ce stade</text>
+      <text x="410" y="262" fill="#a7b4c9" font-size="10" text-anchor="middle">collecte des MissingSaveItem</text>
+
+      <path d="M575 237 L640 237" stroke="#f87171" stroke-width="2" fill="none" marker-end="url(#c20-b2)"/>
+      <rect x="644" y="210" width="160" height="54" rx="8" fill="#1b1416" stroke="#f87171"/>
+      <text x="724" y="232" fill="#f87171" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">await clear()</text>
+      <text x="724" y="250" fill="#a7b4c9" font-size="10" text-anchor="middle">success: false</text>
+
+      <path d="M410 270 L410 300" stroke="#3a4966" stroke-width="2" fill="none" marker-end="url(#c20-b1)"/>
+
+      <rect x="245" y="304" width="330" height="86" rx="8" fill="#151b2b" stroke="#34d399"/>
+      <text x="410" y="326" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">hydrate() dans l'ordre</text>
+      <text x="410" y="348" fill="#a7b4c9" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">skills → inventory → deck → run</text>
+      <text x="410" y="370" fill="#a7b4c9" font-size="10" text-anchor="middle">du moins dépendant au plus dépendant</text>
+
+      <rect x="16" y="300" width="200" height="94" rx="8" fill="#101728" stroke="#3a4966"/>
+      <text x="116" y="322" fill="#a7b4c9" font-size="10" text-anchor="middle">pourquoi cet ordre</text>
+      <text x="116" y="342" fill="#e6ecf5" font-size="10" text-anchor="middle">skills : rien</text>
+      <text x="116" y="358" fill="#e6ecf5" font-size="10" text-anchor="middle">inventory : catalogue reliques</text>
+      <text x="116" y="374" fill="#e6ecf5" font-size="10" text-anchor="middle">deck : catalogue cartes</text>
+      <text x="116" y="388" fill="#e6ecf5" font-size="10" text-anchor="middle">run : passifs + forge</text>
+      <path d="M216 347 L241 347" stroke="#3a4966" stroke-width="2" fill="none" marker-end="url(#c20-b1)"/>
+
+      <path d="M410 390 L410 416" stroke="#3a4966" stroke-width="2" fill="none" marker-end="url(#c20-b1)"/>
+
+      <rect x="215" y="420" width="390" height="42" rx="8" fill="#12211b" stroke="#34d399"/>
+      <text x="410" y="446" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">SaveLoadResult(success: true, missingItems)</text>
+    </svg>
+  </div>
+  <figcaption>Deux sorties d'échec, une sortie de succès. Les deux échecs passent par
+  <code>clear()</code> : après un chargement raté, il n'y a plus de sauvegarde.</figcaption>
+</figure>
+
+<h3>Le patron <code>fromJsonWithReport</code></h3>
+
+<p>C'est l'idée centrale de tout le système de chargement, et elle mérite d'être énoncée seule :</p>
+
+<div class="box rule">
+  <div class="box-title">Plutôt que planter, reconstruire ce qui existe et rapporter ce qui manque</div>
+  <p>Un <code>fromJson</code> classique lève une exception dès qu'une donnée référencée n'existe plus.
+  Un <code>fromJsonWithReport</code> rend un couple
+  <code>(État reconstruit, List&lt;MissingSaveItem&gt;)</code> : il <em>garde</em> tout ce qu'il peut
+  résoudre, <em>jette</em> silencieusement le reste, et <em>consigne</em> chaque perte dans une liste
+  que l'interface affichera au joueur.</p>
+</div>
+
+<p>Le rapport lui-même est un modèle minuscule, volontairement bilingue :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/missing_save_item.dart</span><span class="lang">dart</span></div>
+  <pre>class MissingSaveItem {
+  final String id;
+  final String nameFr;
+  final String nameEn;
+  final String category;
+
+  const MissingSaveItem({
+    required this.id,
+    required this.nameFr,
+    required this.nameEn,
+    required this.category,
+  });</pre>
+</div>
+
+<p>Quatre <code>category</code> sont produites dans le projet : <code>'card'</code> (dans
+<code>DeckState._decodePile</code>), <code>'relic'</code> (dans
+<code>InventoryState.fromJsonWithReport</code>), <code>'passive'</code> (dans
+<code>RunState.fromJsonWithReport</code>) et <code>'forgeUpgrade'</code> (dans
+<code>ForgeUpgradeData.filterValidRefs</code>).</p>
+
+<h3><code>DeckState._decodePile</code>, le cas le plus riche</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/deck_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  static (List&lt;CardInstance&gt;, List&lt;MissingSaveItem&gt;) _decodePile(
+    List&lt;dynamic&gt;? rawPile,
+  ) {
+    final kept = &lt;CardInstance&gt;[];
+    final missing = &lt;MissingSaveItem&gt;[];
+
+    for (final entry in (rawPile ?? const [])) {
+      final instance = CardInstance.fromJson(entry as Map&lt;String, dynamic&gt;);
+      final freshData = CardData.getById(instance.data.id);
+      if (freshData == null) {
+        missing.add(
+          MissingSaveItem(
+            id: instance.data.id,
+            nameFr: instance.data.nameFr,
+            nameEn: instance.data.nameEn,
+            category: 'card',
+          ),
+        );
+        continue;
+      }
+      final (validUpgrades, upgradesMissing) =
+          ForgeUpgradeData.filterValidRefs(instance.forgeUpgrades);
+      missing.addAll(upgradesMissing);
+      kept.add(instance.copyWith(data: freshData, forgeUpgrades: validUpgrades));
+    }
+
+    return (kept, missing);
+  }</pre>
+</div>
+
+<p>Quatre gestes en dix-huit lignes :</p>
+
+<ol>
+  <li><strong>Décoder</strong> l'instance telle qu'elle a été écrite, avec sa <code>CardData</code>
+  complète figée au moment de la sauvegarde.</li>
+  <li><strong>Re-résoudre</strong> la définition fraîche par son identifiant :
+  <code>CardData.getById(instance.data.id)</code> va chercher dans le
+  <code>GameDataRegistry</code> chargé depuis <code>assets/data/cards.json</code>.</li>
+  <li><strong>Écarter</strong> si la carte n'existe plus : on ajoute un <code>MissingSaveItem</code> —
+  en utilisant les noms FR/EN <em>figés dans la sauvegarde</em>, seule trace restante d'une carte
+  supprimée — puis <code>continue</code>.</li>
+  <li><strong>Remplacer</strong> : <code>instance.copyWith(data: freshData, ...)</code> jette la
+  <code>CardData</code> sauvegardée et lui substitue celle du catalogue, tout en conservant
+  <code>uniqueId</code>, <code>rarity</code> et les améliorations de forge encore valides.</li>
+</ol>
+
+<p>Le troisième point est celui qu'on rate quand on écrit ça soi-même. Au moment où l'on veut prévenir
+le joueur qu'il a perdu « Boule de Feu », la carte n'existe plus dans le catalogue : impossible d'en
+lire le nom. La seule source disponible est la copie gelée dans le JSON. C'est précisément pour ça
+que le deck sérialise toute la <code>CardData</code> plutôt qu'un simple identifiant — voir
+section 4.</p>
+
+<p><code>_decodePile</code> est appelé cinq fois, une par pile :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/deck_controller.dart</span><span class="lang">dart</span></div>
+  <pre>    final (masterDeck, m1) = _decodePile(json['masterDeck'] as List&lt;dynamic&gt;?);
+    final (drawPile, m2) = _decodePile(json['drawPile'] as List&lt;dynamic&gt;?);
+    final (hand, m3) = _decodePile(json['hand'] as List&lt;dynamic&gt;?);
+    final (discardPile, m4) = _decodePile(json['discardPile'] as List&lt;dynamic&gt;?);
+    final (exhaustPile, m5) = _decodePile(json['exhaustPile'] as List&lt;dynamic&gt;?);
+    missing
+      ..addAll(m1)
+      ..addAll(m2)
+      ..addAll(m3)
+      ..addAll(m4)
+      ..addAll(m5);</pre>
+</div>
+
+<p>Le <code>..</code> est l'opérateur de <em>cascade</em> de Dart : il appelle une méthode sur un objet
+et rend l'objet lui-même, ce qui permet d'enchaîner sans répéter <code>missing.</code>.</p>
+
+<div class="box warn">
+  <div class="box-title">Piège : une carte supprimée peut apparaître cinq fois</div>
+  <p>Une carte présente dans le master deck <em>et</em> dans la pioche produit deux
+  <code>MissingSaveItem</code> distincts. Le dialogue de <code>home_screen.dart</code> les affiche
+  tels quels, joints par des virgules : le joueur peut donc lire deux fois le même nom. Ce n'est pas
+  faux (deux exemplaires ont bien disparu), mais ce n'est pas dédupliqué non plus.
+  <code>MissingSaveItem</code> implémente pourtant <code>==</code> et <code>hashCode</code> sur ses
+  quatre champs — tout ce qu'il faut pour un <code>.toSet()</code> qui n'est jamais appelé.</p>
+</div>
+
+<h3><code>ForgeUpgradeData.filterValidRefs</code></h3>
+
+<p>Le même patron, en plus resserré, pour les améliorations de forge :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/forge_upgrade_data.dart</span><span class="lang">dart</span></div>
+  <pre>  static (List&lt;String&gt;, List&lt;MissingSaveItem&gt;) filterValidRefs(
+    List&lt;dynamic&gt;? raw,
+  ) {
+    final kept = &lt;String&gt;[];
+    final missing = &lt;MissingSaveItem&gt;[];
+    for (final entry in (raw ?? const [])) {
+      final ref = entry as String;
+      final id = ref.split(':').first;
+      if (getById(id) != null) {
+        kept.add(ref);
+      } else {
+        missing.add(
+          MissingSaveItem(
+            id: id,
+            nameFr: id,
+            nameEn: id,
+            category: 'forgeUpgrade',
+          ),
+        );
+      }
+    }
+    return (kept, missing);
+  }</pre>
+</div>
+
+<p>Deux détails. D'abord <code>ref.split(':').first</code> : une référence d'amélioration de forge
+n'est pas un simple identifiant, c'est une chaîne composée <code>id:tier</code>. On ne valide que la
+partie gauche, le <em>tier</em> étant un nombre qui ne peut pas « disparaître » du catalogue.</p>
+
+<p>Ensuite <code>nameFr: id, nameEn: id</code>. Contrairement aux cartes, la sauvegarde ne stocke
+<strong>pas</strong> les noms lisibles des améliorations : elle ne stocke que la référence. Quand une
+amélioration disparaît, il ne reste que son identifiant technique, et c'est lui qui sera affiché au
+joueur. C'est un compromis assumé — un identifiant est moins joli mais reste actionnable pour un
+rapport de bug.</p>
+
+<p><code>filterValidRefs</code> est appelé à <strong>trois endroits</strong> : sur les
+<code>forgeUpgrades</code> de chaque <code>CardInstance</code> (dans <code>_decodePile</code>), sur
+<code>json['forgeSlots']</code> et sur chaque entrée de <code>forgeTargetSessions</code> (dans
+<code>RunState.fromJsonWithReport</code>). Une seule fonction couvre les trois endroits où le jeu
+mémorise des références de forge.</p>
+
+<h3>Le cas du passif : un repli plutôt qu'un trou</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run_controller.dart</span><span class="lang">dart</span></div>
+  <pre>    final activePassiveId = json['activePassiveId'] as String?;
+    PassiveData? activePassive;
+    if (activePassiveId != null) {
+      activePassive = PassiveData.getById(activePassiveId);
+      if (activePassive == null) {
+        missing.add(
+          MissingSaveItem(
+            id: activePassiveId,
+            nameFr: json['activePassiveNameFr'] as String? ?? activePassiveId,
+            nameEn: json['activePassiveNameEn'] as String? ?? activePassiveId,
+            category: 'passive',
+          ),
+        );
+        activePassive = PassiveData.fallback(
+          json['passiveTrait'] as String? ?? '',
+        );
+      }
+    }</pre>
+</div>
+
+<p>Ici la stratégie diverge : au lieu de simplement écarter le passif disparu, on le
+<strong>remplace</strong> par <code>PassiveData.fallback(...)</code>, une définition codée en dur dans
+le fichier (par exemple <code>regenArmor</code> : « Gagne 2 points d'Armure (+ Maîtrise)
+automatiquement à la fin de chaque tour »). La raison est structurelle : un héros sans passif du tout
+serait un état que le reste du code ne sait pas gérer, alors qu'un deck sans une carte est
+parfaitement viable. On rapporte quand même la perte au joueur.</p>
+
+<p>Notez aussi les trois champs sauvegardés côte à côte dans <code>RunState.toJson</code> :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run_controller.dart</span><span class="lang">dart</span></div>
+  <pre>        'passiveTrait': passiveTrait,
+        'activePassiveId': activePassive?.id,
+        'activePassiveNameFr': activePassive?.nameFr,
+        'activePassiveNameEn': activePassive?.nameEn,</pre>
+</div>
+
+<p>Trois champs pour un seul objet : l'identifiant sert à re-résoudre, les deux noms servent
+uniquement au message d'erreur. C'est exactement la stratégie de l'inventaire, qu'on détaille
+maintenant.</p>
+
+<h2 id="s4">4. Le patron « re-résoudre plutôt que dupliquer »</h2>
+
+<p>Le projet applique deux stratégies de sérialisation <em>différentes</em> pour deux collections qui
+se ressemblent beaucoup. Comprendre pourquoi, c'est comprendre tout le système.</p>
+
+<h3>L'inventaire : trois champs par relique</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/inventory_state.dart</span><span class="lang">dart</span></div>
+  <pre>  Map&lt;String, dynamic&gt; toJson() =&gt; {
+        'gold': gold,
+        'relics': relics
+            .map((r) =&gt; {'id': r.id, 'nameFr': r.nameFr, 'nameEn': r.nameEn})
+            .toList(),
+        'bonusShopCards': bonusShopCards,
+      };</pre>
+</div>
+
+<p>Une <code>RelicData</code> complète contient bien plus : description FR, description EN,
+<code>trigger</code>, <code>effectType</code>, <code>value</code>, <code>rarity</code>,
+<code>emoji</code>. Rien de tout ça n'est écrit. Trois champs suffisent : l'<code>id</code> pour
+re-résoudre, les deux noms pour le message d'erreur.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/inventory_state.dart</span><span class="lang">dart</span></div>
+  <pre>    for (final entry in (json['relics'] as List&lt;dynamic&gt;? ?? const [])) {
+      final map = entry as Map&lt;String, dynamic&gt;;
+      final id = map['id'] as String;
+      final relic = RelicData.getById(id);
+      if (relic != null) {
+        relics.add(relic);
+      } else {
+        missing.add(
+          MissingSaveItem(
+            id: id,
+            nameFr: map['nameFr'] as String? ?? id,
+            nameEn: map['nameEn'] as String? ?? id,
+            category: 'relic',
+          ),
+        );
+      }
+    }</pre>
+</div>
+
+<p>L'objet reconstruit vient <strong>intégralement</strong> du catalogue. Si l'on rééquilibre le
+Talisman de Fer de 2 à 3 points d'armure dans <code>assets/data/relics.json</code>, toutes les
+sauvegardes existantes bénéficient du changement dès le prochain chargement. Il n'y a rien à migrer.</p>
+
+<h3>Le deck : toute la <code>CardData</code></h3>
+
+<p>Le deck fait l'inverse. <code>CardInstance.toJson</code> écrit la définition complète :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/card_instance.dart</span><span class="lang">dart</span></div>
+  <pre>  Map&lt;String, dynamic&gt; toJson() =&gt; {
+        'uniqueId': uniqueId,
+        'data': data.toJson(),
+        'rarity': rarity.name,
+        'forgeUpgrades': forgeUpgrades,
+      };</pre>
+</div>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/card_data.dart</span><span class="lang">dart</span></div>
+  <pre>  Map&lt;String, dynamic&gt; toJson() =&gt; {
+        'id': id,
+        'name_en': nameEn,
+        'name_fr': nameFr,
+        'description_en': descriptionEn,
+        'description_fr': descriptionFr,
+        'cost': cost,
+        'type': type.name,
+        'category': category.name,
+        if (heroClass != null) 'heroClass': heroClass,
+        'rarity': rarity.name,
+        'target': target.name,
+        if (spritePath != null) 'spritePath': spritePath,
+        if (animation != null) 'animation': animation,
+        'isExhaust': isExhaust,
+        'effects': effects.map((e) =&gt; e.toJson()).toList(),
+        'baseMaxForgeUpgrades': baseMaxForgeUpgrades,
+      };</pre>
+</div>
+
+<p>Une carte pèse donc une quinzaine de champs, plus la liste de ses effets. Multipliez par un master
+deck de trente cartes plus quatre piles, et le blob devient nettement plus gros que nécessaire.</p>
+
+<p>Et pourtant — <strong><code>_decodePile</code> jette tout ça</strong>. Elle décode l'objet, appelle
+<code>CardData.getById</code>, et remplace la définition sauvegardée par celle du catalogue. Les
+quinze champs sérialisés ne servent à rien… sauf dans un cas : celui où
+<code>CardData.getById</code> rend <code>null</code>. Là, et seulement là, <code>nameFr</code> et
+<code>nameEn</code> sont lus pour construire le <code>MissingSaveItem</code>.</p>
+
+<div class="box danger">
+  <div class="box-title">Point d'attention — une asymétrie qui coûte de la place</div>
+  <p>L'inventaire ne stocke que ce qu'il utilise (3 champs) ; le deck stocke tout et n'en utilise
+  que 3 (<code>id</code>, <code>nameFr</code>, <code>nameEn</code>) — plus <code>uniqueId</code>,
+  <code>rarity</code> et <code>forgeUpgrades</code>, qui appartiennent à l'instance et non à la
+  définition. Le <code>data.toJson()</code> complet est un reliquat : réduire
+  <code>CardInstance.toJson</code> au triplet identifiant + noms produirait exactement le même
+  comportement pour une fraction de la taille. Rien ne casse aujourd'hui, mais c'est de la dette
+  latente : chaque nouveau champ de <code>CardData</code> grossit toutes les sauvegardes sans jamais
+  être relu.</p>
+</div>
+
+<h3>La stratégie de migration implicite</h3>
+
+<p>Il n'existe <strong>aucun code de migration</strong> dans le projet — pas de
+<code>migrateV1toV2</code>, pas de table de conversion. C'est volontaire, et ça marche grâce à trois
+propriétés combinées.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Changement du jeu</th><th>Effet sur une sauvegarde existante</th><th>Mécanisme</th></tr></thead>
+<tbody>
+<tr><td><strong>Ajout</strong> d'un champ à un modèle (ex. <code>cardsPerTurn</code>)</td>
+    <td>Le champ absent prend sa valeur par défaut, la run continue</td>
+    <td><code>json['cardsPerTurn'] as int? ?? 5</code> — cast nullable + <code>??</code></td></tr>
+<tr><td><strong>Rééquilibrage</strong> d'une carte, relique ou passif</td>
+    <td>La nouvelle valeur s'applique immédiatement</td>
+    <td>Re-résolution par <code>getById</code> depuis le catalogue</td></tr>
+<tr><td><strong>Ajout</strong> d'une entrée au catalogue</td>
+    <td>Aucun effet — la sauvegarde ne la référence pas</td>
+    <td>—</td></tr>
+<tr><td><strong>Suppression</strong> d'une carte / relique / amélioration</td>
+    <td>Elle disparaît du deck ou de l'inventaire, le joueur est prévenu</td>
+    <td><code>MissingSaveItem</code> + dialogue</td></tr>
+<tr><td><strong>Suppression</strong> d'un passif</td>
+    <td>Remplacé par <code>PassiveData.fallback</code>, le joueur est prévenu</td>
+    <td>Repli codé en dur</td></tr>
+<tr><td><strong>Changement</strong> incompatible de structure</td>
+    <td>Sauvegarde effacée, le joueur repart de zéro</td>
+    <td>Incrément de <code>_schemaVersion</code></td></tr>
+</tbody>
+</table></div>
+
+<p>Regardez la deuxième colonne de <code>RunState.fromJsonWithReport</code> : quasiment chaque lecture
+est défensive.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run_controller.dart</span><span class="lang">dart</span></div>
+  <pre>      currentLevel: json['currentLevel'] as int,
+      act: json['act'] as int? ?? 1,
+      heroStats: EntityStats.fromJson(json['heroStats'] as Map&lt;String, dynamic&gt;),
+      heroClassId: json['heroClassId'] as String,
+      mapNodes: (json['mapNodes'] as List&lt;dynamic&gt;? ?? const [])
+          .map((n) =&gt; MapNode.fromJson(n as Map&lt;String, dynamic&gt;))
+          .toList(),
+      currentNodeId: json['currentNodeId'] as String?,
+      passiveTrait: json['passiveTrait'] as String?,
+      activePassive: activePassive,
+      forgeSlots: forgeSlots,
+      forgeTargetCardId: json['forgeTargetCardId'] as String?,
+      forgeTargetSessions: forgeTargetSessions,
+      bonusForgeSlots: json['bonusForgeSlots'] as int? ?? 0,
+      pendingDrafts: json['pendingDrafts'] as int? ?? 0,
+      cardsPerTurn: json['cardsPerTurn'] as int? ?? 5,</pre>
+</div>
+
+<p>Deux champs seulement sont lus en type non-nullable : <code>currentLevel</code> et
+<code>heroClassId</code>. Ce sont les deux sans lesquels une run n'a aucun sens — s'ils manquent,
+l'exception remonte au <code>catch</code> de <code>load</code>, la sauvegarde est effacée, et c'est le
+bon comportement. Tous les autres ont un défaut.</p>
+
+<div class="box ok">
+  <div class="box-title">Bonne pratique — la migration par défauts</div>
+  <p>Un <code>as int? ?? 5</code> systématique remplace un système de migration entier. Le coût est
+  d'un caractère <code>?</code> et de deux caractères <code>??</code> par champ ; le bénéfice est
+  qu'on n'écrit jamais de code de migration. La contrepartie : il faut choisir des valeurs par défaut
+  qui produisent un état <em>jouable</em>, pas seulement un état <em>valide</em>. Ici
+  <code>cardsPerTurn: 5</code> et <code>act: 1</code> sont bien les valeurs de départ réelles du jeu.</p>
+</div>
+
+<h3>Le rapport à l'utilisateur</h3>
+
+<p>Quand <code>load</code> rend un <code>SaveLoadResult</code> avec des <code>missingItems</code>,
+<code>HomeScreen</code> affiche un dialogue avant de lancer la carte :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/home_screen.dart</span><span class="lang">dart</span></div>
+  <pre>    if (result.missingItems.isNotEmpty) {
+      final locale = Localizations.localeOf(context).languageCode;
+      final names = result.missingItems
+          .map((m) =&gt; locale == 'fr' ? m.nameFr : m.nameEn)
+          .join(', ');
+      await showDialog&lt;void&gt;(
+        context: context,
+        builder: (dialogContext) =&gt; GameDialog(
+          title: Text(AppLocalizations.of(context)!.missingItemsTitle),
+          content: Text(AppLocalizations.of(context)!.missingItemsMessage(names)),
+          actions: [
+            TextButton(
+              onPressed: () =&gt; Navigator.of(dialogContext).pop(),
+              child: Text(AppLocalizations.of(context)!.ok),
+            ),
+          ],
+        ),
+      );
+    }</pre>
+</div>
+
+<p>C'est ici que le double nom stocké dans <code>MissingSaveItem</code> paie : la ligne
+<code>locale == 'fr' ? m.nameFr : m.nameEn</code> choisit la variante d'après la locale courante,
+exactement comme les <code>getName(locale)</code> du catalogue (section 5). Le dialogue lui-même passe
+par le système ARB — <code>missingItemsMessage(names)</code> est une clé <strong>paramétrée</strong>
+qui reçoit la liste jointe.</p>
+
+<p>Le chemin d'échec dur, lui, est silencieux :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/home_screen.dart</span><span class="lang">dart</span></div>
+  <pre>    if (!result.success) {
+      // The save was corrupted or unreadable; SaveService.load already
+      // cleared it internally, so simply refresh this screen — the
+      // "Continuer" button will disappear on rebuild.
+      setState(() {});
+      return;
+    }</pre>
+</div>
+
+<p>Pas de dialogue d'erreur : un <code>setState</code> vide. Le bouton « Continuer » n'est affiché que
+si <code>SaveService.hasSave()</code> rend <code>true</code>, via un <code>FutureBuilder</code>. Comme
+<code>load</code> a déjà effacé la clé, la reconstruction fait simplement disparaître le bouton. C'est
+un choix d'UX discutable — le joueur ne comprend pas pourquoi le bouton s'évapore — mais c'est
+cohérent avec la règle « jamais de sauvegarde zombie ».</p>
+
+<h3>La confirmation d'écrasement</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/home_screen.dart</span><span class="lang">dart</span></div>
+  <pre>  Future&lt;void&gt; _startNewGame(bool hasSave) async {
+    if (hasSave) {
+      final confirmed = await showDialog&lt;bool&gt;(
+        context: context,
+        builder: (dialogContext) =&gt; GameDialog(
+          title: Text(AppLocalizations.of(context)!.newGameOverwriteTitle),
+          content: Text(AppLocalizations.of(context)!.newGameOverwriteMessage),
+          onClose: () =&gt; Navigator.of(dialogContext).pop(false),
+          actions: [
+            TextButton(
+              onPressed: () =&gt; Navigator.of(dialogContext).pop(false),
+              child: Text(AppLocalizations.of(context)!.cancel),
+            ),
+            TextButton(
+              onPressed: () =&gt; Navigator.of(dialogContext).pop(true),
+              child: Text(AppLocalizations.of(context)!.newGameOverwriteConfirm),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
+      await SaveService.clear();
+    }</pre>
+</div>
+
+<p>Trois détails de rigueur. Le dialogue n'apparaît que <code>if (hasSave)</code> — inutile de
+demander confirmation quand il n'y a rien à écraser. Le test de sortie est
+<code>if (confirmed != true) return;</code> et non <code>if (!confirmed)</code> : <code>showDialog</code>
+rend un <code>bool?</code>, et fermer la boîte par le bouton système donnerait <code>null</code>, sur
+lequel <code>!</code> planterait. Enfin <code>onClose</code> est explicitement câblé sur
+<code>pop(false)</code> : la croix de fermeture équivaut à « Annuler ».</p>
+
+<p>Et surtout, <code>SaveService.clear()</code> est appelé <strong>avant</strong> la navigation vers
+l'écran de sélection de classe, pas après. Si le joueur abandonne en cours de création de personnage,
+l'ancienne sauvegarde a déjà disparu — c'est bien le sens de « J'écrase », et ça évite l'état bâtard
+où une nouvelle run à moitié configurée cohabiterait avec l'ancienne.</p>
+
+<h2 id="s5">5. La localisation, système double</h2>
+
+<p>Hero's Draft parle français et anglais. Mais il le fait de <strong>deux façons</strong>
+complètement séparées, avec deux fichiers sources différents, deux outillages différents et deux
+syntaxes d'appel différentes. Ce n'est pas un accident historique : les deux ont des contraintes
+opposées.</p>
+
+<h3>(a) L'interface : le système ARB</h3>
+
+<p>ARB signifie <em>Application Resource Bundle</em>. C'est le format officiel de Flutter pour les
+chaînes d'interface : un fichier JSON par langue, plus un générateur de code qui en tire une classe
+Dart typée.</p>
+
+<div class="code" data-lang="yaml">
+  <div class="code-head"><span class="path">l10n.yaml</span><span class="lang">yaml</span></div>
+  <pre>arb-dir: lib/l10n
+template-arb-file: app_en.arb
+output-localization-file: app_localizations.dart</pre>
+</div>
+
+<p>Trois lignes à la racine du projet, et c'est toute la configuration. <code>arb-dir</code> indique où
+chercher les fichiers, <code>template-arb-file</code> désigne le <strong>modèle de référence</strong>
+(ici l'anglais : c'est lui qui définit les clés et les métadonnées, les autres langues ne font que
+traduire), <code>output-localization-file</code> nomme le fichier Dart généré.</p>
+
+<p>La génération est déclenchée par la ligne <code>generate: true</code> de <code>pubspec.yaml</code>
+sous la section <code>flutter:</code> — dès lors, <code>flutter pub get</code> et
+<code>flutter run</code> régénèrent <code>app_localizations.dart</code> automatiquement. Le paquet
+<code>flutter_localizations</code> et <code>intl: ^0.20.2</code> sont déclarés en dépendances.</p>
+
+<div class="code" data-lang="json">
+  <div class="code-head"><span class="path">illustration</span><span class="lang">json</span></div>
+  <pre>{
+  "@@locale": "fr",
+
+  "continueGame": "CONTINUER",
+
+  "missingItemsTitle": "Objets manquants",
+  "missingItemsMessage": "Ces éléments n'existent plus et ont été retirés : {names}",
+  "@missingItemsMessage": {
+    "placeholders": {
+      "names": { "type": "String" }
+    }
+  },
+
+  "actLevel": "Acte {act} — Niveau {level}",
+  "@actLevel": {
+    "placeholders": {
+      "act":   { "type": "int" },
+      "level": { "type": "int" }
+    }
+  }
+}</pre>
+</div>
+
+<p>Cet extrait montre la <strong>forme</strong> d'un fichier ARB. Les noms de clés
+(<code>continueGame</code>, <code>missingItemsTitle</code>, <code>missingItemsMessage</code>,
+<code>actLevel</code>), le nombre et le type des placeholders sont ceux réellement appelés dans le
+code du projet ; seuls les libellés sont reconstitués pour l'exemple. Retenez la mécanique : une clé
+simple est une paire chaîne/chaîne ; une clé paramétrée ajoute une entrée jumelle préfixée
+<code>@</code> qui déclare ses placeholders et leur type.</p>
+
+<p>Le générateur transforme ça en méthodes Dart :</p>
+
+<ul>
+  <li><code>continueGame</code> devient un <strong>getter</strong> : <code>l10n.continueGame</code> ;</li>
+  <li><code>missingItemsMessage</code> devient une <strong>méthode</strong> à un argument :
+  <code>l10n.missingItemsMessage(names)</code> ;</li>
+  <li><code>actLevel</code> devient une méthode à deux arguments <code>int</code> :
+  <code>l10n.actLevel(act, currentLevel)</code>.</li>
+</ul>
+
+<p>C'est ce typage qui fait tout l'intérêt du système : oublier un placeholder ou en passer deux au
+lieu d'un devient une <strong>erreur de compilation</strong>, pas un texte cassé à l'exécution.</p>
+
+<h3>Brancher les délégués</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/main.dart</span><span class="lang">dart</span></div>
+  <pre>    return MaterialApp(
+      onGenerateTitle: (context) =&gt; AppLocalizations.of(context)!.appTitle,
+      theme: AppTheme.darkNeonTheme,
+      debugShowCheckedModeBanner: false,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [Locale('en', ''), Locale('fr', '')],
+      home: const SplashScreen(),</pre>
+</div>
+
+<p>Quatre délégués. Le premier, <code>AppLocalizations.delegate</code>, est généré à partir des ARB et
+fournit les chaînes du jeu. Les trois autres viennent de <code>flutter_localizations</code> et
+traduisent les composants fournis par Flutter : libellés des boutons de dialogue Material, textes
+d'accessibilité, sélecteurs de date, menus contextuels Cupertino. Sans eux, un
+<code>showDatePicker</code> resterait obstinément en anglais.</p>
+
+<p><code>supportedLocales</code> déclare deux locales, chacune sans code pays (<code>''</code>) : le
+jeu ne distingue pas <code>fr_FR</code> de <code>fr_CA</code>. Flutter compare la locale du système à
+cette liste et retient la première correspondance ; s'il n'y en a aucune, il retombe sur le
+<strong>premier élément de la liste</strong>, ici l'anglais.</p>
+
+<p>Enfin <code>onGenerateTitle</code> plutôt que <code>title</code> : le titre de l'application
+(celui du sélecteur de tâches Android) doit lui aussi être traduit, et il ne peut l'être qu'à
+l'intérieur d'un contexte où les délégués sont installés — d'où la version « callback ».</p>
+
+<h3>L'appel dans les widgets</h3>
+
+<p>Deux formes coexistent dans le projet. La forme longue, pour un appel isolé :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/home_screen.dart</span><span class="lang">dart</span></div>
+  <pre>                          child: Text(
+                            AppLocalizations.of(context)!.continueGame,
+                            style: const TextStyle(color: Colors.white),
+                          ),</pre>
+</div>
+
+<p>Et la forme courte, quand un <code>build</code> a plusieurs chaînes à afficher :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/deck_screen.dart</span><span class="lang">dart</span></div>
+  <pre>    final l10n = AppLocalizations.of(context)!;
+    // ...
+                            l10n.mergeLabel(3),
+    // ...
+                          l10n.mergeMoreRequired(3 - count),
+    // ...
+          l10n.deckMergeSuccess(cardName, nextRarityIndex + 1),</pre>
+</div>
+
+<p>Le <code>!</code> est l'opérateur d'assertion de non-nullité : <code>AppLocalizations.of</code>
+rend un <code>AppLocalizations?</code> parce qu'il est techniquement possible d'appeler la méthode
+depuis un contexte situé au-dessus du <code>MaterialApp</code>. Comme ici tous les écrans sont sous le
+<code>MaterialApp</code>, le <code>!</code> est toujours sûr.</p>
+
+<p>Trois exemples réels de clés paramétrées, avec leur site d'appel :</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Clé</th><th>Appel réel</th><th>Placeholders</th><th>Fichier</th></tr></thead>
+<tbody>
+<tr><td><code>missingItemsMessage</code></td><td><code>missingItemsMessage(names)</code></td>
+    <td>1 × <code>String</code></td><td><code>ui/screens/home_screen.dart</code></td></tr>
+<tr><td><code>actLevel</code></td><td><code>actLevel(act, currentLevel)</code></td>
+    <td>2 × <code>int</code></td><td><code>ui/widgets/hud/combat_top_bar.dart</code></td></tr>
+<tr><td><code>deckMergeSuccess</code></td><td><code>deckMergeSuccess(cardName, nextRarityIndex + 1)</code></td>
+    <td>1 × <code>String</code> + 1 × <code>int</code></td><td><code>ui/screens/deck_screen.dart</code></td></tr>
+<tr><td><code>purchased</code></td><td><code>purchased(card.data.getName(locale))</code></td>
+    <td>1 × <code>String</code></td><td><code>ui/screens/shop_screen.dart</code></td></tr>
+<tr><td><code>mergeMoreRequired</code></td><td><code>mergeMoreRequired(3 - count)</code></td>
+    <td>1 × <code>int</code></td><td><code>ui/screens/deck_screen.dart</code></td></tr>
+</tbody>
+</table></div>
+
+<p>Le volume est significatif : en comptant les trois formes d'accès utilisées dans le projet
+(<code>l10n.xxx</code>, <code>AppLocalizations.of(context)!.xxx</code> et les <em>selectors</em>
+<code>(l) =&gt; l.xxx</code>), on trouve <strong>201 clés distinctes</strong> référencées dans
+<code>lib/</code>, dont <strong>59 paramétrées</strong>. Ce n'est plus un petit fichier de libellés,
+c'est un vrai dictionnaire.</p>
+
+<p>Notez la ligne <code>purchased(card.data.getName(locale))</code> : elle mélange les deux systèmes.
+Le gabarit de la phrase vient de l'ARB ; le nom de carte qu'on y injecte vient du JSON bilingue. C'est
+le point de couture entre les deux mondes.</p>
+
+<h3>(b) Le contenu du jeu : JSON bilingue</h3>
+
+<p>Les cartes, ennemis, héros, reliques, événements, passifs et améliorations de forge ne sont pas
+dans les ARB. Ils vivent dans <code>assets/data/*.json</code>, et chaque entrée porte ses deux
+langues côte à côte :</p>
+
+<div class="code" data-lang="json">
+  <div class="code-head"><span class="path">assets/data/relics.json</span><span class="lang">json</span></div>
+  <pre>  {
+    "id": "iron_talisman",
+    "name_en": "Iron Talisman",
+    "name_fr": "Talisman de Fer",
+    "description_en": "Gain 2 Block at the start of each turn.",
+    "description_fr": "Gagne 2 points d'Armure au début de chaque tour.",
+    "trigger": "startOfTurn",
+    "effectType": "gain_armor",
+    "value": 2,
+    "rarity": "common",
+    "emoji": "🪙"
+  }</pre>
+</div>
+
+<p>Côté Dart, chaque modèle de données expose deux getters строго identiques :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/card_data.dart</span><span class="lang">dart</span></div>
+  <pre>  String getName(String locale) =&gt; locale == 'fr' ? nameFr : nameEn;
+  String getDescription(String locale) =&gt;
+      locale == 'fr' ? descriptionFr : descriptionEn;</pre>
+</div>
+
+<p>Exactement les mêmes deux lignes sont dupliquées dans <code>hero_data.dart</code>,
+<code>relic_data.dart</code> et <code>passive_data.dart</code> ; <code>event_data.dart</code> n'a que
+<code>getDescription</code> (son champ titre s'appelle <code>title_fr</code>/<code>title_en</code>).
+<code>forge_upgrade_data.dart</code> pousse le principe un cran plus loin avec un gabarit à trous :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/forge_upgrade_data.dart</span><span class="lang">dart</span></div>
+  <pre>  String getName(String locale) {
+    return locale == 'fr' ? nameFr : nameEn;
+  }
+
+  String getDescription(int tier, String locale) {
+    final template = locale == 'fr' ? descriptionFr : descriptionEn;
+    final val = tier * valueMultiplier;
+    return template
+        .replaceAll('{tier}', tier.toString())
+        .replaceAll('{val}', val.toString());
+  }</pre>
+</div>
+
+<div class="box rule">
+  <div class="box-title">Le repli sur l'anglais</div>
+  <p>Le test est <code>locale == 'fr' ? nameFr : nameEn</code>, pas un <code>switch</code> exhaustif.
+  Autrement dit : <strong>toute locale qui n'est pas exactement <code>'fr'</code> reçoit l'anglais</strong>.
+  Allemand, japonais, espagnol, chaîne vide — tout retombe sur <code>nameEn</code>. C'est le
+  comportement le plus sûr possible : le jeu ne peut jamais afficher une chaîne vide ou planter sur
+  une locale inconnue, il devient juste anglophone.</p>
+</div>
+
+<p>Le même esprit gouverne le décodage. Chaque <code>fromJson</code> tolère un ancien format
+monolingue :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/card_data.dart</span><span class="lang">dart</span></div>
+  <pre>  factory CardData.fromJson(Map&lt;String, dynamic&gt; json) {
+    final nEn = json['name_en'] as String? ?? json['name'] as String? ?? '';
+    final nFr = json['name_fr'] as String? ?? json['name'] as String? ?? '';
+    final dEn =
+        json['description_en'] as String? ??
+        json['description'] as String? ??
+        '';
+    final dFr =
+        json['description_fr'] as String? ??
+        json['description'] as String? ??
+        '';</pre>
+</div>
+
+<p>Trois niveaux de repli par champ : la variante localisée, puis le champ générique
+(<code>name</code>, <code>description</code>) d'un format plus ancien, puis la chaîne vide. Une entrée
+JSON écrite avant l'introduction du bilinguisme continue donc de charger — elle affichera juste le
+même texte dans les deux langues. Cette même tolérance est reproduite à l'identique dans
+<code>hero_data.dart</code>, <code>relic_data.dart</code>, <code>passive_data.dart</code> et
+<code>event_data.dart</code>.</p>
+
+<div class="box rule">
+  <div class="box-title">Règle du projet</div>
+  <p>Toute entrée JSON de <code>assets/data/</code> comportant du texte visible par le joueur
+  <strong>doit</strong> fournir ses deux variantes : <code>name_fr</code> + <code>name_en</code>,
+  <code>description_fr</code> + <code>description_en</code> (ou <code>title_fr</code> +
+  <code>title_en</code> pour les événements). Le repli sur <code>name</code> existe pour la
+  compatibilité, pas pour économiser une traduction : une entrée monolingue passera les tests mais
+  affichera de l'anglais à un joueur français, ou l'inverse.</p>
+</div>
+
+<h3>Le cas Flame : <code>getTranslation</code></h3>
+
+<p>Une complication surgit dans la couche de rendu. Les composants Flame ne sont pas des widgets : ils
+n'ont pas de <code>BuildContext</code> propre, donc pas d'accès direct à
+<code>AppLocalizations.of(context)</code>. <code>CardComponent</code> contourne le problème avec deux
+helpers :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/card_component.dart</span><span class="lang">dart</span></div>
+  <pre>  String get activeLocale {
+    final context = game.buildContext;
+    if (context != null) {
+      return Localizations.localeOf(context).languageCode;
+    }
+    return 'fr'; // Langue par défaut en secours
+  }
+
+  String getTranslation(
+    String Function(AppLocalizations) select, {
+    String fallback = '',
+  }) {
+    final context = game.buildContext;
+    if (context != null) {
+      final localizations = AppLocalizations.of(context);
+      if (localizations != null) {
+        return select(localizations);
+      }
+    }
+    return fallback;
+  }</pre>
+</div>
+
+<p>Le paramètre <code>select</code> est une fonction qui reçoit l'objet <code>AppLocalizations</code>
+et en extrait la chaîne voulue. À l'appel, ça donne
+<code>getTranslation((l) =&gt; l.cardTypeAttack, fallback: 'Attaque')</code> : on passe le
+<em>chemin d'accès</em> à la clé plutôt que la clé résolue, ce qui permet de ne rien évaluer quand le
+contexte est absent. Le <code>fallback</code> couvre la fenêtre où le composant Flame est construit
+avant que l'arbre de widgets soit prêt.</p>
+
+<div class="box warn">
+  <div class="box-title">Piège — deux valeurs de secours contradictoires</div>
+  <p><code>activeLocale</code> retombe sur <code>'fr'</code> ; les <code>fallback</code> de
+  <code>getTranslation</code> sont écrits tantôt en français (<code>'Attaque'</code>,
+  <code>'Compétence'</code>), tantôt en anglais (<code>'Single enemy'</code>, <code>'Common'</code>).
+  Les getters du catalogue, eux, retombent sur l'anglais. Dans la fenêtre — très courte — où le
+  contexte n'est pas encore disponible, une même carte peut donc afficher un type en français et une
+  cible en anglais. Ce n'est pas visible en pratique, mais c'est une incohérence de conception.</p>
+</div>
+
+<h3>Pourquoi deux systèmes ?</h3>
+
+<div class="table-wrap"><table>
+<thead><tr>
+  <th>Critère</th><th>ARB (interface)</th><th>JSON bilingue (contenu)</th>
+</tr></thead>
+<tbody>
+<tr><td>Fichier source</td>
+    <td><code>lib/l10n/app_en.arb</code>, <code>lib/l10n/app_fr.arb</code></td>
+    <td><code>assets/data/cards.json</code>, <code>relics.json</code>, <code>heroes.json</code>…</td></tr>
+<tr><td>Structure</td>
+    <td>Un fichier <strong>par langue</strong>, mêmes clés partout</td>
+    <td>Un seul fichier, <strong>les deux langues dans la même entrée</strong></td></tr>
+<tr><td>Outillage</td>
+    <td><code>l10n.yaml</code> + <code>flutter gen-l10n</code> (auto via <code>generate: true</code>)</td>
+    <td>Aucun — <code>jsonDecode</code> au démarrage dans <code>GameDataRegistry</code></td></tr>
+<tr><td>Accès</td>
+    <td><code>AppLocalizations.of(context)!.maCle</code></td>
+    <td><code>maDonnee.getName(locale)</code></td></tr>
+<tr><td>Typage</td>
+    <td><strong>Fort</strong> : clé inexistante = erreur de compilation</td>
+    <td><strong>Faible</strong> : champ absent = chaîne vide silencieuse</td></tr>
+<tr><td>Paramètres</td>
+    <td>Placeholders typés, pluriels et sélecteurs ICU</td>
+    <td><code>replaceAll('{tier}', ...)</code> pour la forge, rien ailleurs</td></tr>
+<tr><td>Ajouter une langue</td>
+    <td>Un nouveau fichier <code>app_de.arb</code> + 1 ligne dans <code>supportedLocales</code></td>
+    <td><strong>Toucher chaque entrée</strong> de chaque fichier + chaque getter</td></tr>
+<tr><td>Ajouter une entrée</td>
+    <td>Éditer 2 fichiers (en + fr) et vérifier qu'ils restent synchronisés</td>
+    <td>Éditer 1 fichier, les deux langues sont côte à côte</td></tr>
+<tr><td>Rechargeable à chaud</td>
+    <td>Non — nécessite une régénération</td>
+    <td>Oui — c'est de la donnée d'asset</td></tr>
+<tr><td>Volume</td>
+    <td>201 clés distinctes référencées, dont 59 paramétrées</td>
+    <td>9 fichiers de données dans <code>assets/data/</code></td></tr>
+</tbody>
+</table></div>
+
+<p>La ligne décisive est « Ajouter une entrée ». Un game designer qui crée une carte veut écrire
+<strong>une</strong> entrée, pas deux moitiés dans deux fichiers qu'il faut garder alignés. Le format
+bilingue rend la désynchronisation structurellement impossible : le nom français et le nom anglais
+sont dans le même objet, à trois lignes d'écart.</p>
+
+<p>À l'inverse, l'interface a besoin de ce que le JSON ne sait pas faire : des placeholders typés, des
+pluriels, et surtout une <strong>vérification à la compilation</strong>. Une faute de frappe dans un
+nom de clé ARB casse le build ; la même faute dans un champ JSON produit silencieusement une chaîne
+vide affichée à l'écran.</p>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 840 430" width="840" role="img" aria-label="Les deux systèmes de localisation côte à côte : ARB pour l'interface, JSON bilingue pour le contenu">
+      <defs>
+        <marker id="c20-c1" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#22d3ee"/>
+        </marker>
+        <marker id="c20-c2" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#f59e0b"/>
+        </marker>
+        <marker id="c20-c3" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#a7b4c9"/>
+        </marker>
+      </defs>
+      <rect x="0" y="0" width="840" height="430" fill="#0e1524"/>
+
+      <rect x="20" y="14" width="380" height="308" rx="10" fill="#101728" stroke="#22d3ee" stroke-opacity="0.35"/>
+      <text x="210" y="38" fill="#22d3ee" font-size="14" text-anchor="middle" font-weight="bold">(a) INTERFACE — système ARB</text>
+
+      <rect x="44" y="52" width="150" height="46" rx="7" fill="#151b2b" stroke="#3a4966"/>
+      <text x="119" y="72" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">app_en.arb</text>
+      <text x="119" y="89" fill="#a7b4c9" font-size="10" text-anchor="middle">template</text>
+
+      <rect x="226" y="52" width="150" height="46" rx="7" fill="#151b2b" stroke="#3a4966"/>
+      <text x="301" y="72" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">app_fr.arb</text>
+      <text x="301" y="89" fill="#a7b4c9" font-size="10" text-anchor="middle">traduction</text>
+
+      <path d="M119 98 L119 118 L210 118 L210 132" stroke="#22d3ee" stroke-width="2" fill="none" marker-end="url(#c20-c1)"/>
+      <path d="M301 98 L301 118 L210 118" stroke="#22d3ee" stroke-width="2" fill="none"/>
+
+      <rect x="70" y="136" width="280" height="44" rx="7" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="210" y="154" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">flutter gen-l10n</text>
+      <text x="210" y="171" fill="#a7b4c9" font-size="10" text-anchor="middle">piloté par l10n.yaml · generate: true</text>
+
+      <path d="M210 180 L210 202" stroke="#22d3ee" stroke-width="2" fill="none" marker-end="url(#c20-c1)"/>
+
+      <rect x="70" y="206" width="280" height="44" rx="7" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="210" y="224" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">AppLocalizations</text>
+      <text x="210" y="241" fill="#a7b4c9" font-size="10" text-anchor="middle">classe Dart typée + delegate</text>
+
+      <path d="M210 250 L210 272" stroke="#22d3ee" stroke-width="2" fill="none" marker-end="url(#c20-c1)"/>
+
+      <rect x="46" y="276" width="328" height="34" rx="7" fill="#12212a" stroke="#22d3ee"/>
+      <text x="210" y="298" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">AppLocalizations.of(context)!.continueGame</text>
+
+      <rect x="424" y="14" width="396" height="308" rx="10" fill="#101728" stroke="#f59e0b" stroke-opacity="0.35"/>
+      <text x="622" y="38" fill="#f59e0b" font-size="14" text-anchor="middle" font-weight="bold">(b) CONTENU — JSON bilingue</text>
+
+      <rect x="470" y="52" width="304" height="60" rx="7" fill="#151b2b" stroke="#3a4966"/>
+      <text x="622" y="72" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">assets/data/*.json</text>
+      <text x="622" y="90" fill="#a7b4c9" font-size="10" text-anchor="middle">"name_fr" + "name_en" dans la MÊME entrée</text>
+      <text x="622" y="105" fill="#a7b4c9" font-size="10" text-anchor="middle">"description_fr" + "description_en"</text>
+
+      <path d="M622 112 L622 134" stroke="#f59e0b" stroke-width="2" fill="none" marker-end="url(#c20-c2)"/>
+
+      <rect x="482" y="138" width="280" height="42" rx="7" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="622" y="156" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">GameDataRegistry</text>
+      <text x="622" y="172" fill="#a7b4c9" font-size="10" text-anchor="middle">jsonDecode au démarrage — aucun codegen</text>
+
+      <path d="M622 180 L622 202" stroke="#f59e0b" stroke-width="2" fill="none" marker-end="url(#c20-c2)"/>
+
+      <rect x="482" y="206" width="280" height="44" rx="7" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="622" y="224" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">CardData · RelicData · HeroData</text>
+      <text x="622" y="241" fill="#a7b4c9" font-size="10" text-anchor="middle">PassiveData · EventData · ForgeUpgradeData</text>
+
+      <path d="M622 250 L622 272" stroke="#f59e0b" stroke-width="2" fill="none" marker-end="url(#c20-c2)"/>
+
+      <rect x="470" y="276" width="304" height="34" rx="7" fill="#241d10" stroke="#f59e0b"/>
+      <text x="622" y="298" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">relic.getName(locale)  →  'fr' ? FR : EN</text>
+
+      <rect x="180" y="348" width="480" height="56" rx="8" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="420" y="370" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">Localizations.localeOf(context).languageCode</text>
+      <text x="420" y="391" fill="#a7b4c9" font-size="10" text-anchor="middle">seule source de vérité partagée — toute valeur ≠ 'fr' donne l'anglais</text>
+
+      <path d="M300 348 L240 322" stroke="#a7b4c9" stroke-width="1.5" stroke-dasharray="4 3" fill="none" marker-end="url(#c20-c3)"/>
+      <path d="M540 348 L600 322" stroke="#a7b4c9" stroke-width="1.5" stroke-dasharray="4 3" fill="none" marker-end="url(#c20-c3)"/>
+    </svg>
+  </div>
+  <figcaption>Deux chaînes de production parallèles, un seul point commun : la locale courante lue
+  depuis le <code>BuildContext</code>.</figcaption>
+</figure>
+
+<h2 id="s6">6. Le tutoriel</h2>
+
+<p>Le troisième système transverse est le plus autonome des trois. Tout le tutoriel tient dans
+<code>lib/tutorial/</code> : cinq fichiers à la racine, treize widgets d'illustration. Sa
+caractéristique principale, celle qui justifie son isolation, est simple :</p>
+
+<div class="box rule">
+  <div class="box-title">Le tutoriel ne touche jamais l'état réel</div>
+  <p>Aucun fichier de <code>lib/tutorial/</code> n'importe <code>flutter_riverpod</code>, ni
+  <code>runProvider</code>, ni <code>deckProvider</code>, ni <code>combatProvider</code>. Le tutoriel
+  a son propre état factice, <code>TutorialMockState</code>, et sa propre logique,
+  <code>TutorialEngine</code>. Un joueur peut lancer le tutoriel au milieu d'une run en cours : à la
+  sortie, rien n'a bougé. C'est aussi ce qui permet au tutoriel de mentir librement — il montre des
+  valeurs rondes et pédagogiques plutôt que les vraies.</p>
+</div>
+
+<h3>Le modèle d'étape</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/tutorial/tutorial_step.dart</span><span class="lang">dart</span></div>
+  <pre>class TutorialStep {
+  final String titleFr;
+  final String titleEn;
+  final String bodyFr;
+  final String bodyEn;
+  final TutorialStepType type;
+  final String? highlightZone;
+
+  const TutorialStep({
+    required this.titleFr,
+    required this.titleEn,
+    required this.bodyFr,
+    required this.bodyEn,
+    required this.type,
+    this.highlightZone,
+  });
+}
+
+enum TutorialStepType {
+  welcome,
+  map,
+  nodeTypes,
+  combatOverview,
+  cards,
+  playCard,
+  armorDamage,
+  elements,
+  enemies,
+  merge,
+  xp,
+  draft,
+  relics,
+}</pre>
+</div>
+
+<p>Troisième stratégie de localisation dans le même projet ! Le tutoriel ne passe ni par les ARB, ni
+par les JSON d'assets : il duplique les champs <strong>directement dans la classe Dart</strong>
+(<code>titleFr</code>/<code>titleEn</code>, <code>bodyFr</code>/<code>bodyEn</code>). C'est défendable
+— le tutoriel est du texte long, structurel, qui change rarement, et le garder dans le code évite un
+aller-retour vers les ARB pour treize écrans. Mais c'est un troisième endroit à mettre à jour quand
+on ajoute une langue.</p>
+
+<p><code>highlightZone</code>, en revanche, est un champ mort : il est déclaré, il est optionnel, et
+<strong>aucune des treize étapes ne le renseigne</strong>. Le nom suggère une fonctionnalité de
+surlignage d'une zone d'écran qui n'a jamais été implémentée.</p>
+
+<h3>Les treize étapes</h3>
+
+<p><code>kTutorialSteps</code> est une <code>const List&lt;TutorialStep&gt;</code> — donc évaluée à la
+compilation, sans allocation à l'exécution. Elle contient exactement <strong>13</strong> entrées, dans
+le même ordre que les 13 valeurs de <code>TutorialStepType</code>.</p>
+
+<div class="table-wrap"><table>
+<thead><tr>
+  <th>#</th><th><code>type</code></th><th>Titre FR</th><th>Ce qui est enseigné</th><th>Widget</th>
+</tr></thead>
+<tbody>
+<tr><td>0</td><td><code>welcome</code></td><td>Bienvenue dans Hero's Draft !</td>
+    <td>Le pitch : deckbuilder roguelike au tour par tour, drafts au level up</td>
+    <td><code>TutorialWelcomeWidget</code></td></tr>
+<tr><td>1</td><td><code>map</code></td><td>La Carte du Monde</td>
+    <td>Nœuds connectés, départ en bas, progression vers le haut</td>
+    <td><code>TutorialMapWidget</code></td></tr>
+<tr><td>2</td><td><code>nodeTypes</code></td><td>Types de Rencontres</td>
+    <td>Les six types : Combat, Élite, Boutique, Repos, Événement, Boss</td>
+    <td><code>TutorialNodeTypesWidget</code></td></tr>
+<tr><td>3</td><td><code>combatOverview</code></td><td>Le Combat — Vue d'ensemble</td>
+    <td>La disposition de l'écran : centre, bas, côté gauche, côté droit</td>
+    <td><code>TutorialCombatOverviewWidget</code></td></tr>
+<tr><td>4</td><td><code>cards</code></td><td>Les Cartes &amp; le Mana</td>
+    <td>Coût en cristaux, icônes plutôt que texte, tooltips au survol / appui long</td>
+    <td><code>TutorialCardsWidget</code></td></tr>
+<tr><td>5</td><td><code>playCard</code></td><td>Jouer des cartes</td>
+    <td><strong>Action requise</strong> : frapper le Slime, puis se défendre</td>
+    <td><code>TutorialPlayCardWidget</code></td></tr>
+<tr><td>6</td><td><code>armorDamage</code></td><td>Armure &amp; Dégâts</td>
+    <td>L'armure absorbe avant les PV, elle décroît selon la classe</td>
+    <td><code>TutorialArmorWidget</code></td></tr>
+<tr><td>7</td><td><code>elements</code></td><td>Les Effets Élémentaires</td>
+    <td>Poison, Brûlure, Gel, Foudre : quand ils tombent et comment ils décroissent</td>
+    <td><code>TutorialElementsWidget</code></td></tr>
+<tr><td>8</td><td><code>enemies</code></td><td>Les Intentions Ennies <em>(sic)</em></td>
+    <td>Lire l'icône d'intention : épée, bouclier, flèche violette, point d'interrogation</td>
+    <td><code>TutorialEnemyIntentsWidget</code></td></tr>
+<tr><td>9</td><td><code>merge</code></td><td>La Fusion de Cartes</td>
+    <td><strong>Action requise</strong> : trois cartes identiques → une version améliorée</td>
+    <td><code>TutorialMergeWidget</code></td></tr>
+<tr><td>10</td><td><code>xp</code></td><td>L'Expérience &amp; le Level Up</td>
+    <td><strong>Action requise</strong> : remplir la barre d'XP, le mana est restauré</td>
+    <td><code>TutorialXpWidget</code></td></tr>
+<tr><td>11</td><td><code>draft</code></td><td>Le Draft de Récompenses</td>
+    <td><strong>Action requise</strong> : choisir entre stats permanentes et clonage</td>
+    <td><code>TutorialDraftWidget</code></td></tr>
+<tr><td>12</td><td><code>relics</code></td><td>Les Reliques</td>
+    <td>Bonus passifs pour toute la run, obtenus sur Élite, Boss ou en Boutique</td>
+    <td><code>TutorialRelicsWidget</code></td></tr>
+</tbody>
+</table></div>
+
+<p>La progression est délibérée : trois étapes de contexte (0-2), puis l'écran de combat (3-8), puis
+les systèmes de méta-progression (9-12). Les quatre étapes qui exigent une action réelle sont réparties
+sur la seconde moitié — le joueur regarde d'abord, agit ensuite.</p>
+
+<h3><code>TutorialEngine</code> et son état factice</h3>
+
+<p><code>TutorialEngine extends ChangeNotifier</code>. Pas de Riverpod : <code>ChangeNotifier</code>
+est le mécanisme d'observabilité de base de Flutter, et il est largement suffisant pour un module qui
+vit dans un seul écran. L'écran l'écoute via un <code>AnimatedBuilder</code> ; les widgets d'illustration
+le reçoivent en paramètre de constructeur.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/tutorial/tutorial_engine.dart</span><span class="lang">dart</span></div>
+  <pre>class TutorialMockState {
+  int heroHp = 80;
+  int heroMaxHp = 80;
+  int heroMana = 3;
+  int heroMaxMana = 3;
+  int heroArmor = 0;
+  List&lt;TutorialCard&gt; hand = [];
+  List&lt;TutorialCard&gt; deck = [];
+  TutorialEnemy? enemy;
+  int playerXp = 0;
+  int xpToNextLevel = 100;
+  int playerLevel = 1;
+  bool hasDrafted = false;
+
+  void reset() {
+    heroHp = 80;
+    heroMaxHp = 80;
+    // ... remise à zéro de tous les champs
+  }
+}</pre>
+</div>
+
+<p>Comparez avec le vrai jeu : <code>EntityStats</code> a quinze champs dont
+<code>armorMastery</code>, <code>critChance</code>, <code>critMultiplier</code>, une liste de
+<code>StatusEffect</code>… <code>TutorialMockState</code> en a douze, tous des primitives, et
+<strong>mutables</strong> — pas de <code>copyWith</code>, pas d'immutabilité. Les classes
+<code>TutorialCard</code> et <code>TutorialEnemy</code> sont pareillement simplifiées : une
+<code>TutorialCard</code> a <code>damage</code> et <code>armor</code> comme entiers directs, là où une
+vraie <code>CardData</code> porte une liste de <code>CardEffect</code>.</p>
+
+<p>C'est le bon niveau de mensonge pédagogique. Un mock qui reproduirait fidèlement le vrai modèle
+serait plus lourd à maintenir <em>et</em> moins clair à l'écran.</p>
+
+<h3>Le <code>switch</code> sur l'index d'étape</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/tutorial/tutorial_engine.dart</span><span class="lang">dart</span></div>
+  <pre>  void nextStep() {
+    if (_currentStepIndex &lt; kTutorialSteps.length - 1) {
+      _currentStepIndex++;
+      resetMockState();
+      notifyListeners();
+    }
+  }
+
+  void prevStep() {
+    if (_currentStepIndex &gt; 0) {
+      _currentStepIndex--;
+      resetMockState();
+      notifyListeners();
+    }
+  }
+
+  void resetMockState() {
+    mockState.reset();
+    switch (_currentStepIndex) {
+      case 4: // Step 5: Cards &amp; Mana
+        mockState.heroMana = 3;
+        mockState.hand = [ /* strike, defend, fireball */ ];
+        break;
+      case 5: // Step 6: Play Card
+        mockState.heroMana = 3;
+        mockState.hand = [ /* strike, defend */ ];
+        mockState.enemy = TutorialEnemy(
+          nameEn: 'Tutorial Slime',
+          nameFr: 'Slime d\'Entraînement',
+          hp: 20,
+          maxHp: 20,
+          // ...
+        );
+        break;
+      case 6: // Step 7: Armor &amp; Damage
+        // ... Training Dummy 30 PV, intention 10
+        break;
+      case 9: // Step 10: Merge
+        mockState.hand = [ /* 3 × 'Frappe Basique Niv.1' */ ];
+        break;
+      case 10: // Step 11: XP
+        mockState.playerXp = 0;
+        mockState.playerLevel = 1;
+        break;
+      case 11: // Step 12: Draft
+        mockState.playerLevel = 2;
+        mockState.hasDrafted = false;
+        break;
+      default:
+        break;
+    }
+  }</pre>
+</div>
+
+<p>Le patron est clair : <strong>remise à zéro complète, puis re-mise en scène de l'étape courante</strong>.
+Six étapes sur treize ont besoin d'un décor (les index 4, 5, 6, 9, 10 et 11) ; les sept autres tombent
+dans le <code>default</code> et se contentent de l'état vierge, parce que leurs widgets sont purement
+illustratifs.</p>
+
+<p>Notez que <code>resetMockState()</code> est appelé à <em>chaque</em> changement d'étape, dans les
+deux sens. Revenir en arrière puis repartir en avant remet donc le décor à neuf : le Slime récupère
+ses 20 PV, la main est reconstituée. Aucun état ne fuit d'une étape à l'autre.</p>
+
+<h3>Le gating : quatre étapes exigent une action</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/tutorial/tutorial_screen.dart</span><span class="lang">dart</span></div>
+  <pre>  bool _isStepActionComplete(TutorialEngine engine) {
+    final step = kTutorialSteps[engine.currentStepIndex];
+    switch (step.type) {
+      case TutorialStepType.playCard:
+        return engine.mockState.enemy != null &amp;&amp;
+            engine.mockState.enemy!.hp &lt; 20 &amp;&amp;
+            engine.mockState.heroArmor &gt; 0;
+      case TutorialStepType.merge:
+        return engine.mockState.hand.length == 1 &amp;&amp;
+            engine.mockState.hand.first.id == 'strike_upgraded';
+      case TutorialStepType.xp:
+        return engine.mockState.playerLevel &gt; 1;
+      case TutorialStepType.draft:
+        return engine.mockState.hasDrafted;
+      default:
+        return true;
+    }
+  }</pre>
+</div>
+
+<p>Quatre cas explicites, un <code>default: return true</code> pour les neuf autres. Chaque condition
+est une <strong>observation de l'état factice</strong>, pas un drapeau « l'utilisateur a cliqué » :</p>
+
+<ul>
+  <li><strong>playCard</strong> — l'ennemi doit exister, avoir moins de 20 PV (il en a 20 au départ,
+  donc il faut l'avoir frappé) <em>et</em> le héros doit avoir de l'armure. Deux cartes différentes
+  doivent avoir été jouées, sur deux cibles différentes.</li>
+  <li><strong>merge</strong> — la main doit contenir exactement une carte, d'identifiant
+  <code>'strike_upgraded'</code>. C'est <code>engine.mergeCards()</code> qui produit cet état.</li>
+  <li><strong>xp</strong> — le niveau doit avoir dépassé 1. Le bouton du widget donne
+  <code>gainXp(35)</code> et il faut 100 XP : trois clics minimum.</li>
+  <li><strong>draft</strong> — le drapeau <code>hasDrafted</code>, mis par
+  <code>engine.draftReward()</code> quand une option est choisie.</li>
+</ul>
+
+<div class="box ok">
+  <div class="box-title">Bonne pratique — le <code>switch</code> porte sur le <code>type</code></div>
+  <p>Contrairement à <code>resetMockState</code>, qui compare des index numériques,
+  <code>_isStepActionComplete</code> commence par <code>kTutorialSteps[index].type</code> et fait son
+  <code>switch</code> sur l'énumération. Insérer une étape au milieu de la liste ne casse rien ici.
+  C'est exactement le même problème traité de deux manières, dans deux fichiers voisins — et une
+  seule des deux est robuste.</p>
+</div>
+
+<h3>Les trois libellés de bouton</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/tutorial/tutorial_screen.dart</span><span class="lang">dart</span></div>
+  <pre>                                            child: Text(
+                                              _engine.isLastStep
+                                                  ? (isFrench ? 'TERMINER' : 'FINISH')
+                                                  : (isComplete
+                                                        ? (isFrench
+                                                              ? 'SUIVANT'
+                                                              : 'NEXT')
+                                                        : (isFrench
+                                                              ? 'AGIR'
+                                                              : 'ACTION')),</pre>
+</div>
+
+<p>Un ternaire imbriqué qui encode toute la logique d'affordance :</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Situation</th><th>Libellé FR</th><th>Libellé EN</th><th>État visuel</th></tr></thead>
+<tbody>
+<tr><td>Dernière étape (index 12)</td><td><code>TERMINER</code></td><td><code>FINISH</code></td>
+    <td>Dégradé ambre, cliquable</td></tr>
+<tr><td>Étape validée (ou sans action)</td><td><code>SUIVANT</code></td><td><code>NEXT</code></td>
+    <td>Dégradé ambre + ombre portée, cliquable</td></tr>
+<tr><td>Action en attente</td><td><code>AGIR</code></td><td><code>ACTION</code></td>
+    <td>Fond gris <code>0xFF1E293B</code>, <code>onTap: null</code></td></tr>
+</tbody>
+</table></div>
+
+<p>Le bouton n'est pas seulement grisé : <code>onTap: isComplete ? () =&gt; _handleNext(isComplete) : null</code>.
+Un <code>InkWell</code> avec <code>onTap: null</code> est réellement inerte — pas d'effet d'encre, pas
+de retour haptique. Et <code>_handleNext</code> commence de toute façon par
+<code>if (!isComplete) return;</code> : double sécurité. La bordure du panneau de texte change aussi
+de couleur (ambre à 30 % d'opacité quand c'est validé, gris <code>0xFF1E293B</code> sinon), ce qui donne
+un second signal visuel.</p>
+
+<h3>La persistance de la progression</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/tutorial/tutorial_progress_service.dart</span><span class="lang">dart</span></div>
+  <pre>class TutorialProgressService {
+  static const String _tutorialCompletedKey = 'tutorial_completed';
+
+  static Future&lt;bool&gt; hasCompletedTutorial() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_tutorialCompletedKey) ?? false;
+  }
+
+  static Future&lt;void&gt; markTutorialCompleted() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_tutorialCompletedKey, true);
+  }
+
+  static Future&lt;void&gt; resetTutorial() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_tutorialCompletedKey, false);
+  }
+}</pre>
+</div>
+
+<p>Un booléen sous la clé <code>tutorial_completed</code>, dans le même
+<code>shared_preferences</code> que <code>run_save_v1</code> mais totalement indépendant : effacer la
+sauvegarde de run ne remet pas le tutoriel à zéro, et inversement. Le service est structuré exactement
+comme <code>SaveService</code> : méthodes statiques, <code>SharedPreferences.getInstance()</code> à
+chaque appel, aucun état en mémoire.</p>
+
+<p>La marque de complétion n'est posée qu'à un seul endroit :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/tutorial/tutorial_screen.dart</span><span class="lang">dart</span></div>
+  <pre>  Future&lt;void&gt; _handleNext(bool isComplete) async {
+    if (!isComplete) return;
+
+    if (_engine.isLastStep) {
+      await TutorialProgressService.markTutorialCompleted();
+      if (mounted) {
+        Navigator.pop(context);
+      }
+    } else {
+      _engine.nextStep();
+    }
+  }</pre>
+</div>
+
+<p>Côté menu principal, le drapeau pilote un badge « NEW » :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/home_screen.dart</span><span class="lang">dart</span></div>
+  <pre>            FutureBuilder&lt;bool&gt;(
+              future: TutorialProgressService.hasCompletedTutorial(),
+              builder: (context, snapshot) {
+                final isCompleted = snapshot.data ?? false;
+                return Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    OutlinedButton(
+                      // ...
+                      onPressed: () async {
+                        await Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) =&gt; const TutorialScreen(),
+                          ),
+                        );
+                        // Refresh the UI to update the 'NEW' badge state
+                        setState(() {});
+                      },</pre>
+</div>
+
+<p>Même patron que pour « Continuer » : un <code>FutureBuilder</code> lit
+<code>shared_preferences</code>, et un <code>setState</code> au retour de navigation force la
+relecture. Le <code>snapshot.data ?? false</code> gère l'instant où le <code>Future</code> n'a pas
+encore répondu — le badge apparaît alors, puis disparaît si le tutoriel était déjà fait. Une
+oscillation d'une frame, invisible en pratique.</p>
+
+<h2 id="s7">7. Ce que le tutoriel enseigne, et ses limites</h2>
+
+<p>Les treize widgets d'illustration constituent, ensemble, la plus grosse partie du module (environ
+150 Ko de Dart contre 40 Ko pour le moteur, les données et l'écran réunis). Quatre d'entre eux valent
+qu'on les regarde de près.</p>
+
+<h3>La comparaison A/B de l'armure</h3>
+
+<p><code>TutorialArmorWidget</code> affiche <strong>deux panneaux côte à côte</strong> — « SANS
+ARMURE » à gauche en rouge, « AVEC ARMURE » à droite — et applique le même coup de 10 dégâts aux deux
+en même temps :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/tutorial/widgets/tutorial_armor_widget.dart</span><span class="lang">dart</span></div>
+  <pre>      setState(() {
+        // Appliquer dégâts de 10
+        // Gauche : Pas d'armure -&gt; prend 10 dégâts directs sur HP
+        _leftHp = 70;
+        _leftShowDamage = true;
+        _leftDamageY = -30.0;
+
+        // Droite : 4 armure -&gt; l'armure absorbe 4 dégâts, 6 dégâts sur HP
+        _rightArmor = 0;
+        _rightHp = 74;
+        _rightShowDamage = true;
+        _rightDamageY = -30.0;
+      });</pre>
+</div>
+
+<p>80 → 70 à gauche, 80 → 74 à droite, avec des nombres flottants animés vers le haut
+(<code>_leftDamageY = -30.0</code> dans un <code>AnimatedPositioned</code>) puis effacés après
+1200 ms. La démonstration est parfaite : deux colonnes, un seul événement, un écart de 4 PV qui
+<em>est</em> exactement la valeur d'armure. Le joueur comprend la règle sans lire une ligne.</p>
+
+<h3>La boucle des statuts élémentaires</h3>
+
+<p><code>TutorialElementsWidget</code> ne demande aucune interaction : il fait tourner un
+<code>Timer.periodic</code> de 2 secondes qui joue en boucle les quatre décroissances.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/tutorial/widgets/tutorial_elements_widget.dart</span><span class="lang">dart</span></div>
+  <pre>    _timer = Timer.periodic(const Duration(seconds: 2), (timer) {
+      if (!mounted) return;
+      setState(() {
+        // Poison tick: 3 -&gt; 2 -&gt; 1 -&gt; reset
+        _poisonVal = _poisonVal &gt; 1 ? _poisonVal - 1 : 3;
+
+        // Burn tick: 6 -&gt; 3 -&gt; 1 -&gt; reset
+        _burnVal = _burnVal &gt; 1 ? (_burnVal / 2).floor() : 6;
+
+        // Gel toggle
+        _gelActive = !_gelActive;
+
+        // Shock hits: 0 -&gt; 1 -&gt; 2 -&gt; reset
+        _shockHits = _shockHits &lt; 2 ? _shockHits + 1 : 0;
+      });
+    });</pre>
+</div>
+
+<p>Chaque statut a sa propre loi de décroissance, et la boucle la rend visible : le poison descend de
+1 en 1 (3, 2, 1), la brûlure est divisée par deux (6, 3, 1), le gel alterne actif/inactif, la foudre
+compte les coups. Le <code>if (!mounted) return;</code> en tête de callback et le
+<code>_timer?.cancel()</code> dans <code>dispose</code> évitent la fuite classique du timer qui
+survit à son widget.</p>
+
+<h3>L'animation de fusion</h3>
+
+<p><code>TutorialMergeWidget</code> orchestre trois phases avec un
+<code>AnimationController</code> de 600 ms :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/tutorial/widgets/tutorial_merge_widget.dart</span><span class="lang">dart</span></div>
+  <pre>    _controller.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        setState(() {
+          _showFlash = true;
+        });
+        Future.delayed(const Duration(milliseconds: 150), () {
+          if (!mounted) return;
+          setState(() {
+            _showFlash = false;
+            _isMerged = true;
+          });
+          widget.engine.mergeCards();
+        });
+      }
+    });</pre>
+</div>
+
+<p>Les trois cartes glissent l'une vers l'autre (<code>Transform.translate</code> piloté par une
+<code>CurvedAnimation</code> en <code>Curves.easeInQuad</code>), un flash blanc de 150 ms masque la
+substitution, puis la carte améliorée apparaît. C'est seulement <em>après</em> le flash que
+<code>engine.mergeCards()</code> est appelé — donc le bouton « SUIVANT » ne s'active qu'une fois
+l'animation terminée. La distance de glissement, <code>cardWidth * 1.05</code>, est recalculée à
+chaque <code>LayoutBuilder</code> : l'effet reste correct sur toutes les tailles d'écran.</p>
+
+<h3>La barre d'XP</h3>
+
+<p><code>TutorialXpWidget</code> est le seul widget qui s'abonne explicitement au moteur
+(<code>widget.engine.addListener(_onStateChanged)</code> dans <code>initState</code>, retiré dans
+<code>dispose</code>). Le but est de détecter la montée de niveau pour afficher une bannière :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/tutorial/widgets/tutorial_xp_widget.dart</span><span class="lang">dart</span></div>
+  <pre>  void _onStateChanged() {
+    if (!mounted) return;
+    if (widget.engine.mockState.playerLevel &gt; 1 &amp;&amp; !_showLevelUpBanner) {
+      setState(() {
+        _showLevelUpBanner = true;
+      });
+      // Hide banner after delay
+      Future.delayed(const Duration(milliseconds: 1500), () {
+        if (mounted) {
+          setState(() {
+            _showLevelUpBanner = false;
+          });
+        }
+      });
+    }
+  }</pre>
+</div>
+
+<p>Le bouton porte <code>'Battre un Ennemi (+35 XP) ⚔️'</code> et n'est affiché que
+<code>if (state.playerLevel == 1)</code> : une fois le niveau 2 atteint, il disparaît de lui-même. La
+barre est un <code>Container</code> à dégradé violet/bleu dont la largeur suit
+<code>(state.playerXp / state.xpToNextLevel).clamp(0.0, 1.0)</code>. Trois clics, la barre déborde, le
+niveau passe, la bannière s'affiche 1,5 s, et l'étape est validée.</p>
+
+<h3>Les points d'attention</h3>
+
+<p>Le module est propre, mais il porte quelques défauts qu'il faut connaître avant d'y toucher. Chacun
+a été vérifié dans le code.</p>
+
+<div class="box danger">
+  <div class="box-title">Point d'attention — quatre fragilités vérifiées dans <code>lib/tutorial/</code></div>
+  <p><strong>1. Couplage par index numérique.</strong> <code>TutorialEngine.resetMockState()</code>
+  fait un <code>switch (_currentStepIndex)</code> sur les valeurs littérales <code>4, 5, 6, 9, 10,
+  11</code>, avec des commentaires (<code>// Step 5: Cards &amp; Mana</code>) comme seule
+  documentation. Insérer une étape en position 3 dans <code>kTutorialSteps</code> décale tout : le
+  décor du Slime se retrouverait monté sur l'étape « Armure &amp; Dégâts », sans aucune erreur de
+  compilation. <code>_isStepActionComplete</code>, dans le fichier voisin, fait pourtant son
+  <code>switch</code> sur <code>step.type</code> — la version robuste existe, elle n'a simplement pas
+  été appliquée des deux côtés.</p>
+
+  <p><strong>2. La dernière étape n'est pas gatée.</strong> <code>TutorialStepType.relics</code> tombe
+  dans le <code>default: return true;</code> de <code>_isStepActionComplete</code>. Le bouton affiche
+  donc <code>TERMINER</code> et est cliquable dès l'affichage. Or le texte de l'étape dit
+  explicitement « Terminez cette étape pour finir le tutoriel ! » et
+  <code>TutorialRelicsWidget</code> propose bien une interaction (<code>_collectRelic()</code>,
+  la relique rétrécit à <code>scale 0.2</code> puis un « Relique Collectée ! » s'affiche). Le joueur
+  peut valider sans jamais collecter la relique : le texte promet un gating qui n'existe pas.</p>
+
+  <p><strong>3. « Passer » ne marque pas la complétion.</strong> Le bouton d'en-tête
+  <code>'✕ Passer'</code> a pour tout code <code>onPressed: () =&gt; Navigator.pop(context)</code>.
+  Aucun appel à <code>markTutorialCompleted()</code>. Un joueur qui parcourt douze étapes puis
+  abandonne à la treizième retrouve le badge « NEW » sur le bouton TUTORIEL au menu principal. Seul le
+  chemin <code>isLastStep</code> + clic sur <code>TERMINER</code> pose le drapeau.</p>
+
+  <p><strong>4. Divergences entre <code>tutorial_data.dart</code> et les widgets.</strong> Quatre
+  écarts constatés : <em>(a)</em> l'étape 7 décrit la Foudre comme « Augmente les dégâts subis par
+  l'ennemi lors de votre prochaine attaque » alors que
+  <code>TutorialElementsWidget</code> dit « Subit des dégâts supplémentaires à chaque coup reçu » — et
+  c'est le widget qui a raison, <code>DamagePipeline.calculate</code> ajoute
+  <code>shockStatus.value</code> à <em>chaque</em> calcul de dégâts tant que le statut dure ;
+  <em>(b)</em> le même statut s'appelle « Foudre » dans les données et « Électrocution » dans le
+  widget ; <em>(c)</em> l'étape 9 affirme que trois cartes identiques « fusionnent automatiquement »,
+  alors que <code>deck_screen.dart</code> exige un clic sur un bouton <code>mergeLabel(3)</code> puis
+  une confirmation dans <code>_MergeDialog</code> — la fusion est manuelle ; <em>(d)</em> le titre
+  français de l'étape 8 contient une coquille : <code>'Les Intentions Ennies'</code>.</p>
+</div>
+
+<div class="box warn">
+  <div class="box-title">Piège bonus — du code mort dans le moteur</div>
+  <p><code>TutorialEngine.simulateDamageTake({required bool withArmor})</code> est déclaré, écrit,
+  et <strong>jamais appelé</strong> : <code>TutorialArmorWidget</code> gère sa propre paire d'états
+  locaux (<code>_leftHp</code>, <code>_rightHp</code>, <code>_leftArmor</code>,
+  <code>_rightArmor</code>) et ignore complètement <code>mockState</code>. Conséquence en cascade :
+  le <code>case 6</code> de <code>resetMockState</code>, qui met en place un « Mannequin de Test » de
+  30 PV avec une intention à 10, ne sert à rien non plus. Et si l'on voulait un jour brancher
+  <code>simulateDamageTake</code>, il faudrait d'abord la corriger : sa branche
+  <code>withArmor: true</code> pose <code>heroArmor = 4</code> puis retire <strong>6 PV pleins</strong>
+  sans que l'armure n'absorbe quoi que ce soit — l'inverse de la règle que l'étape est censée
+  enseigner.</p>
+</div>
+
+<div class="memo">
+  <div class="card"><h5>Une clé, un blob</h5><p><code>run_save_v1</code> contient tout : quatre états
+  sérialisés, un numéro de schéma, un horodatage.</p></div>
+  <div class="card"><h5>Un compteur suffit</h5><p><code>bump()</code> incrémente un entier ; un
+  <code>ref.listen</code> transforme ça en sauvegarde.</p></div>
+  <div class="card"><h5>Rapporter, pas planter</h5><p><code>fromJsonWithReport</code> reconstruit ce
+  qui existe et liste ce qui manque.</p></div>
+  <div class="card"><h5>Re-résoudre</h5><p>L'identifiant est la vérité ; la copie sauvegardée n'est
+  qu'un nom de secours.</p></div>
+  <div class="card"><h5>Deux localisations</h5><p>ARB typé pour l'interface, JSON bilingue pour le
+  contenu. Repli systématique sur l'anglais.</p></div>
+  <div class="card"><h5>Un tutoriel étanche</h5><p>13 étapes, 0 import Riverpod, 0 effet sur la run en
+  cours.</p></div>
+</div>
+
+<div class="quiz">
+  <h2>Quiz — vérifiez vos acquis</h2>
+
+  <div class="q" data-answer="1">
+    <p class="q-text">1. Sous quelle clé <code>shared_preferences</code> la sauvegarde de run est-elle
+    écrite, et quelle est la valeur de <code>schemaVersion</code> ?</p>
+    <ul class="q-opts">
+      <li><code>heros_draft_save</code>, version 2</li>
+      <li><code>run_save_v1</code>, version 1</li>
+      <li><code>save_v1</code>, version 0</li>
+      <li>Une clé par état sauvegardé (<code>run</code>, <code>deck</code>…), sans version</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>lib/services/save_service.dart</code> déclare
+    <code>static const String _saveKey = 'run_save_v1';</code> et
+    <code>static const int _schemaVersion = 1;</code>. Il n'y a qu'une seule clé, contenant un unique
+    blob JSON avec les quatre états <code>run</code>, <code>deck</code>, <code>inventory</code>,
+    <code>skills</code> plus <code>schemaVersion</code> et <code>savedAt</code>.</div>
+  </div>
+
+  <div class="q" data-answer="2">
+    <p class="q-text">2. Combien d'endroits dans <code>lib/</code> appellent
+    <code>CheckpointNotifier.bump()</code>, et lesquels ?</p>
+    <ul class="q-opts">
+      <li>Un seul : <code>completeCurrentNode()</code></li>
+      <li>Trois : la fin de nœud, la fin de combat et l'achat en boutique</li>
+      <li>Deux : <code>completeCurrentNode()</code> et <code>decrementPendingDrafts()</code></li>
+      <li>Chaque écran de jeu appelle <code>bump()</code> dans son <code>dispose</code></li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> exactement deux, tous deux dans des managers de
+    <code>RunController</code> : <code>completeCurrentNode()</code> dans
+    <code>run/map_progression_manager.dart</code> (dernière ligne de la méthode) et
+    <code>decrementPendingDrafts()</code> dans <code>run/player_stats_manager.dart</code> (à
+    l'intérieur du <code>if (pendingDrafts &gt; 0)</code>).</div>
+  </div>
+
+  <div class="q" data-answer="3">
+    <p class="q-text">3. Que fait <code>SaveService.load</code> quand
+    <code>decoded['schemaVersion']</code> ne vaut pas 1 ?</p>
+    <ul class="q-opts">
+      <li>Elle tente une migration automatique vers la version courante</li>
+      <li>Elle charge quand même en ignorant les champs inconnus</li>
+      <li>Elle rend <code>success: false</code> mais laisse la sauvegarde intacte</li>
+      <li>Elle lève une <code>FormatException</code>, attrapée par le <code>catch</code> qui appelle
+      <code>clear()</code> puis rend <code>success: false</code></li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> le test
+    <code>decoded['schemaVersion'] != _schemaVersion</code> déclenche
+    <code>throw const FormatException('Unsupported or missing schemaVersion')</code>. Le
+    <code>catch</code> journalise sous <code>kDebugMode</code>, appelle <code>await clear()</code> et
+    rend <code>const SaveLoadResult(success: false)</code>. Il n'existe aucun code de migration dans le
+    projet.</div>
+  </div>
+
+  <div class="q" data-answer="0">
+    <p class="q-text">4. Dans <code>DeckState._decodePile</code>, pourquoi la <code>CardData</code>
+    sauvegardée est-elle remplacée par <code>CardData.getById(instance.data.id)</code> ?</p>
+    <ul class="q-opts">
+      <li>Pour que tout rééquilibrage du catalogue s'applique immédiatement aux sauvegardes existantes</li>
+      <li>Parce que <code>CardData.fromJson</code> ne sait pas relire ce que <code>toJson</code> écrit</li>
+      <li>Pour économiser de la mémoire en partageant une seule instance par carte</li>
+      <li>Parce que la sauvegarde ne contient que l'identifiant de la carte</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> c'est le patron « re-résoudre plutôt que dupliquer ».
+    <code>instance.copyWith(data: freshData, forgeUpgrades: validUpgrades)</code> jette la définition
+    figée au profit de celle du catalogue. La copie sauvegardée ne sert que dans un cas : quand
+    <code>getById</code> rend <code>null</code>, ses <code>nameFr</code>/<code>nameEn</code>
+    alimentent le <code>MissingSaveItem</code> affiché au joueur.</div>
+  </div>
+
+  <div class="q" data-answer="2">
+    <p class="q-text">5. Un utilisateur lance le jeu avec la locale <code>de</code> (allemand). Que
+    renvoie <code>relic.getName('de')</code> pour le Talisman de Fer ?</p>
+    <ul class="q-opts">
+      <li>Une chaîne vide, puisqu'aucune traduction allemande n'existe</li>
+      <li>« Talisman de Fer » — le français est la langue de repli du projet</li>
+      <li>« Iron Talisman » — toute locale différente de <code>'fr'</code> reçoit l'anglais</li>
+      <li>Une <code>ArgumentError</code>, la locale n'étant pas dans <code>supportedLocales</code></li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> le getter s'écrit
+    <code>String getName(String locale) =&gt; locale == 'fr' ? nameFr : nameEn;</code>. Le test n'est
+    pas exhaustif : toute valeur autre que <code>'fr'</code> tombe dans la branche anglaise. Même règle
+    dans <code>card_data.dart</code>, <code>hero_data.dart</code>, <code>passive_data.dart</code>,
+    <code>event_data.dart</code> et <code>forge_upgrade_data.dart</code>.</div>
+  </div>
+
+  <div class="q" data-answer="1">
+    <p class="q-text">6. Combien d'étapes compte <code>kTutorialSteps</code>, combien exigent une
+    action réelle avant de pouvoir continuer, et sous quelle clé la complétion est-elle stockée ?</p>
+    <ul class="q-opts">
+      <li>10 étapes, 3 gatées, clé <code>tutorial_done</code></li>
+      <li>13 étapes, 4 gatées (<code>playCard</code>, <code>merge</code>, <code>xp</code>,
+      <code>draft</code>), clé <code>tutorial_completed</code></li>
+      <li>13 étapes, toutes gatées, clé <code>run_save_v1</code></li>
+      <li>12 étapes, 4 gatées, clé <code>tutorial_progress</code></li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>tutorial_data.dart</code> contient 13
+    <code>TutorialStep</code>, autant que de valeurs dans <code>TutorialStepType</code>.
+    <code>_isStepActionComplete</code> ne traite explicitement que quatre types — <code>playCard</code>,
+    <code>merge</code>, <code>xp</code>, <code>draft</code> — les neuf autres tombant dans
+    <code>default: return true;</code>. La clé est
+    <code>static const String _tutorialCompletedKey = 'tutorial_completed';</code> dans
+    <code>tutorial_progress_service.dart</code>.</div>
+  </div>
+</div>
+
+<div class="pager">
+<a class="prev" href="ch19.html"><div class="dir">&#8592; Chapitre 19</div><div class="ttl">Écrans, navigation et design system</div></a>
+<a class="next" href="ch21.html"><div class="dir">Chapitre 21 &#8594;</div><div class="ttl">Tests, outillage, dette technique et évolutions</div></a>
+</div>
+</div>
+</main>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

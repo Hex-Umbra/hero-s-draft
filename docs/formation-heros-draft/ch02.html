@@ -1,0 +1,1583 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dart, le langage — l&#x27;essentiel pour ce projet — Formation Hero's Draft</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<button class="menu-btn" aria-label="Menu">&#9776;</button>
+<div class="layout">
+<aside class="sidebar">
+  <a class="brand" href="index.html">
+    <div class="brand-title">HERO'S DRAFT</div>
+    <div class="brand-sub">Formation complète au projet Flutter</div>
+  </a>
+<nav class="nav">
+<div class="nav-part">Partie 0 — Démarrage</div>
+<a href="ch01.html"><span class="num">01</span><span>Vue d&#x27;ensemble : qu&#x27;est-ce que Hero&#x27;s Draft ?</span></a>
+<div class="nav-part">Partie 1 — Les fondations techniques</div>
+<a href="ch02.html" class="active"><span class="num">02</span><span>Dart, le langage — l&#x27;essentiel pour ce projet</span></a>
+<a href="ch03.html"><span class="num">03</span><span>Flutter — widgets, arbre et navigation</span></a>
+<a href="ch04.html"><span class="num">04</span><span>Riverpod — l&#x27;état partagé du jeu</span></a>
+<a href="ch05.html"><span class="num">05</span><span>Flame — le moteur de rendu du combat</span></a>
+<div class="nav-part">Partie 2 — L&#x27;architecture du projet</div>
+<a href="ch06.html"><span class="num">06</span><span>L&#x27;architecture en quatre couches</span></a>
+<a href="ch07.html"><span class="num">07</span><span>La couche de données : un jeu 100 % data-driven</span></a>
+<div class="nav-part">Partie 3 — Les règles du jeu</div>
+<a href="ch08.html"><span class="num">08</span><span>Le héros : stats, classes, passifs et progression</span></a>
+<a href="ch09.html"><span class="num">09</span><span>Les cartes et le deck</span></a>
+<a href="ch10.html"><span class="num">10</span><span>Le combat : boucle de tour, dégâts et effets</span></a>
+<a href="ch11.html"><span class="num">11</span><span>Les ennemis et la courbe de difficulté</span></a>
+<a href="ch12.html"><span class="num">12</span><span>La carte du monde procédurale</span></a>
+<a href="ch13.html"><span class="num">13</span><span>Les reliques et le système de déclencheurs</span></a>
+<a href="ch14.html"><span class="num">14</span><span>L&#x27;économie : or, boutique, forge et fusion</span></a>
+<a href="ch15.html"><span class="num">15</span><span>Récompenses, chance et probabilités</span></a>
+<a href="ch16.html"><span class="num">16</span><span>Événements, repos et autel des reliques</span></a>
+<div class="nav-part">Partie 4 — L&#x27;interface et le rendu</div>
+<a href="ch17.html"><span class="num">17</span><span>Le pont Flame ↔ Riverpod : l&#x27;écran de combat</span></a>
+<a href="ch18.html"><span class="num">18</span><span>Composants Flame et game feel</span></a>
+<a href="ch19.html"><span class="num">19</span><span>Écrans, navigation et design system</span></a>
+<div class="nav-part">Partie 5 — Qualité et cycle de vie</div>
+<a href="ch20.html"><span class="num">20</span><span>Sauvegarde, localisation et tutoriel</span></a>
+<a href="ch21.html"><span class="num">21</span><span>Tests, outillage, dette technique et évolutions</span></a>
+</nav>
+</aside>
+<main class="main">
+<div class="content">
+<div class="chapter-kicker">Chapitre 02</div>
+<h1>Dart, le langage — l'essentiel pour ce projet</h1>
+<p class="lede">Dart expliqué non pas dans l'abstrait, mais à travers les constructions réellement utilisées dans Hero's Draft. Chaque notion de ce chapitre est illustrée par un extrait verbatim du dépôt : si une syntaxe n'apparaît pas dans le jeu, elle n'apparaît pas ici.</p>
+<div class="toc">
+  <div class="toc-title">Dans ce chapitre</div>
+  <ol>
+    <li><a href="#s1">Pourquoi Dart, et comment le lire</a></li>
+    <li><a href="#s2">La null-safety : le point qui change tout</a></li>
+    <li><a href="#s3">Les classes : constructeurs, factory, static</a></li>
+    <li><a href="#s4">Immutabilité et le pattern copyWith</a></li>
+    <li><a href="#s5">Les enums, colonne vertébrale des données du jeu</a></li>
+    <li><a href="#s6">Collections et opérateurs de confort</a></li>
+    <li><a href="#s7">Records et destructuration (Dart 3)</a></li>
+    <li><a href="#s8">Extensions et typedef</a></li>
+    <li><a href="#s9">L'asynchrone : Future, async, await</a></li>
+  </ol>
+</div>
+
+<h2 id="s1">1. Pourquoi Dart, et comment le lire</h2>
+<p>Flutter n'accepte qu'un seul langage : <strong>Dart</strong>. Ce n'est pas un choix qu'on fait, c'est le ticket d'entrée. La bonne nouvelle, c'est que Dart a été conçu <em>pour</em> ce genre d'application : il se compile en code natif (AOT) pour la version finale du jeu, et tourne en machine virtuelle (JIT) pendant le développement — ce qui rend possible le <em>hot reload</em> : modifier une valeur, sauvegarder, et voir l'écran de combat se mettre à jour sans redémarrer la partie.</p>
+<p>La version du langage est déclarée dans le manifeste du projet :</p>
+<div class="code" data-lang="yaml">
+  <div class="code-head"><span class="path">pubspec.yaml</span><span class="lang">yaml</span></div>
+  <pre>name: roguelike_card_game
+version: 0.4.7+1
+
+environment:
+  sdk: ^3.11.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flame: ^1.17.0
+  flutter_riverpod: ^2.5.1
+  uuid: ^4.4.0
+  intl: ^0.20.2
+  shared_preferences: ^2.2.0
+  meta: ^1.11.0</pre>
+</div>
+<p><code>sdk: ^3.11.4</code> signifie « Dart 3 ». C'est important pour la suite : tout ce que nous verrons en section 7 — les <em>records</em> — n'existe que depuis Dart 3, et le projet s'en sert massivement.</p>
+
+<h3>Le point d'entrée : main()</h3>
+<p>Comme en C, en Java ou en Go, un programme Dart démarre par une fonction <code>main()</code>. Dans Hero's Draft, elle tient en trois lignes.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/main.dart</span><span class="lang">dart</span></div>
+  <pre>void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const ProviderScope(child: HerosDraftApp()));
+}</pre>
+</div>
+<p>Trois choses à repérer, elles reviendront partout :</p>
+<ul>
+  <li><code>void</code> : le type de retour s'écrit <strong>avant</strong> le nom de la fonction (comme en C# ou en Java, contrairement à TypeScript ou Rust).</li>
+  <li>Les <strong>point-virgules sont obligatoires</strong>. L'indentation n'a aucune valeur syntaxique, contrairement à Python : ce sont les accolades qui délimitent les blocs.</li>
+  <li><code>const ProviderScope(...)</code> : on construit un objet <em>sans</em> écrire <code>new</code>. Le mot-clé existe encore mais n'apparaît nulle part dans le projet, ni dans le style Dart moderne.</li>
+</ul>
+
+<h3>var, final, const : trois mots pour déclarer</h3>
+<p>C'est la première source de confusion pour qui vient de JavaScript, où <code>const</code>
+signifie simplement « je ne réaffecterai pas cette variable ». En Dart, la frontière n'est pas au même endroit.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Mot-clé</th><th>Type</th><th>Réaffectable ?</th><th>Valeur connue…</th></tr></thead>
+<tbody>
+<tr><td><code>var</code></td><td>inféré à la déclaration</td><td>oui</td><td>à l'exécution</td></tr>
+<tr><td><code>final</code></td><td>inféré ou explicite</td><td><strong>non</strong></td><td>à l'exécution</td></tr>
+<tr><td><code>const</code></td><td>inféré ou explicite</td><td><strong>non</strong></td><td><strong>à la compilation</strong></td></tr>
+</tbody>
+</table></div>
+<p>La distinction <code>final</code> / <code>const</code> est visible dès les premières lignes des constantes du jeu :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/game_constants.dart</span><span class="lang">dart</span></div>
+  <pre>class GameConstants {
+  // --- Z-INDEX PRIORITIES ---
+  static const int priorityBackground = -100;
+  static const int priorityCardBase = 10;
+  static const int priorityTargetingLine = 300;
+
+  // --- CARD DIMENSIONS ---
+  static const double cardWidth = 140.0;
+  static const double cardHeight = 196.0;
+  static final Vector2 cardSize = Vector2(cardWidth, cardHeight);</pre>
+</div>
+<p>Regardez la dernière ligne : <code>cardSize</code> est <code>static final</code> et non <code>static const</code>. Pourquoi ? Parce que <code>Vector2(140.0, 196.0)</code> est un objet de Flame construit par un constructeur ordinaire, et non par un constructeur <code>const</code> : le compilateur ne peut pas le figer dans le binaire. Il sera créé une seule fois, au premier accès, puis jamais réaffecté. À l'inverse, <code>140.0</code> est un littéral : <code>const</code> passe.</p>
+<div class="box"><div class="box-title">À retenir</div>
+<p><code>const</code> en Dart est plus fort qu'en JavaScript. Ce n'est pas « je ne réassigne pas », c'est « cette valeur est calculée pendant la compilation et gravée dans le binaire ». Toutes les instances <code>const</code> identiques sont <em>le même objet en mémoire</em> — c'est un des piliers de la performance de Flutter, qu'on retrouvera au chapitre 3.</p></div>
+<p>Quand le type est évident, on écrit <code>var</code> ou <code>final</code> et on laisse l'inférence travailler :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/entity_stats.dart</span><span class="lang">dart</span></div>
+  <pre>  factory EntityStats.fromJson(Map&lt;String, dynamic&gt; json) {
+    var statusesJson = json['statuses'] as List?;
+    List&lt;StatusEffect&gt; parsedStatuses = [];
+    if (statusesJson != null) {
+      parsedStatuses = statusesJson
+          .map((e) =&gt; StatusEffect.fromJson(e as Map&lt;String, dynamic&gt;))
+          .toList();
+    }
+    // ...</pre>
+</div>
+<p><code>statusesJson</code> est déclaré avec <code>var</code> : son type inféré est <code>List?</code>. <code>parsedStatuses</code>, lui, porte un type explicite parce qu'il est <em>réaffecté</em> plus bas — un <code>final</code> serait interdit.</p>
+
+<h3>Ce qui surprend quand on vient d'ailleurs</h3>
+<p>Dart est <strong>statiquement typé</strong> : chaque expression a un type connu à la compilation. Cela le rapproche de C# ou de Java et l'éloigne de Python et de JavaScript. Le type <code>dynamic</code> est la porte de sortie ; le projet ne l'utilise qu'aux frontières, au décodage JSON, où l'on écrit systématiquement <code>Map&lt;String, dynamic&gt;</code> puis on recaste chaque champ avec <code>as</code>. C'est une discipline, pas un hasard.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Ce qu'on cherche</th><th>En Dart</th><th>Exemple dans le projet</th></tr></thead>
+<tbody>
+<tr><td><code>private</code></td>
+    <td>Aucun mot-clé. Un identifiant qui commence par <code>_</code> est privé <strong>à son fichier</strong>.</td>
+    <td><code>_drawInto</code>, <code>_saveKey</code>, <code>_rng</code></td></tr>
+<tr><td><code>public</code></td><td>Tout est public par défaut.</td><td><code>calculate</code>, <code>copyWith</code></td></tr>
+<tr><td>Lambda</td><td><code>(x) =&gt; expr</code> pour une expression, <code>(x) { ... }</code> pour un bloc</td>
+    <td><code>(e) =&gt; e.name == json['type']</code></td></tr>
+<tr><td>Méthode d'une ligne</td><td><code>=&gt;</code> remplace <code>{ return ...; }</code></td>
+    <td><code>int get currentCost =&gt; data.cost;</code></td></tr>
+<tr><td>Interpolation</td><td><code>'$variable'</code> ou <code>'${expression}'</code></td>
+    <td><code>'${e.key}:${e.value}'</code></td></tr>
+<tr><td>Nom de fichier</td><td><code>snake_case.dart</code>, classes en <code>UpperCamelCase</code></td>
+    <td><code>damage_pipeline.dart</code> → <code>DamagePipeline</code></td></tr>
+</tbody>
+</table></div>
+<p>Un dernier détail qui compte : en Dart, <strong>tout est objet</strong>. <code>int</code>, <code>double</code>, <code>bool</code> et <code>String</code> sont des classes avec des méthodes. C'est pour cela qu'on peut écrire <code>(totalDamage * 0.75).round()</code> directement sur le résultat d'une multiplication, comme le fait le pipeline de dégâts.</p>
+
+<h2 id="s2">2. La null-safety : le point qui change tout</h2>
+<p>Dart a une <strong>null-safety saine</strong> (<em>sound null safety</em>). La règle est brutale et simple : <em>un type ne peut pas contenir <code>null</code>, sauf si vous l'avez explicitement écrit avec un <code>?</code></em>. Le compilateur refuse de compiler tant qu'un chemin d'exécution peut produire un <code>null</code> dans un type non nullable.</p>
+<p>Ce n'est pas une contrainte administrative. C'est ce qui fait qu'un jeu qui recharge des sauvegardes potentiellement obsolètes et lit neuf fichiers JSON écrits à la main ne s'effondre pas au milieu d'un combat.</p>
+
+<h3>Le type nullable : T?</h3>
+<p>Dans <code>CardData</code>, quatre champs sur seize sont nullables — exactement ceux qui peuvent manquer dans le JSON.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/card_data.dart</span><span class="lang">dart</span></div>
+  <pre>class CardData {
+  final String id;
+  final int cost;
+  final CardType type;
+  final CardCategory category;
+  final String? heroClass;
+  final CardRarity rarity;
+  final CardTarget target;
+  final String? spritePath;
+  final String? animation; // Type d'animation (ex: 'melee', 'magic', 'buff')
+  final bool isExhaust;
+  final List&lt;CardEffect&gt; effects;
+  final int baseMaxForgeUpgrades;
+  // ...</pre>
+</div>
+<p><code>String? heroClass</code> se lit : « une carte a peut-être une classe de héros associée ». Une carte globale, disponible pour tous les héros, n'en a pas — le champ vaut <code>null</code>. Le type porte l'information, la documentation devient inutile.</p>
+
+<h3>Le cast nullable : as String?</h3>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/card_data.dart</span><span class="lang">dart</span></div>
+  <pre>      heroClass: json['heroClass'] as String?,
+      rarity: CardRarity.values.firstWhere(
+        (e) =&gt; e.name == json['rarity'],
+        orElse: () =&gt; CardRarity.common,
+      ),
+      spritePath: json['spritePath'] as String?,
+      animation: json['animation'] as String?,
+      isExhaust: json['isExhaust'] as bool? ?? false,</pre>
+</div>
+<p>Trois écritures cohabitent, et la différence est essentielle :</p>
+<ul>
+  <li><code>json['heroClass'] as String?</code> — « si la clé est absente, garde <code>null</code> ». Le champ cible est nullable, on transmet le vide tel quel.</li>
+  <li><code>json['isExhaust'] as bool? ?? false</code> — « si la clé est absente, mets <code>false</code> ». <strong>L'ordre compte</strong> : on caste d'abord en <code>bool?</code>, puis on applique <code>??</code>. Écrire <code>as bool ?? false</code> lèverait une exception avant même d'atteindre le <code>??</code>.</li>
+  <li><code>json['cost'] as int</code> (plus haut dans le fichier) — « ce champ est obligatoire ». Si un fichier JSON l'oublie, le jeu échoue au chargement, bruyamment, plutôt que de fabriquer une carte à coût zéro.</li>
+</ul>
+
+<h3>Chaîner : ?. et ??</h3>
+<p>Une méthode statique du projet illustre la propagation du doute :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/passive_data.dart</span><span class="lang">dart</span></div>
+  <pre>  static PassiveData? getById(String id) {
+    final registry = GameDataRegistry.instance;
+    if (registry == null) return null;
+    try {
+      return registry.passives.firstWhere((p) =&gt; p.id == id);
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('PassiveData.getById: no passive found for id "$id" ($e)');
+      }
+      return null;
+    }
+  }</pre>
+</div>
+<p>Le type de retour est <code>PassiveData?</code>. Deux raisons de renvoyer <code>null</code> : le registre de données n'est pas encore chargé, ou aucun passif ne porte cet identifiant. Le compilateur oblige donc <strong>tous</strong> les appelants à traiter le cas. C'est exactement ce que fait la sérialisation de l'état de run :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run_controller.dart</span><span class="lang">dart</span></div>
+  <pre>        'passiveTrait': passiveTrait,
+        'activePassiveId': activePassive?.id,
+        'activePassiveNameFr': activePassive?.nameFr,
+        'activePassiveNameEn': activePassive?.nameEn,</pre>
+</div>
+<p><code>activePassive?.id</code> se lit : « si <code>activePassive</code> est <code>null</code>, n'appelle rien et renvoie <code>null</code> ; sinon renvoie <code>.id</code> ». Sans le <code>?.</code>, le compilateur refuserait la ligne, puisque le champ est déclaré <code>PassiveData?</code>. Le résultat de l'expression est <code>String?</code> — et c'est très bien, un champ JSON peut valoir <code>null</code>.</p>
+<p>Le chargement fait le trajet inverse : si l'identifiant sauvegardé ne correspond plus à aucun passif (parce qu'une mise à jour du jeu l'a renommé), on <em>signale</em> l'objet manquant au joueur et on retombe sur une valeur par défaut, plutôt que de casser la partie.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run_controller.dart</span><span class="lang">dart</span></div>
+  <pre>    final activePassiveId = json['activePassiveId'] as String?;
+    PassiveData? activePassive;
+    if (activePassiveId != null) {
+      activePassive = PassiveData.getById(activePassiveId);
+      if (activePassive == null) {
+        missing.add(
+          MissingSaveItem(
+            id: activePassiveId,
+            nameFr: json['activePassiveNameFr'] as String? ?? activePassiveId,
+            nameEn: json['activePassiveNameEn'] as String? ?? activePassiveId,
+            category: 'passive',
+          ),
+        );
+        activePassive = PassiveData.fallback(
+          json['passiveTrait'] as String? ?? '',
+        );
+      }
+    }</pre>
+</div>
+<div class="box ok"><div class="box-title">Bonne pratique du projet</div>
+<p>Remarquez la double sécurité : <code>json['activePassiveNameFr'] as String? ?? activePassiveId</code>. Le nom lisible du passif est <em>dupliqué dans la sauvegarde</em>
+précisément pour pouvoir dire au joueur « tu as perdu ce passif » même si l'objet n'existe plus dans les données du jeu. Et si ce nom manque aussi, on retombe sur l'identifiant brut. Deux <code>??</code> en cascade, zéro plantage possible.</p></div>
+
+<h3>Le cast composé, décortiqué</h3>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/entity_stats.dart</span><span class="lang">dart</span></div>
+  <pre>      critChance: json['critChance'] as int? ?? 0,
+      critMultiplier: (json['critMultiplier'] as num?)?.toDouble() ?? 1.5,
+      lastActionWasCrit: json['lastActionWasCrit'] as bool? ?? false,</pre>
+</div>
+<ol>
+  <li><code>json['critMultiplier']</code> est de type <code>dynamic</code>.</li>
+  <li><code>as num?</code> : on le voit comme un nombre, éventuellement absent. Pourquoi <code>num</code> et pas <code>double</code> ? Parce que le décodeur JSON de Dart renvoie un <code>int</code> si le fichier contient <code>2</code> et un <code>double</code> s'il contient <code>2.0</code>. <code>num</code> est le parent commun des deux.</li>
+  <li><code>?.toDouble()</code> : conversion, mais seulement si la valeur existe.</li>
+  <li><code>?? 1.5</code> : le multiplicateur critique par défaut du jeu.</li>
+</ol>
+
+<h3>Le tableau récapitulatif</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Écriture</th><th>Nom</th><th>Ce que ça fait</th><th>Exemple réel</th></tr></thead>
+<tbody>
+<tr><td><code>T?</code></td><td>type nullable</td>
+    <td>Autorise <code>null</code> dans ce type.</td>
+    <td><code>final String? heroClass;</code><br><span class="path">card_data.dart</span></td></tr>
+<tr><td><code>?.</code></td><td>accès conditionnel</td>
+    <td>Appelle le membre seulement si l'objet n'est pas <code>null</code> ; renvoie <code>null</code> sinon.</td>
+    <td><code>activePassive?.id</code><br><span class="path">run_controller.dart</span></td></tr>
+<tr><td><code>??</code></td><td>valeur de repli</td>
+    <td>Renvoie l'opérande de droite si celui de gauche est <code>null</code>.</td>
+    <td><code>json['luck'] as int? ?? 0</code><br><span class="path">entity_stats.dart</span></td></tr>
+<tr><td><code>??=</code></td><td>affectation si null</td>
+    <td>N'affecte que si la variable vaut <code>null</code>.</td>
+    <td><code>rolledId ??= 'sharp';</code><br><span class="path">shop_controller.dart</span></td></tr>
+<tr><td><code>!</code></td><td>assertion non-null</td>
+    <td>« Je garantis que ce n'est pas <code>null</code> ». Lève une exception si c'est faux.</td>
+    <td><code>heroCard!.position = ...</code><br><span class="path">heros_draft_game.dart</span></td></tr>
+<tr><td><code>late</code></td><td>initialisation différée</td>
+    <td>Champ non nullable initialisé plus tard, mais avant toute lecture.</td>
+    <td><code>late final Random _random;</code><br><span class="path">deck_controller.dart</span></td></tr>
+<tr><td><code>required</code></td><td>paramètre nommé obligatoire</td>
+    <td>Le compilateur exige que l'appelant fournisse ce paramètre.</td>
+    <td><code>required this.maxPv,</code><br><span class="path">entity_stats.dart</span></td></tr>
+</tbody>
+</table></div>
+
+<h3>??= et ! en situation réelle</h3>
+<p>Le tirage d'une rune de forge en boutique est un enchaînement de replis, parce qu'il ne doit <em>jamais</em> échouer : le joueur a payé, il doit recevoir quelque chose.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/shop_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Helper privé pour générer un upgrade de forge aléatoire avec son tier
+  String _rollRandomUpgrade(CardInstance card, List&lt;String&gt; existingUpgrades, Random rng) {
+    final excludedIds = existingUpgrades.map((u) =&gt; u.split(':')[0]).toList();
+    String? rolledId = _rollUpgradeId(card, rng, excludedIds);
+    rolledId ??= _rollUpgradeId(card, rng, []);
+    rolledId ??= 'sharp';</pre>
+</div>
+<p>Premier tirage en excluant les runes déjà présentes sur la carte. S'il échoue, on retire l'exclusion et on retire. Si ça échoue encore, on donne <code>'sharp'</code>. La variable est déclarée <code>String?</code> mais la fonction renvoie <code>String</code> : les deux <code>??=</code> suffisent à convaincre le compilateur qu'après ces trois lignes, <code>rolledId</code> ne peut plus valoir <code>null</code>.</p>
+<div class="box warn"><div class="box-title">Piège : l'opérateur <code>!</code></div>
+<p><code>!</code> ne <em>vérifie</em> rien : il dit au compilateur de se taire. Si l'objet est <code>null</code> à l'exécution, l'application s'arrête net. Dans Hero's Draft, il n'apparaît qu'à l'intérieur d'un test qui vient de prouver le contraire :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/heros_draft_game.dart</span><span class="lang">dart</span></div>
+  <pre>  @override
+  void onGameResize(Vector2 size) {
+    super.onGameResize(size);
+    if (heroCard != null) {
+      heroCard!.position = Vector2(size.x / 2, size.y * 0.51);
+    }</pre>
+</div>
+<p>Si vous vous surprenez à écrire <code>!</code> sans un <code>if</code> juste au-dessus, c'est presque toujours que le type devrait être non nullable ailleurs. Cherchez la cause, pas le symptôme.</p></div>
+
+<h3>late : la promesse d'initialisation</h3>
+<p><code>late</code> résout un problème précis : un champ qui ne peut pas être initialisé dans le constructeur, mais dont on sait qu'il le sera avant toute lecture. Un <code>Notifier</code> Riverpod n'a accès à <code>ref</code> que dans sa méthode <code>build()</code>, jamais dans son constructeur — d'où :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/deck_controller.dart</span><span class="lang">dart</span></div>
+  <pre>class DeckNotifier extends Notifier&lt;DeckState&gt; {
+  late final Random _random;
+
+  @override
+  DeckState build() {
+    _random = ref.read(deckRandomProvider);
+    return const DeckState();
+  }</pre>
+</div>
+<p><code>late final</code> combine deux garanties : affectation unique, et pas de <code>null</code>
+possible dans le type. Si du code lisait <code>_random</code> avant <code>build()</code>, Dart lèverait une <code>LateInitializationError</code> explicite — bien plus lisible qu'un <code>null</code> silencieux qui se propage.</p>
+
+<h2 id="s3">3. Les classes : constructeurs, factory, static</h2>
+<p>Dart est orienté objet, avec héritage simple et une syntaxe de constructeur très dense. Cette densité est la principale difficulté de lecture au début ; une fois les cinq formes reconnues, tout le projet devient transparent.</p>
+
+<h3>Paramètres nommés et this.x</h3>
+<p>Un constructeur Dart prend des paramètres <strong>positionnels</strong> (entre parenthèses) ou <strong>nommés</strong> (entre accolades). Hero's Draft utilise presque exclusivement les paramètres nommés, ce qui reste lisible même avec seize champs.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/entity_stats.dart</span><span class="lang">dart</span></div>
+  <pre>  EntityStats({
+    required this.maxPv,
+    required this.currentPv,
+    this.maxMana = 0,
+    this.currentMana = 0,
+    required this.armure,
+    this.armorMastery = 0,
+    required this.attaque,
+    this.luck = 0,
+    this.level = 1,
+    this.xp = 0,
+    this.xpToNextLevel = 100,
+    this.critChance = 0,
+    this.critMultiplier = 1.5,
+    List&lt;StatusEffect&gt; statuses = const [],
+    this.lastActionWasCrit = false,
+  }) : statuses = List.unmodifiable(statuses);</pre>
+</div>
+<p>Quatre mécanismes sont empilés dans ces dix-sept lignes :</p>
+<ul>
+  <li><code>{ ... }</code> : les paramètres sont <strong>nommés</strong>. À l'appel on écrit <code>EntityStats(maxPv: 100, currentPv: 100, armure: 0, attaque: 0)</code> ; l'ordre n'a plus d'importance.</li>
+  <li><code>this.maxPv</code> : le raccourci d'initialisation. Dart affecte automatiquement le paramètre au champ du même nom, sans <code>this.maxPv = maxPv;</code> à écrire.</li>
+  <li><code>required</code> : sans lui, un paramètre nommé est optionnel. Un paramètre nommé optionnel de type non nullable <strong>doit</strong> avoir une valeur par défaut — d'où les <code>= 0</code>, <code>= 1</code>, <code>= 100</code>, <code>= 1.5</code>.</li>
+  <li><code>: statuses = List.unmodifiable(statuses)</code> : la <strong>liste d'initialisation</strong>, exécutée avant le corps du constructeur. <code>statuses</code> est le seul paramètre <em>sans</em> <code>this.</code> : c'est une variable locale, transformée avant d'atterrir dans le champ.</li>
+</ul>
+<p>Ces valeurs par défaut sont des faits de gameplay : une entité commence au <strong>niveau 1</strong>, avec <strong>100 XP</strong> à atteindre pour le niveau suivant, <strong>0 %</strong> de chance de critique et un multiplicateur critique de <strong>×1.5</strong>.</p>
+
+<h3>La liste d'initialisation, en profondeur</h3>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/card_instance.dart</span><span class="lang">dart</span></div>
+  <pre>  CardInstance({
+    String? uniqueId,
+    required this.data,
+    CardRarity? rarity,
+    List&lt;String&gt;? forgeUpgrades,
+  })  : uniqueId = uniqueId ?? const Uuid().v4(),
+        rarity = rarity ?? data.rarity,
+        forgeUpgrades = forgeUpgrades != null
+            ? List&lt;String&gt;.unmodifiable(forgeUpgrades)
+            : const &lt;String&gt;[];</pre>
+</div>
+<p>C'est le cœur de la distinction entre <em>modèle de carte</em> et <em>exemplaire de carte</em> :</p>
+<ul>
+  <li><code>uniqueId = uniqueId ?? const Uuid().v4()</code> — si l'appelant ne fournit pas d'identifiant, on en génère un avec le paquet <code>uuid</code>. C'est ce qui permet d'avoir trois exemplaires de la même carte dans le deck et de n'en défausser qu'un seul. Le paramètre local masque le champ pendant l'expression : à droite du <code>=</code>, <code>uniqueId</code> désigne le paramètre ; à gauche, le champ.</li>
+  <li><code>rarity = rarity ?? data.rarity</code> — la rareté de l'exemplaire peut diverger de celle du modèle : c'est exactement ce que produit la fusion de trois cartes identiques.</li>
+  <li>La liste de runes est rendue non modifiable, ou remplacée par <code>const &lt;String&gt;[]</code> — une liste vide <em>partagée en mémoire</em> par toutes les cartes sans rune.</li>
+</ul>
+
+<h3>Les constructeurs factory</h3>
+<p>Un constructeur normal <em>doit</em> renvoyer une nouvelle instance de sa classe. Un constructeur <code>factory</code> est libre : il peut calculer, choisir entre plusieurs branches, ou renvoyer un objet existant. Dans le projet, ils servent presque tous à construire un objet depuis une <code>Map</code> JSON.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/card_data.dart</span><span class="lang">dart</span></div>
+  <pre>  factory CardData.fromJson(Map&lt;String, dynamic&gt; json) {
+    final nEn = json['name_en'] as String? ?? json['name'] as String? ?? '';
+    final nFr = json['name_fr'] as String? ?? json['name'] as String? ?? '';
+    final dEn =
+        json['description_en'] as String? ??
+        json['description'] as String? ??
+        '';
+    // ...
+    return CardData(
+      id: json['id'] as String,
+      nameEn: nEn,
+      nameFr: nFr,
+      cost: json['cost'] as int,
+      type: CardType.values.firstWhere((e) =&gt; e.name == json['type']),
+      // ...</pre>
+</div>
+<p><code>CardData.fromJson</code> est un <strong>constructeur nommé</strong> (le <code>.fromJson</code> après le nom de classe) <strong>et</strong> une <code>factory</code>. La raison d'être du <code>factory</code> ici : les premières lignes font du travail — lire <code>name_fr</code>, sinon <code>name</code>, sinon la chaîne vide — avant de pouvoir appeler le constructeur. Un constructeur ordinaire ne peut pas exécuter d'instructions avant sa liste d'initialisation.</p>
+<p>Cette triple cascade est la stratégie de localisation du projet : les fichiers JSON peuvent contenir soit des clés bilingues (<code>name_fr</code> / <code>name_en</code>), soit une clé <code>name</code> unique héritée d'une version antérieure. Le code accepte les deux formats.</p>
+
+<h3>Les constructeurs const</h3>
+<p>Quand tous les champs d'une classe sont <code>final</code>, on peut déclarer son constructeur <code>const</code>. C'est le cas de <code>CardData</code>, <code>CardEffect</code>, <code>PassiveData</code>, <code>StatusEffect</code> et <code>ForgeUpgradeData</code>.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/card_data.dart</span><span class="lang">dart</span></div>
+  <pre>class CardEffect {
+  final String type;
+  final int value;
+  final String? statusId;
+  final int? duration;
+
+  const CardEffect({
+    required this.type,
+    required this.value,
+    this.statusId,
+    this.duration,
+  });</pre>
+</div>
+<p>Le bénéfice concret : les passifs de repli du jeu sont écrits comme des constantes littérales, gravées dans le binaire, jamais recalculées.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/passive_data.dart</span><span class="lang">dart</span></div>
+  <pre>      case 'regenArmor':
+        return const PassiveData(
+          id: 'regenArmor',
+          nameFr: "Régénération d'Armure",
+          descriptionEn:
+              'Gain 2 Block (+ Mastery) automatically at the end of each turn.',
+          trigger: RelicTrigger.endOfTurn,
+          effectType: 'gain_armor',
+          value: 2,
+        );</pre>
+</div>
+<div class="box rule"><div class="box-title">Règle du jeu</div>
+<p>Le passif de départ du Paladin, <code>regenArmor</code>, se déclenche sur <code>RelicTrigger.endOfTurn</code> et donne <code>value: 2</code> points d'armure, auxquels s'ajoute la Maîtrise d'armure. Ces trois faits sont écrits en dur dans <code>PassiveData.fallback</code> — la version de secours utilisée quand les données JSON ne sont pas disponibles.</p></div>
+
+<h3>Membres static</h3>
+<div class="memo">
+  <div class="card"><h5>Constantes de réglage</h5>
+  <p><code>static const int maxHandSize = 10;</code> dans <code>GameConstants</code> : une valeur de gameplay accessible partout sans instancier quoi que ce soit.</p></div>
+  <div class="card"><h5>Fonctions pures</h5>
+  <p><code>DamagePipeline.calculate(...)</code> et <code>EncounterSystem.calculateBudget(...)</code>
+  n'ont pas d'état : ce sont des classes utilisées comme espaces de noms.</p></div>
+  <div class="card"><h5>Recherche dans le registre</h5>
+  <p><code>CardData.getById</code>, <code>PassiveData.getById</code>, <code>ForgeUpgradeData.getById</code> : chaque modèle sait se retrouver dans les données chargées.</p></div>
+</div>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/game_data_registry.dart</span><span class="lang">dart</span></div>
+  <pre>class GameDataRegistry {
+  final List&lt;EnemyData&gt; enemies;
+  final List&lt;HeroData&gt; heroes;
+  final List&lt;CardData&gt; cards;
+  // ...
+  static GameDataRegistry? _instance;
+  static GameDataRegistry? get instance =&gt; _instance;</pre>
+</div>
+<p>Le champ statique <code>_instance</code> est privé et exposé en lecture seule par un <em>getter</em> statique. Son type est <code>GameDataRegistry?</code> : avant le chargement des JSON il vaut <code>null</code>, ce qui explique le <code>if (registry == null) return null;</code> vu en section 2.</p>
+
+<h3>== et hashCode</h3>
+<p>Par défaut, deux objets Dart ne sont égaux que s'ils sont <em>le même objet en mémoire</em>. Pour comparer par valeur, il faut redéfinir <code>operator ==</code> et <code>hashCode</code> ensemble. Le projet ne le fait qu'à un seul endroit :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/missing_save_item.dart</span><span class="lang">dart</span></div>
+  <pre>class MissingSaveItem {
+  final String id;
+  final String nameFr;
+  final String nameEn;
+  final String category;
+
+  const MissingSaveItem({
+    required this.id,
+    required this.nameFr,
+    required this.nameEn,
+    required this.category,
+  });
+
+  @override
+  bool operator ==(Object other) =&gt;
+      identical(this, other) ||
+      (other is MissingSaveItem &amp;&amp;
+          other.id == id &amp;&amp;
+          other.nameFr == nameFr &amp;&amp;
+          other.nameEn == nameEn &amp;&amp;
+          other.category == category);
+
+  @override
+  int get hashCode =&gt; Object.hash(id, nameFr, nameEn, category);</pre>
+</div>
+<ul>
+  <li><code>identical(this, other)</code> : court-circuit rapide, vrai si c'est littéralement la même référence.</li>
+  <li><code>other is MissingSaveItem</code> : Dart pratique la <strong>promotion de type</strong>. Après ce test, dans la même expression, <code>other</code> est traité comme un <code>MissingSaveItem</code> — on écrit <code>other.id</code> sans cast.</li>
+  <li><code>Object.hash(...)</code> : la fonction du SDK pour combiner plusieurs champs en un hachage. L'écrire soi-même est une source classique de bugs.</li>
+</ul>
+<div class="box warn"><div class="box-title">Piège : redéfinir == sans hashCode</div>
+<p>Le contrat de Dart exige que deux objets égaux aient le même <code>hashCode</code>. Si vous redéfinissez <code>==</code> et oubliez <code>hashCode</code>, votre objet se comportera correctement avec <code>==</code> mais se dupliquera silencieusement dans un <code>Set</code> ou une <code>Map</code>. C'est précisément ce qui compte ici : <code>MissingSaveItem</code> sert à <strong>dédoublonner</strong> la liste des objets manquants d'une sauvegarde — la même carte perdue dans cinq piles différentes ne doit être signalée qu'une fois au joueur.</p></div>
+
+<h2 id="s4">4. Immutabilité et le pattern copyWith</h2>
+<p>Hero's Draft est bâti sur une règle simple : <strong>un objet d'état ne change jamais</strong>. Quand le héros prend des dégâts, on ne modifie pas ses PV : on fabrique un nouvel <code>EntityStats</code> avec les nouveaux PV, et on remplace l'ancien. Plus coûteux en apparence, infiniment plus sûr en pratique.</p>
+
+<h3>@immutable et final</h3>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/entity_stats.dart</span><span class="lang">dart</span></div>
+  <pre>import 'package:meta/meta.dart';
+import 'status_effect.dart';
+
+@immutable
+class EntityStats {
+  final int maxPv;
+  final int currentPv;
+  final int armure;
+  final int armorMastery; // Bonus permanent ajouté à chaque gain d'armure
+  final int attaque;
+  final double critMultiplier;
+  final List&lt;StatusEffect&gt; statuses;
+  final bool lastActionWasCrit;
+  // ...</pre>
+</div>
+<p><code>@immutable</code> vient du paquet <code>meta</code> déclaré dans le <code>pubspec.yaml</code>. Ce n'est pas une contrainte du langage mais une <strong>annotation d'analyse</strong> : l'analyseur avertit si un champ non <code>final</code> se glisse dans la classe. Trois classes du projet la portent : <code>EntityStats</code>, <code>CombatState</code> et <code>EnemyInstance</code>.</p>
+
+<h3>List.unmodifiable : l'immuabilité en profondeur</h3>
+<p>Déclarer <code>final List&lt;StatusEffect&gt; statuses</code> empêche de <em>remplacer</em> la liste, mais pas d'y <em>ajouter</em> un élément. C'est le piège classique. Le projet le referme dans la liste d'initialisation :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/combat_state.dart</span><span class="lang">dart</span></div>
+  <pre>  CombatState({
+    List&lt;EnemyInstance&gt; enemies = const [],
+    List&lt;EnemyInstance&gt; pendingEnemies = const [],
+    List&lt;EnemyInstance&gt; defeatedEnemies = const [],
+    this.turnPhase = TurnPhase.player,
+    this.turnCount = 1,
+    this.selectedEnemyId,
+    this.isCombatEnded = false,
+    this.isVictory = false,
+  })  : enemies = List.unmodifiable(enemies),
+        pendingEnemies = List.unmodifiable(pendingEnemies),
+        defeatedEnemies = List.unmodifiable(defeatedEnemies);</pre>
+</div>
+<p><code>List.unmodifiable(x)</code> crée une <em>copie</em> figée de <code>x</code>. Tout appel à <code>.add()</code>, <code>.remove()</code> ou <code>[i] =</code> sur le résultat lève une <code>UnsupportedError</code>. Corollaire pour la suite : partout dans le projet, un contrôleur qui veut modifier une liste d'état commence par <code>List.from(state.xxx)</code>. Impossible de faire autrement.</p>
+
+<h3>Pourquoi copyWith existe</h3>
+<p>Si tout est immuable, comment fait-on évoluer l'état ? On construit un nouvel objet identique sauf sur les champs qui changent. Écrit à la main, cela donnerait un appel de constructeur de seize lignes à chaque fois. <code>copyWith</code> automatise exactement ça.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/entity_stats.dart</span><span class="lang">dart</span></div>
+  <pre>  EntityStats copyWith({
+    int? maxPv,
+    int? currentPv,
+    int? armure,
+    // ...
+  }) {
+    return EntityStats(
+      maxPv: maxPv ?? this.maxPv,
+      currentPv: currentPv ?? this.currentPv,
+      armure: armure ?? this.armure,
+      // ...
+    );
+  }</pre>
+</div>
+<p>Le mécanisme tient dans une ligne : <code>maxPv ?? this.maxPv</code>. Tous les paramètres sont nullables et optionnels ; ne pas les passer signifie <code>null</code>, donc « garde la valeur actuelle ». L'appelant n'écrit que ce qui change :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/entity_stats.dart</span><span class="lang">dart</span></div>
+  <pre>  EntityStats takeDamage(int amount, {bool isCrit = false}) {
+    if (amount &lt;= 0) return copyWith(lastActionWasCrit: isCrit);
+
+    // 2. Absorption via Armure
+    int damageAfterArmor = amount - armure;
+    int newArmor = armure;
+    int newPv = currentPv;
+
+    if (damageAfterArmor &gt; 0) {
+      // L'armure est brisée, le reste va aux PV
+      newArmor = 0;
+      newPv -= damageAfterArmor;
+    } else {
+      // L'armure encaisse tout
+      newArmor -= amount;
+    }
+
+    if (newPv &lt; 0) newPv = 0;
+
+    return copyWith(armure: newArmor, currentPv: newPv, lastActionWasCrit: isCrit);
+  }</pre>
+</div>
+<div class="box rule"><div class="box-title">Règle du jeu</div>
+<p>Ces vingt lignes sont la règle d'absorption complète de Hero's Draft : l'armure encaisse <strong>d'abord</strong>. Si les dégâts dépassent l'armure, l'armure tombe à 0 et le <em>reste</em>
+est retiré des PV. Sinon, l'armure est simplement réduite du montant des dégâts et les PV ne bougent pas. Les PV sont bornés à 0, jamais négatifs.</p></div>
+
+<h3>Le flux complet, en image</h3>
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 820 340" width="820" role="img" aria-label="Flux des données : du fichier JSON à l'objet Dart immuable, puis nouvelle instance via copyWith">
+      <rect x="0" y="0" width="820" height="340" fill="#0e1524"/>
+      <text x="112" y="42" fill="#a7b4c9" font-size="11" text-anchor="middle" font-family="ui-sans-serif, sans-serif">1 · données brutes</text>
+      <rect x="24" y="56" width="176" height="62" rx="8" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="112" y="80" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">assets/data/</text>
+      <text x="112" y="99" fill="#f59e0b" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">cards.json</text>
+      <path d="M204 87 L240 87" stroke="#3a4966" stroke-width="2" marker-end="url(#c2-arrow)"/>
+      <text x="356" y="42" fill="#a7b4c9" font-size="11" text-anchor="middle" font-family="ui-sans-serif, sans-serif">2 · constructeur factory</text>
+      <rect x="248" y="56" width="216" height="62" rx="8" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="356" y="80" fill="#22d3ee" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">CardData.fromJson()</text>
+      <text x="356" y="99" fill="#a7b4c9" font-size="11" text-anchor="middle" font-family="ui-sans-serif, sans-serif">casts, ?? de repli, enums</text>
+      <path d="M468 87 L504 87" stroke="#3a4966" stroke-width="2" marker-end="url(#c2-arrow)"/>
+      <text x="620" y="42" fill="#a7b4c9" font-size="11" text-anchor="middle" font-family="ui-sans-serif, sans-serif">3 · objet immuable</text>
+      <rect x="512" y="56" width="216" height="62" rx="8" fill="#151b2b" stroke="#34d399"/>
+      <text x="620" y="80" fill="#34d399" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">CardData</text>
+      <text x="620" y="99" fill="#a7b4c9" font-size="11" text-anchor="middle" font-family="ui-sans-serif, sans-serif">tous les champs final</text>
+      <path d="M620 118 L620 155 L356 155 L356 190" stroke="#a78bfa" stroke-width="2" fill="none" stroke-dasharray="5 4" marker-end="url(#c2-arrow-v)"/>
+      <text x="488" y="147" fill="#a78bfa" font-size="11" text-anchor="middle" font-family="ui-sans-serif, sans-serif">l'objet source n'est jamais modifié</text>
+      <text x="356" y="182" fill="#a7b4c9" font-size="11" text-anchor="middle" font-family="ui-sans-serif, sans-serif">4 · demande de changement</text>
+      <rect x="248" y="194" width="216" height="62" rx="8" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="356" y="218" fill="#a78bfa" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">copyWith(rarity: rare)</text>
+      <text x="356" y="237" fill="#a7b4c9" font-size="11" text-anchor="middle" font-family="ui-sans-serif, sans-serif">champ ?? this.champ</text>
+      <path d="M468 225 L504 225" stroke="#3a4966" stroke-width="2" marker-end="url(#c2-arrow)"/>
+      <text x="620" y="182" fill="#a7b4c9" font-size="11" text-anchor="middle" font-family="ui-sans-serif, sans-serif">5 · nouvelle instance</text>
+      <rect x="512" y="194" width="216" height="62" rx="8" fill="#151b2b" stroke="#60a5fa"/>
+      <text x="620" y="218" fill="#60a5fa" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">CardData'</text>
+      <text x="620" y="237" fill="#a7b4c9" font-size="11" text-anchor="middle" font-family="ui-sans-serif, sans-serif">identité différente</text>
+      <rect x="24" y="276" width="704" height="44" rx="8" fill="#111827" stroke="#3a4966"/>
+      <text x="376" y="303" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-sans-serif, sans-serif">Riverpod compare les identités : nouvel objet = nouvelle notification = l'écran se redessine.</text>
+      <defs>
+        <marker id="c2-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0 0 L8 4 L0 8 z" fill="#3a4966"/>
+        </marker>
+        <marker id="c2-arrow-v" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0 0 L8 4 L0 8 z" fill="#a78bfa"/>
+        </marker>
+      </defs>
+    </svg>
+  </div>
+  <figcaption>Le trajet d'une donnée dans Hero's Draft : le fichier JSON est lu une fois au démarrage, transformé en objet figé, et toute évolution produit un nouvel objet. Rien n'est jamais écrasé sur place.</figcaption>
+</figure>
+
+<h3>Le piège : comment remettre un champ à null ?</h3>
+<p>Voici le trou dans le pattern <code>copyWith</code>, et le projet le rencontre pour de vrai. L'ennemi ciblé est stocké dans <code>String? selectedEnemyId</code>. Quand le joueur désélectionne, ou quand l'ennemi ciblé meurt, il faut remettre ce champ à <code>null</code>.</p>
+<p>Mais <code>copyWith(selectedEnemyId: null)</code> <strong>ne fait rien du tout</strong> : l'implémentation lit <code>selectedEnemyId ?? this.selectedEnemyId</code>, et <code>null ?? ancienne_valeur</code> vaut l'ancienne valeur. Passer <code>null</code> est indistinguable de ne rien passer. La solution retenue est un <strong>drapeau booléen explicite</strong> :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/combat_state.dart</span><span class="lang">dart</span></div>
+  <pre>  CombatState copyWith({
+    List&lt;EnemyInstance&gt;? enemies,
+    TurnPhase? turnPhase,
+    int? turnCount,
+    String? selectedEnemyId,
+    bool? isCombatEnded,
+    bool? isVictory,
+    bool clearSelectedEnemy = false,
+  }) {
+    return CombatState(
+      enemies: enemies ?? this.enemies,
+      turnPhase: turnPhase ?? this.turnPhase,
+      turnCount: turnCount ?? this.turnCount,
+      selectedEnemyId: clearSelectedEnemy
+          ? null
+          : (selectedEnemyId ?? this.selectedEnemyId),
+      isCombatEnded: isCombatEnded ?? this.isCombatEnded,
+      isVictory: isVictory ?? this.isVictory,
+    );
+  }</pre>
+</div>
+<p><code>clearSelectedEnemy</code> est le seul paramètre <strong>non nullable</strong> avec une valeur par défaut : c'est un interrupteur, pas une valeur. L'appel côté contrôleur devient d'une lisibilité parfaite — une seule méthode gère la sélection <em>et</em> la désélection :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/combat_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Sélectionne l'ennemi ciblé par le joueur
+  void selectEnemy(String? enemyId) {
+    state = state.copyWith(
+      selectedEnemyId: enemyId,
+      clearSelectedEnemy: enemyId == null,
+    );
+  }</pre>
+</div>
+<p>Le même motif sert quand un ennemi meurt alors qu'il était la cible active : <code>clearSelectedEnemy: nextSelected == null</code>.</p>
+
+<h3>Le même motif, trois fois, dans RunState</h3>
+<p><code>RunState.copyWith</code> pousse la convention plus loin : il expose <strong>trois</strong>
+drapeaux de remise à zéro, un par champ effaçable.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  RunState copyWith({
+    int? currentLevel,
+    // ...
+    String? currentNodeId,
+    bool resetCurrentNode = false,
+    // ...
+    String? forgeTargetCardId,
+    bool resetForgeTargetCardId = false,
+    Map&lt;String, List&lt;String&gt;&gt;? forgeTargetSessions,
+    bool resetForgeTargetSessions = false,
+    // ...
+  }) {
+    return RunState(
+      currentNodeId: resetCurrentNode
+          ? null
+          : (currentNodeId ?? this.currentNodeId),
+      // ...
+      forgeTargetSessions: resetForgeTargetSessions
+          ? const {}
+          : (forgeTargetSessions ?? this.forgeTargetSessions),</pre>
+</div>
+<p>Variante intéressante sur la dernière ligne : <code>resetForgeTargetSessions</code> ne remet pas à <code>null</code> mais à <code>const {}</code> — une <code>Map</code> vide constante, puisque le champ <code>forgeTargetSessions</code> n'est pas nullable. Le drapeau signifie « vide-le », pas « annule-le ».</p>
+<p>Le seul usage de <code>resetCurrentNode</code> dans tout le projet est le passage à l'acte suivant :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run/map_progression_manager.dart</span><span class="lang">dart</span></div>
+  <pre>        resetCurrentNode: true, // Reset la position pour le nouveau monde</pre>
+</div>
+<div class="box ok"><div class="box-title">Bonne pratique du projet</div>
+<p>La convention est constante et lisible : un paramètre <code>bool resetXxx</code> ou <code>bool clearXxx</code> à <code>false</code> par défaut, placé juste après le champ qu'il concerne. Une alternative répandue consiste à utiliser un objet sentinelle (<code>Object? xxx = _sentinel</code>) : plus générique, mais nettement plus obscur pour qui découvre le code. Le projet a choisi la lisibilité.</p></div>
+
+<h2 id="s5">5. Les enums, colonne vertébrale des données du jeu</h2>
+<p>Le projet définit <strong>17 enums</strong>. Ce ne sont pas des détails : ce sont les catégories mêmes du jeu. Quatre d'entre eux vivent dans le fichier des cartes, sur les onze premières lignes :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/card_data.dart</span><span class="lang">dart</span></div>
+  <pre>enum CardType { attack, skill, power, status }
+
+enum CardCategory { global, characterSpecific }
+
+enum CardRarity { common, uncommon, rare, epic, legendary, unique }
+
+enum CardTarget { singleEnemy, allEnemies, self, none }</pre>
+</div>
+<p>Chaque valeur d'enum expose gratuitement trois membres :</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Membre</th><th>Type</th><th>Exemple</th></tr></thead>
+<tbody>
+<tr><td><code>.name</code></td><td><code>String</code></td><td><code>CardRarity.epic.name</code> vaut <code>'epic'</code></td></tr>
+<tr><td><code>.index</code></td><td><code>int</code></td><td><code>CardRarity.epic.index</code> vaut <code>3</code></td></tr>
+<tr><td><code>.values</code></td><td><code>List&lt;T&gt;</code> (statique)</td><td><code>CardRarity.values.length</code> vaut <code>6</code></td></tr>
+</tbody>
+</table></div>
+<p>Écrire un enum dans un JSON, c'est <code>.name</code>. Le relire, c'est chercher la valeur dont le <code>.name</code> correspond :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/card_instance.dart</span><span class="lang">dart</span></div>
+  <pre>      rarity: CardRarity.values.firstWhere((e) =&gt; e.name == json['rarity']),
+      forgeUpgrades: (json['forgeUpgrades'] as List&lt;dynamic&gt;?)?.map((e) =&gt; e as String).toList(),
+    );
+  }
+
+  Map&lt;String, dynamic&gt; toJson() =&gt; {
+        'uniqueId': uniqueId,
+        'data': data.toJson(),
+        'rarity': rarity.name,
+        'forgeUpgrades': forgeUpgrades,
+      };</pre>
+</div>
+
+<h3>firstWhere et orElse : la différence qui compte</h3>
+<p><code>firstWhere</code> renvoie le premier élément satisfaisant un test. S'il n'en trouve aucun, il <strong>lève une exception</strong> — sauf si on lui donne un <code>orElse</code>. Le projet utilise les deux comportements.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/card_data.dart</span><span class="lang">dart</span></div>
+  <pre>      type: CardType.values.firstWhere((e) =&gt; e.name == json['type']),
+      category: CardCategory.values.firstWhere(
+        (e) =&gt; e.name == json['category'],
+        orElse: () =&gt; CardCategory.global,
+      ),
+      heroClass: json['heroClass'] as String?,
+      rarity: CardRarity.values.firstWhere(
+        (e) =&gt; e.name == json['rarity'],
+        orElse: () =&gt; CardRarity.common,
+      ),</pre>
+</div>
+<div class="box danger"><div class="box-title">Point d'attention</div>
+<p>Le champ <code>type</code> est le seul des quatre à ne pas avoir d'<code>orElse</code>. Un <code>"type": "atack"</code> mal orthographié dans <code>cards.json</code> ferait donc échouer le chargement de <strong>toutes</strong> les données du jeu, alors qu'un <code>"rarity"</code> erroné retomberait silencieusement sur <code>common</code>. Ce n'est probablement pas volontaire, mais c'est défendable : le type d'une carte détermine sa mécanique (attaque, compétence, pouvoir, statut) et n'a aucune valeur de repli raisonnable.</p></div>
+<p>Deuxième asymétrie, historique celle-là : deux styles de désérialisation d'enum cohabitent. Les fichiers récents utilisent <code>.name</code> ; les plus anciens utilisent l'ancienne astuce <code>toString().split('.').last</code>, qui produit le même résultat en fabriquant une chaîne intermédiaire.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/status_effect.dart</span><span class="lang">dart</span></div>
+  <pre>      type: StatusType.values.firstWhere(
+        (e) =&gt; e.toString().split('.').last == json['type'],
+        orElse: () =&gt; StatusType.buff,
+      ),</pre>
+</div>
+
+<h3>L'ordre des valeurs comme progression de rareté</h3>
+<p>Voici le point le plus important de cette section. Dans <code>CardRarity</code>, l'ordre de déclaration n'est pas cosmétique : <strong>c'est la règle de progression de rareté du jeu</strong>.</p>
+<div class="tree">enum CardRarity {
+  <span class="f">common</span>,      <span class="c">// .index == 0</span>
+  <span class="f">uncommon</span>,    <span class="c">// .index == 1</span>
+  <span class="f">rare</span>,        <span class="c">// .index == 2</span>
+  <span class="f">epic</span>,        <span class="c">// .index == 3</span>
+  <span class="f">legendary</span>,   <span class="c">// .index == 4</span>
+  <span class="f">unique</span>       <span class="c">// .index == 5 == values.length - 1</span>
+}</div>
+<p>Fusionner trois cartes identiques produit une carte de la rareté <em>suivante</em>. Le calcul tient en une ligne :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/deck_controller.dart</span><span class="lang">dart</span></div>
+  <pre>      // Retire les 3 exemplaires
+      currentMasterDeck.removeWhere((c) =&gt; selectedIds.contains(c.uniqueId));
+
+      // Détermine la rareté suivante
+      final nextRarityIndex = min(rarity.index + 1, CardRarity.values.length - 1);
+      final nextRarity = CardRarity.values[nextRarityIndex];</pre>
+</div>
+<ul>
+  <li><code>rarity.index + 1</code> : on avance d'un cran dans l'enum.</li>
+  <li><code>min(..., CardRarity.values.length - 1)</code> : on plafonne au dernier indice valide. <code>min</code> vient de <code>dart:math</code>, importé en tête du fichier.</li>
+  <li><code>CardRarity.values[nextRarityIndex]</code> : on relit la valeur d'enum correspondante.</li>
+</ul>
+<p>Le même calcul apparaît dans <code>upgradeCard</code>, l'amélioration payante de la Forge. Et l'indice de rareté sert aussi de <strong>capacité de runes</strong> : une carte peut porter <code>baseMaxForgeUpgrades + rarity.index</code> runes. Une commune (indice 0) n'a que sa capacité de base ; une légendaire (indice 4) en a quatre de plus.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/ui_card/card_rune_sockets.dart</span><span class="lang">dart</span></div>
+  <pre>    final totalSlots = baseMaxForgeUpgrades + rarityIndex;</pre>
+</div>
+<div class="box warn"><div class="box-title">Piège : ne jamais réordonner un enum</div>
+<p>Puisque <code>.index</code> pilote la progression de rareté <em>et</em> le nombre d'emplacements de runes, insérer une valeur au milieu de <code>CardRarity</code> changerait silencieusement l'équilibrage du jeu. Pire : les sauvegardes stockent <code>rarity.name</code>, donc elles survivraient au réordonnancement — mais les cartes chargées n'auraient plus le bon nombre d'emplacements. Ajoutez toujours les nouvelles valeurs <strong>à la fin</strong>.</p></div>
+<p>Une dernière subtilité de gameplay, vérifiable dans <code>mergeCards</code> : la rareté <code>unique</code> ne peut pas participer à une fusion, ce qui empêche d'exploiter le plafonnement de <code>min</code>.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/deck_controller.dart</span><span class="lang">dart</span></div>
+  <pre>      if (selectedCards.any((c) =&gt; c.rarity == CardRarity.unique)) {
+        return;
+      }</pre>
+</div>
+
+<h2 id="s6">6. Collections et opérateurs de confort</h2>
+<p>Dart a trois collections de base — <code>List</code>, <code>Map</code>, <code>Set</code> — et une syntaxe littérale pour chacune. Le projet les utilise toutes les trois, chacune pour ce qu'elle sait faire.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Type</th><th>Littéral</th><th>Ce qu'il garantit</th><th>Où dans le projet</th></tr></thead>
+<tbody>
+<tr><td><code>List&lt;T&gt;</code></td><td><code>[a, b, c]</code></td><td>ordre, doublons autorisés</td><td>les 5 piles de cartes, les statuts, les nœuds de carte</td></tr>
+<tr><td><code>Map&lt;K, V&gt;</code></td><td><code>{k: v}</code></td><td>association clé → valeur</td><td>JSON, quotas de nœuds, sessions de forge</td></tr>
+<tr><td><code>Set&lt;T&gt;</code></td><td><code>{a, b}</code></td><td>unicité, test d'appartenance rapide</td><td>synchronisation Flame, sélections de l'UI</td></tr>
+</tbody>
+</table></div>
+<div class="box warn"><div class="box-title">Piège : <code>{}</code> est une Map, pas un Set</div>
+<p>Un littéral <code>{}</code> vide est une <code>Map</code> par défaut. Pour obtenir un <code>Set</code> vide, il faut soit annoter le type — comme le fait le projet avec <code>final Set&lt;String&gt; _selectedCardIds = {};</code> — soit écrire <code>&lt;String&gt;{}</code>.</p></div>
+
+<h3>Set : comparer deux états efficacement</h3>
+<p>Le pont entre Riverpod et Flame doit, à chaque changement d'état, déterminer quelles cartes retirer de l'écran et lesquelles ajouter. Avec des listes, ce serait quadratique ; avec des ensembles, c'est linéaire.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/state_sync_system.dart</span><span class="lang">dart</span></div>
+  <pre>  void _applyDeckState(DeckState deck) {
+    final newHandIds = deck.hand.map((c) =&gt; c.uniqueId).toSet();
+    final cardsToRemove = game.handCards
+        .where((c) =&gt; !newHandIds.contains(c.card.uniqueId))
+        .toList();
+    // ...
+    final currentHandIds = game.handCards.map((c) =&gt; c.card.uniqueId).toSet();
+    final cardsToAdd = deck.hand
+        .where((c) =&gt; !currentHandIds.contains(c.uniqueId))
+        .toList();</pre>
+</div>
+
+<h3>Le spread : ...</h3>
+<p>Les trois petits points insèrent le contenu d'une collection dans une autre. C'est l'outil naturel de l'immutabilité : au lieu d'ajouter à une liste existante, on en fabrique une nouvelle.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/deck_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Ajoute une carte au Master Deck
+  void addCardToMasterDeck(CardInstance newCard) {
+    state = state.copyWith(masterDeck: [...state.masterDeck, newCard]);
+  }</pre>
+</div>
+<p>Le chargement des données l'utilise pour fusionner deux fichiers JSON distincts en un seul catalogue :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/services/game_data_service.dart</span><span class="lang">dart</span></div>
+  <pre>  final allCards = [
+    ...cardsList,
+    ...heroCardsList,
+  ];</pre>
+</div>
+
+<h3>Le collection-if</h3>
+<p>Dart permet d'écrire un <code>if</code> <em>à l'intérieur</em> d'un littéral de collection. Sans <code>else</code>, sans accolades : si la condition est fausse, l'élément n'existe simplement pas. Le projet s'en sert pour ne pas polluer les fichiers de sauvegarde avec des clés nulles.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/card_data.dart</span><span class="lang">dart</span></div>
+  <pre>  Map&lt;String, dynamic&gt; toJson() =&gt; {
+        'id': id,
+        'cost': cost,
+        'type': type.name,
+        'category': category.name,
+        if (heroClass != null) 'heroClass': heroClass,
+        'rarity': rarity.name,
+        'target': target.name,
+        if (spritePath != null) 'spritePath': spritePath,
+        if (animation != null) 'animation': animation,
+        'isExhaust': isExhaust,
+        'effects': effects.map((e) =&gt; e.toJson()).toList(),
+      };</pre>
+</div>
+<p>Combiné au spread, le collection-if devient l'outil central de la construction d'interfaces — on le retrouvera partout au chapitre 3 sous la forme <code>if (condition) ...[ widget, widget ]</code>.</p>
+
+<h3>Les méthodes de parcours</h3>
+<p>Toutes viennent d'<code>Iterable</code> et sont <strong>paresseuses</strong> : elles ne calculent rien tant qu'on n'appelle pas <code>.toList()</code> ou qu'on ne les parcourt pas. C'est pour cela que <code>.map(...).toList()</code> revient si souvent dans le projet.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Méthode</th><th>Renvoie</th><th>Exemple réel du projet</th></tr></thead>
+<tbody>
+<tr><td><code>map</code></td><td><code>Iterable&lt;R&gt;</code></td>
+    <td><code>deck.hand.map((c) =&gt; c.uniqueId)</code></td></tr>
+<tr><td><code>where</code></td><td><code>Iterable&lt;T&gt;</code> filtré</td>
+    <td><code>.where((s) =&gt; s.duration &gt; 0 ...)</code></td></tr>
+<tr><td><code>firstWhere</code></td><td><code>T</code> (ou lève / <code>orElse</code>)</td>
+    <td><code>registry.cards.firstWhere((c) =&gt; c.id == id)</code></td></tr>
+<tr><td><code>any</code></td><td><code>bool</code></td>
+    <td><code>statuses.any((s) =&gt; s.id == 'weakness')</code></td></tr>
+<tr><td><code>indexWhere</code></td><td><code>int</code>, ou <code>-1</code></td>
+    <td><code>hand.indexWhere((c) =&gt; c.uniqueId == card.uniqueId)</code></td></tr>
+<tr><td><code>whereType&lt;R&gt;</code></td><td>filtre <em>et</em> retype</td>
+    <td><code>.whereType&lt;CardData&gt;()</code></td></tr>
+<tr><td><code>removeWhere</code></td><td><code>void</code>, mute la liste</td>
+    <td><code>currentMasterDeck.removeWhere(...)</code></td></tr>
+</tbody>
+</table></div>
+<p><code>indexWhere</code> mérite un mot : il renvoie <code>-1</code> quand rien ne correspond, ce qui explique le <code>if (index != -1)</code> qu'on croise partout. Le voici dans le jeu d'une carte, où le commentaire explique pourquoi un simple <code>remove</code> ne suffirait pas :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/deck_controller.dart</span><span class="lang">dart</span></div>
+  <pre>    // Trouver l'index pour ne supprimer qu'un seul exemplaire si doublons (sécurité)
+    final index = currentHand.indexWhere((c) =&gt; c.uniqueId == card.uniqueId);
+
+    if (index != -1) {
+      final cardToPlay = currentHand.removeAt(index);
+
+      final isExhausted = cardToPlay.data.isExhaust &amp;&amp; !cardToPlay.forgeUpgrades.contains('enduring:1');
+
+      if (cardToPlay.data.type == CardType.power || isExhausted) {
+        currentExhaustPile.add(cardToPlay);
+      } else {
+        currentDiscardPile.add(cardToPlay);
+      }</pre>
+</div>
+<div class="box rule"><div class="box-title">Règle du jeu</div>
+<p>Une carte jouée part à l'épuisement si son type est <code>power</code> <strong>ou</strong> si son champ <code>isExhaust</code> est vrai — sauf si elle porte la rune <code>'enduring:1'</code>, qui annule l'épuisement. Dans tous les autres cas, elle rejoint la défausse.</p></div>
+<p><code>fold</code> existe aussi en Dart pour agréger une collection en une seule valeur ; il n'apparaît nulle part dans Hero's Draft, qui préfère systématiquement une boucle explicite. La comparaison, à titre pédagogique :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">exemple</span><span class="lang">dart</span></div>
+  <pre>// Le style du projet (lib/models/entity_stats.dart) :
+int get effectiveAttaque {
+  int bonus = 0;
+  for (var status in statuses) {
+    if (status.id == 'strength') {
+      bonus += status.value;
+    }
+  }
+  return attaque + bonus;
+}
+
+// Le même calcul avec fold — non utilisé dans le projet :
+int get effectiveAttaqueFold =&gt; attaque +
+    statuses
+        .where((s) =&gt; s.id == 'strength')
+        .fold&lt;int&gt;(0, (somme, s) =&gt; somme + s.value);</pre>
+</div>
+<p><code>fold</code> prend une valeur initiale et une fonction de combinaison. Les deux versions sont correctes ; la boucle est plus lisible pour un débutant, la seconde plus courte. Sachez lire les deux.</p>
+
+<h3>La cascade : ..</h3>
+<p>L'opérateur <code>..</code> appelle une méthode ou affecte un champ, puis <strong>renvoie l'objet lui-même</strong> au lieu du résultat de l'opération. Il permet d'enchaîner sur un objet sans le stocker dans une variable.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">exemple</span><span class="lang">dart</span></div>
+  <pre>// Sans cascade :
+final liste = List&lt;int&gt;.from(source);
+liste.addAll(autre);
+liste.shuffle(rng);
+
+// Avec cascade — même effet, une seule expression :
+final liste = List&lt;int&gt;.from(source)
+  ..addAll(autre)
+  ..shuffle(rng);</pre>
+</div>
+<p>Le remélange de la défausse dans la pioche en est l'usage le plus dense du projet :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/deck_controller.dart</span><span class="lang">dart</span></div>
+  <pre>    for (var i = 0; i &lt; amount; i++) {
+      if (hand.length &gt;= maxHandSize) break;
+      if (draw.isEmpty) {
+        if (discard.isEmpty) break;
+        draw
+          ..addAll(discard)
+          ..shuffle(random);
+        discard.clear();
+        reshuffles++;
+      }
+      hand.add(draw.removeLast());
+    }</pre>
+</div>
+
+<h3>..priority : la cascade sur un composant Flame</h3>
+<p>La cascade prend tout son sens quand on doit configurer un objet <em>au moment même</em> où on le passe en argument. Chaque composant <span class="pill f">Flame</span> a un champ <code>priority</code> qui détermine son ordre de dessin — plus il est élevé, plus le composant est devant.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/heros_draft_game.dart</span><span class="lang">dart</span></div>
+  <pre>    final bgSprite = Sprite(images.fromCache('bg_dungeon.png'));
+    add(
+      SpriteComponent(sprite: bgSprite, size: size)
+        ..priority = GameConstants.priorityBackground,
+    );</pre>
+</div>
+<p>Sans la cascade, il faudrait une variable intermédiaire, régler la priorité, puis appeler <code>add()</code>. Ici l'expression entière vaut le <code>SpriteComponent</code>, priorité déjà fixée à <code>-100</code> : le fond passe derrière tout le reste, puisque les cartes commencent à <code>10</code> et la ligne de ciblage monte à <code>300</code>. Le système de ciblage applique la même technique à un composant déjà existant :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/combat_visual_system.dart</span><span class="lang">dart</span></div>
+  <pre>    add(targetingLine..priority = GameConstants.priorityTargetingLine);</pre>
+</div>
+
+<h2 id="s7">7. Records et destructuration (Dart 3)</h2>
+<p>Les <em>records</em> sont la grande nouveauté de Dart 3, et Hero's Draft en fait un usage intensif. Un record est un <strong>agrégat anonyme de valeurs</strong> : un tuple. Il permet à une fonction de renvoyer plusieurs choses sans créer de classe dédiée.</p>
+
+<h3>Le record positionnel : (int, bool)</h3>
+<p>Le calcul de dégâts doit renvoyer deux informations : le montant final, et le fait qu'il s'agisse ou non d'un coup critique — l'interface affiche un texte flottant différent. Créer une classe <code>DamageResult</code> pour deux valeurs serait disproportionné.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/services/damage_pipeline.dart</span><span class="lang">dart</span></div>
+  <pre>class DamagePipeline {
+  static (int damage, bool isCrit) calculate({
+    required int initialDamage,
+    required EntityStats attackerStats,
+    required EntityStats defenderStats,
+    bool canCrit = true,
+  }) {
+    int totalDamage = initialDamage;
+
+    // 1. Weakness (faiblesse) de l'attaquant : réduit les dégâts de 25% (arrondi)
+    final hasWeakness = attackerStats.statuses.any((s) =&gt; s.id == 'weakness');
+    if (hasWeakness) {
+      totalDamage = (totalDamage * 0.75).round();
+    }
+
+    // 2. Coup critique de l'attaquant : multiplie les dégâts par critMultiplier
+    bool isCrit = false;
+    if (canCrit) {
+      final random = Random();
+      if (random.nextInt(100) &lt; attackerStats.effectiveCritChance) {
+        totalDamage = (totalDamage * attackerStats.critMultiplier).round();
+        isCrit = true;
+      }
+    }
+    // ...
+    return (totalDamage, isCrit);
+  }
+}</pre>
+</div>
+<ul>
+  <li><code>(int damage, bool isCrit)</code> est le <strong>type</strong> de retour. Les noms <code>damage</code> et <code>isCrit</code> sont ici purement documentaires : sur un record positionnel, les champs s'accèdent par <code>.$1</code> et <code>.$2</code>. Les nommer sert uniquement le lecteur.</li>
+  <li><code>return (totalDamage, isCrit);</code> — un record littéral, avec de simples parenthèses. Un record à un seul élément s'écrit <code>(x,)</code>, avec une virgule finale, pour le distinguer d'une parenthèse de groupement.</li>
+</ul>
+
+<h3>La destructuration</h3>
+<p>Personne dans le projet n'écrit <code>.$1</code> : tous les appelants <strong>déstructurent</strong> immédiatement le record en deux variables.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/services/effects/strategies.dart</span><span class="lang">dart</span></div>
+  <pre>    } else if (card.data.target == CardTarget.allEnemies) {
+      for (var enemy in combatController.currentState.enemies) {
+        final (individualDmg, isCrit) = DamagePipeline.calculate(
+          initialDamage: scaledValue + runController.currentState.heroStats.effectiveAttaque,
+          attackerStats: runController.currentState.heroStats,
+          defenderStats: enemy.stats,
+        );
+        combatController.updateEnemyStats(
+          enemy.id,
+          enemy.stats.takeDamage(individualDmg, isCrit: isCrit),
+        );
+      }
+    }</pre>
+</div>
+<p><code>final (individualDmg, isCrit) = ...</code> déclare deux variables d'un coup, dans l'ordre des champs du record. Le motif se répète six fois dans le projet, avec des noms adaptés au contexte : <code>(dmg, isCrit)</code> dans les contrôleurs de combat, <code>(finalDmg, isCrit)</code> et <code>(individualDmg, isCrit)</code> dans les stratégies d'effet.</p>
+
+<h3>Le record de retour double : (résultat, rapport d'erreurs)</h3>
+<p>Le deuxième grand usage des records, c'est le <strong>chargement tolérant aux pannes</strong>. Chaque fonction de décodage de sauvegarde renvoie deux choses : ce qu'elle a réussi à reconstruire, et la liste de ce qui manquait.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/forge_upgrade_data.dart</span><span class="lang">dart</span></div>
+  <pre>  static (List&lt;String&gt;, List&lt;MissingSaveItem&gt;) filterValidRefs(
+    List&lt;dynamic&gt;? raw,
+  ) {
+    final kept = &lt;String&gt;[];
+    final missing = &lt;MissingSaveItem&gt;[];
+    for (final entry in (raw ?? const [])) {
+      final ref = entry as String;
+      final id = ref.split(':').first;
+      if (getById(id) != null) {
+        kept.add(ref);
+      } else {
+        missing.add(
+          MissingSaveItem(id: id, nameFr: id, nameEn: id, category: 'forgeUpgrade'),
+        );
+      }
+    }
+    return (kept, missing);
+  }</pre>
+</div>
+<p>Le motif se compose : <code>DeckState._decodePile</code> renvoie <code>(List&lt;CardInstance&gt;, List&lt;MissingSaveItem&gt;)</code>, et <code>fromJsonWithReport</code> l'appelle cinq fois — une par pile — en déstructurant chaque résultat.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/deck_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  static (DeckState, List&lt;MissingSaveItem&gt;) fromJsonWithReport(
+    Map&lt;String, dynamic&gt; json,
+  ) {
+    final missing = &lt;MissingSaveItem&gt;[];
+
+    final (masterDeck, m1) = _decodePile(json['masterDeck'] as List&lt;dynamic&gt;?);
+    final (drawPile, m2) = _decodePile(json['drawPile'] as List&lt;dynamic&gt;?);
+    final (hand, m3) = _decodePile(json['hand'] as List&lt;dynamic&gt;?);
+    final (discardPile, m4) = _decodePile(json['discardPile'] as List&lt;dynamic&gt;?);
+    final (exhaustPile, m5) = _decodePile(json['exhaustPile'] as List&lt;dynamic&gt;?);
+    missing
+      ..addAll(m1)
+      ..addAll(m2)
+      ..addAll(m3)
+      ..addAll(m4)
+      ..addAll(m5);</pre>
+</div>
+<div class="box ok"><div class="box-title">Bonne pratique du projet</div>
+<p>Ce style « renvoie le résultat <em>et</em> le rapport » remplace avantageusement les exceptions pour un cas qui n'est pas exceptionnel : une sauvegarde qui référence une carte supprimée par une mise à jour du jeu. Le joueur récupère sa partie, amputée des objets disparus, et voit la liste de ce qu'il a perdu. Sans records, il aurait fallu une classe par fonction de décodage.</p></div>
+
+<h3>Le record nommé : ({int min, int max})</h3>
+<p>Quand un record a plus de deux champs, ou que ses champs ne se distinguent pas par leur type, on les nomme. La syntaxe ajoute des accolades à l'intérieur des parenthèses.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/game_constants.dart</span><span class="lang">dart</span></div>
+  <pre>  // --- MAP GENERATION QUOTAS ---
+  static const Map&lt;MapNodeType, ({int min, int max})&gt; nodeQuotas = {
+    MapNodeType.combat: (min: 12, max: 22),
+    MapNodeType.elite: (min: 3, max: 6),
+    MapNodeType.rest: (min: 3, max: 6),
+    MapNodeType.shop: (min: 2, max: 5),
+    MapNodeType.event: (min: 4, max: 9),
+  };</pre>
+</div>
+<div class="box rule"><div class="box-title">Règle du jeu</div>
+<p>Voilà, en six lignes, les quotas de génération d'une carte du monde : entre 12 et 22 combats normaux, 3 à 6 élites, 3 à 6 repos, 2 à 5 boutiques, 4 à 9 événements. Le <code>const</code> signifie que ces bornes sont figées à la compilation ; la génération de carte du chapitre 12 les respecte comme un contrat.</p></div>
+<p>Trois remarques. D'abord, <code>({int min, int max})</code> est un <strong>type</strong>
+utilisable partout, y compris comme paramètre générique de <code>Map</code>. Ensuite, le record est <code>const</code>-compatible, ce qui autorise la <code>Map</code> entière à être <code>static const</code>. Enfin, les champs s'accèdent par leur nom, comme sur un objet ordinaire :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/services/map/map_validator.dart</span><span class="lang">dart</span></div>
+  <pre>      MapNodeType? deficientType;
+      for (var entry in GameConstants.nodeQuotas.entries) {
+        final type = entry.key;
+        final min = entry.value.min;
+        if ((counts[type] ?? 0) &lt; min) {
+          deficientType = type;
+          break;
+        }
+      }</pre>
+</div>
+<p>Et un peu plus loin, la combinaison <code>?.</code> + <code>??</code> sur un champ de record : <code>final currentMin = GameConstants.nodeQuotas[currentType]?.min ?? 0;</code>. L'accès <code>map[clé]</code> renvoie toujours un type nullable en Dart — d'où le <code>?.min</code>, puis le <code>?? 0</code> pour un type de nœud qui n'a pas de quota, comme <code>MapNodeType.boss</code>.</p>
+
+<h3>Un record nommé comme type de retour</h3>
+<p>Le cas le plus élaboré du projet est le cœur de la pioche. La fonction renvoie quatre valeurs : les trois piles modifiées, plus le nombre de remélanges effectués.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/deck_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Cœur de la pioche. Fonction pure : ne touche pas à `state`, mute les
+  /// listes qu'on lui passe et rend le nombre de remélanges effectués.
+  ///
+  /// Deux conditions d'arrêt, dans cet ordre :
+  ///  1. la main a atteint [maxHandSize] — on s'arrête sans consommer de carte
+  ///     ni déclencher de remélange ;
+  ///  2. pioche ET défausse vides — le deck est épuisé, sortie propre.
+  static ({
+    List&lt;CardInstance&gt; draw,
+    List&lt;CardInstance&gt; hand,
+    List&lt;CardInstance&gt; discard,
+    int reshuffles,
+  }) _drawInto({
+    required List&lt;CardInstance&gt; draw,
+    required List&lt;CardInstance&gt; hand,
+    required List&lt;CardInstance&gt; discard,
+    required int amount,
+    required int maxHandSize,
+    required Random random,
+  }) {</pre>
+</div>
+<p>Le retour, en fin de fonction, se lit comme un littéral d'objet : <code>return (draw: draw, hand: hand, discard: discard, reshuffles: reshuffles);</code>. Et l'appelant lit les champs par leur nom, sans déstructurer, parce qu'il y en a quatre :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/deck_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  void drawCards(int amount, {required int maxHandSize}) {
+    final result = _drawInto(
+      draw: List&lt;CardInstance&gt;.from(state.drawPile),
+      hand: List&lt;CardInstance&gt;.from(state.hand),
+      discard: List&lt;CardInstance&gt;.from(state.discardPile),
+      amount: amount,
+      maxHandSize: maxHandSize,
+      random: _random,
+    );
+
+    state = state.copyWith(
+      drawPile: result.draw,
+      hand: result.hand,
+      discardPile: result.discard,
+      reshuffleCount: state.reshuffleCount + result.reshuffles,
+    );
+  }</pre>
+</div>
+<div class="box ok"><div class="box-title">Bonne pratique du projet</div>
+<p>Le commentaire au-dessus de <code>drawCards</code> le dit explicitement : « Une seule affectation de <code>state</code>, donc une seule notification <span class="pill r">Riverpod</span>. » C'est le vrai bénéfice du record ici. Sans lui, il faudrait quatre affectations successives de <code>state</code> — donc quatre reconstructions de l'interface, et des états intermédiaires incohérents visibles à l'écran.</p></div>
+
+<h3>Les records ont une égalité structurelle</h3>
+<p>Contrairement aux classes ordinaires, deux records de même forme et de mêmes valeurs sont <strong>égaux</strong> et ont le <strong>même <code>hashCode</code></strong>, gratuitement. C'est ce qui permet à l'écran de carte d'utiliser un record comme clé d'ensemble pour mémoriser les liaisons surlignées entre deux nœuds :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/map_screen.dart</span><span class="lang">dart</span></div>
+  <pre>  Set&lt;String&gt; _highlightedNodeIds = {};
+  Set&lt;(String, String)&gt; _highlightedConnections = {};</pre>
+</div>
+<p><code>Set&lt;(String, String)&gt;</code> est un ensemble de paires d'identifiants. Avec une classe ordinaire, il aurait fallu écrire <code>==</code> et <code>hashCode</code> à la main, exactement comme pour <code>MissingSaveItem</code> en section 3. Avec un record, c'est automatique.</p>
+
+<h2 id="s8">8. Extensions et typedef</h2>
+<h3>Les extensions : ajouter des méthodes à une classe qu'on ne possède pas</h3>
+<p>Une <code>extension</code> ajoute des méthodes et des getters à un type existant, sans en hériter et sans le modifier. Dans Hero's Draft, elle sert un objectif d'architecture précis : <strong>garder la couche de données propre</strong>.</p>
+<p><code>HeroData</code> contient une liste d'identifiants de compétences (<code>List&lt;String&gt; skills</code>). Pour obtenir les vraies cartes correspondantes, il faut consulter le registre. Mais on ne veut pas que <code>hero_data.dart</code> dépende de <code>game_data_registry.dart</code> — la couche <span class="pill a">Données</span> doit rester un ensemble de structures inertes. Solution : un fichier séparé qui ajoute la méthode.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/hero_skills_link.dart</span><span class="lang">dart</span></div>
+  <pre>import 'hero_data.dart';
+import 'card_data.dart';
+import 'game_data_registry.dart';
+
+extension HeroSkillsLink on HeroData {
+  List&lt;CardData&gt; getHeroCards(GameDataRegistry gameData) {
+    return skills
+        .map((skillId) {
+          final matches = gameData.cards.where((c) =&gt; c.id == skillId);
+          return matches.isNotEmpty ? matches.first : null;
+        })
+        .whereType&lt;CardData&gt;()
+        .toList();
+  }
+}</pre>
+</div>
+<ul>
+  <li><code>extension NomDeLExtension on TypeCible</code> — le nom sert seulement à résoudre les conflits ; à l'usage, il est invisible.</li>
+  <li>Dans le corps, <code>skills</code> désigne directement le champ de l'instance : à l'intérieur d'une extension, <code>this</code> est implicite comme dans une méthode normale.</li>
+  <li><code>.map(...)</code> peut renvoyer <code>null</code> pour un identifiant introuvable ; le type intermédiaire est donc <code>Iterable&lt;CardData?&gt;</code>. C'est <code>.whereType&lt;CardData&gt;()</code> qui fait le travail : il filtre les <code>null</code>
+  <em>et</em> retire le <code>?</code> du type. Deux opérations en un appel.</li>
+</ul>
+<p>À l'usage, la méthode se comporte comme si elle appartenait à <code>HeroData</code> : <code>final classCards = widget.playerClass.getHeroCards(gameData);</code> dans <span class="path">lib/ui/screens/starter_deck_draft_screen.dart</span>.</p>
+
+<h3>Étendre un enum</h3>
+<p>On peut aussi étendre un <strong>enum</strong>. C'est ce qui permet à <code>CardRarity</code> — déclaré dans un fichier de données qui n'importe que <code>flutter/foundation.dart</code> — d'avoir une couleur et un libellé traduit, sans jamais importer <code>material.dart</code> ni le système de localisation.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/model_extensions.dart</span><span class="lang">dart</span></div>
+  <pre>extension CardRarityExtension on CardRarity {
+  String getLabel(AppLocalizations l10n) {
+    switch (this) {
+      case CardRarity.common:
+        return l10n.rarityCommon;
+      case CardRarity.uncommon:
+        return l10n.rarityUncommon;
+      case CardRarity.rare:
+        return l10n.rarityRare;
+      case CardRarity.epic:
+        return l10n.rarityEpic;
+      case CardRarity.legendary:
+        return l10n.rarityLegendary;
+      case CardRarity.unique:
+        return 'Unique';
+    }
+  }
+
+  Color get color {
+    switch (this) {
+      case CardRarity.common:
+        return AppColors.rarityCommon;
+      // ...
+    }
+  }
+}</pre>
+</div>
+<p>Ici <code>this</code> désigne la valeur d'enum elle-même. Le <code>switch</code> n'a pas de <code>default</code>, et c'est délibéré : quand un <code>switch</code> couvre <strong>toutes</strong> les valeurs d'un enum, Dart le considère exhaustif et n'exige pas de branche par défaut. Corollaire précieux : si quelqu'un ajoute une septième rareté, le compilateur signalera immédiatement tous les <code>switch</code> devenus incomplets.</p>
+<p>L'appel, côté interface, ne trahit rien de cette mécanique :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/ui_card.dart</span><span class="lang">dart</span></div>
+  <pre>      rarity: card.rarity.getLabel(l10n),
+      target: card.data.target.getLabel(l10n),</pre>
+</div>
+<p><code>model_extensions.dart</code> contient quatre extensions du même genre : <code>CardRarityExtension</code>, <code>CardTargetExtension</code>, <code>RelicRarityExtension</code>
+et <code>IntentTypeExtension</code>.</p>
+<div class="box"><div class="box-title">À retenir</div>
+<p>Une extension n'est <strong>pas</strong> du polymorphisme : la résolution se fait à la compilation, sur le type <em>statique</em> de l'expression. Elle n'est visible que dans les fichiers qui importent celui où elle est déclarée. C'est précisément ce qui en fait un bon outil de séparation des couches : la couche UI importe <code>model_extensions.dart</code>, la couche données l'ignore.</p></div>
+
+<h3>typedef : donner un nom à un type</h3>
+<p>Un <code>typedef</code> crée un alias. Le cas le plus simple du projet consiste à nommer un record devenu trop long à écrire :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/encounter_system.dart</span><span class="lang">dart</span></div>
+  <pre>/// Breakdown of the combat budget calculation — see [EncounterSystem.calculateBudget].
+typedef BudgetBreakdown = ({
+  double playerPower,
+  double expectedPower,
+  double baseBudget,
+  double powerRatio,
+  double powerModifier,
+  double nodeMultiplier,
+  double finalBudget,
+});</pre>
+</div>
+<p>Sans cet alias, la signature de <code>calculateBudget</code> devrait répéter ces sept lignes. Avec, elle se réduit à <code>static BudgetBreakdown calculateBudget({...})</code>.</p>
+
+<h3>Le typedef générique de save_service.dart</h3>
+<p>Le deuxième <code>typedef</code> du projet est le plus subtil de tout ce chapitre. Prenez le temps.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/services/save_service.dart</span><span class="lang">dart</span></div>
+  <pre>/// The subset of Ref/WidgetRef/ProviderContainer that SaveService needs:
+/// a plain synchronous provider read. Accepting this instead of `Ref`
+/// lets the same code run from a Notifier's `ref`, a widget's `WidgetRef`,
+/// and a bare `ProviderContainer` in tests — none of which share a common
+/// supertype in riverpod 2.6.1, but all of which expose this exact method.
+typedef RefReader = T Function&lt;T&gt;(ProviderListenable&lt;T&gt; provider);</pre>
+</div>
+<ol>
+  <li><code>Function&lt;T&gt;(ProviderListenable&lt;T&gt; provider)</code> : une fonction qui prend un argument de type <code>ProviderListenable&lt;T&gt;</code>.</li>
+  <li><code>T Function...</code> : elle renvoie un <code>T</code>. Donnez-lui un provider de <code>DeckState</code>, elle renvoie un <code>DeckState</code> ; un provider de <code>RunState</code>, elle renvoie un <code>RunState</code>.</li>
+  <li>Et voici le point crucial : <strong>le <code>&lt;T&gt;</code> est placé après <code>Function</code>, pas après <code>RefReader</code></strong>.</li>
+</ol>
+<p>Cette position change tout. Comparez :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">exemple</span><span class="lang">dart</span></div>
+  <pre>// (A) Générique sur l'ALIAS — il faut choisir T à la déclaration de la variable.
+typedef LecteurA&lt;T&gt; = T Function(ProviderListenable&lt;T&gt; provider);
+LecteurA&lt;DeckState&gt; lireDeck = ...;   // ne sait lire QUE des DeckState
+
+// (B) Générique sur la FONCTION — le T est choisi à chaque appel. (le vrai projet)
+typedef RefReader = T Function&lt;T&gt;(ProviderListenable&lt;T&gt; provider);
+RefReader read = ...;
+final deck = read(deckProvider);   // T = DeckState
+final run  = read(runProvider);    // T = RunState — même variable !</pre>
+</div>
+<p>Avec la forme (B), une <em>seule</em> valeur de type <code>RefReader</code> peut lire n'importe quel provider, chaque appel instanciant <code>T</code> de son côté. On parle de <em>fonction générique</em>. C'est exactement ce dont <code>SaveService</code> a besoin :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/services/save_service.dart</span><span class="lang">dart</span></div>
+  <pre>  static Future&lt;void&gt; save(RefReader read) async {
+    final prefs = await SharedPreferences.getInstance();
+    final payload = {
+      'schemaVersion': _schemaVersion,
+      'savedAt': DateTime.now().toIso8601String(),
+      'run': read(runProvider).toJson(),
+      'deck': read(deckProvider).toJson(),
+      'inventory': read(inventoryProvider).toJson(),
+      'skills': read(skillProvider).toJson(),
+    };
+    await prefs.setString(_saveKey, jsonEncode(payload));
+  }</pre>
+</div>
+<p>Quatre appels à <code>read</code>, quatre types de retour différents, un seul paramètre. Le commentaire du fichier explique le vrai motif : en Riverpod 2.6.1, <code>Ref</code> (dans un <code>Notifier</code>), <code>WidgetRef</code> (dans un widget) et <code>ProviderContainer</code>
+(dans un test) <strong>n'ont aucun ancêtre commun</strong>, alors qu'ils exposent tous les trois exactement cette méthode. Plutôt que de dupliquer <code>SaveService</code> en trois versions, on prend en paramètre la <em>capacité</em> dont on a besoin.</p>
+<div class="box ok"><div class="box-title">Bonne pratique du projet</div>
+<p>C'est de l'injection de dépendance à son plus simple : la fonction ne demande pas un objet, elle demande une capacité. Conséquence directe et mesurable : <code>SaveService</code> est testable sans Flutter, sans widget et sans <code>BuildContext</code> — un simple <code>ProviderContainer</code>
+suffit.</p></div>
+
+<h2 id="s9">9. L'asynchrone : Future, async, await</h2>
+<p>Dart est <strong>mono-thread</strong>. Un seul fil d'exécution traite les entrées du joueur, la logique du jeu et le rendu à 60 images par seconde. Il n'y a pas de fil séparé pour l'interface. Conséquence directe : toute opération qui bloque ce fil <strong>gèle le jeu</strong>. Les animations figent, les clics sont ignorés.</p>
+<p>La solution de Dart est une <strong>boucle d'événements</strong> : au lieu d'attendre, on enregistre « ce qu'il faudra faire quand ce sera prêt » et on rend la main. C'est le rôle de <code>Future</code>.</p>
+
+<h3>Future, async et await</h3>
+<p>Un <code>Future&lt;T&gt;</code> est la promesse d'un <code>T</code> plus tard. Une fonction marquée <code>async</code> renvoie forcément un <code>Future</code>, et peut utiliser <code>await</code> pour suspendre son exécution jusqu'à ce qu'un <code>Future</code> se résolve — <strong>sans bloquer</strong> : pendant l'attente, la boucle d'événements traite tout le reste.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/services/game_data_service.dart</span><span class="lang">dart</span></div>
+  <pre>Future&lt;List&lt;dynamic&gt;&gt; _loadJsonList(String path) async {
+  try {
+    final String content = await rootBundle.loadString(path);
+    final decoded = jsonDecode(content);
+    if (decoded is! List) {
+      throw FormatException('Le fichier JSON doit être une liste à la racine.');
+    }
+    return decoded;
+  } catch (e, stack) {
+    throw Exception('Erreur de chargement/décodage pour le fichier "$path": $e\n$stack');
+  }
+}</pre>
+</div>
+<ul>
+  <li>Le type de retour est <code>Future&lt;List&lt;dynamic&gt;&gt;</code>, mais le corps écrit <code>return decoded;</code> — Dart emballe automatiquement.</li>
+  <li><code>await rootBundle.loadString(path)</code> : sans <code>await</code>, on manipulerait un <code>Future</code> au lieu d'une <code>String</code>, et le compilateur refuserait.</li>
+  <li><code>catch (e, stack)</code> : Dart donne accès à la pile d'appels en second paramètre. Le projet la réinjecte dans le message d'erreur — précieux quand un JSON écrit à la main est mal formé.</li>
+</ul>
+
+<h3>Future.wait : neuf chargements en parallèle</h3>
+<p>Hero's Draft charge neuf fichiers JSON au démarrage. Les charger l'un après l'autre avec neuf <code>await</code> successifs additionnerait neuf temps d'attente. <code>Future.wait</code> les lance tous, puis attend que <em>tous</em> soient terminés.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/services/game_data_service.dart</span><span class="lang">dart</span></div>
+  <pre>final gameDataLoaderProvider = FutureProvider&lt;GameDataRegistry&gt;((ref) async {
+  final List&lt;List&lt;dynamic&gt;&gt; results = await Future.wait([
+    _loadJsonList('assets/data/enemies.json'),
+    _loadJsonList('assets/data/heroes.json'),
+    _loadJsonList('assets/data/skills.json'),
+    _loadJsonList('assets/data/cards.json'),
+    _loadJsonList('assets/data/events.json'),
+    _loadJsonList('assets/data/passives.json'),
+    _loadJsonList('assets/data/relics.json'),
+    _loadJsonList('assets/data/hero_cards.json'),
+    _loadJsonList('assets/data/forge_upgrades.json'),
+  ]);
+
+  final enemiesList = results[0];
+  final heroesList = results[1];
+  // ...
+  final forgeUpgradesList = results[8];</pre>
+</div>
+<div class="box warn"><div class="box-title">Piège : l'ordre de <code>Future.wait</code></div>
+<p><code>Future.wait</code> renvoie une <code>List</code> dans <strong>l'ordre des futures soumises</strong>, pas dans l'ordre où elles se terminent. D'où les neuf lignes <code>results[0]</code> à <code>results[8]</code>, qui doivent correspondre exactement à l'ordre du tableau au-dessus. Insérer un dixième fichier au milieu de la liste décalerait silencieusement toutes les affectations suivantes — le jeu chargerait les reliques comme des événements. C'est le prix de la concision ici ; un record nommé aurait été plus sûr.</p></div>
+<p>Côté interface, ce <code>FutureProvider</code> est consommé sans une seule ligne d'asynchrone explicite. Riverpod expose les trois états possibles, et l'écran de démarrage se contente de les peindre :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/splash_screen.dart</span><span class="lang">dart</span></div>
+  <pre>    final gameData = ref.watch(gameDataLoaderProvider);
+
+    return Scaffold(
+      body: Center(
+        child: gameData.when(
+          data: (_) =&gt;
+              const HomeScreen(), // Si les données sont chargées, on affiche l'écran d'accueil
+          loading: () =&gt;
+              const CircularProgressIndicator(), // Pendant le chargement
+          error: (error, stack) =&gt;
+              Text('Erreur de chargement: $error'), // En cas d'erreur
+        ),
+      ),
+    );</pre>
+</div>
+
+<h3>Future.delayed : rythmer le combat sans figer le jeu</h3>
+<p>Le deuxième grand usage de l'asynchrone n'est pas de l'attente d'entrée/sortie, mais de la <strong>mise en scène</strong>. Quand le joueur lance une compétence, il ne faut pas que tout se résolve dans la même image : le héros doit s'élancer, frapper, puis les ennemis doivent riposter l'un après l'autre. Les durées sont centralisées, en millisecondes, dans les constantes du jeu :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/game_constants.dart</span><span class="lang">dart</span></div>
+  <pre>  // --- COMBAT TIMINGS (ms) ---
+  /// Délai du dash du héros avant d'appliquer les dégâts d'une compétence.
+  static const int combatDelayHeroDashMs = 200;
+  /// Délai après l'exécution d'une compétence avant de continuer ou de riposter.
+  static const int combatDelayAfterSkillMs = 400;
+  /// Délai avant le début du tour des ennemis.
+  static const int combatDelayEnemyTurnStartMs = 600;
+  /// Délai après la résolution des ticks (poison, buffs, etc.) au début du tour ennemi.
+  static const int combatDelayAfterTicksMs = 400;
+  /// Délai du dash d'un ennemi lors de son attaque.
+  static const int combatDelayEnemyDashMs = 200;
+  /// Délai avant de finaliser le tour des ennemis.
+  static const int combatDelayEnemyTurnEndMs = 300;</pre>
+</div>
+<p>Et la phase de riposte des ennemis les enchaîne :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/heros_draft_game.dart</span><span class="lang">dart</span></div>
+  <pre>  Future&lt;void&gt; _enemyRipostePhase() async {
+    onPhaseChanged(TurnPhase.enemy);
+    await Future.delayed(const Duration(milliseconds: GameConstants.combatDelayEnemyTurnStartMs));
+
+    onStartEnemyTurn();
+
+    await Future.delayed(const Duration(milliseconds: GameConstants.combatDelayAfterTicksMs));
+
+    final activeEnemies = List&lt;EnemyCard&gt;.from(enemyCards);
+    for (var enemy in activeEnemies) {
+      if (currentRunState == null || currentRunState!.isDead) break;
+
+      final intent = enemy.effectiveIntent;
+      if (intent == null) continue;
+
+      if (intent.type == IntentType.attack) {
+        enemy.dashAnimation();
+      } else {
+        enemy.buffAnimation(intent.type);
+      }
+
+      await Future.delayed(const Duration(milliseconds: GameConstants.combatDelayEnemyDashMs));
+
+      onResolveEnemyIntent(enemy.id);
+
+      await Future.delayed(const Duration(milliseconds: GameConstants.combatDelayAfterIntentResolveMs));
+    }
+
+    await Future.delayed(const Duration(milliseconds: GameConstants.combatDelayEnemyTurnEndMs));
+
+    onEndEnemyTurn();
+  }</pre>
+</div>
+<p>Le point à comprendre absolument : <strong><code>await Future.delayed(...)</code> ne bloque pas</strong>. Pendant ces 200 ou 600 millisecondes, la boucle Flame continue de tourner à plein régime — les animations de dash s'exécutent, les particules se déplacent, les textes flottants montent. La fonction, elle, est simplement mise en pause et sa suite est replanifiée.</p>
+<div class="box warn"><div class="box-title">Piège : l'équivalent bloquant n'existe pas (heureusement)</div>
+<p>Dans un langage à threads, on écrirait <code>Thread.sleep(600)</code>. Il n'existe rien de tel en Dart pour le fil principal, et c'est délibéré : une boucle d'attente active (<code>while (DateTime.now() &lt; fin) {}</code>) figerait complètement l'écran, les entrées et le rendu pendant toute sa durée. Le seul moyen d'attendre en Dart, c'est de rendre la main.</p></div>
+
+<h3>Se protéger pendant l'attente</h3>
+<p>Rendre la main a une contrepartie : pendant l'attente, le joueur peut cliquer. Si rien ne l'empêchait, il pourrait lancer une seconde compétence au milieu de la première. La parade du projet est un verrou, posé <em>avant</em> le premier <code>await</code> :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/heros_draft_game.dart</span><span class="lang">dart</span></div>
+  <pre>    if (skill.effectType.startsWith('damage')) {
+      if (enemyCards.isEmpty) return;
+      currentPhase = TurnPhase.enemy;
+
+      heroCard?.dashAnimation();
+      await Future.delayed(const Duration(milliseconds: GameConstants.combatDelayHeroDashMs));
+
+      onExecuteSkill(skill, selectedEnemy?.id);
+
+      await Future.delayed(const Duration(milliseconds: GameConstants.combatDelayAfterSkillMs));
+      if (enemyCards.isEmpty) {
+        onEnemiesDead();
+        currentPhase = TurnPhase.player;
+        return;
+      }
+
+      await _enemyRipostePhase();
+    }</pre>
+</div>
+<p>Et la garde correspondante, tout en haut de la même méthode :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/heros_draft_game.dart</span><span class="lang">dart</span></div>
+  <pre>  }) async {
+    if (currentPhase != TurnPhase.player ||
+        currentRunState == null ||
+        currentRunState!.isDead) {
+      return;
+    }</pre>
+</div>
+<p>Notez aussi <code>heroCard?.dashAnimation()</code> : la carte du héros peut ne pas encore être montée dans le moteur Flame. Le <code>?.</code> évite un <code>if</code>, puisque le résultat de l'appel ne sert à rien. Enfin, dans la boucle sur les ennemis, deux gardes sont réévaluées à chaque itération : <code>if (currentRunState == null || currentRunState!.isDead) break;</code>. C'est indispensable, parce que l'état a pu changer <em>pendant</em> les <code>await</code> précédents — si le héros meurt du deuxième ennemi, le troisième ne doit pas frapper un cadavre.</p>
+<div class="box"><div class="box-title">À retenir</div>
+<p>Après chaque <code>await</code>, l'état du monde a pu changer. C'est la règle d'or de l'asynchrone dans un jeu : ne jamais faire confiance à une variable lue avant une suspension. Relisez l'état, ou vérifiez à nouveau vos conditions.</p></div>
+<div class="memo">
+  <div class="card"><h5>Future&lt;T&gt;</h5><p>La promesse d'une valeur plus tard. Type de retour de toute fonction <code>async</code>.</p></div>
+  <div class="card"><h5>async</h5><p>Autorise <code>await</code> dans le corps et emballe automatiquement le retour dans un <code>Future</code>.</p></div>
+  <div class="card"><h5>await</h5><p>Suspend la fonction sans bloquer le fil. La boucle d'événements continue de tourner.</p></div>
+  <div class="card"><h5>Future.wait</h5><p>Lance plusieurs opérations en parallèle et attend qu'elles soient toutes terminées. Résultats dans l'ordre de soumission.</p></div>
+  <div class="card"><h5>Future.delayed</h5><p>Attend une durée. Sert au rythme du combat, jamais à synchroniser des données.</p></div>
+  <div class="card"><h5>FutureProvider</h5><p>Le pont Riverpod : expose un <code>Future</code> à l'interface sous forme de trois états (données, chargement, erreur).</p></div>
+</div>
+<p>Vous avez maintenant lu, dans du vrai code de production, la quasi-totalité de la syntaxe Dart que Hero's Draft utilise. Les chapitres suivants ne reviendront plus sur le langage : ils s'appuieront dessus pour parler de <span class="pill g">Flutter</span>, de <span class="pill r">Riverpod</span> et de <span class="pill f">Flame</span>.</p>
+
+<div class="quiz">
+  <h2>Quiz — vérifiez vos acquis</h2>
+  <div class="q" data-answer="2">
+    <p class="q-text">1. Que renvoie exactement <code>DamagePipeline.calculate(...)</code> ?</p>
+    <ul class="q-opts">
+      <li>Un <code>int</code>, le montant des dégâts</li>
+      <li>Une classe <code>DamageResult</code> avec deux champs</li>
+      <li>Un record <code>(int damage, bool isCrit)</code></li>
+      <li>Un <code>Future&lt;int&gt;</code>, car le calcul est asynchrone</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> la signature dans <code>lib/game/services/damage_pipeline.dart</code> est <code>static (int damage, bool isCrit) calculate({...})</code>. Les six appelants du projet le déstructurent immédiatement, par exemple <code>final (dmg, isCrit) = DamagePipeline.calculate(...)</code>. La fonction est entièrement synchrone.</div>
+  </div>
+  <div class="q" data-answer="1">
+    <p class="q-text">2. Dans <code>CombatState.copyWith</code>, comment remet-on <code>selectedEnemyId</code> à <code>null</code> ?</p>
+    <ul class="q-opts">
+      <li>En appelant <code>copyWith(selectedEnemyId: null)</code></li>
+      <li>En passant le paramètre booléen <code>clearSelectedEnemy: true</code></li>
+      <li>En reconstruisant un <code>CombatState</code> complet à la main</li>
+      <li>En appelant <code>copyWith()</code> sans aucun argument</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> passer <code>null</code> est indistinguable de ne rien passer, puisque l'implémentation lit <code>selectedEnemyId ?? this.selectedEnemyId</code>. <code>lib/models/combat_state.dart</code> ajoute donc un paramètre <code>bool clearSelectedEnemy = false</code>, utilisé dans <code>combat_controller.dart</code>
+    sous la forme <code>clearSelectedEnemy: enemyId == null</code>. <code>RunState.copyWith</code>
+    applique la même convention avec <code>resetCurrentNode</code>, <code>resetForgeTargetCardId</code> et <code>resetForgeTargetSessions</code>.</div>
+  </div>
+  <div class="q" data-answer="3">
+    <p class="q-text">3. Que se passe-t-il si l'on construit un <code>CardInstance</code> sans fournir de <code>uniqueId</code> ?</p>
+    <ul class="q-opts">
+      <li>Le compilateur refuse : <code>uniqueId</code> est <code>required</code></li>
+      <li>Le champ vaut <code>null</code> et la carte n'est pas identifiable</li>
+      <li>Le champ reprend l'<code>id</code> de la <code>CardData</code> associée</li>
+      <li>La liste d'initialisation génère un UUID avec <code>const Uuid().v4()</code></li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> dans <code>lib/models/card_instance.dart</code>, la liste d'initialisation contient <code>uniqueId = uniqueId ?? const Uuid().v4()</code>. C'est ce qui permet d'avoir plusieurs exemplaires de la même carte dans le deck tout en n'en défaussant qu'un seul — <code>playCard</code> localise la carte avec <code>indexWhere((c) =&gt; c.uniqueId == card.uniqueId)</code>.</div>
+  </div>
+  <div class="q" data-answer="0">
+    <p class="q-text">4. Dans <code>mergeCards</code>, pourquoi la rareté suivante est-elle calculée avec <code>min(rarity.index + 1, CardRarity.values.length - 1)</code> ?</p>
+    <ul class="q-opts">
+      <li>Pour plafonner à la dernière valeur de l'enum, <code>unique</code> (indice 5)</li>
+      <li>Parce que <code>CardRarity</code> ne contient que 3 valeurs</li>
+      <li>Pour interdire la fusion des cartes communes</li>
+      <li>Parce que <code>.index</code> commence à 1 en Dart</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>CardRarity</code> déclare six valeurs (<code>common</code>, <code>uncommon</code>, <code>rare</code>, <code>epic</code>, <code>legendary</code>, <code>unique</code>), donc <code>values.length - 1</code> vaut 5. <code>min</code>, importé de <code>dart:math</code>, empêche de sortir du tableau. L'ordre de déclaration de l'enum <em>est</em> la progression de rareté du jeu ; le même indice sert aussi de bonus d'emplacements de runes, via <code>baseMaxForgeUpgrades + rarityIndex</code>.</div>
+  </div>
+  <div class="q" data-answer="2">
+    <p class="q-text">5. Que permet précisément le <code>typedef RefReader = T Function&lt;T&gt;(ProviderListenable&lt;T&gt; provider)</code> de <code>save_service.dart</code> ?</p>
+    <ul class="q-opts">
+      <li>De déclarer une variable qui lit un seul type de provider, choisi à la déclaration</li>
+      <li>De rendre les lectures de providers asynchrones</li>
+      <li>Qu'une même valeur lise n'importe quel provider, <code>T</code> étant résolu à chaque appel</li>
+      <li>De créer un alias pour <code>Ref</code>, le type de Riverpod</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> le <code>&lt;T&gt;</code> porte sur <code>Function</code> et non sur l'alias : c'est une <em>fonction générique</em>, dont le paramètre de type est instancié à l'appel. C'est pourquoi <code>SaveService.save</code> peut écrire à la suite <code>read(runProvider)</code>, <code>read(deckProvider)</code>, <code>read(inventoryProvider)</code> et <code>read(skillProvider)</code> avec le même paramètre. Le commentaire du fichier précise le motif : <code>Ref</code>, <code>WidgetRef</code> et <code>ProviderContainer</code> n'ont pas de supertype commun en riverpod 2.6.1, mais exposent tous cette méthode.</div>
+  </div>
+</div>
+
+<div class="pager">
+<a class="prev" href="ch01.html"><div class="dir">&#8592; Chapitre 01</div><div class="ttl">Vue d&#x27;ensemble : qu&#x27;est-ce que Hero&#x27;s Draft ?</div></a>
+<a class="next" href="ch03.html"><div class="dir">Chapitre 03 &#8594;</div><div class="ttl">Flutter — widgets, arbre et navigation</div></a>
+</div>
+</div>
+</main>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

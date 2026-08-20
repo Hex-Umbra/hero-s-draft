@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>L&#x27;architecture en quatre couches — Formation Hero's Draft</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<button class="menu-btn" aria-label="Menu">&#9776;</button>
+<div class="layout">
+<aside class="sidebar">
+  <a class="brand" href="index.html">
+    <div class="brand-title">HERO'S DRAFT</div>
+    <div class="brand-sub">Formation complète au projet Flutter</div>
+  </a>
+<nav class="nav">
+<div class="nav-part">Partie 0 — Démarrage</div>
+<a href="ch01.html"><span class="num">01</span><span>Vue d&#x27;ensemble : qu&#x27;est-ce que Hero&#x27;s Draft ?</span></a>
+<div class="nav-part">Partie 1 — Les fondations techniques</div>
+<a href="ch02.html"><span class="num">02</span><span>Dart, le langage — l&#x27;essentiel pour ce projet</span></a>
+<a href="ch03.html"><span class="num">03</span><span>Flutter — widgets, arbre et navigation</span></a>
+<a href="ch04.html"><span class="num">04</span><span>Riverpod — l&#x27;état partagé du jeu</span></a>
+<a href="ch05.html"><span class="num">05</span><span>Flame — le moteur de rendu du combat</span></a>
+<div class="nav-part">Partie 2 — L&#x27;architecture du projet</div>
+<a href="ch06.html" class="active"><span class="num">06</span><span>L&#x27;architecture en quatre couches</span></a>
+<a href="ch07.html"><span class="num">07</span><span>La couche de données : un jeu 100 % data-driven</span></a>
+<div class="nav-part">Partie 3 — Les règles du jeu</div>
+<a href="ch08.html"><span class="num">08</span><span>Le héros : stats, classes, passifs et progression</span></a>
+<a href="ch09.html"><span class="num">09</span><span>Les cartes et le deck</span></a>
+<a href="ch10.html"><span class="num">10</span><span>Le combat : boucle de tour, dégâts et effets</span></a>
+<a href="ch11.html"><span class="num">11</span><span>Les ennemis et la courbe de difficulté</span></a>
+<a href="ch12.html"><span class="num">12</span><span>La carte du monde procédurale</span></a>
+<a href="ch13.html"><span class="num">13</span><span>Les reliques et le système de déclencheurs</span></a>
+<a href="ch14.html"><span class="num">14</span><span>L&#x27;économie : or, boutique, forge et fusion</span></a>
+<a href="ch15.html"><span class="num">15</span><span>Récompenses, chance et probabilités</span></a>
+<a href="ch16.html"><span class="num">16</span><span>Événements, repos et autel des reliques</span></a>
+<div class="nav-part">Partie 4 — L&#x27;interface et le rendu</div>
+<a href="ch17.html"><span class="num">17</span><span>Le pont Flame ↔ Riverpod : l&#x27;écran de combat</span></a>
+<a href="ch18.html"><span class="num">18</span><span>Composants Flame et game feel</span></a>
+<a href="ch19.html"><span class="num">19</span><span>Écrans, navigation et design system</span></a>
+<div class="nav-part">Partie 5 — Qualité et cycle de vie</div>
+<a href="ch20.html"><span class="num">20</span><span>Sauvegarde, localisation et tutoriel</span></a>
+<a href="ch21.html"><span class="num">21</span><span>Tests, outillage, dette technique et évolutions</span></a>
+</nav>
+</aside>
+<main class="main">
+<div class="content">
+<div class="chapter-kicker">Chapitre 06</div>
+<h1>L'architecture en quatre couches</h1>
+<p class="lede">Une seule règle gouverne tout le dépôt : le rendu, l'état, les données et l'interface ne
+se mélangent jamais. Ce chapitre explique la règle, montre comment elle est appliquée, et donne la carte
+complète du code.</p>
+
+<div class="toc">
+  <div class="toc-title">Dans ce chapitre</div>
+  <ol>
+    <li><a href="#s1">Le problème que l'architecture résout</a></li>
+    <li><a href="#s2">Les quatre couches</a></li>
+    <li><a href="#s3">Qui a le droit d'appeler qui</a></li>
+    <li><a href="#s4">Le sens de circulation de l'information</a></li>
+    <li><a href="#s5">Le patron « Notifier + managers »</a></li>
+    <li><a href="#s6">Les autres patrons du projet</a></li>
+    <li><a href="#s7">Où mettre son code : le guide de décision</a></li>
+    <li><a href="#s8">Les entorses assumées</a></li>
+  </ol>
+</div>
+
+<h2 id="s1">1. Le problème que l'architecture résout</h2>
+
+<p>Un jeu réunit trois activités qui ont des rythmes incompatibles.</p>
+
+<ul>
+<li>Le <strong>rendu</strong> tourne à 60 images par seconde. Il est continu, interpolé, et il ment
+volontiers : une carte qui vole vers un ennemi met 300 ms à arriver alors que les dégâts sont déjà
+appliqués.</li>
+<li>L'<strong>état</strong> change par sauts discrets, à des moments précis : on joue une carte, on
+termine un tour, on gagne un niveau. Il doit être exact, sérialisable et testable sans écran.</li>
+<li>L'<strong>interface</strong> se reconstruit à la demande, réagit aux changements d'état, et navigue
+entre des écrans.</li>
+</ul>
+
+<p>Le piège classique du jeu amateur est de tout mélanger : le composant visuel de l'ennemi détient ses
+points de vie, l'écran de boutique retire l'or directement, et le calcul de dégâts se retrouve dans un
+gestionnaire de clic. Le jeu marche… jusqu'au premier bug visuel qui corrompt une partie, ou jusqu'à ce
+qu'il devienne impossible d'écrire un test sans lancer l'application.</p>
+
+<div class="box rule"><div class="box-title">La règle du dépôt, telle qu'elle est écrite</div>
+<p>Extrait de <code>CLAUDE.md</code>, le fichier d'instructions du projet :</p>
+<blockquote style="margin:10px 0 0;padding-left:14px;border-left:3px solid #a78bfa;color:#a7b4c9;">
+« The codebase strictly separates three layers — never mix them. […] Flame components are
+visual/reactive only: they read Riverpod state and render it, they never own game logic. […] All
+shared/business state lives in Riverpod 2.x <code>Notifier</code>s here — never in UI widgets or Flame
+components, and never as global variables/singletons. […] UI widgets and Flame components must stay
+decoupled: no Flame references inside UI code, no Flutter widget trees inside Flame components. »
+</blockquote>
+</div>
+
+<h2 id="s2">2. Les quatre couches</h2>
+
+<p>Le dépôt parle de trois couches ; en pratique il y en a quatre, si l'on compte la couche de données
+qui est transverse. Les voici, avec leur dossier et leur contrat.</p>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 840 430" width="840" role="img" aria-label="Les quatre couches de Hero's Draft">
+      <defs>
+        <marker id="c6-a1" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#3a4966"/></marker>
+      </defs>
+
+      <rect x="20" y="16" width="800" height="96" rx="10" fill="#141c2c" stroke="#34d399" stroke-width="1.6"/>
+      <text x="40" y="40" fill="#34d399" font-size="14" font-weight="bold">UI — Flutter</text>
+      <text x="40" y="59" fill="#a7b4c9" font-size="12" font-family="ui-monospace, monospace">lib/ui/screens · lib/ui/widgets · lib/ui/theme · lib/tutorial</text>
+      <text x="40" y="80" fill="#a7b4c9" font-size="12">Affiche l'état, déclenche des actions, navigue. Ne calcule aucune règle.</text>
+      <text x="40" y="99" fill="#6f7d95" font-size="11.5">17 écrans · 46 widgets · ≈ 15 700 lignes</text>
+
+      <rect x="20" y="124" width="386" height="96" rx="10" fill="#141c2c" stroke="#22d3ee" stroke-width="1.6"/>
+      <text x="40" y="148" fill="#22d3ee" font-size="14" font-weight="bold">Rendu — Flame</text>
+      <text x="40" y="167" fill="#a7b4c9" font-size="12" font-family="ui-monospace, monospace">lib/game/components · lib/game/systems</text>
+      <text x="40" y="188" fill="#a7b4c9" font-size="12">Lit l'état et l'anime. N'écrit jamais.</text>
+      <text x="40" y="207" fill="#6f7d95" font-size="11.5">21 composants · 4 systèmes de rendu</text>
+
+      <rect x="434" y="124" width="386" height="96" rx="10" fill="#141c2c" stroke="#a78bfa" stroke-width="2"/>
+      <text x="454" y="148" fill="#a78bfa" font-size="14" font-weight="bold">État et règles — Riverpod</text>
+      <text x="454" y="167" fill="#a7b4c9" font-size="12" font-family="ui-monospace, monospace">lib/game/controllers · lib/game/services</text>
+      <text x="454" y="188" fill="#a7b4c9" font-size="12">Toutes les décisions du jeu. Aucun widget, aucune animation.</text>
+      <text x="454" y="207" fill="#6f7d95" font-size="11.5">9 contrôleurs · ≈ 3 100 lignes</text>
+
+      <rect x="20" y="232" width="800" height="96" rx="10" fill="#141c2c" stroke="#f59e0b" stroke-width="1.6"/>
+      <text x="40" y="256" fill="#f59e0b" font-size="14" font-weight="bold">Données — modèles et catalogue</text>
+      <text x="40" y="275" fill="#a7b4c9" font-size="12" font-family="ui-monospace, monospace">lib/models/data (miroir des JSON) · lib/models (instances de run) · lib/services</text>
+      <text x="40" y="296" fill="#a7b4c9" font-size="12">Structures pures et immuables. Aucune dépendance à Flutter, Flame ou Riverpod.</text>
+      <text x="40" y="315" fill="#6f7d95" font-size="11.5">11 modèles de données · 12 modèles d'état · ≈ 1 800 lignes</text>
+
+      <rect x="20" y="344" width="800" height="70" rx="10" fill="#0e1524" stroke="#263048" stroke-dasharray="5 4"/>
+      <text x="40" y="368" fill="#a7b4c9" font-size="13" font-weight="bold">assets/data/*.json</text>
+      <text x="40" y="388" fill="#6f7d95" font-size="12">10 fichiers · cartes, ennemis, héros, reliques, événements, runes, passifs, compétences, patch notes</text>
+      <text x="40" y="406" fill="#6f7d95" font-size="11.5">Chargés une seule fois au démarrage par gameDataLoaderProvider</text>
+
+      <path d="M213 232 L213 224" stroke="#3a4966" stroke-width="2" marker-end="url(#c6-a1)"/>
+      <path d="M627 232 L627 224" stroke="#3a4966" stroke-width="2" marker-end="url(#c6-a1)"/>
+      <path d="M420 344 L420 332" stroke="#3a4966" stroke-width="2" marker-end="url(#c6-a1)"/>
+      <path d="M406 172 L428 172" stroke="#3a4966" stroke-width="2" marker-end="url(#c6-a1)"/>
+      <path d="M300 124 L300 116" stroke="#3a4966" stroke-width="2" marker-end="url(#c6-a1)"/>
+      <path d="M560 124 L560 116" stroke="#3a4966" stroke-width="2" marker-end="url(#c6-a1)"/>
+    </svg>
+  </div>
+  <figcaption>Les flèches indiquent les dépendances autorisées. Notez qu'aucune ne remonte : la couche
+  de données ne connaît rien, les contrôleurs ne connaissent que les données, et le rendu ne fait que
+  lire.</figcaption>
+</figure>
+
+<h3>Couche 1 — Données</h3>
+
+<p>Deux familles de fichiers, à ne pas confondre.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th></th><th><code>lib/models/data/</code></th><th><code>lib/models/</code> (racine)</th></tr></thead>
+<tbody>
+<tr><td>Contenu</td><td>Le <strong>catalogue</strong> : définitions partagées, immuables, lues depuis le JSON</td><td>Les <strong>instances</strong> et l'<strong>état</strong> d'une run en cours</td></tr>
+<tr><td>Exemples</td><td><code>CardData</code>, <code>EnemyData</code>, <code>HeroData</code>, <code>RelicData</code>, <code>EventData</code>, <code>ForgeUpgradeData</code></td><td><code>CardInstance</code>, <code>EnemyInstance</code>, <code>EntityStats</code>, <code>CombatState</code>, <code>MapNode</code></td></tr>
+<tr><td>Durée de vie</td><td>Toute la session, chargé une fois</td><td>Le temps d'une run, sérialisé dans la sauvegarde</td></tr>
+<tr><td>Multiplicité</td><td>Un <code>CardData</code> « Frappe » pour toute la partie</td><td>Autant de <code>CardInstance</code> « Frappe » que le joueur en possède, chacune avec son UUID</td></tr>
+</tbody>
+</table></div>
+
+<div class="box"><div class="box-title">À retenir</div>
+<p>C'est <strong>la</strong> distinction structurante du projet. <code>CardData</code> décrit ce qu'est
+une Frappe ; <code>CardInstance</code> décrit <em>cette</em> Frappe-là, celle qui est rare et porte deux
+runes de forge. Le chapitre 9 y revient en détail.</p></div>
+
+<h3>Couche 2 — État et règles</h3>
+
+<p>Neuf contrôleurs Riverpod, tous bâtis sur le même moule : une classe d'état immuable, un
+<code>Notifier</code> qui la fait évoluer, un <code>NotifierProvider</code> pour l'exposer.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Contrôleur</th><th>État</th><th>Ce qu'il décide</th></tr></thead>
+<tbody>
+<tr><td><code>RunController</code></td><td><code>RunState</code></td><td>Statistiques du héros, position sur la carte, acte, niveau, drafts en attente, session de forge</td></tr>
+<tr><td><code>CombatController</code></td><td><code>CombatState</code></td><td>Ennemis, phase de tour, intentions, résolution des dégâts</td></tr>
+<tr><td><code>DeckNotifier</code></td><td><code>DeckState</code></td><td>Les cinq piles de cartes, la pioche, le remélange, la fusion</td></tr>
+<tr><td><code>RewardController</code></td><td><code>RewardState</code></td><td>Butin de victoire, tirage de relique, cartes de boss</td></tr>
+<tr><td><code>ShopController</code></td><td><code>ShopState</code></td><td>Inventaire de la boutique, prix, tirages de rareté et de runes</td></tr>
+<tr><td><code>EventController</code></td><td><code>EventState</code></td><td>Tirage et résolution des événements narratifs</td></tr>
+<tr><td><code>InventoryController</code></td><td><code>InventoryState</code></td><td>Or et reliques</td></tr>
+<tr><td><code>SkillController</code></td><td><code>SkillState</code></td><td>Les deux cooldowns de compétence</td></tr>
+<tr><td><code>CheckpointNotifier</code></td><td><code>int</code></td><td>Un simple compteur qui déclenche la sauvegarde automatique</td></tr>
+</tbody>
+</table></div>
+
+<p>À côté, <code>lib/game/services/</code> contient des fonctions pures que les contrôleurs appellent :
+<code>DamagePipeline</code>, <code>EffectResolver</code>, le registre de stratégies d'effet,
+<code>LevelUpRewardService</code>. Elles n'ont pas d'état et sont directement testables.</p>
+
+<h3>Couche 3 — Rendu Flame</h3>
+
+<p>Un seul <code>FlameGame</code> (<code>HerosDraftGame</code>), monté par un unique
+<code>GameWidget</code> dans <code>game_screen.dart</code>. Sous lui, 21 composants et 4 systèmes.</p>
+
+<div class="box rule"><div class="box-title">Le contrat des composants Flame</div>
+<p>Aucun composant de <code>lib/game/components/</code> n'importe <code>flutter_riverpod</code> ni
+n'accède à un provider. Ils reçoivent leur donnée par la synchronisation descendante
+(<code>StateSyncSystem</code>) et remontent les intentions du joueur par des <em>callbacks</em> passés
+au constructeur de <code>HerosDraftGame</code>. Le chapitre 17 détaille ce pont.</p></div>
+
+<h3>Couche 4 — Interface Flutter</h3>
+
+<p>17 écrans et 46 widgets. Un écran typique est un <code>ConsumerWidget</code> ou un
+<code>ConsumerStatefulWidget</code> qui <code>ref.watch</code> un ou plusieurs providers pour
+l'affichage, et <code>ref.read(...notifier)</code> pour agir. Aucun écran ne contient de formule de jeu
+— avec quelques exceptions assumées dont nous parlerons en section 8.</p>
+
+<h2 id="s3">3. Qui a le droit d'appeler qui</h2>
+
+<p>Le tableau suivant se lit comme une matrice de permissions. C'est le résumé opérationnel de tout le
+chapitre.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>De ↓ vers →</th><th>Données</th><th>Contrôleurs</th><th>Composants Flame</th><th>Widgets Flutter</th></tr></thead>
+<tbody>
+<tr><td><strong>Données</strong></td><td>oui</td><td style="color:#f87171">non</td><td style="color:#f87171">non</td><td style="color:#f87171">non</td></tr>
+<tr><td><strong>Contrôleurs</strong></td><td>oui</td><td>oui (par <code>ref.read</code>)</td><td style="color:#f87171">non</td><td style="color:#f87171">non</td></tr>
+<tr><td><strong>Composants Flame</strong></td><td>oui (lecture)</td><td style="color:#f87171">non — callbacks uniquement</td><td>oui</td><td style="color:#f87171">non</td></tr>
+<tr><td><strong>Widgets Flutter</strong></td><td>oui (lecture)</td><td>oui (<code>ref</code>)</td><td>uniquement <code>game_screen.dart</code></td><td>oui</td></tr>
+</tbody>
+</table></div>
+
+<p>Une exception à signaler dans la ligne « Données » : <code>lib/models/data/model_extensions.dart</code>
+importe bien <code>flutter/material.dart</code> et <code>AppLocalizations</code>. Ce fichier ne contient
+que des <em>extensions</em> de présentation (couleur et libellé d'une rareté, libellé d'une cible) et non
+des modèles ; il est volontairement à part.</p>
+
+<h3>Vérifier soi-même la règle</h3>
+
+<p>La séparation est facile à contrôler, et c'est un bon exercice pour se familiariser avec le dépôt :</p>
+
+<div class="code" data-lang="bash">
+  <div class="code-head"><span class="path">terminal</span><span class="lang">bash</span></div>
+  <pre># Aucun composant Flame ne doit importer Riverpod
+grep -rl "flutter_riverpod" lib/game/components/     # → aucun résultat attendu
+
+# Aucun widget d'interface ne doit importer Flame, sauf l'écran de combat
+grep -rl "package:flame" lib/ui/                     # → game_screen.dart uniquement
+
+# Aucun StateNotifier hors de la file de toasts
+grep -rn "extends StateNotifier" lib/                # → notification_overlay.dart uniquement</pre>
+</div>
+
+<h2 id="s4">4. Le sens de circulation de l'information</h2>
+
+<p>L'information descend par la donnée, remonte par l'intention. Ce schéma, tracé sur le cas concret
+« le joueur joue une carte », vaut pour tout le projet.</p>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 840 400" width="840" role="img" aria-label="Circulation de l'information">
+      <defs>
+        <marker id="c6-b1" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#22d3ee"/></marker>
+        <marker id="c6-b2" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#f59e0b"/></marker>
+      </defs>
+
+      <rect x="60" y="20" width="230" height="52" rx="8" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="175" y="42" fill="#22d3ee" font-size="13" text-anchor="middle">CardComponent</text>
+      <text x="175" y="60" fill="#a7b4c9" font-size="11" text-anchor="middle">le joueur relâche la carte</text>
+
+      <rect x="550" y="20" width="230" height="52" rx="8" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="665" y="42" fill="#a78bfa" font-size="13" text-anchor="middle">CombatController</text>
+      <text x="665" y="60" fill="#a7b4c9" font-size="11" text-anchor="middle">applyPlayerCardPlay(card)</text>
+
+      <path d="M290 46 L544 46" stroke="#f59e0b" stroke-width="2.2" marker-end="url(#c6-b2)"/>
+      <text x="417" y="36" fill="#f59e0b" font-size="12" text-anchor="middle">INTENTION — callback onPlayCard</text>
+
+      <rect x="550" y="110" width="230" height="52" rx="8" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="665" y="132" fill="#a78bfa" font-size="13" text-anchor="middle">EffectResolver + stratégies</text>
+      <text x="665" y="150" fill="#a7b4c9" font-size="11" text-anchor="middle">DamagePipeline · EntityStats</text>
+      <path d="M665 72 L665 104" stroke="#3a4966" stroke-width="2" marker-end="url(#c6-b2)"/>
+
+      <rect x="550" y="200" width="230" height="52" rx="8" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="665" y="222" fill="#a78bfa" font-size="13" text-anchor="middle">state = nouveau CombatState</text>
+      <text x="665" y="240" fill="#a7b4c9" font-size="11" text-anchor="middle">Riverpod notifie ses abonnés</text>
+      <path d="M665 162 L665 194" stroke="#3a4966" stroke-width="2" marker-end="url(#c6-b2)"/>
+
+      <rect x="330" y="200" width="180" height="52" rx="8" fill="#151b2b" stroke="#34d399"/>
+      <text x="420" y="222" fill="#34d399" font-size="13" text-anchor="middle">GameScreen.build</text>
+      <text x="420" y="240" fill="#a7b4c9" font-size="11" text-anchor="middle">ref.watch(combatProvider)</text>
+      <path d="M550 226 L516 226" stroke="#22d3ee" stroke-width="2.2" marker-end="url(#c6-b1)"/>
+
+      <rect x="60" y="200" width="230" height="52" rx="8" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="175" y="222" fill="#22d3ee" font-size="13" text-anchor="middle">_game.syncCombat(state)</text>
+      <text x="175" y="240" fill="#a7b4c9" font-size="11" text-anchor="middle">dépôt dans StateSyncSystem</text>
+      <path d="M330 226 L296 226" stroke="#22d3ee" stroke-width="2.2" marker-end="url(#c6-b1)"/>
+
+      <rect x="60" y="292" width="230" height="52" rx="8" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="175" y="314" fill="#22d3ee" font-size="13" text-anchor="middle">StateSyncSystem.update(dt)</text>
+      <text x="175" y="332" fill="#a7b4c9" font-size="11" text-anchor="middle">applique à la prochaine image</text>
+      <path d="M175 252 L175 286" stroke="#22d3ee" stroke-width="2.2" marker-end="url(#c6-b1)"/>
+
+      <rect x="330" y="292" width="450" height="52" rx="8" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="555" y="314" fill="#22d3ee" font-size="13" text-anchor="middle">EnemyCard.updateStats → triggerHitReactions</text>
+      <text x="555" y="332" fill="#a7b4c9" font-size="11" text-anchor="middle">secousse, flash, texte flottant, particules</text>
+      <path d="M290 318 L324 318" stroke="#22d3ee" stroke-width="2.2" marker-end="url(#c6-b1)"/>
+
+      <text x="420" y="378" fill="#6f7d95" font-size="12" text-anchor="middle">Ambre : l'intention remonte. Cyan : la donnée redescend. Aucune flèche ne fait de raccourci.</text>
+    </svg>
+  </div>
+  <figcaption>Le composant qui a déclenché l'action ne se met pas à jour lui-même : il attend que l'état
+  redescende. C'est ce qui garantit qu'un bug visuel ne peut jamais corrompre une partie.</figcaption>
+</figure>
+
+<p>Concrètement, la remontée passe par des callbacks passés au constructeur du jeu Flame :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/heros_draft_game.dart</span><span class="lang">dart</span></div>
+  <pre>final void Function() onEnemiesDead;
+final void Function(TurnPhase) onPhaseChanged;
+final void Function(String title, String description, CardType? cardType) onShowTooltip;
+final void Function() onHideTooltip;
+final bool Function(CardInstance, EnemyCard?) onPlayCard;
+final VoidCallback? onEnemiesSpawned;
+final void Function() onEnemyKilled;
+
+final void Function(String enemyId) onResolveEnemyIntent;
+final void Function() onStartEnemyTurn;
+final void Function() onEndEnemyTurn;
+final void Function(String? enemyId) onSelectEnemy;
+final void Function(String enemyId, EntityStats stats) onUpdateEnemyStats;
+final void Function(SkillData skill, String? targetEnemyId) onExecuteSkill;
+final VoidCallback? onAnimationStateChanged;</pre>
+</div>
+
+<p>Et la descente par trois méthodes de dépôt, appelées à chaque <code>build</code> de
+<code>GameScreen</code> :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/heros_draft_game.dart</span><span class="lang">dart</span></div>
+  <pre>void syncState(RunState state) {
+  stateSyncSystem?.nextState = state;
+}
+
+void syncDeck(DeckState deckState) {
+  stateSyncSystem?.nextDeckState = deckState;
+}
+
+void syncCombat(CombatState combatState) {
+  stateSyncSystem?.nextCombatState = combatState;
+}</pre>
+</div>
+
+<div class="box ok"><div class="box-title">Bonne pratique</div>
+<p>Remarquez que <code>syncState</code> ne fait qu'<strong>enregistrer</strong> l'état. L'application
+réelle a lieu dans <code>StateSyncSystem.update(dt)</code>, donc pendant la boucle de jeu, et seulement
+si <code>game.hasLayout</code> est vrai. On ne modifie jamais l'arbre Flame depuis un <code>build</code>
+Flutter : les deux boucles ne tournent pas au même rythme.</p></div>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/state_sync_system.dart</span><span class="lang">dart</span></div>
+  <pre>@override
+void update(double dt) {
+  super.update(dt);
+  if (nextState != null &amp;&amp; game.hasLayout) {
+    _applyState(nextState!);
+    nextState = null;
+  }
+  if (nextDeckState != null &amp;&amp; game.hasLayout) {
+    _applyDeckState(nextDeckState!);
+    nextDeckState = null;
+  }
+  if (nextCombatState != null &amp;&amp; game.hasLayout) {
+    _applyCombatState(nextCombatState!);
+    nextCombatState = null;
+  }
+}</pre>
+</div>
+
+<h2 id="s5">5. Le patron « Notifier + managers »</h2>
+
+<p><code>RunController</code> est le plus gros contrôleur du projet : il porte les statistiques du héros,
+la progression sur la carte, l'or indirectement, les reliques, la session de forge. Écrit d'un bloc, il
+ferait plus de mille lignes.</p>
+
+<p>Le projet le découpe en trois <strong>managers</strong>, qui ne sont pas des <code>Notifier</code>
+mais de simples classes recevant le contrôleur et le <code>Ref</code> :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run_controller.dart</span><span class="lang">dart</span></div>
+  <pre>class RunController extends Notifier&lt;RunState&gt; {
+  RunState get currentState =&gt; state;
+
+  late final PlayerStatsManager _playerStatsManager;
+  late final MapProgressionManager _mapProgressionManager;
+  late final GoldManager _goldManager;
+
+  @override
+  RunState build() {
+    _playerStatsManager = PlayerStatsManager(this, ref);
+    _mapProgressionManager = MapProgressionManager(this, ref);
+    _goldManager = GoldManager(this, ref);
+
+    return RunState( /* ... état initial ... */ );
+  }
+
+  // Permet aux managers internes de mettre à jour l'état
+  void updateState(RunState newState) {
+    state = newState;
+  }</pre>
+</div>
+
+<p>Le contrôleur expose ensuite une façade : chaque méthode publique délègue à un manager.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run_controller.dart</span><span class="lang">dart</span></div>
+  <pre>/// Ajoute de l'Expérience au joueur.
+bool gainXp(int amount) {
+  return _playerStatsManager.gainXp(amount);
+}
+
+/// Marque le nœud actuel comme complété
+void completeCurrentNode() {
+  _mapProgressionManager.completeCurrentNode();
+}
+
+bool buyBonusForgeSlot() {
+  return _goldManager.buyBonusForgeSlot();
+}</pre>
+</div>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Manager</th><th>Fichier</th><th>Responsabilité</th></tr></thead>
+<tbody>
+<tr><td><code>PlayerStatsManager</code></td><td><code>run/player_stats_manager.dart</code></td><td>Statistiques, XP, soins, dégâts, statuts, application et retrait des reliques (le plus gros : ≈ 490 lignes)</td></tr>
+<tr><td><code>MapProgressionManager</code></td><td><code>run/map_progression_manager.dart</code></td><td>Voyage, complétion de nœud, passage à l'acte suivant, niveau</td></tr>
+<tr><td><code>GoldManager</code></td><td><code>run/gold_manager.dart</code></td><td>Achat des fentes de forge bonus</td></tr>
+</tbody>
+</table></div>
+
+<p><code>CombatController</code> applique exactement le même patron, avec deux collaborateurs :
+<code>TurnPhaseManager</code> (les phases de tour et la résolution des intentions) et
+<code>StatusEffectProcessor</code> (les altérations d'état, entièrement statique).</p>
+
+<div class="box warn"><div class="box-title">Piège</div>
+<p>Un manager n'est pas un provider : il n'a pas d'état propre et il <strong>ne doit jamais</strong>
+écrire <code>state = ...</code> directement. Il passe par <code>controller.updateState(...)</code>. Si
+un manager gardait une copie de l'état, on aurait deux sources de vérité — exactement ce que
+l'architecture cherche à éviter.</p></div>
+
+<h2 id="s6">6. Les autres patrons du projet</h2>
+
+<h3>Registre de stratégies</h3>
+
+<p>Résoudre l'effet d'une carte demande un aiguillage sur son type (<code>damage</code>,
+<code>heal</code>, <code>armor</code>…). Plutôt qu'un <code>switch</code> qui grossirait à chaque nouvel
+effet, le projet enregistre des stratégies dans un provider :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/services/effects/effect_strategy.dart</span><span class="lang">dart</span></div>
+  <pre>final effectRegistryProvider = Provider&lt;EffectRegistry&gt;((ref) {
+  final registry = EffectRegistry();
+  registry.register('damage', DamageEffectStrategy());
+  registry.register('heal', HealEffectStrategy());
+  registry.register('armor', ArmorEffectStrategy());
+  registry.register('gain_mana', GainManaEffectStrategy());
+  registry.register('draw', DrawEffectStrategy());
+  registry.register('apply_status', ApplyStatusEffectStrategy());
+  return registry;
+});</pre>
+</div>
+
+<p>Ajouter un septième type d'effet, c'est écrire une classe qui implémente
+<code>EffectStrategy</code> et ajouter une ligne ici. Rien d'autre ne change.</p>
+
+<h3>Fonctions pures et injection d'aléatoire</h3>
+
+<p>Les calculs sensibles sont sortis dans des classes sans état, donc testables directement :
+<code>DamagePipeline.calculate</code>, <code>EncounterSystem.calculateBudget</code>,
+<code>LevelUpRewardService.generateChoices</code>, <code>DeckNotifier._drawInto</code>.</p>
+
+<p>Mieux : la source d'aléatoire de la pioche est elle-même un provider, ce qui permet de la remplacer
+en test par un générateur à graine fixe.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/deck_controller.dart</span><span class="lang">dart</span></div>
+  <pre>/// Source d'aléatoire de la pioche. Surchargeable en test via
+/// `deckRandomProvider.overrideWithValue(Random(42))` pour rendre les
+/// séquences de pioche reproductibles.
+final deckRandomProvider = Provider&lt;Random&gt;((ref) =&gt; Random());</pre>
+</div>
+
+<h3>Chargement asynchrone par FutureProvider</h3>
+
+<p>Les neuf fichiers JSON sont chargés une seule fois, en parallèle, par un
+<code>FutureProvider</code>. <code>SplashScreen</code> attend qu'il soit résolu ; tous les autres écrans
+utilisent ensuite <code>.requireValue</code> sans re-tester.</p>
+
+<h3>Sérialisation tolérante</h3>
+
+<p>Le chargement d'une sauvegarde ne plante jamais sur un contenu disparu : chaque état implémente
+<code>fromJsonWithReport</code>, qui reconstruit ce qui existe encore et renvoie la liste des
+<code>MissingSaveItem</code> à afficher au joueur. Le chapitre 20 détaille ce mécanisme.</p>
+
+<h2 id="s7">7. Où mettre son code : le guide de décision</h2>
+
+<p>Voici l'arbre de décision à suivre quand on ajoute quelque chose au projet.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Ce que vous voulez ajouter</th><th>Où</th><th>Faut-il toucher au code ?</th></tr></thead>
+<tbody>
+<tr><td>Une carte, un ennemi, une relique, un événement, une rune, un héros</td><td><code>assets/data/*.json</code></td><td><strong>Non</strong> — dupliquez une entrée existante</td></tr>
+<tr><td>Un nouveau <em>type</em> d'effet de carte (<code>effects[].type</code>)</td><td><code>lib/game/services/effects/strategies.dart</code> + une ligne dans le registre</td><td>Oui, une classe</td></tr>
+<tr><td>Un nouveau <em>type</em> d'effet de relique (<code>effectType</code>)</td><td>Un <code>case</code> dans <code>PlayerStatsManager.applyRelicEffect</code></td><td>Oui, un <code>case</code></td></tr>
+<tr><td>Une nouvelle altération d'état</td><td><code>EffectResolver.createStatus</code> + lecture dans <code>DamagePipeline</code> ou <code>StatusEffectProcessor</code></td><td>Oui, deux endroits</td></tr>
+<tr><td>Une nouvelle règle de combat</td><td><code>lib/game/controllers/combat/</code></td><td>Oui</td></tr>
+<tr><td>Un nouveau type de nœud de carte</td><td><code>MapNodeType</code> + <code>MapContentPlacer</code> + le <code>switch</code> de <code>map_screen._onNodeTap</code></td><td>Oui, trois endroits</td></tr>
+<tr><td>Un nouvel écran</td><td><code>lib/ui/screens/</code> + une route depuis l'écran appelant</td><td>Oui</td></tr>
+<tr><td>Une nouvelle animation de carte</td><td><code>CardAnimator</code> + une valeur dans le champ <code>animation</code> du JSON</td><td>Oui, une méthode</td></tr>
+<tr><td>Un nouvel élément de HUD de combat</td><td><code>lib/ui/widgets/hud/</code> + un <code>Positioned</code> dans le <code>Stack</code> de <code>game_screen.dart</code></td><td>Oui</td></tr>
+<tr><td>Une valeur d'équilibrage (dégâts, PV, prix)</td><td>Le JSON concerné, ou <code>GameConstants</code> pour les valeurs de moteur</td><td>Non ou presque</td></tr>
+</tbody>
+</table></div>
+
+<div class="box rule"><div class="box-title">Trois questions à se poser</div>
+<ol style="margin-bottom:0">
+<li><strong>Est-ce que ça décide de quelque chose ?</strong> Si oui, c'est un contrôleur ou un service de
+<code>lib/game/</code>. Jamais un widget, jamais un composant.</li>
+<li><strong>Est-ce que ça se voit et ça bouge dans l'arène ?</strong> Si oui, c'est un composant Flame.</li>
+<li><strong>Est-ce que ça se voit ailleurs que dans l'arène ?</strong> Si oui, c'est un widget Flutter.</li>
+</ol></div>
+
+<h2 id="s8">8. Les entorses assumées</h2>
+
+<p>Aucune architecture n'est pure. En voici les écarts réels, tous vérifiables dans le code — les
+connaître évite de croire à une règle qui n'existe pas.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Écart</th><th>Où</th><th>Pourquoi c'est accepté</th></tr></thead>
+<tbody>
+<tr><td>Un <code>StateNotifier</code> subsiste</td><td><code>lib/ui/widgets/notification_overlay.dart</code></td><td>File de toasts purement visuelle, sans état métier. <code>CLAUDE.md</code> l'autorise explicitement et interdit d'en ajouter d'autres.</td></tr>
+<tr><td>Un singleton statique</td><td><code>GameDataRegistry.instance</code></td><td>Permet à <code>CardData.getById</code>, <code>RelicData.getById</code> et <code>ForgeUpgradeData.getById</code> de fonctionner depuis n'importe où, y compris pendant la désérialisation d'une sauvegarde où l'on n'a pas de <code>ref</code>.</td></tr>
+<tr><td>Des règles de jeu dans des écrans</td><td><code>forge_fusion_screen.dart</code> (coût <code>80 × (n−1)</code>), <code>shop_screen.dart</code> (prix des services), <code>rest_screen.dart</code> (soin de 30 %)</td><td>Valeurs d'équilibrage locales à un écran, jamais lues ailleurs. C'est de la dette assumée, signalée au chapitre 21.</td></tr>
+<tr><td>Une extension de présentation dans <code>models/</code></td><td><code>model_extensions.dart</code></td><td>Importe Material et <code>AppLocalizations</code> pour donner couleur et libellé aux raretés. Isolé dans un seul fichier.</td></tr>
+<tr><td>Un tirage aléatoire dans <code>build()</code></td><td><code>relic_exchange_screen.dart</code></td><td>Fonctionne parce que la graine est déterministe (<code>node.id.hashCode ^ act</code>), mais reste un anti-patron Flutter.</td></tr>
+</tbody>
+</table></div>
+
+<div class="box danger"><div class="box-title">Point d'attention</div>
+<p>Le cas le plus gênant est celui des règles de jeu logées dans les écrans. Le prix du reroll de
+boutique (15 or), celui de la purge (75), le soin du feu de camp (30 % des PV max) et le coût de fusion
+de runes (80 par rune supplémentaire) sont écrits directement dans des <code>build</code>. Ils ne sont
+donc ni testables isolément, ni modifiables sans recompiler. Une évolution naturelle serait de les
+remonter dans <code>GameConstants</code> ou dans un fichier JSON d'équilibrage.</p></div>
+
+<div class="quiz">
+  <h2>Quiz — vérifiez vos acquis</h2>
+
+  <div class="q" data-answer="3">
+    <p class="q-text">1. Un composant Flame a besoin de retirer 5 points de vie à un ennemi. Que
+    doit-il faire ?</p>
+    <ul class="q-opts">
+      <li>Modifier directement <code>enemy.stats.currentPv</code></li>
+      <li>Faire <code>ref.read(combatProvider.notifier).updateEnemyStats(...)</code></li>
+      <li>Appeler <code>DamagePipeline.calculate</code> lui-même</li>
+      <li>Rien : il remonte l'intention par un callback et attend que l'état redescende</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> aucun composant de
+    <code>lib/game/components/</code> n'importe Riverpod. Le composant appelle un callback fourni au
+    constructeur de <code>HerosDraftGame</code>, le contrôleur décide, et
+    <code>StateSyncSystem</code> redescend le nouvel état à l'image suivante.</div>
+  </div>
+
+  <div class="q" data-answer="1">
+    <p class="q-text">2. Quelle est la différence entre <code>lib/models/data/</code> et
+    <code>lib/models/</code> ?</p>
+    <ul class="q-opts">
+      <li><code>data/</code> contient les classes générées, la racine les classes écrites à la main</li>
+      <li><code>data/</code> est le catalogue immuable chargé depuis le JSON, la racine contient les instances et l'état d'une run</li>
+      <li><code>data/</code> est pour Flame, la racine pour Flutter</li>
+      <li>Il n'y a pas de différence, c'est un rangement historique</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> un <code>CardData</code> « Frappe » existe une seule
+    fois pour toute la session ; il peut exister dix <code>CardInstance</code> « Frappe », chacune avec
+    son UUID, sa rareté et ses runes.</div>
+  </div>
+
+  <div class="q" data-answer="0">
+    <p class="q-text">3. Pourquoi <code>StateSyncSystem</code> applique-t-il l'état dans
+    <code>update(dt)</code> plutôt qu'immédiatement dans <code>syncCombat</code> ?</p>
+    <ul class="q-opts">
+      <li>Parce que l'arbre Flame ne doit pas être modifié depuis un <code>build</code> Flutter, et parce qu'il faut attendre que <code>game.hasLayout</code> soit vrai</li>
+      <li>Pour économiser de la mémoire</li>
+      <li>Parce que Riverpod l'interdit</li>
+      <li>Pour que l'animation soit plus rapide</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> les deux boucles ne tournent pas au même rythme.
+    <code>syncCombat</code> ne fait que déposer l'état dans <code>nextCombatState</code> ; l'application
+    a lieu pendant la boucle de jeu, conditionnée par <code>game.hasLayout</code>.</div>
+  </div>
+
+  <div class="q" data-answer="2">
+    <p class="q-text">4. Qu'est-ce qu'un « manager » comme <code>PlayerStatsManager</code> ?</p>
+    <ul class="q-opts">
+      <li>Un <code>Notifier</code> Riverpod avec son propre provider</li>
+      <li>Un composant Flame sans rendu</li>
+      <li>Une classe simple qui reçoit le contrôleur et <code>ref</code>, et écrit via <code>controller.updateState(...)</code></li>
+      <li>Un widget Flutter de haut niveau</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> les trois managers de <code>RunController</code> sont
+    créés dans son <code>build()</code>. Ils n'ont pas d'état propre : ils ne font que découper un gros
+    contrôleur en fichiers lisibles.</div>
+  </div>
+
+  <div class="q" data-answer="1">
+    <p class="q-text">5. Vous voulez ajouter une nouvelle relique « +3 armure quand un ennemi meurt ».
+    Que faut-il modifier ?</p>
+    <ul class="q-opts">
+      <li>Une entrée JSON, une stratégie d'effet et un widget</li>
+      <li>Uniquement une entrée dans <code>relics.json</code> : le trigger <code>onEnemyKilled</code> et l'effectType <code>gain_armor</code> existent déjà</li>
+      <li>Il faut créer un nouveau contrôleur Riverpod</li>
+      <li>Il faut ajouter un <code>case</code> dans <code>TraitSystem</code></li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> c'est tout l'intérêt du data-driven. Les neuf triggers
+    et les effectTypes courants sont déjà câblés dans
+    <code>PlayerStatsManager.applyRelicEffect</code> ; une nouvelle combinaison ne demande aucune ligne
+    de Dart.</div>
+  </div>
+
+  <div class="q" data-answer="2">
+    <p class="q-text">6. Quel est le seul <code>StateNotifier</code> encore présent dans le projet, et
+    pourquoi est-il toléré ?</p>
+    <ul class="q-opts">
+      <li><code>RunController</code>, parce qu'il est trop gros à migrer</li>
+      <li><code>CheckpointNotifier</code>, parce qu'il ne porte qu'un entier</li>
+      <li>La file de toasts de <code>notification_overlay.dart</code>, parce qu'elle ne porte aucun état métier</li>
+      <li>Il n'y en a plus aucun</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> la migration vers <code>Notifier</code> est terminée
+    pour tous les contrôleurs. <code>CLAUDE.md</code> autorise explicitement cette exception, purement
+    visuelle, et interdit d'en ajouter de nouvelles.</div>
+  </div>
+</div>
+
+<div class="pager">
+<a class="prev" href="ch05.html"><div class="dir">&#8592; Chapitre 05</div><div class="ttl">Flame — le moteur de rendu du combat</div></a>
+<a class="next" href="ch07.html"><div class="dir">Chapitre 07 &#8594;</div><div class="ttl">La couche de données : un jeu 100 % data-driven</div></a>
+</div>
+</div>
+</main>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

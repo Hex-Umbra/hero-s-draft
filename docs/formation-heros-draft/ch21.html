@@ -1,0 +1,1723 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tests, outillage, dette technique et évolutions — Formation Hero's Draft</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<button class="menu-btn" aria-label="Menu">&#9776;</button>
+<div class="layout">
+<aside class="sidebar">
+  <a class="brand" href="index.html">
+    <div class="brand-title">HERO'S DRAFT</div>
+    <div class="brand-sub">Formation complète au projet Flutter</div>
+  </a>
+<nav class="nav">
+<div class="nav-part">Partie 0 — Démarrage</div>
+<a href="ch01.html"><span class="num">01</span><span>Vue d&#x27;ensemble : qu&#x27;est-ce que Hero&#x27;s Draft ?</span></a>
+<div class="nav-part">Partie 1 — Les fondations techniques</div>
+<a href="ch02.html"><span class="num">02</span><span>Dart, le langage — l&#x27;essentiel pour ce projet</span></a>
+<a href="ch03.html"><span class="num">03</span><span>Flutter — widgets, arbre et navigation</span></a>
+<a href="ch04.html"><span class="num">04</span><span>Riverpod — l&#x27;état partagé du jeu</span></a>
+<a href="ch05.html"><span class="num">05</span><span>Flame — le moteur de rendu du combat</span></a>
+<div class="nav-part">Partie 2 — L&#x27;architecture du projet</div>
+<a href="ch06.html"><span class="num">06</span><span>L&#x27;architecture en quatre couches</span></a>
+<a href="ch07.html"><span class="num">07</span><span>La couche de données : un jeu 100 % data-driven</span></a>
+<div class="nav-part">Partie 3 — Les règles du jeu</div>
+<a href="ch08.html"><span class="num">08</span><span>Le héros : stats, classes, passifs et progression</span></a>
+<a href="ch09.html"><span class="num">09</span><span>Les cartes et le deck</span></a>
+<a href="ch10.html"><span class="num">10</span><span>Le combat : boucle de tour, dégâts et effets</span></a>
+<a href="ch11.html"><span class="num">11</span><span>Les ennemis et la courbe de difficulté</span></a>
+<a href="ch12.html"><span class="num">12</span><span>La carte du monde procédurale</span></a>
+<a href="ch13.html"><span class="num">13</span><span>Les reliques et le système de déclencheurs</span></a>
+<a href="ch14.html"><span class="num">14</span><span>L&#x27;économie : or, boutique, forge et fusion</span></a>
+<a href="ch15.html"><span class="num">15</span><span>Récompenses, chance et probabilités</span></a>
+<a href="ch16.html"><span class="num">16</span><span>Événements, repos et autel des reliques</span></a>
+<div class="nav-part">Partie 4 — L&#x27;interface et le rendu</div>
+<a href="ch17.html"><span class="num">17</span><span>Le pont Flame ↔ Riverpod : l&#x27;écran de combat</span></a>
+<a href="ch18.html"><span class="num">18</span><span>Composants Flame et game feel</span></a>
+<a href="ch19.html"><span class="num">19</span><span>Écrans, navigation et design system</span></a>
+<div class="nav-part">Partie 5 — Qualité et cycle de vie</div>
+<a href="ch20.html"><span class="num">20</span><span>Sauvegarde, localisation et tutoriel</span></a>
+<a href="ch21.html" class="active"><span class="num">21</span><span>Tests, outillage, dette technique et évolutions</span></a>
+</nav>
+</aside>
+<main class="main">
+<div class="content">
+<div class="chapter-kicker">Chapitre 21</div>
+<h1>Tests, outillage, dette technique et évolutions</h1>
+<p class="lede">Un dernier tour de piste : comment on vérifie que le jeu marche, comment on le publie,
+et ce qu'il reste à nettoyer.</p>
+
+<div class="toc">
+  <div class="toc-title">Dans ce chapitre</div>
+  <ol>
+    <li><a href="#s1">L'outillage quotidien</a></li>
+    <li><a href="#s2">La pyramide de tests du projet</a></li>
+    <li><a href="#s3">Tester un <code>Notifier</code> Riverpod</a></li>
+    <li><a href="#s4">Tester un écran</a></li>
+    <li><a href="#s5">Tester des règles de jeu</a></li>
+    <li><a href="#s6">Les règles du dépôt</a></li>
+    <li><a href="#s7">Publier une version</a></li>
+    <li><a href="#s8">Dette technique et pistes d'évolution</a></li>
+  </ol>
+</div>
+
+<p>Les vingt chapitres précédents ont démonté le jeu système par système. Celui-ci change d'angle :
+on ne regarde plus <em>ce que le code fait</em>, mais <strong>comment on sait qu'il le fait
+correctement</strong>, et <strong>comment on le livre</strong>. C'est la partie la moins spectaculaire
+d'un projet, et de loin la plus rentable — un test qui échoue coûte trente secondes, un bug en
+production coûte une soirée.</p>
+
+<p>On finira par l'exercice le plus honnête possible : un inventaire de la dette technique réelle
+du dépôt, point par point, chacun vérifié dans le code. Aucun projet n'en est exempt ; le seul écart
+qui compte est entre ceux qui la connaissent et ceux qui la découvrent.</p>
+
+<h2 id="s1">1. L'outillage quotidien</h2>
+
+<p>Le fichier <code>CLAUDE.md</code>, à la racine du dépôt, sert de contrat pour tout contributeur
+(humain ou agent). Il commence par sept commandes. Elles suffisent à couvrir 95 % du travail
+quotidien.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Commande</th><th>Ce qu'elle fait</th><th>Quand la lancer</th></tr></thead>
+<tbody>
+<tr><td><code>flutter pub get</code></td>
+    <td>Résout et télécharge les dépendances déclarées dans <code>pubspec.yaml</code></td>
+    <td>Après un clone, et après toute modification de <code>pubspec.yaml</code></td></tr>
+<tr><td><code>flutter run</code></td>
+    <td>Compile et lance l'application sur l'appareil par défaut</td>
+    <td>Développement courant (avec le <em>hot reload</em>)</td></tr>
+<tr><td><code>flutter test</code></td>
+    <td>Exécute l'intégralité du dossier <code>test/</code></td>
+    <td>Avant chaque commit</td></tr>
+<tr><td><code>flutter test test/unit/combat_controller_test.dart</code></td>
+    <td>N'exécute qu'un seul fichier</td>
+    <td>Quand on itère sur un système précis</td></tr>
+<tr><td><code>flutter test --plain-name "test description"</code></td>
+    <td>N'exécute que les tests dont le nom contient la chaîne donnée</td>
+    <td>Pour isoler un cas au milieu d'un gros fichier</td></tr>
+<tr><td><code>dart analyze</code></td>
+    <td>Analyse statique : erreurs de typage, warnings, lints</td>
+    <td><strong>Systématiquement</strong> — voir la règle ci-dessous</td></tr>
+<tr><td><code>flutter build &lt;apk|ios|web|windows|macos|linux&gt;</code></td>
+    <td>Produit un binaire pour la cible demandée</td>
+    <td>Publication, ou vérification qu'une plateforme compile encore</td></tr>
+</tbody>
+</table></div>
+
+<p>La commande la moins glamour de la liste est celle qui a le statut le plus fort dans ce dépôt.
+Voici la ligne exacte de <code>CLAUDE.md</code> :</p>
+
+<div class="code" data-lang="text">
+  <div class="code-head"><span class="path">CLAUDE.md</span><span class="lang">text</span></div>
+  <pre>- Lint/analyze: `dart analyze` — **must be run and be clean (zero issues) after any code
+  change**, before considering work done
+
+Lint rules come from `package:flutter_lints/flutter.yaml` (see `analysis_options.yaml`).</pre>
+</div>
+
+<div class="box rule">
+  <div class="box-title">La règle du zéro</div>
+  <p><code>dart analyze</code> doit rendre <strong>zéro problème</strong>. Pas « zéro erreur mais
+  quelques warnings » : zéro. Un projet où l'analyse rend trois warnings tolérés devient, six mois
+  plus tard, un projet où elle en rend quarante et où plus personne ne les lit. Le seuil zéro est le
+  seul seuil qui se maintienne tout seul.</p>
+</div>
+
+<p>Les règles de lint ne sont pas écrites à la main. Le fichier de configuration tient en une ligne :</p>
+
+<div class="code" data-lang="yaml">
+  <div class="code-head"><span class="path">analysis_options.yaml</span><span class="lang">yaml</span></div>
+  <pre>include: package:flutter_lints/flutter.yaml</pre>
+</div>
+
+<p><span class="pill g">Flutter</span> <code>flutter_lints</code> est le jeu de règles officiel
+recommandé par l'équipe Flutter. Il vérifie des choses comme : pas d'import inutilisé, pas de
+<code>print()</code> en production, préférer <code>const</code> quand c'est possible, nommer les
+types en <code>UpperCamelCase</code>, ne pas utiliser <code>BuildContext</code> après un
+<code>await</code>. C'est volontairement un socle modeste — l'intérêt est qu'il soit <em>identique</em>
+d'un projet Flutter à l'autre, donc qu'un nouveau contributeur n'ait rien à apprendre.</p>
+
+<h3>Les dépendances du projet</h3>
+
+<p>Le <code>pubspec.yaml</code> de Hero's Draft est court. C'est un signe de santé : un jeu complet
+avec huit dépendances de production, dont deux fournies par le SDK Flutter lui-même.</p>
+
+<div class="code" data-lang="yaml">
+  <div class="code-head"><span class="path">pubspec.yaml</span><span class="lang">yaml</span></div>
+  <pre>name: roguelike_card_game
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.4.7+1
+
+environment:
+  sdk: ^3.11.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flame: ^1.17.0
+  flutter_riverpod: ^2.5.1
+  uuid: ^4.4.0
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.2
+  shared_preferences: ^2.2.0
+  meta: ^1.11.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  generate: true
+  assets:
+    - assets/data/
+    - assets/images/</pre>
+</div>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Paquet</th><th>Version</th><th>Rôle dans Hero's Draft</th><th>Où on le voit</th></tr></thead>
+<tbody>
+<tr><td><code>flutter</code></td><td>SDK</td>
+    <td>Le framework d'interface : widgets, <code>MaterialApp</code>, rendu, gestes</td>
+    <td>Partout dans <code>lib/ui/</code></td></tr>
+<tr><td><code>flame</code></td><td>^1.17.0</td>
+    <td>Le moteur de jeu 2D : boucle de jeu, <code>PositionComponent</code>, <code>Effect</code>,
+    système de <code>priority</code></td>
+    <td><code>lib/game/heros_draft_game.dart</code>, <code>lib/game/components/</code></td></tr>
+<tr><td><code>flutter_riverpod</code></td><td>^2.5.1</td>
+    <td>La gestion d'état : <code>Notifier</code>, <code>NotifierProvider</code>,
+    <code>FutureProvider</code>, <code>ProviderContainer</code></td>
+    <td><code>lib/game/controllers/</code> et tous les tests unitaires</td></tr>
+<tr><td><code>uuid</code></td><td>^4.4.0</td>
+    <td>Identifiants uniques d'instances runtime</td>
+    <td><code>card_instance.dart</code> (<code>const Uuid().v4()</code>),
+    <code>enemy_instance.dart</code></td></tr>
+<tr><td><code>flutter_localizations</code></td><td>SDK</td>
+    <td>Les délégués Material / Widgets / Cupertino traduits</td>
+    <td><code>lib/main.dart</code>, et obligatoires dans les tests de widget</td></tr>
+<tr><td><code>intl</code></td><td>^0.20.2</td>
+    <td>Requis par le code de localisation <em>généré</em> à partir des ARB
+    (<code>l10n.yaml</code>). Aucun <code>import 'package:intl/intl.dart'</code> n'est écrit à la
+    main dans <code>lib/</code></td>
+    <td><code>lib/l10n/</code> (généré)</td></tr>
+<tr><td><code>shared_preferences</code></td><td>^2.2.0</td>
+    <td>Stockage clé/valeur persistant</td>
+    <td><code>save_service.dart</code> (clé <code>run_save_v1</code>),
+    <code>tutorial_progress_service.dart</code> (clé <code>tutorial_completed</code>)</td></tr>
+<tr><td><code>meta</code></td><td>^1.11.0</td>
+    <td>Annotations d'intention, notamment <code>@immutable</code></td>
+    <td><code>combat_state.dart</code>, <code>entity_stats.dart</code>,
+    <code>enemy_instance.dart</code></td></tr>
+<tr><td><code>flutter_test</code></td><td>SDK <em>(dev)</em></td>
+    <td><code>test()</code>, <code>testWidgets()</code>, <code>expect()</code>,
+    <code>WidgetTester</code></td>
+    <td>Les 42 fichiers de <code>test/</code></td></tr>
+<tr><td><code>flutter_lints</code></td><td>^6.0.0 <em>(dev)</em></td>
+    <td>Le jeu de règles de <code>dart analyze</code></td>
+    <td><code>analysis_options.yaml</code></td></tr>
+</tbody>
+</table></div>
+
+<div class="box warn">
+  <div class="box-title">Piège : <code>generate: true</code></div>
+  <p>La ligne <code>generate: true</code> dans la section <code>flutter:</code> active la génération
+  du code de localisation à partir des fichiers ARB décrits par <code>l10n.yaml</code>
+  (<code>arb-dir: lib/l10n</code>, <code>template-arb-file: app_en.arb</code>,
+  <code>output-localization-file: app_localizations.dart</code>). Si vous clonez le dépôt et que
+  <code>AppLocalizations</code> est introuvable, ce n'est pas un bug : lancez
+  <code>flutter pub get</code> (ou <code>flutter gen-l10n</code>), le fichier est
+  <strong>généré</strong>, pas versionné comme du code écrit à la main.</p>
+</div>
+
+<h2 id="s2">2. La pyramide de tests du projet</h2>
+
+<p>Le dossier <code>test/</code> contient <strong>42 fichiers</strong>, organisés en trois familles.
+Ce n'est pas une organisation décorative : chaque famille a un coût d'exécution et un pouvoir de
+détection différents.</p>
+
+<div class="tree">test/
+├── <span class="f">encounter_system_test.dart</span>   <span class="c">// 1 fichier — test système, à la racine</span>
+├── <span class="d">tutorial/</span>                     <span class="c">// 2 fichiers — le sous-système d'onboarding</span>
+├── <span class="d">unit/</span>                         <span class="c">// 24 fichiers — la logique métier pure</span>
+└── <span class="d">widget/</span>                       <span class="c">// 15 fichiers — les écrans Flutter</span>
+</div>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 800 400" width="800" role="img" aria-label="Pyramide de tests du projet : 24 tests unitaires à la base, 15 tests de widget au milieu, 3 tests de système et de tutoriel au sommet">
+      <rect x="0" y="0" width="800" height="400" fill="#0e1524"/>
+
+      <text x="400" y="28" fill="#e6ecf5" font-size="15" text-anchor="middle">42 fichiers de test, trois étages</text>
+
+      <polygon points="400,50 470,120 330,120" fill="#151b2b" stroke="#f87171" stroke-width="2"/>
+      <text x="400" y="98" fill="#f87171" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">3</text>
+
+      <polygon points="330,126 470,126 545,236 255,236" fill="#151b2b" stroke="#a78bfa" stroke-width="2"/>
+      <text x="400" y="190" fill="#a78bfa" font-size="15" text-anchor="middle" font-family="ui-monospace, monospace">15</text>
+
+      <polygon points="255,242 545,242 640,378 160,378" fill="#151b2b" stroke="#34d399" stroke-width="2"/>
+      <text x="400" y="320" fill="#34d399" font-size="17" text-anchor="middle" font-family="ui-monospace, monospace">24</text>
+
+      <path d="M478 90 L600 90" stroke="#3a4966" stroke-width="1.5" marker-end="url(#c21-pyr-grey)"/>
+      <text x="608" y="82" fill="#f87171" font-size="12" font-family="ui-monospace, monospace">système + tutoriel</text>
+      <text x="608" y="98" fill="#a7b4c9" font-size="11">7,1 % — lents, larges</text>
+
+      <path d="M552 180 L600 180" stroke="#3a4966" stroke-width="1.5" marker-end="url(#c21-pyr-grey)"/>
+      <text x="608" y="172" fill="#a78bfa" font-size="12" font-family="ui-monospace, monospace">test/widget/</text>
+      <text x="608" y="188" fill="#a7b4c9" font-size="11">35,7 % — pompent des frames</text>
+
+      <path d="M648 310 L690 310" stroke="#3a4966" stroke-width="1.5" marker-end="url(#c21-pyr-grey)"/>
+      <text x="612" y="352" fill="#34d399" font-size="12" font-family="ui-monospace, monospace">test/unit/</text>
+      <text x="612" y="368" fill="#a7b4c9" font-size="11">57,1 % — rapides, précis</text>
+
+      <text x="30" y="300" fill="#a7b4c9" font-size="11">Plus on descend :</text>
+      <text x="30" y="318" fill="#a7b4c9" font-size="11">plus c'est rapide,</text>
+      <text x="30" y="336" fill="#a7b4c9" font-size="11">plus l'échec pointe</text>
+      <text x="30" y="354" fill="#a7b4c9" font-size="11">directement la ligne fautive.</text>
+
+      <defs>
+        <marker id="c21-pyr-grey" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#3a4966"/>
+        </marker>
+      </defs>
+    </svg>
+  </div>
+  <figcaption>La répartition réelle du dossier <code>test/</code> : 24 tests unitaires (57,1 %),
+  15 tests de widget (35,7 %), 3 tests système et tutoriel (7,1 %). La forme en pyramide n'est pas
+  un hasard : c'est la répartition recommandée.</figcaption>
+</figure>
+
+<p>Pourquoi cette forme ? Parce que le coût d'un test et sa précision de diagnostic évoluent en sens
+inverse. Un test unitaire sur <code>DeckNotifier</code> s'exécute en une milliseconde et, s'il
+échoue, vous savez immédiatement quelle méthode est cassée. Un test de widget sur
+<code>MapScreen</code> construit un arbre entier de widgets, pompe des frames d'animation, et s'il
+échoue vous savez seulement que « quelque chose dans l'écran de carte ne va plus ». Les deux sont
+utiles ; le premier doit juste être beaucoup plus nombreux.</p>
+
+<h3>Le tableau complet des 42 fichiers</h3>
+
+<p>Pour chaque test, voici le fichier source qu'il vise. Cette colonne est la plus utile des trois :
+quand un test casse, elle vous dit où aller lire.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Fichier de test</th><th>Code source visé</th><th>Ce qu'il vérifie</th></tr></thead>
+<tbody>
+<tr><td colspan="3"><strong>Racine — test système (1)</strong></td></tr>
+<tr><td><code>test/encounter_system_test.dart</code></td>
+    <td><code>lib/game/systems/encounter_system.dart</code></td>
+    <td>Le budget de rencontre, le Combat Rating, la montée en puissance par acte et le nombre
+    maximum d'ennemis</td></tr>
+
+<tr><td colspan="3"><strong><code>test/tutorial/</code> — le sous-système d'onboarding (2)</strong></td></tr>
+<tr><td><code>tutorial_engine_test.dart</code></td>
+    <td><code>lib/tutorial/tutorial_engine.dart</code></td>
+    <td>L'état simulé du tutoriel (<code>mockState</code>), l'enchaînement des étapes,
+    <code>gainXp()</code> avec son seuil <code>xpToNextLevel = 100</code></td></tr>
+<tr><td><code>tutorial_progress_service_test.dart</code></td>
+    <td><code>lib/tutorial/tutorial_progress_service.dart</code></td>
+    <td>Le trio <code>hasCompletedTutorial()</code> / <code>markTutorialCompleted()</code> /
+    <code>resetTutorial()</code> sur la clé <code>tutorial_completed</code></td></tr>
+
+<tr><td colspan="3"><strong><code>test/unit/</code> — la logique métier (24)</strong></td></tr>
+<tr><td><code>checkpoint_autosave_test.dart</code></td>
+    <td><code>lib/game/controllers/checkpoint_controller.dart</code></td>
+    <td>Que <code>bump()</code> incrémente bien le compteur et que
+    <code>autosaveOrchestratorProvider</code> réagit au changement</td></tr>
+<tr><td><code>combat_controller_test.dart</code></td>
+    <td><code>lib/game/controllers/combat_controller.dart</code></td>
+    <td><code>initializeCombat</code> : mise en place de l'état, mise à l'échelle PV/attaque selon
+    le type de nœud (normal / élite / boss), premier tirage d'intention</td></tr>
+<tr><td><code>combat_debug_logger_test.dart</code></td>
+    <td><code>lib/game/services/combat_debug_logger.dart</code></td>
+    <td>Que <code>logCombatInitialization</code> ne produit rien hors <code>kDebugMode</code> et
+    formate les bonnes sections sinon</td></tr>
+<tr><td><code>deck_controller_test.dart</code></td>
+    <td><code>lib/game/controllers/deck_controller.dart</code></td>
+    <td>La pioche, le remélange automatique défausse → pioche, le compteur
+    <code>reshuffleCount</code>, la limite <code>maxHandSize</code></td></tr>
+<tr><td><code>deck_state_persistence_test.dart</code></td>
+    <td><code>DeckState.toJson</code> / <code>fromJsonWithReport</code></td>
+    <td>L'aller-retour JSON des cinq piles et le rapport des cartes disparues du catalogue</td></tr>
+<tr><td><code>decoupled_forge_test.dart</code></td>
+    <td><code>deck_controller.dart</code> (<code>addForgeUpgrade</code>,
+    <code>setForgeUpgrades</code>) et <code>run_controller.dart</code>
+    (<code>forgeSlots</code>, <code>forgeTargetSessions</code>)</td>
+    <td>Que la forge manipule des <em>références</em> <code>"id:tier"</code> sans dépendre de
+    l'écran de forge</td></tr>
+<tr><td><code>effect_resolver_test.dart</code></td>
+    <td><code>lib/game/services/effect_resolver.dart</code></td>
+    <td><code>createStatus</code>, la consommation de mana, la boucle d'effets et les bonus de runes
+    de forge</td></tr>
+<tr><td><code>event_controller_test.dart</code></td>
+    <td><code>lib/game/controllers/event_controller.dart</code></td>
+    <td><code>initializeEvent</code> et <code>setEvent</code> : le tirage d'un événement narratif</td></tr>
+<tr><td><code>inventory_controller_test.dart</code></td>
+    <td><code>lib/game/controllers/inventory_controller.dart</code></td>
+    <td><code>gainGold</code>, <code>spendGold</code> (qui refuse si l'or manque),
+    <code>addRelic</code>, <code>removeRelics</code>, <code>reset</code></td></tr>
+<tr><td><code>inventory_state_persistence_test.dart</code></td>
+    <td><code>lib/models/inventory_state.dart</code></td>
+    <td><code>toJson</code> / <code>fromJsonWithReport</code> : or, reliques, extensions de boutique</td></tr>
+<tr><td><code>localization_test.dart</code></td>
+    <td><code>lib/models/data/card_data.dart</code></td>
+    <td><code>CardData.fromJson</code> puis <code>getName(locale)</code> /
+    <code>getDescription(locale)</code>, y compris le repli anglais</td></tr>
+<tr><td><code>map_generator_test.dart</code></td>
+    <td><code>lib/services/map_generator_service.dart</code></td>
+    <td>Les invariants structurels de la carte : étages, boss, chokepoint, connexions</td></tr>
+<tr><td><code>notifier_hydrate_test.dart</code></td>
+    <td>Les quatre <code>hydrate()</code> : <code>RunController</code>, <code>DeckNotifier</code>,
+    <code>InventoryController</code>, <code>SkillController</code></td>
+    <td>Qu'un état chargé remplace intégralement l'état courant, sans fusion partielle</td></tr>
+<tr><td><code>probabilities_test.dart</code></td>
+    <td><code>ProbabilitiesDialog.calculateDraftProbabilities</code>
+    (<code>lib/ui/widgets/map/dialogs/probabilities_dialog.dart</code>)</td>
+    <td>Les chances de rareté au draft en fonction de la chance du héros, et la différence
+    récompense de niveau / draft normal</td></tr>
+<tr><td><code>relic_exchange_test.dart</code></td>
+    <td><code>RunController.exchangeRelics</code> →
+    <code>lib/game/controllers/run/player_stats_manager.dart</code></td>
+    <td>Que 3 reliques sacrifiées deviennent 1 relique gagnée, effets passifs compris</td></tr>
+<tr><td><code>reward_controller_test.dart</code></td>
+    <td><code>lib/game/controllers/reward_controller.dart</code></td>
+    <td><code>handleVictory</code>, <code>collectGoldAndXp</code>, <code>collectRelic</code>,
+    <code>chooseCards</code> et la résolution finale</td></tr>
+<tr><td><code>run_controller_test.dart</code></td>
+    <td><code>lib/game/controllers/run_controller.dart</code></td>
+    <td><code>startNewRun</code>, <code>travelToNode</code>, <code>takeDamage</code>,
+    <code>heal</code>, <code>applyRelics</code></td></tr>
+<tr><td><code>run_state_persistence_test.dart</code></td>
+    <td><code>RunState.toJson</code> / <code>fromJsonWithReport</code></td>
+    <td>La sérialisation de l'état de run, dont <code>forgeSlots</code> et
+    <code>forgeTargetSessions</code></td></tr>
+<tr><td><code>save_catalog_lookups_test.dart</code></td>
+    <td><code>CardData.getById</code>, <code>RelicData.getById</code>,
+    <code>PassiveData.getById</code>, <code>ForgeUpgradeData.filterValidRefs</code></td>
+    <td>Qu'une sauvegarde référençant du contenu supprimé produit des
+    <code>MissingSaveItem</code> au lieu de planter</td></tr>
+<tr><td><code>save_service_test.dart</code></td>
+    <td><code>lib/services/save_service.dart</code></td>
+    <td>L'aller-retour complet <code>save</code> / <code>load</code> sur la clé
+    <code>run_save_v1</code>, avec <code>schemaVersion</code></td></tr>
+<tr><td><code>shop_controller_test.dart</code></td>
+    <td><code>lib/game/controllers/shop_controller.dart</code></td>
+    <td><code>buyCard</code>, <code>buyHeal</code>, <code>rerollCards</code>,
+    <code>purgeCard</code>, <code>cloneCard</code> et le tirage pondéré des runes</td></tr>
+<tr><td><code>skill_controller_test.dart</code></td>
+    <td><code>lib/game/controllers/skill_controller.dart</code></td>
+    <td><code>triggerSkill1</code> / <code>triggerSkill2</code> refusent si le cooldown est actif,
+    <code>tickCooldowns</code> décrémente sans passer sous zéro</td></tr>
+<tr><td><code>skill_state_persistence_test.dart</code></td>
+    <td><code>lib/models/skill_state.dart</code></td>
+    <td>L'aller-retour JSON de <code>skill1Cooldown</code> / <code>skill2Cooldown</code></td></tr>
+<tr><td><code>xp_scaling_test.dart</code></td>
+    <td><code>PlayerStatsManager.gainXp</code></td>
+    <td>La formule <code>100 × 1,5^(niveau-1)</code>, les montées de niveau en cascade et le report
+    de l'XP excédentaire</td></tr>
+
+<tr><td colspan="3"><strong><code>test/widget/</code> — les écrans (15)</strong></td></tr>
+<tr><td><code>boss_card_draft_screen_test.dart</code></td>
+    <td><code>lib/ui/screens/boss_card_draft_screen.dart</code></td>
+    <td>L'affichage du draft de récompense de boss et la sélection d'une carte</td></tr>
+<tr><td><code>card_dictionary_screen_test.dart</code></td>
+    <td><code>lib/ui/screens/card_dictionary_screen.dart</code></td>
+    <td>Le dictionnaire : filtrage par type, affichage des raretés</td></tr>
+<tr><td><code>class_selection_screen_test.dart</code></td>
+    <td><code>lib/ui/screens/class_selection_screen.dart</code></td>
+    <td>Que les trois classes s'affichent et que le choix démarre une run</td></tr>
+<tr><td><code>deck_screen_test.dart</code></td>
+    <td><code>lib/ui/screens/deck_screen.dart</code></td>
+    <td>L'affichage du deck maître et l'accès à la fusion</td></tr>
+<tr><td><code>draft_screen_test.dart</code></td>
+    <td><code>lib/ui/screens/draft_screen.dart</code></td>
+    <td>Le draft post-combat : trois choix, un skip</td></tr>
+<tr><td><code>forge_fusion_screen_test.dart</code></td>
+    <td><code>lib/ui/screens/forge_fusion_screen.dart</code></td>
+    <td>La fusion de trois cartes identiques et l'application d'une rune</td></tr>
+<tr><td><code>home_screen_save_test.dart</code></td>
+    <td><code>lib/ui/screens/home_screen.dart</code></td>
+    <td>Le <code>FutureBuilder&lt;bool&gt;</code> sur <code>SaveService.hasSave()</code> et la
+    confirmation d'écrasement d'une sauvegarde</td></tr>
+<tr><td><code>hud_and_targeting_badge_test.dart</code></td>
+    <td><code>lib/ui/widgets/hud/</code> et <code>lib/ui/widgets/ui_card.dart</code>
+    (<code>targetType</code>)</td>
+    <td>Le HUD de combat et le badge de ciblage / d'épuisement porté par la carte</td></tr>
+<tr><td><code>mana_indicator_test.dart</code></td>
+    <td><code>lib/ui/widgets/hud/mana_indicator.dart</code></td>
+    <td>Le nombre de losanges affichés (<code>max(currentMana, maxMana)</code>) et leur
+    rétrécissement au-delà de 5</td></tr>
+<tr><td><code>map_screen_test.dart</code></td>
+    <td><code>lib/ui/screens/map_screen.dart</code></td>
+    <td>Que les nœuds s'affichent et que les nœuds inaccessibles sont bien verrouillés</td></tr>
+<tr><td><code>player_health_bar_test.dart</code></td>
+    <td><code>lib/ui/widgets/hud/player_health_bar.dart</code></td>
+    <td>PV, armure et attaque effective, ainsi que l'animation de rattrapage</td></tr>
+<tr><td><code>relic_exchange_screen_test.dart</code></td>
+    <td><code>lib/ui/screens/relic_exchange_screen.dart</code></td>
+    <td>La règle « exactement 3 reliques » avant que le bouton d'échange s'active</td></tr>
+<tr><td><code>rest_screen_test.dart</code></td>
+    <td><code>lib/ui/screens/rest_screen.dart</code></td>
+    <td>Les options du feu de camp (soin / amélioration) et leur effet</td></tr>
+<tr><td><code>shop_screen_test.dart</code></td>
+    <td><code>lib/ui/screens/shop_screen.dart</code></td>
+    <td>Les prix, l'or insuffisant qui grise les boutons, le reroll</td></tr>
+<tr><td><code>starter_deck_draft_screen_test.dart</code></td>
+    <td><code>lib/ui/screens/starter_deck_draft_screen.dart</code></td>
+    <td>La construction du deck de départ avant le premier combat</td></tr>
+</tbody>
+</table></div>
+
+<div class="box ok">
+  <div class="box-title">Bonne pratique du dépôt : un test par fichier de logique</div>
+  <p>Regardez la colonne du milieu : chaque contrôleur de <code>lib/game/controllers/</code> a son
+  fichier de test dédié, et chaque état sérialisable a en plus un fichier
+  <code>*_state_persistence_test.dart</code>. Cette symétrie n'est pas cosmétique : elle rend
+  trivial de répondre à « ce comportement est-il testé ? » — on regarde le fichier au même nom.</p>
+</div>
+
+<h2 id="s3">3. Tester un <code>Notifier</code> Riverpod</h2>
+
+<p>C'est le patron le plus important du chapitre, parce que c'est celui que vous appliquerez le plus
+souvent. La bonne nouvelle : tester un <code>Notifier</code> <span class="pill r">Riverpod</span>
+ne demande <strong>ni widget, ni <code>ProviderScope</code>, ni <code>testWidgets</code></strong>.
+Un simple <code>test()</code> suffit.</p>
+
+<p>Voici le squelette exact utilisé par <code>deck_controller_test.dart</code> :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">test/unit/deck_controller_test.dart</span><span class="lang">dart</span></div>
+  <pre>void main() {
+  group('DeckNotifier Tests', () {
+    late ProviderContainer container;
+    late DeckNotifier notifier;
+
+    setUp(() {
+      container = ProviderContainer();
+      notifier = container.read(deckProvider.notifier);
+    });
+
+    tearDown(() {
+      container.dispose();
+    });
+
+    test(
+      'drawCards remélange désormais la défausse quand la pioche est vide',
+      () {
+        final cardA = _card('strike');
+        final cardB = _card('defend');
+
+        notifier.initializeStarterDeck([cardA, cardB]);
+        notifier.state = notifier.state.copyWith(
+          drawPile: [cardA],
+          hand: [],
+          discardPile: [cardB],
+        );
+
+        notifier.drawCards(2, maxHandSize: 10);
+
+        // Comportement inversé par P-02 : cardB ne reste plus bloquée en défausse.
+        expect(notifier.state.hand.length, 2);
+        expect(notifier.state.drawPile, isEmpty);
+        expect(notifier.state.discardPile, isEmpty);
+        expect(notifier.state.reshuffleCount, 1);
+      },
+    );</pre>
+</div>
+
+<h3>Décomposons</h3>
+
+<div class="memo">
+  <div class="card"><h5><code>ProviderContainer()</code></h5>
+    <p>C'est l'implémentation « nue » du conteneur de providers. En temps normal,
+    <code>ProviderScope</code> en crée un et le range dans l'arbre de widgets. Ici on le crée
+    directement, sans arbre.</p></div>
+  <div class="card"><h5><code>container.read(deckProvider.notifier)</code></h5>
+    <p>Demande l'objet <code>DeckNotifier</code> lui-même (et non son état). C'est cette lecture qui
+    déclenche <code>build()</code> et instancie le contrôleur.</p></div>
+  <div class="card"><h5><code>container.dispose()</code></h5>
+    <p>Libère tous les providers du conteneur. Sans ça, les tests suivants pourraient hériter
+    d'un état résiduel — la source de bugs de tests la plus pénible à diagnostiquer.</p></div>
+  <div class="card"><h5><code>setUp</code> / <code>tearDown</code></h5>
+    <p>Fournis par <code>flutter_test</code>. Ils s'exécutent <em>avant</em> et <em>après chaque</em>
+    <code>test()</code> du <code>group</code>. Chaque test repart donc d'un deck vierge.</p></div>
+</div>
+
+<div class="box"><div class="box-title">À retenir</div>
+  <p>Un <code>Notifier</code> Riverpod est <strong>une classe Dart ordinaire</strong> dont l'état est
+  un champ. Il ne dépend d'aucun <code>BuildContext</code>, d'aucun rendu, d'aucune plateforme.
+  C'est exactement pour ça que <code>CLAUDE.md</code> impose que toute la logique métier vive dans
+  <code>lib/game/controllers/</code> : c'est la couche testable en une milliseconde. Si une règle
+  du jeu se retrouve dans un widget, elle devient un test de widget — cent fois plus lent et dix
+  fois plus fragile.</p>
+</div>
+
+<h3>Rendre l'aléatoire reproductible</h3>
+
+<p>Un problème saute aux yeux avec un test de pioche : <code>drawCards</code> remélange la défausse.
+Un mélange, c'est du hasard. Comment écrire un <code>expect()</code> sur un résultat aléatoire ?</p>
+
+<p>La réponse du projet est élégante : <strong>l'aléatoire est un provider</strong>, donc il est
+surchargeable.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/deck_controller.dart</span><span class="lang">dart</span></div>
+  <pre>/// Source d'aléatoire de la pioche. Surchargeable en test via
+/// `deckRandomProvider.overrideWithValue(Random(42))` pour rendre les
+/// séquences de pioche reproductibles.
+final deckRandomProvider = Provider&lt;Random&gt;((ref) =&gt; Random());
+
+final deckProvider = NotifierProvider&lt;DeckNotifier, DeckState&gt;(DeckNotifier.new);</pre>
+</div>
+
+<p>Le <code>DeckNotifier</code> ne fabrique jamais son propre <code>Random</code>. Il le
+<em>demande</em> au conteneur, une seule fois, dans <code>build()</code> :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/deck_controller.dart</span><span class="lang">dart</span></div>
+  <pre>class DeckNotifier extends Notifier&lt;DeckState&gt; {
+  late final Random _random;
+
+  @override
+  DeckState build() {
+    _random = ref.read(deckRandomProvider);
+    return const DeckState();
+  }</pre>
+</div>
+
+<p>Résultat : en test, il suffit de construire le conteneur avec une surcharge. Un
+<code>Random(42)</code> est un générateur pseudo-aléatoire <em>déterministe</em> : à graine
+identique, séquence identique, sur toutes les machines.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">illustration</span><span class="lang">dart</span></div>
+  <pre>setUp(() {
+  container = ProviderContainer(
+    overrides: [
+      deckRandomProvider.overrideWithValue(Random(42)),
+    ],
+  );
+  notifier = container.read(deckProvider.notifier);
+});</pre>
+</div>
+
+<p>Le mélange devient alors une permutation fixe, et on peut écrire
+<code>expect(notifier.state.hand.first.data.id, 'defend')</code> sans risque de test
+« intermittent ». C'est l'application directe du principe d'<em>injection de dépendance</em> : ne
+jamais construire une dépendance non déterministe à l'intérieur de l'objet qui l'utilise.</p>
+
+<div class="box ok"><div class="box-title">Bonne pratique</div>
+  <p>Le même raisonnement s'applique à l'horloge (<code>DateTime.now()</code>) et au réseau. Dès
+  qu'un objet appelle une source d'imprévisibilité en dur, il devient non testable. Passez-la par un
+  <code>Provider</code> — le coût est d'une ligne, le gain est un test déterministe.</p>
+</div>
+
+<h3>Le patron « fixture » : construire des données de test</h3>
+
+<p>Les tests unitaires n'ont pas accès aux fichiers JSON d'<code>assets/</code> (ils tourneraient
+alors sur un vrai chargement d'assets, ce qui est lent et fragile). Ils construisent donc leurs
+données à la main. Le fichier <code>deck_controller_test.dart</code> définit un helper minuscule en
+haut de fichier :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">test/unit/deck_controller_test.dart</span><span class="lang">dart</span></div>
+  <pre>CardInstance _card(String id) =&gt; CardInstance(
+      data: CardData(
+        id: id,
+        nameEn: id,
+        nameFr: id,
+        cost: 1,
+        type: CardType.skill,
+        category: CardCategory.global,
+        rarity: CardRarity.common,
+        target: CardTarget.self,
+        effects: const [],
+      ),
+    );</pre>
+</div>
+
+<p>Et <code>combat_controller_test.dart</code> fait la même chose, en plus fourni, avec des
+constantes de groupe :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">test/unit/combat_controller_test.dart</span><span class="lang">dart</span></div>
+  <pre>void main() {
+  group('CombatController Tests', () {
+    final goblinData = EnemyData(
+      id: 'goblin',
+      nameEn: 'Goblin',
+      nameFr: 'Gobelin',
+      maxHp: 20,
+      baseDamage: 5,
+      spritePath: 'goblin.png',
+      tier: 1,
+      intents: [
+        EnemyIntent(type: IntentType.attack, value: 5),
+        EnemyIntent(type: IntentType.defend, value: 6),
+      ],
+    );
+
+    // ...
+
+    test(
+      'initializeCombat sets state, scales hp/attack for standard/elite/boss nodes, and rolls first intent',
+      () {
+        final container = ProviderContainer();
+        final combatController = container.read(combatProvider.notifier);
+
+        // Standard Node
+        combatController.initializeCombat(1, MapNodeType.combat, [goblinData]);</pre>
+</div>
+
+<div class="box warn"><div class="box-title">Piège : les valeurs des fixtures ne sont pas celles du jeu</div>
+  <p>Le gobelin de test a <code>maxHp: 20</code> et <code>baseDamage: 5</code>. Le gobelin réel de
+  <code>assets/data/enemies.json</code> a 28 PV et 5 de dégâts. C'est <strong>voulu</strong> : le
+  test vérifie la <em>mécanique</em> de mise à l'échelle, pas l'équilibrage. Si vous nerfez le
+  gobelin dans le JSON, aucun test ne doit casser — sinon vos tests testent vos données au lieu de
+  votre code.</p>
+</div>
+
+<h2 id="s4">4. Tester un écran</h2>
+
+<p>Passons à l'étage du dessus. Un test de widget construit un vrai arbre Flutter dans un
+environnement de test, puis interroge ce qui est affiché. Le fichier
+<code>test/widget/map_screen_test.dart</code> concentre les quatre difficultés du genre.</p>
+
+<h3>Difficulté 1 — court-circuiter le chargement des assets</h3>
+
+<p>L'écran de carte dépend indirectement du registre de données du jeu, chargé par un
+<code>FutureProvider</code> qui lit neuf fichiers JSON depuis le bundle. Dans un test, ce bundle
+n'existe pas vraiment. La parade : déclarer un provider de remplacement qui renvoie un registre
+vide.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">test/widget/map_screen_test.dart</span><span class="lang">dart</span></div>
+  <pre>// Mock data provider to bypass actual json loading
+final mockGameDataLoaderProvider = FutureProvider&lt;GameDataRegistry&gt;((
+  ref,
+) async {
+  return GameDataRegistry(
+    enemies: [],
+    heroes: [],
+    skills: [],
+    cards: [],
+    events: [],
+    passives: [],
+    relics: [],
+    forgeUpgrades: [],
+  );
+});</pre>
+</div>
+
+<p>Notez que le registre est <em>complet mais vide</em> : les huit listes sont bien fournies, elles
+sont juste sans contenu. C'est suffisant pour que l'écran de carte se construise — il n'a besoin
+d'aucune carte ni d'aucun ennemi pour dessiner ses nœuds.</p>
+
+<h3>Difficulté 2 — partager un conteneur préparé avec l'arbre de widgets</h3>
+
+<p>Le test veut préparer l'état <em>avant</em> de construire l'écran : générer une carte, placer le
+héros. Il crée donc un <code>ProviderContainer</code> comme dans un test unitaire, l'utilise
+directement… puis le donne à l'arbre de widgets via
+<code>UncontrolledProviderScope</code>.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">test/widget/map_screen_test.dart</span><span class="lang">dart</span></div>
+  <pre>    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final runNotifier = container.read(runProvider.notifier);
+
+    // Generate map
+    runNotifier.startNewRun(hero);
+
+    final runState = container.read(runProvider);
+    final mapNodes = runState.mapNodes;
+
+    expect(mapNodes.isNotEmpty, true);
+
+    // 2. Build widget
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(
+          localizationsDelegates: [
+            AppLocalizations.delegate,
+            // ...</pre>
+</div>
+
+<div class="box"><div class="box-title">À retenir : <code>ProviderScope</code> vs <code>UncontrolledProviderScope</code></div>
+  <p><code>ProviderScope</code> <strong>crée</strong> son conteneur et le possède : vous ne pouvez pas
+  y toucher avant que l'arbre existe. <code>UncontrolledProviderScope</code> prend un conteneur
+  <strong>que vous avez déjà créé</strong> et se contente de l'exposer à l'arbre. C'est le pont
+  entre le monde du test unitaire (rapide, direct) et le monde du test de widget. Le
+  <code>addTearDown(container.dispose)</code> garantit sa libération même si le test échoue en
+  cours de route.</p>
+</div>
+
+<h3>Difficulté 3 — les délégués de localisation sont obligatoires</h3>
+
+<p>C'est l'erreur numéro un des débutants en test de widget Flutter. Dès qu'un widget de l'arbre
+appelle <code>AppLocalizations.of(context)!</code>, il faut que le <code>MaterialApp</code> du test
+déclare les mêmes <code>localizationsDelegates</code> que l'application réelle — sinon
+<code>AppLocalizations.of(context)</code> renvoie <code>null</code> et le <code>!</code> lève une
+exception au milieu du <code>build</code>.</p>
+
+<p>Pour mémoire, voici ce que déclare l'application de production :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/main.dart</span><span class="lang">dart</span></div>
+  <pre>      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [Locale('en', ''), Locale('fr', '')],</pre>
+</div>
+
+<div class="box warn"><div class="box-title">Piège classique</div>
+  <p>Le message d'erreur, dans ce cas, ne parle pas de localisation : vous obtenez un
+  <code>Null check operator used on a null value</code> pointant sur un fichier de widget qui n'a
+  rien à se reprocher. Réflexe à acquérir : <em>plantage au premier <code>pumpWidget</code> d'un
+  écran qui affiche du texte traduit</em> → vérifier les délégués.</p>
+</div>
+
+<h3>Difficulté 4 — <code>pumpAndSettle()</code> ne termine jamais</h3>
+
+<p>Voici le meilleur point pédagogique du dossier <code>test/</code>. Le commentaire est écrit
+directement dans le fichier, au-dessus du contournement :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">test/widget/map_screen_test.dart</span><span class="lang">dart</span></div>
+  <pre>// MapScreen's dash-line animation repeats forever, so pumpAndSettle() never
+// terminates here; pump a fixed duration instead to let transitions finish.
+Future&lt;void&gt; _settle(WidgetTester tester) async {
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 500));
+}</pre>
+</div>
+
+<p>Décortiquons, parce que ce piège vous attend dans n'importe quel projet Flutter avec des
+animations d'ambiance.</p>
+
+<p><code>tester.pumpAndSettle()</code> est la méthode de confort : elle pompe des frames en boucle
+jusqu'à ce qu'<strong>aucune animation ne soit plus en cours</strong>. C'est parfait pour attendre la
+fin d'une transition de page ou d'un fondu. Mais sa condition d'arrêt est « plus rien ne bouge ».
+Or, l'écran de carte fait ceci :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/map_screen.dart</span><span class="lang">dart</span></div>
+  <pre>  @override
+  void initState() {
+    super.initState();
+    _dashController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat();</pre>
+</div>
+
+<p>Le <code>..repeat()</code> lance une animation <strong>infinie</strong> : c'est elle qui fait
+défiler les pointillés le long des chemins entre les nœuds
+(<code>lib/ui/widgets/map/map_connection_painter.dart</code> calcule une <code>phase</code> à partir
+de <code>animation.value</code>). Du point de vue de <code>pumpAndSettle()</code>, quelque chose
+bouge encore… et bougera toujours. Le test se bloque jusqu'au timeout.</p>
+
+<p>La parade tient en deux lignes. On abandonne « pompe jusqu'à ce que ce soit calme » pour
+« pompe une durée décidée par moi » :</p>
+
+<ul>
+  <li><code>await tester.pump()</code> — construit la première frame (les <code>initState</code>
+  s'exécutent, les <code>FutureBuilder</code> partent).</li>
+  <li><code>await tester.pump(const Duration(milliseconds: 500))</code> — avance l'horloge virtuelle
+  de 500 ms d'un coup, ce qui laisse les transitions <em>finies</em> se terminer, sans jamais
+  attendre l'animation infinie.</li>
+</ul>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 820 300" width="820" role="img" aria-label="Comparaison entre pumpAndSettle qui boucle indéfiniment et le helper _settle qui pompe une durée fixe">
+      <rect x="0" y="0" width="820" height="300" fill="#0e1524"/>
+
+      <text x="205" y="30" fill="#f87171" font-size="14" text-anchor="middle" font-family="ui-monospace, monospace">pumpAndSettle()</text>
+      <rect x="30" y="46" width="350" height="216" rx="10" fill="#1a1220" stroke="#f87171"/>
+      <rect x="60" y="70" width="290" height="40" rx="6" fill="#151b2b" stroke="#3a4966"/>
+      <text x="205" y="95" fill="#e6ecf5" font-size="12" text-anchor="middle">pompe une frame</text>
+      <path d="M205 110 L205 132" stroke="#3a4966" stroke-width="2" marker-end="url(#c21-settle-grey)"/>
+      <rect x="60" y="136" width="290" height="46" rx="6" fill="#151b2b" stroke="#3a4966"/>
+      <text x="205" y="156" fill="#e6ecf5" font-size="12" text-anchor="middle">une animation est-elle en cours ?</text>
+      <text x="205" y="174" fill="#f87171" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">_dashController.repeat() → oui</text>
+      <path d="M60 159 L44 159 L44 90 L60 90" stroke="#f87171" stroke-width="2" fill="none" marker-end="url(#c21-settle-red)"/>
+      <text x="205" y="212" fill="#f87171" font-size="13" text-anchor="middle">boucle sans fin</text>
+      <text x="205" y="236" fill="#a7b4c9" font-size="11" text-anchor="middle">le test finit en timeout</text>
+
+      <text x="615" y="30" fill="#34d399" font-size="14" text-anchor="middle" font-family="ui-monospace, monospace">_settle(tester)</text>
+      <rect x="440" y="46" width="350" height="216" rx="10" fill="#0f1f1a" stroke="#34d399"/>
+      <rect x="470" y="76" width="290" height="44" rx="6" fill="#151b2b" stroke="#3a4966"/>
+      <text x="615" y="95" fill="#e6ecf5" font-size="12" text-anchor="middle">await tester.pump()</text>
+      <text x="615" y="112" fill="#a7b4c9" font-size="11" text-anchor="middle">1re frame : initState, FutureBuilder</text>
+      <path d="M615 120 L615 146" stroke="#3a4966" stroke-width="2" marker-end="url(#c21-settle-grey)"/>
+      <rect x="470" y="150" width="290" height="44" rx="6" fill="#151b2b" stroke="#3a4966"/>
+      <text x="615" y="169" fill="#e6ecf5" font-size="12" text-anchor="middle">await tester.pump(500 ms)</text>
+      <text x="615" y="186" fill="#a7b4c9" font-size="11" text-anchor="middle">horloge virtuelle avancée d'un bloc</text>
+      <path d="M615 194 L615 216" stroke="#34d399" stroke-width="2" marker-end="url(#c21-settle-green)"/>
+      <text x="615" y="238" fill="#34d399" font-size="13" text-anchor="middle">rend la main, toujours</text>
+
+      <defs>
+        <marker id="c21-settle-grey" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#3a4966"/>
+        </marker>
+        <marker id="c21-settle-red" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#f87171"/>
+        </marker>
+        <marker id="c21-settle-green" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#34d399"/>
+        </marker>
+      </defs>
+    </svg>
+  </div>
+  <figcaption>Une animation en <code>repeat()</code> rend <code>pumpAndSettle()</code> inutilisable.
+  Le helper <code>_settle()</code> échange la garantie « tout est calme » contre la garantie
+  « ça rend la main ».</figcaption>
+</figure>
+
+<div class="box ok"><div class="box-title">Bonne pratique : documenter le contournement sur place</div>
+  <p>Le vrai enseignement n'est pas le helper, c'est le commentaire de deux lignes qui l'accompagne.
+  Sans lui, le prochain développeur remplacerait <code>_settle()</code> par
+  <code>pumpAndSettle()</code> « pour faire plus propre », et passerait une heure à comprendre
+  pourquoi la CI expire. Un contournement non documenté est une bombe à retardement ; un
+  contournement documenté est une décision.</p>
+</div>
+
+<h2 id="s5">5. Tester des règles de jeu</h2>
+
+<p>Le générateur de carte pose un problème apparemment insoluble : <strong>il est aléatoire</strong>.
+<code>MapGeneratorService.generateMap()</code> tire les types de nœuds, les connexions et les
+événements avec un <code>Random</code> interne. Deux exécutions ne produisent jamais la même carte.
+Sur quoi écrire un <code>expect()</code> ?</p>
+
+<p>La réponse : on ne teste pas des <em>valeurs</em>, on teste des <strong>propriétés</strong> —
+des affirmations qui doivent rester vraies quelle que soit la carte tirée. C'est ce qu'on appelle
+un <em>test de propriété</em> (par opposition au test de valeur figée).</p>
+
+<h3>Propriété 1 — le bon nombre d'étages</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">test/unit/map_generator_test.dart</span><span class="lang">dart</span></div>
+  <pre>    test('generates expected number of floors', () {
+      final nodes = MapGeneratorService.generateMap(floors: 10, maxWidth: 5);
+
+      // Determine the number of floors by grouping by Y position
+      final floors = &lt;double&gt;{};
+      for (var node in nodes) {
+        floors.add(node.position.y);
+      }
+
+      expect(floors.length, 10);
+    });</pre>
+</div>
+
+<p>Remarquez la technique : le test ne demande pas au générateur combien d'étages il a produits, il
+le <strong>déduit</strong> des positions. En rangeant tous les <code>position.y</code> dans un
+<code>Set&lt;double&gt;</code>, les doublons disparaissent et il ne reste que le nombre d'ordonnées
+distinctes. C'est un test « boîte noire » : il mesure le résultat observable, pas l'implémentation.</p>
+
+<h3>Propriété 2 — trois boss au sommet, sans connexion sortante</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">test/unit/map_generator_test.dart</span><span class="lang">dart</span></div>
+  <pre>    test('boss nodes are at the top (last floor), rowWidth is 3, and they have no boss IDs', () {
+      final nodes = MapGeneratorService.generateMap(floors: 10, maxWidth: 5);
+
+      final bossNodes = nodes.where((n) =&gt; n.type == MapNodeType.boss).toList();
+      expect(bossNodes.length, 3);
+
+      for (var bossNode in bossNodes) {
+        expect(bossNode.bossEnemyId, isNull);
+        // posY for floor 9 is 0
+        expect(bossNode.position.y, 0.0);
+        expect(bossNode.connections.isEmpty, true);
+      }
+    });</pre>
+</div>
+
+<p>Trois affirmations en une : il y a exactement 3 boss ; ils sont tout en haut
+(<code>position.y == 0.0</code>, parce que <code>posY = (floors - 1 - y) * 200.0</code> et que
+l'étage 9 donne 0) ; et aucun n'a de connexion sortante, ce qui est logique — après le boss, il n'y
+a plus rien.</p>
+
+<div class="box danger"><div class="box-title">Ce test documente un champ mort</div>
+  <p><code>expect(bossNode.bossEnemyId, isNull)</code> n'est pas une exigence de design, c'est un
+  <em>constat</em>. Dans <code>lib/services/map/map_node_generator.dart</code>, la variable
+  <code>String? bossEnemyId;</code> est déclarée puis passée au constructeur <strong>sans jamais
+  recevoir de valeur</strong>. On y revient en section 8.</p>
+</div>
+
+<h3>Propriété 3 — le chokepoint élite au milieu</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">test/unit/map_generator_test.dart</span><span class="lang">dart</span></div>
+  <pre>    test('floor 5 is an elite chokepoint with exactly 1 elite node', () {
+      final nodes = MapGeneratorService.generateMap(floors: 10, maxWidth: 5);
+
+      // floor 5 posY is (10 - 1 - 5) * 200 = 800
+      final floor5Nodes = nodes.where((n) =&gt; n.position.y == 800.0).toList();
+      expect(floor5Nodes.length, 1);
+      expect(floor5Nodes.first.type, MapNodeType.elite);
+    });</pre>
+</div>
+
+<p>C'est la <em>règle du goulot d'étranglement</em> : au milieu de la carte, un seul nœud, forcément
+élite. Tous les chemins convergent, tout le monde affronte cette élite. Côté code, la règle vient de
+deux <code>if</code> dans le générateur :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/services/map/map_node_generator.dart</span><span class="lang">dart</span></div>
+  <pre>      // Special case: Chokepoint at middle floor
+      if (y == middleFloor) {
+        rowWidth = 1;
+      }
+
+      // Special case: Boss floor always has 3 nodes
+      if (y == floors - 1) {
+        rowWidth = 3;
+      }
+
+      // ...
+        // Force structure rules
+        if (y == middleFloor) {
+          // Chokepoint is always Elite
+          type = MapNodeType.elite;
+        } else if (y == floors - 2) {
+          // Guaranteed Rest before boss
+          type = MapNodeType.rest;
+        } else if (y == floors - 1) {
+          type = MapNodeType.boss;</pre>
+</div>
+
+<div class="box rule"><div class="box-title">Règle du jeu</div>
+  <p><code>middleFloor = floors ~/ 2</code>, soit l'étage 5 pour une carte de 10 étages. Trois
+  contraintes structurelles sont garanties quelle que soit la génération : un chokepoint élite au
+  milieu, un feu de camp obligatoire à l'avant-dernier étage (<code>floors - 2</code>), et trois
+  boss au dernier.</p>
+</div>
+
+<h3>Propriétés 4 et 5 — l'intégrité du graphe</h3>
+
+<p>Les deux derniers tests vérifient que la carte est un graphe <em>parcourable</em>. Aucun
+cul-de-sac, aucun nœud inatteignable.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">test/unit/map_generator_test.dart</span><span class="lang">dart</span></div>
+  <pre>    test('all nodes except boss have at least one connection (no dead ends)', () {
+      final nodes = MapGeneratorService.generateMap(floors: 10, maxWidth: 5);
+
+      for (var node in nodes) {
+        if (node.type != MapNodeType.boss) {
+          expect(
+            node.connections.isNotEmpty,
+            true,
+            reason: 'Node ${node.id} has no connections',
+          );
+        }
+      }
+    });</pre>
+</div>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">test/unit/map_generator_test.dart</span><span class="lang">dart</span></div>
+  <pre>    test('all nodes (except the first floor) are reachable (no isolated nodes)', () {
+      final nodes = MapGeneratorService.generateMap(floors: 10, maxWidth: 5);
+
+      // Determine bottom floor Y (floors - 1) * 200
+      final bottomY = (10 - 1) * 200.0;
+
+      // Get all nodes that are not in the first floor
+      final notFirstFloorNodes = nodes
+          .where((n) =&gt; n.position.y != bottomY)
+          .toList();
+
+      for (var targetNode in notFirstFloorNodes) {
+        bool isReachable = nodes.any(
+          (sourceNode) =&gt; sourceNode.connections.contains(targetNode.id),
+        );</pre>
+</div>
+
+<p>Le premier test regarde les arêtes <em>sortantes</em> (« ce nœud mène-t-il quelque part ? »), le
+second les arêtes <em>entrantes</em> (« un nœud mène-t-il jusqu'ici ? »). Ensemble, ils garantissent
+qu'aucun joueur ne peut se retrouver bloqué et qu'aucun contenu n'est généré pour rien.</p>
+
+<div class="box ok"><div class="box-title">Bonne pratique : le paramètre <code>reason:</code></div>
+  <p><code>expect(..., reason: 'Node ${node.id} has no connections')</code> transforme un échec
+  illisible (« Expected: true, Actual: false ») en diagnostic immédiat (« Node node_4_2 has no
+  connections »). Sur un test de propriété qui boucle sur plusieurs dizaines d'éléments, c'est ce
+  qui fait la différence entre cinq secondes et une demi-heure de débogage.</p>
+</div>
+
+<h3>Un test de propriété d'un autre genre : le repli de langue</h3>
+
+<p><code>test/unit/localization_test.dart</code> vérifie une propriété différente : que le système
+bilingue ne casse jamais, même face à une langue non prévue. Rappel du modèle :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/card_data.dart</span><span class="lang">dart</span></div>
+  <pre>  String getName(String locale) =&gt; locale == 'fr' ? nameFr : nameEn;</pre>
+</div>
+
+<p>La règle est donc : <strong>français si et seulement si <code>'fr'</code>, anglais dans tous les
+autres cas</strong>. L'anglais n'est pas « l'autre langue », c'est le <em>repli universel</em>. Le
+test le formalise :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">test/unit/localization_test.dart</span><span class="lang">dart</span></div>
+  <pre>        final cardData = CardData.fromJson(jsonFragment);
+
+        // Verify English translation
+        expect(cardData.getName('en'), 'Strike Test');
+        expect(cardData.getDescription('en'), 'Deals 6 damage.');
+
+        // Verify French translation
+        expect(cardData.getName('fr'), 'Frappe Test');
+        expect(cardData.getDescription('fr'), 'Inflige 6 dégâts.');
+
+        // Verify fallback behavior on unknown/default locale (falls back to English nameEn/descriptionEn)
+        expect(cardData.getName('es'), 'Strike Test');
+        expect(cardData.getDescription('de'), 'Deals 6 damage.');</pre>
+</div>
+
+<p>Les deux dernières lignes sont les plus importantes. Elles disent : si demain quelqu'un lance le
+jeu sur un téléphone configuré en espagnol ou en allemand, il verra de l'anglais — pas une chaîne
+vide, pas un plantage, pas <code>null</code>. Et le test part d'un vrai fragment JSON passé à
+<code>CardData.fromJson</code>, donc il couvre aussi le parsing des clés
+<code>name_en</code> / <code>name_fr</code> / <code>description_en</code> /
+<code>description_fr</code>.</p>
+
+<div class="box"><div class="box-title">À retenir</div>
+  <p>Trois familles de tests coexistent dans <code>test/unit/</code> : les tests de
+  <strong>comportement</strong> (le deck, les contrôleurs), les tests de <strong>propriété</strong>
+  (le générateur de carte), et les tests d'<strong>aller-retour</strong> (les cinq fichiers
+  <code>*_persistence_test.dart</code>, qui sérialisent puis désérialisent et comparent). Chacune
+  attrape une classe de bug différente.</p>
+</div>
+
+<h2 id="s6">6. Les règles du dépôt</h2>
+
+<p><code>CLAUDE.md</code> n'est pas une documentation d'architecture : c'est un <strong>ensemble de
+contraintes</strong>. Chaque ligne y interdit quelque chose. Voici la check-list correspondante,
+utilisable telle quelle en revue de code.</p>
+
+<h3>Architecture : trois couches, jamais mélangées</h3>
+
+<div class="table-wrap"><table>
+<thead><tr><th>À vérifier</th><th>Où</th><th>Symptôme d'infraction</th></tr></thead>
+<tbody>
+<tr><td>Aucune règle de jeu dans un composant Flame</td><td><code>lib/game/components/</code>,
+    <code>lib/game/systems/</code></td>
+    <td>Un composant calcule des dégâts ou modifie des PV au lieu de lire l'état et de le dessiner</td></tr>
+<tr><td>Aucune règle de jeu dans un widget</td><td><code>lib/ui/</code></td>
+    <td>Un <code>onPressed</code> qui décide d'un montant plutôt que d'appeler un contrôleur</td></tr>
+<tr><td>Aucun <code>import 'package:flame/…'</code> dans <code>lib/ui/</code></td><td><code>lib/ui/</code></td>
+    <td>Un widget qui manipule un <code>PositionComponent</code></td></tr>
+<tr><td>Aucun arbre de widgets Flutter dans un composant Flame</td><td><code>lib/game/components/</code></td>
+    <td>Un composant qui construit un <code>Column</code></td></tr>
+<tr><td>Tout l'état métier partagé est un <code>Notifier</code> de
+    <code>lib/game/controllers/</code></td><td><code>lib/game/controllers/</code></td>
+    <td>Un état de jeu stocké dans un <code>State&lt;…&gt;</code> de widget</td></tr>
+<tr><td>Aucun nouveau <code>StateNotifier</code></td><td>tout <code>lib/</code></td>
+    <td>Le seul autorisé est la file de toasts de
+    <code>lib/ui/widgets/notification_overlay.dart</code></td></tr>
+<tr><td>Aucun singleton, aucune variable globale mutable</td><td>tout <code>lib/</code></td>
+    <td>Un <code>static</code> qui porte de l'état de partie</td></tr>
+<tr><td>Le chargement asynchrone passe par un <code>FutureProvider</code></td>
+    <td><code>lib/services/</code></td>
+    <td>Un <code>Future</code> déclenché dans un <code>initState</code> et stocké dans un champ</td></tr>
+</tbody>
+</table></div>
+
+<p>Le point sur <code>StateNotifier</code> mérite une vérification, parce qu'il est facile à
+enfreindre par inadvertance. Dans tout <code>lib/</code>, il n'existe aujourd'hui
+<strong>qu'une seule occurrence</strong> :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/notification_overlay.dart</span><span class="lang">dart</span></div>
+  <pre>class NotificationNotifier extends StateNotifier&lt;List&lt;GameNotification&gt;&gt; {
+  // ...
+}
+
+final notificationProvider =
+    StateNotifierProvider&lt;NotificationNotifier, List&lt;GameNotification&gt;&gt;((ref) {</pre>
+</div>
+
+<p>Le <code>CLAUDE.md</code> l'assume explicitement : « <em>the only remaining
+<code>StateNotifier</code> is the UI-local toast queue in
+<code>lib/ui/widgets/notification_overlay.dart</code>, which holds no business state. Do not add new
+ones.</em> » Une file de messages éphémères n'est pas de l'état de partie — la migration s'arrête là.</p>
+
+<h3>Conventions spécifiques au dépôt</h3>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Règle</th><th>Formulation exacte</th><th>Conséquence pratique</th></tr></thead>
+<tbody>
+<tr><td><code>patch_notes.json</code> est géré par un agent</td>
+    <td>« <em>never hand-edit it</em> » — il est maintenu par le skill
+    <code>patch-notes-writer</code></td>
+    <td>Toute modification manuelle sera écrasée à la prochaine release</td></tr>
+<tr><td>Synchronisation avec <code>pubspec.yaml</code></td>
+    <td>Le skill « <em>keeps <code>pubspec.yaml</code>'s <code>version:</code> field in sync with
+    it</em> »</td>
+    <td>Le champ <code>version: 0.4.7+1</code> et la dernière entrée de
+    <code>patch_notes.json</code> doivent concorder — le pipeline le vérifie</td></tr>
+<tr><td>Animations non bloquantes</td>
+    <td>« <em>Favor non-blocking animations in Flame code (<code>Effect</code>,
+    <code>Future.delayed</code> inside <code>async</code> methods) — never block the game loop</em> »</td>
+    <td>Jamais de boucle d'attente synchrone dans <code>update()</code></td></tr>
+<tr><td><code>priority</code> pour le z-ordre</td>
+    <td>« <em>Use <code>priority</code> on Flame components to manage z-ordering (e.g. background at
+    <code>-100</code>, floating text high)</em> »</td>
+    <td>On ne réordonne pas la liste des enfants à la main : on change
+    <code>component.priority</code></td></tr>
+<tr><td><code>FutureProvider</code> pour l'asynchrone</td>
+    <td>« <em>Use <code>FutureProvider</code> for async resource loading through Riverpod</em> »</td>
+    <td><code>gameDataLoaderProvider</code> est le modèle à copier</td></tr>
+<tr><td>Pas de code mort</td>
+    <td>« <em>No dead code, unused imports, or commented-out blocks in committed code</em> »</td>
+    <td>Un bloc mis en commentaire « au cas où » doit être supprimé — git s'en souvient pour vous</td></tr>
+<tr><td>Bilinguisme obligatoire dans les données</td>
+    <td>« <em>Every JSON entry with user-facing text must include both <code>_fr</code> and
+    <code>_en</code> variants</em> »</td>
+    <td>Ajouter une carte sans <code>name_fr</code> casse la moitié du jeu en français</td></tr>
+</tbody>
+</table></div>
+
+<p>La convention du z-ordre est directement lisible dans le code : les priorités sont des constantes
+nommées, regroupées en tête de <code>GameConstants</code>.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/game_constants.dart</span><span class="lang">dart</span></div>
+  <pre>class GameConstants {
+  // --- Z-INDEX PRIORITIES ---
+  static const int priorityBackground = -100;
+  static const int priorityCardBase = 10;
+  static const int priorityCardHovered = 100;
+  static const int priorityCardFocused = 150;
+  static const int priorityCardTrail = 200;
+  static const int priorityTargetingLine = 300;
+  static const int priorityCardDraggingMax = 500;</pre>
+</div>
+
+<div class="box ok"><div class="box-title">Bonne pratique : une échelle, pas des nombres</div>
+  <p>Les sept valeurs forment une échelle lisible : le fond est sous tout (<code>-100</code>), une
+  carte au repos est à <code>10</code>, survolée à <code>100</code>, en cours de glisser à
+  <code>500</code>. Quand un nouvel élément doit passer devant les cartes survolées mais derrière la
+  ligne de ciblage, vous cherchez un nombre entre 100 et 300 — pas besoin de relire tout le moteur
+  de rendu.</p>
+</div>
+
+<h2 id="s7">7. Publier une version</h2>
+
+<p>La procédure de release tient en trois étapes et une commande. Le README les décrit ainsi :</p>
+
+<div class="code" data-lang="text">
+  <div class="code-head"><span class="path">README.md</span><span class="lang">text</span></div>
+  <pre>## Publier une version
+
+1. Faire rédiger les patch notes par le skill `patch-notes-writer` — il écrit
+   l'entrée dans `assets/data/patch_notes.json` et synchronise `pubspec.yaml`.
+2. Committer et pousser sur `main`.
+3. Poser le tag correspondant.</pre>
+</div>
+
+<div class="code" data-lang="bash">
+  <div class="code-head"><span class="path">README.md</span><span class="lang">bash</span></div>
+  <pre>git tag v0.4.8
+git push origin v0.4.8</pre>
+</div>
+
+<p>C'est <strong>le push du tag</strong> qui déclenche tout. Tant que le tag n'est pas poussé, rien
+ne se passe : vous pouvez committer sur <code>main</code> autant que vous voulez.</p>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 840 470" width="840" role="img" aria-label="Pipeline de publication : patch notes, commit, tag, vérification de concordance, déploiement web versionné et pre-release GitHub">
+      <rect x="0" y="0" width="840" height="470" fill="#0e1524"/>
+
+      <text x="150" y="26" fill="#a7b4c9" font-size="12" text-anchor="middle">Poste du développeur</text>
+      <text x="580" y="26" fill="#a7b4c9" font-size="12" text-anchor="middle">Pipeline (CI)</text>
+      <path d="M310 36 L310 450" stroke="#3a4966" stroke-width="1" stroke-dasharray="4 5"/>
+
+      <rect x="30" y="46" width="250" height="60" rx="8" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="46" y="68" fill="#f59e0b" font-size="12" font-family="ui-monospace, monospace">1. patch-notes-writer</text>
+      <text x="46" y="86" fill="#a7b4c9" font-size="11">écrit patch_notes.json</text>
+      <text x="46" y="100" fill="#a7b4c9" font-size="11">et synchronise pubspec.yaml</text>
+
+      <path d="M155 106 L155 128" stroke="#3a4966" stroke-width="2" marker-end="url(#c21-rel-grey)"/>
+
+      <rect x="30" y="132" width="250" height="46" rx="8" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="46" y="154" fill="#22d3ee" font-size="12" font-family="ui-monospace, monospace">2. commit + push sur main</text>
+      <text x="46" y="170" fill="#a7b4c9" font-size="11">rien ne se déclenche encore</text>
+
+      <path d="M155 178 L155 200" stroke="#3a4966" stroke-width="2" marker-end="url(#c21-rel-grey)"/>
+
+      <rect x="30" y="204" width="250" height="60" rx="8" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="46" y="226" fill="#a78bfa" font-size="12" font-family="ui-monospace, monospace">3. git tag v0.4.8</text>
+      <text x="46" y="244" fill="#a78bfa" font-size="12" font-family="ui-monospace, monospace">   git push origin v0.4.8</text>
+      <text x="46" y="258" fill="#a7b4c9" font-size="11">c'est ce push qui déclenche tout</text>
+
+      <path d="M280 234 L400 234" stroke="#a78bfa" stroke-width="2" marker-end="url(#c21-rel-violet)"/>
+
+      <rect x="404" y="196" width="410" height="76" rx="8" fill="#1c1a10" stroke="#f59e0b"/>
+      <text x="420" y="218" fill="#f59e0b" font-size="12" font-family="ui-monospace, monospace">VÉRIFICATION DE CONCORDANCE</text>
+      <text x="420" y="238" fill="#e6ecf5" font-size="11">tag v0.4.8  ==  pubspec.yaml version:  ==  patch_notes.json</text>
+      <text x="420" y="256" fill="#f87171" font-size="11">une seule divergence → le pipeline échoue ici</text>
+
+      <path d="M540 272 L540 300" stroke="#3a4966" stroke-width="2" marker-end="url(#c21-rel-grey)"/>
+      <path d="M700 272 L700 300" stroke="#3a4966" stroke-width="2" marker-end="url(#c21-rel-grey)"/>
+
+      <rect x="404" y="304" width="240" height="74" rx="8" fill="#0f1f1a" stroke="#34d399"/>
+      <text x="420" y="326" fill="#34d399" font-size="12" font-family="ui-monospace, monospace">flutter build web</text>
+      <text x="420" y="346" fill="#e6ecf5" font-size="11">déployé sur /v0.4.8/</text>
+      <text x="420" y="364" fill="#a7b4c9" font-size="11">chaque version reste accessible</text>
+
+      <rect x="660" y="304" width="154" height="74" rx="8" fill="#0f1f1a" stroke="#34d399"/>
+      <text x="674" y="326" fill="#34d399" font-size="12" font-family="ui-monospace, monospace">build windows</text>
+      <text x="674" y="346" fill="#e6ecf5" font-size="11">pre-release</text>
+      <text x="674" y="364" fill="#e6ecf5" font-size="11">GitHub</text>
+
+      <rect x="404" y="398" width="410" height="52" rx="8" fill="#1a1220" stroke="#f87171"/>
+      <text x="420" y="420" fill="#f87171" font-size="12">En cas d'échec : « Re-run failed jobs » est sûr sur tous les jobs.</text>
+      <text x="420" y="438" fill="#a7b4c9" font-size="11">Si le tag est erroné : le supprimer, corriger, le reposer.</text>
+
+      <defs>
+        <marker id="c21-rel-grey" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#3a4966"/>
+        </marker>
+        <marker id="c21-rel-violet" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#a78bfa"/>
+        </marker>
+      </defs>
+    </svg>
+  </div>
+  <figcaption>Le pipeline de publication. Le point de contrôle central est la triple concordance
+  tag / <code>pubspec.yaml</code> / <code>patch_notes.json</code>.</figcaption>
+</figure>
+
+<h3>Ce que vérifie le pipeline</h3>
+
+<p>La règle est simple et impitoyable : <strong>trois sources doivent annoncer le même numéro de
+version</strong>.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Source</th><th>Ce qu'elle porte</th><th>Qui l'écrit</th></tr></thead>
+<tbody>
+<tr><td>Le tag Git</td><td><code>v0.4.8</code></td><td>Vous, à la main</td></tr>
+<tr><td><code>pubspec.yaml</code></td><td><code>version: 0.4.8+1</code></td>
+    <td>Le skill <code>patch-notes-writer</code></td></tr>
+<tr><td><code>assets/data/patch_notes.json</code></td><td>L'entrée la plus récente,
+    <code>"version": "0.4.8"</code></td><td>Le skill <code>patch-notes-writer</code></td></tr>
+</tbody>
+</table></div>
+
+<p>Cette redondance n'est pas de la paranoïa. Sans elle, on déploie un build web sous
+<code>/v0.4.8/</code> dont l'écran « Patch Notes » affiche fièrement les nouveautés de la 0.4.7 —
+et personne ne s'en aperçoit avant qu'un joueur le signale.</p>
+
+<div class="box"><div class="box-title">À retenir : versions web archivées</div>
+  <p>Le déploiement web est <strong>versionné par chemin</strong> : la 0.4.8 va sur
+  <code>/v0.4.8/</code>, la 0.4.7 reste sur <code>/v0.4.7/</code>. Les anciennes versions ne
+  disparaissent pas. C'est précieux pour reproduire un bug signalé sur une version précédente, ou
+  pour comparer un ressenti d'équilibrage entre deux patches.</p>
+</div>
+
+<h3>Le build Windows et la pre-release</h3>
+
+<p>En parallèle du web, le pipeline produit le build Windows
+(<code>flutter build windows</code>) et le publie comme <strong>pre-release GitHub</strong>. Le
+statut « pre-release » est cohérent avec un numéro de version en <code>0.x.y</code> : tant que la
+majeure est à 0, l'API et l'équilibrage peuvent bouger sans préavis. Le projet est en
+<code>0.4.7+1</code> à l'heure où ce chapitre est écrit.</p>
+
+<h3>Quand ça échoue</h3>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Situation</th><th>Marche à suivre</th><th>Pourquoi c'est sûr</th></tr></thead>
+<tbody>
+<tr><td>Un job échoue pour une raison passagère (réseau, runner, cache)</td>
+    <td>« <strong>Re-run failed jobs</strong> » sur tous les jobs</td>
+    <td>Le README le garantit explicitement : les jobs sont idempotents, un rejeu ne produit pas de
+    doublon ni d'état intermédiaire</td></tr>
+<tr><td>Le tag lui-même est faux (mauvais numéro, posé sur le mauvais commit)</td>
+    <td>Le supprimer, corriger, le reposer</td>
+    <td>Il faut supprimer le tag distant avant de le recréer, sinon le push est refusé</td></tr>
+</tbody>
+</table></div>
+
+<div class="code" data-lang="bash">
+  <div class="code-head"><span class="path">README.md</span><span class="lang">bash</span></div>
+  <pre>git push --delete origin v0.4.8
+# corriger pubspec.yaml / patch_notes.json, committer sur main
+git tag -d v0.4.8
+git tag v0.4.8
+git push origin v0.4.8</pre>
+</div>
+
+<div class="box warn"><div class="box-title">Piège : supprimer un tag déjà publié</div>
+  <p>Supprimer et reposer un tag est acceptable <em>tant que personne n'a rien récupéré</em>.
+  Si des joueurs ont déjà téléchargé la pre-release, le tag est devenu un point de repère public :
+  publiez plutôt une <code>0.4.9</code>. Cette manœuvre est un correctif de quelques minutes après
+  un échec de pipeline, pas une méthode de travail.</p>
+</div>
+
+<h2 id="s8">8. Dette technique et pistes d'évolution</h2>
+
+<p>Un chapitre de formation qui prétendrait que le code est parfait vous rendrait un mauvais service.
+Chaque point ci-dessous a été vérifié dans <code>/tmp/src/files/</code> : fichier, ligne, mécanisme.
+Aucun n'est un bug bloquant ; ensemble, ils décrivent l'écart normal entre un projet qui avance vite
+et un projet fini.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Constat</th><th>Fichier concerné</th><th>Impact</th><th>Effort estimé</th></tr></thead>
+<tbody>
+
+<tr><td><strong>Quatre palettes de rareté concurrentes</strong> alors que
+    <code>AppColors.rarity*</code> existe et fait autorité</td>
+    <td><code>lib/ui/theme/app_colors.dart</code> (référence) ·
+    <code>lib/ui/widgets/ui_card/ui_card_helpers.dart</code> ·
+    <code>lib/game/components/card_component.dart</code> ·
+    <code>lib/ui/screens/relic_exchange_screen.dart</code> et
+    <code>card_dictionary_screen.dart</code></td>
+    <td>Une carte légendaire est ambre <code>#FFB300</code> via <code>AppColors</code>, mais
+    <code>Colors.orangeAccent</code> dans le composant Flame et dans <code>ui_card_helpers</code>.
+    Les deux écrans de reliques dupliquent mot pour mot la même fonction
+    <code>_getRelicRarityColor</code> avec une cinquième gamme (<code>#FFCC00</code>, <code>#AF52DE</code>…)</td>
+    <td>Moyen — remplacer les 4 sources par <code>CardRarityExtension.color</code> et créer
+    l'équivalent pour <code>RelicRarity</code></td></tr>
+
+<tr><td><strong>Bonus de forge écrits en dur</strong> alors que
+    <code>ForgeUpgradeData.valueMultiplier</code> existe et vaut 2 dans le JSON</td>
+    <td><code>lib/game/services/effect_resolver.dart</code> (<code>extraDamage += 2 * k;</code> et
+    <code>extraArmor += 2 * k;</code>)</td>
+    <td>Désynchronisation silencieuse : <code>getDescription</code> calcule
+    <code>tier * valueMultiplier</code>, l'effet réel calcule <code>2 * k</code>. Passer
+    <code>sharp</code> à <code>valueMultiplier: 3</code> dans le JSON afficherait « +3 Dégâts » pour
+    un effet resté à +2</td>
+    <td>Faible — lire l'upgrade via <code>ForgeUpgradeData.getById(id)</code> et utiliser son
+    <code>valueMultiplier</code></td></tr>
+
+<tr><td><strong>Écrans dont les textes ne passent pas par <code>l10n</code></strong></td>
+    <td><code>lib/ui/screens/home_screen.dart</code> (<code>'JOUER'</code>,
+    <code>'TUTORIEL'</code>, <code>'DICTIONNAIRE'</code>, <code>'PATCH NOTES'</code>,
+    <code>'NEW'</code>) · <code>patch_notes_screen.dart</code> et <code>splash_screen.dart</code>
+    (aucune référence à <code>AppLocalizations</code>)</td>
+    <td>L'accueil reste en français quel que soit le réglage système, alors que ses dialogues
+    (<code>newGameOverwriteTitle</code>, <code>missingItemsTitle</code>) sont bien traduits. Un
+    joueur anglophone voit une interface mixte</td>
+    <td>Faible par écran, mais répétitif — ajouter les clés aux ARB et remplacer les littéraux</td></tr>
+
+<tr><td><strong>93 branchements de langue en dur</strong> à côté du système ARB</td>
+    <td>55 occurrences de <code>isFr ? … : …</code> (dont 16 dans
+    <code>lib/ui/widgets/forge/forge_slot_row.dart</code> et 16 dans
+    <code>lib/game/components/card_component.dart</code>) et 38 de
+    <code>activeLocale == 'fr'</code></td>
+    <td>Deux systèmes de traduction cohabitent. Ajouter une troisième langue obligerait à réécrire
+    93 ternaires au lieu d'ajouter un fichier ARB</td>
+    <td>Élevé — c'est le chantier de refactorisation le plus lourd de la liste</td></tr>
+
+<tr><td><strong><code>priorityCardBase</code> et <code>priorityCardTrail</code> déclarées mais
+    inutilisées</strong></td>
+    <td><code>lib/game/game_constants.dart</code> (lignes 8 et 11). Seules
+    <code>priorityCardHovered</code>, <code>priorityCardFocused</code> et
+    <code>priorityCardDraggingMax</code> sont référencées</td>
+    <td>L'échelle de z-ordre documente une intention que le code n'applique pas : la traînée
+    (<code>ribbon_trail.dart</code>) reçoit son <code>priority</code> par paramètre de constructeur,
+    valeur par défaut <code>0</code></td>
+    <td>Très faible — soit brancher les constantes, soit les supprimer (règle « pas de code mort »)</td></tr>
+
+<tr><td><strong>Plafond de 5 ennemis actifs écrit en dur</strong></td>
+    <td><code>lib/game/controllers/combat_controller.dart</code>, dans
+    <code>cleanDeadEnemies()</code> : <code>if (remainingEnemies.length &lt; 5 &amp;&amp;
+    nextPending.isNotEmpty)</code></td>
+    <td>Le 5 gouverne le nombre d'ennemis simultanés à l'écran mais ne figure pas dans
+    <code>GameConstants</code>. Il est invisible pour qui règle l'équilibrage, et non couvert par un
+    nom parlant</td>
+    <td>Très faible — extraire en <code>GameConstants.maxActiveEnemies = 5</code></td></tr>
+
+<tr><td><strong><code>weakness</code> et <code>vulnerable</code> implémentés mais jamais appliqués</strong></td>
+    <td>Calculés dans <code>lib/game/services/damage_pipeline.dart</code> (étapes 1 et 4),
+    créables par <code>EffectResolver.createStatus</code>, affichés par
+    <code>status_effects_panel.dart</code> et <code>status_indicator.dart</code></td>
+    <td>Aucune entrée d'<code>assets/data/</code> ne référence ces deux identifiants : les seuls
+    <code>statusId</code> présents dans <code>cards.json</code> sont <code>poison</code>,
+    <code>burn</code>, <code>freeze</code>, <code>shock</code>, <code>strength</code> et
+    <code>armor_regen</code>. Deux mécaniques complètes dorment</td>
+    <td>Très faible — ce n'est pas du code à écrire, c'est du contenu : ajouter une carte avec
+    <code>"statusId": "weakness"</code></td></tr>
+
+<tr><td><strong><code>lifesteal</code> créé mais lu par aucun calcul</strong></td>
+    <td>Créé par <code>PlayerStatsManager.applyLifestealBuff()</code>
+    (<code>lib/game/controllers/run/player_stats_manager.dart</code>), déclenché depuis
+    <code>heros_draft_game.dart</code> pour <code>effectType == 'lifesteal_buff'</code></td>
+    <td>Le statut apparaît dans le HUD (« Vol de Vie »), mais aucun code de soin ni
+    <code>DamagePipeline</code> ne le consulte. C'est un buff purement décoratif</td>
+    <td>Moyen — implémenter la restitution de PV dans le pipeline de dégâts du joueur</td></tr>
+
+<tr><td><strong><code>skills.json</code> sans point d'entrée</strong></td>
+    <td><code>assets/data/skills.json</code> (6 entrées), chargé dans
+    <code>gameDataLoaderProvider</code> et exposé par <code>GameDataRegistry.skills</code></td>
+    <td><code>registry.skills</code> n'est lu <strong>nulle part</strong> dans
+    <code>lib/</code>. Les compétences réellement utilisées sont les cartes de héros de
+    <code>hero_cards.json</code>, référencées par <code>HeroData.skills</code>. Trois
+    <code>effectType</code> (<code>damage_aoe</code>, <code>damage_targeted</code>,
+    <code>damage_pierce</code>) n'ont aucun consommateur. De plus <code>SkillData</code> n'a qu'un
+    champ <code>name</code>, sans <code>name_fr</code>/<code>name_en</code> — contraire à la règle
+    bilingue de <code>CLAUDE.md</code></td>
+    <td>Moyen — soit brancher un écran de compétences, soit supprimer le fichier et le modèle</td></tr>
+
+<tr><td><strong><code>bossEnemyId</code> jamais affecté</strong></td>
+    <td><code>lib/services/map/map_node_generator.dart</code> : <code>String? bossEnemyId;</code>
+    est déclaré puis passé au constructeur <code>MapNode</code> sans jamais recevoir de valeur</td>
+    <td>Le champ traverse tout le système (<code>map_node.dart</code>,
+    <code>game_screen.dart</code>, <code>combat_controller.dart</code>,
+    <code>encounter_system.dart</code>) en restant <code>null</code>. La branche « boss sur mesure »
+    de l'<code>EncounterSystem</code> est donc morte, et un test l'entérine :
+    <code>expect(bossNode.bossEnemyId, isNull)</code></td>
+    <td>Moyen — soit affecter un id de boss selon l'acte, soit retirer le champ et sa branche</td></tr>
+
+<tr><td><strong><code>SaveService.save</code> appelé sans <code>await</code></strong></td>
+    <td><code>lib/game/controllers/checkpoint_controller.dart</code>, dans le
+    <code>ref.listen</code> d'<code>autosaveOrchestratorProvider</code></td>
+    <td><code>save</code> est un <code>Future&lt;void&gt;</code> lancé sans être attendu ni gardé :
+    une exception d'écriture disparaît en <em>unhandled future error</em>, et deux
+    <code>bump()</code> rapprochés peuvent lancer deux écritures concurrentes sur la même clé
+    <code>run_save_v1</code></td>
+    <td>Faible — sérialiser les sauvegardes (file d'attente ou drapeau « en cours ») et journaliser
+    l'erreur</td></tr>
+
+<tr><td><strong><code>GameDataRegistry</code> maintient une instance statique</strong></td>
+    <td><code>lib/models/data/game_data_registry.dart</code> : <code>static GameDataRegistry?
+    _instance;</code>, affectée dans le constructeur</td>
+    <td>Nécessaire aux lookups statiques (<code>CardData.getById</code>,
+    <code>ForgeUpgradeData.getById</code>), mais c'est un état global mutable — en tension avec la
+    règle « never as global variables/singletons ». En test, construire un registre vide (comme le
+    fait <code>mockGameDataLoaderProvider</code>) remplace silencieusement le registre global pour
+    tout le reste de l'exécution</td>
+    <td>Élevé — remplacer les lookups statiques par une lecture de provider dans une quarantaine
+    d'appels</td></tr>
+
+</tbody>
+</table></div>
+
+<div class="box danger"><div class="box-title">Le pire de la liste : la désynchronisation forge</div>
+  <p>Les deux extraits qui suivent vivent dans le même dépôt et décrivent le même bonus. L'un est la
+  donnée, l'autre est la règle. Ils ne se parlent pas.</p>
+</div>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/forge_upgrade_data.dart</span><span class="lang">dart</span></div>
+  <pre>  String getDescription(int tier, String locale) {
+    final template = locale == 'fr' ? descriptionFr : descriptionEn;
+    final val = tier * valueMultiplier;
+    return template
+        .replaceAll('{tier}', tier.toString())
+        .replaceAll('{val}', val.toString());
+  }</pre>
+</div>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/services/effect_resolver.dart</span><span class="lang">dart</span></div>
+  <pre>    for (var upgrade in card.forgeUpgrades) {
+      final parts = upgrade.split(':');
+      if (parts.length != 2) continue;
+      final id = parts[0];
+      final k = int.tryParse(parts[1]) ?? 0;
+      if (k &lt;= 0) continue;
+      switch (id) {
+        case 'sharp':
+          extraDamage += 2 * k;
+          break;
+        case 'hardened':
+          extraArmor += 2 * k;
+          break;</pre>
+</div>
+
+<p>Le <code>2</code> de <code>2 * k</code> est la valeur de <code>valueMultiplier</code> de
+<code>sharp</code> et <code>hardened</code> dans <code>assets/data/forge_upgrades.json</code>,
+recopiée à la main. Aujourd'hui les deux coïncident, donc rien ne casse. Le jour où un designer
+équilibre la forge en éditant le JSON — ce que le README présente comme la bonne façon de faire —
+l'affichage bougera et l'effet non. C'est la définition même d'une dette : un coût nul maintenant,
+un coût aléatoire plus tard.</p>
+
+<div class="box danger"><div class="box-title">Point d'attention : l'autosave silencieuse</div>
+  <p>Le déclencheur d'autosauvegarde tient en cinq lignes. Repérez ce qui manque.</p>
+</div>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/checkpoint_controller.dart</span><span class="lang">dart</span></div>
+  <pre>/// Écoute checkpointProvider et déclenche une sauvegarde à chaque bump().
+/// Doit être lu une fois au démarrage de l'app pour s'activer (voir main.dart).
+final autosaveOrchestratorProvider = Provider&lt;void&gt;((ref) {
+  ref.listen&lt;int&gt;(checkpointProvider, (previous, next) {
+    SaveService.save(ref.read);
+  });
+});</pre>
+</div>
+
+<p>Il manque le <code>await</code> — ou, à défaut, un <code>.catchError(...)</code>. La signature est
+<code>static Future&lt;void&gt; save(RefReader read)</code> : on lance une opération asynchrone
+d'écriture sur <code>SharedPreferences</code> et on jette la <code>Future</code>. Tant que tout va
+bien, personne ne voit la différence. Le jour où l'écriture échoue (disque plein, permissions,
+plateforme web capricieuse), le joueur croit sa partie sauvegardée et ne l'est pas. Le callback de
+<code>ref.listen</code> étant synchrone, la correction propre consiste à passer par une méthode
+<code>async</code> dédiée qui attend et journalise.</p>
+
+<h3>Par où commencer si vous reprenez ce projet</h3>
+
+<p>Cinq pistes concrètes, classées par rapport gain / effort. Les deux premières se font en une
+soirée et rendent le reste plus facile.</p>
+
+<div class="memo">
+  <div class="card"><h5>1. Extraire les nombres magiques restants</h5>
+    <p>Le <code>5</code> de <code>cleanDeadEnemies()</code> devient
+    <code>GameConstants.maxActiveEnemies</code>, le <code>2 * k</code> d'<code>effect_resolver.dart</code>
+    devient une lecture de <code>ForgeUpgradeData.valueMultiplier</code>. Deux commits, aucun
+    changement de comportement, deux sources de désynchronisation en moins.</p></div>
+
+  <div class="card"><h5>2. Trancher sur le code mort</h5>
+    <p><code>priorityCardBase</code>, <code>priorityCardTrail</code>, <code>bossEnemyId</code>,
+    <code>skills.json</code> + <code>SkillData</code> : pour chacun, soit on le branche, soit on le
+    supprime. La règle « <em>no dead code</em> » de <code>CLAUDE.md</code> tranche déjà en cas
+    d'hésitation — git conserve l'historique.</p></div>
+
+  <div class="card"><h5>3. Unifier les couleurs de rareté</h5>
+    <p>Un seul point d'entrée : <code>CardRarityExtension.color</code> pour les cartes, un
+    <code>RelicRarityExtension.color</code> à créer pour les reliques. Supprimer les deux
+    <code>_getRelicRarityColor</code> dupliqués et faire pointer
+    <code>CardComponent.getRarityColor()</code> vers <code>AppColors</code>. Bénéfice immédiat : le
+    jeu devient cohérent visuellement, et une seule ligne suffit ensuite pour changer une teinte.</p></div>
+
+  <div class="card"><h5>4. Fiabiliser l'autosauvegarde</h5>
+    <p>Rendre l'appel attendu, sérialiser les écritures concurrentes, journaliser l'échec et — idéalement —
+    remonter un toast via <code>notificationProvider</code>. C'est le seul point de la liste qui
+    peut coûter une partie à un joueur.</p></div>
+
+  <div class="card"><h5>5. Réveiller les mécaniques dormantes</h5>
+    <p><code>weakness</code> et <code>vulnerable</code> sont déjà calculés par
+    <code>DamagePipeline</code> : il suffit d'ajouter deux cartes dans <code>cards.json</code> avec
+    le bon <code>statusId</code> pour doubler la profondeur tactique sans écrire une ligne de Dart.
+    <code>lifesteal</code> demande un peu plus : le brancher réellement sur les dégâts infligés.</p></div>
+</div>
+
+<div class="box ok"><div class="box-title">La bonne habitude à emporter</div>
+  <p>Avant chaque commit : <code>flutter test</code> puis <code>dart analyze</code>. Deux commandes,
+  moins d'une minute, et la garantie que les 42 fichiers de test et le linter sont d'accord avec
+  vous. C'est tout ce que <code>CLAUDE.md</code> exige — et c'est déjà plus que ce que font
+  beaucoup de projets.</p>
+</div>
+
+<div class="quiz">
+  <h2>Quiz — vérifiez vos acquis</h2>
+
+  <div class="q" data-answer="2">
+    <p class="q-text">1. Pourquoi <code>test/widget/map_screen_test.dart</code> définit-il un helper
+    <code>_settle()</code> au lieu d'appeler <code>tester.pumpAndSettle()</code> ?</p>
+    <ul class="q-opts">
+      <li>Parce que <code>pumpAndSettle()</code> n'existe pas pour les widgets Riverpod</li>
+      <li>Parce que le registre de données mocké met trop longtemps à se charger</li>
+      <li>Parce que l'animation de pointillés de la carte est lancée avec <code>..repeat()</code>,
+      donc <code>pumpAndSettle()</code> attendrait indéfiniment qu'elle se termine</li>
+      <li>Parce que <code>pumpAndSettle()</code> est incompatible avec
+      <code>UncontrolledProviderScope</code></li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> le commentaire du fichier le dit explicitement —
+    « <em>MapScreen's dash-line animation repeats forever, so <code>pumpAndSettle()</code> never
+    terminates here</em> ». Dans <code>lib/ui/screens/map_screen.dart</code>, le
+    <code>_dashController</code> est créé avec <code>..repeat()</code>, donc une animation est
+    toujours en cours. <code>_settle()</code> pompe une frame puis avance de 500 ms fixes.</div>
+  </div>
+
+  <div class="q" data-answer="1">
+    <p class="q-text">2. Dans <code>deck_controller_test.dart</code>, à quoi sert
+    <code>container.dispose()</code> dans le <code>tearDown</code> ?</p>
+    <ul class="q-opts">
+      <li>À écrire l'état du deck sur disque avant le test suivant</li>
+      <li>À libérer tous les providers du conteneur, pour que chaque test reparte d'un état vierge</li>
+      <li>À forcer la reconstruction de l'arbre de widgets</li>
+      <li>À annuler la surcharge de <code>deckRandomProvider</code></li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> le <code>ProviderContainer</code> créé dans
+    <code>setUp</code> détient l'instance de <code>DeckNotifier</code> et son état. Sans
+    <code>dispose()</code>, un état résiduel pourrait fuir vers le test suivant. Dans
+    <code>map_screen_test.dart</code>, le même rôle est tenu par
+    <code>addTearDown(container.dispose)</code>.</div>
+  </div>
+
+  <div class="q" data-answer="3">
+    <p class="q-text">3. Que vérifient les deux dernières lignes de
+    <code>test/unit/localization_test.dart</code>,
+    <code>expect(cardData.getName('es'), 'Strike Test')</code> et
+    <code>expect(cardData.getDescription('de'), 'Deals 6 damage.')</code> ?</p>
+    <ul class="q-opts">
+      <li>Que l'espagnol et l'allemand sont des locales supportées par le jeu</li>
+      <li>Que <code>CardData.fromJson</code> refuse les locales inconnues</li>
+      <li>Que les clés <code>name_es</code> et <code>description_de</code> sont bien lues du JSON</li>
+      <li>Que toute locale autre que <code>'fr'</code> retombe sur l'anglais, car
+      <code>getName</code> s'écrit <code>locale == 'fr' ? nameFr : nameEn</code></li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> dans
+    <code>lib/models/data/card_data.dart</code>, <code>getName</code> est un ternaire :
+    <code>locale == 'fr' ? nameFr : nameEn</code>. L'anglais n'est pas « l'autre langue », c'est le
+    repli universel. Le test garantit qu'un téléphone configuré en espagnol affiche de l'anglais
+    plutôt qu'une chaîne vide.</div>
+  </div>
+
+  <div class="q" data-answer="0">
+    <p class="q-text">4. Le pipeline de publication échoue immédiatement après le push du tag
+    <code>v0.4.8</code>. Quelle est la cause la plus probable ?</p>
+    <ul class="q-opts">
+      <li>Le tag, le champ <code>version:</code> de <code>pubspec.yaml</code> et la dernière entrée
+      de <code>patch_notes.json</code> ne concordent pas</li>
+      <li>Le build Windows n'a pas été lancé localement avant le push</li>
+      <li>Le déploiement web écrase le dossier <code>/v0.4.7/</code> existant</li>
+      <li><code>dart analyze</code> n'a pas été relancé après le tag</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> le README l'annonce : « <em>Le pipeline vérifie
+    que le tag, <code>pubspec.yaml</code> et <code>patch_notes.json</code> concordent</em> ». C'est
+    le premier contrôle. Si le tag est vraiment erroné, on le supprime
+    (<code>git push --delete origin v0.4.8</code>), on corrige et on le repose ; sinon
+    « Re-run failed jobs » est sûr sur tous les jobs.</div>
+  </div>
+
+  <div class="q" data-answer="2">
+    <p class="q-text">5. Les statuts <code>weakness</code> (−25 % de dégâts) et
+    <code>vulnerable</code> (+50 %) sont calculés dans <code>DamagePipeline.calculate</code>.
+    Pourquoi ne les voit-on jamais en jeu ?</p>
+    <ul class="q-opts">
+      <li>Parce que <code>DamagePipeline</code> n'est appelé que pour les boss</li>
+      <li>Parce que <code>EffectResolver.createStatus</code> ne sait pas les construire</li>
+      <li>Parce qu'aucune entrée d'<code>assets/data/</code> n'utilise ces
+      <code>statusId</code> : <code>cards.json</code> ne référence que <code>poison</code>,
+      <code>burn</code>, <code>freeze</code>, <code>shock</code>, <code>strength</code> et
+      <code>armor_regen</code></li>
+      <li>Parce que le HUD ne sait pas afficher d'icône pour ces deux statuts</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> toute la chaîne technique existe —
+    <code>createStatus</code> les fabrique, <code>DamagePipeline</code> les applique aux étapes 1 et
+    4, <code>status_effects_panel.dart</code> et <code>status_indicator.dart</code> les affichent.
+    Il manque uniquement du <em>contenu</em> : une carte avec
+    <code>"statusId": "weakness"</code> suffirait à réveiller la mécanique.</div>
+  </div>
+</div>
+
+<div class="pager">
+<a class="prev" href="ch20.html"><div class="dir">&#8592; Chapitre 20</div><div class="ttl">Sauvegarde, localisation et tutoriel</div></a>
+<a class="next" href="index.html"><div class="dir">Sommaire &#8594;</div><div class="ttl">Retour à la table des matières</div></a>
+</div>
+</div>
+</main>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

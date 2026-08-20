@@ -1,0 +1,2265 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Événements, repos et autel des reliques — Formation Hero's Draft</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<button class="menu-btn" aria-label="Menu">&#9776;</button>
+<div class="layout">
+<aside class="sidebar">
+  <a class="brand" href="index.html">
+    <div class="brand-title">HERO'S DRAFT</div>
+    <div class="brand-sub">Formation complète au projet Flutter</div>
+  </a>
+<nav class="nav">
+<div class="nav-part">Partie 0 — Démarrage</div>
+<a href="ch01.html"><span class="num">01</span><span>Vue d&#x27;ensemble : qu&#x27;est-ce que Hero&#x27;s Draft ?</span></a>
+<div class="nav-part">Partie 1 — Les fondations techniques</div>
+<a href="ch02.html"><span class="num">02</span><span>Dart, le langage — l&#x27;essentiel pour ce projet</span></a>
+<a href="ch03.html"><span class="num">03</span><span>Flutter — widgets, arbre et navigation</span></a>
+<a href="ch04.html"><span class="num">04</span><span>Riverpod — l&#x27;état partagé du jeu</span></a>
+<a href="ch05.html"><span class="num">05</span><span>Flame — le moteur de rendu du combat</span></a>
+<div class="nav-part">Partie 2 — L&#x27;architecture du projet</div>
+<a href="ch06.html"><span class="num">06</span><span>L&#x27;architecture en quatre couches</span></a>
+<a href="ch07.html"><span class="num">07</span><span>La couche de données : un jeu 100 % data-driven</span></a>
+<div class="nav-part">Partie 3 — Les règles du jeu</div>
+<a href="ch08.html"><span class="num">08</span><span>Le héros : stats, classes, passifs et progression</span></a>
+<a href="ch09.html"><span class="num">09</span><span>Les cartes et le deck</span></a>
+<a href="ch10.html"><span class="num">10</span><span>Le combat : boucle de tour, dégâts et effets</span></a>
+<a href="ch11.html"><span class="num">11</span><span>Les ennemis et la courbe de difficulté</span></a>
+<a href="ch12.html"><span class="num">12</span><span>La carte du monde procédurale</span></a>
+<a href="ch13.html"><span class="num">13</span><span>Les reliques et le système de déclencheurs</span></a>
+<a href="ch14.html"><span class="num">14</span><span>L&#x27;économie : or, boutique, forge et fusion</span></a>
+<a href="ch15.html"><span class="num">15</span><span>Récompenses, chance et probabilités</span></a>
+<a href="ch16.html" class="active"><span class="num">16</span><span>Événements, repos et autel des reliques</span></a>
+<div class="nav-part">Partie 4 — L&#x27;interface et le rendu</div>
+<a href="ch17.html"><span class="num">17</span><span>Le pont Flame ↔ Riverpod : l&#x27;écran de combat</span></a>
+<a href="ch18.html"><span class="num">18</span><span>Composants Flame et game feel</span></a>
+<a href="ch19.html"><span class="num">19</span><span>Écrans, navigation et design system</span></a>
+<div class="nav-part">Partie 5 — Qualité et cycle de vie</div>
+<a href="ch20.html"><span class="num">20</span><span>Sauvegarde, localisation et tutoriel</span></a>
+<a href="ch21.html"><span class="num">21</span><span>Tests, outillage, dette technique et évolutions</span></a>
+</nav>
+</aside>
+<main class="main">
+<div class="content">
+<div class="chapter-kicker">Chapitre 16</div>
+<h1>Événements, repos et autel des reliques</h1>
+<p class="lede">Trois nœuds sans combat, trois façons différentes de dépenser une ressource. Ils partagent
+un même contrat : on ne quitte pas le nœud sans avoir agi.</p>
+
+<div class="toc">
+  <div class="toc-title">Dans ce chapitre</div>
+  <ol>
+    <li><a href="#s1">Le modèle d'événement</a></li>
+    <li><a href="#s2">Les huit types d'action</a></li>
+    <li><a href="#s3">Le catalogue des 5 événements</a></li>
+    <li><a href="#s4">Les choix impossibles</a></li>
+    <li><a href="#s5">Le tirage de relique d'événement</a></li>
+    <li><a href="#s6">Le feu de camp</a></li>
+    <li><a href="#s7">L'autel des reliques</a></li>
+  </ol>
+</div>
+
+<p>Une carte de Hero's Draft n'est pas faite que de combats. Sur les huit valeurs de
+<code>MapNodeType</code>, trois désignent des nœuds où l'on ne joue aucune carte, où aucun ennemi
+n'apparaît, et où pourtant l'état de la run change de façon définitive :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/map_node.dart</span><span class="lang">dart</span></div>
+  <pre>enum MapNodeType { combat, elite, shop, rest, event, boss, relicExchange, forgeFusion }</pre>
+</div>
+
+<p>Ce chapitre traite de <code>event</code> (l'événement narratif à choix multiples),
+<code>rest</code> (le feu de camp) et <code>relicExchange</code> (l'autel des reliques). Le nœud
+<code>shop</code> a son propre chapitre, et <code>forgeFusion</code> aussi. Les trois nœuds étudiés
+ici ont un point commun structurant : <strong>ils vous obligent à faire un choix</strong>. Ce ne sont
+pas des salles de repos optionnelles où l'on passe sans rien faire — le code va jusqu'à désactiver le
+bouton « retour » du système tant que vous n'avez pas agi.</p>
+
+<p>Le routage vers les trois écrans se fait au même endroit, dans le <code>switch</code> de la carte :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/map_screen.dart</span><span class="lang">dart</span></div>
+  <pre>    Widget destination;
+    switch (node.type) {
+      // ...
+      case MapNodeType.rest:
+        destination = const RestScreen();
+        break;
+      case MapNodeType.event:
+        destination = const EventScreen();
+        break;
+      case MapNodeType.relicExchange:
+        destination = RelicExchangeScreen(node: node);
+        break;
+      // ...
+    }
+
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) =&gt; destination));</pre>
+</div>
+
+<p>Notez la différence : <code>RestScreen</code> et <code>EventScreen</code> sont des
+<code>const</code> sans paramètre — ils lisent tout ce dont ils ont besoin dans les providers.
+<code>RelicExchangeScreen</code>, lui, reçoit le <code>node</code>. Vous verrez en section 7 pourquoi :
+l'identifiant du nœud sert de graine à un tirage aléatoire déterministe.</p>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 840 330" width="840" role="img" aria-label="Les trois nœuds sans combat et leur mécanisme de verrouillage">
+      <defs>
+        <marker id="c16-a1" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#3a4966"/>
+        </marker>
+      </defs>
+
+      <text x="420" y="26" fill="#a7b4c9" font-size="13" text-anchor="middle">MapNodeType — les trois nœuds sans combat</text>
+
+      <!-- colonne 1 : event -->
+      <rect x="22" y="46" width="250" height="52" rx="8" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="147" y="70" fill="#22d3ee" font-size="14" font-family="ui-monospace, monospace" text-anchor="middle">MapNodeType.event</text>
+      <text x="147" y="88" fill="#a7b4c9" font-size="12" text-anchor="middle">EventScreen</text>
+      <path d="M147 98 L147 138" stroke="#3a4966" stroke-width="2" marker-end="url(#c16-a1)"/>
+      <rect x="22" y="144" width="250" height="70" rx="8" fill="#0e1524" stroke="#3a4966"/>
+      <text x="147" y="168" fill="#e6ecf5" font-size="12.5" text-anchor="middle">3 choix, 1 seul retenu</text>
+      <text x="147" y="188" fill="#a7b4c9" font-size="11.5" text-anchor="middle">actions typées appliquées</text>
+      <text x="147" y="205" fill="#a7b4c9" font-size="11.5" text-anchor="middle">immédiatement</text>
+      <path d="M147 214 L147 250" stroke="#3a4966" stroke-width="2" marker-end="url(#c16-a1)"/>
+      <rect x="22" y="256" width="250" height="50" rx="8" fill="#151b2b" stroke="#34d399"/>
+      <text x="147" y="277" fill="#34d399" font-size="11.5" font-family="ui-monospace, monospace" text-anchor="middle">PopScope</text>
+      <text x="147" y="294" fill="#e6ecf5" font-size="11.5" font-family="ui-monospace, monospace" text-anchor="middle">canPop: isResolved</text>
+
+      <!-- colonne 2 : rest -->
+      <rect x="295" y="46" width="250" height="52" rx="8" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="420" y="70" fill="#f59e0b" font-size="14" font-family="ui-monospace, monospace" text-anchor="middle">MapNodeType.rest</text>
+      <text x="420" y="88" fill="#a7b4c9" font-size="12" text-anchor="middle">RestScreen</text>
+      <path d="M420 98 L420 138" stroke="#3a4966" stroke-width="2" marker-end="url(#c16-a1)"/>
+      <rect x="295" y="144" width="250" height="70" rx="8" fill="#0e1524" stroke="#3a4966"/>
+      <text x="420" y="168" fill="#e6ecf5" font-size="12.5" text-anchor="middle">3 options exclusives</text>
+      <text x="420" y="188" fill="#a7b4c9" font-size="11.5" text-anchor="middle">soigner / forger / supprimer</text>
+      <text x="420" y="205" fill="#a7b4c9" font-size="11.5" text-anchor="middle">une seule est jouable</text>
+      <path d="M420 214 L420 250" stroke="#3a4966" stroke-width="2" marker-end="url(#c16-a1)"/>
+      <rect x="295" y="256" width="250" height="50" rx="8" fill="#151b2b" stroke="#34d399"/>
+      <text x="420" y="277" fill="#34d399" font-size="11.5" font-family="ui-monospace, monospace" text-anchor="middle">PopScope</text>
+      <text x="420" y="294" fill="#e6ecf5" font-size="11.5" font-family="ui-monospace, monospace" text-anchor="middle">canPop: _actionTaken</text>
+
+      <!-- colonne 3 : relicExchange -->
+      <rect x="568" y="46" width="250" height="52" rx="8" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="693" y="70" fill="#a78bfa" font-size="13" font-family="ui-monospace, monospace" text-anchor="middle">MapNodeType.relicExchange</text>
+      <text x="693" y="88" fill="#a7b4c9" font-size="12" text-anchor="middle">RelicExchangeScreen(node: node)</text>
+      <path d="M693 98 L693 138" stroke="#3a4966" stroke-width="2" marker-end="url(#c16-a1)"/>
+      <rect x="568" y="144" width="250" height="70" rx="8" fill="#0e1524" stroke="#3a4966"/>
+      <text x="693" y="168" fill="#e6ecf5" font-size="12.5" text-anchor="middle">1 offre figée par graine</text>
+      <text x="693" y="188" fill="#a7b4c9" font-size="11.5" text-anchor="middle">3 reliques sacrifiées</text>
+      <text x="693" y="205" fill="#a7b4c9" font-size="11.5" text-anchor="middle">ou aucune (bouton PARTIR)</text>
+      <path d="M693 214 L693 250" stroke="#3a4966" stroke-width="2" marker-end="url(#c16-a1)"/>
+      <rect x="568" y="256" width="250" height="50" rx="8" fill="#151b2b" stroke="#f87171"/>
+      <text x="693" y="277" fill="#f87171" font-size="11.5" font-family="ui-monospace, monospace" text-anchor="middle">aucun PopScope</text>
+      <text x="693" y="294" fill="#a7b4c9" font-size="11.5" text-anchor="middle">le verrou manque ici</text>
+    </svg>
+  </div>
+  <figcaption>Les trois nœuds et leur mécanisme de verrouillage. Deux écrans sur trois passent un
+  <code>canPop</code> à <code>ScreenScaffold</code> ; l'autel, non.</figcaption>
+</figure>
+
+<h2 id="s1">1. Le modèle d'événement</h2>
+
+<p>Un événement, dans Hero's Draft, est une donnée pure. Aucun code Dart ne décrit « L'Autel
+Mystérieux » : le fichier <span class="pill a">Données</span> <code>assets/data/events.json</code>
+contient cinq objets, et c'est tout le contenu narratif du jeu. Le modèle qui les charge tient en
+trois classes emboîtées, dans un seul fichier.</p>
+
+<div class="tree">lib/models/data/<span class="f">event_data.dart</span>
+├── <span class="d">EventData</span>       <span class="c">// un événement : titre, description, liste de choix</span>
+│   └── <span class="d">EventChoice</span>   <span class="c">// un bouton : libellé, texte de résultat, liste d'actions</span>
+│       └── <span class="d">EventAction</span> <span class="c">// une paire { type, value }</span>
+</div>
+
+<p>Cette hiérarchie est volontairement plate. Un <code>EventChoice</code> n'est pas une classe
+polymorphe avec des sous-types (<code>DamageChoice</code>, <code>GoldChoice</code>…) : c'est une
+<strong>simple liste d'actions typées</strong>. Le type est une <code>String</code>, la valeur est un
+<code>dynamic</code>. Toute la logique de dispatch se fait dans un <code>switch</code> sur cette
+chaîne, dans le contrôleur. C'est un choix de conception qui a un coût (aucune vérification au
+compile-time) et un bénéfice énorme (ajouter un événement ne demande pas une ligne de Dart).</p>
+
+<h3>L'entrée JSON complète de <code>mysterious_altar</code></h3>
+
+<p>Voici le premier événement du fichier, dans son intégralité. Lisez-le d'abord comme un designer :
+un titre, un texte d'ambiance, trois boutons, et pour chaque bouton un texte de conséquence et la
+liste des effets mécaniques.</p>
+
+<div class="code" data-lang="json">
+  <div class="code-head"><span class="path">assets/data/events.json</span><span class="lang">json</span></div>
+  <pre>  {
+    "id": "mysterious_altar",
+    "title_en": "Mysterious Altar",
+    "title_fr": "L'Autel Mystérieux",
+    "description_en": "You discover an ancient altar covered in glowing runes. A voice seems to whisper in your mind, demanding a sacrifice in exchange for power.",
+    "description_fr": "Vous découvrez un autel ancien couvert de runes rougeoyantes. Une voix semble murmurer dans votre esprit, réclamant un sacrifice en échange de puissance.",
+    "choices": [
+      {
+        "text_en": "Sacrifice your blood (-15 HP, +1 Attack)",
+        "text_fr": "Sacrifier votre sang (-15 PV, +1 Attaque)",
+        "result_text_en": "The altar absorbs your blood and a dark power courses through your veins.",
+        "result_text_fr": "L'autel absorbe votre sang et une puissance sombre parcourt vos veines.",
+        "actions": [
+          { "type": "take_damage", "value": 15 },
+          { "type": "gain_strength", "value": 1 }
+        ]
+      },
+      {
+        "text_en": "Make a gold offering (-50 Gold, +10 Max HP)",
+        "text_fr": "Faire une offrande d'or (-50 Or, +10 PV Max)",
+        "result_text_en": "The coins disappear into a slot in the altar. You feel more robust.",
+        "result_text_fr": "Les pièces disparaissent dans une fente de l'autel. Vous vous sentez plus robuste.",
+        "actions": [
+          { "type": "spend_gold", "value": 50 },
+          { "type": "gain_max_hp", "value": 10 }
+        ]
+      },
+      {
+        "text_en": "Pray and leave (Nothing)",
+        "text_fr": "Prier et partir (Rien)",
+        "result_text_en": "You mutter a quick prayer and continue on your way without incident.",
+        "result_text_fr": "Vous marmonnez une prière rapide et continuez votre chemin sans incident.",
+        "actions": []
+      }
+    ]
+  }</pre>
+</div>
+
+<p>Quatre remarques importantes sur cette structure.</p>
+
+<p><strong>1. Le bilinguisme est dans les données, pas dans les fichiers ARB.</strong> Le reste de
+l'interface passe par <code>AppLocalizations</code> (les clés <code>l10n.eventGainGold(…)</code> que
+vous verrez plus loin). Mais le <em>contenu</em> des événements — titres, descriptions, libellés de
+choix, textes de résultat — est stocké en double dans le JSON, suffixé <code>_fr</code> et
+<code>_en</code>. Il n'y a pas de troisième langue possible sans toucher au modèle.</p>
+
+<p><strong>2. Le libellé du bouton répète les effets à la main.</strong> Regardez
+<code>"text_fr": "Sacrifier votre sang (-15 PV, +1 Attaque)"</code> : la parenthèse est du texte
+libre, pas généré. Si vous changez <code>"value": 15</code> en <code>20</code> sans corriger le
+libellé, le joueur lira « -15 PV » et en prendra 20. Rien ne le détectera.</p>
+
+<p><strong>3. Le tableau <code>actions</code> peut être vide.</strong> C'est le cas du troisième
+choix. Un choix sans action reste un choix valide : il résout l'événement, affiche son texte de
+résultat, et libère le nœud. C'est le « je passe » assumé.</p>
+
+<p><strong>4. Les actions sont ordonnées et exécutées séquentiellement.</strong>
+<code>take_damage</code> puis <code>gain_strength</code> : l'ordre du tableau est l'ordre
+d'application. Sur ces cinq événements l'ordre n'a pas d'impact, mais si vous ajoutiez
+<code>{"type": "gain_max_hp", "value": 20}</code> suivi de <code>{"type": "heal", "value": 20}</code>,
+l'inverse ne donnerait pas le même résultat.</p>
+
+<h3>Le désérialiseur</h3>
+
+<p><code>EventData.fromJson</code> gère deux formats : le format bilingue actuel
+(<code>title_fr</code> / <code>title_en</code>) et un format monolingue historique
+(<code>title</code> seul). Le <code>??</code> en cascade fait toute la rétrocompatibilité :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/event_data.dart</span><span class="lang">dart</span></div>
+  <pre>class EventData {
+  final String id;
+  final String titleEn;
+  final String titleFr;
+  final String descriptionEn;
+  final String descriptionFr;
+  final List&lt;EventChoice&gt; choices;
+
+  // ...
+
+  String getTitle(String locale) =&gt; locale == 'fr' ? titleFr : titleEn;
+  String getDescription(String locale) =&gt;
+      locale == 'fr' ? descriptionFr : descriptionEn;
+
+  factory EventData.fromJson(Map&lt;String, dynamic&gt; json) {
+    final tEn = json['title_en'] as String? ?? json['title'] as String? ?? '';
+    final tFr = json['title_fr'] as String? ?? json['title'] as String? ?? '';
+    final dEn =
+        json['description_en'] as String? ??
+        json['description'] as String? ??
+        '';
+    final dFr =
+        json['description_fr'] as String? ??
+        json['description'] as String? ??
+        '';
+
+    return EventData(
+      id: json['id'] as String,
+      titleEn: tEn,
+      titleFr: tFr,
+      descriptionEn: dEn,
+      descriptionFr: dFr,
+      choices: (json['choices'] as List)
+          .map((c) =&gt; EventChoice.fromJson(c as Map&lt;String, dynamic&gt;))
+          .toList(),
+    );
+  }
+}</pre>
+</div>
+
+<p>Le sélecteur de langue est la méthode <code>getTitle(locale)</code> : une comparaison de chaîne,
+<code>locale == 'fr'</code>, avec l'anglais en défaut implicite. Même schéma pour
+<code>EventChoice.getText</code> et <code>getResultText</code>. Le <code>locale</code> vient toujours
+de <code>Localizations.localeOf(context).languageCode</code> dans les écrans.</p>
+
+<p>Le maillon terminal, <code>EventAction</code>, est d'une simplicité désarmante :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/event_data.dart</span><span class="lang">dart</span></div>
+  <pre>class EventAction {
+  final String type; // gain_gold, take_damage, heal, gain_relic
+  final dynamic value;
+
+  EventAction({required this.type, required this.value});
+
+  factory EventAction.fromJson(Map&lt;String, dynamic&gt; json) {
+    return EventAction(type: json['type'] as String, value: json['value']);
+  }
+}</pre>
+</div>
+
+<div class="box warn">
+  <div class="box-title">Piège : <code>dynamic value</code></div>
+  <p><code>value</code> n'est pas typé. Dans <code>EventController.selectChoice</code>, chaque branche
+  fait un <code>action.value as int</code> — un cast qui explose à l'exécution si le JSON contient
+  <code>"value": "15"</code> (une chaîne) ou <code>"value": 1.5</code>. En revanche
+  <code>EventChoice.isSelectable</code>, lui, est défensif : il fait
+  <code>action.value is int ? action.value as int : int.tryParse(action.value.toString()) ?? 0</code>.
+  Les deux endroits ne font donc pas les mêmes hypothèses sur les données. Un JSON avec une valeur en
+  chaîne passerait le test de sélectionnabilité et planterait à l'application.</p>
+</div>
+
+<h3>L'état et le chargement</h3>
+
+<p>Le chargement se fait avec tous les autres fichiers de données, dans le
+<code>gameDataLoaderProvider</code> : neuf <code>_loadJsonList</code> lancés en parallèle par un
+<code>Future.wait</code>, dont le cinquième est le nôtre.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/services/game_data_service.dart</span><span class="lang">dart</span></div>
+  <pre>final gameDataLoaderProvider = FutureProvider&lt;GameDataRegistry&gt;((ref) async {
+  final List&lt;List&lt;dynamic&gt;&gt; results = await Future.wait([
+    _loadJsonList('assets/data/enemies.json'),
+    // ...
+    _loadJsonList('assets/data/events.json'),
+    // ...
+  ]);
+
+  final eventsList = results[4];
+  // ...
+
+  return GameDataRegistry(
+    // ...
+    events: _mapList(eventsList, EventData.fromJson, 'EventData'),
+    // ...
+  );
+});</pre>
+</div>
+
+<p>Côté état de jeu, un événement en cours tient dans trois champs. <span class="pill r">Riverpod</span>
+<code>EventState</code> est immuable, comme tous les états du projet :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/event_state.dart</span><span class="lang">dart</span></div>
+  <pre>class EventState {
+  final EventData? activeEvent;
+  final EventChoice? selectedChoice;
+  final bool isResolved;
+
+  const EventState({
+    this.activeEvent,
+    this.selectedChoice,
+    this.isResolved = false,
+  });
+
+  EventState copyWith({
+    EventData? activeEvent,
+    EventChoice? selectedChoice,
+    bool? isResolved,
+    bool clearSelectedChoice = false,
+  }) {
+    return EventState(
+      activeEvent: activeEvent ?? this.activeEvent,
+      selectedChoice: clearSelectedChoice
+          ? null
+          : (selectedChoice ?? this.selectedChoice),
+      isResolved: isResolved ?? this.isResolved,
+    );
+  }
+}</pre>
+</div>
+
+<p>Le drapeau <code>clearSelectedChoice</code> est le motif habituel du projet pour « remettre à
+<code>null</code> » un champ nullable : sans lui, <code>selectedChoice: null</code> serait indiscernable
+de « ne change pas ce champ », puisque <code>null ?? this.selectedChoice</code> renvoie l'ancienne
+valeur. Ce drapeau n'est en fait jamais utilisé par <code>EventController</code>, qui reconstruit
+toujours un <code>EventState</code> complet quand il repart de zéro.</p>
+
+<p>Et l'entrée dans l'écran déclenche un tirage uniforme parmi les cinq événements disponibles :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/event_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Sélectionne un événement aléatoire parmi la liste disponible
+  void initializeEvent(List&lt;EventData&gt; events) {
+    if (events.isEmpty) {
+      state = const EventState(
+        activeEvent: null,
+        selectedChoice: null,
+        isResolved: false,
+      );
+      return;
+    }
+
+    final random = Random();
+    final chosen = events[random.nextInt(events.length)];
+    state = EventState(
+      activeEvent: chosen,
+      selectedChoice: null,
+      isResolved: false,
+    );
+  }
+
+  /// Initialise un événement spécifique (utile pour les tests unitaires)
+  void setEvent(EventData event) { /* ... */ }</pre>
+</div>
+
+<div class="box rule">
+  <div class="box-title">Règle du jeu</div>
+  <p>Le tirage est <strong>uniforme et sans mémoire</strong> : <code>random.nextInt(events.length)</code>
+  sur les 5 événements, soit 20 % chacun, à chaque nœud <code>event</code>. Rien n'empêche le même
+  événement de tomber deux fois d'affilée, et aucun événement n'est « consommé » après avoir été vu.</p>
+</div>
+
+<p>L'appel est fait depuis <code>initState</code>, mais différé d'une microtask :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/event_screen.dart</span><span class="lang">dart</span></div>
+  <pre>  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      final gameData = ref.read(gameDataLoaderProvider).requireValue;
+      ref.read(eventProvider.notifier).initializeEvent(gameData.events);
+    });
+  }</pre>
+</div>
+
+<div class="box ok">
+  <div class="box-title">Bonne pratique</div>
+  <p>Modifier un provider directement dans <code>initState</code> lèverait une assertion Riverpod :
+  on ne peut pas notifier des listeners pendant la construction de l'arbre. Le
+  <code>Future.microtask</code> repousse l'appel juste après la première frame, quand l'arbre est
+  stable. C'est le motif standard pour « initialiser un état au montage d'un écran ».</p>
+</div>
+
+<h2 id="s2">2. Les huit types d'action</h2>
+
+<p>Toute la mécanique des événements passe par un unique <code>switch</code> sur
+<code>action.type</code>, dans <code>EventController.selectChoice</code>. Sept chaînes y sont
+reconnues ; un huitième cas — la liste d'actions vide — n'entre jamais dans la boucle.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/event_controller.dart</span><span class="lang">dart</span></div>
+  <pre>    state = state.copyWith(selectedChoice: choice, isResolved: true);
+
+    RelicData? chosenRelic;
+    final runController = ref.read(runProvider.notifier);
+    final inventoryController = ref.read(inventoryProvider.notifier);
+
+    for (var action in choice.actions) {
+      switch (action.type) {
+        case 'gain_gold':
+          inventoryController.gainGold(action.value as int);
+          break;
+        case 'spend_gold':
+          inventoryController.spendGold(action.value as int);
+          break;
+        case 'take_damage':
+          runController.takeDamage(action.value as int);
+          break;
+        case 'heal':
+          runController.heal(action.value as int);
+          break;
+        case 'gain_max_hp':
+          runController.applyHeroStatModifier(maxPvAcc: action.value as int);
+          break;
+        case 'gain_strength':
+          runController.applyHeroStatModifier(attackAcc: action.value as int);
+          break;
+        case 'gain_relic':
+          // bloc de tirage détaillé en section 5
+          break;
+      }
+    }
+
+    return chosenRelic;</pre>
+</div>
+
+<p>Remarquez la première ligne : <code>isResolved</code> passe à <code>true</code>
+<strong>avant</strong> que la moindre action soit appliquée. Si un cast échouait au milieu de la
+boucle, l'événement serait déjà marqué résolu avec des effets partiellement appliqués.</p>
+
+<div class="table-wrap"><table>
+<thead><tr>
+  <th><code>type</code></th>
+  <th>Valeurs présentes dans <code>events.json</code></th>
+  <th>Méthode appelée dans <code>selectChoice</code></th>
+  <th>Effet exact sur l'état</th>
+</tr></thead>
+<tbody>
+<tr>
+  <td><code>gain_gold</code></td>
+  <td>15, 50, 100</td>
+  <td><code>inventoryController.gainGold(value)</code></td>
+  <td><code>gold = gold + value</code>. Aucun plafond, aucune vérification.</td>
+</tr>
+<tr>
+  <td><code>spend_gold</code></td>
+  <td>20, 25, 40, 50</td>
+  <td><code>inventoryController.spendGold(value)</code></td>
+  <td>Retourne <code>false</code> et ne fait rien si <code>gold &lt; value</code> ; sinon
+      <code>gold = gold - value</code>. <strong>La valeur de retour est ignorée.</strong></td>
+</tr>
+<tr>
+  <td><code>take_damage</code></td>
+  <td>10, 12, 15, 18</td>
+  <td><code>runController.takeDamage(value)</code></td>
+  <td>Passe par <code>EntityStats.takeDamage</code> : l'armure absorbe d'abord, puis les PV, avec
+      <code>if (newPv &lt; 0) newPv = 0</code>. Hors combat l'armure vaut 0 (remise à zéro dans
+      <code>completeCurrentNode</code>), donc les dégâts vont intégralement aux PV.</td>
+</tr>
+<tr>
+  <td><code>heal</code></td>
+  <td>15, 25, 30</td>
+  <td><code>runController.heal(value)</code></td>
+  <td><code>currentPv = (currentPv + value).clamp(0, maxPv)</code>. Le surplus est perdu.</td>
+</tr>
+<tr>
+  <td><code>gain_max_hp</code></td>
+  <td>−12, 8, 10</td>
+  <td><code>runController.applyHeroStatModifier(maxPvAcc: value)</code></td>
+  <td><code>maxPv += value</code>, puis
+      <code>currentPv = (currentPv + (value &gt; 0 ? value : 0)).clamp(0, newMaxPv)</code>.
+      Un gain soigne d'autant ; une perte ne retire pas de PV courants mais les rabote par le
+      <code>clamp</code> si l'on était trop haut.</td>
+</tr>
+<tr>
+  <td><code>gain_strength</code></td>
+  <td>1</td>
+  <td><code>runController.applyHeroStatModifier(attackAcc: value)</code></td>
+  <td><code>attaque = attaque + value</code>, définitivement pour la run.</td>
+</tr>
+<tr>
+  <td><code>gain_relic</code></td>
+  <td>1</td>
+  <td>Bloc de tirage interne (voir section 5)</td>
+  <td>Tire une rareté, filtre le catalogue, choisit une relique, appelle
+      <code>inventoryController.addRelic</code>. <strong>La <code>value</code> n'est jamais lue :</strong>
+      <code>"value": 1</code> ou <code>"value": 3</code> donnent une seule relique.</td>
+</tr>
+<tr>
+  <td><em>liste vide</em> <code>[]</code></td>
+  <td>—</td>
+  <td>Aucune : la boucle <code>for</code> ne s'exécute pas</td>
+  <td><code>isResolved</code> passe à <code>true</code>, <code>selectedChoice</code> est mémorisé,
+      l'écran affiche le badge « Aucun effet » (<code>_buildNoEffectBadge</code>) et le bouton
+      CONTINUER.</td>
+</tr>
+</tbody>
+</table></div>
+
+<h3>Le cas <code>gain_max_hp</code> négatif</h3>
+
+<p>C'est le seul type dont la valeur peut être négative dans les données. Le choix « Purifier son
+esprit » de la Fontaine Bénie retire <strong>12 PV maximum</strong> en échange de +1 attaque :</p>
+
+<div class="code" data-lang="json">
+  <div class="code-head"><span class="path">assets/data/events.json</span><span class="lang">json</span></div>
+  <pre>      {
+        "text_en": "Purify your mind (-12 Max HP, +1 Attack)",
+        "text_fr": "Purifier son esprit (-12 PV Max, +1 Attaque)",
+        "result_text_en": "You plunge your head into the fountain. The pain is intense, but your mind becomes incredibly sharp.",
+        "result_text_fr": "Vous plongez votre tête dans la fontaine. La douleur est vive, mais votre esprit devient incroyablement aiguisé.",
+        "actions": [
+          { "type": "gain_max_hp", "value": -12 },
+          { "type": "gain_strength", "value": 1 }
+        ]
+      }</pre>
+</div>
+
+<p>Voici pourquoi le signe change tout, dans <code>applyHeroStatModifier</code> :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run/player_stats_manager.dart</span><span class="lang">dart</span></div>
+  <pre>  void applyHeroStatModifier({
+    int maxPvAcc = 0,
+    int attackAcc = 0,
+    // ...
+  }) {
+    final currentStats = controller.currentState.heroStats;
+    final newMaxPv = currentStats.maxPv + maxPvAcc;
+    final newCurrentPv =
+        (currentStats.currentPv + (maxPvAcc &gt; 0 ? maxPvAcc : 0)).clamp(
+          0,
+          newMaxPv,
+        );
+    // ...
+  }</pre>
+</div>
+
+<p>Le ternaire <code>(maxPvAcc &gt; 0 ? maxPvAcc : 0)</code> est le cœur de la mécanique. Déroulons les
+deux sens avec un Paladin (100 PV max) :</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Situation</th><th>Avant</th><th>Calcul</th><th>Après</th></tr></thead>
+<tbody>
+<tr><td><code>gain_max_hp: +10</code>, hérso blessé</td><td>60 / 100</td>
+    <td><code>newMaxPv = 110</code> ; <code>(60 + 10).clamp(0, 110)</code></td><td>70 / 110</td></tr>
+<tr><td><code>gain_max_hp: +10</code>, héros intact</td><td>100 / 100</td>
+    <td><code>newMaxPv = 110</code> ; <code>(100 + 10).clamp(0, 110)</code></td><td>110 / 110</td></tr>
+<tr><td><code>gain_max_hp: -12</code>, héros blessé</td><td>60 / 100</td>
+    <td><code>newMaxPv = 88</code> ; <code>(60 + 0).clamp(0, 88)</code></td><td>60 / 88</td></tr>
+<tr><td><code>gain_max_hp: -12</code>, héros intact</td><td>100 / 100</td>
+    <td><code>newMaxPv = 88</code> ; <code>(100 + 0).clamp(0, 88)</code></td><td>88 / 88</td></tr>
+</tbody>
+</table></div>
+
+<div class="box rule">
+  <div class="box-title">Règle du jeu</div>
+  <p>Un <code>gain_max_hp</code> positif <strong>soigne également</strong> du même montant : +10 PV max
+  vaut +10 PV max <em>et</em> +10 PV courants. À l'inverse, un <code>gain_max_hp</code> négatif ne retire
+  jamais de PV courants directement — mais le <code>clamp</code> final vous rabote si vous dépassiez le
+  nouveau maximum. Un héros à pleine vie perd donc bien 12 PV effectifs à la Fontaine ; un héros à
+  60/100 n'en perd aucun.</p>
+</div>
+
+<h3>Le cas par défaut : les types inconnus</h3>
+
+<p>Le <code>switch</code> du contrôleur n'a pas de <code>default</code> : un type inconnu est
+silencieusement ignoré. L'interface, elle, en a un — et l'affiche brut :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/event_screen.dart</span><span class="lang">dart</span></div>
+  <pre>      case 'gain_relic':
+        icon = Icons.auto_awesome;
+        iconColor = Colors.purpleAccent;
+        textColor = Colors.purpleAccent;
+        bgColor = Colors.purple.withValues(alpha: 0.12);
+        text = l10n.eventGainRelic;
+        break;
+      default:
+        icon = Icons.help_outline;
+        iconColor = Colors.white54;
+        textColor = Colors.white70;
+        bgColor = Colors.white.withAlpha(15);
+        text = '${action.type}: ${action.value}';</pre>
+</div>
+
+<div class="box warn">
+  <div class="box-title">Piège de débutant</div>
+  <p>Si vous ajoutez <code>{"type": "gain_luck", "value": 1}</code> dans <code>events.json</code>, le
+  jeu ne plantera pas et ne vous préviendra pas. Le badge affichera littéralement
+  <code>gain_luck: 1</code> avec une icône de point d'interrogation, et le contrôleur n'appliquera
+  <strong>rien</strong>. C'est le prix des types en <code>String</code> : le compilateur ne peut pas
+  vous aider. Ajoutez toujours le <code>case</code> dans <code>selectChoice</code> <em>et</em> dans les
+  deux méthodes de badge (<code>_buildActionBadge</code> et <code>_buildCompactActionBadge</code>).</p>
+</div>
+
+<h2 id="s3">3. Le catalogue des 5 événements</h2>
+
+<p>Cinq événements, trois choix chacun : quinze branches en tout. Les tableaux qui suivent donnent le
+libellé français exact tel qu'il apparaît sur le bouton, et la liste chiffrée des actions telle qu'elle
+est écrite dans le JSON.</p>
+
+<h3>1. L'Autel Mystérieux — <code>mysterious_altar</code></h3>
+
+<p>Un autel qui réclame un sacrifice. C'est le seul événement du jeu qui propose une sortie
+strictement neutre.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Libellé du choix (FR)</th><th>Actions</th><th>Bilan</th></tr></thead>
+<tbody>
+<tr><td>Sacrifier votre sang (-15 PV, +1 Attaque)</td>
+    <td><code>take_damage 15</code> → <code>gain_strength 1</code></td>
+    <td>−15 PV courants, +1 attaque permanente</td></tr>
+<tr><td>Faire une offrande d'or (-50 Or, +10 PV Max)</td>
+    <td><code>spend_gold 50</code> → <code>gain_max_hp 10</code></td>
+    <td>−50 or, +10 PV max <em>et</em> +10 PV courants</td></tr>
+<tr><td>Prier et partir (Rien)</td>
+    <td><code>[]</code></td>
+    <td>Aucun effet — badge « Aucun effet »</td></tr>
+</tbody>
+</table></div>
+
+<h3>2. Le Marchand Fugitif — <code>goblin_merchant</code></h3>
+
+<p>Un gobelin poursuivi. Deux des trois choix donnent une relique : c'est l'événement le plus généreux
+du catalogue, et le seul où deux branches sur trois passent par le tirage de la section 5.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Libellé du choix (FR)</th><th>Actions</th><th>Bilan</th></tr></thead>
+<tbody>
+<tr><td>Acheter une relique mystérieuse (-40 Or, +1 Relique)</td>
+    <td><code>spend_gold 40</code> → <code>gain_relic 1</code></td>
+    <td>−40 or, 1 relique tirée au sort</td></tr>
+<tr><td>Voler le gobelin (+50 Or, -12 PV)</td>
+    <td><code>gain_gold 50</code> → <code>take_damage 12</code></td>
+    <td>+50 or, −12 PV courants</td></tr>
+<tr><td>L'aider à se cacher (-15 PV, +1 Relique)</td>
+    <td><code>take_damage 15</code> → <code>gain_relic 1</code></td>
+    <td>−15 PV courants, 1 relique tirée au sort</td></tr>
+</tbody>
+</table></div>
+
+<h3>3. La Fontaine Bénie — <code>blessed_fountain</code></h3>
+
+<p>Le seul événement du jeu qui peut <strong>réduire</strong> une statistique maximale.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Libellé du choix (FR)</th><th>Actions</th><th>Bilan</th></tr></thead>
+<tbody>
+<tr><td>Boire l'eau bénie (+25 PV)</td>
+    <td><code>heal 25</code></td>
+    <td>+25 PV courants, plafonnés à <code>maxPv</code></td></tr>
+<tr><td>Purifier son esprit (-12 PV Max, +1 Attaque)</td>
+    <td><code>gain_max_hp -12</code> → <code>gain_strength 1</code></td>
+    <td>−12 PV max, +1 attaque permanente</td></tr>
+<tr><td>Jeter une pièce dans la fontaine (-20 Or, +8 PV Max)</td>
+    <td><code>spend_gold 20</code> → <code>gain_max_hp 8</code></td>
+    <td>−20 or, +8 PV max <em>et</em> +8 PV courants</td></tr>
+</tbody>
+</table></div>
+
+<h3>4. Le Tombeau Oublié — <code>forgotten_tomb</code></h3>
+
+<p>Le plus gros gain d'or unique du jeu hors combat : 100 pièces. Et le seul événement dont les trois
+branches sont toutes « sûres » au sens de <code>isSelectable</code> — aucune ne coûte d'or.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Libellé du choix (FR)</th><th>Actions</th><th>Bilan</th></tr></thead>
+<tbody>
+<tr><td>Piller le sarcophage (+100 Or, -18 PV)</td>
+    <td><code>gain_gold 100</code> → <code>take_damage 18</code></td>
+    <td>+100 or, −18 PV courants</td></tr>
+<tr><td>Inspecter les gravures murales (+10 PV Max)</td>
+    <td><code>gain_max_hp 10</code></td>
+    <td>+10 PV max <em>et</em> +10 PV courants</td></tr>
+<tr><td>Respecter le repos des morts (+15 Or)</td>
+    <td><code>gain_gold 15</code></td>
+    <td>+15 or, aucun coût</td></tr>
+</tbody>
+</table></div>
+
+<h3>5. Le Feu de Camp Abandonné — <code>abandoned_camp</code></h3>
+
+<p>À ne pas confondre avec le nœud <code>rest</code> de la section 6 : c'est un événement ordinaire qui
+emprunte le décor du feu de camp. Il n'offre ni forge ni suppression de carte.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Libellé du choix (FR)</th><th>Actions</th><th>Bilan</th></tr></thead>
+<tbody>
+<tr><td>Fouiller les sacs restants (-10 PV, +1 Relique)</td>
+    <td><code>take_damage 10</code> → <code>gain_relic 1</code></td>
+    <td>−10 PV courants, 1 relique tirée au sort</td></tr>
+<tr><td>Se reposer près du feu (+15 PV)</td>
+    <td><code>heal 15</code></td>
+    <td>+15 PV courants</td></tr>
+<tr><td>Consommer les provisions abandonnées (-25 Or, +30 PV)</td>
+    <td><code>spend_gold 25</code> → <code>heal 30</code></td>
+    <td>−25 or, +30 PV courants</td></tr>
+</tbody>
+</table></div>
+
+<div class="box">
+  <div class="box-title">À retenir — la géographie du catalogue</div>
+  <p>Sur 15 choix : 3 donnent une relique, 5 coûtent des PV courants (10 à 18), 4 coûtent de l'or
+  (20 à 50), 3 rendent des PV (15, 25, 30), 4 touchent aux PV max (−12, +8, +10, +10), 2 donnent
+  +1 attaque, 3 donnent de l'or (15, 50, 100) et 1 seul ne fait strictement rien. Les PV maximum ne
+  bougent que dans deux événements sur cinq, et l'attaque non plus.</p>
+</div>
+
+<h2 id="s4">4. Les choix impossibles</h2>
+
+<p>Un choix qui coûte 50 or n'a pas de sens si le joueur en a 30. Un choix qui inflige 15 dégâts à un
+héros qui a 12 PV le tuerait sur un nœud sans combat — ce qui n'est pas l'expérience visée. Une seule
+méthode répond à ces trois questions : <code>EventChoice.isSelectable</code>.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/event_data.dart</span><span class="lang">dart</span></div>
+  <pre>  bool isSelectable(int currentHp, int currentGold, int currentMaxHp) {
+    for (final action in actions) {
+      if (action.type == 'take_damage') {
+        final damage = action.value is int
+            ? action.value as int
+            : int.tryParse(action.value.toString()) ?? 0;
+        if (currentHp &lt;= damage) {
+          return false;
+        }
+      } else if (action.type == 'spend_gold') {
+        final cost = action.value is int
+            ? action.value as int
+            : int.tryParse(action.value.toString()) ?? 0;
+        if (currentGold &lt; cost) {
+          return false;
+        }
+      } else if (action.type == 'gain_max_hp') {
+        final val = action.value is int
+            ? action.value as int
+            : int.tryParse(action.value.toString()) ?? 0;
+        if (val &lt; 0 &amp;&amp; currentMaxHp &lt;= -val) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }</pre>
+</div>
+
+<p>Trois règles, et trois seulement. Notez l'asymétrie des comparateurs — elle n'est pas accidentelle.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Règle</th><th>Test exact</th><th>Interprétation</th><th>Exemple concret</th></tr></thead>
+<tbody>
+<tr>
+  <td>Dégâts mortels</td>
+  <td><code>currentHp &lt;= damage</code> → interdit</td>
+  <td>Il faut survivre <strong>strictement</strong>. Un choix qui vous laisserait à 0 PV est bloqué,
+      pas seulement celui qui vous tuerait.</td>
+  <td>« Piller le sarcophage » (−18 PV) est grisé dès que vous avez 18 PV ou moins. Il faut 19 PV pour
+      cliquer.</td>
+</tr>
+<tr>
+  <td>Or insuffisant</td>
+  <td><code>currentGold &lt; cost</code> → interdit</td>
+  <td>Comparateur strict : payer exactement tout son or est <strong>autorisé</strong>.</td>
+  <td>« Faire une offrande d'or » (−50 or) est jouable avec exactement 50 or, et vous laisse à 0.</td>
+</tr>
+<tr>
+  <td>Perte de PV max fatale</td>
+  <td><code>val &lt; 0 &amp;&amp; currentMaxHp &lt;= -val</code> → interdit</td>
+  <td>Même logique que les dégâts : le PV max résultant doit rester strictement positif.</td>
+  <td>« Purifier son esprit » (−12 PV max) est grisé si <code>maxPv &lt;= 12</code>. Il faut 13 PV max
+      pour cliquer.</td>
+</tr>
+</tbody>
+</table></div>
+
+<div class="box rule">
+  <div class="box-title">Règle du jeu</div>
+  <p>Aucun choix d'événement ne peut vous tuer ni vous laisser à 0 PV. Aucun ne peut vous laisser avec
+  0 PV max. En revanche, un choix peut vous vider entièrement votre or : payer 50 avec exactement 50
+  passe. La ressource « or » est traitée différemment de la ressource « vie ».</p>
+</div>
+
+<h3>Du booléen au bouton grisé</h3>
+
+<p>L'écran appelle <code>isSelectable</code> pour chaque choix, à chaque reconstruction, avec les
+valeurs lues dans les providers :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/event_screen.dart</span><span class="lang">dart</span></div>
+  <pre>            if (!eventState.isResolved)
+              ...activeEvent.choices.map(
+                (choice) {
+                  final isSelectable = choice.isSelectable(currentPv, gold, maxPv);
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _EventOptionButton(
+                      text: choice.getText(locale),
+                      onPressed: isSelectable ? () =&gt; _handleChoice(choice) : null,
+                      badges: choice.actions
+                          .map((action) =&gt; _buildCompactActionBadge(context, action))
+                          .toList(),
+                    ),
+                  );
+                },
+              )
+            else
+              _EventOptionButton(
+                text: locale == 'fr' ? 'CONTINUER' : 'CONTINUE',
+                onPressed: _leave,
+                highlight: true,
+              ),</pre>
+</div>
+
+<p>Le mécanisme est le plus idiomatique qui soit en Flutter : <strong>on ne désactive pas un bouton,
+on lui passe <code>onPressed: null</code></strong>. Un <code>ElevatedButton</code> dont
+<code>onPressed</code> est <code>null</code> se désactive tout seul — il ignore les taps, change de
+couleur et perd son effet de ripple. Le widget interne <code>_EventOptionButton</code> lit ce
+<code>null</code> et en déduit toute son apparence :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/event_screen.dart</span><span class="lang">dart</span></div>
+  <pre>  @override
+  Widget build(BuildContext context) {
+    final bool isEnabled = onPressed != null;
+
+    // Détermination des couleurs selon l'état
+    final Color bgColor = isEnabled
+        ? (highlight ? Colors.white12 : Colors.black45)
+        : Colors.black.withValues(alpha: 0.2);
+    final Color borderColor = isEnabled
+        ? (highlight ? Colors.blueAccent : Colors.white24)
+        : Colors.white10;
+    final Color textColor = isEnabled
+        ? Colors.white
+        : Colors.white38;
+
+    return Opacity(
+      opacity: isEnabled ? 1.0 : 0.55,
+      child: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: bgColor,
+            foregroundColor: textColor,
+            disabledBackgroundColor: bgColor,
+            disabledForegroundColor: textColor,
+            // ...
+            elevation: isEnabled ? 4 : 0,</pre>
+</div>
+
+<p>Quatre signaux visuels cumulés pour dire « non » : une <strong>opacité de 0,55</strong> sur tout le
+bouton, un fond plus sombre, une bordure presque invisible (<code>Colors.white10</code>) et une
+élévation ramenée à 0 (le bouton perd son ombre portée, donc son relief). Les badges chiffrés restent
+affichés : le joueur voit toujours ce qu'il rate.</p>
+
+<div class="box ok">
+  <div class="box-title">Bonne pratique</div>
+  <p>Les <code>disabledBackgroundColor</code> et <code>disabledForegroundColor</code> sont explicitement
+  fixés aux mêmes valeurs que les couleurs actives calculées. Sans cela, Material appliquerait ses
+  propres teintes grises par-dessus le thème sombre et le bouton deviendrait illisible. C'est le genre
+  de détail qu'on découvre en testant, pas en lisant la doc.</p>
+</div>
+
+<h3>Le verrou de sortie</h3>
+
+<p>Griser un bouton empêche un mauvais choix. Il reste à empêcher <em>l'absence</em> de choix : le
+joueur pourrait balayer vers l'arrière (Android), appuyer sur Échap, ou utiliser le bouton retour du
+navigateur en build web, et repartir sans avoir rien décidé. Le nœud ne serait pas complété et
+resterait cliquable — le joueur pourrait retirer un nouvel événement au hasard, indéfiniment.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/event_screen.dart</span><span class="lang">dart</span></div>
+  <pre>    return ScreenScaffold(
+      backgroundType: ScreenBackgroundType.dark,
+      canPop: eventState.isResolved,
+      body: Padding(
+        // ...</pre>
+</div>
+
+<p><code>ScreenScaffold</code> est le gabarit d'écran maison du projet. Il n'enveloppe dans un
+<code>PopScope</code> que si on lui donne une raison de le faire :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/screen_scaffold.dart</span><span class="lang">dart</span></div>
+  <pre>    Widget mainWidget = Scaffold(
+      backgroundColor: backgroundColor,
+      appBar: appBar,
+      body: scaffoldBody,
+    );
+
+    if (canPop != null || onPopInvokedWithResult != null) {
+      mainWidget = PopScope(
+        canPop: canPop ?? true,
+        onPopInvokedWithResult: onPopInvokedWithResult,
+        child: mainWidget,
+      );
+    }
+
+    return mainWidget;</pre>
+</div>
+
+<p><span class="pill g">Flutter</span> <code>PopScope</code> est le widget qui intercepte les
+tentatives de fermeture de route. Avec <code>canPop: false</code>, le geste de retour système est
+purement et simplement ignoré. Ici <code>canPop</code> vaut <code>eventState.isResolved</code> : tant
+que le joueur n'a pas cliqué un choix, la porte est fermée. Dès qu'il a cliqué,
+<code>isResolved</code> passe à <code>true</code>, l'écran se reconstruit, le <code>PopScope</code>
+laisse passer — et de toute façon le bouton CONTINUER prend le relais :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/event_screen.dart</span><span class="lang">dart</span></div>
+  <pre>  void _leave() {
+    ref.read(runProvider.notifier).completeCurrentNode();
+    Navigator.of(context).pop();
+  }</pre>
+</div>
+
+<div class="box warn">
+  <div class="box-title">Piège : <code>canPop</code> n'est pas une garantie de logique métier</div>
+  <p><code>PopScope</code> bloque le geste de retour, pas le chemin normal. C'est
+  <code>_leave()</code> qui appelle <code>completeCurrentNode()</code> — si vous ajoutiez une autre
+  sortie à l'écran sans passer par <code>_leave</code>, le nœud resterait non complété malgré le
+  <code>PopScope</code>. Le verrou et la complétion sont deux mécanismes distincts qui doivent rester
+  cohérents à la main.</p>
+</div>
+
+<div class="box danger">
+  <div class="box-title">Point d'attention : la garde est dans l'UI, pas dans le contrôleur</div>
+  <p><code>isSelectable</code> est appelé exclusivement depuis <code>event_screen.dart</code>.
+  <code>EventController.selectChoice</code>, lui, n'en sait rien : il applique les actions sans
+  vérifier quoi que ce soit. Un appel direct à <code>selectChoice</code> avec un choix à
+  <code>spend_gold 50</code> sur un joueur qui a 10 or ferait échouer silencieusement
+  <code>spendGold</code> (qui retourne <code>false</code>, valeur ignorée) — et appliquerait quand même
+  le <code>gain_max_hp 10</code> qui suit. Le joueur obtiendrait le bonus gratuitement. Le jour où un
+  deuxième écran, un test ou une relique appellera <code>selectChoice</code>, il faudra remonter la
+  garde dans le contrôleur.</p>
+</div>
+
+<h2 id="s5">5. Le tirage de relique d'événement</h2>
+
+<p>Trois des quinze choix contiennent <code>gain_relic</code>. Ce cas est de loin le plus long du
+<code>switch</code>, parce qu'il embarque un tirage de rareté complet.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/event_controller.dart</span><span class="lang">dart</span></div>
+  <pre>        case 'gain_relic':
+          if (allRelics.isNotEmpty) {
+            final luck = runController.currentState.heroStats.luck;
+            final double roll = mockRoll ?? (Random().nextDouble() * 100);
+
+            final double legChance = 1.0 + luck * 0.5;
+            final double epicChance = 5.0 + luck * 1.0;
+            final double rareChance = 14.0 + luck * 2.0;
+            final double uncommonChance = 20.0 + luck * 3.0;
+
+            RelicRarity rarity;
+            double currentRoll = roll;
+
+            if (currentRoll &lt; legChance) {
+              rarity = RelicRarity.legendary;
+            } else {
+              currentRoll -= legChance;
+              if (currentRoll &lt; epicChance) {
+                rarity = RelicRarity.epic;
+              } else {
+                currentRoll -= epicChance;
+                if (currentRoll &lt; rareChance) {
+                  rarity = RelicRarity.rare;
+                } else {
+                  currentRoll -= rareChance;
+                  if (currentRoll &lt; uncommonChance) {
+                    rarity = RelicRarity.uncommon;
+                  } else {
+                    rarity = RelicRarity.common;
+                  }
+                }
+              }
+            }</pre>
+</div>
+
+<h3>Les quatre pentes</h3>
+
+<p>Les quatre constantes sont exactement celles du butin de relique standard (celui d'un nœud
+<code>elite</code>). Chacune est une droite affine en <code>luck</code>, la statistique de chance du
+héros :</p>
+
+<div class="table-wrap"><table>
+<thead><tr>
+  <th>Rareté</th><th>Formule</th><th>Pente par point de <code>luck</code></th>
+  <th>À <code>luck</code> = 0</th><th>À <code>luck</code> = 3</th>
+</tr></thead>
+<tbody>
+<tr><td>Légendaire</td><td><code>1.0 + 0.5 × L</code></td><td>+0,5 pt</td><td>1,0 %</td><td>2,5 %</td></tr>
+<tr><td>Épique</td><td><code>5.0 + 1.0 × L</code></td><td>+1 pt</td><td>5,0 %</td><td>8,0 %</td></tr>
+<tr><td>Rare</td><td><code>14.0 + 2.0 × L</code></td><td>+2 pts</td><td>14,0 %</td><td>20,0 %</td></tr>
+<tr><td>Peu commun</td><td><code>20.0 + 3.0 × L</code></td><td>+3 pts</td><td>20,0 %</td><td>29,0 %</td></tr>
+<tr><td>Commun</td><td><em>le reste</em> : <code>100 − (somme)</code></td><td>−6,5 pts</td><td>60,0 %</td><td>40,5 %</td></tr>
+</tbody>
+</table></div>
+
+<p>Les trois héros du jeu démarrent tous à <code>luck: 0</code> (voir <code>assets/data/heroes.json</code>) :
+le tirage de base est donc 1 / 5 / 14 / 20 / 60. La chance se gagne ensuite via des reliques comme le
+Trèfle Enchanté 🍀 (<code>gain_luck</code>, valeur 1, épique) ou le Dé de Fortune 🎲
+(<code>gain_luck</code>, valeur 2, légendaire).</p>
+
+<h3>Soustractions successives contre seuils cumulés</h3>
+
+<p>Le point technique intéressant de ce bloc est sa <em>forme</em>. Le contrôleur de récompenses, qui
+utilise exactement les mêmes quatre valeurs, les écrit en seuils cumulés :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/reward_controller.dart</span><span class="lang">dart</span></div>
+  <pre>        RelicRarity rarity;
+        double roll = rand;
+        if (roll &lt; legChance) {
+          rarity = RelicRarity.legendary;
+        } else if (roll &lt; legChance + epicChance) {
+          rarity = RelicRarity.epic;
+        } else if (roll &lt; legChance + epicChance + rareChance) {
+          rarity = RelicRarity.rare;
+        } else if (roll &lt; legChance + epicChance + rareChance + uncommonChance) {
+          rarity = RelicRarity.uncommon;
+        } else {
+          rarity = RelicRarity.common;
+        }</pre>
+</div>
+
+<p><code>EventController</code>, lui, décrémente une variable de travail et compare toujours à un seuil
+simple. Les deux écritures sont <strong>rigoureusement équivalentes</strong>. Déroulons l'algèbre, en
+notant <code>L</code>, <code>E</code>, <code>R</code>, <code>U</code> les quatre probabilités :</p>
+
+<div class="code" data-lang="text">
+  <div class="code-head"><span class="path">illustration</span><span class="lang">text</span></div>
+  <pre>Branche épique
+  cumulée     : roll &lt; L + E
+  soustractive: (roll - L) &lt; E          ⟺  roll &lt; L + E          ✔ identique
+
+Branche rare
+  cumulée     : roll &lt; L + E + R
+  soustractive: (roll - L - E) &lt; R      ⟺  roll &lt; L + E + R      ✔ identique
+
+Branche peu commune
+  cumulée     : roll &lt; L + E + R + U
+  soustractive: (roll - L - E - R) &lt; U  ⟺  roll &lt; L + E + R + U  ✔ identique</pre>
+</div>
+
+<p>À chaque étage, la soustraction déjà appliquée reconstitue exactement la somme du seuil cumulé.
+Prenons un exemple chiffré avec <code>luck = 0</code> (donc L=1, E=5, R=14, U=20) et un jet de
+<strong>17,3</strong> :</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Étape</th><th>Forme cumulée</th><th>Forme soustractive</th><th>Verdict</th></tr></thead>
+<tbody>
+<tr><td>Légendaire</td><td><code>17,3 &lt; 1</code> → faux</td><td><code>currentRoll = 17,3 &lt; 1</code> → faux</td><td>non</td></tr>
+<tr><td>Épique</td><td><code>17,3 &lt; 6</code> → faux</td><td><code>currentRoll = 16,3 &lt; 5</code> → faux</td><td>non</td></tr>
+<tr><td>Rare</td><td><code>17,3 &lt; 20</code> → vrai</td><td><code>currentRoll = 11,3 &lt; 14</code> → vrai</td><td><strong>rare</strong></td></tr>
+</tbody>
+</table></div>
+
+<p>Même verdict, deux chemins. Pourquoi deux écritures alors ? Aucune raison technique : c'est une
+duplication de logique métier. La forme soustractive économise trois additions et évite de réécrire
+<code>legChance + epicChance + rareChance</code>, mais elle mute une variable locale, ce qui rend le
+raisonnement légèrement plus dur à suivre. La forme cumulée se lit comme un tableau de seuils.</p>
+
+<div class="box danger">
+  <div class="box-title">Point d'attention : trois copies de la même table</div>
+  <p>Les quatre formules <code>1.0 + 0.5×L</code> / <code>5.0 + 1.0×L</code> / <code>14.0 + 2.0×L</code> /
+  <code>20.0 + 3.0×L</code> apparaissent à l'identique dans <strong>trois fichiers</strong> :
+  <code>event_controller.dart</code>, <code>reward_controller.dart</code> et
+  <code>ui/widgets/map/dialogs/probabilities_dialog.dart</code> (méthode
+  <code>calculateRelicProbabilities</code>, qui affiche les pourcentages au joueur). Rééquilibrer la
+  chance demande de modifier les trois. Le jour où l'une des trois est oubliée, l'écran de
+  probabilités mentira au joueur sans qu'aucun test ne s'en aperçoive.</p>
+</div>
+
+<h3>Du tirage de rareté à la relique concrète</h3>
+
+<p>Une fois la rareté connue, il reste à choisir une relique de cette rareté. Le catalogue
+<code>assets/data/relics.json</code> contient 25 reliques : 5 communes, 6 peu communes, 8 rares,
+3 épiques, 3 légendaires.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/event_controller.dart</span><span class="lang">dart</span></div>
+  <pre>            var filtered = allRelics.where((r) =&gt; r.rarity == rarity).toList();
+            if (filtered.isEmpty) {
+              filtered = allRelics
+                  .where((r) =&gt; r.rarity == RelicRarity.common)
+                  .toList();
+              if (filtered.isEmpty) {
+                filtered = allRelics;
+              }
+            }
+
+            final rng = Random();
+            final index = mockRelicIndex ?? rng.nextInt(filtered.length);
+            chosenRelic = filtered[index % filtered.length];
+            inventoryController.addRelic(chosenRelic);
+          }
+          break;</pre>
+</div>
+
+<p>Trois filets de sécurité en cascade : si aucune relique n'existe dans la rareté tirée, on retombe
+sur les communes ; si le catalogue n'a même pas de commune, on prend tout. Enfin
+<code>index % filtered.length</code> garantit qu'un index injecté hors bornes ne provoque pas de
+<code>RangeError</code> — c'est le modulo qui rend <code>mockRelicIndex</code> sûr à utiliser.</p>
+
+<p>Détail important : le tirage <strong>ne filtre pas les doublons</strong>. Si vous possédez déjà le
+Talisman de Fer, vous pouvez en obtenir un second. <code>InventoryController.addRelic</code> ajoute
+sans dédoublonner, et applique l'effet <code>startOfRun</code> à chaque exemplaire :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/inventory_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  void addRelic(RelicData relic) {
+    state = state.copyWith(relics: [...state.relics, relic]);
+    if (relic.trigger == RelicTrigger.startOfRun) {
+      ref.read(runProvider.notifier).applyRelicEffect(relic);
+    }
+  }</pre>
+</div>
+
+<h3><code>mockRoll</code> et <code>mockRelicIndex</code> : l'injection de hasard</h3>
+
+<p>Regardez à nouveau la signature de la méthode :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/event_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  /// Gère la sélection et la résolution d'un choix d'événement
+  ///
+  /// Retourne la relique obtenue si le choix comprenait une action 'gain_relic', sinon null.
+  RelicData? selectChoice(
+    EventChoice choice,
+    List&lt;RelicData&gt; allRelics, {
+    double? mockRoll, // Permet d'injecter un jet de dé fixe pour les tests
+    int? mockRelicIndex, // Permet d'injecter l'index de sélection de relique pour les tests
+  }) {</pre>
+</div>
+
+<p>Deux paramètres nommés optionnels, nullables, utilisés via l'opérateur <code>??</code> :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/event_controller.dart</span><span class="lang">dart</span></div>
+  <pre>            final double roll = mockRoll ?? (Random().nextDouble() * 100);
+            // ...
+            final index = mockRelicIndex ?? rng.nextInt(filtered.length);</pre>
+</div>
+
+<p>Le problème que cela résout est universel : <strong>on ne peut pas écrire d'assertion sur du
+hasard</strong>. Un test qui appelle <code>selectChoice</code> et vérifie « le joueur a obtenu une
+relique légendaire » échouerait 99 fois sur 100. Avec <code>mockRoll: 0.5</code>, le jet est
+inférieur à <code>legChance = 1.0</code> : la branche légendaire est prise à coup sûr. Avec
+<code>mockRelicIndex: 0</code>, c'est toujours la première relique légendaire du catalogue filtré qui
+sort. Le test devient déterministe.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">exemple</span><span class="lang">dart</span></div>
+  <pre>// Forcer une légendaire, première du catalogue filtré :
+controller.selectChoice(choice, allRelics, mockRoll: 0.5, mockRelicIndex: 0);
+
+// Forcer une commune (au-delà de 1 + 5 + 14 + 20 = 40 à luck 0) :
+controller.selectChoice(choice, allRelics, mockRoll: 99.0);
+
+// Tester la frontière exacte légendaire/épique à luck 0 :
+controller.selectChoice(choice, allRelics, mockRoll: 1.0); // → épique, car &lt; est strict</pre>
+</div>
+
+<div class="box ok">
+  <div class="box-title">Bonne pratique — et sa limite</div>
+  <p>Injecter le hasard par paramètre est la technique la plus simple qui fonctionne : zéro
+  dépendance, zéro abstraction, lisible par un débutant. Sa limite est visible dans le code de
+  production : <code>event_screen.dart</code> appelle
+  <code>selectChoice(choice, gameData.relics)</code> sans les mocks, mais les deux paramètres restent
+  exposés dans l'API publique de la classe. Rien n'empêche un appel de production de passer un
+  <code>mockRoll</code>. L'alternative plus propre, utilisée ailleurs dans le projet pour la pioche
+  (<code>deckRandomProvider.overrideWithValue(Random(42))</code>), injecte le
+  <code>Random</code> lui-même par un provider — le test surcharge le provider, la production ne voit
+  rien.</p>
+</div>
+
+<h3>La notification de relique</h3>
+
+<p>La valeur de retour de <code>selectChoice</code> — un <code>RelicData?</code> — sert uniquement à
+afficher une notification. C'est l'écran qui traduit la rareté :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/event_screen.dart</span><span class="lang">dart</span></div>
+  <pre>    if (chosenRelic != null) {
+      String rarityStr = '';
+      switch (chosenRelic.rarity) {
+        case RelicRarity.common:
+          rarityStr = 'COMMUN';
+          break;
+        // ...
+        case RelicRarity.legendary:
+          rarityStr = 'LÉGENDAIRE';
+          break;
+      }
+
+      final locale = Localizations.localeOf(context).languageCode;
+      context.showNotification(
+        '👑 ${locale == 'fr' ? 'RELIQUE OBTENUE' : 'RELIC OBTAINED'} : ${chosenRelic.emoji} ${chosenRelic.getName(locale)} ($rarityStr)',
+        type: NotificationType.success,
+      );
+    }</pre>
+</div>
+
+<div class="box warn">
+  <div class="box-title">Piège : des libellés en dur au milieu d'un système localisé</div>
+  <p>Les cinq chaînes <code>'COMMUN'</code>, <code>'PEU COMMUN'</code>, <code>'RARE'</code>,
+  <code>'ÉPIQUE'</code>, <code>'LÉGENDAIRE'</code> sont écrites en français directement dans le
+  <code>switch</code>, alors que le reste de la ligne bascule proprement selon
+  <code>locale</code>. Un joueur anglophone lit donc « RELIC OBTAINED : 🍀 Enchanted Clover
+  (ÉPIQUE) ». Le projet dispose pourtant des clés adéquates — <code>l10n.rarityEpic</code> et
+  consorts — utilisées par <code>relic_exchange_screen.dart</code>.</p>
+</div>
+
+<h2 id="s6">6. Le feu de camp</h2>
+
+<p>Le nœud <code>rest</code> est un choix unique entre trois services. Toute la logique tient dans un
+seul booléen d'état local, <code>_actionTaken</code> — pas de provider, pas de state machine : une
+variable de <code>State</code>.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/rest_screen.dart</span><span class="lang">dart</span></div>
+  <pre>class _RestScreenState extends ConsumerState&lt;RestScreen&gt; {
+  bool _actionTaken = false;</pre>
+</div>
+
+<p>Ce booléen fait trois choses à la fois : il masque les trois options, il affiche l'écran de
+confirmation avec le bouton « continuer », et il pilote le <code>PopScope</code>.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/rest_screen.dart</span><span class="lang">dart</span></div>
+  <pre>    return ScreenScaffold(
+      backgroundType: ScreenBackgroundType.dark,
+      canPop: _actionTaken,
+      body: Center(
+        child: Column(
+          // ...
+            if (!_actionTaken) ...[
+              _RestOption(
+                icon: Icons.favorite,
+                title: l10n.restCampRest,
+                description: l10n.restCampRestDesc(
+                  (heroStats.maxPv * 0.3).round(),
+                ),
+                onTap: _heal,
+                color: Colors.greenAccent,
+              ),
+              AppSpacing.heightMd,
+              _RestOption(
+                icon: Icons.auto_fix_high,
+                title: l10n.restCampForge,
+                description: l10n.restCampForgeDesc,
+                onTap: _upgradeCard,
+                color: Colors.amberAccent,
+              ),
+              AppSpacing.heightMd,
+              _RestOption(
+                icon: Icons.delete_sweep,
+                title: l10n.restCampRemove,
+                description: l10n.restCampRemoveDesc,
+                onTap: _removeCard,
+                color: Colors.redAccent,
+              ),
+            ] else ...[
+              const Icon(
+                Icons.check_circle_outline,
+                color: Colors.green,
+                size: 100,
+              ),
+              // ... bouton _leave
+            ],</pre>
+</div>
+
+<p>L'exclusivité mutuelle n'est pas gérée par une condition ni par un <code>enum</code> : les trois
+options disparaissent simplement de l'arbre de widgets dès que <code>_actionTaken</code> passe à
+<code>true</code>. C'est du Flutter idiomatique — l'état décrit l'UI, l'UI n'a pas d'état caché.</p>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 840 470" width="840" role="img" aria-label="Les trois branches du feu de camp et leur convergence vers _actionTaken">
+      <defs>
+        <marker id="c16-a2" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#3a4966"/>
+        </marker>
+        <marker id="c16-a3" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#f59e0b"/>
+        </marker>
+      </defs>
+
+      <!-- racine -->
+      <rect x="290" y="16" width="260" height="48" rx="8" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="420" y="37" fill="#f59e0b" font-size="14" text-anchor="middle">RestScreen</text>
+      <text x="420" y="55" fill="#e6ecf5" font-size="12" font-family="ui-monospace, monospace" text-anchor="middle">_actionTaken == false</text>
+
+      <!-- répartiteur -->
+      <path d="M420 64 L420 86" stroke="#3a4966" stroke-width="2"/>
+      <path d="M140 86 L700 86" stroke="#3a4966" stroke-width="2"/>
+      <path d="M140 86 L140 110" stroke="#3a4966" stroke-width="2" marker-end="url(#c16-a2)"/>
+      <path d="M420 86 L420 110" stroke="#3a4966" stroke-width="2" marker-end="url(#c16-a2)"/>
+      <path d="M700 86 L700 110" stroke="#3a4966" stroke-width="2" marker-end="url(#c16-a2)"/>
+
+      <!-- branche 1 : heal -->
+      <rect x="24" y="116" width="232" height="46" rx="8" fill="#0e1524" stroke="#34d399"/>
+      <text x="140" y="135" fill="#34d399" font-size="12.5" font-family="ui-monospace, monospace" text-anchor="middle">_heal()</text>
+      <text x="140" y="153" fill="#a7b4c9" font-size="11" text-anchor="middle">se reposer</text>
+      <path d="M140 162 L140 190" stroke="#3a4966" stroke-width="2" marker-end="url(#c16-a2)"/>
+      <rect x="24" y="196" width="232" height="60" rx="8" fill="#0e1524" stroke="#3a4966"/>
+      <text x="140" y="217" fill="#e6ecf5" font-size="11.5" font-family="ui-monospace, monospace" text-anchor="middle">(maxHp * 0.3).round()</text>
+      <text x="140" y="236" fill="#a7b4c9" font-size="11.5" text-anchor="middle">runController.heal(amount)</text>
+      <text x="140" y="250" fill="#a7b4c9" font-size="11" text-anchor="middle">100 PV max → 30 PV rendus</text>
+
+      <!-- branche 2 : forge -->
+      <rect x="304" y="116" width="232" height="46" rx="8" fill="#0e1524" stroke="#f59e0b"/>
+      <text x="420" y="135" fill="#f59e0b" font-size="12.5" font-family="ui-monospace, monospace" text-anchor="middle">_upgradeCard()</text>
+      <text x="420" y="153" fill="#a7b4c9" font-size="11" text-anchor="middle">forger</text>
+      <path d="M420 162 L420 190" stroke="#3a4966" stroke-width="2" marker-end="url(#c16-a2)"/>
+      <rect x="304" y="196" width="232" height="60" rx="8" fill="#0e1524" stroke="#3a4966"/>
+      <text x="420" y="216" fill="#e6ecf5" font-size="10.5" font-family="ui-monospace, monospace" text-anchor="middle">push&lt;Map&lt;String, dynamic&gt;&gt;</text>
+      <text x="420" y="233" fill="#a7b4c9" font-size="11" text-anchor="middle">RestCardSelectionScreen</text>
+      <text x="420" y="248" fill="#a7b4c9" font-size="11" font-family="ui-monospace, monospace" text-anchor="middle">isForge: true</text>
+      <path d="M420 256 L420 284" stroke="#f59e0b" stroke-width="2" marker-end="url(#c16-a3)"/>
+      <rect x="304" y="290" width="232" height="62" rx="8" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="420" y="310" fill="#f59e0b" font-size="11.5" font-family="ui-monospace, monospace" text-anchor="middle">ForgeUpgradeDialog</text>
+      <text x="420" y="327" fill="#a7b4c9" font-size="10.5" text-anchor="middle">plafond : baseMaxForgeUpgrades</text>
+      <text x="420" y="343" fill="#a7b4c9" font-size="10.5" text-anchor="middle">+ rarity.index</text>
+
+      <!-- branche 3 : remove -->
+      <rect x="584" y="116" width="232" height="46" rx="8" fill="#0e1524" stroke="#f87171"/>
+      <text x="700" y="135" fill="#f87171" font-size="12.5" font-family="ui-monospace, monospace" text-anchor="middle">_removeCard()</text>
+      <text x="700" y="153" fill="#a7b4c9" font-size="11" text-anchor="middle">supprimer une carte</text>
+      <path d="M700 162 L700 190" stroke="#3a4966" stroke-width="2" marker-end="url(#c16-a2)"/>
+      <rect x="584" y="196" width="232" height="60" rx="8" fill="#0e1524" stroke="#3a4966"/>
+      <text x="700" y="216" fill="#e6ecf5" font-size="11" font-family="ui-monospace, monospace" text-anchor="middle">push&lt;CardInstance&gt;</text>
+      <text x="700" y="233" fill="#a7b4c9" font-size="11" text-anchor="middle">RestCardSelectionScreen</text>
+      <text x="700" y="248" fill="#a7b4c9" font-size="11" font-family="ui-monospace, monospace" text-anchor="middle">isForge: false</text>
+      <path d="M700 256 L700 284" stroke="#3a4966" stroke-width="2" marker-end="url(#c16-a2)"/>
+      <rect x="584" y="290" width="232" height="62" rx="8" fill="#151b2b" stroke="#f87171"/>
+      <text x="700" y="316" fill="#f87171" font-size="11" font-family="ui-monospace, monospace" text-anchor="middle">deck.removeCardById(</text>
+      <text x="700" y="333" fill="#f87171" font-size="11" font-family="ui-monospace, monospace" text-anchor="middle">card.uniqueId)</text>
+
+      <!-- convergence -->
+      <path d="M140 256 L140 388" stroke="#3a4966" stroke-width="2"/>
+      <path d="M420 352 L420 388" stroke="#3a4966" stroke-width="2"/>
+      <path d="M700 352 L700 388" stroke="#3a4966" stroke-width="2"/>
+      <path d="M140 388 L700 388" stroke="#3a4966" stroke-width="2"/>
+      <path d="M420 388 L420 404" stroke="#3a4966" stroke-width="2" marker-end="url(#c16-a2)"/>
+
+      <rect x="256" y="410" width="328" height="48" rx="8" fill="#151b2b" stroke="#34d399"/>
+      <text x="420" y="430" fill="#34d399" font-size="12.5" font-family="ui-monospace, monospace" text-anchor="middle">setState(() =&gt; _actionTaken = true)</text>
+      <text x="420" y="449" fill="#a7b4c9" font-size="11" text-anchor="middle">les deux autres options disparaissent · canPop devient true</text>
+    </svg>
+  </div>
+  <figcaption>Les trois branches du feu de camp. Elles divergent complètement (une seule fait une
+  navigation avec dialogue) mais convergent toutes sur le même <code>setState</code>.</figcaption>
+</figure>
+
+<h3>Branche 1 — se reposer</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/rest_screen.dart</span><span class="lang">dart</span></div>
+  <pre>  void _heal() {
+    final l10n = AppLocalizations.of(context)!;
+    final runController = ref.read(runProvider.notifier);
+    final maxHp = runController.currentState.heroStats.maxPv;
+    final healAmount = (maxHp * 0.3).round();
+
+    runController.heal(healAmount);
+
+    setState(() {
+      _actionTaken = true;
+    });
+
+    context.showNotification(
+      l10n.restCampSnackbarHeal(healAmount),
+      type: NotificationType.success,
+    );
+  }</pre>
+</div>
+
+<p>Le soin vaut <strong>30 % des PV maximum, arrondi</strong> — <code>(maxHp * 0.3).round()</code>,
+donc un arrondi au plus proche, pas une troncature. Sur les trois héros de départ :</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Héros</th><th><code>maxHp</code> de départ</th><th><code>(maxHp * 0.3).round()</code></th></tr></thead>
+<tbody>
+<tr><td>Le Paladin</td><td>100</td><td>30 PV</td></tr>
+<tr><td>Le Berserker</td><td>80</td><td>24 PV</td></tr>
+<tr><td>Le Mage</td><td>60</td><td>18 PV</td></tr>
+</tbody>
+</table></div>
+
+<div class="box rule">
+  <div class="box-title">Règle du jeu</div>
+  <p>Le soin du feu de camp est <strong>proportionnel</strong>, pas fixe. Un héros qui a gagné des PV
+  max au cours de la run (via <code>gain_max_hp</code> aux événements) se soigne davantage à chaque
+  feu de camp. Investir dans les PV max a donc un rendement composé : plus de vie, et plus de vie
+  rendue à chaque repos. Le <code>heal</code> sous-jacent clampe au maximum, donc un héros déjà
+  intact gaspille complètement l'option.</p>
+</div>
+
+<h3>Branche 2 — forger</h3>
+
+<p>C'est la branche la plus riche. Elle enchaîne <strong>deux</strong> navigations : un écran de
+sélection de carte, puis un dialogue plein écran.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/rest_screen.dart</span><span class="lang">dart</span></div>
+  <pre>  void _upgradeCard() async {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
+
+    final result = await Navigator.of(context).push&lt;Map&lt;String, dynamic&gt;&gt;(
+      MaterialPageRoute(
+        builder: (context) =&gt; RestCardSelectionScreen(
+          title: l10n.restCampForgeTitle,
+          subtitle: l10n.restCampForgeSubtitle,
+          isForge: true,
+        ),
+      ),
+    );
+
+    final card = result?['card'] as CardInstance?;
+    if (card != null) {
+      setState(() {
+        _actionTaken = true;
+      });
+      // ... notification
+    }
+  }</pre>
+</div>
+
+<p><span class="pill g">Flutter</span> <code>Navigator.push&lt;T&gt;</code> est <em>typé</em> : le
+paramètre générique <code>T</code> déclare ce que la route poussée est censée renvoyer via
+<code>Navigator.pop(valeur)</code>. La méthode retourne un <code>Future&lt;T?&gt;</code> — nullable,
+parce qu'un retour arrière donne <code>null</code>. Ici <code>T</code> vaut
+<code>Map&lt;String, dynamic&gt;</code> : l'écran de sélection renvoie un dictionnaire à deux clés.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/rest_card_selection_screen.dart</span><span class="lang">dart</span></div>
+  <pre>  void _onCardTapped(BuildContext context, WidgetRef ref, CardInstance card) async {
+    final locale = Localizations.localeOf(context).languageCode;
+
+    if (isForge) {
+      final rarityIndex = card.rarity.index;
+      final totalMaxForgeUpgrades =
+          card.data.baseMaxForgeUpgrades + rarityIndex;
+
+      if (card.forgeUpgrades.length &gt;= totalMaxForgeUpgrades) {
+        context.showNotification(
+          locale == 'fr'
+              ? "Cette carte a atteint sa capacité maximale d'améliorations de forge !"
+              : "This card has reached its maximum forge upgrades capacity!",
+          type: NotificationType.error,
+        );
+        return;
+      }
+
+      final selectedUpgrade = await showDialog&lt;String&gt;(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) =&gt; ForgeUpgradeDialog(card: card),
+      );
+
+      if (selectedUpgrade != null) {
+        if (context.mounted) {
+          Navigator.of(context).pop({
+            'card': card,
+            'upgrade': selectedUpgrade,
+          });
+        }
+      }
+    } else {
+      // Card Removal
+      Navigator.of(context).pop(card);
+    }
+  }</pre>
+</div>
+
+<h4>Le plafond de runes par carte</h4>
+
+<p>La formule est <code>baseMaxForgeUpgrades + rarity.index</code>. Le premier terme vient des données
+de carte (<code>assets/data/cards.json</code>), avec 1 en défaut ; le second est la position de la
+rareté dans l'énumération :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/data/card_data.dart</span><span class="lang">dart</span></div>
+  <pre>enum CardRarity { common, uncommon, rare, epic, legendary, unique }
+
+// ...
+  final int baseMaxForgeUpgrades;
+// ...
+    this.baseMaxForgeUpgrades = 1,
+// ...
+      baseMaxForgeUpgrades: json['baseMaxForgeUpgrades'] as int? ?? 1,</pre>
+</div>
+
+<div class="table-wrap"><table>
+<thead><tr>
+  <th>Rareté de la carte</th><th><code>rarity.index</code></th>
+  <th>Plafond si <code>baseMaxForgeUpgrades = 1</code></th>
+  <th>Plafond si <code>baseMaxForgeUpgrades = 5</code> (cartes de héros)</th>
+</tr></thead>
+<tbody>
+<tr><td>common</td><td>0</td><td>1 rune</td><td>5 runes</td></tr>
+<tr><td>uncommon</td><td>1</td><td>2 runes</td><td>6 runes</td></tr>
+<tr><td>rare</td><td>2</td><td>3 runes</td><td>7 runes</td></tr>
+<tr><td>epic</td><td>3</td><td>4 runes</td><td>8 runes</td></tr>
+<tr><td>legendary</td><td>4</td><td>5 runes</td><td>9 runes</td></tr>
+<tr><td>unique</td><td>5</td><td>6 runes</td><td>10 runes</td></tr>
+</tbody>
+</table></div>
+
+<div class="box rule">
+  <div class="box-title">Règle du jeu</div>
+  <p>Plus une carte est rare, plus elle peut porter de runes. Améliorer la rareté d'une carte
+  (<code>DeckController.upgradeCard</code>) augmente donc mécaniquement son plafond de forge de 1.
+  Attention toutefois : le contrôle du plafond est fait dans <code>rest_card_selection_screen.dart</code>
+  <em>avant</em> d'ouvrir le dialogue, et redondamment dans
+  <code>ForgeUpgradeDialog.initState</code> (qui recalcule <code>_totalMaxForgeUpgrades</code> pour
+  l'affichage). La carte saturée reste visible et cliquable dans la grille : le refus se manifeste par
+  une notification rouge, pas par une carte grisée.</p>
+</div>
+
+<h4>La session de forge : l'anti-savescum</h4>
+
+<p>Le dialogue tire aléatoirement de 1 à 5 offres d'amélioration. Sans précaution, un joueur pourrait
+annuler et rouvrir le dialogue jusqu'à obtenir l'offre qu'il veut. C'est le rôle de
+<code>forgeTargetSessions</code>, une <code>Map&lt;String, List&lt;String&gt;&gt;</code> stockée dans
+<code>RunState</code> et indexée par <code>uniqueId</code> de carte :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/forge_upgrade_dialog.dart</span><span class="lang">dart</span></div>
+  <pre>  @override
+  void initState() {
+    super.initState();
+    final rarityIndex = widget.card.rarity.index;
+    _totalMaxForgeUpgrades =
+        widget.card.data.baseMaxForgeUpgrades + rarityIndex;
+
+    final runState = ref.read(runProvider);
+    if (runState.forgeTargetSessions.containsKey(widget.card.uniqueId)) {
+      _slots = [];
+      final savedSlots = runState.forgeTargetSessions[widget.card.uniqueId]!;
+      for (int i = 0; i &lt; savedSlots.length; i++) {
+        final s = savedSlots[i];
+        final parts = s.split(':');
+        final id = parts[0];
+        final tier = parts.length &gt; 1 ? parts[1] : '1';
+        final rerolls = parts.length &gt; 2 ? (int.tryParse(parts[2]) ?? 0) : 0;
+        _slots.add(ForgeSlot(
+          index: i,
+          upgrade: '$id:$tier',
+          rerollsCount: rerolls,
+        ));
+      }
+    } else {
+      _slots = _generateInitialSlots(widget.card);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(runProvider.notifier).setForgeSession(
+          widget.card.uniqueId,
+          _slots.map((s) =&gt; '${s.upgrade}:${s.rerollsCount}').toList(),
+        );
+      });
+    }
+  }</pre>
+</div>
+
+<p>La logique est en deux temps : <strong>si une session existe pour cette carte, on la restaure ;
+sinon on tire et on la mémorise</strong>. Le format de stockage est une chaîne
+<code>id:tier:rerolls</code> découpée au <code>split(':')</code> — un format textuel plutôt qu'un objet
+sérialisé, ce qui simplifie la persistance de <code>RunState</code> en JSON.</p>
+
+<p>Côté contrôleur, deux méthodes symétriques :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  void setForgeSession(String cardId, List&lt;String&gt; slots) {
+    final updated = Map&lt;String, List&lt;String&gt;&gt;.from(state.forgeTargetSessions);
+    updated[cardId] = slots;
+    state = state.copyWith(
+      forgeTargetSessions: updated,
+      forgeTargetCardId: cardId,
+      forgeSlots: slots,
+    );
+  }
+
+  void clearForgeSession() {
+    state = state.copyWith(
+      resetForgeTargetCardId: true,
+      forgeSlots: const [],
+      resetForgeTargetSessions: true,
+    );
+  }</pre>
+</div>
+
+<p><code>setForgeSession</code> copie la Map avant de la modifier — jamais de mutation en place sur un
+état immuable. <code>clearForgeSession</code>, lui, vide <strong>toutes</strong> les sessions d'un
+coup, grâce au drapeau <code>resetForgeTargetSessions</code> de <code>copyWith</code> (qui remplace la
+Map par <code>const {}</code> plutôt que de la laisser inchangée sur un <code>null</code>).</p>
+
+<p>Cette purge est déclenchée à deux endroits :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/forge_upgrade_dialog.dart</span><span class="lang">dart</span></div>
+  <pre>  void _selectUpgrade(String upgrade) {
+    ref
+        .read(deckProvider.notifier)
+        .addForgeUpgrade(widget.card.uniqueId, upgrade);
+    ref.read(runProvider.notifier).clearForgeSession();
+    Navigator.of(context).pop(upgrade);
+  }</pre>
+</div>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/rest_screen.dart</span><span class="lang">dart</span></div>
+  <pre>  void _leave() {
+    ref.read(runProvider.notifier).clearForgeSession();
+    ref.read(runProvider.notifier).completeCurrentNode();
+    Navigator.of(context).pop();
+  }</pre>
+</div>
+
+<div class="box warn">
+  <div class="box-title">Piège : la mutation du deck a lieu dans le dialogue, pas dans l'écran</div>
+  <p>C'est <code>_selectUpgrade</code>, à l'intérieur de <code>ForgeUpgradeDialog</code>, qui appelle
+  <code>deckProvider.notifier.addForgeUpgrade(...)</code>. Le <code>Map</code> renvoyé jusqu'à
+  <code>RestScreen</code> ne sert plus qu'à <strong>afficher une notification</strong> et à basculer
+  <code>_actionTaken</code>. Si vous cherchez « où la rune est-elle posée sur la carte ? » en partant de
+  <code>rest_screen.dart</code>, vous ne trouverez rien : il faut descendre de deux niveaux de
+  navigation.</p>
+</div>
+
+<h3>Branche 3 — supprimer une carte</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/rest_screen.dart</span><span class="lang">dart</span></div>
+  <pre>  void _removeCard() async {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
+    final selectedCard = await Navigator.of(context).push&lt;CardInstance&gt;(
+      MaterialPageRoute(
+        builder: (context) =&gt; RestCardSelectionScreen(
+          title: l10n.restCampRemoveTitle,
+          subtitle: l10n.restCampRemoveSubtitle,
+          isForge: false,
+        ),
+      ),
+    );
+
+    if (selectedCard != null) {
+      ref.read(deckProvider.notifier).removeCardById(selectedCard.uniqueId);
+
+      setState(() {
+        _actionTaken = true;
+      });
+      // ... notification
+    }
+  }</pre>
+</div>
+
+<p>Même écran de sélection, mais <code>isForge: false</code> et surtout un type de retour différent :
+<code>push&lt;CardInstance&gt;</code> au lieu de <code>push&lt;Map&lt;String, dynamic&gt;&gt;</code>.
+L'écran <code>RestCardSelectionScreen</code> est donc <strong>polymorphe dans sa valeur de retour</strong>
+selon un booléen — un <code>CardInstance</code> nu en mode suppression, un <code>Map</code> en mode
+forge. Le compilateur ne peut évidemment rien vérifier : les deux <code>Navigator.pop</code> sont dans
+la même méthode et Dart n'infère aucune contrainte entre <code>isForge</code> et le type poussé.</p>
+
+<div class="box danger">
+  <div class="box-title">Point d'attention : un contrat de retour implicite</div>
+  <p>Si quelqu'un inversait par erreur les deux branches de <code>_onCardTapped</code>, l'appelant
+  recevrait un <code>CardInstance</code> là où il attend un <code>Map</code>. Le
+  <code>push&lt;Map&lt;String, dynamic&gt;&gt;</code> lèverait alors une erreur de cast à l'exécution, dans
+  <code>Navigator</code>, très loin du bug. Un <code>sealed class ForgeResult</code> ou deux écrans
+  distincts auraient rendu le contrat vérifiable au compile-time.</p>
+</div>
+
+<p>La suppression elle-même est triviale, et se fait par <code>uniqueId</code> — pas par
+<code>data.id</code> : deux exemplaires de « Frappe » ont le même <code>data.id</code> mais des
+<code>uniqueId</code> différents, et l'un peut porter des runes que l'autre n'a pas.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/deck_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  void removeCardById(String uniqueId) {
+    var currentMasterDeck = List&lt;CardInstance&gt;.from(state.masterDeck);
+    currentMasterDeck.removeWhere((c) =&gt; c.uniqueId == uniqueId);
+    state = state.copyWith(masterDeck: currentMasterDeck);
+  }</pre>
+</div>
+
+<div class="memo">
+  <div class="card"><h5>Une seule action</h5><p><code>_actionTaken</code> est mis à <code>true</code>
+  par les trois branches, et rien ne le remet jamais à <code>false</code>.</p></div>
+  <div class="card"><h5>Annuler ne consomme rien</h5><p>Revenir de l'écran de sélection sans choisir
+  donne <code>null</code> : <code>_actionTaken</code> reste <code>false</code>, les trois options
+  restent disponibles.</p></div>
+  <div class="card"><h5>Sortie unique</h5><p>Le bouton final appelle <code>_leave()</code>, qui purge
+  les sessions de forge puis complète le nœud.</p></div>
+  <div class="card"><h5>Verrou</h5><p><code>canPop: _actionTaken</code> : impossible de quitter le feu
+  de camp sans avoir consommé son service.</p></div>
+</div>
+
+<h2 id="s7">7. L'autel des reliques</h2>
+
+<p>Le nœud <code>relicExchange</code> est le plus rare du jeu. Il n'apparaît qu'à partir de l'acte 5,
+et seulement sur certains étages :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/services/map/map_content_placer.dart</span><span class="lang">dart</span></div>
+  <pre>    if (act &gt;= 5 &amp;&amp; (act % 5 == 0 || random.nextDouble() &lt; 0.10)) {
+      final eligibleNodes = allNodes.where((node) {
+        final y = node.floor;
+        return y == 2 || y == 3 || y == 4 || y == 6 || y == 7;
+      }).toList();
+
+      if (eligibleNodes.isNotEmpty) {
+        final chosenNode = eligibleNodes[random.nextInt(eligibleNodes.length)];
+        chosenNode.originalType = chosenNode.type;
+        chosenNode.type = MapNodeType.relicExchange;
+      }
+    }</pre>
+</div>
+
+<p>Garanti tous les 5 actes (5, 10, 15…), plus 10 % de chance dans les autres actes à partir du
+cinquième. Le nœud écrase un nœud existant, dont il mémorise le type d'origine dans
+<code>originalType</code>.</p>
+
+<h3>La graine déterministe</h3>
+
+<p>C'est le point le plus intéressant de cet écran. L'offre de l'autel — quelle relique est proposée —
+ne doit pas changer si le joueur quitte l'écran et y revient. Sinon, il suffirait d'entrer et sortir en
+boucle pour faire apparaître une légendaire.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/relic_exchange_screen.dart</span><span class="lang">dart</span></div>
+  <pre>        data: (gameData) {
+          if (_offeredRelic == null) {
+            final seed = (widget.node.id.hashCode ^ runState.act).abs();
+            final random = Random(seed);
+
+            // 1. Roll for rarity: Uncommon (40%), Rare (35%), Epic (20%), Legendary (5%)
+            final double roll = random.nextDouble();
+            RelicRarity offeredRarity;
+            if (roll &lt; 0.40) {
+              offeredRarity = RelicRarity.uncommon;
+            } else if (roll &lt; 0.75) {
+              offeredRarity = RelicRarity.rare;
+            } else if (roll &lt; 0.95) {
+              offeredRarity = RelicRarity.epic;
+            } else {
+              offeredRarity = RelicRarity.legendary;
+            }
+
+            final eligibleRelics = gameData.relics.where((r) =&gt; r.rarity == offeredRarity).toList();
+            if (eligibleRelics.isNotEmpty) {
+              _offeredRelic = eligibleRelics[random.nextInt(eligibleRelics.length)];
+            } else {
+              _offeredRelic = gameData.relics.firstWhere((r) =&gt; r.rarity != RelicRarity.common, orElse: () =&gt; gameData.relics.first);
+            }
+            _requiredRarity = _getRequiredSacrificeRarity(_offeredRelic!.rarity);
+          }</pre>
+</div>
+
+<p>Décomposons <code>(widget.node.id.hashCode ^ runState.act).abs()</code> :</p>
+
+<ul>
+  <li><code>widget.node.id</code> est une chaîne du type <code>node_3_2</code> — les identifiants sont
+  générés par <code>'node_${y}_$x'</code> dans <code>map_node_generator.dart</code>.</li>
+  <li><code>.hashCode</code> transforme cette chaîne en entier de façon déterministe : la même chaîne
+  donne toujours le même entier.</li>
+  <li><code>^ runState.act</code> est un OU exclusif bit à bit avec le numéro d'acte.
+  <strong>C'est indispensable</strong> : les identifiants de nœuds se répètent d'un acte à l'autre
+  (<code>node_3_2</code> existe à l'acte 5 comme à l'acte 10). Sans ce XOR, la même position sur la
+  carte offrirait éternellement la même relique.</li>
+  <li><code>.abs()</code> normalise en positif — un <code>hashCode</code> peut être négatif.</li>
+</ul>
+
+<p>Comme <code>Random(seed)</code> est réinstancié à chaque appel avec la même graine, la séquence de
+tirages est identique à chaque fois. Le premier <code>nextDouble()</code> donne toujours le même
+nombre, et le <code>nextInt(eligibleRelics.length)</code> qui suit aussi.</p>
+
+<div class="box rule">
+  <div class="box-title">Règle du jeu</div>
+  <p>L'offre d'un autel est <strong>figée par la paire (identifiant du nœud, acte)</strong>. Quitter
+  l'écran et y revenir donne rigoureusement la même relique. Il n'y a rien à « rerouler ». En revanche
+  le même nœud d'un acte à l'autre offrira autre chose, grâce au XOR.</p>
+</div>
+
+<h3>La table de rareté offerte</h3>
+
+<div class="table-wrap"><table>
+<thead><tr>
+  <th>Rareté offerte</th><th>Intervalle du <code>nextDouble()</code></th><th>Probabilité</th>
+  <th>Reliques du catalogue dans cette rareté</th><th>Sacrifice exigé</th>
+</tr></thead>
+<tbody>
+<tr><td>Peu commun</td><td><code>[0 ; 0,40[</code></td><td>40 %</td><td>6</td><td>3 × commun</td></tr>
+<tr><td>Rare</td><td><code>[0,40 ; 0,75[</code></td><td>35 %</td><td>8</td><td>3 × peu commun</td></tr>
+<tr><td>Épique</td><td><code>[0,75 ; 0,95[</code></td><td>20 %</td><td>3</td><td>3 × rare</td></tr>
+<tr><td>Légendaire</td><td><code>[0,95 ; 1,00[</code></td><td>5 %</td><td>3</td><td>3 × épique</td></tr>
+</tbody>
+</table></div>
+
+<p>La rareté commune n'est <strong>jamais</strong> offerte : l'autel monte toujours en gamme. La
+rareté exigée en sacrifice est déterminée par une fonction d'un cran vers le bas :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/relic_exchange_screen.dart</span><span class="lang">dart</span></div>
+  <pre>  RelicRarity _getRequiredSacrificeRarity(RelicRarity offered) {
+    switch (offered) {
+      case RelicRarity.uncommon:
+        return RelicRarity.common;
+      case RelicRarity.rare:
+        return RelicRarity.uncommon;
+      case RelicRarity.epic:
+        return RelicRarity.rare;
+      case RelicRarity.legendary:
+        return RelicRarity.epic;
+      default:
+        return RelicRarity.common;
+    }
+  }</pre>
+</div>
+
+<p>Le <code>default</code> ne couvre que <code>RelicRarity.common</code>, cas impossible ici puisque le
+tirage ne produit jamais de commune. C'est une garde défensive, pas un cas réel.</p>
+
+<div class="box warn">
+  <div class="box-title">Piège de conception : la légendaire est presque inatteignable</div>
+  <p>Le catalogue ne compte que <strong>3 reliques épiques</strong> (Trèfle Enchanté 🍀, Pierre
+  d'Énergie ⚡, Plume de Phénix 🪶). Pour saisir une offre légendaire — déjà tirée à 5 % — il faut donc
+  posséder simultanément trois reliques épiques, ce qui, avec un taux de drop épique de 5 % à
+  <code>luck</code> 0, arrive rarement. Symétriquement, l'offre la plus fréquente (peu commune, 40 %)
+  demande 3 communes, dont le jeu regorge. Le taux de tirage et la faisabilité vont dans le même sens.</p>
+</div>
+
+<h3>Sélectionner exactement trois reliques</h3>
+
+<p>L'écran filtre l'inventaire pour ne montrer que les reliques de la rareté exigée, tout en gardant
+leur <em>indice d'origine</em> dans la liste complète :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/relic_exchange_screen.dart</span><span class="lang">dart</span></div>
+  <pre>          // Filter qualified relics from player's inventory
+          final qualifiedRelics = &lt;_QualifiedRelicIndex&gt;[];
+          for (int i = 0; i &lt; inventoryState.relics.length; i++) {
+            final r = inventoryState.relics[i];
+            if (r.rarity == _requiredRarity) {
+              qualifiedRelics.add(_QualifiedRelicIndex(originalIndex: i, relic: r));
+            }
+          }
+
+          final canExchange = _selectedOriginalIndices.length == 3;</pre>
+</div>
+
+<p>La petite classe <code>_QualifiedRelicIndex</code> existe uniquement pour transporter ce couple
+(indice d'origine, relique). C'est nécessaire parce que la sélection est mémorisée dans un
+<code>Set&lt;int&gt;</code> d'indices de l'inventaire complet — pas de la liste filtrée — de sorte que
+le joueur puisse posséder plusieurs exemplaires de la même relique et n'en sacrifier que certains.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/relic_exchange_screen.dart</span><span class="lang">dart</span></div>
+  <pre>  void _onRelicTap(int index) {
+    setState(() {
+      if (_selectedOriginalIndices.contains(index)) {
+        _selectedOriginalIndices.remove(index);
+      } else {
+        if (_selectedOriginalIndices.length &lt; 3) {
+          _selectedOriginalIndices.add(index);
+        }
+      }
+    });
+  }
+
+  void _performExchange(List&lt;RelicData&gt; inventory) {
+    if (_offeredRelic == null || _selectedOriginalIndices.length != 3) return;
+
+    final sacrificed = _selectedOriginalIndices.map((idx) =&gt; inventory[idx]).toList();
+
+    // Complete the node and exchange relics
+    ref.read(runProvider.notifier).exchangeRelics(sacrificed, _offeredRelic!);
+    ref.read(runProvider.notifier).completeCurrentNode();
+
+    Navigator.of(context).pop();
+  }</pre>
+</div>
+
+<p>Le nombre 3 apparaît trois fois : dans le plafond de <code>_onRelicTap</code> (on ne peut pas en
+cocher une quatrième), dans <code>canExchange</code> (le bouton ÉCHANGER n'est actif qu'à exactement
+3), et en garde d'entrée de <code>_performExchange</code>. Trois vérifications indépendantes de la
+même règle — l'interface interdit déjà d'arriver dans un état invalide, mais la méthode se protège
+quand même.</p>
+
+<div class="box rule">
+  <div class="box-title">Règle du jeu</div>
+  <p>Il faut sacrifier <strong>exactement trois</strong> reliques, ni deux ni quatre, toutes de la
+  rareté immédiatement inférieure à celle offerte. Si vous en possédez moins de trois, l'écran affiche
+  un encadré rouge à la place de la grille et il ne reste que le bouton PARTIR. Le taux de change est
+  donc fixe : 3 pour 1, avec un gain d'un cran de rareté.</p>
+</div>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 840 400" width="840" role="img" aria-label="Déroulement de l'échange à l'autel des reliques">
+      <defs>
+        <marker id="c16-a4" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#3a4966"/>
+        </marker>
+        <marker id="c16-a5" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#a78bfa"/>
+        </marker>
+      </defs>
+
+      <text x="200" y="24" fill="#a7b4c9" font-size="12.5" text-anchor="middle">Détermination de l'offre (déterministe)</text>
+      <text x="640" y="24" fill="#a7b4c9" font-size="12.5" text-anchor="middle">Exécution de l'échange</text>
+      <path d="M418 34 L418 372" stroke="#3a4966" stroke-width="1" stroke-dasharray="4 5"/>
+
+      <!-- colonne gauche : graine -->
+      <rect x="40" y="40" width="320" height="52" rx="8" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="200" y="62" fill="#a78bfa" font-size="11.5" font-family="ui-monospace, monospace" text-anchor="middle">(node.id.hashCode ^ act).abs()</text>
+      <text x="200" y="80" fill="#a7b4c9" font-size="11" text-anchor="middle">graine stable pour ce nœud, cet acte</text>
+      <path d="M200 92 L200 118" stroke="#a78bfa" stroke-width="2" marker-end="url(#c16-a5)"/>
+
+      <rect x="40" y="124" width="320" height="44" rx="8" fill="#0e1524" stroke="#3a4966"/>
+      <text x="200" y="151" fill="#e6ecf5" font-size="12" font-family="ui-monospace, monospace" text-anchor="middle">Random(seed).nextDouble()</text>
+      <path d="M200 168 L200 194" stroke="#3a4966" stroke-width="2" marker-end="url(#c16-a4)"/>
+
+      <rect x="40" y="200" width="320" height="92" rx="8" fill="#0e1524" stroke="#3a4966"/>
+      <text x="60" y="222" fill="#34d399" font-size="11.5" font-family="ui-monospace, monospace">&lt; 0,40</text>
+      <text x="150" y="222" fill="#e6ecf5" font-size="11.5">peu commun (40 %) → sacrifier 3 communs</text>
+      <text x="60" y="241" fill="#60a5fa" font-size="11.5" font-family="ui-monospace, monospace">&lt; 0,75</text>
+      <text x="150" y="241" fill="#e6ecf5" font-size="11.5">rare (35 %) → sacrifier 3 peu communs</text>
+      <text x="60" y="260" fill="#a78bfa" font-size="11.5" font-family="ui-monospace, monospace">&lt; 0,95</text>
+      <text x="150" y="260" fill="#e6ecf5" font-size="11.5">épique (20 %) → sacrifier 3 rares</text>
+      <text x="60" y="279" fill="#f59e0b" font-size="11.5" font-family="ui-monospace, monospace">sinon</text>
+      <text x="150" y="279" fill="#e6ecf5" font-size="11.5">légendaire (5 %) → sacrifier 3 épiques</text>
+
+      <path d="M200 292 L200 320" stroke="#3a4966" stroke-width="2" marker-end="url(#c16-a4)"/>
+      <rect x="40" y="326" width="320" height="46" rx="8" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="200" y="345" fill="#f59e0b" font-size="12" font-family="ui-monospace, monospace" text-anchor="middle">_offeredRelic</text>
+      <text x="200" y="363" fill="#a7b4c9" font-size="11" text-anchor="middle">+ _requiredRarity</text>
+
+      <path d="M360 349 L500 349" stroke="#3a4966" stroke-width="2" marker-end="url(#c16-a4)"/>
+
+      <!-- colonne droite : échange -->
+      <rect x="478" y="40" width="330" height="52" rx="8" fill="#0e1524" stroke="#3a4966"/>
+      <text x="643" y="62" fill="#e6ecf5" font-size="12" text-anchor="middle">le joueur coche 3 reliques qualifiées</text>
+      <text x="643" y="80" fill="#a7b4c9" font-size="11" font-family="ui-monospace, monospace" text-anchor="middle">_selectedOriginalIndices.length == 3</text>
+      <path d="M643 92 L643 118" stroke="#3a4966" stroke-width="2" marker-end="url(#c16-a4)"/>
+
+      <rect x="478" y="124" width="330" height="44" rx="8" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="643" y="151" fill="#a78bfa" font-size="12" font-family="ui-monospace, monospace" text-anchor="middle">exchangeRelics(sacrificed, gained)</text>
+      <path d="M643 168 L643 194" stroke="#a78bfa" stroke-width="2" marker-end="url(#c16-a5)"/>
+
+      <rect x="478" y="200" width="330" height="46" rx="8" fill="#0e1524" stroke="#f87171"/>
+      <text x="643" y="219" fill="#f87171" font-size="11.5" font-family="ui-monospace, monospace" text-anchor="middle">removeRelicEffect(r) × 3</text>
+      <text x="643" y="236" fill="#a7b4c9" font-size="10.5" text-anchor="middle">annule les bonus startOfRun uniquement</text>
+      <path d="M643 246 L643 268" stroke="#3a4966" stroke-width="2" marker-end="url(#c16-a4)"/>
+
+      <rect x="478" y="274" width="330" height="40" rx="8" fill="#0e1524" stroke="#3a4966"/>
+      <text x="643" y="299" fill="#e6ecf5" font-size="11.5" font-family="ui-monospace, monospace" text-anchor="middle">removeRelics(sacrificedIds)</text>
+      <path d="M643 314 L643 336" stroke="#3a4966" stroke-width="2" marker-end="url(#c16-a4)"/>
+
+      <rect x="478" y="342" width="330" height="42" rx="8" fill="#151b2b" stroke="#34d399"/>
+      <text x="643" y="360" fill="#34d399" font-size="11.5" font-family="ui-monospace, monospace" text-anchor="middle">addRelic(gained)</text>
+      <text x="643" y="377" fill="#a7b4c9" font-size="10.5" text-anchor="middle">réapplique l'effet si trigger == startOfRun</text>
+    </svg>
+  </div>
+  <figcaption>L'échange à l'autel : offre figée à gauche, transaction à droite. Les effets
+  <code>startOfRun</code> sont retirés avant l'ajout de la nouvelle relique.</figcaption>
+</figure>
+
+<h3><code>exchangeRelics</code> : retirer avant d'ajouter</h3>
+
+<p>La transaction elle-même est de six lignes, mais l'ordre de ces lignes est essentiel :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run/player_stats_manager.dart</span><span class="lang">dart</span></div>
+  <pre>  void exchangeRelics(List&lt;RelicData&gt; sacrificed, RelicData gained) {
+    for (var relic in sacrificed) {
+      removeRelicEffect(relic);
+    }
+    final sacrificedIds = sacrificed.map((r) =&gt; r.id).toList();
+    ref.read(inventoryProvider.notifier).removeRelics(sacrificedIds);
+    ref.read(inventoryProvider.notifier).addRelic(gained);
+  }</pre>
+</div>
+
+<p>Pourquoi cette étape <code>removeRelicEffect</code> ? Parce que certaines reliques ne s'appliquent
+pas « quand un événement arrive » mais <strong>une fois pour toutes, à l'acquisition</strong>. Ce sont
+celles dont le <code>trigger</code> vaut <code>startOfRun</code> : elles poussent définitivement une
+statistique du héros. Les retirer de l'inventaire ne suffirait pas — le bonus resterait acquis.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run/player_stats_manager.dart</span><span class="lang">dart</span></div>
+  <pre>  void removeRelicEffect(RelicData relic) {
+    if (relic.trigger == RelicTrigger.startOfRun) {
+      switch (relic.effectType) {
+        case 'gain_mana':
+          applyHeroStatModifier(maxManaAcc: -relic.value);
+          break;
+        case 'gain_strength':
+          applyHeroStatModifier(attackAcc: -relic.value);
+          break;
+        case 'gain_luck':
+          applyHeroStatModifier(luckAcc: -relic.value);
+          break;
+        case 'gain_crit':
+          applyHeroStatModifier(critChanceAcc: -relic.value);
+          break;
+        case 'increase_cards_per_turn':
+          applyRunRuleModifier(cardsPerTurnAcc: -relic.value);
+          break;
+      }
+    }
+  }</pre>
+</div>
+
+<p>Le miroir exact de <code>applyRelicEffect</code>, avec les valeurs négatives. Sur les 25 reliques du
+catalogue, 9 ont le trigger <code>startOfRun</code> — ce sont les seules concernées. Les autres
+(<code>startOfCombat</code>, <code>endOfTurn</code>, <code>onEnemyKilled</code>…) n'ont aucun état
+permanent à défaire : elles agissent au moment du déclencheur, en lisant l'inventaire. Les faire
+disparaître de l'inventaire suffit.</p>
+
+<div class="box">
+  <div class="box-title">À retenir — la symétrie acquisition / perte</div>
+  <p><code>InventoryController.addRelic</code> appelle <code>applyRelicEffect</code> si le trigger est
+  <code>startOfRun</code>. <code>exchangeRelics</code> appelle <code>removeRelicEffect</code> qui ne
+  fait quelque chose que si le trigger est <code>startOfRun</code>. Les deux moitiés sont écrites dans
+  deux fichiers différents mais forment une paire : toute nouvelle valeur d'<code>effectType</code>
+  <code>startOfRun</code> doit être ajoutée <strong>aux deux</strong> <code>switch</code>, sinon
+  l'échange laissera un bonus fantôme.</p>
+</div>
+
+<div class="box danger">
+  <div class="box-title">Point d'attention : le tirage se fait dans <code>build()</code></div>
+  <p>Relisez le code de la graine : il est <strong>à l'intérieur du <code>build()</code></strong>, dans
+  la branche <code>data:</code> du <code>gameDataAsync.when(...)</code>, et il <em>écrit</em> dans deux
+  champs de <code>State</code> (<code>_offeredRelic</code> et <code>_requiredRarity</code>). C'est un
+  anti-pattern Flutter caractérisé : <code>build()</code> doit être une fonction pure de l'état vers
+  les widgets. Flutter se réserve le droit de l'appeler à n'importe quel moment, plusieurs fois de
+  suite, sans que rien n'ait changé (redimensionnement, changement de thème, rebuild d'un ancêtre,
+  animation de route…).</p>
+  <p><strong>Pourquoi ça marche quand même ici ?</strong> Deux raisons cumulées. D'abord la garde
+  <code>if (_offeredRelic == null)</code> rend l'écriture <em>idempotente</em> : elle n'a lieu qu'une
+  fois par instance de <code>State</code>. Ensuite, et c'est le vrai filet de sécurité, la graine est
+  déterministe : <code>Random(seed)</code> est reconstruit à chaque passage avec la même valeur, donc
+  même si la garde sautait, les rebuilds successifs recalculeraient <strong>exactement la même
+  relique</strong>. Le déterminisme du tirage neutralise l'impureté du <code>build</code>.</p>
+  <p>Cela reste fragile. La place correcte de ce calcul est <code>initState</code> — impossible en
+  l'état, car il a besoin de <code>gameData</code>, encore en cours de chargement au montage. Un
+  <code>ref.listen</code> sur <code>gameDataLoaderProvider</code>, ou un provider dédié prenant le
+  <code>node</code> en paramètre, résoudrait proprement le problème.</p>
+</div>
+
+<h3>La sortie de l'autel</h3>
+
+<p>L'écran a deux boutons, et les deux appellent <code>completeCurrentNode()</code> :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/relic_exchange_screen.dart</span><span class="lang">dart</span></div>
+  <pre>  void _leave() {
+    ref.read(runProvider.notifier).completeCurrentNode();
+    Navigator.of(context).pop();
+  }</pre>
+</div>
+
+<p>PARTIR complète le nœud sans rien échanger ; ÉCHANGER fait la transaction puis complète le nœud.
+Contrairement à l'événement et au feu de camp, <strong>partir les mains vides est une sortie
+légitime</strong> — c'est même la seule possible quand on n'a pas trois reliques de la bonne rareté.</p>
+
+<div class="box warn">
+  <div class="box-title">Piège : l'autel n'a pas de <code>PopScope</code></div>
+  <p><code>RelicExchangeScreen</code> construit son <code>ScreenScaffold</code> sans passer
+  <code>canPop</code> ni <code>onPopInvokedWithResult</code>. Or le gabarit n'enveloppe dans un
+  <code>PopScope</code> que si l'un des deux est fourni. Résultat : le geste de retour système sort de
+  l'écran <strong>sans</strong> appeler <code>completeCurrentNode()</code>. Le nœud reste marqué non
+  complété et le joueur peut y revenir — pour retrouver, grâce à la graine déterministe, exactement la
+  même offre. Le bug est donc sans conséquence sur l'équilibrage, mais c'est bien un oubli : les deux
+  autres nœuds sans combat verrouillent leur sortie, celui-ci non.</p>
+</div>
+
+<div class="memo">
+  <div class="card"><h5>Événement</h5><p>3 choix, un seul retenu, effets immédiats. Verrou
+  <code>canPop: isResolved</code>.</p></div>
+  <div class="card"><h5>Feu de camp</h5><p>3 services exclusifs. Verrou
+  <code>canPop: _actionTaken</code>.</p></div>
+  <div class="card"><h5>Autel</h5><p>1 offre figée, 3 sacrifices exigés, ou rien. Pas de verrou.</p></div>
+  <div class="card"><h5>Le point commun</h5><p>Les trois écrans appellent
+  <code>completeCurrentNode()</code> juste avant leur <code>Navigator.pop()</code>.</p></div>
+</div>
+
+<div class="quiz">
+  <h2>Quiz — vérifiez vos acquis</h2>
+
+  <div class="q" data-answer="1">
+    <p class="q-text">1. Le choix « Purifier son esprit » de la Fontaine Bénie applique
+    <code>gain_max_hp</code> avec la valeur −12. À partir de quelle valeur de PV maximum le bouton
+    est-il grisé par <code>EventChoice.isSelectable</code> ?</p>
+    <ul class="q-opts">
+      <li>Dès que <code>maxPv</code> vaut 11 ou moins</li>
+      <li>Dès que <code>maxPv</code> vaut 12 ou moins</li>
+      <li>Dès que <code>maxPv</code> vaut 13 ou moins</li>
+      <li>Jamais : seuls les dégâts et le coût en or sont vérifiés</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> le test est
+    <code>if (val &lt; 0 &amp;&amp; currentMaxHp &lt;= -val) return false;</code> dans
+    <code>lib/models/data/event_data.dart</code>. Avec <code>val = -12</code>, la condition devient
+    <code>maxPv &lt;= 12</code> : le bouton est bloqué à 12 PV max et en dessous, et il faut donc
+    13 PV max au minimum pour pouvoir cliquer.</div>
+  </div>
+
+  <div class="q" data-answer="2">
+    <p class="q-text">2. Un Berserker (80 PV maximum de départ) choisit « se reposer » au feu de camp.
+    Combien de PV lui sont rendus ?</p>
+    <ul class="q-opts">
+      <li>30 PV, valeur fixe pour tous les héros</li>
+      <li>20 PV — un quart des PV maximum</li>
+      <li>24 PV — <code>(80 × 0.3).round()</code></li>
+      <li>40 PV — la moitié des PV maximum</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>_heal()</code> dans
+    <code>lib/ui/screens/rest_screen.dart</code> calcule
+    <code>final healAmount = (maxHp * 0.3).round();</code>, soit 30 % des PV maximum arrondis :
+    24 pour le Berserker (80), 30 pour le Paladin (100), 18 pour le Mage (60).</div>
+  </div>
+
+  <div class="q" data-answer="3">
+    <p class="q-text">3. Un héros avec <code>luck = 0</code> déclenche l'action <code>gain_relic</code>
+    d'un événement. Quelle est la probabilité d'obtenir une relique <strong>commune</strong> ?</p>
+    <ul class="q-opts">
+      <li>20 % — la même valeur que la rareté « peu commun »</li>
+      <li>40 % — le total des quatre autres raretés</li>
+      <li>80 % — les communes dominent le catalogue</li>
+      <li>60 % — le reste après 1 + 5 + 14 + 20</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> dans
+    <code>lib/game/controllers/event_controller.dart</code>, à <code>luck = 0</code> les quatre pentes
+    valent <code>legChance = 1.0</code>, <code>epicChance = 5.0</code>, <code>rareChance = 14.0</code>,
+    <code>uncommonChance = 20.0</code>, soit 40 points sur 100. Le <code>else</code> final attrape tout
+    le reste : 60 % de commune.</div>
+  </div>
+
+  <div class="q" data-answer="0">
+    <p class="q-text">4. L'autel des reliques propose une relique <strong>épique</strong>. Que doit
+    sacrifier le joueur ?</p>
+    <ul class="q-opts">
+      <li>Exactement 3 reliques rares</li>
+      <li>Exactement 3 reliques épiques</li>
+      <li>Exactement 2 reliques rares</li>
+      <li>3 reliques de n'importe quelle rareté</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>_getRequiredSacrificeRarity</code> dans
+    <code>lib/ui/screens/relic_exchange_screen.dart</code> renvoie
+    <code>RelicRarity.rare</code> pour une offre <code>RelicRarity.epic</code> — toujours un cran en
+    dessous. Et le compte est vérifié trois fois dans l'écran :
+    <code>_selectedOriginalIndices.length == 3</code>, exactement.</div>
+  </div>
+
+  <div class="q" data-answer="2">
+    <p class="q-text">5. Une carte ordinaire (<code>baseMaxForgeUpgrades</code> à sa valeur par défaut)
+    de rareté <strong>épique</strong> est présentée à la forge du feu de camp. Combien de runes peut-elle
+    porter au maximum ?</p>
+    <ul class="q-opts">
+      <li>1 rune — la valeur de base ne dépend pas de la rareté</li>
+      <li>3 runes</li>
+      <li>4 runes</li>
+      <li>5 runes — le plafond global du dialogue de forge</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> le calcul est
+    <code>card.data.baseMaxForgeUpgrades + card.rarity.index</code> dans
+    <code>lib/ui/screens/rest_card_selection_screen.dart</code>. La valeur par défaut de
+    <code>baseMaxForgeUpgrades</code> est 1 (<code>lib/models/data/card_data.dart</code>) et
+    <code>CardRarity.epic</code> est en position 3 dans
+    <code>enum CardRarity { common, uncommon, rare, epic, legendary, unique }</code> : 1 + 3 = 4 runes.</div>
+  </div>
+</div>
+
+<div class="pager">
+<a class="prev" href="ch15.html"><div class="dir">&#8592; Chapitre 15</div><div class="ttl">Récompenses, chance et probabilités</div></a>
+<a class="next" href="ch17.html"><div class="dir">Chapitre 17 &#8594;</div><div class="ttl">Le pont Flame ↔ Riverpod : l&#x27;écran de combat</div></a>
+</div>
+</div>
+</main>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

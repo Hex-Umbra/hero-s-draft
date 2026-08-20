@@ -1,0 +1,1737 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flutter — widgets, arbre et navigation — Formation Hero's Draft</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<button class="menu-btn" aria-label="Menu">&#9776;</button>
+<div class="layout">
+<aside class="sidebar">
+  <a class="brand" href="index.html">
+    <div class="brand-title">HERO'S DRAFT</div>
+    <div class="brand-sub">Formation complète au projet Flutter</div>
+  </a>
+<nav class="nav">
+<div class="nav-part">Partie 0 — Démarrage</div>
+<a href="ch01.html"><span class="num">01</span><span>Vue d&#x27;ensemble : qu&#x27;est-ce que Hero&#x27;s Draft ?</span></a>
+<div class="nav-part">Partie 1 — Les fondations techniques</div>
+<a href="ch02.html"><span class="num">02</span><span>Dart, le langage — l&#x27;essentiel pour ce projet</span></a>
+<a href="ch03.html" class="active"><span class="num">03</span><span>Flutter — widgets, arbre et navigation</span></a>
+<a href="ch04.html"><span class="num">04</span><span>Riverpod — l&#x27;état partagé du jeu</span></a>
+<a href="ch05.html"><span class="num">05</span><span>Flame — le moteur de rendu du combat</span></a>
+<div class="nav-part">Partie 2 — L&#x27;architecture du projet</div>
+<a href="ch06.html"><span class="num">06</span><span>L&#x27;architecture en quatre couches</span></a>
+<a href="ch07.html"><span class="num">07</span><span>La couche de données : un jeu 100 % data-driven</span></a>
+<div class="nav-part">Partie 3 — Les règles du jeu</div>
+<a href="ch08.html"><span class="num">08</span><span>Le héros : stats, classes, passifs et progression</span></a>
+<a href="ch09.html"><span class="num">09</span><span>Les cartes et le deck</span></a>
+<a href="ch10.html"><span class="num">10</span><span>Le combat : boucle de tour, dégâts et effets</span></a>
+<a href="ch11.html"><span class="num">11</span><span>Les ennemis et la courbe de difficulté</span></a>
+<a href="ch12.html"><span class="num">12</span><span>La carte du monde procédurale</span></a>
+<a href="ch13.html"><span class="num">13</span><span>Les reliques et le système de déclencheurs</span></a>
+<a href="ch14.html"><span class="num">14</span><span>L&#x27;économie : or, boutique, forge et fusion</span></a>
+<a href="ch15.html"><span class="num">15</span><span>Récompenses, chance et probabilités</span></a>
+<a href="ch16.html"><span class="num">16</span><span>Événements, repos et autel des reliques</span></a>
+<div class="nav-part">Partie 4 — L&#x27;interface et le rendu</div>
+<a href="ch17.html"><span class="num">17</span><span>Le pont Flame ↔ Riverpod : l&#x27;écran de combat</span></a>
+<a href="ch18.html"><span class="num">18</span><span>Composants Flame et game feel</span></a>
+<a href="ch19.html"><span class="num">19</span><span>Écrans, navigation et design system</span></a>
+<div class="nav-part">Partie 5 — Qualité et cycle de vie</div>
+<a href="ch20.html"><span class="num">20</span><span>Sauvegarde, localisation et tutoriel</span></a>
+<a href="ch21.html"><span class="num">21</span><span>Tests, outillage, dette technique et évolutions</span></a>
+</nav>
+</aside>
+<main class="main">
+<div class="content">
+<div class="chapter-kicker">Chapitre 03</div>
+<h1>Flutter — widgets, arbre et navigation</h1>
+<p class="lede">Tout ce qui s'affiche dans Hero's Draft en dehors du canvas de combat est un widget Flutter. Voici la mécanique, expliquée sur les écrans du jeu.</p>
+<div class="toc">
+  <div class="toc-title">Dans ce chapitre</div>
+  <ol>
+    <li><a href="#s1">« Tout est widget » — l'arbre, le <code>build</code>, l'immuabilité</a></li>
+    <li><a href="#s2">StatelessWidget, StatefulWidget, ConsumerWidget : les 4 variantes du projet</a></li>
+    <li><a href="#s3">Le cycle de vie d'un <code>State</code></a></li>
+    <li><a href="#s4">La mise en page : Scaffold, Column, Row, Stack, Expanded</a></li>
+    <li><a href="#s5">Responsive : MediaQuery, LayoutBuilder, AspectRatio</a></li>
+    <li><a href="#s6">BuildContext, Theme et localisation d'accès</a></li>
+    <li><a href="#s7">La navigation : Navigator, routes typées, PopScope</a></li>
+    <li><a href="#s8">Les animations : implicites et explicites</a></li>
+    <li><a href="#s9">Dessiner soi-même : CustomPainter</a></li>
+  </ol>
+</div>
+
+<h2 id="s1">1. « Tout est widget »</h2>
+<p>En Flutter, il n'y a pas de fichier de mise en page séparé, pas de XML, pas de HTML. L'interface est décrite <strong>en Dart</strong>, par des objets appelés <em>widgets</em>. Un bouton est un widget, un texte est un widget, mais aussi une marge (<code>Padding</code>), un alignement (<code>Center</code>), une contrainte de taille (<code>SizedBox</code>), une opacité (<code>Opacity</code>) et même une zone d'écoute de la souris (<code>MouseRegion</code>). Cette uniformité est déroutante au début, puis devient l'atout principal du framework : il n'y a qu'un seul concept à maîtriser.</p>
+<p>Ces widgets sont assemblés en un <strong>arbre</strong>. Chaque widget déclare ses enfants — soit un seul via <code>child:</code>, soit plusieurs via <code>children:</code>. La racine de l'arbre de Hero's Draft, c'est <code>runApp()</code> dans <code>lib/main.dart</code>.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/main.dart</span><span class="lang">dart</span></div>
+  <pre>import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:roguelike_card_game/l10n/app_localizations.dart';
+import 'ui/screens/splash_screen.dart';
+import 'ui/widgets/notification_overlay.dart';
+import 'game/controllers/checkpoint_controller.dart';
+import 'ui/theme/app_theme.dart';
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const ProviderScope(child: HerosDraftApp()));
+}
+class HerosDraftApp extends ConsumerWidget {
+  const HerosDraftApp({super.key});
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Force l'activation de l'écoute d'autosave dès le démarrage de l'app.
+    ref.watch(autosaveOrchestratorProvider);
+    return MaterialApp(
+      onGenerateTitle: (context) =&gt; AppLocalizations.of(context)!.appTitle,
+      theme: AppTheme.darkNeonTheme,
+      debugShowCheckedModeBanner: false,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [Locale('en', ''), Locale('fr', '')],
+      home: const SplashScreen(),
+      builder: (context, child) {
+        return Stack(
+          children: [
+            child ?? const SizedBox.shrink(),
+            const GameNotificationOverlay(),
+          ],
+        );
+      },
+    );
+  }
+}</pre>
+</div>
+<p>Lisez ce fichier de haut en bas, c'est la carte du jeu entier :</p>
+<ul>
+  <li><code>WidgetsFlutterBinding.ensureInitialized()</code> initialise le pont entre Dart et la plateforme. Obligatoire dès qu'on touche à des services natifs avant <code>runApp</code>.</li>
+  <li><code>ProviderScope</code> vient de <span class="pill r">Riverpod</span> : c'est le conteneur qui héberge tous les états partagés du jeu. Il est <em>au-dessus</em> de l'application, donc accessible depuis n'importe quel widget en dessous.</li>
+  <li><code>MaterialApp</code> apporte le <code>Navigator</code> (la pile d'écrans), le thème, la localisation et les transitions de pages.</li>
+  <li><code>home: const SplashScreen()</code> est la première route de la pile. Retenez ce détail : toute la section 7 sur <code>popUntil</code> en dépend.</li>
+  <li><code>builder:</code> est un point d'insertion : Flutter vous donne le <code>child</code> (c'est-à-dire le <code>Navigator</code> et tout ce qu'il affiche) et vous le rendez enveloppé. Ici, on le place dans un <code>Stack</code> avec <code>GameNotificationOverlay</code> par-dessus, ce qui garantit que les notifications du jeu flottent au-dessus de <strong>tous</strong> les écrans, quel que soit celui qui est affiché.</li>
+</ul>
+<div class="box"><div class="box-title">À retenir</div>
+<p>Un widget n'est <strong>pas</strong> un objet graphique. C'est une <em>description immuable</em> de ce qui doit être affiché — l'équivalent d'un plan, pas du bâtiment. C'est pour cette raison que la quasi-totalité des widgets du projet sont déclarés <code>const</code> avec des champs <code>final</code> : ils sont créés, comparés, jetés et recréés des dizaines de fois par seconde.</p></div>
+
+<h3>La reconstruction : la méthode <code>build</code></h3>
+<p>Chaque widget qui a du contenu implémente une méthode <code>build</code>. Elle renvoie un nouveau sous-arbre de widgets. Flutter l'appelle :</p>
+<ul>
+  <li>à la première insertion du widget dans l'arbre ;</li>
+  <li>quand un <code>setState()</code> est déclenché dans un <code>State</code> au-dessus ou dans ce widget ;</li>
+  <li>quand un provider observé par <code>ref.watch(...)</code> change de valeur ;</li>
+  <li>quand une dépendance héritée change (rotation d'écran, changement de langue, changement de thème).</li>
+</ul>
+<p>Ce que Flutter fait ensuite n'est pas de tout redessiner : il <strong>compare</strong> l'ancien arbre de widgets et le nouveau, position par position. Si le type et la <code>key</code> d'un widget n'ont pas changé, il conserve l'élément et son <code>State</code> existant et se contente de mettre à jour les propriétés. C'est ce qui rend acceptable un <code>build</code> qui reconstruit visuellement tout un écran : ce sont des allocations d'objets Dart très légers, pas des opérations graphiques.</p>
+<div class="box warn"><div class="box-title">Piège</div>
+<p><code>build</code> doit être <strong>pur</strong> : pas d'appel réseau, pas d'écriture de fichier, pas de <code>setState</code>, pas de modification de provider. Il peut être appelé à n'importe quel moment et plusieurs fois d'affilée. Le projet enfreint cette règle une fois, dans <code>lib/ui/screens/map_screen.dart</code> — on y revient en section 3.</p></div>
+
+<h3>Le widget racine des écrans : <code>ScreenScaffold</code></h3>
+<p>Pour éviter de recopier le même fond dégradé sur 17 écrans, le projet définit un widget maison, <code>ScreenScaffold</code>, qui compose <code>Scaffold</code> + fond + <code>SafeArea</code> + éventuellement <code>PopScope</code>. Sa méthode <code>build</code> est un excellent exemple de « composition conditionnelle » : on part du <code>body</code> et on l'emballe couche par couche.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/screen_scaffold.dart</span><span class="lang">dart</span></div>
+  <pre>@override
+Widget build(BuildContext context) {
+  Widget content = body;
+  if (useSafeArea) {
+    content = SafeArea(child: content);
+  }
+  Decoration? decoration;
+  Color? backgroundColor;
+  switch (backgroundType) {
+    case ScreenBackgroundType.dark:
+      decoration = BoxDecoration(
+        gradient: LinearGradient(/* noir → 0xFF1A0A00 → noir */),
+      );
+      backgroundColor = const Color(0xFF0D0D1A);
+      break;
+    // ... parchment / none
+  }
+  Widget scaffoldBody = content;
+  if (decoration != null) {
+    scaffoldBody = Container(
+      width: double.infinity, height: double.infinity,
+      decoration: decoration, child: content,
+    );
+  }
+  Widget mainWidget = Scaffold(
+    backgroundColor: backgroundColor, appBar: appBar, body: scaffoldBody,
+  );
+  if (canPop != null || onPopInvokedWithResult != null) {
+    mainWidget = PopScope(
+      canPop: canPop ?? true,
+      onPopInvokedWithResult: onPopInvokedWithResult,
+      child: mainWidget,
+    );
+  }
+  return mainWidget;
+}</pre>
+</div>
+<p>Notez l'ordre d'emballage : <code>SafeArea</code> est appliqué en premier, donc il se retrouve <em>le plus bas</em> dans l'arbre ; <code>PopScope</code> est appliqué en dernier, donc il se retrouve <em>le plus haut</em>. Voici l'arbre réel obtenu pour l'écran de carte du monde.</p>
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 840 480" width="840" role="img" aria-label="Arbre de widgets de l'écran MapScreen : ScreenScaffold, PopScope, Scaffold, Container, SafeArea, Stack et ses cinq enfants">
+      <defs>
+        <marker id="c3-arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0 0 L8 4 L0 8 z" fill="#3a4966"/> </marker>
+        <marker id="c3-arr-v" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0 0 L8 4 L0 8 z" fill="#a78bfa"/> </marker>
+        <marker id="c3-arr-g" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0 0 L8 4 L0 8 z" fill="#34d399"/> </marker>
+      </defs>
+      <rect x="0" y="0" width="840" height="480" fill="#0e1524"/>
+      <!-- colonne A : la colonne vertebrale -->
+      <rect x="24" y="24" width="200" height="44" rx="8" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="124" y="43" fill="#e6ecf5" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">MapScreen</text>
+      <text x="124" y="59" fill="#a7b4c9" font-size="10" text-anchor="middle">ConsumerStatefulWidget</text>
+      <rect x="24" y="84" width="200" height="44" rx="8" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="124" y="103" fill="#e6ecf5" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">ScreenScaffold</text>
+      <text x="124" y="119" fill="#a7b4c9" font-size="10" text-anchor="middle">backgroundType: parchment</text>
+      <rect x="24" y="144" width="200" height="44" rx="8" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="124" y="163" fill="#e6ecf5" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">PopScope</text>
+      <text x="124" y="179" fill="#f59e0b" font-size="10" text-anchor="middle">canPop: false</text>
+      <rect x="24" y="204" width="200" height="44" rx="8" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="124" y="223" fill="#e6ecf5" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">Scaffold</text>
+      <text x="124" y="239" fill="#a7b4c9" font-size="10" text-anchor="middle">appBar: AppBar + body</text>
+      <rect x="24" y="264" width="200" height="44" rx="8" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="124" y="283" fill="#e6ecf5" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">Container</text>
+      <text x="124" y="299" fill="#a7b4c9" font-size="10" text-anchor="middle">RadialGradient parchemin</text>
+      <rect x="24" y="324" width="200" height="32" rx="8" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="124" y="345" fill="#e6ecf5" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">SafeArea</text>
+      <rect x="24" y="372" width="200" height="44" rx="8" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="124" y="391" fill="#e6ecf5" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">Stack</text>
+      <text x="124" y="407" fill="#a7b4c9" font-size="10" text-anchor="middle">body — 5 enfants empilés</text>
+      <path d="M124 68 L124 82" stroke="#3a4966" stroke-width="2" marker-end="url(#c3-arr)"/>
+      <path d="M124 128 L124 142" stroke="#3a4966" stroke-width="2" marker-end="url(#c3-arr)"/>
+      <path d="M124 188 L124 202" stroke="#3a4966" stroke-width="2" marker-end="url(#c3-arr)"/>
+      <path d="M124 248 L124 262" stroke="#3a4966" stroke-width="2" marker-end="url(#c3-arr)"/>
+      <path d="M124 308 L124 322" stroke="#3a4966" stroke-width="2" marker-end="url(#c3-arr)"/>
+      <path d="M124 356 L124 370" stroke="#3a4966" stroke-width="2" marker-end="url(#c3-arr)"/>
+      <!-- connecteur Stack -> enfants -->
+      <path d="M224 394 L255 394" stroke="#a78bfa" stroke-width="2"/>
+      <path d="M255 198 L255 422" stroke="#a78bfa" stroke-width="2"/>
+      <path d="M255 198 L284 198" stroke="#a78bfa" stroke-width="2" marker-end="url(#c3-arr-v)"/>
+      <path d="M255 254 L284 254" stroke="#a78bfa" stroke-width="2" marker-end="url(#c3-arr-v)"/>
+      <path d="M255 310 L284 310" stroke="#a78bfa" stroke-width="2" marker-end="url(#c3-arr-v)"/>
+      <path d="M255 366 L284 366" stroke="#a78bfa" stroke-width="2" marker-end="url(#c3-arr-v)"/>
+      <path d="M255 422 L284 422" stroke="#a78bfa" stroke-width="2" marker-end="url(#c3-arr-v)"/>
+      <!-- colonne B : enfants du Stack -->
+      <rect x="286" y="176" width="246" height="44" rx="8" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="409" y="195" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">Listener › InteractiveViewer</text>
+      <text x="409" y="211" fill="#a7b4c9" font-size="10" text-anchor="middle">toile 3000 × 5000 pannable</text>
+      <rect x="286" y="232" width="246" height="44" rx="8" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="409" y="251" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">Positioned › MapLegend</text>
+      <text x="409" y="267" fill="#a7b4c9" font-size="10" text-anchor="middle">left: 20, bottom: 20</text>
+      <rect x="286" y="288" width="246" height="44" rx="8" fill="#151b2b" stroke="#3a4966"/>
+      <text x="409" y="307" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">MapTooltipOverlay</text>
+      <text x="409" y="323" fill="#a7b4c9" font-size="10" text-anchor="middle">seulement si _showTooltip</text>
+      <rect x="286" y="344" width="246" height="44" rx="8" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="409" y="363" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">Positioned › HeroMiniStatsPanel</text>
+      <text x="409" y="379" fill="#a7b4c9" font-size="10" text-anchor="middle">right: 20, bottom: 20</text>
+      <rect x="286" y="400" width="246" height="44" rx="8" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="409" y="419" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">LevelUpOverlay</text>
+      <text x="409" y="435" fill="#f59e0b" font-size="10" text-anchor="middle">si pendingDrafts &gt; 0</text>
+      <!-- connecteur B1 -> colonne C -->
+      <path d="M532 198 L552 198" stroke="#34d399" stroke-width="2"/>
+      <path d="M552 154 L552 266" stroke="#34d399" stroke-width="2"/>
+      <path d="M552 154 L574 154" stroke="#34d399" stroke-width="2" marker-end="url(#c3-arr-g)"/>
+      <path d="M552 210 L574 210" stroke="#34d399" stroke-width="2" marker-end="url(#c3-arr-g)"/>
+      <path d="M552 266 L574 266" stroke="#34d399" stroke-width="2" marker-end="url(#c3-arr-g)"/>
+      <!-- colonne C -->
+      <rect x="576" y="132" width="240" height="44" rx="8" fill="#151b2b" stroke="#34d399"/>
+      <text x="696" y="151" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">RepaintBoundary</text>
+      <text x="696" y="167" fill="#a7b4c9" font-size="10" text-anchor="middle">CustomPaint · MapConnectionPainter</text>
+      <rect x="576" y="188" width="240" height="44" rx="8" fill="#151b2b" stroke="#34d399"/>
+      <text x="696" y="207" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">MapNodeWidget × n</text>
+      <text x="696" y="223" fill="#a7b4c9" font-size="10" text-anchor="middle">un par nœud de la carte</text>
+      <rect x="576" y="244" width="240" height="44" rx="8" fill="#151b2b" stroke="#34d399"/>
+      <text x="696" y="263" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">PlayerPawn</text>
+      <text x="696" y="279" fill="#a7b4c9" font-size="10" text-anchor="middle">AnimatedPositioned 600 ms</text>
+      <text x="576" y="330" fill="#a7b4c9" font-size="11">Les 5 enfants du Stack sont dessinés</text>
+      <text x="576" y="346" fill="#a7b4c9" font-size="11">dans l'ordre : le dernier de la liste</text>
+      <text x="576" y="362" fill="#a7b4c9" font-size="11">(LevelUpOverlay) est devant tous</text>
+      <text x="576" y="378" fill="#a7b4c9" font-size="11">les autres et bloque les clics.</text>
+    </svg>
+  </div>
+  <figcaption>L'arbre réel de <code>lib/ui/screens/map_screen.dart</code>. La colonne de gauche est produite par <code>ScreenScaffold</code>, la colonne du milieu est le <code>body</code>, la colonne de droite est le contenu de la toile de carte.</figcaption>
+</figure>
+
+<h2 id="s2">2. StatelessWidget, StatefulWidget, ConsumerWidget</h2>
+<p>Le projet utilise exactement quatre variantes de widget. Savoir laquelle choisir est la première compétence à acquérir, et la règle tient en deux questions :</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Classe</th><th>État local ?</th><th>Accès aux providers ?</th><th>Occurrences dans <code>lib/</code></th></tr></thead>
+<tbody>
+<tr><td><code>StatelessWidget</code></td><td>non</td><td>non</td><td>36</td></tr>
+<tr><td><code>StatefulWidget</code> + <code>State</code></td><td>oui</td><td>non</td><td>30</td></tr>
+<tr><td><code>ConsumerWidget</code></td><td>non</td><td>oui (<code>ref</code> en paramètre de <code>build</code>)</td><td>11</td></tr>
+<tr><td><code>ConsumerStatefulWidget</code> + <code>ConsumerState</code></td><td>oui</td><td>oui (<code>ref</code> champ de la classe)</td><td>13</td></tr>
+</tbody>
+</table></div>
+
+<h3>StatelessWidget — <code>_RelicDictionaryCard</code></h3>
+<p>Une fiche de relique dans le dictionnaire. Elle reçoit sa relique et la langue par le constructeur, elle n'a rien à mémoriser, elle ne fait que traduire des données en pixels. C'est le cas le plus fréquent, et celui qu'il faut viser par défaut.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/card_dictionary_screen.dart</span><span class="lang">dart</span></div>
+  <pre>class _RelicDictionaryCard extends StatelessWidget {
+  final RelicData relic;
+  final String locale;
+  const _RelicDictionaryCard({required this.relic, required this.locale});
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    Color triggerColor = Colors.grey;
+    String triggerText = 'Passif';
+    switch (relic.trigger) {
+      case RelicTrigger.startOfRun:
+        triggerText = l10n.relicTriggerRun;
+        triggerColor = Colors.blueAccent;
+        break;
+      // ... 8 autres déclencheurs
+    }
+    // ...
+  }
+}</pre>
+</div>
+<p>Le préfixe <code>_</code> signifie « privé au fichier » en Dart. C'est la convention du projet pour les widgets qui ne servent qu'à un seul écran : ils vivent dans le même fichier que l'écran, sous la classe principale.</p>
+
+<h3>StatefulWidget + State — <code>_PatchVersionCard</code></h3>
+<p>Une carte de version dans les patch notes, qui se déplie au clic. Il y a deux choses à mémoriser entre deux <code>build</code> : le booléen <code>_expanded</code> et un <code>AnimationController</code> qui fait pivoter le chevron. Un <code>StatelessWidget</code> ne peut pas les héberger, car il est recréé à chaque reconstruction du parent.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/patch_notes_screen.dart</span><span class="lang">dart</span></div>
+  <pre>class _PatchVersionCard extends StatefulWidget {
+  final _PatchVersion patch;
+  final bool isLatest;
+  const _PatchVersionCard({required this.patch, required this.isLatest});
+  @override
+  State&lt;_PatchVersionCard&gt; createState() =&gt; _PatchVersionCardState();
+}
+class _PatchVersionCardState extends State&lt;_PatchVersionCard&gt;
+    with SingleTickerProviderStateMixin {
+  bool _expanded = false;
+  late AnimationController _controller;
+  late Animation&lt;double&gt; _rotateAnim;
+  @override
+  void initState() {
+    super.initState();
+    _expanded = widget.isLatest; // expand latest by default
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 250),
+      value: _expanded ? 1.0 : 0.0,
+    );
+    _rotateAnim = Tween&lt;double&gt;(begin: 0, end: 0.5).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+  void _toggle() {
+    setState(() =&gt; _expanded = !_expanded);
+    _expanded ? _controller.forward() : _controller.reverse();
+  }</pre>
+</div>
+<div class="box"><div class="box-title">À retenir</div>
+<p>Un <code>StatefulWidget</code> est en réalité <strong>deux</strong> classes. Le widget lui-même reste immuable et jetable (ses champs sont <code>final</code>) ; c'est l'objet <code>State</code>, lui, qui survit aux reconstructions. Dans le <code>State</code>, on accède aux paramètres du widget via <code>widget.xxx</code> — vous le verrez partout : <code>widget.isLatest</code>, <code>widget.patch</code>, <code>widget.currentPv</code>.</p></div>
+
+<h3>ConsumerWidget — <code>SplashScreen</code></h3>
+<p><span class="pill r">Riverpod</span> ajoute <code>ConsumerWidget</code> : un <code>StatelessWidget</code> dont la méthode <code>build</code> reçoit un second paramètre, <code>WidgetRef ref</code>, qui donne accès aux providers. Le premier écran du jeu s'en sert pour attendre le chargement des JSON.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/splash_screen.dart</span><span class="lang">dart</span></div>
+  <pre>class SplashScreen extends ConsumerWidget {
+  const SplashScreen({super.key});
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final gameData = ref.watch(gameDataLoaderProvider);
+    return Scaffold(
+      body: Center(
+        child: gameData.when(
+          data: (_) =&gt;
+              const HomeScreen(), // Si les données sont chargées, on affiche l'écran d'accueil
+          loading: () =&gt;
+              const CircularProgressIndicator(), // Pendant le chargement
+          error: (error, stack) =&gt;
+              Text('Erreur de chargement: $error'), // En cas d'erreur
+        ),
+      ),
+    );
+  }
+}</pre>
+</div>
+<p>Trois états, trois branches, zéro <code>if</code> : c'est le pattern <code>when</code> de Riverpod. Notez surtout que <code>HomeScreen</code> n'est pas une route à part entière — c'est le <em>contenu</em> de la route <code>SplashScreen</code>. Ce détail explique pourquoi le menu pause peut revenir au menu principal avec <code>popUntil((route) =&gt; route.isFirst)</code>.</p>
+
+<h3>ConsumerStatefulWidget — <code>HomeScreen</code></h3>
+<p>Le menu principal a besoin des deux : de <code>ref</code> (pour passer <code>ref.read</code> au <code>SaveService</code>) et d'un <code>State</code> (pour appeler <code>setState</code> au retour d'un écran et rafraîchir la présence d'une sauvegarde).</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/home_screen.dart</span><span class="lang">dart</span></div>
+  <pre>class HomeScreen extends ConsumerStatefulWidget {
+  const HomeScreen({super.key});
+  @override
+  ConsumerState&lt;HomeScreen&gt; createState() =&gt; _HomeScreenState();
+}
+class _HomeScreenState extends ConsumerState&lt;HomeScreen&gt; {
+  Future&lt;void&gt; _continueGame() async {
+    final result = await SaveService.load(ref.read);
+    if (!mounted) return;
+    if (!result.success) {
+      // The save was corrupted or unreadable; SaveService.load already
+      // cleared it internally, so simply refresh this screen — the
+      // "Continuer" button will disappear on rebuild.
+      setState(() {});
+      return;
+    }
+    // ...</pre>
+</div>
+<div class="box ok"><div class="box-title">Bonne pratique</div>
+<p>Choisissez la classe la <strong>moins</strong> puissante qui fait le travail : <code>StatelessWidget</code> par défaut, <code>ConsumerWidget</code> s'il faut lire un provider, <code>StatefulWidget</code> seulement si un <code>AnimationController</code>, un <code>TextEditingController</code>, un <code>ScrollController</code> ou un booléen local est nécessaire. Un widget stateless est plus facile à tester et à raisonner.</p></div>
+<div class="box danger"><div class="box-title">Point d'attention</div>
+<p>Deux widgets du projet trichent : <code>_InteractiveClassCard</code> (<code>lib/ui/screens/class_selection_screen.dart</code>) et <code>_MergeDialog</code> (<code>lib/ui/screens/deck_screen.dart</code>) sont de simples <code>StatefulWidget</code> qui reçoivent un <code>final WidgetRef ref;</code> par leur constructeur, puis appellent <code>widget.ref.watch(gameDataLoaderProvider)</code> dans leur <code>build</code>. Cela fonctionne ici parce que le provider observé ne change jamais après le chargement, mais c'est fragile : la souscription est rattachée au widget <em>parent</em>, pas à l'enfant. La forme correcte est <code>ConsumerStatefulWidget</code>, qui expose <code>ref</code> nativement.</p></div>
+
+<h2 id="s3">3. Le cycle de vie d'un <code>State</code></h2>
+<p>Un objet <code>State</code> traverse toujours la même séquence. Les cinq méthodes à connaître, dans l'ordre chronologique :</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Méthode</th><th>Quand</th><th>Ce qu'on y met dans le projet</th></tr></thead>
+<tbody>
+<tr><td><code>initState()</code></td><td>une seule fois, à la création</td><td>création des <code>AnimationController</code>, tirage des choix de draft, chargement d'un <code>Future</code></td></tr>
+<tr><td><code>didChangeDependencies()</code></td><td>après <code>initState</code>, puis à chaque changement d'un <code>InheritedWidget</code> dont on dépend</td><td>initialisation de la boutique (<code>shop_screen.dart</code>)</td></tr>
+<tr><td><code>build()</code></td><td>très souvent</td><td>uniquement de la description d'interface</td></tr>
+<tr><td><code>didUpdateWidget(old)</code></td><td>quand le parent reconstruit le widget avec de nouveaux paramètres</td><td>comparaison ancien/nouveau PV pour relancer une animation</td></tr>
+<tr><td><code>dispose()</code></td><td>au retrait définitif de l'arbre</td><td><code>controller.dispose()</code>, annulation des <code>Timer</code></td></tr>
+</tbody>
+</table></div>
+
+<h3>Pourquoi on ne peut pas simplement écrire son code dans <code>initState</code></h3>
+<p>Il y a une contrainte forte : pendant <code>initState</code>, on est au milieu de la construction de l'arbre. Modifier un provider à ce moment-là ferait muter un état pendant que Flutter est en train de bâtir la frame, ce qui déclenche l'erreur classique <em>« Tried to modify a provider while the widget tree was building »</em>. La solution est de <strong>différer</strong> l'appel après la construction. Le projet utilise deux techniques, selon les fichiers.</p>
+<p><strong>Technique 1 — <code>Future.microtask</code></strong> : la fonction est mise en file d'attente et exécutée dès que la pile d'appels courante est vide, c'est-à-dire juste après la fin de <code>initState</code>, mais éventuellement avant que la première frame ne soit peinte.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/event_screen.dart</span><span class="lang">dart</span></div>
+  <pre>class _EventScreenState extends ConsumerState&lt;EventScreen&gt; {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      final gameData = ref.read(gameDataLoaderProvider).requireValue;
+      ref.read(eventProvider.notifier).initializeEvent(gameData.events);
+    });
+  }</pre>
+</div>
+<p>Le même schéma, en plus fourni, ouvre le combat : <code>startPlayerCombat()</code> puis <code>initializeCombat(...)</code> avec le niveau, l'acte, les ennemis, le nombre de reliques et la taille du deck.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>@override
+void initState() {
+  super.initState();
+  Future.microtask(() {
+    ref.read(combatProvider.notifier).startPlayerCombat();
+    final runState = ref.read(runProvider);
+    final currentNode = runState.mapNodes.firstWhere(
+      (n) =&gt; n.id == runState.currentNodeId,
+      orElse: () =&gt; runState.mapNodes.first,
+    );
+    final gameData = ref.read(gameDataLoaderProvider).requireValue;
+    ref.read(combatProvider.notifier).initializeCombat(
+          runState.currentLevel, runState.currentNodeType, gameData.enemies,
+          playerLevel: runState.heroStats.level,
+          act: runState.act,
+          playerMaxHp: runState.heroStats.maxPv,
+          // ... 5 autres paramètres
+          bossEnemyId: currentNode.bossEnemyId,
+        );
+  });</pre>
+</div>
+<p><strong>Technique 2 — <code>didChangeDependencies</code> + un drapeau</strong> : la boutique utilise cette variante, parce que <code>didChangeDependencies</code> peut être rappelé plusieurs fois (changement de langue, de thème, de taille d'écran) alors qu'on ne veut initialiser le stock qu'une seule fois.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/shop_screen.dart</span><span class="lang">dart</span></div>
+  <pre>class _ShopScreenState extends ConsumerState&lt;ShopScreen&gt; {
+  bool _isInitialized = false;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isInitialized) {
+      Future.microtask(() {
+        final gameData = ref.read(gameDataLoaderProvider).requireValue;
+        final inventoryState = ref.read(inventoryProvider);
+        ref
+            .read(shopProvider.notifier)
+            .initializeShop(gameData.cards, inventoryState.bonusShopCards);
+      });
+      _isInitialized = true;
+    }
+  }</pre>
+</div>
+<p><strong>Technique 3 — <code>WidgetsBinding.instance.addPostFrameCallback</code></strong> : la fonction est appelée <em>après</em> que la frame en cours a été peinte. C'est ce qu'il faut quand on a besoin d'une information géométrique déjà calculée, ou qu'on veut ouvrir un dialogue par-dessus une page déjà affichée. Le dialogue de fusion de cartes s'en sert pour sauter directement à l'étape 2 quand le joueur possède exactement trois exemplaires :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/deck_screen.dart</span><span class="lang">dart</span></div>
+  <pre>@override
+void initState() {
+  super.initState();
+  if (widget.duplicates.length == 3) {
+    _selectedCardIds.addAll(widget.duplicates.map((c) =&gt; c.uniqueId));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _proceedToUpgrades();
+    });
+  }
+}</pre>
+</div>
+<div class="box danger"><div class="box-title">Point d'attention</div>
+<p><code>lib/ui/screens/map_screen.dart</code> appelle <code>addPostFrameCallback</code> <strong>dans <code>build</code></strong>, pas dans <code>initState</code> :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/map_screen.dart</span><span class="lang">dart</span></div>
+  <pre>WidgetsBinding.instance.addPostFrameCallback((_) {
+  _centerCameraIfNeeded(runState, nodes, currentNodeId, screenSize);
+});</pre>
+</div>
+<p>Une nouvelle callback est donc enregistrée à chaque reconstruction de la carte. Le corps de <code>_centerCameraIfNeeded</code> sort immédiatement si <code>_lastActCentered</code> vaut déjà l'acte courant, donc le coût réel est faible — mais c'est une entorse à la règle « <code>build</code> doit être pur » et un piège si quelqu'un ajoute un effet de bord dans cette fonction.</p></div>
+
+<h3>Le <code>if (!mounted) return;</code> après un <code>await</code></h3>
+<p>C'est la règle de sécurité la plus importante du chapitre. Considérez ce déroulé :</p>
+<ol>
+  <li>Le joueur appuie sur « Continuer ». <code>_continueGame()</code> démarre.</li>
+  <li>Le code atteint <code>await SaveService.load(ref.read)</code> et <strong>rend la main</strong>. Pendant ce temps, Flutter continue de tourner.</li>
+  <li>Le joueur appuie sur retour, ou l'écran est retiré pour une autre raison. Le <code>State</code> est <em>disposé</em>.</li>
+  <li>La lecture de la sauvegarde se termine, le code reprend… et appelle <code>setState()</code> sur un <code>State</code> mort, ou lit <code>context</code> qui n'est plus rattaché à l'arbre. Exception.</li>
+</ol>
+<p>La propriété <code>mounted</code> du <code>State</code> vaut <code>false</code> dès que le widget a été retiré. On la teste systématiquement après chaque <code>await</code>. <code>HomeScreen</code> le fait trois fois dans la même méthode :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/home_screen.dart</span><span class="lang">dart</span></div>
+  <pre>Future&lt;void&gt; _continueGame() async {
+  final result = await SaveService.load(ref.read);
+  if (!mounted) return;
+  // ...
+  if (result.missingItems.isNotEmpty) {
+    final locale = Localizations.localeOf(context).languageCode;
+    // ... affichage du dialogue des objets manquants
+  }
+  if (!mounted) return;
+  await Navigator.of(context).push(
+    MaterialPageRoute(builder: (context) =&gt; const MapScreen()),
+  );
+  // The pause menu and the death overlay both return here via
+  // Navigator.popUntil((route) =&gt; route.isFirst) rather than recreating
+  // this screen, so the save state must be re-checked on return.
+  if (mounted) setState(() {});
+}</pre>
+</div>
+<p>Notez la dernière ligne : <code>Navigator.push</code> renvoie un <code>Future</code> qui ne se résout que lorsque l'écran poussé est dépilé. On peut donc écrire du code « au retour de l'écran » simplement en mettant un <code>await</code> devant, ce que le projet fait pour rafraîchir la présence d'une sauvegarde.</p>
+<div class="box warn"><div class="box-title">Piège</div>
+<p>Dans un <code>StatelessWidget</code> ou dans un callback qui n'a pas de <code>State</code>, il n'existe pas de <code>mounted</code> local. On teste alors <code>context.mounted</code>, comme dans <code>lib/ui/widgets/hud/death_overlay.dart</code> : <code>await SaveService.clear(); if (!context.mounted) return;</code>.</p></div>
+
+<h3><code>dispose</code> : tout ce qu'on crée, on le détruit</h3>
+<p>Un <code>AnimationController</code> s'abonne au <em>ticker</em> de Flutter (60 à 120 rappels par seconde). Si on ne le libère pas, il continue de tourner après la disparition de l'écran : fuite mémoire et batterie. La règle est mécanique — un <code>controller</code> créé dans <code>initState</code>, un <code>controller.dispose()</code> dans <code>dispose</code>, et <code>super.dispose()</code> en dernier.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/class_selection_screen.dart</span><span class="lang">dart</span></div>
+  <pre>@override
+void initState() {
+  super.initState();
+  _floatController = AnimationController(
+    duration: const Duration(seconds: 3),
+    vsync: this,
+  )..repeat(reverse: true);
+  _floatAnimation = Tween&lt;double&gt;(begin: -4, end: 4).animate(
+    CurvedAnimation(parent: _floatController, curve: Curves.easeInOut),
+  );
+}
+@override
+void dispose() {
+  _floatController.dispose();
+  super.dispose();
+}</pre>
+</div>
+<p>Le même principe s'applique aux ressources non graphiques. <code>NotificationNotifier</code> maintient une <code>Map&lt;String, Timer&gt;</code> ; le widget qui l'affiche annule tout dans son <code>dispose</code> :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/notification_overlay.dart</span><span class="lang">dart</span></div>
+  <pre>class _GameNotificationOverlayState
+    extends ConsumerState&lt;GameNotificationOverlay&gt; {
+  @override
+  void dispose() {
+    // Annule tous les Timers restants et nettoie le cache lors du démontage du widget (indispensable pour les tests)
+    ref.read(notificationProvider.notifier).clearAll();
+    super.dispose();
+  }</pre>
+</div>
+
+<h2 id="s4">4. La mise en page</h2>
+<p>Flutter n'a ni flexbox ni grille CSS : la mise en page se fait en imbriquant des widgets dont c'est l'unique rôle. Le vocabulaire de base utilisé dans le projet :</p>
+<div class="memo">
+  <div class="card"><h5>Scaffold</h5><p>La structure Material d'un écran : <code>appBar</code>, <code>body</code>, couleur de fond. Un par écran.</p></div>
+  <div class="card"><h5>Column / Row</h5><p>Empile les enfants verticalement / horizontalement. <code>mainAxisAlignment</code> gère l'axe principal, <code>crossAxisAlignment</code> l'axe perpendiculaire.</p></div>
+  <div class="card"><h5>Stack</h5><p>Superpose les enfants. Le dernier de la liste est devant. Se combine avec <code>Positioned</code> et <code>Positioned.fill</code>.</p></div>
+  <div class="card"><h5>Expanded</h5><p>Dans une <code>Row</code> ou une <code>Column</code>, prend tout l'espace restant, réparti selon <code>flex</code>.</p></div>
+  <div class="card"><h5>Flexible</h5><p>Comme <code>Expanded</code>, mais l'enfant peut être plus petit que l'espace offert. Sert à laisser un texte rétrécir sans déborder.</p></div>
+  <div class="card"><h5>Spacer</h5><p>Un <code>Expanded</code> vide : pousse ce qui l'entoure vers les extrémités.</p></div>
+  <div class="card"><h5>Container</h5><p>Le couteau suisse : couleur, dégradé, bordure, ombre, coins arrondis, marge, padding, taille.</p></div>
+  <div class="card"><h5>SizedBox</h5><p>Juste une taille. Plus léger qu'un <code>Container</code> vide, et <code>const</code>-able.</p></div>
+  <div class="card"><h5>Wrap</h5><p>Comme une <code>Row</code>, mais passe à la ligne quand la place manque. <code>spacing</code> et <code>runSpacing</code>.</p></div>
+</div>
+
+<h3>Le cas d'école : le layout deux colonnes de la boutique</h3>
+<p>La boutique partage l'écran entre les cartes à vendre (à gauche) et les services (à droite). Aucun pourcentage n'est écrit nulle part : c'est <code>Expanded</code> et son <code>flex</code> qui font le partage, 3 parts contre 1, soit 75 % / 25 % de l'espace restant après déduction du séparateur.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/shop_screen.dart</span><span class="lang">dart</span></div>
+  <pre>body: Padding(
+  padding: const EdgeInsets.all(20.0),
+  child: Row(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      // Main Section (75%) - Cards for Sale
+      Expanded(
+        flex: 3,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(l10n.cardsForSale, /* ... */),
+            const SizedBox(height: 20),
+            Expanded(
+              child: shopState.cardsForSale.isEmpty
+                  ? Center(child: Text(l10n.noCardsInStock, /* ... */))
+                  : SingleChildScrollView(
+                      child: Wrap(
+                        spacing: 12,
+                        runSpacing: 20,
+                        children: /* SizedBox(width: 150, child: _ShopCardItem(...)) */,
+                      ),
+                    ),
+            ),
+          ],
+        ),
+      ),
+      const VerticalDivider(color: Colors.white24, width: 40),
+      // Sidebar Section (25%) - Services
+      Expanded(
+        flex: 1,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(l10n.services, /* ... */),
+            const SizedBox(height: 20),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 12,
+                  alignment: WrapAlignment.center,
+                  children: [ /* _ShopServiceWidget × n */ ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ],
+  ),
+),</pre>
+</div>
+<p>Quatre idées sont empilées ici, et elles reviennent partout dans le projet :</p>
+<ul>
+  <li><code>crossAxisAlignment: CrossAxisAlignment.stretch</code> force les enfants à occuper toute la hauteur de la <code>Row</code>, sinon chaque colonne aurait la hauteur de son contenu.</li>
+  <li><code>VerticalDivider(width: 40)</code> ne fait pas 40 px de trait : <code>width</code> est l'espace <em>réservé</em>, le trait est fin et centré dedans. Il produit donc le séparateur <strong>et</strong> la gouttière de 40 px entre les deux colonnes.</li>
+  <li><code>Expanded</code> imbriqué dans la <code>Column</code> : la zone de contenu prend toute la hauteur restante sous le titre, ce qui permet au <code>SingleChildScrollView</code> d'avoir une hauteur finie et donc de défiler.</li>
+  <li><code>Wrap</code> plutôt que <code>GridView</code> : les cartes ont une largeur fixe (<code>SizedBox(width: 150)</code>) et le nombre de colonnes s'adapte tout seul à la largeur disponible.</li>
+</ul>
+<div class="box warn"><div class="box-title">Piège</div>
+<p>L'erreur de débutant la plus fréquente est <em>« RenderFlex overflowed by N pixels »</em>. Elle survient quand le contenu d'une <code>Column</code> ou d'une <code>Row</code> dépasse. Trois remèdes selon l'intention : <code>Expanded</code> / <code>Flexible</code> si un enfant doit se partager l'espace, <code>SingleChildScrollView</code> si le contenu doit défiler, <code>Wrap</code> si les éléments doivent passer à la ligne. Ne « corrigez » jamais un overflow en réduisant les tailles au jugé : le bug reviendra sur un autre écran.</p></div>
+
+<h3>Container ou SizedBox ?</h3>
+<p>La règle du projet est simple : <code>SizedBox</code> quand on ne veut qu'une taille ou un espace, <code>Container</code> dès qu'il y a une décoration. Le fichier <code>lib/ui/theme/app_spacing.dart</code> pousse la logique jusqu'au bout en fournissant des espaces pré-construits et <code>const</code> :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/theme/app_spacing.dart</span><span class="lang">dart</span></div>
+  <pre>class AppSpacing {
+  AppSpacing._();
+  // Spacing Constants
+  static const double xs = 4.0;
+  static const double sm = 8.0;
+  static const double md = 16.0;
+  static const double lg = 24.0;
+  static const double xl = 32.0;
+  static const double xxl = 48.0;
+  // Height SizedBox Helpers
+  static const SizedBox heightXs = SizedBox(height: xs);
+  static const SizedBox heightSm = SizedBox(height: sm);
+  static const SizedBox heightMd = SizedBox(height: md);
+  // ...
+}</pre>
+</div>
+<p>Dans <code>lib/ui/screens/rest_screen.dart</code>, cela donne un code lisible : <code>AppSpacing.heightMd</code>, <code>AppSpacing.heightXxl</code> au lieu de <code>const SizedBox(height: 16)</code> répété vingt fois. Et comme ces objets sont <code>const</code> et partagés, Flutter les reconnaît comme identiques d'une frame à l'autre et saute leur reconstruction.</p>
+
+<h3>Flexible contre Expanded : l'exemple du bouton</h3>
+<p><code>GameButton</code> illustre la différence. Le texte du bouton est enveloppé dans un <code>Flexible</code> — pas un <code>Expanded</code> — parce qu'un bouton court ne doit pas être étiré : le texte doit rester collé à son icône, mais doit pouvoir se tronquer avec des points de suspension si le libellé traduit est trop long.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/game_button.dart</span><span class="lang">dart</span></div>
+  <pre>final buttonContent = Row(
+  mainAxisAlignment: MainAxisAlignment.center,
+  mainAxisSize: MainAxisSize.min,
+  children: [
+    if (widget.isLoading) ...[
+      SizedBox(/* CircularProgressIndicator */),
+      AppSpacing.widthSm,
+    ] else if (widget.icon != null) ...[
+      Icon(widget.icon, color: textColor, size: widget.fontSize + 2),
+      if (widget.text.isNotEmpty) AppSpacing.widthSm,
+    ],
+    if (widget.text.isNotEmpty)
+      Flexible(
+        child: Text(
+          widget.text,
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
+          style: TextStyle(color: textColor, fontSize: widget.fontSize, fontWeight: FontWeight.bold),
+        ),
+      ),
+    // ... coût en or optionnel
+  ],
+);</pre>
+</div>
+<p>Ce bloc montre aussi deux idiomes Dart omniprésents dans les listes de widgets : <code>if (condition) widget</code> pour insérer conditionnellement <strong>un</strong> enfant, et <code>...[ a, b ]</code> (l'opérateur <em>spread</em>) pour en insérer plusieurs d'un coup. <code>mainAxisSize: MainAxisSize.min</code> demande à la <code>Row</code> de ne pas s'étirer : sans lui, elle occuperait toute la largeur disponible.</p>
+
+<h3>Stack et Positioned</h3>
+<p>Le <code>Stack</code> est la brique des overlays. Deux règles à connaître :</p>
+<ul>
+  <li>Un enfant <strong>non</strong> positionné est placé selon <code>alignment</code> (haut-gauche par défaut) et participe au calcul de la taille du <code>Stack</code>.</li>
+  <li><code>Positioned</code> et <code>Positioned.fill</code> doivent être des enfants <em>directs</em> d'un <code>Stack</code>. C'est exactement pour cela que <code>GameNotificationOverlay</code> renvoie un <code>Positioned</code> : il est placé directement dans le <code>Stack</code> créé par le <code>builder</code> de <code>MaterialApp</code>.</li>
+</ul>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/notification_overlay.dart</span><span class="lang">dart</span></div>
+  <pre>@override
+Widget build(BuildContext context) {
+  final notifications = ref.watch(notificationProvider);
+  if (notifications.isEmpty) {
+    return const SizedBox.shrink();
+  }
+  return Positioned(
+    left: 20, top: 0, bottom: 0,
+    child: Center(
+      child: SizedBox(
+        width: 300,
+        child: Material(
+          color: Colors.transparent,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: notifications.map((n) =&gt; Padding(
+              key: ValueKey(n.id),
+              padding: const EdgeInsets.symmetric(vertical: 6.0),
+              child: _AnimatedNotificationTile(notification: n),
+            )).toList(),
+          ),
+        ),
+      ),
+    ),
+  );
+}</pre>
+</div>
+<p>Trois détails utiles : <code>const SizedBox.shrink()</code> est la façon idiomatique de « ne rien afficher » ; <code>top: 0, bottom: 0</code> combiné à <code>Center</code> centre verticalement la pile de notifications ; et le <code>Material(color: Colors.transparent)</code> est indispensable pour que les textes s'affichent correctement en dehors de l'arbre d'un <code>Scaffold</code>.</p>
+
+<h3>GridView</h3>
+<p>Le projet n'utilise qu'un seul type de grille, <code>SliverGridDelegateWithMaxCrossAxisExtent</code> : on donne une largeur <em>maximale</em> de cellule, et Flutter calcule lui-même le nombre de colonnes. C'est la façon la plus simple d'obtenir une grille responsive sans écrire de condition. Dans le deck :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/deck_screen.dart</span><span class="lang">dart</span></div>
+  <pre>Expanded(
+  child: GridView.builder(
+    gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+      maxCrossAxisExtent: 200,
+      childAspectRatio: 70 / 110,
+      crossAxisSpacing: 12,
+      mainAxisSpacing: 12,
+    ),
+    itemCount: groups.keys.length,
+    itemBuilder: (context, index) {
+      // ...
+    },
+  ),
+),</pre>
+</div>
+<p>Le ratio <code>70 / 110</code> est la proportion officielle d'une carte du jeu ; on le retrouve à l'identique dans <code>boss_card_draft_screen.dart</code>, <code>starter_deck_draft_screen.dart</code>, <code>rest_card_selection_screen.dart</code>, <code>card_dictionary_screen.dart</code> et dans <code>UiCard</code> lui-même, sous forme d'un <code>AspectRatio(aspectRatio: 70 / 110, ...)</code>.</p>
+<div class="box ok"><div class="box-title">Bonne pratique</div>
+<p>Pour imbriquer une <code>GridView</code> dans un <code>SingleChildScrollView</code> (deux zones défilantes sur le même axe), il faut désactiver le défilement interne. Le dictionnaire des reliques le fait avec <code>shrinkWrap: true</code> et <code>physics: const NeverScrollableScrollPhysics()</code> — sans cela, Flutter lève une exception de contraintes non bornées.</p></div>
+
+<h2 id="s5">5. Responsive</h2>
+<p>Deux outils, et une différence essentielle entre eux :</p>
+<ul>
+  <li><code>MediaQuery.of(context).size</code> donne la taille de la <strong>fenêtre entière</strong>. C'est la bonne mesure pour une décision globale « mobile ou desktop ».</li>
+  <li><code>LayoutBuilder</code> donne les <strong>contraintes du parent immédiat</strong> via <code>constraints.maxWidth</code> / <code>maxHeight</code>. C'est la bonne mesure pour un composant qui doit s'adapter à la place qu'on lui laisse — un panneau, une carte dans une grille, une boîte de dialogue.</li>
+</ul>
+<p>Le seuil « mobile » du projet est <strong>600 px</strong>, écrit à l'identique dans cinq fichiers :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/class_selection_screen.dart</span><span class="lang">dart</span></div>
+  <pre>@override
+Widget build(BuildContext context, WidgetRef ref) {
+  // Les données sont déjà chargées par le SplashScreen
+  final gameData = ref.watch(gameDataLoaderProvider).requireValue;
+  final classes = gameData.heroes;
+  final bool isMobile = MediaQuery.of(context).size.width &lt; 600;
+  final l10n = AppLocalizations.of(context)!;
+  return ScreenScaffold(
+    backgroundType: ScreenBackgroundType.dark,
+    appBar: PageHeader(/* ... */),
+    body: Padding(
+      padding: EdgeInsets.all(isMobile ? 10 : 20),
+      child: GridView.builder(
+        gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+          maxCrossAxisExtent: isMobile
+              ? 200
+              : 400, // Divise par deux sur mobile pour afficher 2 colonnes réduites
+          childAspectRatio: isMobile
+              ? 0.68
+              : 0.75, // Plus haute sur mobile pour donner plus d'espace vertical
+          crossAxisSpacing: isMobile ? 10 : 20,
+          mainAxisSpacing: isMobile ? 10 : 20,
+        ),
+        itemCount: classes.length,
+        itemBuilder: (context, index) =&gt; _InteractiveClassCard(
+          playerClass: classes[index], ref: ref, isMobile: isMobile,
+        ),
+      ),
+    ),
+  );
+}</pre>
+</div>
+<p>Le booléen <code>isMobile</code> est ensuite propagé à la carte enfant, qui l'utilise dans une vingtaine d'endroits. Voici le tableau complet des valeurs réelles de l'écran de sélection de classe, plus les autres seuils du projet.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Réglage</th><th>Fichier</th><th>Mobile (largeur &lt; 600)</th><th>Desktop</th></tr></thead>
+<tbody>
+<tr><td>Padding du corps</td><td><code>class_selection_screen.dart</code></td><td>10</td><td>20</td></tr>
+<tr><td><code>maxCrossAxisExtent</code></td><td><code>class_selection_screen.dart</code></td><td>200</td><td>400</td></tr>
+<tr><td><code>childAspectRatio</code></td><td><code>class_selection_screen.dart</code></td><td>0.68</td><td>0.75</td></tr>
+<tr><td><code>crossAxisSpacing</code> / <code>mainAxisSpacing</code></td><td><code>class_selection_screen.dart</code></td><td>10</td><td>20</td></tr>
+<tr><td>Padding interne de la carte</td><td><code>class_selection_screen.dart</code></td><td>8</td><td>20</td></tr>
+<tr><td>Taille de l'icône de héros</td><td><code>class_selection_screen.dart</code></td><td>48</td><td>65</td></tr>
+<tr><td>Amplitude du flottement de l'icône</td><td><code>class_selection_screen.dart</code></td><td>× 0.5</td><td>× 1.0</td></tr>
+<tr><td>Ombre portée de l'icône (<code>blurRadius</code>)</td><td><code>class_selection_screen.dart</code></td><td>5</td><td>10</td></tr>
+<tr><td>Taille du nom de classe</td><td><code>class_selection_screen.dart</code></td><td>20</td><td>26</td></tr>
+<tr><td>Taille des icônes de stats</td><td><code>class_selection_screen.dart</code></td><td>14</td><td>16</td></tr>
+<tr><td>Taille du texte des stats</td><td><code>class_selection_screen.dart</code></td><td>12</td><td>14</td></tr>
+<tr><td>Titre du trait passif</td><td><code>class_selection_screen.dart</code></td><td>10</td><td>11</td></tr>
+<tr><td>Description du trait passif</td><td><code>class_selection_screen.dart</code></td><td>9.5</td><td>10.5</td></tr>
+<tr><td>Description de la classe</td><td><code>class_selection_screen.dart</code></td><td>11.5</td><td>13</td></tr>
+<tr><td>Hauteur du <code>Divider</code></td><td><code>class_selection_screen.dart</code></td><td>8</td><td>25</td></tr>
+<tr><td>Hauteur du bouton « Sélectionner »</td><td><code>class_selection_screen.dart</code></td><td>38</td><td>48</td></tr>
+<tr><td>Rayon du bouton / du texte</td><td><code>class_selection_screen.dart</code></td><td>8 / 14</td><td>12 / 16</td></tr>
+<tr><td>Largeur max des cartes du draft</td><td><code>starter_deck_draft_screen.dart</code></td><td>140</td><td>180</td></tr>
+<tr><td>Espacements de la grille de draft</td><td><code>starter_deck_draft_screen.dart</code></td><td>8</td><td>16</td></tr>
+<tr><td>Padding du gabarit de draft</td><td><code>draft/card_draft_layout.dart</code></td><td>12.0</td><td>24.0</td></tr>
+<tr><td>Hauteur de base du HUD de combat</td><td><code>game_screen.dart</code></td><td>100.0</td><td>88.0</td></tr>
+<tr><td>Largeur du HUD de combat</td><td><code>game_screen.dart</code></td><td>90 % de l'écran</td><td>52 % de l'écran</td></tr>
+</tbody>
+</table></div>
+
+<h3>LayoutBuilder : le seuil 760 de la forge de runes</h3>
+<p>L'écran de fusion de runes ne peut pas se fier à <code>MediaQuery</code> : son contenu est déjà dans une <code>Column</code> avec un padding de 24 et un en-tête. Ce qui compte, c'est la place réellement disponible pour la zone de fusion. D'où le <code>LayoutBuilder</code> et son seuil propre de <strong>760</strong>, plus élevé que le 600 global parce qu'il faut loger deux panneaux côte à côte dont le gauche fait 300 px.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/forge_fusion_screen.dart</span><span class="lang">dart</span></div>
+  <pre>Expanded(
+  child: LayoutBuilder(
+    builder: (context, constraints) {
+      final isDesktop = constraints.maxWidth &gt;= 760;
+      if (eligibleCards.isEmpty) {
+        return Center(/* message « aucune carte éligible » */);
+      }
+      // Left panel: List of eligible cards
+      final cardsListPanel = Container(
+        width: isDesktop ? 300 : double.infinity,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(/* ... */),
+        // ...
+      );</pre>
+</div>
+<p>Deux autres seuils du même type existent : <code>constraints.maxWidth &gt;= 720</code> dans <code>lib/ui/widgets/forge_upgrade_dialog.dart</code> et <code>constraints.maxWidth &lt; 600</code> (variable <code>isPortrait</code>) dans <code>lib/ui/screens/draft_screen.dart</code>.</p>
+
+<h3>LayoutBuilder pour mesurer, pas seulement pour décider</h3>
+<p><code>LayoutBuilder</code> sert aussi à récupérer une taille exacte pour faire du calcul. La carte de classe l'utilise pour connaître ses propres dimensions et convertir la position de la souris en angle d'inclinaison 3D :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/class_selection_screen.dart</span><span class="lang">dart</span></div>
+  <pre>return LayoutBuilder(
+  builder: (context, constraints) {
+    final cardSize = Size(constraints.maxWidth, constraints.maxHeight);
+
+    return MouseRegion(
+      onEnter: (_) =&gt; _onPointerEnter(),
+      onExit: (_) =&gt; _onPointerExit(),
+      child: Listener(
+        onPointerMove: (e) =&gt; _onPointerMove(e, cardSize),
+        onPointerHover: (e) =&gt; _onPointerMove(e, cardSize),
+        // ...</pre>
+</div>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/class_selection_screen.dart</span><span class="lang">dart</span></div>
+  <pre>void _onPointerMove(PointerEvent event, Size cardSize) {
+  if (cardSize.width == 0 || cardSize.height == 0) return;
+
+  // Relative position from center (-0.5 to 0.5)
+  final double relX = (event.localPosition.dx / cardSize.width) - 0.5;
+  final double relY = (event.localPosition.dy / cardSize.height) - 0.5;
+
+  setState(() {
+    // Limit tilt angle (approx 0.025 radians max)
+    _tiltX = relX * 0.05;
+    _tiltY = relY * 0.05;
+    _mousePosition = event.localPosition;
+  });
+}</pre>
+</div>
+
+<h3>FractionallySizedBox : des tailles en pourcentage</h3>
+<p>La barre de vie du héros superpose trois remplissages dans un <code>Stack</code> : le rouge « retard » (l'ancienne valeur qui rattrape), le vert (les PV actuels) et le bleu translucide (l'armure). Chacun est un <code>FractionallySizedBox</code> dont <code>widthFactor</code> est une fraction entre 0 et 1, systématiquement <code>clamp</code>ée pour éviter tout débordement si l'armure dépasse les PV max.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/hud/player_health_bar.dart</span><span class="lang">dart</span></div>
+  <pre>// Remplissage PV (Vert - Core interne avec padding)
+if (widget.maxPv &gt; 0 &amp;&amp; greenVal &gt; 0)
+  FractionallySizedBox(
+    alignment: Alignment.centerLeft,
+    widthFactor: (greenVal / widget.maxPv).clamp(0.0, 1.0),
+    heightFactor: 1.0,
+    child: Padding(
+      padding: const EdgeInsets.symmetric(
+        vertical: 3.0,
+        horizontal: 1.5,
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          gradient: const LinearGradient(
+            colors: [
+              Color(0xFF1E824C), // Vert forêt foncé
+              Color(0xFF27AE60), // Vert éclatant
+              Color(0xFF58D68D), // Vert doux / menthe
+            ],
+            begin: Alignment.centerLeft, end: Alignment.centerRight,
+          ),
+        ),
+      ),
+    ),
+  ),</pre>
+</div>
+
+<h3>S'adapter aussi à la taille de police du système</h3>
+<p>Le responsive ne concerne pas que la largeur. Si l'utilisateur a grossi les polices dans les réglages de son téléphone, un HUD à hauteur fixe casse. La barre de vie lit donc <code>MediaQuery.textScalerOf(context)</code> et calcule cinq dimensions dérivées, chacune bornée par un <code>clamp</code> :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/hud/player_health_bar.dart</span><span class="lang">dart</span></div>
+  <pre>final textScaler = MediaQuery.textScalerOf(context);
+final double screenWidth = MediaQuery.of(context).size.width;
+
+// Calculate adaptive values
+final double textScaleFactor = textScaler.scale(1.0);
+final double healthBarHeight = (26.0 * textScaleFactor).clamp(20.0, 40.0);
+final double healthBarWidth = (screenWidth * 0.26).clamp(120.0, 300.0);
+final double fontSize = (16.0 * textScaleFactor).clamp(12.0, 22.0);
+final double healthFontSize = (13.0 * textScaleFactor).clamp(10.0, 18.0);
+final double iconSize = (20.0 * textScaleFactor).clamp(16.0, 28.0);</pre>
+</div>
+<p>Le même principe s'applique au HUD de combat, dans <code>lib/ui/screens/game_screen.dart</code> : <code>(baseHudHeight * textScaleFactor).clamp(88.0, 140.0)</code>, où <code>baseHudHeight</code> vaut 100.0 sur mobile et 88.0 ailleurs.</p>
+
+<h2 id="s6">6. BuildContext, Theme et localisation d'accès</h2>
+<p>Le <code>BuildContext</code> passé à chaque <code>build</code> n'est pas un simple jeton : c'est la <strong>position du widget dans l'arbre</strong>. Il permet de remonter l'arbre pour trouver la première occurrence d'un type de donnée fourni plus haut. C'est le mécanisme des <code>InheritedWidget</code>, et il se manifeste toujours sous la forme <code>QuelqueChose.of(context)</code>.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Appel</th><th>Ce qu'il remonte chercher</th><th>Fourni par</th></tr></thead>
+<tbody>
+<tr><td><code>Theme.of(context)</code></td><td>le <code>ThemeData</code> courant</td><td><code>MaterialApp(theme: AppTheme.darkNeonTheme)</code></td></tr>
+<tr><td><code>MediaQuery.of(context)</code></td><td>taille, orientation, marges système</td><td><code>MaterialApp</code></td></tr>
+<tr><td><code>Navigator.of(context)</code></td><td>la pile de routes</td><td><code>MaterialApp</code></td></tr>
+<tr><td><code>AppLocalizations.of(context)!</code></td><td>les chaînes traduites</td><td><code>localizationsDelegates</code></td></tr>
+<tr><td><code>Localizations.localeOf(context)</code></td><td>la locale active</td><td><code>supportedLocales</code></td></tr>
+<tr><td><code>DefaultTabController.of(context)</code></td><td>l'onglet actif</td><td><code>DefaultTabController</code> (dictionnaire)</td></tr>
+<tr><td><code>ProviderScope.containerOf(context)</code></td><td>le conteneur Riverpod</td><td><code>ProviderScope</code> dans <code>main.dart</code></td></tr>
+</tbody>
+</table></div>
+
+<h3><code>Theme.of(context)</code> : le thème comme donnée métier</h3>
+<p>Hero's Draft a deux thèmes : <code>darkNeonTheme</code> (les écrans de jeu) et <code>lightParchmentTheme</code> (la carte du monde, style parchemin). Plutôt que de passer un booléen partout, les composants partagés détectent le thème actif en comparant la couleur de fond :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/game_dialog.dart</span><span class="lang">dart</span></div>
+  <pre>@override
+Widget build(BuildContext context) {
+  final themeGlowColor = glowColor ?? Theme.of(context).colorScheme.primary;
+  final isParchment =
+      Theme.of(context).scaffoldBackgroundColor == AppColors.parchmentBg;
+
+  final border = Border.all(
+    color: isParchment
+        ? AppColors.parchmentBorder
+        : themeGlowColor.withValues(alpha: 0.6),
+    width: 2,
+  );</pre>
+</div>
+<p><code>GameButton</code> applique exactement la même logique, avec en plus une porte de sortie manuelle (<code>isParchmentOverride</code>) pour les cas où l'on veut forcer le style parchemin :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/game_button.dart</span><span class="lang">dart</span></div>
+  <pre>final theme = Theme.of(context);
+final isParchment = widget.isParchmentOverride ||
+    theme.scaffoldBackgroundColor == AppColors.parchmentBg;
+final isEnabled = widget.onPressed != null &amp;&amp; !widget.isLoading;
+
+// ...
+final primaryColor = widget.baseColor ?? theme.colorScheme.primary;
+buttonColor = _isHovered
+    ? primaryColor.withValues(alpha: 0.25)
+    : primaryColor.withValues(alpha: 0.1);</pre>
+</div>
+<p>Le thème lui-même est défini dans <code>lib/ui/theme/app_theme.dart</code>, et le projet y ajoute une <code>ThemeExtension</code> maison, <code>GameThemeExtension</code>, qui transporte les couleurs propres au jeu (raretés, PV, mana, or, armure, néons) que Material ne connaît pas.</p>
+
+<h3>Localisation : deux appels, deux usages</h3>
+<p>Le jeu est bilingue français / anglais. Deux mécanismes coexistent :</p>
+<ul>
+  <li><code>AppLocalizations.of(context)!</code> pour les libellés de <strong>l'interface</strong>, générés depuis les fichiers ARB (<code>lib/l10n/</code>, voir <code>l10n.yaml</code>). L'écriture canonique du projet est <code>final l10n = AppLocalizations.of(context)!;</code> en tête de <code>build</code>, puis <code>l10n.shop</code>, <code>l10n.restCampTitle</code>, <code>l10n.notEnoughGold</code>…</li>
+  <li><code>Localizations.localeOf(context).languageCode</code> pour les textes qui viennent des <strong>données JSON</strong> du jeu. Les cartes, reliques et passifs portent leurs deux versions et exposent <code>getName(locale)</code> / <code>getDescription(locale)</code>.</li>
+</ul>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/class_selection_screen.dart</span><span class="lang">dart</span></div>
+  <pre>final locale = Localizations.localeOf(context).languageCode;
+// ...
+final String traitName = passive.getName(locale);
+final String traitDesc = passive.getDescription(locale);</pre>
+</div>
+<p>Quelques endroits mélangent les deux, comme la reprise de partie corrompue dans <code>home_screen.dart</code> : le titre du dialogue vient de l'ARB, mais la liste des objets manquants est construite à la main avec <code>locale == 'fr' ? m.nameFr : m.nameEn</code>.</p>
+
+<h3>L'extension <code>context.showNotification(...)</code></h3>
+<p>C'est l'astuce la plus élégante du projet. Plutôt que d'exiger un <code>ref</code> pour afficher une notification, le fichier <code>notification_overlay.dart</code> déclare une <em>extension</em> Dart sur <code>BuildContext</code>, qui récupère le conteneur Riverpod à partir du contexte :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/notification_overlay.dart</span><span class="lang">dart</span></div>
+  <pre>extension NotificationContextExtension on BuildContext {
+  void showNotification(
+    String message, {
+    NotificationType type = NotificationType.info,
+  }) {
+    try {
+      ProviderScope.containerOf(
+        this,
+        listen: false,
+      ).read(notificationProvider.notifier).show(message, type: type);
+    } catch (e) {
+      debugPrint("Notification: $message (Type: $type)");
+    }
+  }
+}</pre>
+</div>
+<p>Résultat : n'importe quel widget, même un <code>StatelessWidget</code> sans accès aux providers, peut écrire une seule ligne. C'est utilisé partout — au feu de camp :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/rest_screen.dart</span><span class="lang">dart</span></div>
+  <pre>context.showNotification(
+  l10n.restCampSnackbarHeal(healAmount),
+  type: NotificationType.success,
+);</pre>
+</div>
+<p>Le <code>listen: false</code> est important : on <em>lit</em> le conteneur pour envoyer une commande, on ne s'y abonne pas. Le <code>try / catch</code> couvre le cas des tests unitaires où aucun <code>ProviderScope</code> n'existe au-dessus : la notification se dégrade alors en simple <code>debugPrint</code> au lieu de faire planter le test.</p>
+<div class="box rule"><div class="box-title">Règle du jeu</div>
+<p>Une notification vit <strong>3 500 ms</strong> avant disparition automatique, et la pile en affiche au maximum <strong>4</strong> : au-delà, la plus ancienne est retirée (<code>state = [...state.sublist(1), notification]</code>). Quatre types existent — <code>info</code> (bleu <code>#007AFF</code>), <code>success</code> (vert <code>#34C759</code>), <code>warning</code> (jaune <code>#FFCC00</code>) et <code>error</code> (rouge <code>#FF3B30</code>).</p></div>
+
+<h2 id="s7">7. La navigation</h2>
+<p>Flutter empile les écrans comme des cartes : le <code>Navigator</code> gère une pile de <code>Route</code>. Hero's Draft n'utilise <strong>aucune route nommée</strong> et aucun routeur déclaratif : tout passe par des <code>MaterialPageRoute</code> construites à la main, ce qui permet de passer des objets Dart typés en paramètres de constructeur.</p>
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 800 380" width="800" role="img" aria-label="Pile de navigation : SplashScreen, MapScreen, GameScreen, avec les flèches push et popUntil">
+      <defs>
+        <marker id="c3-nav-up" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0 0 L8 4 L0 8 z" fill="#34d399"/> </marker>
+        <marker id="c3-nav-back" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0 0 L8 4 L0 8 z" fill="#f87171"/> </marker>
+      </defs>
+      <rect x="0" y="0" width="800" height="380" fill="#0e1524"/>
+      <text x="340" y="22" fill="#a7b4c9" font-size="12" text-anchor="middle">sommet de la pile</text>
+      <rect x="200" y="36" width="280" height="56" rx="8" fill="#151b2b" stroke="#f87171"/>
+      <text x="340" y="60" fill="#e6ecf5" font-size="14" text-anchor="middle" font-family="ui-monospace, monospace">GameScreen</text>
+      <text x="340" y="79" fill="#a7b4c9" font-size="10" text-anchor="middle">PopScope(canPop: isCompleted || isDead)</text>
+      <rect x="200" y="132" width="280" height="56" rx="8" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="340" y="156" fill="#e6ecf5" font-size="14" text-anchor="middle" font-family="ui-monospace, monospace">MapScreen</text>
+      <text x="340" y="175" fill="#a7b4c9" font-size="10" text-anchor="middle">PopScope(canPop: false) → menu pause</text>
+      <rect x="200" y="228" width="280" height="56" rx="8" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="340" y="252" fill="#e6ecf5" font-size="14" text-anchor="middle" font-family="ui-monospace, monospace">SplashScreen — route.isFirst</text>
+      <text x="340" y="271" fill="#a7b4c9" font-size="10" text-anchor="middle">affiche HomeScreen une fois les JSON chargés</text>
+      <rect x="200" y="312" width="280" height="34" rx="6" fill="#0e1524" stroke="#3a4966" stroke-dasharray="4 3"/>
+      <text x="340" y="334" fill="#a7b4c9" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">MaterialApp(home:) · Navigator</text>
+      <path d="M170 250 L170 166" stroke="#34d399" stroke-width="2" marker-end="url(#c3-nav-up)"/>
+      <text x="156" y="214" fill="#34d399" font-size="11" text-anchor="end" font-family="ui-monospace, monospace">push(MapScreen)</text>
+      <path d="M170 154 L170 70" stroke="#34d399" stroke-width="2" marker-end="url(#c3-nav-up)"/>
+      <text x="156" y="118" fill="#34d399" font-size="11" text-anchor="end" font-family="ui-monospace, monospace">push(GameScreen)</text>
+      <path d="M486 64 L548 64 L548 256 L488 256" stroke="#f87171" stroke-width="2" fill="none" marker-end="url(#c3-nav-back)"/>
+      <text x="562" y="148" fill="#f87171" font-size="11" font-family="ui-monospace, monospace">popUntil(</text>
+      <text x="562" y="164" fill="#f87171" font-size="11" font-family="ui-monospace, monospace">  (route) =&gt; route.isFirst</text>
+      <text x="562" y="180" fill="#f87171" font-size="11" font-family="ui-monospace, monospace">)</text>
+      <text x="562" y="204" fill="#a7b4c9" font-size="10">menu pause · écran de mort</text>
+      <text x="562" y="248" fill="#a7b4c9" font-size="10">pop() simple :</text>
+      <text x="562" y="264" fill="#a7b4c9" font-size="10">fin de combat, de repos,</text>
+      <text x="562" y="280" fill="#a7b4c9" font-size="10">de boutique, d'événement</text>
+    </svg>
+  </div>
+  <figcaption>La pile de navigation d'une partie. Le fond de pile est la route <code>SplashScreen</code> — c'est elle qui héberge <code>HomeScreen</code>, ce qui explique que <code>popUntil((route) =&gt; route.isFirst)</code> ramène bien au menu principal.</figcaption>
+</figure>
+
+<h3>Les cinq opérations utilisées</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Opération</th><th>Effet</th><th>Où dans le projet</th></tr></thead>
+<tbody>
+<tr><td><code>push</code></td><td>ajoute une route au-dessus</td><td><code>home_screen.dart</code>, <code>map_screen.dart</code>, <code>class_selection_screen.dart</code>, <code>rest_screen.dart</code></td></tr>
+<tr><td><code>pushReplacement</code></td><td>remplace la route courante</td><td><code>hud/death_overlay.dart</code> — bouton « Changer de classe »</td></tr>
+<tr><td><code>pushAndRemoveUntil</code></td><td>ajoute une route et vide la pile jusqu'à un prédicat</td><td><code>starter_deck_draft_screen.dart</code> — départ de l'aventure</td></tr>
+<tr><td><code>pop</code></td><td>retire la route courante, éventuellement avec un résultat</td><td><code>rest_screen.dart</code>, <code>event_screen.dart</code>, <code>game_screen.dart</code></td></tr>
+<tr><td><code>popUntil((route) =&gt; route.isFirst)</code></td><td>revient au fond de pile</td><td><code>map_screen.dart</code>, <code>game_screen.dart</code>, <code>death_overlay.dart</code></td></tr>
+<tr><td><code>maybePop</code></td><td>dépile <em>si c'est permis</em> (respecte <code>PopScope</code>)</td><td><code>page_header.dart</code> — flèche retour standard</td></tr>
+</tbody>
+</table></div>
+<p>Le nœud central du graphe est <code>_onNodeTap</code> dans la carte du monde : un <code>switch</code> sur le type de nœud choisit l'écran de destination, puis un seul <code>push</code> l'ouvre.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/map_screen.dart</span><span class="lang">dart</span></div>
+  <pre>void _onNodeTap(BuildContext context, WidgetRef ref, MapNode node) {
+  if (ref.read(runProvider).pendingDrafts &gt; 0) return;
+  ref.read(runProvider.notifier).travelToNode(node.id);
+  Widget destination;
+  switch (node.type) {
+    case MapNodeType.combat:
+    case MapNodeType.elite:
+    case MapNodeType.boss:
+      destination = const GameScreen();
+      break;
+    case MapNodeType.shop:
+      destination = const ShopScreen();
+      break;
+    case MapNodeType.rest:
+      destination = const RestScreen();
+      break;
+    // ... event, relicExchange, forgeFusion
+  }
+  Navigator.of(
+    context,
+  ).push(MaterialPageRoute(builder: (context) =&gt; destination));
+}</pre>
+</div>
+<p>Et à l'entrée dans la partie, une fois le deck de départ choisi, il faut à la fois ouvrir la carte <strong>et</strong> effacer l'écran de sélection de classe et l'écran de draft : sinon le bouton retour ramènerait le joueur au choix de classe en pleine partie.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/starter_deck_draft_screen.dart</span><span class="lang">dart</span></div>
+  <pre>// 4. Redirection propre vers la map de jeu
+Navigator.of(context).pushAndRemoveUntil(
+  MaterialPageRoute(builder: (context) =&gt; const MapScreen()),
+  (route) =&gt; route.isFirst,
+);</pre>
+</div>
+
+<h3>Les routes typées : récupérer une valeur d'un écran</h3>
+<p><code>Navigator.push</code> est générique. En écrivant <code>push&lt;T&gt;(...)</code>, on obtient un <code>Future&lt;T?&gt;</code> : l'écran poussé renverra sa valeur via <code>pop(valeur)</code>. Le point d'interrogation est là parce que l'utilisateur peut aussi partir sans rien choisir — d'où un <code>null</code>. Le feu de camp exploite cette mécanique deux fois, avec deux types différents :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/rest_screen.dart</span><span class="lang">dart</span></div>
+  <pre>void _upgradeCard() async {
+  // ...
+  final result = await Navigator.of(context).push&lt;Map&lt;String, dynamic&gt;&gt;(
+    MaterialPageRoute(
+      builder: (context) =&gt; RestCardSelectionScreen(
+        title: l10n.restCampForgeTitle,
+        subtitle: l10n.restCampForgeSubtitle,
+        isForge: true,
+      ),
+    ),
+  );
+  final card = result?['card'] as CardInstance?;
+  if (card != null) {
+    setState(() { _actionTaken = true; });
+    // ... notification
+  }
+}
+void _removeCard() async {
+  // ...
+  final selectedCard = await Navigator.of(context).push&lt;CardInstance&gt;(
+    MaterialPageRoute(
+      builder: (context) =&gt; RestCardSelectionScreen(
+        title: l10n.restCampRemoveTitle,
+        subtitle: l10n.restCampRemoveSubtitle,
+        isForge: false,
+      ),
+    ),
+  );
+  if (selectedCard != null) {
+    ref.read(deckProvider.notifier).removeCardById(selectedCard.uniqueId);
+  }
+}</pre>
+</div>
+<p>Côté écran de sélection, le renvoi se fait par un <code>pop</code> avec argument. Le même écran sert aux deux usages et renvoie donc soit une <code>Map</code>, soit une <code>CardInstance</code>, selon son paramètre <code>isForge</code> :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/rest_card_selection_screen.dart</span><span class="lang">dart</span></div>
+  <pre>final selectedUpgrade = await showDialog&lt;String&gt;(
+  context: context,
+  barrierDismissible: false,
+  builder: (context) =&gt; ForgeUpgradeDialog(card: card),
+);
+if (selectedUpgrade != null) {
+  if (context.mounted) {
+    Navigator.of(context).pop({
+      'card': card,
+      'upgrade': selectedUpgrade,
+    });
+  }
+} else {
+  // Card Removal
+  Navigator.of(context).pop(card);
+}</pre>
+</div>
+
+<h3>Les dialogues : <code>showDialog</code> et <code>showGeneralDialog</code></h3>
+<p>Un dialogue est une route comme une autre, poussée sur la même pile. Il est donc lui aussi typé. <code>showDialog&lt;bool&gt;</code> est le patron de la confirmation :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/home_screen.dart</span><span class="lang">dart</span></div>
+  <pre>final confirmed = await showDialog&lt;bool&gt;(
+  context: context,
+  builder: (dialogContext) =&gt; GameDialog(
+    title: Text(AppLocalizations.of(context)!.newGameOverwriteTitle),
+    content: Text(AppLocalizations.of(context)!.newGameOverwriteMessage),
+    onClose: () =&gt; Navigator.of(dialogContext).pop(false),
+    actions: [
+      TextButton(
+        onPressed: () =&gt; Navigator.of(dialogContext).pop(false),
+        child: Text(AppLocalizations.of(context)!.cancel),
+      ),
+      TextButton(
+        onPressed: () =&gt; Navigator.of(dialogContext).pop(true),
+        child: Text(AppLocalizations.of(context)!.newGameOverwriteConfirm),
+      ),
+    ], // ...
+  ),
+);
+if (confirmed != true) return;
+await SaveService.clear();</pre>
+</div>
+<div class="box warn"><div class="box-title">Piège</div>
+<p>Remarquez le paramètre nommé <code>dialogContext</code> : le <code>builder</code> d'un dialogue reçoit un <strong>nouveau</strong> contexte, situé sous la route du dialogue. C'est <code>Navigator.of(dialogContext).pop(...)</code> qui ferme le dialogue ; utiliser le contexte de l'écran parent fermerait… l'écran. Et le test <code>if (confirmed != true)</code> plutôt que <code>if (!confirmed)</code> est délibéré : <code>confirmed</code> est un <code>bool?</code> qui vaut <code>null</code> si le joueur ferme le dialogue en tapant à côté.</p></div>
+<p>Quand il faut une transition sur mesure, on passe à <code>showGeneralDialog</code>, qui expose la durée et le <code>transitionBuilder</code>. Le panneau de statistiques de la carte entre en grossissant avec un rebond :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/map/dialogs/stats_dialog.dart</span><span class="lang">dart</span></div>
+  <pre>static void show(BuildContext context) {
+  showGeneralDialog(
+    context: context,
+    barrierDismissible: true,
+    barrierLabel: 'StatsOverlay',
+    barrierColor: Colors.black54,
+    transitionDuration: const Duration(milliseconds: 300),
+    pageBuilder: (dialogContext, anim1, anim2) {
+      return const StatsDialog();
+    },
+    transitionBuilder: (context, anim1, anim2, child) {
+      return ScaleTransition(
+        scale: CurvedAnimation(parent: anim1, curve: Curves.easeOutBack),
+        child: FadeTransition(opacity: anim1, child: child),
+      );
+    },
+  );
+}</pre>
+</div>
+<p>Le carrousel de reliques après un boss utilise le même outil avec des réglages plus stricts — <code>barrierDismissible: false</code>, <code>barrierColor: Colors.black87</code>, <code>transitionDuration: const Duration(milliseconds: 400)</code> et un simple <code>FadeTransition</code> — parce que le joueur ne doit pas pouvoir esquiver sa récompense.</p>
+
+<h3><code>PopScope</code> : verrouiller la sortie</h3>
+<p>Un joueur qui quitte un combat en cours par le bouton retour du téléphone laisserait le jeu dans un état incohérent : les ennemis vivants, le nœud non complété, la sauvegarde décalée. <code>PopScope</code> intercepte la tentative. Deux propriétés :</p>
+<ul>
+  <li><code>canPop</code> : si <code>false</code>, le geste retour <strong>ne dépile pas</strong>.</li>
+  <li><code>onPopInvokedWithResult(didPop, result)</code> : appelée dans tous les cas. <code>didPop</code> dit si le dépilement a effectivement eu lieu. C'est là qu'on réagit à une tentative bloquée.</li>
+</ul>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>return PopScope(
+  canPop: isCompleted || runState.isDead,
+  child: Scaffold(
+    body: Stack(
+      children: [
+        // Le jeu prend tout l'écran
+        Positioned.fill(child: GameWidget(game: _game)),
+        // HUD et Overlays dans une SafeArea
+        SafeArea(
+          child: Stack(
+            children: [
+              if (!_showDraft &amp;&amp; runState.isDead) const DeathOverlay(),
+              // ... CombatTopBar, CombatBottomHud, TurnControlPanel,
+              //     CombatSidePanels, CombatPhaseBanner, CombatTooltipOverlay
+            ],
+          ),
+        ),
+      ],
+    ),
+  ),
+);</pre>
+</div>
+<p>La condition se lit littéralement : « on ne peut sortir du combat que si le nœud est complété (victoire traitée) ou si le héros est mort ». Le même verrou existe ailleurs, avec la condition adaptée au contenu :</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Écran</th><th><code>canPop</code></th><th>Effet</th></tr></thead>
+<tbody>
+<tr><td><code>game_screen.dart</code></td><td><code>isCompleted || runState.isDead</code></td><td>combat verrouillé jusqu'à sa résolution</td></tr>
+<tr><td><code>event_screen.dart</code></td><td><code>eventState.isResolved</code></td><td>il faut choisir une option de l'événement</td></tr>
+<tr><td><code>rest_screen.dart</code></td><td><code>_actionTaken</code></td><td>il faut consommer son feu de camp (soin, forge ou purge)</td></tr>
+<tr><td><code>map_screen.dart</code></td><td><code>false</code></td><td>retour → ouverture du menu pause</td></tr>
+<tr><td><code>shop_screen.dart</code></td><td><code>true</code></td><td>sortie libre, mais nettoyage des options de clonage au passage</td></tr>
+</tbody>
+</table></div>
+<p>Le feu de camp est l'exemple le plus lisible : <code>_actionTaken</code> passe à <code>true</code> dans <code>_heal()</code>, <code>_upgradeCard()</code> et <code>_removeCard()</code>, ce qui déverrouille automatiquement la sortie <em>et</em> remplace les trois options par un bouton « continuer ».</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/rest_screen.dart</span><span class="lang">dart</span></div>
+  <pre>if (!_actionTaken) ...[
+  _RestOption(
+    icon: Icons.favorite,
+    title: l10n.restCampRest,
+    description: l10n.restCampRestDesc(
+      (heroStats.maxPv * 0.3).round(),
+    ),
+    onTap: _heal,
+    color: Colors.greenAccent,
+  ),
+  AppSpacing.heightMd,
+  _RestOption(
+    icon: Icons.auto_fix_high,
+    title: l10n.restCampForge,
+    description: l10n.restCampForgeDesc,
+              // ... deux autres _RestOption : Forge et Suppression
+            ],</pre>
+</div>
+<p>Sur la carte du monde, la logique est inversée : le retour est interdit en permanence (<code>canPop: false</code>) et le callback sert à ouvrir le menu pause à la place.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/map_screen.dart</span><span class="lang">dart</span></div>
+  <pre>return ScreenScaffold(
+  backgroundType: ScreenBackgroundType.parchment,
+  canPop: false,
+  onPopInvokedWithResult: (didPop, result) {
+    if (!didPop) {
+      _showPauseMenu();
+    }
+  },
+  // ...
+void _showPauseMenu() {
+  PauseDialog.show(
+    context,
+    onResume: () =&gt; Navigator.of(context).pop(),
+    onExit: () =&gt; Navigator.of(context).popUntil((route) =&gt; route.isFirst),
+  );
+}</pre>
+</div>
+<p>Dans <code>game_screen.dart</code>, la variante est plus subtile : il faut d'abord fermer le dialogue de pause lui-même (qui est une route), <em>puis</em> vider la pile.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>void _showPauseMenu() {
+  _game.pauseEngine();
+  PauseDialog.show(
+    context,
+    onResume: () =&gt; Navigator.of(context).pop(),
+    onExit: () {
+      Navigator.of(context).pop();
+      Navigator.of(context).popUntil((route) =&gt; route.isFirst);
+    },
+  ).then((_) {
+    if (mounted) {
+      _game.resumeEngine();
+    }
+  });
+}</pre>
+</div>
+<div class="box"><div class="box-title">À retenir</div>
+<p><code>popUntil((route) =&gt; route.isFirst)</code> ramène à la route <code>SplashScreen</code>, qui affiche <code>HomeScreen</code> <strong>sans le reconstruire</strong> : son <code>State</code> a survécu tout ce temps. C'est précisément pour cela que <code>_continueGame</code> et <code>_startNewGame</code> se terminent par <code>if (mounted) setState(() {});</code> — sinon le bouton « Continuer » afficherait encore l'état de la sauvegarde d'avant la partie.</p></div>
+
+<h2 id="s8">8. Les animations</h2>
+<p>Flutter propose deux familles. La première est déclarative et sans effort ; la seconde donne le contrôle total. Le projet utilise massivement les deux.</p>
+
+<h3>Famille 1 — les animations implicites</h3>
+<p>Le principe : un widget dont le nom commence par <code>Animated…</code> prend une valeur cible et une <code>duration</code>. Chaque fois que la valeur change entre deux <code>build</code>, il interpole automatiquement de l'ancienne vers la nouvelle. Vous ne gérez ni contrôleur, ni <code>dispose</code>.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Widget</th><th>Fichier</th><th>Valeurs réelles</th></tr></thead>
+<tbody>
+<tr><td><code>AnimatedScale</code></td><td><code>widgets/game_button.dart</code></td><td>1.0 → 1.03 au survol, 150 ms</td></tr>
+<tr><td><code>AnimatedScale</code></td><td><code>screens/rest_screen.dart</code></td><td>1.0 → 1.03, 150 ms</td></tr>
+<tr><td><code>AnimatedScale</code></td><td><code>screens/class_selection_screen.dart</code></td><td>1.0 → 1.04, 150 ms</td></tr>
+<tr><td><code>AnimatedContainer</code></td><td><code>widgets/map/map_node_widget.dart</code></td><td>70 → 85 px au survol, 200 ms</td></tr>
+<tr><td><code>AnimatedContainer</code></td><td><code>widgets/hud/combat_phase_banner.dart</code></td><td>300 ms, <code>Curves.easeInOut</code></td></tr>
+<tr><td><code>AnimatedOpacity</code></td><td><code>screens/starter_deck_draft_screen.dart</code></td><td>opacité 0.4 quand 5 cartes sont déjà prises, 200 ms</td></tr>
+<tr><td><code>AnimatedPositioned</code></td><td><code>widgets/map/player_pawn.dart</code></td><td>600 ms, <code>Curves.easeInOutBack</code></td></tr>
+<tr><td><code>AnimatedSwitcher</code></td><td><code>tutorial/tutorial_screen.dart</code></td><td>200 ms, changement de texte d'étape</td></tr>
+<tr><td><code>AnimatedCrossFade</code></td><td><code>screens/patch_notes_screen.dart</code></td><td>280 ms, dépliage d'une version</td></tr>
+<tr><td><code>TweenAnimationBuilder</code></td><td><code>screens/class_selection_screen.dart</code></td><td>150 ms, <code>Curves.easeOut</code></td></tr>
+</tbody>
+</table></div>
+<p>Le pion du joueur sur la carte est l'exemple le plus économique du projet : le déplacement d'un nœud à l'autre est entièrement géré par le changement de <code>left</code> et <code>top</code>.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/map/player_pawn.dart</span><span class="lang">dart</span></div>
+  <pre>class PlayerPawn extends StatelessWidget {
+  final Vector2 position;
+  const PlayerPawn({super.key, required this.position});
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedPositioned(
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeInOutBack, // Petit effet de ressort lors de l'arrivée
+      left: position.x - 20,
+      top: position.y - 65 + 80.0, // Un peu au dessus du centre du node
+      child: Column(children: [
+        // ... pastille blanche + Icon(Icons.person_pin)
+        CustomPaint(size: const Size(10, 10), painter: PawnPointerPainter()),
+      ]),
+    );
+  }
+}</pre>
+</div>
+<p>C'est un <code>StatelessWidget</code>. Aucun contrôleur, aucun <code>dispose</code> : quand <code>runProvider</code> change le nœud courant, la carte se reconstruit, <code>position</code> change, et <code>AnimatedPositioned</code> fait glisser le pion pendant 600 ms avec un petit rebond.</p>
+<div class="box warn"><div class="box-title">Piège</div>
+<p><code>AnimatedSwitcher</code> ne détecte un changement d'enfant que si le <strong>type</strong> ou la <strong>key</strong> diffèrent. Deux <code>Text</code> avec un contenu différent mais sans clé sont considérés identiques et rien ne s'anime. Le tutoriel le gère correctement avec <code>key: ValueKey&lt;int&gt;(_engine.currentStepIndex)</code> sur chaque <code>Text</code>.</p></div>
+
+<h3>Famille 2 — les animations explicites</h3>
+<p>Dès qu'il faut boucler, séquencer, inverser ou piloter plusieurs propriétés depuis une même horloge, on passe à l'<code>AnimationController</code>. La recette est toujours la même :</p>
+<ol>
+  <li>Ajouter <code>with SingleTickerProviderStateMixin</code> au <code>State</code> (ou <code>TickerProviderStateMixin</code> s'il y a plusieurs contrôleurs). Ce mixin fournit le <code>vsync</code>, c'est-à-dire la source des battements d'horloge, synchronisée avec l'écran.</li>
+  <li>Créer le contrôleur dans <code>initState</code> avec sa <code>duration</code>.</li>
+  <li>Le passer dans un <code>Tween</code> (de quelle valeur à quelle valeur) et une <code>CurvedAnimation</code> (avec quelle courbe d'accélération).</li>
+  <li>Reconstruire la portion concernée avec <code>AnimatedBuilder</code> ou une transition prête à l'emploi (<code>ScaleTransition</code>, <code>FadeTransition</code>, <code>RotationTransition</code>).</li>
+  <li>Appeler <code>dispose()</code> sur le contrôleur.</li>
+</ol>
+<p>L'overlay de montée de niveau montre une subtilité de plus : deux animations différentes <strong>pilotées par le même contrôleur</strong>, décalées dans le temps grâce à <code>Interval</code>.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/map/level_up_overlay.dart</span><span class="lang">dart</span></div>
+  <pre>class _LevelUpOverlayState extends State&lt;LevelUpOverlay&gt;
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation&lt;double&gt; _scaleAnimation;
+  late Animation&lt;double&gt; _opacityAnimation;
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+    _scaleAnimation = Tween&lt;double&gt;(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.2, 1.0, curve: Curves.elasticOut),
+      ),
+    );
+    _opacityAnimation = Tween&lt;double&gt;(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.4, curve: Curves.easeInOut),
+      ),
+    );
+    _controller.forward();
+  }
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }</pre>
+</div>
+<p>Traduction en secondes : le contrôleur court de 0.0 à 1.0 en 1 200 ms. Le voile noir apparaît pendant les 40 premiers pourcents (0 → 480 ms), tandis que la boîte « LEVEL UP ! » ne commence à grossir qu'à 20 % (240 ms) et rebondit jusqu'à la fin avec <code>Curves.elasticOut</code>. La consommation dans <code>build</code> passe par un <code>AnimatedBuilder</code>, qui n'est rien d'autre qu'un widget qui se reconstruit à chaque battement de l'animation qu'on lui donne :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/map/level_up_overlay.dart</span><span class="lang">dart</span></div>
+  <pre>@override
+Widget build(BuildContext context) {
+  return AnimatedBuilder(
+    animation: _controller,
+    builder: (context, child) {
+      return Positioned.fill(
+        child: GestureDetector(
+          onTap: widget.onTap,
+          behavior: HitTestBehavior.opaque,
+          child: Container(
+            color: Colors.black.withValues(alpha: 0.85 * _opacityAnimation.value),
+            child: Center(
+              child: ScaleTransition(
+                scale: _scaleAnimation,
+                child: Container(/* la boîte dorée */),
+              ),
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}</pre>
+</div>
+
+<h3>Réagir à un changement de paramètre : <code>didUpdateWidget</code></h3>
+<p>La barre de vie du joueur est le morceau d'animation le plus intéressant du projet. L'effet recherché est celui des jeux de combat : quand on prend des dégâts, la barre verte tombe <em>instantanément</em> et une barre rouge derrière descend lentement pour montrer ce qui vient d'être perdu ; quand on se soigne, c'est l'inverse.</p>
+<p>Or <code>PlayerHealthBar</code> ne connaît que <code>widget.currentPv</code>, une valeur qui lui est fournie de l'extérieur. Pour savoir qu'il y a eu un changement, il compare l'ancien et le nouveau widget dans <code>didUpdateWidget</code> :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/hud/player_health_bar.dart</span><span class="lang">dart</span></div>
+  <pre>@override
+void didUpdateWidget(covariant PlayerHealthBar oldWidget) {
+  super.didUpdateWidget(oldWidget);
+  if (widget.currentPv != oldWidget.currentPv) {
+    final double activeGreen = currentGreen;
+    final double activeCatchUp = currentCatchUp;
+    final double newPv = widget.currentPv.toDouble();
+    if (newPv &lt; activeGreen) {
+      // Damage: green drops instantly, catchUp animates down
+      _controller.duration = const Duration(milliseconds: 1200);
+      _greenStart = newPv;
+      _greenEnd = newPv;
+      _catchUpStart = activeCatchUp;
+      _catchUpEnd = newPv;
+    } else {
+      // Healing: catchUp jumps instantly, green animates up
+      _controller.duration = const Duration(milliseconds: 500);
+      _catchUpStart = newPv;
+      _catchUpEnd = newPv;
+      _greenStart = activeGreen;
+      _greenEnd = newPv;
+    }
+    _controller.forward(from: 0.0);
+  } else {
+    _controller.duration = const Duration(milliseconds: 500);
+  }
+}</pre>
+</div>
+<p>Trois idées à retenir de ce bloc :</p>
+<ul>
+  <li>La durée n'est pas fixe : <strong>1 200 ms</strong> pour un dégât (le rouge traîne, on voit ce qu'on a perdu) contre <strong>500 ms</strong> pour un soin.</li>
+  <li>La nouvelle animation repart de la valeur <em>interpolée en cours</em> (<code>currentGreen</code>, <code>currentCatchUp</code>), pas de la dernière valeur cible. C'est ce qui évite les saccades quand deux dégâts s'enchaînent en moins d'une seconde.</li>
+  <li><code>forward(from: 0.0)</code> redémarre le contrôleur depuis le début à chaque changement.</li>
+</ul>
+
+<h3>Boucler : <code>repeat</code></h3>
+<p>L'icône de héros sur les cartes de classe « respire » en continu. Un contrôleur de 3 secondes en <code>repeat(reverse: true)</code> pilote un <code>Tween</code> de −4 à +4 pixels, consommé par un <code>AnimatedBuilder</code> qui applique une <code>Transform.translate</code>. Sur mobile, l'amplitude est divisée par deux.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/class_selection_screen.dart</span><span class="lang">dart</span></div>
+  <pre>// Floating hero icon
+AnimatedBuilder(
+  animation: _floatAnimation,
+  builder: (context, child) {
+    final double floatOffset =
+        _floatAnimation.value *
+        (widget.isMobile ? 0.5 : 1.0);
+    return Transform.translate(
+      offset: Offset(0, floatOffset),
+      child: Icon(
+        icon,
+        size: widget.isMobile ? 48 : 65,
+        color: classColor,
+        shadows: [Shadow(
+          color: classColor.withValues(alpha: 0.5),
+          blurRadius: widget.isMobile ? 5 : 10,
+        )],
+      ),
+    );
+  },
+),</pre>
+</div>
+<p>La carte animée du menu de sélection cumule d'ailleurs les deux familles : <code>TweenAnimationBuilder</code> (150 ms) lisse l'entrée et la sortie de l'effet de survol, <code>Transform</code> avec <code>Matrix4</code> applique l'inclinaison 3D calculée depuis la souris, et <code>AnimatedContainer</code> (200 ms) anime bordure et lueur.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/class_selection_screen.dart</span><span class="lang">dart</span></div>
+  <pre>child: TweenAnimationBuilder&lt;double&gt;(
+  duration: const Duration(milliseconds: 150),
+  curve: Curves.easeOut,
+  tween: Tween&lt;double&gt;(begin: 0.0, end: _isHovered ? 1.0 : 0.0),
+  builder: (context, hoverVal, child) {
+    // Interpolate rotation to standard or tilt value
+    final double currentTiltX = _tiltX * hoverVal;
+    final double currentTiltY = _tiltY * hoverVal;
+    return Transform(
+      transform: Matrix4.identity()
+        ..setEntry(3, 2, 0.002) // Perspective 3D
+        ..rotateX(
+          currentTiltY,
+        ) // Inversé : le côté avec le curseur s'éloigne (tilt vers l'arrière)
+        ..rotateY(-currentTiltX),
+      alignment: Alignment.center,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        decoration: BoxDecoration(
+          color: const Color(0xFF2A2A3D),
+          border: Border.all(
+            color: classColor.withValues(alpha: _isHovered ? 1.0 : 0.7),
+            width: _isHovered ? 3.0 : 2.0,
+          ),
+          // ... boxShadow : blurRadius 25 au survol, 10 sinon</pre>
+</div>
+<div class="box ok"><div class="box-title">Bonne pratique</div>
+<p>Le paramètre <code>child</code> d'<code>AnimatedBuilder</code> sert à optimiser : ce qui est passé en <code>child:</code> est construit <strong>une seule fois</strong> puis réutilisé à chaque frame. La tuile de notification l'exploite correctement — seuls la translation et l'opacité sont recalculées, le <code>Container</code> avec ses ombres reste intact : <code>builder: (context, child) =&gt; Transform.translate(..., child: Opacity(..., child: child))</code>, avec le vrai contenu passé en <code>child:</code> après le <code>builder</code>.</p></div>
+
+<h2 id="s9">9. Dessiner soi-même</h2>
+<p>Quand aucun assemblage de widgets ne convient — une courbe, un trait pointillé animé, une forme libre — on descend d'un cran avec <code>CustomPaint</code> et <code>CustomPainter</code>. Le projet compte neuf <code>CustomPainter</code>, dont le plus instructif est celui qui relie les nœuds de la carte du monde.</p>
+<p>Un <code>CustomPainter</code> impose deux méthodes :</p>
+<ul>
+  <li><code>void paint(Canvas canvas, Size size)</code> — le dessin proprement dit. <code>canvas</code> offre <code>drawLine</code>, <code>drawCircle</code>, <code>drawPath</code>, <code>drawRect</code>… <code>size</code> est la taille allouée par le parent.</li>
+  <li><code>bool shouldRepaint(covariant T oldDelegate)</code> — Flutter appelle cette méthode quand un nouveau painter remplace l'ancien. Renvoyer <code>false</code> quand rien n'a changé évite un repeint inutile.</li>
+</ul>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/map/map_connection_painter.dart</span><span class="lang">dart</span></div>
+  <pre>class MapConnectionPainter extends CustomPainter {
+  final List&lt;MapNode&gt; nodes;
+  final Animation&lt;double&gt; animation;
+  final Set&lt;(String, String)&gt; highlightedConnections;
+  final bool isParchmentMode;
+  MapConnectionPainter({
+    required this.nodes,
+    required this.animation,
+    this.highlightedConnections = const {},
+    this.isParchmentMode = false,
+  }) : super(repaint: animation);
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paintBase = Paint()
+      ..color = isParchmentMode
+          ? const Color(0xFF4A3728).withAlpha(80) // Brun encre dilué
+          : Colors.white.withAlpha(60)
+      ..strokeWidth = 3
+      ..style = PaintingStyle.stroke;
+    final paintHighlight = Paint()
+      ..color = isParchmentMode ? const Color(0xFF8B4513) : Colors.blueAccent
+      ..strokeWidth = 5
+      ..style = PaintingStyle.stroke
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
+    final double dashLength = 12.0;
+    final double dashSpace = 8.0;
+    final double totalDash = dashLength + dashSpace;
+    final double phase = animation.value * totalDash * 2;
+    // ...</pre>
+</div>
+
+<h3><code>super(repaint: animation)</code> : la clé de l'animation à coût nul</h3>
+<p>C'est la ligne la plus importante du fichier. Le constructeur de <code>CustomPainter</code> accepte un <code>Listenable</code> nommé <code>repaint</code>. Quand cet objet notifie ses auditeurs, Flutter redessine le painter — <strong>sans reconstruire l'arbre de widgets</strong>. Comme un <code>AnimationController</code> est un <code>Listenable</code> qui notifie à chaque frame, il suffit de le passer là pour obtenir une animation continue à 60 fps qui ne coûte ni <code>setState</code>, ni <code>build</code>, ni <code>AnimatedBuilder</code>.</p>
+<p>Le contrôleur en question est créé dans la carte du monde et tourne en boucle infinie :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/map_screen.dart</span><span class="lang">dart</span></div>
+  <pre>@override
+void initState() {
+  super.initState();
+  _dashController = AnimationController(
+    vsync: this,
+    duration: const Duration(seconds: 2),
+  )..repeat();
+  _transformationController.value =
+      Matrix4.translationValues(-200.0, -1500.0, 0.0) *
+      Matrix4.diagonal3Values(0.8, 0.8, 1.0);
+}
+@override
+void dispose() {
+  _dashController.dispose();
+  _transformationController.dispose();
+  super.dispose();
+}</pre>
+</div>
+<p>La valeur du contrôleur (0 → 1 en 2 secondes, en boucle) est convertie en décalage de pointillés : <code>final double phase = animation.value * totalDash * 2;</code>, puis <code>double currentDist = (phase % totalDash) - totalDash;</code>. Les tirets défilent donc le long des chemins, deux cycles complets par tour de contrôleur.</p>
+<div class="box"><div class="box-title">À retenir</div>
+<p>Le dessin des tirets est fait à la main, segment par segment, avec <code>canvas.drawLine</code> et des positions bornées par <code>clamp</code>. Le commentaire du fichier explique pourquoi : <em>« Clamped math-based dashes to prevent WASM path allocation heap leak »</em>. L'approche « naturelle » (construire un <code>Path</code> par tiret) fuyait en mémoire sur la cible WebAssembly. C'est un bon rappel : dans <code>paint</code>, on est appelé 60 fois par seconde, chaque allocation compte.</p></div>
+
+<h3><code>shouldRepaint</code></h3>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/map/map_connection_painter.dart</span><span class="lang">dart</span></div>
+  <pre>@override
+bool shouldRepaint(covariant MapConnectionPainter oldDelegate) =&gt;
+    oldDelegate.nodes != nodes ||
+    oldDelegate.animation != animation ||
+    oldDelegate.highlightedConnections != highlightedConnections;</pre>
+</div>
+<p>Trois comparaisons, une par entrée qui influence le rendu. Le mot-clé <code>covariant</code> permet de typer le paramètre par la classe concrète plutôt que par <code>CustomPainter</code> — c'est la convention pour toutes les méthodes de comparaison en Flutter, y compris <code>didUpdateWidget</code>.</p>
+<p>À l'opposé, le petit painter qui dessine le triangle sous le pion du joueur n'a aucun paramètre variable : il renvoie donc toujours <code>false</code>.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/map/player_pawn.dart</span><span class="lang">dart</span></div>
+  <pre>class PawnPointerPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = Colors.white..style = PaintingStyle.fill;
+    final path = Path()
+      ..moveTo(0, 0)
+      ..lineTo(size.width, 0)
+      ..lineTo(size.width / 2, size.height)
+      ..close();
+    canvas.drawPath(path, paint);
+  }
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) =&gt; false;
+}</pre>
+</div>
+<p>Même schéma pour <code>SwordIcon</code> (<code>lib/ui/widgets/sword_icon.dart</code>), l'icône d'épée dessinée à la main utilisée dans le HUD et sur les cartes de classe : un <code>SizedBox(width: size, height: size)</code> pour donner une taille, un <code>CustomPaint</code> à l'intérieur, un painter privé qui trace la lame avec deux nuances de la couleur pour l'effet biseauté.</p>
+
+<h3><code>RepaintBoundary</code></h3>
+<p>Par défaut, Flutter regroupe les widgets voisins dans une même « couche » de rendu. Si un seul élément de la couche change, toute la couche est repeinte. <code>RepaintBoundary</code> isole son sous-arbre dans sa propre couche : ce qui se repeint dedans n'oblige plus le reste à se repeindre, et inversement.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/map_screen.dart</span><span class="lang">dart</span></div>
+  <pre>child: Stack(
+  children: [
+    RepaintBoundary(
+      child: CustomPaint(
+        size: const Size(1000, 3000),
+        painter: MapConnectionPainter(
+          nodes: nodes,
+          animation: _dashController,
+          highlightedConnections: _highlightedConnections,
+          isParchmentMode: true,
+        ),
+      ),
+    ),
+    ...nodes.map(
+      (node) =&gt; MapNodeWidget(
+        node: node,
+        isAvailable: _isNodeAvailable(node, nodes, currentNodeId),
+        isCurrent: node.id == currentNodeId,
+        onTap: () =&gt; _onNodeTap(context, ref, node),
+        // ...
+      ),
+    ),
+    // Pion du Joueur Animé
+    if (currentNodeId != null)
+      PlayerPawn(
+        position: nodes.firstWhere((n) =&gt; n.id == currentNodeId).position,
+      ),
+  ],
+),</pre>
+</div>
+<p>Sans ce <code>RepaintBoundary</code>, les pointillés animés — qui se redessinent 60 fois par seconde sur une toile de 1000 × 3000 — forceraient le repeint de tous les nœuds de la carte et du pion à chaque frame. C'est le seul <code>RepaintBoundary</code> du projet, et il est exactement au bon endroit : autour de la seule chose qui bouge en permanence.</p>
+<div class="box ok"><div class="box-title">Bonne pratique</div>
+<p>N'ajoutez pas de <code>RepaintBoundary</code> « au cas où » : chaque frontière crée une couche supplémentaire, donc de la mémoire vidéo et une composition en plus. On les place uniquement autour d'un sous-arbre qui se repeint beaucoup plus souvent (ou beaucoup moins souvent) que ses voisins — typiquement une animation continue, un canvas, ou une liste très longue.</p></div>
+<div class="box"><div class="box-title">À retenir</div>
+<p>Trois niveaux de granularité, du moins coûteux au plus coûteux, pour animer quelque chose : <strong>repeindre</strong> (un <code>CustomPainter</code> avec <code>repaint:</code>) &lt; <strong>reconstruire un petit sous-arbre</strong> (<code>AnimatedBuilder</code> avec un <code>child:</code> constant) &lt; <strong>reconstruire l'écran</strong> (<code>setState</code>). Choisissez toujours le plus bas des trois qui suffit.</p></div>
+
+<div class="quiz">
+  <h2>Quiz — vérifiez vos acquis</h2>
+  <div class="q" data-answer="1">
+    <p class="q-text">1. Dans <code>lib/ui/screens/shop_screen.dart</code>, quelle méthode du cycle de vie initialise le stock de la boutique ?</p>
+    <ul class="q-opts">
+      <li><code>initState()</code>, directement</li>
+      <li><code>didChangeDependencies()</code>, protégée par un drapeau <code>_isInitialized</code> et un <code>Future.microtask</code></li>
+      <li><code>build()</code>, à chaque reconstruction</li>
+      <li><code>didUpdateWidget()</code>, en comparant l'ancien état</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>_ShopScreenState.didChangeDependencies()</code> teste <code>if (!_isInitialized)</code>, lance <code>Future.microtask(...)</code> pour appeler <code>initializeShop(gameData.cards, inventoryState.bonusShopCards)</code>, puis met le drapeau à <code>true</code>. Le drapeau est nécessaire parce que <code>didChangeDependencies</code> peut être rappelée (changement de langue, de thème, de taille).</div>
+  </div>
+  <div class="q" data-answer="2">
+    <p class="q-text">2. Comment la boutique partage-t-elle son écran entre les cartes en vente et les services ?</p>
+    <ul class="q-opts">
+      <li>Deux <code>SizedBox</code> de largeur fixe 600 et 200</li>
+      <li>Un <code>GridView</code> à deux colonnes</li>
+      <li>Un <code>Expanded(flex: 3)</code> et un <code>Expanded(flex: 1)</code> séparés par un <code>VerticalDivider(width: 40)</code></li>
+      <li>Un <code>LayoutBuilder</code> avec un seuil à 760</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> la <code>Row</code> de <code>lib/ui/screens/shop_screen.dart</code> contient <code>Expanded(flex: 3)</code> (cartes à vendre), puis <code>const VerticalDivider(color: Colors.white24, width: 40)</code>, puis <code>Expanded(flex: 1)</code> (services) — soit un partage 75 % / 25 % de l'espace restant.</div>
+  </div>
+  <div class="q" data-answer="0">
+    <p class="q-text">3. Dans <code>class_selection_screen.dart</code>, quelles sont les valeurs de <code>maxCrossAxisExtent</code> pour la grille des classes ?</p>
+    <ul class="q-opts">
+      <li>200 sur mobile (largeur &lt; 600), 400 sinon</li>
+      <li>140 sur mobile, 180 sinon</li>
+      <li>320 dans les deux cas</li>
+      <li>Toujours 400, seul <code>childAspectRatio</code> change</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>maxCrossAxisExtent: isMobile ? 200 : 400</code>, avec <code>childAspectRatio: isMobile ? 0.68 : 0.75</code>. Le commentaire du fichier précise : « Divise par deux sur mobile pour afficher 2 colonnes réduites ». Les valeurs 140/180 sont celles de <code>starter_deck_draft_screen.dart</code>.</div>
+  </div>
+  <div class="q" data-answer="3">
+    <p class="q-text">4. Que fait le bouton « Retour au menu principal » du menu pause ?</p>
+    <ul class="q-opts">
+      <li><code>Navigator.pop()</code> une seule fois</li>
+      <li><code>Navigator.pushReplacement(HomeScreen())</code></li>
+      <li><code>Navigator.pushAndRemoveUntil(SplashScreen(), (r) =&gt; false)</code></li>
+      <li><code>Navigator.popUntil((route) =&gt; route.isFirst)</code></li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>_showPauseMenu()</code> passe <code>onExit: () =&gt; Navigator.of(context).popUntil((route) =&gt; route.isFirst)</code> dans <code>map_screen.dart</code> (et la même chose précédée d'un <code>pop()</code> dans <code>game_screen.dart</code>). La route de fond est <code>SplashScreen</code>, qui affiche <code>HomeScreen</code> ; comme ce <code>State</code> n'est pas recréé, <code>_continueGame</code> termine par <code>if (mounted) setState(() {});</code> pour rafraîchir l'état de la sauvegarde.</div>
+  </div>
+  <div class="q" data-answer="2">
+    <p class="q-text">5. Comment <code>MapConnectionPainter</code> obtient-il ses pointillés animés à 60 fps ?</p>
+    <ul class="q-opts">
+      <li>Un <code>Timer.periodic</code> qui appelle <code>setState</code> toutes les 16 ms</li>
+      <li>Un <code>AnimatedContainer</code> autour du <code>CustomPaint</code></li>
+      <li>Le constructeur passe l'<code>AnimationController</code> à <code>super(repaint: animation)</code></li>
+      <li><code>shouldRepaint</code> renvoie toujours <code>true</code></li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> le constructeur se termine par <code>: super(repaint: animation)</code>. Un <code>AnimationController</code> étant un <code>Listenable</code>, Flutter repeint le painter à chaque battement <em>sans</em> reconstruire l'arbre de widgets. Le contrôleur, <code>_dashController</code>, est créé dans <code>map_screen.dart</code> avec <code>duration: const Duration(seconds: 2)</code> et <code>..repeat()</code>.</div>
+  </div>
+</div>
+<div class="pager">
+<a class="prev" href="ch02.html"><div class="dir">&#8592; Chapitre 02</div><div class="ttl">Dart, le langage — l&#x27;essentiel pour ce projet</div></a>
+<a class="next" href="ch04.html"><div class="dir">Chapitre 04 &#8594;</div><div class="ttl">Riverpod — l&#x27;état partagé du jeu</div></a>
+</div>
+</div>
+</main>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

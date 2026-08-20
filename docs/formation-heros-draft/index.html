@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sommaire — Formation Hero's Draft</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<button class="menu-btn" aria-label="Menu">&#9776;</button>
+<div class="layout">
+<aside class="sidebar">
+  <a class="brand" href="index.html">
+    <div class="brand-title">HERO'S DRAFT</div>
+    <div class="brand-sub">Formation complète au projet Flutter</div>
+  </a>
+<nav class="nav">
+<div class="nav-part">Partie 0 — Démarrage</div>
+<a href="ch01.html"><span class="num">01</span><span>Vue d&#x27;ensemble : qu&#x27;est-ce que Hero&#x27;s Draft ?</span></a>
+<div class="nav-part">Partie 1 — Les fondations techniques</div>
+<a href="ch02.html"><span class="num">02</span><span>Dart, le langage — l&#x27;essentiel pour ce projet</span></a>
+<a href="ch03.html"><span class="num">03</span><span>Flutter — widgets, arbre et navigation</span></a>
+<a href="ch04.html"><span class="num">04</span><span>Riverpod — l&#x27;état partagé du jeu</span></a>
+<a href="ch05.html"><span class="num">05</span><span>Flame — le moteur de rendu du combat</span></a>
+<div class="nav-part">Partie 2 — L&#x27;architecture du projet</div>
+<a href="ch06.html"><span class="num">06</span><span>L&#x27;architecture en quatre couches</span></a>
+<a href="ch07.html"><span class="num">07</span><span>La couche de données : un jeu 100 % data-driven</span></a>
+<div class="nav-part">Partie 3 — Les règles du jeu</div>
+<a href="ch08.html"><span class="num">08</span><span>Le héros : stats, classes, passifs et progression</span></a>
+<a href="ch09.html"><span class="num">09</span><span>Les cartes et le deck</span></a>
+<a href="ch10.html"><span class="num">10</span><span>Le combat : boucle de tour, dégâts et effets</span></a>
+<a href="ch11.html"><span class="num">11</span><span>Les ennemis et la courbe de difficulté</span></a>
+<a href="ch12.html"><span class="num">12</span><span>La carte du monde procédurale</span></a>
+<a href="ch13.html"><span class="num">13</span><span>Les reliques et le système de déclencheurs</span></a>
+<a href="ch14.html"><span class="num">14</span><span>L&#x27;économie : or, boutique, forge et fusion</span></a>
+<a href="ch15.html"><span class="num">15</span><span>Récompenses, chance et probabilités</span></a>
+<a href="ch16.html"><span class="num">16</span><span>Événements, repos et autel des reliques</span></a>
+<div class="nav-part">Partie 4 — L&#x27;interface et le rendu</div>
+<a href="ch17.html"><span class="num">17</span><span>Le pont Flame ↔ Riverpod : l&#x27;écran de combat</span></a>
+<a href="ch18.html"><span class="num">18</span><span>Composants Flame et game feel</span></a>
+<a href="ch19.html"><span class="num">19</span><span>Écrans, navigation et design system</span></a>
+<div class="nav-part">Partie 5 — Qualité et cycle de vie</div>
+<a href="ch20.html"><span class="num">20</span><span>Sauvegarde, localisation et tutoriel</span></a>
+<a href="ch21.html"><span class="num">21</span><span>Tests, outillage, dette technique et évolutions</span></a>
+</nav>
+</aside>
+<main class="main">
+<div class="content">
+<div class="hero">
+  <h1>Hero's Draft</h1>
+  <p class="sub">Formation complète au projet Flutter — comprendre le jeu, son architecture,
+  ses données et chacun de ses systèmes, de zéro.</p>
+  <div class="badges">
+    <span class="badge">Flutter</span>
+    <span class="badge">Flame 1.17</span>
+    <span class="badge">Riverpod 2.x</span>
+    <span class="badge">Dart 3.11</span>
+    <span class="badge">21 chapitres</span>
+    <span class="badge">166 fichiers analysés</span>
+    <span class="badge">v0.4.7</span>
+  </div>
+</div>
+
+<p><strong>Hero's Draft</strong> est un roguelike deckbuilder développé avec Flutter et le moteur Flame :
+combats tactiques au tour par tour, carte du monde procédurale, deckbuilding avec fusion de cartes,
+reliques, boutique et forge. Le jeu est intégralement <em>data-driven</em> — tout son contenu vit dans
+dix fichiers JSON.</p>
+
+<p>Cette formation part de zéro. Elle explique d'abord Dart, Flutter, Riverpod et Flame
+<em>à travers le code réel du projet</em>, puis démonte chaque système de jeu, formule par formule, avec
+les valeurs exactes du dépôt. Chaque chapitre contient des extraits de code verbatim, des schémas et un
+quiz de vérification.</p>
+
+<div class="memo">
+  <div class="card"><h5>Débutant Flutter</h5><p>Commencez au chapitre 1 et suivez l'ordre. Les chapitres 2 à 5 posent les bases du langage et des bibliothèques.</p></div>
+  <div class="card"><h5>Déjà à l'aise en Flutter</h5><p>Survolez les chapitres 2 et 3, mais lisez le 4 et le 5 : ils décrivent les patrons précis employés ici.</p></div>
+  <div class="card"><h5>Vous reprenez le projet</h5><p>Parcours court : chapitres 6, 7, 9, 10 et 12. Puis le 21 pour la dette technique et les pistes d'évolution.</p></div>
+  <div class="card"><h5>Game designer</h5><p>Chapitres 7 à 16 : toutes les règles, tous les barèmes, toutes les tables de probabilité.</p></div>
+</div>
+
+<div class="box"><div class="box-title">Comment lire les chapitres</div>
+<p>Sauf mention <code>exemple</code> ou <code>illustration</code>, tous les blocs de code sont copiés
+verbatim du dépôt et portent leur chemin réel. Les encadrés violets marquent une règle de jeu, les
+ambres un piège courant, les rouges un point d'attention ou de dette technique, les verts une bonne
+pratique. Les flèches ← et → du clavier passent d'un chapitre à l'autre.</p></div>
+
+<div class="chapters"><div class="part-title">Partie 0 — Démarrage</div>
+<a class="ch-card" href="ch01.html"><div class="n">01</div><div><div class="t">Vue d&#x27;ensemble : qu&#x27;est-ce que Hero&#x27;s Draft ?</div><div class="d">Le jeu, la stack technique, l&#x27;arborescence, comment lancer le projet.</div></div></a>
+<div class="part-title">Partie 1 — Les fondations techniques</div>
+<a class="ch-card" href="ch02.html"><div class="n">02</div><div><div class="t">Dart, le langage — l&#x27;essentiel pour ce projet</div><div class="d">Variables, null-safety, classes, immutabilité, enums, records, extensions, async.</div></div></a>
+<a class="ch-card" href="ch03.html"><div class="n">03</div><div><div class="t">Flutter — widgets, arbre et navigation</div><div class="d">Stateless/Stateful, layout, BuildContext, Navigator, responsive, animations.</div></div></a>
+<a class="ch-card" href="ch04.html"><div class="n">04</div><div><div class="t">Riverpod — l&#x27;état partagé du jeu</div><div class="d">Provider, Notifier, ref.watch/read/listen, ProviderScope, les 10 providers du jeu.</div></div></a>
+<a class="ch-card" href="ch05.html"><div class="n">05</div><div><div class="t">Flame — le moteur de rendu du combat</div><div class="d">FlameGame, Component, cycle de vie, priority, Effects, mixins d&#x27;entrée.</div></div></a>
+<div class="part-title">Partie 2 — L&#x27;architecture du projet</div>
+<a class="ch-card" href="ch06.html"><div class="n">06</div><div><div class="t">L&#x27;architecture en quatre couches</div><div class="d">Rendu / État / Données / UI : la règle d&#x27;or du projet, et l&#x27;arborescence complète.</div></div></a>
+<a class="ch-card" href="ch07.html"><div class="n">07</div><div><div class="t">La couche de données : un jeu 100 % data-driven</div><div class="d">Les 10 fichiers JSON, les modèles, le registre, le chargement et l&#x27;i18n inline.</div></div></a>
+<div class="part-title">Partie 3 — Les règles du jeu</div>
+<a class="ch-card" href="ch08.html"><div class="n">08</div><div><div class="t">Le héros : stats, classes, passifs et progression</div><div class="d">EntityStats, les 3 classes, les traits passifs, XP, niveaux, mana et armure.</div></div></a>
+<a class="ch-card" href="ch09.html"><div class="n">09</div><div><div class="t">Les cartes et le deck</div><div class="d">CardData vs CardInstance, raretés, les 5 piles, pioche, remélange, épuisement.</div></div></a>
+<a class="ch-card" href="ch10.html"><div class="n">10</div><div><div class="t">Le combat : boucle de tour, dégâts et effets</div><div class="d">CombatState, phases, intentions, DamagePipeline, EffectResolver, altérations d&#x27;état.</div></div></a>
+<a class="ch-card" href="ch11.html"><div class="n">11</div><div><div class="t">Les ennemis et la courbe de difficulté</div><div class="d">EncounterSystem : budget de combat, scaling HP/dégâts, actes, tiers, boss et élites.</div></div></a>
+<a class="ch-card" href="ch12.html"><div class="n">12</div><div><div class="t">La carte du monde procédurale</div><div class="d">Génération en 4 étapes, quotas, chokepoints, types de nœuds, règles de progression.</div></div></a>
+<a class="ch-card" href="ch13.html"><div class="n">13</div><div><div class="t">Les reliques et le système de déclencheurs</div><div class="d">9 triggers, 25 reliques, effets à charges, application et retrait.</div></div></a>
+<a class="ch-card" href="ch14.html"><div class="n">14</div><div><div class="t">L&#x27;économie : or, boutique, forge et fusion</div><div class="d">Prix, reroll, purge, clonage, runes de forge, fusion de cartes et de runes.</div></div></a>
+<a class="ch-card" href="ch15.html"><div class="n">15</div><div><div class="t">Récompenses, chance et probabilités</div><div class="d">RewardController, drafts de niveau, tables de raretés, l&#x27;effet exact de la Chance.</div></div></a>
+<a class="ch-card" href="ch16.html"><div class="n">16</div><div><div class="t">Événements, repos et autel des reliques</div><div class="d">Les nœuds narratifs, le feu de camp et l&#x27;échange de reliques.</div></div></a>
+<div class="part-title">Partie 4 — L&#x27;interface et le rendu</div>
+<a class="ch-card" href="ch17.html"><div class="n">17</div><div><div class="t">Le pont Flame ↔ Riverpod : l&#x27;écran de combat</div><div class="d">GameScreen, les 14 callbacks, la synchronisation d&#x27;état et le séquenceur de récompenses.</div></div></a>
+<a class="ch-card" href="ch18.html"><div class="n">18</div><div><div class="t">Composants Flame et game feel</div><div class="d">CardComponent, animations, particules, traînées, textes flottants, ciblage.</div></div></a>
+<a class="ch-card" href="ch19.html"><div class="n">19</div><div><div class="t">Écrans, navigation et design system</div><div class="d">Les 17 écrans, le graphe de navigation, le thème, le responsive.</div></div></a>
+<div class="part-title">Partie 5 — Qualité et cycle de vie</div>
+<a class="ch-card" href="ch20.html"><div class="n">20</div><div><div class="t">Sauvegarde, localisation et tutoriel</div><div class="d">SaveService, checkpoints et autosave, ARB + JSON bilingue, moteur de tutoriel.</div></div></a>
+<a class="ch-card" href="ch21.html"><div class="n">21</div><div><div class="t">Tests, outillage, dette technique et évolutions</div><div class="d">43 fichiers de test, conventions du repo, CI/CD, points d&#x27;attention identifiés.</div></div></a></div>
+
+<h2 id="ref">Repères rapides</h2>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Question</th><th>Chapitre</th></tr></thead>
+<tbody>
+<tr><td>Comment sont calculés les dégâts d'une carte ?</td><td>10 — <em>Le combat</em></td></tr>
+<tr><td>Comment sont générés les ennemis d'un combat ?</td><td>11 — <em>Ennemis et difficulté</em></td></tr>
+<tr><td>Comment fonctionne la pioche et le remélange ?</td><td>9 — <em>Cartes et deck</em></td></tr>
+<tr><td>Comment la carte du monde est-elle générée ?</td><td>12 — <em>Carte du monde</em></td></tr>
+<tr><td>Que fait exactement la statistique Chance ?</td><td>15 — <em>Récompenses et probabilités</em></td></tr>
+<tr><td>Combien coûte chaque service de la boutique ?</td><td>14 — <em>L'économie</em></td></tr>
+<tr><td>Comment ajouter une carte ou une relique ?</td><td>7 — <em>La couche de données</em></td></tr>
+<tr><td>Comment Flame et Riverpod communiquent-ils ?</td><td>17 — <em>Le pont</em></td></tr>
+<tr><td>Où est stockée la sauvegarde ?</td><td>20 — <em>Sauvegarde et localisation</em></td></tr>
+<tr><td>Comment publier une nouvelle version ?</td><td>21 — <em>Tests et outillage</em></td></tr>
+</tbody>
+</table></div>
+
+
+</div>
+</main>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

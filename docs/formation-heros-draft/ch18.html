@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Composants Flame et game feel — Formation Hero's Draft</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<button class="menu-btn" aria-label="Menu">&#9776;</button>
+<div class="layout">
+<aside class="sidebar">
+  <a class="brand" href="index.html">
+    <div class="brand-title">HERO'S DRAFT</div>
+    <div class="brand-sub">Formation complète au projet Flutter</div>
+  </a>
+<nav class="nav">
+<div class="nav-part">Partie 0 — Démarrage</div>
+<a href="ch01.html"><span class="num">01</span><span>Vue d&#x27;ensemble : qu&#x27;est-ce que Hero&#x27;s Draft ?</span></a>
+<div class="nav-part">Partie 1 — Les fondations techniques</div>
+<a href="ch02.html"><span class="num">02</span><span>Dart, le langage — l&#x27;essentiel pour ce projet</span></a>
+<a href="ch03.html"><span class="num">03</span><span>Flutter — widgets, arbre et navigation</span></a>
+<a href="ch04.html"><span class="num">04</span><span>Riverpod — l&#x27;état partagé du jeu</span></a>
+<a href="ch05.html"><span class="num">05</span><span>Flame — le moteur de rendu du combat</span></a>
+<div class="nav-part">Partie 2 — L&#x27;architecture du projet</div>
+<a href="ch06.html"><span class="num">06</span><span>L&#x27;architecture en quatre couches</span></a>
+<a href="ch07.html"><span class="num">07</span><span>La couche de données : un jeu 100 % data-driven</span></a>
+<div class="nav-part">Partie 3 — Les règles du jeu</div>
+<a href="ch08.html"><span class="num">08</span><span>Le héros : stats, classes, passifs et progression</span></a>
+<a href="ch09.html"><span class="num">09</span><span>Les cartes et le deck</span></a>
+<a href="ch10.html"><span class="num">10</span><span>Le combat : boucle de tour, dégâts et effets</span></a>
+<a href="ch11.html"><span class="num">11</span><span>Les ennemis et la courbe de difficulté</span></a>
+<a href="ch12.html"><span class="num">12</span><span>La carte du monde procédurale</span></a>
+<a href="ch13.html"><span class="num">13</span><span>Les reliques et le système de déclencheurs</span></a>
+<a href="ch14.html"><span class="num">14</span><span>L&#x27;économie : or, boutique, forge et fusion</span></a>
+<a href="ch15.html"><span class="num">15</span><span>Récompenses, chance et probabilités</span></a>
+<a href="ch16.html"><span class="num">16</span><span>Événements, repos et autel des reliques</span></a>
+<div class="nav-part">Partie 4 — L&#x27;interface et le rendu</div>
+<a href="ch17.html"><span class="num">17</span><span>Le pont Flame ↔ Riverpod : l&#x27;écran de combat</span></a>
+<a href="ch18.html" class="active"><span class="num">18</span><span>Composants Flame et game feel</span></a>
+<a href="ch19.html"><span class="num">19</span><span>Écrans, navigation et design system</span></a>
+<div class="nav-part">Partie 5 — Qualité et cycle de vie</div>
+<a href="ch20.html"><span class="num">20</span><span>Sauvegarde, localisation et tutoriel</span></a>
+<a href="ch21.html"><span class="num">21</span><span>Tests, outillage, dette technique et évolutions</span></a>
+</nav>
+</aside>
+<main class="main">
+<div class="content">
+<div class="chapter-kicker">Chapitre 18</div>
+<h1>Composants Flame et game feel</h1>
+<p class="lede">Le « juice » d'un jeu de cartes tient dans quelques dizaines de millisecondes bien
+placées. Ce chapitre démonte chaque animation du combat et donne ses valeurs exactes.</p>
+
+<div class="toc">
+  <div class="toc-title">Dans ce chapitre</div>
+  <ol>
+    <li><a href="#s1">CardComponent, le chef d'orchestre</a></li>
+    <li><a href="#s2">L'état visuel d'une carte</a></li>
+    <li><a href="#s3">Survol, sélection, ciblage</a></li>
+    <li><a href="#s4">Le glisser-déposer</a></li>
+    <li><a href="#s5">Le rendu d'une carte</a></li>
+    <li><a href="#s6">Les animations de jeu</a></li>
+    <li><a href="#s7">Les entités de combat</a></li>
+    <li><a href="#s8">Les retours d'information</a></li>
+  </ol>
+</div>
+
+<p>Un jeu de cartes au tour par tour n'a aucune contrainte technique forte : il n'y a ni physique, ni
+pathfinding, ni synchronisation réseau. Ce qui distingue un bon d'un mauvais, c'est presque entièrement
+la <strong>qualité du retour d'information</strong>. Quand le joueur relâche une carte, il doit
+<em>sentir</em> l'impact avant même de lire le chiffre.</p>
+
+<p>Hero's Draft consacre à cela un dossier entier — <code>lib/game/components/</code>, 21 fichiers — et
+un vocabulaire d'animations très précis. Ce chapitre les recense tous, avec leurs durées et leurs
+courbes réelles, parce qu'en matière de game feel c'est exactement là que tout se joue : 0,08 s de
+recul avant l'impact, ce n'est pas la même sensation que 0,20 s.</p>
+
+<div class="box"><div class="box-title">À retenir</div>
+<p>Trois familles de fichiers : les <strong>entités</strong> (<code>entities/</code> — héros, ennemis,
+badges, indicateurs de statut), les <strong>effets visuels</strong> (<code>visual_effects/</code> —
+traînées, entailles, ligne de ciblage, animations de carte) et les <strong>helpers de rendu</strong>
+(<code>widgets/</code> — dessin de carte, barres, icônes vectorielles). Au centre, un seul composant
+piloté par le joueur : <code>CardComponent</code>.</p></div>
+
+<h2 id="s1">1. <code>CardComponent</code>, le chef d'orchestre</h2>
+
+<p>C'est le composant le plus sollicité du jeu : il y en a jusqu'à dix à l'écran, tous animés, tous
+interactifs. Voici sa déclaration :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/card_component.dart</span><span class="lang">dart</span></div>
+  <pre>class CardComponent extends PositionComponent
+    with
+        DragCallbacks,
+        TapCallbacks,
+        HoverCallbacks,
+        HasGameReference&lt;HerosDraftGame&gt;
+    implements OpacityProvider {</pre>
+</div>
+
+<p>Quatre mixins et une interface, chacun pour une raison précise :</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Mixin / interface</th><th>Ce qu'il apporte</th></tr></thead>
+<tbody>
+<tr><td><code>DragCallbacks</code></td><td><code>onDragStart</code>, <code>onDragUpdate</code>, <code>onDragEnd</code>, <code>onDragCancel</code> — le glisser-déposer</td></tr>
+<tr><td><code>TapCallbacks</code></td><td><code>onTapDown</code> — la sélection au clic (mode « clic pour jouer »)</td></tr>
+<tr><td><code>HoverCallbacks</code></td><td><code>onHoverEnter</code> / <code>onHoverExit</code> — le survol souris, donc desktop et web uniquement</td></tr>
+<tr><td><code>HasGameReference&lt;HerosDraftGame&gt;</code></td><td>Le getter <code>game</code>, <strong>typé</strong> : on accède directement à <code>game.focusedCard</code>, <code>game.scaleFactor</code>…</td></tr>
+<tr><td><code>OpacityProvider</code></td><td>Permet aux <code>OpacityEffect</code> de Flame de piloter un composant qui dessine lui-même son canvas</td></tr>
+</tbody>
+</table></div>
+
+<h3>La composition plutôt que l'héritage</h3>
+
+<p>Le point le plus intéressant pédagogiquement n'est pas la liste des mixins, mais ce que fait le
+constructeur :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/card_component.dart</span><span class="lang">dart</span></div>
+  <pre>CardComponent(this.card) : super(size: Vector2(cardWidth, cardHeight)) {
+  anchor = Anchor.center;
+  textRenderer       = CardTextRenderer(this);
+  animator           = CardAnimator(this);
+  renderer           = CardRenderer(this);
+  interactionHandler = CardInteractionHandler(this);
+}</pre>
+</div>
+
+<p>Ces quatre objets <strong>ne sont pas des <code>Component</code></strong>. Ce sont de simples classes
+Dart qui reçoivent le <code>CardComponent</code> en paramètre et travaillent dessus. Ils ne sont pas
+ajoutés à l'arbre Flame, ils n'ont pas de <code>update</code>, ils n'ont pas de position.</p>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 840 330" width="840" role="img" aria-label="Composition de CardComponent">
+      <defs>
+        <marker id="c18-a1" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#3a4966"/></marker>
+      </defs>
+
+      <rect x="300" y="20" width="240" height="76" rx="10" fill="#151b2b" stroke="#f59e0b" stroke-width="2"/>
+      <text x="420" y="46" fill="#f59e0b" font-size="15" text-anchor="middle" font-family="ui-monospace, monospace">CardComponent</text>
+      <text x="420" y="66" fill="#a7b4c9" font-size="11.5" text-anchor="middle">extends PositionComponent</text>
+      <text x="420" y="84" fill="#a7b4c9" font-size="11.5" text-anchor="middle">position · scale · angle · priority</text>
+
+      <path d="M340 96 L200 148" stroke="#3a4966" stroke-width="1.6" marker-end="url(#c18-a1)"/>
+      <path d="M390 96 L340 148" stroke="#3a4966" stroke-width="1.6" marker-end="url(#c18-a1)"/>
+      <path d="M450 96 L500 148" stroke="#3a4966" stroke-width="1.6" marker-end="url(#c18-a1)"/>
+      <path d="M500 96 L640 148" stroke="#3a4966" stroke-width="1.6" marker-end="url(#c18-a1)"/>
+
+      <rect x="20" y="152" width="196" height="72" rx="8" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="118" y="176" fill="#22d3ee" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">CardTextRenderer</text>
+      <text x="118" y="196" fill="#a7b4c9" font-size="11" text-anchor="middle">pré-calcule les TextPainter</text>
+      <text x="118" y="212" fill="#a7b4c9" font-size="11" text-anchor="middle">et les peint sur le Canvas</text>
+
+      <rect x="228" y="152" width="180" height="72" rx="8" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="318" y="176" fill="#a78bfa" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">CardAnimator</text>
+      <text x="318" y="196" fill="#a7b4c9" font-size="11" text-anchor="middle">séquences d'Effect,</text>
+      <text x="318" y="212" fill="#a7b4c9" font-size="11" text-anchor="middle">particules, retour en main</text>
+
+      <rect x="420" y="152" width="176" height="72" rx="8" fill="#151b2b" stroke="#34d399"/>
+      <text x="508" y="176" fill="#34d399" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">CardRenderer</text>
+      <text x="508" y="196" fill="#a7b4c9" font-size="11" text-anchor="middle">châssis, bordure foil,</text>
+      <text x="508" y="212" fill="#a7b4c9" font-size="11" text-anchor="middle">halo de sélection</text>
+
+      <rect x="608" y="152" width="212" height="72" rx="8" fill="#151b2b" stroke="#60a5fa"/>
+      <text x="714" y="176" fill="#60a5fa" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">CardInteractionHandler</text>
+      <text x="714" y="196" fill="#a7b4c9" font-size="11" text-anchor="middle">tap, drag, zone d'annulation,</text>
+      <text x="714" y="212" fill="#a7b4c9" font-size="11" text-anchor="middle">détection de la cible</text>
+
+      <rect x="240" y="256" width="360" height="52" rx="8" fill="#0e1524" stroke="#263048" stroke-dasharray="4 4"/>
+      <text x="420" y="278" fill="#a7b4c9" font-size="12" text-anchor="middle">Aucun des quatre n'est un Component Flame :</text>
+      <text x="420" y="296" fill="#a7b4c9" font-size="12" text-anchor="middle">ils n'ont ni position, ni update, ni cycle de vie propre.</text>
+    </svg>
+  </div>
+  <figcaption>Un composant Flame de 200 lignes plutôt qu'un monolithe de 1 400 : chaque collaborateur a
+  une seule responsabilité et reçoit la carte en paramètre.</figcaption>
+</figure>
+
+<div class="box ok"><div class="box-title">Bonne pratique</div>
+<p>Ce découpage a un avantage très concret : <code>CardRenderer</code> et <code>CardTextRenderer</code>
+sont testables et modifiables sans toucher au moteur d'entrée, et inversement. C'est aussi ce qui permet
+au fichier principal de rester lisible : <code>render</code> tient en une ligne.</p></div>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/card_component.dart</span><span class="lang">dart</span></div>
+  <pre>@override
+void render(Canvas canvas) =&gt; renderer.render(canvas);
+
+void superRender(Canvas canvas) { super.render(canvas); }</pre>
+</div>
+
+<p><code>superRender</code> est l'astuce qui rend la délégation possible. <code>CardRenderer</code> doit,
+à la fin de son travail, appeler le <code>render</code> de la superclasse pour que les composants
+enfants soient dessinés — mais il n'est pas dans la hiérarchie de classe, donc <code>super</code> ne
+lui est pas accessible. On lui expose donc un pont public.</p>
+
+<h2 id="s2">2. L'état visuel d'une carte</h2>
+
+<p>Une carte de la main peut se trouver dans une dizaine d'états simultanés. Ils sont tous portés par des
+champs publics simples :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/card_component.dart</span><span class="lang">dart</span></div>
+  <pre>bool isFlashing = false;
+bool isCancelling = false;
+bool isHoveringCancelZone = false;
+bool isPlayed = false;
+bool isEnteringHand = false;
+bool isDragging = false;
+double targetTilt = 0;
+RibbonTrail? activeTrail;
+double foilTime = 0.0;
+Vector2 originalPosition = Vector2.zero();
+double originalAngle = 0;
+int basePriority = 10;
+bool get isSelected =&gt; game.focusedCard == this;</pre>
+</div>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Champ</th><th>Ce qu'il déclenche</th></tr></thead>
+<tbody>
+<tr><td><code>isEnteringHand</code></td><td>La durée d'animation passe de 0,35 s à <strong>0,7 s</strong> dans <code>LayoutSystem</code> : une carte piochée arrive plus lentement que les cartes qui se réorganisent</td></tr>
+<tr><td><code>isDragging</code></td><td>Active l'inclinaison dans <code>update</code>, l'émission de particules et le suivi de la traînée ; désactive les repositionnements du <code>LayoutSystem</code></td></tr>
+<tr><td><code>targetTilt</code></td><td>Angle visé pendant le drag, proportionnel à la vitesse horizontale</td></tr>
+<tr><td><code>isHoveringCancelZone</code></td><td>Réduit l'échelle à 0,9 et fait passer la bordure en gris — signal « lâchez ici et il ne se passera rien »</td></tr>
+<tr><td><code>isFlashing</code></td><td>Bordure blanche pleine, texte masqué : la carte devient un rectangle lumineux au moment de l'impact</td></tr>
+<tr><td><code>isPlayed</code></td><td>Verrou : tous les gestionnaires d'entrée sortent immédiatement</td></tr>
+<tr><td><code>foilTime</code></td><td>Horloge du dégradé animé de bordure, avancée uniquement quand la carte est survolée</td></tr>
+<tr><td><code>basePriority</code></td><td>Priorité de repos, <code>10 + index dans la main</code> : la carte la plus à droite passe au-dessus de sa voisine</td></tr>
+<tr><td><code>originalPosition</code> / <code>originalAngle</code></td><td>Mémorisés par <code>LayoutSystem</code> pour que <code>returnToHand()</code> sache où revenir</td></tr>
+</tbody>
+</table></div>
+
+<h3>L'interpolation indépendante du framerate</h3>
+
+<p>La méthode <code>update</code> tient en quelques lignes, mais chacune mérite une explication :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/card_component.dart</span><span class="lang">dart</span></div>
+  <pre>@override
+void update(double dt) {
+  super.update(dt);
+  if (isDragging) {
+    angle      += (targetTilt - angle) * 15 * dt;   // rattrapage rapide (facteur 15)
+    targetTilt += (0 - targetTilt) * 5 * dt;        // retour au neutre (facteur 5)
+
+    animator.spawnTrailParticles();
+    activeTrail?.addPoint(position);
+  }
+  if (game.hoveredCard == this) {
+    foilTime += dt * 3.0;   // horloge du dégradé "foil" animé de la bordure
+  }
+}</pre>
+</div>
+
+<p>La forme <code>valeur += (cible − valeur) × k × dt</code> est un <strong>lissage exponentiel</strong>.
+Elle rapproche la valeur de sa cible d'un pourcentage fixe <em>par seconde</em>, et non par image. À 60
+images par seconde, <code>dt ≈ 0,0167</code>, donc <code>15 × dt ≈ 0,25</code> : la carte comble un quart
+de l'écart à chaque image. À 30 images par seconde, <code>dt ≈ 0,0333</code>, donc le facteur double —
+et le mouvement met exactement le même temps réel à converger.</p>
+
+<div class="box warn"><div class="box-title">Piège</div>
+<p>La faute classique du débutant est d'écrire <code>angle += (targetTilt - angle) * 0.25;</code> sans
+<code>dt</code>. Ça marche parfaitement sur la machine du développeur, puis l'animation devient deux fois
+plus lente sur un écran 120 Hz ou deux fois plus rapide sur une machine qui rame. Toute grandeur
+progressive dans un <code>update</code> doit être multipliée par <code>dt</code>.</p></div>
+
+<p>Notez aussi les deux facteurs différents : <strong>15</strong> pour que la carte rattrape vite
+l'inclinaison visée, <strong>5</strong> pour que cette inclinaison retombe lentement vers zéro. C'est
+ce déséquilibre qui produit l'impression d'inertie — la carte « penche » brusquement quand on tire d'un
+coup, puis se redresse mollement.</p>
+
+<h2 id="s3">3. Survol, sélection, ciblage</h2>
+
+<p>Deux notions distinctes cohabitent : la carte <strong>survolée</strong> (<code>hoveredCard</code>,
+souris seulement) et la carte <strong>sélectionnée</strong> (<code>focusedCard</code>, valide au tactile
+aussi). <code>CardAnimationSystem</code> gère les deux.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/card_animation_system.dart</span><span class="lang">dart</span></div>
+  <pre>game.hoveredCard = card;
+
+if (card != null &amp;&amp; card != focusedCard) {
+  card.isHovered = true;
+  card.priority = GameConstants.priorityCardHovered;
+  card.removeAll(card.children.whereType&lt;Effect&gt;());
+  card.refreshVisuals();
+  if (!card.isDragging) {
+    card.add(
+      ScaleEffect.to(
+        Vector2.all(game.scaleFactor * 0.88 * 1.2),
+        EffectController(duration: 0.1, curve: Curves.easeOut),
+      ),
+    );
+  }
+}</pre>
+</div>
+
+<div class="table-wrap"><table>
+<thead><tr><th>État</th><th>Échelle</th><th>Décalage</th><th>Durée</th><th>Courbe</th><th><code>priority</code></th></tr></thead>
+<tbody>
+<tr><td>Repos</td><td><code>scaleFactor × 0,88</code></td><td>—</td><td>0,35 s</td><td><code>easeOutCubic</code></td><td><code>basePriority</code> (10 + i)</td></tr>
+<tr><td>Survol</td><td><code>× 1,2</code></td><td>—</td><td><strong>0,10 s</strong></td><td><code>easeOut</code></td><td><strong>100</strong></td></tr>
+<tr><td>Sortie de survol</td><td>retour à 1,0</td><td>—</td><td>0,10 s</td><td><code>easeIn</code></td><td>retour à <code>basePriority</code></td></tr>
+<tr><td>Sélection</td><td><code>× 1,25</code></td><td><code>Vector2(0, −60)</code></td><td><strong>0,20 s</strong></td><td><code>easeOut</code></td><td><strong>150</strong></td></tr>
+<tr><td>Désélection</td><td>retour à 1,0</td><td>retour à <code>originalPosition</code></td><td>0,15 s</td><td><code>easeIn</code></td><td>retour à <code>basePriority</code></td></tr>
+<tr><td>Entrée en main</td><td>0 → 1,0</td><td>depuis <code>(40, size.y − 40)</code></td><td><strong>0,70 s</strong></td><td><code>easeOutCubic</code></td><td>—</td></tr>
+</tbody>
+</table></div>
+
+<p>La sélection fait bien plus que grossir la carte : elle allume tout le système de ciblage.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/card_animation_system.dart</span><span class="lang">dart</span></div>
+  <pre>game.targetingLine.color = card.getElementalColor();
+applyTargetHighlights(card.card.data.target);
+game.onShowTooltip(
+  card.card.data.getName(card.activeLocale),
+  card.buildDetailedDescription(),
+  card.card.data.type,
+);</pre>
+</div>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/card_animation_system.dart</span><span class="lang">dart</span></div>
+  <pre>void applyTargetHighlights(CardTarget target) {
+  if (target == CardTarget.singleEnemy || target == CardTarget.allEnemies) {
+    for (var enemy in game.enemyCards) {
+      enemy.setHighlight(true);
+    }
+  } else if (target == CardTarget.self) {
+    game.heroCard?.setHighlight(true);
+  }
+}</pre>
+</div>
+
+<p>Trois choses partent donc d'un seul clic : la ligne de ciblage prend la couleur élémentaire de la
+carte, toutes les cibles valides se mettent à pulser en cyan, et l'infobulle détaillée remonte vers
+Flutter par un callback. La désélection défait exactement les trois.</p>
+
+<h3>La ligne de ciblage</h3>
+
+<p><code>TargetingLine</code> est un <code>Component</code> pur (pas un <code>PositionComponent</code>) :
+il dessine en coordonnées absolues. Sa courbe est une Bézier quadratique calculée à la main :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/visual_effects/targeting_line.dart</span><span class="lang">dart</span></div>
+  <pre>Vector2 getBezierPoint(Vector2 p0, Vector2 p1, Vector2 p2, double t) {
+  final double u = 1.0 - t;
+  final double tt = t * t;
+  final double uu = u * u;
+  final x = uu * p0.x + 2 * u * t * p1.x + tt * p2.x;
+  final y = uu * p0.y + 2 * u * t * p1.y + tt * p2.y;
+  return Vector2(x, y);
+}</pre>
+</div>
+
+<p>Le point de contrôle est placé au-dessus du milieu du segment, d'autant plus haut que les deux
+extrémités sont éloignées horizontalement — la courbe se cambre naturellement :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/visual_effects/targeting_line.dart</span><span class="lang">dart</span></div>
+  <pre>final midX = (from!.x + to!.x) / 2;
+final double controlY = min(from!.y, to!.y) - 100 - (from!.x - to!.x).abs() * 0.15;</pre>
+</div>
+
+<p>Seize points lumineux défilent le long de cette courbe, avec un décalage qui avance à
+<code>_time * 0.25</code> et un <code>% 1.0</code> pour boucler. Les points rétrécissent dans les 15 %
+de début et de fin, ce qui donne une entrée et une sortie douces plutôt qu'une apparition brutale.</p>
+
+<h2 id="s4">4. Le glisser-déposer</h2>
+
+<p>Toute la logique d'entrée est concentrée dans <code>CardInteractionHandler</code>, 164 lignes. Chaque
+méthode commence par le même garde-fou :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/widgets/card_interaction_handler.dart</span><span class="lang">dart</span></div>
+  <pre>if (cardComponent.isEnteringHand || cardComponent.isPlayed) return;</pre>
+</div>
+
+<p>Une carte qui vole encore vers la main, ou qui est déjà partie vers un ennemi, n'accepte aucune
+interaction. C'est la protection la plus simple et la plus efficace contre les doubles jeux.</p>
+
+<h3>Le début du drag</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/widgets/card_interaction_handler.dart</span><span class="lang">dart</span></div>
+  <pre>cardComponent.isDragging = true;
+cardComponent.targetTilt = 0;
+cardComponent.activeTrail = RibbonTrail(
+  priority: cardComponent.priority - 1,
+  glowColor: cardComponent.getElementalColor(),
+  coreColor: Colors.white,
+);
+cardComponent.game.add(cardComponent.activeTrail!);
+cardComponent.clearEffects();
+cardComponent.priority = 200;
+cardComponent.angle = 0;
+cardComponent.scale = Vector2.all(cardComponent.game.scaleFactor * 0.88 * 1.25);</pre>
+</div>
+
+<p>Notez <code>cardComponent.clearEffects()</code> : tous les effets en cours sont annulés avant de
+prendre la main manuellement sur la position. Sans cela, un <code>MoveEffect</code> résiduel du
+<code>LayoutSystem</code> se battrait avec le doigt du joueur.</p>
+
+<h3>Pendant le drag</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/widgets/card_interaction_handler.dart</span><span class="lang">dart</span></div>
+  <pre>cardComponent.position += event.canvasDelta;
+cardComponent.targetTilt = (event.canvasDelta.x * 0.08).clamp(-0.4, 0.4);
+
+bool isInCancelZone = cardComponent.position.y &gt; cardComponent.game.size.y * 0.68;
+if (isInCancelZone != cardComponent.isHoveringCancelZone) {
+  cardComponent.isHoveringCancelZone = isInCancelZone;
+  applyCancelZoneFeedback(cardComponent.isHoveringCancelZone);
+}
+if (cardComponent.card.data.target == CardTarget.singleEnemy) {
+  EnemyCard? hoveredEnemy = cardComponent.isHoveringCancelZone
+      ? null : findHoveredEnemy(cardComponent.position);
+  cardComponent.game.highlightEnemy(hoveredEnemy);
+}</pre>
+</div>
+
+<p>Trois mécanismes en dix lignes :</p>
+
+<ul>
+<li><strong>L'inclinaison</strong> est proportionnelle au déplacement horizontal de la dernière image
+(<code>canvasDelta.x × 0,08</code>), bornée à ±0,4 radian (environ ±23°). C'est <code>targetTilt</code>
+que <code>update</code> lisse ensuite.</li>
+<li><strong>La zone d'annulation</strong> occupe tout ce qui est en dessous de <strong>68 % de la
+hauteur d'écran</strong> — c'est-à-dire l'endroit d'où la carte vient. Y ramener la carte annule le jeu.
+Le test <code>isInCancelZone != isHoveringCancelZone</code> garantit que le retour visuel n'est déclenché
+qu'au <em>franchissement</em> de la frontière, pas à chaque image.</li>
+<li><strong>La détection de cible</strong> n'a lieu que pour les cartes à cible unique, et jamais quand
+on est en zone d'annulation.</li>
+</ul>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/widgets/card_interaction_handler.dart</span><span class="lang">dart</span></div>
+  <pre>EnemyCard? findHoveredEnemy(Vector2 canvasPos) {
+  for (var enemy in cardComponent.game.enemyCards) {
+    if (enemy.containsPoint(canvasPos)) return enemy;
+  }
+  return null;
+}</pre>
+</div>
+
+<p><code>containsPoint</code> est fourni par <code>PositionComponent</code> : il tient compte de la
+position, de la taille, de l'ancre <em>et</em> de l'échelle du composant. C'est le test de collision
+gratuit dont on a besoin ici.</p>
+
+<h3>La fin du drag</h3>
+
+<p><code>onDragEnd</code> est un arbre de décision en six branches, à lire dans l'ordre :</p>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 760 396" width="760" role="img" aria-label="Arbre de décision de onDragEnd">
+      <defs>
+        <marker id="c18-a2" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#3a4966"/></marker>
+      </defs>
+
+      <rect x="252" y="14" width="256" height="40" rx="8" fill="#151b2b" stroke="#60a5fa"/>
+      <text x="380" y="39" fill="#e6ecf5" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">onDragEnd</text>
+      <path d="M380 54 L380 78" stroke="#3a4966" stroke-width="2" marker-end="url(#c18-a2)"/>
+
+      <rect x="240" y="82" width="280" height="36" rx="8" fill="#0e1524" stroke="#263048"/>
+      <text x="380" y="105" fill="#a7b4c9" font-size="12" text-anchor="middle">activeTrail.stop() ; activeTrail = null</text>
+      <path d="M380 118 L380 142" stroke="#3a4966" stroke-width="2" marker-end="url(#c18-a2)"/>
+
+      <rect x="248" y="146" width="264" height="36" rx="8" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="380" y="169" fill="#e6ecf5" font-size="12.5" text-anchor="middle">Zone d'annulation ?</text>
+      <path d="M512 164 L600 164" stroke="#f87171" stroke-width="2" marker-end="url(#c18-a2)"/>
+      <text x="556" y="156" fill="#f87171" font-size="11" text-anchor="middle">oui</text>
+      <rect x="604" y="146" width="140" height="36" rx="8" fill="#151b2b" stroke="#f87171"/>
+      <text x="674" y="169" fill="#f87171" font-size="12" text-anchor="middle">returnToHand()</text>
+      <path d="M380 182 L380 206" stroke="#3a4966" stroke-width="2" marker-end="url(#c18-a2)"/>
+
+      <rect x="248" y="210" width="264" height="36" rx="8" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="380" y="233" fill="#e6ecf5" font-size="12.5" text-anchor="middle">Mana suffisant ?</text>
+      <path d="M512 228 L600 228" stroke="#f87171" stroke-width="2" marker-end="url(#c18-a2)"/>
+      <text x="556" y="220" fill="#f87171" font-size="11" text-anchor="middle">non</text>
+      <rect x="604" y="210" width="150" height="36" rx="8" fill="#151b2b" stroke="#f87171"/>
+      <text x="679" y="227" fill="#f87171" font-size="11.5" text-anchor="middle">shakeAnimation()</text>
+      <text x="679" y="240" fill="#f87171" font-size="11.5" text-anchor="middle">+ returnToHand()</text>
+      <path d="M380 246 L380 270" stroke="#3a4966" stroke-width="2" marker-end="url(#c18-a2)"/>
+
+      <rect x="232" y="274" width="296" height="36" rx="8" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="380" y="297" fill="#e6ecf5" font-size="12.5" text-anchor="middle">cible = game.highlightedEnemy</text>
+      <path d="M380 310 L380 334" stroke="#3a4966" stroke-width="2" marker-end="url(#c18-a2)"/>
+
+      <rect x="216" y="338" width="328" height="44" rx="8" fill="#151b2b" stroke="#34d399"/>
+      <text x="380" y="358" fill="#34d399" font-size="12.5" text-anchor="middle" font-family="ui-monospace, monospace">game.tryPlayCard(card, cible)</text>
+      <text x="380" y="375" fill="#a7b4c9" font-size="11" text-anchor="middle">si false → returnToHand() ; puis highlightEnemy(null)</text>
+    </svg>
+  </div>
+  <figcaption>Trois raisons de refuser un jeu — zone d'annulation, mana insuffisant, refus du contrôleur
+  — et une seule façon de l'accepter.</figcaption>
+</figure>
+
+<p>Le retour en main est élastique, pour que l'annulation soit agréable plutôt que punitive :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/visual_effects/card_animator.dart</span><span class="lang">dart</span></div>
+  <pre>card.add(
+  MoveEffect.to(
+    card.originalPosition,
+    EffectController(duration: 0.4, curve: Curves.elasticOut),
+  ),
+);
+card.add(
+  RotateEffect.to(
+    card.originalAngle,
+    EffectController(duration: 0.4, curve: Curves.elasticOut),
+  ),
+);</pre>
+</div>
+
+<p>Et le refus pour mana insuffisant secoue la carte : cinq déplacements horizontaux de 0,05 s chacun,
+soit 0,25 s au total, d'amplitudes +5, −10, +10, −10, +5.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/visual_effects/card_animator.dart</span><span class="lang">dart</span></div>
+  <pre>card.add(SequenceEffect([
+  MoveEffect.by(Vector2(5, 0),   EffectController(duration: 0.05)),
+  MoveEffect.by(Vector2(-10, 0), EffectController(duration: 0.05)),
+  MoveEffect.by(Vector2(10, 0),  EffectController(duration: 0.05)),
+  MoveEffect.by(Vector2(-10, 0), EffectController(duration: 0.05)),
+  MoveEffect.by(Vector2(5, 0),   EffectController(duration: 0.05)),
+]));</pre>
+</div>
+
+<div class="box ok"><div class="box-title">Bonne pratique</div>
+<p>La séquence commence et finit par une amplitude réduite (+5 plutôt que ±10) : la secousse
+« démarre » et « s'éteint » au lieu de commencer et s'arrêter net. C'est un détail d'une demi-seconde
+que personne ne remarque consciemment, et qui fait toute la différence entre une animation propre et
+une animation qui « claque ».</p></div>
+
+<h2 id="s5">5. Le rendu d'une carte</h2>
+
+<p><code>CardRenderer</code> dessine le châssis dans l'ordre : fond, bordure, halo, texte, enfants.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/widgets/card_renderer.dart</span><span class="lang">dart</span></div>
+  <pre>if (useSaveLayer) {
+  canvas.saveLayer(
+    cardComponent.size.toRect(),
+    Paint()..color = Colors.white.withValues(alpha: cardComponent.opacity),
+  );</pre>
+</div>
+
+<div class="box warn"><div class="box-title">Piège</div>
+<p><code>saveLayer</code> alloue une texture hors écran, y dessine tout le groupe, puis la recompose
+avec l'opacité voulue. C'est la seule façon d'obtenir une transparence correcte sur un groupe
+d'éléments qui se chevauchent — appliquer l'opacité couche par couche donnerait des superpositions
+visibles — mais c'est <strong>coûteux</strong>. D'où le test : la carte n'y a droit que si elle est
+réellement en train de disparaître.</p></div>
+
+<h3>La bordure « foil »</h3>
+
+<p>Au survol, la bordure de la carte devient un dégradé qui tourne. Le mécanisme est simple et très
+efficace : on dérive les points de départ et d'arrivée du dégradé du cosinus et du sinus de
+<code>foilTime</code>, l'horloge incrémentée dans <code>update</code>.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/widgets/card_renderer.dart</span><span class="lang">dart</span></div>
+  <pre>if (isHovered &amp;&amp; !cardComponent.isFlashing) {
+  bPaint.strokeWidth = 3.5;
+  final colors = cardComponent.getRarityShineColors();
+  final angle  = cardComponent.foilTime;
+  final cosVal = math.cos(angle);
+  final sinVal = math.sin(angle);
+  bPaint.shader = LinearGradient(
+    begin: Alignment(cosVal, sinVal),
+    end:   Alignment(-cosVal, -sinVal),
+    colors: colors,
+  ).createShader(rect);
+} else {
+  bPaint.strokeWidth = cardComponent.isSelected ? 2.5 : 1.5;
+  bPaint.color = cardComponent.isSelected
+      ? Colors.white.withValues(alpha: 0.8)
+      : rarityColor.withValues(alpha: 0.5);
+}</pre>
+</div>
+
+<p>La palette du dégradé dépend de la rareté. Pour les cartes <strong>uniques</strong> — les six cartes
+de classe — elle s'allonge avec le nombre de runes de forge, produisant un arc-en-ciel de plus en plus
+riche à mesure que la carte est améliorée :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/card_component.dart</span><span class="lang">dart</span></div>
+  <pre>  final pool = [
+    baseColor,
+    Colors.white70,
+    Colors.greenAccent,
+    Colors.blueAccent,
+    Colors.purpleAccent,
+    Colors.orangeAccent,
+    Colors.red,
+    Colors.yellow,
+    Colors.cyan,
+    Colors.pink,
+  ];
+  final upgradeCount = card.forgeUpgrades.length;
+  final count = (upgradeCount + 1).clamp(1, pool.length);
+  final colors = pool.sublist(0, count);
+  return [...colors, colors.first];
+}</pre>
+</div>
+
+<p>Pour les autres raretés, la palette est choisie par <strong>plage de teinte HSV</strong> de la couleur
+de base : rouges et orangés pour <code>hue ≥ 340 || hue &lt; 20</code>, ambre et jaune de 20 à 50, vert
+clair de 50 à 70, lime et teal de 70 à 165, cyan et bleu de 165 à 200, cyan et indigo de 200 à 260, rose
+et violet au-delà. Un garde-fou renvoie une palette blanc/gris si la couleur est trop désaturée ou trop
+sombre (<code>hsv.saturation &lt; 0.15 || hsv.value &lt; 0.15</code>).</p>
+
+<h3>La palette par type</h3>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Type de carte</th><th>Fond</th><th>Bordure</th><th>Icône</th></tr></thead>
+<tbody>
+<tr><td><code>attack</code></td><td><code>Color(0xFF4A1D1D)</code></td><td><code>Colors.redAccent</code></td><td><code>Icons.hardware_rounded</code></td></tr>
+<tr><td><code>skill</code></td><td><code>Color(0xFF152A4A)</code></td><td><code>Colors.blueAccent</code></td><td><code>Icons.shield_rounded</code></td></tr>
+<tr><td><code>power</code></td><td><code>Color(0xFF453215)</code></td><td><code>Colors.amber</code></td><td><code>Icons.auto_fix_high_rounded</code></td></tr>
+<tr><td><code>status</code></td><td><code>Color(0xFF2D2D2D)</code></td><td><code>Colors.blueGrey</code></td><td><code>Icons.warning_rounded</code></td></tr>
+<tr><td>Mana insuffisant</td><td>inchangé</td><td><strong><code>Colors.redAccent</code></strong></td><td>—</td></tr>
+<tr><td>Zone d'annulation</td><td><code>Color(0xFF1A1A1A)</code></td><td><code>Colors.grey</code></td><td>—</td></tr>
+</tbody>
+</table></div>
+
+<p>La couleur de bordure est calculée par <code>getTypeColor()</code>, et l'ordre des tests compte : le
+mana insuffisant l'emporte sur tout le reste, puis l'annulation, puis le type de carte.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/card_component.dart</span><span class="lang">dart</span></div>
+  <pre>Color getTypeColor() {
+  if (!canAfford &amp;&amp; !isFlashing) return Colors.redAccent;
+  if (isCancelling) return Colors.grey;
+
+  switch (card.data.type) {
+    case CardType.attack:
+      return Colors.redAccent;
+    case CardType.skill:
+      return Colors.blueAccent;
+    case CardType.power:
+      return Colors.amber;
+    case CardType.status:
+      return Colors.blueGrey;
+  }
+}</pre>
+</div>
+
+<h2 id="s6">6. Les animations de jeu</h2>
+
+<p>Quand une carte est acceptée, <code>CardAnimator.playAnimation</code> prend le relais. Le dispatcher
+lit le champ <code>animation</code> du JSON de la carte :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/visual_effects/card_animator.dart</span><span class="lang">dart</span></div>
+  <pre>void playAnimation(EnemyCard? target, {required VoidCallback onComplete}) {
+  card.isPlayed = true;
+  card.isDragging = false;
+  card.priority = GameConstants.priorityCardDraggingMax;
+
+  card.clearEffects();
+
+  final animType = card.card.data.animation ?? 'melee';
+
+  void wrappedOnComplete() {
+    if (card.card.data.isExhaust) {
+      spawnExhaustParticles(card.position);
+    }
+    onComplete();
+  }
+
+  switch (animType) {
+    case 'magic':
+      _playMagicAnimation(target, wrappedOnComplete);
+      break;
+    case 'buff':
+      _playBuffAnimation(wrappedOnComplete);
+      break;
+    case 'poison':
+      _playStatusAnimation(
+        target,
+        const Color(0xFF10B981),
+        wrappedOnComplete,
+      );
+      break;
+    case 'fire':
+      _playStatusAnimation(target, Colors.orangeAccent, wrappedOnComplete);
+      break;
+    case 'ice':
+      _playStatusAnimation(target, Colors.lightBlueAccent, wrappedOnComplete);
+      break;
+    case 'lightning':
+      _playStatusAnimation(target, Colors.yellowAccent, wrappedOnComplete);
+      break;
+    case 'melee':
+    default:</pre>
+</div>
+
+<p>C'est le point où la donnée pilote directement le rendu : ajouter <code>"animation": "fire"</code> à
+une entrée de <code>cards.json</code> suffit à changer toute la mise en scène, sans toucher au code.</p>
+
+<h3>L'animation de mêlée, phase par phase</h3>
+
+<div class="table-wrap"><table>
+<thead><tr><th>#</th><th>Étape</th><th>Effet</th><th>Durée</th><th>Courbe</th></tr></thead>
+<tbody>
+<tr><td>0</td><td>Flash</td><td><code>applyFlashVisual</code> — bordure blanche, texte masqué</td><td>—</td><td>—</td></tr>
+<tr><td>1</td><td>Repositionnement (AoE seulement)</td><td><code>MoveEffect.to(castingPos)</code></td><td>0,25 s</td><td><code>easeOutQuad</code></td></tr>
+<tr><td>2</td><td><strong>Anticipation</strong> (recul)</td><td><code>MoveEffect.by(anticipationDir × 40)</code></td><td><strong>0,10 s</strong></td><td><code>easeOut</code></td></tr>
+<tr><td>3</td><td><strong>Impact</strong></td><td><code>MoveEffect.to(targetPos)</code></td><td><strong>0,15 s</strong></td><td><code>easeIn</code></td></tr>
+<tr><td>4</td><td>Disparition</td><td><code>ScaleEffect.to(Vector2.all(0.0))</code></td><td>0,05 s</td><td>linéaire</td></tr>
+<tr><td>5</td><td>Entaille</td><td><code>SlashEffect</code> rouge de <code>target.size × 1,5</code></td><td>0,30 s</td><td>voir plus bas</td></tr>
+</tbody>
+</table></div>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/visual_effects/card_animator.dart</span><span class="lang">dart</span></div>
+  <pre>final anticipationDir = (startPos - targetPos).normalized();</pre>
+</div>
+
+<p>La direction du recul est simplement le vecteur unitaire <em>opposé</em> à la cible. La carte part
+donc en arrière de 40 pixels avant de foncer — c'est le principe d'animation classique de
+l'<strong>anticipation</strong>, et c'est ce qui donne l'impression de force. Le ratio compte : 0,10 s
+de recul pour 0,15 s d'attaque, soit un rapport 2:3 très net.</p>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 800 250" width="800" role="img" aria-label="Chronologie d'une animation de mêlée">
+      <line x1="60" y1="60" x2="760" y2="60" stroke="#3a4966" stroke-width="1.5"/>
+      <text x="60" y="46" fill="#a7b4c9" font-size="11" font-family="ui-monospace, monospace">0 ms</text>
+      <text x="760" y="46" fill="#a7b4c9" font-size="11" text-anchor="end" font-family="ui-monospace, monospace">300 ms</text>
+
+      <rect x="60" y="70" width="233" height="34" rx="5" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="176" y="92" fill="#f59e0b" font-size="12.5" text-anchor="middle">Anticipation · 100 ms</text>
+
+      <rect x="297" y="70" width="350" height="34" rx="5" fill="#151b2b" stroke="#f87171"/>
+      <text x="472" y="92" fill="#f87171" font-size="12.5" text-anchor="middle">Impact · 150 ms</text>
+
+      <rect x="651" y="70" width="109" height="34" rx="5" fill="#151b2b" stroke="#6f7d95"/>
+      <text x="705" y="92" fill="#a7b4c9" font-size="12" text-anchor="middle">Fin · 50 ms</text>
+
+      <path d="M176 108 L176 130" stroke="#3a4966" stroke-width="1.5"/>
+      <text x="176" y="146" fill="#a7b4c9" font-size="11.5" text-anchor="middle">recul de 40 px</text>
+      <text x="176" y="162" fill="#6f7d95" font-size="11" text-anchor="middle">easeOut</text>
+
+      <path d="M472 108 L472 130" stroke="#3a4966" stroke-width="1.5"/>
+      <text x="472" y="146" fill="#a7b4c9" font-size="11.5" text-anchor="middle">course vers la cible</text>
+      <text x="472" y="162" fill="#6f7d95" font-size="11" text-anchor="middle">easeIn (accélère)</text>
+
+      <path d="M705 108 L705 130" stroke="#3a4966" stroke-width="1.5"/>
+      <text x="705" y="146" fill="#a7b4c9" font-size="11.5" text-anchor="middle">échelle → 0</text>
+
+      <line x1="647" y1="60" x2="647" y2="196" stroke="#34d399" stroke-width="1.5" stroke-dasharray="4 3"/>
+      <text x="647" y="212" fill="#34d399" font-size="11.5" text-anchor="middle">SlashEffect + shakeAndFlash + particules</text>
+      <text x="400" y="238" fill="#6f7d95" font-size="11" text-anchor="middle">Les dégâts sont déjà appliqués dans l'état depuis le tout début : seule l'image est en retard.</text>
+    </svg>
+  </div>
+  <figcaption>Trois phases pour 300 ms. L'impact visuel arrive au moment exact où la carte disparaît.</figcaption>
+</figure>
+
+<h3>Les quatre autres variantes</h3>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Variante</th><th>Bordure</th><th>Séquence</th></tr></thead>
+<tbody>
+<tr><td><code>magic</code></td><td><code>cyanAccent</code></td><td>Lévitation <code>Vector2(0,−30)</code> en 0,30 s <code>easeInOut</code> → charge d'échelle ×1,1 en 0,40 s <code>elasticIn</code> avec <code>alternate: true</code> → disparition 0,20 s <code>easeIn</code></td></tr>
+<tr><td><code>poison</code> / <code>fire</code> / <code>ice</code> / <code>lightning</code></td><td>blanche</td><td>Montée <code>Vector2(0,−50)</code> <strong>combinée</strong> à une rotation de 0,2 rad en aller-retour, 0,40 s <code>easeOut</code> → projection vers la cible 0,20 s <code>easeIn</code> → disparition 0,10 s</td></tr>
+<tr><td><code>buff</code></td><td>—</td><td><code>MoveEffect.by(Vector2(0, -100))</code> en 0,60 s <code>easeOut</code> puis <code>OpacityEffect.to(0.0)</code> en 0,30 s</td></tr>
+</tbody>
+</table></div>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/visual_effects/card_animator.dart</span><span class="lang">dart</span></div>
+  <pre>card.add(
+  SequenceEffect([
+    MoveEffect.by(
+      Vector2(0, -100),
+      EffectController(duration: 0.6, curve: Curves.easeOut),
+    ),
+    OpacityEffect.to(
+      0.0,
+      EffectController(duration: 0.3),
+      onComplete: () {
+        onComplete();
+      },
+    ),
+  ]),
+);</pre>
+</div>
+
+<p>Pour les cartes de renforcement, l'animateur regarde <em>le contenu</em> de la carte et non son type :
+si elle contient un effet <code>heal</code>, il fait pleuvoir des particules dorées et émeraude ; sinon,
+si elle contient un effet <code>armor</code>, il pose un dôme cyan pulsant au-dessus du héros.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Émetteur</th><th>Nombre</th><th>Durée de vie</th><th>Détail</th></tr></thead>
+<tbody>
+<tr><td><code>spawnTrailParticles</code> (drag)</td><td>3 par image</td><td>0,6 s</td><td>Gravité <code>Vector2(0, 150)</code>, rayon 2 à 4, couleur élémentaire de la carte</td></tr>
+<tr><td><code>spawnImpactParticles</code></td><td>15</td><td>0,5 s</td><td>Dispersion ±100 px, <code>Curves.easeOut</code>, rayon 2 mis à l'échelle ×1,5</td></tr>
+<tr><td><code>_spawnHealParticles</code></td><td>20</td><td>1,2 s</td><td>Montée de 120 à 180 px, couleur or <code>0xFFFFD700</code> ou émeraude <code>0xFF10B981</code></td></tr>
+<tr><td><code>spawnExhaustParticles</code></td><td>40</td><td>0,8 s</td><td>Dispersion X ±75, Y majoritairement vers le haut, orange ou rouge — jouée quand la carte est épuisée</td></tr>
+<tr><td><code>spawnDamageParticles</code></td><td>12 / 15 / 35</td><td>0,6 s</td><td>12 pour le poison, 15 en standard, <strong>35 pour un coup critique</strong></td></tr>
+</tbody>
+</table></div>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/visual_effects/card_animator.dart</span><span class="lang">dart</span></div>
+  <pre>final gravity = Vector2(0, 150);
+card.game.add(
+  ParticleSystemComponent(
+    particle: Particle.generate(
+      count: 3,
+      lifespan: 0.6,
+      generator: (i) { /* AcceleratedParticle &gt; ScaledParticle &gt; CircleParticle */ },
+    ),
+  )..priority = card.priority - 1,
+);</pre>
+</div>
+
+<p>Le système de particules de Flame s'emboîte comme des poupées russes :
+<code>Particle.generate</code> (le nombre et la durée) contient un
+<code>AcceleratedParticle</code> (la physique : position, vitesse, accélération) qui contient un
+<code>ScaledParticle</code> (la taille) qui contient enfin un <code>CircleParticle</code> (le dessin).
+Chaque couche ne fait qu'une chose.</p>
+
+<h2 id="s7">7. Les entités de combat</h2>
+
+<p>Héros et ennemis partagent une classe mère abstraite. C'est elle qui contient toutes les animations
+de réaction, les filles ne fournissant que les pièces :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/entities/combat_entity.dart</span><span class="lang">dart</span></div>
+  <pre>abstract class CombatEntity extends PositionComponent
+    with HasGameReference&lt;HerosDraftGame&gt; {
+  SpriteComponent get sprite;
+  RectangleComponent get borderInfo;
+  double get entityBaseScale;
+  bool get isPlayer;
+  void refreshBorderVisuals();</pre>
+</div>
+
+<div class="box ok"><div class="box-title">Bonne pratique</div>
+<p>Cinq getters abstraits, et la mère écrit tout le reste. <code>HeroCard</code> mesure 120 × 160 et lit
+son sprite depuis le cache synchrone ; <code>EnemyCard</code> mesure 100 × 140 et le charge en
+asynchrone. Aucune des deux ne réimplémente une seule animation.</p></div>
+
+<h3>La réaction à un coup</h3>
+
+<p><code>shakeAndFlashAnimation</code> superpose trois couches indépendantes. D'abord un bump d'échelle
+qui dépend de la nature du coup :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/entities/combat_entity.dart</span><span class="lang">dart</span></div>
+  <pre>final double bumpMultiplier = isCritical ? 1.45 : (isPoison ? 1.12 : 1.22);
+add(
+  SequenceEffect([
+    ScaleEffect.to(
+      Vector2.all(bScale * bumpMultiplier),
+      EffectController(duration: 0.08, curve: Curves.easeOut),
+    ),
+    ScaleEffect.to(
+      Vector2.all(bScale),
+      EffectController(duration: 0.35, curve: Curves.elasticOut),
+    ),
+  ]),
+);</pre>
+</div>
+
+<p>Puis une secousse haute fréquence, dont l'intensité et le nombre d'oscillations varient aussi :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/entities/combat_entity.dart</span><span class="lang">dart</span></div>
+  <pre>final shakeIntensity = isCritical ? 28.0 : (isPoison ? 8.0 : 18.0);
+final shakeCount = isCritical ? 8 : 5;
+for (int i = 0; i &lt; shakeCount; i++) {
+  add(
+    MoveEffect.by(
+      Vector2(
+        (rand.nextDouble() - 0.5) * shakeIntensity,
+        (rand.nextDouble() - 0.5) * shakeIntensity,
+      ),
+      EffectController(duration: 0.025, alternate: true),
+    ),
+  );
+}</pre>
+</div>
+
+<p>Et enfin une teinte de flash — appliquée <strong>au sprite</strong> et non à l'entité, pour ne pas
+colorer les badges de statistiques posés par-dessus :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/entities/combat_entity.dart</span><span class="lang">dart</span></div>
+  <pre>final flashColor = isCritical
+    ? const Color(0xFFF59E0B)
+    : (isPoison ? const Color(0xFF10B981) : Colors.redAccent);
+sprite.add(
+  SequenceEffect([
+    ColorEffect(
+      flashColor,
+      EffectController(duration: 0.1),
+      opacityTo: isCritical ? 0.85 : 0.75,
+    ),
+    ColorEffect(
+      flashColor,
+      EffectController(duration: isCritical ? 0.35 : 0.25, curve: Curves.easeIn),
+      opacityTo: 0.0,
+    ),
+  ]),
+);</pre>
+</div>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Type de coup</th><th>Bump</th><th>Intensité de secousse</th><th>Oscillations</th><th>Couleur</th><th>Particules</th></tr></thead>
+<tbody>
+<tr><td>Standard</td><td>×1,22</td><td>18,0</td><td>5</td><td><code>redAccent</code></td><td>15</td></tr>
+<tr><td><strong>Critique</strong></td><td><strong>×1,45</strong></td><td><strong>28,0</strong></td><td><strong>8</strong></td><td><code>0xFFF59E0B</code> (ambre)</td><td><strong>35</strong></td></tr>
+<tr><td>Poison / brûlure</td><td>×1,12</td><td>8,0</td><td>5</td><td><code>0xFF10B981</code> (émeraude)</td><td>12</td></tr>
+</tbody>
+</table></div>
+
+<h3>Qui décide de quelle réaction jouer ?</h3>
+
+<p><code>triggerHitReactions</code> compare l'ancien et le nouvel état, et en déduit ce qui s'est passé.
+C'est un principe important : <strong>l'entité visuelle ne reçoit jamais d'ordre « joue telle
+animation »</strong>, elle observe une différence d'état et en tire les conséquences.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/entities/combat_entity.dart</span><span class="lang">dart</span></div>
+  <pre>final isTurnPhaseForPoison = isPlayer
+    ? game.currentPhase == TurnPhase.player
+    : game.currentPhase == TurnPhase.enemy;
+final hadPoison = oldStats.statuses.any((s) =&gt; s.id == 'poison');
+final isPoisonDamage = isTurnPhaseForPoison &amp;&amp; hadPoison;</pre>
+</div>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Différence détectée</th><th>Retour visuel</th></tr></thead>
+<tbody>
+<tr><td>Armure perdue</td><td>Texte <code>−N</code> en <code>Color(0xFF3B82F6)</code> avec préfixe bouclier, sous l'entité, + <code>shieldHitAnimation()</code></td></tr>
+<tr><td>Armure gagnée</td><td>Texte <code>+N</code> en <code>lightBlueAccent</code>, au-dessus de l'entité</td></tr>
+<tr><td>PV perdus (poison)</td><td>Texte émeraude <code>0xFF10B981</code>, secousse douce, 12 particules</td></tr>
+<tr><td>PV perdus (critique)</td><td>Texte ambre <code>0xFFF59E0B</code>, préfixe <code>💥 CRIT</code>, secousse maximale, 35 particules</td></tr>
+<tr><td>PV perdus (standard)</td><td>Texte <code>0xFFF87171</code>, secousse standard, 15 particules</td></tr>
+</tbody>
+</table></div>
+
+<p>Le sens de la dérive du texte dépend du camp : <code>isUpward: isPlayer</code>. Le texte du joueur
+monte, celui de l'ennemi descend — les deux flux ne se croisent jamais au milieu de l'écran.</p>
+
+<h3>La file d'attente visuelle</h3>
+
+<p>Voici le mécanisme le plus subtil du chapitre. L'état Riverpod est mis à jour <em>immédiatement</em>
+quand une carte est jouée, mais l'animation d'impact dure 300 ms. Sans précaution, l'ennemi perdrait ses
+points de vie avant que la carte ne l'ait touché.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/entities/enemy_card.dart</span><span class="lang">dart</span></div>
+  <pre>void updateStats(EnemyInstance newInstance) {
+  if (game.isCardAnimating) {
+    _pendingVisualInstance = newInstance;
+  } else {
+    triggerHitReactions(stats, newInstance.stats);
+    instance = newInstance;
+    _refreshBadges();
+    buffIndicator.updateStatuses(
+      instance.stats.statuses.where((s) =&gt; s.type == StatusType.buff).toList(),
+    );
+    debuffIndicator.updateStatuses(
+      instance.stats.statuses.where((s) =&gt; s.type == StatusType.debuff).toList(),
+    );
+  }
+}</pre>
+</div>
+
+<p>Tant que <code>game.isCardAnimating</code> est vrai, la mise à jour visuelle est mise de côté. Quand
+la carte a fini son vol, <code>HerosDraftGame.resolvePendingDeaths()</code> appelle
+<code>resolvePendingVisualStats()</code> sur chaque ennemi, et tout le retard se rejoue d'un coup — au
+bon moment. Le même drapeau retarde la <strong>disparition</strong> d'un ennemi mort, via
+<code>isPendingDeath</code>.</p>
+
+<div class="box rule"><div class="box-title">Règle d'architecture</div>
+<p>L'état est la vérité, l'image est en retard. C'est la conséquence directe de la séparation
+Riverpod/Flame : le contrôleur ne connaît aucune animation, et le composant visuel est libre de
+rattraper son retard quand il le peut.</p></div>
+
+<h3>Les badges de statistiques</h3>
+
+<p><code>StatBadge</code> est un composant de 531 lignes qui gère trois mises en page différentes selon
+le type de statistique et le drapeau <code>isCircle</code>. Le point à retenir n'est pas la mise en page,
+mais la <strong>mise à jour incrémentale</strong> :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/entities/stat_badge.dart</span><span class="lang">dart</span></div>
+  <pre>if (isLoaded) {
+  // Optimisation absolue : mise à jour des valeurs existantes sans remove ni reconstruction !
+  if (_attackTextComponent != null) {
+    _attackTextComponent!.text = '$_attackValue';
+  }
+  if (_armorTextComponent != null) {
+    _armorTextComponent!.text = '$_armorValue';
+  }
+  if (_progressBarComponent != null) {
+    _progressBarComponent!.percentage = _fillPercentage;
+    _progressBarComponent!.armorPercentage = _armorPercentage;
+  }
+  if (textComponent != null) {
+    textComponent!.text = _value;
+  }
+}</pre>
+</div>
+
+<div class="box ok"><div class="box-title">Bonne pratique</div>
+<p>Reconstruire un sous-arbre de composants à chaque changement de points de vie coûterait une
+allocation par image sur chaque ennemi. Ici, les références sont gardées en champ et seule la chaîne de
+caractères change. Le badge n'est réellement reconstruit que si sa <em>largeur</em> doit changer —
+c'est-à-dire quand un bonus d'attaque apparaît ou disparaît et fait passer le badge de 48 à 90 pixels.</p></div>
+
+<h2 id="s8">8. Les retours d'information</h2>
+
+<h3>Les textes flottants</h3>
+
+<p><code>FloatingText</code> étend <code>TextComponent</code> et empile quatre effets simultanés dès son
+chargement. Toutes ses constantes sont centralisées dans <code>GameConstants</code> :</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Constante</th><th>Valeur</th><th>Rôle</th></tr></thead>
+<tbody>
+<tr><td><code>floatingTextFontSizeCritical</code></td><td><strong>36,0</strong></td><td>Taille du texte de coup critique</td></tr>
+<tr><td><code>floatingTextFontSizePoison</code></td><td>22,0</td><td>Taille du texte de poison</td></tr>
+<tr><td><code>floatingTextFontSizeStandard</code></td><td>26,0</td><td>Taille standard</td></tr>
+<tr><td><code>floatingTextDurationBirthRotation</code></td><td>0,15 s</td><td>Rotation initiale aléatoire (±0,15 rad)</td></tr>
+<tr><td><code>floatingTextDurationCritInitialPop</code></td><td>0,35 s</td><td>Agrandissement jusqu'à ×1,5 (<code>elasticOut</code>)</td></tr>
+<tr><td><code>floatingTextDurationCritInitialReturn</code></td><td>0,15 s</td><td>Retour à ×1,15</td></tr>
+<tr><td><code>floatingTextDurationCritPulse</code></td><td>0,3 s</td><td>Pulsation infinie jusqu'à ×1,3</td></tr>
+<tr><td><code>floatingTextDurationStandardBounce</code></td><td>0,15 s</td><td>Rebond d'apparition (<code>bounceOut</code>)</td></tr>
+<tr><td><code>floatingTextDurationDriftPoison</code></td><td>1,2 s</td><td>Dérive du poison</td></tr>
+<tr><td><code>floatingTextDurationDriftShield</code> / <code>Standard</code></td><td>1,0 s</td><td>Dérive du bouclier et standard</td></tr>
+<tr><td><code>floatingTextDurationFadeOut</code></td><td>1,2 s</td><td>Fondu de sortie</td></tr>
+<tr><td><code>floatingTextDriftXMax</code></td><td>80,0</td><td>Dérive horizontale maximale</td></tr>
+<tr><td><code>floatingTextDriftYPoisonBase</code></td><td>−90,0</td><td>Le poison monte toujours</td></tr>
+<tr><td><code>floatingTextDriftYStandardBase</code></td><td>60,0</td><td>Inversé si <code>isUpward</code></td></tr>
+</tbody>
+</table></div>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/floating_text.dart</span><span class="lang">dart</span></div>
+  <pre>@override set opacity(double value) {
+  if (_opacity == value) return;
+  _opacity = value;
+  paint.color = paint.color.withValues(alpha: value);
+  _updateTextStyle();
+}</pre>
+</div>
+
+<div class="box warn"><div class="box-title">Piège</div>
+<p><code>TextPaint</code> est immuable : on ne peut pas modifier la couleur d'un texte déjà rendu. Pour
+qu'un <code>OpacityEffect</code> fonctionne sur un <code>TextComponent</code>, il faut donc
+<strong>reconstruire le renderer entier</strong> à chaque changement d'opacité — y compris toutes les
+ombres, dont l'alpha doit être multiplié à la main. C'est ce que fait <code>_updateTextStyle()</code>.</p></div>
+
+<p>Un détail amusant : le texte de poison ondule horizontalement pendant sa montée, par une simple
+sinusoïde appliquée dans <code>update</code>.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/floating_text.dart</span><span class="lang">dart</span></div>
+  <pre>if (isPoison) {
+  _time += dt;
+  position.x += sin(_time * 10) * 0.8;   // sinusoïde horizontale
+}</pre>
+</div>
+
+<h3>Les indicateurs de statut</h3>
+
+<p><code>StatusIndicator</code> affiche la colonne d'icônes de buffs (à gauche de l'ennemi) et de debuffs
+(à droite). Il implémente une réconciliation qui rappellera quelque chose à qui connaît React :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/entities/status_indicator.dart</span><span class="lang">dart</span></div>
+  <pre>final currentIcons = children.whereType&lt;_StatusIcon&gt;().toList();
+final Map&lt;String, _StatusIcon&gt; iconMap = {
+  for (var icon in currentIcons) icon.status.id: icon,
+};
+
+final Set&lt;String&gt; newIds = list.map((s) =&gt; s.id).toSet();
+
+// Supprimer les icônes obsolètes
+for (var icon in currentIcons) {
+  if (!newIds.contains(icon.status.id)) {
+    remove(icon);
+  }
+}
+
+// Mettre à jour ou ajouter les icônes actives (empilées verticalement)
+double currentY = 0;
+for (var status in list) {
+  final existingIcon = iconMap[status.id];
+  if (existingIcon != null) {
+    existingIcon.updateStatus(status);
+    existingIcon.position = Vector2(0, currentY);
+  } else {
+    final icon = _StatusIcon(</pre>
+</div>
+
+<p>L'identifiant du statut sert de clé stable : une icône de Poison qui passe de 3 à 2 n'est pas
+détruite et recréée, elle est simplement mise à jour. Et avant même d'en arriver là, une comparaison
+structurelle court-circuite tout si rien n'a changé :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/entities/status_indicator.dart</span><span class="lang">dart</span></div>
+  <pre>void updateStatuses(List&lt;StatusEffect&gt; newStatuses) {
+  if (_areStatusListsEqual(newStatuses, statuses)) return;  // court-circuit
+  statuses = List.from(newStatuses);
+  _refresh(newStatuses);
+}</pre>
+</div>
+
+<p>Chaque statut a son emoji : 🧪 poison, 💪 force, 🥀 faiblesse, 🎯 vulnérable, ✊ régénération de force,
+🛡️ régénération d'armure, 🧛 vol de vie, 🔥 brûlure, ❄️ gel, ⚡ électrocution, ✨ par défaut.</p>
+
+<h3>Les effets ponctuels</h3>
+
+<p><code>SlashEffect</code> illustre une astuce d'animation élégante : l'entaille s'étire sur l'axe X
+puis s'écrase sur l'axe Y, ce qui donne l'impression d'un coup qui traverse.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/visual_effects/slash_effect.dart</span><span class="lang">dart</span></div>
+  <pre>scale = Vector2(0, 1);
+opacity = 0;
+
+add(
+  SequenceEffect([
+    // 1. Apparition rapide et étirement
+    CombinedEffect([
+      ScaleEffect.to(
+        Vector2(1.2, 1),
+        EffectController(duration: 0.1, curve: Curves.easeOut),
+      ),
+      OpacityEffect.to(1.0, EffectController(duration: 0.05)),
+    ]),
+    // 2. Disparition
+    CombinedEffect([
+      ScaleEffect.to(
+        Vector2(1.5, 0),
+        EffectController(duration: 0.2, curve: Curves.easeIn),
+      ),
+      OpacityEffect.to(0.0, EffectController(duration: 0.2)),
+    ]),
+  ]),
+);</pre>
+</div>
+
+<p><code>SequenceEffect</code> enchaîne, <code>CombinedEffect</code> superpose. Le binôme couvre à peu
+près tous les besoins d'animation composite.</p>
+
+<p><code>RibbonTrail</code>, la traînée du drag, mérite aussi un mot : c'est un polygone construit à la
+volée à partir des 20 dernières positions de la carte, avec une largeur qui décroît vers la queue.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/visual_effects/ribbon_trail.dart</span><span class="lang">dart</span></div>
+  <pre>Vector2 direction;
+
+if (i &lt; _points.length - 1) {
+  direction = (_points[i + 1] - p).normalized();
+} else {
+  direction = (p - _points[i - 1]).normalized();
+}
+
+// Calcul de la normale (perpendiculaire au mouvement)
+final normal = Vector2(-direction.y, direction.x);
+
+// Largeur décroissante (tapering)
+final width = _startWidth * (1.0 - (i / _maxPoints));
+
+leftSide.add((p + normal * (width / 2)).toOffset());
+rightSide.add((p - normal * (width / 2)).toOffset());</pre>
+</div>
+
+<p>La normale d'un vecteur 2D s'obtient en échangeant les composantes et en niant la première :
+<code>(x, y) → (−y, x)</code>. On avance le long de la trajectoire, on écarte de part et d'autre, et on
+referme le polygone en parcourant le côté droit à l'envers. La traînée se supprime toute seule : quand
+<code>stop()</code> est appelé, un point disparaît par image jusqu'à ce qu'il n'en reste plus.</p>
+
+<h3>Tableau de synthèse : événement de jeu → retour visuel</h3>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Événement</th><th>Retour visuel</th><th>Durée</th></tr></thead>
+<tbody>
+<tr><td>Carte piochée</td><td>Vol depuis le coin bas-gauche, échelle 0 → 1</td><td>0,70 s</td></tr>
+<tr><td>Réorganisation de la main</td><td><code>MoveEffect</code> + <code>RotateEffect</code> + <code>ScaleEffect</code></td><td>0,35 s</td></tr>
+<tr><td>Survol souris</td><td>Agrandissement ×1,2 + bordure foil animée</td><td>0,10 s</td></tr>
+<tr><td>Sélection</td><td>Agrandissement ×1,25, montée de 60 px, ligne de ciblage, cibles surlignées</td><td>0,20 s</td></tr>
+<tr><td>Drag</td><td>Inclinaison inertielle, traînée en ruban, 3 particules par image</td><td>continu</td></tr>
+<tr><td>Mana insuffisant</td><td>Secousse horizontale en 5 temps + retour élastique</td><td>0,25 s + 0,40 s</td></tr>
+<tr><td>Annulation</td><td>Échelle ×0,9, bordure grise, retour élastique</td><td>0,10 s + 0,40 s</td></tr>
+<tr><td>Attaque au corps à corps</td><td>Recul, course, entaille, secousse de la cible, particules</td><td>0,30 s</td></tr>
+<tr><td>Dégâts subis</td><td>Bump d'échelle, secousse, flash coloré, texte flottant, particules</td><td>≈ 0,45 s</td></tr>
+<tr><td>Coup critique</td><td>Idem en ×1,45 / 28,0 / 8 oscillations / 35 particules, texte 36 px pulsant à l'infini</td><td>≈ 0,45 s</td></tr>
+<tr><td>Armure touchée</td><td>Bump ×1,08 + bordure cyan épaisse, texte bleu sous l'entité</td><td>0,26 s</td></tr>
+<tr><td>Ennemi vaincu</td><td><code>OpacityEffect</code> vers 0 + <code>ScaleEffect</code> vers 0, puis retrait</td><td>0,40 s</td></tr>
+<tr><td>Carte épuisée</td><td>40 particules orange et rouge projetées vers le haut</td><td>0,80 s</td></tr>
+<tr><td>Gain d'armure (carte)</td><td>Dôme cyan pulsant au-dessus du héros</td><td>0,80 s</td></tr>
+<tr><td>Soin</td><td>20 particules or et émeraude qui montent de 120 à 180 px</td><td>1,20 s</td></tr>
+<tr><td>Intention ennemie de défense ou de buff</td><td><code>EffectIcon</code> vectoriel qui monte de 65 px en s'estompant</td><td>1,10 s</td></tr>
+</tbody>
+</table></div>
+
+<div class="box danger"><div class="box-title">Point d'attention</div>
+<p><code>lib/game/components/entities/health_bar.dart</code> définit un <code>HealthBarComponent</code>
+complet — fond, barre, bordure, texte — qui n'est référencé nulle part ailleurs dans <code>lib/</code>.
+Les barres de vie réellement affichées viennent de <code>StatBadge</code> combiné à
+<code>LinearProgressBarComponent</code>. C'est du code mort, et le dépôt interdit explicitement le code
+mort dans <code>CLAUDE.md</code>.</p></div>
+
+<div class="quiz">
+  <h2>Quiz — vérifiez vos acquis</h2>
+
+  <div class="q" data-answer="1">
+    <p class="q-text">1. Pourquoi l'inclinaison d'une carte s'écrit-elle
+    <code>angle += (targetTilt - angle) * 15 * dt;</code> plutôt que
+    <code>angle += (targetTilt - angle) * 0.25;</code> ?</p>
+    <ul class="q-opts">
+      <li>Parce que 15 est plus précis que 0,25</li>
+      <li>Parce que multiplier par <code>dt</code> rend la convergence indépendante du nombre d'images par seconde</li>
+      <li>Parce que Flame l'exige pour tous les composants</li>
+      <li>Parce que l'angle est en radians et non en degrés</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> sans <code>dt</code>, l'animation avance d'un
+    pourcentage fixe <em>par image</em>, donc deux fois plus vite sur un écran 120 Hz. Avec
+    <code>dt</code>, elle avance d'un pourcentage fixe <em>par seconde</em>, et le temps réel de
+    convergence est constant.</div>
+  </div>
+
+  <div class="q" data-answer="3">
+    <p class="q-text">2. À partir de quelle hauteur d'écran une carte relâchée est-elle annulée ?</p>
+    <ul class="q-opts">
+      <li>50 % de la hauteur</li>
+      <li>80 % de la hauteur</li>
+      <li>Il n'y a pas de zone d'annulation, il faut appuyer sur Échap</li>
+      <li>68 % de la hauteur</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>card_interaction_handler.dart</code> teste
+    <code>cardComponent.position.y &gt; cardComponent.game.size.y * 0.68</code>. Tout ce qui est en
+    dessous de ce seuil — c'est-à-dire là d'où la carte vient — annule le jeu.</div>
+  </div>
+
+  <div class="q" data-answer="0">
+    <p class="q-text">3. Quel multiplicateur d'échelle une entité subit-elle sur un coup critique ?</p>
+    <ul class="q-opts">
+      <li>×1,45, contre ×1,22 en standard et ×1,12 sur du poison</li>
+      <li>×2,0, la valeur de <code>critMultiplier</code></li>
+      <li>×1,25, comme une carte sélectionnée</li>
+      <li>Aucun : seul le texte flottant change</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>combat_entity.dart</code> définit
+    <code>bumpMultiplier = isCritical ? 1.45 : (isPoison ? 1.12 : 1.22)</code>. Le critique augmente
+    aussi la secousse (28,0 contre 18,0), le nombre d'oscillations (8 contre 5) et les particules (35
+    contre 15).</div>
+  </div>
+
+  <div class="q" data-answer="2">
+    <p class="q-text">4. Que fait le drapeau <code>game.isCardAnimating</code> dans
+    <code>EnemyCard.updateStats</code> ?</p>
+    <ul class="q-opts">
+      <li>Il empêche complètement la mise à jour de l'état de l'ennemi</li>
+      <li>Il accélère l'animation en cours</li>
+      <li>Il diffère le retour visuel dans <code>_pendingVisualInstance</code>, pour que les dégâts ne s'affichent pas avant l'impact</li>
+      <li>Il met le moteur Flame en pause</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> l'état Riverpod est mis à jour immédiatement, mais
+    l'animation de la carte dure encore. La mise à jour visuelle est donc stockée et rejouée par
+    <code>resolvePendingVisualStats()</code> quand la carte a fini son vol.</div>
+  </div>
+
+  <div class="q" data-answer="1">
+    <p class="q-text">5. Pourquoi <code>CardRenderer</code> n'active-t-il <code>saveLayer</code> que si
+    <code>opacity &lt; 1.0</code> ?</p>
+    <ul class="q-opts">
+      <li>Parce que <code>saveLayer</code> ne fonctionne pas à opacité pleine</li>
+      <li>Parce que <code>saveLayer</code> alloue une texture hors écran et coûte cher : on ne le paie que quand la transparence de groupe est nécessaire</li>
+      <li>Parce que Flame l'interdit sur les <code>PositionComponent</code></li>
+      <li>Parce que la bordure foil s'y superposerait mal</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>saveLayer</code> est la seule façon d'obtenir une
+    opacité correcte sur un groupe d'éléments qui se chevauchent, mais c'est une opération coûteuse. La
+    condition <code>useSaveLayer</code> évite de la payer 60 fois par seconde sur dix cartes opaques.</div>
+  </div>
+
+  <div class="q" data-answer="2">
+    <p class="q-text">6. Combien de temps dure la phase d'anticipation d'une attaque au corps à corps,
+    et de combien de pixels la carte recule-t-elle ?</p>
+    <ul class="q-opts">
+      <li>0,25 s et 100 px</li>
+      <li>0,05 s et 10 px</li>
+      <li>0,10 s et 40 px</li>
+      <li>0,15 s et 60 px</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>_playMeleeAnimation</code> applique
+    <code>MoveEffect.by(anticipationDir * 40)</code> sur <code>EffectController(duration: 0.10, curve: Curves.easeOut)</code>,
+    puis fonce vers la cible en 0,15 s. Le rapport 2:3 entre recul et impact est ce qui donne la
+    sensation de force.</div>
+  </div>
+</div>
+
+<div class="pager">
+<a class="prev" href="ch17.html"><div class="dir">&#8592; Chapitre 17</div><div class="ttl">Le pont Flame ↔ Riverpod : l&#x27;écran de combat</div></a>
+<a class="next" href="ch19.html"><div class="dir">Chapitre 19 &#8594;</div><div class="ttl">Écrans, navigation et design system</div></a>
+</div>
+</div>
+</main>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

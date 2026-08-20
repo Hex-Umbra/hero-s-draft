@@ -1,0 +1,2051 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Le combat : boucle de tour, dégâts et effets — Formation Hero's Draft</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<button class="menu-btn" aria-label="Menu">&#9776;</button>
+<div class="layout">
+<aside class="sidebar">
+  <a class="brand" href="index.html">
+    <div class="brand-title">HERO'S DRAFT</div>
+    <div class="brand-sub">Formation complète au projet Flutter</div>
+  </a>
+<nav class="nav">
+<div class="nav-part">Partie 0 — Démarrage</div>
+<a href="ch01.html"><span class="num">01</span><span>Vue d&#x27;ensemble : qu&#x27;est-ce que Hero&#x27;s Draft ?</span></a>
+<div class="nav-part">Partie 1 — Les fondations techniques</div>
+<a href="ch02.html"><span class="num">02</span><span>Dart, le langage — l&#x27;essentiel pour ce projet</span></a>
+<a href="ch03.html"><span class="num">03</span><span>Flutter — widgets, arbre et navigation</span></a>
+<a href="ch04.html"><span class="num">04</span><span>Riverpod — l&#x27;état partagé du jeu</span></a>
+<a href="ch05.html"><span class="num">05</span><span>Flame — le moteur de rendu du combat</span></a>
+<div class="nav-part">Partie 2 — L&#x27;architecture du projet</div>
+<a href="ch06.html"><span class="num">06</span><span>L&#x27;architecture en quatre couches</span></a>
+<a href="ch07.html"><span class="num">07</span><span>La couche de données : un jeu 100 % data-driven</span></a>
+<div class="nav-part">Partie 3 — Les règles du jeu</div>
+<a href="ch08.html"><span class="num">08</span><span>Le héros : stats, classes, passifs et progression</span></a>
+<a href="ch09.html"><span class="num">09</span><span>Les cartes et le deck</span></a>
+<a href="ch10.html" class="active"><span class="num">10</span><span>Le combat : boucle de tour, dégâts et effets</span></a>
+<a href="ch11.html"><span class="num">11</span><span>Les ennemis et la courbe de difficulté</span></a>
+<a href="ch12.html"><span class="num">12</span><span>La carte du monde procédurale</span></a>
+<a href="ch13.html"><span class="num">13</span><span>Les reliques et le système de déclencheurs</span></a>
+<a href="ch14.html"><span class="num">14</span><span>L&#x27;économie : or, boutique, forge et fusion</span></a>
+<a href="ch15.html"><span class="num">15</span><span>Récompenses, chance et probabilités</span></a>
+<a href="ch16.html"><span class="num">16</span><span>Événements, repos et autel des reliques</span></a>
+<div class="nav-part">Partie 4 — L&#x27;interface et le rendu</div>
+<a href="ch17.html"><span class="num">17</span><span>Le pont Flame ↔ Riverpod : l&#x27;écran de combat</span></a>
+<a href="ch18.html"><span class="num">18</span><span>Composants Flame et game feel</span></a>
+<a href="ch19.html"><span class="num">19</span><span>Écrans, navigation et design system</span></a>
+<div class="nav-part">Partie 5 — Qualité et cycle de vie</div>
+<a href="ch20.html"><span class="num">20</span><span>Sauvegarde, localisation et tutoriel</span></a>
+<a href="ch21.html"><span class="num">21</span><span>Tests, outillage, dette technique et évolutions</span></a>
+</nav>
+</aside>
+<main class="main">
+<div class="content">
+<div class="chapter-kicker">Chapitre 10</div>
+<h1>Le combat : boucle de tour, dégâts et effets</h1>
+<p class="lede">Le combat est la mécanique la plus dense du projet. On y suit une carte depuis le doigt du joueur jusqu'aux points de vie d'un ennemi, en passant par six couches de code.</p>
+
+<div class="toc">
+  <div class="toc-title">Dans ce chapitre</div>
+  <ol>
+    <li><a href="#s1">L'état du combat : <code>CombatState</code></a></li>
+    <li><a href="#s2">La chronologie d'un tour</a></li>
+    <li><a href="#s3">Les intentions ennemies</a></li>
+    <li><a href="#s4">Jouer une carte : le chemin complet</a></li>
+    <li><a href="#s5">Le patron Stratégie des effets</a></li>
+    <li><a href="#s6"><code>DamagePipeline</code> : les 4 étapes</a></li>
+    <li><a href="#s7">Les altérations d'état</a></li>
+    <li><a href="#s8"><code>StatusEffectProcessor</code> : joueur vs ennemi</a></li>
+    <li><a href="#s9">Fin de combat et nettoyage</a></li>
+  </ol>
+</div>
+
+<p>Un combat de <em>Hero's Draft</em>, vu de l'extérieur, c'est simple : le joueur pose des cartes, appuie sur « Fin de tour », les ennemis répliquent, on recommence. Vu de l'intérieur, c'est six couches qui se passent le relais, chacune avec une responsabilité stricte :</p>
+
+<div class="tree">lib/
+├── <span class="d">models/</span>
+│   ├── <span class="f">combat_state.dart</span>          <span class="c">// l'état immuable du combat</span>
+│   ├── <span class="f">enemy_instance.dart</span>        <span class="c">// un ennemi sur le terrain + effectiveIntent</span>
+│   ├── <span class="f">enemy_intent.dart</span>          <span class="c">// EnemyIntent + IntentType</span>
+│   ├── <span class="f">status_effect.dart</span>         <span class="c">// StatusEffect + combine()</span>
+│   └── <span class="f">entity_stats.dart</span>          <span class="c">// PV, armure, statuts, takeDamage()</span>
+├── <span class="d">game/</span>
+│   ├── <span class="f">game_constants.dart</span>        <span class="c">// les 7 délais de combat</span>
+│   ├── <span class="f">heros_draft_game.dart</span>      <span class="c">// executeTurn / _enemyRipostePhase (le séquenceur)</span>
+│   ├── <span class="d">controllers/</span>
+│   │   ├── <span class="f">combat_controller.dart</span> <span class="c">// LE fichier central</span>
+│   │   └── <span class="d">combat/</span>
+│   │       ├── <span class="f">turn_phase_manager.dart</span>      <span class="c">// les phases de tour</span>
+│   │       └── <span class="f">status_effect_processor.dart</span> <span class="c">// les ticks de début de tour</span>
+│   ├── <span class="d">services/</span>
+│   │   ├── <span class="f">damage_pipeline.dart</span>   <span class="c">// le calcul des dégâts</span>
+│   │   ├── <span class="f">effect_resolver.dart</span>   <span class="c">// mana, runes, boucle d'effets</span>
+│   │   └── <span class="d">effects/</span>
+│   │       ├── <span class="f">effect_strategy.dart</span> <span class="c">// interface + registre</span>
+│   │       └── <span class="f">strategies.dart</span>      <span class="c">// les 6 implémentations</span>
+│   └── <span class="d">systems/</span>
+│       └── <span class="f">trait_system.dart</span>      <span class="c">// les passifs de classe</span>
+└── <span class="d">ui/screens/</span>
+    └── <span class="f">game_screen.dart</span>           <span class="c">// le pont Flutter ↔ Flame</span>
+</div>
+
+<p>La règle à garder en tête pendant tout le chapitre : <strong>Flame séquence, Riverpod calcule.</strong> Le fichier <code>heros_draft_game.dart</code> ne connaît aucune règle de jeu — il joue des animations et attend des millisecondes. Le fichier <code>combat_controller.dart</code> ne connaît aucune animation — il transforme un <code>CombatState</code> en un autre <code>CombatState</code>.</p>
+
+<h2 id="s1">1. L'état du combat : <code>CombatState</code></h2>
+
+<p>Tout ce que le jeu sait d'un combat en cours tient dans une seule classe immuable (<span class="pill r">Riverpod</span>), exposée par un <code>NotifierProvider</code>. Huit champs, pas un de plus.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/combat_state.dart</span><span class="lang">dart</span></div>
+  <pre>enum TurnPhase { player, enemy }
+
+@immutable
+class CombatState {
+  final List&lt;EnemyInstance&gt; enemies;
+  final List&lt;EnemyInstance&gt; pendingEnemies;
+  final List&lt;EnemyInstance&gt; defeatedEnemies;
+  final TurnPhase turnPhase;
+  final int turnCount;
+  final String? selectedEnemyId;
+  final bool isCombatEnded;
+  final bool isVictory;
+
+  CombatState({
+    List&lt;EnemyInstance&gt; enemies = const [],
+    List&lt;EnemyInstance&gt; pendingEnemies = const [],
+    List&lt;EnemyInstance&gt; defeatedEnemies = const [],
+    this.turnPhase = TurnPhase.player,
+    this.turnCount = 1,
+    this.selectedEnemyId,
+    this.isCombatEnded = false,
+    this.isVictory = false,
+  })  : enemies = List.unmodifiable(enemies),
+        pendingEnemies = List.unmodifiable(pendingEnemies),
+        defeatedEnemies = List.unmodifiable(defeatedEnemies);</pre>
+</div>
+
+<p>Les trois listes sont passées par <code>List.unmodifiable(...)</code> dans la liste d'initialisation du constructeur. C'est une protection réelle, pas décorative : si un morceau de code UI tentait un <code>state.enemies.add(...)</code>, il lèverait une <code>UnsupportedError</code> à l'exécution plutôt que de corrompre silencieusement l'état partagé.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Champ</th><th>Type</th><th>Défaut</th><th>Rôle</th></tr></thead>
+<tbody>
+<tr><td><code>enemies</code></td><td><code>List&lt;EnemyInstance&gt;</code></td><td><code>[]</code></td><td>Les ennemis <strong>actifs</strong>, ceux qui sont dessinés et qui jouent leur intention. Au maximum 5.</td></tr>
+<tr><td><code>pendingEnemies</code></td><td><code>List&lt;EnemyInstance&gt;</code></td><td><code>[]</code></td><td>La file d'attente : ennemis générés mais pas encore entrés en scène.</td></tr>
+<tr><td><code>defeatedEnemies</code></td><td><code>List&lt;EnemyInstance&gt;</code></td><td><code>[]</code></td><td>Les cadavres. Sert au calcul des récompenses en fin de combat.</td></tr>
+<tr><td><code>turnPhase</code></td><td><code>TurnPhase</code></td><td><code>player</code></td><td><code>player</code> ou <code>enemy</code>. Conditionne l'activation du bouton « Fin de tour ».</td></tr>
+<tr><td><code>turnCount</code></td><td><code>int</code></td><td><code>1</code></td><td>Numéro du tour. Incrémenté dans <code>endEnemyTurn()</code>, affiché dans le <code>TurnControlPanel</code>.</td></tr>
+<tr><td><code>selectedEnemyId</code></td><td><code>String?</code></td><td><code>null</code></td><td>La cible courante. <code>null</code> = aucune cible, ce qui bloque les cartes <code>singleEnemy</code>.</td></tr>
+<tr><td><code>isCombatEnded</code></td><td><code>bool</code></td><td><code>false</code></td><td>Passe à <code>true</code> quand il ne reste ni ennemi actif ni ennemi en attente.</td></tr>
+<tr><td><code>isVictory</code></td><td><code>bool</code></td><td><code>false</code></td><td>Aujourd'hui strictement égal à <code>isCombatEnded</code> (voir la section 9).</td></tr>
+</tbody>
+</table></div>
+
+<h3>Le rôle de <code>pendingEnemies</code> : la file d'attente</h3>
+
+<p>Un combat peut générer plus de cinq ennemis (l'<code>EncounterSystem</code> raisonne en budget, pas en nombre). Mais l'écran de combat ne peut pas en afficher davantage sans devenir illisible. La solution retenue est une file d'attente : les cinq premiers entrent, les autres patientent, et <strong>chaque mort libère une place</strong>.</p>
+
+<p>La répartition se fait une fois pour toutes à l'initialisation du combat, avec un <code>5</code> écrit en dur dans la boucle :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/combat_controller.dart</span><span class="lang">dart</span></div>
+  <pre>final List&lt;EnemyInstance&gt; activeEnemies = [];
+final List&lt;EnemyInstance&gt; pendingEnemies = [];
+
+for (int i = 0; i &lt; allEnemyInstances.length; i++) {
+  var enemy = allEnemyInstances[i];
+  if (i &lt; 5) {
+    enemy = rollIntent(enemy);
+    activeEnemies.add(enemy);
+  } else {
+    pendingEnemies.add(enemy);
+  }
+}
+
+state = CombatState(
+  enemies: activeEnemies,
+  pendingEnemies: pendingEnemies,
+  defeatedEnemies: const [],
+  turnPhase: TurnPhase.player,
+  turnCount: 1,
+  selectedEnemyId: null,
+  isCombatEnded: false,
+  isVictory: false,
+);</pre>
+</div>
+
+<p>Notez le détail : <code>rollIntent(enemy)</code> n'est appelé <strong>que sur les ennemis actifs</strong>. Un ennemi en attente n'a pas d'intention — ce serait inutile puisqu'il ne joue pas, et l'affichage de son intention n'aurait aucun sens. Il reçoit la sienne au moment exact où il entre en scène.</p>
+
+<p>La promotion, elle, a lieu dans <code>cleanDeadEnemies()</code> (détaillé en section 9). Le principe tient en trois lignes : pour chaque mort constatée, si la scène compte moins de 5 combattants et que la file n'est pas vide, on sort le premier de la file, on lui tire une intention, et on le pose sur le terrain.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/combat_controller.dart</span><span class="lang">dart</span></div>
+  <pre>if (killedCount &gt; 0) {
+  final List&lt;EnemyInstance&gt; nextPending = List.from(state.pendingEnemies);
+  for (int i = 0; i &lt; killedCount; i++) {
+    if (remainingEnemies.length &lt; 5 &amp;&amp; nextPending.isNotEmpty) {
+      var incoming = nextPending.removeAt(0);
+      incoming = rollIntent(incoming);
+      remainingEnemies.add(incoming);
+    }
+  }
+  // ...</pre>
+</div>
+
+<div class="box rule">
+  <div class="box-title">Règle du jeu</div>
+  <p>Cinq ennemis actifs au maximum. Toute mort libère immédiatement une place, occupée aussitôt par le premier ennemi de <code>pendingEnemies</code>. Un renfort qui arrive de cette façon <strong>agit dès la phase ennemie suivante</strong> : il reçoit son intention à l'instant de son entrée, pas au tour d'après.</p>
+</div>
+
+<div class="box warn">
+  <div class="box-title">Piège</div>
+  <p>Le nombre <code>5</code> apparaît à deux endroits (la boucle d'initialisation et la boucle de promotion) et n'est pas dans <code>GameConstants</code>. Si vous voulez passer à six ennemis, il faut modifier les deux — en oublier un donne un combat qui commence à 6 mais qui, après la première mort, ne remonte plus jamais au-dessus de 5.</p>
+</div>
+
+<h2 id="s2">2. La chronologie d'un tour</h2>
+
+<p>C'est le point que les débutants comprennent le plus lentement, parce que la boucle est <em>éclatée</em> entre trois fichiers : le widget Flutter (le bouton), le jeu Flame (le séquenceur asynchrone) et le contrôleur Riverpod (les règles). Voici le cycle complet.</p>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 840 690" width="840" role="img" aria-label="Chronologie complète d'un tour de combat, de la phase joueur à la phase ennemie">
+      <defs>
+        <marker id="c10-d1-grey" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#3a4966"/>
+        </marker>
+        <marker id="c10-d1-red" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#f87171"/>
+        </marker>
+        <marker id="c10-d1-green" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#34d399"/>
+        </marker>
+      </defs>
+
+      <rect x="0" y="0" width="840" height="690" fill="#0e1524"/>
+
+      <rect x="100" y="14" width="600" height="26" rx="6" fill="#0d2230" stroke="#22d3ee"/>
+      <text x="400" y="32" fill="#22d3ee" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">PHASE JOUEUR — turnPhase = TurnPhase.player</text>
+
+      <rect x="120" y="52" width="560" height="58" rx="8" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="136" y="72" fill="#e6ecf5" font-size="13" font-family="ui-monospace, monospace">startPlayerTurn()</text>
+      <text x="136" y="90" fill="#a7b4c9" font-size="11">mana au max, armure remise a 0, reliques startOfTurn,</text>
+      <text x="136" y="104" fill="#a7b4c9" font-size="11">statuts (poison / regen), cooldowns, passifs, puis pioche</text>
+
+      <path d="M400 110 L400 126" stroke="#3a4966" stroke-width="2" marker-end="url(#c10-d1-grey)"/>
+
+      <rect x="120" y="130" width="560" height="52" rx="8" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="136" y="150" fill="#e6ecf5" font-size="13" font-family="ui-monospace, monospace">applyPlayerCardPlay(card)   x N</text>
+      <text x="136" y="170" fill="#a7b4c9" font-size="11">le joueur pose autant de cartes que son mana le permet</text>
+
+      <path d="M400 182 L400 198" stroke="#3a4966" stroke-width="2" marker-end="url(#c10-d1-grey)"/>
+
+      <rect x="120" y="202" width="560" height="70" rx="8" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="136" y="222" fill="#f59e0b" font-size="13" font-family="ui-monospace, monospace">onEndTurnTap  (bouton Fin de tour)</text>
+      <text x="136" y="240" fill="#a7b4c9" font-size="11">1. TraitSystem.onTurnEnd()     2. applyRelics(endOfTurn)</text>
+      <text x="136" y="256" fill="#a7b4c9" font-size="11">3. deckController.discardHand()   4. _game.executeTurn()</text>
+
+      <path d="M400 272 L400 292" stroke="#f59e0b" stroke-width="2" marker-end="url(#c10-d1-red)"/>
+
+      <rect x="100" y="296" width="600" height="26" rx="6" fill="#2a1420" stroke="#f87171"/>
+      <text x="400" y="314" fill="#f87171" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">PHASE ENNEMIE — executeTurn() puis _enemyRipostePhase()</text>
+
+      <rect x="120" y="334" width="560" height="40" rx="8" fill="#151b2b" stroke="#f87171"/>
+      <text x="136" y="359" fill="#e6ecf5" font-size="13" font-family="ui-monospace, monospace">onPhaseChanged(TurnPhase.enemy)</text>
+      <rect x="700" y="340" width="120" height="26" rx="13" fill="#2a2210" stroke="#f59e0b"/>
+      <text x="760" y="358" fill="#f59e0b" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">600 ms</text>
+
+      <path d="M400 374 L400 390" stroke="#3a4966" stroke-width="2" marker-end="url(#c10-d1-grey)"/>
+
+      <rect x="120" y="394" width="560" height="58" rx="8" fill="#151b2b" stroke="#f87171"/>
+      <text x="136" y="414" fill="#e6ecf5" font-size="13" font-family="ui-monospace, monospace">onStartEnemyTurn() -&gt; startEnemyTurn()</text>
+      <text x="136" y="432" fill="#a7b4c9" font-size="11">processEnemyStatuses sur chaque ennemi (poison, brulure,</text>
+      <text x="136" y="446" fill="#a7b4c9" font-size="11">regen) puis cleanDeadEnemies()</text>
+      <rect x="700" y="410" width="120" height="26" rx="13" fill="#2a2210" stroke="#f59e0b"/>
+      <text x="760" y="428" fill="#f59e0b" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">400 ms</text>
+
+      <path d="M400 452 L400 468" stroke="#3a4966" stroke-width="2" marker-end="url(#c10-d1-grey)"/>
+
+      <rect x="110" y="472" width="580" height="106" rx="10" fill="#131a29" stroke="#a78bfa" stroke-dasharray="6 4"/>
+      <text x="126" y="492" fill="#a78bfa" font-size="12" font-family="ui-monospace, monospace">pour chaque ennemi actif (copie de la liste) :</text>
+
+      <rect x="128" y="502" width="250" height="36" rx="6" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="253" y="525" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">dashAnimation / buffAnimation</text>
+      <rect x="128" y="544" width="110" height="24" rx="12" fill="#2a2210" stroke="#f59e0b"/>
+      <text x="183" y="561" fill="#f59e0b" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">200 ms</text>
+
+      <path d="M378 520 L406 520" stroke="#a78bfa" stroke-width="2" marker-end="url(#c10-d1-grey)"/>
+
+      <rect x="412" y="502" width="260" height="36" rx="6" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="542" y="525" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">onResolveEnemyIntent(enemy.id)</text>
+      <rect x="412" y="544" width="110" height="24" rx="12" fill="#2a2210" stroke="#f59e0b"/>
+      <text x="467" y="561" fill="#f59e0b" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">400 ms</text>
+
+      <path d="M400 578 L400 598" stroke="#3a4966" stroke-width="2" marker-end="url(#c10-d1-grey)"/>
+      <rect x="560" y="578" width="120" height="24" rx="12" fill="#2a2210" stroke="#f59e0b"/>
+      <text x="620" y="595" fill="#f59e0b" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">300 ms</text>
+
+      <rect x="120" y="602" width="560" height="58" rx="8" fill="#151b2b" stroke="#34d399"/>
+      <text x="136" y="622" fill="#e6ecf5" font-size="13" font-family="ui-monospace, monospace">onEndEnemyTurn() -&gt; endEnemyTurn()</text>
+      <text x="136" y="640" fill="#a7b4c9" font-size="11">rollIntent sur tous les ennemis, turnPhase = player,</text>
+      <text x="136" y="654" fill="#a7b4c9" font-size="11">turnCount + 1, puis _startPlayerNewTurn()</text>
+
+      <path d="M120 631 L60 631 L60 81 L114 81" stroke="#34d399" stroke-width="2" fill="none" marker-end="url(#c10-d1-green)"/>
+      <text x="70" y="360" fill="#34d399" font-size="12" font-family="ui-monospace, monospace" transform="rotate(-90 70 360)">tour suivant</text>
+    </svg>
+  </div>
+  <figcaption>La boucle complète d'un tour. Les pastilles ambre sont les délais réels de <code>GameConstants</code> attendus par <code>_enemyRipostePhase()</code>.</figcaption>
+</figure>
+
+<h3>2.1 Le déclencheur : le bouton « Fin de tour »</h3>
+
+<p>Tout part d'un <code>onTap</code> dans <code>game_screen.dart</code>. C'est <strong>ce widget</strong>, pas le contrôleur, qui déclenche les trois effets de fin de tour avant de passer la main à Flame :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>TurnControlPanel(
+  canEndTurn:
+      combatState.turnPhase == TurnPhase.player &amp;&amp;
+      _game.currentPhase == TurnPhase.player &amp;&amp;
+      !_game.isCardAnimating,
+  onEndTurnTap: () {
+    final currentMana = runState.heroStats.currentMana;
+    if (currentMana &gt; 0 &amp;&amp; !_showRemainingManaWarning) {
+      setState(() {
+        _showRemainingManaWarning = true;
+        _showManaWarning = false;
+      });
+      return;
+    }
+    setState(() {
+      _showManaWarning = false;
+      _showRemainingManaWarning = false;
+    });
+    TraitSystem.onTurnEnd(ref.read(runProvider.notifier));
+    ref
+        .read(runProvider.notifier)
+        .applyRelics(RelicTrigger.endOfTurn);
+    ref.read(deckProvider.notifier).discardHand();
+    _game.executeTurn();
+  },
+  showManaWarning: _showManaWarning,
+  showRemainingManaWarning: _showRemainingManaWarning,
+  turnCount: combatState.turnCount,
+),</pre>
+</div>
+
+<p>Deux choses méritent d'être soulignées.</p>
+
+<p><strong>L'avertissement de mana restant.</strong> Si le joueur a encore du mana et que <code>_showRemainingManaWarning</code> est <code>false</code>, le premier appui <em>ne termine pas le tour</em> : il se contente d'allumer l'avertissement et de faire <code>return</code>. Il faut donc appuyer une seconde fois pour confirmer. C'est un garde-fou « anti-gâchis » classique, implémenté sans la moindre boîte de dialogue — juste un booléen d'état local du <code>State</code>.</p>
+
+<p>Il existe un <strong>second</strong> avertissement, symétrique, déclenché non pas par le bouton mais par le fait de jouer une carte. Quand une carte fait tomber le mana de « strictement positif » à zéro, l'écran attend 600 ms puis affiche un rappel « vous pouvez finir votre tour », à condition qu'il reste des ennemis et que le mana soit toujours nul :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>if (runController.currentState.heroStats.currentMana &gt; 0) {
+  setState(() {
+    _showManaWarning = false;
+  });
+} else if (previousMana &gt; 0 &amp;&amp;
+    runController.currentState.heroStats.currentMana == 0) {
+  Future.delayed(const Duration(milliseconds: 600), () {
+    if (mounted &amp;&amp;
+        ref.read(combatProvider).enemies.isNotEmpty &amp;&amp;
+        ref.read(runProvider).heroStats.currentMana == 0) {
+      setState(() {
+        _showManaWarning = true;
+      });
+    }
+  });
+}</pre>
+</div>
+
+<p><strong>La double condition de <code>canEndTurn</code>.</strong> Le bouton n'est actif que si <em>les deux</em> notions de phase concordent : celle de Riverpod (<code>combatState.turnPhase</code>) et celle de Flame (<code>_game.currentPhase</code>), plus l'absence d'animation de carte en cours. C'est la conséquence directe de l'architecture : la phase est stockée à deux endroits, et pendant les quelques centaines de millisecondes où Flame a déjà basculé mais où Riverpod n'a pas encore reçu l'ordre, il ne faut surtout pas laisser le joueur cliquer.</p>
+
+<h3>2.2 Le séquenceur : <code>executeTurn</code> et <code>_enemyRipostePhase</code></h3>
+
+<p><code>executeTurn()</code> est volontairement minuscule. Il vérifie, bascule la phase locale, gère le cas « plus aucun ennemi » et délègue :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/heros_draft_game.dart</span><span class="lang">dart</span></div>
+  <pre>Future&lt;void&gt; executeTurn() async {
+  if (currentPhase != TurnPhase.player ||
+      currentRunState == null ||
+      currentRunState!.isDead) {
+    return;
+  }
+
+  currentPhase = TurnPhase.enemy;
+
+  if (enemyCards.isEmpty) {
+    onEnemiesDead();
+    currentPhase = TurnPhase.player;
+    return;
+  }
+
+  await _enemyRipostePhase();
+}</pre>
+</div>
+
+<p>Toute la chorégraphie est dans <code>_enemyRipostePhase()</code>. C'est une méthode <code>async</code> qui alterne « je fais quelque chose » et « j'attends N millisecondes ». Les <code>await Future.delayed(...)</code> ne sont pas du confort : ce sont eux qui laissent aux animations Flame le temps de se jouer avant que l'état ne change sous leurs pieds.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/heros_draft_game.dart</span><span class="lang">dart</span></div>
+  <pre>Future&lt;void&gt; _enemyRipostePhase() async {
+  onPhaseChanged(TurnPhase.enemy);
+  await Future.delayed(const Duration(milliseconds: GameConstants.combatDelayEnemyTurnStartMs));
+
+  onStartEnemyTurn();
+
+  await Future.delayed(const Duration(milliseconds: GameConstants.combatDelayAfterTicksMs));
+
+  final activeEnemies = List&lt;EnemyCard&gt;.from(enemyCards);
+  for (var enemy in activeEnemies) {
+    if (currentRunState == null || currentRunState!.isDead) break;
+
+    final intent = enemy.effectiveIntent;
+    if (intent == null) continue;
+
+    if (intent.type == IntentType.attack) {
+      enemy.dashAnimation();
+    } else {
+      enemy.buffAnimation(intent.type);
+    }
+
+    await Future.delayed(const Duration(milliseconds: GameConstants.combatDelayEnemyDashMs));
+
+    onResolveEnemyIntent(enemy.id);
+
+    await Future.delayed(const Duration(milliseconds: GameConstants.combatDelayAfterIntentResolveMs));
+  }
+
+  await Future.delayed(const Duration(milliseconds: GameConstants.combatDelayEnemyTurnEndMs));
+
+  onEndEnemyTurn();
+}</pre>
+</div>
+
+<p>Trois détails de robustesse valent d'être notés :</p>
+<ul>
+  <li><code>List&lt;EnemyCard&gt;.from(enemyCards)</code> : on itère sur une <strong>copie</strong>. Sans elle, la mort d'un ennemi par poison en cours de boucle modifierait la collection pendant l'itération — erreur classique en Dart (<code>ConcurrentModificationError</code>).</li>
+  <li><code>if (... isDead) break;</code> : si le héros meurt au milieu de la riposte, les ennemis restants n'attaquent pas un cadavre.</li>
+  <li><code>if (intent == null) continue;</code> : un ennemi qui vient d'entrer en scène sans intention est simplement sauté.</li>
+</ul>
+
+<h3>2.3 Les délais réels</h3>
+
+<p>Tous les délais sont centralisés dans <code>GameConstants</code>, en millisecondes, avec un commentaire de documentation pour chacun.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/game_constants.dart</span><span class="lang">dart</span></div>
+  <pre>// --- COMBAT TIMINGS (ms) ---
+/// Délai du dash du héros avant d'appliquer les dégâts d'une compétence.
+static const int combatDelayHeroDashMs = 200;
+/// Délai après l'exécution d'une compétence avant de continuer ou de riposter.
+static const int combatDelayAfterSkillMs = 400;
+/// Délai avant le début du tour des ennemis.
+static const int combatDelayEnemyTurnStartMs = 600;
+/// Délai après la résolution des ticks (poison, buffs, etc.) au début du tour ennemi.
+static const int combatDelayAfterTicksMs = 400;
+/// Délai du dash d'un ennemi lors de son attaque.
+static const int combatDelayEnemyDashMs = 200;
+/// Délai après la résolution d'une intention d'ennemi.
+static const int combatDelayAfterIntentResolveMs = 400;
+/// Délai avant de finaliser le tour des ennemis.
+static const int combatDelayEnemyTurnEndMs = 300;</pre>
+</div>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Constante</th><th>Valeur</th><th>Où</th><th>Ce qu'elle laisse le temps de faire</th></tr></thead>
+<tbody>
+<tr><td><code>combatDelayHeroDashMs</code></td><td>200 ms</td><td><code>executeSkill</code></td><td>Le héros s'élance avant que les dégâts de la compétence ne s'appliquent.</td></tr>
+<tr><td><code>combatDelayAfterSkillMs</code></td><td>400 ms</td><td><code>executeSkill</code></td><td>On laisse voir le résultat de la compétence avant d'enchaîner ou de riposter.</td></tr>
+<tr><td><code>combatDelayEnemyTurnStartMs</code></td><td>600 ms</td><td><code>_enemyRipostePhase</code></td><td>La bannière « Tour ennemi » s'affiche avant que quoi que ce soit ne bouge.</td></tr>
+<tr><td><code>combatDelayAfterTicksMs</code></td><td>400 ms</td><td><code>_enemyRipostePhase</code></td><td>Les textes flottants de poison / brûlure / régénération sont lisibles.</td></tr>
+<tr><td><code>combatDelayEnemyDashMs</code></td><td>200 ms</td><td><code>_enemyRipostePhase</code></td><td>L'ennemi s'élance (ou joue son animation de buff) avant l'impact.</td></tr>
+<tr><td><code>combatDelayAfterIntentResolveMs</code></td><td>400 ms</td><td><code>_enemyRipostePhase</code></td><td>Le joueur voit le chiffre de dégâts avant que l'ennemi suivant n'agisse.</td></tr>
+<tr><td><code>combatDelayEnemyTurnEndMs</code></td><td>300 ms</td><td><code>_enemyRipostePhase</code></td><td>Respiration avant le retour à la phase joueur.</td></tr>
+</tbody>
+</table></div>
+
+<p>On peut en déduire la durée exacte d'une phase ennemie à <em>n</em> ennemis :</p>
+
+<div class="code" data-lang="text">
+  <div class="code-head"><span class="path">illustration</span><span class="lang">text</span></div>
+  <pre>duree = 600 + 400 + n x (200 + 400) + 300
+      = 1300 + 600 x n   (millisecondes)
+
+n = 1 ennemi   ->  1 900 ms
+n = 3 ennemis  ->  3 100 ms
+n = 5 ennemis  ->  4 300 ms</pre>
+</div>
+
+<div class="box warn">
+  <div class="box-title">Piège</div>
+  <p>Ces attentes sont des <code>Future.delayed</code>, pas des animations pilotées par le <code>update()</code> de <span class="pill f">Flame</span>. Elles continuent donc de s'écouler même si l'écran est démonté. C'est pour cela que <code>_enemyRipostePhase</code> reteste <code>currentRunState</code> à chaque itération : le monde a pu changer pendant l'attente.</p>
+</div>
+
+<h3>2.4 Le retour à la phase joueur</h3>
+
+<p>Le dernier maillon, <code>endEnemyTurn()</code>, est ce qui fait réellement avancer le compteur de tours. Il vit dans le <code>TurnPhaseManager</code>, une classe extraite du contrôleur pour lui éviter de grossir indéfiniment :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/combat/turn_phase_manager.dart</span><span class="lang">dart</span></div>
+  <pre>/// Début du tour de l'ennemi (application des statuts autonomes)
+void startEnemyTurn() {
+  controller.updateState(
+    controller.currentState.copyWith(turnPhase: TurnPhase.enemy),
+  );
+
+  final List&lt;EnemyInstance&gt; updatedEnemies = [];
+  for (var enemy in controller.currentState.enemies) {
+    final updatedStats = StatusEffectProcessor.processEnemyStatuses(enemy.stats);
+    updatedEnemies.add(enemy.copyWith(stats: updatedStats));
+  }
+
+  controller.updateState(
+    controller.currentState.copyWith(enemies: updatedEnemies),
+  );
+
+  // Nettoyer les morts (par exemple à cause du poison de début de tour)
+  controller.cleanDeadEnemies();
+}
+
+/// Fin de la phase ennemie : roll intents et retour au joueur
+void endEnemyTurn() {
+  final List&lt;EnemyInstance&gt; rolledEnemies = controller.currentState.enemies
+      .map((enemy) =&gt; controller.rollIntent(enemy))
+      .toList();
+
+  controller.updateState(
+    controller.currentState.copyWith(
+      enemies: rolledEnemies,
+      turnPhase: TurnPhase.player,
+      turnCount: controller.currentState.turnCount + 1,
+    ),
+  );
+}</pre>
+</div>
+
+<p>Côté écran, le callback <code>onEndEnemyTurn</code> enchaîne immédiatement sur l'ouverture du tour joueur :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>onEndEnemyTurn: () {
+  ref.read(combatProvider.notifier).endEnemyTurn();
+  _startPlayerNewTurn();
+},
+
+// ...
+
+void _startPlayerNewTurn() {
+  setState(() {
+    _showManaWarning = false;
+    _showRemainingManaWarning = false;
+  });
+  _game.currentPhase = TurnPhase.player;
+  _game.heroCard?.suppressArmorChangeAnimation = true;
+  ref.read(combatProvider.notifier).startPlayerTurn();
+}</pre>
+</div>
+
+<p>Et <code>startPlayerTurn()</code> délègue au <code>RunController</code>, dont l'ordre interne est commenté dans le code comme intangible :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run_controller.dart</span><span class="lang">dart</span></div>
+  <pre>void startTurn() {
+  // 1. Restaurer le Mana à sa valeur maximale (ne se cumule pas d'un tour à l'autre) et reset l'armure
+  state = state.copyWith(
+    heroStats: state.heroStats.copyWith(
+      armure: 0,
+      currentMana: state.heroStats.maxMana,
+    ),
+  );
+
+  // 2. Déclencher les reliques de début de tour (qui peuvent maintenant rajouter du mana par-dessus)
+  applyRelics(RelicTrigger.startOfTurn);
+
+  // 3. Appliquer les effets de début de tour (ex: Poison, Regen) et décrémenter les statuts via le StatusEffectProcessor
+  final updatedStats = StatusEffectProcessor.processPlayerStatuses(state.heroStats);
+  state = state.copyWith(heroStats: updatedStats);
+
+  // 4. Décrémenter les cooldowns via le skill provider
+  ref.read(skillProvider.notifier).tickCooldowns();
+
+  // 5. Déclencher les traits passifs
+  TraitSystem.onTurnStart(this);
+}</pre>
+</div>
+
+<div class="box rule">
+  <div class="box-title">Règle du jeu</div>
+  <p>L'armure du héros est <strong>remise à zéro à chaque début de tour</strong> (étape 1), avant les reliques et avant les statuts. Le bouclier ne se reporte donc jamais d'un tour sur l'autre : tout ce qui a été gagné au tour précédent et non consommé est perdu. Le mana, lui, est restauré au maximum (il ne s'accumule pas non plus).</p>
+</div>
+
+<h2 id="s3">3. Les intentions ennemies</h2>
+
+<p>Une <strong>intention</strong>, c'est ce que l'ennemi annonce qu'il fera à son prochain tour. C'est le cœur de la lisibilité tactique : le joueur voit l'icône et le chiffre au-dessus de l'ennemi, et décide s'il attaque ou s'il se protège. Le modèle est minimal :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/enemy_intent.dart</span><span class="lang">dart</span></div>
+  <pre>enum IntentType { attack, defend, buff }
+
+class EnemyIntent {
+  final IntentType type;
+  final int value;
+
+  EnemyIntent({required this.type, required this.value});
+
+  factory EnemyIntent.fromJson(Map&lt;String, dynamic&gt; json) {
+    return EnemyIntent(
+      type: IntentType.values.firstWhere(
+        (e) =&gt; e.toString().split('.').last == json['type'],
+        orElse: () =&gt; IntentType.attack,
+      ),
+      value: json['value'] as int,
+    );
+  }
+  // ... toJson() symétrique
+}</pre>
+</div>
+
+<h3>3.1 <code>rollIntent</code> : script d'abord, hasard ensuite</h3>
+
+<p>Le choix de l'intention suivante se fait dans le contrôleur. Il y a <strong>deux modes</strong>, et le premier a la priorité :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/combat_controller.dart</span><span class="lang">dart</span></div>
+  <pre>/// Calcule l'intention suivante d'un ennemi
+EnemyInstance rollIntent(EnemyInstance enemy) {
+  final data = enemy.data;
+  EnemyIntent nextIntent;
+  int nextStep = enemy.intentStep;
+
+  if (data.intents != null &amp;&amp; data.intents!.isNotEmpty) {
+    nextIntent = data.intents![enemy.intentStep];
+    nextStep = (enemy.intentStep + 1) % data.intents!.length;
+  } else {
+    final random = Random();
+    final roll = random.nextInt(100);
+
+    if (roll &lt; 60) {
+      nextIntent = EnemyIntent(
+        type: IntentType.attack,
+        value: data.baseDamage,
+      );
+    } else if (roll &lt; 85) {
+      nextIntent = EnemyIntent(
+        type: IntentType.defend,
+        value: 5 + random.nextInt(6),
+      );
+    } else {
+      nextIntent = EnemyIntent(type: IntentType.buff, value: 2);
+    }
+  }
+  return enemy.copyWith(currentIntent: nextIntent, intentStep: nextStep);
+}</pre>
+</div>
+
+<p><strong>Mode 1 — le script.</strong> Si le JSON de l'ennemi contient une liste <code>intents</code> non vide, elle est parcourue <strong>en boucle</strong> grâce à <code>intentStep</code> et à un modulo : <code>(intentStep + 1) % intents.length</code>. Le comportement est donc parfaitement déterministe et apprenable par le joueur — c'est un choix de game design, pas une facilité technique.</p>
+
+<p>Les quatre ennemis livrés dans <code>assets/data/enemies.json</code> ont tous une liste d'intentions. L'orc est le plus intéressant : trois étapes, dont un buff au milieu.</p>
+
+<div class="code" data-lang="json">
+  <div class="code-head"><span class="path">assets/data/enemies.json</span><span class="lang">json</span></div>
+  <pre>{
+  "id": "orc",
+  "name_en": "Furious Orc",
+  "name_fr": "Orc Furieux",
+  "maxHp": 50,
+  "baseDamage": 8,
+  "spritePath": "enemy_orc.png",
+  "tier": 3,
+  "xp": 100,
+  "critChance": 15,
+  "gold": 25,
+  "intents": [ { "type": "attack", "value": 8 },
+               { "type": "buff",   "value": 2 },
+               { "type": "attack", "value": 12 } ]
+}</pre>
+</div>
+
+<p>Le cycle de l'orc est donc : <em>frappe → se renforce → grosse frappe → frappe → se renforce → …</em> Et comme le buff ajoute de la Force qui, elle, augmente l'attaque effective, chaque tour de cycle frappe plus fort que le précédent.</p>
+
+<p><strong>Mode 2 — le hasard.</strong> Si (et seulement si) la liste est absente ou vide, on tire un entier dans <code>[0, 100[</code> :</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Tirage</th><th>Probabilité</th><th>Intention</th><th>Valeur</th></tr></thead>
+<tbody>
+<tr><td><code>roll &lt; 60</code></td><td>60 %</td><td><code>attack</code></td><td><code>data.baseDamage</code> (la valeur brute du JSON)</td></tr>
+<tr><td><code>60 ≤ roll &lt; 85</code></td><td>25 %</td><td><code>defend</code></td><td><code>5 + random.nextInt(6)</code>, soit <strong>5 à 10</strong> inclus</td></tr>
+<tr><td><code>roll ≥ 85</code></td><td>15 %</td><td><code>buff</code></td><td><strong>2</strong>, en dur</td></tr>
+</tbody>
+</table></div>
+
+<div class="box warn">
+  <div class="box-title">Piège</div>
+  <p><code>random.nextInt(6)</code> renvoie 0, 1, 2, 3, 4 ou 5 — la borne est <strong>exclue</strong>. La défense vaut donc bien 5 à 10, et non 5 à 11. Une erreur d'un cran ici change sensiblement l'équilibrage, puisque cette armure s'ajoute directement à <code>stats.armure</code>.</p>
+</div>
+
+<h3>3.2 <code>effectiveIntent</code> : de la valeur affichée à la valeur réelle</h3>
+
+<p>La valeur écrite dans le JSON est une valeur de <em>référence</em>, pensée pour un ennemi au niveau 1 de l'acte 1. En jeu, l'ennemi a été « gonflé » à l'apparition par l'<code>EncounterSystem</code>, et il peut avoir gagné de la Force pendant le combat. C'est <code>effectiveIntent</code>, un getter de <code>EnemyInstance</code>, qui réconcilie tout cela.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/enemy_instance.dart</span><span class="lang">dart</span></div>
+  <pre>EnemyIntent? get effectiveIntent {
+  final intent = currentIntent;
+  if (intent == null) return null;
+  if (intent.type == IntentType.attack) {
+    final double spawnMultiplier = data.baseDamage &gt; 0
+        ? stats.attaque / data.baseDamage
+        : 1.0;
+    final int scaledValue = (intent.value * spawnMultiplier).round();
+    final int inBattleBonus = stats.effectiveAttaque - stats.attaque;
+    int finalValue = (stats.effectiveAttaque &gt; (scaledValue + inBattleBonus))
+        ? stats.effectiveAttaque
+        : (scaledValue + inBattleBonus);
+    if (stats.statuses.any((s) =&gt; s.id == 'freeze')) {
+      finalValue = (finalValue * 0.5).round();
+    }
+    return EnemyIntent(
+      type: intent.type,
+      value: finalValue,
+    );
+  }
+  return intent;
+}</pre>
+</div>
+
+<p>Décortiquons, ligne par ligne.</p>
+
+<ol>
+  <li><strong>Seules les attaques sont transformées.</strong> Les intentions <code>defend</code> et <code>buff</code> sont renvoyées telles quelles (<code>return intent;</code> à la fin). Un ennemi de fin d'acte se défend donc du même nombre de points d'armure qu'un ennemi de départ.</li>
+
+  <li><strong>Le multiplicateur de spawn.</strong> <code>spawnMultiplier = stats.attaque / data.baseDamage</code>. C'est un rapport entre l'attaque <em>réellement</em> attribuée à l'instance au moment de sa création et l'attaque de référence du JSON. Ce rapport n'est jamais calculé ailleurs : il est <em>reconstruit</em> ici à partir de deux valeurs déjà connues. La garde <code>data.baseDamage &gt; 0</code> évite la division par zéro pour un ennemi purement défensif.</li>
+
+  <li><strong>La mise à l'échelle.</strong> <code>scaledValue = (intent.value * spawnMultiplier).round()</code>. Une intention à 12 pour un ennemi dont l'attaque a été doublée devient 24.</li>
+
+  <li><strong>Le bonus acquis en combat.</strong> <code>inBattleBonus = stats.effectiveAttaque - stats.attaque</code>. Comme <code>effectiveAttaque</code> vaut <code>attaque + somme des statuts 'strength'</code>, cette soustraction isole exactement la Force gagnée depuis le début du combat.</li>
+
+  <li><strong>Le <code>max</code> des deux.</strong> La ligne ternaire prend le plus grand entre <code>effectiveAttaque</code> et <code>scaledValue + inBattleBonus</code>. C'est un plancher de sécurité : une intention scriptée volontairement faible (par exemple « attaque 2 ») ne pourra jamais rendre l'ennemi ridicule si son attaque effective est bien supérieure.</li>
+
+  <li><strong>Le Gel, en dernier.</strong> Si l'ennemi porte un statut <code>freeze</code>, la valeur finale est divisée par deux et arrondie. Comme c'est la <em>dernière</em> opération, le Gel s'applique bien au total, pas à la valeur de base.</li>
+</ol>
+
+<p>Un exemple chiffré avec l'orc, supposé apparu avec <code>attaque = 12</code> (contre <code>baseDamage = 8</code> dans le JSON), à la troisième étape de son cycle (<code>attack</code>, valeur 12), et porteur de 3 points de Force :</p>
+
+<div class="code" data-lang="text">
+  <div class="code-head"><span class="path">illustration</span><span class="lang">text</span></div>
+  <pre>spawnMultiplier  = stats.attaque / data.baseDamage = 12 / 8      = 1.5
+scaledValue      = (12 * 1.5).round()                            = 18
+effectiveAttaque = attaque + strength = 12 + 3                   = 15
+inBattleBonus    = effectiveAttaque - attaque = 15 - 12          = 3
+candidat A       = effectiveAttaque                              = 15
+candidat B       = scaledValue + inBattleBonus = 18 + 3          = 21
+finalValue       = max(A, B)                                     = 21
+
+... et si l'orc est gele :
+finalValue       = (21 * 0.5).round()                            = 11</pre>
+</div>
+
+<div class="box warn">
+  <div class="box-title">Piège</div>
+  <p><code>21 * 0.5 = 10.5</code>, et <code>10.5.round()</code> vaut <strong>11</strong> en Dart : l'arrondi se fait <em>en s'éloignant de zéro</em>, pas « au pair le plus proche » comme dans certains langages. Ce demi-point systématiquement en faveur de l'ennemi se retrouve partout dans le projet, puisque <code>.round()</code> est utilisé dans <code>DamagePipeline</code>, dans <code>rarityMultiplier</code> et dans les multiplicateurs de l'<code>EncounterSystem</code>.</p>
+</div>
+
+<p>Enfin, la moitié « Gel » est calculée à l'affichage <em>comme</em> à la résolution : Flame lit <code>enemy.effectiveIntent</code> pour choisir l'animation, et <code>TurnPhaseManager</code> lit le même getter pour infliger les dégâts. Le joueur voit donc exactement le chiffre qu'il va prendre.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/combat/turn_phase_manager.dart</span><span class="lang">dart</span></div>
+  <pre>/// Applique l'effet de l'intention d'un ennemi
+void resolveEnemyIntent(String enemyId) {
+  final runController = ref.read(runProvider.notifier);
+  final index = controller.currentState.enemies.indexWhere((e) =&gt; e.id == enemyId);
+  if (index == -1) return;
+  final enemy = controller.currentState.enemies[index];
+
+  final intent = enemy.effectiveIntent;
+  if (intent == null) return;
+
+  switch (intent.type) {
+    case IntentType.attack:
+      final hasFreeze = enemy.stats.statuses.any((s) =&gt; s.id == 'freeze');
+
+      final (dmg, isCrit) = DamagePipeline.calculate(
+        initialDamage: intent.value,
+        attackerStats: enemy.stats,
+        defenderStats: runController.currentState.heroStats,
+      );
+
+      runController.takeDamage(dmg, isCrit: isCrit);
+      // ... puis décrément manuel de la durée du freeze
+      break;
+    case IntentType.defend:
+      // enemy.stats.armure + intent.value
+      break;
+    case IntentType.buff:
+      // addStatus(strength, value: intent.value, duration: 99)
+      break;
+  }
+}</pre>
+</div>
+
+<p>Le cas <code>buff</code> pose une Force de <strong>durée 99</strong> : autrement dit, permanente à l'échelle d'un combat. L'orc qui se renforce ne perd jamais ce gain.</p>
+
+<h2 id="s4">4. Jouer une carte : le chemin complet</h2>
+
+<p>C'est le trajet le plus long du projet. Un tap sur une carte traverse cinq couches avant de retirer un point de vie à quelqu'un.</p>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 840 480" width="840" role="img" aria-label="Chemin d'une carte jouée, en couloirs : UI, CombatController, EffectResolver, Strategy, EntityStats">
+      <defs>
+        <marker id="c10-d2-grey" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#3a4966"/>
+        </marker>
+        <marker id="c10-d2-amber" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#f59e0b"/>
+        </marker>
+      </defs>
+
+      <rect x="0" y="0" width="840" height="480" fill="#0e1524"/>
+
+      <rect x="20" y="46" width="148" height="412" rx="8" fill="#111827" stroke="#3a4966" stroke-dasharray="3 4"/>
+      <rect x="184" y="46" width="148" height="412" rx="8" fill="#111827" stroke="#3a4966" stroke-dasharray="3 4"/>
+      <rect x="348" y="46" width="148" height="412" rx="8" fill="#111827" stroke="#3a4966" stroke-dasharray="3 4"/>
+      <rect x="512" y="46" width="148" height="412" rx="8" fill="#111827" stroke="#3a4966" stroke-dasharray="3 4"/>
+      <rect x="676" y="46" width="148" height="412" rx="8" fill="#111827" stroke="#3a4966" stroke-dasharray="3 4"/>
+
+      <rect x="20" y="12" width="148" height="28" rx="6" fill="#0d2230" stroke="#22d3ee"/>
+      <text x="94" y="31" fill="#22d3ee" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">UI (Flame)</text>
+      <rect x="184" y="12" width="148" height="28" rx="6" fill="#1c1030" stroke="#a78bfa"/>
+      <text x="258" y="31" fill="#a78bfa" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">CombatController</text>
+      <rect x="348" y="12" width="148" height="28" rx="6" fill="#2a2210" stroke="#f59e0b"/>
+      <text x="422" y="31" fill="#f59e0b" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">EffectResolver</text>
+      <rect x="512" y="12" width="148" height="28" rx="6" fill="#0d2230" stroke="#60a5fa"/>
+      <text x="586" y="31" fill="#60a5fa" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">Strategy</text>
+      <rect x="676" y="12" width="148" height="28" rx="6" fill="#0f2a1f" stroke="#34d399"/>
+      <text x="750" y="31" fill="#34d399" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">EntityStats</text>
+
+      <rect x="24" y="58" width="140" height="40" rx="6" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="94" y="74" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">onPlayCard</text>
+      <text x="94" y="90" fill="#a7b4c9" font-size="10" text-anchor="middle">canPlayCard + anim</text>
+
+      <path d="M94 98 L94 128 L178 128" stroke="#3a4966" stroke-width="2" fill="none" marker-end="url(#c10-d2-grey)"/>
+
+      <rect x="188" y="108" width="140" height="40" rx="6" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="258" y="124" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">applyPlayerCardPlay</text>
+      <text x="258" y="140" fill="#a7b4c9" font-size="10" text-anchor="middle">lit les 3 providers</text>
+
+      <path d="M258 148 L258 178 L342 178" stroke="#3a4966" stroke-width="2" fill="none" marker-end="url(#c10-d2-grey)"/>
+
+      <rect x="352" y="158" width="140" height="40" rx="6" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="422" y="174" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">resolveCard</text>
+      <text x="422" y="190" fill="#a7b4c9" font-size="10" text-anchor="middle">garde canPlayCard</text>
+
+      <path d="M422 198 L422 204" stroke="#3a4966" stroke-width="2" marker-end="url(#c10-d2-grey)"/>
+
+      <rect x="352" y="208" width="140" height="40" rx="6" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="422" y="224" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">mana + runes</text>
+      <text x="422" y="240" fill="#a7b4c9" font-size="10" text-anchor="middle">+ statuts elementaires</text>
+
+      <path d="M422 248 L422 278 L506 278" stroke="#3a4966" stroke-width="2" fill="none" marker-end="url(#c10-d2-grey)"/>
+
+      <rect x="516" y="258" width="140" height="40" rx="6" fill="#151b2b" stroke="#60a5fa"/>
+      <text x="586" y="274" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">registry.get(type)</text>
+      <text x="586" y="290" fill="#a7b4c9" font-size="10" text-anchor="middle">.resolve(...)</text>
+
+      <path d="M586 298 L586 328 L670 328" stroke="#3a4966" stroke-width="2" fill="none" marker-end="url(#c10-d2-grey)"/>
+
+      <rect x="680" y="308" width="140" height="40" rx="6" fill="#151b2b" stroke="#34d399"/>
+      <text x="750" y="324" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">takeDamage</text>
+      <text x="750" y="340" fill="#a7b4c9" font-size="10" text-anchor="middle">addStatus / armure</text>
+
+      <path d="M680 328 L258 328 L258 352" stroke="#f59e0b" stroke-width="2" fill="none" stroke-dasharray="5 3" marker-end="url(#c10-d2-amber)"/>
+      <text x="470" y="322" fill="#f59e0b" font-size="10" text-anchor="middle">retour : success == true</text>
+
+      <rect x="188" y="358" width="140" height="40" rx="6" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="258" y="374" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">playCard + traits</text>
+      <text x="258" y="390" fill="#a7b4c9" font-size="10" text-anchor="middle">+ 2 vagues de reliques</text>
+
+      <path d="M258 398 L258 404" stroke="#3a4966" stroke-width="2" marker-end="url(#c10-d2-grey)"/>
+
+      <rect x="188" y="408" width="140" height="40" rx="6" fill="#151b2b" stroke="#f87171"/>
+      <text x="258" y="432" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">cleanDeadEnemies()</text>
+    </svg>
+  </div>
+  <figcaption>Le chemin d'une carte, en couloirs. Chaque couloir correspond à un fichier distinct.</figcaption>
+</figure>
+
+<h3>4.1 <code>applyPlayerCardPlay</code> : l'orchestrateur</h3>
+
+<p>Cette méthode du <code>CombatController</code> est courte et numérotée dans le code. Elle décide <em>quoi</em> se passe, mais délègue le <em>comment</em>.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/combat_controller.dart</span><span class="lang">dart</span></div>
+  <pre>/// Applique le jeu d'une carte par le joueur
+void applyPlayerCardPlay(CardInstance card) {
+  final runController = ref.read(runProvider.notifier);
+  final deckController = ref.read(deckProvider.notifier);
+  final registry = ref.read(effectRegistryProvider);
+
+  // 1. Résolution des effets
+  final success = EffectResolver.resolveCard(
+    card,
+    runController,
+    deckController,
+    this,
+    state.selectedEnemyId,
+    registry,
+  );
+
+  if (success) {
+    // 2. Transmettre au deck que la carte est jouée
+    deckController.playCard(card);
+
+    // 3. Déclencher les traits passifs
+    TraitSystem.onCardPlayed(runController, card);
+
+    // 4. Déclencher les reliques liées aux cartes jouées
+    runController.applyRelics(RelicTrigger.onCardPlayed);
+    if (card.data.type == CardType.attack) {
+      runController.applyRelics(RelicTrigger.onAttackPlayed);
+    } else if (card.data.type == CardType.skill) {
+      runController.applyRelics(RelicTrigger.onSkillPlayed);
+    } else if (card.data.type == CardType.power) {
+      runController.applyRelics(RelicTrigger.onPowerPlayed);
+    }
+
+    // 5. Nettoyer les morts
+    cleanDeadEnemies();
+  }
+}</pre>
+</div>
+
+<p>Le <code>if (success)</code> est structurant : <strong>si la carte n'a pas pu être résolue, rien d'autre ne se produit</strong>. Elle reste en main, les reliques ne se déclenchent pas, le passif ne se déclenche pas. Un seul point de vérité pour « la carte a été jouée ».</p>
+
+<p>Notez aussi la double vague de reliques : <code>onCardPlayed</code> se déclenche pour <em>toutes</em> les cartes, puis un déclencheur spécifique selon le type. Une relique « +1 armure quand vous jouez une compétence » utilisera <code>onSkillPlayed</code>, une relique « piochez quand vous jouez n'importe quelle carte » utilisera <code>onCardPlayed</code>. Les cartes de type <code>status</code> ne déclenchent rien de spécifique — de toute façon elles sont injouables (voir <code>canPlayCard</code>).</p>
+
+<h3>4.2 <code>resolveCard</code> : la garde, le mana, les runes</h3>
+
+<p>Le service <code>EffectResolver</code> est purement statique : pas d'état, que des fonctions. Il commence par re-vérifier la jouabilité, puis consomme le mana.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/services/effect_resolver.dart</span><span class="lang">dart</span></div>
+  <pre>/// Vérifie si la carte peut être jouée
+static bool canPlayCard(
+  CardInstance card,
+  RunState runState,
+  String? selectedEnemyId,
+) {
+  if (runState.heroStats.currentMana &lt; card.currentCost) {
+    return false;
+  }
+  if (card.data.type == CardType.status) {
+    return false;
+  }
+  if (card.data.target == CardTarget.singleEnemy &amp;&amp; selectedEnemyId == null) {
+    return false;
+  }
+  return true;
+}
+
+/// Résout les effets d'une carte
+static bool resolveCard(
+  CardInstance card,
+  RunController runController,
+  DeckNotifier deckController,
+  CombatController combatController,
+  String? selectedEnemyId,
+  EffectRegistry registry,
+) {
+  if (!canPlayCard(card, runController.currentState, selectedEnemyId)) {
+    return false;
+  }
+
+  runController.consumeResource(mana: card.currentCost);
+  // ...</pre>
+</div>
+
+<p>La même fonction <code>canPlayCard</code> est appelée deux fois : une première fois par <code>game_screen.dart</code> avant même de lancer l'animation (pour ne pas animer une carte injouable), une seconde fois ici comme garde de dernier recours. C'est délibéré — l'UI peut mentir, le service ne doit jamais faire confiance à son appelant.</p>
+
+<p>Vient ensuite le <strong>parsing des runes de forge</strong>. Une rune est stockée sur l'instance de carte sous la forme d'une chaîne <code>"identifiant:niveau"</code>, par exemple <code>"sharp:2"</code>. Sept identifiants sont reconnus :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/services/effect_resolver.dart</span><span class="lang">dart</span></div>
+  <pre>int extraDamage = 0;
+int extraArmor = 0;
+int extraDraw = 0;
+int extraMana = 0;
+int elementBurn = 0;
+int elementFreeze = 0;
+int elementShock = 0;
+
+for (var upgrade in card.forgeUpgrades) {
+  final parts = upgrade.split(':');
+  if (parts.length != 2) continue;
+  final id = parts[0];
+  final k = int.tryParse(parts[1]) ?? 0;
+  if (k &lt;= 0) continue;
+  switch (id) {
+    case 'sharp':
+      extraDamage += 2 * k;
+      break;
+    case 'hardened':
+      extraArmor += 2 * k;
+      break;
+    case 'quick':
+      extraDraw += k;
+      break;
+    case 'eco':
+      extraMana += k;
+      break;
+    case 'burning':
+      elementBurn += k;
+      break;
+    case 'freezing':
+      elementFreeze += k;
+      break;
+    case 'shocking':
+      elementShock += k;
+      break;
+  }
+}</pre>
+</div>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Rune</th><th>Apport pour un niveau <code>k</code></th><th>Quand elle agit</th></tr></thead>
+<tbody>
+<tr><td><code>sharp</code></td><td><code>extraDamage += 2 * k</code></td><td>Ajouté au <code>scaledValue</code> des effets de type <code>damage</code>.</td></tr>
+<tr><td><code>hardened</code></td><td><code>extraArmor += 2 * k</code></td><td>Ajouté aux effets <code>armor</code> ; sinon appliqué au héros en fin de résolution.</td></tr>
+<tr><td><code>quick</code></td><td><code>extraDraw += k</code></td><td>Pioche immédiate, <strong>avant</strong> les effets de la carte.</td></tr>
+<tr><td><code>eco</code></td><td><code>extraMana += k</code></td><td>Mana rendu immédiatement, après la consommation du coût.</td></tr>
+<tr><td><code>burning</code></td><td><code>elementBurn += k</code></td><td>Statut <code>burn</code> de valeur <em>k</em> et de durée <em>k</em>, cartes d'attaque uniquement.</td></tr>
+<tr><td><code>freezing</code></td><td><code>elementFreeze += k</code></td><td>Statut <code>freeze</code>, mêmes règles.</td></tr>
+<tr><td><code>shocking</code></td><td><code>elementShock += k</code></td><td>Statut <code>shock</code>, mêmes règles.</td></tr>
+</tbody>
+</table></div>
+
+<p>Les statuts élémentaires sont appliqués <strong>avant</strong> la boucle d'effets, et uniquement si <code>card.data.type == CardType.attack</code> :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/services/effect_resolver.dart</span><span class="lang">dart</span></div>
+  <pre>// Apply elemental statuses if this is an Attack card
+if (card.data.type == CardType.attack) {
+  final List&lt;StatusEffect&gt; extraStatuses = [];
+  if (elementBurn &gt; 0) {
+    final st = createStatus('burn', elementBurn, elementBurn);
+    if (st != null) extraStatuses.add(st);
+  }
+  // ... idem freeze et shock
+
+  if (extraStatuses.isNotEmpty) {
+    if (card.data.target == CardTarget.singleEnemy &amp;&amp; selectedEnemyId != null) {
+      final enemyIndex = combatController.currentState.enemies
+          .indexWhere((e) =&gt; e.id == selectedEnemyId);
+      if (enemyIndex != -1) {
+        final enemy = combatController.currentState.enemies[enemyIndex];
+        combatController.updateEnemyStats(
+          enemy.id,
+          enemy.stats.copyWith(
+            statuses: [...enemy.stats.statuses, ...extraStatuses],
+          ),
+        );
+      }
+    } else if (card.data.target == CardTarget.allEnemies) {
+      // ... même chose pour chaque ennemi
+    }
+  }
+}</pre>
+</div>
+
+<div class="box danger">
+  <div class="box-title">Point d'attention</div>
+  <p>Ce bloc utilise <code>copyWith(statuses: [...anciens, ...nouveaux])</code> et <strong>non</strong> <code>addStatus()</code>. Il court-circuite donc <code>StatusEffect.combine</code> : frapper deux fois le même ennemi avec une carte <code>burning:1</code> crée <strong>deux entrées</strong> <code>burn</code> distinctes dans la liste, au lieu d'un unique <code>burn</code> de valeur 2. Comme <code>processEnemyStatuses</code> additionne les valeurs de tous les statuts <code>burn</code>, les dégâts restent corrects, mais l'affichage montre deux icônes et <code>tickStatuses</code> les fait décroître indépendamment. Toutes les autres applications de statut du projet passent, elles, par <code>addStatus()</code>.</p>
+</div>
+
+<h3>4.3 La boucle d'effets</h3>
+
+<p>Enfin le cœur : chaque <code>CardEffect</code> déclaré dans le JSON est mis à l'échelle puis confié à sa stratégie.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/services/effect_resolver.dart</span><span class="lang">dart</span></div>
+  <pre>for (var effect in card.data.effects) {
+  final int baseValue = effect.value;
+  int scaledValue = (baseValue * card.rarityMultiplier).round();
+  if (effect.type == 'damage') {
+    scaledValue += extraDamage;
+  } else if (effect.type == 'armor') {
+    scaledValue += extraArmor;
+  }
+
+  final strategy = registry.get(effect.type);
+  if (strategy != null) {
+    strategy.resolve(
+      card: card,
+      effect: effect,
+      scaledValue: scaledValue,
+      runController: runController,
+      deckController: deckController,
+      combatController: combatController,
+      selectedEnemyId: selectedEnemyId,
+    );
+  }
+}
+
+final hasArmorEffect = card.data.effects.any((e) =&gt; e.type == 'armor');
+if (!hasArmorEffect &amp;&amp; extraArmor &gt; 0) {
+  final currentStats = runController.currentState.heroStats;
+  runController.setHeroStats(armure: currentStats.armure + extraArmor);
+}
+
+return true;</pre>
+</div>
+
+<p><code>card.rarityMultiplier</code> vient de <code>CardInstance</code> : 1,0 pour une commune, 1,2 pour une peu commune, 1,4 pour une rare, 1,6 pour une épique, 2,0 pour une légendaire (et 1,0 pour une unique). C'est ce qui fait qu'une <em>Frappe</em> rare inflige 8 points de base (<code>(6 * 1.4).round()</code>) là où la commune en inflige 6.</p>
+
+<p>Le <code>if (strategy != null)</code> final est important : un type d'effet inconnu du registre est <strong>silencieusement ignoré</strong>. Pas d'exception, pas de log. Une faute de frappe dans <code>cards.json</code> (<code>"dammage"</code> au lieu de <code>"damage"</code>) donnera une carte qui se joue, consomme le mana… et ne fait rien.</p>
+
+<h2 id="s5">5. Le patron Stratégie des effets</h2>
+
+<p>Le projet aurait pu écrire un gros <code>switch (effect.type)</code> dans le résolveur. Il a préféré le patron <strong>Stratégie</strong> : une interface, une implémentation par type d'effet, un registre qui associe une chaîne de caractères à une implémentation. C'est la différence entre « ajouter un <code>case</code> dans une fonction qui grossit » et « ajouter un fichier ».</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/services/effects/effect_strategy.dart</span><span class="lang">dart</span></div>
+  <pre>abstract class EffectStrategy {
+  void resolve({
+    required CardInstance card,
+    required CardEffect effect,
+    required int scaledValue,
+    required RunController runController,
+    required DeckNotifier deckController,
+    required CombatController combatController,
+    required String? selectedEnemyId,
+  });
+}
+
+class EffectRegistry {
+  final Map&lt;String, EffectStrategy&gt; _strategies = {};
+
+  void register(String type, EffectStrategy strategy) {
+    _strategies[type] = strategy;
+  }
+
+  EffectStrategy? get(String type) {
+    return _strategies[type];
+  }
+}
+
+final effectRegistryProvider = Provider&lt;EffectRegistry&gt;((ref) {
+  final registry = EffectRegistry();
+  registry.register('damage', DamageEffectStrategy());
+  registry.register('heal', HealEffectStrategy());
+  registry.register('armor', ArmorEffectStrategy());
+  registry.register('gain_mana', GainManaEffectStrategy());
+  registry.register('draw', DrawEffectStrategy());
+  registry.register('apply_status', ApplyStatusEffectStrategy());
+  return registry;
+});</pre>
+</div>
+
+<p>Trois observations sur ce fichier de 45 lignes :</p>
+
+<ul>
+  <li><strong>La signature est unique et large.</strong> Toutes les stratégies reçoivent les mêmes sept paramètres nommés, même celles qui n'en utilisent qu'un. <code>DrawEffectStrategy</code> n'a besoin que de <code>deckController</code> et <code>scaledValue</code>, mais reçoit tout le reste. C'est le prix à payer pour une interface uniforme.</li>
+  <li><strong>Le registre est un <code>Provider</code> <span class="pill r">Riverpod</span></strong>, pas un singleton global. Il est donc remplaçable dans un test via un <code>override</code>, ce qui permet de vérifier qu'une carte appelle bien la bonne stratégie sans exécuter la vraie logique.</li>
+  <li><strong>Le registre est en lecture seule de fait.</strong> Le <code>Map</code> est privé, seule la fabrique du provider appelle <code>register</code>.</li>
+</ul>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Clé</th><th>Classe</th><th>Ce qu'elle fait</th></tr></thead>
+<tbody>
+<tr><td><code>damage</code></td><td><code>DamageEffectStrategy</code></td><td>Passe par <code>DamagePipeline</code> puis <code>takeDamage</code>, sur une cible ou sur tous.</td></tr>
+<tr><td><code>heal</code></td><td><code>HealEffectStrategy</code></td><td>Soigne le héros. Peut critiquer : son propre tirage <code>nextInt(100) &lt; effectiveCritChance</code>.</td></tr>
+<tr><td><code>armor</code></td><td><code>ArmorEffectStrategy</code></td><td><code>armure + scaledValue</code> sur le héros. Une ligne.</td></tr>
+<tr><td><code>gain_mana</code></td><td><code>GainManaEffectStrategy</code></td><td><code>currentMana + scaledValue</code>. Aucun plafond appliqué ici.</td></tr>
+<tr><td><code>draw</code></td><td><code>DrawEffectStrategy</code></td><td><code>deckController.drawCards(scaledValue, maxHandSize: 10)</code>.</td></tr>
+<tr><td><code>apply_status</code></td><td><code>ApplyStatusEffectStrategy</code></td><td>Construit le statut via <code>createStatus</code> puis <code>addStatus</code> sur la bonne cible.</td></tr>
+</tbody>
+</table></div>
+
+<h3>5.1 <code>DamageEffectStrategy</code> en entier</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/services/effects/strategies.dart</span><span class="lang">dart</span></div>
+  <pre>class DamageEffectStrategy implements EffectStrategy {
+  @override
+  void resolve({
+    required CardInstance card,
+    required CardEffect effect,
+    required int scaledValue,
+    required RunController runController,
+    required DeckNotifier deckController,
+    required CombatController combatController,
+    required String? selectedEnemyId,
+  }) {
+    if (card.data.target == CardTarget.singleEnemy &amp;&amp; selectedEnemyId != null) {
+      final enemyIndex = combatController.currentState.enemies.indexWhere(
+        (e) =&gt; e.id == selectedEnemyId,
+      );
+      if (enemyIndex != -1) {
+        final enemy = combatController.currentState.enemies[enemyIndex];
+        final (finalDmg, isCrit) = DamagePipeline.calculate(
+          initialDamage: scaledValue + runController.currentState.heroStats.effectiveAttaque,
+          attackerStats: runController.currentState.heroStats,
+          defenderStats: enemy.stats,
+        );
+        combatController.updateEnemyStats(
+          selectedEnemyId,
+          enemy.stats.takeDamage(finalDmg, isCrit: isCrit),
+        );
+      }
+    } else if (card.data.target == CardTarget.allEnemies) {
+      for (var enemy in combatController.currentState.enemies) {
+        final (individualDmg, isCrit) = DamagePipeline.calculate(
+          initialDamage: scaledValue + runController.currentState.heroStats.effectiveAttaque,
+          attackerStats: runController.currentState.heroStats,
+          defenderStats: enemy.stats,
+        );
+        combatController.updateEnemyStats(
+          enemy.id,
+          enemy.stats.takeDamage(individualDmg, isCrit: isCrit),
+        );
+      }
+    }
+  }
+}</pre>
+</div>
+
+<h3>5.2 Pourquoi <code>scaledValue + effectiveAttaque</code> ?</h3>
+
+<p>C'est la formule de dégâts la plus importante du jeu, et elle apparaît deux fois dans le fichier ci-dessus (cible unique et zone). Elle dit ceci :</p>
+
+<div class="code" data-lang="text">
+  <div class="code-head"><span class="path">illustration</span><span class="lang">text</span></div>
+  <pre>degats bruts d'une carte
+  = (valeur JSON x multiplicateur de rarete).round()   <span class="c">// le potentiel de la carte</span>
+  + runes 'sharp' (2 par niveau)                       <span class="c">// l'amelioration de la carte</span>
+  + attaque effective du heros                         <span class="c">// la puissance du personnage</span>
+
+... ou, dans les termes du code :
+  initialDamage = scaledValue + heroStats.effectiveAttaque</pre>
+</div>
+
+<p>Autrement dit, <strong>la carte apporte un socle, le héros apporte un bonus additif</strong>. Ce choix a des conséquences de design très concrètes :</p>
+
+<ul>
+  <li>Une <em>Frappe</em> commune (6) et une <em>Boule de Feu</em> (6) profitent exactement autant de l'attaque du héros. La progression du personnage bénéficie à tout le deck, pas seulement aux grosses cartes.</li>
+  <li>Comme c'est <strong>additif</strong> et non multiplicatif, jouer beaucoup de petites cartes est meilleur que jouer une grosse carte, dès que l'attaque du héros dépasse la valeur des cartes. Deux cartes à 3 avec 10 d'attaque font 26 ; une carte à 6 avec 10 d'attaque en fait 16.</li>
+  <li><code>effectiveAttaque</code> inclut la Force (statut <code>strength</code>). Une carte <em>Forme Démoniaque</em> (+2 Force pendant 4 tours) augmente donc les dégâts de <strong>chaque</strong> carte d'attaque jouée pendant sa durée.</li>
+  <li>Pour une carte de zone, le bonus d'attaque est appliqué <strong>à chaque ennemi</strong> : le pipeline est recalculé dans la boucle, avec un tirage de critique indépendant par cible.</li>
+</ul>
+
+<div class="box ok">
+  <div class="box-title">Bonne pratique</div>
+  <p>Remarquez que <code>DamageEffectStrategy</code> ne calcule rien lui-même. Elle choisit les cibles, compose l'<code>initialDamage</code>, et délègue immédiatement à <code>DamagePipeline</code> puis à <code>EntityStats.takeDamage</code>. Une stratégie sert à répondre à « <em>sur qui</em> ? », pas à « <em>combien</em> ? ».</p>
+</div>
+
+<h3>5.3 Ajouter un septième type d'effet</h3>
+
+<p>C'est le test qui prouve que le patron est bien posé. Imaginons un effet <code>lose_hp</code> (la carte coûte des points de vie au héros). Trois étapes, et <strong>aucune modification</strong> de <code>EffectResolver</code> ni de <code>CombatController</code> :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">exemple</span><span class="lang">dart</span></div>
+  <pre><span class="c">// Étape 1 — ajouter la classe dans lib/game/services/effects/strategies.dart</span>
+class LoseHpEffectStrategy implements EffectStrategy {
+  @override
+  void resolve({
+    required CardInstance card,
+    required CardEffect effect,
+    required int scaledValue,
+    // ... les 4 autres paramètres nommés de l'interface
+  }) {
+    runController.takeDamage(scaledValue);
+  }
+}
+
+<span class="c">// Étape 2 — l'enregistrer dans lib/game/services/effects/effect_strategy.dart</span>
+final effectRegistryProvider = Provider&lt;EffectRegistry&gt;((ref) {
+  final registry = EffectRegistry();
+  <span class="c">// ... les 6 existantes</span>
+  registry.register('lose_hp', LoseHpEffectStrategy());
+  return registry;
+});</pre>
+</div>
+
+<div class="code" data-lang="json">
+  <div class="code-head"><span class="path">exemple</span><span class="lang">json</span></div>
+  <pre><span class="c">// Étape 3 — l'utiliser dans assets/data/cards.json</span>
+{
+  "id": "blood_pact",
+  "name_fr": "Pacte de Sang",
+  "cost": 0,
+  "type": "skill",
+  "target": "self",
+  "effects": [
+    { "type": "lose_hp", "value": 3 },
+    { "type": "draw",    "value": 2 }
+  ]
+}</pre>
+</div>
+
+<p>La boucle de <code>resolveCard</code> traitera les deux effets dans l'ordre du tableau JSON : d'abord la perte de PV, puis la pioche. C'est le seul mécanisme d'ordonnancement disponible — l'ordre d'écriture dans le JSON <em>est</em> l'ordre d'exécution.</p>
+
+<h2 id="s6">6. <code>DamagePipeline</code> : les 4 étapes</h2>
+
+<p>Toutes les sources de dégâts du jeu — cartes, intentions ennemies, compétences héroïques — convergent vers une unique fonction statique de 50 lignes. Elle prend des dégâts bruts et rend des dégâts finaux, plus un booléen « c'était un critique » qui sert à l'affichage.</p>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 840 356" width="840" role="img" aria-label="Les quatre étapes du DamagePipeline, puis l'absorption par l'armure hors du pipeline">
+      <defs>
+        <marker id="c10-d3-grey" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#3a4966"/>
+        </marker>
+        <marker id="c10-d3-red" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#f87171"/>
+        </marker>
+      </defs>
+
+      <rect x="0" y="0" width="840" height="356" fill="#0e1524"/>
+
+      <rect x="20" y="12" width="800" height="196" rx="10" fill="#101725" stroke="#22d3ee" stroke-dasharray="7 5"/>
+      <rect x="34" y="2" width="300" height="22" rx="6" fill="#0d2230" stroke="#22d3ee"/>
+      <text x="184" y="18" fill="#22d3ee" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">DamagePipeline.calculate()</text>
+
+      <rect x="40" y="46" width="170" height="62" rx="8" fill="#151b2b" stroke="#f87171"/>
+      <text x="125" y="68" fill="#f87171" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">1. weakness</text>
+      <text x="125" y="85" fill="#e6ecf5" font-size="11" text-anchor="middle">de l'ATTAQUANT</text>
+      <text x="125" y="100" fill="#a7b4c9" font-size="11" text-anchor="middle">total x 0.75</text>
+
+      <path d="M210 77 L226 77" stroke="#3a4966" stroke-width="2" marker-end="url(#c10-d3-grey)"/>
+
+      <rect x="230" y="46" width="170" height="62" rx="8" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="315" y="68" fill="#f59e0b" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">2. coup critique</text>
+      <text x="315" y="85" fill="#e6ecf5" font-size="11" text-anchor="middle">de l'ATTAQUANT</text>
+      <text x="315" y="100" fill="#a7b4c9" font-size="11" text-anchor="middle">x critMultiplier (1.5)</text>
+
+      <path d="M400 77 L416 77" stroke="#3a4966" stroke-width="2" marker-end="url(#c10-d3-grey)"/>
+
+      <rect x="420" y="46" width="170" height="62" rx="8" fill="#151b2b" stroke="#60a5fa"/>
+      <text x="505" y="68" fill="#60a5fa" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">3. shock</text>
+      <text x="505" y="85" fill="#e6ecf5" font-size="11" text-anchor="middle">du DEFENSEUR</text>
+      <text x="505" y="100" fill="#a7b4c9" font-size="11" text-anchor="middle">total + valeur (additif)</text>
+
+      <path d="M590 77 L606 77" stroke="#3a4966" stroke-width="2" marker-end="url(#c10-d3-grey)"/>
+
+      <rect x="610" y="46" width="170" height="62" rx="8" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="695" y="68" fill="#a78bfa" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">4. vulnerable</text>
+      <text x="695" y="85" fill="#e6ecf5" font-size="11" text-anchor="middle">du DEFENSEUR</text>
+      <text x="695" y="100" fill="#a7b4c9" font-size="11" text-anchor="middle">total x 1.5</text>
+
+      <path d="M695 108 L695 138 L622 138" stroke="#3a4966" stroke-width="2" fill="none" marker-end="url(#c10-d3-grey)"/>
+
+      <rect x="230" y="118" width="380" height="42" rx="8" fill="#151b2b" stroke="#34d399"/>
+      <text x="420" y="144" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">garde-fou : if (totalDamage &lt; 0) totalDamage = 0;</text>
+
+      <path d="M420 160 L420 178" stroke="#3a4966" stroke-width="2" marker-end="url(#c10-d3-grey)"/>
+
+      <rect x="250" y="178" width="340" height="24" rx="6" fill="#0f2a1f" stroke="#34d399"/>
+      <text x="420" y="195" fill="#34d399" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">return (totalDamage, isCrit);</text>
+
+      <path d="M420 208 L420 262" stroke="#f87171" stroke-width="2" marker-end="url(#c10-d3-red)"/>
+      <text x="432" y="236" fill="#f87171" font-size="11" font-family="ui-monospace, monospace">hors du pipeline</text>
+
+      <rect x="150" y="266" width="540" height="72" rx="10" fill="#2a1420" stroke="#f87171"/>
+      <text x="420" y="290" fill="#f87171" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">EntityStats.takeDamage(amount, isCrit)</text>
+      <text x="420" y="310" fill="#e6ecf5" font-size="12" text-anchor="middle">C'est ICI, et nulle part ailleurs, que l'ARMURE absorbe.</text>
+      <text x="420" y="328" fill="#a7b4c9" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">damageAfterArmor = amount - armure</text>
+    </svg>
+  </div>
+  <figcaption>Les quatre étapes, dans l'ordre exact du code. L'armure vit dans un autre fichier.</figcaption>
+</figure>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/services/damage_pipeline.dart</span><span class="lang">dart</span></div>
+  <pre>class DamagePipeline {
+  static (int damage, bool isCrit) calculate({
+    required int initialDamage,
+    required EntityStats attackerStats,
+    required EntityStats defenderStats,
+    bool canCrit = true,
+  }) {
+    int totalDamage = initialDamage;
+
+    // 1. Weakness (faiblesse) de l'attaquant : réduit les dégâts de 25% (arrondi)
+    final hasWeakness = attackerStats.statuses.any((s) =&gt; s.id == 'weakness');
+    if (hasWeakness) {
+      totalDamage = (totalDamage * 0.75).round();
+    }
+
+    // 2. Coup critique de l'attaquant : multiplie les dégâts par critMultiplier
+    bool isCrit = false;
+    if (canCrit) {
+      final random = Random();
+      if (random.nextInt(100) &lt; attackerStats.effectiveCritChance) {
+        totalDamage = (totalDamage * attackerStats.critMultiplier).round();
+        isCrit = true;
+      }
+    }
+
+    // 3. Shock (choc) du défenseur : ajoute la valeur de shock au total
+    final shockStatus = defenderStats.statuses.firstWhere(
+      (s) =&gt; s.id == 'shock',
+      orElse: () =&gt; const StatusEffect(
+        id: '',
+        name: '',
+        type: StatusType.debuff,
+        value: 0,
+        duration: 0,
+      ),
+    );
+    if (shockStatus.id.isNotEmpty) {
+      totalDamage += shockStatus.value;
+    }
+
+    // 4. Vulnerable (vulnérabilité) du défenseur : augmente les dégâts de 50% (arrondi)
+    final hasVulnerable = defenderStats.statuses.any((s) =&gt; s.id == 'vulnerable');
+    if (hasVulnerable) {
+      totalDamage = (totalDamage * 1.5).round();
+    }
+
+    // Garde-fou pour éviter des dégâts négatifs
+    if (totalDamage &lt; 0) {
+      totalDamage = 0;
+    }
+
+    return (totalDamage, isCrit);
+  }
+}</pre>
+</div>
+
+<p>Le type de retour <code>(int damage, bool isCrit)</code> est un <strong>record</strong> Dart 3 : un tuple nommé, sans classe à écrire. À l'appel, on le déstructure directement en deux variables locales : <code>final (dmg, isCrit) = DamagePipeline.calculate(...);</code>.</p>
+
+<div class="box rule">
+  <div class="box-title">Règle du jeu — l'ordre du pipeline</div>
+  <p>L'ordre est <strong>Faiblesse → Critique → Choc → Vulnérable</strong>, et il n'est pas interchangeable :</p>
+  <ul>
+    <li>La Faiblesse s'applique <em>avant</em> le critique, donc le critique multiplie des dégâts déjà réduits. Elle est donc plus pénalisante que si l'ordre était inverse.</li>
+    <li>Le Choc est <strong>additif</strong> et arrive <em>après</em> le critique : il n'est jamais multiplié par 1,5. Un ennemi avec 5 de Choc prend toujours exactement +5, critique ou non.</li>
+    <li>La Vulnérabilité est <em>dernière</em>, elle multiplie donc tout, Choc compris. C'est le multiplicateur le plus puissant du jeu.</li>
+  </ul>
+</div>
+
+<div class="box warn">
+  <div class="box-title">Piège — l'armure n'est PAS dans le pipeline</div>
+  <p>Le mot <code>armure</code> n'apparaît nulle part dans <code>damage_pipeline.dart</code>. L'absorption a lieu une couche plus bas, dans <code>EntityStats.takeDamage()</code>, appelée <em>après</em> le pipeline par la stratégie ou par le contrôleur. Conséquence directe : la Vulnérabilité augmente les dégâts <strong>avant</strong> que l'armure ne les absorbe, donc un défenseur bien blindé peut encore tout encaisser. Et surtout : si vous cherchez un bug d'armure, ce n'est pas dans ce fichier qu'il faut le chercher.</p>
+</div>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/entity_stats.dart</span><span class="lang">dart</span></div>
+  <pre>EntityStats takeDamage(int amount, {bool isCrit = false}) {
+  if (amount &lt;= 0) return copyWith(lastActionWasCrit: isCrit);
+
+  // 2. Absorption via Armure
+  int damageAfterArmor = amount - armure;
+  int newArmor = armure;
+  int newPv = currentPv;
+
+  if (damageAfterArmor &gt; 0) {
+    // L'armure est brisée, le reste va aux PV
+    newArmor = 0;
+    newPv -= damageAfterArmor;
+  } else {
+    // L'armure encaisse tout
+    newArmor -= amount;
+  }
+
+  if (newPv &lt; 0) newPv = 0;
+
+  return copyWith(armure: newArmor, currentPv: newPv, lastActionWasCrit: isCrit);
+}</pre>
+</div>
+
+<p>L'armure est donc un <strong>bouclier consommable</strong> à la <em>Slay the Spire</em> : elle absorbe point pour point, elle est réduite d'autant, et le surplus passe aux PV. Le champ <code>lastActionWasCrit</code> est un drapeau purement cosmétique, lu par les composants Flame pour choisir la taille et la couleur du texte flottant.</p>
+
+<h3>6.1 Un exemple chiffré de bout en bout</h3>
+
+<p>Scénario : le héros joue une <em>Frappe</em> de rareté <strong>rare</strong>, améliorée d'une rune <code>sharp:2</code>, sur un ennemi Choqué et Vulnérable. Le héros a 5 d'attaque, 3 de Force, 15 % de chance critique. L'ennemi a 5 d'armure, 30 PV, un statut <code>shock</code> de valeur 1 et un statut <code>vulnerable</code>. Le tirage critique tombe sur 7 (donc réussi, puisque 7 &lt; 15).</p>
+
+<div class="code" data-lang="text">
+  <div class="code-head"><span class="path">illustration</span><span class="lang">text</span></div>
+  <pre>--- 1. EffectResolver.resolveCard ---
+valeur JSON de la carte "strike_basic"           :  6
+rarityMultiplier (rare)                          :  1.4
+scaledValue = (6 * 1.4).round()                  =  8
+rune sharp:2  ->  extraDamage = 2 * 2 = 4
+scaledValue += extraDamage                       =  12
+
+--- 2. DamageEffectStrategy ---
+effectiveAttaque = attaque + strength = 5 + 3    =  8
+initialDamage = scaledValue + effectiveAttaque   =  20
+
+--- 3. DamagePipeline.calculate ---
+etape 1 weakness   : absent                      -> 20
+etape 2 critique   : nextInt(100) = 7 &lt; 15       -> (20 * 1.5).round() = 30   isCrit = true
+etape 3 shock      : valeur 1 sur le defenseur   -> 30 + 1 = 31
+etape 4 vulnerable : present sur le defenseur    -> (31 * 1.5).round() = 47
+garde-fou          : 47 &gt; 0                      -> 47
+retour             : (47, true)
+
+--- 4. EntityStats.takeDamage(47, isCrit: true) ---
+damageAfterArmor = 47 - 5                        =  42   (&gt; 0)
+armure 5 -&gt; 0
+PV 30 - 42 = -12  ->  plancher a 0
+
+--- resultat : l'ennemi meurt, texte flottant "47" en mode critique ---</pre>
+</div>
+
+<p>Le même calcul sans le critique donnerait : 20 → 20 → 21 → (21 × 1,5).round() = 32 → moins 5 d'armure = 27 de dégâts aux PV. L'ennemi survivrait avec 3 PV. Le critique n'a pas seulement multiplié par 1,5 : comme il agit <em>avant</em> la Vulnérabilité, il a été lui-même amplifié par elle.</p>
+
+<h2 id="s7">7. Les altérations d'état</h2>
+
+<p>Un <code>StatusEffect</code> est un enregistrement simple : un identifiant technique, un nom affiché, un type (buff ou debuff), une valeur, une durée en tours, et un drapeau de cumul.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/status_effect.dart</span><span class="lang">dart</span></div>
+  <pre>enum StatusType { buff, debuff }
+
+class StatusEffect {
+  final String id;
+  final String name;
+  final StatusType type;
+  final int value;
+  final int duration;
+  final bool isStackable;
+
+  const StatusEffect({
+    required this.id,
+    required this.name,
+    required this.type,
+    required this.value,
+    required this.duration,
+    this.isStackable = true,
+  });</pre>
+</div>
+
+<p>Les identifiants sont des chaînes libres — il n'y a <strong>pas</strong> d'enum. La seule fabrique « officielle » côté cartes est <code>EffectResolver.createStatus</code>, dont le <code>switch</code> connaît neuf identifiants et renvoie <code>null</code> pour tout le reste. Mais d'autres statuts sont créés directement ailleurs, notamment par les reliques. Voici la liste exhaustive de ce que le code sait manipuler.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Identifiant</th><th>Nom affiché</th><th>Créé où</th><th>Ce qu'il fait</th><th>Lu où</th></tr></thead>
+<tbody>
+<tr><td><code>poison</code></td><td>Poison</td><td><code>createStatus</code> (carte <em>Coup Empoisonné</em> : 1 pendant 2 tours)</td><td>Inflige <code>value</code> dégâts en début de tour du porteur.</td><td><code>StatusEffectProcessor</code>, joueur <strong>et</strong> ennemi</td></tr>
+<tr><td><code>strength</code></td><td>Attaque / Force (Relique)</td><td><code>createStatus</code> (carte <em>Forme Démoniaque</em>) ; <code>resolveEnemyIntent</code> cas <code>buff</code> (durée 99) ; <code>StatusEffectProcessor</code> via <code>strength_regen</code> ; reliques à charges</td><td>Ajoute <code>value</code> à l'attaque effective.</td><td><code>EntityStats.effectiveAttaque</code></td></tr>
+<tr><td><code>weakness</code></td><td>Faiblesse</td><td><code>createStatus</code> uniquement</td><td>Réduit les dégâts <em>infligés</em> par le porteur de 25 %.</td><td><code>DamagePipeline</code>, étape 1</td></tr>
+<tr><td><code>vulnerable</code></td><td>Vulnérable</td><td><code>createStatus</code> uniquement</td><td>Augmente les dégâts <em>reçus</em> par le porteur de 50 %.</td><td><code>DamagePipeline</code>, étape 4</td></tr>
+<tr><td><code>strength_regen</code></td><td>Éveil d'Attaque</td><td><code>createStatus</code></td><td>Chaque début de tour, accorde un statut <code>strength</code> de même valeur.</td><td><code>StatusEffectProcessor</code> (durée 3 chez le joueur, 1 chez l'ennemi)</td></tr>
+<tr><td><code>armor_regen</code></td><td>Métallisation</td><td><code>createStatus</code> (carte <em>Métallisation</em> : 2 pendant 2 tours)</td><td>Chaque début de tour, ajoute <code>value</code> à l'armure.</td><td><code>StatusEffectProcessor</code>, joueur et ennemi</td></tr>
+<tr><td><code>burn</code></td><td>Brûlure</td><td><code>createStatus</code> (carte <em>Boule de Feu</em>) et rune de forge <code>burning</code></td><td>Dégâts en début de tour, mais <strong>uniquement sur les ennemis</strong>. Sa valeur décroît de 1 à chaque tick.</td><td><code>StatusEffectProcessor.processEnemyStatuses</code> seulement</td></tr>
+<tr><td><code>freeze</code></td><td>Gel</td><td><code>createStatus</code> (carte <em>Trait de Glace</em>) et rune <code>freezing</code></td><td>Divise par deux la valeur des intentions d'attaque de l'ennemi gelé.</td><td><code>EnemyInstance.effectiveIntent</code> ; durée décrémentée à la main dans <code>resolveEnemyIntent</code></td></tr>
+<tr><td><code>shock</code></td><td>Électrocution</td><td><code>createStatus</code> (carte <em>Coup de Tonnerre</em>) et rune <code>shocking</code></td><td>Ajoute <code>value</code> aux dégâts reçus, de façon additive.</td><td><code>DamagePipeline</code>, étape 3</td></tr>
+<tr><td><code>crit_chance</code></td><td>Critique (Relique)</td><td>Relique <code>gain_crit</code> hors <code>startOfRun</code>, durée 99</td><td>Ajoute <code>value</code> % de chance critique.</td><td><code>EntityStats.effectiveCritChance</code>, lu par <code>DamagePipeline</code> et <code>HealEffectStrategy</code></td></tr>
+<tr><td><code>armor_mastery</code></td><td>Maîtrise d'Armure (Relique)</td><td>Relique <code>charge_armor_mastery_combat</code>, après 3 charges, durée 99</td><td>Bonus ajouté à chaque gain d'armure issu d'un passif.</td><td><code>EntityStats.effectiveArmorMastery</code>, lu par <code>TraitSystem</code></td></tr>
+<tr><td><code>lifesteal</code></td><td>Vol de Vie</td><td><code>applyLifestealBuff</code>, déclenché par une compétence <code>lifesteal_buff</code>, valeur 1</td><td>Aucun effet mécanique aujourd'hui : <strong>aucun calcul de combat ne lit ce statut</strong>.</td><td>Seulement l'affichage : <code>status_effects_panel.dart</code> et <code>status_indicator.dart</code></td></tr>
+<tr><td><code>kunai_charge</code></td><td>Charge Kunaï</td><td>Relique <code>charge_armor_mastery_combat</code>, valeur 1, durée 1, cumulable</td><td>Compteur interne. À 3, il est supprimé et remplacé par <code>armor_mastery</code>.</td><td><code>player_stats_manager.dart</code></td></tr>
+<tr><td><code>shuriken_charge</code></td><td>Charge Shuriken</td><td>Relique <code>charge_strength_combat</code>, valeur 1, durée 1, cumulable</td><td>Compteur interne. À 3, remplacé par un <code>strength</code> de durée 99.</td><td><code>player_stats_manager.dart</code></td></tr>
+<tr><td><code>pen_nib_charge</code></td><td>Charge Plume</td><td>Relique <code>charge_strength_turn</code>, valeur 1, durée 99, cumulable</td><td>Compteur interne. À 5, remplacé par un <code>strength</code> de durée 1.</td><td><code>player_stats_manager.dart</code></td></tr>
+<tr><td><code>incense_charge</code></td><td>Charge Encensoir</td><td>Relique <code>charge_armor_turn</code>, valeur 1, durée 99, cumulable</td><td>Compteur interne. À 4, supprimé et converti en armure directe.</td><td><code>player_stats_manager.dart</code></td></tr>
+</tbody>
+</table></div>
+
+<div class="box danger">
+  <div class="box-title">Point d'attention</div>
+  <p>Trois constats à faire en lisant ce tableau. Primo, <code>weakness</code> et <code>vulnerable</code> sont pleinement implémentés dans le pipeline mais <strong>aucune carte de <code>cards.json</code> ne les applique</strong> aujourd'hui : la mécanique existe, le contenu manque. Secundo, <code>lifesteal</code> est créé et affiché mais jamais lu par un calcul — c'est une fonctionnalité visuellement présente et mécaniquement absente. Tertio, les quatre statuts « charge » polluent la liste de statuts du héros et sont visibles dans le panneau latéral au même titre que le Poison.</p>
+</div>
+
+<h3>7.1 <code>StatusEffect.combine</code> : cumuler ou rafraîchir</h3>
+
+<p>Quand on applique un statut déjà présent, il faut décider quoi faire. C'est le rôle de <code>combine</code>, appelé depuis <code>EntityStats.addStatus</code> :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/status_effect.dart</span><span class="lang">dart</span></div>
+  <pre>/// Retourne un nouvel effet combiné si stackable, sinon rafraîchit la durée
+StatusEffect combine(StatusEffect other) {
+  if (id != other.id) return this;
+  if (isStackable) {
+    return copyWith(
+      value: value + other.value,
+      duration: duration &gt; other.duration
+          ? duration
+          : other.duration, // Ne pas additionner les durées
+    );
+  } else {
+    // Rafraîchit la durée si elle est plus grande
+    return copyWith(
+      duration: other.duration &gt; duration ? other.duration : duration,
+      value: other.value &gt; value ? other.value : value,
+    );
+  }
+}</pre>
+</div>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/entity_stats.dart</span><span class="lang">dart</span></div>
+  <pre>/// Ajoute ou combine un effet de statut
+EntityStats addStatus(StatusEffect effect) {
+  final index = statuses.indexWhere((s) =&gt; s.id == effect.id);
+  List&lt;StatusEffect&gt; newStatuses = List.from(statuses);
+
+  if (index != -1) {
+    newStatuses[index] = newStatuses[index].combine(effect);
+  } else {
+    newStatuses.add(effect);
+  }
+
+  return copyWith(statuses: newStatuses);
+}</pre>
+</div>
+
+<p>Les deux branches :</p>
+<ul>
+  <li><strong><code>isStackable == true</code></strong> (le défaut) : les <strong>valeurs s'additionnent</strong>, la durée devient le <strong>maximum</strong> des deux. Le commentaire du code est explicite — <em>« Ne pas additionner les durées »</em>. Deux Poison de 1 pendant 2 tours donnent un Poison de 2 pendant 2 tours, pas de 2 pendant 4 tours.</li>
+  <li><strong><code>isStackable == false</code></strong> : on ne cumule pas, on prend le maximum des deux durées <em>et</em> le maximum des deux valeurs. C'est un rafraîchissement : appliquer un statut faible ne peut jamais affaiblir un statut fort déjà en place.</li>
+</ul>
+
+<p>La garde <code>if (id != other.id) return this;</code> est une sécurité : combiner deux statuts différents ne fait rien. En pratique <code>addStatus</code> ne peut pas produire ce cas, puisqu'il cherche l'index par identifiant.</p>
+
+<h3>7.2 <code>tickStatuses</code> : la décrémentation, avec deux exceptions</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/entity_stats.dart</span><span class="lang">dart</span></div>
+  <pre>/// Décrémente la durée des statuts et supprime ceux expirés
+EntityStats tickStatuses() {
+  List&lt;StatusEffect&gt; newStatuses = statuses
+      .map((s) {
+        if (s.id == 'freeze') {
+          return s;
+        }
+        if (s.id == 'burn') {
+          return s.copyWith(
+            value: s.value - 1,
+            duration: s.duration - 1,
+          );
+        }
+        return s.copyWith(duration: s.duration - 1);
+      })
+      .where((s) =&gt; s.duration &gt; 0 &amp;&amp; (s.id != 'burn' || s.value &gt; 0))
+      .toList();
+
+  return copyWith(statuses: newStatuses);
+}</pre>
+</div>
+
+<p>Le cas général est banal : <code>duration - 1</code>, puis on filtre tout ce dont la durée est tombée à zéro ou moins. Mais deux identifiants sont traités à part.</p>
+
+<div class="memo">
+  <div class="card">
+    <h5><code>freeze</code> : jamais décrémenté ici</h5>
+    <p>Le Gel est renvoyé <strong>tel quel</strong> par <code>tickStatuses</code>. Sa durée ne baisse que dans <code>resolveEnemyIntent</code>, et seulement quand l'ennemi gelé exécute effectivement une attaque. Un ennemi gelé qui se défend ou se renforce ne « consomme » pas son Gel.</p>
+  </div>
+  <div class="card">
+    <h5><code>burn</code> : valeur ET durée baissent</h5>
+    <p>La Brûlure est le seul statut dont la <strong>valeur</strong> décroît de 1 en même temps que sa durée. Elle s'éteint donc naturellement, et le filtre ajoute une seconde condition de sortie : <code>s.id != 'burn' || s.value &gt; 0</code>.</p>
+  </div>
+</div>
+
+<p>Concrètement, une <em>Boule de Feu</em> applique <code>burn</code> de valeur 2 et de durée 2. Le premier tick de l'ennemi inflige 2 dégâts puis réduit le statut à (valeur 1, durée 1). Le tick suivant inflige 1 dégât puis réduit à (valeur 0, durée 0) : le filtre l'élimine. Total : 3 dégâts, pas 4.</p>
+
+<div class="box warn">
+  <div class="box-title">Piège</div>
+  <p>L'ordre compte : dans <code>processEnemyStatuses</code>, les dégâts sont infligés avec les valeurs <strong>avant</strong> le tick, puisque <code>tickStatuses()</code> est appelé sur la toute dernière ligne (<code>return updatedStats.tickStatuses();</code>). Un statut de durée 1 produit donc bien son effet une fois avant de disparaître.</p>
+</div>
+
+<div class="box warn">
+  <div class="box-title">Piège</div>
+  <p>Le poison et la brûlure passent par <code>takeDamage()</code>, qui soustrait l'armure. <strong>Un ennemi bien blindé encaisse donc son poison avec son bouclier</strong>, sans perdre de PV. Chez le héros ce n'est pas visible, parce que <code>startTurn()</code> remet l'armure à zéro à l'étape 1, avant le traitement des statuts à l'étape 3. Chez l'ennemi, dont l'armure persiste d'un tour sur l'autre, l'effet est bien réel.</p>
+</div>
+
+<h2 id="s8">8. <code>StatusEffectProcessor</code> : joueur vs ennemi</h2>
+
+<p>Ce petit fichier de 94 lignes contient deux méthodes statiques quasi jumelles. Les regarder côte à côte révèle deux asymétries volontaires entre le héros et ses adversaires.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/combat/status_effect_processor.dart</span><span class="lang">dart</span></div>
+  <pre>/// Applique les effets de statut de début de tour sur le joueur.
+/// Retourne les nouvelles statistiques du joueur.
+static EntityStats processPlayerStatuses(EntityStats stats) {
+  int poisonDamage = 0;
+  int strengthGain = 0;
+  int armorGain = 0;
+
+  for (var status in stats.statuses) {
+    if (status.id == 'poison') {
+      poisonDamage += status.value;
+    } else if (status.id == 'strength_regen') {
+      strengthGain += status.value;
+    } else if (status.id == 'armor_regen') {
+      armorGain += status.value;
+    }
+  }
+
+  EntityStats updatedStats = stats;
+  if (poisonDamage &gt; 0) {
+    updatedStats = updatedStats.takeDamage(poisonDamage);
+  }
+  if (strengthGain &gt; 0) {
+    updatedStats = updatedStats.addStatus(
+      StatusEffect(
+        id: 'strength',
+        name: 'Attaque',
+        type: StatusType.buff,
+        value: strengthGain,
+        duration: 3, // 3 tours maximum pour le joueur
+      ),
+    );
+  }
+  if (armorGain &gt; 0) {
+    updatedStats = updatedStats.copyWith(
+      armure: updatedStats.armure + armorGain,
+    );
+  }
+
+  return updatedStats.tickStatuses();
+}</pre>
+</div>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/combat/status_effect_processor.dart</span><span class="lang">dart</span></div>
+  <pre>/// Applique les effets de statut de début de tour sur un ennemi.
+/// Retourne les nouvelles statistiques de l'ennemi.
+static EntityStats processEnemyStatuses(EntityStats stats) {
+  int poisonDamage = 0;
+  int strengthGain = 0;
+  int armorGain = 0;
+  int burnDamage = 0;
+
+  for (var status in stats.statuses) {
+    if (status.id == 'poison') {
+      poisonDamage += status.value;
+    } else if (status.id == 'strength_regen') {
+      strengthGain += status.value;
+    } else if (status.id == 'armor_regen') {
+      armorGain += status.value;
+    } else if (status.id == 'burn') {
+      burnDamage += status.value;
+    }
+  }
+
+  EntityStats updatedStats = stats;
+  if (poisonDamage &gt; 0) {
+    updatedStats = updatedStats.takeDamage(poisonDamage);
+  }
+  if (burnDamage &gt; 0) {
+    updatedStats = updatedStats.takeDamage(burnDamage);
+  }
+  if (strengthGain &gt; 0) {
+    updatedStats = updatedStats.addStatus(
+      StatusEffect(
+        id: 'strength',
+        name: 'Attaque',
+        type: StatusType.buff,
+        value: strengthGain,
+        duration: 1, // 1 tour maximum pour l'ennemi
+      ),
+    );
+  }
+  if (armorGain &gt; 0) {
+    updatedStats = updatedStats.copyWith(
+      armure: updatedStats.armure + armorGain,
+    );
+  }
+
+  return updatedStats.tickStatuses();
+}</pre>
+</div>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Aspect</th><th><code>processPlayerStatuses</code></th><th><code>processEnemyStatuses</code></th></tr></thead>
+<tbody>
+<tr><td>Accumulateurs</td><td>3 : poison, force, armure</td><td>4 : poison, force, armure, <strong>brûlure</strong></td></tr>
+<tr><td><code>burn</code></td><td><strong>Ignoré</strong> — la boucle ne teste même pas cet identifiant</td><td>Traité, avec un <code>takeDamage</code> séparé de celui du poison</td></tr>
+<tr><td>Durée du <code>strength</code> issu de <code>strength_regen</code></td><td><strong>3 tours</strong></td><td><strong>1 tour</strong></td></tr>
+<tr><td>Poison</td><td>Identique</td><td>Identique</td></tr>
+<tr><td><code>armor_regen</code></td><td>Identique (<code>copyWith</code> direct sur l'armure)</td><td>Identique</td></tr>
+<tr><td>Fin de méthode</td><td><code>return updatedStats.tickStatuses();</code></td><td><code>return updatedStats.tickStatuses();</code></td></tr>
+<tr><td>Appelé depuis</td><td><code>RunController.startTurn()</code>, étape 3</td><td><code>TurnPhaseManager.startEnemyTurn()</code></td></tr>
+</tbody>
+</table></div>
+
+<h3>8.1 Différence 1 — le joueur ne brûle pas</h3>
+
+<p>La boucle de <code>processPlayerStatuses</code> ne contient <em>aucune</em> branche <code>else if (status.id == 'burn')</code>. Un statut <code>burn</code> posé sur le héros serait donc inerte : il apparaîtrait dans le panneau de statuts, il serait décrémenté par <code>tickStatuses</code> (valeur et durée), mais il n'infligerait jamais le moindre dégât.</p>
+
+<p>Est-ce un oubli ? Dans l'état actuel du contenu, ça n'a aucune conséquence : la Brûlure ne peut être posée que par une carte du joueur ou une rune de forge, donc toujours sur un ennemi. Aucune intention ennemie n'applique de statut — le cas <code>buff</code> pose uniquement <code>strength</code> sur l'ennemi lui-même. La Brûlure est donc, de fait, une arme à sens unique.</p>
+
+<h3>8.2 Différence 2 — trois tours contre un</h3>
+
+<p>Le statut <code>strength_regen</code> (« Éveil d'Attaque ») ne donne pas de Force directement : il <em>fabrique</em> un statut <code>strength</code> à chaque début de tour. Et la durée de ce statut fabriqué diffère selon le porteur : <strong>3 tours pour le joueur, 1 tour pour l'ennemi</strong>.</p>
+
+<p>La conséquence est un <strong>empilement</strong>, parce que <code>strength</code> est cumulable par défaut. Chez le joueur, un <code>strength_regen</code> de valeur 2 actif pendant 3 tours produit :</p>
+
+<div class="code" data-lang="text">
+  <div class="code-head"><span class="path">illustration</span><span class="lang">text</span></div>
+  <pre>JOUEUR — strength_regen valeur 2, duree 3 (les strength durent 3 tours)
+  tour 1 : +2 Force (duree 3)          -> Force totale = 2
+  tour 2 : +2 Force, combine -> 4      -> Force totale = 4
+  tour 3 : +2 Force, combine -> 6      -> Force totale = 6
+  (les strength ne commencent a expirer qu'apres, la duree combinee etant le max)
+
+ENNEMI — strength_regen valeur 2, duree 3 (les strength durent 1 tour)
+  tour 1 : +2 Force (duree 1)          -> Force totale = 2
+  tour 2 : le strength precedent a ete tique a 0 et supprime
+           +2 Force (duree 1)          -> Force totale = 2
+  tour 3 : idem                        -> Force totale = 2</pre>
+</div>
+
+<p>Le même statut, avec la même valeur, est donc une <strong>montée en puissance</strong> chez le joueur et un simple <strong>maintien</strong> chez l'ennemi. C'est un levier d'équilibrage discret mais puissant, tenu par un seul chiffre dans chacune des deux méthodes.</p>
+
+<div class="box ok">
+  <div class="box-title">Bonne pratique</div>
+  <p>Les deux méthodes sont statiques et <strong>pures</strong> : elles prennent un <code>EntityStats</code> et en rendent un autre, sans toucher à aucun provider. C'est ce qui les rend testables en trois lignes, sans <code>ProviderContainer</code> ni <code>WidgetTester</code>. Quand vous extrayez de la logique d'un contrôleur Riverpod, visez toujours cette forme.</p>
+</div>
+
+<h2 id="s9">9. Fin de combat et nettoyage</h2>
+
+<p>Une seule méthode décide qui est mort, qui entre en scène, et si le combat est terminé. Elle est appelée à cinq endroits : après une carte, après une compétence de zone, après une compétence ciblée, après une compétence perforante, et au début de la phase ennemie (pour les morts par poison).</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/combat_controller.dart</span><span class="lang">dart</span></div>
+  <pre>/// Nettoie les ennemis décédés et met à jour les indicateurs de fin de combat
+void cleanDeadEnemies() {
+  final runController = ref.read(runProvider.notifier);
+  final List&lt;EnemyInstance&gt; remainingEnemies = [];
+  final List&lt;EnemyInstance&gt; newlyKilledEnemies = [];
+  int killedCount = 0;
+
+  for (var enemy in state.enemies) {
+    if (enemy.stats.currentPv &lt;= 0) {
+      killedCount++;
+      newlyKilledEnemies.add(enemy);
+      runController.onEnemyKilled();
+    } else {
+      remainingEnemies.add(enemy);
+    }
+  }
+
+  if (killedCount &gt; 0) {
+    final List&lt;EnemyInstance&gt; nextPending = List.from(state.pendingEnemies);
+    for (int i = 0; i &lt; killedCount; i++) {
+      if (remainingEnemies.length &lt; 5 &amp;&amp; nextPending.isNotEmpty) {
+        var incoming = nextPending.removeAt(0);
+        incoming = rollIntent(incoming);
+        remainingEnemies.add(incoming);
+      }
+    }
+
+    String? nextSelected = state.selectedEnemyId;
+    if (nextSelected != null &amp;&amp;
+        !remainingEnemies.any((e) =&gt; e.id == nextSelected)) {
+      nextSelected = null;
+    }
+
+    final bool isCombatEnded = remainingEnemies.isEmpty &amp;&amp; nextPending.isEmpty;
+    final bool isVictory = isCombatEnded;
+
+    state = state.copyWith(
+      enemies: remainingEnemies,
+      pendingEnemies: nextPending,
+      defeatedEnemies: [...state.defeatedEnemies, ...newlyKilledEnemies],
+      selectedEnemyId: nextSelected,
+      clearSelectedEnemy: nextSelected == null,
+      isCombatEnded: isCombatEnded,
+      isVictory: isVictory,
+    );
+  }
+}</pre>
+</div>
+
+<p>Étape par étape :</p>
+
+<ol>
+  <li><strong>Détection.</strong> Un ennemi est mort si <code>currentPv &lt;= 0</code> — pas <code>== 0</code>, parce que <code>takeDamage</code> plafonne déjà à 0 mais que d'autres chemins (comme <code>damage_pierce</code>) écrivent directement les PV.</li>
+  <li><strong>Reliques.</strong> <code>runController.onEnemyKilled()</code> est appelé <strong>une fois par mort</strong>, à l'intérieur de la boucle. Cette méthode déclenche toutes les reliques dont le trigger est <code>RelicTrigger.onEnemyKilled</code>. Tuer trois ennemis d'un coup avec une carte de zone déclenche donc trois fois la relique.</li>
+  <li><strong>Sortie anticipée.</strong> Tout le reste est sous <code>if (killedCount &gt; 0)</code>. Aucun mort, aucune écriture d'état — donc aucune notification Riverpod inutile.</li>
+  <li><strong>Promotion.</strong> Autant de tentatives que de morts, chacune sous double condition (moins de 5 sur le terrain, file non vide).</li>
+  <li><strong>Désélection.</strong> Si la cible du joueur ne figure plus parmi les survivants, <code>selectedEnemyId</code> est remis à <code>null</code> via le drapeau <code>clearSelectedEnemy</code>. C'est indispensable : <code>copyWith</code> ne peut pas distinguer « je ne change pas ce champ » de « je veux le mettre à null », d'où ce paramètre supplémentaire dans <code>CombatState.copyWith</code>.</li>
+  <li><strong>Fin de combat.</strong> <code>isCombatEnded</code> exige les <em>deux</em> listes vides. Un dernier ennemi qui meurt alors qu'il reste des renforts en attente ne termine pas le combat — le renfort entre à la place. Et <code>isVictory</code> est aujourd'hui une copie stricte de <code>isCombatEnded</code> : il n'existe pas de chemin où le combat se termine par autre chose qu'une victoire, la défaite étant gérée séparément via <code>runState.isDead</code>.</li>
+</ol>
+
+<h3>9.1 La victoire peut être signalée deux fois</h3>
+
+<p>C'est le point le plus délicat de tout le système de combat. Il existe <strong>deux chemins indépendants</strong> qui aboutissent au même traitement de victoire.</p>
+
+<p><strong>Chemin A — le callback Flame.</strong> Dans <code>executeTurn()</code>, si la liste des cartes d'ennemis de Flame est vide au moment où le joueur termine son tour, le jeu appelle directement <code>onEnemiesDead()</code>, câblé sur <code>_handleCombatVictory</code> :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>_game = HerosDraftGame(
+  onEnemiesDead: _handleCombatVictory,
+  // ... 13 autres callbacks</pre>
+</div>
+
+<p><strong>Chemin B — l'écoute Riverpod.</strong> Dans <code>build</code>, un <code>ref.listen</code> surveille les transitions de <code>CombatState</code> et déclenche la victoire au moment précis où <code>isCombatEnded</code> passe de <code>false</code> à <code>true</code> :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>ref.listen&lt;CombatState&gt;(combatProvider, (previous, next) {
+  final wasEnded = previous?.isCombatEnded ?? false;
+  if (next.isCombatEnded &amp;&amp; next.isVictory &amp;&amp; !wasEnded) {
+    _handleCombatVictory();
+  }
+});</pre>
+</div>
+
+<p>Les deux chemins peuvent se déclencher pour le même combat : le chemin B au moment où la dernière carte tue le dernier ennemi, le chemin A quelques secondes plus tard si le joueur appuie quand même sur « Fin de tour ». Sans protection, le joueur recevrait <strong>deux fois</strong> ses récompenses.</p>
+
+<p>D'où le verrou, un simple booléen d'instance du <code>State</code> :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>bool _showManaWarning = false;
+bool _showRemainingManaWarning = false;
+bool _isVictoryHandled = false;
+
+void _handleCombatVictory() {
+  if (_isVictoryHandled) return;
+  _isVictoryHandled = true;
+
+  final runState = ref.read(runProvider);
+  final gameData = ref.read(gameDataLoaderProvider).requireValue;
+  final currentNode = runState.mapNodes.firstWhere(
+    (n) =&gt; n.id == runState.currentNodeId,
+    orElse: () =&gt; runState.mapNodes.first,
+  );
+
+  ref.read(rewardProvider.notifier).handleVictory(
+    defeatedEnemies: ref.read(combatProvider).defeatedEnemies,
+    currentNode: currentNode,
+    allRelics: gameData.relics,
+    allCards: gameData.cards,
+    luck: runState.heroStats.luck,
+    act: runState.act,
+  );
+
+  _presentNextReward();
+}</pre>
+</div>
+
+<div class="box danger">
+  <div class="box-title">Point d'attention — double déclenchement de la victoire</div>
+  <p>La correction repose entièrement sur <code>_isVictoryHandled</code>, un champ <strong>local au <code>State</code> du widget</strong>. Deux fragilités en découlent. D'abord, le verrou ne survit pas à une reconstruction du <code>State</code> : si l'écran de combat était recréé (changement de route, <code>hot restart</code>), le drapeau repartirait à <code>false</code>. Ensuite et surtout, c'est un correctif <em>symptomatique</em> : la vraie cause est que la notion de « fin de combat » vit à deux endroits — dans <code>CombatState.isCombatEnded</code> et dans <code>_game.enemyCards.isEmpty</code>. Tant que ces deux sources coexistent, tout nouveau chemin de victoire devra penser à passer par <code>_handleCombatVictory</code> et pas ailleurs.</p>
+</div>
+
+<div class="box ok">
+  <div class="box-title">Bonne pratique</div>
+  <p>Un détail que le code fait bien : <code>onEnemyKilled</code> est déclaré comme callback de <code>HerosDraftGame</code> et câblé dans <code>game_screen.dart</code>, mais il n'est jamais invoqué par le moteur. Les reliques d'élimination ne se déclenchent donc que depuis <code>cleanDeadEnemies()</code> — un point d'entrée unique, du côté des règles, sans risque de double comptage. Le callback est du code mort, mais c'est le bon des deux qui est mort.</p>
+</div>
+
+<h3>9.2 Récapitulatif</h3>
+
+<div class="memo">
+  <div class="card">
+    <h5>Flame séquence</h5>
+    <p><code>heros_draft_game.dart</code> enchaîne animations et <code>Future.delayed</code>, et appelle des callbacks. Il ne calcule aucun dégât.</p>
+  </div>
+  <div class="card">
+    <h5>Riverpod calcule</h5>
+    <p><code>combat_controller.dart</code> et ses deux managers transforment un <code>CombatState</code> immuable en un autre. Aucune animation, aucun <code>await</code>.</p>
+  </div>
+  <div class="card">
+    <h5>Un seul pipeline</h5>
+    <p>Toute source de dégâts passe par <code>DamagePipeline.calculate</code>, puis par <code>EntityStats.takeDamage</code> pour l'armure.</p>
+  </div>
+  <div class="card">
+    <h5>Un registre, pas un switch</h5>
+    <p>Six stratégies d'effet enregistrées dans un <code>Provider</code>. Ajouter un type d'effet = une classe + une ligne d'enregistrement.</p>
+  </div>
+  <div class="card">
+    <h5>Cinq sur le terrain</h5>
+    <p><code>pendingEnemies</code> garde les autres en réserve ; chaque mort libère une place, occupée aussitôt par le premier de la file.</p>
+  </div>
+  <div class="card">
+    <h5>Deux ticks, deux règles</h5>
+    <p>Le joueur ne brûle pas et garde sa Force 3 tours ; l'ennemi brûle et ne la garde qu'un tour.</p>
+  </div>
+</div>
+
+<div class="quiz">
+  <h2>Quiz — vérifiez vos acquis</h2>
+
+  <div class="q" data-answer="2">
+    <p class="q-text">1. Combien d'ennemis peuvent être actifs simultanément sur le terrain, et où ce nombre est-il écrit ?</p>
+    <ul class="q-opts">
+      <li>3, dans <code>GameConstants.maxActiveEnemies</code></li>
+      <li>4, calculé par <code>EncounterSystem</code> selon l'acte</li>
+      <li>5, écrit en dur dans <code>combat_controller.dart</code> (deux fois)</li>
+      <li>10, comme <code>GameConstants.maxHandSize</code></li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> le nombre 5 apparaît deux fois dans <code>lib/game/controllers/combat_controller.dart</code> : dans <code>initializeCombat</code> (<code>if (i &lt; 5)</code>) et dans <code>cleanDeadEnemies</code> (<code>if (remainingEnemies.length &lt; 5 &amp;&amp; nextPending.isNotEmpty)</code>). Il n'est pas dans <code>GameConstants</code>.</div>
+  </div>
+
+  <div class="q" data-answer="1">
+    <p class="q-text">2. Quel délai s'écoule entre <code>onPhaseChanged(TurnPhase.enemy)</code> et l'appel à <code>onStartEnemyTurn()</code> ?</p>
+    <ul class="q-opts">
+      <li>200 ms (<code>combatDelayEnemyDashMs</code>)</li>
+      <li>600 ms (<code>combatDelayEnemyTurnStartMs</code>)</li>
+      <li>400 ms (<code>combatDelayAfterTicksMs</code>)</li>
+      <li>300 ms (<code>combatDelayEnemyTurnEndMs</code>)</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>_enemyRipostePhase()</code> dans <code>lib/game/heros_draft_game.dart</code> attend <code>combatDelayEnemyTurnStartMs</code>, soit <strong>600 ms</strong>, juste après avoir signalé le changement de phase. Les 400 ms de <code>combatDelayAfterTicksMs</code> viennent ensuite, <em>après</em> <code>onStartEnemyTurn()</code>.</div>
+  </div>
+
+  <div class="q" data-answer="3">
+    <p class="q-text">3. Dans quel ordre <code>DamagePipeline.calculate</code> applique-t-il ses quatre étapes ?</p>
+    <ul class="q-opts">
+      <li>Vulnérable, Choc, critique, Faiblesse</li>
+      <li>Critique, Faiblesse, Vulnérable, Choc</li>
+      <li>Faiblesse, Choc, critique, Vulnérable</li>
+      <li>Faiblesse, critique, Choc, Vulnérable</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> l'ordre exact dans <code>lib/game/services/damage_pipeline.dart</code> est <strong>Faiblesse (×0,75) → coup critique (×<code>critMultiplier</code>, 1,5 par défaut) → Choc (additif) → Vulnérable (×1,5)</strong>, puis le garde-fou à 0. Le Choc arrive après le critique, il n'est donc jamais multiplié par 1,5.</div>
+  </div>
+
+  <div class="q" data-answer="0">
+    <p class="q-text">4. Lorsqu'un ennemi n'a pas de liste <code>intents</code> dans son JSON, quelle est la probabilité qu'il choisisse <code>defend</code>, et quelle valeur d'armure obtient-il ?</p>
+    <ul class="q-opts">
+      <li>25 %, une valeur de 5 à 10 inclus</li>
+      <li>25 %, une valeur de 5 à 11 inclus</li>
+      <li>15 %, une valeur de 5 à 10 inclus</li>
+      <li>40 %, une valeur égale à <code>baseDamage</code></li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> dans <code>rollIntent</code>, la branche <code>roll &lt; 85</code> après <code>roll &lt; 60</code> couvre 25 tirages sur 100. La valeur est <code>5 + random.nextInt(6)</code> ; comme <code>nextInt(6)</code> rend 0 à 5, la défense vaut <strong>5 à 10</strong>. Les 15 % restants donnent un <code>buff</code> de valeur 2.</div>
+  </div>
+
+  <div class="q" data-answer="2">
+    <p class="q-text">5. Le statut <code>strength_regen</code> fabrique un statut <code>strength</code> à chaque début de tour. Quelle durée lui donne-t-il ?</p>
+    <ul class="q-opts">
+      <li>99 tours pour les deux camps</li>
+      <li>1 tour pour le joueur, 3 tours pour l'ennemi</li>
+      <li>3 tours pour le joueur, 1 tour pour l'ennemi</li>
+      <li>2 tours pour les deux camps</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> dans <code>lib/game/controllers/combat/status_effect_processor.dart</code>, <code>processPlayerStatuses</code> crée le <code>strength</code> avec <code>duration: 3 // 3 tours maximum pour le joueur</code>, tandis que <code>processEnemyStatuses</code> utilise <code>duration: 1</code>. Comme <code>strength</code> est cumulable, le joueur empile sa Force alors que l'ennemi la renouvelle seulement.</div>
+  </div>
+
+  <div class="q" data-answer="1">
+    <p class="q-text">6. À quel moment exact l'armure du défenseur est-elle soustraite des dégâts ?</p>
+    <ul class="q-opts">
+      <li>À l'étape 1 de <code>DamagePipeline</code>, avant la Faiblesse</li>
+      <li>Hors du pipeline, dans <code>EntityStats.takeDamage()</code>, après le retour du record</li>
+      <li>Entre le coup critique et le Choc, à l'étape 2 bis</li>
+      <li>Dans <code>cleanDeadEnemies()</code>, au moment du test des PV</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>damage_pipeline.dart</code> ne mentionne jamais l'armure. C'est <code>EntityStats.takeDamage()</code> dans <code>lib/models/entity_stats.dart</code> qui calcule <code>damageAfterArmor = amount - armure</code>, met l'armure à 0 si elle est brisée, et n'envoie que le surplus aux PV. La Vulnérabilité s'applique donc bien <em>avant</em> l'absorption.</div>
+  </div>
+
+</div>
+
+<div class="pager">
+<a class="prev" href="ch09.html"><div class="dir">&#8592; Chapitre 09</div><div class="ttl">Les cartes et le deck</div></a>
+<a class="next" href="ch11.html"><div class="dir">Chapitre 11 &#8594;</div><div class="ttl">Les ennemis et la courbe de difficulté</div></a>
+</div>
+</div>
+</main>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

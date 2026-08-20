@@ -1,0 +1,1882 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Récompenses, chance et probabilités — Formation Hero's Draft</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<button class="menu-btn" aria-label="Menu">&#9776;</button>
+<div class="layout">
+<aside class="sidebar">
+  <a class="brand" href="index.html">
+    <div class="brand-title">HERO'S DRAFT</div>
+    <div class="brand-sub">Formation complète au projet Flutter</div>
+  </a>
+<nav class="nav">
+<div class="nav-part">Partie 0 — Démarrage</div>
+<a href="ch01.html"><span class="num">01</span><span>Vue d&#x27;ensemble : qu&#x27;est-ce que Hero&#x27;s Draft ?</span></a>
+<div class="nav-part">Partie 1 — Les fondations techniques</div>
+<a href="ch02.html"><span class="num">02</span><span>Dart, le langage — l&#x27;essentiel pour ce projet</span></a>
+<a href="ch03.html"><span class="num">03</span><span>Flutter — widgets, arbre et navigation</span></a>
+<a href="ch04.html"><span class="num">04</span><span>Riverpod — l&#x27;état partagé du jeu</span></a>
+<a href="ch05.html"><span class="num">05</span><span>Flame — le moteur de rendu du combat</span></a>
+<div class="nav-part">Partie 2 — L&#x27;architecture du projet</div>
+<a href="ch06.html"><span class="num">06</span><span>L&#x27;architecture en quatre couches</span></a>
+<a href="ch07.html"><span class="num">07</span><span>La couche de données : un jeu 100 % data-driven</span></a>
+<div class="nav-part">Partie 3 — Les règles du jeu</div>
+<a href="ch08.html"><span class="num">08</span><span>Le héros : stats, classes, passifs et progression</span></a>
+<a href="ch09.html"><span class="num">09</span><span>Les cartes et le deck</span></a>
+<a href="ch10.html"><span class="num">10</span><span>Le combat : boucle de tour, dégâts et effets</span></a>
+<a href="ch11.html"><span class="num">11</span><span>Les ennemis et la courbe de difficulté</span></a>
+<a href="ch12.html"><span class="num">12</span><span>La carte du monde procédurale</span></a>
+<a href="ch13.html"><span class="num">13</span><span>Les reliques et le système de déclencheurs</span></a>
+<a href="ch14.html"><span class="num">14</span><span>L&#x27;économie : or, boutique, forge et fusion</span></a>
+<a href="ch15.html" class="active"><span class="num">15</span><span>Récompenses, chance et probabilités</span></a>
+<a href="ch16.html"><span class="num">16</span><span>Événements, repos et autel des reliques</span></a>
+<div class="nav-part">Partie 4 — L&#x27;interface et le rendu</div>
+<a href="ch17.html"><span class="num">17</span><span>Le pont Flame ↔ Riverpod : l&#x27;écran de combat</span></a>
+<a href="ch18.html"><span class="num">18</span><span>Composants Flame et game feel</span></a>
+<a href="ch19.html"><span class="num">19</span><span>Écrans, navigation et design system</span></a>
+<div class="nav-part">Partie 5 — Qualité et cycle de vie</div>
+<a href="ch20.html"><span class="num">20</span><span>Sauvegarde, localisation et tutoriel</span></a>
+<a href="ch21.html"><span class="num">21</span><span>Tests, outillage, dette technique et évolutions</span></a>
+</nav>
+</aside>
+<main class="main">
+<div class="content">
+<div class="chapter-kicker">Chapitre 15</div>
+<h1>Récompenses, chance et probabilités</h1>
+<p class="lede">Cinq tables de probabilité différentes cohabitent dans le jeu, toutes pilotées par une
+seule statistique : la Chance. Ce chapitre les met à plat et les compare.</p>
+
+<div class="toc">
+  <div class="toc-title">Dans ce chapitre</div>
+  <ol>
+    <li><a href="#s1">Le séquenceur de récompenses</a></li>
+    <li><a href="#s2">Or et XP de victoire</a></li>
+    <li><a href="#s3">Les trois récompenses de boss</a></li>
+    <li><a href="#s4">Le tirage de relique standard</a></li>
+    <li><a href="#s5">Le tirage de relique amélioré</a></li>
+    <li><a href="#s6">Le draft de montée de niveau</a></li>
+    <li><a href="#s7">Ce que la Chance change vraiment</a></li>
+    <li><a href="#s8">La mise en scène</a></li>
+  </ol>
+</div>
+
+<p>Un roguelike de cartes tient sur une promesse simple : <em>gagner un combat doit donner envie d'en
+faire un autre</em>. Hero's Draft honore cette promesse avec un système de récompenses qui paraît
+banal de l'extérieur — de l'or, de l'XP, parfois une relique, parfois des cartes — et qui, à
+l'intérieur, empile <strong>cinq tables de probabilité distinctes</strong>. Toutes sont écrites à la
+main, toutes utilisent la même statistique de <strong>Chance</strong> (<code>luck</code>), et aucune
+n'utilise la même pente.</p>
+
+<p>C'est exactement le genre de zone où un projet perd le contrôle : les formules sont dupliquées, la
+fenêtre d'aide affiche des chiffres qui ne sont plus ceux du calcul, et personne ne s'en aperçoit
+parce que « ça a l'air aléatoire de toute façon ». Nous allons donc faire deux choses : reconstruire
+chaque table à partir du code, et <strong>vérifier terme par terme</strong> ce que le jeu montre au
+joueur par rapport à ce qu'il calcule réellement.</p>
+
+<div class="box"><div class="box-title">Les fichiers de ce chapitre</div>
+<p>Le cœur est <code>lib/game/controllers/reward_controller.dart</code> (282 lignes) : il contient à
+lui seul trois des cinq tables. Autour de lui gravitent
+<code>lib/game/services/level_up_reward_service.dart</code> (le draft de niveau),
+<code>lib/game/controllers/event_controller.dart</code> (les reliques d'événement),
+<code>lib/ui/screens/game_screen.dart</code> (l'orchestration de l'affichage) et
+<code>lib/ui/widgets/map/dialogs/probabilities_dialog.dart</code> (ce que le joueur voit).</p></div>
+
+<h2 id="s1">1. Le séquenceur de récompenses</h2>
+
+<p>Quand le dernier ennemi meurt, plusieurs choses doivent arriver <em>dans un ordre précis</em> : une
+relique peut être tirée, des cartes de boss peuvent être proposées, l'or et l'XP doivent être crédités,
+et le combat doit se fermer. Chacune de ces étapes est asynchrone : le carrousel de relique est une
+animation de plusieurs secondes, la sélection de cartes est un écran complet que le joueur peut mettre
+dix minutes à valider.</p>
+
+<p>Le problème classique dans cette situation : comment savoir où on en est ? Hero's Draft répond avec
+une <strong>machine à drapeaux</strong>. Toutes les récompenses sont calculées d'un coup, stockées dans
+un état immuable, et chaque étape terminée lève un booléen.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/reward_controller.dart</span><span class="lang">dart</span></div>
+  <pre>class RewardState {
+  final int goldGained;
+  final int xpGained;
+  final RelicData? rolledRelic;
+  final List&lt;CardInstance&gt; rolledCards;
+
+  final bool isGoldXpCollected;
+  final bool isRelicCollected;
+  final bool isRelicSkipped;
+  final bool isCardsProcessed;
+  final List&lt;CardInstance&gt; selectedCards;
+  final bool isResolved;
+  final CardData? rolledBonusCard;</pre>
+</div>
+
+<p>Lisez ce bloc comme deux moitiés. La première (<code>goldGained</code>, <code>xpGained</code>,
+<code>rolledRelic</code>, <code>rolledCards</code>, <code>rolledBonusCard</code>) contient le
+<strong>contenu</strong> de la récompense : ce qui a été tiré. La seconde
+(<code>isGoldXpCollected</code>, <code>isRelicCollected</code>, <code>isRelicSkipped</code>,
+<code>isCardsProcessed</code>) contient sa <strong>progression</strong> : ce que le joueur a déjà
+consommé.</p>
+
+<h3>Pourquoi des drapeaux plutôt qu'une file d'attente ?</h3>
+
+<p>L'alternative naturelle serait une <code>Queue&lt;Reward&gt;</code> : on empile relique, cartes,
+or/XP, et on dépile. Trois raisons rendent les drapeaux préférables ici.</p>
+
+<p><strong>Premièrement, l'idempotence.</strong> Chaque méthode publique du contrôleur commence par un
+garde qui teste son propre drapeau :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/reward_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  void collectRelic() {
+    if (state.rolledRelic == null || state.isRelicCollected || state.isRelicSkipped) return;
+
+    ref.read(inventoryProvider.notifier).addRelic(state.rolledRelic!);
+    state = state.copyWith(isRelicCollected: true);
+    _checkResolution();
+  }</pre>
+</div>
+
+<p>Si le bouton « RÉCUPÉRER » est tapé deux fois (double-tap, rebuild inattendu, retour de
+navigation), la relique n'est ajoutée qu'une fois. Avec une file, un double dépilement serait un bug
+silencieux. Ici, le drapeau <em>est</em> la protection.</p>
+
+<p><strong>Deuxièmement, la reprise.</strong> L'état survit à la fermeture d'un écran. Quand
+<code>BossCardDraftScreen</code> se ferme, le code qui reprend la main n'a pas besoin de savoir ce qui
+a été fait avant lui : il relit l'état et recalcule ce qu'il reste à faire.</p>
+
+<p><strong>Troisièmement, l'ordre est décidé par l'UI, pas par le modèle.</strong> Une file impose son
+ordre au moment où on la remplit. Les drapeaux laissent l'écran choisir l'ordre de présentation, et
+même le changer, sans toucher au contrôleur.</p>
+
+<p>La contrepartie : il faut une fonction qui répond à la question « est-ce fini ? ». C'est
+<code>_checkResolution</code>, appelée à la fin de chaque mutation.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/reward_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  void _checkResolution() {
+    final needsRelic = state.rolledRelic != null;
+    final relicDone = !needsRelic || state.isRelicCollected || state.isRelicSkipped;
+
+    final needsCards = state.rolledCards.isNotEmpty;
+    final cardsDone = !needsCards || state.isCardsProcessed;
+
+    if (state.isGoldXpCollected &amp;&amp; relicDone &amp;&amp; cardsDone) {
+      state = state.copyWith(isResolved: true);
+    }
+  }</pre>
+</div>
+
+<p>Le motif <code>!needsX || xDone</code> est l'implication logique « si cette récompense existe, alors
+elle doit être traitée ». Une récompense absente est considérée comme traitée : c'est ce qui permet au
+même code de gérer un combat normal (ni relique ni cartes) et un boss complet (les deux).</p>
+
+<div class="box warn"><div class="box-title">Piège de débutant : le drapeau qui ne sert à rien</div>
+<p><code>isResolved</code> est calculé consciencieusement… et n'est <strong>lu nulle part</strong>.
+Une recherche sur <code>rewardProvider</code> dans <code>lib/</code> ne renvoie que quatre appels, tous
+dans <code>game_screen.dart</code> et <code>boss_card_draft_screen.dart</code>, et aucun ne consulte
+<code>isResolved</code> — l'écran relit les drapeaux individuels. Attention à ne pas confondre avec
+<code>EventState.isResolved</code> (dans <code>lib/models/event_state.dart</code>), qui, lui, est bien
+utilisé par <code>event_screen.dart</code>. Deux champs de même nom, un seul vivant.</p></div>
+
+<h3>L'ordre imposé par <code>_presentNextReward()</code></h3>
+
+<p>La séquence réelle est écrite dans l'écran de combat. C'est une fonction récursive : chaque étape se
+rappelle elle-même quand l'écran qu'elle a ouvert se ferme.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>  void _presentNextReward() {
+    if (!mounted) return;
+    final rewardState = ref.read(rewardProvider);
+
+    // 1. Present Relic if any and not processed yet
+    if (rewardState.rolledRelic != null &amp;&amp;
+        !rewardState.isRelicCollected &amp;&amp;
+        !rewardState.isRelicSkipped) {
+      _showRelicCarouselDialog(rewardState.rolledRelic!);
+      return;
+    }
+
+    // 2. Present Cards if any and not processed yet
+    if (rewardState.rolledCards.isNotEmpty &amp;&amp; !rewardState.isCardsProcessed) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) =&gt; const BossCardDraftScreen(),
+        ),
+      ).then((_) {
+        if (mounted) {
+          _presentNextReward();
+        }
+      });
+      return;
+    }
+    // ...</pre>
+</div>
+
+<p>Puis, en dernier, l'or et l'XP — et seulement là, la sortie du combat :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>    // 3. Process Gold and XP
+    if (!rewardState.isGoldXpCollected) {
+      final leveledUp = ref.read(rewardProvider.notifier).collectGoldAndXp();
+      // ... notifications : or/XP, carte bonus, LEVEL UP
+      Future.delayed(const Duration(milliseconds: 800), () {
+        if (mounted) {
+          _completeAndExitCombat();
+        }
+      });
+    }</pre>
+</div>
+
+<p>L'ordre est donc <strong>relique → cartes de boss → or/XP → sortie après 800 ms</strong>. Ce n'est
+pas arbitraire :</p>
+
+<ul>
+  <li>La <strong>relique</strong> passe en premier parce que c'est la récompense la plus spectaculaire
+  et la plus rare. On ne fait pas patienter le joueur derrière une notification d'or.</li>
+  <li>Les <strong>cartes</strong> passent ensuite parce qu'elles demandent une décision (choisir
+  exactement 2 cartes sur 5) : mieux vaut la poser sur un écran dédié, sans compétition visuelle.</li>
+  <li>L'<strong>or et l'XP</strong> ferment la marche parce que ce sont les seuls à pouvoir déclencher
+  une montée de niveau — donc à devoir être crédités juste avant la sortie, pour que l'overlay de
+  level-up de la carte apparaisse au bon moment.</li>
+  <li>Les <strong>800 ms</strong> laissent le temps de lire les notifications superposées (victoire,
+  carte bonus, LEVEL UP) avant que <code>_completeAndExitCombat()</code> n'appelle
+  <code>nextLevel()</code>, <code>completeCurrentNode()</code> et ne dépile l'écran.</li>
+</ul>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 820 700" width="820" role="img" aria-label="Séquence des récompenses : handleVictory remplit RewardState, puis _presentNextReward présente successivement la relique via le carrousel, les cartes de boss via BossCardDraftScreen, puis l'or et l'XP avant de sortir du combat après 800 millisecondes">
+      <rect x="0" y="0" width="820" height="700" fill="#0e1524"/>
+
+      <rect x="250" y="16" width="320" height="46" rx="10" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="410" y="37" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">RewardController.handleVictory()</text>
+      <text x="410" y="53" fill="#a7b4c9" font-size="10" text-anchor="middle">un seul appel : tout est tiré ici</text>
+
+      <path d="M410 62 L410 84" stroke="#3a4966" stroke-width="2" marker-end="url(#c15-a1)"/>
+
+      <rect x="190" y="86" width="440" height="82" rx="10" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="410" y="106" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">RewardState</text>
+      <text x="410" y="124" fill="#a7b4c9" font-size="10.5" text-anchor="middle" font-family="ui-monospace, monospace">goldGained · xpGained · rolledRelic · rolledCards · rolledBonusCard</text>
+      <text x="410" y="142" fill="#a7b4c9" font-size="10.5" text-anchor="middle" font-family="ui-monospace, monospace">isGoldXpCollected = isRelicCollected = isRelicSkipped = false</text>
+      <text x="410" y="158" fill="#a7b4c9" font-size="10.5" text-anchor="middle" font-family="ui-monospace, monospace">isCardsProcessed = false · isResolved = false</text>
+
+      <path d="M410 168 L410 190" stroke="#3a4966" stroke-width="2" marker-end="url(#c15-a1)"/>
+
+      <rect x="290" y="192" width="240" height="40" rx="10" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="410" y="217" fill="#f59e0b" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">_presentNextReward()</text>
+
+      <path d="M410 232 L410 254" stroke="#3a4966" stroke-width="2" marker-end="url(#c15-a1)"/>
+
+      <polygon points="410,256 560,292 410,328 260,292" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="410" y="288" fill="#e6ecf5" font-size="10.5" text-anchor="middle" font-family="ui-monospace, monospace">rolledRelic != null &amp;&amp;</text>
+      <text x="410" y="304" fill="#e6ecf5" font-size="10.5" text-anchor="middle" font-family="ui-monospace, monospace">!collected &amp;&amp; !skipped ?</text>
+
+      <path d="M560 292 L628 292" stroke="#3a4966" stroke-width="2" marker-end="url(#c15-a1)"/>
+      <text x="592" y="284" fill="#34d399" font-size="10" text-anchor="middle">oui</text>
+
+      <rect x="630" y="266" width="180" height="54" rx="10" fill="#151b2b" stroke="#34d399"/>
+      <text x="720" y="286" fill="#e6ecf5" font-size="10.5" text-anchor="middle" font-family="ui-monospace, monospace">RelicCarouselScreen</text>
+      <text x="720" y="304" fill="#a7b4c9" font-size="10" text-anchor="middle" font-family="ui-monospace, monospace">onCollect → collectRelic()</text>
+
+      <path d="M720 266 L720 210 L536 210" stroke="#34d399" stroke-width="1.6" stroke-dasharray="5 4" fill="none" marker-end="url(#c15-a2)"/>
+
+      <path d="M410 328 L410 350" stroke="#3a4966" stroke-width="2" marker-end="url(#c15-a1)"/>
+      <text x="426" y="344" fill="#a7b4c9" font-size="10">non</text>
+
+      <polygon points="410,352 560,388 410,424 260,388" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="410" y="384" fill="#e6ecf5" font-size="10.5" text-anchor="middle" font-family="ui-monospace, monospace">rolledCards.isNotEmpty &amp;&amp;</text>
+      <text x="410" y="400" fill="#e6ecf5" font-size="10.5" text-anchor="middle" font-family="ui-monospace, monospace">!isCardsProcessed ?</text>
+
+      <path d="M260 388 L192 388" stroke="#3a4966" stroke-width="2" marker-end="url(#c15-a1)"/>
+      <text x="226" y="380" fill="#34d399" font-size="10" text-anchor="middle">oui</text>
+
+      <rect x="10" y="362" width="180" height="54" rx="10" fill="#151b2b" stroke="#34d399"/>
+      <text x="100" y="382" fill="#e6ecf5" font-size="10.5" text-anchor="middle" font-family="ui-monospace, monospace">BossCardDraftScreen</text>
+      <text x="100" y="400" fill="#a7b4c9" font-size="10" text-anchor="middle" font-family="ui-monospace, monospace">chooseCards() · 2 sur 5</text>
+
+      <path d="M100 362 L100 210 L284 210" stroke="#34d399" stroke-width="1.6" stroke-dasharray="5 4" fill="none" marker-end="url(#c15-a2)"/>
+
+      <path d="M410 424 L410 446" stroke="#3a4966" stroke-width="2" marker-end="url(#c15-a1)"/>
+      <text x="426" y="440" fill="#a7b4c9" font-size="10">non</text>
+
+      <polygon points="410,448 560,484 410,520 260,484" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="410" y="489" fill="#e6ecf5" font-size="10.5" text-anchor="middle" font-family="ui-monospace, monospace">!isGoldXpCollected ?</text>
+
+      <path d="M560 484 L700 484" stroke="#3a4966" stroke-width="1.6" stroke-dasharray="4 4" fill="none"/>
+      <text x="632" y="476" fill="#a7b4c9" font-size="10" text-anchor="middle">non</text>
+      <text x="700" y="488" fill="#a7b4c9" font-size="10" text-anchor="start">fin de méthode</text>
+
+      <path d="M410 520 L410 542" stroke="#3a4966" stroke-width="2" marker-end="url(#c15-a1)"/>
+      <text x="426" y="536" fill="#34d399" font-size="10">oui</text>
+
+      <rect x="240" y="544" width="340" height="52" rx="10" fill="#151b2b" stroke="#60a5fa"/>
+      <text x="410" y="565" fill="#e6ecf5" font-size="11.5" text-anchor="middle" font-family="ui-monospace, monospace">collectGoldAndXp()</text>
+      <text x="410" y="584" fill="#a7b4c9" font-size="10" text-anchor="middle">gainGold · gainXp · carte bonus · notifications</text>
+
+      <path d="M410 596 L410 618" stroke="#3a4966" stroke-width="2" marker-end="url(#c15-a1)"/>
+
+      <rect x="240" y="620" width="340" height="52" rx="10" fill="#151b2b" stroke="#f87171"/>
+      <text x="410" y="641" fill="#e6ecf5" font-size="11.5" text-anchor="middle" font-family="ui-monospace, monospace">Future.delayed(800 ms)</text>
+      <text x="410" y="660" fill="#a7b4c9" font-size="10" text-anchor="middle" font-family="ui-monospace, monospace">_completeAndExitCombat()</text>
+
+      <defs>
+        <marker id="c15-a1" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0 0 L8 4 L0 8 z" fill="#3a4966"/>
+        </marker>
+        <marker id="c15-a2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0 0 L8 4 L0 8 z" fill="#34d399"/>
+        </marker>
+      </defs>
+    </svg>
+  </div>
+  <figcaption>La séquence complète. Les flèches vertes en pointillés sont les retours : chaque écran
+  fermé rappelle <code>_presentNextReward()</code>, qui retombe sur le premier test dont le drapeau est
+  encore faux.</figcaption>
+</figure>
+
+<div class="box danger"><div class="box-title">Dette technique : les sorties non câblées</div>
+<p><code>skipRelic()</code> et <code>skipCards()</code> existent dans le contrôleur, mais aucun appel
+n'existe dans <code>lib/</code>. Le carrousel de relique est ouvert avec
+<code>barrierDismissible: false</code> et n'a qu'un bouton « RÉCUPÉRER », donc l'absence de
+<code>skipRelic()</code> est cohérente. En revanche <code>BossCardDraftScreen</code> ne pose aucun
+<code>PopScope</code> : un retour système dépile la route, ce qui déclenche le
+<code>.then((_) =&gt; _presentNextReward())</code>, qui repousse aussitôt le même écran puisque
+<code>isCardsProcessed</code> est resté <code>false</code>. Le joueur est enfermé jusqu'à ce qu'il
+sélectionne ses 2 cartes. <code>skipCards()</code> a été écrit exactement pour ce cas — il n'a jamais
+été branché.</p></div>
+
+<h2 id="s2">2. Or et XP de victoire</h2>
+
+<p>Les deux premières sections de <code>handleVictory</code> sont volontairement symétriques : le même
+calcul est appliqué deux fois, une fois à l'XP, une fois à l'or.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/reward_controller.dart</span><span class="lang">dart</span></div>
+  <pre>    // 1. Calculate XP from defeated enemies
+    int totalXp = 0;
+    for (var enemy in defeatedEnemies) {
+      final double levelMultiplier = 1.0 + 0.10 * (enemy.stats.level - 1);
+      totalXp += (enemy.data.xp * levelMultiplier).round();
+    }
+    if (currentNode.bossRewardType == BossRewardType.doubleXp) {
+      totalXp *= 3;
+    }
+
+    // 2. Calculate Gold from defeated enemies
+    int totalGold = 0;
+    for (var enemy in defeatedEnemies) {
+      final double levelMultiplier = 1.0 + 0.10 * (enemy.stats.level - 1);
+      totalGold += (enemy.data.gold * levelMultiplier).round();
+    }
+    if (currentNode.bossRewardType == BossRewardType.doubleXp) {
+      totalGold *= 3;
+    }</pre>
+</div>
+
+<p>La formule est donc, <strong>par ennemi</strong> :</p>
+
+<div class="code" data-lang="text">
+  <div class="code-head"><span class="path">illustration</span><span class="lang">text</span></div>
+  <pre>gain = round( valeur_de_base × (1 + 0,10 × (niveau_de_l_ennemi − 1)) )</pre>
+</div>
+
+<p>Trois détails comptent, et ils sont faciles à rater.</p>
+
+<p><strong>L'arrondi est par ennemi, pas sur le total.</strong> <code>.round()</code> est appelé à
+l'intérieur de la boucle. Battre deux gobelins n'est donc pas exactement équivalent à battre un
+« gobelin double » : les arrondis se cumulent séparément.</p>
+
+<p><strong>Le multiplicateur dépend du niveau de l'<em>ennemi</em>, pas du joueur.</strong> Or ce
+niveau vient de <code>EncounterSystem.getEnemyLevel</code>, qui vaut
+<code>max(1, playerLevel + nodeModifier)</code> avec <code>nodeModifier</code> à 2 sur un boss et 1 sur
+une élite. Un boss rapporte donc mécaniquement plus qu'un combat normal au même niveau de joueur, sans
+qu'aucune ligne de <code>reward_controller.dart</code> ne le mentionne.</p>
+
+<p><strong>Le <code>× 3</code> s'applique aux deux.</strong> Malgré son nom, <code>doubleXp</code>
+triple, et il triple aussi l'or.</p>
+
+<h3>Le bestiaire, valeurs de base</h3>
+
+<p>Quatre entrées dans <code>assets/data/enemies.json</code>, quatre couples (XP, or) :</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Ennemi</th><th><code>tier</code></th><th><code>xp</code></th><th><code>gold</code></th></tr></thead>
+<tbody>
+<tr><td>Slime</td><td>1</td><td>25</td><td>10</td></tr>
+<tr><td>Gobelin</td><td>1</td><td>35</td><td>12</td></tr>
+<tr><td>Squelette</td><td>2</td><td>50</td><td>15</td></tr>
+<tr><td>Orc Furieux</td><td>3</td><td>100</td><td>25</td></tr>
+</tbody>
+</table></div>
+
+<h3>Un exemple chiffré complet</h3>
+
+<p>Imaginons un combat qui aurait vaincu les quatre archétypes d'un coup, tous au
+<strong>niveau 5</strong>. Le multiplicateur vaut <code>1 + 0,10 × (5 − 1) = 1,4</code>.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Ennemi</th><th>XP base</th><th>XP × 1,4</th><th>arrondi</th><th>Or base</th><th>Or × 1,4</th><th>arrondi</th></tr></thead>
+<tbody>
+<tr><td>Slime</td><td>25</td><td>35,0</td><td><strong>35</strong></td><td>10</td><td>14,0</td><td><strong>14</strong></td></tr>
+<tr><td>Gobelin</td><td>35</td><td>49,0</td><td><strong>49</strong></td><td>12</td><td>16,8</td><td><strong>17</strong></td></tr>
+<tr><td>Squelette</td><td>50</td><td>70,0</td><td><strong>70</strong></td><td>15</td><td>21,0</td><td><strong>21</strong></td></tr>
+<tr><td>Orc Furieux</td><td>100</td><td>140,0</td><td><strong>140</strong></td><td>25</td><td>35,0</td><td><strong>35</strong></td></tr>
+<tr><td><strong>Total</strong></td><td>210</td><td>—</td><td><strong>294</strong></td><td>62</td><td>—</td><td><strong>87</strong></td></tr>
+</tbody>
+</table></div>
+
+<p>Sur un nœud normal, le joueur repart donc avec <strong>294 XP et 87 or</strong>. Sur un boss
+<code>doubleXp</code>, la dernière ligne de chaque bloc multiplie par 3 :
+<strong>882 XP et 261 or</strong>.</p>
+
+<p>Pour mesurer ce que cela représente, il faut la courbe d'XP, qui vit dans le gestionnaire de stats
+du joueur :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run/player_stats_manager.dart</span><span class="lang">dart</span></div>
+  <pre>    while (newXp &gt;= currentXpToNext) {
+      newXp -= currentXpToNext;
+      currentLevel++;
+      // Formule d'XP requise pour le nouveau niveau: 100 * (1.5 ^ (level - 1))
+      currentXpToNext = (100 * pow(1.5, currentLevel - 1)).round();
+      leveledUp = true;
+      levelsGained++;
+    }</pre>
+</div>
+
+<p>Le seuil est <code>100 × 1,5^(niveau − 1)</code> : 100, 150, 225, 338, 506, 759, 1139… La boucle
+<code>while</code> gère les montées multiples et <strong>conserve l'excédent</strong>
+(<code>newXp -= currentXpToNext</code>), en incrémentant <code>pendingDrafts</code> d'autant. Nos
+882 XP de boss peuvent donc faire gagner deux ou trois niveaux d'un coup — et ouvrir deux ou trois
+drafts successifs sur la carte.</p>
+
+<div class="box rule"><div class="box-title">Règle du jeu</div>
+<p>Chaque niveau de l'ennemi ajoute <strong>10 % de la valeur de base</strong> à l'or comme à l'XP.
+Le boss <code>doubleXp</code> triple les deux (pas seulement l'XP, malgré son nom). Un niveau gagné
+égale un draft en attente : <code>pendingDrafts</code> est incrémenté d'une unité par niveau, et
+l'overlay de la carte reste affiché tant qu'il est &gt; 0.</p></div>
+
+<h2 id="s3">3. Les trois récompenses de boss</h2>
+
+<p>Le type de récompense d'un boss n'est pas tiré au sort à la victoire : il est <strong>gravé dans le
+nœud à la génération de la carte</strong>. Le joueur voit donc, sur l'écran de carte, trois boss
+distincts et choisit lequel il veut affronter.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/map_node.dart</span><span class="lang">dart</span></div>
+  <pre>enum MapNodeType { combat, elite, shop, rest, event, boss, relicExchange, forgeFusion }
+
+enum BossRewardType { cards, doubleXp, improvedRelic }</pre>
+</div>
+
+<p>L'attribution se fait dans le générateur, à l'étage final. Notez que cet étage a toujours exactement
+trois nœuds (<code>rowWidth = 3</code>), ce qui garantit que les trois types existent tous :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/services/map/map_node_generator.dart</span><span class="lang">dart</span></div>
+  <pre>        } else if (y == floors - 1) {
+          type = MapNodeType.boss;
+          if (x == 0) {
+            bossRewardType = BossRewardType.cards;
+          } else if (x == 1) {
+            bossRewardType = BossRewardType.doubleXp;
+          } else if (x == 2) {
+            bossRewardType = BossRewardType.improvedRelic;
+          }
+        }</pre>
+</div>
+
+<p>C'est un choix de design fort : la récompense est <strong>positionnelle</strong>. Le boss de gauche
+donne toujours des cartes, celui du milieu toujours de l'or et de l'XP triplés, celui de droite
+toujours la relique améliorée. Aucun aléa, donc aucune frustration — le joueur décide de ce dont il a
+besoin.</p>
+
+<h3><code>cards</code> : dupliquer son propre deck</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/reward_controller.dart</span><span class="lang">dart</span></div>
+  <pre>    // 4. Roll Cards
+    List&lt;CardInstance&gt; rolledCards = [];
+    if (currentNode.bossRewardType == BossRewardType.cards) {
+      final playerDeck = ref.read(deckProvider).masterDeck;
+      if (playerDeck.isNotEmpty) {
+        final random = Random();
+        final List&lt;CardInstance&gt; candidates = List&lt;CardInstance&gt;.from(playerDeck);
+        candidates.shuffle(random);
+        final toTake = min(5, candidates.length);
+        for (int i = 0; i &lt; toTake; i++) {
+          rolledCards.add(CardInstance(
+            data: candidates[i].data,
+            rarity: candidates[i].rarity,
+            forgeUpgrades: candidates[i].forgeUpgrades,
+          ));
+        }
+      }
+    }</pre>
+</div>
+
+<p>Le pool n'est <strong>pas</strong> la liste de toutes les cartes du jeu : c'est le
+<code>masterDeck</code> du joueur, mélangé, dont on prend au maximum 5 exemplaires. Chaque entrée est
+un <em>nouveau</em> <code>CardInstance</code> qui recopie <code>data</code>, <code>rarity</code> et
+<code>forgeUpgrades</code>. Autrement dit, ce boss ne donne pas de nouvelles cartes : il
+<strong>duplique</strong> celles que le joueur possède déjà, améliorations de forge comprises.</p>
+
+<p>Côté écran, la contrainte est stricte — ni plus ni moins de deux :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/boss_card_draft_screen.dart</span><span class="lang">dart</span></div>
+  <pre>  void _toggleCardSelection(CardInstance card) {
+    final isFr = Localizations.localeOf(context).languageCode == 'fr';
+    setState(() {
+      if (_selectedCards.contains(card)) {
+        _selectedCards.remove(card);
+      } else {
+        if (_selectedCards.length &lt; 2) {
+          _selectedCards.add(card);
+        } else {
+          context.showNotification(
+            isFr ? "Vous ne pouvez sélectionner que 2 cartes maximum." : "You can only select up to 2 cards.",
+            type: NotificationType.warning,
+          );
+        }
+      }
+    });
+  }
+
+  void _confirmSelection() {
+    if (_selectedCards.length != 2) return;
+
+    ref.read(rewardProvider.notifier).chooseCards(_selectedCards.toList());
+    Navigator.of(context).pop();
+  }</pre>
+</div>
+
+<h3><code>doubleXp</code> : le triplement et la carte bonus</h3>
+
+<p>En plus du <code>× 3</code> vu en section 2, ce boss tire une carte bonus aléatoire :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/reward_controller.dart</span><span class="lang">dart</span></div>
+  <pre>    CardData? rolledBonusCard;
+    if (currentNode.bossRewardType == BossRewardType.doubleXp) {
+      final validCards = allCards
+          .where((c) =&gt; c.type != CardType.status &amp;&amp; c.rarity != CardRarity.unique)
+          .toList();
+      if (validCards.isNotEmpty) {
+        rolledBonusCard = validCards[Random().nextInt(validCards.length)];
+      }
+    }</pre>
+</div>
+
+<p><code>allCards</code> est la concaténation de <code>cards.json</code> (17 cartes) et de
+<code>hero_cards.json</code> (6 cartes), assemblée dans
+<code>lib/services/game_data_service.dart</code>. Le filtre exclut les cartes de statut et les cartes
+<code>unique</code> — or les 6 cartes de héros sont précisément les <code>unique</code>. Le tirage se
+fait donc sur <strong>17 cartes équiprobables</strong>, soit environ 5,9 % chacune.</p>
+
+<p>La carte n'est ajoutée au deck qu'au moment de la collecte de l'or, pas au tirage :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/reward_controller.dart</span><span class="lang">dart</span></div>
+  <pre>  bool collectGoldAndXp() {
+    if (state.isGoldXpCollected) return false;
+
+    ref.read(inventoryProvider.notifier).gainGold(state.goldGained);
+    final leveledUp = ref.read(runProvider.notifier).gainXp(state.xpGained);
+
+    if (state.rolledBonusCard != null) {
+      ref.read(deckProvider.notifier).addCardToMasterDeck(CardInstance(data: state.rolledBonusCard!));
+    }
+
+    state = state.copyWith(isGoldXpCollected: true);
+    _checkResolution();
+
+    return leveledUp;
+  }</pre>
+</div>
+
+<p>Remarquez le <code>CardInstance(data: ...)</code> sans <code>rarity</code> ni
+<code>forgeUpgrades</code> : la carte bonus arrive nue, avec les valeurs par défaut du constructeur.</p>
+
+<h3><code>improvedRelic</code> : le déclencheur du tirage amélioré</h3>
+
+<p>Ce type n'ajoute rien de visible : il bascule un booléen qui change complètement la table de
+probabilité utilisée pour la relique (section 5).</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Type</th><th>Position <code>x</code></th><th>Or / XP</th><th>Cartes</th><th>Relique</th></tr></thead>
+<tbody>
+<tr><td><code>cards</code></td><td>0</td><td>normal</td><td>5 copies de son deck, en choisir 2</td><td>aucune</td></tr>
+<tr><td><code>doubleXp</code></td><td>1</td><td><strong>× 3</strong> sur les deux</td><td>1 carte bonus aléatoire (1/17)</td><td>aucune</td></tr>
+<tr><td><code>improvedRelic</code></td><td>2</td><td>normal</td><td>aucune</td><td><strong>table améliorée</strong></td></tr>
+</tbody>
+</table></div>
+
+<div class="box rule"><div class="box-title">Règle du jeu</div>
+<p>Un boss <code>cards</code> ou <code>doubleXp</code> ne donne <strong>aucune relique</strong>. La
+condition d'entrée du tirage est
+<code>currentNode.type == MapNodeType.elite || (currentNode.type == MapNodeType.boss &amp;&amp; isImprovedRelic)</code>.
+Les deux seuls nœuds qui donnent une relique en combat sont donc l'élite et le boss de droite.</p></div>
+
+<h2 id="s4">4. Le tirage de relique standard</h2>
+
+<p>Voici la première vraie table de probabilité. Elle est utilisée sur les nœuds Élite (et, on le verra,
+recopiée à l'identique pour les reliques d'événement).</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/reward_controller.dart</span><span class="lang">dart</span></div>
+  <pre>        } else {
+          legChance = 1.0 + luck * 0.5;
+          epicChance = 5.0 + luck * 1.0;
+          rareChance = 14.0 + luck * 2.0;
+          uncommonChance = 20.0 + luck * 3.0;
+        }
+
+        RelicRarity rarity;
+        double roll = rand;
+        if (roll &lt; legChance) {
+          rarity = RelicRarity.legendary;
+        } else if (roll &lt; legChance + epicChance) {
+          rarity = RelicRarity.epic;
+        } else if (roll &lt; legChance + epicChance + rareChance) {
+          rarity = RelicRarity.rare;
+        } else if (roll &lt; legChance + epicChance + rareChance + uncommonChance) {
+          rarity = RelicRarity.uncommon;
+        } else {
+          rarity = RelicRarity.common;
+        }</pre>
+</div>
+
+<p>Le jet est <code>final rand = Random().nextDouble() * 100;</code>, donc un réel uniforme sur
+[0, 100[. Les quatre seuils sont <strong>cumulés</strong> : on compare le même <code>roll</code> à des
+bornes croissantes. La rareté commune n'a pas de chance propre — elle récupère tout ce qui reste.</p>
+
+<div class="box"><div class="box-title">À retenir : seuils cumulés vs soustraction</div>
+<p>Deux écritures équivalentes existent dans ce projet. Ici, on compare <code>roll</code> à
+<code>legChance + epicChance</code>, puis à <code>legChance + epicChance + rareChance</code>. Ailleurs
+(<code>event_controller.dart</code>, <code>level_up_reward_service.dart</code>), on soustrait au fur et
+à mesure : <code>roll -= legChance</code> puis <code>if (roll &lt; epicChance)</code>. Le résultat est
+strictement le même ; seule la lisibilité change.</p></div>
+
+<h3>La table, chiffrée</h3>
+
+<p>Avec les pentes <code>0,5 / 1,0 / 2,0 / 3,0</code> par point de Chance, la somme des quatre chances
+non communes vaut <code>40 + 6,5 × L</code>. Elle atteint 100 pour <code>L ≈ 9,23</code> : à partir de
+Chance 10, il n'y a plus de reliques communes du tout, et le peu commun commence à être écrêté.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Chance</th><th>Légendaire</th><th>Épique</th><th>Rare</th><th>Peu commun</th><th>Commun</th></tr></thead>
+<tbody>
+<tr><td>0</td><td>1,00 %</td><td>5,00 %</td><td>14,00 %</td><td>20,00 %</td><td>60,00 %</td></tr>
+<tr><td>1</td><td>1,50 %</td><td>6,00 %</td><td>16,00 %</td><td>23,00 %</td><td>53,50 %</td></tr>
+<tr><td>2</td><td>2,00 %</td><td>7,00 %</td><td>18,00 %</td><td>26,00 %</td><td>47,00 %</td></tr>
+<tr><td>5</td><td>3,50 %</td><td>10,00 %</td><td>24,00 %</td><td>35,00 %</td><td>27,50 %</td></tr>
+<tr><td>10</td><td>6,00 %</td><td>15,00 %</td><td>34,00 %</td><td><strong>45,00 %</strong></td><td>0,00 %</td></tr>
+</tbody>
+</table></div>
+
+<p>La ligne <code>L = 10</code> mérite un arrêt. Les chances brutes valent 6 / 15 / 34 / 50, soit 105
+au total. Mais le dernier test est
+<code>roll &lt; legChance + epicChance + rareChance + uncommonChance</code>, c'est-à-dire
+<code>roll &lt; 105</code>, alors que <code>roll</code> ne dépasse jamais 100. Le peu commun ne reçoit
+donc que <code>100 − 55 = 45</code> points, pas 50. <strong>Le dépassement est absorbé par le bas de la
+table</strong>, silencieusement.</p>
+
+<h3>Le repli quand la rareté tirée n'existe pas</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/reward_controller.dart</span><span class="lang">dart</span></div>
+  <pre>        var filtered = allRelics.where((r) =&gt; r.rarity == rarity).toList();
+        if (filtered.isEmpty) {
+          filtered = allRelics.where((r) =&gt; r.rarity == RelicRarity.common).toList();
+          if (filtered.isEmpty) {
+            filtered = allRelics;
+          }
+        }
+        rolledRelic = filtered[Random().nextInt(filtered.length)];</pre>
+</div>
+
+<p>La rareté tirée n'est qu'une <em>intention</em>. Si aucune relique de cette rareté n'existe dans
+<code>assets/data/relics.json</code>, on retombe sur les communes ; et si même celles-ci manquent, sur
+la liste entière. C'est un garde-fou contre les données, pas contre le hasard : il protège le jeu d'un
+crash si un designer supprime la dernière relique légendaire.</p>
+
+<p>Dans l'état actuel des données (25 reliques), aucune rareté n'est vide : 5 communes, 6 peu communes,
+8 rares, 3 épiques, 3 légendaires. Le repli ne se déclenche donc jamais — mais le fait qu'il existe
+signifie que <strong>la distribution finale des reliques n'est pas celle de la table</strong> : à
+l'intérieur d'une rareté, le choix est uniforme sur les reliques disponibles, indépendamment de leur
+nombre. Une rareté qui ne contient qu'une relique la donnera systématiquement.</p>
+
+<div class="box warn"><div class="box-title">Piège</div>
+<p>1 % de légendaire ne veut pas dire « 1 % de chance d'avoir <em>telle</em> relique légendaire ». Avec
+3 légendaires en base, chacune vaut 1 %/3 ≈ 0,33 %. À l'inverse, les 8 rares se partagent 14 %, soit
+1,75 % chacune : à Chance 0, une relique rare précise est <strong>plus probable</strong> qu'une
+légendaire précise… d'un facteur 5.</p></div>
+
+<h2 id="s5">5. Le tirage de relique amélioré</h2>
+
+<p>Voici le bloc le plus dense du fichier. Il ne s'exécute que sur le boss <code>improvedRelic</code>,
+et il fait deux choses à la fois : monter fortement le légendaire, et <strong>faire disparaître
+progressivement les basses raretés au fil des actes</strong>.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/reward_controller.dart</span><span class="lang">dart</span></div>
+  <pre>        if (isImprovedRelic) {
+          legChance = 10.0 + luck * 0.5;
+          final double commonChance = max(0.0, 40.0 - (act - 1) * 10.0);
+          if (commonChance &gt; 0.0) {
+            final double baseRemaining = 90.0 - commonChance;
+            uncommonChance = (20.0 / 85.0) * baseRemaining + luck * 3.0;
+            rareChance = (35.0 / 85.0) * baseRemaining + luck * 2.0;
+            epicChance = (30.0 / 85.0) * baseRemaining + luck * 1.0;
+          } else {
+            final double maxUncommonBase = (20.0 / 85.0) * 90.0;
+            final double baseUncommonChance = max(0.0, maxUncommonBase - (act - 5) * 10.0);
+            if (baseUncommonChance &gt; 0.0) {
+              final double baseRemaining = 90.0 - baseUncommonChance;
+              rareChance = (35.0 / 65.0) * baseRemaining + luck * 2.0;
+              epicChance = (30.0 / 65.0) * baseRemaining + luck * 1.0;
+              uncommonChance = baseUncommonChance + luck * 3.0;
+            } else {
+              rareChance = (35.0 / 65.0) * 90.0 + luck * 2.0;
+              epicChance = (30.0 / 65.0) * 90.0 + luck * 1.0;
+              uncommonChance = 0.0;
+            }
+          }
+        } else {</pre>
+</div>
+
+<h3>Décodage pas à pas</h3>
+
+<p><strong>Ligne 1 : le légendaire est réservé.</strong> <code>legChance = 10.0 + luck * 0.5</code>.
+Dix points sont mis de côté d'emblée — dix fois la valeur du tirage standard. Les 90 points restants
+sont ce que le reste de l'algorithme se partage.</p>
+
+<p><strong>Ligne 2 : le commun est piloté par l'acte.</strong>
+<code>commonChance = max(0, 40 − (acte − 1) × 10)</code>. Il vaut 40 à l'acte 1, 30 à l'acte 2, 20 à
+l'acte 3, 10 à l'acte 4, et <strong>0 à partir de l'acte 5</strong>. C'est une extinction linéaire, en
+quatre marches de 10 points.</p>
+
+<p><strong>Branche A (actes 1 à 4) : la re-répartition proportionnelle.</strong> Le reste à distribuer
+est <code>baseRemaining = 90 − commonChance</code>. Il est découpé selon des parts fixes
+<strong>20 / 35 / 30 sur 85</strong> — peu commun, rare, épique. Pourquoi 85 ? Parce que
+<code>20 + 35 + 30 = 85</code> : les trois fractions somment exactement à 1, donc les trois chances
+somment exactement à <code>baseRemaining</code>. Le total est alors
+<code>10 (leg) + baseRemaining + commonChance = 10 + 90 = 100</code>, à Chance 0. Rien ne fuit.</p>
+
+<p><strong>Branche B (actes 5 à 7) : c'est au tour du peu commun de s'éteindre.</strong> Quand le commun
+est à zéro, le code repart de la valeur qu'aurait le peu commun avec tout le reste,
+<code>maxUncommonBase = (20/85) × 90 ≈ 21,18</code>, et lui applique la même extinction décalée de
+quatre actes : <code>baseUncommonChance = max(0, 21,18 − (acte − 5) × 10)</code>. Les 90 points sont
+alors redistribués entre rare et épique seulement, avec les parts <strong>35 / 30 sur 65</strong> — et
+65, c'est bien <code>35 + 30</code>, la même astuce que précédemment.</p>
+
+<p><strong>Branche C (acte 8 et au-delà) : plus que trois raretés.</strong> Le peu commun tombe à zéro
+et les 90 points entiers vont à rare et épique, soit <code>(35/65) × 90 ≈ 48,46</code> et
+<code>(30/65) × 90 ≈ 41,54</code>.</p>
+
+<div class="box ok"><div class="box-title">Bonne pratique</div>
+<p>Cette construction en « parts sur une somme » (<code>20/85</code>, <code>35/65</code>) est
+robuste : quel que soit le montant à répartir, la somme reste exacte, sans écart d'arrondi et sans
+normalisation a posteriori. C'est plus lisible qu'une liste de pourcentages écrits en dur pour chaque
+acte, et surtout impossible à désynchroniser.</p></div>
+
+<h3>Exemple à l'acte 1, Chance 0</h3>
+
+<div class="code" data-lang="text">
+  <div class="code-head"><span class="path">illustration</span><span class="lang">text</span></div>
+  <pre>legChance     = 10 + 0 × 0,5              = 10,00
+commonChance  = max(0, 40 − (1−1) × 10)   = 40,00   → branche A
+baseRemaining = 90 − 40                   = 50,00
+uncommon      = (20/85) × 50              = 11,76
+rare          = (35/85) × 50              = 20,59
+epic          = (30/85) × 50              = 17,65
+                                            ------
+somme des quatre                          = 60,00  → commun = 40,00</pre>
+</div>
+
+<h3>Exemple à l'acte 4, Chance 0</h3>
+
+<div class="code" data-lang="text">
+  <div class="code-head"><span class="path">illustration</span><span class="lang">text</span></div>
+  <pre>commonChance  = max(0, 40 − 3 × 10)       = 10,00   → branche A
+baseRemaining = 90 − 10                   = 80,00
+uncommon      = (20/85) × 80              = 18,82
+rare          = (35/85) × 80              = 32,94
+epic          = (30/85) × 80              = 28,24
+                                            ------
+somme des quatre (avec leg = 10)          = 90,00  → commun = 10,00</pre>
+</div>
+
+<h3>Exemple à l'acte 6, Chance 0</h3>
+
+<div class="code" data-lang="text">
+  <div class="code-head"><span class="path">illustration</span><span class="lang">text</span></div>
+  <pre>commonChance      = max(0, 40 − 5 × 10)   = 0,00    → branche B
+maxUncommonBase   = (20/85) × 90          = 21,18
+baseUncommonChance= max(0, 21,18 − 1×10)  = 11,18
+baseRemaining     = 90 − 11,18            = 78,82
+rare              = (35/65) × 78,82       = 42,44
+epic              = (30/65) × 78,82       = 36,38
+uncommon          = 11,18
+                                            ------
+somme des quatre (avec leg = 10)          = 100,00 → commun = 0,00</pre>
+</div>
+
+<h3>La table complète, acte par acte (Chance 0)</h3>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Acte</th><th>Branche</th><th>Légendaire</th><th>Épique</th><th>Rare</th><th>Peu commun</th><th>Commun</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>A</td><td>10,00 %</td><td>17,65 %</td><td>20,59 %</td><td>11,76 %</td><td>40,00 %</td></tr>
+<tr><td>2</td><td>A</td><td>10,00 %</td><td>21,18 %</td><td>24,71 %</td><td>14,12 %</td><td>30,00 %</td></tr>
+<tr><td>3</td><td>A</td><td>10,00 %</td><td>24,71 %</td><td>28,82 %</td><td>16,47 %</td><td>20,00 %</td></tr>
+<tr><td>4</td><td>A</td><td>10,00 %</td><td>28,24 %</td><td>32,94 %</td><td>18,82 %</td><td>10,00 %</td></tr>
+<tr><td>5</td><td>B</td><td>10,00 %</td><td>31,76 %</td><td>37,06 %</td><td>21,18 %</td><td>0,00 %</td></tr>
+<tr><td>6</td><td>B</td><td>10,00 %</td><td>36,38 %</td><td>42,44 %</td><td>11,18 %</td><td>0,00 %</td></tr>
+<tr><td>7</td><td>B</td><td>10,00 %</td><td>41,00 %</td><td>47,83 %</td><td>1,18 %</td><td>0,00 %</td></tr>
+<tr><td>8 et +</td><td>C</td><td>10,00 %</td><td>41,54 %</td><td>48,46 %</td><td>0,00 %</td><td>0,00 %</td></tr>
+</tbody>
+</table></div>
+
+<p>Deux observations. D'abord, chaque ligne somme exactement à 100 % : la construction est saine.
+Ensuite, le légendaire reste bloqué à 10 % <em>quel que soit l'acte</em> — la progression ne récompense
+pas le joueur par plus de légendaire, mais par <strong>moins de déchet</strong>. À l'acte 8, une
+relique améliorée est au minimum rare.</p>
+
+<h3>Et avec de la Chance ?</h3>
+
+<p>Les pentes de la table améliorée sont <code>0,5 / 1,0 / 2,0 / 3,0</code> — identiques à celles du
+tirage standard. Comme la table est déjà pleine à partir de l'acte 5, chaque point de Chance pousse le
+total au-dessus de 100 et l'écrêtage frappe immédiatement le bas de la table.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Acte</th><th>Chance</th><th>Légendaire</th><th>Épique</th><th>Rare</th><th>Peu commun</th><th>Commun</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>0</td><td>10,00 %</td><td>17,65 %</td><td>20,59 %</td><td>11,76 %</td><td>40,00 %</td></tr>
+<tr><td>1</td><td>2</td><td>11,00 %</td><td>19,65 %</td><td>24,59 %</td><td>17,76 %</td><td>27,00 %</td></tr>
+<tr><td>1</td><td>5</td><td>12,50 %</td><td>22,65 %</td><td>30,59 %</td><td>26,76 %</td><td>7,50 %</td></tr>
+<tr><td>1</td><td>10</td><td>15,00 %</td><td>27,65 %</td><td>40,59 %</td><td><strong>16,76 %</strong></td><td>0,00 %</td></tr>
+<tr><td>4</td><td>0</td><td>10,00 %</td><td>28,24 %</td><td>32,94 %</td><td>18,82 %</td><td>10,00 %</td></tr>
+<tr><td>4</td><td>2</td><td>11,00 %</td><td>30,24 %</td><td>36,94 %</td><td><strong>21,82 %</strong></td><td>0,00 %</td></tr>
+<tr><td>4</td><td>10</td><td>15,00 %</td><td>38,24 %</td><td><strong>46,76 %</strong></td><td>0,00 %</td><td>0,00 %</td></tr>
+<tr><td>6</td><td>0</td><td>10,00 %</td><td>36,38 %</td><td>42,44 %</td><td>11,18 %</td><td>0,00 %</td></tr>
+<tr><td>6</td><td>2</td><td>11,00 %</td><td>38,38 %</td><td>46,44 %</td><td><strong>4,18 %</strong></td><td>0,00 %</td></tr>
+<tr><td>6</td><td>10</td><td>15,00 %</td><td>46,38 %</td><td><strong>38,62 %</strong></td><td>0,00 %</td><td>0,00 %</td></tr>
+</tbody>
+</table></div>
+
+<p>Les cellules en gras sont écrêtées : leur chance brute a été rognée par le plafond de 100. Le cas le
+plus contre-intuitif est <strong>acte 6, Chance 10</strong> : la chance brute du rare vaut
+<code>42,44 + 20 = 62,44</code>, mais légendaire et épique en consomment déjà <code>15 + 46,38 =
+61,38</code>, donc le rare n'obtient que 38,62 %. <strong>Ajouter de la Chance a fait baisser la
+probabilité de rare</strong>, au profit de l'épique et du légendaire. C'est le comportement voulu — mais
+il faut le savoir pour ne pas croire à un bug.</p>
+
+<div class="box rule"><div class="box-title">Règle du jeu</div>
+<p>Le boss <code>improvedRelic</code> garantit 10 % de légendaire à tous les actes. Ce qui progresse
+avec l'acte, ce n'est pas le haut de la table mais l'élimination du bas : commun éteint à l'acte 5,
+peu commun éteint à l'acte 8.</p></div>
+
+<h2 id="s6">6. Le draft de montée de niveau</h2>
+
+<p>Changement complet de contexte. Le draft n'a rien à voir avec les reliques : il donne des
+<strong>bonus de statistiques permanents</strong>, et il est déclenché depuis la carte quand
+<code>pendingDrafts &gt; 0</code>. Toute sa logique de tirage est isolée dans un service pur,
+volontairement sans dépendance à Flutter :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/services/level_up_reward_service.dart</span><span class="lang">dart</span></div>
+  <pre>/// Rolls and generates the "level up" reward choices (permanent stat boosts,
+/// lucky clover, magic mirror clone) offered on [DraftScreen]. Pure/stateless
+/// so it can be unit-tested directly, instead of only through a copy of its
+/// formula duplicated in a test file.
+class LevelUpRewardService {</pre>
+</div>
+
+<div class="box ok"><div class="box-title">Bonne pratique</div>
+<p>Le commentaire est explicite sur l'intention : sortir la formule de l'écran pour qu'elle soit
+testable directement. C'est une leçon générale — dès qu'une règle de jeu est enfermée dans un
+<code>State</code> de widget, la seule façon de la tester est de recopier la formule dans le test, et
+les deux copies divergent au premier changement.</p></div>
+
+<h3>La structure d'un draft : 3 + 0 à 2</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/services/level_up_reward_service.dart</span><span class="lang">dart</span></div>
+  <pre>    final choices = List.generate(3, (index) {
+      RewardRarity rarity;
+      // ...
+        rarity = rollRarity(luck, canBeLegendary: true, isLevelReward: false);
+      // ...
+      int type = rng.nextInt(6);</pre>
+</div>
+
+<p>Trois choix, tirés <strong>indépendamment</strong> : chacun refait son propre
+<code>rollRarity</code> et son propre <code>rng.nextInt(6)</code>. Rien n'empêche d'obtenir trois fois
+la même récompense, ni trois raretés communes.</p>
+
+<p>Puis, en fin de fonction, deux tirages supplémentaires — un par option mythique :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/services/level_up_reward_service.dart</span><span class="lang">dart</span></div>
+  <pre>    if (rollRarity(luck, isLevelReward: true, forceLegendary: forceLegendary) ==
+        RewardRarity.mythic) {
+      choices.add(
+        const DraftChoice(
+          type: LevelUpRewardType.luckyClover,
+          luckBoost: 1,
+          rarity: RewardRarity.mythic,
+        ),
+      );
+    }
+
+    if (rollRarity(luck, isLevelReward: true, forceLegendary: forceLegendary) ==
+        RewardRarity.mythic) {
+      choices.add(
+        const DraftChoice(
+          type: LevelUpRewardType.mirror,
+          isCloneOption: true,
+          rarity: RewardRarity.mythic,
+        ),
+      );
+    }</pre>
+</div>
+
+<p>Le draft comporte donc <strong>3, 4 ou 5 cartes</strong>. Les deux appels sont indépendants : on peut
+obtenir le Trèfle sans le Miroir, l'inverse, les deux, ou aucun.</p>
+
+<h3><code>rollRarity</code>, ligne à ligne</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/services/level_up_reward_service.dart</span><span class="lang">dart</span></div>
+  <pre>    final rng = Random();
+    double mythicChance = isLevelReward ? 0.5 : 0.0;
+    double legendaryChance = 2.0;
+    double epicChance = 6.0;
+    double rareChance = 16.0;
+    double uncommonChance = 24.0;
+
+    if (isLevelReward) {
+      mythicChance += luck * 0.15;
+    }
+    legendaryChance += luck * 0.5;
+    epicChance += luck * 1.5;
+    rareChance += luck * 3.0;
+    uncommonChance += luck * 4.0;
+
+    double roll = rng.nextDouble() * 100;
+
+    if (isLevelReward &amp;&amp; roll &lt; mythicChance) {
+      return RewardRarity.mythic;
+    }
+    if (isLevelReward) {
+      roll -= mythicChance;
+    }
+
+    if (canBeLegendary &amp;&amp; roll &lt; legendaryChance) return RewardRarity.legendary;</pre>
+</div>
+
+<p>Les bases sont <strong>2 / 6 / 16 / 24</strong> et les pentes <strong>0,5 / 1,5 / 3,0 / 4,0</strong>.
+Le mythique ne vaut que si <code>isLevelReward</code> est vrai : <code>0,5 + 0,15 × L</code>.</p>
+
+<p>Le drapeau <code>canBeLegendary</code> et le paramètre <code>forceLegendary</code> existent dans la
+signature mais sont, en pratique, morts : <code>DraftScreen</code> est construit sans
+<code>forceLegendary</code> depuis <code>map_screen.dart</code>, et <code>canBeLegendary</code> vaut
+toujours <code>true</code> (valeur par défaut, ou passé explicitement). La branche
+<code>if (!canBeLegendary) roll = (rng.nextDouble() * (100 - legendaryChance)) + legendaryChance;</code>
+— qui retire un second dé au milieu du premier — n'est jamais atteinte.</p>
+
+<h3>La table du draft standard</h3>
+
+<p>La somme des quatre chances vaut <code>48 + 9 × L</code>, et dépasse 100 dès
+<code>L ≈ 5,78</code> : l'écrêtage arrive donc <em>beaucoup plus tôt</em> que sur les reliques.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Chance</th><th>Légendaire</th><th>Épique</th><th>Rare</th><th>Peu commun</th><th>Commun</th></tr></thead>
+<tbody>
+<tr><td>0</td><td>2,00 %</td><td>6,00 %</td><td>16,00 %</td><td>24,00 %</td><td>52,00 %</td></tr>
+<tr><td>1</td><td>2,50 %</td><td>7,50 %</td><td>19,00 %</td><td>28,00 %</td><td>43,00 %</td></tr>
+<tr><td>2</td><td>3,00 %</td><td>9,00 %</td><td>22,00 %</td><td>32,00 %</td><td>34,00 %</td></tr>
+<tr><td>5</td><td>4,50 %</td><td>13,50 %</td><td>31,00 %</td><td>44,00 %</td><td>7,00 %</td></tr>
+<tr><td>10</td><td>7,00 %</td><td>21,00 %</td><td>46,00 %</td><td><strong>26,00 %</strong></td><td>0,00 %</td></tr>
+</tbody>
+</table></div>
+
+<p>Comme les trois choix sont indépendants, la probabilité d'avoir <strong>au moins un légendaire</strong>
+dans le draft vaut <code>1 − (1 − p)³</code> : 5,88 % à Chance 0, 8,73 % à Chance 2, 12,90 % à
+Chance 5, 19,56 % à Chance 10.</p>
+
+<h3>La table mythique</h3>
+
+<p>Le mythique est la seule voie vers le Trèfle porte-bonheur et le Miroir magique. Sa probabilité par
+tirage est <code>(0,5 + 0,15 × L)</code> pour cent, et il y a deux tirages indépendants.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Chance</th><th>p (un tirage)</th><th>Aucun mythique</th><th>Au moins un</th><th>Exactement un</th><th>Les deux</th></tr></thead>
+<tbody>
+<tr><td>0</td><td>0,50 %</td><td>99,002 %</td><td>0,997 %</td><td>0,995 %</td><td>0,0025 %</td></tr>
+<tr><td>1</td><td>0,65 %</td><td>98,704 %</td><td>1,296 %</td><td>1,292 %</td><td>0,0042 %</td></tr>
+<tr><td>2</td><td>0,80 %</td><td>98,406 %</td><td>1,594 %</td><td>1,587 %</td><td>0,0064 %</td></tr>
+<tr><td>5</td><td>1,25 %</td><td>97,516 %</td><td>2,484 %</td><td>2,469 %</td><td>0,0156 %</td></tr>
+<tr><td>10</td><td>2,00 %</td><td>96,040 %</td><td>3,960 %</td><td>3,920 %</td><td>0,0400 %</td></tr>
+<tr><td>20</td><td>3,50 %</td><td>93,123 %</td><td>6,878 %</td><td>6,755 %</td><td>0,1225 %</td></tr>
+</tbody>
+</table></div>
+
+<div class="box warn"><div class="box-title">Piège : le cercle vertueux est très lent</div>
+<p>Le Trèfle donne +1 Chance, ce qui augmente la probabilité de futurs Trèfles… de 0,15 point de
+pourcentage. Il faudrait <strong>Chance 31</strong> pour atteindre 10 % de chances de voir au moins un
+mythique dans un draft. Les seules autres sources de Chance sont deux reliques —
+<code>lucky_clover</code> « Trèfle Enchanté » (épique, +1) et <code>fortune_dice</code> « Dé de
+Fortune » (légendaire, +2), toutes deux en déclencheur <code>startOfRun</code>. Tous les héros
+commencent à <code>luck: 0</code>.</p></div>
+
+<h3>Les multiplicateurs de valeur</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/services/level_up_reward_service.dart</span><span class="lang">dart</span></div>
+  <pre>      double multiplier = 1.0;
+      if (rarity == RewardRarity.uncommon) multiplier = 1.5;
+      if (rarity == RewardRarity.rare) multiplier = 2.0;
+      if (rarity == RewardRarity.epic) multiplier = 3.0;
+      if (rarity == RewardRarity.legendary) multiplier = 4.0;</pre>
+</div>
+
+<p>Un seul multiplicateur pour tout le monde : <strong>×1 / ×1,5 / ×2 / ×3 / ×4</strong>. Sauf que trois
+types sur six ne l'utilisent pas.</p>
+
+<h3>Les huit types de récompense</h3>
+
+<p>Le type est tiré avec <code>rng.nextInt(6)</code> : six valeurs équiprobables, à 1/6 ≈ 16,7 %
+chacune. Les deux derniers types de l'enum, <code>luckyClover</code> et <code>mirror</code>, ne sont
+<strong>jamais</strong> produits par ce tirage : ils n'existent que via les deux jets mythiques.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th><code>LevelUpRewardType</code></th><th>Source</th><th>Effet</th><th>Calcul</th></tr></thead>
+<tbody>
+<tr><td><code>vitality</code></td><td><code>nextInt(6) == 0</code></td><td>PV max</td><td><code>(5 × multiplicateur).round()</code></td></tr>
+<tr><td><code>sharpening</code></td><td><code>== 1</code></td><td>Attaque</td><td><code>(2 × multiplicateur).round()</code></td></tr>
+<tr><td><code>steelForge</code></td><td><code>== 2</code></td><td>Maîtrise d'armure</td><td>multiplicateur spécifique 1 / 2 / 3 / 5</td></tr>
+<tr><td><code>wisdom</code></td><td><code>== 3</code></td><td>Mana max</td><td><code>(1 × multiplicateur).round()</code>, minimum 1</td></tr>
+<tr><td><code>precision</code></td><td><code>== 4</code></td><td>% de critique</td><td><code>switch</code> : 1 / 2 / 3 / 4 / 5</td></tr>
+<tr><td><code>ferocity</code></td><td>sinon (<code>== 5</code>)</td><td>Dégâts critiques</td><td><code>switch</code> : 0,10 → 0,50</td></tr>
+<tr><td><code>luckyClover</code></td><td>jet mythique n° 1</td><td>+1 Chance</td><td>constante</td></tr>
+<tr><td><code>mirror</code></td><td>jet mythique n° 2</td><td>clonage d'une carte</td><td><code>isCloneOption: true</code></td></tr>
+</tbody>
+</table></div>
+
+<p>Voici la valeur <strong>exacte</strong> de chaque type, pour chaque rareté. Attention à
+l'arrondi : <code>.round()</code> en Dart arrondit à l'entier le plus proche en s'éloignant de zéro,
+donc <code>7,5 → 8</code> et <code>1,5 → 2</code>.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Type</th><th>Commun (×1)</th><th>Peu commun (×1,5)</th><th>Rare (×2)</th><th>Épique (×3)</th><th>Légendaire (×4)</th></tr></thead>
+<tbody>
+<tr><td><code>vitality</code> (PV)</td><td>+5</td><td>+8</td><td>+10</td><td>+15</td><td>+20</td></tr>
+<tr><td><code>sharpening</code> (ATK)</td><td>+2</td><td>+3</td><td>+4</td><td>+6</td><td>+8</td></tr>
+<tr><td><code>steelForge</code> (armure)</td><td>+1</td><td>+2</td><td>+3</td><td>+5</td><td><strong>+1</strong></td></tr>
+<tr><td><code>wisdom</code> (mana)</td><td>+1</td><td>+2</td><td>+2</td><td>+3</td><td>+4</td></tr>
+<tr><td><code>precision</code> (% crit)</td><td>+1 %</td><td>+2 %</td><td>+3 %</td><td>+4 %</td><td>+5 %</td></tr>
+<tr><td><code>ferocity</code> (dég. crit)</td><td>+0,10</td><td>+0,20</td><td>+0,30</td><td>+0,40</td><td>+0,50</td></tr>
+</tbody>
+</table></div>
+
+<div class="box danger"><div class="box-title">Bug latent : la Forge d'Acier légendaire</div>
+<p>Regardez la cellule en gras. Le calcul de <code>steelForge</code> n'énumère que quatre raretés :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/services/level_up_reward_service.dart</span><span class="lang">dart</span></div>
+  <pre>      if (type == 2) {
+        double masteryMultiplier = 1.0;
+        if (rarity == RewardRarity.uncommon) masteryMultiplier = 2.0;
+        if (rarity == RewardRarity.rare) masteryMultiplier = 3.0;
+        if (rarity == RewardRarity.epic) masteryMultiplier = 5.0;
+        int boost = (1 * masteryMultiplier).round();</pre>
+</div>
+<p>Aucune ligne pour <code>legendary</code>. Une Forge d'Acier légendaire retombe donc sur la valeur
+initiale <code>1.0</code> et donne <strong>+1 armure</strong> — exactement comme une commune, et cinq
+fois moins qu'une épique. C'est le seul type dont la valeur n'est pas monotone avec la rareté. Le motif
+« <code>if</code> en cascade avec une valeur initiale » est précisément ce qui permet d'oublier un cas
+sans que le compilateur ne dise rien ; un <code>switch</code> exhaustif sur l'enum, comme celui utilisé
+juste en dessous pour <code>precision</code> et <code>ferocity</code>, aurait produit une erreur de
+compilation.</p></div>
+
+<h3>Application de la récompense</h3>
+
+<p>Quand le joueur touche une carte, l'écran attend 300 ms (le temps de l'animation de sélection) puis
+applique tout d'un coup :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/draft_screen.dart</span><span class="lang">dart</span></div>
+  <pre>      final runController = ref.read(runProvider.notifier);
+      runController.applyHeroStatModifier(
+        maxPvAcc: choice.pvBoost,
+        attackAcc: choice.atkBoost,
+        armorAcc: choice.armorBoost,
+        maxManaAcc: choice.manaBoost,
+        luckAcc: choice.luckBoost,
+        critChanceAcc: choice.critChanceBoost,
+        critDamageAcc: choice.critDamageBoost,
+      );</pre>
+</div>
+
+<p>Une seule méthode reçoit les sept accumulateurs. Comme un <code>DraftChoice</code> n'en remplit
+qu'un, les six autres valent 0 et n'ont aucun effet. Le détail intéressant est du côté du
+gestionnaire :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/run/player_stats_manager.dart</span><span class="lang">dart</span></div>
+  <pre>    final currentStats = controller.currentState.heroStats;
+    final newMaxPv = currentStats.maxPv + maxPvAcc;
+    final newCurrentPv =
+        (currentStats.currentPv + (maxPvAcc &gt; 0 ? maxPvAcc : 0)).clamp(
+          0,
+          newMaxPv,
+        );
+
+    final newMaxMana = currentStats.maxMana + maxManaAcc;
+    // On ajoute aussi le bonus au mana actuel
+    final newCurrentMana = (currentStats.currentMana + maxManaAcc).clamp(
+      0,
+      newMaxMana,
+    );</pre>
+</div>
+
+<p>Un bonus de PV max <strong>soigne aussi du même montant</strong> : <code>currentPv</code> est
+augmenté de <code>maxPvAcc</code> avant d'être borné. La Vitalité légendaire (+20 PV max) rend donc
+20 PV immédiatement. Même logique pour le mana. Le <code>maxPvAcc &gt; 0 ?</code> protège le cas des
+malus (utilisés ailleurs, par exemple au retrait d'une relique) : perdre des PV max ne doit pas
+retirer de PV courants, seulement les borner.</p>
+
+<h3>Le Miroir magique</h3>
+
+<p>Le Miroir ne passe pas par <code>applyHeroStatModifier</code> : il ouvre une modale
+(<code>barrierDismissible: false</code>) proposant trois cartes tirées du deck.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/draft_screen.dart</span><span class="lang">dart</span></div>
+  <pre>    masterDeck.shuffle();
+    final options = masterDeck.take(3).toList();
+
+    if (options.isEmpty) {
+      _finishDraft(ref);
+      return;
+    }</pre>
+</div>
+
+<p>La carte choisie est recopiée dans le deck maître avec sa rareté et ses améliorations de forge
+(<code>forgeUpgrades: List.from(card.forgeUpgrades)</code>) : c'est un clone parfait, pas une carte
+neuve. Le garde <code>options.isEmpty</code> ferme proprement le draft si le deck est vide.</p>
+
+<h2 id="s7">7. Ce que la Chance change vraiment</h2>
+
+<p>Rassemblons. Cinq tables, cinq comportements, une seule statistique.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Table</th><th>Fichier</th><th>Quand</th><th>Mythique</th><th>Légendaire</th><th>Épique</th><th>Rare</th><th>Peu commun</th></tr></thead>
+<tbody>
+<tr>
+  <td>Draft standard<br>(3 choix de base)</td>
+  <td><code>level_up_reward_service.dart</code></td>
+  <td>montée de niveau</td>
+  <td>—</td>
+  <td>2 + 0,5·L</td>
+  <td>6 + 1,5·L</td>
+  <td>16 + 3·L</td>
+  <td>24 + 4·L</td>
+</tr>
+<tr>
+  <td>Récompense de niveau<br>(Trèfle / Miroir)</td>
+  <td><code>level_up_reward_service.dart</code></td>
+  <td>montée de niveau, 2 jets</td>
+  <td><strong>0,5 + 0,15·L</strong></td>
+  <td>2 + 0,5·L</td>
+  <td>6 + 1,5·L</td>
+  <td>16 + 3·L</td>
+  <td>24 + 4·L</td>
+</tr>
+<tr>
+  <td>Butin de relique</td>
+  <td><code>reward_controller.dart</code></td>
+  <td>nœud Élite</td>
+  <td>—</td>
+  <td>1 + 0,5·L</td>
+  <td>5 + 1·L</td>
+  <td>14 + 2·L</td>
+  <td>20 + 3·L</td>
+</tr>
+<tr>
+  <td>Relique améliorée</td>
+  <td><code>reward_controller.dart</code></td>
+  <td>boss <code>improvedRelic</code></td>
+  <td>—</td>
+  <td><strong>10 + 0,5·L</strong></td>
+  <td>fonction de l'acte<br>+ 1·L</td>
+  <td>fonction de l'acte<br>+ 2·L</td>
+  <td>fonction de l'acte<br>+ 3·L</td>
+</tr>
+<tr>
+  <td>Relique d'événement</td>
+  <td><code>event_controller.dart</code></td>
+  <td>action <code>gain_relic</code></td>
+  <td>—</td>
+  <td>1 + 0,5·L</td>
+  <td>5 + 1·L</td>
+  <td>14 + 2·L</td>
+  <td>20 + 3·L</td>
+</tr>
+</tbody>
+</table></div>
+
+<p>La relique d'événement est une <strong>copie littérale</strong> du tirage standard, réécrite dans un
+autre fichier avec la variante « soustraction » de la cascade :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/event_controller.dart</span><span class="lang">dart</span></div>
+  <pre>        case 'gain_relic':
+          if (allRelics.isNotEmpty) {
+            final luck = runController.currentState.heroStats.luck;
+            final double roll = mockRoll ?? (Random().nextDouble() * 100);
+
+            final double legChance = 1.0 + luck * 0.5;
+            final double epicChance = 5.0 + luck * 1.0;
+            final double rareChance = 14.0 + luck * 2.0;
+            final double uncommonChance = 20.0 + luck * 3.0;
+
+            RelicRarity rarity;
+            double currentRoll = roll;
+
+            if (currentRoll &lt; legChance) {
+              rarity = RelicRarity.legendary;
+            } else {
+              currentRoll -= legChance;
+              if (currentRoll &lt; epicChance) {
+                rarity = RelicRarity.epic;
+              } else {
+                // ...</pre>
+</div>
+
+<div class="box danger"><div class="box-title">Dette technique : une formule, trois copies</div>
+<p>Les valeurs <code>1.0 / 5.0 / 14.0 / 20.0</code> et les pentes <code>0.5 / 1.0 / 2.0 / 3.0</code>
+apparaissent <strong>trois fois</strong> dans le projet : dans <code>reward_controller.dart</code>,
+dans <code>event_controller.dart</code>, et dans <code>probabilities_dialog.dart</code>. Aucune
+constante partagée. Rééquilibrer les reliques suppose donc de modifier trois fichiers en cohérence —
+et la section suivante montre ce qui arrive quand on n'y pense pas. À noter tout de même : le
+<code>event_controller</code> accepte un <code>mockRoll</code> et un <code>mockRelicIndex</code> pour
+les tests, ce que le <code>reward_controller</code> ne fait pas.</p></div>
+
+<h3>Deux méthodes différentes pour gérer le dépassement</h3>
+
+<p>La fenêtre d'aide accessible depuis la carte
+(<code>lib/ui/widgets/map/dialogs/probabilities_dialog.dart</code>) recalcule les tables pour les
+afficher. Elle contient deux fonctions statiques, qui ne gèrent <strong>pas</strong> le dépassement de
+la même façon.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/map/dialogs/probabilities_dialog.dart</span><span class="lang">dart</span></div>
+  <pre>    double sum = pLeg;
+    pEpic = pEpic.clamp(0.0, 100.0 - sum);
+    sum += pEpic;
+    pRare = pRare.clamp(0.0, 100.0 - sum);
+    sum += pRare;
+    pUncommon = pUncommon.clamp(0.0, 100.0 - sum);
+    sum += pUncommon;
+    double pCommon = (100.0 - sum).clamp(0.0, 100.0);</pre>
+</div>
+
+<p>Ça, c'est <code>calculateDraftProbabilities</code> : un <strong>écrêtage en cascade</strong>. Chaque
+rareté est bornée par ce qui reste après les précédentes. C'est exactement ce que fait la vraie
+cascade de <code>if</code> sur un jet uniforme — donc, sur ce point, la méthode est correcte.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/map/dialogs/probabilities_dialog.dart</span><span class="lang">dart</span></div>
+  <pre>    double sum = leg + epic + rare + uncommon;
+    if (sum &gt; 100.0) {
+      leg = leg / sum * 100.0;
+      epic = epic / sum * 100.0;
+      rare = rare / sum * 100.0;
+      uncommon = uncommon / sum * 100.0;
+      return {
+        'legendary': leg,
+        'epic': epic,
+        'rare': rare,
+        'uncommon': uncommon,
+        'common': 0.0,
+      };
+    }</pre>
+</div>
+
+<p>Ça, c'est <code>calculateRelicProbabilities</code> : une <strong>normalisation
+proportionnelle</strong>. Quand la somme dépasse 100, tout le monde est réduit du même facteur. Or le
+code réel de <code>reward_controller.dart</code> ne fait <em>pas</em> ça : il écrête par le bas. Les
+deux méthodes ne donnent pas le même résultat.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Butin de relique, Chance 10</th><th>Légendaire</th><th>Épique</th><th>Rare</th><th>Peu commun</th><th>Commun</th></tr></thead>
+<tbody>
+<tr><td>Affiché (normalisation)</td><td>5,71 %</td><td>14,29 %</td><td>32,38 %</td><td>47,62 %</td><td>0,00 %</td></tr>
+<tr><td><strong>Réel (écrêtage)</strong></td><td><strong>6,00 %</strong></td><td><strong>15,00 %</strong></td><td><strong>34,00 %</strong></td><td><strong>45,00 %</strong></td><td>0,00 %</td></tr>
+</tbody>
+</table></div>
+
+<p>L'écart reste modeste et ne commence qu'à Chance 10 (avant, la somme est sous 100 et les deux
+méthodes coïncident). Ce n'est pas le problème principal.</p>
+
+<h3>Vérification terme par terme : l'affichage diverge-t-il du calcul ?</h3>
+
+<p>Comparons les valeurs littérales, une par une.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/map/dialogs/probabilities_dialog.dart</span><span class="lang">dart</span></div>
+  <pre>  static Map&lt;String, double&gt; calculateDraftProbabilities(
+    int luck,
+    bool isLevelReward,
+  ) {
+    double legendaryChance = isLevelReward ? 0.5 + luck * 0.5 : 1.0 + luck * 0.5;
+    double epicChance = isLevelReward ? 4.5 + luck * 1.5 : 5.0 + luck * 1.5;
+    double rareChance = isLevelReward ? 15.0 + luck * 3.0 : 14.0 + luck * 3.0;
+    double uncommonChance = 20.0 + luck * 4.0;</pre>
+</div>
+
+<p>À mettre face à <code>rollRarity</code>, qui utilise <code>2.0</code>, <code>6.0</code>,
+<code>16.0</code>, <code>24.0</code>. Le verdict est net.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Draft standard</th><th>Affiché (<code>isLevelReward = false</code>)</th><th>Réel (<code>rollRarity</code>)</th><th>Écart à Chance 0</th></tr></thead>
+<tbody>
+<tr><td>Légendaire</td><td>1,0 + 0,5·L</td><td><strong>2,0</strong> + 0,5·L</td><td>−1,0 pt</td></tr>
+<tr><td>Épique</td><td>5,0 + 1,5·L</td><td><strong>6,0</strong> + 1,5·L</td><td>−1,0 pt</td></tr>
+<tr><td>Rare</td><td>14,0 + 3,0·L</td><td><strong>16,0</strong> + 3,0·L</td><td>−2,0 pt</td></tr>
+<tr><td>Peu commun</td><td>20,0 + 4,0·L</td><td><strong>24,0</strong> + 4,0·L</td><td>−4,0 pt</td></tr>
+<tr><td>Commun</td><td>60,0 − 9·L</td><td><strong>52,0</strong> − 9·L</td><td>+8,0 pt</td></tr>
+</tbody>
+</table></div>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Récompense de niveau</th><th>Affiché (<code>isLevelReward = true</code>)</th><th>Réel (<code>rollRarity</code>)</th><th>Écart à Chance 0</th></tr></thead>
+<tbody>
+<tr><td>Mythique</td><td><strong>ligne absente</strong></td><td>0,5 + 0,15·L</td><td>non affiché</td></tr>
+<tr><td>Légendaire</td><td>0,5 + 0,5·L</td><td><strong>2,0</strong> + 0,5·L</td><td>−1,5 pt</td></tr>
+<tr><td>Épique</td><td>4,5 + 1,5·L</td><td><strong>6,0</strong> + 1,5·L</td><td>−1,5 pt</td></tr>
+<tr><td>Rare</td><td>15,0 + 3,0·L</td><td><strong>16,0</strong> + 3,0·L</td><td>−1,0 pt</td></tr>
+<tr><td>Peu commun</td><td>20,0 + 4,0·L</td><td><strong>24,0</strong> + 4,0·L</td><td>−4,0 pt</td></tr>
+</tbody>
+</table></div>
+
+<div class="box danger"><div class="box-title">Divergence confirmée entre l'affichage et le calcul</div>
+<p>Elle est réelle et porte sur les trois panneaux de la fenêtre, à des degrés différents.</p>
+<ol>
+  <li><strong>Panneau « Draft standard de récompenses » : les quatre bases sont fausses.</strong>
+  Les pentes (0,5 / 1,5 / 3 / 4) sont correctes, mais les bases affichées (1 / 5 / 14 / 20) sont celles
+  de la table des <em>reliques</em>, pas celles du draft (2 / 6 / 16 / 24). Le joueur lit
+  60,00 % de commun à Chance 0 ; la valeur réelle est <strong>52,00 %</strong>. Il lit 1,0 % de
+  légendaire ; la valeur réelle est <strong>2,00 %</strong>, soit le double.</li>
+  <li><strong>Panneau « Récompense de niveau » : il décrit une distribution qui n'existe pas.</strong>
+  Non seulement les bases (0,5 / 4,5 / 15 / 20) ne correspondent à aucune constante de
+  <code>rollRarity</code>, mais surtout <code>generateChoices</code> n'utilise le résultat de
+  <code>rollRarity(luck, isLevelReward: true)</code> que pour tester
+  <code>== RewardRarity.mythic</code>. Les issues légendaire, épique, rare, peu commune et commune de
+  ce jet sont <strong>jetées</strong>. Le panneau détaille donc soigneusement cinq lignes dont aucune
+  n'a d'effet en jeu, et omet la seule qui compte : le mythique, à 0,5 + 0,15·L.</li>
+  <li><strong>Panneau « Butin de Reliques » : les bases sont exactes, le périmètre ne l'est pas.</strong>
+  <code>1 / 5 / 14 / 20</code> et <code>0,5 / 1 / 2 / 3</code> correspondent terme pour terme à
+  <code>reward_controller.dart</code> et à <code>event_controller.dart</code>. Mais le sous-titre
+  annonce « Boss, Élites &amp; Événements » : or un boss <code>cards</code> ou <code>doubleXp</code> ne
+  donne aucune relique, et le boss <code>improvedRelic</code> utilise la table améliorée, où le
+  légendaire vaut 10 % et non 1 %. L'écart est d'un facteur 10 sur le seul boss qui donne une
+  relique.</li>
+</ol>
+<p>Un joueur qui optimise sa Chance en se fiant à cette fenêtre sous-estime systématiquement ses
+chances de draft, et n'a aucune information sur ce qui gouverne réellement le Trèfle et le Miroir.</p></div>
+
+<div class="box ok"><div class="box-title">Comment on évite ça</div>
+<p>Le bon correctif n'est pas de recopier les bonnes valeurs dans le dialogue : c'est d'exposer une
+fonction publique unique — par exemple <code>LevelUpRewardService.probabilities(luck)</code> — et de
+la faire consommer par l'écran. Tant que deux fichiers portent les mêmes littéraux, ils divergeront.
+Le <code>rollRarity</code> a déjà été extrait dans un service pur pour être testable ; il ne reste
+qu'un pas à faire pour qu'il soit aussi la source unique de l'affichage.</p></div>
+
+<h3>Deux courbes pour comprendre l'écrêtage</h3>
+
+<p>Le graphe ci-dessous compare la probabilité effective d'obtenir un <strong>peu commun</strong> dans
+les deux tables principales, en fonction de la Chance. Le peu commun est le meilleur révélateur :
+il monte tant qu'il reste de la place sous 100, puis se fait écraser par les raretés supérieures.</p>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 820 430" width="820" role="img" aria-label="Courbes de probabilité effective du peu commun en fonction de la Chance, pour le draft standard et pour le butin de relique. Le draft culmine à 47,1 pour cent à Chance 5,8 puis redescend jusqu'à zéro à Chance 15,2 ; le butin de relique culmine à 47,7 pour cent à Chance 9,2 et redescend plus lentement.">
+      <rect x="0" y="0" width="820" height="430" fill="#0e1524"/>
+
+      <line x1="90" y1="350" x2="790" y2="350" stroke="#3a4966" stroke-width="1.5"/>
+      <line x1="90" y1="350" x2="90" y2="44" stroke="#3a4966" stroke-width="1.5"/>
+
+      <line x1="90" y1="300" x2="790" y2="300" stroke="#1c2537" stroke-width="1"/>
+      <line x1="90" y1="250" x2="790" y2="250" stroke="#1c2537" stroke-width="1"/>
+      <line x1="90" y1="200" x2="790" y2="200" stroke="#1c2537" stroke-width="1"/>
+      <line x1="90" y1="150" x2="790" y2="150" stroke="#1c2537" stroke-width="1"/>
+      <line x1="90" y1="100" x2="790" y2="100" stroke="#1c2537" stroke-width="1"/>
+      <line x1="90" y1="50" x2="790" y2="50" stroke="#1c2537" stroke-width="1"/>
+
+      <text x="78" y="354" fill="#a7b4c9" font-size="11" text-anchor="end">0 %</text>
+      <text x="78" y="304" fill="#a7b4c9" font-size="11" text-anchor="end">10 %</text>
+      <text x="78" y="254" fill="#a7b4c9" font-size="11" text-anchor="end">20 %</text>
+      <text x="78" y="204" fill="#a7b4c9" font-size="11" text-anchor="end">30 %</text>
+      <text x="78" y="154" fill="#a7b4c9" font-size="11" text-anchor="end">40 %</text>
+      <text x="78" y="104" fill="#a7b4c9" font-size="11" text-anchor="end">50 %</text>
+      <text x="78" y="54" fill="#a7b4c9" font-size="11" text-anchor="end">60 %</text>
+
+      <text x="90" y="370" fill="#a7b4c9" font-size="11" text-anchor="middle">0</text>
+      <text x="260" y="370" fill="#a7b4c9" font-size="11" text-anchor="middle">4</text>
+      <text x="430" y="370" fill="#a7b4c9" font-size="11" text-anchor="middle">8</text>
+      <text x="600" y="370" fill="#a7b4c9" font-size="11" text-anchor="middle">12</text>
+      <text x="770" y="370" fill="#a7b4c9" font-size="11" text-anchor="middle">16</text>
+      <text x="440" y="392" fill="#a7b4c9" font-size="12" text-anchor="middle">Chance (statistique luck)</text>
+
+      <path d="M90 230 L335.6 114.4 L736 350 L770 350" fill="none" stroke="#f59e0b" stroke-width="2.5"/>
+      <path d="M90 250 L482.3 111.5 L770 230" fill="none" stroke="#22d3ee" stroke-width="2.5"/>
+
+      <circle cx="335.6" cy="114.4" r="4" fill="#f59e0b"/>
+      <circle cx="482.3" cy="111.5" r="4" fill="#22d3ee"/>
+
+      <line x1="335.6" y1="114.4" x2="335.6" y2="350" stroke="#f59e0b" stroke-width="1" stroke-dasharray="3 4" opacity="0.5"/>
+      <line x1="482.3" y1="111.5" x2="482.3" y2="350" stroke="#22d3ee" stroke-width="1" stroke-dasharray="3 4" opacity="0.5"/>
+
+      <text x="335.6" y="104" fill="#f59e0b" font-size="10.5" text-anchor="middle">47,1 % à L ≈ 5,8</text>
+      <text x="512" y="101" fill="#22d3ee" font-size="10.5" text-anchor="middle">47,7 % à L ≈ 9,2</text>
+
+      <text x="700" y="330" fill="#f59e0b" font-size="10.5" text-anchor="middle">0 % à L = 15,2</text>
+
+      <rect x="110" y="60" width="14" height="4" fill="#f59e0b"/>
+      <text x="132" y="66" fill="#e6ecf5" font-size="11" text-anchor="start">Draft standard — peu commun : min(24 + 4·L ; 76 − 5·L)</text>
+      <rect x="110" y="84" width="14" height="4" fill="#22d3ee"/>
+      <text x="132" y="90" fill="#e6ecf5" font-size="11" text-anchor="start">Butin de relique — peu commun : min(20 + 3·L ; 80 − 3,5·L)</text>
+
+      <text x="440" y="414" fill="#a7b4c9" font-size="10.5" text-anchor="middle">La branche montante est la chance brute ; la branche descendante est ce qui reste sous le plafond de 100.</text>
+    </svg>
+  </div>
+  <figcaption>Probabilité effective du peu commun. Tant que la somme des raretés supérieures laisse de
+  la place, la courbe suit sa chance brute (montée). Dès que le plafond de 100 est atteint, elle ne
+  reçoit plus que le reste (descente). Le draft, dont les pentes sont plus raides, sature dès la
+  Chance 5,8 ; le butin de relique tient jusqu'à 9,2.</figcaption>
+</figure>
+
+<div class="box rule"><div class="box-title">Règle du jeu</div>
+<p>Un point de Chance vaut <strong>9 points de pourcentage</strong> retirés au commun dans un draft de
+niveau (0,5 + 1,5 + 3 + 4), contre <strong>6,5 points</strong> dans un tirage de relique
+(0,5 + 1 + 2 + 3). La Chance est donc environ 1,4 fois plus efficace sur les récompenses de niveau que
+sur les reliques — mais elle sature aussi 1,6 fois plus vite.</p></div>
+
+<h2 id="s8">8. La mise en scène</h2>
+
+<p>Tout ce qui précède se joue en quelques millisecondes. Le reste du temps — plusieurs secondes par
+récompense — est consacré à <em>montrer</em> le hasard. Cette mise en scène est un vrai morceau de code,
+et elle mérite d'être lue pour elle-même.</p>
+
+<h3>La machine à sous : <code>DraftCardReel</code></h3>
+
+<p>Chaque carte de draft est un rouleau qui fait défiler de fausses récompenses avant de s'arrêter sur
+la vraie. Le défilement est un <code>AnimationController</code> de 140 ms qui se relance lui-même :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/relic_carousel/draft_card_reel.dart</span><span class="lang">dart</span></div>
+  <pre>    // 2. Infinite vertical roll controller
+    _rollController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 140),
+    );
+
+    _rollController.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        if (!mounted) return;
+
+        if (_prepareToLand &amp;&amp; !_hasLanded) {
+          // Landed! Stop the roll, set final stationary state, trigger rarity reveal
+          // ...
+        } else if (!_hasLanded) {
+          // Standard infinite mock roll loop
+          setState(() {
+            _currentCardData = _nextCardData;
+            _nextCardData = _mockUpgrades[random.nextInt(_mockUpgrades.length)];
+          });
+          widget.onTick?.call();
+          _rollController.forward(from: 0.0);
+        }
+      }
+    });</pre>
+</div>
+
+<p>Le motif est important : au lieu d'une animation infinie avec <code>repeat()</code>, on relance
+manuellement à chaque cycle (<code>forward(from: 0.0)</code>). Cela donne un <strong>tick</strong>
+discret toutes les 140 ms — un point de synchronisation naturel pour un son de cliquet
+(<code>widget.onTick?.call()</code>) et un moment où l'on peut décider de s'arrêter. Les fausses cartes
+viennent d'une liste littérale de six intitulés : Vitalité, Aiguisage, Forge d'Acier, Sagesse, Trèfle
+à 4 feuilles, Miroir.</p>
+
+<p>L'arrêt est programmé dès la construction, par un simple <code>Timer</code> :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/relic_carousel/draft_card_reel.dart</span><span class="lang">dart</span></div>
+  <pre>      // Start fast rolling immediately
+      _rollController.forward();
+      // Staggered landing calculation: staggered lock-in delay based on slot index
+      final int delayMs =
+          1200 +
+          widget.index * 600 +
+          (isMythic ? 800 : (isLegendary ? 400 : 0));
+      _landTimer = Timer(Duration(milliseconds: delayMs), _landReel);</pre>
+</div>
+
+<p>Trois termes, trois intentions :</p>
+
+<ul>
+  <li><code>1200</code> : le plancher. Personne ne s'arrête avant 1,2 s, sinon on ne verrait pas le
+  défilement.</li>
+  <li><code>widget.index * 600</code> : le <strong>décalage</strong>. Les trois cartes s'arrêtent à
+  1 200 ms, 1 800 ms et 2 400 ms. C'est ce qui crée la lecture de gauche à droite, comme sur une vraie
+  machine à sous.</li>
+  <li><code>800</code> pour un mythique, <code>400</code> pour un légendaire : le <strong>suspense
+  supplémentaire</strong>. La carte la plus rare est aussi celle qui met le plus de temps à
+  s'immobiliser.</li>
+</ul>
+
+<div class="box warn"><div class="box-title">Piège : ce délai révèle la rareté avant la carte</div>
+<p>Le retard supplémentaire est calculé à partir de la rareté <em>déjà tirée</em>. Un joueur attentif
+sait donc, avant même que la carte ne s'arrête, qu'une carte qui tourne trop longtemps est au moins
+légendaire. C'est un choix assumé de mise en scène (le même que la secousse ci-dessous), pas un
+défaut — mais c'est bien une fuite d'information vers l'UI.</p></div>
+
+<p>La secousse est le second signal, encore plus explicite :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/relic_carousel/draft_card_reel.dart</span><span class="lang">dart</span></div>
+  <pre>        // Screenshake translations during fast spin (for legendary/mythic)
+        double shakeX = 0.0;
+        double shakeY = 0.0;
+        if (!_hasLanded &amp;&amp; isHighRarity) {
+          final random = Random();
+          final shakeScale = isMythic ? 12.0 : 6.0;
+          shakeX = (random.nextDouble() - 0.5) * shakeScale;
+          shakeY = (random.nextDouble() - 0.5) * shakeScale;
+        }</pre>
+</div>
+
+<p>L'échelle est <strong>12 pour un mythique, 6 pour un légendaire</strong>. Comme on centre autour de
+zéro (<code>nextDouble() - 0.5</code>), l'amplitude réelle est de ±6 px et ±3 px. La secousse n'est
+active que <code>!_hasLanded</code> : elle s'arrête à l'atterrissage, et le
+<code>_shakeController</code> (100 ms, <code>repeat(reverse: true)</code>) sert uniquement d'horloge
+pour forcer le rebuild.</p>
+
+<p>À l'atterrissage, un <code>_rarityController</code> de 700 ms fait apparaître progressivement la
+couleur de rareté (<code>rarityProgress</code> dans <code>DraftChoiceCard</code>), avec un flash plein
+cadre qui s'estompe : <code>rarityColor.withValues(alpha: 0.80 * (1.0 - _rarityController.value))</code>.
+Puis, et seulement puis, <code>widget.onLand?.call()</code> est déclenché.</p>
+
+<h3>L'alerte mythique</h3>
+
+<p>Quand les trois rouleaux de base ont atterri et qu'un mythique existe dans la liste,
+<code>_onBaseReelLanded</code> déclenche une animation d'alerte plein écran de
+<strong>1 400 ms</strong>. Toute sa chorégraphie tient dans une seule valeur normalisée
+<code>val</code> découpée en trois phases :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/draft_screen.dart</span><span class="lang">dart</span></div>
+  <pre>                  final val = _alertController.value;
+
+                  double lineWidthPercent = (val / 0.2).clamp(0.0, 1.0);
+
+                  double exclamationScale = 0.0;
+                  if (val &gt; 0.2) {
+                    final t = (val - 0.2) / 0.4;
+                    const c4 = (2 * pi) / 3;
+                    exclamationScale = t == 0
+                        ? 0
+                        : t == 1
+                            ? 1
+                            : pow(2, -10 * t) * sin((t * 10 - 0.75) * c4) + 1;
+                    exclamationScale = exclamationScale.clamp(0.0, 1.2);
+                  }
+
+                  bool isVisible = true;
+                  if (val &gt; 0.6) {
+                    final blinkVal = ((val - 0.6) / 0.4 * 6).floor();
+                    isVisible = blinkVal % 2 == 0;
+                  }</pre>
+</div>
+
+<div class="memo">
+  <div class="card"><h5>0 → 20 %</h5><p>Une barre rouge de 6 px de haut traverse l'écran :
+  <code>lineWidthPercent</code> passe de 0 à 1, la largeur suit
+  <code>MediaQuery.of(context).size.width</code>.</p></div>
+  <div class="card"><h5>20 → 60 %</h5><p>Les « !!! » apparaissent avec un rebond élastique. La formule
+  <code>pow(2, -10t) × sin((10t − 0,75) × 2π/3) + 1</code> est la courbe <em>easeOutElastic</em>
+  standard, réimplémentée à la main pour être bornée à 1,2.</p></div>
+  <div class="card"><h5>60 → 100 %</h5><p>Clignotement : <code>((val − 0,6) / 0,4 × 6).floor()</code>
+  découpe la fin en <strong>6 phases</strong>, et <code>% 2 == 0</code> alterne visible / invisible.
+  Trois éclats complets.</p></div>
+</div>
+
+<p>Le voile de fond suit lui aussi <code>val</code> :
+<code>Colors.black.withValues(alpha: 0.3 * val)</code>, donc l'écran s'assombrit progressivement
+jusqu'à 30 % d'opacité. Tout le bloc est enveloppé dans un <code>IgnorePointer</code> : l'alerte ne
+capture aucun clic.</p>
+
+<p>À la fin de l'animation, un <code>addStatusListener</code> bascule vers la phase de révélation, qui
+affiche les cartes mythiques par-dessus un <code>BackdropFilter</code> flouté (sigma 8), avec le texte
+<code>'RÉCOMPENSE MYTHIQUE DÉCOUVERTE !'</code>. Une fois tous les rouleaux mythiques posés, un délai
+de 1 500 ms laisse le temps d'admirer avant de rendre la main.</p>
+
+<h3>Le verrou de sélection</h3>
+
+<p>Pendant toute cette séquence, il ne faut surtout pas que le joueur puisse valider un des trois choix
+de base — il raterait le mythique. Le verrou est d'une simplicité désarmante :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/draft_screen.dart</span><span class="lang">dart</span></div>
+  <pre>                                            onTap: () {
+                                              if (_hasMythicChoices &amp;&amp;
+                                                  !_mythicCompleted) {
+                                                return;
+                                              }
+                                              _onChoiceSelected(
+                                                choice,
+                                                index,
+                                              );
+                                            },</pre>
+</div>
+
+<p>Deux booléens : <code>_hasMythicChoices</code> (calculé à la volée par
+<code>_choices.any((c) =&gt; c.rarity == RewardRarity.mythic)</code>) et <code>_mythicCompleted</code>
+(levé 1 500 ms après le dernier atterrissage mythique). Tant que le second est faux, le
+<code>onTap</code> ne fait rien. Ce n'est pas un widget désactivé, juste un retour anticipé — l'effet
+visuel de survol continue de fonctionner, ce qui est un peu trompeur, mais aucune sélection ne
+passe.</p>
+
+<p>La liste affichée suit la même logique :
+<code>final visibleChoices = _mythicCompleted ? _choices : _choices.sublist(0, 3);</code>. Les cartes
+mythiques n'apparaissent dans la grille principale qu'après la révélation ; avant, seules les trois
+cartes de base existent.</p>
+
+<div class="box ok"><div class="box-title">Bonne pratique</div>
+<p>Ce découpage — l'état du jeu est calculé d'un bloc, l'UI ne fait que le révéler progressivement —
+est ce qui rend l'animation totalement découplée du hasard. Si l'écran est détruit en plein
+défilement, rien n'est perdu : les <code>DraftChoice</code> existent déjà. Comparez avec un système qui
+tirerait la rareté <em>au moment</em> où le rouleau s'arrête : impossible à tester, impossible à
+rejouer.</p></div>
+
+<h3>Le carrousel de relique</h3>
+
+<p>Pour les reliques, la mise en scène change de forme : c'est un <code>PageView</code> horizontal
+piloté par script. L'ouverture se fait en <code>showGeneralDialog</code>, volontairement
+inescapable :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>  void _showRelicCarouselDialog(RelicData rolledRelic) {
+    final gameData = ref.read(gameDataLoaderProvider).requireValue;
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.black87,
+      transitionDuration: const Duration(milliseconds: 400),
+      pageBuilder: (dialogContext, _, _) {
+        return RelicCarouselScreen(
+          relicPool: gameData.relics,
+          wonRelic: rolledRelic,</pre>
+</div>
+
+<p><code>barrierDismissible: false</code> est indispensable ici : un tap hors de la modale fermerait le
+dialogue sans jamais appeler <code>collectRelic()</code>, et comme <code>isRelicCollected</code>
+resterait faux, <code>_presentNextReward()</code> ne serait jamais rappelé — le joueur serait bloqué sur
+l'écran de combat, avec une relique tirée et jamais donnée.</p>
+
+<p>Le carrousel lui-même triche de façon assumée : la relique gagnante est <strong>placée à l'avance</strong>
+à un index fixe.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/relic_carousel/relic_carousel_screen.dart</span><span class="lang">dart</span></div>
+  <pre>  final int _targetIndex = 22; // Index where the winning relic will sit
+  // ...
+    // Generate pool of relics excluding the winning one to avoid premature duplication during spin
+    final otherRelics = widget.relicPool
+        .where((r) =&gt; r.id != widget.wonRelic.id)
+        .toList();
+    final random = Random();
+
+    // Populate carousel items
+    _carouselItems = List.generate(_targetIndex + 4, (index) {
+      if (index == _targetIndex) {
+        return widget.wonRelic;
+      }
+      // Fill others randomly
+      final source = otherRelics.isNotEmpty ? otherRelics : widget.relicPool;
+      return source[random.nextInt(source.length)];
+    });</pre>
+</div>
+
+<p>26 cases (<code>22 + 4</code>), la gagnante en 23<sup>e</sup> position, les autres tirées au hasard
+<em>en excluant la gagnante</em> pour qu'elle n'apparaisse pas prématurément. Puis un défilement de
+4 000 ms en <code>Curves.easeOutCubic</code>, précédé de 600 ms d'attente, avec
+<code>NeverScrollableScrollPhysics</code> pour que le joueur ne puisse pas intervenir :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/relic_carousel/relic_carousel_screen.dart</span><span class="lang">dart</span></div>
+  <pre>  void _startSpin() {
+    Future.delayed(const Duration(milliseconds: 600), () {
+      if (!mounted) return;
+      _pageController
+          .animateToPage(
+            _targetIndex,
+            duration: const Duration(milliseconds: 4000),
+            curve: Curves.easeOutCubic,
+          )
+          .then((_) {
+            // ... 55 particules, _isWon = true, widget.onLand?.call()
+          });
+    });
+  }</pre>
+</div>
+
+<p>Le <code>viewportFraction: 0.45</code> affiche trois cartes de front, et un <code>_onScroll</code>
+émet un <code>onTick</code> à chaque changement de page entière — le même crochet sonore que les
+rouleaux du draft. À l'arrêt : 55 particules radiales sur 1 800 ms, la rareté qui apparaît en fondu, et
+le bouton « RÉCUPÉRER » qui entre en <code>Curves.elasticOut</code>. Le bouton est protégé par
+<code>onPressed: (_isWon &amp;&amp; !_collected) ? ... : null</code> — un second garde d'idempotence, en
+plus de celui de <code>collectRelic()</code>.</p>
+
+<div class="memo">
+  <div class="card"><h5>140 ms</h5><p>Le tick d'un rouleau de draft. Trois cartes s'arrêtent à 1 200,
+  1 800 et 2 400 ms.</p></div>
+  <div class="card"><h5>1 400 ms</h5><p>L'alerte mythique : barre 0→20 %, « !!! » élastique 20→60 %,
+  clignotement en 6 phases après 60 %.</p></div>
+  <div class="card"><h5>4 000 ms</h5><p>Le défilement du carrousel de relique, vers l'index 22 sur 26,
+  en <code>easeOutCubic</code>.</p></div>
+  <div class="card"><h5>800 ms</h5><p>Le délai final avant <code>_completeAndExitCombat()</code>, une
+  fois l'or et l'XP crédités.</p></div>
+</div>
+
+<div class="box"><div class="box-title">À retenir</div>
+<p>Cinq tables, une statistique. Le draft de niveau utilise <strong>2 / 6 / 16 / 24</strong> avec les
+pentes <strong>0,5 / 1,5 / 3 / 4</strong> et un mythique à <strong>0,5 + 0,15·L</strong>. Les reliques
+utilisent <strong>1 / 5 / 14 / 20</strong> avec les pentes <strong>0,5 / 1 / 2 / 3</strong>, sauf le
+boss <code>improvedRelic</code> qui réserve <strong>10 %</strong> au légendaire et éteint le commun à
+l'acte 5, le peu commun à l'acte 8. Toutes utilisent une cascade sur un jet uniforme, donc tout
+dépassement de 100 est absorbé par le bas de la table. Et la fenêtre d'aide du jeu affiche, pour deux
+de ses trois panneaux, des chiffres qui ne sont pas ceux du calcul.</p></div>
+
+<div class="quiz">
+  <h2>Quiz — vérifiez vos acquis</h2>
+
+  <div class="q" data-answer="1">
+    <p class="q-text">1. Dans quel ordre <code>_presentNextReward()</code> présente-t-il les
+    récompenses, et que se passe-t-il après la collecte de l'or et de l'XP ?</p>
+    <ul class="q-opts">
+      <li>Or/XP, puis relique, puis cartes ; l'écran se ferme immédiatement</li>
+      <li>Relique, puis cartes de boss, puis or/XP ; <code>_completeAndExitCombat()</code> est appelé après 800 ms</li>
+      <li>Cartes de boss, puis relique, puis or/XP ; l'écran attend un tap du joueur</li>
+      <li>L'ordre dépend de <code>isResolved</code>, qui est évalué à chaque étape</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>lib/ui/screens/game_screen.dart</code> teste
+    d'abord <code>rolledRelic != null &amp;&amp; !isRelicCollected &amp;&amp; !isRelicSkipped</code>, puis
+    <code>rolledCards.isNotEmpty &amp;&amp; !isCardsProcessed</code>, et enfin
+    <code>!isGoldXpCollected</code>, qui déclenche un
+    <code>Future.delayed(const Duration(milliseconds: 800))</code> avant
+    <code>_completeAndExitCombat()</code>. <code>isResolved</code> n'est lu nulle part.</div>
+  </div>
+
+  <div class="q" data-answer="2">
+    <p class="q-text">2. Un boss <code>doubleXp</code> est vaincu avec quatre ennemis de niveau 5 (Slime,
+    Gobelin, Squelette, Orc Furieux). Combien d'XP le joueur reçoit-il ?</p>
+    <ul class="q-opts">
+      <li>210 XP</li>
+      <li>630 XP</li>
+      <li>882 XP</li>
+      <li>420 XP</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> le multiplicateur vaut
+    <code>1 + 0,10 × (5 − 1) = 1,4</code>, appliqué et arrondi par ennemi :
+    35 + 49 + 70 + 140 = 294 XP. <code>bossRewardType == BossRewardType.doubleXp</code> déclenche
+    <code>totalXp *= 3</code>, soit 882 XP (et 261 or, le même triplement s'appliquant à l'or).</div>
+  </div>
+
+  <div class="q" data-answer="2">
+    <p class="q-text">3. Sur un nœud Élite, avec une Chance de 4, quelle est la probabilité exacte
+    d'obtenir une relique légendaire ?</p>
+    <ul class="q-opts">
+      <li>1,0 %</li>
+      <li>2,0 %</li>
+      <li>3,0 %</li>
+      <li>10,0 %</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> la branche standard de <code>handleVictory</code>
+    utilise <code>legChance = 1.0 + luck * 0.5</code>, soit <code>1 + 4 × 0,5 = 3,0 %</code>. Le 10 %
+    correspondrait au boss <code>improvedRelic</code> (<code>legChance = 10.0 + luck * 0.5</code>, donc
+    12,0 % à Chance 4).</div>
+  </div>
+
+  <div class="q" data-answer="0">
+    <p class="q-text">4. Sur un boss <code>improvedRelic</code> à l'acte 4, avec Chance 0, quelle est la
+    probabilité d'obtenir une relique commune ?</p>
+    <ul class="q-opts">
+      <li>10 %</li>
+      <li>0 %</li>
+      <li>40 %</li>
+      <li>18,82 %</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong>
+    <code>commonChance = max(0.0, 40.0 - (act - 1) * 10.0)</code> vaut
+    <code>40 − 3 × 10 = 10</code> à l'acte 4. Le commun ne s'éteint qu'à partir de l'acte 5. 18,82 %
+    est la valeur du peu commun au même acte, et 40 % celle du commun à l'acte 1.</div>
+  </div>
+
+  <div class="q" data-answer="3">
+    <p class="q-text">5. Avec une Chance de 10, quelle est la probabilité qu'un draft de montée de
+    niveau contienne au moins une option mythique (Trèfle ou Miroir) ?</p>
+    <ul class="q-opts">
+      <li>0,5 %</li>
+      <li>2,0 %</li>
+      <li>4,0 % exactement</li>
+      <li>3,960 %</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> chaque jet vaut
+    <code>mythicChance = 0.5 + luck * 0.15</code>, soit 2,00 % à Chance 10.
+    <code>generateChoices</code> effectue <strong>deux</strong> jets indépendants, donc
+    <code>1 − (1 − 0,02)² = 3,960 %</code>. Le doublement naïf (4,0 %) surestime en oubliant
+    l'intersection (0,04 %).</div>
+  </div>
+
+  <div class="q" data-answer="1">
+    <p class="q-text">6. La fenêtre <code>ProbabilitiesDialog</code> affiche 60,0 % de commun pour le
+    « Draft standard de récompenses » à Chance 0. Que calcule réellement
+    <code>LevelUpRewardService.rollRarity</code> ?</p>
+    <ul class="q-opts">
+      <li>60,0 % : l'affichage est exact, seule la méthode de normalisation diffère</li>
+      <li>52,0 % : le dialogue utilise les bases des reliques (1 / 5 / 14 / 20) au lieu de celles du draft (2 / 6 / 16 / 24)</li>
+      <li>47,0 % : le dialogue oublie la ligne mythique dans le total</li>
+      <li>34,0 % : le dialogue applique les pentes de relique au lieu de celles du draft</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>rollRarity</code> pose
+    <code>legendaryChance = 2.0</code>, <code>epicChance = 6.0</code>, <code>rareChance = 16.0</code>,
+    <code>uncommonChance = 24.0</code>, soit 48 % de non-commun et <strong>52 % de commun</strong>. Le
+    dialogue, lui, utilise <code>1.0 / 5.0 / 14.0 / 20.0</code> — les bases de la table des reliques —
+    avec les pentes correctes du draft (0,5 / 1,5 / 3 / 4). Les pentes ne sont donc pas en cause : ce
+    sont les quatre valeurs de base qui sont fausses.</div>
+  </div>
+</div>
+
+<div class="pager">
+<a class="prev" href="ch14.html"><div class="dir">&#8592; Chapitre 14</div><div class="ttl">L&#x27;économie : or, boutique, forge et fusion</div></a>
+<a class="next" href="ch16.html"><div class="dir">Chapitre 16 &#8594;</div><div class="ttl">Événements, repos et autel des reliques</div></a>
+</div>
+</div>
+</main>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

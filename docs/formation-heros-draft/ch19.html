@@ -1,0 +1,2060 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Écrans, navigation et design system — Formation Hero's Draft</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<button class="menu-btn" aria-label="Menu">&#9776;</button>
+<div class="layout">
+<aside class="sidebar">
+  <a class="brand" href="index.html">
+    <div class="brand-title">HERO'S DRAFT</div>
+    <div class="brand-sub">Formation complète au projet Flutter</div>
+  </a>
+<nav class="nav">
+<div class="nav-part">Partie 0 — Démarrage</div>
+<a href="ch01.html"><span class="num">01</span><span>Vue d&#x27;ensemble : qu&#x27;est-ce que Hero&#x27;s Draft ?</span></a>
+<div class="nav-part">Partie 1 — Les fondations techniques</div>
+<a href="ch02.html"><span class="num">02</span><span>Dart, le langage — l&#x27;essentiel pour ce projet</span></a>
+<a href="ch03.html"><span class="num">03</span><span>Flutter — widgets, arbre et navigation</span></a>
+<a href="ch04.html"><span class="num">04</span><span>Riverpod — l&#x27;état partagé du jeu</span></a>
+<a href="ch05.html"><span class="num">05</span><span>Flame — le moteur de rendu du combat</span></a>
+<div class="nav-part">Partie 2 — L&#x27;architecture du projet</div>
+<a href="ch06.html"><span class="num">06</span><span>L&#x27;architecture en quatre couches</span></a>
+<a href="ch07.html"><span class="num">07</span><span>La couche de données : un jeu 100 % data-driven</span></a>
+<div class="nav-part">Partie 3 — Les règles du jeu</div>
+<a href="ch08.html"><span class="num">08</span><span>Le héros : stats, classes, passifs et progression</span></a>
+<a href="ch09.html"><span class="num">09</span><span>Les cartes et le deck</span></a>
+<a href="ch10.html"><span class="num">10</span><span>Le combat : boucle de tour, dégâts et effets</span></a>
+<a href="ch11.html"><span class="num">11</span><span>Les ennemis et la courbe de difficulté</span></a>
+<a href="ch12.html"><span class="num">12</span><span>La carte du monde procédurale</span></a>
+<a href="ch13.html"><span class="num">13</span><span>Les reliques et le système de déclencheurs</span></a>
+<a href="ch14.html"><span class="num">14</span><span>L&#x27;économie : or, boutique, forge et fusion</span></a>
+<a href="ch15.html"><span class="num">15</span><span>Récompenses, chance et probabilités</span></a>
+<a href="ch16.html"><span class="num">16</span><span>Événements, repos et autel des reliques</span></a>
+<div class="nav-part">Partie 4 — L&#x27;interface et le rendu</div>
+<a href="ch17.html"><span class="num">17</span><span>Le pont Flame ↔ Riverpod : l&#x27;écran de combat</span></a>
+<a href="ch18.html"><span class="num">18</span><span>Composants Flame et game feel</span></a>
+<a href="ch19.html" class="active"><span class="num">19</span><span>Écrans, navigation et design system</span></a>
+<div class="nav-part">Partie 5 — Qualité et cycle de vie</div>
+<a href="ch20.html"><span class="num">20</span><span>Sauvegarde, localisation et tutoriel</span></a>
+<a href="ch21.html"><span class="num">21</span><span>Tests, outillage, dette technique et évolutions</span></a>
+</nav>
+</aside>
+<main class="main">
+<div class="content">
+<div class="chapter-kicker">Chapitre 19</div>
+<h1>Écrans, navigation et design system</h1>
+<p class="lede">Dix-sept écrans, un seul point d'entrée, et une pile de navigation dont le fond ne change jamais. Ce chapitre cartographie l'interface et son vocabulaire visuel.</p>
+
+<div class="toc">
+  <div class="toc-title">Dans ce chapitre</div>
+  <ol>
+    <li><a href="#s1">Le catalogue des écrans</a></li>
+    <li><a href="#s2">Le graphe de navigation</a></li>
+    <li><a href="#s3">Les trois portes de sortie d'une run</a></li>
+    <li><a href="#s4">Les verrous de navigation</a></li>
+    <li><a href="#s5">Les widgets partagés</a></li>
+    <li><a href="#s6"><code>UiCard</code>, la carte hors combat</a></li>
+    <li><a href="#s7">Le design system</a></li>
+    <li><a href="#s8">La cohérence, en pratique</a></li>
+  </ol>
+</div>
+
+<p>Jusqu'ici nous avons regardé le moteur : les modèles, les <span class="pill r">Riverpod</span> providers,
+la boucle de combat <span class="pill f">Flame</span>. Ce chapitre change d'angle. On regarde la
+<strong>couche Flutter pure</strong> : les écrans, la façon dont on passe de l'un à l'autre, et le
+vocabulaire visuel partagé (couleurs, espacements, boutons, cartes) qui donne au jeu son unité —
+ou qui la lui refuse, comme on le verra à la section 8.</p>
+
+<p>Tout le code de ce chapitre vit dans trois dossiers :</p>
+
+<div class="tree">lib/
+├── <span class="f">main.dart</span>                     <span class="c">// le seul MaterialApp du projet</span>
+└── <span class="d">ui/</span>
+    ├── <span class="d">screens/</span>                  <span class="c">// 17 fichiers = 17 écrans</span>
+    ├── <span class="d">theme/</span>
+    │   ├── <span class="f">app_colors.dart</span>        <span class="c">// 38 tokens de couleur</span>
+    │   ├── <span class="f">app_spacing.dart</span>       <span class="c">// échelle 4/8/16/24/32/48</span>
+    │   ├── <span class="f">app_theme.dart</span>         <span class="c">// darkNeonTheme + lightParchmentTheme</span>
+    │   └── <span class="f">game_theme_extension.dart</span> <span class="c">// ThemeExtension à 13 champs</span>
+    └── <span class="d">widgets/</span>
+        ├── <span class="f">screen_scaffold.dart</span>   <span class="c">// le fond de tous les écrans</span>
+        ├── <span class="f">page_header.dart</span>       <span class="c">// l'AppBar maison</span>
+        ├── <span class="f">game_button.dart</span>       <span class="c">// le bouton maison</span>
+        ├── <span class="f">game_dialog.dart</span>       <span class="c">// la boîte de dialogue maison</span>
+        ├── <span class="f">notification_overlay.dart</span> <span class="c">// les toasts + context.showNotification</span>
+        ├── <span class="f">ui_card.dart</span>           <span class="c">// la carte hors combat</span>
+        └── <span class="d">ui_card/</span>, <span class="d">draft/</span>, <span class="d">hud/</span>, <span class="d">map/</span>, <span class="d">forge/</span>, <span class="d">relic_carousel/</span>
+</div>
+
+<h2 id="s1">1. Le catalogue des écrans</h2>
+
+<p>Un « écran » dans ce projet, c'est simplement un widget qu'on pousse sur le <code>Navigator</code> avec une
+<code>MaterialPageRoute</code>. Il n'y a <strong>aucun système de routes nommées</strong>, aucun <code>go_router</code>,
+aucune table <code>routes:</code> dans le <code>MaterialApp</code>. Chaque écran construit lui-même l'instance de
+l'écran suivant et la pousse. C'est le style le plus direct de Flutter, et pour un jeu à navigation
+arborescente (menu → run → nœud → retour) ça se tient très bien.</p>
+
+<p>Voici les dix-sept fichiers de <code>lib/ui/screens/</code>. La colonne « type de widget » est importante :
+elle vous dit tout de suite si l'écran a un état local (<code>State</code>) ou s'il ne fait que lire des
+providers.</p>
+
+<div class="table-wrap"><table>
+<thead><tr>
+  <th>Fichier</th><th>Classe</th><th>Type de widget</th><th>Rôle</th><th>Écrans d'arrivée</th><th>Écrans de sortie</th>
+</tr></thead>
+<tbody>
+<tr>
+  <td><code>splash_screen.dart</code></td>
+  <td><code>SplashScreen</code></td>
+  <td><code>ConsumerWidget</code></td>
+  <td>Surveille <code>gameDataLoaderProvider</code> ; affiche un <code>CircularProgressIndicator</code> pendant le chargement des JSON, puis <code>HomeScreen</code>.</td>
+  <td><code>home:</code> du <code>MaterialApp</code></td>
+  <td>aucune : rend <code>HomeScreen</code> <em>comme enfant</em></td>
+</tr>
+<tr>
+  <td><code>home_screen.dart</code></td>
+  <td><code>HomeScreen</code></td>
+  <td><code>ConsumerStatefulWidget</code></td>
+  <td>Menu principal : Continuer (si sauvegarde), JOUER, TUTORIEL (avec badge <code>NEW</code>), DICTIONNAIRE, PATCH NOTES.</td>
+  <td>rendu par <code>SplashScreen</code></td>
+  <td><code>MapScreen</code>, <code>ClassSelectionScreen</code>, <code>TutorialScreen</code>, <code>CardDictionaryScreen</code>, <code>PatchNotesScreen</code></td>
+</tr>
+<tr>
+  <td><code>class_selection_screen.dart</code></td>
+  <td><code>ClassSelectionScreen</code></td>
+  <td><code>ConsumerWidget</code></td>
+  <td>Grille des classes jouables. Chaque carte est un <code>_InteractiveClassCard</code> avec inclinaison 3D au survol et icône flottante.</td>
+  <td><code>HomeScreen</code> (push), <code>DeathOverlay</code> (<code>pushReplacement</code>)</td>
+  <td><code>StarterDeckDraftScreen</code>, <code>CardDictionaryScreen</code></td>
+</tr>
+<tr>
+  <td><code>starter_deck_draft_screen.dart</code></td>
+  <td><code>StarterDeckDraftScreen</code></td>
+  <td><code>ConsumerStatefulWidget</code></td>
+  <td>Draft du deck de départ : exactement 5 cartes globales non-statut, plus les cartes de classe ajoutées automatiquement.</td>
+  <td><code>ClassSelectionScreen</code></td>
+  <td><code>MapScreen</code> via <code>pushAndRemoveUntil</code></td>
+</tr>
+<tr>
+  <td><code>map_screen.dart</code></td>
+  <td><code>MapScreen</code></td>
+  <td><code>ConsumerStatefulWidget</code></td>
+  <td>Carte de l'acte dans un <code>InteractiveViewer</code> de 3000×5000 px, surbrillance des chemins, pion animé, légende, mini-stats.</td>
+  <td><code>StarterDeckDraftScreen</code>, <code>HomeScreen</code> (Continuer)</td>
+  <td>les 6 destinations de nœud, <code>DraftScreen</code>, <code>DeckScreen</code></td>
+</tr>
+<tr>
+  <td><code>game_screen.dart</code></td>
+  <td><code>GameScreen</code></td>
+  <td><code>ConsumerStatefulWidget</code></td>
+  <td>Le combat. Un <code>GameWidget(game: _game)</code> Flame en plein écran, tout le HUD Flutter par-dessus dans une <code>SafeArea</code>.</td>
+  <td><code>MapScreen</code> (nœuds <code>combat</code>, <code>elite</code>, <code>boss</code>)</td>
+  <td><code>BossCardDraftScreen</code>, <code>DeckScreen</code>, <code>RelicCarouselScreen</code> (dialogue)</td>
+</tr>
+<tr>
+  <td><code>shop_screen.dart</code></td>
+  <td><code>ShopScreen</code></td>
+  <td><code>ConsumerStatefulWidget</code></td>
+  <td>Boutique : cartes à vendre (75 %) et colonne de services (25 %) — reroll 15, potion 30, purge 75, agrandissement 100, clonage à prix variable.</td>
+  <td><code>MapScreen</code> (nœud <code>shop</code>)</td>
+  <td><code>pop()</code> vers <code>MapScreen</code></td>
+</tr>
+<tr>
+  <td><code>rest_screen.dart</code></td>
+  <td><code>RestScreen</code></td>
+  <td><code>ConsumerStatefulWidget</code></td>
+  <td>Campement : se soigner de 30 % des PV max, forger une carte, ou retirer une carte. Une seule action par visite.</td>
+  <td><code>MapScreen</code> (nœud <code>rest</code>)</td>
+  <td><code>RestCardSelectionScreen</code>, puis <code>pop()</code></td>
+</tr>
+<tr>
+  <td><code>rest_card_selection_screen.dart</code></td>
+  <td><code>RestCardSelectionScreen</code></td>
+  <td><code>ConsumerWidget</code></td>
+  <td>Grille du deck maître. Écran « sélecteur » : il ne modifie rien, il renvoie un résultat par <code>pop(...)</code>.</td>
+  <td><code>RestScreen</code></td>
+  <td><code>pop(card)</code> ou <code>pop({'card': …, 'upgrade': …})</code></td>
+</tr>
+<tr>
+  <td><code>event_screen.dart</code></td>
+  <td><code>EventScreen</code></td>
+  <td><code>ConsumerStatefulWidget</code></td>
+  <td>Événement narratif à choix multiples, avec badges d'effet (or, PV, relique…) et bouton CONTINUER une fois résolu.</td>
+  <td><code>MapScreen</code> (nœud <code>event</code>)</td>
+  <td><code>pop()</code> vers <code>MapScreen</code></td>
+</tr>
+<tr>
+  <td><code>relic_exchange_screen.dart</code></td>
+  <td><code>RelicExchangeScreen</code></td>
+  <td><code>ConsumerStatefulWidget</code></td>
+  <td>Sacrifier exactement 3 reliques de la rareté requise pour obtenir la relique proposée (un cran au-dessus). Fond parchemin.</td>
+  <td><code>MapScreen</code> (nœud <code>relicExchange</code>)</td>
+  <td><code>pop()</code> vers <code>MapScreen</code></td>
+</tr>
+<tr>
+  <td><code>forge_fusion_screen.dart</code></td>
+  <td><code>ForgeFusionScreen</code></td>
+  <td><code>ConsumerStatefulWidget</code></td>
+  <td>Fusionne des runes de forge identiques sur une même carte. Coût : <code>80 * (nombre de runes - 1)</code>.</td>
+  <td><code>MapScreen</code> (nœud <code>forgeFusion</code>)</td>
+  <td><code>pop()</code> vers <code>MapScreen</code></td>
+</tr>
+<tr>
+  <td><code>draft_screen.dart</code></td>
+  <td><code>DraftScreen</code></td>
+  <td><code>ConsumerStatefulWidget</code></td>
+  <td>Récompense de montée de niveau : 3 choix de bonus tirés au sort dans des rouleaux animés, plus une alerte « mythique » optionnelle.</td>
+  <td><code>MapScreen</code> via <code>LevelUpOverlay</code></td>
+  <td><code>onDraftComplete</code> → <code>pop()</code></td>
+</tr>
+<tr>
+  <td><code>boss_card_draft_screen.dart</code></td>
+  <td><code>BossCardDraftScreen</code></td>
+  <td><code>ConsumerStatefulWidget</code></td>
+  <td>Choix de <strong>exactement 2</strong> cartes parmi les récompenses roulées après un combat.</td>
+  <td><code>GameScreen</code> (<code>_presentNextReward</code>)</td>
+  <td><code>pop()</code> vers <code>GameScreen</code></td>
+</tr>
+<tr>
+  <td><code>deck_screen.dart</code></td>
+  <td><code>DeckScreen</code></td>
+  <td><code>ConsumerWidget</code></td>
+  <td>Deck maître groupé par <code>id_rareté</code> avec un badge <code>xN</code>. Fusion de 3 exemplaires si <code>allowMerge</code>.</td>
+  <td><code>MapToolbar</code> (<code>allowMerge: true</code>), <code>CombatTopBar</code> (<code>allowMerge: false</code>)</td>
+  <td><code>pop()</code> ou <code>pop(true)</code> après fusion</td>
+</tr>
+<tr>
+  <td><code>card_dictionary_screen.dart</code></td>
+  <td><code>CardDictionaryScreen</code></td>
+  <td><code>ConsumerWidget</code></td>
+  <td>Encyclopédie à deux onglets (<code>DefaultTabController</code>) : toutes les cartes, toutes les reliques.</td>
+  <td><code>HomeScreen</code>, <code>ClassSelectionScreen</code></td>
+  <td><code>pop()</code></td>
+</tr>
+<tr>
+  <td><code>patch_notes_screen.dart</code></td>
+  <td><code>PatchNotesScreen</code></td>
+  <td><code>StatefulWidget</code> <em>(le seul sans Riverpod)</em></td>
+  <td>Notes de version dépliables, chargées depuis <code>assets/data/patch_notes.json</code> via <code>rootBundle</code>.</td>
+  <td><code>HomeScreen</code></td>
+  <td><code>pop()</code></td>
+</tr>
+</tbody>
+</table></div>
+
+<div class="box"><div class="box-title">À retenir</div>
+<p>Sur 17 écrans, 11 sont des <code>ConsumerStatefulWidget</code> (ils ont un état local : sélection en cours,
+animation, drapeau « action déjà prise »), 5 sont des <code>ConsumerWidget</code> (purs lecteurs de providers)
+et 1 seul, <code>PatchNotesScreen</code>, ignore complètement Riverpod parce qu'il ne lit qu'un fichier JSON
+d'assets.</p></div>
+
+<h2 id="s2">2. Le graphe de navigation</h2>
+
+<p>Avant de regarder le diagramme, il faut comprendre le point de départ. Tout part de
+<code>lib/main.dart</code>, et ce fichier tient en 47 lignes :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/main.dart</span><span class="lang">dart</span></div>
+  <pre>void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const ProviderScope(child: HerosDraftApp()));
+}
+
+class HerosDraftApp extends ConsumerWidget {
+  const HerosDraftApp({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Force l'activation de l'écoute d'autosave dès le démarrage de l'app.
+    ref.watch(autosaveOrchestratorProvider);
+
+    return MaterialApp(
+      onGenerateTitle: (context) =&gt; AppLocalizations.of(context)!.appTitle,
+      theme: AppTheme.darkNeonTheme,
+      debugShowCheckedModeBanner: false,
+      localizationsDelegates: const [ /* ... */ ],
+      supportedLocales: const [Locale('en', ''), Locale('fr', '')],
+      home: const SplashScreen(),
+      builder: (context, child) {
+        return Stack(
+          children: [
+            child ?? const SizedBox.shrink(),
+            const GameNotificationOverlay(),
+          ],
+        );
+      },
+    );
+  }
+}</pre>
+</div>
+
+<p>Trois choses à noter, et chacune a des conséquences dans tout le reste du projet :</p>
+
+<ul>
+  <li><code>home: const SplashScreen()</code> — c'est la <strong>seule route déclarée</strong>. Tout le reste est
+  poussé impérativement.</li>
+  <li><code>builder:</code> enveloppe l'application entière dans un <code>Stack</code> qui superpose
+  <code>GameNotificationOverlay</code>. Les notifications flottent donc <em>au-dessus de toutes les routes</em>,
+  y compris des dialogues : elles survivent aux changements d'écran.</li>
+  <li><code>theme: AppTheme.darkNeonTheme</code> et rien d'autre. Il n'y a ni <code>darkTheme:</code>, ni
+  <code>themeMode:</code>. Nous y reviendrons — c'est la racine d'un problème réel.</li>
+</ul>
+
+<h3>Le point subtil : <code>SplashScreen</code> est la route <code>isFirst</code></h3>
+
+<p>Regardez bien <code>SplashScreen</code>. Il ne pousse jamais <code>HomeScreen</code>. Il le
+<strong>rend comme enfant</strong> :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/splash_screen.dart</span><span class="lang">dart</span></div>
+  <pre>class SplashScreen extends ConsumerWidget {
+  const SplashScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final gameData = ref.watch(gameDataLoaderProvider);
+
+    return Scaffold(
+      body: Center(
+        child: gameData.when(
+          data: (_) =&gt;
+              const HomeScreen(), // Si les données sont chargées, on affiche l'écran d'accueil
+          loading: () =&gt;
+              const CircularProgressIndicator(), // Pendant le chargement
+          error: (error, stack) =&gt;
+              Text('Erreur de chargement: $error'), // En cas d'erreur
+        ),
+      ),
+    );
+  }
+}</pre>
+</div>
+
+<p>Conséquence : la pile de navigation ne contient <strong>qu'une seule route</strong> quand on est au menu
+principal, et cette route est <code>SplashScreen</code>. <code>HomeScreen</code> n'est pas une route, c'est un
+widget à l'intérieur du <code>body</code> de la route racine.</p>
+
+<p>C'est exactement ce qui rend l'idiome <code>Navigator.popUntil((route) =&gt; route.isFirst)</code> valide
+partout dans le projet : dépiler jusqu'à la première route, c'est revenir à <code>SplashScreen</code>, donc
+au menu principal — sans jamais recharger les JSON du jeu (le provider est déjà résolu, <code>when</code>
+retombe immédiatement dans la branche <code>data</code>).</p>
+
+<div class="box ok"><div class="box-title">Bonne pratique</div>
+<p>Faire du splash la route racine plutôt qu'une route jetable qu'on remplace est astucieux ici :
+le chargement des données est un <code>FutureProvider</code>, donc mis en cache. Revenir à la racine
+réaffiche instantanément le menu, et tout le reste de la pile est détruit d'un coup. Un
+<code>pushReplacement(HomeScreen)</code> au démarrage aurait obligé à gérer un cas « et si on veut revenir
+tout en bas ? » beaucoup plus fragile.</p></div>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 860 600" width="860" role="img" aria-label="Graphe complet de navigation entre les écrans de Hero's Draft">
+      <defs>
+        <marker id="c19-arrow-amber" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#f59e0b"/></marker>
+        <marker id="c19-arrow-green" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#34d399"/></marker>
+        <marker id="c19-arrow-red" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#f87171"/></marker>
+        <marker id="c19-arrow-blue" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#60a5fa"/></marker>
+      </defs>
+
+      <rect x="0" y="0" width="860" height="600" fill="#0e1524"/>
+
+      <!-- Colonne gauche : le tronc de la run -->
+      <rect x="40" y="16" width="240" height="104" rx="10" fill="#151b2b" stroke="#22d3ee" stroke-width="2"/>
+      <text x="160" y="38" fill="#22d3ee" font-size="13" font-weight="bold" text-anchor="middle" font-family="ui-monospace, monospace">SplashScreen</text>
+      <text x="160" y="52" fill="#a7b4c9" font-size="9" text-anchor="middle">home: du MaterialApp — route.isFirst</text>
+      <rect x="54" y="60" width="212" height="48" rx="8" fill="#101827" stroke="#34d399" stroke-width="1.5"/>
+      <text x="160" y="80" fill="#34d399" font-size="12" font-weight="bold" text-anchor="middle" font-family="ui-monospace, monospace">HomeScreen</text>
+      <text x="160" y="97" fill="#a7b4c9" font-size="9" text-anchor="middle">enfant du body, pas une route</text>
+
+      <rect x="40" y="170" width="240" height="46" rx="8" fill="#151b2b" stroke="#a78bfa" stroke-width="1.5"/>
+      <text x="160" y="190" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">ClassSelectionScreen</text>
+      <text x="160" y="206" fill="#a7b4c9" font-size="8.5" text-anchor="middle">action AppBar → CardDictionaryScreen</text>
+
+      <rect x="40" y="256" width="240" height="46" rx="8" fill="#151b2b" stroke="#a78bfa" stroke-width="1.5"/>
+      <text x="160" y="276" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">StarterDeckDraftScreen</text>
+      <text x="160" y="292" fill="#a7b4c9" font-size="8.5" text-anchor="middle">5 cartes globales à sélectionner</text>
+
+      <rect x="40" y="342" width="240" height="52" rx="8" fill="#1c1710" stroke="#f59e0b" stroke-width="2"/>
+      <text x="160" y="364" fill="#f59e0b" font-size="13" font-weight="bold" text-anchor="middle" font-family="ui-monospace, monospace">MapScreen</text>
+      <text x="160" y="381" fill="#a7b4c9" font-size="8.5" text-anchor="middle">canPop: false → ouvre le menu pause</text>
+
+      <!-- Flèches verticales colonne gauche -->
+      <path d="M160 120 L160 166" stroke="#f59e0b" stroke-width="2" marker-end="url(#c19-arrow-amber)"/>
+      <text x="168" y="146" fill="#a7b4c9" font-size="9">push — bouton JOUER</text>
+      <path d="M160 216 L160 252" stroke="#f59e0b" stroke-width="2" marker-end="url(#c19-arrow-amber)"/>
+      <text x="168" y="238" fill="#a7b4c9" font-size="9">push — bouton SÉLECTIONNER</text>
+      <path d="M160 302 L160 338" stroke="#f59e0b" stroke-width="2" marker-end="url(#c19-arrow-amber)"/>
+      <text x="168" y="324" fill="#a7b4c9" font-size="9">pushAndRemoveUntil(isFirst)</text>
+
+      <!-- Continuer : HomeScreen -> MapScreen -->
+      <path d="M266 96 L300 96 L300 356 L276 356" stroke="#60a5fa" stroke-width="1.6" fill="none" stroke-dasharray="5 3" marker-end="url(#c19-arrow-blue)"/>
+      <text x="305" y="250" fill="#60a5fa" font-size="8.5">push</text>
+      <text x="305" y="262" fill="#a7b4c9" font-size="8.5">Continuer</text>
+
+      <!-- popUntil depuis MapScreen (pause) -->
+      <path d="M40 380 L16 380 L16 100 L36 100" stroke="#f87171" stroke-width="1.8" fill="none" marker-end="url(#c19-arrow-red)"/>
+      <text x="11" y="250" fill="#f87171" font-size="9" text-anchor="middle" transform="rotate(-90 11 250)">popUntil(isFirst)</text>
+
+      <!-- popUntil depuis GameScreen -->
+      <path d="M430 150 L430 132 L292 132 L292 110 L284 110" stroke="#f87171" stroke-width="1.8" fill="none" marker-end="url(#c19-arrow-red)"/>
+      <text x="352" y="126" fill="#f87171" font-size="9">popUntil(isFirst) — pause / mort</text>
+
+      <!-- Tronc du hub carte -->
+      <path d="M280 368 L328 368" stroke="#3a4966" stroke-width="2"/>
+      <path d="M328 163 L328 545" stroke="#3a4966" stroke-width="2"/>
+      <circle cx="328" cy="368" r="3.5" fill="#f59e0b"/>
+
+      <!-- Destinations de nœud -->
+      <rect x="352" y="150" width="178" height="38" rx="7" fill="#151b2b" stroke="#f87171" stroke-width="1.5"/>
+      <text x="441" y="174" fill="#e6ecf5" font-size="11.5" text-anchor="middle" font-family="ui-monospace, monospace">GameScreen</text>
+      <path d="M328 163 L348 163" stroke="#f59e0b" stroke-width="1.6" marker-end="url(#c19-arrow-amber)"/>
+      <path d="M352 175 L332 175" stroke="#34d399" stroke-width="1.6" marker-end="url(#c19-arrow-green)"/>
+
+      <rect x="352" y="202" width="178" height="38" rx="7" fill="#151b2b" stroke="#3a4966" stroke-width="1.5"/>
+      <text x="441" y="226" fill="#e6ecf5" font-size="11.5" text-anchor="middle" font-family="ui-monospace, monospace">ShopScreen</text>
+      <path d="M328 215 L348 215" stroke="#f59e0b" stroke-width="1.6" marker-end="url(#c19-arrow-amber)"/>
+      <path d="M352 227 L332 227" stroke="#34d399" stroke-width="1.6" marker-end="url(#c19-arrow-green)"/>
+
+      <rect x="352" y="254" width="178" height="38" rx="7" fill="#151b2b" stroke="#3a4966" stroke-width="1.5"/>
+      <text x="441" y="278" fill="#e6ecf5" font-size="11.5" text-anchor="middle" font-family="ui-monospace, monospace">RestScreen</text>
+      <path d="M328 267 L348 267" stroke="#f59e0b" stroke-width="1.6" marker-end="url(#c19-arrow-amber)"/>
+      <path d="M352 279 L332 279" stroke="#34d399" stroke-width="1.6" marker-end="url(#c19-arrow-green)"/>
+
+      <rect x="352" y="306" width="178" height="38" rx="7" fill="#151b2b" stroke="#3a4966" stroke-width="1.5"/>
+      <text x="441" y="330" fill="#e6ecf5" font-size="11.5" text-anchor="middle" font-family="ui-monospace, monospace">EventScreen</text>
+      <path d="M328 319 L348 319" stroke="#f59e0b" stroke-width="1.6" marker-end="url(#c19-arrow-amber)"/>
+      <path d="M352 331 L332 331" stroke="#34d399" stroke-width="1.6" marker-end="url(#c19-arrow-green)"/>
+
+      <rect x="352" y="358" width="178" height="38" rx="7" fill="#151b2b" stroke="#3a4966" stroke-width="1.5"/>
+      <text x="441" y="382" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">RelicExchangeScreen</text>
+      <path d="M328 371 L348 371" stroke="#f59e0b" stroke-width="1.6" marker-end="url(#c19-arrow-amber)"/>
+      <path d="M352 383 L332 383" stroke="#34d399" stroke-width="1.6" marker-end="url(#c19-arrow-green)"/>
+
+      <rect x="352" y="410" width="178" height="38" rx="7" fill="#151b2b" stroke="#3a4966" stroke-width="1.5"/>
+      <text x="441" y="434" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">ForgeFusionScreen</text>
+      <path d="M328 423 L348 423" stroke="#f59e0b" stroke-width="1.6" marker-end="url(#c19-arrow-amber)"/>
+      <path d="M352 435 L332 435" stroke="#34d399" stroke-width="1.6" marker-end="url(#c19-arrow-green)"/>
+
+      <rect x="352" y="468" width="178" height="38" rx="7" fill="#151b2b" stroke="#a78bfa" stroke-width="1.5"/>
+      <text x="441" y="486" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">DraftScreen</text>
+      <text x="441" y="499" fill="#a7b4c9" font-size="8">via LevelUpOverlay</text>
+      <path d="M328 481 L348 481" stroke="#f59e0b" stroke-width="1.6" marker-end="url(#c19-arrow-amber)"/>
+      <path d="M352 493 L332 493" stroke="#34d399" stroke-width="1.6" marker-end="url(#c19-arrow-green)"/>
+
+      <rect x="352" y="520" width="178" height="38" rx="7" fill="#151b2b" stroke="#a78bfa" stroke-width="1.5"/>
+      <text x="441" y="538" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">DeckScreen</text>
+      <text x="441" y="551" fill="#a7b4c9" font-size="8">MapToolbar + CombatTopBar</text>
+      <path d="M328 533 L348 533" stroke="#f59e0b" stroke-width="1.6" marker-end="url(#c19-arrow-amber)"/>
+      <path d="M352 545 L332 545" stroke="#34d399" stroke-width="1.6" marker-end="url(#c19-arrow-green)"/>
+
+      <!-- Colonne droite : hors run + feuilles -->
+      <rect x="600" y="20" width="210" height="38" rx="7" fill="#151b2b" stroke="#3a4966" stroke-width="1.5"/>
+      <text x="705" y="44" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">CardDictionaryScreen</text>
+      <rect x="600" y="68" width="210" height="38" rx="7" fill="#151b2b" stroke="#3a4966" stroke-width="1.5"/>
+      <text x="705" y="92" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">PatchNotesScreen</text>
+      <rect x="600" y="116" width="210" height="38" rx="7" fill="#151b2b" stroke="#3a4966" stroke-width="1.5" stroke-dasharray="5 3"/>
+      <text x="705" y="140" fill="#a7b4c9" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">TutorialScreen</text>
+
+      <path d="M266 84 L570 84" stroke="#f59e0b" stroke-width="1.5" fill="none"/>
+      <path d="M570 84 L570 39 L596 39" stroke="#f59e0b" stroke-width="1.5" fill="none" marker-end="url(#c19-arrow-amber)"/>
+      <path d="M570 84 L570 87 L596 87" stroke="#f59e0b" stroke-width="1.5" fill="none" marker-end="url(#c19-arrow-amber)"/>
+      <path d="M570 84 L570 135 L596 135" stroke="#f59e0b" stroke-width="1.5" fill="none" marker-end="url(#c19-arrow-amber)"/>
+      <text x="400" y="76" fill="#a7b4c9" font-size="9">push depuis le menu</text>
+
+      <rect x="600" y="180" width="210" height="38" rx="7" fill="#151b2b" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="705" y="204" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">BossCardDraftScreen</text>
+      <path d="M530 163 L566 163 L566 193 L596 193" stroke="#f59e0b" stroke-width="1.5" fill="none" marker-end="url(#c19-arrow-amber)"/>
+      <path d="M600 206 L578 206 L578 176 L534 176" stroke="#34d399" stroke-width="1.5" fill="none" marker-end="url(#c19-arrow-green)"/>
+
+      <rect x="600" y="254" width="210" height="38" rx="7" fill="#151b2b" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="705" y="273" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">RestCardSelectionScreen</text>
+      <text x="705" y="286" fill="#a7b4c9" font-size="8">renvoie un résultat par pop(...)</text>
+      <path d="M530 267 L596 267" stroke="#f59e0b" stroke-width="1.5" fill="none" marker-end="url(#c19-arrow-amber)"/>
+      <path d="M600 281 L534 281" stroke="#34d399" stroke-width="1.5" fill="none" marker-end="url(#c19-arrow-green)"/>
+
+      <!-- Légende -->
+      <path d="M40 576 L74 576" stroke="#f59e0b" stroke-width="2" marker-end="url(#c19-arrow-amber)"/>
+      <text x="82" y="580" fill="#a7b4c9" font-size="9.5">push</text>
+      <path d="M130 576 L164 576" stroke="#34d399" stroke-width="2" marker-end="url(#c19-arrow-green)"/>
+      <text x="172" y="580" fill="#a7b4c9" font-size="9.5">pop()</text>
+      <path d="M222 576 L256 576" stroke="#f87171" stroke-width="2" marker-end="url(#c19-arrow-red)"/>
+      <text x="264" y="580" fill="#a7b4c9" font-size="9.5">popUntil((route) =&gt; route.isFirst)</text>
+      <path d="M470 576 L504 576" stroke="#60a5fa" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#c19-arrow-blue)"/>
+      <text x="512" y="580" fill="#a7b4c9" font-size="9.5">reprise de sauvegarde</text>
+      <rect x="660" y="568" width="24" height="16" rx="4" fill="#151b2b" stroke="#3a4966" stroke-dasharray="4 3"/>
+      <text x="692" y="580" fill="#a7b4c9" font-size="9.5">hors lib/ui/screens/</text>
+    </svg>
+  </div>
+  <figcaption>Le graphe complet. Le tronc gris vertical représente le hub <code>MapScreen</code> : six destinations
+  de nœud, plus <code>DraftScreen</code> (montée de niveau) et <code>DeckScreen</code> (barre d'outils). Toutes reviennent
+  par un simple <code>pop()</code>.</figcaption>
+</figure>
+
+<p>Le nœud tapé sur la carte détermine la destination par un simple <code>switch</code> sur
+<code>node.type</code>. Pas de table de routage : un <code>Widget destination</code> local, puis un <code>push</code>.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/map_screen.dart</span><span class="lang">dart</span></div>
+  <pre>  void _onNodeTap(BuildContext context, WidgetRef ref, MapNode node) {
+    if (ref.read(runProvider).pendingDrafts &gt; 0) return;
+    ref.read(runProvider.notifier).travelToNode(node.id);
+
+    Widget destination;
+    switch (node.type) {
+      case MapNodeType.combat:
+      case MapNodeType.elite:
+      case MapNodeType.boss:
+        destination = const GameScreen();
+        break;
+      case MapNodeType.shop:
+        destination = const ShopScreen();
+        break;
+      case MapNodeType.rest:
+        destination = const RestScreen();
+        break;
+      case MapNodeType.event:
+        destination = const EventScreen();
+        break;
+      case MapNodeType.relicExchange:
+        destination = RelicExchangeScreen(node: node);
+        break;
+      case MapNodeType.forgeFusion:
+        destination = const ForgeFusionScreen();
+        break;
+    }
+
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) =&gt; destination));
+  }</pre>
+</div>
+
+<div class="box warn"><div class="box-title">Piège</div>
+<p><code>RelicExchangeScreen</code> est le seul écran de nœud qui reçoit un paramètre (<code>node: node</code>), et donc
+le seul qui ne peut pas être <code>const</code>. Si vous ajoutez un type de nœud, souvenez-vous que ce
+<code>switch</code> n'a pas de branche <code>default</code> : le compilateur Dart vous signalera l'oubli, ce qui est
+exactement ce qu'on veut. Ne mettez pas de <code>default</code> ici.</p></div>
+
+<h2 id="s3">3. Les trois portes de sortie d'une run</h2>
+
+<p>Une fois dans une run, la pile de navigation grossit : <code>SplashScreen</code> → <code>MapScreen</code> →
+<code>GameScreen</code> → éventuellement <code>BossCardDraftScreen</code>. Trois mécanismes très différents servent
+à en sortir, et chacun laisse la pile dans un état différent. C'est le genre de détail qui, mal
+compris, produit des bugs de « bouton retour qui ramène dans un combat mort ».</p>
+
+<h3>Porte 1 — <code>popUntil((route) =&gt; route.isFirst)</code></h3>
+
+<p>Utilisée à trois endroits : le menu pause depuis <code>MapScreen</code>, le menu pause depuis
+<code>GameScreen</code>, et le bouton « Menu principal » de l'écran de mort.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/map_screen.dart</span><span class="lang">dart</span></div>
+  <pre>  void _showPauseMenu() {
+    PauseDialog.show(
+      context,
+      onResume: () =&gt; Navigator.of(context).pop(),
+      onExit: () =&gt; Navigator.of(context).popUntil((route) =&gt; route.isFirst),
+    );
+  }</pre>
+</div>
+
+<p>Le <code>onExit</code> ne dépile pas explicitement le dialogue. Ce n'est pas un oubli : un dialogue
+Flutter <em>est</em> une route poussée sur le même <code>Navigator</code>. <code>popUntil(isFirst)</code> l'emporte
+donc avec tout le reste. Sur <code>GameScreen</code>, en revanche, l'auteur a écrit les deux :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>  void _showPauseMenu() {
+    _game.pauseEngine();
+    PauseDialog.show(
+      context,
+      onResume: () =&gt; Navigator.of(context).pop(),
+      onExit: () {
+        Navigator.of(context).pop();
+        Navigator.of(context).popUntil((route) =&gt; route.isFirst);
+      },
+    ).then((_) {
+      if (mounted) {
+        _game.resumeEngine();
+      }
+    });
+  }</pre>
+</div>
+
+<p>Notez le <code>_game.pauseEngine()</code> / <code>resumeEngine()</code> : mettre le jeu Flame en pause n'a rien à
+voir avec la navigation, il faut le faire à la main. Le <code>.then()</code> s'exécute quand la route du
+dialogue est dépilée, quel que soit le chemin.</p>
+
+<h3>Porte 2 — <code>pushReplacement(ClassSelectionScreen)</code></h3>
+
+<p>C'est le bouton « Changer de classe » de l'écran de mort. On veut recommencer une run avec une
+autre classe sans repasser par le menu principal.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/hud/death_overlay.dart</span><span class="lang">dart</span></div>
+  <pre>                  ElevatedButton(
+                    onPressed: () async {
+                      await SaveService.clear();
+                      if (!context.mounted) return;
+                      Navigator.of(context).popUntil((route) =&gt; route.isFirst);
+                    },
+                    child: Text(l10n.mainMenu),
+                  ),
+                  const SizedBox(width: 10),
+                  ElevatedButton(
+                    onPressed: () async {
+                      await SaveService.clear();
+                      if (!context.mounted) return;
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                          builder: (context) =&gt; const ClassSelectionScreen(),
+                        ),
+                      );
+                    },
+                    child: Text(l10n.changeClass),
+                  ),</pre>
+</div>
+
+<p><code>pushReplacement</code> remplace <strong>uniquement la route du sommet</strong>. Le <code>DeathOverlay</code> est
+affiché à l'intérieur de <code>GameScreen</code>, donc c'est <code>GameScreen</code> qui est remplacé par
+<code>ClassSelectionScreen</code>. <code>MapScreen</code> reste dessous. C'est un détail important : la pile est
+alors <code>[SplashScreen, MapScreen, ClassSelectionScreen]</code>, avec un <code>MapScreen</code> « fantôme » qui
+appartient à la run précédente.</p>
+
+<h3>Porte 3 — <code>pushAndRemoveUntil(MapScreen, isFirst)</code></h3>
+
+<p>C'est le démarrage d'une run, à la fin du draft de deck de départ. Et c'est précisément le
+mécanisme qui nettoie le fantôme laissé par la porte 2.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/starter_deck_draft_screen.dart</span><span class="lang">dart</span></div>
+  <pre>    // 3. Initialiser les providers
+    ref.read(deckProvider.notifier).clearDeck();
+    ref
+        .read(runProvider.notifier)
+        .startNewRun(widget.playerClass, widget.passive);
+    ref.read(deckProvider.notifier).initializeStarterDeck(finalDeck);
+
+    // 4. Redirection propre vers la map de jeu
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) =&gt; const MapScreen()),
+      (route) =&gt; route.isFirst,
+    );</pre>
+</div>
+
+<p>Le second argument est un prédicat : <em>continue de dépiler tant que le prédicat est faux</em>. Ici
+il s'arrête à la première route. Résultat : quel que soit l'état de la pile avant (menu → classe →
+draft, ou run morte → classe → draft), on obtient toujours exactement
+<code>[SplashScreen, MapScreen]</code>. Le bouton retour matériel ne peut plus revenir dans l'ancienne run.</p>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="-18 0 880 400" width="860" role="img" aria-label="État de la pile de navigation après chacune des trois portes de sortie">
+      <defs>
+        <marker id="c19-stack-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0 0 L8 4 L0 8 z" fill="#a7b4c9"/></marker>
+      </defs>
+      <rect x="0" y="0" width="860" height="400" fill="#0e1524"/>
+
+      <!-- Colonne A -->
+      <text x="110" y="26" fill="#e6ecf5" font-size="12.5" font-weight="bold" text-anchor="middle">A. Pendant la run</text>
+      <text x="110" y="44" fill="#a7b4c9" font-size="9" text-anchor="middle">combat en cours sur un nœud</text>
+      <rect x="20" y="154" width="180" height="42" rx="7" fill="#241417" stroke="#f87171" stroke-width="1.6"/>
+      <text x="110" y="180" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">GameScreen</text>
+      <rect x="20" y="206" width="180" height="42" rx="7" fill="#1c1710" stroke="#f59e0b" stroke-width="1.6"/>
+      <text x="110" y="232" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">MapScreen</text>
+      <rect x="20" y="258" width="180" height="42" rx="7" fill="#101c22" stroke="#22d3ee" stroke-width="1.6"/>
+      <text x="110" y="278" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">SplashScreen</text>
+      <text x="110" y="292" fill="#22d3ee" font-size="8" text-anchor="middle">isFirst → HomeScreen</text>
+      <path d="M210 175 L232 175" stroke="#a7b4c9" stroke-width="1.4" marker-end="url(#c19-stack-arrow)" transform="translate(-222 -40) rotate(0)"/>
+      <text x="110" y="140" fill="#a7b4c9" font-size="9" text-anchor="middle">sommet de pile</text>
+      <path d="M110 144 L110 150" stroke="#a7b4c9" stroke-width="1.4" marker-end="url(#c19-stack-arrow)"/>
+      <text x="110" y="320" fill="#a7b4c9" font-size="9" text-anchor="middle">index 0 — route.isFirst</text>
+
+      <!-- Colonne B -->
+      <text x="320" y="26" fill="#f87171" font-size="12.5" font-weight="bold" text-anchor="middle">B. popUntil(isFirst)</text>
+      <text x="320" y="44" fill="#a7b4c9" font-size="9" text-anchor="middle">pause ou « Menu principal » à la mort</text>
+      <rect x="230" y="154" width="180" height="42" rx="7" fill="#12161f" stroke="#3a4966" stroke-width="1.4" stroke-dasharray="5 3"/>
+      <text x="320" y="173" fill="#6b7a93" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">GameScreen</text>
+      <text x="320" y="187" fill="#f87171" font-size="8" text-anchor="middle">détruite</text>
+      <rect x="230" y="206" width="180" height="42" rx="7" fill="#12161f" stroke="#3a4966" stroke-width="1.4" stroke-dasharray="5 3"/>
+      <text x="320" y="225" fill="#6b7a93" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">MapScreen</text>
+      <text x="320" y="239" fill="#f87171" font-size="8" text-anchor="middle">détruite</text>
+      <rect x="230" y="258" width="180" height="42" rx="7" fill="#101c22" stroke="#22d3ee" stroke-width="1.6"/>
+      <text x="320" y="278" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">SplashScreen</text>
+      <text x="320" y="292" fill="#22d3ee" font-size="8" text-anchor="middle">isFirst → HomeScreen</text>
+      <text x="320" y="330" fill="#a7b4c9" font-size="9" text-anchor="middle">pile de hauteur 1</text>
+      <text x="320" y="345" fill="#a7b4c9" font-size="9" text-anchor="middle">les providers de run, eux, survivent</text>
+
+      <!-- Colonne C -->
+      <text x="530" y="26" fill="#a78bfa" font-size="12.5" font-weight="bold" text-anchor="middle">C. pushReplacement</text>
+      <text x="530" y="44" fill="#a7b4c9" font-size="9" text-anchor="middle">« Changer de classe » depuis DeathOverlay</text>
+      <rect x="440" y="154" width="180" height="42" rx="7" fill="#1a1626" stroke="#a78bfa" stroke-width="1.6"/>
+      <text x="530" y="173" fill="#e6ecf5" font-size="10.5" text-anchor="middle" font-family="ui-monospace, monospace">ClassSelectionScreen</text>
+      <text x="530" y="187" fill="#a78bfa" font-size="8" text-anchor="middle">remplace GameScreen</text>
+      <rect x="440" y="206" width="180" height="42" rx="7" fill="#1c1710" stroke="#f59e0b" stroke-width="1.6"/>
+      <text x="530" y="225" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">MapScreen</text>
+      <text x="530" y="239" fill="#f59e0b" font-size="8" text-anchor="middle">reste en pile (fantôme)</text>
+      <rect x="440" y="258" width="180" height="42" rx="7" fill="#101c22" stroke="#22d3ee" stroke-width="1.6"/>
+      <text x="530" y="278" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">SplashScreen</text>
+      <text x="530" y="292" fill="#22d3ee" font-size="8" text-anchor="middle">isFirst → HomeScreen</text>
+      <text x="530" y="330" fill="#a7b4c9" font-size="9" text-anchor="middle">pile de hauteur 3</text>
+      <text x="530" y="345" fill="#a7b4c9" font-size="9" text-anchor="middle">le MapScreen mort sera balayé en D</text>
+
+      <!-- Colonne D -->
+      <text x="740" y="26" fill="#34d399" font-size="12.5" font-weight="bold" text-anchor="middle">D. pushAndRemoveUntil</text>
+      <text x="740" y="44" fill="#a7b4c9" font-size="9" text-anchor="middle">fin de StarterDeckDraftScreen</text>
+      <rect x="650" y="102" width="180" height="42" rx="7" fill="#12161f" stroke="#3a4966" stroke-width="1.4" stroke-dasharray="5 3"/>
+      <text x="740" y="121" fill="#6b7a93" font-size="10" text-anchor="middle" font-family="ui-monospace, monospace">StarterDeckDraftScreen</text>
+      <text x="740" y="135" fill="#f87171" font-size="8" text-anchor="middle">retirée</text>
+      <rect x="650" y="154" width="180" height="42" rx="7" fill="#12161f" stroke="#3a4966" stroke-width="1.4" stroke-dasharray="5 3"/>
+      <text x="740" y="173" fill="#6b7a93" font-size="10.5" text-anchor="middle" font-family="ui-monospace, monospace">ClassSelectionScreen</text>
+      <text x="740" y="187" fill="#f87171" font-size="8" text-anchor="middle">retirée</text>
+      <rect x="650" y="206" width="180" height="42" rx="7" fill="#132217" stroke="#34d399" stroke-width="1.8"/>
+      <text x="740" y="225" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">MapScreen</text>
+      <text x="740" y="239" fill="#34d399" font-size="8" text-anchor="middle">nouvelle instance</text>
+      <rect x="650" y="258" width="180" height="42" rx="7" fill="#101c22" stroke="#22d3ee" stroke-width="1.6"/>
+      <text x="740" y="278" fill="#e6ecf5" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">SplashScreen</text>
+      <text x="740" y="292" fill="#22d3ee" font-size="8" text-anchor="middle">isFirst → HomeScreen</text>
+      <text x="740" y="330" fill="#a7b4c9" font-size="9" text-anchor="middle">pile de hauteur 2, toujours</text>
+      <text x="740" y="345" fill="#a7b4c9" font-size="9" text-anchor="middle">quel que soit l'état d'avant</text>
+
+      <path d="M20 370 L840 370" stroke="#3a4966" stroke-width="1"/>
+      <text x="430" y="388" fill="#a7b4c9" font-size="9.5" text-anchor="middle">Les boîtes en pointillé sont des routes retirées de la pile ; elles sont détruites (dispose) par Flutter.</text>
+    </svg>
+  </div>
+  <figcaption>Les quatre états de la pile. Remarquez qu'aucune de ces trois portes ne remet à zéro les
+  providers Riverpod : c'est <code>startNewRun()</code>, appelé juste avant <code>pushAndRemoveUntil</code>, qui s'en charge.</figcaption>
+</figure>
+
+<div class="box rule"><div class="box-title">Règle du jeu</div>
+<p>Quand on revient au menu principal par <code>popUntil</code>, <code>HomeScreen</code> n'est <strong>pas reconstruit
+depuis zéro</strong> : c'est la même instance de <code>_HomeScreenState</code> qui réapparaît. C'est pour ça que
+<code>_continueGame()</code> et <code>_startNewGame()</code> se terminent par un <code>setState(() {})</code> après
+l'<code>await</code> du <code>push</code>, avec ce commentaire explicite dans le code :</p>
+<p><em>« The pause menu and the death overlay both return here via
+<code>Navigator.popUntil((route) =&gt; route.isFirst)</code> rather than recreating this screen, so the save
+state must be re-checked on return. »</em> Sans ce <code>setState</code>, le bouton « Continuer » resterait
+affiché après une mort qui a effacé la sauvegarde.</p></div>
+
+<h2 id="s4">4. Les verrous de navigation</h2>
+
+<p><code>PopScope</code> est le widget Flutter qui intercepte le geste « retour » (bouton matériel Android,
+balayage iOS, <code>maybePop()</code>). Il expose deux paramètres :</p>
+
+<ul>
+  <li><code>canPop</code> : si <code>false</code>, le geste est bloqué ;</li>
+  <li><code>onPopInvokedWithResult(didPop, result)</code> : rappelé dans les deux cas. On regarde
+  <code>didPop</code> pour savoir si le retour a effectivement eu lieu.</li>
+</ul>
+
+<p>Le projet en compte cinq, tous avec une intention de gameplay derrière.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Écran</th><th>Condition exacte</th><th>Mécanisme</th><th>Conséquence de jeu</th></tr></thead>
+<tbody>
+<tr>
+  <td><code>game_screen.dart</code>:418</td>
+  <td><code>canPop: isCompleted || runState.isDead</code></td>
+  <td><code>PopScope</code> écrit directement dans le <code>build</code></td>
+  <td>On ne peut pas fuir un combat en cours par le bouton retour. La sortie n'est rouverte que si le nœud est marqué complété (victoire traitée) ou si le héros est mort — auquel cas c'est le <code>DeathOverlay</code> qui prend la main.</td>
+</tr>
+<tr>
+  <td><code>rest_screen.dart</code>:118</td>
+  <td><code>canPop: _actionTaken</code></td>
+  <td><code>ScreenScaffold(canPop: …)</code></td>
+  <td>Le campement doit être « consommé ». Tant qu'on n'a pas soigné, forgé ou retiré une carte, le retour est bloqué : impossible de sauter le nœud pour le garder en réserve.</td>
+</tr>
+<tr>
+  <td><code>event_screen.dart</code>:320</td>
+  <td><code>canPop: eventState.isResolved</code></td>
+  <td><code>ScreenScaffold(canPop: …)</code></td>
+  <td>Même logique : l'événement impose un choix. On ne peut pas quitter pour éviter un malus. Une fois résolu, le bouton CONTINUER remplace les options.</td>
+</tr>
+<tr>
+  <td><code>map_screen.dart</code>:166</td>
+  <td><code>canPop: false</code> + <code>onPopInvokedWithResult</code></td>
+  <td><code>ScreenScaffold(canPop:, onPopInvokedWithResult:)</code></td>
+  <td>Le retour ne quitte jamais la carte silencieusement : il <strong>ouvre le menu pause</strong>. C'est la seule façon d'abandonner une run, et elle est explicite.</td>
+</tr>
+<tr>
+  <td><code>shop_screen.dart</code>:305</td>
+  <td><code>canPop: true</code> + nettoyage sur <code>didPop</code></td>
+  <td><code>PopScope</code> enveloppant le <code>ScreenScaffold</code></td>
+  <td>La boutique se quitte librement, mais le retour purge <code>clearCloneOptions()</code> pour ne pas retrouver les options de clonage de la boutique précédente.</td>
+</tr>
+</tbody>
+</table></div>
+
+<p>Le cas de <code>MapScreen</code> est le plus intéressant, parce qu'il détourne <code>PopScope</code> de son usage
+« bloquer » vers un usage « rediriger » :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/map_screen.dart</span><span class="lang">dart</span></div>
+  <pre>    return ScreenScaffold(
+      backgroundType: ScreenBackgroundType.parchment,
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          _showPauseMenu();
+        }
+      },
+      appBar: AppBar(
+        title: Text(
+          '${l10n.worldMap} - Acte ${runState.act}',
+          // ...</pre>
+</div>
+
+<p>Et celui de <code>ShopScreen</code> montre l'usage inverse — laisser passer, mais faire du ménage :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/shop_screen.dart</span><span class="lang">dart</span></div>
+  <pre>    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          ref.read(shopProvider.notifier).clearCloneOptions();
+        }
+      },
+      child: ScreenScaffold(
+        backgroundType: ScreenBackgroundType.dark,
+        appBar: appBar,
+        // ...</pre>
+</div>
+
+<div class="box danger"><div class="box-title">Point d'attention</div>
+<p>Il y a deux façons de déclarer un <code>PopScope</code> dans ce projet : soit via les paramètres
+<code>canPop</code> / <code>onPopInvokedWithResult</code> de <code>ScreenScaffold</code> (Rest, Event, Map), soit en écrivant
+un <code>PopScope</code> à la main autour du scaffold (Game, Shop). Les deux fonctionnent, mais un lecteur
+qui cherche « où sont les verrous ? » doit connaître les deux emplacements. Grep sur
+<code>canPop</code> plutôt que sur <code>PopScope</code> si vous auditez le projet.</p></div>
+
+<div class="box warn"><div class="box-title">Piège</div>
+<p><code>canPop: false</code> ne bloque <strong>que</strong> les retours système et <code>maybePop()</code>. Un
+<code>Navigator.pop()</code> explicite passe outre. C'est pour ça que <code>RestScreen._leave()</code> et
+<code>EventScreen._leave()</code> peuvent appeler <code>pop()</code> directement sans se soucier de leur propre
+<code>PopScope</code> : ce sont des sorties « légitimes » validées par le code de jeu.</p></div>
+
+<h2 id="s5">5. Les widgets partagés</h2>
+
+<p>Six widgets constituent le vocabulaire commun de l'interface hors combat. Les connaître, c'est
+pouvoir écrire un nouvel écran cohérent en dix minutes.</p>
+
+<div class="memo">
+  <div class="card"><h5>ScreenScaffold</h5><p>Le fond. Trois types : <code>dark</code>, <code>parchment</code>, <code>none</code>. Utilisé par 13 fichiers.</p></div>
+  <div class="card"><h5>PageHeader</h5><p>Une <code>AppBar</code> transparente, titre en majuscules, <code>letterSpacing: 2.0</code>.</p></div>
+  <div class="card"><h5>GameButton</h5><p>Bouton bordé avec survol, ombre néon, coût en or optionnel. 18 usages.</p></div>
+  <div class="card"><h5>GameDialog</h5><p>Dialogue flouté avec halo coloré, titre / sous-titre / contenu / actions.</p></div>
+  <div class="card"><h5>GoldIndicator</h5><p>Icône + montant d'or, lit <code>inventoryProvider</code>. Deux teintes.</p></div>
+  <div class="card"><h5>CardDraftLayout</h5><p>Le gabarit des écrans de draft : en-tête, grille, bouton valider.</p></div>
+</div>
+
+<h3><code>ScreenScaffold</code> — les deux fonds du jeu</h3>
+
+<p>C'est le widget le plus structurant du projet. Il encapsule un <code>Scaffold</code>, choisit un dégradé
+de fond selon un <code>enum</code>, applique une <code>SafeArea</code> optionnelle, et ajoute un <code>PopScope</code>
+seulement si on lui en donne les paramètres.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/screen_scaffold.dart</span><span class="lang">dart</span></div>
+  <pre>enum ScreenBackgroundType { dark, parchment, none }
+
+// ...
+    switch (backgroundType) {
+      case ScreenBackgroundType.dark:
+        decoration = BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.black,
+              const Color(0xFF1A0A00).withAlpha(120),
+              Colors.black,
+            ],
+          ),
+        );
+        backgroundColor = const Color(0xFF0D0D1A);
+        break;
+      case ScreenBackgroundType.parchment:
+        decoration = const BoxDecoration(
+          color: Color(0xFFF5DEB3),
+          gradient: RadialGradient(
+            colors: [
+              Color(0xFFF5DEB3),
+              Color(0xFFE8D5B5),
+              Color(0xFFD2B48C),
+            ],
+            radius: 1.5,
+          ),
+        );
+        backgroundColor = const Color(0xFFE8D5B5);
+        break;
+      case ScreenBackgroundType.none:
+        backgroundColor = Colors.transparent;
+        break;
+    }</pre>
+</div>
+
+<p>Le fond <code>dark</code> est un dégradé vertical noir → brun très sombre (<code>0xFF1A0A00</code> à 120/255
+d'alpha) → noir : une ambiance de donjon. Le fond <code>parchment</code> est un dégradé <em>radial</em> beige
+(<code>0xFFF5DEB3</code>, la couleur « Wheat ») qui imite une carte au trésor. Deux écrans seulement
+utilisent <code>parchment</code> : <code>MapScreen</code> et <code>RelicExchangeScreen</code>. Tous les autres sont en
+<code>dark</code>. Le troisième type, <code>none</code>, n'est utilisé nulle part dans le projet — il est là pour
+les compositions futures.</p>
+
+<div class="box warn"><div class="box-title">Piège</div>
+<p><code>ScreenScaffold</code> peint la couleur sur le <code>Scaffold</code>, pas sur le <code>Theme</code>. Autrement dit,
+même sur un écran parchemin, <code>Theme.of(context).scaffoldBackgroundColor</code> vaut toujours
+<code>AppColors.darkBg</code> (<code>0xFF1E1E2C</code>). C'est pour cette raison que <code>MapScreen</code> doit passer
+<code>GoldIndicator(isParchment: true)</code> explicitement : aucun widget ne peut deviner le fond depuis
+le thème. Nous verrons en section 8 la conséquence de cette architecture sur <code>GameButton</code>.</p></div>
+
+<h3><code>PageHeader</code></h3>
+
+<p>Une <code>AppBar</code> déguisée. Elle implémente <code>PreferredSizeWidget</code> pour pouvoir être passée au
+paramètre <code>appBar:</code> d'un <code>Scaffold</code>, avec <code>preferredSize =&gt; const Size.fromHeight(kToolbarHeight)</code>.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/page_header.dart</span><span class="lang">dart</span></div>
+  <pre>    final textColor = isParchment ? const Color(0xFF4A3728) : Colors.white;
+    final iconColor = isParchment ? const Color(0xFF4A3728) : Colors.white;
+
+    final leadingButton = showBackButton
+        ? IconButton(
+            icon: Icon(Icons.arrow_back_ios_new, color: iconColor, size: 20),
+            onPressed: onBackPressed ?? () =&gt; Navigator.of(context).maybePop(),
+          )
+        : null;
+
+    return AppBar(
+      title: Text(
+        title.toUpperCase(),
+        style: TextStyle(
+          color: textColor,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 2.0,
+          fontSize: 20,
+          shadows: isParchment ? null : [ /* ombre portée noire */ ],
+        ),
+      ),
+      leading: leadingButton,
+      actions: actions,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      centerTitle: true,
+      automaticallyImplyLeading: false,
+    );</pre>
+</div>
+
+<p>Deux détails à retenir. D'abord <code>maybePop()</code> et non <code>pop()</code> : c'est ce qui fait que le bouton
+retour de la barre respecte les <code>PopScope</code> de la section précédente. Ensuite
+<code>automaticallyImplyLeading: false</code> : sans lui, Flutter ajouterait sa propre flèche par-dessus.
+Le paramètre <code>onBackPressed</code> permet de renvoyer une valeur : <code>RestCardSelectionScreen</code>
+l'utilise pour faire <code>pop(null)</code> et signaler « annulé ».</p>
+
+<h3><code>GameButton</code> — un bouton, beaucoup d'axes</h3>
+
+<p>Il n'y a pas d'<code>enum</code> de variantes ici. La « variante » se compose à partir de neuf
+paramètres : <code>text</code>, <code>onPressed</code>, <code>isLoading</code>, <code>goldCost</code>, <code>baseColor</code>,
+<code>isParchmentOverride</code>, <code>icon</code>, <code>width</code>, <code>height</code> (48 par défaut) et <code>fontSize</code>
+(16 par défaut). Le bouton est <code>StatefulWidget</code> uniquement pour mémoriser le survol
+(<code>_isHovered</code>), qui déclenche un <code>AnimatedScale</code> à 1.03 en 150 ms et une ombre colorée.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/game_button.dart</span><span class="lang">dart</span></div>
+  <pre>  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isParchment = widget.isParchmentOverride ||
+        theme.scaffoldBackgroundColor == AppColors.parchmentBg;
+    final isEnabled = widget.onPressed != null &amp;&amp; !widget.isLoading;
+
+    Color buttonColor;
+    Color textColor;
+    Color borderColor;
+
+    if (!isEnabled) {
+      buttonColor = isParchment ? Colors.grey.shade300 : Colors.white12;
+      textColor = isParchment ? Colors.grey.shade500 : Colors.white30;
+      borderColor = isParchment ? Colors.grey.shade400 : Colors.white24;
+    } else {
+      if (isParchment) {
+        buttonColor =
+            _isHovered ? AppColors.parchmentSurface : AppColors.parchmentBg;
+        textColor = AppColors.parchmentText;
+        borderColor = AppColors.parchmentBorder;
+      } else {
+        final primaryColor = widget.baseColor ?? theme.colorScheme.primary;
+        buttonColor = _isHovered
+            ? primaryColor.withValues(alpha: 0.25)
+            : primaryColor.withValues(alpha: 0.1);
+        textColor = primaryColor;
+        borderColor =
+            _isHovered ? primaryColor : primaryColor.withValues(alpha: 0.5);
+      }
+    }</pre>
+</div>
+
+<p>Le mécanisme central : <strong>la couleur de base pilote tout</strong>. Le fond du bouton est cette
+couleur à 10 % d'opacité (25 % au survol), le texte est cette couleur à 100 %, la bordure à 50 %
+(100 % au survol). C'est pour ça que <code>GameButton(text: …, baseColor: Colors.redAccent)</code> dans
+<code>PauseDialog</code> donne un bouton « quitter » rouge cohérent sans écrire une seule ligne de style.</p>
+
+<p>Le paramètre <code>goldCost</code> ajoute une icône <code>Icons.monetization_on</code> ambre et le montant à droite
+du libellé. Il n'est utilisé qu'à deux endroits, tous deux dans <code>shop_screen.dart</code> (les tuiles de
+service et les cartes à cloner) :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/game_button.dart</span><span class="lang">dart</span></div>
+  <pre>        if (widget.goldCost != null) ...[
+          if (widget.text.isNotEmpty) AppSpacing.widthSm,
+          Icon(
+            Icons.monetization_on,
+            color: Colors.amber,
+            size: widget.fontSize + 2,
+          ),
+          const SizedBox(width: 2),
+          Text(
+            '${widget.goldCost}',
+            style: TextStyle(
+              color: Colors.amber,
+              fontSize: widget.fontSize,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],</pre>
+</div>
+
+<p>Notez la détection du thème parchemin : <code>theme.scaffoldBackgroundColor == AppColors.parchmentBg</code>.
+Comparer deux <code>Color</code> pour deviner un thème est une technique fragile ; <code>isParchmentOverride</code>
+existe précisément parce que la détection automatique ne marche pas dans ce projet. Section 8.</p>
+
+<h3><code>GameDialog</code>, <code>GoldIndicator</code>, <code>CardDraftLayout</code></h3>
+
+<p><code>GameDialog</code> est le seul dialogue du jeu (<code>PauseDialog</code>, <code>_MergeDialog</code>,
+<code>ForgeUpgradeDialog</code> et les modales de boutique l'utilisent tous). Il applique un
+<code>BackdropFilter</code> avec <code>ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0)</code> par défaut, une bordure
+colorée par <code>glowColor ?? Theme.of(context).colorScheme.primary</code>, et un halo
+<code>BoxShadow(blurRadius: 15, spreadRadius: 2)</code> de cette même couleur. Sa largeur maximale est de
+500 px. Le bouton de fermeture est affichable ou non (<code>showCloseButton</code>) — <code>PauseDialog</code> le
+désactive pour forcer un choix explicite.</p>
+
+<p><code>GoldIndicator</code> est un <code>ConsumerWidget</code> de 37 lignes qui lit <code>inventoryProvider</code> et affiche
+une icône plus le montant. Sa seule variation est <code>isParchment</code>, qui bascule la couleur entre
+<code>Colors.amber</code> et <code>0xFF8B4513</code> (un brun cuir). Il apparaît dans l'<code>AppBar</code> de trois écrans :
+<code>MapScreen</code> (en parchemin), <code>ShopScreen</code> et <code>ForgeFusionScreen</code>.</p>
+
+<p><code>CardDraftLayout</code> est un gabarit complet réutilisé par deux écrans : <code>StarterDeckDraftScreen</code>
+et <code>BossCardDraftScreen</code>. Il fournit l'en-tête encadré (titre, sous-titre, badge compteur qui
+passe au vert quand la sélection est valide), la zone centrale <code>Expanded(child: child)</code>, et le
+bouton de validation en pied de page.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/draft/card_draft_layout.dart</span><span class="lang">dart</span></div>
+  <pre>            const SizedBox(height: 20),
+
+            // Contenu principal (Grille de cartes)
+            Expanded(child: child),
+
+            // Pied de page (Bouton valider)
+            const SizedBox(height: 20),
+            Center(
+              child: GameButton(
+                text: confirmButtonText.toUpperCase(),
+                onPressed: isConfirmEnabled ? onConfirm : null,
+                baseColor: isConfirmEnabled ? Colors.green : Colors.grey,
+                width: 250,
+                height: 50,
+                fontSize: 16,
+              ),
+            ),</pre>
+</div>
+
+<div class="box ok"><div class="box-title">Bonne pratique</div>
+<p><code>CardDraftLayout</code> est le bon niveau d'abstraction : il fige la structure (en-tête / grille /
+bouton) et la logique visuelle du compteur, mais laisse l'appelant fournir sa propre grille via
+<code>child</code>. On peut donc afficher des <code>CardData</code> (draft de départ) ou des <code>CardInstance</code>
+(draft de boss) sans dupliquer le châssis. C'est ce qu'il faudrait faire pour les six écrans qui
+ré-implémentent chacun leur en-tête à la main.</p></div>
+
+<h3><code>NotificationOverlay</code> et <code>context.showNotification(...)</code></h3>
+
+<p>Le système de toasts du jeu ne passe pas par <code>ScaffoldMessenger</code>. Il est bâti sur un
+<code>StateNotifierProvider</code> qui contient une liste de notifications, plus un widget d'affichage
+monté <em>hors des routes</em> par le <code>builder:</code> du <code>MaterialApp</code>. La pile est plafonnée à
+4 notifications et chacune s'auto-supprime après 3 500 ms.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/notification_overlay.dart</span><span class="lang">dart</span></div>
+  <pre>enum NotificationType { info, success, error, warning }
+
+// ...
+  void show(String message, {NotificationType type = NotificationType.info}) {
+    final String uniqueId = "${DateTime.now().microsecondsSinceEpoch}_${_random.nextInt(100000)}";
+    final notification = GameNotification(id: uniqueId, message: message, type: type);
+    // Supprime la plus ancienne si le stack dépasse 4 notifications actives
+    if (state.length &gt;= 4) {
+      state = [...state.sublist(1), notification];
+    } else {
+      state = [...state, notification];
+    }
+
+    _timers[notification.id]?.cancel();
+
+    // Auto-suppression après 3,5 secondes
+    _timers[notification.id] = Timer(const Duration(milliseconds: 3500), () {
+      dismiss(notification.id);
+    });
+  }</pre>
+</div>
+
+<p>Le point d'entrée est une <strong>extension sur <code>BuildContext</code></strong>, ce qui rend l'appel très court
+à l'usage : <code>context.showNotification('...', type: NotificationType.success)</code>. On en compte
+29 appels dans <code>lib/</code>.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/notification_overlay.dart</span><span class="lang">dart</span></div>
+  <pre>extension NotificationContextExtension on BuildContext {
+  void showNotification(
+    String message, {
+    NotificationType type = NotificationType.info,
+  }) {
+    try {
+      ProviderScope.containerOf(
+        this,
+        listen: false,
+      ).read(notificationProvider.notifier).show(message, type: type);
+    } catch (e) {
+      debugPrint("Notification: $message (Type: $type)");
+    }
+  }
+}</pre>
+</div>
+
+<p>Le <code>try / catch</code> est important : <code>ProviderScope.containerOf</code> lève une exception si le contexte
+n'est pas sous un <code>ProviderScope</code> — typiquement dans un test de widget isolé. Plutôt que de
+faire planter le test, on retombe sur un <code>debugPrint</code>.</p>
+
+<p>Chaque type a sa couleur et son icône, définies dans <code>_AnimatedNotificationTileState.build</code> :</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Type</th><th>Couleur</th><th>Icône</th><th>Usage typique</th></tr></thead>
+<tbody>
+<tr><td><code>success</code></td><td><code>0xFF34C759</code> (vert)</td><td><code>check_circle_outline_rounded</code></td><td>victoire, relique obtenue, achat réussi, soin</td></tr>
+<tr><td><code>error</code></td><td><code>0xFFFF3B30</code> (rouge)</td><td><code>error_outline_rounded</code></td><td>or insuffisant, carte retirée, capacité de forge atteinte</td></tr>
+<tr><td><code>warning</code></td><td><code>0xFFFFCC00</code> (jaune or)</td><td><code>warning_amber_rounded</code></td><td>limite de sélection atteinte, amélioration de forge</td></tr>
+<tr><td><code>info</code></td><td><code>0xFF007AFF</code> (bleu)</td><td><code>info_outline_rounded</code></td><td>deck remélangé</td></tr>
+</tbody>
+</table></div>
+
+<p>Visuellement, chaque tuile fait 280 px de large, arrive par la gauche avec une
+<code>Curves.easeOutBack</code> sur 300 ms, et affiche une barre de 6 px de la couleur du type sur son bord
+gauche. L'ensemble est positionné à <code>left: 20</code>, centré verticalement.</p>
+
+<h2 id="s6"><code>UiCard</code>, la carte hors combat</h2>
+
+<p>Il existe <strong>deux rendus complètement séparés</strong> d'une carte dans ce projet :</p>
+
+<ul>
+  <li><code>CardComponent</code> (<code>lib/game/components/card_component.dart</code>), un <code>PositionComponent</code>
+  Flame dessiné sur le canvas du jeu, pendant le combat ;</li>
+  <li><code>UiCard</code> (<code>lib/ui/widgets/ui_card.dart</code>), un widget Flutter utilisé partout ailleurs :
+  boutique, deck, dictionnaire, drafts, campement, forge.</li>
+</ul>
+
+<p>Les deux affichent le même objet métier — une <code>CardInstance</code> ou une <code>CardData</code> — mais ne
+partagent pas une ligne de code de rendu.</p>
+
+<h3>Les deux constructeurs nommés</h3>
+
+<p><code>UiCard</code> a un constructeur principal à 15 paramètres plats (titre, description, rareté, coût,
+effets…) et deux fabriques qui remplissent ces paramètres depuis les modèles du jeu :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/ui_card.dart</span><span class="lang">dart</span></div>
+  <pre>  factory UiCard.fromInstance({
+    Key? key,
+    required CardInstance card,
+    required String locale,
+    required AppLocalizations l10n,
+    bool isSelected = false,
+    bool isGrayedOut = false,
+    VoidCallback? onTap,
+  }) {
+    return UiCard(
+      key: key,
+      title: card.data.getName(locale),
+      description: card.data.getDescription(locale),
+      rarity: card.rarity.getLabel(l10n),
+      target: card.data.target.getLabel(l10n),
+      cost: card.currentCost,
+      level: 1,
+      rarityMultiplier: card.rarityMultiplier,
+      forgeUpgrades: card.forgeUpgrades,
+      baseMaxForgeUpgrades: card.data.baseMaxForgeUpgrades,
+      effects: card.data.effects,
+      type: card.data.type,
+      targetType: card.data.target,
+      isExhaust: card.data.isExhaust,
+      isSelected: isSelected,
+      isGrayedOut: isGrayedOut,
+      onTap: onTap,
+    );
+  }</pre>
+</div>
+
+<p>La différence entre les deux est exactement la différence entre les deux modèles :</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th></th><th><code>UiCard.fromData(card: CardData)</code></th><th><code>UiCard.fromInstance(card: CardInstance)</code></th></tr></thead>
+<tbody>
+<tr><td>Coût affiché</td><td><code>card.cost</code> — le coût de base</td><td><code>card.currentCost</code> — après runes de forge</td></tr>
+<tr><td>Rareté</td><td><code>card.rarity</code> (celle du <em>modèle</em>)</td><td><code>card.rarity</code> (celle de l'<em>exemplaire</em>, qui a pu monter par fusion)</td></tr>
+<tr><td><code>rarityMultiplier</code></td><td>paramètre explicite, 1.0 par défaut</td><td><code>card.rarityMultiplier</code>, dérivé de la rareté de l'exemplaire</td></tr>
+<tr><td><code>forgeUpgrades</code></td><td>paramètre explicite, liste vide par défaut</td><td><code>card.forgeUpgrades</code></td></tr>
+<tr><td>Utilisée par</td><td><code>StarterDeckDraftScreen</code>, <code>CardDictionaryScreen</code>, <code>ForgeFusionScreen</code></td><td><code>DeckScreen</code>, <code>ShopScreen</code>, <code>RestCardSelectionScreen</code>, <code>BossCardDraftScreen</code></td></tr>
+</tbody>
+</table></div>
+
+<h3>La composition</h3>
+
+<p>Le <code>build</code> assemble quatre sous-widgets, tous dans <code>lib/ui/widgets/ui_card/</code> :</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Sous-widget</th><th>Fichier</th><th>Rôle</th><th>Chiffres clés</th></tr></thead>
+<tbody>
+<tr><td><code>CardManaMedallion</code></td><td><code>card_mana_medallion.dart</code></td><td>Pastille circulaire de coût en mana</td><td>30×30 px, bordure <code>cyanAccent</code> 1.5, positionnée <code>top: -9, left: -9</code></td></tr>
+<tr><td><code>CardRuneSockets</code></td><td><code>card_rune_sockets.dart</code></td><td>Emplacements de runes de forge, remplis ou vides</td><td>alvéoles de 10×10 px dans un <code>Wrap</code> de 58 px ; total = <code>baseMaxForgeUpgrades + rarityIndex</code></td></tr>
+<tr><td><code>PolychromaticBorder</code></td><td><code>polychromatic_border.dart</code></td><td>Bordure animée en dégradé tournant au survol</td><td><code>CustomPainter</code>, cycle de 2 s, trait 3.0 au survol / 1.5 au repos</td></tr>
+<tr><td><code>CardCompactDescription</code></td><td><code>card_compact_description.dart</code></td><td>Description condensée en badges d'effet</td><td>police 7 px, 4 lignes max, bonus de runes calculés (<code>sharp</code> = +2 dégâts, <code>hardened</code> = +2 armure par palier)</td></tr>
+</tbody>
+</table></div>
+
+<p>Le tout est enveloppé dans un <code>AspectRatio</code> qui fixe le format de carte :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/ui_card.dart</span><span class="lang">dart</span></div>
+  <pre>    final showBadge = isExhaust || type == CardType.power;
+    final descriptionTop = showBadge ? 52.0 : 40.0;
+
+    return AspectRatio(
+      aspectRatio: 70 / 110,
+      child: Tooltip(
+        padding: const EdgeInsets.all(16),
+        margin: const EdgeInsets.symmetric(horizontal: 24),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1E1E2C).withAlpha(245),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: rarityColor, width: 1.5),
+          // ...
+        ),
+        preferBelow: false,
+        richMessage: TextSpan( /* titre coloré + description détaillée */ ),
+        child: GestureDetector(
+          onTap: onTap,
+          child: Stack( /* corps de carte + médaillon hors ClipRRect */ ),
+        ),
+      ),
+    );</pre>
+</div>
+
+<p>Le ratio <code>70 / 110</code> (soit environ 0,636) est la constante de forme des cartes. On la retrouve
+telle quelle dans le <code>childAspectRatio</code> de cinq grilles du projet — c'est ce qui garantit que les
+cartes ne sont jamais déformées par la grille qui les contient.</p>
+
+<p>Détail d'implémentation à noter : le médaillon de mana est placé <strong>hors du <code>ClipRRect</code></strong>,
+dans le <code>Stack</code> parent, avec un commentaire explicite dans le code : <em>« Circular Mana Medallion —
+outside ClipRRect so it's never cropped »</em>. C'est la seule façon d'avoir une pastille qui déborde
+du coin arrondi de la carte.</p>
+
+<h3>Pourquoi deux rendus, et ce que ça coûte</h3>
+
+<p>La duplication n'est pas un accident, elle est structurelle : <code>CardComponent</code> vit dans l'arbre
+de composants Flame, où l'on peint sur un <code>Canvas</code> et où l'on gère le drag &amp; drop avec
+<code>DragCallbacks</code> ; <code>UiCard</code> vit dans l'arbre de widgets Flutter, où l'on compose des
+<code>Container</code> et où l'on gère le tap avec <code>GestureDetector</code>. Les deux mondes n'ont pas de langage
+commun pour « dessiner une carte ».</p>
+
+<p>Le coût est visible dès qu'on compare la logique de couleur de rareté des deux côtés. Voici celle
+de <code>UiCard</code> :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/ui_card/ui_card_helpers.dart</span><span class="lang">dart</span></div>
+  <pre>Color getCardRarityColor(BuildContext context, String? rarity) {
+  if (rarity == null) return Colors.white54;
+  final l10n = AppLocalizations.of(context)!;
+  final r = rarity.toLowerCase();
+  if (r.contains('unique')) {
+    return const Color(0xFFFFD700); // Gold pur — rareté Unique
+  }
+  if (r == l10n.rarityLegendary.toLowerCase() ||
+      r.contains('legendary') ||
+      r.contains('légendaire')) {
+    return Colors.orangeAccent;
+  }
+  // ... epic → purpleAccent, rare → blueAccent,
+  //     uncommon → greenAccent, common → white70
+  return Colors.white54;
+}</pre>
+</div>
+
+<p>Et voici celle de <code>CardComponent</code> :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/card_component.dart</span><span class="lang">dart</span></div>
+  <pre>  Color getRarityColor() {
+    final r = card.data.rarity.name.toLowerCase();
+    if (r.contains('unique')) return const Color(0xFFFFD700);
+    if (r.contains('legendary')) return Colors.orangeAccent;
+    if (r.contains('epic')) return Colors.purpleAccent;
+    if (r.contains('rare')) return Colors.blueAccent;
+    if (r.contains('uncommon')) return Colors.greenAccent;
+    return Colors.white70;
+  }</pre>
+</div>
+
+<div class="box danger"><div class="box-title">Point d'attention</div>
+<p>Les deux fonctions renvoient les mêmes couleurs, mais ne travaillent pas sur la même donnée.
+<code>getCardRarityColor</code> reçoit une <strong>chaîne déjà traduite</strong> (le libellé affiché, « LÉGENDAIRE »)
+et doit donc comparer contre <code>l10n</code> <em>et</em> contre les mots anglais <em>et</em> contre les mots
+français. <code>getRarityColor</code> reçoit le nom de l'<code>enum</code> (<code>legendary</code>), donc une comparaison
+suffit. Deux implémentations pour un seul concept : toute nouvelle rareté doit être ajoutée aux
+deux, plus à <code>getCardRarityIndex</code>, plus à la palette iOS de la section 8. Quatre endroits.</p>
+<p>Pire : la logique de dégradé animé du survol (<code>_getRarityShineColors</code> dans
+<code>polychromatic_border.dart</code> et <code>getRarityShineColors</code> dans <code>card_component.dart</code>) est
+<strong>copiée-collée à l'identique</strong> — mêmes bornes de teinte HSV (20, 50, 70, 165, 200, 260),
+mêmes listes de couleurs, même pool arc-en-ciel de 10 entrées pour la rareté Unique. Environ
+50 lignes dupliquées à la virgule près.</p></div>
+
+<h2 id="s7">7. Le design system</h2>
+
+<p>Quatre fichiers dans <code>lib/ui/theme/</code>. Ensemble ils forment un design system tout à fait
+classique : des <em>tokens</em> (couleurs, espacements), un <em>thème</em> Material, et une extension
+de thème pour les concepts propres au jeu.</p>
+
+<h3><code>AppColors</code> — les tokens de couleur</h3>
+
+<p>Une classe à constructeur privé (<code>AppColors._();</code>) qui n'expose que des <code>static const Color</code>.
+Aucune instance, aucune allocation : c'est le bon pattern pour des tokens.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/theme/app_colors.dart</span><span class="lang">dart</span></div>
+  <pre>class AppColors {
+  AppColors._();
+
+  // --- Neon Dark Theme ---
+  static const Color scaffoldDark = Color(0xFF0D0D1A);
+  static const Color surfaceDark = Color(0xFF1A1A2E);
+  static const Color containerDark = Color(0xFF16213E);
+  static const Color borderDark = Color(0xFF0F3460);
+
+  // Backward-compatible aliases for existing code
+  static const Color darkBg = Color(0xFF1E1E2C);
+  static const Color darkSurface = Color(0xFF2A2A3D);
+  static const Color darkBorder = Color(0xFF3F3F5F);</pre>
+</div>
+
+<p>Les tables complètes, telles qu'elles sont dans le fichier :</p>
+
+<p><strong>Thème sombre</strong> — notez qu'il y a deux familles : les quatre tokens « propres »
+(<code>scaffoldDark</code>…) et trois alias marqués <em>« Backward-compatible aliases for existing code »</em>.
+Ce sont les alias qui sont réellement câblés dans <code>darkNeonTheme</code>.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Token</th><th>Valeur</th><th>Rôle</th></tr></thead>
+<tbody>
+<tr><td><code>scaffoldDark</code></td><td><code>0xFF0D0D1A</code></td><td>fond d'écran théorique (utilisé en dur par <code>ScreenScaffold</code>)</td></tr>
+<tr><td><code>surfaceDark</code></td><td><code>0xFF1A1A2E</code></td><td>surface</td></tr>
+<tr><td><code>containerDark</code></td><td><code>0xFF16213E</code></td><td>couleur des <code>Card</code> via <code>cardTheme</code></td></tr>
+<tr><td><code>borderDark</code></td><td><code>0xFF0F3460</code></td><td>bordure</td></tr>
+<tr><td><code>darkBg</code> <em>(alias)</em></td><td><code>0xFF1E1E2C</code></td><td><code>scaffoldBackgroundColor</code> réel du thème</td></tr>
+<tr><td><code>darkSurface</code> <em>(alias)</em></td><td><code>0xFF2A2A3D</code></td><td><code>cardColor</code>, fond de <code>GameDialog</code>, fond des dialogues</td></tr>
+<tr><td><code>darkBorder</code> <em>(alias)</em></td><td><code>0xFF3F3F5F</code></td><td><code>dividerColor</code></td></tr>
+</tbody>
+</table></div>
+
+<p><strong>Néons</strong> — la signature visuelle du jeu.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Token</th><th>Valeur</th><th>Où on le voit</th></tr></thead>
+<tbody>
+<tr><td><code>neonBlue</code></td><td><code>0xFF00D4FF</code></td><td><code>colorScheme.primary</code> — donc la couleur par défaut de tous les <code>GameButton</code></td></tr>
+<tr><td><code>neonGlow</code></td><td><code>0xFF00FFFF</code></td><td>champ <code>neonGlow</code> de <code>GameThemeExtension.dark()</code></td></tr>
+<tr><td><code>neonPurple</code></td><td><code>0xFFB146EC</code></td><td><code>colorScheme.secondary</code></td></tr>
+<tr><td><code>neonPink</code></td><td><code>0xFFFF2E93</code></td><td>extension de thème</td></tr>
+<tr><td><code>neonRed</code></td><td><code>0xFFFF4D6D</code></td><td>identique à <code>danger</code></td></tr>
+<tr><td><code>neonGold</code></td><td><code>0xFFFFD700</code></td><td><code>colorScheme.secondary</code> du thème parchemin</td></tr>
+<tr><td><code>neonGreen</code></td><td><code>0xFF00FF88</code></td><td>identique à <code>success</code></td></tr>
+</tbody>
+</table></div>
+
+<p><strong>Parchemin</strong> — même dédoublement : quatre tokens « propres », cinq alias rétrocompatibles.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Token</th><th>Valeur</th><th>Rôle</th></tr></thead>
+<tbody>
+<tr><td><code>scaffoldParchment</code></td><td><code>0xFFF5E6C8</code></td><td>fond théorique</td></tr>
+<tr><td><code>surfaceParchment</code></td><td><code>0xFFE8D5A3</code></td><td>surface</td></tr>
+<tr><td><code>borderParchment</code></td><td><code>0xFF8B6914</code></td><td><code>colorScheme.primary</code> du thème clair</td></tr>
+<tr><td><code>textParchment</code></td><td><code>0xFF3E2723</code></td><td>texte</td></tr>
+<tr><td><code>parchmentBg</code> <em>(alias)</em></td><td><code>0xFFF4EAD4</code></td><td><code>scaffoldBackgroundColor</code> clair — <strong>sentinelle de détection</strong> dans <code>GameButton</code> et <code>GameDialog</code></td></tr>
+<tr><td><code>parchmentSurface</code> <em>(alias)</em></td><td><code>0xFFFCF8F0</code></td><td><code>cardColor</code>, fond de dialogue clair</td></tr>
+<tr><td><code>parchmentBorder</code> <em>(alias)</em></td><td><code>0xFFD4C59E</code></td><td><code>dividerColor</code>, bordure de <code>GameButton</code> clair</td></tr>
+<tr><td><code>parchmentText</code> <em>(alias)</em></td><td><code>0xFF2C2212</code></td><td>texte principal clair</td></tr>
+<tr><td><code>parchmentInk</code> <em>(alias)</em></td><td><code>0xFF3E301B</code></td><td>texte secondaire clair</td></tr>
+</tbody>
+</table></div>
+
+<p><strong>Raretés</strong> — la palette « officielle » du design system.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Rareté</th><th>Token</th><th>Valeur</th><th>Équivalent Material</th></tr></thead>
+<tbody>
+<tr><td>Commune</td><td><code>rarityCommon</code></td><td><code>0xFFB0BEC5</code></td><td>Blue Grey 200</td></tr>
+<tr><td>Peu commune</td><td><code>rarityUncommon</code></td><td><code>0xFF66BB6A</code></td><td>Green 400</td></tr>
+<tr><td>Rare</td><td><code>rarityRare</code></td><td><code>0xFF42A5F5</code></td><td>Blue 400</td></tr>
+<tr><td>Épique</td><td><code>rarityEpic</code></td><td><code>0xFFAB47BC</code></td><td>Purple 400</td></tr>
+<tr><td>Légendaire</td><td><code>rarityLegendary</code></td><td><code>0xFFFFB300</code></td><td>Amber 600</td></tr>
+<tr><td>Unique</td><td><code>rarityUnique</code></td><td><code>0xFF00E5FF</code></td><td>Cyan A400</td></tr>
+</tbody>
+</table></div>
+
+<p><strong>Stats</strong> et <strong>sémantique</strong> :</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Token</th><th>Valeur</th><th>Token</th><th>Valeur</th></tr></thead>
+<tbody>
+<tr><td><code>statHp</code></td><td><code>0xFFEF5350</code></td><td><code>textPrimary</code></td><td><code>0xFFECEFF1</code></td></tr>
+<tr><td><code>statMana</code></td><td><code>0xFF42A5F5</code></td><td><code>textSecondary</code></td><td><code>0xFF90A4AE</code></td></tr>
+<tr><td><code>statGold</code></td><td><code>0xFFFFD700</code></td><td><code>textDisabled</code></td><td><code>0xFF546E7A</code></td></tr>
+<tr><td><code>statArmor</code></td><td><code>0xFF90A4AE</code></td><td><code>success</code></td><td><code>0xFF00FF88</code></td></tr>
+<tr><td></td><td></td><td><code>danger</code></td><td><code>0xFFFF4D6D</code></td></tr>
+<tr><td></td><td></td><td><code>warning</code></td><td><code>0xFFFFB300</code></td></tr>
+</tbody>
+</table></div>
+
+<h3><code>AppSpacing</code> — l'échelle 4 / 8 / 16 / 24 / 32 / 48</h3>
+
+<p>Une échelle géométrique classique, avec des multiplicateurs de 2 sauf entre <code>md</code> et <code>lg</code>
+(16 → 24, facteur 1,5). Le fichier ne se contente pas des constantes : il pré-construit
+les <code>SizedBox</code> et <code>EdgeInsets</code> correspondants, tous <code>const</code>.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/theme/app_spacing.dart</span><span class="lang">dart</span></div>
+  <pre>class AppSpacing {
+  AppSpacing._();
+
+  // Spacing Constants
+  static const double xs = 4.0;
+  static const double sm = 8.0;
+  static const double md = 16.0;
+  static const double lg = 24.0;
+  static const double xl = 32.0;
+  static const double xxl = 48.0;
+
+  // Height SizedBox Helpers
+  static const SizedBox heightXs = SizedBox(height: xs);
+  static const SizedBox heightSm = SizedBox(height: sm);
+  static const SizedBox heightMd = SizedBox(height: md);
+  static const SizedBox heightLg = SizedBox(height: lg);
+  static const SizedBox heightXl = SizedBox(height: xl);
+  static const SizedBox heightXxl = SizedBox(height: xxl);
+
+  // Width SizedBox Helpers  (widthXs … widthXxl, mêmes valeurs)
+  // ...
+
+  // Common EdgeInsets
+  static const EdgeInsets paddingXs = EdgeInsets.all(xs);
+  static const EdgeInsets paddingSm = EdgeInsets.all(sm);
+  static const EdgeInsets paddingMd = EdgeInsets.all(md);
+  static const EdgeInsets paddingLg = EdgeInsets.all(lg);
+
+  static const EdgeInsets paddingHSm = EdgeInsets.symmetric(horizontal: sm);
+  static const EdgeInsets paddingHMd = EdgeInsets.symmetric(horizontal: md);
+  static const EdgeInsets paddingHLg = EdgeInsets.symmetric(horizontal: lg);
+  static const EdgeInsets paddingVSm = EdgeInsets.symmetric(vertical: sm);
+  static const EdgeInsets paddingVMd = EdgeInsets.symmetric(vertical: md);
+}</pre>
+</div>
+
+<div class="box ok"><div class="box-title">Bonne pratique</div>
+<p>Pré-construire <code>heightMd</code> plutôt que d'écrire <code>const SizedBox(height: AppSpacing.md)</code> à chaque
+fois n'est pas seulement plus court : comme il s'agit d'une <em>même instance <code>const</code></em>, Flutter
+peut court-circuiter la reconstruction du sous-arbre (l'égalité d'identité suffit). Dans une
+colonne qui se reconstruit à chaque tick de combat, ça compte.</p>
+<p>Il manque cependant <code>paddingXl</code> et <code>paddingVLg</code> : les écrans qui veulent 32 px de padding
+retombent sur un <code>EdgeInsets.all(...)</code> écrit à la main.</p></div>
+
+<h3><code>AppTheme</code> — deux <code>ThemeData</code></h3>
+
+<p><code>darkNeonTheme</code> part de <code>ThemeData.dark()</code> et surcharge <code>scaffoldBackgroundColor</code>,
+<code>cardColor</code>, <code>dividerColor</code>, <code>colorScheme</code>, <code>cardTheme</code>, <code>textTheme</code>,
+<code>dialogTheme</code>, et installe l'extension de jeu :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/theme/app_theme.dart</span><span class="lang">dart</span></div>
+  <pre>  static ThemeData get darkNeonTheme {
+    return ThemeData.dark().copyWith(
+      scaffoldBackgroundColor: AppColors.darkBg,
+      cardColor: AppColors.darkSurface,
+      dividerColor: AppColors.darkBorder,
+      extensions: [
+        GameThemeExtension.dark(),
+      ],
+      colorScheme: const ColorScheme.dark(
+        primary: AppColors.neonBlue,
+        secondary: AppColors.neonPurple,
+        surface: AppColors.darkSurface,
+        error: AppColors.danger,
+      ),
+      cardTheme: const CardThemeData(
+        color: AppColors.containerDark,
+        elevation: 8,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+        ),
+      ),
+      // ... textTheme et dialogTheme</pre>
+</div>
+
+<p>Le <code>TextTheme</code> ne définit que six styles, et volontairement pas plus :</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Style</th><th>Taille</th><th>Graisse</th><th>Couleur</th></tr></thead>
+<tbody>
+<tr><td><code>displayLarge</code></td><td>32</td><td><code>bold</code></td><td><code>textPrimary</code></td></tr>
+<tr><td><code>displayMedium</code></td><td>24</td><td><code>bold</code></td><td><code>textPrimary</code></td></tr>
+<tr><td><code>headlineMedium</code></td><td>20</td><td><code>w600</code></td><td><code>textPrimary</code></td></tr>
+<tr><td><code>bodyLarge</code></td><td>16</td><td>normale</td><td><code>Colors.white</code></td></tr>
+<tr><td><code>bodyMedium</code></td><td>14</td><td>normale</td><td><code>Colors.white70</code></td></tr>
+<tr><td><code>labelLarge</code></td><td>14</td><td><code>bold</code></td><td><code>textPrimary</code></td></tr>
+</tbody>
+</table></div>
+
+<p><code>lightParchmentTheme</code> est la version claire : <code>ThemeData.light()</code>, fond <code>parchmentBg</code>,
+<code>primary: borderParchment</code>, <code>secondary: neonGold</code>, un <code>textTheme</code> réduit à deux styles
+(<code>bodyLarge</code> et <code>bodyMedium</code>) et un <code>dialogTheme</code> clair. Deux alias terminent le fichier :
+<code>AppTheme.dark</code> et <code>AppTheme.light</code>.</p>
+
+<h3><code>GameThemeExtension</code> — étendre <code>ThemeData</code> proprement</h3>
+
+<p>Une <code>ThemeExtension&lt;T&gt;</code> est le mécanisme officiel de Flutter pour ajouter <strong>vos propres
+tokens</strong> à un <code>ThemeData</code>. Sans elle, vous n'avez que le choix entre deux mauvaises options :</p>
+
+<ul>
+  <li>détourner les rôles Material existants (mettre la couleur « épique » dans
+  <code>colorScheme.tertiaryContainer</code>) — illisible et fragile ;</li>
+  <li>importer <code>AppColors</code> directement partout — vos couleurs ne suivent alors plus le thème
+  courant, et vous ne pouvez pas les animer.</li>
+</ul>
+
+<p>Une <code>ThemeExtension</code> demande deux méthodes obligatoires : <code>copyWith</code> (pour dériver une
+variante) et <code>lerp</code> (pour interpoler entre deux thèmes pendant une transition animée). C'est
+<code>lerp</code> qui fait la différence : si l'application bascule du thème sombre au thème clair,
+Flutter interpole automatiquement chacune des 13 couleurs.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/theme/game_theme_extension.dart</span><span class="lang">dart</span></div>
+  <pre>  @override
+  GameThemeExtension lerp(ThemeExtension&lt;GameThemeExtension&gt;? other, double t) {
+    if (other is! GameThemeExtension) {
+      return this;
+    }
+    return GameThemeExtension(
+      rarityCommon: Color.lerp(rarityCommon, other.rarityCommon, t)!,
+      rarityUncommon: Color.lerp(rarityUncommon, other.rarityUncommon, t)!,
+      rarityRare: Color.lerp(rarityRare, other.rarityRare, t)!,
+      rarityEpic: Color.lerp(rarityEpic, other.rarityEpic, t)!,
+      rarityLegendary: Color.lerp(rarityLegendary, other.rarityLegendary, t)!,
+      rarityUnique: Color.lerp(rarityUnique, other.rarityUnique, t)!,
+      statHp: Color.lerp(statHp, other.statHp, t)!,
+      statMana: Color.lerp(statMana, other.statMana, t)!,
+      statGold: Color.lerp(statGold, other.statGold, t)!,
+      statArmor: Color.lerp(statArmor, other.statArmor, t)!,
+      neonGlow: Color.lerp(neonGlow, other.neonGlow, t)!,
+      neonPurple: Color.lerp(neonPurple, other.neonPurple, t)!,
+      neonPink: Color.lerp(neonPink, other.neonPink, t)!,
+    );
+  }</pre>
+</div>
+
+<p>Les 13 champs se répartissent en trois groupes : 6 raretés, 4 stats, 3 néons. Et il y a deux
+fabriques, une par thème :</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Champ</th><th><code>GameThemeExtension.dark()</code></th><th><code>GameThemeExtension.light()</code></th></tr></thead>
+<tbody>
+<tr><td><code>rarityCommon</code></td><td><code>AppColors.rarityCommon</code> — <code>0xFFB0BEC5</code></td><td><code>0xFF78909C</code></td></tr>
+<tr><td><code>rarityUncommon</code></td><td><code>0xFF66BB6A</code></td><td><code>0xFF2E7D32</code></td></tr>
+<tr><td><code>rarityRare</code></td><td><code>0xFF42A5F5</code></td><td><code>0xFF1565C0</code></td></tr>
+<tr><td><code>rarityEpic</code></td><td><code>0xFFAB47BC</code></td><td><code>0xFF6A1B9A</code></td></tr>
+<tr><td><code>rarityLegendary</code></td><td><code>0xFFFFB300</code></td><td><code>0xFFE65100</code></td></tr>
+<tr><td><code>rarityUnique</code></td><td><code>0xFF00E5FF</code></td><td><code>0xFF00838F</code></td></tr>
+<tr><td><code>statHp</code></td><td><code>0xFFEF5350</code></td><td><code>0xFFC62828</code></td></tr>
+<tr><td><code>statMana</code></td><td><code>0xFF42A5F5</code></td><td><code>0xFF1565C0</code></td></tr>
+<tr><td><code>statGold</code></td><td><code>0xFFFFD700</code></td><td><code>0xFFF57F17</code></td></tr>
+<tr><td><code>statArmor</code></td><td><code>0xFF90A4AE</code></td><td><code>0xFF37474F</code></td></tr>
+<tr><td><code>neonGlow</code></td><td><code>0xFF00FFFF</code></td><td><code>0xFF00ACC1</code></td></tr>
+<tr><td><code>neonPurple</code></td><td><code>0xFFB146EC</code></td><td><code>0xFF6A1B9A</code></td></tr>
+<tr><td><code>neonPink</code></td><td><code>0xFFFF2E93</code></td><td><code>0xFFC2185B</code></td></tr>
+</tbody>
+</table></div>
+
+<p>La logique de la version claire est cohérente : chaque couleur est remplacée par sa variante
+Material foncée (400 → 800/900), parce qu'un vert clair sur du parchemin serait illisible. Le
+travail de conception a été fait.</p>
+
+<div class="box danger"><div class="box-title">Point d'attention</div>
+<p>Ce travail ne sert à rien pour l'instant. <code>Theme.of(context).extension&lt;GameThemeExtension&gt;()</code>
+n'apparaît <strong>nulle part</strong> dans <code>lib/</code>. Les 130 lignes de <code>game_theme_extension.dart</code> sont
+instanciées par les deux thèmes et jamais lues. Vérifiez vous-même : un <code>grep</code> sur
+<code>GameThemeExtension</code> ne renvoie que les trois fichiers de <code>lib/ui/theme/</code>.</p>
+<p>Corollaire : dans <code>lib/models/data/model_extensions.dart</code>, <code>CardRarity.color</code> et
+<code>RelicRarity.color</code> lisent <code>AppColors.rarity*</code> en dur — donc sans passer par le thème, donc
+sans possibilité de basculer en parchemin.</p></div>
+
+<h2 id="s8">8. La cohérence, en pratique</h2>
+
+<p>Cette section est l'audit honnête. Toutes les affirmations ci-dessous sont vérifiables par
+<code>grep</code> dans <code>/tmp/src/files/lib/</code>.</p>
+
+<h3>Trois palettes de rareté coexistent</h3>
+
+<p>Le jeu a six raretés. Il a aussi trois façons de les colorer, qui ne donnent jamais les mêmes
+pixels.</p>
+
+<div class="table-wrap"><table>
+<thead><tr>
+  <th>Rareté</th>
+  <th>① Tokens <code>AppColors.rarity*</code></th>
+  <th>② Palette <code>Colors.*Accent</code></th>
+  <th>③ Palette « iOS »</th>
+</tr></thead>
+<tbody>
+<tr><td>Commune</td><td><code>0xFFB0BEC5</code></td><td><code>Colors.white70</code></td><td><code>0xFF8E8E93</code></td></tr>
+<tr><td>Peu commune</td><td><code>0xFF66BB6A</code></td><td><code>Colors.greenAccent</code></td><td><code>0xFF34C759</code></td></tr>
+<tr><td>Rare</td><td><code>0xFF42A5F5</code></td><td><code>Colors.blueAccent</code></td><td><code>0xFF007AFF</code></td></tr>
+<tr><td>Épique</td><td><code>0xFFAB47BC</code></td><td><code>Colors.purpleAccent</code></td><td><code>0xFFAF52DE</code></td></tr>
+<tr><td>Légendaire</td><td><code>0xFFFFB300</code></td><td><code>Colors.orangeAccent</code></td><td><code>0xFFFFCC00</code></td></tr>
+<tr><td>Unique / Mythique</td><td><code>0xFF00E5FF</code></td><td><code>0xFFFFD700</code></td><td><code>0xFFE53E3E</code> <em>(mythique)</em></td></tr>
+<tr>
+  <td><strong>Où</strong></td>
+  <td><code>model_extensions.dart</code> (<code>CardRarity.color</code>, <code>RelicRarity.color</code>) et <code>GameThemeExtension</code></td>
+  <td><code>ui_card_helpers.dart:getCardRarityColor</code> et <code>card_component.dart:getRarityColor</code></td>
+  <td><code>draft_choice_card.dart</code>, <code>relic_exchange_screen.dart</code>, <code>card_dictionary_screen.dart</code>, <code>relic_carousel_card.dart</code>, <code>relic_carousel_screen.dart</code>, <code>draft_card_reel.dart</code></td>
+</tr>
+</tbody>
+</table></div>
+
+<p>La troisième palette est reconnaissable : ce sont les couleurs système d'iOS (<em>systemGray</em>,
+<em>systemGreen</em>, <em>systemBlue</em>, <em>systemPurple</em>, <em>systemYellow</em>). Elle est commentée
+« premium » dans le code, et elle a une rareté de plus que les deux autres : le <em>mythique</em>
+écarlate <code>0xFFE53E3E</code>, qui n'existe ni dans <code>AppColors</code>, ni dans l'énumération <code>CardRarity</code> —
+c'est une <code>RewardRarity</code> propre au système de draft.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/draft/draft_choice_card.dart</span><span class="lang">dart</span></div>
+  <pre>    // 1. Determine rarity color matching the game's theme
+    Color rarityColor = const Color(0xFF8E8E93); // Common Gray
+    final rarityUpper = rarity.toUpperCase();
+
+    if (rarityUpper == 'HORS NORME' ||
+        rarityUpper == 'UNCOMMON' ||
+        rarityUpper == 'ATYPIQUE') {
+      rarityColor = const Color(0xFF34C759); // Uncommon Green
+    } else if (rarityUpper == 'RARE') {
+      rarityColor = const Color(0xFF007AFF); // Rare Blue
+    } else if (rarityUpper == 'ÉPIQUE' || rarityUpper == 'EPIC') {
+      rarityColor = const Color(0xFFAF52DE); // Epic Purple
+    } else if (rarityUpper == 'LÉGENDAIRE' || rarityUpper == 'LEGENDARY') {
+      rarityColor = const Color(0xFFFFCC00); // Legendary Gold
+    } else if (rarityUpper == 'MYTHIQUE' || rarityUpper == 'MYTHIC') {
+      rarityColor = const Color(0xFFE53E3E); // Mythic Scarlet Red
+    }</pre>
+</div>
+
+<div class="box danger"><div class="box-title">Point d'attention — la dette la plus visible</div>
+<p>Concrètement : une carte épique est <strong>violet Material 400</strong> dans une <code>Card</code> Material,
+<strong><code>purpleAccent</code></strong> dans <code>UiCard</code> et dans le combat Flame, et <strong>violet iOS</strong> dans le
+dictionnaire et le carrousel de reliques. Le joueur voit trois violets différents pour la même
+rareté selon l'écran. Et le commentaire du code — <em>« matching the game's theme »</em> — est
+faux : cette palette ne correspond à aucun thème du projet.</p>
+<p>La correction est mécanique : faire de <code>GameThemeExtension</code> la source unique, exposer un
+<code>rarityMythic</code>, et remplacer les six fonctions de mapping par un unique
+<code>Theme.of(context).extension&lt;GameThemeExtension&gt;()!.forRarity(r)</code>. Le travail de conception de la
+palette existe déjà (section 7) ; il n'est simplement pas branché.</p></div>
+
+<h3>L'adoption partielle d'<code>AppSpacing</code></h3>
+
+<p>Sur les 60 fichiers de <code>lib/ui/</code>, seuls <strong>cinq</strong> importent <code>AppSpacing</code> :</p>
+
+<div class="tree">lib/ui/
+├── <span class="d">screens/</span>
+│   ├── <span class="f">draft_screen.dart</span>         <span class="c">// 8 usages</span>
+│   └── <span class="f">rest_screen.dart</span>          <span class="c">// 9 usages</span>
+└── <span class="d">widgets/</span>
+    ├── <span class="f">game_button.dart</span>          <span class="c">// 4 usages</span>
+    ├── <span class="f">game_dialog.dart</span>          <span class="c">// 7 usages</span>
+    └── <span class="d">hud/dialogs/</span><span class="f">pause_dialog.dart</span> <span class="c">// 1 usage</span>
+</div>
+
+<p>Partout ailleurs, on trouve des <code>SizedBox(height: 20)</code>, des <code>EdgeInsets.all(24.0)</code>, des
+<code>EdgeInsets.symmetric(horizontal: 30, vertical: 25)</code>. Les valeurs 10, 12, 14, 15, 20, 25, 30 et 40
+apparaissent régulièrement — aucune n'est dans l'échelle. Même les fichiers qui utilisent
+<code>AppSpacing</code> sont mixtes : <code>game_button.dart</code> écrit <code>AppSpacing.widthSm</code> puis, deux lignes plus
+bas, <code>const SizedBox(width: 2)</code>.</p>
+
+<div class="box warn"><div class="box-title">Piège</div>
+<p>Une échelle d'espacement n'a de valeur que si elle est <em>exhaustive</em>. Une échelle suivie à 8 %
+coûte plus cher qu'elle ne rapporte : elle ajoute un import et un vocabulaire à apprendre, sans
+donner la garantie de rythme visuel qui justifie l'effort. Si vous reprenez ce projet, le choix
+est binaire : soit vous généralisez <code>AppSpacing</code> (une passe de <code>sed</code> bien menée sur les valeurs
+4/8/16/24/32/48 fait déjà 60 % du travail), soit vous le supprimez.</p></div>
+
+<h3>Les écrans qui ne passent pas par <code>l10n</code></h3>
+
+<p>Le projet a un système de traduction complet (<code>AppLocalizations</code>, anglais et français). Tous les
+écrans ne l'utilisent pas de la même façon. Trois régimes coexistent :</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Régime</th><th>Écrans</th><th>Symptôme</th></tr></thead>
+<tbody>
+<tr>
+  <td><strong>A.</strong> Tout par <code>l10n</code></td>
+  <td><code>shop_screen.dart</code> (14 références), <code>home_screen.dart</code> (8), <code>draft_screen.dart</code> (5), <code>class_selection_screen.dart</code>, <code>starter_deck_draft_screen.dart</code>, <code>map_screen.dart</code></td>
+  <td>aucun — c'est la cible</td>
+</tr>
+<tr>
+  <td><strong>B.</strong> Mixte <code>l10n</code> + ternaires <code>locale == 'fr'</code></td>
+  <td><code>event_screen.dart</code> (6 ternaires), <code>card_dictionary_screen.dart</code> (5), <code>game_screen.dart</code> (4), <code>rest_card_selection_screen.dart</code> (2), <code>boss_card_draft_screen.dart</code>, <code>deck_screen.dart</code>, <code>forge_fusion_screen.dart</code>, <code>rest_screen.dart</code>, <code>relic_exchange_screen.dart</code></td>
+  <td>les chaînes vivent à deux endroits ; ajouter une langue oblige à rouvrir chaque écran</td>
+</tr>
+<tr>
+  <td><strong>C.</strong> Aucun <code>l10n</code></td>
+  <td><code>patch_notes_screen.dart</code>, <code>splash_screen.dart</code></td>
+  <td>chaînes en dur : titre <code>'Patch Notes'</code>, <code>'Erreur de chargement\n${snapshot.error}'</code>, <code>'Erreur de chargement: $error'</code></td>
+</tr>
+</tbody>
+</table></div>
+
+<p>Le cas le plus parlant est <code>event_screen.dart</code>, qui a un <code>l10n</code> disponible dans la portée et
+écrit quand même les raretés à la main, en français uniquement :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/event_screen.dart</span><span class="lang">dart</span></div>
+  <pre>      String rarityStr = '';
+      switch (chosenRelic.rarity) {
+        case RelicRarity.common:
+          rarityStr = 'COMMUN';
+          break;
+        case RelicRarity.uncommon:
+          rarityStr = 'PEU COMMUN';
+          break;
+        case RelicRarity.rare:
+          rarityStr = 'RARE';
+          break;
+        case RelicRarity.epic:
+          rarityStr = 'ÉPIQUE';
+          break;
+        case RelicRarity.legendary:
+          rarityStr = 'LÉGENDAIRE';
+          break;
+      }
+
+      final locale = Localizations.localeOf(context).languageCode;
+      context.showNotification(
+        '👑 ${locale == 'fr' ? 'RELIQUE OBTENUE' : 'RELIC OBTAINED'} : ${chosenRelic.emoji} ${chosenRelic.getName(locale)} ($rarityStr)',
+        type: NotificationType.success,
+      );</pre>
+</div>
+
+<p>Un joueur anglophone verra donc : <em>« RELIC OBTAINED : 🗡 Ancient Blade (LÉGENDAIRE) »</em>. Le même
+switch existe pourtant, correctement traduit, dans <code>game_screen.dart:163</code> et dans
+<code>relic_exchange_screen.dart:_getRelicRarityLabel</code> — qui utilisent tous deux
+<code>l10n.rarityLegendary</code>.</p>
+
+<h3>Le thème parchemin n'est jamais installé</h3>
+
+<p>Dernier point, et le plus contre-intuitif. Reprenons la ligne de <code>GameButton</code> :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/game_button.dart</span><span class="lang">dart</span></div>
+  <pre>    final isParchment = widget.isParchmentOverride ||
+        theme.scaffoldBackgroundColor == AppColors.parchmentBg;</pre>
+</div>
+
+<p>Pour que la partie droite soit vraie, il faudrait que <code>lightParchmentTheme</code> soit le thème actif.
+Or <code>main.dart</code> ne déclare que <code>theme: AppTheme.darkNeonTheme</code>, sans <code>darkTheme:</code> ni
+<code>themeMode:</code>, et <code>lightParchmentTheme</code> n'est référencé nulle part ailleurs dans <code>lib/</code>.
+<code>theme.scaffoldBackgroundColor</code> vaut donc toujours <code>AppColors.darkBg</code>.</p>
+
+<div class="box danger"><div class="box-title">Point d'attention</div>
+<p>La branche <code>isParchment</code> de <code>GameButton</code> et celle de <code>GameDialog</code> sont du <strong>code mort</strong>.
+Elles ne peuvent s'activer que par <code>isParchmentOverride: true</code> — qui n'est passé nulle part dans
+le projet. Les écrans parchemin (<code>MapScreen</code>, <code>RelicExchangeScreen</code>) contournent le problème
+en peignant leurs couleurs claires en dur (<code>0xFF4A3728</code> pour le texte, <code>0xFF8B4513</code> pour l'or)
+et en passant <code>isParchment: true</code> à <code>GoldIndicator</code> et <code>PageHeader</code>.</p>
+<p>Deux mécanismes de « thème clair » cohabitent donc : un vrai <code>ThemeData</code> jamais monté, et un
+booléen propagé à la main d'appelant en appelant. Le premier est correct et inerte ; le second
+fonctionne et se propage mal.</p></div>
+
+<h3>Les seuils de responsive</h3>
+
+<p>Il y a exactement trois seuils dans le projet, et ils ne sont pas centralisés dans une constante :</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Seuil</th><th>Expression</th><th>Où</th><th>Effet</th></tr></thead>
+<tbody>
+<tr>
+  <td><strong>600 px</strong> (général)</td>
+  <td><code>MediaQuery.of(context).size.width &lt; 600</code></td>
+  <td><code>class_selection_screen.dart:22</code>, <code>starter_deck_draft_screen.dart:120</code>, <code>rest_card_selection_screen.dart:65</code>, <code>card_draft_layout.dart:30</code></td>
+  <td>drapeau <code>isMobile</code> : réduit paddings, tailles de police et taille des tuiles de grille</td>
+</tr>
+<tr>
+  <td><strong>600 px</strong> (contraintes)</td>
+  <td><code>constraints.maxWidth &lt; 600</code></td>
+  <td><code>draft_screen.dart:184</code></td>
+  <td><code>isPortrait</code> : les 3 choix passent d'une <code>Row</code> à une <code>ListView</code> verticale</td>
+</tr>
+<tr>
+  <td><strong>600 px</strong> (combat)</td>
+  <td><code>screenWidth &lt; 600</code></td>
+  <td><code>game_screen.dart:411</code></td>
+  <td>HUD de combat : hauteur de base 100 au lieu de 88, largeur 90 % au lieu de 52 %</td>
+</tr>
+<tr>
+  <td><strong>720 px</strong></td>
+  <td><code>constraints.maxWidth &gt;= 720</code></td>
+  <td><code>forge_upgrade_dialog.dart:400</code></td>
+  <td><code>isDesktop</code> dans le dialogue de choix de rune de forge</td>
+</tr>
+<tr>
+  <td><strong>760 px</strong></td>
+  <td><code>constraints.maxWidth &gt;= 760</code></td>
+  <td><code>forge_fusion_screen.dart:189</code></td>
+  <td><code>isDesktop</code> : la forge de fusion passe en deux colonnes (liste + aperçu)</td>
+</tr>
+</tbody>
+</table></div>
+
+<p>Le seuil 600 utilise <code>MediaQuery</code> dans quatre fichiers et <code>LayoutBuilder</code> dans deux autres. Ce
+n'est pas équivalent : <code>MediaQuery</code> mesure la fenêtre entière, <code>constraints</code> mesure la place
+réellement disponible pour ce sous-arbre. Dans <code>game_screen.dart</code>, le calcul du HUD combine
+d'ailleurs la largeur et le facteur d'échelle du texte :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>    final double screenWidth = MediaQuery.of(context).size.width;
+    final bool isMobile = screenWidth &lt; 600;
+    final double textScaleFactor = MediaQuery.textScalerOf(context).scale(1.0);
+    final double baseHudHeight = isMobile ? 100.0 : 88.0;
+    final double hudHeight = (baseHudHeight * textScaleFactor).clamp(88.0, 140.0);
+    final double hudWidth = isMobile ? screenWidth * 0.90 : screenWidth * 0.52;</pre>
+</div>
+
+<div class="box ok"><div class="box-title">Bonne pratique</div>
+<p>Ce <code>clamp(88.0, 140.0)</code> est un bon réflexe d'accessibilité : le HUD grandit avec la taille de
+police système du téléphone, mais jamais au point de manger l'écran de combat. C'est le seul
+endroit du projet qui prend <code>textScaler</code> en compte.</p></div>
+
+<h3>Les grilles, écran par écran</h3>
+
+<p>Toutes les grilles du projet utilisent <code>SliverGridDelegateWithMaxCrossAxisExtent</code> — jamais
+<code>crossAxisCount</code>. C'est le bon choix : on impose une <em>largeur maximale de tuile</em>, et Flutter
+calcule le nombre de colonnes. La grille s'adapte donc à toutes les tailles sans seuil explicite.</p>
+
+<div class="table-wrap"><table>
+<thead><tr>
+  <th>Écran / grille</th><th><code>maxCrossAxisExtent</code></th><th><code>childAspectRatio</code></th><th>Espacements</th><th>Contenu</th>
+</tr></thead>
+<tbody>
+<tr>
+  <td><code>class_selection_screen.dart</code>:48</td>
+  <td>200 (mobile) / 400</td>
+  <td>0.68 / 0.75</td>
+  <td>10 / 20</td>
+  <td>cartes de classe</td>
+</tr>
+<tr>
+  <td><code>starter_deck_draft_screen.dart</code>:144</td>
+  <td>140 (mobile) / 180</td>
+  <td><code>70 / 110</code></td>
+  <td>8 / 16</td>
+  <td><code>UiCard.fromData</code></td>
+</tr>
+<tr>
+  <td><code>rest_card_selection_screen.dart</code>:104</td>
+  <td>140 (mobile) / 180</td>
+  <td><code>70 / 110</code></td>
+  <td>8 / 16</td>
+  <td><code>UiCard.fromInstance</code></td>
+</tr>
+<tr>
+  <td><code>boss_card_draft_screen.dart</code>:74</td>
+  <td>160</td>
+  <td><code>70 / 110</code></td>
+  <td>12 / 12</td>
+  <td><code>UiCard.fromInstance</code></td>
+</tr>
+<tr>
+  <td><code>deck_screen.dart</code>:56</td>
+  <td>200</td>
+  <td><code>70 / 110</code></td>
+  <td>12 / 12</td>
+  <td><code>UiCard.fromInstance</code> + badge <code>xN</code></td>
+</tr>
+<tr>
+  <td><code>card_dictionary_screen.dart</code>:111 (onglet cartes)</td>
+  <td>200</td>
+  <td><code>70 / 110</code></td>
+  <td>12 / 12</td>
+  <td><code>UiCard.fromData</code></td>
+</tr>
+<tr>
+  <td><code>card_dictionary_screen.dart</code>:172 (onglet reliques)</td>
+  <td>320</td>
+  <td>2.2</td>
+  <td>12 / 12</td>
+  <td>fiches de relique horizontales</td>
+</tr>
+<tr>
+  <td><code>relic_exchange_screen.dart</code>:351</td>
+  <td>300</td>
+  <td>2.2</td>
+  <td>10 / 10</td>
+  <td>reliques sacrifiables</td>
+</tr>
+<tr>
+  <td><code>shop_screen.dart</code>:151 (modale de purge)</td>
+  <td>200</td>
+  <td>0.65</td>
+  <td>10 / 10</td>
+  <td><code>UiCard.fromInstance</code></td>
+</tr>
+</tbody>
+</table></div>
+
+<p>Deux enseignements. D'abord, <code>70 / 110</code> ≈ 0,636 revient cinq fois : c'est bien la constante de
+forme de carte, alignée sur l'<code>AspectRatio</code> interne d'<code>UiCard</code>. Ensuite, la modale de purge de
+la boutique utilise <strong>0.65</strong> au lieu de <code>70 / 110</code>. Un écart de 2 %, invisible à l'œil nu,
+mais qui révèle une valeur recopiée « à peu près » plutôt que référencée. La grille des cartes
+de classe (0.68 / 0.75) et les grilles de reliques (2.2) sont, elles, des formats délibérément
+différents.</p>
+
+<div class="box"><div class="box-title">À retenir</div>
+<p>Le design system de ce projet est <strong>correctement conçu et partiellement branché</strong>. Les tokens
+existent, l'extension de thème est écrite proprement avec <code>copyWith</code> et <code>lerp</code>, l'échelle
+d'espacement est cohérente, le thème clair est designé. Ce qui manque, c'est la dernière étape :
+supprimer les palettes concurrentes, monter le thème parchemin (ou assumer qu'il n'existe pas et
+supprimer son code), lire <code>GameThemeExtension</code> depuis les widgets, et généraliser
+<code>AppSpacing</code>. Aucune de ces quatre tâches n'exige de repenser quoi que ce soit — seulement de
+finir le câblage.</p></div>
+
+<div class="quiz">
+  <h2>Quiz — vérifiez vos acquis</h2>
+
+  <div class="q" data-answer="2">
+    <p class="q-text">1. Pourquoi <code>Navigator.popUntil((route) =&gt; route.isFirst)</code> ramène-t-il au menu principal ?</p>
+    <ul class="q-opts">
+      <li>Parce que <code>HomeScreen</code> est déclaré dans la table <code>routes:</code> du <code>MaterialApp</code> avec le nom <code>'/'</code>.</li>
+      <li>Parce que <code>HomeScreen</code> est poussé par <code>SplashScreen</code> avec <code>pushReplacement</code>, donc il devient la première route.</li>
+      <li>Parce que <code>SplashScreen</code> est la seule route déclarée (<code>home:</code>) et qu'il <em>rend</em> <code>HomeScreen</code> comme enfant dans la branche <code>data</code> de son <code>gameData.when(...)</code>.</li>
+      <li>Parce que <code>popUntil</code> vide toujours la pile jusqu'au widget racine de l'application, quel qu'il soit.</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> dans <code>lib/ui/screens/splash_screen.dart</code>, la branche
+    <code>data: (_) =&gt; const HomeScreen()</code> retourne <code>HomeScreen</code> comme <em>enfant</em> du <code>Scaffold</code> —
+    ce n'est pas une route. La pile ne contient donc qu'une seule route au menu, et
+    <code>route.isFirst</code> désigne <code>SplashScreen</code>.</div>
+  </div>
+
+  <div class="q" data-answer="1">
+    <p class="q-text">2. Sur <code>MapScreen</code>, quelle est la valeur de <code>canPop</code> et que fait le retour système ?</p>
+    <ul class="q-opts">
+      <li><code>canPop: true</code> — le retour dépile vers <code>StarterDeckDraftScreen</code>.</li>
+      <li><code>canPop: false</code> — <code>onPopInvokedWithResult</code> détecte <code>!didPop</code> et appelle <code>_showPauseMenu()</code>.</li>
+      <li><code>canPop: runState.isDead</code> — le retour n'est possible qu'après la mort du héros.</li>
+      <li>Il n'y a pas de <code>PopScope</code> sur <code>MapScreen</code> ; le blocage vient de <code>pushAndRemoveUntil</code>.</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>map_screen.dart</code> ligne 166 passe <code>canPop: false</code> à
+    <code>ScreenScaffold</code>, avec <code>onPopInvokedWithResult: (didPop, result) { if (!didPop) { _showPauseMenu(); } }</code>.
+    Le geste retour ouvre donc le menu pause au lieu de quitter la carte.</div>
+  </div>
+
+  <div class="q" data-answer="3">
+    <p class="q-text">3. Quel <code>childAspectRatio</code> est utilisé par la grille de <code>deck_screen.dart</code>, et pourquoi cette valeur précise ?</p>
+    <ul class="q-opts">
+      <li><code>0.65</code>, arrondi pratique du format de carte.</li>
+      <li><code>2.2</code>, comme les grilles de reliques.</li>
+      <li><code>0.75</code>, hérité de la grille de sélection de classe.</li>
+      <li><code>70 / 110</code>, exactement le ratio de l'<code>AspectRatio</code> interne d'<code>UiCard</code>.</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>deck_screen.dart</code> ligne 58 écrit
+    <code>childAspectRatio: 70 / 110</code>, la même expression que le <code>AspectRatio(aspectRatio: 70 / 110)</code>
+    de <code>ui_card.dart</code>. C'est ce qui empêche la grille de déformer les cartes. La modale de purge de
+    <code>shop_screen.dart</code>, elle, utilise <code>0.65</code> — une approximation.</div>
+  </div>
+
+  <div class="q" data-answer="0">
+    <p class="q-text">4. Combien de champs contient <code>GameThemeExtension</code>, et combien de fichiers hors <code>lib/ui/theme/</code> la lisent ?</p>
+    <ul class="q-opts">
+      <li>13 champs (6 raretés + 4 stats + 3 néons) ; aucun fichier ne la lit.</li>
+      <li>13 champs ; elle est lue par <code>ui_card.dart</code> et <code>card_component.dart</code>.</li>
+      <li>6 champs, uniquement les raretés ; lue par tous les écrans de draft.</li>
+      <li>13 champs ; lue par <code>model_extensions.dart</code> pour <code>CardRarity.color</code>.</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>game_theme_extension.dart</code> déclare 13 <code>final Color</code> :
+    <code>rarityCommon</code> à <code>rarityUnique</code>, <code>statHp</code>/<code>statMana</code>/<code>statGold</code>/<code>statArmor</code>, et
+    <code>neonGlow</code>/<code>neonPurple</code>/<code>neonPink</code>. Aucun appel à
+    <code>Theme.of(context).extension&lt;GameThemeExtension&gt;()</code> n'existe dans <code>lib/</code> :
+    <code>model_extensions.dart</code> lit <code>AppColors.rarity*</code> en dur.</div>
+  </div>
+
+  <div class="q" data-answer="2">
+    <p class="q-text">5. Dans <code>GameButton</code>, que vaut <code>isParchment</code> en pratique quand on lance le jeu ?</p>
+    <ul class="q-opts">
+      <li><code>true</code> sur <code>MapScreen</code> et <code>RelicExchangeScreen</code>, car ils utilisent <code>ScreenBackgroundType.parchment</code>.</li>
+      <li>Cela dépend du <code>themeMode</code> choisi par l'utilisateur dans les réglages du jeu.</li>
+      <li>Toujours <code>false</code> : <code>lightParchmentTheme</code> n'est jamais monté et <code>isParchmentOverride</code> n'est passé nulle part.</li>
+      <li><code>true</code> partout, car <code>ThemeData.dark()</code> renvoie <code>parchmentBg</code> comme <code>scaffoldBackgroundColor</code>.</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> la détection est
+    <code>theme.scaffoldBackgroundColor == AppColors.parchmentBg</code>. Or <code>main.dart</code> ne déclare que
+    <code>theme: AppTheme.darkNeonTheme</code>, dont le <code>scaffoldBackgroundColor</code> est <code>AppColors.darkBg</code>
+    (<code>0xFF1E1E2C</code>). <code>ScreenScaffold</code> peint son fond parchemin sur le <code>Scaffold</code>, pas sur le
+    <code>Theme</code> : la branche claire est du code mort.</div>
+  </div>
+
+  <div class="q" data-answer="1">
+    <p class="q-text">6. Après combien de temps une notification disparaît-elle, et combien peuvent être affichées simultanément ?</p>
+    <ul class="q-opts">
+      <li>2 000 ms, maximum 3 notifications.</li>
+      <li>3 500 ms, maximum 4 notifications — la plus ancienne est évincée au-delà.</li>
+      <li>5 000 ms, sans limite de nombre.</li>
+      <li>3 500 ms, mais une seule à la fois : la nouvelle remplace l'ancienne.</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> dans <code>notification_overlay.dart</code>,
+    <code>NotificationNotifier.show()</code> fait <code>if (state.length &gt;= 4) { state = [...state.sublist(1), notification]; }</code>
+    puis arme un <code>Timer(const Duration(milliseconds: 3500), ...)</code> qui appelle <code>dismiss</code>.</div>
+  </div>
+</div>
+
+<div class="pager">
+<a class="prev" href="ch18.html"><div class="dir">&#8592; Chapitre 18</div><div class="ttl">Composants Flame et game feel</div></a>
+<a class="next" href="ch20.html"><div class="dir">Chapitre 20 &#8594;</div><div class="ttl">Sauvegarde, localisation et tutoriel</div></a>
+</div>
+</div>
+</main>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

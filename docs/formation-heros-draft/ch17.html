@@ -1,0 +1,2260 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Le pont Flame ↔ Riverpod : l&#x27;écran de combat — Formation Hero's Draft</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<button class="menu-btn" aria-label="Menu">&#9776;</button>
+<div class="layout">
+<aside class="sidebar">
+  <a class="brand" href="index.html">
+    <div class="brand-title">HERO'S DRAFT</div>
+    <div class="brand-sub">Formation complète au projet Flutter</div>
+  </a>
+<nav class="nav">
+<div class="nav-part">Partie 0 — Démarrage</div>
+<a href="ch01.html"><span class="num">01</span><span>Vue d&#x27;ensemble : qu&#x27;est-ce que Hero&#x27;s Draft ?</span></a>
+<div class="nav-part">Partie 1 — Les fondations techniques</div>
+<a href="ch02.html"><span class="num">02</span><span>Dart, le langage — l&#x27;essentiel pour ce projet</span></a>
+<a href="ch03.html"><span class="num">03</span><span>Flutter — widgets, arbre et navigation</span></a>
+<a href="ch04.html"><span class="num">04</span><span>Riverpod — l&#x27;état partagé du jeu</span></a>
+<a href="ch05.html"><span class="num">05</span><span>Flame — le moteur de rendu du combat</span></a>
+<div class="nav-part">Partie 2 — L&#x27;architecture du projet</div>
+<a href="ch06.html"><span class="num">06</span><span>L&#x27;architecture en quatre couches</span></a>
+<a href="ch07.html"><span class="num">07</span><span>La couche de données : un jeu 100 % data-driven</span></a>
+<div class="nav-part">Partie 3 — Les règles du jeu</div>
+<a href="ch08.html"><span class="num">08</span><span>Le héros : stats, classes, passifs et progression</span></a>
+<a href="ch09.html"><span class="num">09</span><span>Les cartes et le deck</span></a>
+<a href="ch10.html"><span class="num">10</span><span>Le combat : boucle de tour, dégâts et effets</span></a>
+<a href="ch11.html"><span class="num">11</span><span>Les ennemis et la courbe de difficulté</span></a>
+<a href="ch12.html"><span class="num">12</span><span>La carte du monde procédurale</span></a>
+<a href="ch13.html"><span class="num">13</span><span>Les reliques et le système de déclencheurs</span></a>
+<a href="ch14.html"><span class="num">14</span><span>L&#x27;économie : or, boutique, forge et fusion</span></a>
+<a href="ch15.html"><span class="num">15</span><span>Récompenses, chance et probabilités</span></a>
+<a href="ch16.html"><span class="num">16</span><span>Événements, repos et autel des reliques</span></a>
+<div class="nav-part">Partie 4 — L&#x27;interface et le rendu</div>
+<a href="ch17.html" class="active"><span class="num">17</span><span>Le pont Flame ↔ Riverpod : l&#x27;écran de combat</span></a>
+<a href="ch18.html"><span class="num">18</span><span>Composants Flame et game feel</span></a>
+<a href="ch19.html"><span class="num">19</span><span>Écrans, navigation et design system</span></a>
+<div class="nav-part">Partie 5 — Qualité et cycle de vie</div>
+<a href="ch20.html"><span class="num">20</span><span>Sauvegarde, localisation et tutoriel</span></a>
+<a href="ch21.html"><span class="num">21</span><span>Tests, outillage, dette technique et évolutions</span></a>
+</nav>
+</aside>
+<main class="main">
+<div class="content">
+<div class="chapter-kicker">Chapitre 17</div>
+<h1>Le pont Flame ↔ Riverpod : l'écran de combat</h1>
+<p class="lede"><code>GameScreen</code> est le seul endroit du projet où les trois mondes se rencontrent.
+Comprendre ce fichier, c'est comprendre comment un moteur de jeu et un gestionnaire d'état cohabitent
+sans se marcher dessus.</p>
+
+<div class="toc">
+  <div class="toc-title">Dans ce chapitre</div>
+  <ol>
+    <li><a href="#s1">La règle de séparation</a></li>
+    <li><a href="#s2">L'anatomie de <code>GameScreen</code></a></li>
+    <li><a href="#s3">L'initialisation du combat</a></li>
+    <li><a href="#s4">Le sens descendant : synchroniser l'état vers Flame</a></li>
+    <li><a href="#s5">Le sens montant : les callbacks</a></li>
+    <li><a href="#s6">Le cas critique : jouer une carte</a></li>
+    <li><a href="#s7">Fin de tour, fin de combat, mort</a></li>
+    <li><a href="#s8">Ce qu'il faut retenir pour étendre le combat</a></li>
+  </ol>
+</div>
+
+<p>Jusqu'ici, chaque chapitre a exploré un monde à la fois. Le chapitre sur Flame vous a montré des
+composants qui se dessinent et s'animent. Les chapitres sur Riverpod vous ont montré des
+<code>Notifier</code> qui produisent des états immuables. Les chapitres sur l'interface vous ont montré
+des widgets Flutter qui affichent des barres de vie.</p>
+
+<p>Ces trois mondes ne se parlent pas naturellement. Flame vit dans une boucle de jeu qui tourne à
+60 images par seconde et dessine sur un <code>Canvas</code>. Riverpod vit dans un arbre de providers
+qui n'a aucune idée de ce qu'est une image par seconde. Flutter vit dans un arbre de widgets reconstruit
+à la demande. Il faut bien que quelqu'un fasse le pont — et dans Hero's Draft, ce quelqu'un s'appelle
+<code>lib/ui/screens/game_screen.dart</code>, 526 lignes qui portent la totalité de la logique de
+liaison du combat.</p>
+
+<p>Ce chapitre le démonte ligne par ligne. À la fin, vous saurez exactement où poser un nouveau
+widget de HUD, où brancher un nouveau callback, et surtout quelles erreurs ne jamais commettre.</p>
+
+<h2 id="s1">1. La règle de séparation</h2>
+
+<p>Avant de lire une seule ligne, il faut poser la règle qui gouverne tout le fichier. Elle tient en
+trois verbes.</p>
+
+<div class="box rule">
+  <div class="box-title">La règle des trois mondes</div>
+  <p><strong>Flame rend. Riverpod décide. Flutter habille.</strong></p>
+  <p>Aucun composant Flame ne modifie l'état du jeu : il ne fait que <em>demander</em>, via un callback,
+  que quelqu'un d'autre le modifie. Aucun widget Flutter n'entre dans le canvas : il se contente de
+  flotter au-dessus. Et Riverpod ne sait même pas que Flame existe.</p>
+</div>
+
+<p>Concrètement, cela veut dire trois choses.</p>
+
+<p><strong>Riverpod décide.</strong> La vérité du jeu — combien de points de vie a le héros, quelles
+cartes sont en main, quels ennemis sont vivants — vit dans trois providers :
+<span class="pill r">Riverpod</span> <code>runProvider</code>, <code>deckProvider</code> et
+<code>combatProvider</code>. Quand une carte inflige des dégâts, c'est un <code>Notifier</code> qui
+recalcule un état immuable. Rien d'autre.</p>
+
+<p><strong>Flame rend.</strong> <span class="pill f">Flame</span> <code>HerosDraftGame</code> ne
+possède aucune donnée de gameplay. Il possède des <em>représentations</em> : un <code>HeroCard</code>,
+une liste de <code>EnemyCard</code>, une liste de <code>CardComponent</code>. Ces objets sont des
+miroirs. Quand l'état change, on les met à jour pour qu'ils reflètent le nouvel état — jamais l'inverse.</p>
+
+<p><strong>Flutter habille.</strong> Tout ce qui est texte lisible, bouton, panneau, avertissement,
+est un widget Flutter classique posé dans un <code>Stack</code> au-dessus du <code>GameWidget</code>.
+Ces widgets sont tous <em>bêtes</em> : ils reçoivent des valeurs et des callbacks, ils ne lisent aucun
+provider eux-mêmes.</p>
+
+<p>Il en découle une propriété très pratique : la circulation de l'information est
+<strong>strictement à sens unique dans chaque direction</strong>. Vers le bas, ce sont des
+<em>états</em>. Vers le haut, ce sont des <em>intentions</em>.</p>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 820 470" width="820" role="img" aria-label="Les trois mondes de Hero's Draft et les deux sens de circulation entre eux">
+      <defs>
+        <marker id="c17-down" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#f59e0b"/>
+        </marker>
+        <marker id="c17-up" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#22d3ee"/>
+        </marker>
+        <marker id="c17-no" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#f87171"/>
+        </marker>
+      </defs>
+
+      <rect x="0" y="0" width="820" height="470" fill="#0e1524"/>
+
+      <text x="296" y="15" fill="#f59e0b" font-size="11" text-anchor="end" letter-spacing="2">DESCENDANT — DES ÉTATS</text>
+      <text x="524" y="15" fill="#22d3ee" font-size="11" text-anchor="start" letter-spacing="2">MONTANT — DES INTENTIONS</text>
+
+      <rect x="250" y="26" width="320" height="86" rx="10" fill="#151b2b" stroke="#a78bfa" stroke-width="2"/>
+      <text x="410" y="52" fill="#a78bfa" font-size="15" text-anchor="middle" font-weight="bold">Riverpod — la décision</text>
+      <text x="410" y="76" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">runProvider · deckProvider</text>
+      <text x="410" y="97" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">combatProvider · rewardProvider</text>
+
+      <rect x="250" y="192" width="320" height="86" rx="10" fill="#151b2b" stroke="#34d399" stroke-width="2"/>
+      <text x="410" y="218" fill="#34d399" font-size="15" text-anchor="middle" font-weight="bold">Flutter — GameScreen</text>
+      <text x="410" y="242" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">PopScope › Scaffold › Stack</text>
+      <text x="410" y="263" fill="#a7b4c9" font-size="12" text-anchor="middle">le seul traducteur du projet</text>
+
+      <rect x="250" y="358" width="320" height="86" rx="10" fill="#151b2b" stroke="#22d3ee" stroke-width="2"/>
+      <text x="410" y="384" fill="#22d3ee" font-size="15" text-anchor="middle" font-weight="bold">Flame — HerosDraftGame</text>
+      <text x="410" y="408" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">StateSyncSystem · LayoutSystem</text>
+      <text x="410" y="429" fill="#e6ecf5" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">CardComponent · EnemyCard</text>
+
+      <path d="M320 112 L320 190" stroke="#f59e0b" stroke-width="2" marker-end="url(#c17-down)"/>
+      <path d="M320 278 L320 356" stroke="#f59e0b" stroke-width="2" marker-end="url(#c17-down)"/>
+
+      <text x="300" y="142" fill="#f59e0b" font-size="11" text-anchor="end" font-family="ui-monospace, monospace">ref.watch(runProvider)</text>
+      <text x="300" y="159" fill="#f59e0b" font-size="11" text-anchor="end" font-family="ui-monospace, monospace">ref.watch(deckProvider)</text>
+      <text x="300" y="176" fill="#f59e0b" font-size="11" text-anchor="end" font-family="ui-monospace, monospace">ref.watch(combatProvider)</text>
+
+      <text x="300" y="303" fill="#f59e0b" font-size="11" text-anchor="end" font-family="ui-monospace, monospace">_game.syncState(...)</text>
+      <text x="300" y="320" fill="#f59e0b" font-size="11" text-anchor="end" font-family="ui-monospace, monospace">_game.syncDeck(...)</text>
+      <text x="300" y="337" fill="#f59e0b" font-size="11" text-anchor="end" font-family="ui-monospace, monospace">_game.syncCombat(...)</text>
+
+      <path d="M500 356 L500 280" stroke="#22d3ee" stroke-width="2" marker-end="url(#c17-up)"/>
+      <path d="M500 190 L500 114" stroke="#22d3ee" stroke-width="2" marker-end="url(#c17-up)"/>
+
+      <text x="524" y="303" fill="#22d3ee" font-size="11" text-anchor="start" font-family="ui-monospace, monospace">onPlayCard(card, cible)</text>
+      <text x="524" y="320" fill="#22d3ee" font-size="11" text-anchor="start" font-family="ui-monospace, monospace">onStartEnemyTurn()</text>
+      <text x="524" y="337" fill="#22d3ee" font-size="11" text-anchor="start" font-family="ui-monospace, monospace">onEnemiesDead() ...</text>
+
+      <text x="524" y="142" fill="#22d3ee" font-size="11" text-anchor="start" font-family="ui-monospace, monospace">ref.read(...).notifier</text>
+      <text x="524" y="159" fill="#22d3ee" font-size="11" text-anchor="start" font-family="ui-monospace, monospace">.applyPlayerCardPlay()</text>
+      <text x="524" y="176" fill="#22d3ee" font-size="11" text-anchor="start" font-family="ui-monospace, monospace">.startEnemyTurn() ...</text>
+
+      <path d="M150 90 L150 372" stroke="#f87171" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#c17-no)"/>
+      <circle cx="150" cy="231" r="16" fill="#0e1524" stroke="#f87171" stroke-width="2"/>
+      <path d="M142 223 L158 239" stroke="#f87171" stroke-width="2"/>
+      <path d="M158 223 L142 239" stroke="#f87171" stroke-width="2"/>
+      <text x="126" y="231" fill="#f87171" font-size="11" text-anchor="middle" transform="rotate(-90 126 231)">aucun lien direct</text>
+
+      <text x="700" y="455" fill="#a7b4c9" font-size="11" text-anchor="middle">lib/ui/screens/game_screen.dart</text>
+    </svg>
+  </div>
+  <figcaption>Les trois mondes et les deux sens de circulation. Riverpod et Flame ne se connaissent pas :
+  toute information passe par <code>GameScreen</code>, qui traduit des états en descendant et des
+  intentions en montant.</figcaption>
+</figure>
+
+<p>Regardez bien la flèche barrée à gauche. Elle est l'essentiel du chapitre. Dans
+<code>heros_draft_game.dart</code>, il n'y a pas un seul <code>import</code> de
+<code>flutter_riverpod</code>, pas un seul <code>ref</code>, pas un seul <code>Notifier</code>. Le
+moteur ne peut littéralement pas modifier l'état, même si on le voulait.</p>
+
+<p>Ce que <code>HerosDraftGame</code> importe des contrôleurs, ce sont uniquement les <em>types
+d'état</em> :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/heros_draft_game.dart</span><span class="lang">dart</span></div>
+  <pre>import 'controllers/run_controller.dart';
+import 'controllers/deck_controller.dart';
+import '../models/enemy_intent.dart';
+import '../models/combat_state.dart';
+
+import 'systems/state_sync_system.dart';
+import 'systems/card_animation_system.dart';
+import 'systems/combat_visual_system.dart';
+import 'systems/layout_system.dart';</pre>
+</div>
+
+<p>Les deux premiers imports servent à connaître les classes <code>RunState</code> et
+<code>DeckState</code> — des sacs de données immuables — pas les <code>Notifier</code> qui les
+produisent. C'est une nuance capitale : le moteur sait <em>lire</em> la forme d'un état, il ne sait pas
+en <em>fabriquer</em> un nouveau.</p>
+
+<div class="box ok">
+  <div class="box-title">Bonne pratique</div>
+  <p>Cette asymétrie n'est pas une contrainte arbitraire : elle rend le moteur testable et
+  remplaçable. Vous pourriez remplacer Flame par un rendu totalement différent sans toucher une ligne
+  des contrôleurs, parce que ces derniers ne connaissent aucun composant graphique.</p>
+</div>
+
+<h2 id="s2">2. L'anatomie de <code>GameScreen</code></h2>
+
+<p><code>GameScreen</code> est un <code>ConsumerStatefulWidget</code>. Le mot est long mais il dit
+exactement deux choses : <em>Consumer</em> parce qu'il lit des providers Riverpod, <em>Stateful</em>
+parce qu'il détient un état local qui n'a rien à faire dans un provider (une bannière visible ou non,
+un tooltip affiché ou non).</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>class GameScreen extends ConsumerStatefulWidget {
+  const GameScreen({super.key});
+
+  @override
+  ConsumerState&lt;GameScreen&gt; createState() =&gt; _GameScreenState();
+}
+
+class _GameScreenState extends ConsumerState&lt;GameScreen&gt; {
+  late HerosDraftGame _game;
+  final bool _showDraft = false;
+  String? _phaseBannerText;
+  bool _showPhaseBanner = false;
+
+  String? _tooltipTitle;
+  String? _tooltipDescription;
+  CardType? _tooltipCardType;
+  bool _showTooltip = false;
+  // ...
+  bool _showManaWarning = false;
+  bool _showRemainingManaWarning = false;
+  bool _isVictoryHandled = false;</pre>
+</div>
+
+<p>Neuf champs, et pas un de plus. Prenez le temps de remarquer ce qui <strong>n'est pas</strong> là :
+aucun point de vie, aucune liste d'ennemis, aucune carte. Tout ce qui est du gameplay vit dans les
+providers. Ce qui reste ici est purement de la <em>présentation locale</em> :</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Champ</th><th>Type</th><th>Rôle</th></tr></thead>
+<tbody>
+<tr><td><code>_game</code></td><td><code>HerosDraftGame</code></td><td>L'instance unique du moteur Flame, construite dans <code>initState</code>.</td></tr>
+<tr><td><code>_showDraft</code></td><td><code>final bool</code></td><td>Toujours <code>false</code>. Vestige d'un écran de draft intégré ; voir la section 8.</td></tr>
+<tr><td><code>_phaseBannerText</code></td><td><code>String?</code></td><td>Le texte de la bannière « Tour du joueur » / « Tour de l'ennemi ».</td></tr>
+<tr><td><code>_showPhaseBanner</code></td><td><code>bool</code></td><td>Affiche ou non cette bannière.</td></tr>
+<tr><td><code>_tooltipTitle</code>, <code>_tooltipDescription</code>, <code>_tooltipCardType</code></td><td><code>String?</code>, <code>CardType?</code></td><td>Le contenu du tooltip de carte, poussé depuis Flame.</td></tr>
+<tr><td><code>_showTooltip</code></td><td><code>bool</code></td><td>Visibilité du tooltip.</td></tr>
+<tr><td><code>_showManaWarning</code></td><td><code>bool</code></td><td>« Vous n'avez plus de mana » — affiché 600 ms après être tombé à zéro.</td></tr>
+<tr><td><code>_showRemainingManaWarning</code></td><td><code>bool</code></td><td>« Il vous reste du mana » — le garde-fou du double clic sur Fin de tour.</td></tr>
+<tr><td><code>_isVictoryHandled</code></td><td><code>bool</code></td><td>Verrou anti-double-victoire, indispensable (section 7).</td></tr>
+</tbody>
+</table></div>
+
+<h3>L'empilement réel</h3>
+
+<p>La méthode <code>build</code> construit une pile de couches. Voici sa structure, débarrassée des
+paramètres :</p>
+
+<div class="tree">PopScope                          <span class="c">// intercepte le retour arrière</span>
+└── Scaffold
+    └── Stack
+        ├── <span class="f">Positioned.fill(GameWidget)</span>   <span class="c">// tout le canvas Flame</span>
+        └── SafeArea
+            └── Stack
+                ├── <span class="f">DeathOverlay</span>            <span class="c">// si runState.isDead</span>
+                ├── <span class="f">CombatTopBar</span>            <span class="c">// acte/niveau, deck, pause</span>
+                ├── <span class="f">CombatBottomHud</span>         <span class="c">// mana + barre de vie</span>
+                ├── <span class="f">TurnControlPanel</span>        <span class="c">// fin de tour + avertissements</span>
+                ├── <span class="f">CombatSidePanels</span>        <span class="c">// pioche/défausse, statuts, intentions</span>
+                ├── <span class="f">CombatPhaseBanner</span>       <span class="c">// si _showPhaseBanner</span>
+                └── <span class="f">CombatTooltipOverlay</span>    <span class="c">// toujours présent, opacité animée</span>
+</div>
+
+<p>Et voici le code réel de cet empilement. C'est le cœur visuel du fichier :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>return PopScope(
+  canPop: isCompleted || runState.isDead,
+  child: Scaffold(
+    body: Stack(
+      children: [
+        // Le jeu prend tout l'écran
+        Positioned.fill(child: GameWidget(game: _game)),
+
+        // HUD et Overlays dans une SafeArea
+        SafeArea(
+          child: Stack(
+            children: [
+
+              if (!_showDraft &amp;&amp; runState.isDead) const DeathOverlay(),
+
+              if (!runState.isDead &amp;&amp; !_showDraft)
+                CombatTopBar(
+                  act: runState.act,
+                  currentLevel: runState.currentLevel,
+                  onPauseTap: _showPauseMenu,
+                ),
+              // ...</pre>
+</div>
+
+<p>Trois détails valent qu'on s'y arrête.</p>
+
+<p><strong><code>PopScope</code> et <code>canPop</code>.</strong> Sur Android, un geste de retour
+arrière quitterait l'écran de combat en plein milieu d'un tour. <code>canPop</code> vaut
+<code>isCompleted || runState.isDead</code> : on ne peut sortir que si le nœud de carte est déjà marqué
+terminé, ou si le héros est mort. Autrement dit, le joueur ne peut pas fuir un combat en cours.</p>
+
+<p><strong><code>Positioned.fill(GameWidget)</code> en premier enfant.</strong> Dans un
+<code>Stack</code>, l'ordre des enfants est l'ordre de dessin : le premier est au fond. Le canvas Flame
+est donc systématiquement <em>sous</em> tous les widgets de HUD. C'est ce qui garantit qu'un bouton
+Flutter recouvre toujours une carte Flame, jamais l'inverse.</p>
+
+<p><strong>La <code>SafeArea</code> n'entoure que le HUD.</strong> Le <code>GameWidget</code> est
+volontairement <em>hors</em> de la <code>SafeArea</code> : le fond de donjon doit remplir l'écran
+jusque sous l'encoche. Seuls les widgets lisibles sont contraints à la zone sûre.</p>
+
+<h3>Le catalogue des widgets de HUD</h3>
+
+<p>Sept widgets, tous dans <code>lib/ui/widgets/hud/</code>. Aucun d'eux n'importe Riverpod : ils
+reçoivent des valeurs brutes et des callbacks. C'est ce qui les rend réutilisables et testables
+isolément.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Widget</th><th>Fichier</th><th>Position à l'écran</th><th>Rôle</th><th>Condition d'affichage</th></tr></thead>
+<tbody>
+<tr>
+  <td><code>DeathOverlay</code></td>
+  <td><code>hud/death_overlay.dart</code></td>
+  <td><code>Positioned.fill</code>, voile rouge <code>withAlpha(230)</code></td>
+  <td>Écran de fin de run : « Menu principal » et « Changer de classe ».</td>
+  <td><code>runState.isDead</code></td>
+</tr>
+<tr>
+  <td><code>CombatTopBar</code></td>
+  <td><code>hud/combat_top_bar.dart</code></td>
+  <td>Haut : acte/niveau à gauche (<code>top: 10, left: 20</code>), deck (<code>right: 75</code>) et pause (<code>right: 20</code>) à droite</td>
+  <td>Contexte de progression + accès au deck et au menu pause.</td>
+  <td>vivant</td>
+</tr>
+<tr>
+  <td><code>CombatBottomHud</code></td>
+  <td><code>hud/combat_bottom_hud.dart</code></td>
+  <td>Bas, pleine largeur, hauteur <code>hudHeight</code></td>
+  <td>Conteneur de <code>ManaIndicator</code> + <code>PlayerHealthBar</code>.</td>
+  <td>vivant</td>
+</tr>
+<tr>
+  <td><code>TurnControlPanel</code></td>
+  <td><code>hud/turn_control_panel.dart</code></td>
+  <td>Milieu droit : bouton à <code>screenHeight / 2 - 25</code>, avertissements à <code>- 85</code>, compteur à <code>+ 33</code></td>
+  <td>Bouton « Fin de tour », les deux avertissements de mana, le numéro de tour.</td>
+  <td>vivant</td>
+</tr>
+<tr>
+  <td><code>CombatSidePanels</code></td>
+  <td><code>hud/combat_side_panels.dart</code></td>
+  <td>Bas gauche et bas droite (<code>bottom: 20</code>), panneaux à <code>bottom: 80</code></td>
+  <td>Compteurs pioche/défausse, <code>StatusEffectsPanel</code>, <code>EnemyIntentsPanel</code>.</td>
+  <td>vivant</td>
+</tr>
+<tr>
+  <td><code>CombatPhaseBanner</code></td>
+  <td><code>hud/combat_phase_banner.dart</code></td>
+  <td><code>Center</code>, bandeau noir bordé d'ambre</td>
+  <td>Annonce du changement de phase, texte 32 px, <code>letterSpacing: 4</code>.</td>
+  <td><code>_showPhaseBanner</code></td>
+</tr>
+<tr>
+  <td><code>CombatTooltipOverlay</code></td>
+  <td><code>hud/combat_tooltip_overlay.dart</code></td>
+  <td><code>bottom: 270</code>, centré, largeur max 300</td>
+  <td>Description détaillée de la carte survolée ou sélectionnée.</td>
+  <td>toujours construit, opacité animée sur 200 ms</td>
+</tr>
+</tbody>
+</table></div>
+
+<p>Deux widgets de second rang méritent une mention, car ils sont utilisés <em>par</em>
+<code>CombatBottomHud</code> et non par <code>GameScreen</code> :
+<code>hud/mana_indicator.dart</code> dessine les cristaux de mana (icône <code>Icons.diamond</code>,
+taille de base 24 px, réduite si le total dépasse 5 cristaux, avec un rendu creux distinct pour le mana
+excédentaire offert par une relique), et <code>hud/player_health_bar.dart</code> est le seul
+<code>StatefulWidget</code> du lot, parce qu'il anime la descente de la barre verte sur 500 ms.</p>
+
+<div class="box">
+  <div class="box-title">À retenir</div>
+  <p>Le <code>CombatTooltipOverlay</code> est <strong>toujours</strong> dans l'arbre, contrairement aux
+  autres qui sont conditionnés par un <code>if</code>. C'est délibéré : un widget qui apparaît et
+  disparaît de l'arbre ne peut pas être animé en fondu. En le gardant présent et en pilotant seulement
+  son <code>AnimatedOpacity</code>, on obtient une transition douce. Le <code>IgnorePointer</code>
+  interne empêche qu'il intercepte les clics quand il est invisible.</p>
+</div>
+
+<h3>Les dimensions calculées</h3>
+
+<p>Juste avant le <code>return</code>, <code>build</code> calcule quatre valeurs de mise en page :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>final double screenWidth = MediaQuery.of(context).size.width;
+final bool isMobile = screenWidth &lt; 600;
+final double textScaleFactor = MediaQuery.textScalerOf(context).scale(1.0);
+final double baseHudHeight = isMobile ? 100.0 : 88.0;
+final double hudHeight = (baseHudHeight * textScaleFactor).clamp(88.0, 140.0);
+final double hudWidth = isMobile ? screenWidth * 0.90 : screenWidth * 0.52;</pre>
+</div>
+
+<p>Le seuil mobile est à 600 pixels de large. La hauteur du HUD suit le facteur d'échelle de texte du
+système — un utilisateur qui a agrandi la police de son téléphone verra un HUD plus haut — mais bornée
+entre 88 et 140 pixels pour ne jamais dévorer l'écran. Enfin le HUD occupe 90 % de la largeur sur
+mobile et seulement 52 % sur grand écran, parce qu'une barre de vie étirée sur 1600 pixels est
+illisible.</p>
+
+<h2 id="s3">3. L'initialisation du combat</h2>
+
+<p><code>initState</code> fait exactement deux choses, dans un ordre qui n'est pas celui qu'on
+attendrait : il planifie l'initialisation du combat, <em>puis</em> il construit le jeu Flame.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>@override
+void initState() {
+  super.initState();
+
+  Future.microtask(() {
+    ref.read(combatProvider.notifier).startPlayerCombat();
+
+    final runState = ref.read(runProvider);
+    final currentNode = runState.mapNodes.firstWhere(
+      (n) =&gt; n.id == runState.currentNodeId,
+      orElse: () =&gt; runState.mapNodes.first,
+    );
+    final bossEnemyId = currentNode.bossEnemyId;
+    final gameData = ref.read(gameDataLoaderProvider).requireValue;
+    ref
+        .read(combatProvider.notifier)
+        .initializeCombat(
+          runState.currentLevel,
+          runState.currentNodeType,
+          gameData.enemies,
+          playerLevel: runState.heroStats.level,
+          act: runState.act,
+          playerMaxHp: runState.heroStats.maxPv,
+          playerAttaque: runState.heroStats.attaque,
+          playerMaxMana: runState.heroStats.maxMana,
+          playerRelicsCount: ref.read(inventoryProvider).relics.length,
+          playerCardsCount: ref.read(deckProvider).masterDeck.length,
+          bossEnemyId: bossEnemyId,
+        );
+  });</pre>
+</div>
+
+<h3>Pourquoi <code>Future.microtask</code> ?</h3>
+
+<p>C'est le point le plus subtil du fichier, et une erreur classique de débutant Riverpod.</p>
+
+<div class="box warn">
+  <div class="box-title">Piège</div>
+  <p>Modifier un provider <strong>pendant</strong> la construction d'un widget est interdit. Si vous
+  appelez <code>ref.read(combatProvider.notifier).initializeCombat(...)</code> directement dans
+  <code>initState</code>, Riverpod peut lever une erreur, ou pire, provoquer un
+  <code>setState() called during build</code>. La raison est simple : <code>initState</code> s'exécute
+  au milieu d'une passe de construction de l'arbre, et modifier un état déclenche une reconstruction —
+  on demande à Flutter de reconstruire quelque chose qu'il est en train de construire.</p>
+</div>
+
+<p><code>Future.microtask</code> résout ça élégamment. La fonction passée n'est pas exécutée tout de
+suite : elle est mise dans la file des microtâches et sera exécutée dès que la pile d'appels courante
+sera vide — c'est-à-dire juste après la fin de la construction, mais avant le prochain rendu. Le combat
+est donc initialisé « immédiatement » du point de vue de l'utilisateur, mais légalement du point de vue
+de Flutter.</p>
+
+<p>Deux appels s'enchaînent dans cette microtâche.
+<code>startPlayerCombat()</code> ouvre le combat côté joueur : il réinitialise les ressources du héros
+et fait piocher la main d'ouverture.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/combat/turn_phase_manager.dart</span><span class="lang">dart</span></div>
+  <pre>void startPlayerCombat() {
+  final runController = ref.read(runProvider.notifier);
+  final deckController = ref.read(deckProvider.notifier);
+  // ...
+  runController.startCombat();
+  deckController.startCombat(
+    handSize: runController.currentState.cardsPerTurn,
+    maxHandSize: GameConstants.maxHandSize,
+  );
+}</pre>
+</div>
+
+<p>Puis <code>initializeCombat(...)</code> génère les ennemis. Et là, regardez la liste des paramètres
+nommés : sept d'entre eux décrivent la <em>puissance actuelle du joueur</em>.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/combat_controller.dart</span><span class="lang">dart</span></div>
+  <pre>void initializeCombat(
+  int level,
+  MapNodeType? nodeType,
+  List&lt;EnemyData&gt; availableEnemies, {
+  int playerLevel = 1,
+  int act = 1,
+  int playerMaxHp = 100,
+  int playerAttaque = 0,
+  int playerMaxMana = 3,
+  int playerRelicsCount = 0,
+  int playerCardsCount = 0,
+  String? bossEnemyId,
+}) {
+  final enemyDataList = EncounterSystem.generateEnemiesForLevel(
+    level,
+    availableEnemies,
+    nodeType: nodeType,
+    playerLevel: playerLevel,
+    act: act,
+    // ...</pre>
+</div>
+
+<h3>Pourquoi passer ces valeurs plutôt que les lire dans le contrôleur ?</h3>
+
+<p>La question est légitime : <code>CombatController</code> a un <code>ref</code>, il pourrait très
+bien faire <code>ref.read(runProvider).heroStats.maxPv</code> lui-même. Trois raisons expliquent ce
+choix.</p>
+
+<p><strong>1. Le sens des dépendances.</strong> Si <code>CombatController</code> lisait
+<code>runProvider</code> et <code>inventoryProvider</code> et <code>deckProvider</code> pour se
+configurer, il deviendrait dépendant de trois autres providers rien que pour démarrer. Ici, il reçoit
+sept entiers. Un contrôleur qui reçoit des entiers est infiniment plus simple à tester : on lui donne
+<code>playerMaxHp: 200, playerRelicsCount: 5</code> et on vérifie que le budget d'ennemis grimpe. Pas
+besoin de monter tout un <code>ProviderContainer</code>.</p>
+
+<p><strong>2. L'instantané.</strong> Ces valeurs constituent une photographie prise à un instant
+précis : le début du combat. Si le contrôleur les relisait plus tard, il lirait des valeurs modifiées
+par le combat lui-même (le joueur a perdu des PV, gagné de l'armure). Le budget de difficulté doit être
+calculé sur la puissance <em>avant</em> le combat, pas pendant.</p>
+
+<p><strong>3. La lisibilité de l'appel.</strong> À la lecture de <code>initState</code>, on voit
+immédiatement et exhaustivement <em>ce qui influence la difficulté</em> : le niveau du héros, l'acte,
+ses PV max, son attaque, son mana max, son nombre de reliques et la taille de son deck. Sept leviers,
+visibles en sept lignes. Si la lecture était enfouie dans <code>EncounterSystem</code>, il faudrait
+fouiller trois fichiers pour dresser la même liste.</p>
+
+<div class="box rule">
+  <div class="box-title">Règle du jeu</div>
+  <p>Le nombre de reliques et la taille du deck comptent dans le calcul de difficulté. Un joueur qui
+  ramasse tout ce qu'il trouve rend ses combats plus durs. C'est une décision de design assumée : la
+  progression n'est pas gratuite.</p>
+</div>
+
+<h3>La construction du jeu Flame</h3>
+
+<p>Après la microtâche, <code>initState</code> instancie <code>HerosDraftGame</code>. L'instanciation
+est <em>synchrone</em> et se fait ici, pas dans <code>build</code> :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>  _game = HerosDraftGame(
+    onEnemiesDead: _handleCombatVictory,
+    onPhaseChanged: (phase) {
+      final l10n = AppLocalizations.of(context)!;
+      _triggerPhaseBanner(
+        phase == TurnPhase.player ? l10n.playerTurn : l10n.enemyTurn,
+      );
+    },
+    onEnemyKilled: () {
+      ref.read(runProvider.notifier).onEnemyKilled();
+    },
+    // ... douze autres callbacks
+  );
+}</pre>
+</div>
+
+<div class="box warn">
+  <div class="box-title">Piège</div>
+  <p>Ne construisez <strong>jamais</strong> un <code>FlameGame</code> dans <code>build</code>. Chaque
+  reconstruction du widget créerait une nouvelle instance, rechargerait toutes les images, recréerait
+  tous les composants — et vous verriez le combat se réinitialiser à chaque changement de point de vie.
+  Le jeu vit dans l'état du widget (<code>late HerosDraftGame _game</code>) et n'est construit qu'une
+  fois, dans <code>initState</code>.</p>
+</div>
+
+<h2 id="s4">4. Le sens descendant : synchroniser l'état vers Flame</h2>
+
+<p>Voici les trois lignes les plus importantes du fichier :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>@override
+Widget build(BuildContext context) {
+  final runState = ref.watch(runProvider);
+  final deckState = ref.watch(deckProvider);
+  final combatState = ref.watch(combatProvider);
+  final gameData = ref.watch(gameDataLoaderProvider).requireValue;
+
+  // ... ref.listen(...)
+
+  _game.availableEnemies = gameData.enemies;
+  _game.availableHeroes = gameData.heroes;
+  _game.syncState(runState);
+  _game.syncDeck(deckState);
+  _game.syncCombat(combatState);</pre>
+</div>
+
+<p>Le mécanisme complet tient en deux temps. <code>ref.watch</code> abonne le widget aux trois
+providers : dès que l'un d'eux change, <code>build</code> est rappelée. Et à chaque <code>build</code>,
+les trois états sont poussés dans le jeu. Il n'y a aucune condition, aucune comparaison, aucun test
+« est-ce que ça a changé ». On pousse, systématiquement.</p>
+
+<p>Que fait <code>syncState</code> ? Presque rien :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/heros_draft_game.dart</span><span class="lang">dart</span></div>
+  <pre>void syncState(RunState state) {
+  stateSyncSystem?.nextState = state;
+}
+
+void syncDeck(DeckState deckState) {
+  stateSyncSystem?.nextDeckState = deckState;
+}
+
+void syncCombat(CombatState combatState) {
+  stateSyncSystem?.nextCombatState = combatState;
+}</pre>
+</div>
+
+<p>Trois affectations. C'est tout. On dépose l'état dans une boîte aux lettres et on repart. Aucun
+composant n'est touché, aucune animation n'est lancée, aucune position n'est recalculée pendant la
+passe de build de Flutter.</p>
+
+<div class="box rule">
+  <div class="box-title">Le patron « boîte aux lettres »</div>
+  <p>Flutter et Flame ne tournent pas au même rythme. Modifier des composants Flame depuis
+  <code>build</code> reviendrait à toucher le monde du jeu au milieu d'un rendu Flutter, avec un risque
+  de composant pas encore monté, de taille d'écran pas encore connue, ou d'animation coupée en deux.
+  On dépose donc l'état, et c'est la boucle de jeu qui viendra le chercher quand elle sera prête.</p>
+</div>
+
+<h3><code>StateSyncSystem</code> : la levée du courrier</h3>
+
+<p>Côté Flame, un composant sans aucun rendu, ajouté dans <code>onLoad</code>, ne fait qu'une chose :
+regarder ses trois boîtes aux lettres à chaque image.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/state_sync_system.dart</span><span class="lang">dart</span></div>
+  <pre>class StateSyncSystem extends Component with HasGameReference&lt;HerosDraftGame&gt; {
+  RunState? currentState;
+  RunState? nextState;
+  DeckState? nextDeckState;
+  CombatState? currentCombatState;
+  CombatState? nextCombatState;
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    if (nextState != null &amp;&amp; game.hasLayout) {
+      _applyState(nextState!);
+      nextState = null;
+    }
+    if (nextDeckState != null &amp;&amp; game.hasLayout) {
+      _applyDeckState(nextDeckState!);
+      nextDeckState = null;
+    }
+    if (nextCombatState != null &amp;&amp; game.hasLayout) {
+      _applyCombatState(nextCombatState!);
+      nextCombatState = null;
+    }
+  }</pre>
+</div>
+
+<p>Trois choses à noter.</p>
+
+<p><strong><code>game.hasLayout</code>.</strong> C'est une propriété de Flame qui indique si le jeu
+connaît déjà sa taille à l'écran. Tant qu'elle est fausse, <code>game.size</code> n'a pas de valeur
+utilisable — et toute la disposition du projet en dépend : la position du héros est
+<code>Vector2(game.size.x / 2, game.size.y * 0.51)</code>, les ennemis sont placés à
+<code>game.size.y * 0.21</code>, l'arc de la main est calculé à partir de <code>game.size.y</code>.
+Appliquer un état avant que la taille soit connue placerait tout à zéro.</p>
+
+<p><strong>La remise à <code>null</code>.</strong> Après application, la boîte est vidée. Si Flutter n'a
+pas reconstruit entre deux images, <code>update</code> ne refait rien. Le coût par image est donc de
+trois comparaisons à <code>null</code>.</p>
+
+<p><strong>L'écrasement.</strong> Si <code>build</code> s'exécute deux fois avant la prochaine image,
+la deuxième affectation écrase la première. On perd un état intermédiaire — et c'est exactement ce
+qu'on veut. Un état intermédiaire jamais rendu n'a aucune valeur ; seule compte la dernière vérité.</p>
+
+<h3><code>_applyState</code> : le héros</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/state_sync_system.dart</span><span class="lang">dart</span></div>
+  <pre>void _applyState(RunState state) {
+  currentState = state;
+
+  int bonusAtt = state.effectiveAttaque - state.heroStats.attaque;
+
+  if (game.heroCard == null) {
+    String imagePath = 'hero_paladin.png';
+    if (game.availableHeroes.isNotEmpty) {
+      final heroData = game.availableHeroes.firstWhere(
+        (h) =&gt; h.id == state.heroClassId,
+        orElse: () =&gt; game.availableHeroes.first,
+      );
+      imagePath = heroData.iconPath;
+    }
+
+    game.heroCard = HeroCard(
+      state.heroStats,
+      bonusAttack: bonusAtt,
+      imagePath: imagePath,
+    );
+    game.heroCard!.position = Vector2(game.size.x / 2, game.size.y * 0.51);
+    game.add(game.heroCard!);
+  } else {
+    game.heroCard!.updateStats(state.heroStats, bonusAttack: bonusAtt);
+  }
+
+  for (var card in game.handCards) {
+    card.refreshVisuals();
+  }
+}</pre>
+</div>
+
+<p>Le patron « créer ou mettre à jour » apparaît ici pour la première fois : si le composant n'existe
+pas, on le crée ; sinon on le met à jour. Le composant n'est jamais détruit puis recréé, ce qui
+préserverait mal ses animations en cours.</p>
+
+<p>La dernière boucle est facile à manquer et pourtant essentielle : à chaque changement d'état de run,
+<em>toutes</em> les cartes en main se redessinent. Pourquoi ? Parce que le mana a pu changer. Une carte
+qui coûte 2 mana s'affiche en rouge quand le joueur n'en a plus qu'un — cette information appartient au
+<code>RunState</code>, pas à la carte.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/card_component.dart</span><span class="lang">dart</span></div>
+  <pre>bool get canAfford {
+  if (!isLoaded || !isMounted) return true;
+  final currentMana = game.currentRunState?.heroStats.currentMana ?? 0;
+  return currentMana &gt;= card.currentCost;
+}</pre>
+</div>
+
+<p>Notez que la carte lit <code>game.currentRunState</code>, qui est un simple accesseur vers
+<code>stateSyncSystem?.currentState</code>. Elle <em>lit</em> l'état. Elle ne le modifie pas.</p>
+
+<h3><code>_applyDeckState</code> : la réconciliation de la main</h3>
+
+<p>C'est le morceau le plus instructif du système. Le problème posé : d'un côté, une liste de
+<code>CardInstance</code> (des données) ; de l'autre, une liste de <code>CardComponent</code> (des
+objets graphiques animés, avec une position, une rotation, une échelle, des effets en cours). Comment
+faire correspondre les deux ?</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/state_sync_system.dart</span><span class="lang">dart</span></div>
+  <pre>void _applyDeckState(DeckState deck) {
+  final newHandIds = deck.hand.map((c) =&gt; c.uniqueId).toSet();
+  final cardsToRemove = game.handCards
+      .where((c) =&gt; !newHandIds.contains(c.card.uniqueId))
+      .toList();
+
+  for (var c in cardsToRemove) {
+    c.removeFromParent();
+    game.handCards.remove(c);
+  }
+
+  final currentHandIds = game.handCards.map((c) =&gt; c.card.uniqueId).toSet();
+  final cardsToAdd = deck.hand
+      .where((c) =&gt; !currentHandIds.contains(c.uniqueId))
+      .toList();
+
+  for (var c in cardsToAdd) {
+    final cardComp = CardComponent(c);
+    cardComp.isEnteringHand = true;
+    cardComp.position = Vector2(40, game.size.y - 40);
+    cardComp.scale = Vector2.zero();
+    game.handCards.add(cardComp);
+    game.add(cardComp);
+  }
+
+  if (cardsToRemove.isNotEmpty || cardsToAdd.isNotEmpty) {
+    game.layoutHand();
+  }
+}</pre>
+</div>
+
+<p>L'algorithme est en trois temps : <strong>supprimer</strong> les composants dont l'identifiant a
+disparu de la main, <strong>ajouter</strong> un composant pour chaque identifiant nouveau,
+<strong>réagencer</strong> l'arc de la main seulement si quelque chose a bougé.</p>
+
+<p>La clé de tout, c'est <code>uniqueId</code>. Chaque <code>CardInstance</code> reçoit un UUID à sa
+création :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/models/card_instance.dart</span><span class="lang">dart</span></div>
+  <pre>final String uniqueId;
+// ...
+  })  : uniqueId = uniqueId ?? const Uuid().v4(),</pre>
+</div>
+
+<h4>Pourquoi la réconciliation par identifiant est le bon patron</h4>
+
+<p>Imaginez l'alternative naïve : à chaque synchronisation, on vide <code>handCards</code>, on supprime
+tous les composants, et on en recrée un par carte de la main. Cela « marche », et c'est catastrophique.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Approche</th><th>Une carte jouée sur 5</th><th>Conséquence visible</th></tr></thead>
+<tbody>
+<tr>
+  <td>Tout détruire et recréer</td>
+  <td>5 destructions + 4 créations</td>
+  <td>Les 4 cartes restantes réapparaissent à la position de départ, échelle zéro, avec l'animation
+  d'entrée de 0,7 s. La main clignote à chaque point de vie perdu.</td>
+</tr>
+<tr>
+  <td>Comparer par index</td>
+  <td>Décalage de tous les index après la carte retirée</td>
+  <td>La carte 3 hérite des données de la carte 4 : le visuel ne correspond plus aux données.</td>
+</tr>
+<tr>
+  <td>Réconcilier par <code>uniqueId</code></td>
+  <td>1 destruction, 0 création</td>
+  <td>Les 4 cartes restantes gardent leur composant, leurs animations, leur survol. Seul
+  <code>layoutHand()</code> les fait glisser vers leur nouvelle place.</td>
+</tr>
+</tbody>
+</table></div>
+
+<p>C'est exactement le raisonnement des <code>Key</code> de Flutter, ou du <code>key</code> d'une liste
+en React. Dès qu'une collection d'objets visuels avec état doit refléter une collection de données,
+l'identité doit être portée par une clé stable, jamais par une position.</p>
+
+<div class="box warn">
+  <div class="box-title">Piège</div>
+  <p>Pourquoi un UUID plutôt que l'identifiant de la carte (<code>card.data.id</code>) ? Parce qu'un
+  deck peut contenir <strong>trois exemplaires de « Frappe »</strong>. Avec <code>data.id</code> comme
+  clé, les trois seraient indiscernables : jouer la première ferait disparaître un composant au hasard,
+  et les améliorations de forge propres à un exemplaire seraient appliquées au mauvais. Le
+  <code>uniqueId</code> identifie l'<em>exemplaire</em>, pas le <em>modèle</em>.</p>
+</div>
+
+<h3><code>_applyCombatState</code> : morts, apparitions, sélection</h3>
+
+<p>La même logique s'applique aux ennemis, avec une complication : un ennemi qui disparaît ne doit pas
+s'évanouir instantanément, il doit mourir <em>visuellement</em>. Et cette mort peut devoir attendre.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/state_sync_system.dart</span><span class="lang">dart</span></div>
+  <pre>void _applyCombatState(CombatState state) {
+  game.currentPhase = state.turnPhase;
+
+  // 1. Gérer les disparitions (morts)
+  final newEnemiesIds = state.enemies.map((e) =&gt; e.id).toSet();
+  final cardsToRemove = game.enemyCards
+      .where((c) =&gt; !newEnemiesIds.contains(c.id))
+      .toList();
+
+  bool immediateRemovals = false;
+  for (var card in cardsToRemove) {
+    if (game.isCardAnimating) {
+      card.isPendingDeath = true;
+    } else {
+      card.isDead = true;
+      card.isPendingDeath = true;
+      card.add(OpacityEffect.to(0.0, EffectController(duration: 0.4)));
+      card.add(
+        ScaleEffect.to(
+          Vector2.zero(),
+          EffectController(duration: 0.4),
+          onComplete: () {
+            card.removeFromParent();
+          },
+        ),
+      );
+      game.enemyCards.remove(card);
+      immediateRemovals = true;
+    }
+  }</pre>
+</div>
+
+<p>La bifurcation sur <code>game.isCardAnimating</code> est le cœur de l'illusion : si une carte est en
+train de voler vers l'ennemi, on ne le fait pas disparaître, on le <em>marque</em>
+(<code>isPendingDeath = true</code>) et on le laisse en place. On y revient en détail à la section 6.</p>
+
+<p>Les étapes 2 et 3 reprennent le patron « créer ou mettre à jour » :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/state_sync_system.dart</span><span class="lang">dart</span></div>
+  <pre>  // 2. Gérer les apparitions ou mises à jour
+  bool listChanged = immediateRemovals;
+
+  for (var enemyInstance in state.enemies) {
+    final existingIndex = game.enemyCards.indexWhere(
+      (c) =&gt; c.id == enemyInstance.id,
+    );
+    if (existingIndex != -1) {
+      game.enemyCards[existingIndex].updateStats(enemyInstance);
+    } else {
+      final enemyCard = EnemyCard(
+        instance: enemyInstance,
+        onTapEnemy: game.handlePlayerTargeting,
+      );
+      game.enemyCards.add(enemyCard);
+      game.add(enemyCard);
+      listChanged = true;
+    }
+  }
+
+  // 3. Repositionner si la liste a changé
+  if (listChanged) {
+    game.repositionEnemies();
+    game.onEnemiesSpawned?.call();
+  }</pre>
+</div>
+
+<p>Ce bloc gère aussi les <em>renforts</em> : quand <code>cleanDeadEnemies</code> fait entrer un ennemi
+de <code>pendingEnemies</code>, un nouvel identifiant apparaît dans <code>state.enemies</code> et un
+<code>EnemyCard</code> est créé automatiquement. Personne n'a besoin d'écrire de code de « spawn » : la
+réconciliation le fait gratuitement.</p>
+
+<p>Enfin l'étape 4 synchronise la sélection :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/state_sync_system.dart</span><span class="lang">dart</span></div>
+  <pre>  // 4. Synchroniser la sélection visuelle
+  game.selectedEnemy = null;
+  for (var card in game.enemyCards) {
+    final isSelected = card.id == state.selectedEnemyId;
+    card.setSelection(isSelected);
+    if (isSelected) {
+      game.selectedEnemy = card;
+    }
+  }
+
+  currentCombatState = state;
+}</pre>
+</div>
+
+<p>Approche brutale mais imparable : on remet tout à plat, puis on rallume le bon. Le
+<code>selectedEnemyId</code> de <code>CombatState</code> est la seule vérité ; le champ
+<code>game.selectedEnemy</code> n'est qu'un raccourci vers le composant correspondant, recalculé à
+chaque synchronisation. Aucune dérive possible entre les deux.</p>
+
+<div class="box ok">
+  <div class="box-title">Bonne pratique</div>
+  <p>Remarquez que <code>_applyCombatState</code> commence par
+  <code>game.currentPhase = state.turnPhase</code>. La phase du tour existe donc en deux exemplaires :
+  <code>combatState.turnPhase</code> côté Riverpod et <code>_game.currentPhase</code> côté Flame. La
+  première est la vérité, la seconde une copie de travail que le moteur peut avancer localement pendant
+  ses séquences asynchrones. Le bouton « Fin de tour » exige d'ailleurs que les <em>deux</em> soient à
+  <code>TurnPhase.player</code>.</p>
+</div>
+
+<h2 id="s5">5. Le sens montant : les callbacks</h2>
+
+<p>Le sens descendant transporte des états. Le sens montant transporte des <em>intentions</em> : « le
+joueur veut jouer cette carte », « le tour ennemi commence », « affiche ce tooltip ». Le moteur ne
+décide de rien ; il signale.</p>
+
+<p>Techniquement, ce sont quatorze champs <code>final</code> de type fonction, déclarés dans
+<code>HerosDraftGame</code> et fournis par <code>GameScreen</code> à la construction :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/heros_draft_game.dart</span><span class="lang">dart</span></div>
+  <pre>final void Function() onEnemiesDead;
+final void Function(TurnPhase) onPhaseChanged;
+final void Function(String title, String description, CardType? cardType) onShowTooltip;
+final void Function() onHideTooltip;
+final bool Function(CardInstance, EnemyCard?) onPlayCard;
+final VoidCallback? onEnemiesSpawned;
+final void Function() onEnemyKilled;
+
+final void Function(String enemyId) onResolveEnemyIntent;
+final void Function() onStartEnemyTurn;
+final void Function() onEndEnemyTurn;
+final void Function(String? enemyId) onSelectEnemy;
+final void Function(String enemyId, EntityStats stats) onUpdateEnemyStats;
+final void Function(SkillData skill, String? targetEnemyId) onExecuteSkill;
+final VoidCallback? onAnimationStateChanged;</pre>
+</div>
+
+<p>Douze sont <code>required</code>, deux sont optionnels et nullables
+(<code>onEnemiesSpawned</code> et <code>onAnimationStateChanged</code>, appelés avec <code>?.call()</code>).
+Un seul renvoie autre chose que <code>void</code> : <code>onPlayCard</code> renvoie un
+<code>bool</code>, et c'est fondamental — c'est un droit de veto.</p>
+
+<div class="table-wrap"><table>
+<thead><tr>
+  <th>Callback</th><th>Signature</th><th>Appelé depuis (Flame)</th><th>Ce que fait <code>GameScreen</code></th><th>État</th>
+</tr></thead>
+<tbody>
+<tr>
+  <td><code>onEnemiesDead</code></td>
+  <td><code>void Function()</code></td>
+  <td><code>heros_draft_game.dart:308</code> dans <code>executeTurn()</code>, quand <code>enemyCards</code> est vide ; et <code>:344</code> dans <code>executeSkill()</code></td>
+  <td>Appelle <code>_handleCombatVictory</code> : calcule les récompenses puis enchaîne <code>_presentNextReward()</code>.</td>
+  <td>actif (via <code>executeTurn</code>)</td>
+</tr>
+<tr>
+  <td><code>onPhaseChanged</code></td>
+  <td><code>void Function(TurnPhase)</code></td>
+  <td><code>_enemyRipostePhase()</code>, avec <code>TurnPhase.enemy</code></td>
+  <td>Déclenche <code>_triggerPhaseBanner</code> avec le libellé localisé (<code>l10n.playerTurn</code> ou <code>l10n.enemyTurn</code>).</td>
+  <td>actif</td>
+</tr>
+<tr>
+  <td><code>onShowTooltip</code></td>
+  <td><code>void Function(String, String, CardType?)</code></td>
+  <td><code>card_animation_system.dart:101</code> (<code>setFocusedCard</code>) et <code>stat_badge.dart:470</code></td>
+  <td><code>setState</code> : remplit <code>_tooltipTitle</code>, <code>_tooltipDescription</code>, <code>_tooltipCardType</code> et met <code>_showTooltip = true</code>.</td>
+  <td>actif</td>
+</tr>
+<tr>
+  <td><code>onHideTooltip</code></td>
+  <td><code>void Function()</code></td>
+  <td><code>card_animation_system.dart:75</code> et <code>stat_badge.dart:475</code> / <code>:480</code></td>
+  <td><code>setState</code> : <code>_showTooltip = false</code>.</td>
+  <td>actif</td>
+</tr>
+<tr>
+  <td><code>onPlayCard</code></td>
+  <td><code>bool Function(CardInstance, EnemyCard?)</code></td>
+  <td><code>tryPlayCard()</code>, ligne 199</td>
+  <td>Vérifie <code>EffectResolver.canPlayCard</code>, anime le héros, sélectionne la cible, appelle <code>applyPlayerCardPlay</code>, gère les avertissements de mana. Renvoie <code>false</code> pour refuser.</td>
+  <td>actif — le plus important</td>
+</tr>
+<tr>
+  <td><code>onEnemyKilled</code></td>
+  <td><code>void Function()</code></td>
+  <td>nulle part</td>
+  <td>Appellerait <code>ref.read(runProvider.notifier).onEnemyKilled()</code>.</td>
+  <td><strong>jamais appelé</strong></td>
+</tr>
+<tr>
+  <td><code>onResolveEnemyIntent</code></td>
+  <td><code>void Function(String enemyId)</code></td>
+  <td><code>_enemyRipostePhase()</code>, une fois par ennemi vivant</td>
+  <td><code>ref.read(combatProvider.notifier).resolveEnemyIntent(enemyId)</code>.</td>
+  <td>actif</td>
+</tr>
+<tr>
+  <td><code>onStartEnemyTurn</code></td>
+  <td><code>void Function()</code></td>
+  <td><code>_enemyRipostePhase()</code>, après le délai d'ouverture</td>
+  <td><code>ref.read(combatProvider.notifier).startEnemyTurn()</code>.</td>
+  <td>actif</td>
+</tr>
+<tr>
+  <td><code>onEndEnemyTurn</code></td>
+  <td><code>void Function()</code></td>
+  <td><code>_enemyRipostePhase()</code>, en toute fin de séquence</td>
+  <td><code>endEnemyTurn()</code> puis <code>_startPlayerNewTurn()</code> : efface les avertissements, remet la phase à joueur, appelle <code>startPlayerTurn()</code>.</td>
+  <td>actif</td>
+</tr>
+<tr>
+  <td><code>onSelectEnemy</code></td>
+  <td><code>void Function(String? enemyId)</code></td>
+  <td>nulle part</td>
+  <td>Appellerait <code>combatProvider.notifier.selectEnemy(enemyId)</code>.</td>
+  <td><strong>jamais appelé</strong></td>
+</tr>
+<tr>
+  <td><code>onUpdateEnemyStats</code></td>
+  <td><code>void Function(String, EntityStats)</code></td>
+  <td>nulle part</td>
+  <td>Appellerait <code>combatProvider.notifier.updateEnemyStats(...)</code>.</td>
+  <td><strong>jamais appelé</strong></td>
+</tr>
+<tr>
+  <td><code>onExecuteSkill</code></td>
+  <td><code>void Function(SkillData, String?)</code></td>
+  <td><code>HerosDraftGame.executeSkill()</code>, lignes 340 et 352 — mais <code>executeSkill</code> n'est appelée nulle part</td>
+  <td>Appellerait <code>combatProvider.notifier.executeSkill(skill, targetEnemyId: ...)</code>.</td>
+  <td><strong>inatteignable</strong></td>
+</tr>
+<tr>
+  <td><code>onEnemiesSpawned</code></td>
+  <td><code>VoidCallback?</code></td>
+  <td><code>resolvePendingDeaths()</code> et <code>_applyCombatState</code> (étape 3)</td>
+  <td><code>addPostFrameCallback</code> puis <code>setState(() {})</code> — force un rafraîchissement du HUD après la frame.</td>
+  <td>actif</td>
+</tr>
+<tr>
+  <td><code>onAnimationStateChanged</code></td>
+  <td><code>VoidCallback?</code></td>
+  <td><code>tryPlayCard()</code>, deux fois : au passage à <code>true</code> et au retour à <code>false</code></td>
+  <td><code>setState(() {})</code> — rafraîchit l'état actif/inactif du bouton « Fin de tour ».</td>
+  <td>actif</td>
+</tr>
+</tbody>
+</table></div>
+
+<div class="box danger">
+  <div class="box-title">Point d'attention — quatre callbacks morts</div>
+  <p>Vérification faite sur l'ensemble de <code>lib/</code> : <code>onEnemyKilled</code>,
+  <code>onSelectEnemy</code> et <code>onUpdateEnemyStats</code> ne sont <strong>invoqués nulle part</strong>
+  dans le code Flame. Ils ne sont que déclarés, exigés par le constructeur, et branchés côté
+  <code>GameScreen</code>. <code>onExecuteSkill</code> est un cas voisin : il est bien appelé, mais
+  uniquement depuis <code>HerosDraftGame.executeSkill(...)</code>, méthode qu'aucun appelant n'invoque.
+  La seule occurrence d'<code>executeSkill</code> hors du moteur est
+  <code>ref.read(combatProvider.notifier).executeSkill(...)</code> — c'est la méthode du contrôleur, pas
+  celle du jeu.</p>
+  <p>Attention à ne pas se tromper de piste : le comportement « tuer un ennemi déclenche les reliques »
+  fonctionne bel et bien, mais il passe par un autre chemin —
+  <code>combat_controller.dart:371</code> appelle <code>runController.onEnemyKilled()</code> directement
+  depuis <code>cleanDeadEnemies()</code>. Le callback Flame homonyme est un doublon inerte.</p>
+</div>
+
+<p>Ces quatre callbacks morts ne sont pas un bug : ils ne cassent rien. Ce sont des vestiges d'une
+architecture antérieure où le moteur pilotait davantage. Ils ont un coût réel malgré tout : ils
+alourdissent le constructeur de douze paramètres obligatoires et ils induisent en erreur quiconque lit
+le fichier en pensant que la sélection d'ennemi remonte par <code>onSelectEnemy</code>. Elle ne remonte
+pas : <code>handlePlayerTargeting</code> ne fait que jouer la carte focalisée sur la cible, et c'est
+<code>onPlayCard</code> qui appelle <code>combatController.selectEnemy(target.id)</code>.</p>
+
+<h3>Le patron de fond</h3>
+
+<p>Tous les callbacks actifs suivent la même forme, à trois lignes près :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>onResolveEnemyIntent: (enemyId) {
+  ref
+      .read(combatProvider.notifier)
+      .resolveEnemyIntent(enemyId);
+},
+onStartEnemyTurn: () {
+  ref
+      .read(combatProvider.notifier)
+      .startEnemyTurn();
+},
+onEndEnemyTurn: () {
+  ref.read(combatProvider.notifier).endEnemyTurn();
+  _startPlayerNewTurn();
+},</pre>
+</div>
+
+<p>Une intention arrive du moteur, <code>GameScreen</code> la traduit en appel de méthode sur un
+<code>Notifier</code>. Le <code>Notifier</code> produit un nouvel état. L'état redescend par
+<code>ref.watch</code> → <code>syncCombat</code> → <code>StateSyncSystem</code> → composants. La boucle
+est bouclée, et elle ne se referme jamais sur elle-même parce qu'à aucun moment le moteur ne modifie
+directement ce qu'il affiche.</p>
+
+<div class="box rule">
+  <div class="box-title">Règle</div>
+  <p>Un callback ne doit contenir que trois choses : un <code>ref.read(...).notifier</code>, un
+  <code>setState</code> local, ou une animation Flame. Jamais de logique de règle du jeu. Si vous vous
+  surprenez à calculer des dégâts dans un callback, le calcul est au mauvais endroit — il appartient à
+  un contrôleur ou à un système.</p>
+</div>
+
+<h2 id="s6">6. Le cas critique : jouer une carte</h2>
+
+<p>Jouer une carte est la seule action où les trois mondes interviennent dans un ordre strict, où un
+refus est possible, et où une animation doit retarder un changement d'état visuel. C'est le meilleur
+banc d'essai pour tout ce que nous venons de voir.</p>
+
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 840 500" width="840" role="img" aria-label="Diagramme en couloirs de la chaîne de jeu d'une carte, de onDragEnd jusqu'à resolvePendingDeaths">
+      <defs>
+        <marker id="c17-flow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#60a5fa"/>
+        </marker>
+        <marker id="c17-deny" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#f87171"/>
+        </marker>
+      </defs>
+
+      <rect x="0" y="0" width="840" height="500" fill="#0e1524"/>
+
+      <rect x="0" y="44" width="840" height="86" fill="#111a2c"/>
+      <rect x="0" y="164" width="840" height="86" fill="#111a2c"/>
+      <rect x="0" y="284" width="840" height="86" fill="#111a2c"/>
+
+      <text x="10" y="38" fill="#22d3ee" font-size="12" letter-spacing="1">FLAME — CardComponent / HerosDraftGame</text>
+      <text x="10" y="158" fill="#34d399" font-size="12" letter-spacing="1">FLUTTER — GameScreen</text>
+      <text x="10" y="278" fill="#a78bfa" font-size="12" letter-spacing="1">RIVERPOD — EffectResolver / CombatController</text>
+
+      <rect x="14" y="58" width="106" height="58" rx="7" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="67" y="80" fill="#e6ecf5" font-size="10.5" text-anchor="middle" font-family="ui-monospace, monospace">onDragEnd</text>
+      <text x="67" y="98" fill="#a7b4c9" font-size="9.5" text-anchor="middle">1 · relâchement</text>
+
+      <rect x="150" y="58" width="106" height="58" rx="7" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="203" y="80" fill="#e6ecf5" font-size="10.5" text-anchor="middle" font-family="ui-monospace, monospace">tryPlayCard</text>
+      <text x="203" y="98" fill="#a7b4c9" font-size="9.5" text-anchor="middle">2 · demande</text>
+
+      <rect x="286" y="178" width="106" height="58" rx="7" fill="#151b2b" stroke="#34d399"/>
+      <text x="339" y="200" fill="#e6ecf5" font-size="10.5" text-anchor="middle" font-family="ui-monospace, monospace">onPlayCard</text>
+      <text x="339" y="218" fill="#a7b4c9" font-size="9.5" text-anchor="middle">3 · traduction</text>
+
+      <rect x="422" y="298" width="106" height="58" rx="7" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="475" y="320" fill="#e6ecf5" font-size="10.5" text-anchor="middle" font-family="ui-monospace, monospace">canPlayCard</text>
+      <text x="475" y="338" fill="#a7b4c9" font-size="9.5" text-anchor="middle">4 · veto</text>
+
+      <rect x="558" y="298" width="106" height="58" rx="7" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="611" y="316" fill="#e6ecf5" font-size="10.5" text-anchor="middle" font-family="ui-monospace, monospace">applyPlayer</text>
+      <text x="611" y="330" fill="#e6ecf5" font-size="10.5" text-anchor="middle" font-family="ui-monospace, monospace">CardPlay</text>
+      <text x="611" y="348" fill="#a7b4c9" font-size="9.5" text-anchor="middle">5 · effets réels</text>
+
+      <rect x="558" y="58" width="106" height="58" rx="7" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="611" y="76" fill="#e6ecf5" font-size="10.5" text-anchor="middle" font-family="ui-monospace, monospace">handCards</text>
+      <text x="611" y="90" fill="#e6ecf5" font-size="10.5" text-anchor="middle" font-family="ui-monospace, monospace">.remove()</text>
+      <text x="611" y="108" fill="#a7b4c9" font-size="9.5" text-anchor="middle">6 · + layoutHand</text>
+
+      <rect x="694" y="58" width="132" height="58" rx="7" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="760" y="76" fill="#e6ecf5" font-size="10.5" text-anchor="middle" font-family="ui-monospace, monospace">playAnimation</text>
+      <text x="760" y="90" fill="#e6ecf5" font-size="10.5" text-anchor="middle" font-family="ui-monospace, monospace">→ onComplete</text>
+      <text x="760" y="108" fill="#a7b4c9" font-size="9.5" text-anchor="middle">7 · resolvePendingDeaths</text>
+
+      <path d="M120 87 L146 87" stroke="#60a5fa" stroke-width="2" marker-end="url(#c17-flow)"/>
+      <path d="M256 100 L280 100 L280 195 L282 195" stroke="#60a5fa" stroke-width="2" fill="none" marker-end="url(#c17-flow)"/>
+      <path d="M392 218 L410 218 L410 315 L418 315" stroke="#60a5fa" stroke-width="2" fill="none" marker-end="url(#c17-flow)"/>
+      <path d="M528 327 L554 327" stroke="#60a5fa" stroke-width="2" marker-end="url(#c17-flow)"/>
+      <path d="M611 298 L611 120" stroke="#60a5fa" stroke-width="2" marker-end="url(#c17-flow)"/>
+      <path d="M664 87 L690 87" stroke="#60a5fa" stroke-width="2" marker-end="url(#c17-flow)"/>
+
+      <path d="M440 298 L440 250 L200 250 L200 122" stroke="#f87171" stroke-width="2" stroke-dasharray="6 4" fill="none" marker-end="url(#c17-deny)"/>
+      <text x="330" y="243" fill="#f87171" font-size="10" text-anchor="middle" font-family="ui-monospace, monospace">false → returnToHand()</text>
+
+      <rect x="558" y="404" width="268" height="30" rx="6" fill="#1b2436" stroke="#f59e0b"/>
+      <text x="692" y="424" fill="#f59e0b" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">isCardAnimating = true</text>
+      <path d="M558 419 L540 419" stroke="#f59e0b" stroke-width="2"/>
+      <path d="M540 419 L540 386" stroke="#f59e0b" stroke-width="2"/>
+
+      <text x="420" y="462" fill="#a7b4c9" font-size="11" text-anchor="middle">pendant cette fenêtre, un ennemi qui meurt est marqué</text>
+      <text x="420" y="480" fill="#a7b4c9" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">isPendingDeath = true</text>
+      <text x="420" y="480" fill="#a7b4c9" font-size="11" text-anchor="middle" opacity="0"> </text>
+    </svg>
+  </div>
+  <figcaption>La chaîne complète du jeu d'une carte. Le seul chemin de refus est le retour
+  <code>false</code> de <code>canPlayCard</code>, qui remonte jusqu'à <code>onDragEnd</code> et
+  déclenche <code>returnToHand()</code>.</figcaption>
+</figure>
+
+<h3>Étape 1 — <code>onDragEnd</code></h3>
+
+<p>Le joueur relâche la carte. <code>CardComponent</code> délègue tout à son
+<code>CardInteractionHandler</code> :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/widgets/card_interaction_handler.dart</span><span class="lang">dart</span></div>
+  <pre>void onDragEnd(DragEndEvent event) {
+  if (cardComponent.isPlayed) return;
+  if (!cardComponent.isDragging) return;
+
+  cardComponent.isDragging = false;
+  cardComponent.targetTilt = 0;
+  cardComponent.game.setFocusedCard(null);
+
+  cardComponent.activeTrail?.stop();
+  cardComponent.activeTrail = null;
+
+  if (cardComponent.isHoveringCancelZone) {
+    cardComponent.animator.returnToHand();
+    cardComponent.game.highlightEnemy(null);
+    return;
+  }
+
+  if (!cardComponent.canAfford) {
+    cardComponent.animator.shakeAnimation();
+    cardComponent.animator.returnToHand();
+    cardComponent.game.highlightEnemy(null);
+    return;
+  }
+
+  EnemyCard? targetedEnemy;
+  if (cardComponent.card.data.target == CardTarget.singleEnemy) {
+    targetedEnemy = cardComponent.game.highlightedEnemy;
+  }
+
+  bool played = cardComponent.game.tryPlayCard(cardComponent, targetedEnemy);
+
+  if (!played) {
+    cardComponent.animator.returnToHand();
+  }
+
+  cardComponent.game.highlightEnemy(null);
+}</pre>
+</div>
+
+<p>Deux filtres purement locaux se déclenchent avant de déranger qui que ce soit : la zone
+d'annulation (le bas de l'écran, sous <code>game.size.y * 0.68</code>) et le coût en mana. Ce sont des
+vérifications de confort qui évitent un aller-retour complet. Mais notez bien : ce sont des
+<em>optimisations</em>, pas des règles. La vraie règle sera revérifiée plus loin par
+<code>canPlayCard</code>.</p>
+
+<h3>Étape 2 — <code>tryPlayCard</code>, le point de bascule</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/heros_draft_game.dart</span><span class="lang">dart</span></div>
+  <pre>bool tryPlayCard(dynamic cardComp, EnemyCard? target) {
+  if (cardComp is CardComponent &amp;&amp; onPlayCard(cardComp.card, target)) {
+    handCards.remove(cardComp);
+    layoutHand();
+
+    isCardAnimating = true;
+    onAnimationStateChanged?.call();
+
+    cardComp.playAnimation(
+      target,
+      onComplete: () {
+        cardComp.removeFromParent();
+        isCardAnimating = false;
+        onAnimationStateChanged?.call();
+        resolvePendingDeaths();
+      },
+    );
+
+    return true;
+  }
+  return false;
+}</pre>
+</div>
+
+<p>Tout tient dans la première ligne. <code>onPlayCard(...)</code> est évalué <em>dans la condition</em>
+du <code>if</code>. S'il renvoie <code>false</code>, le corps n'est jamais exécuté : la carte reste dans
+<code>handCards</code>, aucun composant n'est retiré, <code>isCardAnimating</code> reste
+<code>false</code>, et <code>tryPlayCard</code> renvoie <code>false</code>, ce qui fait remonter le
+refus jusqu'à <code>onDragEnd</code> qui rappelle la carte en main.</p>
+
+<div class="box rule">
+  <div class="box-title">Règle — l'ordre est non négociable</div>
+  <p>La carte n'est retirée de <code>handCards</code> qu'<strong>après</strong> que l'état a été
+  modifié avec succès. Si l'ordre était inversé — retirer d'abord, demander ensuite — un refus
+  laisserait la main visuelle et la main logique désynchronisées. Le prochain
+  <code>_applyDeckState</code> réparerait probablement les dégâts, mais avec un clignotement visible.</p>
+</div>
+
+<h3>Étape 3 — <code>onPlayCard</code>, le traducteur</h3>
+
+<p>C'est le callback le plus long du fichier. Il fait cinq choses, dans cet ordre :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>onPlayCard: (card, target) {
+  final runController = ref.read(runProvider.notifier);
+  final combatController = ref.read(combatProvider.notifier);
+  final previousMana = runController.currentState.heroStats.currentMana;
+
+  if (!EffectResolver.canPlayCard(
+    card,
+    runController.currentState,
+    target?.id,
+  )) {
+    return false;
+  }
+
+  if (card.data.type == CardType.attack) {
+    _game.heroCard?.dashAnimation();
+  } else {
+    bool hasArmor = card.data.effects.any((e) =&gt; e.type == 'armor');
+    _game.heroCard?.buffAnimation(hasArmor ? 'defend' : 'buff');
+  }
+
+  if (target != null) {
+    combatController.selectEnemy(target.id);
+  }
+
+  combatController.applyPlayerCardPlay(
+    card,
+  );
+  // ... gestion des avertissements de mana
+  return true;
+},</pre>
+</div>
+
+<p>Observez l'ordre : <strong>on vérifie, puis on anime, puis on applique</strong>. L'animation du héros
+part avant que l'état ne change, ce qui donne l'impression que le héros initie l'action. Et
+<code>selectEnemy(target.id)</code> est appelé <em>avant</em> <code>applyPlayerCardPlay</code>, parce
+que le résolveur d'effets lit <code>state.selectedEnemyId</code> pour savoir qui frapper :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/controllers/combat_controller.dart</span><span class="lang">dart</span></div>
+  <pre>void applyPlayerCardPlay(CardInstance card) {
+  final runController = ref.read(runProvider.notifier);
+  final deckController = ref.read(deckProvider.notifier);
+  final registry = ref.read(effectRegistryProvider);
+
+  // 1. Résolution des effets
+  final success = EffectResolver.resolveCard(
+    card,
+    runController,
+    deckController,
+    this,
+    state.selectedEnemyId,
+    registry,
+  );
+
+  if (success) {
+    // 2. Transmettre au deck que la carte est jouée
+    deckController.playCard(card);
+    // 3. Déclencher les traits passifs
+    TraitSystem.onCardPlayed(runController, card);
+    // 4. Déclencher les reliques liées aux cartes jouées
+    runController.applyRelics(RelicTrigger.onCardPlayed);
+    // ...
+    // 5. Nettoyer les morts
+    cleanDeadEnemies();
+  }
+}</pre>
+</div>
+
+<h3>Étape 4 — <code>canPlayCard</code>, le veto</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/services/effect_resolver.dart</span><span class="lang">dart</span></div>
+  <pre>static bool canPlayCard(
+  CardInstance card,
+  RunState runState,
+  String? selectedEnemyId,
+) {
+  if (runState.heroStats.currentMana &lt; card.currentCost) {
+    return false;
+  }
+  if (card.data.type == CardType.status) {
+    return false;
+  }
+  if (card.data.target == CardTarget.singleEnemy &amp;&amp; selectedEnemyId == null) {
+    return false;
+  }
+  return true;
+}</pre>
+</div>
+
+<p>Trois refus possibles : pas assez de mana, carte de type <code>status</code> (les malédictions et
+blessures ne se jouent pas), ou carte à cible unique lâchée dans le vide. Cette fonction est
+<strong>statique et pure</strong> : elle ne lit que ses arguments, ne modifie rien. Elle est appelée
+deux fois par carte jouée — une fois par <code>onPlayCard</code> pour décider du veto, une fois par
+<code>resolveCard</code> comme garde-fou final.</p>
+
+<div class="box ok">
+  <div class="box-title">Bonne pratique</div>
+  <p>Cette double vérification n'est pas une redondance inutile. <code>onPlayCard</code> l'appelle pour
+  savoir s'il doit <em>accepter le drop</em> — décision d'interface. <code>resolveCard</code> l'appelle
+  pour protéger <em>l'état</em> — décision de logique. Si demain un autre chemin de code appelle
+  <code>resolveCard</code> sans passer par l'écran, la règle tient toujours.</p>
+</div>
+
+<h3>Étapes 6 et 7 — le vol de la carte et le drapeau <code>isCardAnimating</code></h3>
+
+<p>Une fois <code>onPlayCard</code> revenu à <code>true</code>, on entre dans une fenêtre temporelle
+particulière. Les dégâts sont <em>déjà appliqués</em> dans l'état — un ennemi peut déjà avoir disparu de
+<code>combatState.enemies</code> — mais visuellement, la carte n'a pas encore atteint sa cible.</p>
+
+<p>Si on laissait faire, la séquence serait absurde : l'ennemi s'évaporerait pendant que la carte vole
+vers lui, et la carte terminerait sa course dans le vide. C'est exactement ce que
+<code>isCardAnimating</code> empêche.</p>
+
+<p>Le drapeau a trois effets distincts, dans trois fichiers différents :</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Fichier</th><th>Ce qui se passe si <code>isCardAnimating</code> est vrai</th></tr></thead>
+<tbody>
+<tr>
+  <td><code>lib/game/systems/state_sync_system.dart</code></td>
+  <td>Un ennemi absent du nouvel état est marqué <code>isPendingDeath = true</code> mais reste affiché, sans effet d'opacité ni de disparition.</td>
+</tr>
+<tr>
+  <td><code>lib/game/components/entities/enemy_card.dart</code></td>
+  <td><code>updateStats</code> range la nouvelle instance dans <code>_pendingVisualInstance</code> au lieu de l'appliquer : la barre de vie ne bouge pas encore.</td>
+</tr>
+<tr>
+  <td><code>lib/ui/screens/game_screen.dart</code></td>
+  <td><code>canEndTurn</code> devient <code>false</code> : le bouton « Fin de tour » est désactivé tant qu'une carte est en vol.</td>
+</tr>
+</tbody>
+</table></div>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/entities/enemy_card.dart</span><span class="lang">dart</span></div>
+  <pre>void updateStats(EnemyInstance newInstance) {
+  if (game.isCardAnimating) {
+    _pendingVisualInstance = newInstance;
+  } else {
+    triggerHitReactions(stats, newInstance.stats);
+    instance = newInstance;
+    _refreshBadges();
+    // ...
+  }
+}
+
+void resolvePendingVisualStats() {
+  if (_pendingVisualInstance != null) {
+    triggerHitReactions(stats, _pendingVisualInstance!.stats);
+    instance = _pendingVisualInstance!;
+    _refreshBadges();
+    // ...
+    _pendingVisualInstance = null;
+  }
+}</pre>
+</div>
+
+<p>Et à l'arrivée de la carte, <code>resolvePendingDeaths</code> rattrape tout le retard accumulé :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/heros_draft_game.dart</span><span class="lang">dart</span></div>
+  <pre>void resolvePendingDeaths() {
+  for (var card in enemyCards) {
+    card.resolvePendingVisualStats();
+  }
+
+  final deadCards = enemyCards.where((c) =&gt; c.isPendingDeath).toList();
+  if (deadCards.isEmpty) return;
+
+  for (var card in deadCards) {
+    card.isDead = true;
+    card.add(OpacityEffect.to(0.0, EffectController(duration: 0.4)));
+    card.add(
+      ScaleEffect.to(
+        Vector2.zero(),
+        EffectController(duration: 0.4),
+        onComplete: () {
+          card.removeFromParent();
+        },
+      ),
+    );
+    enemyCards.remove(card);
+  }
+  repositionEnemies();
+  onEnemiesSpawned?.call();
+}</pre>
+</div>
+
+<p>L'ordre est important : d'abord les statistiques différées (la barre de vie tombe, le nombre de
+dégâts s'affiche, la réaction de coup se joue), <em>ensuite</em> les morts. Le joueur voit donc :
+la carte arrive → l'ennemi encaisse visiblement → l'ennemi s'évanouit en 0,4 s → les survivants se
+repositionnent.</p>
+
+<div class="box warn">
+  <div class="box-title">Piège</div>
+  <p>Un détail vicieux : <code>enemyCards.remove(card)</code> est appelé <em>à l'intérieur</em> d'une
+  boucle sur <code>deadCards</code>. Ce n'est pas un bug parce que <code>deadCards</code> est une copie
+  matérialisée par <code>.toList()</code>. Si on avait itéré directement sur le résultat paresseux de
+  <code>.where(...)</code>, on aurait modifié la collection pendant l'itération — et Dart lève une
+  <code>ConcurrentModificationError</code>. Le <code>.toList()</code> n'est pas décoratif.</p>
+</div>
+
+<h2 id="s7">7. Fin de tour, fin de combat, mort</h2>
+
+<h3>Le double clic sur « Fin de tour »</h3>
+
+<p>Un joueur qui termine son tour avec du mana inutilisé gaspille une ressource, presque toujours par
+inadvertance. <code>GameScreen</code> intercale donc une confirmation, sans dialogue modal :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>TurnControlPanel(
+  canEndTurn:
+      combatState.turnPhase == TurnPhase.player &amp;&amp;
+      _game.currentPhase == TurnPhase.player &amp;&amp;
+      !_game.isCardAnimating,
+  onEndTurnTap: () {
+    final currentMana = runState.heroStats.currentMana;
+    if (currentMana &gt; 0 &amp;&amp; !_showRemainingManaWarning) {
+      setState(() {
+        _showRemainingManaWarning = true;
+        _showManaWarning = false;
+      });
+      return;
+    }
+    setState(() {
+      _showManaWarning = false;
+      _showRemainingManaWarning = false;
+    });
+    TraitSystem.onTurnEnd(ref.read(runProvider.notifier));
+    ref
+        .read(runProvider.notifier)
+        .applyRelics(RelicTrigger.endOfTurn);
+    ref.read(deckProvider.notifier).discardHand();
+    _game.executeTurn();
+  },
+  showManaWarning: _showManaWarning,
+  showRemainingManaWarning: _showRemainingManaWarning,
+  turnCount: combatState.turnCount,
+),</pre>
+</div>
+
+<div class="box rule">
+  <div class="box-title">Règle du jeu — le premier clic ne termine pas le tour</div>
+  <p>Si <code>currentMana &gt; 0</code> et que l'avertissement n'est pas déjà affiché, le premier appui
+  ne fait <strong>que</strong> montrer le panneau « il vous reste du mana » et sortir par
+  <code>return</code>. Le deuxième appui passe le test (<code>_showRemainingManaWarning</code> est
+  désormais vrai) et termine réellement le tour. À zéro mana, la condition est fausse dès le premier
+  appui : le tour se termine immédiatement.</p>
+</div>
+
+<p><code>canEndTurn</code> exige trois conditions simultanées : la phase <em>logique</em>
+(<code>combatState.turnPhase</code>) doit être au joueur, la phase <em>du moteur</em>
+(<code>_game.currentPhase</code>) aussi, et aucune carte ne doit être en vol. La double vérification de
+phase n'est pas de la paranoïa : pendant <code>_enemyRipostePhase</code>, le moteur passe
+<code>currentPhase</code> à <code>enemy</code> localement avant même que le contrôleur ne soit prévenu.
+Sans ce test, le joueur pourrait cliquer deux fois vite et lancer deux tours ennemis.</p>
+
+<p>Quand le tour se termine réellement, quatre actions s'enchaînent, dans un ordre significatif : les
+passifs de fin de tour (<code>TraitSystem.onTurnEnd</code>), les reliques
+<code>RelicTrigger.endOfTurn</code>, la défausse de la main, puis seulement
+<code>_game.executeTurn()</code>. Le moteur est prévenu en dernier — il ne prend la main qu'une fois
+l'état stabilisé.</p>
+
+<h3>L'avertissement de mana à zéro : 600 ms</h3>
+
+<p>L'autre avertissement obéit à une logique inverse : il apparaît quand le joueur n'a
+<em>plus</em> de mana, pour lui signaler qu'il ne peut plus rien faire. Il est déclenché depuis
+<code>onPlayCard</code>, à la fin :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>if (runController.currentState.heroStats.currentMana &gt; 0) {
+  setState(() {
+    _showManaWarning = false;
+  });
+} else if (previousMana &gt; 0 &amp;&amp;
+    runController.currentState.heroStats.currentMana == 0) {
+  Future.delayed(const Duration(milliseconds: 600), () {
+    if (mounted &amp;&amp;
+        ref.read(combatProvider).enemies.isNotEmpty &amp;&amp;
+        ref.read(runProvider).heroStats.currentMana == 0) {
+      setState(() {
+        _showManaWarning = true;
+      });
+    }
+  });
+}</pre>
+</div>
+
+<p>Trois garde-fous après le délai de 600 ms, et chacun corrige un cas réel. <code>mounted</code> :
+l'écran peut avoir été quitté entre-temps. <code>enemies.isNotEmpty</code> : si la carte a tué le
+dernier ennemi, le combat est gagné et un avertissement de mana serait absurde. <code>currentMana == 0</code>
+relu : une relique ou un effet a pu redonner du mana pendant le délai.</p>
+
+<p>Le délai lui-même sert à laisser passer l'animation de la carte. Un avertissement qui surgit dans la
+même frame que le clic ressemble à une erreur ; 600 ms plus tard, il ressemble à un conseil.</p>
+
+<h3>La bannière de phase : 1 500 ms</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>void _triggerPhaseBanner(String text) async {
+  setState(() {
+    _phaseBannerText = text;
+    _showPhaseBanner = true;
+  });
+  await Future.delayed(const Duration(milliseconds: 1500));
+  if (mounted) {
+    setState(() {
+      _showPhaseBanner = false;
+    });
+  }
+}</pre>
+</div>
+
+<p>Simple, mais notez le <code>if (mounted)</code> avant le second <code>setState</code>. Sans lui, un
+joueur qui quitte l'écran pendant l'affichage de la bannière provoquerait un
+<code>setState() called after dispose()</code>. C'est la règle d'or de tout <code>await</code> dans un
+<code>State</code>.</p>
+
+<p>Le déclencheur est <code>onPhaseChanged</code>, lui-même appelé une seule fois par tour ennemi,
+au tout début de <code>_enemyRipostePhase</code> :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/heros_draft_game.dart</span><span class="lang">dart</span></div>
+  <pre>Future&lt;void&gt; _enemyRipostePhase() async {
+  onPhaseChanged(TurnPhase.enemy);
+  await Future.delayed(const Duration(milliseconds: GameConstants.combatDelayEnemyTurnStartMs));
+
+  onStartEnemyTurn();
+
+  await Future.delayed(const Duration(milliseconds: GameConstants.combatDelayAfterTicksMs));
+
+  final activeEnemies = List&lt;EnemyCard&gt;.from(enemyCards);
+  for (var enemy in activeEnemies) {
+    if (currentRunState == null || currentRunState!.isDead) break;
+    // ... dash ou buff, puis onResolveEnemyIntent(enemy.id)
+  }
+
+  await Future.delayed(const Duration(milliseconds: GameConstants.combatDelayEnemyTurnEndMs));
+
+  onEndEnemyTurn();
+}</pre>
+</div>
+
+<p>Le retour au tour du joueur passe par <code>onEndEnemyTurn</code>, qui appelle
+<code>_startPlayerNewTurn</code> :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>void _startPlayerNewTurn() {
+  setState(() {
+    _showManaWarning = false;
+    _showRemainingManaWarning = false;
+  });
+  _game.currentPhase = TurnPhase.player;
+  _game.heroCard?.suppressArmorChangeAnimation = true;
+  ref.read(combatProvider.notifier).startPlayerTurn();
+}</pre>
+</div>
+
+<p>La ligne <code>suppressArmorChangeAnimation = true</code> mérite un mot. Au début du tour du joueur,
+l'armure est remise à zéro par les règles du jeu. Sans ce drapeau, <code>HeroCard</code> jouerait son
+animation « armure perdue » — le joueur croirait avoir été touché. Le drapeau est consommé et remis à
+<code>false</code> à la première mise à jour dans <code>hero_card.dart</code>.</p>
+
+<h3>La victoire, et pourquoi <code>_isVictoryHandled</code> existe</h3>
+
+<p>C'est le point le plus délicat de la section. La victoire peut être détectée par
+<strong>deux chemins indépendants</strong>.</p>
+
+<p><strong>Chemin A — Riverpod.</strong> Le joueur tue le dernier ennemi avec une carte.
+<code>cleanDeadEnemies()</code> constate qu'il ne reste plus rien et pose <code>isCombatEnded: true,
+isVictory: true</code>. À la reconstruction suivante, l'écouteur se déclenche :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>ref.listen&lt;CombatState&gt;(combatProvider, (previous, next) {
+  final wasEnded = previous?.isCombatEnded ?? false;
+  if (next.isCombatEnded &amp;&amp; next.isVictory &amp;&amp; !wasEnded) {
+    _handleCombatVictory();
+  }
+});</pre>
+</div>
+
+<p><strong>Chemin B — Flame.</strong> Le joueur appuie sur « Fin de tour » alors que le canvas ne
+contient plus aucun <code>EnemyCard</code> :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/heros_draft_game.dart</span><span class="lang">dart</span></div>
+  <pre>Future&lt;void&gt; executeTurn() async {
+  if (currentPhase != TurnPhase.player ||
+      currentRunState == null ||
+      currentRunState!.isDead) {
+    return;
+  }
+
+  currentPhase = TurnPhase.enemy;
+
+  if (enemyCards.isEmpty) {
+    onEnemiesDead();
+    currentPhase = TurnPhase.player;
+    return;
+  }
+
+  await _enemyRipostePhase();
+}</pre>
+</div>
+
+<p>Les deux chemins mènent à <code>_handleCombatVictory</code>. Rien n'empêche qu'ils se déclenchent
+tous les deux — d'où le verrou :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>void _handleCombatVictory() {
+  if (_isVictoryHandled) return;
+  _isVictoryHandled = true;
+
+  final runState = ref.read(runProvider);
+  final gameData = ref.read(gameDataLoaderProvider).requireValue;
+  final currentNode = runState.mapNodes.firstWhere(
+    (n) =&gt; n.id == runState.currentNodeId,
+    orElse: () =&gt; runState.mapNodes.first,
+  );
+
+  ref.read(rewardProvider.notifier).handleVictory(
+    defeatedEnemies: ref.read(combatProvider).defeatedEnemies,
+    currentNode: currentNode,
+    allRelics: gameData.relics,
+    allCards: gameData.cards,
+    luck: runState.heroStats.luck,
+    act: runState.act,
+  );
+
+  _presentNextReward();
+}</pre>
+</div>
+
+<div class="box danger">
+  <div class="box-title">Point d'attention</div>
+  <p>Sans <code>_isVictoryHandled</code>, <code>handleVictory</code> serait appelé deux fois : le joueur
+  recevrait deux fois l'or et l'XP, et deux carrousels de relique s'empileraient. Le verrou est une
+  variable d'instance, donc remis à <code>false</code> à chaque nouvel écran de combat — c'est
+  précisément ce qu'on veut, puisque chaque combat a droit à sa victoire.</p>
+</div>
+
+<h3>Le séquenceur de récompenses</h3>
+
+<p><code>_presentNextReward</code> est une petite machine à états récursive. Elle traite au plus une
+récompense par appel, puis se rappelle elle-même quand cette récompense est consommée.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>void _presentNextReward() {
+  if (!mounted) return;
+  final rewardState = ref.read(rewardProvider);
+
+  // 1. Present Relic if any and not processed yet
+  if (rewardState.rolledRelic != null &amp;&amp;
+      !rewardState.isRelicCollected &amp;&amp;
+      !rewardState.isRelicSkipped) {
+    _showRelicCarouselDialog(rewardState.rolledRelic!);
+    return;
+  }
+
+  // 2. Present Cards if any and not processed yet
+  if (rewardState.rolledCards.isNotEmpty &amp;&amp; !rewardState.isCardsProcessed) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) =&gt; const BossCardDraftScreen(),
+      ),
+    ).then((_) {
+      if (mounted) {
+        _presentNextReward();
+      }
+    });
+    return;
+  }
+
+  // 3. Process Gold and XP
+  if (!rewardState.isGoldXpCollected) {
+    final leveledUp = ref.read(rewardProvider.notifier).collectGoldAndXp();
+    // ... notifications
+    Future.delayed(const Duration(milliseconds: 800), () {
+      if (mounted) {
+        _completeAndExitCombat();
+      }
+    });
+  }
+}</pre>
+</div>
+
+<p>L'ordre est fixe : relique, puis cartes, puis or et XP. Chaque étape vérifie un drapeau de
+<code>RewardState</code> (<code>isRelicCollected</code>, <code>isRelicSkipped</code>,
+<code>isCardsProcessed</code>, <code>isGoldXpCollected</code>) pour ne jamais se rejouer. La récursion
+est déclenchée par le <code>.then(...)</code> de la navigation pour les cartes, et par le
+<code>onCollect</code> du carrousel pour la relique :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>onCollect: () {
+  ref.read(rewardProvider.notifier).collectRelic();
+  // ... notification localisée
+  Navigator.of(dialogContext).pop();
+  _presentNextReward();
+},</pre>
+</div>
+
+<p>La dernière étape est la seule sans récursion : après l'or et l'XP, on attend 800 ms — le temps que
+les notifications montantes soient lues — et on sort du combat.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>void _completeAndExitCombat() {
+  final runController = ref.read(runProvider.notifier);
+  runController.nextLevel();
+  runController.completeCurrentNode();
+  Navigator.of(context).pop();
+}</pre>
+</div>
+
+<p>Trois lignes, trois effets : <code>nextLevel()</code> incrémente le niveau de la run,
+<code>completeCurrentNode()</code> marque le nœud de carte comme terminé — ce qui, au passage, rend
+<code>canPop</code> vrai dans le <code>PopScope</code> — et <code>pop()</code> ramène à l'écran de
+carte.</p>
+
+<h3>La mort</h3>
+
+<p>La mort n'est pas un événement : c'est une propriété calculée. <code>RunState.isDead</code> vaut
+<code>heroStats.currentPv &lt;= 0</code>. Dès que <code>build</code> observe cette valeur à vrai, tous
+les widgets de HUD disparaissent (leur condition est <code>!runState.isDead</code>) et
+<code>DeathOverlay</code> les remplace.</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/widgets/hud/death_overlay.dart</span><span class="lang">dart</span></div>
+  <pre>ElevatedButton(
+  // ...
+  onPressed: () async {
+    await SaveService.clear();
+    if (!context.mounted) return;
+    Navigator.of(context).popUntil((route) =&gt; route.isFirst);
+  },
+  child: Text(l10n.mainMenu),
+),
+const SizedBox(width: 10),
+ElevatedButton(
+  // ...
+  onPressed: () async {
+    await SaveService.clear();
+    if (!context.mounted) return;
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (context) =&gt; const ClassSelectionScreen(),
+      ),
+    );
+  },
+  child: Text(l10n.changeClass),
+),</pre>
+</div>
+
+<p>Les deux boutons commencent par <code>await SaveService.clear()</code>. C'est la traduction technique
+de la règle roguelike : une run perdue est perdue, il n'y a pas de retour en arrière. Le
+<code>if (!context.mounted) return;</code> après l'<code>await</code> est là encore la protection
+obligatoire — le <code>BuildContext</code> pourrait avoir été démonté pendant l'écriture sur disque.</p>
+
+<p>La différence entre les deux boutons est un choix de destination : <code>popUntil(isFirst)</code>
+dépile jusqu'à la toute première route (le menu principal), tandis que
+<code>pushReplacement(ClassSelectionScreen)</code> remplace l'écran de combat par l'écran de choix de
+classe, pour relancer une run immédiatement.</p>
+
+<div class="box rule">
+  <div class="box-title">Règle du jeu</div>
+  <p>À la mort, <code>PopScope.canPop</code> devient vrai (<code>isCompleted || runState.isDead</code>).
+  Le joueur peut donc aussi quitter l'écran par le geste de retour arrière — ce qui, contrairement aux
+  deux boutons, <strong>n'efface pas la sauvegarde</strong>. C'est une asymétrie du fichier, à connaître
+  si vous touchez à la persistance.</p>
+</div>
+
+<h3>La pause</h3>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>void _showPauseMenu() {
+  _game.pauseEngine();
+  PauseDialog.show(
+    context,
+    onResume: () =&gt; Navigator.of(context).pop(),
+    onExit: () {
+      Navigator.of(context).pop();
+      Navigator.of(context).popUntil((route) =&gt; route.isFirst);
+    },
+  ).then((_) {
+    if (mounted) {
+      _game.resumeEngine();
+    }
+  });
+}</pre>
+</div>
+
+<p><code>pauseEngine()</code> gèle la boucle de jeu Flame : plus aucun <code>update(dt)</code>, donc
+plus aucune animation, et surtout plus de <code>StateSyncSystem</code> — les états déposés
+s'accumuleront et seront appliqués à la reprise. La reprise est branchée sur le <code>.then</code> du
+<code>Future</code> renvoyé par <code>showDialog</code>, ce qui couvre <em>tous</em> les cas de
+fermeture, y compris un appui en dehors du dialogue (<code>barrierDismissible: true</code> dans
+<code>PauseDialog.show</code>).</p>
+
+<h2 id="s8">8. Ce qu'il faut retenir pour étendre le combat</h2>
+
+<p>Cette dernière section est un mode d'emploi. Si vous devez modifier l'écran de combat, ces recettes
+vous éviteront de casser l'architecture.</p>
+
+<h3>Ajouter un widget de HUD</h3>
+
+<div class="memo">
+  <div class="card"><h5>1. Créez le fichier</h5><p>Dans <code>lib/ui/widgets/hud/</code>, un
+  <code>StatelessWidget</code> qui ne prend que des valeurs simples et des callbacks. Aucun
+  <code>ref</code>, aucun provider.</p></div>
+  <div class="card"><h5>2. Positionnez-le vous-même</h5><p>Renvoyez un <code>Positioned</code> ou un
+  <code>Positioned.fill(Stack(...))</code> : le parent est un <code>Stack</code>, il n'imposera aucune
+  contrainte.</p></div>
+  <div class="card"><h5>3. Insérez-le dans le Stack</h5><p>Dans <code>build</code>, après
+  <code>CombatSidePanels</code> et avant la bannière de phase, avec la même garde
+  <code>if (!runState.isDead &amp;&amp; !_showDraft)</code>.</p></div>
+  <div class="card"><h5>4. Alimentez-le depuis build</h5><p>Passez des valeurs déjà extraites des
+  <code>ref.watch</code> du haut de <code>build</code>. Ne rajoutez pas de <code>ref.watch</code> dans
+  le widget enfant.</p></div>
+</div>
+
+<h3>Ajouter un callback</h3>
+
+<div class="memo">
+  <div class="card"><h5>1. Déclarez le champ</h5><p>Un <code>final void Function(...)</code> dans
+  <code>HerosDraftGame</code>, et le paramètre correspondant dans le constructeur.</p></div>
+  <div class="card"><h5>2. Appelez-le depuis Flame</h5><p>Depuis un système ou un composant, à
+  l'endroit où l'intention naît. Un callback qu'on oublie d'appeler devient un des quatre morts de la
+  section 5.</p></div>
+  <div class="card"><h5>3. Branchez-le dans initState</h5><p>Dans la construction de
+  <code>_game</code>, avec un corps qui ne fait que <code>ref.read(...).notifier</code>,
+  <code>setState</code> ou animation.</p></div>
+  <div class="card"><h5>4. Choisissez le type de retour</h5><p><code>void</code> pour une notification.
+  <code>bool</code> seulement si Flame doit pouvoir être refusé, comme
+  <code>onPlayCard</code>.</p></div>
+</div>
+
+<h3>Pourquoi ne jamais appeler un <code>Notifier</code> depuis un composant Flame</h3>
+
+<p>La tentation est forte. Un <code>EnemyCard</code> sait qu'il a été touché ; pourquoi ne pas lui
+donner un accès au <code>CombatController</code> pour qu'il applique les dégâts lui-même ? Quatre
+raisons rédhibitoires.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Problème</th><th>Conséquence concrète</th></tr></thead>
+<tbody>
+<tr>
+  <td>Aucun <code>ref</code> disponible</td>
+  <td>Il faudrait faire remonter un <code>WidgetRef</code> ou un <code>ProviderContainer</code> dans le
+  moteur. <code>heros_draft_game.dart</code> n'importe pas Riverpod ; l'ajouter contaminerait tout le
+  dossier <code>lib/game/components/</code>.</td>
+</tr>
+<tr>
+  <td>Boucle de jeu contre passe de build</td>
+  <td>Un composant modifie l'état pendant <code>update(dt)</code> ou <code>render</code> ; Riverpod
+  notifie ; Flutter reconstruit — au milieu d'une frame de rendu Flame.</td>
+</tr>
+<tr>
+  <td>Deux sources de vérité</td>
+  <td>Le composant modifie l'état et se met à jour lui-même. Au prochain <code>_applyCombatState</code>,
+  l'état officiel écrase la modification locale, ou pire, la double.</td>
+</tr>
+<tr>
+  <td>Impossible à tester</td>
+  <td>Tester la règle « cette carte inflige 8 dégâts » exigerait de monter un moteur Flame complet avec
+  ses images et sa taille d'écran.</td>
+</tr>
+</tbody>
+</table></div>
+
+<h3>Le piège du <code>ref.read</code> dans un callback</h3>
+
+<p>Voici le piège le plus subtil du fichier, et il concerne directement du code que vous écrirez.</p>
+
+<div class="box danger">
+  <div class="box-title">Point d'attention — la fraîcheur d'un <code>ref.read</code></div>
+  <p><code>ref.read(provider)</code> renvoie un <strong>instantané</strong>. Dans un callback appelé
+  depuis la boucle de jeu, potentiellement plusieurs centaines de millisecondes après le début d'une
+  séquence asynchrone, cet instantané peut être périmé.</p>
+</div>
+
+<p>Le fichier montre les deux faces de la médaille. Dans <code>onPlayCard</code>, l'auteur ne lit
+volontairement pas <code>ref.read(runProvider)</code> pour connaître le mana après application, mais
+<code>runController.currentState</code> :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>final runController = ref.read(runProvider.notifier);
+final combatController = ref.read(combatProvider.notifier);
+final previousMana = runController.currentState.heroStats.currentMana;
+// ...
+if (runController.currentState.heroStats.currentMana &gt; 0) {</pre>
+</div>
+
+<p>La différence est essentielle. <code>ref.read(runProvider)</code> capture un <code>RunState</code>
+figé. <code>ref.read(runProvider.notifier)</code> capture le <em>contrôleur</em>, dont
+<code>currentState</code> est relu à chaque accès. Comme <code>applyPlayerCardPlay</code> a modifié
+l'état entre-temps, seule la seconde forme voit le mana à jour.</p>
+
+<p>Et dans le <code>Future.delayed</code> de 600 ms, l'auteur refait des <code>ref.read</code> frais
+plutôt que de réutiliser les variables capturées — c'est le bon réflexe :</p>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>Future.delayed(const Duration(milliseconds: 600), () {
+  if (mounted &amp;&amp;
+      ref.read(combatProvider).enemies.isNotEmpty &amp;&amp;
+      ref.read(runProvider).heroStats.currentMana == 0) {</pre>
+</div>
+
+<div class="box rule">
+  <div class="box-title">Règle</div>
+  <p>Dans un callback ou après un <code>await</code> : capturez les <code>.notifier</code>, jamais les
+  états. Et relisez toujours l'état au moment où vous en avez besoin, pas au moment où vous écrivez la
+  closure.</p>
+</div>
+
+<h3>Les points d'attention réels du fichier</h3>
+
+<p>Pour terminer, voici la liste honnête des fragilités que la lecture intégrale de
+<code>game_screen.dart</code> met au jour. Aucune n'est un bug ouvert ; toutes méritent d'être connues
+avant d'y toucher.</p>
+
+<div class="box danger">
+  <div class="box-title">1. <code>_showDraft</code> est une constante morte</div>
+  <p><code>final bool _showDraft = false;</code> — déclaré <code>final</code>, initialisé à
+  <code>false</code>, jamais réaffecté. Il apparaît pourtant cinq fois dans <code>build</code>, dans des
+  conditions comme <code>if (!runState.isDead &amp;&amp; !_showDraft)</code>. Toutes ces conditions se
+  réduisent à leur premier terme. C'est le reliquat d'un écran de draft qui vivait dans
+  <code>GameScreen</code> et qui est aujourd'hui un écran à part
+  (<code>BossCardDraftScreen</code>). Le compilateur ne s'en plaint pas, mais un lecteur perd du temps à
+  chercher où ce drapeau est mis à vrai. Réponse : nulle part.</p>
+</div>
+
+<div class="box danger">
+  <div class="box-title">2. Un <code>try/catch</code> silencieux</div>
+  <p>Dans <code>build</code> :</p>
+</div>
+
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>final currentNodeId = runState.currentNodeId;
+bool isCompleted = false;
+try {
+  final currentNode = runState.mapNodes.firstWhere(
+    (n) =&gt; n.id == currentNodeId,
+  );
+  isCompleted = currentNode.isCompleted;
+} catch (_) {}</pre>
+</div>
+
+<p>Le <code>catch (_) {}</code> avale toute exception sans le moindre message. Si
+<code>currentNodeId</code> ne correspond à aucun nœud — une désynchronisation de la carte, par exemple —
+<code>isCompleted</code> reste <code>false</code>, donc <code>canPop</code> reste faux, donc le joueur
+est <strong>bloqué dans l'écran de combat</strong> sans aucune trace dans les logs. Comparez avec la
+même situation ailleurs dans le projet : <code>RunState.currentNodeType</code> attrape aussi
+l'exception, mais journalise un <code>debugPrint</code> détaillé en mode debug. Notez au passage que
+deux lignes plus haut, <code>_handleCombatVictory</code> et <code>initState</code> résolvent le même
+nœud avec un <code>orElse: () =&gt; runState.mapNodes.first</code> — trois traitements différents du même
+problème dans un seul fichier.</p>
+
+<div class="box danger">
+  <div class="box-title">3. La pause suspend aussi la synchronisation</div>
+  <p><code>_game.pauseEngine()</code> gèle <code>update(dt)</code>, donc <code>StateSyncSystem</code>
+  cesse de relever ses boîtes aux lettres. Pendant la pause, <code>build</code> peut continuer à
+  s'exécuter et à écraser <code>nextState</code>, <code>nextDeckState</code> et
+  <code>nextCombatState</code> : seul le dernier état sera appliqué à la reprise. En pratique c'est sans
+  conséquence, puisque le combat ne progresse pas pendant la pause. Mais la reprise est branchée sur
+  <code>.then(...)</code>, sous garde <code>if (mounted)</code> — si l'écran est démonté pendant le
+  dialogue (via <code>onExit</code>, qui dépile jusqu'à la première route), <code>resumeEngine()</code>
+  n'est jamais appelé, et le jeu est détruit de toute façon. L'enchaînement fonctionne, mais il repose
+  sur un équilibre qu'une modification hâtive de <code>onExit</code> casserait facilement.</p>
+</div>
+
+<div class="box">
+  <div class="box-title">À retenir</div>
+  <p>Un seul fichier, trois mondes, deux sens de circulation. Vers le bas, des états poussés sans
+  condition à chaque <code>build</code> et appliqués par la boucle de jeu quand elle est prête. Vers le
+  haut, quatorze callbacks dont dix vivants, qui ne font jamais autre chose que traduire une intention
+  en appel de <code>Notifier</code>. Entre les deux, un drapeau <code>isCardAnimating</code> qui accorde
+  le temps du gameplay avec le temps de l'animation. Tout le reste n'est que mise en page.</p>
+</div>
+
+<div class="quiz">
+  <h2>Quiz — vérifiez vos acquis</h2>
+
+  <div class="q" data-answer="2">
+    <p class="q-text">1. Quand <code>StateSyncSystem</code> applique-t-il les états déposés par
+    <code>syncState</code>, <code>syncDeck</code> et <code>syncCombat</code> ?</p>
+    <ul class="q-opts">
+      <li>Immédiatement, dans le corps de <code>syncState</code></li>
+      <li>Dans <code>onLoad()</code>, une seule fois au démarrage du jeu</li>
+      <li>Dans <code>update(dt)</code>, uniquement si <code>game.hasLayout</code> est vrai</li>
+      <li>Dans <code>render(canvas)</code>, juste avant de dessiner les composants</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> les trois méthodes <code>sync*</code> de
+    <code>lib/game/heros_draft_game.dart</code> ne font qu'une affectation dans une « boîte aux
+    lettres ». C'est <code>update(dt)</code> de <code>lib/game/systems/state_sync_system.dart</code> qui
+    relève le courrier, et les trois tests sont gardés par <code>&amp;&amp; game.hasLayout</code> :
+    tant que le jeu ne connaît pas sa taille, <code>game.size</code> est inutilisable et toute la
+    disposition (héros à <code>size.y * 0.51</code>, ennemis à <code>size.y * 0.21</code>) serait
+    fausse.</div>
+  </div>
+
+  <div class="q" data-answer="1">
+    <p class="q-text">2. Que se passe-t-il exactement si le callback <code>onPlayCard</code> renvoie
+    <code>false</code> ?</p>
+    <ul class="q-opts">
+      <li>La carte est retirée de la main puis remise par la synchronisation suivante</li>
+      <li>Le corps de <code>tryPlayCard</code> n'est pas exécuté, et <code>onDragEnd</code> appelle
+      <code>animator.returnToHand()</code></li>
+      <li>Le jeu affiche l'avertissement de mana et désactive le bouton « Fin de tour »</li>
+      <li>Une exception est levée et attrapée par le <code>try/catch</code> de <code>build</code></li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> dans <code>tryPlayCard</code>,
+    <code>onPlayCard(...)</code> est évalué dans la condition du <code>if</code> : à <code>false</code>,
+    rien n'est retiré de <code>handCards</code>, <code>isCardAnimating</code> reste <code>false</code>,
+    et la méthode renvoie <code>false</code>. Dans
+    <code>lib/game/components/widgets/card_interaction_handler.dart</code>, <code>onDragEnd</code> teste
+    <code>if (!played)</code> et rappelle la carte en main.</div>
+  </div>
+
+  <div class="q" data-answer="1">
+    <p class="q-text">3. Lequel de ces callbacks du constructeur de <code>HerosDraftGame</code> n'est
+    invoqué nulle part dans le code Flame ?</p>
+    <ul class="q-opts">
+      <li><code>onPhaseChanged</code></li>
+      <li><code>onSelectEnemy</code></li>
+      <li><code>onEnemiesSpawned</code></li>
+      <li><code>onAnimationStateChanged</code></li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>onSelectEnemy</code> est déclaré ligne 68 de
+    <code>lib/game/heros_draft_game.dart</code>, exigé par le constructeur ligne 83, branché dans
+    <code>initState</code>… et jamais appelé. La sélection d'un ennemi passe en réalité par
+    <code>onPlayCard</code>, qui exécute <code>combatController.selectEnemy(target.id)</code>. Deux
+    autres callbacks sont dans le même cas : <code>onEnemyKilled</code> et
+    <code>onUpdateEnemyStats</code>.</div>
+  </div>
+
+  <div class="q" data-answer="3">
+    <p class="q-text">4. Le joueur a encore 2 mana et appuie une première fois sur « Fin de tour ».
+    Que se passe-t-il ?</p>
+    <ul class="q-opts">
+      <li>Le tour se termine, le mana restant est converti en armure</li>
+      <li>Un dialogue modal de confirmation s'ouvre</li>
+      <li>Le bouton est désactivé jusqu'à ce que le mana soit dépensé</li>
+      <li>Rien ne se passe sinon l'affichage d'un avertissement ; il faut appuyer une seconde fois</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> dans <code>onEndTurnTap</code>, si
+    <code>currentMana &gt; 0 &amp;&amp; !_showRemainingManaWarning</code>, le code met
+    <code>_showRemainingManaWarning = true</code> puis sort par <code>return</code>. Au second appui, la
+    condition est fausse et le tour se termine réellement. Aucun dialogue n'est impliqué : c'est un
+    simple panneau du <code>TurnControlPanel</code>.</div>
+  </div>
+
+  <div class="q" data-answer="0">
+    <p class="q-text">5. Sur quelle clé <code>_applyDeckState</code> réconcilie-t-il les
+    <code>CardComponent</code> avec les cartes de la main ?</p>
+    <ul class="q-opts">
+      <li><code>CardInstance.uniqueId</code>, un UUID généré à la création de l'exemplaire</li>
+      <li><code>card.data.id</code>, l'identifiant du modèle de carte</li>
+      <li>L'index de la carte dans <code>deck.hand</code></li>
+      <li>Le <code>hashCode</code> du <code>CardComponent</code></li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>_applyDeckState</code> construit
+    <code>deck.hand.map((c) =&gt; c.uniqueId).toSet()</code> puis compare avec
+    <code>c.card.uniqueId</code>. Le <code>uniqueId</code> est un <code>Uuid().v4()</code> attribué à
+    chaque <code>CardInstance</code> dans <code>lib/models/card_instance.dart</code> : c'est ce qui
+    permet de distinguer trois exemplaires de la même carte dans un deck.</div>
+  </div>
+
+  <div class="q" data-answer="2">
+    <p class="q-text">6. Pourquoi le champ <code>_isVictoryHandled</code> est-il nécessaire ?</p>
+    <ul class="q-opts">
+      <li>Parce que <code>build</code> peut s'exécuter plusieurs fois par frame</li>
+      <li>Parce que <code>handleVictory</code> est asynchrone et peut échouer</li>
+      <li>Parce que la victoire peut être détectée à la fois par le callback <code>onEnemiesDead</code>
+      et par <code>ref.listen&lt;CombatState&gt;</code></li>
+      <li>Parce que le joueur peut appuyer deux fois sur le bouton de récompense</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> deux chemins mènent à <code>_handleCombatVictory</code>.
+    Chemin Riverpod : <code>cleanDeadEnemies()</code> pose <code>isCombatEnded</code> et
+    <code>isVictory</code>, l'écouteur <code>ref.listen&lt;CombatState&gt;</code> réagit. Chemin Flame :
+    <code>executeTurn()</code> constate <code>enemyCards.isEmpty</code> et appelle
+    <code>onEnemiesDead()</code>. Sans le verrou, or, XP et carrousel de relique seraient traités deux
+    fois.</div>
+  </div>
+</div>
+
+<div class="pager">
+<a class="prev" href="ch16.html"><div class="dir">&#8592; Chapitre 16</div><div class="ttl">Événements, repos et autel des reliques</div></a>
+<a class="next" href="ch18.html"><div class="dir">Chapitre 18 &#8594;</div><div class="ttl">Composants Flame et game feel</div></a>
+</div>
+</div>
+</main>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

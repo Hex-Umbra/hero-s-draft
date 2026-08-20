@@ -1,0 +1,1802 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flame — le moteur de rendu du combat — Formation Hero's Draft</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<button class="menu-btn" aria-label="Menu">&#9776;</button>
+<div class="layout">
+<aside class="sidebar">
+  <a class="brand" href="index.html">
+    <div class="brand-title">HERO'S DRAFT</div>
+    <div class="brand-sub">Formation complète au projet Flutter</div>
+  </a>
+<nav class="nav">
+<div class="nav-part">Partie 0 — Démarrage</div>
+<a href="ch01.html"><span class="num">01</span><span>Vue d&#x27;ensemble : qu&#x27;est-ce que Hero&#x27;s Draft ?</span></a>
+<div class="nav-part">Partie 1 — Les fondations techniques</div>
+<a href="ch02.html"><span class="num">02</span><span>Dart, le langage — l&#x27;essentiel pour ce projet</span></a>
+<a href="ch03.html"><span class="num">03</span><span>Flutter — widgets, arbre et navigation</span></a>
+<a href="ch04.html"><span class="num">04</span><span>Riverpod — l&#x27;état partagé du jeu</span></a>
+<a href="ch05.html" class="active"><span class="num">05</span><span>Flame — le moteur de rendu du combat</span></a>
+<div class="nav-part">Partie 2 — L&#x27;architecture du projet</div>
+<a href="ch06.html"><span class="num">06</span><span>L&#x27;architecture en quatre couches</span></a>
+<a href="ch07.html"><span class="num">07</span><span>La couche de données : un jeu 100 % data-driven</span></a>
+<div class="nav-part">Partie 3 — Les règles du jeu</div>
+<a href="ch08.html"><span class="num">08</span><span>Le héros : stats, classes, passifs et progression</span></a>
+<a href="ch09.html"><span class="num">09</span><span>Les cartes et le deck</span></a>
+<a href="ch10.html"><span class="num">10</span><span>Le combat : boucle de tour, dégâts et effets</span></a>
+<a href="ch11.html"><span class="num">11</span><span>Les ennemis et la courbe de difficulté</span></a>
+<a href="ch12.html"><span class="num">12</span><span>La carte du monde procédurale</span></a>
+<a href="ch13.html"><span class="num">13</span><span>Les reliques et le système de déclencheurs</span></a>
+<a href="ch14.html"><span class="num">14</span><span>L&#x27;économie : or, boutique, forge et fusion</span></a>
+<a href="ch15.html"><span class="num">15</span><span>Récompenses, chance et probabilités</span></a>
+<a href="ch16.html"><span class="num">16</span><span>Événements, repos et autel des reliques</span></a>
+<div class="nav-part">Partie 4 — L&#x27;interface et le rendu</div>
+<a href="ch17.html"><span class="num">17</span><span>Le pont Flame ↔ Riverpod : l&#x27;écran de combat</span></a>
+<a href="ch18.html"><span class="num">18</span><span>Composants Flame et game feel</span></a>
+<a href="ch19.html"><span class="num">19</span><span>Écrans, navigation et design system</span></a>
+<div class="nav-part">Partie 5 — Qualité et cycle de vie</div>
+<a href="ch20.html"><span class="num">20</span><span>Sauvegarde, localisation et tutoriel</span></a>
+<a href="ch21.html"><span class="num">21</span><span>Tests, outillage, dette technique et évolutions</span></a>
+</nav>
+</aside>
+<main class="main">
+<div class="content">
+<div class="chapter-kicker">Chapitre 05</div>
+<h1>Flame — le moteur de rendu du combat</h1>
+<p class="lede">Flame est un moteur de jeu 2D qui vit à l'intérieur d'un widget Flutter. Dans Hero's Draft il ne gère qu'une chose : l'arène de combat, ses cartes et ses animations.</p>
+<div class="toc">
+  <div class="toc-title">Dans ce chapitre</div>
+  <ol>
+    <li><a href="#s1">Flame en une page</a></li>
+    <li><a href="#s2"><code>FlameGame</code> — la classe racine</a></li>
+    <li><a href="#s3">L'arbre de composants</a></li>
+    <li><a href="#s4">Le cycle de vie d'un composant</a></li>
+    <li><a href="#s5"><code>priority</code> : le z-index de Flame</a></li>
+    <li><a href="#s6">Les mixins d'entrée</a></li>
+    <li><a href="#s7">Le système d'effets</a></li>
+    <li><a href="#s8">Dessiner à la main</a></li>
+    <li><a href="#s9">La géométrie de l'arène</a></li>
+  </ol>
+</div>
+
+<h2 id="s1">1. Flame en une page</h2>
+<p>Flutter sait déjà dessiner. Il a un <code>CustomPainter</code>, des animations, des <code>Transform</code>. Pourquoi
+ajouter un moteur de jeu ? Parce que Flutter raisonne en <strong>arbre de widgets reconstruit à la demande</strong>,
+alors qu'un jeu raisonne en <strong>scène persistante mise à jour à chaque image</strong>. Ce ne sont pas les mêmes
+réflexes.</p>
+<p>Concrètement, <span class="pill f">Flame</span> apporte quatre choses que Flutter seul ne donne pas :</p>
+<div class="memo">
+  <div class="card">
+    <h5>Une boucle de jeu</h5>
+    <p>À chaque image (≈ 60 fois par seconde, en réalité à la fréquence de l'écran), Flame appelle <code>update(dt)</code>
+puis <code>render(canvas)</code> sur tout l'arbre. Pas de <code>setState</code>, pas de reconstruction de widgets.</p>
+  </div>
+  <div class="card">
+    <h5>Un canvas unique</h5>
+    <p>Tout le combat est peint sur une seule surface. Mille particules ne coûtent pas mille widgets : elles coûtent mille
+appels à <code>canvas.drawCircle</code>.</p>
+  </div>
+  <div class="card">
+    <h5>Des composants positionnés</h5>
+    <p>Un <code>PositionComponent</code> a sa propre <code>position</code>, <code>size</code>, <code>scale</code>,
+<code>angle</code> et <code>anchor</code>. On déplace un objet en assignant un vecteur, pas en reconstruisant un
+<code>Positioned</code>.</p>
+  </div>
+  <div class="card">
+    <h5>Un système d'effets</h5>
+    <p><code>MoveEffect</code>, <code>ScaleEffect</code>, <code>OpacityEffect</code>… On décrit l'animation, on l'attache au
+composant, et le moteur la joue puis la nettoie.</p>
+  </div>
+</div>
+<h3>Où Flame commence, où il s'arrête</h3>
+<p>Dans ce projet, la frontière est nette et facile à mémoriser : <strong>Flame ne rend que l'arène de combat</strong>.
+Tout le reste — la barre du haut, le HUD du bas, le bouton de fin de tour, les tooltips, les overlays de mort — est du
+<span class="pill g">Flutter</span> classique posé <em>par-dessus</em> le canvas, dans le même <code>Stack</code>.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/ui/screens/game_screen.dart</span><span class="lang">dart</span></div>
+  <pre>return PopScope(
+  canPop: isCompleted || runState.isDead,
+  child: Scaffold(
+    body: Stack(
+      children: [
+        // Le jeu prend tout l'écran
+        Positioned.fill(child: GameWidget(game: _game)),
+
+        // HUD et Overlays dans une SafeArea
+        SafeArea(
+          child: Stack(
+            children: [
+
+              if (!_showDraft &amp;&amp; runState.isDead) const DeathOverlay(),
+
+              if (!runState.isDead &amp;&amp; !_showDraft)
+                CombatTopBar(
+                  act: runState.act,
+                  currentLevel: runState.currentLevel,
+                  onPauseTap: _showPauseMenu,
+                ),
+// ...</pre>
+</div>
+<p>Il n'y a qu'un seul <code>GameWidget</code> dans tout le projet, et il n'existe que pendant un combat. Sur la carte
+du monde, dans la boutique ou à la forge, <strong>Flame n'est pas monté du tout</strong> : ces écrans sont 100 %
+Flutter.</p>
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 820 300" width="820" role="img" aria-label="Empilement du GameWidget Flame et du HUD Flutter dans le Stack de GameScreen">
+      <defs>
+        <marker id="c5-a1" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#3a4966"/>
+        </marker>
+      </defs>
+      <rect x="20" y="18" width="780" height="264" rx="10" fill="#0e1524" stroke="#3a4966"/>
+      <text x="36" y="42" fill="#a7b4c9" font-size="13" font-family="ui-monospace, monospace">GameScreen › Scaffold › Stack</text>
+      <rect x="48" y="58" width="440" height="86" rx="8" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="66" y="84" fill="#e6ecf5" font-size="13.5" font-family="ui-monospace, monospace">Positioned.fill(child: GameWidget(game: _game))</text>
+      <text x="66" y="106" fill="#a7b4c9" font-size="12">1 seul canvas · HerosDraftGame · boucle 60 Hz</text>
+      <text x="66" y="126" fill="#a7b4c9" font-size="12">cartes, héros, ennemis, particules, ligne de ciblage</text>
+      <rect x="48" y="164" width="440" height="96" rx="8" fill="#151b2b" stroke="#34d399"/>
+      <text x="66" y="190" fill="#e6ecf5" font-size="13.5" font-family="ui-monospace, monospace">SafeArea(child: Stack(...))</text>
+      <text x="66" y="212" fill="#a7b4c9" font-size="12">CombatTopBar · CombatBottomHud · TurnControlPanel</text>
+      <text x="66" y="230" fill="#a7b4c9" font-size="12">CombatTooltipOverlay · CombatPhaseBanner · DeathOverlay</text>
+      <text x="66" y="250" fill="#a7b4c9" font-size="12">widgets Flutter ordinaires, sensibles au thème et au texte</text>
+      <path d="M488 100 L556 100" stroke="#3a4966" stroke-width="2" marker-end="url(#c5-a1)"/>
+      <path d="M488 212 L556 212" stroke="#3a4966" stroke-width="2" marker-end="url(#c5-a1)"/>
+      <rect x="562" y="72" width="222" height="58" rx="8" fill="#101827" stroke="#22d3ee" stroke-dasharray="4 3"/>
+      <text x="673" y="96" fill="#22d3ee" font-size="12.5" text-anchor="middle" font-family="ui-monospace, monospace">lib/game/components/</text>
+      <text x="673" y="116" fill="#22d3ee" font-size="12.5" text-anchor="middle" font-family="ui-monospace, monospace">lib/game/systems/</text>
+      <rect x="562" y="184" width="222" height="58" rx="8" fill="#101827" stroke="#34d399" stroke-dasharray="4 3"/>
+      <text x="673" y="208" fill="#34d399" font-size="12.5" text-anchor="middle" font-family="ui-monospace, monospace">lib/ui/widgets/hud/</text>
+      <text x="673" y="228" fill="#34d399" font-size="12.5" text-anchor="middle" font-family="ui-monospace, monospace">lib/ui/screens/</text>
+      <text x="34" y="105" fill="#f59e0b" font-size="11" text-anchor="middle" transform="rotate(-90 34 105)">peint en 1er</text>
+      <text x="34" y="215" fill="#f59e0b" font-size="11" text-anchor="middle" transform="rotate(-90 34 215)">peint en 2e</text>
+    </svg>
+  </div>
+  <figcaption>Le <code>GameWidget</code> est le premier enfant du <code>Stack</code> : il est donc peint en dessous. Tout le HUD Flutter passe au-dessus.</figcaption>
+</figure>
+<h3>Le dossier <code>lib/game/</code></h3>
+<div class="tree">lib/
+└── <span class="d">game/</span>
+    ├── <span class="f">heros_draft_game.dart</span>      <span class="c">// la classe FlameGame racine</span>
+    ├── <span class="f">game_constants.dart</span>        <span class="c">// priorités, tailles, délais</span>
+    ├── <span class="d">components/</span>                <span class="c">// TOUT ce qui se dessine (Flame)</span>
+    │   ├── <span class="f">card_component.dart</span>
+    │   ├── <span class="f">floating_text.dart</span>
+    │   ├── <span class="f">effect_icon.dart</span>
+    │   ├── <span class="d">entities/</span>              <span class="c">// hero_card, enemy_card, stat_badge…</span>
+    │   ├── <span class="d">visual_effects/</span>        <span class="c">// slash, ruban, ligne de ciblage</span>
+    │   └── <span class="d">widgets/</span>               <span class="c">// rendu manuel : cartes, barres, icônes</span>
+    ├── <span class="d">systems/</span>                   <span class="c">// 4 Components sans rendu + 2 classes pures</span>
+    │   ├── <span class="f">layout_system.dart</span>         <span class="c">// Component</span>
+    │   ├── <span class="f">state_sync_system.dart</span>     <span class="c">// Component</span>
+    │   ├── <span class="f">card_animation_system.dart</span> <span class="c">// Component</span>
+    │   ├── <span class="f">combat_visual_system.dart</span>  <span class="c">// Component</span>
+    │   ├── <span class="f">encounter_system.dart</span>      <span class="c">// classe Dart pure, PAS Flame</span>
+    │   └── <span class="f">trait_system.dart</span>          <span class="c">// classe Dart pure, PAS Flame</span>
+    ├── <span class="d">controllers/</span>               <span class="c">// Riverpod — aucun import Flame</span>
+    └── <span class="d">services/</span>                  <span class="c">// Dart pur — aucun import Flame</span>
+</div>
+<div class="box"><div class="box-title">À retenir</div>
+<p>Le dossier s'appelle <code>lib/game/</code>, mais tout ce qu'il contient n'est pas du Flame. Seuls
+<code>components/</code> et quatre fichiers de <code>systems/</code> héritent de <code>Component</code>.
+<code>EncounterSystem</code> et <code>TraitSystem</code> sont de simples classes Dart, et <code>controllers/</code> est
+du Riverpod.</p></div>
+
+<h2 id="s2">2. <code>FlameGame</code> — la classe racine</h2>
+<p><code>FlameGame</code> est à Flame ce que <code>MaterialApp</code> est à Flutter : le point d'entrée. C'est
+<strong>aussi un composant</strong> (la racine de l'arbre), donc il a lui-même un <code>onLoad</code>, un
+<code>update</code>, un <code>render</code>. Dans ce projet, une seule classe en hérite.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/heros_draft_game.dart</span><span class="lang">dart</span></div>
+  <pre>class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
+  List&lt;EnemyData&gt; availableEnemies = [];
+  List&lt;HeroData&gt; availableHeroes = [];
+  HeroCard? heroCard;
+  List&lt;EnemyCard&gt; enemyCards = [];
+  List&lt;CardComponent&gt; handCards = [];
+  CardComponent? hoveredCard;
+  CardComponent? focusedCard;
+
+  StateSyncSystem? stateSyncSystem;
+  CardAnimationSystem? cardAnimationSystem;
+  CombatVisualSystem? combatVisualSystem;
+  LayoutSystem? layoutSystem;
+
+  TargetingLine get targetingLine =&gt; combatVisualSystem!.targetingLine;
+  Vector2 _lastPointerPos = Vector2.zero();
+
+  double get scaleFactor =&gt; (size.y / 800).clamp(0.85, 2.5);</pre>
+</div>
+<p>Trois familles de champs cohabitent :</p>
+<ul>
+<li><strong>Les données de référence</strong> (<code>availableEnemies</code>, <code>availableHeroes</code>) : injectées
+depuis Riverpod par <code>GameScreen</code>.</li>
+<li><strong>Les registres de composants</strong> (<code>heroCard</code>, <code>enemyCards</code>,
+<code>handCards</code>) : des listes tenues à la main en plus de l'arbre Flame, parce que parcourir
+<code>game.enemyCards</code> est plus direct que filtrer <code>children</code>.</li>
+<li><strong>L'état d'interaction</strong> (<code>hoveredCard</code>, <code>focusedCard</code>,
+<code>selectedEnemy</code>, <code>highlightedEnemy</code>, <code>isCardAnimating</code>).</li>
+</ul>
+<p>À cela s'ajoutent <strong>quatorze callbacks</strong> passés au constructeur (<code>onEnemiesDead</code>,
+<code>onPlayCard</code>, <code>onResolveEnemyIntent</code>…). C'est le pont vers Riverpod : Flame ne décide jamais des
+règles, il demande. Ce pont fait l'objet du chapitre 17.</p>
+<h3><code>onLoad()</code> : préparer la scène</h3>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/heros_draft_game.dart</span><span class="lang">dart</span></div>
+  <pre>@override
+Future&lt;void&gt; onLoad() async {
+  await super.onLoad();
+
+  final system = StateSyncSystem();
+  stateSyncSystem = system;
+  final animSys = CardAnimationSystem();
+  cardAnimationSystem = animSys;
+  final visualSys = CombatVisualSystem();
+  combatVisualSystem = visualSys;
+  final laySys = LayoutSystem();
+  layoutSystem = laySys;
+
+  await add(system);
+  await add(animSys);
+  await add(visualSys);
+  await add(laySys);
+
+  final List&lt;String&gt; imagesToPreload = ['bg_dungeon.png'];
+// ...</pre>
+</div>
+<p>Les quatre <em>systems</em> sont créés, mémorisés dans des champs, <strong>puis ajoutés à l'arbre</strong>. Le double
+stockage (champ + enfant) permet d'écrire <code>layoutSystem?.layoutHand()</code> sans aller chercher le composant dans
+<code>children</code>.</p>
+<p>Vient ensuite le préchargement des images. Elles ne sont pas listées en dur : elles sont <strong>extraites des JSON
+du jeu</strong>.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/heros_draft_game.dart</span><span class="lang">dart</span></div>
+  <pre>try {
+  final String enemiesRaw = await rootBundle.loadString(
+    'assets/data/enemies.json',
+  );
+  final List&lt;dynamic&gt; enemiesJson = jsonDecode(enemiesRaw);
+  for (final enemy in enemiesJson) {
+    final spritePath = enemy['spritePath'] as String?;
+    if (spritePath != null &amp;&amp; spritePath.isNotEmpty) {
+      imagesToPreload.add(spritePath);
+    }
+  }
+  // ... idem pour heroes.json / iconPath
+} catch (e) {
+  imagesToPreload.addAll([
+    'hero_paladin.png',
+    // ... 6 autres sprites de secours codés en dur
+  ]);
+}
+final uniqueImages = imagesToPreload.toSet().toList();
+await images.loadAll(uniqueImages);
+final bgSprite = Sprite(images.fromCache('bg_dungeon.png'));
+add(
+  SpriteComponent(sprite: bgSprite, size: size)
+    ..priority = GameConstants.priorityBackground,
+);</pre>
+</div>
+<h3>Le cache d'images</h3>
+<p><code>images</code> est un objet <code>Images</code> fourni par <code>FlameGame</code>. C'est un cache mémoire clé →
+<code>ui.Image</code>, où la clé est le chemin relatif à <code>assets/images/</code>. Trois méthodes suffisent à tout
+comprendre :</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Méthode</th><th>Nature</th><th>Comportement</th><th>Où dans le projet</th></tr></thead>
+<tbody>
+<tr><td><code>images.loadAll(list)</code></td><td><code>Future</code></td><td>Charge en parallèle et remplit le cache. On l'attend une fois pour toutes.</td><td><code>HerosDraftGame.onLoad</code></td></tr>
+<tr><td><code>images.fromCache(key)</code></td><td>synchrone</td><td>Retourne l'image déjà chargée. <strong>Lance une exception</strong> si la clé est absente.</td><td>fond de l'arène, <code>HeroCard.onLoad</code></td></tr>
+<tr><td><code>images.load(key)</code></td><td><code>Future</code></td><td>Retourne le cache s'il existe, sinon charge depuis les assets. Le filet de sécurité.</td><td><code>EnemyCard.onLoad</code></td></tr>
+</tbody>
+</table></div>
+<p>La logique du projet est cohérente : le fond et le héros utilisent <code>fromCache</code> parce que le préchargement
+les garantit ; l'ennemi utilise <code>load</code> parce qu'un boss ajouté plus tard dans un JSON pourrait échapper au
+préchargement.</p>
+<p>Notez aussi le <code>toSet().toList()</code> : plusieurs héros peuvent partager une icône, plusieurs ennemis un
+sprite. Dédupliquer évite des chargements redondants.</p>
+<h3><code>onGameResize</code> et <code>backgroundColor()</code></h3>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/heros_draft_game.dart</span><span class="lang">dart</span></div>
+  <pre>@override
+void onGameResize(Vector2 size) {
+  super.onGameResize(size);
+  if (heroCard != null) {
+    heroCard!.position = Vector2(size.x / 2, size.y * 0.51);
+  }
+  if (enemyCards.isNotEmpty) {
+    repositionEnemies();
+  }
+  layoutHand();
+
+  children.whereType&lt;SpriteComponent&gt;().forEach((bg) {
+    if (bg.priority == GameConstants.priorityBackground) bg.size = size;
+  });
+}
+// ...
+@override
+Color backgroundColor() =&gt; const Color(0xFF1E1E2C);</pre>
+</div>
+<p>Trois choses à voir ici :</p>
+<ol>
+<li>Le redimensionnement <strong>recalcule toute la mise en page</strong> : héros, ennemis, main. Rien n'est figé en
+pixels absolus, tout est en fractions de <code>size.y</code>.</li>
+<li>Le fond est retrouvé <strong>par sa priorité</strong> (<code>-100</code>) et non par une référence conservée. C'est
+astucieux mais fragile : n'importe quel autre <code>SpriteComponent</code> à <code>-100</code> serait redimensionné lui
+aussi.</li>
+<li><code>backgroundColor()</code> est la couleur peinte <em>sous</em> tout le reste (<code>#1E1E2C</code>). On la voit
+si le sprite de fond n'a pas le bon ratio.</li>
+</ol>
+<p>Enfin, <code>GameScreen._showPauseMenu()</code> pilote la boucle depuis Flutter : il appelle
+<code>_game.pauseEngine()</code> avant d'ouvrir le <code>PauseDialog</code>, puis <code>_game.resumeEngine()</code> dans
+le <code>.then()</code> de la boîte de dialogue. <code>pauseEngine()</code> arrête <code>update</code> et
+<code>render</code> : les effets en cours sont gelés, pas annulés. C'est exactement ce qu'on veut pour une pause.</p>
+
+<h2 id="s3">3. L'arbre de composants</h2>
+<p>Tout, dans Flame, est un <code>Component</code>. Un composant peut avoir des enfants, être ajouté, retiré, et il
+reçoit les appels du moteur. La hiérarchie de classes qui compte tient en trois niveaux.</p>
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 820 356" width="820" role="img" aria-label="Hiérarchie des classes Flame utilisées dans le projet">
+      <defs>
+        <marker id="c5-a2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0 0 L8 4 L0 8 z" fill="#3a4966"/>
+        </marker>
+      </defs>
+      <rect x="320" y="18" width="180" height="40" rx="8" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="410" y="43" fill="#e6ecf5" font-size="14" text-anchor="middle" font-family="ui-monospace, monospace">Component</text>
+      <path d="M410 58 L410 78 L150 78 L150 96" stroke="#3a4966" stroke-width="1.6" fill="none" marker-end="url(#c5-a2)"/>
+      <path d="M410 58 L410 96" stroke="#3a4966" stroke-width="1.6" fill="none" marker-end="url(#c5-a2)"/>
+      <rect x="14" y="98" width="272" height="88" rx="8" fill="#101827" stroke="#a78bfa"/>
+      <text x="150" y="120" fill="#a78bfa" font-size="12.5" text-anchor="middle">sans transform (pas de position)</text>
+      <text x="150" y="141" fill="#e6ecf5" font-size="11.5" text-anchor="middle" font-family="ui-monospace, monospace">TargetingLine · RibbonTrail</text>
+      <text x="150" y="159" fill="#e6ecf5" font-size="11.5" text-anchor="middle" font-family="ui-monospace, monospace">LayoutSystem · StateSyncSystem</text>
+      <text x="150" y="177" fill="#e6ecf5" font-size="11.5" text-anchor="middle" font-family="ui-monospace, monospace">CardAnimationSystem · CombatVisualSystem</text>
+      <rect x="310" y="98" width="200" height="40" rx="8" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="410" y="123" fill="#e6ecf5" font-size="14" text-anchor="middle" font-family="ui-monospace, monospace">PositionComponent</text>
+      <path d="M410 138 L410 158 L126 158 L126 190" stroke="#3a4966" stroke-width="1.6" fill="none" marker-end="url(#c5-a2)"/>
+      <path d="M410 138 L410 158 L330 158 L330 190" stroke="#3a4966" stroke-width="1.6" fill="none" marker-end="url(#c5-a2)"/>
+      <path d="M410 138 L410 158 L520 158 L520 190" stroke="#3a4966" stroke-width="1.6" fill="none" marker-end="url(#c5-a2)"/>
+      <path d="M410 138 L410 158 L710 158 L710 190" stroke="#3a4966" stroke-width="1.6" fill="none" marker-end="url(#c5-a2)"/>
+      <rect x="18" y="192" width="216" height="36" rx="7" fill="#151b2b" stroke="#34d399"/>
+      <text x="126" y="215" fill="#e6ecf5" font-size="12.5" text-anchor="middle" font-family="ui-monospace, monospace">classes du projet</text>
+      <rect x="248" y="192" width="164" height="36" rx="7" fill="#151b2b" stroke="#60a5fa"/>
+      <text x="330" y="215" fill="#e6ecf5" font-size="12.5" text-anchor="middle" font-family="ui-monospace, monospace">SpriteComponent</text>
+      <rect x="440" y="192" width="160" height="36" rx="7" fill="#151b2b" stroke="#60a5fa"/>
+      <text x="520" y="215" fill="#e6ecf5" font-size="12.5" text-anchor="middle" font-family="ui-monospace, monospace">TextComponent</text>
+      <rect x="618" y="192" width="184" height="36" rx="7" fill="#151b2b" stroke="#60a5fa"/>
+      <text x="710" y="215" fill="#e6ecf5" font-size="12.5" text-anchor="middle" font-family="ui-monospace, monospace">Rectangle/CircleComponent</text>
+      <rect x="18" y="240" width="216" height="98" rx="7" fill="#0e1524" stroke="#243049"/>
+      <text x="126" y="260" fill="#a7b4c9" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">CardComponent · StatBadge</text>
+      <text x="126" y="278" fill="#a7b4c9" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">CombatEntity ↳ Hero/EnemyCard</text>
+      <text x="126" y="296" fill="#a7b4c9" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">BaseVisualEffect ↳ SlashEffect</text>
+      <text x="126" y="314" fill="#a7b4c9" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">StatusIndicator · barres de PV</text>
+      <rect x="248" y="240" width="164" height="98" rx="7" fill="#0e1524" stroke="#243049"/>
+      <text x="330" y="260" fill="#a7b4c9" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">fond bg_dungeon.png</text>
+      <text x="330" y="278" fill="#a7b4c9" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">HeroCard.sprite</text>
+      <text x="330" y="296" fill="#a7b4c9" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">EnemyCard.sprite</text>
+      <rect x="440" y="240" width="160" height="98" rx="7" fill="#0e1524" stroke="#243049"/>
+      <text x="520" y="260" fill="#a7b4c9" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">FloatingText</text>
+      <text x="520" y="278" fill="#a7b4c9" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">_StatusIcon (emoji)</text>
+      <text x="520" y="296" fill="#a7b4c9" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">textes des badges</text>
+      <rect x="618" y="240" width="184" height="98" rx="7" fill="#0e1524" stroke="#243049"/>
+      <text x="710" y="260" fill="#a7b4c9" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">borderInfo (héros/ennemi)</text>
+      <text x="710" y="278" fill="#a7b4c9" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">fond des badges circulaires</text>
+      <text x="710" y="296" fill="#a7b4c9" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">HealthBarComponent (inutilisé)</text>
+    </svg>
+  </div>
+  <figcaption>Les trois branches de <code>Component</code> utilisées dans Hero's Draft. La colonne de gauche regroupe les composants sans position : ils ne servent qu'à orchestrer ou à peindre en coordonnées absolues.</figcaption>
+</figure>
+<h3>Les cinq propriétés d'un <code>PositionComponent</code></h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Propriété</th><th>Type</th><th>Rôle</th><th>Exemple réel</th></tr></thead>
+<tbody>
+<tr><td><code>position</code></td><td><code>Vector2</code></td><td>Position de l'ancre dans le repère du parent</td><td><code>heroCard.position = Vector2(size.x / 2, size.y * 0.51)</code></td></tr>
+<tr><td><code>size</code></td><td><code>Vector2</code></td><td>Dimensions logiques, avant <code>scale</code></td><td><code>CardComponent</code> : 140 × 196 ; <code>HeroCard</code> : 120 × 160 ; <code>EnemyCard</code> : 100 × 140</td></tr>
+<tr><td><code>scale</code></td><td><code>Vector2</code></td><td>Facteur d'agrandissement</td><td><code>scale = Vector2.all(game.scaleFactor * 0.88)</code></td></tr>
+<tr><td><code>angle</code></td><td><code>double</code></td><td>Rotation en <strong>radians</strong>, autour de l'ancre</td><td>l'inclinaison des cartes en éventail (0,08 rad par cran)</td></tr>
+<tr><td><code>anchor</code></td><td><code>Anchor</code></td><td>Point de référence de la position et de la rotation</td><td><code>anchor = Anchor.center</code> dans <code>CardComponent</code>, <code>HeroCard</code>, <code>EnemyCard</code>, <code>FloatingText</code></td></tr>
+</tbody>
+</table></div>
+<div class="box warn"><div class="box-title">Piège classique</div>
+<p>Par défaut, <code>anchor</code> vaut <code>Anchor.topLeft</code>. Une rotation se fait alors autour du coin supérieur
+gauche, ce qui donne des cartes qui « balaient » l'écran au lieu de pivoter sur elles-mêmes. Toutes les entités animées
+du projet posent <code>anchor = Anchor.center</code> dès le constructeur ou dans <code>onLoad</code>. Attention :
+changer l'ancre change aussi le sens de <code>position</code>, qui désigne désormais le <em>centre</em> de l'objet.</p></div>
+<h3>Ajouter et retirer</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Appel</th><th>Effet</th><th>Exemple</th></tr></thead>
+<tbody>
+<tr><td><code>add(child)</code></td><td>Ajoute un enfant (retourne un <code>Future</code> que l'on peut attendre)</td><td><code>await add(system)</code> dans <code>onLoad</code></td></tr>
+<tr><td><code>addAll([...])</code></td><td>Ajoute plusieurs enfants d'un coup</td><td>disponible, peu utilisé ici</td></tr>
+<tr><td><code>removeFromParent()</code></td><td>L'enfant se retire lui-même</td><td><code>card.removeFromParent()</code> à la fin de l'animation de jeu</td></tr>
+<tr><td><code>removeAll(iterable)</code></td><td>Retire un lot d'enfants</td><td><code>card.removeAll(card.children.whereType&lt;MoveEffect&gt;())</code></td></tr>
+<tr><td><code>children.whereType&lt;T&gt;()</code></td><td>Filtre les enfants par type</td><td>retrouver et supprimer les effets en cours</td></tr>
+</tbody>
+</table></div>
+<p>L'exemple le plus parlant d'arbre imbriqué est <code>HeroCard</code> : le composant lui-même ne dessine (presque)
+rien, ce sont ses enfants qui portent le visuel.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/entities/hero_card.dart</span><span class="lang">dart</span></div>
+  <pre>@override
+Future&lt;void&gt; onLoad() async {
+  anchor = Anchor.center;
+  scale = Vector2.all(game.scaleFactor * 1.3);
+
+  // Position par défaut au centre pour le joueur (sera mise à jour par onGameResize du jeu)
+  position = Vector2(game.size.x / 2, game.size.y * 0.6);
+
+  sprite = SpriteComponent(
+    sprite: Sprite(game.images.fromCache(imagePath)),
+    size: size,
+  );
+  add(sprite);
+
+  // Encadré de la carte
+  borderInfo = RectangleComponent(
+    size: size,
+    paint: Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2,
+  );
+  add(borderInfo);
+}</pre>
+</div>
+<p>Un enfant hérite de la transformation de son parent. Quand <code>HeroCard</code> tremble grâce à un
+<code>MoveEffect</code>, son sprite et son cadre tremblent avec lui : on n'anime qu'un seul objet.</p>
+<h3>Les <em>systems</em> sont des composants sans rendu</h3>
+<p>C'est le point le plus contre-intuitif pour un débutant. <code>LayoutSystem</code> ne dessine rien, n'a pas de
+position, pas de taille. Pourtant c'est un <code>Component</code> ajouté à l'arbre :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/layout_system.dart</span><span class="lang">dart</span></div>
+  <pre>class LayoutSystem extends Component with HasGameReference&lt;HerosDraftGame&gt; {
+  void layoutHand() {
+    final handCards = game.handCards;
+    if (handCards.isEmpty) return;
+// ...</pre>
+</div>
+<p>Pourquoi ? Pour deux raisons très concrètes :</p>
+<ul>
+<li>Le mixin <code>HasGameReference&lt;HerosDraftGame&gt;</code> ne fonctionne que sur un composant <strong>monté dans
+l'arbre</strong>. C'est lui qui fournit le getter <code>game</code> typé.</li>
+<li>Un <code>Component</code> reçoit <code>update(dt)</code> à chaque image. <code>StateSyncSystem</code> s'en sert pour
+appliquer les états Riverpod <em>au bon moment</em> du cycle, jamais en plein rendu.</li>
+</ul>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/state_sync_system.dart</span><span class="lang">dart</span></div>
+  <pre>class StateSyncSystem extends Component with HasGameReference&lt;HerosDraftGame&gt; {
+  RunState? currentState;
+  RunState? nextState;
+  DeckState? nextDeckState;
+  CombatState? currentCombatState;
+  CombatState? nextCombatState;
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    if (nextState != null &amp;&amp; game.hasLayout) {
+      _applyState(nextState!);
+      nextState = null;
+    }
+    if (nextDeckState != null &amp;&amp; game.hasLayout) {
+      _applyDeckState(nextDeckState!);
+      nextDeckState = null;
+    }
+    if (nextCombatState != null &amp;&amp; game.hasLayout) {
+      _applyCombatState(nextCombatState!);
+      nextCombatState = null;
+    }
+  }</pre>
+</div>
+<p>Quand Riverpod pousse un nouvel état, <code>game.syncState(state)</code> ne fait qu'écrire dans
+<code>nextState</code>. L'application réelle attend la prochaine image <em>et</em> la garde <code>game.hasLayout</code>,
+qui certifie que le jeu connaît enfin sa taille. Sans cette garde, un <code>size.y</code> encore nul ferait exploser
+tous les calculs de mise en page.</p>
+
+<h2 id="s4">4. Le cycle de vie d'un composant</h2>
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 820 260" width="820" role="img" aria-label="Cycle de vie d'un composant Flame : onLoad, onMount, boucle update/render, onRemove">
+      <defs>
+        <marker id="c5-a3" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#3a4966"/>
+        </marker>
+        <marker id="c5-a4" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#f59e0b"/>
+        </marker>
+      </defs>
+      <rect x="24" y="72" width="126" height="46" rx="8" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="87" y="94" fill="#e6ecf5" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">onLoad()</text>
+      <text x="87" y="110" fill="#a7b4c9" font-size="10.5" text-anchor="middle">async, 1 fois</text>
+      <path d="M150 95 L186 95" stroke="#3a4966" stroke-width="2" marker-end="url(#c5-a3)"/>
+      <rect x="190" y="72" width="120" height="46" rx="8" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="250" y="94" fill="#e6ecf5" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">onMount()</text>
+      <text x="250" y="110" fill="#a7b4c9" font-size="10.5" text-anchor="middle">dans l'arbre</text>
+      <path d="M310 95 L348 95" stroke="#3a4966" stroke-width="2" marker-end="url(#c5-a3)"/>
+      <rect x="340" y="58" width="300" height="76" rx="10" fill="#101827" stroke="#f59e0b" stroke-dasharray="5 3"/>
+      <rect x="356" y="76" width="126" height="42" rx="7" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="419" y="102" fill="#e6ecf5" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">update(dt)</text>
+      <path d="M482 97 L500 97" stroke="#f59e0b" stroke-width="2" marker-end="url(#c5-a4)"/>
+      <rect x="502" y="76" width="126" height="42" rx="7" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="565" y="102" fill="#e6ecf5" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">render(c)</text>
+      <path d="M565 76 C565 40, 419 40, 419 74" stroke="#f59e0b" stroke-width="1.8" fill="none" marker-end="url(#c5-a4)"/>
+      <text x="492" y="34" fill="#f59e0b" font-size="11.5" text-anchor="middle">≈ 16,7 ms par tour à 60 Hz</text>
+      <path d="M640 95 L676 95" stroke="#3a4966" stroke-width="2" marker-end="url(#c5-a3)"/>
+      <rect x="680" y="72" width="118" height="46" rx="8" fill="#151b2b" stroke="#f87171"/>
+      <text x="739" y="94" fill="#e6ecf5" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">onRemove()</text>
+      <text x="739" y="110" fill="#a7b4c9" font-size="10.5" text-anchor="middle">nettoyage</text>
+      <rect x="240" y="182" width="340" height="46" rx="8" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="410" y="204" fill="#e6ecf5" font-size="13" text-anchor="middle" font-family="ui-monospace, monospace">onGameResize(Vector2 size)</text>
+      <text x="410" y="220" fill="#a7b4c9" font-size="10.5" text-anchor="middle">au montage, puis à chaque changement de taille</text>
+      <path d="M300 182 L300 140 L87 140 L87 120" stroke="#a78bfa" stroke-width="1.5" fill="none" stroke-dasharray="4 3" marker-end="url(#c5-a3)"/>
+      <path d="M520 182 L520 152 L490 152" stroke="#a78bfa" stroke-width="1.5" fill="none" stroke-dasharray="4 3"/>
+    </svg>
+  </div>
+  <figcaption>Le cycle de vie. <code>onGameResize</code> est le seul rappel qui peut survenir très tôt, avant même la fin de <code>onLoad</code>.</figcaption>
+</figure>
+<div class="table-wrap"><table>
+<thead><tr><th>Rappel</th><th>Quand</th><th>Signature</th><th>Usage dans le projet</th></tr></thead>
+<tbody>
+<tr><td><code>onLoad()</code></td><td>Une fois, à l'ajout</td><td><code>Future&lt;void&gt;</code></td><td>Charger les images, créer les enfants, poser l'échelle initiale</td></tr>
+<tr><td><code>onMount()</code></td><td>Quand le composant entre dans l'arbre</td><td><code>void</code></td><td>Non redéfini ici</td></tr>
+<tr><td><code>update(double dt)</code></td><td>Chaque image</td><td><code>void</code></td><td>Interpolations manuelles, oscillations, synchronisation d'état</td></tr>
+<tr><td><code>render(Canvas)</code></td><td>Chaque image, après <code>update</code></td><td><code>void</code></td><td>Dessin manuel des cartes, glows, courbes, rubans</td></tr>
+<tr><td><code>onGameResize(Vector2)</code></td><td>Au montage et à chaque redimensionnement</td><td><code>void</code></td><td>Recalcul de <code>scale</code> et de la mise en page</td></tr>
+<tr><td><code>onRemove()</code></td><td>Au retrait de l'arbre</td><td><code>void</code></td><td><code>HerosDraftGame</code> remet les états synchronisés à <code>null</code></td></tr>
+</tbody>
+</table></div>
+<h3><code>dt</code> : le delta time</h3>
+<p><code>dt</code> est le temps écoulé <strong>en secondes</strong> depuis l'image précédente. À 60 Hz, il vaut environ
+<code>0.0167</code>. À 120 Hz, <code>0.0083</code>. Et sur une image qui rame, il peut monter à <code>0.05</code>.</p>
+<p>C'est pour ça qu'on ne doit jamais écrire <code>position.x += 3</code> : la vitesse dépendrait du matériel. On écrit
+<code>position.x += 180 * dt</code>, ce qui signifie « 180 pixels par seconde » quelle que soit la machine.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/card_component.dart</span><span class="lang">dart</span></div>
+  <pre>@override
+void update(double dt) {
+  super.update(dt);
+  if (isDragging) {
+    angle += (targetTilt - angle) * 15 * dt;
+    targetTilt += (0 - targetTilt) * 5 * dt;
+
+    animator.spawnTrailParticles();
+    activeTrail?.addPoint(position);
+  }
+  if (game.hoveredCard == this) {
+    foilTime += dt * 3.0;
+  }
+}</pre>
+</div>
+<p>Décortiquons la ligne clé.</p>
+<div class="code" data-lang="text">
+  <div class="code-head"><span class="path">illustration</span><span class="lang">text</span></div>
+  <pre>angle += (targetTilt - angle) * 15 * dt;
+         └────── écart ──────┘  └── vitesse de rattrapage ──┘
+  écart          : de combien on est loin de la cible
+  15             : on rattrape 15 fois l'écart par seconde
+  dt             : fraction de seconde écoulée depuis la dernière image</pre>
+</div>
+<p>C'est une interpolation exponentielle : on parcourt à chaque image une <em>fraction</em> de la distance restante. Le
+mouvement démarre vite, ralentit près de la cible et ne l'atteint jamais tout à fait — la sensation d'une carte qui «
+suit » le doigt avec un léger retard. La deuxième ligne fait de même avec une constante de <code>5</code> :
+l'inclinaison revient doucement vers zéro, si bien que la carte se redresse toute seule dès qu'on arrête de bouger.
+Cette inclinaison est alimentée par le geste :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/widgets/card_interaction_handler.dart</span><span class="lang">dart</span></div>
+  <pre>void onDragUpdate(DragUpdateEvent event) {
+  if (cardComponent.isEnteringHand || cardComponent.isPlayed) return;
+  if (!cardComponent.isDragging) return;
+
+  cardComponent.position += event.canvasDelta;
+  cardComponent.targetTilt = (event.canvasDelta.x * 0.08).clamp(-0.4, 0.4);
+// ...</pre>
+</div>
+<p>Le déplacement horizontal du doigt est multiplié par <code>0.08</code> et borné à <code>±0.4</code> radian (≈ 23°).
+La carte ne peut donc jamais partir en vrille.</p>
+<div class="box warn"><div class="box-title">Ne jamais bloquer la boucle de jeu</div>
+<p>Tout ce qui s'exécute dans <code>update</code> ou <code>render</code> se paie sur le budget de l'image : environ
+<strong>16,7 ms à 60 Hz</strong>, pour <em>tous</em> les composants réunis. Un <code>await</code> bloquant, une boucle
+sur 10 000 éléments, un décodage JSON ou un <code>Thread.sleep</code> déguisé, et l'écran saute.</p>
+<p>La convention du dépôt est explicite : <em>« Favor non-blocking animations in Flame code (<code>Effect</code>,
+<code>Future.delayed</code> inside <code>async</code> methods) — never block the game loop. »</em> C'est pour cela que
+la phase ennemie de <code>HerosDraftGame</code> est une méthode <code>async</code> qui enchaîne des <code>await
+Future.delayed(...)</code> : pendant ces pauses, la boucle continue de tourner et les animations se jouent. Rien n'est
+gelé.</p>
+<p>Même logique pour <code>StateSyncSystem</code> : au lieu d'appliquer un nouvel état Riverpod immédiatement
+(potentiellement en plein rendu), il le met en file d'attente et le traite au prochain <code>update</code>.</p></div>
+<h3>La garde <code>_lastSize</code></h3>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/card_component.dart</span><span class="lang">dart</span></div>
+  <pre>@override
+Future&lt;void&gt; onLoad() async {
+  scale = Vector2.all(game.scaleFactor * 0.88);
+  refreshVisuals();
+}
+
+Vector2 _lastSize = Vector2.zero();
+
+@override
+void onGameResize(Vector2 size) {
+  if (_lastSize == size) return;
+  _lastSize = size.clone();
+  super.onGameResize(size);
+
+  if (!isDragging &amp;&amp; game.focusedCard != this) {
+    scale = Vector2.all(game.scaleFactor * 0.88);
+  }
+}</pre>
+</div>
+<p><code>onGameResize</code> peut être appelé plus souvent qu'on ne le croit : au montage du composant, à la rotation de
+l'appareil, à l'apparition du clavier, au redimensionnement d'une fenêtre desktop — et parfois plusieurs fois de suite
+avec la <em>même</em> valeur. Sans garde, chaque appel écraserait le <code>scale</code>, y compris pendant qu'un
+<code>ScaleEffect</code> est en train de l'animer : la carte survolée « retomberait » brutalement à sa taille
+normale.</p>
+<p>La garde fait deux choses :</p>
+<ol>
+<li><strong>Filtrer les appels redondants</strong> : si la taille n'a pas changé, on sort immédiatement.</li>
+<li><strong>Protéger les états spéciaux</strong> : une carte en cours de glissement (<code>isDragging</code>) ou
+sélectionnée (<code>focusedCard</code>) garde son échelle agrandie.</li>
+</ol>
+<p>Notez le <code>size.clone()</code> : <code>Vector2</code> est <strong>mutable</strong>. Stocker la référence au lieu
+d'une copie donnerait un <code>_lastSize</code> qui change tout seul, et la garde serait toujours vraie. C'est un piège
+classique de Flame, où presque tous les vecteurs sont mutables.</p>
+<div class="box"><div class="box-title">À retenir</div>
+<p>Dans Flame, <code>Vector2</code> et <code>Rect</code> sont mutables et souvent partagés. Quand on mémorise un vecteur
+pour comparaison ultérieure, il faut <code>clone()</code>. Le projet applique la même règle dans
+<code>CombatEntity.spawnDamageParticles</code> (<code>final centerPos = position.clone();</code>) et dans
+<code>CardAnimator</code> (<code>card.position.clone()</code>).</p></div>
+
+<h2 id="s5">5. <code>priority</code> : le z-index de Flame</h2>
+<p>Un canvas est plat : ce qui est dessiné en dernier recouvre le reste. <code>priority</code> est l'entier qui décide
+de cet ordre. <strong>Plus la valeur est grande, plus le composant est peint tard, donc au-dessus.</strong> La valeur
+par défaut est <code>0</code>, et les négatifs sont autorisés.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/game_constants.dart</span><span class="lang">dart</span></div>
+  <pre>class GameConstants {
+  // --- Z-INDEX PRIORITIES ---
+  static const int priorityBackground = -100;
+  static const int priorityCardBase = 10;
+  static const int priorityCardHovered = 100;
+  static const int priorityCardFocused = 150;
+  static const int priorityCardTrail = 200;
+  static const int priorityTargetingLine = 300;
+  static const int priorityCardDraggingMax = 500;</pre>
+</div>
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 820 424" width="820" role="img" aria-label="Table des priorités de rendu, de -100 pour le fond à 500 pour la carte jouée">
+      <defs>
+        <marker id="c5-a5" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#f59e0b"/>
+        </marker>
+      </defs>
+      <path d="M22 380 L22 34" stroke="#f59e0b" stroke-width="2" marker-end="url(#c5-a5)"/>
+      <text x="14" y="216" fill="#f59e0b" font-size="11.5" text-anchor="middle" transform="rotate(-90 14 216)">peint plus tard = au-dessus</text>
+      <rect x="40" y="26" width="762" height="40" rx="7" fill="#151b2b" stroke="#f87171"/>
+      <text x="88" y="51" fill="#f87171" font-size="14" text-anchor="middle" font-family="ui-monospace, monospace">500</text>
+      <text x="150" y="51" fill="#e6ecf5" font-size="12.5" font-family="ui-monospace, monospace">priorityCardDraggingMax</text>
+      <text x="400" y="51" fill="#a7b4c9" font-size="12">carte en cours d'animation de jeu — CardAnimator.playAnimation</text>
+      <rect x="40" y="72" width="762" height="40" rx="7" fill="#151b2b" stroke="#a78bfa"/>
+      <text x="88" y="97" fill="#a78bfa" font-size="14" text-anchor="middle" font-family="ui-monospace, monospace">300</text>
+      <text x="150" y="97" fill="#e6ecf5" font-size="12.5" font-family="ui-monospace, monospace">priorityTargetingLine</text>
+      <text x="400" y="97" fill="#a7b4c9" font-size="12">TargetingLine — CombatVisualSystem.onLoad</text>
+      <rect x="40" y="118" width="762" height="40" rx="7" fill="#151b2b" stroke="#22d3ee"/>
+      <text x="88" y="143" fill="#22d3ee" font-size="14" text-anchor="middle" font-family="ui-monospace, monospace">200</text>
+      <text x="150" y="143" fill="#e6ecf5" font-size="12.5" font-family="ui-monospace, monospace">priorityCardTrail</text>
+      <text x="400" y="143" fill="#a7b4c9" font-size="12">FloatingText, EffectIcon, carte glissée — écrits en dur</text>
+      <rect x="40" y="164" width="762" height="40" rx="7" fill="#151b2b" stroke="#60a5fa"/>
+      <text x="88" y="189" fill="#60a5fa" font-size="14" text-anchor="middle" font-family="ui-monospace, monospace">150</text>
+      <text x="150" y="189" fill="#e6ecf5" font-size="12.5" font-family="ui-monospace, monospace">priorityCardFocused</text>
+      <text x="400" y="189" fill="#a7b4c9" font-size="12">carte sélectionnée — CardAnimationSystem.setFocusedCard</text>
+      <rect x="40" y="210" width="762" height="40" rx="7" fill="#151b2b" stroke="#60a5fa"/>
+      <text x="88" y="235" fill="#60a5fa" font-size="14" text-anchor="middle" font-family="ui-monospace, monospace">100</text>
+      <text x="150" y="235" fill="#e6ecf5" font-size="12.5" font-family="ui-monospace, monospace">priorityCardHovered</text>
+      <text x="400" y="235" fill="#a7b4c9" font-size="12">carte survolée — CardAnimationSystem.setHoveredCard</text>
+      <rect x="40" y="256" width="762" height="40" rx="7" fill="#151b2b" stroke="#34d399"/>
+      <text x="88" y="281" fill="#34d399" font-size="14" text-anchor="middle" font-family="ui-monospace, monospace">10+i</text>
+      <text x="150" y="281" fill="#e6ecf5" font-size="12.5" font-family="ui-monospace, monospace">priorityCardBase</text>
+      <text x="400" y="281" fill="#a7b4c9" font-size="12">cartes de la main, de gauche à droite — LayoutSystem</text>
+      <rect x="40" y="302" width="762" height="40" rx="7" fill="#151b2b" stroke="#3a4966"/>
+      <text x="88" y="327" fill="#a7b4c9" font-size="14" text-anchor="middle" font-family="ui-monospace, monospace">0</text>
+      <text x="150" y="327" fill="#e6ecf5" font-size="12.5" font-family="ui-monospace, monospace">(défaut)</text>
+      <text x="400" y="327" fill="#a7b4c9" font-size="12">HeroCard, EnemyCard, les 4 systems, ParticleSystemComponent</text>
+      <rect x="40" y="348" width="762" height="40" rx="7" fill="#151b2b" stroke="#f59e0b"/>
+      <text x="88" y="373" fill="#f59e0b" font-size="14" text-anchor="middle" font-family="ui-monospace, monospace">-100</text>
+      <text x="150" y="373" fill="#e6ecf5" font-size="12.5" font-family="ui-monospace, monospace">priorityBackground</text>
+      <text x="400" y="373" fill="#a7b4c9" font-size="12">SpriteComponent bg_dungeon.png — HerosDraftGame.onLoad</text>
+    </svg>
+  </div>
+  <figcaption>Les couches de rendu de l'arène. Le fond est loin en dessous ; la carte en train d'être jouée passe au-dessus de tout.</figcaption>
+</figure>
+<div class="table-wrap"><table>
+<thead><tr><th>Valeur</th><th>Constante</th><th>Posée où, exactement</th></tr></thead>
+<tbody>
+<tr><td><code>-100</code></td><td><code>priorityBackground</code></td><td><code>heros_draft_game.dart</code> : <code>SpriteComponent(...)..priority = GameConstants.priorityBackground</code>, et relue dans <code>onGameResize</code> pour retrouver le fond</td></tr>
+<tr><td><code>0</code></td><td>—</td><td>Valeur par défaut : héros, ennemis, systems, particules</td></tr>
+<tr><td><code>10</code> puis <code>10+i</code></td><td><code>priorityCardBase</code></td><td><code>card_component.dart</code> : <code>int basePriority = 10;</code> — <code>layout_system.dart</code> : <code>card.basePriority = 10 + i;</code></td></tr>
+<tr><td><code>100</code></td><td><code>priorityCardHovered</code></td><td><code>card_animation_system.dart</code> : <code>card.priority = GameConstants.priorityCardHovered;</code></td></tr>
+<tr><td><code>150</code></td><td><code>priorityCardFocused</code></td><td><code>card_animation_system.dart</code> : <code>card.priority = GameConstants.priorityCardFocused;</code></td></tr>
+<tr><td><code>200</code></td><td><code>priorityCardTrail</code></td><td>Écrit en dur : <code>card_interaction_handler.dart</code> (carte glissée), <code>combat_entity.dart</code> (<code>ft.priority = 200</code>), <code>hero_card.dart</code> et <code>enemy_card.dart</code> (<code>effectIcon.priority = 200</code>)</td></tr>
+<tr><td><code>300</code></td><td><code>priorityTargetingLine</code></td><td><code>combat_visual_system.dart</code> : <code>add(targetingLine..priority = GameConstants.priorityTargetingLine);</code></td></tr>
+<tr><td><code>500</code></td><td><code>priorityCardDraggingMax</code></td><td><code>card_animator.dart</code> : <code>card.priority = GameConstants.priorityCardDraggingMax;</code> au début de <code>playAnimation</code></td></tr>
+</tbody>
+</table></div>
+<h3>Le détail élégant : <code>10 + i</code></h3>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/layout_system.dart</span><span class="lang">dart</span></div>
+  <pre>for (int i = 0; i &lt; count; i++) {
+  final card = handCards[i];
+  card.basePriority = 10 + i;
+// ...
+  if (card != game.hoveredCard &amp;&amp; card != game.focusedCard) {
+    card.priority = card.basePriority;
+  }
+}</pre>
+</div>
+<p>Chaque carte de la main reçoit une priorité croissante de gauche à droite. Dans un éventail où les cartes se
+chevauchent, c'est ce qui produit l'empilement naturel « en escalier » : la carte de droite recouvre sa voisine de
+gauche. Et comme <code>basePriority</code> est mémorisé, la carte peut être propulsée à 100 ou 150 au survol, puis
+<strong>retrouver sa place exacte</strong> dans l'empilement quand la souris s'en va.</p>
+<h3>Priorité et hiérarchie</h3>
+<p>Point capital, souvent mal compris : <code>priority</code> <strong>ne trie que les enfants d'un même parent</strong>.
+Le rendu est un parcours en profondeur — un parent se dessine, puis ses enfants dans l'ordre de leurs priorités. Une
+priorité de 500 sur un enfant enfoui ne le fera jamais passer au-dessus d'un composant racine.</p>
+<div class="box danger"><div class="box-title">Point d'attention</div>
+<p>Trois anomalies cohabitent dans cette table de priorités :</p>
+<p><strong>1.</strong> <code>priorityCardBase</code> et <code>priorityCardTrail</code> ne sont jamais utilisées <em>par
+leur nom</em>. Le code écrit <code>10</code> et <code>200</code> en dur à cinq endroits. Renommer ou changer une de ces
+constantes ne changerait rien au comportement du jeu — c'est exactement le genre de faux filet de sécurité qui trompe un
+nouveau venu.</p>
+<p><strong>2.</strong> <code>TargetingLine</code> est ajoutée comme <em>enfant de <code>CombatVisualSystem</code></em>,
+lequel garde la priorité par défaut <code>0</code>. Or la priorité ne trie qu'entre frères et sœurs : le
+<code>300</code> de la ligne ne la classe que parmi les enfants de <code>CombatVisualSystem</code> — où elle est seule.
+C'est le <code>0</code> du system qui décide en pratique, donc la ligne de ciblage passe <em>sous</em> les cartes de la
+main (priorité 10+), et non au-dessus comme la constante le laisse croire.</p>
+<p><strong>3.</strong> <code>HealthBarComponent</code> (<code>lib/game/components/entities/health_bar.dart</code>) est
+un composant complet — fond, barre de progression, bordure, texte — qui n'est référencé nulle part ailleurs dans
+<code>lib/</code>. Les barres de vie effectivement affichées viennent de <code>StatBadge</code> et
+<code>LinearProgressBarComponent</code>. C'est du code mort.</p></div>
+
+<h2 id="s6">6. Les mixins d'entrée</h2>
+<p>Un composant Flame ne reçoit <strong>aucun événement d'entrée</strong> par défaut. Il faut le déclarer explicitement,
+mixin par mixin. C'est verbeux mais performant : Flame ne teste que les composants qui ont demandé à être testés.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Mixin</th><th>Ce qu'il apporte</th><th>Qui le déclare ici</th></tr></thead>
+<tbody>
+<tr><td><code>TapCallbacks</code></td><td><code>onTapDown</code>, <code>onTapUp</code>, <code>onTapCancel</code></td><td><code>HerosDraftGame</code>, <code>CardComponent</code>, <code>HeroCard</code>, <code>EnemyCard</code></td></tr>
+<tr><td><code>DragCallbacks</code></td><td><code>onDragStart</code>, <code>onDragUpdate</code>, <code>onDragEnd</code>, <code>onDragCancel</code></td><td><code>CardComponent</code></td></tr>
+<tr><td><code>HoverCallbacks</code></td><td><code>onHoverEnter</code>, <code>onHoverExit</code>, champ <code>isHovered</code></td><td><code>CardComponent</code></td></tr>
+<tr><td><code>PointerMoveCallbacks</code></td><td><code>onPointerMove</code> — suit le curseur même sans clic</td><td><code>HerosDraftGame</code></td></tr>
+<tr><td><code>HasGameReference&lt;T&gt;</code></td><td>Le getter <code>game</code>, typé <code>T</code></td><td><code>CardComponent</code>, <code>CombatEntity</code>, les 4 systems</td></tr>
+<tr><td><code>HasPaint</code></td><td>Un <code>Paint</code> intégré et une <code>opacity</code> pilotable</td><td><code>EnemyCard</code>, <code>FloatingText</code>, <code>BaseVisualEffect</code>, <code>EffectIcon</code></td></tr>
+<tr><td><code>OpacityProvider</code></td><td><em>Interface</em> (pas un mixin) : contrat <code>opacity</code> lu/écrit par <code>OpacityEffect</code></td><td><code>CardComponent</code> l'implémente à la main</td></tr>
+</tbody>
+</table></div>
+<h3>La déclaration de <code>CardComponent</code></h3>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/card_component.dart</span><span class="lang">dart</span></div>
+  <pre>class CardComponent extends PositionComponent
+    with
+        DragCallbacks,
+        TapCallbacks,
+        HoverCallbacks,
+        HasGameReference&lt;HerosDraftGame&gt;
+    implements OpacityProvider {
+  final CardInstance card;
+
+  double _opacity = 1.0;
+
+  @override
+  double get opacity =&gt; _opacity;
+  // ...
+  @override
+  set opacity(double value) {
+    if (_opacity == value) return;
+    _opacity = value;
+  }</pre>
+</div>
+<p>Pourquoi implémenter <code>OpacityProvider</code> à la main ? Parce que <code>PositionComponent</code> n'a pas de
+notion d'opacité : seuls les composants avec <code>HasPaint</code> en ont une. Or <code>CardComponent</code> dessine
+tout à la main, avec ses propres <code>Paint</code>. Sans ce contrat, <code>OpacityEffect.to(0.0, ...)</code> — utilisé
+dans l'animation de carte « buff » — ne compilerait pas.</p>
+<p>Le setter est délibérément passif : il stocke la valeur, point. C'est <code>CardRenderer</code> qui lira
+<code>opacity</code> à chaque image pour décider de peindre ou non dans un calque translucide.</p>
+<h3>La délégation à <code>CardInteractionHandler</code></h3>
+<p><code>CardComponent</code> dépasse déjà les 600 lignes. Plutôt que d'y ajouter la logique d'interaction, chaque
+rappel est réduit à une ligne qui délègue :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/card_component.dart</span><span class="lang">dart</span></div>
+  <pre>@override
+void onHoverEnter() =&gt; interactionHandler.onHoverEnter();
+
+// ...
+
+@override
+void onTapDown(TapDownEvent event) =&gt; interactionHandler.onTapDown(event);
+
+// ...
+
+@override
+void onDragStart(DragStartEvent event) {
+  super.onDragStart(event);
+  interactionHandler.onDragStart(event);
+}</pre>
+</div>
+<p>Notez la différence de traitement : les rappels de <em>drag</em> appellent <code>super</code> avant de déléguer (le
+mixin <code>DragCallbacks</code> tient un état interne qu'il faut laisser fonctionner), alors que <code>onTapDown</code>
+et les rappels de survol le remplacent purement. <code>CardInteractionHandler</code> n'est pas un composant : c'est une
+classe ordinaire qui garde une référence vers sa carte.</p>
+<h3><code>continuePropagation</code></h3>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/widgets/card_interaction_handler.dart</span><span class="lang">dart</span></div>
+  <pre>void onTapDown(TapDownEvent event) {
+  if (cardComponent.isEnteringHand || cardComponent.isPlayed) return;
+  if (cardComponent.game.focusedCard == cardComponent) {
+    cardComponent.game.setFocusedCard(null);
+  } else {
+    cardComponent.game.setFocusedCard(cardComponent);
+  }
+  cardComponent.refreshVisuals();
+  event.continuePropagation = false;
+}</pre>
+</div>
+<p>Par défaut, un événement de tap traverse la pile de composants sous le doigt, du plus haut au plus bas. Ici, la carte
+a traité le clic : elle met <code>continuePropagation = false</code> pour que l'événement <strong>s'arrête
+là</strong>.</p>
+<p>Sans cette ligne, le clic descendrait jusqu'à <code>HerosDraftGame</code>, qui possède lui aussi un
+<code>onTapDown</code> :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/heros_draft_game.dart</span><span class="lang">dart</span></div>
+  <pre>@override
+void onTapDown(TapDownEvent event) {
+  super.onTapDown(event);
+  setFocusedCard(null);
+}</pre>
+</div>
+<p>Le jeu joue le rôle de « clic dans le vide » : cliquer sur le fond désélectionne la carte en cours. Sans
+<code>continuePropagation = false</code>, chaque clic sur une carte la sélectionnerait puis la désélectionnerait
+immédiatement. Le jeu serait injouable.</p>
+<h3><code>containsPoint</code></h3>
+<p>Pendant un glissement, la carte doit savoir sur quel ennemi elle survole. Flame fournit
+<code>containsPoint(Vector2)</code> sur tout <code>PositionComponent</code> : il teste si un point du repère parent
+tombe dans la boîte du composant, <strong>en tenant compte de la position, de la taille, de l'échelle, de l'angle et de
+l'ancre</strong>.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/widgets/card_interaction_handler.dart</span><span class="lang">dart</span></div>
+  <pre>EnemyCard? findHoveredEnemy(Vector2 canvasPos) {
+  for (var enemy in cardComponent.game.enemyCards) {
+    if (enemy.containsPoint(canvasPos)) {
+      return enemy;
+    }
+  }
+  return null;
+}</pre>
+</div>
+<p>C'est le point testé qui est intéressant : ce n'est pas la position du doigt, mais
+<code>cardComponent.position</code>, c'est-à-dire le <strong>centre de la carte</strong> (souvenez-vous, l'ancre est au
+centre). On cible donc un ennemi en amenant le <em>corps</em> de la carte sur lui, pas la pointe du doigt. C'est plus
+tolérant sur mobile, où le doigt masque la carte.</p>
+<h3><code>PointerMoveCallbacks</code> et la ligne de ciblage</h3>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/heros_draft_game.dart</span><span class="lang">dart</span></div>
+  <pre>@override
+void onPointerMove(PointerMoveEvent event) {
+  _lastPointerPos = event.localPosition;
+  combatVisualSystem?.updatePointer(_lastPointerPos);
+}</pre>
+</div>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/combat_visual_system.dart</span><span class="lang">dart</span></div>
+  <pre>class CombatVisualSystem extends Component with HasGameReference&lt;HerosDraftGame&gt; {
+  late final TargetingLine targetingLine;
+
+  @override
+  Future&lt;void&gt; onLoad() async {
+    await super.onLoad();
+    targetingLine = TargetingLine();
+    add(targetingLine..priority = GameConstants.priorityTargetingLine);
+  }
+
+  void updatePointer(Vector2 pointerPos) {
+    if (game.focusedCard != null &amp;&amp; !game.focusedCard!.isDragging) {
+      targetingLine.updatePoints(
+        game.focusedCard!.position + Vector2(0, -40),
+        pointerPos,
+      );
+    }
+  }
+}</pre>
+</div>
+<p>Le mixin est posé sur le <strong>jeu</strong>, pas sur un composant : on veut suivre le curseur partout, y compris
+au-dessus du vide. La ligne ne s'affiche que si une carte est sélectionnée et qu'elle n'est pas en train d'être glissée
+— les deux modes de ciblage (clic puis clic, ou glisser-déposer) ne se mélangent jamais.</p>
+
+<h2 id="s7">7. Le système d'effets</h2>
+<p>Un <code>Effect</code> est un composant comme un autre : on l'ajoute à sa cible, il modifie une propriété au fil du
+temps, puis il se retire. C'est la manière <em>déclarative</em> d'animer dans Flame — on décrit le résultat voulu, pas
+la boucle qui y mène.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">illustration</span><span class="lang">dart</span></div>
+  <pre>composant.add(
+  MoveEffect.to(
+    Vector2(300, 200),                 // QUOI : la valeur cible
+    EffectController(                  // COMMENT : le pilotage dans le temps
+      duration: 0.35,
+      curve: Curves.easeOutCubic,
+    ),
+    onComplete: () { /* ... */ },      // ET APRÈS
+  ),
+);</pre>
+</div>
+<h3>La table des effets utilisés</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Effet</th><th>Propriété animée</th><th>Exemple réel dans le projet</th></tr></thead>
+<tbody>
+<tr><td><code>MoveEffect.to</code></td><td><code>position</code> (absolue)</td><td><code>LayoutSystem.layoutHand</code> : chaque carte rejoint sa place dans l'éventail</td></tr>
+<tr><td><code>MoveEffect.by</code></td><td><code>position</code> (relative)</td><td><code>CombatEntity.dashAnimation</code> : <code>Vector2(0, 50 * direction)</code> puis retour</td></tr>
+<tr><td><code>ScaleEffect.to</code></td><td><code>scale</code></td><td>Survol : <code>Vector2.all(scaleFactor * 0.88 * 1.2)</code> en 0,1 s</td></tr>
+<tr><td><code>RotateEffect.to</code></td><td><code>angle</code></td><td><code>layoutHand</code> : chaque carte s'incline à son angle d'éventail</td></tr>
+<tr><td><code>RotateEffect.by</code></td><td><code>angle</code> (relatif)</td><td><code>CardAnimator._playStatusAnimation</code> : <code>RotateEffect.by(0.2, ...alternate: true)</code></td></tr>
+<tr><td><code>OpacityEffect.to</code></td><td><code>opacity</code></td><td>Mort d'un ennemi : <code>OpacityEffect.to(0.0, EffectController(duration: 0.4))</code></td></tr>
+<tr><td><code>OpacityEffect.fadeOut</code></td><td><code>opacity</code> → 0</td><td><code>FloatingText</code> (1,2 s) et <code>EffectIcon</code> (1,1 s)</td></tr>
+<tr><td><code>ColorEffect</code></td><td>teinte du <code>Paint</code></td><td><code>CombatEntity.shakeAndFlashAnimation</code> : flash rouge/ambre sur le sprite</td></tr>
+<tr><td><code>RemoveEffect</code></td><td>— (retire le composant)</td><td><code>BaseVisualEffect</code> et <code>FloatingText</code> : auto-destruction différée</td></tr>
+<tr><td><code>SequenceEffect</code></td><td>enchaîne des effets</td><td>Tremblement : 5 <code>MoveEffect.by</code> de 0,05 s à la suite</td></tr>
+<tr><td><code>CombinedEffect</code></td><td>joue des effets en parallèle</td><td><code>SlashEffect</code> : étirement et apparition simultanés</td></tr>
+</tbody>
+</table></div>
+<h3><code>EffectController</code> : le moteur du temps</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Paramètre</th><th>Effet</th><th>Valeur réelle du projet</th></tr></thead>
+<tbody>
+<tr><td><code>duration</code></td><td>Durée en secondes</td><td>0,025 (micro-tremblement) à 1,2 (dérive du poison)</td></tr>
+<tr><td><code>curve</code></td><td>Courbe d'accélération Flutter</td><td><code>easeOutCubic</code>, <code>elasticOut</code>, <code>bounceOut</code>, <code>easeIn</code>…</td></tr>
+<tr><td><code>alternate</code></td><td>Joue l'effet puis son inverse (aller-retour)</td><td><code>EffectController(duration: 0.025, alternate: true)</code> dans le tremblement d'impact</td></tr>
+<tr><td><code>infinite</code></td><td>Recommence indéfiniment</td><td>Pulsation d'un coup critique : <code>duration: 0.3, alternate: true, infinite: true</code></td></tr>
+<tr><td><code>delay</code></td><td>Attente avant démarrage</td><td><code>RemoveEffect(delay: duration)</code> dans <code>BaseVisualEffect</code></td></tr>
+</tbody>
+</table></div>
+<h3>Exemple chiffré 1 : la main qui se réorganise</h3>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/layout_system.dart</span><span class="lang">dart</span></div>
+  <pre>final double duration = card.isEnteringHand ? 0.7 : 0.35;
+
+card.removeAll(card.children.whereType&lt;MoveEffect&gt;());
+card.removeAll(card.children.whereType&lt;RotateEffect&gt;());
+card.removeAll(card.children.whereType&lt;ScaleEffect&gt;());
+
+card.add(
+  MoveEffect.to(
+    targetPos,
+    EffectController(duration: duration, curve: Curves.easeOutCubic),
+  ),
+);
+card.add(
+  RotateEffect.to(
+    targetAngle,
+    EffectController(duration: duration, curve: Curves.easeOutCubic),
+  ),
+);
+card.add(
+  ScaleEffect.to(
+    targetScale,
+    EffectController(duration: duration, curve: Curves.easeOutCubic),
+    onComplete: card.isEnteringHand ? () {
+      card.isEnteringHand = false;
+    } : null,
+  ),
+);</pre>
+</div>
+<p>Trois choses remarquables :</p>
+<ul>
+<li><strong>Deux durées, une intention.</strong> Une carte qui entre en main met <code>0.7</code> s : elle part du coin
+bas-gauche (<code>Vector2(40, game.size.y - 40)</code>, posé par <code>StateSyncSystem</code>) avec une échelle nulle,
+et ce long trajet doit se lire. Une carte qui se décale simplement parce qu'une voisine est partie met <code>0.35</code>
+s : on ne veut pas attendre.</li>
+<li><strong>On nettoie avant d'ajouter.</strong> Les trois <code>removeAll</code> suppriment les effets de même type
+encore en cours. Sans cela, deux <code>MoveEffect</code> concurrents s'additionneraient et la carte partirait n'importe
+où.</li>
+<li><strong>Le drapeau se referme tout seul.</strong> <code>isEnteringHand</code> passe à <code>false</code> dans le
+<code>onComplete</code> du dernier effet — la carte n'est « vraiment » en main qu'une fois posée, ce qui bloque les
+interactions pendant l'arrivée.</li>
+</ul>
+<p><code>Curves.easeOutCubic</code> démarre vite et finit doucement : la courbe standard d'une interface qui répond au
+doigt. On la retrouve dans les particules de dégâts et la dérive des textes flottants.</p>
+<h3>Exemple chiffré 2 : la mort d'un ennemi</h3>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/heros_draft_game.dart</span><span class="lang">dart</span></div>
+  <pre>final deadCards = enemyCards.where((c) =&gt; c.isPendingDeath).toList();
+if (deadCards.isEmpty) return;
+
+for (var card in deadCards) {
+  card.isDead = true;
+  card.add(OpacityEffect.to(0.0, EffectController(duration: 0.4)));
+  card.add(
+    ScaleEffect.to(
+      Vector2.zero(),
+      EffectController(duration: 0.4),
+      onComplete: () {
+        card.removeFromParent();
+      },
+    ),
+  );
+  enemyCards.remove(card);
+}
+repositionEnemies();
+onEnemiesSpawned?.call();</pre>
+</div>
+<p>Deux effets de <strong>0,4 s</strong> jouent en parallèle : l'ennemi s'efface et se rétracte vers un point. Aucune
+courbe n'est passée, donc c'est la courbe par défaut (linéaire). Le retrait de l'arbre est confié au
+<code>onComplete</code> du second : on ne supprime jamais un composant dont l'animation n'est pas finie, sinon elle
+serait coupée net.</p>
+<p>À noter : <code>enemyCards.remove(card)</code> retire l'ennemi du registre logique <em>immédiatement</em>, alors que
+le composant est encore visible pendant 0,4 s. Le jeu considère donc l'ennemi comme mort avant que le joueur ne le voie
+disparaître — ce qui permet à <code>repositionEnemies()</code>, appelé juste après, de recentrer les survivants pendant
+que le cadavre s'estompe.</p>
+<p>Ce même bloc existe en double dans <code>StateSyncSystem._applyCombatState</code>, avec les mêmes valeurs. La
+duplication est réelle et connue : les deux chemins traitent deux moments différents (mort pendant une animation de
+carte, mort déclenchée par un changement d'état).</p>
+<h3>Le pattern d'auto-destruction de <code>BaseVisualEffect</code></h3>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/visual_effects/base_visual_effect.dart</span><span class="lang">dart</span></div>
+  <pre>class BaseVisualEffect extends PositionComponent with HasPaint {
+  final double duration;
+  final VoidCallback? onComplete;
+
+  BaseVisualEffect({
+    required this.duration,
+    this.onComplete,
+    super.position,
+    super.size,
+    super.scale,
+    super.angle,
+    super.anchor,
+    super.priority,
+  }) {
+    add(
+      RemoveEffect(
+        delay: duration,
+        onComplete: onComplete,
+      ),
+    );
+  }
+}</pre>
+</div>
+<p>Moins de trente lignes, et c'est toute la classe. L'idée est excellente : <strong>le composant programme sa propre
+suppression dans son constructeur</strong>. Impossible d'oublier de nettoyer, impossible de laisser fuir un effet visuel
+dans l'arbre.</p>
+<p><code>SlashEffect</code> en hérite avec <code>duration: 0.3</code> : le temps que ses animations d'apparition (0,1 s)
+et de disparition (0,2 s) se terminent, le <code>RemoveEffect</code> le retire. Les deux durées sont accordées à la main
+— 0,1 + 0,2 = 0,3.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/visual_effects/slash_effect.dart</span><span class="lang">dart</span></div>
+  <pre>@override
+Future&lt;void&gt; onLoad() async {
+  // On commence invisible et petit
+  scale = Vector2(0, 1);
+  opacity = 0;
+
+  add(
+    SequenceEffect([
+      // 1. Apparition rapide et étirement
+      CombinedEffect([
+        ScaleEffect.to(
+          Vector2(1.2, 1),
+          EffectController(duration: 0.1, curve: Curves.easeOut),
+        ),
+        OpacityEffect.to(1.0, EffectController(duration: 0.05)),
+      ]),
+      // 2. Disparition
+      CombinedEffect([
+        ScaleEffect.to(
+          Vector2(1.5, 0),
+          EffectController(duration: 0.2, curve: Curves.easeIn),
+        ),
+        OpacityEffect.to(0.0, EffectController(duration: 0.2)),
+      ]),
+    ]),
+  );
+}</pre>
+</div>
+<p>Le <code>scale</code> non uniforme est astucieux : <code>Vector2(0, 1)</code> puis <code>Vector2(1.2, 1)</code> étire
+le trait dans sa longueur ; <code>Vector2(1.5, 0)</code> l'écrase ensuite dans son épaisseur. Le coup de lame se déploie
+puis s'affine, sans qu'on ait rien dessiné de plus qu'une ligne.</p>
+<p><code>FloatingText</code> applique le même pattern sans passer par <code>BaseVisualEffect</code> :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/floating_text.dart</span><span class="lang">dart</span></div>
+  <pre>if (isCritical) {
+  add(
+    SequenceEffect([
+      ScaleEffect.to(
+        Vector2.all(1.5),
+        EffectController(duration: GameConstants.floatingTextDurationCritInitialPop, curve: Curves.elasticOut),
+      ),
+      ScaleEffect.to(
+        Vector2.all(1.15),
+        EffectController(duration: GameConstants.floatingTextDurationCritInitialReturn, curve: Curves.easeOut),
+      ),
+      ScaleEffect.to(
+        Vector2.all(1.3),
+        EffectController(duration: GameConstants.floatingTextDurationCritPulse, alternate: true, infinite: true),
+      ),
+    ]),
+  );
+}
+// ...
+add(RemoveEffect(delay: GameConstants.floatingTextDurationRemoveDelay));</pre>
+</div>
+<p>Un coup critique fait un « pop » élastique à 1,5× en <strong>0,35 s</strong>, redescend à 1,15× en <strong>0,15
+s</strong>, puis pulse entre 1,15× et 1,3× toutes les <strong>0,3 s</strong>, indéfiniment. « Indéfiniment » n'est pas
+un problème : le <code>RemoveEffect</code> final supprime le texte après <strong>1,2 s</strong> quoi qu'il arrive. La
+pulsation infinie meurt avec son hôte.</p>
+<div class="box ok"><div class="box-title">Bonne pratique</div>
+<p>Trois réflexes à retenir de ce système d'effets :</p>
+<p><strong>Nettoyer avant d'animer.</strong> Toujours retirer les effets du même type avant d'en ajouter un nouveau
+(<code>removeAll(children.whereType&lt;ScaleEffect&gt;())</code>), sinon les effets s'additionnent silencieusement. Le
+projet le fait dans <code>LayoutSystem</code>, <code>CardAnimationSystem</code>,
+<code>CombatEntity.shieldHitAnimation</code> et <code>CardComponent.clearEffects()</code>.</p>
+<p><strong>Programmer sa propre mort.</strong> Tout composant temporaire (effet visuel, texte flottant, icône) doit
+embarquer son <code>RemoveEffect</code>. C'est le rôle exact de <code>BaseVisualEffect</code>.</p>
+<p><strong>Faire porter la suite par <code>onComplete</code>.</strong> Ne jamais retirer un composant « en même temps »
+qu'on l'anime : on le retire <em>depuis</em> le <code>onComplete</code> de son dernier effet.</p></div>
+
+<h2 id="s8">8. Dessiner à la main</h2>
+<p>Les composants prêts à l'emploi couvrent 80 % des besoins. Pour le reste — une carte à jouer avec son dégradé
+holographique, un halo pulsant, une courbe de ciblage — on redescend d'un cran et on écrit <code>render(Canvas
+canvas)</code>. On retrouve alors l'API de dessin de Flutter, la même que celle d'un <code>CustomPainter</code>.</p>
+<h3><code>Paint</code> : le pinceau</h3>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/card_component.dart</span><span class="lang">dart</span></div>
+  <pre>final Paint borderPaint = Paint()
+  ..color = Colors.blueAccent
+  ..style = PaintingStyle.stroke
+  ..strokeWidth = 3;</pre>
+</div>
+<p>Un <code>Paint</code> réunit tout ce qui décrit « comment » peindre : couleur, style (<code>fill</code> ou
+<code>stroke</code>), épaisseur de trait, terminaison (<code>strokeCap</code>), filtre de flou, dégradé
+(<code>shader</code>). Les formes disent « quoi », le <code>Paint</code> dit « comment ».</p>
+<h3><code>drawRRect</code> et la carte</h3>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/widgets/card_renderer.dart</span><span class="lang">dart</span></div>
+  <pre>void render(Canvas canvas) {
+  final bool useSaveLayer = cardComponent.opacity &lt; 1.0;
+  if (useSaveLayer) {
+    canvas.saveLayer(
+      cardComponent.size.toRect(),
+      Paint()..color = Colors.white.withValues(alpha: cardComponent.opacity),
+    );
+  }
+
+  final rect = cardComponent.size.toRect();
+  final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(12));
+  final bgColor = cardComponent.getBackgroundColor();
+  final rarityColor = cardComponent.getRarityColor();
+
+  // Fond plein (non transparent)
+  final Paint bgPaint = Paint();
+  if (cardComponent.isFlashing) {
+    bgPaint.color = Colors.white;
+  } else {
+    bgPaint.color = bgColor;
+  }
+  canvas.drawRRect(rrect, bgPaint);</pre>
+</div>
+<p><code>RRect</code> = <em>rounded rectangle</em>. Ici : le rectangle de la carte (140 × 196) avec un rayon de 12
+pixels. Les coordonnées sont <strong>locales au composant</strong> : le coin haut-gauche est en (0, 0), et c'est Flame
+qui a déjà appliqué position, échelle, rotation et ancre avant d'appeler <code>render</code>.</p>
+<h3><code>saveLayer</code> : le calque temporaire</h3>
+<p><code>saveLayer</code> ouvre un calque hors écran. Tout ce qui est dessiné ensuite y va, et au
+<code>canvas.restore()</code> le calque entier est composé sur la scène avec l'opacité demandée.</p>
+<p>Pourquoi ne pas mettre simplement l'alpha sur chaque <code>Paint</code> ? Parce qu'une carte superpose un fond, une
+bordure, un halo et une dizaine de textes : avec des alphas individuels, les zones de recouvrement seraient plus opaques
+que les autres et la carte se « délaminerait » en s'estompant. Le calque garantit qu'elle s'efface comme un objet
+unique.</p>
+<p>Mais <code>saveLayer</code> est <strong>l'opération la plus coûteuse du canvas</strong> : elle alloue une texture
+hors écran à chaque image. D'où la garde <code>useSaveLayer</code>, calculée une fois en tête de méthode et relue tout à
+la fin pour le <code>canvas.restore()</code>. Le calque n'est donc ouvert que si <code>opacity &lt; 1.0</code>,
+c'est-à-dire pendant les quelques dixièmes de seconde d'un fondu — pour l'immense majorité des images, aucun surcoût. Et
+comme l'ouverture et la fermeture dépendent de la <em>même</em> variable, elles s'équilibrent toujours : un
+<code>saveLayer</code> sans <code>restore</code> laisserait le canvas dans un état incohérent pour tous les composants
+suivants.</p>
+<h3><code>MaskFilter.blur</code> : les halos</h3>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/entities/enemy_card.dart</span><span class="lang">dart</span></div>
+  <pre>@override
+void render(Canvas canvas) {
+  if (_isHighlighted) {
+    final rect = size.toRect();
+    final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(0));
+    final glowPaint = Paint()
+      ..color = Colors.cyanAccent.withValues(alpha: _glowOpacity)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 6 + (2 * _glowOpacity)
+      ..maskFilter = MaskFilter.blur(BlurStyle.outer, 8 + (4 * _glowOpacity));
+    canvas.drawRRect(rrect, glowPaint);
+  }
+  super.render(canvas);
+}</pre>
+</div>
+<p><code>_glowOpacity</code> n'est pas constant : il est recalculé à chaque image dans <code>update</code> par une
+sinusoïde — <code>_totalTime += dt;</code> puis <code>_glowOpacity = 0.5 + 0.3 * sin(_totalTime * 4);</code>.</p>
+<p>L'opacité oscille donc entre <strong>0,2 et 0,8</strong>, à raison de 4 radians par seconde — soit une pulsation
+complète toutes les <code>2π/4 ≈ 1,57</code> seconde. Et comme <code>strokeWidth</code> et le rayon de flou dépendent
+eux aussi de <code>_glowOpacity</code>, le halo « respire » en épaisseur en même temps qu'en intensité. Un seul
+<code>sin()</code> pilote trois paramètres. <code>HeroCard</code> utilise exactement la même formule, avec un trait plus
+épais (<code>8 + 2 × opacité</code>, flou <code>10 + 4 × opacité</code>).</p>
+<p>Deux styles de flou coexistent dans le projet :</p>
+<div class="table-wrap"><table>
+<thead><tr><th><code>BlurStyle</code></th><th>Effet</th><th>Où</th></tr></thead>
+<tbody>
+<tr><td><code>BlurStyle.outer</code></td><td>Ne garde que le flou <em>à l'extérieur</em> de la forme ; l'intérieur reste net</td><td>Halos de sélection : <code>HeroCard</code>, <code>EnemyCard</code>, halo de rareté dans <code>CardRenderer</code></td></tr>
+<tr><td><code>BlurStyle.normal</code></td><td>Floute la forme entière, dedans comme dehors</td><td><code>TargetingLine</code>, <code>SlashEffect</code>, <code>RibbonTrail</code>, <code>ShieldDome</code></td></tr>
+</tbody>
+</table></div>
+<h3>Les shaders de dégradé</h3>
+<p>Un <code>shader</code> remplace la couleur unie d'un <code>Paint</code> par un dégradé calculé sur une zone. La barre
+de vie des ennemis en empile deux :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/widgets/linear_progress_bar.dart</span><span class="lang">dart</span></div>
+  <pre>final fillPaint = Paint()
+  ..shader = const LinearGradient(
+    colors: [
+      Color(0xFF8B0000), // Rouge foncé
+      Color(0xFFE74C3C), // Rouge vif
+      Color(0xFFFF7675), // Rouge clair / corail
+    ],
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
+  ).createShader(fillRect);
+
+canvas.drawRRect(pvRRect, fillPaint);
+canvas.restore();</pre>
+</div>
+<p><code>createShader(rect)</code> ancre le dégradé sur un rectangle : <code>centerLeft</code> et
+<code>centerRight</code> désignent les bords de <em>ce</em> rectangle. Comme <code>fillRect</code> est calculé à partir
+du pourcentage de vie, le dégradé se comprime avec la barre — les trois teintes restent visibles même à 10 % de PV.</p>
+<p>Juste avant, la méthode appelle <code>canvas.save()</code> puis <code>canvas.clipRRect(rrect)</code> : tout ce qui
+dépasse du contour arrondi de la barre est découpé. C'est ce qui permet de dessiner un rectangle de remplissage plus
+simple que la forme finale et de laisser le clip s'occuper des coins.</p>
+<p>Le même fichier superpose ensuite une capsule d'armure semi-transparente (<code>blueAccent</code> à 0,45 d'alpha →
+<code>lightBlueAccent</code> à 0,65) par-dessus la barre rouge, avec sa bordure cyan à 0,5 pixel : on lit d'un coup
+d'œil les PV <em>et</em> l'armure sur une seule barre de 66 × 13 pixels.</p>
+<p><code>CardRenderer</code> pousse le procédé plus loin : le contour d'une carte survolée reçoit un dégradé
+<strong>tournant</strong>.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/widgets/card_renderer.dart</span><span class="lang">dart</span></div>
+  <pre>final bool isHovered = cardComponent.game.hoveredCard == cardComponent;
+if (isHovered &amp;&amp; !cardComponent.isFlashing) {
+  bPaint.strokeWidth = 3.5;
+  final colors = cardComponent.getRarityShineColors();
+  final angle = cardComponent.foilTime;
+  final cosVal = math.cos(angle);
+  final sinVal = math.sin(angle);
+  bPaint.shader = LinearGradient(
+    begin: Alignment(cosVal, sinVal),
+    end: Alignment(-cosVal, -sinVal),
+    colors: colors,
+  ).createShader(rect);
+}</pre>
+</div>
+<p>Souvenez-vous de <code>update</code> : <code>foilTime += dt * 3.0</code> tant que la carte est survolée. Cet angle
+fait tourner les points de départ et d'arrivée du dégradé sur un cercle. L'effet « holographique » d'une carte à
+collectionner, en douze lignes. Les couleurs, elles, viennent de la rareté — jusqu'à un arc-en-ciel complet pour une
+carte <em>unique</em> très améliorée.</p>
+<h3>L'arc de cercle du badge</h3>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/widgets/circle_progress.dart</span><span class="lang">dart</span></div>
+  <pre>@override
+void render(Canvas canvas) {
+  final paint = Paint()
+    ..color = color
+    ..style = PaintingStyle.fill;
+
+  // Dessine un arc de cercle à partir du haut (-pi/2)
+  canvas.drawArc(
+    Rect.fromLTWH(0, 0, size.x, size.y),
+    -1.5708, // -90 degrés
+    6.28319 * percentage, // 360 degrés * pourcentage
+    true,
+    paint,
+  );
+}</pre>
+</div>
+<p>Les angles du canvas sont en radians et partent de « 3 heures » (l'axe des x positifs). Pour démarrer en haut il faut
+donc reculer d'un quart de tour : <code>-1.5708</code>, soit <code>-π/2</code> écrit en dur. Le troisième argument est
+le <em>balayage</em> : <code>6.28319 × pourcentage</code>, soit une fraction de <code>2π</code>. Le <code>true</code>
+signifie « relie au centre » — on obtient une part de camembert et non un simple arc.</p>
+<h3>La courbe de Bézier de <code>TargetingLine</code></h3>
+<p>C'est le morceau de dessin le plus élaboré du projet. La ligne qui relie une carte sélectionnée au curseur n'est pas
+droite : c'est une <strong>Bézier quadratique</strong> bombée vers le haut, parcourue par des points lumineux qui
+défilent.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/visual_effects/targeting_line.dart</span><span class="lang">dart</span></div>
+  <pre>Vector2 getBezierPoint(Vector2 p0, Vector2 p1, Vector2 p2, double t) {
+  final double u = 1.0 - t;
+  final double tt = t * t;
+  final double uu = u * u;
+
+  final x = uu * p0.x + 2 * u * t * p1.x + tt * p2.x;
+  final y = uu * p0.y + 2 * u * t * p1.y + tt * p2.y;
+  return Vector2(x, y);
+}</pre>
+</div>
+<p>C'est la formule mathématique exacte de la Bézier quadratique : <code>B(t) = (1-t)²·P0 + 2(1-t)t·P1 + t²·P2</code>,
+où <code>P0</code> est le départ, <code>P2</code> l'arrivée et <code>P1</code> le point de contrôle qui « aimante » la
+courbe. <code>t</code> va de 0 à 1.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/visual_effects/targeting_line.dart</span><span class="lang">dart</span></div>
+  <pre>// Define control point for Quadratic Bezier
+final midX = (from!.x + to!.x) / 2;
+// Bend the curve upwards
+final double controlY =
+    min(from!.y, to!.y) - 100 - (from!.x - to!.x).abs() * 0.15;
+final controlPoint = Vector2(midX, controlY);
+
+// Draw the smooth bezier path underneath as a subtle glow
+final mainPaint = Paint()
+  ..color = color.withValues(alpha: 0.15)
+  ..strokeWidth = 6
+  ..style = PaintingStyle.stroke
+  ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+
+final path = Path();
+path.moveTo(from!.x, from!.y);
+path.quadraticBezierTo(controlPoint.x, controlPoint.y, to!.x, to!.y);
+canvas.drawPath(path, mainPaint);</pre>
+</div>
+<p>Le point de contrôle est placé à mi-chemin horizontalement, et <strong>100 pixels au-dessus</strong> du plus haut des
+deux points — plus <strong>15 % de la distance horizontale</strong>. Autrement dit : plus la cible est loin
+latéralement, plus l'arc est bombé. C'est ce qui empêche la courbe de devenir un trait plat quand on vise loin sur le
+côté.</p>
+<p>Ensuite vient la partie curieuse : la courbe est dessinée <strong>deux fois</strong>. Une fois avec
+<code>Path.quadraticBezierTo</code> pour la lueur de fond (alpha 0,15, flou 4), où Flutter calcule la courbe pour nous ;
+une fois avec une boucle manuelle sur <code>getBezierPoint</code> pour les 17 points lumineux, qui exigent des
+<strong>positions individuelles</strong> qu'un <code>Path</code> ne sait pas donner.</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/visual_effects/targeting_line.dart</span><span class="lang">dart</span></div>
+  <pre>final int numDots = 16;
+for (int i = 0; i &lt;= numDots; i++) {
+  // Offset translation based on time
+  final double t = (i / numDots + (_time * 0.25)) % 1.0;
+
+  // Position along Bezier
+  final p = getBezierPoint(from!, controlPoint, to!, t);
+
+  // Scale down near start and end for smooth entry/exit
+  final double scale = t &lt; 0.15
+      ? (t / 0.15)
+      : (t &gt; 0.85 ? (1.0 - t) / 0.15 : 1.0);
+  final double radius = 3.0 + scale * 4.0;
+
+  final dotPaint = Paint()
+    ..color = color.withValues(alpha: (0.1 + scale * 0.9))
+    ..style = PaintingStyle.fill
+    ..maskFilter = MaskFilter.blur(BlurStyle.normal, 2 + scale * 2);
+
+  canvas.drawCircle(Offset(p.x, p.y), radius, dotPaint);
+}</pre>
+</div>
+<p>Le défilement vient du modulo : <code>(i/16 + _time × 0.25) % 1.0</code>. Comme <code>_time</code> augmente de
+<code>dt × 1.5</code> par image, les points glissent le long de la courbe et rebouclent en douceur. Les 15 % de chaque
+extrémité servent de zone de fondu : rayon, opacité et flou y montent de zéro à leur valeur nominale, si bien qu'aucun
+point n'apparaît ni ne disparaît brutalement.</p>
+<p>La flèche terminale, enfin, est orientée par la <strong>tangente</strong> de la courbe à l'arrivée :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/visual_effects/targeting_line.dart</span><span class="lang">dart</span></div>
+  <pre>// Tangent angle at t = 1.0 for the arrow
+final angle = atan2(to!.y - controlPoint.y, to!.x - controlPoint.x);
+final arrowSize = 18.0;
+// ...
+arrowPath.moveTo(to!.x, to!.y);
+arrowPath.lineTo(
+  to!.x - arrowSize * cos(angle - pi / 6),
+  to!.y - arrowSize * sin(angle - pi / 6),
+);</pre>
+</div>
+<p>Pour une Bézier quadratique, la direction d'arrivée est exactement celle du vecteur <code>P1 → P2</code>. Les deux
+barbes de la flèche sont tracées à <code>±π/6</code> (30°) de cette tangente, sur 18 pixels. La pointe suit donc
+naturellement la courbure.</p>
+<h3>Le ruban de traînée</h3>
+<p><code>RibbonTrail</code> ne dessine ni ligne ni cercle, mais un <strong>polygone</strong> construit à la volée dans
+son <code>render</code>. Pour chacun des 20 points mémorisés de la trajectoire (<code>_maxPoints</code>), il calcule la
+direction du mouvement, en déduit la perpendiculaire (<code>final normal = Vector2(-direction.y, direction.x);</code> —
+une rotation d'un quart de tour) et écarte deux sommets de part et d'autre. La largeur suit <code>_startWidth * (1.0 -
+(i / _maxPoints))</code> : elle décroît linéairement avec l'ancienneté du point, si bien que le ruban s'affine en
+s'éloignant. Le polygone est ensuite fermé et peint deux fois — une passe de lueur (alpha 60, flou 8) puis une passe de
+cœur (alpha 150, flou 2).</p>
+<div class="box"><div class="box-title">À retenir</div>
+<p>Le rendu manuel suit toujours le même ordre dans ce projet : <strong>lueur d'abord, forme ensuite, détail net en
+dernier</strong>. <code>SlashEffect</code> peint son halo, puis le trait principal, puis un fil blanc à 30 % d'épaisseur
+pour le tranchant. <code>RibbonTrail</code> peint sa lueur puis son cœur. C'est ce qui donne l'impression de matière
+lumineuse sans aucun shader compliqué.</p></div>
+
+<h2 id="s9">9. La géométrie de l'arène</h2>
+<p>Aucune position n'est écrite en pixels absolus. Tout est exprimé en <strong>fractions de la hauteur de
+l'écran</strong>, et toutes les tailles passent par un facteur d'échelle unique.</p>
+<h3><code>scaleFactor</code> : la référence 800</h3>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/heros_draft_game.dart</span><span class="lang">dart</span></div>
+  <pre>double get scaleFactor =&gt; (size.y / 800).clamp(0.85, 2.5);</pre>
+</div>
+<p>Une seule ligne, et tout le responsive du combat en découle. La hauteur de référence est <strong>800 pixels
+logiques</strong> : à cette hauteur, <code>scaleFactor</code> vaut exactement 1 et les composants s'affichent à leur
+taille nominale.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Hauteur d'écran</th><th><code>size.y / 800</code></th><th><code>scaleFactor</code> après <code>clamp</code></th></tr></thead>
+<tbody>
+<tr><td>600 (petit téléphone paysage)</td><td>0,75</td><td><strong>0,85</strong> (borne basse)</td></tr>
+<tr><td>680</td><td>0,85</td><td>0,85</td></tr>
+<tr><td>800 (référence)</td><td>1,00</td><td>1,00</td></tr>
+<tr><td>1080</td><td>1,35</td><td>1,35</td></tr>
+<tr><td>2000 (moniteur 4K)</td><td>2,50</td><td>2,50</td></tr>
+<tr><td>2400</td><td>3,00</td><td><strong>2,50</strong> (borne haute)</td></tr>
+</tbody>
+</table></div>
+<p>Le <code>clamp(0.85, 2.5)</code> est essentiel. Sans borne basse, un écran très plat rendrait les cartes illisibles ;
+sans borne haute, un moniteur 4K afficherait trois cartes géantes. Chaque famille d'entité applique ensuite son propre
+coefficient au-dessus de ce socle :</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Entité</th><th>Échelle appliquée</th><th>Où</th></tr></thead>
+<tbody>
+<tr><td>Carte en main (repos)</td><td><code>scaleFactor × 0.88</code></td><td><code>CardComponent.onLoad</code>, <code>LayoutSystem</code></td></tr>
+<tr><td>Carte survolée</td><td><code>scaleFactor × 0.88 × 1.2</code></td><td><code>CardAnimationSystem.setHoveredCard</code></td></tr>
+<tr><td>Carte sélectionnée ou glissée</td><td><code>scaleFactor × 0.88 × 1.25</code></td><td><code>setFocusedCard</code>, <code>onDragStart</code></td></tr>
+<tr><td>Héros</td><td><code>scaleFactor × 1.3</code></td><td><code>HeroCard.onLoad</code> et <code>onGameResize</code></td></tr>
+<tr><td>Ennemi</td><td><code>scaleFactor × 1.45 × (boss ? 1.25 : 1.0) × scaleMultiplier</code></td><td><code>EnemyCard.baseScale</code></td></tr>
+</tbody>
+</table></div>
+<h3>La main en éventail</h3>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/layout_system.dart</span><span class="lang">dart</span></div>
+  <pre>void layoutHand() {
+  final handCards = game.handCards;
+  if (handCards.isEmpty) return;
+
+  final int count = handCards.length;
+  final double radius = game.size.y * 1.5;
+
+  double angleStep = 0.08;
+  if (count &gt; 4) {
+    angleStep = (0.4 / count).clamp(0.04, 0.08);
+  }
+
+  final double totalAngle = (count - 1) * angleStep;
+  final double startAngle = -totalAngle / 2;
+
+  final Vector2 centerPoint = Vector2(
+    game.size.x / 2,
+    game.size.y + radius - (game.size.y * 0.23),
+  );
+
+  for (int i = 0; i &lt; count; i++) {
+    final card = handCards[i];
+    card.basePriority = 10 + i;
+
+    final double angle = startAngle + (i * angleStep);
+
+    final double x = centerPoint.x + radius * sin(angle);
+    final double y = centerPoint.y - radius * cos(angle);
+
+    card.originalPosition = Vector2(x, y);
+    card.originalAngle = angle;</pre>
+</div>
+<p>L'idée : les cartes sont posées sur un <strong>cercle géant</strong> dont le centre est très loin sous l'écran. Un
+très grand rayon donne une courbure douce — l'éventail se voit, mais ne ressemble pas à un arc de cercle serré.</p>
+<ul>
+  <li><strong>Rayon</strong> : <code>size.y * 1.5</code>. Sur un écran de 800 px, cela fait 1 200 px.</li>
+<li><strong>Centre</strong> : <code>size.y + radius - size.y*0.23</code>, soit 1 816 px sur ce même écran — environ
+<strong>2,27 fois la hauteur</strong>, très en dessous du bas de l'écran.</li>
+<li><strong>Sommet de l'arc</strong> : à l'angle 0, <code>y = centre - rayon</code>, ce qui se simplifie en <code>size.y
+× (1 - 0.23) = size.y × 0.77</code>. La carte du milieu a donc toujours son centre à <strong>77 % de la
+hauteur</strong>, quel que soit le rayon.</li>
+<li><strong>Pas angulaire</strong> : 0,08 rad (≈ 4,6°) jusqu'à 4 cartes. Au-delà, <code>(0.4 / count)</code> borné entre
+0,04 et 0,08 : l'éventail se resserre quand la main grossit.</li>
+</ul>
+<p>Conséquence chiffrée : l'ouverture totale de l'éventail est remarquablement stable. À 5 cartes, <code>4 × 0,08 =
+0,32</code> rad ; à 7 cartes, <code>6 × 0,057 ≈ 0,343</code> rad ; à 10 cartes (la main maximale,
+<code>GameConstants.maxHandSize</code>), <code>9 × 0,04 = 0,36</code> rad. Entre 18 et 21 degrés dans tous les cas. Les
+cartes se chevauchent davantage, mais l'éventail ne déborde jamais de l'écran.</p>
+<figure>
+  <div class="diagram">
+    <svg viewBox="0 0 820 530" width="820" role="img" aria-label="Repères verticaux de l'arène de combat : ennemis à 21 pour cent, héros à 51 pour cent, zone d'annulation à 68 pour cent, éventail à 77 pour cent">
+      <defs>
+        <marker id="c5-a6" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0 0 L8 4 L0 8 z" fill="#3a4966"/>
+        </marker>
+      </defs>
+      <rect x="260" y="30" width="300" height="440" rx="6" fill="#0e1524" stroke="#3a4966" stroke-width="2"/>
+      <text x="410" y="20" fill="#a7b4c9" font-size="12" text-anchor="middle" font-family="ui-monospace, monospace">canvas Flame — size.x × size.y</text>
+      <line x1="260" y1="122.4" x2="560" y2="122.4" stroke="#f87171" stroke-dasharray="5 4"/>
+      <line x1="260" y1="228" x2="560" y2="228" stroke="#a78bfa" stroke-dasharray="5 4"/>
+      <line x1="260" y1="254.4" x2="560" y2="254.4" stroke="#34d399" stroke-dasharray="5 4"/>
+      <line x1="260" y1="329.2" x2="560" y2="329.2" stroke="#f59e0b" stroke-dasharray="5 4"/>
+      <line x1="260" y1="368.8" x2="560" y2="368.8" stroke="#22d3ee" stroke-dasharray="5 4"/>
+      <rect x="316" y="104" width="34" height="42" rx="3" fill="#151b2b" stroke="#f87171"/>
+      <rect x="393" y="104" width="34" height="42" rx="3" fill="#151b2b" stroke="#f87171"/>
+      <rect x="470" y="104" width="34" height="42" rx="3" fill="#151b2b" stroke="#f87171"/>
+      <text x="410" y="98" fill="#f87171" font-size="10.5" text-anchor="middle">ennemis · espacement borné</text>
+      <rect x="386" y="230" width="48" height="50" rx="3" fill="#151b2b" stroke="#34d399"/>
+      <text x="410" y="260" fill="#34d399" font-size="11" text-anchor="middle">héros</text>
+      <rect x="272" y="331" width="276" height="137" rx="4" fill="#1a1206" stroke="#f59e0b" stroke-dasharray="3 3" opacity="0.55"/>
+      <text x="410" y="348" fill="#f59e0b" font-size="10.5" text-anchor="middle">zone d'annulation pendant le glissement</text>
+      <g opacity="0.95">
+        <rect x="271" y="330" width="68" height="95" rx="6" fill="#182236" stroke="#22d3ee" transform="rotate(-9.17 304.85 377.23)"/>
+        <rect x="323" y="323" width="68" height="95" rx="6" fill="#182236" stroke="#22d3ee" transform="rotate(-4.58 357.26 370.91)"/>
+        <rect x="376" y="321" width="68" height="95" rx="6" fill="#182236" stroke="#22d3ee"/>
+        <rect x="429" y="323" width="68" height="95" rx="6" fill="#182236" stroke="#22d3ee" transform="rotate(4.58 462.74 370.91)"/>
+        <rect x="481" y="330" width="68" height="95" rx="6" fill="#182236" stroke="#22d3ee" transform="rotate(9.17 515.15 377.23)"/>
+      </g>
+      <circle cx="304.85" cy="377.23" r="2.5" fill="#22d3ee"/>
+      <circle cx="357.26" cy="370.91" r="2.5" fill="#22d3ee"/>
+      <circle cx="410" cy="368.8" r="3" fill="#f59e0b"/>
+      <circle cx="462.74" cy="370.91" r="2.5" fill="#22d3ee"/>
+      <circle cx="515.15" cy="377.23" r="2.5" fill="#22d3ee"/>
+      <path d="M410 372 L410 500" stroke="#22d3ee" stroke-width="1.2" stroke-dasharray="4 4"/>
+      <text x="410" y="516" fill="#22d3ee" font-size="10.5" text-anchor="middle">centre de l'arc : size.y + rayon − size.y×0,23 ≈ 2,27 × size.y (hors écran)</text>
+      <text x="252" y="126" fill="#f87171" font-size="11.5" text-anchor="end" font-family="ui-monospace, monospace">0.21 · size.y</text>
+      <text x="252" y="232" fill="#a78bfa" font-size="11.5" text-anchor="end" font-family="ui-monospace, monospace">0.45 · size.y</text>
+      <text x="252" y="258" fill="#34d399" font-size="11.5" text-anchor="end" font-family="ui-monospace, monospace">0.51 · size.y</text>
+      <text x="252" y="333" fill="#f59e0b" font-size="11.5" text-anchor="end" font-family="ui-monospace, monospace">0.68 · size.y</text>
+      <text x="252" y="372" fill="#22d3ee" font-size="11.5" text-anchor="end" font-family="ui-monospace, monospace">0.77 · size.y</text>
+      <text x="572" y="126" fill="#a7b4c9" font-size="11.5">posY des ennemis</text>
+      <text x="572" y="232" fill="#a7b4c9" font-size="11.5">castingPos (cartes de zone)</text>
+      <text x="572" y="258" fill="#a7b4c9" font-size="11.5">position du héros</text>
+      <text x="572" y="333" fill="#a7b4c9" font-size="11.5">seuil d'annulation</text>
+      <text x="572" y="372" fill="#a7b4c9" font-size="11.5">sommet de l'éventail</text>
+      <path d="M556 126 L566 126" stroke="#3a4966" stroke-width="1.4" marker-end="url(#c5-a6)"/>
+      <path d="M556 232 L566 232" stroke="#3a4966" stroke-width="1.4" marker-end="url(#c5-a6)"/>
+      <path d="M556 258 L566 258" stroke="#3a4966" stroke-width="1.4" marker-end="url(#c5-a6)"/>
+      <path d="M556 333 L566 333" stroke="#3a4966" stroke-width="1.4" marker-end="url(#c5-a6)"/>
+      <path d="M556 372 L566 372" stroke="#3a4966" stroke-width="1.4" marker-end="url(#c5-a6)"/>
+      <text x="30" y="60" fill="#e6ecf5" font-size="12.5" font-family="ui-monospace, monospace">scaleFactor</text>
+      <text x="30" y="80" fill="#a7b4c9" font-size="11">= (size.y / 800)</text>
+      <text x="30" y="96" fill="#a7b4c9" font-size="11">  .clamp(0.85, 2.5)</text>
+      <text x="30" y="140" fill="#e6ecf5" font-size="12.5" font-family="ui-monospace, monospace">éventail</text>
+      <text x="30" y="160" fill="#a7b4c9" font-size="11">rayon = size.y × 1.5</text>
+      <text x="30" y="176" fill="#a7b4c9" font-size="11">pas = 0.08 rad (≤ 4 cartes)</text>
+      <text x="30" y="192" fill="#a7b4c9" font-size="11">ou (0.4/n).clamp(0.04, 0.08)</text>
+      <text x="30" y="232" fill="#e6ecf5" font-size="12.5" font-family="ui-monospace, monospace">ennemis</text>
+      <text x="30" y="252" fill="#a7b4c9" font-size="11">esp. = (size.x×0.85)/(n+1)</text>
+      <text x="30" y="268" fill="#a7b4c9" font-size="11">borné min/max ×scaleFactor</text>
+      <text x="30" y="308" fill="#e6ecf5" font-size="12.5" font-family="ui-monospace, monospace">tailles nominales</text>
+      <text x="30" y="328" fill="#a7b4c9" font-size="11">carte  140 × 196</text>
+      <text x="30" y="344" fill="#a7b4c9" font-size="11">héros  120 × 160</text>
+      <text x="30" y="360" fill="#a7b4c9" font-size="11">ennemi 100 × 140</text>
+    </svg>
+  </div>
+  <figcaption>Les repères verticaux de l'arène, en fractions de <code>size.y</code>. Les cinq cartes sont dessinées à l'échelle réelle d'un écran de 800 px de haut : elles se chevauchent, et la plus à droite (priorité 14) recouvre ses voisines.</figcaption>
+</figure>
+<h3>Les trois états d'une carte dans l'éventail</h3>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/layout_system.dart</span><span class="lang">dart</span></div>
+  <pre>if (card == game.focusedCard) {
+  targetPos = Vector2(x, y) + Vector2(0, -60);
+  targetScale = Vector2.all(game.scaleFactor * 0.88 * 1.25);
+} else if (card == game.hoveredCard) {
+  targetPos = Vector2(x, y);
+  targetScale = Vector2.all(game.scaleFactor * 0.88 * 1.2);
+} else {
+  targetPos = Vector2(x, y);
+  targetScale = Vector2.all(game.scaleFactor * 0.88);
+}</pre>
+</div>
+<p>La carte survolée grossit sur place (×1,2) ; la carte sélectionnée grossit un peu plus (×1,25) <strong>et se soulève
+de 60 pixels</strong>. Ces 60 pixels ne sont pas mis à l'échelle : c'est un décalage constant, la même valeur qu'on
+retrouve dans <code>CardAnimationSystem.setFocusedCard</code> et dans <code>CardAnimator.shakeAnimation</code>. Une
+seule ligne de la boucle est protégée : <code>if (card.isDragging) continue;</code> — une carte tenue au doigt garde sa
+position, elle a juste sa place réservée pour le retour.</p>
+<h3>Le placement des ennemis</h3>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/layout_system.dart</span><span class="lang">dart</span></div>
+  <pre>void repositionEnemies() {
+  final enemyCards = game.enemyCards;
+  if (enemyCards.isEmpty) return;
+
+  final int count = enemyCards.length;
+  double scaleMultiplier = 1.0;
+
+  final double visualWidthPerEnemy = (100.0 + 70.0) * game.scaleFactor * 1.45;
+
+  double totalEstimatedWidth = count * visualWidthPerEnemy;
+  final double maxAvailableWidth = game.size.x * 0.95;
+
+  if (totalEstimatedWidth &gt; maxAvailableWidth) {
+    scaleMultiplier = (maxAvailableWidth / totalEstimatedWidth).clamp(0.4, 1.0);
+  }
+
+  for (var enemy in enemyCards) {
+    enemy.scaleMultiplier = scaleMultiplier;
+  }
+
+  final double minSpacing = 165.0 * game.scaleFactor * 1.45 * scaleMultiplier;
+  final double maxSpacing = 280.0 * game.scaleFactor * 1.45 * scaleMultiplier;
+
+  double spacing = (game.size.x * 0.85) / (count + 1);
+  spacing = spacing.clamp(minSpacing, maxSpacing);
+
+  double startX = (game.size.x / 2) - ((count - 1) * (spacing / 2));
+  double posY = game.size.y * 0.21;
+
+  for (int i = 0; i &lt; count; i++) {
+    enemyCards[i].position = Vector2(startX + (i * spacing), posY);
+  }
+}</pre>
+</div>
+<p>L'algorithme se lit en quatre temps :</p>
+<ol>
+<li><strong>Estimer la place nécessaire.</strong> Chaque ennemi occupe visuellement <code>(100 + 70) × scaleFactor ×
+1.45</code> : sa largeur nominale plus 70 px de marge, à l'échelle.</li>
+<li><strong>Rétrécir si ça déborde.</strong> Si le total dépasse 95 % de la largeur, tous les ennemis reçoivent le même
+<code>scaleMultiplier</code>, jamais inférieur à <strong>0,4</strong>. Ils rapetissent ensemble, ce qui préserve les
+proportions relatives (un boss reste plus gros).</li>
+<li><strong>Calculer un espacement borné.</strong> L'idéal est <code>(size.x × 0.85) / (count + 1)</code>, ramené entre
+<code>165</code> et <code>280</code> unités mises à l'échelle : sans borne basse deux ennemis se chevaucheraient, sans
+borne haute un ennemi solitaire serait perdu dans un coin.</li>
+<li><strong>Centrer la rangée.</strong> <code>startX</code> place le premier ennemi de façon que le groupe soit
+symétrique autour de <code>size.x / 2</code>.</li>
+</ol>
+<p>La hauteur, elle, ne bouge jamais : <code>posY = size.y * 0.21</code>. Les ennemis occupent le tiers supérieur de
+l'arène, sous la barre de combat Flutter.</p>
+<h3>Le héros et les points de passage</h3>
+<p>Le héros est le repère le plus simple ; il est posé à deux endroits qui doivent rester d'accord :</p>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/systems/state_sync_system.dart</span><span class="lang">dart</span></div>
+  <pre>game.heroCard = HeroCard(
+  state.heroStats,
+  bonusAttack: bonusAtt,
+  imagePath: imagePath,
+);
+game.heroCard!.position = Vector2(game.size.x / 2, game.size.y * 0.51);
+game.add(game.heroCard!);</pre>
+</div>
+<p>Même valeur dans <code>HerosDraftGame.onGameResize</code>. Attention au faux ami : <code>HeroCard.onLoad</code> pose
+<code>position = Vector2(game.size.x / 2, game.size.y * 0.6)</code>, mais ce 0,6 n'est qu'un placeholder immédiatement
+écrasé par le 0,51, comme son commentaire l'indique.</p>
+<p>Trois autres fractions complètent la géographie de l'arène :</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Fraction</th><th>Rôle</th><th>Fichier</th></tr></thead>
+<tbody>
+<tr><td><code>size.y * 0.21</code></td><td>Hauteur de la rangée d'ennemis</td><td><code>layout_system.dart</code></td></tr>
+<tr><td><code>size.y * 0.25</code></td><td>Point d'impact de secours d'une attaque de mêlée sans cible</td><td><code>card_animator.dart</code></td></tr>
+<tr><td><code>size.y * 0.45</code></td><td><code>castingPos</code> : où une carte de zone se place avant de partir</td><td><code>card_animator.dart</code></td></tr>
+<tr><td><code>size.y * 0.51</code></td><td>Position du héros</td><td><code>heros_draft_game.dart</code>, <code>state_sync_system.dart</code></td></tr>
+<tr><td><code>size.y * 0.68</code></td><td>Seuil de la zone d'annulation pendant un glissement</td><td><code>card_interaction_handler.dart</code></td></tr>
+<tr><td><code>size.y * 0.77</code></td><td>Sommet de l'éventail (déduit du rayon et du 0,23)</td><td><code>layout_system.dart</code></td></tr>
+</tbody>
+</table></div>
+<div class="code" data-lang="dart">
+  <div class="code-head"><span class="path">lib/game/components/widgets/card_interaction_handler.dart</span><span class="lang">dart</span></div>
+  <pre>bool isInCancelZone = cardComponent.position.y &gt; cardComponent.game.size.y * 0.68;
+if (isInCancelZone != cardComponent.isHoveringCancelZone) {
+  cardComponent.isHoveringCancelZone = isInCancelZone;
+  applyCancelZoneFeedback(cardComponent.isHoveringCancelZone);
+}</pre>
+</div>
+<p>La comparaison porte sur le <em>centre</em> de la carte, et le retour visuel n'est déclenché qu'au
+<strong>franchissement</strong> du seuil (<code>isInCancelZone != isHoveringCancelZone</code>), pas à chaque image — le
+même réflexe que la garde <code>_lastSize</code>.</p>
+<div class="memo">
+  <div class="card">
+    <h5>Une seule référence</h5>
+    <p>Tout part de <code>size.y</code>. La largeur n'intervient que pour centrer et pour borner l'espacement des
+ennemis.</p>
+  </div>
+  <div class="card">
+    <h5>Deux échelles</h5>
+    <p><code>scaleFactor</code> pour la taille des objets, fractions de <code>size.y</code> pour leur position. Les deux ne
+se mélangent jamais.</p>
+  </div>
+  <div class="card">
+    <h5>Des bornes partout</h5>
+    <p><code>clamp</code> borne le facteur d'échelle, le pas angulaire, l'espacement des ennemis et l'inclinaison de
+glissement. Rien ne peut diverger.</p>
+  </div>
+  <div class="card">
+    <h5>Recalculé, jamais mémorisé</h5>
+    <p><code>onGameResize</code> rejoue héros, ennemis et main : aucune position n'est mise en cache entre deux tailles
+d'écran.</p>
+  </div>
+</div>
+
+<div class="quiz">
+  <h2>Quiz — vérifiez vos acquis</h2>
+  <div class="q" data-answer="2">
+    <p class="q-text">1. Que vaut exactement <code>scaleFactor</code> sur un écran de 600 pixels de haut ?</p>
+    <ul class="q-opts">
+      <li>0,75</li>
+      <li>1,0</li>
+      <li>0,85</li>
+      <li>2,5</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>lib/game/heros_draft_game.dart</code> définit
+    <code>double get scaleFactor =&gt; (size.y / 800).clamp(0.85, 2.5);</code>. Le calcul brut donne
+    600 / 800 = 0,75, mais le <code>clamp</code> le remonte à la borne basse <strong>0,85</strong>.</div>
+  </div>
+  <div class="q" data-answer="1">
+    <p class="q-text">2. Dans <code>LayoutSystem.layoutHand</code>, quelle est la durée du
+    <code>MoveEffect</code> d'une carte qui vient d'entrer en main, et celle d'une carte qui se
+    contente de se replacer ?</p>
+    <ul class="q-opts">
+      <li>0,4 s et 0,2 s</li>
+      <li>0,7 s et 0,35 s</li>
+      <li>0,35 s et 0,7 s</li>
+      <li>1,0 s et 0,5 s</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>final double duration = card.isEnteringHand ? 0.7 : 0.35;</code>
+    dans <code>lib/game/systems/layout_system.dart</code>. La courbe est <code>Curves.easeOutCubic</code>
+    dans les deux cas, et la même durée s'applique aux <code>MoveEffect</code>,
+    <code>RotateEffect</code> et <code>ScaleEffect</code>.</div>
+  </div>
+  <div class="q" data-answer="3">
+    <p class="q-text">3. Quelle valeur de <code>priority</code> reçoit une carte au moment où son
+    animation de jeu démarre ?</p>
+    <ul class="q-opts">
+      <li>100 (<code>priorityCardHovered</code>)</li>
+      <li>150 (<code>priorityCardFocused</code>)</li>
+      <li>300 (<code>priorityTargetingLine</code>)</li>
+      <li>500 (<code>priorityCardDraggingMax</code>)</li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>CardAnimator.playAnimation</code>
+    (<code>lib/game/components/visual_effects/card_animator.dart</code>) commence par
+    <code>card.priority = GameConstants.priorityCardDraggingMax;</code>, soit <strong>500</strong>,
+    la valeur la plus haute de la table. La carte jouée passe donc au-dessus de tout.</div>
+  </div>
+  <div class="q" data-answer="0">
+    <p class="q-text">4. Sur quelle ligne verticale <code>repositionEnemies</code> place-t-il tous les
+    ennemis ?</p>
+    <ul class="q-opts">
+      <li><code>size.y * 0.21</code></li>
+      <li><code>size.y * 0.25</code></li>
+      <li><code>size.y * 0.45</code></li>
+      <li><code>size.y * 0.51</code></li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> <code>double posY = game.size.y * 0.21;</code> dans
+    <code>lib/game/systems/layout_system.dart</code>. Les autres valeurs existent aussi dans le
+    projet : 0,25 est le point d'impact de secours d'une attaque de mêlée, 0,45 la
+    <code>castingPos</code> des cartes de zone, et 0,51 la position du héros.</div>
+  </div>
+  <div class="q" data-answer="2">
+    <p class="q-text">5. Dans <code>CardComponent.update</code>, que signifie exactement
+    <code>angle += (targetTilt - angle) * 15 * dt;</code> ?</p>
+    <ul class="q-opts">
+      <li>L'angle augmente de 15 radians par image</li>
+      <li>L'angle atteint <code>targetTilt</code> en 15 secondes exactement</li>
+      <li>L'angle rattrape 15 fois par seconde l'écart restant : une interpolation indépendante du taux de rafraîchissement</li>
+      <li>L'angle est multiplié par 15 à chaque appel de <code>update</code></li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> C'est une interpolation exponentielle. La
+    multiplication par <code>dt</code> (le temps écoulé depuis l'image précédente, ≈ 0,0167 s à 60 Hz)
+    rend le mouvement identique à 60 comme à 120 Hz. La ligne suivante,
+    <code>targetTilt += (0 - targetTilt) * 5 * dt;</code>, fait revenir l'inclinaison vers zéro avec
+    une constante plus lente.</div>
+  </div>
+  <div class="q" data-answer="1">
+    <p class="q-text">6. Quels effets sont ajoutés à un ennemi qui meurt, et pendant combien de
+    temps ?</p>
+    <ul class="q-opts">
+      <li>Un <code>RemoveEffect</code> immédiat</li>
+      <li>Un <code>OpacityEffect.to(0.0, ...)</code> et un <code>ScaleEffect.to(Vector2.zero(), ...)</code>, tous deux de 0,4 s</li>
+      <li>Un <code>SequenceEffect</code> de 1,2 s avec <code>Curves.elasticOut</code></li>
+      <li>Un <code>ColorEffect</code> rouge de 0,25 s suivi d'un <code>RemoveEffect</code></li>
+    </ul>
+    <div class="q-exp"><strong>Réponse :</strong> Dans <code>HerosDraftGame.resolvePendingDeaths</code>
+    (et à l'identique dans <code>StateSyncSystem._applyCombatState</code>) :
+    <code>card.add(OpacityEffect.to(0.0, EffectController(duration: 0.4)));</code> puis un
+    <code>ScaleEffect.to(Vector2.zero(), EffectController(duration: 0.4), onComplete: ...)</code>.
+    C'est le <code>onComplete</code> du second qui appelle <code>card.removeFromParent()</code>.</div>
+  </div>
+</div>
+<div class="pager">
+<a class="prev" href="ch04.html"><div class="dir">&#8592; Chapitre 04</div><div class="ttl">Riverpod — l&#x27;état partagé du jeu</div></a>
+<a class="next" href="ch06.html"><div class="dir">Chapitre 06 &#8594;</div><div class="ttl">L&#x27;architecture en quatre couches</div></a>
+</div>
+</div>
+</main>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>
