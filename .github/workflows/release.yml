@@ -200,6 +200,15 @@ jobs:
             "https://heros-draft.vilarserver.com" \
             "${{ needs.verify-version.outputs.version }}"
 
+  # Appele en workflow reutilisable plutot que duplique : une seule definition
+  # du deploiement du site, partagee avec le lancement manuel.
+  # `needs: smoke-test` garantit que le site n'annonce jamais une version dont
+  # personne n'a verifie qu'elle se charge.
+  deploy-site:
+    needs: [verify-version, smoke-test]
+    uses: ./.github/workflows/site.yml
+    secrets: inherit
+
   release-windows:
     needs: [verify-version, build-windows]
     runs-on: ubuntu-latest
@@ -241,7 +250,7 @@ jobs:
   # le run. `if: success()` limite l'annonce aux releases reussies -- GitHub
   # envoie deja un e-mail en cas d'echec.
   notify-discord:
-    needs: [verify-version, smoke-test, release-windows]
+    needs: [verify-version, deploy-site, release-windows]
     if: success()
     continue-on-error: true
     runs-on: ubuntu-latest
