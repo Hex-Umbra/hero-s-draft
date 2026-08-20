@@ -804,13 +804,26 @@ Attendu : `52 ok, 0 echec(s)`.
 bash .github/scripts/verify_version.sh 0.4.8
 ```
 
-Attendu : **échec**, avec `l'entree current a id='v0.4.7', attendu 'v0.4.8'`. C'est le comportement voulu : `versions.json` est amorcé sur 0.4.7 et sera mis à jour par la Task 13. Vérifier ensuite que le cas cohérent passe :
+> [!NOTE]
+> Ce bloc supposait que la Task 4 avait déjà porté `pubspec.yaml` en 0.4.8. Si cette tâche est exécutée avant la release 0.4.8 — ce qui est le cas dès que le lot 2 est traité d'un seul tenant — le dépôt est encore en 0.4.7 et les sorties attendues s'inversent. Les trois commandes ci-dessous couvrent le même terrain quel que soit l'ordre.
 
 ```bash
 bash .github/scripts/verify_version.sh 0.4.7
 ```
 
-Attendu : échec sur `pubspec.yaml` (qui est en 0.4.8), **pas** sur `versions.json` — la preuve que les messages nomment bien le bon fichier fautif.
+Attendu : **succès**, et la ligne finale doit désormais nommer les trois fichiers, `versions.json` compris — c'est la preuve que l'entrée amorcée concorde avec le reste.
+
+```bash
+bash .github/scripts/verify_version.sh 0.4.8
+```
+
+Attendu : **échec nommant `pubspec.yaml`**, pas `versions.json`. Les vérifications s'exécutent dans l'ordre et s'arrêtent au premier désaccord ; c'est le comportement voulu.
+
+```bash
+VERSIONS_PATH=/inexistant/versions.json bash .github/scripts/verify_version.sh 0.4.7
+```
+
+Attendu : **échec nommant le fichier de versions manquant** — la preuve que le nouveau bloc est réellement atteint et qu'il nomme le bon fichier fautif.
 
 - [ ] **Étape 7 : commit**
 
