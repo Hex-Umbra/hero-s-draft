@@ -36,7 +36,7 @@ class _TutorialScreenState extends State<TutorialScreen> {
   void initState() {
     super.initState();
     _engine = TutorialEngine(data: widget.data);
-    _engine.resetMockState();
+    _engine.prepareStep(_engine.currentStepIndex);
     _pageController = PageController(initialPage: _engine.currentStepIndex);
     _engine.addListener(_onEngineChanged);
   }
@@ -324,7 +324,8 @@ class _TutorialScreenState extends State<TutorialScreen> {
                                   Row(
                                     children: [
                                       // Back Button (only if currentStepIndex > 0)
-                                      if (_engine.currentStepIndex > 0)
+                                      if (_engine.currentStepIndex >
+                                          _engine.minReachableStep)
                                         IconButton(
                                           onPressed: () => _engine.prevStep(),
                                           icon: const Icon(

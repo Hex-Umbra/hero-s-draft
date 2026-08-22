@@ -11,7 +11,7 @@ void main() {
 
   setUp(() {
     engine = TutorialEngine(data: buildTutorialTestRegistry());
-    engine.resetMockState();
+    engine.prepareStep(engine.currentStepIndex);
   });
 
   group('Modèles réels', () {
@@ -148,6 +148,77 @@ void main() {
 
       expect(engine.mockState.playerLevel, 2);
       expect(engine.mockState.playerXp, 5); // 105 - 100
+    });
+  });
+
+  group('Parcours à état', () {
+    test('la classe choisie survit aux changements d\'étape', () {
+      final paladin = engine.fixtures.heroes.first;
+      engine.chooseHero(paladin);
+
+      engine.nextStep();
+      engine.nextStep();
+
+      expect(engine.mockState.chosenHero?.id, 'paladin');
+      expect(engine.mockState.activePassive?.id, 'regenArmor');
+    });
+
+    test('les stats du héros dérivent de la classe choisie', () {
+      final mage = engine.fixtures.heroes.firstWhere((h) => h.id == 'mage');
+      engine.chooseHero(mage);
+      engine.prepareStep(engine.currentStepIndex);
+
+      expect(engine.mockState.heroStats.maxPv, 60);
+      expect(engine.mockState.heroStats.maxMana, 3);
+    });
+
+    test('le deck drafté survit aux changements d\'étape', () {
+      final pool = engine.fixtures.starterPool.take(5).toList();
+      engine.chooseHero(engine.fixtures.heroes.first);
+      engine.setStarterDeck(pool);
+
+      final expectedSize = 5 + engine.fixtures.heroes.first.skills.length;
+      engine.nextStep();
+
+      expect(engine.mockState.masterDeck, hasLength(expectedSize));
+    });
+
+    test('la tranche scratch est bien réinitialisée entre deux étapes', () {
+      engine.seedEnemy();
+      engine.nextStep();
+      expect(engine.mockState.enemy, isNull);
+    });
+  });
+
+  group('Verrou des étapes d\'amont', () {
+    test('minReachableStep vaut 0 avant l\'étape 03', () {
+      expect(engine.minReachableStep, 0);
+    });
+
+    test('une fois l\'étape 03 franchie, on ne redescend plus sous 03', () {
+      while (engine.currentStepIndex < 3) {
+        engine.nextStep();
+      }
+      expect(engine.minReachableStep, 3);
+
+      engine.prevStep();
+      engine.prevStep();
+      engine.prevStep();
+
+      expect(engine.currentStepIndex, 3);
+    });
+  });
+
+  group('prepareStep et le découplage des notifications', () {
+    test('une étape qui sème main et ennemi n\'émet qu\'une seule notification', () {
+      var notifications = 0;
+      engine.addListener(() => notifications++);
+
+      // Étape "Jouer des cartes" (indice 5) : sème l'ennemi puis la main,
+      // les deux passant par les variantes privées sans notification.
+      engine.prepareStep(5);
+
+      expect(notifications, 1);
     });
   });
 }

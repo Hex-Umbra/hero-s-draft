@@ -9,6 +9,7 @@ import '../models/enemy_instance.dart';
 import '../game/services/damage_pipeline.dart';
 import 'tutorial_data.dart';
 import 'tutorial_fixtures.dart';
+import 'tutorial_step.dart';
 
 class TutorialMockState {
   // --- Tranche persistante (écrite par les étapes 02 et 03) ---
@@ -86,64 +87,118 @@ class TutorialEngine extends ChangeNotifier {
   bool get isLastStep => _currentStepIndex == kTutorialSteps.length - 1;
 
   void nextStep() {
-    if (_currentStepIndex < kTutorialSteps.length - 1) {
-      _currentStepIndex++;
-      resetMockState();
-      notifyListeners();
-    }
+    if (_currentStepIndex >= kTutorialSteps.length - 1) return;
+    _currentStepIndex++;
+    // `>=` et non `>` : atteindre le plancher suffit à verrouiller l'amont.
+    if (_currentStepIndex >= _upstreamFloorIndex) _upstreamLocked = true;
+    prepareStep(_currentStepIndex);
+    notifyListeners();
   }
 
   void prevStep() {
-    if (_currentStepIndex > 0) {
-      _currentStepIndex--;
-      resetMockState();
-      notifyListeners();
-    }
+    if (_currentStepIndex <= minReachableStep) return;
+    _currentStepIndex--;
+    prepareStep(_currentStepIndex);
+    notifyListeners();
   }
 
-  void resetMockState() {
+  /// Indice plancher du retour en arrière une fois les étapes d'amont
+  /// franchies. Dans le parcours cible à 15 étapes, l'indice 3 est « La
+  /// Carte du Monde », la première étape qui suit le draft de départ :
+  /// revenir en deçà invaliderait la classe et le deck dont dépendent toutes
+  /// les étapes suivantes.
+  static const int _upstreamFloorIndex = 3;
+
+  bool _upstreamLocked = false;
+
+  int get minReachableStep => _upstreamLocked ? _upstreamFloorIndex : 0;
+
+  void chooseHero(HeroData hero) {
+    mockState.chosenHero = hero;
+    mockState.activePassive = fixtures.passiveFor(hero);
+    mockState.heroStats = mockState.baseStatsForHero();
+    notifyListeners();
+  }
+
+  /// Fixe le deck de départ : les cartes choisies plus les cartes de classe,
+  /// comme `StarterDeckDraftScreen._startAdventure`.
+  void setStarterDeck(List<CardData> chosen) {
+    final hero = mockState.chosenHero;
+    final classCards = hero == null
+        ? <CardData>[]
+        : hero.skills.map(fixtures.card).toList();
+
+    mockState.masterDeck = [
+      ...classCards.map((c) => CardInstance(data: c)),
+      ...chosen.map((c) => CardInstance(data: c)),
+    ];
+    notifyListeners();
+  }
+
+  /// Prépare l'étape [index] : réinitialise la tranche scratch, puis pose le
+  /// décor propre à l'étape. La tranche persistante (classe, deck) survit.
+  ///
+  /// `seedHand`/`seedEnemy` notifient chacun individuellement ; les appeler
+  /// tels quels ici produirait jusqu'à trois notifications par changement
+  /// d'étape (une par semis, plus celle de `nextStep`/`prevStep`), soit
+  /// autant de reconstructions complètes de l'écran. On passe donc par leurs
+  /// variantes privées, sans notification, et une seule notification est
+  /// émise à la fin de cette méthode.
+  void prepareStep(int index) {
     mockState.resetScratch();
-    switch (_currentStepIndex) {
-      case 4: // Step 5: Cards & Mana
-        seedHand([
+    _armorGainedThisStep = false;
+
+    switch (kTutorialSteps[index].type) {
+      case TutorialStepType.cards:
+        _seedHand([
           TutorialFixtureIds.strike,
           TutorialFixtureIds.defend,
           TutorialFixtureIds.fireball,
         ]);
         break;
-      case 5: // Step 6: Play Card
-        seedHand([TutorialFixtureIds.strike, TutorialFixtureIds.defend]);
-        seedEnemy();
+      case TutorialStepType.playCard:
+        _seedEnemy();
+        _seedHand([TutorialFixtureIds.strike, TutorialFixtureIds.defend]);
         break;
-      case 6: // Step 7: Armor & Damage
-        seedEnemy();
+      case TutorialStepType.armorDamage:
+        _seedEnemy();
         break;
-      case 9: // Step 10: Merge
-        seedHand([
+      case TutorialStepType.merge:
+        _seedHand([
           TutorialFixtureIds.strike,
           TutorialFixtureIds.strike,
           TutorialFixtureIds.strike,
         ]);
         break;
-      case 11: // Step 12: Draft
+      case TutorialStepType.draft:
         mockState.playerLevel = 2;
-        mockState.hasDrafted = false;
         break;
       default:
         break;
     }
+
+    notifyListeners();
   }
 
   /// Peuple la main à partir d'ids de cartes du registre.
   void seedHand(List<String> cardIds) {
+    _seedHand(cardIds);
+    notifyListeners();
+  }
+
+  void _seedHand(List<String> cardIds) {
     mockState.hand = cardIds
         .map((id) => CardInstance(data: fixtures.card(id)))
         .toList();
-    notifyListeners();
   }
 
   /// Place l'ennemi d'entraînement, intention comprise.
   void seedEnemy() {
+    _seedEnemy();
+    notifyListeners();
+  }
+
+  void _seedEnemy() {
     final data = fixtures.trainingEnemy;
     mockState.enemy = EnemyInstance(
       data: data,
@@ -155,7 +210,6 @@ class TutorialEngine extends ChangeNotifier {
       ),
       currentIntent: data.intents?.first,
     );
-    notifyListeners();
   }
 
   void setMana(int value) {
