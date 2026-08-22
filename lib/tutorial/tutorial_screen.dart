@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../models/data/card_data.dart';
 import '../models/data/game_data_registry.dart';
 import 'tutorial_engine.dart';
 import 'tutorial_step.dart';
@@ -62,12 +63,13 @@ class _TutorialScreenState extends State<TutorialScreen> {
     final step = kTutorialSteps[engine.currentStepIndex];
     switch (step.type) {
       case TutorialStepType.playCard:
-        return engine.mockState.enemy != null &&
-            engine.mockState.enemy!.hp < 20 &&
-            engine.mockState.heroArmor > 0;
+        final enemy = engine.mockState.enemy;
+        return enemy != null &&
+            enemy.stats.currentPv < enemy.stats.maxPv &&
+            engine.mockState.heroStats.armure > 0;
       case TutorialStepType.merge:
         return engine.mockState.hand.length == 1 &&
-            engine.mockState.hand.first.id == 'strike_upgraded';
+            engine.mockState.hand.first.rarity != CardRarity.common;
       case TutorialStepType.xp:
         return engine.mockState.playerLevel > 1;
       case TutorialStepType.draft:

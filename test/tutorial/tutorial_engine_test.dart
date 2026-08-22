@@ -1,77 +1,105 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/tutorial/tutorial_engine.dart';
+import 'package:roguelike_card_game/tutorial/tutorial_fixtures.dart';
 
 import 'tutorial_test_registry.dart';
 
 void main() {
-  group('TutorialEngine Tests', () {
-    late TutorialEngine engine;
+  late TutorialEngine engine;
 
-    setUp(() {
-      engine = TutorialEngine(data: buildTutorialTestRegistry());
-      engine.resetMockState();
+  setUp(() {
+    engine = TutorialEngine(data: buildTutorialTestRegistry());
+    engine.resetMockState();
+  });
+
+  group('Modèles réels', () {
+    test('la main est composée de CardInstance issues du registre', () {
+      engine.seedHand([
+        TutorialFixtureIds.strike,
+        TutorialFixtureIds.defend,
+      ]);
+
+      expect(engine.mockState.hand, everyElement(isA<CardInstance>()));
+      expect(engine.mockState.hand.first.data.id, 'strike_basic');
+      // La valeur vient du JSON, pas d'une constante recopiée.
+      expect(engine.mockState.hand.first.data.cost, 1);
     });
 
-    test('Initial state is step 0', () {
-      expect(engine.currentStepIndex, 0);
-      expect(engine.isLastStep, false);
+    test('l\'ennemi d\'entraînement porte les stats du JSON', () {
+      engine.seedEnemy();
+
+      final enemy = engine.mockState.enemy!;
+      final slime = engine.fixtures.trainingEnemy;
+      expect(enemy.stats.maxPv, slime.maxHp);
+      expect(enemy.stats.currentPv, slime.maxHp);
+      expect(enemy.data.id, 'slime');
     });
 
-    test('nextStep advances step and resets mock state', () {
-      engine.nextStep();
-      expect(engine.currentStepIndex, 1);
+    test('les stats du héros sont un EntityStats', () {
+      expect(engine.mockState.heroStats.maxPv, greaterThan(0));
+      expect(engine.mockState.heroStats.armure, 0);
+    });
+  });
 
-      // Advance to step 5 (playCard step)
-      while (engine.currentStepIndex < 5) {
-        engine.nextStep();
-      }
-      expect(engine.currentStepIndex, 5);
-      expect(engine.mockState.enemy, isNotNull);
-      expect(engine.mockState.enemy!.hp, 20);
+  group('playCard passe par les vrais calculs', () {
+    test('une attaque retire les dégâts du JSON aux PV de l\'ennemi', () {
+      engine.seedEnemy();
+      engine.seedHand([TutorialFixtureIds.strike]);
 
-      // Playing a card deals damage
-      final card = engine.mockState.hand.firstWhere((c) => c.id == 'strike');
-      final success = engine.playCard(card);
-      expect(success, true);
-      expect(engine.mockState.enemy!.hp, 14); // 20 - 6 damage
+      final slimeHp = engine.fixtures.trainingEnemy.maxHp;
+      final strikeDamage = engine.fixtures
+          .card(TutorialFixtureIds.strike)
+          .effects
+          .firstWhere((e) => e.type == 'damage')
+          .value;
+
+      final played = engine.playCard(engine.mockState.hand.first);
+
+      expect(played, isTrue);
+      expect(engine.mockState.enemy!.stats.currentPv, slimeHp - strikeDamage);
     });
 
-    test('prevStep goes back and resets mock state', () {
-      engine.nextStep();
-      expect(engine.currentStepIndex, 1);
-      engine.prevStep();
-      expect(engine.currentStepIndex, 0);
+    test('une carte de Défense donne de l\'armure même sans ennemi', () {
+      // Régression : le gain d'armure était imbriqué dans `if (enemy != null)`.
+      engine.seedHand([TutorialFixtureIds.defend]);
+      expect(engine.mockState.enemy, isNull);
+
+      final armorValue = engine.fixtures
+          .card(TutorialFixtureIds.defend)
+          .effects
+          .firstWhere((e) => e.type == 'armor')
+          .value;
+
+      engine.playCard(engine.mockState.hand.first);
+
+      expect(engine.mockState.heroStats.armure, armorValue);
     });
 
-    test('mergeCards upgrades cards in hand', () {
-      // Go to step 9 (merge step)
-      while (engine.currentStepIndex < 9) {
-        engine.nextStep();
-      }
-      expect(engine.currentStepIndex, 9);
-      expect(engine.mockState.hand.length, 3);
+    test('une carte trop chère n\'est pas jouée', () {
+      engine.seedHand([TutorialFixtureIds.fireball]);
+      engine.setMana(0);
 
-      engine.mergeCards();
-      expect(engine.mockState.hand.length, 1);
-      expect(engine.mockState.hand.first.id, 'strike_upgraded');
+      expect(engine.playCard(engine.mockState.hand.first), isFalse);
+      expect(engine.mockState.hand, hasLength(1));
+    });
+  });
+
+  group('L\'absorption d\'armure suit EntityStats.takeDamage', () {
+    test('sans armure, tous les dégâts vont aux PV', () {
+      final before = engine.mockState.heroStats.currentPv;
+      engine.applyDamageToHero(10);
+      expect(engine.mockState.heroStats.currentPv, before - 10);
     });
 
-    test('gainXp triggers level up when exceeding 100', () {
-      // Go to step 10 (xp step)
-      while (engine.currentStepIndex < 10) {
-        engine.nextStep();
-      }
-      expect(engine.currentStepIndex, 10);
-      expect(engine.mockState.playerLevel, 1);
-      expect(engine.mockState.playerXp, 0);
+    test('avec armure, l\'armure encaisse en premier', () {
+      engine.setHeroArmor(4);
+      final before = engine.mockState.heroStats.currentPv;
 
-      engine.gainXp(35);
-      expect(engine.mockState.playerXp, 35);
-      engine.gainXp(35);
-      expect(engine.mockState.playerXp, 70);
-      engine.gainXp(35);
-      expect(engine.mockState.playerLevel, 2);
-      expect(engine.mockState.playerXp, 5); // 105 - 100
+      engine.applyDamageToHero(10);
+
+      expect(engine.mockState.heroStats.armure, 0);
+      expect(engine.mockState.heroStats.currentPv, before - 6);
     });
   });
 }

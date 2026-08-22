@@ -1,5 +1,30 @@
 import 'package:flutter/material.dart';
+import '../../models/card_instance.dart';
 import '../tutorial_engine.dart';
+import '../tutorial_fixtures.dart';
+
+/// Dérive un score d'effet scalaire (dégâts, armure) depuis les données
+/// réelles de la carte, en appliquant le multiplicateur de rareté.
+///
+/// Collage jetable : `TutorialUiCard` prend encore des scalaires. La Task 8
+/// supprime ce widget et cet helper avec.
+int _effectValue(CardInstance card, String type) {
+  for (final effect in card.data.effects) {
+    if (effect.type == type) {
+      return (effect.value * card.rarityMultiplier).round();
+    }
+  }
+  return 0;
+}
+
+/// Dérive l'identifiant de statut élémentaire (ex: 'burn') appliqué par la
+/// carte, s'il y en a un. Même statut jetable que `_effectValue`.
+String? _effectStatusId(CardInstance card) {
+  for (final effect in card.data.effects) {
+    if (effect.type == 'apply_status') return effect.statusId;
+  }
+  return null;
+}
 
 class TutorialUiCard extends StatelessWidget {
   final String title;
@@ -308,18 +333,18 @@ class TutorialCardsWidget extends StatefulWidget {
 class _TutorialCardsWidgetState extends State<TutorialCardsWidget> {
   int _selectedCardIndex = 0;
 
-  @override
-  void initState() {
-    super.initState();
-    // Ensure the mock state is populated for this step
-    widget.engine.resetMockState();
-  }
+  // Pas de resetMockState() ici : `TutorialEngine.nextStep()`/`prevStep()`
+  // l'ont déjà appelé avant que cette page ne soit montée. Le refaire ici
+  // déclencherait notifyListeners() en plein passage de build de la
+  // PageView (le AnimatedBuilder parent est déjà construit cette frame),
+  // ce que Flutter refuse : « setState() or markNeedsBuild() called during
+  // build. »
 
   @override
   Widget build(BuildContext context) {
     final isFrench = Localizations.localeOf(context).languageCode == 'fr';
     final hand = widget.engine.mockState.hand;
-    final mana = widget.engine.mockState.heroMana;
+    final mana = widget.engine.mockState.heroStats.currentMana;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -377,13 +402,13 @@ class _TutorialCardsWidgetState extends State<TutorialCardsWidget> {
                       children: List.generate(hand.length, (index) {
                         final card = hand[index];
                         final isSelected = _selectedCardIndex == index;
-                        final title = isFrench ? card.nameFr : card.nameEn;
+                        final title = card.data.getName(isFrench ? 'fr' : 'en');
 
                         // Simple text descriptions for mockup
                         String cardDesc = '';
-                        if (card.id == 'strike') {
+                        if (card.data.id == TutorialFixtureIds.strike) {
                           cardDesc = isFrench ? 'Inflige 6 dégâts.' : 'Deals 6 damage.';
-                        } else if (card.id == 'defend') {
+                        } else if (card.data.id == TutorialFixtureIds.defend) {
                           cardDesc = isFrench ? 'Gagne 4 armure.' : 'Gains 4 armor.';
                         } else {
                           cardDesc = isFrench
@@ -396,12 +421,14 @@ class _TutorialCardsWidgetState extends State<TutorialCardsWidget> {
                           child: TutorialUiCard(
                             title: title,
                             description: cardDesc,
-                            cost: card.cost,
-                            type: card.id == 'defend' ? 'skill' : 'attack',
+                            cost: card.currentCost,
+                            type: card.data.id == TutorialFixtureIds.defend
+                                ? 'skill'
+                                : 'attack',
                             isSelected: isSelected,
-                            damage: card.damage,
-                            armor: card.armor,
-                            effectType: card.effectType,
+                            damage: _effectValue(card, 'damage'),
+                            armor: _effectValue(card, 'armor'),
+                            effectType: _effectStatusId(card),
                             onTap: () {
                               setState(() {
                                 _selectedCardIndex = index;
@@ -428,8 +455,8 @@ class _TutorialCardsWidgetState extends State<TutorialCardsWidget> {
                   ),
                   child: Text(
                     isFrench
-                        ? 'Chaque cristal 💎 vaut 1 mana. La carte sélectionnée coûte ${hand[_selectedCardIndex].cost} mana.'
-                        : 'Each crystal 💎 counts as 1 mana. The selected card costs ${hand[_selectedCardIndex].cost} mana.',
+                        ? 'Chaque cristal 💎 vaut 1 mana. La carte sélectionnée coûte ${hand[_selectedCardIndex].currentCost} mana.'
+                        : 'Each crystal 💎 counts as 1 mana. The selected card costs ${hand[_selectedCardIndex].currentCost} mana.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.grey.shade300,

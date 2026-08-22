@@ -1,6 +1,29 @@
 import 'package:flutter/material.dart';
+import '../../models/card_instance.dart';
 import '../tutorial_engine.dart';
+import '../tutorial_fixtures.dart';
 import 'tutorial_cards_widget.dart'; // Reuses TutorialUiCard
+
+/// Copie locale de `tutorial_cards_widget.dart` : `_effectValue` est privé à
+/// sa librairie, donc chaque fichier consommateur a la sienne. Collage
+/// jetable, supprimé avec `TutorialUiCard` en Task 8.
+int _effectValue(CardInstance card, String type) {
+  for (final effect in card.data.effects) {
+    if (effect.type == type) {
+      return (effect.value * card.rarityMultiplier).round();
+    }
+  }
+  return 0;
+}
+
+/// Copie locale de `_effectStatusId` (voir `tutorial_cards_widget.dart`),
+/// pour la même raison de visibilité privée par librairie.
+String? _effectStatusId(CardInstance card) {
+  for (final effect in card.data.effects) {
+    if (effect.type == 'apply_status') return effect.statusId;
+  }
+  return null;
+}
 
 class TutorialPlayCardWidget extends StatefulWidget {
   final TutorialEngine engine;
@@ -11,17 +34,18 @@ class TutorialPlayCardWidget extends StatefulWidget {
 }
 
 class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
-  TutorialCard? _selectedCard;
+  CardInstance? _selectedCard;
   bool _showFloatingText = false;
   String _floatingText = '';
   Color _floatingColor = Colors.red;
   double _floatingYOffset = 0.0;
 
-  @override
-  void initState() {
-    super.initState();
-    widget.engine.resetMockState();
-  }
+  // Pas de resetMockState() ici : `TutorialEngine.nextStep()`/`prevStep()`
+  // l'ont déjà appelé avant que cette page ne soit montée. Le refaire ici
+  // déclencherait notifyListeners() en plein passage de build de la
+  // PageView (le AnimatedBuilder parent est déjà construit cette frame),
+  // ce que Flutter refuse : « setState() or markNeedsBuild() called during
+  // build. »
 
   void _triggerFloatingText(String text, Color color) {
     setState(() {
@@ -55,19 +79,20 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
     final isFrench = Localizations.localeOf(context).languageCode == 'fr';
     final hand = widget.engine.mockState.hand;
     final enemy = widget.engine.mockState.enemy;
-    final heroHp = widget.engine.mockState.heroHp;
-    final heroMaxHp = widget.engine.mockState.heroMaxHp;
-    final heroArmor = widget.engine.mockState.heroArmor;
-    final mana = widget.engine.mockState.heroMana;
+    final heroStats = widget.engine.mockState.heroStats;
+    final heroHp = heroStats.currentPv;
+    final heroMaxHp = heroStats.maxPv;
+    final heroArmor = heroStats.armure;
+    final mana = heroStats.currentMana;
 
     // Filter hand in two phases to guide the player:
     // Phase 1 (slime has full HP): show only Strike to target the enemy.
     // Phase 2 (slime took damage): show only Defend to target the hero.
     final displayedHand = hand.where((card) {
-      if (enemy != null && enemy.hp == 20) {
-        return card.id == 'strike';
+      if (enemy != null && enemy.stats.currentPv == enemy.stats.maxPv) {
+        return card.data.id == TutorialFixtureIds.strike;
       } else {
-        return card.id == 'defend';
+        return card.data.id == TutorialFixtureIds.defend;
       }
     }).toList();
 
@@ -113,18 +138,19 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
                                 return;
                               }
 
-                              if (_selectedCard!.id == 'strike') {
+                              if (_selectedCard!.data.id == TutorialFixtureIds.strike) {
+                                final damage = _effectValue(_selectedCard!, 'damage');
                                 final success = widget.engine.playCard(_selectedCard!);
                                 if (success) {
                                   _triggerFloatingText(
-                                    '-${_selectedCard!.damage} HP',
+                                    '-$damage HP',
                                     Colors.redAccent,
                                   );
                                   setState(() {
                                     _selectedCard = null;
                                   });
                                 }
-                              } else if (_selectedCard!.id == 'defend') {
+                              } else if (_selectedCard!.data.id == TutorialFixtureIds.defend) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text(
@@ -146,11 +172,13 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
                                 padding: EdgeInsets.all(10 * scale),
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: (_selectedCard != null && _selectedCard!.id == 'strike')
+                                  color: (_selectedCard != null &&
+                                      _selectedCard!.data.id == TutorialFixtureIds.strike)
                                       ? Colors.redAccent.withValues(alpha: 0.08)
                                       : Colors.transparent,
                                   border: Border.all(
-                                    color: (_selectedCard != null && _selectedCard!.id == 'strike')
+                                    color: (_selectedCard != null &&
+                                      _selectedCard!.data.id == TutorialFixtureIds.strike)
                                         ? Colors.redAccent.withValues(alpha: 0.3)
                                         : Colors.transparent,
                                     width: 2 * scale,
@@ -173,7 +201,7 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
                                       child: Icon(
                                         Icons.pest_control_rodent_rounded,
                                         size: 50 * scale,
-                                        color: enemy.hp > 0
+                                        color: enemy.stats.currentPv > 0
                                             ? Colors.greenAccent
                                             : Colors.grey,
                                       ),
@@ -181,7 +209,7 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
                                     SizedBox(height: 4 * scale),
                                     // Enemy Name
                                     Text(
-                                      isFrench ? enemy.nameFr : enemy.nameEn,
+                                      isFrench ? enemy.data.nameFr : enemy.data.nameEn,
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 11 * scale,
@@ -202,7 +230,8 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
                                         children: [
                                           AnimatedContainer(
                                             duration: const Duration(milliseconds: 300),
-                                            width: (100 * scale) * (enemy.hp / enemy.maxHp),
+                                            width: (100 * scale) *
+                                                (enemy.stats.currentPv / enemy.stats.maxPv),
                                             decoration: BoxDecoration(
                                               color: Colors.redAccent,
                                               borderRadius: BorderRadius.circular(5 * scale),
@@ -210,7 +239,7 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
                                           ),
                                           Center(
                                             child: Text(
-                                              '${enemy.hp}/${enemy.maxHp}',
+                                              '${enemy.stats.currentPv}/${enemy.stats.maxPv}',
                                               style: TextStyle(
                                                 color: Colors.white,
                                                 fontSize: 8 * scale,
@@ -277,18 +306,19 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
                           return;
                         }
 
-                        if (_selectedCard!.id == 'defend') {
+                        if (_selectedCard!.data.id == TutorialFixtureIds.defend) {
+                          final armor = _effectValue(_selectedCard!, 'armor');
                           final success = widget.engine.playCard(_selectedCard!);
                           if (success) {
                             _triggerFloatingText(
-                              '+${_selectedCard!.armor} 🛡️',
+                              '+$armor 🛡️',
                               Colors.blueAccent,
                             );
                             setState(() {
                               _selectedCard = null;
                             });
                           }
-                        } else if (_selectedCard!.id == 'strike') {
+                        } else if (_selectedCard!.data.id == TutorialFixtureIds.strike) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
@@ -313,7 +343,8 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
                             color: const Color(0xFF1E293B).withValues(alpha: 0.3),
                             borderRadius: BorderRadius.circular(10 * scale),
                             border: Border.all(
-                              color: (_selectedCard != null && _selectedCard!.id == 'defend')
+                              color: (_selectedCard != null &&
+                                      _selectedCard!.data.id == TutorialFixtureIds.defend)
                                   ? Colors.cyanAccent.withValues(alpha: 0.4)
                                   : Colors.transparent,
                               width: 1.5 * scale,
@@ -415,7 +446,7 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
                           Padding(
                             padding: EdgeInsets.only(bottom: 6 * scale),
                             child: Text(
-                              (enemy?.hp ?? 20) == 20
+                              (enemy == null || enemy.stats.currentPv == enemy.stats.maxPv)
                                   ? (isFrench
                                       ? "Étape 1 : Sélectionnez 'Frappe Basique' puis touchez le Slime."
                                       : "Step 1: Select 'Basic Strike' then tap the Slime.")
@@ -450,10 +481,10 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
                                   children: List.generate(displayedHand.length, (index) {
                                     final card = displayedHand[index];
                                     final isSelected = _selectedCard == card;
-                                    final title = isFrench ? card.nameFr : card.nameEn;
+                                    final title = card.data.getName(isFrench ? 'fr' : 'en');
 
                                     String cardDesc = '';
-                                    if (card.id == 'strike') {
+                                    if (card.data.id == TutorialFixtureIds.strike) {
                                       cardDesc = isFrench
                                           ? 'Inflige 6 dégâts.'
                                           : 'Deals 6 damage.';
@@ -469,12 +500,14 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
                                       child: TutorialUiCard(
                                         title: title,
                                         description: cardDesc,
-                                        cost: card.cost,
-                                        type: card.id == 'defend' ? 'skill' : 'attack',
+                                        cost: card.currentCost,
+                                        type: card.data.id == TutorialFixtureIds.defend
+                                            ? 'skill'
+                                            : 'attack',
                                         isSelected: isSelected,
-                                        damage: card.damage,
-                                        armor: card.armor,
-                                        effectType: card.effectType,
+                                        damage: _effectValue(card, 'damage'),
+                                        armor: _effectValue(card, 'armor'),
+                                        effectType: _effectStatusId(card),
                                         onTap: () {
                                           setState(() {
                                             _selectedCard = isSelected ? null : card;

@@ -20,7 +20,12 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
   @override
   void initState() {
     super.initState();
-    widget.engine.resetMockState();
+    // Pas de resetMockState() ici : `TutorialEngine.nextStep()`/`prevStep()`
+    // l'ont déjà appelé avant que cette page ne soit montée. Le refaire ici
+    // déclencherait notifyListeners() en plein passage de build de la
+    // PageView (le AnimatedBuilder parent est déjà construit cette frame),
+    // ce que Flutter refuse : « setState() or markNeedsBuild() called
+    // during build. »
     _controller = AnimationController(
       duration: const Duration(milliseconds: 600),
       vsync: this,
