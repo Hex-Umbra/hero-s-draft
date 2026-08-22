@@ -1779,6 +1779,29 @@ Ajouter à `test/tutorial/tutorial_engine_test.dart` :
         engine.mockState.heroStats.maxMana,
       );
     });
+
+    test('finir le tour ne re-verrouille pas l\'étape', () {
+      // Régression : la complétion lisait `heroStats.armure`, que `endTurn`
+      // remet à 0 — le joueur restait bloqué sur l'étape.
+      engine.seedEnemy();
+      engine.setHeroArmor(4);
+      expect(engine.armorGainedThisStep, isTrue);
+
+      engine.setMana(0);
+      engine.endTurn();
+
+      expect(engine.mockState.heroStats.armure, 0);
+      expect(engine.armorGainedThisStep, isTrue);
+    });
+
+    test('changer d\'étape réarme le drapeau d\'armure', () {
+      engine.setHeroArmor(4);
+      expect(engine.armorGainedThisStep, isTrue);
+
+      engine.prepareStep(engine.currentStepIndex);
+
+      expect(engine.armorGainedThisStep, isFalse);
+    });
   });
 ```
 
