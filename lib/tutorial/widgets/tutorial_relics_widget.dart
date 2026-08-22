@@ -31,11 +31,16 @@ class _TutorialRelicsWidgetState extends State<TutorialRelicsWidget> {
     });
   }
 
-  @override
-  void initState() {
-    super.initState();
-    widget.engine.resetMockState();
-  }
+  // Pas de resetMockState() ici : `TutorialEngine.nextStep()`/`prevStep()`
+  // l'ont déjà appelé avant que cette page ne soit montée, donc le
+  // refaire ici est redondant. C'est aussi dangereux : `TutorialScreen`
+  // reconstruit tout le sous-arbre de la PageView au franchissement d'un
+  // seuil de layout (bascule portrait/paysage, ou largeur 720px), ce qui
+  // rejoue initState() ici sans que `_currentStepIndex` ait changé. Si un
+  // futur cas de `resetMockState()` venait semer `seedHand`/`seedEnemy`
+  // pour cette étape, `notifyListeners()` partirait en plein passage de
+  // build de la PageView, ce que Flutter refuse : « setState() or
+  // markNeedsBuild() called during build. »
 
   @override
   Widget build(BuildContext context) {

@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
+import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/tutorial/tutorial_engine.dart';
 import 'package:roguelike_card_game/tutorial/tutorial_fixtures.dart';
 
@@ -100,6 +101,53 @@ void main() {
 
       expect(engine.mockState.heroStats.armure, 0);
       expect(engine.mockState.heroStats.currentPv, before - 6);
+    });
+  });
+
+  // Couverture perdue par le remplacement verbatim de l'étape 1 : ces trois
+  // comportements (le `switch` de resetMockState, mergeCards, le level-up de
+  // gainXp) étaient exercés par l'ancien fichier de test et ne le sont plus
+  // par les tests ci-dessus, qui appellent les helpers de peuplement
+  // directement plutôt que de naviguer les étapes.
+  group('resetMockState, mergeCards et gainXp restent couverts', () {
+    test(
+      'nextStep() x5 atteint l\'étape Jouer les cartes avec la main et l\'ennemi attendus',
+      () {
+        for (var i = 0; i < 5; i++) {
+          engine.nextStep();
+        }
+
+        expect(engine.currentStepIndex, 5);
+        expect(engine.mockState.hand, hasLength(2));
+        expect(engine.mockState.enemy, isNotNull);
+      },
+    );
+
+    test('mergeCards fusionne 3 exemplaires en une carte de rareté supérieure', () {
+      engine.seedHand([
+        TutorialFixtureIds.strike,
+        TutorialFixtureIds.strike,
+        TutorialFixtureIds.strike,
+      ]);
+
+      engine.mergeCards();
+
+      expect(engine.mockState.hand, hasLength(1));
+      expect(engine.mockState.hand.first.rarity, CardRarity.uncommon);
+    });
+
+    test('gainXp déclenche un passage de niveau au-delà de xpToNextLevel', () {
+      expect(engine.mockState.playerLevel, 1);
+      expect(engine.mockState.playerXp, 0);
+
+      engine.gainXp(35);
+      expect(engine.mockState.playerXp, 35);
+      engine.gainXp(35);
+      expect(engine.mockState.playerXp, 70);
+      engine.gainXp(35);
+
+      expect(engine.mockState.playerLevel, 2);
+      expect(engine.mockState.playerXp, 5); // 105 - 100
     });
   });
 }
