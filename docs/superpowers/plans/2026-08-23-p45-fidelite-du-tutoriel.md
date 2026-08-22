@@ -801,8 +801,19 @@ Toujours dans `TutorialEngine`, remplacer `playCard` (ligne 221) et ajouter les 
 
   void setHeroArmor(int value) {
     mockState.heroStats = mockState.heroStats.copyWith(armure: value);
+    if (value > 0) _armorGainedThisStep = true;
     notifyListeners();
   }
+
+  bool _armorGainedThisStep = false;
+
+  /// Vrai dès qu'un gain d'armure a eu lieu pendant l'étape courante.
+  ///
+  /// La complétion de l'étape « Jouer des cartes & finir le tour » ne peut
+  /// pas lire `heroStats.armure` : finir le tour remet l'armure à 0, ce qui
+  /// re-verrouillerait l'étape et bloquerait le joueur. Le drapeau se
+  /// verrouille jusqu'au prochain `prepareStep`.
+  bool get armorGainedThisStep => _armorGainedThisStep;
 
   /// Applique des dégâts au héros via la vraie formule d'absorption.
   void applyDamageToHero(int amount) {
@@ -838,6 +849,7 @@ Toujours dans `TutorialEngine`, remplacer `playCard` (ligne 221) et ajouter les 
         mockState.heroStats = mockState.heroStats.copyWith(
           armure: mockState.heroStats.armure + scaled,
         );
+        if (scaled > 0) _armorGainedThisStep = true;
       }
     }
 
@@ -866,7 +878,24 @@ Ajouter `import '../models/data/card_data.dart';` pour `CardRarity`.
 
 - [ ] **Step 5: Adapter les trois widgets qui typaient la main**
 
-Dans `tutorial_cards_widget.dart`, `tutorial_play_card_widget.dart` et `tutorial_merge_widget.dart`, remplacer chaque `TutorialCard` par `CardInstance`, chaque `card.nameFr` / `card.nameEn` par `card.data.getName(locale)`, chaque `card.cost` par `card.currentCost`, et chaque `card.id` par `card.data.id`. L'affichage lui-même est retouché en Tasks 8, 7 et 12 ; ici on se contente de faire compiler.
+Dans `tutorial_cards_widget.dart`, `tutorial_play_card_widget.dart` et `tutorial_merge_widget.dart`, remplacer chaque `TutorialCard` par `CardInstance`, chaque `card.nameFr` / `card.nameEn` par `card.data.getName(locale)`, chaque `card.cost` par `card.currentCost`, et chaque `card.id` par `card.data.id`.
+
+`TutorialUiCard` prend encore des scalaires `damage:` et `armor:` à ce stade. Les dériver des effets, via un helper local placé dans `tutorial_cards_widget.dart` :
+
+```dart
+int _effectValue(CardInstance card, String type) {
+  for (final effect in card.data.effects) {
+    if (effect.type == type) {
+      return (effect.value * card.rarityMultiplier).round();
+    }
+  }
+  return 0;
+}
+```
+
+appelé en `damage: _effectValue(card, 'damage')` et `armor: _effectValue(card, 'armor')`.
+
+> Ce collage est **jetable** : la Task 8 supprime `TutorialUiCard` et le helper avec. Il n'existe que pour garder l'arbre compilable entre les deux tâches.
 
 - [ ] **Step 6: Lancer les tests**
 
@@ -973,9 +1002,10 @@ Dans `TutorialEngine`, remplacer `resetMockState()` (ligne 102) par :
 
 ```dart
   /// Indice plancher du retour en arrière une fois les étapes d'amont
-  /// franchies : c'est « La Carte du Monde », la première étape qui suit le
-  /// draft de départ. Revenir en deçà invaliderait la classe et le deck dont
-  /// dépendent toutes les étapes suivantes.
+  /// franchies. Dans le parcours cible à 15 étapes, l'indice 3 est « La
+  /// Carte du Monde », la première étape qui suit le draft de départ :
+  /// revenir en deçà invaliderait la classe et le deck dont dépendent toutes
+  /// les étapes suivantes.
   static const int _upstreamFloorIndex = 3;
 
   bool _upstreamLocked = false;
@@ -1008,6 +1038,7 @@ Dans `TutorialEngine`, remplacer `resetMockState()` (ligne 102) par :
   /// décor propre à l'étape. La tranche persistante (classe, deck) survit.
   void prepareStep(int index) {
     mockState.resetScratch();
+    _armorGainedThisStep = false;
 
     switch (kTutorialSteps[index].type) {
       case TutorialStepType.cards:
@@ -1059,6 +1090,8 @@ et remplacer `nextStep` / `prevStep` :
     notifyListeners();
   }
 ```
+
+> **Ne pas « corriger » `_upstreamFloorIndex`.** Les étapes 02 et 03 n'existent pas encore à ce stade — elles arrivent en Tasks 5 et 6. La valeur 3 vise le parcours final à 15 étapes et est délibérée ; les tests de cette tâche passent avant comme après l'insertion.
 
 > **Attention au piège de l'ancien `switch`.** L'ancien code branchait sur l'**indice** (`case 4:`, `case 5:`…). Avec deux étapes insérées en amont, tous ces indices se décalent. Le nouveau `switch` branche sur `kTutorialSteps[index].type`, qui ne bouge pas quand on insère une étape.
 
@@ -1338,7 +1371,7 @@ class _TutorialClassChoiceWidgetState extends State<TutorialClassChoiceWidget> {
               ),
             ),
             Text(
-              '${hero.maxMana} ${locale == 'fr' ? 'Mana' : 'Mana'}',
+              '${hero.maxMana} Mana',
               style: const TextStyle(color: Colors.cyanAccent, fontSize: 12),
             ),
             const Divider(color: Colors.white12, height: 18),
@@ -1885,10 +1918,12 @@ Dans `tutorial_screen.dart`, remplacer la branche `playCard` de `_isStepActionCo
         final enemy = engine.mockState.enemy;
         return enemy != null &&
             enemy.stats.currentPv < enemy.stats.maxPv &&
-            engine.mockState.heroStats.armure > 0;
+            engine.armorGainedThisStep;
 ```
 
 > Le seuil `hp < 20` codé en dur disparaît : on compare aux PV max réels de l'ennemi.
+>
+> **Et on lit `armorGainedThisStep`, pas `heroStats.armure`.** `endTurn()` remet l'armure à 0 : un joueur qui gagne de l'armure puis finit son tour verrait l'étape se re-verrouiller et resterait bloqué.
 
 - [ ] **Step 7: Lancer les tests**
 
@@ -1922,7 +1957,7 @@ git commit -m "feat(tutorial): enseigner le glisser-deposer et le cycle de tour 
 
 - [ ] **Step 1: Supprimer `TutorialUiCard` et brancher `UiCard`**
 
-Dans `tutorial_cards_widget.dart`, supprimer intégralement la classe `TutorialUiCard` (lignes 4-298) et remplacer son usage par :
+Dans `tutorial_cards_widget.dart`, supprimer intégralement la classe `TutorialUiCard` — ne pas se fier à un numéro de ligne, le fichier a déjà été modifié en Task 3 — et remplacer son usage par :
 
 ```dart
                           child: UiCard.fromInstance(
@@ -2784,8 +2819,8 @@ Invoquer le skill `patch-notes-writer`. Le note joueur porte sur ce qui se voit 
 
 - [ ] **Step 8: Vérifier la cohérence de version**
 
-Run: `bash verify_version.sh`
-Expected: succès — `patch_notes.json`, `pubspec.yaml` et `site/_site/versions.json` concordent.
+Run: `bash .github/scripts/verify_version.sh $(grep '^version:' pubspec.yaml | sed 's/version: *//' | cut -d+ -f1)`
+Expected: succès — `patch_notes.json`, `pubspec.yaml` et `site/_site/versions.json` concordent. Le script vit dans `.github/scripts/` et prend la version en argument.
 
 - [ ] **Step 9: Commit documentaire**
 
