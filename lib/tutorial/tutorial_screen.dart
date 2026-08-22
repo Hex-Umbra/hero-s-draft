@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../models/data/game_data_registry.dart';
 import 'tutorial_engine.dart';
 import 'tutorial_step.dart';
 import 'tutorial_data.dart';
@@ -18,7 +19,9 @@ import 'widgets/tutorial_draft_widget.dart';
 import 'widgets/tutorial_relics_widget.dart';
 
 class TutorialScreen extends StatefulWidget {
-  const TutorialScreen({super.key});
+  final GameDataRegistry data;
+
+  const TutorialScreen({super.key, required this.data});
 
   @override
   State<TutorialScreen> createState() => _TutorialScreenState();
@@ -31,7 +34,7 @@ class _TutorialScreenState extends State<TutorialScreen> {
   @override
   void initState() {
     super.initState();
-    _engine = TutorialEngine();
+    _engine = TutorialEngine(data: widget.data);
     _engine.resetMockState();
     _pageController = PageController(initialPage: _engine.currentStepIndex);
     _engine.addListener(_onEngineChanged);

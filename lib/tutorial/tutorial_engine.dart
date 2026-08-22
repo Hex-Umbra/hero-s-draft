@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
+import '../models/data/game_data_registry.dart';
 import 'tutorial_data.dart';
+import 'tutorial_fixtures.dart';
 
 class TutorialCard {
   final String id;
@@ -76,8 +78,15 @@ class TutorialMockState {
 }
 
 class TutorialEngine extends ChangeNotifier {
+  final GameDataRegistry data;
+  late final TutorialFixtures fixtures;
+
   int _currentStepIndex = 0;
   final TutorialMockState mockState = TutorialMockState();
+
+  TutorialEngine({required this.data}) {
+    fixtures = TutorialFixtures(data);
+  }
 
   int get currentStepIndex => _currentStepIndex;
 

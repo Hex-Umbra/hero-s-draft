@@ -1,12 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/tutorial/tutorial_engine.dart';
 
+import 'tutorial_test_registry.dart';
+
 void main() {
   group('TutorialEngine Tests', () {
     late TutorialEngine engine;
 
     setUp(() {
-      engine = TutorialEngine();
+      engine = TutorialEngine(data: buildTutorialTestRegistry());
       engine.resetMockState();
     });
 
