@@ -43,30 +43,56 @@ const List<TutorialStep> kTutorialSteps = [
     titleEn: 'The World Map',
     titleFr: 'La Carte du Monde',
     bodyEn:
-        'Your journey is represented by a map of connected nodes. You start at the bottom and choose your path upward. Each node represents a different encounter. Try tapping on nodes to see details.',
+        'Your journey climbs a map of ten floors, two to five nodes each. You '
+        'start at the bottom and choose your path upward.\n\n'
+        '**Touching a node commits you to it immediately** — there is no '
+        'preview and no confirmation. Read the legend before you touch.\n\n'
+        'The layout is not fully random: floor 1 is always a fight, floor 6 '
+        'narrows to a single Elite you cannot avoid, floor 9 is a guaranteed '
+        'Rest, and the summit offers three Bosses side by side.',
     bodyFr:
-        'Votre voyage est représenté par une carte de nœuds connectés. Vous commencez en bas et choisissez votre chemin vers le haut. Chaque nœud représente une rencontre différente. Appuyez sur un nœud pour voir les détails.',
+        'Votre voyage gravit une carte de dix planchers, de deux à cinq nœuds '
+        'chacun. Vous partez du bas et choisissez votre chemin vers le haut.\n\n'
+        '**Toucher un nœud vous y engage immédiatement** — aucun aperçu, aucune '
+        'confirmation. Lisez la légende avant de toucher.\n\n'
+        'Le tracé n\'est pas entièrement aléatoire : le plancher 1 est toujours '
+        'un combat, le plancher 6 se resserre sur une Élite unique qu\'on ne '
+        'peut éviter, le plancher 9 est un Repos garanti, et le sommet propose '
+        'trois Boss côte à côte.',
     type: TutorialStepType.map,
   ),
   TutorialStep(
     titleEn: 'Types of Encounters',
     titleFr: 'Types de Rencontres',
     bodyEn:
-        'There are different types of encounters on the map:\n'
-        '• ⚔️ Combat: Standard fight to gain gold and XP.\n'
-        '• 👑 Elite: Challenging fight that rewards a powerful Relic.\n'
-        '• 🏪 Shop: Spend your gold to buy new cards or clean your deck.\n'
-        '• 🏕️ Rest: Heal your HP or forge cards to upgrade them.\n'
-        '• 🎭 Event: Narrative choices with unpredictable outcomes.\n'
-        '• 💀 Boss: Defeat the Boss at the top of the map to win the act.',
+        'Eight kinds of node share the map:\n'
+        '• ⚔️ Combat: a standard fight, for gold and XP.\n'
+        '• 👑 Elite: a hard fight that rewards a Relic.\n'
+        '• 🏪 Shop: buy cards, reroll the stock, buy a potion, purge a card, '
+        'expand the stock or clone a card. No relics.\n'
+        '• 🏕️ Rest: heal 30% of your max HP, forge a card, **or remove one '
+        'from your deck**.\n'
+        '• 🎭 Event: narrative choices with real consequences.\n'
+        '• 🔄 Relic Shrine: sacrifice relics for a better one.\n'
+        '• 🧩 Fusion Forge: merge a card\'s duplicate upgrades, for gold.\n'
+        '• 💀 Boss: three at the summit, one reward each — cards, triple XP '
+        'and gold, or an improved relic. Choosing the Boss is choosing the '
+        'reward.',
     bodyFr:
-        'Il existe différents types de rencontres sur la carte :\n'
-        '• ⚔️ Combat : Combat standard pour gagner de l\'or et de l\'XP.\n'
-        '• 👑 Élite : Combat difficile qui récompense par une puissante Relique.\n'
-        '• 🏪 Boutique : Dépensez votre or pour acheter des cartes ou épurer votre deck.\n'
-        '• 🏕️ Repos : Soignez vos PV ou forgez des cartes pour les améliorer.\n'
-        '• 🎭 Événement : Choix narratifs aux conséquences imprévisibles.\n'
-        '• 💀 Boss : Battez le Boss au sommet pour remporter l\'acte.',
+        'Huit types de nœuds se partagent la carte :\n'
+        '• ⚔️ Combat : affrontement standard, pour l\'or et l\'XP.\n'
+        '• 👑 Élite : combat difficile qui récompense par une Relique.\n'
+        '• 🏪 Boutique : acheter des cartes, relancer le stock, prendre une '
+        'potion, purger une carte, agrandir le stock ou cloner. Aucune relique.\n'
+        '• 🏕️ Repos : soigner 30 % de vos PV max, forger une carte, **ou en '
+        'retirer une de votre deck**.\n'
+        '• 🎭 Événement : choix narratifs aux conséquences réelles.\n'
+        '• 🔄 Autel des Reliques : sacrifier des reliques pour une meilleure.\n'
+        '• 🧩 Forge de Fusion : fusionner les améliorations dupliquées d\'une '
+        'carte, contre de l\'or.\n'
+        '• 💀 Boss : trois au sommet, une récompense chacun — des cartes, le '
+        'triple d\'XP et d\'or, ou une relique améliorée. Choisir le Boss, '
+        'c\'est choisir la récompense.',
     type: TutorialStepType.nodeTypes,
   ),
   TutorialStep(
@@ -77,13 +103,15 @@ const List<TutorialStep> kTutorialSteps = [
         '• Center (Vertical Stack): The Enemy card (top) faces your Hero card (bottom) directly.\n'
         '• Bottom: Your fanned hand of cards, Mana crystals, and your Health bar (HP).\n'
         '• Left Side: Player active status effects ("Effets du Joueur") and your Draw pile.\n'
-        '• Right Side: End Turn button, current Turn number, Enemy Intentions panel, and Discard pile.',
+        '• Right Side: End Turn button, current Turn number, Enemy Intentions panel, and Discard pile.\n'
+        '• Top Right: the "My Deck" and "Pause" buttons.',
     bodyFr:
         'En combat, l\'interface présente la disposition suivante :\n'
         '• Centre (Empilement Vertical) : La carte de l\'Ennemi (en haut) fait face à la carte de votre Héros (en bas).\n'
         '• Bas : Votre main de cartes en éventail, vos cristaux de Mana et votre barre de Points de Vie (PV).\n'
         '• Côté Gauche : Le panneau des effets du joueur ("Effets du Joueur") et la Pioche.\n'
-        '• Côté Droit : Le bouton "Fin de Tour", le numéro du Tour, le panneau des intentions ennemies ("Intentions Ennemies") et la Défausse.',
+        '• Côté Droit : Le bouton "Fin de Tour", le numéro du Tour, le panneau des intentions ennemies ("Intentions Ennemies") et la Défausse.\n'
+        '• Haut Droit : les boutons "Mon Deck" et "Pause".',
     type: TutorialStepType.combatOverview,
   ),
   TutorialStep(
@@ -224,7 +252,9 @@ const List<TutorialStep> kTutorialSteps = [
         'values: ×1.2 uncommon, ×1.4 rare, ×1.6 epic, ×2.0 legendary.\n\n'
         'Forge upgrades carried by the three copies are inherited and merged, '
         'capped by the new rarity\'s capacity. Your class cards are unique, and '
-        'unique cards never merge.',
+        'unique cards never merge. **The Fusion Forge is a separate, paid '
+        'system** — a dedicated map node, not to be confused with this free '
+        'merging.',
     bodyFr:
         'La fusion est **manuelle**, et seulement hors combat. Ouvrez votre '
         'Deck : lorsque vous détenez trois exemplaires d\'une même carte **de '
@@ -235,7 +265,10 @@ const List<TutorialStep> kTutorialSteps = [
         'valeurs : ×1,2 peu commun, ×1,4 rare, ×1,6 épique, ×2,0 légendaire.\n\n'
         'Les améliorations de forge des trois exemplaires sont héritées et '
         'consolidées, dans la limite de la capacité de la nouvelle rareté. Vos '
-        'cartes de classe sont uniques, et une carte unique ne fusionne jamais.',
+        'cartes de classe sont uniques, et une carte unique ne fusionne jamais. '
+        '**La Forge de Fusion est un système distinct et payant** — un nœud '
+        'dédié de la carte du monde, à ne pas confondre avec cette '
+        'fusion-ci, qui reste gratuite.',
     type: TutorialStepType.merge,
   ),
   TutorialStep(

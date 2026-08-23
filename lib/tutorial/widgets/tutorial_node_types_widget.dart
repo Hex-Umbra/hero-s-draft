@@ -2,16 +2,21 @@ import 'package:flutter/material.dart';
 import '../tutorial_engine.dart';
 
 class NodeTypeInfo {
-  final IconData icon;
-  final Color color;
+  // L'Autel des Reliques n'a pas d'IconData ni de couleur dédiées dans
+  // map_legend.dart (seulement un emoji) : icon/color sont donc optionnels,
+  // et emoji sert de repli, comme LegendItem dans map_legend.dart.
+  final IconData? icon;
+  final Color? color;
+  final String? emoji;
   final String titleEn;
   final String titleFr;
   final String descEn;
   final String descFr;
 
   const NodeTypeInfo({
-    required this.icon,
-    required this.color,
+    this.icon,
+    this.color,
+    this.emoji,
     required this.titleEn,
     required this.titleFr,
     required this.descEn,
@@ -45,16 +50,18 @@ class TutorialNodeTypesWidget extends StatelessWidget {
       color: Colors.amber,
       titleEn: 'Shop',
       titleFr: 'Boutique',
-      descEn: 'Buy cards, relics, or clean deck.',
-      descFr: 'Achetez des cartes, reliques ou épurés.',
+      descEn: 'Buy cards, reroll stock, purge a card. No relics.',
+      descFr:
+          'Achetez des cartes, relancez le stock, purgez-en une. Aucune '
+          'relique.',
     ),
     NodeTypeInfo(
       icon: Icons.nightlight_round,
       color: Colors.greenAccent,
       titleEn: 'Rest Site',
       titleFr: 'Repos',
-      descEn: 'Heal health or upgrade a card.',
-      descFr: 'Soignez vos PV ou forgez une carte.',
+      descEn: 'Heal 30% max HP, forge, or remove a card.',
+      descFr: 'Soignez 30 % des PV max, forgez ou retirez une carte.',
     ),
     NodeTypeInfo(
       icon: Icons.help_outline,
@@ -63,6 +70,21 @@ class TutorialNodeTypesWidget extends StatelessWidget {
       titleFr: 'Événement',
       descEn: 'Narrative choices & rewards.',
       descFr: 'Choix narratifs et récompenses.',
+    ),
+    NodeTypeInfo(
+      emoji: '🔄',
+      titleEn: 'Relic Shrine',
+      titleFr: 'Autel des Reliques',
+      descEn: 'Sacrifice relics for a better one.',
+      descFr: 'Sacrifiez des reliques pour une meilleure.',
+    ),
+    NodeTypeInfo(
+      icon: Icons.layers_rounded,
+      color: Colors.deepPurpleAccent,
+      titleEn: 'Fusion Forge',
+      titleFr: 'Forge de Fusion',
+      descEn: 'Merge duplicate upgrades, for gold.',
+      descFr: 'Fusionne les améliorations dupliquées, contre de l\'or.',
     ),
     NodeTypeInfo(
       icon: Icons.style,
@@ -75,10 +97,10 @@ class TutorialNodeTypesWidget extends StatelessWidget {
     NodeTypeInfo(
       icon: Icons.auto_awesome,
       color: Colors.cyanAccent,
-      titleEn: 'Boss (Double XP)',
-      titleFr: 'Boss (XP x2)',
-      descEn: 'Rewards double XP.',
-      descFr: 'Offre le double d\'XP.',
+      titleEn: 'Boss (3× XP & Gold)',
+      titleFr: 'Boss (XP & Or ×3)',
+      descEn: 'Rewards triple XP and gold.',
+      descFr: 'Offre le triple d\'XP et d\'or.',
     ),
     NodeTypeInfo(
       icon: Icons.diamond,
@@ -148,17 +170,23 @@ class TutorialNodeTypesWidget extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(5),
                           decoration: BoxDecoration(
-                            color: type.color.withValues(alpha: 0.1),
+                            color: (type.color ?? Colors.white)
+                                .withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(type.icon, color: type.color, size: 20),
+                          child: type.icon != null
+                              ? Icon(type.icon, color: type.color, size: 20)
+                              : Text(
+                                  type.emoji!,
+                                  style: const TextStyle(fontSize: 16),
+                                ),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             title,
                             style: TextStyle(
-                              color: type.color,
+                              color: type.color ?? Colors.white,
                               fontWeight: FontWeight.bold,
                               fontSize: 13,
                             ),

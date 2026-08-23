@@ -33,6 +33,7 @@ class _TutorialCombatOverviewWidgetState
   @override
   Widget build(BuildContext context) {
     final isFrench = Localizations.localeOf(context).languageCode == 'fr';
+    final heroStats = widget.engine.mockState.heroStats;
 
     return Center(
       child: LayoutBuilder(
@@ -66,6 +67,24 @@ class _TutorialCombatOverviewWidgetState
                       fontSize: 12 * scale,
                       fontWeight: FontWeight.bold,
                     ),
+                  ),
+                ),
+
+                // Boutons Mon Deck & Pause (Haut Droit), comme CombatTopBar
+                Positioned(
+                  top: 6 * scale,
+                  right: 8 * scale,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.style, color: Colors.amber, size: 16 * scale),
+                      SizedBox(width: 8 * scale),
+                      Icon(
+                        Icons.pause_circle_outline,
+                        color: Colors.white,
+                        size: 16 * scale,
+                      ),
+                    ],
                   ),
                 ),
 
@@ -103,7 +122,12 @@ class _TutorialCombatOverviewWidgetState
                                 SizedBox(height: 2 * scale),
                                 _buildManaCrystals(scale),
                                 SizedBox(height: 2 * scale),
-                                _buildHealthBar(isFrench, scale),
+                                _buildHealthBar(
+                                  isFrench,
+                                  scale,
+                                  heroStats.currentPv,
+                                  heroStats.maxPv,
+                                ),
                               ],
                             ),
                           ],
@@ -242,7 +266,11 @@ class _TutorialCombatOverviewWidgetState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        // Fin de Tour Button & Tour 1 Count
+        // Sur le vrai écran de combat, le bouton Fin de Tour et le compteur
+        // de tour sont ancrés au centre vertical du bord droit
+        // (TurnControlPanel, `top: screenHeight / 2 - 25`), pas en haut :
+        // les deux Spacer() qui encadrent ce bloc reproduisent ce centrage.
+        const Spacer(),
         Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
@@ -275,7 +303,7 @@ class _TutorialCombatOverviewWidgetState
             ),
           ],
         ),
-        SizedBox(height: 12 * scale),
+        const Spacer(),
         // INTENTIONS ENNEMIES card
         Container(
           width: double.infinity,
@@ -320,7 +348,7 @@ class _TutorialCombatOverviewWidgetState
             ],
           ),
         ),
-        const Spacer(),
+        SizedBox(height: 12 * scale),
         // Défausse Button
         Container(
           padding: EdgeInsets.symmetric(horizontal: 10 * scale, vertical: 6 * scale),
@@ -542,7 +570,12 @@ class _TutorialCombatOverviewWidgetState
     );
   }
 
-  Widget _buildHealthBar(bool isFrench, double scale) {
+  Widget _buildHealthBar(
+    bool isFrench,
+    double scale,
+    int currentPv,
+    int maxPv,
+  ) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -587,7 +620,7 @@ class _TutorialCombatOverviewWidgetState
               ),
               Center(
                 child: Text(
-                  isFrench ? '80 / 80 PV' : '80 / 80 HP',
+                  isFrench ? '$currentPv / $maxPv PV' : '$currentPv / $maxPv HP',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 9 * scale,
