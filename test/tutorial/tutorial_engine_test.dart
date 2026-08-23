@@ -185,6 +185,25 @@ void main() {
       expect(engine.mockState.masterDeck, hasLength(expectedSize));
     });
 
+    test(
+      'setStarterDeck([]) vide le deck, cartes de classe comprises',
+      () {
+        // Régression : setStarterDeck injectait toujours les cartes de
+        // classe, même avec une sélection vide, ce qui rendait
+        // masterDeck.isNotEmpty vrai dès la première carte cochée dans
+        // TutorialStarterDeckWidget (widget qui appelle setStarterDeck([])
+        // tant que la cible de 5 n'est pas atteinte).
+        final pool = engine.fixtures.starterPool.take(5).toList();
+        engine.chooseHero(engine.fixtures.heroes.first);
+        engine.setStarterDeck(pool);
+        expect(engine.mockState.masterDeck, isNotEmpty);
+
+        engine.setStarterDeck([]);
+
+        expect(engine.mockState.masterDeck, isEmpty);
+      },
+    );
+
     test('la tranche scratch est bien réinitialisée entre deux étapes', () {
       engine.seedEnemy();
       engine.nextStep();

@@ -121,8 +121,18 @@ class TutorialEngine extends ChangeNotifier {
   }
 
   /// Fixe le deck de départ : les cartes choisies plus les cartes de classe,
-  /// comme `StarterDeckDraftScreen._startAdventure`.
+  /// comme `StarterDeckDraftScreen._startAdventure`. Un draft vide donne un
+  /// deck vide, cartes de classe comprises : `_isStepActionComplete` lit
+  /// `masterDeck.isNotEmpty` pour savoir si l'étape est terminée, et ne doit
+  /// donc jamais voir un deck non vide tant que la sélection n'est pas
+  /// complète.
   void setStarterDeck(List<CardData> chosen) {
+    if (chosen.isEmpty) {
+      mockState.masterDeck = [];
+      notifyListeners();
+      return;
+    }
+
     final hero = mockState.chosenHero;
     final classCards = hero == null
         ? <CardData>[]

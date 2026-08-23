@@ -39,6 +39,22 @@ void main() {
     expect(find.text('0 / 5'), findsOneWidget);
   });
 
+  testWidgets('sélectionner 1 seule carte laisse le deck vide', (tester) async {
+    // Régression : `_toggle` appelle `setStarterDeck([])` tant que la
+    // sélection n'atteint pas 5 ; le deck ne doit pas se remplir avant que
+    // le compte soit atteint, sans quoi le bouton SUIVANT se débloquerait
+    // avec un deck incomplet et le joueur resterait bloqué dessus (verrou
+    // d'amont dès l'étape suivante).
+    final engine = await _pump(tester);
+    final pool = engine.fixtures.starterPool;
+
+    await tester.tap(find.byKey(ValueKey('tutorial-pool-${pool[0].id}')));
+    await tester.pump();
+
+    expect(find.text('1 / 5'), findsOneWidget);
+    expect(engine.mockState.masterDeck, isEmpty);
+  });
+
   testWidgets('sélectionner 5 cartes remplit le deck avec les cartes de classe', (tester) async {
     final engine = await _pump(tester);
     final pool = engine.fixtures.starterPool;
