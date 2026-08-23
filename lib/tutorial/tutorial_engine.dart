@@ -218,6 +218,15 @@ class TutorialEngine extends ChangeNotifier {
   /// Repli sur les fixtures si le deck n'en contient pas un de chaque : le
   /// pool de départ interdit les doublons, rien n'oblige à drafter Frappe ou
   /// Défense, et l'étape 03 a pu être sautée (deck vide).
+  ///
+  /// Régression (revue de branche) : `smite`, carte de classe du Paladin,
+  /// est à la fois une attaque `singleEnemy` et porteuse d'un effet `armor`
+  /// (elle inflige des dégâts *et* donne de l'Armure). La retenir comme
+  /// « l'attaque » de la leçon faisait gagner de l'Armure en jouant sur
+  /// l'ennemi : `_isStepActionComplete` se satisfaisait d'un seul geste, pour
+  /// 100 % des parcours Paladin. `_isEnemyTargetingAttack` écarte donc toute
+  /// carte dont les effets contiennent aussi `armor`, exactement comme
+  /// `_seedMergeHand` écarte les cartes de rareté `unique`.
   void _seedPlayCardHand() {
     CardData? attack;
     CardData? armorSkill;
@@ -239,7 +248,9 @@ class TutorialEngine extends ChangeNotifier {
   }
 
   bool _isEnemyTargetingAttack(CardData data) =>
-      data.type == CardType.attack && data.target == CardTarget.singleEnemy;
+      data.type == CardType.attack &&
+      data.target == CardTarget.singleEnemy &&
+      !data.effects.any((e) => e.type == 'armor');
 
   bool _isArmorGivingSkill(CardData data) =>
       data.type == CardType.skill &&

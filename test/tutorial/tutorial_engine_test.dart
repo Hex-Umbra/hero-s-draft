@@ -309,6 +309,36 @@ void main() {
     );
 
     test(
+      'Jouer des cartes n\'utilise jamais smite (attaque + armure) comme geste d\'attaque',
+      () {
+        // Régression (revue de branche) : `smite`, carte de classe du
+        // Paladin, est à la fois une attaque `singleEnemy` et porteuse d'un
+        // effet `armor` (6 dégâts + 4 Armure). La retenir comme « l'attaque »
+        // de la leçon fait gagner de l'Armure en jouant sur l'ennemi :
+        // `_isStepActionComplete` se satisfait d'un seul geste au lieu des
+        // deux distincts que la leçon enseigne, et ce pour 100 % des
+        // parcours Paladin (`smite` précède toujours les cartes draftées
+        // dans `masterDeck`).
+        final paladin = engine.fixtures.heroes.firstWhere((h) => h.id == 'paladin');
+        engine.chooseHero(paladin);
+        // masterDeck = [holy_shield, smite, heavy_strike] : smite doit être
+        // écartée et la recherche doit se poursuivre jusqu'à heavy_strike.
+        engine.setStarterDeck([engine.fixtures.card('heavy_strike')]);
+
+        engine.prepareStep(7);
+
+        expect(
+          engine.mockState.hand.map((c) => c.data.id),
+          isNot(contains('smite')),
+        );
+        expect(
+          engine.mockState.hand.any((c) => c.data.id == 'heavy_strike'),
+          isTrue,
+        );
+      },
+    );
+
+    test(
       'Jouer des cartes se replie sur les fixtures si le deck ne fournit pas les deux gestes',
       () {
         // Le pool interdit les doublons et rien n'oblige à drafter Frappe ou
