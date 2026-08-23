@@ -111,15 +111,15 @@ void main() {
   // directement plutôt que de naviguer les étapes.
   group('resetMockState, mergeCards et gainXp restent couverts', () {
     test(
-      'nextStep() x6 atteint l\'étape Jouer les cartes avec la main et l\'ennemi attendus',
+      'nextStep() x7 atteint l\'étape Jouer les cartes avec la main et l\'ennemi attendus',
       () {
-        // L'étape 02 (choix de classe) a décalé "Jouer des cartes" de
-        // l'indice 5 à l'indice 6.
-        for (var i = 0; i < 6; i++) {
+        // Les étapes 02 (choix de classe) et 03 (draft du deck de départ)
+        // ont décalé "Jouer des cartes" de l'indice 5 à l'indice 7.
+        for (var i = 0; i < 7; i++) {
           engine.nextStep();
         }
 
-        expect(engine.currentStepIndex, 6);
+        expect(engine.currentStepIndex, 7);
         expect(engine.mockState.hand, hasLength(2));
         expect(engine.mockState.enemy, isNotNull);
       },
@@ -225,10 +225,10 @@ void main() {
       var notifications = 0;
       engine.addListener(() => notifications++);
 
-      // Étape "Jouer des cartes" (indice 6, décalée par le choix de classe
-      // en indice 1) : sème l'ennemi puis la main, les deux passant par les
-      // variantes privées sans notification.
-      engine.prepareStep(6);
+      // Étape "Jouer des cartes" (indice 7, décalée par le choix de classe
+      // puis par le draft du deck de départ) : sème l'ennemi puis la main,
+      // les deux passant par les variantes privées sans notification.
+      engine.prepareStep(7);
 
       expect(notifications, 1);
     });

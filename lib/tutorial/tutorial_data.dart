@@ -25,6 +25,21 @@ const List<TutorialStep> kTutorialSteps = [
     type: TutorialStepType.classChoice,
   ),
   TutorialStep(
+    titleEn: 'Your Starting Deck',
+    titleFr: 'Votre deck de départ',
+    bodyEn:
+        'Pick 5 cards from the common pool. Your class cards are added on top, '
+        'automatically — they are unique, and unlike the others they can never '
+        'be merged. This deck is the one you will play with for the rest of '
+        'the tutorial.',
+    bodyFr:
+        'Choisissez 5 cartes dans le pool commun. Les cartes de votre classe '
+        's\'y ajoutent automatiquement : elles sont uniques et, contrairement '
+        'aux autres, ne pourront jamais être fusionnées. C\'est avec ce deck '
+        'que vous jouerez le reste du tutoriel.',
+    type: TutorialStepType.starterDeck,
+  ),
+  TutorialStep(
     titleEn: 'The World Map',
     titleFr: 'La Carte du Monde',
     bodyEn:

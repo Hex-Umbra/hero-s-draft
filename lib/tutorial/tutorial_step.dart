@@ -19,6 +19,7 @@ class TutorialStep {
 enum TutorialStepType {
   welcome,
   classChoice,
+  starterDeck,
   map,
   nodeTypes,
   combatOverview,
