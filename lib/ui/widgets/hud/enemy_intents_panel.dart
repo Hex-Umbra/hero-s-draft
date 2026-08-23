@@ -43,13 +43,20 @@ class EnemyIntentsPanel extends StatelessWidget {
                 size: 16,
               ),
               const SizedBox(width: 6),
-              Text(
-                l10n.enemyIntentsTitle.toUpperCase(),
-                style: const TextStyle(
-                  color: Colors.amberAccent,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.2,
+              // Le panneau a une largeur fixe de 250 : sans `Flexible`, un
+              // titre long (locale, mise a l'echelle du texte) deborde de la
+              // `Row` et Flutter peint la bande d'erreur jaune et noire a la
+              // place. Ici le titre se replie sur plusieurs lignes, sans rien
+              // perdre.
+              Flexible(
+                child: Text(
+                  l10n.enemyIntentsTitle.toUpperCase(),
+                  style: const TextStyle(
+                    color: Colors.amberAccent,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                  ),
                 ),
               ),
             ],
@@ -140,13 +147,19 @@ class EnemyIntentsPanel extends StatelessWidget {
                   children: [
                     Icon(icon, color: color, size: 14),
                     const SizedBox(width: 6),
-                    Text(
-                      label,
-                      style: TextStyle(
-                        color: color,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5,
+                    // Meme contrainte que le titre. On se replie plutot que
+                    // de tronquer : la valeur chiffree est en fin de libelle
+                    // (« Attaque Devastatrice : 25 »), une ellipse la ferait
+                    // disparaitre — or c'est l'information que le joueur lit.
+                    Flexible(
+                      child: Text(
+                        label,
+                        style: TextStyle(
+                          color: color,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
                       ),
                     ),
                   ],
