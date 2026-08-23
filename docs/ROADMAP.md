@@ -138,6 +138,7 @@ graph TD
 | **P-07** | **Lot P1 « juice »** (hit-stop, screenshake, héros qui attaque, impacts, idle, mort) | **4-6 j** | ★★★☆☆ | 🔥🔥🔥 |
 | **P-08** | **Cadre d'ennemi** — prototyper puis trancher PNG vs procédural | **0,5 j** *(proto)* **+ 1-3 j** | ★★★☆☆ | 🔥🔥 |
 | **P-09** | **Boss multi-phases** (changement de comportement au seuil 50 % HP) | **3-4 j** | ★★★★☆ | 🔥🔥 |
+| ~~**P-45**~~ | ~~**Fidélité du tutoriel**~~ ✅ **Livré le 2026-08-23**, publié en `0.4.9` — 50 écarts corrigés entre `lib/tutorial/` et le jeu réel, tutoriel étendu de 13 à 15 étapes — voir [ADR-081](../.obsidian_vault/_adr/ADR-081-amendement-autonomie-tutoriel-zero-provider-etat.md) | — | — | — |
 
 ### P-05 — Roster tier-1
 **Le brainstorm le plus abouti du dossier** : stats calibrées, formule `combatRating` étendue (`utilityThreat`), spread de rating vérifié (27,9 → 35,4 à l'Acte 1, comparable à l'écart Slime/Gobelin existant). Prêt à passer en spec sans travail de design supplémentaire.
@@ -157,6 +158,22 @@ Hit-stop et screenshake pilotés par la magnitude `dégâts / PV max`, le héros
 
 ### P-09 — Boss multi-phases
 Marqué **priorité haute** dans le rapport du 22/07 et jamais traité. Difficulté ★★★★☆ parce que `EntityStats`/`EnemyInstance` n'ont aujourd'hui **aucune notion de changement de comportement conditionné aux PV restants** — c'est un mécanisme à créer. Bonne nouvelle : ce même mécanisme sert ensuite au « Dragon Juvénile » (seuil d'enrage, tier 5) et potentiellement au Boss de Cycle de P-10.
+
+### P-45 — Fidélité du tutoriel
+> [!NOTE]
+> ✅ **Livré le 2026-08-23, publié en `0.4.9`** (branche `docs/p45-fidelite-tutoriel`, 31 commits
+> TDD, **278 tests** au vert, `dart analyze` propre). Un audit avait relevé **50 écarts** entre `lib/tutorial/` et
+> le jeu réel, nés d'une règle d'autonomie qui interdisait au tutoriel de lire même les données
+> immuables du jeu, forçant une recopie manuelle qui a dérivé avec le temps. La règle est
+> amendée en « zéro provider d'*état* » plutôt que « zéro Riverpod » —
+> [ADR-081](../.obsidian_vault/_adr/ADR-081-amendement-autonomie-tutoriel-zero-provider-etat.md)
+> — et le parcours passe de 13 à **15 étapes**, les deux nouvelles (choix de classe, draft du
+> deck de départ) précédant désormais le premier combat, verrouillées une fois franchies.
+> Détail du système : [`_rules/08-00`](../.obsidian_vault/_rules/08-00-systeme-de-tutoriel-autonome.md).
+>
+> **Effet de bord découvert en cours de route** : la légende de la carte du monde annonçait
+> « Boss (XP & Or x2) » alors que `reward_controller.dart` applique `×3`. Corrigé dans le même
+> chantier — l'affichage s'aligne sur le code, aucun rééquilibrage.
 
 ---
 

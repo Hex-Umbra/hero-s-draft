@@ -1,7 +1,7 @@
 ## 🎓 ADR-019 : Système de Tutoriel Autonome Isolant la Boucle Principale (Standalone Tutorial System with State Isolation)
 
 ### Statut
-✅ Accepté & Implémenté
+✅ Accepté & Implémenté — **Amendé par [ADR-081](ADR-081-amendement-autonomie-tutoriel-zero-provider-etat.md) le 2026-08-23** : dans la section Décision ci-dessous, « Éviter les providers Riverpod de production » devient « zéro provider d'*état* », qui autorise la lecture de données immuables via `gameDataLoaderProvider` en un point unique. Le reste de cette décision tient inchangé.
 
 ### Contexte
 L'onboarding des nouveaux joueurs est un aspect crucial pour "Hero's Draft", mais l'arène de combat Flame, les providers Riverpod complexes (RunController, DeckNotifier, etc.) et le chargement de données asynchrones lient fortement l'application à un flux de production stricte. Essayer de greffer un tutoriel guidé sur la boucle de gameplay classique créerait des risques majeurs d'effets de bord, d'effondrement de la run de production, ou de corruption de données. Un sous-système de tutoriel complètement découplé et autonome est nécessaire.

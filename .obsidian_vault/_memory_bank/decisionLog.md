@@ -5,10 +5,11 @@ Index des **ADR** (Architecture Decision Records) de **Hero's Draft**. Le corps 
 > [!IMPORTANT]
 > **Plafond : 250 lignes.** Ce fichier est un index, jamais un contenu. Un nouvel ADR prend le numéro `max(index) + 1` lu ici, jamais un numéro deviné.
 
-**Vérifié le 2026-08-20** — 80 décisions, numéros `ADR-001` à `ADR-080`, sans doublon ni trou.
+**Vérifié le 2026-08-23** — 81 décisions, numéros `ADR-001` à `ADR-081`, sans doublon ni trou.
 
 | N° | Décision | Statut | Version | Fichier |
 |:---|:---|:---:|:---:|:---|
+| `ADR-081` | Amendement de la Règle d'Autonomie du Tutoriel — Zéro Provider d'État (chantier P-45) | ✅ | 0.4.9 | [ADR-081-amendement-autonomie-tutoriel-zero-provider-etat.md](../_adr/ADR-081-amendement-autonomie-tutoriel-zero-provider-etat.md) |
 | `ADR-080` | Site Vitrine Piloté par la Donnée et Jointure Déclarée Version → Patch Note (chantier P-04, lot 2) | ✅ | 0.4.8 | [ADR-080-site-vitrine-pilote-par-la-donnee-et-jointure-decl.md](../_adr/ADR-080-site-vitrine-pilote-par-la-donnee-et-jointure-decl.md) |
 | `ADR-079` | Chaîne de Release Déclenchée par Tag et Garde-fou de Version à Trois Fichiers (chantier P-04, lot 1) | ✅ | — | [ADR-079-chaine-de-release-declenchee-par-tag-et-garde-fou.md](../_adr/ADR-079-chaine-de-release-declenchee-par-tag-et-garde-fou.md) |
 | `ADR-078` | Assainissement du Système de Pioche — Remélange à Sec, Arrêt Net et Règle de Tour hors du Widget (chantier P-02) | ✅ | 0.4.7 | [ADR-078-assainissement-du-systeme-de-pioche-remelange-a-sec.md](../_adr/ADR-078-assainissement-du-systeme-de-pioche-remelange-a-sec.md) |

@@ -1,5 +1,35 @@
 [
   {
+    "version": "0.4.9",
+    "date": "2026-08-23",
+    "title": "L'École du Héros",
+    "sections": [
+      {
+        "category": "Nouvelles Fonctionnalités",
+        "emoji": "✨",
+        "entries": [
+          "Le tutoriel s'ouvre désormais sur le choix de votre classe, avec les vraies statistiques et le vrai passif de chacune des trois classes.",
+          "Juste après, vous composez votre deck de départ en piochant 5 cartes parmi le pool commun, exactement comme au lancement d'une vraie partie."
+        ]
+      },
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "Le tutoriel affiche désormais les vraies cartes, les vrais ennemis et les vraies reliques du jeu, au lieu d'exemples simplifiés.",
+          "Les règles enseignées par le tutoriel (Armure, Poison, Brûlure, Électrocution, intentions ennemies, fusion de cartes, calcul des dégâts, expérience et récompenses de niveau, reliques) sont désormais exactes."
+        ]
+      },
+      {
+        "category": "Corrections",
+        "emoji": "🐛",
+        "entries": [
+          "La légende de la carte du monde affiche maintenant correctement \"x3\" pour la récompense d'XP et d'or d'un Boss, au lieu de \"x2\" — la récompense elle-même n'a pas changé."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.4.8",
     "date": "2026-08-20",
     "title": "La Salle des Archives",
