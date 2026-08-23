@@ -213,12 +213,29 @@ const List<TutorialStep> kTutorialSteps = [
     type: TutorialStepType.enemies,
   ),
   TutorialStep(
-    titleEn: 'Card Fusion',
+    titleEn: 'Card Merging',
     titleFr: 'La Fusion de Cartes',
     bodyEn:
-        'Card merging is an out-of-combat master deck management action. When you acquire three identical cards of the same level outside of combat, they automatically merge into a single upgraded version! Upgraded cards have lower mana costs, higher values, or extra effects. Tap "Merge" to see!',
+        'Merging is **manual**, and only outside combat. Open your Deck: when '
+        'you hold three copies of the same card **at the same rarity**, the '
+        'group offers a merge. Select exactly three, confirm, and they become '
+        'one card of the next rarity up.\n\n'
+        'Rarity **never changes a card\'s Mana cost** — it multiplies its '
+        'values: ×1.2 uncommon, ×1.4 rare, ×1.6 epic, ×2.0 legendary.\n\n'
+        'Forge upgrades carried by the three copies are inherited and merged, '
+        'capped by the new rarity\'s capacity. Your class cards are unique, and '
+        'unique cards never merge.',
     bodyFr:
-        'La fusion de cartes est une action de gestion du deck principal effectuée hors combat. Lorsque vous obtenez trois cartes identiques de même niveau en dehors des affrontements, elles fusionnent automatiquement en une version améliorée ! Les cartes améliorées ont un coût réduit, des valeurs accrues ou des effets bonus. Appuyez sur "Fusionner" pour voir !',
+        'La fusion est **manuelle**, et seulement hors combat. Ouvrez votre '
+        'Deck : lorsque vous détenez trois exemplaires d\'une même carte **de '
+        'même rareté**, le groupe propose une fusion. Sélectionnez-en exactement '
+        'trois, confirmez, et elles deviennent une carte de la rareté '
+        'supérieure.\n\n'
+        'La rareté **ne change jamais le coût en Mana** — elle multiplie les '
+        'valeurs : ×1,2 peu commun, ×1,4 rare, ×1,6 épique, ×2,0 légendaire.\n\n'
+        'Les améliorations de forge des trois exemplaires sont héritées et '
+        'consolidées, dans la limite de la capacité de la nouvelle rareté. Vos '
+        'cartes de classe sont uniques, et une carte unique ne fusionne jamais.',
     type: TutorialStepType.merge,
   ),
   TutorialStep(

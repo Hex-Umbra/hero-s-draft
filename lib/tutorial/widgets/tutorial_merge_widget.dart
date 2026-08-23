@@ -225,7 +225,10 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
                       ],
                     ),
                     child: Text(
-                      isFrench ? 'Fusionner 🔮' : 'Merge 🔮',
+                      isFrench
+                          ? 'Sélectionner les 3 et fusionner'
+                          : 'Select all 3 and merge',
+                      textAlign: TextAlign.center,
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -235,13 +238,28 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
                   ),
                 )
               else
-                Text(
-                  isFrench ? 'Fusion Complétée ! ✨' : 'Merge Complete! ✨',
-                  style: const TextStyle(
-                    color: Colors.amber,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      isFrench ? 'Fusion Complétée ! ✨' : 'Merge Complete! ✨',
+                      style: const TextStyle(
+                        color: Colors.amber,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      isFrench
+                          ? 'Même coût. Valeurs ×1,2.'
+                          : 'Same cost. Values ×1.2.',
+                      style: TextStyle(
+                        color: Colors.grey.shade300,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                 ),
             ],
           ),
