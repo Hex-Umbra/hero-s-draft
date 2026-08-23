@@ -189,19 +189,27 @@ const List<TutorialStep> kTutorialSteps = [
   ),
   TutorialStep(
     titleEn: 'Enemy Intentions',
-    titleFr: 'Les Intentions Ennies',
+    titleFr: 'Les Intentions Ennemies',
     bodyEn:
-        'Enemies announce their actions before you play. Pay attention to the intent icon above them:\n'
-        '• ⚔️ Sword: Attacking (shows damage value).\n'
-        '• 🛡️ Shield: Defending (adding Armor).\n'
-        '• 💜 Purple Arrow: Buffing or applying status effects.\n'
-        '• ❓ Question Mark: Unknown or complex action.',
+        'Enemies announce what they will do before you play. Their intent is '
+        'not shown above them — read it in the **Enemy Intentions panel, '
+        'bottom-right**.\n\n'
+        'There are three: attack, defend, and buff. Attacks change icon and '
+        'colour with their size — Quick, Attack, Heavy, Devastating — so a '
+        'glance is enough to tell a scratch from a threat.\n\n'
+        'The number is recalculated live: it grows with the enemy\'s level and '
+        'accumulated Strength, and halves while they are Frozen.',
     bodyFr:
-        'Les ennemis annoncent leurs actions avant que vous ne jouiez. Observez l\'icône au-dessus d\'eux :\n'
-        '• ⚔️ Épée : Attaque imminente (affiche la valeur des dégâts).\n'
-        '• 🛡️ Bouclier : Défense imminente (génération d\'Armure).\n'
-        '• 💜 Flèche Violette : Amélioration ou application de statut.\n'
-        '• ❓ Point d\'interrogation : Action complexe ou inconnue.',
+        'Les ennemis annoncent leur action avant que vous ne jouiez. Leur '
+        'intention n\'est pas affichée au-dessus d\'eux : elle se lit dans le '
+        'panneau **Intentions Ennemies, en bas à droite**.\n\n'
+        'Il en existe trois : attaque, défense et renforcement. Les attaques '
+        'changent d\'icône et de couleur selon leur ampleur — Rapide, Attaque, '
+        'Lourde, Dévastatrice — pour distinguer d\'un coup d\'œil l\'égratignure '
+        'de la menace.\n\n'
+        'Le chiffre est recalculé en direct : il monte avec le niveau de '
+        'l\'ennemi et sa Force accumulée, et se divise par deux tant qu\'il est '
+        'Gelé.',
     type: TutorialStepType.enemies,
   ),
   TutorialStep(
