@@ -10,26 +10,36 @@ class TutorialArmorWidget extends StatefulWidget {
 }
 
 class _TutorialArmorWidgetState extends State<TutorialArmorWidget> {
-  // Socle de démonstration : 80 PV visées (le moteur plafonne lui-même au
-  // maxPv réel du héros choisi, ex. 60 pour le Mage), et 4 points d'Armure
-  // pour le panneau de droite.
+  // Point d'Armure de départ pour le panneau de droite : un paramètre du
+  // scénario pédagogique (« et si vous aviez 4 Armure ? »), pas une valeur
+  // de jeu réelle — contrairement au maximum de PV, l'Armure de départ ne
+  // dépend d'aucune classe.
   static const int _rightStartArmor = 4;
 
-  int _leftHp = 80;
-  final int _leftMaxHp = 80;
+  // `null` tant qu'aucune simulation n'a tourné : le panneau affiche alors
+  // la pleine vie réelle (`_maxHp`). Un champ ne peut pas lire `_maxHp` à
+  // l'initialisation (`widget` n'est pas encore attaché à cet instant) —
+  // d'où le `null` plutôt qu'une constante comme 80.
+  int? _leftHp;
   int _leftArmor = 0;
-  int _leftHpLoss = 10;
+  int _leftHpLoss = 0;
 
-  int _rightHp = 80;
-  final int _rightMaxHp = 80;
+  int? _rightHp;
   int _rightArmor = _rightStartArmor;
-  int _rightArmorLoss = _rightStartArmor;
-  int _rightHpLoss = 6;
+  int _rightArmorLoss = 0;
+  int _rightHpLoss = 0;
 
   bool _leftShowDamage = false;
   bool _rightShowDamage = false;
   double _leftDamageY = 0.0;
   double _rightDamageY = 0.0;
+
+  /// PV max réels du héros choisi, ou le repli neutre de `baseStatsForHero`
+  /// si l'étape de classe a été sautée (jamais une constante en dur : un
+  /// Mage a 60 PV, pas 80). Les deux panneaux illustrent le même
+  /// personnage dans deux scénarios (avec/sans Armure), jamais deux
+  /// personnages différents : un seul plafond leur suffit.
+  int get _maxHp => widget.engine.mockState.baseStatsForHero().maxPv;
 
   /// Remet `heroStats` à un socle neutre avant un calcul de démonstration.
   ///
@@ -41,15 +51,16 @@ class _TutorialArmorWidgetState extends State<TutorialArmorWidget> {
   /// moteur (`resetHeroStatsForDemo`) plafonne lui-même ce socle au `maxPv`
   /// réel du héros choisi et notifie ses observateurs.
   void _resetDemoBaseline() {
-    widget.engine.resetHeroStatsForDemo(_leftMaxHp);
+    widget.engine.resetHeroStatsForDemo(_maxHp);
   }
 
   void _runSimulation() {
-    // Reset to start
+    // Reset to start : null -> les barres réaffichent la pleine vie réelle
+    // du héros (voir _maxHp), pas une constante.
     setState(() {
-      _leftHp = 80;
+      _leftHp = null;
       _leftArmor = 0;
-      _rightHp = 80;
+      _rightHp = null;
       _rightArmor = _rightStartArmor;
       _leftShowDamage = false;
       _rightShowDamage = false;
@@ -63,10 +74,9 @@ class _TutorialArmorWidgetState extends State<TutorialArmorWidget> {
 
       // Gauche : pas d'Armure -> les dégâts tapent les PV en direct. Les
       // pertes se mesurent avant/après setHeroArmor (pas juste après le
-      // reset) plutôt que par rapport à un socle supposé de 80 : pour le
-      // Mage (maxPv 60), resetHeroStatsForDemo plafonne le socle réel en
-      // dessous de 80, et l'Armure de départ n'est fixée qu'à l'appel de
-      // setHeroArmor.
+      // reset) plutôt que par rapport à _maxHp : le socle réel dépend du
+      // héros (resetHeroStatsForDemo le plafonne, ex. 60 pour le Mage), et
+      // l'Armure de départ n'est fixée qu'à l'appel de setHeroArmor.
       _resetDemoBaseline();
       widget.engine.setHeroArmor(0);
       final beforeLeft = widget.engine.mockState.heroStats;
@@ -111,6 +121,7 @@ class _TutorialArmorWidgetState extends State<TutorialArmorWidget> {
   @override
   Widget build(BuildContext context) {
     final isFrench = Localizations.localeOf(context).languageCode == 'fr';
+    final maxHp = _maxHp;
 
     return Center(
       child: FittedBox(
@@ -179,8 +190,8 @@ class _TutorialArmorWidgetState extends State<TutorialArmorWidget> {
                               // HP bar
                               buildHealthBar(
                                 'HP',
-                                _leftHp,
-                                _leftMaxHp,
+                                _leftHp ?? maxHp,
+                                maxHp,
                                 Colors.redAccent,
                               ),
                               const SizedBox(height: 6),
@@ -250,8 +261,8 @@ class _TutorialArmorWidgetState extends State<TutorialArmorWidget> {
                               // HP bar
                               buildHealthBar(
                                 'HP',
-                                _rightHp,
-                                _rightMaxHp,
+                                _rightHp ?? maxHp,
+                                maxHp,
                                 Colors.redAccent,
                               ),
                               const SizedBox(height: 6),
