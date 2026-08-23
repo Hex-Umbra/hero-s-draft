@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/foundation.dart';
 import '../models/data/game_data_registry.dart';
 import '../models/card_instance.dart';
@@ -324,12 +326,29 @@ class TutorialEngine extends ChangeNotifier {
     notifyListeners();
   }
 
+  int _pendingDrafts = 0;
+
+  int get pendingDrafts => _pendingDrafts;
+
+  /// Même formule que `PlayerStatsManager.gainXp` : report de l'excédent et
+  /// palier géométrique `100 × 1,5^(niveau-1)`.
   void gainXp(int amount) {
-    mockState.playerXp += amount;
-    if (mockState.playerXp >= mockState.xpToNextLevel) {
-      mockState.playerLevel++;
-      mockState.playerXp = mockState.playerXp - mockState.xpToNextLevel;
+    if (amount <= 0) return;
+
+    var xp = mockState.playerXp + amount;
+    var level = mockState.playerLevel;
+    var threshold = mockState.xpToNextLevel;
+
+    while (xp >= threshold) {
+      xp -= threshold;
+      level++;
+      threshold = (100 * pow(1.5, level - 1)).round();
+      _pendingDrafts++;
     }
+
+    mockState.playerXp = xp;
+    mockState.playerLevel = level;
+    mockState.xpToNextLevel = threshold;
     notifyListeners();
   }
 

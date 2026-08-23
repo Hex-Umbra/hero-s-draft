@@ -242,9 +242,29 @@ const List<TutorialStep> kTutorialSteps = [
     titleEn: 'Experience & Leveling Up',
     titleFr: 'L\'Expérience & le Level Up',
     bodyEn:
-        'Defeating enemies grants Experience Points (XP). Once the XP bar is filled, you level up! Leveling up fully restores your Mana and triggers a Reward Draft.',
+        'Defeating enemies grants XP. Each level costs more than the last: '
+        '100, then 150, then 225, and so on.\n\n'
+        'Overflow XP carries into the next level, and if you gain several '
+        'levels at once the rewards stack — **the world map stays locked until '
+        'you have drafted them all**.\n\n'
+        'Winning a fight refills your Mana and clears your skill cooldowns, '
+        'whether or not it also levels you up. Note that your hero\'s XP '
+        'level and the "Level" shown next to the Act are two different '
+        'counters: the second is the one a victory advances, and it tracks '
+        'your progress across the map.',
     bodyFr:
-        'Vaincre des ennemis rapporte des points d\'expérience (XP). Une fois la barre d\'XP remplie, vous passez au niveau supérieur ! Le passage de niveau restaure tout votre Mana et déclenche un Draft de récompense.',
+        'Vaincre des ennemis rapporte de l\'XP. Chaque niveau coûte plus cher '
+        'que le précédent : 100, puis 150, puis 225, et ainsi de suite.\n\n'
+        'L\'XP excédentaire est reportée sur le niveau suivant, et si vous '
+        'gagnez plusieurs niveaux d\'un coup les récompenses s\'empilent — **la '
+        'carte du monde reste verrouillée tant que vous ne les avez pas toutes '
+        'draftées**.\n\n'
+        'Gagner un combat restaure votre Mana et réinitialise vos temps de '
+        'recharge, que ce combat vous fasse gagner un niveau ou non. '
+        'Attention : le niveau d\'XP de votre héros et le « Niveau » affiché '
+        'à côté de l\'Acte sont deux compteurs distincts : c\'est le second '
+        'qu\'une victoire fait avancer, et il suit votre progression sur la '
+        'carte.',
     type: TutorialStepType.xp,
   ),
   TutorialStep(

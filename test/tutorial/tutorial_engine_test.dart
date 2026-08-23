@@ -153,6 +153,25 @@ void main() {
     });
   });
 
+  group('Progression d\'XP', () {
+    test('le palier suit 100 x 1,5^(niveau-1)', () {
+      expect(engine.mockState.xpToNextLevel, 100);
+
+      engine.gainXp(100);
+
+      expect(engine.mockState.playerLevel, 2);
+      expect(engine.mockState.xpToNextLevel, 150);
+    });
+
+    test('l\'XP excédentaire est reportée et les drafts s\'empilent', () {
+      engine.gainXp(260); // 100 -> niv.2, 150 -> niv.3, reste 10
+
+      expect(engine.mockState.playerLevel, 3);
+      expect(engine.mockState.playerXp, 10);
+      expect(engine.pendingDrafts, 2);
+    });
+  });
+
   group('Parcours à état', () {
     test('la classe choisie survit aux changements d\'étape', () {
       final paladin = engine.fixtures.heroes.first;

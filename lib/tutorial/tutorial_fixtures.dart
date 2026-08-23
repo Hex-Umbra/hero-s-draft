@@ -17,6 +17,7 @@ class TutorialFixtureIds {
   static const String defend = 'defend_basic';
   static const String fireball = 'fireball';
   static const String trainingEnemy = 'slime';
+  static const String goblin = 'gobelin';
   static const String sampleRelic = 'iron_talisman';
   static const List<String> heroes = ['paladin', 'berserker', 'mage'];
 }
@@ -36,6 +37,11 @@ class TutorialFixtures {
 
   EnemyData get trainingEnemy =>
       registry.enemies.firstWhere((e) => e.id == TutorialFixtureIds.trainingEnemy);
+
+  /// Le Gobelin de démonstration de l'étape XP : son `xp` (35 dans le JSON)
+  /// alimente le libellé du bouton sans jamais être recopié en dur.
+  EnemyData get goblin =>
+      registry.enemies.firstWhere((e) => e.id == TutorialFixtureIds.goblin);
 
   RelicData get sampleRelic =>
       registry.relics.firstWhere((r) => r.id == TutorialFixtureIds.sampleRelic);

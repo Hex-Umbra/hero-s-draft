@@ -33,6 +33,10 @@ void main() {
       expect(fixtures.trainingEnemy.id, 'slime');
       expect(fixtures.sampleRelic.id, 'iron_talisman');
     });
+
+    test('le Gobelin de l\'étape XP existe', () {
+      expect(fixtures.goblin.id, 'gobelin');
+    });
   });
 
   group('Propriétés dont la pédagogie dépend', () {
