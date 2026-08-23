@@ -6,6 +6,7 @@ import 'tutorial_step.dart';
 import 'tutorial_data.dart';
 import 'tutorial_progress_service.dart';
 import 'widgets/tutorial_welcome_widget.dart';
+import 'widgets/tutorial_class_choice_widget.dart';
 import 'widgets/tutorial_map_widget.dart';
 import 'widgets/tutorial_node_types_widget.dart';
 import 'widgets/tutorial_combat_overview_widget.dart';
@@ -74,6 +75,8 @@ class _TutorialScreenState extends State<TutorialScreen> {
         return engine.mockState.playerLevel > 1;
       case TutorialStepType.draft:
         return engine.mockState.hasDrafted;
+      case TutorialStepType.classChoice:
+        return engine.mockState.chosenHero != null;
       default:
         return true;
     }
@@ -83,6 +86,8 @@ class _TutorialScreenState extends State<TutorialScreen> {
     switch (type) {
       case TutorialStepType.welcome:
         return TutorialWelcomeWidget(engine: _engine);
+      case TutorialStepType.classChoice:
+        return TutorialClassChoiceWidget(engine: _engine);
       case TutorialStepType.map:
         return TutorialMapWidget(engine: _engine);
       case TutorialStepType.nodeTypes:

@@ -18,6 +18,7 @@ class TutorialStep {
 
 enum TutorialStepType {
   welcome,
+  classChoice,
   map,
   nodeTypes,
   combatOverview,

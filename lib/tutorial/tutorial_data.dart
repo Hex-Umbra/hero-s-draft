@@ -11,6 +11,20 @@ const List<TutorialStep> kTutorialSteps = [
     type: TutorialStepType.welcome,
   ),
   TutorialStep(
+    titleEn: 'Choose Your Class',
+    titleFr: 'Choisissez votre classe',
+    bodyEn:
+        'Every run starts here. The three classes differ by their health pool '
+        'and — above all — by their passive, which decides how they earn Armor. '
+        'Pick one: the rest of this tutorial will use it.',
+    bodyFr:
+        'Toute partie commence ici. Les trois classes se distinguent par leurs '
+        'points de vie et surtout par leur passif, qui décide de la façon dont '
+        'elles gagnent de l\'Armure. Choisissez-en une : la suite de ce '
+        'tutoriel s\'y adaptera.',
+    type: TutorialStepType.classChoice,
+  ),
+  TutorialStep(
     titleEn: 'The World Map',
     titleFr: 'La Carte du Monde',
     bodyEn:
