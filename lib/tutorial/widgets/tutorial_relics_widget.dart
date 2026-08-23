@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:roguelike_card_game/l10n/app_localizations.dart';
+
 import '../tutorial_engine.dart';
 
 class TutorialRelicsWidget extends StatefulWidget {
@@ -44,7 +46,18 @@ class _TutorialRelicsWidgetState extends State<TutorialRelicsWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final isFrench = Localizations.localeOf(context).languageCode == 'fr';
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
+    final isFrench = locale == 'fr';
+    final relic = widget.engine.fixtures.sampleRelic;
+    final relicCount = widget.engine.fixtures.registry.relics.length;
+    // Compte les déclencheurs effectivement utilisés par au moins une relique
+    // du registre (7), pas la taille de l'enum RelicTrigger (9) :
+    // onSkillPlayed et onPowerPlayed n'ont aucune relique qui les déclenche.
+    final triggerCount = widget.engine.fixtures.registry.relics
+        .map((r) => r.trigger)
+        .toSet()
+        .length;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -129,16 +142,15 @@ class _TutorialRelicsWidgetState extends State<TutorialRelicsWidget> {
                                       color: Colors.amber.withValues(alpha: 0.1),
                                       shape: BoxShape.circle,
                                     ),
-                                    child: const Icon(
-                                      Icons.shield_outlined,
-                                      color: Colors.amber,
-                                      size: 38,
+                                    child: Text(
+                                      relic.emoji,
+                                      style: const TextStyle(fontSize: 38),
                                     ),
                                   ),
                                   const SizedBox(height: 12),
                                   // Relic Name
                                   Text(
-                                    isFrench ? 'Talisman de Fer' : 'Iron Talisman',
+                                    relic.getName(locale),
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontWeight: FontWeight.bold,
@@ -149,9 +161,7 @@ class _TutorialRelicsWidgetState extends State<TutorialRelicsWidget> {
                                   const SizedBox(height: 6),
                                   // Relic Description
                                   Text(
-                                    isFrench
-                                        ? 'Au début du combat, gagnez 4 Armure.'
-                                        : 'At start of combat, gain 4 Armor.',
+                                    relic.getDescription(locale),
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       color: Colors.grey.shade400,
@@ -177,26 +187,33 @@ class _TutorialRelicsWidgetState extends State<TutorialRelicsWidget> {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
                 ),
-                child: Wrap(
-                  alignment: WrapAlignment.spaceAround,
-                  spacing: 12,
-                  runSpacing: 8,
+                child: Column(
                   children: [
-                    _buildRarityBadge(
-                      isFrench ? 'Commun' : 'Common',
-                      Colors.white70,
+                    Wrap(
+                      alignment: WrapAlignment.spaceAround,
+                      spacing: 12,
+                      runSpacing: 8,
+                      children: [
+                        _buildRarityBadge(l10n.rarityCommon, Colors.white70),
+                        _buildRarityBadge(
+                          l10n.rarityUncommon,
+                          const Color(0xFF34C759),
+                        ),
+                        _buildRarityBadge(l10n.rarityRare, Colors.blueAccent),
+                        _buildRarityBadge(l10n.rarityEpic, Colors.purpleAccent),
+                        _buildRarityBadge(l10n.rarityLegendary, Colors.amber),
+                      ],
                     ),
-                    _buildRarityBadge(
-                      isFrench ? 'Rare' : 'Rare',
-                      Colors.blueAccent,
-                    ),
-                    _buildRarityBadge(
-                      isFrench ? 'Épique' : 'Epic',
-                      Colors.purpleAccent,
-                    ),
-                    _buildRarityBadge(
-                      isFrench ? 'Légendaire' : 'Legendary',
-                      Colors.amber,
+                    const SizedBox(height: 8),
+                    Text(
+                      isFrench
+                          ? '$relicCount reliques, $triggerCount déclencheurs.'
+                          : '$relicCount relics, $triggerCount triggers.',
+                      style: TextStyle(
+                        color: Colors.grey.shade500,
+                        fontSize: 10.5,
+                        fontStyle: FontStyle.italic,
+                      ),
                     ),
                   ],
                 ),

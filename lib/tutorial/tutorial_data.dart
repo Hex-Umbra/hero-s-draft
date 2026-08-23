@@ -293,12 +293,27 @@ const List<TutorialStep> kTutorialSteps = [
     type: TutorialStepType.draft,
   ),
   TutorialStep(
-    titleEn: 'Relics & Boss Loot',
+    titleEn: 'Relics',
     titleFr: 'Les Reliques',
     bodyEn:
-        'Relics are unique treasures that grant passive bonuses for the rest of your run. You obtain them by defeating Elite enemies, Bosses, or buying them from the Shop. Complete this step to finish the tutorial!',
+        'Relics grant passive bonuses for the rest of your run. You get them '
+        'from **Elite** fights, from the **improved-relic Boss** — only that '
+        'one of the three — and from the **Relic Shrine**, which trades several '
+        'sacrificed relics for a better one. The Shop sells none.\n\n'
+        'Each relic fires on a specific trigger: start of run, start of combat, '
+        'start or end of turn, when you play a card, when you play an attack, '
+        'or when an enemy dies. Reading the trigger matters as much as reading '
+        'the effect.',
     bodyFr:
-        'Les Reliques sont des trésors uniques qui vous accordent des bonus passifs pour le reste de votre run. Vous les obtenez en battant des Élites, des Boss, ou à la Boutique. Terminez cette étape pour finir le tutoriel !',
+        'Les Reliques accordent des bonus passifs pour le reste de votre run. '
+        'Vous les obtenez en combat **Élite**, auprès du **Boss à relique '
+        'améliorée** — celui-là seulement sur les trois — et à l\'**Autel des '
+        'Reliques**, qui échange plusieurs reliques sacrifiées contre une '
+        'meilleure. La Boutique n\'en vend aucune.\n\n'
+        'Chaque relique se déclenche sur un moment précis : début de run, début '
+        'de combat, début ou fin de tour, quand vous jouez une carte, quand vous '
+        'jouez une attaque, ou quand un ennemi meurt. Lire le déclencheur compte '
+        'autant que lire l\'effet.',
     type: TutorialStepType.relics,
   ),
 ];
