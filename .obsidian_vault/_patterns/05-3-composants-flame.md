@@ -13,10 +13,10 @@
 
 **Décomposition de `CardComponent`** :
 Afin de nettoyer la classe `CardComponent` de ses centaines de lignes de dessin 2D et de gestion bas niveau des gestes, elle a été divisée en trois responsabilités :
-- **`CardComponent`** (`card_component.dart`) :
+- **`CardComponent`** (`lib/game/components/card_component.dart`) :
   - Classe façade principale qui coordonne les initialisations et les interactions de haut niveau (callbacks de jeu, effets de shake).
-- **`CardRenderer`** (`widgets/card_renderer.dart`) :
+- **`CardRenderer`** (`lib/game/components/widgets/card_renderer.dart`) :
   - Encapsule tout le dessin 2D de la face avant de la carte (fond avec coins arrondis, dégradés selon le type de carte, liseré et halo de rareté de carte, effet foil polychromatique rotatif pour la rareté `unique`, et dessin des fentes de runes de forge avec wrapping Canvas).
   - Délègue le dessin des textes à `CardTextRenderer`.
-- **`CardInteractionHandler`** (`widgets/card_interaction_handler.dart`) :
+- **`CardInteractionHandler`** (`lib/game/components/widgets/card_interaction_handler.dart`) :
   - Centralise la gestion des gestes du pointeur : détection du survol (`hover`), calcul du glissement (`drag`), détection d'entrée dans la zone d'annulation (`cancel zone`) et détection de survol d'un ennemi pour ciblage.

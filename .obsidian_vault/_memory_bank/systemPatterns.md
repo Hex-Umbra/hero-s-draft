@@ -78,13 +78,13 @@
 
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
-| 8. Conventions de Code & Standards Techniques | [08-00-conventions-de-code-standards-techniques.md](../_patterns/08-00-conventions-de-code-standards-techniques.md) | 84 |
+| 8. Conventions de Code & Standards Techniques | [08-00-conventions-de-code-standards-techniques.md](../_patterns/08-00-conventions-de-code-standards-techniques.md) | 94 |
 
 ### 9. Architecture du Système de Tutoriel Autonome (Tutorial System Technical Design)
 
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
-| 9. Architecture du Système de Tutoriel Autonome (Tutorial System Technical Design) | [09-00-architecture-du-systeme-de-tutoriel-autonome.md](../_patterns/09-00-architecture-du-systeme-de-tutoriel-autonome.md) | 80 |
+| 9. Architecture du Système de Tutoriel Autonome (Tutorial System Technical Design) | [09-00-architecture-du-systeme-de-tutoriel-autonome.md](../_patterns/09-00-architecture-du-systeme-de-tutoriel-autonome.md) | 134 |
 
 ### 10. Architecture du Système de Forge et de Fusion de Cartes (Forge & Card Merge Technical Design)
 

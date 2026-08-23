@@ -5,7 +5,7 @@ ordre ils ont été écrits. C'est un index de navigation — il ne contient **a
 des liens. Si tu cherches une réponse plutôt qu'un document, la table de `CLAUDE.md` (§Documentation
 Map) t'oriente plus vite.
 
-**Dernière mise à jour** : 2026-08-17
+**Dernière mise à jour** : 2026-08-23
 
 ---
 
@@ -49,7 +49,7 @@ Chaque sujet suit la même chaîne. Tous les documents n'en parcourent pas tous 
 
 | | Document | Date |
 |:---:|:---|:---|
-| 🔍 | [Assainissement du système de pioche](possible_upgrades/31-07-2026_systeme_pioche_assainissement_Opus5.md) | 31/07/2026 |
+| 🔍 | [Assainissement du système de pioche](possible_upgrades/_archives/31-07-2026_systeme_pioche_assainissement_Opus5.md) | 31/07/2026 |
 | 📐 | [P-02 — Assainissement de la pioche](superpowers/specs/2026-08-04-p02-assainissement-pioche-design.md) | 04/08/2026 |
 | 🔨 | [P-02 — Plan d'implémentation](superpowers/plans/2026-08-05-p02-assainissement-pioche.md) | 05/08/2026 |
 | ✅ | [ADR-078](../.obsidian_vault/_adr/ADR-078-assainissement-du-systeme-de-pioche-remelange-a-sec.md) → [`ROADMAP.md` P-02](ROADMAP.md) | 06/08/2026 |
@@ -116,12 +116,13 @@ Chaque sujet suit la même chaîne. Tous les documents n'en parcourent pas tous 
 |:---:|:---|:---|
 | 🗄️ | [Plan d'implémentation du tutoriel](implementation_plans/done/implementation_plan_tutorial_02-06-2026.md) | 02/06/2026 |
 | 🗄️ | [Revue de responsivité du tutoriel](archives/tutorial_responsiveness_review.md) | — |
+| 📐🔨 | [P-45 — Fidélité du tutoriel](superpowers/specs/2026-08-22-p45-fidelite-du-tutoriel-design.md) · [plan](superpowers/plans/2026-08-23-p45-fidelite-du-tutoriel.md) — **livré en `0.4.9`** : 50 écarts relevés entre `lib/tutorial/` et le jeu réel, parcours étendu de 13 à 15 étapes, règle d'autonomie amendée en « zéro provider d'*état* » | 22/08/2026 |
 
 ## 10. Infrastructure & CI/CD
 
 | | Document | Date |
 |:---:|:---|:---|
-| 🔍⚠️ | [Pipeline CI/CD GitHub Actions](possible_upgrades/30-07-2026_ci_cd_pipeline_github_actions_Sonnet5.md) *(→ P-04)* — **périmé, ne pas implémenter depuis ce document** : la modification nginx qu'il prescrit casserait le site en production, et son job `build-web` produit une page blanche. Corrigé par la spec ci-dessous (§9). Reste valable pour le *raisonnement*. | 30/07/2026 |
+| 🔍⚠️ | [Pipeline CI/CD GitHub Actions](possible_upgrades/_archives/30-07-2026_ci_cd_pipeline_github_actions_Sonnet5.md) *(→ P-04)* — **périmé, ne pas implémenter depuis ce document** : la modification nginx qu'il prescrit casserait le site en production, et son job `build-web` produit une page blanche. Corrigé par la spec ci-dessous (§9). Reste valable pour le *raisonnement*. | 30/07/2026 |
 | 📐🔨 | [P-04 — CI/CD GitHub Actions](superpowers/specs/2026-08-17-p04-ci-cd-github-actions-design.md) · [plan](superpowers/plans/2026-08-17-p04-ci-cd-github-actions.md) — **livré, en production depuis le 18/08** | 17/08/2026 |
 | 📐🔨 | [P-04 lot 2 — Site vitrine & finalisation du CI/CD](superpowers/specs/2026-08-19-site-vitrine-et-finalisation-ci-cd-design.md) · [plan](superpowers/plans/2026-08-19-site-vitrine-et-finalisation-ci-cd.md) — smoke test, notification Discord, répertoire `site/` piloté par `versions.json` | 19/08/2026 |
 | 🗄️ | [Tests manuels — phase 3](tests/phase_3_manual_tests.md) | — |

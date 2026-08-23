@@ -25,6 +25,16 @@ Le codebase utilise exhaustivement des enums pour éliminer les typos et optimis
 | `RelicTrigger` | `relic_data.dart` | `startOfRun`, `startOfCombat`, `startOfTurn`, `endOfTurn`, `onCardPlayed`, `onAttackPlayed`, `onSkillPlayed`, `onPowerPlayed`, `onEnemyKilled` |
 | `RelicRarity` | `relic_data.dart` | `common`, `uncommon`, `rare`, `epic`, `legendary` |
 
+> [!IMPORTANT]
+> **Un `switch` exhaustif, jamais une cascade de `if`, pour couvrir un enum.** Dart 3
+> vérifie l'exhaustivité d'un `switch` sur un enum **à la compilation** : ajouter une valeur
+> casse le build partout où elle n'est pas traitée. Une cascade de `if` ne dit rien et
+> retombe silencieusement sur sa dernière branche. C'est ainsi que la Forge d'Acier
+> légendaire a rendu la valeur d'un commun pendant des mois sans que rien ne le signale —
+> voir [`_rules/06-00`](../_rules/06-00-economie-de-jeu.md). Attention à `RewardRarity`, qui
+> compte **six** valeurs, `mythic` incluse : un `case legendary: case mythic:` groupé est
+> explicite, un `else` ne l'est pas.
+
 ### 8.3. Principes de Code Documentés
 
 - **Zéro logique métier dans les vues** : toutes les mutations d'état sont déléguées aux contrôleurs Riverpod.

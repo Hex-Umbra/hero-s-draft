@@ -57,7 +57,7 @@
 
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
-| 6. Économie de Jeu | [06-00-economie-de-jeu.md](../_rules/06-00-economie-de-jeu.md) | 19 |
+| 6. Économie de Jeu | [06-00-economie-de-jeu.md](../_rules/06-00-economie-de-jeu.md) | 55 |
 
 ### 7. Architecture des Données (100% Data-Driven)
 
