@@ -250,6 +250,25 @@ class TutorialEngine extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Remet `heroStats` à un socle neutre pour une démonstration de dégâts :
+  /// Armure à 0, PV courants au plus petit de [desiredPv] et du `maxPv` réel
+  /// du héros choisi.
+  ///
+  /// Contrairement à `setHeroArmor`/`applyDamageToHero`, qui ne peuvent
+  /// qu'appauvrir l'état, ce point d'entrée peut remonter les PV courants :
+  /// nécessaire aux démonstrations qui rejouent un même scénario plusieurs
+  /// fois sur le `heroStats` partagé du moteur. Le plafond réel du héros est
+  /// toujours respecté — jamais de PV courants supérieurs au maximum, même
+  /// si [desiredPv] le dépasse (ex. le Mage, `maxPv: 60`).
+  void resetHeroStatsForDemo(int desiredPv) {
+    final stats = mockState.heroStats;
+    mockState.heroStats = stats.copyWith(
+      currentPv: desiredPv < stats.maxPv ? desiredPv : stats.maxPv,
+      armure: 0,
+    );
+    notifyListeners();
+  }
+
   /// Joue une carte de la main. Les dégâts passent par le pipeline réel :
   /// avec `critChance: 0`, il est déterministe.
   bool playCard(CardInstance card) {

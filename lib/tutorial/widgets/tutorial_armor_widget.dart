@@ -10,35 +10,38 @@ class TutorialArmorWidget extends StatefulWidget {
 }
 
 class _TutorialArmorWidgetState extends State<TutorialArmorWidget> {
-  // Socle de démonstration : 80 PV, et 4 points d'Armure pour le panneau de
-  // droite. Fixe et indépendant du héros réellement choisi, pour que les
-  // deux panneaux restent comparables quelle que soit la classe.
+  // Socle de démonstration : 80 PV visées (le moteur plafonne lui-même au
+  // maxPv réel du héros choisi, ex. 60 pour le Mage), et 4 points d'Armure
+  // pour le panneau de droite.
   static const int _rightStartArmor = 4;
 
   int _leftHp = 80;
   final int _leftMaxHp = 80;
   int _leftArmor = 0;
+  int _leftHpLoss = 10;
 
   int _rightHp = 80;
   final int _rightMaxHp = 80;
   int _rightArmor = _rightStartArmor;
+  int _rightArmorLoss = _rightStartArmor;
+  int _rightHpLoss = 6;
 
   bool _leftShowDamage = false;
   bool _rightShowDamage = false;
   double _leftDamageY = 0.0;
   double _rightDamageY = 0.0;
 
-  /// Remet `heroStats` à un socle neutre (80 PV, 0 Armure) avant un calcul
-  /// de démonstration.
+  /// Remet `heroStats` à un socle neutre avant un calcul de démonstration.
   ///
   /// `setHeroArmor` et `applyDamageToHero` ne peuvent qu'appauvrir l'état
   /// (fixer l'Armure ou infliger des dégâts), jamais restaurer les PV. Les
   /// deux panneaux comparent pourtant deux scénarios sur le même `heroStats`
   /// partagé par le moteur, et le bouton peut être pressé plusieurs fois :
-  /// chaque scénario repart donc explicitement d'un socle identique.
+  /// chaque scénario repart donc explicitement d'un socle identique. Le
+  /// moteur (`resetHeroStatsForDemo`) plafonne lui-même ce socle au `maxPv`
+  /// réel du héros choisi et notifie ses observateurs.
   void _resetDemoBaseline() {
-    widget.engine.mockState.heroStats = widget.engine.mockState.heroStats
-        .copyWith(currentPv: _leftMaxHp, armure: 0);
+    widget.engine.resetHeroStatsForDemo(_leftMaxHp);
   }
 
   void _runSimulation() {
@@ -58,9 +61,15 @@ class _TutorialArmorWidgetState extends State<TutorialArmorWidget> {
     Future.delayed(const Duration(milliseconds: 200), () {
       if (!mounted) return;
 
-      // Gauche : pas d'Armure -> les dégâts tapent les PV en direct.
+      // Gauche : pas d'Armure -> les dégâts tapent les PV en direct. Les
+      // pertes se mesurent avant/après setHeroArmor (pas juste après le
+      // reset) plutôt que par rapport à un socle supposé de 80 : pour le
+      // Mage (maxPv 60), resetHeroStatsForDemo plafonne le socle réel en
+      // dessous de 80, et l'Armure de départ n'est fixée qu'à l'appel de
+      // setHeroArmor.
       _resetDemoBaseline();
       widget.engine.setHeroArmor(0);
+      final beforeLeft = widget.engine.mockState.heroStats;
       widget.engine.applyDamageToHero(10);
       final afterLeft = widget.engine.mockState.heroStats;
 
@@ -69,17 +78,21 @@ class _TutorialArmorWidgetState extends State<TutorialArmorWidget> {
       // calcule le résultat : on ne le recopie plus à la main.
       _resetDemoBaseline();
       widget.engine.setHeroArmor(_rightStartArmor);
+      final beforeRight = widget.engine.mockState.heroStats;
       widget.engine.applyDamageToHero(10);
       final afterRight = widget.engine.mockState.heroStats;
 
       setState(() {
         _leftHp = afterLeft.currentPv;
+        _leftHpLoss = beforeLeft.currentPv - afterLeft.currentPv;
         _leftArmor = afterLeft.armure;
         _leftShowDamage = true;
         _leftDamageY = -30.0;
 
         _rightArmor = afterRight.armure;
+        _rightArmorLoss = beforeRight.armure - afterRight.armure;
         _rightHp = afterRight.currentPv;
+        _rightHpLoss = beforeRight.currentPv - afterRight.currentPv;
         _rightShowDamage = true;
         _rightDamageY = -30.0;
       });
@@ -152,7 +165,7 @@ class _TutorialArmorWidgetState extends State<TutorialArmorWidget> {
                                       curve: Curves.easeOutQuad,
                                       top: _leftDamageY,
                                       child: Text(
-                                        '-${_leftMaxHp - _leftHp} HP',
+                                        '-$_leftHpLoss HP',
                                         style: const TextStyle(
                                           color: Colors.redAccent,
                                           fontWeight: FontWeight.bold,
@@ -220,10 +233,8 @@ class _TutorialArmorWidgetState extends State<TutorialArmorWidget> {
                                       top: _rightDamageY,
                                       child: Text(
                                         isFrench
-                                            ? '-${_rightStartArmor - _rightArmor} Armure\n'
-                                                  '-${_rightMaxHp - _rightHp} HP'
-                                            : '-${_rightStartArmor - _rightArmor} Armor\n'
-                                                  '-${_rightMaxHp - _rightHp} HP',
+                                            ? '-$_rightArmorLoss Armure\n-$_rightHpLoss HP'
+                                            : '-$_rightArmorLoss Armor\n-$_rightHpLoss HP',
                                         textAlign: TextAlign.center,
                                         style: const TextStyle(
                                           color: Colors.cyanAccent,
