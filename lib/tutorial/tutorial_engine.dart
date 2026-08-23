@@ -157,6 +157,7 @@ class TutorialEngine extends ChangeNotifier {
   void prepareStep(int index) {
     mockState.resetScratch();
     _armorGainedThisStep = false;
+    _manaWarningPending = false;
 
     switch (kTutorialSteps[index].type) {
       case TutorialStepType.cards:

@@ -230,12 +230,31 @@ void main() {
     });
   });
 
-  group('Réarmement de armorGainedThisStep', () {
+  group('Réarmement des drapeaux d\'étape par prepareStep', () {
     test('armorGainedThisStep est réarmé par prepareStep', () {
       engine.setHeroArmor(4);
       expect(engine.armorGainedThisStep, isTrue);
       engine.prepareStep(engine.currentStepIndex);
       expect(engine.armorGainedThisStep, isFalse);
+    });
+
+    test('manaWarningPending est réarmé par prepareStep', () {
+      // Régression (ronde de correction 1/5) : `TutorialEngine` est une
+      // instance unique partagée par tout le tutoriel, et l'étape "Jouer des
+      // cartes" est revisitable via prevStep(). Sans ce réarmement, revenir
+      // sur l'étape après avoir déclenché l'avertissement sans confirmer
+      // laissait `manaWarningPending` bloqué à `true` : le bandeau
+      // s'affichait sans qu'aucune carte n'ait été jouée, et le premier clic
+      // "Fin de Tour" de cette nouvelle visite était traité comme la seconde
+      // confirmation, contournant silencieusement la double confirmation.
+      engine.seedEnemy();
+      engine.setMana(3);
+      engine.endTurn();
+      expect(engine.manaWarningPending, isTrue);
+
+      engine.prepareStep(engine.currentStepIndex);
+
+      expect(engine.manaWarningPending, isFalse);
     });
   });
 
@@ -314,7 +333,7 @@ void main() {
     });
 
     // Le cas "changer d'étape réarme le drapeau d'armure" est déjà couvert
-    // par le groupe "Réarmement de armorGainedThisStep" ci-dessus (Task 4) :
-    // pas de doublon ici.
+    // par le groupe "Réarmement des drapeaux d'étape par prepareStep"
+    // ci-dessus (Task 4) : pas de doublon ici.
   });
 }
