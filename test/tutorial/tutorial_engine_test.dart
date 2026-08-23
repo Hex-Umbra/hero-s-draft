@@ -209,6 +209,15 @@ void main() {
     });
   });
 
+  group('Réarmement de armorGainedThisStep', () {
+    test('armorGainedThisStep est réarmé par prepareStep', () {
+      engine.setHeroArmor(4);
+      expect(engine.armorGainedThisStep, isTrue);
+      engine.prepareStep(engine.currentStepIndex);
+      expect(engine.armorGainedThisStep, isFalse);
+    });
+  });
+
   group('prepareStep et le découplage des notifications', () {
     test('une étape qui sème main et ennemi n\'émet qu\'une seule notification', () {
       var notifications = 0;
