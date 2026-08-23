@@ -73,6 +73,16 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
     final l10n = AppLocalizations.of(context)!;
     final hand = widget.engine.mockState.hand;
 
+    // Garde-fou : `hand` peut retomber à `[]` le temps d'une frame quand
+    // `nextStep()`/`prevStep()` a déjà appelé `resetScratch()` alors que
+    // cette page est encore la page courante de la `PageView` (son
+    // animation de transition ne fait que démarrer). Sans ces gardes,
+    // `hand[0..2]`/`hand.first` lèvent RangeError/StateError et
+    // l'`AnimatedBuilder` ambiant transforme la page en `ErrorWidget`
+    // visible pendant toute la transition.
+    final hasUnmergedTrio = hand.length >= 3;
+    final hasMergedResult = hand.isNotEmpty;
+
     return LayoutBuilder(
       builder: (context, constraints) {
         // Calculate dynamic card width and merge slide distance based on screen size
@@ -91,7 +101,7 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      if (!_isMerged) ...[
+                      if (!_isMerged && hasUnmergedTrio) ...[
                         // Left Card
                         AnimatedBuilder(
                           animation: _slideAnimation,
@@ -157,7 +167,7 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
                       ],
 
                       // Upgraded Merge Result Card
-                      if (_isMerged)
+                      if (_isMerged && hasMergedResult)
                         TweenAnimationBuilder<double>(
                           tween: Tween(begin: 0.5, end: 1.1),
                           duration: const Duration(milliseconds: 400),
