@@ -97,8 +97,8 @@ class _TutorialElementsWidgetState extends State<TutorialElementsWidget> {
     ElementStatusInfo(
       icon: Icons.flash_on,
       color: Colors.orangeAccent,
-      nameEn: 'Strength',
-      nameFr: 'Force',
+      nameEn: 'Attack',
+      nameFr: 'Attaque',
       descEn: 'Adds to every attack\'s damage',
       descFr: 'S\'ajoute aux dégâts de chaque attaque',
     ),
@@ -113,7 +113,7 @@ class _TutorialElementsWidgetState extends State<TutorialElementsWidget> {
     ElementStatusInfo(
       icon: Icons.shield,
       color: Colors.cyanAccent,
-      nameEn: 'Metallicize',
+      nameEn: 'Plated Armor',
       nameFr: 'Métallisation',
       descEn: 'Grants Armor at the start of the turn',
       descFr: 'Donne de l\'Armure au début du tour',
