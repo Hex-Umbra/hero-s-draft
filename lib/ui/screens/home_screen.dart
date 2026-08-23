@@ -5,7 +5,7 @@ import 'class_selection_screen.dart';
 import 'card_dictionary_screen.dart';
 import 'patch_notes_screen.dart';
 import 'map_screen.dart';
-import '../../tutorial/tutorial_screen.dart';
+import '../../tutorial/tutorial_loader.dart';
 import '../../tutorial/tutorial_progress_service.dart';
 import '../../services/save_service.dart';
 import '../widgets/game_dialog.dart';
@@ -185,7 +185,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       onPressed: () async {
                         await Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (context) => const TutorialScreen(),
+                            builder: (context) => const TutorialLoader(),
                           ),
                         );
                         // Refresh the UI to update the 'NEW' badge state

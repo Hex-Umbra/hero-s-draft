@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:roguelike_card_game/l10n/app_localizations.dart';
+
+import '../../ui/widgets/ui_card.dart';
 import '../tutorial_engine.dart';
-import 'tutorial_cards_widget.dart'; // Reuses TutorialUiCard
 
 class TutorialMergeWidget extends StatefulWidget {
   final TutorialEngine engine;
@@ -20,7 +22,12 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
   @override
   void initState() {
     super.initState();
-    widget.engine.resetMockState();
+    // Pas de resetMockState() ici : `TutorialEngine.nextStep()`/`prevStep()`
+    // l'ont déjà appelé avant que cette page ne soit montée. Le refaire ici
+    // déclencherait notifyListeners() en plein passage de build de la
+    // PageView (le AnimatedBuilder parent est déjà construit cette frame),
+    // ce que Flutter refuse : « setState() or markNeedsBuild() called
+    // during build. »
     _controller = AnimationController(
       duration: const Duration(milliseconds: 600),
       vsync: this,
@@ -62,6 +69,19 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
   @override
   Widget build(BuildContext context) {
     final isFrench = Localizations.localeOf(context).languageCode == 'fr';
+    final locale = isFrench ? 'fr' : 'en';
+    final l10n = AppLocalizations.of(context)!;
+    final hand = widget.engine.mockState.hand;
+
+    // Garde-fou : `hand` peut retomber à `[]` le temps d'une frame quand
+    // `nextStep()`/`prevStep()` a déjà appelé `resetScratch()` alors que
+    // cette page est encore la page courante de la `PageView` (son
+    // animation de transition ne fait que démarrer). Sans ces gardes,
+    // `hand[0..2]`/`hand.first` lèvent RangeError/StateError et
+    // l'`AnimatedBuilder` ambiant transforme la page en `ErrorWidget`
+    // visible pendant toute la transition.
+    final hasUnmergedTrio = hand.length >= 3;
+    final hasMergedResult = hand.isNotEmpty;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -81,7 +101,7 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      if (!_isMerged) ...[
+                      if (!_isMerged && hasUnmergedTrio) ...[
                         // Left Card
                         AnimatedBuilder(
                           animation: _slideAnimation,
@@ -98,14 +118,10 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
                             opacity: (1.0 - _controller.value * 0.5).clamp(0.0, 1.0),
                             child: SizedBox(
                               width: cardWidth,
-                              child: const TutorialUiCard(
-                                title: 'Frappe',
-                                description: 'Lvl 1',
-                                cost: 1,
-                                type: 'attack',
-                                isSelected: false,
-                                damage: 6,
-                                onTap: _dummyTap,
+                              child: UiCard.fromInstance(
+                                card: hand[0],
+                                locale: locale,
+                                l10n: l10n,
                               ),
                             ),
                           ),
@@ -127,14 +143,10 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
                             opacity: (1.0 - _controller.value * 0.5).clamp(0.0, 1.0),
                             child: SizedBox(
                               width: cardWidth,
-                              child: const TutorialUiCard(
-                                title: 'Frappe',
-                                description: 'Lvl 1',
-                                cost: 1,
-                                type: 'attack',
-                                isSelected: false,
-                                damage: 6,
-                                onTap: _dummyTap,
+                              child: UiCard.fromInstance(
+                                card: hand[1],
+                                locale: locale,
+                                l10n: l10n,
                               ),
                             ),
                           ),
@@ -145,21 +157,17 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
                           opacity: (1.0 - _controller.value * 0.2).clamp(0.0, 1.0),
                           child: SizedBox(
                             width: cardWidth,
-                            child: const TutorialUiCard(
-                              title: 'Frappe',
-                              description: 'Lvl 1',
-                              cost: 1,
-                              type: 'attack',
-                              isSelected: false,
-                              damage: 6,
-                              onTap: _dummyTap,
+                            child: UiCard.fromInstance(
+                              card: hand[2],
+                              locale: locale,
+                              l10n: l10n,
                             ),
                           ),
                         ),
                       ],
 
                       // Upgraded Merge Result Card
-                      if (_isMerged)
+                      if (_isMerged && hasMergedResult)
                         TweenAnimationBuilder<double>(
                           tween: Tween(begin: 0.5, end: 1.1),
                           duration: const Duration(milliseconds: 400),
@@ -178,16 +186,11 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
                               ],
                             ),
                             width: cardWidth * 1.1,
-                            child: TutorialUiCard(
-                              title: isFrench ? 'Frappe Niv.2' : 'Strike Lvl 2',
-                              description: isFrench
-                                  ? 'Inflige 9 dégâts.'
-                                  : 'Deals 9 damage.',
-                              cost: 1,
-                              type: 'attack',
+                            child: UiCard.fromInstance(
+                              card: hand.first,
+                              locale: locale,
+                              l10n: l10n,
                               isSelected: true,
-                              damage: 9,
-                              onTap: _dummyTap,
                             ),
                           ),
                         ),
@@ -232,7 +235,10 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
                       ],
                     ),
                     child: Text(
-                      isFrench ? 'Fusionner 🔮' : 'Merge 🔮',
+                      isFrench
+                          ? 'Sélectionner les 3 et fusionner'
+                          : 'Select all 3 and merge',
+                      textAlign: TextAlign.center,
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -242,13 +248,28 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
                   ),
                 )
               else
-                Text(
-                  isFrench ? 'Fusion Complétée ! ✨' : 'Merge Complete! ✨',
-                  style: const TextStyle(
-                    color: Colors.amber,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      isFrench ? 'Fusion Complétée ! ✨' : 'Merge Complete! ✨',
+                      style: const TextStyle(
+                        color: Colors.amber,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      isFrench
+                          ? 'Même coût. Valeurs ×1,2.'
+                          : 'Same cost. Values ×1.2.',
+                      style: TextStyle(
+                        color: Colors.grey.shade300,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                 ),
             ],
           ),
@@ -256,6 +277,4 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
       },
     );
   }
-
-  static void _dummyTap() {}
 }

@@ -5,8 +5,6 @@ class TutorialMapNode {
   final Offset relativePosition;
   final String nameEn;
   final String nameFr;
-  final String descEn;
-  final String descFr;
   final IconData icon;
   final Color color;
 
@@ -14,8 +12,6 @@ class TutorialMapNode {
     required this.relativePosition,
     required this.nameEn,
     required this.nameFr,
-    required this.descEn,
-    required this.descFr,
     required this.icon,
     required this.color,
   });
@@ -37,9 +33,6 @@ class _TutorialMapWidgetState extends State<TutorialMapWidget> {
       relativePosition: Offset(0.5, 0.8),
       nameEn: 'Combat Encounter',
       nameFr: 'Rencontre de Combat',
-      descEn: 'Fight base monsters to gain XP and gold.',
-      descFr:
-          'Affrontez des monstres de base pour gagner de l\'XP et de l\'or.',
       icon: Icons.flash_on,
       color: Colors.white70,
     ),
@@ -47,9 +40,6 @@ class _TutorialMapWidgetState extends State<TutorialMapWidget> {
       relativePosition: Offset(0.25, 0.5),
       nameEn: 'Shop',
       nameFr: 'Boutique',
-      descEn: 'Buy new cards, remove cards, or purchase relics.',
-      descFr:
-          'Achetez de nouvelles cartes, retirez-en ou procurez-vous des reliques.',
       icon: Icons.shopping_cart_outlined,
       color: Colors.amber,
     ),
@@ -57,8 +47,6 @@ class _TutorialMapWidgetState extends State<TutorialMapWidget> {
       relativePosition: Offset(0.75, 0.5),
       nameEn: 'Rest Site',
       nameFr: 'Zone de Repos',
-      descEn: 'Heal your HP or forge cards to upgrade them.',
-      descFr: 'Soignez vos PV ou forgez des cartes pour les améliorer.',
       icon: Icons.nightlight_round,
       color: Colors.greenAccent,
     ),
@@ -66,9 +54,6 @@ class _TutorialMapWidgetState extends State<TutorialMapWidget> {
       relativePosition: Offset(0.5, 0.2),
       nameEn: 'Elite Combat',
       nameFr: 'Combat Élite',
-      descEn: 'Defeat strong foes to claim powerful Relics.',
-      descFr:
-          'Battez des ennemis redoutables pour obtenir de puissantes Reliques.',
       icon: Icons.warning_amber_rounded,
       color: Colors.redAccent,
     ),
@@ -78,201 +63,234 @@ class _TutorialMapWidgetState extends State<TutorialMapWidget> {
   Widget build(BuildContext context) {
     final isFrench = Localizations.localeOf(context).languageCode == 'fr';
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        final height = constraints.maxHeight;
+    return Column(
+      children: [
+        Expanded(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final width = constraints.maxWidth;
+              final height = constraints.maxHeight;
 
-        // Ensure we don't have negative or infinite sizing issues
-        final mapWidth = width.isFinite && width > 0 ? width : 320.0;
-        final mapHeight = height.isFinite && height > 0 ? height : 260.0;
+              // Ensure we don't have negative or infinite sizing issues
+              final mapWidth = width.isFinite && width > 0 ? width : 320.0;
+              final mapHeight = height.isFinite && height > 0 ? height : 260.0;
 
-        return SizedBox(
-          width: mapWidth,
-          height: mapHeight,
-          child: Stack(
-            children: [
-              // Starry/grid space background simulation
-              Positioned.fill(
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () {
-                    setState(() {
-                      _selectedNode = null;
-                    });
-                  },
-                  child: CustomPaint(painter: StarryGridPainter()),
-                ),
-              ),
-
-              // Custom painter for node connections
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: CustomPaint(
-                    painter: MapConnectionsPainter(
-                      _nodes.map((node) => Offset(
-                        node.relativePosition.dx * mapWidth,
-                        node.relativePosition.dy * mapHeight,
-                      )).toList(),
+              return SizedBox(
+                width: mapWidth,
+                height: mapHeight,
+                child: Stack(
+                  children: [
+                    // Starry/grid space background simulation
+                    Positioned.fill(
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () {
+                          setState(() {
+                            _selectedNode = null;
+                          });
+                        },
+                        child: CustomPaint(painter: StarryGridPainter()),
+                      ),
                     ),
-                  ),
-                ),
-              ),
 
-              // Map Nodes
-              ...List.generate(_nodes.length, (index) {
-                final node = _nodes[index];
-                final isSelected = _selectedNode == node;
-                final nodeX = node.relativePosition.dx * mapWidth;
-                final nodeY = node.relativePosition.dy * mapHeight;
-
-                return Positioned(
-                  left: nodeX - 25,
-                  top: nodeY - 25,
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _selectedNode = isSelected ? null : node;
-                      });
-                    },
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? const Color(0xFF2A2A40)
-                            : const Color(0xFF131A2D),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: isSelected ? Colors.yellow : node.color,
-                          width: isSelected ? 3.5 : 2,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: (isSelected ? Colors.yellow : node.color)
-                                .withValues(alpha: 0.3),
-                            blurRadius: isSelected ? 12 : 6,
-                            spreadRadius: isSelected ? 3 : 1,
+                    // Custom painter for node connections
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: CustomPaint(
+                          painter: MapConnectionsPainter(
+                            _nodes.map((node) => Offset(
+                              node.relativePosition.dx * mapWidth,
+                              node.relativePosition.dy * mapHeight,
+                            )).toList(),
                           ),
-                        ],
-                      ),
-                      child: Icon(node.icon, color: node.color, size: 26),
-                    ),
-                  ),
-                );
-              }),
-
-              // Instruction Tip
-              if (_selectedNode == null)
-                Positioned(
-                  bottom: 12,
-                  left: 0,
-                  right: 0,
-                  child: IgnorePointer(
-                    child: Center(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.black54,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          isFrench
-                              ? '💡 Touchez un nœud pour voir l\'effet'
-                              : '💡 Tap a node to inspect its effect',
-                          style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
                         ),
                       ),
                     ),
-                  ),
-                ),
 
-              // Glassmorphic Tooltip Panel
-              Positioned(
-                left: 16,
-                right: 16,
-                top: (_selectedNode != null && _selectedNode!.relativePosition.dy > 0.5)
-                    ? 16
-                    : null,
-                bottom: (_selectedNode == null || _selectedNode!.relativePosition.dy <= 0.5)
-                    ? 16
-                    : null,
-                child: IgnorePointer(
-                  ignoring: true,
-                  child: AnimatedOpacity(
-                    opacity: _selectedNode != null ? 1.0 : 0.0,
-                    duration: const Duration(milliseconds: 200),
-                    child: _selectedNode == null
-                        ? const SizedBox.shrink()
-                        : Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 10,
-                            ),
+                    // Map Nodes
+                    ...List.generate(_nodes.length, (index) {
+                      final node = _nodes[index];
+                      final isSelected = _selectedNode == node;
+                      final nodeX = node.relativePosition.dx * mapWidth;
+                      final nodeY = node.relativePosition.dy * mapHeight;
+
+                      return Positioned(
+                        left: nodeX - 25,
+                        top: nodeY - 25,
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _selectedNode = isSelected ? null : node;
+                            });
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            width: 50,
+                            height: 50,
                             decoration: BoxDecoration(
-                              color: const Color(0xFF1E293B).withValues(alpha: 0.95),
-                              borderRadius: BorderRadius.circular(10),
+                              color: isSelected
+                                  ? const Color(0xFF2A2A40)
+                                  : const Color(0xFF131A2D),
+                              shape: BoxShape.circle,
                               border: Border.all(
-                                color: _selectedNode!.color.withValues(alpha: 0.55),
-                                width: 1.5,
+                                color: isSelected ? Colors.yellow : node.color,
+                                width: isSelected ? 3.5 : 2,
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.3),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 3),
+                                  color: (isSelected ? Colors.yellow : node.color)
+                                      .withValues(alpha: 0.3),
+                                  blurRadius: isSelected ? 12 : 6,
+                                  spreadRadius: isSelected ? 3 : 1,
                                 ),
                               ],
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Row(
-                                  children: [
-                                    Icon(
-                                      _selectedNode!.icon,
-                                      color: _selectedNode!.color,
-                                      size: 16,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      isFrench
-                                          ? _selectedNode!.nameFr
-                                          : _selectedNode!.nameEn,
-                                      style: TextStyle(
-                                        color: _selectedNode!.color,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 13,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  isFrench
-                                      ? _selectedNode!.descFr
-                                      : _selectedNode!.descEn,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 11.5,
-                                    height: 1.3,
-                                  ),
-                                ),
-                              ],
+                            child: Icon(node.icon, color: node.color, size: 26),
+                          ),
+                        ),
+                      );
+                    }),
+
+                    // Instruction Tip
+                    if (_selectedNode == null)
+                      Positioned(
+                        bottom: 12,
+                        left: 0,
+                        right: 0,
+                        child: IgnorePointer(
+                          child: Center(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.black54,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                isFrench
+                                    ? '💡 Touchez un nœud pour vous y engager'
+                                    : '💡 Tap a node to commit to it',
+                                style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
+                              ),
                             ),
                           ),
-                  ),
+                        ),
+                      ),
+
+                    // Glassmorphic Tooltip Panel — libellé d'engagement, pas
+                    // une description : sur la vraie carte, toucher un nœud
+                    // engage le déplacement immédiatement, sans aperçu.
+                    Positioned(
+                      left: 16,
+                      right: 16,
+                      top: (_selectedNode != null && _selectedNode!.relativePosition.dy > 0.5)
+                          ? 16
+                          : null,
+                      bottom: (_selectedNode == null || _selectedNode!.relativePosition.dy <= 0.5)
+                          ? 16
+                          : null,
+                      child: IgnorePointer(
+                        ignoring: true,
+                        child: AnimatedOpacity(
+                          opacity: _selectedNode != null ? 1.0 : 0.0,
+                          duration: const Duration(milliseconds: 200),
+                          child: _selectedNode == null
+                              ? const SizedBox.shrink()
+                              : Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 10,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF1E293B).withValues(alpha: 0.95),
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                      color: _selectedNode!.color.withValues(alpha: 0.55),
+                                      width: 1.5,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.3),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 3),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            _selectedNode!.icon,
+                                            color: _selectedNode!.color,
+                                            size: 16,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            isFrench
+                                                ? _selectedNode!.nameFr
+                                                : _selectedNode!.nameEn,
+                                            style: TextStyle(
+                                              color: _selectedNode!.color,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        isFrench
+                                            ? 'Vous y allez.'
+                                            : 'You are going there.',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 11.5,
+                                          height: 1.3,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+              );
+            },
           ),
-        );
-      },
+        ),
+        _buildFloorStructureReminder(isFrench),
+      ],
+    );
+  }
+
+  /// Rappel textuel sous la mini-carte : celle-ci n'illustre que 4 nœuds pour
+  /// rester lisible, la vraie carte en compte dix fois plus (dix planchers).
+  Widget _buildFloorStructureReminder(bool isFrench) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: const BoxDecoration(
+        color: Color(0xFF0F172A),
+        border: Border(top: BorderSide(color: Color(0xFF1E293B), width: 1)),
+      ),
+      child: Text(
+        isFrench
+            ? '10 planchers, de 2 à 5 nœuds chacun.'
+            : '10 floors, 2 to 5 nodes each.',
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: Colors.grey.shade400,
+          fontSize: 11.5,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }

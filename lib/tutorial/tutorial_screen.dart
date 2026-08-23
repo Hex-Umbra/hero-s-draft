@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import '../models/data/card_data.dart';
+import '../models/data/game_data_registry.dart';
 import 'tutorial_engine.dart';
 import 'tutorial_step.dart';
 import 'tutorial_data.dart';
 import 'tutorial_progress_service.dart';
 import 'widgets/tutorial_welcome_widget.dart';
+import 'widgets/tutorial_class_choice_widget.dart';
+import 'widgets/tutorial_starter_deck_widget.dart';
 import 'widgets/tutorial_map_widget.dart';
 import 'widgets/tutorial_node_types_widget.dart';
 import 'widgets/tutorial_combat_overview_widget.dart';
@@ -18,7 +22,9 @@ import 'widgets/tutorial_draft_widget.dart';
 import 'widgets/tutorial_relics_widget.dart';
 
 class TutorialScreen extends StatefulWidget {
-  const TutorialScreen({super.key});
+  final GameDataRegistry data;
+
+  const TutorialScreen({super.key, required this.data});
 
   @override
   State<TutorialScreen> createState() => _TutorialScreenState();
@@ -31,8 +37,8 @@ class _TutorialScreenState extends State<TutorialScreen> {
   @override
   void initState() {
     super.initState();
-    _engine = TutorialEngine();
-    _engine.resetMockState();
+    _engine = TutorialEngine(data: widget.data);
+    _engine.prepareStep(_engine.currentStepIndex);
     _pageController = PageController(initialPage: _engine.currentStepIndex);
     _engine.addListener(_onEngineChanged);
   }
@@ -59,16 +65,21 @@ class _TutorialScreenState extends State<TutorialScreen> {
     final step = kTutorialSteps[engine.currentStepIndex];
     switch (step.type) {
       case TutorialStepType.playCard:
-        return engine.mockState.enemy != null &&
-            engine.mockState.enemy!.hp < 20 &&
-            engine.mockState.heroArmor > 0;
+        final enemy = engine.mockState.enemy;
+        return enemy != null &&
+            enemy.stats.currentPv < enemy.stats.maxPv &&
+            engine.armorGainedThisStep;
       case TutorialStepType.merge:
         return engine.mockState.hand.length == 1 &&
-            engine.mockState.hand.first.id == 'strike_upgraded';
+            engine.mockState.hand.first.rarity != CardRarity.common;
       case TutorialStepType.xp:
         return engine.mockState.playerLevel > 1;
       case TutorialStepType.draft:
         return engine.mockState.hasDrafted;
+      case TutorialStepType.classChoice:
+        return engine.mockState.chosenHero != null;
+      case TutorialStepType.starterDeck:
+        return engine.mockState.masterDeck.isNotEmpty;
       default:
         return true;
     }
@@ -78,6 +89,10 @@ class _TutorialScreenState extends State<TutorialScreen> {
     switch (type) {
       case TutorialStepType.welcome:
         return TutorialWelcomeWidget(engine: _engine);
+      case TutorialStepType.classChoice:
+        return TutorialClassChoiceWidget(engine: _engine);
+      case TutorialStepType.starterDeck:
+        return TutorialStarterDeckWidget(engine: _engine);
       case TutorialStepType.map:
         return TutorialMapWidget(engine: _engine);
       case TutorialStepType.nodeTypes:
@@ -299,15 +314,19 @@ class _TutorialScreenState extends State<TutorialScreen> {
                                       physics: const BouncingScrollPhysics(),
                                       child: AnimatedSwitcher(
                                         duration: const Duration(milliseconds: 200),
-                                        child: Text(
-                                          stepBody,
+                                        child: Text.rich(
+                                          TextSpan(
+                                            children: parseBoldSegments(
+                                              stepBody,
+                                              TextStyle(
+                                                color: Colors.grey.shade300,
+                                                fontSize: 13.5,
+                                                height: 1.45,
+                                              ),
+                                            ),
+                                          ),
                                           key: ValueKey<int>(
                                             _engine.currentStepIndex,
-                                          ),
-                                          style: TextStyle(
-                                            color: Colors.grey.shade300,
-                                            fontSize: 13.5,
-                                            height: 1.45,
                                           ),
                                         ),
                                       ),
@@ -319,7 +338,8 @@ class _TutorialScreenState extends State<TutorialScreen> {
                                   Row(
                                     children: [
                                       // Back Button (only if currentStepIndex > 0)
-                                      if (_engine.currentStepIndex > 0)
+                                      if (_engine.currentStepIndex >
+                                          _engine.minReachableStep)
                                         IconButton(
                                           onPressed: () => _engine.prevStep(),
                                           icon: const Icon(
@@ -495,3 +515,36 @@ class _TutorialScreenState extends State<TutorialScreen> {
   }
 }
 
+/// Découpe [text] sur le délimiteur `**` et renvoie les segments prêts pour
+/// un `TextSpan.children`, en alternant style normal et style en gras.
+///
+/// - Un nombre pair de `**` délimite des segments en gras correctement
+///   fermés (paires consécutives de délimiteurs).
+/// - Si le nombre de `**` est impair, le tout dernier segment (jamais
+///   refermé) est affiché normalement plutôt que transformé en gras ou
+///   perdu : aucun texte ne disparaît.
+/// - Une chaîne sans aucun `**` renvoie un unique segment normal, identique
+///   au texte d'origine.
+/// - Seul le délimiteur `**` est retiré : retours à la ligne, puces et tout
+///   autre caractère traversent la fonction sans être interprétés.
+///
+/// Fonction pure (aucune dépendance au widget tree), testable directement.
+List<TextSpan> parseBoldSegments(String text, TextStyle baseStyle) {
+  final List<String> parts = text.split('**');
+  final bool hasDanglingDelimiter = (parts.length - 1).isOdd;
+  final TextStyle boldStyle = baseStyle.copyWith(fontWeight: FontWeight.bold);
+
+  final List<TextSpan> spans = [];
+  for (var i = 0; i < parts.length; i++) {
+    final String part = parts[i];
+    if (part.isEmpty) continue;
+
+    final bool isDanglingLastPart =
+        hasDanglingDelimiter && i == parts.length - 1;
+    final bool isBold = i.isOdd && !isDanglingLastPart;
+
+    spans.add(TextSpan(text: part, style: isBold ? boldStyle : baseStyle));
+  }
+
+  return spans;
+}

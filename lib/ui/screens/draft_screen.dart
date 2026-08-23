@@ -10,6 +10,7 @@ import '../../game/controllers/run_controller.dart';
 import '../../game/controllers/deck_controller.dart';
 import '../../game/services/level_up_reward_service.dart';
 import '../../models/card_instance.dart';
+import '../widgets/draft/draft_choice_labels.dart';
 import '../widgets/relic_carousel/draft_card_reel.dart';
 
 class DraftScreen extends ConsumerStatefulWidget {
@@ -100,71 +101,6 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
   void dispose() {
     _alertController.dispose();
     super.dispose();
-  }
-
-  String _rarityToString(BuildContext context, RewardRarity rarity) {
-    final l10n = AppLocalizations.of(context)!;
-    switch (rarity) {
-      case RewardRarity.mythic:
-        return Localizations.localeOf(context).languageCode == 'fr'
-            ? 'MYTHIQUE'
-            : 'MYTHIC';
-      case RewardRarity.legendary:
-        return l10n.rarityLegendary;
-      case RewardRarity.epic:
-        return l10n.rarityEpic;
-      case RewardRarity.rare:
-        return l10n.rarityRare;
-      case RewardRarity.uncommon:
-        return l10n.rarityUncommon;
-      case RewardRarity.common:
-        return l10n.rarityCommon;
-    }
-  }
-
-  String _getChoiceTitle(BuildContext context, DraftChoice choice) {
-    final l10n = AppLocalizations.of(context)!;
-    switch (choice.type) {
-      case LevelUpRewardType.vitality:
-        return l10n.draftChoiceVitality;
-      case LevelUpRewardType.sharpening:
-        return l10n.draftChoiceSharpening;
-      case LevelUpRewardType.steelForge:
-        return l10n.draftChoiceSteelForge;
-      case LevelUpRewardType.wisdom:
-        return l10n.draftChoiceWisdom;
-      case LevelUpRewardType.luckyClover:
-        return l10n.draftChoiceClover;
-      case LevelUpRewardType.mirror:
-        return l10n.draftChoiceMirror;
-      case LevelUpRewardType.precision:
-        return l10n.draftChoicePrecision;
-      case LevelUpRewardType.ferocity:
-        return l10n.draftChoiceFerocity;
-    }
-  }
-
-  String _getChoiceDescription(BuildContext context, DraftChoice choice) {
-    final l10n = AppLocalizations.of(context)!;
-    switch (choice.type) {
-      case LevelUpRewardType.vitality:
-        return l10n.draftChoiceVitalityDesc(choice.pvBoost);
-      case LevelUpRewardType.sharpening:
-        return l10n.draftChoiceSharpeningDesc(choice.atkBoost);
-      case LevelUpRewardType.steelForge:
-        return l10n.draftChoiceSteelForgeDesc(choice.armorBoost);
-      case LevelUpRewardType.wisdom:
-        return l10n.draftChoiceWisdomDesc(choice.manaBoost);
-      case LevelUpRewardType.luckyClover:
-        return l10n.draftChoiceCloverDesc(choice.luckBoost);
-      case LevelUpRewardType.mirror:
-        return l10n.draftChoiceMirrorDesc;
-      case LevelUpRewardType.precision:
-        return l10n.draftChoicePrecisionDesc(choice.critChanceBoost);
-      case LevelUpRewardType.ferocity:
-        return l10n.draftChoiceFerocityDesc(
-            (choice.critDamageBoost * 100).round());
-    }
   }
 
   @override
@@ -259,13 +195,14 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                                   : [],
                                             ),
                                             child: DraftCardReel(
-                                              title: _getChoiceTitle(
-                                                context,
+                                              title:
+                                                  DraftChoiceLabels.getChoiceTitle(
+                                                l10n,
                                                 choice,
                                               ),
                                               description:
-                                                  _getChoiceDescription(
-                                                context,
+                                                  DraftChoiceLabels.getChoiceDescription(
+                                                l10n,
                                                 choice,
                                               ),
                                               onTap: () {
@@ -278,8 +215,8 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                                   index,
                                                 );
                                               },
-                                              rarity: _rarityToString(
-                                                context,
+                                              rarity: DraftChoiceLabels.rarityToString(
+                                                l10n,
                                                 choice.rarity,
                                               ),
                                               index: index,
@@ -349,12 +286,12 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                                 : [],
                                           ),
                                           child: DraftCardReel(
-                                            title: _getChoiceTitle(
-                                              context,
+                                            title: DraftChoiceLabels.getChoiceTitle(
+                                              l10n,
                                               choice,
                                             ),
-                                            description: _getChoiceDescription(
-                                              context,
+                                            description: DraftChoiceLabels.getChoiceDescription(
+                                              l10n,
                                               choice,
                                             ),
                                             onTap: () {
@@ -367,8 +304,8 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                                 index,
                                               );
                                             },
-                                            rarity: _rarityToString(
-                                              context,
+                                            rarity: DraftChoiceLabels.rarityToString(
+                                              l10n,
                                               choice.rarity,
                                             ),
                                             index: index,
@@ -471,17 +408,17 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                             : [],
                                       ),
                                       child: DraftCardReel(
-                                        title: _getChoiceTitle(
-                                          context,
+                                        title: DraftChoiceLabels.getChoiceTitle(
+                                          l10n,
                                           choice,
                                         ),
-                                        description: _getChoiceDescription(
-                                          context,
+                                        description: DraftChoiceLabels.getChoiceDescription(
+                                          l10n,
                                           choice,
                                         ),
                                         onTap: () {},
-                                        rarity: _rarityToString(
-                                          context,
+                                        rarity: DraftChoiceLabels.rarityToString(
+                                          l10n,
                                           choice.rarity,
                                         ),
                                         index: relativeIndex,

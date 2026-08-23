@@ -3,7 +3,7 @@
 > [!IMPORTANT]
 > **Plafond : 120 lignes.** Ce fichier est un index, jamais un contenu. Chaque règle métier vit dans sa fiche sous `../_rules/`. Les arbitrages qui les ont produites vivent dans `../_adr/`.
 
-**Vérifié le 2026-08-03** — 26 fiches, découpées depuis un `productContext.md` de 807 lignes.
+**Vérifié le 2026-08-23** — 26 fiches, découpées depuis un `productContext.md` de 807 lignes.
 
 ### 1. Boucle de Gameplay Principale (Core Loop)
 
@@ -69,7 +69,7 @@
 
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
-| 8. Système de Tutoriel Autonome (Tutorial System) | [08-00-systeme-de-tutoriel-autonome.md](../_rules/08-00-systeme-de-tutoriel-autonome.md) | 33 |
+| 8. Système de Tutoriel Autonome (Tutorial System) | [08-00-systeme-de-tutoriel-autonome.md](../_rules/08-00-systeme-de-tutoriel-autonome.md) | 106 |
 
 ---
 

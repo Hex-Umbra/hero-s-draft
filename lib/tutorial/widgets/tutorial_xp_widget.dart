@@ -12,10 +12,21 @@ class TutorialXpWidget extends StatefulWidget {
 class _TutorialXpWidgetState extends State<TutorialXpWidget> {
   bool _showLevelUpBanner = false;
 
+  // Pas de resetMockState() ici : `TutorialEngine.nextStep()`/`prevStep()`
+  // l'ont déjà appelé avant que cette page ne soit montée, donc le
+  // refaire ici est redondant. C'est aussi dangereux : `TutorialScreen`
+  // reconstruit tout le sous-arbre de la PageView au franchissement d'un
+  // seuil de layout (bascule portrait/paysage, ou largeur 720px), ce qui
+  // rejoue initState() ici sans que `_currentStepIndex` ait changé.
+  // `resetScratch()` effacerait alors une progression déjà validée
+  // (`playerLevel`) et re-verrouillerait le bouton SUIVANT. Si un futur
+  // cas de `resetMockState()` venait en plus semer `seedHand`/`seedEnemy`
+  // pour cette étape, `notifyListeners()` partirait en plein passage de
+  // build de la PageView, ce que Flutter refuse : « setState() or
+  // markNeedsBuild() called during build. »
   @override
   void initState() {
     super.initState();
-    widget.engine.resetMockState();
     widget.engine.addListener(_onStateChanged);
   }
 
@@ -47,6 +58,8 @@ class _TutorialXpWidgetState extends State<TutorialXpWidget> {
     final isFrench = Localizations.localeOf(context).languageCode == 'fr';
     final state = widget.engine.mockState;
     final progress = (state.playerXp / state.xpToNextLevel).clamp(0.0, 1.0);
+    // L'XP du Gobelin vient du registre (enemies.json) : jamais recopiée en dur ici.
+    final goblinXp = widget.engine.fixtures.goblin.xp;
 
     return Stack(
       alignment: Alignment.center,
@@ -153,10 +166,26 @@ class _TutorialXpWidgetState extends State<TutorialXpWidget> {
                   ),
                   const SizedBox(height: 28),
 
+                  // Drafts en attente : tant qu'il en reste, la carte du monde
+                  // est verrouillée (map_screen.dart, _onNodeTap).
+                  if (widget.engine.pendingDrafts > 0) ...[
+                    Text(
+                      isFrench
+                          ? 'Drafts en attente : ${widget.engine.pendingDrafts}'
+                          : 'Pending drafts: ${widget.engine.pendingDrafts}',
+                      style: const TextStyle(
+                        color: Colors.amber,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+
                   // Action button
                   if (state.playerLevel == 1)
                     InkWell(
-                      onTap: () => widget.engine.gainXp(35),
+                      onTap: () => widget.engine.gainXp(goblinXp),
                       borderRadius: BorderRadius.circular(10),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
@@ -172,8 +201,8 @@ class _TutorialXpWidgetState extends State<TutorialXpWidget> {
                         ),
                         child: Text(
                           isFrench
-                              ? 'Battre un Ennemi (+35 XP) ⚔️'
-                              : 'Defeat an Enemy (+35 XP) ⚔️',
+                              ? 'Battre un Gobelin (+$goblinXp XP) ⚔️'
+                              : 'Defeat a Goblin (+$goblinXp XP) ⚔️',
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,

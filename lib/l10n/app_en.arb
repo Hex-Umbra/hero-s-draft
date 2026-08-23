@@ -81,7 +81,7 @@
   "legendRest": "Rest Camp",
   "legendEvent": "Unknown Event",
   "legendBossCards": "Boss (Cards Reward)",
-  "legendBossXp": "Boss (Double XP)",
+  "legendBossXp": "Boss (3x XP)",
   "legendBossRelic": "Boss (Relic Reward)",
 
   "tooltipCombatTitle": "Normal Combat",

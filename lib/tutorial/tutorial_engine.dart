@@ -1,269 +1,407 @@
+import 'dart:math';
+
 import 'package:flutter/foundation.dart';
+import '../models/data/game_data_registry.dart';
+import '../models/card_instance.dart';
+import '../models/data/card_data.dart';
+import '../models/data/hero_data.dart';
+import '../models/data/passive_data.dart';
+import '../models/entity_stats.dart';
+import '../models/enemy_instance.dart';
+import '../game/services/damage_pipeline.dart';
 import 'tutorial_data.dart';
-
-class TutorialCard {
-  final String id;
-  final String nameEn;
-  final String nameFr;
-  final int cost;
-  final int damage;
-  final int armor;
-  final String? effectType; // 'poison', 'fire', 'ice', 'lightning'
-  final bool isAoe;
-
-  const TutorialCard({
-    required this.id,
-    required this.nameEn,
-    required this.nameFr,
-    required this.cost,
-    required this.damage,
-    required this.armor,
-    this.effectType,
-    this.isAoe = false,
-  });
-}
-
-class TutorialEnemy {
-  final String nameEn;
-  final String nameFr;
-  int hp;
-  int maxHp;
-  int armor;
-  String intentIcon;
-  int intentValue;
-  List<String> activeStatuses;
-
-  TutorialEnemy({
-    required this.nameEn,
-    required this.nameFr,
-    required this.hp,
-    required this.maxHp,
-    required this.armor,
-    required this.intentIcon,
-    required this.intentValue,
-    required this.activeStatuses,
-  });
-}
+import 'tutorial_fixtures.dart';
+import 'tutorial_step.dart';
 
 class TutorialMockState {
-  int heroHp = 80;
-  int heroMaxHp = 80;
-  int heroMana = 3;
-  int heroMaxMana = 3;
-  int heroArmor = 0;
-  List<TutorialCard> hand = [];
-  List<TutorialCard> deck = [];
-  TutorialEnemy? enemy;
+  // --- Tranche persistante (écrite par les étapes 02 et 03) ---
+  HeroData? chosenHero;
+  PassiveData? activePassive;
+  List<CardInstance> masterDeck = [];
+
+  // --- Tranche scratch (réinitialisée à chaque étape) ---
+  EntityStats heroStats = EntityStats(
+    maxPv: 80,
+    currentPv: 80,
+    maxMana: 3,
+    currentMana: 3,
+    armure: 0,
+    attaque: 0,
+  );
+  List<CardInstance> hand = [];
+  EnemyInstance? enemy;
   int playerXp = 0;
   int xpToNextLevel = 100;
   int playerLevel = 1;
+  int pendingDrafts = 0;
   bool hasDrafted = false;
 
-  void reset() {
-    heroHp = 80;
-    heroMaxHp = 80;
-    heroMana = 3;
-    heroMaxMana = 3;
-    heroArmor = 0;
+  /// Statistiques de départ dérivées de la classe choisie, ou valeurs de
+  /// repli tant que l'étape 02 n'a pas été franchie.
+  EntityStats baseStatsForHero() {
+    final hero = chosenHero;
+    if (hero == null) {
+      return EntityStats(
+        maxPv: 80,
+        currentPv: 80,
+        maxMana: 3,
+        currentMana: 3,
+        armure: 0,
+        attaque: 0,
+      );
+    }
+    return EntityStats(
+      maxPv: hero.maxHp,
+      currentPv: hero.maxHp,
+      maxMana: hero.maxMana,
+      currentMana: hero.maxMana,
+      armure: 0,
+      armorMastery: hero.armorMastery,
+      attaque: 0,
+      luck: hero.luck,
+    );
+  }
+
+  /// Réinitialise uniquement la tranche scratch.
+  void resetScratch() {
+    heroStats = baseStatsForHero();
     hand = [];
-    deck = [];
     enemy = null;
     playerXp = 0;
     xpToNextLevel = 100;
     playerLevel = 1;
+    pendingDrafts = 0;
     hasDrafted = false;
   }
 }
 
 class TutorialEngine extends ChangeNotifier {
+  final GameDataRegistry data;
+  late final TutorialFixtures fixtures;
+
   int _currentStepIndex = 0;
   final TutorialMockState mockState = TutorialMockState();
+
+  TutorialEngine({required this.data}) {
+    fixtures = TutorialFixtures(data);
+  }
 
   int get currentStepIndex => _currentStepIndex;
 
   bool get isLastStep => _currentStepIndex == kTutorialSteps.length - 1;
 
   void nextStep() {
-    if (_currentStepIndex < kTutorialSteps.length - 1) {
-      _currentStepIndex++;
-      resetMockState();
-      notifyListeners();
-    }
+    if (_currentStepIndex >= kTutorialSteps.length - 1) return;
+    _currentStepIndex++;
+    // `>=` et non `>` : atteindre le plancher suffit à verrouiller l'amont.
+    if (_currentStepIndex >= _upstreamFloorIndex) _upstreamLocked = true;
+    prepareStep(_currentStepIndex);
+    notifyListeners();
   }
 
   void prevStep() {
-    if (_currentStepIndex > 0) {
-      _currentStepIndex--;
-      resetMockState();
-      notifyListeners();
-    }
+    if (_currentStepIndex <= minReachableStep) return;
+    _currentStepIndex--;
+    prepareStep(_currentStepIndex);
+    notifyListeners();
   }
 
-  void resetMockState() {
-    mockState.reset();
-    switch (_currentStepIndex) {
-      case 4: // Step 5: Cards & Mana
-        mockState.heroMana = 3;
-        mockState.hand = [
-          const TutorialCard(
-            id: 'strike',
-            nameEn: 'Basic Strike',
-            nameFr: 'Frappe Basique',
-            cost: 1,
-            damage: 6,
-            armor: 0,
-          ),
-          const TutorialCard(
-            id: 'defend',
-            nameEn: 'Defend',
-            nameFr: 'Défense',
-            cost: 1,
-            damage: 0,
-            armor: 4,
-          ),
-          const TutorialCard(
-            id: 'fireball',
-            nameEn: 'Fireball',
-            nameFr: 'Boule de Feu',
-            cost: 2,
-            damage: 10,
-            armor: 0,
-            effectType: 'fire',
-          ),
-        ];
+  /// Indice plancher du retour en arrière une fois les étapes d'amont
+  /// franchies. Dans le parcours cible à 15 étapes, l'indice 3 est « La
+  /// Carte du Monde », la première étape qui suit le draft de départ :
+  /// revenir en deçà invaliderait la classe et le deck dont dépendent toutes
+  /// les étapes suivantes.
+  static const int _upstreamFloorIndex = 3;
+
+  bool _upstreamLocked = false;
+
+  int get minReachableStep => _upstreamLocked ? _upstreamFloorIndex : 0;
+
+  void chooseHero(HeroData hero) {
+    mockState.chosenHero = hero;
+    mockState.activePassive = fixtures.passiveFor(hero);
+    mockState.heroStats = mockState.baseStatsForHero();
+    // Régression : revenir choisir une autre classe après avoir drafté un
+    // deck laissait `masterDeck` intact. `_isStepActionComplete` ne lit que
+    // `masterDeck.isNotEmpty` pour déverrouiller SUIVANT à l'étape 03, donc
+    // le bouton restait actif avec les cartes de l'ancienne classe alors que
+    // l'écran de draft, remonté à neuf par la `PageView`, affichait 0/5 pour
+    // la nouvelle.
+    mockState.masterDeck = [];
+    notifyListeners();
+  }
+
+  /// Fixe le deck de départ : les cartes choisies plus les cartes de classe,
+  /// comme `StarterDeckDraftScreen._startAdventure`. Un draft vide donne un
+  /// deck vide, cartes de classe comprises : `_isStepActionComplete` lit
+  /// `masterDeck.isNotEmpty` pour savoir si l'étape est terminée, et ne doit
+  /// donc jamais voir un deck non vide tant que la sélection n'est pas
+  /// complète.
+  void setStarterDeck(List<CardData> chosen) {
+    if (chosen.isEmpty) {
+      mockState.masterDeck = [];
+      notifyListeners();
+      return;
+    }
+
+    final hero = mockState.chosenHero;
+    final classCards = hero == null
+        ? <CardData>[]
+        : hero.skills.map(fixtures.card).toList();
+
+    mockState.masterDeck = [
+      ...classCards.map((c) => CardInstance(data: c)),
+      ...chosen.map((c) => CardInstance(data: c)),
+    ];
+    notifyListeners();
+  }
+
+  /// Prépare l'étape [index] : réinitialise la tranche scratch, puis pose le
+  /// décor propre à l'étape. La tranche persistante (classe, deck) survit.
+  ///
+  /// `seedHand`/`seedEnemy` notifient chacun individuellement ; les appeler
+  /// tels quels ici produirait jusqu'à trois notifications par changement
+  /// d'étape (une par semis, plus celle de `nextStep`/`prevStep`), soit
+  /// autant de reconstructions complètes de l'écran. On passe donc par leurs
+  /// variantes privées, sans notification, et une seule notification est
+  /// émise à la fin de cette méthode.
+  void prepareStep(int index) {
+    mockState.resetScratch();
+    _armorGainedThisStep = false;
+    _manaWarningPending = false;
+
+    switch (kTutorialSteps[index].type) {
+      case TutorialStepType.cards:
+        _seedHand([
+          TutorialFixtureIds.strike,
+          TutorialFixtureIds.defend,
+          TutorialFixtureIds.fireball,
+        ]);
         break;
-      case 5: // Step 6: Play Card
-        mockState.heroMana = 3;
-        mockState.hand = [
-          const TutorialCard(
-            id: 'strike',
-            nameEn: 'Basic Strike',
-            nameFr: 'Frappe Basique',
-            cost: 1,
-            damage: 6,
-            armor: 0,
-          ),
-          const TutorialCard(
-            id: 'defend',
-            nameEn: 'Defend',
-            nameFr: 'Défense',
-            cost: 1,
-            damage: 0,
-            armor: 4,
-          ),
-        ];
-        mockState.enemy = TutorialEnemy(
-          nameEn: 'Tutorial Slime',
-          nameFr: 'Slime d\'Entraînement',
-          hp: 20,
-          maxHp: 20,
-          armor: 0,
-          intentIcon: 'sword',
-          intentValue: 5,
-          activeStatuses: [],
-        );
+      case TutorialStepType.playCard:
+        _seedEnemy();
+        _seedPlayCardHand();
         break;
-      case 6: // Step 7: Armor & Damage
-        mockState.heroHp = 80;
-        mockState.heroArmor = 0;
-        mockState.enemy = TutorialEnemy(
-          nameEn: 'Training Dummy',
-          nameFr: 'Mannequin de Test',
-          hp: 30,
-          maxHp: 30,
-          armor: 0,
-          intentIcon: 'sword',
-          intentValue: 10,
-          activeStatuses: [],
-        );
+      case TutorialStepType.armorDamage:
+        _seedEnemy();
         break;
-      case 9: // Step 10: Merge
-        mockState.hand = [
-          const TutorialCard(
-            id: 'strike_1',
-            nameEn: 'Basic Strike Lvl 1',
-            nameFr: 'Frappe Basique Niv.1',
-            cost: 1,
-            damage: 6,
-            armor: 0,
-          ),
-          const TutorialCard(
-            id: 'strike_2',
-            nameEn: 'Basic Strike Lvl 1',
-            nameFr: 'Frappe Basique Niv.1',
-            cost: 1,
-            damage: 6,
-            armor: 0,
-          ),
-          const TutorialCard(
-            id: 'strike_3',
-            nameEn: 'Basic Strike Lvl 1',
-            nameFr: 'Frappe Basique Niv.1',
-            cost: 1,
-            damage: 6,
-            armor: 0,
-          ),
-        ];
+      case TutorialStepType.merge:
+        _seedMergeHand();
         break;
-      case 10: // Step 11: XP
-        mockState.playerXp = 0;
-        mockState.playerLevel = 1;
-        break;
-      case 11: // Step 12: Draft
+      case TutorialStepType.draft:
         mockState.playerLevel = 2;
-        mockState.hasDrafted = false;
         break;
       default:
         break;
     }
+
+    notifyListeners();
   }
 
-  bool playCard(TutorialCard card) {
-    if (mockState.heroMana < card.cost) return false;
-    mockState.heroMana -= card.cost;
+  /// Peuple la main à partir d'ids de cartes du registre.
+  void seedHand(List<String> cardIds) {
+    _seedHand(cardIds);
+    notifyListeners();
+  }
+
+  void _seedHand(List<String> cardIds) {
+    mockState.hand = cardIds
+        .map((id) => CardInstance(data: fixtures.card(id)))
+        .toList();
+  }
+
+  /// Sème la main de l'étape « Jouer des cartes & finir le tour » : une
+  /// attaque du deck du joueur qui cible un ennemi, et une compétence du même
+  /// deck qui donne de l'Armure — les deux gestes que la leçon enseigne, et
+  /// les deux seuls que `TutorialPlayCardWidget` sait accepter en
+  /// glisser-déposer (zone ennemie : `singleEnemy` ; zone Héros : `self`).
+  /// Repli sur les fixtures si le deck n'en contient pas un de chaque : le
+  /// pool de départ interdit les doublons, rien n'oblige à drafter Frappe ou
+  /// Défense, et l'étape 03 a pu être sautée (deck vide).
+  ///
+  /// Régression (revue de branche) : `smite`, carte de classe du Paladin,
+  /// est à la fois une attaque `singleEnemy` et porteuse d'un effet `armor`
+  /// (elle inflige des dégâts *et* donne de l'Armure). La retenir comme
+  /// « l'attaque » de la leçon faisait gagner de l'Armure en jouant sur
+  /// l'ennemi : `_isStepActionComplete` se satisfaisait d'un seul geste, pour
+  /// 100 % des parcours Paladin. `_isEnemyTargetingAttack` écarte donc toute
+  /// carte dont les effets contiennent aussi `armor`, exactement comme
+  /// `_seedMergeHand` écarte les cartes de rareté `unique`.
+  void _seedPlayCardHand() {
+    CardData? attack;
+    CardData? armorSkill;
+    for (final instance in mockState.masterDeck) {
+      final data = instance.data;
+      attack ??= _isEnemyTargetingAttack(data) ? data : null;
+      armorSkill ??= _isArmorGivingSkill(data) ? data : null;
+    }
+
+    if (attack == null || armorSkill == null) {
+      _seedHand([TutorialFixtureIds.strike, TutorialFixtureIds.defend]);
+      return;
+    }
+
+    mockState.hand = [
+      CardInstance(data: attack),
+      CardInstance(data: armorSkill),
+    ];
+  }
+
+  bool _isEnemyTargetingAttack(CardData data) =>
+      data.type == CardType.attack &&
+      data.target == CardTarget.singleEnemy &&
+      !data.effects.any((e) => e.type == 'armor');
+
+  bool _isArmorGivingSkill(CardData data) =>
+      data.type == CardType.skill &&
+      data.target == CardTarget.self &&
+      data.effects.any((e) => e.type == 'armor');
+
+  /// Place l'ennemi d'entraînement, intention comprise.
+  void seedEnemy() {
+    _seedEnemy();
+    notifyListeners();
+  }
+
+  void _seedEnemy() {
+    final data = fixtures.trainingEnemy;
+    mockState.enemy = EnemyInstance(
+      data: data,
+      stats: EntityStats(
+        maxPv: data.maxHp,
+        currentPv: data.maxHp,
+        armure: 0,
+        attaque: data.baseDamage,
+      ),
+      currentIntent: data.intents?.first,
+    );
+  }
+
+  void setMana(int value) {
+    mockState.heroStats = mockState.heroStats.copyWith(currentMana: value);
+    notifyListeners();
+  }
+
+  void setHeroArmor(int value) {
+    mockState.heroStats = mockState.heroStats.copyWith(armure: value);
+    if (value > 0) _armorGainedThisStep = true;
+    notifyListeners();
+  }
+
+  bool _armorGainedThisStep = false;
+
+  /// Vrai dès qu'un gain d'armure a eu lieu pendant l'étape courante.
+  ///
+  /// La complétion de l'étape « Jouer des cartes & finir le tour » ne peut
+  /// pas lire `heroStats.armure` : finir le tour remet l'armure à 0, ce qui
+  /// re-verrouillerait l'étape et bloquerait le joueur. Le drapeau se
+  /// verrouille jusqu'au prochain `prepareStep`.
+  bool get armorGainedThisStep => _armorGainedThisStep;
+
+  /// Applique des dégâts au héros via la vraie formule d'absorption.
+  void applyDamageToHero(int amount) {
+    mockState.heroStats = mockState.heroStats.takeDamage(amount);
+    notifyListeners();
+  }
+
+  /// Remet `heroStats` à un socle neutre pour une démonstration de dégâts :
+  /// Armure à 0, PV courants au plus petit de [desiredPv] et du `maxPv` réel
+  /// du héros choisi.
+  ///
+  /// Contrairement à `setHeroArmor`/`applyDamageToHero`, qui ne peuvent
+  /// qu'appauvrir l'état, ce point d'entrée peut remonter les PV courants :
+  /// nécessaire aux démonstrations qui rejouent un même scénario plusieurs
+  /// fois sur le `heroStats` partagé du moteur. Le plafond réel du héros est
+  /// toujours respecté — jamais de PV courants supérieurs au maximum, même
+  /// si [desiredPv] le dépasse (ex. le Mage, `maxPv: 60`).
+  void resetHeroStatsForDemo(int desiredPv) {
+    final stats = mockState.heroStats;
+    mockState.heroStats = stats.copyWith(
+      currentPv: desiredPv < stats.maxPv ? desiredPv : stats.maxPv,
+      armure: 0,
+    );
+    notifyListeners();
+  }
+
+  /// Joue une carte de la main. Les dégâts passent par le pipeline réel :
+  /// avec `critChance: 0`, il est déterministe.
+  bool playCard(CardInstance card) {
+    if (mockState.heroStats.currentMana < card.currentCost) return false;
+
+    _manaWarningPending = false;
+
+    mockState.heroStats = mockState.heroStats.copyWith(
+      currentMana: mockState.heroStats.currentMana - card.currentCost,
+    );
     mockState.hand.remove(card);
 
-    final enemy = mockState.enemy;
-    if (enemy != null) {
-      if (card.damage > 0) {
-        if (enemy.armor >= card.damage) {
-          enemy.armor -= card.damage;
-        } else {
-          final remainingDamage = card.damage - enemy.armor;
-          enemy.armor = 0;
-          enemy.hp = (enemy.hp - remainingDamage).clamp(0, enemy.maxHp);
-        }
-      }
-      if (card.armor > 0) {
-        mockState.heroArmor += card.armor;
+    for (final effect in card.data.effects) {
+      final scaled = (effect.value * card.rarityMultiplier).round();
+
+      if (effect.type == 'damage') {
+        final enemy = mockState.enemy;
+        if (enemy == null) continue;
+        final (dealt, isCrit) = DamagePipeline.calculate(
+          initialDamage: scaled + mockState.heroStats.effectiveAttaque,
+          attackerStats: mockState.heroStats,
+          defenderStats: enemy.stats,
+        );
+        mockState.enemy = enemy.copyWith(
+          stats: enemy.stats.takeDamage(dealt, isCrit: isCrit),
+        );
+      } else if (effect.type == 'armor') {
+        mockState.heroStats = mockState.heroStats.copyWith(
+          armure: mockState.heroStats.armure + scaled,
+        );
+        if (scaled > 0) _armorGainedThisStep = true;
       }
     }
+
     notifyListeners();
     return true;
   }
 
-  void simulateDamageTake({required bool withArmor}) {
-    if (withArmor) {
-      mockState.heroArmor = 4;
-      mockState.heroHp = (mockState.heroHp - 6).clamp(0, mockState.heroMaxHp);
-      mockState.heroArmor = 0;
-    } else {
-      mockState.heroArmor = 0;
-      mockState.heroHp = (mockState.heroHp - 10).clamp(0, mockState.heroMaxHp);
+  /// Sème la main de l'étape Fusion : trois copies d'une carte du deck du
+  /// joueur, en excluant les cartes de classe (rareté `unique`, qui ne
+  /// fusionnent jamais — l'étape l'enseigne elle-même). Repli sur les
+  /// fixtures si le deck est vide ou n'en contient aucune hors classe
+  /// (étape 03 sautée).
+  void _seedMergeHand() {
+    CardData? candidate;
+    for (final instance in mockState.masterDeck) {
+      if (instance.data.rarity != CardRarity.unique) {
+        candidate = instance.data;
+        break;
+      }
     }
-    notifyListeners();
+
+    if (candidate == null) {
+      _seedHand([
+        TutorialFixtureIds.strike,
+        TutorialFixtureIds.strike,
+        TutorialFixtureIds.strike,
+      ]);
+      return;
+    }
+
+    // `candidate` n'est pas promu dans la fermeture ci-dessous (limitation
+    // de l'analyse de flux de Dart à travers les closures) : on le fixe dans
+    // une variable `final` non-nullable.
+    final resolvedCandidate = candidate;
+    mockState.hand = List.generate(
+      3,
+      (_) => CardInstance(data: resolvedCandidate),
+    );
   }
 
+  /// Fusionne les 3 exemplaires de la main en une carte de rareté
+  /// supérieure, comme `DeckNotifier.mergeCards`.
   void mergeCards() {
+    if (mockState.hand.length != 3) return;
+    final base = mockState.hand.first;
+    final nextIndex = (base.rarity.index + 1).clamp(0, CardRarity.values.length - 1);
     mockState.hand = [
-      const TutorialCard(
-        id: 'strike_upgraded',
-        nameEn: 'Basic Strike Lvl 2',
-        nameFr: 'Frappe Basique Niv.2',
-        cost: 1,
-        damage: 9,
-        armor: 0,
-      ),
+      CardInstance(data: base.data, rarity: CardRarity.values[nextIndex]),
     ];
     notifyListeners();
   }
@@ -273,13 +411,57 @@ class TutorialEngine extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Vit sur `mockState` (tranche scratch) plutôt que sur `TutorialEngine` :
+  /// `resetScratch()` le réarme ainsi automatiquement à chaque `prepareStep`,
+  /// comme `playerLevel`. Régression (ronde de correction 1/5) : porté par
+  /// l'engine, il survivait à un aller-retour Suivant/Précédent et
+  /// s'empilait indéfiniment à chaque nouveau passage de niveau.
+  int get pendingDrafts => mockState.pendingDrafts;
+
+  /// Même formule que `PlayerStatsManager.gainXp` : report de l'excédent et
+  /// palier géométrique `100 × 1,5^(niveau-1)`.
   void gainXp(int amount) {
-    mockState.playerXp += amount;
-    if (mockState.playerXp >= mockState.xpToNextLevel) {
-      mockState.playerLevel++;
-      mockState.playerXp = mockState.playerXp - mockState.xpToNextLevel;
+    if (amount <= 0) return;
+
+    var xp = mockState.playerXp + amount;
+    var level = mockState.playerLevel;
+    var threshold = mockState.xpToNextLevel;
+    var drafts = mockState.pendingDrafts;
+
+    while (xp >= threshold) {
+      xp -= threshold;
+      level++;
+      threshold = (100 * pow(1.5, level - 1)).round();
+      drafts++;
     }
+
+    mockState.playerXp = xp;
+    mockState.playerLevel = level;
+    mockState.xpToNextLevel = threshold;
+    mockState.pendingDrafts = drafts;
     notifyListeners();
   }
-}
 
+  bool _manaWarningPending = false;
+
+  bool get manaWarningPending => _manaWarningPending;
+
+  /// Reproduit la double confirmation du jeu : terminer le tour avec du mana
+  /// restant demande deux clics. Le second tour ouvre avec l'armure remise à
+  /// zéro et le mana au maximum, comme `RunController.startTurn()`.
+  bool endTurn() {
+    if (mockState.heroStats.currentMana > 0 && !_manaWarningPending) {
+      _manaWarningPending = true;
+      notifyListeners();
+      return false;
+    }
+
+    _manaWarningPending = false;
+    mockState.heroStats = mockState.heroStats.copyWith(
+      armure: 0,
+      currentMana: mockState.heroStats.maxMana,
+    );
+    notifyListeners();
+    return true;
+  }
+}

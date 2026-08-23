@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../models/status_effect.dart';
+import '../../ui/widgets/hud/status_effects_panel.dart';
 import '../tutorial_engine.dart';
 
 class ElementStatusInfo {
@@ -30,7 +32,8 @@ class TutorialElementsWidget extends StatefulWidget {
 
 class _TutorialElementsWidgetState extends State<TutorialElementsWidget> {
   Timer? _timer;
-  int _poisonVal = 3;
+  static const int _poisonValue = 3;
+  int _poisonDuration = 2;
   int _burnVal = 6;
   bool _gelActive = true;
   int _shockHits = 0;
@@ -42,19 +45,17 @@ class _TutorialElementsWidgetState extends State<TutorialElementsWidget> {
       nameEn: 'Poison',
       nameFr: 'Poison',
       descEn:
-          'Deals damage equal to its value at start of turn, then decreases by 1.',
+          'Deals its value at the start of the turn. The value holds; the duration ticks down.',
       descFr:
-          'Inflige des dégâts égaux au Poison au début du tour, puis diminue de 1.',
+          'Inflige sa valeur au début du tour. La valeur ne baisse pas ; la durée décrémente.',
     ),
     ElementStatusInfo(
       icon: Icons.local_fire_department_rounded,
       color: Colors.orangeAccent,
       nameEn: 'Burn',
       nameFr: 'Brûlure',
-      descEn:
-          'Deals damage equal to its value at end of turn, then decreases by half.',
-      descFr:
-          'Inflige des dégâts de Feu à la fin du tour, puis diminue de moitié.',
+      descEn: 'Deals its value at the start of the enemy turn, then loses 1.',
+      descFr: 'Inflige sa valeur au début du tour ennemi, puis perd 1.',
     ),
     ElementStatusInfo(
       icon: Icons.ac_unit_rounded,
@@ -74,23 +75,69 @@ class _TutorialElementsWidgetState extends State<TutorialElementsWidget> {
     ),
   ];
 
+  // Les cinq autres statuts qui circulent en combat mais que la galerie
+  // ci-dessus ne montre pas.
+  static const List<ElementStatusInfo> _missingStatuses = [
+    ElementStatusInfo(
+      icon: Icons.arrow_downward,
+      color: Colors.redAccent,
+      nameEn: 'Vulnerable',
+      nameFr: 'Vulnérable',
+      descEn: '+50% damage taken',
+      descFr: '+50 % de dégâts subis',
+    ),
+    ElementStatusInfo(
+      icon: Icons.arrow_downward,
+      color: Colors.redAccent,
+      nameEn: 'Weakness',
+      nameFr: 'Faiblesse',
+      descEn: '-25% damage dealt',
+      descFr: '-25 % de dégâts infligés',
+    ),
+    ElementStatusInfo(
+      icon: Icons.flash_on,
+      color: Colors.orangeAccent,
+      nameEn: 'Attack',
+      nameFr: 'Attaque',
+      descEn: 'Adds to every attack\'s damage',
+      descFr: 'S\'ajoute aux dégâts de chaque attaque',
+    ),
+    ElementStatusInfo(
+      icon: Icons.flash_on,
+      color: Colors.orangeAccent,
+      nameEn: 'Attack Awakening',
+      nameFr: 'Éveil d\'Attaque',
+      descEn: 'Grants Attack at the start of the turn',
+      descFr: 'Donne de l\'Attaque au début du tour',
+    ),
+    ElementStatusInfo(
+      icon: Icons.shield,
+      color: Colors.cyanAccent,
+      nameEn: 'Plated Armor',
+      nameFr: 'Métallisation',
+      descEn: 'Grants Armor at the start of the turn',
+      descFr: 'Donne de l\'Armure au début du tour',
+    ),
+  ];
+
   @override
   void initState() {
     super.initState();
-    // Start simulation timer
+    // Démarre le minuteur de simulation
     _timer = Timer.periodic(const Duration(seconds: 2), (timer) {
       if (!mounted) return;
       setState(() {
-        // Poison tick: 3 -> 2 -> 1 -> reset
-        _poisonVal = _poisonVal > 1 ? _poisonVal - 1 : 3;
+        // Poison : la valeur reste constante, seule la durée décroît
+        // jusqu'à expiration (2 -> 1 -> 0), puis le cycle repart.
+        _poisonDuration = _poisonDuration > 0 ? _poisonDuration - 1 : 2;
 
-        // Burn tick: 6 -> 3 -> 1 -> reset
-        _burnVal = _burnVal > 1 ? (_burnVal / 2).floor() : 6;
+        // Brûlure : perd 1 par tour au lieu d'être divisée par deux.
+        _burnVal = _burnVal > 1 ? _burnVal - 1 : 6;
 
-        // Gel toggle
+        // Gel : bascule l'état visuel
         _gelActive = !_gelActive;
 
-        // Shock hits: 0 -> 1 -> 2 -> reset
+        // Électrocution : 0 -> 1 -> 2 -> reset
         _shockHits = _shockHits < 2 ? _shockHits + 1 : 0;
       });
     });
@@ -102,16 +149,19 @@ class _TutorialElementsWidgetState extends State<TutorialElementsWidget> {
     super.dispose();
   }
 
-  Widget _buildSimulationVisual(int index, double scale) {
+  Widget _buildSimulationVisual(int index, double scale, bool isFrench) {
     switch (index) {
       case 0: // Poison
+        final String durationLabel = _poisonDuration > 0
+            ? '$_poisonDuration'
+            : (isFrench ? 'expiré' : 'expired');
         return Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.science, color: Colors.greenAccent, size: 14 * scale),
             SizedBox(width: 4 * scale),
             Text(
-              '$_poisonVal',
+              '$_poisonValue',
               style: TextStyle(
                 color: Colors.greenAccent,
                 fontWeight: FontWeight.bold,
@@ -120,16 +170,16 @@ class _TutorialElementsWidgetState extends State<TutorialElementsWidget> {
             ),
             SizedBox(width: 8 * scale),
             Text(
-              '->  -$_poisonVal HP',
+              '($durationLabel)',
               style: TextStyle(
-                color: Colors.redAccent,
+                color: Colors.white70,
                 fontSize: 12 * scale,
                 fontWeight: FontWeight.w600,
               ),
             ),
           ],
         );
-      case 1: // Burn
+      case 1: // Brûlure
         return Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -158,7 +208,7 @@ class _TutorialElementsWidgetState extends State<TutorialElementsWidget> {
             ),
           ],
         );
-      case 2: // Freeze
+      case 2: // Gel
         return AnimatedOpacity(
           opacity: _gelActive ? 1.0 : 0.4,
           duration: const Duration(milliseconds: 300),
@@ -178,7 +228,7 @@ class _TutorialElementsWidgetState extends State<TutorialElementsWidget> {
             ],
           ),
         );
-      case 3: // Shock
+      case 3: // Électrocution
         return Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -208,10 +258,8 @@ class _TutorialElementsWidgetState extends State<TutorialElementsWidget> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final isFrench = Localizations.localeOf(context).languageCode == 'fr';
-
+  // Galerie 2x2 des quatre effets élémentaires, avec leur simulation animée.
+  Widget _buildGallery(bool isFrench) {
     return Center(
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -267,7 +315,7 @@ class _TutorialElementsWidgetState extends State<TutorialElementsWidget> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Icon & Name Row
+                      // Icône et nom
                       Row(
                         children: [
                           Container(
@@ -317,7 +365,7 @@ class _TutorialElementsWidgetState extends State<TutorialElementsWidget> {
 
                       SizedBox(height: 4 * scale),
 
-                      // Visual Simulation Area
+                      // Zone de simulation visuelle
                       Container(
                         height: 28 * scale,
                         width: double.infinity,
@@ -326,7 +374,7 @@ class _TutorialElementsWidgetState extends State<TutorialElementsWidget> {
                           borderRadius: BorderRadius.circular(8 * scale),
                         ),
                         child: Center(
-                          child: _buildSimulationVisual(index, scale),
+                          child: _buildSimulationVisual(index, scale, isFrench),
                         ),
                       ),
                     ],
@@ -336,6 +384,118 @@ class _TutorialElementsWidgetState extends State<TutorialElementsWidget> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  // Une ligne du tableau des statuts absents de la galerie.
+  Widget _buildStatusRow(ElementStatusInfo status, bool isFrench) {
+    final name = isFrench ? status.nameFr : status.nameEn;
+    final desc = isFrench ? status.descFr : status.descEn;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: status.color.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(status.icon, color: status.color, size: 18),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: TextStyle(
+                    color: status.color,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  desc,
+                  style: TextStyle(
+                    color: Colors.grey.shade300,
+                    fontSize: 12,
+                    height: 1.2,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isFrench = Localizations.localeOf(context).languageCode == 'fr';
+
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            height: 300,
+            child: _buildGallery(isFrench),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            isFrench
+                ? 'Cinq autres altérations circulent en combat :'
+                : 'Five more status effects circulate in combat:',
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          ..._missingStatuses.map((status) => _buildStatusRow(status, isFrench)),
+          const SizedBox(height: 16),
+          Text(
+            isFrench
+                ? 'Voilà comment ils apparaissent en combat :'
+                : 'This is how they show up in combat:',
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Center(
+            child: StatusEffectsPanel(
+              statuses: const [
+                StatusEffect(
+                  id: 'poison',
+                  name: 'Poison',
+                  type: StatusType.debuff,
+                  value: 3,
+                  duration: 2,
+                ),
+                StatusEffect(
+                  id: 'burn',
+                  name: 'Brûlure',
+                  type: StatusType.debuff,
+                  value: 2,
+                  duration: 2,
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
