@@ -178,7 +178,7 @@ const List<TutorialStep> kTutorialSteps = [
         'expense, never a stock you build up.\n\n'
         'What your class changes is *how you earn it*: that is your passive. '
         'Armor Mastery, a permanent stat, is added to every Armor gain your '
-        'passive or your relics produce.',
+        'passive produces.',
     bodyFr:
         'L\'Armure absorbe les dégâts avant vos PV. Ce qui dépasse une fois '
         'l\'Armure épuisée entame votre santé.\n\n'
@@ -188,7 +188,7 @@ const List<TutorialStep> kTutorialSteps = [
         'accumule.\n\n'
         'Ce que votre classe change, c\'est la *façon d\'en gagner* : c\'est '
         'votre passif. La Maîtrise d\'Armure, statistique permanente, s\'ajoute '
-        'à chaque gain d\'Armure produit par votre passif ou vos reliques.',
+        'à chaque gain d\'Armure produit par votre passif.',
     type: TutorialStepType.armorDamage,
   ),
   TutorialStep(
@@ -222,22 +222,26 @@ const List<TutorialStep> kTutorialSteps = [
         'Enemies announce what they will do before you play. Their intent is '
         'not shown above them — read it in the **Enemy Intentions panel, '
         'bottom-right**.\n\n'
-        'There are three: attack, defend, and buff. Attacks change icon and '
-        'colour with their size — Quick, Attack, Heavy, Devastating — so a '
+        'There are three: Attack, Defend, and Buff Attack. Attacks change icon '
+        'and colour with their size — Quick, Attack, Heavy, Devastating — so a '
         'glance is enough to tell a scratch from a threat.\n\n'
+        'Until an enemy has an intent, that same panel shows an hourglass and '
+        '**Waiting...** instead.\n\n'
         'The number is recalculated live: it grows with the enemy\'s level and '
-        'accumulated Strength, and halves while they are Frozen.',
+        'accumulated Attack, and halves while they are Frozen.',
     bodyFr:
         'Les ennemis annoncent leur action avant que vous ne jouiez. Leur '
         'intention n\'est pas affichée au-dessus d\'eux : elle se lit dans le '
         'panneau **Intentions Ennemies, en bas à droite**.\n\n'
-        'Il en existe trois : attaque, défense et renforcement. Les attaques '
+        'Il en existe trois : Attaque, Défense et Buff Attaque. Les attaques '
         'changent d\'icône et de couleur selon leur ampleur — Rapide, Attaque, '
         'Lourde, Dévastatrice — pour distinguer d\'un coup d\'œil l\'égratignure '
         'de la menace.\n\n'
+        'Tant qu\'un ennemi n\'a pas encore d\'intention, ce même panneau '
+        'affiche un sablier et l\'indication **En attente...**.\n\n'
         'Le chiffre est recalculé en direct : il monte avec le niveau de '
-        'l\'ennemi et sa Force accumulée, et se divise par deux tant qu\'il est '
-        'Gelé.',
+        'l\'ennemi et son Attaque accumulée, et se divise par deux tant qu\'il '
+        'est Gelé.',
     type: TutorialStepType.enemies,
   ),
   TutorialStep(
@@ -311,7 +315,7 @@ const List<TutorialStep> kTutorialSteps = [
         'Rarity decides how much you get. Luck raises your odds on every roll, '
         'which makes the Clover the option that improves all the others.\n\n'
         'Careful with Steel Forge: it grants **Armor Mastery**, added to the '
-        'Armor your passive and relics produce — not a flat block of Armor.',
+        'Armor your passive produces — not a flat block of Armor.',
     bodyFr:
         'Chaque niveau donne droit à un draft. Trois options sont tirées parmi '
         'six types — Vitalité, Aiguisage, Forge d\'Acier, Sagesse, Précision, '
@@ -321,8 +325,8 @@ const List<TutorialStep> kTutorialSteps = [
         'probabilités à chaque tirage, ce qui fait du Trèfle l\'option qui '
         'améliore toutes les autres.\n\n'
         'Attention à la Forge d\'Acier : elle donne de la **Maîtrise d\'Armure**, '
-        'ajoutée à l\'Armure que produisent votre passif et vos reliques — pas '
-        'un bloc d\'Armure directe.',
+        'ajoutée à l\'Armure que produit votre passif — pas un bloc d\'Armure '
+        'directe.',
     type: TutorialStepType.draft,
   ),
   TutorialStep(

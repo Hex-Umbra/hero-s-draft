@@ -107,8 +107,8 @@ class _TutorialElementsWidgetState extends State<TutorialElementsWidget> {
       color: Colors.orangeAccent,
       nameEn: 'Attack Awakening',
       nameFr: 'Éveil d\'Attaque',
-      descEn: 'Grants Strength at the start of the turn',
-      descFr: 'Donne de la Force au début du tour',
+      descEn: 'Grants Attack at the start of the turn',
+      descFr: 'Donne de l\'Attaque au début du tour',
     ),
     ElementStatusInfo(
       icon: Icons.shield,
