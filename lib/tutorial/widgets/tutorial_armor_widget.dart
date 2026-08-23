@@ -10,18 +10,36 @@ class TutorialArmorWidget extends StatefulWidget {
 }
 
 class _TutorialArmorWidgetState extends State<TutorialArmorWidget> {
+  // Socle de démonstration : 80 PV, et 4 points d'Armure pour le panneau de
+  // droite. Fixe et indépendant du héros réellement choisi, pour que les
+  // deux panneaux restent comparables quelle que soit la classe.
+  static const int _rightStartArmor = 4;
+
   int _leftHp = 80;
   final int _leftMaxHp = 80;
   int _leftArmor = 0;
 
   int _rightHp = 80;
   final int _rightMaxHp = 80;
-  int _rightArmor = 4;
+  int _rightArmor = _rightStartArmor;
 
   bool _leftShowDamage = false;
   bool _rightShowDamage = false;
   double _leftDamageY = 0.0;
   double _rightDamageY = 0.0;
+
+  /// Remet `heroStats` à un socle neutre (80 PV, 0 Armure) avant un calcul
+  /// de démonstration.
+  ///
+  /// `setHeroArmor` et `applyDamageToHero` ne peuvent qu'appauvrir l'état
+  /// (fixer l'Armure ou infliger des dégâts), jamais restaurer les PV. Les
+  /// deux panneaux comparent pourtant deux scénarios sur le même `heroStats`
+  /// partagé par le moteur, et le bouton peut être pressé plusieurs fois :
+  /// chaque scénario repart donc explicitement d'un socle identique.
+  void _resetDemoBaseline() {
+    widget.engine.mockState.heroStats = widget.engine.mockState.heroStats
+        .copyWith(currentPv: _leftMaxHp, armure: 0);
+  }
 
   void _runSimulation() {
     // Reset to start
@@ -29,7 +47,7 @@ class _TutorialArmorWidgetState extends State<TutorialArmorWidget> {
       _leftHp = 80;
       _leftArmor = 0;
       _rightHp = 80;
-      _rightArmor = 4;
+      _rightArmor = _rightStartArmor;
       _leftShowDamage = false;
       _rightShowDamage = false;
       _leftDamageY = 0.0;
@@ -39,16 +57,29 @@ class _TutorialArmorWidgetState extends State<TutorialArmorWidget> {
     // Run after a short delay
     Future.delayed(const Duration(milliseconds: 200), () {
       if (!mounted) return;
+
+      // Gauche : pas d'Armure -> les dégâts tapent les PV en direct.
+      _resetDemoBaseline();
+      widget.engine.setHeroArmor(0);
+      widget.engine.applyDamageToHero(10);
+      final afterLeft = widget.engine.mockState.heroStats;
+
+      // Droite : l'Armure absorbe une partie des dégâts, le reste entame
+      // les PV. La vraie formule d'absorption (EntityStats.takeDamage)
+      // calcule le résultat : on ne le recopie plus à la main.
+      _resetDemoBaseline();
+      widget.engine.setHeroArmor(_rightStartArmor);
+      widget.engine.applyDamageToHero(10);
+      final afterRight = widget.engine.mockState.heroStats;
+
       setState(() {
-        // Appliquer dégâts de 10
-        // Gauche : Pas d'armure -> prend 10 dégâts directs sur HP
-        _leftHp = 70;
+        _leftHp = afterLeft.currentPv;
+        _leftArmor = afterLeft.armure;
         _leftShowDamage = true;
         _leftDamageY = -30.0;
 
-        // Droite : 4 armure -> l'armure absorbe 4 dégâts, 6 dégâts sur HP
-        _rightArmor = 0;
-        _rightHp = 74;
+        _rightArmor = afterRight.armure;
+        _rightHp = afterRight.currentPv;
         _rightShowDamage = true;
         _rightDamageY = -30.0;
       });
@@ -73,7 +104,7 @@ class _TutorialArmorWidgetState extends State<TutorialArmorWidget> {
         fit: BoxFit.scaleDown,
         child: SizedBox(
           width: 320,
-          height: 250,
+          height: 380,
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Column(
@@ -120,9 +151,9 @@ class _TutorialArmorWidgetState extends State<TutorialArmorWidget> {
                                       duration: const Duration(milliseconds: 800),
                                       curve: Curves.easeOutQuad,
                                       top: _leftDamageY,
-                                      child: const Text(
-                                        '-10 HP',
-                                        style: TextStyle(
+                                      child: Text(
+                                        '-${_leftMaxHp - _leftHp} HP',
+                                        style: const TextStyle(
                                           color: Colors.redAccent,
                                           fontWeight: FontWeight.bold,
                                           fontSize: 14,
@@ -189,8 +220,10 @@ class _TutorialArmorWidgetState extends State<TutorialArmorWidget> {
                                       top: _rightDamageY,
                                       child: Text(
                                         isFrench
-                                            ? '-4 Armure\n-6 HP'
-                                            : '-4 Armor\n-6 HP',
+                                            ? '-${_rightStartArmor - _rightArmor} Armure\n'
+                                                  '-${_rightMaxHp - _rightHp} HP'
+                                            : '-${_rightStartArmor - _rightArmor} Armor\n'
+                                                  '-${_rightMaxHp - _rightHp} HP',
                                         textAlign: TextAlign.center,
                                         style: const TextStyle(
                                           color: Colors.cyanAccent,
@@ -219,6 +252,55 @@ class _TutorialArmorWidgetState extends State<TutorialArmorWidget> {
                       ),
                     ],
                   ),
+                ),
+
+                // Passif de la classe choisie : lu depuis la tranche
+                // persistante, jamais recopié en dur (nom/description
+                // viennent de passives.json via le moteur).
+                Builder(
+                  builder: (context) {
+                    final passive = widget.engine.mockState.activePassive;
+                    if (passive == null) return const SizedBox.shrink();
+                    final locale = Localizations.localeOf(context).languageCode;
+                    return Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.only(top: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1E293B).withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: Colors.amber.withValues(alpha: 0.25),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            locale == 'fr'
+                                ? 'Votre passif : ${passive.getName(locale)}'
+                                : 'Your passive: ${passive.getName(locale)}',
+                            style: const TextStyle(
+                              color: Colors.amber,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12.5,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            passive.getDescription(locale),
+                            style: TextStyle(
+                              color: Colors.grey.shade300,
+                              fontSize: 11.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 10),
 

@@ -143,9 +143,24 @@ const List<TutorialStep> kTutorialSteps = [
     titleEn: 'Armor & Damage',
     titleFr: 'Armure & Dégâts',
     bodyEn:
-        'Armor (🛡️) acts as a temporary shield. When you take damage, it is subtracted from your Armor first. Any remaining damage reduces your HP. Armor resets or decays depending on your character class.',
+        'Armor absorbs damage before your HP. Any damage left over after the '
+        'Armor is gone hits your health.\n\n'
+        '**Armor always resets to 0 at the start of your turn** — every class, '
+        'no exception — and again at the end of a combat. It is a one-turn '
+        'expense, never a stock you build up.\n\n'
+        'What your class changes is *how you earn it*: that is your passive. '
+        'Armor Mastery, a permanent stat, is added to every Armor gain your '
+        'passive or your relics produce.',
     bodyFr:
-        'L\'Armure (🛡️) agit comme un bouclier temporaire. Lorsque vous subissez des dégâts, ils sont d\'abord déduits de votre Armure. Les dégâts restants réduisent vos PV. L\'Armure se réinitialise ou diminue selon votre classe.',
+        'L\'Armure absorbe les dégâts avant vos PV. Ce qui dépasse une fois '
+        'l\'Armure épuisée entame votre santé.\n\n'
+        '**L\'Armure retombe toujours à 0 au début de votre tour** — toutes '
+        'classes confondues, sans exception — et de nouveau à la fin d\'un '
+        'combat. C\'est une dépense pour un tour, jamais un stock qu\'on '
+        'accumule.\n\n'
+        'Ce que votre classe change, c\'est la *façon d\'en gagner* : c\'est '
+        'votre passif. La Maîtrise d\'Armure, statistique permanente, s\'ajoute '
+        'à chaque gain d\'Armure produit par votre passif ou vos reliques.',
     type: TutorialStepType.armorDamage,
   ),
   TutorialStep(
