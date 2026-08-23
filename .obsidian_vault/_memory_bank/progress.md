@@ -5,25 +5,27 @@
 
 ## Métriques
 
-**Vérifié le 2026-08-20**
+**Vérifié le 2026-08-23**
 
 | Métrique | Valeur | Commande |
 |:---|:---|:---|
-| Tests automatisés (jeu) | 230 au vert | `flutter test` |
-| Fichiers de test | 42 | `find test -name "*.dart" \| wc -l` |
+| Tests automatisés (jeu) | 278 au vert | `flutter test` |
+| Fichiers de test | 48 | `find test -name "*.dart" \| wc -l` |
 | Analyse statique | 0 erreur (`No issues found!`) | `dart analyze` |
-| Fichiers Dart (`lib/`) | 169 | `find lib -name "*.dart" \| wc -l` |
-| Lignes de code (`lib/`) | 36 441 | `find lib -name "*.dart" -exec cat {} + \| wc -l` |
+| Fichiers Dart (`lib/`) | 174 | `find lib -name "*.dart" \| wc -l` |
+| Lignes de code (`lib/`) | 37 425 | `find lib -name "*.dart" -exec cat {} + \| wc -l` |
 | Fichiers de données | 10 | `ls assets/data/*.json \| wc -l` |
 | Tests de la logique du site | 20 au vert | `cd site && node --test` |
 | Assertions du harnais CI | 55 au vert | `bash .github/scripts/test_scripts.sh` |
 | Fichiers suivis sous `site/` | 16 | `git ls-files site/ \| wc -l` |
 
 > [!NOTE]
-> Les six premières métriques sont **identiques à celles du 2026-08-06**, et c'est un
-> résultat, pas un oubli de mesure : le chantier P-04 n'a touché aucun fichier de `lib/`,
-> `test/` ou `assets/`. Les trois dernières lignes couvrent les surfaces de test nées de
-> ce chantier, qui échappent à `flutter test`.
+> Les six premières lignes ont bougé depuis le 2026-08-20 : le chantier **P-45** (fidélité
+> du tutoriel) a ajouté du code et des tests dans `lib/tutorial/` et `test/` (+5 fichiers
+> `lib/`, +6 fichiers de test, +984 lignes, +48 tests). Les trois dernières lignes
+> (surfaces de test du site, nées de P-04) sont inchangées : P-45 n'a touché ni
+> `site/_site/js/`, ni `.github/scripts/test_scripts.sh`, et n'a modifié que des fichiers
+> `site/` déjà suivis (aucun ajout net).
 
 > [!NOTE]
 > **La version ne vit pas ici.** La version de référence se lit dans `pubspec.yaml`
@@ -149,8 +151,9 @@ Design complet — [ADR-069](../_adr/ADR-069-systeme-de-sauvegarde-de-run-checkp
 
 | Fonctionnalité | Implémentation | Détails |
 |:---|:---|:---|
-| Moteur local | `TutorialEngine`, `TutorialMockState` | `ChangeNotifier` gérant la progression, état simulé réinitialisé par étape |
-| 13 étapes interactives | `TutorialScreen`, `lib/tutorial/widgets/` | Guidage pas-à-pas couvrant le gameplay de base |
+| Moteur local, zéro provider d'état | `TutorialEngine`, `TutorialMockState` | `ChangeNotifier` gérant la progression ; tranche persistante (classe, deck) + tranche scratch réinitialisée par étape — [ADR-081](../_adr/ADR-081-amendement-autonomie-tutoriel-zero-provider-etat.md) |
+| 15 étapes interactives, choix de classe et draft de départ en amont | `TutorialScreen`, `lib/tutorial/widgets/` | Guidage pas-à-pas depuis le choix de classe jusqu'aux reliques ; étapes 02-03 verrouillées une fois franchies ; détail complet en [`_rules/08-00`](../_rules/08-00-systeme-de-tutoriel-autonome.md) |
+| Fixtures résolues contre le registre de données | `tutorial_loader.dart`, `TutorialFixtures` | `gameDataLoaderProvider` lu en un point unique ; cartes/ennemis/reliques affichés sont ceux du jeu (`CardInstance`, `EnemyInstance`), plus de valeurs recopiées à la main |
 | Ciblage double phase et info-bulles | `TutorialPlayCardWidget`, `TutorialCardsWidget` | Ciblage en deux temps, icônes vectorielles canvas et tooltips localisés |
 | Persistance et badge « NEW » | `TutorialProgressService`, `HomeScreen` | Complétion sauvegardée en `shared_preferences` |
 | Responsivité | `LayoutBuilder`, `FittedBox`, `Wrap` | Ajustements multi-résolutions (mobile, web, desktop) |
@@ -225,6 +228,7 @@ dépourvu de sérialisation.
 
 | Version | Date | Titre | Description des changements clés |
 |:---|:---|:---|:---|
+| **0.4.9** | 2026-08-23 | L'École du Héros (P-45) | Le tutoriel autonome (`lib/tutorial/`) avait dérivé du jeu réel : 50 écarts relevés, nés d'une règle « zéro Riverpod » qui interdisait aussi l'accès aux données immuables, forçant une recopie manuelle qui a dérivé avec le temps. La règle devient « zéro provider d'*état* » : `gameDataLoaderProvider` est autorisé en un point unique (`tutorial_loader.dart`), les neuf providers d'état restent interdits, critère vérifié par `test/tutorial/tutorial_isolation_test.dart`. Les POJOs du mock (`TutorialCard`, `TutorialEnemy`) sont remplacés par les vrais modèles du jeu (`CardInstance`, `EnemyInstance`, `EntityStats`, `DamagePipeline`). Le parcours passe de 13 à **15 étapes** : choix de classe et draft du deck de départ ajoutés en amont, verrouillés une fois franchis, dont dépendent les étapes suivantes (Armure démontre le passif choisi, Jouer pioche dans ce deck, Fusion y prend une carte réellement draftée). Correctif d'affichage hors tutoriel : la légende de la carte du monde annonçait « Boss (XP & Or x2) » alors que `reward_controller.dart` applique `×3` depuis longtemps — seul l'affichage change, le code de récompense est intact. 31 commits TDD, **278 tests au vert** (+48 depuis `0.4.8`), `dart analyze` propre. Voir [ADR-081](../_adr/ADR-081-amendement-autonomie-tutoriel-zero-provider-etat.md). |
 | **0.4.8** | 2026-08-20 | La Salle des Archives (P-04) | Chantier **P-04** livré en deux lots, sans que le jeu change : **aucun fichier de `lib/`, `test/` ou `assets/` n'est touché**, et le patch note joueur ne décrit donc que le site. **Lot 1 — chaîne CI/CD** : trois workflows (`ci.yml`, `release.yml` à neuf jobs, `site.yml`), publication réduite à la pose d'un tag `v*.*.*`, garde-fou `verify-version` comparant le tag à `pubspec.yaml`, `patch_notes.json` et `versions.json` **avant tout build**, smoke test HTTP post-déploiement, pré-release GitHub avec le zip Windows, annonce Discord en `continue-on-error`. Toute la logique vit dans cinq scripts shell testables — harnais à **55 assertions**, attentes dérivées à l'exécution par `jq` plutôt que figées. Actions tierces épinglées sur SHA, secrets par `env:` uniquement, accès VPS confiné en écriture seule par `rrsync -wo`. Voir [ADR-079](../_adr/ADR-079-chaine-de-release-declenchee-par-tag-et-garde-fou.md). **Lot 2 — site vitrine** : la page de sélection des versions, jusque-là hors du dépôt et maintenue à la main, devient `site/` — trois pages sans étape de build ni dépendance npm, pilotées par `site/_site/versions.json`, logique pure testée par `node --test` (**20 tests**). La jointure version → patch note passe par un champ `notes` déclaré et nullable, jamais dérivé du nom de dossier : les quatorze dossiers historiques rapportent tous `0.1.0`, et une dérivation aurait produit quatre associations fausses. Voir [ADR-080](../_adr/ADR-080-site-vitrine-pilote-par-la-donnee-et-jointure-decl.md). Enrichissement du 20/08 : les quatorze dates relevées sur l'archive locale des builds, et deux jointures déclarées (`v0.0.5` → note `0.0.4`, `v0.0.9` → note `0.0.93`). |
 | **0.4.7** | 2026-08-06 | Assainissement du Système de Pioche (P-02) | Le remélange défausse → pioche devient **automatique et à sec** : il n'intervient plus qu'une fois la pioche réellement vide, y compris au milieu d'une pioche. L'ancien seuil `if (drawPile.length < 5)` porté par `game_screen.dart` déclenchait un remélange presque chaque tour et détruisait la capacité à compter son deck ; `shuffleDiscardIntoDraw()` est supprimée. La pioche s'arrête **net** à `GameConstants.maxHandSize` (10) sans consommer de carte ni remélanger. `RunState.cardsPerTurn` (défaut 5) remplace le `5` codé en dur, et `TurnPhaseManager` gagne `startPlayerCombat()`/`startPlayerTurn()` : le tour 1 et le tour N+1 empruntent enfin le même code, et `game_screen.dart` n'anime plus que (perte de `_turnCount` et du deck de secours, 555 → 524 lignes). Aléatoire injectable via `deckRandomProvider`, compteur `DeckState.reshuffleCount` observable et notification joueur. Première relique touchant au deck : `scholars_satchel` (Besace de l'Érudit, legendary, +1 carte/tour), avec `case` symétrique dans `removeRelicEffect`. 6 éléments de code mort supprimés (`temporaryCost`, `IntentType.debuffDeck`, `intentCurse`, `onEnemyDebuffDeck`, `onTurnEnded`, deck de secours). 8 commits TDD, **230/230 tests au vert** (+18 neufs, 2 réécrits), `dart analyze` propre, **playtest de validation passé le 2026-08-06**. Voir [ADR-078](../_adr/ADR-078-assainissement-du-systeme-de-pioche-remelange-a-sec.md). |
 | **v3.5.1** | 2026-07-26 | Correction de la Réactivité du Bouton « Continuer » (HomeScreen) | `HomeScreen._continueGame()`/`_startNewGame()` naviguent via `Navigator.push`, mais le menu pause et `GameOverScreen` reviennent à l'accueil via `Navigator.popUntil((route) => route.isFirst)`, qui ne reconstruit pas `HomeScreen` ni ne réévalue `SaveService.hasSave()` : le bouton « Continuer » pouvait rester dans un état obsolète jusqu'au redémarrage de l'application. Correctif : les deux méthodes attendent désormais (`await`) leur `Navigator.push` et appellent `setState(() {})` à son retour. Nouveau test `test/widget/home_screen_save_test.dart` (95 lignes). Commit `17564b4`, mergé avec ADR-072 via PR #22. Voir ADR-073. |
@@ -234,11 +238,10 @@ dépourvu de sérialisation.
 | **v3.2.0** | 2026-07-24 | Système de Sauvegarde et Persistance de Run (Autosave) | Résolution du point bloquant de commercialisation ADR-011 : `SaveService` (`shared_preferences`, slot unique, JSON versionné) sauvegardant `RunState`/`DeckState`/`InventoryState`/`SkillState` à chaque checkpoint carte (`checkpointProvider`/`autosaveOrchestratorProvider`), jamais en cours de combat. Bouton "Continuer" et dialogue de confirmation sur `HomeScreen`. Dégradation gracieuse du contenu manquant (cartes/reliques/upgrades/passifs supprimés du catalogue) avec avertissement nommé au joueur. Sauvegarde corrompue traitée comme échec total sans récupération partielle. Sauvegarde effacée à la mort du héros. Suppression du stub mort `RunPersistenceManager`. Voir ADR-069. |
 | **v3.1.0** | 2026-07-01 | Forge de Fusion et Forge Data-Driven | Introduction du nœud Forge de Fusion (`MapNodeType.forgeFusion` à 25% de chance) sur les étages 3 à 7. Écran `ForgeFusionScreen` pour fusionner les runes identiques pour un coût de 80 Or. Remplacement des upgrades codés en dur par une structure data-driven (`assets/data/forge_upgrades.json` + `ForgeUpgradeData`). Cumul de runes sans épuisement (alreadyHas retiré). Correction de la navigation au repos : annuler la forge ramène à la sélection de cartes au lieu de quitter au menu du repos. Écriture de tests unitaires (112 tests réussis, 0 erreur). |
 | **v0.3.0** | 2026-06-25 | Refonte et Validation du Système d'Événements | Enrichissement visuel et narratif du système de rencontres avec 5 événements bilingues configurés dans `assets/data/events.json`. Conception d'un Safety Gate de validation d'éligibilité (`isSelectable`) bloquant les options en cas d'or insuffisant, de dégâts létaux (`currentHp <= damage`), ou de réduction de PV Max létale. Rendu visuel d'en-tête (PV et Or réactifs) et intégration de badges compacts directement dans les boutons de choix d'options avec transition d'échelle animée après résolution. |
-| **v0.2.9** | 2026-06-25 | Équilibrage Boutique et Miroir Magique | Vente de cartes modélisée par instances réelles (`CardInstance`) affichant leurs sockets de runes et raretés dynamiques via `UiCard.fromInstance`. Tarification dynamique (+20 Or par upgrade de forge). Scaling de raretés et d'upgrades par Acte. Nerf anti-exploit du Miroir Magique doublant son coût à chaque achat ($150 \rightarrow 300 \rightarrow 600 \dots$ Or) avec réinitialisation à 150 Or en sortie de session. |
 
 Les releases sorties de ce tableau par débordement du plafond FIFO sont conservées
-verbatim sous `.obsidian_vault/_archive/` (`2026-08-20-progress-releases.md` pour la
-dernière rotation).
+verbatim sous `.obsidian_vault/_archive/` (`2026-08-23-progress-releases.md` pour la
+dernière rotation, `2026-08-20-progress-releases.md` pour la précédente).
 
 > [!NOTE]
 > **Le schéma `v3.x` est gelé.** L'historique ci-dessus emploie un schéma interne
