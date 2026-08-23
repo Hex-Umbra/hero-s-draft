@@ -242,6 +242,23 @@ assert_contains "/v${REAL_VER}/" "contient l'URL de jeu" "${RENDER_PAYLOAD[@]}"
 assert_contains "heros-draft-v${REAL_VER}-windows.zip" "contient l'URL du zip" "${RENDER_PAYLOAD[@]}"
 assert_contains "releases/tag/v${REAL_VER}" "contient l'URL de la release" "${RENDER_PAYLOAD[@]}"
 
+# Le titre cliquable de l'embed mene au site vitrine ; seul le champ « Jouer »
+# lance le build navigateur. On surcharge SITE_BASE_URL pour verifier la
+# construction de l'URL plutot que la valeur par defaut.
+EMBED_URL="$(env "SITE_BASE_URL=https://exemple.test" ${PAYLOAD} "${REAL_VER}" 2>/dev/null | jq -r '.embeds[0].url' | tr -d '\r')"
+if [[ "${EMBED_URL}" == "https://exemple.test/" ]]; then
+  ok "le titre de l'embed mene au site vitrine"
+else
+  nok "le titre de l'embed mene au site vitrine (obtenu : ${EMBED_URL})"
+fi
+
+PLAY_FIELD="$(env "SITE_BASE_URL=https://exemple.test" ${PAYLOAD} "${REAL_VER}" 2>/dev/null | jq -r '.embeds[0].fields[0].value' | tr -d '\r')"
+if [[ "${PLAY_FIELD}" == *"https://exemple.test/v${REAL_VER}/"* ]]; then
+  ok "le champ Jouer lance toujours le build navigateur"
+else
+  nok "le champ Jouer lance toujours le build navigateur (obtenu : ${PLAY_FIELD})"
+fi
+
 # La couleur de la charte, 0xEAF06A.
 if [[ "$(${PAYLOAD} "${REAL_VER}" 2>/dev/null | jq -r '.embeds[0].color')" == "15396970" ]]; then
   ok "utilise la couleur 0xEAF06A"

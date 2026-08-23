@@ -50,6 +50,10 @@ EMBED_TITLE="Hero's Draft v${VERSION} — ${TITLE}"
 PLAY_URL="${SITE_BASE_URL}/v${VERSION}/"
 ZIP_URL="${REPO_URL}/releases/download/v${VERSION}/heros-draft-v${VERSION}-windows.zip"
 RELEASE_URL="${REPO_URL}/releases/tag/v${VERSION}"
+# Le titre cliquable de l'embed mene au site vitrine, pas au build jouable :
+# cliquer un titre est un geste de curiosite, pas une intention de lancer une
+# partie. Le champ « Jouer » reste, lui, la porte d'entree du jeu.
+SITE_URL="${SITE_BASE_URL}/"
 
 # jq fait l'echappement ET la troncature. Une concatenation shell produirait du
 # JSON invalide des la premiere apostrophe des patch notes francaises.
@@ -57,13 +61,14 @@ jq -n \
   --arg embedTitle "${EMBED_TITLE}" \
   --arg body       "${BODY}" \
   --arg play       "${PLAY_URL}" \
+  --arg site       "${SITE_URL}" \
   --arg zip        "${ZIP_URL}" \
   --arg release    "${RELEASE_URL}" \
   --argjson limit  "${DESC_LIMIT}" \
   '{
      embeds: [{
        title: $embedTitle,
-       url: $play,
+       url: $site,
        color: 15396970,
        description: (
          if ($body | length) > $limit
