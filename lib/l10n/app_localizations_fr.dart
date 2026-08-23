@@ -162,7 +162,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get legendBossCards => 'Boss (Récompense Cartes)';
 
   @override
-  String get legendBossXp => 'Boss (XP x2)';
+  String get legendBossXp => 'Boss (XP x3)';
 
   @override
   String get legendBossRelic => 'Boss (Récompense Relique)';

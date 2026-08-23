@@ -383,7 +383,7 @@ abstract class AppLocalizations {
   /// No description provided for @legendBossXp.
   ///
   /// In en, this message translates to:
-  /// **'Boss (Double XP)'**
+  /// **'Boss (3x XP)'**
   String get legendBossXp;
 
   /// No description provided for @legendBossRelic.
