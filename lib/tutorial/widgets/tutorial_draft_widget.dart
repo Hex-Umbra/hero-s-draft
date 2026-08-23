@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../tutorial_engine.dart';
+import '../../game/services/level_up_reward_service.dart';
 import '../../ui/widgets/draft/draft_choice_card.dart';
+import '../../ui/widgets/draft/draft_choice_labels.dart';
 
 class TutorialDraftWidget extends StatefulWidget {
   final TutorialEngine engine;
@@ -13,50 +16,35 @@ class TutorialDraftWidget extends StatefulWidget {
 class _TutorialDraftWidgetState extends State<TutorialDraftWidget> {
   int? _selectedIndex;
   int? _hoveredIndex;
+  late final List<DraftChoice> _choices;
 
-  static const List<Map<String, dynamic>> _choices = [
-    {
-      'titleEn': 'Vitality',
-      'titleFr': 'Vitalité',
-      'descEn': '+15 Max HP',
-      'descFr': '+15 PV Max',
-      'rarityEn': 'Rare',
-      'rarityFr': 'Rare',
-    },
-    {
-      'titleEn': 'Steel Forge',
-      'titleFr': "Forge d'Acier",
-      'descEn': '+4 Armor',
-      'descFr': '+4 Armure',
-      'rarityEn': 'Epic',
-      'rarityFr': 'Épique',
-    },
-    {
-      'titleEn': 'Mirror',
-      'titleFr': 'Miroir',
-      'descEn': 'Clone a card from deck',
-      'descFr': 'Dupliquer une carte',
-      'rarityEn': 'Legendary',
-      'rarityFr': 'Légendaire',
-    },
-  ];
-
-  // Pas de resetMockState() ici : `TutorialEngine.nextStep()`/`prevStep()`
-  // l'ont déjà appelé avant que cette page ne soit montée, donc le
-  // refaire ici est redondant. C'est aussi dangereux : `TutorialScreen`
-  // reconstruit tout le sous-arbre de la PageView au franchissement d'un
-  // seuil de layout (bascule portrait/paysage, ou largeur 720px), ce qui
-  // rejoue initState() ici sans que `_currentStepIndex` ait changé.
-  // `resetScratch()` effacerait alors une progression déjà validée
-  // (`hasDrafted`) et re-verrouillerait le bouton SUIVANT. Si un futur
-  // cas de `resetMockState()` venait en plus semer `seedHand`/`seedEnemy`
-  // pour cette étape, `notifyListeners()` partirait en plein passage de
-  // build de la PageView, ce que Flutter refuse : « setState() or
-  // markNeedsBuild() called during build. »
+  @override
+  void initState() {
+    super.initState();
+    // Pas de resetMockState() ici : `TutorialEngine.nextStep()`/`prevStep()`
+    // l'ont déjà appelé avant que cette page ne soit montée, donc le
+    // refaire ici est redondant. C'est aussi dangereux : `TutorialScreen`
+    // reconstruit tout le sous-arbre de la PageView au franchissement d'un
+    // seuil de layout (bascule portrait/paysage, ou largeur 720px), ce qui
+    // rejoue initState() ici sans que `_currentStepIndex` ait changé.
+    // `resetScratch()` effacerait alors une progression déjà validée
+    // (`hasDrafted`) et re-verrouillerait le bouton SUIVANT. Si un futur
+    // cas de `resetMockState()` venait en plus semer `seedHand`/`seedEnemy`
+    // pour cette étape, `notifyListeners()` partirait en plein passage de
+    // build de la PageView, ce que Flutter refuse : « setState() or
+    // markNeedsBuild() called during build. »
+    //
+    // `_choices` en revanche est de l'état purement local à ce widget (pas
+    // le moteur du tutoriel) : le tirer ici via le vrai service de draft,
+    // avec luck: 0 (Chance d'un héros niveau 1), est donc légitime et rend
+    // la démo fidèle au vrai premier draft du jeu.
+    _choices = LevelUpRewardService.generateChoices(luck: 0);
+  }
 
   @override
   Widget build(BuildContext context) {
     final isFrench = Localizations.localeOf(context).languageCode == 'fr';
+    final l10n = AppLocalizations.of(context)!;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -93,9 +81,9 @@ class _TutorialDraftWidgetState extends State<TutorialDraftWidget> {
                       runSpacing: 12,
                       children: List.generate(_choices.length, (index) {
                         final choice = _choices[index];
-                        final title = isFrench ? choice['titleFr'] : choice['titleEn'];
-                        final desc = isFrench ? choice['descFr'] : choice['descEn'];
-                        final rarity = isFrench ? choice['rarityFr'] : choice['rarityEn'];
+                        final title = DraftChoiceLabels.getChoiceTitle(l10n, choice);
+                        final desc = DraftChoiceLabels.getChoiceDescription(l10n, choice);
+                        final rarity = DraftChoiceLabels.rarityToString(l10n, choice.rarity);
 
                         final isSelected = _selectedIndex == index;
                         final isHovered = _hoveredIndex == index;

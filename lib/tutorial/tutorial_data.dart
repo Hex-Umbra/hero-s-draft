@@ -271,9 +271,25 @@ const List<TutorialStep> kTutorialSteps = [
     titleEn: 'Reward Draft',
     titleFr: 'Le Draft de Récompenses',
     bodyEn:
-        'When you level up, you draft a reward! A selection of options is presented, which include permanent hero stat upgrades (+Max HP, +Atk, etc.) or card cloning (Mirror). Try selecting an option in the draft below.',
+        'Each level grants a draft. Three options are rolled from six kinds — '
+        'Vitality, Sharpening, Steel Forge, Wisdom, Precision, Ferocity — and '
+        'up to two **Mythic** options can appear on top: the Four-Leaf Clover '
+        'and the Mirror.\n\n'
+        'Rarity decides how much you get. Luck raises your odds on every roll, '
+        'which makes the Clover the option that improves all the others.\n\n'
+        'Careful with Steel Forge: it grants **Armor Mastery**, added to the '
+        'Armor your passive and relics produce — not a flat block of Armor.',
     bodyFr:
-        'À chaque niveau gagné, vous draftez une récompense ! Une sélection d\'options s\'affiche : vous pouvez choisir des améliorations de statistiques permanentes pour votre héros (+PV Max, +Atk, etc.) ou le clonage de cartes (Miroir). Essayez de sélectionner une option ci-dessous.',
+        'Chaque niveau donne droit à un draft. Trois options sont tirées parmi '
+        'six types — Vitalité, Aiguisage, Forge d\'Acier, Sagesse, Précision, '
+        'Férocité — et jusqu\'à deux options **Mythiques** peuvent s\'y ajouter : '
+        'le Trèfle à 4 feuilles et le Miroir.\n\n'
+        'La rareté décide de l\'ampleur du gain. La Chance améliore vos '
+        'probabilités à chaque tirage, ce qui fait du Trèfle l\'option qui '
+        'améliore toutes les autres.\n\n'
+        'Attention à la Forge d\'Acier : elle donne de la **Maîtrise d\'Armure**, '
+        'ajoutée à l\'Armure que produisent votre passif et vos reliques — pas '
+        'un bloc d\'Armure directe.',
     type: TutorialStepType.draft,
   ),
   TutorialStep(
