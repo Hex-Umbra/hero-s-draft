@@ -252,4 +252,69 @@ void main() {
       expect(notifications, 1);
     });
   });
+
+  group('Fin de tour', () {
+    test('finir le tour avec du mana exige une seconde confirmation', () {
+      engine.seedEnemy();
+      engine.seedHand([TutorialFixtureIds.strike]);
+      engine.setMana(3);
+
+      expect(engine.endTurn(), isFalse);
+      expect(engine.manaWarningPending, isTrue);
+
+      expect(engine.endTurn(), isTrue);
+    });
+
+    test('sans mana restant, le tour se termine du premier coup', () {
+      engine.seedEnemy();
+      engine.setMana(0);
+
+      expect(engine.endTurn(), isTrue);
+      expect(engine.manaWarningPending, isFalse);
+    });
+
+    test('jouer une carte annule la confirmation en attente', () {
+      engine.seedEnemy();
+      engine.seedHand([TutorialFixtureIds.strike]);
+      engine.setMana(3);
+      engine.endTurn();
+      expect(engine.manaWarningPending, isTrue);
+
+      engine.playCard(engine.mockState.hand.first);
+
+      expect(engine.manaWarningPending, isFalse);
+    });
+
+    test('le nouveau tour remet l\'armure à zéro et le mana au max', () {
+      engine.seedEnemy();
+      engine.setHeroArmor(7);
+      engine.setMana(0);
+
+      engine.endTurn();
+
+      expect(engine.mockState.heroStats.armure, 0);
+      expect(
+        engine.mockState.heroStats.currentMana,
+        engine.mockState.heroStats.maxMana,
+      );
+    });
+
+    test('finir le tour ne re-verrouille pas l\'étape', () {
+      // Régression : la complétion lisait `heroStats.armure`, que `endTurn`
+      // remet à 0 — le joueur restait bloqué sur l'étape.
+      engine.seedEnemy();
+      engine.setHeroArmor(4);
+      expect(engine.armorGainedThisStep, isTrue);
+
+      engine.setMana(0);
+      engine.endTurn();
+
+      expect(engine.mockState.heroStats.armure, 0);
+      expect(engine.armorGainedThisStep, isTrue);
+    });
+
+    // Le cas "changer d'étape réarme le drapeau d'armure" est déjà couvert
+    // par le groupe "Réarmement de armorGainedThisStep" ci-dessus (Task 4) :
+    // pas de doublon ici.
+  });
 }

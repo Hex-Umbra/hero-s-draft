@@ -68,7 +68,7 @@ class _TutorialScreenState extends State<TutorialScreen> {
         final enemy = engine.mockState.enemy;
         return enemy != null &&
             enemy.stats.currentPv < enemy.stats.maxPv &&
-            engine.mockState.heroStats.armure > 0;
+            engine.armorGainedThisStep;
       case TutorialStepType.merge:
         return engine.mockState.hand.length == 1 &&
             engine.mockState.hand.first.rarity != CardRarity.common;

@@ -254,6 +254,8 @@ class TutorialEngine extends ChangeNotifier {
   bool playCard(CardInstance card) {
     if (mockState.heroStats.currentMana < card.currentCost) return false;
 
+    _manaWarningPending = false;
+
     mockState.heroStats = mockState.heroStats.copyWith(
       currentMana: mockState.heroStats.currentMana - card.currentCost,
     );
@@ -309,5 +311,28 @@ class TutorialEngine extends ChangeNotifier {
       mockState.playerXp = mockState.playerXp - mockState.xpToNextLevel;
     }
     notifyListeners();
+  }
+
+  bool _manaWarningPending = false;
+
+  bool get manaWarningPending => _manaWarningPending;
+
+  /// Reproduit la double confirmation du jeu : terminer le tour avec du mana
+  /// restant demande deux clics. Le second tour ouvre avec l'armure remise à
+  /// zéro et le mana au maximum, comme `RunController.startTurn()`.
+  bool endTurn() {
+    if (mockState.heroStats.currentMana > 0 && !_manaWarningPending) {
+      _manaWarningPending = true;
+      notifyListeners();
+      return false;
+    }
+
+    _manaWarningPending = false;
+    mockState.heroStats = mockState.heroStats.copyWith(
+      armure: 0,
+      currentMana: mockState.heroStats.maxMana,
+    );
+    notifyListeners();
+    return true;
   }
 }

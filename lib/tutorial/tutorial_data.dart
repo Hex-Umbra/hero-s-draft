@@ -100,12 +100,27 @@ const List<TutorialStep> kTutorialSteps = [
     type: TutorialStepType.cards,
   ),
   TutorialStep(
-    titleEn: 'Playing Cards',
-    titleFr: 'Jouer des cartes',
+    titleEn: 'Playing Cards & Ending the Turn',
+    titleFr: 'Jouer des cartes & finir le tour',
     bodyEn:
-        'Let\'s try playing cards! Select the "Basic Strike" card by tapping it, then tap the Slime enemy to attack it. Next, select the "Defend" card and tap your Hero (the HP/Mana bar) to gain armor. Remember, cards apply their effects immediately.',
+        'A turn draws 5 cards. To play one, **drag it onto its target**: an '
+        'enemy for attacks, your Hero card in the centre for cards that '
+        'affect you. Dragging a card to the bottom of the screen cancels it.\n\n'
+        'You can also tap a card to raise it, then tap its target.\n\n'
+        'When you end your turn, any leftover Mana triggers a warning — a '
+        'second click confirms. Your hand is discarded, the enemy acts, and '
+        'your next turn opens with your Armor back to 0 and your Mana refilled.',
     bodyFr:
-        'Essayons de jouer des cartes ! Sélectionnez la carte "Frappe Basique" en appuyant dessus, puis touchez le Slime pour l\'attaquer. Ensuite, sélectionnez la carte "Défense" et touchez votre Héros (la barre de PV/Mana) pour gagner de l\'armure. Les cartes appliquent leurs effets immédiatement.',
+        'Un tour pioche 5 cartes. Pour en jouer une, **glissez-la sur sa '
+        'cible** : un ennemi pour les attaques, votre carte Héros au centre '
+        'pour les cartes qui vous visent. Relâcher la carte en bas de l\'écran '
+        'l\'annule.\n\n'
+        'Vous pouvez aussi appuyer sur une carte pour la relever, puis appuyer '
+        'sur sa cible.\n\n'
+        'Quand vous finissez votre tour, le mana restant déclenche un '
+        'avertissement — un second clic confirme. Votre main est défaussée, '
+        'l\'ennemi agit, puis votre tour suivant s\'ouvre avec votre Armure '
+        'remise à 0 et votre Mana refait.',
     type: TutorialStepType.playCard,
   ),
   TutorialStep(
