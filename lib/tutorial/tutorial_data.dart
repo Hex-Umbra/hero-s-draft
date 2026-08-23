@@ -167,17 +167,24 @@ const List<TutorialStep> kTutorialSteps = [
     titleEn: 'Elemental Effects',
     titleFr: 'Les Effets Élémentaires',
     bodyEn:
-        'Certain cards apply elemental statuses to enemies:\n'
-        '• 🟢 Poison: Deals damage at the start of their turn, decreasing by 1.\n'
-        '• 🔥 Burn: Deals damage at the end of their turn, decreasing by half.\n'
-        '• ❄️ Chill: Reduces the enemy\'s next attack damage.\n'
-        '• ⚡ Shock: Increases the damage the enemy takes from your next attack.',
+        'Some cards apply status effects to enemies:\n'
+        '• 🧪 Poison: damage equal to its value at the start of their turn. '
+        'The value never drops — only the duration ticks down.\n'
+        '• 🔥 Burn: damage at the start of their turn, then the value drops by 1. '
+        'It vanishes when it reaches 0.\n'
+        '• ❄️ Freeze: halves their next attack. The duration only ticks down '
+        'once they have attacked.\n'
+        '• ⚡ Shock: adds its value to **every** hit they take while it lasts.',
     bodyFr:
-        'Certaines cartes appliquent des effets élémentaires aux ennemis :\n'
-        '• 🟢 Poison : Inflige des dégâts au début de leur tour, diminue de 1.\n'
-        '• 🔥 Brûlure : Inflige des dégâts à la fin de leur tour, diminue de moitié.\n'
-        '• ❄️ Gel : Réduit les dégâts de la prochaine attaque de l\'ennemi.\n'
-        '• ⚡ Foudre : Augmente les dégâts subis par l\'ennemi lors de votre prochaine attaque.',
+        'Certaines cartes appliquent des altérations aux ennemis :\n'
+        '• 🧪 Poison : inflige sa valeur en dégâts au début de leur tour. '
+        'La valeur ne baisse jamais — seule la durée décrémente.\n'
+        '• 🔥 Brûlure : inflige des dégâts au début de leur tour, puis la valeur '
+        'perd 1. Elle disparaît en atteignant 0.\n'
+        '• ❄️ Gel : divise par deux leur prochaine attaque. La durée ne '
+        'décrémente qu\'une fois qu\'ils ont attaqué.\n'
+        '• ⚡ Électrocution : ajoute sa valeur à **chaque** coup qu\'ils '
+        'subissent tant qu\'elle dure.',
     type: TutorialStepType.elements,
   ),
   TutorialStep(
