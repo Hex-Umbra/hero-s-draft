@@ -1,4 +1,4 @@
-<!-- last-sync: 2026-08-23 | commit: 008b7d4 -->
+<!-- last-sync: 2026-08-23 | commit: 3045971 -->
 
 # 🧠 Contexte Actuel
 
@@ -10,7 +10,10 @@
 **P-04 et P-45 sont clos.** Publier une version se réduit désormais à poser un tag `v*.*.*`,
 **mais seulement après** que le skill `patch-notes-writer` a déplacé ensemble les trois
 fichiers qui portent le numéro : sinon `verify-version` échoue avant le moindre build. Ce
-n'est pas une panne, c'est le garde-fou.
+n'est pas une panne, c'est le garde-fou. Depuis le 2026-08-23, le titre cliquable de
+l'annonce Discord mène au **site vitrine** et non plus au build jouable — cliquer un titre
+est un geste de curiosité, pas une intention de lancer une partie. Le champ « Jouer » reste,
+lui, la porte d'entrée du jeu.
 
 Le Jalon 1 « Socle » n'a plus qu'un chantier ouvert : **P-03 (audio)** — le plus gros gain
 de game feel par heure investie du projet selon l'audit du 25/07. Son chemin critique est
@@ -46,8 +49,15 @@ Quatre réserves à ne pas perdre de vue :
    ajoutés en amont, verrouillés une fois franchis). Correctif d'affichage inclus : la
    légende de la carte du monde annonçait « Boss (XP & Or x2) », le jeu applique `×3`
    depuis longtemps — seul l'affichage a changé. Voir
-   [ADR-081](../_adr/ADR-081-amendement-autonomie-tutoriel-zero-provider-etat.md) et
-   [`_rules/08-00`](../_rules/08-00-systeme-de-tutoriel-autonome.md).
+   [ADR-081](../_adr/ADR-081-amendement-autonomie-tutoriel-zero-provider-etat.md),
+   [`_rules/08-00`](../_rules/08-00-systeme-de-tutoriel-autonome.md) et
+   [`_patterns/09-00`](../_patterns/09-00-architecture-du-systeme-de-tutoriel-autonome.md).
+   **Deux correctifs de jeu sans rapport ont rejoint le même tag par la PR #28, et la note
+   joueur `0.4.9` ne les décrit pas** : le panneau d'intentions ennemies débordait de sa
+   largeur fixe et peignait la bande d'erreur en plein HUD, et la Forge d'Acier légendaire
+   rendait +1 Maîtrise d'Armure — la valeur d'un commun — au lieu de +7. La table des 30
+   valeurs de récompense, dont l'absence avait laissé le trou invisible, est désormais
+   écrite dans [`_rules/06-00`](../_rules/06-00-economie-de-jeu.md).
 2. **CI/CD et site vitrine — P-04** (2026-08-17 → 2026-08-20, publié en `0.4.8`) — livré en
    deux lots, **sans toucher au jeu** : aucun fichier de `lib/`, `test/` ou `assets/` n'a
    changé. *Lot 1* : trois workflows GitHub Actions, publication déclenchée par tag,
