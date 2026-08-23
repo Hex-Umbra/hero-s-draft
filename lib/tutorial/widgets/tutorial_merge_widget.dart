@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:roguelike_card_game/l10n/app_localizations.dart';
+
+import '../../ui/widgets/ui_card.dart';
 import '../tutorial_engine.dart';
-import 'tutorial_cards_widget.dart'; // Reuses TutorialUiCard
 
 class TutorialMergeWidget extends StatefulWidget {
   final TutorialEngine engine;
@@ -67,6 +69,9 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
   @override
   Widget build(BuildContext context) {
     final isFrench = Localizations.localeOf(context).languageCode == 'fr';
+    final locale = isFrench ? 'fr' : 'en';
+    final l10n = AppLocalizations.of(context)!;
+    final hand = widget.engine.mockState.hand;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -103,14 +108,10 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
                             opacity: (1.0 - _controller.value * 0.5).clamp(0.0, 1.0),
                             child: SizedBox(
                               width: cardWidth,
-                              child: const TutorialUiCard(
-                                title: 'Frappe',
-                                description: 'Lvl 1',
-                                cost: 1,
-                                type: 'attack',
-                                isSelected: false,
-                                damage: 6,
-                                onTap: _dummyTap,
+                              child: UiCard.fromInstance(
+                                card: hand[0],
+                                locale: locale,
+                                l10n: l10n,
                               ),
                             ),
                           ),
@@ -132,14 +133,10 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
                             opacity: (1.0 - _controller.value * 0.5).clamp(0.0, 1.0),
                             child: SizedBox(
                               width: cardWidth,
-                              child: const TutorialUiCard(
-                                title: 'Frappe',
-                                description: 'Lvl 1',
-                                cost: 1,
-                                type: 'attack',
-                                isSelected: false,
-                                damage: 6,
-                                onTap: _dummyTap,
+                              child: UiCard.fromInstance(
+                                card: hand[1],
+                                locale: locale,
+                                l10n: l10n,
                               ),
                             ),
                           ),
@@ -150,14 +147,10 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
                           opacity: (1.0 - _controller.value * 0.2).clamp(0.0, 1.0),
                           child: SizedBox(
                             width: cardWidth,
-                            child: const TutorialUiCard(
-                              title: 'Frappe',
-                              description: 'Lvl 1',
-                              cost: 1,
-                              type: 'attack',
-                              isSelected: false,
-                              damage: 6,
-                              onTap: _dummyTap,
+                            child: UiCard.fromInstance(
+                              card: hand[2],
+                              locale: locale,
+                              l10n: l10n,
                             ),
                           ),
                         ),
@@ -183,16 +176,11 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
                               ],
                             ),
                             width: cardWidth * 1.1,
-                            child: TutorialUiCard(
-                              title: isFrench ? 'Frappe Niv.2' : 'Strike Lvl 2',
-                              description: isFrench
-                                  ? 'Inflige 9 dégâts.'
-                                  : 'Deals 9 damage.',
-                              cost: 1,
-                              type: 'attack',
+                            child: UiCard.fromInstance(
+                              card: hand.first,
+                              locale: locale,
+                              l10n: l10n,
                               isSelected: true,
-                              damage: 9,
-                              onTap: _dummyTap,
                             ),
                           ),
                         ),
@@ -261,6 +249,4 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
       },
     );
   }
-
-  static void _dummyTap() {}
 }

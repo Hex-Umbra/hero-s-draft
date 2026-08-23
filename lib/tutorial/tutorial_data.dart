@@ -90,13 +90,29 @@ const List<TutorialStep> kTutorialSteps = [
     titleEn: 'Cards & Mana',
     titleFr: 'Les Cartes & le Mana',
     bodyEn:
-        'To play cards, you must spend Mana crystals (💎). Each card has a cost shown as cyan diamonds at the bottom.\n\n'
-        '• **Card Display**: Cards do not show text descriptions inside. Instead, they feature icons representing their effects (e.g. ⚔️ for damage, 🛡️ for armor) with their numeric values.\n'
-        '• **Tooltips**: To read a card\'s detailed description, hover over it with your mouse (on Desktop) or long-press it (on Mobile) to display a Tooltip.',
+        'Playing a card costs Mana. The cost sits in the **round cyan medallion '
+        'at the top-left corner** of the card.\n\n'
+        '• **Card body**: icons and numbers, not sentences — a sword for damage, '
+        'a shield for Armor, and so on.\n'
+        '• **Full description**: **tap** the card. It rises, its description '
+        'panel opens, and every valid target lights up. Hovering only enlarges it.\n'
+        '• **Three types**: Attack, Skill and Power. A Power is exiled once '
+        'played — it will not come back this combat.\n\n'
+        'The damage printed on a card is not the final number: your Hero\'s '
+        'Attack stat is added on top, and rarity multiplies the base value.',
     bodyFr:
-        'Pour jouer des cartes, vous devez dépenser des cristaux de Mana (💎). Chaque carte a un coût affiché sous forme de diamants cyan en bas.\n\n'
-        '• **Affichage des cartes** : Les cartes n\'affichent pas de texte explicatif. À la place, elles présentent des icônes représentant leurs effets (ex : ⚔️ pour les dégâts, 🛡️ pour l\'armure) avec leurs valeurs.\n'
-        '• **Tooltips** : Pour lire la description détaillée d\'une carte, survolez-la avec votre souris (sur Ordinateur) ou restez appuyé dessus (sur Mobile) pour faire apparaître une bulle d\'aide.',
+        'Jouer une carte coûte du Mana. Le coût est inscrit dans le **médaillon '
+        'rond cyan en haut à gauche** de la carte.\n\n'
+        '• **Corps de la carte** : des icônes et des chiffres, pas des phrases — '
+        'une épée pour les dégâts, un bouclier pour l\'Armure, etc.\n'
+        '• **Description complète** : **appuyez** sur la carte. Elle se relève, '
+        'son panneau de description s\'ouvre et les cibles valides s\'illuminent. '
+        'Le survol ne fait que l\'agrandir.\n'
+        '• **Trois types** : Attaque, Compétence et Pouvoir. Un Pouvoir joué part '
+        'à l\'exil — il ne reviendra pas de ce combat.\n\n'
+        'Les dégâts imprimés sur une carte ne sont pas le chiffre final : '
+        'l\'Attaque de votre héros s\'y ajoute, et la rareté multiplie la valeur '
+        'de base.',
     type: TutorialStepType.cards,
   ),
   TutorialStep(
