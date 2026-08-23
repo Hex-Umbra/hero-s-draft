@@ -120,11 +120,30 @@ class LevelUpRewardService {
         rarity = rollRarity(luck, canBeLegendary: true, isLevelReward: false);
       }
 
-      double multiplier = 1.0;
-      if (rarity == RewardRarity.uncommon) multiplier = 1.5;
-      if (rarity == RewardRarity.rare) multiplier = 2.0;
-      if (rarity == RewardRarity.epic) multiplier = 3.0;
-      if (rarity == RewardRarity.legendary) multiplier = 4.0;
+      // Un `switch` exhaustif, pas une cascade de `if` : l'analyseur refuse
+      // alors tout palier de rarete oublie. C'est precisement une cascade de
+      // `if` qui avait laisse passer l'absence du palier legendaire sur la
+      // Maitrise d'Armure ci-dessous, ou un legendaire retombait sur la
+      // valeur d'un commun.
+      //
+      // `mythic` est inatteignable ici — `rollRarity` ne le rend que pour
+      // `isLevelReward: true`, et les deux options mythiques (Trefle, Miroir)
+      // sont construites a part, sans passer par ce multiplicateur. On le
+      // groupe avec `legendary` pour rester exhaustif sans inventer un palier.
+      final double multiplier;
+      switch (rarity) {
+        case RewardRarity.common:
+          multiplier = 1.0;
+        case RewardRarity.uncommon:
+          multiplier = 1.5;
+        case RewardRarity.rare:
+          multiplier = 2.0;
+        case RewardRarity.epic:
+          multiplier = 3.0;
+        case RewardRarity.legendary:
+        case RewardRarity.mythic:
+          multiplier = 4.0;
+      }
 
       int type = rng.nextInt(6);
       if (type == 0) {
@@ -144,11 +163,24 @@ class LevelUpRewardService {
         );
       }
       if (type == 2) {
-        double masteryMultiplier = 1.0;
-        if (rarity == RewardRarity.uncommon) masteryMultiplier = 2.0;
-        if (rarity == RewardRarity.rare) masteryMultiplier = 3.0;
-        if (rarity == RewardRarity.epic) masteryMultiplier = 5.0;
-        int boost = (1 * masteryMultiplier).round();
+        // La Maitrise d'Armure a sa propre courbe : elle s'ajoute a *chaque*
+        // gain d'armure du passif, donc a chaque tour pour le Paladin mais a
+        // chaque Competence jouee pour le Mage. Elle compose plus fort que
+        // les autres recompenses, d'ou une progression distincte.
+        final int boost;
+        switch (rarity) {
+          case RewardRarity.common:
+            boost = 1;
+          case RewardRarity.uncommon:
+            boost = 2;
+          case RewardRarity.rare:
+            boost = 3;
+          case RewardRarity.epic:
+            boost = 5;
+          case RewardRarity.legendary:
+          case RewardRarity.mythic:
+            boost = 7;
+        }
         return DraftChoice(
           type: LevelUpRewardType.steelForge,
           armorBoost: boost,
