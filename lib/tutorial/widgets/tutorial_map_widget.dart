@@ -170,8 +170,8 @@ class _TutorialMapWidgetState extends State<TutorialMapWidget> {
                               ),
                               child: Text(
                                 isFrench
-                                    ? '💡 Touchez un nœud pour voir l\'effet'
-                                    : '💡 Tap a node to inspect its effect',
+                                    ? '💡 Touchez un nœud pour vous y engager'
+                                    : '💡 Tap a node to commit to it',
                                 style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
                               ),
                             ),
