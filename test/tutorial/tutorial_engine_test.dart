@@ -228,6 +228,103 @@ void main() {
       engine.nextStep();
       expect(engine.mockState.enemy, isNull);
     });
+
+    test(
+      'changer de classe après un draft vide le deck de l\'ancienne classe',
+      () {
+        // Régression : Paladin choisi, 5 cartes draftées (masterDeck à 7),
+        // Précédent jusqu'à l'étape 02 puis Mage sélectionné. `chooseHero`
+        // réécrivait `chosenHero`/`activePassive`/`heroStats` mais jamais
+        // `masterDeck` : l'écran de draft, remonté à neuf par la `PageView`,
+        // affichait 0/5 pour le Mage pendant que SUIVANT restait actif
+        // (masterDeck.isNotEmpty lisait encore les cartes du Paladin).
+        final paladin = engine.fixtures.heroes.firstWhere((h) => h.id == 'paladin');
+        final mage = engine.fixtures.heroes.firstWhere((h) => h.id == 'mage');
+
+        engine.chooseHero(paladin);
+        final pool = engine.fixtures.starterPool.take(5).toList();
+        engine.setStarterDeck(pool);
+        expect(engine.mockState.masterDeck, hasLength(5 + paladin.skills.length));
+
+        engine.chooseHero(mage);
+
+        expect(engine.mockState.masterDeck, isEmpty);
+        expect(engine.mockState.chosenHero?.id, 'mage');
+      },
+    );
+  });
+
+  group('Semis des étapes Fusion et Jouer des cartes depuis le deck', () {
+    test(
+      'la Fusion sème 3 exemplaires d\'une carte non-unique du deck, en écartant les cartes de classe',
+      () {
+        final paladin = engine.fixtures.heroes.firstWhere((h) => h.id == 'paladin');
+        engine.chooseHero(paladin);
+        engine.setStarterDeck([engine.fixtures.card('heavy_strike')]);
+        // Les cartes de classe (uniques) du Paladin précèdent la carte
+        // choisie dans `masterDeck` : le test n'a de sens que si elles sont
+        // bien écartées plutôt que ramassées en premier.
+        expect(engine.mockState.masterDeck.first.rarity, CardRarity.unique);
+
+        engine.prepareStep(11); // étape "La Fusion de Cartes"
+
+        expect(engine.mockState.hand, hasLength(3));
+        expect(
+          engine.mockState.hand.every((c) => c.data.id == 'heavy_strike'),
+          isTrue,
+        );
+        expect(
+          engine.mockState.hand.every((c) => c.rarity == CardRarity.common),
+          isTrue,
+        );
+      },
+    );
+
+    test('la Fusion se replie sur les fixtures si le deck est vide (étape 03 sautée)', () {
+      expect(engine.mockState.masterDeck, isEmpty);
+
+      engine.prepareStep(11);
+
+      expect(engine.mockState.hand, hasLength(3));
+      expect(
+        engine.mockState.hand.every((c) => c.data.id == TutorialFixtureIds.strike),
+        isTrue,
+      );
+    });
+
+    test(
+      'Jouer des cartes sème l\'attaque et la compétence d\'armure du deck quand elles y sont',
+      () {
+        engine.setStarterDeck([
+          engine.fixtures.card('heavy_strike'), // attaque, cible singleEnemy
+          engine.fixtures.card('iron_wall'), // compétence, cible self, armure
+        ]);
+
+        engine.prepareStep(7); // étape "Jouer des cartes & finir le tour"
+
+        expect(engine.mockState.hand, hasLength(2));
+        expect(engine.mockState.hand[0].data.id, 'heavy_strike');
+        expect(engine.mockState.hand[1].data.id, 'iron_wall');
+      },
+    );
+
+    test(
+      'Jouer des cartes se replie sur les fixtures si le deck ne fournit pas les deux gestes',
+      () {
+        // Le pool interdit les doublons et rien n'oblige à drafter Frappe ou
+        // Défense : `concentration` (Compétence, pioche 2, sans Armure) ne
+        // couvre ni le geste d'attaque ni le geste d'Armure.
+        engine.setStarterDeck([engine.fixtures.card('concentration')]);
+
+        engine.prepareStep(7);
+
+        expect(engine.mockState.hand, hasLength(2));
+        expect(
+          engine.mockState.hand.map((c) => c.data.id).toList(),
+          [TutorialFixtureIds.strike, TutorialFixtureIds.defend],
+        );
+      },
+    );
   });
 
   group('Verrou des étapes d\'amont', () {

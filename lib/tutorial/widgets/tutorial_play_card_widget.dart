@@ -6,7 +6,6 @@ import '../../models/data/card_data.dart';
 import '../../models/enemy_instance.dart';
 import '../../ui/widgets/ui_card.dart';
 import '../tutorial_engine.dart';
-import '../tutorial_fixtures.dart';
 
 /// Valeur d'effet réelle (dégâts ou armure) utilisée pour le texte flottant
 /// déclenché par le chemin tap-puis-tap ; applique le multiplicateur de
@@ -165,7 +164,7 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
                 return;
               }
 
-              if (_selectedCard!.data.id == TutorialFixtureIds.strike) {
+              if (_selectedCard!.data.type == CardType.attack) {
                 final damage = _effectValue(_selectedCard!, 'damage');
                 final success = widget.engine.playCard(_selectedCard!);
                 if (success) {
@@ -174,13 +173,13 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
                     _selectedCard = null;
                   });
                 }
-              } else if (_selectedCard!.data.id == TutorialFixtureIds.defend) {
+              } else if (_selectedCard!.data.type == CardType.skill) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
                       isFrench
-                          ? 'La Défense doit être jouée sur vous-même ! Touchez votre carte Héros.'
-                          : 'Defense must be played on yourself! Tap your Hero card.',
+                          ? 'Cette carte doit être jouée sur vous-même ! Touchez votre carte Héros.'
+                          : 'This card must be played on yourself! Tap your Hero card.',
                     ),
                     duration: const Duration(seconds: 2),
                   ),
@@ -198,14 +197,13 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
                   shape: BoxShape.circle,
                   color:
                       (_selectedCard != null &&
-                          _selectedCard!.data.id == TutorialFixtureIds.strike)
+                          _selectedCard!.data.type == CardType.attack)
                       ? Colors.redAccent.withValues(alpha: 0.08)
                       : Colors.transparent,
                   border: Border.all(
                     color:
                         (_selectedCard != null &&
-                            _selectedCard!.data.id ==
-                                TutorialFixtureIds.strike)
+                            _selectedCard!.data.type == CardType.attack)
                         ? Colors.redAccent.withValues(alpha: 0.3)
                         : Colors.transparent,
                     width: 2 * scale,
@@ -316,8 +314,8 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
   /// explicitement libellée, au centre du plateau sous l'ennemi.
   Widget _buildHeroZone(double scale, bool isFrench) {
     final heroStats = widget.engine.mockState.heroStats;
-    final isDefendSelected =
-        _selectedCard != null && _selectedCard!.data.id == TutorialFixtureIds.defend;
+    final isArmorCardSelected =
+        _selectedCard != null && _selectedCard!.data.type == CardType.skill;
 
     return _dropTarget(
       accepts: (card) => card.data.target == CardTarget.self,
@@ -338,7 +336,7 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
             return;
           }
 
-          if (_selectedCard!.data.id == TutorialFixtureIds.defend) {
+          if (_selectedCard!.data.type == CardType.skill) {
             final armor = _effectValue(_selectedCard!, 'armor');
             final success = widget.engine.playCard(_selectedCard!);
             if (success) {
@@ -347,7 +345,7 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
                 _selectedCard = null;
               });
             }
-          } else if (_selectedCard!.data.id == TutorialFixtureIds.strike) {
+          } else if (_selectedCard!.data.type == CardType.attack) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
@@ -375,7 +373,7 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
               color: const Color(0xFF1E293B).withValues(alpha: 0.4),
               borderRadius: BorderRadius.circular(12 * scale),
               border: Border.all(
-                color: isDefendSelected
+                color: isArmorCardSelected
                     ? Colors.cyanAccent.withValues(alpha: 0.5)
                     : Colors.amber.withValues(alpha: 0.25),
                 width: 1.5 * scale,
@@ -483,25 +481,33 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
     );
   }
 
-  /// Consigne au-dessus de la main : nomme la vraie carte à jouer, en
-  /// dérivant son titre de `card.data.getName`, jamais d'une valeur en dur.
+  /// Consigne au-dessus de la main : nomme la vraie carte à jouer, en la
+  /// cherchant par type dans la main courante plutôt que par id de fixture —
+  /// la main peut désormais venir du deck du joueur (voir
+  /// `TutorialEngine.prepareStep`). Chaque phase ne cherche que la carte
+  /// qu'elle sait présente : l'attaque en phase 1 (pas encore jouée), la
+  /// compétence en phase 2 (l'attaque a déjà quitté la main).
   String _handHint(EnemyInstance? enemy, bool isFrench, String locale) {
-    final strikeName = widget.engine.fixtures
-        .card(TutorialFixtureIds.strike)
-        .getName(locale);
-    final defendName = widget.engine.fixtures
-        .card(TutorialFixtureIds.defend)
-        .getName(locale);
-
+    final hand = widget.engine.mockState.hand;
     final isPhaseOne = enemy == null || enemy.stats.currentPv == enemy.stats.maxPv;
+
     if (isPhaseOne) {
+      final attackName = hand
+          .firstWhere((c) => c.data.type == CardType.attack)
+          .data
+          .getName(locale);
       return isFrench
-          ? "Étape 1 : glissez ou touchez '$strikeName' sur le Slime."
-          : "Step 1: drag or tap '$strikeName' onto the Slime.";
+          ? "Étape 1 : glissez ou touchez '$attackName' sur le Slime."
+          : "Step 1: drag or tap '$attackName' onto the Slime.";
     }
+
+    final armorName = hand
+        .firstWhere((c) => c.data.type == CardType.skill)
+        .data
+        .getName(locale);
     return isFrench
-        ? "Étape 2 : glissez ou touchez '$defendName' sur votre carte Héros."
-        : "Step 2: drag or tap '$defendName' onto your Hero card.";
+        ? "Étape 2 : glissez ou touchez '$armorName' sur votre carte Héros."
+        : "Step 2: drag or tap '$armorName' onto your Hero card.";
   }
 
   Widget _buildHandZone(
@@ -514,13 +520,13 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
     final enemy = widget.engine.mockState.enemy;
 
     // Filter hand in two phases to guide the player:
-    // Phase 1 (slime has full HP): show only Strike to target the enemy.
-    // Phase 2 (slime took damage): show only Defend to target the hero.
+    // Phase 1 (slime has full HP): show only the attack card, to target the enemy.
+    // Phase 2 (slime took damage): show only the armor skill, to target the hero.
     final displayedHand = hand.where((card) {
       if (enemy != null && enemy.stats.currentPv == enemy.stats.maxPv) {
-        return card.data.id == TutorialFixtureIds.strike;
+        return card.data.type == CardType.attack;
       } else {
-        return card.data.id == TutorialFixtureIds.defend;
+        return card.data.type == CardType.skill;
       }
     }).toList();
 

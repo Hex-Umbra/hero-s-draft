@@ -121,6 +121,13 @@ class TutorialEngine extends ChangeNotifier {
     mockState.chosenHero = hero;
     mockState.activePassive = fixtures.passiveFor(hero);
     mockState.heroStats = mockState.baseStatsForHero();
+    // Régression : revenir choisir une autre classe après avoir drafté un
+    // deck laissait `masterDeck` intact. `_isStepActionComplete` ne lit que
+    // `masterDeck.isNotEmpty` pour déverrouiller SUIVANT à l'étape 03, donc
+    // le bouton restait actif avec les cartes de l'ancienne classe alors que
+    // l'écran de draft, remonté à neuf par la `PageView`, affichait 0/5 pour
+    // la nouvelle.
+    mockState.masterDeck = [];
     notifyListeners();
   }
 
@@ -173,17 +180,13 @@ class TutorialEngine extends ChangeNotifier {
         break;
       case TutorialStepType.playCard:
         _seedEnemy();
-        _seedHand([TutorialFixtureIds.strike, TutorialFixtureIds.defend]);
+        _seedPlayCardHand();
         break;
       case TutorialStepType.armorDamage:
         _seedEnemy();
         break;
       case TutorialStepType.merge:
-        _seedHand([
-          TutorialFixtureIds.strike,
-          TutorialFixtureIds.strike,
-          TutorialFixtureIds.strike,
-        ]);
+        _seedMergeHand();
         break;
       case TutorialStepType.draft:
         mockState.playerLevel = 2;
@@ -206,6 +209,42 @@ class TutorialEngine extends ChangeNotifier {
         .map((id) => CardInstance(data: fixtures.card(id)))
         .toList();
   }
+
+  /// Sème la main de l'étape « Jouer des cartes & finir le tour » : une
+  /// attaque du deck du joueur qui cible un ennemi, et une compétence du même
+  /// deck qui donne de l'Armure — les deux gestes que la leçon enseigne, et
+  /// les deux seuls que `TutorialPlayCardWidget` sait accepter en
+  /// glisser-déposer (zone ennemie : `singleEnemy` ; zone Héros : `self`).
+  /// Repli sur les fixtures si le deck n'en contient pas un de chaque : le
+  /// pool de départ interdit les doublons, rien n'oblige à drafter Frappe ou
+  /// Défense, et l'étape 03 a pu être sautée (deck vide).
+  void _seedPlayCardHand() {
+    CardData? attack;
+    CardData? armorSkill;
+    for (final instance in mockState.masterDeck) {
+      final data = instance.data;
+      attack ??= _isEnemyTargetingAttack(data) ? data : null;
+      armorSkill ??= _isArmorGivingSkill(data) ? data : null;
+    }
+
+    if (attack == null || armorSkill == null) {
+      _seedHand([TutorialFixtureIds.strike, TutorialFixtureIds.defend]);
+      return;
+    }
+
+    mockState.hand = [
+      CardInstance(data: attack),
+      CardInstance(data: armorSkill),
+    ];
+  }
+
+  bool _isEnemyTargetingAttack(CardData data) =>
+      data.type == CardType.attack && data.target == CardTarget.singleEnemy;
+
+  bool _isArmorGivingSkill(CardData data) =>
+      data.type == CardType.skill &&
+      data.target == CardTarget.self &&
+      data.effects.any((e) => e.type == 'armor');
 
   /// Place l'ennemi d'entraînement, intention comprise.
   void seedEnemy() {
@@ -309,6 +348,39 @@ class TutorialEngine extends ChangeNotifier {
 
     notifyListeners();
     return true;
+  }
+
+  /// Sème la main de l'étape Fusion : trois copies d'une carte du deck du
+  /// joueur, en excluant les cartes de classe (rareté `unique`, qui ne
+  /// fusionnent jamais — l'étape l'enseigne elle-même). Repli sur les
+  /// fixtures si le deck est vide ou n'en contient aucune hors classe
+  /// (étape 03 sautée).
+  void _seedMergeHand() {
+    CardData? candidate;
+    for (final instance in mockState.masterDeck) {
+      if (instance.data.rarity != CardRarity.unique) {
+        candidate = instance.data;
+        break;
+      }
+    }
+
+    if (candidate == null) {
+      _seedHand([
+        TutorialFixtureIds.strike,
+        TutorialFixtureIds.strike,
+        TutorialFixtureIds.strike,
+      ]);
+      return;
+    }
+
+    // `candidate` n'est pas promu dans la fermeture ci-dessous (limitation
+    // de l'analyse de flux de Dart à travers les closures) : on le fixe dans
+    // une variable `final` non-nullable.
+    final resolvedCandidate = candidate;
+    mockState.hand = List.generate(
+      3,
+      (_) => CardInstance(data: resolvedCandidate),
+    );
   }
 
   /// Fusionne les 3 exemplaires de la main en une carte de rareté
