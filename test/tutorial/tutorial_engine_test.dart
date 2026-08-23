@@ -275,6 +275,25 @@ void main() {
 
       expect(engine.manaWarningPending, isFalse);
     });
+
+    test('pendingDrafts est réarmé par prepareStep', () {
+      // Régression (ronde de correction 1/5) : `_pendingDrafts` vivait sur
+      // `TutorialEngine`, jamais réarmé par `prepareStep`. L'étape XP exige
+      // `playerLevel > 1` pour être validée, donc la terminer laisse
+      // toujours au moins un draft en attente ; un aller-retour Suivant/
+      // Précédent remettait `playerLevel` à 1 (le bouton de niveau 1
+      // réapparaissait) sans jamais purger l'ancien draft, et regagner un
+      // niveau l'empilait indéfiniment (1, 2, 3...) au lieu de repartir de
+      // zéro comme `playerLevel` lui-même.
+      engine.gainXp(100);
+      expect(engine.pendingDrafts, 1);
+      expect(engine.mockState.playerLevel, 2);
+
+      engine.prepareStep(engine.currentStepIndex);
+
+      expect(engine.pendingDrafts, 0);
+      expect(engine.mockState.playerLevel, 1);
+    });
   });
 
   group('prepareStep et le découplage des notifications', () {

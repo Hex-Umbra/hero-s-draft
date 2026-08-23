@@ -33,6 +33,7 @@ class TutorialMockState {
   int playerXp = 0;
   int xpToNextLevel = 100;
   int playerLevel = 1;
+  int pendingDrafts = 0;
   bool hasDrafted = false;
 
   /// Statistiques de départ dérivées de la classe choisie, ou valeurs de
@@ -69,6 +70,7 @@ class TutorialMockState {
     playerXp = 0;
     xpToNextLevel = 100;
     playerLevel = 1;
+    pendingDrafts = 0;
     hasDrafted = false;
   }
 }
@@ -326,9 +328,12 @@ class TutorialEngine extends ChangeNotifier {
     notifyListeners();
   }
 
-  int _pendingDrafts = 0;
-
-  int get pendingDrafts => _pendingDrafts;
+  /// Vit sur `mockState` (tranche scratch) plutôt que sur `TutorialEngine` :
+  /// `resetScratch()` le réarme ainsi automatiquement à chaque `prepareStep`,
+  /// comme `playerLevel`. Régression (ronde de correction 1/5) : porté par
+  /// l'engine, il survivait à un aller-retour Suivant/Précédent et
+  /// s'empilait indéfiniment à chaque nouveau passage de niveau.
+  int get pendingDrafts => mockState.pendingDrafts;
 
   /// Même formule que `PlayerStatsManager.gainXp` : report de l'excédent et
   /// palier géométrique `100 × 1,5^(niveau-1)`.
@@ -338,17 +343,19 @@ class TutorialEngine extends ChangeNotifier {
     var xp = mockState.playerXp + amount;
     var level = mockState.playerLevel;
     var threshold = mockState.xpToNextLevel;
+    var drafts = mockState.pendingDrafts;
 
     while (xp >= threshold) {
       xp -= threshold;
       level++;
       threshold = (100 * pow(1.5, level - 1)).round();
-      _pendingDrafts++;
+      drafts++;
     }
 
     mockState.playerXp = xp;
     mockState.playerLevel = level;
     mockState.xpToNextLevel = threshold;
+    mockState.pendingDrafts = drafts;
     notifyListeners();
   }
 
