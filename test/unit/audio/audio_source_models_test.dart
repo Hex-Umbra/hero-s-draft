@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
+import 'package:roguelike_card_game/models/data/enemy_data.dart';
+import 'package:roguelike_card_game/models/data/relic_data.dart';
 import 'package:roguelike_card_game/services/audio/audio_source.dart';
 
 void main() {
@@ -42,6 +44,35 @@ void main() {
       });
 
       expect(card.sfx, isNull);
+    });
+
+    test('EnemyData expose sfx comme AudioSource et animation vaut null', () {
+      final enemy = EnemyData.fromJson({
+        'id': 'test_enemy',
+        'maxHp': 10,
+        'baseDamage': 5,
+        'spritePath': 'enemies/test.png',
+        'sfx': 'enemy_attack',
+      });
+
+      expect(enemy, isA<AudioSource>());
+      expect(enemy.sfx, 'enemy_attack');
+      expect(enemy.animation, isNull);
+    });
+
+    test('RelicData expose sfx comme AudioSource et animation vaut null', () {
+      final relic = RelicData.fromJson({
+        'id': 'test_relic',
+        'trigger': 'startOfCombat',
+        'effectType': 'gain_energy',
+        'value': 1,
+        'rarity': 'common',
+        'sfx': 'mana_gain',
+      });
+
+      expect(relic, isA<AudioSource>());
+      expect(relic.sfx, 'mana_gain');
+      expect(relic.animation, isNull);
     });
   });
 }

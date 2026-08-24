@@ -145,7 +145,6 @@ class CardData implements AudioSource {
         'target': target.name,
         if (spritePath != null) 'spritePath': spritePath,
         if (animation != null) 'animation': animation,
-        if (sfx != null) 'sfx': sfx,
         'isExhaust': isExhaust,
         'effects': effects.map((e) => e.toJson()).toList(),
         'baseMaxForgeUpgrades': baseMaxForgeUpgrades,
