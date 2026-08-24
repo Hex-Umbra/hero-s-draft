@@ -56,12 +56,22 @@ void main() {
     });
 
     test('un catalogue desactive rend tout silencieux sans lever', () async {
-      final director = _director(backend, data: const AudioData.disabled());
+      final director = _director(
+        backend,
+        data: const AudioData(
+          schemaVersion: 1,
+          sounds: {'present': SoundData(file: 'sfx/present.mp3')},
+          moments: {'impact': MomentSounds(defaultSound: 'present')},
+          music: {},
+          enabled: false,
+        ),
+      );
       await director.preloadAll();
 
       expect(() => director.onMoment(GameMoment.impact), returnsNormally);
       expect(backend.playedOnce, isEmpty);
-      expect(backend.preloadAttempts, isEmpty);
+      expect(backend.preloadAttempts, isEmpty,
+          reason: 'un catalogue desactive ne precharge rien, meme s il declare des sons');
     });
 
     test('jouer avant la fin du prechargement est silencieux, pas mis en file', () async {
