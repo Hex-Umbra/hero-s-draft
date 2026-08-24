@@ -16,7 +16,7 @@ Ces règles s'appliquent à **chaque** tâche, sans être répétées dans les t
 
 - `dart analyze` doit rendre `No issues found!` avant tout commit. Zéro issue, pas « zéro erreur ».
 - `flutter test` doit être au vert avant tout commit.
-- **Les 295 tests existants doivent rester au vert et ne doivent jamais être modifiés.** Si une tâche impose d'en toucher un, c'est que la couture est mauvaise — arrêter et remonter le problème.
+- **Les 295 tests existants doivent rester au vert. Aucun ne doit être affaibli, réécrit ni supprimé.** La seule modification autorisée est l'ajout mécanique d'un argument de constructeur devenu requis (tâches 2 et 8). Toute autre retouche d'un test existant signale une mauvaise couture — arrêter et remonter le problème.
 - L'audio ne lève jamais d'exception et ne bloque jamais le jeu. Toute défaillance dégrade en silence.
 - État partagé exclusivement via `Notifier` / `NotifierProvider` de Riverpod 2.x. Jamais de `StateNotifier`, jamais de singleton, jamais de variable globale.
 - Les composants Flame ne lisent jamais un provider. Ils reçoivent leurs collaborateurs par injection depuis la couche UI.
@@ -558,14 +558,15 @@ Le cœur du système.
 **Files:**
 - Create: `lib/services/audio/game_moment.dart`
 - Create: `lib/services/audio/audio_source.dart`
+- Create: `lib/services/audio/audio_settings.dart`
 - Create: `lib/services/audio/audio_director.dart`
 - Test: `test/unit/audio/audio_director_resolution_test.dart`
 
 **Interfaces:**
 - Consumes: `AudioBackend`, `FakeAudioBackend` (tâche 1) · `AudioData`, `SoundData`, `MomentSounds` (tâche 2)
-- Produces: `enum GameMoment` à 14 valeurs, chacune portant `final String jsonKey` · `abstract class AudioSource {String? get sfx; String? get animation;}` · `class AudioDirector` avec `AudioDirector({required AudioBackend backend, required AudioData data, required AudioSettings Function() settings, Random? random})` et `void onMoment(GameMoment moment, {AudioSource? source})`
+- Produces: `enum GameMoment` à 14 valeurs, chacune portant `final String jsonKey` · `abstract class AudioSource {String? get sfx; String? get animation;}` · `class AudioSettings` immuable (`master`, `sfx`, `music`, `muted`, `effectiveSfx`, `effectiveMusic`, `copyWith`, `toJson`, `fromJson`, `==`) · `class AudioDirector` avec `AudioDirector({required AudioBackend backend, required AudioData data, required AudioSettings Function() settings, Random? random})`, `Future<void> preloadAll()` et `void onMoment(GameMoment moment, {AudioSource? source})`
 
-> **Note pour l'implémenteur :** `AudioSettings` n'existe qu'à partir de la tâche 6. Pour ne pas inverser l'ordre TDD, la tâche 3 déclare le directeur avec un paramètre `double Function() sfxVolume` et `bool Function() muted`. La tâche 6 les remplace par `AudioSettings Function() settings`. C'est un remplacement assumé, pas un oubli.
+> **Pourquoi `AudioSettings` est ici et non en tâche 6 :** c'est une classe de valeur pure, sans dépendance de persistance. La déclarer ici donne au directeur sa signature définitive du premier coup. La tâche 6 n'ajoute que ce qui touche au stockage (`SettingsService`) et à l'état partagé (le `Notifier`).
 
 - [ ] **Step 1: Écrire le test qui échoue**
 
@@ -577,6 +578,7 @@ import 'dart:math';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/models/data/audio_data.dart';
 import 'package:roguelike_card_game/services/audio/audio_director.dart';
+import 'package:roguelike_card_game/services/audio/audio_settings.dart';
 import 'package:roguelike_card_game/services/audio/audio_source.dart';
 import 'package:roguelike_card_game/services/audio/game_moment.dart';
 
@@ -612,8 +614,7 @@ Future<AudioDirector> _director(FakeAudioBackend backend) async {
   final director = AudioDirector(
     backend: backend,
     data: _catalogue(),
-    sfxVolume: () => 1.0,
-    muted: () => false,
+    settings: () => const AudioSettings(master: 1.0, sfx: 1.0),
     random: Random(42),
   );
   await director.preloadAll();
@@ -688,8 +689,7 @@ void main() {
       final director = AudioDirector(
         backend: backend,
         data: _catalogue(),
-        sfxVolume: () => 1.0,
-        muted: () => true,
+        settings: () => const AudioSettings(muted: true),
         random: Random(42),
       );
       await director.preloadAll();
@@ -712,8 +712,7 @@ void main() {
           },
           'music': <String, dynamic>{},
         }),
-        sfxVolume: () => 0.5,
-        muted: () => false,
+        settings: () => const AudioSettings(master: 1.0, sfx: 0.5),
         random: Random(42),
       );
       await director.preloadAll();
@@ -785,6 +784,73 @@ abstract class AudioSource {
 }
 ```
 
+`lib/services/audio/audio_settings.dart` — classe de valeur pure, sans dépendance de persistance :
+
+```dart
+import 'package:flutter/foundation.dart';
+
+/// Reglages audio du joueur. Immuable ; toute modification passe par
+/// [copyWith] et produit un nouvel etat Riverpod.
+@immutable
+class AudioSettings {
+  final double master;
+  final double sfx;
+  final double music;
+  final bool muted;
+
+  const AudioSettings({
+    this.master = 0.8,
+    this.sfx = 1.0,
+    this.music = 0.6,
+    this.muted = false,
+  });
+
+  /// Volume reellement applique aux bruitages : produit du general et de
+  /// la categorie, ramene a zero par la coupure globale.
+  double get effectiveSfx => muted ? 0.0 : master * sfx;
+
+  double get effectiveMusic => muted ? 0.0 : master * music;
+
+  AudioSettings copyWith({
+    double? master,
+    double? sfx,
+    double? music,
+    bool? muted,
+  }) =>
+      AudioSettings(
+        master: master ?? this.master,
+        sfx: sfx ?? this.sfx,
+        music: music ?? this.music,
+        muted: muted ?? this.muted,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'master': master,
+        'sfx': sfx,
+        'music': music,
+        'muted': muted,
+      };
+
+  factory AudioSettings.fromJson(Map<String, dynamic> json) => AudioSettings(
+        master: (json['master'] as num?)?.toDouble() ?? 0.8,
+        sfx: (json['sfx'] as num?)?.toDouble() ?? 1.0,
+        music: (json['music'] as num?)?.toDouble() ?? 0.6,
+        muted: json['muted'] as bool? ?? false,
+      );
+
+  @override
+  bool operator ==(Object other) =>
+      other is AudioSettings &&
+      other.master == master &&
+      other.sfx == sfx &&
+      other.music == music &&
+      other.muted == muted;
+
+  @override
+  int get hashCode => Object.hash(master, sfx, music, muted);
+}
+```
+
 - [ ] **Step 4: Écrire le directeur**
 
 `lib/services/audio/audio_director.dart` :
@@ -796,6 +862,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../models/data/audio_data.dart';
 import 'audio_backend.dart';
+import 'audio_settings.dart';
 import 'audio_source.dart';
 import 'game_moment.dart';
 
@@ -809,19 +876,16 @@ class AudioDirector {
   AudioDirector({
     required AudioBackend backend,
     required AudioData data,
-    required double Function() sfxVolume,
-    required bool Function() muted,
+    required AudioSettings Function() settings,
     Random? random,
   })  : _backend = backend,
         _data = data,
-        _sfxVolume = sfxVolume,
-        _muted = muted,
+        _settings = settings,
         _random = random ?? Random();
 
   final AudioBackend _backend;
   final AudioData _data;
-  final double Function() _sfxVolume;
-  final bool Function() _muted;
+  final AudioSettings Function() _settings;
   final Random _random;
 
   final Set<String> _availableFiles = {};
@@ -845,7 +909,10 @@ class AudioDirector {
   }
 
   void onMoment(GameMoment moment, {AudioSource? source}) {
-    if (!_data.enabled || _muted()) return;
+    if (!_data.enabled) return;
+
+    final volumeScale = _settings().effectiveSfx;
+    if (volumeScale <= 0) return;
 
     final soundId = _resolve(moment, source);
     if (soundId == null) return;
@@ -856,10 +923,7 @@ class AudioDirector {
     final file = _pickFile(sound);
     if (!_availableFiles.contains(file)) return;
 
-    final volume = sound.volume * _sfxVolume();
-    if (volume <= 0) return;
-
-    _backend.playOnce(file, volume: volume);
+    _backend.playOnce(file, volume: sound.volume * volumeScale);
   }
 
   /// La chaine de repli, dans l'ordre : son propre a l'entite, son du type
@@ -1069,6 +1133,7 @@ import 'dart:math';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/models/data/audio_data.dart';
 import 'package:roguelike_card_game/services/audio/audio_director.dart';
+import 'package:roguelike_card_game/services/audio/audio_settings.dart';
 import 'package:roguelike_card_game/services/audio/game_moment.dart';
 
 import 'fake_audio_backend.dart';
@@ -1091,8 +1156,7 @@ AudioData _catalogue() => AudioData.fromJson({
 AudioDirector _director(FakeAudioBackend backend, {AudioData? data}) => AudioDirector(
       backend: backend,
       data: data ?? _catalogue(),
-      sfxVolume: () => 1.0,
-      muted: () => false,
+      settings: () => const AudioSettings(master: 1.0, sfx: 1.0),
       random: Random(7),
     );
 
@@ -1183,16 +1247,15 @@ git add -A && git commit -m "test(audio): verrouiller la degradation silencieuse
 ## Task 6: Réglages audio et persistance
 
 **Files:**
-- Create: `lib/services/audio/audio_settings.dart`
 - Create: `lib/services/settings_service.dart`
 - Modify: `lib/services/audio/audio_providers.dart`
-- Modify: `lib/services/audio/audio_director.dart` (remplacer les deux callbacks par `AudioSettings Function()`)
-- Modify: `test/unit/audio/audio_director_resolution_test.dart`, `test/unit/audio/audio_director_degraded_test.dart` (adapter les constructions — ce sont des tests de cette tâche, pas des tests existants)
 - Test: `test/unit/audio/audio_settings_test.dart`
 
 **Interfaces:**
-- Consumes: `SaveService`-style `RefReader` (voir `lib/services/save_service.dart:18`)
-- Produces: `class AudioSettings {double master; double sfx; double music; bool muted;}` avec `copyWith`, `toJson`, `AudioSettings.fromJson` · `class AudioSettingsNotifier extends Notifier<AudioSettings>` avec `Future<void> hydrate()`, `void setMaster(double)`, `void setSfx(double)`, `void setMusic(double)`, `void toggleMute()` · `final audioSettingsProvider = NotifierProvider<AudioSettingsNotifier, AudioSettings>` · `class SettingsService` avec `static Future<AudioSettings> load()` et `static Future<void> save(AudioSettings)` · getters dérivés `double get effectiveSfx` et `double get effectiveMusic` sur `AudioSettings`
+- Consumes: `AudioSettings` (tâche 3) — la classe de valeur existe déjà, cette tâche n'y touche pas
+- Produces: `class SettingsService` avec `static Future<AudioSettings> load()` et `static Future<void> save(AudioSettings)` · `class AudioSettingsNotifier extends Notifier<AudioSettings>` avec `Future<void> hydrate()`, `void setMaster(double)`, `void setSfx(double)`, `void setMusic(double)`, `void toggleMute()` · `final audioSettingsProvider = NotifierProvider<AudioSettingsNotifier, AudioSettings>`
+
+> **Ne pas recréer `AudioSettings`.** La classe est écrite en tâche 3, avec `effectiveSfx`, `effectiveMusic`, `copyWith`, `toJson`, `fromJson` et `==`. Cette tâche n'ajoute que le stockage et l'état partagé. Les deux premiers tests ci-dessous vérifient la classe de la tâche 3 : ils sont ici parce que c'est ici que les réglages deviennent utilisables, et ils doivent passer sans qu'une ligne d'`audio_settings.dart` ne bouge.
 
 - [ ] **Step 1: Écrire le test qui échoue**
 
@@ -1291,78 +1354,9 @@ void main() {
 flutter test test/unit/audio/audio_settings_test.dart
 ```
 
-Attendu : ÉCHEC, `audio_settings.dart` introuvable.
+Attendu : ÉCHEC, `settings_service.dart` introuvable. Les deux premiers tests du groupe `AudioSettings` compilent déjà — la classe vient de la tâche 3 — mais le fichier ne se lance pas tant que `SettingsService` n'existe pas.
 
-- [ ] **Step 3: Écrire le modèle de réglages**
-
-`lib/services/audio/audio_settings.dart` :
-
-```dart
-import 'package:flutter/foundation.dart';
-
-/// Reglages audio du joueur. Immuable ; toute modification passe par
-/// [copyWith] et produit un nouvel etat Riverpod.
-@immutable
-class AudioSettings {
-  final double master;
-  final double sfx;
-  final double music;
-  final bool muted;
-
-  const AudioSettings({
-    this.master = 0.8,
-    this.sfx = 1.0,
-    this.music = 0.6,
-    this.muted = false,
-  });
-
-  /// Volume reellement applique aux bruitages : produit du general et de
-  /// la categorie, ramene a zero par la coupure globale.
-  double get effectiveSfx => muted ? 0.0 : master * sfx;
-
-  double get effectiveMusic => muted ? 0.0 : master * music;
-
-  AudioSettings copyWith({
-    double? master,
-    double? sfx,
-    double? music,
-    bool? muted,
-  }) =>
-      AudioSettings(
-        master: master ?? this.master,
-        sfx: sfx ?? this.sfx,
-        music: music ?? this.music,
-        muted: muted ?? this.muted,
-      );
-
-  Map<String, dynamic> toJson() => {
-        'master': master,
-        'sfx': sfx,
-        'music': music,
-        'muted': muted,
-      };
-
-  factory AudioSettings.fromJson(Map<String, dynamic> json) => AudioSettings(
-        master: (json['master'] as num?)?.toDouble() ?? 0.8,
-        sfx: (json['sfx'] as num?)?.toDouble() ?? 1.0,
-        music: (json['music'] as num?)?.toDouble() ?? 0.6,
-        muted: json['muted'] as bool? ?? false,
-      );
-
-  @override
-  bool operator ==(Object other) =>
-      other is AudioSettings &&
-      other.master == master &&
-      other.sfx == sfx &&
-      other.music == music &&
-      other.muted == muted;
-
-  @override
-  int get hashCode => Object.hash(master, sfx, music, muted);
-}
-```
-
-- [ ] **Step 4: Écrire le service de persistance**
+- [ ] **Step 3: Écrire le service de persistance**
 
 `lib/services/settings_service.dart` :
 
@@ -1413,7 +1407,7 @@ class SettingsService {
 }
 ```
 
-- [ ] **Step 5: Écrire le notifier et le brancher au provider**
+- [ ] **Step 4: Écrire le notifier et le brancher au provider**
 
 Dans `lib/services/audio/audio_providers.dart`, ajouter :
 
@@ -1444,33 +1438,7 @@ final audioSettingsProvider =
 
 avec les imports `import 'audio_settings.dart';` et `import '../settings_service.dart';`.
 
-- [ ] **Step 6: Remplacer les deux callbacks du directeur par les réglages**
-
-Dans `lib/services/audio/audio_director.dart`, remplacer les paramètres `sfxVolume` et `muted` par un unique `required AudioSettings Function() settings`, stocké en `_settings`. Adapter `onMoment` :
-
-```dart
-  void onMoment(GameMoment moment, {AudioSource? source}) {
-    if (!_data.enabled) return;
-
-    final volumeScale = _settings().effectiveSfx;
-    if (volumeScale <= 0) return;
-
-    final soundId = _resolve(moment, source);
-    if (soundId == null) return;
-
-    final sound = _data.sounds[soundId];
-    if (sound == null) return;
-
-    final file = _pickFile(sound);
-    if (!_availableFiles.contains(file)) return;
-
-    _backend.playOnce(file, volume: sound.volume * volumeScale);
-  }
-```
-
-Adapter les constructions dans les deux fichiers de test des tâches 3 et 5 : remplacer `sfxVolume: () => 1.0, muted: () => false,` par `settings: () => const AudioSettings(master: 1.0, sfx: 1.0),`, et le cas coupé par `settings: () => const AudioSettings(muted: true),`. Dans le test de volume, `settings: () => const AudioSettings(master: 1.0, sfx: 0.5),`.
-
-- [ ] **Step 7: Lancer tous les tests audio**
+- [ ] **Step 5: Lancer tous les tests audio**
 
 ```bash
 flutter test test/unit/audio/
@@ -1478,13 +1446,13 @@ flutter test test/unit/audio/
 
 Attendu : PASS, tous les tests des tâches 1 à 6.
 
-- [ ] **Step 8: Vérifier**
+- [ ] **Step 6: Vérifier**
 
 ```bash
 dart analyze && flutter test
 ```
 
-- [ ] **Step 9: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
 git add -A && git commit -m "feat(audio): persister les reglages audio hors de la sauvegarde de run"
@@ -1675,6 +1643,8 @@ git add -A && git commit -m "test(audio): garder la coherence du catalogue et ra
 
 `test/unit/audio/audio_impact_moments_test.dart`. On teste la **décision** du directeur, pas le rendu Flame — instancier un `HerosDraftGame` complet en test serait lourd et fragile.
 
+> **Limite connue et assumée, à ne pas signaler comme un oubli en revue :** aucun test automatique ne vérifie que les appels sont réellement posés aux bons endroits de `combat_entity.dart`. Seule la résolution est couverte. Le câblage se vérifie à l'exécution, en tâche 12 step 5. L'alternative — monter un `HerosDraftGame` complet dans un test widget — est disproportionnée pour le style de test de ce dépôt.
+
 ```dart
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/models/data/audio_data.dart';
@@ -1860,7 +1830,7 @@ git add -A && git commit -m "feat(audio): sonoriser les quatre moments d impact 
 
 - [ ] **Step 1: Écrire le test des dix moments**
 
-`test/unit/audio/audio_remaining_moments_test.dart` :
+`test/unit/audio/audio_remaining_moments_test.dart`. Même limite assumée qu'en tâche 8 : le test couvre la résolution, pas la pose des appels. Le câblage se vérifie à l'exécution en tâche 12 step 5 — ce n'est pas un oubli à signaler en revue.
 
 ```dart
 import 'package:flutter_test/flutter_test.dart';
@@ -2075,11 +2045,13 @@ void main() {
 
     setUp(() => backend = FakeAudioBackend());
 
-    test('une scene demarre sa piste', () {
+    test('une scene demarre sa piste au volume declare', () {
       _conductor(backend).onScene(MusicScene.menu);
 
       expect(backend.currentLoop, 'music/menu.mp3');
       expect(backend.loopStartCount, 1);
+      expect(backend.currentLoopVolume, closeTo(0.6, 0.0001),
+          reason: 'volume de la piste (0.6) x general (1.0) x musique (1.0)');
     });
 
     test('redemander la scene en cours est un no-op', () {
@@ -2526,6 +2498,8 @@ flutter run -d windows
 ```
 
 Attendu : le jeu démarre, aucune exception audio dans la console, et le rapport de sourcing indique toujours les fichiers manquants. Le jeu est silencieux tant que le catalogue est vide — **c'est le comportement correct**.
+
+**Vérification du câblage des tâches 8 et 9** — c'est le seul contrôle du fait que les appels sont posés au bon endroit, aucun test ne le couvre. Déposer un fichier MP3 court et audible dans `assets/audio/sfx/`, nommé d'après un son du catalogue (`impact_normal_1.mp3` est le plus facile à déclencher), relancer, et frapper un ennemi. Si le son sort à l'impact, la chaîne complète — point d'appel, résolution, disponibilité, backend — est vérifiée de bout en bout. Répéter avec `turn_start.mp3` pour couvrir un moment côté contrôleur. Retirer ensuite le fichier de test s'il n'est pas destiné à rester.
 
 - [ ] **Step 6: Commit**
 
