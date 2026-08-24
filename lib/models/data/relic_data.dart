@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../../services/audio/audio_source.dart';
 import 'game_data_registry.dart';
 
 enum RelicTrigger {
@@ -15,7 +16,7 @@ enum RelicTrigger {
 
 enum RelicRarity { common, uncommon, rare, epic, legendary }
 
-class RelicData {
+class RelicData implements AudioSource {
   final String id;
   final String nameEn;
   final String nameFr;
@@ -26,6 +27,11 @@ class RelicData {
   final int value;
   final RelicRarity rarity;
   final String emoji;
+  @override
+  final String? sfx; // Identifiant de son propre a la relique (voir audio.json)
+
+  @override
+  String? get animation => null;
 
   const RelicData({
     required this.id,
@@ -38,6 +44,7 @@ class RelicData {
     required this.value,
     required this.rarity,
     required this.emoji,
+    this.sfx,
   });
 
   String getName(String locale) => locale == 'fr' ? nameFr : nameEn;
@@ -67,6 +74,7 @@ class RelicData {
       value: json['value'] as int,
       rarity: RelicRarity.values.firstWhere((e) => e.name == json['rarity']),
       emoji: json['emoji'] as String? ?? '🪙',
+      sfx: json['sfx'] as String?,
     );
   }
 
