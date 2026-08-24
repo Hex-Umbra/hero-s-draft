@@ -119,6 +119,22 @@ final audioDirectorProvider = Provider<AudioDirector>(...);
 final audioSettingsProvider = NotifierProvider<AudioSettingsNotifier, AudioSettings>(...);
 ```
 
+### 4.1 Comment la couche Flame atteint le directeur
+
+`HerosDraftGame` **n'a aucun accès à Riverpod** — vérifié le 2026-08-24 : la classe est découplée
+par quinze callbacks injectés depuis `GameScreen` (`game_screen.dart:243`). Un composant Flame ne
+peut donc pas lire `audioDirectorProvider`.
+
+Le directeur est **injecté comme collaborateur**, pas lu comme provider : `HerosDraftGame` gagne un
+champ `final AudioDirector audio;`, que `GameScreen` remplit par `ref.read(audioDirectorProvider)`
+au moment de la construction. Les entités l'atteignent par `game.audio`, `CombatEntity` disposant
+déjà de `HasGameReference<HerosDraftGame>` (`combat_entity.dart:11`).
+
+C'est un champ plutôt qu'un seizième callback : un callback par moment de jeu ferait exploser un
+constructeur déjà large, et le directeur est précisément l'objet conçu pour être appelé directement.
+La règle `CLAUDE.md` — les composants Flame ne lisent jamais l'état Riverpod — est respectée : la
+lecture du provider a lieu dans la couche UI, Flame ne reçoit qu'une référence.
+
 **La couture de test, et pourquoi elle est gratuite.** `audioBackendProvider` vaut
 `SilentAudioBackend` **par défaut**, et `main.dart` le surcharge par `FlameAudioBackend` au
 démarrage de l'application réelle. C'est l'inverse du réflexe habituel (défaut réel, surcharge en
