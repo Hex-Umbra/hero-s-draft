@@ -43,7 +43,7 @@
 
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
-| 4. Synchronisation Bidirectionnelle Flame ⇄ Riverpod | [04-00-synchronisation-bidirectionnelle-flame-riverp.md](../_patterns/04-00-synchronisation-bidirectionnelle-flame-riverp.md) | 70 |
+| 4. Synchronisation Bidirectionnelle Flame ⇄ Riverpod | [04-00-synchronisation-bidirectionnelle-flame-riverp.md](../_patterns/04-00-synchronisation-bidirectionnelle-flame-riverp.md) | 79 |
 
 ### 5. UI et Composants Graphiques
 
