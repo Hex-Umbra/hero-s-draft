@@ -6,6 +6,8 @@ import 'package:roguelike_card_game/ui/widgets/game_button.dart';
 import '../../game/controllers/run_controller.dart';
 import '../../game/controllers/deck_controller.dart';
 import '../../models/card_instance.dart';
+import '../../services/audio/audio_providers.dart';
+import '../../services/audio/music_scene.dart';
 import '../widgets/notification_overlay.dart';
 import 'rest_card_selection_screen.dart';
 import '../widgets/screen_scaffold.dart';
@@ -108,6 +110,8 @@ class _RestScreenState extends ConsumerState<RestScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.read(musicConductorProvider).onScene(MusicScene.map);
+
     final l10n = AppLocalizations.of(context)!;
     final runState = ref.watch(runProvider);
     final heroStats = runState.heroStats;

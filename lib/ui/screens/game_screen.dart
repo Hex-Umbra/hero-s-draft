@@ -9,11 +9,13 @@ import '../../game/controllers/combat_controller.dart';
 import '../../game/controllers/inventory_controller.dart';
 import '../../game/controllers/reward_controller.dart';
 import '../../models/combat_state.dart';
+import '../../models/map_node.dart';
 import '../../game/services/effect_resolver.dart';
 import '../../game/systems/trait_system.dart';
 import 'boss_card_draft_screen.dart';
 import '../../services/game_data_service.dart';
 import '../../services/audio/audio_providers.dart';
+import '../../services/audio/music_scene.dart';
 import '../../models/data/relic_data.dart';
 import '../../models/data/card_data.dart';
 import '../widgets/hud/dialogs/pause_dialog.dart';
@@ -373,6 +375,20 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   @override
   Widget build(BuildContext context) {
     final runState = ref.watch(runProvider);
+
+    // Meme garde que CombatController.initializeCombat et
+    // EncounterSystem.generateEnemiesForLevel (voir combat_controller.dart) :
+    // le nœud de carte fait foi, le modulo de niveau n'est qu'un repli pour
+    // les rencontres sans nœud associé.
+    final nodeType = runState.currentNodeType;
+    final bool isBossEncounter = nodeType == MapNodeType.boss ||
+        (nodeType == null &&
+            runState.currentLevel > 0 &&
+            runState.currentLevel % 10 == 0);
+    ref
+        .read(musicConductorProvider)
+        .onScene(isBossEncounter ? MusicScene.boss : MusicScene.combat);
+
     final deckState = ref.watch(deckProvider);
     final combatState = ref.watch(combatProvider);
     final gameData = ref.watch(gameDataLoaderProvider).requireValue;

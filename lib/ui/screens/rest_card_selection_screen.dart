@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../game/controllers/deck_controller.dart';
 import '../../models/card_instance.dart';
+import '../../services/audio/audio_providers.dart';
+import '../../services/audio/music_scene.dart';
 import '../widgets/ui_card.dart';
 import '../widgets/notification_overlay.dart';
 import '../widgets/forge_upgrade_dialog.dart';
@@ -61,6 +63,8 @@ class RestCardSelectionScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.read(musicConductorProvider).onScene(MusicScene.map);
+
     final bool isMobile = MediaQuery.of(context).size.width < 600;
     final locale = Localizations.localeOf(context).languageCode;
     final l10n = AppLocalizations.of(context)!;

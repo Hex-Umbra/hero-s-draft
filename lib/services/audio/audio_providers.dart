@@ -78,3 +78,8 @@ class AudioSettingsNotifier extends Notifier<AudioSettings> {
 
 final audioSettingsProvider =
     NotifierProvider<AudioSettingsNotifier, AudioSettings>(AudioSettingsNotifier.new);
+
+/// Charge les reglages persistes une seule fois, au demarrage.
+final audioSettingsHydrationProvider = FutureProvider<void>(
+  (ref) => ref.read(audioSettingsProvider.notifier).hydrate(),
+);

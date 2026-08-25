@@ -6,6 +6,8 @@ import '../../game/controllers/inventory_controller.dart';
 import '../../game/controllers/run_controller.dart';
 import '../../models/card_instance.dart';
 import '../../models/data/forge_upgrade_data.dart';
+import '../../services/audio/audio_providers.dart';
+import '../../services/audio/music_scene.dart';
 import '../widgets/screen_scaffold.dart';
 import '../widgets/page_header.dart';
 import '../widgets/gold_indicator.dart';
@@ -127,6 +129,8 @@ class _ForgeFusionScreenState extends ConsumerState<ForgeFusionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.read(musicConductorProvider).onScene(MusicScene.map);
+
     final deckState = ref.watch(deckProvider);
     final masterDeck = deckState.masterDeck;
     final inventoryState = ref.watch(inventoryProvider);

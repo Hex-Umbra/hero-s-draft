@@ -8,6 +8,8 @@ import 'map_screen.dart';
 import '../../tutorial/tutorial_loader.dart';
 import '../../tutorial/tutorial_progress_service.dart';
 import '../../services/save_service.dart';
+import '../../services/audio/audio_providers.dart';
+import '../../services/audio/music_scene.dart';
 import '../widgets/game_dialog.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -96,6 +98,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.read(musicConductorProvider).onScene(MusicScene.menu);
+
     return Scaffold(
       body: Center(
         child: Column(

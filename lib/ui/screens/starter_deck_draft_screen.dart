@@ -9,6 +9,8 @@ import '../../models/data/hero_data.dart';
 import '../../models/data/passive_data.dart';
 import '../../models/data/hero_skills_link.dart';
 import '../../services/game_data_service.dart';
+import '../../services/audio/audio_providers.dart';
+import '../../services/audio/music_scene.dart';
 import '../widgets/ui_card.dart';
 import 'map_screen.dart';
 import '../widgets/notification_overlay.dart';
@@ -116,6 +118,8 @@ class _StarterDeckDraftScreenState
 
   @override
   Widget build(BuildContext context) {
+    ref.read(musicConductorProvider).onScene(MusicScene.map);
+
     final bool isMobile = MediaQuery.of(context).size.width < 600;
     final locale = Localizations.localeOf(context).languageCode;
     final l10n = AppLocalizations.of(context)!;

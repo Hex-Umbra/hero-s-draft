@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../game/controllers/reward_controller.dart';
 import '../../models/card_instance.dart';
+import '../../services/audio/audio_providers.dart';
+import '../../services/audio/music_scene.dart';
 import '../widgets/ui_card.dart';
 import '../widgets/notification_overlay.dart';
 import '../widgets/draft/card_draft_layout.dart';
@@ -44,6 +46,8 @@ class _BossCardDraftScreenState extends ConsumerState<BossCardDraftScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.read(musicConductorProvider).onScene(MusicScene.map);
+
     final locale = Localizations.localeOf(context).languageCode;
     final isFr = locale == 'fr';
     final l10n = AppLocalizations.of(context)!;

@@ -10,6 +10,8 @@ import '../../game/controllers/run_controller.dart';
 import '../../game/controllers/deck_controller.dart';
 import '../../game/services/level_up_reward_service.dart';
 import '../../models/card_instance.dart';
+import '../../services/audio/audio_providers.dart';
+import '../../services/audio/music_scene.dart';
 import '../widgets/draft/draft_choice_labels.dart';
 import '../widgets/relic_carousel/draft_card_reel.dart';
 
@@ -105,6 +107,8 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
 
   @override
   Widget build(BuildContext context) {
+    ref.read(musicConductorProvider).onScene(MusicScene.map);
+
     final l10n = AppLocalizations.of(context)!;
     final visibleChoices = _mythicCompleted ? _choices : _choices.sublist(0, 3);
 

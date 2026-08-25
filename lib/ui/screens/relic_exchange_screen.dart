@@ -7,6 +7,8 @@ import '../../game/controllers/inventory_controller.dart';
 import '../../models/data/relic_data.dart';
 import '../../models/map_node.dart';
 import '../../services/game_data_service.dart';
+import '../../services/audio/audio_providers.dart';
+import '../../services/audio/music_scene.dart';
 import '../widgets/screen_scaffold.dart';
 
 class RelicExchangeScreen extends ConsumerStatefulWidget {
@@ -100,6 +102,8 @@ class _RelicExchangeScreenState extends ConsumerState<RelicExchangeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.read(musicConductorProvider).onScene(MusicScene.map);
+
     final runState = ref.watch(runProvider);
     final inventoryState = ref.watch(inventoryProvider);
     final gameDataAsync = ref.watch(gameDataLoaderProvider);
