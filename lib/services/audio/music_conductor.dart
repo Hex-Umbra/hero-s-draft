@@ -41,8 +41,15 @@ class MusicConductor {
 
   MusicScene? get currentScene => _current;
 
-  /// Idempotent : redemander la scene en cours ne fait rien. C'est ce qui
-  /// rend sur de l'appeler depuis un `build()`, y compris au retour arriere.
+  /// Idempotent seulement quand une boucle est reellement active pour la
+  /// scene demandee (`_current` non nul) : redemander cette meme scene ne
+  /// fait alors rien, ce qui rend sur de l'appeler depuis un `build()`, y
+  /// compris au retour arriere. Pendant une coupure (volume nul : `_current`
+  /// est a null, `_pending` retient la scene), ce court-circuit ne s'applique
+  /// plus, puisque `scene == _current` est alors faux — chaque rebuild
+  /// muet repasse par la branche a volume nul et redemande un `stopLoop()`
+  /// au backend (sans effet audible sur une boucle deja arretee, mais ce
+  /// n'est plus un no-op). Voir `_patterns/16-00` §16.6.
   void onScene(MusicScene scene) {
     if (_locked) {
       _pending = scene;
@@ -104,9 +111,18 @@ class MusicConductor {
     final volume = track.volume * _settings().effectiveMusic;
     if (volume <= 0) {
       if (_current != null) {
-        await _backend.stopLoop(fadeMs: _fadeMs);
+        // _pending/_current sont ecrits AVANT le await, pas apres : deux
+        // refreshVolume() lances sans etre attendus (les quatre sites
+        // d'appel font tous conductor.refreshVolume(); sans await) peuvent
+        // s'entrelacer sur ce await. Le second doit voir _current deja a
+        // null pour court-circuiter ici (via le if ci-dessus) au lieu de
+        // relire l'ancien _current et ecraser le _pending que le premier
+        // vient de poser. Ecrire apres le await perd la scene en attente et
+        // bloque refreshVolume() en no-op pour toujours : voir
+        // music_conductor_test.dart, "deux refreshVolume() concurrents...".
         _pending = _current;
         _current = null;
+        await _backend.stopLoop(fadeMs: _fadeMs);
       }
       return;
     }

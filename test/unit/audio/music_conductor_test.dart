@@ -193,6 +193,49 @@ void main() {
     });
 
     test(
+        'deux refreshVolume() concurrents a volume nul ne perdent pas la '
+        'scene en attente', () async {
+      // Regression : refreshVolume() ecrivait _pending/_current apres le
+      // await sur stopLoop(). Les quatre sites d'appel (settings_screen.dart,
+      // game_screen.dart) invoquent tous refreshVolume() sans l'attendre :
+      // un second appel peut donc demarrer avant que le premier n'ait repris
+      // apres son await, et lire l'ancien _current avant qu'il soit mis a
+      // null. Les deux ecrivent alors _pending a partir de ce meme _current :
+      // le second ecrase avec null ce que le premier venait de poser, et
+      // plus aucun refreshVolume() ulterieur ne peut relancer la musique.
+      var master = 1.0;
+      final conductor = MusicConductor(
+        backend: backend,
+        data: _catalogue(),
+        settings: () => AudioSettings(master: master, music: 1.0, sfx: 0.2),
+      );
+
+      conductor.onScene(MusicScene.menu);
+      expect(backend.currentLoop, 'music/menu.mp3');
+      expect(backend.loopStartCount, 1);
+
+      master = 0.0;
+      final first = conductor.refreshVolume();
+      final second = conductor.refreshVolume();
+      await first;
+      await second;
+
+      expect(backend.currentLoop, isNull, reason: 'volume nul : la boucle s\'arrete');
+
+      master = 1.0;
+      await conductor.refreshVolume();
+
+      expect(
+        backend.currentLoop,
+        'music/menu.mp3',
+        reason: 'la scene en attente doit survivre a deux refreshVolume() '
+            'entrelaces a volume nul, sinon plus aucun refreshVolume() '
+            'ulterieur ne peut relancer la musique',
+      );
+      expect(backend.loopStartCount, 2, reason: 'la boucle a bien redemarre');
+    });
+
+    test(
         'refreshVolume() ajuste le volume en place quand la scene ne '
         'change pas, sans redemarrer la piste', () async {
       var music = 1.0;
