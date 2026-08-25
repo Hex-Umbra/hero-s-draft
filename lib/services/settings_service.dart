@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'audio/audio_settings.dart';
@@ -18,12 +19,18 @@ class SettingsService {
   static const int _schemaVersion = 1;
 
   static Future<void> save(AudioSettings settings) async {
-    final prefs = await SharedPreferences.getInstance();
-    final payload = {
-      'schemaVersion': _schemaVersion,
-      ...settings.toJson(),
-    };
-    await prefs.setString(_settingsKey, jsonEncode(payload));
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final payload = {
+        'schemaVersion': _schemaVersion,
+        ...settings.toJson(),
+      };
+      await prefs.setString(_settingsKey, jsonEncode(payload));
+    } catch (e) {
+      // Meme asymetrie que `load` : perdre un reglage de volume ne doit pas
+      // remonter en incident. Trace en debug pour rester diagnosticable.
+      debugPrint('[settings] echec de l ecriture des reglages : $e');
+    }
   }
 
   static Future<AudioSettings> load() async {
