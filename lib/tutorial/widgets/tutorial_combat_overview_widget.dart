@@ -335,12 +335,25 @@ class _TutorialCombatOverviewWidgetState
                 children: [
                   Icon(Icons.flash_on, color: Colors.amber, size: 10 * scale),
                   SizedBox(width: 2 * scale),
-                  Text(
-                    isFrench ? 'Attaque Rapide : 5' : 'Quick Attack: 5',
-                    style: TextStyle(
-                      color: Colors.amber,
-                      fontSize: 8.5 * scale,
-                      fontWeight: FontWeight.bold,
+                  // La colonne qui contient cette maquette a une largeur
+                  // derivee du viewport : sans `Flexible`, « Attaque Rapide :
+                  // 5 » deborde de la `Row` et Flutter peint la bande
+                  // d'erreur jaune et noire a la place, en plein tutoriel.
+                  //
+                  // Troisieme occurrence du meme motif, apres
+                  // `EnemyIntentsPanel` (PR #28) et `StatusEffectsPanel` :
+                  // une `Icon` et un `Text` sans contrainte dans une `Row`
+                  // de largeur bornee. Meme correctif, meme repli sur
+                  // plusieurs lignes plutot qu'une troncature — la valeur
+                  // chiffree est en fin de libelle.
+                  Flexible(
+                    child: Text(
+                      isFrench ? 'Attaque Rapide : 5' : 'Quick Attack: 5',
+                      style: TextStyle(
+                        color: Colors.amber,
+                        fontSize: 8.5 * scale,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ],

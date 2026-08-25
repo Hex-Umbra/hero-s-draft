@@ -38,13 +38,24 @@ class StatusEffectsPanel extends StatelessWidget {
                 size: 16,
               ),
               const SizedBox(width: 6),
-              Text(
-                l10n.playerEffects.toUpperCase(),
-                style: const TextStyle(
-                  color: Colors.cyanAccent,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.2,
+              // Le panneau a une largeur fixe de 250 : sans `Flexible`, un
+              // titre long (locale, mise a l'echelle du texte) deborde de la
+              // `Row` et Flutter peint la bande d'erreur jaune et noire a la
+              // place. « EFFETS DU JOUEUR » depasse deja de 18 px en francais,
+              // sans aucun statut affiche. Ici le titre se replie sur
+              // plusieurs lignes, sans rien perdre.
+              //
+              // Meme correctif que sur le panneau jumeau `EnemyIntentsPanel`,
+              // qui expose la meme `Row` titre dans le meme `Container` fige.
+              Flexible(
+                child: Text(
+                  l10n.playerEffects.toUpperCase(),
+                  style: const TextStyle(
+                    color: Colors.cyanAccent,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                  ),
                 ),
               ),
             ],
