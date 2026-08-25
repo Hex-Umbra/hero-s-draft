@@ -306,12 +306,12 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   }
 
   Future<void> executeTurn() async {
-    audio.onMoment(GameMoment.turnEnd);
     if (currentPhase != TurnPhase.player ||
         currentRunState == null ||
         currentRunState!.isDead) {
       return;
     }
+    audio.onMoment(GameMoment.turnEnd);
 
     currentPhase = TurnPhase.enemy;
 
