@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/models/data/audio_data.dart';
+import 'package:roguelike_card_game/services/audio/game_moment.dart';
+import 'package:roguelike_card_game/services/audio/music_scene.dart';
 
 Map<String, dynamic> _readJsonMap(String path) =>
     jsonDecode(File(path).readAsStringSync()) as Map<String, dynamic>;
@@ -54,6 +56,30 @@ void main() {
 
       expect(offenders, isEmpty,
           reason: 'Champs sfx pointant vers un son non declare :\n${offenders.join('\n')}');
+    });
+
+    test('tout GameMoment a une entree dans "moments"', () {
+      final declared = audio.moments.keys.toSet();
+      final missing = GameMoment.values
+          .map((moment) => moment.jsonKey)
+          .where((jsonKey) => !declared.contains(jsonKey))
+          .toList();
+
+      expect(missing, isEmpty,
+          reason: 'GameMoment sans entree "moments" dans audio.json (silence '
+              'permanent, sans erreur) : $missing');
+    });
+
+    test('toute MusicScene a une entree dans "music"', () {
+      final declared = audio.music.keys.toSet();
+      final missing = MusicScene.values
+          .map((scene) => scene.jsonKey)
+          .where((jsonKey) => !declared.contains(jsonKey))
+          .toList();
+
+      expect(missing, isEmpty,
+          reason: 'MusicScene sans entree "music" dans audio.json (silence '
+              'permanent, sans erreur) : $missing');
     });
   });
 }
