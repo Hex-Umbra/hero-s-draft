@@ -39,7 +39,7 @@ class AudioDirector {
   Future<void> preloadAll() async {
     if (!_data.enabled) return;
     for (final sound in _data.sounds.values) {
-      for (final file in _filesFor(sound)) {
+      for (final file in sound.expectedFiles) {
         final ok = await _backend.preload(file);
         if (ok) {
           _availableFiles.add(file);
@@ -88,20 +88,10 @@ class AudioDirector {
     return moments.defaultSound;
   }
 
-  List<String> _filesFor(SoundData sound) {
-    if (sound.variants <= 1) return [sound.file];
-    return List.generate(sound.variants, (i) => _variantFile(sound.file, i + 1));
-  }
-
   String _pickFile(SoundData sound) {
-    if (sound.variants <= 1) return sound.file;
-    return _variantFile(sound.file, _random.nextInt(sound.variants) + 1);
-  }
-
-  String _variantFile(String file, int index) {
-    final dot = file.lastIndexOf('.');
-    if (dot < 0) return '${file}_$index';
-    return '${file.substring(0, dot)}_$index${file.substring(dot)}';
+    final files = sound.expectedFiles;
+    if (files.length == 1) return files.first;
+    return files[_random.nextInt(files.length)];
   }
 
   void _reportMissing(String file) {

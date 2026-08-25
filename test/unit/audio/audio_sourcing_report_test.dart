@@ -16,14 +16,7 @@ void main() {
 
     final expected = <String>[];
     for (final sound in audio.sounds.values) {
-      if (sound.variants <= 1) {
-        expected.add(sound.file);
-      } else {
-        final dot = sound.file.lastIndexOf('.');
-        for (var i = 1; i <= sound.variants; i++) {
-          expected.add('${sound.file.substring(0, dot)}_$i${sound.file.substring(dot)}');
-        }
-      }
+      expected.addAll(sound.expectedFiles);
     }
     expected.addAll(audio.music.values.map((m) => m.file));
 

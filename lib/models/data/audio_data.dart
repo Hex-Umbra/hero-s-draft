@@ -15,6 +15,22 @@ class SoundData {
     volume: (json['volume'] as num?)?.toDouble() ?? 1.0,
     variants: (json['variants'] as num?)?.toInt() ?? 1,
   );
+
+  /// Les fichiers que ce son attend sur le disque.
+  ///
+  /// Sans variante, un seul. `variants: 3` en attend trois, numerotes avant
+  /// l'extension : `sfx/x.mp3` donne `sfx/x_1.mp3`, `_2`, `_3`. Un nom sans
+  /// extension recoit le suffixe a la fin plutot que de lever.
+  List<String> get expectedFiles {
+    if (variants <= 1) return [file];
+    return List.generate(variants, (i) => _numbered(i + 1));
+  }
+
+  String _numbered(int index) {
+    final dot = file.lastIndexOf('.');
+    if (dot < 0) return '${file}_$index';
+    return '${file.substring(0, dot)}_$index${file.substring(dot)}';
+  }
 }
 
 /// Les sons possibles pour un moment de jeu : un repli par type d'animation,

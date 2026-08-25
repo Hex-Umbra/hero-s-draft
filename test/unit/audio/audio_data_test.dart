@@ -57,4 +57,25 @@ void main() {
       expect(data.moments['turn_start']!.byAnimation, isEmpty);
     });
   });
+
+  group('SoundData.expectedFiles', () {
+    test('sans variante declaree, un seul fichier attendu', () {
+      const sound = SoundData(file: 'sfx/hover.mp3');
+
+      expect(sound.expectedFiles, ['sfx/hover.mp3']);
+    });
+
+    test('les variantes sont numerotees avant l extension', () {
+      const sound = SoundData(file: 'sfx/x.mp3', variants: 3);
+
+      expect(sound.expectedFiles, ['sfx/x_1.mp3', 'sfx/x_2.mp3', 'sfx/x_3.mp3']);
+    });
+
+    test('un nom sans extension recoit le suffixe sans lever', () {
+      const sound = SoundData(file: 'sfx/x', variants: 2);
+
+      expect(() => sound.expectedFiles, returnsNormally);
+      expect(sound.expectedFiles, ['sfx/x_1', 'sfx/x_2']);
+    });
+  });
 }
