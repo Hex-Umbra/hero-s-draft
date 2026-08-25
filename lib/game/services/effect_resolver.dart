@@ -1,4 +1,6 @@
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../models/card_instance.dart';
 import '../../models/data/card_data.dart';
 import '../../models/status_effect.dart';
@@ -7,6 +9,8 @@ import '../controllers/deck_controller.dart';
 import '../controllers/combat_controller.dart';
 import 'effects/effect_strategy.dart';
 import '../game_constants.dart';
+import '../../services/audio/audio_providers.dart';
+import '../../services/audio/game_moment.dart';
 
 class EffectResolver {
 
@@ -90,13 +94,20 @@ class EffectResolver {
     }
   }
 
-  /// Vérifie si la carte peut être jouée
+  /// Vérifie si la carte peut être jouée.
+  ///
+  /// [ref] est optionnel : seul l'appel interne depuis [resolveCard] le
+  /// fournit, pour émettre `GameMoment.insufficientMana` au refus. Le
+  /// laisser absent ne change aucune règle de jeu — seulement l'absence de
+  /// ce retour audio pour cet appelant précis.
   static bool canPlayCard(
     CardInstance card,
     RunState runState,
-    String? selectedEnemyId,
-  ) {
+    String? selectedEnemyId, {
+    Ref? ref,
+  }) {
     if (runState.heroStats.currentMana < card.currentCost) {
+      ref?.read(audioDirectorProvider).onMoment(GameMoment.insufficientMana);
       return false;
     }
     if (card.data.type == CardType.status) {
@@ -117,7 +128,12 @@ class EffectResolver {
     String? selectedEnemyId,
     EffectRegistry registry,
   ) {
-    if (!canPlayCard(card, runController.currentState, selectedEnemyId)) {
+    if (!canPlayCard(
+      card,
+      runController.currentState,
+      selectedEnemyId,
+      ref: runController.ref,
+    )) {
       return false;
     }
 

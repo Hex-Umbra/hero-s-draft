@@ -10,6 +10,8 @@ import '../deck_controller.dart';
 import 'status_effect_processor.dart';
 import '../../services/damage_pipeline.dart';
 import '../../game_constants.dart';
+import '../../../services/audio/audio_providers.dart';
+import '../../../services/audio/game_moment.dart';
 
 class TurnPhaseManager {
   final CombatController controller;
@@ -44,6 +46,7 @@ class TurnPhaseManager {
   /// L'ordre est celui d'avant P-02 et doit le rester : inverser les deux
   /// appels décalerait toute relique `startOfTurn` d'un tour.
   void startPlayerTurn() {
+    ref.read(audioDirectorProvider).onMoment(GameMoment.turnStart);
     final runController = ref.read(runProvider.notifier);
 
     runController.startTurn();

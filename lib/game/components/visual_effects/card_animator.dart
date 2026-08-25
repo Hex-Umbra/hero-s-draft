@@ -10,6 +10,7 @@ import '../entities/hero_card.dart';
 import 'slash_effect.dart';
 import 'base_visual_effect.dart';
 import '../../../models/data/card_data.dart';
+import '../../../services/audio/game_moment.dart';
 
 class CardAnimator {
   final CardComponent card;
@@ -129,6 +130,7 @@ class CardAnimator {
   }
 
   void playAnimation(EnemyCard? target, {required VoidCallback onComplete}) {
+    card.game.audio.onMoment(GameMoment.cardPickup);
     card.isPlayed = true;
     card.isDragging = false;
     card.priority = GameConstants.priorityCardDraggingMax;
@@ -136,6 +138,7 @@ class CardAnimator {
     card.clearEffects();
 
     final animType = card.card.data.animation ?? 'melee';
+    card.game.audio.onMoment(GameMoment.cardPlay, source: card.card.data);
 
     void wrappedOnComplete() {
       if (card.card.data.isExhaust) {
