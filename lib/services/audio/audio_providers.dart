@@ -1,6 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meta/meta.dart';
+import '../../models/data/audio_data.dart';
+import '../game_data_service.dart';
 import 'audio_backend.dart';
+import 'audio_director.dart';
 import 'audio_settings.dart';
 import 'silent_audio_backend.dart';
 import '../settings_service.dart';
@@ -11,6 +16,20 @@ import '../settings_service.dart';
 final audioBackendProvider = Provider<AudioBackend>(
   (ref) => const SilentAudioBackend(),
 );
+
+/// Le directeur depend du catalogue, donc du chargement asynchrone des
+/// donnees. Tant que celui-ci n'a pas abouti, on rend un directeur sur
+/// catalogue desactive : silencieux, jamais nul, jamais en erreur.
+final audioDirectorProvider = Provider<AudioDirector>((ref) {
+  final registry = ref.watch(gameDataLoaderProvider).valueOrNull;
+  final director = AudioDirector(
+    backend: ref.watch(audioBackendProvider),
+    data: registry?.audio ?? const AudioData.disabled(),
+    settings: () => ref.read(audioSettingsProvider),
+  );
+  unawaited(director.preloadAll());
+  return director;
+});
 
 class AudioSettingsNotifier extends Notifier<AudioSettings> {
   @override

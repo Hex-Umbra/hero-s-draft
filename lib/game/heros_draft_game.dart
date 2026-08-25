@@ -20,6 +20,7 @@ import 'controllers/run_controller.dart';
 import 'controllers/deck_controller.dart';
 import '../models/enemy_intent.dart';
 import '../models/combat_state.dart';
+import '../services/audio/audio_director.dart';
 
 import 'systems/state_sync_system.dart';
 import 'systems/card_animation_system.dart';
@@ -53,6 +54,9 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   EnemyCard? highlightedEnemy;
   bool isCardAnimating = false;
 
+  /// Injecte depuis `GameScreen` : la couche Flame ne lit jamais un provider.
+  final AudioDirector audio;
+
   final void Function() onEnemiesDead;
   final void Function(TurnPhase) onPhaseChanged;
   final void Function(String title, String description, CardType? cardType) onShowTooltip;
@@ -70,6 +74,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   final VoidCallback? onAnimationStateChanged;
 
   HerosDraftGame({
+    required this.audio,
     required this.onEnemiesDead,
     required this.onPhaseChanged,
     required this.onShowTooltip,

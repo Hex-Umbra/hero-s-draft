@@ -13,6 +13,7 @@ import '../../game/services/effect_resolver.dart';
 import '../../game/systems/trait_system.dart';
 import 'boss_card_draft_screen.dart';
 import '../../services/game_data_service.dart';
+import '../../services/audio/audio_providers.dart';
 import '../../models/data/relic_data.dart';
 import '../../models/data/card_data.dart';
 import '../widgets/hud/dialogs/pause_dialog.dart';
@@ -241,6 +242,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     });
 
     _game = HerosDraftGame(
+      audio: ref.read(audioDirectorProvider),
       onEnemiesDead: _handleCombatVictory,
       onPhaseChanged: (phase) {
         final l10n = AppLocalizations.of(context)!;

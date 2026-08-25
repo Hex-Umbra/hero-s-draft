@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../../heros_draft_game.dart';
 import '../../../models/entity_stats.dart';
 import '../../../models/combat_state.dart';
+import '../../../services/audio/game_moment.dart';
 import '../floating_text.dart';
 
 abstract class CombatEntity extends PositionComponent
@@ -192,6 +193,7 @@ abstract class CombatEntity extends PositionComponent
           position + Vector2(0, (size.y / 2 - 20) * scale.y),
           isShield: true,
         );
+        game.audio.onMoment(GameMoment.armorHit);
         shieldHitAnimation();
       } else if (newStats.armure > oldStats.armure) {
         final gainedArmor = newStats.armure - oldStats.armure;
@@ -200,12 +202,14 @@ abstract class CombatEntity extends PositionComponent
           Colors.lightBlueAccent,
           position + Vector2(0, -size.y * scale.y / 2),
         );
+        game.audio.onMoment(GameMoment.armorHit);
       }
     }
 
     if (newStats.currentPv < oldStats.currentPv) {
       final lostHp = oldStats.currentPv - newStats.currentPv;
       final isCritical = newStats.lastActionWasCrit;
+      game.audio.onMoment(isCritical ? GameMoment.impactCrit : GameMoment.impact);
       final damageColor = isPoisonDamage
           ? const Color(0xFF10B981) // Poison neon green
           : (isCritical
@@ -230,6 +234,10 @@ abstract class CombatEntity extends PositionComponent
         color: damageColor,
         count: isCritical ? 35 : (isPoisonDamage ? 12 : 15),
       );
+    }
+
+    if (newStats.currentPv > oldStats.currentPv) {
+      game.audio.onMoment(GameMoment.heal);
     }
   }
 }
