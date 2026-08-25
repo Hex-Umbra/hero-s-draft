@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:meta/meta.dart';
 import 'audio_backend.dart';
 import 'audio_settings.dart';
 import 'silent_audio_backend.dart';
@@ -15,6 +16,16 @@ class AudioSettingsNotifier extends Notifier<AudioSettings> {
   @override
   AudioSettings build() => const AudioSettings();
 
+  /// L'ecriture disque lancee par le dernier reglage modifie.
+  ///
+  /// Les setters n'attendent pas l'ecriture — un curseur de volume ne doit
+  /// pas se figer sur une I/O disque. Ce handle existe pour que les tests
+  /// puissent attendre ce que la production laisse volontairement filer.
+  Future<void>? _pendingSave;
+
+  @visibleForTesting
+  Future<void>? get pendingSave => _pendingSave;
+
   /// Charge les reglages persistes. Appele une fois au demarrage.
   Future<void> hydrate() async {
     state = await SettingsService.load();
@@ -27,7 +38,7 @@ class AudioSettingsNotifier extends Notifier<AudioSettings> {
 
   void _update(AudioSettings next) {
     state = next;
-    SettingsService.save(next);
+    _pendingSave = SettingsService.save(next);
   }
 }
 

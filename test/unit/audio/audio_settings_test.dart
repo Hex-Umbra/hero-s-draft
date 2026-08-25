@@ -77,6 +77,8 @@ void main() {
       notifier.toggleMute();
       expect(container.read(audioSettingsProvider).muted, isTrue);
 
+      await notifier.pendingSave;
+
       final persisted = await SettingsService.load();
       expect(persisted.muted, isTrue);
     });

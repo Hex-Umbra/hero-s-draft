@@ -17,24 +17,7 @@ class SettingsService {
   static const String _settingsKey = 'settings_v1';
   static const int _schemaVersion = 1;
 
-  /// L'ecriture disque en cours, le cas echeant.
-  ///
-  /// `AudioSettingsNotifier` appelle [save] sans l'attendre : un curseur de
-  /// volume ne doit pas se figer pour une ecriture disque. Sans ce suivi,
-  /// un [load] lance juste apres une [save] non attendue peut gagner la
-  /// course face au tout premier `SharedPreferences.getInstance()` du
-  /// processus (son Completer interne resout les appels concurrents dans un
-  /// ordre qui ne respecte pas l'ordre d'appel) et relire l'ancienne valeur.
-  /// [load] attend donc l'ecriture en cours avant de lire.
-  static Future<void>? _pendingSave;
-
-  static Future<void> save(AudioSettings settings) {
-    final future = _persist(settings);
-    _pendingSave = future;
-    return future;
-  }
-
-  static Future<void> _persist(AudioSettings settings) async {
+  static Future<void> save(AudioSettings settings) async {
     final prefs = await SharedPreferences.getInstance();
     final payload = {
       'schemaVersion': _schemaVersion,
@@ -45,9 +28,6 @@ class SettingsService {
 
   static Future<AudioSettings> load() async {
     try {
-      if (_pendingSave != null) {
-        await _pendingSave;
-      }
       final prefs = await SharedPreferences.getInstance();
       final raw = prefs.getString(_settingsKey);
       if (raw == null) return const AudioSettings();
