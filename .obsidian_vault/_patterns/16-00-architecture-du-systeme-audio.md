@@ -30,7 +30,10 @@ draft). Pourquoi ces décisions plutôt que des appels dispersés ou un bus d'é
 > raison d'être de l'injection ci-dessous.
 
 - **Couche Flame** (`HerosDraftGame`, tout `lib/game/components/`, tout `lib/game/systems/`) :
-  `game.audio.onMoment(...)` — c'est la seule méthode que `game.audio` expose. `onScene` n'existe
+  `game.audio.onMoment(...)` — c'est la seule méthode que la couche Flame appelle sur
+  `game.audio`. `AudioDirector` expose aussi `preloadAll()` (`audio_director.dart:39`), mais
+  celle-ci n'est jamais appelée via `game.audio` : `audio_providers.dart` l'appelle une seule
+  fois au démarrage, directement sur l'instance issue du provider. `onScene` n'existe
   pas sur `AudioDirector` : c'est une méthode de `MusicConductor`, jamais atteint depuis Flame
   (la couche qui l'appelle est en §16.3). `audio` est un **champ**
   `final AudioDirector audio;` de `HerosDraftGame`, rempli **une seule fois** par `GameScreen`
