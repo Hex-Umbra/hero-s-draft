@@ -103,11 +103,15 @@ void main() {
       await _tapNext(tester); // -> 9 Effets Élémentaires (démarre un Timer.periodic)
       await _tapNext(tester); // -> 10 Intentions Ennemies
 
-      // Purge : à cette taille de test, le vrai `EnemyIntentsPanel` déborde
-      // (défaut préexistant, hors sujet ici — voir la tâche de suivi signalée
-      // séparément). Ce test ne porte que sur la Fusion ; on efface ce bruit
-      // avant d'y entrer pour ne pas le confondre avec la régression visée.
-      tester.takeException();
+      // Ce point portait un `tester.takeException()` nu, censé écarter un
+      // débordement attribué à `EnemyIntentsPanel`. L'attribution était
+      // fausse — ce panneau avait déjà été corrigé — et le coupable réel
+      // était `StatusEffectsPanel`, son jumeau, oublié lors de ce correctif.
+      // Un `takeException()` sans assertion jette l'erreur au lieu de la
+      // vérifier : le test annonçait « ne lève aucune exception » tout en
+      // avalant celle qui passait. On assère désormais, comme partout
+      // ailleurs dans ce fichier.
+      expect(tester.takeException(), isNull);
 
       await _tapNext(tester); // -> 11 La Fusion de Cartes
 
