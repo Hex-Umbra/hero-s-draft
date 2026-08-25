@@ -1,6 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../services/audio/audio_providers.dart';
+import '../../services/audio/music_scene.dart';
 import '../widgets/screen_scaffold.dart';
 import '../widgets/page_header.dart';
 
@@ -53,14 +56,14 @@ class _PatchVersion {
 // Screen
 // ---------------------------------------------------------------------------
 
-class PatchNotesScreen extends StatefulWidget {
+class PatchNotesScreen extends ConsumerStatefulWidget {
   const PatchNotesScreen({super.key});
 
   @override
-  State<PatchNotesScreen> createState() => _PatchNotesScreenState();
+  ConsumerState<PatchNotesScreen> createState() => _PatchNotesScreenState();
 }
 
-class _PatchNotesScreenState extends State<PatchNotesScreen> {
+class _PatchNotesScreenState extends ConsumerState<PatchNotesScreen> {
   late Future<List<_PatchVersion>> _patchNotesFuture;
 
   @override
@@ -79,6 +82,8 @@ class _PatchNotesScreenState extends State<PatchNotesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.read(musicConductorProvider).onScene(MusicScene.menu);
+
     final appBar = PageHeader(
       title: 'Patch Notes',
       showBackButton: true,

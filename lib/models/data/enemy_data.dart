@@ -1,6 +1,7 @@
+import '../../services/audio/audio_source.dart';
 import '../enemy_intent.dart';
 
-class EnemyData {
+class EnemyData implements AudioSource {
   final String id;
   final String nameEn;
   final String nameFr;
@@ -12,6 +13,11 @@ class EnemyData {
   final int critChance;
   final int gold;
   final List<EnemyIntent>? intents;
+  @override
+  final String? sfx; // Identifiant de son propre a l'ennemi (voir audio.json)
+
+  @override
+  String? get animation => null;
 
   const EnemyData({
     required this.id,
@@ -25,6 +31,7 @@ class EnemyData {
     this.critChance = 0,
     this.gold = 10,
     this.intents,
+    this.sfx,
   });
 
   String getName(String locale) => locale == 'fr' ? nameFr : nameEn;
@@ -51,6 +58,7 @@ class EnemyData {
       critChance: json['critChance'] as int? ?? 0,
       gold: json['gold'] as int? ?? 10,
       intents: parsedIntents,
+      sfx: json['sfx'] as String?,
     );
   }
 }

@@ -1405,6 +1405,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'+1 Relic'**
   String get eventGainRelic;
+
+  /// No description provided for @settingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settingsTitle;
+
+  /// No description provided for @audioSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio'**
+  String get audioSection;
+
+  /// No description provided for @volumeMaster.
+  ///
+  /// In en, this message translates to:
+  /// **'Master volume'**
+  String get volumeMaster;
+
+  /// No description provided for @volumeSfx.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound effects'**
+  String get volumeSfx;
+
+  /// No description provided for @volumeMusic.
+  ///
+  /// In en, this message translates to:
+  /// **'Music'**
+  String get volumeMusic;
+
+  /// No description provided for @muteAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute all'**
+  String get muteAll;
 }
 
 class _AppLocalizationsDelegate

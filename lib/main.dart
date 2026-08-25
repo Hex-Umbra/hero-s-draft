@@ -5,12 +5,19 @@ import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'ui/screens/splash_screen.dart';
 import 'ui/widgets/notification_overlay.dart';
 import 'game/controllers/checkpoint_controller.dart';
+import 'services/audio/audio_providers.dart';
+import 'services/audio/flame_audio_backend.dart';
 
 import 'ui/theme/app_theme.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const ProviderScope(child: HerosDraftApp()));
+  runApp(
+    ProviderScope(
+      overrides: [audioBackendProvider.overrideWithValue(FlameAudioBackend())],
+      child: const HerosDraftApp(),
+    ),
+  );
 }
 
 class HerosDraftApp extends ConsumerWidget {
@@ -20,6 +27,8 @@ class HerosDraftApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Force l'activation de l'écoute d'autosave dès le démarrage de l'app.
     ref.watch(autosaveOrchestratorProvider);
+    // Hydrate les reglages audio persistes (volumes, coupure) une seule fois.
+    ref.watch(audioSettingsHydrationProvider);
 
     return MaterialApp(
       onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
@@ -34,11 +43,15 @@ class HerosDraftApp extends ConsumerWidget {
       supportedLocales: const [Locale('en', ''), Locale('fr', '')],
       home: const SplashScreen(),
       builder: (context, child) {
-        return Stack(
-          children: [
-            child ?? const SizedBox.shrink(),
-            const GameNotificationOverlay(),
-          ],
+        return Listener(
+          behavior: HitTestBehavior.translucent,
+          onPointerDown: (_) => ref.read(musicConductorProvider).unlock(),
+          child: Stack(
+            children: [
+              child ?? const SizedBox.shrink(),
+              const GameNotificationOverlay(),
+            ],
+          ),
         );
       },
     );

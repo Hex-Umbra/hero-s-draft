@@ -4,6 +4,8 @@ import '../../models/card_instance.dart';
 import '../../models/data/card_data.dart';
 import '../../models/missing_save_item.dart';
 import '../../models/data/forge_upgrade_data.dart';
+import '../../services/audio/audio_providers.dart';
+import '../../services/audio/game_moment.dart';
 
 class DeckState {
   final List<CardInstance> masterDeck;
@@ -200,6 +202,7 @@ class DeckNotifier extends Notifier<DeckState> {
   /// celle-ci est vide, y compris au milieu d'une pioche. Une seule
   /// affectation de `state`, donc une seule notification Riverpod.
   void drawCards(int amount, {required int maxHandSize}) {
+    final initialHandSize = state.hand.length;
     final result = _drawInto(
       draw: List<CardInstance>.from(state.drawPile),
       hand: List<CardInstance>.from(state.hand),
@@ -215,6 +218,13 @@ class DeckNotifier extends Notifier<DeckState> {
       discardPile: result.discard,
       reshuffleCount: state.reshuffleCount + result.reshuffles,
     );
+
+    // Un seul son par appel, meme si plusieurs cartes sont piochees d'un
+    // coup ("Piocher 2"), et seulement si au moins une carte a rejoint la
+    // main (pioche ET defausse vides, ou main deja pleine : silence).
+    if (result.hand.length > initialHandSize) {
+      ref.read(audioDirectorProvider).onMoment(GameMoment.cardDraw);
+    }
   }
 
   /// Défausse toute la main à la fin du tour

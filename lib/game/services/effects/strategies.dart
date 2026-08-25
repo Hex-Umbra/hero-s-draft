@@ -7,6 +7,8 @@ import '../../controllers/combat_controller.dart';
 import '../damage_pipeline.dart';
 import '../effect_resolver.dart';
 import '../../game_constants.dart';
+import '../../../services/audio/audio_providers.dart';
+import '../../../services/audio/game_moment.dart';
 import 'effect_strategy.dart';
 
 class DamageEffectStrategy implements EffectStrategy {
@@ -104,6 +106,7 @@ class GainManaEffectStrategy implements EffectStrategy {
   }) {
     final currentMana = runController.currentState.heroStats.currentMana;
     runController.setHeroStats(currentMana: currentMana + scaledValue);
+    runController.ref.read(audioDirectorProvider).onMoment(GameMoment.manaGain);
   }
 }
 

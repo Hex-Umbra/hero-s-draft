@@ -20,6 +20,8 @@ import 'controllers/run_controller.dart';
 import 'controllers/deck_controller.dart';
 import '../models/enemy_intent.dart';
 import '../models/combat_state.dart';
+import '../services/audio/audio_director.dart';
+import '../services/audio/game_moment.dart';
 
 import 'systems/state_sync_system.dart';
 import 'systems/card_animation_system.dart';
@@ -53,6 +55,9 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   EnemyCard? highlightedEnemy;
   bool isCardAnimating = false;
 
+  /// Injecte depuis `GameScreen` : la couche Flame ne lit jamais un provider.
+  final AudioDirector audio;
+
   final void Function() onEnemiesDead;
   final void Function(TurnPhase) onPhaseChanged;
   final void Function(String title, String description, CardType? cardType) onShowTooltip;
@@ -70,6 +75,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   final VoidCallback? onAnimationStateChanged;
 
   HerosDraftGame({
+    required this.audio,
     required this.onEnemiesDead,
     required this.onPhaseChanged,
     required this.onShowTooltip,
@@ -87,6 +93,9 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   });
 
   void setHoveredCard(CardComponent? card) {
+    if (card != null && card != hoveredCard) {
+      audio.onMoment(GameMoment.cardHover);
+    }
     cardAnimationSystem?.setHoveredCard(card);
   }
 
@@ -226,6 +235,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
     if (deadCards.isEmpty) return;
 
     for (var card in deadCards) {
+      audio.onMoment(GameMoment.enemyDeath, source: card.data);
       card.isDead = true;
       card.add(OpacityEffect.to(0.0, EffectController(duration: 0.4)));
       card.add(
@@ -282,6 +292,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
           focusedCard!.card.data.target == CardTarget.allEnemies) {
         final cardToPlay = focusedCard!;
         if (!cardToPlay.canAfford) {
+          audio.onMoment(GameMoment.insufficientMana);
           cardToPlay.shakeAnimation();
           return;
         }
@@ -300,6 +311,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
         currentRunState!.isDead) {
       return;
     }
+    audio.onMoment(GameMoment.turnEnd);
 
     currentPhase = TurnPhase.enemy;
 
@@ -373,6 +385,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
       if (intent == null) continue;
 
       if (intent.type == IntentType.attack) {
+        audio.onMoment(GameMoment.enemyAttack, source: enemy.data);
         enemy.dashAnimation();
       } else {
         enemy.buffAnimation(intent.type);

@@ -5,30 +5,27 @@
 
 ## Métriques
 
-**Vérifié le 2026-08-23**
+**Vérifié le 2026-08-25**
 
 | Métrique | Valeur | Commande |
 |:---|:---|:---|
-| Tests automatisés (jeu) | 295 au vert | `flutter test` |
-| Fichiers de test | 51 | `find test -name "*.dart" \| wc -l` |
+| Tests automatisés (jeu) | 354 au vert | `flutter test` |
+| Fichiers de test | 65 | `find test -name "*.dart" \| wc -l` |
 | Analyse statique | 0 erreur (`No issues found!`) | `dart analyze` |
-| Fichiers Dart (`lib/`) | 174 | `find lib -name "*.dart" \| wc -l` |
-| Lignes de code (`lib/`) | 37 573 | `find lib -name "*.dart" -exec cat {} + \| wc -l` |
-| Fichiers de données | 10 | `ls assets/data/*.json \| wc -l` |
+| Fichiers Dart (`lib/`) | 187 | `find lib -name "*.dart" \| wc -l` |
+| Lignes de code (`lib/`) | 38 784 | `find lib -name "*.dart" -exec cat {} + \| wc -l` |
+| Fichiers de données | 11 | `ls assets/data/*.json \| wc -l` |
 | Tests de la logique du site | 20 au vert | `cd site && node --test` |
 | Assertions du harnais CI | 57 au vert | `bash .github/scripts/test_scripts.sh` |
 | Fichiers suivis sous `site/` | 16 | `git ls-files site/ \| wc -l` |
 
 > [!NOTE]
-> Relevé sur `3045971`, augmenté du correctif de lien Discord de cette même passe. Quatre
-> lignes ont bougé depuis le 2026-08-20. Le chantier **P-45** a ajouté du code et des tests
-> dans `lib/tutorial/` et `test/` ; sa vague de correctifs de fin de revue, puis les deux
-> correctifs de jeu entrés dans le même tag par la PR #28, ont ajouté trois fichiers de test
-> de plus — `tutorial_merge_transition_test.dart`, `enemy_intents_panel_overflow_test.dart`
-> et `level_up_reward_values_test.dart`. Le harnais CI passe de 55 à 57 assertions : le
-> titre cliquable de l'annonce Discord mène désormais au site vitrine et non au build
-> jouable, et les deux moitiés du message sont verrouillées séparément. `site/_site/js/`
-> n'a pas bougé, d'où les 20 tests de site inchangés.
+> Relevé sur `708f34d` (branche `feat/p03-systeme-audio`, pas encore mergée). Le chantier
+> **P-03** (audio) explique tout le mouvement depuis le 2026-08-23 : +13 fichiers Dart et
+> +14 fichiers de test sous `lib/services/audio/`, `lib/models/data/audio_data.dart` et
+> `test/unit/audio/`, un nouveau fichier de données (`assets/data/audio.json`), et 59 tests
+> neufs (295 → 354) sans qu'aucun test existant n'ait été modifié. `site/`, `.github/` et
+> le harnais CI n'ont pas bougé, d'où les trois dernières métriques inchangées.
 
 > [!NOTE]
 > **La version ne vit pas ici.** La version de référence se lit dans `pubspec.yaml`
@@ -173,18 +170,24 @@ Design complet — [ADR-069](../_adr/ADR-069-systeme-de-sauvegarde-de-run-checkp
 
 Structure détaillée — [fiche §15](../_patterns/15-00-chaine-de-release-et-site-vitrine.md).
 
+### 🔊 Système Audio
+
+| Fonctionnalité | Fichiers clés | Détails |
+|:---|:---|:---|
+| Directeur central | `AudioDirector.onMoment()`, `MusicConductor.onScene()` (`lib/services/audio/`) | Point d'entrée unique ; le code de jeu déclare un moment ou une scène, jamais un fichier |
+| Mapping par données | `assets/data/audio.json`, `AudioData`/`SoundData`/`MomentSounds` | Chaîne de repli à 4 niveaux (son propre → type d'animation → défaut → silence) ; champ `sfx` optionnel sur `CardData`/`EnemyData`/`RelicData` |
+| 14 moments de jeu | `GameMoment` | Branchés dans 8 fichiers ; `triggerHitReactions()` couvre à lui seul les 4 moments d'impact, héros et ennemis |
+| Backend silencieux par défaut | `SilentAudioBackend` (défaut), `FlameAudioBackend` (`main.dart` seul à le surcharger) | Les 295 tests antérieurs au chantier n'ont subi aucune modification |
+| Musique par scène | `MusicConductor`, `MusicScene` (menu/map/combat/boss) | `onScene` idempotent, déverrouillage autoplay web au premier geste pointeur |
+| Réglages persistés | `AudioSettingsNotifier`, `SettingsService` | Clé `shared_preferences` dédiée, indépendante de `SaveService` ; écran `SettingsScreen` + coupure au HUD de combat |
+| Sourcing en cours | `test/unit/audio/audio_sourcing_report_test.dart` | Rapport non bloquant, ne rougit jamais la CI ; état courant : `docs/ROADMAP.md` (P-03) |
+
+Design complet — [ADR-082](../_adr/ADR-082-directeur-audio-central-et-mapping-par-donnees.md),
+remplace [ADR-012](../_adr/ADR-012-absence-de-systeme-audio.md). Catalogue des moments et
+chaîne de repli — [`_rules/09-00`](../_rules/09-00-systeme-audio.md). Architecture des trois
+couches — [`_patterns/16-00`](../_patterns/16-00-architecture-du-systeme-audio.md).
+
 ## 2. Dette métier assumée
-
-### ⚠️ Système Audio
-
-| Aspect | État |
-|:---|:---|
-| Commentaires `// TODO: Audio Hook` | 1 occurrence mesurée (`lib/game/components/floating_text.dart`) |
-| Dépendance `flame_audio` dans `pubspec.yaml` | ❌ ABSENTE |
-| Service `AudioService` | ❌ ABSENT |
-| Fichiers audio dans `assets/` | ❌ ABSENTS |
-
-Absence délibérée — [ADR-012](../_adr/ADR-012-absence-de-systeme-audio.md).
 
 ### ⚠️ Sérialisation Partielle des Modèles
 

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../models/data/hero_data.dart';
 import '../../services/game_data_service.dart';
+import '../../services/audio/audio_providers.dart';
+import '../../services/audio/music_scene.dart';
 import 'card_dictionary_screen.dart';
 import 'starter_deck_draft_screen.dart';
 import '../widgets/sword_icon.dart';
@@ -15,6 +17,8 @@ class ClassSelectionScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.read(musicConductorProvider).onScene(MusicScene.menu);
+
     // Les données sont déjà chargées par le SplashScreen
     final gameData = ref.watch(gameDataLoaderProvider).requireValue;
     final classes = gameData.heroes;

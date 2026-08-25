@@ -14,6 +14,8 @@ import 'forge_fusion_screen.dart';
 import 'draft_screen.dart';
 import '../../models/card_instance.dart';
 import '../../game/controllers/deck_controller.dart';
+import '../../services/audio/audio_providers.dart';
+import '../../services/audio/music_scene.dart';
 import '../widgets/map/map_connection_painter.dart';
 import '../widgets/map/map_legend.dart';
 import '../widgets/map/map_node_widget.dart';
@@ -145,6 +147,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
   @override
   Widget build(BuildContext context) {
+    ref.read(musicConductorProvider).onScene(MusicScene.map);
+
     final runState = ref.watch(runProvider);
     final inventoryState = ref.watch(inventoryProvider);
     final nodes = runState.mapNodes;

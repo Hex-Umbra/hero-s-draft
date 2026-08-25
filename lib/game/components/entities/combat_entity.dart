@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../../heros_draft_game.dart';
 import '../../../models/entity_stats.dart';
 import '../../../models/combat_state.dart';
+import '../../../services/audio/game_moment.dart';
 import '../floating_text.dart';
 
 abstract class CombatEntity extends PositionComponent
@@ -192,6 +193,7 @@ abstract class CombatEntity extends PositionComponent
           position + Vector2(0, (size.y / 2 - 20) * scale.y),
           isShield: true,
         );
+        game.audio.onMoment(GameMoment.armorHit);
         shieldHitAnimation();
       } else if (newStats.armure > oldStats.armure) {
         final gainedArmor = newStats.armure - oldStats.armure;
@@ -200,12 +202,14 @@ abstract class CombatEntity extends PositionComponent
           Colors.lightBlueAccent,
           position + Vector2(0, -size.y * scale.y / 2),
         );
+        game.audio.onMoment(GameMoment.armorHit);
       }
     }
 
     if (newStats.currentPv < oldStats.currentPv) {
       final lostHp = oldStats.currentPv - newStats.currentPv;
       final isCritical = newStats.lastActionWasCrit;
+      game.audio.onMoment(isCritical ? GameMoment.impactCrit : GameMoment.impact);
       final damageColor = isPoisonDamage
           ? const Color(0xFF10B981) // Poison neon green
           : (isCritical
@@ -230,6 +234,16 @@ abstract class CombatEntity extends PositionComponent
         color: damageColor,
         count: isCritical ? 35 : (isPoisonDamage ? 12 : 15),
       );
+    } else if (newStats.currentPv > oldStats.currentPv) {
+      // Toute hausse de PV est traitee comme un soin. Cela ne produit pas de
+      // faux positif aujourd'hui pour deux raisons qui ne sont PAS des garde-fous
+      // audio : la premiere synchro d'une entite passe par son constructeur et
+      // non par `updateStats`, et `GameScreen` est depile avant que les gains de
+      // niveau et les recompenses n'appliquent leurs modificateurs de PV max.
+      // Un contenu qui accorderait des PV max EN COMBAT (relique, competence)
+      // casserait cet equilibre et ferait sonner un soin sans soin — c'est le
+      // meme defaut que `suppressArmorChange` corrige deja pour l'armure.
+      game.audio.onMoment(GameMoment.heal);
     }
   }
 }

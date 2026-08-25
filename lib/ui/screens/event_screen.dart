@@ -7,6 +7,8 @@ import '../../game/controllers/inventory_controller.dart';
 import '../../models/data/event_data.dart';
 import '../../models/data/relic_data.dart';
 import '../../services/game_data_service.dart';
+import '../../services/audio/audio_providers.dart';
+import '../../services/audio/music_scene.dart';
 import '../widgets/notification_overlay.dart';
 import '../widgets/screen_scaffold.dart';
 
@@ -299,6 +301,8 @@ class _EventScreenState extends ConsumerState<EventScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.read(musicConductorProvider).onScene(MusicScene.map);
+
     final eventState = ref.watch(eventProvider);
     final activeEvent = eventState.activeEvent;
 

@@ -819,4 +819,22 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get eventGainRelic => '+1 Relique';
+
+  @override
+  String get settingsTitle => 'Réglages';
+
+  @override
+  String get audioSection => 'Audio';
+
+  @override
+  String get volumeMaster => 'Volume général';
+
+  @override
+  String get volumeSfx => 'Bruitages';
+
+  @override
+  String get volumeMusic => 'Musique';
+
+  @override
+  String get muteAll => 'Couper le son';
 }

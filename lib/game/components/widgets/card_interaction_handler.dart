@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../card_component.dart';
 import '../entities/enemy_card.dart';
 import '../../../models/data/card_data.dart';
+import '../../../services/audio/game_moment.dart';
 import '../visual_effects/ribbon_trail.dart';
 
 class CardInteractionHandler {
@@ -31,6 +32,11 @@ class CardInteractionHandler {
     if (cardComponent.game.focusedCard == cardComponent) {
       cardComponent.game.setFocusedCard(null);
     } else {
+      // La carte devient la carte focalisee : c'est le geste de "pick up"
+      // du parcours clic-pour-jouer, l'equivalent au clic du debut d'un
+      // glisser (voir onDragStart). Ne pas emettre dans la branche
+      // inverse : defocaliser n'est pas reprendre la carte en main.
+      cardComponent.game.audio.onMoment(GameMoment.cardPickup);
       cardComponent.game.setFocusedCard(cardComponent);
     }
     cardComponent.refreshVisuals();
@@ -51,7 +57,17 @@ class CardInteractionHandler {
     cardComponent.game.add(cardComponent.activeTrail!);
 
     if (cardComponent.game.focusedCard == cardComponent) {
+      // Vrai signifie qu'onTapDown, qui s'execute toujours en premier sur ce
+      // meme geste, vient de focaliser cette carte dans sa propre branche
+      // else (elle partait donc non focalisee) et a deja emis cardPickup
+      // a ce moment-la. Ce glisser ne fait qu'acter la fin du focus, ce
+      // n'est pas une seconde prise en main : ne pas re-emettre.
       cardComponent.game.setFocusedCard(null);
+    } else {
+      // Faux signifie que la carte partait deja focalisee : onTapDown vient
+      // de la defocaliser sans emettre (voir son propre commentaire). C'est
+      // donc ici, et seulement ici, l'unique emission de ce geste.
+      cardComponent.game.audio.onMoment(GameMoment.cardPickup);
     }
     if (cardComponent.game.hoveredCard == cardComponent) {
       cardComponent.game.setHoveredCard(null);
@@ -116,6 +132,7 @@ class CardInteractionHandler {
     }
 
     if (!cardComponent.canAfford) {
+      cardComponent.game.audio.onMoment(GameMoment.insufficientMana);
       cardComponent.animator.shakeAnimation();
       cardComponent.animator.returnToHand();
       cardComponent.game.highlightEnemy(null);

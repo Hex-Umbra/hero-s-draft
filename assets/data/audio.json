@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "sounds": {
+    "card_hover":        { "file": "sfx/card_hover.mp3", "volume": 0.4 },
+    "card_pickup":       { "file": "sfx/card_pickup.mp3", "volume": 0.6 },
+    "card_play_generic": { "file": "sfx/card_play_generic.mp3" },
+    "card_play_melee":   { "file": "sfx/card_play_melee.mp3" },
+    "card_play_magic":   { "file": "sfx/card_play_magic.mp3" },
+    "card_play_buff":    { "file": "sfx/card_play_buff.mp3" },
+    "impact_normal":     { "file": "sfx/impact_normal.mp3", "volume": 0.9, "variants": 3 },
+    "impact_crit":       { "file": "sfx/impact_crit.mp3" },
+    "armor_hit":         { "file": "sfx/armor_hit.mp3", "volume": 0.8 },
+    "heal":              { "file": "sfx/heal.mp3", "volume": 0.7 },
+    "enemy_attack":      { "file": "sfx/enemy_attack.mp3", "volume": 0.8 },
+    "enemy_death":       { "file": "sfx/enemy_death.mp3" },
+    "card_draw":         { "file": "sfx/card_draw.mp3", "volume": 0.5 },
+    "mana_gain":         { "file": "sfx/mana_gain.mp3", "volume": 0.6 },
+    "insufficient_mana": { "file": "sfx/insufficient_mana.mp3", "volume": 0.7 },
+    "turn_start":        { "file": "sfx/turn_start.mp3", "volume": 0.6 },
+    "turn_end":          { "file": "sfx/turn_end.mp3", "volume": 0.6 }
+  },
+  "moments": {
+    "card_hover":        { "default": "card_hover" },
+    "card_pickup":       { "default": "card_pickup" },
+    "card_play":         { "default": "card_play_generic",
+                           "byAnimation": { "melee": "card_play_melee",
+                                            "magic": "card_play_magic",
+                                            "buff": "card_play_buff" } },
+    "impact":            { "default": "impact_normal" },
+    "impact_crit":       { "default": "impact_crit" },
+    "armor_hit":         { "default": "armor_hit" },
+    "heal":              { "default": "heal" },
+    "enemy_attack":      { "default": "enemy_attack" },
+    "enemy_death":       { "default": "enemy_death" },
+    "card_draw":         { "default": "card_draw" },
+    "mana_gain":         { "default": "mana_gain" },
+    "insufficient_mana": { "default": "insufficient_mana" },
+    "turn_start":        { "default": "turn_start" },
+    "turn_end":          { "default": "turn_end" }
+  },
+  "music": {
+    "menu":   { "file": "music/menu.mp3",   "volume": 0.6 },
+    "map":    { "file": "music/map.mp3",    "volume": 0.6 },
+    "combat": { "file": "music/combat.mp3", "volume": 0.6 },
+    "boss":   { "file": "music/boss.mp3",   "volume": 0.7 }
+  }
+}

@@ -1,6 +1,7 @@
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import '../heros_draft_game.dart';
+import '../../services/audio/game_moment.dart';
 import '../controllers/run_controller.dart';
 import '../controllers/deck_controller.dart';
 import '../../models/combat_state.dart';
@@ -109,6 +110,7 @@ class StateSyncSystem extends Component with HasGameReference<HerosDraftGame> {
       } else {
         card.isDead = true;
         card.isPendingDeath = true;
+        game.audio.onMoment(GameMoment.enemyDeath, source: card.data);
         card.add(OpacityEffect.to(0.0, EffectController(duration: 0.4)));
         card.add(
           ScaleEffect.to(

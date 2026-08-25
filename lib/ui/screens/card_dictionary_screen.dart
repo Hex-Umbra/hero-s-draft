@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../services/game_data_service.dart';
+import '../../services/audio/audio_providers.dart';
+import '../../services/audio/music_scene.dart';
 import '../../models/data/card_data.dart';
 import '../../models/data/relic_data.dart';
 import '../widgets/ui_card.dart';
@@ -12,6 +14,8 @@ class CardDictionaryScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.read(musicConductorProvider).onScene(MusicScene.menu);
+
     final gameDataAsync = ref.watch(gameDataLoaderProvider);
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).languageCode;

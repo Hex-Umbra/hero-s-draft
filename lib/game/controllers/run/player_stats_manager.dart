@@ -5,6 +5,8 @@ import '../../../models/data/relic_data.dart';
 import '../inventory_controller.dart';
 import '../run_controller.dart';
 import '../checkpoint_controller.dart';
+import '../../../services/audio/audio_providers.dart';
+import '../../../services/audio/game_moment.dart';
 
 class PlayerStatsManager {
   final RunController controller;
@@ -436,6 +438,7 @@ class PlayerStatsManager {
     }
 
     if (mana > 0 && controller.currentState.heroStats.currentMana < mana) {
+      ref.read(audioDirectorProvider).onMoment(GameMoment.insufficientMana);
       return false;
     }
 

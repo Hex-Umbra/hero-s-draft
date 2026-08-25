@@ -223,5 +223,12 @@
   "eventGainHp": "+{amount} PV",
   "eventGainMaxHp": "+{amount} PV Max",
   "eventGainAttack": "+{amount} Attaque",
-  "eventGainRelic": "+1 Relique"
+  "eventGainRelic": "+1 Relique",
+
+  "settingsTitle": "Réglages",
+  "audioSection": "Audio",
+  "volumeMaster": "Volume général",
+  "volumeSfx": "Bruitages",
+  "volumeMusic": "Musique",
+  "muteAll": "Couper le son"
 }

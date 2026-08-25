@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../../services/audio/audio_source.dart';
 import 'game_data_registry.dart';
 
 enum CardType { attack, skill, power, status }
@@ -39,7 +40,7 @@ class CardEffect {
       };
 }
 
-class CardData {
+class CardData implements AudioSource {
   final String id;
   final String nameEn;
   final String nameFr;
@@ -52,7 +53,10 @@ class CardData {
   final CardRarity rarity;
   final CardTarget target;
   final String? spritePath;
+  @override
   final String? animation; // Type d'animation (ex: 'melee', 'magic', 'buff')
+  @override
+  final String? sfx; // Identifiant de son propre a la carte (voir audio.json)
   final bool isExhaust;
   final List<CardEffect> effects;
   final int baseMaxForgeUpgrades;
@@ -71,6 +75,7 @@ class CardData {
     required this.target,
     this.spritePath,
     this.animation,
+    this.sfx,
     this.isExhaust = false,
     required this.effects,
     this.baseMaxForgeUpgrades = 1,
@@ -115,6 +120,7 @@ class CardData {
       ),
       spritePath: json['spritePath'] as String?,
       animation: json['animation'] as String?,
+      sfx: json['sfx'] as String?,
       isExhaust: json['isExhaust'] as bool? ?? false,
       effects:
           (json['effects'] as List<dynamic>?)

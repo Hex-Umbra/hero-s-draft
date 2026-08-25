@@ -8,6 +8,8 @@ import '../../game/controllers/deck_controller.dart';
 import '../../game/controllers/shop_controller.dart';
 import '../../game/controllers/inventory_controller.dart';
 import '../../services/game_data_service.dart';
+import '../../services/audio/audio_providers.dart';
+import '../../services/audio/music_scene.dart';
 import '../../models/card_instance.dart';
 import '../widgets/ui_card.dart';
 import '../widgets/notification_overlay.dart';
@@ -285,6 +287,8 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.read(musicConductorProvider).onScene(MusicScene.map);
+
     final runState = ref.watch(runProvider);
     final inventoryState = ref.watch(inventoryProvider);
     final shopState = ref.watch(shopProvider);

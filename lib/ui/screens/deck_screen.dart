@@ -8,6 +8,8 @@ import '../../game/controllers/deck_controller.dart';
 import '../../models/card_instance.dart';
 import '../../models/data/card_data.dart';
 import '../../models/data/forge_upgrade_data.dart';
+import '../../services/audio/audio_providers.dart';
+import '../../services/audio/music_scene.dart';
 import '../widgets/ui_card.dart';
 import '../widgets/notification_overlay.dart';
 import '../widgets/screen_scaffold.dart';
@@ -19,6 +21,8 @@ class DeckScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.read(musicConductorProvider).onScene(MusicScene.menu);
+
     final deckState = ref.watch(deckProvider);
     final masterDeck = deckState.masterDeck;
     final l10n = AppLocalizations.of(context)!;
