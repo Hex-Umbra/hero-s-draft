@@ -235,7 +235,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
     if (deadCards.isEmpty) return;
 
     for (var card in deadCards) {
-      audio.onMoment(GameMoment.enemyDeath);
+      audio.onMoment(GameMoment.enemyDeath, source: card.data);
       card.isDead = true;
       card.add(OpacityEffect.to(0.0, EffectController(duration: 0.4)));
       card.add(
@@ -385,7 +385,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
       if (intent == null) continue;
 
       if (intent.type == IntentType.attack) {
-        audio.onMoment(GameMoment.enemyAttack);
+        audio.onMoment(GameMoment.enemyAttack, source: enemy.data);
         enemy.dashAnimation();
       } else {
         enemy.buffAnimation(intent.type);

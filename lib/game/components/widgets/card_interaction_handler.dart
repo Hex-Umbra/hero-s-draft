@@ -32,6 +32,11 @@ class CardInteractionHandler {
     if (cardComponent.game.focusedCard == cardComponent) {
       cardComponent.game.setFocusedCard(null);
     } else {
+      // La carte devient la carte focalisee : c'est le geste de "pick up"
+      // du parcours clic-pour-jouer, l'equivalent au clic du debut d'un
+      // glisser (voir onDragStart). Ne pas emettre dans la branche
+      // inverse : defocaliser n'est pas reprendre la carte en main.
+      cardComponent.game.audio.onMoment(GameMoment.cardPickup);
       cardComponent.game.setFocusedCard(cardComponent);
     }
     cardComponent.refreshVisuals();
@@ -41,6 +46,7 @@ class CardInteractionHandler {
   void onDragStart(DragStartEvent event) {
     if (cardComponent.isEnteringHand || cardComponent.isPlayed) return;
 
+    cardComponent.game.audio.onMoment(GameMoment.cardPickup);
     cardComponent.isDragging = true;
     cardComponent.targetTilt = 0;
 

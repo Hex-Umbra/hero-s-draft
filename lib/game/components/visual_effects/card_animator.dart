@@ -130,7 +130,6 @@ class CardAnimator {
   }
 
   void playAnimation(EnemyCard? target, {required VoidCallback onComplete}) {
-    card.game.audio.onMoment(GameMoment.cardPickup);
     card.isPlayed = true;
     card.isDragging = false;
     card.priority = GameConstants.priorityCardDraggingMax;

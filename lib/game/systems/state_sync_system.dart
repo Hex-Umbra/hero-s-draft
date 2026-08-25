@@ -110,7 +110,7 @@ class StateSyncSystem extends Component with HasGameReference<HerosDraftGame> {
       } else {
         card.isDead = true;
         card.isPendingDeath = true;
-        game.audio.onMoment(GameMoment.enemyDeath);
+        game.audio.onMoment(GameMoment.enemyDeath, source: card.data);
         card.add(OpacityEffect.to(0.0, EffectController(duration: 0.4)));
         card.add(
           ScaleEffect.to(
