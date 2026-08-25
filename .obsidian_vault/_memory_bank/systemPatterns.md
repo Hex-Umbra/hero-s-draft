@@ -3,7 +3,7 @@
 > [!IMPORTANT]
 > **Plafond : 120 lignes.** Ce fichier est un index, jamais un contenu. Chaque pattern d'architecture vit dans sa fiche sous `../_patterns/`. Les arbitrages qui les ont produits vivent dans `../_adr/`.
 
-**Vérifié le 2026-08-20** — 40 fiches. Découpage initial depuis un `systemPatterns.md` de 1320 lignes (après archivage des §13-14) ; §15 ajoutée le 2026-08-20.
+**Vérifié le 2026-08-25** — 41 fiches. Découpage initial depuis un `systemPatterns.md` de 1320 lignes (après archivage des §13-14) ; §15 ajoutée le 2026-08-20, §16 le 2026-08-25.
 
 ### 1. Architecture Globale — Séparation Triangulaire
 
@@ -110,8 +110,10 @@
 |:---|:---|---:|
 | 15. Chaîne de Release et Site Vitrine (`.github/` et `site/`) | [15-00-chaine-de-release-et-site-vitrine.md](../_patterns/15-00-chaine-de-release-et-site-vitrine.md) | 83 |
 
----
+### 16. Architecture du Système Audio
 
-## Historique
+| Domaine | Fiche | Lignes |
+|:---|:---|---:|
+| 16. Architecture du Système Audio | [16-00-architecture-du-systeme-audio.md](../_patterns/16-00-architecture-du-systeme-audio.md) | 103 |
 
-Les sections §13 (Design System, v0.0.99) et §14 (UX Combat, v0.1.00) sont dans `../_archive/2026-08-03-systemPatterns-historique.md` — leurs numéros restent pris, d'où le saut de §12 à §15.
+Historique de renumérotation (pourquoi §13-§14 manquent) archivé le 2026-08-25 : `../_archive/2026-08-25-systemPatterns-historique.md`.

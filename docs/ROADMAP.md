@@ -82,7 +82,7 @@ graph TD
 |:---|:---|:---:|:---:|:---:|
 | ~~**P-01**~~ | ~~**Resynchroniser `pubspec.yaml`** (`0.1.0+1` → `0.4.7+1`) sur `patch_notes.json`~~ ✅ **Livré le 2026-08-03** — désormais maintenu automatiquement par le skill `patch-notes-writer` | — | — | — |
 | ~~**P-02**~~ | ~~**Assainissement du système de pioche**~~ ✅ **Livré et validé le 2026-08-06** (code + playtest) — voir [ADR-078](../.obsidian_vault/_adr/ADR-078-assainissement-du-systeme-de-pioche-remelange-a-sec.md) | — | — | — |
-| **P-03** | **Système audio** (`flame_audio` + `SfxService`, ~15 événements) | **3-5 j** | ★★★☆☆ | 🔥🔥🔥 |
+| ~~**P-03**~~ | ~~**Système audio**~~ ✅ **Livré le 2026-08-25** — moteur data-driven complet (directeur central, chaîne de repli à 4 niveaux, musique par scène, réglages persistés) ; sourcing des fichiers en cours — voir [ADR-082](../.obsidian_vault/_adr/ADR-082-directeur-audio-central-et-mapping-par-donnees.md) | — | — | — |
 | ~~**P-04**~~ | ~~**CI/CD GitHub Actions**~~ ✅ **Livré le 2026-08-20** en deux lots (chaîne CI/CD puis site vitrine), publié en `0.4.8` — voir [ADR-079](../.obsidian_vault/_adr/ADR-079-chaine-de-release-declenchee-par-tag-et-garde-fou.md) et [ADR-080](../.obsidian_vault/_adr/ADR-080-site-vitrine-pilote-par-la-donnee-et-jointure-decl.md) | — | — | — |
 
 ### P-01 — Resync de version
@@ -113,8 +113,38 @@ graph TD
 **Livrable annexe** : 6 tests aujourd'hui inécrivables + une première relique interagissant avec le deck (`maxHandSize`).
 
 ### P-03 — Audio
-**Le plus gros gain de game feel par heure investie du projet**, et la recommandation n°1 de l'audit du 25/07, très loin devant toutes les autres. État vérifié le 31/07 : aucune dépendance audio dans `pubspec.yaml`, aucun `AudioService`, aucun fichier son — seulement des `// TODO: Audio Hook` disséminés. Chantier identifié depuis la Phase 4 de la roadmap de dette technique et jamais entamé.
-**Difficulté technique modeste** (★★★☆☆) : `flame_audio` + un service central, les points d'accroche existent déjà (`onTick`/`onLand` du carrousel de reliques, hooks du draft). **Le vrai coût est le sourcing** : ~15 bruitages + 4 musiques (menu, carte, combat, boss) à trouver, licencier et calibrer. Prévoir cette part en parallèle du code.
+> [!NOTE]
+> ✅ **Livré le 2026-08-25** (branche `feat/p03-systeme-audio`, 28 commits). Conception et
+> arbitrages : [ADR-082](../.obsidian_vault/_adr/ADR-082-directeur-audio-central-et-mapping-par-donnees.md).
+> Catalogue des moments et chaîne de repli : [`_rules/09-00`](../.obsidian_vault/_rules/09-00-systeme-audio.md).
+> Architecture : [`_patterns/16-00`](../.obsidian_vault/_patterns/16-00-architecture-du-systeme-audio.md).
+>
+> **L'estimation d'origine (3-5 j) était sous-chiffrée : le chantier a réellement demandé
+> 6-9 j hors sourcing.** L'écart tient à trois postes absents du chiffrage du 31/07 : la
+> **musique** (le diagnostic ne portait que sur les bruitages, pas les 4 pistes par scène),
+> l'**écran de réglages** (créé de zéro — aucun n'existait avant ce chantier), et le
+> **mapping par données** (`assets/data/audio.json` piloté par une chaîne de repli à 4
+> niveaux, plutôt que le catalogue codé en dur envisagé au 31/07). Détail du chiffrage par
+> poste : `docs/superpowers/specs/2026-08-24-p03-systeme-audio-design.md` §14.
+>
+> **Le sourcing reste ouvert, et reste hors chiffrage.** 23 fichiers restent à trouver,
+> licencier et poser sous `assets/audio/` : 19 bruitages (dont les 3 variantes
+> d'`impact_normal`) et 4 musiques. Le jeu tourne et reste silencieux tant qu'ils ne sont pas
+> livrés — c'est le comportement voulu (voir ADR-082, D5), pas une régression. État courant à
+> la demande : `flutter test test/unit/audio/audio_sourcing_report_test.dart --reporter expanded`.
+>
+> Le **Jalon 1 « Socle »** (§9) est clos avec cette livraison.
+
+*Diagnostic du 31/07/2026, conservé tel quel pour mémoire — le chantier est livré depuis (voir
+la note ci-dessus) :* « Le plus gros gain de game feel par heure investie du projet », et la
+recommandation n°1 de l'audit du 25/07, très loin devant toutes les autres. État vérifié le
+31/07 : aucune dépendance audio dans `pubspec.yaml`, aucun `AudioService`, aucun fichier son —
+seulement des `// TODO: Audio Hook` disséminés. Chantier identifié depuis la Phase 4 de la
+roadmap de dette technique et jamais entamé. **Difficulté technique modeste** (★★★☆☆) :
+`flame_audio` + un service central, les points d'accroche existent déjà (`onTick`/`onLand` du
+carrousel de reliques, hooks du draft). **Le vrai coût est le sourcing** : ~15 bruitages + 4
+musiques (menu, carte, combat, boss) à trouver, licencier et calibrer. Prévoir cette part en
+parallèle du code.
 
 ### P-04 — CI/CD
 > [!NOTE]
@@ -442,7 +472,7 @@ gantt
     P-01 Resync version (clos)    :done, j1a, 2026-08-01, 1d
     P-02 Assainissement pioche    :done, j1b, after j1a, 3d
     P-04 CI/CD                    :done, j1c, after j1a, 3d
-    P-03 Audio                    :j1d, after j1b, 5d
+    P-03 Audio (clos)             :done, j1d, after j1b, 7d
     section Jalon 2 — Feel & contenu
     P-06 P0 animations            :j2a, after j1d, 3d
     P-07 P1 juice                 :j2b, after j2a, 6d
@@ -454,7 +484,11 @@ gantt
     P-16 Refonte probabilités     :j3c, after j3b, 3d
 ```
 
-### Jalon 1 — Socle *(≈ 11 j)* → ~~P-01~~ ✅, ~~P-02~~ ✅, ~~P-04~~ ✅, P-03
+### Jalon 1 — Socle *(≈ 11 j annoncés)* → ~~P-01~~ ✅, ~~P-02~~ ✅, ~~P-04~~ ✅, ~~P-03~~ ✅
+> [!NOTE]
+> ✅ **Jalon clos le 2026-08-25**, avec la livraison de P-03. Son estimation réelle (6-9 j hors
+> sourcing) dépasse celle annoncée ci-dessus — voir le détail dans sa propre section §2.
+
 Corrige les règles cassées, comble le trou audio, automatise la distribution. **Rien de nouveau n'est ajouté** — c'est délibéré : tout ajout de contenu posé sur l'ancienne pioche aurait dû être re-testé après P-02, désormais livré.
 
 ### Jalon 2 — Feel & contenu *(≈ 14 j)* → P-06, P-08 (proto), P-07, P-05

@@ -1,7 +1,9 @@
 ## 🔇 ADR-012 : Absence de Système Audio
 
 ### Statut
-⚠️ Accepté (dette technique reconnue)
+✅ **Remplacé par [ADR-082](ADR-082-directeur-audio-central-et-mapping-par-donnees.md) le
+2026-08-25** (chantier P-03) : un système audio complet existe désormais, la décision
+« pas d'audio » ci-dessous est intégralement renversée. Conservé pour mémoire.
 
 ### Contexte
 `// TODO: Audio Hook` est disséminé dans les fichiers d'effets et d'interactions de cartes, mais aucune dépendance audio n'existe dans `pubspec.yaml`.

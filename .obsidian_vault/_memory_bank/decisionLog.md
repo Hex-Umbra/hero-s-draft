@@ -5,10 +5,11 @@ Index des **ADR** (Architecture Decision Records) de **Hero's Draft**. Le corps 
 > [!IMPORTANT]
 > **Plafond : 250 lignes.** Ce fichier est un index, jamais un contenu. Un nouvel ADR prend le numéro `max(index) + 1` lu ici, jamais un numéro deviné.
 
-**Vérifié le 2026-08-23** — 81 décisions, numéros `ADR-001` à `ADR-081`, sans doublon ni trou.
+**Vérifié le 2026-08-25** — 82 décisions, numéros `ADR-001` à `ADR-082`, sans doublon ni trou.
 
 | N° | Décision | Statut | Version | Fichier |
 |:---|:---|:---:|:---:|:---|
+| `ADR-082` | Directeur Audio Central et Mapping par Données — Chaîne de Repli à 4 Niveaux (chantier P-03) | ✅ | — | [ADR-082-directeur-audio-central-et-mapping-par-donnees.md](../_adr/ADR-082-directeur-audio-central-et-mapping-par-donnees.md) |
 | `ADR-081` | Amendement de la Règle d'Autonomie du Tutoriel — Zéro Provider d'État (chantier P-45) | ✅ | 0.4.9 | [ADR-081-amendement-autonomie-tutoriel-zero-provider-etat.md](../_adr/ADR-081-amendement-autonomie-tutoriel-zero-provider-etat.md) |
 | `ADR-080` | Site Vitrine Piloté par la Donnée et Jointure Déclarée Version → Patch Note (chantier P-04, lot 2) | ✅ | 0.4.8 | [ADR-080-site-vitrine-pilote-par-la-donnee-et-jointure-decl.md](../_adr/ADR-080-site-vitrine-pilote-par-la-donnee-et-jointure-decl.md) |
 | `ADR-079` | Chaîne de Release Déclenchée par Tag et Garde-fou de Version à Trois Fichiers (chantier P-04, lot 1) | ✅ | — | [ADR-079-chaine-de-release-declenchee-par-tag-et-garde-fou.md](../_adr/ADR-079-chaine-de-release-declenchee-par-tag-et-garde-fou.md) |
@@ -78,7 +79,7 @@ Index des **ADR** (Architecture Decision Records) de **Hero's Draft**. Le corps 
 | `ADR-015` | Système de Carrousel de Récompense de Reliques (Interactive Relic Carousel Reward System) | ✅ | — | [ADR-015-systeme-de-carrousel-de-recompense-de-reliques.md](../_adr/ADR-015-systeme-de-carrousel-de-recompense-de-reliques.md) |
 | `ADR-014` | Système de Résolution des Altérations Élémentaires (Burn, Freeze, Shock) | ✅ | — | [ADR-014-systeme-de-resolution-des-alterations-elementaires.md](../_adr/ADR-014-systeme-de-resolution-des-alterations-elementaires.md) |
 | `ADR-013` | Système de Mort et de Stats Synchronisé Z-Sync (Z-Sync Death & Stats System) | ✅ | — | [ADR-013-systeme-de-mort-et-de-stats-synchronise-z-sync.md](../_adr/ADR-013-systeme-de-mort-et-de-stats-synchronise-z-sync.md) |
-| `ADR-012` | Absence de Système Audio | ⚠️ | — | [ADR-012-absence-de-systeme-audio.md](../_adr/ADR-012-absence-de-systeme-audio.md) |
+| `ADR-012` | Absence de Système Audio — **remplacée par `ADR-082`** | ✅ | — | [ADR-012-absence-de-systeme-audio.md](../_adr/ADR-012-absence-de-systeme-audio.md) |
 | `ADR-011` | Absence de Système de Persistance | ✅ | v3.2.0 | [ADR-011-absence-de-systeme-de-persistance.md](../_adr/ADR-011-absence-de-systeme-de-persistance.md) |
 | `ADR-010` | Absence Délibérée de Routeur Centralisé | ⚠️ | — | [ADR-010-absence-deliberee-de-routeur-centralise.md](../_adr/ADR-010-absence-deliberee-de-routeur-centralise.md) |
 | `ADR-009` | Graphe Acyclique Dirigé pour la Carte du Monde | ✅ | — | [ADR-009-graphe-acyclique-dirige-pour-la-carte-du-monde.md](../_adr/ADR-009-graphe-acyclique-dirige-pour-la-carte-du-monde.md) |

@@ -5,7 +5,7 @@ ordre ils ont été écrits. C'est un index de navigation — il ne contient **a
 des liens. Si tu cherches une réponse plutôt qu'un document, la table de `CLAUDE.md` (§Documentation
 Map) t'oriente plus vite.
 
-**Dernière mise à jour** : 2026-08-23
+**Dernière mise à jour** : 2026-08-25
 
 ---
 
@@ -151,7 +151,18 @@ Notes de maîtrise, indépendantes de tout chantier.
 
 - [Concepts](lessons/concept_mastery.md) · [Flame](lessons/flame_mastery.md) · [Riverpod](lessons/riverpod_mastery.md)
 
-## 14. Idées non encore rattachées à un sujet
+## 14. Audio
+
+*Chantier **P-03** de [`ROADMAP.md`](ROADMAP.md) — clos.*
+
+| | Document | Date |
+|:---:|:---|:---|
+| 🔍 | [Audit animations & juice](possible_upgrades/25-07-2026_animations_juice_analysis_Opus5.md) — recommandation n°1, à l'origine du chantier *(→ P-03)* | 25/07/2026 |
+| 📐 | [P-03 — Système audio](superpowers/specs/2026-08-24-p03-systeme-audio-design.md) | 24/08/2026 |
+| 🔨 | [P-03 — Plan d'implémentation](superpowers/plans/2026-08-24-p03-systeme-audio.md) | 24/08/2026 |
+| ✅ | [ADR-082](../.obsidian_vault/_adr/ADR-082-directeur-audio-central-et-mapping-par-donnees.md) → [`ROADMAP.md` P-03](ROADMAP.md) | 25/08/2026 |
+
+## 15. Idées non encore rattachées à un sujet
 
 | | Document |
 |:---:|:---|
