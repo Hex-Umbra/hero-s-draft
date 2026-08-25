@@ -1,12 +1,13 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:meta/meta.dart';
 import '../../models/data/audio_data.dart';
 import '../game_data_service.dart';
 import 'audio_backend.dart';
 import 'audio_director.dart';
 import 'audio_settings.dart';
+import 'music_conductor.dart';
 import 'silent_audio_backend.dart';
 import '../settings_service.dart';
 
@@ -29,6 +30,20 @@ final audioDirectorProvider = Provider<AudioDirector>((ref) {
   );
   unawaited(director.preloadAll());
   return director;
+});
+
+/// Meme repli que [audioDirectorProvider] : catalogue desactive tant que le
+/// chargement asynchrone n'a pas abouti. `locked: kIsWeb` car le web bloque
+/// l'autoplay avant un geste utilisateur ; le deverrouillage est cable a la
+/// tache 11.
+final musicConductorProvider = Provider<MusicConductor>((ref) {
+  final registry = ref.watch(gameDataLoaderProvider).valueOrNull;
+  return MusicConductor(
+    backend: ref.watch(audioBackendProvider),
+    data: registry?.audio ?? const AudioData.disabled(),
+    settings: () => ref.read(audioSettingsProvider),
+    locked: kIsWeb,
+  );
 });
 
 class AudioSettingsNotifier extends Notifier<AudioSettings> {
