@@ -15,12 +15,11 @@ panne, c'est le garde-fou.
 
 **P-03 est livré en code et en documentation, pas encore en version.** Branche
 `feat/p03-systeme-audio`, pas encore mergée dans `main`. `patch-notes-writer` n'a
-**délibérément pas** été invoqué pour cette livraison : 23 fichiers restent à sourcer sous
-`assets/audio/` (19 bruitages dont les 3 variantes d'`impact_normal`, 4 musiques), et une
-note joueur annoncerait un son que personne ne peut encore entendre. Le jeu tourne et reste
-silencieux tant qu'ils manquent — comportement voulu, voir
-[ADR-082](../_adr/ADR-082-directeur-audio-central-et-mapping-par-donnees.md) D5. État courant :
-`flutter test test/unit/audio/audio_sourcing_report_test.dart --reporter expanded`.
+**délibérément pas** été invoqué : le catalogue audio reste troué, et une note joueur
+annoncerait un son que personne ne peut encore entendre — comportement voulu, voir
+[ADR-082](../_adr/ADR-082-directeur-audio-central-et-mapping-par-donnees.md) D5. État du
+sourcing : `docs/ROADMAP.md` (P-03) ; décompte vivant via `flutter test
+test/unit/audio/audio_sourcing_report_test.dart --reporter expanded`.
 **Invoquer `patch-notes-writer` une fois le catalogue comblé, pas avant.**
 
 Quatre réserves à ne pas perdre de vue :
@@ -85,4 +84,4 @@ Quatre réserves à ne pas perdre de vue :
 Jalon 1 « Socle » clos : ~~P-01~~ ✅, ~~P-02~~ ✅, ~~P-04~~ ✅, ~~P-03~~ ✅. Prochain jalon —
 Jalon 2 « Feel & contenu » (`docs/ROADMAP.md` §9) : P-06 (lot P0 animations), puis P-07, le
 prototype de P-08, et P-05. Suivi indépendant de ce séquencement : combler le sourcing audio
-de P-03 (23 fichiers), puis invoquer `patch-notes-writer` pour publier la version.
+de P-03, puis invoquer `patch-notes-writer` pour publier la version.

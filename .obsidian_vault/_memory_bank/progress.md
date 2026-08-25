@@ -180,7 +180,7 @@ Structure détaillée — [fiche §15](../_patterns/15-00-chaine-de-release-et-s
 | Backend silencieux par défaut | `SilentAudioBackend` (défaut), `FlameAudioBackend` (`main.dart` seul à le surcharger) | Les 295 tests antérieurs au chantier n'ont subi aucune modification |
 | Musique par scène | `MusicConductor`, `MusicScene` (menu/map/combat/boss) | `onScene` idempotent, déverrouillage autoplay web au premier geste pointeur |
 | Réglages persistés | `AudioSettingsNotifier`, `SettingsService` | Clé `shared_preferences` dédiée, indépendante de `SaveService` ; écran `SettingsScreen` + coupure au HUD de combat |
-| Sourcing en cours | `test/unit/audio/audio_sourcing_report_test.dart` | Rapport non bloquant : **23 fichiers restants** (19 bruitages dont les 3 variantes d'`impact_normal`, 4 musiques) |
+| Sourcing en cours | `test/unit/audio/audio_sourcing_report_test.dart` | Rapport non bloquant, ne rougit jamais la CI ; état courant : `docs/ROADMAP.md` (P-03) |
 
 Design complet — [ADR-082](../_adr/ADR-082-directeur-audio-central-et-mapping-par-donnees.md),
 remplace [ADR-012](../_adr/ADR-012-absence-de-systeme-audio.md). Catalogue des moments et

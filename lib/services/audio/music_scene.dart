@@ -1,7 +1,7 @@
 /// Les quatre ambiances musicales du jeu. Une scene, une piste.
 enum MusicScene {
-  /// Accueil, Deck, Reglages, Notes de version, Dictionnaire, Selection de
-  /// classe.
+  /// Accueil, Deck, Reglages (heritee), Notes de version, Dictionnaire,
+  /// Selection de classe.
   menu('menu'),
 
   /// Carte du monde, Boutique, Evenement, Repos, Selection de carte au
