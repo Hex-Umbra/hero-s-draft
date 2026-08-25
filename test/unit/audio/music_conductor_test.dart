@@ -111,5 +111,47 @@ void main() {
 
       expect(backend.currentLoop, isNull);
     });
+
+    test(
+        'la musique reprend quand on redemande la meme scene apres une '
+        'coupure puis un demutage', () async {
+      // Regression : refreshVolume() met _current a null dans sa branche a
+      // volume nul, precisement pour que ce cycle fonctionne. onScene() ne
+      // le fait pas dans la sienne (voir le commentaire a cote de
+      // `_current = null` dans refreshVolume) : c'est l'asymetrie qui rend
+      // ce test capable d'echouer si elle disparait.
+      var muted = false;
+      final conductor = MusicConductor(
+        backend: backend,
+        data: _catalogue(),
+        settings: () => AudioSettings(master: 1.0, music: 1.0, muted: muted),
+      );
+
+      conductor.onScene(MusicScene.menu);
+      expect(backend.currentLoop, 'music/menu.mp3');
+      expect(backend.loopStartCount, 1);
+
+      muted = true;
+      await conductor.refreshVolume();
+      expect(backend.currentLoop, isNull, reason: 'la coupure arrete la boucle');
+
+      muted = false;
+      conductor.onScene(MusicScene.menu);
+
+      expect(
+        backend.currentLoop,
+        'music/menu.mp3',
+        reason: 'refreshVolume() a mis _current a null : redemander la meme '
+            "scene n'est donc plus absorbe par le no-op d'idempotence, et la "
+            'musique reprend apres la coupure',
+      );
+      expect(
+        backend.loopStartCount,
+        2,
+        reason: 'sans la nullification dans refreshVolume(), scene == '
+            '_current serait reste vrai et onScene() ne relancerait jamais '
+            'playLoop',
+      );
+    });
   });
 }

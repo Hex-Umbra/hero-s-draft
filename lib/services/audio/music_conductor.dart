@@ -75,6 +75,10 @@ class MusicConductor {
     final volume = track.volume * _settings().effectiveMusic;
     if (volume <= 0) {
       await _backend.stopLoop(fadeMs: _fadeMs);
+      // Annuler _current ici (et pas dans onScene) est delibere : c'est ce
+      // qui permet a la musique de reprendre apres une coupure. Sans ca, le
+      // prochain onScene() pour cette meme scene resterait un no-op via
+      // `scene == _current` et ne relancerait jamais la boucle.
       _current = null;
       return;
     }
