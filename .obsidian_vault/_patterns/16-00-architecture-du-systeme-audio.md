@@ -30,7 +30,9 @@ draft). Pourquoi ces décisions plutôt que des appels dispersés ou un bus d'é
 > raison d'être de l'injection ci-dessous.
 
 - **Couche Flame** (`HerosDraftGame`, tout `lib/game/components/`, tout `lib/game/systems/`) :
-  `game.audio.onMoment(...)` / `game.audio.onScene(...)`, où `audio` est un **champ**
+  `game.audio.onMoment(...)` — c'est la seule méthode que `game.audio` expose. `onScene` n'existe
+  pas sur `AudioDirector` : c'est une méthode de `MusicConductor`, jamais atteint depuis Flame
+  (la couche qui l'appelle est en §16.3). `audio` est un **champ**
   `final AudioDirector audio;` de `HerosDraftGame`, rempli **une seule fois** par `GameScreen`
   via `ref.read(audioDirectorProvider)` au moment de la construction du jeu
   (`game_screen.dart:247`). `HerosDraftGame` n'a structurellement aucun accès à Riverpod : ses
@@ -85,19 +87,39 @@ dérivation avant d'être recentrée sur `expectedFiles`** — toute évolution 
 nommage (`_rules/09-00` §9.3) ne doit donc toucher qu'un seul endroit ; en ajouter un second
 reproduirait exactement la divergence déjà corrigée une fois.
 
-### 16.6. L'asymétrie `_current` de `MusicConductor` — testée, pas accidentelle
+### 16.6. La reprise de `MusicConductor` après coupure — testée, pas accidentelle
 
-`refreshVolume()` met `_current` à `null` dans sa branche à volume nul ; `onScene()` ne le fait
-**pas** dans la sienne. Ce n'est pas un oubli d'harmonisation entre deux méthodes qui semblent
-faire la même chose : c'est ce qui permet à la musique de **reprendre** après une coupure
-suivie d'un démutage. Sans cette asymétrie, redemander la même scène après un cycle
-coupure/démutage resterait un no-op via `scene == _current` (§16.3) et ne relancerait jamais la
-boucle.
+**Invariant central : `_current` est non nul si et seulement si le backend a une boucle
+réellement active pour cette scène.** `onScene()` et `refreshVolume()` le maintiennent tous les
+deux, symétriquement : dès que l'un ou l'autre arrête la boucle (volume effectif nul, que la
+cause soit une coupure, un curseur à 0, ou une scène atteinte alors que le son était déjà coupé),
+il stocke la scène dans `_pending` **et** met `_current` à `null`. Dès que l'un ou l'autre
+démarre une boucle, il vide `_pending`.
+
+Cet invariant est ce qui permet à `refreshVolume()` de choisir correctement entre deux
+comportements quand le volume redevient positif :
+- **`_current` non nul (scène inchangée, boucle déjà active)** : ajuste le volume en place via
+  `setVolume`, sans redémarrer la piste — un simple glissement de curseur ne doit pas faire
+  recommencer la musique depuis le début.
+- **`_current` nul (`_pending` retient la scène arrêtée)** : redémarre en repassant par
+  `onScene(_pending)`, qui pose `_current` et relance la boucle puisque `scene != _current` (nul)
+  est vrai.
+
+C'est ce second cas qui fait que la musique **reprend** après une coupure, y compris quand
+l'écran de réglages est le seul écran visité entre la coupure et le démutage : il n'a pas de
+scène propre (`music_scene.dart` : sa scène est héritée) et n'appelle donc jamais `onScene()` —
+la reprise doit donc pouvoir se faire **depuis `refreshVolume()` seul**, sans dépendre d'un
+écran qui rappellerait `onScene()` depuis son `build()`.
+
+`onScene()` reste idempotent au sens de §16.3 : redemander la scène déjà active (`_current`
+non nul, donc réellement en cours) est toujours un no-op immédiat, avant même de regarder le
+volume.
 
 > [!IMPORTANT]
-> Régression verrouillée par
-> `test/unit/audio/music_conductor_test.dart` — *« la musique reprend quand on redemande la
-> meme scene apres une coupure puis un demutage »*. Une future « harmonisation » de `onScene`
-> et `refreshVolume` qui unifierait leur traitement de `_current` casserait ce test. Ne pas le
-> traiter comme redondant avec les autres tests de coupure : c'est le seul qui couvre le cycle
-> coupure → démutage → reprise, pas seulement la coupure elle-même.
+> Régression verrouillée par `test/unit/audio/music_conductor_test.dart` :
+> *« refreshVolume() redemarre seul la piste apres une coupure, sans aucun appel a onScene
+> entre les deux »* couvre la reprise elle-même ; *« la musique reprend quand on redemande la
+> meme scene apres une coupure puis un demutage »* couvre le cas où un écran rappelle bien
+> `onScene()` après coup ; *« refreshVolume() ajuste le volume en place quand la scene ne
+> change pas »* couvre le chemin `setVolume`. Casser l'invariant ci-dessus — par exemple en ne
+> nullifiant `_current` que d'un seul côté — fait échouer l'un ou l'autre.

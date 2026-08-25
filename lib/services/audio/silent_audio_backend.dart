@@ -17,4 +17,7 @@ class SilentAudioBackend implements AudioBackend {
 
   @override
   Future<void> stopLoop({int fadeMs = 0}) async {}
+
+  @override
+  Future<void> setVolume(double volume) async {}
 }

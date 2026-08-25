@@ -15,4 +15,8 @@ abstract class AudioBackend {
 
   /// Arrete la boucle en cours. Sans effet s'il n'y en a pas.
   Future<void> stopLoop({int fadeMs = 0});
+
+  /// Ajuste le volume de la boucle en cours, sans la redemarrer. Sans effet
+  /// s'il n'y a pas de boucle active. Ne leve jamais.
+  Future<void> setVolume(double volume);
 }

@@ -21,7 +21,10 @@ MusicConductor _conductor(FakeAudioBackend backend, {bool locked = false}) =>
     MusicConductor(
       backend: backend,
       data: _catalogue(),
-      settings: () => const AudioSettings(master: 1.0, music: 1.0),
+      // sfx delibrement different de music : un test qui lirait par erreur
+      // effectiveSfx au lieu d'effectiveMusic doit voir une valeur fausse,
+      // pas une coincidence qui le laisse passer.
+      settings: () => const AudioSettings(master: 1.0, music: 1.0, sfx: 0.2),
       locked: locked,
     );
 
@@ -152,6 +155,72 @@ void main() {
             '_current serait reste vrai et onScene() ne relancerait jamais '
             'playLoop',
       );
+    });
+
+    test(
+        'refreshVolume() redemarre seul la piste apres une coupure, sans '
+        'aucun appel a onScene entre les deux', () async {
+      // Regression : l'ecran de reglages, seul construit pour changer le
+      // volume, n'appelle jamais onScene() (sa scene est heritee, voir
+      // music_scene.dart). Si refreshVolume() ne sait pas reprendre seul,
+      // la musique reste coupee tant qu on ne quitte pas l'ecran.
+      var master = 1.0;
+      final conductor = MusicConductor(
+        backend: backend,
+        data: _catalogue(),
+        settings: () => AudioSettings(master: master, music: 1.0, sfx: 0.2),
+      );
+
+      conductor.onScene(MusicScene.menu);
+      expect(backend.currentLoop, 'music/menu.mp3');
+      expect(backend.loopStartCount, 1);
+
+      master = 0.0;
+      await conductor.refreshVolume();
+      expect(backend.currentLoop, isNull, reason: 'volume nul : la boucle s\'arrete');
+
+      master = 1.0;
+      await conductor.refreshVolume();
+
+      expect(
+        backend.currentLoop,
+        'music/menu.mp3',
+        reason: 'un second refreshVolume() a volume positif doit a lui seul '
+            'relancer la piste stockee, sans qu aucun ecran ne rappelle '
+            'onScene()',
+      );
+      expect(backend.loopStartCount, 2, reason: 'la boucle a bien redemarre');
+    });
+
+    test(
+        'refreshVolume() ajuste le volume en place quand la scene ne '
+        'change pas, sans redemarrer la piste', () async {
+      var music = 1.0;
+      final conductor = MusicConductor(
+        backend: backend,
+        data: _catalogue(),
+        settings: () => AudioSettings(master: 1.0, music: music, sfx: 0.2),
+      );
+
+      conductor.onScene(MusicScene.menu);
+      expect(backend.loopStartCount, 1);
+      expect(backend.currentLoopVolume, closeTo(0.6, 0.0001));
+
+      music = 0.5;
+      await conductor.refreshVolume();
+
+      expect(
+        backend.loopStartCount,
+        1,
+        reason: 'un ajustement de volume ne doit pas redemarrer la piste '
+            'depuis le debut',
+      );
+      expect(
+        backend.currentLoopVolume,
+        closeTo(0.3, 0.0001),
+        reason: 'piste (0.6) x general (1.0) x musique (0.5)',
+      );
+      expect(backend.setVolumeCalls, [closeTo(0.3, 0.0001)]);
     });
   });
 }

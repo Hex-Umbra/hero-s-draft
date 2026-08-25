@@ -7,6 +7,7 @@ class FakeAudioBackend implements AudioBackend {
   final List<double> playedVolumes = [];
   final Set<String> missingFiles = {};
   final List<String> preloadAttempts = [];
+  final List<double> setVolumeCalls = [];
   String? currentLoop;
   double? currentLoopVolume;
   int loopStartCount = 0;
@@ -34,5 +35,11 @@ class FakeAudioBackend implements AudioBackend {
   Future<void> stopLoop({int fadeMs = 0}) async {
     currentLoop = null;
     currentLoopVolume = null;
+  }
+
+  @override
+  Future<void> setVolume(double volume) async {
+    setVolumeCalls.add(volume);
+    currentLoopVolume = volume;
   }
 }

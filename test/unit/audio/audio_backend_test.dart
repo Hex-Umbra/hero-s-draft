@@ -22,5 +22,11 @@ void main() {
       await expectLater(backend.playLoop('music/absent.mp3'), completes);
       await expectLater(backend.stopLoop(), completes);
     });
+
+    test('le backend silencieux honore setVolume sans lever', () async {
+      const backend = SilentAudioBackend();
+
+      await expectLater(backend.setVolume(0.5), completes);
+    });
   });
 }

@@ -26,7 +26,17 @@ class MusicConductor {
   final AudioSettings Function() _settings;
 
   bool _locked;
+
+  /// Scene a reprendre des que le volume effectif redevient positif : soit
+  /// parce que le conducteur est verrouille (autoplay web), soit parce que
+  /// la boucle est arretee par un volume nul (coupure, ou curseur a 0). Nul
+  /// des qu'une boucle est reellement active pour `_current`.
   MusicScene? _pending;
+
+  /// Non-nul si et seulement si le backend a une boucle active pour cette
+  /// scene. C'est l'invariant qui rend `refreshVolume()` capable de choisir
+  /// entre ajuster le volume en place et redemarrer : voir `_patterns/16-00`
+  /// §16.6.
   MusicScene? _current;
 
   MusicScene? get currentScene => _current;
@@ -49,8 +59,17 @@ class MusicConductor {
     final volume = track.volume * _settings().effectiveMusic;
     if (volume <= 0) {
       _backend.stopLoop(fadeMs: _fadeMs);
+      // Stocker la scene dans _pending et annuler _current (au lieu de la
+      // laisser pointer vers une boucle arretee) maintient l'invariant
+      // ci-dessus meme quand c'est une navigation, pas refreshVolume(), qui
+      // rencontre le volume nul (ecran ouvert pendant une coupure). Sans
+      // cela, refreshVolume() croirait la boucle active et se contenterait
+      // d'un setVolume() qui ne redemarre jamais rien.
+      _pending = scene;
+      _current = null;
       return;
     }
+    _pending = null;
     _backend.playLoop(track.file, volume: volume, fadeMs: _fadeMs);
   }
 
@@ -65,8 +84,18 @@ class MusicConductor {
   }
 
   /// A appeler quand les reglages changent : reapplique le volume, ou coupe.
+  ///
+  /// Scene toujours active (`_current` non nul) : ajuste le volume en place
+  /// via `setVolume`, sans redemarrer la piste depuis le debut. Scene
+  /// arretee par un volume nul precedent (`_current` nul, `_pending` la
+  /// retient) : redemarre en repassant par `onScene`, qui pose `_current` et
+  /// relance la boucle puisque `scene != _current` (nul) est vrai. C'est ce
+  /// second cas qui permet a la musique de reprendre apres une coupure
+  /// **sans** attendre qu'un ecran rappelle `onScene()` depuis son
+  /// `build()` — l'ecran de reglages, seul construit pour changer le
+  /// volume, n'en a pas (`music_scene.dart` : sa scene est heritee).
   Future<void> refreshVolume() async {
-    final scene = _current;
+    final scene = _current ?? _pending;
     if (scene == null) return;
 
     final track = _data.music[scene.jsonKey];
@@ -74,14 +103,20 @@ class MusicConductor {
 
     final volume = track.volume * _settings().effectiveMusic;
     if (volume <= 0) {
-      await _backend.stopLoop(fadeMs: _fadeMs);
-      // Annuler _current ici (et pas dans onScene) est delibere : c'est ce
-      // qui permet a la musique de reprendre apres une coupure. Sans ca, le
-      // prochain onScene() pour cette meme scene resterait un no-op via
-      // `scene == _current` et ne relancerait jamais la boucle.
-      _current = null;
+      if (_current != null) {
+        await _backend.stopLoop(fadeMs: _fadeMs);
+        _pending = _current;
+        _current = null;
+      }
       return;
     }
-    await _backend.playLoop(track.file, volume: volume, fadeMs: _fadeMs);
+
+    if (_current == null) {
+      _pending = null;
+      onScene(scene);
+      return;
+    }
+
+    await _backend.setVolume(volume);
   }
 }

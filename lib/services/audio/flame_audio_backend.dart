@@ -64,4 +64,13 @@ class FlameAudioBackend implements AudioBackend {
       debugPrint('[audio] echec d\'arret de la boucle : $e');
     }
   }
+
+  @override
+  Future<void> setVolume(double volume) async {
+    try {
+      await FlameAudio.bgm.audioPlayer.setVolume(volume);
+    } catch (e) {
+      debugPrint('[audio] echec de reglage du volume de la boucle : $e');
+    }
+  }
 }
