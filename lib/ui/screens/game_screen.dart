@@ -451,6 +451,11 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                       act: runState.act,
                       currentLevel: runState.currentLevel,
                       onPauseTap: _showPauseMenu,
+                      muted: ref.watch(audioSettingsProvider).muted,
+                      onMuteTap: () {
+                        ref.read(audioSettingsProvider.notifier).toggleMute();
+                        ref.read(musicConductorProvider).refreshVolume();
+                      },
                     ),
 
                   if (!runState.isDead && !_showDraft)

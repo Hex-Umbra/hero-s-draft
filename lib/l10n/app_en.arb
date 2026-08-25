@@ -589,5 +589,12 @@
       "amount": { "type": "int" }
     }
   },
-  "eventGainRelic": "+1 Relic"
+  "eventGainRelic": "+1 Relic",
+
+  "settingsTitle": "Settings",
+  "audioSection": "Audio",
+  "volumeMaster": "Master volume",
+  "volumeSfx": "Sound effects",
+  "volumeMusic": "Music",
+  "muteAll": "Mute all"
 }

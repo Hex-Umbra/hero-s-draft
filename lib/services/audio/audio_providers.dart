@@ -47,14 +47,37 @@ final musicConductorProvider = Provider<MusicConductor>((ref) {
 });
 
 class AudioSettingsNotifier extends Notifier<AudioSettings> {
+  /// Delai de regroupement avant l'ecriture disque.
+  ///
+  /// Un `Slider` de volume declenche `onChanged` a chaque frame du glisser —
+  /// des dizaines d'appels par geste. Sans regroupement, chacun lancerait sa
+  /// propre ecriture asynchrone vers `shared_preferences` ; et en cas
+  /// d'echec d'ecriture soutenu, le `debugPrint` non deduplique de
+  /// `SettingsService.save` tracerait une fois par frame. Le debounce
+  /// resout les deux : une seule ecriture par geste, declenchee quand il se
+  /// stabilise.
+  @visibleForTesting
+  static const Duration debounceDelay = Duration(milliseconds: 300);
+
+  Timer? _debounceTimer;
+  Completer<void>? _saveCompleter;
+
   @override
-  AudioSettings build() => const AudioSettings();
+  AudioSettings build() {
+    // Un geste interrompu (ecran ferme pendant un glisser) ne doit pas
+    // laisser un Timer en vie apres la destruction du notifier.
+    ref.onDispose(() => _debounceTimer?.cancel());
+    return const AudioSettings();
+  }
 
   /// L'ecriture disque lancee par le dernier reglage modifie.
   ///
   /// Les setters n'attendent pas l'ecriture — un curseur de volume ne doit
   /// pas se figer sur une I/O disque. Ce handle existe pour que les tests
   /// puissent attendre ce que la production laisse volontairement filer.
+  /// Assigne de facon synchrone des le premier appel d'un train de mises a
+  /// jour, pour qu'un appelant qui le lit immediatement apres un setter
+  /// obtienne bien le futur qui aboutira a l'ecriture finale.
   Future<void>? _pendingSave;
 
   @visibleForTesting
@@ -71,8 +94,24 @@ class AudioSettingsNotifier extends Notifier<AudioSettings> {
   void toggleMute() => _update(state.copyWith(muted: !state.muted));
 
   void _update(AudioSettings next) {
+    // L'etat Riverpod se met a jour immediatement : c'est ce qui garde le
+    // curseur reactif independamment du regroupement de l'ecriture.
     state = next;
-    _pendingSave = SettingsService.save(next);
+    _scheduleSave(next);
+  }
+
+  /// Regroupe les ecritures rapprochees. Chaque appel annule l'echeance
+  /// precedente et en repousse une nouvelle : seule la valeur du DERNIER
+  /// appel du train sera ecrite, une seule fois, une fois le geste stabilise.
+  void _scheduleSave(AudioSettings next) {
+    _debounceTimer?.cancel();
+    _saveCompleter ??= Completer<void>();
+    _pendingSave = _saveCompleter!.future;
+    _debounceTimer = Timer(debounceDelay, () {
+      final completer = _saveCompleter!;
+      _saveCompleter = null;
+      completer.complete(SettingsService.save(next));
+    });
   }
 }
 

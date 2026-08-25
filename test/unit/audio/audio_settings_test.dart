@@ -82,5 +82,34 @@ void main() {
       final persisted = await SettingsService.load();
       expect(persisted.muted, isTrue);
     });
+
+    test(
+      'les reglages rapproches (glisser un curseur) sont regroupes : '
+      'une seule ecriture, avec la derniere valeur',
+      () async {
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
+        final notifier = container.read(audioSettingsProvider.notifier);
+
+        // Simule les dizaines d'appels d'onChanged pendant un glisser de
+        // Slider : la valeur en memoire suit chaque appel immediatement...
+        notifier.setSfx(0.9);
+        notifier.setSfx(0.7);
+        notifier.setSfx(0.5);
+        expect(container.read(audioSettingsProvider).sfx, closeTo(0.5, 0.0001));
+
+        // ...mais tant que le geste n'est pas stabilise, rien n'est encore
+        // ecrit sur disque : c'est ce qui evite une ecriture par frame.
+        await Future<void>.delayed(AudioSettingsNotifier.debounceDelay ~/ 4);
+        final duringDebounce = await SettingsService.load();
+        expect(duringDebounce.sfx, closeTo(1.0, 0.0001));
+
+        // Une fois le train d'appels stabilise, `pendingSave` se resout et
+        // c'est bien la DERNIERE valeur (0.5, pas 0.9 ni 0.7) qui est ecrite.
+        await notifier.pendingSave;
+        final persisted = await SettingsService.load();
+        expect(persisted.sfx, closeTo(0.5, 0.0001));
+      },
+    );
   });
 }
