@@ -292,6 +292,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
           focusedCard!.card.data.target == CardTarget.allEnemies) {
         final cardToPlay = focusedCard!;
         if (!cardToPlay.canAfford) {
+          audio.onMoment(GameMoment.insufficientMana);
           cardToPlay.shakeAnimation();
           return;
         }

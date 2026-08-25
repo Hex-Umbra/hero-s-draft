@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../../models/entity_stats.dart';
 import '../effect_icon.dart';
 import '../../../models/data/card_data.dart';
+import '../../../services/audio/game_moment.dart';
 import 'combat_entity.dart';
 
 class HeroCard extends CombatEntity with TapCallbacks {
@@ -85,6 +86,7 @@ class HeroCard extends CombatEntity with TapCallbacks {
       if (game.focusedCard!.card.data.target == CardTarget.self) {
         final cardToPlay = game.focusedCard!;
         if (!cardToPlay.canAfford) {
+          game.audio.onMoment(GameMoment.insufficientMana);
           cardToPlay.shakeAnimation();
           return;
         }

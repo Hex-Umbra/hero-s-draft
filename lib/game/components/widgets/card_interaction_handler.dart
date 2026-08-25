@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../card_component.dart';
 import '../entities/enemy_card.dart';
 import '../../../models/data/card_data.dart';
+import '../../../services/audio/game_moment.dart';
 import '../visual_effects/ribbon_trail.dart';
 
 class CardInteractionHandler {
@@ -116,6 +117,7 @@ class CardInteractionHandler {
     }
 
     if (!cardComponent.canAfford) {
+      cardComponent.game.audio.onMoment(GameMoment.insufficientMana);
       cardComponent.animator.shakeAnimation();
       cardComponent.animator.returnToHand();
       cardComponent.game.highlightEnemy(null);
