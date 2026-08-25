@@ -111,5 +111,39 @@ void main() {
         expect(persisted.sfx, closeTo(0.5, 0.0001));
       },
     );
+
+    test(
+      'detruire le conteneur pendant le debounce ecrit quand meme la '
+      'derniere valeur, et pendingSave se resout malgre tout',
+      () async {
+        // Pas de addTearDown(container.dispose) : ce test dispose lui-meme,
+        // au milieu du test, et un double dispose leverait.
+        final container = ProviderContainer();
+        final notifier = container.read(audioSettingsProvider.notifier);
+
+        notifier.setSfx(0.42);
+        final pending = notifier.pendingSave;
+
+        // Detruit le conteneur alors que le Timer de debounce (300 ms) est
+        // encore en vol : simule un ecran de reglages ferme, ou une
+        // navigation, en plein glisser de curseur.
+        container.dispose();
+
+        // pendingSave doit se resoudre grace au flush de `onDispose`, sans
+        // attendre l'echeance normale du debounce. Le timeout rend un echec
+        // lisible si jamais il ne se resout pas, plutot que de bloquer la
+        // suite indefiniment.
+        await pending!.timeout(
+          AudioSettingsNotifier.debounceDelay * 3,
+          onTimeout: () => fail(
+            'pendingSave ne s est jamais resolu apres la destruction du '
+            'conteneur : le reglage aurait ete perdu silencieusement.',
+          ),
+        );
+
+        final persisted = await SettingsService.load();
+        expect(persisted.sfx, closeTo(0.42, 0.0001));
+      },
+    );
   });
 }

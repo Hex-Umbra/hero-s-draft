@@ -74,22 +74,34 @@ class CombatTopBar extends StatelessWidget {
             ),
           ),
 
-          // Indicateurs de niveau (Haut Gauche)
+          // Indicateurs de niveau (Haut Gauche).
+          // `right: 196` borne la largeur disponible pour ne jamais empieter
+          // sur le trio de boutons : mesure reelle (test a 360 px, theme de
+          // l'appli), le bouton son (le plus a gauche du trio, right: 130)
+          // a son bord gauche a 174px du bord ecran, donc a 186px de son
+          // bord droit ; 196 laisse 10px de marge. `FittedBox(scaleDown)`
+          // plutot qu'une ellipse : Acte/Niveau sont des nombres que le
+          // joueur doit pouvoir lire entierement, jamais tronquer.
           Positioned(
             top: 10,
             left: 20,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.actLevel(act, currentLevel),
-                  style: const TextStyle(
-                    color: Colors.amber,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
+            right: 196,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.actLevel(act, currentLevel),
+                    style: const TextStyle(
+                      color: Colors.amber,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],

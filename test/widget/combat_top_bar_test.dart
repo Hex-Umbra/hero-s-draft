@@ -4,30 +4,34 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'package:roguelike_card_game/ui/widgets/hud/combat_top_bar.dart';
 
-Widget _harness({required bool muted, required VoidCallback onMuteTap}) =>
-    MaterialApp(
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: const [Locale('en', ''), Locale('fr', '')],
-      locale: const Locale('fr', ''),
-      home: Scaffold(
-        body: Stack(
-          children: [
-            CombatTopBar(
-              act: 1,
-              currentLevel: 1,
-              onPauseTap: () {},
-              muted: muted,
-              onMuteTap: onMuteTap,
-            ),
-          ],
+Widget _harness({
+  required bool muted,
+  required VoidCallback onMuteTap,
+  int act = 1,
+  int currentLevel = 1,
+}) => MaterialApp(
+  localizationsDelegates: const [
+    AppLocalizations.delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+  ],
+  supportedLocales: const [Locale('en', ''), Locale('fr', '')],
+  locale: const Locale('fr', ''),
+  home: Scaffold(
+    body: Stack(
+      children: [
+        CombatTopBar(
+          act: act,
+          currentLevel: currentLevel,
+          onPauseTap: () {},
+          muted: muted,
+          onMuteTap: onMuteTap,
         ),
-      ),
-    );
+      ],
+    ),
+  ),
+);
 
 void main() {
   group('CombatTopBar - bouton de coupure du son', () {
@@ -78,6 +82,43 @@ void main() {
 
         expect(muteTop, equals(deckTop));
         expect(muteTop, equals(pauseTop));
+      },
+    );
+  });
+
+  group('CombatTopBar - indicateur Acte/Niveau contraint', () {
+    testWidgets(
+      'ne chevauche pas le cluster de boutons sur telephone etroit (360px)',
+      (tester) async {
+        tester.view.physicalSize = const Size(360, 800);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        // Acte/niveau a deux chiffres chacun : le plus long realistement
+        // atteignable dans une run (voir le rapport pour le detail).
+        await tester.pumpWidget(
+          _harness(muted: false, onMuteTap: () {}, act: 9, currentLevel: 99),
+        );
+        await tester.pumpAndSettle();
+
+        // Aucun debordement dur (RenderFlex/overflow) signale pendant le
+        // layout.
+        expect(tester.takeException(), isNull);
+
+        final textRight = tester.getRect(find.textContaining('Acte')).right;
+        final muteButtonLeft = tester
+            .getRect(
+              find.ancestor(
+                of: find.byIcon(Icons.volume_up),
+                matching: find.byType(IconButton),
+              ),
+            )
+            .left;
+
+        // Le texte peint (apres mise a l'echelle par le FittedBox) doit
+        // rester entierement a gauche du bouton le plus a gauche du trio.
+        expect(textRight, lessThanOrEqualTo(muteButtonLeft));
       },
     );
   });
