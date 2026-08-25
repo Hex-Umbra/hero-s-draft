@@ -234,9 +234,15 @@ abstract class CombatEntity extends PositionComponent
         color: damageColor,
         count: isCritical ? 35 : (isPoisonDamage ? 12 : 15),
       );
-    }
-
-    if (newStats.currentPv > oldStats.currentPv) {
+    } else if (newStats.currentPv > oldStats.currentPv) {
+      // Toute hausse de PV est traitee comme un soin. Cela ne produit pas de
+      // faux positif aujourd'hui pour deux raisons qui ne sont PAS des garde-fous
+      // audio : la premiere synchro d'une entite passe par son constructeur et
+      // non par `updateStats`, et `GameScreen` est depile avant que les gains de
+      // niveau et les recompenses n'appliquent leurs modificateurs de PV max.
+      // Un contenu qui accorderait des PV max EN COMBAT (relique, competence)
+      // casserait cet equilibre et ferait sonner un soin sans soin — c'est le
+      // meme defaut que `suppressArmorChange` corrige deja pour l'armure.
       game.audio.onMoment(GameMoment.heal);
     }
   }
