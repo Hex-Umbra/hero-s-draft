@@ -6,12 +6,18 @@ import 'ui/screens/splash_screen.dart';
 import 'ui/widgets/notification_overlay.dart';
 import 'game/controllers/checkpoint_controller.dart';
 import 'services/audio/audio_providers.dart';
+import 'services/audio/flame_audio_backend.dart';
 
 import 'ui/theme/app_theme.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const ProviderScope(child: HerosDraftApp()));
+  runApp(
+    ProviderScope(
+      overrides: [audioBackendProvider.overrideWithValue(FlameAudioBackend())],
+      child: const HerosDraftApp(),
+    ),
+  );
 }
 
 class HerosDraftApp extends ConsumerWidget {
