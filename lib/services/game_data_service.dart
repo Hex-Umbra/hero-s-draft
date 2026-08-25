@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/data/enemy_data.dart';
@@ -52,16 +53,25 @@ List<T> _mapList<T>(
 /// Charge `audio.json`. Contrairement a `_loadJsonList`, cette fonction ne
 /// leve jamais : l'audio est le seul sous-systeme auquel il est interdit de
 /// faire echouer le demarrage du jeu. Fichier absent ou malforme = catalogue
-/// desactive, jeu silencieux.
-Future<AudioData> _loadAudioData(String path) async {
+/// desactive, jeu silencieux, trace en debug pour rester diagnosticable.
+///
+/// Publique (pas de prefixe `_`) et annotee `@visibleForTesting` uniquement
+/// pour que les tests puissent l'appeler directement avec un path/contenu
+/// controle : elle ne fait pas partie de l'API publique du service.
+@visibleForTesting
+Future<AudioData> loadAudioData(String path) async {
   try {
     final String content = await rootBundle.loadString(path);
     final decoded = jsonDecode(content);
     if (decoded is! Map<String, dynamic>) {
+      debugPrint(
+        '[audio] "$path" ne decode pas vers un objet JSON : catalogue desactive',
+      );
       return const AudioData.disabled();
     }
     return AudioData.fromJson(decoded);
-  } catch (_) {
+  } catch (e) {
+    debugPrint('[audio] echec de chargement de "$path" : $e, catalogue desactive');
     return const AudioData.disabled();
   }
 }
@@ -79,7 +89,7 @@ final gameDataLoaderProvider = FutureProvider<GameDataRegistry>((ref) async {
     _loadJsonList('assets/data/forge_upgrades.json'),
   ]);
 
-  final audio = await _loadAudioData('assets/data/audio.json');
+  final audio = await loadAudioData('assets/data/audio.json');
 
   final enemiesList = results[0];
   final heroesList = results[1];
