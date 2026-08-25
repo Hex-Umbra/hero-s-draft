@@ -16,20 +16,29 @@ Dans `HerosDraftGame.update(dt)`, si `hasLayout == true` et qu'un buffer est non
 
 ### 4.2. Remontée d'Événements (Flame → Riverpod)
 
-**16 callbacks fortement typés** injectés via le constructeur de `HerosDraftGame` (les callbacks `onPlayerTakeDamage`/`onPlayerHeal`/`onPlayerGainArmor` ont depuis été supprimés — voir §6.2 point 7) :
+**14 callbacks fortement typés** injectés via le constructeur de `HerosDraftGame` — **compté le 2026-08-25** sur les déclarations de champs de `lib/game/heros_draft_game.dart` :
+
 | Callback | Déclencheur |
 |:---|:---|
 | `onPlayCard` | Carte jouée (drop sur ennemi valide) |
 | `onSelectEnemy` / `onUpdateEnemyStats` | Clic/tap sur ennemi |
-| `onTurnEnded` / `onPhaseChanged` | Fin de tour joueur / changement de phase |
+| `onPhaseChanged` | Changement de phase |
 | `onStartEnemyTurn` / `onEndEnemyTurn` | Début/fin de phase ennemie |
 | `onResolveEnemyIntent` | Résolution séquentielle d'intention |
 | `onExecuteSkill` | Exécution d'une compétence héroïque (skill1/skill2) |
 | `onEnemiesDead` / `onEnemyKilled` | Nettoyage d'ennemis |
-| `onEnemyDebuffDeck` | Action debuff du deck par ennemi |
 | `onEnemiesSpawned` | Spawn initial |
 | `onAnimationStateChanged` | Changement d'état d'animation Flame (force un rebuild HUD) |
 | `onShowTooltip` / `onHideTooltip` | Tooltips contextuels |
+
+> [!NOTE]
+> **Cinq callbacks ont été supprimés depuis la rédaction initiale**, en deux vagues.
+> `onPlayerTakeDamage` / `onPlayerHeal` / `onPlayerGainArmor` d'abord — voir §6.2
+> point 7. Puis `onTurnEnded` et `onEnemyDebuffDeck`, tous deux dans le commit
+> `295ec93` du 2026-08-06, la passe de suppression de code mort de **P-02**
+> ([ADR-078](../_adr/ADR-078-assainissement-du-systeme-de-pioche-remelange-a-sec.md)).
+> Ces deux-là sont restés listés ici pendant dix-neuf jours, et le total annoncé
+> était donc resté à 16 — un décompte qui décrivait le tableau, non le code.
 
 ### 4.3. Phase de Riposte Ennemie (`_enemyRipostePhase`)
 

@@ -355,7 +355,7 @@ Les runes de forge `eco` et `quick` (regain de mana / pioche à la lecture d'une
 | **P-40** | **Nettoyage héros & cartes** : suppression de la chaîne `skills.json`, 3 bugs confirmés, dérives documentaires — *lot S1 du programme P-40→P-44* | **1-1,5 j** | ★★☆☆☆ | 🔥🔥 |
 | **P-26** | **Lot d'hygiène** : `GameDataRegistry` en `Map` O(1), `MapNode` découplé de `Vector2`, ~~`SkillData` bilingue~~ *(annulé par P-40)* | **1 j** | ★★☆☆☆ | 🔥🔥 |
 | **P-22** | **Typage des modèles** : `==`/`hashCode` sur les 13 modèles suivis, sérialisation d'`EventState` | **1,5-2 j** | ★★★☆☆ | 🔥🔥 |
-| **P-27** | **Event Bus** (remplace les 13 callbacks de constructeur de `HerosDraftGame`) | **2-3 j** | ★★★★☆ | 🔥 |
+| **P-27** | **Event Bus** (remplace les 14 callbacks de constructeur de `HerosDraftGame`) | **2-3 j** | ★★★★☆ | 🔥 |
 | **P-21** | **Couverture de tests → ≥ 50 %** — *mesurer avant de chiffrer* | **2-4 j** | ★★★☆☆ | 🔥🔥 |
 | **P-24** | **Routage centralisé** (`GoRouter`, 15 `Navigator.push` en dur) | **2-3 j** | ★★★★☆ | 🔥 |
 | **P-23** | **`draft_screen.dart`** : découpe des 691 lignes | **1 j** | ★★☆☆☆ | 🔥 |
