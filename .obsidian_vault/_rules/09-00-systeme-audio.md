@@ -15,7 +15,7 @@ comprendre pourquoi un moment reste silencieux.
 | Moment (`GameMoment`) | Déclencheur |
 |:---|:---|
 | `cardHover` | `HerosDraftGame.setHoveredCard()` — `lib/game/heros_draft_game.dart:97` |
-| `cardPickup` | **Deux sites, un par geste de prise en main** : `CardInteractionHandler.onDragStart()`, au tout début du glisser (`lib/game/components/widgets/card_interaction_handler.dart:49`), et `CardInteractionHandler.onTapDown()`, quand la carte devient la carte focalisée par un clic (`card_interaction_handler.dart:39`) — le pendant clic-pour-jouer du même geste |
+| `cardPickup` | **Deux sites mutuellement exclusifs, un par geste de prise en main** : `CardInteractionHandler.onTapDown()`, quand la carte devient la carte focalisée par un clic (`lib/game/components/widgets/card_interaction_handler.dart:39`), et `CardInteractionHandler.onDragStart()`, dans la branche où la carte n'était pas déjà focalisée avant ce geste (`card_interaction_handler.dart:70`). `onTapDown` s'exécute toujours en premier sur un même geste (arène de gestes Flutter) et détermine donc lequel des deux émet : jamais les deux, jamais aucun des deux pour un glisser ou un clic qui focalise |
 | `cardPlay` | `CardAnimator.playAnimation()`, au tout début de l'animation de jeu — résolu via `CardData` comme `AudioSource` (`sfx` propre, puis `animation`, puis défaut) — `lib/game/components/visual_effects/card_animator.dart:140` |
 | `impact` / `impactCrit` | `CombatEntity.triggerHitReactions()`, perte de PV actuels — `lib/game/components/entities/combat_entity.dart:212` |
 | `armorHit` | Même méthode, perte **ou** gain d'armure — `combat_entity.dart:196` et `:205` |
@@ -24,7 +24,7 @@ comprendre pourquoi un moment reste silencieux.
 | `enemyDeath` | **Deux sites** : `HerosDraftGame.resolvePendingDeaths()` (mort différée pendant une animation de carte, `heros_draft_game.dart:238`) et `StateSyncSystem._applyCombatState()` (suppression immédiate hors animation — poison, effets passifs — `lib/game/systems/state_sync_system.dart:113`) |
 | `cardDraw` | `DeckNotifier.drawCards()` — `lib/game/controllers/deck_controller.dart:226` |
 | `manaGain` | `GainManaEffectStrategy` — `lib/game/services/effects/strategies.dart:109` |
-| `insufficientMana` | **Quatre sites** : `HerosDraftGame._handlePlayerTargeting()` (`heros_draft_game.dart:295`), `PlayerStatsManager` — refus de compétence héroïque (`player_stats_manager.dart:441`), `HeroCard` (`hero_card.dart:89`) et `CardInteractionHandler` (`card_interaction_handler.dart:126`) — refus au clic/glisser sur la carte elle-même |
+| `insufficientMana` | **Quatre sites** : `HerosDraftGame._handlePlayerTargeting()` (`heros_draft_game.dart:295`), `PlayerStatsManager` — refus de compétence héroïque (`player_stats_manager.dart:441`), `HeroCard` (`hero_card.dart:89`) et `CardInteractionHandler` (`card_interaction_handler.dart:135`) — refus au clic/glisser sur la carte elle-même |
 | `turnStart` | `TurnPhaseManager.startPlayerTurn()`, avant le tick des reliques et statuts — `lib/game/controllers/combat/turn_phase_manager.dart:49` |
 | `turnEnd` | `HerosDraftGame.executeTurn()`, juste après la garde de validité du tour — `heros_draft_game.dart:314` |
 

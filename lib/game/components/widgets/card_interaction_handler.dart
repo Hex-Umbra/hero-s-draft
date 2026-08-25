@@ -46,7 +46,6 @@ class CardInteractionHandler {
   void onDragStart(DragStartEvent event) {
     if (cardComponent.isEnteringHand || cardComponent.isPlayed) return;
 
-    cardComponent.game.audio.onMoment(GameMoment.cardPickup);
     cardComponent.isDragging = true;
     cardComponent.targetTilt = 0;
 
@@ -58,7 +57,17 @@ class CardInteractionHandler {
     cardComponent.game.add(cardComponent.activeTrail!);
 
     if (cardComponent.game.focusedCard == cardComponent) {
+      // Vrai signifie qu'onTapDown, qui s'execute toujours en premier sur ce
+      // meme geste, vient de focaliser cette carte dans sa propre branche
+      // else (elle partait donc non focalisee) et a deja emis cardPickup
+      // a ce moment-la. Ce glisser ne fait qu'acter la fin du focus, ce
+      // n'est pas une seconde prise en main : ne pas re-emettre.
       cardComponent.game.setFocusedCard(null);
+    } else {
+      // Faux signifie que la carte partait deja focalisee : onTapDown vient
+      // de la defocaliser sans emettre (voir son propre commentaire). C'est
+      // donc ici, et seulement ici, l'unique emission de ce geste.
+      cardComponent.game.audio.onMoment(GameMoment.cardPickup);
     }
     if (cardComponent.game.hoveredCard == cardComponent) {
       cardComponent.game.setHoveredCard(null);
