@@ -3,7 +3,7 @@
 > [!IMPORTANT]
 > **Plafond : 120 lignes.** Ce fichier est un index, jamais un contenu. Chaque pattern d'architecture vit dans sa fiche sous `../_patterns/`. Les arbitrages qui les ont produits vivent dans `../_adr/`.
 
-**Vérifié le 2026-08-25** — 41 fiches. Découpage initial depuis un `systemPatterns.md` de 1320 lignes (après archivage des §13-14) ; §15 ajoutée le 2026-08-20, §16 le 2026-08-25.
+**Vérifié le 2026-08-28** — 41 fiches. Découpage initial depuis un `systemPatterns.md` de 1320 lignes (après archivage des §13-14) ; §15 ajoutée le 2026-08-20, §16 le 2026-08-25.
 
 ### 1. Architecture Globale — Séparation Triangulaire
 
@@ -19,7 +19,7 @@
 | 2.1. `RunController` (`runProvider`) — Superviseur Global (Façade) | [02-1-runcontroller-superviseur-global.md](../_patterns/02-1-runcontroller-superviseur-global.md) | 26 |
 | 2.1.bis Persistance de Run — `SaveService`, Checkpoints et Réhydratation (v3.2.0) | [02-1-bis-bis-persistance-de-run-saveservice-checkpoint.md](../_patterns/02-1-bis-bis-persistance-de-run-saveservice-checkpoint.md) | 13 |
 | 2.2. `CombatController` (`combatProvider`) — Pilote de Combat (Façade) | [02-2-combatcontroller-pilote-de-combat.md](../_patterns/02-2-combatcontroller-pilote-de-combat.md) | 31 |
-| 2.3. `DeckNotifier` (`deckProvider`) — Maître du Deck | [02-3-decknotifier-maitre-du-deck.md](../_patterns/02-3-decknotifier-maitre-du-deck.md) | 14 |
+| 2.3. `DeckNotifier` (`deckProvider`) — Maître du Deck | [02-3-decknotifier-maitre-du-deck.md](../_patterns/02-3-decknotifier-maitre-du-deck.md) | 32 |
 | 2.4. `EventController` (`eventProvider`) | [02-4-eventcontroller.md](../_patterns/02-4-eventcontroller.md) | 49 |
 | 2.5. `ShopController` (`shopProvider`) | [02-5-shopcontroller.md](../_patterns/02-5-shopcontroller.md) | 30 |
 | 2.5. Immutabilité Stricte des Modèles d'État | [02-5-immutabilite-stricte-des-modeles-d-etat.md](../_patterns/02-5-immutabilite-stricte-des-modeles-d-etat.md) | 4 |
@@ -72,7 +72,7 @@
 
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
-| 7. Flux Complet d'un Tour de Combat | [07-00-flux-complet-d-un-tour-de-combat.md](../_patterns/07-00-flux-complet-d-un-tour-de-combat.md) | 54 |
+| 7. Flux Complet d'un Tour de Combat | [07-00-flux-complet-d-un-tour-de-combat.md](../_patterns/07-00-flux-complet-d-un-tour-de-combat.md) | 72 |
 
 ### 8. Conventions de Code & Standards Techniques
 
@@ -114,6 +114,6 @@
 
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
-| 16. Architecture du Système Audio | [16-00-architecture-du-systeme-audio.md](../_patterns/16-00-architecture-du-systeme-audio.md) | 103 |
+| 16. Architecture du Système Audio | [16-00-architecture-du-systeme-audio.md](../_patterns/16-00-architecture-du-systeme-audio.md) | 128 |
 
 Historique de renumérotation (pourquoi §13-§14 manquent) archivé le 2026-08-25 : `../_archive/2026-08-25-systemPatterns-historique.md`.

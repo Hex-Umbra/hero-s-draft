@@ -5,7 +5,7 @@ Index des **ADR** (Architecture Decision Records) de **Hero's Draft**. Le corps 
 > [!IMPORTANT]
 > **Plafond : 250 lignes.** Ce fichier est un index, jamais un contenu. Un nouvel ADR prend le numéro `max(index) + 1` lu ici, jamais un numéro deviné.
 
-**Vérifié le 2026-08-25** — 82 décisions, numéros `ADR-001` à `ADR-082`, sans doublon ni trou.
+**Vérifié le 2026-08-28** — 82 décisions, numéros `ADR-001` à `ADR-082`, sans doublon ni trou.
 
 | N° | Décision | Statut | Version | Fichier |
 |:---|:---|:---:|:---:|:---|

@@ -82,7 +82,7 @@ graph TD
 |:---|:---|:---:|:---:|:---:|
 | ~~**P-01**~~ | ~~**Resynchroniser `pubspec.yaml`** (`0.1.0+1` → `0.4.7+1`) sur `patch_notes.json`~~ ✅ **Livré le 2026-08-03** — désormais maintenu automatiquement par le skill `patch-notes-writer` | — | — | — |
 | ~~**P-02**~~ | ~~**Assainissement du système de pioche**~~ ✅ **Livré et validé le 2026-08-06** (code + playtest) — voir [ADR-078](../.obsidian_vault/_adr/ADR-078-assainissement-du-systeme-de-pioche-remelange-a-sec.md) | — | — | — |
-| ~~**P-03**~~ | ~~**Système audio**~~ ✅ **Livré le 2026-08-25** — moteur data-driven complet (directeur central, chaîne de repli à 4 niveaux, musique par scène, réglages persistés) ; sourcing des fichiers en cours — voir [ADR-082](../.obsidian_vault/_adr/ADR-082-directeur-audio-central-et-mapping-par-donnees.md) | — | — | — |
+| ~~**P-03**~~ | ~~**Système audio**~~ ✅ **Livré le 2026-08-25, publié en `0.5.0`** — moteur data-driven complet (directeur central, chaîne de repli à 4 niveaux, musique par scène, réglages persistés) et **19 bruitages sur 19** posés ; les 4 musiques sortent vers **P-46** — voir [ADR-082](../.obsidian_vault/_adr/ADR-082-directeur-audio-central-et-mapping-par-donnees.md) | — | — | — |
 | ~~**P-04**~~ | ~~**CI/CD GitHub Actions**~~ ✅ **Livré le 2026-08-20** en deux lots (chaîne CI/CD puis site vitrine), publié en `0.4.8` — voir [ADR-079](../.obsidian_vault/_adr/ADR-079-chaine-de-release-declenchee-par-tag-et-garde-fou.md) et [ADR-080](../.obsidian_vault/_adr/ADR-080-site-vitrine-pilote-par-la-donnee-et-jointure-decl.md) | — | — | — |
 
 ### P-01 — Resync de version
@@ -114,8 +114,8 @@ graph TD
 
 ### P-03 — Audio
 > [!NOTE]
-> ✅ **Livré le 2026-08-25**, branche `feat/p03-systeme-audio` **fusionnée dans `main`** par la
-> PR #30 — **37 commits**, re-comptés le 2026-08-25 après la fusion
+> ✅ **Livré le 2026-08-25, publié en `0.5.0` le 2026-08-28**, branche `feat/p03-systeme-audio`
+> **fusionnée dans `main`** par la PR #30 — **37 commits**, re-comptés le 2026-08-25 après la fusion
 > (`git log --no-merges da5bc34^1..da5bc34^2`). Conception et
 > arbitrages : [ADR-082](../.obsidian_vault/_adr/ADR-082-directeur-audio-central-et-mapping-par-donnees.md).
 > Catalogue des moments et chaîne de repli : [`_rules/09-00`](../.obsidian_vault/_rules/09-00-systeme-audio.md).
@@ -129,18 +129,16 @@ graph TD
 > niveaux, plutôt que le catalogue codé en dur envisagé au 31/07). Détail du chiffrage par
 > poste : `docs/superpowers/specs/2026-08-24-p03-systeme-audio-design.md` §14.
 >
-> **Le sourcing reste ouvert, et reste hors chiffrage.** Le catalogue attend 23 fichiers sous
-> `assets/audio/` : 19 bruitages (dont les 3 variantes d'`impact_normal`) et 4 musiques.
-> **Les 19 bruitages sont posés au 2026-08-28**, soit 19 des 23 fichiers (mesuré par le rapport
-> ci-dessous). **Il ne reste que les 4 musiques.** Chaque `GameMoment` a désormais son son : le
-> jeu n'est plus muet en combat, seule la bande-son de fond manque, et le silence sur les
-> scènes musicales reste le comportement voulu (voir ADR-082, D5), pas une régression. État
-> courant à la demande :
+> **Le sourcing des bruitages est clos au 2026-08-28** : les **19 sont posés sur 19**, chaque
+> `GameMoment` a son son, le jeu n'est plus muet en combat. Les bruitages sont passés en WAV,
+> la musique reste en MP3 — motif dans
+> [`_rules/09-00`](../.obsidian_vault/_rules/09-00-systeme-audio.md) §9.3, qu'ADR-082 déléguait
+> déjà à cette fiche. État courant à la demande :
 > `flutter test test/unit/audio/audio_sourcing_report_test.dart --reporter expanded`.
 >
-> **La musique est le seul chemin critique restant.** `impact_normal` est le seul son à
-> variantes et ses 3 fichiers sont posés — voir le piège des jeux incomplets en
-> [`_rules/09-00`](../.obsidian_vault/_rules/09-00-systeme-audio.md) §9.3.
+> **Les 4 musiques sortent vers le chantier P-46** (§3, Tier A), pour ne pas retenir la
+> publication des bruitages. Le silence sur les scènes musicales reste
+> le comportement voulu (ADR-082, D5), pas une régression.
 >
 > **Les bruitages sont en WAV, les musiques en MP3** depuis le 2026-08-28 — bascule décidée
 > après que les 7 premiers bruitages ont été livrés en WAV. Motif et arbitrage :
@@ -181,6 +179,7 @@ parallèle du code.
 | **P-07** | **Lot P1 « juice »** (hit-stop, screenshake, héros qui attaque, impacts, idle, mort) | **4-6 j** | ★★★☆☆ | 🔥🔥🔥 |
 | **P-08** | **Cadre d'ennemi** — prototyper puis trancher PNG vs procédural | **0,5 j** *(proto)* **+ 1-3 j** | ★★★☆☆ | 🔥🔥 |
 | **P-09** | **Boss multi-phases** (changement de comportement au seuil 50 % HP) | **3-4 j** | ★★★★☆ | 🔥🔥 |
+| **P-46** | **Sourcing des 4 musiques** (menu, carte, combat, boss) — le moteur est livré, seuls les fichiers manquent | **0,5 j** *(+ 4 pistes)* | ★☆☆☆☆ | 🔥🔥 |
 | ~~**P-45**~~ | ~~**Fidélité du tutoriel**~~ ✅ **Livré le 2026-08-23**, publié en `0.4.9` — 50 écarts corrigés entre `lib/tutorial/` et le jeu réel, tutoriel étendu de 13 à 15 étapes — voir [ADR-081](../.obsidian_vault/_adr/ADR-081-amendement-autonomie-tutoriel-zero-provider-etat.md) | — | — | — |
 
 ### P-05 — Roster tier-1
@@ -201,6 +200,18 @@ Hit-stop et screenshake pilotés par la magnitude `dégâts / PV max`, le héros
 
 ### P-09 — Boss multi-phases
 Marqué **priorité haute** dans le rapport du 22/07 et jamais traité. Difficulté ★★★★☆ parce que `EntityStats`/`EnemyInstance` n'ont aujourd'hui **aucune notion de changement de comportement conditionné aux PV restants** — c'est un mécanisme à créer. Bonne nouvelle : ce même mécanisme sert ensuite au « Dragon Juvénile » (seuil d'enrage, tier 5) et potentiellement au Boss de Cycle de P-10.
+
+### P-46 — Sourcing des musiques
+**Aucun code à écrire.** `MusicConductor` est livré, testé et branché : chaque écran déclare déjà sa `MusicScene` (`menu`, `map`, `combat`, `boss`) et le déverrouillage autoplay web est en place. Il manque quatre fichiers, et rien d'autre — c'est le reliquat de **P-03**, sorti dans son propre chantier le 2026-08-28 pour ne pas retenir la publication des bruitages.
+**Format** : MP3 stéréo 44,1 kHz, bouclables proprement. La musique reste en MP3 quand les bruitages sont passés en WAV — motif et arbitrage dans [`_rules/09-00`](../.obsidian_vault/_rules/09-00-systeme-audio.md) §9.3. Les poser sous `assets/audio/music/` aux noms exacts déclarés dans `assets/data/audio.json`, puis vérifier avec `flutter test test/unit/audio/audio_sourcing_report_test.dart --reporter expanded`.
+
+> [!WARNING]
+> **`variants` n'est pas honoré pour la musique** : `MusicConductor.onScene()` lit `track.file`
+> directement, sans passer par `SoundData.expectedFiles`. Une piste par scène, aucune rotation
+> aléatoire — limitation connue et assumée, voir
+> [`_patterns/16-00`](../.obsidian_vault/_patterns/16-00-architecture-du-systeme-audio.md) §16.4.
+
+**Un effet de bord à trancher dans le même geste** : l'écran de Réglages expose un curseur « Musique » (`lib/ui/screens/settings_screen.dart`) qui ne contrôle rien tant qu'aucune piste n'existe. Le masquer jusqu'à la livraison, ou l'assumer — c'est la seule promesse visible que le jeu ne tient pas depuis `0.5.0`.
 
 ### P-45 — Fidélité du tutoriel
 > [!NOTE]
@@ -517,7 +528,7 @@ Donne une fin à une run, archive les résultats, puis recalibre l'économie **u
 ## 10. Ce qu'il faut retenir
 
 1. **Quatre chantiers font l'essentiel de la valeur** : audio (P-03), pioche (~~P-02~~ ✅), juice (P-07), et une condition de victoire (P-10). Le reste est de l'accumulation.
-2. **Le chemin critique n'est presque jamais le code** — c'est le son (P-03), les sprites (P-05, P-15), les illustrations (P-12) et le playtest de calibration (P-16, P-17). Lancer ces productions en parallèle du développement, pas après.
+2. **Le chemin critique n'est presque jamais le code** — c'est le son (~~P-03~~ ✅ bruitages, P-46 musiques), les sprites (P-05, P-15), les illustrations (P-12) et le playtest de calibration (P-16, P-17). Lancer ces productions en parallèle du développement, pas après.
 3. **P-02 avant tout ajout de contenu**, et **P-16 après P-02** — ✅ *les deux conditions sont remplies depuis le 2026-08-06 (code livré, playtest validé)*. P-16 peut désormais s'ouvrir sans risque de calibrer deux fois.
 4. La dette technique restante est réelle mais **nettement plus faible que ne le disent les anciens documents** : les deux god classes UI sont résolues, la persistance est livrée, et la re-vérification du Tier D le 2026-08-04 a montré que **six de ses huit fiches énonçaient des faits périmés** — deux chantiers y étaient même déjà livrés. Corollaire de méthode : **une fiche de dette non re-mesurée depuis plus d'une semaine doit être re-vérifiée contre le code avant d'être ouverte**, jamais crue sur parole. Les tiers A, B, C et E n'ont pas encore subi ce contrôle.
 

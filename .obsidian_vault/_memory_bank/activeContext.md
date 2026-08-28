@@ -1,4 +1,4 @@
-<!-- last-sync: 2026-08-25 | commit: 5a3d086 -->
+<!-- last-sync: 2026-08-28 | commit: e34ba2c -->
 
 # 🧠 Contexte Actuel
 
@@ -13,18 +13,18 @@ seulement après** que le skill `patch-notes-writer` a déplacé ensemble les tr
 portent le numéro : sinon `verify-version` échoue avant le moindre build. Ce n'est pas une
 panne, c'est le garde-fou.
 
-**P-03 est livré en code et en documentation, pas encore en version.** La branche
-`feat/p03-systeme-audio` est **fusionnée dans `main`** (PR #30), suivie de deux correctifs
-sans rapport entre eux (PR #31, PR #32). `patch-notes-writer` n'avait **délibérément pas** été
-invoqué tant que le catalogue restait vide : une note joueur aurait annoncé des sons que
-personne ne pouvait entendre — voir
-[ADR-082](../_adr/ADR-082-directeur-audio-central-et-mapping-par-donnees.md) D5. **Ce motif est
-levé côté bruitages depuis le 2026-08-28** : les 19 sont posés, chaque `GameMoment` a son son,
-et les bruitages sont passés en WAV (la musique reste en MP3 — [`_rules/09-00`](../_rules/09-00-systeme-audio.md) §9.3).
-Restent les **4 musiques**. État du sourcing : `docs/ROADMAP.md` (P-03) ; décompte vivant via
+**P-03 est livré et publié en `0.5.0`.** La branche `feat/p03-systeme-audio` est **fusionnée
+dans `main`** (PR #30), suivie de deux correctifs sans rapport entre eux (PR #31, PR #32).
+`patch-notes-writer` n'avait **délibérément pas** été invoqué tant que le catalogue restait
+vide : une note joueur aurait annoncé des sons que personne ne pouvait entendre — voir
+[ADR-082](../_adr/ADR-082-directeur-audio-central-et-mapping-par-donnees.md) D5. **Le motif est
+tombé le 2026-08-28** : les 19 bruitages sont posés, chaque `GameMoment` a son son, et les
+trois livraisons partagent enfin le même numéro. Les bruitages sont passés en WAV, la musique
+reste en MP3 — [`_rules/09-00`](../_rules/09-00-systeme-audio.md) §9.3.
+**Il reste à poser le tag pour déclencher la publication.** Le sourcing et la note de version
+vivent sur `feat/audio-bruitages-en-wav`, **non poussée**. Les 4 musiques sortent vers le
+chantier **P-46** ; décompte vivant via
 `flutter test test/unit/audio/audio_sourcing_report_test.dart --reporter expanded`.
-**Décision ouverte : publier maintenant sur les seuls bruitages, ou attendre la musique** —
-trois livraisons attendent la même publication, pas une seule.
 
 Quatre réserves à ne pas perdre de vue :
 
@@ -37,13 +37,15 @@ Quatre réserves à ne pas perdre de vue :
   réussit, le site affiche un lien vers un asset absent. Correctif identifié, non fait —
   voir [ADR-080](../_adr/ADR-080-site-vitrine-pilote-par-la-donnee-et-jointure-decl.md).
 - **`patch-notes-writer` ne rafraîchit que les `href` de repli, pas les libellés visibles**
-  qui citent la version en toutes lettres — cause vivant dans le skill, non corrigée,
-  découverte le 2026-08-23 et corrigée ponctuellement à cette date seulement.
+  qui citent la version en toutes lettres — cause vivante dans le skill, non corrigée.
+  Contournée à la main aux **deux** dernières publications (2026-08-23 puis 2026-08-28) :
+  `site/index.html` porte le numéro en clair dans sa carte de version et doit être repris
+  à chaque fois. Le contournement répété est le symptôme, pas le remède.
 
 ## 3 dernières livraisons
 
-1. **Système audio — P-03** (2026-08-25, PR #30, fusionné dans `main`, pas encore
-   publié) — un directeur central (`AudioDirector.onMoment`/`MusicConductor.onScene`)
+1. **Système audio — P-03** (2026-08-25, PR #30, **publié en `0.5.0`** le 2026-08-28 avec son
+   sourcing) — un directeur central (`AudioDirector.onMoment`/`MusicConductor.onScene`)
    résout un moment de jeu ou une scène musicale en son via `assets/data/audio.json`, chaîne
    de repli à 4 niveaux (son propre à l'entité → type d'animation → défaut → silence), sans
    qu'aucun appelant ne nomme jamais un fichier. 14 moments branchés dans 8 fichiers,
@@ -95,5 +97,5 @@ Quatre réserves à ne pas perdre de vue :
 
 Jalon 1 « Socle » clos : ~~P-01~~ ✅, ~~P-02~~ ✅, ~~P-04~~ ✅, ~~P-03~~ ✅. Prochain jalon —
 Jalon 2 « Feel & contenu » (`docs/ROADMAP.md` §9) : P-06 (lot P0 animations), puis P-07, le
-prototype de P-08, et P-05. Suivi indépendant de ce séquencement : combler le sourcing audio
-de P-03, puis invoquer `patch-notes-writer` pour publier la version.
+prototype de P-08, et P-05. Suivi indépendant de ce séquencement : poser le tag de `0.5.0`,
+puis sourcer les 4 musiques (**P-46**) — le moteur qui les jouera est déjà livré et testé.

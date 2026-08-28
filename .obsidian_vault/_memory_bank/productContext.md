@@ -3,7 +3,7 @@
 > [!IMPORTANT]
 > **Plafond : 120 lignes.** Ce fichier est un index, jamais un contenu. Chaque règle métier vit dans sa fiche sous `../_rules/`. Les arbitrages qui les ont produites vivent dans `../_adr/`.
 
-**Vérifié le 2026-08-25** — 27 fiches, découpées depuis un `productContext.md` de 807 lignes.
+**Vérifié le 2026-08-28** — 27 fiches, découpées depuis un `productContext.md` de 807 lignes. Les six compteurs de lignes périmés (trois ici, trois dans `systemPatterns.md`) ont été recalés sur le disque à cette date.
 
 ### 1. Boucle de Gameplay Principale (Core Loop)
 
@@ -30,8 +30,8 @@
 | 3.1. 🔋 Gestion du Mana | [03-1-gestion-du-mana.md](../_rules/03-1-gestion-du-mana.md) | 9 |
 | 3.2. 🛡️ Gestion de l'Armure | [03-2-gestion-de-l-armure.md](../_rules/03-2-gestion-de-l-armure.md) | 20 |
 | 3.3. ⚔️ Pipeline de Dégâts Centralisé | [03-3-pipeline-de-degats-centralise.md](../_rules/03-3-pipeline-de-degats-centralise.md) | 20 |
-| 3.4. 🃏 Système de Piles de Cartes | [03-4-systeme-de-piles-de-cartes.md](../_rules/03-4-systeme-de-piles-de-cartes.md) | 20 |
-| 3.5. 🎒 Système de Reliques | [03-5-systeme-de-reliques.md](../_rules/03-5-systeme-de-reliques.md) | 47 |
+| 3.4. 🃏 Système de Piles de Cartes | [03-4-systeme-de-piles-de-cartes.md](../_rules/03-4-systeme-de-piles-de-cartes.md) | 60 |
+| 3.5. 🎒 Système de Reliques | [03-5-systeme-de-reliques.md](../_rules/03-5-systeme-de-reliques.md) | 57 |
 | 3.6. 🎪 Système d'Événements | [03-6-systeme-d-evenements.md](../_rules/03-6-systeme-d-evenements.md) | 21 |
 | 3.7. 🏕️ Feu de Camp / Repos (`RestScreen`) | [03-7-feu-de-camp-repos.md](../_rules/03-7-feu-de-camp-repos.md) | 6 |
 | 3.8. 🔨 Système de Forge & Forge de Fusion (Forge v2.5) | [03-8-systeme-de-forge-forge-de-fusion.md](../_rules/03-8-systeme-de-forge-forge-de-fusion.md) | 54 |
@@ -75,7 +75,7 @@
 
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
-| 9. Système Audio | [09-00-systeme-audio.md](../_rules/09-00-systeme-audio.md) | 107 |
+| 9. Système Audio | [09-00-systeme-audio.md](../_rules/09-00-systeme-audio.md) | 132 |
 
 ---
 
