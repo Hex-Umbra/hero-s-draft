@@ -1,5 +1,38 @@
 [
   {
+    "version": "0.5.0",
+    "date": "2026-08-28",
+    "title": "Le Jeu Sort du Silence",
+    "sections": [
+      {
+        "category": "Nouvelles Fonctionnalités",
+        "emoji": "✨",
+        "entries": [
+          "Le jeu sort du silence : 19 bruitages accompagnent désormais le combat et la navigation, du survol d'une carte jusqu'à la mort d'un ennemi.",
+          "Un écran de Réglages, accessible depuis l'écran d'accueil, permet d'ajuster le volume et de couper le son ; vos préférences sont conservées d'une partie à l'autre.",
+          "Un bouton de coupure du son est disponible directement dans l'interface de combat, sans passer par les réglages."
+        ]
+      },
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "Jouer une carte ne sonne plus pareil selon sa nature : une attaque au corps à corps, un sort et une carte de soutien ont chacun leur bruitage.",
+          "Les coups qui touchent alternent entre trois sons différents, pour que les longs combats ne deviennent pas répétitifs.",
+          "Un coup critique, un coup absorbé par l'armure et un soin se distinguent désormais à l'oreille, sans avoir à lire les nombres."
+        ]
+      },
+      {
+        "category": "Corrections",
+        "emoji": "🐛",
+        "entries": [
+          "Le panneau des effets de statut ne déborde plus de son cadre, y compris avec un libellé long ou une taille de police système agrandie.",
+          "Le même défaut d'affichage est corrigé dans l'écran d'aperçu du combat du tutoriel."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.4.9",
     "date": "2026-08-23",
     "title": "L'École du Héros",
