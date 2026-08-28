@@ -1,4 +1,4 @@
-<!-- last-sync: 2026-08-25 | commit: 708f34d -->
+<!-- last-sync: 2026-08-25 | commit: 5a3d086 -->
 
 # 🧠 Contexte Actuel
 
@@ -13,14 +13,16 @@ seulement après** que le skill `patch-notes-writer` a déplacé ensemble les tr
 portent le numéro : sinon `verify-version` échoue avant le moindre build. Ce n'est pas une
 panne, c'est le garde-fou.
 
-**P-03 est livré en code et en documentation, pas encore en version.** Branche
-`feat/p03-systeme-audio`, pas encore mergée dans `main`. `patch-notes-writer` n'a
-**délibérément pas** été invoqué : le catalogue audio reste troué, et une note joueur
-annoncerait un son que personne ne peut encore entendre — comportement voulu, voir
+**P-03 est livré en code et en documentation, pas encore en version.** La branche
+`feat/p03-systeme-audio` est **fusionnée dans `main`** (PR #30), suivie de deux correctifs
+sans rapport entre eux (PR #31, PR #32). `patch-notes-writer` n'a **délibérément pas** été
+invoqué : le catalogue audio reste troué, et une note joueur annoncerait un son que personne
+ne peut encore entendre — comportement voulu, voir
 [ADR-082](../_adr/ADR-082-directeur-audio-central-et-mapping-par-donnees.md) D5. État du
 sourcing : `docs/ROADMAP.md` (P-03) ; décompte vivant via `flutter test
 test/unit/audio/audio_sourcing_report_test.dart --reporter expanded`.
-**Invoquer `patch-notes-writer` une fois le catalogue comblé, pas avant.**
+**Invoquer `patch-notes-writer` une fois le catalogue comblé, pas avant** — trois livraisons
+attendent alors la même publication, pas une seule.
 
 Quatre réserves à ne pas perdre de vue :
 
@@ -38,17 +40,25 @@ Quatre réserves à ne pas perdre de vue :
 
 ## 3 dernières livraisons
 
-1. **Système audio — P-03** (2026-08-25, branche `feat/p03-systeme-audio`, pas encore
+1. **Système audio — P-03** (2026-08-25, PR #30, fusionné dans `main`, pas encore
    publié) — un directeur central (`AudioDirector.onMoment`/`MusicConductor.onScene`)
    résout un moment de jeu ou une scène musicale en son via `assets/data/audio.json`, chaîne
    de repli à 4 niveaux (son propre à l'entité → type d'animation → défaut → silence), sans
    qu'aucun appelant ne nomme jamais un fichier. 14 moments branchés dans 8 fichiers,
    musique par scène avec déverrouillage autoplay web, écran de réglages et coupure HUD
    persistés hors de `SaveService`. `SilentAudioBackend` par défaut : les 295 tests
-   existants n'ont pas bougé (354 aujourd'hui, +59 neufs pour l'audio). Voir
+   existants n'ont pas bougé (369 aujourd'hui — décomposition dans `progress.md`
+   §Métriques). Voir
    [ADR-082](../_adr/ADR-082-directeur-audio-central-et-mapping-par-donnees.md),
    [`_rules/09-00`](../_rules/09-00-systeme-audio.md) et
    [`_patterns/16-00`](../_patterns/16-00-architecture-du-systeme-audio.md).
+   **Deux correctifs sans rapport ont suivi le même jour** : *(PR #31)* deux débordements
+   de `RenderFlex` — `StatusEffectsPanel`, jumeau oublié du panneau corrigé par la PR #28,
+   et une troisième copie manuscrite du même motif dans
+   `tutorial_combat_overview_widget.dart` ; le test qui aurait dû les voir avalait
+   l'exception par un `takeException()` sans assertion. *(PR #32)* le compte de callbacks
+   de `HerosDraftGame` dans [`_patterns/04-00`](../_patterns/04-00-synchronisation-bidirectionnelle-flame-riverp.md),
+   annoncé à 16 depuis dix-neuf jours, ramené à 14.
 2. **Fidélité du tutoriel — P-45** (2026-08-23, publié en `0.4.9`) — un audit avait relevé
    **50 écarts** entre `lib/tutorial/` et le jeu réel, nés d'une règle d'autonomie qui
    interdisait au tutoriel de lire même les données immuables du jeu, forçant une recopie

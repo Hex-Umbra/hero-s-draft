@@ -9,23 +9,29 @@
 
 | Métrique | Valeur | Commande |
 |:---|:---|:---|
-| Tests automatisés (jeu) | 354 au vert | `flutter test` |
-| Fichiers de test | 65 | `find test -name "*.dart" \| wc -l` |
+| Tests automatisés (jeu) | 369 au vert | `flutter test` |
+| Fichiers de test | 67 | `find test -name "*.dart" \| wc -l` |
 | Analyse statique | 0 erreur (`No issues found!`) | `dart analyze` |
 | Fichiers Dart (`lib/`) | 187 | `find lib -name "*.dart" \| wc -l` |
-| Lignes de code (`lib/`) | 38 784 | `find lib -name "*.dart" -exec cat {} + \| wc -l` |
+| Lignes de code (`lib/`) | 38 899 | `find lib -name "*.dart" -exec cat {} + \| wc -l` |
 | Fichiers de données | 11 | `ls assets/data/*.json \| wc -l` |
 | Tests de la logique du site | 20 au vert | `cd site && node --test` |
 | Assertions du harnais CI | 57 au vert | `bash .github/scripts/test_scripts.sh` |
 | Fichiers suivis sous `site/` | 16 | `git ls-files site/ \| wc -l` |
 
 > [!NOTE]
-> Relevé sur `708f34d` (branche `feat/p03-systeme-audio`, pas encore mergée). Le chantier
-> **P-03** (audio) explique tout le mouvement depuis le 2026-08-23 : +13 fichiers Dart et
-> +14 fichiers de test sous `lib/services/audio/`, `lib/models/data/audio_data.dart` et
-> `test/unit/audio/`, un nouveau fichier de données (`assets/data/audio.json`), et 59 tests
-> neufs (295 → 354) sans qu'aucun test existant n'ait été modifié. `site/`, `.github/` et
-> le harnais CI n'ont pas bougé, d'où les trois dernières métriques inchangées.
+> Relevé sur `5a3d086` (`main`, arbre propre). Le chantier **P-03** (audio) explique
+> l'essentiel du mouvement depuis le 2026-08-23 : +13 fichiers Dart et +14 fichiers de test
+> sous `lib/services/audio/`, `lib/models/data/audio_data.dart` et `test/unit/audio/`, un
+> nouveau fichier de données (`assets/data/audio.json`), sans qu'aucun test existant n'ait
+> été modifié. `site/`, `.github/` et le harnais CI n'ont pas bougé, d'où les trois
+> dernières métriques inchangées.
+>
+> Le compte de tests est passé de 295 à **369** en trois temps : +59 pour le corps du
+> chantier audio, puis **+10** pour ses rondes de correctifs (chargement d'`audio.json`,
+> couverture `GameMoment`/`MusicScene`), puis **+5** pour la garde anti-débordement du
+> panneau de statuts (PR #31). Les deux derniers chiffres sont postérieurs au relevé du
+> 2026-08-25 fait sur `708f34d`, qui annonçait 354.
 
 > [!NOTE]
 > **La version ne vit pas ici.** La version de référence se lit dans `pubspec.yaml`

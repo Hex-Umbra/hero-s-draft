@@ -114,7 +114,9 @@ graph TD
 
 ### P-03 — Audio
 > [!NOTE]
-> ✅ **Livré le 2026-08-25** (branche `feat/p03-systeme-audio`, 28 commits). Conception et
+> ✅ **Livré le 2026-08-25**, branche `feat/p03-systeme-audio` **fusionnée dans `main`** par la
+> PR #30 — **37 commits**, re-comptés le 2026-08-25 après la fusion
+> (`git log --no-merges da5bc34^1..da5bc34^2`). Conception et
 > arbitrages : [ADR-082](../.obsidian_vault/_adr/ADR-082-directeur-audio-central-et-mapping-par-donnees.md).
 > Catalogue des moments et chaîne de repli : [`_rules/09-00`](../.obsidian_vault/_rules/09-00-systeme-audio.md).
 > Architecture : [`_patterns/16-00`](../.obsidian_vault/_patterns/16-00-architecture-du-systeme-audio.md).

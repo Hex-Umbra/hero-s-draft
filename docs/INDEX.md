@@ -105,6 +105,7 @@ Chaque sujet suit la même chaîne. Tous les documents n'en parcourent pas tous 
 | | Document | Date |
 |:---:|:---|:---|
 | 🔍 | [Audit animations & juice](possible_upgrades/25-07-2026_animations_juice_analysis_Opus5.md) *(→ P-06, P-07, P-29)* | 25/07/2026 |
+| 🔍⚠️ | [Audit responsive — téléphone & tablette](possible_upgrades/05-08-2026_audit_responsive_mobile_tablette_Opus5.md) — **aucun chantier `P-xx` ne le porte à ce jour** : son verdict (portrait téléphone injouable) n'a pas de destination dans `ROADMAP.md`, à trancher | 05/08/2026 |
 | ⚠️ | [Système d'animation des cartes](animations/card_animations_system.md) — **faux sur 4 points**, mise en conformité listée en `ROADMAP.md` §7 | — |
 | 🔨 | [UI, UX, audio & juice](implementation_plans/8_ui_ux_audio_juice.md) | — |
 | 🗄️ | [Analyse de responsivité UI](possible_upgrades/_archives/3_ui_responsiveness_analysis.md) · [Responsivité dynamique](possible_upgrades/_archives/4_dynamic_game_responsiveness_analysis.md) · [Parcours utilisateur](archives/user_flow_report.md) | — |
