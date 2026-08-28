@@ -131,14 +131,16 @@ graph TD
 >
 > **Le sourcing reste ouvert, et reste hors chiffrage.** Le catalogue attend 23 fichiers sous
 > `assets/audio/` : 19 bruitages (dont les 3 variantes d'`impact_normal`) et 4 musiques.
-> **9 sont posés au 2026-08-28** (mesuré par le rapport ci-dessous), 14 restent à trouver,
-> licencier et poser. Le jeu tourne et reste silencieux sur les moments non pourvus — c'est le
-> comportement voulu (voir ADR-082, D5), pas une régression. État courant à la demande :
-> `flutter test test/unit/audio/audio_sourcing_report_test.dart --reporter expanded`.
+> **17 sont posés au 2026-08-28** (mesuré par le rapport ci-dessous) et 6 restent : les
+> **4 musiques**, plus `armor_hit` et `card_play_buff` — ces deux-là en attente d'un arbitrage,
+> un fichier ayant été livré sous le nom fusionné `card_play_buffarmor_hit.wav`, qui ne
+> correspond à aucune entrée du catalogue. Le jeu tourne et reste silencieux sur les moments non
+> pourvus — c'est le comportement voulu (voir ADR-082, D5), pas une régression. État courant à
+> la demande : `flutter test test/unit/audio/audio_sourcing_report_test.dart --reporter expanded`.
 >
-> `impact_normal` est le **premier moment complètement pourvu** : ses 3 variantes sont sur le
-> disque, donc le tirage aléatoire de `_pickFile` rend enfin la rotation qu'il promet, sans
-> lecture muette. Voir le piège documenté en
+> **Le chemin critique est désormais la musique**, entièrement absente, alors que les bruitages
+> sont à 17 sur 19. `impact_normal` est le seul son à variantes et ses 3 fichiers sont posés —
+> voir le piège des jeux incomplets en
 > [`_rules/09-00`](../.obsidian_vault/_rules/09-00-systeme-audio.md) §9.3.
 >
 > **Les bruitages sont en WAV, les musiques en MP3** depuis le 2026-08-28 — bascule décidée
