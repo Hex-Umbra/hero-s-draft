@@ -129,11 +129,16 @@ graph TD
 > niveaux, plutôt que le catalogue codé en dur envisagé au 31/07). Détail du chiffrage par
 > poste : `docs/superpowers/specs/2026-08-24-p03-systeme-audio-design.md` §14.
 >
-> **Le sourcing reste ouvert, et reste hors chiffrage.** 23 fichiers restent à trouver,
-> licencier et poser sous `assets/audio/` : 19 bruitages (dont les 3 variantes
-> d'`impact_normal`) et 4 musiques. Le jeu tourne et reste silencieux tant qu'ils ne sont pas
-> livrés — c'est le comportement voulu (voir ADR-082, D5), pas une régression. État courant à
-> la demande : `flutter test test/unit/audio/audio_sourcing_report_test.dart --reporter expanded`.
+> **Le sourcing reste ouvert, et reste hors chiffrage.** Le catalogue attend 23 fichiers sous
+> `assets/audio/` : 19 bruitages (dont les 3 variantes d'`impact_normal`) et 4 musiques.
+> **7 sont posés au 2026-08-28** (mesuré par le rapport ci-dessous), 16 restent à trouver,
+> licencier et poser. Le jeu tourne et reste silencieux sur les moments non pourvus — c'est le
+> comportement voulu (voir ADR-082, D5), pas une régression. État courant à la demande :
+> `flutter test test/unit/audio/audio_sourcing_report_test.dart --reporter expanded`.
+>
+> **Les bruitages sont en WAV, les musiques en MP3** depuis le 2026-08-28 — bascule décidée
+> après que les 7 premiers bruitages ont été livrés en WAV. Motif et arbitrage :
+> [`_rules/09-00`](../.obsidian_vault/_rules/09-00-systeme-audio.md) §9.3.
 >
 > Le **Jalon 1 « Socle »** (§9) est clos avec cette livraison.
 

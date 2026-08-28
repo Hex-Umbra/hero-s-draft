@@ -59,18 +59,29 @@ Résolue par `AudioDirector._resolve()` (`lib/services/audio/audio_director.dart
 
 ### 9.3. Format des assets et contrat de nommage des variantes
 
-- **MP3**, 44,1 kHz — mono pour les bruitages, stéréo pour la musique. Pas d'OGG : Safari ne le
-  lit pas de façon fiable et le jeu est distribué en web.
+- **Deux formats, un par usage** : **WAV** (PCM 16 bits, mono) pour les bruitages, **MP3**
+  (stéréo) pour la musique — 44,1 kHz dans les deux cas. Pas d'OGG : Safari ne le lit pas de
+  façon fiable et le jeu est distribué en web. Le WAV, lui, est décodé partout, Safari compris.
+- **Pourquoi pas du MP3 partout** (amendé le 2026-08-28). Un bruitage pèse ~13 Ko : il n'y a
+  rien à compresser, et l'encodage MP3 préfixe 13 à 26 ms de silence que les navigateurs
+  honorent mal — ça s'entend sur un `card_hover` de 84 ms rejoué à chaque survol de carte. Une
+  musique, elle, dure des minutes : c'est là que la compression sert. ADR-082 ne fixait pas le
+  format, il le déléguait à cette fiche ; l'amendement n'y touche donc pas.
 - Bruitages courts (< 1,5 s) ; musiques bouclables proprement.
 - Chemins déclarés dans `assets/data/audio.json`, relatifs à `assets/audio/` (`pubspec.yaml`
   déclare `assets/audio/sfx/` et `assets/audio/music/` séparément).
 - **Variantes.** `"variants": N` sur une entrée de `sounds` attend `N` fichiers numérotés,
-  dérivés du nom déclaré en insérant le suffixe **avant l'extension** : `sfx/impact_normal.mp3`
-  avec `variants: 3` attend `impact_normal_1.mp3`, `_2` et `_3`. Un fichier est tiré au hasard à
+  dérivés du nom déclaré en insérant le suffixe **avant l'extension** : `sfx/impact_normal.wav`
+  avec `variants: 3` attend `impact_normal_1.wav`, `_2` et `_3`. Un fichier est tiré au hasard à
   chaque lecture (`AudioDirector._pickFile`) pour casser la répétition sur les sons les plus
   fréquents. Champ optionnel, vaut `1` par défaut. **Cette dérivation n'a qu'un seul
   propriétaire dans le code**, `SoundData.expectedFiles` — voir `_patterns/16-00` pour pourquoi
   ça compte.
+- **Un jeu de variantes incomplet rend muet au prorata**, il ne se replie pas : le tirage
+  précède la vérification de présence (`_pickFile` puis le garde de `onMoment`), donc
+  `variants: 3` avec le seul `_1` sur le disque laisse passer deux lectures sur trois en
+  silence. Fournir tous les numéros, ou aucun — redescendre `variants` à `1` n'aide pas, ça
+  change le nom attendu en `impact_normal.wav` et rend les trois lectures muettes.
 
 ### 9.4. Donner un son à une carte, un ennemi ou une relique
 

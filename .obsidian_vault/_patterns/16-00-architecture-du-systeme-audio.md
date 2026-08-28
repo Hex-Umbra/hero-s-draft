@@ -80,7 +80,7 @@ pour que l'ajout futur soit un changement d'implémentation, jamais un changemen
 ### 16.5. `SoundData.expectedFiles` — propriétaire unique de la dérivation de variantes
 
 `SoundData.expectedFiles` (`lib/models/data/audio_data.dart`) est le seul endroit du code qui
-calcule les noms de fichiers numérotés d'un son à variantes (`impact_normal.mp3` +
+calcule les noms de fichiers numérotés d'un son à variantes (`impact_normal.wav` +
 `variants: 3` → `_1`/`_2`/`_3`, suffixe inséré avant l'extension). Deux consommateurs l'appellent
 plutôt que de recalculer la règle : `AudioDirector` (`preloadAll()` pour le préchargement,
 `_pickFile()` pour le tirage aléatoire à la lecture) et
