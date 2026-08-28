@@ -15,14 +15,16 @@ panne, c'est le garde-fou.
 
 **P-03 est livré en code et en documentation, pas encore en version.** La branche
 `feat/p03-systeme-audio` est **fusionnée dans `main`** (PR #30), suivie de deux correctifs
-sans rapport entre eux (PR #31, PR #32). `patch-notes-writer` n'a **délibérément pas** été
-invoqué : le catalogue audio reste troué, et une note joueur annoncerait un son que personne
-ne peut encore entendre — comportement voulu, voir
-[ADR-082](../_adr/ADR-082-directeur-audio-central-et-mapping-par-donnees.md) D5. État du
-sourcing : `docs/ROADMAP.md` (P-03) ; décompte vivant via `flutter test
-test/unit/audio/audio_sourcing_report_test.dart --reporter expanded`.
-**Invoquer `patch-notes-writer` une fois le catalogue comblé, pas avant** — trois livraisons
-attendent alors la même publication, pas une seule.
+sans rapport entre eux (PR #31, PR #32). `patch-notes-writer` n'avait **délibérément pas** été
+invoqué tant que le catalogue restait vide : une note joueur aurait annoncé des sons que
+personne ne pouvait entendre — voir
+[ADR-082](../_adr/ADR-082-directeur-audio-central-et-mapping-par-donnees.md) D5. **Ce motif est
+levé côté bruitages depuis le 2026-08-28** : les 19 sont posés, chaque `GameMoment` a son son,
+et les bruitages sont passés en WAV (la musique reste en MP3 — [`_rules/09-00`](../_rules/09-00-systeme-audio.md) §9.3).
+Restent les **4 musiques**. État du sourcing : `docs/ROADMAP.md` (P-03) ; décompte vivant via
+`flutter test test/unit/audio/audio_sourcing_report_test.dart --reporter expanded`.
+**Décision ouverte : publier maintenant sur les seuls bruitages, ou attendre la musique** —
+trois livraisons attendent la même publication, pas une seule.
 
 Quatre réserves à ne pas perdre de vue :
 
