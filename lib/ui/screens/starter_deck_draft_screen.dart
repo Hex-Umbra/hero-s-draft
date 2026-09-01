@@ -10,6 +10,7 @@ import '../../models/data/passive_data.dart';
 import '../../models/data/hero_skills_link.dart';
 import '../../services/game_data_service.dart';
 import '../../services/audio/audio_providers.dart';
+import '../../services/audio/game_moment.dart';
 import '../../services/audio/music_scene.dart';
 import '../widgets/ui_card.dart';
 import 'map_screen.dart';
@@ -63,6 +64,7 @@ class _StarterDeckDraftScreenState
 
   void _toggleCardSelection(int index) {
     final l10n = AppLocalizations.of(context)!;
+    ref.read(audioDirectorProvider).onMoment(GameMoment.draftCardPick);
     setState(() {
       if (_selectedIndexes.contains(index)) {
         _selectedIndexes.remove(index);

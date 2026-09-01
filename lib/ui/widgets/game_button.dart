@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../services/audio/audio_providers.dart';
+import '../../services/audio/game_moment.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 
-class GameButton extends StatefulWidget {
+class GameButton extends ConsumerStatefulWidget {
   final String text;
   final VoidCallback? onPressed;
   final bool isLoading;
@@ -29,11 +32,18 @@ class GameButton extends StatefulWidget {
   });
 
   @override
-  State<GameButton> createState() => _GameButtonState();
+  ConsumerState<GameButton> createState() => _GameButtonState();
 }
 
-class _GameButtonState extends State<GameButton> {
+class _GameButtonState extends ConsumerState<GameButton> {
   bool _isHovered = false;
+
+  /// Point unique du son de validation d'interface : tout menu passe par ce
+  /// bouton, donc aucun ecran n'a besoin de cabler `uiTap` lui-meme.
+  void _handleTap() {
+    ref.read(audioDirectorProvider).onMoment(GameMoment.uiTap);
+    widget.onPressed!.call();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -146,7 +156,7 @@ class _GameButtonState extends State<GameButton> {
             color: Colors.transparent,
             child: InkWell(
               borderRadius: BorderRadius.circular(10),
-              onTap: isEnabled ? widget.onPressed : null,
+              onTap: isEnabled ? _handleTap : null,
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                 child: Center(child: buttonContent),

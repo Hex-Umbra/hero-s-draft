@@ -11,6 +11,8 @@ import '../../game/controllers/deck_controller.dart';
 import '../../game/services/level_up_reward_service.dart';
 import '../../models/card_instance.dart';
 import '../../services/audio/audio_providers.dart';
+import '../../services/audio/audio_source.dart';
+import '../../services/audio/game_moment.dart';
 import '../../services/audio/music_scene.dart';
 import '../widgets/draft/draft_choice_labels.dart';
 import '../widgets/relic_carousel/draft_card_reel.dart';
@@ -45,7 +47,23 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
   bool get _hasMythicChoices =>
       _choices.any((c) => c.rarity == RewardRarity.mythic);
 
-  void _onBaseReelLanded() {
+  /// Un cran du rouleau. La cadence n'est pas pilotee ici : `DraftCardReel`
+  /// emet `onTick` a chaque carte qui defile, et sa courbe de deceleration
+  /// espace les emissions d'elle-meme.
+  void _reelTick() =>
+      ref.read(audioDirectorProvider).onMoment(GameMoment.reelTick);
+
+  /// La revelation. La rarete voyage comme cle de variante, pas comme son :
+  /// `audio.json` decide quel bruitage chaque rarete declenche, et deux
+  /// raretes peuvent partager le meme tant qu'aucun son distinct n'existe.
+  /// Le libelle passe a `DraftCardReel.rarity` est localise, donc inutilisable
+  /// ici — c'est l'enum brut qu'il faut.
+  void _reelLand(RewardRarity rarity) => ref
+      .read(audioDirectorProvider)
+      .onMoment(GameMoment.reelLand, source: VariantAudioSource(rarity.name));
+
+  void _onBaseReelLanded(RewardRarity rarity) {
+    _reelLand(rarity);
     _baseLandedCount++;
     if (_baseLandedCount == 3) {
       if (_hasMythicChoices) {
@@ -62,7 +80,8 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
     }
   }
 
-  void _onMythicReelLanded() {
+  void _onMythicReelLanded(RewardRarity rarity) {
+    _reelLand(rarity);
     _mythicLandedCount++;
     final mythicChoicesCount =
         _choices.where((c) => c.rarity == RewardRarity.mythic).length;
@@ -199,6 +218,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                                   : [],
                                             ),
                                             child: DraftCardReel(
+                                              onTick: () => _reelTick(),
                                               title:
                                                   DraftChoiceLabels.getChoiceTitle(
                                                 l10n,
@@ -225,7 +245,8 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                               ),
                                               index: index,
                                               onLand: index < 3
-                                                  ? _onBaseReelLanded
+                                                  ? () => _onBaseReelLanded(
+                                                      choice.rarity)
                                                   : null,
                                               initialLanded: index >= 3
                                                   ? true
@@ -290,6 +311,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                                 : [],
                                           ),
                                           child: DraftCardReel(
+                                            onTick: () => _reelTick(),
                                             title: DraftChoiceLabels.getChoiceTitle(
                                               l10n,
                                               choice,
@@ -314,7 +336,8 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                             ),
                                             index: index,
                                             onLand: index < 3
-                                                ? _onBaseReelLanded
+                                                ? () => _onBaseReelLanded(
+                                                    choice.rarity)
                                                 : null,
                                             initialLanded: index >= 3
                                                 ? true
@@ -412,6 +435,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                             : [],
                                       ),
                                       child: DraftCardReel(
+                                        onTick: () => _reelTick(),
                                         title: DraftChoiceLabels.getChoiceTitle(
                                           l10n,
                                           choice,
@@ -426,7 +450,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                           choice.rarity,
                                         ),
                                         index: relativeIndex,
-                                        onLand: _onMythicReelLanded,
+                                        onLand: () => _onMythicReelLanded(choice.rarity),
                                       ),
                                     ),
                                   ),

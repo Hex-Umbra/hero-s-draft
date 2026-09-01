@@ -15,6 +15,7 @@ import '../../game/systems/trait_system.dart';
 import 'boss_card_draft_screen.dart';
 import '../../services/game_data_service.dart';
 import '../../services/audio/audio_providers.dart';
+import '../../services/audio/game_moment.dart';
 import '../../services/audio/music_scene.dart';
 import '../../models/data/relic_data.dart';
 import '../../models/data/card_data.dart';
@@ -156,6 +157,13 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         return RelicCarouselScreen(
           relicPool: gameData.relics,
           wonRelic: rolledRelic,
+          // Un cran par relique qui defile. Le carrousel anime sur 4 s en
+          // `easeOutCubic` : le ralentissement facon machine a sous vient de
+          // sa courbe, aucune cadence n'est calculee ici.
+          onTick: () =>
+              ref.read(audioDirectorProvider).onMoment(GameMoment.carouselTick),
+          onLand: () =>
+              ref.read(audioDirectorProvider).onMoment(GameMoment.carouselLand),
           onCollect: () {
             ref.read(rewardProvider.notifier).collectRelic();
 
