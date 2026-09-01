@@ -21,11 +21,12 @@ vide : une note joueur aurait annoncé des sons que personne ne pouvait entendre
 tombé le 2026-08-28** : les 19 bruitages sont posés, chaque `GameMoment` a son son, et les
 trois livraisons partagent enfin le même numéro. Les bruitages sont passés en WAV, la musique
 reste en MP3 — [`_rules/09-00`](../_rules/09-00-systeme-audio.md) §9.3.
-**Mais `0.5.0` n'est toujours pas taguée, et six commits l'ont déjà dépassée.** Le sourcing,
-la note de version et le chantier du chemin de lecture vivent tous sur
-`feat/audio-bruitages-en-wav`, **non poussée** : rien n'est publié. Ces six commits n'ont
-aucune note joueur — **`patch-notes-writer` reste à invoquer** avant de taguer quoi que ce
-soit. Les 4 musiques sortent vers le chantier **P-46** ; décompte vivant via
+**La note `0.5.0` couvre tout le chantier audio**, sourcing et chemin de lecture compris :
+elle a été écrite avant les sept commits qui ont suivi, puis rouverte pour les intégrer, la
+version n'ayant jamais été taguée entre-temps. C'est la seule fois où une entrée de
+`patch_notes.json` a été rouverte, et c'est légitime : personne ne l'avait encore vue.
+`0.4.9` reste la dernière version réellement distribuée. Les 4 musiques sortent vers le
+chantier **P-46** ; décompte vivant via
 `flutter test test/unit/audio/audio_sourcing_report_test.dart --reporter expanded`.
 
 Quatre réserves à ne pas perdre de vue :
@@ -47,7 +48,7 @@ Quatre réserves à ne pas perdre de vue :
 ## 3 dernières livraisons
 
 1. **Chemin de lecture audio — latence, disponibilité, synchronisation** (2026-08-29,
-   branche `feat/audio-bruitages-en-wav`, **pas encore publié**) — le moteur de P-03 était
+   branche `feat/audio-bruitages-en-wav`, replié dans la note `0.5.0`) — le moteur de P-03 était
    livré et testé, mais personne ne l'avait jamais *entendu* : le sourcing a révélé quatre
    défauts que le vert des tests ne pouvait pas voir. Les bruitages passent par un réservoir
    de lecteurs pré-armés au lieu d'allouer un lecteur natif et quatre allers-retours de canal
@@ -106,5 +107,4 @@ Jalon 1 « Socle » clos : ~~P-01~~ ✅, ~~P-02~~ ✅, ~~P-04~~ ✅, ~~P-03~~ �
 Jalon 2 « Feel & contenu » (`docs/ROADMAP.md` §9) : P-06 (lot P0 animations), puis P-07, le
 prototype de P-08, et P-05. **P-07 doit lire [ADR-083](../_adr/ADR-083-latence-et-synchronisation-du-chemin-de-lecture.md) D6 avant de toucher aux animations** :
 la frappe d'impact y est déjà posée, et `spawnImpactParticles` l'attend, déclarée et jamais
-appelée. Suivi indépendant : écrire la note joueur des six commits post-`0.5.0`, poser le tag,
-puis sourcer les 4 musiques (**P-46**).
+appelée. Suivi indépendant : poser le tag `v0.5.0`, puis sourcer les 4 musiques (**P-46**).
