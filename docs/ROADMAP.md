@@ -114,7 +114,7 @@ graph TD
 
 ### P-03 — Audio
 > [!NOTE]
-> ✅ **Livré le 2026-08-25, publié en `0.5.0` le 2026-08-28**, branche `feat/p03-systeme-audio`
+> ✅ **Livré le 2026-08-25, publié en `0.5.0` le 2026-09-01**, branche `feat/p03-systeme-audio`
 > **fusionnée dans `main`** par la PR #30 — **37 commits**, re-comptés le 2026-08-25 après la fusion
 > (`git log --no-merges da5bc34^1..da5bc34^2`). Conception et
 > arbitrages : [ADR-082](../.obsidian_vault/_adr/ADR-082-directeur-audio-central-et-mapping-par-donnees.md).
@@ -141,8 +141,10 @@ graph TD
 > perdu, et son de conséquence désynchronisé de son animation — voir
 > [ADR-083](../.obsidian_vault/_adr/ADR-083-latence-et-synchronisation-du-chemin-de-lecture.md).
 >
-> **Les 4 musiques sortent vers le chantier P-46** (§3, Tier A), pour ne pas retenir la
-> publication des bruitages. Le silence sur les scènes musicales reste
+> **Chantier clos.** `v0.5.0` est taguée sur `main` et déployée — les neuf jobs de
+> `release.yml` au vert, web en ligne et zip Windows publié. Les 4 musiques sortent vers
+> **P-46** (§3, Tier A) et la seconde passe de couverture et de mixage vers **P-47** (§7,
+> Tier E), pour ne pas retenir la publication des bruitages. Le silence sur les scènes musicales reste
 > le comportement voulu (ADR-082, D5), pas une régression.
 >
 > **Les bruitages sont en WAV, les musiques en MP3** depuis le 2026-08-28 — bascule décidée
@@ -447,6 +449,7 @@ Sur les 14 blocs `catch` de `lib/`, **un seul est totalement muet** : `lib/ui/sc
 | **P-37** | **Icônes de type de dégâts** dans les descriptions de cartes | **0,5 j** | ★☆☆☆☆ | 🔥 |
 | **P-38** | **Dashboard de perf** (FPS, drops) dans les logs de debug | **1 j** | ★★☆☆☆ | 🔥 |
 | **P-39** | **Skins de héros** débloquables | **3 j+** *(art)* | ★★☆☆☆ | 🔥 |
+| **P-47** | **Seconde passe audio** — sonoriser l'économie et la fin de partie, réveiller le niveau 1 de la chaîne de repli, revoir le mixage | **1-2 j** *(+ ~10 bruitages)* | ★☆☆☆☆ | 🔥🔥 |
 
 ### P-31 — Ne pas ouvrir sans lire le prérequis
 
@@ -470,6 +473,35 @@ Sur les 14 blocs `catch` de `lib/`, **un seul est totalement muet** : `lib/ui/sc
 - Vérifier que la règle anti-répétition de nœuds fonctionne réellement, et que les quotas par acte sont respectés.
 - Repositionner la popup d'aperçu des améliorations d'une carte (forge et tous les autres écrans concernés).
 - Mettre `docs/animations/card_animations_system.md` en conformité avec le code (documentation fausse sur 4 points).
+
+---
+
+### P-47 — Seconde passe audio
+Le moteur est livré, éprouvé en production depuis `0.5.0`, et **il reste sous-exploité**. Rien ici n'est bloquant ni structurant : c'est de la couverture et du mixage, à piocher quand l'envie d'entendre le jeu revient. À faire de préférence avec **P-46** (§3, Tier A), pour n'avoir qu'une seule campagne d'écoute.
+
+**Ce qui n'a toujours pas de son.** Les écrans ont leur retour de bouton via `uiTap`, mais **aucun n'a de son pour son action propre** : achat en boutique, fusion à la forge, échange de relique, repos, résolution d'événement, gain d'or, montée de niveau. Et la fin de partie — victoire comme défaite — est muette. S'y ajoute le dernier `// TODO: Audio Hook` du dépôt, `floating_text.dart:166`, seul rescapé de P-03.
+
+> [!IMPORTANT]
+> **Le niveau 1 de la chaîne de repli n'est utilisé nulle part.** Aucune entité de
+> `assets/data/*.json` ne déclare de `sfx` propre : le mécanisme qui permet à *une* carte ou
+> *un* ennemi d'avoir sa signature sonore est construit, testé, et dort. Le donner à quelques
+> cartes de classe et aux boss coûte une clé JSON par entité, sans une ligne de Dart —
+> voir [`_rules/09-00`](../.obsidian_vault/_rules/09-00-systeme-audio.md) §9.4.
+>
+> Cas à part : **`RelicData.sfx` est parsé mais mort**, faute de moment de relique. C'est le
+> seul des trois modèles porteurs de `sfx` dans ce cas, et le combler demande un `GameMoment`
+> plus un site d'appel, donc du code.
+
+**Ce qui mérite d'être retouché.** Le mixage n'a jamais été passé en revue d'ensemble : les volumes ont été posés un par un. Deux points connus — trois `DraftCardReel` émettent leur `reelTick` **simultanément** sur l'écran de niveau, et `_poolMinPlayers` vaut 1, si bien que la première superposition d'un son donné garde encore l'ancienne latence d'allocation ([ADR-083](../.obsidian_vault/_adr/ADR-083-latence-et-synchronisation-du-chemin-de-lecture.md)). Le fondu enchaîné de la musique est accepté mais **jamais honoré** (`fadeMs`), limitation assumée décrite dans [`_patterns/16-00`](../.obsidian_vault/_patterns/16-00-architecture-du-systeme-audio.md) §16.4.
+
+> [!WARNING]
+> **Le build Windows n'est compilé qu'au moment du tag.** `ci.yml` ne tourne que sur
+> `ubuntu-latest` ; c'est ce qui a transformé une dérive de toolchain MSVC en release cassée
+> plutôt qu'en PR rouge, lors de la publication de `0.5.0`. Le correctif en place
+> (`_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS`, `windows/CMakeLists.txt`) est une
+> **suppression** : l'en-tête `<experimental/coroutine>` est annoncé pour disparaître, donc un
+> futur MSVC recassera le build — au tag, encore. Arbitré le 2026-09-01 : on n'ajoute pas de
+> job Windows au CI. À rouvrir si le cas se reproduit.
 
 ---
 
@@ -533,7 +565,7 @@ Donne une fin à une run, archive les résultats, puis recalibre l'économie **u
 ## 10. Ce qu'il faut retenir
 
 1. **Quatre chantiers font l'essentiel de la valeur** : audio (P-03), pioche (~~P-02~~ ✅), juice (P-07), et une condition de victoire (P-10). Le reste est de l'accumulation.
-2. **Le chemin critique n'est presque jamais le code** — c'est le son (~~P-03~~ ✅ bruitages, P-46 musiques), les sprites (P-05, P-15), les illustrations (P-12) et le playtest de calibration (P-16, P-17). Lancer ces productions en parallèle du développement, pas après.
+2. **Le chemin critique n'est presque jamais le code** — c'est le son (~~P-03~~ ✅ bruitages, P-46 musiques, P-47 couverture), les sprites (P-05, P-15), les illustrations (P-12) et le playtest de calibration (P-16, P-17). Lancer ces productions en parallèle du développement, pas après.
 3. **P-02 avant tout ajout de contenu**, et **P-16 après P-02** — ✅ *les deux conditions sont remplies depuis le 2026-08-06 (code livré, playtest validé)*. P-16 peut désormais s'ouvrir sans risque de calibrer deux fois.
 4. La dette technique restante est réelle mais **nettement plus faible que ne le disent les anciens documents** : les deux god classes UI sont résolues, la persistance est livrée, et la re-vérification du Tier D le 2026-08-04 a montré que **six de ses huit fiches énonçaient des faits périmés** — deux chantiers y étaient même déjà livrés. Corollaire de méthode : **une fiche de dette non re-mesurée depuis plus d'une semaine doit être re-vérifiée contre le code avant d'être ouverte**, jamais crue sur parole. Les tiers A, B, C et E n'ont pas encore subi ce contrôle.
 

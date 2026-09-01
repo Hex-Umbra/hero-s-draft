@@ -107,4 +107,7 @@ Jalon 1 « Socle » clos : ~~P-01~~ ✅, ~~P-02~~ ✅, ~~P-04~~ ✅, ~~P-03~~ �
 Jalon 2 « Feel & contenu » (`docs/ROADMAP.md` §9) : P-06 (lot P0 animations), puis P-07, le
 prototype de P-08, et P-05. **P-07 doit lire [ADR-083](../_adr/ADR-083-latence-et-synchronisation-du-chemin-de-lecture.md) D6 avant de toucher aux animations** :
 la frappe d'impact y est déjà posée, et `spawnImpactParticles` l'attend, déclarée et jamais
-appelée. Suivi indépendant : poser le tag `v0.5.0`, puis sourcer les 4 musiques (**P-46**).
+appelée. **P-03 est clos** : `v0.5.0` est taguée sur `main` et déployée, les neuf jobs de
+`release.yml` au vert. Ce qui reste du son part en deux chantiers indépendants du
+séquencement — les 4 musiques (**P-46**) et la seconde passe de couverture et de mixage
+(**P-47**).
