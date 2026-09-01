@@ -129,7 +129,21 @@ class CardAnimator {
     );
   }
 
-  void playAnimation(EnemyCard? target, {required VoidCallback onComplete}) {
+  /// [onImpact] est la **frappe d'impact** : l'instant ou la carte atteint sa
+  /// cible et ou son effet doit se voir *et* s'entendre. [onComplete] reste la
+  /// fin de l'animation, quand la carte a fini de disparaitre.
+  ///
+  /// Les deux etaient confondus, ce qui produisait deux defauts opposes. Une
+  /// carte `buff` resolvait son effet sur le heros des la frame suivante, si
+  /// bien que le son de consequence se superposait a celui de la carte. Une
+  /// carte `magic` attendait 1,30 s la fin de l'animation, sans aucun visuel
+  /// d'impact pour occuper l'intervalle. Chaque animation declare desormais
+  /// elle-meme ou tombe sa frappe.
+  void playAnimation(
+    EnemyCard? target, {
+    required VoidCallback onImpact,
+    required VoidCallback onComplete,
+  }) {
     card.isPlayed = true;
     card.isDragging = false;
     card.priority = GameConstants.priorityCardDraggingMax;
@@ -148,30 +162,46 @@ class CardAnimator {
 
     switch (animType) {
       case 'magic':
-        _playMagicAnimation(target, wrappedOnComplete);
+        _playMagicAnimation(target, onImpact, wrappedOnComplete);
         break;
       case 'buff':
-        _playBuffAnimation(wrappedOnComplete);
+        _playBuffAnimation(onImpact, wrappedOnComplete);
         break;
       case 'poison':
         _playStatusAnimation(
           target,
           const Color(0xFF10B981),
+          onImpact,
           wrappedOnComplete,
         );
         break;
       case 'fire':
-        _playStatusAnimation(target, Colors.orangeAccent, wrappedOnComplete);
+        _playStatusAnimation(
+          target,
+          Colors.orangeAccent,
+          onImpact,
+          wrappedOnComplete,
+        );
         break;
       case 'ice':
-        _playStatusAnimation(target, Colors.lightBlueAccent, wrappedOnComplete);
+        _playStatusAnimation(
+          target,
+          Colors.lightBlueAccent,
+          onImpact,
+          wrappedOnComplete,
+        );
         break;
       case 'lightning':
-        _playStatusAnimation(target, Colors.yellowAccent, wrappedOnComplete);
+        _playStatusAnimation(
+          target,
+          Colors.yellowAccent,
+          onImpact,
+          wrappedOnComplete,
+        );
         break;
       case 'melee':
       default:
-        _playMeleeAnimation(target, wrappedOnComplete);
+        _playMeleeAnimation(target, onImpact, wrappedOnComplete);
         break;
     }
   }
@@ -179,6 +209,7 @@ class CardAnimator {
   void _playStatusAnimation(
     EnemyCard? target,
     Color color,
+    VoidCallback onImpact,
     VoidCallback onComplete,
   ) {
     final isAoe =
@@ -210,6 +241,9 @@ class CardAnimator {
       MoveEffect.to(
         targetPos,
         EffectController(duration: 0.2, curve: Curves.easeIn),
+        // La frappe tombe a l'arrivee sur la cible, pas 0,1 s plus tard quand
+        // la carte a fini de se resorber.
+        onComplete: onImpact,
       ),
       ScaleEffect.to(
         Vector2.all(0.0),
@@ -223,7 +257,11 @@ class CardAnimator {
     card.add(SequenceEffect(effects));
   }
 
-  void _playMeleeAnimation(EnemyCard? target, VoidCallback onComplete) {
+  void _playMeleeAnimation(
+    EnemyCard? target,
+    VoidCallback onImpact,
+    VoidCallback onComplete,
+  ) {
     final isAoe =
         target == null || card.card.data.target == CardTarget.allEnemies;
     final castingPos = Vector2(card.game.size.x / 2, card.game.size.y * 0.45);
@@ -278,6 +316,10 @@ class CardAnimator {
               );
             }
           }
+          // Le mêlée etait deja juste : sa frappe et sa fin coincident, le
+          // `SlashEffect` naissant dans ce meme callback. On la nomme quand
+          // meme, pour que les quatre animations aient le meme contrat.
+          onImpact();
           onComplete();
         },
       ),
@@ -286,7 +328,11 @@ class CardAnimator {
     card.add(SequenceEffect(effects));
   }
 
-  void _playMagicAnimation(EnemyCard? target, VoidCallback onComplete) {
+  void _playMagicAnimation(
+    EnemyCard? target,
+    VoidCallback onImpact,
+    VoidCallback onComplete,
+  ) {
     final isAoe =
         target == null || card.card.data.target == CardTarget.allEnemies;
     final castingPos = Vector2(card.game.size.x / 2, card.game.size.y * 0.45);
@@ -316,6 +362,10 @@ class CardAnimator {
           alternate: true,
           curve: Curves.elasticIn,
         ),
+        // `alternate` joue la duree deux fois : la pulsation dure 0,8 s, pas
+        // 0,4. La frappe tombe a sa fin — la carte a fini de se charger, elle
+        // decharge. Attendre la resorption ajoutait 0,2 s de silence de plus.
+        onComplete: onImpact,
       ),
       ScaleEffect.to(
         Vector2.all(0.0),
@@ -329,19 +379,27 @@ class CardAnimator {
     card.add(SequenceEffect(effects));
   }
 
-  void _playBuffAnimation(VoidCallback onComplete) {
+  void _playBuffAnimation(VoidCallback onImpact, VoidCallback onComplete) {
     card.borderPaint.color = Colors.white;
 
     final hasHeal = card.card.data.effects.any((e) => e.type == 'heal');
     final hasArmor = card.card.data.effects.any((e) => e.type == 'armor');
     final hero = card.game.heroCard;
 
-    if (hero != null) {
-      if (hasHeal) {
-        _spawnHealParticles(hero.position);
-      } else if (hasArmor) {
-        _spawnShieldDome(hero);
+    // Les particules naissaient ici, a t=0, en meme temps que le son de la
+    // carte : les deux bruitages se superposaient en une seule bouillie. Elles
+    // partent maintenant a l'apogee de la montee, ou la carte se decharge dans
+    // le heros — le visuel et le son de consequence arrivent ensemble, et
+    // apres le son de la carte au lieu de dessus.
+    void deliver() {
+      if (hero != null) {
+        if (hasHeal) {
+          _spawnHealParticles(hero.position);
+        } else if (hasArmor) {
+          _spawnShieldDome(hero);
+        }
       }
+      onImpact();
     }
 
     card.add(
@@ -349,6 +407,7 @@ class CardAnimator {
         MoveEffect.by(
           Vector2(0, -100),
           EffectController(duration: 0.6, curve: Curves.easeOut),
+          onComplete: deliver,
         ),
         OpacityEffect.to(
           0.0,
