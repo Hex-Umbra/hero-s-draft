@@ -38,12 +38,14 @@ final audioDirectorProvider = Provider<AudioDirector>((ref) {
 /// tache 11.
 final musicConductorProvider = Provider<MusicConductor>((ref) {
   final registry = ref.watch(gameDataLoaderProvider).valueOrNull;
-  return MusicConductor(
+  final conductor = MusicConductor(
     backend: ref.watch(audioBackendProvider),
     data: registry?.audio ?? const AudioData.disabled(),
     settings: () => ref.read(audioSettingsProvider),
     locked: kIsWeb,
   );
+  unawaited(conductor.preloadAll());
+  return conductor;
 });
 
 class AudioSettingsNotifier extends Notifier<AudioSettings> {

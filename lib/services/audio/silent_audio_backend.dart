@@ -10,6 +10,9 @@ class SilentAudioBackend implements AudioBackend {
   Future<bool> preload(String file) async => true;
 
   @override
+  Future<bool> preloadMusic(String file) async => true;
+
+  @override
   void playOnce(String file, {double volume = 1.0}) {}
 
   @override

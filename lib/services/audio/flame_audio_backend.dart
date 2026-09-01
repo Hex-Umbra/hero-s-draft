@@ -55,6 +55,19 @@ class FlameAudioBackend implements AudioBackend {
   }
 
   @override
+  Future<bool> preloadMusic(String file) async {
+    try {
+      // Pas de reservoir ici : `playLoop` passe par `FlameAudio.bgm`, qui a
+      // son propre lecteur unique. On ne fait que remplir le cache d'octets
+      // — et constater au passage si la piste existe.
+      await FlameAudio.audioCache.load(file);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  @override
   void playOnce(String file, {double volume = 1.0}) {
     // Contrat de [AudioBackend.playOnce] : sans effet si le fichier n'a pas
     // ete precharge. Ici c'est litteral — pas de reservoir, pas de son, et
