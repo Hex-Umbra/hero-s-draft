@@ -7,6 +7,7 @@ class FakeAudioBackend implements AudioBackend {
   final List<double> playedVolumes = [];
   final Set<String> missingFiles = {};
   final List<String> preloadAttempts = [];
+  final List<String> musicPreloadAttempts = [];
   final List<double> setVolumeCalls = [];
   String? currentLoop;
   double? currentLoopVolume;
@@ -15,6 +16,12 @@ class FakeAudioBackend implements AudioBackend {
   @override
   Future<bool> preload(String file) async {
     preloadAttempts.add(file);
+    return !missingFiles.contains(file);
+  }
+
+  @override
+  Future<bool> preloadMusic(String file) async {
+    musicPreloadAttempts.add(file);
     return !missingFiles.contains(file);
   }
 

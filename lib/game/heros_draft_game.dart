@@ -213,6 +213,11 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
 
       cardComp.playAnimation(
         target,
+        // Les degats sont deja appliques dans l'etat : c'est leur *rendu*
+        // — nombres flottants et bruitages — qui attend ici la frappe de
+        // l'animation, pour ne plus se superposer au son de la carte ni le
+        // suivre d'une seconde.
+        onImpact: resolvePendingHits,
         onComplete: () {
           cardComp.removeFromParent();
           isCardAnimating = false;
@@ -226,10 +231,18 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
     return false;
   }
 
-  void resolvePendingDeaths() {
+  /// Rend visibles et audibles les coups mis en attente pendant l'animation,
+  /// heros compris. Idempotent : les entites sans etat en attente ne font
+  /// rien, ce qui permet a [resolvePendingDeaths] de le rappeler en filet.
+  void resolvePendingHits() {
+    heroCard?.resolvePendingVisualStats();
     for (var card in enemyCards) {
       card.resolvePendingVisualStats();
     }
+  }
+
+  void resolvePendingDeaths() {
+    resolvePendingHits();
 
     final deadCards = enemyCards.where((c) => c.isPendingDeath).toList();
     if (deadCards.isEmpty) return;

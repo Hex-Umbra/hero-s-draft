@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../../models/data/audio_data.dart';
 import 'audio_backend.dart';
 import 'audio_settings.dart';
@@ -41,6 +43,30 @@ class MusicConductor {
 
   MusicScene? get currentScene => _current;
 
+  /// Pistes que le prechargement a trouvees absentes du disque.
+  ///
+  /// **Cache negatif, deliberement.** Memoriser ce qui manque plutot que ce
+  /// qui existe rend la garde insensible a la course : `preloadAll()` n'est
+  /// pas attendu, donc un cache positif serait vide au premier `onScene()` et
+  /// refuserait une piste pourtant presente — l'ecran resterait muet jusqu'au
+  /// changement de scene suivant. Ici, tant que le prechargement n'a rien
+  /// conclu, la lecture est tentee comme avant.
+  final Set<String> _missingTracks = {};
+
+  /// Precharge les pistes declarees et retient celles qui manquent.
+  ///
+  /// Volontairement `async` et jamais attendu, comme `AudioDirector.preloadAll`.
+  Future<void> preloadAll() async {
+    if (!_data.enabled) return;
+    for (final track in _data.music.values) {
+      final ok = await _backend.preloadMusic(track.file);
+      if (ok) continue;
+      if (_missingTracks.add(track.file)) {
+        debugPrint('[audio] piste declaree mais absente : ${track.file}');
+      }
+    }
+  }
+
   /// Idempotent seulement quand une boucle est reellement active pour la
   /// scene demandee (`_current` non nul) : redemander cette meme scene ne
   /// fait alors rien, ce qui rend sur de l'appeler depuis un `build()`, y
@@ -60,6 +86,12 @@ class MusicConductor {
 
     final track = _data.music[scene.jsonKey];
     if (track == null) return; // Piste non declaree : la precedente continue.
+
+    // Piste declaree mais absente du disque : meme traitement, et surtout
+    // aucune tentative de lecture. Le backend journalisait une erreur a
+    // chaque entree de scene, sans deduplication — le contrat du systeme est
+    // qu'un fichier manquant produise du silence, pas du bruit dans les logs.
+    if (_missingTracks.contains(track.file)) return;
 
     _current = scene;
 

@@ -29,6 +29,14 @@ class HerosDraftApp extends ConsumerWidget {
     ref.watch(autosaveOrchestratorProvider);
     // Hydrate les reglages audio persistes (volumes, coupure) une seule fois.
     ref.watch(audioSettingsHydrationProvider);
+    // Reveille le systeme audio des le lancement. Les deux providers sont
+    // paresseux : sans cela, ils n'existaient qu'au premier son demande, et
+    // ce son-la arrivait donc avant la fin de son propre prechargement — il
+    // etait abandonne. Le premier clic de menu etait muet. `watch` et non
+    // `read` : les deux sont recrees quand le catalogue JSON acheve de
+    // charger, et leur prechargement repart alors tout seul.
+    ref.watch(audioDirectorProvider);
+    ref.watch(musicConductorProvider);
 
     return MaterialApp(
       onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,

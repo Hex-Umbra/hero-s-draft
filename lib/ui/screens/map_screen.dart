@@ -15,6 +15,7 @@ import 'draft_screen.dart';
 import '../../models/card_instance.dart';
 import '../../game/controllers/deck_controller.dart';
 import '../../services/audio/audio_providers.dart';
+import '../../services/audio/game_moment.dart';
 import '../../services/audio/music_scene.dart';
 import '../widgets/map/map_connection_painter.dart';
 import '../widgets/map/map_legend.dart';
@@ -389,6 +390,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
   void _onNodeTap(BuildContext context, WidgetRef ref, MapNode node) {
     if (ref.read(runProvider).pendingDrafts > 0) return;
+    // Apres la garde : un clic refuse ne doit pas sonner comme un depart.
+    ref.read(audioDirectorProvider).onMoment(GameMoment.mapNodeSelect);
     ref.read(runProvider.notifier).travelToNode(node.id);
 
     Widget destination;

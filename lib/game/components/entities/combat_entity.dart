@@ -202,7 +202,10 @@ abstract class CombatEntity extends PositionComponent
           Colors.lightBlueAccent,
           position + Vector2(0, -size.y * scale.y / 2),
         );
-        game.audio.onMoment(GameMoment.armorHit);
+        // Gagner de l'armure et en encaisser un coup sont deux evenements
+        // opposes : ils partageaient `armorHit` avant le 2026-08-29, si bien
+        // qu'une carte defensive jouait le son du coup recu.
+        game.audio.onMoment(GameMoment.armorGain);
       }
     }
 

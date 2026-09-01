@@ -266,4 +266,64 @@ void main() {
       expect(backend.setVolumeCalls, [closeTo(0.3, 0.0001)]);
     });
   });
+
+  group('MusicConductor — piste absente du disque', () {
+    late FakeAudioBackend backend;
+
+    setUp(() => backend = FakeAudioBackend());
+
+    test('le prechargement sonde chaque piste declaree', () async {
+      await _conductor(backend).preloadAll();
+
+      expect(backend.musicPreloadAttempts,
+          ['music/menu.mp3', 'music/map.mp3', 'music/combat.mp3']);
+    });
+
+    // Le defaut d'origine : `onScene` allait droit au backend, qui
+    // journalisait une erreur a chaque entree de scene, sans deduplication.
+    // Le contrat du systeme veut qu'un fichier manquant produise du silence.
+    test('une piste absente n est jamais tentee, et ne coupe pas la precedente',
+        () async {
+      backend.missingFiles.add('music/map.mp3');
+      final conductor = _conductor(backend);
+      await conductor.preloadAll();
+
+      conductor.onScene(MusicScene.menu);
+      conductor.onScene(MusicScene.map);
+
+      expect(backend.currentLoop, 'music/menu.mp3',
+          reason: 'la piste precedente continue, comme pour une scene non declaree');
+      expect(backend.loopStartCount, 1);
+      expect(conductor.currentScene, MusicScene.menu);
+    });
+
+    // Le cache est negatif et pas positif, precisement pour ce cas :
+    // `preloadAll()` n'est jamais attendu, donc un cache positif serait vide
+    // au premier `onScene()` et refuserait a tort une piste presente.
+    test('avant la fin du prechargement, la lecture reste tentee', () {
+      backend.missingFiles.add('music/menu.mp3');
+
+      _conductor(backend).onScene(MusicScene.menu);
+
+      expect(backend.loopStartCount, 1,
+          reason: 'rien n a encore ete conclu sur cette piste');
+    });
+
+    test('une piste absente redevient jouable si elle apparait au prochain lancement',
+        () async {
+      backend.missingFiles.add('music/menu.mp3');
+      final premier = _conductor(backend);
+      await premier.preloadAll();
+      premier.onScene(MusicScene.menu);
+      expect(backend.loopStartCount, 0);
+
+      // Nouveau lancement : le fichier a ete pose entre-temps.
+      backend.missingFiles.clear();
+      final second = _conductor(backend);
+      await second.preloadAll();
+      second.onScene(MusicScene.menu);
+
+      expect(backend.loopStartCount, 1);
+    });
+  });
 }

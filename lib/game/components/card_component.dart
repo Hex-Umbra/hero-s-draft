@@ -621,8 +621,12 @@ class CardComponent extends PositionComponent
     animator.shakeAnimation();
   }
 
-  void playAnimation(EnemyCard? target, {required VoidCallback onComplete}) {
-    animator.playAnimation(target, onComplete: onComplete);
+  void playAnimation(
+    EnemyCard? target, {
+    required VoidCallback onImpact,
+    required VoidCallback onComplete,
+  }) {
+    animator.playAnimation(target, onImpact: onImpact, onComplete: onComplete);
   }
 
   void applyFlashVisual() {

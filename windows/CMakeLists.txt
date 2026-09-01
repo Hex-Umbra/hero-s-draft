@@ -32,6 +32,30 @@ set(CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS_RELEASE}")
 # Use Unicode for all projects.
 add_definitions(-DUNICODE -D_UNICODE)
 
+# Debloque la compilation du plugin `audioplayers_windows` sur les MSVC recents
+# (14.51 / VS 18, arrive sur `windows-latest` fin aout 2026).
+#
+# Le plugin inclut des en-tetes C++/WinRT ; `winrt/base.h` choisit entre
+# <coroutine> et <experimental/coroutine> selon le standard, et retombe sur le
+# second sous C++20. Or APPLY_STANDARD_SETTINGS impose `cxx_std_17` a tous les
+# plugins. MSVC 14.51 a transforme <experimental/coroutine> en erreur dure
+# (STL1011), la ou les versions precedentes n'emettaient qu'un avertissement :
+# le build Windows du tag v0.5.0 a echoue la-dessus, sans qu'une seule ligne de
+# ce depot ait change.
+#
+# Definition posee ici, au niveau du repertoire, pour etre heritee par les
+# sous-repertoires ajoutes ensuite — dont `flutter/generated_plugins.cmake`, qui
+# ajoute les plugins. Le plugin ne peut pas etre corrige : il vit dans le cache
+# pub et serait regenere.
+#
+# C'est une suppression, pas un correctif de fond. Le vrai remede est de passer
+# le standard a C++20, ce qui ferait choisir <coroutine> a WinRT — mais
+# APPLY_STANDARD_SETTINGS porte `/WX`, donc tout nouvel avertissement introduit
+# par le changement de standard casserait le build. A traiter separement.
+# `audioplayers_windows` 4.4.1 existe mais n'est pas atteignable : la resolution
+# de dependances le maintient en 4.3.1.
+add_definitions(-D_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS)
+
 # Compilation settings that should be applied to most targets.
 #
 # Be cautious about adding new options here, as plugins use this function by

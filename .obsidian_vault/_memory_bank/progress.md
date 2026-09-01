@@ -5,27 +5,30 @@
 
 ## Métriques
 
-**Vérifié le 2026-08-25**
+**Vérifié le 2026-09-01**
 
 | Métrique | Valeur | Commande |
 |:---|:---|:---|
-| Tests automatisés (jeu) | 354 au vert | `flutter test` |
-| Fichiers de test | 65 | `find test -name "*.dart" \| wc -l` |
+| Tests automatisés (jeu) | 385 au vert | `flutter test` |
+| Fichiers de test | 69 | `find test -name "*.dart" \| wc -l` |
 | Analyse statique | 0 erreur (`No issues found!`) | `dart analyze` |
 | Fichiers Dart (`lib/`) | 187 | `find lib -name "*.dart" \| wc -l` |
-| Lignes de code (`lib/`) | 38 784 | `find lib -name "*.dart" -exec cat {} + \| wc -l` |
+| Lignes de code (`lib/`) | 39 256 | `find lib -name "*.dart" -exec cat {} + \| wc -l` |
 | Fichiers de données | 11 | `ls assets/data/*.json \| wc -l` |
 | Tests de la logique du site | 20 au vert | `cd site && node --test` |
 | Assertions du harnais CI | 57 au vert | `bash .github/scripts/test_scripts.sh` |
 | Fichiers suivis sous `site/` | 16 | `git ls-files site/ \| wc -l` |
 
 > [!NOTE]
-> Relevé sur `708f34d` (branche `feat/p03-systeme-audio`, pas encore mergée). Le chantier
-> **P-03** (audio) explique tout le mouvement depuis le 2026-08-23 : +13 fichiers Dart et
-> +14 fichiers de test sous `lib/services/audio/`, `lib/models/data/audio_data.dart` et
-> `test/unit/audio/`, un nouveau fichier de données (`assets/data/audio.json`), et 59 tests
-> neufs (295 → 354) sans qu'aucun test existant n'ait été modifié. `site/`, `.github/` et
-> le harnais CI n'ont pas bougé, d'où les trois dernières métriques inchangées.
+> Relevé sur `5a0a81d`. Le chantier audio post-`0.5.0` explique tout le mouvement depuis le
+> 2026-08-28 : **+357 lignes** et **+16 tests** (369 → 385), pour deux fichiers de test neufs
+> seulement — le reste des tests s'est ajouté aux fichiers existants. Aucun fichier Dart créé
+> ni supprimé, d'où les 187 inchangés.
+>
+> Le catalogue de bruitages passe de 19 à **31 fichiers** et de 14 à **22 moments**, sans
+> qu'aucun `.json` de données ne s'ajoute : les moments vivent dans `audio.json`, déjà compté.
+> Les 4 musiques manquent toujours — chantier P-46 de `docs/ROADMAP.md`. `site/`, `.github/`
+> et le harnais CI n'ont pas bougé, d'où les trois dernières métriques inchangées.
 
 > [!NOTE]
 > **La version ne vit pas ici.** La version de référence se lit dans `pubspec.yaml`
@@ -176,16 +179,21 @@ Structure détaillée — [fiche §15](../_patterns/15-00-chaine-de-release-et-s
 |:---|:---|:---|
 | Directeur central | `AudioDirector.onMoment()`, `MusicConductor.onScene()` (`lib/services/audio/`) | Point d'entrée unique ; le code de jeu déclare un moment ou une scène, jamais un fichier |
 | Mapping par données | `assets/data/audio.json`, `AudioData`/`SoundData`/`MomentSounds` | Chaîne de repli à 4 niveaux (son propre → type d'animation → défaut → silence) ; champ `sfx` optionnel sur `CardData`/`EnemyData`/`RelicData` |
-| 14 moments de jeu | `GameMoment` | Branchés dans 8 fichiers ; `triggerHitReactions()` couvre à lui seul les 4 moments d'impact, héros et ennemis |
+| 22 moments de jeu | `GameMoment` | Branchés dans 13 fichiers ; `triggerHitReactions()` couvre à lui seul les 5 moments d'impact, héros et ennemis. Catalogue : [`_rules/09-1`](../_rules/09-1-catalogue-des-moments.md) |
+| Lecture sans allocation | `SfxPool` / `AudioPool` (`flame_audio_backend.dart`) | Un réservoir de lecteurs pré-armés par fichier, monté au préchargement ; `playOnce` ne fait plus que réserver et relancer |
+| Deux préchargements distincts | `AudioBackend.preload` / `.preloadMusic` | Réservoir pour les bruitages, octets seuls pour la musique — les deux chemins n'ont plus rien de commun |
+| Rendu des coups sur la frappe | `CardAnimator.playAnimation(onImpact:)`, `HeroCard._pendingStats` | Nombres flottants et bruitages tombent quand la carte atteint sa cible, plus à la fin de l'animation |
 | Backend silencieux par défaut | `SilentAudioBackend` (défaut), `FlameAudioBackend` (`main.dart` seul à le surcharger) | Les 295 tests antérieurs au chantier n'ont subi aucune modification |
-| Musique par scène | `MusicConductor`, `MusicScene` (menu/map/combat/boss) | `onScene` idempotent, déverrouillage autoplay web au premier geste pointeur |
+| Musique par scène | `MusicConductor`, `MusicScene` (menu/map/combat/boss) | `onScene` idempotent, déverrouillage autoplay web au premier geste pointeur ; garde de disponibilité à cache négatif — une piste absente est silencieuse, pas bruyante |
 | Réglages persistés | `AudioSettingsNotifier`, `SettingsService` | Clé `shared_preferences` dédiée, indépendante de `SaveService` ; écran `SettingsScreen` + coupure au HUD de combat |
-| Sourcing en cours | `test/unit/audio/audio_sourcing_report_test.dart` | Rapport non bloquant, ne rougit jamais la CI ; état courant : `docs/ROADMAP.md` (P-03) |
+| Bruitages complets, musique absente | `test/unit/audio/audio_sourcing_report_test.dart` | 31 bruitages WAV sur 31 ; les 4 musiques MP3 manquent — rapport non bloquant, ne rougit jamais la CI ; état courant : `docs/ROADMAP.md` (P-46) |
 
 Design complet — [ADR-082](../_adr/ADR-082-directeur-audio-central-et-mapping-par-donnees.md),
-remplace [ADR-012](../_adr/ADR-012-absence-de-systeme-audio.md). Catalogue des moments et
-chaîne de repli — [`_rules/09-00`](../_rules/09-00-systeme-audio.md). Architecture des trois
-couches — [`_patterns/16-00`](../_patterns/16-00-architecture-du-systeme-audio.md).
+remplace [ADR-012](../_adr/ADR-012-absence-de-systeme-audio.md). Latence, disponibilité et
+synchronisation — [ADR-083](../_adr/ADR-083-latence-et-synchronisation-du-chemin-de-lecture.md).
+Chaîne de repli — [`_rules/09-00`](../_rules/09-00-systeme-audio.md), catalogue des moments —
+[`_rules/09-1`](../_rules/09-1-catalogue-des-moments.md). Architecture —
+[`_patterns/16-00`](../_patterns/16-00-architecture-du-systeme-audio.md).
 
 ## 2. Dette métier assumée
 
@@ -234,6 +242,7 @@ dépourvu de sérialisation.
 
 | Version | Date | Titre | Description des changements clés |
 |:---|:---|:---|:---|
+| **0.5.0** | 2026-09-01 | Le Jeu Sort du Silence (P-03, sourcing et chemin de lecture) | Première version **audible** : le moteur livré en `0.4.9` restait muet faute d'assets ; les **31 bruitages** sont désormais posés et chacun des 14 `GameMoment` a son son. Les fichiers sont arrivés en WAV alors qu'`audio.json` déclarait des `.mp3` — le rapport de sourcing restait à 0/23 sans rien signaler d'autre, ne vérifiant que la présence. **Arbitrage : WAV pour les bruitages, MP3 pour la musique**, amendement de [`_rules/09-00`](../_rules/09-00-systeme-audio.md) §9.3 ; [ADR-082](../_adr/ADR-082-directeur-audio-central-et-mapping-par-donnees.md) ne fixait pas le format mais le déléguait à la fiche, elle n'est donc pas touchée. Motif : un bruitage pèse ~13 Ko, rien à compresser, et l'encodage MP3 préfixe 13 à 26 ms de silence audibles sur un `card_hover` de 84 ms rejoué à chaque survol ; une musique dure des minutes, c'est là que la compression sert. **Zéro fichier `.dart` modifié** sur toute la bascule : aucune ligne de `lib/` ne nomme d'extension, `SoundData.expectedFiles` insérant le suffixe de variante avant l'extension quelle qu'elle soit. Piège documenté au passage : un jeu de variantes incomplet **rend muet au prorata au lieu de se replier**, `_pickFile` tirant au hasard avant le garde de présence d'`onMoment` — `impact_normal` en `variants: 3` avec le seul `_1` posé laissait deux impacts sur trois silencieux. Les 19 empreintes MD5 sont distinctes, contrôle que le rapport de sourcing ne fait pas. **Trois livraisons rejoignent ce numéro**, l'attente ayant été délibérée (ADR-082 D5) : P-03, la PR #31 (deux débordements de `RenderFlex` — `StatusEffectsPanel` et `tutorial_combat_overview_widget.dart`) et la PR #32 (documentation seule, sans effet joueur). **369 tests au vert**, `dart analyze` propre. Les 4 musiques sortent vers le chantier **P-46**. **Note rouverte le 2026-09-01** pour absorber les sept commits du chemin de lecture ([ADR-083](../_adr/ADR-083-latence-et-synchronisation-du-chemin-de-lecture.md)) : la version n'avait jamais été taguée, donc aucun joueur n'avait vu la note initiale. |
 | **0.4.9** | 2026-08-23 | L'École du Héros (P-45) | Le tutoriel autonome (`lib/tutorial/`) avait dérivé du jeu réel : 50 écarts relevés, nés d'une règle « zéro Riverpod » qui interdisait aussi l'accès aux données immuables, forçant une recopie manuelle qui a dérivé avec le temps. La règle devient « zéro provider d'*état* » : `gameDataLoaderProvider` est autorisé en un point unique (`tutorial_loader.dart`), les neuf providers d'état restent interdits, critère vérifié par `test/tutorial/tutorial_isolation_test.dart`. Les POJOs du mock (`TutorialCard`, `TutorialEnemy`) sont remplacés par les vrais modèles du jeu (`CardInstance`, `EnemyInstance`, `EntityStats`, `DamagePipeline`). Le parcours passe de 13 à **15 étapes** : choix de classe et draft du deck de départ ajoutés en amont, verrouillés une fois franchis, dont dépendent les étapes suivantes (Armure démontre le passif choisi, Jouer pioche dans ce deck, Fusion y prend une carte réellement draftée). Correctif d'affichage hors tutoriel : la légende de la carte du monde annonçait « Boss (XP & Or x2) » alors que `reward_controller.dart` applique `×3` depuis longtemps — seul l'affichage change, le code de récompense est intact. **45 commits hors merges** depuis `v0.4.8`, **295 tests au vert** (+65), `dart analyze` propre. Voir [ADR-081](../_adr/ADR-081-amendement-autonomie-tutoriel-zero-provider-etat.md). ⚠️ **Deux correctifs de jeu sont entrés dans ce même tag par la PR #28 et ne figurent pas dans la note joueur**, rédigée avant leur fusion. *(1)* `EnemyIntentsPanel` débordait de sa largeur fixe de 250 px dès que le libellé d'intention était long : la bande d'erreur jaune et noire s'affichait en plein HUD de combat, à chaque combat en français, depuis au moins `0.4.8`. Les deux `Row` se replient désormais au lieu de tronquer — la valeur chiffrée est en fin de libellé (« Attaque Dévastatrice : 25 »), une ellipse l'aurait fait disparaître. *(2)* La **Forge d'Acier légendaire** rendait +1 Maîtrise d'Armure, la valeur d'un commun, faute de palier légendaire dans sa cascade de `if` : elle rend désormais **+7**. Les 30 cases type × rareté sont verrouillées par `test/unit/level_up_reward_values_test.dart` et la table est écrite dans [`_rules/06-00`](../_rules/06-00-economie-de-jeu.md) — son absence était la raison pour laquelle rien n'avait signalé le trou. |
 | **0.4.8** | 2026-08-20 | La Salle des Archives (P-04) | Chantier **P-04** livré en deux lots, sans que le jeu change : **aucun fichier de `lib/`, `test/` ou `assets/` n'est touché**, et le patch note joueur ne décrit donc que le site. **Lot 1 — chaîne CI/CD** : trois workflows (`ci.yml`, `release.yml` à neuf jobs, `site.yml`), publication réduite à la pose d'un tag `v*.*.*`, garde-fou `verify-version` comparant le tag à `pubspec.yaml`, `patch_notes.json` et `versions.json` **avant tout build**, smoke test HTTP post-déploiement, pré-release GitHub avec le zip Windows, annonce Discord en `continue-on-error`. Toute la logique vit dans cinq scripts shell testables — harnais à **55 assertions**, attentes dérivées à l'exécution par `jq` plutôt que figées. Actions tierces épinglées sur SHA, secrets par `env:` uniquement, accès VPS confiné en écriture seule par `rrsync -wo`. Voir [ADR-079](../_adr/ADR-079-chaine-de-release-declenchee-par-tag-et-garde-fou.md). **Lot 2 — site vitrine** : la page de sélection des versions, jusque-là hors du dépôt et maintenue à la main, devient `site/` — trois pages sans étape de build ni dépendance npm, pilotées par `site/_site/versions.json`, logique pure testée par `node --test` (**20 tests**). La jointure version → patch note passe par un champ `notes` déclaré et nullable, jamais dérivé du nom de dossier : les quatorze dossiers historiques rapportent tous `0.1.0`, et une dérivation aurait produit quatre associations fausses. Voir [ADR-080](../_adr/ADR-080-site-vitrine-pilote-par-la-donnee-et-jointure-decl.md). Enrichissement du 20/08 : les quatorze dates relevées sur l'archive locale des builds, et deux jointures déclarées (`v0.0.5` → note `0.0.4`, `v0.0.9` → note `0.0.93`). |
 | **0.4.7** | 2026-08-06 | Assainissement du Système de Pioche (P-02) | Le remélange défausse → pioche devient **automatique et à sec** : il n'intervient plus qu'une fois la pioche réellement vide, y compris au milieu d'une pioche. L'ancien seuil `if (drawPile.length < 5)` porté par `game_screen.dart` déclenchait un remélange presque chaque tour et détruisait la capacité à compter son deck ; `shuffleDiscardIntoDraw()` est supprimée. La pioche s'arrête **net** à `GameConstants.maxHandSize` (10) sans consommer de carte ni remélanger. `RunState.cardsPerTurn` (défaut 5) remplace le `5` codé en dur, et `TurnPhaseManager` gagne `startPlayerCombat()`/`startPlayerTurn()` : le tour 1 et le tour N+1 empruntent enfin le même code, et `game_screen.dart` n'anime plus que (perte de `_turnCount` et du deck de secours, 555 → 524 lignes). Aléatoire injectable via `deckRandomProvider`, compteur `DeckState.reshuffleCount` observable et notification joueur. Première relique touchant au deck : `scholars_satchel` (Besace de l'Érudit, legendary, +1 carte/tour), avec `case` symétrique dans `removeRelicEffect`. 6 éléments de code mort supprimés (`temporaryCost`, `IntentType.debuffDeck`, `intentCurse`, `onEnemyDebuffDeck`, `onTurnEnded`, deck de secours). 8 commits TDD, **230/230 tests au vert** (+18 neufs, 2 réécrits), `dart analyze` propre, **playtest de validation passé le 2026-08-06**. Voir [ADR-078](../_adr/ADR-078-assainissement-du-systeme-de-pioche-remelange-a-sec.md). |
@@ -243,11 +252,10 @@ dépourvu de sérialisation.
 | **v3.3.0** | 2026-07-24 | Scaling de Difficulté en Escalier Géométrique & Déblocage de Tier | Correction d'un double comptage de l'Acte dans `EncounterSystem` (`enemyLevel` + terme linéaire direct dans `getHpMultiplier`/`getDamageMultiplier`) qui provoquait une explosion de difficulté incontrôlée en mode endless. `enemyLevel` devient strictement indépendant de l'Acte ; l'Acte agit désormais via un facteur géométrique par palier de 5 actes (`getHpActFactor`/`getDamageActFactor`, x1.35 HP / x1.25 Dégâts par palier + rampe intra-palier douce réinitialisée). Ajout d'un déblocage de tier d'ennemi tous les 10 actes (`getUnlockedTier`, plafond tier 3), gating strict assumé (Squelette/tier 2 non disponible avant l'Acte 11, contre l'Acte 2 auparavant) créant un backlog de contenu tier-1. 6 commits TDD, 201/201 tests au vert, `dart analyze` propre, revue de code de branche complète. Voir ADR-070. Mergé vers `main` (PR #20). |
 | **v3.2.0** | 2026-07-24 | Système de Sauvegarde et Persistance de Run (Autosave) | Résolution du point bloquant de commercialisation ADR-011 : `SaveService` (`shared_preferences`, slot unique, JSON versionné) sauvegardant `RunState`/`DeckState`/`InventoryState`/`SkillState` à chaque checkpoint carte (`checkpointProvider`/`autosaveOrchestratorProvider`), jamais en cours de combat. Bouton "Continuer" et dialogue de confirmation sur `HomeScreen`. Dégradation gracieuse du contenu manquant (cartes/reliques/upgrades/passifs supprimés du catalogue) avec avertissement nommé au joueur. Sauvegarde corrompue traitée comme échec total sans récupération partielle. Sauvegarde effacée à la mort du héros. Suppression du stub mort `RunPersistenceManager`. Voir ADR-069. |
 | **v3.1.0** | 2026-07-01 | Forge de Fusion et Forge Data-Driven | Introduction du nœud Forge de Fusion (`MapNodeType.forgeFusion` à 25% de chance) sur les étages 3 à 7. Écran `ForgeFusionScreen` pour fusionner les runes identiques pour un coût de 80 Or. Remplacement des upgrades codés en dur par une structure data-driven (`assets/data/forge_upgrades.json` + `ForgeUpgradeData`). Cumul de runes sans épuisement (alreadyHas retiré). Correction de la navigation au repos : annuler la forge ramène à la sélection de cartes au lieu de quitter au menu du repos. Écriture de tests unitaires (112 tests réussis, 0 erreur). |
-| **v0.3.0** | 2026-06-25 | Refonte et Validation du Système d'Événements | Enrichissement visuel et narratif du système de rencontres avec 5 événements bilingues configurés dans `assets/data/events.json`. Conception d'un Safety Gate de validation d'éligibilité (`isSelectable`) bloquant les options en cas d'or insuffisant, de dégâts létaux (`currentHp <= damage`), ou de réduction de PV Max létale. Rendu visuel d'en-tête (PV et Or réactifs) et intégration de badges compacts directement dans les boutons de choix d'options avec transition d'échelle animée après résolution. |
 
 Les releases sorties de ce tableau par débordement du plafond FIFO sont conservées
-verbatim sous `.obsidian_vault/_archive/` (`2026-08-23-progress-releases.md` pour la
-dernière rotation, `2026-08-20-progress-releases.md` pour la précédente).
+verbatim sous `.obsidian_vault/_archive/` (`2026-08-28-progress-releases.md` pour la
+dernière rotation, `2026-08-23-progress-releases.md` pour la précédente).
 
 > [!NOTE]
 > **Le schéma `v3.x` est gelé.** L'historique ci-dessus emploie un schéma interne
