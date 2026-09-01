@@ -1,4 +1,4 @@
-<!-- last-sync: 2026-08-28 | commit: e34ba2c -->
+<!-- last-sync: 2026-09-01 | commit: 5a0a81d -->
 
 # 🧠 Contexte Actuel
 
@@ -21,9 +21,11 @@ vide : une note joueur aurait annoncé des sons que personne ne pouvait entendre
 tombé le 2026-08-28** : les 19 bruitages sont posés, chaque `GameMoment` a son son, et les
 trois livraisons partagent enfin le même numéro. Les bruitages sont passés en WAV, la musique
 reste en MP3 — [`_rules/09-00`](../_rules/09-00-systeme-audio.md) §9.3.
-**Il reste à poser le tag pour déclencher la publication.** Le sourcing et la note de version
-vivent sur `feat/audio-bruitages-en-wav`, **non poussée**. Les 4 musiques sortent vers le
-chantier **P-46** ; décompte vivant via
+**Mais `0.5.0` n'est toujours pas taguée, et six commits l'ont déjà dépassée.** Le sourcing,
+la note de version et le chantier du chemin de lecture vivent tous sur
+`feat/audio-bruitages-en-wav`, **non poussée** : rien n'est publié. Ces six commits n'ont
+aucune note joueur — **`patch-notes-writer` reste à invoquer** avant de taguer quoi que ce
+soit. Les 4 musiques sortent vers le chantier **P-46** ; décompte vivant via
 `flutter test test/unit/audio/audio_sourcing_report_test.dart --reporter expanded`.
 
 Quatre réserves à ne pas perdre de vue :
@@ -44,7 +46,20 @@ Quatre réserves à ne pas perdre de vue :
 
 ## 3 dernières livraisons
 
-1. **Système audio — P-03** (2026-08-25, PR #30, **publié en `0.5.0`** le 2026-08-28 avec son
+1. **Chemin de lecture audio — latence, disponibilité, synchronisation** (2026-08-29,
+   branche `feat/audio-bruitages-en-wav`, **pas encore publié**) — le moteur de P-03 était
+   livré et testé, mais personne ne l'avait jamais *entendu* : le sourcing a révélé quatre
+   défauts que le vert des tests ne pouvait pas voir. Les bruitages passent par un réservoir
+   de lecteurs pré-armés au lieu d'allouer un lecteur natif et quatre allers-retours de canal
+   par son ; une piste manquante devient silencieuse au lieu de bruyante ; le système est
+   réveillé au lancement, sans quoi le premier son de la session était toujours perdu ; et le
+   son de conséquence tombe sur la **frappe d'impact** de l'animation, plus à sa fin. Le
+   catalogue passe de 14 à **22 moments** et de 19 à **31 bruitages**. Voir
+   [ADR-083](../_adr/ADR-083-latence-et-synchronisation-du-chemin-de-lecture.md),
+   [`_rules/09-1`](../_rules/09-1-catalogue-des-moments.md) et
+   [`_patterns/16-00`](../_patterns/16-00-architecture-du-systeme-audio.md) §16.7.
+   ⚠️ **Le retiming n'est couvert par aucun test** — le dépôt n'a pas `flame_test`.
+2. **Système audio — P-03** (2026-08-25, PR #30, **publié en `0.5.0`** le 2026-08-28 avec son
    sourcing) — un directeur central (`AudioDirector.onMoment`/`MusicConductor.onScene`)
    résout un moment de jeu ou une scène musicale en son via `assets/data/audio.json`, chaîne
    de repli à 4 niveaux (son propre à l'entité → type d'animation → défaut → silence), sans
@@ -63,7 +78,7 @@ Quatre réserves à ne pas perdre de vue :
    l'exception par un `takeException()` sans assertion. *(PR #32)* le compte de callbacks
    de `HerosDraftGame` dans [`_patterns/04-00`](../_patterns/04-00-synchronisation-bidirectionnelle-flame-riverp.md),
    annoncé à 16 depuis dix-neuf jours, ramené à 14.
-2. **Fidélité du tutoriel — P-45** (2026-08-23, publié en `0.4.9`) — un audit avait relevé
+3. **Fidélité du tutoriel — P-45** (2026-08-23, publié en `0.4.9`) — un audit avait relevé
    **50 écarts** entre `lib/tutorial/` et le jeu réel, nés d'une règle d'autonomie qui
    interdisait au tutoriel de lire même les données immuables du jeu, forçant une recopie
    manuelle qui a dérivé. La règle devient « zéro provider d'*état* » plutôt que « zéro
@@ -77,25 +92,19 @@ Quatre réserves à ne pas perdre de vue :
    panneau d'intentions ennemies débordait de sa largeur fixe, et la Forge d'Acier
    légendaire rendait +1 Maîtrise d'Armure au lieu de +7 — table des 30 valeurs désormais
    dans [`_rules/06-00`](../_rules/06-00-economie-de-jeu.md).
-3. **CI/CD et site vitrine — P-04** (2026-08-17 → 2026-08-20, publié en `0.4.8`) — livré en
-   deux lots, **sans toucher au jeu**. *Lot 1* : trois workflows GitHub Actions, publication
-   déclenchée par tag, garde-fou `verify-version` à trois fichiers, smoke test HTTP,
-   annonce Discord — [ADR-079](../_adr/ADR-079-chaine-de-release-declenchee-par-tag-et-garde-fou.md).
-   *Lot 2* : site vitrine piloté par `site/_site/versions.json`, testé par `node --test`
-   (20 tests) — [ADR-080](../_adr/ADR-080-site-vitrine-pilote-par-la-donnee-et-jointure-decl.md).
-
 > [!NOTE]
-> **Rotations.** La livraison sortie au 2026-08-25 (assainissement de la pioche, P-02,
-> ADR-078) est conservée verbatim dans
-> `../_archive/2026-08-25-activeContext-livraisons.md`. Celle sortie au 2026-08-23 (refonte
-> documentaire du memory bank, 2026-08-03) est dans
-> `../_archive/2026-08-23-activeContext-livraisons.md`. Celle sortie au 2026-08-20
-> (réactivité du bouton « Continuer », ADR-073) est dans
+> **Rotations.** La livraison sortie au 2026-09-01 (CI/CD et site vitrine, P-04, ADR-079 et
+> ADR-080) est conservée verbatim dans
+> `../_archive/2026-09-01-activeContext-livraisons.md`. Les trois rotations précédentes sont
+> dans `../_archive/2026-08-25-activeContext-livraisons.md`,
+> `../_archive/2026-08-23-activeContext-livraisons.md` et
 > `../_archive/2026-08-20-activeContext-livraisons.md`.
 
 ## Prochaine étape
 
 Jalon 1 « Socle » clos : ~~P-01~~ ✅, ~~P-02~~ ✅, ~~P-04~~ ✅, ~~P-03~~ ✅. Prochain jalon —
 Jalon 2 « Feel & contenu » (`docs/ROADMAP.md` §9) : P-06 (lot P0 animations), puis P-07, le
-prototype de P-08, et P-05. Suivi indépendant de ce séquencement : poser le tag de `0.5.0`,
-puis sourcer les 4 musiques (**P-46**) — le moteur qui les jouera est déjà livré et testé.
+prototype de P-08, et P-05. **P-07 doit lire [ADR-083](../_adr/ADR-083-latence-et-synchronisation-du-chemin-de-lecture.md) D6 avant de toucher aux animations** :
+la frappe d'impact y est déjà posée, et `spawnImpactParticles` l'attend, déclarée et jamais
+appelée. Suivi indépendant : écrire la note joueur des six commits post-`0.5.0`, poser le tag,
+puis sourcer les 4 musiques (**P-46**).

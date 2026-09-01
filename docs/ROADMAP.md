@@ -82,7 +82,7 @@ graph TD
 |:---|:---|:---:|:---:|:---:|
 | ~~**P-01**~~ | ~~**Resynchroniser `pubspec.yaml`** (`0.1.0+1` → `0.4.7+1`) sur `patch_notes.json`~~ ✅ **Livré le 2026-08-03** — désormais maintenu automatiquement par le skill `patch-notes-writer` | — | — | — |
 | ~~**P-02**~~ | ~~**Assainissement du système de pioche**~~ ✅ **Livré et validé le 2026-08-06** (code + playtest) — voir [ADR-078](../.obsidian_vault/_adr/ADR-078-assainissement-du-systeme-de-pioche-remelange-a-sec.md) | — | — | — |
-| ~~**P-03**~~ | ~~**Système audio**~~ ✅ **Livré le 2026-08-25, publié en `0.5.0`** — moteur data-driven complet (directeur central, chaîne de repli à 4 niveaux, musique par scène, réglages persistés) et **19 bruitages sur 19** posés ; les 4 musiques sortent vers **P-46** — voir [ADR-082](../.obsidian_vault/_adr/ADR-082-directeur-audio-central-et-mapping-par-donnees.md) | — | — | — |
+| ~~**P-03**~~ | ~~**Système audio**~~ ✅ **Livré le 2026-08-25, publié en `0.5.0`** — moteur data-driven complet (directeur central, chaîne de repli à 4 niveaux, musique par scène, réglages persistés) et **31 bruitages sur 31** posés ; les 4 musiques sortent vers **P-46** — voir [ADR-082](../.obsidian_vault/_adr/ADR-082-directeur-audio-central-et-mapping-par-donnees.md) | — | — | — |
 | ~~**P-04**~~ | ~~**CI/CD GitHub Actions**~~ ✅ **Livré le 2026-08-20** en deux lots (chaîne CI/CD puis site vitrine), publié en `0.4.8` — voir [ADR-079](../.obsidian_vault/_adr/ADR-079-chaine-de-release-declenchee-par-tag-et-garde-fou.md) et [ADR-080](../.obsidian_vault/_adr/ADR-080-site-vitrine-pilote-par-la-donnee-et-jointure-decl.md) | — | — | — |
 
 ### P-01 — Resync de version
@@ -129,12 +129,17 @@ graph TD
 > niveaux, plutôt que le catalogue codé en dur envisagé au 31/07). Détail du chiffrage par
 > poste : `docs/superpowers/specs/2026-08-24-p03-systeme-audio-design.md` §14.
 >
-> **Le sourcing des bruitages est clos au 2026-08-28** : les **19 sont posés sur 19**, chaque
-> `GameMoment` a son son, le jeu n'est plus muet en combat. Les bruitages sont passés en WAV,
-> la musique reste en MP3 — motif dans
+> **Le sourcing des bruitages est clos** : **31 posés sur 31** au 2026-08-29, chacun des
+> 22 `GameMoment` a son son, le jeu n'est plus muet. Les bruitages sont passés en WAV, la
+> musique reste en MP3 — motif dans
 > [`_rules/09-00`](../.obsidian_vault/_rules/09-00-systeme-audio.md) §9.3, qu'ADR-082 déléguait
 > déjà à cette fiche. État courant à la demande :
 > `flutter test test/unit/audio/audio_sourcing_report_test.dart --reporter expanded`.
+>
+> **Une seconde passe a suivi la première écoute**, le moteur n'ayant jamais été entendu avant
+> d'avoir des fichiers : latence de lecture, piste manquante bruyante, premier son de session
+> perdu, et son de conséquence désynchronisé de son animation — voir
+> [ADR-083](../.obsidian_vault/_adr/ADR-083-latence-et-synchronisation-du-chemin-de-lecture.md).
 >
 > **Les 4 musiques sortent vers le chantier P-46** (§3, Tier A), pour ne pas retenir la
 > publication des bruitages. Le silence sur les scènes musicales reste

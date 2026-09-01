@@ -10,28 +10,12 @@ Comment les couches se connectent entre elles :
 C'est la fiche à lire pour donner un son à une carte, un ennemi, une relique, ou pour
 comprendre pourquoi un moment reste silencieux.
 
-### 9.1. Les 14 moments et leurs déclencheurs
+### 9.1. Les 22 moments
 
-| Moment (`GameMoment`) | Déclencheur |
-|:---|:---|
-| `cardHover` | `HerosDraftGame.setHoveredCard()` — `lib/game/heros_draft_game.dart:97` |
-| `cardPickup` | **Deux sites mutuellement exclusifs, un par geste de prise en main** : `CardInteractionHandler.onTapDown()`, quand la carte devient la carte focalisée par un clic (`lib/game/components/widgets/card_interaction_handler.dart:39`), et `CardInteractionHandler.onDragStart()`, dans la branche où la carte n'était pas déjà focalisée avant ce geste (`card_interaction_handler.dart:70`). `onTapDown` s'exécute toujours en premier sur un même geste (arène de gestes Flutter) et détermine donc lequel des deux émet : jamais les deux, jamais aucun des deux pour un glisser ou un clic qui focalise |
-| `cardPlay` | `CardAnimator.playAnimation()`, au tout début de l'animation de jeu — résolu via `CardData` comme `AudioSource` (`sfx` propre, puis `animation`, puis défaut) — `lib/game/components/visual_effects/card_animator.dart:140` |
-| `impact` / `impactCrit` | `CombatEntity.triggerHitReactions()`, perte de PV actuels — `lib/game/components/entities/combat_entity.dart:212` |
-| `armorHit` | Même méthode, perte **ou** gain d'armure — `combat_entity.dart:196` et `:205` |
-| `heal` | Même méthode, gain de PV actuels — `combat_entity.dart:246`. **Voir l'avertissement §9.5** |
-| `enemyAttack` | `HerosDraftGame._enemyRipostePhase()`, avant `dashAnimation()` — `heros_draft_game.dart:388` |
-| `enemyDeath` | **Deux sites** : `HerosDraftGame.resolvePendingDeaths()` (mort différée pendant une animation de carte, `heros_draft_game.dart:238`) et `StateSyncSystem._applyCombatState()` (suppression immédiate hors animation — poison, effets passifs — `lib/game/systems/state_sync_system.dart:113`) |
-| `cardDraw` | `DeckNotifier.drawCards()` — `lib/game/controllers/deck_controller.dart:226` |
-| `manaGain` | `GainManaEffectStrategy` — `lib/game/services/effects/strategies.dart:109` |
-| `insufficientMana` | **Quatre sites** : `HerosDraftGame._handlePlayerTargeting()` (`heros_draft_game.dart:295`), `PlayerStatsManager` — refus de compétence héroïque (`player_stats_manager.dart:441`), `HeroCard` (`hero_card.dart:89`) et `CardInteractionHandler` (`card_interaction_handler.dart:135`) — refus au clic/glisser sur la carte elle-même |
-| `turnStart` | `TurnPhaseManager.startPlayerTurn()`, avant le tick des reliques et statuts — `lib/game/controllers/combat/turn_phase_manager.dart:49` |
-| `turnEnd` | `HerosDraftGame.executeTurn()`, juste après la garde de validité du tour — `heros_draft_game.dart:314` |
-
-Les moments systémiques (tour, pioche, mana, survol) n'ont pas de `source` et se résolvent
-directement au niveau 3 de la chaîne de repli (§9.2). `triggerHitReactions()` est un entonnoir
-unique, appelé aussi bien par `hero_card.dart` que par `enemy_card.dart` : quatre moments — les
-plus fréquents en combat — se branchent en un seul endroit, héros et ennemis couverts d'un coup.
+Le catalogue complet et ses déclencheurs vivent dans leur propre fiche :
+[`09-1`](09-1-catalogue-des-moments.md). Détaché le 2026-09-01, quand le catalogue est passé
+de 14 à 22 moments — c'est la partie qui grossit à chaque livraison de contenu, et elle
+poussait cette fiche-ci contre son plafond.
 
 ### 9.2. La chaîne de repli (4 niveaux)
 
@@ -122,8 +106,9 @@ avant la CI, pas en jeu.
 Le catalogue est déclaré avant d'exister ([ADR-082](../_adr/ADR-082-directeur-audio-central-et-mapping-par-donnees.md),
 D7), gardé par un test bloquant (§9.4) et un rapport non bloquant. Le compte de fichiers
 manquants est un fait vivant qui change à chaque livraison de sourcing : il vit dans
-`docs/ROADMAP.md` (chantier P-03), pas ici, pour ne pas devoir re-mesurer cette fiche à chaque
-fichier livré. Relevé à la demande :
+`docs/ROADMAP.md` (chantier **P-46**, la musique — les bruitages sont complets depuis le
+2026-08-29), pas ici, pour ne pas devoir re-mesurer cette fiche à chaque fichier livré.
+Relevé à la demande :
 
 ```bash
 flutter test test/unit/audio/audio_sourcing_report_test.dart --reporter expanded

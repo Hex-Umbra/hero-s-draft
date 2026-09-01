@@ -126,3 +126,24 @@ volume.
 > `onScene()` après coup ; *« refreshVolume() ajuste le volume en place quand la scene ne
 > change pas »* couvre le chemin `setVolume`. Casser l'invariant ci-dessus — par exemple en ne
 > nullifiant `_current` que d'un seul côté — fait échouer l'un ou l'autre.
+
+### 16.7. Le chemin de lecture — trois invariants à ne pas casser
+
+Le *pourquoi*, les quatre défauts d'origine et leurs cadences mesurées vivent dans
+[ADR-083](../_adr/ADR-083-latence-et-synchronisation-du-chemin-de-lecture.md). Ici, seulement
+ce qu'il ne faut pas défaire.
+
+> [!IMPORTANT]
+> **1. Le chemin de lecture n'alloue rien.** `playOnce` réserve un lecteur déjà armé dans son
+> `SfxPool` ; il ne crée jamais de lecteur, ne pose jamais de source. Réintroduire
+> `FlameAudio.play` ramènerait quatre allers-retours de canal de plateforme par son.
+> `flame_audio_backend_pool_test.dart` le garde : trois `playOnce` ne doivent créer aucun pool.
+>
+> **2. La garde de disponibilité de la musique est un cache *négatif*.** `MusicConductor`
+> mémorise ce qui manque, jamais ce qui existe — `preloadAll()` n'étant jamais attendu, un
+> cache positif refuserait au premier `onScene()` une piste pourtant présente.
+>
+> **3. Le rendu des coups appartient à la frappe, pas à la fin d'animation.**
+> `playAnimation` sépare `onImpact` de `onComplete`, et `HeroCard` diffère comme `EnemyCard`.
+> Router `resolvePendingHits` ailleurs que sur la frappe désynchronise à nouveau le son de son
+> propre visuel. **Aucun test ne couvre cet invariant** : le dépôt n'a pas `flame_test`.

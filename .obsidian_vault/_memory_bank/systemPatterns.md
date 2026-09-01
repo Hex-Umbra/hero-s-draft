@@ -114,6 +114,6 @@
 
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
-| 16. Architecture du Système Audio | [16-00-architecture-du-systeme-audio.md](../_patterns/16-00-architecture-du-systeme-audio.md) | 128 |
+| 16. Architecture du Système Audio | [16-00-architecture-du-systeme-audio.md](../_patterns/16-00-architecture-du-systeme-audio.md) | 149 |
 
 Historique de renumérotation (pourquoi §13-§14 manquent) archivé le 2026-08-25 : `../_archive/2026-08-25-systemPatterns-historique.md`.

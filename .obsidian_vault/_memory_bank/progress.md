@@ -5,33 +5,30 @@
 
 ## Métriques
 
-**Vérifié le 2026-08-28**
+**Vérifié le 2026-09-01**
 
 | Métrique | Valeur | Commande |
 |:---|:---|:---|
-| Tests automatisés (jeu) | 369 au vert | `flutter test` |
-| Fichiers de test | 67 | `find test -name "*.dart" \| wc -l` |
+| Tests automatisés (jeu) | 385 au vert | `flutter test` |
+| Fichiers de test | 69 | `find test -name "*.dart" \| wc -l` |
 | Analyse statique | 0 erreur (`No issues found!`) | `dart analyze` |
 | Fichiers Dart (`lib/`) | 187 | `find lib -name "*.dart" \| wc -l` |
-| Lignes de code (`lib/`) | 38 899 | `find lib -name "*.dart" -exec cat {} + \| wc -l` |
+| Lignes de code (`lib/`) | 39 256 | `find lib -name "*.dart" -exec cat {} + \| wc -l` |
 | Fichiers de données | 11 | `ls assets/data/*.json \| wc -l` |
 | Tests de la logique du site | 20 au vert | `cd site && node --test` |
 | Assertions du harnais CI | 57 au vert | `bash .github/scripts/test_scripts.sh` |
 | Fichiers suivis sous `site/` | 16 | `git ls-files site/ \| wc -l` |
 
 > [!NOTE]
-> Relevé sur `e34ba2c`. **Aucune métrique de code n'a bougé depuis le 2026-08-25** : le
-> sourcing audio n'a ajouté que 19 fichiers binaires sous `assets/audio/sfx/` et modifié
-> `assets/data/audio.json`, sans toucher une ligne de Dart — le code déclare un moment,
-> jamais un fichier. Le catalogue de bruitages est complet (**19/19**) ; les 4 musiques
-> manquent encore et sont portées par le chantier P-46 de `docs/ROADMAP.md`.
+> Relevé sur `5a0a81d`. Le chantier audio post-`0.5.0` explique tout le mouvement depuis le
+> 2026-08-28 : **+357 lignes** et **+16 tests** (369 → 385), pour deux fichiers de test neufs
+> seulement — le reste des tests s'est ajouté aux fichiers existants. Aucun fichier Dart créé
+> ni supprimé, d'où les 187 inchangés.
 >
-> Le chantier **P-03** explique le mouvement depuis le 2026-08-23 : +13 fichiers Dart et
-> +14 fichiers de test sous `lib/services/audio/`, `lib/models/data/audio_data.dart` et
-> `test/unit/audio/`, sans qu'aucun test existant n'ait été modifié. Le compte de tests est
-> passé de 295 à **369** en trois temps : +59 pour le corps du chantier, +10 pour ses rondes
-> de correctifs, +5 pour la garde anti-débordement du panneau de statuts (PR #31). `site/`,
-> `.github/` et le harnais CI n'ont pas bougé, d'où les trois dernières métriques inchangées.
+> Le catalogue de bruitages passe de 19 à **31 fichiers** et de 14 à **22 moments**, sans
+> qu'aucun `.json` de données ne s'ajoute : les moments vivent dans `audio.json`, déjà compté.
+> Les 4 musiques manquent toujours — chantier P-46 de `docs/ROADMAP.md`. `site/`, `.github/`
+> et le harnais CI n'ont pas bougé, d'où les trois dernières métriques inchangées.
 
 > [!NOTE]
 > **La version ne vit pas ici.** La version de référence se lit dans `pubspec.yaml`
@@ -182,16 +179,21 @@ Structure détaillée — [fiche §15](../_patterns/15-00-chaine-de-release-et-s
 |:---|:---|:---|
 | Directeur central | `AudioDirector.onMoment()`, `MusicConductor.onScene()` (`lib/services/audio/`) | Point d'entrée unique ; le code de jeu déclare un moment ou une scène, jamais un fichier |
 | Mapping par données | `assets/data/audio.json`, `AudioData`/`SoundData`/`MomentSounds` | Chaîne de repli à 4 niveaux (son propre → type d'animation → défaut → silence) ; champ `sfx` optionnel sur `CardData`/`EnemyData`/`RelicData` |
-| 14 moments de jeu | `GameMoment` | Branchés dans 8 fichiers ; `triggerHitReactions()` couvre à lui seul les 4 moments d'impact, héros et ennemis |
+| 22 moments de jeu | `GameMoment` | Branchés dans 13 fichiers ; `triggerHitReactions()` couvre à lui seul les 5 moments d'impact, héros et ennemis. Catalogue : [`_rules/09-1`](../_rules/09-1-catalogue-des-moments.md) |
+| Lecture sans allocation | `SfxPool` / `AudioPool` (`flame_audio_backend.dart`) | Un réservoir de lecteurs pré-armés par fichier, monté au préchargement ; `playOnce` ne fait plus que réserver et relancer |
+| Deux préchargements distincts | `AudioBackend.preload` / `.preloadMusic` | Réservoir pour les bruitages, octets seuls pour la musique — les deux chemins n'ont plus rien de commun |
+| Rendu des coups sur la frappe | `CardAnimator.playAnimation(onImpact:)`, `HeroCard._pendingStats` | Nombres flottants et bruitages tombent quand la carte atteint sa cible, plus à la fin de l'animation |
 | Backend silencieux par défaut | `SilentAudioBackend` (défaut), `FlameAudioBackend` (`main.dart` seul à le surcharger) | Les 295 tests antérieurs au chantier n'ont subi aucune modification |
-| Musique par scène | `MusicConductor`, `MusicScene` (menu/map/combat/boss) | `onScene` idempotent, déverrouillage autoplay web au premier geste pointeur |
+| Musique par scène | `MusicConductor`, `MusicScene` (menu/map/combat/boss) | `onScene` idempotent, déverrouillage autoplay web au premier geste pointeur ; garde de disponibilité à cache négatif — une piste absente est silencieuse, pas bruyante |
 | Réglages persistés | `AudioSettingsNotifier`, `SettingsService` | Clé `shared_preferences` dédiée, indépendante de `SaveService` ; écran `SettingsScreen` + coupure au HUD de combat |
-| Bruitages complets, musique absente | `test/unit/audio/audio_sourcing_report_test.dart` | 19 bruitages WAV sur 19 ; les 4 musiques MP3 manquent — rapport non bloquant, ne rougit jamais la CI ; état courant : `docs/ROADMAP.md` (P-46) |
+| Bruitages complets, musique absente | `test/unit/audio/audio_sourcing_report_test.dart` | 31 bruitages WAV sur 31 ; les 4 musiques MP3 manquent — rapport non bloquant, ne rougit jamais la CI ; état courant : `docs/ROADMAP.md` (P-46) |
 
 Design complet — [ADR-082](../_adr/ADR-082-directeur-audio-central-et-mapping-par-donnees.md),
-remplace [ADR-012](../_adr/ADR-012-absence-de-systeme-audio.md). Catalogue des moments et
-chaîne de repli — [`_rules/09-00`](../_rules/09-00-systeme-audio.md). Architecture des trois
-couches — [`_patterns/16-00`](../_patterns/16-00-architecture-du-systeme-audio.md).
+remplace [ADR-012](../_adr/ADR-012-absence-de-systeme-audio.md). Latence, disponibilité et
+synchronisation — [ADR-083](../_adr/ADR-083-latence-et-synchronisation-du-chemin-de-lecture.md).
+Chaîne de repli — [`_rules/09-00`](../_rules/09-00-systeme-audio.md), catalogue des moments —
+[`_rules/09-1`](../_rules/09-1-catalogue-des-moments.md). Architecture —
+[`_patterns/16-00`](../_patterns/16-00-architecture-du-systeme-audio.md).
 
 ## 2. Dette métier assumée
 

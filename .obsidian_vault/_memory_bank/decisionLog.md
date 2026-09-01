@@ -5,10 +5,11 @@ Index des **ADR** (Architecture Decision Records) de **Hero's Draft**. Le corps 
 > [!IMPORTANT]
 > **Plafond : 250 lignes.** Ce fichier est un index, jamais un contenu. Un nouvel ADR prend le numéro `max(index) + 1` lu ici, jamais un numéro deviné.
 
-**Vérifié le 2026-08-28** — 82 décisions, numéros `ADR-001` à `ADR-082`, sans doublon ni trou.
+**Vérifié le 2026-09-01** — 83 décisions, numéros `ADR-001` à `ADR-083`, sans doublon ni trou.
 
 | N° | Décision | Statut | Version | Fichier |
 |:---|:---|:---:|:---:|:---|
+| `ADR-083` | Latence et Synchronisation du Chemin de Lecture Audio — Réservoirs de Lecteurs, Garde de Disponibilité et Frappe d'Impact | ✅ | — | [ADR-083-latence-et-synchronisation-du-chemin-de-lecture.md](../_adr/ADR-083-latence-et-synchronisation-du-chemin-de-lecture.md) |
 | `ADR-082` | Directeur Audio Central et Mapping par Données — Chaîne de Repli à 4 Niveaux (chantier P-03) | ✅ | — | [ADR-082-directeur-audio-central-et-mapping-par-donnees.md](../_adr/ADR-082-directeur-audio-central-et-mapping-par-donnees.md) |
 | `ADR-081` | Amendement de la Règle d'Autonomie du Tutoriel — Zéro Provider d'État (chantier P-45) | ✅ | 0.4.9 | [ADR-081-amendement-autonomie-tutoriel-zero-provider-etat.md](../_adr/ADR-081-amendement-autonomie-tutoriel-zero-provider-etat.md) |
 | `ADR-080` | Site Vitrine Piloté par la Donnée et Jointure Déclarée Version → Patch Note (chantier P-04, lot 2) | ✅ | 0.4.8 | [ADR-080-site-vitrine-pilote-par-la-donnee-et-jointure-decl.md](../_adr/ADR-080-site-vitrine-pilote-par-la-donnee-et-jointure-decl.md) |

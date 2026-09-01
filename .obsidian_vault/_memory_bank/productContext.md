@@ -75,7 +75,8 @@
 
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
-| 9. Système Audio | [09-00-systeme-audio.md](../_rules/09-00-systeme-audio.md) | 132 |
+| 9. Système Audio | [09-00-systeme-audio.md](../_rules/09-00-systeme-audio.md) | 118 |
+| 9.1. Catalogue des moments et de leurs déclencheurs | [09-1-catalogue-des-moments.md](../_rules/09-1-catalogue-des-moments.md) | 73 |
 
 ---
 
