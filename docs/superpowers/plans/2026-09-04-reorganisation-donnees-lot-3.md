@@ -1403,7 +1403,7 @@ flutter test
 dart analyze
 ```
 
-Attendu : **413 au vert** (409 + 4) et `No issues found!`. `dart analyze` couvre `tool/` : le script doit être propre lui aussi.
+Attendu : **415 au vert** (409 + 4, puis + 2 au round de correctifs — voir l addendum ci-dessous) et `No issues found!`. `dart analyze` couvre `tool/` : le script doit être propre lui aussi.
 
 - [ ] **Step 8: Commit**
 
@@ -1411,6 +1411,28 @@ Attendu : **413 au vert** (409 + 4) et `No issues found!`. `dart analyze` couvre
 git add tool/sync_assets.dart pubspec.yaml test/unit/sync_assets_test.dart
 git commit -m "feat(build): generer la section assets du pubspec depuis le disque"
 ```
+
+### Addendum — deux gardes ajoutées après revue (`f628b86`)
+
+Le code ci-dessus a été livré tel quel, puis complété. **La revue de cette tâche a trouvé deux défauts réels, reproduits en bac à sable, et imputables à ce plan** — le script fait de la chirurgie de texte sans bibliothèque YAML, et le code écrit plus haut ne s'en protège pas :
+
+- **Une clé `  assets:` dupliquée plus haut dans le fichier** — par exemple une dépendance nommée `assets`, les enfants de `dependencies:` étant à deux espaces — fait prendre à `indexWhere` la mauvaise section. Le script y réécrivait **silencieusement**, effaçant du contenu, et sortait en **0** avec un message de succès.
+- **Une entrée de liste à une indentation étrangère** échappe à `startsWith('    - ')` : elle n'était ni lue ni supprimée, et le nouveau bloc s'ajoutait par-dessus — doublons sous deux indentations, YAML invalide au prochain `pub get`. Et `--check` annonçait alors à tort `manquant : …` pour une ligne existante.
+
+**Ruling** : on corrige, malgré un pubspec de dépôt sain aujourd'hui. `tool/sync_assets.dart` est le seul survivant permanent de `tool/`, il sera appelé par le devtool d'édition du chantier suivant, et son mode de défaillance est la **corruption silencieuse du pubspec** — exactement la classe de défaillance que ce chantier existe pour supprimer. Un outil dont le travail est de rendre un échec silencieux impossible ne doit pas échouer silencieusement lui-même.
+
+Le contrat des deux gardes, tel qu'implémenté dans `tool/sync_assets.dart` (`_checkNoDuplicateAssetsLine`, `_checkTrailingIndentation`) :
+
+| Garde | Déclenchement | Comportement |
+|:---|:---|:---|
+| A | La ligne `  assets:` apparaît plus d'une fois | `exit(2)`, message sur `stderr` nommant **tous** les numéros de ligne, fichier intact |
+| B | Une entrée de liste (`^\s*- `) suit le bloc à une indentation autre que 4 espaces | `exit(2)`, message nommant le numéro **et le contenu** de chaque ligne fautive, fichier intact |
+
+Les deux s'appliquent **aussi en mode `--check`**, avant tout diagnostic : un `--check` qui rendrait un verdict sur un fichier qu'il lit mal serait pire qu'un refus. Chacune est couverte par un test qui vérifie le code de sortie **et** l'égalité octet pour octet du pubspec — c'est le refus qui ne doit rien abîmer.
+
+Vérifié en re-revue : aucun faux positif sur une section `fonts:` légitime (ses entrées sont à 4 espaces, et l'en-tête `  fonts:` arrête le balayage avant elles), garde A généralisant bien à N occurrences, et comportement strictement inchangé sur un pubspec sain.
+
+**Limite connue, non traitée** : si `  assets:` n'apparaît **qu'une fois** et appartient malgré tout à une autre section — une dépendance nommée `assets` alors que `flutter:` n'a aucune clé `assets:` —, la garde A reste muette. Fenêtre bien plus étroite, limite de conception antérieure au correctif, et sans objet ici puisque le pubspec du dépôt porte les deux.
 
 ---
 
@@ -1835,7 +1857,7 @@ flutter test
 dart analyze
 ```
 
-Attendu : **419 au vert** (413 + 6) et `No issues found!`. Le provider lit toujours les catalogues : **aucun comportement du jeu n'a changé**.
+Attendu : **421 au vert** (415 + 6) et `No issues found!`. Le provider lit toujours les catalogues : **aucun comportement du jeu n'a changé**.
 
 - [ ] **Step 9: Commit**
 
@@ -2097,7 +2119,7 @@ flutter test
 dart analyze
 ```
 
-Attendu : **419 au vert** (compte inchangé : aucun test ajouté ni supprimé) et `No issues found!`.
+Attendu : **421 au vert** (compte inchangé : aucun test ajouté ni supprimé) et `No issues found!`.
 
 - [ ] **Step 6: Commit**
 
@@ -2335,7 +2357,7 @@ flutter test
 
 **`flutter clean` est de nouveau obligatoire** : cette tâche supprime 15 fichiers, et `_needsRebuild` ne détecte pas les suppressions. Sans purge, les catalogues supprimés pourraient survivre dans `build/unit_test_assets/` et faire passer les tests sur des données fantômes.
 
-Attendu : **421 au vert** — 419 plus les 2 tests ajoutés au fichier de convention, qui passe de 1 à 3. Les trois tests des étapes 5 et 6 sont réécrits, pas ajoutés : leur nombre ne bouge pas.
+Attendu : **423 au vert** — 421 plus les 2 tests ajoutés au fichier de convention, qui passe de 1 à 3. Les trois tests des étapes 5 et 6 sont réécrits, pas ajoutés : leur nombre ne bouge pas.
 
 L'oracle de la tâche 5 doit rester vert : il lit sa **référence figée**, catalogues et images comprises — c'est exactement pour survivre à cette étape qu'elle a été prise.
 
@@ -2624,7 +2646,7 @@ flutter test
 dart analyze
 ```
 
-Attendu : **428 au vert** (421 + 7) et `No issues found!`.
+Attendu : **430 au vert** (423 + 7) et `No issues found!`.
 
 - [ ] **Step 7: Commit**
 
@@ -2669,7 +2691,7 @@ Le garder plus longtemps serait de toute façon un piège : il fait vivre une co
 flutter test
 ```
 
-Attendu : **422 au vert** (428 − les 6 tests de l oracle).
+Attendu : **424 au vert** (430 − les 6 tests de l oracle).
 
 - [ ] **Step 2: Écrire le test qui échoue**
 
@@ -2775,7 +2797,7 @@ flutter test
 dart analyze
 ```
 
-Attendu : **423 au vert** (422 + le test de durcissement) et `No issues found!`.
+Attendu : **425 au vert** (424 + le test de durcissement) et `No issues found!`.
 
 `flutter clean` parce que cette étape a modifié 23 fichiers d'assets et supprimé un répertoire de test : le bundle de test ne détecte pas les suppressions.
 
@@ -2826,7 +2848,7 @@ flutter test
 dart analyze
 ```
 
-Attendu : **423 au vert** (compte inchangé — le script supprimé n'était couvert par aucun test) et `No issues found!`.
+Attendu : **425 au vert** (compte inchangé — le script supprimé n'était couvert par aucun test) et `No issues found!`.
 
 - [ ] **Step 3: Amender ADR-003**
 
@@ -2894,7 +2916,7 @@ flutter test
 dart run tool/sync_assets.dart --check
 ```
 
-Attendu : `No issues found!`, **423 au vert**, sortie 0.
+Attendu : `No issues found!`, **425 au vert**, sortie 0.
 
 ```bash
 find assets/data -name '*.json' | wc -l   # → 73
@@ -2917,7 +2939,7 @@ git commit -m "docs(reorg): documenter la nouvelle structure et retirer l echafa
 À vérifier avant d'ouvrir la PR. Chaque ligne fausse est un motif de ne pas ouvrir.
 
 - [ ] `dart analyze --fatal-infos` → `No issues found!`
-- [ ] `flutter test` → **423 au vert**, après un `flutter clean` *(le compte exact est à consigner ; l'invariant est qu'aucun test existant n'a disparu sans justification écrite)*
+- [ ] `flutter test` → **425 au vert**, après un `flutter clean` *(le compte exact est à consigner ; l'invariant est qu'aucun test existant n'a disparu sans justification écrite)*
 - [ ] `dart run tool/sync_assets.dart --check` → sortie 0
 - [ ] `find assets/data -name '*.json' | wc -l` → **73**
 - [ ] `assets/images/` ne contient plus que `bg_dungeon.png`
