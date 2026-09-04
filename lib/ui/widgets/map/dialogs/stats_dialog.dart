@@ -39,7 +39,6 @@ class StatsDialog extends ConsumerWidget {
 
     final heroData = gameData.heroes.firstWhere(
       (h) => h.id == runState.heroClassId,
-      orElse: () => gameData.heroes.first,
     );
 
     final locale = Localizations.localeOf(context).languageCode;

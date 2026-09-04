@@ -4,12 +4,11 @@ import 'game_data_registry.dart';
 
 extension HeroSkillsLink on HeroData {
   List<CardData> getHeroCards(GameDataRegistry gameData) {
+    // Pas de filtrage silencieux : une carte de signature introuvable est un
+    // bug de données. L'avaler produisait un deck de départ amputé sans la
+    // moindre trace.
     return skills
-        .map((skillId) {
-          final matches = gameData.cards.where((c) => c.id == skillId);
-          return matches.isNotEmpty ? matches.first : null;
-        })
-        .whereType<CardData>()
+        .map((skillId) => gameData.cards.firstWhere((c) => c.id == skillId))
         .toList();
   }
 }

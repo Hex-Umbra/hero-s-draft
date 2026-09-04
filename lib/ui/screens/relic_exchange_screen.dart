@@ -141,7 +141,8 @@ class _RelicExchangeScreenState extends ConsumerState<RelicExchangeScreen> {
             if (eligibleRelics.isNotEmpty) {
               _offeredRelic = eligibleRelics[random.nextInt(eligibleRelics.length)];
             } else {
-              _offeredRelic = gameData.relics.firstWhere((r) => r.rarity != RelicRarity.common, orElse: () => gameData.relics.first);
+              _offeredRelic = gameData.relics
+                  .firstWhere((r) => r.rarity != RelicRarity.common);
             }
             _requiredRarity = _getRequiredSacrificeRarity(_offeredRelic!.rarity);
           }
