@@ -342,7 +342,7 @@ erreur de contenu en mauvais rendu silencieux."
 
 ### Task 4: Rendre un passif absent inerte — côté moteur
 
-`PassiveData.fallback()` duplique les trois passifs **en dur en Dart** (`passive_data.dart:67-120`), en plus de `passives.json`. C'est le même anti-pattern que les replis d'images, avec **7 points d'appel dans 5 fichiers**.
+`PassiveData.fallback()` duplique les trois passifs **en dur en Dart** (`passive_data.dart:67-120`), en plus de `passives.json`. C'est le même anti-pattern que les replis d'images, avec **8 points d'appel dans 4 fichiers**.
 
 **Files:**
 - Modify: `lib/game/systems/trait_system.dart` (3 sites : lignes 10-12, 36-38, 52-54)
@@ -1213,7 +1213,7 @@ signature introuvable, sans erreur."
 - [x] `flutter test` → **388 tests au vert** *(385 à la fin de la tâche 10, +2 par la vague de correction de la revue finale, +1 par la vérification avant PR — tri intra-groupe des reliques)*
 - [x] `grep -rn "PassiveData.fallback\|hero_paladin.png\|enemy_goblin.png" lib/` → aucune sortie
 - [x] `grep -rn "orElse: () => .*\.first" lib/ --include=*.dart` → 4 restants, tous sur `runState.mapNodes`/`nodes`, jamais `gameData.*`
-- [x] `grep -rn "regenArmor\|berserkerArmor\|spellArmor" lib/ test/ assets/` → 2 lignes restantes, toutes deux des **noms de variables Dart locales** (`test/unit/run_controller_test.dart:90`, `test/unit/run_state_persistence_test.dart:12`) dont le champ `id:` est bien en `snake_case`. Les identifiants Dart restent en lowerCamelCase (lint `constant_identifier_names`) ; seule la **valeur** de l'id est normalisée.
+- [x] `grep -rn "regenArmor\|berserkerArmor\|spellArmor" lib/ test/ assets/` → 5 lignes dans 2 fichiers (`run_controller_test.dart:90,99`, `run_state_persistence_test.dart:12,27,49`), toutes des **noms de variables Dart locales** dont le champ `id:` est bien en `snake_case`. Les identifiants Dart restent en lowerCamelCase (lint `constant_identifier_names`) ; seule la **valeur** de l'id est normalisée.
 - [ ] **(non fait)** Lancer le jeu et vérifier à l'œil : sélection de classe dans l'ordre paladin/berserker/mage, dictionnaire groupé par type dans l'ordre de l'enum, un combat qui démarre avec les bons sprites
 
 **Spec mise à jour** : §1 (377 sur `ced306e` → 388 après les lots), §5.3 (la septième surface, manquée par la table et retrouvée en revue finale), §9, §10 et §11 alignés sur la livraison.

@@ -46,7 +46,7 @@ pie title Répartition de l'effort restant estimé (~91 jours)
 > [!WARNING]
 > **Le camembert et le total de ~91 jours sont antérieurs au programme P-40→P-44** (ajouté le
 > 2026-08-07) et ne l'incluent pas. Le solde net n'est pas calculable en l'état : P-41 est chiffré
-> (5-7 j) et P-40 aussi (1-1,5 j), mais **P-42, P-43 et P-44 attendent leur spec**, tandis que P-18
+> (5-7 j) et P-40 aussi (1-1,5 j à l'origine, **~0,75-1 j restant** depuis la livraison de son bloc 1), mais **P-42, P-43 et P-44 attendent leur spec**, tandis que P-18
 > et P-20 sortent du Tier C par redistribution. Recalculer l'ensemble à la prochaine passe de
 > re-priorisation, pas avant — un total partiellement mis à jour serait plus trompeur que celui-ci.
 
@@ -254,6 +254,7 @@ Marqué **priorité haute** dans le rapport du 22/07 et jamais traité. Difficul
 | **P-42** | **Pools de cartes par classe** — séparation `unique`/`heroClass`, ~25-30 cartes | *à chiffrer en spec* | ★★★★☆ | 🔥🔥🔥 |
 | **P-43** | **Économie de deck** — récompense de carte, limite de taille, rééquilibrage fusion | *à chiffrer en spec* | ★★★☆☆ | 🔥🔥 |
 | **P-44** | **Profondeur de cartes** — coût 3, `scaleWith`, génération, cible `none`, malédictions | *à chiffrer en spec* | ★★★★☆ | 🔥🔥 |
+| **P-48** | **Réorganisation des données** — un fichier par entité, dossiers auto-suffisants, chargeur générique · [spec](superpowers/specs/2026-09-04-reorganisation-donnees-un-fichier-par-entite-design.md) — *lots 1 et 2 livrés* | **~4,5 j** *(lot 3 restant)* | ★★★☆☆ | 🔥🔥 |
 
 ### P-10 — Finale de Séquence
 **Le jeu n'a aujourd'hui aucune condition de victoire** : les actes continuent indéfiniment et seule la mort termine une run. Le Portail Final (4ᵉ nœud optionnel à l'étage boss des Actes 5, 10, 15…, inspiré du téléporteur de Risk of Rain 2) donne enfin une sortie propre, sans supprimer l'endless pour qui veut continuer. C'est probablement **le manque de design le plus structurel du jeu actuel**.
@@ -275,7 +276,7 @@ Rien n'existe hors-run aujourd'hui. Gain d'une monnaie à la fin de chaque run p
 ### P-15 — Tiers 2-5
 Réutilise `onHitEffect`/`evadeChance` de P-05 sans nouveau champ. Trois concepts demandent chacun une mécanique inédite et sont à isoler : Chaman Orc (première interaction ennemi → ennemi), Dragon Juvénile (seuil d'enrage — mutualisable avec P-09), Cavalier de la Mort (dégâts différés). Les tiers 4-5 exigent en plus de relever `maxTierAuthored` au-delà de 3.
 
-### P-46 — Réorganisation des données : un fichier par entité
+### P-48 — Réorganisation des données : un fichier par entité
 
 Éclater les catalogues JSON monolithiques en un fichier par entité, avec des dossiers auto-suffisants
 par classe et par ennemi, chargés par un mécanisme générique piloté par des motifs de chemin.
@@ -289,7 +290,7 @@ travail de relecture.
 |:---|:---|:---|
 | 1 | Supprimer les quatre replis codés en dur | ✅ **livré le 2026-09-04** |
 | 2 | Rendre explicite tout ordre d'affichage, renommer les ids de passifs, `displayOrder` | ✅ **livré le 2026-09-04** |
-| 3 | La migration : découpage, chargeur générique, dossiers, pubspec généré | **~4 j** — plan à écrire |
+| 3 | La migration : découpage, chargeur générique, dossiers, pubspec généré | **~4,5 j** — plan à écrire |
 
 **Prérequis** : P-40 bloc 1, livré. **Créneau** : avant P-42, dont les pools de cartes doivent être
 écrits directement dans la nouvelle structure.

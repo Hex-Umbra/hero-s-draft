@@ -538,7 +538,7 @@ Le test d'équivalence est supprimé une fois la migration fusionnée.
 | `lib/ui/screens/game_screen.dart` | 254 | 1 | Liste de préchargement passée au constructeur |
 | `lib/game/systems/state_sync_system.dart` | 42, 46 | 1, 2 | Repli d'image en dur, puis repli `.first` |
 | `lib/game/components/entities/enemy_card.dart` | 73 | 1 | Repli d'image en dur supprimé |
-| `lib/models/data/passive_data.dart` | 67-120 | 1 | `fallback()` **supprimé** (D11) — **7 points d'appel dans 4 fichiers**, plus sa déclaration ici |
+| `lib/models/data/passive_data.dart` | 67-120 | 1 | `fallback()` **supprimé** (D11) — **8 points d'appel dans 4 fichiers**, plus sa déclaration ici |
 | `lib/game/systems/trait_system.dart` | 12, 38, 54 | 1 | Passif absent = aucun effet, plus d'objet dégradé |
 | `lib/game/controllers/run_controller.dart` | 170, 217, 250 | 1 | Chargement de sauvegarde, état initial, démarrage de run |
 | `lib/ui/widgets/map/dialogs/stats_dialog.dart` | 60 | 1 | Affichage du passif |
@@ -584,7 +584,8 @@ Le test d'équivalence est supprimé une fois la migration fusionnée.
 | **Pubspec synchronisé** | 3 | `dart run tool/sync_assets.dart --check` sort en 0 |
 | **Isolation du tutoriel** *(existant)* | — | `test/tutorial/tutorial_isolation_test.dart` continue de passer |
 
-**388 tests au vert et `dart analyze` à zéro problème** après chaque lot, conformément à `CLAUDE.md`.
+**`dart analyze` à zéro problème après chaque lot**, conformément à `CLAUDE.md`. Le compte de tests
+est de **388 après les lots 1 et 2** ; le lot 3 l'augmentera des tests listés ci-dessus.
 
 ---
 
@@ -605,11 +606,13 @@ Le test d'équivalence est supprimé une fois la migration fusionnée.
   décrire la création d'un fichier et l'appel au générateur. La liste des modèles de « Data layer »
   nomme `skill_data.dart`, supprimé par le bloc 1 de P-40 (`ced306e`).
 - **`.agents/skills/game_designer.md:12`** : énumère les catalogues, `skills.json` compris.
-- **`docs/INDEX.md`** : entrée sous « Héros, classes & cartes ». **`docs/ROADMAP.md`** : nouvelle
-  fiche entre P-40 et P-41.
+- **`docs/INDEX.md`** : entrée sous « Héros, classes & cartes ». **`docs/ROADMAP.md`** : fiche
+  **P-48**, ouverte en Tier B (et non « entre P-40 et P-41 » comme prévu ici : P-46 et P-47 étaient
+  déjà pris par les chantiers audio).
 - **Patch note** : à trancher, sur un constat corrigé. Cette spec affirmait que le joueur ne voyait
   rien hors la casse de sauvegarde de §3.3 — c'est faux, et mesuré sur les données livrées : le
-  dictionnaire réordonne ses trois groupes de cartes et ses cinq groupes de reliques, et le pool du
+  dictionnaire réordonne le **contenu** de ses trois groupes de cartes et de ses cinq groupes de
+  reliques — l'ordre des groupes eux-mêmes ne bouge pas —, et le pool du
   draft de départ — le tout premier écran de choix d'une run — est entièrement réordonné. Ce sont
   des changements visibles, voulus et sans effet sur l'équilibrage, mais visibles. La décision
   d'écrire ou non une entrée revient au propriétaire du projet ; si elle est prise, elle passe par
@@ -656,7 +659,7 @@ Le test d'équivalence est supprimé une fois la migration fusionnée.
 | Lot | Contenu | Effort |
 |:---:|:---|:---:|
 | **1** | 4 replis en dur supprimés, getter de préchargement, passage au constructeur, comportement du passif absent | 1 j |
-| **2** | Tris explicites (4 surfaces), 4 replis `.first`, renommage des ids + ~20 fichiers de test, `displayOrder` | 1 j |
+| **2** | Tris explicites (5 surfaces), 4 replis `.first`, renommage des ids + ~20 fichiers de test, `displayOrder` | 1 j |
 | **3** | `GameDataLoader`, `EntitySource`, motif de chemin, injection, validation, agrégation | 1 j |
 | **3** | Script de découpage (avec renommage d'images) + oracle JSON brut + exécution + vérification | 1 j |
 | **3** | `tool/sync_assets.dart` + `--check` + test de chargement par le vrai bundle | 0,75 j |
