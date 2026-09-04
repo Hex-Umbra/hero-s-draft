@@ -21,6 +21,9 @@ const _heroes = [
     maxMana: 3,
     baseDamage: 5,
     passiveTrait: 'regenArmor',
+    // Declared first but sorts last: keeps the grid order dependent on
+    // displayOrder rather than on declaration order or List.sort stability.
+    displayOrder: 3,
   ),
   HeroData(
     id: 'berserker',
@@ -33,6 +36,8 @@ const _heroes = [
     maxMana: 3,
     baseDamage: 15,
     passiveTrait: 'berserkerArmor',
+    // Declared second and sorts first (lowest displayOrder).
+    displayOrder: 1,
   ),
   HeroData(
     id: 'mage',
@@ -45,6 +50,8 @@ const _heroes = [
     maxMana: 3,
     baseDamage: 10,
     passiveTrait: 'spellArmor',
+    // Declared third and sorts in the middle.
+    displayOrder: 2,
   ),
 ];
 
@@ -125,12 +132,20 @@ void main() {
       expect(find.byType(ClassSelectionScreen), findsOneWidget);
       expect(find.byType(StarterDeckDraftScreen), findsNothing);
 
-      // Tap the Berserker card's "Select" button (index 1 in the grid,
-      // matching _heroes order). ClassSelectionScreen itself doesn't call
-      // startNewRun (that happens later, inside StarterDeckDraftScreen's
-      // "start adventure" flow) — what it owns is navigating onward with
-      // the tapped hero, which we verify via the pushed screen's data.
-      await tester.tap(find.text('Select').at(1));
+      // Tap the Berserker card's "Select" button. _heroes is declared
+      // paladin/berserker/mage, but each has a distinct displayOrder
+      // (3/1/2), so the screen's sort renders berserker first (grid index
+      // 0) — not the declaration order and not the index the old
+      // equal-displayOrder mocks happened to preserve. Asserting at index 0
+      // rather than the middle index 1 matters: for a 3-item list,
+      // reversing the comparator swaps the first and last positions but
+      // leaves the middle position unchanged, so only index 0 (or 2) can
+      // actually catch a reversed or removed sort. ClassSelectionScreen
+      // itself doesn't call startNewRun (that happens later, inside
+      // StarterDeckDraftScreen's "start adventure" flow) — what it owns is
+      // navigating onward with the tapped hero, which we verify via the
+      // pushed screen's data.
+      await tester.tap(find.text('Select').at(0));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
 
