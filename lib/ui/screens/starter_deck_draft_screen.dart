@@ -55,7 +55,16 @@ class _StarterDeckDraftScreenState
         .where(
           (c) => c.category == CardCategory.global && c.type != CardType.status,
         )
-        .toList();
+        .toList()
+      // Le pool est affiché et sélectionné par index, sans mélange : sans tri
+      // explicite, le premier choix d'une run suivrait l'ordre de cards.json.
+      ..sort((a, b) {
+        final byRarity = a.rarity.index.compareTo(b.rarity.index);
+        if (byRarity != 0) return byRarity;
+        final byCost = a.cost.compareTo(b.cost);
+        if (byCost != 0) return byCost;
+        return a.id.compareTo(b.id);
+      });
 
     setState(() {
       _draftPool = globalCards;
