@@ -44,7 +44,7 @@ final _mockRegistry = GameDataRegistry(
       maxHp: 100,
       maxMana: 3,
       baseDamage: 5,
-      passiveTrait: 'regenArmor',
+      passiveTrait: 'regen_armor',
     ),
   ],
   cards: const [],

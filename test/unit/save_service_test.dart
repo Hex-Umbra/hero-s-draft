@@ -15,7 +15,7 @@ void main() {
   group('SaveService', () {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
-      // startNewRun's default hero passive ('regenArmor') round-trips through
+      // startNewRun's default hero passive ('regen_armor') round-trips through
       // RunState.fromJsonWithReport, which looks it up via
       // PassiveData.getById — that requires a populated GameDataRegistry,
       // exactly like test/unit/run_state_persistence_test.dart already sets
@@ -27,7 +27,7 @@ void main() {
         events: const [],
         passives: const [
           PassiveData(
-            id: 'regenArmor',
+            id: 'regen_armor',
             nameFr: "Régénération d'Armure",
             nameEn: 'Armor Regeneration',
             trigger: RelicTrigger.endOfTurn,
@@ -60,7 +60,7 @@ void main() {
         baseDamage: 5,
         luck: 0,
         armorMastery: 0,
-        passiveTrait: 'regenArmor',
+        passiveTrait: 'regen_armor',
       );
       container.read(runProvider.notifier).startNewRun(dummyHero);
       container.read(inventoryProvider.notifier).gainGold(37);
@@ -97,7 +97,7 @@ void main() {
         maxHp: 100,
         maxMana: 3,
         baseDamage: 5,
-        passiveTrait: 'regenArmor',
+        passiveTrait: 'regen_armor',
       );
       container.read(runProvider.notifier).startNewRun(dummyHero);
       await SaveService.save(container.read);

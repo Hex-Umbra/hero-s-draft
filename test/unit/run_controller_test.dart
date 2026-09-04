@@ -54,7 +54,7 @@ void main() {
           baseDamage: 5,
           luck: 0,
           armorMastery: 0,
-          passiveTrait: 'regenArmor',
+          passiveTrait: 'regen_armor',
         );
 
         runController.startNewRun(dummyHero);
@@ -81,14 +81,14 @@ void main() {
           baseDamage: 6,
           luck: 0,
           armorMastery: 1,
-          passiveTrait: 'berserkerArmor',
+          passiveTrait: 'berserker_armor',
         );
 
         // activePassive n'est plus déduit du passiveTrait par un repli codé
         // en dur : on le fournit explicitement, comme le ferait le vrai
         // chargement depuis passives.json via PassiveData.getById.
         const berserkerArmor = PassiveData(
-          id: 'berserkerArmor',
+          id: 'berserker_armor',
           nameEn: 'Berserker Armor',
           nameFr: 'Armure du Berserker',
           trigger: RelicTrigger.startOfTurn,
@@ -136,7 +136,7 @@ void main() {
           baseDamage: 5,
           luck: 0,
           armorMastery: 0,
-          passiveTrait: 'regenArmor',
+          passiveTrait: 'regen_armor',
         );
         runController.startNewRun(dummyHero);
 
@@ -264,7 +264,7 @@ void main() {
       baseDamage: 5,
       luck: 0,
       armorMastery: 0,
-      passiveTrait: 'regenArmor',
+      passiveTrait: 'regen_armor',
     );
 
     test('vaut 5 au démarrage d\'une run', () {

@@ -10,7 +10,7 @@
     "maxMana": 3,
     "baseDamage": 5,
     "luck": 0,
-    "passiveTrait": "regenArmor",
+    "passiveTrait": "regen_armor",
     "displayOrder": 1,
     "skills": ["holy_shield", "smite"]
   },
@@ -25,7 +25,7 @@
     "maxMana": 3,
     "baseDamage": 15,
     "luck": 0,
-    "passiveTrait": "berserkerArmor",
+    "passiveTrait": "berserker_armor",
     "displayOrder": 2,
     "skills": ["reckless_strike", "rage_form"]
   },
@@ -40,7 +40,7 @@
     "maxMana": 3,
     "baseDamage": 10,
     "luck": 0,
-    "passiveTrait": "spellArmor",
+    "passiveTrait": "spell_armor",
     "displayOrder": 3,
     "skills": ["magic_missile", "mana_surge"]
   }

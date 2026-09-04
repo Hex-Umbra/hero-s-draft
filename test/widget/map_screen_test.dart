@@ -44,7 +44,7 @@ void main() {
       iconPath: 'test',
       maxHp: 10,
       maxMana: 3,
-      passiveTrait: 'regenArmor',
+      passiveTrait: 'regen_armor',
       baseDamage: 0,
     );
 
@@ -112,7 +112,7 @@ void main() {
       iconPath: 'test',
       maxHp: 10,
       maxMana: 3,
-      passiveTrait: 'regenArmor',
+      passiveTrait: 'regen_armor',
       baseDamage: 0,
     );
 
@@ -161,7 +161,7 @@ void main() {
       iconPath: 'test',
       maxHp: 10,
       maxMana: 3,
-      passiveTrait: 'regenArmor',
+      passiveTrait: 'regen_armor',
       baseDamage: 0,
     );
 
@@ -210,7 +210,7 @@ void main() {
         iconPath: 'test',
         maxHp: 10,
         maxMana: 3,
-        passiveTrait: 'regenArmor',
+        passiveTrait: 'regen_armor',
         baseDamage: 0,
       );
 
@@ -279,7 +279,7 @@ void main() {
         iconPath: 'test',
         maxHp: 10,
         maxMana: 3,
-        passiveTrait: 'regenArmor',
+        passiveTrait: 'regen_armor',
         baseDamage: 0,
       );
 

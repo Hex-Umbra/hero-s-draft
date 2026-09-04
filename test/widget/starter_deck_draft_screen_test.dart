@@ -175,12 +175,12 @@ void main() {
     baseDamage: 5,
     luck: 0,
     armorMastery: 0,
-    passiveTrait: 'regenArmor',
+    passiveTrait: 'regen_armor',
     skills: ['holy_shield'],
   );
 
   final mockPassive = const PassiveData(
-    id: 'regenArmor',
+    id: 'regen_armor',
     nameEn: 'Armor Regeneration',
     nameFr: "Régénération d'Armure",
     descriptionEn: 'Regen armor each turn',

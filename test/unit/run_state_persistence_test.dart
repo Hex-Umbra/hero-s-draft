@@ -10,7 +10,7 @@ import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 void main() {
   group('RunState persistence', () {
     const regenArmor = PassiveData(
-      id: 'regenArmor',
+      id: 'regen_armor',
       nameFr: "Régénération d'Armure",
       nameEn: 'Armor Regeneration',
       trigger: RelicTrigger.endOfTurn,
@@ -45,7 +45,7 @@ void main() {
           currentLevel: 5,
           act: 2,
           heroClassId: 'paladin',
-          passiveTrait: 'regenArmor',
+          passiveTrait: 'regen_armor',
           activePassive: regenArmor,
           heroStats: EntityStats(
             maxPv: 80,
@@ -74,8 +74,8 @@ void main() {
       expect(restored.currentLevel, 5);
       expect(restored.act, 2);
       expect(restored.heroClassId, 'paladin');
-      expect(restored.passiveTrait, 'regenArmor');
-      expect(restored.activePassive?.id, 'regenArmor');
+      expect(restored.passiveTrait, 'regen_armor');
+      expect(restored.activePassive?.id, 'regen_armor');
       expect(restored.heroStats.currentPv, 60);
       expect(restored.currentNodeId, 'floor_3_node_1');
       expect(restored.forgeSlots, ['enduring:1']);

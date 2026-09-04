@@ -51,7 +51,7 @@ void main() {
       baseDamage: 5,
       luck: 0,
       armorMastery: 0,
-      passiveTrait: 'regenArmor',
+      passiveTrait: 'regen_armor',
     );
 
     test('calculateCombatRating computes threat score correctly', () {

@@ -23,7 +23,7 @@ class RunState {
   final String heroClassId;
   final List<MapNode> mapNodes;
   final String? currentNodeId;
-  final String? passiveTrait; // Trait passif du héros (ex: regenArmor)
+  final String? passiveTrait; // Trait passif du héros (ex: regen_armor)
   final PassiveData? activePassive; // Passif dynamique du héros
   final List<String> forgeSlots;
   final String? forgeTargetCardId;
@@ -209,7 +209,7 @@ class RunController extends Notifier<RunState> {
       currentLevel: 1,
       act: 1,
       heroClassId: 'paladin',
-      passiveTrait: 'regenArmor',
+      passiveTrait: 'regen_armor',
       activePassive: null,
       heroStats: EntityStats(
         maxPv: 100,

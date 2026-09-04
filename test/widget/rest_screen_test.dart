@@ -26,7 +26,7 @@ void main() {
     baseDamage: 5,
     luck: 0,
     armorMastery: 0,
-    passiveTrait: 'regenArmor',
+    passiveTrait: 'regen_armor',
   );
 
   const mockCard = CardData(
