@@ -1,5 +1,5 @@
-import 'dart:convert';
-import 'package:flutter/services.dart';
+import 'dart:ui';
+
 import 'package:flame/game.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
@@ -57,6 +57,11 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   /// Injecte depuis `GameScreen` : la couche Flame ne lit jamais un provider.
   final AudioDirector audio;
 
+  /// Les images à charger avant le premier rendu. Fournie par le registre
+  /// (`GameDataRegistry.imagesToPreload`) : la couche de rendu ne lit jamais
+  /// de JSON elle-même.
+  final List<String> imagesToPreload;
+
   final void Function() onEnemiesDead;
   final void Function(TurnPhase) onPhaseChanged;
   final void Function(String title, String description, CardType? cardType) onShowTooltip;
@@ -74,6 +79,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
 
   HerosDraftGame({
     required this.audio,
+    required this.imagesToPreload,
     required this.onEnemiesDead,
     required this.onPhaseChanged,
     required this.onShowTooltip,
@@ -130,43 +136,10 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
     await add(visualSys);
     await add(laySys);
 
-    final List<String> imagesToPreload = ['bg_dungeon.png'];
-
-    try {
-      final String enemiesRaw = await rootBundle.loadString(
-        'assets/data/enemies.json',
-      );
-      final List<dynamic> enemiesJson = jsonDecode(enemiesRaw);
-      for (final enemy in enemiesJson) {
-        final spritePath = enemy['spritePath'] as String?;
-        if (spritePath != null && spritePath.isNotEmpty) {
-          imagesToPreload.add(spritePath);
-        }
-      }
-
-      final String heroesRaw = await rootBundle.loadString(
-        'assets/data/heroes.json',
-      );
-      final List<dynamic> heroesJson = jsonDecode(heroesRaw);
-      for (final hero in heroesJson) {
-        final iconPath = hero['iconPath'] as String?;
-        if (iconPath != null && iconPath.isNotEmpty) {
-          imagesToPreload.add(iconPath);
-        }
-      }
-    } catch (e) {
-      imagesToPreload.addAll([
-        'hero_paladin.png',
-        'hero_berserker.png',
-        'hero_mage.png',
-        'enemy_goblin.png',
-        'enemy_slime.png',
-        'enemy_skeleton.png',
-        'enemy_orc.png',
-      ]);
-    }
-
-    final uniqueImages = imagesToPreload.toSet().toList();
+    final uniqueImages = <String>{
+      'bg_dungeon.png',
+      ...imagesToPreload,
+    }.toList();
     await images.loadAll(uniqueImages);
 
     final bgSprite = Sprite(images.fromCache('bg_dungeon.png'));

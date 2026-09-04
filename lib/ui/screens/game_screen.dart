@@ -253,6 +253,8 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
     _game = HerosDraftGame(
       audio: ref.read(audioDirectorProvider),
+      imagesToPreload:
+          ref.read(gameDataLoaderProvider).requireValue.imagesToPreload,
       onEnemiesDead: _handleCombatVictory,
       onPhaseChanged: (phase) {
         final l10n = AppLocalizations.of(context)!;
