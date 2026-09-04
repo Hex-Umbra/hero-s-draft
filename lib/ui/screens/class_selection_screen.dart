@@ -20,7 +20,8 @@ class ClassSelectionScreen extends ConsumerWidget {
 
     // Les données sont déjà chargées par le SplashScreen
     final gameData = ref.watch(gameDataLoaderProvider).requireValue;
-    final classes = gameData.heroes;
+    final classes = [...gameData.heroes]
+      ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
     final bool isMobile = MediaQuery.of(context).size.width < 600;
     final l10n = AppLocalizations.of(context)!;
 

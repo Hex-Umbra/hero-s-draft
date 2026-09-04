@@ -11,6 +11,7 @@
     "baseDamage": 5,
     "luck": 0,
     "passiveTrait": "regenArmor",
+    "displayOrder": 1,
     "skills": ["holy_shield", "smite"]
   },
   {
@@ -25,6 +26,7 @@
     "baseDamage": 15,
     "luck": 0,
     "passiveTrait": "berserkerArmor",
+    "displayOrder": 2,
     "skills": ["reckless_strike", "rage_form"]
   },
   {
@@ -39,6 +41,7 @@
     "baseDamage": 10,
     "luck": 0,
     "passiveTrait": "spellArmor",
+    "displayOrder": 3,
     "skills": ["magic_missile", "mana_surge"]
   }
 ]

@@ -13,6 +13,10 @@ class HeroData {
   final String? passiveTrait;
   final List<String> skills;
 
+  /// Rang d'affichage à la sélection de classe. Donnée de présentation :
+  /// l'ordre ne doit pas dépendre de l'ordre du catalogue.
+  final int displayOrder;
+
   const HeroData({
     required this.id,
     this.nameEn = '',
@@ -27,6 +31,7 @@ class HeroData {
     this.armorMastery = 0,
     this.passiveTrait,
     this.skills = const [],
+    this.displayOrder = 0,
   });
 
   String getName(String locale) => locale == 'fr' ? nameFr : nameEn;
@@ -62,6 +67,7 @@ class HeroData {
               ?.map((e) => e as String)
               .toList() ??
           [],
+      displayOrder: json['displayOrder'] as int? ?? 0,
     );
   }
 }
