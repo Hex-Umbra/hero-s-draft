@@ -7,6 +7,7 @@ import 'package:roguelike_card_game/ui/screens/card_dictionary_screen.dart';
 import 'package:roguelike_card_game/ui/widgets/ui_card.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
+import 'package:roguelike_card_game/models/data/relic_data.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
 
 const _skill = CardData(
@@ -84,6 +85,83 @@ const _mixedGroup = [
     effects: [],
   ),
 ];
+
+/// Deux reliques de meme rarete, declarees a l'envers de l'ordre d'id. Le
+/// jumeau exact de `_mixedGroup` pour l'onglet reliques, dont le tri
+/// intra-groupe n'etait jusqu'ici verifie que par lecture de code.
+const _mixedRelics = [
+  RelicData(
+    id: 'relic_z_rare',
+    nameEn: 'Zulu Charm',
+    nameFr: 'Charme Zoulou',
+    trigger: RelicTrigger.startOfTurn,
+    effectType: 'gain_armor',
+    value: 1,
+    rarity: RelicRarity.rare,
+    emoji: '🔮',
+  ),
+  RelicData(
+    id: 'relic_a_rare',
+    nameEn: 'Alpha Charm',
+    nameFr: 'Charme Alpha',
+    trigger: RelicTrigger.startOfTurn,
+    effectType: 'gain_armor',
+    value: 1,
+    rarity: RelicRarity.rare,
+    emoji: '🔷',
+  ),
+];
+
+Future<List<String>> _renderedRelicNames(
+  WidgetTester tester,
+  List<RelicData> relics,
+) async {
+  final registry = GameDataRegistry(
+    enemies: const [],
+    heroes: const [],
+    cards: const [],
+    events: const [],
+    passives: const [],
+    relics: relics,
+    forgeUpgrades: const [],
+  );
+  final container = ProviderContainer(
+    overrides: [gameDataLoaderProvider.overrideWith((ref) => registry)],
+  );
+  addTearDown(container.dispose);
+  await container.read(gameDataLoaderProvider.future);
+
+  await tester.pumpWidget(
+    UncontrolledProviderScope(
+      container: container,
+      child: const MaterialApp(
+        localizationsDelegates: [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: [Locale('en', ''), Locale('fr', '')],
+        locale: Locale('en', ''),
+        home: CardDictionaryScreen(),
+      ),
+    ),
+  );
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 300));
+
+  // Les reliques sont rendues par une classe privee de l'ecran : on releve
+  // donc les Text dans l'ordre de rendu, filtres sur les noms de la fixture.
+  await tester.tap(find.byType(Tab).at(1));
+  await tester.pumpAndSettle();
+
+  final expected = relics.map((r) => r.nameEn).toSet();
+  return tester
+      .widgetList<Text>(find.byType(Text))
+      .map((t) => t.data ?? '')
+      .where(expected.contains)
+      .toList();
+}
 
 Future<List<String>> _renderedGroupHeaders(
   WidgetTester tester,
@@ -198,6 +276,15 @@ void main() {
         'Group Common Two', // commun, coût 2 — départage par coût
         'Group Rare One', // rare — la rareté prime malgré le plus petit coût/id
       ]);
+    },
+  );
+
+  testWidgets(
+    'l ordre intra-groupe des reliques suit l id, pas la declaration',
+    (tester) async {
+      final names = await _renderedRelicNames(tester, _mixedRelics);
+
+      expect(names, ['Alpha Charm', 'Zulu Charm']);
     },
   );
 }

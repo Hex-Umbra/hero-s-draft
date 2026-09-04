@@ -12,9 +12,9 @@ La progression dans **Hero's Draft** est structurée autour d'une boucle classiq
        │                                                                │
        ▼                                                                │
 [Sélection de Classe (HeroSelectionScreen)]                             │
-  Paladin (100 HP, 3 Mana, 5 Atk, passif: regenArmor)
-  Berserker (80 HP, 3 Mana, 15 Atk, passif: berserkerArmor)
-  Mage (60 HP, 3 Mana, 10 Atk, passif: spellArmor)
+  Paladin (100 HP, 3 Mana, 5 Atk, passif: regen_armor)
+  Berserker (80 HP, 3 Mana, 15 Atk, passif: berserker_armor)
+  Mage (60 HP, 3 Mana, 10 Atk, passif: spell_armor)
        │
        ▼
 [Draft Deck Initial (StarterDeckDraftScreen)]

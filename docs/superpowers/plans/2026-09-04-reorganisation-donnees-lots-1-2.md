@@ -1209,13 +1209,13 @@ signature introuvable, sans erreur."
 
 ## Fin des lots 1 et 2 — vérification de sortie
 
-- [ ] `dart analyze` → `No issues found!`
-- [ ] `flutter test` → **385 tests au vert**
-- [ ] `grep -rn "PassiveData.fallback\|hero_paladin.png\|enemy_goblin.png" lib/` → aucune sortie
-- [ ] `grep -rn "orElse: () => .*\.first" lib/ --include=*.dart` → ne doit plus renvoyer que des listes **hors registre** (`runState.mapNodes`, `nodes`), jamais `gameData.*`
-- [ ] `grep -rn "regenArmor\|berserkerArmor\|spellArmor" lib/ test/ assets/` → aucune sortie
-- [ ] Lancer le jeu et vérifier à l'œil : sélection de classe dans l'ordre paladin/berserker/mage, dictionnaire groupé par type dans l'ordre de l'enum, un combat qui démarre avec les bons sprites
+- [x] `dart analyze` → `No issues found!`
+- [x] `flutter test` → **388 tests au vert** *(385 à la fin de la tâche 10, +2 par la vague de correction de la revue finale, +1 par la vérification avant PR — tri intra-groupe des reliques)*
+- [x] `grep -rn "PassiveData.fallback\|hero_paladin.png\|enemy_goblin.png" lib/` → aucune sortie
+- [x] `grep -rn "orElse: () => .*\.first" lib/ --include=*.dart` → 4 restants, tous sur `runState.mapNodes`/`nodes`, jamais `gameData.*`
+- [x] `grep -rn "regenArmor\|berserkerArmor\|spellArmor" lib/ test/ assets/` → 2 lignes restantes, toutes deux des **noms de variables Dart locales** (`test/unit/run_controller_test.dart:90`, `test/unit/run_state_persistence_test.dart:12`) dont le champ `id:` est bien en `snake_case`. Les identifiants Dart restent en lowerCamelCase (lint `constant_identifier_names`) ; seule la **valeur** de l'id est normalisée.
+- [ ] **(non fait)** Lancer le jeu et vérifier à l'œil : sélection de classe dans l'ordre paladin/berserker/mage, dictionnaire groupé par type dans l'ordre de l'enum, un combat qui démarre avec les bons sprites
 
-**Mettre à jour la spec** : `docs/superpowers/specs/2026-09-04-reorganisation-donnees-un-fichier-par-entite-design.md` §1 (référence de tests 377 → 385) avant d'écrire le plan du lot 3.
+**Spec mise à jour** : §1 (377 sur `ced306e` → 388 après les lots), §5.3 (la septième surface, manquée par la table et retrouvée en revue finale), §9, §10 et §11 alignés sur la livraison.
 
 Le **lot 3** (migration proprement dite) fera l'objet de son propre plan, écrit une fois ces deux lots fusionnés : ses références de ligne dépendent de l'état que ce plan produit.

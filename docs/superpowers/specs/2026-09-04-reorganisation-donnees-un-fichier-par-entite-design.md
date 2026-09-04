@@ -1,7 +1,7 @@
 # Réorganisation des données — un fichier par entité — Conception
 
 Date : 2026-09-04
-Statut : **Design validé, non implémenté**
+Statut : **Lots 1 et 2 livrés le 2026-09-04 (`2c1b183`) ; lot 3 conçu, non implémenté**
 Révision : v3 — après deux tours de revue indépendante (4 agents)
 Prérequis : **P-40 bloc 1** — **livré** le 2026-09-04 (`ced306e`), voir §3.1
 Créneau : **entre P-40 et P-41**, donc avant **P-42** (pools de cartes par classe)
@@ -31,7 +31,7 @@ Relevées le **2026-09-04**, sur `ced306e` — c'est-à-dire **après la livrais
 | Mesure | Valeur |
 |:---|:---|
 | `dart analyze` | `No issues found!` |
-| `flutter test` | **387 tests au vert** |
+| `flutter test` | **377** sur `ced306e` — **388** après les lots 1 et 2 |
 | Fichiers dans `assets/data/` | **10** |
 | Entités réparties en 8 catalogues | **71** |
 | Lectures de bundle au démarrage | **9** — 8 catalogues + `audio.json` *(`patch_notes.json` n'est lu que par son écran)* |
@@ -335,8 +335,10 @@ Le tri se fait **par `id` après parsing**, jamais sur l'ordre du manifeste, qui
 garantie (`asset_manifest.dart:115`). C'est la seule règle qui donne le même résultat depuis le
 bundle et depuis le disque.
 
-**Le lot 2 rend ce tri sans conséquence** en traitant les six surfaces où l'ordre d'une liste du
-registre est aujourd'hui observable :
+**Le lot 2 rend ce tri sans conséquence** en traitant les sept surfaces où l'ordre d'une liste du
+registre est aujourd'hui observable. *(La septième — la copie du pool de draft dans le tutoriel — a
+été manquée par cette table et retrouvée en revue finale de branche ; elle est corrigée par
+`2c1b183`, et inscrite ici pour que le lot 3 soit planifié sur une énumération complète.)*
 
 | Surface | Aujourd'hui | Correctif du lot 2 |
 |:---|:---|:---|
@@ -346,6 +348,7 @@ registre est aujourd'hui observable :
 | `starter_deck_draft_screen.dart:54-61` | Pool filtré **sans mélange**, sélectionné par index | Tri explicite par rareté/coût/id |
 | `state_sync_system.dart:46`, `stats_dialog.dart:43`, `relic_exchange_screen.dart:144` | `orElse: () => liste.first` | **Replis supprimés** |
 | `hero_skills_link.dart:9-11` | `matches.first`, puis `.whereType<CardData>()` avale l'absence | Repli supprimé ; une carte de signature manquante devient une erreur |
+| `tutorial_fixtures.dart:57` (`starterPool`), rendu par `tutorial_starter_deck_widget.dart:40` | Copie du pool du draft, filtrée **sans** tri | Même tri, via `CardData.compareByDisplayOrder` |
 
 Reste une conséquence assumée : `relic_exchange_screen.dart:125` **recalcule** la relique offerte à
 chaque affichage. Une run reprise après migration verra une autre relique au même nœud — non parce
@@ -535,7 +538,7 @@ Le test d'équivalence est supprimé une fois la migration fusionnée.
 | `lib/ui/screens/game_screen.dart` | 254 | 1 | Liste de préchargement passée au constructeur |
 | `lib/game/systems/state_sync_system.dart` | 42, 46 | 1, 2 | Repli d'image en dur, puis repli `.first` |
 | `lib/game/components/entities/enemy_card.dart` | 73 | 1 | Repli d'image en dur supprimé |
-| `lib/models/data/passive_data.dart` | 67-120 | 1 | `fallback()` **supprimé** (D11) — **7 points d'appel dans 5 fichiers** |
+| `lib/models/data/passive_data.dart` | 67-120 | 1 | `fallback()` **supprimé** (D11) — **7 points d'appel dans 4 fichiers**, plus sa déclaration ici |
 | `lib/game/systems/trait_system.dart` | 12, 38, 54 | 1 | Passif absent = aucun effet, plus d'objet dégradé |
 | `lib/game/controllers/run_controller.dart` | 170, 217, 250 | 1 | Chargement de sauvegarde, état initial, démarrage de run |
 | `lib/ui/widgets/map/dialogs/stats_dialog.dart` | 60 | 1 | Affichage du passif |
@@ -581,7 +584,7 @@ Le test d'équivalence est supprimé une fois la migration fusionnée.
 | **Pubspec synchronisé** | 3 | `dart run tool/sync_assets.dart --check` sort en 0 |
 | **Isolation du tutoriel** *(existant)* | — | `test/tutorial/tutorial_isolation_test.dart` continue de passer |
 
-**377 tests au vert et `dart analyze` à zéro problème** après chaque lot, conformément à `CLAUDE.md`.
+**388 tests au vert et `dart analyze` à zéro problème** après chaque lot, conformément à `CLAUDE.md`.
 
 ---
 
@@ -604,8 +607,14 @@ Le test d'équivalence est supprimé une fois la migration fusionnée.
 - **`.agents/skills/game_designer.md:12`** : énumère les catalogues, `skills.json` compris.
 - **`docs/INDEX.md`** : entrée sous « Héros, classes & cartes ». **`docs/ROADMAP.md`** : nouvelle
   fiche entre P-40 et P-41.
-- **Patch note** : le joueur ne voit rien d'autre que la casse de sauvegarde de §3.3, qui relève d'un
-  build alpha. Aucune entrée `patch_notes.json` n'est justifiée.
+- **Patch note** : à trancher, sur un constat corrigé. Cette spec affirmait que le joueur ne voyait
+  rien hors la casse de sauvegarde de §3.3 — c'est faux, et mesuré sur les données livrées : le
+  dictionnaire réordonne ses trois groupes de cartes et ses cinq groupes de reliques, et le pool du
+  draft de départ — le tout premier écran de choix d'une run — est entièrement réordonné. Ce sont
+  des changements visibles, voulus et sans effet sur l'équilibrage, mais visibles. La décision
+  d'écrire ou non une entrée revient au propriétaire du projet ; si elle est prise, elle passe par
+  la skill `patch-notes-writer`, qui fait bouger ensemble `patch_notes.json`, `pubspec.yaml` et
+  `site/_site/versions.json`.
 
 ---
 
