@@ -104,5 +104,46 @@ void main() {
       expect(result.exitCode, 0);
       expect(File('${sandbox.path}/pubspec.yaml').readAsStringSync(), before);
     });
+
+    test('refuse et laisse le fichier intact si "  assets:" est dupliquee', () async {
+      // Une dependance nommee `assets` produit aussi une ligne "  assets:" :
+      // `dependencies:` indente ses enfants de 2 espaces, exactement comme
+      // `flutter:`. Le script ne doit pas deviner laquelle des deux lignes
+      // est la section a synchroniser.
+      const pubspec = 'name: sandbox\r\n'
+          'environment:\r\n'
+          '  sdk: ^3.11.4\r\n'
+          'dependencies:\r\n'
+          '  assets:\r\n'
+          '    git:\r\n'
+          '      url: https://example.com/assets.git\r\n'
+          'flutter:\r\n'
+          '  uses-material-design: true\r\n'
+          '  assets:\r\n'
+          '    - assets/images/\r\n'
+          '  fonts: []\r\n';
+      write('assets/images/bg.png', 'x');
+      write('pubspec.yaml', pubspec);
+
+      final result = await _run([], cwd: sandbox.path);
+      expect(result.exitCode, 2, reason: '${result.stdout}${result.stderr}');
+      expect(result.stderr.toString(), contains('lignes 5, 10'));
+      expect(File('${sandbox.path}/pubspec.yaml').readAsStringSync(), pubspec);
+    });
+
+    test('refuse et laisse le fichier intact si une entree de liste suit '
+        'le bloc a une indentation etrangere', () async {
+      write('assets/images/bg.png', 'x');
+      // 2 espaces au lieu de 4 : ni lue comme faisant partie du bloc (le
+      // while de `main` ne consomme que `'    - '`, 4 espaces), ni reconnue
+      // comme une section suivante.
+      final pubspec = pubspecWith('  - assets/legacy/\r\n');
+      write('pubspec.yaml', pubspec);
+
+      final result = await _run([], cwd: sandbox.path);
+      expect(result.exitCode, 2, reason: '${result.stdout}${result.stderr}');
+      expect(result.stderr.toString(), contains('assets/legacy/'));
+      expect(File('${sandbox.path}/pubspec.yaml').readAsStringSync(), pubspec);
+    });
   });
 }

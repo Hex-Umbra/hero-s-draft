@@ -10,6 +10,12 @@
 // Usage :
 //   dart run tool/sync_assets.dart           regenere la section
 //   dart run tool/sync_assets.dart --check   sort en 1 si elle a derive
+//
+// Le script refuse de travailler (exit 2, stderr, fichier intact) plutot que
+// de deviner face a un pubspec.yaml ambigu : cle "  assets:" dupliquee
+// (_checkNoDuplicateAssetsLine) ou entree de liste juste apres le bloc a une
+// indentation etrangere (_checkTrailingIndentation). Les deux gardes
+// s appliquent aussi en mode --check, avant tout diagnostic.
 
 import 'dart:io';
 
@@ -22,6 +28,7 @@ void main(List<String> args) {
   final eol = content.contains('\r\n') ? '\r\n' : '\n';
 
   final lines = content.split(eol);
+  _checkNoDuplicateAssetsLine(lines);
   final start = lines.indexWhere((l) => l == '  assets:');
   if (start == -1) {
     stderr.writeln('pubspec.yaml : section "  assets:" introuvable.');
@@ -32,6 +39,7 @@ void main(List<String> args) {
   while (end < lines.length && lines[end].startsWith('    - ')) {
     end++;
   }
+  _checkTrailingIndentation(lines, end);
 
   final current = lines
       .sublist(start + 1, end)
@@ -70,6 +78,57 @@ void main(List<String> args) {
   ];
   pubspec.writeAsStringSync(rebuilt.join(eol));
   stdout.writeln('pubspec.yaml regenere : ${expected.length} entrees.');
+}
+
+/// Refuse de continuer si "  assets:" apparait plus d une fois dans le
+/// fichier : un pubspec.yaml peut porter une dependance nommee `assets` (les
+/// enfants de `dependencies:` sont eux aussi indentes de 2 espaces), et
+/// deviner laquelle est la bonne reecrirait silencieusement la mauvaise
+/// section.
+void _checkNoDuplicateAssetsLine(List<String> lines) {
+  final matches = [
+    for (var i = 0; i < lines.length; i++)
+      if (lines[i] == '  assets:') i,
+  ];
+  if (matches.length <= 1) return;
+
+  final lineNumbers = matches.map((i) => i + 1).join(', ');
+  stderr.writeln(
+    'pubspec.yaml : plusieurs lignes "  assets:" trouvees (lignes '
+    '$lineNumbers) ; impossible de determiner laquelle est la section '
+    'assets de flutter: a synchroniser.',
+  );
+  exit(2);
+}
+
+/// Refuse de continuer si une entree de liste suit immediatement le bloc
+/// `assets:` a une indentation autre que 4 espaces. Une telle ligne n a ete
+/// comptee ni dans le bloc (elle a arrete la boucle qui calcule [end]) ni
+/// reconnue comme une section suivante : la laisser en l etat ferait
+/// inserer le nouveau bloc par-dessus, doublons sous deux indentations. Le
+/// balayage s arrete a la premiere ligne qui n est pas une entree de liste,
+/// pour ne pas confondre avec une section `fonts:` legitime qui suivrait.
+void _checkTrailingIndentation(List<String> lines, int end) {
+  final listEntry = RegExp(r'^(\s*)- ');
+  final rogueLines = <int>[];
+
+  for (var i = end; i < lines.length; i++) {
+    final match = listEntry.firstMatch(lines[i]);
+    if (match == null) break;
+    if (match.group(1)!.length != 4) {
+      rogueLines.add(i);
+    }
+  }
+  if (rogueLines.isEmpty) return;
+
+  for (final i in rogueLines) {
+    stderr.writeln(
+      'pubspec.yaml ligne ${i + 1} : "${lines[i]}" — entree de liste a '
+      'une indentation inattendue (4 espaces requis) ; corriger '
+      'l indentation.',
+    );
+  }
+  exit(2);
 }
 
 bool _sameOrder(List<String> a, List<String> b) {
