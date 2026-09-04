@@ -125,11 +125,11 @@ Arrêtées avec le propriétaire du projet les 2026-08-26 et 2026-09-04 (deux pa
 | D8 | **La réorganisation précède le devtool d'édition** | Le devtool devient trivial une fois la structure en place |
 | D9 | **Les ids de passifs sont renommés en `snake_case`, et la casse des sauvegardes est acceptée** | Le jeu est en alpha ; aucune sauvegarde en circulation ne justifie une migration de schéma. Voir §3.3 |
 | D10 | **`class.json` gagne un champ `displayOrder`** | L'ordre d'affichage des classes est une donnée de présentation ; sa place est dans la donnée, et ça reste vrai quand P-42 ajoutera des classes |
-| D11 | **`PassiveData.fallback()` est supprimé au lot 1** | Même motif et même lot que les trois replis d'images : un passif introuvable est un bug, pas un cas à masquer. Le supprimer **avant** le lot 2 est aussi ce qui évite que le renommage traverse un `fallback('regenArmor')` codé en dur (`run_controller.dart:217`) |
+| D11 | **`PassiveData.fallback()` est supprimé au lot 1** | Même motif et même lot que les trois replis d'images : un passif introuvable est un bug, pas un cas à masquer. Le supprimer **avant** le lot 2 est aussi ce qui évite que le renommage traverse un `fallback('regenArmor')` codé en dur (`run_controller.dart:216`) |
 
 ### 3.1 Le prérequis P-40 est levé
 
-`ROADMAP.md:396-399` charte P-40 en trois blocs. **Seul le bloc 1 — la suppression de la chaîne
+La fiche **P-40** de `ROADMAP.md` charte trois blocs. **Seul le bloc 1 — la suppression de la chaîne
 `skills.json` — conditionnait ce chantier, et il est livré** : commit `ced306e`, 34 fichiers,
 +49/−544, `dart analyze` propre et 377 tests au vert.
 
@@ -303,7 +303,7 @@ Trois propriétés que la signature précédente ne pouvait pas offrir :
 `gameDataLoaderProvider` reste l'entrée publique et instancie `GameDataLoader(rootBundle)`.
 `_loadJsonList` et `_mapList` disparaissent — `loadAudioData` n'en utilise aucun.
 
-> **Note pour P-26.** `ROADMAP.md:387` prévoit `GameDataRegistry` en `Map` O(1) pour supprimer les
+> **Note pour P-26.** La fiche **P-26** de `ROADMAP.md` prévoit `GameDataRegistry` en `Map` O(1) pour supprimer les
 > quatre recherches linéaires des `getById`. Le chargeur construisant déjà les collections, les
 > produire en `Map<String, T>` coûte peu ici. À trancher à l'écriture du plan.
 
@@ -548,6 +548,8 @@ Le test d'équivalence est supprimé une fois la migration fusionnée.
 | `lib/ui/widgets/map/dialogs/stats_dialog.dart` | 43 | 2 | Repli `.first` supprimé |
 | `lib/ui/screens/relic_exchange_screen.dart` | 144 | 2 | Repli `.first` supprimé |
 | `lib/models/data/hero_skills_link.dart` | 9-11 | 2 | Repli silencieux supprimé |
+| `lib/tutorial/tutorial_fixtures.dart` | 57 | 2 | Le pool de draft du tutoriel trié comme celui de l'écran |
+| `lib/models/data/card_data.dart` | — | 2 | Gagne `compareByDisplayOrder`, comparateur partagé par les trois sites de tri |
 | `lib/models/data/hero_data.dart` | — | 2 | Champ `displayOrder` (D10) |
 | `assets/data/passives.json` + `heroes.json` | — | 2 | Ids renommés, `displayOrder` ajouté |
 | ~20 fichiers de `test/` | — | 2 | Ids de passifs en dur à mettre à jour |
