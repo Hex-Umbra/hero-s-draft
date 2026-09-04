@@ -53,8 +53,9 @@ class TutorialFixtures {
   PassiveData passiveFor(HeroData hero) =>
       registry.passives.firstWhere((p) => p.id == hero.passiveTrait);
 
-  /// Le pool du draft de départ, filtré comme `StarterDeckDraftScreen`.
+  /// Le pool du draft de départ, filtré et trié comme `StarterDeckDraftScreen`.
   List<CardData> get starterPool => registry.cards
       .where((c) => c.category == CardCategory.global && c.type != CardType.status)
-      .toList();
+      .toList()
+    ..sort(CardData.compareByDisplayOrder);
 }

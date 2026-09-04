@@ -31,7 +31,7 @@ Relevées le **2026-09-04**, sur `ced306e` — c'est-à-dire **après la livrais
 | Mesure | Valeur |
 |:---|:---|
 | `dart analyze` | `No issues found!` |
-| `flutter test` | **377 tests au vert** |
+| `flutter test` | **387 tests au vert** |
 | Fichiers dans `assets/data/` | **10** |
 | Entités réparties en 8 catalogues | **71** |
 | Lectures de bundle au démarrage | **9** — 8 catalogues + `audio.json` *(`patch_notes.json` n'est lu que par son écran)* |

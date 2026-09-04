@@ -93,13 +93,7 @@ class CardDictionaryScreen extends ConsumerWidget {
       groupedCards[card.type]!.add(card);
     }
     for (final group in groupedCards.values) {
-      group.sort((a, b) {
-        final byRarity = a.rarity.index.compareTo(b.rarity.index);
-        if (byRarity != 0) return byRarity;
-        final byCost = a.cost.compareTo(b.cost);
-        if (byCost != 0) return byCost;
-        return a.id.compareTo(b.id);
-      });
+      group.sort(CardData.compareByDisplayOrder);
     }
     groupedCards.removeWhere((_, cards) => cards.isEmpty);
 

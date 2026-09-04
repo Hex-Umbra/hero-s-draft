@@ -58,13 +58,7 @@ class _StarterDeckDraftScreenState
         .toList()
       // Le pool est affiché et sélectionné par index, sans mélange : sans tri
       // explicite, le premier choix d'une run suivrait l'ordre de cards.json.
-      ..sort((a, b) {
-        final byRarity = a.rarity.index.compareTo(b.rarity.index);
-        if (byRarity != 0) return byRarity;
-        final byCost = a.cost.compareTo(b.cost);
-        if (byCost != 0) return byCost;
-        return a.id.compareTo(b.id);
-      });
+      ..sort(CardData.compareByDisplayOrder);
 
     setState(() {
       _draftPool = globalCards;
