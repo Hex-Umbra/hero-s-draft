@@ -166,9 +166,6 @@ class RunState {
             category: 'passive',
           ),
         );
-        activePassive = PassiveData.fallback(
-          json['passiveTrait'] as String? ?? '',
-        );
       }
     }
 
@@ -213,7 +210,7 @@ class RunController extends Notifier<RunState> {
       act: 1,
       heroClassId: 'paladin',
       passiveTrait: 'regenArmor',
-      activePassive: PassiveData.fallback('regenArmor'),
+      activePassive: null,
       heroStats: EntityStats(
         maxPv: 100,
         currentPv: 100,
@@ -245,8 +242,7 @@ class RunController extends Notifier<RunState> {
       act: 1,
       heroClassId: chosenClass.id,
       passiveTrait: chosenClass.passiveTrait,
-      activePassive:
-          activePassive ?? PassiveData.fallback(chosenClass.passiveTrait ?? ''),
+      activePassive: activePassive,
       heroStats: EntityStats(
         maxPv: chosenClass.maxHp,
         currentPv: chosenClass.maxHp,

@@ -100,20 +100,16 @@ void main() {
       expect(restoredLegacy.cardsPerTurn, 5);
     });
 
-    test('falls back to PassiveData.fallback and reports a missing passive', () {
+    test('leaves activePassive null and reports a missing passive', () {
       final json = buildRunState().toJson();
       json['activePassiveId'] = 'removed_passive';
       json['activePassiveNameFr'] = 'Passif Retiré';
       json['activePassiveNameEn'] = 'Removed Passive';
-      // Use an unrecognized passiveTrait too, so PassiveData.fallback has no
-      // hardcoded match and genuinely falls through to its 'none' default
-      // (passiveTrait: 'regenArmor' would otherwise itself be a known
-      // fallback fixture and mask the "nothing to fall back to" case).
       json['passiveTrait'] = 'removed_passive';
 
       final (restored, missing) = RunState.fromJsonWithReport(json);
 
-      expect(restored.activePassive?.id, 'none');
+      expect(restored.activePassive, isNull);
       expect(missing, [
         const MissingSaveItem(
           id: 'removed_passive',
