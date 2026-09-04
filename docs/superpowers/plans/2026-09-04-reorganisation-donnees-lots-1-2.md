@@ -237,7 +237,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 ```
 
-Vérifier avant de retirer : `git show ced306e:lib/game/heros_draft_game.dart | grep -n "jsonDecode\|rootBundle"` ne doit plus renvoyer que les lignes du bloc supprimé.
+Vérifier **dans l'arbre de travail**, après l'édition du Step 2 : `grep -n "jsonDecode\|rootBundle" lib/game/heros_draft_game.dart` ne doit renvoyer aucune ligne. (Ne pas interroger `git show ced306e:` — ce serait la version d'avant l'édition.)
 
 - [ ] **Step 4: Brancher l'appelant**
 
