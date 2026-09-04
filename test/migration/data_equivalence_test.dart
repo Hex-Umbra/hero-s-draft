@@ -31,6 +31,17 @@ void _expectSameEntities(
   Map<String, Map<String, dynamic>> migrated,
   String label,
 ) {
+  // Deux entites partageant un id se fondraient en un seul fichier cote
+  // migrated : la comparaison d ensembles ci-dessous ne verrait alors que
+  // des ids uniques des deux cotes, et ne remarquerait rien. La
+  // cardinalite, elle, les distingue.
+  expect(
+    migrated.length,
+    reference.length,
+    reason: '$label : cardinalite differente — un id duplique cote '
+        'reference a peut etre fondu deux entites en une seule',
+  );
+
   final referenceIds = reference.map((e) => e['id'] as String).toSet();
   expect(
     migrated.keys.toSet(),
@@ -86,7 +97,59 @@ Map<String, Map<String, dynamic>> _flatCategory(String directory) {
   };
 }
 
+/// Les 8 catalogues que `assets/data/*.json` contient encore aujourd hui,
+/// et que `gameDataLoaderProvider` lit reellement, jusqu a la tache 7.
+const _catalogues = [
+  'cards.json',
+  'hero_cards.json',
+  'relics.json',
+  'events.json',
+  'enemies.json',
+  'heroes.json',
+  'passives.json',
+  'forge_upgrades.json',
+];
+
+bool _identicalBytes(List<int> a, List<int> b) {
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    if (a[i] != b[i]) return false;
+  }
+  return true;
+}
+
 void main() {
+  group('Garde de la reference — les catalogues vivants n ont pas derive', () {
+    // Le reste de ce fichier compare `test/migration/reference/` au nouvel
+    // arbre, jamais a `assets/data/*.json` — pourtant c est ce dernier que
+    // l application lit encore aujourd hui, et lira jusqu a la tache 7.
+    // La reference est le temoin sur lequel repose toute la preuve
+    // d equivalence de ce fichier : si elle decroche de ce que l application
+    // lit reellement, cette preuve ne prouve plus rien. Et une fois la
+    // tache 7 passee — qui supprime les 8 catalogues pour de bon — ce test
+    // devient a jamais impossible a rejouer : c est maintenant ou jamais.
+    test(
+        'les 8 catalogues de assets/data sont octet pour octet identiques '
+        'a leur copie figee dans test/migration/reference', () {
+      final drifted = <String>[];
+      for (final catalogue in _catalogues) {
+        final live = File('assets/data/$catalogue').readAsBytesSync();
+        final frozen =
+            File('test/migration/reference/$catalogue').readAsBytesSync();
+        if (!_identicalBytes(live, frozen)) {
+          drifted.add(catalogue);
+        }
+      }
+
+      expect(
+        drifted,
+        isEmpty,
+        reason: 'catalogue(s) ayant derive de test/migration/reference/ : '
+            '${drifted.join(', ')}',
+      );
+    });
+  });
+
   group('Equivalence de la migration — categories a plat', () {
     const plain = {
       'cards.json': 'cards',
