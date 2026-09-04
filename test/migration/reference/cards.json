@@ -1,0 +1,368 @@
+[
+  {
+    "id": "strike_basic",
+    "name_en": "Strike",
+    "name_fr": "Frappe",
+    "description_en": "Deal 6 damage.",
+    "description_fr": "Inflige 6 dégâts.",
+    "cost": 1,
+    "type": "attack",
+    "category": "global",
+    "rarity": "common",
+    "target": "singleEnemy",
+    "animation": "melee",
+    "effects": [
+      {
+        "type": "damage",
+        "value": 6
+      }
+    ]
+  },
+  {
+    "id": "defend_basic",
+    "name_en": "Defend",
+    "name_fr": "Défense",
+    "description_en": "Gain 5 Block.",
+    "description_fr": "Gagne 5 d'Armure.",
+    "cost": 1,
+    "type": "skill",
+    "category": "global",
+    "rarity": "common",
+    "target": "self",
+    "animation": "buff",
+    "effects": [
+      {
+        "type": "armor",
+        "value": 5
+      }
+    ]
+  },
+  {
+    "id": "quick_attack",
+    "name_en": "Quick Attack",
+    "name_fr": "Attaque Rapide",
+    "description_en": "Deal 3 damage and draw 1 card.",
+    "description_fr": "Inflige 3 dégâts et pioche 1 carte.",
+    "cost": 1,
+    "type": "attack",
+    "category": "global",
+    "rarity": "common",
+    "target": "singleEnemy",
+    "animation": "melee",
+    "effects": [
+      {
+        "type": "damage",
+        "value": 3
+      },
+      {
+        "type": "draw",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "sweep",
+    "name_en": "Sweep",
+    "name_fr": "Balayage",
+    "description_en": "Deal 3 damage to all enemies.",
+    "description_fr": "Inflige 3 dégâts à tous les ennemis.",
+    "cost": 1,
+    "type": "attack",
+    "category": "global",
+    "rarity": "common",
+    "target": "allEnemies",
+    "animation": "magic",
+    "effects": [
+      {
+        "type": "damage",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "concentration",
+    "name_en": "Concentration",
+    "name_fr": "Concentration",
+    "description_en": "Draw 2 cards.",
+    "description_fr": "Pioche 2 cartes.",
+    "cost": 0,
+    "type": "skill",
+    "category": "global",
+    "rarity": "common",
+    "target": "self",
+    "animation": "buff",
+    "isExhaust": true,
+    "effects": [
+      {
+        "type": "draw",
+        "value": 2
+      }
+    ]
+  },
+  {
+    "id": "heal_potion",
+    "name_en": "Healing Potion",
+    "name_fr": "Potion de Soin",
+    "description_en": "Heal 3 HP.",
+    "description_fr": "Soigne 3 PV.",
+    "cost": 1,
+    "type": "skill",
+    "category": "global",
+    "rarity": "common",
+    "target": "self",
+    "animation": "buff",
+    "isExhaust": true,
+    "effects": [
+      {
+        "type": "heal",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "iron_wall",
+    "name_en": "Iron Wall",
+    "name_fr": "Mur de Fer",
+    "description_en": "Gain 10 Block.",
+    "description_fr": "Gagne 10 d'Armure.",
+    "cost": 2,
+    "type": "skill",
+    "category": "global",
+    "rarity": "common",
+    "target": "self",
+    "animation": "buff",
+    "effects": [
+      {
+        "type": "armor",
+        "value": 10
+      }
+    ]
+  },
+  {
+    "id": "heavy_strike",
+    "name_en": "Heavy Strike",
+    "name_fr": "Frappe Lourde",
+    "description_en": "Deal 12 damage.",
+    "description_fr": "Inflige 12 dégâts.",
+    "cost": 2,
+    "type": "attack",
+    "category": "global",
+    "rarity": "common",
+    "target": "singleEnemy",
+    "animation": "melee",
+    "effects": [
+      {
+        "type": "damage",
+        "value": 12
+      }
+    ]
+  },
+  {
+    "id": "awakening",
+    "name_en": "Awakening",
+    "name_fr": "Éveil",
+    "description_en": "Gain 4 Block and draw 1 card.",
+    "description_fr": "Gagne 4 d'Armure et pioche 1 carte.",
+    "cost": 1,
+    "type": "skill",
+    "category": "global",
+    "rarity": "common",
+    "target": "self",
+    "animation": "buff",
+    "effects": [
+      {
+        "type": "armor",
+        "value": 4
+      },
+      {
+        "type": "draw",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "warcry",
+    "name_en": "Warcry",
+    "name_fr": "Cri de Guerre",
+    "description_en": "Deal 4 damage to all enemies and gain 4 Block.",
+    "description_fr": "Inflige 4 dégâts à tous les ennemis et gagne 4 d'Armure.",
+    "cost": 2,
+    "type": "attack",
+    "category": "global",
+    "rarity": "common",
+    "target": "allEnemies",
+    "animation": "magic",
+    "effects": [
+      {
+        "type": "damage",
+        "value": 4
+      },
+      {
+        "type": "armor",
+        "value": 4
+      }
+    ]
+  },
+  {
+    "id": "demon_form",
+    "name_en": "Demon Form",
+    "name_fr": "Forme Démoniaque",
+    "description_en": "Gain 2 Strength for 4 turns.",
+    "description_fr": "Gagne 2 Force pendant 4 tours.",
+    "cost": 2,
+    "type": "power",
+    "category": "global",
+    "rarity": "common",
+    "target": "self",
+    "animation": "buff",
+    "effects": [
+      {
+        "type": "apply_status",
+        "statusId": "strength",
+        "value": 2,
+        "duration": 4
+      }
+    ]
+  },
+  {
+    "id": "metallicize",
+    "name_en": "Metallicize",
+    "name_fr": "Métallisation",
+    "description_en": "For 2 turns, gain 2 Block at start of turn.",
+    "description_fr": "Pendant 2 tours, gagne 2 Armure au début du tour.",
+    "cost": 1,
+    "type": "power",
+    "category": "global",
+    "rarity": "common",
+    "target": "self",
+    "animation": "buff",
+    "effects": [
+      {
+        "type": "apply_status",
+        "statusId": "armor_regen",
+        "value": 2,
+        "duration": 2
+      }
+    ]
+  },
+  {
+    "id": "poison_stab",
+    "name_en": "Poison Stab",
+    "name_fr": "Coup Empoisonné",
+    "description_en": "Deal 3 damage. Apply 1 Poison.",
+    "description_fr": "Inflige 3 dégâts. Applique 1 Poison.",
+    "cost": 1,
+    "type": "attack",
+    "category": "global",
+    "rarity": "common",
+    "target": "singleEnemy",
+    "animation": "poison",
+    "effects": [
+      {
+        "type": "damage",
+        "value": 3
+      },
+      {
+        "type": "apply_status",
+        "statusId": "poison",
+        "value": 1,
+        "duration": 2
+      }
+    ]
+  },
+  {
+    "id": "fireball",
+    "name_en": "Fireball",
+    "name_fr": "Boule de Feu",
+    "description_en": "Deal 6 damage. Apply 2 Burn.",
+    "description_fr": "Inflige 6 dégâts. Applique 2 Brûlure.",
+    "cost": 2,
+    "type": "attack",
+    "category": "global",
+    "rarity": "common",
+    "target": "singleEnemy",
+    "animation": "fire",
+    "effects": [
+      {
+        "type": "damage",
+        "value": 6
+      },
+      {
+        "type": "apply_status",
+        "statusId": "burn",
+        "value": 2,
+        "duration": 2
+      }
+    ]
+  },
+  {
+    "id": "ice_bolt",
+    "name_en": "Ice Bolt",
+    "name_fr": "Trait de Glace",
+    "description_en": "Deal 4 damage. Apply 1 Freeze.",
+    "description_fr": "Inflige 4 dégâts. Applique 1 Gel.",
+    "cost": 1,
+    "type": "attack",
+    "category": "global",
+    "rarity": "common",
+    "target": "singleEnemy",
+    "animation": "ice",
+    "effects": [
+      {
+        "type": "damage",
+        "value": 4
+      },
+      {
+        "type": "apply_status",
+        "statusId": "freeze",
+        "value": 1,
+        "duration": 1
+      }
+    ]
+  },
+  {
+    "id": "thunder_clap",
+    "name_en": "Thunderclap",
+    "name_fr": "Coup de Tonnerre",
+    "description_en": "Deal 4 damage. Apply 1 Shock.",
+    "description_fr": "Inflige 4 dégâts. Applique 1 Électrocution.",
+    "cost": 1,
+    "type": "attack",
+    "category": "global",
+    "rarity": "common",
+    "target": "singleEnemy",
+    "animation": "lightning",
+    "effects": [
+      {
+        "type": "damage",
+        "value": 4
+      },
+      {
+        "type": "apply_status",
+        "statusId": "shock",
+        "value": 1,
+        "duration": 1
+      }
+    ]
+  },
+  {
+    "id": "focus",
+    "name_en": "Focus",
+    "name_fr": "Focalisation",
+    "description_en": "Gain 1 Mana this turn.",
+    "description_fr": "Gagnez 1 de Mana ce tour-ci.",
+    "cost": 0,
+    "type": "skill",
+    "category": "global",
+    "rarity": "common",
+    "target": "self",
+    "animation": "buff",
+    "isExhaust": true,
+    "effects": [
+      {
+        "type": "gain_mana",
+        "value": 1
+      }
+    ]
+  }
+]

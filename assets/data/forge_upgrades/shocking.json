@@ -1,0 +1,19 @@
+{
+  "id": "shocking",
+  "name_en": "Shocking",
+  "name_fr": "Surchargé",
+  "description_en": "Applies {tier} Shock",
+  "description_fr": "Applique {tier} Électrocution",
+  "icon": "flash_on_rounded",
+  "color": "amberAccent",
+  "pools": [
+    "common",
+    "uncommon",
+    "rare"
+  ],
+  "eligibleCardTypes": [
+    "attack"
+  ],
+  "weight": 80,
+  "emoji": "⚡"
+}

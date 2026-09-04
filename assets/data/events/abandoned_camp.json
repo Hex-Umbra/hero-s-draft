@@ -1,0 +1,53 @@
+{
+  "id": "abandoned_camp",
+  "title_en": "The Abandoned Camp",
+  "title_fr": "Le Feu de Camp Abandonné",
+  "description_en": "Embers still smoke in this deserted camp. The former occupants seem to have fled in a hurry, leaving some belongings behind.",
+  "description_fr": "Des braises fument encore dans ce campement déserté. Les anciens occupants semblent être partis précipitamment, laissant quelques affaires.",
+  "choices": [
+    {
+      "text_en": "Rummage through remaining bags (-10 HP, +1 Relic)",
+      "text_fr": "Fouiller les sacs restants (-10 PV, +1 Relique)",
+      "result_text_en": "While searching the bags, you get bitten by a venomous spider, but find a valuable relic.",
+      "result_text_fr": "En fouillant les sacs, vous vous faites mordre par une araignée venimeuse, mais trouvez une relique de valeur.",
+      "actions": [
+        {
+          "type": "take_damage",
+          "value": 10
+        },
+        {
+          "type": "gain_relic",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "text_en": "Rest by the fire (+15 HP)",
+      "text_fr": "Se reposer près du feu (+15 PV)",
+      "result_text_en": "You spend a peaceful moment warming yourself, restoring some health.",
+      "result_text_fr": "Vous passez un moment paisible à vous réchauffer, ce qui restaure une partie de votre santé.",
+      "actions": [
+        {
+          "type": "heal",
+          "value": 15
+        }
+      ]
+    },
+    {
+      "text_en": "Purchase left-behind provisions (-25 Gold, +30 HP)",
+      "text_fr": "Consommer les provisions abandonnées (-25 Or, +30 PV)",
+      "result_text_en": "You leave some gold in an honest-box and eat the well-preserved rations.",
+      "result_text_fr": "Vous laissez de l'or dans une boîte honnête et mangez les rations bien conservées.",
+      "actions": [
+        {
+          "type": "spend_gold",
+          "value": 25
+        },
+        {
+          "type": "heal",
+          "value": 30
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "id": "pen_nib",
+  "name_en": "Pen Nib",
+  "name_fr": "Plume de scribe",
+  "description_en": "Every 5 cards played, gain 3 Strength for the current turn.",
+  "description_fr": "Toutes les 5 cartes jouées, gagne 3 Force pour le tour en cours.",
+  "trigger": "onCardPlayed",
+  "effectType": "charge_strength_turn",
+  "value": 3,
+  "rarity": "uncommon",
+  "emoji": "🖋️"
+}

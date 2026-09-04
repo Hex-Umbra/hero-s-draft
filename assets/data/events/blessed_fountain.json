@@ -1,0 +1,53 @@
+{
+  "id": "blessed_fountain",
+  "title_en": "The Blessed Fountain",
+  "title_fr": "La Fontaine Bénie",
+  "description_en": "You find a crystal-clear fountain adorned with angel statues. The water seems to radiate a gentle warmth.",
+  "description_fr": "Vous découvrez une fontaine d'eau cristalline ornée de statues d'anges. L'eau semble irradier une douce chaleur.",
+  "choices": [
+    {
+      "text_en": "Drink the blessed water (+25 HP)",
+      "text_fr": "Boire l'eau bénie (+25 PV)",
+      "result_text_en": "The water tastes sweet and pure. Your wounds heal instantly.",
+      "result_text_fr": "L'eau a un goût doux et pur. Vos blessures guérissent instantanément.",
+      "actions": [
+        {
+          "type": "heal",
+          "value": 25
+        }
+      ]
+    },
+    {
+      "text_en": "Purify your mind (-12 Max HP, +1 Attack)",
+      "text_fr": "Purifier son esprit (-12 PV Max, +1 Attaque)",
+      "result_text_en": "You plunge your head into the fountain. The pain is intense, but your mind becomes incredibly sharp.",
+      "result_text_fr": "Vous plongez votre tête dans la fontaine. La douleur est vive, mais votre esprit devient incroyablement aiguisé.",
+      "actions": [
+        {
+          "type": "gain_max_hp",
+          "value": -12
+        },
+        {
+          "type": "gain_strength",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "text_en": "Toss a coin into the fountain (-20 Gold, +8 Max HP)",
+      "text_fr": "Jeter une pièce dans la fontaine (-20 Or, +8 PV Max)",
+      "result_text_en": "The coin sparkles as it sinks. You feel a permanent blessing washing over you.",
+      "result_text_fr": "La pièce scintille en coulant. Vous sentez une bénédiction permanente vous envahir.",
+      "actions": [
+        {
+          "type": "spend_gold",
+          "value": 20
+        },
+        {
+          "type": "gain_max_hp",
+          "value": 8
+        }
+      ]
+    }
+  ]
+}

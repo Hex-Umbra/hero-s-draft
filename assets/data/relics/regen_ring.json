@@ -1,0 +1,12 @@
+{
+  "id": "regen_ring",
+  "name_en": "Ring of Regeneration",
+  "name_fr": "Anneau de Régénération",
+  "description_en": "Restore 2 HP at the end of each turn.",
+  "description_fr": "Restaure 2 PV à la fin de chaque tour.",
+  "trigger": "endOfTurn",
+  "effectType": "heal",
+  "value": 2,
+  "rarity": "rare",
+  "emoji": "💍"
+}

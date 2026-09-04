@@ -1,0 +1,10 @@
+{
+  "id": "berserker_armor",
+  "name_en": "Berserker Armor",
+  "name_fr": "Armure du Berserker",
+  "description_en": "Gain 1 Block (+ Mastery) at the start of your turn for every 10 missing HP.",
+  "description_fr": "Gagne 1 point d'Armure (+ Maîtrise) au début du tour pour chaque tranche de 10 PV manquants.",
+  "trigger": "startOfTurn",
+  "effectType": "berserker_armor",
+  "value": 1
+}

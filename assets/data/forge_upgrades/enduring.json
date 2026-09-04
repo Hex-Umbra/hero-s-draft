@@ -1,0 +1,20 @@
+{
+  "id": "enduring",
+  "name_en": "Enduring",
+  "name_fr": "Persistant",
+  "description_en": "Removes Exhaust",
+  "description_fr": "Retire Épuisement (Exhaust)",
+  "icon": "hourglass_bottom_rounded",
+  "color": "greenAccent",
+  "pools": [
+    "rare"
+  ],
+  "eligibleCardTypes": [
+    "attack",
+    "skill",
+    "power"
+  ],
+  "requiresExhaust": true,
+  "weight": 30,
+  "emoji": "⏳"
+}

@@ -1,0 +1,20 @@
+{
+  "id": "heal_potion",
+  "name_en": "Healing Potion",
+  "name_fr": "Potion de Soin",
+  "description_en": "Heal 3 HP.",
+  "description_fr": "Soigne 3 PV.",
+  "cost": 1,
+  "type": "skill",
+  "category": "global",
+  "rarity": "common",
+  "target": "self",
+  "animation": "buff",
+  "isExhaust": true,
+  "effects": [
+    {
+      "type": "heal",
+      "value": 3
+    }
+  ]
+}

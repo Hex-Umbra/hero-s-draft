@@ -31,4 +31,19 @@ flutter:
     - assets/audio/music/
     - assets/audio/sfx/
     - assets/data/
+    - assets/data/cards/
+    - assets/data/classes/berserker/
+    - assets/data/classes/berserker/cards/
+    - assets/data/classes/mage/
+    - assets/data/classes/mage/cards/
+    - assets/data/classes/paladin/
+    - assets/data/classes/paladin/cards/
+    - assets/data/enemies/gobelin/
+    - assets/data/enemies/orc/
+    - assets/data/enemies/slime/
+    - assets/data/enemies/squelette/
+    - assets/data/events/
+    - assets/data/forge_upgrades/
+    - assets/data/passives/
+    - assets/data/relics/
     - assets/images/

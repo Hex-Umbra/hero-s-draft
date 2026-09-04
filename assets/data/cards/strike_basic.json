@@ -1,0 +1,19 @@
+{
+  "id": "strike_basic",
+  "name_en": "Strike",
+  "name_fr": "Frappe",
+  "description_en": "Deal 6 damage.",
+  "description_fr": "Inflige 6 dégâts.",
+  "cost": 1,
+  "type": "attack",
+  "category": "global",
+  "rarity": "common",
+  "target": "singleEnemy",
+  "animation": "melee",
+  "effects": [
+    {
+      "type": "damage",
+      "value": 6
+    }
+  ]
+}

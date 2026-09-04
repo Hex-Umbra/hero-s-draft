@@ -1,0 +1,47 @@
+[
+  {
+    "id": "paladin",
+    "name_en": "Paladin",
+    "name_fr": "Le Paladin",
+    "description_en": "Survival Oriented",
+    "description_fr": "Orienté Survie",
+    "iconPath": "assets/images/hero_paladin.png",
+    "maxHp": 100,
+    "maxMana": 3,
+    "baseDamage": 5,
+    "luck": 0,
+    "passiveTrait": "regen_armor",
+    "displayOrder": 1,
+    "skills": ["holy_shield", "smite"]
+  },
+  {
+    "id": "berserker",
+    "name_en": "Berserker",
+    "name_fr": "Le Berserker",
+    "description_en": "Damage Oriented",
+    "description_fr": "Orienté Dégâts",
+    "iconPath": "assets/images/hero_berserker.png",
+    "maxHp": 80,
+    "maxMana": 3,
+    "baseDamage": 15,
+    "luck": 0,
+    "passiveTrait": "berserker_armor",
+    "displayOrder": 2,
+    "skills": ["reckless_strike", "rage_form"]
+  },
+  {
+    "id": "mage",
+    "name_en": "Mage",
+    "name_fr": "Le Mage",
+    "description_en": "Alteration Oriented",
+    "description_fr": "Orienté Altération",
+    "iconPath": "assets/images/hero_mage.png",
+    "maxHp": 60,
+    "maxMana": 3,
+    "baseDamage": 10,
+    "luck": 0,
+    "passiveTrait": "spell_armor",
+    "displayOrder": 3,
+    "skills": ["magic_missile", "mana_surge"]
+  }
+]

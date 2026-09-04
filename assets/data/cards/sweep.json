@@ -1,0 +1,19 @@
+{
+  "id": "sweep",
+  "name_en": "Sweep",
+  "name_fr": "Balayage",
+  "description_en": "Deal 3 damage to all enemies.",
+  "description_fr": "Inflige 3 dégâts à tous les ennemis.",
+  "cost": 1,
+  "type": "attack",
+  "category": "global",
+  "rarity": "common",
+  "target": "allEnemies",
+  "animation": "magic",
+  "effects": [
+    {
+      "type": "damage",
+      "value": 3
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "id": "fireball",
+  "name_en": "Fireball",
+  "name_fr": "Boule de Feu",
+  "description_en": "Deal 6 damage. Apply 2 Burn.",
+  "description_fr": "Inflige 6 dégâts. Applique 2 Brûlure.",
+  "cost": 2,
+  "type": "attack",
+  "category": "global",
+  "rarity": "common",
+  "target": "singleEnemy",
+  "animation": "fire",
+  "effects": [
+    {
+      "type": "damage",
+      "value": 6
+    },
+    {
+      "type": "apply_status",
+      "statusId": "burn",
+      "value": 2,
+      "duration": 2
+    }
+  ]
+}

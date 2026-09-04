@@ -1,0 +1,12 @@
+{
+  "id": "vampiric_fang",
+  "name_en": "Vampiric Fang",
+  "name_fr": "Croc Vampirique",
+  "description_en": "Restore 8 HP each time an enemy dies.",
+  "description_fr": "Restaure 8 PV chaque fois qu'un ennemi meurt.",
+  "trigger": "onEnemyKilled",
+  "effectType": "heal",
+  "value": 8,
+  "rarity": "uncommon",
+  "emoji": "🧛"
+}

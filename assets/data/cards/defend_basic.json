@@ -1,0 +1,19 @@
+{
+  "id": "defend_basic",
+  "name_en": "Defend",
+  "name_fr": "Défense",
+  "description_en": "Gain 5 Block.",
+  "description_fr": "Gagne 5 d'Armure.",
+  "cost": 1,
+  "type": "skill",
+  "category": "global",
+  "rarity": "common",
+  "target": "self",
+  "animation": "buff",
+  "effects": [
+    {
+      "type": "armor",
+      "value": 5
+    }
+  ]
+}

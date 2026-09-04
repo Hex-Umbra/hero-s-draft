@@ -1,0 +1,20 @@
+{
+  "id": "sharp",
+  "name_en": "Sharp",
+  "name_fr": "Tranchant",
+  "description_en": "+{val} Damage on the card",
+  "description_fr": "+{val} Dégâts sur la carte",
+  "icon": "hardware_rounded",
+  "color": "redAccent",
+  "pools": [
+    "common",
+    "uncommon",
+    "rare"
+  ],
+  "eligibleCardTypes": [
+    "attack"
+  ],
+  "valueMultiplier": 2,
+  "weight": 100,
+  "emoji": "⚔️"
+}

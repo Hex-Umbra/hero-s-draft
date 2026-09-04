@@ -1,0 +1,22 @@
+{
+  "id": "squelette",
+  "name_en": "Skeleton",
+  "name_fr": "Squelette",
+  "maxHp": 22,
+  "baseDamage": 8,
+  "spritePath": "assets/data/enemies/squelette/sprite.png",
+  "tier": 2,
+  "xp": 50,
+  "critChance": 10,
+  "gold": 15,
+  "intents": [
+    {
+      "type": "attack",
+      "value": 8
+    },
+    {
+      "type": "attack",
+      "value": 10
+    }
+  ]
+}

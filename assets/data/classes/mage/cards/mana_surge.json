@@ -1,0 +1,26 @@
+{
+  "id": "mana_surge",
+  "name_en": "Mana Surge",
+  "name_fr": "Surtension de Mana",
+  "description_en": "Gain 1 Mana and draw 1 card.",
+  "description_fr": "Gagne 1 Mana et pioche 1 carte.",
+  "cost": 0,
+  "type": "skill",
+  "category": "characterSpecific",
+  "heroClass": "mage",
+  "rarity": "unique",
+  "target": "self",
+  "animation": "buff",
+  "isExhaust": true,
+  "effects": [
+    {
+      "type": "gain_mana",
+      "value": 1
+    },
+    {
+      "type": "draw",
+      "value": 1
+    }
+  ],
+  "baseMaxForgeUpgrades": 5
+}

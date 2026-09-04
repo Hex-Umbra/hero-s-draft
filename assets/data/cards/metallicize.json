@@ -1,0 +1,21 @@
+{
+  "id": "metallicize",
+  "name_en": "Metallicize",
+  "name_fr": "Métallisation",
+  "description_en": "For 2 turns, gain 2 Block at start of turn.",
+  "description_fr": "Pendant 2 tours, gagne 2 Armure au début du tour.",
+  "cost": 1,
+  "type": "power",
+  "category": "global",
+  "rarity": "common",
+  "target": "self",
+  "animation": "buff",
+  "effects": [
+    {
+      "type": "apply_status",
+      "statusId": "armor_regen",
+      "value": 2,
+      "duration": 2
+    }
+  ]
+}

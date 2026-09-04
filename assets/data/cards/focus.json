@@ -1,0 +1,20 @@
+{
+  "id": "focus",
+  "name_en": "Focus",
+  "name_fr": "Focalisation",
+  "description_en": "Gain 1 Mana this turn.",
+  "description_fr": "Gagnez 1 de Mana ce tour-ci.",
+  "cost": 0,
+  "type": "skill",
+  "category": "global",
+  "rarity": "common",
+  "target": "self",
+  "animation": "buff",
+  "isExhaust": true,
+  "effects": [
+    {
+      "type": "gain_mana",
+      "value": 1
+    }
+  ]
+}

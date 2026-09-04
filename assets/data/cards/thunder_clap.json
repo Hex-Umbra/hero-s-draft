@@ -1,0 +1,25 @@
+{
+  "id": "thunder_clap",
+  "name_en": "Thunderclap",
+  "name_fr": "Coup de Tonnerre",
+  "description_en": "Deal 4 damage. Apply 1 Shock.",
+  "description_fr": "Inflige 4 dégâts. Applique 1 Électrocution.",
+  "cost": 1,
+  "type": "attack",
+  "category": "global",
+  "rarity": "common",
+  "target": "singleEnemy",
+  "animation": "lightning",
+  "effects": [
+    {
+      "type": "damage",
+      "value": 4
+    },
+    {
+      "type": "apply_status",
+      "statusId": "shock",
+      "value": 1,
+      "duration": 1
+    }
+  ]
+}

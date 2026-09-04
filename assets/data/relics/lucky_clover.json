@@ -1,0 +1,12 @@
+{
+  "id": "lucky_clover",
+  "name_en": "Enchanted Clover",
+  "name_fr": "Trèfle Enchanté",
+  "description_en": "+1 Luck permanently for the entire run.",
+  "description_fr": "+1 Chance de manière permanente pour toute la run.",
+  "trigger": "startOfRun",
+  "effectType": "gain_luck",
+  "value": 1,
+  "rarity": "epic",
+  "emoji": "🍀"
+}
