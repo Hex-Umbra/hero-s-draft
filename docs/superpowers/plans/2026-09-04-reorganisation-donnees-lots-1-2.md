@@ -4,7 +4,7 @@
 
 **Goal:** Supprimer les quatre replis codés en dur qui masquent les défaillances de chargement, puis rendre explicite tout ordre d'affichage aujourd'hui hérité par accident de l'ordre des catalogues JSON.
 
-**Architecture:** Deux lots de correctifs, livrables indépendamment et **avant** la migration des données (lot 3, planifié séparément). Le lot 1 fait porter au registre la liste des images à précharger, ce qui supprime un second chargeur de JSON en doublon et trois replis d'images en dur, plus `PassiveData.fallback()`. Le lot 2 rend explicites quatre ordres d'affichage et supprime quatre replis silencieux, ce qui retire au tri par `id` du lot 3 toute conséquence observable.
+**Architecture:** Deux lots de correctifs, livrables indépendamment et **avant** la migration des données (lot 3, planifié séparément). Le lot 1 fait porter au registre la liste des images à précharger, ce qui supprime un second chargeur de JSON en doublon et trois replis d'images en dur, plus `PassiveData.fallback()`. Le lot 2 rend explicites cinq ordres d'affichage et supprime quatre replis silencieux, ce qui retire au tri par `id` du lot 3 toute conséquence observable.
 
 **Tech Stack:** Flutter 3.41.6 / Dart 3.11.4, Flame 1.37.0, Riverpod 2.x (`Notifier`/`NotifierProvider`), `flutter_test`.
 
@@ -38,6 +38,7 @@
 | `lib/ui/screens/class_selection_screen.dart` | **Modifié** — trie par `displayOrder` |
 | `lib/ui/screens/starter_deck_draft_screen.dart` | **Modifié** — pool trié explicitement |
 | `lib/models/data/hero_skills_link.dart` | **Modifié** — une carte de signature absente n'est plus avalée |
+| `lib/tutorial/tutorial_fixtures.dart` | **Modifié** — le pool de draft du tutoriel est trié comme celui de l'écran |
 | `assets/data/heroes.json`, `assets/data/passives.json` | **Modifiés** — `displayOrder`, ids en `snake_case` |
 | `test/unit/game_data_registry_preload_test.dart` | **Créé** — garantit la complétude de la liste de préchargement |
 | `test/unit/passive_absent_test.dart` | **Créé** — garantit qu'un passif absent est inerte |
@@ -346,7 +347,7 @@ erreur de contenu en mauvais rendu silencieux."
 
 **Files:**
 - Modify: `lib/game/systems/trait_system.dart` (3 sites : lignes 10-12, 36-38, 52-54)
-- Modify: `lib/game/controllers/run_controller.dart` (3 sites : lignes 169, 216, 250)
+- Modify: `lib/game/controllers/run_controller.dart` (3 sites : lignes 169, 216, 249)
 - Test: `test/unit/passive_absent_test.dart` (create)
 
 **Interfaces:**
@@ -1216,6 +1217,6 @@ signature introuvable, sans erreur."
 - [x] `grep -rn "regenArmor\|berserkerArmor\|spellArmor" lib/ test/ assets/` → 5 lignes dans 2 fichiers (`run_controller_test.dart:90,99`, `run_state_persistence_test.dart:12,27,49`), toutes des **noms de variables Dart locales** dont le champ `id:` est bien en `snake_case`. Les identifiants Dart restent en lowerCamelCase (lint `constant_identifier_names`) ; seule la **valeur** de l'id est normalisée.
 - [ ] **(non fait)** Lancer le jeu et vérifier à l'œil : sélection de classe dans l'ordre paladin/berserker/mage, dictionnaire groupé par type dans l'ordre de l'enum, un combat qui démarre avec les bons sprites
 
-**Spec mise à jour** : §1 (377 sur `ced306e` → 388 après les lots), §5.3 (la septième surface, manquée par la table et retrouvée en revue finale), §9, §10 et §11 alignés sur la livraison.
+**Spec mise à jour** : §1 (377 sur `ced306e` → 388 après les lots), §5.3 (la septième surface, manquée par la table et retrouvée en revue finale), §9, §10, §11 et §14 alignés sur la livraison.
 
 Le **lot 3** (migration proprement dite) fera l'objet de son propre plan, écrit une fois ces deux lots fusionnés : ses références de ligne dépendent de l'état que ce plan produit.

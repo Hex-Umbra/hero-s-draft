@@ -540,7 +540,7 @@ Le test d'équivalence est supprimé une fois la migration fusionnée.
 | `lib/game/components/entities/enemy_card.dart` | 73 | 1 | Repli d'image en dur supprimé |
 | `lib/models/data/passive_data.dart` | 67-120 | 1 | `fallback()` **supprimé** (D11) — **8 points d'appel dans 4 fichiers**, plus sa déclaration ici |
 | `lib/game/systems/trait_system.dart` | 12, 38, 54 | 1 | Passif absent = aucun effet, plus d'objet dégradé |
-| `lib/game/controllers/run_controller.dart` | 170, 217, 250 | 1 | Chargement de sauvegarde, état initial, démarrage de run |
+| `lib/game/controllers/run_controller.dart` | 169, 216, 249 | 1 | Chargement de sauvegarde, état initial, démarrage de run |
 | `lib/ui/widgets/map/dialogs/stats_dialog.dart` | 60 | 1 | Affichage du passif |
 | `lib/ui/screens/class_selection_screen.dart` | 24, 61, 156 | 1, 2 | Usage de `fallback()` retiré ; tri par `displayOrder` |
 | `lib/ui/screens/card_dictionary_screen.dart` | 87-96 | 2 | Groupes via `CardType.values` + tri intra-groupe |
