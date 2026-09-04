@@ -39,19 +39,17 @@ class StateSyncSystem extends Component with HasGameReference<HerosDraftGame> {
     int bonusAtt = state.effectiveAttaque - state.heroStats.attaque;
 
     if (game.heroCard == null) {
-      String imagePath = 'hero_paladin.png';
-      if (game.availableHeroes.isNotEmpty) {
-        final heroData = game.availableHeroes.firstWhere(
-          (h) => h.id == state.heroClassId,
-          orElse: () => game.availableHeroes.first,
-        );
-        imagePath = heroData.iconPath;
-      }
+      // Pas de repli : un héros introuvable est un bug de données, pas un cas
+      // à masquer. Le lot 3 ajoutera un test d'intégrité référentielle qui
+      // rend la situation impossible.
+      final heroData = game.availableHeroes.firstWhere(
+        (h) => h.id == state.heroClassId,
+      );
 
       game.heroCard = HeroCard(
         state.heroStats,
         bonusAttack: bonusAtt,
-        imagePath: imagePath,
+        imagePath: heroData.iconPath,
       );
       game.heroCard!.position = Vector2(game.size.x / 2, game.size.y * 0.51);
       game.add(game.heroCard!);
