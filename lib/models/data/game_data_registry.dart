@@ -1,6 +1,5 @@
 import 'enemy_data.dart';
 import 'hero_data.dart';
-import 'skill_data.dart';
 import 'card_data.dart';
 import 'event_data.dart';
 import 'passive_data.dart';
@@ -11,7 +10,6 @@ import 'audio_data.dart';
 class GameDataRegistry {
   final List<EnemyData> enemies;
   final List<HeroData> heroes;
-  final List<SkillData> skills;
   final List<CardData> cards;
   final List<EventData> events;
   final List<PassiveData> passives;
@@ -25,7 +23,6 @@ class GameDataRegistry {
   GameDataRegistry({
     required this.enemies,
     required this.heroes,
-    required this.skills,
     required this.cards,
     required this.events,
     required this.passives,
@@ -35,4 +32,15 @@ class GameDataRegistry {
   }) {
     _instance = this;
   }
+
+  /// Les chemins d'images référencés par les entités chargées.
+  ///
+  /// Unique source de la liste de préchargement de Flame : avant, la couche
+  /// de rendu relisait `enemies.json` et `heroes.json` pour la reconstituer.
+  /// C'est un getter calculé et non un champ de constructeur, pour ne pas
+  /// casser les dizaines de `GameDataRegistry(...)` construits par les tests.
+  List<String> get imagesToPreload => <String>{
+        ...heroes.map((h) => h.iconPath),
+        ...enemies.map((e) => e.spritePath),
+      }.where((path) => path.isNotEmpty).toList();
 }

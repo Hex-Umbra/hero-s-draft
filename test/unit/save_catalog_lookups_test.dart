@@ -31,7 +31,6 @@ void main() {
       GameDataRegistry(
         enemies: [],
         heroes: [],
-        skills: [],
         cards: [
           const CardData(
             id: 'strike_basic',
@@ -46,7 +45,7 @@ void main() {
         events: [],
         passives: [
           const PassiveData(
-            id: 'regenArmor',
+            id: 'regen_armor',
             trigger: RelicTrigger.endOfTurn,
             effectType: 'gain_armor',
             value: 2,
@@ -83,7 +82,7 @@ void main() {
     });
 
     test('PassiveData.getById finds an existing passive', () {
-      expect(PassiveData.getById('regenArmor')?.id, 'regenArmor');
+      expect(PassiveData.getById('regen_armor')?.id, 'regen_armor');
     });
 
     test('PassiveData.getById returns null for an unknown id', () {
@@ -96,7 +95,6 @@ void main() {
       GameDataRegistry(
         enemies: [],
         heroes: [],
-        skills: [],
         cards: [],
         events: [],
         passives: [],

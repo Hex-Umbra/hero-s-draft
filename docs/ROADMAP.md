@@ -46,7 +46,7 @@ pie title Répartition de l'effort restant estimé (~91 jours)
 > [!WARNING]
 > **Le camembert et le total de ~91 jours sont antérieurs au programme P-40→P-44** (ajouté le
 > 2026-08-07) et ne l'incluent pas. Le solde net n'est pas calculable en l'état : P-41 est chiffré
-> (5-7 j) et P-40 aussi (1-1,5 j), mais **P-42, P-43 et P-44 attendent leur spec**, tandis que P-18
+> (5-7 j) et P-40 aussi (1-1,5 j à l'origine, **~0,75-1 j restant** depuis la livraison de son bloc 1), mais **P-42, P-43 et P-44 attendent leur spec**, tandis que P-18
 > et P-20 sortent du Tier C par redistribution. Recalculer l'ensemble à la prochaine passe de
 > re-priorisation, pas avant — un total partiellement mis à jour serait plus trompeur que celui-ci.
 
@@ -254,6 +254,7 @@ Marqué **priorité haute** dans le rapport du 22/07 et jamais traité. Difficul
 | **P-42** | **Pools de cartes par classe** — séparation `unique`/`heroClass`, ~25-30 cartes | *à chiffrer en spec* | ★★★★☆ | 🔥🔥🔥 |
 | **P-43** | **Économie de deck** — récompense de carte, limite de taille, rééquilibrage fusion | *à chiffrer en spec* | ★★★☆☆ | 🔥🔥 |
 | **P-44** | **Profondeur de cartes** — coût 3, `scaleWith`, génération, cible `none`, malédictions | *à chiffrer en spec* | ★★★★☆ | 🔥🔥 |
+| **P-48** | **Réorganisation des données** — un fichier par entité, dossiers auto-suffisants, chargeur générique · [spec](superpowers/specs/2026-09-04-reorganisation-donnees-un-fichier-par-entite-design.md) — *lots 1 et 2 livrés* | **~4,5 j** *(lot 3 restant)* | ★★★☆☆ | 🔥🔥 |
 
 ### P-10 — Finale de Séquence
 **Le jeu n'a aujourd'hui aucune condition de victoire** : les actes continuent indéfiniment et seule la mort termine une run. Le Portail Final (4ᵉ nœud optionnel à l'étage boss des Actes 5, 10, 15…, inspiré du téléporteur de Risk of Rain 2) donne enfin une sortie propre, sans supprimer l'endless pour qui veut continuer. C'est probablement **le manque de design le plus structurel du jeu actuel**.
@@ -274,6 +275,27 @@ Rien n'existe hors-run aujourd'hui. Gain d'une monnaie à la fin de chaque run p
 
 ### P-15 — Tiers 2-5
 Réutilise `onHitEffect`/`evadeChance` de P-05 sans nouveau champ. Trois concepts demandent chacun une mécanique inédite et sont à isoler : Chaman Orc (première interaction ennemi → ennemi), Dragon Juvénile (seuil d'enrage — mutualisable avec P-09), Cavalier de la Mort (dégâts différés). Les tiers 4-5 exigent en plus de relever `maxTierAuthored` au-delà de 3.
+
+### P-48 — Réorganisation des données : un fichier par entité
+
+Éclater les catalogues JSON monolithiques en un fichier par entité, avec des dossiers auto-suffisants
+par classe et par ennemi, chargés par un mécanisme générique piloté par des motifs de chemin.
+Débloque le devtool d'édition de contenu, et l'écriture des ~25-30 cartes de P-42 sans doubler le
+travail de relecture.
+
+[Spec](superpowers/specs/2026-09-04-reorganisation-donnees-un-fichier-par-entite-design.md) ·
+[Plan des lots 1 et 2](superpowers/plans/2026-09-04-reorganisation-donnees-lots-1-2.md)
+
+| Lot | Contenu | État |
+|:---|:---|:---|
+| 1 | Supprimer les quatre replis codés en dur | ✅ **livré le 2026-09-04** |
+| 2 | Rendre explicite tout ordre d'affichage, renommer les ids de passifs, `displayOrder` | ✅ **livré le 2026-09-04** |
+| 3 | La migration : découpage, chargeur générique, dossiers, pubspec généré | **~4,5 j** — plan à écrire |
+
+**Prérequis** : P-40 bloc 1, livré. **Créneau** : avant P-42, dont les pools de cartes doivent être
+écrits directement dans la nouvelle structure.
+
+---
 
 ### P-40 à P-44 — Programme « Identité de classe & catalogue »
 
@@ -383,7 +405,7 @@ Les runes de forge `eco` et `quick` (regain de mana / pioche à la lecture d'une
 
 | ID | Chantier | Effort | Difficulté | Apport |
 |:---|:---|:---:|:---:|:---:|
-| **P-40** | **Nettoyage héros & cartes** : suppression de la chaîne `skills.json`, 3 bugs confirmés, dérives documentaires — *lot S1 du programme P-40→P-44* | **1-1,5 j** | ★★☆☆☆ | 🔥🔥 |
+| **P-40** | **Nettoyage héros & cartes** : ~~suppression de la chaîne `skills.json`~~ *(livré, `ced306e`)*, 3 bugs confirmés, dérives documentaires — *lot S1 du programme P-40→P-44* | **~0,75-1 j** *(restant)* | ★★☆☆☆ | 🔥🔥 |
 | **P-26** | **Lot d'hygiène** : `GameDataRegistry` en `Map` O(1), `MapNode` découplé de `Vector2`, ~~`SkillData` bilingue~~ *(annulé par P-40)* | **1 j** | ★★☆☆☆ | 🔥🔥 |
 | **P-22** | **Typage des modèles** : `==`/`hashCode` sur les 13 modèles suivis, sérialisation d'`EventState` | **1,5-2 j** | ★★★☆☆ | 🔥🔥 |
 | **P-27** | **Event Bus** (remplace les 14 callbacks de constructeur de `HerosDraftGame`) | **2-3 j** | ★★★★☆ | 🔥 |
@@ -396,7 +418,10 @@ Les runes de forge `eco` et `quick` (regain de mana / pioche à la lecture d'une
 ### P-40 — Nettoyage héros & cartes *(lot S1 du programme P-40→P-44)*
 Trois blocs sans aucune décision de design à prendre, donc exécutable immédiatement et indépendamment de P-41.
 
-1. **Supprimer la chaîne `skills.json`** — 6 entrées de données, `SkillData`, `SkillController`, `SkillState`, les deux `executeSkill` et le champ de sauvegarde. Le système est **inatteignable** : aucun appelant de `_game.executeSkill(...)`, aucun bouton de compétence dans `lib/ui/`. ⚠️ **Ne pas emporter `applyLifestealBuff()`** (`lib/game/controllers/run/player_stats_manager.dart:472`) : elle vit dans `RunController`, pas dans le système de compétences, et P-41 s'en sert.
+> [!NOTE]
+> **Bloc 1 livré le 2026-09-04** (`ced306e`). Restent ouverts les blocs 2 et 3, soit ~0,75-1 j.
+
+1. ~~**Supprimer la chaîne `skills.json`**~~ — ✅ **livré** — 6 entrées de données, `SkillData`, `SkillController`, `SkillState`, les deux `executeSkill` et le champ de sauvegarde. Le système est **inatteignable** : aucun appelant de `_game.executeSkill(...)`, aucun bouton de compétence dans `lib/ui/`. ⚠️ **Ne pas emporter `applyLifestealBuff()`** (`lib/game/controllers/run/player_stats_manager.dart:472`) : elle vit dans `RunController`, pas dans le système de compétences, et P-41 s'en sert.
 2. **Trois bugs confirmés** — la rune `enduring` cassée dès le tier 2 (`'enduring:1'` codé en dur, `deck_controller.dart:188`, alors que la fusion de runes *et* la fusion 3→1 produisent des tiers supérieurs) ; la duplication des cartes `unique` par trois voies de clonage non filtrées ; l'écart de capacité de forge 1 ↔ 10 entre carte commune et carte de classe, où le code contredit `_rules/03-8`.
 3. **Dix dérives documentaires** entre les fiches du vault et le code, listées en Partie III.C de l'[état des lieux](analysis_reports/05082026_etat_des_lieux_heros_et_cartes_Opus5.md) — dont deux entrées **de ce document** (§5, P-17 : « `Attaque Rapide` gratuite » et « Paladin 20 armure de base ») héritées sans re-mesure et fausses. C'est exactement le motif documenté au §10.4 pour le Tier D ; le Tier C n'a pas encore subi ce contrôle.
 

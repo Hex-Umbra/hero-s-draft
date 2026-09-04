@@ -13,7 +13,6 @@ import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/status_effect.dart';
 import 'package:roguelike_card_game/models/map_node.dart';
 import 'package:roguelike_card_game/models/entity_stats.dart';
-import 'package:roguelike_card_game/models/data/skill_data.dart';
 import 'package:roguelike_card_game/game/game_constants.dart';
 import 'package:roguelike_card_game/game/controllers/inventory_controller.dart';
 import 'package:roguelike_card_game/models/data/relic_data.dart';
@@ -57,7 +56,7 @@ void main() {
       baseDamage: 5,
       luck: 0,
       armorMastery: 0,
-      passiveTrait: 'regenArmor',
+      passiveTrait: 'regen_armor',
     );
 
     test(
@@ -620,106 +619,6 @@ void main() {
         );
       },
     );
-
-    test('executeSkill resolves damage_aoe, damage_targeted, damage_pierce, and armor_buff correctly', () {
-      final container = ProviderContainer();
-      final combatController = container.read(combatProvider.notifier);
-      final runController = container.read(runProvider.notifier);
-      runController.startNewRun(paladinHero);
-      runController.state = runController.state.copyWith(
-        heroStats: runController.state.heroStats.copyWith(attaque: 5),
-      );
-
-      final enemy1 = EnemyInstance(
-        data: goblinData,
-        stats: EntityStats(
-          maxPv: 20,
-          currentPv: 20,
-          armure: 10,
-          attaque: 5,
-        ),
-      );
-      final enemy2 = EnemyInstance(
-        data: orcData,
-        stats: EntityStats(
-          maxPv: 30,
-          currentPv: 30,
-          armure: 0,
-          attaque: 8,
-        ),
-      );
-
-      combatController.state = CombatState(
-        enemies: [enemy1, enemy2],
-        selectedEnemyId: enemy1.id,
-        turnPhase: TurnPhase.player,
-      );
-
-      // 1. damage_aoe test
-      // Hero base damage is 5 (effectiveAttaque = 5 since strength is 0)
-      // effectValue = 200 (i.e. 200% scaling -> 5 * 2.0 = 10 damage)
-      final aoeSkill = const SkillData(
-        id: 'aoe_test',
-        name: 'AOE Test',
-        manaCost: 0,
-        effectType: 'damage_aoe',
-        effectValue: 200,
-      );
-
-      combatController.executeSkill(aoeSkill);
-      // Enemy 2 has 30 HP, 0 armor. 30 - 10 = 20.
-      expect(combatController.currentState.enemies[1].stats.currentPv, 20);
-
-      // 2. damage_targeted test
-      // Target enemy 1 (which has 10 armor and 20 HP originally).
-      // aoe skill did 10 damage: takeDamage(10) -> armor becomes 0, PV remains 20.
-      // Now, let's do a targeted skill on enemy1: 100% scaling -> 5 damage.
-      final targetedSkill = const SkillData(
-        id: 'targeted_test',
-        name: 'Targeted Test',
-        manaCost: 0,
-        effectType: 'damage_targeted',
-        effectValue: 100,
-      );
-      combatController.executeSkill(targetedSkill, targetEnemyId: enemy1.id);
-      // enemy1 has 0 armor, 20 HP. -5 damage -> 15 HP.
-      expect(combatController.currentState.enemies[0].stats.currentPv, 15);
-
-      // 3. damage_pierce test
-      // Deals effectiveAttaque (5 damage) and steals effectValue% armor (50% armor)
-      // Let's first set enemy1 armor to 10
-      combatController.updateEnemyStats(
-        enemy1.id,
-        combatController.currentState.enemies[0].stats.copyWith(armure: 10),
-      );
-      final pierceSkill = const SkillData(
-        id: 'pierce_test',
-        name: 'Pierce Test',
-        manaCost: 0,
-        effectType: 'damage_pierce',
-        effectValue: 50,
-      );
-      final heroArmorBefore = runController.currentState.heroStats.armure;
-      combatController.executeSkill(pierceSkill, targetEnemyId: enemy1.id);
-      // Stolen armor: 10 * 50% = 5.
-      // Enemy armor: 10 - 5 = 5.
-      // Enemy HP: 15 - 5 = 10.
-      expect(combatController.currentState.enemies[0].stats.armure, 5);
-      expect(combatController.currentState.enemies[0].stats.currentPv, 10);
-      expect(runController.currentState.heroStats.armure, heroArmorBefore + 5);
-
-      // 4. armor_buff test
-      final armorBuffSkill = const SkillData(
-        id: 'armor_test',
-        name: 'Armor Test',
-        manaCost: 0,
-        effectType: 'armor_buff',
-        effectValue: 8,
-      );
-      final heroArmorBeforeBuff = runController.currentState.heroStats.armure;
-      combatController.executeSkill(armorBuffSkill);
-      expect(runController.currentState.heroStats.armure, heroArmorBeforeBuff + 8);
-    });
   });
 
   group('CombatController — moitié joueur du cycle de tour', () {
@@ -738,7 +637,7 @@ void main() {
       baseDamage: 5,
       luck: 0,
       armorMastery: 0,
-      passiveTrait: 'regenArmor',
+      passiveTrait: 'regen_armor',
     );
 
     const ironTalisman = RelicData(

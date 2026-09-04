@@ -24,7 +24,6 @@ void main() {
       GameDataRegistry(
         enemies: [],
         heroes: [],
-        skills: [],
         cards: [strike],
         events: [],
         passives: [],

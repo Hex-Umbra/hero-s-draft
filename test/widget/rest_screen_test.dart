@@ -26,7 +26,7 @@ void main() {
     baseDamage: 5,
     luck: 0,
     armorMastery: 0,
-    passiveTrait: 'regenArmor',
+    passiveTrait: 'regen_armor',
   );
 
   const mockCard = CardData(
@@ -46,7 +46,6 @@ void main() {
   final mockRegistry = GameDataRegistry(
     enemies: const [],
     heroes: [mockHero],
-    skills: const [],
     cards: const [mockCard],
     events: const [],
     passives: const [],

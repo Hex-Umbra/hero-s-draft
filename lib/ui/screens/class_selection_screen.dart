@@ -8,7 +8,6 @@ import '../../services/audio/music_scene.dart';
 import 'card_dictionary_screen.dart';
 import 'starter_deck_draft_screen.dart';
 import '../widgets/sword_icon.dart';
-import '../../models/data/passive_data.dart';
 import '../widgets/screen_scaffold.dart';
 import '../widgets/page_header.dart';
 
@@ -21,7 +20,8 @@ class ClassSelectionScreen extends ConsumerWidget {
 
     // Les données sont déjà chargées par le SplashScreen
     final gameData = ref.watch(gameDataLoaderProvider).requireValue;
-    final classes = gameData.heroes;
+    final classes = [...gameData.heroes]
+      ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
     final bool isMobile = MediaQuery.of(context).size.width < 600;
     final l10n = AppLocalizations.of(context)!;
 
@@ -151,10 +151,9 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
   Widget build(BuildContext context) {
     final playerClass = widget.playerClass;
     final gameData = widget.ref.watch(gameDataLoaderProvider).requireValue;
-    final passive = gameData.passives.firstWhere(
-      (p) => p.id == playerClass.passiveTrait,
-      orElse: () => PassiveData.fallback(playerClass.passiveTrait ?? ''),
-    );
+    final matchingPassives =
+        gameData.passives.where((p) => p.id == playerClass.passiveTrait);
+    final passive = matchingPassives.isEmpty ? null : matchingPassives.first;
     final locale = Localizations.localeOf(context).languageCode;
 
     Color classColor = Colors.blue;
@@ -166,8 +165,8 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
     if (playerClass.id == 'berserker') icon = Icons.whatshot;
     if (playerClass.id == 'mage') icon = Icons.auto_fix_high;
 
-    final String traitName = passive.getName(locale);
-    final String traitDesc = passive.getDescription(locale);
+    final String traitName = passive?.getName(locale) ?? '—';
+    final String traitDesc = passive?.getDescription(locale) ?? '';
 
     return LayoutBuilder(
       builder: (context, constraints) {

@@ -1,6 +1,6 @@
 [
   {
-    "id": "regenArmor",
+    "id": "regen_armor",
     "name_en": "Armor Regeneration",
     "name_fr": "Régénération d'Armure",
     "description_en": "Gain 2 Block (+ Mastery) automatically at the end of each turn.",
@@ -10,7 +10,7 @@
     "value": 2
   },
   {
-    "id": "berserkerArmor",
+    "id": "berserker_armor",
     "name_en": "Berserker Armor",
     "name_fr": "Armure du Berserker",
     "description_en": "Gain 1 Block (+ Mastery) at the start of your turn for every 10 missing HP.",
@@ -20,7 +20,7 @@
     "value": 1
   },
   {
-    "id": "spellArmor",
+    "id": "spell_armor",
     "name_en": "Spell Armor",
     "name_fr": "Armure Magique",
     "description_en": "Gain 1 Block (+ Mastery) instantly each time you play a Skill card.",

@@ -19,7 +19,7 @@ import '../widgets/draft/card_draft_layout.dart';
 
 class StarterDeckDraftScreen extends ConsumerStatefulWidget {
   final HeroData playerClass;
-  final PassiveData passive;
+  final PassiveData? passive;
 
   const StarterDeckDraftScreen({
     super.key,
@@ -55,7 +55,10 @@ class _StarterDeckDraftScreenState
         .where(
           (c) => c.category == CardCategory.global && c.type != CardType.status,
         )
-        .toList();
+        .toList()
+      // Le pool est affiché et sélectionné par index, sans mélange : sans tri
+      // explicite, le premier choix d'une run suivrait l'ordre de cards.json.
+      ..sort(CardData.compareByDisplayOrder);
 
     setState(() {
       _draftPool = globalCards;

@@ -162,4 +162,17 @@ class CardData implements AudioSource {
       return null;
     }
   }
+
+  /// Ordre d'affichage canonique : rareté, puis coût, puis id.
+  ///
+  /// Partagé par `CardDictionaryScreen`, `StarterDeckDraftScreen` et le
+  /// tutoriel (`TutorialFixtures.starterPool`) pour que les trois pools
+  /// s'affichent dans un ordre indépendant de celui de `cards.json`.
+  static int compareByDisplayOrder(CardData a, CardData b) {
+    final byRarity = a.rarity.index.compareTo(b.rarity.index);
+    if (byRarity != 0) return byRarity;
+    final byCost = a.cost.compareTo(b.cost);
+    if (byCost != 0) return byCost;
+    return a.id.compareTo(b.id);
+  }
 }

@@ -1,5 +1,5 @@
-import 'dart:convert';
-import 'package:flutter/services.dart';
+import 'dart:ui';
+
 import 'package:flame/game.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
@@ -11,7 +11,6 @@ import 'components/visual_effects/targeting_line.dart';
 import '../models/card_instance.dart';
 import '../models/data/enemy_data.dart';
 import '../models/data/hero_data.dart';
-import '../models/data/skill_data.dart';
 import '../models/data/card_data.dart';
 import '../models/entity_stats.dart';
 import 'game_constants.dart';
@@ -58,6 +57,11 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   /// Injecte depuis `GameScreen` : la couche Flame ne lit jamais un provider.
   final AudioDirector audio;
 
+  /// Les images à charger avant le premier rendu. Fournie par le registre
+  /// (`GameDataRegistry.imagesToPreload`) : la couche de rendu ne lit jamais
+  /// de JSON elle-même.
+  final List<String> imagesToPreload;
+
   final void Function() onEnemiesDead;
   final void Function(TurnPhase) onPhaseChanged;
   final void Function(String title, String description, CardType? cardType) onShowTooltip;
@@ -71,11 +75,11 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   final void Function() onEndEnemyTurn;
   final void Function(String? enemyId) onSelectEnemy;
   final void Function(String enemyId, EntityStats stats) onUpdateEnemyStats;
-  final void Function(SkillData skill, String? targetEnemyId) onExecuteSkill;
   final VoidCallback? onAnimationStateChanged;
 
   HerosDraftGame({
     required this.audio,
+    required this.imagesToPreload,
     required this.onEnemiesDead,
     required this.onPhaseChanged,
     required this.onShowTooltip,
@@ -87,7 +91,6 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
     required this.onEndEnemyTurn,
     required this.onSelectEnemy,
     required this.onUpdateEnemyStats,
-    required this.onExecuteSkill,
     this.onEnemiesSpawned,
     this.onAnimationStateChanged,
   });
@@ -133,43 +136,10 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
     await add(visualSys);
     await add(laySys);
 
-    final List<String> imagesToPreload = ['bg_dungeon.png'];
-
-    try {
-      final String enemiesRaw = await rootBundle.loadString(
-        'assets/data/enemies.json',
-      );
-      final List<dynamic> enemiesJson = jsonDecode(enemiesRaw);
-      for (final enemy in enemiesJson) {
-        final spritePath = enemy['spritePath'] as String?;
-        if (spritePath != null && spritePath.isNotEmpty) {
-          imagesToPreload.add(spritePath);
-        }
-      }
-
-      final String heroesRaw = await rootBundle.loadString(
-        'assets/data/heroes.json',
-      );
-      final List<dynamic> heroesJson = jsonDecode(heroesRaw);
-      for (final hero in heroesJson) {
-        final iconPath = hero['iconPath'] as String?;
-        if (iconPath != null && iconPath.isNotEmpty) {
-          imagesToPreload.add(iconPath);
-        }
-      }
-    } catch (e) {
-      imagesToPreload.addAll([
-        'hero_paladin.png',
-        'hero_berserker.png',
-        'hero_mage.png',
-        'enemy_goblin.png',
-        'enemy_slime.png',
-        'enemy_skeleton.png',
-        'enemy_orc.png',
-      ]);
-    }
-
-    final uniqueImages = imagesToPreload.toSet().toList();
+    final uniqueImages = <String>{
+      'bg_dungeon.png',
+      ...imagesToPreload,
+    }.toList();
     await images.loadAll(uniqueImages);
 
     final bgSprite = Sprite(images.fromCache('bg_dungeon.png'));
@@ -335,51 +305,6 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
     }
 
     await _enemyRipostePhase();
-  }
-
-  Future<void> executeSkill(
-    SkillData skill, {
-    required void Function() onTriggerAttackBuff,
-    required void Function() onTriggerLifesteal,
-  }) async {
-    if (currentPhase != TurnPhase.player ||
-        currentRunState == null ||
-        currentRunState!.isDead) {
-      return;
-    }
-
-    if ((skill.effectType == 'damage_targeted' ||
-            skill.effectType == 'damage_pierce') &&
-        selectedEnemy == null) {
-      return;
-    }
-
-    if (skill.effectType.startsWith('damage')) {
-      if (enemyCards.isEmpty) return;
-      currentPhase = TurnPhase.enemy;
-
-      heroCard?.dashAnimation();
-      await Future.delayed(const Duration(milliseconds: GameConstants.combatDelayHeroDashMs));
-
-      onExecuteSkill(skill, selectedEnemy?.id);
-
-      await Future.delayed(const Duration(milliseconds: GameConstants.combatDelayAfterSkillMs));
-      if (enemyCards.isEmpty) {
-        onEnemiesDead();
-        currentPhase = TurnPhase.player;
-        return;
-      }
-
-      await _enemyRipostePhase();
-    } else {
-      if (skill.effectType == 'armor_buff') {
-        onExecuteSkill(skill, null);
-      } else if (skill.effectType == 'attack_buff') {
-        onTriggerAttackBuff();
-      } else if (skill.effectType == 'lifesteal_buff') {
-        onTriggerLifesteal();
-      }
-    }
   }
 
   Future<void> _enemyRipostePhase() async {

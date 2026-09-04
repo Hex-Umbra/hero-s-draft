@@ -69,8 +69,7 @@ class EnemyCard extends CombatEntity
     // Appliquer l'échelle initiale
     scale = Vector2.all(baseScale);
 
-    String spriteName = data.spritePath;
-    if (spriteName.isEmpty) spriteName = 'enemy_goblin.png';
+    final spriteName = data.spritePath;
 
     // Chargement asynchrone robuste (lit le cache si déjà chargé, ou charge depuis les assets sinon)
     final image = await game.images.load(spriteName);

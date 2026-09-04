@@ -62,7 +62,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(engine.mockState.chosenHero?.id, 'mage');
-    expect(engine.mockState.activePassive?.id, 'spellArmor');
+    expect(engine.mockState.activePassive?.id, 'spell_armor');
     expect(engine.mockState.heroStats.maxPv, 60);
   });
 }

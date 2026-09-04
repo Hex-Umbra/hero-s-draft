@@ -4,9 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
 import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
 import 'package:roguelike_card_game/game/controllers/inventory_controller.dart';
-import 'package:roguelike_card_game/game/controllers/skill_controller.dart';
 import 'package:roguelike_card_game/models/entity_stats.dart';
-import 'package:roguelike_card_game/models/skill_state.dart';
 import 'package:roguelike_card_game/models/inventory_state.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
@@ -65,15 +63,6 @@ void main() {
 
       controller.hydrate(const InventoryState(gold: 999));
       expect(container.read(inventoryProvider).gold, 999);
-    });
-
-    test('SkillController.hydrate replaces the state wholesale', () {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
-      final controller = container.read(skillProvider.notifier);
-
-      controller.hydrate(const SkillState(skill1Cooldown: 3));
-      expect(container.read(skillProvider).skill1Cooldown, 3);
     });
   });
 }

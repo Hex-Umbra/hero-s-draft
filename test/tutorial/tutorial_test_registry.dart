@@ -27,7 +27,6 @@ GameDataRegistry buildTutorialTestRegistry() {
   return GameDataRegistry(
     enemies: _readJson('assets/data/enemies.json').map(EnemyData.fromJson).toList(),
     heroes: _readJson('assets/data/heroes.json').map(HeroData.fromJson).toList(),
-    skills: const [],
     cards: cards,
     events: const [],
     passives: _readJson('assets/data/passives.json').map(PassiveData.fromJson).toList(),

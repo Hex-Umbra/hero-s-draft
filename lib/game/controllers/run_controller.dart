@@ -11,7 +11,6 @@ import '../../models/data/forge_upgrade_data.dart';
 import '../../services/map_generator_service.dart';
 import '../systems/trait_system.dart';
 import 'inventory_controller.dart';
-import 'skill_controller.dart';
 import 'run/player_stats_manager.dart';
 import 'run/map_progression_manager.dart';
 import 'run/gold_manager.dart';
@@ -24,7 +23,7 @@ class RunState {
   final String heroClassId;
   final List<MapNode> mapNodes;
   final String? currentNodeId;
-  final String? passiveTrait; // Trait passif du héros (ex: regenArmor)
+  final String? passiveTrait; // Trait passif du héros (ex: regen_armor)
   final PassiveData? activePassive; // Passif dynamique du héros
   final List<String> forgeSlots;
   final String? forgeTargetCardId;
@@ -167,9 +166,6 @@ class RunState {
             category: 'passive',
           ),
         );
-        activePassive = PassiveData.fallback(
-          json['passiveTrait'] as String? ?? '',
-        );
       }
     }
 
@@ -213,8 +209,8 @@ class RunController extends Notifier<RunState> {
       currentLevel: 1,
       act: 1,
       heroClassId: 'paladin',
-      passiveTrait: 'regenArmor',
-      activePassive: PassiveData.fallback('regenArmor'),
+      passiveTrait: 'regen_armor',
+      activePassive: null,
       heroStats: EntityStats(
         maxPv: 100,
         currentPv: 100,
@@ -246,8 +242,7 @@ class RunController extends Notifier<RunState> {
       act: 1,
       heroClassId: chosenClass.id,
       passiveTrait: chosenClass.passiveTrait,
-      activePassive:
-          activePassive ?? PassiveData.fallback(chosenClass.passiveTrait ?? ''),
+      activePassive: activePassive,
       heroStats: EntityStats(
         maxPv: chosenClass.maxHp,
         currentPv: chosenClass.maxHp,
@@ -272,8 +267,6 @@ class RunController extends Notifier<RunState> {
           initialBonusShopCards: 0,
         );
 
-    // Réinitialise les cooldowns de sorts
-    ref.read(skillProvider.notifier).resetCooldowns();
   }
 
   /// Sélectionne un nœud sur la carte et déplace le joueur
@@ -421,10 +414,8 @@ class RunController extends Notifier<RunState> {
     final updatedStats = StatusEffectProcessor.processPlayerStatuses(state.heroStats);
     state = state.copyWith(heroStats: updatedStats);
 
-    // 4. Décrémenter les cooldowns via le skill provider
-    ref.read(skillProvider.notifier).tickCooldowns();
 
-    // 5. Déclencher les traits passifs
+    // 4. Déclencher les traits passifs
     TraitSystem.onTurnStart(this);
   }
 

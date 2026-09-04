@@ -181,7 +181,7 @@ void main() {
       engine.nextStep();
 
       expect(engine.mockState.chosenHero?.id, 'paladin');
-      expect(engine.mockState.activePassive?.id, 'regenArmor');
+      expect(engine.mockState.activePassive?.id, 'regen_armor');
     });
 
     test('les stats du héros dérivent de la classe choisie', () {

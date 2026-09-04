@@ -10,7 +10,7 @@ import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 void main() {
   group('RunState persistence', () {
     const regenArmor = PassiveData(
-      id: 'regenArmor',
+      id: 'regen_armor',
       nameFr: "Régénération d'Armure",
       nameEn: 'Armor Regeneration',
       trigger: RelicTrigger.endOfTurn,
@@ -22,7 +22,6 @@ void main() {
       GameDataRegistry(
         enemies: [],
         heroes: [],
-        skills: [],
         cards: [],
         events: [],
         passives: [regenArmor],
@@ -46,7 +45,7 @@ void main() {
           currentLevel: 5,
           act: 2,
           heroClassId: 'paladin',
-          passiveTrait: 'regenArmor',
+          passiveTrait: 'regen_armor',
           activePassive: regenArmor,
           heroStats: EntityStats(
             maxPv: 80,
@@ -75,8 +74,8 @@ void main() {
       expect(restored.currentLevel, 5);
       expect(restored.act, 2);
       expect(restored.heroClassId, 'paladin');
-      expect(restored.passiveTrait, 'regenArmor');
-      expect(restored.activePassive?.id, 'regenArmor');
+      expect(restored.passiveTrait, 'regen_armor');
+      expect(restored.activePassive?.id, 'regen_armor');
       expect(restored.heroStats.currentPv, 60);
       expect(restored.currentNodeId, 'floor_3_node_1');
       expect(restored.forgeSlots, ['enduring:1']);
@@ -101,20 +100,16 @@ void main() {
       expect(restoredLegacy.cardsPerTurn, 5);
     });
 
-    test('falls back to PassiveData.fallback and reports a missing passive', () {
+    test('leaves activePassive null and reports a missing passive', () {
       final json = buildRunState().toJson();
       json['activePassiveId'] = 'removed_passive';
       json['activePassiveNameFr'] = 'Passif Retiré';
       json['activePassiveNameEn'] = 'Removed Passive';
-      // Use an unrecognized passiveTrait too, so PassiveData.fallback has no
-      // hardcoded match and genuinely falls through to its 'none' default
-      // (passiveTrait: 'regenArmor' would otherwise itself be a known
-      // fallback fixture and mask the "nothing to fall back to" case).
       json['passiveTrait'] = 'removed_passive';
 
       final (restored, missing) = RunState.fromJsonWithReport(json);
 
-      expect(restored.activePassive?.id, 'none');
+      expect(restored.activePassive, isNull);
       expect(missing, [
         const MissingSaveItem(
           id: 'removed_passive',
