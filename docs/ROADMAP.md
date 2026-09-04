@@ -284,13 +284,14 @@ Débloque le devtool d'édition de contenu, et l'écriture des ~25-30 cartes de 
 travail de relecture.
 
 [Spec](superpowers/specs/2026-09-04-reorganisation-donnees-un-fichier-par-entite-design.md) ·
-[Plan des lots 1 et 2](superpowers/plans/2026-09-04-reorganisation-donnees-lots-1-2.md)
+[Plan des lots 1 et 2](superpowers/plans/2026-09-04-reorganisation-donnees-lots-1-2.md) ·
+[Plan du lot 3](superpowers/plans/2026-09-04-reorganisation-donnees-lot-3.md)
 
 | Lot | Contenu | État |
 |:---|:---|:---|
 | 1 | Supprimer les quatre replis codés en dur | ✅ **livré le 2026-09-04** |
 | 2 | Rendre explicite tout ordre d'affichage, renommer les ids de passifs, `displayOrder` | ✅ **livré le 2026-09-04** |
-| 3 | La migration : découpage, chargeur générique, dossiers, pubspec généré | **~4,5 j** — plan à écrire |
+| 3 | La migration : découpage, chargeur générique, dossiers, pubspec généré | **~4,5 j** — plan écrit, 10 tâches, à exécuter |
 
 **Prérequis** : P-40 bloc 1, livré. **Créneau** : avant P-42, dont les pools de cartes doivent être
 écrits directement dans la nouvelle structure.
