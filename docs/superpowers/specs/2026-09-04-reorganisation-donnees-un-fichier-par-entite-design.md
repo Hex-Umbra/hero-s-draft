@@ -3,7 +3,7 @@
 Date : 2026-09-04
 Statut : **Design validé, non implémenté**
 Révision : v3 — après deux tours de revue indépendante (4 agents)
-Prérequis bloquant : **P-40** (« Nettoyage héros & cartes ») — voir §3.1
+Prérequis : **P-40 bloc 1** — **livré** le 2026-09-04 (`ced306e`), voir §3.1
 Créneau : **entre P-40 et P-41**, donc avant **P-42** (pools de cartes par classe)
 Sources amont :
 - `docs/ROADMAP.md` §4 — programme P-40 → P-44, et la dépendance P-41 → P-42
@@ -12,7 +12,7 @@ Sources amont :
 
 > **Le chantier n'est pas « ranger les JSON », c'est « faire porter l'appartenance par la structure ».**
 >
-> Neuf catalogues monolithiques décrivent tout le contenu du jeu. Éditer une carte veut dire
+> Huit catalogues monolithiques décrivent tout le contenu du jeu. Éditer une carte veut dire
 > réécrire le catalogue ; ajouter une classe veut dire toucher quatre fichiers dispersés ; et l'ordre
 > des tableaux, que personne n'a jamais décidé, est visible par le joueur.
 >
@@ -25,15 +25,16 @@ Sources amont :
 
 ## 1. Mesures de référence
 
-Relevées le **2026-09-04**, sur `HEAD = 50d0ccd`.
+Relevées le **2026-09-04**, sur `ced306e` — c'est-à-dire **après la livraison du bloc 1 de P-40**
+(§3.1), dont toutes les valeurs ci-dessous tiennent déjà compte.
 
 | Mesure | Valeur |
 |:---|:---|
 | `dart analyze` | `No issues found!` |
-| `flutter test` | **385 tests au vert** |
-| Fichiers dans `assets/data/` | 11 *(10 après P-40)* |
-| Entités réparties en 9 catalogues | **77** *(71 après P-40)* |
-| Lectures de bundle au démarrage | **10** — 9 catalogues + `audio.json` *(`patch_notes.json` n'est lu que par son écran)* |
+| `flutter test` | **377 tests au vert** |
+| Fichiers dans `assets/data/` | **10** |
+| Entités réparties en 8 catalogues | **71** |
+| Lectures de bundle au démarrage | **9** — 8 catalogues + `audio.json` *(`patch_notes.json` n'est lu que par son écran)* |
 | Flutter / Dart / Flame | 3.41.6 / 3.11.4 / 1.37.0 |
 
 Le compte de tests est la mesure qui dira, après migration, si un test a disparu en route.
@@ -44,8 +45,8 @@ Chaque affirmation vérifiée contre le code le 2026-09-04.
 
 | Constat | Vérification |
 |:---|:---|
-| Neuf catalogues chargés depuis neuf chemins codés en dur | `lib/services/game_data_service.dart:81-89` |
-| `_mapList` lève à la **première** entrée fautive | `lib/services/game_data_service.dart:29-51` |
+| Huit catalogues chargés depuis huit chemins codés en dur | `lib/services/game_data_service.dart:80-87` |
+| `_mapList` lève à la **première** entrée fautive | `lib/services/game_data_service.dart:28-50` |
 | `AssetManifest.loadFromAssetBundle` + `listAssets()` rendent les fichiers issus d'une déclaration de répertoire | `flutter/lib/src/services/asset_manifest.dart:27-48, 122-124` |
 | `listAssets()` n'offre **aucune garantie d'ordre** — `getAssetVariants` déplace les clés entre deux structures | idem `:115, 122-124` |
 | `listAssets()` renvoie aussi les assets de paquets, sous `packages/<nom>/…` | idem |
@@ -55,8 +56,8 @@ Chaque affirmation vérifiée contre le code le 2026-09-04.
 | **Le préfixe ne fait pas partie des clés du cache Flame** | idem `:29-32` — voir §6.2, c'est une contrainte, pas une garantie |
 | `FlameGame.images` **est** le singleton global par défaut | `flame-1.37.0/lib/src/game/game.dart:28` |
 | `FlameGame` n'accepte pas `images` au constructeur | `flame-1.37.0/lib/src/game/flame_game.dart:43-46` — affectation dans le corps |
-| Un second chargeur en doublon relit `enemies.json` et `heroes.json` | `lib/game/heros_draft_game.dart:139` et `:150` |
-| …son `catch` retombe sur une liste d'images codée en dur | `lib/game/heros_draft_game.dart:160-170` |
+| Un second chargeur en doublon relit `enemies.json` et `heroes.json` | `lib/game/heros_draft_game.dart:136` et `:147` |
+| …son `catch` retombe sur une liste d'images codée en dur | `lib/game/heros_draft_game.dart:157-167` |
 | …et **deux autres** replis d'images codés en dur existent | `state_sync_system.dart:42`, `enemy_card.dart:73` |
 | `PassiveData.fallback()` duplique les 3 passifs **en dur en Dart** | `lib/models/data/passive_data.dart:67-120` |
 | L'ordre de `registry.cards` est l'ordre d'affichage du dictionnaire | `card_dictionary_screen.dart:87-96` — `Map` non pré-amorcée + `putIfAbsent`, puis `entries.map` |
@@ -67,11 +68,11 @@ Chaque affirmation vérifiée contre le code le 2026-09-04.
 | `PassiveData` **n'a pas** de champ `heroClass` | `lib/models/data/passive_data.dart:6-13` |
 | `CardData` **et** `ForgeUpgradeData` possèdent un `toJson()` ; les 5 autres modèles n'en ont pas | `card_data.dart:134`, `forge_upgrade_data.dart:56` |
 | `CardData.toJson()` **omet `sfx`**, que `fromJson` lit | `card_data.dart:123` (lecture) vs `:134-151` (écriture) |
-| Le constructeur de `GameDataRegistry` écrit un singleton statique | `game_data_registry.dart:36` — `_instance = this` |
-| `availableEnemies` / `availableHeroes` sont affectés **après** `onLoad()` | `game_screen.dart:420-421` vs `heros_draft_game.dart:136-175` |
+| Le constructeur de `GameDataRegistry` écrit un singleton statique | `game_data_registry.dart:33` — `_instance = this` |
+| `availableEnemies` / `availableHeroes` sont affectés **après** `onLoad()` | `game_screen.dart:417-418` vs `heros_draft_game.dart:133-172` |
 | …mais la donnée **est** disponible en `initState` | `splash_screen.dart:11-22` résout le provider ; il n'est pas `autoDispose` ; `game_screen.dart:73, 150, 236` lisent déjà ainsi |
 | `buildTutorialTestRegistry()` est **synchrone** et appelé depuis 3 initialiseurs de `final` de haut niveau | `tutorial_class_step_test.dart:16`, `tutorial_starter_draft_test.dart:16`, `tutorial_merge_transition_test.dart:59` |
-| L'audio a le droit de dégrader silencieusement | `game_data_service.dart:62-77` — `loadAudioData` ne lève jamais |
+| L'audio a le droit de dégrader silencieusement | `game_data_service.dart:61-76` — `loadAudioData` ne lève jamais |
 | `flutter test` construit le bundle d'assets par défaut | `flutter_tools/lib/src/commands/test.dart:412, 486-489` |
 | …mais `_needsRebuild` **ne détecte pas les suppressions** | idem `:817-843`, TODO explicite, flutter#128563 |
 | CI : `dart analyze --fatal-infos` puis `flutter test` nu, sur `ubuntu-latest` | `.github/workflows/ci.yml:21, 36, 38` |
@@ -100,8 +101,8 @@ dictionnaire, l'ordre des classes à la sélection, le pool du draft de départ 
 par nœud. Insérer une carte au milieu de `cards.json` change ce que voit le joueur.
 
 **2.4 — Quatre chemins de repli codés en dur masquent les défaillances.**
-`heros_draft_game.dart:139` relit `enemies.json` et `heroes.json` une seconde fois pour collecter les
-chemins à précharger, dans un `catch` qui retombe sur une liste d'images en dur (`:160-170`) ;
+`heros_draft_game.dart:136` relit `enemies.json` et `heroes.json` une seconde fois pour collecter les
+chemins à précharger, dans un `catch` qui retombe sur une liste d'images en dur (`:157-167`) ;
 `state_sync_system.dart:42` et `enemy_card.dart:73` portent chacun leur repli en dur ; et
 `PassiveData.fallback()` duplique les trois passifs en Dart. Toute évolution du format casse ces
 blocs **sans erreur visible**.
@@ -126,19 +127,29 @@ Arrêtées avec le propriétaire du projet les 2026-08-26 et 2026-09-04 (deux pa
 | D10 | **`class.json` gagne un champ `displayOrder`** | L'ordre d'affichage des classes est une donnée de présentation ; sa place est dans la donnée, et ça reste vrai quand P-42 ajoutera des classes |
 | D11 | **`PassiveData.fallback()` est supprimé au lot 1** | Même motif et même lot que les trois replis d'images : un passif introuvable est un bug, pas un cas à masquer. Le supprimer **avant** le lot 2 est aussi ce qui évite que le renommage traverse un `fallback('regenArmor')` codé en dur (`run_controller.dart:217`) |
 
-### 3.1 P-40 est un prérequis, pas un lot de ce chantier
+### 3.1 Le prérequis P-40 est levé
 
-`ROADMAP.md:396-399` charte P-40 à **1-1,5 j** : supprimer la chaîne `skills.json` — données,
-`SkillData`, `SkillController`, `SkillState`, les deux `executeSkill` et le champ de sauvegarde ; et
-le qualifie d'« exécutable immédiatement et indépendamment de P-41 ».
+`ROADMAP.md:396-399` charte P-40 en trois blocs. **Seul le bloc 1 — la suppression de la chaîne
+`skills.json` — conditionnait ce chantier, et il est livré** : commit `ced306e`, 34 fichiers,
++49/−544, `dart analyze` propre et 377 tests au vert.
 
-Tous les chiffrages de ce document (71 entités, 73 fichiers cibles, métrique « 11 → 2 ») supposent
-P-40 fusionné. **P-40 n'a ni spec ni plan** : il doit être ordonnancé avant que le plan de ce
-chantier démarre.
+Ont disparu : `assets/data/skills.json`, `SkillData`, `SkillState`, `SkillController`, les deux
+`executeSkill`, le callback `onExecuteSkill` et son branchement, les trois appels de cooldown, et le
+champ `'skills'` de la sauvegarde. Sont délibérément conservés `applyLifestealBuff`
+(`player_stats_manager.dart:475`, sans appelant, réservée à P-41) et `HeroData.skills`, homonyme
+sans rapport qui porte les ids des cartes de signature d'une classe.
 
-> **Piège de sauvegarde à traiter dans P-40, pas ici** : `SaveService._schemaVersion` vaut 1 et
-> `json['skills'] as Map<String, dynamic>` est un cast non-nullable. Retirer la clé sans migration
-> fait lever la lecture, que le `catch` traduit en `clear()`.
+> **Aucune migration de sauvegarde n'a été nécessaire, contrairement à ce que cette spec annonçait.**
+> Le piège supposé — `json['skills'] as Map<String, dynamic>` est un cast non-nullable, donc retirer
+> la clé ferait lever la lecture et le `catch` appellerait `clear()` — ne se déclenche que si l'on
+> retire l'écriture sans la lecture. Les trois lignes de `save_service.dart` étant parties ensemble,
+> une sauvegarde existante conserve une clé `'skills'` simplement jamais relue ; `_schemaVersion`
+> reste à 1. Un test épingle la garantie : *« a save still carrying a "skills" key loads without
+> error »*.
+
+**Restent ouverts dans P-40**, sans lien avec ce chantier : le bloc 2 (trois bugs confirmés — rune
+`enduring`, duplication des cartes `unique`, écart de capacité de forge) et le bloc 3 (dix dérives
+documentaires).
 
 ### 3.2 Le découpage en lots
 
@@ -225,7 +236,7 @@ interchangeables* ; il **reste à plat** s'il est un *document de configuration 
 
 **73 fichiers JSON** — 71 fichiers d'entité (17 + 25 + 5 + 8 + 3 + 3 `class.json` + 6 cartes de
 classe + 4 `enemy.json`) plus `patch_notes.json` et `audio.json`. Le chargeur en lit **72** au
-démarrage (71 entités + `audio.json`), contre 10 aujourd'hui.
+démarrage (71 entités + `audio.json`), contre 9 aujourd'hui.
 
 **19 lignes d'assets** au pubspec, croissant de **+2 par classe** et **+1 par ennemi**.
 
@@ -343,7 +354,7 @@ un `id` plutôt qu'un index — est hors périmètre.)*
 
 ### 5.4 Agrégation des erreurs
 
-`_mapList` lève aujourd'hui à la **première** entrée fautive (`game_data_service.dart:29-51`). Avec
+`_mapList` lève aujourd'hui à la **première** entrée fautive (`game_data_service.dart:28-50`). Avec
 72 fichiers, corriger une faute par cycle de rebuild serait invivable. `GameDataLoader` accumule
 donc les erreurs de toutes les catégories, et `throwIfFailed()` lève une fois à la fin.
 
@@ -364,7 +375,7 @@ constructeur : 18 sites de `test/` construisent `GameDataRegistry(...)`, qu'un c
 tous.
 
 **L'ordonnancement, qui est la vraie difficulté.** `availableEnemies` et `availableHeroes` sont
-affectés dans `build()` (`game_screen.dart:420-421`), soit **après** que `onLoad()` a préchargé — ce
+affectés dans `build()` (`game_screen.dart:417-418`), soit **après** que `onLoad()` a préchargé — ce
 qui est précisément pourquoi le chargeur en doublon existe. La liste est donc **passée au
 constructeur de `HerosDraftGame`** (`game_screen.dart:254`), comme `audio:` l'est déjà à `:255`. La
 donnée y est disponible : `SplashScreen` a résolu le provider, qui n'est pas `autoDispose`.
@@ -406,9 +417,9 @@ dans le même isolate**, rendant les tests dépendants de leur ordre.
 
 | Fichier | Ligne | Lot | Aujourd'hui | Cible |
 |:---|---:|:---:|:---|:---|
-| `heros_draft_game.dart` | 136 | 3 | `'bg_dungeon.png'` | `'assets/images/bg_dungeon.png'` |
-| `heros_draft_game.dart` | 175 | 3 | `images.fromCache('bg_dungeon.png')` | idem |
-| `heros_draft_game.dart` | 173 | — | `images.loadAll(uniqueImages)` | inchangé — consomme la liste du registre |
+| `heros_draft_game.dart` | 133 | 3 | `'bg_dungeon.png'` | `'assets/images/bg_dungeon.png'` |
+| `heros_draft_game.dart` | 172 | 3 | `images.fromCache('bg_dungeon.png')` | idem |
+| `heros_draft_game.dart` | 170 | — | `images.loadAll(uniqueImages)` | inchangé — consomme la liste du registre |
 | `state_sync_system.dart` | 42 | 1 | `'hero_paladin.png'` *(repli)* | **repli supprimé** |
 | `enemy_card.dart` | 73 | 1 | `'enemy_goblin.png'` *(repli)* | **repli supprimé** |
 | `enemy_card.dart` | 76 | 3 | `game.images.load(spriteName)` | inchangé, `spriteName` devient complet |
@@ -479,7 +490,7 @@ Un script jetable, **non conservé** (`tool/` ne garde que `sync_assets.dart`) :
 le lot 2.
 
 > **`flutter clean` est obligatoire après le découpage.** `_needsRebuild` (`test.dart:817-843`) ne
-> détecte pas les suppressions (TODO explicite, flutter#128563) : les 9 catalogues supprimés peuvent
+> détecte pas les suppressions (TODO explicite, flutter#128563) : les 8 catalogues supprimés peuvent
 > survivre dans `build/unit_test_assets/`.
 
 ### 8.2 Le filet de sécurité
@@ -519,7 +530,7 @@ Le test d'équivalence est supprimé une fois la migration fusionnée.
 
 | Fichier | Ligne | Lot | Nature de la rupture |
 |:---|---:|:---:|:---|
-| `lib/game/heros_draft_game.dart` | 136-175 | **1, 3** | Lot 1 : second chargeur supprimé, liste reçue au constructeur. Lot 3 : chemins `bg_dungeon` complets |
+| `lib/game/heros_draft_game.dart` | 133-172 | **1, 3** | Lot 1 : second chargeur supprimé, liste reçue au constructeur. Lot 3 : chemins `bg_dungeon` complets |
 | `lib/models/data/game_data_registry.dart` | — | 1 | Getter de préchargement calculé sur `heroes`/`enemies` |
 | `lib/ui/screens/game_screen.dart` | 254 | 1 | Liste de préchargement passée au constructeur |
 | `lib/game/systems/state_sync_system.dart` | 42, 46 | 1, 2 | Repli d'image en dur, puis repli `.first` |
@@ -537,7 +548,7 @@ Le test d'équivalence est supprimé une fois la migration fusionnée.
 | `lib/models/data/hero_data.dart` | — | 2 | Champ `displayOrder` (D10) |
 | `assets/data/passives.json` + `heroes.json` | — | 2 | Ids renommés, `displayOrder` ajouté |
 | ~20 fichiers de `test/` | — | 2 | Ids de passifs en dur à mettre à jour |
-| `lib/services/game_data_service.dart` | 16-51, 81-118 | 3 | `_loadJsonList`/`_mapList` supprimés ; `GameDataLoader` |
+| `lib/services/game_data_service.dart` | 15-50, 78-116 | 3 | `_loadJsonList`/`_mapList` supprimés ; `GameDataLoader` |
 | `lib/game/components/entities/enemy_card.dart` | 76 | 3 | Dépend du préfixe vidé |
 | `lib/game/components/entities/hero_card.dart` | 114 | 3 | Dépend du préfixe vidé |
 | 23 fichiers de cartes | — | 3 | `heroClass`/`category` dépouillés au durcissement (§5.2) |
@@ -570,7 +581,7 @@ Le test d'équivalence est supprimé une fois la migration fusionnée.
 | **Pubspec synchronisé** | 3 | `dart run tool/sync_assets.dart --check` sort en 0 |
 | **Isolation du tutoriel** *(existant)* | — | `test/tutorial/tutorial_isolation_test.dart` continue de passer |
 
-**385 tests au vert et `dart analyze` à zéro problème** après chaque lot, conformément à `CLAUDE.md`.
+**377 tests au vert et `dart analyze` à zéro problème** après chaque lot, conformément à `CLAUDE.md`.
 
 ---
 
@@ -585,11 +596,11 @@ Le test d'équivalence est supprimé une fois la migration fusionnée.
   écrire.
 - **Fiche `_patterns/`** : `GameDataLoader`, `EntitySource` et le motif de chemin.
 - **`.claude/skills/memory-bank-sync/SKILL.md:46`** : la métrique « Fichiers de données » est mesurée
-  par `ls assets/data/*.json | wc -l`. Elle passe de 11 à **2**. La skill re-mesure avant d'écrire :
+  par `ls assets/data/*.json | wc -l`. Elle passe de 10 à **2**. La skill re-mesure avant d'écrire :
   sans correction de la commande, elle publiera un chiffre juste et trompeur.
 - **`CLAUDE.md`** : « Data-Driven Content Workflow » décrit le fichier unique à éditer ; il faut
   décrire la création d'un fichier et l'appel au générateur. La liste des modèles de « Data layer »
-  nomme `skill_data.dart`, supprimé par P-40.
+  nomme `skill_data.dart`, supprimé par le bloc 1 de P-40 (`ced306e`).
 - **`.agents/skills/game_designer.md:12`** : énumère les catalogues, `skills.json` compris.
 - **`docs/INDEX.md`** : entrée sous « Héros, classes & cartes ». **`docs/ROADMAP.md`** : nouvelle
   fiche entre P-40 et P-41.
@@ -600,7 +611,7 @@ Le test d'équivalence est supprimé une fois la migration fusionnée.
 
 ## 12. Hors périmètre
 
-- **P-40** — prérequis livré avant, à ordonnancer séparément (§3.1).
+- **P-40 blocs 2 et 3** — trois bugs de gameplay et dix dérives documentaires, sans lien avec ce chantier. Le bloc 1, seul prérequis, est livré (§3.1).
 - **Le devtool d'édition de contenu** — chantier suivant, accessible uniquement en `kDebugMode`.
 - **P-30** (menu de triche) — chantier distinct, même s'il partagera une coquille `lib/devtools/`.
 - **P-41 et P-42** — ce chantier construit l'infrastructure des pools par classe, il n'en écrit pas
@@ -624,14 +635,14 @@ Le test d'équivalence est supprimé une fois la migration fusionnée.
 | Un dossier de classe incomplet passe inaperçu | Moyenne | Test d'intégrité référentielle (§10) |
 | Le passage de `buildTutorialTestRegistry` en asynchrone casse 3 tests | Moyenne | Construction déplacée en `setUpAll`, budgétée en §14 |
 | Les runs en cours perdent leur passif | **Acceptée** | Décision D9, §3.3 — alpha |
-| Coût de démarrage : 72 lectures de bundle au lieu de 10 | Faible | À **mesurer** avant fusion. Le bundle est mappé en mémoire ; les lectures sont parallélisables |
+| Coût de démarrage : 72 lectures de bundle au lieu de 9 | Faible | À **mesurer** avant fusion. Le bundle est mappé en mémoire ; les lectures sont parallélisables |
 | Perte de la vue d'ensemble pour l'équilibrage | Faible | `jq -s '.' assets/data/relics/*.json` ; la vue liste du devtool jouera ce rôle |
 
 ---
 
 ## 14. Estimation
 
-**6 à 7 jours**, hors P-40 (1-1,5 j, prérequis).
+**6 à 7 jours**. Le prérequis P-40 bloc 1 est déjà livré et ne compte pas dans ce total.
 
 | Lot | Contenu | Effort |
 |:---:|:---|:---:|
