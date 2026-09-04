@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:flame/cache.dart';
 import 'package:flame/game.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
@@ -93,7 +94,17 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
     required this.onUpdateEnemyStats,
     this.onEnemiesSpawned,
     this.onAnimationStateChanged,
-  });
+  }) {
+    // Cache propre au jeu, jamais le singleton `Flame.images` : le muter en
+    // place changerait le prefixe pour tout le processus, et la mutation
+    // survivrait d un test widget a l autre dans le meme isolate.
+    //
+    // Prefixe vide parce que le prefixe ne fait PAS partie des cles du cache
+    // (`flame/lib/src/cache/images.dart:29-32`) : avec un prefixe par
+    // dossier, l `icon.png` du mage ecraserait celui du paladin. Avec des
+    // chemins complets, le chemin est la cle.
+    images = Images(prefix: '');
+  }
 
   void setHoveredCard(CardComponent? card) {
     if (card != null && card != hoveredCard) {
@@ -137,12 +148,12 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
     await add(laySys);
 
     final uniqueImages = <String>{
-      'bg_dungeon.png',
+      'assets/images/bg_dungeon.png',
       ...imagesToPreload,
     }.toList();
     await images.loadAll(uniqueImages);
 
-    final bgSprite = Sprite(images.fromCache('bg_dungeon.png'));
+    final bgSprite = Sprite(images.fromCache('assets/images/bg_dungeon.png'));
     add(
       SpriteComponent(sprite: bgSprite, size: size)
         ..priority = GameConstants.priorityBackground,
