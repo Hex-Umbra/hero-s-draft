@@ -83,11 +83,25 @@ class CardDictionaryScreen extends ConsumerWidget {
     String locale,
   ) {
     final l10n = AppLocalizations.of(context)!;
-    // Grouper par type pour la clarté
-    final Map<CardType, List<CardData>> groupedCards = {};
+    // L'ordre des groupes vient de l'enum, jamais de l'ordre du catalogue ;
+    // l'ordre dans un groupe est explicite. Sans cela, insérer une carte au
+    // milieu de cards.json changerait ce que voit le joueur.
+    final Map<CardType, List<CardData>> groupedCards = {
+      for (final type in CardType.values) type: <CardData>[],
+    };
     for (var card in allCards) {
-      groupedCards.putIfAbsent(card.type, () => []).add(card);
+      groupedCards[card.type]!.add(card);
     }
+    for (final group in groupedCards.values) {
+      group.sort((a, b) {
+        final byRarity = a.rarity.index.compareTo(b.rarity.index);
+        if (byRarity != 0) return byRarity;
+        final byCost = a.cost.compareTo(b.cost);
+        if (byCost != 0) return byCost;
+        return a.id.compareTo(b.id);
+      });
+    }
+    groupedCards.removeWhere((_, cards) => cards.isEmpty);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -145,6 +159,9 @@ class CardDictionaryScreen extends ConsumerWidget {
     }
     for (var relic in allRelics) {
       groupedRelics[relic.rarity]?.add(relic);
+    }
+    for (final group in groupedRelics.values) {
+      group.sort((a, b) => a.id.compareTo(b.id));
     }
 
     return SingleChildScrollView(
