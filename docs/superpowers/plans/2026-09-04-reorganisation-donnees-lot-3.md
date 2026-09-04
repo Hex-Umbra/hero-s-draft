@@ -160,15 +160,15 @@ HerosDraftGame _buildGame() => HerosDraftGame(
       imagesToPreload: const [],
       onEnemiesDead: () {},
       onPhaseChanged: (_) {},
-      onShowTooltip: (_, __, ___) {},
+      onShowTooltip: (_, _, _) {},
       onHideTooltip: () {},
-      onPlayCard: (_, __) => false,
+      onPlayCard: (_, _) => false,
       onEnemyKilled: () {},
       onResolveEnemyIntent: (_) {},
       onStartEnemyTurn: () {},
       onEndEnemyTurn: () {},
       onSelectEnemy: (_) {},
-      onUpdateEnemyStats: (_, __) {},
+      onUpdateEnemyStats: (_, _) {},
     );
 
 void main() {
@@ -279,7 +279,7 @@ Dans `assets/data/enemies.json`, les quatre `spritePath` :
 flutter test test/unit/asset_path_convention_test.dart test/unit/flame_image_prefix_test.dart
 ```
 
-Attendu : **4 tests au vert**.
+Attendu : **3 tests au vert** (1 dans `asset_path_convention_test.dart`, 2 dans `flame_image_prefix_test.dart`).
 
 - [ ] **Step 7: Prouver que le test de préfixe mord**
 
