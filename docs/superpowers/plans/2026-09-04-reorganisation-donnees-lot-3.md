@@ -12,6 +12,8 @@
 
 **Plan amont :** [`2026-09-04-reorganisation-donnees-lots-1-2.md`](2026-09-04-reorganisation-donnees-lots-1-2.md) — **livré**, PR [#34](https://github.com/Hex-Umbra/hero-s-draft/pull/34). Le lot 3 en dépend : les cinq ordres d'affichage sont déjà explicites, donc le tri par `id` de ce lot n'a aucune conséquence observable.
 
+**Effort : 5,4 j** — somme des dix tâches. La spec §14 et `docs/ROADMAP.md:257` budgètent 4,5 j : l'écart de 0,9 j vient de la tâche 1 (le préfixe Flame sorti en amont, §D-P4) et du découpage de la migration en deux temps, qui ajoute une tâche de bascule. Corriger les deux documents à la tâche 10, ou assumer l'écart en le disant.
+
 ---
 
 ## Global Constraints
@@ -36,7 +38,7 @@
 La spec laissait quatre points ouverts. Ils sont tranchés ici, et les tâches en dépendent.
 
 **D-P1 — `GameDataRegistry` garde des `List<T>`, pas des `Map<String, T>`.**
-La note de §5.1 proposait de produire des `Map` pour supprimer les recherches linéaires des quatre `getById`. **Non** : c'est le périmètre de la fiche **P-26**, et le convertir ici toucherait les 18 sites de `test/` qui construisent `GameDataRegistry(...)`, pour un gain de performance qui n'a jamais été mesuré comme un problème. Le chargeur rend une `List<T>` triée par `id` ; P-26 pourra la transformer sans rien changer au chargeur.
+La note de §5.1 proposait de produire des `Map` pour supprimer les recherches linéaires des quatre `getById`. **Non** : c'est le périmètre de la fiche **P-26**, et le convertir ici toucherait les **25 sites répartis dans 21 fichiers** de `test/` qui construisent `GameDataRegistry(...)` — mesuré par `grep -ro 'GameDataRegistry(' test/ | wc -l`, la spec §5.5 en annonce 18, un chiffre périmé —, pour un gain de performance qui n'a jamais été mesuré comme un problème. Le chargeur rend une `List<T>` triée par `id` ; P-26 pourra la transformer sans rien changer au chargeur.
 
 **D-P2 — L'`id` est injecté depuis le nom de fichier, sous la même règle de conflit que le reste.**
 §6.1 pose « le nom du fichier **est** l'`id` » et §10 demande un test « Nom de fichier = `id` ». Plutôt que d'ajouter un contrôle séparé — impossible à écrire génériquement, puisque le chargeur ne connaît pas le type `T` et ne peut pas lire `.id` —, l'`id` est **injecté depuis le segment capturé**, exactement comme `heroClass` et `category`. La règle D5 (« le répertoire injecte, le JSON peut confirmer, la contradiction échoue ») fait alors tout le travail : `cards/strike.json` déclarant `"id": "strke"` échoue en nommant le fichier, le champ, l'attendu et le trouvé.
@@ -87,7 +89,7 @@ Flame stocke les images sous une clé qui **n'inclut pas le préfixe** (`flame-1
 Et il faut une instance `Images` **propre au jeu**, jamais `Flame.images` : `FlameGame.images` vaut par défaut le singleton global (`flame-1.37.0/lib/src/game/game.dart:28`), et le muter en place changerait le préfixe pour tout le processus — **y compris d'un test widget à l'autre dans le même isolate**, rendant les tests dépendants de leur ordre.
 
 **Files:**
-- Modify: `lib/game/heros_draft_game.dart:29-32` (corps du constructeur), `:140`, `:145`
+- Modify: `lib/game/heros_draft_game.dart:80-96` (le constructeur, qui n'a pas de corps aujourd'hui), `:140`, `:145`
 - Modify: `assets/data/heroes.json` — les 3 `iconPath`
 - Modify: `assets/data/enemies.json` — les 4 `spritePath`
 - Test: `test/unit/flame_image_prefix_test.dart` (create)
@@ -204,7 +206,7 @@ Dans `lib/game/heros_draft_game.dart`, ajouter l'import :
 import 'package:flame/cache.dart';
 ```
 
-Puis donner un corps au constructeur (`:80-95`), qui n'en a pas aujourd'hui :
+Puis donner un corps au constructeur (`:80-96`), qui n'en a pas aujourd'hui :
 
 ```dart
   HerosDraftGame({
@@ -238,7 +240,7 @@ Puis donner un corps au constructeur (`:80-95`), qui n'en a pas aujourd'hui :
 
 - [ ] **Step 4: Passer les chemins internes en complet**
 
-Toujours dans `lib/game/heros_draft_game.dart`, `onLoad()` (`:139-146`) :
+Toujours dans `lib/game/heros_draft_game.dart`, `onLoad()` (`:139-145`) :
 
 ```dart
     final uniqueImages = <String>{
@@ -335,11 +337,14 @@ Créer `test/unit/game_data_loader_test.dart` :
 
 ```dart
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/services/game_data_loader.dart';
+
+// `ByteData` et `Uint8List` viennent de `package:flutter/services.dart`, qui
+// les reexporte : pas d import `dart:typed_data`, comme dans
+// `test/unit/audio/load_audio_data_test.dart`.
 
 /// Bundle factice : sert un `AssetManifest.bin` construit a la volee depuis
 /// les cles de [files]. C est le seul moyen d exercer le chargeur sur une
@@ -549,6 +554,27 @@ void main() {
           final lines = message.split('\n').where((l) => l.contains('casse')).length;
           return lines == 10 && message.contains('et 3 autres');
         })),
+      );
+    });
+
+    test('un fichier contenant un tableau est rejete, pas un objet', () async {
+      // §6.1 : « Un JSON d entite contient un objet, pas un tableau. » C est
+      // la faute la plus probable pendant la migration — recopier un
+      // catalogue entier au lieu d une de ses entrees.
+      final loader = GameDataLoader(FakeBundle({
+        'assets/data/things/a.json': '[{"id":"a","label":"A"}]',
+      }));
+
+      final things = await loader.loadAll<Thing>([
+        EntitySource('assets/data/things/*.json', Thing.fromJson),
+      ]);
+
+      expect(things, isEmpty);
+      expect(
+        () => loader.throwIfFailed(),
+        throwsA(predicate((e) =>
+            e.toString().contains('a.json') &&
+            e.toString().contains('objet JSON'))),
       );
     });
 
@@ -831,7 +857,7 @@ class GameDataLoader {
 flutter test test/unit/game_data_loader_test.dart
 ```
 
-Attendu : **10 tests au vert**.
+Attendu : **11 tests au vert**.
 
 - [ ] **Step 5: Prouver que le test de tri mord**
 
@@ -844,7 +870,7 @@ flutter test
 dart analyze
 ```
 
-Attendu : **401 au vert** (391 + 10) et `No issues found!`.
+Attendu : **402 au vert** (391 + 11) et `No issues found!`.
 
 - [ ] **Step 7: Commit**
 
@@ -877,11 +903,14 @@ Créer `test/unit/game_data_loader_injection_test.dart` :
 
 ```dart
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/services/game_data_loader.dart';
+
+// `ByteData` et `Uint8List` viennent de `package:flutter/services.dart`, qui
+// les reexporte : pas d import `dart:typed_data`, comme dans
+// `test/unit/audio/load_audio_data_test.dart`.
 
 class FakeBundle extends CachingAssetBundle {
   FakeBundle(this.files);
@@ -1068,7 +1097,7 @@ flutter test
 dart analyze
 ```
 
-Attendu : **408 au vert** (401 + 7) et `No issues found!`.
+Attendu : **409 au vert** (402 + 7) et `No issues found!`.
 
 - [ ] **Step 5: Commit**
 
@@ -1112,11 +1141,19 @@ import 'package:flutter_test/flutter_test.dart';
 
 /// `tool/sync_assets.dart` vit hors de `lib/`, donc n est pas importable par
 /// `package:`. On l invoque comme le ferait un humain ou la CI.
+///
+/// `runInShell: true` est INDISPENSABLE. L hote de `flutter test` est
+/// `flutter_tester.exe`, dont l environnement ne resout pas `dart` : sans le
+/// shell, `Process.run` leve `ProcessException: Le fichier specifie est
+/// introuvable`. Sur `ubuntu-latest` ca passerait — `dart` y est un script a
+/// shebang — donc l omission produirait exactement l asymetrie local/CI que
+/// ce chantier traque ailleurs, mais inversee : rouge en local, vert en CI.
 Future<ProcessResult> _run(List<String> args, {String? cwd}) {
   return Process.run(
     'dart',
     ['run', 'tool/sync_assets.dart', ...args],
     workingDirectory: cwd,
+    runInShell: true,
   );
 }
 
@@ -1148,8 +1185,12 @@ void main() {
       file.writeAsStringSync(content);
     }
 
+    // `environment:` evite l avertissement « has no lower-bound SDK
+    // constraint » que `dart run` ecrirait sur stdout a chaque invocation.
     String pubspecWith(String assetsBlock) =>
         'name: sandbox\r\n'
+        'environment:\r\n'
+        '  sdk: ^3.11.4\r\n'
         'flutter:\r\n'
         '  uses-material-design: true\r\n'
         '  assets:\r\n'
@@ -1362,7 +1403,7 @@ flutter test
 dart analyze
 ```
 
-Attendu : **412 au vert** (408 + 4) et `No issues found!`. `dart analyze` couvre `tool/` : le script doit être propre lui aussi.
+Attendu : **413 au vert** (409 + 4) et `No issues found!`. `dart analyze` couvre `tool/` : le script doit être propre lui aussi.
 
 - [ ] **Step 8: Commit**
 
@@ -1401,11 +1442,14 @@ git commit -m "feat(build): generer la section assets du pubspec depuis le disqu
 - [ ] **Step 1: Figer la référence de l'oracle**
 
 ```bash
-mkdir -p test/migration/reference
+mkdir -p test/migration/reference/images
 cp assets/data/cards.json assets/data/hero_cards.json assets/data/relics.json assets/data/events.json assets/data/enemies.json assets/data/heroes.json assets/data/passives.json assets/data/forge_upgrades.json test/migration/reference/
+cp assets/images/hero_paladin.png assets/images/hero_berserker.png assets/images/hero_mage.png assets/images/enemy_slime.png assets/images/enemy_goblin.png assets/images/enemy_skeleton.png assets/images/enemy_orc.png test/migration/reference/images/
 ```
 
 La référence est prise **maintenant**, après les deux changements de contenu du lot 2 (ids de passifs en `snake_case`, `displayOrder`) et après la tâche 1 (chemins d'images complets). L'oracle apparie les entités par `id` : les avoir faits avant est ce qui permet l'appariement.
+
+> **Les 7 images sont figées elles aussi, et c'est indispensable.** L'oracle compare les octets de chaque image copiée à ceux de son original — or la tâche 7 **supprime** les originaux de `assets/images/`. Sans copie figée, l'oracle deviendrait rouge à la tâche 7, et l'implémenteur serait tenté d'affaiblir le seul filet de sécurité du chantier pour le faire taire. Même raison que pour les huit catalogues : la référence doit survivre à la disparition de ce qu'elle décrit. Tout `test/migration/` part ensemble à la tâche 9.
 
 - [ ] **Step 2: Écrire l'oracle d'équivalence, qui échoue**
 
@@ -1586,6 +1630,10 @@ void main() {
     });
 
     test('les octets de l image copiee sont identiques a l original', () {
+      // La comparaison porte sur la copie figee de `reference/images/`, pas
+      // sur `assets/images/` : la tache 7 y supprime les originaux, et un
+      // oracle qui lirait la source qu on est en train de retirer deviendrait
+      // rouge pour une raison qui n a rien a voir avec l equivalence.
       const icons = {
         'paladin': 'hero_paladin.png',
         'berserker': 'hero_berserker.png',
@@ -1594,7 +1642,7 @@ void main() {
       icons.forEach((id, original) {
         expect(
           File('assets/data/classes/$id/icon.png').readAsBytesSync(),
-          File('assets/images/$original').readAsBytesSync(),
+          File('test/migration/reference/images/$original').readAsBytesSync(),
         );
       });
 
@@ -1607,7 +1655,7 @@ void main() {
       sprites.forEach((id, original) {
         expect(
           File('assets/data/enemies/$id/sprite.png').readAsBytesSync(),
-          File('assets/images/$original').readAsBytesSync(),
+          File('test/migration/reference/images/$original').readAsBytesSync(),
         );
       });
     });
@@ -1787,7 +1835,7 @@ flutter test
 dart analyze
 ```
 
-Attendu : **418 au vert** (412 + 6) et `No issues found!`. Le provider lit toujours les catalogues : **aucun comportement du jeu n'a changé**.
+Attendu : **419 au vert** (413 + 6) et `No issues found!`. Le provider lit toujours les catalogues : **aucun comportement du jeu n'a changé**.
 
 - [ ] **Step 9: Commit**
 
@@ -1821,25 +1869,36 @@ Cette tâche crée aussi `loadGameDataRegistry(bundle)` : **l'unique endroit où
 - Consumes: `GameDataLoader`, `EntitySource` (tâche 2), l'arborescence (tâche 5)
 - Produces: `Future<GameDataRegistry> loadGameDataRegistry(AssetBundle bundle)` dans `lib/services/game_data_service.dart` — construit le registre complet, lève via `throwIfFailed()` si une seule entité est fautive. `Future<GameDataRegistry> buildTutorialTestRegistry()` devient asynchrone et n'est plus qu'une délégation.
 
+> **La délégation change aussi le contenu du registre, pas seulement sa forme.** `buildTutorialTestRegistry` rend aujourd'hui `events: const []` et `forgeUpgrades: const []` (`tutorial_test_registry.dart:31, 34`) ; après délégation il rendra les 5 événements et les 8 améliorations réels. **Aucune assertion des cinq fichiers appelants n'en dépend** — vérifié — donc l'étape reste verte, et le registre gagne en fidélité. Conséquence secondaire à connaître : chaque `testWidgets` des deux fichiers de `test/widget/` fait désormais ~72 lectures de bundle au lieu de 6 lectures `dart:io`. Si la durée de ces tests devient gênante, c'est le passage en `setUpAll` de ces deux fichiers qui la réglera — pas un retour en arrière.
+
 > **Piège du singleton.** `GameDataRegistry` fait `_instance = this` dans son constructeur (`game_data_registry.dart:33`), et les quatre `getById` lisent ce global. **Tout test qui construit deux registres écrase silencieusement le premier.** D'où `setUpAll` et non `setUp` : un registre par fichier de test, construit une fois.
 
 - [ ] **Step 1: Déclarer les sources et le constructeur de registre**
 
-Dans `lib/services/game_data_service.dart`, retirer les imports devenus inutiles (`dart:convert` reste pour `loadAudioData`) et ajouter :
+Dans `lib/services/game_data_service.dart`, ajouter :
 
 ```dart
 import 'game_data_loader.dart';
 ```
 
+**Ne retirer aucun import à cette étape.** `_loadJsonList` et `_mapList` sont encore là — c'est la tâche 7 qui les supprime — et les sept imports de modèles servent tous au nouveau `loadGameDataRegistry`. Le nettoyage appartient à la tâche 7 Step 1.
+
 Puis, avant `gameDataLoaderProvider`, ajouter :
 
 ```dart
-/// Construit le registre complet depuis [bundle].
+/// Construit le registre complet : les entites depuis [bundle], l audio
+/// depuis `rootBundle`.
 ///
 /// **Unique declaration des huit sources du jeu.** Le provider de production
 /// et le registre des tests du tutoriel passent tous deux par ici : une
 /// seconde declaration serait une seconde verite, et c est exactement ce que
 /// ce chantier supprime.
+///
+/// L audio fait exception au seam : `loadAudioData` lit `rootBundle` en dur
+/// (`game_data_service.dart:63`) et ses propres tests simulent le canal
+/// `flutter/assets` plutot que d injecter un bundle. Sans consequence
+/// aujourd hui — seul `rootBundle` est passe ici — mais l ecrire evite de
+/// promettre un seam complet qui n existe pas.
 ///
 /// Le motif de chemin porte la selection ET l injection : `*` vaut un
 /// segment, et les segments captures alimentent `inject`.
@@ -2038,7 +2097,7 @@ flutter test
 dart analyze
 ```
 
-Attendu : **418 au vert** (compte inchangé : aucun test ajouté ni supprimé) et `No issues found!`.
+Attendu : **419 au vert** (compte inchangé : aucun test ajouté ni supprimé) et `No issues found!`.
 
 - [ ] **Step 6: Commit**
 
@@ -2059,12 +2118,16 @@ Le chargeur est écrit, testé sur un bundle factice, et prouvé sur le vrai bun
 - Modify: `lib/services/game_data_service.dart:15-50, 78-116` — `_loadJsonList` et `_mapList` supprimés, provider rebranché
 - Delete: `assets/data/{cards,hero_cards,relics,events,enemies,heroes,passives,forge_upgrades}.json`
 - Delete: `assets/images/{hero_paladin,hero_berserker,hero_mage,enemy_slime,enemy_goblin,enemy_skeleton,enemy_orc}.png`
-- Modify: `test/unit/entity_id_convention_test.dart` — parcourt l'arborescence
+- Modify: `test/unit/entity_id_convention_test.dart:14-31` — parcourt l'arborescence
 - Modify: `test/unit/asset_path_convention_test.dart` — lit l'arborescence
+- Modify: `test/unit/audio/audio_catalogue_test.dart:36-59` — lit les 4 catalogues en `dart:io`
+- Modify: `test/unit/hero_display_order_test.dart:9, 27` — lit `heroes.json` en `dart:io`
 
 **Interfaces:**
 - Consumes: `loadGameDataRegistry` (tâche 6)
 - Produces: `gameDataLoaderProvider` reste l'unique entrée publique et rend le même `FutureProvider<GameDataRegistry>`. **Aucune signature publique ne change.**
+
+> **Quatre fichiers de test lisent les catalogues en `dart:io`, pas deux.** Le balayage qui les trouve tous est `grep -rn "assets/data/" test/` : au-delà des deux tests de convention, `audio_catalogue_test.dart` **et** `hero_display_order_test.dart` les lisent aussi, et ne sont pas passés par le chargeur de la tâche 6. Trois tests deviendraient rouges si on les oubliait — dont le seul garde-fou sur les champs `sfx`, c'est-à-dire précisément l'angle mort que l'oracle de §8.2 invoque pour justifier sa forme.
 
 - [ ] **Step 1: Rebrancher le provider**
 
@@ -2169,11 +2232,14 @@ void main() {
 
 - [ ] **Step 4: Adapter le test de chemins d'images**
 
-`test/unit/asset_path_convention_test.dart` lit `heroes.json` et `enemies.json`. Remplacer son corps par un parcours de l'arborescence :
+`test/unit/asset_path_convention_test.dart` lit `heroes.json` et `enemies.json`. Remplacer le corps du `test(...)` par un parcours de l'arborescence :
 
 ```dart
-    void check(String glob, String field) {
-      for (final file in Directory('assets/data/$glob')
+  test('tout chemin d image des donnees est complet et designe un fichier existant', () {
+    final offenders = <String>[];
+
+    void check(String directory, String field) {
+      for (final file in Directory('assets/data/$directory')
           .listSync(recursive: true)
           .whereType<File>()
           .where((f) => f.path.endsWith('.json'))) {
@@ -2190,9 +2256,76 @@ void main() {
 
     check('classes', 'iconPath');
     check('enemies', 'spritePath');
+
+    expect(offenders, isEmpty, reason: offenders.join('\n'));
+  });
 ```
 
-- [ ] **Step 5: Purger le bundle et tout relancer**
+- [ ] **Step 5: Adapter le garde-fou des champs `sfx`**
+
+`test/unit/audio/audio_catalogue_test.dart:37-42` liste quatre catalogues en dur. Remplacer cette liste par un parcours de l'arborescence, en gardant le reste du test intact :
+
+```dart
+    test('tout champ sfx d un JSON de contenu correspond a un son declare', () {
+      // Les catalogues ont ete eclates : on parcourt l arborescence plutot
+      // que d enumerer des chemins. Les entites qui peuvent porter un `sfx`
+      // sont les cartes (neutres et de classe), les ennemis et les reliques ;
+      // `AudioSource` n est implemente que par ces trois modeles.
+      final contentFiles = [
+        ...Directory('assets/data/cards').listSync().whereType<File>(),
+        ...Directory('assets/data/relics').listSync().whereType<File>(),
+        ...Directory('assets/data/classes')
+            .listSync(recursive: true)
+            .whereType<File>()
+            .where((f) => f.path.replaceAll(r'\', '/').contains('/cards/')),
+        ...Directory('assets/data/enemies')
+            .listSync(recursive: true)
+            .whereType<File>()
+            .where((f) => f.path.endsWith('enemy.json')),
+      ].where((f) => f.path.endsWith('.json'));
+
+      final declared = audio.sounds.keys.toSet();
+      final offenders = <String>[];
+
+      for (final file in contentFiles) {
+        final map =
+            jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
+        final sfx = map['sfx'] as String?;
+        if (sfx != null && !declared.contains(sfx)) {
+          offenders.add('${file.path} :: ${map['id']} -> "$sfx"');
+        }
+      }
+
+      expect(offenders, isEmpty,
+          reason: 'Champs sfx pointant vers un son non declare :\n${offenders.join('\n')}');
+    });
+```
+
+Vérifier ensuite que `_readJsonList` n'est plus utilisé par aucun autre test du fichier ; s'il est devenu orphelin, le supprimer (`CLAUDE.md` : aucun code mort).
+
+- [ ] **Step 6: Adapter le test de `displayOrder`**
+
+`test/unit/hero_display_order_test.dart` lit `heroes.json` à ses deux tests. Remplacer la lecture par un parcours des dossiers de classe, en gardant les deux assertions telles quelles :
+
+```dart
+List<HeroData> _heroes() => Directory('assets/data/classes')
+    .listSync()
+    .whereType<Directory>()
+    .map((d) {
+      final json =
+          jsonDecode(File('${d.path}/class.json').readAsStringSync())
+              as Map<String, dynamic>;
+      // L id vient du repertoire parent (§6.1) ; le chargeur l injecte, mais
+      // ce test lit le disque directement et doit donc faire de meme.
+      json['id'] ??= d.uri.pathSegments[d.uri.pathSegments.length - 2];
+      return HeroData.fromJson(json);
+    })
+    .toList();
+```
+
+Puis, dans les deux tests, remplacer les quatre lignes de lecture/décodage par `final heroes = _heroes();`. **Ne toucher à aucune assertion** : `displayOrder` distinct et non nul, et le tri qui rend `paladin, berserker, mage`. Le second reste vrai — il trie par `displayOrder`, pas par `id`.
+
+- [ ] **Step 7: Purger le bundle et tout relancer**
 
 ```bash
 flutter clean
@@ -2202,7 +2335,9 @@ flutter test
 
 **`flutter clean` est de nouveau obligatoire** : cette tâche supprime 15 fichiers, et `_needsRebuild` ne détecte pas les suppressions. Sans purge, les catalogues supprimés pourraient survivre dans `build/unit_test_assets/` et faire passer les tests sur des données fantômes.
 
-Attendu : **420 au vert** (418 + 2 tests ajoutés au fichier de convention, qui passe de 1 à 3) et l'oracle de la tâche 5 toujours vert — il lit sa référence figée, pas les catalogues.
+Attendu : **421 au vert** — 419 plus les 2 tests ajoutés au fichier de convention, qui passe de 1 à 3. Les trois tests des étapes 5 et 6 sont réécrits, pas ajoutés : leur nombre ne bouge pas.
+
+L'oracle de la tâche 5 doit rester vert : il lit sa **référence figée**, catalogues et images comprises — c'est exactement pour survivre à cette étape qu'elle a été prise.
 
 ```bash
 dart analyze
@@ -2211,7 +2346,7 @@ dart run tool/sync_assets.dart --check
 
 Attendu : `No issues found!` et sortie 0.
 
-- [ ] **Step 6: Mesurer le coût de démarrage**
+- [ ] **Step 8: Mesurer le coût de démarrage**
 
 Le chargeur fait désormais **72 lectures de bundle** au lieu de 9 (71 entités + `audio.json`). La spec classe le risque « faible » mais demande une mesure **avant fusion**.
 
@@ -2223,7 +2358,7 @@ Chronométrer, dans `SplashScreen`, la résolution de `gameDataLoaderProvider` �
 
 **Si le temps dépasse 200 ms**, paralléliser les huit catégories dans `loadGameDataRegistry` : garder les futures et les attendre ensemble par `Future.wait<Object?>([...])` avant `throwIfFailed()`. Les lectures d'une même catégorie sont déjà parallèles (`Future.wait` dans `loadAll`) ; seules les catégories sont séquentielles.
 
-- [ ] **Step 7: Vérification manuelle**
+- [ ] **Step 9: Vérification manuelle**
 
 Aucun agent ne peut faire celle-ci. **Lancer le jeu et vérifier à l'œil** :
 
@@ -2232,9 +2367,9 @@ Aucun agent ne peut faire celle-ci. **Lancer le jeu et vérifier à l'œil** :
 - le dictionnaire de cartes liste bien 23 cartes ;
 - le tutoriel se déroule jusqu'au bout.
 
-Une icône manquante ne casse aucun test : elle se voit.
+> **Ce n'est pas du confort : c'est la seule couverture du changement d'espace de clés du cache Flame.** Les trois sites qui chargent une image (`heros_draft_game.dart:143`, `enemy_card.dart:75`, `hero_card.dart:114`) ne sont exercés par aucun test — **aucun fichier de `test/` ne construit `HerosDraftGame`**, et les deux tests de la tâche 1 ne vérifient que `images.prefix` et l'identité du cache, jamais un chargement réel. Or `hero_card.dart:114` appelle `fromCache(imagePath)` : si la clé préchargée et la clé demandée divergeaient, l'échec serait une exception au premier rendu du héros, invisible en CI. À inscrire au risque : **le seul filet sur ce point est l'œil du développeur, ici.**
 
-- [ ] **Step 8: Commit**
+- [ ] **Step 10: Commit**
 
 ```bash
 git add -A
@@ -2279,9 +2414,12 @@ import 'package:roguelike_card_game/services/game_data_service.dart';
 ///
 /// `flutter test` construit le bundle d assets par defaut
 /// (`flutter_tools/lib/src/commands/test.dart:412, 486-489`), ce que
-/// `test/unit/audio/load_audio_data_test.dart` exerce deja. Hypothese
-/// gardee : la CI lance `flutter test` nu — `--no-test-assets` ferait
-/// echouer ce fichier.
+/// `test/unit/audio/audio_ui_and_reel_moments_test.dart:22` exerce deja en
+/// lisant `assets/data/audio.json` par `rootBundle`. Hypothese gardee : la CI
+/// lance `flutter test` nu — `--no-test-assets` ferait echouer ce fichier.
+///
+/// (Ne pas citer `load_audio_data_test.dart` comme precedent : celui-la
+/// SIMULE le canal `flutter/assets` et n atteint jamais le vrai bundle.)
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -2486,7 +2624,7 @@ flutter test
 dart analyze
 ```
 
-Attendu : **427 au vert** (420 + 7) et `No issues found!`.
+Attendu : **428 au vert** (421 + 7) et `No issues found!`.
 
 - [ ] **Step 7: Commit**
 
@@ -2531,7 +2669,7 @@ Le garder plus longtemps serait de toute façon un piège : il fait vivre une co
 flutter test
 ```
 
-Attendu : **421 au vert** (427 − les 6 tests de l'oracle).
+Attendu : **422 au vert** (428 − les 6 tests de l oracle).
 
 - [ ] **Step 2: Écrire le test qui échoue**
 
@@ -2637,7 +2775,7 @@ flutter test
 dart analyze
 ```
 
-Attendu : **422 au vert** (421 + le test de durcissement) et `No issues found!`.
+Attendu : **423 au vert** (422 + le test de durcissement) et `No issues found!`.
 
 `flutter clean` parce que cette étape a modifié 23 fichiers d'assets et supprimé un répertoire de test : le bundle de test ne détecte pas les suppressions.
 
@@ -2661,8 +2799,8 @@ git commit -m "refactor(data): faire expirer la tolerance de champ redondant"
 - Create: `.obsidian_vault/_adr/ADR-0XX-*` — deux ADR neufs
 - Modify: `.obsidian_vault/_adr/ADR-003-architecture-100-data-driven.md`
 - Create: `.obsidian_vault/_patterns/` — une fiche pour le chargeur
-- Modify: `docs/ROADMAP.md:257, 279-297` — P-48 livré
-- Modify: `docs/INDEX.md:44` — le plan du lot 3 indexé
+- Modify: `docs/ROADMAP.md:257, 279-298` — P-48 livré
+- Modify: `docs/INDEX.md:45` — l'entrée du plan du lot 3 passe à « livré »
 - Modify: `CLAUDE.md` — « Data-Driven Content Workflow » et « Data layer »
 - Modify: `.claude/skills/memory-bank-sync/SKILL.md:46` — la métrique
 - Modify: `.agents/skills/game_designer.md:12` — la liste des catalogues
@@ -2688,15 +2826,25 @@ flutter test
 dart analyze
 ```
 
-Attendu : **422 au vert** (compte inchangé — le script supprimé n'était couvert par aucun test) et `No issues found!`.
+Attendu : **423 au vert** (compte inchangé — le script supprimé n'était couvert par aucun test) et `No issues found!`.
 
 - [ ] **Step 3: Amender ADR-003**
 
 Dans `.obsidian_vault/_adr/ADR-003-architecture-100-data-driven.md`, remplacer l'énumération des 8 fichiers et la mention de `GameDataService.loadAll()` par un renvoi à la nouvelle structure et au nouveau chargeur. **Ne pas y recopier les chiffres** : ils vivent dans `_memory_bank/progress.md`, qui les re-mesure. Un ADR dit *pourquoi*, pas *combien*.
 
-- [ ] **Step 4: Écrire les deux ADR neufs**
+- [ ] **Step 4: Écrire les deux ADR neufs, et reporter dans la spec les trois écarts du plan**
 
-Numérotation attribuée par la skill `memory-bank-sync` — ne pas l'inventer.
+**D'abord les écarts, parce que c'est ce qu'on oublie.** Le plan s'écarte de la spec sur trois points, chacun argumenté sur place mais **aucun encore inscrit dans la spec**. Les laisser diverger ferait de la spec et du plan deux vérités contradictoires sur le même sujet — la violation exacte de « One question, one place ».
+
+| Écart | Ce que dit la spec | Ce qu'a fait le plan |
+|:---|:---|:---|
+| **D-P2** | Le tableau §5.2 n'injecte l'`id` que pour `class.json` et `enemy.json` | L'`id` est injecté pour **toutes** les catégories, depuis le nom de fichier — un chargeur générique ne peut pas lire `.id` sur un `T` inconnu |
+| **D-P3** | « Expiration » de §5.2 : déclarer un champ injecté devient une erreur | Vrai pour `heroClass` et `category` ; **`id` reste redéclarable à titre permanent** |
+| **§8.1** | Le script « déplace et renomme les images … et supprime les anciens fichiers » | Les images sont **copiées** en tâche 5, supprimées en tâche 7 — c'est ce qui permet à chaque tâche de finir au vert |
+
+Amender §5.2, §6.1 et §8.1 de la spec en conséquence, et mettre son statut à *livré*.
+
+Puis les deux ADR. Numérotation attribuée par la skill `memory-bank-sync` — ne pas l'inventer.
 
 1. **La règle de partage catalogue / configuration.** Un fichier de `assets/data/` est *découpé* s'il est un catalogue d'entités interchangeables ; il *reste à plat* s'il est un document de configuration unique. `patch_notes.json` (l'ordre du tableau **est** la sémantique : index 0 = version courante, et cinq scripts de `.github/scripts/` plus `site/_site/js/model.js` en dépendent) et `audio.json` tombent du second côté.
 2. **L'autorité du répertoire, option C, avec expiration.** Le répertoire injecte, le JSON pouvait confirmer, la contradiction échoue — et la tolérance a expiré à la tâche 9. Consigner pourquoi les passifs en sont exclus (décision D4 : `PassiveData` n'a pas de `heroClass`, l'injection serait un no-op indétectable) et pourquoi `id` reste redéclarable (D-P3).
@@ -2731,10 +2879,10 @@ Ligne 12 : l'énumération des catalogues, `skills.json` compris. La remplacer p
 
 Dans `docs/ROADMAP.md` :
 - ligne 257 : retirer *« lots 1 et 2 livrés »* et *« ~4,5 j (lot 3 restant) »*, marquer **P-48 livré** ;
-- lignes 289-293 : la ligne du lot 3 passe à ✅ **livré le YYYY-MM-DD** ;
+- ligne **294** : la ligne du lot 3 passe à ✅ **livré le YYYY-MM-DD** *(289-293 sont l'en-tête du tableau et les lots 1 et 2, déjà à jour)* ;
 - noter que **P-42 doit désormais écrire ses cartes directement dans `assets/data/classes/<id>/cards/`**, un fichier par carte, sans `heroClass` ni `category`.
 
-Dans `docs/INDEX.md`, ajouter le plan du lot 3 sous « Héros, classes & cartes », et corriger la mention *« lot 3 à planifier »* de la ligne 44.
+Dans `docs/INDEX.md`, **ligne 45** : le plan du lot 3 y est déjà indexé sous « Héros, classes & cartes » — il ne s'agit que de remplacer la mention *« (la migration ; à exécuter) »* par *« (livré) »*. La ligne 44, celle des lots 1-2, est déjà correcte.
 
 - [ ] **Step 10: Vérification finale complète**
 
@@ -2746,13 +2894,13 @@ flutter test
 dart run tool/sync_assets.dart --check
 ```
 
-Attendu : `No issues found!`, **422 au vert**, sortie 0.
+Attendu : `No issues found!`, **423 au vert**, sortie 0.
 
 ```bash
 find assets/data -name '*.json' | wc -l   # → 73
 ls assets/images/                          # → bg_dungeon.png, seul
 ls tool/                                   # → sync_assets.dart, seul
-git status --short                         # → propre après commit
+git status --short                         # → propre (voir la note l10n plus bas)
 ```
 
 - [ ] **Step 11: Commit**
@@ -2769,15 +2917,16 @@ git commit -m "docs(reorg): documenter la nouvelle structure et retirer l echafa
 À vérifier avant d'ouvrir la PR. Chaque ligne fausse est un motif de ne pas ouvrir.
 
 - [ ] `dart analyze --fatal-infos` → `No issues found!`
-- [ ] `flutter test` → **422 au vert**, après un `flutter clean` *(le compte exact est à consigner ; l'invariant est qu'aucun test existant n'a disparu sans justification écrite)*
+- [ ] `flutter test` → **423 au vert**, après un `flutter clean` *(le compte exact est à consigner ; l'invariant est qu'aucun test existant n'a disparu sans justification écrite)*
 - [ ] `dart run tool/sync_assets.dart --check` → sortie 0
 - [ ] `find assets/data -name '*.json' | wc -l` → **73**
 - [ ] `assets/images/` ne contient plus que `bg_dungeon.png`
 - [ ] `tool/` ne contient plus que `sync_assets.dart`
 - [ ] `test/migration/` n'existe plus
+- [ ] `git status --short` est propre. *`lib/l10n/app_localizations*.dart` peuvent apparaître ` M` après un `flutter clean` (`generate: true` les régénère) : confirmer avec `git diff` que le contenu est identique avant de conclure à une dérive.*
 - [ ] Aucun fichier de `assets/data/cards/` ou `assets/data/classes/*/cards/` ne porte `heroClass` ou `category`
-- [ ] Les six mutations de preuve ont été exécutées et **ont fait échouer** le test visé : préfixe Flame (t.1), tri par id (t.2), contradiction d'injection (t.3), `--check` du pubspec (t.4), les trois de l'oracle (t.5), ligne de pubspec retirée (t.8), image de classe manquante (t.8), champ redondant réintroduit (t.9)
-- [ ] Le coût de démarrage a été mesuré et consigné (t.7 step 6)
+- [ ] Les **dix** mutations de preuve ont été exécutées et **ont fait échouer** le test visé : préfixe Flame (t.1), tri par id (t.2), contradiction d'injection (t.3), `--check` du pubspec (t.4), les **trois** de l'oracle (t.5), ligne de pubspec retirée (t.8), image de classe manquante (t.8), champ redondant réintroduit (t.9)
+- [ ] Le coût de démarrage a été mesuré et consigné (t.7 step 8)
 - [ ] **Le jeu a été lancé et vérifié à l'œil** : sélection de classe avec icônes, combat avec sprites, dictionnaire à 23 cartes, tutoriel complet *(aucun agent ne peut faire cette vérification)*
 - [ ] ADR-003 ne décrit plus les 8 catalogues
 - [ ] `.claude/skills/memory-bank-sync/SKILL.md` ne mesure plus les données par `ls assets/data/*.json`
@@ -2791,7 +2940,7 @@ Rappelé ici parce que ce sont les tentations les plus probables en cours de rou
 - **Les cinq `toJson()` manquants** (`RelicData`, `HeroData`, `PassiveData`, `EnemyData`, `EventData`). L'oracle compare du JSON brut précisément pour ne pas en avoir besoin. Ils restent un prérequis du devtool d'édition, qui les paiera avec ses propres tests de round-trip.
 - **Le devtool d'édition de contenu** — chantier suivant, `kDebugMode` uniquement.
 - **P-30** (menu de triche), **P-41** et **P-42**. Ce chantier construit l'infrastructure des pools par classe ; il n'en écrit pas le contenu.
-- **Le correctif « tirer un `id` plutôt qu'un index »** dans `relic_exchange_screen.dart:125`. Conséquence assumée : une run reprise après migration verra une autre relique au même nœud — non parce que la sauvegarde la mémorise, mais parce qu'elle ne la mémorise pas.
+- **Le correctif « tirer un `id` plutôt qu'un index »** dans `relic_exchange_screen.dart:142` *(le tirage lui-même ; le `Random(seed)` qui l'alimente est à `:125`)*. Conséquence assumée : une run reprise après migration verra une autre relique au même nœud — non parce que la sauvegarde la mémorise, mais parce qu'elle ne la mémorise pas.
 - **P-40 blocs 2 et 3** — trois bugs de gameplay et dix dérives documentaires.
 - **Toute modification d'équilibrage.**
 - **Le patch note** — décision du propriétaire du projet ; si elle est prise, elle passe par la skill `patch-notes-writer`, qui fait bouger ensemble `patch_notes.json`, `pubspec.yaml` et `site/_site/versions.json`.
