@@ -19,7 +19,7 @@ import '../widgets/draft/card_draft_layout.dart';
 
 class StarterDeckDraftScreen extends ConsumerStatefulWidget {
   final HeroData playerClass;
-  final PassiveData passive;
+  final PassiveData? passive;
 
   const StarterDeckDraftScreen({
     super.key,

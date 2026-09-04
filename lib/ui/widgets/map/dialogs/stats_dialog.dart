@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'package:roguelike_card_game/ui/widgets/game_dialog.dart';
 import '../../../../game/controllers/run_controller.dart';
-import '../../../../models/data/passive_data.dart';
 import '../../../../services/game_data_service.dart';
 import '../../sword_icon.dart';
 
@@ -55,11 +54,9 @@ class StatsDialog extends ConsumerWidget {
     if (runState.heroClassId == 'berserker') classIcon = Icons.whatshot;
     if (runState.heroClassId == 'mage') classIcon = Icons.auto_fix_high;
 
-    final passive =
-        runState.activePassive ??
-        PassiveData.fallback(runState.passiveTrait ?? '');
-    final traitName = passive.getName(locale);
-    final traitDesc = passive.getDescription(locale);
+    final passive = runState.activePassive;
+    final traitName = passive?.getName(locale) ?? '—';
+    final traitDesc = passive?.getDescription(locale) ?? '';
 
     final stats = runState.heroStats;
 
