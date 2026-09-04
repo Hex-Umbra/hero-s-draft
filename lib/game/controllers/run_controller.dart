@@ -11,7 +11,6 @@ import '../../models/data/forge_upgrade_data.dart';
 import '../../services/map_generator_service.dart';
 import '../systems/trait_system.dart';
 import 'inventory_controller.dart';
-import 'skill_controller.dart';
 import 'run/player_stats_manager.dart';
 import 'run/map_progression_manager.dart';
 import 'run/gold_manager.dart';
@@ -272,8 +271,6 @@ class RunController extends Notifier<RunState> {
           initialBonusShopCards: 0,
         );
 
-    // Réinitialise les cooldowns de sorts
-    ref.read(skillProvider.notifier).resetCooldowns();
   }
 
   /// Sélectionne un nœud sur la carte et déplace le joueur
@@ -421,10 +418,8 @@ class RunController extends Notifier<RunState> {
     final updatedStats = StatusEffectProcessor.processPlayerStatuses(state.heroStats);
     state = state.copyWith(heroStats: updatedStats);
 
-    // 4. Décrémenter les cooldowns via le skill provider
-    ref.read(skillProvider.notifier).tickCooldowns();
 
-    // 5. Déclencher les traits passifs
+    // 4. Déclencher les traits passifs
     TraitSystem.onTurnStart(this);
   }
 

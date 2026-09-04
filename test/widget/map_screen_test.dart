@@ -15,7 +15,6 @@ final mockGameDataLoaderProvider = FutureProvider<GameDataRegistry>((
   return GameDataRegistry(
     enemies: [],
     heroes: [],
-    skills: [],
     cards: [],
     events: [],
     passives: [],

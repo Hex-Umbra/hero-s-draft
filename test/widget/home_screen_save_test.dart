@@ -47,7 +47,6 @@ final _mockRegistry = GameDataRegistry(
       passiveTrait: 'regenArmor',
     ),
   ],
-  skills: const [],
   cards: const [],
   events: const [],
   passives: const [],

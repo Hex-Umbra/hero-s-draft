@@ -5,9 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../game/controllers/run_controller.dart';
 import '../game/controllers/deck_controller.dart';
 import '../game/controllers/inventory_controller.dart';
-import '../game/controllers/skill_controller.dart';
 import '../models/inventory_state.dart';
-import '../models/skill_state.dart';
 import '../models/missing_save_item.dart';
 
 /// The subset of Ref/WidgetRef/ProviderContainer that SaveService needs:
@@ -36,7 +34,6 @@ class SaveService {
       'run': read(runProvider).toJson(),
       'deck': read(deckProvider).toJson(),
       'inventory': read(inventoryProvider).toJson(),
-      'skills': read(skillProvider).toJson(),
     };
     await prefs.setString(_saveKey, jsonEncode(payload));
   }
@@ -75,7 +72,6 @@ class SaveService {
     }
 
     try {
-      final skills = SkillState.fromJson(json['skills'] as Map<String, dynamic>);
       final (inventory, invMissing) = InventoryState.fromJsonWithReport(
         json['inventory'] as Map<String, dynamic>,
       );
@@ -86,7 +82,6 @@ class SaveService {
         json['run'] as Map<String, dynamic>,
       );
 
-      read(skillProvider.notifier).hydrate(skills);
       read(inventoryProvider.notifier).hydrate(inventory);
       read(deckProvider.notifier).hydrate(deck);
       read(runProvider.notifier).hydrate(run);

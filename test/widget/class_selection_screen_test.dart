@@ -53,7 +53,6 @@ const _heroes = [
 final _mockRegistry = GameDataRegistry(
   enemies: const [],
   heroes: _heroes,
-  skills: const [],
   cards: const [],
   events: const [],
   passives: const [],

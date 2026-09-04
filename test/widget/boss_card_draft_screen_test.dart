@@ -85,7 +85,6 @@ void main() {
   final mockRegistry = GameDataRegistry(
     enemies: [],
     heroes: [],
-    skills: [],
     cards: mockCards,
     events: [],
     passives: [],

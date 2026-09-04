@@ -98,7 +98,6 @@ const _relics = [
 final _mockRegistry = GameDataRegistry(
   enemies: const [],
   heroes: const [],
-  skills: const [],
   cards: _cards,
   events: const [],
   passives: const [],

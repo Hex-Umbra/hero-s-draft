@@ -61,7 +61,6 @@ void main() {
   final mockRegistry = GameDataRegistry(
     enemies: const [],
     heroes: const [],
-    skills: const [],
     cards: const [strikeCard, defendCard],
     events: const [],
     passives: const [],

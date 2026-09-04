@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/map_node.dart';
 import '../../../services/map_generator_service.dart';
 import '../run_controller.dart';
-import '../skill_controller.dart';
 import '../checkpoint_controller.dart';
 
 class MapProgressionManager {
@@ -67,7 +66,5 @@ class MapProgressionManager {
         heroStats: currentStats.copyWith(currentMana: currentStats.maxMana),
       ),
     );
-    // Réinitialise les cooldowns à chaque nouveau niveau
-    ref.read(skillProvider.notifier).resetCooldowns();
   }
 }

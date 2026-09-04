@@ -347,9 +347,6 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       onUpdateEnemyStats: (enemyId, stats) {
         ref.read(combatProvider.notifier).updateEnemyStats(enemyId, stats);
       },
-      onExecuteSkill: (skill, targetEnemyId) {
-        ref.read(combatProvider.notifier).executeSkill(skill, targetEnemyId: targetEnemyId);
-      },
       onEnemiesSpawned: () {
         if (mounted) {
           WidgetsBinding.instance.addPostFrameCallback((_) {

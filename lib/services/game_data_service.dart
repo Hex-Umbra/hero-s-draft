@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/data/enemy_data.dart';
 import '../models/data/hero_data.dart';
-import '../models/data/skill_data.dart';
 import '../models/data/card_data.dart';
 import '../models/data/event_data.dart';
 import '../models/data/passive_data.dart';
@@ -80,7 +79,6 @@ final gameDataLoaderProvider = FutureProvider<GameDataRegistry>((ref) async {
   final List<List<dynamic>> results = await Future.wait([
     _loadJsonList('assets/data/enemies.json'),
     _loadJsonList('assets/data/heroes.json'),
-    _loadJsonList('assets/data/skills.json'),
     _loadJsonList('assets/data/cards.json'),
     _loadJsonList('assets/data/events.json'),
     _loadJsonList('assets/data/passives.json'),
@@ -93,13 +91,12 @@ final gameDataLoaderProvider = FutureProvider<GameDataRegistry>((ref) async {
 
   final enemiesList = results[0];
   final heroesList = results[1];
-  final skillsList = results[2];
-  final cardsList = results[3];
-  final eventsList = results[4];
-  final passivesList = results[5];
-  final relicsList = results[6];
-  final heroCardsList = results[7];
-  final forgeUpgradesList = results[8];
+  final cardsList = results[2];
+  final eventsList = results[3];
+  final passivesList = results[4];
+  final relicsList = results[5];
+  final heroCardsList = results[6];
+  final forgeUpgradesList = results[7];
 
   final allCards = [
     ...cardsList,
@@ -109,7 +106,6 @@ final gameDataLoaderProvider = FutureProvider<GameDataRegistry>((ref) async {
   return GameDataRegistry(
     enemies: _mapList(enemiesList, EnemyData.fromJson, 'EnemyData'),
     heroes: _mapList(heroesList, HeroData.fromJson, 'HeroData'),
-    skills: _mapList(skillsList, SkillData.fromJson, 'SkillData'),
     cards: _mapList(allCards, CardData.fromJson, 'CardData'),
     events: _mapList(eventsList, EventData.fromJson, 'EventData'),
     passives: _mapList(passivesList, PassiveData.fromJson, 'PassiveData'),

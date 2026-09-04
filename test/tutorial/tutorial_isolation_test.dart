@@ -32,7 +32,6 @@ void main() {
       'deckProvider',
       'combatProvider',
       'inventoryProvider',
-      'skillProvider',
       'rewardProvider',
       'shopProvider',
       'eventProvider',

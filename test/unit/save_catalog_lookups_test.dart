@@ -31,7 +31,6 @@ void main() {
       GameDataRegistry(
         enemies: [],
         heroes: [],
-        skills: [],
         cards: [
           const CardData(
             id: 'strike_basic',
@@ -96,7 +95,6 @@ void main() {
       GameDataRegistry(
         enemies: [],
         heroes: [],
-        skills: [],
         cards: [],
         events: [],
         passives: [],

@@ -14,10 +14,8 @@ import '../systems/encounter_system.dart';
 import '../systems/trait_system.dart';
 import '../services/effect_resolver.dart';
 import '../services/effects/effect_strategy.dart';
-import '../../../models/data/skill_data.dart';
 import 'run_controller.dart';
 import 'deck_controller.dart';
-import '../services/damage_pipeline.dart';
 import 'combat/turn_phase_manager.dart';
 
 class CombatController extends Notifier<CombatState> {
@@ -203,74 +201,6 @@ class CombatController extends Notifier<CombatState> {
         return enemy.copyWith(stats: newStats);
       }).toList(),
     );
-  }
-
-  /// Résout les calculs et l'application d'un Skill (compétence héroïque)
-  void executeSkill(SkillData skill, {String? targetEnemyId}) {
-    final runController = ref.read(runProvider.notifier);
-    final heroStats = runController.currentState.heroStats;
-    final effectiveAttaque = runController.currentState.effectiveAttaque;
-
-    if (skill.effectType == 'damage_aoe') {
-      state = state.copyWith(
-        enemies: state.enemies.map((enemy) {
-          final (dmg, isCrit) = DamagePipeline.calculate(
-            initialDamage: (effectiveAttaque * (skill.effectValue / 100.0)).round(),
-            attackerStats: heroStats,
-            defenderStats: enemy.stats,
-          );
-          return enemy.copyWith(stats: enemy.stats.takeDamage(dmg, isCrit: isCrit));
-        }).toList(),
-      );
-      cleanDeadEnemies();
-    } else if (skill.effectType == 'damage_targeted' && targetEnemyId != null) {
-      state = state.copyWith(
-        enemies: state.enemies.map((enemy) {
-          if (enemy.id != targetEnemyId) return enemy;
-          final (dmg, isCrit) = DamagePipeline.calculate(
-            initialDamage: (effectiveAttaque * (skill.effectValue / 100.0)).round(),
-            attackerStats: heroStats,
-            defenderStats: enemy.stats,
-          );
-          return enemy.copyWith(stats: enemy.stats.takeDamage(dmg, isCrit: isCrit));
-        }).toList(),
-      );
-      cleanDeadEnemies();
-    } else if (skill.effectType == 'damage_pierce' && targetEnemyId != null) {
-      final enemyIndex = state.enemies.indexWhere((e) => e.id == targetEnemyId);
-      if (enemyIndex != -1) {
-        final enemy = state.enemies[enemyIndex];
-        final (dmg, isCrit) = DamagePipeline.calculate(
-          initialDamage: effectiveAttaque,
-          attackerStats: heroStats,
-          defenderStats: enemy.stats,
-        );
-        int stolenArmor = (enemy.stats.armure * (skill.effectValue / 100.0)).round();
-        int newPv = enemy.stats.currentPv - dmg;
-        int newArm = enemy.stats.armure - stolenArmor;
-        if (newPv < 0) newPv = 0;
-        if (newArm < 0) newArm = 0;
-
-        state = state.copyWith(
-          enemies: state.enemies.map((e) {
-            if (e.id != targetEnemyId) return e;
-            return e.copyWith(
-              stats: e.stats.copyWith(
-                currentPv: newPv,
-                armure: newArm,
-                lastActionWasCrit: isCrit,
-              ),
-            );
-          }).toList(),
-        );
-        if (stolenArmor > 0) {
-          runController.setHeroStats(armure: heroStats.armure + stolenArmor);
-        }
-        cleanDeadEnemies();
-      }
-    } else if (skill.effectType == 'armor_buff') {
-      runController.setHeroStats(armure: heroStats.armure + skill.effectValue);
-    }
   }
 
   /// Applique le jeu d'une carte par le joueur
