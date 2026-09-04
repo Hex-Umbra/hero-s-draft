@@ -28,7 +28,7 @@ flutter:
   uses-material-design: true
   generate: true
   assets:
+    - assets/audio/music/
+    - assets/audio/sfx/
     - assets/data/
     - assets/images/
-    - assets/audio/sfx/
-    - assets/audio/music/
