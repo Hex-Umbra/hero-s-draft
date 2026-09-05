@@ -1667,9 +1667,10 @@ menu pause **depuis la carte puis depuis un combat**.
 
 **Attendu : aucun bouton de debug, dans l'un comme dans l'autre.**
 
-Aucun test automatisé ne peut prouver ce point — `kDebugMode` vaut toujours `true` sous
-`flutter test`. C'est la raison d'être de cette étape, et elle est à refaire à chaque déplacement
-du point d'entrée.
+`flutter test` ne peut rien prouver ici, `kDebugMode` y valant toujours `true`. Mais la
+vérification est **mécanisable** sur l'instantané AOT plutôt que laissée à l'œil : voir §7.1 de la
+spec, qui porte la procédure et le résultat mesuré. À refaire à chaque déplacement du point
+d'entrée.
 
 - [ ] **Étape 6 : commit**
 

@@ -1,9 +1,10 @@
 # Menu de debug — lot 1 : manipulateur de run — Conception
 
 Date : 2026-09-05
-Statut : **Conçu, non implémenté**
-Révision : v2 — après relecture : ciblage des ennemis un par un plutôt qu'une action de vague
-(§4, onglet Combat), et vérification manuelle du build release (§7.1)
+Statut : **Livré** le 2026-09-05, branche `feat/menu-debug-lot-1`
+Révision : v3 — v2 après relecture (ciblage des ennemis un par un plutôt qu'une action de vague,
+§4) ; v3 après livraison : la vérification du build release s'est révélée **mécanisable** sur
+l'instantané AOT, là où la v2 la donnait pour irréductiblement visuelle (§7.1)
 Périmètre : **lot 1 sur 2.** Le lot 2 — l'éditeur de contenu hors run — fait l'objet de sa propre
 spec et n'est pas traité ici.
 Sources amont :
@@ -235,19 +236,39 @@ Les seules lignes ajoutées à du code existant sont au nombre de trois :
 - drapeau levé + `checkpointProvider.bump()` → aucune écriture ;
 - `startNewRun` rabaisse le drapeau et l'autosave reprend.
 
-### 7.1 L'absence en build release se vérifie à la main
+### 7.1 L'absence en build release se vérifie sur l'instantané AOT
 
-Les tests s'exécutent en mode debug : `kDebugMode` y vaut toujours `true`. Aucun test automatisé
-de ce dépôt ne peut donc prouver l'absence du menu dans un build publié. **Cette vérification est
-manuelle, et c'est le choix retenu** plutôt qu'un test automatisé qui ne prouverait rien.
+Les tests `flutter test` s'exécutent en mode debug, où `kDebugMode` vaut toujours `true` : aucun
+d'eux ne peut rien dire du build publié. **Mais la vérification n'est pas condamnée à être
+visuelle pour autant** — contrairement à ce que cette section affirmait avant d'être mise à
+l'épreuve.
 
-Procédure, à exécuter une fois à la livraison du lot, puis à chaque déplacement du point d'entrée
-de §3.4 :
+Les littéraux de chaînes du code Dart survivent dans l'instantané AOT
+`build/windows/x64/runner/Release/data/app.so`. Y chercher un libellé du menu de debug répond donc
+directement à la question, **à condition de vérifier d'abord que la recherche sait trouver quelque
+chose** :
 
-1. `flutter build windows --release`
-2. Lancer le binaire produit, démarrer une run, ouvrir le menu pause **depuis la carte** puis
-   **depuis un combat**.
-3. Aucun bouton de debug ne doit apparaître dans l'un ni dans l'autre.
+```bash
+flutter build windows --release
+SO=build/windows/x64/runner/Release/data/app.so
+# Temoins : doivent etre PRESENTS, sinon la recherche ne prouve rien
+for s in "Carte du Monde" "Menu Principal"; do grep -aq "$s" "$SO" && echo "temoin ok : $s"; done
+# Libelles de debug : doivent etre ABSENTS
+for s in "Menu de debug" "Soin complet" "Reliques possedees"; do
+  grep -aq "$s" "$SO" && echo "FUITE : $s"
+done
+```
+
+**Mesuré le 2026-09-05**, à la livraison du lot : les quatre témoins présents, les trois libellés
+de debug absents. Le sous-arbre a bien été éliminé au tree-shaking.
+
+Le témoin n'est pas une précaution de style. La première exécution de cette recherche n'a rien
+trouvé **nulle part**, y compris pour des chaînes réellement présentes : le résultat négatif sur le
+menu de debug ne valait alors rien. Une recherche incapable de trouver ne démontre aucune absence.
+
+Cette vérification ne dispense pas d'un coup d'œil à l'écran à la livraison — ouvrir le menu pause
+depuis la carte puis depuis un combat — mais elle le précède, parce qu'elle est reproductible et ne
+dépend pas de l'attention de qui regarde.
 
 La garantie de fond reste le repliage de constante du compilateur ; la double garde de §3.1 est là
 pour que l'oubli d'un seul des deux niveaux ne suffise pas à faire fuiter le menu.
@@ -268,7 +289,7 @@ pour que l'oubli d'un seul des deux niveaux ne suffise pas à faire fuiter le me
 
 | Risque | Portée | Traitement |
 |:---|:---|:---|
-| Le menu atteint un build publié | Élevée si elle survenait | Double garde `kDebugMode` (§3.1, §3.4), et vérification manuelle sur un build release à la livraison (§7.1) |
+| Le menu atteint un build publié | Élevée si elle survenait | Double garde `kDebugMode` (§3.1, §3.4), et recherche des libellés de debug dans l'instantané AOT du build release, témoins à l'appui (§7.1) |
 | Une sauvegarde trafiquée passe pour légitime | Élevée | **D5** — le drapeau ; la sauvegarde disque reste celle d'avant |
 | Une valeur forcée produit un état impossible à atteindre en jeu, et un faux bug | Moyenne | Aucun garde-fou : c'est le but de l'outil. Les bornes des champs sont celles des modèles, pas celles du gameplay |
 | Un `act` forcé sans carte correspondante | Faible | §5 sépare les deux actions précisément pour ça |
