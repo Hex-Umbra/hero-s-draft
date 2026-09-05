@@ -2682,7 +2682,7 @@ flutter test
 dart analyze
 ```
 
-Attendu : **430 au vert** (423 + 7) et `No issues found!`.
+Attendu : **431 au vert** (423 + 7, puis + 1 au round de correctifs) et `No issues found!`.
 
 - [ ] **Step 7: Commit**
 
@@ -2727,7 +2727,7 @@ Le garder plus longtemps serait de toute façon un piège : il fait vivre une co
 flutter test
 ```
 
-Attendu : **424 au vert** (430 − les 6 tests de l oracle).
+Attendu : **425 au vert** (431 − les 6 tests de l oracle).
 
 - [ ] **Step 2: Écrire le test qui échoue**
 
@@ -2833,7 +2833,7 @@ flutter test
 dart analyze
 ```
 
-Attendu : **425 au vert** (424 + le test de durcissement) et `No issues found!`.
+Attendu : **426 au vert** (425 + le test de durcissement) et `No issues found!`.
 
 `flutter clean` parce que cette étape a modifié 23 fichiers d'assets et supprimé un répertoire de test : le bundle de test ne détecte pas les suppressions.
 
@@ -2886,7 +2886,7 @@ flutter test
 dart analyze
 ```
 
-Attendu : **425 au vert** (compte inchangé — le script supprimé n'était couvert par aucun test) et `No issues found!`.
+Attendu : **426 au vert** (compte inchangé — le script supprimé n'était couvert par aucun test) et `No issues found!`.
 
 - [ ] **Step 3: Amender ADR-003**
 
@@ -2960,7 +2960,7 @@ Les huit de `lib/`, au moment où ce plan est écrit :
 | `lib/ui/screens/card_dictionary_screen.dart:88` | « insérer une carte au milieu de `cards.json` » |
 | `lib/ui/screens/starter_deck_draft_screen.dart:60` | « suivrait l'ordre de `cards.json` » |
 
-Remplacer chaque mention par ce qu'elle désigne désormais — `assets/data/relics/`, `assets/data/cards/`, le registre, selon le cas. **Ne pas toucher au code**, seulement aux commentaires. Relancer `flutter test` pour confirmer que rien n'a bougé : **425 au vert**, inchangé.
+Remplacer chaque mention par ce qu'elle désigne désormais — `assets/data/relics/`, `assets/data/cards/`, le registre, selon le cas. **Ne pas toucher au code**, seulement aux commentaires. Relancer `flutter test` pour confirmer que rien n'a bougé : **426 au vert**, inchangé.
 
 - [ ] **Step 8: Mettre à jour `.agents/skills/game_designer.md`**
 
@@ -2985,7 +2985,7 @@ flutter test
 dart run tool/sync_assets.dart --check
 ```
 
-Attendu : `No issues found!`, **425 au vert**, sortie 0.
+Attendu : `No issues found!`, **426 au vert**, sortie 0.
 
 ```bash
 find assets/data -name '*.json' | wc -l   # → 73
@@ -3008,7 +3008,7 @@ git commit -m "docs(reorg): documenter la nouvelle structure et retirer l echafa
 À vérifier avant d'ouvrir la PR. Chaque ligne fausse est un motif de ne pas ouvrir.
 
 - [ ] `dart analyze --fatal-infos` → `No issues found!`
-- [ ] `flutter test` → **425 au vert**, après un `flutter clean` *(le compte exact est à consigner ; l'invariant est qu'aucun test existant n'a disparu sans justification écrite)*
+- [ ] `flutter test` → **426 au vert**, après un `flutter clean` *(le compte exact est à consigner ; l'invariant est qu'aucun test existant n'a disparu sans justification écrite)*
 - [ ] `dart run tool/sync_assets.dart --check` → sortie 0
 - [ ] `find assets/data -name '*.json' | wc -l` → **73**
 - [ ] `assets/images/` ne contient plus que `bg_dungeon.png`
