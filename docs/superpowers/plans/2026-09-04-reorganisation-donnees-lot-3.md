@@ -2861,7 +2861,8 @@ git commit -m "refactor(data): faire expirer la tolerance de champ redondant"
 - Modify: `docs/INDEX.md:45` — l'entrée du plan du lot 3 passe à « livré »
 - Modify: `CLAUDE.md` — « Data-Driven Content Workflow » et « Data layer »
 - Modify: `.claude/skills/memory-bank-sync/SKILL.md:46` — la métrique
-- Modify: 8 fichiers de `lib/` — commentaires nommant des catalogues disparus (voir Step 7 bis)
+- Modify: 8 fichiers de `lib/` + 3 de `test/` — commentaires nommant des catalogues disparus (voir Step 7 bis)
+- Modify: `README.md:64` — la section « Modding » décrit une procédure devenue impossible
 - Modify: `.agents/skills/game_designer.md:12` — la liste des catalogues
 
 **Interfaces:**
@@ -2924,21 +2925,29 @@ Remplacer par une commande qui compte ce qu'on veut vraiment savoir :
 find assets/data -name '*.json' | wc -l
 ```
 
-- [ ] **Step 7: Mettre à jour `CLAUDE.md`**
+- [ ] **Step 7: Mettre à jour `CLAUDE.md` et `README.md`**
+
+**`README.md:64` d'abord, parce que c'est le plus grave et qu'il a failli passer entre les mailles.** Sa section « Modding (Ajouter du contenu) » donne trois étapes opératoires — *« Ouvrez `assets/data/cards.json` ou `enemies.json`, dupliquez une entrée existante… »* — vers deux fichiers qui n'existent plus. Ce n'est pas un renvoi conceptuel comme les précédents : c'est une instruction, dans la porte d'entrée du dépôt, et elle est devenue impossible à suivre. La remplacer par la nouvelle procédure : créer un fichier dans le bon répertoire, ou un **dossier** pour une classe ou un ennemi, puis lancer `dart run tool/sync_assets.dart`.
+
+Puis `CLAUDE.md` :
 
 - **« Data-Driven Content Workflow »** décrit aujourd'hui le fichier unique à éditer. Le remplacer par : créer un fichier dans le bon répertoire, puis lancer `dart run tool/sync_assets.dart`. Mentionner que pour une classe ou un ennemi, c'est un **dossier** qu'on crée, image comprise.
 - **« Data layer »** nomme encore `skill_data.dart`, supprimé par le bloc 1 de P-40.
 - Ajouter `tool/` à la carte d'architecture : un seul script, générateur de la section `assets:`.
 
-- [ ] **Step 7 bis: Corriger les huit commentaires de `lib/` qui nomment des catalogues disparus**
+- [ ] **Step 7 bis: Corriger les commentaires qui nomment des catalogues disparus, dans `lib/` ET `test/`**
 
 La bascule les a laissés en l'état, à raison : les corriger là aurait élargi le diff de la tâche la plus risquée du chantier. Ce sont des renvois conceptuels, pas des chemins ouverts, donc rien ne casse — mais ils décrivent une structure abolie, ce que `CLAUDE.md` interdit.
 
+**Le balayage porte sur `lib/` et `test/`**, pas seulement `lib/` : la revue de la tâche 7 a trouvé trois mentions supplémentaires côté tests — `test/unit/game_data_loader_test.dart:175` (renvoi pendant à `_mapList`, symbole supprimé), `test/unit/run_controller_test.dart:89` et `test/widget/tutorial_class_step_test.dart:49` (`passives.json`).
+
 ```bash
-grep -rn "cards\.json\|enemies\.json\|heroes\.json\|relics\.json\|passives\.json\|hero_cards\.json\|events\.json\|forge_upgrades\.json" lib/
+grep -rn "cards\.json\|enemies\.json\|heroes\.json\|relics\.json\|passives\.json\|hero_cards\.json\|events\.json\|forge_upgrades\.json\|_mapList\|_loadJsonList" lib/ test/
 ```
 
-Les huit, au moment où ce plan est écrit :
+**Exclure `test/migration/`** : la copie figée y porte légitimement les noms des catalogues, c'est son objet — et elle disparaît à la tâche 9.
+
+Les huit de `lib/`, au moment où ce plan est écrit :
 
 | Fichier | Ce que dit le commentaire |
 |:---|:---|
