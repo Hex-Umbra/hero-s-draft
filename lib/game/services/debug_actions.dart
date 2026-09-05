@@ -1,10 +1,15 @@
 import 'package:flutter/foundation.dart';
 
+import '../../models/card_instance.dart';
+import '../../models/data/card_data.dart';
+import '../../models/data/relic_data.dart';
 import '../../models/entity_stats.dart';
 import '../../services/save_service.dart' show RefReader;
 import '../controllers/debug_taint_controller.dart';
+import '../controllers/deck_controller.dart';
 import '../controllers/inventory_controller.dart';
 import '../controllers/run_controller.dart';
+import '../game_constants.dart';
 
 /// Mutations d'etat reservees au menu de debug.
 ///
@@ -54,6 +59,49 @@ class DebugActions {
   static void advanceToNextAct(RefReader read) {
     if (!kDebugMode) return;
     read(runProvider.notifier).advanceToNextWorld();
+    _taint(read);
+  }
+
+  static void addCard(RefReader read, CardData card) {
+    if (!kDebugMode) return;
+    read(deckProvider.notifier).addCardToMasterDeck(CardInstance(data: card));
+    _taint(read);
+  }
+
+  static void removeCard(RefReader read, String uniqueId) {
+    if (!kDebugMode) return;
+    read(deckProvider.notifier).removeCardById(uniqueId);
+    _taint(read);
+  }
+
+  static void drawCards(RefReader read, int amount) {
+    if (!kDebugMode) return;
+    read(
+      deckProvider.notifier,
+    ).drawCards(amount, maxHandSize: GameConstants.maxHandSize);
+    _taint(read);
+  }
+
+  static void discardHand(RefReader read) {
+    if (!kDebugMode) return;
+    read(deckProvider.notifier).discardHand();
+    _taint(read);
+  }
+
+  /// `addRelic` declenche deja l'effet des reliques `startOfRun` : le
+  /// comportement obtenu est celui du vrai jeu.
+  ///
+  /// Attention, dissymetrie heritee du jeu et non de ce menu :
+  /// `removeRelic` ne defait pas cet effet.
+  static void addRelic(RefReader read, RelicData relic) {
+    if (!kDebugMode) return;
+    read(inventoryProvider.notifier).addRelic(relic);
+    _taint(read);
+  }
+
+  static void removeRelic(RefReader read, String relicId) {
+    if (!kDebugMode) return;
+    read(inventoryProvider.notifier).removeRelics([relicId]);
     _taint(read);
   }
 }

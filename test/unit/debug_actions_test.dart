@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/game/controllers/debug_taint_controller.dart';
 import 'package:roguelike_card_game/game/controllers/inventory_controller.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
+import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
 import 'package:roguelike_card_game/game/services/debug_actions.dart';
+import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/data/hero_data.dart';
 
 const paladin = HeroData(
@@ -79,6 +81,51 @@ void main() {
       expect(container.read(runProvider).mapNodes, isNot(same(mapBefore)));
       expect(container.read(runProvider).currentNodeId, isNull);
       expect(container.read(debugTaintProvider), isTrue);
+    });
+  });
+
+  group('DebugActions — deck et reliques', () {
+    const strike = CardData(
+      id: 'strike_basic',
+      nameEn: 'Strike',
+      nameFr: 'Frappe',
+      descriptionEn: 'Deals 6 damage.',
+      descriptionFr: 'Inflige 6 degats.',
+      cost: 1,
+      type: CardType.attack,
+      category: CardCategory.global,
+      rarity: CardRarity.common,
+      target: CardTarget.singleEnemy,
+      effects: [CardEffect(type: 'damage', value: 6)],
+    );
+
+    test('addCard ajoute une instance au deck maitre et contamine', () {
+      final container = _startedRun();
+      addTearDown(container.dispose);
+      expect(container.read(deckProvider).masterDeck, isEmpty);
+
+      DebugActions.addCard(container.read, strike);
+
+      expect(container.read(deckProvider).masterDeck.length, 1);
+      expect(
+        container.read(deckProvider).masterDeck.first.data.id,
+        'strike_basic',
+      );
+      expect(container.read(debugTaintProvider), isTrue);
+    });
+
+    test('removeCard retire exactement l instance visee', () {
+      final container = _startedRun();
+      addTearDown(container.dispose);
+      DebugActions.addCard(container.read, strike);
+      DebugActions.addCard(container.read, strike);
+      final victim = container.read(deckProvider).masterDeck.first.uniqueId;
+
+      DebugActions.removeCard(container.read, victim);
+
+      final remaining = container.read(deckProvider).masterDeck;
+      expect(remaining.length, 1);
+      expect(remaining.first.uniqueId, isNot(victim));
     });
   });
 }
