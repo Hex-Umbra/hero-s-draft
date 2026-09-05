@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../game_dialog.dart';
+import 'tabs/debug_combat_tab.dart';
+import 'tabs/debug_deck_tab.dart';
 import 'tabs/debug_hero_tab.dart';
+import 'tabs/debug_relics_tab.dart';
 import 'tabs/debug_run_tab.dart';
 
 /// Menu de manipulation d'etat, reserve au developpement.
@@ -24,8 +27,16 @@ class DebugMenuDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tabs = <(String, Widget)>[
+      ('Heros', const DebugHeroTab()),
+      ('Run', DebugRunTab(canRegenerateMap: !inCombat)),
+      ('Deck', const DebugDeckTab()),
+      ('Reliques', const DebugRelicsTab()),
+      if (inCombat) ('Combat', const DebugCombatTab()),
+    ];
+
     return DefaultTabController(
-      length: 2,
+      length: tabs.length,
       child: GameDialog(
         title: const Text('Menu de debug', textAlign: TextAlign.center),
         content: SizedBox(
@@ -33,13 +44,13 @@ class DebugMenuDialog extends StatelessWidget {
           width: 460,
           child: Column(
             children: [
-              const TabBar(tabs: [Tab(text: 'Heros'), Tab(text: 'Run')]),
+              TabBar(
+                isScrollable: true,
+                tabs: [for (final (label, _) in tabs) Tab(text: label)],
+              ),
               Expanded(
                 child: TabBarView(
-                  children: [
-                    const DebugHeroTab(),
-                    DebugRunTab(canRegenerateMap: !inCombat),
-                  ],
+                  children: [for (final (_, view) in tabs) view],
                 ),
               ),
             ],
