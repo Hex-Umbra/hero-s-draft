@@ -11,21 +11,24 @@ void main() {
   test('tout chemin d image des donnees est complet et designe un fichier existant', () {
     final offenders = <String>[];
 
-    void check(String catalogue, String field) {
-      final raw = File('assets/data/$catalogue').readAsStringSync();
-      for (final entry in jsonDecode(raw) as List) {
-        final path = (entry as Map<String, dynamic>)[field] as String;
-        final id = entry['id'] as String;
+    void check(String directory, String field) {
+      for (final file in Directory('assets/data/$directory')
+          .listSync(recursive: true)
+          .whereType<File>()
+          .where((f) => f.path.endsWith('.json'))) {
+        final entry = jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
+        final path = entry[field] as String?;
+        if (path == null) continue;
         if (!path.startsWith('assets/')) {
-          offenders.add('$catalogue → $id : "$path" n est pas un chemin complet');
+          offenders.add('${file.path} : "$path" n est pas un chemin complet');
         } else if (!File(path).existsSync()) {
-          offenders.add('$catalogue → $id : "$path" ne designe aucun fichier');
+          offenders.add('${file.path} : "$path" ne designe aucun fichier');
         }
       }
     }
 
-    check('heroes.json', 'iconPath');
-    check('enemies.json', 'spritePath');
+    check('classes', 'iconPath');
+    check('enemies', 'spritePath');
 
     expect(offenders, isEmpty, reason: offenders.join('\n'));
   });

@@ -13,47 +13,11 @@ import '../models/data/game_data_registry.dart';
 import '../models/data/audio_data.dart';
 import 'game_data_loader.dart';
 
-Future<List<dynamic>> _loadJsonList(String path) async {
-  try {
-    final String content = await rootBundle.loadString(path);
-    final decoded = jsonDecode(content);
-    if (decoded is! List) {
-      throw FormatException('Le fichier JSON doit être une liste à la racine.');
-    }
-    return decoded;
-  } catch (e, stack) {
-    throw Exception('Erreur de chargement/décodage pour le fichier "$path": $e\n$stack');
-  }
-}
-
-List<T> _mapList<T>(
-  List<dynamic> list,
-  T Function(Map<String, dynamic>) fromJson,
-  String modelName,
-) {
-  final List<T> result = [];
-  for (int i = 0; i < list.length; i++) {
-    final item = list[i];
-    if (item is! Map<String, dynamic>) {
-      throw Exception(
-        'L\'élément à l\'index $i pour le modèle "$modelName" n\'est pas un Map<String, dynamic>. Reçu: $item',
-      );
-    }
-    try {
-      result.add(fromJson(item));
-    } catch (e, stack) {
-      throw Exception(
-        'Erreur de parsing dans le modèle "$modelName" à l\'index $i (données: $item): $e\n$stack',
-      );
-    }
-  }
-  return result;
-}
-
-/// Charge `audio.json`. Contrairement a `_loadJsonList`, cette fonction ne
-/// leve jamais : l'audio est le seul sous-systeme auquel il est interdit de
-/// faire echouer le demarrage du jeu. Fichier absent ou malforme = catalogue
-/// desactive, jeu silencieux, trace en debug pour rester diagnosticable.
+/// Charge `audio.json`. Contrairement au chargement des entites, cette
+/// fonction ne leve jamais : l'audio est le seul sous-systeme auquel il est
+/// interdit de faire echouer le demarrage du jeu. Fichier absent ou malforme =
+/// catalogue desactive, jeu silencieux, trace en debug pour rester
+/// diagnosticable.
 ///
 /// Publique (pas de prefixe `_`) et annotee `@visibleForTesting` uniquement
 /// pour que les tests puissent l'appeler directement avec un path/contenu
@@ -92,7 +56,7 @@ Future<AudioData> loadAudioData(String path) async {
 /// ce chantier supprime.
 ///
 /// L audio fait exception au seam : `loadAudioData` lit `rootBundle` en dur
-/// (`game_data_service.dart:63`) et ses propres tests simulent le canal
+/// (`game_data_service.dart:35`) et ses propres tests simulent le canal
 /// `flutter/assets` plutot que d injecter un bundle. Sans consequence
 /// aujourd hui — seul `rootBundle` est passe ici — mais l ecrire evite de
 /// promettre un seam complet qui n existe pas.
@@ -180,42 +144,10 @@ Future<GameDataRegistry> loadGameDataRegistry(AssetBundle bundle) async {
   );
 }
 
-final gameDataLoaderProvider = FutureProvider<GameDataRegistry>((ref) async {
-  final List<List<dynamic>> results = await Future.wait([
-    _loadJsonList('assets/data/enemies.json'),
-    _loadJsonList('assets/data/heroes.json'),
-    _loadJsonList('assets/data/cards.json'),
-    _loadJsonList('assets/data/events.json'),
-    _loadJsonList('assets/data/passives.json'),
-    _loadJsonList('assets/data/relics.json'),
-    _loadJsonList('assets/data/hero_cards.json'),
-    _loadJsonList('assets/data/forge_upgrades.json'),
-  ]);
-
-  final audio = await loadAudioData('assets/data/audio.json');
-
-  final enemiesList = results[0];
-  final heroesList = results[1];
-  final cardsList = results[2];
-  final eventsList = results[3];
-  final passivesList = results[4];
-  final relicsList = results[5];
-  final heroCardsList = results[6];
-  final forgeUpgradesList = results[7];
-
-  final allCards = [
-    ...cardsList,
-    ...heroCardsList,
-  ];
-
-  return GameDataRegistry(
-    enemies: _mapList(enemiesList, EnemyData.fromJson, 'EnemyData'),
-    heroes: _mapList(heroesList, HeroData.fromJson, 'HeroData'),
-    cards: _mapList(allCards, CardData.fromJson, 'CardData'),
-    events: _mapList(eventsList, EventData.fromJson, 'EventData'),
-    passives: _mapList(passivesList, PassiveData.fromJson, 'PassiveData'),
-    relics: _mapList(relicsList, RelicData.fromJson, 'RelicData'),
-    forgeUpgrades: _mapList(forgeUpgradesList, ForgeUpgradeData.fromJson, 'ForgeUpgradeData'),
-    audio: audio,
-  );
-});
+/// Charge et met en cache toutes les donnees du jeu au demarrage.
+///
+/// Reste l unique entree publique du chargement : `SplashScreen` le resout
+/// avant que le moindre ecran de jeu ne soit atteint.
+final gameDataLoaderProvider = FutureProvider<GameDataRegistry>(
+  (ref) => loadGameDataRegistry(rootBundle),
+);
