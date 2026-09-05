@@ -2861,6 +2861,7 @@ git commit -m "refactor(data): faire expirer la tolerance de champ redondant"
 - Modify: `docs/INDEX.md:45` — l'entrée du plan du lot 3 passe à « livré »
 - Modify: `CLAUDE.md` — « Data-Driven Content Workflow » et « Data layer »
 - Modify: `.claude/skills/memory-bank-sync/SKILL.md:46` — la métrique
+- Modify: 8 fichiers de `lib/` — commentaires nommant des catalogues disparus (voir Step 7 bis)
 - Modify: `.agents/skills/game_designer.md:12` — la liste des catalogues
 
 **Interfaces:**
@@ -2928,6 +2929,29 @@ find assets/data -name '*.json' | wc -l
 - **« Data-Driven Content Workflow »** décrit aujourd'hui le fichier unique à éditer. Le remplacer par : créer un fichier dans le bon répertoire, puis lancer `dart run tool/sync_assets.dart`. Mentionner que pour une classe ou un ennemi, c'est un **dossier** qu'on crée, image comprise.
 - **« Data layer »** nomme encore `skill_data.dart`, supprimé par le bloc 1 de P-40.
 - Ajouter `tool/` à la carte d'architecture : un seul script, générateur de la section `assets:`.
+
+- [ ] **Step 7 bis: Corriger les huit commentaires de `lib/` qui nomment des catalogues disparus**
+
+La bascule les a laissés en l'état, à raison : les corriger là aurait élargi le diff de la tâche la plus risquée du chantier. Ce sont des renvois conceptuels, pas des chemins ouverts, donc rien ne casse — mais ils décrivent une structure abolie, ce que `CLAUDE.md` interdit.
+
+```bash
+grep -rn "cards\.json\|enemies\.json\|heroes\.json\|relics\.json\|passives\.json\|hero_cards\.json\|events\.json\|forge_upgrades\.json" lib/
+```
+
+Les huit, au moment où ce plan est écrit :
+
+| Fichier | Ce que dit le commentaire |
+|:---|:---|
+| `lib/game/controllers/run/player_stats_manager.dart:264` | « le contrat étant porté par la donnée (`relics.json`) » |
+| `lib/models/data/card_data.dart:170` | « un ordre indépendant de celui de `cards.json` » |
+| `lib/models/data/game_data_registry.dart:39` | « la couche de rendu relisait `enemies.json` et `heroes.json` » |
+| `lib/tutorial/widgets/tutorial_armor_widget.dart:281` | « viennent de `passives.json` via le moteur » |
+| `lib/tutorial/widgets/tutorial_class_choice_widget.dart:9` | « `heroes.json` et `passives.json` : aucune valeur n'est écrite ici » |
+| `lib/tutorial/widgets/tutorial_xp_widget.dart:61` | « l'XP du Gobelin vient du registre (`enemies.json`) » |
+| `lib/ui/screens/card_dictionary_screen.dart:88` | « insérer une carte au milieu de `cards.json` » |
+| `lib/ui/screens/starter_deck_draft_screen.dart:60` | « suivrait l'ordre de `cards.json` » |
+
+Remplacer chaque mention par ce qu'elle désigne désormais — `assets/data/relics/`, `assets/data/cards/`, le registre, selon le cas. **Ne pas toucher au code**, seulement aux commentaires. Relancer `flutter test` pour confirmer que rien n'a bougé : **425 au vert**, inchangé.
 
 - [ ] **Step 8: Mettre à jour `.agents/skills/game_designer.md`**
 
