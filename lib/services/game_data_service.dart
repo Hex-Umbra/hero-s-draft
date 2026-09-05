@@ -123,7 +123,7 @@ Future<GameDataRegistry> loadGameDataRegistry(AssetBundle bundle) async {
   ]);
 
   // Une fois seulement, a la fin : les fautes de toutes les categories sont
-  // remontees ensemble. Corriger une faute par cycle de rebuild, sur 72
+  // remontees ensemble. Corriger une faute par cycle de rebuild, sur 71
   // fichiers, serait invivable.
   loader.throwIfFailed();
 

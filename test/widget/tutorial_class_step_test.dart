@@ -46,7 +46,7 @@ void main() {
     expect(find.text('60 PV'), findsOneWidget);
   });
 
-  testWidgets('le passif de chaque classe est affiché depuis passives.json', (tester) async {
+  testWidgets('le passif de chaque classe est affiché depuis assets/data/passives/', (tester) async {
     await _pump(tester);
 
     expect(find.text('Régénération d\'Armure'), findsOneWidget);

@@ -58,7 +58,8 @@ class _TutorialXpWidgetState extends State<TutorialXpWidget> {
     final isFrench = Localizations.localeOf(context).languageCode == 'fr';
     final state = widget.engine.mockState;
     final progress = (state.playerXp / state.xpToNextLevel).clamp(0.0, 1.0);
-    // L'XP du Gobelin vient du registre (enemies.json) : jamais recopiée en dur ici.
+    // L'XP du Gobelin vient du registre (`assets/data/enemies/`) : jamais
+    // recopiée en dur ici.
     final goblinXp = widget.engine.fixtures.goblin.xp;
 
     return Stack(

@@ -36,7 +36,8 @@ class GameDataRegistry {
   /// Les chemins d'images référencés par les entités chargées.
   ///
   /// Unique source de la liste de préchargement de Flame : avant, la couche
-  /// de rendu relisait `enemies.json` et `heroes.json` pour la reconstituer.
+  /// de rendu relisait elle-même les données d'ennemis et de héros pour la
+  /// reconstituer.
   /// C'est un getter calculé et non un champ de constructeur, pour ne pas
   /// casser les dizaines de `GameDataRegistry(...)` construits par les tests.
   List<String> get imagesToPreload => <String>{

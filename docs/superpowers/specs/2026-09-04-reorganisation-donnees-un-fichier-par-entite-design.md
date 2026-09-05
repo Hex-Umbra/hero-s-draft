@@ -1,8 +1,9 @@
 # Réorganisation des données — un fichier par entité — Conception
 
 Date : 2026-09-04
-Statut : **Lots 1 et 2 livrés le 2026-09-04 (`2c1b183`) ; lot 3 conçu, non implémenté**
-Révision : v3 — après deux tours de revue indépendante (4 agents)
+Statut : **Livré.** Lots 1 et 2 le 2026-09-04 (`2c1b183`) ; lot 3 le 2026-09-05
+Révision : v4 — v3 après deux tours de revue indépendante (4 agents), puis report des trois écarts
+du plan (D-P2 et D-P3 en §5.2 et §6.1, la copie des images en §8.1)
 Prérequis : **P-40 bloc 1** — **livré** le 2026-09-04 (`ced306e`), voir §3.1
 Créneau : **entre P-40 et P-41**, donc avant **P-42** (pools de cartes par classe)
 Sources amont :
@@ -311,10 +312,18 @@ Trois propriétés que la signature précédente ne pouvait pas offrir :
 
 | Emplacement | Champs injectés |
 |:---|:---|
-| `classes/<id>/cards/*.json` | `heroClass: <id>`, `category: characterSpecific` |
-| `cards/*.json` | `category: global` |
+| `classes/<id>/cards/*.json` | `id: <fichier>`, `heroClass: <id>`, `category: characterSpecific` |
+| `cards/*.json` | `id: <fichier>`, `category: global` |
 | `classes/<id>/class.json` | `id: <id>` *(segment capturé)* |
 | `enemies/<id>/enemy.json` | `id: <id>` *(idem)* |
+| `relics/`, `events/`, `forge_upgrades/`, `passives/` — `*.json` | `id: <fichier>` |
+
+> **Écart D-P2, tranché à l'implémentation.** Cette table n'injectait à l'origine l'`id` que pour
+> `class.json` et `enemy.json`, les autres catégories étant censées le lire dans le fichier. Un
+> chargeur **générique** ne le peut pas : il manipule un `T` inconnu et ne sait rien lire dessus
+> avant `fromJson`. L'`id` est donc injecté depuis le nom de fichier pour **toutes** les
+> catégories, ce qui rend au passage §6.1 (« le nom du fichier *est* l'`id` ») exécutoire plutôt
+> que conventionnel.
 
 **Règle de conflit** : si le JSON déclare un champ injecté, la valeur **doit** être identique ; sinon
 le chargement échoue en nommant le fichier, le champ, la valeur attendue et la valeur trouvée.
@@ -323,11 +332,17 @@ Le périmètre est volontairement limité aux cartes et aux ids. Les passifs en 
 `PassiveData` n'ayant pas de `heroClass`, une injection y serait jetée par `fromJson` — un no-op
 qu'aucun test ne pourrait détecter.
 
-**Expiration.** La tolérance « le JSON peut confirmer » sert **pendant** la migration, où elle laisse
-passer tels quels les `category` des 17 cartes neutres et les `heroClass` + `category` des 6 cartes
-de classe. Une fois la migration fusionnée, la règle se durcit : déclarer un champ injecté devient
-une erreur, ce qui impose de **dépouiller ces 23 fichiers**. C'est une tâche du lot 3, budgétée
-en §14 — sans elle, chaque carte de P-42 porterait deux champs redondants que le chargeur écrase.
+**Expiration — appliquée.** La tolérance « le JSON peut confirmer » a servi **pendant** la
+migration, où elle laissait passer tels quels les `category` des 17 cartes neutres et les
+`heroClass` + `category` des 6 cartes de classe. La tâche 9 du lot 3 a dépouillé ces 23 fichiers et
+durci la règle : déclarer `heroClass` ou `category` est désormais une erreur de chargement. Sans
+cela, chaque carte de P-42 porterait deux champs redondants que le chargeur écrase.
+
+> **Écart D-P3, tranché à l'implémentation.** Le durcissement ne s'étend pas à l'`id`, qui reste
+> redéclarable **à titre permanent**, à condition d'être identique. Le porter dans le fichier le
+> rend lisible hors de son contexte et inspectable en masse — un `grep` sur `assets/data/` rend des
+> entités nommées, pas des objets anonymes dont il faudrait reconstituer l'identité depuis le
+> chemin. C'est le défaut de `EntitySource.redundantFields` (`const {'id'}`).
 
 ### 5.3 Ordre déterministe
 
@@ -390,6 +405,10 @@ donnée y est disponible : `SplashScreen` a résolu le provider, qui n'est pas `
 ### 6.1 Convention de nommage
 
 - Le nom du fichier **est** l'`id` : `relics/iron_talisman.json` contient `"id": "iron_talisman"`.
+  Ce n'est pas une convention que les fichiers doivent honorer mais une **règle exécutoire** : le
+  chargeur injecte l'`id` depuis le nom de fichier, pour toutes les catégories (écart D-P2, §5.2).
+  Le fichier peut le redéclarer à l'identique — c'est le seul champ injecté qui garde ce droit
+  (écart D-P3) — et une divergence échoue au chargement.
 - **Exception** : les fichiers à nom fixe (`class.json`, `enemy.json`) tirent leur `id` du
   **répertoire parent**, injecté par le chargeur (§5.2). Le test de §10 porte cette dérogation.
 - **Les ids sont en `snake_case` ASCII minuscule.** Le poste de développement est Windows (NTFS
@@ -484,9 +503,17 @@ Créer une classe devient : créer le dossier, lancer le script. Le devtool appe
 ### 8.1 Le script de découpage
 
 Un script jetable, **non conservé** (`tool/` ne garde que `sync_assets.dart`) : il lit les catalogues,
-écrit un fichier par entité au bon emplacement, **déplace et renomme** les images
+écrit un fichier par entité au bon emplacement, et **copie et renomme** les images
 (`enemy_goblin.png` → `enemies/gobelin/sprite.png`, `hero_paladin.png` →
-`classes/paladin/icon.png`), et supprime les anciens fichiers.
+`classes/paladin/icon.png`).
+
+> **Écart §8.1, tranché à l'implémentation.** Cette section prévoyait un script qui *déplace* les
+> images et *supprime* les anciens fichiers en une passe. Le plan les **copie** (tâche 5) et ne
+> supprime qu'après la bascule des lecteurs (tâche 7). C'est ce qui rend vraie la contrainte
+> globale « chaque tâche se termine au vert » : entre les deux, l'ancienne et la nouvelle
+> arborescence coexistent, et la suite de tests passe sur l'une comme sur l'autre. Une suppression
+> immédiate aurait cassé tous les tests intermédiaires, et fait de la tâche 5 un point sans retour.
+> Le script lui-même a été supprimé à la tâche 10, après avoir servi.
 
 `hero_cards.json` → dossiers de classe, sur le champ `heroClass`, présent sur les 6 entrées.
 `passives.json` → `passives/` à plat, **sans renommage** : les ids sont déjà en `snake_case` depuis
@@ -592,6 +619,11 @@ est de **388 après les lots 1 et 2** ; le lot 3 l'augmentera des tests listés 
 ---
 
 ## 11. Documentation et traçabilité
+
+> **État au 2026-09-05.** Tout ce qui suit est fait, à deux exceptions près : les écritures dans
+> `.obsidian_vault/` (ADR-003 amendé, deux ADR neufs, la fiche `_patterns/`), qui appartiennent à la
+> skill `memory-bank-sync` et dont la commande de travail est portée par la fiche **P-48** de
+> `docs/ROADMAP.md` ; et la décision du patch note, qui revient au propriétaire.
 
 - **ADR neufs** : la règle de partage catalogue/configuration, et l'autorité du répertoire (option C
   avec expiration). Numérotation attribuée par la skill `memory-bank-sync`.

@@ -37,9 +37,11 @@ class EntitySource<T> {
   /// que la valeur soit identique. Tout autre champ injecte present dans le
   /// JSON fait echouer le chargement.
   ///
-  /// `id` y figure a titre permanent : le porter dans le fichier le rend
-  /// lisible hors contexte et inspectable en masse. `heroClass` et
-  /// `category` n y sont que le temps de la migration.
+  /// `id` est le seul champ qui y figure encore, et a titre permanent : le
+  /// porter dans le fichier le rend lisible hors contexte et inspectable en
+  /// masse. `heroClass` et `category` y ont ete tolerees le temps de la
+  /// migration ; cette tolerance a expire, et les declarer est desormais une
+  /// erreur de chargement.
   final Set<String> redundantFields;
 }
 

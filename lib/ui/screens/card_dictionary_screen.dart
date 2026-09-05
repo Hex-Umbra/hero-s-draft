@@ -83,9 +83,10 @@ class CardDictionaryScreen extends ConsumerWidget {
     String locale,
   ) {
     final l10n = AppLocalizations.of(context)!;
-    // L'ordre des groupes vient de l'enum, jamais de l'ordre du catalogue ;
-    // l'ordre dans un groupe est explicite. Sans cela, insérer une carte au
-    // milieu de cards.json changerait ce que voit le joueur.
+    // L'ordre des groupes vient de l'enum, jamais de l'ordre du registre ;
+    // l'ordre dans un groupe est explicite. Sans cela, ajouter un fichier dans
+    // `assets/data/cards/` changerait ce que voit le joueur — le registre est
+    // trié par `id`, donc un id neuf s'insère au milieu.
     final Map<CardType, List<CardData>> groupedCards = {
       for (final type in CardType.values) type: <CardData>[],
     };

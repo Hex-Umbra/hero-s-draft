@@ -172,7 +172,7 @@ void main() {
 
   group('GameDataLoader — agregation des erreurs', () {
     test('deux fichiers fautifs produisent UN rapport listant les deux', () async {
-      // `_mapList` levait a la premiere entree fautive. Avec 72 fichiers,
+      // L ancien chargeur levait a la premiere entree fautive. Avec 71 fichiers,
       // corriger une faute par cycle de rebuild serait invivable.
       final loader = GameDataLoader(FakeBundle({
         'assets/data/things/bon.json': '{"id":"bon","label":"B"}',

@@ -254,7 +254,7 @@ Marqué **priorité haute** dans le rapport du 22/07 et jamais traité. Difficul
 | **P-42** | **Pools de cartes par classe** — séparation `unique`/`heroClass`, ~25-30 cartes | *à chiffrer en spec* | ★★★★☆ | 🔥🔥🔥 |
 | **P-43** | **Économie de deck** — récompense de carte, limite de taille, rééquilibrage fusion | *à chiffrer en spec* | ★★★☆☆ | 🔥🔥 |
 | **P-44** | **Profondeur de cartes** — coût 3, `scaleWith`, génération, cible `none`, malédictions | *à chiffrer en spec* | ★★★★☆ | 🔥🔥 |
-| **P-48** | **Réorganisation des données** — un fichier par entité, dossiers auto-suffisants, chargeur générique · [spec](superpowers/specs/2026-09-04-reorganisation-donnees-un-fichier-par-entite-design.md) — *lots 1 et 2 livrés* | **~4,5 j** *(lot 3 restant)* | ★★★☆☆ | 🔥🔥 |
+| ~~**P-48**~~ | ~~**Réorganisation des données** — un fichier par entité, dossiers auto-suffisants, chargeur générique~~ ✅ **Livré le 2026-09-05** — 8 catalogues monolithiques éclatés en 71 fichiers d'entité, lus par un chargeur générique piloté par des motifs de chemin · [spec](superpowers/specs/2026-09-04-reorganisation-donnees-un-fichier-par-entite-design.md) | — | — | — |
 
 ### P-10 — Finale de Séquence
 **Le jeu n'a aujourd'hui aucune condition de victoire** : les actes continuent indéfiniment et seule la mort termine une run. Le Portail Final (4ᵉ nœud optionnel à l'étage boss des Actes 5, 10, 15…, inspiré du téléporteur de Risk of Rain 2) donne enfin une sortie propre, sans supprimer l'endless pour qui veut continuer. C'est probablement **le manque de design le plus structurel du jeu actuel**.
@@ -278,6 +278,12 @@ Réutilise `onHitEffect`/`evadeChance` de P-05 sans nouveau champ. Trois concept
 
 ### P-48 — Réorganisation des données : un fichier par entité
 
+> ✅ **Livré le 2026-09-05.** Les 8 catalogues JSON monolithiques sont éclatés en **71 fichiers
+> d'entité**, dans des dossiers auto-suffisants par classe et par ennemi, lus par un chargeur
+> générique piloté par des motifs de chemin. Le répertoire fait autorité sur l'appartenance : une
+> carte rangée dans `classes/paladin/cards/` *est* une carte du paladin, et un JSON qui prétendrait
+> le contraire échoue au chargement.
+
 Éclater les catalogues JSON monolithiques en un fichier par entité, avec des dossiers auto-suffisants
 par classe et par ennemi, chargés par un mécanisme générique piloté par des motifs de chemin.
 Débloque le devtool d'édition de contenu, et l'écriture des ~25-30 cartes de P-42 sans doubler le
@@ -291,10 +297,48 @@ travail de relecture.
 |:---|:---|:---|
 | 1 | Supprimer les quatre replis codés en dur | ✅ **livré le 2026-09-04** |
 | 2 | Rendre explicite tout ordre d'affichage, renommer les ids de passifs, `displayOrder` | ✅ **livré le 2026-09-04** |
-| 3 | La migration : découpage, chargeur générique, dossiers, pubspec généré | **~4,5 j** — plan écrit, 10 tâches, à exécuter |
+| 3 | La migration : découpage, chargeur générique, dossiers, pubspec généré | ✅ **livré le 2026-09-05** |
 
-**Prérequis** : P-40 bloc 1, livré. **Créneau** : avant P-42, dont les pools de cartes doivent être
-écrits directement dans la nouvelle structure.
+**Prérequis** : P-40 bloc 1, livré.
+
+**Conséquence pour P-42.** Les ~25-30 cartes de classe s'écrivent désormais **directement dans
+`assets/data/classes/<id>/cards/`**, un fichier par carte, nommé par l'`id`. Elles ne portent
+**ni `heroClass` ni `category`** : le répertoire les injecte, et les déclarer fait échouer le
+chargement. Chaque nouveau dossier impose un `dart run tool/sync_assets.dart`.
+
+#### Reste à faire — commande de travail de `memory-bank-sync`
+
+Les écritures dans `.obsidian_vault/` appartiennent à la skill `memory-bank-sync` (`CLAUDE.md`) :
+elle seule attribue la numérotation des ADR, re-mesure chaque métrique par une commande avant de
+l'écrire, applique les plafonds de lignes et archive au lieu d'ajouter. Le chantier a donc préparé
+ce travail sans le faire. **Commande de travail, en toutes lettres :**
+
+1. **Amender ADR-003 « Architecture 100 % Data-Driven ».** Il énumère nommément les 8 fichiers JSON
+   et décrit un `GameDataService.loadAll()` qui n'existe plus, et ses comptes sont faux (15 cartes,
+   2 événements, 12 reliques). Le remplacer par un renvoi à la nouvelle structure et au nouveau
+   chargeur, **sans y recopier de chiffres** : ils vivent dans `_memory_bank/progress.md`, qui les
+   re-mesure. Un ADR dit *pourquoi*, pas *combien*.
+2. **Deux ADR neufs.**
+   - *La règle de partage catalogue / configuration* : un fichier de `assets/data/` est découpé s'il
+     est un **catalogue d'entités interchangeables**, il reste à plat s'il est un **document de
+     configuration unique**. `patch_notes.json` et `audio.json` tombent du second côté — pour
+     `patch_notes.json`, l'ordre du tableau **est** la sémantique (index 0 = version courante), et
+     cinq scripts de `.github/scripts/` plus `site/_site/js/model.js` en dépendent.
+   - *L'autorité du répertoire, option C, avec expiration* : le répertoire injecte, le JSON pouvait
+     confirmer, la contradiction échoue — et la tolérance a expiré à la tâche 9 du lot 3. Consigner
+     pourquoi les passifs en sont exclus (**D4** : `PassiveData` n'a pas de `heroClass`, l'injection
+     y serait un no-op indétectable) et pourquoi l'`id` reste redéclarable à titre permanent
+     (**D-P3** : le porter dans le fichier le rend lisible hors contexte et inspectable en masse).
+3. **Une fiche `_patterns/`** décrivant `GameDataLoader`, `EntitySource` et le motif de chemin : le
+   `*` qui vaut un segment, le comptage de segments qui sépare `class.json` de `cards/*.json` et
+   écarte les assets de paquets (`packages/<nom>/...`), l'agrégation d'erreurs remontée en une fois
+   par `throwIfFailed()`, et le `bundle` en paramètre comme seam de test. À indexer dans
+   `_memory_bank/systemPatterns.md` — **sans jamais réinliner son contenu dans l'index**, c'est la
+   règle des trois index de `CLAUDE.md`.
+
+Reste également ouverte la **décision du patch note** (spec §11) : le réordonnancement du
+dictionnaire et du pool de draft de départ est visible par le joueur. Elle revient au propriétaire,
+et passe le cas échéant par la skill `patch-notes-writer`.
 
 ---
 
@@ -362,16 +406,17 @@ Les runes de forge `eco` et `quick` (regain de mana / pioche à la lecture d'une
 
 > [!WARNING]
 > **Deux des cinq constats d'origine sont faux.** Re-vérifiés contre les données le 2026-08-11 :
-> `quick_attack` porte `"cost": 1` dans `assets/data/cards.json`, et `assets/data/heroes.json` ne
-> contient **aucun champ d'armure** — les trois classes n'ont que `maxHp`, `maxMana`, `baseDamage`,
-> `luck`, `passiveTrait` et `skills`. Les deux entrées viennent de `6_analyse_game_balance.md`,
+> `quick_attack` porte `"cost": 1` (aujourd'hui `assets/data/cards/quick_attack.json`), et les
+> `assets/data/classes/<id>/class.json` ne contiennent **aucun champ d'armure** — les trois classes
+> n'ont, côté statistiques, que `maxHp`, `maxMana`, `baseDamage`, `luck`, `passiveTrait` et
+> `skills`. Les deux entrées viennent de `6_analyse_game_balance.md`,
 > reprises sans re-mesure. Détail en Partie III.C de l'[état des
 > lieux](analysis_reports/05082026_etat_des_lieux_heros_et_cartes_Opus5.md), points 8 et 9.
 
 | # | Constat d'origine | Statut au 2026-08-11 |
 |:---:|:---|:---|
 | 1 | Économie de mana permissive | ⚠️ non re-mesuré — **recouvre P-16**, ne pas traiter deux fois |
-| 2 | ~~Paladin quasi invulnérable (20 armure de base)~~ | ❌ **faux** — aucune armure dans `heroes.json` ; son passif donne +2/tour |
+| 2 | ~~Paladin quasi invulnérable (20 armure de base)~~ | ❌ **faux** — aucune armure dans `classes/paladin/class.json` ; son passif donne +2/tour |
 | 3 | HP des sbires trop bas | ⚠️ non re-mesuré |
 | 4 | ~~`Attaque Rapide` gratuite (0 mana → 3 dégâts + 1 pioche)~~ | ❌ **faux** — `"cost": 1` |
 | 5 | Soin répétable | ⚠️ non re-mesuré |

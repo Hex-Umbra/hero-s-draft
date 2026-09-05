@@ -43,7 +43,7 @@ tableaux de liens. Le contenu vit dans les fiches, jamais dans l'index.
 | Analyse statique | `dart analyze` |
 | Fichiers Dart | `find lib -name "*.dart" \| wc -l` |
 | Lignes de code | `find lib -name "*.dart" -exec cat {} + \| wc -l` |
-| Fichiers de données | `ls assets/data/*.json \| wc -l` |
+| Fichiers de données | `find assets/data -name '*.json' \| wc -l` |
 | Versions | lire `pubspec.yaml` et la 1ʳᵉ entrée de `assets/data/patch_notes.json` |
 | Ce qui a changé | `git log <last-sync-sha>..HEAD --oneline` |
 | Taille d'un fichier cité comme chantier | `wc -l <fichier>` |
