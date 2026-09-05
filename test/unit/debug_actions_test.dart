@@ -4,9 +4,15 @@ import 'package:roguelike_card_game/game/controllers/debug_taint_controller.dart
 import 'package:roguelike_card_game/game/controllers/inventory_controller.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
 import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
+import 'package:roguelike_card_game/game/controllers/combat_controller.dart';
 import 'package:roguelike_card_game/game/services/debug_actions.dart';
+import 'package:roguelike_card_game/models/combat_state.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
+import 'package:roguelike_card_game/models/data/enemy_data.dart';
 import 'package:roguelike_card_game/models/data/hero_data.dart';
+import 'package:roguelike_card_game/models/enemy_instance.dart';
+import 'package:roguelike_card_game/models/enemy_intent.dart';
+import 'package:roguelike_card_game/models/entity_stats.dart';
 
 const paladin = HeroData(
   id: 'paladin',
@@ -126,6 +132,118 @@ void main() {
       final remaining = container.read(deckProvider).masterDeck;
       expect(remaining.length, 1);
       expect(remaining.first.uniqueId, isNot(victim));
+    });
+  });
+
+  group('DebugActions — combat', () {
+    final goblinData = EnemyData(
+      id: 'goblin',
+      nameEn: 'Goblin',
+      nameFr: 'Gobelin',
+      maxHp: 20,
+      baseDamage: 5,
+      spritePath: 'goblin.png',
+      tier: 1,
+      intents: [EnemyIntent(type: IntentType.attack, value: 5)],
+    );
+
+    EnemyInstance freshGoblin() => EnemyInstance(
+      data: goblinData,
+      stats: EntityStats(maxPv: 20, currentPv: 20, armure: 0, attaque: 5),
+    );
+
+    test('setEnemyHp a 0 tue la cible et laisse les autres intacts', () {
+      final container = _startedRun();
+      addTearDown(container.dispose);
+      final combat = container.read(combatProvider.notifier);
+      final a = freshGoblin();
+      final b = freshGoblin();
+      final c = freshGoblin();
+      combat.updateState(CombatState(enemies: [a, b, c]));
+
+      DebugActions.setEnemyHp(container.read, b.id, 0);
+
+      final remaining = container.read(combatProvider).enemies;
+      expect(remaining.length, 2);
+      expect(remaining.map((e) => e.id), containsAll([a.id, c.id]));
+      expect(remaining.every((e) => e.stats.currentPv == 20), isTrue);
+      expect(container.read(combatProvider).isCombatEnded, isFalse);
+      expect(container.read(debugTaintProvider), isTrue);
+    });
+
+    test('setEnemyHp a une valeur non nulle laisse la cible en vie', () {
+      final container = _startedRun();
+      addTearDown(container.dispose);
+      final combat = container.read(combatProvider.notifier);
+      final a = freshGoblin();
+      combat.updateState(CombatState(enemies: [a]));
+
+      DebugActions.setEnemyHp(container.read, a.id, 3);
+
+      final enemies = container.read(combatProvider).enemies;
+      expect(enemies.length, 1);
+      expect(enemies.first.stats.currentPv, 3);
+      expect(container.read(combatProvider).isCombatEnded, isFalse);
+    });
+
+    test('killAllEnemies fait apparaitre la vague suivante sans finir le combat', () {
+      final container = _startedRun();
+      addTearDown(container.dispose);
+      final combat = container.read(combatProvider.notifier);
+      combat.updateState(
+        CombatState(
+          enemies: [freshGoblin()],
+          pendingEnemies: [freshGoblin()],
+        ),
+      );
+
+      DebugActions.killAllEnemies(container.read);
+
+      expect(container.read(combatProvider).enemies.length, 1);
+      expect(container.read(combatProvider).pendingEnemies, isEmpty);
+      expect(container.read(combatProvider).isCombatEnded, isFalse);
+    });
+
+    test('winCombat court-circuite tout, files comprises', () {
+      final container = _startedRun();
+      addTearDown(container.dispose);
+      final combat = container.read(combatProvider.notifier);
+      combat.updateState(
+        CombatState(
+          enemies: [freshGoblin()],
+          pendingEnemies: [freshGoblin()],
+        ),
+      );
+
+      DebugActions.winCombat(container.read);
+
+      expect(container.read(combatProvider).enemies, isEmpty);
+      expect(container.read(combatProvider).pendingEnemies, isEmpty);
+      expect(container.read(combatProvider).isCombatEnded, isTrue);
+      expect(container.read(combatProvider).isVictory, isTrue);
+    });
+
+    test('loseCombat met le heros a 0 PV', () {
+      final container = _startedRun();
+      addTearDown(container.dispose);
+
+      DebugActions.loseCombat(container.read);
+
+      expect(container.read(runProvider).heroStats.currentPv, 0);
+      expect(container.read(runProvider).isDead, isTrue);
+    });
+
+    test('skipEnemyPhase force la phase joueur', () {
+      final container = _startedRun();
+      addTearDown(container.dispose);
+      final combat = container.read(combatProvider.notifier);
+      combat.updateState(
+        CombatState(enemies: [freshGoblin()], turnPhase: TurnPhase.enemy),
+      );
+
+      DebugActions.skipEnemyPhase(container.read);
+
+      expect(container.read(combatProvider).turnPhase, TurnPhase.player);
     });
   });
 }

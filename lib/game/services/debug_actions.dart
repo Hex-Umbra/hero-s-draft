@@ -1,10 +1,12 @@
 import 'package:flutter/foundation.dart';
 
 import '../../models/card_instance.dart';
+import '../../models/combat_state.dart';
 import '../../models/data/card_data.dart';
 import '../../models/data/relic_data.dart';
 import '../../models/entity_stats.dart';
 import '../../services/save_service.dart' show RefReader;
+import '../controllers/combat_controller.dart';
 import '../controllers/debug_taint_controller.dart';
 import '../controllers/deck_controller.dart';
 import '../controllers/inventory_controller.dart';
@@ -102,6 +104,65 @@ class DebugActions {
   static void removeRelic(RefReader read, String relicId) {
     if (!kDebugMode) return;
     read(inventoryProvider.notifier).removeRelics([relicId]);
+    _taint(read);
+  }
+
+  /// Fixe les PV d'un ennemi, puis resout les morts par le **vrai** chemin :
+  /// `cleanDeadEnemies` distribue l'XP, declenche les reliques et fait
+  /// apparaitre la vague suivante s'il en reste une.
+  ///
+  /// A ne pas confondre avec [winCombat], qui court-circuite tout.
+  static void setEnemyHp(RefReader read, String enemyId, int currentPv) {
+    if (!kDebugMode) return;
+    final combat = read(combatProvider.notifier);
+    final index = combat.currentState.enemies.indexWhere(
+      (e) => e.id == enemyId,
+    );
+    if (index == -1) return;
+    final enemy = combat.currentState.enemies[index];
+    combat.updateEnemyStats(enemyId, enemy.stats.copyWith(currentPv: currentPv));
+    combat.cleanDeadEnemies();
+    _taint(read);
+  }
+
+  static void killAllEnemies(RefReader read) {
+    if (!kDebugMode) return;
+    final combat = read(combatProvider.notifier);
+    // Copie explicite : `updateEnemyStats` remplace la liste a chaque appel.
+    for (final enemy in List.of(combat.currentState.enemies)) {
+      combat.updateEnemyStats(enemy.id, enemy.stats.copyWith(currentPv: 0));
+    }
+    combat.cleanDeadEnemies();
+    _taint(read);
+  }
+
+  /// Termine le combat sans passer par la mort des ennemis : va directement a
+  /// l'ecran de recompense.
+  static void winCombat(RefReader read) {
+    if (!kDebugMode) return;
+    final combat = read(combatProvider.notifier);
+    combat.updateState(
+      combat.currentState.copyWith(
+        enemies: const [],
+        pendingEnemies: const [],
+        isCombatEnded: true,
+        isVictory: true,
+      ),
+    );
+    _taint(read);
+  }
+
+  static void loseCombat(RefReader read) {
+    if (!kDebugMode) return;
+    updateHeroStats(read, (s) => s.copyWith(currentPv: 0));
+  }
+
+  static void skipEnemyPhase(RefReader read) {
+    if (!kDebugMode) return;
+    final combat = read(combatProvider.notifier);
+    combat.updateState(
+      combat.currentState.copyWith(turnPhase: TurnPhase.player),
+    );
     _taint(read);
   }
 }
