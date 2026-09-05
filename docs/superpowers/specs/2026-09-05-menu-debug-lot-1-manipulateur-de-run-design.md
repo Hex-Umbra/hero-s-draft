@@ -112,10 +112,14 @@ le sous-arbre — dialogue, actions, imports — devient inatteignable, donc él
 Une seule insertion couvre les deux contextes, `PauseDialog` étant déjà appelé depuis
 `game_screen.dart:541` et `map_screen.dart:142`.
 
-Chaque action confirme par le système de notifications existant
-(`notificationProvider`, `NotificationType.success`). Pas de rappel de redémarrage : **le lot 1 est
-immédiat.** L'avertissement de hot restart appartient au lot 2, dont les écritures ne sont visibles
-qu'après rechargement du bundle d'assets.
+Les champs numériques affichent la valeur courante et se rafraîchissent dès l'écriture : **ils sont
+leur propre confirmation**, et une notification à chaque frappe validée ne serait que du bruit.
+Seules les actions sans écho à l'écran — gagner un combat, vider une vague, changer d'acte, ajouter
+une carte ou une relique — confirment par le système existant, via l'extension
+`BuildContext.showNotification`.
+
+Pas de rappel de redémarrage : **le lot 1 est immédiat.** L'avertissement de hot restart appartient
+au lot 2, dont les écritures ne sont visibles qu'après rechargement du bundle d'assets.
 
 ## 4. Inventaire des actions
 
