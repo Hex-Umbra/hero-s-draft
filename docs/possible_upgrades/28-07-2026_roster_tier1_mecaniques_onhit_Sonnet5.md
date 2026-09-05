@@ -3,7 +3,7 @@
 **Date** : 28/07/2026
 **Contexte** : Suite directe de `27-07-2026_nouveaux_ennemis_par_tier_Sonnet5.md` — ce document fait passer les 5 candidats Tier 1 du statut "concept/flavor" à un design concret et implémentable : stats calibrées, extension d'architecture (`onHitEffect`, esquive), et formule de `combatRating` mise à jour.
 **Statut** : Brainstorm validé par échange (design complet, architecture + stats + formule figées) — **rien encore implémenté**. Prêt à passer en spec/plan d'implémentation dédié.
-**Roster actuel** (`assets/data/enemies.json`) : Slime (tier 1), Gobelin (tier 1), Squelette (tier 2), Orc Furieux (tier 3). `maxTierAuthored = 3`.
+**Roster actuel** (`assets/data/enemies/`) : Slime (tier 1), Gobelin (tier 1), Squelette (tier 2), Orc Furieux (tier 3). `maxTierAuthored = 3`.
 
 ---
 

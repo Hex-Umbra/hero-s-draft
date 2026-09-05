@@ -38,7 +38,7 @@ Trois d'entre eux **corrigent ou complètent les documents amont** et sont marqu
 | `PassiveData.fallback()` duplique les 3 passifs en Dart, en plus du JSON | `lib/models/data/passive_data.dart:67-120` |
 | `RelicTrigger` compte 9 valeurs | `lib/models/data/relic_data.dart:5-13` |
 | `onAttackPlayed` / `onSkillPlayed` / `onPowerPlayed` sont dispatchés | `lib/game/controllers/combat_controller.dart:302-306` |
-| Sur les 25 reliques, **`onSkillPlayed` et `onPowerPlayed` n'ont aucun consommateur** ; `onAttackPlayed` en a **deux** (`kunai`, `shuriken`) | `assets/data/relics.json`, re-mesuré le 2026-08-11 |
+| Sur les 25 reliques, **`onSkillPlayed` et `onPowerPlayed` n'ont aucun consommateur** ; `onAttackPlayed` en a **deux** (`kunai`, `shuriken`) | `assets/data/relics/`, re-mesuré le 2026-08-11 |
 | `effectiveAttaque` n'a que 2 sites de résolution vivants | `lib/game/services/effects/strategies.dart:30` et `:42` |
 | …plus 1 site d'affichage | `lib/game/components/card_component.dart:343` |
 | …plus 1 getter de passe-plat et le système de compétences mort | `run_controller.dart:43` · `combat_controller.dart:212-244` |

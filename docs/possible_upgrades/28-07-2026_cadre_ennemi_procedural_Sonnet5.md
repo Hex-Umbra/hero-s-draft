@@ -65,4 +65,4 @@ Aucun asset PNG à produire ou régénérer — tout est dessiné au runtime, à
 
 1. Prototype rapide sur un seul ennemi (ex. Gobelin) pour valider lisibilité des icônes à 100×140px et coût de performance réel avant d'investir plus loin.
 2. Trancher entre cette approche et le cadre PNG (`28-07-2026_cadre_ennemi_modulaire_par_tier_Sonnet5.md`) une fois le prototype vu en jeu.
-3. Étendre `assets/data/enemies.json` avec `elementalAffinity` pour le roster actuel et les 25 candidats du doc de tiers, une fois l'approche retenue.
+3. Créer un dossier `assets/data/enemies/<id>/` avec `enemy.json` et `sprite.png`, puis lancer `dart run tool/sync_assets.dart`, pour ajouter `elementalAffinity` au roster actuel et aux 25 candidats du doc de tiers, une fois l'approche retenue.
