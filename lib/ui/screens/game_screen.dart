@@ -21,7 +21,7 @@ import '../../services/audio/game_moment.dart';
 import '../../services/audio/music_scene.dart';
 import '../../models/data/relic_data.dart';
 import '../../models/data/card_data.dart';
-import '../widgets/debug/debug_combat_drawer.dart';
+import '../widgets/debug/debug_drawer.dart';
 import '../widgets/hud/dialogs/pause_dialog.dart';
 import '../widgets/hud/death_overlay.dart';
 import '../widgets/hud/combat_top_bar.dart';
@@ -474,7 +474,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                       ref.watch(debugRunProvider).isDebugRun &&
                       !runState.isDead &&
                       !_showDraft)
-                    const DebugCombatDrawer(),
+                    const DebugDrawer(inCombat: true),
 
                   if (!runState.isDead && !_showDraft)
                     CombatTopBar(

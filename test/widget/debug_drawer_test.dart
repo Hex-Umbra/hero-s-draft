@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/game/controllers/combat_controller.dart';
 import 'package:roguelike_card_game/game/controllers/debug_run_controller.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
-import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'package:roguelike_card_game/models/combat_state.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/data/enemy_data.dart';
@@ -16,7 +14,7 @@ import 'package:roguelike_card_game/models/enemy_instance.dart';
 import 'package:roguelike_card_game/models/enemy_intent.dart';
 import 'package:roguelike_card_game/models/entity_stats.dart';
 import 'package:roguelike_card_game/ui/theme/app_theme.dart';
-import 'package:roguelike_card_game/ui/widgets/debug/debug_menu_dialog.dart';
+import 'package:roguelike_card_game/ui/widgets/debug/debug_drawer.dart';
 
 const _paladin = HeroData(
   id: 'paladin',
@@ -69,9 +67,14 @@ final _goblinData = EnemyData(
   intents: [EnemyIntent(type: IntentType.attack, value: 5)],
 );
 
+EnemyInstance _freshGoblin() => EnemyInstance(
+  data: _goblinData,
+  stats: EntityStats(maxPv: 20, currentPv: 20, armure: 0, attaque: 5),
+);
+
 /// Le registre doit etre **peuple** : avec des catalogues vides, les onglets
-/// Deck et Reliques ne construisent aucun `ListTile`, et ce test passerait au
-/// travers du defaut qu'il existe pour attraper.
+/// Deck et Reliques ne construisent aucun `ListTile`, et ces tests passeraient
+/// au travers de tout defaut de construction les concernant.
 void _populateRegistry() {
   GameDataRegistry(
     enemies: [_goblinData],
@@ -84,93 +87,69 @@ void _populateRegistry() {
   );
 }
 
-/// Le menu doit etre **ouvert par `showDialog`**, comme dans le jeu, et non
-/// monte directement dans le `body` d'un `Scaffold`.
-///
-/// La difference decide de la valeur de ce fichier : un `Scaffold` fournit
-/// lui-meme un `Material`, si bien qu'un menu monte dedans se construit
-/// parfaitement — y compris lorsqu'il lui manque le sien. `showDialog` place
-/// le dialogue dans l'overlay, au-dessus du `Scaffold` et hors de son
-/// `Material` : c'est la condition reelle, et la seule ou le defaut se voit.
+ProviderContainer _debugRunContainer({List<EnemyInstance> enemies = const []}) {
+  final container = ProviderContainer();
+  container.read(debugRunProvider.notifier).requestDebugRun();
+  container.read(runProvider.notifier).startNewRun(_paladin);
+  container
+      .read(combatProvider.notifier)
+      .updateState(CombatState(enemies: enemies));
+  return container;
+}
+
+/// Le tiroir est monte dans le `Stack` d'un ecran, sous son `Scaffold` —
+/// exactement comme `GameScreen` et `MapScreen` le font.
 Widget _harness(ProviderContainer container, {required bool inCombat}) {
   return UncontrolledProviderScope(
     container: container,
     child: MaterialApp(
       theme: AppTheme.darkNeonTheme,
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: const [Locale('en', ''), Locale('fr', '')],
-      locale: const Locale('fr', ''),
       home: Scaffold(
-        body: Builder(
-          builder: (context) => ElevatedButton(
-            onPressed: () =>
-                DebugMenuDialog.show(context, inCombat: inCombat),
-            child: const Text('ouvrir le menu'),
-          ),
-        ),
+        body: Stack(children: [DebugDrawer(inCombat: inCombat)]),
       ),
     ),
   );
 }
 
-/// Monte le harnais puis ouvre reellement le dialogue.
-Future<void> _openMenu(
-  WidgetTester tester,
-  ProviderContainer container, {
-  required bool inCombat,
-}) async {
-  await tester.pumpWidget(_harness(container, inCombat: inCombat));
-  await tester.tap(find.text('ouvrir le menu'));
+Future<void> _openDrawer(WidgetTester tester) async {
+  await tester.tap(find.text('DEBUG'));
   await tester.pumpAndSettle();
-}
-
-ProviderContainer _debugRunContainer() {
-  final container = ProviderContainer();
-  container.read(debugRunProvider.notifier).requestDebugRun();
-  container.read(runProvider.notifier).startNewRun(_paladin);
-  container.read(combatProvider.notifier).updateState(
-    CombatState(
-      enemies: [
-        EnemyInstance(
-          data: _goblinData,
-          stats: EntityStats(
-            maxPv: 20,
-            currentPv: 20,
-            armure: 0,
-            attaque: 5,
-          ),
-        ),
-      ],
-    ),
-  );
-  return container;
 }
 
 void main() {
   setUp(_populateRegistry);
 
-  testWidgets('les quatre onglets se construisent sans exception', (
-    tester,
-  ) async {
-    // Regression : `GameDialog` est un conteneur stylé maison, sans `Material`
-    // dans son arbre. `TextField` (onglets Heros, Run) et `ListTile` (Deck,
-    // Reliques) en exigent un et refusaient de se construire — le menu
-    // affichait un pave d'erreur rouge a la place de son contenu.
-    tester.view.physicalSize = const Size(1200, 1800);
+  void sizeScreen(WidgetTester tester) {
+    tester.view.physicalSize = const Size(1600, 1200);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
+  }
 
+  testWidgets('ferme, le tiroir ne montre que sa poignee', (tester) async {
+    sizeScreen(tester);
     final container = _debugRunContainer();
     addTearDown(container.dispose);
 
-    await _openMenu(tester, container, inCombat: true);
-    expect(tester.takeException(), isNull, reason: 'construction initiale');
+    await tester.pumpWidget(_harness(container, inCombat: false));
+
+    expect(find.text('DEBUG'), findsOneWidget);
+    expect(find.text('Heros'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('en combat, les cinq onglets se construisent sans exception', (
+    tester,
+  ) async {
+    sizeScreen(tester);
+    final container = _debugRunContainer(
+      enemies: [_freshGoblin(), _freshGoblin()],
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(_harness(container, inCombat: true));
+    await _openDrawer(tester);
+    expect(tester.takeException(), isNull, reason: 'ouverture');
 
     // A chaque onglet, un contenu qui lui est propre : sans cette seconde
     // assertion, un onglet qui ne s'afficherait pas du tout passerait le test,
@@ -179,12 +158,11 @@ void main() {
       'Run': 'Or',
       'Deck': 'Ajouter une carte',
       'Reliques': 'Ajouter une relique',
+      'Combat': 'Gagner le combat',
       'Heros': 'PV',
     };
 
     for (final entry in tabs.entries) {
-      // La barre d'onglets defile : le dernier onglet sort du cadre, et le tap
-      // manquerait sa cible sans deplacer la vue jusqu'a lui.
       await tester.ensureVisible(find.text(entry.key));
       await tester.pump();
       await tester.tap(find.text(entry.key));
@@ -200,38 +178,66 @@ void main() {
     }
   });
 
-  testWidgets('les actions de combat ne sont jamais dans ce dialogue', (
+  testWidgets('sur la carte, pas d onglet Combat mais l acte suivant', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(1200, 1800);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-
+    sizeScreen(tester);
     final container = _debugRunContainer();
     addTearDown(container.dispose);
 
-    // Elles vivent dans `DebugCombatDrawer`, ancre a l'ecran de combat.
-    await _openMenu(tester, container, inCombat: true);
+    await tester.pumpWidget(_harness(container, inCombat: false));
+    await _openDrawer(tester);
 
     expect(find.text('Combat'), findsNothing);
-    expect(find.text('Heros'), findsOneWidget);
-    expect(tester.takeException(), isNull);
+
+    await tester.tap(find.text('Run'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Acte suivant'), findsOneWidget);
   });
 
-  testWidgets('l acte suivant n est propose que hors combat', (tester) async {
-    tester.view.physicalSize = const Size(1200, 1800);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
+  testWidgets('en combat, l acte suivant est retire', (tester) async {
+    sizeScreen(tester);
+    final container = _debugRunContainer(enemies: [_freshGoblin()]);
+    addTearDown(container.dispose);
 
-    // `advanceToNextAct` regenere la carte et efface la position : le
-    // proposer en combat laisserait la run sans noeud courant.
-    final inCombat = _debugRunContainer();
-    addTearDown(inCombat.dispose);
-    await _openMenu(tester, inCombat, inCombat: true);
+    await tester.pumpWidget(_harness(container, inCombat: true));
+    await _openDrawer(tester);
+
+    // `advanceToNextAct` regenere la carte et efface la position : le proposer
+    // en combat laisserait la run sans noeud courant.
     await tester.tap(find.text('Run'));
     await tester.pumpAndSettle();
     expect(find.textContaining('Acte suivant'), findsNothing);
+  });
+
+  testWidgets('mettre un ennemi a 0 PV ne ferme pas le tiroir', (tester) async {
+    sizeScreen(tester);
+    final container = _debugRunContainer(
+      enemies: [_freshGoblin(), _freshGoblin()],
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(_harness(container, inCombat: true));
+    await _openDrawer(tester);
+    // La barre d'onglets defile : « Combat » est le cinquieme et sort du
+    // cadre, le tap manquerait sa cible sans amener la vue jusqu'a lui.
+    await tester.ensureVisible(find.text('Combat'));
+    await tester.pump();
+    await tester.tap(find.text('Combat'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('1. Gobelin'), findsOneWidget);
+    expect(find.textContaining('2. Gobelin'), findsOneWidget);
+
+    await tester.tap(find.text('0 PV').first);
+    await tester.pumpAndSettle();
+
+    // L'ennemi meurt et le tiroir reste ouvert : un panneau ancre n'est pas
+    // une route, donc rien ne peut le fermer par megarde. C'est la propriete
+    // qui motive tout ce composant — sa perte reproduirait le defaut ou la
+    // sortie de combat fermait le menu au lieu de l'ecran.
+    expect(container.read(combatProvider).enemies.length, 1);
+    expect(find.text('Gagner le combat'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }

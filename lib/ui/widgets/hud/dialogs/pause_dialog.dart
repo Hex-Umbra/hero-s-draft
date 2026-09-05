@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/game/controllers/debug_run_controller.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
-import 'package:roguelike_card_game/ui/widgets/debug/debug_menu_dialog.dart';
 import 'package:roguelike_card_game/ui/widgets/game_dialog.dart';
 import 'package:roguelike_card_game/ui/widgets/game_button.dart';
 import 'package:roguelike_card_game/ui/theme/app_spacing.dart';
@@ -12,8 +11,9 @@ class PauseDialog extends ConsumerWidget {
   final VoidCallback onResume;
   final VoidCallback onExit;
 
-  /// Transmis au menu de debug : en combat, l'onglet Combat apparait et
-  /// l'action d'acte suivant disparait.
+  /// Conserve pour les appelants, qui savent dans quel ecran ils sont.
+  /// Le dialogue ne s'en sert plus depuis que les commandes de debug ont
+  /// rejoint `DebugDrawer`, ancre a meme l'ecran.
   final bool inCombat;
 
   const PauseDialog({
@@ -45,19 +45,15 @@ class PauseDialog extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-
-    // `kDebugMode` est une constante de compilation : en release, la condition
-    // entiere est repliee a false et tout ce sous-arbre devient inatteignable,
-    // donc elimine au tree-shaking.
-    final showDebug = kDebugMode && ref.watch(debugRunProvider).isDebugRun;
+    final isDebugRun = kDebugMode && ref.watch(debugRunProvider).isDebugRun;
 
     return GameDialog(
       showCloseButton: false,
       title: Text(l10n.pauseTitle, textAlign: TextAlign.center),
-      // Le marqueur : sans lui, rien a l'ecran ne distingue une run de test
-      // d'une vraie partie, et on peut jouer une heure avant de comprendre
-      // pourquoi elle ne s'est jamais sauvegardee.
-      subtitle: showDebug
+      // Le marqueur reste ici, meme si les commandes n'y sont plus : c'est en
+      // mettant le jeu en pause qu'on se demande si la partie est enregistree,
+      // et la poignee du tiroir ne dit pas, elle, que rien ne l'est.
+      subtitle: isDebugRun
           ? const Text(
               'RUN DEBUG — aucune sauvegarde',
               textAlign: TextAlign.center,
@@ -72,15 +68,6 @@ class PauseDialog extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           GameButton(text: l10n.resumeCombat, onPressed: onResume),
-          if (showDebug) ...[
-            AppSpacing.heightSm,
-            GameButton(
-              text: 'Menu de debug',
-              baseColor: Colors.deepPurpleAccent,
-              onPressed: () =>
-                  DebugMenuDialog.show(context, inCombat: inCombat),
-            ),
-          ],
           AppSpacing.heightSm,
           GameButton(
             text: l10n.backToMainMenu,
