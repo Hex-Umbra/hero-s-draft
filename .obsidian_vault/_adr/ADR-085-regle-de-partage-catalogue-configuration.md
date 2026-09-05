@@ -50,8 +50,9 @@ appartient au skill `patch-notes-writer`, qui le déplace avec `pubspec.yaml` et
 
 - `assets/data/` : deux fichiers à la racine (`audio.json`, `patch_notes.json`), sept
   répertoires de catalogue.
-- `loadGameDataRegistry` (`lib/services/game_data_service.dart`) déclare sept sources
-  d'entités par motif de chemin ; `loadAudioData` lit `audio.json` par son chemin littéral,
+- `loadGameDataRegistry` (`lib/services/game_data_service.dart`) déclare **huit** `EntitySource`
+  pour **sept catégories** — les cartes en ont deux, `cards/*.json` et
+  `classes/*/cards/*.json` ; `loadAudioData` lit `audio.json` par son chemin littéral,
   **hors du chargeur générique**.
 - `patch_notes.json` n'est lu par aucun chargeur de données : l'écran de notes de version
   le lit pour lui-même.

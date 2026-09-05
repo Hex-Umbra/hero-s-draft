@@ -103,7 +103,9 @@ identique, parce qu'il rend le fichier lisible hors de son contexte.*
 ## Publier une version
 
 1. Faire rédiger les patch notes par le skill `patch-notes-writer` — il écrit
-   l'entrée dans `assets/data/patch_notes.json` et synchronise `pubspec.yaml`.
+   l'entrée dans `assets/data/patch_notes.json` et synchronise `pubspec.yaml`
+   ainsi que `site/_site/versions.json`, dont il rafraîchit aussi les liens de
+   repli dans `site/index.html` et `site/versions.html`.
 2. Committer et pousser sur `main`.
 3. Poser le tag correspondant :
 
@@ -112,9 +114,9 @@ identique, parce qu'il rend le fichier lisible hors de son contexte.*
    git push origin v0.4.8
    ```
 
-Le pipeline vérifie que le tag, `pubspec.yaml` et `patch_notes.json`
-concordent, puis déploie le web sur `/v0.4.8/` et publie une pre-release
-GitHub avec le build Windows.
+Le pipeline vérifie que le tag, `pubspec.yaml`, `patch_notes.json` et
+l'entrée `current` de `site/_site/versions.json` concordent, puis déploie le
+web sur `/v0.4.8/` et publie une pre-release GitHub avec le build Windows.
 
 En cas d'échec, « Re-run failed jobs » est sûr sur tous les jobs. Si le tag
 lui-même est erroné, le supprimer (`git push --delete origin v0.4.8`), corriger,
@@ -127,6 +129,6 @@ et le reposer.
 Le moteur de base et l'architecture complète sont **terminés et fonctionnels** (Phases 1 à 12 validées).
 
 **À venir :**
-*   **Expérience Audio** : Intégration de `flame_audio` pour la musique dynamique et les effets sonores (SFX de cartes, impacts).
+*   **Musique** : les 4 pistes musicales restent à sourcer (chantiers P-46 et P-47). Le moteur audio et les 31 bruitages sont livrés depuis la version 0.5.0.
 *   **Plus de Profondeur** : Nouvelles reliques, nouveaux archétypes de cartes (Malédictions à jouer) et de nouveaux événements narratifs.
 *   **Polissage Final** : Équilibrage des derniers pourcentages, animations spécifiques aux boss, et préparation pour les plateformes de distribution.

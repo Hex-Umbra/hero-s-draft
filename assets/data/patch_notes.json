@@ -8,8 +8,8 @@
         "category": "Améliorations",
         "emoji": "⚡",
         "entries": [
-          "Le dictionnaire de cartes est désormais trié par rareté, puis par coût en mana : il ne suit plus l'ordre interne du catalogue.",
-          "Le tirage du deck de départ et le tutoriel présentent les cartes dans ce même ordre, identique à celui du dictionnaire.",
+          "Le dictionnaire est désormais trié : les cartes par rareté puis par coût en mana au sein de chaque type, les reliques par ordre alphabétique au sein de chaque rareté. Ni les unes ni les autres ne suivent plus l'ordre interne du catalogue.",
+          "Le tirage du deck de départ et le tutoriel classent les cartes selon le même critère que le dictionnaire : rareté, puis coût en mana.",
           "L'écran de choix de classe présente toujours le Paladin, puis le Berserker, puis le Mage."
         ]
       },
@@ -17,6 +17,7 @@
         "category": "Technique",
         "emoji": "🔧",
         "entries": [
+          "Une partie sauvegardée avant cette mise à jour ne reconnaît plus le passif de votre classe : la reprendre affiche un avertissement, et le passif reste inactif jusqu'à la fin de cette partie. Les parties commencées après la mise à jour ne sont pas concernées.",
           "Tout le contenu du jeu — cartes, classes, ennemis, reliques, événements — est désormais rangé à raison d'un fichier par élément : ajouter du contenu ne demande plus de toucher au code du jeu.",
           "Un système de compétences héroïques resté inachevé et inaccessible depuis les premières versions a été retiré."
         ]

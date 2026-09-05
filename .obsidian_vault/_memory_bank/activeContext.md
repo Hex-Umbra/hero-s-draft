@@ -21,11 +21,17 @@ ce chantier, et **P-42** et ses ~25-30 cartes de classe, qui s'écrivent désorm
 
 Cinq réserves à ne pas perdre de vue :
 
+- **⚠️ Les lots 1-2 cassent les sauvegardes antérieures, sur le passif seulement.** Les ids de
+  passifs sont passés en `snake_case` (`regenArmor` → `regen_armor`, commit `7da5db2`) alors que
+  la clé `run_save_v1` et `schemaVersion: 1` n'ont pas bougé : une partie d'avant se recharge
+  donc **et perd son passif de classe** jusqu'à sa fin, signalé par un `MissingSaveItem` nommé
+  à l'écran d'accueil. Casse assumée à l'époque (jeu en alpha), mais elle n'était consignée que
+  dans un message de commit — la note de version est le seul canal qui prévienne *avant*.
 - **La note de version couvrant P-48 et P-40 bloc 1 est écrite** (« Chaque Chose à Sa Place »,
-  le 2026-09-05) : un PATCH, les deux chantiers étant sans effet visible et seul le
-  réordonnancement d'affichage des lots 1-2 se voyant. **Elle n'est pas encore taguée** — la
-  publication reste à faire. Le numéro se lit dans `pubspec.yaml` et la 1ʳᵉ entrée de
-  `assets/data/patch_notes.json`, jamais ici.
+  le 2026-09-05) : un PATCH, les chantiers de fond étant invisibles. Ce que le joueur voit :
+  les réordonnancements d'affichage des lots 1-2 et la casse de sauvegarde ci-dessus.
+  **Elle n'est pas encore taguée** — la publication reste à faire. Le numéro se lit dans
+  `pubspec.yaml` et la 1ʳᵉ entrée de `assets/data/patch_notes.json`, jamais ici.
 - **Les tiers A, B, C et E de `docs/ROADMAP.md` n'ont toujours pas été re-vérifiés contre le
   code** — seuls S et D l'ont été (2026-08-04). Les traiter comme non vérifiés. Inchangé
   depuis le 2026-08-06.
@@ -34,11 +40,11 @@ Cinq réserves à ne pas perdre de vue :
 - **Bouton de téléchargement mort** : si le build Windows échoue quand le build web
   réussit, le site affiche un lien vers un asset absent. Correctif identifié, non fait —
   voir [ADR-080](../_adr/ADR-080-site-vitrine-pilote-par-la-donnee-et-jointure-decl.md).
-- **`patch-notes-writer` ne rafraîchit que les `href` de repli, pas les libellés visibles**
-  qui citent la version en toutes lettres — cause vivante dans le skill, non corrigée.
-  Contournée à la main aux **deux** dernières publications (2026-08-23 puis 2026-08-28) :
-  `site/index.html` porte le numéro en clair dans sa carte de version et doit être repris
-  à chaque fois. Le contournement répété est le symptôme, pas le remède.
+- **`systemPatterns.md` est à 122 lignes pour un plafond de 120** qu'il déclare lui-même, et
+  plus rien n'y est archivable. Cause structurelle : 12 de ses 17 sections ne portent qu'une
+  fiche et dépensent 6 lignes chacune, titre répété à l'identique entre l'en-tête et la ligne
+  de tableau. La prochaine fiche débordera pareil. **Arbitrage au propriétaire** : relever le
+  plafond, ou supprimer l'en-tête des sections à fiche unique (−24 lignes).
 
 ## 3 dernières livraisons
 
@@ -49,9 +55,12 @@ Cinq réserves à ne pas perdre de vue :
    fautes s'accumulent et lèvent en une fois. Le risque du chantier — une perte silencieuse
    d'entité ou de champ — a été traité par un **oracle comparant le JSON brut** avant/après,
    prouvé mordant par trois mutations, puis **refait depuis zéro par la revue de branche** :
-   71/71 entités, 0 champ perdu, 8/8 images MD5-identiques. Une run sauvegardée sur `main` se
-   recharge intacte : tout y est référencé par `id`. **53 ms** de démarrage en profile pour 72
-   lectures de bundle, contre un seuil d'alerte à 200 ms.
+   71/71 entités, 0 champ perdu, **7/7** images déplacées MD5-identiques (la 8ᵉ,
+   `bg_dungeon.png`, n'a jamais bougé — c'est le 8 des clés du cache Flame, pas celui de la
+   migration). **Ce lot seul** ne casse aucune sauvegarde : rien n'y change d'`id`. Coût de
+   démarrage relevé à **53 ms** pour 72 lectures de bundle en profile, contre un seuil
+   d'alerte de 200 ms — ⚠️ mesure ponctuelle du chantier, **qu'aucun test du dépôt ne
+   reproduit ni ne garde**.
    ⚠️ **Le préfixe d'images de Flame doit rester vide** — il ne fait pas partie des clés du
    cache, et un préfixe par dossier ferait s'écraser les trois `icon.png` de classes.
 2. **Réorganisation des données, lots 1-2 — la préparation** (2026-09-04, PR #34) — quatre

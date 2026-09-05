@@ -4,7 +4,7 @@ Ce document explique le fonctionnement du système d'animations piloté par les 
 
 ## 1. Vue d'ensemble
 
-Le système permet de déclencher des séquences visuelles différentes selon le type de carte jouée. Le choix de l'animation est défini directement dans le fichier `assets/data/cards.json` via la clé `"animation"`.
+Le système permet de déclencher des séquences visuelles différentes selon le type de carte jouée. Le choix de l'animation est défini directement dans le fichier de la carte — `assets/data/cards/<id>.json` ou `assets/data/classes/<classe>/cards/<id>.json` — via la clé `"animation"`.
 
 ## 2. Configuration JSON
 

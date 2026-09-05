@@ -82,5 +82,6 @@ sont les clés.
   `test/unit/real_bundle_load_test.dart` est le garde-fou.
 - ⚠️ **Le préfixe Flame doit rester vide.** Le remettre réintroduirait la collision de D6.
 - ⚠️ `GameDataRegistry` expose toujours des `List<T>` en lookup linéaire : la conversion en
-  `Map` reste au périmètre de P-26, 25 sites de construction dans 21 fichiers de test en
-  dépendant.
+  `Map` reste au périmètre de P-26, **24 sites de construction dans 20 fichiers de test** en
+  dépendant (re-mesuré le 2026-09-05 ;
+  `grep -rn "GameDataRegistry(" test/ | grep -v "loadGameDataRegistry("`).

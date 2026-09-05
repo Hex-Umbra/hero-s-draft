@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-"Hero's Draft" is a roguelike deckbuilder built with **Flutter**, using the **Flame** engine for game rendering and **Riverpod** for state management. It features turn-based combat, hero classes with unique passives, a procedural world map, relics, a shop, narrative events, and a full deckbuilding/forge loop. The game is **100% data-driven**: cards, enemies, heroes, skills, relics, events, and patch notes are all defined in JSON under `assets/data/` rather than hardcoded.
+"Hero's Draft" is a roguelike deckbuilder built with **Flutter**, using the **Flame** engine for game rendering and **Riverpod** for state management. It features turn-based combat, hero classes with unique passives, a procedural world map, relics, a shop, narrative events, and a full deckbuilding/forge loop. The game is **100% data-driven**: cards, enemies, heroes, relics, passives, events, forge upgrades, and patch notes are all defined in JSON under `assets/data/` rather than hardcoded.
 
 ## Commands
 
@@ -62,7 +62,7 @@ The codebase strictly separates three layers — never mix them:
 
 - **Localization** — dual system:
   - `lib/l10n/` (ARB files) drives Flutter-widget-level UI strings via `flutter_localizations`/`intl`.
-  - All game *content* (card/enemy/relic/event/skill text) is localized inline in the JSON data as bilingual key pairs, not via ARB. **Every JSON entry with user-facing text must include both `_fr` and `_en` variants**, and the corresponding Dart model in `lib/models/data/` must be updated whenever a JSON schema changes.
+  - All game *content* (card/enemy/relic/event/passive text) is localized inline in the JSON data as bilingual key pairs, not via ARB. **Every JSON entry with user-facing text must include both `_fr` and `_en` variants**, and the corresponding Dart model in `lib/models/data/` must be updated whenever a JSON schema changes.
   - Supported locales: French and English.
 
 - **Persistence** — `shared_preferences` for run state and settings (see `SaveService`, `lib/services/save_service.dart`).
@@ -116,7 +116,7 @@ The three index files are capped and deliberately short: they exist to be read w
 
 - **`patch_notes.json` is agent-managed**: never hand-edit it. It is maintained by the `patch-notes-writer` skill (`.claude/skills/patch-notes-writer/SKILL.md`), which prepends a new semver entry, writes player-facing French only, keeps `pubspec.yaml`'s `version:` field in sync with it, and adds the matching `current` entry to `site/_site/versions.json` while demoting the previous one to `stable`. Those three files carry the version number and must always move together in a single commit: `verify_version.sh` fails the release if any of them disagrees. The skill also refreshes three hardcoded fallback links, in `site/index.html` and `site/versions.html`, to match.
 - **The memory bank is agent-managed**: `.obsidian_vault/_memory_bank/`, `_adr/`, `_rules/` and `_patterns/` are maintained by the `memory-bank-sync` skill (`.claude/skills/memory-bank-sync/SKILL.md`). It re-measures every metric with a command before writing it, enforces per-file line caps, and archives rather than appends. `.obsidian_vault/_archive/` is read-only.
-- **`.agents/`** also defines a `game_designer` skill; other subfolders there (`orchestrator`, `worker_m1`, `auditor_m1`, etc.) are empty run-artifact directories from a past multi-agent workflow, not templates to follow.
+- **`.agents/`** holds exactly one file, `.agents/skills/game_designer.md`, defining a `game_designer` skill. The empty run-artifact directories of a past multi-agent workflow that this entry used to warn about are gone.
 - Favor non-blocking animations in Flame code (`Effect`, `Future.delayed` inside `async` methods) — never block the game loop.
 - Use `priority` on Flame components to manage z-ordering (e.g. background at `-100`, floating text high).
 - Use `FutureProvider` for async resource loading through Riverpod.

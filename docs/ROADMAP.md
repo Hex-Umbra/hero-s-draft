@@ -87,7 +87,7 @@ graph TD
 
 ### P-01 — Resync de version
 > [!NOTE]
-> ✅ **Clos le 2026-08-03.** La resynchronisation a été faite, et la propriété du numéro de version est désormais portée par le skill `.claude/skills/patch-notes-writer/SKILL.md`, qui l'écrit simultanément dans `patch_notes.json` et `pubspec.yaml`. L'écart ne peut plus se recreuser.
+> ✅ **Clos le 2026-08-03.** La resynchronisation a été faite, et la propriété du numéro de version est désormais portée par le skill `.claude/skills/patch-notes-writer/SKILL.md`, qui l'écrit simultanément dans `patch_notes.json`, `pubspec.yaml` et `site/_site/versions.json`. L'écart ne peut plus se recreuser.
 
 *Diagnostic du 31/07/2026, conservé tel quel pour mémoire — le chantier est clos depuis (voir la note ci-dessus) :* « Cinq minutes de travail, mais **prérequis bloquant strict** de P-04 : le job `verify-version` compare le tag git à `pubspec.yaml` et échoue systématiquement tant que l'écart `0.1.0` / `0.4.7` subsiste. À faire immédiatement, indépendamment du reste. »
 
@@ -316,9 +316,12 @@ successeurs et son corps reste gelé. Livré : [ADR-085](../.obsidian_vault/_adr
 [`_patterns/17-00`](../.obsidian_vault/_patterns/17-00-chargeur-de-donnees-generique-et-motifs-de-che.md)
 et la refonte de [`_rules/07-00`](../.obsidian_vault/_rules/07-00-architecture-des-donnees.md).
 
-**Note de version écrite le 2026-09-05** (spec §11) : un PATCH, le réordonnancement du
-dictionnaire et du pool de draft de départ livré par les lots 1-2 étant la seule chose visible
-par le joueur. **Reste à publier** — poser le tag, seul geste déclenchant `release.yml`.
+**Note de version écrite le 2026-09-05** (spec §11) : un PATCH. Ce que le joueur voit vient
+entièrement des lots 1-2 — les réordonnancements du dictionnaire (cartes *et* reliques), du
+pool de draft de départ et de la sélection de classe, **plus la casse du passif des
+sauvegardes antérieures** que le passage des ids en `snake_case` (`7da5db2`) entraîne, clé et
+`schemaVersion` étant inchangés. Le lot 3 est invisible et ne casse aucune sauvegarde.
+**Reste à publier** — poser le tag, seul geste déclenchant `release.yml`.
 
 ---
 

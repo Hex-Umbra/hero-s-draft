@@ -35,9 +35,13 @@ capturés alimentent `inject`, dans leur ordre d'apparition.
 
 > [!NOTE]
 > **Le nombre de segments doit correspondre exactement.** C'est ce seul fait qui sépare
-> `classes/*/class.json` de `classes/*/cards/*.json` — les deux commencent pareil — et ce qui
-> écarte les assets de paquets, servis sous `packages/<nom>/...` et donc toujours plus
-> profonds. Aucune expression régulière n'est en jeu.
+> `classes/*/class.json` de `classes/*/cards/*.json` — les deux commencent pareil. Aucune
+> expression régulière n'est en jeu.
+>
+> ⚠️ Les assets de paquets, eux, ne sont **pas** écartés par la profondeur : servis sous
+> `packages/<nom>/...`, ils sont rejetés dès le premier segment par la comparaison littérale
+> `assets` ≠ `packages` (`game_data_loader.dart`, branche `p != s`). Un paquet déclarant un
+> asset peu profond produirait une clé plus *courte*, pas plus longue.
 
 **Les passifs ne reçoivent aucune appartenance** (décision D4) : `PassiveData` n'a pas de
 champ `heroClass`, donc l'injection y serait silencieusement jetée par `fromJson` — un no-op
@@ -94,8 +98,9 @@ faire échouer le démarrage — [`_patterns/16-00`](16-00-architecture-du-syste
 | `test/unit/flame_image_prefix_test.dart` | La **collision de clés du cache d'images de Flame**. `Images.prefix` ne fait pas partie des clés : sous un préfixe par dossier, les trois `icon.png` de classes s'écraseraient |
 
 > [!NOTE]
-> **Coût de démarrage mesuré le 2026-09-05** : 72 lectures de bundle en **53 ms** en profile,
-> contre un seuil d'alerte fixé à 200 ms. Aucune parallélisation nécessaire.
+> **Coût de démarrage relevé le 2026-09-05** : 72 lectures de bundle en **53 ms** en profile,
+> contre un seuil d'alerte fixé à 200 ms. Aucune parallélisation nécessaire. ⚠️ Mesure
+> ponctuelle du chantier : **rien dans le dépôt ne la reproduit ni ne garde ce seuil**.
 
 Structure des données et règle de partage catalogue / configuration —
 [`_rules/07-00`](../_rules/07-00-architecture-des-donnees.md) et

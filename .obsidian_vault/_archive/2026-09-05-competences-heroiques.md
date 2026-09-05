@@ -57,4 +57,4 @@ Deux homonymes ont été **délibérément conservés** ; ne pas les confondre a
 | Survivant | Où | Pourquoi |
 |:---|:---|:---|
 | `HeroData.skills` | `assets/data/classes/<id>/class.json` | Homonyme sans rapport : la liste des `id` des deux cartes de signature d'une classe, lue par le tutoriel et le draft de départ via `HeroSkillsLink.getHeroCards()` |
-| `applyLifestealBuff` | `lib/game/controllers/run/player_stats_manager.dart` | Vit dans `RunController`, pas dans le système de compétences ; P-41 s'en sert. Sans appelant depuis la suppression |
+| `applyLifestealBuff` | `run_controller.dart:438` (façade) → `run/player_stats_manager.dart:475` (implémentation) | Vit dans `RunController`, pas dans le système de compétences ; P-41 s'en sert. C'est la **façade** qui n'a plus d'appelant, l'implémentation restant appelée par elle — précision apportée le 2026-09-05, la formulation d'origine désignant le mauvais des deux |

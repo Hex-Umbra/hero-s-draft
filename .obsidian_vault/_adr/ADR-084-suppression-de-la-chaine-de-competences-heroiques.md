@@ -2,8 +2,10 @@
 
 ✅ **Livré le 2026-09-04**, commit `ced306e`, bloc 1 du chantier P-40.
 Retire du jeu un système décrit par [ADR-003](ADR-003-architecture-100-data-driven.md) parmi
-les huit catalogues d'origine. Les deux fiches qui le documentaient sont archivées verbatim
-dans `../_archive/2026-09-05-competences-heroiques.md`.
+les huit catalogues d'origine. **Trois fiches** le documentaient : `_rules/05-00` et
+`_patterns/02-7`, entièrement consacrées à lui, sont archivées verbatim dans
+`../_archive/2026-09-05-competences-heroiques.md` ; [`_rules/02-2`](../_rules/02-2-systeme-de-heros.md)
+en portait une colonne, corrigée sur place et non archivée puisque le reste de la fiche est vivant.
 
 ### Contexte
 
@@ -41,7 +43,7 @@ disparaître.
 **D3 — Conserver les deux homonymes, explicitement.** `HeroData.skills` est la liste des `id`
 des deux cartes de signature d'une classe, lue par le tutoriel et le draft de départ ; elle
 n'a aucun rapport avec ce système. `applyLifestealBuff` vit dans `RunController`, pas dans le
-système de compétences, et P-41 s'en sert — elle reste, sans appelant.
+système de compétences, et P-41 s'en sert — elle reste, désormais sans point d'entrée.
 
 **D4 — Aucune migration de sauvegarde.** Les trois lignes de `save_service.dart` (écriture,
 lecture, hydratation) partent **ensemble** : une sauvegarde existante conserve une clé
@@ -57,7 +59,11 @@ avant la suppression.
 - `HeroData.skills` et `HeroSkillsLink.getHeroCards()`
   (`lib/models/data/hero_skills_link.dart`) subsistent, appelés par
   `lib/ui/screens/starter_deck_draft_screen.dart`.
-- `applyLifestealBuff` subsiste dans `lib/game/controllers/run/player_stats_manager.dart`.
+- `applyLifestealBuff` subsiste en **paire** : `RunController.applyLifestealBuff`
+  (`lib/game/controllers/run_controller.dart:438`) n'a plus aucun appelant et délègue à
+  `PlayerStatsManager.applyLifestealBuff` (`lib/game/controllers/run/player_stats_manager.dart:475`),
+  que rien d'autre n'appelle. C'est la façade qui est morte, pas l'implémentation — vérifié
+  le 2026-09-05, `grep -rn "applyLifestealBuff" lib/ test/` rendant exactement trois lignes.
 - Compatibilité de sauvegarde couverte par `test/unit/save_service_test.dart`.
 
 ### Conséquences
@@ -69,8 +75,15 @@ avant la suppression.
   commit) : `skill_controller_test`, `skill_state_persistence_test`, un test de
   `notifier_hydrate_test`, le bloc `executeSkill` de `combat_controller_test`. Le garde-fou
   de compatibilité en rend un.
-- ⚠️ **`applyLifestealBuff` est désormais sans appelant.** Conservée sur avertissement
-  explicite ; P-41 doit la reprendre ou la supprimer à son tour.
+- ⚠️ **La façade `RunController.applyLifestealBuff` est sans appelant.** Conservée sur
+  avertissement explicite ; P-41 doit la reprendre ou la supprimer avec son implémentation.
+- ⚠️ **Trois vestiges non prévus par cette décision subsistent** (relevés le 2026-09-05,
+  à traiter dans P-40 bloc 3) : `RunController.tickCooldown()` (`run_controller.dart:423`),
+  sans appelant, dont le corps se réduit à `startTurn()` ; la doc de
+  `TurnPhaseManager.startPlayerTurn` (`turn_phase_manager.dart:43-44`) qui annonce encore des
+  « cooldowns » ; et surtout un **texte vu par le joueur** dans `lib/tutorial/tutorial_data.dart`
+  (l. 287 en anglais, l. 300 en français) promettant que gagner un combat réinitialise les
+  temps de recharge de compétences.
 - ⚠️ **P-26 perd un tiers de son périmètre.** Restent le `GameDataRegistry` en `Map` O(1) et
   `MapNode` découplé de `Vector2`.
 - ⚠️ Restent ouverts dans P-40 : le bloc 2 (trois bugs confirmés) et le bloc 3 (dix dérives
