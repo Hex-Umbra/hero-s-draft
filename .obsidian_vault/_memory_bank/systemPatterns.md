@@ -3,7 +3,7 @@
 > [!IMPORTANT]
 > **Plafond : 120 lignes.** Ce fichier est un index, jamais un contenu. Chaque pattern d'architecture vit dans sa fiche sous `../_patterns/`. Les arbitrages qui les ont produits vivent dans `../_adr/`.
 
-**Vérifié le 2026-08-28** — 41 fiches. Découpage initial depuis un `systemPatterns.md` de 1320 lignes (après archivage des §13-14) ; §15 ajoutée le 2026-08-20, §16 le 2026-08-25.
+**Vérifié le 2026-09-05** — 41 fiches. Provenance du découpage, sections ajoutées et numéros non réattribués (§2.7, §13, §14) : `../_archive/2026-08-25-systemPatterns-historique.md`.
 
 ### 1. Architecture Globale — Séparation Triangulaire
 
@@ -24,7 +24,6 @@
 | 2.5. `ShopController` (`shopProvider`) | [02-5-shopcontroller.md](../_patterns/02-5-shopcontroller.md) | 30 |
 | 2.5. Immutabilité Stricte des Modèles d'État | [02-5-immutabilite-stricte-des-modeles-d-etat.md](../_patterns/02-5-immutabilite-stricte-des-modeles-d-etat.md) | 4 |
 | 2.6. `InventoryController` (`inventoryProvider`) | [02-6-inventorycontroller.md](../_patterns/02-6-inventorycontroller.md) | 7 |
-| 2.7. `SkillController` (`skillProvider`) | [02-7-skillcontroller.md](../_patterns/02-7-skillcontroller.md) | 7 |
 | 2.8. `RewardController` (`rewardProvider`) — Pilote des Récompenses de Combat | [02-8-rewardcontroller-pilote-des-recompenses-de-co.md](../_patterns/02-8-rewardcontroller-pilote-des-recompenses-de-co.md) | 32 |
 
 ### 3. Systèmes Transversaux (`lib/game/systems/`)
@@ -116,4 +115,8 @@
 |:---|:---|---:|
 | 16. Architecture du Système Audio | [16-00-architecture-du-systeme-audio.md](../_patterns/16-00-architecture-du-systeme-audio.md) | 149 |
 
-Historique de renumérotation (pourquoi §13-§14 manquent) archivé le 2026-08-25 : `../_archive/2026-08-25-systemPatterns-historique.md`.
+### 17. Chargeur de Données Générique et Motifs de Chemin (`GameDataLoader`)
+
+| Domaine | Fiche | Lignes |
+|:---|:---|---:|
+| 17. Chargeur de Données Générique et Motifs de Chemin (`GameDataLoader`) | [17-00-chargeur-de-donnees-generique-et-motifs-de-che.md](../_patterns/17-00-chargeur-de-donnees-generique-et-motifs-de-che.md) | 102 |

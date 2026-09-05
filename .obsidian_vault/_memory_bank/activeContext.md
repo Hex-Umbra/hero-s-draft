@@ -1,4 +1,4 @@
-<!-- last-sync: 2026-09-01 | commit: 5a0a81d -->
+<!-- last-sync: 2026-09-05 | commit: ac37596 -->
 
 # 🧠 Contexte Actuel
 
@@ -7,30 +7,25 @@
 
 ## Focus courant
 
-**Le Jalon 1 « Socle » est clos.** P-01, P-02, P-04 et désormais **P-03 (audio)** sont tous
-livrés — `docs/ROADMAP.md` §9. Publier une version se réduit à poser un tag `v*.*.*`, **mais
-seulement après** que le skill `patch-notes-writer` a déplacé ensemble les trois fichiers qui
-portent le numéro : sinon `verify-version` échoue avant le moindre build. Ce n'est pas une
-panne, c'est le garde-fou.
+**La couche de données est refaite.** P-48 est livré : les 8 catalogues JSON monolithiques
+sont éclatés en **71 fichiers d'entité**, et le répertoire fait autorité sur l'appartenance —
+une carte rangée dans `classes/paladin/cards/` *est* une carte du paladin, un JSON qui
+prétendrait le contraire échoue au chargement. **Ajouter du contenu ne demande plus de code** :
+un fichier au bon endroit suffit. Voir [ADR-085](../_adr/ADR-085-regle-de-partage-catalogue-configuration.md),
+[ADR-086](../_adr/ADR-086-autorite-du-repertoire-avec-expiration-de-la-toler.md) et
+[`_patterns/17-00`](../_patterns/17-00-chargeur-de-donnees-generique-et-motifs-de-che.md).
 
-**P-03 est livré et publié en `0.5.0`.** La branche `feat/p03-systeme-audio` est **fusionnée
-dans `main`** (PR #30), suivie de deux correctifs sans rapport entre eux (PR #31, PR #32).
-`patch-notes-writer` n'avait **délibérément pas** été invoqué tant que le catalogue restait
-vide : une note joueur aurait annoncé des sons que personne ne pouvait entendre — voir
-[ADR-082](../_adr/ADR-082-directeur-audio-central-et-mapping-par-donnees.md) D5. **Le motif est
-tombé le 2026-08-28** : les 19 bruitages sont posés, chaque `GameMoment` a son son, et les
-trois livraisons partagent enfin le même numéro. Les bruitages sont passés en WAV, la musique
-reste en MP3 — [`_rules/09-00`](../_rules/09-00-systeme-audio.md) §9.3.
-**La note `0.5.0` couvre tout le chantier audio**, sourcing et chemin de lecture compris :
-elle a été écrite avant les sept commits qui ont suivi, puis rouverte pour les intégrer, la
-version n'ayant jamais été taguée entre-temps. C'est la seule fois où une entrée de
-`patch_notes.json` a été rouverte, et c'est légitime : personne ne l'avait encore vue.
-`0.4.9` reste la dernière version réellement distribuée. Les 4 musiques sortent vers le
-chantier **P-46** ; décompte vivant via
-`flutter test test/unit/audio/audio_sourcing_report_test.dart --reporter expanded`.
+Deux chantiers en sont débloqués : le **devtool d'édition de contenu**, demande d'origine de
+ce chantier, et **P-42** et ses ~25-30 cartes de classe, qui s'écrivent désormais un fichier
+à la fois sans doubler le travail de relecture.
 
-Quatre réserves à ne pas perdre de vue :
+Cinq réserves à ne pas perdre de vue :
 
+- **Aucun patch note n'existe pour P-48 ni pour P-40 bloc 1.** Les deux sont sans effet
+  visible pour le joueur, mais le réordonnancement du dictionnaire et du pool de draft de
+  départ, livré par les lots 1-2, l'est. **La décision revient au propriétaire** et passe le
+  cas échéant par le skill `patch-notes-writer`. La version publiée reste celle qu'annoncent
+  `pubspec.yaml` et la 1ʳᵉ entrée de `assets/data/patch_notes.json`.
 - **Les tiers A, B, C et E de `docs/ROADMAP.md` n'ont toujours pas été re-vérifiés contre le
   code** — seuls S et D l'ont été (2026-08-04). Les traiter comme non vérifiés. Inchangé
   depuis le 2026-08-06.
@@ -47,67 +42,56 @@ Quatre réserves à ne pas perdre de vue :
 
 ## 3 dernières livraisons
 
-1. **Chemin de lecture audio — latence, disponibilité, synchronisation** (2026-08-29,
-   branche `feat/audio-bruitages-en-wav`, replié dans la note `0.5.0`) — le moteur de P-03 était
-   livré et testé, mais personne ne l'avait jamais *entendu* : le sourcing a révélé quatre
-   défauts que le vert des tests ne pouvait pas voir. Les bruitages passent par un réservoir
-   de lecteurs pré-armés au lieu d'allouer un lecteur natif et quatre allers-retours de canal
-   par son ; une piste manquante devient silencieuse au lieu de bruyante ; le système est
-   réveillé au lancement, sans quoi le premier son de la session était toujours perdu ; et le
-   son de conséquence tombe sur la **frappe d'impact** de l'animation, plus à sa fin. Le
-   catalogue passe de 14 à **22 moments** et de 19 à **31 bruitages**. Voir
-   [ADR-083](../_adr/ADR-083-latence-et-synchronisation-du-chemin-de-lecture.md),
-   [`_rules/09-1`](../_rules/09-1-catalogue-des-moments.md) et
-   [`_patterns/16-00`](../_patterns/16-00-architecture-du-systeme-audio.md) §16.7.
-   ⚠️ **Le retiming n'est couvert par aucun test** — le dépôt n'a pas `flame_test`.
-2. **Système audio — P-03** (2026-08-25, PR #30, **publié en `0.5.0`** le 2026-08-28 avec son
-   sourcing) — un directeur central (`AudioDirector.onMoment`/`MusicConductor.onScene`)
-   résout un moment de jeu ou une scène musicale en son via `assets/data/audio.json`, chaîne
-   de repli à 4 niveaux (son propre à l'entité → type d'animation → défaut → silence), sans
-   qu'aucun appelant ne nomme jamais un fichier. 14 moments branchés dans 8 fichiers,
-   musique par scène avec déverrouillage autoplay web, écran de réglages et coupure HUD
-   persistés hors de `SaveService`. `SilentAudioBackend` par défaut : les 295 tests
-   existants n'ont pas bougé (369 aujourd'hui — décomposition dans `progress.md`
-   §Métriques). Voir
-   [ADR-082](../_adr/ADR-082-directeur-audio-central-et-mapping-par-donnees.md),
-   [`_rules/09-00`](../_rules/09-00-systeme-audio.md) et
-   [`_patterns/16-00`](../_patterns/16-00-architecture-du-systeme-audio.md).
-   **Deux correctifs sans rapport ont suivi le même jour** : *(PR #31)* deux débordements
-   de `RenderFlex` — `StatusEffectsPanel`, jumeau oublié du panneau corrigé par la PR #28,
-   et une troisième copie manuscrite du même motif dans
-   `tutorial_combat_overview_widget.dart` ; le test qui aurait dû les voir avalait
-   l'exception par un `takeException()` sans assertion. *(PR #32)* le compte de callbacks
-   de `HerosDraftGame` dans [`_patterns/04-00`](../_patterns/04-00-synchronisation-bidirectionnelle-flame-riverp.md),
-   annoncé à 16 depuis dix-neuf jours, ramené à 14.
-3. **Fidélité du tutoriel — P-45** (2026-08-23, publié en `0.4.9`) — un audit avait relevé
-   **50 écarts** entre `lib/tutorial/` et le jeu réel, nés d'une règle d'autonomie qui
-   interdisait au tutoriel de lire même les données immuables du jeu, forçant une recopie
-   manuelle qui a dérivé. La règle devient « zéro provider d'*état* » plutôt que « zéro
-   Riverpod » : `gameDataLoaderProvider` est désormais autorisé en un point unique,
-   `tutorial_loader.dart`, critère vérifié par `test/tutorial/tutorial_isolation_test.dart`.
-   Le parcours passe de 13 à **15 étapes**. Voir
-   [ADR-081](../_adr/ADR-081-amendement-autonomie-tutoriel-zero-provider-etat.md),
-   [`_rules/08-00`](../_rules/08-00-systeme-de-tutoriel-autonome.md) et
-   [`_patterns/09-00`](../_patterns/09-00-architecture-du-systeme-de-tutoriel-autonome.md).
-   **Deux correctifs de jeu sans rapport ont rejoint le même tag par la PR #28** : le
-   panneau d'intentions ennemies débordait de sa largeur fixe, et la Forge d'Acier
-   légendaire rendait +1 Maîtrise d'Armure au lieu de +7 — table des 30 valeurs désormais
-   dans [`_rules/06-00`](../_rules/06-00-economie-de-jeu.md).
+1. **Réorganisation des données, lot 3 — la migration** (2026-09-05, PR #35, 30 commits) —
+   les catalogues deviennent **71 fichiers d'entité**, lus par un chargeur générique piloté
+   par des **motifs de chemin** : `*` vaut un segment, et le comptage de segments sépare
+   `classes/*/class.json` de `classes/*/cards/*.json` sans aucune expression régulière. Les
+   fautes s'accumulent et lèvent en une fois. Le risque du chantier — une perte silencieuse
+   d'entité ou de champ — a été traité par un **oracle comparant le JSON brut** avant/après,
+   prouvé mordant par trois mutations, puis **refait depuis zéro par la revue de branche** :
+   71/71 entités, 0 champ perdu, 8/8 images MD5-identiques. Une run sauvegardée sur `main` se
+   recharge intacte : tout y est référencé par `id`. **53 ms** de démarrage en profile pour 72
+   lectures de bundle, contre un seuil d'alerte à 200 ms.
+   ⚠️ **Le préfixe d'images de Flame doit rester vide** — il ne fait pas partie des clés du
+   cache, et un préfixe par dossier ferait s'écraser les trois `icon.png` de classes.
+2. **Réorganisation des données, lots 1-2 — la préparation** (2026-09-04, PR #34) — quatre
+   replis codés en dur supprimés, dont un second chargeur de JSON dans la couche Flame et des
+   chemins d'images en dur ; `GameDataRegistry.imagesToPreload` devient l'unique source de la
+   liste de préchargement. Tout **ordre d'affichage devient explicite** : le dictionnaire, le
+   pool de draft de départ et la sélection de classe ne dépendent plus de l'ordre du
+   catalogue — `AssetManifest.listAssets()` n'offrant aucune garantie d'ordre, le lot 3 aurait
+   sinon changé l'affichage sans que rien ne le signale. Ids de passifs passés en
+   `snake_case`, `PassiveData.fallback` supprimé.
+3. **Suppression de la chaîne de compétences héroïques — P-40 bloc 1** (2026-09-04, commit
+   `ced306e`) — un système présent depuis les premières versions, **sans aucun point
+   d'entrée** : personne n'appelait `executeSkill`, aucun bouton n'existait, et les 6 entrées
+   de `skills.json` ne correspondaient à aucun identifiant réel. **−544 lignes** sur 34
+   fichiers, sans migration de sauvegarde — les trois lignes de `save_service.dart` partent
+   ensemble, une sauvegarde existante garde une clé jamais relue. Voir
+   [ADR-084](../_adr/ADR-084-suppression-de-la-chaine-de-competences-heroiques.md) ; les deux
+   fiches du vault qui le décrivaient sont archivées.
+   ⚠️ **`applyLifestealBuff` est désormais sans appelant**, conservée sur avertissement
+   explicite pour P-41. **P-26 perd un tiers de son périmètre.**
+
 > [!NOTE]
-> **Rotations.** La livraison sortie au 2026-09-01 (CI/CD et site vitrine, P-04, ADR-079 et
-> ADR-080) est conservée verbatim dans
-> `../_archive/2026-09-01-activeContext-livraisons.md`. Les trois rotations précédentes sont
-> dans `../_archive/2026-08-25-activeContext-livraisons.md`,
+> **Rotations.** Les trois livraisons sorties au 2026-09-05 (chemin de lecture audio, P-03,
+> P-45) sont conservées verbatim dans
+> `../_archive/2026-09-05-activeContext-livraisons.md`. Les rotations précédentes sont dans
+> `../_archive/2026-09-01-activeContext-livraisons.md`,
+> `../_archive/2026-08-25-activeContext-livraisons.md`,
 > `../_archive/2026-08-23-activeContext-livraisons.md` et
 > `../_archive/2026-08-20-activeContext-livraisons.md`.
 
 ## Prochaine étape
 
-Jalon 1 « Socle » clos : ~~P-01~~ ✅, ~~P-02~~ ✅, ~~P-04~~ ✅, ~~P-03~~ ✅. Prochain jalon —
-Jalon 2 « Feel & contenu » (`docs/ROADMAP.md` §9) : P-06 (lot P0 animations), puis P-07, le
-prototype de P-08, et P-05. **P-07 doit lire [ADR-083](../_adr/ADR-083-latence-et-synchronisation-du-chemin-de-lecture.md) D6 avant de toucher aux animations** :
-la frappe d'impact y est déjà posée, et `spawnImpactParticles` l'attend, déclarée et jamais
-appelée. **P-03 est clos** : `v0.5.0` est taguée sur `main` et déployée, les neuf jobs de
-`release.yml` au vert. Ce qui reste du son part en deux chantiers indépendants du
-séquencement — les 4 musiques (**P-46**) et la seconde passe de couverture et de mixage
-(**P-47**).
+**Trancher la note de version de P-48** (réserve 1), puis reprendre le programme
+« Identité de classe & catalogue ». Le chemin le plus court est **P-40 blocs 2 et 3** — trois
+bugs de gameplay confirmés et dix dérives documentaires, ~0,75-1 j restant — qui referme le
+lot S1 avant d'ouvrir P-41 et P-42. **Le devtool d'édition de contenu** est débloqué et sans
+spec : il ne bloque personne, mais c'est lui qui justifiait la réorganisation.
+
+Le Jalon 2 « Feel & contenu » (`docs/ROADMAP.md` §9) reste par ailleurs ouvert : P-06 (lot P0
+animations), P-07, le prototype de P-08, P-05. **P-07 doit lire
+[ADR-083](../_adr/ADR-083-latence-et-synchronisation-du-chemin-de-lecture.md) D6 avant de
+toucher aux animations** : la frappe d'impact y est déjà posée, et `spawnImpactParticles`
+l'attend, déclarée et jamais appelée.

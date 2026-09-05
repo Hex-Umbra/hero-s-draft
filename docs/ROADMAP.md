@@ -254,7 +254,7 @@ Marqué **priorité haute** dans le rapport du 22/07 et jamais traité. Difficul
 | **P-42** | **Pools de cartes par classe** — séparation `unique`/`heroClass`, ~25-30 cartes | *à chiffrer en spec* | ★★★★☆ | 🔥🔥🔥 |
 | **P-43** | **Économie de deck** — récompense de carte, limite de taille, rééquilibrage fusion | *à chiffrer en spec* | ★★★☆☆ | 🔥🔥 |
 | **P-44** | **Profondeur de cartes** — coût 3, `scaleWith`, génération, cible `none`, malédictions | *à chiffrer en spec* | ★★★★☆ | 🔥🔥 |
-| ~~**P-48**~~ | ~~**Réorganisation des données** — un fichier par entité, dossiers auto-suffisants, chargeur générique~~ ✅ **Livré le 2026-09-05** · **vault à synchroniser** — 8 catalogues monolithiques éclatés en 71 fichiers d'entité, lus par un chargeur générique piloté par des motifs de chemin · [spec](superpowers/specs/2026-09-04-reorganisation-donnees-un-fichier-par-entite-design.md) | — | — | — |
+| ~~**P-48**~~ | ~~**Réorganisation des données** — un fichier par entité, dossiers auto-suffisants, chargeur générique~~ ✅ **Livré le 2026-09-05** — 8 catalogues monolithiques éclatés en 71 fichiers d'entité, lus par un chargeur générique piloté par des motifs de chemin · [spec](superpowers/specs/2026-09-04-reorganisation-donnees-un-fichier-par-entite-design.md) | — | — | — |
 
 ### P-10 — Finale de Séquence
 **Le jeu n'a aujourd'hui aucune condition de victoire** : les actes continuent indéfiniment et seule la mort termine une run. Le Portail Final (4ᵉ nœud optionnel à l'étage boss des Actes 5, 10, 15…, inspiré du téléporteur de Risk of Rain 2) donne enfin une sortie propre, sans supprimer l'endless pour qui veut continuer. C'est probablement **le manque de design le plus structurel du jeu actuel**.
@@ -306,39 +306,20 @@ travail de relecture.
 **ni `heroClass` ni `category`** : le répertoire les injecte, et les déclarer fait échouer le
 chargement. Chaque nouveau dossier impose un `dart run tool/sync_assets.dart`.
 
-#### Reste à faire — commande de travail de `memory-bank-sync`
+#### Vault synchronisé le 2026-09-05
 
-Les écritures dans `.obsidian_vault/` appartiennent à la skill `memory-bank-sync` (`CLAUDE.md`) :
-elle seule attribue la numérotation des ADR, re-mesure chaque métrique par une commande avant de
-l'écrire, applique les plafonds de lignes et archive au lieu d'ajouter. Le chantier a donc préparé
-ce travail sans le faire. **Commande de travail, en toutes lettres :**
+La commande de travail de `memory-bank-sync` est exécutée. ADR-003 n'a **pas** été amendé : la
+Garantie 5 de la skill interdit de réécrire un ADR publié, son statut renvoie donc vers ses
+successeurs et son corps reste gelé. Livré : [ADR-085](../.obsidian_vault/_adr/ADR-085-regle-de-partage-catalogue-configuration.md)
+(règle de partage catalogue / configuration), [ADR-086](../.obsidian_vault/_adr/ADR-086-autorite-du-repertoire-avec-expiration-de-la-toler.md)
+(autorité du répertoire, avec D4 et D-P3), la fiche
+[`_patterns/17-00`](../.obsidian_vault/_patterns/17-00-chargeur-de-donnees-generique-et-motifs-de-che.md)
+et la refonte de [`_rules/07-00`](../.obsidian_vault/_rules/07-00-architecture-des-donnees.md).
 
-1. **Amender ADR-003 « Architecture 100 % Data-Driven ».** Il énumère nommément les 8 fichiers JSON
-   et décrit un `GameDataService.loadAll()` qui n'existe plus, et ses comptes sont faux (15 cartes,
-   2 événements, 12 reliques). Le remplacer par un renvoi à la nouvelle structure et au nouveau
-   chargeur, **sans y recopier de chiffres** : ils vivent dans `_memory_bank/progress.md`, qui les
-   re-mesure. Un ADR dit *pourquoi*, pas *combien*.
-2. **Deux ADR neufs.**
-   - *La règle de partage catalogue / configuration* : un fichier de `assets/data/` est découpé s'il
-     est un **catalogue d'entités interchangeables**, il reste à plat s'il est un **document de
-     configuration unique**. `patch_notes.json` et `audio.json` tombent du second côté — pour
-     `patch_notes.json`, l'ordre du tableau **est** la sémantique (index 0 = version courante), et
-     cinq scripts de `.github/scripts/` plus `site/_site/js/model.js` en dépendent.
-   - *L'autorité du répertoire, option C, avec expiration* : le répertoire injecte, le JSON pouvait
-     confirmer, la contradiction échoue — et la tolérance a expiré à la tâche 9 du lot 3. Consigner
-     pourquoi les passifs en sont exclus (**D4** : `PassiveData` n'a pas de `heroClass`, l'injection
-     y serait un no-op indétectable) et pourquoi l'`id` reste redéclarable à titre permanent
-     (**D-P3** : le porter dans le fichier le rend lisible hors contexte et inspectable en masse).
-3. **Une fiche `_patterns/`** décrivant `GameDataLoader`, `EntitySource` et le motif de chemin : le
-   `*` qui vaut un segment, le comptage de segments qui sépare `class.json` de `cards/*.json` et
-   écarte les assets de paquets (`packages/<nom>/...`), l'agrégation d'erreurs remontée en une fois
-   par `throwIfFailed()`, et le `bundle` en paramètre comme seam de test. À indexer dans
-   `_memory_bank/systemPatterns.md` — **sans jamais réinliner son contenu dans l'index**, c'est la
-   règle des trois index de `CLAUDE.md`.
-
-Reste également ouverte la **décision du patch note** (spec §11) : le réordonnancement du
-dictionnaire et du pool de draft de départ est visible par le joueur. Elle revient au propriétaire,
-et passe le cas échéant par la skill `patch-notes-writer`.
+**Reste ouverte : la décision du patch note** (spec §11). Le réordonnancement du dictionnaire et
+du pool de draft de départ, livré par les lots 1-2, est visible par le joueur ; le lot 3 ne l'est
+pas. La décision revient au propriétaire, et passe le cas échéant par la skill
+`patch-notes-writer`.
 
 ---
 
@@ -467,7 +448,7 @@ Trois blocs sans aucune décision de design à prendre, donc exécutable immédi
 > [!NOTE]
 > **Bloc 1 livré le 2026-09-04** (`ced306e`). Restent ouverts les blocs 2 et 3, soit ~0,75-1 j.
 
-1. ~~**Supprimer la chaîne `skills.json`**~~ — ✅ **livré** — 6 entrées de données, `SkillData`, `SkillController`, `SkillState`, les deux `executeSkill` et le champ de sauvegarde. Le système est **inatteignable** : aucun appelant de `_game.executeSkill(...)`, aucun bouton de compétence dans `lib/ui/`. ⚠️ **Ne pas emporter `applyLifestealBuff()`** (`lib/game/controllers/run/player_stats_manager.dart:472`) : elle vit dans `RunController`, pas dans le système de compétences, et P-41 s'en sert.
+1. ~~**Supprimer la chaîne `skills.json`**~~ — ✅ **livré** — 6 entrées de données, `SkillData`, `SkillController`, `SkillState`, les deux `executeSkill` et le champ de sauvegarde. Le système était **inatteignable** : aucun appelant de `_game.executeSkill(...)`, aucun bouton de compétence dans `lib/ui/`. Conception et conséquences — [ADR-084](../.obsidian_vault/_adr/ADR-084-suppression-de-la-chaine-de-competences-heroiques.md). ⚠️ **`applyLifestealBuff()`** (`lib/game/controllers/run/player_stats_manager.dart:475`) a été conservée et **n'a plus d'appelant** : elle vit dans `RunController`, pas dans le système de compétences, et P-41 doit la reprendre ou la supprimer.
 2. **Trois bugs confirmés** — la rune `enduring` cassée dès le tier 2 (`'enduring:1'` codé en dur, `deck_controller.dart:188`, alors que la fusion de runes *et* la fusion 3→1 produisent des tiers supérieurs) ; la duplication des cartes `unique` par trois voies de clonage non filtrées ; l'écart de capacité de forge 1 ↔ 10 entre carte commune et carte de classe, où le code contredit `_rules/03-8`.
 3. **Dix dérives documentaires** entre les fiches du vault et le code, listées en Partie III.C de l'[état des lieux](analysis_reports/05082026_etat_des_lieux_heros_et_cartes_Opus5.md) — dont deux entrées **de ce document** (§5, P-17 : « `Attaque Rapide` gratuite » et « Paladin 20 armure de base ») héritées sans re-mesure et fausses. C'est exactement le motif documenté au §10.4 pour le Tier D ; le Tier C n'a pas encore subi ce contrôle.
 
@@ -479,7 +460,7 @@ Trois blocs sans aucune décision de design à prendre, donc exécutable immédi
 > **annulé par P-40**, qui supprime le modèle au lieu de le localiser. Ne pas ouvrir P-26 avant
 > P-40. Restent deux dettes sur trois.
 
-Seule fiche du tier dont **les trois constats se vérifiaient encore intégralement** au 2026-08-04, et la seule qui contînt une **violation d'une règle explicite du projet** : `SkillData` n'expose qu'un `final String name` (`lib/models/data/skill_data.dart:3`) alors que `CLAUDE.md` impose `_fr`/`_en` sur toute entrée à texte visible — c'est précisément ce constat que P-40 résout par suppression. S'y ajoutent `MapNode.position` typé `Vector2` — un modèle de données couplé à un type Flame, contraire à la séparation de couches du même document — et un `GameDataRegistry` composé de huit `List<>` parcourues linéairement à chaque lookup. Deux dettes réelles restantes, un risque nul.
+Seule fiche du tier dont **les trois constats se vérifiaient encore intégralement** au 2026-08-04, et la seule qui contînt une **violation d'une règle explicite du projet** : `SkillData` n'exposait qu'un `final String name` alors que `CLAUDE.md` impose `_fr`/`_en` sur toute entrée à texte visible — **ce constat est clos depuis le 2026-09-04**, P-40 ayant supprimé le modèle avec son fichier. S'y ajoutent `MapNode.position` typé `Vector2` — un modèle de données couplé à un type Flame, contraire à la séparation de couches du même document — et un `GameDataRegistry` composé de **sept** `List<>` (re-mesuré le 2026-09-05, huit avant la suppression de `SkillData`) parcourues linéairement à chaque lookup. Deux dettes réelles restantes, un risque nul.
 
 ### P-22 — Périmètre réduit de moitié
 Le constat `==`/`hashCode` tient intégralement : **aucun des 13 modèles suivis** n'en possède. En revanche la fiche du 31/07 réclamait un `toJson` pour `CardInstance` et `ShopState` : **les deux en ont un depuis le commit `3b2365c` du 24/06**, plus d'un mois avant la rédaction. Le seul modèle réellement dépourvu de sérialisation est **`EventState`** — ni `toJson` ni `fromJson`. Comme l'autosave se déclenche à la résolution d'un nœud et non pendant un événement, l'absence n'est pas exploitée aujourd'hui ; elle le deviendrait au premier événement multi-étapes.

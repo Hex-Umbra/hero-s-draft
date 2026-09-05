@@ -7,7 +7,7 @@
 **Responsabilités** :
 - **Initialisation** : `handleVictory(...)` — Déclenché lors de la victoire. 
   - Somme l'XP de base de chaque ennemi battu, indexé sur son niveau : `(enemy.data.xp * levelMultiplier).round()` où `levelMultiplier = 1.0 + 0.10 * (enemy.stats.level - 1)`. Triple (x3) le gain total d'XP si le nœud est de type boss central (`bossRewardType == BossRewardType.doubleXp`), et attribue en plus une carte aléatoire du jeu hors uniques et statuts.
-  - Somme l'or de base de chaque ennemi battu (`enemies.json`) avec le même coefficient de niveau : `(enemy.data.gold * levelMultiplier).round()`. Triple (x3) le gain total d'Or si le nœud est de type boss central (`bossRewardType == BossRewardType.doubleXp`).
+  - Somme l'or de base de chaque ennemi battu (`assets/data/enemies/<id>/enemy.json`) avec le même coefficient de niveau : `(enemy.data.gold * levelMultiplier).round()`. Triple (x3) le gain total d'Or si le nœud est de type boss central (`bossRewardType == BossRewardType.doubleXp`).
   - **Tirage de Reliques Boss 3 (`improvedRelic`)** : Effectue le tirage de Reliques si combat de type Élite ou Boss. Si le nœud présente `bossRewardType == BossRewardType.improvedRelic`, les probabilités de drop sont dynamiques et calculées par Act :
     - La chance Légendaire de base est fixée à **10.0%** (augmentable via la chance `luck` du joueur : `legChance = 10.0 + luck * 0.5`).
     - La chance Commune de base démarre à **40.0%** et diminue de **10% par acte** : `commonChance = max(0.0, 40.0 - (act - 1) * 10.0)`.

@@ -57,7 +57,7 @@ sur l'étape 01.
 
 1. **Accueil** : logo animé, résumé du jeu.
 2. **Choix de classe** *(une classe choisie)* : les 3 héros avec leurs vraies valeurs
-   (Paladin 100 PV, Berserker 80, Mage 60, tous à 3 mana) et le passif lu dans `passives.json`.
+   (Paladin 100 PV, Berserker 80, Mage 60, tous à 3 mana) et le passif lu sous `assets/data/passives/`.
    Trois cartes simples, pas le carrousel de `ClassSelectionScreen`. Écrit la tranche
    persistante.
 3. **Draft du deck de départ** *(5 cartes choisies)* : les 17 cartes globales de

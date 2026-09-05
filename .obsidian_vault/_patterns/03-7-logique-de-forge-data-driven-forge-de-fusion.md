@@ -1,7 +1,7 @@
 ### 3.7. Logique de Forge Data-Driven & Forge de Fusion
 
 #### 3.7.1. Gestion des Données de Forge
-- **Déclaration JSON (`forge_upgrades.json`)** : Les améliorations, descriptions, types de cartes éligibles, poids de tirage par rareté et multiplicateurs de tier sont externalisés.
+- **Déclaration JSON (`assets/data/forge_upgrades/<id>.json`)** : Les améliorations, descriptions, types de cartes éligibles, poids de tirage par rareté et multiplicateurs de tier sont externalisés.
 - **Modèle et Registre (`ForgeUpgradeData`)** : Parser JSON avec registre d'accès statique `getById(id)` pour résoudre les données d'upgrades depuis n'importe quel point de rendu graphique sans avoir à passer par le state.
 - **Chargement asynchrone** : Pris en charge par `GameDataService` lors de la phase de chargement initial et mis à la disposition du jeu dans l'instance globale de `GameDataRegistry`.
 

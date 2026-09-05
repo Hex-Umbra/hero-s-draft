@@ -3,7 +3,7 @@
 > [!IMPORTANT]
 > **Plafond : 120 lignes.** Ce fichier est un index, jamais un contenu. Chaque règle métier vit dans sa fiche sous `../_rules/`. Les arbitrages qui les ont produites vivent dans `../_adr/`.
 
-**Vérifié le 2026-08-28** — 27 fiches, découpées depuis un `productContext.md` de 807 lignes. Les six compteurs de lignes périmés (trois ici, trois dans `systemPatterns.md`) ont été recalés sur le disque à cette date.
+**Vérifié le 2026-09-05** — 27 fiches, découpées depuis un `productContext.md` de 807 lignes. La **§5 (Compétences Héroïques) a été retirée le 2026-09-05** : le système qu'elle décrivait est supprimé du jeu ([ADR-084](../_adr/ADR-084-suppression-de-la-chaine-de-competences-heroiques.md)), sa fiche est archivée verbatim dans `../_archive/2026-09-05-competences-heroiques.md`, et son numéro n'est pas réattribué.
 
 ### 1. Boucle de Gameplay Principale (Core Loop)
 
@@ -17,7 +17,7 @@
 |:---|:---|---:|
 | 2.1. Génération Procédurale de Carte (`MapGeneratorService`) | [02-1-generation-procedurale-de-carte.md](../_rules/02-1-generation-procedurale-de-carte.md) | 55 |
 | 2.2. Système de Héros | [02-2-systeme-de-heros.md](../_rules/02-2-systeme-de-heros.md) | 16 |
-| 2.3. Catalogue de Cartes | [02-3-catalogue-de-cartes.md](../_rules/02-3-catalogue-de-cartes.md) | 29 |
+| 2.3. Catalogue de Cartes | [02-3-catalogue-de-cartes.md](../_rules/02-3-catalogue-de-cartes.md) | 33 |
 | 2.4. Progression de Rareté Dynamique et Fusion Interactive | [02-4-progression-de-rarete-dynamique-et-fusion-int.md](../_rules/02-4-progression-de-rarete-dynamique-et-fusion-int.md) | 10 |
 | 2.5. Bestiaire | [02-5-bestiaire.md](../_rules/02-5-bestiaire.md) | 48 |
 | 2.6. Équilibrage Hybride, Budget de Menace et Réserve de Vagues | [02-6-equilibrage-hybride-budget-de-menace-et-reser.md](../_rules/02-6-equilibrage-hybride-budget-de-menace-et-reser.md) | 31 |
@@ -32,7 +32,7 @@
 | 3.3. ⚔️ Pipeline de Dégâts Centralisé | [03-3-pipeline-de-degats-centralise.md](../_rules/03-3-pipeline-de-degats-centralise.md) | 20 |
 | 3.4. 🃏 Système de Piles de Cartes | [03-4-systeme-de-piles-de-cartes.md](../_rules/03-4-systeme-de-piles-de-cartes.md) | 60 |
 | 3.5. 🎒 Système de Reliques | [03-5-systeme-de-reliques.md](../_rules/03-5-systeme-de-reliques.md) | 57 |
-| 3.6. 🎪 Système d'Événements | [03-6-systeme-d-evenements.md](../_rules/03-6-systeme-d-evenements.md) | 21 |
+| 3.6. 🎪 Système d'Événements | [03-6-systeme-d-evenements.md](../_rules/03-6-systeme-d-evenements.md) | 32 |
 | 3.7. 🏕️ Feu de Camp / Repos (`RestScreen`) | [03-7-feu-de-camp-repos.md](../_rules/03-7-feu-de-camp-repos.md) | 6 |
 | 3.8. 🔨 Système de Forge & Forge de Fusion (Forge v2.5) | [03-8-systeme-de-forge-forge-de-fusion.md](../_rules/03-8-systeme-de-forge-forge-de-fusion.md) | 54 |
 | 3.9. 🛒 Boutique (Shop) | [03-9-boutique.md](../_rules/03-9-boutique.md) | 18 |
@@ -47,12 +47,6 @@
 |:---|:---|---:|
 | 4. Altérations d'État & Statuts (Status Effects) | [04-00-alterations-d-etat-statuts.md](../_rules/04-00-alterations-d-etat-statuts.md) | 32 |
 
-### 5. Compétences Héroïques (Skills)
-
-| Domaine | Fiche | Lignes |
-|:---|:---|---:|
-| 5. Compétences Héroïques (Skills) | [05-00-competences-heroiques.md](../_rules/05-00-competences-heroiques.md) | 14 |
-
 ### 6. Économie de Jeu
 
 | Domaine | Fiche | Lignes |
@@ -63,7 +57,7 @@
 
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
-| 7. Architecture des Données (100% Data-Driven) | [07-00-architecture-des-donnees.md](../_rules/07-00-architecture-des-donnees.md) | 36 |
+| 7. Architecture des Données (100% Data-Driven) | [07-00-architecture-des-donnees.md](../_rules/07-00-architecture-des-donnees.md) | 83 |
 
 ### 8. Système de Tutoriel Autonome (Tutorial System)
 

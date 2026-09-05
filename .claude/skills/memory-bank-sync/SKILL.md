@@ -174,13 +174,26 @@ documentaire. Un seul schéma vivant, un seul propriétaire.
       — **extraire les deux formes** : les chemins entre backticks *et* les cibles de
       liens markdown `](...)`. Une extraction limitée aux backticks avait laissé passer
       53 liens absolus `file:///` dans 15 fiches d'ADR.
-      **Exceptions connues, à ne pas corriger** — ces trois chemins n'ont jamais existé
-      dans ce dépôt et sont cités dans des corps d'ADR gelés que la Garantie 5 interdit
-      de réécrire :
+      **Exceptions connues, à ne pas corriger** — chemins cités dans des corps gelés que la
+      Garantie 5 interdit de réécrire.
+      *(a)* N'ont jamais existé dans ce dépôt :
       `docs/lessons/flame_riverpod_sync.md` (ADR-001, ADR-008),
       `docs/lessons/state_immutability.md` (ADR-005),
-      `docs/implementation_plans/deck_merge_system.md` (ADR-007).
+      `docs/implementation_plans/deck_merge_system.md` (ADR-007),
+      `.superpowers/sdd/progress.md` (ADR-069, artefact de session jamais suivi par git),
+      `../Prototypes/Web/` (ADR-080, hors dépôt).
+      *(b)* **Ont existé, et ont été supprimés — texte historique, laisser tel quel** : les
+      catalogues abolis par P-48 (`cards.json`, `hero_cards.json`, `enemies.json`,
+      `relics.json`, `events.json`, `forge_upgrades.json`) dans ADR-024, ADR-026, ADR-031,
+      ADR-033, ADR-074, ADR-078 et l'historique des releases de `progress.md` ; la chaîne de
+      compétences supprimée par P-40 (`skills.json`, `skill_data.dart`, `skill_state.dart`,
+      `skill_controller.dart`) dans ADR-081 et ADR-084.
+      Y corriger le chemin sans corriger les chiffres qui l'entourent produirait une
+      affirmation fausse — pire qu'un lien mort. Un **lien markdown** cassé fait exception à
+      l'exception : il se retarge (Garantie 3), comme ADR-068 le 2026-09-05.
       Tout autre échec est un vrai défaut : le corriger ou le signaler.
+      ⚠️ Un nom de branche git entre backticks (`fix/combat_scaling`, `docs/p45-…`) et un
+      raccourci de section (`_rules/09-00`) ne sont **pas** des chemins : ne pas les tester.
 - [ ] `pubspec.yaml` et la 1ʳᵉ entrée de `patch_notes.json` annoncent la même version — et le vault ne la recopie pas (Garantie 4)
 - [ ] Index ADR : numéros uniques et triés
 - [ ] Aucune métrique sans `**Vérifié le ...**`
