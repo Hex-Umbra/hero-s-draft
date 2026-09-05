@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
+import '../../game/controllers/debug_run_controller.dart';
 import 'class_selection_screen.dart';
 import 'card_dictionary_screen.dart';
 import 'patch_notes_screen.dart';
@@ -65,7 +67,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (mounted) setState(() {});
   }
 
+  /// Lance une run de test.
+  ///
+  /// Contrairement à [_startNewGame], elle **ne demande pas** à écraser la
+  /// sauvegarde existante et n'y touche pas : une run debug ne persiste rien,
+  /// donc elle n'a rien à écraser. Passer par le chemin normal détruirait la
+  /// vraie partie avant même que la run de test ne commence.
+  Future<void> _startDebugRun() async {
+    ref.read(debugRunProvider.notifier).requestDebugRun();
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const ClassSelectionScreen()),
+    );
+    if (mounted) setState(() {});
+  }
+
   Future<void> _startNewGame(bool hasSave) async {
+    // Chaque départ déclare son mode : sans cela, un appui sur « Run Debug »
+    // suivi d'un retour ici teindrait silencieusement cette run normale.
+    ref.read(debugRunProvider.notifier).requestNormalRun();
+
     if (hasSave) {
       final confirmed = await showDialog<bool>(
         context: context,
@@ -88,7 +108,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
       );
       if (confirmed != true) return;
-      await SaveService.clear();
+      await SaveService.clear(ref.read);
     }
 
     if (!mounted) return;
@@ -186,6 +206,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   style: TextStyle(color: Colors.white),
                                 ),
                               ),
+                              // `kDebugMode` est une constante de compilation :
+                              // en release, ce bouton et tout ce qu'il atteint
+                              // sont eliminés au tree-shaking.
+                              if (kDebugMode) ...[
+                                const SizedBox(height: 12),
+                                ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 40,
+                                      vertical: 14,
+                                    ),
+                                    backgroundColor: Colors.deepPurpleAccent,
+                                    textStyle: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  onPressed: _startDebugRun,
+                                  child: const Text(
+                                    'RUN DEBUG',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                              ],
                             ],
                           );
                         },

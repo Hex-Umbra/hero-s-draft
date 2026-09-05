@@ -1,12 +1,14 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:roguelike_card_game/game/controllers/debug_run_controller.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'package:roguelike_card_game/ui/widgets/debug/debug_menu_dialog.dart';
 import 'package:roguelike_card_game/ui/widgets/game_dialog.dart';
 import 'package:roguelike_card_game/ui/widgets/game_button.dart';
 import 'package:roguelike_card_game/ui/theme/app_spacing.dart';
 
-class PauseDialog extends StatelessWidget {
+class PauseDialog extends ConsumerWidget {
   final VoidCallback onResume;
   final VoidCallback onExit;
 
@@ -41,27 +43,36 @@ class PauseDialog extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
+
+    // `kDebugMode` est une constante de compilation : en release, la condition
+    // entiere est repliee a false et tout ce sous-arbre devient inatteignable,
+    // donc elimine au tree-shaking.
+    final showDebug = kDebugMode && ref.watch(debugRunProvider).isDebugRun;
 
     return GameDialog(
       showCloseButton: false,
-      title: Text(
-        l10n.pauseTitle,
-        textAlign: TextAlign.center,
-      ),
+      title: Text(l10n.pauseTitle, textAlign: TextAlign.center),
+      // Le marqueur : sans lui, rien a l'ecran ne distingue une run de test
+      // d'une vraie partie, et on peut jouer une heure avant de comprendre
+      // pourquoi elle ne s'est jamais sauvegardee.
+      subtitle: showDebug
+          ? const Text(
+              'RUN DEBUG — aucune sauvegarde',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.deepPurpleAccent,
+                fontWeight: FontWeight.bold,
+              ),
+            )
+          : null,
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          GameButton(
-            text: l10n.resumeCombat,
-            onPressed: onResume,
-          ),
-          // `kDebugMode` est une constante de compilation : en release la
-          // condition est repliee a false et tout ce sous-arbre devient
-          // inatteignable, donc elimine au tree-shaking.
-          if (kDebugMode) ...[
+          GameButton(text: l10n.resumeCombat, onPressed: onResume),
+          if (showDebug) ...[
             AppSpacing.heightSm,
             GameButton(
               text: 'Menu de debug',

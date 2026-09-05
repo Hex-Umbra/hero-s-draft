@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../game/controllers/debug_run_controller.dart';
 import '../game/controllers/run_controller.dart';
 import '../game/controllers/deck_controller.dart';
 import '../game/controllers/inventory_controller.dart';
@@ -26,7 +27,18 @@ class SaveService {
   static const String _saveKey = 'run_save_v1';
   static const int _schemaVersion = 1;
 
+  /// Une run debug ne persiste rien : ni ecriture, ni effacement.
+  ///
+  /// Le verrou est ici, et non chez les appelants, pour deux raisons. Il y a
+  /// quatre points d'appel — un pour `save`, trois pour `clear` — et rien ne
+  /// garantit qu'il n'y en aura pas un cinquieme. Surtout, l'effacement est
+  /// aussi destructeur que l'ecriture : un menu de debug capable de tuer le
+  /// heros mene a `DeathOverlay`, qui efface la sauvegarde. Proteger la seule
+  /// ecriture aurait laisse la vraie partie disparaitre par la porte d'a cote.
+  static bool _isDebugRun(RefReader read) => read(debugRunProvider).isDebugRun;
+
   static Future<void> save(RefReader read) async {
+    if (_isDebugRun(read)) return;
     final prefs = await SharedPreferences.getInstance();
     final payload = {
       'schemaVersion': _schemaVersion,
@@ -43,12 +55,18 @@ class SaveService {
     return prefs.containsKey(_saveKey);
   }
 
-  static Future<void> clear() async {
+  static Future<void> clear(RefReader read) async {
+    if (_isDebugRun(read)) return;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_saveKey);
   }
 
   static Future<SaveLoadResult> load(RefReader read) async {
+    // Charger, c'est reprendre une run legitime : le mode debug d'une run
+    // precedente ne doit pas la suivre. Fait en premier, avant les `clear`
+    // du chemin « sauvegarde corrompue », qu'il debloque au passage.
+    read(debugRunProvider.notifier).clearForLoadedRun();
+
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_saveKey);
     if (raw == null) {
@@ -67,7 +85,7 @@ class SaveService {
       if (kDebugMode) {
         debugPrint('SaveService.load: corrupted or unsupported save data ($e)');
       }
-      await clear();
+      await clear(read);
       return const SaveLoadResult(success: false);
     }
 
@@ -94,7 +112,7 @@ class SaveService {
       if (kDebugMode) {
         debugPrint('SaveService.load: failed to hydrate save data ($e)');
       }
-      await clear();
+      await clear(read);
       return const SaveLoadResult(success: false);
     }
   }

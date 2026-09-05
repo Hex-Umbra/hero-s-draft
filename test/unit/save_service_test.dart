@@ -123,7 +123,7 @@ void main() {
       await SaveService.save(container.read);
       expect(await SaveService.hasSave(), isTrue);
 
-      await SaveService.clear();
+      await SaveService.clear(container.read);
       expect(await SaveService.hasSave(), isFalse);
     });
 

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:roguelike_card_game/game/controllers/debug_taint_controller.dart';
+import 'package:roguelike_card_game/game/controllers/debug_run_controller.dart';
 import 'package:roguelike_card_game/game/controllers/inventory_controller.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
 import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
@@ -29,18 +29,20 @@ const paladin = HeroData(
   passiveTrait: 'regen_armor',
 );
 
+/// Une run *debug*, seule dans laquelle `DebugActions` accepte d'agir.
 ProviderContainer _startedRun() {
   final container = ProviderContainer();
+  container.read(debugRunProvider.notifier).requestDebugRun();
   container.read(runProvider.notifier).startNewRun(paladin);
   return container;
 }
 
 void main() {
   group('DebugActions — run et heros', () {
-    test('updateHeroStats ecrit les PV et contamine la run', () {
+    test('updateHeroStats ecrit les PV du heros', () {
       final container = _startedRun();
       addTearDown(container.dispose);
-      expect(container.read(debugTaintProvider), isFalse);
+      expect(container.read(debugRunProvider).isDebugRun, isTrue);
 
       DebugActions.updateHeroStats(
         container.read,
@@ -48,7 +50,6 @@ void main() {
       );
 
       expect(container.read(runProvider).heroStats.currentPv, 42);
-      expect(container.read(debugTaintProvider), isTrue);
     });
 
     test('setGold fixe l or a la valeur exacte, a la hausse comme a la baisse', () {
@@ -86,7 +87,6 @@ void main() {
       expect(container.read(runProvider).act, 2);
       expect(container.read(runProvider).mapNodes, isNot(same(mapBefore)));
       expect(container.read(runProvider).currentNodeId, isNull);
-      expect(container.read(debugTaintProvider), isTrue);
     });
   });
 
@@ -105,7 +105,7 @@ void main() {
       effects: [CardEffect(type: 'damage', value: 6)],
     );
 
-    test('addCard ajoute une instance au deck maitre et contamine', () {
+    test('addCard ajoute une instance au deck maitre', () {
       final container = _startedRun();
       addTearDown(container.dispose);
       expect(container.read(deckProvider).masterDeck, isEmpty);
@@ -117,7 +117,6 @@ void main() {
         container.read(deckProvider).masterDeck.first.data.id,
         'strike_basic',
       );
-      expect(container.read(debugTaintProvider), isTrue);
     });
 
     test('removeCard retire exactement l instance visee', () {
@@ -168,7 +167,6 @@ void main() {
       expect(remaining.map((e) => e.id), containsAll([a.id, c.id]));
       expect(remaining.every((e) => e.stats.currentPv == 20), isTrue);
       expect(container.read(combatProvider).isCombatEnded, isFalse);
-      expect(container.read(debugTaintProvider), isTrue);
     });
 
     test('setEnemyHp a une valeur non nulle laisse la cible en vie', () {
