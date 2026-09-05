@@ -64,6 +64,9 @@ void main() {
   test('il y a bien 71 fichiers d entite', () {
     // 17 cartes neutres + 25 reliques + 5 evenements + 8 ameliorations de
     // forge + 3 passifs + 3 class.json + 6 cartes de classe + 4 enemy.json.
-    expect(_entityFiles().length, 71);
+    expect(_entityFiles().length, 71,
+        reason: '17 cartes neutres + 25 reliques + 5 evenements + 8 '
+            'ameliorations de forge + 3 passifs + 3 class.json + 6 cartes '
+            'de classe + 4 enemy.json');
   });
 }
