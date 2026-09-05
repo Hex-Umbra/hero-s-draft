@@ -2,6 +2,8 @@
 
 Date : 2026-09-05
 Statut : **Conçu, non implémenté**
+Révision : v2 — après relecture : ciblage des ennemis un par un plutôt qu'une action de vague
+(§4, onglet Combat), et vérification manuelle du build release (§7.1)
 Périmètre : **lot 1 sur 2.** Le lot 2 — l'éditeur de contenu hors run — fait l'objet de sa propre
 spec et n'est pas traité ici.
 Sources amont :
@@ -151,19 +153,32 @@ des reliques `startOfRun` : le comportement testé est donc le vrai.
 
 ### Onglet Combat — présent seulement pendant un combat
 
+L'onglet liste **les ennemis actuellement en jeu**, un par ligne : nom, PV courants sur PV max, et
+son rang dans la vague pour distinguer deux ennemis du même type. Chaque ligne porte ses propres
+commandes.
+
 | Action | Mécanisme | Ce que ça teste |
 |:---|:---|:---|
-| **Tuer la vague courante** | `updateEnemyStats(currentPv: 0)` sur chaque ennemi, puis `cleanDeadEnemies()` | Le **vrai** chemin de mort : gain d'XP, déclencheurs de reliques, et apparition de la vague suivante depuis `pendingEnemies` |
+| **Mettre un ennemi à 0 PV** — un bouton par ligne | `updateEnemyStats(currentPv: 0)` sur cet ennemi seul, puis `cleanDeadEnemies()` | Viser une cible précise au milieu des autres, par le **vrai** chemin de mort : gain d'XP et déclencheurs de reliques compris |
+| **Fixer les PV d'un ennemi** — un champ par ligne | `updateEnemyStats(currentPv: n)` | Les seuils de PV bas : exécutions, intentions conditionnelles, affichage des barres de vie |
+| **Mettre tous les ennemis à 0 PV** | La même chose appliquée à chaque ennemi de `state.enemies` | Vider la vague courante ; la vague suivante apparaît depuis `pendingEnemies` si elle n'est pas vide |
 | **Gagner le combat** | `updateState` avec `enemies` et `pendingEnemies` vides, `isCombatEnded` et `isVictory` à `true` | Le court-circuit : passe directement à l'écran de récompense |
 | **Perdre le combat** | `heroStats.currentPv = 0` | `RunState.isDead`, donc `DeathOverlay` |
 | **Sauter la phase ennemie** | `updateState(turnPhase: TurnPhase.player)` | Enchaîner des tours joueur sans subir les intentions |
 
 > [!NOTE]
-> La distinction entre les deux premières lignes est le cœur de cet onglet. « Tuer la vague »
-> emprunte le chemin réel et **fait apparaître la vague suivante** si `pendingEnemies` n'est pas
-> vide — c'est le comportement légitime, et c'est précisément ce qu'on veut pouvoir observer.
-> « Gagner le combat » vide les files et court-circuite tout. Confondre les deux donnerait un
-> outil qui ment sur ce qu'il vient de tester.
+> **Réduire des PV n'est pas gagner un combat, et l'outil ne doit pas les confondre.** Les trois
+> premières lignes empruntent le chemin réel : `cleanDeadEnemies()` distribue l'XP, déclenche les
+> reliques et **fait apparaître la vague suivante** si `pendingEnemies` n'est pas vide — c'est le
+> comportement légitime, et c'est exactement ce qu'on veut pouvoir observer. « Gagner le combat »
+> vide les files et court-circuite tout. Un outil qui mélangerait les deux mentirait sur ce qu'il
+> vient de tester.
+
+Les commandes par ennemi vivent **dans le dialogue de debug, pas sur les sprites.** Poser un
+bouton sur un composant d'ennemi ferait entrer de la logique de debug dans la couche de rendu
+Flame, que l'architecture du dépôt tient à l'écart de toute décision — les composants lisent
+l'état et l'affichent, ils n'en déclenchent pas la modification. La liste du dialogue donne le
+même pouvoir de ciblage sans toucher au rendu.
 
 ## 5. Le cas de l'acte
 
@@ -201,8 +216,12 @@ Les seules lignes ajoutées à du code existant sont au nombre de trois :
 `test/unit/debug_actions_test.dart` :
 
 - une assertion par action, vérifiant l'état résultant ;
-- « tuer la vague courante » avec `pendingEnemies` non vide → la vague suivante apparaît et le
-  combat **n'est pas** terminé ;
+- mettre **un** ennemi à 0 PV sur une vague de trois → il disparaît, les deux autres sont intacts,
+  et le combat continue ;
+- mettre **tous** les ennemis à 0 PV avec `pendingEnemies` non vide → la vague suivante apparaît
+  et le combat **n'est pas** terminé ;
+- fixer les PV d'un ennemi à une valeur non nulle → il survit, `cleanDeadEnemies` ne l'emporte
+  pas ;
 - « gagner le combat » → `isCombatEnded` et `isVictory` levés, les deux files vides ;
 - « forcer l'acte » → `act` change, `mapNodes` et `currentNodeId` inchangés.
 
@@ -212,12 +231,23 @@ Les seules lignes ajoutées à du code existant sont au nombre de trois :
 - drapeau levé + `checkpointProvider.bump()` → aucune écriture ;
 - `startNewRun` rabaisse le drapeau et l'autosave reprend.
 
-> [!IMPORTANT]
-> **Limite assumée.** Les tests s'exécutent en mode debug : `kDebugMode` y vaut toujours `true`.
-> Aucun test de ce dépôt ne peut donc prouver l'absence du menu dans un build release. La garantie
-> repose sur le repliage de constante du compilateur, et la double garde de §3.1 est là pour que
-> l'oubli d'un seul des deux niveaux ne suffise pas à faire fuiter le menu. `CombatDebugLogger`
-> vit sous la même limite depuis son introduction.
+### 7.1 L'absence en build release se vérifie à la main
+
+Les tests s'exécutent en mode debug : `kDebugMode` y vaut toujours `true`. Aucun test automatisé
+de ce dépôt ne peut donc prouver l'absence du menu dans un build publié. **Cette vérification est
+manuelle, et c'est le choix retenu** plutôt qu'un test automatisé qui ne prouverait rien.
+
+Procédure, à exécuter une fois à la livraison du lot, puis à chaque déplacement du point d'entrée
+de §3.4 :
+
+1. `flutter build windows --release`
+2. Lancer le binaire produit, démarrer une run, ouvrir le menu pause **depuis la carte** puis
+   **depuis un combat**.
+3. Aucun bouton de debug ne doit apparaître dans l'un ni dans l'autre.
+
+La garantie de fond reste le repliage de constante du compilateur ; la double garde de §3.1 est là
+pour que l'oubli d'un seul des deux niveaux ne suffise pas à faire fuiter le menu.
+`CombatDebugLogger` vit sous la même limite depuis son introduction.
 
 ## 8. Hors périmètre
 
@@ -234,7 +264,7 @@ Les seules lignes ajoutées à du code existant sont au nombre de trois :
 
 | Risque | Portée | Traitement |
 |:---|:---|:---|
-| Le menu atteint un build publié | Élevée si elle survenait | Double garde `kDebugMode` (§3.1, §3.4) ; limite de test reconnue en §7 |
+| Le menu atteint un build publié | Élevée si elle survenait | Double garde `kDebugMode` (§3.1, §3.4), et vérification manuelle sur un build release à la livraison (§7.1) |
 | Une sauvegarde trafiquée passe pour légitime | Élevée | **D5** — le drapeau ; la sauvegarde disque reste celle d'avant |
 | Une valeur forcée produit un état impossible à atteindre en jeu, et un faux bug | Moyenne | Aucun garde-fou : c'est le but de l'outil. Les bornes des champs sont celles des modèles, pas celles du gameplay |
 | Un `act` forcé sans carte correspondante | Faible | §5 sépare les deux actions précisément pour ça |
@@ -242,13 +272,14 @@ Les seules lignes ajoutées à du code existant sont au nombre de trois :
 
 ## 10. Estimation
 
-Cinq tâches, séquentielles :
+Six tâches, séquentielles :
 
 1. `DebugActions` et le drapeau, avec leurs tests — le gros du travail
 2. Les trois lignes dans le code existant (§6)
-3. `DebugMenuDialog` et ses onglets
+3. `DebugMenuDialog` et ses onglets, dont la liste d'ennemis ciblables
 4. Le bouton dans `PauseDialog`
 5. `dart analyze` propre, suite complète verte
+6. La vérification manuelle du build release (§7.1)
 
 Aucune dépendance nouvelle. Aucun asset. Aucune migration de sauvegarde — le format n'est pas
 touché.
