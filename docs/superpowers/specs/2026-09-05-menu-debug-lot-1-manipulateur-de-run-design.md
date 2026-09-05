@@ -325,21 +325,28 @@ pour que l'oubli d'un seul des deux niveaux ne suffise pas à faire fuiter le me
 | Risque | Portée | Traitement |
 |:---|:---|:---|
 | Le menu atteint un build publié | Élevée si elle survenait | Double garde `kDebugMode` (§3.1, §3.4), et recherche des libellés de debug dans l'instantané AOT du build release, témoins à l'appui (§7.1) |
-| Une sauvegarde trafiquée passe pour légitime | Élevée | **D5** — le drapeau ; la sauvegarde disque reste celle d'avant |
+| Une sauvegarde trafiquée passe pour légitime | Élevée | **D5** — le verrou dans `SaveService` ; la sauvegarde disque reste celle d'avant |
+| **La sauvegarde réelle est effacée depuis une run debug** | **Élevée, et réalisée une fois** | La v3 ne verrouillait que l'écriture ; `DeathOverlay` effaçait. `clear()` est désormais verrouillé au même endroit que `save()`, et un test couvre ce chemin précis (§7) |
 | Une valeur forcée produit un état impossible à atteindre en jeu, et un faux bug | Moyenne | Aucun garde-fou : c'est le but de l'outil. Les bornes des champs sont celles des modèles, pas celles du gameplay |
 | Un `act` forcé sans carte correspondante | Faible | §5 sépare les deux actions précisément pour ça |
 | `DebugActions` diverge des contrôleurs qu'il compose | Faible | Il n'appelle que des méthodes publiques déjà couvertes par les tests existants ; une signature changée casse la compilation |
 
 ## 10. Estimation
 
-Six tâches, séquentielles :
+Sept tâches, séquentielles :
 
-1. `DebugActions` et le drapeau, avec leurs tests — le gros du travail
-2. Les trois lignes dans le code existant (§6)
-3. `DebugMenuDialog` et ses onglets, dont la liste d'ennemis ciblables
-4. Le bouton dans `PauseDialog`
-5. `dart analyze` propre, suite complète verte
-6. La vérification manuelle du build release (§7.1)
+1. `DebugRunState` et le verrou de `SaveService`, avec leurs tests
+2. `DebugActions` — run et héros, deck et reliques, combat — le gros du travail
+3. Les ajouts au code existant (§6)
+4. `DebugMenuDialog` et ses onglets, dont la liste d'ennemis ciblables
+5. Les boutons : **RUN DEBUG** sur l'accueil, le menu dans `PauseDialog`, le marqueur
+6. `dart analyze` propre, suite complète verte
+7. La vérification sur l'instantané AOT du build release (§7.1)
 
 Aucune dépendance nouvelle. Aucun asset. Aucune migration de sauvegarde — le format n'est pas
 touché.
+
+**Réalisé le 2026-09-05** : 448 tests verts, `dart analyze` sans problème, absence confirmée du
+build release. La huitième tâche, non prévue, fut de refaire la première : le mode déclaré a
+remplacé le drapeau après que la question « peut-on simplement ne pas sauvegarder ? » eut révélé
+que l'effacement n'était pas protégé.
