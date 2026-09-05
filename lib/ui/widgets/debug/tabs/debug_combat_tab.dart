@@ -51,18 +51,15 @@ class DebugCombatTab extends ConsumerWidget {
           },
           child: const Text('Tous les ennemis a 0 PV'),
         ),
+        // Aucun `Navigator.pop()` ici : ce panneau est ancre dans l'ecran de
+        // combat, pas pousse comme route. C'est le jeu qui navigue — la
+        // victoire mene aux recompenses, la mort a `DeathOverlay`.
         TextButton(
-          onPressed: () {
-            DebugActions.winCombat(ref.read);
-            Navigator.of(context).pop();
-          },
+          onPressed: () => DebugActions.winCombat(ref.read),
           child: const Text('Gagner le combat'),
         ),
         TextButton(
-          onPressed: () {
-            DebugActions.loseCombat(ref.read);
-            Navigator.of(context).pop();
-          },
+          onPressed: () => DebugActions.loseCombat(ref.read),
           child: const Text('Perdre le combat'),
         ),
         TextButton(

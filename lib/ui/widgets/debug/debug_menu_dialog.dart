@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../game_dialog.dart';
-import 'tabs/debug_combat_tab.dart';
 import 'tabs/debug_deck_tab.dart';
 import 'tabs/debug_hero_tab.dart';
 import 'tabs/debug_relics_tab.dart';
@@ -27,12 +26,15 @@ class DebugMenuDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Pas d'onglet Combat : il vit dans `DebugCombatDrawer`, ancre a meme
+    // l'ecran de combat. Une seule place par chose — et surtout, un panneau
+    // ancre n'est pas une route, donc terminer un combat depuis lui ne
+    // derange pas la pile de navigation.
     final tabs = <(String, Widget)>[
       ('Heros', const DebugHeroTab()),
       ('Run', DebugRunTab(canRegenerateMap: !inCombat)),
       ('Deck', const DebugDeckTab()),
       ('Reliques', const DebugRelicsTab()),
-      if (inCombat) ('Combat', const DebugCombatTab()),
     ];
 
     return DefaultTabController(

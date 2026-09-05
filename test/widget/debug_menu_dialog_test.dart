@@ -154,12 +154,12 @@ ProviderContainer _debugRunContainer() {
 void main() {
   setUp(_populateRegistry);
 
-  testWidgets('les cinq onglets se construisent sans exception', (
+  testWidgets('les quatre onglets se construisent sans exception', (
     tester,
   ) async {
     // Regression : `GameDialog` est un conteneur stylé maison, sans `Material`
-    // dans son arbre. `TextField` (onglets Heros, Run, Combat) et `ListTile`
-    // (Deck, Reliques) en exigent un et refusaient de se construire — le menu
+    // dans son arbre. `TextField` (onglets Heros, Run) et `ListTile` (Deck,
+    // Reliques) en exigent un et refusaient de se construire — le menu
     // affichait un pave d'erreur rouge a la place de son contenu.
     tester.view.physicalSize = const Size(1200, 1800);
     tester.view.devicePixelRatio = 1.0;
@@ -179,7 +179,6 @@ void main() {
       'Run': 'Or',
       'Deck': 'Ajouter une carte',
       'Reliques': 'Ajouter une relique',
-      'Combat': 'Gagner le combat',
       'Heros': 'PV',
     };
 
@@ -201,7 +200,9 @@ void main() {
     }
   });
 
-  testWidgets('l onglet Combat est absent hors combat', (tester) async {
+  testWidgets('les actions de combat ne sont jamais dans ce dialogue', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(1200, 1800);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -210,10 +211,27 @@ void main() {
     final container = _debugRunContainer();
     addTearDown(container.dispose);
 
-    await _openMenu(tester, container, inCombat: false);
+    // Elles vivent dans `DebugCombatDrawer`, ancre a l'ecran de combat.
+    await _openMenu(tester, container, inCombat: true);
 
     expect(find.text('Combat'), findsNothing);
     expect(find.text('Heros'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('l acte suivant n est propose que hors combat', (tester) async {
+    tester.view.physicalSize = const Size(1200, 1800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    // `advanceToNextAct` regenere la carte et efface la position : le
+    // proposer en combat laisserait la run sans noeud courant.
+    final inCombat = _debugRunContainer();
+    addTearDown(inCombat.dispose);
+    await _openMenu(tester, inCombat, inCombat: true);
+    await tester.tap(find.text('Run'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Acte suivant'), findsNothing);
   });
 }
