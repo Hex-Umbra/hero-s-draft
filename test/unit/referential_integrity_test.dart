@@ -19,6 +19,19 @@ void main() {
     registry = await loadGameDataRegistry(rootBundle);
   });
 
+  // Garde de tete de fichier : sans elle, les quatre tests suivants
+  // bouclent sur `registry.heroes` et `registry.enemies` et passeraient a
+  // vide si le bundle perdait la totalite de assets/data/classes/*/ ou
+  // assets/data/enemies/*/ — une boucle for sur une liste vide ne produit
+  // aucun coupable, donc `expect(offenders, isEmpty)` serait trivialement
+  // vrai plus bas. Un fichier de garde doit se suffire a lui-meme : il ne
+  // doit pas dependre de real_bundle_load_test.dart (qui verifie
+  // hasLength(3) et hasLength(4)) pour detecter une perte totale.
+  test('le registre contient au moins un heros et un ennemi', () {
+    expect(registry.heroes, isNotEmpty);
+    expect(registry.enemies, isNotEmpty);
+  });
+
   test('tout passiveTrait designe un passif existant', () {
     final known = registry.passives.map((p) => p.id).toSet();
     final offenders = <String>[];
@@ -97,6 +110,11 @@ void main() {
       final onDisk = Directory('assets/data/classes/${hero.id}/cards')
           .listSync()
           .whereType<File>()
+          // Windows laisse trainer Thumbs.db/desktop.ini dans les dossiers
+          // consultes par l explorateur ; ni l un ni l autre n est couvert
+          // par .gitignore. Sans ce filtre, un fichier parasite local ferait
+          // rougir ce test pour une raison etrangere a l integrite.
+          .where((f) => f.path.endsWith('.json'))
           .map((f) => f.uri.pathSegments.last.replaceAll('.json', ''))
           .toSet();
       expect(onDisk, hero.skills.toSet(), reason: 'classe ${hero.id}');

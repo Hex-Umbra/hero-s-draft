@@ -38,8 +38,31 @@ void main() {
     expect(countUnder('assets/data/forge_upgrades/', 4), 8, reason: 'forge');
     expect(countUnder('assets/data/passives/', 4), 3, reason: 'passifs');
 
-    expect(json.where((a) => a.endsWith('/class.json')).length, 3);
-    expect(json.where((a) => a.endsWith('/enemy.json')).length, 4);
+    expect(
+      json
+          .where(
+            (a) =>
+                a.startsWith('assets/data/classes/') &&
+                a.endsWith('/class.json'),
+          )
+          .length,
+      3,
+    );
+    expect(
+      json
+          .where(
+            (a) =>
+                a.startsWith('assets/data/enemies/') &&
+                a.endsWith('/enemy.json'),
+          )
+          .length,
+      4,
+    );
+    // Canari delibere : ce compte (comme celui de registry.cards plus bas
+    // dans ce fichier) augmentera avec les 25 a 30 cartes de classe que
+    // P-42 doit ajouter. Quand ce test rougira a cause de P-42, mettre le 6
+    // a jour avec le nouveau total est la bonne reaction, pas retirer
+    // l assertion.
     expect(countUnder('assets/data/classes/', 6), 6, reason: 'cartes de classe');
 
     // Les deux documents de configuration restent a plat.
@@ -63,6 +86,9 @@ void main() {
   test('le registre se charge entierement depuis le vrai bundle', () async {
     final registry = await loadGameDataRegistry(rootBundle);
 
+    // Canari delibere, comme countUnder('assets/data/classes/', 6) plus
+    // haut dans ce fichier : ce total augmentera avec les cartes de P-42.
+    // Le mettre a jour est la bonne reaction, pas retirer l assertion.
     expect(registry.cards, hasLength(23)); // 17 neutres + 6 de classe
     expect(registry.relics, hasLength(25));
     expect(registry.events, hasLength(5));
