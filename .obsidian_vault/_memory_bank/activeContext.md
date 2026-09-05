@@ -21,11 +21,11 @@ ce chantier, et **P-42** et ses ~25-30 cartes de classe, qui s'écrivent désorm
 
 Cinq réserves à ne pas perdre de vue :
 
-- **Aucun patch note n'existe pour P-48 ni pour P-40 bloc 1.** Les deux sont sans effet
-  visible pour le joueur, mais le réordonnancement du dictionnaire et du pool de draft de
-  départ, livré par les lots 1-2, l'est. **La décision revient au propriétaire** et passe le
-  cas échéant par le skill `patch-notes-writer`. La version publiée reste celle qu'annoncent
-  `pubspec.yaml` et la 1ʳᵉ entrée de `assets/data/patch_notes.json`.
+- **La note de version couvrant P-48 et P-40 bloc 1 est écrite** (« Chaque Chose à Sa Place »,
+  le 2026-09-05) : un PATCH, les deux chantiers étant sans effet visible et seul le
+  réordonnancement d'affichage des lots 1-2 se voyant. **Elle n'est pas encore taguée** — la
+  publication reste à faire. Le numéro se lit dans `pubspec.yaml` et la 1ʳᵉ entrée de
+  `assets/data/patch_notes.json`, jamais ici.
 - **Les tiers A, B, C et E de `docs/ROADMAP.md` n'ont toujours pas été re-vérifiés contre le
   code** — seuls S et D l'ont été (2026-08-04). Les traiter comme non vérifiés. Inchangé
   depuis le 2026-08-06.
@@ -84,8 +84,8 @@ Cinq réserves à ne pas perdre de vue :
 
 ## Prochaine étape
 
-**Trancher la note de version de P-48** (réserve 1), puis reprendre le programme
-« Identité de classe & catalogue ». Le chemin le plus court est **P-40 blocs 2 et 3** — trois
+**Publier la note écrite** — poser le tag, ce qui déclenche `release.yml` — puis reprendre le
+programme « Identité de classe & catalogue ». Le chemin le plus court est **P-40 blocs 2 et 3** — trois
 bugs de gameplay confirmés et dix dérives documentaires, ~0,75-1 j restant — qui referme le
 lot S1 avant d'ouvrir P-41 et P-42. **Le devtool d'édition de contenu** est débloqué et sans
 spec : il ne bloque personne, mais c'est lui qui justifiait la réorganisation.

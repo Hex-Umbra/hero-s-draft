@@ -316,10 +316,9 @@ successeurs et son corps reste gelé. Livré : [ADR-085](../.obsidian_vault/_adr
 [`_patterns/17-00`](../.obsidian_vault/_patterns/17-00-chargeur-de-donnees-generique-et-motifs-de-che.md)
 et la refonte de [`_rules/07-00`](../.obsidian_vault/_rules/07-00-architecture-des-donnees.md).
 
-**Reste ouverte : la décision du patch note** (spec §11). Le réordonnancement du dictionnaire et
-du pool de draft de départ, livré par les lots 1-2, est visible par le joueur ; le lot 3 ne l'est
-pas. La décision revient au propriétaire, et passe le cas échéant par la skill
-`patch-notes-writer`.
+**Note de version écrite le 2026-09-05** (spec §11) : un PATCH, le réordonnancement du
+dictionnaire et du pool de draft de départ livré par les lots 1-2 étant la seule chose visible
+par le joueur. **Reste à publier** — poser le tag, seul geste déclenchant `release.yml`.
 
 ---
 

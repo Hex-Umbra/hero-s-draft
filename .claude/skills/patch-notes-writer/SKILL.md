@@ -109,7 +109,14 @@ présent sur le VPS.
 **Rafraîchis aussi les liens de repli, dans le même geste.** Trois liens sont codés en
 dur sur une version précise : `site/index.html` (bouton « JOUER MAINTENANT » et la carte
 de version « actuelle ») et `site/versions.html` (lien « Jouer à la dernière version
-connue »). Remplace leur `/v<ANCIENNE_VERSION>/` par `/v<VERSION>/`. Ils ne peuvent pas
+connue »). Remplace leur `/v<ANCIENNE_VERSION>/` par `/v<VERSION>/`.
+
+> ⚠️ **Le `href` ne suffit pas.** La carte « actuelle » de `site/index.html` porte aussi le
+> numéro **en toutes lettres** dans son `<div class="card__label">`. Un `sed` sur les seuls
+> `href` laisse une carte qui affiche l'ancien numéro tout en pointant vers le nouveau — la
+> dérive a été rattrapée à la main aux publications `0.4.9`, `0.5.0` puis `0.5.1` avant d'être
+> écrite ici. Le contrôle qui l'attrape : `grep -rn '0\.<ANCIENNE_VERSION>' site/*.html` doit
+> ne rien rendre. Ils ne peuvent pas
 être rendus indépendants de la version — aucune URL jouable n'existe sans numéro, le
 symlink `latest` ayant été délibérément écarté — mais ils ne sont atteints que si
 JavaScript est désactivé ou si les données échouent à charger : un lien resté sur
