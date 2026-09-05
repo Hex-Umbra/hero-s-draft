@@ -10,6 +10,7 @@ import '../../models/missing_save_item.dart';
 import '../../models/data/forge_upgrade_data.dart';
 import '../../services/map_generator_service.dart';
 import '../systems/trait_system.dart';
+import 'debug_taint_controller.dart';
 import 'inventory_controller.dart';
 import 'run/player_stats_manager.dart';
 import 'run/map_progression_manager.dart';
@@ -267,6 +268,12 @@ class RunController extends Notifier<RunState> {
           initialBonusShopCards: 0,
         );
 
+    // Une run neuve repart propre : le menu de debug n'a pas encore touché à
+    // son état, l'autosave doit reprendre. `kDebugMode` étant une constante de
+    // compilation, cette ligne disparaît du build release.
+    if (kDebugMode) {
+      ref.read(debugTaintProvider.notifier).clear();
+    }
   }
 
   /// Sélectionne un nœud sur la carte et déplace le joueur

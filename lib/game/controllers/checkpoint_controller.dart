@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../services/save_service.dart';
+import 'debug_taint_controller.dart';
 
 class CheckpointNotifier extends Notifier<int> {
   @override
@@ -15,8 +16,12 @@ final checkpointProvider =
 
 /// Écoute checkpointProvider et déclenche une sauvegarde à chaque bump().
 /// Doit être lu une fois au démarrage de l'app pour s'activer (voir main.dart).
+///
+/// Une run touchée par le menu de debug ne se sauvegarde plus : la sauvegarde
+/// déjà présente sur le disque reste celle d'avant.
 final autosaveOrchestratorProvider = Provider<void>((ref) {
   ref.listen<int>(checkpointProvider, (previous, next) {
+    if (ref.read(debugTaintProvider)) return;
     SaveService.save(ref.read);
   });
 });
