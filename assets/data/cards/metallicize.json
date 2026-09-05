@@ -6,7 +6,6 @@
   "description_fr": "Pendant 2 tours, gagne 2 Armure au début du tour.",
   "cost": 1,
   "type": "power",
-  "category": "global",
   "rarity": "common",
   "target": "self",
   "animation": "buff",

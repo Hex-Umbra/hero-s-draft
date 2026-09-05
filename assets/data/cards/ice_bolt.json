@@ -6,7 +6,6 @@
   "description_fr": "Inflige 4 dégâts. Applique 1 Gel.",
   "cost": 1,
   "type": "attack",
-  "category": "global",
   "rarity": "common",
   "target": "singleEnemy",
   "animation": "ice",

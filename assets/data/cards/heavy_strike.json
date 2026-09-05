@@ -6,7 +6,6 @@
   "description_fr": "Inflige 12 dégâts.",
   "cost": 2,
   "type": "attack",
-  "category": "global",
   "rarity": "common",
   "target": "singleEnemy",
   "animation": "melee",

@@ -6,7 +6,6 @@
   "description_fr": "Gagne 4 d'Armure et pioche 1 carte.",
   "cost": 1,
   "type": "skill",
-  "category": "global",
   "rarity": "common",
   "target": "self",
   "animation": "buff",

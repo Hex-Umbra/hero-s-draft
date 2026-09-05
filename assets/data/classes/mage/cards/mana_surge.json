@@ -6,8 +6,6 @@
   "description_fr": "Gagne 1 Mana et pioche 1 carte.",
   "cost": 0,
   "type": "skill",
-  "category": "characterSpecific",
-  "heroClass": "mage",
   "rarity": "unique",
   "target": "self",
   "animation": "buff",

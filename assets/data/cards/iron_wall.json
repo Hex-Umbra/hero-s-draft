@@ -6,7 +6,6 @@
   "description_fr": "Gagne 10 d'Armure.",
   "cost": 2,
   "type": "skill",
-  "category": "global",
   "rarity": "common",
   "target": "self",
   "animation": "buff",

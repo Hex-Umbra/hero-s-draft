@@ -6,7 +6,6 @@
   "description_fr": "Gagne 2 Force pendant 4 tours.",
   "cost": 2,
   "type": "power",
-  "category": "global",
   "rarity": "common",
   "target": "self",
   "animation": "buff",

@@ -109,6 +109,35 @@ void main() {
       expect(things.map((t) => t.id), ['shield']);
       expect(() => loader.throwIfFailed(), throwsException);
     });
+
+    test('un champ hors redundantFields est interdit, meme s il est juste', () {
+      // Expiration de la tolerance : pendant la migration, redeclarer
+      // `owner: paladin` sous `classes/paladin/` etait tolere. Ce n est plus
+      // une confirmation utile, c est une seconde verite en attente de
+      // diverger.
+      final loader = GameDataLoader(FakeBundle({
+        'assets/data/classes/paladin/things/smite.json': '{"owner":"paladin"}',
+      }));
+
+      return loader.loadAll<Thing>([
+        EntitySource(
+          'assets/data/classes/*/things/*.json',
+          Thing.fromJson,
+          inject: (c) => {'id': c[1], 'owner': c[0], 'category': 'owned'},
+          // `id` seul reste redeclarable.
+        ),
+      ]).then((_) {
+        expect(
+          () => loader.throwIfFailed(),
+          throwsA(predicate((e) {
+            final message = e.toString();
+            return message.contains('smite.json') &&
+                message.contains('impose par le repertoire') &&
+                message.contains('owner');
+          })),
+        );
+      });
+    });
   });
 
   group('Origine de l id', () {

@@ -6,8 +6,6 @@
   "description_fr": "Inflige 15 dégâts.",
   "cost": 2,
   "type": "attack",
-  "category": "characterSpecific",
-  "heroClass": "berserker",
   "rarity": "unique",
   "target": "singleEnemy",
   "animation": "melee",

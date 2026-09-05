@@ -6,7 +6,6 @@
   "description_fr": "Inflige 4 dégâts à tous les ennemis et gagne 4 d'Armure.",
   "cost": 2,
   "type": "attack",
-  "category": "global",
   "rarity": "common",
   "target": "allEnemies",
   "animation": "magic",

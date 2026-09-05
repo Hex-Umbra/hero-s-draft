@@ -6,8 +6,6 @@
   "description_fr": "Donne 8 d'Armure et soigne 2 PV.",
   "cost": 1,
   "type": "skill",
-  "category": "characterSpecific",
-  "heroClass": "paladin",
   "rarity": "unique",
   "target": "self",
   "animation": "buff",

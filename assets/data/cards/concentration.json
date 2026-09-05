@@ -6,7 +6,6 @@
   "description_fr": "Pioche 2 cartes.",
   "cost": 0,
   "type": "skill",
-  "category": "global",
   "rarity": "common",
   "target": "self",
   "animation": "buff",

@@ -66,16 +66,16 @@ Future<AudioData> loadAudioData(String path) async {
 Future<GameDataRegistry> loadGameDataRegistry(AssetBundle bundle) async {
   final loader = GameDataLoader(bundle);
 
-  // `redundantFields` autorise le fichier a redeclarer un champ injecte, a
-  // l identique. `id` y reste a titre permanent : le porter rend le fichier
-  // lisible hors contexte. `heroClass` et `category` n y sont que le temps de
-  // la migration — la tache de durcissement les en retire.
+  // La tolerance de migration a expire : le repertoire est desormais la
+  // seule source d appartenance. `redundantFields` retombe sur son defaut
+  // `const {'id'}` — `id` reste redeclarable a titre permanent (le porter
+  // rend le fichier lisible hors contexte), mais `heroClass` et `category`
+  // ne doivent plus figurer dans le fichier.
   final cards = await loader.loadAll<CardData>([
     EntitySource(
       'assets/data/cards/*.json',
       CardData.fromJson,
       inject: (c) => {'id': c[0], 'category': 'global'},
-      redundantFields: const {'id', 'category'},
     ),
     EntitySource(
       'assets/data/classes/*/cards/*.json',
@@ -85,7 +85,6 @@ Future<GameDataRegistry> loadGameDataRegistry(AssetBundle bundle) async {
         'heroClass': c[0],
         'category': 'characterSpecific',
       },
-      redundantFields: const {'id', 'heroClass', 'category'},
     ),
   ]);
 

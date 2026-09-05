@@ -6,8 +6,6 @@
   "description_fr": "Inflige 6 dégâts et donne 4 d'Armure.",
   "cost": 1,
   "type": "attack",
-  "category": "characterSpecific",
-  "heroClass": "paladin",
   "rarity": "unique",
   "target": "singleEnemy",
   "animation": "melee",

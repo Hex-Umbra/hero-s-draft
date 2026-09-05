@@ -6,7 +6,6 @@
   "description_fr": "Gagnez 1 de Mana ce tour-ci.",
   "cost": 0,
   "type": "skill",
-  "category": "global",
   "rarity": "common",
   "target": "self",
   "animation": "buff",

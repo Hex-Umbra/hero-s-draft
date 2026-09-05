@@ -6,8 +6,6 @@
   "description_fr": "Inflige 5 dégâts et pioche 1 carte.",
   "cost": 1,
   "type": "attack",
-  "category": "characterSpecific",
-  "heroClass": "mage",
   "rarity": "unique",
   "target": "singleEnemy",
   "animation": "magic",

@@ -6,8 +6,6 @@
   "description_fr": "Applique 2 Force ce tour-ci. Pioche 1 carte.",
   "cost": 1,
   "type": "skill",
-  "category": "characterSpecific",
-  "heroClass": "berserker",
   "rarity": "unique",
   "target": "self",
   "animation": "buff",

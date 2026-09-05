@@ -6,7 +6,6 @@
   "description_fr": "Inflige 6 dégâts. Applique 2 Brûlure.",
   "cost": 2,
   "type": "attack",
-  "category": "global",
   "rarity": "common",
   "target": "singleEnemy",
   "animation": "fire",

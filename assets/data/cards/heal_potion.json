@@ -6,7 +6,6 @@
   "description_fr": "Soigne 3 PV.",
   "cost": 1,
   "type": "skill",
-  "category": "global",
   "rarity": "common",
   "target": "self",
   "animation": "buff",
