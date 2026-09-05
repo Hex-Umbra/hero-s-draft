@@ -2,9 +2,11 @@
 
 Date : 2026-09-05
 Statut : **Livré** le 2026-09-05, branche `feat/menu-debug-lot-1`
-Révision : v3 — v2 après relecture (ciblage des ennemis un par un plutôt qu'une action de vague,
-§4) ; v3 après livraison : la vérification du build release s'est révélée **mécanisable** sur
-l'instantané AOT, là où la v2 la donnait pour irréductiblement visuelle (§7.1)
+Révision : v4 — v2 : ciblage des ennemis un par un plutôt qu'une action de vague (§4). v3 : la
+vérification du build release s'est révélée **mécanisable** sur l'instantané AOT (§7.1). **v4 : le
+drapeau de contamination est remplacé par un mode debug déclaré au lancement, et le verrou de
+persistance descend dans `SaveService`** — la v3 n'empêchait que l'écriture, laissant `clear()`
+détruire la vraie sauvegarde (§3.3)
 Périmètre : **lot 1 sur 2.** Le lot 2 — l'éditeur de contenu hors run — fait l'objet de sa propre
 spec et n'est pas traité ici.
 Sources amont :
@@ -50,8 +52,9 @@ Trois conséquences mesurables :
 | **D2** | Approche A — une classe statique `DebugActions` composant les contrôleurs existants | Aucune méthode nouvelle sur les contrôleurs ; §6 |
 | **D3** | Point d'entrée unique dans `PauseDialog` | Ce dialogue est déjà appelé depuis le combat *et* la carte : une insertion couvre les deux |
 | **D4** | Tout est gardé par `kDebugMode`, à deux niveaux | Jamais présent dans un build publié ; §3.4 |
-| **D5** | Une run touchée par le debug ne se sauvegarde plus | Une sauvegarde trafiquée est indistinguable d'une sauvegarde légitime, et survivrait à la session |
-| **D6** | Le drapeau de contamination se remet à zéro dans `startNewRun` | Sinon toute run ultérieure reste non sauvegardable jusqu'au redémarrage |
+| **D5** | Une run debug **ne persiste rien** : ni écriture, ni effacement | Une sauvegarde trafiquée est indistinguable d'une sauvegarde légitime ; et l'effacement est aussi destructeur que l'écriture — voir §3.3 |
+| **D6** | Le mode est **déclaré au lancement**, pas déduit d'une modification | Un mode déclaré peut refuser toute persistance dès la première ligne, et s'afficher à l'écran ; un mode déduit ne réagit qu'après coup, et reste invisible |
+| **D6b** | Le menu n'existe **que** dans une run debug, et `DebugActions` refuse d'agir ailleurs | Une run normale n'est alors pas seulement dépourvue de boutons : elle est intouchable, y compris par un appel égaré |
 | **D7** | Pas de génération d'ennemis choisis | Demanderait d'exposer le calcul de scaling d'`EncounterSystem` ; §8 |
 
 ## 3. Architecture
@@ -61,9 +64,11 @@ Trois conséquences mesurables :
 `lib/game/services/debug_actions.dart` — classe statique, calquée sur `SaveService` : elle reçoit
 un `Ref` et compose les contrôleurs. Elle ne détient aucun état.
 
-Chaque méthode publique commence par `if (!kDebugMode) return;`. C'est la seconde garde, celle qui
-tient même si un appel échappait un jour à la première. Le précédent du dépôt est
-`CombatDebugLogger` (`lib/game/services/combat_debug_logger.dart:33`), gardé exactement ainsi.
+Chaque méthode publique commence par la même garde : `kDebugMode` **et** une run debug en cours
+(**D6b**). C'est la seconde barrière, celle qui tient même si un appel échappait un jour à
+l'interface — une run normale n'est pas seulement dépourvue de boutons, elle est intouchable.
+Le précédent du dépôt est `CombatDebugLogger`
+(`lib/game/services/combat_debug_logger.dart:33`), gardé sur le seul `kDebugMode`.
 
 ### 3.2 Les points d'entrée utilisés
 
@@ -83,32 +88,52 @@ Aucun n'est à créer. Tous existent et sont publics :
 Les listes de choix ne demandent aucun chargement : `GameDataRegistry.instance` expose déjà
 `cards`, `relics`, `enemies`, `heroes`, `passives` et `forgeUpgrades`.
 
-### 3.3 Le drapeau de contamination
+### 3.3 Le mode debug, déclaré au lancement
 
-Un `debugTaintProvider` — `NotifierProvider<DebugTaintNotifier, bool>`, conforme à la règle du
-dépôt qui proscrit les nouveaux `StateNotifier`. Il vit dans `debug_actions.dart`.
-
-- `DebugActions` le passe à `true` à la **première** action, quelle qu'elle soit.
-- `autosaveOrchestratorProvider` (`checkpoint_controller.dart:20`) le lit et, s'il est levé,
-  n'appelle plus `SaveService.save`.
-- `RunController.startNewRun` le remet à `false`, derrière `kDebugMode` (**D6**).
-
-**La sauvegarde déjà présente sur le disque n'est ni écrasée ni effacée.** Une run debug la laisse
-exactement où elle était : au prochain lancement, c'est elle qui se recharge.
+`DebugRunState` — un `Notifier` dans `debug_run_controller.dart`, portant deux booléens :
+`isDebugRun` (la run en cours) et `requested` (la prochaine). Le bouton **RUN DEBUG**, sous
+« JOUER », pose `requested` ; `startNewRun` le consomme, deux écrans plus loin — la run ne naît
+qu'après le choix de classe et le draft de départ.
 
 > [!IMPORTANT]
-> Le drapeau est volontairement irréversible pour la run en cours. Aucun bouton ne le rabaisse :
-> une run dont on ne sait plus quelles valeurs ont été forcées ne doit pas pouvoir redevenir
-> sauvegardable par inadvertance. On en sort en lançant une nouvelle run.
+> **Le verrou est dans `SaveService`, pas chez ses appelants**, et `clear()` y prend le même
+> `RefReader` que `save()`.
+>
+> La conception précédente ne protégeait que l'écriture. Or `SaveService.clear` est appelé à trois
+> endroits, dont `DeathOverlay` — et le menu offre « Perdre le combat ». Tester une mort effaçait
+> donc la vraie sauvegarde. **L'effacement est aussi destructeur que l'écriture ; ne garder qu'une
+> des deux portes ne garde rien.**
+>
+> Placé dans le service, le verrou couvre les quatre appelants externes, les deux appels internes
+> du chemin « sauvegarde corrompue », et ceux que personne n'a encore écrits.
+
+Deux pièges, tous deux silencieux, ont chacun leur test :
+
+1. **L'intention qui traîne.** « RUN DEBUG », retour à l'accueil, puis « JOUER » : sans que le
+   bouton normal efface la demande en attente, la run normale partirait en debug sans rien dire.
+   Chaque bouton de départ déclare donc son mode.
+2. **La sauvegarde chargée après une run debug.** `SaveService.load` rabaisse le mode dès sa
+   première ligne — avant les `clear` du chemin corrompu, qu'il débloque au passage. Sans cela,
+   enchaîner une run debug puis « Continuer » privait la vraie partie de toute sauvegarde pour le
+   reste de la session.
+
+Enfin, le bouton **RUN DEBUG** ne passe pas par la confirmation d'écrasement ni par le `clear()`
+du chemin normal : une run qui ne persiste rien n'a rien à écraser, et emprunter ce chemin
+détruirait la vraie partie avant même de commencer.
 
 ### 3.4 L'interface
 
 `lib/ui/widgets/debug/` — un `DebugMenuDialog` construit sur le kit existant (`GameDialog`,
 `GameButton`, `AppSpacing`), à onglets.
 
-Le bouton d'ouverture est ajouté dans `PauseDialog`, enveloppé dans `if (kDebugMode)`.
-`kDebugMode` est une constante de compilation : en release, la condition est repliée à `false` et
-le sous-arbre — dialogue, actions, imports — devient inatteignable, donc éliminé au tree-shaking.
+Le bouton d'ouverture est ajouté dans `PauseDialog`, sous `kDebugMode && isDebugRun`. `kDebugMode`
+étant une constante de compilation, la condition entière est repliée à `false` en release : le
+sous-arbre — dialogue, actions, imports — devient inatteignable, donc éliminé au tree-shaking.
+
+`PauseDialog` porte aussi **le marqueur** — « RUN DEBUG — aucune sauvegarde ». Sans lui, rien à
+l'écran ne distingue une run de test d'une vraie partie, et on peut jouer une heure avant de
+comprendre pourquoi elle ne s'est jamais enregistrée. C'est ce que la conception précédente,
+fondée sur un drapeau invisible, ne pouvait pas offrir.
 
 Une seule insertion couvre les deux contextes, `PauseDialog` étant déjà appelé depuis
 `game_screen.dart:541` et `map_screen.dart:142`.
@@ -207,11 +232,15 @@ retenue : **aucun contrôleur n'est modifié pour rendre l'état accessible.**
 avait exactement le même besoin — remplacer un état entier par un autre. Le menu de debug est un
 second client de cette même surface.
 
-Les seules lignes ajoutées à du code existant sont au nombre de trois :
+Les ajouts à du code existant restent peu nombreux, et tous d'une ligne ou deux :
 
-1. le bouton dans `PauseDialog`, sous `if (kDebugMode)` ;
-2. la lecture du drapeau dans `autosaveOrchestratorProvider` ;
-3. la remise à zéro dans `startNewRun`, sous `if (kDebugMode)` (**D6**).
+1. le bouton **RUN DEBUG** et la déclaration de mode dans `home_screen.dart`, sous `kDebugMode` ;
+2. le bouton du menu dans `PauseDialog`, sous la même condition ;
+3. la consommation de l'intention dans `startNewRun`, sous `kDebugMode` ;
+4. le verrou dans `SaveService.save` et `clear`, plus la remise à zéro en tête de `load`.
+
+Deux changements de signature en découlent, tous deux mécaniques : `SaveService.clear` prend un
+`RefReader`, et `DeathOverlay` devient un `ConsumerWidget` pour le lui fournir.
 
 ## 7. Tests
 
@@ -230,11 +259,17 @@ Les seules lignes ajoutées à du code existant sont au nombre de trois :
 - « gagner le combat » → `isCombatEnded` et `isVictory` levés, les deux files vides ;
 - « forcer l'acte » → `act` change, `mapNodes` et `currentNodeId` inchangés.
 
-`test/unit/debug_taint_test.dart`, dans la lignée de `checkpoint_autosave_test.dart` :
+`test/unit/debug_run_test.dart`, dans la lignée de `checkpoint_autosave_test.dart` :
 
-- une action debug lève le drapeau ;
-- drapeau levé + `checkpointProvider.bump()` → aucune écriture ;
-- `startNewRun` rabaisse le drapeau et l'autosave reprend.
+- une run lancée normalement n'est pas une run debug ; le bouton **RUN DEBUG** marque bien celle
+  qui naît deux écrans plus loin ;
+- **le piège 1** — « RUN DEBUG » puis « JOUER » → la run est normale ;
+- **le piège 2** — `SaveService.load` rabaisse le mode ;
+- une run debug ne déclenche aucune écriture au checkpoint, quand une run normale, elle, en
+  déclenche toujours (non-régression) ;
+- **le test qui compte** — une run debug **n'efface pas** la sauvegarde existante, c'est-à-dire
+  que le chemin `DeathOverlay` la laisse intacte ;
+- `DebugActions` refuse d'agir hors d'une run debug.
 
 ### 7.1 L'absence en build release se vérifie sur l'instantané AOT
 
