@@ -1,6 +1,6 @@
 ### 3.5. 🎒 Système de Reliques
 
-**25 reliques** définies dans `relics.json` (au lieu de 14 initialement, équilibrant le pool commun), organisées par déclencheurs et types d'effets :
+**25 reliques**, un fichier par relique sous `assets/data/relics/` (au lieu de 14 initialement, équilibrant le pool commun), organisées par déclencheurs et types d'effets :
 
 | ID | Nom | Rareté | Trigger | Effet | Valeur | Description |
 |:---|:---|:---|:---|:---|:---|:---|

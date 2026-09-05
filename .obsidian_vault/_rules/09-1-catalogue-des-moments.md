@@ -39,7 +39,7 @@ dans la donnée (`assets/data/audio.json`) et la chaîne de repli est décrite e
 | `cardPickup` | **Deux sites mutuellement exclusifs, un par geste de prise en main** : `CardInteractionHandler.onTapDown()`, quand la carte devient la carte focalisée par un clic (`lib/game/components/widgets/card_interaction_handler.dart:39`), et `onDragStart()`, dans la branche où la carte n'était pas déjà focalisée (`card_interaction_handler.dart:70`). `onTapDown` s'exécute toujours en premier sur un même geste (arène de gestes Flutter) et détermine donc lequel des deux émet : jamais les deux, jamais aucun |
 | `cardDraw` | `DeckNotifier.drawCards()` — `lib/game/controllers/deck_controller.dart:226` |
 | `manaGain` | `GainManaEffectStrategy` — `lib/game/services/effects/strategies.dart:109` |
-| `insufficientMana` | **Quatre sites** : `HerosDraftGame._handlePlayerTargeting()` (`heros_draft_game.dart:308`), `PlayerStatsManager` — refus de compétence héroïque (`player_stats_manager.dart:441`), `HeroCard` (`hero_card.dart:89`) et `CardInteractionHandler` (`card_interaction_handler.dart:135`) |
+| `insufficientMana` | **Quatre sites** : `HerosDraftGame._handlePlayerTargeting()` (`heros_draft_game.dart:289`), `PlayerStatsManager.consumeResource` — refus de mana au jeu d'une carte (`player_stats_manager.dart:441`), `HeroCard` (`hero_card.dart:89`) et `CardInteractionHandler` (`card_interaction_handler.dart:135`) |
 
 ### Interface et rouleaux *(ajoutés le 2026-08-29)*
 

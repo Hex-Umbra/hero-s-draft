@@ -16,7 +16,7 @@ Dans `HerosDraftGame.update(dt)`, si `hasLayout == true` et qu'un buffer est non
 
 ### 4.2. Remontée d'Événements (Flame → Riverpod)
 
-**14 callbacks fortement typés** injectés via le constructeur de `HerosDraftGame` — **compté le 2026-08-25** sur les déclarations de champs de `lib/game/heros_draft_game.dart` :
+**13 callbacks fortement typés** injectés via le constructeur de `HerosDraftGame` — **re-compté le 2026-09-05** : `grep -cE "^\s+final (void Function|bool Function|VoidCallback)" lib/game/heros_draft_game.dart` :
 
 | Callback | Déclencheur |
 |:---|:---|
@@ -25,14 +25,13 @@ Dans `HerosDraftGame.update(dt)`, si `hasLayout == true` et qu'un buffer est non
 | `onPhaseChanged` | Changement de phase |
 | `onStartEnemyTurn` / `onEndEnemyTurn` | Début/fin de phase ennemie |
 | `onResolveEnemyIntent` | Résolution séquentielle d'intention |
-| `onExecuteSkill` | Exécution d'une compétence héroïque (skill1/skill2) |
 | `onEnemiesDead` / `onEnemyKilled` | Nettoyage d'ennemis |
 | `onEnemiesSpawned` | Spawn initial |
 | `onAnimationStateChanged` | Changement d'état d'animation Flame (force un rebuild HUD) |
 | `onShowTooltip` / `onHideTooltip` | Tooltips contextuels |
 
 > [!NOTE]
-> **Cinq callbacks ont été supprimés depuis la rédaction initiale**, en deux vagues.
+> **Six callbacks ont été supprimés depuis la rédaction initiale**, en trois vagues.
 > `onPlayerTakeDamage` / `onPlayerHeal` / `onPlayerGainArmor` d'abord — voir §6.2
 > point 7. Puis `onTurnEnded` et `onEnemyDebuffDeck`, tous deux dans le commit
 > `295ec93` du 2026-08-06, la passe de suppression de code mort de **P-02**

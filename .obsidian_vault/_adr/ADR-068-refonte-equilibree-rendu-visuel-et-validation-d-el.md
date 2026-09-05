@@ -31,7 +31,7 @@ Avant cette refonte, le système d'événements ne comprenait que 2 rencontres n
   - Implémentation du style de désactivation réactif dans le widget privé `_EventOptionButton`.
   - Conception de `_buildCompactActionBadge` et `_buildActionBadge` pour le rendu visuel thématique et réactif.
   - Ajout des badges en direct pour les PV et l'or en haut de l'écran.
-- [events.json](../../assets/data/events.json) :
+- [assets/data/events/](../../assets/data/events/) :
   - Définition complète des 5 rencontres bilingues structurées et de leurs actions.
 
 ### Conséquences

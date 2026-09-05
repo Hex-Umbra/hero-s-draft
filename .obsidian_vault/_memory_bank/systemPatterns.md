@@ -3,13 +3,13 @@
 > [!IMPORTANT]
 > **Plafond : 120 lignes.** Ce fichier est un index, jamais un contenu. Chaque pattern d'architecture vit dans sa fiche sous `../_patterns/`. Les arbitrages qui les ont produits vivent dans `../_adr/`.
 
-**Vérifié le 2026-08-28** — 41 fiches. Découpage initial depuis un `systemPatterns.md` de 1320 lignes (après archivage des §13-14) ; §15 ajoutée le 2026-08-20, §16 le 2026-08-25.
+**Vérifié le 2026-09-05** — 41 fiches. Provenance du découpage, sections ajoutées et numéros non réattribués (§2.7, §13, §14) : `../_archive/2026-09-05-systemPatterns-historique.md` et `../_archive/2026-08-25-systemPatterns-historique.md`.
 
 ### 1. Architecture Globale — Séparation Triangulaire
 
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
-| 1. Architecture Globale — Séparation Triangulaire | [01-00-architecture-globale-separation-triangulaire.md](../_patterns/01-00-architecture-globale-separation-triangulaire.md) | 57 |
+| 1. Architecture Globale — Séparation Triangulaire | [01-00-architecture-globale-separation-triangulaire.md](../_patterns/01-00-architecture-globale-separation-triangulaire.md) | 61 |
 
 ### 2. Rôle des Contrôleurs et Architecture Modulaire (`lib/game/controllers/`)
 
@@ -24,7 +24,6 @@
 | 2.5. `ShopController` (`shopProvider`) | [02-5-shopcontroller.md](../_patterns/02-5-shopcontroller.md) | 30 |
 | 2.5. Immutabilité Stricte des Modèles d'État | [02-5-immutabilite-stricte-des-modeles-d-etat.md](../_patterns/02-5-immutabilite-stricte-des-modeles-d-etat.md) | 4 |
 | 2.6. `InventoryController` (`inventoryProvider`) | [02-6-inventorycontroller.md](../_patterns/02-6-inventorycontroller.md) | 7 |
-| 2.7. `SkillController` (`skillProvider`) | [02-7-skillcontroller.md](../_patterns/02-7-skillcontroller.md) | 7 |
 | 2.8. `RewardController` (`rewardProvider`) — Pilote des Récompenses de Combat | [02-8-rewardcontroller-pilote-des-recompenses-de-co.md](../_patterns/02-8-rewardcontroller-pilote-des-recompenses-de-co.md) | 32 |
 
 ### 3. Systèmes Transversaux (`lib/game/systems/`)
@@ -43,7 +42,7 @@
 
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
-| 4. Synchronisation Bidirectionnelle Flame ⇄ Riverpod | [04-00-synchronisation-bidirectionnelle-flame-riverp.md](../_patterns/04-00-synchronisation-bidirectionnelle-flame-riverp.md) | 79 |
+| 4. Synchronisation Bidirectionnelle Flame ⇄ Riverpod | [04-00-synchronisation-bidirectionnelle-flame-riverp.md](../_patterns/04-00-synchronisation-bidirectionnelle-flame-riverp.md) | 78 |
 
 ### 5. UI et Composants Graphiques
 
@@ -66,13 +65,13 @@
 
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
-| 6. Stratégie de State Management (Riverpod v2.5.1) | [06-00-strategie-de-state-management.md](../_patterns/06-00-strategie-de-state-management.md) | 34 |
+| 6. Stratégie de State Management (Riverpod v2.5.1) | [06-00-strategie-de-state-management.md](../_patterns/06-00-strategie-de-state-management.md) | 40 |
 
 ### 7. Flux Complet d'un Tour de Combat
 
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
-| 7. Flux Complet d'un Tour de Combat | [07-00-flux-complet-d-un-tour-de-combat.md](../_patterns/07-00-flux-complet-d-un-tour-de-combat.md) | 72 |
+| 7. Flux Complet d'un Tour de Combat | [07-00-flux-complet-d-un-tour-de-combat.md](../_patterns/07-00-flux-complet-d-un-tour-de-combat.md) | 71 |
 
 ### 8. Conventions de Code & Standards Techniques
 
@@ -84,7 +83,7 @@
 
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
-| 9. Architecture du Système de Tutoriel Autonome (Tutorial System Technical Design) | [09-00-architecture-du-systeme-de-tutoriel-autonome.md](../_patterns/09-00-architecture-du-systeme-de-tutoriel-autonome.md) | 134 |
+| 9. Architecture du Système de Tutoriel Autonome (Tutorial System Technical Design) | [09-00-architecture-du-systeme-de-tutoriel-autonome.md](../_patterns/09-00-architecture-du-systeme-de-tutoriel-autonome.md) | 135 |
 
 ### 10. Architecture du Système de Forge et de Fusion de Cartes (Forge & Card Merge Technical Design)
 
@@ -116,4 +115,8 @@
 |:---|:---|---:|
 | 16. Architecture du Système Audio | [16-00-architecture-du-systeme-audio.md](../_patterns/16-00-architecture-du-systeme-audio.md) | 149 |
 
-Historique de renumérotation (pourquoi §13-§14 manquent) archivé le 2026-08-25 : `../_archive/2026-08-25-systemPatterns-historique.md`.
+### 17. Chargeur de Données Générique et Motifs de Chemin (`GameDataLoader`)
+
+| Domaine | Fiche | Lignes |
+|:---|:---|---:|
+| 17. Chargeur de Données Générique et Motifs de Chemin (`GameDataLoader`) | [17-00-chargeur-de-donnees-generique-et-motifs-de-che.md](../_patterns/17-00-chargeur-de-donnees-generique-et-motifs-de-che.md) | 108 |

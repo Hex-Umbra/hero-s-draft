@@ -2,18 +2,24 @@
 
 ### 6.1. Inventaire Complet des Providers
 
+**Vérifié le 2026-09-05** — 18 providers de premier niveau, `grep -rhoE "^final [a-zA-Z_]+Provider" lib/ | sort -u | wc -l`. La table en groupe certains par famille.
+
 | Provider | Type | État | Auto-Dispose | Rôle |
 |:---|:---|:---|:---|:---|
 | `runProvider` | `NotifierProvider<RunController, RunState>` | `RunState` | Non | Progression globale, stats héros, carte, reliques |
 | `deckProvider` | `NotifierProvider<DeckNotifier, DeckState>` | `DeckState` | Non | 5 piles de cartes, merge, upgrade |
 | `combatProvider` | `NotifierProvider<CombatController, CombatState>` | `CombatState` | Non | Combat actif, ennemis, phases, intentions |
 | `inventoryProvider` | `NotifierProvider<InventoryController, InventoryState>` | `InventoryState` | Non | Or, reliques, bonus boutique |
-| `skillProvider` | `NotifierProvider<SkillController, SkillState>` | `SkillState` | Non | Cooldowns des 2 compétences héroïques |
 | `eventProvider` | `NotifierProvider<EventController, EventState>` | `EventState` | Non | Événement narratif actif, choix sélectionné |
 | `shopProvider` | `NotifierProvider<ShopController, ShopState>` | `ShopState` | Non | Cartes en vente, état d'achat heal |
 | `rewardProvider` | `NotifierProvider<RewardController, RewardState>` | `RewardState` | Non | Butins post-combat (or, XP, reliques, cartes) |
+| `checkpointProvider` / `autosaveOrchestratorProvider` | `NotifierProvider` / `Provider` | `int` | Non | Déclenche l'autosave à la résolution d'un nœud de carte (`checkpoint_controller.dart`) |
+| `deckRandomProvider` | `Provider<Random>` | — | Non | Aléatoire de pioche injectable, pour les tests de séquence (`deck_controller.dart`) |
+| `audioDirectorProvider` / `musicConductorProvider` / `audioBackendProvider` | `Provider` | — | Non | Résolution moment → son et scène → musique, et le backend derrière (`services/audio/audio_providers.dart`) — voir [`_patterns/16-00`](16-00-architecture-du-systeme-audio.md) |
+| `audioSettingsProvider` / `audioSettingsHydrationProvider` | `NotifierProvider` / `FutureProvider` | `AudioSettings` | Non | Réglages audio persistés hors de `SaveService` |
+| `notificationProvider` | `StateNotifierProvider` | `List<GameNotification>` | Non | File de toasts, **UI-locale** : seul `StateNotifier` restant du dépôt, sans état métier (`ui/widgets/notification_overlay.dart`) |
 | `effectRegistryProvider` | `Provider<EffectRegistry>` | `EffectRegistry` | Non | Registre d'effets Riverpodisé instanciant les 6 stratégies concrètes d'effets |
-| `gameDataLoaderProvider` | `FutureProvider<GameDataRegistry>` | `GameDataRegistry` | Non | Chargement asynchrone de 9 JSON d'assets (`patch_notes.json`, 10ᵉ fichier de `assets/data/`, est chargé séparément) |
+| `gameDataLoaderProvider` | `FutureProvider<GameDataRegistry>` | `GameDataRegistry` | Non | Chargement asynchrone des entités du jeu, déclarées en `EntitySource` et appariées par motif de chemin — voir [`_patterns/17-00`](17-00-chargeur-de-donnees-generique-et-motifs-de-che.md). `patch_notes.json` reste hors de cette chaîne |
 
 ### 6.2. Principes Appliqués
 
@@ -31,4 +37,4 @@
 | Modèle | `fromJson`/`toJson` | Statut |
 |:---|:---|:---|
 | `CombatState`, `EnemyInstance`, `EnemyIntent`, `EntityStats`, `StatusEffect`, `MapNode` | ✅ Oui | Round-trip complet |
-| `CardInstance`, `EventState`, `InventoryState`, `ShopState`, `SkillState` | ❌ Non | Runtime uniquement |
+| `CardInstance`, `EventState`, `InventoryState`, `ShopState` | ❌ Non | Runtime uniquement |

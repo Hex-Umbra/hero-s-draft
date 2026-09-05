@@ -5,30 +5,35 @@
 
 ## Métriques
 
-**Vérifié le 2026-09-01**
+**Vérifié le 2026-09-05**
 
 | Métrique | Valeur | Commande |
 |:---|:---|:---|
-| Tests automatisés (jeu) | 385 au vert | `flutter test` |
-| Fichiers de test | 69 | `find test -name "*.dart" \| wc -l` |
+| Tests automatisés (jeu) | 427 au vert | `flutter test` |
+| Fichiers de test | 81 | `find test -name "*.dart" \| wc -l` |
 | Analyse statique | 0 erreur (`No issues found!`) | `dart analyze` |
-| Fichiers Dart (`lib/`) | 187 | `find lib -name "*.dart" \| wc -l` |
-| Lignes de code (`lib/`) | 39 256 | `find lib -name "*.dart" -exec cat {} + \| wc -l` |
-| Fichiers de données | 11 | `ls assets/data/*.json \| wc -l` |
+| Fichiers Dart (`lib/`) | 185 | `find lib -name "*.dart" \| wc -l` |
+| Lignes de code (`lib/`) | 39 280 | `find lib -name "*.dart" -exec cat {} + \| wc -l` |
+| Fichiers de données | 73 | `find assets/data -name '*.json' \| wc -l` |
 | Tests de la logique du site | 20 au vert | `cd site && node --test` |
 | Assertions du harnais CI | 57 au vert | `bash .github/scripts/test_scripts.sh` |
 | Fichiers suivis sous `site/` | 16 | `git ls-files site/ \| wc -l` |
 
 > [!NOTE]
-> Relevé sur `5a0a81d`. Le chantier audio post-`0.5.0` explique tout le mouvement depuis le
-> 2026-08-28 : **+357 lignes** et **+16 tests** (369 → 385), pour deux fichiers de test neufs
-> seulement — le reste des tests s'est ajouté aux fichiers existants. Aucun fichier Dart créé
-> ni supprimé, d'où les 187 inchangés.
+> Relevé sur `ac37596`. Deux chantiers expliquent tout le mouvement depuis le 2026-09-01.
 >
-> Le catalogue de bruitages passe de 19 à **31 fichiers** et de 14 à **22 moments**, sans
-> qu'aucun `.json` de données ne s'ajoute : les moments vivent dans `audio.json`, déjà compté.
-> Les 4 musiques manquent toujours — chantier P-46 de `docs/ROADMAP.md`. `site/`, `.github/`
-> et le harnais CI n'ont pas bougé, d'où les trois dernières métriques inchangées.
+> **P-48 (réorganisation des données)** : les 73 fichiers de données sont **71 entités**
+> — `cards/` 17, `relics/` 25, `forge_upgrades/` 8, `events/` 5, `passives/` 3, 3 classes
+> (`class.json` + 2 cartes chacune), 4 ennemis — plus `audio.json` et `patch_notes.json`, qui
+> restent des documents de configuration. La comparaison au 11 précédent est directe : avant,
+> `assets/data/` n'avait aucun sous-répertoire.
+>
+> **P-40 bloc 1** : −3 fichiers Dart avec la chaîne de compétences, +1 pour
+> `game_data_loader.dart`, d'où 187 → **185** pour +24 lignes nettes.
+>
+> **+42 tests** (385 → 427) : −8 partis avec le système de compétences, +50 pour la
+> réorganisation, dont les gardes permanentes de la structure. `site/`, `.github/` et
+> le harnais CI n'ont pas bougé.
 
 > [!NOTE]
 > **La version ne vit pas ici.** La version de référence se lit dans `pubspec.yaml`
@@ -44,11 +49,11 @@
 | Fonctionnalité | Fichiers clés | Détails |
 |:---|:---|:---|
 | Autosave à checkpoint carte | `SaveService`, `checkpointProvider`, `autosaveOrchestratorProvider` | `shared_preferences`, slot unique, JSON versionné (`schemaVersion`), à chaque nœud résolu, jamais en cours de combat |
-| Réhydratation des contrôleurs | `RunController.hydrate()`, `DeckNotifier`, `InventoryController`, `SkillController` | Remplacement intégral de l'état depuis les données chargées, navigation directe vers `MapScreen` |
+| Réhydratation des contrôleurs | `RunController.hydrate()`, `DeckNotifier`, `InventoryController` | Remplacement intégral de l'état depuis les données chargées, navigation directe vers `MapScreen` |
 | Reprise depuis l'accueil | `HomeScreen` | Bouton « Continuer » (si `SaveService.hasSave()`), confirmation avant écrasement ; réactivité après retour via `Navigator.popUntil` corrigée — [ADR-073](../_adr/ADR-073-reactivite-du-bouton-continuer-de-homescreen-apres.md) |
 | Dégradation gracieuse du contenu manquant | `MissingSaveItem`, `SaveLoadResult.missingItems` | Élément supprimé du catalogue depuis la sauvegarde : retiré silencieusement, signalé nommément au chargement |
 | Sauvegarde corrompue = échec total | `SaveService.load()` | JSON illisible ou `schemaVersion` inconnue → échec propre, pas de récupération partielle |
-| Fin de run | `GameOverScreen` | Sauvegarde effacée à la mort du héros |
+| Fin de run | `DeathOverlay` (`lib/ui/widgets/hud/death_overlay.dart`) | Sauvegarde effacée à la mort du héros — vérifié le 2026-09-05, `grep -rn 'SaveService.clear' lib/` |
 
 Design complet — [ADR-069](../_adr/ADR-069-systeme-de-sauvegarde-de-run-checkpoint-carte-refr.md).
 
@@ -76,7 +81,7 @@ Design complet — [ADR-069](../_adr/ADR-069-systeme-de-sauvegarde-de-run-checkp
 | Progression XP | `RunController.gainXp()`, `PlayerStatsManager` | Progression exponentielle, gains multiples, carry-over |
 | Échelonnement des ennemis | `CombatController.initializeCombat()` | Multiplicateurs dynamiques par acte — détail en §Combat |
 | Piles de cartes | `DeckNotifier`/`deckProvider` | 5 piles logiques (Master, Draw, Hand, Discard, Exhaust), invariant de conservation asserté ; remélange à sec et arrêt net sur main pleine — [ADR-078](../_adr/ADR-078-assainissement-du-systeme-de-pioche-remelange-a-sec.md) |
-| Économie, compétences, événements, boutique, récompenses | `InventoryController`, `SkillController`, `EventController`, `ShopController`, `RewardController` | Or/reliques à charges, cooldowns de compétences, résolution d'événements, achat/clone/reroll boutique, tirage post-victoire |
+| Économie, événements, boutique, récompenses | `InventoryController`, `EventController`, `ShopController`, `RewardController` | Or/reliques à charges, résolution d'événements, achat/clone/reroll boutique, tirage post-victoire |
 | Logique de Fusion | `DeckNotifier`, `InventoryController` | Fusion d'améliorations identiques, déduction d'or, mise à jour de la carte via `setForgeUpgrades` |
 
 ### 🃏 Cartes et Deck
@@ -86,11 +91,11 @@ Design complet — [ADR-069](../_adr/ADR-069-systeme-de-sauvegarde-de-run-checkp
 | Auto-Merge (3→1) | `DeckNotifier.mergeCards()` | 3 copies même ID + rareté → 1 copie rareté supérieure ; cartes `unique` non fusionnables |
 | Foil Unique Progressif | `PolychromaticBorder`, `UiCard` | Bordure polychromatique au survol, nombre de couleurs croissant avec les upgrades |
 | Rareté Dynamique | `EffectResolver.resolveCard()` | Progression par rareté (common → legendary), rareté `unique` fixée à ×1.0 |
-| Catalogue de cartes | `assets/data/cards.json`, `assets/data/hero_cards.json` | 23 cartes : 17 globales (communes) + 6 de classe (unique) |
+| Catalogue de cartes | `assets/data/cards/`, `assets/data/classes/<id>/cards/` | 23 cartes, un fichier par carte : 17 globales (communes) + 6 de classe (unique) |
 | Effets et exhaust | `EffectResolver`, `CardEffect`, `DeckNotifier.playCard()` | damage/heal/armor/draw/gain_mana/apply_status ; Power et `isExhaust` → pile d'épuisement |
 | Moteur de pioche | `DeckNotifier._drawInto`, `.drawCards`, `.startCombat`, `deckRandomProvider` | Remélange à sec (défausse → pioche uniquement si pioche vide), arrêt net à `GameConstants.maxHandSize` (10), aléatoire injectable pour les tests de séquence, `DeckState.reshuffleCount` observable |
 | Règle de tour joueur | `TurnPhaseManager.startPlayerCombat()`/`.startPlayerTurn()` | Moitié joueur du cycle, symétrique de `startEnemyTurn`/`endEnemyTurn` ; tour 1 et tour N+1 sur le même chemin ; nombre de cartes piochées piloté par `RunState.cardsPerTurn` (défaut 5) |
-| Forge et Fusion | `DeckNotifier.addForgeUpgrade()`, `ForgeUpgradeDialog`, `ForgeFusionScreen` | Upgrades pilotées par `assets/data/forge_upgrades.json`, cumulables sans limite |
+| Forge et Fusion | `DeckNotifier.addForgeUpgrade()`, `ForgeUpgradeDialog`, `ForgeFusionScreen` | Upgrades pilotées par `assets/data/forge_upgrades/`, un fichier par amélioration, cumulables sans limite |
 | Draft (départ, post-combat) et suppression | `DraftScreen`, `StarterDeckDraftScreen`, `DeckNotifier.removeCardById()` | 3 choix post-victoire, 5 cartes globales au départ, oubli au feu de camp |
 
 ### ⚔️ Combat
@@ -110,7 +115,7 @@ Design complet — [ADR-069](../_adr/ADR-069-systeme-de-sauvegarde-de-run-checkp
 
 | Fonctionnalité | Implémentation | Détails |
 |:---|:---|:---|
-| Passifs data-driven | `assets/data/passives.json` → `TraitSystem` | 3 passifs liés aux héros par `HeroData.passiveTrait` |
+| Passifs data-driven | `assets/data/passives/` → `TraitSystem` | 3 passifs liés aux héros par `HeroData.passiveTrait` ; ids en `snake_case` |
 | Triggers multiples | `TraitSystem.onTurnStart`/`.onTurnEnd`/`.onCardPlayed` | Logique spécifique par `effectType` (`gain_armor`, `berserker_armor`, `spell_armor`) |
 | Reliques à triggers | `RunController.applyRelics(trigger)` | 9 types de triggers (startOfRun → onEnemyKilled) |
 | Reliques à charges | `RunController.applyRelicEffect()` | Croc Kunaï, Shuriken, Plume de Scribe, Encensoir — compteurs visuels via `StatusEffect` |
@@ -120,7 +125,7 @@ Design complet — [ADR-069](../_adr/ADR-069-systeme-de-sauvegarde-de-run-checkp
 | Fonctionnalité | Implémentation | Détails |
 |:---|:---|:---|
 | UI 100% localisée | `AppLocalizations` (ARB) | Zéro chaîne codée en dur |
-| Modèles bilingues | `nameEn`/`nameFr` | Sauf `SkillData` (champ `name` unique — dette connue) |
+| Modèles bilingues | `nameEn`/`nameFr` | **Plus aucun champ de texte visible monolingue** depuis la suppression de `SkillData` — [ADR-084](../_adr/ADR-084-suppression-de-la-chaine-de-competences-heroiques.md). `EnemyData` n'a pas de description ; le `name` de `StatusEffect` est un identifiant technique |
 | Statuts localisés | `StatusEffectsPanel` | Traduction dynamique depuis identifiants techniques |
 | Langues supportées | `app_en.arb`, `app_fr.arb` | Français + Anglais |
 
@@ -195,6 +200,24 @@ Chaîne de repli — [`_rules/09-00`](../_rules/09-00-systeme-audio.md), catalog
 [`_rules/09-1`](../_rules/09-1-catalogue-des-moments.md). Architecture —
 [`_patterns/16-00`](../_patterns/16-00-architecture-du-systeme-audio.md).
 
+### 🗂️ Architecture des Données (un fichier par entité)
+
+| Fonctionnalité | Implémentation | Détails |
+|:---|:---|:---|
+| Une entité, un fichier | `assets/data/` | 71 entités dans 7 catalogues répertoriés ; le nom du fichier **est** l'`id` ; `audio.json` et `patch_notes.json` restent des documents de configuration |
+| Dossiers auto-suffisants | `classes/<id>/`, `enemies/<id>/` | JSON + image dans le même dossier ; ajouter un ennemi = créer un dossier |
+| Chargeur générique par motifs de chemin | `GameDataLoader`, `EntitySource` (`lib/services/game_data_loader.dart`) | Le répertoire injecte l'appartenance ; les fautes s'accumulent et lèvent une fois ; `bundle` en paramètre comme seam de test |
+| Section `assets:` générée depuis le disque | `tool/sync_assets.dart` | `--check` sort 1 sur dérive ; refuse de deviner sur un pubspec ambigu |
+| Gardes permanentes de la structure | `real_bundle_load`, `referential_integrity`, `entity_id_convention`, `flame_image_prefix`, `sync_assets` (`test/unit/`) | Ligne de pubspec oubliée, dossier incomplet, id hors convention, collision de clés du cache d'images |
+
+Règle de partage catalogue / configuration — [ADR-085](../_adr/ADR-085-regle-de-partage-catalogue-configuration.md).
+Autorité du répertoire — [ADR-086](../_adr/ADR-086-autorite-du-repertoire-avec-expiration-de-la-toler.md).
+Structure — [`_rules/07-00`](../_rules/07-00-architecture-des-donnees.md), mécanique —
+[`_patterns/17-00`](../_patterns/17-00-chargeur-de-donnees-generique-et-motifs-de-che.md).
+**Coût de démarrage relevé le 2026-09-05** : 72 lectures de bundle en **53 ms** en profile,
+contre un seuil d'alerte de 200 ms. ⚠️ Mesure ponctuelle du chantier : **aucun test ni banc du
+dépôt ne la reproduit ni ne garde ce seuil** — une régression de démarrage passerait au vert.
+
 ## 2. Dette métier assumée
 
 ### ⚠️ Sérialisation Partielle des Modèles
@@ -204,6 +227,10 @@ Chaîne de repli — [`_rules/09-00`](../_rules/09-00-systeme-audio.md), catalog
 `CardInstance` et `ShopState` étaient fausses avant cette date (leurs `fromJson`/`toJson`
 existent depuis le commit `3b2365c` du 2026-06-24). Seul `EventState` est réellement
 dépourvu de sérialisation.
+
+**2026-09-05** — le tableau ne compte plus que **12 modèles** : `SkillState` a été supprimé
+avec son système ([ADR-084](../_adr/ADR-084-suppression-de-la-chaine-de-competences-heroiques.md)).
+Les 12 lignes restantes n'ont pas été re-vérifiées à cette date.
 
 | Modèle | `fromJson` | `toJson` | `copyWith` | `==`/`hashCode` |
 |:---|:---:|:---:|:---:|:---:|
@@ -219,7 +246,6 @@ dépourvu de sérialisation.
 | `EventState` | ❌ | ❌ | ✅ | ❌ |
 | `InventoryState` | ✅ (`fromJsonWithReport`) | ✅ | ✅ | ❌ |
 | `ShopState` | ✅ | ✅ | ✅ | ❌ |
-| `SkillState` | ✅ | ✅ | ✅ | ❌ |
 
 ## 3. Références documentaires
 
@@ -242,6 +268,7 @@ dépourvu de sérialisation.
 
 | Version | Date | Titre | Description des changements clés |
 |:---|:---|:---|:---|
+| **0.5.1** | 2026-09-05 | Chaque Chose à Sa Place (P-48, P-40 bloc 1) | **PATCH et non MINOR** : les deux chantiers de fond n'ont aucun effet visible, et ce que le joueur voit relève du polish. Visible : le dictionnaire de cartes, le tirage du deck de départ et le tutoriel partagent désormais le même critère rareté → coût → id (`CardData.compareByDisplayOrder`) au lieu de suivre l'ordre du catalogue — **le même ordre, pas la même liste** : le dictionnaire groupe d'abord par `CardType` et ne trie qu'à l'intérieur d'un groupe, là où le pool de draft est plat ; l'onglet Reliques du dictionnaire trie désormais par `id` au sein de chaque rareté ; et la sélection de classe suit un `displayOrder` explicite (Paladin, Berserker, Mage). **Visible aussi, et subi** : le passage des ids de passifs en `snake_case` (`7da5db2`, lots 1-2) casse le passif des sauvegardes antérieures — clé et `schemaVersion` inchangés, donc la partie se recharge et perd son passif jusqu'à sa fin, `MissingSaveItem` à l'appui. Consigné nulle part avant le 2026-09-05 sinon dans le message du commit ; la note de version est le seul canal prévenant *avant*. Invisible mais réel, porté en Technique : la réorganisation des données ([ADR-085](../_adr/ADR-085-regle-de-partage-catalogue-configuration.md), [ADR-086](../_adr/ADR-086-autorite-du-repertoire-avec-expiration-de-la-toler.md)) et la suppression de la chaîne de compétences ([ADR-084](../_adr/ADR-084-suppression-de-la-chaine-de-competences-heroiques.md)). **Écarté délibérément** : le correctif de compilation d'`audioplayers` sur MSVC récents (`e56295e`) est déjà couvert par le tag `v0.5.0`, `git tag --contains` le confirme. **Troisième rattrapage manuel d'affilée** du libellé visible de la carte « actuelle » de `site/index.html`, qui porte le numéro en toutes lettres là où le skill ne rafraîchissait que les `href` — la cause est cette fois corrigée dans `patch-notes-writer` plutôt que contournée. |
 | **0.5.0** | 2026-09-01 | Le Jeu Sort du Silence (P-03, sourcing et chemin de lecture) | Première version **audible** : le moteur livré en `0.4.9` restait muet faute d'assets ; les **31 bruitages** sont désormais posés et chacun des 14 `GameMoment` a son son. Les fichiers sont arrivés en WAV alors qu'`audio.json` déclarait des `.mp3` — le rapport de sourcing restait à 0/23 sans rien signaler d'autre, ne vérifiant que la présence. **Arbitrage : WAV pour les bruitages, MP3 pour la musique**, amendement de [`_rules/09-00`](../_rules/09-00-systeme-audio.md) §9.3 ; [ADR-082](../_adr/ADR-082-directeur-audio-central-et-mapping-par-donnees.md) ne fixait pas le format mais le déléguait à la fiche, elle n'est donc pas touchée. Motif : un bruitage pèse ~13 Ko, rien à compresser, et l'encodage MP3 préfixe 13 à 26 ms de silence audibles sur un `card_hover` de 84 ms rejoué à chaque survol ; une musique dure des minutes, c'est là que la compression sert. **Zéro fichier `.dart` modifié** sur toute la bascule : aucune ligne de `lib/` ne nomme d'extension, `SoundData.expectedFiles` insérant le suffixe de variante avant l'extension quelle qu'elle soit. Piège documenté au passage : un jeu de variantes incomplet **rend muet au prorata au lieu de se replier**, `_pickFile` tirant au hasard avant le garde de présence d'`onMoment` — `impact_normal` en `variants: 3` avec le seul `_1` posé laissait deux impacts sur trois silencieux. Les 19 empreintes MD5 sont distinctes, contrôle que le rapport de sourcing ne fait pas. **Trois livraisons rejoignent ce numéro**, l'attente ayant été délibérée (ADR-082 D5) : P-03, la PR #31 (deux débordements de `RenderFlex` — `StatusEffectsPanel` et `tutorial_combat_overview_widget.dart`) et la PR #32 (documentation seule, sans effet joueur). **369 tests au vert**, `dart analyze` propre. Les 4 musiques sortent vers le chantier **P-46**. **Note rouverte le 2026-09-01** pour absorber les sept commits du chemin de lecture ([ADR-083](../_adr/ADR-083-latence-et-synchronisation-du-chemin-de-lecture.md)) : la version n'avait jamais été taguée, donc aucun joueur n'avait vu la note initiale. |
 | **0.4.9** | 2026-08-23 | L'École du Héros (P-45) | Le tutoriel autonome (`lib/tutorial/`) avait dérivé du jeu réel : 50 écarts relevés, nés d'une règle « zéro Riverpod » qui interdisait aussi l'accès aux données immuables, forçant une recopie manuelle qui a dérivé avec le temps. La règle devient « zéro provider d'*état* » : `gameDataLoaderProvider` est autorisé en un point unique (`tutorial_loader.dart`), les neuf providers d'état restent interdits, critère vérifié par `test/tutorial/tutorial_isolation_test.dart`. Les POJOs du mock (`TutorialCard`, `TutorialEnemy`) sont remplacés par les vrais modèles du jeu (`CardInstance`, `EnemyInstance`, `EntityStats`, `DamagePipeline`). Le parcours passe de 13 à **15 étapes** : choix de classe et draft du deck de départ ajoutés en amont, verrouillés une fois franchis, dont dépendent les étapes suivantes (Armure démontre le passif choisi, Jouer pioche dans ce deck, Fusion y prend une carte réellement draftée). Correctif d'affichage hors tutoriel : la légende de la carte du monde annonçait « Boss (XP & Or x2) » alors que `reward_controller.dart` applique `×3` depuis longtemps — seul l'affichage change, le code de récompense est intact. **45 commits hors merges** depuis `v0.4.8`, **295 tests au vert** (+65), `dart analyze` propre. Voir [ADR-081](../_adr/ADR-081-amendement-autonomie-tutoriel-zero-provider-etat.md). ⚠️ **Deux correctifs de jeu sont entrés dans ce même tag par la PR #28 et ne figurent pas dans la note joueur**, rédigée avant leur fusion. *(1)* `EnemyIntentsPanel` débordait de sa largeur fixe de 250 px dès que le libellé d'intention était long : la bande d'erreur jaune et noire s'affichait en plein HUD de combat, à chaque combat en français, depuis au moins `0.4.8`. Les deux `Row` se replient désormais au lieu de tronquer — la valeur chiffrée est en fin de libellé (« Attaque Dévastatrice : 25 »), une ellipse l'aurait fait disparaître. *(2)* La **Forge d'Acier légendaire** rendait +1 Maîtrise d'Armure, la valeur d'un commun, faute de palier légendaire dans sa cascade de `if` : elle rend désormais **+7**. Les 30 cases type × rareté sont verrouillées par `test/unit/level_up_reward_values_test.dart` et la table est écrite dans [`_rules/06-00`](../_rules/06-00-economie-de-jeu.md) — son absence était la raison pour laquelle rien n'avait signalé le trou. |
 | **0.4.8** | 2026-08-20 | La Salle des Archives (P-04) | Chantier **P-04** livré en deux lots, sans que le jeu change : **aucun fichier de `lib/`, `test/` ou `assets/` n'est touché**, et le patch note joueur ne décrit donc que le site. **Lot 1 — chaîne CI/CD** : trois workflows (`ci.yml`, `release.yml` à neuf jobs, `site.yml`), publication réduite à la pose d'un tag `v*.*.*`, garde-fou `verify-version` comparant le tag à `pubspec.yaml`, `patch_notes.json` et `versions.json` **avant tout build**, smoke test HTTP post-déploiement, pré-release GitHub avec le zip Windows, annonce Discord en `continue-on-error`. Toute la logique vit dans cinq scripts shell testables — harnais à **55 assertions**, attentes dérivées à l'exécution par `jq` plutôt que figées. Actions tierces épinglées sur SHA, secrets par `env:` uniquement, accès VPS confiné en écriture seule par `rrsync -wo`. Voir [ADR-079](../_adr/ADR-079-chaine-de-release-declenchee-par-tag-et-garde-fou.md). **Lot 2 — site vitrine** : la page de sélection des versions, jusque-là hors du dépôt et maintenue à la main, devient `site/` — trois pages sans étape de build ni dépendance npm, pilotées par `site/_site/versions.json`, logique pure testée par `node --test` (**20 tests**). La jointure version → patch note passe par un champ `notes` déclaré et nullable, jamais dérivé du nom de dossier : les quatorze dossiers historiques rapportent tous `0.1.0`, et une dérivation aurait produit quatre associations fausses. Voir [ADR-080](../_adr/ADR-080-site-vitrine-pilote-par-la-donnee-et-jointure-decl.md). Enrichissement du 20/08 : les quatorze dates relevées sur l'archive locale des builds, et deux jointures déclarées (`v0.0.5` → note `0.0.4`, `v0.0.9` → note `0.0.93`). |
@@ -251,11 +278,10 @@ dépourvu de sérialisation.
 | **v3.4.0** | 2026-07-25 | Plafonnement du Nombre d'Ennemis par Acte & Résolution de la Dérive Log/Calcul | Suite directe d'ADR-070 sur la même branche `feature/combat_scaling` (mergée avec PR #21) : plafond du nombre d'ennemis générés par combat, croissant avec l'Acte et différencié combat normal/élite/boss (+1/acte, +1/2 actes, +1/5 actes respectivement, sans plafond ultime), remplaçant l'ancienne limite fixe de 10 — empêche l'empilement de plusieurs ennemis tier-1 faibles pour épuiser un budget élite/boss. Corrige aussi la dérive confirmée entre le log de debug (`math_combat.md`) et le calcul réel de budget (`playerCardsCount`, `+(act-1)*10` manquants dans le log) via un unique `EncounterSystem.calculateBudget()`. Voir ADR-071. *(Patch note joueur rédigé — v0.4.7 "L'Équilibre des Effectifs", voir `assets/data/patch_notes.json`.)* |
 | **v3.3.0** | 2026-07-24 | Scaling de Difficulté en Escalier Géométrique & Déblocage de Tier | Correction d'un double comptage de l'Acte dans `EncounterSystem` (`enemyLevel` + terme linéaire direct dans `getHpMultiplier`/`getDamageMultiplier`) qui provoquait une explosion de difficulté incontrôlée en mode endless. `enemyLevel` devient strictement indépendant de l'Acte ; l'Acte agit désormais via un facteur géométrique par palier de 5 actes (`getHpActFactor`/`getDamageActFactor`, x1.35 HP / x1.25 Dégâts par palier + rampe intra-palier douce réinitialisée). Ajout d'un déblocage de tier d'ennemi tous les 10 actes (`getUnlockedTier`, plafond tier 3), gating strict assumé (Squelette/tier 2 non disponible avant l'Acte 11, contre l'Acte 2 auparavant) créant un backlog de contenu tier-1. 6 commits TDD, 201/201 tests au vert, `dart analyze` propre, revue de code de branche complète. Voir ADR-070. Mergé vers `main` (PR #20). |
 | **v3.2.0** | 2026-07-24 | Système de Sauvegarde et Persistance de Run (Autosave) | Résolution du point bloquant de commercialisation ADR-011 : `SaveService` (`shared_preferences`, slot unique, JSON versionné) sauvegardant `RunState`/`DeckState`/`InventoryState`/`SkillState` à chaque checkpoint carte (`checkpointProvider`/`autosaveOrchestratorProvider`), jamais en cours de combat. Bouton "Continuer" et dialogue de confirmation sur `HomeScreen`. Dégradation gracieuse du contenu manquant (cartes/reliques/upgrades/passifs supprimés du catalogue) avec avertissement nommé au joueur. Sauvegarde corrompue traitée comme échec total sans récupération partielle. Sauvegarde effacée à la mort du héros. Suppression du stub mort `RunPersistenceManager`. Voir ADR-069. |
-| **v3.1.0** | 2026-07-01 | Forge de Fusion et Forge Data-Driven | Introduction du nœud Forge de Fusion (`MapNodeType.forgeFusion` à 25% de chance) sur les étages 3 à 7. Écran `ForgeFusionScreen` pour fusionner les runes identiques pour un coût de 80 Or. Remplacement des upgrades codés en dur par une structure data-driven (`assets/data/forge_upgrades.json` + `ForgeUpgradeData`). Cumul de runes sans épuisement (alreadyHas retiré). Correction de la navigation au repos : annuler la forge ramène à la sélection de cartes au lieu de quitter au menu du repos. Écriture de tests unitaires (112 tests réussis, 0 erreur). |
 
 Les releases sorties de ce tableau par débordement du plafond FIFO sont conservées
-verbatim sous `.obsidian_vault/_archive/` (`2026-08-28-progress-releases.md` pour la
-dernière rotation, `2026-08-23-progress-releases.md` pour la précédente).
+verbatim sous `.obsidian_vault/_archive/` (`2026-09-05-progress-releases.md` pour la
+dernière rotation, `2026-08-28-progress-releases.md` pour la précédente).
 
 > [!NOTE]
 > **Le schéma `v3.x` est gelé.** L'historique ci-dessus emploie un schéma interne

@@ -10,7 +10,7 @@
 La refonte du système d'événements repose sur un découplage strict entre la structure de données declarative, la logique métier de validation, et le rendu d'interface réactif :
 
 1. **Structure de Données Déclarative et Bilingue (`EventData` / `EventChoice` / `EventAction`)** :
-   - Les événements sont sérialisés dans `assets/data/events.json` avec des clés bilingues strictes (`title_en`/`title_fr`, `description_en`/`description_fr`, `text_en`/`text_fr`, `result_text_en`/`result_text_fr`).
+   - Les événements sont sérialisés sous `assets/data/events/`, un fichier par événement, avec des clés bilingues strictes (`title_en`/`title_fr`, `description_en`/`description_fr`, `text_en`/`text_fr`, `result_text_en`/`result_text_fr`).
    - Le modèle `EventData` résout les textes dynamiquement en fonction du code de langue actif (`locale`).
    - La classe `EventAction` encapsule de manière générique le type d'action et sa valeur numérique (`value` typé `dynamic` pour supporter à la fois des entiers de dégâts/or ou des identifiants/quantités de reliques).
 

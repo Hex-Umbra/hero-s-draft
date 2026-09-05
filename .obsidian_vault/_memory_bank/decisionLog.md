@@ -5,10 +5,13 @@ Index des **ADR** (Architecture Decision Records) de **Hero's Draft**. Le corps 
 > [!IMPORTANT]
 > **Plafond : 250 lignes.** Ce fichier est un index, jamais un contenu. Un nouvel ADR prend le numéro `max(index) + 1` lu ici, jamais un numéro deviné.
 
-**Vérifié le 2026-09-01** — 83 décisions, numéros `ADR-001` à `ADR-083`, sans doublon ni trou.
+**Vérifié le 2026-09-05** — 86 décisions, numéros `ADR-001` à `ADR-086`, sans doublon ni trou.
 
 | N° | Décision | Statut | Version | Fichier |
 |:---|:---|:---:|:---:|:---|
+| `ADR-086` | Autorité du Répertoire sur l'Appartenance, avec Expiration de la Tolérance de Champ Redondant (chantier P-48, lot 3) | ✅ | — | [ADR-086-autorite-du-repertoire-avec-expiration-de-la-toler.md](../_adr/ADR-086-autorite-du-repertoire-avec-expiration-de-la-toler.md) |
+| `ADR-085` | Règle de Partage Catalogue / Configuration dans `assets/data/` (chantier P-48) | ✅ | — | [ADR-085-regle-de-partage-catalogue-configuration.md](../_adr/ADR-085-regle-de-partage-catalogue-configuration.md) |
+| `ADR-084` | Suppression de la Chaîne de Compétences Héroïques, Morte et Inatteignable (chantier P-40, bloc 1) | ✅ | — | [ADR-084-suppression-de-la-chaine-de-competences-heroiques.md](../_adr/ADR-084-suppression-de-la-chaine-de-competences-heroiques.md) |
 | `ADR-083` | Latence et Synchronisation du Chemin de Lecture Audio — Réservoirs de Lecteurs, Garde de Disponibilité et Frappe d'Impact | ✅ | — | [ADR-083-latence-et-synchronisation-du-chemin-de-lecture.md](../_adr/ADR-083-latence-et-synchronisation-du-chemin-de-lecture.md) |
 | `ADR-082` | Directeur Audio Central et Mapping par Données — Chaîne de Repli à 4 Niveaux (chantier P-03) | ✅ | — | [ADR-082-directeur-audio-central-et-mapping-par-donnees.md](../_adr/ADR-082-directeur-audio-central-et-mapping-par-donnees.md) |
 | `ADR-081` | Amendement de la Règle d'Autonomie du Tutoriel — Zéro Provider d'État (chantier P-45) | ✅ | 0.4.9 | [ADR-081-amendement-autonomie-tutoriel-zero-provider-etat.md](../_adr/ADR-081-amendement-autonomie-tutoriel-zero-provider-etat.md) |

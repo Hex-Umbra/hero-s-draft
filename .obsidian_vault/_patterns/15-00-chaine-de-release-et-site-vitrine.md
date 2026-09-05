@@ -32,7 +32,7 @@ Toute la logique de la chaîne vit dans des scripts shell testables, jamais dans
 | `release_body.sh` | Rend la patch note la plus récente en markdown de release |
 | `smoke_test.sh` | Quatre assertions HTTP sur la version fraîchement déployée, avec réessais |
 | `discord_payload.sh` | Construit l'embed d'annonce avec `jq -n`, jamais par concaténation. N'envoie rien |
-| `test_scripts.sh` | Harnais des quatre précédents — **55 assertions** |
+| `test_scripts.sh` | Harnais des quatre précédents — décompte vivant dans [`_memory_bank/progress.md`](../_memory_bank/progress.md) §Métriques |
 
 > [!NOTE]
 > Les attentes de `test_scripts.sh` sont **dérivées à l'exécution** par `jq` sur les

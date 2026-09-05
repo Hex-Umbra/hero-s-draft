@@ -1,10 +1,10 @@
 ### 3.3. ⚔️ Pipeline de Dégâts Centralisé
 
-Le calcul de tous les dégâts physiques et magiques du jeu (cartes offensives du joueur, intentions d'attaque des ennemis et compétences de classe héroïques) est unifié sous un pipeline de calcul unique représenté par le service `DamagePipeline.calculate` (`lib/game/services/damage_pipeline.dart`).
+Le calcul de tous les dégâts physiques et magiques du jeu (cartes offensives du joueur et intentions d'attaque des ennemis, plus le combat simulé du tutoriel) est unifié sous un pipeline de calcul unique représenté par le service `DamagePipeline.calculate` (`lib/game/services/damage_pipeline.dart`).
 
 Le calcul s'exécute de façon déterministe selon les étapes successives suivantes :
 
-1. **Calcul des Dégâts Initiaux** : Combinaison des dégâts de base (de la carte, de la compétence ou de l'intention d'attaque) avec la force (`strength`) active de l'attaquant :
+1. **Calcul des Dégâts Initiaux** : Combinaison des dégâts de base (de la carte ou de l'intention d'attaque) avec la force (`strength`) active de l'attaquant :
    $$\text{Dégâts Initiaux} = \text{Dégâts de base} + \text{Force}$$
 2. **Faiblesse (Attaquant)** : Si l'attaquant possède l'altération d'état `weakness`, les dégâts sont réduits de **25%** (multiplication par `0.75` puis arrondi).
 3. **Jet de Coup Critique (Attaquant)** : Effectue un jet probabiliste basé sur la chance de coup critique effective (`effectiveCritChance`) de l'attaquant. S'il réussit :

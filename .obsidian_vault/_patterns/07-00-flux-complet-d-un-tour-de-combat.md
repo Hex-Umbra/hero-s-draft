@@ -16,7 +16,6 @@
        │   ├→ applyRelics(startOfTurn)
        │   ├→ Process statuts: poison (dégâts), strength_regen (→strength), armor_regen (→armure)
        │   ├→ tickStatuses() (décrémente durées, supprime expirés)
-       │   ├→ tickCooldowns() (skill1/skill2 -1)
        │   └→ TraitSystem.onTurnStart(runController)
        └→ DeckNotifier.drawCards(cardsPerTurn, maxHandSize: 10)
            └→ remélange à sec si la pioche se vide en cours de route

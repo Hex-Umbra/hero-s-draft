@@ -1,6 +1,6 @@
 ### 2.5. Bestiaire
 
-**4 ennemis** définis dans `enemies.json` :
+**4 ennemis**, un par dossier `assets/data/enemies/<id>/` (`enemy.json` + `sprite.png`) :
 
 | ID | Nom | HP | Dégâts Base | Tier | Pattern d'Intentions | Crit Chance |
 |:---|:---|:---|:---|:---|:---|:---|
