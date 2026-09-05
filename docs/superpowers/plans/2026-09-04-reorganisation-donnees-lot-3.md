@@ -2960,7 +2960,11 @@ Les huit de `lib/`, au moment où ce plan est écrit :
 | `lib/ui/screens/card_dictionary_screen.dart:88` | « insérer une carte au milieu de `cards.json` » |
 | `lib/ui/screens/starter_deck_draft_screen.dart:60` | « suivrait l'ordre de `cards.json` » |
 
-Remplacer chaque mention par ce qu'elle désigne désormais — `assets/data/relics/`, `assets/data/cards/`, le registre, selon le cas. **Ne pas toucher au code**, seulement aux commentaires. Relancer `flutter test` pour confirmer que rien n'a bougé : **426 au vert**, inchangé.
+Remplacer chaque mention par ce qu'elle désigne désormais — `assets/data/relics/`, `assets/data/cards/`, le registre, selon le cas.
+
+**Un neuvième, d'une autre nature, à corriger dans le même mouvement** : la doc de `EntitySource.redundantFields` (`lib/services/game_data_loader.dart:36-42`) se termine par *« `heroClass` et `category` n'y sont que le temps de la migration »*. C'était vrai quand elle a été écrite ; la tâche 9 a fait expirer cette tolérance. La phrase décrit désormais un état révolu — la reformuler au passé, ou dire que seuls `id` y figure encore et pourquoi.
+
+**Ne pas toucher au code**, seulement aux commentaires. Relancer `flutter test` pour confirmer que rien n'a bougé : **426 au vert**, inchangé.
 
 - [ ] **Step 8: Mettre à jour `.agents/skills/game_designer.md`**
 
