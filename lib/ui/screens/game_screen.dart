@@ -207,7 +207,18 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     final runController = ref.read(runProvider.notifier);
     runController.nextLevel();
     runController.completeCurrentNode();
-    Navigator.of(context).pop();
+
+    // La victoire peut survenir alors que d'autres routes sont empilées
+    // au-dessus du combat : le menu de pause, le menu de debug. Un `pop()` nu
+    // fermerait la plus haute d'entre elles au lieu de l'écran de combat — le
+    // joueur resterait alors en combat, sur un nœud déjà marqué résolu et un
+    // niveau déjà gagné.
+    final navigator = Navigator.of(context);
+    final combatRoute = ModalRoute.of(context);
+    if (combatRoute != null) {
+      navigator.popUntil((route) => route == combatRoute);
+    }
+    navigator.pop();
   }
 
   void _startPlayerNewTurn() {
