@@ -1,0 +1,22 @@
+{
+  "id": "warcry",
+  "name_en": "Warcry",
+  "name_fr": "Cri de Guerre",
+  "description_en": "Deal 4 damage to all enemies and gain 4 Block.",
+  "description_fr": "Inflige 4 dégâts à tous les ennemis et gagne 4 d'Armure.",
+  "cost": 2,
+  "type": "attack",
+  "rarity": "common",
+  "target": "allEnemies",
+  "animation": "magic",
+  "effects": [
+    {
+      "type": "damage",
+      "value": 4
+    },
+    {
+      "type": "armor",
+      "value": 4
+    }
+  ]
+}

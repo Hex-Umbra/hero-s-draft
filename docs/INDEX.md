@@ -41,7 +41,8 @@ Chaque sujet suit la même chaîne. Tous les documents n'en parcourent pas tous 
 | 🔍 | [Idées améliorations classe et cartes](Idées%20améliorations%20classe%20et%20cartes.md) *(notes du propriétaire)* | 05/08/2026 |
 | 📐 | [S2 — Identité de classe *(P-41)*](superpowers/specs/2026-08-07-s2-identite-de-classe-design.md) | 07/08/2026 |
 | 📐 | [Réorganisation des données — un fichier par entité *(P-48)*](superpowers/specs/2026-09-04-reorganisation-donnees-un-fichier-par-entite-design.md) | 04/09/2026 |
-| 🔨 | [P-48 — Plan des lots 1 et 2](superpowers/plans/2026-09-04-reorganisation-donnees-lots-1-2.md) *(livrés ; lot 3 à planifier)* | 04/09/2026 |
+| 🔨 | [P-48 — Plan des lots 1 et 2](superpowers/plans/2026-09-04-reorganisation-donnees-lots-1-2.md) *(livrés)* | 04/09/2026 |
+| 🔨 | [P-48 — Plan du lot 3](superpowers/plans/2026-09-04-reorganisation-donnees-lot-3.md) *(la migration ; livré)* | 04/09/2026 |
 | 🗄️ | [Documentation des classes](archives/classes_documentation.md) · [Système de passifs](archives/système_de_passifs.md) · [Bilan changement compétences](archives/bilan_changement_competences.md) | — |
 | 🗄️ | [Analyse d'équilibrage des cartes](archives/card_balancing_analysis_01-06-2026.md) | 01/06/2026 |
 | 🗄️ | [Refactoring & équilibrage unifié des cartes](implementation_plans/done/unified_cards_refactoring_and_balancing.md) · [Refonte des raretés](implementation_plans/done/implementation_plan_cards_rarity_refactoring.md) · [Ajustements d'équilibrage](implementation_plans/done/22_card_balance_adjustments.md) | — |

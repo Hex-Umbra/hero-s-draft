@@ -1,0 +1,18 @@
+{
+  "id": "berserker",
+  "name_en": "Berserker",
+  "name_fr": "Le Berserker",
+  "description_en": "Damage Oriented",
+  "description_fr": "Orienté Dégâts",
+  "iconPath": "assets/data/classes/berserker/icon.png",
+  "maxHp": 80,
+  "maxMana": 3,
+  "baseDamage": 15,
+  "luck": 0,
+  "passiveTrait": "berserker_armor",
+  "displayOrder": 2,
+  "skills": [
+    "reckless_strike",
+    "rage_form"
+  ]
+}

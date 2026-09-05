@@ -1,0 +1,25 @@
+{
+  "id": "rage_form",
+  "name_en": "Rage Stance",
+  "name_fr": "Posture de Rage",
+  "description_en": "Apply 2 Strength this turn. Draw 1 card.",
+  "description_fr": "Applique 2 Force ce tour-ci. Pioche 1 carte.",
+  "cost": 1,
+  "type": "skill",
+  "rarity": "unique",
+  "target": "self",
+  "animation": "buff",
+  "effects": [
+    {
+      "type": "apply_status",
+      "statusId": "strength",
+      "value": 2,
+      "duration": 1
+    },
+    {
+      "type": "draw",
+      "value": 1
+    }
+  ],
+  "baseMaxForgeUpgrades": 5
+}

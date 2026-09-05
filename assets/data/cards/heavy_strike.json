@@ -1,0 +1,18 @@
+{
+  "id": "heavy_strike",
+  "name_en": "Heavy Strike",
+  "name_fr": "Frappe Lourde",
+  "description_en": "Deal 12 damage.",
+  "description_fr": "Inflige 12 dégâts.",
+  "cost": 2,
+  "type": "attack",
+  "rarity": "common",
+  "target": "singleEnemy",
+  "animation": "melee",
+  "effects": [
+    {
+      "type": "damage",
+      "value": 12
+    }
+  ]
+}

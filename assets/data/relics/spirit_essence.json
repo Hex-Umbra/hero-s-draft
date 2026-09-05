@@ -1,0 +1,12 @@
+{
+  "id": "spirit_essence",
+  "name_en": "Spirit Essence",
+  "name_fr": "Essence Spirituelle",
+  "description_en": "Gain 1 Mana each time an enemy dies.",
+  "description_fr": "Gagne 1 Mana chaque fois qu'un ennemi meurt.",
+  "trigger": "onEnemyKilled",
+  "effectType": "gain_mana",
+  "value": 1,
+  "rarity": "rare",
+  "emoji": "🧪"
+}

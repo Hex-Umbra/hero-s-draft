@@ -1,0 +1,24 @@
+{
+  "id": "ice_bolt",
+  "name_en": "Ice Bolt",
+  "name_fr": "Trait de Glace",
+  "description_en": "Deal 4 damage. Apply 1 Freeze.",
+  "description_fr": "Inflige 4 dégâts. Applique 1 Gel.",
+  "cost": 1,
+  "type": "attack",
+  "rarity": "common",
+  "target": "singleEnemy",
+  "animation": "ice",
+  "effects": [
+    {
+      "type": "damage",
+      "value": 4
+    },
+    {
+      "type": "apply_status",
+      "statusId": "freeze",
+      "value": 1,
+      "duration": 1
+    }
+  ]
+}

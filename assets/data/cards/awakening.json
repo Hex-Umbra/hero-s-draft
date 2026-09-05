@@ -1,0 +1,22 @@
+{
+  "id": "awakening",
+  "name_en": "Awakening",
+  "name_fr": "Éveil",
+  "description_en": "Gain 4 Block and draw 1 card.",
+  "description_fr": "Gagne 4 d'Armure et pioche 1 carte.",
+  "cost": 1,
+  "type": "skill",
+  "rarity": "common",
+  "target": "self",
+  "animation": "buff",
+  "effects": [
+    {
+      "type": "armor",
+      "value": 4
+    },
+    {
+      "type": "draw",
+      "value": 1
+    }
+  ]
+}

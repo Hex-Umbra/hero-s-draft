@@ -1,0 +1,22 @@
+{
+  "id": "quick_attack",
+  "name_en": "Quick Attack",
+  "name_fr": "Attaque Rapide",
+  "description_en": "Deal 3 damage and draw 1 card.",
+  "description_fr": "Inflige 3 dégâts et pioche 1 carte.",
+  "cost": 1,
+  "type": "attack",
+  "rarity": "common",
+  "target": "singleEnemy",
+  "animation": "melee",
+  "effects": [
+    {
+      "type": "damage",
+      "value": 3
+    },
+    {
+      "type": "draw",
+      "value": 1
+    }
+  ]
+}

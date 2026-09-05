@@ -1,0 +1,20 @@
+{
+  "id": "demon_form",
+  "name_en": "Demon Form",
+  "name_fr": "Forme Démoniaque",
+  "description_en": "Gain 2 Strength for 4 turns.",
+  "description_fr": "Gagne 2 Force pendant 4 tours.",
+  "cost": 2,
+  "type": "power",
+  "rarity": "common",
+  "target": "self",
+  "animation": "buff",
+  "effects": [
+    {
+      "type": "apply_status",
+      "statusId": "strength",
+      "value": 2,
+      "duration": 4
+    }
+  ]
+}

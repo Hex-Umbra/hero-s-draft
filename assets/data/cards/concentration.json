@@ -1,0 +1,19 @@
+{
+  "id": "concentration",
+  "name_en": "Concentration",
+  "name_fr": "Concentration",
+  "description_en": "Draw 2 cards.",
+  "description_fr": "Pioche 2 cartes.",
+  "cost": 0,
+  "type": "skill",
+  "rarity": "common",
+  "target": "self",
+  "animation": "buff",
+  "isExhaust": true,
+  "effects": [
+    {
+      "type": "draw",
+      "value": 2
+    }
+  ]
+}

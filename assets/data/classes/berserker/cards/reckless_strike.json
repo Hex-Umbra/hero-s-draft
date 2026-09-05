@@ -1,0 +1,19 @@
+{
+  "id": "reckless_strike",
+  "name_en": "Reckless Strike",
+  "name_fr": "Frappe Téméraire",
+  "description_en": "Deal 15 damage.",
+  "description_fr": "Inflige 15 dégâts.",
+  "cost": 2,
+  "type": "attack",
+  "rarity": "unique",
+  "target": "singleEnemy",
+  "animation": "melee",
+  "effects": [
+    {
+      "type": "damage",
+      "value": 15
+    }
+  ],
+  "baseMaxForgeUpgrades": 5
+}

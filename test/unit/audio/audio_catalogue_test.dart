@@ -9,9 +9,6 @@ import 'package:roguelike_card_game/services/audio/music_scene.dart';
 Map<String, dynamic> _readJsonMap(String path) =>
     jsonDecode(File(path).readAsStringSync()) as Map<String, dynamic>;
 
-List<dynamic> _readJsonList(String path) =>
-    jsonDecode(File(path).readAsStringSync()) as List<dynamic>;
-
 void main() {
   group('Coherence du catalogue audio', () {
     late AudioData audio;
@@ -34,23 +31,35 @@ void main() {
     });
 
     test('tout champ sfx d un JSON de contenu correspond a un son declare', () {
-      const contentFiles = [
-        'assets/data/cards.json',
-        'assets/data/hero_cards.json',
-        'assets/data/enemies.json',
-        'assets/data/relics.json',
-      ];
+      // Les catalogues ont ete eclates : on parcourt l arborescence plutot
+      // que d enumerer des chemins. Les entites qui peuvent porter un `sfx`
+      // sont les cartes (neutres et de classe), les ennemis et les reliques ;
+      // `AudioSource` n est implemente que par ces trois modeles.
+      final contentFiles = [
+        ...Directory('assets/data/cards').listSync().whereType<File>(),
+        ...Directory('assets/data/relics').listSync().whereType<File>(),
+        ...Directory('assets/data/classes')
+            .listSync(recursive: true)
+            .whereType<File>()
+            .where((f) => f.path.replaceAll(r'\', '/').contains('/cards/')),
+        ...Directory('assets/data/enemies')
+            .listSync(recursive: true)
+            .whereType<File>()
+            .where((f) => f.path.endsWith('enemy.json')),
+      ].where((f) => f.path.endsWith('.json'));
+
+      expect(contentFiles.length, 52,
+          reason: '17 cartes + 25 reliques + 6 cartes de classe + 4 ennemis');
 
       final declared = audio.sounds.keys.toSet();
       final offenders = <String>[];
 
-      for (final path in contentFiles) {
-        for (final entry in _readJsonList(path)) {
-          final map = entry as Map<String, dynamic>;
-          final sfx = map['sfx'] as String?;
-          if (sfx != null && !declared.contains(sfx)) {
-            offenders.add('$path :: ${map['id']} -> "$sfx"');
-          }
+      for (final file in contentFiles) {
+        final map =
+            jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
+        final sfx = map['sfx'] as String?;
+        if (sfx != null && !declared.contains(sfx)) {
+          offenders.add('${file.path} :: ${map['id']} -> "$sfx"');
         }
       }
 

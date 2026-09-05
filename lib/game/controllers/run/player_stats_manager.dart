@@ -261,7 +261,7 @@ class PlayerStatsManager {
         break;
       // Cet effectType n'a de sens qu'en `startOfRun` : une variante par combat
       // ou par tour cumulerait indéfiniment. Aucune garde n'est posée ici, le
-      // contrat étant porté par la donnée (`relics.json`) et par le `case`
+      // contrat étant porté par la donnée (`assets/data/relics/`) et par le `case`
       // symétrique de `removeRelicEffect`.
       case 'increase_cards_per_turn':
         applyRunRuleModifier(cardsPerTurnAcc: relic.value);

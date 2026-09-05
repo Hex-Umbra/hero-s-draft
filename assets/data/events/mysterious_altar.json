@@ -1,0 +1,48 @@
+{
+  "id": "mysterious_altar",
+  "title_en": "Mysterious Altar",
+  "title_fr": "L'Autel Mystérieux",
+  "description_en": "You discover an ancient altar covered in glowing runes. A voice seems to whisper in your mind, demanding a sacrifice in exchange for power.",
+  "description_fr": "Vous découvrez un autel ancien couvert de runes rougeoyantes. Une voix semble murmurer dans votre esprit, réclamant un sacrifice en échange de puissance.",
+  "choices": [
+    {
+      "text_en": "Sacrifice your blood (-15 HP, +1 Attack)",
+      "text_fr": "Sacrifier votre sang (-15 PV, +1 Attaque)",
+      "result_text_en": "The altar absorbs your blood and a dark power courses through your veins.",
+      "result_text_fr": "L'autel absorbe votre sang et une puissance sombre parcourt vos veines.",
+      "actions": [
+        {
+          "type": "take_damage",
+          "value": 15
+        },
+        {
+          "type": "gain_strength",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "text_en": "Make a gold offering (-50 Gold, +10 Max HP)",
+      "text_fr": "Faire une offrande d'or (-50 Or, +10 PV Max)",
+      "result_text_en": "The coins disappear into a slot in the altar. You feel more robust.",
+      "result_text_fr": "Les pièces disparaissent dans une fente de l'autel. Vous vous sentez plus robuste.",
+      "actions": [
+        {
+          "type": "spend_gold",
+          "value": 50
+        },
+        {
+          "type": "gain_max_hp",
+          "value": 10
+        }
+      ]
+    },
+    {
+      "text_en": "Pray and leave (Nothing)",
+      "text_fr": "Prier et partir (Rien)",
+      "result_text_en": "You mutter a quick prayer and continue on your way without incident.",
+      "result_text_fr": "Vous marmonnez une prière rapide et continuez votre chemin sans incident.",
+      "actions": []
+    }
+  ]
+}

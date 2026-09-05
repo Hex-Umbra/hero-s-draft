@@ -1,0 +1,24 @@
+{
+  "id": "holy_shield",
+  "name_en": "Holy Shield",
+  "name_fr": "Bouclier Sacré",
+  "description_en": "Gain 8 Block and heal 2 HP.",
+  "description_fr": "Donne 8 d'Armure et soigne 2 PV.",
+  "cost": 1,
+  "type": "skill",
+  "rarity": "unique",
+  "target": "self",
+  "animation": "buff",
+  "isExhaust": true,
+  "effects": [
+    {
+      "type": "armor",
+      "value": 8
+    },
+    {
+      "type": "heal",
+      "value": 2
+    }
+  ],
+  "baseMaxForgeUpgrades": 5
+}

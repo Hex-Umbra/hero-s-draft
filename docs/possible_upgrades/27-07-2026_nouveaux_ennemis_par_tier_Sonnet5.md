@@ -2,7 +2,7 @@
 
 **Date** : 27/07/2026
 **Contexte** : Backlog de contenu identifié par ADR-070/ADR-072 (`decisionLog.md`) — le gating strict du déblocage de tier resserre la fenêtre "tier-1-only" (Slime, Gobelin) aux Actes 1-5, aggravant un manque de variété déjà signalé. Ce document liste des candidats pour étoffer le bestiaire, tier par tier.
-**Roster actuel** (`assets/data/enemies.json`) : Slime (tier 1), Gobelin (tier 1), Squelette (tier 2), Orc Furieux (tier 3). `maxTierAuthored = 3`.
+**Roster actuel** (`assets/data/enemies/`) : Slime (tier 1), Gobelin (tier 1), Squelette (tier 2), Orc Furieux (tier 3). `maxTierAuthored = 3`.
 **Statut** : Brainstorm — concepts et flavor uniquement, aucune stat chiffrée, aucun ennemi encore implémenté.
 
 ---
@@ -137,4 +137,4 @@ Réutilise le pattern déjà validé pour la rareté des cartes (`CardRarity.col
 1. Sélectionner un sous-ensemble prioritaire (par ex. les 5 candidats Tier 1, pour adresser directement le backlog ADR-070/072) — le plus léger et le plus urgent des trois axes.
 2. Les **Variantes d'Élite Adaptatives** sont l'axe le plus ambitieux (nouveau système de triggers côté ennemi) : à traiter dans un brainstorm/spec dédié une fois le roster de base (Tiers 1-3) étoffé, plutôt qu'en premier.
 3. Passer le sous-ensemble retenu par un brainstorm de design dédié (specs `docs/superpowers/specs/`) pour chiffrer les stats (HP, dégâts, `critChance`, pattern d'intents exact, et pour les élites : poids de tirage par affixe).
-4. Rédiger les entrées bilingues (`_fr`/`_en`) dans `assets/data/enemies.json` une fois les stats validées.
+4. Créer un dossier `assets/data/enemies/<id>/` avec `enemy.json` (entrées bilingues `_fr`/`_en`) et `sprite.png`, une fois les stats validées, puis lancer `dart run tool/sync_assets.dart`.

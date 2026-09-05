@@ -1,0 +1,18 @@
+{
+  "id": "gobelin",
+  "name_en": "Goblin",
+  "name_fr": "Gobelin",
+  "maxHp": 28,
+  "baseDamage": 5,
+  "spritePath": "assets/data/enemies/gobelin/sprite.png",
+  "tier": 1,
+  "xp": 35,
+  "critChance": 10,
+  "gold": 12,
+  "intents": [
+    {
+      "type": "attack",
+      "value": 5
+    }
+  ]
+}

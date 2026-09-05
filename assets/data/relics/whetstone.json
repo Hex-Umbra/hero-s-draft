@@ -1,0 +1,12 @@
+{
+  "id": "whetstone",
+  "name_en": "Whetstone",
+  "name_fr": "Pierre à aiguiser",
+  "description_en": "+1 Strength permanently for the entire run.",
+  "description_fr": "+1 Force de manière permanente pour toute la run.",
+  "trigger": "startOfRun",
+  "effectType": "gain_strength",
+  "value": 1,
+  "rarity": "common",
+  "emoji": "🪨"
+}

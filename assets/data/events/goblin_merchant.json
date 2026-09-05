@@ -1,0 +1,57 @@
+{
+  "id": "goblin_merchant",
+  "title_en": "The Fugitive Merchant",
+  "title_fr": "Le Marchand Fugitif",
+  "description_en": "A small goblin carrying a huge sack runs toward you. 'Please! I am being pursued! Buy something quickly!'",
+  "description_fr": "Un petit gobelin portant un sac énorme court vers vous. 'S'il vous plaît ! Je suis poursuivi ! Achetez quelque chose vite !'",
+  "choices": [
+    {
+      "text_en": "Buy a mysterious relic (-40 Gold, +1 Relic)",
+      "text_fr": "Acheter une relique mystérieuse (-40 Or, +1 Relique)",
+      "result_text_en": "You buy a strange object from his sack. He thanks you warmly and runs away.",
+      "result_text_fr": "Vous achetez un objet étrange dans son sac. Il vous remercie chaleureusement et s'enfuit.",
+      "actions": [
+        {
+          "type": "spend_gold",
+          "value": 40
+        },
+        {
+          "type": "gain_relic",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "text_en": "Rob the goblin (+50 Gold, -12 HP)",
+      "text_fr": "Voler le gobelin (+50 Or, -12 PV)",
+      "result_text_en": "The goblin scratches you before fleeing, dropping a few coins.",
+      "result_text_fr": "Le gobelin vous griffe avant de s'enfuir en laissant tomber quelques pièces.",
+      "actions": [
+        {
+          "type": "gain_gold",
+          "value": 50
+        },
+        {
+          "type": "take_damage",
+          "value": 12
+        }
+      ]
+    },
+    {
+      "text_en": "Help him hide (-15 HP, +1 Relic)",
+      "text_fr": "L'aider à se cacher (-15 PV, +1 Relique)",
+      "result_text_en": "You draw the attention of his pursuers and take some hits, but to thank you, he hands you an old amulet.",
+      "result_text_fr": "Vous attirez l'attention de ses poursuivants et subissez quelques coups, mais pour vous remercier, il vous tend une vieille amulette.",
+      "actions": [
+        {
+          "type": "take_damage",
+          "value": 15
+        },
+        {
+          "type": "gain_relic",
+          "value": 1
+        }
+      ]
+    }
+  ]
+}

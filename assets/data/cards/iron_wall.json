@@ -1,0 +1,18 @@
+{
+  "id": "iron_wall",
+  "name_en": "Iron Wall",
+  "name_fr": "Mur de Fer",
+  "description_en": "Gain 10 Block.",
+  "description_fr": "Gagne 10 d'Armure.",
+  "cost": 2,
+  "type": "skill",
+  "rarity": "common",
+  "target": "self",
+  "animation": "buff",
+  "effects": [
+    {
+      "type": "armor",
+      "value": 10
+    }
+  ]
+}

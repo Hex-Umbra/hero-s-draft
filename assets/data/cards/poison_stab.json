@@ -1,0 +1,24 @@
+{
+  "id": "poison_stab",
+  "name_en": "Poison Stab",
+  "name_fr": "Coup Empoisonné",
+  "description_en": "Deal 3 damage. Apply 1 Poison.",
+  "description_fr": "Inflige 3 dégâts. Applique 1 Poison.",
+  "cost": 1,
+  "type": "attack",
+  "rarity": "common",
+  "target": "singleEnemy",
+  "animation": "poison",
+  "effects": [
+    {
+      "type": "damage",
+      "value": 3
+    },
+    {
+      "type": "apply_status",
+      "statusId": "poison",
+      "value": 1,
+      "duration": 2
+    }
+  ]
+}

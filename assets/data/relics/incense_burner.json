@@ -1,0 +1,12 @@
+{
+  "id": "incense_burner",
+  "name_en": "Incense Burner",
+  "name_fr": "Encensoir",
+  "description_en": "Every 4 turns, gain 8 Armor.",
+  "description_fr": "Tous les 4 tours, gagne 8 points d'Armure.",
+  "trigger": "startOfTurn",
+  "effectType": "charge_armor_turn",
+  "value": 8,
+  "rarity": "rare",
+  "emoji": "🏺"
+}

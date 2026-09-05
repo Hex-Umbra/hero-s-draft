@@ -1,0 +1,18 @@
+{
+  "id": "mage",
+  "name_en": "Mage",
+  "name_fr": "Le Mage",
+  "description_en": "Alteration Oriented",
+  "description_fr": "Orienté Altération",
+  "iconPath": "assets/data/classes/mage/icon.png",
+  "maxHp": 60,
+  "maxMana": 3,
+  "baseDamage": 10,
+  "luck": 0,
+  "passiveTrait": "spell_armor",
+  "displayOrder": 3,
+  "skills": [
+    "magic_missile",
+    "mana_surge"
+  ]
+}

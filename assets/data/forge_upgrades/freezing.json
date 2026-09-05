@@ -1,0 +1,19 @@
+{
+  "id": "freezing",
+  "name_en": "Freezing",
+  "name_fr": "Congelant",
+  "description_en": "Applies {tier} Freeze",
+  "description_fr": "Applique {tier} Gel",
+  "icon": "ac_unit_rounded",
+  "color": "lightBlueAccent",
+  "pools": [
+    "common",
+    "uncommon",
+    "rare"
+  ],
+  "eligibleCardTypes": [
+    "attack"
+  ],
+  "weight": 80,
+  "emoji": "❄️"
+}

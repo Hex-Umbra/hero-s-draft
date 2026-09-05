@@ -167,7 +167,8 @@ class CardData implements AudioSource {
   ///
   /// Partagé par `CardDictionaryScreen`, `StarterDeckDraftScreen` et le
   /// tutoriel (`TutorialFixtures.starterPool`) pour que les trois pools
-  /// s'affichent dans un ordre indépendant de celui de `cards.json`.
+  /// s'affichent dans un ordre choisi, et non dans celui — alphabétique par
+  /// `id` — que le chargeur donne au registre.
   static int compareByDisplayOrder(CardData a, CardData b) {
     final byRarity = a.rarity.index.compareTo(b.rarity.index);
     if (byRarity != 0) return byRarity;

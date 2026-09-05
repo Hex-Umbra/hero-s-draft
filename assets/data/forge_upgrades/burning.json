@@ -1,0 +1,19 @@
+{
+  "id": "burning",
+  "name_en": "Burning",
+  "name_fr": "Brûlant",
+  "description_en": "Applies {tier} Burn",
+  "description_fr": "Applique {tier} Brûlure",
+  "icon": "local_fire_department_rounded",
+  "color": "orangeAccent",
+  "pools": [
+    "common",
+    "uncommon",
+    "rare"
+  ],
+  "eligibleCardTypes": [
+    "attack"
+  ],
+  "weight": 80,
+  "emoji": "🔥"
+}

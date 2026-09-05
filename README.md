@@ -60,10 +60,41 @@ flutter test
 ```
 
 ### Modding (Ajouter du contenu)
-Grâce à l'architecture Data-Driven, étendre le jeu est trivial :
-1. Ouvrez `assets/data/cards.json` ou `enemies.json`.
-2. Dupliquez une entrée existante et modifiez ses valeurs (nom, coût, effets, pv).
-3. Relancez l'application. La nouvelle carte ou le nouvel ennemi est déjà dans le jeu, pris en compte par la Boutique, les récompenses et le système de combat !
+Grâce à l'architecture Data-Driven, étendre le jeu est trivial. **Une entité = un fichier**, et
+**le répertoire fait autorité** : une carte rangée dans `classes/paladin/cards/` *est* une carte du
+paladin, le chargeur l'en déduit, sans qu'aucun champ du fichier n'ait à le dire.
+
+```
+assets/data/
+├── cards/<id>.json              # carte neutre
+├── relics/<id>.json             # idem pour events/, forge_upgrades/, passives/
+├── classes/<id>/                # un dossier auto-suffisant par classe
+│   ├── class.json
+│   ├── icon.png
+│   └── cards/<id>.json          # cartes propres à la classe
+└── enemies/<id>/                # un dossier auto-suffisant par ennemi
+    ├── enemy.json
+    └── sprite.png
+```
+
+1. **Créez un fichier** dans le bon répertoire — le nom du fichier **est** l'`id` de l'entité
+   (`relics/iron_talisman.json` → `"id": "iron_talisman"`), en `snake_case` ASCII minuscule.
+   Pour une classe ou un ennemi, c'est un **dossier** que l'on crée, image comprise ; l'`id` vient
+   alors du nom du dossier. Le plus simple reste de copier une entité voisine et d'en changer les
+   valeurs (nom, coût, effets, pv) — copier un fichier n'écrase plus jamais du contenu existant.
+2. **Lancez `dart run tool/sync_assets.dart`** pour régénérer la section `assets:` de
+   `pubspec.yaml`. Les déclarations d'assets de Flutter ne sont récursives à aucun niveau : chaque
+   nouveau dossier de classe ou d'ennemi exige sa propre ligne, et un dossier non déclaré se charge
+   en développement puis disparaît en build, **sans le moindre message**. `--check` sort en 1 si la
+   section a dérivé ; la CI s'en sert.
+3. **Relancez l'application.** La nouvelle carte ou le nouvel ennemi est déjà dans le jeu, pris en
+   compte par la Boutique, les récompenses et le système de combat !
+
+*Note : n'écrivez pas les champs que le répertoire impose — `heroClass` et `category` dans le
+fichier d'une carte font échouer le chargement. Seul l'`id` peut être redéclaré, à condition d'être
+identique, parce qu'il rend le fichier lisible hors de son contexte.*
+
+*Note : toute entrée à texte visible porte ses deux variantes `_fr` et `_en`.*
 
 *Note: Pensez à toujours lancer `dart analyze` après une modification du code.*
 

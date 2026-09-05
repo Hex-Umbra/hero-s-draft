@@ -1,0 +1,12 @@
+{
+  "id": "energy_stone",
+  "name_en": "Energy Stone",
+  "name_fr": "Pierre d'Énergie",
+  "description_en": "Gain 1 Mana at the start of each turn.",
+  "description_fr": "Gagne 1 Mana au début de chaque tour.",
+  "trigger": "startOfTurn",
+  "effectType": "gain_mana",
+  "value": 1,
+  "rarity": "epic",
+  "emoji": "⚡"
+}

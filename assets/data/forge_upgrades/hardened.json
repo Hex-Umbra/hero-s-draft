@@ -1,0 +1,21 @@
+{
+  "id": "hardened",
+  "name_en": "Hardened",
+  "name_fr": "Endurci",
+  "description_en": "+{val} Block on the card",
+  "description_fr": "+{val} Armure sur la carte",
+  "icon": "shield_rounded",
+  "color": "blueAccent",
+  "pools": [
+    "common",
+    "uncommon",
+    "rare"
+  ],
+  "eligibleCardTypes": [
+    "attack",
+    "skill"
+  ],
+  "valueMultiplier": 2,
+  "weight": 100,
+  "emoji": "🛡️"
+}

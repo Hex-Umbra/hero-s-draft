@@ -1,0 +1,49 @@
+{
+  "id": "forgotten_tomb",
+  "title_en": "The Forgotten Tomb",
+  "title_fr": "Le Tombeau Oublié",
+  "description_en": "A half-open crypt reveals a dusty tomb. An aura of ancient wealth and danger emanates from the dark sarcophagus.",
+  "description_fr": "Une crypte entrouverte révèle un tombeau poussiéreux. Une aura de richesse ancienne et de danger émane du sombre sarcophage.",
+  "choices": [
+    {
+      "text_en": "Plunder the sarcophagus (+100 Gold, -18 HP)",
+      "text_fr": "Piller le sarcophage (+100 Or, -18 PV)",
+      "result_text_en": "You force the lid open and grab the gold, triggering a poison needle trap.",
+      "result_text_fr": "Vous forcez le couvercle et attrapez l'or, ce qui déclenche un piège à aiguille empoisonnée.",
+      "actions": [
+        {
+          "type": "gain_gold",
+          "value": 100
+        },
+        {
+          "type": "take_damage",
+          "value": 18
+        }
+      ]
+    },
+    {
+      "text_en": "Inspect the wall engravings (+10 Max HP)",
+      "text_fr": "Inspecter les gravures murales (+10 PV Max)",
+      "result_text_en": "Reading the ancient inscriptions fills you with vitality and resilience.",
+      "result_text_fr": "La lecture des inscriptions anciennes vous remplit de vitalité et de résilience.",
+      "actions": [
+        {
+          "type": "gain_max_hp",
+          "value": 10
+        }
+      ]
+    },
+    {
+      "text_en": "Respect the dead (+15 Gold)",
+      "text_fr": "Respecter le repos des morts (+15 Or)",
+      "result_text_en": "You bow in respect. As you lift your head, you notice some loose coins on the floor.",
+      "result_text_fr": "Vous vous inclinez en signe de respect. En relevant la tête, vous remarquez des pièces éparpillées sur le sol.",
+      "actions": [
+        {
+          "type": "gain_gold",
+          "value": 15
+        }
+      ]
+    }
+  ]
+}

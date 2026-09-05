@@ -1,0 +1,20 @@
+{
+  "id": "quick",
+  "name_en": "Quick",
+  "name_fr": "Véloce",
+  "description_en": "Draw +{tier} card(s)",
+  "description_fr": "Pioche +{tier} carte(s)",
+  "icon": "style_rounded",
+  "color": "amber",
+  "pools": [
+    "uncommon",
+    "rare"
+  ],
+  "eligibleCardTypes": [
+    "attack",
+    "skill",
+    "power"
+  ],
+  "weight": 60,
+  "emoji": "🪶"
+}

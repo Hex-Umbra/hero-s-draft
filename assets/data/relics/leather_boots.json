@@ -1,0 +1,12 @@
+{
+  "id": "leather_boots",
+  "name_en": "Leather Boots",
+  "name_fr": "Bottes en cuir",
+  "description_en": "Gain 3 Block at the start of combat.",
+  "description_fr": "Gagne 3 points d'Armure au début du combat.",
+  "trigger": "startOfCombat",
+  "effectType": "gain_armor",
+  "value": 3,
+  "rarity": "common",
+  "emoji": "🥾"
+}

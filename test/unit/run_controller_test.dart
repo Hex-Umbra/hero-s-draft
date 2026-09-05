@@ -86,7 +86,7 @@ void main() {
 
         // activePassive n'est plus déduit du passiveTrait par un repli codé
         // en dur : on le fournit explicitement, comme le ferait le vrai
-        // chargement depuis passives.json via PassiveData.getById.
+        // chargement depuis assets/data/passives/ via PassiveData.getById.
         const berserkerArmor = PassiveData(
           id: 'berserker_armor',
           nameEn: 'Berserker Armor',

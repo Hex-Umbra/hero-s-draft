@@ -57,7 +57,8 @@ class _StarterDeckDraftScreenState
         )
         .toList()
       // Le pool est affiché et sélectionné par index, sans mélange : sans tri
-      // explicite, le premier choix d'une run suivrait l'ordre de cards.json.
+      // explicite, le premier choix d'une run suivrait l'ordre du registre,
+      // c'est-à-dire l'ordre alphabétique des `id`.
       ..sort(CardData.compareByDisplayOrder);
 
     setState(() {

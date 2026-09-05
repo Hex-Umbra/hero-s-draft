@@ -32,11 +32,9 @@ void main() {
     });
 
     test('fichier absent : catalogue desactive et trace en debug, sans lever', () async {
-      // Chemin propre a ce test : `rootBundle.loadString` met le resultat
-      // en cache par cle, y compris un echec. Reutiliser le meme chemin
-      // dans plusieurs tests ferait retomber les suivants sur l echec (ou
-      // le succes) mis en cache par le premier, au lieu d exercer leur
-      // propre handler.
+      // Chemin propre a ce test : chaque test installe son propre handler
+      // `flutter/assets` (`setMockMessageHandler`) ; un chemin partage entre
+      // plusieurs tests les ferait interferer.
       const path = 'assets/data/audio_test_absent.json';
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMessageHandler('flutter/assets', (message) async => null);

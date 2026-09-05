@@ -40,8 +40,8 @@ class StateSyncSystem extends Component with HasGameReference<HerosDraftGame> {
 
     if (game.heroCard == null) {
       // Pas de repli : un héros introuvable est un bug de données, pas un cas
-      // à masquer. Le lot 3 ajoutera un test d'intégrité référentielle qui
-      // rend la situation impossible.
+      // à masquer. `test/unit/referential_integrity_test.dart` garde l'intégrité
+      // des données ; un `heroClassId` inconnu reste un bug de sauvegarde.
       final heroData = game.availableHeroes.firstWhere(
         (h) => h.id == state.heroClassId,
       );

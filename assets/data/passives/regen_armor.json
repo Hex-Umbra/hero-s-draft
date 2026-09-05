@@ -1,0 +1,10 @@
+{
+  "id": "regen_armor",
+  "name_en": "Armor Regeneration",
+  "name_fr": "Régénération d'Armure",
+  "description_en": "Gain 2 Block (+ Mastery) automatically at the end of each turn.",
+  "description_fr": "Gagne 2 points d'Armure (+ Maîtrise) automatiquement à la fin de chaque tour.",
+  "trigger": "endOfTurn",
+  "effectType": "gain_armor",
+  "value": 2
+}

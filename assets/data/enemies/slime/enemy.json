@@ -1,0 +1,18 @@
+{
+  "id": "slime",
+  "name_en": "Slime",
+  "name_fr": "Slime",
+  "maxHp": 18,
+  "baseDamage": 4,
+  "spritePath": "assets/data/enemies/slime/sprite.png",
+  "tier": 1,
+  "xp": 25,
+  "critChance": 5,
+  "gold": 10,
+  "intents": [
+    {
+      "type": "attack",
+      "value": 4
+    }
+  ]
+}

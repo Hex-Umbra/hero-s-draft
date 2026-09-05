@@ -1,0 +1,12 @@
+{
+  "id": "iron_talisman",
+  "name_en": "Iron Talisman",
+  "name_fr": "Talisman de Fer",
+  "description_en": "Gain 2 Block at the start of each turn.",
+  "description_fr": "Gagne 2 points d'Armure au début de chaque tour.",
+  "trigger": "startOfTurn",
+  "effectType": "gain_armor",
+  "value": 2,
+  "rarity": "common",
+  "emoji": "🪙"
+}

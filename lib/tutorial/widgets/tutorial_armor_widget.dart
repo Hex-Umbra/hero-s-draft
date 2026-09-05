@@ -278,7 +278,7 @@ class _TutorialArmorWidgetState extends State<TutorialArmorWidget> {
 
                 // Passif de la classe choisie : lu depuis la tranche
                 // persistante, jamais recopié en dur (nom/description
-                // viennent de passives.json via le moteur).
+                // viennent de `assets/data/passives/` via le moteur).
                 Builder(
                   builder: (context) {
                     final passive = widget.engine.mockState.activePassive;

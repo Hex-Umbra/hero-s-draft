@@ -6,7 +6,8 @@ import '../tutorial_engine.dart';
 /// Étape 02 — choix de classe.
 ///
 /// Les trois héros, leurs points de vie et leur passif viennent de
-/// `heroes.json` et `passives.json` : aucune valeur n'est écrite ici.
+/// `assets/data/classes/<id>/class.json` et `assets/data/passives/` :
+/// aucune valeur n'est écrite ici.
 class TutorialClassChoiceWidget extends StatefulWidget {
   final TutorialEngine engine;
 

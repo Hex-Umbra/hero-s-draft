@@ -1,0 +1,18 @@
+{
+  "id": "paladin",
+  "name_en": "Paladin",
+  "name_fr": "Le Paladin",
+  "description_en": "Survival Oriented",
+  "description_fr": "Orienté Survie",
+  "iconPath": "assets/data/classes/paladin/icon.png",
+  "maxHp": 100,
+  "maxMana": 3,
+  "baseDamage": 5,
+  "luck": 0,
+  "passiveTrait": "regen_armor",
+  "displayOrder": 1,
+  "skills": [
+    "holy_shield",
+    "smite"
+  ]
+}

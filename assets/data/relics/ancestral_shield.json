@@ -1,0 +1,12 @@
+{
+  "id": "ancestral_shield",
+  "name_en": "Ancestral Shield",
+  "name_fr": "Bouclier Ancestral",
+  "description_en": "Gain 5 Block at the start of combat.",
+  "description_fr": "Gagne 5 points d'Armure au début du combat.",
+  "trigger": "startOfCombat",
+  "effectType": "gain_armor",
+  "value": 5,
+  "rarity": "uncommon",
+  "emoji": "🛡️"
+}

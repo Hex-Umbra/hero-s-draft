@@ -1,0 +1,12 @@
+{
+  "id": "phoenix_feather",
+  "name_en": "Phoenix Feather",
+  "name_fr": "Plume de Phénix",
+  "description_en": "Gain 2 Mana at the start of combat.",
+  "description_fr": "Gagne 2 Mana au début du combat.",
+  "trigger": "startOfCombat",
+  "effectType": "gain_mana",
+  "value": 2,
+  "rarity": "epic",
+  "emoji": "🪶"
+}

@@ -1,0 +1,12 @@
+{
+  "id": "lucky_charm",
+  "name_en": "Lucky Charm",
+  "name_fr": "Porte-bonheur",
+  "description_en": "+10 Critical Hit Chance permanently for the entire run.",
+  "description_fr": "+10 de chance de coup critique de manière permanente pour toute la run.",
+  "trigger": "startOfRun",
+  "effectType": "gain_crit",
+  "value": 10,
+  "rarity": "uncommon",
+  "emoji": "🧿"
+}

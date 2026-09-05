@@ -1,0 +1,12 @@
+{
+  "id": "bandage",
+  "name_en": "Travel Bandage",
+  "name_fr": "Bandage de voyage",
+  "description_en": "Restore 1 HP at the end of each turn.",
+  "description_fr": "Restaure 1 PV à la fin de chaque tour.",
+  "trigger": "endOfTurn",
+  "effectType": "heal",
+  "value": 1,
+  "rarity": "common",
+  "emoji": "🩹"
+}

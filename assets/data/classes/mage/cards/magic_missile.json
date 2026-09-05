@@ -1,0 +1,23 @@
+{
+  "id": "magic_missile",
+  "name_en": "Magic Missile",
+  "name_fr": "Projectile Magique",
+  "description_en": "Deal 5 damage and draw 1 card.",
+  "description_fr": "Inflige 5 dégâts et pioche 1 carte.",
+  "cost": 1,
+  "type": "attack",
+  "rarity": "unique",
+  "target": "singleEnemy",
+  "animation": "magic",
+  "effects": [
+    {
+      "type": "damage",
+      "value": 5
+    },
+    {
+      "type": "draw",
+      "value": 1
+    }
+  ],
+  "baseMaxForgeUpgrades": 5
+}

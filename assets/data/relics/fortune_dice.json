@@ -1,0 +1,12 @@
+{
+  "id": "fortune_dice",
+  "name_en": "Fortune Dice",
+  "name_fr": "Dé de Fortune",
+  "description_en": "+2 Luck permanently for the entire run.",
+  "description_fr": "+2 Chance de manière permanente pour toute la run.",
+  "trigger": "startOfRun",
+  "effectType": "gain_luck",
+  "value": 2,
+  "rarity": "legendary",
+  "emoji": "🎲"
+}
