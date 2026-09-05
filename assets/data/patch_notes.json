@@ -1,5 +1,29 @@
 [
   {
+    "version": "0.5.1",
+    "date": "2026-09-05",
+    "title": "Chaque Chose à Sa Place",
+    "sections": [
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "Le dictionnaire de cartes est désormais trié par rareté, puis par coût en mana : il ne suit plus l'ordre interne du catalogue.",
+          "Le tirage du deck de départ et le tutoriel présentent les cartes dans ce même ordre, identique à celui du dictionnaire.",
+          "L'écran de choix de classe présente toujours le Paladin, puis le Berserker, puis le Mage."
+        ]
+      },
+      {
+        "category": "Technique",
+        "emoji": "🔧",
+        "entries": [
+          "Tout le contenu du jeu — cartes, classes, ennemis, reliques, événements — est désormais rangé à raison d'un fichier par élément : ajouter du contenu ne demande plus de toucher au code du jeu.",
+          "Un système de compétences héroïques resté inachevé et inaccessible depuis les premières versions a été retiré."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.5.0",
     "date": "2026-09-01",
     "title": "Le Jeu Sort du Silence",
