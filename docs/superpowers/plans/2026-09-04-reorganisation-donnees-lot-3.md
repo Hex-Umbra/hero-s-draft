@@ -2854,14 +2854,13 @@ git commit -m "refactor(data): faire expirer la tolerance de champ redondant"
 
 **Files:**
 - Delete: `tool/split_catalogues.dart`
-- Create: `.obsidian_vault/_adr/ADR-0XX-*` — deux ADR neufs
-- Modify: `.obsidian_vault/_adr/ADR-003-architecture-100-data-driven.md`
-- Create: `.obsidian_vault/_patterns/` — une fiche pour le chargeur
+- **Ne touche PAS à `.obsidian_vault/`** — `_adr/`, `_rules/` et `_patterns/` appartiennent a la skill `memory-bank-sync` (`CLAUDE.md`). Leur commande de travail est redigee, pas executee (Step 3)
+
 - Modify: `docs/ROADMAP.md:257, 279-298` — P-48 livré
 - Modify: `docs/INDEX.md:45` — l'entrée du plan du lot 3 passe à « livré »
 - Modify: `CLAUDE.md` — « Data-Driven Content Workflow » et « Data layer »
 - Modify: `.claude/skills/memory-bank-sync/SKILL.md:46` — la métrique
-- Modify: 8 fichiers de `lib/` + 3 de `test/` — commentaires nommant des catalogues disparus (voir Step 7 bis)
+- Modify: 8 fichiers de `lib/` + 3 de `test/` — commentaires nommant des catalogues disparus (voir Step 7)
 - Modify: `README.md:64` — la section « Modding » décrit une procédure devenue impossible
 - Modify: `.agents/skills/game_designer.md:12` — la liste des catalogues
 
@@ -2888,13 +2887,19 @@ dart analyze
 
 Attendu : **426 au vert** (compte inchangé — le script supprimé n'était couvert par aucun test) et `No issues found!`.
 
-- [ ] **Step 3: Amender ADR-003**
+- [ ] **Step 3: Écrire la commande de travail de `memory-bank-sync` — et ne rien écrire dans le vault**
 
-Dans `.obsidian_vault/_adr/ADR-003-architecture-100-data-driven.md`, remplacer l'énumération des 8 fichiers et la mention de `GameDataService.loadAll()` par un renvoi à la nouvelle structure et au nouveau chargeur. **Ne pas y recopier les chiffres** : ils vivent dans `_memory_bank/progress.md`, qui les re-mesure. Un ADR dit *pourquoi*, pas *combien*.
+**`CLAUDE.md` désigne `.obsidian_vault/_adr/`, `_rules/` et `_patterns/` comme maintenus par la skill `memory-bank-sync`.** Cette tâche n'y touche donc pas : elle prépare le travail, elle ne le fait pas. La skill attribue la numérotation, re-mesure chaque métrique par une commande avant de l'écrire, applique des plafonds de lignes par fichier, et archive au lieu d'ajouter — quatre garanties qu'une écriture à la main ne respecterait pas, et dont le contournement produirait exactement la dérive que cette skill existe pour empêcher.
 
-- [ ] **Step 4: Écrire les deux ADR neufs, et reporter dans la spec les trois écarts du plan**
+Rédiger la commande de travail **dans le rapport de tâche et dans la fiche P-48 de `docs/ROADMAP.md`** (étape 9), pour qu'elle survive à la fusion :
 
-**D'abord les écarts, parce que c'est ce qu'on oublie.** Le plan s'écarte de la spec sur trois points, chacun argumenté sur place mais **aucun encore inscrit dans la spec**. Les laisser diverger ferait de la spec et du plan deux vérités contradictoires sur le même sujet — la violation exacte de « One question, one place ».
+1. **Amender ADR-003 « Architecture 100 % Data-Driven ».** Il énumère nommément les 8 fichiers JSON, décrit un `GameDataService.loadAll()` qui n'existe plus, et ses comptes sont faux depuis longtemps (15 cartes, 2 événements, 12 reliques). Le remplacer par un renvoi à la nouvelle structure et au nouveau chargeur, **sans y recopier de chiffres** : ils vivent dans `_memory_bank/progress.md`, qui les re-mesure. Un ADR dit *pourquoi*, pas *combien*.
+2. **Deux ADR neufs.** *La règle de partage catalogue / configuration* : un fichier de `assets/data/` est découpé s'il est un catalogue d'entités interchangeables, il reste à plat s'il est un document de configuration unique — `patch_notes.json` (l'ordre du tableau **est** la sémantique : index 0 = version courante, et cinq scripts de `.github/scripts/` plus `site/_site/js/model.js` en dépendent) et `audio.json` tombent du second côté. Et *l'autorité du répertoire, option C, avec expiration* : le répertoire injecte, le JSON pouvait confirmer, la contradiction échoue, et la tolérance a expiré à la tâche 9 — en consignant pourquoi les passifs en sont exclus (D4 : `PassiveData` n'a pas de `heroClass`, l'injection y serait un no-op indétectable) et pourquoi `id` reste redéclarable (D-P3).
+3. **Une fiche `_patterns/`** décrivant `GameDataLoader`, `EntitySource` et le motif de chemin : le `*` qui vaut un segment, le comptage de segments qui sépare `class.json` de `cards/*.json` et écarte les assets de paquets, l'agrégation d'erreurs, et le `bundle` en paramètre comme seam de test. À indexer dans `_memory_bank/systemPatterns.md` — **sans jamais réinliner son contenu dans l'index**, c'est la règle des trois index de `CLAUDE.md`.
+
+- [ ] **Step 4: Reporter dans la spec les trois écarts du plan**
+
+**C'est ce qu'on oublie.** Le plan s'écarte de la spec sur trois points, chacun argumenté sur place mais **aucun encore inscrit dans la spec**. Les laisser diverger ferait de la spec et du plan deux vérités contradictoires sur le même sujet — la violation exacte de « One question, one place ».
 
 | Écart | Ce que dit la spec | Ce qu'a fait le plan |
 |:---|:---|:---|
@@ -2902,20 +2907,9 @@ Dans `.obsidian_vault/_adr/ADR-003-architecture-100-data-driven.md`, remplacer l
 | **D-P3** | « Expiration » de §5.2 : déclarer un champ injecté devient une erreur | Vrai pour `heroClass` et `category` ; **`id` reste redéclarable à titre permanent** |
 | **§8.1** | Le script « déplace et renomme les images … et supprime les anciens fichiers » | Les images sont **copiées** en tâche 5, supprimées en tâche 7 — c'est ce qui permet à chaque tâche de finir au vert |
 
-Amender §5.2, §6.1 et §8.1 de la spec en conséquence, et mettre son statut à *livré*.
+Amender §5.2, §6.1 et §8.1 de la spec en conséquence, et mettre son statut à *livré*. La spec vit dans `docs/`, pas dans le vault : elle est à toi.
 
-Puis les deux ADR. Numérotation attribuée par la skill `memory-bank-sync` — ne pas l'inventer.
-
-1. **La règle de partage catalogue / configuration.** Un fichier de `assets/data/` est *découpé* s'il est un catalogue d'entités interchangeables ; il *reste à plat* s'il est un document de configuration unique. `patch_notes.json` (l'ordre du tableau **est** la sémantique : index 0 = version courante, et cinq scripts de `.github/scripts/` plus `site/_site/js/model.js` en dépendent) et `audio.json` tombent du second côté.
-2. **L'autorité du répertoire, option C, avec expiration.** Le répertoire injecte, le JSON pouvait confirmer, la contradiction échoue — et la tolérance a expiré à la tâche 9. Consigner pourquoi les passifs en sont exclus (décision D4 : `PassiveData` n'a pas de `heroClass`, l'injection serait un no-op indétectable) et pourquoi `id` reste redéclarable (D-P3).
-
-- [ ] **Step 5: Écrire la fiche de pattern**
-
-Créer une fiche dans `.obsidian_vault/_patterns/` décrivant `GameDataLoader`, `EntitySource` et le motif de chemin : le `*` qui vaut un segment, le comptage de segments qui sépare `class.json` de `cards/*.json` et écarte les assets de paquets, l'agrégation d'erreurs, et le `bundle` en paramètre comme seam de test.
-
-L'indexer dans `_memory_bank/systemPatterns.md`. **Ne jamais réinliner le contenu de la fiche dans son index** — c'est la règle des trois index de `CLAUDE.md`.
-
-- [ ] **Step 6: Corriger la métrique de `memory-bank-sync`**
+- [ ] **Step 5: Corriger la métrique de `memory-bank-sync`**
 
 `.claude/skills/memory-bank-sync/SKILL.md:46` mesure « Fichiers de données » par `ls assets/data/*.json | wc -l`. Cette commande rendait 10 ; elle rend maintenant **2**. La skill re-mesure avant d'écrire : **sans correction, elle publiera un chiffre juste et trompeur.**
 
@@ -2925,7 +2919,7 @@ Remplacer par une commande qui compte ce qu'on veut vraiment savoir :
 find assets/data -name '*.json' | wc -l
 ```
 
-- [ ] **Step 7: Mettre à jour `CLAUDE.md` et `README.md`**
+- [ ] **Step 6: Mettre à jour `CLAUDE.md` et `README.md`**
 
 **`README.md:64` d'abord, parce que c'est le plus grave et qu'il a failli passer entre les mailles.** Sa section « Modding (Ajouter du contenu) » donne trois étapes opératoires — *« Ouvrez `assets/data/cards.json` ou `enemies.json`, dupliquez une entrée existante… »* — vers deux fichiers qui n'existent plus. Ce n'est pas un renvoi conceptuel comme les précédents : c'est une instruction, dans la porte d'entrée du dépôt, et elle est devenue impossible à suivre. La remplacer par la nouvelle procédure : créer un fichier dans le bon répertoire, ou un **dossier** pour une classe ou un ennemi, puis lancer `dart run tool/sync_assets.dart`.
 
@@ -2935,7 +2929,7 @@ Puis `CLAUDE.md` :
 - **« Data layer »** nomme encore `skill_data.dart`, supprimé par le bloc 1 de P-40.
 - Ajouter `tool/` à la carte d'architecture : un seul script, générateur de la section `assets:`.
 
-- [ ] **Step 7 bis: Corriger les commentaires qui nomment des catalogues disparus, dans `lib/` ET `test/`**
+- [ ] **Step 7: Corriger les commentaires qui nomment des catalogues disparus, dans `lib/` ET `test/`**
 
 La bascule les a laissés en l'état, à raison : les corriger là aurait élargi le diff de la tâche la plus risquée du chantier. Ce sont des renvois conceptuels, pas des chemins ouverts, donc rien ne casse — mais ils décrivent une structure abolie, ce que `CLAUDE.md` interdit.
 
@@ -3023,7 +3017,7 @@ git commit -m "docs(reorg): documenter la nouvelle structure et retirer l echafa
 - [ ] Les **dix** mutations de preuve ont été exécutées et **ont fait échouer** le test visé : préfixe Flame (t.1), tri par id (t.2), contradiction d'injection (t.3), `--check` du pubspec (t.4), les **trois** de l'oracle (t.5), ligne de pubspec retirée (t.8), image de classe manquante (t.8), champ redondant réintroduit (t.9)
 - [ ] Le coût de démarrage a été mesuré et consigné (t.7 step 8)
 - [ ] **Le jeu a été lancé et vérifié à l'œil** : sélection de classe avec icônes, combat avec sprites, dictionnaire à 23 cartes, tutoriel complet *(aucun agent ne peut faire cette vérification)*
-- [ ] ADR-003 ne décrit plus les 8 catalogues
+- [ ] La commande de travail de `memory-bank-sync` est écrite dans la fiche P-48 de la ROADMAP — amendement d'ADR-003, deux ADR neufs, une fiche `_patterns/`
 - [ ] `.claude/skills/memory-bank-sync/SKILL.md` ne mesure plus les données par `ls assets/data/*.json`
 - [ ] `CLAUDE.md` décrit la création d'un fichier et l'appel au générateur
 
