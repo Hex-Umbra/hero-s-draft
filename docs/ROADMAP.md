@@ -306,6 +306,8 @@ travail de relecture.
 **ni `heroClass` ni `category`** : le répertoire les injecte, et les déclarer fait échouer le
 chargement. Chaque nouveau dossier impose un `dart run tool/sync_assets.dart`.
 
+**P-42 porte aussi la publication.** La note `0.5.1`, écrite le 2026-09-05, attend ses cartes : c'est le premier lot depuis `0.5.0` qui donnera quelque chose à voir au joueur. **Tranché le 2026-09-05** : ses cartes **rejoindront l'entrée `0.5.1` existante**, rouverte et complétée en place par `patch-notes-writer`. Le numéro ne bouge pas, les trois fichiers porteurs non plus — c'est la seconde réouverture du projet, après `0.5.0`, et pour la même raison : la note n'a jamais été publiée.
+
 **Conséquence pour P-41.** Sa spec est la seule non implémentée à contenir des **instructions
 d'édition de données** ; elle a été rebasée le 2026-09-05. Un champ ajouté à une classe
 (table de redirection de passifs, retrait de `baseDamage`) se pose désormais dans **chacun**
@@ -327,7 +329,9 @@ entièrement des lots 1-2 — les réordonnancements du dictionnaire (cartes *et
 pool de draft de départ et de la sélection de classe, **plus la casse du passif des
 sauvegardes antérieures** que le passage des ids en `snake_case` (`7da5db2`) entraîne, clé et
 `schemaVersion` étant inchangés. Le lot 3 est invisible et ne casse aucune sauvegarde.
-**Reste à publier** — poser le tag, seul geste déclenchant `release.yml`.
+**Publication différée** — décision du propriétaire, le 2026-09-05. Ce lot n'a rien à montrer
+au joueur : la note attend les cartes de **P-42** et sera taguée avec elles. Poser le tag reste
+le seul geste déclenchant `release.yml`, et il suppose `main` poussé.
 
 ---
 
