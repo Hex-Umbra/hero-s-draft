@@ -1857,7 +1857,7 @@ flutter test
 dart analyze
 ```
 
-Attendu : **421 au vert** (415 + 6) et `No issues found!`. Le provider lit toujours les catalogues : **aucun comportement du jeu n'a changé**.
+Attendu : **422 au vert** (415 + 6, puis + 1 au round de correctifs — voir l addendum ci-dessous) et `No issues found!`. Le provider lit toujours les catalogues : **aucun comportement du jeu n'a changé**.
 
 - [ ] **Step 9: Commit**
 
@@ -2119,7 +2119,7 @@ flutter test
 dart analyze
 ```
 
-Attendu : **421 au vert** (compte inchangé : aucun test ajouté ni supprimé) et `No issues found!`.
+Attendu : **422 au vert** (compte inchangé : aucun test ajouté ni supprimé) et `No issues found!`.
 
 - [ ] **Step 6: Commit**
 
@@ -2144,6 +2144,7 @@ Le chargeur est écrit, testé sur un bundle factice, et prouvé sur le vrai bun
 - Modify: `test/unit/asset_path_convention_test.dart` — lit l'arborescence
 - Modify: `test/unit/audio/audio_catalogue_test.dart:36-59` — lit les 4 catalogues en `dart:io`
 - Modify: `test/unit/hero_display_order_test.dart:9, 27` — lit `heroes.json` en `dart:io`
+- Modify: `test/migration/data_equivalence_test.dart` — la **garde de dérive** est retirée avec les catalogues qu'elle surveillait (étape 2) ; les 6 tests d'équivalence restent
 
 **Interfaces:**
 - Consumes: `loadGameDataRegistry` (tâche 6)
@@ -2167,12 +2168,28 @@ final gameDataLoaderProvider = FutureProvider<GameDataRegistry>(
 
 Retirer les imports devenus inutiles. `dart:convert` reste (utilisé par `loadAudioData`), `package:flutter/services.dart` reste (`rootBundle`, `AssetBundle`).
 
-- [ ] **Step 2: Supprimer les catalogues et les images d'origine**
+- [ ] **Step 2: Faire certifier la référence une dernière fois, puis supprimer**
+
+La tâche 5 a gagné, après revue, une **garde de dérive** : le groupe *« Garde de la reference — les catalogues vivants n ont pas derive »* de `test/migration/data_equivalence_test.dart` compare octet pour octet les 8 catalogues à leur copie figée. Son rôle s'achève **exactement ici** : sa dernière utilité est de certifier, à l'instant de la suppression irréversible, que la référence décrit bien ce que l'application lisait encore.
+
+Donc, dans cet ordre :
+
+```bash
+flutter test test/migration/data_equivalence_test.dart
+```
+
+Attendu : **7 au vert**. Si la garde échoue, **arrêter** : un catalogue a dérivé depuis la tâche 5, la référence ne vaut plus rien, et supprimer les catalogues rendrait l'écart invérifiable à jamais.
+
+Puis seulement :
 
 ```bash
 git rm assets/data/cards.json assets/data/hero_cards.json assets/data/relics.json assets/data/events.json assets/data/enemies.json assets/data/heroes.json assets/data/passives.json assets/data/forge_upgrades.json
 git rm assets/images/hero_paladin.png assets/images/hero_berserker.png assets/images/hero_mage.png assets/images/enemy_slime.png assets/images/enemy_goblin.png assets/images/enemy_skeleton.png assets/images/enemy_orc.png
 ```
+
+Et **retirer la garde dans le même mouvement** : le groupe *« Garde de la reference … »* et son helper `_identicalBytes` n'ont plus de sujet — leurs 8 fichiers n'existent plus. Les laisser ferait lever `PathNotFoundException` : un échec bruyant, mais un faux signal sans rapport avec l'équivalence.
+
+**Les 6 autres tests de l'oracle restent**, et restent verts : eux ne lisent que la référence figée et l'arbre éclaté. Ils partiront à la tâche 9.
 
 `assets/images/` ne garde que `bg_dungeon.png` — la seule image qui n'appartient à aucune entité. Le répertoire reste déclaré au pubspec ; `dart run tool/sync_assets.dart --check` doit toujours sortir en 0.
 
@@ -2357,9 +2374,9 @@ flutter test
 
 **`flutter clean` est de nouveau obligatoire** : cette tâche supprime 15 fichiers, et `_needsRebuild` ne détecte pas les suppressions. Sans purge, les catalogues supprimés pourraient survivre dans `build/unit_test_assets/` et faire passer les tests sur des données fantômes.
 
-Attendu : **423 au vert** — 421 plus les 2 tests ajoutés au fichier de convention, qui passe de 1 à 3. Les trois tests des étapes 5 et 6 sont réécrits, pas ajoutés : leur nombre ne bouge pas.
+Attendu : **423 au vert** — 422, plus les 2 tests ajoutés au fichier de convention (qui passe de 1 à 3), moins la garde de dérive retirée à l'étape 2. Les trois tests des étapes 5 et 6 sont réécrits, pas ajoutés : leur nombre ne bouge pas.
 
-L'oracle de la tâche 5 doit rester vert : il lit sa **référence figée**, catalogues et images comprises — c'est exactement pour survivre à cette étape qu'elle a été prise.
+**Les 6 tests d'équivalence restants doivent être verts.** Eux lisent la **référence figée** — catalogues et images comprises — et l'arbre éclaté, jamais les fichiers que cette étape supprime. C'est exactement pour survivre à cette étape que la référence a été prise. *(La 7ᵉ, la garde de dérive, est partie à l'étape 2 : c'est la seule qui lisait les catalogues vivants.)*
 
 ```bash
 dart analyze
