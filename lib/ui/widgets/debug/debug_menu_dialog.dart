@@ -39,21 +39,32 @@ class DebugMenuDialog extends StatelessWidget {
       length: tabs.length,
       child: GameDialog(
         title: const Text('Menu de debug', textAlign: TextAlign.center),
-        content: SizedBox(
-          height: 380,
-          width: 460,
-          child: Column(
-            children: [
-              TabBar(
-                isScrollable: true,
-                tabs: [for (final (label, _) in tabs) Tab(text: label)],
-              ),
-              Expanded(
-                child: TabBarView(
-                  children: [for (final (_, view) in tabs) view],
+        // `GameDialog` est un conteneur stylé maison : il n'y a pas de
+        // `Material` dans son arbre. Or `TextField` et `ListTile` en exigent
+        // un et refusent de se construire sans. `transparency` le fournit
+        // sans rien peindre, pour ne pas recouvrir le fond du dialogue.
+        //
+        // Aucune couleur n'est fixée ici : les deux thèmes du jeu — sombre et
+        // parchemin — définissent déjà les leurs, et les coder en dur rendrait
+        // le menu illisible sur l'un des deux.
+        content: Material(
+          type: MaterialType.transparency,
+          child: SizedBox(
+            height: 380,
+            width: 460,
+            child: Column(
+              children: [
+                TabBar(
+                  isScrollable: true,
+                  tabs: [for (final (label, _) in tabs) Tab(text: label)],
                 ),
-              ),
-            ],
+                Expanded(
+                  child: TabBarView(
+                    children: [for (final (_, view) in tabs) view],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
