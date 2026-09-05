@@ -3,8 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../game/controllers/run_controller.dart';
 import '../../../../game/services/debug_actions.dart';
+import '../../notification_overlay.dart';
 import '../debug_number_field.dart';
 
+/// Statistiques de **progression** du heros.
+///
+/// PV, mana et armure n'y sont pas : ils bougent au fil des tours et vivent
+/// dans l'onglet Combat, seul onglet affiche pendant un combat.
 class DebugHeroTab extends ConsumerWidget {
   const DebugHeroTab({super.key});
 
@@ -15,14 +20,6 @@ class DebugHeroTab extends ConsumerWidget {
     return ListView(
       children: [
         DebugNumberField(
-          label: 'PV',
-          value: stats.currentPv,
-          onSubmitted: (v) => DebugActions.updateHeroStats(
-            ref.read,
-            (s) => s.copyWith(currentPv: v),
-          ),
-        ),
-        DebugNumberField(
           label: 'PV max',
           value: stats.maxPv,
           onSubmitted: (v) => DebugActions.updateHeroStats(
@@ -31,27 +28,11 @@ class DebugHeroTab extends ConsumerWidget {
           ),
         ),
         DebugNumberField(
-          label: 'Mana',
-          value: stats.currentMana,
-          onSubmitted: (v) => DebugActions.updateHeroStats(
-            ref.read,
-            (s) => s.copyWith(currentMana: v),
-          ),
-        ),
-        DebugNumberField(
           label: 'Mana max',
           value: stats.maxMana,
           onSubmitted: (v) => DebugActions.updateHeroStats(
             ref.read,
             (s) => s.copyWith(maxMana: v),
-          ),
-        ),
-        DebugNumberField(
-          label: 'Armure',
-          value: stats.armure,
-          onSubmitted: (v) => DebugActions.updateHeroStats(
-            ref.read,
-            (s) => s.copyWith(armure: v),
           ),
         ),
         DebugNumberField(
@@ -71,22 +52,6 @@ class DebugHeroTab extends ConsumerWidget {
           ),
         ),
         DebugNumberField(
-          label: 'Niveau',
-          value: stats.level,
-          onSubmitted: (v) => DebugActions.updateHeroStats(
-            ref.read,
-            (s) => s.copyWith(level: v),
-          ),
-        ),
-        DebugNumberField(
-          label: 'XP',
-          value: stats.xp,
-          onSubmitted: (v) => DebugActions.updateHeroStats(
-            ref.read,
-            (s) => s.copyWith(xp: v),
-          ),
-        ),
-        DebugNumberField(
           label: 'Chance de critique (%)',
           value: stats.critChance,
           onSubmitted: (v) => DebugActions.updateHeroStats(
@@ -94,19 +59,33 @@ class DebugHeroTab extends ConsumerWidget {
             (s) => s.copyWith(critChance: v),
           ),
         ),
-        TextButton(
-          onPressed: () => DebugActions.updateHeroStats(
+        const Divider(),
+        DebugNumberField(
+          label: 'Niveau (stat brute)',
+          value: stats.level,
+          onSubmitted: (v) => DebugActions.updateHeroStats(
             ref.read,
-            (s) => s.copyWith(currentPv: s.maxPv),
+            (s) => s.copyWith(level: v),
           ),
-          child: const Text('Soin complet'),
         ),
+        DebugNumberField(
+          label: 'XP  (seuil ${stats.xpToNextLevel})',
+          value: stats.xp,
+          onSubmitted: (v) =>
+              DebugActions.updateHeroStats(ref.read, (s) => s.copyWith(xp: v)),
+        ),
+        // Le champ ci-dessus n'ecrase qu'une statistique. Ce bouton emprunte le
+        // vrai chemin : seuil d'XP recalcule et draft de recompense ouvert.
         TextButton(
-          onPressed: () => DebugActions.updateHeroStats(
-            ref.read,
-            (s) => s.copyWith(currentMana: s.maxMana),
-          ),
-          child: const Text('Mana plein'),
+          onPressed: () {
+            DebugActions.gainLevel(ref.read);
+            context.showNotification(
+              'Niveau ${ref.read(runProvider).heroStats.level} — '
+              'draft en attente sur la carte',
+              type: NotificationType.success,
+            );
+          },
+          child: const Text('Gagner un niveau (ouvre le draft)'),
         ),
       ],
     );

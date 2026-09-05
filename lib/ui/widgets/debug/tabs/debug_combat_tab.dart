@@ -2,19 +2,75 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../game/controllers/combat_controller.dart';
+import '../../../../game/controllers/run_controller.dart';
 import '../../../../game/services/debug_actions.dart';
 import '../../notification_overlay.dart';
 import '../debug_number_field.dart';
 
+/// Seul onglet affiche pendant un combat : il doit donc etre autosuffisant.
+///
+/// Il porte les statistiques du heros qui bougent au fil des tours — PV, mana,
+/// armure — la ou l'onglet Heros garde celles qui relevent de la progression :
+/// maxima, attaque, chance, niveau.
 class DebugCombatTab extends ConsumerWidget {
   const DebugCombatTab({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final enemies = ref.watch(combatProvider).enemies;
+    final stats = ref.watch(runProvider).heroStats;
 
     return ListView(
       children: [
+        const Text('Statistiques du heros'),
+        DebugNumberField(
+          label: 'PV  (max ${stats.maxPv})',
+          value: stats.currentPv,
+          onSubmitted: (v) => DebugActions.updateHeroStats(
+            ref.read,
+            (s) => s.copyWith(currentPv: v),
+          ),
+        ),
+        DebugNumberField(
+          label: 'Mana  (max ${stats.maxMana})',
+          value: stats.currentMana,
+          onSubmitted: (v) => DebugActions.updateHeroStats(
+            ref.read,
+            (s) => s.copyWith(currentMana: v),
+          ),
+        ),
+        DebugNumberField(
+          label: 'Armure',
+          value: stats.armure,
+          onSubmitted: (v) => DebugActions.updateHeroStats(
+            ref.read,
+            (s) => s.copyWith(armure: v),
+          ),
+        ),
+        Row(
+          children: [
+            Expanded(
+              child: TextButton(
+                onPressed: () => DebugActions.updateHeroStats(
+                  ref.read,
+                  (s) => s.copyWith(currentPv: s.maxPv),
+                ),
+                child: const Text('Soin complet'),
+              ),
+            ),
+            Expanded(
+              child: TextButton(
+                onPressed: () => DebugActions.updateHeroStats(
+                  ref.read,
+                  (s) => s.copyWith(currentMana: s.maxMana),
+                ),
+                child: const Text('Mana plein'),
+              ),
+            ),
+          ],
+        ),
+        const Divider(),
+        Text('Ennemis (${enemies.length})'),
         for (var i = 0; i < enemies.length; i++)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),

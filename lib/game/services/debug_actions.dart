@@ -62,6 +62,19 @@ class DebugActions {
     read(runProvider.notifier).advanceToNextWorld();
   }
 
+  /// Fait gagner exactement un niveau, par le **vrai** chemin.
+  ///
+  /// Ecrire `level` a la main ne fait qu'ecraser une statistique : ni le seuil
+  /// d'XP ne se recalcule, ni le draft de recompense ne s'ouvre. `gainXp` fait
+  /// les trois, dont l'incrementation de `pendingDrafts` — c'est elle qui fait
+  /// apparaitre l'overlay de montee de niveau sur la carte.
+  static void gainLevel(RefReader read) {
+    if (!_allowed(read)) return;
+    final stats = read(runProvider).heroStats;
+    final missing = stats.xpToNextLevel - stats.xp;
+    read(runProvider.notifier).gainXp(missing > 0 ? missing : 1);
+  }
+
   static void addCard(RefReader read, CardData card) {
     if (!_allowed(read)) return;
     read(deckProvider.notifier).addCardToMasterDeck(CardInstance(data: card));
@@ -112,7 +125,10 @@ class DebugActions {
     );
     if (index == -1) return;
     final enemy = combat.currentState.enemies[index];
-    combat.updateEnemyStats(enemyId, enemy.stats.copyWith(currentPv: currentPv));
+    combat.updateEnemyStats(
+      enemyId,
+      enemy.stats.copyWith(currentPv: currentPv),
+    );
     combat.cleanDeadEnemies();
   }
 

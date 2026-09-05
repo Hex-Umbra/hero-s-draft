@@ -7,12 +7,12 @@ import '../../../../game/services/debug_actions.dart';
 import '../../notification_overlay.dart';
 import '../debug_number_field.dart';
 
+/// Onglet de progression de la run, affiche sur la carte uniquement.
+///
+/// C'est ce qui rend « acte suivant » sur : l'action regenere la carte et
+/// efface la position, ce qui laisserait une run en combat sans noeud courant.
 class DebugRunTab extends ConsumerWidget {
-  /// Faux pendant un combat : `advanceToNextAct` regenere la carte et efface
-  /// la position, ce qui laisserait la run sans noeud courant.
-  final bool canRegenerateMap;
-
-  const DebugRunTab({super.key, required this.canRegenerateMap});
+  const DebugRunTab({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -64,17 +64,16 @@ class DebugRunTab extends ConsumerWidget {
             (s) => s.copyWith(bonusForgeSlots: v),
           ),
         ),
-        if (canRegenerateMap)
-          TextButton(
-            onPressed: () {
-              DebugActions.advanceToNextAct(ref.read);
-              context.showNotification(
-                'Acte ${ref.read(runProvider).act} — carte regeneree',
-                type: NotificationType.success,
-              );
-            },
-            child: const Text('Acte suivant (regenere la carte)'),
-          ),
+        TextButton(
+          onPressed: () {
+            DebugActions.advanceToNextAct(ref.read);
+            context.showNotification(
+              'Acte ${ref.read(runProvider).act} — carte regeneree',
+              type: NotificationType.success,
+            );
+          },
+          child: const Text('Acte suivant (regenere la carte)'),
+        ),
       ],
     );
   }

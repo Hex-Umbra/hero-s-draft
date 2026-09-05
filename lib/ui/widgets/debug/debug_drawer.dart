@@ -15,11 +15,13 @@ import 'tabs/debug_run_tab.dart';
 /// change d'ecran : terminer un combat depuis lui pope bien l'ecran de combat,
 /// la ou un dialogue empile au-dessus se faisait fermer a sa place.
 ///
-/// Un seul composant pour les deux ecrans : les onglets sont les memes, seul
-/// l'onglet Combat s'ajoute quand il y a un combat.
+/// Un seul composant pour les deux ecrans, mais **deux jeux d'onglets
+/// disjoints** : en combat, seul l'onglet Combat ; sur la carte, les quatre
+/// autres.
 class DebugDrawer extends StatefulWidget {
-  /// Ajoute l'onglet Combat, et retire de l'onglet Run l'action d'acte
-  /// suivant — elle regenere la carte et effacerait la position.
+  /// Choisit le jeu d'onglets. En combat, le panneau se reduit a l'onglet
+  /// Combat, qui porte pour cela les statistiques changeant d'un tour a
+  /// l'autre — PV, mana, armure.
   final bool inCombat;
 
   const DebugDrawer({super.key, required this.inCombat});
@@ -37,13 +39,17 @@ class _DebugDrawerState extends State<DebugDrawer> {
   Widget build(BuildContext context) {
     final surface = Theme.of(context).colorScheme.surface;
 
-    final tabs = <(String, Widget)>[
-      ('Heros', const DebugHeroTab()),
-      ('Run', DebugRunTab(canRegenerateMap: !widget.inCombat)),
-      ('Deck', const DebugDeckTab()),
-      ('Reliques', const DebugRelicsTab()),
-      if (widget.inCombat) ('Combat', const DebugCombatTab()),
-    ];
+    // Deux jeux d'onglets disjoints. En combat, seul ce qui sert au combat :
+    // l'onglet Combat porte pour cela les statistiques qui bougent d'un tour a
+    // l'autre — PV, mana, armure — et se suffit donc a lui-meme.
+    final tabs = widget.inCombat
+        ? const <(String, Widget)>[('Combat', DebugCombatTab())]
+        : <(String, Widget)>[
+            ('Heros', const DebugHeroTab()),
+            ('Run', const DebugRunTab()),
+            ('Deck', const DebugDeckTab()),
+            ('Reliques', const DebugRelicsTab()),
+          ];
 
     return Align(
       alignment: Alignment.centerLeft,
@@ -70,12 +76,15 @@ class _DebugDrawerState extends State<DebugDrawer> {
                 length: tabs.length,
                 child: Column(
                   children: [
-                    TabBar(
-                      isScrollable: true,
-                      tabAlignment: TabAlignment.start,
-                      labelPadding: AppSpacing.paddingHSm,
-                      tabs: [for (final (label, _) in tabs) Tab(text: label)],
-                    ),
+                    // Un seul onglet ne merite pas de barre : en combat, le
+                    // panneau montre directement son contenu.
+                    if (tabs.length > 1)
+                      TabBar(
+                        isScrollable: true,
+                        tabAlignment: TabAlignment.start,
+                        labelPadding: AppSpacing.paddingHSm,
+                        tabs: [for (final (label, _) in tabs) Tab(text: label)],
+                      ),
                     Expanded(
                       child: TabBarView(
                         children: [for (final (_, view) in tabs) view],
