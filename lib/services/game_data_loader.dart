@@ -42,6 +42,10 @@ class EntitySource<T> {
   /// masse. `heroClass` et `category` y ont ete tolerees le temps de la
   /// migration ; cette tolerance a expire, et les declarer est desormais une
   /// erreur de chargement.
+  ///
+  /// Aucune source de production ne le surcharge aujourd hui : le defaut
+  /// `{'id'}` est la regle du jeu partout ou `EntitySource` est declare. Le
+  /// parametre reste un seam documente pour le devtool d edition a venir.
   final Set<String> redundantFields;
 }
 
@@ -76,7 +80,7 @@ class GameDataLoader {
   /// Charge le manifeste d assets. Idempotent : les appels suivants rendent
   /// le meme futur. [loadAll] l appelle lui-meme, de sorte qu aucun appelant
   /// ne puisse l oublier.
-  Future<void> prepare() {
+  Future<void> _prepare() {
     return _preparing ??= () async {
       _manifest = await AssetManifest.loadFromAssetBundle(bundle);
     }();
@@ -88,7 +92,7 @@ class GameDataLoader {
   /// **exclue** du resultat : le chargement va jusqu au bout pour collecter
   /// toutes les fautes, que [throwIfFailed] remonte en une fois.
   Future<List<T>> loadAll<T>(List<EntitySource<T>> sources) async {
-    await prepare();
+    await _prepare();
 
     final entries = <_Entry<T>>[];
 
@@ -153,16 +157,14 @@ class GameDataLoader {
 
   Future<Map<String, dynamic>?> _read(_Match match) async {
     try {
-      // `cache: false` : le cache de chaines de `AssetBundle` retourne, pour
-      // une meme cle, le `Future` deja regle de la lecture precedente. Sous
-      // `flutter test`, ce `Future` a ete cree dans la zone d un test qui
-      // s est deja termine ; l attendre depuis un nouveau test (nouveau
-      // `testWidgets`, meme bundle, meme fichier) ne se resout jamais. Impact
-      // reel : `buildTutorialTestRegistry()` relit les memes ~70 fichiers a
-      // chaque appel (`test/tutorial/tutorial_test_registry.dart`), et
-      // `test/widget/tutorial_class_step_test.dart` /
-      // `tutorial_starter_draft_test.dart` en font un par `testWidgets` — la
-      // deuxieme execution se bloquait indefiniment sans `cache: false`.
+      // `cache: false` : l'appelant fait son propre cache — c'est
+      // `GameDataRegistry`, resolu une fois par `gameDataLoaderProvider`. Le SDK
+      // lui-meme procede ainsi dans `loadStructuredData`. Trois consequences, dans
+      // cet ordre d'importance : (1) le devtool d'edition relit le disque a chaud
+      // au lieu de servir un `Future` deja regle ; (2) les ~40 Ko de chaines ne
+      // sont pas retenus apres le demarrage ; (3) sous `flutter test`, un `Future`
+      // mis en cache dans la zone d'un test termine ne se resout jamais depuis un
+      // nouveau test — NE PAS retirer ce drapeau sans traiter les trois.
       final decoded = jsonDecode(await bundle.loadString(match.key, cache: false));
       if (decoded is! Map<String, dynamic>) {
         _errors.add(
