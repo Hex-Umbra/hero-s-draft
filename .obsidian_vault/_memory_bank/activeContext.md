@@ -35,10 +35,10 @@ Six réserves à ne pas perdre de vue :
   ([brainstorm héros et cartes](../../docs/possible_upgrades/05-08-2026_brainstorm_heros_et_cartes_Opus5.md)).
   Le numéro se lit dans `pubspec.yaml` et la 1ʳᵉ entrée de `assets/data/patch_notes.json`,
   jamais ici.
-- **Conséquence à trancher quand P-42 atterrira** : ses cartes rejoignent-elles l'entrée
-  `0.5.1` existante, ou prennent-elles un numéro à part ? Rouvrir une entrée que personne n'a
-  vue est légitime — c'est exactement ce qui a été fait pour `0.5.0`, et le vault l'avait
-  consigné comme la seule fois où ce fut le cas. Ce serait la seconde, pour la même raison.
+- **Tranché le 2026-09-05 : les cartes de P-42 rejoindront l'entrée `0.5.1` existante.**
+  Elle sera donc rouverte, pour la seconde fois de l'histoire du projet après `0.5.0` — et
+  pour la même raison, la seule qui vaille : personne ne l'a encore vue. Le numéro ne change
+  pas ; `patch-notes-writer` complète l'entrée en place plutôt que d'en préposer une neuve.
 - **Les tiers A, B, C et E de `docs/ROADMAP.md` n'ont toujours pas été re-vérifiés contre le
   code** — seuls S et D l'ont été (2026-08-04). Les traiter comme non vérifiés. Inchangé
   depuis le 2026-08-06.
