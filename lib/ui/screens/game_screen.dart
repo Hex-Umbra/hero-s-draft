@@ -540,6 +540,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     _game.pauseEngine();
     PauseDialog.show(
       context,
+      inCombat: true,
       onResume: () => Navigator.of(context).pop(),
       onExit: () {
         Navigator.of(context).pop();

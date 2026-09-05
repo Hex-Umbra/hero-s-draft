@@ -141,6 +141,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   void _showPauseMenu() {
     PauseDialog.show(
       context,
+      inCombat: false,
       onResume: () => Navigator.of(context).pop(),
       onExit: () => Navigator.of(context).popUntil((route) => route.isFirst),
     );
