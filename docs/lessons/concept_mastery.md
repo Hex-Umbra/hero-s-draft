@@ -28,7 +28,7 @@ Dans Hero's Draft, les cartes, les ennemis et les héros ne sont pas codés "en 
 
 ### Concept à retenir : "Modelisation & Service"
 - **Modèles** : Des classes Dart (ex: `CardData`) qui mappent exactement la structure du JSON.
-- **Service** : Le `GameDataService` qui charge ces fichiers au démarrage et les transforme en objets utilisables par le jeu.
+- **Service** : le chargeur (`loadGameDataRegistry`, `lib/services/game_data_service.dart`) qui lit ces fichiers au démarrage et les transforme en objets utilisables par le jeu.
 
 ---
 

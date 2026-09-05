@@ -37,7 +37,6 @@ The codebase strictly separates three layers — never mix them:
   - `ShopController` — shop inventory/purchases.
   - `EventController` — random narrative event resolution.
   - `InventoryController` — relic inventory.
-  - `SkillController` — hero skill management.
   - `CheckpointNotifier` (`checkpoint_controller.dart`) — `checkpointProvider` / `autosaveOrchestratorProvider`: triggers the autosave when a map node is resolved.
   - All shared/business state lives in Riverpod 2.x `Notifier`s here (`extends Notifier<T>`, exposed via `NotifierProvider`) — never in UI widgets or Flame components, and never as global variables/singletons. The migration off `StateNotifier` is complete for the controllers; the only remaining `StateNotifier` is the UI-local toast queue in `lib/ui/widgets/notification_overlay.dart`, which holds no business state. Do not add new ones.
 
@@ -47,7 +46,7 @@ The codebase strictly separates three layers — never mix them:
   - `gameDataLoaderProvider` (`game_data_service.dart`) — a `FutureProvider<GameDataRegistry>` that async-loads and caches all JSON asset data at startup. There is no `GameDataService` class; the provider *is* the entry point. `loadGameDataRegistry(bundle)` is the **single declaration of the game's entity sources**; production and the tutorial test registry both go through it.
   - `GameDataLoader` / `EntitySource` (`game_data_loader.dart`) — the generic loader. An `EntitySource` is an asset **path pattern** plus a `fromJson`: the pattern both selects the files and injects the fields the directory imposes, from the segments it captures (`*` matches exactly one segment, so segment count alone separates `classes/*/class.json` from `classes/*/cards/*.json`). Errors are accumulated across every category and raised once by `throwIfFailed()`. The `bundle` is a parameter rather than a hardcoded `rootBundle` — that is the seam that makes the loader testable on a chosen asset tree.
   - `MapGeneratorService` plus `lib/services/map/` (`map_node_generator.dart`, `map_connection_builder.dart`, `map_content_placer.dart`, `map_validator.dart`) — procedural world-map generation, decomposed into generate → connect → place-content → validate stages.
-  - `SaveService` (`lib/services/save_service.dart`) — serialises `RunState`/`DeckState`/`InventoryState`/`SkillState` into a single versioned JSON blob under one `shared_preferences` key. Never called mid-combat.
+  - `SaveService` (`lib/services/save_service.dart`) — serialises `RunState`/`DeckState`/`InventoryState`, three keys, into a single versioned JSON blob under one `shared_preferences` key. Never called mid-combat.
 
 - **UI (Flutter)** — `lib/ui/`
   - `lib/ui/screens/` — Home, Splash, ClassSelection, Map, Game, Draft, StarterDeckDraft, BossCardDraft, Deck (`deck_screen.dart`), Shop, Event, Rest/RestCardSelection, RelicExchange, PatchNotes, CardDictionary, ForgeFusion.
