@@ -38,10 +38,11 @@ capturés alimentent `inject`, dans leur ordre d'apparition.
 > `classes/*/class.json` de `classes/*/cards/*.json` — les deux commencent pareil. Aucune
 > expression régulière n'est en jeu.
 >
-> ⚠️ Les assets de paquets, eux, ne sont **pas** écartés par la profondeur : servis sous
-> `packages/<nom>/...`, ils sont rejetés dès le premier segment par la comparaison littérale
-> `assets` ≠ `packages` (`game_data_loader.dart`, branche `p != s`). Un paquet déclarant un
-> asset peu profond produirait une clé plus *courte*, pas plus longue.
+> ⚠️ **La profondeur ne suffit pas** à écarter les assets de paquets, servis sous
+> `packages/<nom>/...` : un paquet peut en déclarer un à la même profondeur que nos motifs.
+> Le test de profondeur passe d'abord et écarte les autres ; ceux qui le franchissent tombent
+> au premier segment, sur la comparaison littérale `assets` ≠ `packages`
+> (`game_data_loader.dart`, branche `p != s`).
 
 **Les passifs ne reçoivent aucune appartenance** (décision D4) : `PassiveData` n'a pas de
 champ `heroClass`, donc l'injection y serait silencieusement jetée par `fromJson` — un no-op

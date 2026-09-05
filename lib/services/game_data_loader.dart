@@ -25,9 +25,9 @@ class EntitySource<T> {
   /// Le nombre de segments doit correspondre exactement : c est ce qui
   /// separe `classes/*/class.json` de `classes/*/cards/*.json`.
   ///
-  /// Les assets de paquets, eux, ne sont PAS ecartes par la profondeur — un
-  /// paquet peut declarer un asset moins profond que nos motifs. Ils tombent
-  /// des le premier segment, sur la comparaison litterale `assets` != `packages`.
+  /// La profondeur ne suffit pas a ecarter les assets de paquets : un paquet
+  /// peut en declarer un a la meme profondeur que nos motifs. Ceux-la tombent
+  /// au premier segment, sur la comparaison litterale `assets` != `packages`.
   final String pattern;
 
   final T Function(Map<String, dynamic>) fromJson;

@@ -105,7 +105,8 @@ identique, parce qu'il rend le fichier lisible hors de son contexte.*
 1. Faire rédiger les patch notes par le skill `patch-notes-writer` — il écrit
    l'entrée dans `assets/data/patch_notes.json` et synchronise `pubspec.yaml`
    ainsi que `site/_site/versions.json`, dont il rafraîchit aussi les liens de
-   repli dans `site/index.html` et `site/versions.html`.
+   repli dans `site/index.html` et `site/versions.html` — **et le numéro écrit
+   en toutes lettres** dans la carte « actuelle » de `site/index.html`.
 2. Committer et pousser sur `main`.
 3. Poser le tag correspondant :
 

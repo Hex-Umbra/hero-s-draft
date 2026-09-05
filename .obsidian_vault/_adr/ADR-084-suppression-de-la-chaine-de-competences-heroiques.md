@@ -2,10 +2,13 @@
 
 ✅ **Livré le 2026-09-04**, commit `ced306e`, bloc 1 du chantier P-40.
 Retire du jeu un système décrit par [ADR-003](ADR-003-architecture-100-data-driven.md) parmi
-les huit catalogues d'origine. **Trois fiches** le documentaient : `_rules/05-00` et
-`_patterns/02-7`, entièrement consacrées à lui, sont archivées verbatim dans
-`../_archive/2026-09-05-competences-heroiques.md` ; [`_rules/02-2`](../_rules/02-2-systeme-de-heros.md)
-en portait une colonne, corrigée sur place et non archivée puisque le reste de la fiche est vivant.
+les huit catalogues d'origine. **14 fiches du vault nommaient un de ses symboles** —
+`git grep -lE 'SkillController|SkillState|SkillData|skillProvider|tickCooldowns|triggerSkill|onExecuteSkill|skill_controller|skill_data|skills\.json' ac37596 -- .obsidian_vault/_rules/ .obsidian_vault/_patterns/`
+— et trois de plus le décrivaient en prose sans le nommer (`_rules/03-3`, `_rules/03-13`,
+`_rules/09-1`). `_rules/05-00` et `_patterns/02-7`, entièrement consacrées à lui, sont
+archivées verbatim dans `../_archive/2026-09-05-competences-heroiques.md` ; les autres n'en
+portaient qu'une mention ou une colonne, corrigées sur place, leur reste étant vivant.
+Une première estimation à trois, faite sans lancer ce `grep`, avait manqué les autres.
 
 ### Contexte
 
@@ -77,13 +80,13 @@ avant la suppression.
   de compatibilité en rend un.
 - ⚠️ **La façade `RunController.applyLifestealBuff` est sans appelant.** Conservée sur
   avertissement explicite ; P-41 doit la reprendre ou la supprimer avec son implémentation.
-- ⚠️ **Trois vestiges non prévus par cette décision subsistent** (relevés le 2026-09-05,
+- ⚠️ **Deux vestiges non prévus par cette décision subsistent** (relevés le 2026-09-05,
   à traiter dans P-40 bloc 3) : `RunController.tickCooldown()` (`run_controller.dart:423`),
-  sans appelant, dont le corps se réduit à `startTurn()` ; la doc de
-  `TurnPhaseManager.startPlayerTurn` (`turn_phase_manager.dart:43-44`) qui annonce encore des
-  « cooldowns » ; et surtout un **texte vu par le joueur** dans `lib/tutorial/tutorial_data.dart`
-  (l. 287 en anglais, l. 300 en français) promettant que gagner un combat réinitialise les
-  temps de recharge de compétences.
+  sans appelant, dont le corps se réduit à `startTurn()` ; et la doc de
+  `TurnPhaseManager.startPlayerTurn` (`turn_phase_manager.dart:43-44`), qui annonce encore des
+  « cooldowns ». Un troisième — un **texte vu par le joueur**, dans
+  `lib/tutorial/tutorial_data.dart`, promettant que gagner un combat réinitialisait les temps
+  de recharge — a été **corrigé le 2026-09-05** dans les deux langues.
 - ⚠️ **P-26 perd un tiers de son périmètre.** Restent le `GameDataRegistry` en `Map` O(1) et
   `MapNode` découplé de `Vector2`.
 - ⚠️ Restent ouverts dans P-40 : le bloc 2 (trois bugs confirmés) et le bloc 3 (dix dérives

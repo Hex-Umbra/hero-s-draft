@@ -19,7 +19,7 @@ Deux chantiers en sont débloqués : le **devtool d'édition de contenu**, deman
 ce chantier, et **P-42** et ses ~25-30 cartes de classe, qui s'écrivent désormais un fichier
 à la fois sans doubler le travail de relecture.
 
-Cinq réserves à ne pas perdre de vue :
+Six réserves à ne pas perdre de vue :
 
 - **⚠️ Les lots 1-2 cassent les sauvegardes antérieures, sur le passif seulement.** Les ids de
   passifs sont passés en `snake_case` (`regenArmor` → `regen_armor`, commit `7da5db2`) alors que
@@ -77,10 +77,12 @@ Cinq réserves à ne pas perdre de vue :
    de `skills.json` ne correspondaient à aucun identifiant réel. **−544 lignes** sur 34
    fichiers, sans migration de sauvegarde — les trois lignes de `save_service.dart` partent
    ensemble, une sauvegarde existante garde une clé jamais relue. Voir
-   [ADR-084](../_adr/ADR-084-suppression-de-la-chaine-de-competences-heroiques.md) ; les deux
-   fiches du vault qui le décrivaient sont archivées.
-   ⚠️ **`applyLifestealBuff` est désormais sans appelant**, conservée sur avertissement
-   explicite pour P-41. **P-26 perd un tiers de son périmètre.**
+   [ADR-084](../_adr/ADR-084-suppression-de-la-chaine-de-competences-heroiques.md). **14 fiches
+   du vault nommaient un de ses symboles**, trois de plus le décrivaient en prose : deux
+   archivées, les autres corrigées sur place — une première estimation à trois, faite sans
+   lancer le `grep`, les avait manquées.
+   ⚠️ **La façade `RunController.applyLifestealBuff` est sans appelant**, conservée sur
+   avertissement explicite pour P-41. **P-26 perd un tiers de son périmètre.**
 
 > [!NOTE]
 > **Rotations.** Les trois livraisons sorties au 2026-09-05 (chemin de lecture audio, P-03,

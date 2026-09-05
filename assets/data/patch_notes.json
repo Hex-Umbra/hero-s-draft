@@ -8,7 +8,7 @@
         "category": "Améliorations",
         "emoji": "⚡",
         "entries": [
-          "Le dictionnaire est désormais trié : les cartes par rareté puis par coût en mana au sein de chaque type, les reliques par ordre alphabétique au sein de chaque rareté. Ni les unes ni les autres ne suivent plus l'ordre interne du catalogue.",
+          "Le dictionnaire est désormais trié : les cartes par rareté puis par coût en mana au sein de chaque type, les reliques dans un ordre fixe au sein de chaque rareté. Ni les unes ni les autres ne suivent plus l'ordre interne du catalogue.",
           "Le tirage du deck de départ et le tutoriel classent les cartes selon le même critère que le dictionnaire : rareté, puis coût en mana.",
           "L'écran de choix de classe présente toujours le Paladin, puis le Berserker, puis le Mage."
         ]
