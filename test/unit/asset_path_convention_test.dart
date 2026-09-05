@@ -18,6 +18,14 @@ void main() {
           .where((f) => f.path.endsWith('.json'))) {
         final entry = jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
         final path = entry[field] as String?;
+        // `as String?` + `continue` : un champ absent est ignore ici, pas
+        // signale — ce n est donc pas une garde complete a soi seule. Elle
+        // est compensee deux fois ailleurs : `HeroData.fromJson` caste
+        // `iconPath` en non-nullable (`hero_data.dart:59`), ce qui fait
+        // echouer le chargement si le champ manque, et
+        // `referential_integrity_test.dart:83` compare `iconPath` a sa
+        // valeur exacte attendue. Ce test-ci ne verifie qu une chose : un
+        // chemin present est complet et designe un fichier existant.
         if (path == null) continue;
         if (!path.startsWith('assets/')) {
           offenders.add('${file.path} : "$path" n est pas un chemin complet');

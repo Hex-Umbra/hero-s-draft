@@ -65,9 +65,11 @@ void main() {
     });
 
     test('le fichier a le droit de confirmer un champ injecte a l identique', () async {
-      // Tolerance a expiration : elle sert pendant la migration, ou elle
-      // laisse passer tels quels les `category` et `heroClass` des fichiers
-      // issus du decoupage. La tache 9 la retire.
+      // Tolerance expiree : elle a servi pendant la migration, le temps de
+      // laisser passer tels quels les `category` et `heroClass` des fichiers
+      // issus du decoupage. Le test la conserve parce que `redundantFields`
+      // reste un point de configuration d `EntitySource`, meme si plus aucune
+      // source de production ne va au dela du defaut `{'id'}`.
       final loader = GameDataLoader(FakeBundle({
         'assets/data/classes/paladin/things/smite.json':
             '{"id":"smite","owner":"paladin","category":"owned"}',
