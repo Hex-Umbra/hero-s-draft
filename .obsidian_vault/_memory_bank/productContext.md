@@ -37,7 +37,7 @@
 | 3.8. 🔨 Système de Forge & Forge de Fusion (Forge v2.5) | [03-8-systeme-de-forge-forge-de-fusion.md](../_rules/03-8-systeme-de-forge-forge-de-fusion.md) | 54 |
 | 3.9. 🛒 Boutique (Shop) | [03-9-boutique.md](../_rules/03-9-boutique.md) | 18 |
 | 3.10. 🃏 Poli Visuel et Sélection de Récompenses (Draft Screen Polish) | [03-10-poli-visuel-et-selection-de-recompenses.md](../_rules/03-10-poli-visuel-et-selection-de-recompenses.md) | 8 |
-| 3.11. 🎯 Système de Coup Critique (Critical Hit System) | [03-11-systeme-de-coup-critique.md](../_rules/03-11-systeme-de-coup-critique.md) | 22 |
+| 3.11. 🎯 Système de Coup Critique (Critical Hit System) | [03-11-systeme-de-coup-critique.md](../_rules/03-11-systeme-de-coup-critique.md) | 21 |
 | 3.12. 🎨 Optimisations Visuelles, Fluidité & Animations de Combat | [03-12-optimisations-visuelles-fluidite-animations-d.md](../_rules/03-12-optimisations-visuelles-fluidite-animations-d.md) | 20 |
 | 3.13. 💾 Persistance de Run (Autosave) | [03-13-persistance-de-run.md](../_rules/03-13-persistance-de-run.md) | 11 |
 

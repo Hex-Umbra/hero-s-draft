@@ -53,7 +53,7 @@
 | Reprise depuis l'accueil | `HomeScreen` | Bouton « Continuer » (si `SaveService.hasSave()`), confirmation avant écrasement ; réactivité après retour via `Navigator.popUntil` corrigée — [ADR-073](../_adr/ADR-073-reactivite-du-bouton-continuer-de-homescreen-apres.md) |
 | Dégradation gracieuse du contenu manquant | `MissingSaveItem`, `SaveLoadResult.missingItems` | Élément supprimé du catalogue depuis la sauvegarde : retiré silencieusement, signalé nommément au chargement |
 | Sauvegarde corrompue = échec total | `SaveService.load()` | JSON illisible ou `schemaVersion` inconnue → échec propre, pas de récupération partielle |
-| Fin de run | `GameOverScreen` | Sauvegarde effacée à la mort du héros |
+| Fin de run | `DeathOverlay` (`lib/ui/widgets/hud/death_overlay.dart`) | Sauvegarde effacée à la mort du héros — vérifié le 2026-09-05, `grep -rn 'SaveService.clear' lib/` |
 
 Design complet — [ADR-069](../_adr/ADR-069-systeme-de-sauvegarde-de-run-checkpoint-carte-refr.md).
 
@@ -280,8 +280,8 @@ Les 12 lignes restantes n'ont pas été re-vérifiées à cette date.
 | **v3.2.0** | 2026-07-24 | Système de Sauvegarde et Persistance de Run (Autosave) | Résolution du point bloquant de commercialisation ADR-011 : `SaveService` (`shared_preferences`, slot unique, JSON versionné) sauvegardant `RunState`/`DeckState`/`InventoryState`/`SkillState` à chaque checkpoint carte (`checkpointProvider`/`autosaveOrchestratorProvider`), jamais en cours de combat. Bouton "Continuer" et dialogue de confirmation sur `HomeScreen`. Dégradation gracieuse du contenu manquant (cartes/reliques/upgrades/passifs supprimés du catalogue) avec avertissement nommé au joueur. Sauvegarde corrompue traitée comme échec total sans récupération partielle. Sauvegarde effacée à la mort du héros. Suppression du stub mort `RunPersistenceManager`. Voir ADR-069. |
 
 Les releases sorties de ce tableau par débordement du plafond FIFO sont conservées
-verbatim sous `.obsidian_vault/_archive/` (`2026-08-28-progress-releases.md` pour la
-dernière rotation, `2026-08-23-progress-releases.md` pour la précédente).
+verbatim sous `.obsidian_vault/_archive/` (`2026-09-05-progress-releases.md` pour la
+dernière rotation, `2026-08-28-progress-releases.md` pour la précédente).
 
 > [!NOTE]
 > **Le schéma `v3.x` est gelé.** L'historique ci-dessus emploie un schéma interne

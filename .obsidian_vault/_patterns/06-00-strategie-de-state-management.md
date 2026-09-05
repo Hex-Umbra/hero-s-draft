@@ -13,11 +13,11 @@
 | `eventProvider` | `NotifierProvider<EventController, EventState>` | `EventState` | Non | Événement narratif actif, choix sélectionné |
 | `shopProvider` | `NotifierProvider<ShopController, ShopState>` | `ShopState` | Non | Cartes en vente, état d'achat heal |
 | `rewardProvider` | `NotifierProvider<RewardController, RewardState>` | `RewardState` | Non | Butins post-combat (or, XP, reliques, cartes) |
-| `checkpointProvider` / `autosaveOrchestratorProvider` | `NotifierProvider` / `Provider` | `CheckpointState` | Non | Déclenche l'autosave à la résolution d'un nœud de carte (`checkpoint_controller.dart`) |
+| `checkpointProvider` / `autosaveOrchestratorProvider` | `NotifierProvider` / `Provider` | `int` | Non | Déclenche l'autosave à la résolution d'un nœud de carte (`checkpoint_controller.dart`) |
 | `deckRandomProvider` | `Provider<Random>` | — | Non | Aléatoire de pioche injectable, pour les tests de séquence (`deck_controller.dart`) |
 | `audioDirectorProvider` / `musicConductorProvider` / `audioBackendProvider` | `Provider` | — | Non | Résolution moment → son et scène → musique, et le backend derrière (`services/audio/audio_providers.dart`) — voir [`_patterns/16-00`](16-00-architecture-du-systeme-audio.md) |
 | `audioSettingsProvider` / `audioSettingsHydrationProvider` | `NotifierProvider` / `FutureProvider` | `AudioSettings` | Non | Réglages audio persistés hors de `SaveService` |
-| `notificationProvider` | `StateNotifierProvider` | `List<AppNotification>` | Non | File de toasts, **UI-locale** : seul `StateNotifier` restant du dépôt, sans état métier (`ui/widgets/notification_overlay.dart`) |
+| `notificationProvider` | `StateNotifierProvider` | `List<GameNotification>` | Non | File de toasts, **UI-locale** : seul `StateNotifier` restant du dépôt, sans état métier (`ui/widgets/notification_overlay.dart`) |
 | `effectRegistryProvider` | `Provider<EffectRegistry>` | `EffectRegistry` | Non | Registre d'effets Riverpodisé instanciant les 6 stratégies concrètes d'effets |
 | `gameDataLoaderProvider` | `FutureProvider<GameDataRegistry>` | `GameDataRegistry` | Non | Chargement asynchrone des entités du jeu, déclarées en `EntitySource` et appariées par motif de chemin — voir [`_patterns/17-00`](17-00-chargeur-de-donnees-generique-et-motifs-de-che.md). `patch_notes.json` reste hors de cette chaîne |
 

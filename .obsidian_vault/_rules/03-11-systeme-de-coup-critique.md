@@ -11,7 +11,6 @@ Le coup critique introduit un élément probabiliste d'amplification des effets 
   - **Dégâts des Cartes** (`EffectResolver._calculateDamage`) : Les attaques physiques ou magiques du joueur ont une probabilité égale à `effectiveCritChance` de voir leurs dégâts totaux multipliés par `critMultiplier` (arrondi).
   - **Soins des Cartes** (`EffectResolver.resolveCard` case 'heal') : Les soins appliqués au héros ont une chance de coup critique qui multiplie le soin par `critMultiplier`.
   - **Dégâts des Ennemis** (`CombatController.resolveEnemyIntent` case 'attack') : Les attaques d'intentions des ennemis effectuent également un jet de critique basé sur leur propre `effectiveCritChance`, multipliant les dégâts infligés au héros par leur `critMultiplier`.
-  - **Compétences Héroïques (Skills)** (`HerosDraftGame.executeSkill`) : Les compétences actives du héros (de zone, ciblées, ou perçantes) effectuent également un jet critique pour multiplier leurs dégâts.
 - **Récompenses de Draft de Niveau (Level Up)** :
   - **Précision** : Augmente de façon permanente `critChance` (de +1% à +5% selon la rareté de la récompense).
   - **Férocité** : Augmente de façon permanente `critMultiplier` (en ajoutant de +0.10 à +0.50 au multiplicateur via l'accumulateur `critDamageAcc`).

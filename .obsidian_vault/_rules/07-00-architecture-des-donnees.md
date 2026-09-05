@@ -78,6 +78,6 @@ référence pendante, aucun dossier incomplet.
 ### 7.4. Internationalisation (i18n)
 
 - **UI Flutter** : 100% via `AppLocalizations` (fichiers ARB `app_en.arb`, `app_fr.arb`). Zéro chaîne codée en dur.
-- **Données JSON** : Double-champs bilingues (`nameEn`/`nameFr`, `descriptionEn`/`descriptionFr`). **Aucun champ de texte visible monolingue ne subsiste depuis le 2026-09-04** — le dernier, le `name` unique de `SkillData`, a disparu avec son système. Ce n'est pas la même chose que « les deux paires partout » : `EnemyData` n'a pas de description du tout, et le `name` de `StatusEffect` (`lib/models/status_effect.dart`) est un identifiant technique, traduit à l'affichage.
+- **Données JSON** : Double-champs bilingues (`nameEn`/`nameFr`, `descriptionEn`/`descriptionFr`). **Aucun champ de texte visible monolingue ne subsiste depuis le 2026-09-04** — le dernier modèle qui y manquait a disparu avec son système ([ADR-084](../_adr/ADR-084-suppression-de-la-chaine-de-competences-heroiques.md)). Ce n'est pas la même chose que « les deux paires partout » : `EnemyData` n'a pas de description du tout, et le `name` de `StatusEffect` (`lib/models/status_effect.dart`) est un identifiant technique, traduit à l'affichage.
 - **Méthodes d'accès** : `getName(locale)` sur chaque modèle porteur d'un nom, `getDescription(locale)` sur ceux qui ont une description.
 - **Statuts de combat** : Traduits à la volée par `StatusEffectsPanel` à partir d'identifiants techniques neutres.

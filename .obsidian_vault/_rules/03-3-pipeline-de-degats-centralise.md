@@ -1,6 +1,6 @@
 ### 3.3. ⚔️ Pipeline de Dégâts Centralisé
 
-Le calcul de tous les dégâts physiques et magiques du jeu (cartes offensives du joueur et intentions d'attaque des ennemis) est unifié sous un pipeline de calcul unique représenté par le service `DamagePipeline.calculate` (`lib/game/services/damage_pipeline.dart`).
+Le calcul de tous les dégâts physiques et magiques du jeu (cartes offensives du joueur et intentions d'attaque des ennemis, plus le combat simulé du tutoriel) est unifié sous un pipeline de calcul unique représenté par le service `DamagePipeline.calculate` (`lib/game/services/damage_pipeline.dart`).
 
 Le calcul s'exécute de façon déterministe selon les étapes successives suivantes :
 

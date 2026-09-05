@@ -99,9 +99,9 @@ faire échouer le démarrage — [`_patterns/16-00`](16-00-architecture-du-syste
 | `test/unit/flame_image_prefix_test.dart` | La **collision de clés du cache d'images de Flame**. `Images.prefix` ne fait pas partie des clés : sous un préfixe par dossier, les trois `icon.png` de classes s'écraseraient |
 
 > [!NOTE]
-> **Coût de démarrage relevé le 2026-09-05** : 72 lectures de bundle en **53 ms** en profile,
-> contre un seuil d'alerte fixé à 200 ms. Aucune parallélisation nécessaire. ⚠️ Mesure
-> ponctuelle du chantier : **rien dans le dépôt ne la reproduit ni ne garde ce seuil**.
+> **Coût de démarrage** : mesuré, et sous le seuil d'alerte — aucune parallélisation
+> nécessaire. Le chiffre et sa réserve vivent dans
+> [`_memory_bank/progress.md`](../_memory_bank/progress.md) §Architecture des Données.
 
 Structure des données et règle de partage catalogue / configuration —
 [`_rules/07-00`](../_rules/07-00-architecture-des-donnees.md) et

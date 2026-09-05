@@ -3,13 +3,13 @@
 > [!IMPORTANT]
 > **Plafond : 120 lignes.** Ce fichier est un index, jamais un contenu. Chaque pattern d'architecture vit dans sa fiche sous `../_patterns/`. Les arbitrages qui les ont produits vivent dans `../_adr/`.
 
-**Vérifié le 2026-09-05** — 41 fiches. Provenance du découpage, sections ajoutées et numéros non réattribués (§2.7, §13, §14) : `../_archive/2026-08-25-systemPatterns-historique.md`.
+**Vérifié le 2026-09-05** — 41 fiches. Provenance du découpage, sections ajoutées et numéros non réattribués (§2.7, §13, §14) : `../_archive/2026-09-05-systemPatterns-historique.md` et `../_archive/2026-08-25-systemPatterns-historique.md`.
 
 ### 1. Architecture Globale — Séparation Triangulaire
 
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
-| 1. Architecture Globale — Séparation Triangulaire | [01-00-architecture-globale-separation-triangulaire.md](../_patterns/01-00-architecture-globale-separation-triangulaire.md) | 57 |
+| 1. Architecture Globale — Séparation Triangulaire | [01-00-architecture-globale-separation-triangulaire.md](../_patterns/01-00-architecture-globale-separation-triangulaire.md) | 61 |
 
 ### 2. Rôle des Contrôleurs et Architecture Modulaire (`lib/game/controllers/`)
 
@@ -83,7 +83,7 @@
 
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
-| 9. Architecture du Système de Tutoriel Autonome (Tutorial System Technical Design) | [09-00-architecture-du-systeme-de-tutoriel-autonome.md](../_patterns/09-00-architecture-du-systeme-de-tutoriel-autonome.md) | 134 |
+| 9. Architecture du Système de Tutoriel Autonome (Tutorial System Technical Design) | [09-00-architecture-du-systeme-de-tutoriel-autonome.md](../_patterns/09-00-architecture-du-systeme-de-tutoriel-autonome.md) | 135 |
 
 ### 10. Architecture du Système de Forge et de Fusion de Cartes (Forge & Card Merge Technical Design)
 

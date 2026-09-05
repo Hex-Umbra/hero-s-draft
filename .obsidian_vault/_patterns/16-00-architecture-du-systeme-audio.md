@@ -4,7 +4,7 @@ Trois couches sous `lib/services/audio/` (et non `lib/game/services/` : l'audio 
 aussi bien depuis le combat Flame que depuis des écrans purement Flutter — accueil, boutique,
 draft). Pourquoi ces décisions plutôt que des appels dispersés ou un bus d'événements :
 [ADR-082](../_adr/ADR-082-directeur-audio-central-et-mapping-par-donnees.md). Le catalogue des
-14 moments et la chaîne de repli vivent dans
+moments et la chaîne de repli vivent dans
 [`_rules/09-00`](../_rules/09-00-systeme-audio.md).
 
 ### 16.1. Les trois couches
@@ -38,7 +38,7 @@ draft). Pourquoi ces décisions plutôt que des appels dispersés ou un bus d'é
   (la couche qui l'appelle est en §16.3). `audio` est un **champ**
   `final AudioDirector audio;` de `HerosDraftGame`, rempli **une seule fois** par `GameScreen`
   via `ref.read(audioDirectorProvider)` au moment de la construction du jeu
-  (`game_screen.dart:247`). `HerosDraftGame` n'a structurellement aucun accès à Riverpod : ses
+  (`game_screen.dart:255`). `HerosDraftGame` n'a structurellement aucun accès à Riverpod : ses
   13 autres collaborateurs externes (`onEnemiesDead`, `onPhaseChanged`, `onPlayCard`,
   `onSelectEnemy`... — `heros_draft_game.dart:66-79`) sont déjà des callbacks injectés par
   constructeur, pas des providers lus en interne.

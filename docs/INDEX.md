@@ -5,7 +5,7 @@ ordre ils ont été écrits. C'est un index de navigation — il ne contient **a
 des liens. Si tu cherches une réponse plutôt qu'un document, la table de `CLAUDE.md` (§Documentation
 Map) t'oriente plus vite.
 
-**Dernière mise à jour** : 2026-08-25
+**Dernière mise à jour** : 2026-09-05
 
 ---
 

@@ -12,7 +12,8 @@ déjà produire.* Règles de parcours et contenu pédagogique :
 > [!IMPORTANT]
 > **Zéro provider d'état, un seul provider de données.** Les huit providers de run
 > (`runProvider`, `deckProvider`, `combatProvider`, `inventoryProvider`,
-> `rewardProvider`, `shopProvider`, `eventProvider`, `checkpointProvider`) sont interdits
+> `rewardProvider`, `shopProvider`, `eventProvider`, `checkpointProvider`) sont interdits,
+> ainsi que `GameDataRegistry.instance`,
 > dans tout `lib/tutorial/`. `gameDataLoaderProvider`, qui ne lit que de la donnée
 > immuable, est autorisé **en un point unique** : `tutorial_loader.dart`. Ce n'est pas une
 > affaire de discipline mais de test : `test/tutorial/tutorial_isolation_test.dart` balaie

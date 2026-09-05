@@ -2,13 +2,23 @@
 
 ✅ **Livré le 2026-09-04**, commit `ced306e`, bloc 1 du chantier P-40.
 Retire du jeu un système décrit par [ADR-003](ADR-003-architecture-100-data-driven.md) parmi
-les huit catalogues d'origine. **14 fiches du vault nommaient un de ses symboles** —
-`git grep -lE 'SkillController|SkillState|SkillData|skillProvider|tickCooldowns|triggerSkill|onExecuteSkill|skill_controller|skill_data|skills\.json' ac37596 -- .obsidian_vault/_rules/ .obsidian_vault/_patterns/`
-— et trois de plus le décrivaient en prose sans le nommer (`_rules/03-3`, `_rules/03-13`,
-`_rules/09-1`). `_rules/05-00` et `_patterns/02-7`, entièrement consacrées à lui, sont
-archivées verbatim dans `../_archive/2026-09-05-competences-heroiques.md` ; les autres n'en
-portaient qu'une mention ou une colonne, corrigées sur place, leur reste étant vivant.
-Une première estimation à trois, faite sans lancer ce `grep`, avait manqué les autres.
+les huit catalogues d'origine.
+
+> [!IMPORTANT]
+> **Invariant de purge**, à relancer plutôt qu'à croire sur parole :
+> `grep -rlE 'SkillController|SkillState|SkillData|skillProvider|tickCooldowns|triggerSkill|executeSkill|skill_controller|skill_data|skills\.json' .obsidian_vault/_rules/ .obsidian_vault/_patterns/`
+> **ne doit rien rendre.**
+
+`_rules/05-00` et `_patterns/02-7`, entièrement consacrées à ce système, sont archivées
+verbatim dans `../_archive/2026-09-05-competences-heroiques.md` ; une douzaine d'autres n'en
+portaient qu'une mention, une colonne ou une puce, corrigées sur place, leur reste étant
+vivant.
+
+**Aucun décompte n'est écrit ici, délibérément.** Il a été faux quatre fois : une estimation
+à trois faite sans lancer de `grep`, puis trois motifs différents rendant trois nombres
+différents — dont un qui omettait `executeSkill` et laissait donc `_rules/03-11` derrière lui,
+précisément la fiche qu'il servait à débusquer. Le critère « décrit le système » n'est pas
+décidable par une expression régulière ; l'invariant ci-dessus, lui, l'est.
 
 ### Contexte
 

@@ -41,7 +41,7 @@ Six réserves à ne pas perdre de vue :
   réussit, le site affiche un lien vers un asset absent. Correctif identifié, non fait —
   voir [ADR-080](../_adr/ADR-080-site-vitrine-pilote-par-la-donnee-et-jointure-decl.md).
 - **`systemPatterns.md` est à 122 lignes pour un plafond de 120** qu'il déclare lui-même, et
-  plus rien n'y est archivable. Cause structurelle : 12 de ses 17 sections ne portent qu'une
+  plus rien n'y est archivable. Cause structurelle : 12 de ses 15 sections ne portent qu'une
   fiche et dépensent 6 lignes chacune, titre répété à l'identique entre l'en-tête et la ligne
   de tableau. La prochaine fiche débordera pareil. **Arbitrage au propriétaire** : relever le
   plafond, ou supprimer l'en-tête des sections à fiche unique (−24 lignes).
@@ -57,10 +57,8 @@ Six réserves à ne pas perdre de vue :
    prouvé mordant par trois mutations, puis **refait depuis zéro par la revue de branche** :
    71/71 entités, 0 champ perdu, **7/7** images déplacées MD5-identiques (la 8ᵉ,
    `bg_dungeon.png`, n'a jamais bougé — c'est le 8 des clés du cache Flame, pas celui de la
-   migration). **Ce lot seul** ne casse aucune sauvegarde : rien n'y change d'`id`. Coût de
-   démarrage relevé à **53 ms** pour 72 lectures de bundle en profile, contre un seuil
-   d'alerte de 200 ms — ⚠️ mesure ponctuelle du chantier, **qu'aucun test du dépôt ne
-   reproduit ni ne garde**.
+   migration). **Ce lot seul** ne casse aucune sauvegarde : rien n'y change d'`id`. Coût de démarrage mesuré :
+   voir `progress.md` §Architecture des Données.
    ⚠️ **Le préfixe d'images de Flame doit rester vide** — il ne fait pas partie des clés du
    cache, et un préfixe par dossier ferait s'écraser les trois `icon.png` de classes.
 2. **Réorganisation des données, lots 1-2 — la préparation** (2026-09-04, PR #34) — quatre
@@ -77,10 +75,10 @@ Six réserves à ne pas perdre de vue :
    de `skills.json` ne correspondaient à aucun identifiant réel. **−544 lignes** sur 34
    fichiers, sans migration de sauvegarde — les trois lignes de `save_service.dart` partent
    ensemble, une sauvegarde existante garde une clé jamais relue. Voir
-   [ADR-084](../_adr/ADR-084-suppression-de-la-chaine-de-competences-heroiques.md). **14 fiches
-   du vault nommaient un de ses symboles**, trois de plus le décrivaient en prose : deux
-   archivées, les autres corrigées sur place — une première estimation à trois, faite sans
-   lancer le `grep`, les avait manquées.
+   [ADR-084](../_adr/ADR-084-suppression-de-la-chaine-de-competences-heroiques.md). **Une
+   quinzaine de fiches du vault le décrivaient** : deux archivées, les autres corrigées sur
+   place. Le décompte exact a été faux quatre fois de suite — l'ADR porte désormais un
+   invariant `grep` à relancer, pas un nombre.
    ⚠️ **La façade `RunController.applyLifestealBuff` est sans appelant**, conservée sur
    avertissement explicite pour P-41. **P-26 perd un tiers de son périmètre.**
 
