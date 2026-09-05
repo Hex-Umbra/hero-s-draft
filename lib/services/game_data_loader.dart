@@ -151,7 +151,17 @@ class GameDataLoader {
 
   Future<Map<String, dynamic>?> _read(_Match match) async {
     try {
-      final decoded = jsonDecode(await bundle.loadString(match.key));
+      // `cache: false` : le cache de chaines de `AssetBundle` retourne, pour
+      // une meme cle, le `Future` deja regle de la lecture precedente. Sous
+      // `flutter test`, ce `Future` a ete cree dans la zone d un test qui
+      // s est deja termine ; l attendre depuis un nouveau test (nouveau
+      // `testWidgets`, meme bundle, meme fichier) ne se resout jamais. Impact
+      // reel : `buildTutorialTestRegistry()` relit les memes ~70 fichiers a
+      // chaque appel (`test/tutorial/tutorial_test_registry.dart`), et
+      // `test/widget/tutorial_class_step_test.dart` /
+      // `tutorial_starter_draft_test.dart` en font un par `testWidgets` — la
+      // deuxieme execution se bloquait indefiniment sans `cache: false`.
+      final decoded = jsonDecode(await bundle.loadString(match.key, cache: false));
       if (decoded is! Map<String, dynamic>) {
         _errors.add(
           '${match.key} : le fichier doit contenir un objet JSON, pas un ${decoded.runtimeType}',

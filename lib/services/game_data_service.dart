@@ -11,6 +11,7 @@ import '../models/data/relic_data.dart';
 import '../models/data/forge_upgrade_data.dart';
 import '../models/data/game_data_registry.dart';
 import '../models/data/audio_data.dart';
+import 'game_data_loader.dart';
 
 Future<List<dynamic>> _loadJsonList(String path) async {
   try {
@@ -60,7 +61,14 @@ List<T> _mapList<T>(
 @visibleForTesting
 Future<AudioData> loadAudioData(String path) async {
   try {
-    final String content = await rootBundle.loadString(path);
+    // `cache: false` : `loadGameDataRegistry` (donc `buildTutorialTestRegistry`)
+    // rappelle cette fonction avec le meme `path` a chaque construction de
+    // registre. Le cache de `AssetBundle.loadString` retournerait alors le
+    // `Future` deja regle de l'appel precedent ; sous `flutter test`, ce
+    // `Future` vient de la zone d'un `testWidgets` deja termine et ne se
+    // resout jamais si on l'attend depuis un nouveau test. Voir le meme
+    // correctif sur `GameDataLoader._read` (`game_data_loader.dart`).
+    final String content = await rootBundle.loadString(path, cache: false);
     final decoded = jsonDecode(content);
     if (decoded is! Map<String, dynamic>) {
       debugPrint(
@@ -73,6 +81,103 @@ Future<AudioData> loadAudioData(String path) async {
     debugPrint('[audio] echec de chargement de "$path" : $e, catalogue desactive');
     return const AudioData.disabled();
   }
+}
+
+/// Construit le registre complet : les entites depuis [bundle], l audio
+/// depuis `rootBundle`.
+///
+/// **Unique declaration des huit sources du jeu.** Le provider de production
+/// et le registre des tests du tutoriel passent tous deux par ici : une
+/// seconde declaration serait une seconde verite, et c est exactement ce que
+/// ce chantier supprime.
+///
+/// L audio fait exception au seam : `loadAudioData` lit `rootBundle` en dur
+/// (`game_data_service.dart:63`) et ses propres tests simulent le canal
+/// `flutter/assets` plutot que d injecter un bundle. Sans consequence
+/// aujourd hui — seul `rootBundle` est passe ici — mais l ecrire evite de
+/// promettre un seam complet qui n existe pas.
+///
+/// Le motif de chemin porte la selection ET l injection : `*` vaut un
+/// segment, et les segments captures alimentent `inject`.
+Future<GameDataRegistry> loadGameDataRegistry(AssetBundle bundle) async {
+  final loader = GameDataLoader(bundle);
+
+  // `redundantFields` autorise le fichier a redeclarer un champ injecte, a
+  // l identique. `id` y reste a titre permanent : le porter rend le fichier
+  // lisible hors contexte. `heroClass` et `category` n y sont que le temps de
+  // la migration — la tache de durcissement les en retire.
+  final cards = await loader.loadAll<CardData>([
+    EntitySource(
+      'assets/data/cards/*.json',
+      CardData.fromJson,
+      inject: (c) => {'id': c[0], 'category': 'global'},
+      redundantFields: const {'id', 'category'},
+    ),
+    EntitySource(
+      'assets/data/classes/*/cards/*.json',
+      CardData.fromJson,
+      inject: (c) => {
+        'id': c[1],
+        'heroClass': c[0],
+        'category': 'characterSpecific',
+      },
+      redundantFields: const {'id', 'heroClass', 'category'},
+    ),
+  ]);
+
+  final relics = await loader.loadAll<RelicData>([
+    EntitySource('assets/data/relics/*.json', RelicData.fromJson,
+        inject: (c) => {'id': c[0]}),
+  ]);
+
+  final events = await loader.loadAll<EventData>([
+    EntitySource('assets/data/events/*.json', EventData.fromJson,
+        inject: (c) => {'id': c[0]}),
+  ]);
+
+  final forgeUpgrades = await loader.loadAll<ForgeUpgradeData>([
+    EntitySource('assets/data/forge_upgrades/*.json', ForgeUpgradeData.fromJson,
+        inject: (c) => {'id': c[0]}),
+  ]);
+
+  // Les passifs restent a plat, sans injection d appartenance (decision D4) :
+  // `PassiveData` n a pas de champ `heroClass`, donc une injection y serait
+  // silencieusement jetee par `fromJson` — un no-op qu aucun test ne pourrait
+  // detecter. Et P-41 refait entierement ce modele.
+  final passives = await loader.loadAll<PassiveData>([
+    EntitySource('assets/data/passives/*.json', PassiveData.fromJson,
+        inject: (c) => {'id': c[0]}),
+  ]);
+
+  final heroes = await loader.loadAll<HeroData>([
+    EntitySource('assets/data/classes/*/class.json', HeroData.fromJson,
+        inject: (c) => {'id': c[0]}),
+  ]);
+
+  final enemies = await loader.loadAll<EnemyData>([
+    EntitySource('assets/data/enemies/*/enemy.json', EnemyData.fromJson,
+        inject: (c) => {'id': c[0]}),
+  ]);
+
+  // Une fois seulement, a la fin : les fautes de toutes les categories sont
+  // remontees ensemble. Corriger une faute par cycle de rebuild, sur 72
+  // fichiers, serait invivable.
+  loader.throwIfFailed();
+
+  // L audio est le seul sous-systeme auquel il est interdit de faire echouer
+  // le demarrage : `loadAudioData` ne leve jamais et reste hors du chargeur.
+  final audio = await loadAudioData('assets/data/audio.json');
+
+  return GameDataRegistry(
+    enemies: enemies,
+    heroes: heroes,
+    cards: cards,
+    events: events,
+    passives: passives,
+    relics: relics,
+    forgeUpgrades: forgeUpgrades,
+    audio: audio,
+  );
 }
 
 final gameDataLoaderProvider = FutureProvider<GameDataRegistry>((ref) async {

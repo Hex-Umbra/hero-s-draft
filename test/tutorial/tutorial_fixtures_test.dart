@@ -1,15 +1,23 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
+import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 import 'package:roguelike_card_game/models/data/relic_data.dart';
 import 'package:roguelike_card_game/tutorial/tutorial_fixtures.dart';
 
 import 'tutorial_test_registry.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  late GameDataRegistry data;
   late TutorialFixtures fixtures;
 
+  setUpAll(() async {
+    data = await buildTutorialTestRegistry();
+  });
+
   setUp(() {
-    fixtures = TutorialFixtures(buildTutorialTestRegistry());
+    fixtures = TutorialFixtures(data);
   });
 
   group('Existence des fixtures', () {

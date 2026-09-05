@@ -46,6 +46,7 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
+      final data = await buildTutorialTestRegistry();
       await tester.pumpWidget(
         MaterialApp(
           localizationsDelegates: const [
@@ -56,7 +57,7 @@ void main() {
           ],
           supportedLocales: const [Locale('en', ''), Locale('fr', '')],
           locale: const Locale('fr', ''),
-          home: TutorialScreen(data: buildTutorialTestRegistry()),
+          home: TutorialScreen(data: data),
         ),
       );
       await tester.pump();

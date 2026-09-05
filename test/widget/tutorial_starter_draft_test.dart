@@ -13,7 +13,7 @@ Future<TutorialEngine> _pump(WidgetTester tester) async {
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
 
-  final engine = TutorialEngine(data: buildTutorialTestRegistry());
+  final engine = TutorialEngine(data: await buildTutorialTestRegistry());
   engine.chooseHero(engine.fixtures.heroes.first); // paladin
 
   await tester.pumpWidget(
