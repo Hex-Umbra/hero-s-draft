@@ -10,8 +10,8 @@ déjà produire.* Règles de parcours et contenu pédagogique :
 [`_rules/08-00`](../_rules/08-00-systeme-de-tutoriel-autonome.md).
 
 > [!IMPORTANT]
-> **Zéro provider d'état, un seul provider de données.** Les neuf providers de run
-> (`runProvider`, `deckProvider`, `combatProvider`, `inventoryProvider`, `skillProvider`,
+> **Zéro provider d'état, un seul provider de données.** Les huit providers de run
+> (`runProvider`, `deckProvider`, `combatProvider`, `inventoryProvider`,
 > `rewardProvider`, `shopProvider`, `eventProvider`, `checkpointProvider`) sont interdits
 > dans tout `lib/tutorial/`. `gameDataLoaderProvider`, qui ne lit que de la donnée
 > immuable, est autorisé **en un point unique** : `tutorial_loader.dart`. Ce n'est pas une

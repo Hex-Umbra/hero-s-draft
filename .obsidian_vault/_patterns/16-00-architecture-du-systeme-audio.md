@@ -39,10 +39,10 @@ draft). Pourquoi ces décisions plutôt que des appels dispersés ou un bus d'é
   `final AudioDirector audio;` de `HerosDraftGame`, rempli **une seule fois** par `GameScreen`
   via `ref.read(audioDirectorProvider)` au moment de la construction du jeu
   (`game_screen.dart:247`). `HerosDraftGame` n'a structurellement aucun accès à Riverpod : ses
-  14 autres collaborateurs externes (`onEnemiesDead`, `onPhaseChanged`, `onPlayCard`,
-  `onExecuteSkill`... — `heros_draft_game.dart:61-75`) sont déjà des callbacks injectés par
+  13 autres collaborateurs externes (`onEnemiesDead`, `onPhaseChanged`, `onPlayCard`,
+  `onSelectEnemy`... — `heros_draft_game.dart:66-79`) sont déjà des callbacks injectés par
   constructeur, pas des providers lus en interne.
-- **Pourquoi un champ et pas un quinzième callback.** Un callback par moment de jeu ferait
+- **Pourquoi un champ et pas un quatorzième callback.** Un callback par moment de jeu ferait
   exploser un constructeur déjà large ; le directeur est précisément l'objet conçu pour être
   appelé directement, pas remonté événement par événement.
 - **Couche Riverpod** (contrôleurs : `DeckNotifier`, `TurnPhaseManager`, `PlayerStatsManager`,

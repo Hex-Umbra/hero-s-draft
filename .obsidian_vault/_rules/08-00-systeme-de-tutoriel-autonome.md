@@ -11,16 +11,16 @@ pédagogiques et les annotations visuelles sont écrits en dur. Décision et rat
 ### 8.1. Architecture — zéro provider d'*état*
 
 > [!IMPORTANT]
-> La règle n'est plus « zéro Riverpod » mais **« zéro provider d'état »**. Les neuf providers
+> La règle n'est plus « zéro Riverpod » mais **« zéro provider d'état »**. Les huit providers
 > de run (`runProvider`, `deckProvider`, `combatProvider`, `inventoryProvider`,
-> `skillProvider`, `rewardProvider`, `shopProvider`, `eventProvider`, `checkpointProvider`)
+> `rewardProvider`, `shopProvider`, `eventProvider`, `checkpointProvider`)
 > restent interdits dans `lib/tutorial/` — eux seuls portent un risque d'effet de bord sur la
 > run. `gameDataLoaderProvider`, qui ne lit que de la donnée immuable, est autorisé **en un
 > point unique** : `lib/tutorial/tutorial_loader.dart` (`ConsumerWidget`). Il résout le
 > `FutureProvider`, gère `loading`/`error`, puis passe le `GameDataRegistry` par constructeur
 > à `TutorialScreen` → `TutorialEngine`. Le critère est vérifié par un test, pas seulement
 > documenté : `test/tutorial/tutorial_isolation_test.dart` échoue si un autre fichier du
-> dossier importe `flutter_riverpod` ou nomme un des neuf providers.
+> dossier importe `flutter_riverpod` ou nomme un des huit providers, ou `GameDataRegistry.instance`.
 
 Le moteur (`TutorialEngine`) reste un `ChangeNotifier` Dart simple : il ne gagne aucun
 provider, il possède et mute lui-même les instances qu'il reçoit.

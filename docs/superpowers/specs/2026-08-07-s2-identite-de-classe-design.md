@@ -2,6 +2,16 @@
 
 Date : 2026-08-07
 Statut : **Design validé, non implémenté**
+
+> [!WARNING]
+> **Rebasé le 2026-09-05 sur la structure livrée par P-48.** Cette spec est *opératoire* :
+> ses instructions d'édition de données seront suivies. Les huit catalogues monolithiques
+> n'existent plus — les trois mentions de `heroes.json` ont été réécrites en
+> `assets/data/classes/<id>/class.json`, un fichier par classe. Un champ ajouté à une classe
+> se pose dans **chacun** des trois fichiers ; `heroClass` et `category` ne se déclarent
+> jamais, le répertoire les impose —
+> [ADR-086](../../../.obsidian_vault/_adr/ADR-086-autorite-du-repertoire-avec-expiration-de-la-toler.md).
+> Aucun chiffre ni arbitrage de la spec n'a été touché.
 Chantier ROADMAP : **P-41**, Tier B (`docs/ROADMAP.md` §4) — lot S2 du programme **P-40 → P-44**
 Sources amont :
 - `docs/analysis_reports/05082026_etat_des_lieux_heros_et_cartes_Opus5.md` (diagnostic du 05/08)
@@ -138,7 +148,7 @@ C'est la fondation. Aucun autre élément de S2 ne fonctionne sans elle.
 
 ### 3.2. La forme de la donnée
 
-Une table de redirection dans `heroes.json`, pas une liste de booléens. Le blocage dur et la
+Une table de redirection dans `assets/data/classes/<id>/class.json`, pas une liste de booléens. Le blocage dur et la
 conversion deviennent alors **deux valeurs de la même donnée**, décidées classe par classe :
 
 ```jsonc
@@ -343,7 +353,7 @@ Le blocage est **souple** : les cartes `skill` restent jouables et leurs effets 
 Le même deck ne peut pas viser les deux. C'est ce qui fait du choix de passif une vraie décision.
 
 **M2 est celui qui compte.** Seul passif qui rende la promesse « Orienté Altération » de
-`heroes.json`, il donne à `vulnerable` sa première source, et il ne dépend d'aucune carte —
+`assets/data/classes/<id>/class.json`, il donne à `vulnerable` sa première source, et il ne dépend d'aucune carte —
 R4 est satisfait dès aujourd'hui, avant S3.
 
 Le passif `spellArmor` actuel disparaît. Sa fonction — survivre à 60 PV — est reprise par M3, mais
@@ -377,7 +387,7 @@ rééquilibrage.
 démarre à 0 pour tous (`run_controller.dart:258`, `attaque: 0 // Force de base à 0`).
 **L'écran ment au joueur au moment le plus structurant de la run.**
 
-`baseDamage` est retiré de `heroes.json` et de `HeroData` : le champ n'a aucun consommateur réel
+`baseDamage` est retiré de `assets/data/classes/<id>/class.json` et de `HeroData` : le champ n'a aucun consommateur réel
 côté héros, et le rétablir est explicitement écarté (§10).
 
 L'écran affiche à la place ce qui diffère réellement : PV max, stats de départ non nulles, règles

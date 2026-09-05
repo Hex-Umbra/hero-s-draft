@@ -306,6 +306,12 @@ travail de relecture.
 **ni `heroClass` ni `category`** : le répertoire les injecte, et les déclarer fait échouer le
 chargement. Chaque nouveau dossier impose un `dart run tool/sync_assets.dart`.
 
+**Conséquence pour P-41.** Sa spec est la seule non implémentée à contenir des **instructions
+d'édition de données** ; elle a été rebasée le 2026-09-05. Un champ ajouté à une classe
+(table de redirection de passifs, retrait de `baseDamage`) se pose désormais dans **chacun**
+des trois `assets/data/classes/<id>/class.json`, et non plus en un point d'un catalogue
+unique — il n'existe plus d'endroit où écrire une valeur « pour toutes les classes à la fois ».
+
 #### Vault synchronisé le 2026-09-05
 
 La commande de travail de `memory-bank-sync` est exécutée. ADR-003 n'a **pas** été amendé : la

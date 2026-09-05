@@ -16,7 +16,7 @@
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
 | 2.1. Génération Procédurale de Carte (`MapGeneratorService`) | [02-1-generation-procedurale-de-carte.md](../_rules/02-1-generation-procedurale-de-carte.md) | 55 |
-| 2.2. Système de Héros | [02-2-systeme-de-heros.md](../_rules/02-2-systeme-de-heros.md) | 16 |
+| 2.2. Système de Héros | [02-2-systeme-de-heros.md](../_rules/02-2-systeme-de-heros.md) | 24 |
 | 2.3. Catalogue de Cartes | [02-3-catalogue-de-cartes.md](../_rules/02-3-catalogue-de-cartes.md) | 33 |
 | 2.4. Progression de Rareté Dynamique et Fusion Interactive | [02-4-progression-de-rarete-dynamique-et-fusion-int.md](../_rules/02-4-progression-de-rarete-dynamique-et-fusion-int.md) | 10 |
 | 2.5. Bestiaire | [02-5-bestiaire.md](../_rules/02-5-bestiaire.md) | 48 |
@@ -27,7 +27,7 @@
 
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
-| 3.1. 🔋 Gestion du Mana | [03-1-gestion-du-mana.md](../_rules/03-1-gestion-du-mana.md) | 9 |
+| 3.1. 🔋 Gestion du Mana | [03-1-gestion-du-mana.md](../_rules/03-1-gestion-du-mana.md) | 8 |
 | 3.2. 🛡️ Gestion de l'Armure | [03-2-gestion-de-l-armure.md](../_rules/03-2-gestion-de-l-armure.md) | 20 |
 | 3.3. ⚔️ Pipeline de Dégâts Centralisé | [03-3-pipeline-de-degats-centralise.md](../_rules/03-3-pipeline-de-degats-centralise.md) | 20 |
 | 3.4. 🃏 Système de Piles de Cartes | [03-4-systeme-de-piles-de-cartes.md](../_rules/03-4-systeme-de-piles-de-cartes.md) | 60 |
@@ -69,7 +69,7 @@
 
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
-| 9. Système Audio | [09-00-systeme-audio.md](../_rules/09-00-systeme-audio.md) | 118 |
+| 9. Système Audio | [09-00-systeme-audio.md](../_rules/09-00-systeme-audio.md) | 117 |
 | 9.1. Catalogue des moments et de leurs déclencheurs | [09-1-catalogue-des-moments.md](../_rules/09-1-catalogue-des-moments.md) | 73 |
 
 ---
