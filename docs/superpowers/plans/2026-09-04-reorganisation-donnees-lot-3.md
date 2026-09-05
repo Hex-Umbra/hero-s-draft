@@ -757,7 +757,18 @@ class GameDataLoader {
 
   Future<Map<String, dynamic>?> _read(_Match match) async {
     try {
-      final decoded = jsonDecode(await bundle.loadString(match.key));
+      // `cache: false` parce que le cache d `AssetBundle` serait une seconde
+      // verite : le registre EST le cache, et un rechargement doit relire le
+      // disque. C est d ailleurs ce que fait le SDK lui-meme —
+      // `CachingAssetBundle.loadStructuredData` appelle `loadString(key,
+      // cache: false)` pour cette raison exacte (`asset_bundle.dart:219`).
+      //
+      // Sans ce drapeau, le devtool d edition du chantier suivant relirait des
+      // fichiers perimes sans acces disque, en silence. Et sous `flutter test`
+      // c est pire : `_stringCache` retient le `Future` (pas la chaine), lie a
+      // la zone `FakeAsync` du `testWidgets` qui l a cree ; l attendre depuis
+      // un test suivant ne se resout **jamais** — interblocage, pas lenteur.
+      final decoded = jsonDecode(await bundle.loadString(match.key, cache: false));
       if (decoded is! Map<String, dynamic>) {
         _errors.add(
           '${match.key} : le fichier doit contenir un objet JSON, pas un ${decoded.runtimeType}',
@@ -1894,6 +1905,14 @@ Cette tâche crée aussi `loadGameDataRegistry(bundle)` : **l'unique endroit où
 > **La délégation change aussi le contenu du registre, pas seulement sa forme.** `buildTutorialTestRegistry` rend aujourd'hui `events: const []` et `forgeUpgrades: const []` (`tutorial_test_registry.dart:31, 34`) ; après délégation il rendra les 5 événements et les 8 améliorations réels. **Aucune assertion des cinq fichiers appelants n'en dépend** — vérifié — donc l'étape reste verte, et le registre gagne en fidélité. Conséquence secondaire à connaître : chaque `testWidgets` des deux fichiers de `test/widget/` fait désormais ~72 lectures de bundle au lieu de 6 lectures `dart:io`. Si la durée de ces tests devient gênante, c'est le passage en `setUpAll` de ces deux fichiers qui la réglera — pas un retour en arrière.
 
 > **Piège du singleton.** `GameDataRegistry` fait `_instance = this` dans son constructeur (`game_data_registry.dart:33`), et les quatre `getById` lisent ce global. **Tout test qui construit deux registres écrase silencieusement le premier.** D'où `setUpAll` et non `setUp` : un registre par fichier de test, construit une fois.
+
+> **Piège du cache de bundle — découvert à l'exécution, corrigé dans `7672c32`.** Cette tâche est la première à construire **plusieurs** registres depuis le vrai bundle dans un même fichier de test. `CachingAssetBundle.loadString` mémorise le **`Future`**, pas la chaîne (`asset_bundle.dart:191-196`), et ce `Future` reste lié à la zone `FakeAsync` du `testWidgets` qui l'a créé. L'attendre depuis un test suivant **ne se résout jamais** : un interblocage permanent, pas une lenteur.
+>
+> Le correctif est `cache: false` aux deux sites que `loadGameDataRegistry` atteint — `GameDataLoader._read` et `loadAudioData` — et **ce n'est pas un accommodement de test** : le registre est déjà le cache, et le devtool d'édition du chantier suivant relirait sinon des fichiers périmés sans accès disque. Le SDK tranche pareil (`CachingAssetBundle.loadStructuredData` appelle lui-même `loadString(key, cache: false)`).
+>
+> `AssetManifest.loadFromAssetBundle` échappe au piège : `loadStructuredBinaryData` remplace son entrée de cache par un `SynchronousFuture`, dont le `then` s'exécute dans la zone de l'appelant. C'est la seule différence, et c'est elle qui décide.
+>
+> Coût en production : nul. Les ~40 Ko de JSON ne sont plus retenus pour la vie du processus, et `loadGameDataRegistry` ne s'exécute qu'une fois au démarrage.
 
 - [ ] **Step 1: Déclarer les sources et le constructeur de registre**
 
