@@ -328,6 +328,56 @@ void main() {
       // Le chemin du sprite est calcule, jamais saisi.
       expect(decoded['spritePath'], 'assets/data/enemies/troll/sprite.png');
     });
+
+    test('l image de remplacement est deposee sous le nom attendu', () async {
+      // Le bac a sable doit porter une copie du placeholder, comme le depot.
+      Directory('$root/assets/images').createSync(recursive: true);
+      File('assets/images/placeholder_entity.png')
+          .copySync('$root/assets/images/placeholder_entity.png');
+
+      final descriptor = kEntityDescriptors[EntityCategory.enemy]!;
+      await writerHere().write(
+        EntityDraft(
+          descriptor: descriptor,
+          id: 'troll',
+          bilingual: const {'name_fr': 'Troll', 'name_en': 'Troll'},
+          mechanics: descriptor.template,
+        ),
+      );
+
+      final sprite = File('$root/assets/data/enemies/troll/sprite.png');
+      expect(sprite.existsSync(), isTrue);
+      expect(sprite.lengthSync(), greaterThan(0));
+    });
+
+    test('une image deja presente n est jamais ecrasee', () async {
+      Directory('$root/assets/images').createSync(recursive: true);
+      File('assets/images/placeholder_entity.png')
+          .copySync('$root/assets/images/placeholder_entity.png');
+      Directory('$root/assets/data/enemies/troll').createSync(recursive: true);
+      File('$root/assets/data/enemies/troll/sprite.png')
+          .writeAsStringSync('image peinte a la main');
+
+      final descriptor = kEntityDescriptors[EntityCategory.enemy]!;
+      await writerHere().write(
+        EntityDraft(
+          descriptor: descriptor,
+          id: 'troll',
+          bilingual: const {'name_fr': 'Troll', 'name_en': 'Troll'},
+          mechanics: descriptor.template,
+        ),
+      );
+
+      expect(
+        File('$root/assets/data/enemies/troll/sprite.png').readAsStringSync(),
+        'image peinte a la main',
+      );
+    });
+
+    test('une categorie a plat ne recoit aucune image', () async {
+      await writerHere().write(fixtureRelicDraft());
+      expect(Directory('$root/assets/data/relics').listSync(), hasLength(1));
+    });
   });
 }
 

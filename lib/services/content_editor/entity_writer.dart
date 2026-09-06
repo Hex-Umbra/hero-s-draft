@@ -6,6 +6,10 @@ import 'content_file_system.dart';
 import 'entity_descriptor.dart';
 import 'entity_draft.dart';
 
+/// L'image deposee dans un dossier de classe ou d'ennemi nouvellement cree.
+/// Un carre magenta volontairement laid : oublier de le remplacer doit se voir.
+const String kPlaceholderImage = 'assets/images/placeholder_entity.png';
+
 /// Ce qui a ete ecrit, et ce qu'il reste a faire cote humain.
 @immutable
 class WriteReport {
@@ -77,6 +81,7 @@ class EntityWriter {
   /// classe et l'ennemi y ajoutent leur image.
   void _writeFiles(EntityDraft draft, List<WriteStep> steps) {
     _prepareFolder(draft);
+    _placeImage(draft);
     _writeJson(draft.path, draft.compose(), steps);
     _registerSignatureCard(draft, steps);
   }
@@ -97,6 +102,25 @@ class EntityWriter {
     if (descriptor.category == EntityCategory.heroClass) {
       fs.createDirectory('$folder/cards');
     }
+  }
+
+  /// Depose l'image de remplacement, **si et seulement si aucune n'est deja
+  /// la**. Une image peinte a la main ne doit jamais etre ecrasee par un carre
+  /// magenta.
+  ///
+  /// Elle n'est deliberement pas defaite par [_rollback] : un placeholder
+  /// laisse dans un dossier neuf est sans consequence, la ou une suppression
+  /// pourrait emporter une image legitime.
+  void _placeImage(EntityDraft draft) {
+    final relative = draft.descriptor.imagePathOf(draft.id);
+    if (relative == null) return;
+
+    final absolute = '$rootPath/$relative';
+    if (fs.fileExists(absolute)) return;
+
+    final source = '$rootPath/$kPlaceholderImage';
+    if (!fs.fileExists(source)) return; // rien a copier : on n'invente pas
+    fs.copyFile(source, absolute);
   }
 
   /// Une carte de classe **est** une carte de signature.
