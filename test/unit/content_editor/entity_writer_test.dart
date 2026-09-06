@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/services/content_editor/content_file_system.dart';
 import 'package:roguelike_card_game/services/content_editor/content_file_system_io.dart';
+import 'package:roguelike_card_game/services/content_editor/entity_descriptor.dart';
+import 'package:roguelike_card_game/services/content_editor/entity_draft.dart';
 import 'package:roguelike_card_game/services/content_editor/entity_writer.dart';
 
 import 'fixtures.dart';
@@ -146,6 +148,186 @@ void main() {
     // le rollback ne restaurait pas exactement l ancien, ce serait ce
     // nouveau contenu — fautif — qui resterait en place.
     expect(flaky.files[path], original);
+  });
+
+  /// Monte une classe minimale dans le bac a sable, comme le depot la porte.
+  void seedClass(String id, {List<String> skills = const []}) {
+    Directory('$root/assets/data/classes/$id/cards').createSync(recursive: true);
+    File('$root/assets/data/classes/$id/class.json').writeAsStringSync(
+      jsonEncode({
+        'id': id,
+        'name_en': 'X',
+        'name_fr': 'X',
+        'description_en': 'x',
+        'description_fr': 'x',
+        'iconPath': 'assets/data/classes/$id/icon.png',
+        'maxHp': 100,
+        'maxMana': 3,
+        'baseDamage': 5,
+        'skills': skills,
+      }),
+    );
+  }
+
+  EntityDraft classCardDraft(String id, String heroClass) {
+    final descriptor = kEntityDescriptors[EntityCategory.card]!;
+    return EntityDraft(
+      descriptor: descriptor,
+      id: id,
+      heroClass: heroClass,
+      bilingual: const {
+        'name_fr': 'Frappe',
+        'name_en': 'Strike',
+        'description_fr': 'Inflige 6 degats.',
+        'description_en': 'Deal 6 damage.',
+      },
+      mechanics: descriptor.template,
+    );
+  }
+
+  group('carte de classe', () {
+    test('ecrit la carte ET declare son identifiant dans skills', () async {
+      seedClass('paladin', skills: ['smite']);
+
+      final report =
+          await writerHere().write(classCardDraft('coup_saint', 'paladin'));
+
+      expect(
+        File('$root/assets/data/classes/paladin/cards/coup_saint.json')
+            .existsSync(),
+        isTrue,
+      );
+      final classJson = jsonDecode(
+        File('$root/assets/data/classes/paladin/class.json').readAsStringSync(),
+      ) as Map<String, dynamic>;
+      expect(classJson['skills'], ['coup_saint', 'smite']);
+      expect(report.written, hasLength(2));
+    });
+
+    test('le dossier cards et skills restent en bijection', () async {
+      seedClass('paladin');
+      await writerHere().write(classCardDraft('un', 'paladin'));
+      await writerHere().write(classCardDraft('deux', 'paladin'));
+
+      final onDisk = Directory('$root/assets/data/classes/paladin/cards')
+          .listSync()
+          .whereType<File>()
+          // Meme filtre que `referential_integrity_test` : Windows y laisse
+          // trainer Thumbs.db/desktop.ini, non couverts par .gitignore. Sans
+          // lui ce test ne serait pas la meme garde que celle qu'il imite.
+          .where((f) => f.path.endsWith('.json'))
+          .map((f) => f.uri.pathSegments.last.replaceAll('.json', ''))
+          .toSet();
+      final classJson = jsonDecode(
+        File('$root/assets/data/classes/paladin/class.json').readAsStringSync(),
+      ) as Map<String, dynamic>;
+
+      // La forme exacte de l'assertion de `referential_integrity_test`.
+      expect(onDisk, (classJson['skills'] as List).toSet());
+    });
+
+    test('une classe sans class.json ne laisse pas la carte derriere elle',
+        () async {
+      Directory('$root/assets/data/classes/fantome/cards')
+          .createSync(recursive: true);
+
+      await expectLater(
+        writerHere().write(classCardDraft('orpheline', 'fantome')),
+        throwsA(isA<StateError>()),
+      );
+
+      // Les deux fichiers, ou aucun : la carte a ete defaite.
+      expect(
+        File('$root/assets/data/classes/fantome/cards/orpheline.json')
+            .existsSync(),
+        isFalse,
+      );
+    });
+
+    test('modifier une carte ne retouche pas skills', () async {
+      seedClass('paladin');
+      await writerHere().write(classCardDraft('coup_saint', 'paladin'));
+
+      final before =
+          File('$root/assets/data/classes/paladin/class.json').readAsStringSync();
+      final report = await writerHere().write(
+        EntityDraft(
+          descriptor: kEntityDescriptors[EntityCategory.card]!,
+          id: 'coup_saint',
+          heroClass: 'paladin',
+          isModification: true,
+          bilingual: const {
+            'name_fr': 'Frappe renforcee',
+            'name_en': 'Greater Strike',
+            'description_fr': 'Inflige 9 degats.',
+            'description_en': 'Deal 9 damage.',
+          },
+          mechanics: '{"cost": 2, "type": "attack", "rarity": "common", '
+              '"target": "singleEnemy", "effects": '
+              '[{"type": "damage", "value": 9}]}',
+        ),
+      );
+
+      expect(report.written, hasLength(1));
+      expect(
+        File('$root/assets/data/classes/paladin/class.json').readAsStringSync(),
+        before,
+      );
+    });
+
+    test('une carte deja declaree n est pas ajoutee deux fois', () async {
+      seedClass('paladin', skills: ['coup_saint']);
+      await writerHere().write(classCardDraft('coup_saint', 'paladin'));
+
+      final classJson = jsonDecode(
+        File('$root/assets/data/classes/paladin/class.json').readAsStringSync(),
+      ) as Map<String, dynamic>;
+      expect(classJson['skills'], ['coup_saint']);
+    });
+  });
+
+  group('categories en dossier', () {
+    test('une classe nait avec un sous-dossier cards vide', () async {
+      final descriptor = kEntityDescriptors[EntityCategory.heroClass]!;
+      await writerHere().write(
+        EntityDraft(
+          descriptor: descriptor,
+          id: 'barde',
+          bilingual: const {
+            'name_fr': 'Le Barde',
+            'name_en': 'The Bard',
+            'description_fr': 'Oriente soutien',
+            'description_en': 'Support oriented',
+          },
+          mechanics: descriptor.template,
+        ),
+      );
+
+      final cards = Directory('$root/assets/data/classes/barde/cards');
+      // Sans ce dossier, `referential_integrity_test` **leve** au lieu
+      // d'echouer : `listSync()` y est appele sans garde.
+      expect(cards.existsSync(), isTrue);
+      expect(cards.listSync(), isEmpty);
+    });
+
+    test('un ennemi nait dans son propre dossier', () async {
+      final descriptor = kEntityDescriptors[EntityCategory.enemy]!;
+      await writerHere().write(
+        EntityDraft(
+          descriptor: descriptor,
+          id: 'troll',
+          bilingual: const {'name_fr': 'Troll', 'name_en': 'Troll'},
+          mechanics: descriptor.template,
+        ),
+      );
+
+      final written = File('$root/assets/data/enemies/troll/enemy.json');
+      expect(written.existsSync(), isTrue);
+      final decoded =
+          jsonDecode(written.readAsStringSync()) as Map<String, dynamic>;
+      // Le chemin du sprite est calcule, jamais saisi.
+      expect(decoded['spritePath'], 'assets/data/enemies/troll/sprite.png');
+    });
   });
 }
 

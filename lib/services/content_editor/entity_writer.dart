@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:meta/meta.dart';
 
 import 'content_file_system.dart';
+import 'entity_descriptor.dart';
 import 'entity_draft.dart';
 
 /// Ce qui a ete ecrit, et ce qu'il reste a faire cote humain.
@@ -73,10 +74,60 @@ class EntityWriter {
   }
 
   /// Empile les ecritures dans [steps]. Les tâches suivantes l'etendent : la
-  /// carte de classe y ajoute `class.json`, la classe et l'ennemi leur dossier
-  /// et leur image.
+  /// classe et l'ennemi y ajoutent leur image.
   void _writeFiles(EntityDraft draft, List<WriteStep> steps) {
+    _prepareFolder(draft);
     _writeJson(draft.path, draft.compose(), steps);
+    _registerSignatureCard(draft, steps);
+  }
+
+  /// Une classe et un ennemi sont des **dossiers**, qu'il faut creer avant
+  /// d'y ecrire.
+  ///
+  /// Celui d'une classe porte en outre un sous-dossier `cards/`, **meme
+  /// vide** : `referential_integrity_test` y appelle `listSync()` sans garde,
+  /// et un dossier absent le fait *lever*. Ce n'est alors pas ce test qui
+  /// echoue, c'est toute la suite qui tombe.
+  void _prepareFolder(EntityDraft draft) {
+    final descriptor = draft.descriptor;
+    if (descriptor.folderFile == null || draft.isModification) return;
+
+    final folder = '$rootPath/assets/data/${descriptor.directory}/${draft.id}';
+    fs.createDirectory(folder);
+    if (descriptor.category == EntityCategory.heroClass) {
+      fs.createDirectory('$folder/cards');
+    }
+  }
+
+  /// Une carte de classe **est** une carte de signature.
+  ///
+  /// `referential_integrity_test` exige que le contenu du dossier `cards/`
+  /// soit exactement egal au tableau `skills` de la classe. Une carte ajoutee
+  /// seule y serait orpheline et ferait rougir la suite — a tous les coups, et
+  /// jamais au moment de l'ecriture. Les deux fichiers, ou aucun.
+  void _registerSignatureCard(EntityDraft draft, List<WriteStep> steps) {
+    final heroClass = draft.heroClass;
+    if (heroClass == null || draft.isModification) return;
+
+    final relative = 'assets/data/classes/$heroClass/class.json';
+    final absolute = '$rootPath/$relative';
+    if (!fs.fileExists(absolute)) {
+      throw StateError(
+        'la classe "$heroClass" n a pas de class.json : sa carte de signature '
+        'ne peut pas y etre declaree',
+      );
+    }
+
+    final document = jsonDecode(fs.readFile(absolute)) as Map<String, dynamic>;
+    final skills = List<String>.from(document['skills'] as List? ?? const []);
+    if (skills.contains(draft.id)) return;
+
+    skills.add(draft.id);
+    // Trie pour que l'ordre ne depende pas de celui des ajouts : le diff d'une
+    // classe reste lisible d'une carte a l'autre.
+    skills.sort();
+    document['skills'] = skills;
+    _writeJson(relative, document, steps);
   }
 
   void _writeJson(
