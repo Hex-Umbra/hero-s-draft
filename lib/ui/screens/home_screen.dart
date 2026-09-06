@@ -5,6 +5,7 @@ import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../game/controllers/debug_run_controller.dart';
 import 'class_selection_screen.dart';
 import 'card_dictionary_screen.dart';
+import 'content_editor_screen.dart';
 import 'patch_notes_screen.dart';
 import 'settings_screen.dart';
 import 'map_screen.dart';
@@ -226,6 +227,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   onPressed: _startDebugRun,
                                   child: const Text(
                                     'RUN DEBUG',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 40,
+                                      vertical: 14,
+                                    ),
+                                    backgroundColor: Colors.teal,
+                                    textStyle: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  onPressed: () => Navigator.of(context).push(
+                                    MaterialPageRoute<void>(
+                                      builder: (_) =>
+                                          const ContentEditorScreen(),
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    'EDITEUR DE CONTENU',
                                     style: TextStyle(color: Colors.white),
                                   ),
                                 ),
