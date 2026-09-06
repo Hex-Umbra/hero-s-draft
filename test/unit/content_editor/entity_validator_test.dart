@@ -150,36 +150,204 @@ void main() {
     });
   });
 
-  test('le gabarit de chaque categorie franchit les trois premieres familles',
-      () {
-    // Un gabarit qui ne passerait pas sa propre validation serait un piege
-    // servi a l'utilisateur des l'ouverture de l'ecran. Couvre les sept
-    // categories, pas seulement la relique : une carte n'a pas les memes
-    // cles obligatoires qu'un evenement, et un gabarit fautif pour l'une
-    // d'elles passerait inapercu si le test n'en jugeait qu'une seule.
-    for (final descriptor in kEntityDescriptors.values) {
-      // Les bases bilingues varient par categorie — un evenement porte
-      // `title_*`, un ennemi n'a pas de description — d'ou leur lecture sur
-      // le descripteur plutot qu'une liste de cles ecrite en dur ici.
-      final bilingual = {
-        for (final base in descriptor.bilingualBases) ...{
-          '${base}_fr': 'x',
-          '${base}_en': 'x',
+  group('famille 4 — enumerations', () {
+    test('une rarete inconnue est refusee, et les valeurs admises listees', () {
+      final faults = validatorWith().validate(
+        fixtureRelicDraft(
+          mechanics: '{"trigger": "startOfCombat", "effectType": "gain_armor", '
+              '"value": 5, "rarity": "commune"}',
+        ),
+      );
+      expect(faults, hasLength(1));
+      expect(faults.first.field, 'rarity');
+      expect(faults.first.message, contains('legendary'));
+    });
+
+    test('c est bien ce que fromJson laisse passer', () {
+      // Le point de la famille 4. Le meme document construit sans lever :
+      // `RelicRarity.values.firstWhere` n'a pas d'`orElse` pour `rarity`, mais
+      // `CardRarity` en a un — la carte retombe en silence sur `common`.
+      final descriptor = kEntityDescriptors[EntityCategory.card]!;
+      final draft = EntityDraft(
+        descriptor: descriptor,
+        id: 'coup_bas',
+        bilingual: const {
+          'name_fr': 'x',
+          'name_en': 'x',
+          'description_fr': 'x',
+          'description_en': 'x',
         },
-      };
+        mechanics: '{"cost": 1, "type": "attack", "rarity": "commune"}',
+      );
+
+      // `fromJson` accepte, donc la famille 7 seule ne verrait rien…
+      expect(() => descriptor.construct(draft.compose()), returnsNormally);
+      // …et pourtant la famille 4 refuse.
+      final faults = validatorWith().validate(draft);
+      expect(faults, hasLength(1));
+      expect(faults.first.field, 'rarity');
+    });
+
+    test('une liste enumeree est verifiee element par element', () {
+      final descriptor = kEntityDescriptors[EntityCategory.forgeUpgrade]!;
+      final faults = validatorWith().validate(
+        EntityDraft(
+          descriptor: descriptor,
+          id: 'affutage',
+          bilingual: const {
+            'name_fr': 'x',
+            'name_en': 'x',
+            'description_fr': 'x',
+            'description_en': 'x',
+          },
+          mechanics: '{"pools": ["common"], '
+              '"eligibleCardTypes": ["attack", "sortilege"]}',
+        ),
+      );
+      expect(faults, hasLength(1));
+      expect(faults.first.field, 'eligibleCardTypes');
+      expect(faults.first.message, contains('sortilege'));
+    });
+  });
+
+  group('famille 5 — bilingue', () {
+    test('une variante absente est refusee', () {
+      final faults = validatorWith().validate(
+        fixtureRelicDraft(
+          bilingual: const {
+            'name_fr': 'Talisman',
+            'name_en': 'Talisman',
+            'description_fr': 'Donne 5 armure.',
+          },
+        ),
+      );
+      expect(faults.map((f) => f.field), contains('description_en'));
+    });
+
+    test('une variante vide ou blanche est refusee', () {
+      final faults = validatorWith().validate(
+        fixtureRelicDraft(
+          bilingual: const {
+            'name_fr': 'Talisman',
+            'name_en': '   ',
+            'description_fr': 'Donne 5 armure.',
+            'description_en': 'Gain 5 armor.',
+          },
+        ),
+      );
+      expect(faults.map((f) => f.field), contains('name_en'));
+    });
+
+    test('c est bien ce que fromJson laisse passer', () {
+      // `RelicData.fromJson` retombe sur la chaine vide : la relique existe,
+      // et elle est sans nom en jeu.
+      final draft = fixtureRelicDraft(
+        bilingual: const {
+          'name_fr': 'Talisman',
+          'name_en': 'Talisman',
+          'description_fr': 'Donne 5 armure.',
+        },
+      );
+      expect(
+        () => draft.descriptor.construct(draft.compose()),
+        returnsNormally,
+      );
+      expect(validatorWith().validate(draft), isNotEmpty);
+    });
+
+    test('un ennemi n exige pas de description', () {
+      // La preuve que les bases bilingues sont par categorie et non
+      // universelles : `EnemyData` n'a que des noms.
+      final descriptor = kEntityDescriptors[EntityCategory.enemy]!;
+      final faults = validatorWith().validate(
+        EntityDraft(
+          descriptor: descriptor,
+          id: 'troll',
+          bilingual: const {'name_fr': 'Troll', 'name_en': 'Troll'},
+          mechanics: descriptor.template,
+        ),
+      );
+      expect(faults, isEmpty);
+    });
+  });
+
+  group('famille 6 — references', () {
+    test('un passiveTrait pendant est refuse', () {
+      final descriptor = kEntityDescriptors[EntityCategory.heroClass]!;
+      final faults = validatorWith(
+        registry: fixtureRegistry(passives: [fixturePassive('regen_armor')]),
+      ).validate(
+        EntityDraft(
+          descriptor: descriptor,
+          id: 'barde',
+          bilingual: const {
+            'name_fr': 'Le Barde',
+            'name_en': 'The Bard',
+            'description_fr': 'Oriente soutien',
+            'description_en': 'Support oriented',
+          },
+          mechanics: '{"maxHp": 90, "maxMana": 3, "baseDamage": 4, '
+              '"passiveTrait": "chant_inexistant"}',
+        ),
+      );
+      expect(faults, hasLength(1));
+      expect(faults.first.field, 'passiveTrait');
+    });
+
+    test('un passiveTrait resolu passe', () {
+      final descriptor = kEntityDescriptors[EntityCategory.heroClass]!;
+      final faults = validatorWith(
+        registry: fixtureRegistry(passives: [fixturePassive('regen_armor')]),
+      ).validate(
+        EntityDraft(
+          descriptor: descriptor,
+          id: 'barde',
+          bilingual: const {
+            'name_fr': 'Le Barde',
+            'name_en': 'The Bard',
+            'description_fr': 'Oriente soutien',
+            'description_en': 'Support oriented',
+          },
+          mechanics: '{"maxHp": 90, "maxMana": 3, "baseDamage": 4, '
+              '"passiveTrait": "regen_armor"}',
+        ),
+      );
+      expect(faults, isEmpty);
+    });
+  });
+
+  group('famille 7 — construction', () {
+    test('un type de mauvaise nature est attrape par le modele', () {
+      final faults = validatorWith().validate(
+        fixtureRelicDraft(
+          mechanics: '{"trigger": "startOfCombat", "effectType": "gain_armor", '
+              '"value": "cinq", "rarity": "common"}',
+        ),
+      );
+      expect(faults, hasLength(1));
+      expect(faults.first.message, contains('refuse'));
+    });
+  });
+
+  test('tous les gabarits franchissent les sept familles', () {
+    // Chaque categorie est testee avec sa prose minimale : un gabarit qui ne
+    // passerait pas sa propre validation serait un piege servi a l'ouverture.
+    for (final descriptor in kEntityDescriptors.values) {
       final draft = EntityDraft(
         descriptor: descriptor,
         id: 'entite_de_test',
-        bilingual: bilingual,
+        bilingual: {
+          for (final base in descriptor.bilingualBases) ...{
+            '${base}_fr': 'texte',
+            '${base}_en': 'text',
+          },
+        },
         mechanics: descriptor.template,
       );
-
-      final faults = validatorWith().validate(draft);
       expect(
-        faults,
+        validatorWith().validate(draft),
         isEmpty,
-        reason: '${descriptor.label} (${descriptor.category.name}) : '
-            '${faults.join(', ')}',
+        reason: '${descriptor.label} : ${validatorWith().validate(draft)}',
       );
     }
   });

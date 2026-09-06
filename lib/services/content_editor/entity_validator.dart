@@ -63,7 +63,17 @@ class EntityValidator {
       return [ValidationFault('JSON invalide : ${e.message}')];
     }
 
-    return _keys(draft, mechanics);
+    for (final family in <List<ValidationFault> Function()>[
+      () => _keys(draft, mechanics),
+      () => _enums(draft, mechanics),
+      () => _bilingual(draft),
+      () => _references(draft, mechanics),
+      () => _construct(draft),
+    ]) {
+      final faults = family();
+      if (faults.isNotEmpty) return faults;
+    }
+    return const [];
   }
 
   /// Famille 1 — l'identifiant, sa forme, et son unicite.
@@ -152,6 +162,121 @@ class EntityValidator {
     }
 
     return faults;
+  }
+
+  /// Famille 4 — les valeurs enumerees, contre les enumerations Dart reelles.
+  ///
+  /// **C'est le controle que `fromJson` avale** : `CardRarity`, `CardTarget` et
+  /// `CardCategory` ont un `orElse` qui retombe en silence sur une valeur par
+  /// defaut. La carte existe alors, et elle est fausse.
+  List<ValidationFault> _enums(
+    EntityDraft draft,
+    Map<String, dynamic> mechanics,
+  ) {
+    final faults = <ValidationFault>[];
+
+    draft.descriptor.enumKeys.forEach((key, allowed) {
+      final value = mechanics[key];
+      if (value == null) return; // absente : c'est l'affaire de la famille 3
+      if (value is! String || !allowed.contains(value)) {
+        faults.add(
+          ValidationFault(
+            'valeur inconnue "$value" — attendu : ${allowed.join(', ')}',
+            field: key,
+          ),
+        );
+      }
+    });
+
+    draft.descriptor.enumListKeys.forEach((key, allowed) {
+      final value = mechanics[key];
+      if (value == null) return;
+      if (value is! List) {
+        faults.add(ValidationFault('doit etre une liste', field: key));
+        return;
+      }
+      for (final element in value) {
+        if (element is! String || !allowed.contains(element)) {
+          faults.add(
+            ValidationFault(
+              'valeur inconnue "$element" — attendu : ${allowed.join(', ')}',
+              field: key,
+            ),
+          );
+        }
+      }
+    });
+
+    return faults;
+  }
+
+  /// Famille 5 — les deux variantes linguistiques, presentes et non vides.
+  ///
+  /// Les bases ne sont **pas** les memes partout : un evenement porte `title`,
+  /// un ennemi n'a pas de description. C'est le descripteur qui le dit.
+  List<ValidationFault> _bilingual(EntityDraft draft) {
+    final faults = <ValidationFault>[];
+    for (final base in draft.descriptor.bilingualBases) {
+      for (final suffix in const ['fr', 'en']) {
+        final key = '${base}_$suffix';
+        if ((draft.bilingual[key] ?? '').trim().isEmpty) {
+          faults.add(
+            ValidationFault(
+              'les deux variantes linguistiques sont exigees, et non vides',
+              field: key,
+            ),
+          );
+        }
+      }
+    }
+    return faults;
+  }
+
+  /// Famille 6 — les references vers une autre categorie.
+  ///
+  /// `passiveTrait` doit designer un passif existant : `referential_integrity_test`
+  /// le verifie deja, et une reference pendante ferait rougir la suite bien
+  /// apres l'ecriture.
+  List<ValidationFault> _references(
+    EntityDraft draft,
+    Map<String, dynamic> mechanics,
+  ) {
+    final faults = <ValidationFault>[];
+    draft.descriptor.referenceKeys.forEach((key, category) {
+      final value = mechanics[key];
+      if (value == null) return; // la cle est optionnelle
+      final ids = _idsOf(category);
+      if (ids == null) return; // registre indisponible : on ne devine pas
+      if (value is! String || !ids.contains(value)) {
+        faults.add(
+          ValidationFault(
+            'aucune entite de la categorie '
+            '"${kEntityDescriptors[category]!.label}" ne porte l identifiant '
+            '"$value"',
+            field: key,
+          ),
+        );
+      }
+    });
+    return faults;
+  }
+
+  /// Famille 7 — le filet structurel, en dernier.
+  ///
+  /// Elle attrape ce que les six autres n'ont pas prevu : un `cost` textuel,
+  /// un `choices` absent, un effet malforme. Elle ne les remplace pas — les
+  /// familles 4 et 5 existent precisement parce qu'elle est trop permissive.
+  List<ValidationFault> _construct(EntityDraft draft) {
+    try {
+      draft.descriptor.construct(draft.compose());
+    } catch (e) {
+      return [
+        ValidationFault(
+          'le modele refuse ce document : ${e.toString().replaceAll('\n', ' ')}',
+        ),
+      ];
+    }
+    return const [];
   }
 
   Set<String>? _idsOf(EntityCategory category) {
