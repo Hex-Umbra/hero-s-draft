@@ -153,8 +153,34 @@ void main() {
   test('le gabarit de chaque categorie franchit les trois premieres familles',
       () {
     // Un gabarit qui ne passerait pas sa propre validation serait un piege
-    // servi a l'utilisateur des l'ouverture de l'ecran.
-    final faults = validatorWith().validate(fixtureRelicDraft());
-    expect(faults, isEmpty);
+    // servi a l'utilisateur des l'ouverture de l'ecran. Couvre les sept
+    // categories, pas seulement la relique : une carte n'a pas les memes
+    // cles obligatoires qu'un evenement, et un gabarit fautif pour l'une
+    // d'elles passerait inapercu si le test n'en jugeait qu'une seule.
+    for (final descriptor in kEntityDescriptors.values) {
+      // Les bases bilingues varient par categorie — un evenement porte
+      // `title_*`, un ennemi n'a pas de description — d'ou leur lecture sur
+      // le descripteur plutot qu'une liste de cles ecrite en dur ici.
+      final bilingual = {
+        for (final base in descriptor.bilingualBases) ...{
+          '${base}_fr': 'x',
+          '${base}_en': 'x',
+        },
+      };
+      final draft = EntityDraft(
+        descriptor: descriptor,
+        id: 'entite_de_test',
+        bilingual: bilingual,
+        mechanics: descriptor.template,
+      );
+
+      final faults = validatorWith().validate(draft);
+      expect(
+        faults,
+        isEmpty,
+        reason: '${descriptor.label} (${descriptor.category.name}) : '
+            '${faults.join(', ')}',
+      );
+    }
   });
 }
