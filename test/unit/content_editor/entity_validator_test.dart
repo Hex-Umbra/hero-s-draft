@@ -48,14 +48,14 @@ void main() {
 
       final faults = validatorWith().validate(fixtureRelicDraft());
       expect(faults, isNotEmpty);
-      expect(faults.first.message, contains('existe deja'));
+      expect(faults.first.message, contains('existe déjà'));
     });
 
     test('un fichier absent interdit la modification', () {
       final faults =
           validatorWith().validate(fixtureRelicDraft(isModification: true));
       expect(faults, isNotEmpty);
-      expect(faults.first.message, contains('aucun fichier a modifier'));
+      expect(faults.first.message, contains('aucun fichier à modifier'));
     });
 
     test('un identifiant deja dans le registre est refuse, chemin libre', () {

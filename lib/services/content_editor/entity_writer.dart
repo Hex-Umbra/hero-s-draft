@@ -93,6 +93,9 @@ class EntityWriter {
   /// vide** : `referential_integrity_test` y appelle `listSync()` sans garde,
   /// et un dossier absent le fait *lever*. Ce n'est alors pas ce test qui
   /// echoue, c'est toute la suite qui tombe.
+  ///
+  /// [_rollback] ne defait pas ces dossiers, et c'est sans consequence : une
+  /// ecriture ratee laisse un repertoire **vide**, que git ne suit pas.
   void _prepareFolder(EntityDraft draft) {
     final descriptor = draft.descriptor;
     if (descriptor.folderFile == null || draft.isModification) return;
@@ -137,8 +140,8 @@ class EntityWriter {
     final absolute = '$rootPath/$relative';
     if (!fs.fileExists(absolute)) {
       throw StateError(
-        'la classe "$heroClass" n a pas de class.json : sa carte de signature '
-        'ne peut pas y etre declaree',
+        'la classe "$heroClass" n\'a pas de class.json : sa carte de signature '
+        'ne peut pas y être déclarée',
       );
     }
 

@@ -54,7 +54,7 @@ class EntityValidator {
       if (decoded is! Map<String, dynamic>) {
         return const [
           ValidationFault(
-            'le corps doit etre un objet JSON, entre accolades',
+            'le corps doit être un objet JSON, entre accolades',
           ),
         ];
       }
@@ -84,8 +84,8 @@ class EntityValidator {
     if (!_idPattern.hasMatch(draft.id)) {
       return [
         ValidationFault(
-          'seuls les minuscules ASCII, les chiffres et le souligne sont '
-          'admis (trouve : "${draft.id}")',
+          'seuls les minuscules ASCII, les chiffres et le souligné sont '
+          'admis (trouvé : "${draft.id}")',
           field: 'id',
         ),
       ];
@@ -102,11 +102,11 @@ class EntityValidator {
     final exists = fs.fileExists('$rootPath/${draft.path}');
 
     if (draft.isModification && !exists) {
-      faults.add(ValidationFault('aucun fichier a modifier en ${draft.path}'));
+      faults.add(ValidationFault('aucun fichier à modifier en ${draft.path}'));
     }
     if (!draft.isModification) {
       if (exists) {
-        faults.add(ValidationFault('${draft.path} existe deja'));
+        faults.add(ValidationFault('${draft.path} existe déjà'));
       }
       // Le controle disque ne voit qu'un chemin. Le registre voit tous ceux
       // d'une categorie — dont le cas d'une carte neutre homonyme d'une carte
@@ -114,8 +114,8 @@ class EntityValidator {
       if (_idsOf(draft.descriptor.category)?.contains(draft.id) ?? false) {
         faults.add(
           ValidationFault(
-            'l identifiant "${draft.id}" est deja porte par une entite de '
-            'cette categorie, sous un autre chemin',
+            'l\'identifiant "${draft.id}" est déjà porté par une entité de '
+            'cette catégorie, sous un autre chemin',
             field: 'id',
           ),
         );
@@ -135,7 +135,7 @@ class EntityValidator {
       if (mechanics.containsKey(key)) {
         faults.add(
           ValidationFault(
-            'ce champ est impose par le repertoire et ne doit pas figurer '
+            'ce champ est imposé par le répertoire et ne doit pas figurer '
             'dans le fichier',
             field: key,
           ),
@@ -148,7 +148,7 @@ class EntityValidator {
     if (restated != null && restated != draft.id) {
       faults.add(
         ValidationFault(
-          'le corps declare "$restated" alors que l identifiant est '
+          'le corps déclare "$restated" alors que l\'identifiant est '
           '"${draft.id}"',
           field: 'id',
         ),
@@ -192,7 +192,7 @@ class EntityValidator {
       final value = mechanics[key];
       if (value == null) return;
       if (value is! List) {
-        faults.add(ValidationFault('doit etre une liste', field: key));
+        faults.add(ValidationFault('doit être une liste', field: key));
         return;
       }
       for (final element in value) {
@@ -222,7 +222,7 @@ class EntityValidator {
         if ((draft.bilingual[key] ?? '').trim().isEmpty) {
           faults.add(
             ValidationFault(
-              'les deux variantes linguistiques sont exigees, et non vides',
+              'les deux variantes linguistiques sont exigées, et non vides',
               field: key,
             ),
           );
@@ -250,8 +250,8 @@ class EntityValidator {
       if (value is! String || !ids.contains(value)) {
         faults.add(
           ValidationFault(
-            'aucune entite de la categorie '
-            '"${kEntityDescriptors[category]!.label}" ne porte l identifiant '
+            'aucune entité de la catégorie '
+            '"${kEntityDescriptors[category]!.label}" ne porte l\'identifiant '
             '"$value"',
             field: key,
           ),
@@ -272,7 +272,7 @@ class EntityValidator {
     } catch (e) {
       return [
         ValidationFault(
-          'le modele refuse ce document : ${e.toString().replaceAll('\n', ' ')}',
+          'le modèle refuse ce document : ${e.toString().replaceAll('\n', ' ')}',
         ),
       ];
     }

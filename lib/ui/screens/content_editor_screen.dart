@@ -434,7 +434,7 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
           Text(
             report.relaunchAdvised
                 ? 'Relancer `flutter run` pour que la nouvelle entité soit '
-                    'chargée : le manifeste d assets est produit à la '
+                    "chargée : le manifeste d'assets est produit à la "
                     'compilation.'
                 : 'Redémarrage à chaud pour voir la modification.',
           ),
