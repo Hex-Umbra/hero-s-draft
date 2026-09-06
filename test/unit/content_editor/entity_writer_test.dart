@@ -284,6 +284,40 @@ void main() {
       ) as Map<String, dynamic>;
       expect(classJson['skills'], ['coup_saint']);
     });
+
+    test('une classe creee par l outil accueille sa premiere carte', () async {
+      // Le premier vrai geste d un utilisateur : creer une classe, puis lui
+      // donner sa premiere carte de signature. Le gabarit de la classe ne
+      // porte **pas** `skills` — c est le `?? const []` de l ecrivain qui
+      // tient ce cas, et rien ne l exercait : `seedClass` ecrit toujours la
+      // cle, y compris vide.
+      final descriptor = kEntityDescriptors[EntityCategory.heroClass]!;
+      await writerHere().write(
+        EntityDraft(
+          descriptor: descriptor,
+          id: 'barde',
+          bilingual: const {
+            'name_fr': 'Le Barde',
+            'name_en': 'The Bard',
+            'description_fr': 'Oriente soutien',
+            'description_en': 'Support oriented',
+          },
+          mechanics: descriptor.template,
+        ),
+      );
+
+      final classJson = File('$root/assets/data/classes/barde/class.json');
+      Map<String, dynamic> read() =>
+          jsonDecode(classJson.readAsStringSync()) as Map<String, dynamic>;
+
+      // La condition de depart du test, et non un decor : si le gabarit
+      // gagnait un `skills`, ce test cesserait de couvrir ce qu il annonce.
+      expect(read().containsKey('skills'), isFalse);
+
+      await writerHere().write(classCardDraft('ballade', 'barde'));
+
+      expect(read()['skills'], ['ballade']);
+    });
   });
 
   group('categories en dossier', () {
@@ -375,6 +409,14 @@ void main() {
     });
 
     test('une categorie a plat ne recoit aucune image', () async {
+      // Le placeholder doit etre **la**, comme dans les deux tests
+      // ci-dessus : sans lui, `_placeImage` sort sur sa garde de source
+      // absente quoi que dise le descripteur, et ce test passerait pour une
+      // raison qui n est pas celle qu il annonce.
+      Directory('$root/assets/images').createSync(recursive: true);
+      File('assets/images/placeholder_entity.png')
+          .copySync('$root/assets/images/placeholder_entity.png');
+
       await writerHere().write(fixtureRelicDraft());
       expect(Directory('$root/assets/data/relics').listSync(), hasLength(1));
     });
