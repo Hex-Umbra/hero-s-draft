@@ -182,7 +182,7 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
   ),
   EntityCategory.event: EntityDescriptor(
     category: EntityCategory.event,
-    label: 'Evenement',
+    label: 'Événement',
     directory: 'events',
     requiredKeys: const {'choices'},
     // Un evenement porte `title`, pas `name`. Les textes de ses choix sont
@@ -206,7 +206,7 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
   ),
   EntityCategory.forgeUpgrade: EntityDescriptor(
     category: EntityCategory.forgeUpgrade,
-    label: 'Amelioration de forge',
+    label: 'Amélioration de forge',
     directory: 'forge_upgrades',
     // `ForgeUpgradeData.fromJson` ne leve sur rien d'autre que `id` : toutes
     // les autres cles ont un defaut. C'est la categorie ou la validation

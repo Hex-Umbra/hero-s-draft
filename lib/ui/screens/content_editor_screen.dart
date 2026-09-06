@@ -124,16 +124,16 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
     final root = ref.watch(projectRootProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Editeur de contenu')),
+      appBar: AppBar(title: const Text('Éditeur de contenu')),
       body: root == null
           ? const Center(
               child: Padding(
                 padding: EdgeInsets.all(24),
                 child: Text(
                   "Cette application ne tourne pas depuis une arborescence "
-                  "source : aucun repertoire parent ne porte a la fois "
-                  "pubspec.yaml et assets/data/. L'editeur ne peut pas savoir "
-                  "ou ecrire, et refuse donc de s'ouvrir.",
+                  "source : aucun répertoire parent ne porte à la fois "
+                  "pubspec.yaml et assets/data/. L'éditeur ne peut pas savoir "
+                  "où écrire, et refuse donc de s'ouvrir.",
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -180,7 +180,7 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
                           maxLines: 14,
                           style: const TextStyle(fontFamily: 'monospace'),
                           decoration: const InputDecoration(
-                            labelText: 'Mecanique (JSON)',
+                            labelText: 'Mécanique (JSON)',
                             alignLabelWithHint: true,
                           ),
                         ),
@@ -199,7 +199,7 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
                     const SizedBox(width: 12),
                     ElevatedButton(
                       onPressed: () => _write(root),
-                      child: const Text('Ecrire'),
+                      child: const Text('Écrire'),
                     ),
                   ],
                 ),
@@ -255,7 +255,7 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
               value: _isModification,
               onChanged: (value) => setState(() => _isModification = value),
             ),
-            Text(_isModification ? 'Modifier' : 'Creer'),
+            Text(_isModification ? 'Modifier' : 'Créer'),
           ],
         ),
         Row(
@@ -305,7 +305,7 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
     if (_failure != null) {
       return Padding(
         padding: const EdgeInsets.only(top: 12),
-        child: Text('Echec : $_failure'),
+        child: Text('Échec : $_failure'),
       );
     }
     if (_faults.isNotEmpty) {
@@ -325,17 +325,17 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          for (final path in report.written) Text('Ecrit : $path'),
+          for (final path in report.written) Text('Écrit : $path'),
           if (report.syncFailed)
-            Text('sync_assets a echoue : ${report.sync!.output}'),
+            Text('sync_assets a échoué : ${report.sync!.output}'),
           // Voir §6.3 de la spec : la regle conservatrice, jusqu'a ce que la
           // verification manuelle permette de la resserrer.
           Text(
             report.relaunchAdvised
-                ? 'Relancer `flutter run` pour que la nouvelle entite soit '
-                    'chargee : le manifeste d assets est produit a la '
+                ? 'Relancer `flutter run` pour que la nouvelle entité soit '
+                    'chargée : le manifeste d assets est produit à la '
                     'compilation.'
-                : 'Redemarrage a chaud pour voir la modification.',
+                : 'Redémarrage à chaud pour voir la modification.',
           ),
         ],
       ),
@@ -364,7 +364,7 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
     return ListView(
       children: [
         const Text(
-          'Valeurs deja utilisees',
+          'Valeurs déjà utilisées',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
