@@ -1,10 +1,13 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/services/content_editor/content_editor_providers.dart';
+import 'package:roguelike_card_game/services/content_editor/content_file_system.dart';
 import 'package:roguelike_card_game/services/content_editor/content_file_system_io.dart';
+import 'package:roguelike_card_game/services/content_editor/entity_descriptor.dart';
 import 'package:roguelike_card_game/ui/screens/content_editor_screen.dart';
 
 /// L'etat de `assets/data`, a plat comme en profondeur, trie pour une
@@ -32,7 +35,8 @@ void main() {
   Widget harness({required String? projectRoot}) {
     return ProviderScope(
       overrides: [
-        contentFileSystemProvider.overrideWithValue(const IoContentFileSystem()),
+        contentFileSystemProvider
+            .overrideWithValue(const _NoProcessFileSystem()),
         projectRootProvider.overrideWithValue(projectRoot),
       ],
       child: const MaterialApp(home: ContentEditorScreen()),
@@ -99,4 +103,163 @@ void main() {
     expect(find.textContaining('minuscules'), findsOneWidget);
     expect(_dataTreeSnapshot(root), equals(before));
   });
+
+  group('mode Modifier', () {
+    /// Une relique deja sur le disque, portant **une cle que le gabarit n a
+    /// pas** et des valeurs enumerees differentes des siennes. C est ce que
+    /// « Modifier » doit conserver : sans relecture du fichier, `compose()`
+    /// ecrit la mecanique du gabarit par-dessus, et tout ce qui n y figure
+    /// pas disparait — validation passee, ecriture reussie, aucun signal.
+    void seedRelic() {
+      File('$root/assets/data/relics/talisman_de_fer.json').writeAsStringSync(
+        jsonEncode(const {
+          'id': 'talisman_de_fer',
+          'name_en': 'Iron Talisman',
+          'name_fr': 'Talisman de fer',
+          'description_en': 'Gain 5 armor when an enemy dies.',
+          'description_fr': 'Donne 5 armure a la mort d un ennemi.',
+          'trigger': 'onEnemyKilled',
+          'effectType': 'gain_armor',
+          'value': 5,
+          'rarity': 'legendary',
+          'sfx': 'clang_distinctif',
+        }),
+      );
+    }
+
+    /// Amene l ecran sur la relique semee, en mode Modifier.
+    Future<void> aimAtSeededRelic(WidgetTester tester) async {
+      await tester.tap(find.byType(DropdownButton<EntityCategory>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Relique').last);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(Switch));
+      await tester.pump();
+
+      await tester.enterText(
+        find.byKey(const Key('editeur-id')),
+        'talisman_de_fer',
+      );
+      await tester.pump();
+    }
+
+    testWidgets('Charger relit la cible, et ce qu elle porte survit a Ecrire',
+        (tester) async {
+      seedRelic();
+      await tester.pumpWidget(harness(projectRoot: root));
+      await aimAtSeededRelic(tester);
+
+      await tester.tap(find.text('Charger'));
+      await tester.pump();
+
+      await tester.tap(find.text('Écrire'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Écrit :'), findsOneWidget);
+      final written = jsonDecode(
+        File('$root/assets/data/relics/talisman_de_fer.json')
+            .readAsStringSync(),
+      ) as Map<String, dynamic>;
+
+      // La cle que le gabarit ignore : la preuve directe de la relecture.
+      expect(written['sfx'], 'clang_distinctif');
+      // Les valeurs que le gabarit aurait ramenees aux siennes.
+      expect(written['trigger'], 'onEnemyKilled');
+      expect(written['rarity'], 'legendary');
+      // La prose vient elle aussi du fichier : restee vide, elle aurait fait
+      // echouer la famille 5 avant meme d ecrire.
+      expect(written['name_fr'], 'Talisman de fer');
+      expect(written['description_en'], 'Gain 5 armor when an enemy dies.');
+    });
+
+    testWidgets('Ecrire sans avoir charge est refuse, sans rien ecrire',
+        (tester) async {
+      seedRelic();
+      final before = _dataTreeSnapshot(root);
+      await tester.pumpWidget(harness(projectRoot: root));
+      await aimAtSeededRelic(tester);
+
+      // Le geste que le bouton Charger rend indispensable : la boite JSON
+      // porte encore le gabarit, et l ecrire serait la perte de donnees que
+      // tout ce mode doit empecher.
+      await tester.tap(find.text('Écrire'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Charger'), findsWidgets);
+      expect(find.textContaining('Écrit :'), findsNothing);
+      expect(
+        jsonDecode(
+          File('$root/assets/data/relics/talisman_de_fer.json')
+              .readAsStringSync(),
+        ),
+        containsPair('sfx', 'clang_distinctif'),
+      );
+      expect(_dataTreeSnapshot(root), equals(before));
+    });
+
+    testWidgets('une cible absente est signalee, sans vider le formulaire',
+        (tester) async {
+      await tester.pumpWidget(harness(projectRoot: root));
+      await aimAtSeededRelic(tester); // rien n a ete seme cette fois
+
+      await tester.tap(find.text('Charger'));
+      await tester.pump();
+
+      expect(find.textContaining('aucun fichier à charger'), findsOneWidget);
+      // Le formulaire tient : la boite JSON porte toujours le gabarit.
+      expect(find.textContaining('startOfCombat'), findsOneWidget);
+    });
+  });
+}
+
+/// `IoContentFileSystem` moins le lancement de processus.
+///
+/// Le disque reste reel — c est tout l interet d un bac a sable — mais
+/// `sync_assets` n est pas relance. Deux raisons : sa duree, un `dart run`
+/// par ecriture ; et surtout le fait que `Process.run` prend le bac a sable
+/// comme repertoire de travail, que Windows refuse ensuite de supprimer tant
+/// que le processus vit. Le `tearDown` echouerait par intermittence.
+/// L enchainement reel avec `sync_assets` est couvert par
+/// `test/unit/content_editor/entity_writer_test.dart`.
+class _NoProcessFileSystem implements ContentFileSystem {
+  const _NoProcessFileSystem();
+
+  static const ContentFileSystem _disk = IoContentFileSystem();
+
+  @override
+  String get startDirectory => _disk.startDirectory;
+
+  @override
+  bool fileExists(String path) => _disk.fileExists(path);
+
+  @override
+  bool directoryExists(String path) => _disk.directoryExists(path);
+
+  @override
+  String readFile(String path) => _disk.readFile(path);
+
+  @override
+  void writeFile(String path, String contents) =>
+      _disk.writeFile(path, contents);
+
+  @override
+  void deleteFile(String path) => _disk.deleteFile(path);
+
+  @override
+  void createDirectory(String path) => _disk.createDirectory(path);
+
+  @override
+  void copyFile(String from, String to) => _disk.copyFile(from, to);
+
+  @override
+  List<String> listDirectory(String path) => _disk.listDirectory(path);
+
+  @override
+  Future<ProcessOutcome> run(
+    String executable,
+    List<String> arguments, {
+    required String workingDirectory,
+  }) async =>
+      const ProcessOutcome(0, '');
 }

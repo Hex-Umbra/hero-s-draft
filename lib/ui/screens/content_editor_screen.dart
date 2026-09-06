@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -36,6 +38,18 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
   WriteReport? _report;
   String? _failure;
 
+  /// Le chemin dont le contenu est actuellement dans le formulaire, relu du
+  /// disque. `null` tant que rien n'a ete charge.
+  ///
+  /// En modification, l'ecriture le compare au chemin vise : le triangle
+  /// d'identite reste saisissable — c'est ainsi qu'on **designe** la cible —
+  /// mais il ne peut pas servir a deplacer ce qui a ete charge.
+  String? _loadedPath;
+
+  /// Deux espaces, comme `EntityWriter` et comme les fichiers du depot : ce
+  /// qui est relu s'affiche exactement comme il sera reecrit.
+  static const JsonEncoder _indented = JsonEncoder.withIndent('  ');
+
   /// La table des valeurs connues, et la categorie pour laquelle elle a ete
   /// calculee. Voir [_knownValuesFor].
   EntityCategory? _valuesFor;
@@ -70,6 +84,7 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
         _prose['${base}_$suffix'] = TextEditingController();
       }
     }
+    _loadedPath = null;
     _faults = const [];
     _report = null;
     _failure = null;
@@ -92,7 +107,78 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
         registry: GameDataRegistry.instance,
       ).validate(_draft());
 
+  /// Signale une impossibilite par le canal deja utilise pour les fautes de
+  /// validation : c'est la meme place a l'ecran, et le formulaire n'est pas
+  /// touche.
+  void _refuse(String message) => setState(() {
+        _faults = [ValidationFault(message)];
+        _report = null;
+        _failure = null;
+      });
+
+  /// Relit le fichier vise et le repartit dans le formulaire : la prose
+  /// bilingue dans ses champs, tout le reste dans la boite JSON.
+  ///
+  /// **Sans cette relecture, « Modifier » ecrit le gabarit par-dessus la
+  /// cible** : toute cle que le gabarit ne porte pas — le `skills` d'une
+  /// classe, son `passiveTrait`, les `effects` d'une carte, les `intents` d'un
+  /// ennemi — disparaitrait en silence, validation passee et ecriture reussie.
+  void _load(String root) {
+    final draft = _draft();
+    final fs = ref.read(contentFileSystemProvider)!;
+    final absolute = '$root/${draft.path}';
+
+    if (!fs.fileExists(absolute)) {
+      _refuse('aucun fichier à charger en ${draft.path}');
+      return;
+    }
+
+    final Map<String, dynamic> document;
+    try {
+      document = jsonDecode(fs.readFile(absolute)) as Map<String, dynamic>;
+    } catch (e) {
+      // Un fichier retouche a la main peut ne plus decoder : le dire vaut
+      // mieux que de lever depuis un rappel de bouton.
+      _refuse('${draft.path} ne se relit pas : $e');
+      return;
+    }
+
+    setState(() {
+      // Les cles de `_prose` **sont** les cles bilingues de la categorie.
+      for (final entry in _prose.entries) {
+        final value = document[entry.key];
+        entry.value.text = value is String ? value : '';
+      }
+      // Ni `id`, qui a son propre champ, ni le chemin de l'image, que
+      // l'ecrivain calcule : les remettre dans la boite en ferait des valeurs
+      // saisies a la main, ce que l'outil existe justement pour eviter.
+      _mechanics.text = _indented.convert({
+        for (final entry in document.entries)
+          if (entry.key != 'id' &&
+              entry.key != _descriptor.imagePathKey &&
+              !_prose.containsKey(entry.key))
+            entry.key: entry.value,
+      });
+      _loadedPath = draft.path;
+      _faults = const [];
+      _report = null;
+      _failure = null;
+    });
+  }
+
   Future<void> _write(String root) async {
+    // Le triangle d'identite designe la cible sans jamais la deplacer : en
+    // modification, on n'ecrit que sur un fichier qui vient d'etre relu. Le
+    // changer apres coup invalide le chargement, et l'ecriture est refusee
+    // plutot que d'ecraser une entite avec le contenu d'une autre.
+    if (_isModification && _loadedPath != _draft().path) {
+      _refuse(
+        'charger le fichier avant de le modifier : sans sa relecture, seul le '
+        'gabarit serait écrit',
+      );
+      return;
+    }
+
     final faults = _validate(root);
     setState(() {
       _faults = faults;
@@ -191,6 +277,17 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
                 const SizedBox(height: 12),
                 Row(
                   children: [
+                    // Un bouton explicite, plutot qu'un chargement au bascule
+                    // de l'interrupteur ou a la perte de focus : le geste est
+                    // visible, refaisable, et il ne surprend jamais une
+                    // saisie en cours.
+                    if (_isModification) ...[
+                      TextButton(
+                        onPressed: () => _load(root),
+                        child: const Text('Charger'),
+                      ),
+                      const SizedBox(width: 12),
+                    ],
                     TextButton(
                       onPressed: () =>
                           setState(() => _faults = _validate(root)),
@@ -248,9 +345,10 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
                         _loadCategory();
                       }),
             ),
-            // Le triangle d'identite est **gele** en modification : il decide
-            // ou est le fichier, et le deplacer serait un renommage — hors
-            // perimetre (E1).
+            // Le triangle d'identite decide **ou** est le fichier : le
+            // deplacer serait un renommage, hors perimetre (E1). En
+            // modification il se saisit donc pour designer la cible, mais
+            // l'ecriture refuse tout chemin autre que celui qui a ete charge.
             Switch(
               value: _isModification,
               onChanged: (value) => setState(() => _isModification = value),
@@ -264,7 +362,10 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
               child: TextField(
                 key: const Key('editeur-id'),
                 controller: _id,
-                enabled: !_isModification,
+                // Saisissable en modification aussi : c'est le seul moyen de
+                // **designer** l'entite a charger. Ce qu'il ne peut pas faire,
+                // c'est deplacer une entite deja chargee — l'ecriture le
+                // refuse (voir `_write`).
                 onChanged: (_) => setState(() {}),
                 decoration: const InputDecoration(labelText: 'Identifiant'),
               ),
