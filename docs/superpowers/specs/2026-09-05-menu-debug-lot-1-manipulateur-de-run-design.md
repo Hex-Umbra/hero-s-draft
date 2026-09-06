@@ -6,7 +6,10 @@ Révision : v4 — v2 : ciblage des ennemis un par un plutôt qu'une action de v
 vérification du build release s'est révélée **mécanisable** sur l'instantané AOT (§7.1). **v4 : le
 drapeau de contamination est remplacé par un mode debug déclaré au lancement, et le verrou de
 persistance descend dans `SaveService`** — la v3 n'empêchait que l'écriture, laissant `clear()`
-détruire la vraie sauvegarde (§3.3)
+détruire la vraie sauvegarde (§3.3). **v5 : le dialogue est remplacé par un tiroir ancré au bord
+gauche de l'écran, les onglets deviennent deux jeux disjoints selon le contexte, et les statistiques
+qui bougent au fil des tours passent dans l'onglet Combat** — la v4 décrivait un dialogue ouvert
+depuis le menu de pause, qui n'existe plus (§3.4, §4)
 Périmètre : **lot 1 sur 2.** Le lot 2 — l'éditeur de contenu hors run — fait l'objet de sa propre
 spec et n'est pas traité ici.
 Sources amont :
@@ -50,7 +53,7 @@ Trois conséquences mesurables :
 |:--|:---|:---|
 | **D1** | Deux lots séparés : manipulateur de run (mémoire vive) et éditeur de contenu (disque) | Réversibilité opposée, et les artefacts du lot 2 doivent passer les mêmes gardes que des fichiers écrits à la main |
 | **D2** | Approche A — une classe statique `DebugActions` composant les contrôleurs existants | Aucune méthode nouvelle sur les contrôleurs ; §6 |
-| **D3** | Point d'entrée unique dans `PauseDialog` | Ce dialogue est déjà appelé depuis le combat *et* la carte : une insertion couvre les deux |
+| **D3** | Un tiroir ancré au bord gauche de chaque écran, jamais un dialogue empilé | Un dialogue poussé comme route se fait fermer à la place de l'écran quand une action navigue ; §3.4 |
 | **D4** | Tout est gardé par `kDebugMode`, à deux niveaux | Jamais présent dans un build publié ; §3.4 |
 | **D5** | Une run debug **ne persiste rien** : ni écriture, ni effacement | Une sauvegarde trafiquée est indistinguable d'une sauvegarde légitime ; et l'effacement est aussi destructeur que l'écriture — voir §3.3 |
 | **D6** | Le mode est **déclaré au lancement**, pas déduit d'une modification | Un mode déclaré peut refuser toute persistance dès la première ligne, et s'afficher à l'écran ; un mode déduit ne réagit qu'après coup, et reste invisible |
@@ -123,20 +126,40 @@ détruirait la vraie partie avant même de commencer.
 
 ### 3.4 L'interface
 
-`lib/ui/widgets/debug/` — un `DebugMenuDialog` construit sur le kit existant (`GameDialog`,
-`GameButton`, `AppSpacing`), à onglets.
+`lib/ui/widgets/debug/debug_drawer.dart` — un **tiroir ancré au bord gauche**, inséré comme dernier
+enfant du `Stack` de l'écran de combat et de celui de la carte. Une poignée de 26 px, toujours
+visible, l'ouvre sur un panneau de 360 × 460.
 
-Le bouton d'ouverture est ajouté dans `PauseDialog`, sous `kDebugMode && isDebugRun`. `kDebugMode`
-étant une constante de compilation, la condition entière est repliée à `false` en release : le
-sous-arbre — dialogue, actions, imports — devient inatteignable, donc éliminé au tree-shaking.
+> [!IMPORTANT]
+> **Ancré dans l'arbre de l'écran, jamais poussé comme route.**
+>
+> La v4 ouvrait un dialogue depuis le menu de pause. Un dialogue est une route empilée : quand une
+> action du menu fait naviguer le jeu — terminer un combat, par exemple — le `Navigator.pop()` de
+> l'écran de combat ferme **le dialogue**, qui est au sommet, et non l'écran visé. Le combat se
+> terminait donc sans qu'on en sorte, et le tour suivant ne piochait plus rien.
+>
+> Le tiroir n'est pas une route : il ne peut pas être fermé à la place d'autre chose. La cause
+> racine a par ailleurs été corrigée là où elle était, dans `game_screen.dart` — `popUntil` cible
+> désormais explicitement la route de combat avant de la dépiler.
 
-`PauseDialog` porte aussi **le marqueur** — « RUN DEBUG — aucune sauvegarde ». Sans lui, rien à
-l'écran ne distingue une run de test d'une vraie partie, et on peut jouer une heure avant de
-comprendre pourquoi elle ne s'est jamais enregistrée. C'est ce que la conception précédente,
-fondée sur un drapeau invisible, ne pouvait pas offrir.
+**Deux jeux d'onglets disjoints**, choisis par le drapeau `inCombat` :
 
-Une seule insertion couvre les deux contextes, `PauseDialog` étant déjà appelé depuis
-`game_screen.dart:541` et `map_screen.dart:142`.
+- **en combat, l'onglet Combat seul** — pas de barre d'onglets pour un onglet unique ;
+- **sur la carte, les quatre autres** — Héros, Run, Deck, Reliques.
+
+Ce n'est pas une restriction mais une répartition : l'onglet Combat porte pour cela les
+statistiques qui changent d'un tour à l'autre (§4), et se suffit donc à lui-même. Symétriquement,
+« acte suivant » n'est atteignable que depuis la carte, ce qui rend l'action sûre par construction
+(§5).
+
+`kDebugMode` étant une constante de compilation, la condition d'insertion entière est repliée à
+`false` en release : le sous-arbre — tiroir, onglets, actions, imports — devient inatteignable, donc
+éliminé au tree-shaking.
+
+**La poignée est le marqueur.** Toujours visible, même tiroir fermé, elle signale qu'on joue une run
+debug. Sans elle, rien à l'écran ne distinguerait une run de test d'une vraie partie, et on pourrait
+jouer une heure avant de comprendre pourquoi elle ne s'est jamais enregistrée. `PauseDialog` porte
+en complément le sous-titre « RUN DEBUG — aucune sauvegarde », et plus aucun bouton de debug.
 
 Les champs numériques affichent la valeur courante et se rafraîchissent dès l'écriture : **ils sont
 leur propre confirmation**, et une notification à chaque frappe validée ne serait que du bruit.
@@ -149,12 +172,19 @@ au lot 2, dont les écritures ne sont visibles qu'après rechargement du bundle 
 
 ## 4. Inventaire des actions
 
-### Onglet Héros — via `RunState.heroStats`
+### Onglet Héros — la **progression**, via `RunState.heroStats`
 
-PV et PV max, mana et mana max, armure, attaque, chance, niveau, XP, chance de critique et
-multiplicateur de critique. Tous les champs numériques d'`EntityStats`, en écriture directe.
+PV max, mana max, attaque, chance, chance de critique, niveau et XP. Écriture directe sur les champs
+d'`EntityStats`.
 
-Deux raccourcis : **soin complet** (`currentPv = maxPv`) et **mana plein**.
+PV, mana et armure **n'y sont pas** : ils changent d'un tour à l'autre et vivent dans l'onglet
+Combat, seul onglet affiché pendant un combat (§3.4). La ligne de partage est celle de la durée de
+vie d'une valeur, pas celle du modèle qui la porte.
+
+Un bouton s'ajoute aux champs : **gagner un niveau**. Écrire `level` à la main n'écrase qu'une
+statistique — ni le seuil d'XP ne se recalcule, ni l'écran de récompense ne s'ouvre. Le bouton
+complète l'XP manquante et appelle `gainXp`, qui fait les trois, dont l'incrémentation de
+`pendingDrafts` : c'est elle qui fait apparaître le draft de montée de niveau sur la carte.
 
 ### Onglet Run
 
@@ -181,9 +211,13 @@ le dictionnaire de cartes, le draft de deck de départ et le tutoriel.
 Ajouter et retirer depuis `GameDataRegistry.instance.relics`. `addRelic` déclenche déjà l'effet
 des reliques `startOfRun` : le comportement testé est donc le vrai.
 
-### Onglet Combat — présent seulement pendant un combat
+### Onglet Combat — le **seul** onglet pendant un combat
 
-L'onglet liste **les ennemis actuellement en jeu**, un par ligne : nom, PV courants sur PV max, et
+Il doit donc être autosuffisant, et porte pour cela les trois statistiques qui bougent au fil des
+tours : **PV**, **mana** et **armure**, avec leurs deux raccourcis — *soin complet*
+(`currentPv = maxPv`) et *mana plein*.
+
+Il liste ensuite **les ennemis actuellement en jeu**, un par ligne : nom, PV courants sur PV max, et
 son rang dans la vague pour distinguer deux ennemis du même type. Chaque ligne porte ses propres
 commandes.
 
@@ -204,11 +238,15 @@ commandes.
 > vide les files et court-circuite tout. Un outil qui mélangerait les deux mentirait sur ce qu'il
 > vient de tester.
 
-Les commandes par ennemi vivent **dans le dialogue de debug, pas sur les sprites.** Poser un
+Les commandes par ennemi vivent **dans le tiroir de debug, pas sur les sprites.** Poser un
 bouton sur un composant d'ennemi ferait entrer de la logique de debug dans la couche de rendu
 Flame, que l'architecture du dépôt tient à l'écart de toute décision — les composants lisent
-l'état et l'affichent, ils n'en déclenchent pas la modification. La liste du dialogue donne le
+l'état et l'affichent, ils n'en déclenchent pas la modification. La liste du tiroir donne le
 même pouvoir de ciblage sans toucher au rendu.
+
+Aucune de ces actions n'appelle `Navigator.pop()` : le tiroir est ancré dans l'écran de combat, pas
+poussé au-dessus. C'est le jeu qui navigue — la victoire mène aux récompenses, la mort à
+`DeathOverlay` (§3.4).
 
 ## 5. Le cas de l'acte
 
@@ -235,12 +273,19 @@ second client de cette même surface.
 Les ajouts à du code existant restent peu nombreux, et tous d'une ligne ou deux :
 
 1. le bouton **RUN DEBUG** et la déclaration de mode dans `home_screen.dart`, sous `kDebugMode` ;
-2. le bouton du menu dans `PauseDialog`, sous la même condition ;
+2. l'insertion du tiroir, sous la même condition, dans `game_screen.dart` et `map_screen.dart` —
+   **dernier enfant du `Stack`** dans les deux cas, faute de quoi il se retrouve derrière la carte ;
 3. la consommation de l'intention dans `startNewRun`, sous `kDebugMode` ;
 4. le verrou dans `SaveService.save` et `clear`, plus la remise à zéro en tête de `load`.
 
 Deux changements de signature en découlent, tous deux mécaniques : `SaveService.clear` prend un
 `RefReader`, et `DeathOverlay` devient un `ConsumerWidget` pour le lui fournir.
+
+Un cinquième changement s'est ajouté en cours de route, et il n'est **pas** du debug : le
+`Navigator.pop()` nu de `_completeAndExitCombat` (`game_screen.dart`) dépilait la route du sommet
+plutôt que celle qu'il visait. Le défaut préexistait au menu, qui n'a fait que le rendre atteignable
+en une seconde ; il est corrigé à sa source par un `popUntil` ciblant explicitement la route de
+combat (§3.4).
 
 ## 7. Tests
 
@@ -338,15 +383,19 @@ Sept tâches, séquentielles :
 1. `DebugRunState` et le verrou de `SaveService`, avec leurs tests
 2. `DebugActions` — run et héros, deck et reliques, combat — le gros du travail
 3. Les ajouts au code existant (§6)
-4. `DebugMenuDialog` et ses onglets, dont la liste d'ennemis ciblables
-5. Les boutons : **RUN DEBUG** sur l'accueil, le menu dans `PauseDialog`, le marqueur
+4. `DebugDrawer` et ses cinq onglets, dont la liste d'ennemis ciblables
+5. Les points d'entrée : **RUN DEBUG** sur l'accueil, le tiroir sur les deux écrans, le marqueur
 6. `dart analyze` propre, suite complète verte
 7. La vérification sur l'instantané AOT du build release (§7.1)
 
 Aucune dépendance nouvelle. Aucun asset. Aucune migration de sauvegarde — le format n'est pas
 touché.
 
-**Réalisé le 2026-09-05** : 448 tests verts, `dart analyze` sans problème, absence confirmée du
-build release. La huitième tâche, non prévue, fut de refaire la première : le mode déclaré a
-remplacé le drapeau après que la question « peut-on simplement ne pas sauvegarder ? » eut révélé
-que l'effacement n'était pas protégé.
+**Réalisé le 2026-09-05**, tiroir compris : **452 tests verts** (mesuré le 2026-09-06),
+`dart analyze` sans problème, absence confirmée du build release.
+
+Deux tâches non prévues sont venues s'ajouter aux sept, et toutes deux ont refait une tâche déjà
+close. La huitième a remplacé le drapeau de contamination par un mode déclaré, après que la question
+« peut-on simplement ne pas sauvegarder ? » eut révélé que l'effacement n'était pas protégé. La
+neuvième a remplacé le dialogue par le tiroir, après qu'un combat terminé depuis le menu eut refusé
+de se fermer — un défaut de navigation que seule l'existence du menu rendait visible.

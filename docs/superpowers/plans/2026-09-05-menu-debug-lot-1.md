@@ -17,6 +17,48 @@ déjà publics. Un drapeau de contamination coupe l'autosave dès la première a
 
 **Spec :** [`docs/superpowers/specs/2026-09-05-menu-debug-lot-1-manipulateur-de-run-design.md`](../specs/2026-09-05-menu-debug-lot-1-manipulateur-de-run-design.md)
 
+> [!IMPORTANT]
+> **Plan exécuté et livré le 2026-09-05. Il a divergé de lui-même en cours de route, et il est
+> conservé tel quel — c'est un compte rendu d'intention, pas une description du code.**
+>
+> Pour l'état réel, lire la spec, révisée en v5. Ce qui suit résume les écarts, pour qu'aucun
+> lecteur ne prenne les tâches ci-dessous pour une carte du dépôt.
+>
+> **Deux tâches ont été refaites après avoir été closes :**
+>
+> 1. **Le drapeau de contamination a été remplacé par un mode debug déclaré au lancement.** La
+>    question « peut-on simplement ne pas sauvegarder sur une run debug ? » a révélé que le drapeau
+>    ne protégeait que l'écriture : `SaveService.clear()` restait libre d'effacer la vraie
+>    sauvegarde, et le bouton « Perdre le combat » y menait en deux clics. Le verrou est descendu
+>    dans `SaveService`, sur `save()` **et** `clear()`.
+> 2. **Le dialogue a été remplacé par un tiroir ancré au bord gauche.** Terminer un combat depuis un
+>    dialogue empilé faisait dépiler le dialogue au lieu de l'écran de combat. La cause racine — un
+>    `Navigator.pop()` nu dans `_completeAndExitCombat` — a été corrigée là où elle était.
+>
+> **Structure réellement livrée**, à lire à la place du tableau ci-dessous :
+>
+> | Fichier | Responsabilité |
+> |:---|:---|
+> | `lib/game/controllers/debug_run_controller.dart` | `DebugRunState{isDebugRun, requested}` — le mode déclaré, et non un drapeau levé après coup |
+> | `lib/game/services/debug_actions.dart` | Toutes les mutations. Aucun état propre |
+> | `lib/ui/widgets/debug/debug_drawer.dart` | Le tiroir ancré, et ses **deux jeux d'onglets disjoints** |
+> | `lib/ui/widgets/debug/debug_number_field.dart` | Champ entier réutilisé par les onglets |
+> | `lib/ui/widgets/debug/tabs/*.dart` | Cinq onglets — Héros, Run, Deck, Reliques, Combat |
+> | `lib/services/save_service.dart` *(modifié)* | **Le verrou unique**, sur `save()` et `clear()` |
+> | `lib/game/controllers/run_controller.dart` *(modifié)* | Consomme le mode demandé dans `startNewRun` |
+> | `lib/ui/screens/game_screen.dart` *(modifié)* | Insère le tiroir ; **et** corrige `_completeAndExitCombat` |
+> | `lib/ui/screens/map_screen.dart` *(modifié)* | Insère le tiroir, dernier enfant du `Stack` |
+> | `lib/ui/screens/home_screen.dart` *(modifié)* | Bouton **RUN DEBUG** et déclaration de mode |
+> | `lib/ui/widgets/hud/death_overlay.dart` *(modifié)* | Devient `ConsumerWidget` pour fournir le `RefReader` à `clear()` |
+> | `lib/ui/widgets/hud/dialogs/pause_dialog.dart` *(modifié)* | **Plus aucun bouton de debug** — seulement le sous-titre « RUN DEBUG — aucune sauvegarde » |
+>
+> `debug_taint_controller.dart`, `debug_menu_dialog.dart` et `debug_combat_drawer.dart` ont été
+> supprimés avant la livraison, avec leurs tests. `checkpoint_controller.dart` lisait le drapeau
+> dans la première version ; cette lecture a été retirée quand le verrou est descendu dans
+> `SaveService`, qui couvre tous ses appelants d'un coup. Il n'en reste qu'un commentaire.
+>
+> **Résultat : 452 tests verts** (mesuré le 2026-09-06), `dart analyze` propre.
+
 ## Contraintes globales
 
 - **`dart analyze` doit rendre zéro problème** après chaque tâche, avant tout commit.
@@ -36,6 +78,9 @@ déjà publics. Un drapeau de contamination coupe l'autosave dès la première a
 - Branche de travail : `feat/menu-debug-lot-1`, déjà créée.
 
 ## Structure des fichiers
+
+> ⚠️ **Périmé — structure telle qu'elle était prévue.** La structure livrée figure dans la note de
+> divergence en tête de ce document.
 
 | Fichier | Responsabilité |
 |:---|:---|
