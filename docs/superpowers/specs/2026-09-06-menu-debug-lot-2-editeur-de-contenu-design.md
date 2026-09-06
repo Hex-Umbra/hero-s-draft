@@ -1,8 +1,11 @@
 # Menu de debug — lot 2 : éditeur de contenu — Conception
 
 Date : 2026-09-06
-Statut : **Conception** — non implémenté
-Révision : v1
+Statut : **Conception** — non implémenté ; plan d'implémentation écrit
+Révision : v2 — **v2 : les opérations disque passent par une interface, `dart:io` ne pouvant être
+importé directement sans casser le build web du jeu publié ; et une septième famille de validation
+s'ajoute, les références** (§3.3, §3.4). Les deux écarts sont apparus à l'écriture du plan, en
+vérifiant le dépôt plutôt qu'en supposant
 Périmètre : **lot 2 sur 2.** Le lot 1 — le manipulateur de run — est livré et fait l'objet de sa
 propre spec ; les deux lots ne partagent aucun code.
 Sources amont :
@@ -70,12 +73,13 @@ joints existent ; il reste à les utiliser.
 
 ## 3. Architecture
 
-Trois unités, sans état partagé, chacune testable seule.
+Cinq unités, sans état partagé, chacune testable seule.
 
 ```
+ContentFileSystem  →  les huit opérations disque, et le seul endroit où vit dart:io
 ProjectRoot        →  où écrire, ou pourquoi on ne peut pas
 EntityDescriptor   →  ce qu'est une catégorie (table déclarative, 7 entrées)
-EntityValidator    →  ce qui interdit d'écrire (6 familles, dans l'ordre)
+EntityValidator    →  ce qui interdit d'écrire (7 familles, dans l'ordre)
 EntityWriter       →  l'écriture et ses effets de bord (reçoit la racine)
 ```
 
@@ -124,7 +128,7 @@ listes doivent rester en regard ; un test le vérifie (§9).
 `enumKeys` est peuplé depuis les énumérations réelles (`CardRarity.values.map((e) => e.name)`), jamais
 depuis des littéraux : **E3**.
 
-### 3.3 `EntityValidator` — six familles, dans l'ordre
+### 3.3 `EntityValidator` — sept familles, dans l'ordre
 
 Du moins cher au plus structurel. **On s'arrête à la première famille en échec** : un rapport qui
 mélange une faute de syntaxe JSON et douze clés manquantes est illisible, et les douze sont souvent
@@ -137,20 +141,22 @@ la conséquence de la première.
 | 3 | **Clés** | les obligatoires sont présentes ; les interdites sont absentes |
 | 4 | **Énumérations** | chaque valeur appartient à son énumération Dart — *c'est le contrôle que `fromJson` avale* (§8) |
 | 5 | **Bilingue** | les deux variantes de chaque base sont présentes **et non vides** |
-| 6 | **Construction** | `fromJson` s'exécute sans lever — le filet structurel, en dernier |
+| 6 | **Références** | `passiveTrait` désigne un passif existant — `referential_integrity_test:35` l'exige, et une référence pendante ferait rougir la suite longtemps après l'écriture |
+| 7 | **Construction** | `fromJson` s'exécute sans lever — le filet structurel, en dernier |
 
-La famille 6 ne remplace pas les cinq autres : elle attrape ce qu'on n'a pas prévu. Les cinq
-premières existent précisément parce que la sixième est trop permissive (§8).
+La famille 7 ne remplace pas les six autres : elle attrape ce qu'on n'a pas prévu. Les six
+premières existent précisément parce que la septième est trop permissive (§8).
 
 ### 3.4 `EntityWriter` — la racine en paramètre
 
 ```dart
 class EntityWriter {
-  EntityWriter(this.root);
-  final Directory root;
+  const EntityWriter({required this.fs, required this.rootPath});
+  final ContentFileSystem fs;
+  final String rootPath;
 
-  /// Ecrit l'entite et ses effets de bord. Ne fait rien si [validate] a
-  /// signale la moindre faute : l'appelant valide, l'ecrivain ecrit.
+  /// Ecrit l'entite et ses effets de bord. Ne valide rien : l'appelant valide,
+  /// l'ecrivain ecrit.
   Future<WriteReport> write(EntityDraft draft);
 }
 ```
@@ -158,6 +164,20 @@ class EntityWriter {
 La racine est un paramètre et non une constante : c'est le seul point qui rend l'écrivain testable
 sur une arborescence jetable (**E5**), exactement comme `GameDataLoader(bundle)` et comme
 `sync_assets` piloté par son `workingDirectory`.
+
+> [!IMPORTANT]
+> **`dart:io` ne peut pas être importé directement, et la raison est le produit lui-même.**
+>
+> Le jeu est publié en **build web** — `web/` existe, et le site distribue des URL jouables — et
+> `lib/` n'importe `dart:io` nulle part aujourd'hui. Un import direct casserait cette cible.
+>
+> Les opérations disque passent donc par une interface `ContentFileSystem`, dont l'implémentation
+> est choisie par **import conditionnel** : `dart:io` là où il existe, `null` sur le web — où
+> l'éditeur refuse de s'ouvrir, du même refus que lorsqu'il ne trouve pas la racine (§3.1). Un seul
+> fichier du dépôt importe `dart:io`, et une commande le vérifie.
+>
+> Conséquence heureuse : aucune des unités qui écrivent ne mentionne un type de `dart:io`, et la
+> racine circule comme une simple `String`.
 
 Le JSON est encodé avec `JsonEncoder.withIndent('  ')`, deux espaces, comme les fichiers existants.
 L'ordre des clés est celui de la composition — `Map` et `jsonDecode` préservent tous deux l'ordre
@@ -342,7 +362,7 @@ toutes produisent une entité fausse et silencieuse.
 | `description_en` absent | idem, description vide |
 
 Les familles 4 et 5 ne dupliquent donc pas `fromJson` : elles couvrent exactement ce qu'il ne couvre
-pas. La famille 6 reste utile pour tout le reste — un `cost` textuel, un `choices` absent, un effet
+pas. La famille 7 reste utile pour tout le reste — un `cost` textuel, un `choices` absent, un effet
 malformé — qu'elle attrape en levant.
 
 Les énumérations sans `orElse` (`CardType`, `RelicTrigger`, `RelicRarity`) lèvent bien un
@@ -360,7 +380,7 @@ Le joint est l'arborescence jetable, sur le modèle exact de `sync_assets_test.d
 | Test | Ce qu'il prouve |
 |:---|:---|
 | **Aller-retour** | Une entité écrite dans l'arborescence jetable, puis chargée par `GameDataLoader` sur cette même arborescence, apparaît dans le registre. *Le seul test qui compte vraiment : ce que l'outil écrit est chargeable.* |
-| Validation, une par famille | Chacune des six familles refuse ce qu'elle doit refuser — et, pour les familles 4 et 5, **le même brouillon passe `fromJson` sans lever**, ce qui prouve qu'elles ne sont pas redondantes |
+| Validation, une par famille | Chacune des sept familles refuse ce qu'elle doit refuser — et, pour les familles 4 et 5, **le même brouillon passe `fromJson` sans lever**, ce qui prouve qu'elles ne sont pas redondantes |
 | Champ interdit | `heroClass` dans un fichier de carte est refusé à l'écriture, comme il l'est au chargement |
 | Unicité | Un identifiant dont le fichier existe déjà est refusé — **et** une carte neutre nommée comme une carte de classe existante l'est aussi, alors que son chemin, lui, est libre (**E8**) |
 | Carte de classe | L'écriture met `skills` à jour dans `class.json` ; un échec sur le second fichier laisse le premier absent (**E7**) |
@@ -400,6 +420,7 @@ l'outil contre les règles réelles du dépôt plutôt que contre sa propre idé
 | `pubspec.yaml` en retard après une création | Moyenne — disparition silencieuse au build | `sync_assets` relancé, code de sortie rapporté (§6.2) |
 | Le changement n'apparaît pas dans le jeu, et l'on croit l'écriture ratée | Faible — confusion, pas perte | Message adapté au geste, et vérification manuelle exigée (§6.3) |
 | Les descripteurs se périment par rapport aux sources de chargement | Faible | Test de correspondance (§9) |
+| **Un import de `dart:io` casse le build web, donc le jeu publié** | **Élevée si elle survenait** | Un seul fichier l'importe, derrière un import conditionnel (§3.4) ; `grep` le vérifie, et `flutter build web --release` est exécuté avant la livraison |
 
 Ce lot n'a **aucune interaction avec l'état de jeu ni avec la sauvegarde** : il s'utilise hors run,
 depuis l'écran d'accueil. Le verrou de persistance du lot 1 ne le concerne pas.
@@ -408,9 +429,12 @@ depuis l'écran d'accueil. Le verrou de persistance du lot 1 ne le concerne pas.
 
 ## 12. Estimation
 
-Huit tâches, dont la première — `ProjectRoot` et sa sonde — lève la seule inconnue portante restante
-avec §6.3. L'ordre suggéré fait de chaque tâche un livrable testable : racine, descripteurs,
-validateur, écrivain simple, écriture couplée, dossier et image, `sync_assets`, écran.
+Neuf tâches, dont la première — le seam de plateforme et `ProjectRoot` — lève la seule inconnue
+portante restante avec §6.3. L'ordre fait de chaque tâche un livrable testable : seam et racine,
+descripteurs, validation (deux tâches), écrivain simple, écriture couplée, image, valeurs connues,
+écran.
 
-L'écran arrive en dernier délibérément : les sept huitièmes de la valeur sont dans des unités sans
+L'écran arrive en dernier délibérément : les huit neuvièmes de la valeur sont dans des unités sans
 interface, et c'est là que sont tous les tests qui comptent.
+
+Le plan est écrit : [`docs/superpowers/plans/2026-09-06-menu-debug-lot-2.md`](../plans/2026-09-06-menu-debug-lot-2.md).
