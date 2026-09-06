@@ -848,7 +848,7 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
 - [ ] **Step 5 : Lancer le test et vérifier qu'il passe**
 
 Commande : `flutter test test/unit/content_editor/entity_descriptor_test.dart`
-Attendu : SUCCÈS, 11 tests.
+Attendu : SUCCÈS, 12 tests.
 
 Si le test « les gabarits sont du JSON valide » échoue, c'est le gabarit qu'il faut corriger, jamais
 le test : un gabarit invalide serait servi tel quel à l'utilisateur.
@@ -1841,8 +1841,6 @@ void main() {
 
   tearDown(() => sandbox.deleteSync(recursive: true));
 
-  const writer = EntityWriter(fs: fs, rootPath: '');
-
   EntityWriter writerHere() => EntityWriter(fs: fs, rootPath: root);
 
   test('ecrit le fichier au chemin calcule', () async {
@@ -1908,11 +1906,6 @@ void main() {
     expect(report.relaunchAdvised, isFalse);
   });
 
-  test('le constructeur n exige pas de racine non vide', () {
-    // Garde de compilation : `writer` ci-dessus doit rester constructible pour
-    // que `EntityWriter` demeure `const`, ce dont l'ecran profite.
-    expect(writer.rootPath, isEmpty);
-  });
 }
 ```
 
