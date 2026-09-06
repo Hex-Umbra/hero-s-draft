@@ -47,6 +47,22 @@ class EntityDraft {
   Map<String, dynamic> compose() {
     final decoded = jsonDecode(mechanics) as Map<String, dynamic>;
     final imagePath = descriptor.imagePathOf(id);
+
+    // Le corps est etale **apres** la prose : un doublon y gagnerait la place
+    // du champ que la validation vient de juger, et un `name_fr` vide colle
+    // dans la boite JSON ferait ecrire une entite sans nom. On le retire donc
+    // du corps plutot que de deplacer le bloc bilingue apres l'etalement —
+    // ce qui changerait l'ordre des cles du document, et l'ordre est ce qui
+    // rend le diff d'une modification lisible.
+    final fromForm = {
+      'id',
+      for (final base in descriptor.bilingualBases) ...[
+        '${base}_en',
+        '${base}_fr',
+      ],
+    };
+    decoded.removeWhere((key, _) => fromForm.contains(key));
+
     return {
       'id': id,
       for (final base in descriptor.bilingualBases) ...{
