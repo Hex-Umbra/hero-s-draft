@@ -210,6 +210,59 @@ void main() {
       // Le formulaire tient : la boite JSON porte toujours le gabarit.
       expect(find.textContaining('startOfCombat'), findsOneWidget);
     });
+
+    testWidgets('la categorie reste choisissable apres la bascule',
+        (tester) async {
+      // Le geste reel : on bascule d'abord, on choisit ensuite. La categorie
+      // par defaut etant « Carte », une liste gelee rend toute entite qui
+      // n'est pas une carte **inatteignable** — Charger cherche alors
+      // `cards/<id>.json` et signale une absence parfaitement exacte, ce qui
+      // se lit comme un bouton casse.
+      Directory('$root/assets/data/classes/gambler/cards')
+          .createSync(recursive: true);
+      File('$root/assets/data/classes/gambler/class.json').writeAsStringSync(
+        const JsonEncoder.withIndent('  ').convert({
+          'id': 'gambler',
+          'name_en': 'Gambler',
+          'name_fr': 'Parieur',
+          'description_en': 'Plays with the odds.',
+          'description_fr': 'Manipule les probabilites.',
+          'maxHp': 100,
+          'maxMana': 3,
+          'baseDamage': 5,
+          'displayOrder': 99,
+          'iconPath': 'assets/data/classes/gambler/icon.png',
+        }),
+      );
+
+      await tester.pumpWidget(harness(projectRoot: root));
+      await tester.tap(find.byType(Switch));
+      await tester.pumpAndSettle();
+
+      expect(
+        tester
+            .widget<DropdownButton<EntityCategory>>(
+              find.byType(DropdownButton<EntityCategory>),
+            )
+            .onChanged,
+        isNotNull,
+        reason: 'sans cette liste, la cible ne peut pas etre designee',
+      );
+
+      await tester.tap(find.byType(DropdownButton<EntityCategory>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Classe').last);
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byKey(const Key('editeur-id')), 'gambler');
+      await tester.pump();
+      await tester.tap(find.text('Charger'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('aucun fichier à charger'), findsNothing);
+      expect(find.textContaining('Parieur'), findsOneWidget);
+      expect(find.textContaining('"maxHp": 100'), findsOneWidget);
+    });
   });
 }
 

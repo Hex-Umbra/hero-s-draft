@@ -336,14 +336,22 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
                     child: Text(entry.value.label),
                   ),
               ],
-              onChanged: _isModification
-                  ? null
-                  : (value) => setState(() {
-                        if (value == null) return;
-                        _category = value;
-                        _heroClass = null;
-                        _loadCategory();
-                      }),
+              // Choisissable **aussi** en mode Modifier : c'est par elle qu'on
+              // designe la cible, et la categorie par defaut est « Carte ».
+              // Gelee, elle rendait inatteignable toute entite qui n'en est
+              // pas une : Charger cherchait `cards/<id>.json` et signalait une
+              // absence exacte, ce qui se lit comme un bouton casse.
+              //
+              // Rien n'est risque : changer de categorie appelle
+              // `_loadCategory`, qui remet `_loadedPath` a null. L'ecriture est
+              // alors refusee tant qu'on n'a pas relu, et le contenu d'une
+              // categorie ne peut pas migrer vers une autre.
+              onChanged: (value) => setState(() {
+                if (value == null) return;
+                _category = value;
+                _heroClass = null;
+                _loadCategory();
+              }),
             ),
             // Le triangle d'identite decide **ou** est le fichier : le
             // deplacer serait un renommage, hors perimetre (E1). En
@@ -384,9 +392,11 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
                       child: Text(hero.id as String),
                     ),
                 ],
-                onChanged: _isModification
-                    ? null
-                    : (value) => setState(() => _heroClass = value),
+                // Meme raison que la categorie : sans elle, aucune carte de
+                // classe n'est atteignable en modification. Changer de classe
+                // change le chemin, donc `_loadedPath` ne correspond plus et
+                // l'ecriture reste refusee jusqu'a relecture.
+                onChanged: (value) => setState(() => _heroClass = value),
               ),
             ],
           ],
