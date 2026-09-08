@@ -2,10 +2,15 @@
 
 Date : 2026-09-08
 Statut : **Conception** — non implémenté
-Révision : v1
-Périmètre : **deux étapes, dans cet ordre.** L'étape A sort l'identité visuelle d'une classe du code
-et la met dans `class.json`. L'étape B remplace le parcours de l'éditeur par un arbre de boutons et
-donne au moteur des recettes multi-fichiers. A précède B parce que B consomme la donnée que A crée.
+Révision : v2 — **`iconPath` désignait en réalité la carte de classe (1696 × 2528, 6,5 Mo), pas une
+icône : le champ devient `classCard` et `iconPath` renaît optionnel pour une vraie icône** (§3.1).
+Et le libellé affiché après écriture, laissé ouvert en v1, est refermé — le code séparait déjà
+correctement création et modification (D14). Les deux écarts viennent d'avoir mesuré les fichiers
+plutôt que d'avoir cru leur nom
+Périmètre : **deux étapes, dans cet ordre.** L'étape A rend la donnée de classe honnête — les images
+nommées pour ce qu'elles sont, la couleur sortie du code — et l'étape B remplace le parcours de
+l'éditeur par un arbre de boutons en donnant au moteur des recettes multi-fichiers. A précède B
+parce que B consomme la donnée que A crée.
 Sources amont :
 - Brainstorming des 2026-09-07 / 2026-09-08 (ce fil), consécutif à la livraison du lot 2
 - `docs/superpowers/specs/2026-09-06-menu-debug-lot-2-editeur-de-contenu-design.md` — le moteur et
@@ -54,7 +59,7 @@ Trois défauts secondaires accompagnent celui-là :
 | # | Décision | Motif |
 |:--|:---|:---|
 | D1 | L'identité visuelle de classe passe dans `class.json` **avant** tout le reste | L'étape B consomme cette couleur pour teinter ses boutons ; le champ a donc deux lecteurs, pas un |
-| D2 | L'icône vient de `iconPath`, déjà présent — **pas** d'un nouveau champ `iconName` | Un `IconData` construit dynamiquement casse `--tree-shake-icons` ; et l'image existe déjà pour chaque classe |
+| D2 | L'icône vient d'une **image**, jamais d'un champ `iconName` mappé vers un `IconData` | Un `IconData` construit dynamiquement casse `--tree-shake-icons` : la table de correspondance serait le codage en dur déplacé d'un cran |
 | D3 | La liste déroulante devient un arbre de boutons à **trois niveaux, uniformes** | Direct, et l'arbre montre où le fichier va vivre |
 | D4 | Les cartes se distinguent par **couleur de fond**, pas par un quatrième niveau | Le propriétaire se lit d'un coup d'œil ; l'arbre reste régulier |
 | D5 | À la création d'une carte, le propriétaire est **un champ**, pas un niveau | Une carte qui n'existe pas encore n'est dans aucune liste à colorer |
@@ -65,49 +70,87 @@ Trois défauts secondaires accompagnent celui-là :
 | D10 | Le passif se choisit dans le **catalogue** des passifs, pas dans `knownValues` | `knownValues` liste les valeurs *employées* ; un passif jamais utilisé serait inchoisissable |
 | D11 | `flutter_colorpicker` est ajouté en dépendance | Flutter ne fournit aucun sélecteur de couleur ; le spectre complet est voulu |
 | D12 | `armorMastery` entre au gabarit de la classe | Le brainstorm héros le réclame et il ne coûte que du JSON |
+| D13 | `iconPath` devient `classCard`, fichier `<id>.png` ; `iconPath` renaît **optionnel** pour une vraie icône | Le champ actuel désigne une image de 1696 × 2528 employée comme carte de classe en combat : le nom mentait |
+| D14 | Deux messages distincts après écriture : recompilation pour une création, redémarrage à chaud pour une modification | Une donnée nouvelle n'entre au manifeste d'assets qu'à la compilation. C'est déjà ce que fait `relaunchAdvised` |
 
 ---
 
-## 3. Étape A — l'identité de classe passe dans la donnée
+## 3. Étape A — la donnée de classe dit la vérité
 
-### 3.1 Le champ
+### 3.1 Prérequis : nommer les images pour ce qu'elles sont
 
-Un seul champ nouveau dans `class.json` :
+`iconPath` ne désigne pas une icône. Mesuré le 08/09/2026 : les trois `classes/<id>/icon.png` font
+**1696 × 2528 pixels pour 6,5 Mo chacun**, et c'est bien ainsi qu'ils sont employés —
+`state_sync_system.dart:52` les passe à `HeroCard(imagePath:)`, la carte du héros affichée en
+combat. Le champ porte donc le nom d'une chose qu'il ne contient pas, ce qui a déjà coûté une
+mauvaise décision dans cette spec avant correction.
+
+Le champ est renommé pour ce qu'il contient, et le fichier avec lui :
+
+| Avant | Après | Ce que c'est |
+|:---|:---|:---|
+| `iconPath` → `classes/<id>/icon.png` | `classCard` → `classes/<id>/<id>.png` | La carte de classe, 1696 × 2528 |
+| — | `iconPath` → `classes/<id>/icon.png` | Une **vraie** icône, petite. Optionnelle |
+
+`iconPath` renaît donc en désignant enfin une icône, et devient `String?` : les trois classes
+existantes n'en ont pas encore, le champ est simplement absent de leur JSON.
+
+Les lecteurs suivent le renommage :
+
+- `state_sync_system.dart:52` prend `classCard` ;
+- `imagesToPreload` (`game_data_registry.dart:44`) précharge `classCard` — c'est la grande image que
+  Flame rend, pas l'icône.
+
+**Aucune ligne de `pubspec.yaml` ne bouge** : les assets y sont déclarés par dossier
+(`assets/data/classes/paladin/`), donc renommer un fichier à l'intérieur ne touche pas le manifeste.
+`dart run tool/sync_assets.dart --check` le confirme après la migration.
+
+**Deux conséquences côté descripteur** : le nom du fichier image n'est plus une constante mais
+dérive de l'identifiant (`<id>.png`), et `imagePathKey` vise `classCard`. `iconPath`, lui, n'est
+**pas** calculé par l'écrivain — c'est une image que l'auteur fournit quand elle existe, donc un
+champ ordinaire du formulaire.
+
+### 3.2 La couleur
+
+Un champ nouveau dans `class.json` :
 
 ```json
 "themeColor": "#B71C1C"
 ```
 
 Chaîne hexadécimale `#RRGGBB`, lue par `HeroData.fromJson` en `int? themeColor`, `null` si absente
-ou malformée. **Aucun fichier existant n'est obligé de le porter** : `null` retombe sur la valeur
-actuelle du dialogue, `Colors.blue`. Les trois classes existantes le reçoivent tout de même dans le
-même geste, avec les couleurs que le code affiche aujourd'hui — paladin bleu, berserker rouge, mage
-violet — pour que la migration ne change rien à l'écran.
+ou malformée. **Aucun fichier existant n'est obligé de le porter.** Les trois classes le reçoivent
+tout de même dans le même geste, avec les couleurs que le code affiche aujourd'hui — paladin bleu,
+berserker rouge, mage violet — pour que la migration ne change rien à l'écran.
 
-### 3.2 L'icône : rien à ajouter
+### 3.3 Ce que devient le dialogue de stats
 
-`stats_dialog.dart` choisit aujourd'hui un `IconData` Material par identifiant. Le remplacer par un
-champ `iconName` serait un piège : Flutter refuse de compiler en release un `IconData` construit à
-partir d'une valeur non constante lorsque `--tree-shake-icons` est actif. Il faudrait donc une table
-`Map<String, IconData>` en dur dans le code — c'est-à-dire le codage en dur qu'on retire, déplacé
-d'un cran.
+`stats_dialog.dart:47-54` choisit aujourd'hui une couleur et un `IconData` Material par identifiant,
+en six lignes de `if`. Un champ `iconName` mappé vers un `IconData` ne réglerait rien : Flutter
+refuse de compiler en release un `IconData` construit à partir d'une valeur non constante lorsque
+`--tree-shake-icons` est actif, ce qui imposerait une table `Map<String, IconData>` en dur — le
+codage en dur qu'on retire, déplacé d'un cran.
 
-Or **chaque classe possède déjà son image**, `assets/data/classes/<id>/icon.png`, déclarée par
-`iconPath` dans tous les `class.json`. Le dialogue affiche cette image, redimensionnée, à la place du
-glyphe. Zéro champ nouveau, zéro vocabulaire fermé, et l'éditeur y dépose déjà une image de
-remplacement à la création.
+Le dialogue lit donc la donnée :
 
-### 3.3 Les lecteurs
+| Ce qu'il affiche | D'où ça vient | Si absent |
+|:---|:---|:---|
+| Couleur | `themeColor` | `Colors.blue`, la valeur par défaut actuelle |
+| Icône | `iconPath` | **la carte de classe**, `classCard`, recadrée dans le cercle |
 
-| Lecteur | Ce qu'il prend |
+Le repli sur la carte évite une régression visible : tant qu'aucune vraie icône n'est dessinée,
+l'écran montre quelque chose de juste plutôt qu'un carré magenta.
+
+### 3.4 Les lecteurs de `themeColor`
+
+| Lecteur | Ce qu'il en fait |
 |:---|:---|
-| `stats_dialog.dart` | `themeColor` pour la couleur, `iconPath` pour l'icône |
-| L'arbre de l'étape B | `themeColor` pour teindre les boutons de cartes de la classe |
+| `stats_dialog.dart` | La couleur d'accent de la classe |
+| L'arbre de l'étape B | Le fond des boutons de cartes appartenant à la classe |
 
-Les blocs `if (runState.heroClassId == '…')` disparaissent — six lignes, remplacées par une lecture
-de `HeroData`.
+Un champ à deux lecteurs est justifié ; un champ à un seul n'est souvent que du code en dur déplacé.
 
-### 3.4 Le magenta de l'inachevé
+### 3.5 Le magenta de l'inachevé
 
 Une classe créée par la recette n'a pas de couleur choisie tant que l'auteur n'en met pas une. Le
 gris la confondrait avec les cartes neutres. Elle reçoit donc le magenta de
@@ -232,10 +275,13 @@ Trois choses ne peuvent pas être devinées et bloquent la création tant qu'ell
 ### 5.3 Ce qui n'apparaît jamais au formulaire
 
 - `id` — saisi à part, dans le triangle d'identité ;
-- `iconPath` / `spritePath` — calculés par `EntityWriter` ;
+- `classCard` / `spritePath` — calculés par `EntityWriter` à partir de l'identifiant ;
 - `skills` — dérivé des cartes que la recette vient de créer ;
 - `heroClass` et `category` — **imposés par le répertoire ; les écrire fait échouer le chargement**
   (`CLAUDE.md`, autorité du répertoire).
+
+`iconPath`, en revanche, **apparaît** au formulaire : depuis le §3.1 il désigne une vraie icône que
+l'auteur fournit, et non plus un chemin que l'écrivain calcule.
 
 ### 5.4 Le sélecteur de couleur
 
@@ -280,7 +326,7 @@ Entrées obligatoires : identifiant, N, et pour chacune des N cartes son identif
 
 ```
 assets/data/classes/<id>/class.json      (avec skills déjà rempli)
-assets/data/classes/<id>/icon.png        (placeholder)
+assets/data/classes/<id>/<id>.png        (carte de classe, placeholder)
 assets/data/classes/<id>/cards/<c1>.json (placeholder)
 assets/data/classes/<id>/cards/<cN>.json (placeholder)
 puis  dart run tool/sync_assets.dart
@@ -344,9 +390,14 @@ rendu explicite et donc modifiable depuis le formulaire. C'est ce que réclame l
 Tout test cité ici doit pouvoir échouer. Chacun est écrit d'abord, vu rouge, puis rendu vert.
 
 **Étape A**
-1. `HeroData.fromJson` lit `themeColor` et retombe sur `null` si le champ est absent ou malformé.
-2. Le dialogue de stats affiche la couleur du `HeroData` fourni, et non une couleur codée en dur —
+1. `HeroData.fromJson` lit `classCard`, et `iconPath` vaut `null` quand le champ est absent.
+2. `imagesToPreload` référence `classCard` — le test échouerait s'il restait sur l'ancien champ,
+   ce qui priverait Flame de la seule grande image qu'il préchargeait.
+3. `HeroData.fromJson` lit `themeColor` et retombe sur `null` si le champ est absent ou malformé.
+4. Le dialogue de stats affiche la couleur du `HeroData` fourni, et non une couleur codée en dur —
    vérifié avec une classe fictive dont la couleur n'est aucune des trois actuelles.
+5. Le dialogue replie sur `classCard` quand `iconPath` est absent, et prend `iconPath` quand il est
+   présent — deux assertions, sans quoi le repli du §3.3 n'est pas couvert.
 
 **Étape B — l'arbre**
 3. Le niveau 1 n'apparaît qu'après sélection d'un type ; le niveau 2 qu'après « Modifier ».
@@ -378,15 +429,18 @@ Tout test cité ici doit pouvoir échouer. Chacun est écrit d'abord, vu rouge, 
 - **Le mode « Modifier » pour les classes et ennemis existants** garde le comportement livré :
   relecture du fichier avant écriture, refus d'écrire sans relecture.
 
-## 10. Points à confirmer
+## 10. Ce qui reste à la charge de l'auteur
 
-- **Le libellé après une création.** `_outcome()` distingue aujourd'hui deux cas
-  (`content_editor_screen.dart:444-450`) : pour une entité **nouvelle**, il conseille de relancer
-  `flutter run`, le manifeste d'assets étant produit à la compilation ; pour une modification, un
-  redémarrage à chaud. La règle énoncée en brainstorming — « le redémarrage à chaud suffit, même
-  pour un ajout » — contredit le premier cas. Une seule observation tranche : créer une entité,
-  redémarrer à chaud, regarder si elle est là. Le message est corrigé en conséquence, dans un sens
-  ou dans l'autre.
+- **Trois vraies icônes de classe à dessiner.** `iconPath` étant optionnel et le dialogue repliant
+  sur la carte de classe (§3.3), rien n'est bloqué ; l'écran y gagnera le jour où les trois
+  `icon.png` existeront.
+- **La couleur de thème des trois classes existantes** est reprise du code — bleu, rouge, violet.
+  Si une autre teinte convient mieux, c'est le moment : elle n'est plus dans le code.
+
+Le libellé affiché après écriture, lui, est **tranché** : `relaunchAdvised = !draft.isModification`
+(`entity_writer.dart:76`) sépare déjà exactement les deux cas de D14, et les deux messages sont
+justes tels qu'ils sont. Une donnée nouvelle n'entre au manifeste d'assets qu'à la compilation ;
+une modification de contenu se voit au redémarrage à chaud.
 
 ## 11. Risques
 
@@ -396,3 +450,5 @@ Tout test cité ici doit pouvoir échouer. Chacun est écrit d'abord, vu rouge, 
 | Une couleur choisie librement peut être illisible sur le fond de l'arbre | Accepté : la roue complète est un choix explicite. Le bouton porte aussi l'icône de la classe |
 | `flutter_colorpicker` est une dépendance de plus pour du debug | Le code disparaît des builds de release ; le coût résiduel est le lock et la page de licences |
 | Le test « gabarit ⊇ modèle » lit du texte, pas un AST | Il vérifie aussi qu'il a trouvé au moins une clé par modèle, pour que son silence ne passe pas pour un succès |
+| Le renommage touche trois binaires de 6,5 Mo | Un `git mv` par classe, aucun octet réécrit ; `sync_assets --check` confirme que le manifeste ne bouge pas |
+| Le dialogue de stats change d'aspect — image de classe au lieu d'un glyphe Material | Voulu : c'est la seule façon de sortir la table en dur sans la remplacer par une autre. Le repli montre toujours une image juste, jamais un placeholder |
