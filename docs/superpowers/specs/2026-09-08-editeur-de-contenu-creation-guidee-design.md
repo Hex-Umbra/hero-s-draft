@@ -2,7 +2,9 @@
 
 Date : 2026-09-08
 Statut : **Conception** — non implémenté
-Révision : v2 — **`iconPath` désignait en réalité la carte de classe (1696 × 2528, 6,5 Mo), pas une
+Révision : v3 — **v3 : `EntityWriter._registerSignatureCard` maintenait déjà `skills` ; la §1 le
+décrivait mal, et la garde devient une bijection lue sur le disque plutôt qu'une reference vers le
+registre, qui aurait refuse la sortie meme de l'outil** (§1, §7.1). v2 — **`iconPath` désignait en réalité la carte de classe (1696 × 2528, 6,5 Mo), pas une
 icône : le champ devient `classCard` et `iconPath` renaît optionnel pour une vraie icône** (§3.1).
 Et le libellé affiché après écriture, laissé ouvert en v1, est refermé — le code séparait déjà
 correctement création et modification (D14). Les deux écarts viennent d'avoir mesuré les fichiers
@@ -33,12 +35,21 @@ Sources amont :
 
 Créer une classe complète est aujourd'hui impossible depuis l'outil, et personne ne s'en apercevait.
 
-Une classe jouable, ce n'est pas un fichier : c'est un dossier, une icône, N cartes de signature, et
+Une classe jouable, ce n'est pas un fichier : c'est un dossier, une image, N cartes de signature, et
 un renvoi `skills` de `class.json` vers les identifiants de ces cartes. L'éditeur du lot 2 écrit
-**une entité, un fichier**. Il fallait donc trois passes — écrire la classe, écrire les cartes,
-revenir modifier la classe pour y ajouter `skills` — dont la troisième n'est écrite nulle part.
-Le descripteur le dit lui-même (`entity_descriptor.dart:239`) : *« `skills` … se remplit carte par
-carte »*.
+**une entité, un fichier** : il faut donc N+1 gestes, chacun avec son formulaire entier à remplir.
+
+`skills` lui-même n'est **pas** à la charge de l'auteur — `EntityWriter._registerSignatureCard`
+(`entity_writer.dart:135-158`) l'alimente, trié, à chaque carte de classe écrite. Ce qui manque
+n'est donc pas le lien, mais l'atomicité et l'ordre :
+
+- une carte écrite avant la classe qui la porte lève `StateError` ; l'ordre compte et rien ne
+  l'annonce ;
+- une classe abandonnée en cours de route — deux cartes voulues, une écrite — laisse un `skills`
+  sincère et une classe incomplète ;
+- `referential_integrity_test` exige la bijection **exacte** entre `classes/<id>/cards/*.json` et
+  `skills` (`referential_integrity_test.dart:104-122`). Une incohérence introduite à la main dans la
+  boîte JSON fait donc rougir la suite entière, longtemps après l'écriture.
 
 Et un décalage entre `skills` et les fichiers présents ne dégrade pas doucement : `getHeroCards`
 (`hero_skills_link.dart:6-13`) utilise `firstWhere` **sans `orElse`**, délibérément. Une carte de
@@ -332,8 +343,13 @@ assets/data/classes/<id>/cards/<cN>.json (placeholder)
 puis  dart run tool/sync_assets.dart
 ```
 
-`skills` est écrit par la recette à partir des identifiants saisis — jamais tapé à la main. C'est ce
-qui referme la troisième passe du §1.
+**L'ordre n'est pas libre.** `class.json` part avec un `skills` vide, puis chaque carte est écrite
+par `EntityWriter`, qui l'y ajoute elle-même (`_registerSignatureCard`). Chaque état intermédiaire
+est donc cohérent, et l'état final porte les N cartes. L'inverse — écrire la classe avec son `skills`
+complet avant les cartes — violerait la bijection du §7.1 à chaque étape sauf la dernière.
+
+Cela suppose une seule chose du moteur : que les N+1 écritures partagent **une même transaction**,
+pour que le rollback les couvre toutes et que `sync_assets` ne tourne qu'une fois au lieu de N+1.
 
 `sync_assets` est lancé **une fois**, à la fin : une classe ajoute deux lignes au manifeste
 (`classes/<id>/` et `classes/<id>/cards/`), et un dossier non déclaré disparaît silencieusement du
@@ -354,15 +370,21 @@ propriétaire choisi au §4.3 décide du répertoire.
 
 ## 7. Les deux gardes nouvelles
 
-### 7.1 La référence de `skills`
+### 7.1 La bijection `skills` ↔ `cards/`
 
-`EntityDescriptor` porte déjà `enumKeys` et sa variante de liste `enumListKeys`. Il lui manque la
-symétrique pour les références : `referenceListKeys`, qui vaut `{'skills': EntityCategory.card}`
-pour la classe. La famille 7 de la validation la traite comme les autres références, élément par
-élément.
+Le réflexe serait d'ajouter à `EntityDescriptor` la symétrique de `enumListKeys` pour les
+références — un `referenceListKeys` valant `{'skills': EntityCategory.card}` — et de laisser
+`_references` (`entity_validator.dart:240`) la traiter élément par élément.
 
-C'est le contrôle le plus rentable de tout l'outil : la faute qu'il attrape ne dégrade pas
-l'affichage, elle plante le lancement de la run.
+**Ce serait faux.** `_references` interroge le **registre**, chargé au démarrage de l'application.
+Or les cartes qu'une recette vient d'écrire n'y sont pas, ni aucune carte créée depuis le lancement.
+Le contrôle refuserait la sortie même de l'outil.
+
+La garde interroge donc le **disque**, et vérifie l'invariant réel plutôt qu'une approximation : le
+tableau `skills` d'une classe doit être exactement l'ensemble des `*.json` de son dossier `cards/`.
+C'est mot pour mot ce qu'exige `referential_integrity_test`, avancé au moment de l'écriture au lieu
+de celui des tests. En création, la recette le satisfait par construction ; en modification, il
+attrape la main qui édite `skills` dans la boîte JSON.
 
 ### 7.2 Gabarit ⊇ modèle
 
@@ -413,7 +435,9 @@ Tout test cité ici doit pouvoir échouer. Chacun est écrit d'abord, vu rouge, 
 8. La recette de classe écrit les quatre fichiers et un `skills` qui référence exactement les cartes
    écrites.
 9. Une recette dont une écriture échoue en cours de route ne laisse rien derrière elle.
-10. Un `skills` référençant une carte absente est refusé par la validation (famille 7).
+10. Un `skills` référençant une carte absente du dossier `cards/` est refusé — et, symétriquement,
+    un `skills` qui **omet** une carte présente l'est aussi : la bijection se vérifie dans les deux
+    sens ou elle ne vérifie rien.
 11. Gabarit ⊇ modèle, pour les sept catégories — et le test échoue si un modèle ne livre aucune clé.
 12. Le catalogue des passifs proposé contient un passif présent sur le disque qu'aucune classe
     n'emploie — le cas que `knownValues` manquerait.
