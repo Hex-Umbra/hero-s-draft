@@ -164,4 +164,114 @@ void main() {
       expect(template.containsKey(key), isTrue, reason: 'clé absente : $key');
     }
   });
+
+  // **Gabarit superset-du-modele, pour les sept categories.**
+  //
+  // En creation, le formulaire n'a pas de boite JSON libre : il n'affiche
+  // qu'un champ par cle du gabarit, plus `themeColor` et les `referenceKeys`.
+  // Une cle que le modele lit et que le gabarit ignore est donc **hors
+  // d'atteinte** — c'est ainsi que `sfx`, `isExhaust`, `spritePath`,
+  // `requiresExhaust` et `eligibleCardTypes` avaient disparu de la creation
+  // alors que le lot 2 les atteignait par sa boite JSON.
+  //
+  // **Ce que cette table ne fait pas.** Elle est tenue a la main : elle
+  // rougit si un gabarit **perd** une cle ou en gagne une qui n'est pas
+  // declaree ici, mais elle ne voit pas un `fromJson` qui se met a lire une
+  // cle nouvelle. La spec §7.2 voulait lire le source du modele au motif
+  // regulier `json['...']` ; ce mecanisme-la se tait des qu'un modele change
+  // de forme, ce qui est un silence pire qu'une table honnete. Le prix a
+  // payer est donc explicite : **en ajoutant une cle a un `fromJson` de
+  // `lib/models/data/`, ajoutez-la ici et au gabarit.**
+  //
+  // Ne figurent pas au gabarit, et c'est la §5.3 de la spec :
+  // - `id`, saisi dans le triangle d'identite ;
+  // - `classCard` / `spritePath` d'une classe et d'un ennemi, calcules par
+  //   `EntityWriter` a partir de l'identifiant (`imagePathKey`) ;
+  // - `iconPath`, derive de l'identifiant par `ClassRecipe` ;
+  // - `skills`, alimente carte par carte par `_registerSignatureCard` ;
+  // - `heroClass` et `category`, imposes par le repertoire ;
+  // - `passiveTrait`, qui est une `referenceKeys` : le formulaire le rend en
+  //   catalogue de passifs, pas en champ texte. L'assertion qui suit la table
+  //   le verifie.
+  test('chaque gabarit porte exactement les cles attendues', () {
+    const expected = <EntityCategory, Set<String>>{
+      EntityCategory.card: {
+        'cost',
+        'type',
+        'rarity',
+        'target',
+        'spritePath',
+        'animation',
+        'sfx',
+        'isExhaust',
+        'effects',
+        'baseMaxForgeUpgrades',
+      },
+      EntityCategory.relic: {
+        'trigger',
+        'effectType',
+        'value',
+        'rarity',
+        'emoji',
+        'sfx',
+      },
+      EntityCategory.passive: {'trigger', 'effectType', 'value'},
+      // Un evenement n'a qu'une cle de mecanique : le texte de ses choix est
+      // imbrique dans `choices`, et le gabarit en montre un exemplaire complet.
+      EntityCategory.event: {'choices'},
+      EntityCategory.forgeUpgrade: {
+        'icon',
+        'color',
+        'pools',
+        'eligibleCardTypes',
+        'requiresExhaust',
+        'valueMultiplier',
+        'weight',
+        'emoji',
+      },
+      EntityCategory.heroClass: {
+        'maxHp',
+        'maxMana',
+        'baseDamage',
+        'luck',
+        'armorMastery',
+        'displayOrder',
+        'themeColor',
+      },
+      EntityCategory.enemy: {
+        'maxHp',
+        'baseDamage',
+        'tier',
+        'xp',
+        'critChance',
+        'gold',
+        'intents',
+        'sfx',
+      },
+    };
+
+    expect(
+      expected.keys.toSet(),
+      EntityCategory.values.toSet(),
+      reason: 'la table doit couvrir les sept categories',
+    );
+
+    expected.forEach((category, keys) {
+      expect(
+        kEntityDescriptors[category]!.decodeTemplate().keys.toSet(),
+        keys,
+        reason: '${kEntityDescriptors[category]!.label} : gabarit divergent',
+      );
+    });
+  });
+
+  // `passiveTrait` est la seule cle de modele deliberement absente d'un
+  // gabarit tout en restant atteignable : le formulaire la rend en catalogue
+  // de passifs (§5.5), et la substitution du §5.1 la laisse absente plutot que
+  // d'inventer une reference.
+  test('passiveTrait est atteignable par le catalogue, pas par le gabarit', () {
+    final descriptor = kEntityDescriptors[EntityCategory.heroClass]!;
+    expect(descriptor.decodeTemplate().containsKey('passiveTrait'), isFalse);
+    expect(descriptor.referenceKeys.keys, contains('passiveTrait'));
+  });
 }

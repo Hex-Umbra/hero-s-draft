@@ -146,13 +146,22 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     },
     bilingualBases: const ['name', 'description'],
     construct: CardData.fromJson,
+    // `spritePath`, `sfx` et `isExhaust` figurent au gabarit parce que
+    // `CardData.fromJson` les lit : en creation, le formulaire n'affiche qu'un
+    // champ par cle du gabarit, et une cle absente d'ici est hors d'atteinte.
+    // Les trois chaines vides valent l'absence pour leurs lecteurs —
+    // `AudioDirector._resolve` ne trouve aucun son nomme "" et retombe sur sa
+    // chaine de repli.
     template: '''
 {
   "cost": 1,
   "type": "attack",
   "rarity": "common",
   "target": "singleEnemy",
+  "spritePath": "",
   "animation": "melee",
+  "sfx": "",
+  "isExhaust": false,
   "effects": [
     { "type": "damage", "value": 6 }
   ],
@@ -176,7 +185,8 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
   "effectType": "gain_armor",
   "value": 5,
   "rarity": "common",
-  "emoji": "🪙"
+  "emoji": "🪙",
+  "sfx": ""
 }''',
   ),
   EntityCategory.passive: EntityDescriptor(
@@ -229,11 +239,19 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     enumListKeys: {'eligibleCardTypes': _names(CardType.values)},
     bilingualBases: const ['name', 'description'],
     construct: ForgeUpgradeData.fromJson,
+    // `eligibleCardTypes` porte **les quatre** types, et non la liste vide :
+    // absente, la cle vaut « tous les types » (`shop_controller.dart:65` ne
+    // filtre que si elle est non nulle), tandis qu'une liste vide n'aurait
+    // rendu l'amelioration eligible a **rien**. Les quatre types enumeres sont
+    // le seul equivalent honnete de l'absence, et l'auteur n'a qu'a retirer ce
+    // qu'il ne veut pas.
     template: '''
 {
   "icon": "bolt",
   "color": "#FFAA00",
   "pools": ["common"],
+  "eligibleCardTypes": ["attack", "skill", "power", "status"],
+  "requiresExhaust": false,
   "valueMultiplier": 1,
   "weight": 10,
   "emoji": "🔮"
@@ -287,7 +305,8 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
   "gold": 10,
   "intents": [
     { "type": "attack", "value": 5 }
-  ]
+  ],
+  "sfx": ""
 }''',
   ),
 };
