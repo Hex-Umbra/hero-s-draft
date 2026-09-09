@@ -490,7 +490,11 @@ void main() {
         classCardDraft('all_in', 'gambler'),
       ]);
 
-      expect(report.written, hasLength(greaterThanOrEqualTo(3)));
+      // Compte exact, verifie par trace : class.json, cards/bluff.json,
+      // class.json (skills += bluff), cards/all_in.json, class.json (skills
+      // += all_in). `_registerSignatureCard` reecrit class.json a chaque
+      // carte de signature, jamais deux fois pour la meme carte.
+      expect(report.written, hasLength(5));
       expect(
         fs.syncRuns,
         1,

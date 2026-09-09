@@ -101,11 +101,10 @@ void main() {
       final report = await EntityWriter(fs: fs, rootPath: root).writeAll(drafts);
       // `written` compte chaque ecriture physique, pas chaque brouillon :
       // `_registerSignatureCard` reecrit `class.json` a chaque carte de
-      // signature, comme le montre deja `writeAll ecrit tous les brouillons
-      // et ne synchronise qu une fois` dans `entity_writer_test.dart`, avec
-      // la meme forme d'assertion pour le meme scenario (une classe et deux
-      // cartes de classe).
-      expect(report.written, hasLength(greaterThanOrEqualTo(3)));
+      // signature. Pour 1 classe + 2 cartes, la sequence est deterministe et
+      // verifiee par trace : class.json, cards/pari_1.json, class.json,
+      // cards/pari_2.json, class.json — jamais 3, jamais 4, jamais 6.
+      expect(report.written, hasLength(5));
 
       // L'invariant final : skills == le contenu de cards/.
       final classJson = jsonDecode(
