@@ -10,6 +10,11 @@ import 'entity_draft.dart';
 /// Un carre magenta volontairement laid : oublier de le remplacer doit se voir.
 const String kPlaceholderImage = 'assets/placeholders/images/placeholder_entity.png';
 
+/// L'icone deposee dans un dossier de classe nouvellement cree. Meme magenta
+/// que [kPlaceholderImage], borde pour distinguer la fente d'un coup d'oeil.
+const String kPlaceholderIcon =
+    'assets/placeholders/images/placeholder_icon.png';
+
 /// Ce qui a ete ecrit, et ce qu'il reste a faire cote humain.
 @immutable
 class WriteReport {
@@ -96,6 +101,7 @@ class EntityWriter {
   void _writeFiles(EntityDraft draft, List<WriteStep> steps) {
     _prepareFolder(draft);
     _placeImage(draft);
+    _placeClassIcon(draft);
     _writeJson(draft.path, draft.compose(), steps);
     _registerSignatureCard(draft, steps);
   }
@@ -136,6 +142,31 @@ class EntityWriter {
     if (fs.fileExists(absolute)) return;
 
     final source = '$rootPath/$kPlaceholderImage';
+    if (!fs.fileExists(source)) return; // rien a copier : on n'invente pas
+    fs.copyFile(source, absolute);
+  }
+
+  /// Depose l'icone de remplacement d'une classe **neuve**.
+  ///
+  /// Jamais en modification : les trois classes livrees n'ont pas d'icone
+  /// dessinee, et leur en deposer une ferait afficher un carre magenta a la
+  /// place de leur illustration dans le dialogue de stats. Le repli de
+  /// `StatsDialog.classImageOf` sur la carte de classe n'a de sens que tant que
+  /// `iconPath` reste absent de leur JSON.
+  ///
+  /// Comme [_placeImage], elle n'ecrase jamais une image deja la, et n'est pas
+  /// defaite par [_rollback] : un placeholder laisse dans un dossier neuf est
+  /// sans consequence.
+  void _placeClassIcon(EntityDraft draft) {
+    if (draft.descriptor.category != EntityCategory.heroClass ||
+        draft.isModification) {
+      return;
+    }
+
+    final absolute = '$rootPath/assets/data/classes/${draft.id}/icon.png';
+    if (fs.fileExists(absolute)) return;
+
+    final source = '$rootPath/$kPlaceholderIcon';
     if (!fs.fileExists(source)) return; // rien a copier : on n'invente pas
     fs.copyFile(source, absolute);
   }

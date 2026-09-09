@@ -172,11 +172,12 @@ void main() {
   /// Un brouillon de classe minimal, pour les tests de `writeAll` : le
   /// gabarit ne porte pas `skills`, comme celui livre par le descripteur — la
   /// premiere carte de signature l ajoute.
-  EntityDraft classDraft(String id) {
+  EntityDraft classDraft(String id, {bool isModification = false}) {
     final descriptor = kEntityDescriptors[EntityCategory.heroClass]!;
     return EntityDraft(
       descriptor: descriptor,
       id: id,
+      isModification: isModification,
       bilingual: const {
         'name_fr': 'Le Flambeur',
         'name_en': 'The Gambler',
@@ -437,6 +438,43 @@ void main() {
 
       await writerHere().write(fixtureRelicDraft());
       expect(Directory('$root/assets/data/relics').listSync(), hasLength(1));
+    });
+  });
+
+  group('icone de classe', () {
+    test('une classe creee recoit son icone de remplacement', () async {
+      Directory('$root/assets/placeholders/images').createSync(recursive: true);
+      File('assets/placeholders/images/placeholder_icon.png')
+          .copySync('$root/assets/placeholders/images/placeholder_icon.png');
+
+      await EntityWriter(fs: fs, rootPath: root).write(classDraft('gambler'));
+
+      expect(
+        File('$root/assets/data/classes/gambler/icon.png').existsSync(),
+        isTrue,
+      );
+    });
+
+    // La garde qui empeche une regression visible par les joueurs : les trois
+    // classes livrees n'ont pas d'icone dessinee, et leur en deposer une ferait
+    // afficher un carre magenta a la place de leur illustration dans le
+    // dialogue de stats. Modifier une classe ne doit donc rien deposer.
+    test('modifier une classe ne lui fabrique pas d icone', () async {
+      Directory('$root/assets/placeholders/images').createSync(recursive: true);
+      File('assets/placeholders/images/placeholder_icon.png')
+          .copySync('$root/assets/placeholders/images/placeholder_icon.png');
+      Directory('$root/assets/data/classes/paladin/cards')
+          .createSync(recursive: true);
+      File('$root/assets/data/classes/paladin/class.json')
+          .writeAsStringSync('{}');
+
+      await EntityWriter(fs: fs, rootPath: root)
+          .write(classDraft('paladin', isModification: true));
+
+      expect(
+        File('$root/assets/data/classes/paladin/icon.png').existsSync(),
+        isFalse,
+      );
     });
   });
 
