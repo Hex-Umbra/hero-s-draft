@@ -87,6 +87,12 @@ class ClassRecipe {
     final seen = <String>{};
     final duplicates = <String>{};
     for (final card in signatureCards) {
+      // Un identifiant pas encore saisi n'est pas un doublon d'un autre
+      // identifiant pas encore saisi. Sans cette garde, demander trois cartes
+      // et n'en nommer qu'une ferait crier le formulaire pendant la frappe —
+      // par-dessus la faute « un identifiant est requis », qui elle est juste
+      // et que `EntityValidator._identity` produit deja pour chaque brouillon.
+      if (card.id.isEmpty) continue;
       if (!seen.add(card.id)) duplicates.add(card.id);
     }
     return [

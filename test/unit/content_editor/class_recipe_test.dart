@@ -114,6 +114,32 @@ void main() {
       );
       expect(withTriple.faults(), hasLength(1));
     });
+
+    test(
+        'deux identifiants vides ne sont pas un doublon : la vraie faute '
+        'vient de EntityValidator', () {
+      // Regler le nombre de cartes a 2 cree deux controleurs vides ; taper
+      // Ecrire avant d'avoir nomme les cartes est un enchainement normal en
+      // cours de saisie, pas un doublon. `EntityValidator._identity` dit deja
+      // "un identifiant est requis" pour chaque brouillon a id vide — c'est
+      // ce message qui doit rester seul, pas un « deux cartes portent
+      // l'identifiant "" » qui ne veut rien dire pour qui saisit.
+      final withEmptyIds = ClassRecipe(
+        id: 'gambler',
+        bilingual: const {},
+        mechanics: '{}',
+        signatureCards: const [
+          SignatureCardInput(id: ''),
+          SignatureCardInput(id: ''),
+        ],
+      );
+
+      final faults = withEmptyIds.faults();
+      expect(
+        faults.map((f) => f.message),
+        isNot(contains(contains('deux cartes de signature'))),
+      );
+    });
   });
 
   group('bout en bout, sur un vrai bac a sable', () {
