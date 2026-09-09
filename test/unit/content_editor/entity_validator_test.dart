@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -312,6 +313,44 @@ void main() {
               '"passiveTrait": "regen_armor"}',
         ),
       );
+      expect(faults, isEmpty);
+    });
+  });
+
+  group('famille couleur hex — themeColor', () {
+    EntityDraft classDraftWithColor(String? hex) {
+      final mechanics = <String, dynamic>{
+        'maxHp': 90,
+        'maxMana': 3,
+        'baseDamage': 4,
+      };
+      if (hex != null) mechanics['themeColor'] = hex;
+      return EntityDraft(
+        descriptor: kEntityDescriptors[EntityCategory.heroClass]!,
+        id: 'barde',
+        bilingual: const {
+          'name_fr': 'Le Barde',
+          'name_en': 'The Bard',
+          'description_fr': 'Oriente soutien',
+          'description_en': 'Support oriented',
+        },
+        mechanics: jsonEncode(mechanics),
+      );
+    }
+
+    test('un hex valide est accepte', () {
+      final faults = validatorWith().validate(classDraftWithColor('#B71C1C'));
+      expect(faults, isEmpty);
+    });
+
+    test('un hex malforme est refuse', () {
+      final faults = validatorWith().validate(classDraftWithColor('#XYZ'));
+      expect(faults, isNotEmpty);
+      expect(faults.first.field, 'themeColor');
+    });
+
+    test('themeColor absent est accepte : la cle est optionnelle', () {
+      final faults = validatorWith().validate(classDraftWithColor(null));
       expect(faults, isEmpty);
     });
   });

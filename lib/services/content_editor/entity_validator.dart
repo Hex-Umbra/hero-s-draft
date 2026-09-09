@@ -43,6 +43,7 @@ class EntityValidator {
   final GameDataRegistry? registry;
 
   static final RegExp _idPattern = RegExp(r'^[a-z0-9_]+$');
+  static final RegExp _hexColorPattern = RegExp(r'^#[0-9a-fA-F]{6}$');
 
   List<ValidationFault> validate(EntityDraft draft) {
     final identity = _identity(draft);
@@ -66,6 +67,7 @@ class EntityValidator {
     for (final family in <List<ValidationFault> Function()>[
       () => _keys(draft, mechanics),
       () => _enums(draft, mechanics),
+      () => _hexColors(draft, mechanics),
       () => _bilingual(draft),
       () => _references(draft, mechanics),
       () => _signatureCards(draft, mechanics),
@@ -208,6 +210,36 @@ class EntityValidator {
       }
     });
 
+    return faults;
+  }
+
+  /// Les cles couleur du descripteur — `themeColor` pour une classe —
+  /// doivent porter un `#RRGGBB` valide quand elles sont presentes. Une cle
+  /// absente reste optionnelle et passe : c'est au gabarit ou au remplissage
+  /// de la fournir, jamais a cette famille de l'imposer.
+  ///
+  /// Sans ce controle, un hex mal forme (saisi a la main dans la boite JSON
+  /// en modification) est ecrit tel quel, puis avale en silence au
+  /// chargement — `HeroData._parseHexColor` rend `null` et la classe retombe
+  /// au bleu par defaut, sans que personne sache pourquoi.
+  List<ValidationFault> _hexColors(
+    EntityDraft draft,
+    Map<String, dynamic> mechanics,
+  ) {
+    final faults = <ValidationFault>[];
+    for (final key in draft.descriptor.hexColorKeys) {
+      final value = mechanics[key];
+      if (value == null) continue; // absente : optionnelle
+      if (value is! String || !_hexColorPattern.hasMatch(value)) {
+        faults.add(
+          ValidationFault(
+            'doit être une couleur hexadécimale valide (#RRGGBB), trouvé '
+            '"$value"',
+            field: key,
+          ),
+        );
+      }
+    }
     return faults;
   }
 

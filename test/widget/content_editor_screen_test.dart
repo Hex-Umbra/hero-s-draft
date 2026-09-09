@@ -284,6 +284,39 @@ void main() {
     );
   });
 
+  testWidgets(
+      'deux cartes de signature identiques sont refusees, rien n est ecrit',
+      (tester) async {
+    // Sans le controle de la recette, les deux passeraient chacune la
+    // validation individuelle (ni l'une ni l'autre n'existe encore sur le
+    // disque), et `writeAll` les ecrirait au meme chemin l'une apres
+    // l'autre : la seconde ecraserait la premiere, sans faute affichee.
+    await tester.pumpWidget(harness(projectRoot: root));
+    await tester.tap(find.text('Classe'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Créer'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(const Key('editeur-id')), 'gambler');
+    await tester.enterText(
+        find.byKey(const Key('editeur-nombre-cartes')), '2');
+    await tester.pump();
+    await tester.enterText(
+        find.byKey(const Key('editeur-carte-0-id')), 'bluff');
+    await tester.enterText(
+        find.byKey(const Key('editeur-carte-1-id')), 'bluff');
+    await tester.tap(find.text('Écrire'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Écrit :'), findsNothing);
+    expect(find.textContaining('deux cartes de signature'), findsOneWidget);
+    expect(
+      Directory('$root/assets/data/classes').existsSync(),
+      isFalse,
+      reason: 'la porte E6 doit tenir tant que la recette porte un doublon',
+    );
+  });
+
   testWidgets('le proprietaire d une carte est un champ, pas un niveau',
       (tester) async {
     Directory('$root/assets/data/classes/mage/cards').createSync(recursive: true);

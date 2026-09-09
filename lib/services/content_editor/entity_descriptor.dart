@@ -34,6 +34,7 @@ class EntityDescriptor {
     this.enumKeys = const {},
     this.enumListKeys = const {},
     this.referenceKeys = const {},
+    this.hexColorKeys = const {},
     this.supportsHeroClass = false,
     this.folderFile,
     this.imageName,
@@ -65,6 +66,12 @@ class EntityDescriptor {
   /// Cle -> categorie que sa valeur doit designer. `passiveTrait` pointe un
   /// passif, et `referential_integrity_test` le verifie deja.
   final Map<String, EntityCategory> referenceKeys;
+
+  /// Les cles dont la valeur, si presente, doit etre un `#RRGGBB` valide —
+  /// `themeColor` pour une classe. Une cle absente reste optionnelle et
+  /// passe : c'est au gabarit ou au remplissage de la fournir, pas a cette
+  /// liste de l'imposer.
+  final Set<String> hexColorKeys;
 
   /// Les bases dont les deux variantes `_fr` et `_en` sont exigees. Elles ne
   /// sont **pas** les memes partout : un evenement porte `title`, un ennemi
@@ -241,6 +248,7 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     imagePathKey: 'classCard',
     requiredKeys: const {'maxHp', 'maxMana', 'baseDamage'},
     referenceKeys: const {'passiveTrait': EntityCategory.passive},
+    hexColorKeys: const {'themeColor'},
     bilingualBases: const ['name', 'description'],
     construct: HeroData.fromJson,
     // Ni `classCard` ni `skills` ne figurent au gabarit : l'ecrivain calcule

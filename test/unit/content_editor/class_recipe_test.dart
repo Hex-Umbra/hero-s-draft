@@ -73,6 +73,49 @@ void main() {
     expect(recipe(cards: 0).toDrafts(), hasLength(1));
   });
 
+  group('faults', () {
+    test('des identifiants distincts ne produisent aucune faute', () {
+      expect(recipe().faults(), isEmpty);
+    });
+
+    test('deux cartes de signature identiques sont signalees', () {
+      final withDuplicate = ClassRecipe(
+        id: 'gambler',
+        bilingual: const {
+          'name_fr': 'Le Parieur',
+          'name_en': 'Gambler',
+          'description_fr': 'Manipule les probabilites.',
+          'description_en': 'Plays the odds.',
+        },
+        mechanics: '{"maxHp": 90}',
+        signatureCards: const [
+          SignatureCardInput(id: 'bluff'),
+          SignatureCardInput(id: 'bluff'),
+        ],
+      );
+
+      final faults = withDuplicate.faults();
+      expect(faults, hasLength(1));
+      expect(faults.first.field, 'skills');
+      expect(faults.first.message, contains('bluff'));
+    });
+
+    test('une seule faute par identifiant duplique, meme repete trois fois',
+        () {
+      final withTriple = ClassRecipe(
+        id: 'gambler',
+        bilingual: const {},
+        mechanics: '{}',
+        signatureCards: const [
+          SignatureCardInput(id: 'bluff'),
+          SignatureCardInput(id: 'bluff'),
+          SignatureCardInput(id: 'bluff'),
+        ],
+      );
+      expect(withTriple.faults(), hasLength(1));
+    });
+  });
+
   group('bout en bout, sur un vrai bac a sable', () {
     late Directory sandbox;
     late String root;

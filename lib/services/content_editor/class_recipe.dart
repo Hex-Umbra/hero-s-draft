@@ -4,6 +4,7 @@ import 'package:meta/meta.dart';
 
 import 'entity_descriptor.dart';
 import 'entity_draft.dart';
+import 'entity_validator.dart';
 import 'placeholder_filler.dart';
 
 /// Une carte de signature telle qu'on la saisit : un identifiant, et la prose
@@ -69,6 +70,30 @@ class ClassRecipe {
             mechanics: '{}',
             heroClass: id,
           ),
+        ),
+    ];
+  }
+
+  /// Les fautes que seul l'ensemble de la recette peut voir.
+  ///
+  /// `EntityValidator` juge un brouillon a la fois : deux cartes de signature
+  /// portant le meme identifiant lui paraissent chacune valide, puisque ni
+  /// l'une ni l'autre n'est encore sur le disque au moment ou elles sont
+  /// jugees. C'est a l'ecriture qu'elles se telescopent : `writeAll` les
+  /// ecrit au meme chemin l'une apres l'autre, et la seconde ecrase la
+  /// premiere sans faute affichee, sans message. A appeler **avant** la
+  /// validation par brouillon, dans `_write`.
+  List<ValidationFault> faults() {
+    final seen = <String>{};
+    final duplicates = <String>{};
+    for (final card in signatureCards) {
+      if (!seen.add(card.id)) duplicates.add(card.id);
+    }
+    return [
+      for (final id in duplicates)
+        ValidationFault(
+          'deux cartes de signature portent l\'identifiant "$id"',
+          field: 'skills',
         ),
     ];
   }

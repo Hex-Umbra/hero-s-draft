@@ -352,10 +352,14 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
     // Les brouillons sont completes **avant** d'etre juges : la famille
     // bilingue refuse la prose vide, c'est-a-dire ce que le remplissage est
     // charge de fournir. Inverser l'ordre rendrait la creation impossible.
-    final drafts =
-        _isClassRecipe ? _recipe().toDrafts() : [fillPlaceholders(_draft())];
+    final recipe = _isClassRecipe ? _recipe() : null;
+    final drafts = recipe?.toDrafts() ?? [fillPlaceholders(_draft())];
 
     final faults = [
+      // Les fautes de la recette d'abord : `EntityValidator` juge un
+      // brouillon a la fois et ne peut pas voir que deux cartes de signature
+      // partagent un identifiant — seule la recette voit l'ensemble.
+      if (recipe != null) ...recipe.faults(),
       for (final draft in drafts)
         ...EntityValidator(
           fs: ref.read(contentFileSystemProvider)!,
