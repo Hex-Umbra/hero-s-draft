@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'content_file_system.dart';
+import 'entity_catalog.dart';
 import 'entity_descriptor.dart';
 
 /// Les valeurs deja employees par les entites existantes, cle par cle et
@@ -40,7 +41,7 @@ Map<String, List<String>> knownValues(
     }
   }
 
-  for (final relative in _entityFiles(fs, rootPath, descriptor)) {
+  for (final relative in entityFiles(fs, rootPath, descriptor)) {
     final Object? decoded;
     try {
       decoded = jsonDecode(fs.readFile('$rootPath/$relative'));
@@ -57,39 +58,4 @@ Map<String, List<String>> knownValues(
     for (final entry in collected.entries)
       entry.key: (entry.value.toList()..sort()),
   };
-}
-
-List<String> _entityFiles(
-  ContentFileSystem fs,
-  String rootPath,
-  EntityDescriptor descriptor,
-) {
-  final base = 'assets/data/${descriptor.directory}';
-  final files = <String>[];
-
-  final folderFile = descriptor.folderFile;
-  if (folderFile != null) {
-    for (final entry in fs.listDirectory('$rootPath/$base')) {
-      final candidate = '$base/$entry/$folderFile';
-      if (fs.fileExists('$rootPath/$candidate')) files.add(candidate);
-    }
-    return files;
-  }
-
-  for (final name in fs.listDirectory('$rootPath/$base')) {
-    if (name.endsWith('.json')) files.add('$base/$name');
-  }
-
-  // Une carte vit a plat **et** sous chaque classe. Les deux emplacements
-  // portent le meme vocabulaire.
-  if (descriptor.supportsHeroClass) {
-    for (final heroClass in fs.listDirectory('$rootPath/assets/data/classes')) {
-      final cards = 'assets/data/classes/$heroClass/cards';
-      for (final name in fs.listDirectory('$rootPath/$cards')) {
-        if (name.endsWith('.json')) files.add('$cards/$name');
-      }
-    }
-  }
-
-  return files;
 }
