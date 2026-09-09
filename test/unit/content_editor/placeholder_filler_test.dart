@@ -9,12 +9,16 @@ void main() {
   EntityDraft draft({
     Map<String, String> bilingual = const {},
     String mechanics = '{}',
+    String? heroClass,
+    bool isModification = false,
   }) =>
       EntityDraft(
         descriptor: kEntityDescriptors[EntityCategory.relic]!,
         id: 'talisman',
         bilingual: bilingual,
         mechanics: mechanics,
+        heroClass: heroClass,
+        isModification: isModification,
       );
 
   test('la prose vide recoit un placeholder criard', () {
@@ -49,5 +53,13 @@ void main() {
   test('un corps JSON invalide ressort inchange', () {
     final broken = draft(mechanics: '{ pas du json');
     expect(fillPlaceholders(broken).mechanics, '{ pas du json');
+  });
+
+  test('les champs optionnels ne sont jamais perdus', () {
+    final filled = fillPlaceholders(
+      draft(heroClass: 'paladin', isModification: true),
+    );
+    expect(filled.heroClass, 'paladin');
+    expect(filled.isModification, isTrue);
   });
 }
