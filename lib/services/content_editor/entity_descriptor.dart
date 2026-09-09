@@ -243,15 +243,19 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     referenceKeys: const {'passiveTrait': EntityCategory.passive},
     bilingualBases: const ['name', 'description'],
     construct: HeroData.fromJson,
-    // Ni `classCard` ni `skills` ne figurent au gabarit : l'ecrivain calcule le
-    // premier, et le second se remplit carte par carte (Task 6).
+    // Ni `classCard` ni `skills` ne figurent au gabarit : l'ecrivain calcule
+    // le premier, et `_registerSignatureCard` remplit le second a chaque carte
+    // de classe ecrite. `themeColor` y figure au magenta : une classe dont la
+    // couleur n'a pas ete choisie doit se voir.
     template: '''
 {
   "maxHp": 100,
   "maxMana": 3,
   "baseDamage": 5,
   "luck": 0,
-  "displayOrder": 99
+  "armorMastery": 0,
+  "displayOrder": 99,
+  "themeColor": "#FF00FF"
 }''',
   ),
   EntityCategory.enemy: EntityDescriptor(

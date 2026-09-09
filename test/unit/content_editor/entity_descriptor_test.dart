@@ -145,4 +145,23 @@ void main() {
       'classCard',
     );
   });
+
+  // `armorMastery` est lu par run_controller.dart:253 et applique a chaque
+  // gain d armure. Absent du gabarit, il etait invisible dans l editeur et
+  // valait 0 pour les trois classes sans que personne l ait decide.
+  test('le gabarit de classe expose toutes les stats que le modele lit', () {
+    final template =
+        kEntityDescriptors[EntityCategory.heroClass]!.decodeTemplate();
+    for (final key in const [
+      'maxHp',
+      'maxMana',
+      'baseDamage',
+      'luck',
+      'armorMastery',
+      'displayOrder',
+      'themeColor',
+    ]) {
+      expect(template.containsKey(key), isTrue, reason: 'clé absente : $key');
+    }
+  });
 }
