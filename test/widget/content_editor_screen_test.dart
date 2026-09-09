@@ -317,6 +317,81 @@ void main() {
     );
   });
 
+  group('Valider juge le document que Ecrire ecrira', () {
+    // Un bouton qui valide autre chose que ce qui sera ecrit est pire qu'un
+    // bouton absent : il donne le feu vert a un geste que l'ecriture refusera,
+    // ou reproche une faute que le remplissage allait effacer. Les deux
+    // controles partent donc du **meme** document.
+
+    testWidgets('Valider voit le doublon de cartes de signature',
+        (tester) async {
+      await tester.pumpWidget(harness(projectRoot: root));
+      await tester.tap(find.text('Classe'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Créer'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byKey(const Key('editeur-id')), 'gambler');
+      await tester.enterText(
+          find.byKey(const Key('editeur-nombre-cartes')), '2');
+      await tester.pump();
+      await tester.enterText(
+          find.byKey(const Key('editeur-carte-0-id')), 'bluff');
+      await tester.enterText(
+          find.byKey(const Key('editeur-carte-1-id')), 'bluff');
+
+      await tester.tap(find.text('Valider'));
+      await tester.pump();
+
+      // C'est la faute que « Écrire » leve sur ce meme formulaire, deux tests
+      // plus haut. Valider ne peut pas rester muet la ou Ecrire refuse.
+      expect(find.textContaining('deux cartes de signature'), findsOneWidget);
+    });
+
+    testWidgets('Valider voit la carte de signature non nommee',
+        (tester) async {
+      await tester.pumpWidget(harness(projectRoot: root));
+      await tester.tap(find.text('Classe'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Créer'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byKey(const Key('editeur-id')), 'gambler');
+      await tester.enterText(
+          find.byKey(const Key('editeur-nombre-cartes')), '1');
+      await tester.pump();
+      // L'identifiant de la carte reste vide : le brouillon de classe seul est
+      // pourtant parfaitement valide, et c'est exactement le piege.
+
+      await tester.tap(find.text('Valider'));
+      await tester.pump();
+
+      expect(find.textContaining('un identifiant est requis'), findsOneWidget);
+    });
+
+    testWidgets('Valider ne reproche pas la prose que le remplissage fournit',
+        (tester) async {
+      await tester.pumpWidget(harness(projectRoot: root));
+      await tester.tap(find.text('Relique'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Créer'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byKey(const Key('editeur-id')), 'talisman');
+      await tester.tap(find.text('Valider'));
+      await tester.pump();
+
+      // Le symetrique : « Écrire » ecrit ce formulaire sans broncher (test
+      // « creer une relique avec le seul identifiant »). Valider ne doit donc
+      // pas exiger une prose que la substitution va poser.
+      expect(
+        find.textContaining('variantes linguistiques'),
+        findsNothing,
+        reason: 'Valider jugeait le brouillon non rempli',
+      );
+    });
+  });
+
   testWidgets('le proprietaire d une carte est un champ, pas un niveau',
       (tester) async {
     Directory('$root/assets/data/classes/mage/cards').createSync(recursive: true);

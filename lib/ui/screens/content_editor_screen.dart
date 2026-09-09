@@ -266,11 +266,42 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
         ],
       );
 
-  List<ValidationFault> _validate(String root) => EntityValidator(
-        fs: ref.read(contentFileSystemProvider)!,
-        rootPath: root,
-        registry: GameDataRegistry.instance,
-      ).validate(_draft());
+  /// Le document tel qu'il sera ecrit, et les fautes qui s'y opposent.
+  ///
+  /// **Un seul lieu pour les deux boutons.** « Valider » jugeait auparavant
+  /// `_draft()` — un brouillon isole, non rempli, sans les cartes de la
+  /// recette ni les fautes de `ClassRecipe.faults()` — la ou « Écrire » juge
+  /// ceci. Deux cartes de signature homonymes, ou une carte non nommee,
+  /// passaient donc Valider en silence et etaient refusees par Ecrire. Un
+  /// bouton qui valide autre chose que ce qui sera ecrit est pire qu'un bouton
+  /// absent.
+  ///
+  /// Le remplissage precede la validation, et cet ordre n'est pas negociable :
+  /// la famille bilingue refuse la prose vide, c'est-a-dire exactement ce que
+  /// `fillPlaceholders` est charge de fournir.
+  ({List<EntityDraft> drafts, List<ValidationFault> faults}) _judge(
+    String root,
+  ) {
+    final recipe = _isClassRecipe ? _recipe() : null;
+    final drafts = recipe?.toDrafts() ?? [fillPlaceholders(_draft())];
+
+    final validator = EntityValidator(
+      fs: ref.read(contentFileSystemProvider)!,
+      rootPath: root,
+      registry: GameDataRegistry.instance,
+    );
+
+    return (
+      drafts: drafts,
+      faults: [
+        // Les fautes de la recette d'abord : `EntityValidator` juge un
+        // brouillon a la fois et ne peut pas voir que deux cartes de signature
+        // partagent un identifiant — seule la recette voit l'ensemble.
+        if (recipe != null) ...recipe.faults(),
+        for (final draft in drafts) ...validator.validate(draft),
+      ],
+    );
+  }
 
   /// Signale une impossibilite par le canal deja utilise pour les fautes de
   /// validation : c'est la meme place a l'ecran, et le formulaire n'est pas
@@ -349,24 +380,9 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
       rootPath: root,
     );
 
-    // Les brouillons sont completes **avant** d'etre juges : la famille
-    // bilingue refuse la prose vide, c'est-a-dire ce que le remplissage est
-    // charge de fournir. Inverser l'ordre rendrait la creation impossible.
-    final recipe = _isClassRecipe ? _recipe() : null;
-    final drafts = recipe?.toDrafts() ?? [fillPlaceholders(_draft())];
-
-    final faults = [
-      // Les fautes de la recette d'abord : `EntityValidator` juge un
-      // brouillon a la fois et ne peut pas voir que deux cartes de signature
-      // partagent un identifiant — seule la recette voit l'ensemble.
-      if (recipe != null) ...recipe.faults(),
-      for (final draft in drafts)
-        ...EntityValidator(
-          fs: ref.read(contentFileSystemProvider)!,
-          rootPath: root,
-          registry: GameDataRegistry.instance,
-        ).validate(draft),
-    ];
+    // Exactement ce que « Valider » vient de juger, ou aurait juge : le
+    // document est construit une seule fois, par `_judge`.
+    final (:drafts, :faults) = _judge(root);
     setState(() {
       _faults = faults;
       _report = null;
@@ -618,7 +634,7 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
             cardIds: _cardIds,
             cardNameFr: _cardNameFr,
             cardNameEn: _cardNameEn,
-            onValidate: () => setState(() => _faults = _validate(root)),
+            onValidate: () => setState(() => _faults = _judge(root).faults),
             onWrite: () => _write(root),
             outcome: _outcome(),
           ),
