@@ -69,14 +69,7 @@ class StatsDialog extends ConsumerWidget {
       maxWidth: min(MediaQuery.of(context).size.width * 0.85, 500),
       title: Row(
         children: [
-          ClipOval(
-            child: Image.asset(
-              classImageOf(heroData),
-              width: 36,
-              height: 36,
-              fit: BoxFit.cover,
-            ),
-          ),
+          ClassAvatar(hero: heroData),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -374,6 +367,64 @@ class StatsDialog extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// La pastille ronde de la classe, dans le titre du dialogue de stats.
+///
+/// Deux precautions pour un seul `Image.asset`, et les deux comptent parce que
+/// cet ecran-ci, contrairement a l'editeur, est ouvert par les joueurs :
+///
+/// - **`cacheWidth`.** Flame tient son propre cache d'images, distinct de
+///   l'`ImageCache` de Flutter. `Image.asset` decode donc la carte de classe
+///   une **seconde** fois, a pleine resolution : 1696 x 2528 x 4 octets, soit
+///   ~17 Mo, pour un disque de 36 points, a chaque ouverture du dialogue.
+/// - **`errorBuilder`.** [StatsDialog.classImageOf] peut designer une
+///   `iconPath` qui n'existe pas : `EntityWriter._placeClassIcon` sort en
+///   silence quand son placeholder source est absent, et le `class.json` ecrit
+///   designe alors un fichier jamais depose. Sans repli, le dialogue **leve a
+///   l'ouverture**, et rien ne l'attrape.
+class ClassAvatar extends StatelessWidget {
+  const ClassAvatar({super.key, required this.hero, this.diameter = 36});
+
+  final HeroData hero;
+
+  /// Le diametre a l'ecran, en points. C'est lui qui borne le decodage.
+  final double diameter;
+
+  @override
+  Widget build(BuildContext context) {
+    final path = StatsDialog.classImageOf(hero);
+    return ClipOval(
+      child: _asset(
+        context,
+        path,
+        // Se replier sur la carte de classe n'a de sens que si ce n'est pas
+        // elle qui vient d'echouer : sinon le repli echouerait pareil.
+        fallback: path == hero.classCard ? null : hero.classCard,
+      ),
+    );
+  }
+
+  Widget _asset(BuildContext context, String path, {String? fallback}) {
+    return Image.asset(
+      path,
+      width: diameter,
+      height: diameter,
+      fit: BoxFit.cover,
+      // La cible est un cercle de [diameter] points : decoder plus large ne
+      // gagne rien a l'ecran et coute la difference en memoire.
+      cacheWidth: (diameter * MediaQuery.devicePixelRatioOf(context)).round(),
+      errorBuilder: (innerContext, _, _) => fallback == null
+          // Dernier cran : la couleur de la classe, plutot qu'une exception
+          // remontee depuis le titre du dialogue.
+          ? SizedBox(
+              width: diameter,
+              height: diameter,
+              child: ColoredBox(color: StatsDialog.classColorOf(hero)),
+            )
+          : _asset(innerContext, fallback),
     );
   }
 }

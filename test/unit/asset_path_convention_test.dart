@@ -36,6 +36,14 @@ void main() {
     }
 
     check('classes', 'classCard');
+    // `iconPath` est optionnel — les trois classes livrees n'en portent pas,
+    // et la garde `path == null` ci-dessus les laisse donc passer. Ce qui est
+    // controle ici, c'est le cas d'une classe **creee par l'outil** :
+    // `ClassRecipe` ecrit toujours la cle, tandis que
+    // `EntityWriter._placeClassIcon` sort en silence si le placeholder source
+    // manque. Le `class.json` designerait alors un fichier inexistant, que
+    // rien d'autre ne surveillait.
+    check('classes', 'iconPath');
     check('enemies', 'spritePath');
 
     expect(offenders, isEmpty, reason: offenders.join('\n'));
