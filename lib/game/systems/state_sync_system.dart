@@ -49,7 +49,7 @@ class StateSyncSystem extends Component with HasGameReference<HerosDraftGame> {
       game.heroCard = HeroCard(
         state.heroStats,
         bonusAttack: bonusAtt,
-        imagePath: heroData.iconPath,
+        imagePath: heroData.classCard,
       );
       game.heroCard!.position = Vector2(game.size.x / 2, game.size.y * 0.51);
       game.add(game.heroCard!);

@@ -41,7 +41,7 @@ class GameDataRegistry {
   /// C'est un getter calculé et non un champ de constructeur, pour ne pas
   /// casser les dizaines de `GameDataRegistry(...)` construits par les tests.
   List<String> get imagesToPreload => <String>{
-        ...heroes.map((h) => h.iconPath),
+        ...heroes.map((h) => h.classCard),
         ...enemies.map((e) => e.spritePath),
       }.where((path) => path.isNotEmpty).toList();
 }

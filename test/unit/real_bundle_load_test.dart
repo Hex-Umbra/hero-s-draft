@@ -75,7 +75,7 @@ void main() {
     final assets = manifest.listAssets().toSet();
 
     for (final id in ['paladin', 'berserker', 'mage']) {
-      expect(assets, contains('assets/data/classes/$id/icon.png'));
+      expect(assets, contains('assets/data/classes/$id/$id.png'));
     }
     for (final id in ['slime', 'gobelin', 'squelette', 'orc']) {
       expect(assets, contains('assets/data/enemies/$id/sprite.png'));
