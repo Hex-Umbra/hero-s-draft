@@ -68,6 +68,7 @@ class EntityValidator {
       () => _enums(draft, mechanics),
       () => _bilingual(draft),
       () => _references(draft, mechanics),
+      () => _signatureCards(draft, mechanics),
       () => _construct(draft),
     ]) {
       final faults = family();
@@ -259,6 +260,69 @@ class EntityValidator {
       }
     });
     return faults;
+  }
+
+  /// Le tableau `skills` d'une classe doit etre **exactement** l'ensemble des
+  /// cartes de son dossier `cards/`.
+  ///
+  /// Le controle lit le **disque** et non le registre : les cartes qu'une
+  /// recette vient d'ecrire ne sont pas dans le registre charge au demarrage,
+  /// et un controle par reference refuserait la sortie meme de l'outil. C'est
+  /// aussi l'invariant exact qu'exige `referential_integrity_test`, avance au
+  /// moment de l'ecriture plutot qu'a celui des tests.
+  List<ValidationFault> _signatureCards(
+    EntityDraft draft,
+    Map<String, dynamic> mechanics,
+  ) {
+    if (draft.descriptor.category != EntityCategory.heroClass) {
+      return const [];
+    }
+
+    final declared = <String>{};
+    final raw = mechanics['skills'];
+    if (raw != null) {
+      if (raw is! List) {
+        return const [
+          ValidationFault(
+            'doit être une liste d\'identifiants de cartes',
+            field: 'skills',
+          ),
+        ];
+      }
+      for (final element in raw) {
+        if (element is! String) {
+          return const [
+            ValidationFault(
+              'chaque élément doit être un identifiant de carte',
+              field: 'skills',
+            ),
+          ];
+        }
+        declared.add(element);
+      }
+    }
+
+    final folder = '$rootPath/assets/data/classes/${draft.id}/cards';
+    final onDisk = fs.directoryExists(folder)
+        ? fs
+            .listDirectory(folder)
+            .where((name) => name.endsWith('.json'))
+            .map((name) => name.substring(0, name.length - '.json'.length))
+            .toSet()
+        : const <String>{};
+
+    return [
+      for (final missing in declared.difference(onDisk))
+        ValidationFault(
+          'la carte "$missing" est déclarée mais absente de cards/',
+          field: 'skills',
+        ),
+      for (final orphan in onDisk.difference(declared))
+        ValidationFault(
+          'la carte "$orphan" est dans cards/ mais absente de skills',
+          field: 'skills',
+        ),
+    ];
   }
 
   /// Famille 7 — le filet structurel, en dernier.

@@ -316,6 +316,74 @@ void main() {
     });
   });
 
+  group('bijection skills <-> cards/', () {
+    /// Une classe sur le disque, avec deux cartes dans son dossier.
+    void seedClassWithTwoCards() {
+      Directory('$root/assets/data/classes/gambler/cards')
+          .createSync(recursive: true);
+      for (final id in const ['bluff', 'all_in']) {
+        File('$root/assets/data/classes/gambler/cards/$id.json')
+            .writeAsStringSync('{}');
+      }
+      File('$root/assets/data/classes/gambler/class.json')
+          .writeAsStringSync('{}');
+    }
+
+    EntityDraft classDraft(String skillsJson) => EntityDraft(
+          descriptor: kEntityDescriptors[EntityCategory.heroClass]!,
+          id: 'gambler',
+          bilingual: const {
+            'name_fr': 'Le Parieur',
+            'name_en': 'Gambler',
+            'description_fr': 'Manipule les probabilites.',
+            'description_en': 'Plays the odds.',
+          },
+          mechanics: '{"maxHp": 100, "maxMana": 3, "baseDamage": 5, '
+              '"skills": $skillsJson}',
+          isModification: true,
+        );
+
+    test('un skills exact est accepte', () {
+      seedClassWithTwoCards();
+      final faults =
+          validatorWith().validate(classDraft('["all_in", "bluff"]'));
+      expect(faults, isEmpty);
+    });
+
+    test('une carte declaree mais absente du dossier est refusee', () {
+      seedClassWithTwoCards();
+      final faults = validatorWith()
+          .validate(classDraft('["all_in", "bluff", "fantome"]'));
+      expect(faults.map((f) => f.toString()).join(), contains('fantome'));
+    });
+
+    // L'autre sens compte autant : une carte presente et non declaree serait
+    // chargee dans le pool de la classe sans que rien ne le dise, et
+    // referential_integrity_test rougirait bien plus tard.
+    test('une carte presente mais absente de skills est refusee', () {
+      seedClassWithTwoCards();
+      final faults = validatorWith().validate(classDraft('["bluff"]'));
+      expect(faults.map((f) => f.toString()).join(), contains('all_in'));
+    });
+
+    test('une classe creee, sans dossier cards/ ni skills, passe', () {
+      final faults = validatorWith().validate(
+        EntityDraft(
+          descriptor: kEntityDescriptors[EntityCategory.heroClass]!,
+          id: 'nouveau',
+          bilingual: const {
+            'name_fr': 'Nouveau',
+            'name_en': 'New',
+            'description_fr': 'Rien.',
+            'description_en': 'Nothing.',
+          },
+          mechanics: '{"maxHp": 100, "maxMana": 3, "baseDamage": 5}',
+        ),
+      );
+      expect(faults, isEmpty);
+    });
+  });
+
   group('famille 7 — construction', () {
     test('un type de mauvaise nature est attrape par le modele', () {
       final faults = validatorWith().validate(
