@@ -103,8 +103,15 @@ class EntityDescriptor {
   }
 
   /// Le chemin de l'image, pour les categories qui en portent une.
-  String? imagePathOf(String id) =>
-      imageName == null ? null : 'assets/data/$directory/$id/$imageName';
+  ///
+  /// [imageName] peut porter le jeton `{id}` : la carte d'une classe est
+  /// nommee d'apres elle (`gambler/gambler.png`), la ou le sprite d'un ennemi
+  /// porte un nom constant.
+  String? imagePathOf(String id) {
+    final name = imageName;
+    if (name == null) return null;
+    return 'assets/data/$directory/$id/${name.replaceAll('{id}', id)}';
+  }
 
   Map<String, dynamic> decodeTemplate() =>
       jsonDecode(template) as Map<String, dynamic>;
@@ -230,13 +237,13 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     label: 'Classe',
     directory: 'classes',
     folderFile: 'class.json',
-    imageName: 'icon.png',
-    imagePathKey: 'iconPath',
+    imageName: '{id}.png',
+    imagePathKey: 'classCard',
     requiredKeys: const {'maxHp', 'maxMana', 'baseDamage'},
     referenceKeys: const {'passiveTrait': EntityCategory.passive},
     bilingualBases: const ['name', 'description'],
     construct: HeroData.fromJson,
-    // Ni `iconPath` ni `skills` ne figurent au gabarit : l'ecrivain calcule le
+    // Ni `classCard` ni `skills` ne figurent au gabarit : l'ecrivain calcule le
     // premier, et le second se remplit carte par carte (Task 6).
     template: '''
 {

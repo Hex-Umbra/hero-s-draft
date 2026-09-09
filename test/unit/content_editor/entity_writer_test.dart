@@ -160,7 +160,7 @@ void main() {
         'name_fr': 'X',
         'description_en': 'x',
         'description_fr': 'x',
-        'iconPath': 'assets/data/classes/$id/icon.png',
+        'classCard': 'assets/data/classes/$id/$id.png',
         'maxHp': 100,
         'maxMana': 3,
         'baseDamage': 5,

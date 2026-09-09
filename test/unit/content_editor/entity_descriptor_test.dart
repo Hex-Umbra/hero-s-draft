@@ -124,4 +124,25 @@ void main() {
       expect(descriptor.imagePathKey, isNotNull);
     }
   });
+
+  test('le chemin d image d une classe porte son identifiant', () {
+    expect(
+      kEntityDescriptors[EntityCategory.heroClass]!.imagePathOf('gambler'),
+      'assets/data/classes/gambler/gambler.png',
+    );
+  });
+
+  test('le chemin d image d un ennemi reste constant', () {
+    expect(
+      kEntityDescriptors[EntityCategory.enemy]!.imagePathOf('gobelin'),
+      'assets/data/enemies/gobelin/sprite.png',
+    );
+  });
+
+  test('la classe ecrit son image sous classCard', () {
+    expect(
+      kEntityDescriptors[EntityCategory.heroClass]!.imagePathKey,
+      'classCard',
+    );
+  });
 }

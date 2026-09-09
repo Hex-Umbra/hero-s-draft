@@ -88,7 +88,7 @@ void main() {
         // pose cote CLE, et la forme cote valeur que propose `dart fix`
         // (`imagePathKey!: ?imagePath`) leve ici, le `!` s'evaluant avant que
         // le `?` ne puisse court-circuiter.
-        expect(composed.containsKey('iconPath'), isFalse,
+        expect(composed.containsKey('classCard'), isFalse,
             reason: descriptor.label);
         expect(composed.containsKey('spritePath'), isFalse,
             reason: descriptor.label);
