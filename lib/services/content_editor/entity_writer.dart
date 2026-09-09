@@ -8,7 +8,7 @@ import 'entity_draft.dart';
 
 /// L'image deposee dans un dossier de classe ou d'ennemi nouvellement cree.
 /// Un carre magenta volontairement laid : oublier de le remplacer doit se voir.
-const String kPlaceholderImage = 'assets/images/placeholder_entity.png';
+const String kPlaceholderImage = 'assets/placeholders/images/placeholder_entity.png';
 
 /// Ce qui a ete ecrit, et ce qu'il reste a faire cote humain.
 @immutable

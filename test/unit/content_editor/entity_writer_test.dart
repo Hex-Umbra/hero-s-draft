@@ -365,9 +365,9 @@ void main() {
 
     test('l image de remplacement est deposee sous le nom attendu', () async {
       // Le bac a sable doit porter une copie du placeholder, comme le depot.
-      Directory('$root/assets/images').createSync(recursive: true);
-      File('assets/images/placeholder_entity.png')
-          .copySync('$root/assets/images/placeholder_entity.png');
+      Directory('$root/assets/placeholders/images').createSync(recursive: true);
+      File('assets/placeholders/images/placeholder_entity.png')
+          .copySync('$root/assets/placeholders/images/placeholder_entity.png');
 
       final descriptor = kEntityDescriptors[EntityCategory.enemy]!;
       await writerHere().write(
@@ -385,9 +385,9 @@ void main() {
     });
 
     test('une image deja presente n est jamais ecrasee', () async {
-      Directory('$root/assets/images').createSync(recursive: true);
-      File('assets/images/placeholder_entity.png')
-          .copySync('$root/assets/images/placeholder_entity.png');
+      Directory('$root/assets/placeholders/images').createSync(recursive: true);
+      File('assets/placeholders/images/placeholder_entity.png')
+          .copySync('$root/assets/placeholders/images/placeholder_entity.png');
       Directory('$root/assets/data/enemies/troll').createSync(recursive: true);
       File('$root/assets/data/enemies/troll/sprite.png')
           .writeAsStringSync('image peinte a la main');
@@ -413,9 +413,9 @@ void main() {
       // ci-dessus : sans lui, `_placeImage` sort sur sa garde de source
       // absente quoi que dise le descripteur, et ce test passerait pour une
       // raison qui n est pas celle qu il annonce.
-      Directory('$root/assets/images').createSync(recursive: true);
-      File('assets/images/placeholder_entity.png')
-          .copySync('$root/assets/images/placeholder_entity.png');
+      Directory('$root/assets/placeholders/images').createSync(recursive: true);
+      File('assets/placeholders/images/placeholder_entity.png')
+          .copySync('$root/assets/placeholders/images/placeholder_entity.png');
 
       await writerHere().write(fixtureRelicDraft());
       expect(Directory('$root/assets/data/relics').listSync(), hasLength(1));
