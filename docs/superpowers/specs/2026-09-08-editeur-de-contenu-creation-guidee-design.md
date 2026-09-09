@@ -2,7 +2,10 @@
 
 Date : 2026-09-08
 Statut : **Conception** — non implémenté
-Révision : v3 — **v3 : `EntityWriter._registerSignatureCard` maintenait déjà `skills` ; la §1 le
+Révision : v4 — **v4 : la recette ecrit `iconPath` pour une classe neuve et depose
+`placeholder_icon.png` — mais a la creation seulement, une modification n'en fabriquant jamais, sous
+peine d'afficher un carre magenta a la place de l'illustration des trois classes livrees** (§3.1,
+§6.1). Les deux images de remplacement vivent desormais sous `assets/placeholders/images/`. v3 : **v3 : `EntityWriter._registerSignatureCard` maintenait déjà `skills` ; la §1 le
 décrivait mal, et la garde devient une bijection lue sur le disque plutôt qu'une reference vers le
 registre, qui aurait refuse la sortie meme de l'outil** (§1, §7.1). v2 — **`iconPath` désignait en réalité la carte de classe (1696 × 2528, 6,5 Mo), pas une
 icône : le champ devient `classCard` et `iconPath` renaît optionnel pour une vraie icône** (§3.1).
@@ -117,9 +120,18 @@ Les lecteurs suivent le renommage :
 `dart run tool/sync_assets.dart --check` le confirme après la migration.
 
 **Deux conséquences côté descripteur** : le nom du fichier image n'est plus une constante mais
-dérive de l'identifiant (`<id>.png`), et `imagePathKey` vise `classCard`. `iconPath`, lui, n'est
-**pas** calculé par l'écrivain — c'est une image que l'auteur fournit quand elle existe, donc un
-champ ordinaire du formulaire.
+dérive de l'identifiant (`<id>.png`), et `imagePathKey` vise `classCard`.
+
+**`iconPath` n'est écrit que pour une classe neuve.** La recette le calcule à partir de
+l'identifiant — `classes/<id>/icon.png` — et l'écrivain y dépose
+`assets/placeholders/images/placeholder_icon.png`, un carré magenta bordé de 64 × 64. L'auteur n'a
+alors qu'un fichier à remplacer, pas une clé à se rappeler d'ajouter.
+
+**Jamais en modification, en revanche.** Les trois classes livrées n'ont pas d'icône dessinée : leur
+en déposer une ferait afficher un carré magenta à la place de leur illustration dans le dialogue de
+stats, une régression visible par les joueurs au bénéfice de personne. Elles restent donc sans
+`iconPath`, et le repli du §3.3 montre leur carte. La §10 garde les trois icônes comme travail
+d'auteur.
 
 ### 3.2 La couleur
 
@@ -291,8 +303,8 @@ Trois choses ne peuvent pas être devinées et bloquent la création tant qu'ell
 - `heroClass` et `category` — **imposés par le répertoire ; les écrire fait échouer le chargement**
   (`CLAUDE.md`, autorité du répertoire).
 
-`iconPath`, en revanche, **apparaît** au formulaire : depuis le §3.1 il désigne une vraie icône que
-l'auteur fournit, et non plus un chemin que l'écrivain calcule.
+`iconPath` n'y figure pas davantage : la recette le dérive de l'identifiant pour une classe neuve
+(§3.1), et une classe existante qui n'en a pas ne doit pas en recevoir.
 
 ### 5.4 Le sélecteur de couleur
 
@@ -336,8 +348,9 @@ Entrées obligatoires : identifiant, N, et pour chacune des N cartes son identif
 Écrit, dans cet ordre :
 
 ```
-assets/data/classes/<id>/class.json      (avec skills déjà rempli)
+assets/data/classes/<id>/class.json      (avec iconPath déjà écrit)
 assets/data/classes/<id>/<id>.png        (carte de classe, placeholder)
+assets/data/classes/<id>/icon.png        (icone, placeholder — creation seule)
 assets/data/classes/<id>/cards/<c1>.json (placeholder)
 assets/data/classes/<id>/cards/<cN>.json (placeholder)
 puis  dart run tool/sync_assets.dart

@@ -1156,14 +1156,17 @@ git commit -m "feat(editeur): cataloguer les entites presentes sur le disque"
 
 **Files:**
 - Create: `lib/services/content_editor/class_recipe.dart`
-- Test: `test/unit/content_editor/class_recipe_test.dart` (créé)
+- Modify: `lib/services/content_editor/entity_writer.dart` (dépôt de l'icône, création seule)
+- Test: `test/unit/content_editor/class_recipe_test.dart` (créé), `test/unit/content_editor/entity_writer_test.dart`
 
 **Interfaces:**
 - Consumes: `EntityWriter.writeAll` (tâche 5), `fillPlaceholders` (tâche 6), `EntityDescriptor.imagePathOf` (tâche 3).
 - Produces:
   - `class SignatureCardInput { const SignatureCardInput({required String id, Map<String, String> bilingual}); }`
   - `class ClassRecipe { const ClassRecipe({required String id, required Map<String, String> bilingual, required String mechanics, required List<SignatureCardInput> signatureCards}); List<EntityDraft> toDrafts(); }`
+  - `const String kPlaceholderIcon = 'assets/placeholders/images/placeholder_icon.png';` dans `entity_writer.dart`.
 - La tâche 11 construit un `ClassRecipe` depuis le formulaire et passe `toDrafts()` à `writeAll`.
+- Les deux images de remplacement existent déjà sur le disque, sous `assets/placeholders/images/` : elles ont été mises en place avant l'exécution de ce plan, avec la ligne `pubspec.yaml` correspondante.
 
 - [ ] **Step 1 : écrire les tests qui échouent**
 
@@ -1212,6 +1215,15 @@ Créer `test/unit/content_editor/class_recipe_test.dart` :
     expect(mechanics['maxMana'], 3);
     expect(mechanics['armorMastery'], 0);
     expect(mechanics['themeColor'], '#FF00FF');
+  });
+
+  // Une classe neuve arrive avec son icone deja designee : l'auteur n'aura
+  // qu'un fichier a remplacer, pas une cle a se rappeler d'ajouter six mois
+  // plus tard.
+  test('la classe neuve porte le chemin de son icone', () {
+    final mechanics =
+        jsonDecode(recipe().toDrafts().first.mechanics) as Map<String, dynamic>;
+    expect(mechanics['iconPath'], 'assets/data/classes/gambler/icon.png');
   });
 
   test('chaque carte appartient a la classe et porte une prose non vide', () {
@@ -1293,7 +1305,7 @@ class ClassRecipe {
           descriptor: classDescriptor,
           id: id,
           bilingual: bilingual,
-          mechanics: mechanics,
+          mechanics: _mechanicsWithIcon,
         ),
       ),
       for (final card in signatureCards)
@@ -1308,13 +1320,120 @@ class ClassRecipe {
         ),
     ];
   }
+
+  /// Le corps de la classe, augmente du chemin de son icone.
+  ///
+  /// Il est **derive de l'identifiant**, comme celui de la carte de classe :
+  /// une icone ne se saisit pas, elle se depose. L'ecrire ici plutot que de
+  /// laisser l'auteur ajouter la cle plus tard evite la dette qu'on ne voit
+  /// qu'au moment ou elle coute.
+  String get _mechanicsWithIcon {
+    try {
+      final decoded = jsonDecode(mechanics) as Map<String, dynamic>;
+      decoded['iconPath'] = 'assets/data/classes/$id/icon.png';
+      return jsonEncode(decoded);
+    } catch (_) {
+      // Corps illisible : `EntityValidator` dira pourquoi, et son message vaut
+      // mieux qu'un ecrasement silencieux.
+      return mechanics;
+    }
+  }
 }
 ```
+
+Ajouter `import 'dart:convert';` en tête du fichier.
 
 - [ ] **Step 4 : lancer les tests, vérifier qu'ils passent**
 
 Run: `flutter test test/unit/content_editor/class_recipe_test.dart`
-Expected: PASS, 5 tests.
+Expected: PASS, 6 tests.
+
+- [ ] **Step 4 bis : déposer l'icône de remplacement, à la création seulement**
+
+Écrire d'abord les deux tests, dans `test/unit/content_editor/entity_writer_test.dart` :
+
+```dart
+    test('une classe creee recoit son icone de remplacement', () async {
+      Directory('$root/assets/placeholders/images').createSync(recursive: true);
+      File('assets/placeholders/images/placeholder_icon.png')
+          .copySync('$root/assets/placeholders/images/placeholder_icon.png');
+
+      await EntityWriter(fs: fs, rootPath: root).write(classDraft('gambler'));
+
+      expect(
+        File('$root/assets/data/classes/gambler/icon.png').existsSync(),
+        isTrue,
+      );
+    });
+
+    // La garde qui empeche une regression visible par les joueurs : les trois
+    // classes livrees n'ont pas d'icone dessinee, et leur en deposer une ferait
+    // afficher un carre magenta a la place de leur illustration dans le
+    // dialogue de stats. Modifier une classe ne doit donc rien deposer.
+    test('modifier une classe ne lui fabrique pas d icone', () async {
+      Directory('$root/assets/placeholders/images').createSync(recursive: true);
+      File('assets/placeholders/images/placeholder_icon.png')
+          .copySync('$root/assets/placeholders/images/placeholder_icon.png');
+      Directory('$root/assets/data/classes/paladin/cards')
+          .createSync(recursive: true);
+      File('$root/assets/data/classes/paladin/class.json')
+          .writeAsStringSync('{}');
+
+      await EntityWriter(fs: fs, rootPath: root)
+          .write(classDraft('paladin', isModification: true));
+
+      expect(
+        File('$root/assets/data/classes/paladin/icon.png').existsSync(),
+        isFalse,
+      );
+    });
+```
+
+Run: `flutter test test/unit/content_editor/entity_writer_test.dart`
+Expected: FAIL sur le premier — rien ne dépose encore d'icône.
+
+Puis, dans `lib/services/content_editor/entity_writer.dart`, ajouter la constante sous `kPlaceholderImage` :
+
+```dart
+/// L'icone deposee dans un dossier de classe nouvellement cree. Meme magenta
+/// que [kPlaceholderImage], borde pour distinguer la fente d'un coup d'oeil.
+const String kPlaceholderIcon =
+    'assets/placeholders/images/placeholder_icon.png';
+```
+
+appeler `_placeClassIcon(draft);` dans `_writeFiles`, juste après `_placeImage(draft);`, et écrire :
+
+```dart
+  /// Depose l'icone de remplacement d'une classe **neuve**.
+  ///
+  /// Jamais en modification : les trois classes livrees n'ont pas d'icone
+  /// dessinee, et leur en deposer une ferait afficher un carre magenta a la
+  /// place de leur illustration dans le dialogue de stats. Le repli de
+  /// `StatsDialog.classImageOf` sur la carte de classe n'a de sens que tant que
+  /// `iconPath` reste absent de leur JSON.
+  ///
+  /// Comme [_placeImage], elle n'ecrase jamais une image deja la, et n'est pas
+  /// defaite par [_rollback] : un placeholder laisse dans un dossier neuf est
+  /// sans consequence.
+  void _placeClassIcon(EntityDraft draft) {
+    if (draft.descriptor.category != EntityCategory.heroClass ||
+        draft.isModification) {
+      return;
+    }
+
+    final absolute = '$rootPath/assets/data/classes/${draft.id}/icon.png';
+    if (fs.fileExists(absolute)) return;
+
+    final source = '$rootPath/$kPlaceholderIcon';
+    if (!fs.fileExists(source)) return; // rien a copier : on n'invente pas
+    fs.copyFile(source, absolute);
+  }
+```
+
+Run: `flutter test test/unit/content_editor/entity_writer_test.dart`
+Expected: PASS.
+
+Puis retirer temporairement la garde `|| draft.isModification` et relancer : le second test doit virer au rouge. La rétablir. C'est la seule preuve que la régression est réellement empêchée.
 
 - [ ] **Step 5 : écrire le test de bout en bout, sur un vrai bac à sable**
 
@@ -1340,13 +1459,21 @@ Ajouter au même fichier, avec le patron `Directory.systemTemp.createTempSync` e
         .toSet();
     expect(onDisk, {'pari_1', 'pari_2'});
 
-    // Et la carte de classe a bien ete deposee sous son nouveau nom.
+    // Et les deux images sont la, sous leurs noms respectifs.
     expect(
       File('$root/assets/data/classes/gambler/gambler.png').existsSync(),
       isTrue,
     );
+    expect(
+      File('$root/assets/data/classes/gambler/icon.png').existsSync(),
+      isTrue,
+    );
+    expect(classJson['iconPath'], 'assets/data/classes/gambler/icon.png');
+    expect(classJson['classCard'], 'assets/data/classes/gambler/gambler.png');
   });
 ```
+
+> Le bac à sable doit porter une copie des **deux** remplacements — `placeholder_entity.png` et `placeholder_icon.png`, tous deux sous `assets/placeholders/images/` — sinon `_placeImage` et `_placeClassIcon` sortent sur leur garde de source absente et le test passerait pour une raison qui n'est pas celle qu'il annonce.
 
 Run: `flutter test test/unit/content_editor/class_recipe_test.dart`
 Expected: PASS.
