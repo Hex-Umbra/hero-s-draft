@@ -94,6 +94,16 @@ void main() {
 
   testWidgets('choisir un autre type referme la branche ouverte',
       (tester) async {
+    // Les deux categories portent une entite. Sans elles, ce test ne pouvait
+    // pas echouer : le bac a sable etant neuf, `talisman_de_fer` etait
+    // introuvable **avant** le premier tap, et l'autre assertion etait vraie
+    // que la branche se referme ou non.
+    File('$root/assets/data/relics/talisman_de_fer.json')
+        .writeAsStringSync('{}');
+    Directory('$root/assets/data/enemies/gobelin').createSync(recursive: true);
+    File('$root/assets/data/enemies/gobelin/enemy.json')
+        .writeAsStringSync('{}');
+
     await tester.pumpWidget(harness(projectRoot: root));
 
     await tester.tap(find.text('Relique'));
@@ -101,13 +111,22 @@ void main() {
     await tester.tap(find.text('Modifier'));
     await tester.pumpAndSettle();
 
+    // La branche est bel et bien ouverte : sans cette assertion, la
+    // disparition d'apres ne prouverait rien.
+    expect(find.text('talisman_de_fer'), findsOneWidget);
+
     await tester.tap(find.text('Ennemi'));
     await tester.pumpAndSettle();
 
     // Le niveau 1 est bien la, mais reinitialise : plus aucune branche ouverte
     // en dessous.
     expect(find.text('Créer'), findsOneWidget);
+    // La cible de l'ancienne categorie a disparu...
     expect(find.text('talisman_de_fer'), findsNothing);
+    // ...et aucune cible de la nouvelle n'a pris sa place : c'est **cette**
+    // assertion qui tient la fermeture de la branche. `gobelin` existe sur le
+    // disque et s'afficherait aussitot si « Modifier » restait selectionne.
+    expect(find.text('gobelin'), findsNothing);
   });
 
   testWidgets('les cartes portent la couleur de leur proprietaire',
