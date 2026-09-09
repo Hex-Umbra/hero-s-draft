@@ -214,6 +214,145 @@ void main() {
     expect(_dataTreeSnapshot(root), equals(before));
   });
 
+  testWidgets('creer une relique avec le seul identifiant ecrit un fichier valide',
+      (tester) async {
+    await tester.pumpWidget(harness(projectRoot: root));
+    await tester.tap(find.text('Relique'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Créer'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(const Key('editeur-id')), 'talisman');
+    await tester.tap(find.text('Écrire'));
+    await tester.pumpAndSettle();
+
+    // C'est ce test qui echouerait si la substitution passait *apres* la
+    // validation : la famille bilingue refuserait la prose vide.
+    expect(find.textContaining('Écrit :'), findsOneWidget);
+    final written = jsonDecode(
+      File('$root/assets/data/relics/talisman.json').readAsStringSync(),
+    ) as Map<String, dynamic>;
+    expect(written['name_fr'], contains('À REMPLIR'));
+    expect(written['name_en'], contains('À REMPLIR'));
+  });
+
+  testWidgets('apres une creation, l arbre revient a la branche 0',
+      (tester) async {
+    await tester.pumpWidget(harness(projectRoot: root));
+    await tester.tap(find.text('Relique'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Créer'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('editeur-id')), 'talisman');
+    await tester.tap(find.text('Écrire'));
+    await tester.pumpAndSettle();
+
+    // Plus aucune branche ouverte, mais le compte rendu reste lisible : la
+    // nouvelle entite n'existe pas encore pour l'application qui tourne, et
+    // ouvrir son formulaire donnerait l'illusion inverse.
+    expect(find.text('Créer'), findsNothing);
+    expect(find.textContaining('Écrit :'), findsOneWidget);
+    expect(find.textContaining('Relancer'), findsOneWidget);
+  });
+
+  testWidgets('creer une classe ecrit ses cartes et referme skills',
+      (tester) async {
+    await tester.pumpWidget(harness(projectRoot: root));
+    await tester.tap(find.text('Classe'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Créer'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(const Key('editeur-id')), 'gambler');
+    await tester.enterText(
+        find.byKey(const Key('editeur-nombre-cartes')), '2');
+    await tester.pump();
+    await tester.enterText(
+        find.byKey(const Key('editeur-carte-0-id')), 'bluff');
+    await tester.enterText(
+        find.byKey(const Key('editeur-carte-1-id')), 'all_in');
+    await tester.tap(find.text('Écrire'));
+    await tester.pumpAndSettle();
+
+    final classJson = jsonDecode(
+      File('$root/assets/data/classes/gambler/class.json').readAsStringSync(),
+    ) as Map<String, dynamic>;
+    expect(classJson['skills'], ['all_in', 'bluff']);
+    expect(
+      File('$root/assets/data/classes/gambler/cards/bluff.json').existsSync(),
+      isTrue,
+    );
+  });
+
+  testWidgets('le proprietaire d une carte est un champ, pas un niveau',
+      (tester) async {
+    Directory('$root/assets/data/classes/mage/cards').createSync(recursive: true);
+    File('$root/assets/data/classes/mage/class.json').writeAsStringSync(
+      '{"id":"mage","name_fr":"Mage","name_en":"Mage",'
+      '"description_fr":".","description_en":".",'
+      '"classCard":"assets/data/classes/mage/mage.png",'
+      '"maxHp":100,"maxMana":3,"baseDamage":5}',
+    );
+
+    await tester.pumpWidget(harness(projectRoot: root));
+    await tester.tap(find.text('Carte'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Créer'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('editeur-proprietaire-mage')));
+    await tester.enterText(find.byKey(const Key('editeur-id')), 'eclair');
+    await tester.tap(find.text('Écrire'));
+    await tester.pumpAndSettle();
+
+    expect(
+      File('$root/assets/data/classes/mage/cards/eclair.json').existsSync(),
+      isTrue,
+      reason: 'le propriétaire choisi décide du répertoire',
+    );
+  });
+
+  testWidgets('le passif se choisit dans le catalogue, pas dans l usage',
+      (tester) async {
+    // Un passif present sur le disque qu'aucune classe n'emploie : le cas que
+    // `knownValues`, qui liste les valeurs *employees*, manquerait.
+    Directory('$root/assets/data/passives').createSync(recursive: true);
+    File('$root/assets/data/passives/chance_du_joueur.json')
+        .writeAsStringSync('{}');
+
+    await tester.pumpWidget(harness(projectRoot: root));
+    await tester.tap(find.text('Classe'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Créer'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('chance_du_joueur'), findsWidgets);
+  });
+
+  testWidgets(
+      'cliquer une entite au niveau 2 remplit le champ identifiant (a)',
+      (tester) async {
+    // (a) Avant ce correctif, choisir une entite au niveau 2 ne faisait que
+    // la surligner : `_target`/`_targetOwner` changeaient, mais
+    // `_id.text` restait inchange, si bien que « Charger » et « Écrire »
+    // pouvaient viser une entite differente de celle mise en surbrillance.
+    File('$root/assets/data/relics/talisman_de_fer.json')
+        .writeAsStringSync('{}');
+
+    await tester.pumpWidget(harness(projectRoot: root));
+    await tester.tap(find.text('Relique'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Modifier'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('talisman_de_fer'));
+    await tester.pumpAndSettle();
+
+    final idField =
+        tester.widget<TextField>(find.byKey(const Key('editeur-id')));
+    expect(idField.controller!.text, 'talisman_de_fer');
+  });
+
   group('mode Modifier', () {
     /// Une relique deja sur le disque, portant **une cle que le gabarit n a
     /// pas** et des valeurs enumerees differentes des siennes. C est ce que
