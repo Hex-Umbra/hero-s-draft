@@ -5,11 +5,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/data/game_data_registry.dart';
 import '../../services/content_editor/content_editor_providers.dart';
+import '../../services/content_editor/entity_catalog.dart';
 import '../../services/content_editor/entity_descriptor.dart';
 import '../../services/content_editor/entity_draft.dart';
 import '../../services/content_editor/entity_validator.dart';
 import '../../services/content_editor/entity_writer.dart';
 import '../../services/content_editor/known_values.dart';
+import '../widgets/content_editor/color_field.dart';
+import '../widgets/content_editor/tree_level.dart';
+
+/// Le niveau 1 de l'arbre : creer une entite neuve, ou modifier une existante.
+enum _EditorMode { create, modify }
 
 /// Editeur de contenu. **Hors run** : il ne touche a aucun etat de jeu, et le
 /// verrou de persistance du lot 1 ne le concerne pas.
@@ -26,9 +32,13 @@ class ContentEditorScreen extends ConsumerStatefulWidget {
 }
 
 class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
-  EntityCategory _category = EntityCategory.card;
-  bool _isModification = false;
-  String? _heroClass;
+  // Les trois niveaux de l'arbre. Rien ne se replie vers le haut : descendre
+  // d'un niveau n'efface jamais celui du dessus, seulement ce qui pendait
+  // dessous (voir les `onSelected` de chaque niveau, dans `_form`).
+  EntityCategory? _category;
+  _EditorMode? _mode;
+  String? _target;
+  String? _targetOwner;
 
   final TextEditingController _id = TextEditingController();
   final TextEditingController _mechanics = TextEditingController();
@@ -56,12 +66,6 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
   Map<String, List<String>> _values = const {};
 
   EntityDescriptor get _descriptor => kEntityDescriptors[_category]!;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadCategory();
-  }
 
   @override
   void dispose() {
@@ -93,8 +97,8 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
   EntityDraft _draft() => EntityDraft(
         descriptor: _descriptor,
         id: _id.text.trim(),
-        heroClass: _descriptor.supportsHeroClass ? _heroClass : null,
-        isModification: _isModification,
+        heroClass: _descriptor.supportsHeroClass ? _targetOwner : null,
+        isModification: _mode == _EditorMode.modify,
         bilingual: {
           for (final entry in _prose.entries) entry.key: entry.value.text,
         },
@@ -171,7 +175,7 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
     // modification, on n'ecrit que sur un fichier qui vient d'etre relu. Le
     // changer apres coup invalide le chargement, et l'ecriture est refusee
     // plutot que d'ecraser une entite avec le contenu d'une autre.
-    if (_isModification && _loadedPath != _draft().path) {
+    if (_mode == _EditorMode.modify && _loadedPath != _draft().path) {
       _refuse(
         'charger le fichier avant de le modifier : sans sa relecture, seul le '
         'gabarit serait écrit',
@@ -228,178 +232,219 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
     );
   }
 
+  /// Les trois niveaux de l'arbre, puis — une fois un type et un mode choisis
+  /// — le formulaire d'entite lui-meme.
   Widget _form(String root) {
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            flex: 2,
-            // Les champs defilent seuls, dans leur propre `Expanded` : le
-            // champ JSON (14 lignes) a lui seul depasse la hauteur d'un
-            // panneau, et une simple `ListView` ne construit que les enfants
-            // proches de la fenetre visible — les boutons plus bas n'y
-            // seraient jamais, invisibles aux tests comme au clic. Valider,
-            // Ecrire et l'issue restent donc **hors** du defilement, toujours
-            // a portee.
-            child: Column(
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        _identityTriangle(root),
-                        const Divider(),
-                        for (final entry in _prose.entries)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4),
-                            child: TextField(
-                              controller: entry.value,
-                              decoration:
-                                  InputDecoration(labelText: entry.key),
-                            ),
-                          ),
-                        const Divider(),
-                        TextField(
-                          controller: _mechanics,
-                          maxLines: 14,
-                          style: const TextStyle(fontFamily: 'monospace'),
-                          decoration: const InputDecoration(
-                            labelText: 'Mécanique (JSON)',
-                            alignLabelWithHint: true,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    // Un bouton explicite, plutot qu'un chargement au bascule
-                    // de l'interrupteur ou a la perte de focus : le geste est
-                    // visible, refaisable, et il ne surprend jamais une
-                    // saisie en cours.
-                    if (_isModification) ...[
-                      TextButton(
-                        onPressed: () => _load(root),
-                        child: const Text('Charger'),
-                      ),
-                      const SizedBox(width: 12),
-                    ],
-                    TextButton(
-                      onPressed: () =>
-                          setState(() => _faults = _validate(root)),
-                      child: const Text('Valider'),
-                    ),
-                    const SizedBox(width: 12),
-                    ElevatedButton(
-                      onPressed: () => _write(root),
-                      child: const Text('Écrire'),
-                    ),
-                  ],
-                ),
-                _outcome(),
-              ],
-            ),
+          TreeLevel(
+            choices: [
+              for (final descriptor in kEntityDescriptors.values)
+                TreeChoice(value: descriptor.category, label: descriptor.label),
+            ],
+            selected: _category,
+            onSelected: (value) => setState(() {
+              // Changer de type referme tout ce qui pendait dessous : une
+              // cible d'une autre categorie n'a plus de sens.
+              _category = value as EntityCategory;
+              _mode = null;
+              _target = null;
+              _targetOwner = null;
+              _loadCategory();
+            }),
           ),
-          const SizedBox(width: 16),
-          Expanded(child: _knownValuesPanel(root)),
+          if (_category != null)
+            TreeLevel(
+              depth: 1,
+              choices: const [
+                TreeChoice(value: _EditorMode.create, label: 'Créer'),
+                TreeChoice(value: _EditorMode.modify, label: 'Modifier'),
+              ],
+              selected: _mode,
+              onSelected: (value) => setState(() {
+                _mode = value as _EditorMode;
+                _target = null;
+                _targetOwner = null;
+              }),
+            ),
+          if (_mode == _EditorMode.modify) _targetLevel(root),
+          if (_category != null && _mode != null)
+            Expanded(child: _entityForm(root)),
         ],
       ),
     );
   }
 
+  /// Le niveau 2 : ce qui existe, groupe par proprietaire et colore par lui.
+  Widget _targetLevel(String root) {
+    final byOwner = entityIdsByOwner(
+      ref.read(contentFileSystemProvider)!,
+      root,
+      _descriptor,
+    );
+
+    final choices = <TreeChoice>[];
+    // Les neutres d'abord, puis chaque classe en bloc : le groupement se voit
+    // sans qu'il faille un niveau de plus.
+    final owners = byOwner.keys.whereType<String>().toList()..sort();
+    for (final owner in [null, ...owners]) {
+      for (final id in byOwner[owner] ?? const <String>[]) {
+        choices.add(TreeChoice(
+          value: '${owner ?? ''}/$id',
+          label: id,
+          background: owner == null ? null : _ownerColor(root, owner),
+          imagePath: owner == null ? null : _ownerImage(root, owner),
+        ));
+      }
+    }
+
+    return TreeLevel(
+      depth: 2,
+      choices: choices,
+      selected: _target == null ? null : '${_targetOwner ?? ''}/$_target',
+      onSelected: (value) => setState(() {
+        final parts = (value as String).split('/');
+        _targetOwner = parts.first.isEmpty ? null : parts.first;
+        _target = parts.last;
+      }),
+    );
+  }
+
+  /// `themeColor` de `assets/data/classes/<owner>/class.json`. `null` si le
+  /// fichier manque ou ne decode pas — un dossier incomplet ne doit pas faire
+  /// tomber l'ecran.
+  Color? _ownerColor(String root, String owner) {
+    final hex = _ownerClassJson(root, owner)?['themeColor'];
+    return hex is String ? hexToColor(hex) : null;
+  }
+
+  /// L'icone de la classe proprietaire, ou a defaut sa carte. Meme tolerance
+  /// aux dossiers incomplets que [_ownerColor].
+  String? _ownerImage(String root, String owner) {
+    final json = _ownerClassJson(root, owner);
+    if (json == null) return null;
+    final icon = json['iconPath'];
+    if (icon is String) return icon;
+    final classCard = json['classCard'];
+    return classCard is String ? classCard : null;
+  }
+
+  /// Le contenu decode de `assets/data/classes/<owner>/class.json`, ou `null`
+  /// si le fichier manque ou ne decode pas.
+  Map<String, dynamic>? _ownerClassJson(String root, String owner) {
+    final fs = ref.read(contentFileSystemProvider)!;
+    final path = '$root/assets/data/classes/$owner/class.json';
+    if (!fs.fileExists(path)) return null;
+    try {
+      final decoded = jsonDecode(fs.readFile(path));
+      return decoded is Map<String, dynamic> ? decoded : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Le formulaire d'une entite : identite, prose bilingue, mecanique JSON,
+  /// puis les actions et leur issue.
+  Widget _entityForm(String root) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          flex: 2,
+          // Les champs defilent seuls, dans leur propre `Expanded` : le
+          // champ JSON (14 lignes) a lui seul depasse la hauteur d'un
+          // panneau, et une simple `ListView` ne construit que les enfants
+          // proches de la fenetre visible — les boutons plus bas n'y
+          // seraient jamais, invisibles aux tests comme au clic. Valider,
+          // Ecrire et l'issue restent donc **hors** du defilement, toujours
+          // a portee.
+          child: Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      _identityTriangle(root),
+                      const Divider(),
+                      for (final entry in _prose.entries)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: TextField(
+                            controller: entry.value,
+                            decoration:
+                                InputDecoration(labelText: entry.key),
+                          ),
+                        ),
+                      const Divider(),
+                      TextField(
+                        controller: _mechanics,
+                        maxLines: 14,
+                        style: const TextStyle(fontFamily: 'monospace'),
+                        decoration: const InputDecoration(
+                          labelText: 'Mécanique (JSON)',
+                          alignLabelWithHint: true,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  // Un bouton explicite, plutot qu'un chargement au bascule
+                  // de l'interrupteur ou a la perte de focus : le geste est
+                  // visible, refaisable, et il ne surprend jamais une
+                  // saisie en cours.
+                  if (_mode == _EditorMode.modify) ...[
+                    TextButton(
+                      onPressed: () => _load(root),
+                      child: const Text('Charger'),
+                    ),
+                    const SizedBox(width: 12),
+                  ],
+                  TextButton(
+                    onPressed: () =>
+                        setState(() => _faults = _validate(root)),
+                    child: const Text('Valider'),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton(
+                    onPressed: () => _write(root),
+                    child: const Text('Écrire'),
+                  ),
+                ],
+              ),
+              _outcome(),
+            ],
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(child: _knownValuesPanel(root)),
+      ],
+    );
+  }
+
+  /// L'identifiant et le chemin qu'il calcule : le type et le mode se
+  /// choisissent desormais dans l'arbre au-dessus, pas ici.
   Widget _identityTriangle(String root) {
     final draft = _draft();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // `Wrap` plutot que `Row` : l'intitule le plus long ("Amelioration de
-        // forge") reste affiche meme quand une autre categorie est
-        // selectionnee — `DropdownButton` dimensionne son bouton ferme sur le
-        // plus large de ses items, pas sur celui qui est choisi — et un `Row`
-        // sans enfant flexible deborderait plutot que de passer a la ligne.
-        Wrap(
-          crossAxisAlignment: WrapCrossAlignment.center,
-          spacing: 16,
-          runSpacing: 8,
-          children: [
-            DropdownButton<EntityCategory>(
-              value: _category,
-              items: [
-                for (final entry in kEntityDescriptors.entries)
-                  DropdownMenuItem(
-                    value: entry.key,
-                    child: Text(entry.value.label),
-                  ),
-              ],
-              // Choisissable **aussi** en mode Modifier : c'est par elle qu'on
-              // designe la cible, et la categorie par defaut est « Carte ».
-              // Gelee, elle rendait inatteignable toute entite qui n'en est
-              // pas une : Charger cherchait `cards/<id>.json` et signalait une
-              // absence exacte, ce qui se lit comme un bouton casse.
-              //
-              // Rien n'est risque : changer de categorie appelle
-              // `_loadCategory`, qui remet `_loadedPath` a null. L'ecriture est
-              // alors refusee tant qu'on n'a pas relu, et le contenu d'une
-              // categorie ne peut pas migrer vers une autre.
-              onChanged: (value) => setState(() {
-                if (value == null) return;
-                _category = value;
-                _heroClass = null;
-                _loadCategory();
-              }),
-            ),
-            // Le triangle d'identite decide **ou** est le fichier : le
-            // deplacer serait un renommage, hors perimetre (E1). En
-            // modification il se saisit donc pour designer la cible, mais
-            // l'ecriture refuse tout chemin autre que celui qui a ete charge.
-            Switch(
-              value: _isModification,
-              onChanged: (value) => setState(() => _isModification = value),
-            ),
-            Text(_isModification ? 'Modifier' : 'Créer'),
-          ],
-        ),
-        Row(
-          children: [
-            Expanded(
-              child: TextField(
-                key: const Key('editeur-id'),
-                controller: _id,
-                // Saisissable en modification aussi : c'est le seul moyen de
-                // **designer** l'entite a charger. Ce qu'il ne peut pas faire,
-                // c'est deplacer une entite deja chargee — l'ecriture le
-                // refuse (voir `_write`).
-                onChanged: (_) => setState(() {}),
-                decoration: const InputDecoration(labelText: 'Identifiant'),
-              ),
-            ),
-            if (_descriptor.supportsHeroClass) ...[
-              const SizedBox(width: 16),
-              DropdownButton<String?>(
-                value: _heroClass,
-                hint: const Text('neutre'),
-                items: [
-                  const DropdownMenuItem(value: null, child: Text('neutre')),
-                  for (final hero in GameDataRegistry.instance?.heroes ??
-                      const <dynamic>[])
-                    DropdownMenuItem(
-                      value: hero.id as String,
-                      child: Text(hero.id as String),
-                    ),
-                ],
-                // Meme raison que la categorie : sans elle, aucune carte de
-                // classe n'est atteignable en modification. Changer de classe
-                // change le chemin, donc `_loadedPath` ne correspond plus et
-                // l'ecriture reste refusee jusqu'a relecture.
-                onChanged: (value) => setState(() => _heroClass = value),
-              ),
-            ],
-          ],
+        TextField(
+          key: const Key('editeur-id'),
+          controller: _id,
+          // Saisissable en modification aussi : c'est le seul moyen de
+          // **designer** l'entite a charger. Ce qu'il ne peut pas faire,
+          // c'est deplacer une entite deja chargee — l'ecriture le
+          // refuse (voir `_write`).
+          onChanged: (_) => setState(() {}),
+          decoration: const InputDecoration(labelText: 'Identifiant'),
         ),
         const SizedBox(height: 8),
         // Le retour le plus utile de l'ecran : la consequence du choix de

@@ -51,9 +51,109 @@ void main() {
     expect(find.text('Écrire'), findsNothing);
   });
 
+  testWidgets('les sept types sont des boutons, visibles d emblee',
+      (tester) async {
+    await tester.pumpWidget(harness(projectRoot: root));
+
+    for (final label in const [
+      'Carte', 'Relique', 'Événement', 'Passif',
+      'Amélioration de forge', 'Classe', 'Ennemi',
+    ]) {
+      expect(find.text(label), findsOneWidget, reason: 'type manquant : $label');
+    }
+    expect(find.byType(DropdownButton<EntityCategory>), findsNothing);
+  });
+
+  testWidgets('le niveau 1 n apparait qu apres avoir choisi un type',
+      (tester) async {
+    await tester.pumpWidget(harness(projectRoot: root));
+    expect(find.text('Créer'), findsNothing);
+    expect(find.text('Modifier'), findsNothing);
+
+    await tester.tap(find.text('Relique'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Créer'), findsOneWidget);
+    expect(find.text('Modifier'), findsOneWidget);
+    // Les sept types restent la : rien ne se replie vers le haut.
+    expect(find.text('Ennemi'), findsOneWidget);
+  });
+
+  testWidgets('Modifier ouvre la liste des entites presentes', (tester) async {
+    File('$root/assets/data/relics/talisman_de_fer.json')
+        .writeAsStringSync('{}');
+    await tester.pumpWidget(harness(projectRoot: root));
+
+    await tester.tap(find.text('Relique'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Modifier'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('talisman_de_fer'), findsOneWidget);
+  });
+
+  testWidgets('choisir un autre type referme la branche ouverte',
+      (tester) async {
+    await tester.pumpWidget(harness(projectRoot: root));
+
+    await tester.tap(find.text('Relique'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Modifier'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Ennemi'));
+    await tester.pumpAndSettle();
+
+    // Le niveau 1 est bien la, mais reinitialise : plus aucune branche ouverte
+    // en dessous.
+    expect(find.text('Créer'), findsOneWidget);
+    expect(find.text('talisman_de_fer'), findsNothing);
+  });
+
+  testWidgets('les cartes portent la couleur de leur proprietaire',
+      (tester) async {
+    Directory('$root/assets/data/cards').createSync(recursive: true);
+    File('$root/assets/data/cards/frappe.json').writeAsStringSync('{}');
+    Directory('$root/assets/data/classes/mage/cards')
+        .createSync(recursive: true);
+    File('$root/assets/data/classes/mage/cards/eclair.json').writeAsStringSync('{}');
+    File('$root/assets/data/classes/mage/class.json').writeAsStringSync(
+      '{"id":"mage","name_fr":"Mage","name_en":"Mage",'
+      '"description_fr":".","description_en":".",'
+      '"classCard":"assets/data/classes/mage/mage.png",'
+      '"themeColor":"#9C27B0","maxHp":100,"maxMana":3,"baseDamage":5}',
+    );
+
+    await tester.pumpWidget(harness(projectRoot: root));
+    await tester.tap(find.text('Carte'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Modifier'));
+    await tester.pumpAndSettle();
+
+    Color? backgroundOf(String label) {
+      final button = tester.widget<Container>(
+        find.ancestor(
+          of: find.text(label),
+          matching: find.byKey(const Key('editeur-bouton-fond')),
+        ),
+      );
+      return (button.decoration as BoxDecoration?)?.color;
+    }
+
+    // Sans cette assertion, la couleur pourrait etre uniforme et le test
+    // passerait quand meme : c'est la *difference* qui porte l'information.
+    expect(backgroundOf('eclair'), isNot(backgroundOf('frappe')));
+    expect(backgroundOf('eclair'), const Color(0xFF9C27B0));
+  });
+
   testWidgets('le chemin calcule est affiche et suit la categorie',
       (tester) async {
     await tester.pumpWidget(harness(projectRoot: root));
+
+    await tester.tap(find.text('Carte'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Créer'));
+    await tester.pumpAndSettle();
 
     await tester.enterText(find.byKey(const Key('editeur-id')), 'talisman');
     await tester.pump();
@@ -67,6 +167,11 @@ void main() {
   testWidgets('un brouillon fautif est refuse sans rien ecrire',
       (tester) async {
     await tester.pumpWidget(harness(projectRoot: root));
+
+    await tester.tap(find.text('Carte'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Créer'));
+    await tester.pumpAndSettle();
 
     // Identifiant en majuscules : la famille 1 doit le refuser.
     await tester.enterText(find.byKey(const Key('editeur-id')), 'Talisman');
@@ -88,6 +193,11 @@ void main() {
     // exigence cote ecrivain.
     Directory('$root/assets/data/cards').createSync(recursive: true);
     final before = _dataTreeSnapshot(root);
+
+    await tester.tap(find.text('Carte'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Créer'));
+    await tester.pumpAndSettle();
 
     // Meme brouillon fautif que ci-dessus — identifiant en majuscules — mais
     // tape sur le vrai controle d'ecriture. C'est lui, et non Valider, que la
@@ -129,13 +239,10 @@ void main() {
 
     /// Amene l ecran sur la relique semee, en mode Modifier.
     Future<void> aimAtSeededRelic(WidgetTester tester) async {
-      await tester.tap(find.byType(DropdownButton<EntityCategory>));
+      await tester.tap(find.text('Relique'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Relique').last);
+      await tester.tap(find.text('Modifier'));
       await tester.pumpAndSettle();
-
-      await tester.tap(find.byType(Switch));
-      await tester.pump();
 
       await tester.enterText(
         find.byKey(const Key('editeur-id')),
@@ -211,13 +318,13 @@ void main() {
       expect(find.textContaining('startOfCombat'), findsOneWidget);
     });
 
-    testWidgets('la categorie reste choisissable apres la bascule',
+    testWidgets('le type reste choisissable apres le passage en Modifier',
         (tester) async {
-      // Le geste reel : on bascule d'abord, on choisit ensuite. La categorie
-      // par defaut etant « Carte », une liste gelee rend toute entite qui
-      // n'est pas une carte **inatteignable** — Charger cherche alors
-      // `cards/<id>.json` et signale une absence parfaitement exacte, ce qui
-      // se lit comme un bouton casse.
+      // Le geste reel : on choisit d'abord Modifier, on change ensuite de
+      // type. Rien ne doit se figer — c'est l'invariant meme de l'arbre : les
+      // sept types restent la, quel que soit le mode. Avant l'arbre, un bug
+      // gelait la liste deroulante des lors qu'on avait bascule sur Modifier,
+      // rendant toute entite hors de la categorie par defaut inatteignable.
       Directory('$root/assets/data/classes/gambler/cards')
           .createSync(recursive: true);
       File('$root/assets/data/classes/gambler/class.json').writeAsStringSync(
@@ -236,22 +343,17 @@ void main() {
       );
 
       await tester.pumpWidget(harness(projectRoot: root));
-      await tester.tap(find.byType(Switch));
+
+      await tester.tap(find.text('Relique'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Modifier'));
       await tester.pumpAndSettle();
 
-      expect(
-        tester
-            .widget<DropdownButton<EntityCategory>>(
-              find.byType(DropdownButton<EntityCategory>),
-            )
-            .onChanged,
-        isNotNull,
-        reason: 'sans cette liste, la cible ne peut pas etre designee',
-      );
-
-      await tester.tap(find.byType(DropdownButton<EntityCategory>));
+      // Le type reste choisissable : rien ne s'est fige en passant en
+      // Modifier.
+      await tester.tap(find.text('Classe'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Classe').last);
+      await tester.tap(find.text('Modifier'));
       await tester.pumpAndSettle();
 
       await tester.enterText(find.byKey(const Key('editeur-id')), 'gambler');
