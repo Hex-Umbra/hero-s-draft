@@ -5,7 +5,7 @@ Statut : **Conception** — non implémenté
 Révision : v4 — **v4 : la recette ecrit `iconPath` pour une classe neuve et depose
 `placeholder_icon.png` — mais a la creation seulement, une modification n'en fabriquant jamais, sous
 peine d'afficher un carre magenta a la place de l'illustration des trois classes livrees** (§3.1,
-§6.1). Les deux images de remplacement vivent desormais sous `assets/placeholders/images/`. v3 : **v3 : `EntityWriter._registerSignatureCard` maintenait déjà `skills` ; la §1 le
+§6.1). Les deux images de remplacement vivent desormais sous `assets/placeholders/images/`. v3 — ** `EntityWriter._registerSignatureCard` maintenait déjà `skills` ; la §1 le
 décrivait mal, et la garde devient une bijection lue sur le disque plutôt qu'une reference vers le
 registre, qui aurait refuse la sortie meme de l'outil** (§1, §7.1). v2 — **`iconPath` désignait en réalité la carte de classe (1696 × 2528, 6,5 Mo), pas une
 icône : le champ devient `classCard` et `iconPath` renaît optionnel pour une vraie icône** (§3.1).
