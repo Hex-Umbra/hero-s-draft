@@ -93,6 +93,14 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
   EntityCategory? _valuesFor;
   Map<String, List<String>> _values = const {};
 
+  /// Ce que le disque montre, et la categorie pour laquelle il a ete lu. Voir
+  /// [_ensureCatalog].
+  EntityCategory? _catalogFor;
+  Map<String?, List<String>> _byOwner = const {};
+  List<String> _ownerClassIds = const [];
+  Map<String, List<String>> _references = const {};
+  final Map<String, Map<String, dynamic>?> _ownerJson = {};
+
   EntityDescriptor get _descriptor => kEntityDescriptors[_category]!;
 
   /// Une classe en creation entraine ses cartes de signature en un seul
@@ -396,8 +404,10 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
       if (mounted) {
         setState(() {
           _report = report;
-          // L'entite ecrite vient d'ajouter ses valeurs au vocabulaire.
+          // L'entite ecrite vient d'ajouter ses valeurs au vocabulaire, et un
+          // fichier a l'arborescence.
           _valuesFor = null;
+          _catalogFor = null;
           // Retour a la branche 0 : la nouvelle entite n'est pas dans le
           // registre avant recompilation, et ouvrir son formulaire ferait
           // croire le contraire. Le compte rendu, lui, reste affiche — voir
@@ -494,11 +504,8 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
 
   /// Le niveau 2 : ce qui existe, groupe par proprietaire et colore par lui.
   Widget _targetLevel(String root) {
-    final byOwner = entityIdsByOwner(
-      ref.read(contentFileSystemProvider)!,
-      root,
-      _descriptor,
-    );
+    _ensureCatalog(root);
+    final byOwner = _byOwner;
 
     final choices = <TreeChoice>[];
     // Les neutres d'abord, puis chaque classe en bloc : le groupement se voit
@@ -557,45 +564,79 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
 
   /// Le contenu decode de `assets/data/classes/<owner>/class.json`, ou `null`
   /// si le fichier manque ou ne decode pas.
+  ///
+  /// Retenu par proprietaire, et vide par [_ensureCatalog] : chaque bouton de
+  /// carte de classe demande sa couleur **et** son image, et `build` est
+  /// relance a chaque frappe. Sans cette table, une liste de vingt cartes de
+  /// classe relisait et decodait le meme fichier quarante fois par caractere
+  /// tape.
   Map<String, dynamic>? _ownerClassJson(String root, String owner) {
+    if (_ownerJson.containsKey(owner)) return _ownerJson[owner];
+
     final fs = ref.read(contentFileSystemProvider)!;
     final path = '$root/assets/data/classes/$owner/class.json';
-    if (!fs.fileExists(path)) return null;
-    try {
-      final decoded = jsonDecode(fs.readFile(path));
-      return decoded is Map<String, dynamic> ? decoded : null;
-    } catch (_) {
-      return null;
+    Map<String, dynamic>? result;
+    if (fs.fileExists(path)) {
+      try {
+        final decoded = jsonDecode(fs.readFile(path));
+        if (decoded is Map<String, dynamic>) result = decoded;
+      } catch (_) {
+        // Un dossier incomplet ne doit pas faire tomber l'ecran.
+      }
     }
+    return _ownerJson[owner] = result;
   }
 
-  /// Les identifiants de classe connus, pour (b) la rangee de pastilles de
-  /// proprietaire d'une carte en creation.
-  List<String> _classIds(String root) {
-    final byOwner = entityIdsByOwner(
-      ref.read(contentFileSystemProvider)!,
-      root,
-      kEntityDescriptors[EntityCategory.heroClass]!,
-    );
-    return List<String>.from(byOwner[null] ?? const <String>[])..sort();
-  }
-
-  /// Le catalogue de chaque `referenceKeys` du descripteur courant — tire de
-  /// `entityIdsByOwner`, jamais de `knownValues` : ce dernier ne liste que les
-  /// valeurs deja employees, et un passif jamais utilise y serait invisible.
-  Map<String, List<String>> _referenceOptions(String root) {
+  /// Lit le disque **une fois par categorie**, et retient ce qu'il a vu.
+  ///
+  /// Meme patron que [_knownValuesFor], et pour la meme raison : chacun de ces
+  /// appels a `entityIdsByOwner` enumere une arborescence entiere, et `build`
+  /// est relance a **chaque frappe** dans le champ identifiant. La table est
+  /// donc retenue tant que la categorie ne change pas, et invalidee apres une
+  /// ecriture — qui, elle, ajoute un fichier.
+  ///
+  /// A n'appeler qu'une categorie choisie : [_descriptor] la suppose.
+  void _ensureCatalog(String root) {
+    if (_catalogFor == _category) return;
     final fs = ref.read(contentFileSystemProvider)!;
-    final result = <String, List<String>>{};
-    _descriptor.referenceKeys.forEach((key, category) {
-      final byOwner = entityIdsByOwner(fs, root, kEntityDescriptors[category]!);
-      final ids = <String>[for (final list in byOwner.values) ...list]..sort();
-      result[key] = ids;
-    });
-    return result;
+
+    _byOwner = entityIdsByOwner(fs, root, _descriptor);
+
+    // (b) La rangee de pastilles de proprietaire n'existe que pour une carte,
+    // et seulement en creation : `EntityForm` ne la montre pas autrement.
+    // Enumerer les classes en modification etait un calcul pur perdu.
+    _ownerClassIds = _descriptor.supportsHeroClass
+        ? (List<String>.from(
+            entityIdsByOwner(
+                  fs,
+                  root,
+                  kEntityDescriptors[EntityCategory.heroClass]!,
+                )[null] ??
+                const <String>[],
+          )..sort())
+        : const [];
+
+    // Le catalogue de chaque `referenceKeys` du descripteur — tire de
+    // `entityIdsByOwner`, jamais de `knownValues` : ce dernier ne liste que
+    // les valeurs deja employees, et un passif jamais utilise y serait
+    // invisible.
+    _references = {
+      for (final entry in _descriptor.referenceKeys.entries)
+        entry.key: [
+          for (final ids
+              in entityIdsByOwner(fs, root, kEntityDescriptors[entry.value]!)
+                  .values)
+            ...ids,
+        ]..sort(),
+    };
+
+    _ownerJson.clear();
+    _catalogFor = _category;
   }
 
   /// Le formulaire d'une entite, et a droite le panneau de valeurs connues.
   Widget _entityFormRow(String root) {
+    _ensureCatalog(root);
     final draft = _draft();
     final isModification = _mode == _EditorMode.modify;
 
@@ -612,7 +653,7 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
             pathPreview: draft.path,
             proseControllers: _prose,
             onLoad: isModification ? () => _load(root) : null,
-            ownerClassIds: _descriptor.supportsHeroClass ? _classIds(root) : const [],
+            ownerClassIds: isModification ? const [] : _ownerClassIds,
             selectedOwner: _targetOwner,
             onOwnerSelected: (value) => setState(() => _targetOwner = value),
             ownerColorOf: (classId) => _ownerColor(root, classId),
@@ -622,7 +663,7 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
                 ? null
                 : _themeColor,
             onThemeColorChanged: (color) => setState(() => _themeColor = color),
-            referenceOptions: isModification ? const {} : _referenceOptions(root),
+            referenceOptions: isModification ? const {} : _references,
             referenceSelections: _referenceSelections,
             onReferenceSelected: (key, value) => setState(() {
               _referenceSelections = {..._referenceSelections, key: value};

@@ -32,11 +32,11 @@ void main() {
 
   tearDown(() => sandbox.deleteSync(recursive: true));
 
-  Widget harness({required String? projectRoot}) {
+  Widget harness({required String? projectRoot, ContentFileSystem? fs}) {
     return ProviderScope(
       overrides: [
         contentFileSystemProvider
-            .overrideWithValue(const _NoProcessFileSystem()),
+            .overrideWithValue(fs ?? const _NoProcessFileSystem()),
         projectRootProvider.overrideWithValue(projectRoot),
       ],
       child: const MaterialApp(home: ContentEditorScreen()),
@@ -461,6 +461,76 @@ void main() {
     expect(idField.controller!.text, 'talisman_de_fer');
   });
 
+  testWidgets('taper dans le champ identifiant ne relit pas le disque',
+      (tester) async {
+    // `build` est relance a chaque frappe. Trois lectures y vivaient :
+    // `entityIdsByOwner` pour le niveau 2, la meme pour les pastilles de
+    // proprietaire, et un `class.json` decode **par bouton** pour sa couleur
+    // et son image. Le panneau de valeurs connues, quarante lignes plus bas,
+    // montrait deja la bonne facon de faire : retenir tant que la categorie ne
+    // change pas.
+    Directory('$root/assets/data/cards').createSync(recursive: true);
+    File('$root/assets/data/cards/frappe.json').writeAsStringSync('{}');
+    Directory('$root/assets/data/classes/mage/cards')
+        .createSync(recursive: true);
+    File('$root/assets/data/classes/mage/cards/eclair.json')
+        .writeAsStringSync('{}');
+    File('$root/assets/data/classes/mage/class.json').writeAsStringSync(
+      '{"id":"mage","name_fr":"Mage","name_en":"Mage",'
+      '"description_fr":".","description_en":".",'
+      '"classCard":"assets/data/classes/mage/mage.png",'
+      '"themeColor":"#9C27B0","maxHp":100,"maxMana":3,"baseDamage":5}',
+    );
+
+    final fs = _CountingFileSystem();
+    await tester.pumpWidget(harness(projectRoot: root, fs: fs));
+    await tester.tap(find.text('Carte'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Modifier'));
+    await tester.pumpAndSettle();
+
+    final listings = fs.listings;
+    final reads = fs.reads;
+    expect(listings, greaterThan(0), reason: 'le niveau 2 a bien lu le disque');
+
+    for (final typed in const ['e', 'ec', 'ecl']) {
+      await tester.enterText(find.byKey(const Key('editeur-id')), typed);
+      await tester.pump();
+    }
+
+    expect(fs.listings, listings, reason: 'arborescence relue a chaque frappe');
+    expect(fs.reads, reads, reason: 'class.json redecode a chaque frappe');
+  });
+
+  testWidgets('changer de categorie relit le disque', (tester) async {
+    // La contrepartie, sans laquelle la memorisation serait un cache perime :
+    // le catalogue est retenu **par categorie**, exactement comme celui des
+    // valeurs connues.
+    File('$root/assets/data/relics/talisman_de_fer.json')
+        .writeAsStringSync('{}');
+    Directory('$root/assets/data/cards').createSync(recursive: true);
+    File('$root/assets/data/cards/frappe.json').writeAsStringSync('{}');
+
+    final fs = _CountingFileSystem();
+    await tester.pumpWidget(harness(projectRoot: root, fs: fs));
+    await tester.tap(find.text('Relique'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Modifier'));
+    await tester.pumpAndSettle();
+    expect(find.text('talisman_de_fer'), findsOneWidget);
+
+    final listings = fs.listings;
+
+    await tester.tap(find.text('Carte'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Modifier'));
+    await tester.pumpAndSettle();
+
+    expect(fs.listings, greaterThan(listings));
+    expect(find.text('frappe'), findsOneWidget);
+    expect(find.text('talisman_de_fer'), findsNothing);
+  });
+
   group('mode Modifier', () {
     /// Une relique deja sur le disque, portant **une cle que le gabarit n a
     /// pas** et des valeurs enumerees differentes des siennes. C est ce que
@@ -664,4 +734,60 @@ class _NoProcessFileSystem implements ContentFileSystem {
     required String workingDirectory,
   }) async =>
       const ProcessOutcome(0, '');
+}
+
+/// Compte ce que l ecran demande au disque.
+///
+/// Deux compteurs, parce que le defaut avait deux visages : `listDirectory`
+/// pour l enumeration d une arborescence entiere, `readFile` pour le
+/// `class.json` relu bouton par bouton.
+class _CountingFileSystem implements ContentFileSystem {
+  _CountingFileSystem();
+
+  static const ContentFileSystem _inner = _NoProcessFileSystem();
+
+  int listings = 0;
+  int reads = 0;
+
+  @override
+  String get startDirectory => _inner.startDirectory;
+
+  @override
+  bool fileExists(String path) => _inner.fileExists(path);
+
+  @override
+  bool directoryExists(String path) => _inner.directoryExists(path);
+
+  @override
+  String readFile(String path) {
+    reads++;
+    return _inner.readFile(path);
+  }
+
+  @override
+  void writeFile(String path, String contents) =>
+      _inner.writeFile(path, contents);
+
+  @override
+  void deleteFile(String path) => _inner.deleteFile(path);
+
+  @override
+  void createDirectory(String path) => _inner.createDirectory(path);
+
+  @override
+  void copyFile(String from, String to) => _inner.copyFile(from, to);
+
+  @override
+  List<String> listDirectory(String path) {
+    listings++;
+    return _inner.listDirectory(path);
+  }
+
+  @override
+  Future<ProcessOutcome> run(
+    String executable,
+    List<String> arguments, {
+    required String workingDirectory,
+  }) =>
+      _inner.run(executable, arguments, workingDirectory: workingDirectory);
 }
