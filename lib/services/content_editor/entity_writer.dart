@@ -59,10 +59,24 @@ class EntityWriter {
   /// preservant l'ordre d'insertion, une modification produit un diff minimal.
   static const JsonEncoder _encoder = JsonEncoder.withIndent('  ');
 
-  Future<WriteReport> write(EntityDraft draft) async {
+  /// Ecrit un brouillon. Raccourci sur [writeAll].
+  Future<WriteReport> write(EntityDraft draft) => writeAll([draft]);
+
+  /// Ecrit plusieurs brouillons comme **un seul geste**.
+  ///
+  /// Les etapes partagent une pile de rollback : si le troisieme echoue, les
+  /// deux premiers sont defaits. Une classe a moitie creee est precisement
+  /// l'etat que `referential_integrity_test` refuse, et il ne doit pas pouvoir
+  /// naitre d'une panne d'ecriture.
+  ///
+  /// `sync_assets` ne tourne qu'une fois, a la fin : c'est un `dart run`, et
+  /// un par carte rendrait la recette inutilisable.
+  Future<WriteReport> writeAll(List<EntityDraft> drafts) async {
     final steps = <WriteStep>[];
     try {
-      _writeFiles(draft, steps);
+      for (final draft in drafts) {
+        _writeFiles(draft, steps);
+      }
     } catch (_) {
       _rollback(steps);
       rethrow;
@@ -73,7 +87,7 @@ class EntityWriter {
     return WriteReport(
       written: [for (final step in steps) step.relative],
       sync: sync,
-      relaunchAdvised: !draft.isModification,
+      relaunchAdvised: drafts.any((draft) => !draft.isModification),
     );
   }
 

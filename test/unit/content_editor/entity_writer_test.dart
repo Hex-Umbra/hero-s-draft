@@ -169,6 +169,24 @@ void main() {
     );
   }
 
+  /// Un brouillon de classe minimal, pour les tests de `writeAll` : le
+  /// gabarit ne porte pas `skills`, comme celui livre par le descripteur — la
+  /// premiere carte de signature l ajoute.
+  EntityDraft classDraft(String id) {
+    final descriptor = kEntityDescriptors[EntityCategory.heroClass]!;
+    return EntityDraft(
+      descriptor: descriptor,
+      id: id,
+      bilingual: const {
+        'name_fr': 'Le Flambeur',
+        'name_en': 'The Gambler',
+        'description_fr': 'Parie tout sur chaque carte.',
+        'description_en': 'Bets everything on every card.',
+      },
+      mechanics: descriptor.template,
+    );
+  }
+
   EntityDraft classCardDraft(String id, String heroClass) {
     final descriptor = kEntityDescriptors[EntityCategory.card]!;
     return EntityDraft(
@@ -421,6 +439,63 @@ void main() {
       expect(Directory('$root/assets/data/relics').listSync(), hasLength(1));
     });
   });
+
+  group('writeAll', () {
+    // classCardDraft(id, heroClass) : meme ordre que l helper deja present
+    // plus haut dans ce fichier.
+    test('writeAll ecrit tous les brouillons et ne synchronise qu une fois',
+        () async {
+      final fs = RecordingFileSystem(root);
+      final report = await EntityWriter(fs: fs, rootPath: root).writeAll([
+        classDraft('gambler'),
+        classCardDraft('bluff', 'gambler'),
+        classCardDraft('all_in', 'gambler'),
+      ]);
+
+      expect(report.written, hasLength(greaterThanOrEqualTo(3)));
+      expect(
+        fs.syncRuns,
+        1,
+        reason: 'un dart run par carte serait insupportable',
+      );
+    });
+
+    // Le point entier de la transaction : sans pile partagee, les deux
+    // premieres ecritures resteraient sur le disque et laisseraient une
+    // classe a moitie creee — precisement l etat que
+    // referential_integrity_test refuse.
+    test('un echec en cours de route defait ce qui precede', () async {
+      final flaky = FailingOnNthWrite(root, failAt: 3);
+      final writer = EntityWriter(fs: flaky, rootPath: root);
+
+      await expectLater(
+        writer.writeAll([
+          classDraft('gambler'),
+          classCardDraft('bluff', 'gambler'),
+          classCardDraft('all_in', 'gambler'),
+        ]),
+        throwsA(anything),
+      );
+
+      expect(
+        File('$root/assets/data/classes/gambler/class.json').existsSync(),
+        isFalse,
+      );
+      expect(
+        File('$root/assets/data/classes/gambler/cards/bluff.json')
+            .existsSync(),
+        isFalse,
+      );
+    });
+
+    test('writeAll conseille la recompilation des qu une creation y figure',
+        () async {
+      final fs = RecordingFileSystem(root);
+      final report = await EntityWriter(fs: fs, rootPath: root)
+          .writeAll([classDraft('gambler')]);
+      expect(report.relaunchAdvised, isTrue);
+    });
+  });
 }
 
 /// Un faux systeme de fichiers en memoire : rien, cote disque reel, ne fait
@@ -475,4 +550,65 @@ class _FlakyFileSystem implements ContentFileSystem {
     required String workingDirectory,
   }) async =>
       const ProcessOutcome(0, '');
+}
+
+/// Le vrai systeme de fichiers, augmente d un compteur de synchronisations.
+///
+/// Etend `IoContentFileSystem` plutot que de reimplementer l interface : seul
+/// `run` a un comportement different, tout le reste doit rester le vrai
+/// disque, comme dans le bac a sable des tests du chemin heureux.
+class RecordingFileSystem extends IoContentFileSystem {
+  RecordingFileSystem(this.root);
+
+  final String root;
+
+  /// Le nombre de fois ou `run` a ete appele — un `dart run
+  /// tool/sync_assets.dart` par appel.
+  int syncRuns = 0;
+
+  @override
+  String get startDirectory => root;
+
+  @override
+  Future<ProcessOutcome> run(
+    String executable,
+    List<String> arguments, {
+    required String workingDirectory,
+  }) async {
+    syncRuns++;
+    return super.run(
+      executable,
+      arguments,
+      workingDirectory: workingDirectory,
+    );
+  }
+}
+
+/// Le vrai systeme de fichiers, qui leve au n-ieme appel a [writeFile].
+///
+/// Sert a prouver que la pile de rollback de `writeAll` est **partagee**
+/// entre brouillons : sans elle, un echec sur la carte de signature d une
+/// classe fraichement creee laisserait le `class.json` deja ecrit sur le
+/// disque, et `referential_integrity_test` refuse precisement cet etat.
+class FailingOnNthWrite extends IoContentFileSystem {
+  FailingOnNthWrite(this.root, {required this.failAt});
+
+  final String root;
+  final int failAt;
+  int _writes = 0;
+
+  @override
+  String get startDirectory => root;
+
+  @override
+  void writeFile(String path, String contents) {
+    _writes++;
+    // Comme _FlakyFileSystem : le contenu est ecrit avant de lever, comme le
+    // ferait un disque qui a deja recu les octets — pour que le rollback ait
+    // quelque chose de reel a defaire.
+    super.writeFile(path, contents);
+    if (_writes == failAt) {
+      throw StateError('ecriture simulee en echec au $failAt-ieme appel');
+    }
+  }
 }
