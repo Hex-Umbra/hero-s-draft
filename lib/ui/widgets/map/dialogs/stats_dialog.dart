@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
+import 'package:roguelike_card_game/models/data/hero_data.dart';
 import 'package:roguelike_card_game/ui/widgets/game_dialog.dart';
 import '../../../../game/controllers/run_controller.dart';
 import '../../../../services/game_data_service.dart';
@@ -29,6 +30,17 @@ class StatsDialog extends ConsumerWidget {
     );
   }
 
+  /// La couleur d'accent de la classe. Statique et publique pour etre
+  /// testable sans monter tout le dialogue, qui exige un `runProvider` peuple
+  /// et un registre charge.
+  static Color classColorOf(HeroData hero) =>
+      hero.themeColor == null ? Colors.blue : Color(hero.themeColor!);
+
+  /// L'image montree dans la pastille : la vraie icone si elle existe, la
+  /// carte de classe sinon. Le repli evite un carre magenta tant qu'aucune
+  /// icone n'est dessinee.
+  static String classImageOf(HeroData hero) => hero.iconPath ?? hero.classCard;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final runState = ref.watch(runProvider);
@@ -44,14 +56,7 @@ class StatsDialog extends ConsumerWidget {
     final locale = Localizations.localeOf(context).languageCode;
     final l10n = AppLocalizations.of(context)!;
 
-    Color classColor = Colors.blue;
-    if (runState.heroClassId == 'berserker') classColor = Colors.red;
-    if (runState.heroClassId == 'mage') classColor = Colors.purple;
-
-    IconData classIcon = Icons.person;
-    if (runState.heroClassId == 'paladin') classIcon = Icons.shield;
-    if (runState.heroClassId == 'berserker') classIcon = Icons.whatshot;
-    if (runState.heroClassId == 'mage') classIcon = Icons.auto_fix_high;
+    final classColor = classColorOf(heroData);
 
     final passive = runState.activePassive;
     final traitName = passive?.getName(locale) ?? '—';
@@ -64,7 +69,14 @@ class StatsDialog extends ConsumerWidget {
       maxWidth: min(MediaQuery.of(context).size.width * 0.85, 500),
       title: Row(
         children: [
-          Icon(classIcon, color: classColor, size: 36),
+          ClipOval(
+            child: Image.asset(
+              classImageOf(heroData),
+              width: 36,
+              height: 36,
+              fit: BoxFit.cover,
+            ),
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
