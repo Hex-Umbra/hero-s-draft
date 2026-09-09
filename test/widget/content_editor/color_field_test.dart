@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+// `colorToHex` du paquet entre en collision avec celui de `color_field.dart`
+// (voir plus bas) : seul `ColorPicker`, le type pilote par ce test, est
+// necessaire ici.
+import 'package:flutter_colorpicker/flutter_colorpicker.dart' hide colorToHex;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/ui/widgets/content_editor/color_field.dart';
 
@@ -37,8 +41,19 @@ void main() {
     // La roue est ouverte : le bouton de confirmation en est la preuve.
     expect(find.text('Valider la couleur'), findsOneWidget);
 
+    // La roue rapporte une couleur : on la lui fait rapporter sans dependre
+    // d'une coordonnee, qui rendrait le test tributaire de la geometrie du
+    // widget et pourrait retomber sur la couleur de depart.
+    final picker = tester.widget<ColorPicker>(find.byType(ColorPicker));
+    picker.onColorChanged(const Color(0xFF00FF00));
+    await tester.pumpAndSettle();
+
     await tester.tap(find.text('Valider la couleur'));
     await tester.pumpAndSettle();
-    expect(seen, isNotNull);
+
+    // L'assertion qui compte : c'est la couleur **choisie** qui remonte, pas
+    // celle de depart. Sans elle, un `onChanged(value)` a la place de
+    // `onChanged(picked)` passerait ce test.
+    expect(seen, const Color(0xFF00FF00));
   });
 }
