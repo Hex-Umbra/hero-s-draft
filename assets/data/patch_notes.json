@@ -5,12 +5,24 @@
     "title": "Chaque Chose à Sa Place",
     "sections": [
       {
+        "category": "Nouvelles Fonctionnalités",
+        "emoji": "✨",
+        "entries": [
+          "Un bouton « Quitter » fait son apparition sur l'écran d'accueil : il ferme le jeu directement, sans passer par la croix de la fenêtre. Il n'est pas proposé dans la version navigateur, où il suffit de fermer l'onglet."
+        ]
+      },
+      {
         "category": "Améliorations",
         "emoji": "⚡",
         "entries": [
           "Le dictionnaire est désormais trié : les cartes par rareté puis par coût en mana au sein de chaque type, les reliques dans un ordre fixe au sein de chaque rareté. Ni les unes ni les autres ne suivent plus l'ordre interne du catalogue.",
           "Le tirage du deck de départ et le tutoriel classent les cartes selon le même critère que le dictionnaire : rareté, puis coût en mana.",
-          "L'écran de choix de classe présente toujours le Paladin, puis le Berserker, puis le Mage."
+          "L'écran de choix de classe présente toujours le Paladin, puis le Berserker, puis le Mage.",
+          "L'écran d'accueil est réorganisé : le titre et les boutons sont désormais alignés sur la gauche, avec des boutons de même largeur.",
+          "L'écran de choix de classe dispose d'un bouton retour pour revenir à l'écran d'accueil, y compris sur ordinateur.",
+          "Le choix des cartes du deck de départ dispose lui aussi d'un bouton retour, pour revenir au choix de classe avant de lancer la partie. Les cartes déjà cochées ne sont pas conservées.",
+          "Le badge « NEW » ne s'affiche plus sur le bouton Tutoriel.",
+          "L'écran de choix de classe et la fenêtre des statistiques du héros affichent désormais l'illustration de chaque classe à la place d'une icône générique, et les boutons « Sélectionner » adoptent un dégradé dans la couleur propre à chaque classe."
         ]
       },
       {
