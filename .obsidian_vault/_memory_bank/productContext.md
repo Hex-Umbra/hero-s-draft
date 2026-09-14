@@ -3,7 +3,7 @@
 > [!IMPORTANT]
 > **Plafond : 120 lignes.** Ce fichier est un index, jamais un contenu. Chaque règle métier vit dans sa fiche sous `../_rules/`. Les arbitrages qui les ont produites vivent dans `../_adr/`.
 
-**Vérifié le 2026-09-05** — 27 fiches, découpées depuis un `productContext.md` de 807 lignes. La **§5 (Compétences Héroïques) a été retirée le 2026-09-05** : le système qu'elle décrivait est supprimé du jeu ([ADR-084](../_adr/ADR-084-suppression-de-la-chaine-de-competences-heroiques.md)), sa fiche est archivée verbatim dans `../_archive/2026-09-05-competences-heroiques.md`, et son numéro n'est pas réattribué.
+**Vérifié le 2026-09-14** — 27 fiches, découpées depuis un `productContext.md` de 807 lignes. La **§5 (Compétences Héroïques) a été retirée le 2026-09-05** : le système qu'elle décrivait est supprimé du jeu ([ADR-084](../_adr/ADR-084-suppression-de-la-chaine-de-competences-heroiques.md)), sa fiche est archivée verbatim dans `../_archive/2026-09-05-competences-heroiques.md`, et son numéro n'est pas réattribué.
 
 ### 1. Boucle de Gameplay Principale (Core Loop)
 
@@ -16,7 +16,7 @@
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
 | 2.1. Génération Procédurale de Carte (`MapGeneratorService`) | [02-1-generation-procedurale-de-carte.md](../_rules/02-1-generation-procedurale-de-carte.md) | 55 |
-| 2.2. Système de Héros | [02-2-systeme-de-heros.md](../_rules/02-2-systeme-de-heros.md) | 24 |
+| 2.2. Système de Héros | [02-2-systeme-de-heros.md](../_rules/02-2-systeme-de-heros.md) | 37 |
 | 2.3. Catalogue de Cartes | [02-3-catalogue-de-cartes.md](../_rules/02-3-catalogue-de-cartes.md) | 33 |
 | 2.4. Progression de Rareté Dynamique et Fusion Interactive | [02-4-progression-de-rarete-dynamique-et-fusion-int.md](../_rules/02-4-progression-de-rarete-dynamique-et-fusion-int.md) | 10 |
 | 2.5. Bestiaire | [02-5-bestiaire.md](../_rules/02-5-bestiaire.md) | 48 |
@@ -39,7 +39,7 @@
 | 3.10. 🃏 Poli Visuel et Sélection de Récompenses (Draft Screen Polish) | [03-10-poli-visuel-et-selection-de-recompenses.md](../_rules/03-10-poli-visuel-et-selection-de-recompenses.md) | 8 |
 | 3.11. 🎯 Système de Coup Critique (Critical Hit System) | [03-11-systeme-de-coup-critique.md](../_rules/03-11-systeme-de-coup-critique.md) | 21 |
 | 3.12. 🎨 Optimisations Visuelles, Fluidité & Animations de Combat | [03-12-optimisations-visuelles-fluidite-animations-d.md](../_rules/03-12-optimisations-visuelles-fluidite-animations-d.md) | 20 |
-| 3.13. 💾 Persistance de Run (Autosave) | [03-13-persistance-de-run.md](../_rules/03-13-persistance-de-run.md) | 11 |
+| 3.13. 💾 Persistance de Run (Autosave) | [03-13-persistance-de-run.md](../_rules/03-13-persistance-de-run.md) | 12 |
 
 ### 4. Altérations d'État & Statuts (Status Effects)
 

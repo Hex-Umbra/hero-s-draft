@@ -1,6 +1,6 @@
 ### 2.2. Système de Héros
 
-Trois classes de héros, une par dossier `assets/data/classes/<id>/` (`class.json` + `icon.png` + `cards/`) :
+Trois classes de héros, une par dossier `assets/data/classes/<id>/` (`class.json` + `<id>.png` + `cards/`) :
 
 | Héros | HP | Mana | Attaque | Luck | Armor Mastery | Passif | Cartes de signature (`skills`) |
 |:---|:---|:---|:---|:---|:---|:---|:---|
@@ -15,6 +15,19 @@ Trois classes de héros, une par dossier `assets/data/classes/<id>/` (`class.jso
 > Cette colonne a listé les six compétences mortes jusqu'au 2026-09-05 ; leurs valeurs sont
 > archivées dans `../_archive/2026-09-05-competences-heroiques.md`. Détail des cartes —
 > [`_rules/02-3`](02-3-catalogue-de-cartes.md).
+
+**Identité visuelle portée par la donnée** — [ADR-090](../_adr/ADR-090-identite-visuelle-de-classe-portee-par-la-donnee.md) :
+
+| Champ de `class.json` | Obligatoire | Rôle | Si absent |
+|:---|:---:|:---|:---|
+| `classCard` | oui | Carte de classe affichée en combat, `classes/<id>/<id>.png` | — (chargement refusé) |
+| `themeColor` | non | Couleur d'accent `#RRGGBB` : paladin `#2196F3`, berserker `#F44336`, mage `#9C27B0` | Bleu |
+| `iconPath` | non | Vraie icône de classe — aucune classe livrée n'en porte | Carte de classe recadrée |
+
+> [!IMPORTANT]
+> **Aucun écran ne déduit l'identité d'une classe de son `id`.** Sélection de classe, draft de
+> départ et dialogue de stats lisent ces champs ; le dégradé des boutons se dérive de `themeColor`.
+> Une classe ajoutée par un simple dossier s'affiche partout dans sa couleur et avec son image.
 
 **Passifs** (gérés par `TraitSystem`, un fichier par passif sous `assets/data/passives/`) :
 | ID | Trigger | EffectType | Valeur | Mécanisme |

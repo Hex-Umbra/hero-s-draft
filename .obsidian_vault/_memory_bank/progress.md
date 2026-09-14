@@ -5,35 +5,32 @@
 
 ## Métriques
 
-**Vérifié le 2026-09-05**
+**Vérifié le 2026-09-14**
 
 | Métrique | Valeur | Commande |
 |:---|:---|:---|
-| Tests automatisés (jeu) | 427 au vert | `flutter test` |
-| Fichiers de test | 81 | `find test -name "*.dart" \| wc -l` |
+| Tests automatisés (jeu) | 617 au vert | `flutter test` |
+| Fichiers de test | 99 | `find test -name "*.dart" \| wc -l` |
 | Analyse statique | 0 erreur (`No issues found!`) | `dart analyze` |
-| Fichiers Dart (`lib/`) | 185 | `find lib -name "*.dart" \| wc -l` |
-| Lignes de code (`lib/`) | 39 280 | `find lib -name "*.dart" -exec cat {} + \| wc -l` |
+| Fichiers Dart (`lib/`) | 213 | `find lib -name "*.dart" \| wc -l` |
+| Lignes de code (`lib/`) | 43 501 | `find lib -name "*.dart" -exec cat {} + \| wc -l` |
 | Fichiers de données | 73 | `find assets/data -name '*.json' \| wc -l` |
 | Tests de la logique du site | 20 au vert | `cd site && node --test` |
 | Assertions du harnais CI | 57 au vert | `bash .github/scripts/test_scripts.sh` |
 | Fichiers suivis sous `site/` | 16 | `git ls-files site/ \| wc -l` |
 
 > [!NOTE]
-> Relevé sur `ac37596`. Deux chantiers expliquent tout le mouvement depuis le 2026-09-01.
+> Relevé sur `d8d9319`, branche `feat/menu-debug-lot-2`. Tout le mouvement depuis le 2026-09-05 vient de **P-30**.
 >
-> **P-48 (réorganisation des données)** : les 73 fichiers de données sont **71 entités**
-> — `cards/` 17, `relics/` 25, `forge_upgrades/` 8, `events/` 5, `passives/` 3, 3 classes
-> (`class.json` + 2 cartes chacune), 4 ennemis — plus `audio.json` et `patch_notes.json`, qui
-> restent des documents de configuration. La comparaison au 11 précédent est directe : avant,
-> `assets/data/` n'avait aucun sous-répertoire.
+> **+28 fichiers Dart** (185 → 213) : +29 — 14 pour le moteur de l'éditeur
+> (`lib/services/content_editor/`), 5 pour son écran et ses widgets, 7 pour le tiroir de debug
+> et ses onglets, `debug_run_controller.dart`, `debug_actions.dart` et `class_identity.dart` — et −1,
+> `tutorial_progress_service.dart`. Liste exacte : `git diff --name-status ac37596 d8d9319 -- lib`.
 >
-> **P-40 bloc 1** : −3 fichiers Dart avec la chaîne de compétences, +1 pour
-> `game_data_loader.dart`, d'où 187 → **185** pour +24 lignes nettes.
->
-> **+42 tests** (385 → 427) : −8 partis avec le système de compétences, +50 pour la
-> réorganisation, dont les gardes permanentes de la structure. `site/`, `.github/` et
-> le harnais CI n'ont pas bougé.
+> **+190 tests** (427 → 617) dans **+18 fichiers** : 10 sous `test/unit/content_editor/`, 3 de
+> widgets d'éditeur, 3 de debug, 2 d'identité de classe, `home_screen_menu_test.dart`, moins
+> `tutorial_progress_service_test.dart`. Le nombre de fichiers de données, `site/` et le harnais CI
+> n'ont pas bougé.
 
 > [!NOTE]
 > **La version ne vit pas ici.** La version de référence se lit dans `pubspec.yaml`
@@ -53,6 +50,7 @@
 | Reprise depuis l'accueil | `HomeScreen` | Bouton « Continuer » (si `SaveService.hasSave()`), confirmation avant écrasement ; réactivité après retour via `Navigator.popUntil` corrigée — [ADR-073](../_adr/ADR-073-reactivite-du-bouton-continuer-de-homescreen-apres.md) |
 | Dégradation gracieuse du contenu manquant | `MissingSaveItem`, `SaveLoadResult.missingItems` | Élément supprimé du catalogue depuis la sauvegarde : retiré silencieusement, signalé nommément au chargement |
 | Sauvegarde corrompue = échec total | `SaveService.load()` | JSON illisible ou `schemaVersion` inconnue → échec propre, pas de récupération partielle |
+| Run debug sans persistance | `SaveService._isDebugRun`, `debugRunProvider` | `save` et `clear` inopérants pendant une run debug, mode rabaissé au chargement — [ADR-087](../_adr/ADR-087-run-debug-declaree-au-lancement-et-verrou-de-persis.md) |
 | Fin de run | `DeathOverlay` (`lib/ui/widgets/hud/death_overlay.dart`) | Sauvegarde effacée à la mort du héros — vérifié le 2026-09-05, `grep -rn 'SaveService.clear' lib/` |
 
 Design complet — [ADR-069](../_adr/ADR-069-systeme-de-sauvegarde-de-run-checkpoint-carte-refr.md).
@@ -124,7 +122,7 @@ Design complet — [ADR-069](../_adr/ADR-069-systeme-de-sauvegarde-de-run-checkp
 
 | Fonctionnalité | Implémentation | Détails |
 |:---|:---|:---|
-| UI 100% localisée | `AppLocalizations` (ARB) | Zéro chaîne codée en dur |
+| UI localisée | `AppLocalizations` (ARB) | **Exceptions vérifiées le 2026-09-14** : libellés `JOUER`, `TUTORIEL`, `DICTIONNAIRE`, `PATCH NOTES` de `HomeScreen`, et outils de debug en français par choix ([`_patterns/18-00`](../_patterns/18-00-menu-de-debug-run-declaree-et-tiroir-ancre.md) §18.5) |
 | Modèles bilingues | `nameEn`/`nameFr` | **Plus aucun champ de texte visible monolingue** depuis la suppression de `SkillData` — [ADR-084](../_adr/ADR-084-suppression-de-la-chaine-de-competences-heroiques.md). `EnemyData` n'a pas de description ; le `name` de `StatusEffect` est un identifiant technique |
 | Statuts localisés | `StatusEffectsPanel` | Traduction dynamique depuis identifiants techniques |
 | Langues supportées | `app_en.arb`, `app_fr.arb` | Français + Anglais |
@@ -163,7 +161,6 @@ Design complet — [ADR-069](../_adr/ADR-069-systeme-de-sauvegarde-de-run-checkp
 | 15 étapes interactives, choix de classe et draft de départ en amont | `TutorialScreen`, `lib/tutorial/widgets/` | Guidage pas-à-pas depuis le choix de classe jusqu'aux reliques ; étapes 02-03 verrouillées une fois franchies ; détail complet en [`_rules/08-00`](../_rules/08-00-systeme-de-tutoriel-autonome.md) |
 | Fixtures résolues contre le registre de données | `tutorial_loader.dart`, `TutorialFixtures` | `gameDataLoaderProvider` lu en un point unique ; cartes/ennemis/reliques affichés sont ceux du jeu (`CardInstance`, `EnemyInstance`), plus de valeurs recopiées à la main |
 | Ciblage double phase et info-bulles | `TutorialPlayCardWidget`, `TutorialCardsWidget` | Ciblage en deux temps, icônes vectorielles canvas et tooltips localisés |
-| Persistance et badge « NEW » | `TutorialProgressService`, `HomeScreen` | Complétion sauvegardée en `shared_preferences` |
 | Responsivité | `LayoutBuilder`, `FittedBox`, `Wrap` | Ajustements multi-résolutions (mobile, web, desktop) |
 
 ### 🚀 Chaîne de Release et Site Vitrine
@@ -208,6 +205,7 @@ Chaîne de repli — [`_rules/09-00`](../_rules/09-00-systeme-audio.md), catalog
 | Dossiers auto-suffisants | `classes/<id>/`, `enemies/<id>/` | JSON + image dans le même dossier ; ajouter un ennemi = créer un dossier |
 | Chargeur générique par motifs de chemin | `GameDataLoader`, `EntitySource` (`lib/services/game_data_loader.dart`) | Le répertoire injecte l'appartenance ; les fautes s'accumulent et lèvent une fois ; `bundle` en paramètre comme seam de test |
 | Section `assets:` générée depuis le disque | `tool/sync_assets.dart` | `--check` sort 1 sur dérive ; refuse de deviner sur un pubspec ambigu |
+| Identité visuelle de classe en donnée | `HeroData.classCard`/`themeColor`/`iconPath`, `ClassAvatar` | Carte `classes/<id>/<id>.png`, couleur `#RRGGBB`, icône optionnelle ; lue par tous les écrans via `ClassIdentity`, aucun `if` sur l'`id` — [ADR-090](../_adr/ADR-090-identite-visuelle-de-classe-portee-par-la-donnee.md) |
 | Gardes permanentes de la structure | `real_bundle_load`, `referential_integrity`, `entity_id_convention`, `flame_image_prefix`, `sync_assets` (`test/unit/`) | Ligne de pubspec oubliée, dossier incomplet, id hors convention, collision de clés du cache d'images |
 
 Règle de partage catalogue / configuration — [ADR-085](../_adr/ADR-085-regle-de-partage-catalogue-configuration.md).
@@ -217,6 +215,18 @@ Structure — [`_rules/07-00`](../_rules/07-00-architecture-des-donnees.md), mé
 **Coût de démarrage relevé le 2026-09-05** : 72 lectures de bundle en **53 ms** en profile,
 contre un seuil d'alerte de 200 ms. ⚠️ Mesure ponctuelle du chantier : **aucun test ni banc du
 dépôt ne la reproduit ni ne garde ce seuil** — une régression de démarrage passerait au vert.
+
+### 🛠️ Outils de Développement (build de debug seulement)
+
+| Fonctionnalité | Fichiers clés | Détails |
+|:---|:---|:---|
+| Run debug déclarée au lancement | `debugRunProvider`, `HomeScreen._startDebugRun` | Bouton « RUN DEBUG » ; la run ne persiste rien et `DebugActions` refuse d'agir hors d'elle — [ADR-087](../_adr/ADR-087-run-debug-declaree-au-lancement-et-verrou-de-persis.md) |
+| Tiroir de debug | `DebugDrawer`, `lib/ui/widgets/debug/tabs/` | Ancré au bord gauche : Héros/Run/Deck/Reliques sur la carte, Combat seul en combat — [ADR-088](../_adr/ADR-088-tiroir-de-debug-ancre-et-sortie-de-combat-par-sa-pr.md) |
+| Éditeur de contenu | `ContentEditorScreen`, `lib/services/content_editor/` | Créer ou modifier une entité des 7 catégories, classe entière en un geste ; validation totale avant écriture transactionnelle — [ADR-089](../_adr/ADR-089-editeur-de-contenu-seam-disque-et-validation-totale.md) |
+| Accès | `HomeScreen` | Colonne de debug à droite du menu joueur, sous `kDebugMode` — [ADR-091](../_adr/ADR-091-menu-d-accueil-quitter-par-plateforme-et-retrait-du.md) |
+
+Architecture — [`_patterns/18-00`](../_patterns/18-00-menu-de-debug-run-declaree-et-tiroir-ancre.md)
+et [`_patterns/19-00`](../_patterns/19-00-editeur-de-contenu-seam-disque-validation-ecriture.md).
 
 ## 2. Dette métier assumée
 
@@ -249,20 +259,10 @@ Les 12 lignes restantes n'ont pas été re-vérifiées à cette date.
 
 ## 3. Références documentaires
 
-**Vérifié le 2026-08-20** — chaque chemin testé avec `test -e`, et les trois comptes re-mesurés (5 rapports Gemini, 4 plans de refactoring, 26 phases livrées).
-
-| Document | Chemin | Contenu |
-|:---|:---|:---|
-| Rapport dette technique principal | `docs/analysis_reports/technical_debt_report_Opus4.6.md` | Analyse la plus complète |
-| Rapports dette technique Gemini 3.5 | `docs/analysis_reports/` | 5 rapports dette_technique_rapport_Gemini3.5*.md |
-| Plans de refactoring (historique, chantiers clos) | `docs/analysis_reports/` | 4 plans 26-05-2026_Refactoring_Phase*_implementation_plan.md |
-| Système de récompenses | `docs/archives/reward_and_luck_system.md` | Spécification luck + rareté |
-| Système de passifs | `docs/archives/système_de_passifs.md` | Design document passifs héros |
-| Carte du monde | `docs/archives/world_map_system.md` | Spécification DAG procédural |
-| Stratégie de migration | `docs/archives/stratégies_migrations.md` | Flutter/Flame vs alternatives |
-| Backlog d'upgrades (historique) | `docs/possible_upgrades/upgrade_ideas.md` | Backlog actif désormais dans docs/ROADMAP.md |
-| Phases implémentées | `docs/implementation_plans/done/` | 26 fichiers de phases complétées |
-| Leçons apprises | `docs/lessons/concept_mastery.md`, `docs/lessons/flame_mastery.md`, `docs/lessons/riverpod_mastery.md` | Trois leçons capitalisées |
+Les documents de `docs/` — rapports d'analyse, plans archivés, leçons, specs — sont indexés par
+sujet dans [`docs/INDEX.md`](../../docs/INDEX.md), seul index de navigation. La table qui vivait
+ici au 2026-08-20 le doublait : chacun de ses dix chemins y figure (vérifié le 2026-09-14,
+`grep -c` par chemin).
 
 ## 4. Historique des releases (10 dernières)
 

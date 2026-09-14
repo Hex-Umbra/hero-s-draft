@@ -95,8 +95,8 @@ faire échouer le démarrage — [`_patterns/16-00`](16-00-architecture-du-syste
 |:---|:---|
 | `tool/sync_assets.dart` | Régénère la section `assets:` du `pubspec.yaml` depuis le disque ; `--check` sort 1 sur dérive. Refuse de travailler plutôt que de deviner sur un pubspec ambigu |
 | `test/unit/real_bundle_load_test.dart` | Une **ligne de pubspec oubliée**. Les déclarations d'assets ne sont récursives à aucun niveau, et un répertoire non déclaré ne produit **aucun message** : son contenu se charge en développement et disparaît en build. Seul un chargement par le vrai bundle prouve que l'application voit les fichiers |
-| `test/unit/referential_integrity_test.dart` | Un **dossier incomplet** : classe sans `icon.png`, `skills` désignant une carte absente |
-| `test/unit/flame_image_prefix_test.dart` | La **collision de clés du cache d'images de Flame**. `Images.prefix` ne fait pas partie des clés : sous un préfixe par dossier, les trois `icon.png` de classes s'écraseraient |
+| `test/unit/referential_integrity_test.dart` | Un **dossier incomplet** : classe dont `classCard` ne vaut pas `classes/<id>/<id>.png`, `skills` différent du contenu de `cards/` |
+| `test/unit/flame_image_prefix_test.dart` | La **collision de clés du cache d'images de Flame**. `Images.prefix` ne fait pas partie des clés : sous un préfixe par dossier, deux images de même nom dans des dossiers distincts s'écraseraient — le cas des trois `icon.png` de classes jusqu'à leur renommage en `<id>.png` ([ADR-090](../_adr/ADR-090-identite-visuelle-de-classe-portee-par-la-donnee.md)), et toujours celui des `sprite.png` d'ennemis |
 
 > [!NOTE]
 > **Coût de démarrage** : mesuré, et sous le seuil d'alerte — aucune parallélisation

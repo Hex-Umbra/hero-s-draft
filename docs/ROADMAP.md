@@ -504,7 +504,7 @@ Sur les 14 blocs `catch` de `lib/`, **un seul est totalement muet** : `lib/ui/sc
 | ID | Chantier | Effort | Difficulté | Apport |
 |:---|:---|:---:|:---:|:---:|
 | **P-29** | **Lot P2 animations** : signature VFX des 6 cartes de classe + différenciation réelle feu/glace/foudre/poison | **4-6 j** | ★★★☆☆ | 🔥🔥 |
-| **P-30** | Menu de **debug** (`add_gold`, `spawn_relic`, `jump_to_floor`…) | **1-2 j** | ★★☆☆☆ | 🔥🔥 |
+| ~~**P-30**~~ | ~~Menu de **debug** (`add_gold`, `spawn_relic`, `jump_to_floor`…)~~ ✅ **Livré le 2026-09-09** sur `feat/menu-debug-lot-2`, non fusionné — manipulateur de run *et* éditeur de contenu, voir ci-dessous | — | — | — |
 | **P-31** | **Nœuds Trésor 💎 & Mystère ❓** sur la carte — ⚠️ **prérequis de rendu**, voir ci-dessous | **1-2 j** *(hors prérequis)* | ★★☆☆☆ | 🔥 |
 | **P-32** | **Historique de notifications** (panneau consultable, type chat) | **1-2 j** | ★★☆☆☆ | 🔥 |
 | **P-33** | **Système d'achievements / trophées** | **2-3 j** | ★★★☆☆ | 🔥 |
@@ -515,6 +515,25 @@ Sur les 14 blocs `catch` de `lib/`, **un seul est totalement muet** : `lib/ui/sc
 | **P-38** | **Dashboard de perf** (FPS, drops) dans les logs de debug | **1 j** | ★★☆☆☆ | 🔥 |
 | **P-39** | **Skins de héros** débloquables | **3 j+** *(art)* | ★★☆☆☆ | 🔥 |
 | **P-47** | **Seconde passe audio** — sonoriser l'économie et la fin de partie, réveiller le niveau 1 de la chaîne de repli, revoir le mixage | **1-2 j** *(+ ~10 bruitages)* | ★☆☆☆☆ | 🔥🔥 |
+
+### P-30 — Menu de debug
+
+> ✅ **Livré le 2026-09-09**, en deux lots, sur la branche `feat/menu-debug-lot-2` — **non fusionnée**
+> au 2026-09-14, dernier commit de code `d8d9319`. Le périmètre a dépassé la ligne d'origine :
+> au manipulateur de run s'est ajouté un éditeur de contenu, que P-48 avait rendu possible.
+
+| Lot | Contenu | Conception |
+|:---|:---|:---|
+| 1 | Run debug déclarée au lancement, tiroir ancré sur la carte et en combat — [ADR-087](../.obsidian_vault/_adr/ADR-087-run-debug-declaree-au-lancement-et-verrou-de-persis.md), [ADR-088](../.obsidian_vault/_adr/ADR-088-tiroir-de-debug-ancre-et-sortie-de-combat-par-sa-pr.md) | [spec](superpowers/specs/2026-09-05-menu-debug-lot-1-manipulateur-de-run-design.md) · [plan](superpowers/plans/2026-09-05-menu-debug-lot-1.md) |
+| 2 | Éditeur de contenu, puis création guidée — [ADR-089](../.obsidian_vault/_adr/ADR-089-editeur-de-contenu-seam-disque-et-validation-totale.md), [ADR-090](../.obsidian_vault/_adr/ADR-090-identite-visuelle-de-classe-portee-par-la-donnee.md) | [spec](superpowers/specs/2026-09-06-menu-debug-lot-2-editeur-de-contenu-design.md) · [plan](superpowers/plans/2026-09-06-menu-debug-lot-2.md) · [spec création guidée](superpowers/specs/2026-09-08-editeur-de-contenu-creation-guidee-design.md) · [plan](superpowers/plans/2026-09-08-editeur-de-contenu-creation-guidee.md) |
+
+**Reste ouvert**, sans chiffrage :
+
+- Établir **le geste réellement suffisant** après une écriture de l'éditeur (spec lot 2 §6.3), et
+  resserrer le message s'il est trop prudent.
+- **Les cartes de signature ne sont pas filtrées par classe** en boutique ni sur le bonus de boss —
+  [analyse](possible_upgrades/08-09-2026_filtre_cartes_de_classe_Opus5.md). À traiter avant ou
+  avec **P-42**, qui multipliera ces cartes.
 
 ### P-31 — Ne pas ouvrir sans lire le prérequis
 

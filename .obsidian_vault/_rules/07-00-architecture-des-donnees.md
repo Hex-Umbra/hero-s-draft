@@ -13,7 +13,7 @@ assets/data/
 ├── audio.json, patch_notes.json    # à plat : documents de configuration, pas des catalogues
 ├── cards/<id>.json                 # cartes neutres ; idem relics/, events/,
 │                                   #   forge_upgrades/, passives/
-├── classes/<id>/{class.json, icon.png, cards/<id>.json}
+├── classes/<id>/{class.json, <id>.png, cards/<id>.json}
 └── enemies/<id>/{enemy.json, sprite.png}
 ```
 
