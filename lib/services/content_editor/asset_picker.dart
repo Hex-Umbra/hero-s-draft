@@ -20,6 +20,12 @@ class FilePickerAssetPicker implements AssetPicker {
     final file = await FilePicker.pickFile(
       type: FileType.custom,
       allowedExtensions: extensions,
+      // Sans ce verrou, la fenetre du selecteur ne bloque pas celle de
+      // Flutter sous Windows et Linux : l'usager peut continuer a manipuler
+      // le formulaire pendant qu'elle est ouverte (spec §5.5, voir la garde
+      // de `_importAsset`).
+      windowsOptions: const WindowsOptions(lockParentWindow: true),
+      linuxOptions: const LinuxOptions(lockParentWindow: true),
     );
     return file?.path;
   }

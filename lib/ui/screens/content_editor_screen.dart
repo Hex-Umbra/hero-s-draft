@@ -303,34 +303,73 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
     );
   }
 
+  /// Le corps courant du formulaire — vue document, ou vue brute decodee.
+  /// `null` si la vue brute ne decode pas en objet : la validation la
+  /// refusera de toute facon, inutile de deviner ici.
+  Map<String, dynamic>? _currentMechanics() {
+    if (!_rawView) return _document!.root;
+    try {
+      final decoded = jsonDecode(_raw.text);
+      return decoded is Map<String, dynamic> ? decoded : null;
+    } on FormatException {
+      return null;
+    }
+  }
+
   /// Les imports choisis, prets pour le validateur ou l'ecrivain.
+  ///
+  /// Un import reste dans `_importSources` jusqu'a « Écrire » ou un
+  /// changement d'entite, mais le corps qu'il devait alimenter peut avoir
+  /// change sous lui entre-temps — la vue brute retouchee a la main, ou la
+  /// cle simplement retiree du formulaire. Un tel import est **orphelin** :
+  /// il ne correspond plus a ce que le formulaire montre, et l'ecrire
+  /// copierait un fichier et declarerait un son que rien ne reference. Une
+  /// image obligatoire, elle, n'est jamais dans le corps (l'ecrivain la
+  /// calcule) : son import reste toujours retenu.
   List<PendingImport> _pendingImports() {
     final id = _id.text.trim();
-    return [
-      for (final entry in _importSources.entries)
-        if (_descriptor.assetKeys[entry.key]!.kind == AssetKind.sound)
-          PendingImport.sound(
-            key: entry.key,
-            sourcePath: entry.value,
-            soundId: _importSoundIds[entry.key]!,
-          )
-        else
-          PendingImport.image(
-            descriptor: _descriptor,
-            id: id,
-            key: entry.key,
-            sourcePath: entry.value,
-          ),
-    ];
+    final mechanics = _currentMechanics();
+    final imports = <PendingImport>[];
+    for (final entry in _importSources.entries) {
+      final key = entry.key;
+      final slot = _descriptor.assetKeys[key]!;
+      if (slot.kind == AssetKind.sound) {
+        final soundId = _importSoundIds[key]!;
+        if (mechanics != null && mechanics[key] != soundId) continue;
+        imports.add(PendingImport.sound(
+          key: key,
+          sourcePath: entry.value,
+          soundId: soundId,
+        ));
+      } else {
+        if (!slot.isRequired &&
+            mechanics != null &&
+            !mechanics.containsKey(key)) {
+          continue;
+        }
+        imports.add(PendingImport.image(
+          descriptor: _descriptor,
+          id: id,
+          key: key,
+          sourcePath: entry.value,
+        ));
+      }
+    }
+    return imports;
   }
 
   /// Ouvre le selecteur pour [key], puis — pour un son — demande son
   /// identifiant. Rien n'est copie ici : l'import entre dans la meme
   /// transaction que l'entite, et n'agit qu'au moment d'« Écrire ».
   Future<void> _importAsset(String key, AssetSlot slot) async {
+    // Sous Windows et Linux, la fenetre du selecteur ne bloque pas celle de
+    // Flutter : l'usager peut changer d'entite pendant qu'elle est ouverte.
+    // Le document capture avant l'attente sert de temoin — s'il a change au
+    // reveil, l'import ne vise plus le formulaire courant et est abandonne.
+    final document = _document;
     final picked =
         await ref.read(assetPickerProvider).pickFile(extensions: slot.extensions);
-    if (picked == null || !mounted) return;
+    if (picked == null || !mounted || !identical(document, _document)) return;
     final source = picked.replaceAll(r'\', '/');
 
     if (slot.kind == AssetKind.sound) {
@@ -338,7 +377,12 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
         context: context,
         builder: (_) => _SoundIdDialog(initial: _id.text.trim()),
       );
-      if (soundId == null || soundId.isEmpty || !mounted) return;
+      if (soundId == null ||
+          soundId.isEmpty ||
+          !mounted ||
+          !identical(document, _document)) {
+        return;
+      }
       setState(() {
         _importSources[key] = source;
         _importSoundIds[key] = soundId;

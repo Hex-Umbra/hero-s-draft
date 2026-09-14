@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -1314,6 +1315,154 @@ void main() {
         'nouvelle',
       );
     });
+
+    testWidgets('un fichier choisi apres un changement d entite est ignore',
+        (tester) async {
+      Directory('$root/assets/data/enemies/gobelin').createSync(recursive: true);
+      File('$root/assets/data/enemies/gobelin/sprite.png')
+          .writeAsStringSync('ancienne');
+      File('$root/assets/data/enemies/gobelin/enemy.json').writeAsStringSync(
+        jsonEncode({
+          'id': 'gobelin',
+          'name_en': 'Goblin',
+          'name_fr': 'Gobelin',
+          'maxHp': 30,
+          'baseDamage': 5,
+          'spritePath': 'assets/data/enemies/gobelin/sprite.png',
+          'intents': [
+            {'type': 'attack', 'value': 5},
+          ],
+        }),
+      );
+      final source = sourceFile('gobelin.png', 'nouvelle');
+      final picker = _PendingPicker();
+      await tester.pumpWidget(harness(projectRoot: root, picker: picker));
+      await tester.tap(find.text('Ennemi'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Modifier'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('gobelin'));
+      await tester.pumpAndSettle();
+
+      final button = find.byKey(const Key('editeur-importer-spritePath'));
+      await tester.ensureVisible(button);
+      await tester.tap(button);
+      await tester.pump();
+
+      // Le selecteur est encore ouvert : l usager change de formulaire
+      // pendant ce temps, comme le permet un dialogue non bloquant sous
+      // Windows et Linux (lockParentWindow ne concerne pas ce faux
+      // selecteur, mais reproduit le meme delai).
+      await tester.tap(find.text('Relique'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Créer'));
+      await tester.pumpAndSettle();
+
+      picker.completer.complete(source);
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byKey(const Key('editeur-id')), 'talisman');
+      await tester.tap(find.text('Valider'));
+      await tester.pump();
+
+      expect(tester.takeException(), isNull);
+      expect(find.textContaining('à importer'), findsNothing);
+    });
+
+    testWidgets(
+        'un son importe puis efface par la vue brute n est ni copie ni '
+        'declare', (tester) async {
+      File('$root/assets/data/audio.json').writeAsStringSync(audio);
+      final source = sourceFile('clang.wav', 'octets');
+      await tester.pumpWidget(
+          harness(projectRoot: root, picker: _FakePicker(source)));
+      await tester.tap(find.text('Relique'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Créer'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const Key('editeur-id')), 'talisman');
+
+      await importSound(tester, 'talisman_clang');
+
+      final toggle = find.byKey(const Key('editeur-bascule-json'));
+      await tester.ensureVisible(toggle);
+      await tester.tap(toggle);
+      await tester.pumpAndSettle();
+
+      final box = find.byKey(const Key('editeur-json-brut'));
+      final withoutSfx = jsonDecode(
+        tester.widget<TextField>(box).controller!.text,
+      ) as Map<String, dynamic>;
+      withoutSfx.remove('sfx');
+      await tester.enterText(box, jsonEncode(withoutSfx));
+
+      await tester.ensureVisible(toggle);
+      await tester.tap(toggle);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Écrire'));
+      await tester.pumpAndSettle();
+
+      final written = jsonDecode(
+        File('$root/assets/data/relics/talisman.json').readAsStringSync(),
+      ) as Map<String, dynamic>;
+      expect(written.containsKey('sfx'), isFalse);
+      expect(Directory('$root/assets/audio').existsSync(), isFalse);
+      expect(
+        File('$root/assets/data/audio.json').readAsStringSync(),
+        audio,
+      );
+    });
+
+    testWidgets('importer une icone de classe ecrit iconPath', (tester) async {
+      Directory('$root/assets/data/classes/mage/cards')
+          .createSync(recursive: true);
+      File('$root/assets/data/classes/mage/mage.png')
+          .writeAsStringSync('carte');
+      File('$root/assets/data/classes/mage/class.json').writeAsStringSync(
+        jsonEncode({
+          'id': 'mage',
+          'name_fr': 'Mage',
+          'name_en': 'Mage',
+          'description_fr': '.',
+          'description_en': '.',
+          'classCard': 'assets/data/classes/mage/mage.png',
+          'maxHp': 100,
+          'maxMana': 3,
+          'baseDamage': 5,
+          'displayOrder': 1,
+          'themeColor': '#9C27B0',
+          'skills': <String>[],
+        }),
+      );
+      final source = sourceFile('icone.png', 'nouvelle icone');
+      await tester.pumpWidget(
+          harness(projectRoot: root, picker: _FakePicker(source)));
+      await tester.tap(find.text('Classe'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Modifier'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('mage'));
+      await tester.pumpAndSettle();
+
+      final button = find.byKey(const Key('editeur-importer-iconPath'));
+      await tester.ensureVisible(button);
+      await tester.tap(button);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Écrire'));
+      await tester.pumpAndSettle();
+
+      expect(
+        jsonDecode(
+          File('$root/assets/data/classes/mage/class.json').readAsStringSync(),
+        ),
+        containsPair('iconPath', 'assets/data/classes/mage/icon.png'),
+      );
+      expect(
+        File('$root/assets/data/classes/mage/icon.png').readAsStringSync(),
+        'nouvelle icone',
+      );
+    });
   });
 }
 
@@ -1441,4 +1590,16 @@ class _FakePicker implements AssetPicker {
 
   @override
   Future<String?> pickFile({required List<String> extensions}) async => path;
+}
+
+/// Ne se resout que lorsque le test l'y invite : reproduit un selecteur de
+/// fichier encore ouvert pendant que l usager continue a manipuler l ecran —
+/// c'est le cas reel sous Windows et Linux, ou la fenetre ne bloque pas
+/// celle de Flutter.
+class _PendingPicker implements AssetPicker {
+  final completer = Completer<String?>();
+
+  @override
+  Future<String?> pickFile({required List<String> extensions}) =>
+      completer.future;
 }
