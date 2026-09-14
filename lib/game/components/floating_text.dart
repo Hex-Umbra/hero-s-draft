@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import '../game_constants.dart';
 
 
-class FloatingText extends TextComponent with HasPaint {
+class FloatingText extends TextComponent {
   final bool isCritical;
   final bool isUpward;
   final bool isPoison;
