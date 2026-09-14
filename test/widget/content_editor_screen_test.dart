@@ -708,6 +708,132 @@ void main() {
     expect(find.text('chance_du_joueur'), findsWidgets);
   });
 
+  testWidgets('une saisie non entiere est une faute, et rien n est ecrit',
+      (tester) async {
+    final before = _dataTreeSnapshot(root);
+    await tester.pumpWidget(harness(projectRoot: root));
+    await tester.tap(find.text('Relique'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Créer'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('editeur-id')), 'talisman');
+    final value = find.byKey(const Key('editeur-champ-value'));
+    await tester.ensureVisible(value);
+    await tester.enterText(value, '1a');
+    await tester.tap(find.text('Écrire'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('n\'est pas un entier'), findsOneWidget);
+    expect(_dataTreeSnapshot(root), equals(before));
+  });
+
+  testWidgets(
+      'une structure qui change efface la faute de conversion en cours',
+      (tester) async {
+    // Ruling du controleur (Task 2) : `onStructureChanged` recree le
+    // formulaire, ses controleurs avec lui, et chaque champ retombe sur la
+    // valeur du document. Une faute de conversion qui survivrait n'aurait
+    // alors plus de cause visible — le champ affiche a nouveau une valeur
+    // saisissable.
+    Directory('$root/assets/data/cards').createSync(recursive: true);
+    await tester.pumpWidget(harness(projectRoot: root));
+    await tester.tap(find.text('Carte'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Créer'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('editeur-id')), 'double_coup');
+
+    final cost = find.byKey(const Key('editeur-champ-cost'));
+    await tester.ensureVisible(cost);
+    await tester.enterText(cost, '1a');
+    await tester.pump();
+
+    final add = find.byKey(const Key('editeur-ajouter-effects'));
+    await tester.ensureVisible(add);
+    await tester.tap(add);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Écrire'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('n\'est pas un entier'), findsNothing);
+    final written = jsonDecode(
+      File('$root/assets/data/cards/double_coup.json').readAsStringSync(),
+    ) as Map<String, dynamic>;
+    expect(written['cost'], 1);
+  });
+
+  testWidgets('une vue brute illisible reste brute, texte intact',
+      (tester) async {
+    await tester.pumpWidget(harness(projectRoot: root));
+    await tester.tap(find.text('Relique'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Créer'));
+    await tester.pumpAndSettle();
+
+    final toggle = find.byKey(const Key('editeur-bascule-json'));
+    await tester.ensureVisible(toggle);
+    await tester.tap(toggle);
+    await tester.pumpAndSettle();
+    await tester.enterText(
+        find.byKey(const Key('editeur-json-brut')), '{ pas du json');
+    await tester.ensureVisible(toggle);
+    await tester.tap(toggle);
+    await tester.pumpAndSettle();
+
+    final box =
+        tester.widget<TextField>(find.byKey(const Key('editeur-json-brut')));
+    expect(box.controller!.text, '{ pas du json');
+    expect(find.textContaining('ne se relit pas'), findsOneWidget);
+  });
+
+  testWidgets('ajouter un effet a une carte l ecrit', (tester) async {
+    Directory('$root/assets/data/cards').createSync(recursive: true);
+    await tester.pumpWidget(harness(projectRoot: root));
+    await tester.tap(find.text('Carte'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Créer'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('editeur-id')), 'double_coup');
+    final add = find.byKey(const Key('editeur-ajouter-effects'));
+    await tester.ensureVisible(add);
+    await tester.tap(add);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Écrire'));
+    await tester.pumpAndSettle();
+
+    final written = jsonDecode(
+      File('$root/assets/data/cards/double_coup.json').readAsStringSync(),
+    ) as Map<String, dynamic>;
+    expect(written['effects'], hasLength(2));
+  });
+
+  testWidgets('un son se choisit puis se retire, et aucun n ecrit rien',
+      (tester) async {
+    File('$root/assets/data/audio.json').writeAsStringSync(
+        '{"sounds": {"clang": {"file": "sfx/clang.wav"}}}');
+    await tester.pumpWidget(harness(projectRoot: root));
+    await tester.tap(find.text('Relique'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Créer'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('editeur-id')), 'talisman');
+
+    await tester.ensureVisible(find.text('clang'));
+    await tester.tap(find.text('clang'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('aucun'));
+    await tester.tap(find.text('aucun'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Écrire'));
+    await tester.pumpAndSettle();
+
+    final written = jsonDecode(
+      File('$root/assets/data/relics/talisman.json').readAsStringSync(),
+    ) as Map<String, dynamic>;
+    expect(written.containsKey('sfx'), isFalse);
+  });
+
   testWidgets(
       'cliquer une entite au niveau 2 remplit le champ identifiant (a)',
       (tester) async {
@@ -828,13 +954,19 @@ void main() {
       );
     }
 
-    /// Le document que porte la boite JSON du mode Modifier, decode.
-    Map<String, dynamic> mechanicsBox(WidgetTester tester) {
-      final box = tester.widget<TextField>(find.ancestor(
-        of: find.text('Mécanique (JSON)'),
-        matching: find.byType(TextField),
-      ));
-      return jsonDecode(box.controller!.text) as Map<String, dynamic>;
+    /// Le document du formulaire, lu dans la vue brute puis refermee.
+    Future<Map<String, dynamic>> mechanicsBox(WidgetTester tester) async {
+      final toggle = find.byKey(const Key('editeur-bascule-json'));
+      await tester.ensureVisible(toggle);
+      await tester.tap(toggle);
+      await tester.pumpAndSettle();
+      final box =
+          tester.widget<TextField>(find.byKey(const Key('editeur-json-brut')));
+      final decoded = jsonDecode(box.controller!.text) as Map<String, dynamic>;
+      await tester.ensureVisible(toggle);
+      await tester.tap(toggle);
+      await tester.pumpAndSettle();
+      return decoded;
     }
 
     /// Amene l ecran sur la relique semee, en mode Modifier.
@@ -909,14 +1041,14 @@ void main() {
       await tester.tap(find.text('talisman_de_fer'));
       await tester.pumpAndSettle();
 
-      expect(mechanicsBox(tester), containsPair('sfx', 'clang_distinctif'),
+      expect(await mechanicsBox(tester), containsPair('sfx', 'clang_distinctif'),
           reason: 'le gabarit est encore affiche');
       expect(find.text('Talisman de fer'), findsOneWidget);
 
       await tester.tap(find.text('amulette'));
       await tester.pumpAndSettle();
 
-      final amulet = mechanicsBox(tester);
+      final amulet = await mechanicsBox(tester);
       expect(amulet, containsPair('value', 17),
           reason: 'le contenu de l entite precedente est reste');
       expect(amulet.containsKey('sfx'), isFalse);
@@ -941,7 +1073,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.textContaining('aucun fichier à charger'), findsNothing);
-      expect(mechanicsBox(tester)['effects'], [
+      expect((await mechanicsBox(tester))['effects'], [
         {'type': 'damage', 'value': 77},
       ]);
     });
@@ -980,8 +1112,8 @@ void main() {
       await tester.pump();
 
       expect(find.textContaining('aucun fichier à charger'), findsOneWidget);
-      // Le formulaire tient : la boite JSON porte toujours le gabarit.
-      expect(find.textContaining('startOfCombat'), findsOneWidget);
+      // Le formulaire tient : le document porte toujours le gabarit.
+      expect((await mechanicsBox(tester))['trigger'], 'startOfCombat');
     });
 
     testWidgets('le type reste choisissable apres le passage en Modifier',
@@ -1029,7 +1161,37 @@ void main() {
 
       expect(find.textContaining('aucun fichier à charger'), findsNothing);
       expect(find.textContaining('Parieur'), findsOneWidget);
-      expect(find.textContaining('"maxHp": 100'), findsOneWidget);
+      expect(
+        tester
+            .widget<TextField>(find.byKey(const Key('editeur-champ-maxHp')))
+            .controller!
+            .text,
+        '100',
+      );
+    });
+
+    testWidgets('une cle inconnue du gabarit a son champ et survit a Ecrire',
+        (tester) async {
+      seedRelic();
+      final path = '$root/assets/data/relics/talisman_de_fer.json';
+      File(path).writeAsStringSync(jsonEncode({
+        ...jsonDecode(File(path).readAsStringSync()) as Map<String, dynamic>,
+        'custom_flag': true,
+      }));
+      await tester.pumpWidget(harness(projectRoot: root));
+      await tester.tap(find.text('Relique'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Modifier'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('talisman_de_fer'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('editeur-champ-custom_flag')), findsOneWidget);
+
+      await tester.tap(find.text('Écrire'));
+      await tester.pumpAndSettle();
+      expect(jsonDecode(File(path).readAsStringSync()),
+          containsPair('custom_flag', true));
     });
   });
 }

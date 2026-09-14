@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/data/game_data_registry.dart';
+import '../../services/content_editor/audio_catalog.dart';
 import '../../services/content_editor/class_recipe.dart';
 import '../../services/content_editor/content_editor_providers.dart';
+import '../../services/content_editor/editor_document.dart';
 import '../../services/content_editor/entity_catalog.dart';
 import '../../services/content_editor/entity_descriptor.dart';
 import '../../services/content_editor/entity_draft.dart';
@@ -14,17 +16,15 @@ import '../../services/content_editor/entity_writer.dart';
 import '../../services/content_editor/known_values.dart';
 import '../../services/content_editor/placeholder_filler.dart';
 import '../theme/app_colors.dart';
+import '../widgets/content_editor/asset_field.dart';
 import '../widgets/content_editor/choice_button.dart';
 import '../widgets/content_editor/color_field.dart';
+import '../widgets/content_editor/document_form.dart';
 import '../widgets/content_editor/entity_form.dart';
 import '../widgets/content_editor/tree_level.dart';
 
 /// Le niveau 1 de l'arbre : creer une entite neuve, ou modifier une existante.
 enum _EditorMode { create, modify }
-
-/// La couleur d'une classe dont `themeColor` n'a pas encore ete choisi : le
-/// meme magenta que le gabarit, pour qu'un oubli se voie.
-const Color _kUnsetThemeColor = Color(0xFFFF00FF);
 
 /// Editeur de contenu. **Hors run** : il ne touche a aucun etat de jeu, et le
 /// verrou de persistance du lot 1 ne le concerne pas.
@@ -52,19 +52,19 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
   final TextEditingController _id = TextEditingController();
   final Map<String, TextEditingController> _prose = {};
 
-  /// La boite JSON unique, en modification seulement — voir `EntityForm`.
-  final TextEditingController _mechanics = TextEditingController();
+  /// Le document de la mecanique — voir `EditorDocument`.
+  EditorDocument? _document;
 
-  /// Un controleur par cle du gabarit (hors `themeColor`), en creation
-  /// seulement.
-  final Map<String, TextEditingController> _mechanicsFields = {};
+  /// Change a chaque remplacement ou changement de structure du document :
+  /// `DocumentForm` est alors recree, ses controleurs avec lui.
+  int _revision = 0;
 
-  /// `themeColor`, hors `_mechanicsFields` : porte par un `ColorField`.
-  Color _themeColor = _kUnsetThemeColor;
+  /// La vue « JSON brut », et son texte.
+  bool _rawView = false;
+  final TextEditingController _raw = TextEditingController();
 
-  /// Une selection par `referenceKeys` du descripteur — `passiveTrait` pour
-  /// une classe.
-  Map<String, String?> _referenceSelections = {};
+  /// Les sons d'`audio.json`, lus avec le catalogue de la categorie.
+  List<String> _soundIds = const [];
 
   // La recette de classe (creation seulement) : combien de cartes de
   // signature, et pour chacune ses controleurs.
@@ -114,11 +114,8 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
   @override
   void dispose() {
     _id.dispose();
-    _mechanics.dispose();
+    _raw.dispose();
     for (final controller in _prose.values) {
-      controller.dispose();
-    }
-    for (final controller in _mechanicsFields.values) {
       controller.dispose();
     }
     _cardCount.dispose();
@@ -139,7 +136,6 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
     // garde, il restait affiche sous le nouveau formulaire comme s'il lui
     // appartenait.
     _id.clear();
-    _mechanics.text = _descriptor.template;
     for (final controller in _prose.values) {
       controller.dispose();
     }
@@ -150,22 +146,7 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
       }
     }
 
-    for (final controller in _mechanicsFields.values) {
-      controller.dispose();
-    }
-    _mechanicsFields.clear();
-    final template = _descriptor.decodeTemplate();
-    template.forEach((key, value) {
-      if (key == 'themeColor') return; // porte par le ColorField, a part
-      _mechanicsFields[key] = TextEditingController(text: _initialFieldText(value));
-    });
-    final themeHex = template['themeColor'];
-    _themeColor = themeHex is String
-        ? (hexToColor(themeHex) ?? _kUnsetThemeColor)
-        : _kUnsetThemeColor;
-    _referenceSelections = {
-      for (final key in _descriptor.referenceKeys.keys) key: null,
-    };
+    _seedDocument(_descriptor.decodeTemplate());
 
     _setCardCount(0);
 
@@ -175,60 +156,45 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
     _failure = null;
   }
 
-  /// Le texte initial d'un champ de creation, a partir de la valeur du
-  /// gabarit : brut pour une chaine ou un nombre, JSON compact pour une liste
-  /// ou un objet — `effects`, `intents`, `choices`.
-  String _initialFieldText(Object? value) {
-    if (value is String) return value;
-    if (value is num || value is bool) return value.toString();
-    return jsonEncode(value);
+  /// Remplace le document, et referme la vue brute.
+  void _seedDocument(Map<String, dynamic> seed) {
+    _document = EditorDocument(
+      seed,
+      requiredKeys: _descriptor.requiredKeys,
+      template: _descriptor.decodeTemplate(),
+    );
+    _revision++;
+    _rawView = false;
   }
 
-  /// Convertit le texte saisi dans un champ de creation, en s'appuyant sur le
-  /// **type de la valeur du gabarit** comme reference : un entier reste un
-  /// entier, une liste reste une liste. Une saisie illisible retombe sur la
-  /// valeur du gabarit plutot que de faire echouer la composition — la
-  /// validation, elle, la jugera.
-  Object? _coerce(String text, Object? templateValue) {
-    final trimmed = text.trim();
-    if (templateValue is int) {
-      return int.tryParse(trimmed) ?? templateValue;
-    }
-    if (templateValue is double) {
-      return num.tryParse(trimmed) ?? templateValue;
-    }
-    if (templateValue is bool) {
-      if (trimmed == 'true') return true;
-      if (trimmed == 'false') return false;
-      return templateValue;
-    }
-    if (templateValue is List || templateValue is Map) {
-      try {
-        return jsonDecode(trimmed);
-      } catch (_) {
-        return templateValue;
-      }
-    }
-    return trimmed;
-  }
+  /// Le texte que juge la validation : la vue brute telle quelle, ou le
+  /// document, regle d'omission appliquee.
+  String _mechanicsText() => _rawView ? _raw.text : _document!.toMechanics();
 
-  /// Le corps JSON compose depuis les champs de creation : un par cle du
-  /// gabarit, plus `themeColor` et les `referenceKeys` selectionnees.
-  String _composeCreateMechanics() {
-    final template = _descriptor.decodeTemplate();
-    final result = <String, dynamic>{};
-    template.forEach((key, value) {
-      if (key == 'themeColor') return;
-      final controller = _mechanicsFields[key];
-      result[key] = controller == null ? value : _coerce(controller.text, value);
-    });
-    if (_descriptor.category == EntityCategory.heroClass) {
-      result['themeColor'] = colorToHex(_themeColor);
+  void _toggleRaw() {
+    if (!_rawView) {
+      setState(() {
+        _raw.text = _indented.convert(_document!.root);
+        _rawView = true;
+      });
+      return;
     }
-    _referenceSelections.forEach((key, value) {
-      if (value != null && value.isNotEmpty) result[key] = value;
+    final Object? decoded;
+    try {
+      decoded = jsonDecode(_raw.text);
+    } on FormatException catch (e) {
+      _refuse('le JSON brut ne se relit pas : ${e.message}');
+      return;
+    }
+    if (decoded is! Map<String, dynamic>) {
+      _refuse('le JSON brut ne se relit pas : il doit être un objet');
+      return;
+    }
+    final Map<String, dynamic> map = decoded;
+    setState(() {
+      _seedDocument(map);
+      _faults = const [];
     });
-    return jsonEncode(result);
   }
 
   void _setCardCount(int n) {
@@ -255,9 +221,7 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
         bilingual: {
           for (final entry in _prose.entries) entry.key: entry.value.text,
         },
-        mechanics: _mode == _EditorMode.modify
-            ? _mechanics.text
-            : _composeCreateMechanics(),
+        mechanics: _mechanicsText(),
       );
 
   /// La recette d'une classe entiere : elle-meme, puis ses cartes de
@@ -267,7 +231,7 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
         bilingual: {
           for (final entry in _prose.entries) entry.key: entry.value.text,
         },
-        mechanics: _composeCreateMechanics(),
+        mechanics: _mechanicsText(),
         signatureCards: [
           for (var i = 0; i < _cardCountValue; i++)
             SignatureCardInput(
@@ -308,7 +272,10 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
     return (
       drafts: drafts,
       faults: [
-        // Les fautes de la recette d'abord : `EntityValidator` juge un
+        // Les fautes de conversion du document d'abord : une saisie illisible
+        // (« 1a » pour un entier) ne decode meme pas en un brouillon coherent.
+        if (!_rawView) ..._document!.conversionFaults,
+        // Les fautes de la recette ensuite : `EntityValidator` juge un
         // brouillon a la fois et ne peut pas voir que deux cartes de signature
         // partagent un identifiant — seule la recette voit l'ensemble.
         if (recipe != null) ...recipe.faults(),
@@ -360,9 +327,10 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
         entry.value.text = value is String ? value : '';
       }
       // Ni `id`, qui a son propre champ, ni une image obligatoire, que
-      // l'ecrivain calcule : les remettre dans la boite en ferait des valeurs
-      // saisies a la main, ce que l'outil existe justement pour eviter.
-      _mechanics.text = _indented.convert({
+      // l'ecrivain calcule : les remettre dans le document en ferait des
+      // valeurs saisies a la main, ce que l'outil existe justement pour
+      // eviter.
+      _seedDocument({
         for (final entry in document.entries)
           if (entry.key != 'id' &&
               !_descriptor.isComputedImage(entry.key) &&
@@ -498,6 +466,8 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
                 _mode = value as _EditorMode;
                 _target = null;
                 _targetOwner = null;
+                _seedDocument(_descriptor.decodeTemplate());
+                _loadedPath = null;
               }),
             ),
           if (_mode == _EditorMode.modify) _targetLevel(root),
@@ -645,6 +615,8 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
         ]..sort(),
     };
 
+    _soundIds = soundIds(fs, root);
+
     _ownerJson.clear();
     _catalogFor = _category;
   }
@@ -672,17 +644,9 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
             selectedOwner: _targetOwner,
             onOwnerSelected: (value) => setState(() => _targetOwner = value),
             ownerColorOf: (classId) => _ownerColor(root, classId),
-            mechanicsController: isModification ? _mechanics : null,
-            templateFieldControllers: isModification ? const {} : _mechanicsFields,
-            themeColor: isModification || _descriptor.category != EntityCategory.heroClass
-                ? null
-                : _themeColor,
-            onThemeColorChanged: (color) => setState(() => _themeColor = color),
-            referenceOptions: isModification ? const {} : _references,
-            referenceSelections: _referenceSelections,
-            onReferenceSelected: (key, value) => setState(() {
-              _referenceSelections = {..._referenceSelections, key: value};
-            }),
+            mechanics: _mechanicsView(root),
+            rawView: _rawView,
+            onToggleRaw: _toggleRaw,
             showSignatureCards: _isClassRecipe,
             cardCountController: _cardCount,
             cardCount: _cardCountValue,
@@ -698,6 +662,57 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
         const SizedBox(width: 16),
         Expanded(child: _knownValuesPanel(root)),
       ],
+    );
+  }
+
+  Widget _mechanicsView(String root) {
+    if (_rawView) {
+      return TextField(
+        key: const Key('editeur-json-brut'),
+        controller: _raw,
+        maxLines: 14,
+        style: const TextStyle(fontFamily: 'monospace'),
+        decoration: const InputDecoration(
+          labelText: 'Mécanique (JSON)',
+          floatingLabelBehavior: FloatingLabelBehavior.always,
+          alignLabelWithHint: true,
+        ),
+      );
+    }
+    return DocumentForm(
+      key: ValueKey(_revision),
+      document: _document!,
+      descriptor: _descriptor,
+      onChanged: () => setState(() {}),
+      onStructureChanged: () => setState(() {
+        _document!.clearConversions();
+        _revision++;
+      }),
+      referenceOptions: _references,
+      vocabulary: vocabularyOf(_descriptor, _knownValuesFor(root)),
+      assetField: _assetField,
+    );
+  }
+
+  Widget _assetField(String key, AssetSlot slot) {
+    final document = _document!;
+    if (slot.kind == AssetKind.sound) {
+      final value = document.root[key];
+      return AssetField(
+        fieldKey: key,
+        slot: slot,
+        value: value is String ? value : null,
+        soundIds: _soundIds,
+        onSelectSound: (id) => setState(() => document.setAt([key], id)),
+        onClear: () => setState(() => document.removeAt([key])),
+      );
+    }
+    final present = slot.isRequired || document.root.containsKey(key);
+    return AssetField(
+      fieldKey: key,
+      slot: slot,
+      value: present ? _descriptor.imagePathOf(_id.text.trim(), key) : null,
+      onClear: () => setState(() => document.removeAt([key])),
     );
   }
 

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../services/content_editor/entity_descriptor.dart';
 import '../../theme/app_colors.dart';
 import 'choice_button.dart';
-import 'color_field.dart';
 
 /// Le formulaire d'une entite : ce qu'il edite, identite, proprietaire
 /// (carte), prose bilingue, mecanique, puis les actions et leur issue.
@@ -14,13 +13,9 @@ import 'color_field.dart';
 /// afficher le compte rendu d'ecriture apres que ce widget ait disparu (retour
 /// a la branche 0).
 ///
-/// **Deux visages, selon [isModification]** :
-/// - en creation, un champ par cle du gabarit (plus les cas particuliers —
-///   `themeColor`, les `referenceKeys`, la recette de classe) ;
-/// - en modification, la boite JSON unique deja livree : elle seule peut
-///   porter des cles que le gabarit ignore (`sfx` d'une relique retouchee a la
-///   main, par exemple), et la relecture (« Charger ») la repeuple entierement.
-///   La scinder en champs par cle y ferait perdre silencieusement ces cles.
+/// **Un seul visage** (spec D6) : creation et modification partagent le
+/// formulaire infere du document ; seules les pastilles de proprietaire et la
+/// recette de classe restent propres a la creation.
 class EntityForm extends StatelessWidget {
   const EntityForm({
     super.key,
@@ -33,18 +28,14 @@ class EntityForm extends StatelessWidget {
     required this.onValidate,
     required this.onWrite,
     required this.outcome,
+    required this.mechanics,
+    required this.rawView,
+    required this.onToggleRaw,
     this.onLoad,
     this.ownerClassIds = const [],
     this.selectedOwner,
     this.onOwnerSelected,
     this.ownerColorOf,
-    this.mechanicsController,
-    this.templateFieldControllers = const {},
-    this.themeColor,
-    this.onThemeColorChanged,
-    this.referenceOptions = const {},
-    this.referenceSelections = const {},
-    this.onReferenceSelected,
     this.showSignatureCards = false,
     this.cardCountController,
     this.cardCount = 0,
@@ -74,23 +65,10 @@ class EntityForm extends StatelessWidget {
   final ValueChanged<String?>? onOwnerSelected;
   final Color? Function(String classId)? ownerColorOf;
 
-  /// La boite JSON unique, en modification seulement.
-  final TextEditingController? mechanicsController;
-
-  /// Un controleur par cle du gabarit (hors `themeColor`), en creation
-  /// seulement.
-  final Map<String, TextEditingController> templateFieldControllers;
-
-  /// `themeColor`, porte par un [ColorField] plutot qu'un champ texte.
-  final Color? themeColor;
-  final ValueChanged<Color>? onThemeColorChanged;
-
-  /// Une liste par `referenceKeys` du descripteur — `passiveTrait` pour une
-  /// classe — tiree de `entityIdsByOwner`, jamais de `knownValues` : ce
-  /// dernier ne liste que les valeurs deja employees.
-  final Map<String, List<String>> referenceOptions;
-  final Map<String, String?> referenceSelections;
-  final void Function(String key, String? value)? onReferenceSelected;
+  /// La mecanique : le formulaire infere, ou la vue JSON brute.
+  final Widget mechanics;
+  final bool rawView;
+  final VoidCallback onToggleRaw;
 
   /// La recette de classe, pour une classe en creation seulement.
   final bool showSignatureCards;
@@ -137,7 +115,16 @@ class EntityForm extends StatelessWidget {
                     ),
                   ),
                 const Divider(),
-                if (isModification) _mechanicsBox() else ..._mechanicsFields(),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    key: const Key('editeur-bascule-json'),
+                    onPressed: onToggleRaw,
+                    child: Text(rawView ? 'Formulaire' : 'JSON brut'),
+                  ),
+                ),
+                mechanics,
+                if (showSignatureCards) _signatureCards(),
               ],
             ),
           ),
@@ -228,81 +215,6 @@ class EntityForm extends StatelessWidget {
             identityColor: ownerColorOf?.call(classId) ?? kNeutralOwnerColor,
           ),
       ],
-    );
-  }
-
-  /// En modification : la boite JSON unique, deja livree et conservee telle
-  /// quelle — c'est elle qui porte les cles que le gabarit ignore.
-  Widget _mechanicsBox() {
-    return TextField(
-      controller: mechanicsController,
-      maxLines: 14,
-      style: const TextStyle(fontFamily: 'monospace'),
-      decoration: _labelled('Mécanique (JSON)').copyWith(
-        alignLabelWithHint: true,
-      ),
-    );
-  }
-
-  /// En creation : un champ par cle du gabarit, plus les cas particuliers.
-  List<Widget> _mechanicsFields() {
-    return [
-      for (final entry in templateFieldControllers.entries)
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: TextField(
-            controller: entry.value,
-            decoration: _labelled(entry.key),
-          ),
-        ),
-      if (themeColor != null) _themeColorRow(),
-      for (final entry in referenceOptions.entries)
-        _referenceField(entry.key, entry.value),
-      if (showSignatureCards) _signatureCards(),
-    ];
-  }
-
-  Widget _themeColorRow() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          const Text('themeColor'),
-          const SizedBox(width: 12),
-          ColorField(
-            value: themeColor!,
-            onChanged: (color) => onThemeColorChanged?.call(color),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Le catalogue des identifiants d'une categorie referencee — le passif
-  /// pour `passiveTrait` — jamais le seul vocabulaire deja employe.
-  Widget _referenceField(String key, List<String> options) {
-    final selected = referenceSelections[key];
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(key, style: const TextStyle(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 4),
-          Wrap(
-            spacing: 4,
-            runSpacing: 4,
-            children: [
-              for (final id in options)
-                ChoiceButton(
-                  label: id,
-                  isSelected: selected == id,
-                  onTap: () => onReferenceSelected?.call(key, id),
-                ),
-            ],
-          ),
-        ],
-      ),
     );
   }
 
