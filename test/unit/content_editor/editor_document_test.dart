@@ -92,4 +92,52 @@ void main() {
     expect((mechanics['effects'] as List).first.containsKey('statusId'), isFalse);
     expect(document.root['sfx'], '', reason: 'le document lui-meme est intact');
   });
+
+  test('retirer l element [1] n efface que sa faute et celles apres, pas celle avant', () {
+    final document = EditorDocument({
+      'effects': [
+        {'type': 'damage', 'value': 6},
+        {'type': 'heal', 'value': 3},
+      ],
+    });
+    document.reportConversion(const ['effects', 0, 'value'], 'erreur 0');
+    document.reportConversion(const ['effects', 1, 'value'], 'erreur 1');
+
+    document.removeElement(const ['effects'], 1);
+
+    expect(
+      document.conversionFaults.map((e) => e.field),
+      ['effects[0].value'],
+      reason: 'la faute du premier element survivre',
+    );
+  });
+
+  test('retirer l element [1] efface la faute de l element [2] (decale)', () {
+    final document = EditorDocument({
+      'effects': [
+        {'type': 'damage', 'value': 6},
+        {'type': 'heal', 'value': 3},
+        {'type': 'apply_status', 'value': 2},
+      ],
+    });
+    document.reportConversion(const ['effects', 2, 'value'], 'erreur 2');
+
+    document.removeElement(const ['effects'], 1);
+
+    expect(
+      document.conversionFaults,
+      isEmpty,
+      reason: 'la faute de [2] est effacee car [2] se decale a [1]',
+    );
+  });
+
+  test('clearConversions vide toutes les fautes', () {
+    final document = EditorDocument(card());
+    document.reportConversion(const ['effects', 0, 'value'], 'erreur 1');
+    document.reportConversion(const ['cost'], 'erreur 2');
+
+    expect(document.conversionFaults, hasLength(2));
+    document.clearConversions();
+    expect(document.conversionFaults, isEmpty);
+  });
 }

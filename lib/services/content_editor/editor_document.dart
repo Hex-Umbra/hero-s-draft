@@ -94,14 +94,34 @@ class EditorDocument {
     list.removeAt(index);
     // Les indices suivants se decalent : une faute rattachee a l'un d'eux
     // designerait desormais un autre element.
-    final prefix = '${labelOf(listPath)}[';
-    _conversions.removeWhere((label, _) => label.startsWith(prefix));
+    final listLabel = labelOf(listPath);
+    final prefix = '$listLabel[';
+
+    _conversions.removeWhere((label, _) {
+      if (!label.startsWith(prefix)) return false;
+
+      // Extraire l'indice du libelle : "effects[0].value" -> 0
+      final bracketStart = listLabel.length;
+      final closeIdx = label.indexOf(']', bracketStart);
+      if (closeIdx == -1) return false;
+
+      final indexStr = label.substring(bracketStart + 1, closeIdx);
+      final elementIndex = int.tryParse(indexStr);
+      if (elementIndex == null) return false;
+
+      // Retirer seulement les fautes de l'element supprime et ceux apres
+      return elementIndex >= index;
+    });
   }
 
   void reportConversion(FieldPath path, String message) =>
       _conversions[labelOf(path)] = message;
 
   void clearConversion(FieldPath path) => _conversions.remove(labelOf(path));
+
+  /// Effacer toutes les fautes de conversion. Utilise lors d'une reconstruction
+  /// du formulaire, quand chaque champ affiche la valeur du document.
+  void clearConversions() => _conversions.clear();
 
   List<ValidationFault> get conversionFaults => [
         for (final entry in _conversions.entries)
