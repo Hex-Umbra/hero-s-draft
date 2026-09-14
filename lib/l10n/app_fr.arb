@@ -226,6 +226,7 @@
   "eventGainRelic": "+1 Relique",
 
   "settingsTitle": "Réglages",
+  "quitGame": "Quitter",
   "audioSection": "Audio",
   "volumeMaster": "Volume général",
   "volumeSfx": "Bruitages",

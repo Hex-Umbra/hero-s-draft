@@ -29,7 +29,6 @@ class ClassSelectionScreen extends ConsumerWidget {
       backgroundType: ScreenBackgroundType.dark,
       appBar: PageHeader(
         title: l10n.selectClass,
-        showBackButton: false,
         actions: [
           IconButton(
             icon: const Icon(Icons.menu_book),

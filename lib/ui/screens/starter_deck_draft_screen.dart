@@ -145,6 +145,8 @@ class _StarterDeckDraftScreenState
       onConfirm: _startAdventure,
       isConfirmEnabled: isConfirmEnabled,
       themeColor: classColor,
+      // Rien n'est encore engagé : la run ne démarre qu'à la validation.
+      onBack: () => Navigator.of(context).maybePop(),
       child: _draftPool.isEmpty
           ? const Center(
               child: CircularProgressIndicator(color: Colors.amber),

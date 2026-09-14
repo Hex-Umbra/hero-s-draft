@@ -1412,6 +1412,12 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get settingsTitle;
 
+  /// No description provided for @quitGame.
+  ///
+  /// In en, this message translates to:
+  /// **'Quit'**
+  String get quitGame;
+
   /// No description provided for @audioSection.
   ///
   /// In en, this message translates to:

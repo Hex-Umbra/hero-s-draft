@@ -592,6 +592,7 @@
   "eventGainRelic": "+1 Relic",
 
   "settingsTitle": "Settings",
+  "quitGame": "Quit",
   "audioSection": "Audio",
   "volumeMaster": "Master volume",
   "volumeSfx": "Sound effects",
