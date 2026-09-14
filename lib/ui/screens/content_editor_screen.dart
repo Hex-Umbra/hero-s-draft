@@ -541,6 +541,10 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
             _mode = null;
             _target = null;
             _targetOwner = null;
+            // Le document part avec la branche : un selecteur encore ouvert
+            // qui reviendrait ensuite le trouverait identique a son temoin,
+            // et viserait un formulaire qui n'existe plus.
+            _document = null;
           }
         });
       }

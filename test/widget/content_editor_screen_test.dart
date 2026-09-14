@@ -1440,6 +1440,40 @@ void main() {
     });
 
     testWidgets(
+        'un fichier choisi apres une creation qui referme la branche est '
+        'ignore', (tester) async {
+      // L'icone d'une classe, et non le sprite d'un ennemi : une image
+      // obligatoire ne relit ni le document ni le descripteur au reveil, et
+      // passait donc sans lever. L'icone optionnelle, elle, relisait les deux
+      // alors que plus aucune categorie n'etait choisie.
+      final source = sourceFile('icone.png', 'nouvelle');
+      final picker = _PendingPicker();
+      await tester.pumpWidget(harness(projectRoot: root, picker: picker));
+      await tester.tap(find.text('Classe'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Créer'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const Key('editeur-id')), 'barde');
+      await tester.pump();
+
+      final button = find.byKey(const Key('editeur-importer-iconPath'));
+      await tester.ensureVisible(button);
+      await tester.tap(button);
+      await tester.pump();
+
+      // Le selecteur est encore ouvert quand la creation est ecrite, et la
+      // branche se referme.
+      await tester.tap(find.text('Écrire'));
+      await tester.pumpAndSettle();
+      expect(find.text('Créer'), findsNothing);
+
+      picker.completer.complete(source);
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets(
         'un son importe puis efface par la vue brute n est ni copie ni '
         'declare', (tester) async {
       File('$root/assets/data/audio.json').writeAsStringSync(audio);
