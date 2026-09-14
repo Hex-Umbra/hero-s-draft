@@ -146,6 +146,31 @@ void main() {
     expect(en.dx, greaterThan(fr.dx));
   });
 
+  testWidgets('une paire bilingue qui n est pas faite de chaines garde ses deux '
+      'champs', (tester) async {
+    // Hors rangee — l'anglais n'est pas une chaine — l'anglais etait saute
+    // quand meme, et invisible.
+    await pump(
+      tester,
+      EditorDocument({
+        'choices': [
+          {
+            'text_fr': 'Oui',
+            'text_en': null,
+            'actions': [
+              {'type': 'gold', 'value': 20},
+            ],
+          },
+        ],
+      }),
+      event,
+    );
+    expect(find.byKey(const Key('editeur-champ-choices[0].text_fr')),
+        findsOneWidget);
+    expect(find.byKey(const Key('editeur-champ-choices[0].text_en')),
+        findsOneWidget);
+  });
+
   testWidgets('ni id, ni prose, ni skills ne deviennent des champs',
       (tester) async {
     await pump(

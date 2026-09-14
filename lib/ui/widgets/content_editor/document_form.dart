@@ -343,9 +343,13 @@ class _DocumentFormState extends State<DocumentForm> {
     final widgets = <Widget>[];
     for (final entry in map.entries) {
       final key = entry.key;
-      if (key.endsWith('_en') &&
-          map.containsKey('${key.substring(0, key.length - 3)}_fr')) {
-        continue; // rendu avec sa paire francaise
+      final french = key.endsWith('_en')
+          ? '${key.substring(0, key.length - 3)}_fr'
+          : null;
+      // Rendu avec sa paire francaise — qui ne fait une rangee que si les deux
+      // valeurs sont des chaines : sinon chacune garde son propre champ.
+      if (french != null && map[french] is String && entry.value is String) {
+        continue;
       }
       final english = key.endsWith('_fr')
           ? '${key.substring(0, key.length - 3)}_en'
