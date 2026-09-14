@@ -796,6 +796,15 @@ void main() {
       );
     }
 
+    /// Le document que porte la boite JSON du mode Modifier, decode.
+    Map<String, dynamic> mechanicsBox(WidgetTester tester) {
+      final box = tester.widget<TextField>(find.ancestor(
+        of: find.text('Mécanique (JSON)'),
+        matching: find.byType(TextField),
+      ));
+      return jsonDecode(box.controller!.text) as Map<String, dynamic>;
+    }
+
     /// Amene l ecran sur la relique semee, en mode Modifier.
     Future<void> aimAtSeededRelic(WidgetTester tester) async {
       await tester.tap(find.text('Relique'));
@@ -837,6 +846,72 @@ void main() {
       // echouer la famille 5 avant meme d ecrire.
       expect(written['name_fr'], 'Talisman de fer');
       expect(written['description_en'], 'Gain 5 armor when an enemy dies.');
+    });
+
+    testWidgets(
+        'choisir une entite au niveau 2 la charge, et en choisir une autre la '
+        'remplace', (tester) async {
+      // Observe a la main : la boite JSON montrait le gabarit — le meme pour
+      // toutes les entites — tant que « Charger » n etait pas presse, puis
+      // gardait le contenu de la precedente quand on en choisissait une autre.
+      seedRelic();
+      File('$root/assets/data/relics/amulette.json').writeAsStringSync(
+        jsonEncode(const {
+          'id': 'amulette',
+          'name_en': 'Amulet',
+          'name_fr': 'Amulette',
+          'description_en': 'Heal.',
+          'description_fr': 'Soigne.',
+          'trigger': 'onCombatEnd',
+          'effectType': 'heal',
+          'value': 17,
+          'rarity': 'rare',
+        }),
+      );
+      await tester.pumpWidget(harness(projectRoot: root));
+      await tester.tap(find.text('Relique'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Modifier'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('talisman_de_fer'));
+      await tester.pumpAndSettle();
+
+      expect(mechanicsBox(tester), containsPair('sfx', 'clang_distinctif'),
+          reason: 'le gabarit est encore affiche');
+      expect(find.text('Talisman de fer'), findsOneWidget);
+
+      await tester.tap(find.text('amulette'));
+      await tester.pumpAndSettle();
+
+      final amulet = mechanicsBox(tester);
+      expect(amulet, containsPair('value', 17),
+          reason: 'le contenu de l entite precedente est reste');
+      expect(amulet.containsKey('sfx'), isFalse);
+      expect(find.text('Amulette'), findsOneWidget);
+    });
+
+    testWidgets('choisir une carte de classe la charge depuis son dossier',
+        (tester) async {
+      seedOwners();
+      File('$root/assets/data/classes/mage/cards/eclair.json').writeAsStringSync(
+        '{"id":"eclair","name_fr":"Éclair","name_en":"Bolt",'
+        '"description_fr":".","description_en":".","cost":5,"type":"attack",'
+        '"rarity":"common","effects":[{"type":"damage","value":77}]}',
+      );
+      await tester.pumpWidget(harness(projectRoot: root));
+      await tester.tap(find.text('Carte'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Modifier'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('eclair'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('aucun fichier à charger'), findsNothing);
+      expect(mechanicsBox(tester)['effects'], [
+        {'type': 'damage', 'value': 77},
+      ]);
     });
 
     testWidgets('Ecrire sans avoir charge est refuse, sans rien ecrire',

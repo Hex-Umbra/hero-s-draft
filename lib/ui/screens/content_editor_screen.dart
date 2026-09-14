@@ -537,20 +537,24 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
       caption: 'Entité',
       choices: choices,
       selected: _target == null ? null : '${_targetOwner ?? ''}/$_target',
-      onSelected: (value) => setState(() {
-        final parts = (value as String).split('/');
-        _targetOwner = parts.first.isEmpty ? null : parts.first;
-        _target = parts.last;
-        // (a) Choisir une entite ici designe reellement la cible : sans
-        // cette ligne, le surlignage divergeait en silence de ce que
-        // « Charger » et « Écrire » visaient — `_target` changeait, l'usager
-        // le voyait selectionne, mais le triangle d'identite pointait
-        // ailleurs.
-        _id.text = _target!;
-        _faults = const [];
-        _report = null;
-        _failure = null;
-      }),
+      onSelected: (value) {
+        setState(() {
+          final parts = (value as String).split('/');
+          _targetOwner = parts.first.isEmpty ? null : parts.first;
+          _target = parts.last;
+          // (a) Choisir une entite ici designe reellement la cible : sans
+          // cette ligne, le surlignage divergeait en silence de ce que
+          // « Charger » et « Écrire » visaient — `_target` changeait, l'usager
+          // le voyait selectionne, mais le triangle d'identite pointait
+          // ailleurs.
+          _id.text = _target!;
+        });
+        // Choisir, c'est charger : sans relecture, la boite JSON montrait le
+        // gabarit — le meme pour toutes les entites — ou le contenu de
+        // l'entite choisie juste avant. « Charger » ne sert plus qu'a relire
+        // un identifiant tape a la main.
+        _load(root);
+      },
     );
   }
 
