@@ -7,6 +7,7 @@ import 'package:roguelike_card_game/services/content_editor/content_file_system_
 import 'package:roguelike_card_game/services/content_editor/entity_descriptor.dart';
 import 'package:roguelike_card_game/services/content_editor/entity_draft.dart';
 import 'package:roguelike_card_game/services/content_editor/entity_writer.dart';
+import 'package:roguelike_card_game/services/content_editor/pending_import.dart';
 
 import 'fixtures.dart';
 
@@ -536,6 +537,114 @@ void main() {
       final report = await EntityWriter(fs: fs, rootPath: root)
           .writeAll([classDraft('gambler')]);
       expect(report.createdEntity, isTrue);
+    });
+  });
+
+  group('ressources importees', () {
+    const audio = '{\n  "schemaVersion": 1,\n  "sounds": {\n'
+        '    "clang": { "file": "sfx/clang.wav" }\n  },\n'
+        '  "moments": {},\n  "music": {}\n}\n';
+
+    late String sound;
+    late String image;
+
+    setUp(() {
+      File('$root/assets/data/audio.json').writeAsStringSync(audio);
+      Directory('$root/import').createSync();
+      sound = '$root/import/nouveau.wav';
+      File(sound).writeAsStringSync('octets du son');
+      image = '$root/import/troll.png';
+      File(image).writeAsStringSync('nouvelle');
+
+      Directory('$root/assets/data/enemies/troll').createSync(recursive: true);
+      File('$root/assets/data/enemies/troll/sprite.png')
+          .writeAsStringSync('ancienne');
+      File('$root/assets/data/enemies/troll/enemy.json')
+          .writeAsStringSync('{}');
+    });
+
+    List<String> backups() => Directory('$root/assets')
+        .listSync(recursive: true)
+        .map((entity) => entity.path)
+        .where((path) => path.endsWith('.editor-backup'))
+        .toList();
+
+    EntityDraft trollModification() {
+      final enemy = kEntityDescriptors[EntityCategory.enemy]!;
+      return EntityDraft(
+        descriptor: enemy,
+        id: 'troll',
+        isModification: true,
+        bilingual: const {'name_fr': 'Troll', 'name_en': 'Troll'},
+        mechanics: enemy.template,
+      );
+    }
+
+    PendingImport trollSprite() => PendingImport.image(
+          descriptor: kEntityDescriptors[EntityCategory.enemy]!,
+          id: 'troll',
+          key: 'spritePath',
+          sourcePath: image,
+        );
+
+    test('un son importe est copie et declare', () async {
+      final report = await EntityWriter(fs: RecordingFileSystem(root), rootPath: root)
+          .writeAll([fixtureRelicDraft()], imports: [
+        PendingImport.sound(
+            key: 'sfx', sourcePath: sound, soundId: 'talisman_clang'),
+      ]);
+
+      expect(
+        File('$root/assets/audio/sfx/talisman_clang.wav').readAsStringSync(),
+        'octets du son',
+      );
+      final sounds = (jsonDecode(
+        File('$root/assets/data/audio.json').readAsStringSync(),
+      ) as Map<String, dynamic>)['sounds'] as Map<String, dynamic>;
+      expect(sounds['talisman_clang'], {'file': 'sfx/talisman_clang.wav'});
+      expect(report.written, containsAll([
+        'assets/audio/sfx/talisman_clang.wav',
+        'assets/data/audio.json',
+      ]));
+    });
+
+    test('une image importee remplace celle du nom impose', () async {
+      await EntityWriter(fs: RecordingFileSystem(root), rootPath: root)
+          .writeAll([trollModification()], imports: [trollSprite()]);
+
+      expect(
+        File('$root/assets/data/enemies/troll/sprite.png').readAsStringSync(),
+        'nouvelle',
+      );
+      expect(backups(), isEmpty, reason: 'la sauvegarde est retiree au succes');
+    });
+
+    test('un echec apres les imports defait tout, sauvegarde comprise',
+        () async {
+      // Ecriture 1 : audio.json. Ecriture 2 : enemy.json, qui leve.
+      final flaky = FailingOnNthWrite(root, failAt: 2);
+
+      await expectLater(
+        EntityWriter(fs: flaky, rootPath: root).writeAll(
+          [trollModification()],
+          imports: [
+            trollSprite(),
+            PendingImport.sound(
+                key: 'sfx', sourcePath: sound, soundId: 'troll_cri'),
+          ],
+        ),
+        throwsA(anything),
+      );
+
+      expect(
+        File('$root/assets/data/enemies/troll/sprite.png').readAsStringSync(),
+        'ancienne',
+      );
+      expect(File('$root/assets/audio/sfx/troll_cri.wav').existsSync(), isFalse);
+      expect(File('$root/assets/data/audio.json').readAsStringSync(), audio);
+      expect(File('$root/assets/data/enemies/troll/enemy.json').readAsStringSync(),
+          '{}');
+      expect(backups(), isEmpty);
     });
   });
 }

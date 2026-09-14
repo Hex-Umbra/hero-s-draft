@@ -2,9 +2,11 @@ import 'dart:convert';
 
 import 'package:meta/meta.dart';
 
+import 'audio_catalog.dart';
 import 'content_file_system.dart';
 import 'entity_descriptor.dart';
 import 'entity_draft.dart';
+import 'pending_import.dart';
 
 /// L'image deposee dans un dossier de classe ou d'ennemi nouvellement cree.
 /// Un carre magenta volontairement laid : oublier de le remplacer doit se voir.
@@ -41,12 +43,24 @@ class WriteReport {
 /// Une ecriture, et de quoi la defaire.
 @immutable
 class WriteStep {
-  const WriteStep(this.relative, this.previous);
+  /// Un fichier texte : [previous] est son contenu d'avant, `null` s'il
+  /// n'existait pas.
+  const WriteStep(this.relative, this.previous)
+      : isAsset = false,
+        backup = null;
+
+  /// Une ressource copiee : [backup] est la sauvegarde de l'image ecrasee,
+  /// `null` si la destination n'existait pas.
+  const WriteStep.asset(this.relative, this.backup)
+      : isAsset = true,
+        previous = null;
 
   final String relative;
 
   /// Le contenu d'avant, ou `null` si le fichier n'existait pas.
   final String? previous;
+  final bool isAsset;
+  final String? backup;
 }
 
 /// Ecrit une entite, puis enchaine ses effets de bord.
@@ -68,18 +82,27 @@ class EntityWriter {
   /// Ecrit un brouillon. Raccourci sur [writeAll].
   Future<WriteReport> write(EntityDraft draft) => writeAll([draft]);
 
-  /// Ecrit plusieurs brouillons comme **un seul geste**.
+  /// Ecrit plusieurs brouillons, et les ressources importees, comme **un seul
+  /// geste**.
   ///
-  /// Les etapes partagent une pile de rollback : si le troisieme echoue, les
-  /// deux premiers sont defaits. Une classe a moitie creee est precisement
-  /// l'etat que `referential_integrity_test` refuse, et il ne doit pas pouvoir
-  /// naitre d'une panne d'ecriture.
+  /// Ordre : dossiers, ressources, `audio.json`, puis chaque entite. Tout
+  /// partage une pile de rollback ; une image ecrasee est sauvegardee avant
+  /// copie, restauree en cas d'echec, supprimee au succes.
   ///
-  /// `sync_assets` ne tourne qu'une fois, a la fin : c'est un `dart run`, et
-  /// un par carte rendrait la recette inutilisable.
-  Future<WriteReport> writeAll(List<EntityDraft> drafts) async {
+  /// `sync_assets` ne tourne qu'une fois, a la fin.
+  Future<WriteReport> writeAll(
+    List<EntityDraft> drafts, {
+    List<PendingImport> imports = const [],
+  }) async {
     final steps = <WriteStep>[];
     try {
+      for (final draft in drafts) {
+        _prepareFolder(draft);
+      }
+      for (final pending in imports) {
+        _copyAsset(pending, steps);
+      }
+      _declareSounds(imports, steps);
       for (final draft in drafts) {
         _writeFiles(draft, steps);
       }
@@ -87,6 +110,7 @@ class EntityWriter {
       _rollback(steps);
       rethrow;
     }
+    _dropBackups(steps);
 
     final sync = await _runSyncAssets();
 
@@ -97,14 +121,51 @@ class EntityWriter {
     );
   }
 
-  /// Empile les ecritures dans [steps]. Les tâches suivantes l'etendent : la
-  /// classe et l'ennemi y ajoutent leur image.
   void _writeFiles(EntityDraft draft, List<WriteStep> steps) {
-    _prepareFolder(draft);
     _placeImage(draft);
     _placeClassIcon(draft);
     _writeJson(draft.path, draft.compose(), steps);
     _registerSignatureCard(draft, steps);
+  }
+
+  /// Copie un fichier importe a sa destination. Une destination existante est
+  /// d'abord sauvegardee : l'etape est empilee **avant** la copie, pour qu'une
+  /// copie ratee a mi-chemin se defasse aussi.
+  void _copyAsset(PendingImport pending, List<WriteStep> steps) {
+    final absolute = '$rootPath/${pending.destination}';
+    fs.createDirectory(absolute.substring(0, absolute.lastIndexOf('/')));
+
+    String? backup;
+    if (fs.fileExists(absolute)) {
+      backup = '${pending.destination}.editor-backup';
+      fs.copyFile(absolute, '$rootPath/$backup');
+    }
+    steps.add(WriteStep.asset(pending.destination, backup));
+    fs.copyFile(pending.sourcePath, absolute);
+  }
+
+  /// Declare chaque son importe dans `audio.json`, en une ecriture.
+  void _declareSounds(List<PendingImport> imports, List<WriteStep> steps) {
+    final sounds = [for (final p in imports) if (p.soundId != null) p];
+    if (sounds.isEmpty) return;
+
+    final absolute = '$rootPath/$kAudioCatalogPath';
+    final before = fs.readFile(absolute);
+    var text = before;
+    for (final pending in sounds) {
+      text = insertSound(text, id: pending.soundId!, file: pending.audioFile);
+    }
+    steps.add(WriteStep(kAudioCatalogPath, before));
+    fs.writeFile(absolute, text);
+  }
+
+  void _dropBackups(List<WriteStep> steps) {
+    for (final step in steps) {
+      final backup = step.backup;
+      if (backup != null && fs.fileExists('$rootPath/$backup')) {
+        fs.deleteFile('$rootPath/$backup');
+      }
+    }
   }
 
   /// Une classe et un ennemi sont des **dossiers**, qu'il faut creer avant
@@ -228,6 +289,16 @@ class EntityWriter {
   void _rollback(List<WriteStep> steps) {
     for (final step in steps.reversed) {
       final absolute = '$rootPath/${step.relative}';
+      if (step.isAsset) {
+        final backup = step.backup;
+        if (backup != null) {
+          fs.copyFile('$rootPath/$backup', absolute);
+          fs.deleteFile('$rootPath/$backup');
+        } else if (fs.fileExists(absolute)) {
+          fs.deleteFile(absolute);
+        }
+        continue;
+      }
       final previous = step.previous;
       if (previous == null) {
         if (fs.fileExists(absolute)) fs.deleteFile(absolute);
