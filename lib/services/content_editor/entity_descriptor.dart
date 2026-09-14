@@ -259,7 +259,8 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     directory: 'events',
     requiredKeys: const {'choices'},
     // Un evenement porte `title`, pas `name`. Les textes de ses choix sont
-    // imbriques deux niveaux plus bas et restent dans la partie JSON.
+    // imbriques dans `choices` : le formulaire les rend en paires bilingues,
+    // dans chaque choix, hors de la famille bilingue.
     bilingualBases: const ['title', 'description'],
     construct: EventData.fromJson,
     vocabularyKeys: const {'choices[].actions[].type'},

@@ -44,7 +44,7 @@ void main() {
   group('le formulaire fait autorite sur le corps JSON', () {
     test('une prose doublee dans le corps ne gagne pas', () {
       // Le corps est etale **apres** la prose : sans retrait prealable, un
-      // `name_fr` vide colle dans la boite JSON ecraserait le champ que la
+      // `name_fr` vide colle dans la vue JSON brute ecraserait le champ que la
       // famille 5 vient de juger non vide, et l'entite serait ecrite sans nom.
       final composed = fixtureRelicDraft(
         mechanics: '{"name_fr": "", "description_en": "vole la place", '

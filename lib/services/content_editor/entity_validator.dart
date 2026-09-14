@@ -263,10 +263,10 @@ class EntityValidator {
   /// absente reste optionnelle et passe : c'est au gabarit ou au remplissage
   /// de la fournir, jamais a cette famille de l'imposer.
   ///
-  /// Sans ce controle, un hex mal forme (saisi a la main dans la boite JSON
-  /// en modification) est ecrit tel quel, puis avale en silence au
-  /// chargement — `HeroData._parseHexColor` rend `null` et la classe retombe
-  /// au bleu par defaut, sans que personne sache pourquoi.
+  /// Sans ce controle, un hex mal forme (tape dans la vue JSON brute, ou deja
+  /// dans un fichier retouche a la main) est ecrit tel quel, puis avale en
+  /// silence au chargement — `HeroData._parseHexColor` rend `null` et la
+  /// classe retombe au bleu par defaut, sans que personne sache pourquoi.
   List<ValidationFault> _hexColors(
     EntityDraft draft,
     Map<String, dynamic> mechanics,

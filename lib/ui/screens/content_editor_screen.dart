@@ -433,7 +433,8 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
       });
 
   /// Relit le fichier vise et le repartit dans le formulaire : la prose
-  /// bilingue dans ses champs, tout le reste dans la boite JSON.
+  /// bilingue dans ses champs, tout le reste dans le document dont la
+  /// mecanique est inferee — et que la vue JSON brute montre telle quelle.
   ///
   /// **Sans cette relecture, « Modifier » ecrit le gabarit par-dessus la
   /// cible** : toute cle que le gabarit ne porte pas — le `skills` d'une
@@ -678,7 +679,7 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
           // ailleurs.
           _id.text = _target!;
         });
-        // Choisir, c'est charger : sans relecture, la boite JSON montrait le
+        // Choisir, c'est charger : sans relecture, le formulaire montrait le
         // gabarit — le meme pour toutes les entites — ou le contenu de
         // l'entite choisie juste avant. « Charger » ne sert plus qu'a relire
         // un identifiant tape a la main.

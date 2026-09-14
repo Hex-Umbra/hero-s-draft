@@ -162,12 +162,12 @@ void main() {
 
   // **Gabarit superset-du-modele, pour les sept categories.**
   //
-  // En creation, le formulaire n'a pas de boite JSON libre : il n'affiche
-  // qu'un champ par cle du gabarit, plus `themeColor` et les `referenceKeys`.
-  // Une cle que le modele lit et que le gabarit ignore est donc **hors
-  // d'atteinte** — c'est ainsi que `sfx`, `isExhaust`, `spritePath`,
-  // `requiresExhaust` et `eligibleCardTypes` avaient disparu de la creation
-  // alors que le lot 2 les atteignait par sa boite JSON.
+  // En creation, le formulaire est infere du gabarit : un champ par cle du
+  // gabarit, plus les `assetKeys` et les `referenceKeys` qu'il ne porte pas
+  // (spec §4.2). Une cle que le modele lit sans figurer a aucune de ces
+  // places n'a pas de champ : seule la vue JSON brute l'atteint, a condition
+  // de la connaitre — c'est ainsi que `sfx`, `isExhaust`, `spritePath`,
+  // `requiresExhaust` et `eligibleCardTypes` avaient disparu de la creation.
   //
   // **Ce que cette table ne fait pas.** Elle est tenue a la main : elle
   // rougit si un gabarit **perd** une cle ou en gagne une qui n'est pas

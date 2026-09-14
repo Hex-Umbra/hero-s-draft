@@ -809,11 +809,10 @@ void main() {
   testWidgets(
       'une structure qui change efface la faute de conversion en cours',
       (tester) async {
-    // Ruling du controleur (Task 2) : `onStructureChanged` recree le
-    // formulaire, ses controleurs avec lui, et chaque champ retombe sur la
-    // valeur du document. Une faute de conversion qui survivrait n'aurait
-    // alors plus de cause visible — le champ affiche a nouveau une valeur
-    // saisissable.
+    // `onStructureChanged` recree le formulaire, ses controleurs avec lui, et
+    // chaque champ retombe sur la valeur du document. Une faute de conversion
+    // qui survivrait n'aurait alors plus de cause visible — le champ affiche a
+    // nouveau une valeur saisissable.
     Directory('$root/assets/data/cards').createSync(recursive: true);
     await tester.pumpWidget(harness(projectRoot: root));
     await tester.tap(find.text('Carte'));
@@ -1094,7 +1093,7 @@ void main() {
     testWidgets(
         'choisir une entite au niveau 2 la charge, et en choisir une autre la '
         'remplace', (tester) async {
-      // Observe a la main : la boite JSON montrait le gabarit — le meme pour
+      // Observe a la main : le formulaire montrait le gabarit — le meme pour
       // toutes les entites — tant que « Charger » n etait pas presse, puis
       // gardait le contenu de la precedente quand on en choisissait une autre.
       seedRelic();
@@ -1164,7 +1163,7 @@ void main() {
       await tester.pumpWidget(harness(projectRoot: root));
       await aimAtSeededRelic(tester);
 
-      // Le geste que le bouton Charger rend indispensable : la boite JSON
+      // Le geste que le bouton Charger rend indispensable : le formulaire
       // porte encore le gabarit, et l ecrire serait la perte de donnees que
       // tout ce mode doit empecher.
       await tester.tap(find.text('Écrire'));
