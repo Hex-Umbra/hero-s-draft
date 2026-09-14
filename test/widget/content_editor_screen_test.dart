@@ -200,6 +200,36 @@ void main() {
     expect(idField.controller!.text, isEmpty);
   });
 
+  testWidgets('retaper le choix deja selectionne ne vide pas la saisie',
+      (tester) async {
+    // `TreeLevel` rappelle `onSelected` pour le choix courant aussi : sans
+    // garde, retaper « Créer » reensemencait le document au gabarit, et
+    // retaper « Relique » effacait l'identifiant et le formulaire.
+    await tester.pumpWidget(harness(projectRoot: root));
+    await tester.tap(find.text('Relique'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Créer'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('editeur-id')), 'talisman');
+    final value = find.byKey(const Key('editeur-champ-value'));
+    await tester.ensureVisible(value);
+    await tester.enterText(value, '12');
+    await tester.pump();
+
+    await tester.tap(find.text('Créer'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Relique'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Écrire'));
+    await tester.pumpAndSettle();
+
+    final written = jsonDecode(
+      File('$root/assets/data/relics/talisman.json').readAsStringSync(),
+    ) as Map<String, dynamic>;
+    expect(written['id'], 'talisman');
+    expect(written['value'], 12);
+  });
+
   group('lisibilite', () {
     testWidgets('chaque bouton de choix se lit sur son fond', (tester) async {
       /// Tout ce que le bouton de [label] ecrit — libelle, et coche s'il est

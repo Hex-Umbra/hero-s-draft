@@ -580,6 +580,9 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
             ],
             selected: _category,
             onSelected: (value) => setState(() {
+              // `TreeLevel` rappelle aussi le choix courant : le retaper ne
+              // change rien, et ne doit pas effacer la saisie.
+              if (value == _category) return;
               // Changer de type referme tout ce qui pendait dessous : une
               // cible d'une autre categorie n'a plus de sens.
               _category = value as EntityCategory;
@@ -599,6 +602,8 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
               ],
               selected: _mode,
               onSelected: (value) => setState(() {
+                // Retaper le mode courant ne reensemence pas le document.
+                if (value == _mode) return;
                 _mode = value as _EditorMode;
                 _target = null;
                 _targetOwner = null;
