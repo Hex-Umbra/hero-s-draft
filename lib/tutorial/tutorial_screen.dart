@@ -4,7 +4,6 @@ import '../models/data/game_data_registry.dart';
 import 'tutorial_engine.dart';
 import 'tutorial_step.dart';
 import 'tutorial_data.dart';
-import 'tutorial_progress_service.dart';
 import 'widgets/tutorial_welcome_widget.dart';
 import 'widgets/tutorial_class_choice_widget.dart';
 import 'widgets/tutorial_starter_deck_widget.dart';
@@ -120,14 +119,11 @@ class _TutorialScreenState extends State<TutorialScreen> {
     }
   }
 
-  Future<void> _handleNext(bool isComplete) async {
+  void _handleNext(bool isComplete) {
     if (!isComplete) return;
 
     if (_engine.isLastStep) {
-      await TutorialProgressService.markTutorialCompleted();
-      if (mounted) {
-        Navigator.pop(context);
-      }
+      Navigator.pop(context);
     } else {
       _engine.nextStep();
     }
