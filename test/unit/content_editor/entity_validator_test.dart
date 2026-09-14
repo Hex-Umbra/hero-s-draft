@@ -629,5 +629,39 @@ void main() {
       ));
       expect(faults.single.field, 'spritePath');
     });
+
+    // Une image optionnelle que le corps declare doit exister, comme une
+    // obligatoire : sans quoi `iconPath` pointe un fichier absent, et le
+    // dialogue de stats affiche un vide au lieu de retomber sur `classCard`.
+    test('une image optionnelle declaree sans fichier est refusee en '
+        'modification', () {
+      final hero = kEntityDescriptors[EntityCategory.heroClass]!;
+      Directory('$root/assets/data/classes/barde/cards')
+          .createSync(recursive: true);
+      File('$root/assets/data/classes/barde/class.json')
+          .writeAsStringSync('{}');
+      File('$root/assets/data/classes/barde/barde.png')
+          .writeAsBytesSync(const []);
+
+      final faults = validatorWith().validate(EntityDraft(
+        descriptor: hero,
+        id: 'barde',
+        isModification: true,
+        bilingual: const {
+          'name_fr': 'Le Barde',
+          'name_en': 'The Bard',
+          'description_fr': 'Oriente soutien',
+          'description_en': 'Support oriented',
+        },
+        mechanics: jsonEncode({
+          ...hero.decodeTemplate(),
+          'iconPath': 'assets/data/classes/barde/icon.png',
+        }),
+      ));
+
+      expect(faults.single.field, 'iconPath');
+      expect(faults.single.message,
+          'image absente : assets/data/classes/barde/icon.png');
+    });
   });
 }

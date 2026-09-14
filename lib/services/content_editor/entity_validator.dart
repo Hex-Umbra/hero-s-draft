@@ -340,7 +340,7 @@ class EntityValidator {
   }
 
   /// Les ressources : un son doit etre declare, un import doit pouvoir etre
-  /// copie, une image obligatoire doit exister.
+  /// copie, une image obligatoire — ou optionnelle et declaree — doit exister.
   ///
   /// `audio_catalogue_test` refuse tout `sfx` non declare : ce controle
   /// l'avance au moment de l'ecriture, `"sfx": ""` compris.
@@ -406,7 +406,10 @@ class EntityValidator {
     }
 
     if (draft.isModification) {
-      for (final key in descriptor.imageKeys.where(descriptor.isComputedImage)) {
+      // Une image obligatoire doit toujours exister ; une optionnelle
+      // (`iconPath`), des que le corps la declare.
+      for (final key in descriptor.imageKeys.where((key) =>
+          descriptor.isComputedImage(key) || mechanics.containsKey(key))) {
         final relative = descriptor.imagePathOf(draft.id, key)!;
         final importing = imports.any((pending) => pending.key == key);
         if (!importing && !fs.fileExists('$rootPath/$relative')) {
