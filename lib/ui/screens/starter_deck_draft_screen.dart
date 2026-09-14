@@ -12,6 +12,7 @@ import '../../services/game_data_service.dart';
 import '../../services/audio/audio_providers.dart';
 import '../../services/audio/game_moment.dart';
 import '../../services/audio/music_scene.dart';
+import '../widgets/class_identity.dart';
 import '../widgets/ui_card.dart';
 import 'map_screen.dart';
 import '../widgets/notification_overlay.dart';
@@ -130,10 +131,7 @@ class _StarterDeckDraftScreenState
     final locale = Localizations.localeOf(context).languageCode;
     final l10n = AppLocalizations.of(context)!;
 
-    // Couleurs thématiques par classe
-    Color classColor = Colors.blue;
-    if (widget.playerClass.id == 'berserker') classColor = Colors.red;
-    if (widget.playerClass.id == 'mage') classColor = Colors.purple;
+    final classColor = ClassIdentity.colorOf(widget.playerClass);
 
     final isConfirmEnabled = _selectedIndexes.length == 5;
 

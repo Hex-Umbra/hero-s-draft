@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/models/data/hero_data.dart';
-import 'package:roguelike_card_game/ui/widgets/map/dialogs/stats_dialog.dart';
+import 'package:roguelike_card_game/ui/widgets/class_identity.dart';
 
 void main() {
   const hero = HeroData(
@@ -16,7 +16,7 @@ void main() {
   );
 
   test('la couleur vient de la donnee', () {
-    expect(StatsDialog.classColorOf(hero), const Color(0xFF00A88F));
+    expect(ClassIdentity.colorOf(hero), const Color(0xFF00A88F));
   });
 
   test('une classe sans themeColor retombe sur le bleu d origine', () {
@@ -27,11 +27,47 @@ void main() {
       maxMana: 3,
       baseDamage: 5,
     );
-    expect(StatsDialog.classColorOf(plain), Colors.blue);
+    expect(ClassIdentity.colorOf(plain), Colors.blue);
+  });
+
+  group('le degrade de classe', () {
+    // Le bouton de selection teintait autrefois le paladin d'un degrade
+    // particulier, choisi en comparant sa couleur a `Colors.blue` : toute
+    // classe inconnue heritait alors du degrade du paladin. Le degrade se
+    // derive desormais de la seule couleur, pour toutes les classes.
+    // La quantification sur 8 bits deplace la teinte d'une fraction de degre.
+    double hueOf(Color c) => HSLColor.fromColor(c).hue;
+
+    for (final color in const [
+      Color(0xFF2196F3),
+      Color(0xFFF44336),
+      Color(0xFF9C27B0),
+      Color(0xFF00A88F),
+    ]) {
+      test('derive de ${color.toARGB32().toRadixString(16)}', () {
+        final gradient = ClassIdentity.gradientOf(color);
+        final start = HSLColor.fromColor(gradient.colors.first);
+        final end = HSLColor.fromColor(gradient.colors.last);
+
+        expect(gradient.colors, hasLength(2));
+        expect(start.lightness, lessThan(end.lightness),
+            reason: 'du sombre vers le clair');
+        expect(hueOf(gradient.colors.first), closeTo(hueOf(color), 2),
+            reason: 'la teinte reste celle de la classe');
+        expect(hueOf(gradient.colors.last), closeTo(hueOf(color), 2));
+      });
+    }
+
+    test('deux couleurs distinctes donnent deux degrades distincts', () {
+      expect(
+        ClassIdentity.gradientOf(const Color(0xFF2196F3)).colors,
+        isNot(ClassIdentity.gradientOf(const Color(0xFF00A88F)).colors),
+      );
+    });
   });
 
   test('l image affichee est l icone quand elle existe, la carte sinon', () {
-    expect(StatsDialog.classImageOf(hero),
+    expect(ClassIdentity.imageOf(hero),
         'assets/data/classes/gambler/gambler.png');
 
     const withIcon = HeroData(
@@ -42,12 +78,12 @@ void main() {
       maxMana: 3,
       baseDamage: 5,
     );
-    expect(StatsDialog.classImageOf(withIcon),
+    expect(ClassIdentity.imageOf(withIcon),
         'assets/data/classes/gambler/icon.png');
   });
 
   group('la pastille de classe', () {
-    // `classImageOf` peut designer une `iconPath` qui n'existe pas :
+    // `imageOf` peut designer une `iconPath` qui n'existe pas :
     // `EntityWriter._placeClassIcon` sort en silence quand le placeholder
     // source est absent, et le `class.json` ecrit designe alors un fichier
     // jamais depose. Sans repli, le dialogue leve a son ouverture — et c'est

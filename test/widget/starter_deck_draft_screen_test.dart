@@ -12,6 +12,7 @@ import 'package:roguelike_card_game/models/data/passive_data.dart';
 import 'package:roguelike_card_game/models/data/relic_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
+import 'package:roguelike_card_game/ui/widgets/draft/card_draft_layout.dart';
 
 void main() {
   final mockCards = [
@@ -287,5 +288,50 @@ void main() {
       expect(id.startsWith('slash') || id.startsWith('shield'), isTrue);
     }
     container.dispose();
+  });
+
+  testWidgets('the draft is tinted with the themeColor of the class data', (
+    WidgetTester tester,
+  ) async {
+    const gambler = HeroData(
+      id: 'gambler',
+      nameEn: 'Gambler',
+      nameFr: 'Le Parieur',
+      classCard: 'assets/data/classes/gambler/gambler.png',
+      themeColor: 0xFF00A88F,
+      maxHp: 70,
+      maxMana: 3,
+      baseDamage: 8,
+    );
+    tester.view.physicalSize = const Size(1200, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final container = ProviderContainer(
+      overrides: [gameDataLoaderProvider.overrideWith((ref) => mockRegistry)],
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('en', ''), Locale('fr', '')],
+          locale: const Locale('fr', ''),
+          home: const StarterDeckDraftScreen(playerClass: gambler, passive: null),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final layout = tester.widget<CardDraftLayout>(find.byType(CardDraftLayout));
+    expect(layout.themeColor, const Color(0xFF00A88F));
   });
 }

@@ -151,7 +151,7 @@ class EntityWriter {
   /// Jamais en modification : les trois classes livrees n'ont pas d'icone
   /// dessinee, et leur en deposer une ferait afficher un carre magenta a la
   /// place de leur illustration dans le dialogue de stats. Le repli de
-  /// `StatsDialog.classImageOf` sur la carte de classe n'a de sens que tant que
+  /// `ClassIdentity.imageOf` sur la carte de classe n'a de sens que tant que
   /// `iconPath` reste absent de leur JSON.
   ///
   /// Comme [_placeImage], elle n'ecrase jamais une image deja la, et n'est pas
