@@ -9,6 +9,10 @@ import 'package:roguelike_card_game/services/content_editor/content_file_system.
 import 'package:roguelike_card_game/services/content_editor/content_file_system_io.dart';
 import 'package:roguelike_card_game/services/content_editor/entity_descriptor.dart';
 import 'package:roguelike_card_game/ui/screens/content_editor_screen.dart';
+import 'package:roguelike_card_game/ui/theme/app_theme.dart';
+import 'package:roguelike_card_game/ui/widgets/content_editor/color_field.dart';
+
+import 'content_editor/contrast.dart';
 
 /// L'etat de `assets/data`, a plat comme en profondeur, trie pour une
 /// comparaison stable. Sert a prouver qu'une ecriture refusee n'a rien
@@ -39,9 +43,46 @@ void main() {
             .overrideWithValue(fs ?? const _NoProcessFileSystem()),
         projectRootProvider.overrideWithValue(projectRoot),
       ],
-      child: const MaterialApp(home: ContentEditorScreen()),
+      // Le theme de l'application, et non celui par defaut de `MaterialApp` :
+      // les boutons illisibles n'existaient que sous lui, dont le texte courant
+      // est un blanc a 70 % prevu pour le fond sombre de l'ecran.
+      child: MaterialApp(
+        theme: AppTheme.darkNeonTheme,
+        home: const ContentEditorScreen(),
+      ),
     );
   }
+
+  /// Un neutre et deux classes colorees. Le bleu du paladin compte : c'est sur
+  /// lui que le seuil de `ThemeData.estimateBrightnessForColor` laisserait un
+  /// texte blanc, a 3,1:1.
+  void seedOwners() {
+    Directory('$root/assets/data/cards').createSync(recursive: true);
+    File('$root/assets/data/cards/frappe.json').writeAsStringSync('{}');
+    for (final (id, color, card) in const [
+      ('mage', '#9C27B0', 'eclair'),
+      ('paladin', '#2196F3', 'bouclier'),
+    ]) {
+      Directory('$root/assets/data/classes/$id/cards')
+          .createSync(recursive: true);
+      File('$root/assets/data/classes/$id/cards/$card.json')
+          .writeAsStringSync('{}');
+      File('$root/assets/data/classes/$id/class.json').writeAsStringSync(
+        '{"id":"$id","name_fr":"$id","name_en":"$id",'
+        '"description_fr":".","description_en":".",'
+        '"classCard":"assets/data/classes/$id/$id.png",'
+        '"themeColor":"$color","maxHp":100,"maxMana":3,"baseDamage":5}',
+      );
+    }
+    Directory('$root/assets/data/passives').createSync(recursive: true);
+    File('$root/assets/data/passives/regen_armor.json').writeAsStringSync('{}');
+  }
+
+  /// Le bouton de choix qui porte [label].
+  Finder buttonOf(String label) => find.ancestor(
+        of: find.text(label),
+        matching: find.byKey(const Key('editeur-bouton-fond')),
+      );
 
   testWidgets('sans racine, l ecran refuse et explique pourquoi',
       (tester) async {
@@ -127,6 +168,182 @@ void main() {
     // assertion qui tient la fermeture de la branche. `gobelin` existe sur le
     // disque et s'afficherait aussitot si « Modifier » restait selectionne.
     expect(find.text('gobelin'), findsNothing);
+  });
+
+  testWidgets('changer de type vide le champ identifiant', (tester) async {
+    await tester.pumpWidget(harness(projectRoot: root));
+    await tester.tap(find.text('Relique'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Créer'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('editeur-id')), 'talisman');
+    await tester.pump();
+
+    await tester.tap(find.text('Carte'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Créer'));
+    await tester.pumpAndSettle();
+
+    // Un identifiant tape pour une categorie ne designe rien dans une autre :
+    // garde, il restait affiche sous le nouveau formulaire comme s'il lui
+    // appartenait.
+    final idField =
+        tester.widget<TextField>(find.byKey(const Key('editeur-id')));
+    expect(idField.controller!.text, isEmpty);
+  });
+
+  group('lisibilite', () {
+    testWidgets('chaque bouton de choix se lit sur son fond', (tester) async {
+      /// Tout ce que le bouton de [label] ecrit — libelle, et coche s'il est
+      /// choisi — doit se lire sur son fond, a 4,5:1 au moins (WCAG AA).
+      void expectReadable(List<String> labels) {
+        for (final label in labels) {
+          expect(
+            buttonOf(label),
+            findsOneWidget,
+            reason: '« $label » n est pas un bouton de choix',
+          );
+          final fill = (tester.widget<Container>(buttonOf(label)).decoration!
+                  as BoxDecoration)
+              .color!;
+          final inks = tester.widgetList<RichText>(
+            find.descendant(of: buttonOf(label), matching: find.byType(RichText)),
+          );
+          for (final ink in inks) {
+            final seen = Color.alphaBlend(ink.text.style!.color!, fill);
+            expect(
+              contrastRatio(seen, fill),
+              greaterThanOrEqualTo(4.5),
+              reason: '« $label » illisible sur ${colorToHex(fill)}',
+            );
+          }
+        }
+      }
+
+      seedOwners();
+      await tester.pumpWidget(harness(projectRoot: root));
+
+      await tester.tap(find.text('Carte'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Modifier'));
+      await tester.pumpAndSettle();
+      // Un choix d'identite selectionne garde son fond : sa coche doit s'y lire.
+      await tester.tap(find.text('eclair'));
+      await tester.pumpAndSettle();
+      expectReadable(const [
+        'Carte', 'Relique', 'Créer', 'Modifier', 'frappe', 'eclair', 'bouclier',
+      ]);
+
+      await tester.tap(find.text('Créer'));
+      await tester.pumpAndSettle();
+      expectReadable(const ['Neutre', 'mage', 'paladin']);
+
+      await tester.tap(find.text('Classe'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Créer'));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('regen_armor'));
+      await tester.tap(find.text('regen_armor'));
+      await tester.pumpAndSettle();
+      expectReadable(const ['regen_armor']);
+    });
+
+    testWidgets('seul le choix actif porte la coche', (tester) async {
+      Finder checkOn(String label) => find.descendant(
+            of: buttonOf(label),
+            matching: find.byIcon(Icons.check),
+          );
+
+      seedOwners();
+      await tester.pumpWidget(harness(projectRoot: root));
+
+      await tester.tap(find.text('Relique'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Créer'));
+      await tester.pumpAndSettle();
+      expect(checkOn('Relique'), findsOneWidget);
+      expect(checkOn('Carte'), findsNothing);
+      expect(checkOn('Créer'), findsOneWidget);
+      expect(checkOn('Modifier'), findsNothing);
+
+      // Changer de type deplace la coche, et referme le mode choisi dessous.
+      await tester.tap(find.text('Carte'));
+      await tester.pumpAndSettle();
+      expect(checkOn('Carte'), findsOneWidget);
+      expect(checkOn('Relique'), findsNothing);
+      expect(checkOn('Créer'), findsNothing);
+
+      // Une pastille garde sa couleur, choisie ou non : seule la coche dit
+      // laquelle l'est.
+      await tester.tap(find.text('Créer'));
+      await tester.pumpAndSettle();
+      expect(checkOn('Neutre'), findsOneWidget);
+      expect(checkOn('mage'), findsNothing);
+      await tester.tap(find.byKey(const Key('editeur-proprietaire-mage')));
+      await tester.pumpAndSettle();
+      expect(checkOn('mage'), findsOneWidget);
+      expect(checkOn('Neutre'), findsNothing);
+    });
+
+    testWidgets('le formulaire annonce ce qu il edite', (tester) async {
+      String title() {
+        expect(find.byKey(const Key('editeur-titre')), findsOneWidget);
+        return tester.widget<Text>(find.byKey(const Key('editeur-titre'))).data!;
+      }
+
+      seedOwners();
+      await tester.pumpWidget(harness(projectRoot: root));
+
+      await tester.tap(find.text('Carte'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Créer'));
+      await tester.pumpAndSettle();
+      expect(title(), allOf(contains('Créer'), contains('Carte')));
+
+      // La confusion d'origine : un formulaire de carte pris pour celui d'une
+      // classe, que seul le chemin distinguait. Celui de la classe le dit, et
+      // ne porte aucune pastille de proprietaire.
+      await tester.tap(find.text('Classe'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Créer'));
+      await tester.pumpAndSettle();
+      expect(title(), allOf(contains('Créer'), contains('Classe')));
+      expect(
+        find.byKey(const Key('editeur-proprietaire-neutre')),
+        findsNothing,
+      );
+
+      await tester.tap(find.text('Relique'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Modifier'));
+      await tester.pumpAndSettle();
+      expect(title(), allOf(contains('Modifier'), contains('Relique')));
+    });
+
+    testWidgets('une faute s aligne sur le formulaire, pas en son centre',
+        (tester) async {
+      // Assez large pour que la faute tienne sur une ligne : un texte qui
+      // passe a la ligne occupe toute la largeur, et son centrage ne se voit
+      // plus.
+      tester.view.physicalSize = const Size(1600, 1200);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(harness(projectRoot: root));
+      await tester.tap(find.text('Relique'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Créer'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Valider'));
+      await tester.pump();
+
+      // Plus etroite que le formulaire, la faute se centrait, loin des
+      // boutons qui venaient de la produire.
+      expect(
+        tester.getTopLeft(find.textContaining('un identifiant est requis')).dx,
+        tester.getTopLeft(find.byKey(const Key('editeur-titre'))).dx,
+      );
+    });
   });
 
   testWidgets('les cartes portent la couleur de leur proprietaire',

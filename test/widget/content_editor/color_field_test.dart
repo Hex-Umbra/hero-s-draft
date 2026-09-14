@@ -6,6 +6,8 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart' hide colorToHex;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/ui/widgets/content_editor/color_field.dart';
 
+import 'contrast.dart';
+
 void main() {
   test('la conversion vers le JSON est en majuscules et sur six chiffres', () {
     expect(colorToHex(const Color(0xFFB71C1C)), '#B71C1C');
@@ -19,6 +21,26 @@ void main() {
     expect(hexToColor('#B71C1C'), const Color(0xFFB71C1C));
     for (final bad in const ['B71C1C', '#XYZ', '#B71C1', '']) {
       expect(hexToColor(bad), isNull, reason: 'valeur refusée : "$bad"');
+    }
+  });
+
+  test('le texte choisi se lit sur tout fond, a 4,5:1 au moins', () {
+    // 4,5:1 est le seuil WCAG AA du texte courant. Une couleur de classe se
+    // tire a la roue : aucune palette ne peut etre supposee, d'ou le balayage.
+    // C'est lui qui refuse `ThemeData.estimateBrightnessForColor`, dont le
+    // seuil penche vers le blanc et le laisse a 3,1:1 sur un bleu comme
+    // #0096FF.
+    for (var r = 0; r <= 255; r += 15) {
+      for (var g = 0; g <= 255; g += 15) {
+        for (var b = 0; b <= 255; b += 15) {
+          final background = Color.fromARGB(255, r, g, b);
+          expect(
+            contrastRatio(readableOn(background), background),
+            greaterThanOrEqualTo(4.5),
+            reason: 'texte illisible sur ${colorToHex(background)}',
+          );
+        }
+      }
     }
   });
 

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../../../services/content_editor/entity_descriptor.dart';
+import '../../theme/app_colors.dart';
+import 'choice_button.dart';
 import 'color_field.dart';
 
-/// Le formulaire d'une entite : identite, proprietaire (carte), prose
-/// bilingue, mecanique, puis les actions et leur issue.
+/// Le formulaire d'une entite : ce qu'il edite, identite, proprietaire
+/// (carte), prose bilingue, mecanique, puis les actions et leur issue.
 ///
 /// **Purement presentationnel** : tout l'etat vit dans l'ecran appelant, sous
 /// forme de `TextEditingController`s et de callbacks. Rien ici n'est
@@ -108,6 +110,9 @@ class EntityForm extends StatelessWidget {
     final showOwnerPills = !isModification && descriptor.supportsHeroClass;
 
     return Column(
+      // Sans quoi l'issue, plus etroite que le formulaire, se centre loin des
+      // boutons qui viennent de la produire.
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
           // Voir la note de tete de fichier des l'ecran : un `ListView` ne
@@ -117,7 +122,7 @@ class EntityForm extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _identity(),
+                _identity(context),
                 if (showOwnerPills) ...[
                   const SizedBox(height: 12),
                   _ownerPills(),
@@ -128,7 +133,7 @@ class EntityForm extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     child: TextField(
                       controller: entry.value,
-                      decoration: InputDecoration(labelText: entry.key),
+                      decoration: _labelled(entry.key),
                     ),
                   ),
                 const Divider(),
@@ -141,12 +146,13 @@ class EntityForm extends StatelessWidget {
         Row(
           children: [
             if (onLoad != null) ...[
-              TextButton(onPressed: onLoad, child: const Text('Charger')),
+              OutlinedButton(onPressed: onLoad, child: const Text('Charger')),
               const SizedBox(width: 12),
             ],
-            TextButton(onPressed: onValidate, child: const Text('Valider')),
+            OutlinedButton(onPressed: onValidate, child: const Text('Valider')),
             const SizedBox(width: 12),
-            ElevatedButton(onPressed: onWrite, child: const Text('Écrire')),
+            // Le seul geste qui engage le disque est le seul bouton plein.
+            FilledButton(onPressed: onWrite, child: const Text('Écrire')),
           ],
         ),
         outcome,
@@ -154,23 +160,45 @@ class EntityForm extends StatelessWidget {
     );
   }
 
-  /// L'identifiant et le chemin qu'il calcule.
-  Widget _identity() {
+  /// Un champ dont le nom reste au-dessus, meme vide. Pose dans le champ, il
+  /// se lisait comme une valeur deja saisie : `name_fr` en grand, dans un
+  /// champ pourtant vide.
+  static InputDecoration _labelled(String label) => InputDecoration(
+        labelText: label,
+        floatingLabelBehavior: FloatingLabelBehavior.always,
+      );
+
+  /// Ce que le formulaire edite, le chemin vise, puis l'identifiant qui
+  /// calcule ce chemin.
+  Widget _identity(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Sans ce titre, seul le chemin distinguait le formulaire d'une carte
+        // de celui d'une classe : une classe voulue a ete ecrite en carte
+        // neutre.
+        Text(
+          '${isModification ? 'Modifier' : 'Créer'} · ${descriptor.label}',
+          key: const Key('editeur-titre'),
+          style: Theme.of(context).textTheme.headlineMedium,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          idController.text.trim().isEmpty ? '(identifiant requis)' : pathPreview,
+          style: const TextStyle(
+            fontFamily: 'monospace',
+            fontSize: 12,
+            color: AppColors.textSecondary,
+          ),
+        ),
+        const SizedBox(height: 8),
         TextField(
           key: const Key('editeur-id'),
           controller: idController,
           // Saisissable en modification aussi : c'est le seul moyen de
           // **designer** l'entite a charger.
           onChanged: (_) => onIdentityChanged(),
-          decoration: const InputDecoration(labelText: 'Identifiant'),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          idController.text.trim().isEmpty ? '(identifiant requis)' : pathPreview,
-          style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+          decoration: _labelled('Identifiant'),
         ),
       ],
     );
@@ -178,51 +206,28 @@ class EntityForm extends StatelessWidget {
 
   /// (b) Le proprietaire d'une carte est un champ du formulaire, pas un
   /// niveau de l'arbre : la neutralite et chaque classe sont des pastilles,
-  /// coloree par le `themeColor` de la classe.
+  /// colorees par le `themeColor` de la classe.
   Widget _ownerPills() {
     return Wrap(
-      spacing: 8,
-      runSpacing: 8,
+      spacing: 4,
+      runSpacing: 4,
       children: [
-        _ownerPill(
+        ChoiceButton(
           key: const Key('editeur-proprietaire-neutre'),
           label: 'Neutre',
-          value: null,
-          background: Colors.grey.shade300,
+          isSelected: selectedOwner == null,
+          onTap: () => onOwnerSelected?.call(null),
+          identityColor: kNeutralOwnerColor,
         ),
         for (final classId in ownerClassIds)
-          _ownerPill(
+          ChoiceButton(
             key: Key('editeur-proprietaire-$classId'),
             label: classId,
-            value: classId,
-            background: ownerColorOf?.call(classId) ?? Colors.grey.shade300,
+            isSelected: selectedOwner == classId,
+            onTap: () => onOwnerSelected?.call(classId),
+            identityColor: ownerColorOf?.call(classId) ?? kNeutralOwnerColor,
           ),
       ],
-    );
-  }
-
-  Widget _ownerPill({
-    required Key key,
-    required String label,
-    required String? value,
-    required Color background,
-  }) {
-    final isSelected = selectedOwner == value;
-    return InkWell(
-      key: key,
-      onTap: () => onOwnerSelected?.call(value),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: background,
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(
-            color: isSelected ? Colors.black : Colors.transparent,
-            width: 2,
-          ),
-        ),
-        child: Text(label),
-      ),
     );
   }
 
@@ -233,8 +238,7 @@ class EntityForm extends StatelessWidget {
       controller: mechanicsController,
       maxLines: 14,
       style: const TextStyle(fontFamily: 'monospace'),
-      decoration: const InputDecoration(
-        labelText: 'Mécanique (JSON)',
+      decoration: _labelled('Mécanique (JSON)').copyWith(
         alignLabelWithHint: true,
       ),
     );
@@ -248,7 +252,7 @@ class EntityForm extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 4),
           child: TextField(
             controller: entry.value,
-            decoration: InputDecoration(labelText: entry.key),
+            decoration: _labelled(entry.key),
           ),
         ),
       if (themeColor != null) _themeColorRow(),
@@ -286,14 +290,14 @@ class EntityForm extends StatelessWidget {
           Text(key, style: const TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: 4,
+            runSpacing: 4,
             children: [
               for (final id in options)
-                ChoiceChip(
-                  label: Text(id),
-                  selected: selected == id,
-                  onSelected: (_) => onReferenceSelected?.call(key, id),
+                ChoiceButton(
+                  label: id,
+                  isSelected: selected == id,
+                  onTap: () => onReferenceSelected?.call(key, id),
                 ),
             ],
           ),
@@ -317,7 +321,7 @@ class EntityForm extends StatelessWidget {
           key: const Key('editeur-nombre-cartes'),
           controller: cardCountController,
           keyboardType: TextInputType.number,
-          decoration: const InputDecoration(labelText: 'Nombre de cartes'),
+          decoration: _labelled('Nombre de cartes'),
           onChanged: (text) =>
               onCardCountChanged?.call(int.tryParse(text.trim()) ?? 0),
         ),
@@ -331,17 +335,17 @@ class EntityForm extends StatelessWidget {
                 TextField(
                   key: Key('editeur-carte-$i-id'),
                   controller: cardIds[i],
-                  decoration: const InputDecoration(labelText: 'Identifiant'),
+                  decoration: _labelled('Identifiant'),
                 ),
                 TextField(
                   key: Key('editeur-carte-$i-nom-fr'),
                   controller: cardNameFr[i],
-                  decoration: const InputDecoration(labelText: 'Nom (fr)'),
+                  decoration: _labelled('Nom (fr)'),
                 ),
                 TextField(
                   key: Key('editeur-carte-$i-nom-en'),
                   controller: cardNameEn[i],
-                  decoration: const InputDecoration(labelText: 'Nom (en)'),
+                  decoration: _labelled('Nom (en)'),
                 ),
               ],
             ),

@@ -1,34 +1,38 @@
 import 'package:flutter/material.dart';
 
+import '../../theme/app_colors.dart';
+import 'choice_button.dart';
+
 /// Un choix d'un niveau de l'arbre.
 @immutable
 class TreeChoice {
   const TreeChoice({
     required this.value,
     required this.label,
-    this.background,
+    this.identityColor,
     this.imagePath,
   });
 
   final Object value;
   final String label;
 
-  /// Le fond du bouton. Porte le proprietaire d'une carte : gris pour les
-  /// neutres, `themeColor` de la classe sinon.
-  final Color? background;
+  /// Le proprietaire d'une entite, qui reste son fond : voir
+  /// [ChoiceButton.identityColor]. `null` pour un type ou un mode.
+  final Color? identityColor;
 
   /// L'icone ou la carte de la classe proprietaire. La distinction ne repose
   /// ainsi pas sur la seule couleur.
   final String? imagePath;
 }
 
-/// Une rangee de boutons, dont un peut etre selectionne.
+/// Une rangee de boutons sous sa legende, dont un peut etre selectionne.
 ///
 /// [depth] est la tabulation : chaque descente decale d'un cran, et rien ne se
 /// replie vers le haut.
 class TreeLevel extends StatelessWidget {
   const TreeLevel({
     super.key,
+    required this.caption,
     required this.choices,
     required this.selected,
     required this.onSelected,
@@ -37,6 +41,8 @@ class TreeLevel extends StatelessWidget {
 
   static const double indent = 24;
 
+  /// Ce que le niveau propose : « Type », « Action », « Entité ».
+  final String caption;
   final List<TreeChoice> choices;
   final Object? selected;
   final ValueChanged<Object> onSelected;
@@ -46,56 +52,36 @@ class TreeLevel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.only(left: depth * indent, top: 8, bottom: 8),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          for (final choice in choices)
-            _button(context, choice, choice.value == selected),
-        ],
-      ),
-    );
-  }
-
-  Widget _button(BuildContext context, TreeChoice choice, bool isSelected) {
-    final background = choice.background ?? Colors.grey.shade300;
-    return InkWell(
-      onTap: () => onSelected(choice.value),
-      child: Container(
-        key: const Key('editeur-bouton-fond'),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: background,
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(
-            color: isSelected ? Colors.black : Colors.transparent,
-            width: 2,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (choice.imagePath != null) ...[
-              ClipOval(
-                child: Image.asset(
-                  choice.imagePath!,
-                  width: 16,
-                  height: 16,
-                  fit: BoxFit.cover,
-                  // Un placeholder absent ne doit pas faire tomber l'ecran.
-                  errorBuilder: (_, _, _) => const SizedBox(width: 16),
-                ),
-              ),
-              const SizedBox(width: 6),
-            ],
-            Text(
-              choice.label,
-              style: TextStyle(
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
+          Text(
+            caption.toUpperCase(),
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 1.2,
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            // Chaque bouton garde deja la place de son anneau de selection :
+            // l'ecart entre deux fonds reste d'une douzaine de points.
+            spacing: 4,
+            runSpacing: 4,
+            children: [
+              for (final choice in choices)
+                ChoiceButton(
+                  label: choice.label,
+                  isSelected: choice.value == selected,
+                  onTap: () => onSelected(choice.value),
+                  identityColor: choice.identityColor,
+                  imagePath: choice.imagePath,
+                ),
+            ],
+          ),
+        ],
       ),
     );
   }

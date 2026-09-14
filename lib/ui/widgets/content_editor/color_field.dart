@@ -16,6 +16,21 @@ Color? hexToColor(String hex) {
   return Color(0xFF000000 | int.parse(match.group(1)!, radix: 16));
 }
 
+/// Le texte le plus lisible sur [background] : noir ou blanc, celui des deux
+/// qui contraste le plus.
+///
+/// Les deux contrastes s'egalent quand `(L + 0,05)² = 1,05 × 0,05`, `L` etant
+/// la luminance du fond : c'est le seuil WCAG, et a ce point exact, le pire,
+/// le texte est encore a 4,58:1. Une couleur de classe tiree a la roue reste
+/// donc lisible, quelle qu'elle soit.
+///
+/// Pas `ThemeData.estimateBrightnessForColor` : son seuil, 0,15, penche
+/// deliberement vers le blanc, et y laisse le bleu du paladin a 3,1:1.
+Color readableOn(Color background) {
+  final shifted = background.computeLuminance() + 0.05;
+  return shifted * shifted > 1.05 * 0.05 ? Colors.black : Colors.white;
+}
+
 /// Une pastille de la couleur courante, qui ouvre la roue complete.
 ///
 /// Une palette fermee aurait suffi a l'usage, mais le spectre entier est un
@@ -40,7 +55,13 @@ class ColorField extends StatelessWidget {
             decoration: BoxDecoration(
               color: value,
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.black26),
+              // Le lisere doit se voir sur le fond de l'ecran, meme autour
+              // d'une couleur sombre : `Colors.black26` y disparaissait.
+              border: Border.all(
+                color: Theme.of(context).colorScheme.onSurface.withValues(
+                      alpha: 0.4,
+                    ),
+              ),
             ),
           ),
         ),

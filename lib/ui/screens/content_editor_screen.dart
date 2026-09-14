@@ -13,6 +13,8 @@ import '../../services/content_editor/entity_validator.dart';
 import '../../services/content_editor/entity_writer.dart';
 import '../../services/content_editor/known_values.dart';
 import '../../services/content_editor/placeholder_filler.dart';
+import '../theme/app_colors.dart';
+import '../widgets/content_editor/choice_button.dart';
 import '../widgets/content_editor/color_field.dart';
 import '../widgets/content_editor/entity_form.dart';
 import '../widgets/content_editor/tree_level.dart';
@@ -133,6 +135,10 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
   }
 
   void _loadCategory() {
+    // Un identifiant tape pour une categorie ne designe rien dans une autre :
+    // garde, il restait affiche sous le nouveau formulaire comme s'il lui
+    // appartenait.
+    _id.clear();
     _mechanics.text = _descriptor.template;
     for (final controller in _prose.values) {
       controller.dispose();
@@ -463,6 +469,7 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           TreeLevel(
+            caption: 'Type',
             choices: [
               for (final descriptor in kEntityDescriptors.values)
                 TreeChoice(value: descriptor.category, label: descriptor.label),
@@ -481,6 +488,7 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
           if (_category != null)
             TreeLevel(
               depth: 1,
+              caption: 'Action',
               choices: const [
                 TreeChoice(value: _EditorMode.create, label: 'Créer'),
                 TreeChoice(value: _EditorMode.modify, label: 'Modifier'),
@@ -516,7 +524,9 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
         choices.add(TreeChoice(
           value: '${owner ?? ''}/$id',
           label: id,
-          background: owner == null ? null : _ownerColor(root, owner),
+          identityColor: owner == null
+              ? kNeutralOwnerColor
+              : _ownerColor(root, owner) ?? kNeutralOwnerColor,
           imagePath: owner == null ? null : _ownerImage(root, owner),
         ));
       }
@@ -524,6 +534,7 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
 
     return TreeLevel(
       depth: 2,
+      caption: 'Entité',
       choices: choices,
       selected: _target == null ? null : '${_targetOwner ?? ''}/$_target',
       onSelected: (value) => setState(() {
@@ -686,11 +697,14 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
     );
   }
 
+  /// L'issue du dernier geste, coloree par sa nature : un refus en rouge, une
+  /// ecriture en vert, et en ambre ce qu'il reste a faire pour la voir.
   Widget _outcome() {
+    const refused = TextStyle(color: AppColors.danger);
     if (_failure != null) {
       return Padding(
         padding: const EdgeInsets.only(top: 12),
-        child: Text('Échec : $_failure'),
+        child: Text('Échec : $_failure', style: refused),
       );
     }
     if (_faults.isNotEmpty) {
@@ -698,7 +712,9 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
         padding: const EdgeInsets.only(top: 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [for (final fault in _faults) Text('• $fault')],
+          children: [
+            for (final fault in _faults) Text('• $fault', style: refused),
+          ],
         ),
       );
     }
@@ -710,9 +726,13 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          for (final path in report.written) Text('Écrit : $path'),
+          for (final path in report.written)
+            Text(
+              'Écrit : $path',
+              style: const TextStyle(color: AppColors.success),
+            ),
           if (report.syncFailed)
-            Text('sync_assets a échoué : ${report.sync!.output}'),
+            Text('sync_assets a échoué : ${report.sync!.output}', style: refused),
           // Voir §6.3 de la spec : la regle conservatrice, jusqu'a ce que la
           // verification manuelle permette de la resserrer.
           Text(
@@ -721,6 +741,7 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
                     "chargée : le manifeste d'assets est produit à la "
                     'compilation.'
                 : 'Redémarrage à chaud pour voir la modification.',
+            style: const TextStyle(color: AppColors.warning),
           ),
         ],
       ),
