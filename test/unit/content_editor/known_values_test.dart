@@ -98,4 +98,31 @@ void main() {
       isEmpty,
     );
   });
+
+  test('les valeurs imbriquees sont rangees sous leur motif', () {
+    write('assets/data/cards/a.json',
+        '{"effects": [{"type": "damage", "value": 6}, '
+        '{"type": "apply_status", "statusId": "burn", "value": 2}]}');
+    write('assets/data/events/e.json',
+        '{"choices": [{"text_fr": "Oui", "text_en": "Yes", '
+        '"actions": [{"type": "heal", "value": 5}]}]}');
+
+    final cards =
+        knownValues(fs, root, kEntityDescriptors[EntityCategory.card]!);
+    expect(cards['effects[].type'], ['apply_status', 'damage']);
+    expect(cards['effects[].statusId'], ['burn']);
+
+    final events =
+        knownValues(fs, root, kEntityDescriptors[EntityCategory.event]!);
+    expect(events['choices[].actions[].type'], ['heal']);
+    expect(events.keys.where((key) => key.contains('text_')), isEmpty,
+        reason: 'la prose imbriquee n est pas un vocabulaire');
+  });
+
+  test('vocabularyOf ajoute les valeurs du gabarit a celles du disque', () {
+    final relic = kEntityDescriptors[EntityCategory.relic]!;
+    expect(vocabularyOf(relic, const {'effectType': ['heal']})['effectType'],
+        ['gain_armor', 'heal']);
+    expect(vocabularyOf(relic, const {})['effectType'], ['gain_armor']);
+  });
 }

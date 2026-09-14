@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
+import 'package:roguelike_card_game/models/enemy_intent.dart';
 import 'package:roguelike_card_game/services/content_editor/entity_descriptor.dart';
 
 void main() {
@@ -304,5 +305,30 @@ void main() {
       'spritePath': 'assets/illustration.png',
     });
     expect(read.spritePath, 'assets/illustration.png');
+  });
+
+  test('les vocabulaires fermes cote moteur sont declares', () {
+    expect(kEntityDescriptors[EntityCategory.card]!.vocabularyKeys,
+        {'animation', 'effects[].type', 'effects[].statusId'});
+    expect(kEntityDescriptors[EntityCategory.relic]!.vocabularyKeys,
+        {'effectType'});
+    expect(kEntityDescriptors[EntityCategory.passive]!.vocabularyKeys,
+        {'effectType'});
+    expect(kEntityDescriptors[EntityCategory.event]!.vocabularyKeys,
+        {'choices[].actions[].type'});
+  });
+
+  test('le type d intention d un ennemi est une enumeration imbriquee', () {
+    // `EnemyIntent.fromJson` retombe en silence sur `attack` : sans cette
+    // declaration, une faute de frappe devient une attaque.
+    expect(
+      kEntityDescriptors[EntityCategory.enemy]!.enumKeys['intents[].type'],
+      IntentType.values.map((e) => e.name).toList(),
+    );
+  });
+
+  test('la couleur d une amelioration de forge est une couleur', () {
+    expect(kEntityDescriptors[EntityCategory.forgeUpgrade]!.hexColorKeys,
+        {'color'});
   });
 }

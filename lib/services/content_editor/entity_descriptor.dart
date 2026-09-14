@@ -9,6 +9,7 @@ import '../../models/data/forge_upgrade_data.dart';
 import '../../models/data/hero_data.dart';
 import '../../models/data/passive_data.dart';
 import '../../models/data/relic_data.dart';
+import '../../models/enemy_intent.dart';
 
 /// Les sept categories d'entites editables. Elles sont en regard exact des
 /// sept appels a `loadAll` de `loadGameDataRegistry` — l'audio n'en est pas
@@ -66,6 +67,7 @@ class EntityDescriptor {
     this.referenceKeys = const {},
     this.hexColorKeys = const {},
     this.assetKeys = const {},
+    this.vocabularyKeys = const {},
     this.supportsHeroClass = false,
     this.folderFile,
     this.imageName,
@@ -88,7 +90,8 @@ class EntityDescriptor {
   /// Voir `EntitySource.redundantFields` : seul `id` est redeclarable.
   final Set<String> forbiddenKeys;
 
-  /// Cle -> valeurs admises, lues sur l'enumeration Dart reelle.
+  /// Motif -> valeurs admises, lues sur l'enumeration Dart reelle. Un motif
+  /// imbrique (`intents[].type`) vise chaque element.
   final Map<String, List<String>> enumKeys;
 
   /// Comme [enumKeys], pour une cle portant une **liste** de valeurs.
@@ -107,6 +110,12 @@ class EntityDescriptor {
   /// Cle -> emplacement de ressource. Le formulaire rend ces cles en choix de
   /// son ou en import d'image, jamais en texte (spec §5).
   final Map<String, AssetSlot> assetKeys;
+
+  /// Les motifs dont la valeur est une chaine libre dans le modele mais
+  /// fermee dans le moteur : un type d'effet inconnu du resolveur ne fait
+  /// rien. Admis : les valeurs deja employees sur le disque, et celles du
+  /// gabarit (`vocabularyOf`, spec §4.5).
+  final Set<String> vocabularyKeys;
 
   /// Les bases dont les deux variantes `_fr` et `_en` sont exigees. Elles ne
   /// sont **pas** les memes partout : un evenement porte `title`, un ennemi
@@ -182,6 +191,7 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     bilingualBases: const ['name', 'description'],
     construct: CardData.fromJson,
     assetKeys: const {'sfx': AssetSlot.sound()},
+    vocabularyKeys: const {'animation', 'effects[].type', 'effects[].statusId'},
     // Le gabarit ne porte que ce qu'une carte emploie (spec §3.1) : ni
     // `spritePath`, qu'aucune carte ne porte et qu'aucun ecran n'affiche, ni
     // `sfx`, choisi dans le champ de ressource et absent tant qu'aucun son ne
@@ -212,6 +222,7 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     bilingualBases: const ['name', 'description'],
     construct: RelicData.fromJson,
     assetKeys: const {'sfx': AssetSlot.sound()},
+    vocabularyKeys: const {'effectType'},
     template: '''
 {
   "trigger": "startOfCombat",
@@ -229,6 +240,7 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     enumKeys: {'trigger': _names(RelicTrigger.values)},
     bilingualBases: const ['name', 'description'],
     construct: PassiveData.fromJson,
+    vocabularyKeys: const {'effectType'},
     template: '''
 {
   "trigger": "startOfTurn",
@@ -245,6 +257,7 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     // imbriques deux niveaux plus bas et restent dans la partie JSON.
     bilingualBases: const ['title', 'description'],
     construct: EventData.fromJson,
+    vocabularyKeys: const {'choices[].actions[].type'},
     template: '''
 {
   "choices": [
@@ -269,6 +282,7 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     // declarative fait tout le travail.
     requiredKeys: const {'pools'},
     enumListKeys: {'eligibleCardTypes': _names(CardType.values)},
+    hexColorKeys: const {'color'},
     bilingualBases: const ['name', 'description'],
     construct: ForgeUpgradeData.fromJson,
     // `eligibleCardTypes` porte **les quatre** types, et non la liste vide :
@@ -328,6 +342,7 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     bilingualBases: const ['name'],
     construct: EnemyData.fromJson,
     assetKeys: const {'sfx': AssetSlot.sound()},
+    enumKeys: {'intents[].type': _names(IntentType.values)},
     template: '''
 {
   "maxHp": 30,

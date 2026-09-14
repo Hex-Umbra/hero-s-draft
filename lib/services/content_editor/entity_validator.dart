@@ -6,6 +6,8 @@ import '../../models/data/game_data_registry.dart';
 import 'content_file_system.dart';
 import 'entity_descriptor.dart';
 import 'entity_draft.dart';
+import 'field_path.dart';
+import 'known_values.dart';
 
 /// Une raison de ne pas ecrire.
 @immutable
@@ -67,6 +69,7 @@ class EntityValidator {
     for (final family in <List<ValidationFault> Function()>[
       () => _keys(draft, mechanics),
       () => _enums(draft, mechanics),
+      () => _vocabulary(draft, mechanics),
       () => _hexColors(draft, mechanics),
       () => _bilingual(draft),
       () => _references(draft, mechanics),
@@ -178,16 +181,17 @@ class EntityValidator {
   ) {
     final faults = <ValidationFault>[];
 
-    draft.descriptor.enumKeys.forEach((key, allowed) {
-      final value = mechanics[key];
-      if (value == null) return; // absente : c'est l'affaire de la famille 3
-      if (value is! String || !allowed.contains(value)) {
-        faults.add(
-          ValidationFault(
-            'valeur inconnue "$value" — attendu : ${allowed.join(', ')}',
-            field: key,
-          ),
-        );
+    draft.descriptor.enumKeys.forEach((pattern, allowed) {
+      for (final (path, value) in valuesMatching(mechanics, pattern)) {
+        if (value == null) continue; // absente : l'affaire de la famille 3
+        if (value is! String || !allowed.contains(value)) {
+          faults.add(
+            ValidationFault(
+              'valeur inconnue "$value" — attendu : ${allowed.join(', ')}',
+              field: labelOf(path),
+            ),
+          );
+        }
       }
     });
 
@@ -210,6 +214,39 @@ class EntityValidator {
       }
     });
 
+    return faults;
+  }
+
+  /// Les chaines libres cote modele mais fermees cote moteur.
+  ///
+  /// `dice_throw` portait `"type": "skill"` — un type de carte, pas d'effet :
+  /// `CardData.fromJson` l'accepte, et la carte ne fait rien en jeu. Admis :
+  /// l'usage de la categorie sur le disque, et le gabarit.
+  List<ValidationFault> _vocabulary(
+    EntityDraft draft,
+    Map<String, dynamic> mechanics,
+  ) {
+    final descriptor = draft.descriptor;
+    if (descriptor.vocabularyKeys.isEmpty) return const [];
+
+    final admitted =
+        vocabularyOf(descriptor, knownValues(fs, rootPath, descriptor));
+    final faults = <ValidationFault>[];
+    for (final pattern in descriptor.vocabularyKeys) {
+      final values = admitted[pattern] ?? const <String>[];
+      for (final (path, value) in valuesMatching(mechanics, pattern)) {
+        if (value == null) continue;
+        if (value is! String || !values.contains(value)) {
+          faults.add(
+            ValidationFault(
+              '« $value » n\'est employé ni par un fichier ni par le gabarit : '
+              'le moteur ne le connaît pas',
+              field: labelOf(path),
+            ),
+          );
+        }
+      }
+    }
     return faults;
   }
 

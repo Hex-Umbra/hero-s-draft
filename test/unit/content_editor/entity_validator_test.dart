@@ -458,4 +458,73 @@ void main() {
       );
     }
   });
+
+  group('vocabulaires et enumerations imbriquees', () {
+    const prose = {
+      'name_fr': 'x',
+      'name_en': 'x',
+      'description_fr': 'x',
+      'description_en': 'x',
+    };
+
+    EntityDraft cardDraft(String mechanics) => EntityDraft(
+          descriptor: kEntityDescriptors[EntityCategory.card]!,
+          id: 'coup',
+          bilingual: prose,
+          mechanics: mechanics,
+        );
+
+    test('une valeur employee par un fichier passe', () {
+      File('$root/assets/data/relics/amulette.json')
+          .writeAsStringSync('{"effectType": "heal"}');
+      final faults = validatorWith().validate(fixtureRelicDraft(
+        mechanics: '{"trigger": "startOfCombat", "effectType": "heal", '
+            '"value": 5, "rarity": "common"}',
+      ));
+      expect(faults, isEmpty);
+    });
+
+    test('une valeur inconnue du disque et du gabarit est refusee', () {
+      final faults = validatorWith().validate(fixtureRelicDraft(
+        mechanics: '{"trigger": "startOfCombat", "effectType": "heall", '
+            '"value": 5, "rarity": "common"}',
+      ));
+      expect(faults.single.field, 'effectType');
+    });
+
+    test('la valeur du gabarit passe dans une arborescence vide', () {
+      expect(validatorWith().validate(fixtureRelicDraft()), isEmpty);
+    });
+
+    test('un type d effet de carte inconnu est refuse, avec son chemin', () {
+      final faults = validatorWith().validate(cardDraft(
+        '{"cost": 1, "type": "attack", '
+        '"effects": [{"type": "skill", "value": 3}]}',
+      ));
+      expect(faults.single.field, 'effects[0].type');
+    });
+
+    test('un type d intention inconnu est refuse', () {
+      final enemy = kEntityDescriptors[EntityCategory.enemy]!;
+      final faults = validatorWith().validate(EntityDraft(
+        descriptor: enemy,
+        id: 'troll',
+        bilingual: const {'name_fr': 'Troll', 'name_en': 'Troll'},
+        mechanics: '{"maxHp": 30, "baseDamage": 5, '
+            '"intents": [{"type": "fly", "value": 5}]}',
+      ));
+      expect(faults.single.field, 'intents[0].type');
+    });
+
+    test('une couleur de forge malformee est refusee', () {
+      final forge = kEntityDescriptors[EntityCategory.forgeUpgrade]!;
+      final faults = validatorWith().validate(EntityDraft(
+        descriptor: forge,
+        id: 'eclat',
+        bilingual: prose,
+        mechanics: '{"pools": ["common"], "color": "orange"}',
+      ));
+      expect(faults.single.field, 'color');
+    });
+  });
 }
