@@ -646,6 +646,20 @@ void main() {
           '{}');
       expect(backups(), isEmpty);
     });
+
+    test('une sauvegarde ratee ne laisse aucune copie partielle', () async {
+      await expectLater(
+        EntityWriter(fs: _FailingBackupCopy(root), rootPath: root)
+            .writeAll([trollModification()], imports: [trollSprite()]),
+        throwsA(anything),
+      );
+
+      expect(
+        File('$root/assets/data/enemies/troll/sprite.png').readAsStringSync(),
+        'ancienne',
+      );
+      expect(backups(), isEmpty);
+    });
   });
 }
 
@@ -762,4 +776,36 @@ class FailingOnNthWrite extends IoContentFileSystem {
       throw StateError('ecriture simulee en echec au $failAt-ieme appel');
     }
   }
+}
+
+/// Le vrai systeme de fichiers, qui leve pendant la copie d une sauvegarde.
+///
+/// Sert a prouver que `_copyAsset` ne laisse aucune copie partielle de
+/// `.editor-backup` sur le disque quand cette copie echoue elle-meme : comme
+/// les autres doubles, le fichier est ecrit avant de lever, pour que la garde
+/// ait quelque chose de reel a nettoyer.
+class _FailingBackupCopy extends IoContentFileSystem {
+  _FailingBackupCopy(this.root);
+
+  final String root;
+
+  @override
+  String get startDirectory => root;
+
+  @override
+  void copyFile(String from, String to) {
+    if (to.endsWith('.editor-backup')) {
+      File(to).writeAsStringSync('partiel');
+      throw const FileSystemException('copie de sauvegarde simulee en echec');
+    }
+    super.copyFile(from, to);
+  }
+
+  @override
+  Future<ProcessOutcome> run(
+    String executable,
+    List<String> arguments, {
+    required String workingDirectory,
+  }) async =>
+      const ProcessOutcome(0, '');
 }

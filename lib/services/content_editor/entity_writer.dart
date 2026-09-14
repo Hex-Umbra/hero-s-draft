@@ -138,7 +138,17 @@ class EntityWriter {
     String? backup;
     if (fs.fileExists(absolute)) {
       backup = '${pending.destination}.editor-backup';
-      fs.copyFile(absolute, '$rootPath/$backup');
+      // Pas d'etape empilee avant cette copie : une sauvegarde ratee ne doit
+      // rien laisser a defaire, sinon le rollback recopierait une sauvegarde
+      // partielle par-dessus une destination pourtant intacte.
+      try {
+        fs.copyFile(absolute, '$rootPath/$backup');
+      } catch (_) {
+        if (fs.fileExists('$rootPath/$backup')) {
+          fs.deleteFile('$rootPath/$backup');
+        }
+        rethrow;
+      }
     }
     steps.add(WriteStep.asset(pending.destination, backup));
     fs.copyFile(pending.sourcePath, absolute);
