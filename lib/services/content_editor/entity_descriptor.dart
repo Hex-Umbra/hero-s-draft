@@ -70,8 +70,6 @@ class EntityDescriptor {
     this.vocabularyKeys = const {},
     this.supportsHeroClass = false,
     this.folderFile,
-    this.imageName,
-    this.imagePathKey,
   });
 
   final EntityCategory category;
@@ -136,11 +134,17 @@ class EntityDescriptor {
   /// porte (`class.json`, `enemy.json`).
   final String? folderFile;
 
-  /// Le nom de l'image que ce dossier doit porter.
-  final String? imageName;
+  /// Les cles de ressource qui sont des images.
+  Iterable<String> get imageKeys => assetKeys.entries
+      .where((entry) => entry.value.kind == AssetKind.image)
+      .map((entry) => entry.key);
 
-  /// La cle sous laquelle le chemin de cette image est ecrit dans le JSON.
-  final String? imagePathKey;
+  /// Vrai pour une image **obligatoire** : sa cle n'est jamais saisie,
+  /// l'ecrivain la calcule a chaque ecriture.
+  bool isComputedImage(String key) {
+    final slot = assetKeys[key];
+    return slot != null && slot.kind == AssetKind.image && slot.isRequired;
+  }
 
   /// Le chemin du fichier, relatif a la racine du projet.
   String pathOf(String id, {String? heroClass}) {
@@ -153,14 +157,15 @@ class EntityDescriptor {
     return 'assets/data/$directory/$id.json';
   }
 
-  /// Le chemin de l'image, pour les categories qui en portent une.
-  ///
-  /// [imageName] peut porter le jeton `{id}` : la carte d'une classe est
-  /// nommee d'apres elle (`gambler/gambler.png`), la ou le sprite d'un ennemi
-  /// porte un nom constant.
-  String? imagePathOf(String id) {
-    final name = imageName;
-    if (name == null) return null;
+  /// Le chemin de l'image que [key] designe pour l'entite [id]. Le nom peut
+  /// porter le jeton `{id}` : la carte d'une classe est nommee d'apres elle,
+  /// le sprite d'un ennemi porte un nom constant. `null` hors image.
+  String? imagePathOf(String id, String key) {
+    final slot = assetKeys[key];
+    final name = slot?.fileName;
+    if (slot == null || slot.kind != AssetKind.image || name == null) {
+      return null;
+    }
     return 'assets/data/$directory/$id/${name.replaceAll('{id}', id)}';
   }
 
@@ -308,8 +313,12 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     label: 'Classe',
     directory: 'classes',
     folderFile: 'class.json',
-    imageName: '{id}.png',
-    imagePathKey: 'classCard',
+    assetKeys: const {
+      'classCard': AssetSlot.image('{id}.png'),
+      // Optionnelle : les trois classes livrees n'ont pas d'icone dessinee, et
+      // `ClassIdentity.imageOf` retombe alors sur `classCard`.
+      'iconPath': AssetSlot.image('icon.png', isRequired: false),
+    },
     requiredKeys: const {'maxHp', 'maxMana', 'baseDamage'},
     referenceKeys: const {'passiveTrait': EntityCategory.passive},
     hexColorKeys: const {'themeColor'},
@@ -335,13 +344,14 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     label: 'Ennemi',
     directory: 'enemies',
     folderFile: 'enemy.json',
-    imageName: 'sprite.png',
-    imagePathKey: 'spritePath',
     requiredKeys: const {'maxHp', 'baseDamage'},
     // Un ennemi n'a **pas** de description : seulement un nom.
     bilingualBases: const ['name'],
     construct: EnemyData.fromJson,
-    assetKeys: const {'sfx': AssetSlot.sound()},
+    assetKeys: const {
+      'spritePath': AssetSlot.image('sprite.png'),
+      'sfx': AssetSlot.sound(),
+    },
     enumKeys: {'intents[].type': _names(IntentType.values)},
     template: '''
 {

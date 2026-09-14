@@ -80,19 +80,17 @@ void main() {
   test('le chemin d image n existe que pour les categories en dossier', () {
     for (final descriptor in kEntityDescriptors.values) {
       final composed = draftFor(descriptor).compose();
-      final key = descriptor.imagePathKey;
+      final required = descriptor.imageKeys.where(descriptor.isComputedImage);
+      final key = required.isEmpty ? null : required.first;
 
       if (key == null) {
         // Les cinq categories a plat. L'assertion qui compte est que
-        // `compose()` ait seulement **rendu** : le marqueur null-aware est
-        // pose cote CLE, et la forme cote valeur que propose `dart fix`
-        // (`imagePathKey!: ?imagePath`) leve ici, le `!` s'evaluant avant que
-        // le `?` ne puisse court-circuiter.
+        // `compose()` n'ait rien ajoute : la boucle qui derive les images
+        // n'itere que sur `imageKeys`, vide ici.
         expect(composed.containsKey('classCard'), isFalse,
             reason: descriptor.label);
-        // Une categorie a plat n'a aucune image derivee de son identifiant.
-        expect(descriptor.imagePathOf('entite_de_test'), isNull,
-            reason: descriptor.label);
+        // Une categorie a plat n'a aucun emplacement image.
+        expect(descriptor.imageKeys, isEmpty, reason: descriptor.label);
         // Aucune categorie a plat ne porte de `spritePath` au gabarit — la
         // carte l'a perdu (spec §3.1) — et `compose()` n'en fabrique pas.
         expect(composed.containsKey('spritePath'), isFalse,
@@ -102,7 +100,7 @@ void main() {
         // exactement ce qu'une saisie manuelle rate.
         expect(
           composed[key],
-          descriptor.imagePathOf('entite_de_test'),
+          descriptor.imagePathOf('entite_de_test', key),
           reason: descriptor.label,
         );
         // Et il a le dernier mot : l'outil le calcule, on ne le saisit pas.

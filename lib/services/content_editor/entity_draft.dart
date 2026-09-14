@@ -46,7 +46,6 @@ class EntityDraft {
   /// de la validation, ce que garantit `EntityValidator`.
   Map<String, dynamic> compose() {
     final decoded = jsonDecode(mechanics) as Map<String, dynamic>;
-    final imagePath = descriptor.imagePathOf(id);
 
     // Le corps est etale **apres** la prose : un doublon y gagnerait la place
     // du champ que la validation vient de juger, et un `name_fr` vide colle
@@ -70,16 +69,13 @@ class EntityDraft {
         '${base}_fr': bilingual['${base}_fr'] ?? '',
       },
       ...decoded,
-      // Le chemin de l'image est **derive de l'identifiant**, donc calcule et
-      // jamais saisi — c'est exactement ce qu'une saisie manuelle rate. Il est
-      // place apres la mecanique pour que l'outil ait le dernier mot.
-      //
-      // Marqueur cote cle, et non cote valeur : `imagePathKey` est `null`
-      // pour cinq categories sur sept, et un `!` cote cle s'evaluerait avant
-      // que le marqueur ne court-circuite l'entree — `dart fix` proposait
-      // cette version-la, elle leve `Null check operator used on a null
-      // value` pour toute categorie sans image.
-      ?descriptor.imagePathKey: imagePath,
+      // Le chemin d'une image est **derive de l'identifiant**, donc calcule et
+      // jamais saisi. Obligatoire, il est toujours ecrit ; optionnel
+      // (`iconPath`), il ne l'est que si le corps le porte. Place apres la
+      // mecanique pour que l'outil ait le dernier mot.
+      for (final key in descriptor.imageKeys)
+        if (descriptor.isComputedImage(key) || decoded.containsKey(key))
+          key: descriptor.imagePathOf(id, key),
     };
   }
 }

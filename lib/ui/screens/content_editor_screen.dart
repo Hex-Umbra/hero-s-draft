@@ -359,13 +359,13 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
         final value = document[entry.key];
         entry.value.text = value is String ? value : '';
       }
-      // Ni `id`, qui a son propre champ, ni le chemin de l'image, que
+      // Ni `id`, qui a son propre champ, ni une image obligatoire, que
       // l'ecrivain calcule : les remettre dans la boite en ferait des valeurs
       // saisies a la main, ce que l'outil existe justement pour eviter.
       _mechanics.text = _indented.convert({
         for (final entry in document.entries)
           if (entry.key != 'id' &&
-              entry.key != _descriptor.imagePathKey &&
+              !_descriptor.isComputedImage(entry.key) &&
               !_prose.containsKey(entry.key))
             entry.key: entry.value,
       });

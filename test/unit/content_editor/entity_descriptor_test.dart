@@ -112,39 +112,33 @@ void main() {
     expect(withClass, [EntityCategory.card]);
   });
 
-  test('seules la classe et l ennemi sont des dossiers a image', () {
+  test('seules la classe et l ennemi portent des emplacements image', () {
     final withImage = kEntityDescriptors.values
-        .where((d) => d.imageName != null)
+        .where((d) => d.imageKeys.isNotEmpty)
         .map((d) => d.category)
         .toSet();
     expect(withImage, {EntityCategory.heroClass, EntityCategory.enemy});
-
     for (final category in withImage) {
-      final descriptor = kEntityDescriptors[category]!;
-      expect(descriptor.folderFile, isNotNull);
-      expect(descriptor.imagePathKey, isNotNull);
+      expect(kEntityDescriptors[category]!.folderFile, isNotNull);
     }
   });
 
-  test('le chemin d image d une classe porte son identifiant', () {
-    expect(
-      kEntityDescriptors[EntityCategory.heroClass]!.imagePathOf('gambler'),
-      'assets/data/classes/gambler/gambler.png',
-    );
+  test('la classe : classCard obligatoire, iconPath optionnel', () {
+    final hero = kEntityDescriptors[EntityCategory.heroClass]!;
+    expect(hero.imagePathOf('gambler', 'classCard'),
+        'assets/data/classes/gambler/gambler.png');
+    expect(hero.imagePathOf('gambler', 'iconPath'),
+        'assets/data/classes/gambler/icon.png');
+    expect(hero.isComputedImage('classCard'), isTrue);
+    expect(hero.isComputedImage('iconPath'), isFalse);
   });
 
-  test('le chemin d image d un ennemi reste constant', () {
-    expect(
-      kEntityDescriptors[EntityCategory.enemy]!.imagePathOf('gobelin'),
-      'assets/data/enemies/gobelin/sprite.png',
-    );
-  });
-
-  test('la classe ecrit son image sous classCard', () {
-    expect(
-      kEntityDescriptors[EntityCategory.heroClass]!.imagePathKey,
-      'classCard',
-    );
+  test('le sprite d un ennemi garde un nom constant', () {
+    final enemy = kEntityDescriptors[EntityCategory.enemy]!;
+    expect(enemy.imagePathOf('gobelin', 'spritePath'),
+        'assets/data/enemies/gobelin/sprite.png');
+    expect(enemy.imagePathOf('gobelin', 'sfx'), isNull,
+        reason: 'un son n est pas une image');
   });
 
   // `armorMastery` est lu par run_controller.dart:253 et applique a chaque

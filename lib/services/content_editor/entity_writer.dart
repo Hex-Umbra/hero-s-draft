@@ -128,23 +128,23 @@ class EntityWriter {
     }
   }
 
-  /// Depose l'image de remplacement, **si et seulement si aucune n'est deja
-  /// la**. Une image peinte a la main ne doit jamais etre ecrasee par un carre
-  /// magenta.
+  /// Depose l'image de remplacement de chaque emplacement **obligatoire**, si
+  /// et seulement si aucune n'est deja la. Une image peinte a la main ne doit
+  /// jamais etre ecrasee par un carre magenta.
   ///
   /// Elle n'est deliberement pas defaite par [_rollback] : un placeholder
   /// laisse dans un dossier neuf est sans consequence, la ou une suppression
   /// pourrait emporter une image legitime.
   void _placeImage(EntityDraft draft) {
-    final relative = draft.descriptor.imagePathOf(draft.id);
-    if (relative == null) return;
+    final descriptor = draft.descriptor;
+    for (final key in descriptor.imageKeys.where(descriptor.isComputedImage)) {
+      final absolute = '$rootPath/${descriptor.imagePathOf(draft.id, key)}';
+      if (fs.fileExists(absolute)) continue;
 
-    final absolute = '$rootPath/$relative';
-    if (fs.fileExists(absolute)) return;
-
-    final source = '$rootPath/$kPlaceholderImage';
-    if (!fs.fileExists(source)) return; // rien a copier : on n'invente pas
-    fs.copyFile(source, absolute);
+      final source = '$rootPath/$kPlaceholderImage';
+      if (!fs.fileExists(source)) return; // rien a copier : on n'invente pas
+      fs.copyFile(source, absolute);
+    }
   }
 
   /// Depose l'icone de remplacement d'une classe **neuve**.
@@ -164,7 +164,7 @@ class EntityWriter {
       return;
     }
 
-    final absolute = '$rootPath/assets/data/classes/${draft.id}/icon.png';
+    final absolute = '$rootPath/${draft.descriptor.imagePathOf(draft.id, 'iconPath')}';
     if (fs.fileExists(absolute)) return;
 
     final source = '$rootPath/$kPlaceholderIcon';
