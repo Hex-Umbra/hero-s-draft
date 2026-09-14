@@ -501,6 +501,19 @@ void main() {
       expect(validatorWith().validate(fixtureRelicDraft()), isEmpty);
     });
 
+    test('un type d effet employe par une autre carte passe', () {
+      // `draw` n'est pas au gabarit, qui ne porte que `damage` : seul le
+      // fichier voisin l'admet.
+      File('$root/assets/data/cards/pioche.json')
+        ..parent.createSync(recursive: true)
+        ..writeAsStringSync('{"effects": [{"type": "draw", "value": 1}]}');
+      final faults = validatorWith().validate(cardDraft(
+        '{"cost": 1, "type": "skill", '
+        '"effects": [{"type": "draw", "value": 2}]}',
+      ));
+      expect(faults, isEmpty);
+    });
+
     test('un type d effet de carte inconnu est refuse, avec son chemin', () {
       final faults = validatorWith().validate(cardDraft(
         '{"cost": 1, "type": "attack", '

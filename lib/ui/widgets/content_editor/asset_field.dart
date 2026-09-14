@@ -105,6 +105,9 @@ class AssetField extends StatelessWidget {
               ? const Center(child: Text('—'))
               : Image.memory(
                   bytes,
+                  // Un apercu de 64 points : decoder une carte de classe de
+                  // 6,5 Mo a pleine taille serait un cout pur.
+                  cacheWidth: 128,
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stack) =>
                       const Center(child: Text('?')),

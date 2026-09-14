@@ -1210,7 +1210,9 @@ void main() {
           'name_fr': 'Parieur',
           'description_en': 'Plays with the odds.',
           'description_fr': 'Manipule les probabilites.',
-          'maxHp': 100,
+          // Pas les 100 du gabarit : le champ ne prouve la relecture que
+          // s'il montre une valeur que le gabarit n'a pas.
+          'maxHp': 120,
           'maxMana': 3,
           'baseDamage': 5,
           'displayOrder': 99,
@@ -1244,7 +1246,7 @@ void main() {
             .widget<TextField>(find.byKey(const Key('editeur-champ-maxHp')))
             .controller!
             .text,
-        '100',
+        '120',
       );
     });
 
@@ -1281,6 +1283,26 @@ void main() {
         ..parent.createSync(recursive: true)
         ..writeAsStringSync(content);
       return IoContentFileSystem.toSlashes(file.path);
+    }
+
+    /// Un ennemi deja sur le disque, avec son sprite dessine.
+    void seedGobelin() {
+      Directory('$root/assets/data/enemies/gobelin').createSync(recursive: true);
+      File('$root/assets/data/enemies/gobelin/sprite.png')
+          .writeAsStringSync('ancienne');
+      File('$root/assets/data/enemies/gobelin/enemy.json').writeAsStringSync(
+        jsonEncode({
+          'id': 'gobelin',
+          'name_en': 'Goblin',
+          'name_fr': 'Gobelin',
+          'maxHp': 30,
+          'baseDamage': 5,
+          'spritePath': 'assets/data/enemies/gobelin/sprite.png',
+          'intents': [
+            {'type': 'attack', 'value': 5},
+          ],
+        }),
+      );
     }
 
     Future<void> importSound(WidgetTester tester, String soundId) async {
@@ -1347,22 +1369,7 @@ void main() {
 
     testWidgets('importer une image d ennemi remplace son sprite',
         (tester) async {
-      Directory('$root/assets/data/enemies/gobelin').createSync(recursive: true);
-      File('$root/assets/data/enemies/gobelin/sprite.png')
-          .writeAsStringSync('ancienne');
-      File('$root/assets/data/enemies/gobelin/enemy.json').writeAsStringSync(
-        jsonEncode({
-          'id': 'gobelin',
-          'name_en': 'Goblin',
-          'name_fr': 'Gobelin',
-          'maxHp': 30,
-          'baseDamage': 5,
-          'spritePath': 'assets/data/enemies/gobelin/sprite.png',
-          'intents': [
-            {'type': 'attack', 'value': 5},
-          ],
-        }),
-      );
+      seedGobelin();
       final source = sourceFile('gobelin.png', 'nouvelle');
       await tester.pumpWidget(
           harness(projectRoot: root, picker: _FakePicker(source)));
@@ -1384,26 +1391,18 @@ void main() {
         File('$root/assets/data/enemies/gobelin/sprite.png').readAsStringSync(),
         'nouvelle',
       );
+      // Le chemin reste celui que l'ecrivain calcule, jamais celui du fichier
+      // importe (spec §6.14).
+      expect(
+        jsonDecode(File('$root/assets/data/enemies/gobelin/enemy.json')
+            .readAsStringSync()),
+        containsPair('spritePath', 'assets/data/enemies/gobelin/sprite.png'),
+      );
     });
 
     testWidgets('un fichier choisi apres un changement d entite est ignore',
         (tester) async {
-      Directory('$root/assets/data/enemies/gobelin').createSync(recursive: true);
-      File('$root/assets/data/enemies/gobelin/sprite.png')
-          .writeAsStringSync('ancienne');
-      File('$root/assets/data/enemies/gobelin/enemy.json').writeAsStringSync(
-        jsonEncode({
-          'id': 'gobelin',
-          'name_en': 'Goblin',
-          'name_fr': 'Gobelin',
-          'maxHp': 30,
-          'baseDamage': 5,
-          'spritePath': 'assets/data/enemies/gobelin/sprite.png',
-          'intents': [
-            {'type': 'attack', 'value': 5},
-          ],
-        }),
-      );
+      seedGobelin();
       final source = sourceFile('gobelin.png', 'nouvelle');
       final picker = _PendingPicker();
       await tester.pumpWidget(harness(projectRoot: root, picker: picker));
