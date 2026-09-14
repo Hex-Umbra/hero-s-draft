@@ -321,8 +321,13 @@ void main() {
     );
   });
 
-  test('la couleur d une amelioration de forge est une couleur', () {
-    expect(kEntityDescriptors[EntityCategory.forgeUpgrade]!.hexColorKeys,
-        {'color'});
+  // `forge_slot_row.dart` lit `color` et `icon` par leur nom (`amberAccent`,
+  // `flash_on_rounded`) et retombe en silence sur du gris et
+  // `Icons.help_outline` : ce sont des vocabulaires du moteur, pas un hex.
+  test('la couleur et l icone d une amelioration de forge sont des noms du '
+      'moteur', () {
+    final forge = kEntityDescriptors[EntityCategory.forgeUpgrade]!;
+    expect(forge.vocabularyKeys, {'color', 'icon'});
+    expect(forge.hexColorKeys, isEmpty);
   });
 }

@@ -287,7 +287,11 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     // declarative fait tout le travail.
     requiredKeys: const {'pools'},
     enumListKeys: {'eligibleCardTypes': _names(CardType.values)},
-    hexColorKeys: const {'color'},
+    // `color` et `icon` ne sont pas un hex ni un texte libre : ce sont des
+    // noms que `forge_slot_row.dart` traduit un a un (`amberAccent`,
+    // `flash_on_rounded`), et un nom inconnu y retombe en silence sur du gris
+    // et `Icons.help_outline`. Les huit ameliorations livrees les emploient.
+    vocabularyKeys: const {'color', 'icon'},
     bilingualBases: const ['name', 'description'],
     construct: ForgeUpgradeData.fromJson,
     // `eligibleCardTypes` porte **les quatre** types, et non la liste vide :
@@ -298,8 +302,8 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     // qu'il ne veut pas.
     template: '''
 {
-  "icon": "bolt",
-  "color": "#FFAA00",
+  "icon": "flash_on_rounded",
+  "color": "amberAccent",
   "pools": ["common"],
   "eligibleCardTypes": ["attack", "skill", "power", "status"],
   "requiresExhaust": false,

@@ -2,7 +2,9 @@
 
 Date : 2026-09-14
 Statut : **Conception** — non implémenté
-Révision : v3 — **v3 : le vocabulaire d'une clé est l'usage de toute la catégorie, fichier édité
+Révision : v4 — **v4 : `color` et `icon` d'une amélioration de forge sont des vocabulaires, pas
+un hex** : les huit fichiers livrés portent des noms du moteur, et la déclaration hex refusait de
+les modifier (§4.4). v3 — **v3 : le vocabulaire d'une clé est l'usage de toute la catégorie, fichier édité
 compris, plus le gabarit** : l'exclure refusait de modifier toute entité portant une valeur unique
 (§4.5). Et les `referenceKeys` absentes du document restent des champs, faute de quoi le passif
 d'une classe disparaissait de la création (§4.2). v2 — **v2 : `CardData.spritePath` reste dans le modèle**, réservé aux illustrations de
@@ -229,12 +231,14 @@ non convertible **ne change pas la valeur du document** et produit une faute de 
 | Relique | — | `effectType` | — |
 | Passif | — | `effectType` | — |
 | Événement | — | `choices[].actions[].type` | — |
-| Amélioration de forge | — | — | `color` |
+| Amélioration de forge | — | `color`, `icon` | — |
 | Ennemi | `intents[].type` → `IntentType` | — | — |
 
 `intents[].type` est une vraie énumération Dart (`IntentType`) dont `fromJson` retombe **en
-silence** sur `attack` : la déclarer la fait valider. `color` d'une amélioration de forge est un
-`#RRGGBB` dans les huit fichiers livrés.
+silence** sur `attack` : la déclarer la fait valider. `color` et `icon` d'une amélioration de forge
+sont, dans les huit fichiers livrés, des **noms du moteur** (`amberAccent`, `flash_on_rounded`…) que
+`forge_slot_row.dart` traduit un à un, un nom inconnu retombant en silence sur du gris et
+`Icons.help_outline` : deux vocabulaires, pas un hex.
 
 ### 4.5 Les vocabulaires fermés côté moteur
 

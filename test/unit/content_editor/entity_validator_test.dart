@@ -521,15 +521,19 @@ void main() {
       expect(faults.single.field, 'intents[0].type');
     });
 
-    test('une couleur de forge malformee est refusee', () {
+    test('un nom de couleur de forge inconnu du moteur est refuse', () {
       final forge = kEntityDescriptors[EntityCategory.forgeUpgrade]!;
-      final faults = validatorWith().validate(EntityDraft(
-        descriptor: forge,
-        id: 'eclat',
-        bilingual: prose,
-        mechanics: '{"pools": ["common"], "color": "orange"}',
-      ));
-      expect(faults.single.field, 'color');
+      EntityDraft withColor(String color) => EntityDraft(
+            descriptor: forge,
+            id: 'eclat',
+            bilingual: prose,
+            mechanics: '{"pools": ["common"], "color": "$color"}',
+          );
+
+      expect(validatorWith().validate(withColor('orange')).single.field,
+          'color');
+      // Le nom du gabarit passe dans une arborescence vide.
+      expect(validatorWith().validate(withColor('amberAccent')), isEmpty);
     });
   });
 
