@@ -167,6 +167,9 @@ Le formulaire et la vue « JSON brut » sont deux vues de ce document :
   reste brute et la raison s'affiche au canal des fautes ; rien n'est perdu.
 - **Écrire depuis la vue brute** juge et écrit le texte brut tel quel.
 
+En modification, le gabarit ne complète jamais le document : seule la prose bilingue laissée vide
+reçoit son placeholder.
+
 `_mechanics`, `_mechanicsFields`, `_coerce` et `_composeCreateMechanics` de
 `content_editor_screen.dart` disparaissent : ils sont précisément ce que `EditorDocument` remplace.
 

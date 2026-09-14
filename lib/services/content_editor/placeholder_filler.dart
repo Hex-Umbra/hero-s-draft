@@ -25,6 +25,23 @@ EntityDraft fillPlaceholders(EntityDraft draft) {
     }
   }
 
+  // En modification, le fichier fait foi : le gabarit ne le complete jamais.
+  // Ses valeurs ne sont pas les defauts du modele (`xp` 35 d'un ennemi contre
+  // 20, `animation` "melee" contre null, `displayOrder` 99 contre 0) : les
+  // verser dans un fichier ecrit a la main changerait le jeu en silence, et
+  // Modifier puis Ecrire sans rien toucher doit reecrire le fichier a
+  // l'identique. Seule la prose vide recoit encore son placeholder.
+  if (draft.isModification) {
+    return EntityDraft(
+      descriptor: draft.descriptor,
+      id: draft.id,
+      bilingual: bilingual,
+      mechanics: draft.mechanics,
+      heroClass: draft.heroClass,
+      isModification: true,
+    );
+  }
+
   var mechanics = draft.mechanics;
   try {
     final decoded = jsonDecode(mechanics) as Map<String, dynamic>;

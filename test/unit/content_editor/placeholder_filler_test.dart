@@ -47,6 +47,21 @@ void main() {
     }
   });
 
+  // Le fichier fait foi : les valeurs du gabarit ne sont pas les defauts du
+  // modele, et les verser dans un fichier ecrit a la main changerait le jeu
+  // en silence. Seule la prose vide recoit encore son placeholder.
+  test('une modification ne recoit aucune cle du gabarit', () {
+    final filled = fillPlaceholders(
+      draft(mechanics: '{"value": 7}', isModification: true),
+    );
+    final decoded = jsonDecode(filled.mechanics) as Map<String, dynamic>;
+
+    expect(decoded.keys, ['value']);
+    expect(decoded['value'], 7);
+    expect(filled.bilingual['name_fr'], '[À REMPLIR] talisman');
+    expect(filled.bilingual['description_en'], '[À REMPLIR] talisman');
+  });
+
   // Un corps illisible n'est pas l'affaire du remplisseur : le validateur sait
   // dire *pourquoi* il ne decode pas, et ce message-la vaut mieux qu'un
   // ecrasement silencieux par le gabarit.
