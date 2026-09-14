@@ -472,6 +472,35 @@ void main() {
     expect(written['name_en'], contains('À REMPLIR'));
   });
 
+  testWidgets('une creation sans son ni illustration n ecrit ni sfx ni spritePath',
+      (tester) async {
+    // `audio_catalogue_test` refuse tout `sfx` non declare : un `"sfx": ""`
+    // ecrit par le gabarit faisait rougir la suite a chaque creation.
+    Directory('$root/assets/data/cards').createSync(recursive: true);
+
+    for (final (type, id, path) in const [
+      ('Relique', 'talisman', 'assets/data/relics/talisman.json'),
+      ('Carte', 'frappe', 'assets/data/cards/frappe.json'),
+      ('Ennemi', 'troll', 'assets/data/enemies/troll/enemy.json'),
+    ]) {
+      await tester.pumpWidget(harness(projectRoot: root));
+      await tester.tap(find.text(type));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Créer'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const Key('editeur-id')), id);
+      await tester.tap(find.text('Écrire'));
+      await tester.pumpAndSettle();
+
+      final written = jsonDecode(File('$root/$path').readAsStringSync())
+          as Map<String, dynamic>;
+      expect(written.containsKey('sfx'), isFalse, reason: type);
+      if (type == 'Carte') {
+        expect(written.containsKey('spritePath'), isFalse);
+      }
+    }
+  });
+
   testWidgets('apres une creation, l arbre revient a la branche 0',
       (tester) async {
     await tester.pumpWidget(harness(projectRoot: root));

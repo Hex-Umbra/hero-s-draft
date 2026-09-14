@@ -37,7 +37,6 @@ void main() {
         'value',
         'rarity',
         'emoji',
-        'sfx',
       ],
     );
   });
@@ -94,15 +93,10 @@ void main() {
         // Une categorie a plat n'a aucune image derivee de son identifiant.
         expect(descriptor.imagePathOf('entite_de_test'), isNull,
             reason: descriptor.label);
-        // La carte porte bien un `spritePath` — c'est une cle de son gabarit,
-        // que `CardData.fromJson` lit, et qui serait hors d'atteinte a la
-        // creation si le gabarit l'ignorait. Ce qui est verifie ici, c'est que
-        // sa valeur reste **celle du corps** : `compose()` n'en fabrique pas.
-        expect(
-          composed['spritePath'],
-          descriptor.decodeTemplate()['spritePath'],
-          reason: descriptor.label,
-        );
+        // Aucune categorie a plat ne porte de `spritePath` au gabarit — la
+        // carte l'a perdu (spec §3.1) — et `compose()` n'en fabrique pas.
+        expect(composed.containsKey('spritePath'), isFalse,
+            reason: descriptor.label);
       } else {
         // Un chemin d'asset complet, derive de l'identifiant : c'est
         // exactement ce qu'une saisie manuelle rate.

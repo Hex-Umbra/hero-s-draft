@@ -15,6 +15,36 @@ import '../../models/data/relic_data.dart';
 /// une, c'est un document de configuration.
 enum EntityCategory { card, relic, event, passive, forgeUpgrade, heroClass, enemy }
 
+/// Ce qu'est une ressource : un son declare dans `audio.json`, ou une image
+/// dont le nom est impose par l'identifiant.
+enum AssetKind { sound, image }
+
+/// Un emplacement de ressource d'une categorie.
+@immutable
+class AssetSlot {
+  const AssetSlot.sound()
+      : kind = AssetKind.sound,
+        fileName = null,
+        isRequired = false;
+
+  const AssetSlot.image(String this.fileName, {this.isRequired = true})
+      : kind = AssetKind.image;
+
+  final AssetKind kind;
+
+  /// Le nom du fichier image, jeton `{id}` admis. `null` pour un son.
+  final String? fileName;
+
+  /// Vrai si l'entite ne se charge pas sans : l'ecrivain calcule alors la cle
+  /// a chaque ecriture. Un son n'est jamais obligatoire.
+  final bool isRequired;
+
+  /// Les extensions qu'un import accepte.
+  List<String> get extensions => kind == AssetKind.sound
+      ? const ['wav', 'mp3', 'ogg']
+      : const ['png'];
+}
+
 /// Ce qu'est une categorie : un chemin, des cles, et un `fromJson`.
 ///
 /// Tout ce qui distingue une categorie d'une autre tient dans cette table.
@@ -35,6 +65,7 @@ class EntityDescriptor {
     this.enumListKeys = const {},
     this.referenceKeys = const {},
     this.hexColorKeys = const {},
+    this.assetKeys = const {},
     this.supportsHeroClass = false,
     this.folderFile,
     this.imageName,
@@ -72,6 +103,10 @@ class EntityDescriptor {
   /// passe : c'est au gabarit ou au remplissage de la fournir, pas a cette
   /// liste de l'imposer.
   final Set<String> hexColorKeys;
+
+  /// Cle -> emplacement de ressource. Le formulaire rend ces cles en choix de
+  /// son ou en import d'image, jamais en texte (spec §5).
+  final Map<String, AssetSlot> assetKeys;
 
   /// Les bases dont les deux variantes `_fr` et `_en` sont exigees. Elles ne
   /// sont **pas** les memes partout : un evenement porte `title`, un ennemi
@@ -146,21 +181,18 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     },
     bilingualBases: const ['name', 'description'],
     construct: CardData.fromJson,
-    // `spritePath`, `sfx` et `isExhaust` figurent au gabarit parce que
-    // `CardData.fromJson` les lit : en creation, le formulaire n'affiche qu'un
-    // champ par cle du gabarit, et une cle absente d'ici est hors d'atteinte.
-    // Les trois chaines vides valent l'absence pour leurs lecteurs —
-    // `AudioDirector._resolve` ne trouve aucun son nomme "" et retombe sur sa
-    // chaine de repli.
+    assetKeys: const {'sfx': AssetSlot.sound()},
+    // Le gabarit ne porte que ce qu'une carte emploie (spec §3.1) : ni
+    // `spritePath`, qu'aucune carte ne porte et qu'aucun ecran n'affiche, ni
+    // `sfx`, choisi dans le champ de ressource et absent tant qu'aucun son ne
+    // l'est.
     template: '''
 {
   "cost": 1,
   "type": "attack",
   "rarity": "common",
   "target": "singleEnemy",
-  "spritePath": "",
   "animation": "melee",
-  "sfx": "",
   "isExhaust": false,
   "effects": [
     { "type": "damage", "value": 6 }
@@ -179,14 +211,14 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     },
     bilingualBases: const ['name', 'description'],
     construct: RelicData.fromJson,
+    assetKeys: const {'sfx': AssetSlot.sound()},
     template: '''
 {
   "trigger": "startOfCombat",
   "effectType": "gain_armor",
   "value": 5,
   "rarity": "common",
-  "emoji": "🪙",
-  "sfx": ""
+  "emoji": "🪙"
 }''',
   ),
   EntityCategory.passive: EntityDescriptor(
@@ -295,6 +327,7 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     // Un ennemi n'a **pas** de description : seulement un nom.
     bilingualBases: const ['name'],
     construct: EnemyData.fromJson,
+    assetKeys: const {'sfx': AssetSlot.sound()},
     template: '''
 {
   "maxHp": 30,
@@ -305,8 +338,7 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
   "gold": 10,
   "intents": [
     { "type": "attack", "value": 5 }
-  ],
-  "sfx": ""
+  ]
 }''',
   ),
 };

@@ -185,8 +185,12 @@ void main() {
   //
   // Ne figurent pas au gabarit, et c'est la §5.3 de la spec :
   // - `id`, saisi dans le triangle d'identite ;
+  // - `sfx`, ressource son de la carte, de la relique et de l'ennemi : le
+  //   formulaire le rend en liste de sons (`assetKeys`), jamais en texte ;
+  // - `spritePath` d'une carte : lu par `CardData`, reserve aux illustrations
+  //   a venir, sans lecteur a l'ecran. Exclusion nommee, test ci-dessous ;
   // - `classCard` / `spritePath` d'une classe et d'un ennemi, calcules par
-  //   `EntityWriter` a partir de l'identifiant (`imagePathKey`) ;
+  //   `EntityWriter` a partir de l'identifiant ;
   // - `iconPath`, derive de l'identifiant par `ClassRecipe` ;
   // - `skills`, alimente carte par carte par `_registerSignatureCard` ;
   // - `heroClass` et `category`, imposes par le repertoire ;
@@ -200,9 +204,7 @@ void main() {
         'type',
         'rarity',
         'target',
-        'spritePath',
         'animation',
-        'sfx',
         'isExhaust',
         'effects',
         'baseMaxForgeUpgrades',
@@ -213,7 +215,6 @@ void main() {
         'value',
         'rarity',
         'emoji',
-        'sfx',
       },
       EntityCategory.passive: {'trigger', 'effectType', 'value'},
       // Un evenement n'a qu'une cle de mecanique : le texte de ses choix est
@@ -246,7 +247,6 @@ void main() {
         'critChance',
         'gold',
         'intents',
-        'sfx',
       },
     };
 
@@ -273,5 +273,36 @@ void main() {
     final descriptor = kEntityDescriptors[EntityCategory.heroClass]!;
     expect(descriptor.decodeTemplate().containsKey('passiveTrait'), isFalse);
     expect(descriptor.referenceKeys.keys, contains('passiveTrait'));
+  });
+
+  test('sfx est une ressource son des trois categories qui le lisent', () {
+    for (final category in const [
+      EntityCategory.card,
+      EntityCategory.relic,
+      EntityCategory.enemy,
+    ]) {
+      final descriptor = kEntityDescriptors[category]!;
+      expect(descriptor.assetKeys['sfx']?.kind, AssetKind.sound,
+          reason: descriptor.label);
+      expect(descriptor.decodeTemplate().containsKey('sfx'), isFalse,
+          reason: descriptor.label);
+    }
+  });
+
+  // Exclusion nommee (spec §3.4) : le modele lit la cle, le gabarit ne
+  // l'ecrit pas. Si `CardData` cesse de la lire, retirer ce test ; si un ecran
+  // affiche un jour l'illustration, la cle revient au gabarit avec son champ.
+  test('spritePath de carte : lu par le modele, absent du gabarit', () {
+    final card = kEntityDescriptors[EntityCategory.card]!;
+    expect(card.decodeTemplate().containsKey('spritePath'), isFalse);
+    expect(card.assetKeys.containsKey('spritePath'), isFalse);
+
+    final read = CardData.fromJson({
+      'id': 'x',
+      'cost': 1,
+      'type': 'attack',
+      'spritePath': 'assets/illustration.png',
+    });
+    expect(read.spritePath, 'assets/illustration.png');
   });
 }
