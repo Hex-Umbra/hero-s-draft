@@ -6,6 +6,7 @@ import 'package:roguelike_card_game/services/content_editor/content_file_system_
 import 'package:roguelike_card_game/services/content_editor/entity_descriptor.dart';
 import 'package:roguelike_card_game/services/content_editor/entity_draft.dart';
 import 'package:roguelike_card_game/services/content_editor/entity_validator.dart';
+import 'package:roguelike_card_game/services/content_editor/pending_import.dart';
 
 import 'fixtures.dart';
 
@@ -366,6 +367,10 @@ void main() {
       }
       File('$root/assets/data/classes/gambler/class.json')
           .writeAsStringSync('{}');
+      // `classCard` est une image obligatoire : la modification exige qu elle
+      // soit deja sur le disque (famille ressources).
+      File('$root/assets/data/classes/gambler/gambler.png')
+          .writeAsBytesSync(const []);
     }
 
     EntityDraft classDraft(String skillsJson) => EntityDraft(
@@ -525,6 +530,100 @@ void main() {
         mechanics: '{"pools": ["common"], "color": "orange"}',
       ));
       expect(faults.single.field, 'color');
+    });
+  });
+
+  group('famille ressources', () {
+    void seedAudio() => File('$root/assets/data/audio.json')
+      ..parent.createSync(recursive: true)
+      ..writeAsStringSync('{"sounds": {"clang": {"file": "sfx/clang.wav"}}}');
+
+    EntityDraft relicWithSfx(Object? sfx) => fixtureRelicDraft(
+          mechanics: jsonEncode({
+            ...kEntityDescriptors[EntityCategory.relic]!.decodeTemplate(),
+            'sfx': sfx,
+          }),
+        );
+
+    String sourceFile(String name) {
+      final file = File('$root/import/$name')
+        ..parent.createSync(recursive: true)
+        ..writeAsStringSync('octets');
+      return IoContentFileSystem.toSlashes(file.path);
+    }
+
+    EntityValidator withImports(List<PendingImport> imports) => EntityValidator(
+          fs: fs,
+          rootPath: root,
+          registry: fixtureRegistry(),
+          imports: imports,
+        );
+
+    test('un son declare passe', () {
+      seedAudio();
+      expect(validatorWith().validate(relicWithSfx('clang')), isEmpty);
+    });
+
+    test('un son non declare est refuse', () {
+      seedAudio();
+      expect(validatorWith().validate(relicWithSfx('inconnu')).single.field,
+          'sfx');
+    });
+
+    test('un son vide est refuse', () {
+      seedAudio();
+      expect(validatorWith().validate(relicWithSfx('')).single.field, 'sfx');
+    });
+
+    test('un son en attente d import passe', () {
+      seedAudio();
+      final faults = withImports([
+        PendingImport.sound(
+            key: 'sfx', sourcePath: sourceFile('neuf.wav'), soundId: 'neuf'),
+      ]).validate(relicWithSfx('neuf'));
+      expect(faults, isEmpty);
+    });
+
+    test('un import de son deja declare est refuse', () {
+      seedAudio();
+      final faults = withImports([
+        PendingImport.sound(
+            key: 'sfx', sourcePath: sourceFile('clang.wav'), soundId: 'clang'),
+      ]).validate(relicWithSfx('clang'));
+      expect(faults.map((f) => f.message).join(), contains('existe déjà'));
+    });
+
+    test('une extension refusee est refusee', () {
+      seedAudio();
+      final faults = withImports([
+        PendingImport.sound(
+            key: 'sfx', sourcePath: sourceFile('notes.txt'), soundId: 'notes'),
+      ]).validate(relicWithSfx('notes'));
+      expect(faults.map((f) => f.message).join(), contains('extension'));
+    });
+
+    test('un fichier source absent est refuse', () {
+      seedAudio();
+      final faults = withImports([
+        PendingImport.sound(
+            key: 'sfx', sourcePath: '$root/import/absent.wav', soundId: 'absent'),
+      ]).validate(relicWithSfx('absent'));
+      expect(faults.map((f) => f.message).join(), contains('introuvable'));
+    });
+
+    test('une image obligatoire absente est refusee en modification', () {
+      final enemy = kEntityDescriptors[EntityCategory.enemy]!;
+      File('$root/assets/data/enemies/troll/enemy.json')
+        ..parent.createSync(recursive: true)
+        ..writeAsStringSync('{}');
+      final faults = validatorWith().validate(EntityDraft(
+        descriptor: enemy,
+        id: 'troll',
+        isModification: true,
+        bilingual: const {'name_fr': 'Troll', 'name_en': 'Troll'},
+        mechanics: enemy.template,
+      ));
+      expect(faults.single.field, 'spritePath');
     });
   });
 }

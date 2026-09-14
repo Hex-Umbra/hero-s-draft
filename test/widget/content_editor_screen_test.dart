@@ -809,6 +809,9 @@ void main() {
     /// ecrit la mecanique du gabarit par-dessus, et tout ce qui n y figure
     /// pas disparait — validation passee, ecriture reussie, aucun signal.
     void seedRelic() {
+      File('$root/assets/data/audio.json').writeAsStringSync(
+        '{"sounds": {"clang_distinctif": {"file": "sfx/clang_distinctif.wav"}}}',
+      );
       File('$root/assets/data/relics/talisman_de_fer.json').writeAsStringSync(
         jsonEncode(const {
           'id': 'talisman_de_fer',

@@ -3,11 +3,13 @@ import 'dart:convert';
 import 'package:meta/meta.dart';
 
 import '../../models/data/game_data_registry.dart';
+import 'audio_catalog.dart';
 import 'content_file_system.dart';
 import 'entity_descriptor.dart';
 import 'entity_draft.dart';
 import 'field_path.dart';
 import 'known_values.dart';
+import 'pending_import.dart';
 
 /// Une raison de ne pas ecrire.
 @immutable
@@ -35,6 +37,7 @@ class EntityValidator {
     required this.fs,
     required this.rootPath,
     this.registry,
+    this.imports = const [],
   });
 
   final ContentFileSystem fs;
@@ -43,6 +46,10 @@ class EntityValidator {
   /// Le registre charge. `null` quand il n'est pas disponible : les controles
   /// qui en dependent sont alors sautes, jamais devines.
   final GameDataRegistry? registry;
+
+  /// Les fichiers choisis, en attente d'« Écrire » : un son importe est
+  /// declare pour cette validation, comme il le sera a l'ecriture.
+  final List<PendingImport> imports;
 
   static final RegExp _idPattern = RegExp(r'^[a-z0-9_]+$');
   static final RegExp _hexColorPattern = RegExp(r'^#[0-9a-fA-F]{6}$');
@@ -73,6 +80,7 @@ class EntityValidator {
       () => _hexColors(draft, mechanics),
       () => _bilingual(draft),
       () => _references(draft, mechanics),
+      () => _assets(draft, mechanics),
       () => _signatureCards(draft, mechanics),
       () => _construct(draft),
     ]) {
@@ -328,6 +336,84 @@ class EntityValidator {
         );
       }
     });
+    return faults;
+  }
+
+  /// Les ressources : un son doit etre declare, un import doit pouvoir etre
+  /// copie, une image obligatoire doit exister.
+  ///
+  /// `audio_catalogue_test` refuse tout `sfx` non declare : ce controle
+  /// l'avance au moment de l'ecriture, `"sfx": ""` compris.
+  List<ValidationFault> _assets(
+    EntityDraft draft,
+    Map<String, dynamic> mechanics,
+  ) {
+    final descriptor = draft.descriptor;
+    final faults = <ValidationFault>[];
+    final declared = soundIds(fs, rootPath).toSet();
+    final pendingSounds = {
+      for (final pending in imports)
+        if (pending.soundId != null) pending.soundId!,
+    };
+
+    descriptor.assetKeys.forEach((key, slot) {
+      if (slot.kind != AssetKind.sound || !mechanics.containsKey(key)) return;
+      final value = mechanics[key];
+      if (value is! String ||
+          !(declared.contains(value) || pendingSounds.contains(value))) {
+        faults.add(ValidationFault(
+          '« $value » n\'est déclaré ni dans audio.json ni par un import en '
+          'attente',
+          field: key,
+        ));
+      }
+    });
+
+    for (final pending in imports) {
+      if (!fs.fileExists(pending.sourcePath)) {
+        faults.add(ValidationFault(
+          'fichier introuvable : ${pending.sourcePath}',
+          field: pending.key,
+        ));
+      }
+      if (!pending.slot.extensions.contains(pending.extension)) {
+        faults.add(ValidationFault(
+          'extension « ${pending.extension} » refusée — attendu : '
+          '${pending.slot.extensions.join(', ')}',
+          field: pending.key,
+        ));
+      }
+      final soundId = pending.soundId;
+      if (soundId == null) continue;
+      if (!_idPattern.hasMatch(soundId)) {
+        faults.add(ValidationFault(
+          'identifiant de son invalide : "$soundId"',
+          field: pending.key,
+        ));
+      }
+      if (declared.contains(soundId)) {
+        faults.add(ValidationFault(
+          'le son « $soundId » existe déjà dans audio.json',
+          field: pending.key,
+        ));
+      }
+      if (fs.fileExists('$rootPath/${pending.destination}')) {
+        faults.add(ValidationFault(
+          '${pending.destination} existe déjà',
+          field: pending.key,
+        ));
+      }
+    }
+
+    if (draft.isModification) {
+      for (final key in descriptor.imageKeys.where(descriptor.isComputedImage)) {
+        final relative = descriptor.imagePathOf(draft.id, key)!;
+        final importing = imports.any((pending) => pending.key == key);
+        if (!importing && !fs.fileExists('$rootPath/$relative')) {
+          faults.add(ValidationFault('image absente : $relative', field: key));
+        }
+      }
+    }
     return faults;
   }
 
