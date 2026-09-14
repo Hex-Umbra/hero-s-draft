@@ -415,7 +415,7 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
           _valuesFor = null;
           _catalogFor = null;
           // Retour a la branche 0 : la nouvelle entite n'est pas dans le
-          // registre avant recompilation, et ouvrir son formulaire ferait
+          // registre avant le redemarrage a chaud, et ouvrir son formulaire ferait
           // croire le contraire. Le compte rendu, lui, reste affiche — voir
           // `_form`.
           if (drafts.any((d) => !d.isModification)) {
@@ -733,13 +733,11 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
             ),
           if (report.syncFailed)
             Text('sync_assets a échoué : ${report.sync!.output}', style: refused),
-          // Voir §6.3 de la spec : la regle conservatrice, jusqu'a ce que la
-          // verification manuelle permette de la resserrer.
+          // §6.3 de la spec : pour une creation, le redemarrage a chaud a ete
+          // verifie a la main le 2026-09-14 ; la modification reste en test.
           Text(
-            report.relaunchAdvised
-                ? 'Relancer `flutter run` pour que la nouvelle entité soit '
-                    "chargée : le manifeste d'assets est produit à la "
-                    'compilation.'
+            report.createdEntity
+                ? 'Redémarrage à chaud pour charger la nouvelle entité.'
                 : 'Redémarrage à chaud pour voir la modification.',
             style: const TextStyle(color: AppColors.warning),
           ),

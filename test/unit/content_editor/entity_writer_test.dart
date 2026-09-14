@@ -91,18 +91,18 @@ void main() {
     );
   });
 
-  test('une creation conseille de relancer flutter run', () async {
+  test('une creation est signalee comme telle', () async {
     final report = await writerHere().write(fixtureRelicDraft());
-    expect(report.relaunchAdvised, isTrue);
+    expect(report.createdEntity, isTrue);
     expect(report.written, ['assets/data/relics/talisman_de_fer.json']);
   });
 
-  test('une modification ne le conseille pas', () async {
+  test('une modification ne l est pas', () async {
     await writerHere().write(fixtureRelicDraft());
     final report =
         await writerHere().write(fixtureRelicDraft(isModification: true));
 
-    expect(report.relaunchAdvised, isFalse);
+    expect(report.createdEntity, isFalse);
   });
 
   // Les six tests ci-dessus suivent tous le chemin heureux : rien n y fait
@@ -530,12 +530,12 @@ void main() {
       );
     });
 
-    test('writeAll conseille la recompilation des qu une creation y figure',
+    test('writeAll signale une creation des qu une creation y figure',
         () async {
       final fs = RecordingFileSystem(root);
       final report = await EntityWriter(fs: fs, rootPath: root)
           .writeAll([classDraft('gambler')]);
-      expect(report.relaunchAdvised, isTrue);
+      expect(report.createdEntity, isTrue);
     });
   });
 }

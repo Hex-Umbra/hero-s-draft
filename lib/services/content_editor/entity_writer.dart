@@ -21,7 +21,7 @@ class WriteReport {
   const WriteReport({
     required this.written,
     this.sync,
-    this.relaunchAdvised = false,
+    this.createdEntity = false,
   });
 
   /// Les chemins ecrits, relatifs a la racine du projet.
@@ -30,9 +30,10 @@ class WriteReport {
   /// Le resultat de `sync_assets`. `null` s'il n'a pas ete lance.
   final ProcessOutcome? sync;
 
-  /// Vrai apres une creation : le manifeste d'assets est produit a la
-  /// compilation, et un fichier nouveau ne s'y trouve pas.
-  final bool relaunchAdvised;
+  /// Vrai si le geste a cree au moins une entite. Un redemarrage a chaud
+  /// suffit a la charger, `pubspec.yaml` modifie compris — verifie a la main
+  /// le 2026-09-14 pour une classe comme pour une relique.
+  final bool createdEntity;
 
   bool get syncFailed => sync != null && !sync!.succeeded;
 }
@@ -92,7 +93,7 @@ class EntityWriter {
     return WriteReport(
       written: [for (final step in steps) step.relative],
       sync: sync,
-      relaunchAdvised: drafts.any((draft) => !draft.isModification),
+      createdEntity: drafts.any((draft) => !draft.isModification),
     );
   }
 

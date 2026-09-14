@@ -488,7 +488,13 @@ void main() {
     // ouvrir son formulaire donnerait l'illusion inverse.
     expect(find.text('Créer'), findsNothing);
     expect(find.textContaining('Écrit :'), findsOneWidget);
-    expect(find.textContaining('Relancer'), findsOneWidget);
+    // Verifie a la main le 2026-09-14, classe comme relique : un redemarrage a
+    // chaud suffit a charger une entite creee. Rien n'impose de relancer.
+    expect(
+      find.textContaining('Redémarrage à chaud pour charger la nouvelle entité'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('flutter run'), findsNothing);
   });
 
   testWidgets('creer une classe ecrit ses cartes et referme skills',
