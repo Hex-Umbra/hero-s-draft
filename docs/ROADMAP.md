@@ -529,8 +529,8 @@ Sur les 14 blocs `catch` de `lib/`, **un seul est totalement muet** : `lib/ui/sc
 
 **Reste ouvert**, sans chiffrage :
 
-- Établir **le geste réellement suffisant** après une écriture de l'éditeur (spec lot 2 §6.3), et
-  resserrer le message s'il est trop prudent.
+- **La modification d'entité** est en cours de test par le propriétaire, corrections attendues. La
+  création est vérifiée : un redémarrage à chaud suffit (2026-09-14).
 - **Les cartes de signature ne sont pas filtrées par classe** en boutique ni sur le bonus de boss —
   [analyse](possible_upgrades/08-09-2026_filtre_cartes_de_classe_Opus5.md). À traiter avant ou
   avec **P-42**, qui multipliera ces cartes.

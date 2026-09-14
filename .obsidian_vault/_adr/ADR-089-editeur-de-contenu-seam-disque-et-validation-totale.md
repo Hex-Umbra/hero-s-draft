@@ -68,9 +68,11 @@ fraîchement écrites.
 
 - **Le rollback ne défait ni les dossiers créés ni les images placeholder** ; un échec de
   `sync_assets` en fin d'écriture est signalé sans défaire les fichiers.
-- **Le geste suffisant après écriture n'est pas établi empiriquement** (spec lot 2 §6.3) : le
-  message reste conservateur — recompilation après une création, redémarrage à chaud après une
-  modification (`relaunchAdvised`).
+- **Le geste suffisant après une création est établi à la main le 2026-09-14** (spec lot 2 §6.3) :
+  un redémarrage à chaud charge une classe, un ennemi, une carte ou une relique neuve,
+  `pubspec.yaml` modifié compris. Le message conseillant de relancer `flutter run` est retiré
+  (`WriteReport.createdEntity` remplace `relaunchAdvised`, commit `35e4a9f`). Choisir une entité en
+  mode Modifier la relit désormais (commit `71f52b3`) : la boîte montrait jusque-là le gabarit.
 - La garde « gabarit ⊇ modèle » est une **table de clés maintenue à la main**
   (`entity_descriptor_test.dart`) : elle ne voit pas une clé nouvelle lue par un `fromJson`.
 - Une saisie non convertible est remplacée par la valeur du gabarit **avant** validation : le

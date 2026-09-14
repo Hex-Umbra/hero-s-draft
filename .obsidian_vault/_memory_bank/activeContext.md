@@ -34,9 +34,10 @@ Réserves à ne pas perdre de vue :
   documenté, volontairement non corrigé pendant l'outillage :
   [filtre de classe](../../docs/possible_upgrades/08-09-2026_filtre_cartes_de_classe_Opus5.md).
   À traiter avant ou avec P-42.
-- **Une vérification manuelle due** : le geste réellement suffisant après une écriture de
-  l'éditeur (le message reste conservateur). L'absence du menu de debug en build release a été
-  vérifiée par le propriétaire le 2026-09-14.
+- **La modification d'entité par l'éditeur est en cours de test** par le propriétaire, des
+  corrections y sont attendues. La création, elle, est vérifiée à la main le 2026-09-14 (classe,
+  ennemi, carte, relique) : un redémarrage à chaud suffit, `pubspec.yaml` modifié compris, et
+  l'éditeur l'annonce désormais. L'absence du menu de debug en build release est vérifiée aussi.
 - **Les tiers A, B, C et E de `docs/ROADMAP.md` n'ont toujours pas été re-vérifiés contre le
   code** — seuls S et D l'ont été (2026-08-04).
 - **Le webhook Discord a transité en clair** le 19/08 et n'a pas été régénéré depuis.
@@ -84,8 +85,8 @@ Réserves à ne pas perdre de vue :
 
 ## Prochaine étape
 
-**Fusionner la branche** — le travail est commité et la note de version complétée — puis établir
-le geste suffisant après une écriture de l'éditeur. **Ensuite, reprendre le programme « Identité de classe &
+**Fusionner la branche** — le travail est commité et la note de version complétée — après les
+corrections de la modification d'entité en cours de test. **Ensuite, reprendre le programme « Identité de classe &
 catalogue »** : P-40 blocs 2 et 3 (trois bugs de gameplay confirmés, ~0,75-1 j) referment le
 lot S1 avant P-41 et P-42 — et P-42 peut désormais passer par l'éditeur.
 

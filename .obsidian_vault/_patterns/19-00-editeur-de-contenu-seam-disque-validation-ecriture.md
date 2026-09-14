@@ -76,7 +76,7 @@ liste de brouillons pour un seul `writeAll` ; `faults()` refuse deux cartes de m
 | Arbre de boutons Type → Action → Entité | `content_editor_screen.dart`, `lib/ui/widgets/content_editor/tree_level.dart` | Changer de type referme les niveaux inférieurs et vide l'`id` ; après une création, retour au premier niveau (l'entité n'est pas au registre avant redémarrage) |
 | Propriétaire d'une carte | couleur de fond du bouton, `themeColor` de sa classe | Gris neutre pour une carte sans classe ; magenta pour une classe inachevée |
 | Formulaire de création | `entity_form.dart` | Toutes les clés du gabarit ; `passiveTrait` choisi dans le **catalogue** des passifs |
-| Mode Modifier | même écran | Corps JSON unique, « Charger » exigé d'abord ; pas de roue de couleur |
+| Mode Modifier | même écran | Corps JSON unique ; choisir l'entité la relit, « Charger » ne sert qu'à un `id` tapé (commit `71f52b3`) ; écrire sans relecture est refusé ; pas de roue de couleur |
 | Couleur | `color_field.dart` | Roue `flutter_colorpicker`, sans alpha |
 | Bouton de choix | `choice_button.dart` | Un seul bouton pour niveaux, pastilles et passifs ; sélectionné = coche, plus un anneau `primary` sur une couleur d'identité ou un fond `primary` sans elle |
 | Lisibilité | `readableOn(fill)` dans `color_field.dart` | Texte noir ou blanc selon la luminance WCAG, pas `estimateBrightnessForColor` (3,1:1 sur le bleu du paladin) |
@@ -90,8 +90,9 @@ chaque frappe (commit `bcfd190`).
 
 ### 19.6. Après l'écriture
 
-Le message reste conservateur, le geste suffisant n'ayant pas été établi empiriquement : création
-→ recompilation (`flutter run`), modification → redémarrage à chaud (`relaunchAdvised`).
+Création comme modification → **redémarrage à chaud** (`WriteReport.createdEntity` ne change que
+le libellé). Pour une création, `pubspec.yaml` modifié compris, c'est vérifié à la main le
+2026-09-14 (commit `35e4a9f`) ; la modification est encore en test.
 
 ### 19.7. Tests
 
