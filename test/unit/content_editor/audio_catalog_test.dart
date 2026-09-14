@@ -27,6 +27,10 @@ void main() {
     test('rend une liste vide sans audio.json', () {
       expect(soundIds(const IoContentFileSystem(), root), isEmpty);
     });
+
+    test('rend une liste vide si audio.json ne se lit pas', () {
+      expect(soundIds(_FailingReadFileSystem(), root), isEmpty);
+    });
   });
 
   group('insertSound', () {
@@ -81,4 +85,15 @@ void main() {
           throwsStateError);
     });
   });
+}
+
+class _FailingReadFileSystem extends IoContentFileSystem {
+  const _FailingReadFileSystem();
+
+  @override
+  bool fileExists(String path) => true;
+
+  @override
+  String readFile(String path) =>
+      throw const FileSystemException('lecture simulee en echec');
 }

@@ -15,7 +15,8 @@ List<String> soundIds(ContentFileSystem fs, String rootPath) {
     final sounds = decoded is Map<String, dynamic> ? decoded['sounds'] : null;
     if (sounds is! Map<String, dynamic>) return const [];
     return sounds.keys.toList()..sort();
-  } on FormatException {
+  } catch (_) {
+    // Illisible, quelle qu'en soit la raison : un champ de son sans catalogue ne propose rien.
     return const [];
   }
 }
