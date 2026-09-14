@@ -30,10 +30,15 @@ class ClassRecipe {
     required this.bilingual,
     required this.mechanics,
     required this.signatureCards,
+    this.withIcon = true,
   });
 
   final String id;
   final Map<String, String> bilingual;
+
+  /// Faux quand l'emplacement de l'icone a ete retire (« aucune ») : la
+  /// classe est alors ecrite sans `iconPath`, et sans icone deposee.
+  final bool withIcon;
 
   /// Le corps saisi pour la classe. Ce qu'il ne porte pas, le gabarit le
   /// complete.
@@ -104,7 +109,8 @@ class ClassRecipe {
     ];
   }
 
-  /// Le corps de la classe, augmente du chemin de son icone.
+  /// Le corps de la classe, augmente du chemin de son icone — ou prive de
+  /// lui si [withIcon] est faux.
   ///
   /// Il est **derive de l'identifiant**, comme celui de la carte de classe :
   /// une icone ne se saisit pas, elle se depose. L'ecrire ici plutot que de
@@ -113,7 +119,11 @@ class ClassRecipe {
   String get _mechanicsWithIcon {
     try {
       final decoded = jsonDecode(mechanics) as Map<String, dynamic>;
-      decoded['iconPath'] = 'assets/data/classes/$id/icon.png';
+      if (withIcon) {
+        decoded['iconPath'] = 'assets/data/classes/$id/icon.png';
+      } else {
+        decoded.remove('iconPath');
+      }
       return jsonEncode(decoded);
     } catch (_) {
       // Corps illisible : `EntityValidator` dira pourquoi, et son message vaut

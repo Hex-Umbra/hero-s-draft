@@ -444,16 +444,53 @@ void main() {
   });
 
   group('icone de classe', () {
+    /// Le brouillon d'une classe creee dont le corps porte, ou non, `iconPath`
+    /// — comme le rend `ClassRecipe` selon que l'emplacement a ete garde.
+    EntityDraft createdClass(String id, {required bool withIcon}) {
+      final descriptor = kEntityDescriptors[EntityCategory.heroClass]!;
+      return EntityDraft(
+        descriptor: descriptor,
+        id: id,
+        bilingual: const {
+          'name_fr': 'Le Flambeur',
+          'name_en': 'The Gambler',
+          'description_fr': 'Parie tout sur chaque carte.',
+          'description_en': 'Bets everything on every card.',
+        },
+        mechanics: jsonEncode({
+          ...descriptor.decodeTemplate(),
+          if (withIcon) 'iconPath': 'assets/data/classes/$id/icon.png',
+        }),
+      );
+    }
+
     test('une classe creee recoit son icone de remplacement', () async {
       Directory('$root/assets/placeholders/images').createSync(recursive: true);
       File('assets/placeholders/images/placeholder_icon.png')
           .copySync('$root/assets/placeholders/images/placeholder_icon.png');
 
-      await EntityWriter(fs: fs, rootPath: root).write(classDraft('gambler'));
+      await EntityWriter(fs: fs, rootPath: root)
+          .write(createdClass('gambler', withIcon: true));
 
       expect(
         File('$root/assets/data/classes/gambler/icon.png').existsSync(),
         isTrue,
+      );
+    });
+
+    // « aucune » a retire la cle : deposer l'icone quand meme laisserait un
+    // carre magenta que rien ne reference.
+    test('une classe creee sans iconPath ne recoit pas d icone', () async {
+      Directory('$root/assets/placeholders/images').createSync(recursive: true);
+      File('assets/placeholders/images/placeholder_icon.png')
+          .copySync('$root/assets/placeholders/images/placeholder_icon.png');
+
+      await EntityWriter(fs: fs, rootPath: root)
+          .write(createdClass('gambler', withIcon: false));
+
+      expect(
+        File('$root/assets/data/classes/gambler/icon.png').existsSync(),
+        isFalse,
       );
     });
 

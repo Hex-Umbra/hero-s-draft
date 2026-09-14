@@ -158,7 +158,7 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
       }
     }
 
-    _seedDocument(_descriptor.decodeTemplate());
+    _seedDocument(_templateSeed());
 
     _setCardCount(0);
 
@@ -173,6 +173,15 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
     _report = null;
     _failure = null;
   }
+
+  /// Le document de depart d'un formulaire neuf : le gabarit, plus, pour une
+  /// classe en creation, l'emplacement de son icone. Present d'emblee, il
+  /// montre le chemin calcule et « aucune » le retire vraiment ; sa valeur
+  /// n'est jamais saisie, `compose()` la recalcule.
+  Map<String, dynamic> _templateSeed() => {
+        ..._descriptor.decodeTemplate(),
+        if (_isClassRecipe) 'iconPath': 'icon.png',
+      };
 
   /// Remplace le document, et referme la vue brute.
   void _seedDocument(Map<String, dynamic> seed) {
@@ -250,6 +259,10 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
           for (final entry in _prose.entries) entry.key: entry.value.text,
         },
         mechanics: _mechanicsText(),
+        // « aucune » a retire l'emplacement de l'icone : la recette ne le
+        // remet pas. Une vue brute illisible garde le defaut ; la validation
+        // la refusera de toute facon.
+        withIcon: _currentMechanics()?.containsKey('iconPath') ?? true,
         signatureCards: [
           for (var i = 0; i < _cardCountValue; i++)
             SignatureCardInput(
@@ -607,7 +620,7 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
                 _mode = value as _EditorMode;
                 _target = null;
                 _targetOwner = null;
-                _seedDocument(_descriptor.decodeTemplate());
+                _seedDocument(_templateSeed());
                 _loadedPath = null;
                 // Rien de choisi encore sous ce mode : un import en attente
                 // visait le formulaire precedent.

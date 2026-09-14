@@ -322,7 +322,9 @@ Le champ montre l'image actuelle **lue sur le disque** (`Image.memory` sur les o
 `ContentFileSystem.readBytes`) — un fichier écrit pendant la session n'est pas dans le bundle avant
 le redémarrage, et `Image.file` ferait entrer `dart:io` dans `lib/ui/`, ce que le build web refuse — son chemin, et « Importer… » (`png`
 seulement : les trois noms imposés sont en `.png`). Pour `iconPath`, « aucune » retire la clé ;
-`ClassIdentity.imageOf` retombe alors sur `classCard`.
+`ClassIdentity.imageOf` retombe alors sur `classCard`. À la création d'une classe, l'emplacement de
+l'icône est présent d'emblée (le placeholder est déposé à l'écriture), et « aucune » retire à la fois
+la clé et le placeholder.
 
 À l'écriture, le fichier choisi est copié sous le nom imposé, **par-dessus** l'image existante :
 c'est le sens même d'un import. La valeur de la clé reste calculée par l'écrivain, jamais saisie.

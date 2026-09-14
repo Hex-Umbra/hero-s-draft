@@ -218,13 +218,17 @@ class EntityWriter {
     }
   }
 
-  /// Depose l'icone de remplacement d'une classe **neuve**.
+  /// Depose l'icone de remplacement d'une classe **neuve** dont le corps
+  /// porte `iconPath`.
   ///
   /// Jamais en modification : les trois classes livrees n'ont pas d'icone
   /// dessinee, et leur en deposer une ferait afficher un carre magenta a la
   /// place de leur illustration dans le dialogue de stats. Le repli de
   /// `ClassIdentity.imageOf` sur la carte de classe n'a de sens que tant que
   /// `iconPath` reste absent de leur JSON.
+  ///
+  /// Jamais non plus sans `iconPath` : « aucune » a retire l'emplacement, et
+  /// une icone deposee quand meme serait un fichier que rien ne reference.
   ///
   /// Comme [_placeImage], elle n'ecrase jamais une image deja la, et n'est pas
   /// defaite par [_rollback] : un placeholder laisse dans un dossier neuf est
@@ -234,6 +238,8 @@ class EntityWriter {
         draft.isModification) {
       return;
     }
+    final mechanics = jsonDecode(draft.mechanics) as Map<String, dynamic>;
+    if (!mechanics.containsKey('iconPath')) return;
 
     final absolute = '$rootPath/${draft.descriptor.imagePathOf(draft.id, 'iconPath')}';
     if (fs.fileExists(absolute)) return;

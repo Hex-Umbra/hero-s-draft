@@ -62,6 +62,21 @@ void main() {
     expect(mechanics['iconPath'], 'assets/data/classes/gambler/icon.png');
   });
 
+  // « aucune » sur l'emplacement de l'icone : la recette ne la remet pas.
+  test('sans icone, la classe ne porte pas iconPath', () {
+    final withoutIcon = ClassRecipe(
+      id: 'gambler',
+      bilingual: const {},
+      mechanics: '{"maxHp": 90, "iconPath": "icon.png"}',
+      signatureCards: const [],
+      withIcon: false,
+    );
+    final mechanics = jsonDecode(withoutIcon.toDrafts().first.mechanics)
+        as Map<String, dynamic>;
+    expect(mechanics.containsKey('iconPath'), isFalse);
+    expect(mechanics['maxHp'], 90);
+  });
+
   test('chaque carte appartient a la classe et porte une prose non vide', () {
     final card = recipe().toDrafts()[1];
     expect(card.heroClass, 'gambler');

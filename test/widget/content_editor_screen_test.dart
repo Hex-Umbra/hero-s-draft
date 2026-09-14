@@ -591,6 +591,47 @@ void main() {
       File('$root/assets/data/classes/gambler/cards/bluff.json').existsSync(),
       isTrue,
     );
+    // L'emplacement de l'icone, garde par defaut, est ecrit.
+    expect(classJson['iconPath'], 'assets/data/classes/gambler/icon.png');
+  });
+
+  testWidgets(
+      'une classe creee apres « aucune » n a ni iconPath ni icone deposee',
+      (tester) async {
+    // Le remplacement doit etre la : sans lui, `_placeClassIcon` sort sur sa
+    // garde de source absente, et l'absence d'icone ne prouverait rien.
+    Directory('$root/assets/placeholders/images').createSync(recursive: true);
+    File('assets/placeholders/images/placeholder_icon.png')
+        .copySync('$root/assets/placeholders/images/placeholder_icon.png');
+
+    await tester.pumpWidget(harness(projectRoot: root));
+    await tester.tap(find.text('Classe'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Créer'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('editeur-id')), 'barde');
+    await tester.pump();
+
+    // A la creation, l'emplacement est present : le champ montre le chemin
+    // calcule, et « aucune » le retire vraiment.
+    expect(find.text('assets/data/classes/barde/icon.png'), findsOneWidget);
+    final none = find.text('aucune');
+    await tester.ensureVisible(none);
+    await tester.tap(none);
+    await tester.pumpAndSettle();
+    expect(find.text('(aucune)'), findsOneWidget);
+
+    await tester.tap(find.text('Écrire'));
+    await tester.pumpAndSettle();
+
+    final classJson = jsonDecode(
+      File('$root/assets/data/classes/barde/class.json').readAsStringSync(),
+    ) as Map<String, dynamic>;
+    expect(classJson.containsKey('iconPath'), isFalse);
+    expect(
+      File('$root/assets/data/classes/barde/icon.png').existsSync(),
+      isFalse,
+    );
   });
 
   testWidgets(
