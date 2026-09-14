@@ -169,11 +169,22 @@ class EntityWriter {
     fs.writeFile(absolute, text);
   }
 
+  /// Retire les sauvegardes d'un geste **deja reussi**, au mieux.
+  ///
+  /// Tout est ecrit quand elle tourne : une suppression refusee (un fichier
+  /// encore verrouille sous Windows) ne doit pas faire passer pour un echec
+  /// une ecriture qui a abouti. La sauvegarde reste alors sur le disque,
+  /// ignoree par git (`*.editor-backup`).
   void _dropBackups(List<WriteStep> steps) {
     for (final step in steps) {
       final backup = step.backup;
-      if (backup != null && fs.fileExists('$rootPath/$backup')) {
-        fs.deleteFile('$rootPath/$backup');
+      if (backup == null) continue;
+      try {
+        if (fs.fileExists('$rootPath/$backup')) {
+          fs.deleteFile('$rootPath/$backup');
+        }
+      } catch (_) {
+        // Au mieux : voir plus haut.
       }
     }
   }

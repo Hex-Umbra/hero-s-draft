@@ -685,6 +685,23 @@ void main() {
       expect(backups(), isEmpty);
     });
 
+    // Tout est deja ecrit quand les sauvegardes sont retirees : une
+    // suppression qui echoue (fichier verrouille sous Windows) ne doit pas
+    // faire passer pour un echec un geste qui a reussi.
+    test('une sauvegarde impossible a retirer ne fait pas echouer l ecriture',
+        () async {
+      final report = await EntityWriter(
+        fs: _FailingBackupDelete(root),
+        rootPath: root,
+      ).writeAll([trollModification()], imports: [trollSprite()]);
+
+      expect(report.written, contains('assets/data/enemies/troll/enemy.json'));
+      expect(
+        File('$root/assets/data/enemies/troll/sprite.png').readAsStringSync(),
+        'nouvelle',
+      );
+    });
+
     test('une sauvegarde ratee ne laisse aucune copie partielle', () async {
       await expectLater(
         EntityWriter(fs: _FailingBackupCopy(root), rootPath: root)
@@ -817,6 +834,33 @@ class FailingOnNthWrite extends IoContentFileSystem {
       throw StateError('ecriture simulee en echec au $failAt-ieme appel');
     }
   }
+}
+
+/// Le vrai systeme de fichiers, qui refuse de supprimer une sauvegarde —
+/// comme un fichier encore verrouille par un autre processus sous Windows.
+class _FailingBackupDelete extends IoContentFileSystem {
+  _FailingBackupDelete(this.root);
+
+  final String root;
+
+  @override
+  String get startDirectory => root;
+
+  @override
+  void deleteFile(String path) {
+    if (path.endsWith('.editor-backup')) {
+      throw const FileSystemException('suppression de sauvegarde refusee');
+    }
+    super.deleteFile(path);
+  }
+
+  @override
+  Future<ProcessOutcome> run(
+    String executable,
+    List<String> arguments, {
+    required String workingDirectory,
+  }) async =>
+      const ProcessOutcome(0, '');
 }
 
 /// Le vrai systeme de fichiers, qui leve pendant la copie d une sauvegarde.
