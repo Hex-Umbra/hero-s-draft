@@ -10,6 +10,7 @@ void main() {
   final relic = kEntityDescriptors[EntityCategory.relic]!;
   final hero = kEntityDescriptors[EntityCategory.heroClass]!;
   final event = kEntityDescriptors[EntityCategory.event]!;
+  final forge = kEntityDescriptors[EntityCategory.forgeUpgrade]!;
 
   var structureChanges = 0;
 
@@ -67,6 +68,21 @@ void main() {
     await tester.enterText(find.byKey(const Key('editeur-champ-value')), '1a');
     expect(document.root['value'], 12);
     expect(document.conversionFaults.single.field, 'value');
+  });
+
+  testWidgets('une liste enumeree qui n est pas une liste se rend et se corrige',
+      (tester) async {
+    // Atteignable par la vue brute ou un fichier retouche a la main : le
+    // formulaire levait en construction.
+    final document = EditorDocument({
+      'pools': ['common'],
+      'eligibleCardTypes': 'attack',
+    });
+    await pump(tester, document, forge);
+    expect(tester.takeException(), isNull);
+
+    await tester.tap(find.text('skill'));
+    expect(document.root['eligibleCardTypes'], ['skill']);
   });
 
   testWidgets('une cle inconnue du gabarit a son champ', (tester) async {

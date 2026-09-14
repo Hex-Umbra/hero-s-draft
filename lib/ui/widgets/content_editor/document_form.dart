@@ -141,7 +141,11 @@ class _DocumentFormState extends State<DocumentForm> {
         );
       case FieldKind.enumMulti:
         final options = descriptor.enumListKeys[pattern]!;
-        final selected = {...?(value as List?)?.whereType<String>()};
+        // Une valeur qui n'est pas une liste (vue brute, fichier retouche)
+        // ne selectionne rien : la validation dira pourquoi elle est refusee.
+        final selected = {
+          ...(value is List ? value.whereType<String>() : const <String>[]),
+        };
         return _choices(
           path,
           options,
