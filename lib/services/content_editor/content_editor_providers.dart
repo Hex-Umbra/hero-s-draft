@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'asset_picker.dart';
 import 'content_file_system.dart';
 import 'platform_file_system.dart';
 import 'project_root.dart';
@@ -8,6 +9,10 @@ import 'project_root.dart';
 final contentFileSystemProvider = Provider<ContentFileSystem?>(
   (ref) => platformFileSystem(),
 );
+
+/// Le selecteur de fichier de l'editeur. Surcharge dans les tests.
+final assetPickerProvider =
+    Provider<AssetPicker>((ref) => const FilePickerAssetPicker());
 
 /// La racine de l'arborescence source, ou `null` si l'application ne tourne
 /// pas depuis une. L'ecran refuse alors de s'ouvrir : mieux vaut ne rien

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,6 +15,7 @@ import '../../services/content_editor/entity_draft.dart';
 import '../../services/content_editor/entity_validator.dart';
 import '../../services/content_editor/entity_writer.dart';
 import '../../services/content_editor/known_values.dart';
+import '../../services/content_editor/pending_import.dart';
 import '../../services/content_editor/placeholder_filler.dart';
 import '../theme/app_colors.dart';
 import '../widgets/content_editor/asset_field.dart';
@@ -62,6 +64,16 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
   /// La vue « JSON brut », et son texte.
   bool _rawView = false;
   final TextEditingController _raw = TextEditingController();
+
+  /// Les imports en attente d'« Écrire » : cle de ressource -> fichier choisi.
+  /// La destination est recalculee au moment de juger, l'identifiant pouvant
+  /// changer d'ici la.
+  final Map<String, String> _importSources = {};
+  final Map<String, String> _importSoundIds = {};
+
+  /// Les octets d'image deja lus, par chemin : une carte de classe pese
+  /// 6,5 Mo, et `build` est relance a chaque frappe.
+  final Map<String, Uint8List?> _images = {};
 
   /// Les sons d'`audio.json`, lus avec le catalogue de la categorie.
   List<String> _soundIds = const [];
@@ -149,6 +161,12 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
     _seedDocument(_descriptor.decodeTemplate());
 
     _setCardCount(0);
+
+    // Une autre entite prend la place : un import en attente pour l'ancienne
+    // n'a plus de sens.
+    _importSources.clear();
+    _importSoundIds.clear();
+    _images.clear();
 
     _loadedPath = null;
     _faults = const [];
@@ -267,6 +285,7 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
       fs: ref.read(contentFileSystemProvider)!,
       rootPath: root,
       registry: GameDataRegistry.instance,
+      imports: _pendingImports(),
     );
 
     return (
@@ -283,6 +302,69 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
       ],
     );
   }
+
+  /// Les imports choisis, prets pour le validateur ou l'ecrivain.
+  List<PendingImport> _pendingImports() {
+    final id = _id.text.trim();
+    return [
+      for (final entry in _importSources.entries)
+        if (_descriptor.assetKeys[entry.key]!.kind == AssetKind.sound)
+          PendingImport.sound(
+            key: entry.key,
+            sourcePath: entry.value,
+            soundId: _importSoundIds[entry.key]!,
+          )
+        else
+          PendingImport.image(
+            descriptor: _descriptor,
+            id: id,
+            key: entry.key,
+            sourcePath: entry.value,
+          ),
+    ];
+  }
+
+  /// Ouvre le selecteur pour [key], puis — pour un son — demande son
+  /// identifiant. Rien n'est copie ici : l'import entre dans la meme
+  /// transaction que l'entite, et n'agit qu'au moment d'« Écrire ».
+  Future<void> _importAsset(String key, AssetSlot slot) async {
+    final picked =
+        await ref.read(assetPickerProvider).pickFile(extensions: slot.extensions);
+    if (picked == null || !mounted) return;
+    final source = picked.replaceAll(r'\', '/');
+
+    if (slot.kind == AssetKind.sound) {
+      final soundId = await showDialog<String>(
+        context: context,
+        builder: (_) => _SoundIdDialog(initial: _id.text.trim()),
+      );
+      if (soundId == null || soundId.isEmpty || !mounted) return;
+      setState(() {
+        _importSources[key] = source;
+        _importSoundIds[key] = soundId;
+        _document!.setAt([key], soundId);
+      });
+      return;
+    }
+
+    setState(() {
+      _importSources[key] = source;
+      // Une image optionnelle (`iconPath`) n'est ecrite que si le corps la
+      // porte : l'importer la fait entrer. Pas avec `''`, que la regle
+      // d'omission retirerait — avec le chemin, que `compose()` recalcule.
+      if (!slot.isRequired) {
+        _document!.setAt([key], _descriptor.imagePathOf(_id.text.trim(), key));
+      }
+      _images.remove(source);
+    });
+  }
+
+  /// Les octets d'un fichier image, retenus par chemin : `build` est relance
+  /// a chaque frappe, et une carte de classe pese 6,5 Mo.
+  Uint8List? _bytesOf(String absolute) => _images.putIfAbsent(absolute, () {
+        final fs = ref.read(contentFileSystemProvider)!;
+        return fs.fileExists(absolute) ? fs.readBytes(absolute) : null;
+      });
 
   /// Signale une impossibilite par le canal deja utilise pour les fautes de
   /// validation : c'est la meme place a l'ecran, et le formulaire n'est pas
@@ -337,6 +419,11 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
               !_prose.containsKey(entry.key))
             entry.key: entry.value,
       });
+      // Le fichier relu remplace le formulaire : un import en attente visait
+      // l'ancien contenu.
+      _importSources.clear();
+      _importSoundIds.clear();
+      _images.clear();
       _loadedPath = draft.path;
       _faults = const [];
       _report = null;
@@ -374,7 +461,7 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
     if (faults.isNotEmpty) return;
 
     try {
-      final report = await writer.writeAll(drafts);
+      final report = await writer.writeAll(drafts, imports: _pendingImports());
       if (mounted) {
         setState(() {
           _report = report;
@@ -382,6 +469,11 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
           // fichier a l'arborescence.
           _valuesFor = null;
           _catalogFor = null;
+          // Les imports viennent d'etre copies et declares : plus rien n'est
+          // en attente.
+          _importSources.clear();
+          _importSoundIds.clear();
+          _images.clear();
           // Retour a la branche 0 : la nouvelle entite n'est pas dans le
           // registre avant le redemarrage a chaud, et ouvrir son formulaire ferait
           // croire le contraire. Le compte rendu, lui, reste affiche — voir
@@ -468,6 +560,11 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
                 _targetOwner = null;
                 _seedDocument(_descriptor.decodeTemplate());
                 _loadedPath = null;
+                // Rien de choisi encore sous ce mode : un import en attente
+                // visait le formulaire precedent.
+                _importSources.clear();
+                _importSoundIds.clear();
+                _images.clear();
               }),
             ),
           if (_mode == _EditorMode.modify) _targetLevel(root),
@@ -690,12 +787,17 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
       }),
       referenceOptions: _references,
       vocabulary: vocabularyOf(_descriptor, _knownValuesFor(root)),
-      assetField: _assetField,
+      assetField: (key, slot) => _assetField(root, key, slot),
     );
   }
 
-  Widget _assetField(String key, AssetSlot slot) {
+  Widget _assetField(String root, String key, AssetSlot slot) {
     final document = _document!;
+    final source = _importSources[key];
+    final pending = source == null
+        ? null
+        : 'à importer : ${source.substring(source.lastIndexOf('/') + 1)}';
+
     if (slot.kind == AssetKind.sound) {
       final value = document.root[key];
       return AssetField(
@@ -703,16 +805,39 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
         slot: slot,
         value: value is String ? value : null,
         soundIds: _soundIds,
-        onSelectSound: (id) => setState(() => document.setAt([key], id)),
-        onClear: () => setState(() => document.removeAt([key])),
+        pendingLabel: pending,
+        onSelectSound: (id) => setState(() {
+          _importSources.remove(key);
+          _importSoundIds.remove(key);
+          document.setAt([key], id);
+        }),
+        onClear: () => setState(() {
+          _importSources.remove(key);
+          _importSoundIds.remove(key);
+          document.removeAt([key]);
+        }),
+        onImport: () => _importAsset(key, slot),
       );
     }
+
+    final id = _id.text.trim();
+    final relative = _descriptor.imagePathOf(id, key);
     final present = slot.isRequired || document.root.containsKey(key);
     return AssetField(
       fieldKey: key,
       slot: slot,
-      value: present ? _descriptor.imagePathOf(_id.text.trim(), key) : null,
-      onClear: () => setState(() => document.removeAt([key])),
+      value: present ? relative : null,
+      imageBytes: source != null
+          ? _bytesOf(source)
+          : (present && id.isNotEmpty && relative != null
+              ? _bytesOf('$root/$relative')
+              : null),
+      pendingLabel: pending,
+      onClear: () => setState(() {
+        _importSources.remove(key);
+        document.removeAt([key]);
+      }),
+      onImport: () => _importAsset(key, slot),
     );
   }
 
@@ -799,6 +924,51 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
               style: const TextStyle(fontSize: 12),
             ),
           ),
+      ],
+    );
+  }
+}
+
+/// Demande l'identifiant d'un son importe. Un `StatefulWidget` pour que son
+/// controleur vive exactement autant que le dialogue — le liberer a la
+/// fermeture le ferait servir, dispose, pendant l'animation de sortie.
+class _SoundIdDialog extends StatefulWidget {
+  const _SoundIdDialog({required this.initial});
+
+  final String initial;
+
+  @override
+  State<_SoundIdDialog> createState() => _SoundIdDialogState();
+}
+
+class _SoundIdDialogState extends State<_SoundIdDialog> {
+  late final TextEditingController _controller =
+      TextEditingController(text: widget.initial);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Identifiant du son'),
+      content: TextField(
+        key: const Key('editeur-import-son-id'),
+        controller: _controller,
+        autofocus: true,
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Annuler'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(_controller.text.trim()),
+          child: const Text('Importer'),
+        ),
       ],
     );
   }

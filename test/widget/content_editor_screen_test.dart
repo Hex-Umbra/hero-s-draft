@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:roguelike_card_game/services/content_editor/asset_picker.dart';
 import 'package:roguelike_card_game/services/content_editor/content_editor_providers.dart';
 import 'package:roguelike_card_game/services/content_editor/content_file_system.dart';
 import 'package:roguelike_card_game/services/content_editor/content_file_system_io.dart';
@@ -36,12 +38,17 @@ void main() {
 
   tearDown(() => sandbox.deleteSync(recursive: true));
 
-  Widget harness({required String? projectRoot, ContentFileSystem? fs}) {
+  Widget harness({
+    required String? projectRoot,
+    ContentFileSystem? fs,
+    AssetPicker? picker,
+  }) {
     return ProviderScope(
       overrides: [
         contentFileSystemProvider
             .overrideWithValue(fs ?? const _NoProcessFileSystem()),
         projectRootProvider.overrideWithValue(projectRoot),
+        assetPickerProvider.overrideWithValue(picker ?? const _FakePicker(null)),
       ],
       // Le theme de l'application, et non celui par defaut de `MaterialApp` :
       // les boutons illisibles n'existaient que sous lui, dont le texte courant
@@ -1194,6 +1201,120 @@ void main() {
           containsPair('custom_flag', true));
     });
   });
+
+  group('imports', () {
+    const audio = '{\n  "sounds": {\n    "clang": { "file": "sfx/clang.wav" }\n  }\n}\n';
+
+    String sourceFile(String name, String content) {
+      final file = File('$root/import/$name')
+        ..parent.createSync(recursive: true)
+        ..writeAsStringSync(content);
+      return IoContentFileSystem.toSlashes(file.path);
+    }
+
+    Future<void> importSound(WidgetTester tester, String soundId) async {
+      final button = find.byKey(const Key('editeur-importer-sfx'));
+      await tester.ensureVisible(button);
+      await tester.tap(button);
+      await tester.pumpAndSettle();
+      await tester.enterText(
+          find.byKey(const Key('editeur-import-son-id')), soundId);
+      await tester.tap(find.text('Importer'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('importer un son le copie, le declare et le lie', (tester) async {
+      File('$root/assets/data/audio.json').writeAsStringSync(audio);
+      final source = sourceFile('clang.wav', 'octets');
+      await tester.pumpWidget(
+          harness(projectRoot: root, picker: _FakePicker(source)));
+      await tester.tap(find.text('Relique'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Créer'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const Key('editeur-id')), 'talisman');
+
+      await importSound(tester, 'talisman_clang');
+      await tester.tap(find.text('Écrire'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Écrit :'), findsWidgets);
+      expect(
+        File('$root/assets/audio/sfx/talisman_clang.wav').readAsStringSync(),
+        'octets',
+      );
+      final sounds = (jsonDecode(
+        File('$root/assets/data/audio.json').readAsStringSync(),
+      ) as Map<String, dynamic>)['sounds'] as Map<String, dynamic>;
+      expect(sounds.keys, contains('talisman_clang'));
+      expect(
+        jsonDecode(File('$root/assets/data/relics/talisman.json')
+            .readAsStringSync()),
+        containsPair('sfx', 'talisman_clang'),
+      );
+    });
+
+    testWidgets('un son deja declare est refuse, rien n est copie',
+        (tester) async {
+      File('$root/assets/data/audio.json').writeAsStringSync(audio);
+      final source = sourceFile('clang.wav', 'octets');
+      await tester.pumpWidget(
+          harness(projectRoot: root, picker: _FakePicker(source)));
+      await tester.tap(find.text('Relique'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Créer'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const Key('editeur-id')), 'talisman');
+
+      await importSound(tester, 'clang');
+      await tester.tap(find.text('Écrire'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('existe déjà dans audio.json'), findsOneWidget);
+      expect(Directory('$root/assets/audio').existsSync(), isFalse);
+    });
+
+    testWidgets('importer une image d ennemi remplace son sprite',
+        (tester) async {
+      Directory('$root/assets/data/enemies/gobelin').createSync(recursive: true);
+      File('$root/assets/data/enemies/gobelin/sprite.png')
+          .writeAsStringSync('ancienne');
+      File('$root/assets/data/enemies/gobelin/enemy.json').writeAsStringSync(
+        jsonEncode({
+          'id': 'gobelin',
+          'name_en': 'Goblin',
+          'name_fr': 'Gobelin',
+          'maxHp': 30,
+          'baseDamage': 5,
+          'spritePath': 'assets/data/enemies/gobelin/sprite.png',
+          'intents': [
+            {'type': 'attack', 'value': 5},
+          ],
+        }),
+      );
+      final source = sourceFile('gobelin.png', 'nouvelle');
+      await tester.pumpWidget(
+          harness(projectRoot: root, picker: _FakePicker(source)));
+      await tester.tap(find.text('Ennemi'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Modifier'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('gobelin'));
+      await tester.pumpAndSettle();
+
+      final button = find.byKey(const Key('editeur-importer-spritePath'));
+      await tester.ensureVisible(button);
+      await tester.tap(button);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Écrire'));
+      await tester.pumpAndSettle();
+
+      expect(
+        File('$root/assets/data/enemies/gobelin/sprite.png').readAsStringSync(),
+        'nouvelle',
+      );
+    });
+  });
 }
 
 /// `IoContentFileSystem` moins le lancement de processus.
@@ -1221,6 +1342,9 @@ class _NoProcessFileSystem implements ContentFileSystem {
 
   @override
   String readFile(String path) => _disk.readFile(path);
+
+  @override
+  Uint8List readBytes(String path) => _disk.readBytes(path);
 
   @override
   void writeFile(String path, String contents) =>
@@ -1276,6 +1400,12 @@ class _CountingFileSystem implements ContentFileSystem {
   }
 
   @override
+  Uint8List readBytes(String path) {
+    reads++;
+    return _inner.readBytes(path);
+  }
+
+  @override
   void writeFile(String path, String contents) =>
       _inner.writeFile(path, contents);
 
@@ -1301,4 +1431,14 @@ class _CountingFileSystem implements ContentFileSystem {
     required String workingDirectory,
   }) =>
       _inner.run(executable, arguments, workingDirectory: workingDirectory);
+}
+
+/// Rend toujours le meme chemin, sans ouvrir de fenetre.
+class _FakePicker implements AssetPicker {
+  const _FakePicker(this.path);
+
+  final String? path;
+
+  @override
+  Future<String?> pickFile({required List<String> extensions}) async => path;
 }

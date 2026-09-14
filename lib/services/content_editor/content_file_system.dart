@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:meta/meta.dart';
 
 /// Ce que rend un processus lance par l'editeur.
@@ -31,6 +33,10 @@ abstract class ContentFileSystem {
   bool directoryExists(String path);
 
   String readFile(String path);
+
+  /// Les octets d'un fichier — l'apercu d'une image, que l'interface ne peut
+  /// pas lire elle-meme sans importer `dart:io`.
+  Uint8List readBytes(String path);
 
   void writeFile(String path, String contents);
 

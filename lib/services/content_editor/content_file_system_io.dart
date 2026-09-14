@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'content_file_system.dart';
 
@@ -20,6 +21,9 @@ class IoContentFileSystem implements ContentFileSystem {
 
   @override
   String readFile(String path) => File(path).readAsStringSync();
+
+  @override
+  Uint8List readBytes(String path) => File(path).readAsBytesSync();
 
   @override
   void writeFile(String path, String contents) =>

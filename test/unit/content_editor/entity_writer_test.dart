@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/services/content_editor/content_file_system.dart';
@@ -686,6 +687,9 @@ class _FlakyFileSystem implements ContentFileSystem {
 
   @override
   String readFile(String path) => files[path]!;
+
+  @override
+  Uint8List readBytes(String path) => Uint8List.fromList(utf8.encode(files[path]!));
 
   @override
   void writeFile(String path, String contents) {
