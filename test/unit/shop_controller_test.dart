@@ -6,6 +6,8 @@ import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
 import 'package:roguelike_card_game/game/controllers/inventory_controller.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
+import 'package:roguelike_card_game/models/data/forge_upgrade_data.dart';
+import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 import 'package:roguelike_card_game/models/data/hero_data.dart';
 
 void main() {
@@ -276,6 +278,44 @@ void main() {
       shopController.clearCloneOptions();
       expect(shopController.state.clonePrice, 150);
       expect(shopController.state.clonePurchasedCount, 0);
+    });
+
+    // Dernier test du groupe : le registre statique qu'il installe resterait
+    // visible des tests suivants.
+    test('la boutique ne tire une rune non cumulable qu au tier 1', () {
+      // Un id autre qu'`enduring` : c'est la donnee qui decide, pas l'id.
+      GameDataRegistry(
+        enemies: const [],
+        heroes: const [],
+        cards: const [],
+        events: const [],
+        passives: const [],
+        relics: const [],
+        forgeUpgrades: const [
+          ForgeUpgradeData(
+            id: 'steadfast',
+            nameEn: 'Steadfast',
+            nameFr: 'Inebranlable',
+            descriptionEn: '',
+            descriptionFr: '',
+            icon: '',
+            color: '',
+            pools: ['common', 'uncommon', 'rare'],
+            stackable: false,
+          ),
+        ],
+      );
+      runController.updateState(container.read(runProvider).copyWith(act: 3));
+
+      final rolled = <String>{};
+      for (var i = 0; i < 100; i++) {
+        shopController.initializeShop(testCardPool, 0);
+        for (final card in shopController.state.cardsForSale) {
+          rolled.addAll(card.forgeUpgrades);
+        }
+      }
+
+      expect(rolled, {'steadfast:1'});
     });
   });
 }

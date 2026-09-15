@@ -194,7 +194,7 @@ class ForgeSlotRow extends StatelessWidget {
         ? _getUpgradeIconFromString(upgradeData.icon)
         : _getUpgradeIcon(upgradeId);
     final upgradeName = upgradeData != null
-        ? upgradeData.getName(locale) + (upgradeId == 'enduring' ? '' : ' $tier')
+        ? upgradeData.getName(locale) + (upgradeData.stackable ? ' $tier' : '')
         : _getUpgradeName(slot.upgrade);
     final upgradeDesc = upgradeData != null
         ? upgradeData.getDescription(tier, locale)

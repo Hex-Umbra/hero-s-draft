@@ -281,7 +281,7 @@ class _MergeDialogState extends State<_MergeDialog> {
                             final tier = parts.length > 1 ? parts[1] : '1';
                             final upgradeData = ForgeUpgradeData.getById(id);
                             return upgradeData != null
-                                ? (id == 'enduring' ? upgradeData.getName(locale) : '${upgradeData.getName(locale)} $tier')
+                                ? (upgradeData.stackable ? '${upgradeData.getName(locale)} $tier' : upgradeData.getName(locale))
                                 : '$id $tier';
                           }).join(', ');
                     return CheckboxListTile(
@@ -359,7 +359,7 @@ class _MergeDialogState extends State<_MergeDialog> {
                     final tier = parts[1];
                     final upgradeData = ForgeUpgradeData.getById(id);
                     final displayName = upgradeData != null 
-                        ? (id == 'enduring' ? upgradeData.getName(locale) : '${upgradeData.getName(locale)} (Niveau $tier)')
+                        ? (upgradeData.stackable ? '${upgradeData.getName(locale)} (Niveau $tier)' : upgradeData.getName(locale))
                         : '${id.toUpperCase()} (Niveau $tier)';
                     final isSelected = _chosenUpgrades.contains(upgrade);
                     return CheckboxListTile(

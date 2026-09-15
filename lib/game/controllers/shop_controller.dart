@@ -5,6 +5,7 @@ import '../../models/data/card_data.dart';
 import '../../models/data/game_data_registry.dart';
 import '../../models/data/forge_upgrade_data.dart';
 import '../../models/card_instance.dart';
+import '../services/forge_rune_rules.dart';
 import 'run_controller.dart';
 import 'deck_controller.dart';
 import 'inventory_controller.dart';
@@ -143,7 +144,7 @@ class ShopController extends Notifier<ShopState> {
     rolledId ??= 'sharp';
 
     int tier = 1;
-    if (rolledId != 'enduring') {
+    if (ForgeRuneRules.isStackable(rolledId)) {
       final t = rng.nextInt(100);
       if (t < 80) {
         tier = 1;
