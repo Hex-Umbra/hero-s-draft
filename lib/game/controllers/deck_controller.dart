@@ -45,6 +45,11 @@ class DeckState {
     );
   }
 
+  /// Cartes du master deck qu'une récompense peut copier : draft de boss,
+  /// Miroir Magique, Miroir de montée de niveau.
+  List<CardInstance> get copyableCards =>
+      masterDeck.where((card) => card.rarity.isAcquirable).toList();
+
   Map<String, dynamic> toJson() => {
         'masterDeck': masterDeck.map((c) => c.toJson()).toList(),
         'drawPile': drawPile.map((c) => c.toJson()).toList(),

@@ -37,6 +37,11 @@ enum CardRarity {
         CardRarity.epic => 3,
         CardRarity.legendary => 4,
       };
+
+  /// Une carte de cette rareté peut-elle entrer dans le deck en cours de run :
+  /// achat, récompense, copie par un Miroir ? Une carte `unique` n'y entre
+  /// qu'au draft de départ (ADR-026, ADR-051).
+  bool get isAcquirable => this != CardRarity.unique;
 }
 
 enum CardTarget { singleEnemy, allEnemies, self, none }

@@ -45,7 +45,7 @@ class ShopController extends Notifier<ShopState> {
     return allCards
         .where((c) =>
             c.type != CardType.status &&
-            c.rarity != CardRarity.unique)
+            c.rarity.isAcquirable)
         .toList();
   }
 

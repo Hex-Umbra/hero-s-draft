@@ -54,4 +54,16 @@ void main() {
       expect(CardInstance(data: data, rarity: CardRarity.epic).forgeCapacity, 5);
     });
   });
+
+  group('CardRarity.isAcquirable', () {
+    test('une carte de classe n entre dans le deck qu au draft de depart', () {
+      expect(CardRarity.unique.isAcquirable, isFalse);
+    });
+
+    test('toute rarete de l echelle s acquiert en cours de run', () {
+      for (final rarity in CardRarity.values.take(5)) {
+        expect(rarity.isAcquirable, isTrue, reason: rarity.name);
+      }
+    });
+  });
 }

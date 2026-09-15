@@ -6,7 +6,10 @@ import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'package:roguelike_card_game/ui/screens/draft_screen.dart';
 import 'package:roguelike_card_game/ui/widgets/relic_carousel/draft_card_reel.dart';
 import 'package:roguelike_card_game/ui/widgets/draft/draft_choice_card.dart';
+import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
+import 'package:roguelike_card_game/models/card_instance.dart';
+import 'package:roguelike_card_game/models/data/card_data.dart';
 
 /// DraftScreen's reel-landing animation is driven by chained `Timer`s and
 /// `AnimationController.forward(from: 0.0)` calls made from inside status
@@ -197,6 +200,66 @@ void main() {
         container.read(runProvider).heroStats.luck,
         statsBefore.luck + 1,
       );
+
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
+  testWidgets(
+    'Le Miroir de montee de niveau ne propose jamais de copier une carte unique',
+    (WidgetTester tester) async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
+      final deckNotifier = container.read(deckProvider.notifier);
+      deckNotifier.addCardToMasterDeck(
+        CardInstance(
+          data: const CardData(
+            id: 'strike',
+            nameEn: 'Strike',
+            nameFr: 'Frappe',
+            cost: 1,
+            type: CardType.attack,
+            category: CardCategory.global,
+            rarity: CardRarity.common,
+            target: CardTarget.singleEnemy,
+            effects: [],
+          ),
+        ),
+      );
+      deckNotifier.addCardToMasterDeck(
+        CardInstance(
+          data: const CardData(
+            id: 'holy_shield',
+            nameEn: 'Holy Shield',
+            nameFr: 'Bouclier Sacre',
+            cost: 1,
+            type: CardType.skill,
+            category: CardCategory.characterSpecific,
+            heroClass: 'paladin',
+            rarity: CardRarity.unique,
+            target: CardTarget.self,
+            effects: [],
+          ),
+        ),
+      );
+
+      // forceLegendary rend le Miroir certain (voir le test precedent).
+      await tester.pumpWidget(
+        _wrap(
+          container,
+          DraftScreen(onDraftComplete: () {}, forceLegendary: true),
+        ),
+      );
+      await tester.pump();
+      await _advance(tester, const Duration(milliseconds: 13000));
+
+      await tester.tap(find.text('Miroir'));
+      await tester.pump();
+      await _advance(tester, const Duration(milliseconds: 800));
+
+      expect(find.text('Frappe'), findsOneWidget);
+      expect(find.text('Bouclier Sacre'), findsNothing);
 
       await tester.pumpWidget(const SizedBox.shrink());
     },

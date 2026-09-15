@@ -195,6 +195,23 @@ void main() {
         {CardRarity.legendary},
       );
     });
+
+    test('copyableCards ecarte les cartes unique du master deck', () {
+      final strike = _card('strike');
+      final signature = CardInstance(
+        data: const CardData(
+          id: 'holy_shield',
+          cost: 1,
+          type: CardType.skill,
+          category: CardCategory.characterSpecific,
+          rarity: CardRarity.unique,
+          target: CardTarget.self,
+          effects: [],
+        ),
+      );
+
+      expect(DeckState(masterDeck: [strike, signature]).copyableCards, [strike]);
+    });
   });
 
   group('DeckNotifier — aléatoire et compteur de remélange', () {
