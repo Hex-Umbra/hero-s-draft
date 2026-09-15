@@ -511,9 +511,7 @@ class CardTextRenderer {
 
 
     // Rune sockets row instead of stars
-    final int baseMaxForgeUpgrades = card.card.data.baseMaxForgeUpgrades;
-    final int rarityIndex = card.card.rarity.index;
-    final int totalSlots = baseMaxForgeUpgrades + rarityIndex;
+    final int totalSlots = card.card.forgeCapacity;
     final int appliedUpgradesCount = card.card.forgeUpgrades.length;
 
     final double socketDiameter = 14.0;

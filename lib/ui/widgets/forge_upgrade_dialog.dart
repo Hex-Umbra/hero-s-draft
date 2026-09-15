@@ -47,9 +47,7 @@ class _ForgeUpgradeDialogState extends ConsumerState<ForgeUpgradeDialog> {
   @override
   void initState() {
     super.initState();
-    final rarityIndex = widget.card.rarity.index;
-    _totalMaxForgeUpgrades =
-        widget.card.data.baseMaxForgeUpgrades + rarityIndex;
+    _totalMaxForgeUpgrades = widget.card.forgeCapacity;
 
     final runState = ref.read(runProvider);
     if (runState.forgeTargetSessions.containsKey(widget.card.uniqueId)) {

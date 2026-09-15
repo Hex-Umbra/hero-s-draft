@@ -179,6 +179,22 @@ void main() {
       // Upgrades should be limited to 2
       expect(mergedCard.forgeUpgrades.length, 2);
     });
+
+    test('mergeCards refuse trois legendaires : aucune rarete au-dela', () {
+      final copies = List.generate(
+        3,
+        (_) => CardInstance(data: _card('strike').data, rarity: CardRarity.legendary),
+      );
+      notifier.initializeStarterDeck(copies);
+
+      notifier.mergeCards(copies.map((c) => c.uniqueId).toList(), const []);
+
+      expect(notifier.state.masterDeck, hasLength(3));
+      expect(
+        notifier.state.masterDeck.map((c) => c.rarity).toSet(),
+        {CardRarity.legendary},
+      );
+    });
   });
 
   group('DeckNotifier — aléatoire et compteur de remélange', () {

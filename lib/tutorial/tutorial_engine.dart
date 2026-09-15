@@ -399,9 +399,8 @@ class TutorialEngine extends ChangeNotifier {
   void mergeCards() {
     if (mockState.hand.length != 3) return;
     final base = mockState.hand.first;
-    final nextIndex = (base.rarity.index + 1).clamp(0, CardRarity.values.length - 1);
     mockState.hand = [
-      CardInstance(data: base.data, rarity: CardRarity.values[nextIndex]),
+      CardInstance(data: base.data, rarity: base.rarity.next ?? base.rarity),
     ];
     notifyListeners();
   }

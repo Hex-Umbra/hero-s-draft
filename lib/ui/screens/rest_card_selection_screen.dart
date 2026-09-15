@@ -27,11 +27,7 @@ class RestCardSelectionScreen extends ConsumerWidget {
     final locale = Localizations.localeOf(context).languageCode;
 
     if (isForge) {
-      final rarityIndex = card.rarity.index;
-      final totalMaxForgeUpgrades =
-          card.data.baseMaxForgeUpgrades + rarityIndex;
-      
-      if (card.forgeUpgrades.length >= totalMaxForgeUpgrades) {
+      if (card.forgeUpgrades.length >= card.forgeCapacity) {
         context.showNotification(
           locale == 'fr'
               ? "Cette carte a atteint sa capacité maximale d'améliorations de forge !"

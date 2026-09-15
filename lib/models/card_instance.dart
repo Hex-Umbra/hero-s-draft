@@ -20,6 +20,9 @@ class CardInstance {
 
   int get currentCost => data.cost;
 
+  /// Nombre de runes de forge que cette carte peut porter.
+  int get forgeCapacity => data.forgeCapacityAt(rarity);
+
   double get rarityMultiplier {
     switch (rarity) {
       case CardRarity.common:

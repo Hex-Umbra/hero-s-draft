@@ -4,19 +4,16 @@ import 'ui_card_helpers.dart';
 
 class CardRuneSockets extends StatelessWidget {
   final List<String> forgeUpgrades;
-  final int baseMaxForgeUpgrades;
-  final int rarityIndex;
+  final int totalSlots;
 
   const CardRuneSockets({
     super.key,
     required this.forgeUpgrades,
-    required this.baseMaxForgeUpgrades,
-    required this.rarityIndex,
+    required this.totalSlots,
   });
 
   @override
   Widget build(BuildContext context) {
-    final totalSlots = baseMaxForgeUpgrades + rarityIndex;
     final filledSlots = forgeUpgrades.length;
     final emptySlots = max(0, totalSlots - filledSlots);
 

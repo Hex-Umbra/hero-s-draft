@@ -148,4 +148,25 @@ void main() {
       await tester.pumpWidget(const SizedBox());
     },
   );
+
+  testWidgets(
+    'DeckScreen ne propose aucune fusion pour trois legendaires',
+    (WidgetTester tester) async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
+      final deckNotifier = container.read(deckProvider.notifier);
+      for (var i = 0; i < 3; i++) {
+        deckNotifier.addCardToMasterDeck(
+          CardInstance(data: strikeCard, rarity: CardRarity.legendary),
+        );
+      }
+
+      await tester.pumpWidget(buildApp(container, allowMerge: true));
+      await tester.pumpAndSettle();
+
+      expect(find.text('FUSIONNER (3)'), findsNothing);
+      expect(find.text('Fusion possible'), findsNothing);
+    },
+  );
 }

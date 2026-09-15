@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
@@ -6,7 +5,6 @@ import 'package:roguelike_card_game/ui/widgets/game_dialog.dart';
 import 'package:roguelike_card_game/ui/widgets/game_button.dart';
 import '../../game/controllers/deck_controller.dart';
 import '../../models/card_instance.dart';
-import '../../models/data/card_data.dart';
 import '../../models/data/forge_upgrade_data.dart';
 import '../../services/audio/audio_providers.dart';
 import '../../services/audio/music_scene.dart';
@@ -103,7 +101,7 @@ class DeckScreen extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      if (card.rarity == CardRarity.unique)
+                      if (card.rarity.next == null)
                         const SizedBox.shrink()
                       else if (canMerge && allowMerge)
                         ElevatedButton(
@@ -169,12 +167,11 @@ class DeckScreen extends ConsumerWidget {
       builder: (ctx) => _MergeDialog(duplicates: duplicates, ref: ref),
     );
 
-    if (merged == true) {
+    final nextRarity = card.rarity.next;
+    if (merged == true && nextRarity != null) {
       if (context.mounted) {
-        final nextRarityIndex =
-            min(card.rarity.index + 1, CardRarity.values.length - 1);
         context.showNotification(
-          l10n.deckMergeSuccess(cardName, nextRarityIndex + 1),
+          l10n.deckMergeSuccess(cardName, nextRarity.index + 1),
           type: NotificationType.success,
         );
       }
@@ -221,9 +218,9 @@ class _MergeDialogState extends State<_MergeDialog> {
     if (_selectedCards.length != 3) return;
 
     final firstCard = _selectedCards[0];
-    final nextRarityIndex =
-        min(firstCard.rarity.index + 1, CardRarity.values.length - 1);
-    _capacity = firstCard.data.baseMaxForgeUpgrades + nextRarityIndex;
+    final nextRarity = firstCard.rarity.next;
+    if (nextRarity == null) return;
+    _capacity = firstCard.data.forgeCapacityAt(nextRarity);
 
     final Map<String, int> consolidatedMap = {};
     for (var card in _selectedCards) {

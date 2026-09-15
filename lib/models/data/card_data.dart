@@ -6,7 +6,38 @@ enum CardType { attack, skill, power, status }
 
 enum CardCategory { global, characterSpecific }
 
-enum CardRarity { common, uncommon, rare, epic, legendary, unique }
+enum CardRarity {
+  common,
+  uncommon,
+  rare,
+  epic,
+  legendary,
+  unique;
+
+  /// Rareté que produit une fusion 3→1 de cartes de cette rareté.
+  ///
+  /// `null` au sommet de l'échelle (`legendary`) comme hors d'elle (`unique`,
+  /// qui ne fusionne jamais — ADR-026). Ne jamais la dériver de `index` :
+  /// `unique` est déclarée après `legendary` sans lui succéder.
+  CardRarity? get next => switch (this) {
+        CardRarity.common => CardRarity.uncommon,
+        CardRarity.uncommon => CardRarity.rare,
+        CardRarity.rare => CardRarity.epic,
+        CardRarity.epic => CardRarity.legendary,
+        CardRarity.legendary || CardRarity.unique => null,
+      };
+
+  /// Emplacements de rune que cette rareté ajoute à `baseMaxForgeUpgrades`.
+  ///
+  /// Nul pour `unique` : une carte de classe a une capacité fixe (ADR-026).
+  int get forgeSlotBonus => switch (this) {
+        CardRarity.common || CardRarity.unique => 0,
+        CardRarity.uncommon => 1,
+        CardRarity.rare => 2,
+        CardRarity.epic => 3,
+        CardRarity.legendary => 4,
+      };
+}
 
 enum CardTarget { singleEnemy, allEnemies, self, none }
 
@@ -84,6 +115,10 @@ class CardData implements AudioSource {
   String getName(String locale) => locale == 'fr' ? nameFr : nameEn;
   String getDescription(String locale) =>
       locale == 'fr' ? descriptionFr : descriptionEn;
+
+  /// Nombre de runes de forge qu'une carte de ce modèle porte à [rarity].
+  int forgeCapacityAt(CardRarity rarity) =>
+      baseMaxForgeUpgrades + rarity.forgeSlotBonus;
 
   factory CardData.fromJson(Map<String, dynamic> json) {
     final nEn = json['name_en'] as String? ?? json['name'] as String? ?? '';

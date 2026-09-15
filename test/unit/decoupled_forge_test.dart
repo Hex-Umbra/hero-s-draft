@@ -60,13 +60,11 @@ void main() {
 
       // Common card capacity = 2 + 0 = 2
       final commonInstance = CardInstance(data: baseCard, rarity: CardRarity.common);
-      final commonCapacity = commonInstance.data.baseMaxForgeUpgrades + commonInstance.rarity.index;
-      expect(commonCapacity, 2);
+      expect(commonInstance.forgeCapacity, 2);
 
       // Epic card capacity = 2 + 3 = 5
       final epicInstance = CardInstance(data: baseCard, rarity: CardRarity.epic);
-      final epicCapacity = epicInstance.data.baseMaxForgeUpgrades + epicInstance.rarity.index;
-      expect(epicCapacity, 5);
+      expect(epicInstance.forgeCapacity, 5);
     });
 
     test('addForgeUpgrade correctly adds an upgrade to the master deck card', () {

@@ -201,8 +201,7 @@ class ShopController extends Notifier<ShopState> {
       rarity: finalRarity,
     );
 
-    final int rarityIndex = CardRarity.values.indexOf(finalRarity);
-    final int maxUpgrades = data.baseMaxForgeUpgrades + rarityIndex;
+    final int maxUpgrades = data.forgeCapacityAt(finalRarity);
 
     int upgradesToRoll = 0;
     final rollUpgrade = rng.nextInt(100);

@@ -286,18 +286,15 @@ class DeckNotifier extends Notifier<DeckState> {
     }
 
     if (selectedCards.length == 3) {
-      if (selectedCards.any((c) => c.rarity == CardRarity.unique)) {
+      // Une carte `unique` ou légendaire n'a pas de rareté au-delà.
+      final nextRarity = selectedCards[0].rarity.next;
+      if (nextRarity == null || selectedCards.any((c) => c.rarity.next == null)) {
         return;
       }
       final baseCardData = selectedCards[0].data;
-      final rarity = selectedCards[0].rarity;
 
       // Retire les 3 exemplaires
       currentMasterDeck.removeWhere((c) => selectedIds.contains(c.uniqueId));
-
-      // Détermine la rareté suivante
-      final nextRarityIndex = min(rarity.index + 1, CardRarity.values.length - 1);
-      final nextRarity = CardRarity.values[nextRarityIndex];
 
       // Auto-fusionne les upgrades identiques (cumul des tiers)
       final Map<String, int> consolidatedMap = {};
@@ -313,7 +310,7 @@ class DeckNotifier extends Notifier<DeckState> {
       var finalUpgrades = consolidatedMap.entries.map((e) => '${e.key}:${e.value}').toList();
 
       // Limite à la capacité de la rareté supérieure
-      final capacity = baseCardData.baseMaxForgeUpgrades + nextRarityIndex;
+      final capacity = baseCardData.forgeCapacityAt(nextRarity);
       if (finalUpgrades.length > capacity) {
         finalUpgrades = finalUpgrades.sublist(0, capacity);
       }
@@ -336,19 +333,6 @@ class DeckNotifier extends Notifier<DeckState> {
     var currentMasterDeck = List<CardInstance>.from(state.masterDeck);
     currentMasterDeck.removeWhere((c) => c.uniqueId == uniqueId);
     state = state.copyWith(masterDeck: currentMasterDeck);
-  }
-
-  /// Améliore une carte définitivement (Forge) en augmentant sa rareté
-  void upgradeCard(String uniqueId) {
-    state = state.copyWith(
-      masterDeck: state.masterDeck.map((c) {
-        if (c.uniqueId == uniqueId) {
-          final nextRarityIndex = min(c.rarity.index + 1, CardRarity.values.length - 1);
-          return c.copyWith(rarity: CardRarity.values[nextRarityIndex]);
-        }
-        return c;
-      }).toList(),
-    );
   }
 
   /// Ajoute une amélioration de forge à une carte spécifique du Master Deck
