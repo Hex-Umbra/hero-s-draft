@@ -17,6 +17,16 @@ CardData _cardData({
       baseMaxForgeUpgrades: baseMaxForgeUpgrades,
     );
 
+/// L'échelle de fusion, écrite en toutes lettres : la déduire de l'ordre de
+/// déclaration de l'enum est précisément l'erreur que ces tests gardent.
+const _ladder = [
+  CardRarity.common,
+  CardRarity.uncommon,
+  CardRarity.rare,
+  CardRarity.epic,
+  CardRarity.legendary,
+];
+
 void main() {
   group('CardRarity.next', () {
     test('chaque rarete de l echelle mene a la suivante', () {
@@ -39,7 +49,7 @@ void main() {
     test('une carte globale gagne un emplacement par palier de rarete', () {
       final data = _cardData();
       expect(
-        [for (final rarity in CardRarity.values.take(5)) data.forgeCapacityAt(rarity)],
+        [for (final rarity in _ladder) data.forgeCapacityAt(rarity)],
         [1, 2, 3, 4, 5],
       );
     });
@@ -61,7 +71,7 @@ void main() {
     });
 
     test('toute rarete de l echelle s acquiert en cours de run', () {
-      for (final rarity in CardRarity.values.take(5)) {
+      for (final rarity in _ladder) {
         expect(rarity.isAcquirable, isTrue, reason: rarity.name);
       }
     });

@@ -162,10 +162,14 @@ void main() {
         );
       }
 
+      // Le bouton ne s'affiche qu'avec allowMerge, la mention « Fusion
+      // possible » que sans : chaque mode garde l'une des deux.
       await tester.pumpWidget(buildApp(container, allowMerge: true));
       await tester.pumpAndSettle();
-
       expect(find.text('FUSIONNER (3)'), findsNothing);
+
+      await tester.pumpWidget(buildApp(container, allowMerge: false));
+      await tester.pumpAndSettle();
       expect(find.text('Fusion possible'), findsNothing);
     },
   );
