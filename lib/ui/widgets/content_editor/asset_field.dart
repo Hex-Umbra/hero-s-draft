@@ -5,6 +5,10 @@ import 'package:flutter/material.dart';
 import '../../../services/content_editor/entity_descriptor.dart';
 import '../../theme/app_colors.dart';
 import 'choice_button.dart';
+import 'dashed_border.dart';
+import 'editor_button.dart';
+import 'editor_style.dart';
+import 'property_row.dart';
 
 /// Le champ d'une ressource : un son choisi parmi `audio.json`, ou une image
 /// au nom impose (spec §5.2, §5.3).
@@ -20,6 +24,7 @@ class AssetField extends StatelessWidget {
     this.soundIds = const [],
     this.imageBytes,
     this.pendingLabel,
+    this.errorText,
     this.onSelectSound,
     this.onClear,
     this.onImport,
@@ -38,6 +43,9 @@ class AssetField extends StatelessWidget {
   /// « à importer : … », tant que l'import attend « Écrire ».
   final String? pendingLabel;
 
+  /// La faute qui vise cette ressource, affichee sous elle.
+  final String? errorText;
+
   final ValueChanged<String>? onSelectSound;
 
   /// « aucun » pour un son, « aucune » pour une image optionnelle.
@@ -46,83 +54,208 @@ class AssetField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(fieldKey, style: const TextStyle(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 4),
-          if (slot.kind == AssetKind.sound) _sounds() else _image(),
-          if (pendingLabel != null)
-            Text(pendingLabel!, style: const TextStyle(color: AppColors.warning)),
-          if (onImport != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: OutlinedButton(
-                key: Key('editeur-importer-$fieldKey'),
-                onPressed: onImport,
-                child: const Text('Importer…'),
-              ),
-            ),
-        ],
-      ),
+    final isImage = slot.kind == AssetKind.image;
+    return PropertyRow(
+      label: fieldKey,
+      isRequired: isImage && slot.isRequired,
+      note: isImage && !slot.isRequired ? 'optionnel' : null,
+      errorText: errorText,
+      alignTop: true,
+      child: isImage ? _image() : _sounds(),
     );
   }
 
+  Widget _pending() => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.schedule, size: 15, color: AppColors.warning),
+          const SizedBox(width: 5),
+          Flexible(
+            child: Text(
+              pendingLabel!,
+              style: const TextStyle(
+                color: AppColors.warning,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      );
+
+  Widget _importButton(IconData icon) => EditorButton(
+        key: Key('editeur-importer-$fieldKey'),
+        label: 'Importer…',
+        icon: icon,
+        dense: true,
+        onPressed: onImport,
+      );
+
   Widget _sounds() {
     final current = value;
-    return Wrap(
-      key: Key('editeur-champ-$fieldKey'),
-      spacing: 4,
-      runSpacing: 4,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ChoiceButton(
-          label: 'aucun',
-          isSelected: current == null,
-          onTap: () => onClear?.call(),
+        Wrap(
+          key: Key('editeur-champ-$fieldKey'),
+          spacing: 6,
+          runSpacing: 6,
+          children: [
+            ChoiceButton(
+              label: 'aucun',
+              isPlaceholder: true,
+              isSelected: current == null,
+              onTap: () => onClear?.call(),
+            ),
+            // Un son en attente d'import n'est pas encore dans `audio.json` :
+            // il reste affiche, et choisi.
+            for (final id in {...soundIds, ?current})
+              ChoiceButton(
+                label: id,
+                isSelected: current == id,
+                onTap: () => onSelectSound?.call(id),
+              ),
+          ],
         ),
-        // Un son en attente d'import n'est pas encore dans `audio.json` : il
-        // reste affiche, et choisi.
-        for (final id in {...soundIds, ?current})
-          ChoiceButton(
-            label: id,
-            isSelected: current == id,
-            onTap: () => onSelectSound?.call(id),
+        if (pendingLabel != null)
+          Padding(padding: const EdgeInsets.only(top: 8), child: _pending()),
+        if (onImport != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: _importButton(Icons.music_note),
           ),
       ],
     );
   }
 
   Widget _image() {
-    final bytes = imageBytes;
+    final clearable = !slot.isRequired && onClear != null;
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(
-          width: 64,
-          height: 64,
+        _Thumbnail(bytes: imageBytes, portrait: slot.isRequired),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                value ?? '(aucune)',
+                style: editorMono(
+                  size: 12,
+                  color: value == null ? EditorColors.faint : EditorColors.soft,
+                ),
+              ),
+              if (pendingLabel != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: _pending(),
+                ),
+              if (onImport != null || clearable)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      if (onImport != null) _importButton(Icons.upload_file),
+                      if (clearable)
+                        EditorButton(
+                          label: 'aucune',
+                          icon: Icons.close,
+                          tone: EditorButtonTone.quiet,
+                          dense: true,
+                          onPressed: onClear,
+                        ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// L'apercu d'une image, sur un damier : une zone transparente s'y voit.
+class _Thumbnail extends StatelessWidget {
+  const _Thumbnail({required this.bytes, required this.portrait});
+
+  final Uint8List? bytes;
+
+  /// Une image obligatoire est une carte ou un sprite, en hauteur ; une icone
+  /// est carree.
+  final bool portrait;
+
+  @override
+  Widget build(BuildContext context) {
+    final bytes = this.bytes;
+    final frame = ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: SizedBox(
+        width: portrait ? 72 : 56,
+        height: portrait ? 96 : 56,
+        child: CustomPaint(
+          painter: const _CheckerPainter(),
           child: bytes == null
-              ? const Center(child: Text('—'))
+              ? const Center(
+                  child: Icon(Icons.image, size: 22, color: EditorColors.faint),
+                )
               : Image.memory(
                   bytes,
-                  // Un apercu de 64 points : decoder une carte de classe de
+                  // Un apercu de 72 points : decoder une carte de classe de
                   // 6,5 Mo a pleine taille serait un cout pur.
-                  cacheWidth: 128,
+                  cacheWidth: 144,
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stack) =>
                       const Center(child: Text('?')),
                 ),
         ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            value ?? '(aucune)',
-            style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
-          ),
-        ),
-        if (!slot.isRequired && onClear != null)
-          TextButton(onPressed: onClear, child: const Text('aucune')),
-      ],
+      ),
+    );
+    if (bytes == null) {
+      return DashedBorder(
+        color: EditorColors.lineStrong,
+        radius: 8,
+        child: frame,
+      );
+    }
+    return DecoratedBox(
+      position: DecorationPosition.foreground,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: EditorColors.lineStrong),
+      ),
+      child: frame,
     );
   }
+}
+
+class _CheckerPainter extends CustomPainter {
+  const _CheckerPainter();
+
+  static const double _cell = 6;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawRect(
+      Offset.zero & size,
+      Paint()..color = EditorColors.checkerDark,
+    );
+    final light = Paint()..color = EditorColors.checkerLight;
+    for (var row = 0; row * _cell < size.height; row++) {
+      for (var column = row.isEven ? 1 : 0;
+          column * _cell < size.width;
+          column += 2) {
+        canvas.drawRect(
+          Rect.fromLTWH(column * _cell, row * _cell, _cell, _cell),
+          light,
+        );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_CheckerPainter oldDelegate) => false;
 }

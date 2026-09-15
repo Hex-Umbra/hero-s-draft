@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
+import '../../theme/app_colors.dart';
+import 'editor_style.dart';
+
 /// `Color` -> `#RRGGBB`. L'alpha est ignore : le JSON n'en porte pas, et une
 /// couleur de classe est toujours opaque.
 String colorToHex(Color color) {
@@ -46,27 +49,54 @@ class ColorField extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        InkWell(
-          key: const Key('editeur-couleur-pastille'),
-          onTap: () => _open(context),
-          child: Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: value,
-              shape: BoxShape.circle,
-              // Le lisere doit se voir sur le fond de l'ecran, meme autour
-              // d'une couleur sombre : `Colors.black26` y disparaissait.
-              border: Border.all(
-                color: Theme.of(context).colorScheme.onSurface.withValues(
-                      alpha: 0.4,
-                    ),
+        Semantics(
+          button: true,
+          label: 'Ouvrir la roue des couleurs',
+          child: InkWell(
+            key: const Key('editeur-couleur-pastille'),
+            onTap: () => _open(context),
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: value,
+                borderRadius: BorderRadius.circular(8),
+                // Le lisere doit se voir sur le fond de l'ecran, meme autour
+                // d'une couleur sombre.
+                border: Border.all(
+                  color: EditorColors.soft.withValues(alpha: 0.35),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: value.withValues(alpha: 0.45),
+                    blurRadius: 14,
+                  ),
+                ],
               ),
             ),
           ),
         ),
-        const SizedBox(width: 8),
-        Text(colorToHex(value)),
+        const SizedBox(width: 10),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            color: EditorColors.well,
+            borderRadius: BorderRadius.circular(7),
+            border: Border.all(color: EditorColors.lineStrong),
+          ),
+          child: Text(
+            colorToHex(value),
+            style: editorMono(size: 13, color: AppColors.textPrimary),
+          ),
+        ),
+        const SizedBox(width: 10),
+        const Flexible(
+          child: Text(
+            'Clic sur la pastille : roue complète',
+            style: TextStyle(color: EditorColors.faint, fontSize: 12),
+          ),
+        ),
       ],
     );
   }

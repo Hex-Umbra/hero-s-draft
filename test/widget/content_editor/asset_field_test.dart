@@ -83,4 +83,56 @@ void main() {
     );
     expect(find.text('aucune'), findsNothing);
   });
+
+  testWidgets('une image obligatoire porte son point, une optionnelle sa mention',
+      (tester) async {
+    await pump(
+      tester,
+      const AssetField(
+        fieldKey: 'classCard',
+        slot: AssetSlot.image('{id}.png'),
+        value: 'assets/data/classes/x/x.png',
+      ),
+    );
+    expect(find.byKey(const Key('editeur-obligatoire')), findsOneWidget);
+    expect(find.text('optionnel'), findsNothing);
+
+    await pump(
+      tester,
+      const AssetField(
+        fieldKey: 'iconPath',
+        slot: AssetSlot.image('icon.png', isRequired: false),
+      ),
+    );
+    expect(find.byKey(const Key('editeur-obligatoire')), findsNothing);
+    expect(find.text('optionnel'), findsOneWidget);
+    // Sans valeur, le chemin le dit : il n'y a rien a montrer.
+    expect(find.text('(aucune)'), findsOneWidget);
+  });
+
+  testWidgets('une faute sur la ressource s affiche sous elle', (tester) async {
+    await pump(
+      tester,
+      const AssetField(
+        fieldKey: 'sfx',
+        slot: AssetSlot.sound(),
+        errorText: 'son inconnu : clang',
+      ),
+    );
+    expect(find.text('son inconnu : clang'), findsOneWidget);
+  });
+
+  testWidgets('un import en attente est annonce', (tester) async {
+    await pump(
+      tester,
+      const AssetField(
+        fieldKey: 'sfx',
+        slot: AssetSlot.sound(),
+        value: 'clang',
+        pendingLabel: 'à importer : clang.wav',
+      ),
+    );
+    expect(find.text('à importer : clang.wav'), findsOneWidget);
+    expect(find.byIcon(Icons.schedule), findsOneWidget);
+  });
 }

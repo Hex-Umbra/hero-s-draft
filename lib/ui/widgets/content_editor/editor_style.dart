@@ -44,6 +44,12 @@ abstract final class EditorColors {
 
   /// L'accent au survol, sur le geste principal.
   static const Color accentHover = Color(0xFF45E0FF);
+
+  /// La case sombre du damier d'un apercu d'image.
+  static const Color checkerDark = Color(0xFF15152A);
+
+  /// La case claire du damier d'un apercu d'image.
+  static const Color checkerLight = Color(0xFF1B1B32);
 }
 
 /// Les cles JSON, chemins et identifiants : ce que l'auteur retrouvera tel
