@@ -20,7 +20,7 @@ void main() {
     nameFr: 'Paladin',
     descriptionEn: 'A holy knight',
     descriptionFr: 'Un saint chevalier',
-    iconPath: 'paladin.png',
+    classCard: 'paladin.png',
     maxHp: 100,
     maxMana: 3,
     baseDamage: 5,

@@ -52,7 +52,7 @@ void main() {
     nameFr: 'Test',
     descriptionEn: 'Test',
     descriptionFr: 'Test',
-    iconPath: 'test',
+    classCard: 'test',
     maxHp: 10,
     maxMana: 3,
     passiveTrait: 'regen_armor',

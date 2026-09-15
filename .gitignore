@@ -49,3 +49,6 @@ app.*.map.json
 
 # Worktrees isolés créés pour l'implémentation d'un chantier
 .claude/worktrees/
+
+# Sauvegardes de l'editeur de contenu, laissees si leur suppression echoue
+*.editor-backup

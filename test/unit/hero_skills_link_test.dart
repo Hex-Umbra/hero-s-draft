@@ -17,7 +17,7 @@ void main() {
 
     const hero = HeroData(
       id: 'paladin',
-      iconPath: 'hero_paladin.png',
+      classCard: 'hero_paladin.png',
       maxHp: 100,
       maxMana: 3,
       baseDamage: 5,

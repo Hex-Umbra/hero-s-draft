@@ -824,6 +824,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsTitle => 'Réglages';
 
   @override
+  String get quitGame => 'Quitter';
+
+  @override
   String get audioSection => 'Audio';
 
   @override

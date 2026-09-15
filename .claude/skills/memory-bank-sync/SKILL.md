@@ -16,7 +16,7 @@ Tu maintiens la documentation développeur de **Hero's Draft**. Tu traduis ce qu
 | `.obsidian_vault/_memory_bank/activeContext.md` | 120 l. | Focus courant, 3 dernières livraisons, prochaine étape |
 | `.obsidian_vault/_memory_bank/progress.md` | 300 l. | État du construit, métriques datées, 10 dernières releases |
 | `.obsidian_vault/_memory_bank/productContext.md` | 120 l. | **Index** des fiches de règles métier (tableau seul) |
-| `.obsidian_vault/_memory_bank/systemPatterns.md` | 120 l. | **Index** des fiches d'architecture (tableau seul) |
+| `.obsidian_vault/_memory_bank/systemPatterns.md` | 150 l. | **Index** des fiches d'architecture (tableau seul) |
 | `.obsidian_vault/_memory_bank/decisionLog.md` | 250 l. | **Index** des ADR (tableau seul) |
 | `.obsidian_vault/_adr/ADR-0XX-<slug>.md` | 150 l. | Une fiche par décision |
 | `.obsidian_vault/_rules/<slug>.md` | 150 l. | Une fiche par système de jeu |
@@ -136,7 +136,7 @@ aussi les règles de jeu et les patterns d'architecture.
 1. **Une fiche par système de jeu** sous `_rules/`, **une fiche par domaine
    d'architecture** sous `_patterns/`. Une règle nouvelle crée ou modifie *une* fiche.
 2. **Ne jamais réinjecter le contenu d'une fiche dans son index.** `productContext.md`
-   et `systemPatterns.md` sont des tableaux de liens plafonnés à 120 lignes ; y écrire
+   et `systemPatterns.md` sont des tableaux de liens plafonnés à 120 et 150 lignes ; y écrire
    une règle plutôt que dans sa fiche orphelinise les fiches et reconstitue le
    monolithe que cette architecture a démonté.
 3. **Toute fiche dépassant 150 lignes est redécoupée au niveau `###`**, et l'index mis
@@ -187,7 +187,8 @@ documentaire. Un seul schéma vivant, un seul propriétaire.
       `relics.json`, `events.json`, `forge_upgrades.json`) dans ADR-024, ADR-026, ADR-031,
       ADR-033, ADR-074, ADR-078 et l'historique des releases de `progress.md` ; la chaîne de
       compétences supprimée par P-40 (`skills.json`, `skill_data.dart`, `skill_state.dart`,
-      `skill_controller.dart`) dans ADR-081 et ADR-084.
+      `skill_controller.dart`) dans ADR-081 et ADR-084 ; le service de complétion du tutoriel
+      supprimé le 2026-09-14 (`tutorial_progress_service.dart`) dans ADR-019.
       Y corriger le chemin sans corriger les chiffres qui l'entourent produirait une
       affirmation fausse — pire qu'un lien mort. Un **lien markdown** cassé fait exception à
       l'exception : il se retarge (Garantie 3), comme ADR-068 le 2026-09-05.

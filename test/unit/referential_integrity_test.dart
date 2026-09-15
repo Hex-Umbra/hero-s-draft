@@ -79,9 +79,9 @@ void main() {
     final offenders = <String>[];
 
     for (final hero in registry.heroes) {
-      final expected = 'assets/data/classes/${hero.id}/icon.png';
-      if (hero.iconPath != expected) {
-        offenders.add('${hero.id} → iconPath vaut "${hero.iconPath}"');
+      final expected = 'assets/data/classes/${hero.id}/${hero.id}.png';
+      if (hero.classCard != expected) {
+        offenders.add('${hero.id} → classCard vaut "${hero.classCard}"');
       }
       if (!File(expected).existsSync()) {
         offenders.add('${hero.id} → $expected manquant');

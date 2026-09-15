@@ -4,7 +4,19 @@ class HeroData {
   final String nameFr;
   final String descriptionEn;
   final String descriptionFr;
-  final String iconPath;
+
+  /// L'image de la carte de classe — 1696 x 2528 pour les trois classes
+  /// livrees. C'est elle que `HeroCard` affiche en combat.
+  final String classCard;
+
+  /// Une vraie icone, petite, optionnelle. Absente des trois classes livrees :
+  /// le dialogue de stats replie alors sur [classCard].
+  final String? iconPath;
+
+  /// La couleur d'accent de la classe, en ARGB opaque. `null` quand elle n'est
+  /// pas declaree — le lecteur choisit son repli.
+  final int? themeColor;
+
   final int maxHp;
   final int maxMana;
   final int baseDamage;
@@ -23,7 +35,9 @@ class HeroData {
     this.nameFr = '',
     this.descriptionEn = '',
     this.descriptionFr = '',
-    required this.iconPath,
+    required this.classCard,
+    this.iconPath,
+    this.themeColor,
     required this.maxHp,
     required this.maxMana,
     required this.baseDamage,
@@ -56,7 +70,9 @@ class HeroData {
       nameFr: nFr,
       descriptionEn: dEn,
       descriptionFr: dFr,
-      iconPath: json['iconPath'] as String,
+      classCard: json['classCard'] as String,
+      iconPath: json['iconPath'] as String?,
+      themeColor: _parseHexColor(json['themeColor']),
       maxHp: json['maxHp'] as int,
       maxMana: json['maxMana'] as int,
       baseDamage: json['baseDamage'] as int,
@@ -69,5 +85,13 @@ class HeroData {
           [],
       displayOrder: json['displayOrder'] as int? ?? 0,
     );
+  }
+
+  /// `#RRGGBB` -> `0xFFRRGGBB`. `null` pour tout le reste.
+  static int? _parseHexColor(Object? value) {
+    if (value is! String) return null;
+    final match = RegExp(r'^#([0-9a-fA-F]{6})$').firstMatch(value);
+    if (match == null) return null;
+    return 0xFF000000 | int.parse(match.group(1)!, radix: 16);
   }
 }

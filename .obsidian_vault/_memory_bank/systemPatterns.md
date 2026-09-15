@@ -1,15 +1,30 @@
 # 🏗️ Architecture & Conception — Index
 
 > [!IMPORTANT]
-> **Plafond : 120 lignes.** Ce fichier est un index, jamais un contenu. Chaque pattern d'architecture vit dans sa fiche sous `../_patterns/`. Les arbitrages qui les ont produits vivent dans `../_adr/`.
+> **Plafond : 150 lignes.** Ce fichier est un index, jamais un contenu. Chaque pattern d'architecture vit dans sa fiche sous `../_patterns/`. Les arbitrages qui les ont produits vivent dans `../_adr/`.
 
-**Vérifié le 2026-09-05** — 41 fiches. Provenance du découpage, sections ajoutées et numéros non réattribués (§2.7, §13, §14) : `../_archive/2026-09-05-systemPatterns-historique.md` et `../_archive/2026-08-25-systemPatterns-historique.md`.
+**Vérifié le 2026-09-15** — 44 fiches. Provenance du découpage, sections ajoutées et numéros non réattribués (§2.7, §13, §14) : `../_archive/2026-09-05-systemPatterns-historique.md` et `../_archive/2026-08-25-systemPatterns-historique.md`.
 
-### 1. Architecture Globale — Séparation Triangulaire
+> [!NOTE]
+> **Mise en forme du 2026-09-14**, arbitrage du propriétaire : le plafond passe de 120 à 150 lignes, et les sections qui ne portent qu'une fiche perdent leur en-tête `###`, dont le titre répétait à l'identique la ligne de tableau. Elles sont regroupées dans le premier tableau ; seules les sections à plusieurs fiches gardent un en-tête. Aucune ligne de fiche n'a disparu.
+
+### Sections à fiche unique
 
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
 | 1. Architecture Globale — Séparation Triangulaire | [01-00-architecture-globale-separation-triangulaire.md](../_patterns/01-00-architecture-globale-separation-triangulaire.md) | 61 |
+| 4. Synchronisation Bidirectionnelle Flame ⇄ Riverpod | [04-00-synchronisation-bidirectionnelle-flame-riverp.md](../_patterns/04-00-synchronisation-bidirectionnelle-flame-riverp.md) | 78 |
+| 6. Stratégie de State Management (Riverpod v2.5.1) | [06-00-strategie-de-state-management.md](../_patterns/06-00-strategie-de-state-management.md) | 40 |
+| 7. Flux Complet d'un Tour de Combat | [07-00-flux-complet-d-un-tour-de-combat.md](../_patterns/07-00-flux-complet-d-un-tour-de-combat.md) | 71 |
+| 8. Conventions de Code & Standards Techniques | [08-00-conventions-de-code-standards-techniques.md](../_patterns/08-00-conventions-de-code-standards-techniques.md) | 94 |
+| 9. Architecture du Système de Tutoriel Autonome (Tutorial System Technical Design) | [09-00-architecture-du-systeme-de-tutoriel-autonome.md](../_patterns/09-00-architecture-du-systeme-de-tutoriel-autonome.md) | 133 |
+| 10. Architecture du Système de Forge et de Fusion de Cartes (Forge & Card Merge Technical Design) | [10-00-architecture-du-systeme-de-forge-et-de-fusion.md](../_patterns/10-00-architecture-du-systeme-de-forge-et-de-fusion.md) | 109 |
+| 11. Système de Reliques Avancé : Déclencheurs de Cartes Spécifiques et Charges | [11-00-systeme-de-reliques-avance-declencheurs-de-ca.md](../_patterns/11-00-systeme-de-reliques-avance-declencheurs-de-ca.md) | 58 |
+| 12. Autel d'Échange de Reliques (`RelicExchangeScreen`) | [12-00-autel-d-echange-de-reliques.md](../_patterns/12-00-autel-d-echange-de-reliques.md) | 47 |
+| 15. Chaîne de Release et Site Vitrine (`.github/` et `site/`) | [15-00-chaine-de-release-et-site-vitrine.md](../_patterns/15-00-chaine-de-release-et-site-vitrine.md) | 83 |
+| 16. Architecture du Système Audio | [16-00-architecture-du-systeme-audio.md](../_patterns/16-00-architecture-du-systeme-audio.md) | 149 |
+| 17. Chargeur de Données Générique et Motifs de Chemin (`GameDataLoader`) | [17-00-chargeur-de-donnees-generique-et-motifs-de-che.md](../_patterns/17-00-chargeur-de-donnees-generique-et-motifs-de-che.md) | 108 |
+| 18. Menu de Debug — Run Déclarée et Tiroir Ancré (P-30, lot 1) | [18-00-menu-de-debug-run-declaree-et-tiroir-ancre.md](../_patterns/18-00-menu-de-debug-run-declaree-et-tiroir-ancre.md) | 89 |
 
 ### 2. Rôle des Contrôleurs et Architecture Modulaire (`lib/game/controllers/`)
 
@@ -17,7 +32,7 @@
 |:---|:---|---:|
 | 2. Rôle des Contrôleurs et Architecture Modulaire (`lib/game/controllers/`) | [02-00-role-des-controleurs-et-architecture-modulair.md](../_patterns/02-00-role-des-controleurs-et-architecture-modulair.md) | 5 |
 | 2.1. `RunController` (`runProvider`) — Superviseur Global (Façade) | [02-1-runcontroller-superviseur-global.md](../_patterns/02-1-runcontroller-superviseur-global.md) | 26 |
-| 2.1.bis Persistance de Run — `SaveService`, Checkpoints et Réhydratation (v3.2.0) | [02-1-bis-bis-persistance-de-run-saveservice-checkpoint.md](../_patterns/02-1-bis-bis-persistance-de-run-saveservice-checkpoint.md) | 13 |
+| 2.1.bis Persistance de Run — `SaveService`, Checkpoints et Réhydratation (v3.2.0) | [02-1-bis-bis-persistance-de-run-saveservice-checkpoint.md](../_patterns/02-1-bis-bis-persistance-de-run-saveservice-checkpoint.md) | 14 |
 | 2.2. `CombatController` (`combatProvider`) — Pilote de Combat (Façade) | [02-2-combatcontroller-pilote-de-combat.md](../_patterns/02-2-combatcontroller-pilote-de-combat.md) | 31 |
 | 2.3. `DeckNotifier` (`deckProvider`) — Maître du Deck | [02-3-decknotifier-maitre-du-deck.md](../_patterns/02-3-decknotifier-maitre-du-deck.md) | 32 |
 | 2.4. `EventController` (`eventProvider`) | [02-4-eventcontroller.md](../_patterns/02-4-eventcontroller.md) | 49 |
@@ -38,17 +53,11 @@
 | 3.6. Systèmes de Jeu et Rendu Flame (`lib/game/systems/`) | [03-6-systemes-de-jeu-et-rendu-flame.md](../_patterns/03-6-systemes-de-jeu-et-rendu-flame.md) | 16 |
 | 3.7. Logique de Forge Data-Driven & Forge de Fusion | [03-7-logique-de-forge-data-driven-forge-de-fusion.md](../_patterns/03-7-logique-de-forge-data-driven-forge-de-fusion.md) | 21 |
 
-### 4. Synchronisation Bidirectionnelle Flame ⇄ Riverpod
-
-| Domaine | Fiche | Lignes |
-|:---|:---|---:|
-| 4. Synchronisation Bidirectionnelle Flame ⇄ Riverpod | [04-00-synchronisation-bidirectionnelle-flame-riverp.md](../_patterns/04-00-synchronisation-bidirectionnelle-flame-riverp.md) | 78 |
-
 ### 5. UI et Composants Graphiques
 
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
-| 5.1. Écrans Flutter (`lib/ui/screens/`) | [05-1-ecrans-flutter.md](../_patterns/05-1-ecrans-flutter.md) | 17 |
+| 5.1. Écrans Flutter (`lib/ui/screens/`) | [05-1-ecrans-flutter.md](../_patterns/05-1-ecrans-flutter.md) | 18 |
 | 5.2. Widget `UiCard` (`lib/ui/widgets/ui_card.dart`) | [05-2-widget-uicard.md](../_patterns/05-2-widget-uicard.md) | 33 |
 | 5.3. Composants Flame (`lib/game/components/`) | [05-3-composants-flame.md](../_patterns/05-3-composants-flame.md) | 22 |
 | 5.3.1. Abstractions Graphiques Communes (CombatEntity & BaseVisualEffect) | [05-3-1-abstractions-graphiques-communes.md](../_patterns/05-3-1-abstractions-graphiques-communes.md) | 12 |
@@ -61,62 +70,9 @@
 | 5.10. Optimisations de Rendu GPU/CPU & Effet Physique de Pioche | [05-10-optimisations-de-rendu-gpu-cpu-effet-physique.md](../_patterns/05-10-optimisations-de-rendu-gpu-cpu-effet-physique.md) | 16 |
 | 5.11. Unification UI et Composants Communs (v0.2.2) | [05-11-unification-ui-et-composants-communs.md](../_patterns/05-11-unification-ui-et-composants-communs.md) | 27 |
 
-### 6. Stratégie de State Management (Riverpod v2.5.1)
+### 19. Éditeur de Contenu (P-30)
 
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
-| 6. Stratégie de State Management (Riverpod v2.5.1) | [06-00-strategie-de-state-management.md](../_patterns/06-00-strategie-de-state-management.md) | 40 |
-
-### 7. Flux Complet d'un Tour de Combat
-
-| Domaine | Fiche | Lignes |
-|:---|:---|---:|
-| 7. Flux Complet d'un Tour de Combat | [07-00-flux-complet-d-un-tour-de-combat.md](../_patterns/07-00-flux-complet-d-un-tour-de-combat.md) | 71 |
-
-### 8. Conventions de Code & Standards Techniques
-
-| Domaine | Fiche | Lignes |
-|:---|:---|---:|
-| 8. Conventions de Code & Standards Techniques | [08-00-conventions-de-code-standards-techniques.md](../_patterns/08-00-conventions-de-code-standards-techniques.md) | 94 |
-
-### 9. Architecture du Système de Tutoriel Autonome (Tutorial System Technical Design)
-
-| Domaine | Fiche | Lignes |
-|:---|:---|---:|
-| 9. Architecture du Système de Tutoriel Autonome (Tutorial System Technical Design) | [09-00-architecture-du-systeme-de-tutoriel-autonome.md](../_patterns/09-00-architecture-du-systeme-de-tutoriel-autonome.md) | 135 |
-
-### 10. Architecture du Système de Forge et de Fusion de Cartes (Forge & Card Merge Technical Design)
-
-| Domaine | Fiche | Lignes |
-|:---|:---|---:|
-| 10. Architecture du Système de Forge et de Fusion de Cartes (Forge & Card Merge Technical Design) | [10-00-architecture-du-systeme-de-forge-et-de-fusion.md](../_patterns/10-00-architecture-du-systeme-de-forge-et-de-fusion.md) | 109 |
-
-### 11. Système de Reliques Avancé : Déclencheurs de Cartes Spécifiques et Charges
-
-| Domaine | Fiche | Lignes |
-|:---|:---|---:|
-| 11. Système de Reliques Avancé : Déclencheurs de Cartes Spécifiques et Charges | [11-00-systeme-de-reliques-avance-declencheurs-de-ca.md](../_patterns/11-00-systeme-de-reliques-avance-declencheurs-de-ca.md) | 58 |
-
-### 12. Autel d'Échange de Reliques (`RelicExchangeScreen`)
-
-| Domaine | Fiche | Lignes |
-|:---|:---|---:|
-| 12. Autel d'Échange de Reliques (`RelicExchangeScreen`) | [12-00-autel-d-echange-de-reliques.md](../_patterns/12-00-autel-d-echange-de-reliques.md) | 47 |
-
-### 15. Chaîne de Release et Site Vitrine (`.github/` et `site/`)
-
-| Domaine | Fiche | Lignes |
-|:---|:---|---:|
-| 15. Chaîne de Release et Site Vitrine (`.github/` et `site/`) | [15-00-chaine-de-release-et-site-vitrine.md](../_patterns/15-00-chaine-de-release-et-site-vitrine.md) | 83 |
-
-### 16. Architecture du Système Audio
-
-| Domaine | Fiche | Lignes |
-|:---|:---|---:|
-| 16. Architecture du Système Audio | [16-00-architecture-du-systeme-audio.md](../_patterns/16-00-architecture-du-systeme-audio.md) | 149 |
-
-### 17. Chargeur de Données Générique et Motifs de Chemin (`GameDataLoader`)
-
-| Domaine | Fiche | Lignes |
-|:---|:---|---:|
-| 17. Chargeur de Données Générique et Motifs de Chemin (`GameDataLoader`) | [17-00-chargeur-de-donnees-generique-et-motifs-de-che.md](../_patterns/17-00-chargeur-de-donnees-generique-et-motifs-de-che.md) | 108 |
+| 19. Éditeur de Contenu — Seam Disque, Validation, Écriture (P-30, lot 2) | [19-00-editeur-de-contenu-seam-disque-validation-ecriture.md](../_patterns/19-00-editeur-de-contenu-seam-disque-validation-ecriture.md) | 116 |
+| 19.5. Éditeur de Contenu — Interface : Formulaire Inféré et Habillage « Éditeur » | [19-5-editeur-de-contenu-interface.md](../_patterns/19-5-editeur-de-contenu-interface.md) | 90 |

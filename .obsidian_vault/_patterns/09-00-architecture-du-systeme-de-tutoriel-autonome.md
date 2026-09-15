@@ -39,7 +39,6 @@ graph TD
         Mock["TutorialMockState (persistante + scratch)"]
         Fixtures["TutorialFixtures (résout les ids)"]
         Steps["kTutorialSteps (15 TutorialStep bilingues)"]
-        Progress["TutorialProgressService (SharedPreferences)"]
         Engine -->|"prepareStep(i)"| Mock
         Engine -->|"card / trainingEnemy / heroes"| Fixtures
         Engine -->|"lit"| Steps
@@ -51,7 +50,6 @@ graph TD
     Screen -->|"crée et possède"| Engine
     Fixtures -->|"firstWhere sur"| Registry
     Widgets <-->|"Listen / Trigger"| Engine
-    Home["HomeScreen (UI de production)"] -->|"badge NEW"| Progress
     Home -->|"navigue vers"| Loader
 ```
 
@@ -130,6 +128,6 @@ réécrits : ils sont partagés avec les écrans de production.
   survol à `1.05x`, sélection à `1.12x` avec lueur ambre.
 - **Info-bulles** (`TutorialCardsWidget`) : vrais rendus vectoriels sur Canvas, et
   `TutorialTooltip` localisée au survol ou au toucher.
-- **Persistance** : `TutorialProgressService` lit et écrit le drapeau `tutorial_completed` en
-  `SharedPreferences` ; `HomeScreen` s'en sert via un `FutureBuilder` pour conditionner le
-  badge rouge pulsant « NEW ».
+- **Persistance** : aucune depuis le 2026-09-14. `TutorialProgressService` et le badge « NEW »
+  de `HomeScreen`, son seul lecteur, sont supprimés ; `TutorialScreen._handleNext` dépile
+  simplement à la dernière étape — [ADR-091](../_adr/ADR-091-menu-d-accueil-quitter-par-plateforme-et-retrait-du.md).

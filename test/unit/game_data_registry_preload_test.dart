@@ -24,7 +24,7 @@ void main() {
         heroes: const [
           HeroData(
             id: 'paladin',
-            iconPath: 'hero_paladin.png',
+            classCard: 'hero_paladin.png',
             maxHp: 100,
             maxMana: 3,
             baseDamage: 5,
@@ -51,7 +51,7 @@ void main() {
         heroes: const [
           HeroData(
             id: 'nobody',
-            iconPath: '',
+            classCard: '',
             maxHp: 1,
             maxMana: 1,
             baseDamage: 1,
@@ -65,6 +65,39 @@ void main() {
       );
 
       expect(registry.imagesToPreload, isEmpty);
+    });
+
+    // Sans cette assertion, un retour de `imagesToPreload` a l'ancien champ
+    // passerait inapercu : Flame ne prechargerait plus la seule grande image
+    // qu'il prechargeait, et rien n'echouerait avant l'affichage.
+    test('imagesToPreload prend la carte de classe, pas l icone', () {
+      final registry = GameDataRegistry(
+        cards: const [],
+        relics: const [],
+        events: const [],
+        passives: const [],
+        forgeUpgrades: const [],
+        heroes: const [
+          HeroData(
+            id: 'gambler',
+            classCard: 'assets/data/classes/gambler/gambler.png',
+            iconPath: 'assets/data/classes/gambler/icon.png',
+            maxHp: 100,
+            maxMana: 3,
+            baseDamage: 5,
+          ),
+        ],
+        enemies: const [],
+      );
+
+      expect(
+        registry.imagesToPreload,
+        contains('assets/data/classes/gambler/gambler.png'),
+      );
+      expect(
+        registry.imagesToPreload,
+        isNot(contains('assets/data/classes/gambler/icon.png')),
+      );
     });
   });
 }

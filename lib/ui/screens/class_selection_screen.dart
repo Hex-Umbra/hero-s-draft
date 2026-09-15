@@ -7,6 +7,7 @@ import '../../services/audio/audio_providers.dart';
 import '../../services/audio/music_scene.dart';
 import 'card_dictionary_screen.dart';
 import 'starter_deck_draft_screen.dart';
+import '../widgets/class_identity.dart';
 import '../widgets/sword_icon.dart';
 import '../widgets/screen_scaffold.dart';
 import '../widgets/page_header.dart';
@@ -29,7 +30,6 @@ class ClassSelectionScreen extends ConsumerWidget {
       backgroundType: ScreenBackgroundType.dark,
       appBar: PageHeader(
         title: l10n.selectClass,
-        showBackButton: false,
         actions: [
           IconButton(
             icon: const Icon(Icons.menu_book),
@@ -156,14 +156,7 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
     final passive = matchingPassives.isEmpty ? null : matchingPassives.first;
     final locale = Localizations.localeOf(context).languageCode;
 
-    Color classColor = Colors.blue;
-    if (playerClass.id == 'berserker') classColor = Colors.red;
-    if (playerClass.id == 'mage') classColor = Colors.purple;
-
-    IconData icon = Icons.person;
-    if (playerClass.id == 'paladin') icon = Icons.shield;
-    if (playerClass.id == 'berserker') icon = Icons.whatshot;
-    if (playerClass.id == 'mage') icon = Icons.auto_fix_high;
+    final classColor = ClassIdentity.colorOf(playerClass);
 
     final String traitName = passive?.getName(locale) ?? '—';
     final String traitDesc = passive?.getDescription(locale) ?? '';
@@ -249,7 +242,7 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                             child: Column(
                               children: [
                                 SizedBox(height: widget.isMobile ? 3 : 10),
-                                // Floating hero icon
+                                // Floating hero image
                                 AnimatedBuilder(
                                   animation: _floatAnimation,
                                   builder: (context, child) {
@@ -258,23 +251,30 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                         (widget.isMobile ? 0.5 : 1.0);
                                     return Transform.translate(
                                       offset: Offset(0, floatOffset),
-                                      child: Icon(
-                                        icon,
-                                        size: widget.isMobile ? 48 : 65,
-                                        color: classColor,
-                                        shadows: [
-                                          Shadow(
-                                            color: classColor.withValues(
-                                              alpha: 0.5,
-                                            ),
-                                            blurRadius: widget.isMobile
-                                                ? 5
-                                                : 10,
-                                          ),
-                                        ],
-                                      ),
+                                      child: child,
                                     );
                                   },
+                                  child: DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: classColor,
+                                        width: 2,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: classColor.withValues(
+                                            alpha: 0.5,
+                                          ),
+                                          blurRadius: widget.isMobile ? 5 : 10,
+                                        ),
+                                      ],
+                                    ),
+                                    child: ClassAvatar(
+                                      hero: playerClass,
+                                      diameter: widget.isMobile ? 48 : 65,
+                                    ),
+                                  ),
                                 ),
                                 SizedBox(height: widget.isMobile ? 4 : 15),
                                 Text(
@@ -529,23 +529,7 @@ class _PremiumSelectionButtonState extends State<_PremiumSelectionButton>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final LinearGradient gradient = widget.classColor == Colors.blue
-        ? const LinearGradient(
-            colors: [
-              Color(0xFF0D47A1), // Bleu marine profond
-              Color(0xFF00B0FF), // Bleu azur/cyan éclatant
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          )
-        : LinearGradient(
-            colors: [
-              widget.classColor,
-              widget.classColor.withBlue(255).withGreen(100),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          );
+    final gradient = ClassIdentity.gradientOf(widget.classColor);
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),

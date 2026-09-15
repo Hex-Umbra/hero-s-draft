@@ -816,6 +816,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsTitle => 'Settings';
 
   @override
+  String get quitGame => 'Quit';
+
+  @override
   String get audioSection => 'Audio';
 
   @override

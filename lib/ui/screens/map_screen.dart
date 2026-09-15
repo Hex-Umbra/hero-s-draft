@@ -27,6 +27,9 @@ import '../widgets/map/map_toolbar.dart';
 import '../widgets/map/map_tooltip_overlay.dart';
 import '../widgets/screen_scaffold.dart';
 import '../widgets/gold_indicator.dart';
+import 'package:flutter/foundation.dart';
+import '../../game/controllers/debug_run_controller.dart';
+import '../widgets/debug/debug_drawer.dart';
 import '../widgets/hud/dialogs/pause_dialog.dart';
 import '../../game/services/map_path_highlighter.dart';
 
@@ -141,6 +144,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   void _showPauseMenu() {
     PauseDialog.show(
       context,
+      inCombat: false,
       onResume: () => Navigator.of(context).pop(),
       onExit: () => Navigator.of(context).popUntil((route) => route.isFirst),
     );
@@ -310,6 +314,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 );
               },
             ),
+
+          // Tiroir de debug, ancre au bord gauche et pose en dernier pour
+          // passer au-dessus de la carte. `kDebugMode` etant une constante de
+          // compilation, il disparait du build release avec tout ce qu'il
+          // atteint.
+          if (kDebugMode && ref.watch(debugRunProvider).isDebugRun)
+            const Positioned.fill(child: DebugDrawer(inCombat: false)),
         ],
       ),
     );

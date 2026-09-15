@@ -8,6 +8,7 @@ import 'package:roguelike_card_game/ui/screens/starter_deck_draft_screen.dart';
 import 'package:roguelike_card_game/models/data/hero_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
+import 'package:roguelike_card_game/ui/widgets/class_identity.dart';
 
 const _heroes = [
   HeroData(
@@ -16,7 +17,7 @@ const _heroes = [
     nameFr: 'Le Paladin',
     descriptionEn: 'Survival Oriented',
     descriptionFr: 'Orienté Survie',
-    iconPath: 'hero_paladin.png',
+    classCard: 'hero_paladin.png',
     maxHp: 100,
     maxMana: 3,
     baseDamage: 5,
@@ -31,7 +32,7 @@ const _heroes = [
     nameFr: 'Le Berserker',
     descriptionEn: 'Damage Oriented',
     descriptionFr: 'Orienté Dégâts',
-    iconPath: 'hero_berserker.png',
+    classCard: 'hero_berserker.png',
     maxHp: 80,
     maxMana: 3,
     baseDamage: 15,
@@ -45,7 +46,7 @@ const _heroes = [
     nameFr: 'Le Mage',
     descriptionEn: 'Alteration Oriented',
     descriptionFr: 'Orienté Altération',
-    iconPath: 'hero_mage.png',
+    classCard: 'hero_mage.png',
     maxHp: 60,
     maxMana: 3,
     baseDamage: 10,
@@ -57,9 +58,9 @@ const _heroes = [
 
 // Mock registry so ClassSelectionScreen (which calls `.requireValue` on
 // gameDataLoaderProvider) can build without loading real JSON assets.
-final _mockRegistry = GameDataRegistry(
+GameDataRegistry _registryOf(List<HeroData> heroes) => GameDataRegistry(
   enemies: const [],
-  heroes: _heroes,
+  heroes: heroes,
   cards: const [],
   events: const [],
   passives: const [],
@@ -70,6 +71,7 @@ final _mockRegistry = GameDataRegistry(
 Future<ProviderContainer> _buildAndReady(
   WidgetTester tester, {
   Locale locale = const Locale('en', ''),
+  List<HeroData> heroes = _heroes,
 }) async {
   // GridView.builder only lays out visible children. The default test
   // surface (800x600) fits just one row of hero cards at the desktop
@@ -81,7 +83,9 @@ Future<ProviderContainer> _buildAndReady(
   addTearDown(tester.view.resetDevicePixelRatio);
 
   final container = ProviderContainer(
-    overrides: [gameDataLoaderProvider.overrideWith((ref) => _mockRegistry)],
+    overrides: [
+      gameDataLoaderProvider.overrideWith((ref) => _registryOf(heroes)),
+    ],
   );
   addTearDown(container.dispose);
 
@@ -158,6 +162,57 @@ void main() {
       expect(pushedScreen.playerClass.id, 'berserker');
     },
   );
+
+  group('class identity is read from the data', () {
+    testWidgets('a class unknown to the code shows its own themeColor', (
+      WidgetTester tester,
+    ) async {
+      const gambler = HeroData(
+        id: 'gambler',
+        nameEn: 'Gambler',
+        nameFr: 'Le Parieur',
+        classCard: 'assets/data/classes/gambler/gambler.png',
+        themeColor: 0xFF00A88F,
+        maxHp: 70,
+        maxMana: 3,
+        baseDamage: 8,
+      );
+      await _buildAndReady(tester, heroes: const [gambler]);
+
+      final name = tester.widget<Text>(find.text('Gambler'));
+      expect(name.style?.color, const Color(0xFF00A88F));
+    });
+
+    testWidgets('a known id without themeColor gets no special colour', (
+      WidgetTester tester,
+    ) async {
+      // Proves the id-based branches are gone: 'berserker' used to be forced
+      // to red whatever its data said.
+      const berserker = HeroData(
+        id: 'berserker',
+        nameEn: 'Berserker',
+        classCard: 'assets/data/classes/berserker/berserker.png',
+        maxHp: 80,
+        maxMana: 3,
+        baseDamage: 15,
+      );
+      await _buildAndReady(tester, heroes: const [berserker]);
+
+      final name = tester.widget<Text>(find.text('Berserker'));
+      expect(name.style?.color, ClassIdentity.fallbackColor);
+    });
+
+    testWidgets('each class shows its image, not a coded icon', (
+      WidgetTester tester,
+    ) async {
+      await _buildAndReady(tester);
+
+      expect(find.byType(ClassAvatar), findsNWidgets(_heroes.length));
+      for (final coded in [Icons.whatshot, Icons.auto_fix_high, Icons.person]) {
+        expect(find.byIcon(coded), findsNothing);
+      }
+    });
+  });
 
   testWidgets('ClassSelectionScreen shows French labels when locale is fr', (
     WidgetTester tester,

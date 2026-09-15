@@ -99,8 +99,8 @@ sur l'étape 01.
 - **i18n intégrée** : chaque `TutorialStep` porte ses champs bilingues
   (`titleFr`/`titleEn`, `bodyFr`/`bodyEn`), résolus via
   `Localizations.localeOf(context).languageCode`.
-- **Persistance** (`SharedPreferences`) : la complétion est stockée par
-  `TutorialProgressService` sous la clé `tutorial_completed`, posée quand le joueur atteint la
-  fin de l'étape 15.
-- **Badge "NEW"** : `HomeScreen` l'affiche sur le bouton "TUTORIEL" tant que le tutoriel n'a
-  pas été complété une première fois. Le tutoriel reste rejouable ensuite.
+- **Aucune persistance** depuis le 2026-09-14 : la complétion n'est plus enregistrée, et le
+  bouton "TUTORIEL" de l'accueil ne porte plus de badge "NEW". Le badge était le seul lecteur du
+  drapeau `tutorial_completed` ; le service qui l'écrivait est supprimé —
+  [ADR-091](../_adr/ADR-091-menu-d-accueil-quitter-par-plateforme-et-retrait-du.md). Le tutoriel
+  reste rejouable à volonté, et sa fin ramène à l'accueil.

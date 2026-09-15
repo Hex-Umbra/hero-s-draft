@@ -45,7 +45,7 @@ void main() {
     final paladinHero = HeroData(
       id: 'paladin',
       nameEn: 'Paladin',
-      iconPath: 'paladin.png',
+      classCard: 'paladin.png',
       maxHp: 100,
       maxMana: 3,
       baseDamage: 5,

@@ -5,6 +5,7 @@ import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'package:roguelike_card_game/ui/widgets/game_dialog.dart';
 import '../../../../game/controllers/run_controller.dart';
 import '../../../../services/game_data_service.dart';
+import '../../class_identity.dart';
 import '../../sword_icon.dart';
 
 class StatsDialog extends ConsumerWidget {
@@ -44,14 +45,7 @@ class StatsDialog extends ConsumerWidget {
     final locale = Localizations.localeOf(context).languageCode;
     final l10n = AppLocalizations.of(context)!;
 
-    Color classColor = Colors.blue;
-    if (runState.heroClassId == 'berserker') classColor = Colors.red;
-    if (runState.heroClassId == 'mage') classColor = Colors.purple;
-
-    IconData classIcon = Icons.person;
-    if (runState.heroClassId == 'paladin') classIcon = Icons.shield;
-    if (runState.heroClassId == 'berserker') classIcon = Icons.whatshot;
-    if (runState.heroClassId == 'mage') classIcon = Icons.auto_fix_high;
+    final classColor = ClassIdentity.colorOf(heroData);
 
     final passive = runState.activePassive;
     final traitName = passive?.getName(locale) ?? '—';
@@ -64,7 +58,7 @@ class StatsDialog extends ConsumerWidget {
       maxWidth: min(MediaQuery.of(context).size.width * 0.85, 500),
       title: Row(
         children: [
-          Icon(classIcon, color: classColor, size: 36),
+          ClassAvatar(hero: heroData),
           const SizedBox(width: 12),
           Expanded(
             child: Column(

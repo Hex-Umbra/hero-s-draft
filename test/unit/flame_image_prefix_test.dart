@@ -64,7 +64,7 @@ void main() {
     // Exactement l appel de HeroCard.onLoad (`hero_card.dart:113`), atteint par
     // `state_sync_system.dart:52`. `fromCache` leve si la cle est absente.
     for (final hero in registry.heroes) {
-      expect(() => game.images.fromCache(hero.iconPath), returnsNormally);
+      expect(() => game.images.fromCache(hero.classCard), returnsNormally);
     }
   });
 }

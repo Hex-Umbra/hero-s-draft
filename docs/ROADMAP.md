@@ -504,7 +504,7 @@ Sur les 14 blocs `catch` de `lib/`, **un seul est totalement muet** : `lib/ui/sc
 | ID | Chantier | Effort | Difficulté | Apport |
 |:---|:---|:---:|:---:|:---:|
 | **P-29** | **Lot P2 animations** : signature VFX des 6 cartes de classe + différenciation réelle feu/glace/foudre/poison | **4-6 j** | ★★★☆☆ | 🔥🔥 |
-| **P-30** | Menu de **debug** (`add_gold`, `spawn_relic`, `jump_to_floor`…) | **1-2 j** | ★★☆☆☆ | 🔥🔥 |
+| ~~**P-30**~~ | ~~Menu de **debug** (`add_gold`, `spawn_relic`, `jump_to_floor`…)~~ ✅ **Livré le 2026-09-09** sur `feat/menu-debug-lot-2`, non fusionné — manipulateur de run *et* éditeur de contenu, voir ci-dessous | — | — | — |
 | **P-31** | **Nœuds Trésor 💎 & Mystère ❓** sur la carte — ⚠️ **prérequis de rendu**, voir ci-dessous | **1-2 j** *(hors prérequis)* | ★★☆☆☆ | 🔥 |
 | **P-32** | **Historique de notifications** (panneau consultable, type chat) | **1-2 j** | ★★☆☆☆ | 🔥 |
 | **P-33** | **Système d'achievements / trophées** | **2-3 j** | ★★★☆☆ | 🔥 |
@@ -515,6 +515,36 @@ Sur les 14 blocs `catch` de `lib/`, **un seul est totalement muet** : `lib/ui/sc
 | **P-38** | **Dashboard de perf** (FPS, drops) dans les logs de debug | **1 j** | ★★☆☆☆ | 🔥 |
 | **P-39** | **Skins de héros** débloquables | **3 j+** *(art)* | ★★☆☆☆ | 🔥 |
 | **P-47** | **Seconde passe audio** — sonoriser l'économie et la fin de partie, réveiller le niveau 1 de la chaîne de repli, revoir le mixage | **1-2 j** *(+ ~10 bruitages)* | ★☆☆☆☆ | 🔥🔥 |
+
+### P-30 — Menu de debug
+
+> ✅ **Livré le 2026-09-09**, en deux lots, sur la branche `feat/menu-debug-lot-2` — **non fusionnée**
+> au 2026-09-15, dernier commit de code `2c9ba6d`. Le périmètre a dépassé la ligne d'origine :
+> au manipulateur de run s'est ajouté un éditeur de contenu, que P-48 avait rendu possible, puis
+> son formulaire inféré (2026-09-14) et son habillage « éditeur » (2026-09-15).
+
+| Lot | Contenu | Conception |
+|:---|:---|:---|
+| 1 | Run debug déclarée au lancement, tiroir ancré sur la carte et en combat — [ADR-087](../.obsidian_vault/_adr/ADR-087-run-debug-declaree-au-lancement-et-verrou-de-persis.md), [ADR-088](../.obsidian_vault/_adr/ADR-088-tiroir-de-debug-ancre-et-sortie-de-combat-par-sa-pr.md) | [spec](superpowers/specs/2026-09-05-menu-debug-lot-1-manipulateur-de-run-design.md) · [plan](superpowers/plans/2026-09-05-menu-debug-lot-1.md) |
+| 2 | Éditeur de contenu, puis création guidée — [ADR-089](../.obsidian_vault/_adr/ADR-089-editeur-de-contenu-seam-disque-et-validation-totale.md), [ADR-090](../.obsidian_vault/_adr/ADR-090-identite-visuelle-de-classe-portee-par-la-donnee.md) | [spec](superpowers/specs/2026-09-06-menu-debug-lot-2-editeur-de-contenu-design.md) · [plan](superpowers/plans/2026-09-06-menu-debug-lot-2.md) · [spec création guidée](superpowers/specs/2026-09-08-editeur-de-contenu-creation-guidee-design.md) · [plan](superpowers/plans/2026-09-08-editeur-de-contenu-creation-guidee.md) |
+| 2 | Formulaire inféré du document, vocabulaires du disque, sons et images importés — [ADR-092](../.obsidian_vault/_adr/ADR-092-formulaire-infere-du-document-et-ressources-liees.md) | [spec](superpowers/specs/2026-09-14-editeur-de-contenu-formulaire-infere-et-ressources-design.md) · [plan](superpowers/plans/2026-09-14-editeur-de-contenu-formulaire-infere-et-ressources.md) |
+| 2 | Habillage « éditeur » : onglets, explorateur, inspecteur, barre d'actions, contrat de choix — [ADR-093](../.obsidian_vault/_adr/ADR-093-habillage-editeur-jetons-nommes-et-contrat-de-choix.md) | [spec](superpowers/specs/2026-09-15-editeur-de-contenu-habillage-editeur-design.md) · [plan](superpowers/plans/2026-09-15-editeur-de-contenu-habillage-editeur.md) |
+
+**Reste ouvert**, sans chiffrage :
+
+- **La modification d'entité** a reçu ses corrections (formulaire inféré, commit `47f6731`) et chaque
+  fichier livré en fait l'aller-retour en test (`25b2945`) ; aucune nouvelle validation manuelle n'est
+  consignée depuis. La création est vérifiée : un redémarrage à chaud suffit (2026-09-14).
+- **Suites différées de l'habillage** (2026-09-15), petites et sans risque de données :
+  - les champs texte ont perdu leur nom accessible — le libellé est frère du champ, pas son parent
+    (envelopper la rangée d'un `MergeSemantics`) ;
+  - `EditorColors` : 18 jetons sur 33 n'ont qu'un emploi, plusieurs presque identiques à un voisin
+    (mesuré le 2026-09-15) — à consolider ;
+  - sur une fenêtre très basse, la barre d'actions fixe peut écraser le formulaire (seuil non mesuré) ;
+  - « aller au champ » reste inerte pour une faute dont le champ n'a pas d'ancre montée.
+- **Les cartes de signature ne sont pas filtrées par classe** en boutique ni sur le bonus de boss —
+  [analyse](possible_upgrades/08-09-2026_filtre_cartes_de_classe_Opus5.md). À traiter avant ou
+  avec **P-42**, qui multipliera ces cartes.
 
 ### P-31 — Ne pas ouvrir sans lire le prérequis
 

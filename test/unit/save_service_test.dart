@@ -54,7 +54,7 @@ void main() {
         nameFr: 'Paladin',
         descriptionEn: 'A holy knight',
         descriptionFr: 'Un saint chevalier',
-        iconPath: 'paladin.png',
+        classCard: 'paladin.png',
         maxHp: 100,
         maxMana: 3,
         baseDamage: 5,
@@ -93,7 +93,7 @@ void main() {
         nameFr: 'Paladin',
         descriptionEn: 'A holy knight',
         descriptionFr: 'Un saint chevalier',
-        iconPath: 'paladin.png',
+        classCard: 'paladin.png',
         maxHp: 100,
         maxMana: 3,
         baseDamage: 5,
@@ -123,7 +123,7 @@ void main() {
       await SaveService.save(container.read);
       expect(await SaveService.hasSave(), isTrue);
 
-      await SaveService.clear();
+      await SaveService.clear(container.read);
       expect(await SaveService.hasSave(), isFalse);
     });
 

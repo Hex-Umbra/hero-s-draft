@@ -5,10 +5,17 @@ Index des **ADR** (Architecture Decision Records) de **Hero's Draft**. Le corps 
 > [!IMPORTANT]
 > **Plafond : 250 lignes.** Ce fichier est un index, jamais un contenu. Un nouvel ADR prend le numéro `max(index) + 1` lu ici, jamais un numéro deviné.
 
-**Vérifié le 2026-09-05** — 86 décisions, numéros `ADR-001` à `ADR-086`, sans doublon ni trou.
+**Vérifié le 2026-09-15** — 93 décisions, numéros `ADR-001` à `ADR-093`, sans doublon ni trou.
 
 | N° | Décision | Statut | Version | Fichier |
 |:---|:---|:---:|:---:|:---|
+| `ADR-093` | Éditeur de Contenu — Jetons de Couleur Nommés et Contrat de Choix (habillage « éditeur », chantier P-30) | ✅ | — | [ADR-093-habillage-editeur-jetons-nommes-et-contrat-de-choix.md](../_adr/ADR-093-habillage-editeur-jetons-nommes-et-contrat-de-choix.md) |
+| `ADR-092` | Éditeur de Contenu — Formulaire Inféré du Document, Vocabulaires du Disque et Ressources sous Rollback (chantier P-30) | ✅ | — | [ADR-092-formulaire-infere-du-document-et-ressources-liees.md](../_adr/ADR-092-formulaire-infere-du-document-et-ressources-liees.md) |
+| `ADR-091` | Menu d'Accueil — Quitter par Plateforme, Retours Arrière et Retrait de la Persistance du Tutoriel | ✅ | — | [ADR-091-menu-d-accueil-quitter-par-plateforme-et-retrait-du.md](../_adr/ADR-091-menu-d-accueil-quitter-par-plateforme-et-retrait-du.md) |
+| `ADR-090` | Identité Visuelle de Classe Portée par la Donnée — `classCard`, `themeColor`, `iconPath` (création guidée) | ✅ | — | [ADR-090-identite-visuelle-de-classe-portee-par-la-donnee.md](../_adr/ADR-090-identite-visuelle-de-classe-portee-par-la-donnee.md) |
+| `ADR-089` | Éditeur de Contenu — Seam Disque, Validation Totale avant Écriture Transactionnelle (chantier P-30, lot 2) — **amendé par `ADR-092`** | ✅ | — | [ADR-089-editeur-de-contenu-seam-disque-et-validation-totale.md](../_adr/ADR-089-editeur-de-contenu-seam-disque-et-validation-totale.md) |
+| `ADR-088` | Tiroir de Debug Ancré et Sortie de Combat par sa Propre Route (chantier P-30, lot 1) | ✅ | — | [ADR-088-tiroir-de-debug-ancre-et-sortie-de-combat-par-sa-pr.md](../_adr/ADR-088-tiroir-de-debug-ancre-et-sortie-de-combat-par-sa-pr.md) |
+| `ADR-087` | Run Debug Déclarée au Lancement et Verrou de Persistance dans `SaveService` (chantier P-30, lot 1) | ✅ | — | [ADR-087-run-debug-declaree-au-lancement-et-verrou-de-persis.md](../_adr/ADR-087-run-debug-declaree-au-lancement-et-verrou-de-persis.md) |
 | `ADR-086` | Autorité du Répertoire sur l'Appartenance, avec Expiration de la Tolérance de Champ Redondant (chantier P-48, lot 3) | ✅ | — | [ADR-086-autorite-du-repertoire-avec-expiration-de-la-toler.md](../_adr/ADR-086-autorite-du-repertoire-avec-expiration-de-la-toler.md) |
 | `ADR-085` | Règle de Partage Catalogue / Configuration dans `assets/data/` (chantier P-48) | ✅ | — | [ADR-085-regle-de-partage-catalogue-configuration.md](../_adr/ADR-085-regle-de-partage-catalogue-configuration.md) |
 | `ADR-084` | Suppression de la Chaîne de Compétences Héroïques, Morte et Inatteignable (chantier P-40, bloc 1) | ✅ | — | [ADR-084-suppression-de-la-chaine-de-competences-heroiques.md](../_adr/ADR-084-suppression-de-la-chaine-de-competences-heroiques.md) |
@@ -76,7 +83,7 @@ Index des **ADR** (Architecture Decision Records) de **Hero's Draft**. Le corps 
 | `ADR-022` | Ciblage Interactif en Deux Phases et Clarté des Info-bulles (Two-Phase Targeting & Canvas Cards Tooltips) | ✅ | — | [ADR-022-ciblage-interactif-en-deux-phases-et-clarte-des-in.md](../_adr/ADR-022-ciblage-interactif-en-deux-phases-et-clarte-des-in.md) |
 | `ADR-021` | Stratégie de Responsivité Unifiée du Système de Tutoriel (Unified Tutorial Responsiveness Strategy) | ✅ | — | [ADR-021-strategie-de-responsivite-unifiee-du-systeme-de-tu.md](../_adr/ADR-021-strategie-de-responsivite-unifiee-du-systeme-de-tu.md) |
 | `ADR-020` | Feedback de Focus de Récompenses (Hover & Selection Glow Visual Feedback in Draft Screen) | ✅ | — | [ADR-020-feedback-de-focus-de-recompenses.md](../_adr/ADR-020-feedback-de-focus-de-recompenses.md) |
-| `ADR-019` | Système de Tutoriel Autonome Isolant la Boucle Principale (Standalone Tutorial System with State Isolation) | ✅ | — | [ADR-019-systeme-de-tutoriel-autonome-isolant-la-boucle-pri.md](../_adr/ADR-019-systeme-de-tutoriel-autonome-isolant-la-boucle-pri.md) |
+| `ADR-019` | Système de Tutoriel Autonome Isolant la Boucle Principale (Standalone Tutorial System with State Isolation) — persistance **retirée par `ADR-091`** | ✅ | — | [ADR-019-systeme-de-tutoriel-autonome-isolant-la-boucle-pri.md](../_adr/ADR-019-systeme-de-tutoriel-autonome-isolant-la-boucle-pri.md) |
 | `ADR-018` | Rareté Mythique & Transition d'Alerte Séquentielle en Draft (Mythic Rarity & Two-Step Draft Transition) | ✅ | — | [ADR-018-rarete-mythique-transition-d-alerte-sequentielle-e.md](../_adr/ADR-018-rarete-mythique-transition-d-alerte-sequentielle-e.md) |
 | `ADR-017` | Système Interactif de Révélation de Cartes par Rouleaux 3D (Staggered Draft Slots & Reels) | ✅ | — | [ADR-017-systeme-interactif-de-revelation-de-cartes-par-rou.md](../_adr/ADR-017-systeme-interactif-de-revelation-de-cartes-par-rou.md) |
 | `ADR-016` | Système de Progression XP & Échelonnement Dynamique des Ennemis (XP Progression & Enemy Scaling) | ✅ | — | [ADR-016-systeme-de-progression-xp-echelonnement-dynamique.md](../_adr/ADR-016-systeme-de-progression-xp-echelonnement-dynamique.md) |

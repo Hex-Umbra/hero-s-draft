@@ -81,7 +81,7 @@ const _mockHero = HeroData(
   id: 'paladin',
   nameEn: 'Paladin',
   nameFr: 'Paladin',
-  iconPath: 'paladin.png',
+  classCard: 'paladin.png',
   maxHp: 100,
   maxMana: 3,
   baseDamage: 5,

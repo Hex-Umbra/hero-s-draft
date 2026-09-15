@@ -15,6 +15,9 @@ final checkpointProvider =
 
 /// Écoute checkpointProvider et déclenche une sauvegarde à chaque bump().
 /// Doit être lu une fois au démarrage de l'app pour s'activer (voir main.dart).
+///
+/// Aucune condition ici : c'est `SaveService` qui refuse de persister une run
+/// debug, pour que la garantie tienne aussi sur les autres appelants.
 final autosaveOrchestratorProvider = Provider<void>((ref) {
   ref.listen<int>(checkpointProvider, (previous, next) {
     SaveService.save(ref.read);

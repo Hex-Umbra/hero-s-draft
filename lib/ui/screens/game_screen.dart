@@ -1,8 +1,10 @@
 import 'package:flame/game.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../game/heros_draft_game.dart';
+import '../../game/controllers/debug_run_controller.dart';
 import '../../game/controllers/run_controller.dart';
 import '../../game/controllers/deck_controller.dart';
 import '../../game/controllers/combat_controller.dart';
@@ -19,6 +21,7 @@ import '../../services/audio/game_moment.dart';
 import '../../services/audio/music_scene.dart';
 import '../../models/data/relic_data.dart';
 import '../../models/data/card_data.dart';
+import '../widgets/debug/debug_drawer.dart';
 import '../widgets/hud/dialogs/pause_dialog.dart';
 import '../widgets/hud/death_overlay.dart';
 import '../widgets/hud/combat_top_bar.dart';
@@ -207,7 +210,18 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     final runController = ref.read(runProvider.notifier);
     runController.nextLevel();
     runController.completeCurrentNode();
-    Navigator.of(context).pop();
+
+    // La victoire peut survenir alors que d'autres routes sont empilées
+    // au-dessus du combat : le menu de pause, le menu de debug. Un `pop()` nu
+    // fermerait la plus haute d'entre elles au lieu de l'écran de combat — le
+    // joueur resterait alors en combat, sur un nœud déjà marqué résolu et un
+    // niveau déjà gagné.
+    final navigator = Navigator.of(context);
+    final combatRoute = ModalRoute.of(context);
+    if (combatRoute != null) {
+      navigator.popUntil((route) => route == combatRoute);
+    }
+    navigator.pop();
   }
 
   void _startPlayerNewTurn() {
@@ -453,6 +467,15 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
                   if (!_showDraft && runState.isDead) const DeathOverlay(),
 
+                  // Tiroir de debug, ancre au bord gauche. `kDebugMode` etant
+                  // une constante de compilation, il disparait du build
+                  // release avec tout ce qu'il atteint.
+                  if (kDebugMode &&
+                      ref.watch(debugRunProvider).isDebugRun &&
+                      !runState.isDead &&
+                      !_showDraft)
+                    const DebugDrawer(inCombat: true),
+
                   if (!runState.isDead && !_showDraft)
                     CombatTopBar(
                       act: runState.act,
@@ -540,6 +563,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     _game.pauseEngine();
     PauseDialog.show(
       context,
+      inCombat: true,
       onResume: () => Navigator.of(context).pop(),
       onExit: () {
         Navigator.of(context).pop();

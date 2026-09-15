@@ -40,7 +40,7 @@ final _mockRegistry = GameDataRegistry(
       nameFr: 'Le Paladin',
       descriptionEn: 'Survival Oriented',
       descriptionFr: 'Orienté Survie',
-      iconPath: 'hero_paladin.png',
+      classCard: 'hero_paladin.png',
       maxHp: 100,
       maxMana: 3,
       baseDamage: 5,

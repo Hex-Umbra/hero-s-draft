@@ -10,6 +10,7 @@ import '../../models/missing_save_item.dart';
 import '../../models/data/forge_upgrade_data.dart';
 import '../../services/map_generator_service.dart';
 import '../systems/trait_system.dart';
+import 'debug_run_controller.dart';
 import 'inventory_controller.dart';
 import 'run/player_stats_manager.dart';
 import 'run/map_progression_manager.dart';
@@ -267,6 +268,13 @@ class RunController extends Notifier<RunState> {
           initialBonusShopCards: 0,
         );
 
+    // La run nait ici, deux écrans après le bouton qui a déclaré son mode :
+    // c'est le moment où l'intention posée à l'accueil devient effective.
+    // `kDebugMode` étant une constante de compilation, cette ligne disparaît
+    // du build release, où toute run est donc normale.
+    if (kDebugMode) {
+      ref.read(debugRunProvider.notifier).applyRequestedMode();
+    }
   }
 
   /// Sélectionne un nœud sur la carte et déplace le joueur

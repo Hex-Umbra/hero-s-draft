@@ -5,7 +5,7 @@ ordre ils ont été écrits. C'est un index de navigation — il ne contient **a
 des liens. Si tu cherches une réponse plutôt qu'un document, la table de `CLAUDE.md` (§Documentation
 Map) t'oriente plus vite.
 
-**Dernière mise à jour** : 2026-09-05
+**Dernière mise à jour** : 2026-09-15
 
 ---
 
@@ -43,6 +43,8 @@ Chaque sujet suit la même chaîne. Tous les documents n'en parcourent pas tous 
 | 📐 | [Réorganisation des données — un fichier par entité *(P-48)*](superpowers/specs/2026-09-04-reorganisation-donnees-un-fichier-par-entite-design.md) | 04/09/2026 |
 | 🔨 | [P-48 — Plan des lots 1 et 2](superpowers/plans/2026-09-04-reorganisation-donnees-lots-1-2.md) *(livrés)* | 04/09/2026 |
 | 🔨 | [P-48 — Plan du lot 3](superpowers/plans/2026-09-04-reorganisation-donnees-lot-3.md) *(la migration ; livré)* | 04/09/2026 |
+| 📐🔨 | [Création guidée & identité de classe en donnée](superpowers/specs/2026-09-08-editeur-de-contenu-creation-guidee-design.md) · [plan](superpowers/plans/2026-09-08-editeur-de-contenu-creation-guidee.md) *(livré ; voir aussi §16)* | 08/09/2026 |
+| 🔍 | [Filtre de classe manquant sur deux pools de cartes](possible_upgrades/08-09-2026_filtre_cartes_de_classe_Opus5.md) *(→ P-42)* | 08/09/2026 |
 | 🗄️ | [Documentation des classes](archives/classes_documentation.md) · [Système de passifs](archives/système_de_passifs.md) · [Bilan changement compétences](archives/bilan_changement_competences.md) | — |
 | 🗄️ | [Analyse d'équilibrage des cartes](archives/card_balancing_analysis_01-06-2026.md) | 01/06/2026 |
 | 🗄️ | [Refactoring & équilibrage unifié des cartes](implementation_plans/done/unified_cards_refactoring_and_balancing.md) · [Refonte des raretés](implementation_plans/done/implementation_plan_cards_rarity_refactoring.md) · [Ajustements d'équilibrage](implementation_plans/done/22_card_balance_adjustments.md) | — |
@@ -173,6 +175,18 @@ Notes de maîtrise, indépendantes de tout chantier.
 | 🔍 | [Idées d'améliorations](possible_upgrades/upgrade_ideas.md) — vivier courant |
 | 🗄️ | [Idées regroupées](possible_upgrades/_archives/idees_regroupees.md) · [10/06](possible_upgrades/_archives/analysis_reports_idee_regroupee_ideas_10-06-2026.md) · [post-implémentations](possible_upgrades/_archives/analysis_reports_idee_regroupee_ideas_after_implementations.md) |
 | 🗄️ | Prototypes d'évolutions : [analyse 1](possible_upgrades/_archives/1_analyse_techniques_evols.md) · [proto 1](possible_upgrades/_archives/1_proto_futures_evols.md) · [analyse 2](possible_upgrades/_archives/2_analyse_techniques_evols.md) · [proto 2](possible_upgrades/_archives/2_proto_futures_evols.md) |
+
+## 16. Outils de développement
+
+*Chantier **P-30** de [`ROADMAP.md`](ROADMAP.md) — livré, branche non fusionnée au 2026-09-15.*
+
+| | Document | Date |
+|:---:|:---|:---|
+| 📐🔨 | [Menu de debug, lot 1 — manipulateur de run](superpowers/specs/2026-09-05-menu-debug-lot-1-manipulateur-de-run-design.md) · [plan](superpowers/plans/2026-09-05-menu-debug-lot-1.md) | 05/09/2026 |
+| 📐🔨 | [Menu de debug, lot 2 — éditeur de contenu](superpowers/specs/2026-09-06-menu-debug-lot-2-editeur-de-contenu-design.md) · [plan](superpowers/plans/2026-09-06-menu-debug-lot-2.md) | 06/09/2026 |
+| 📐🔨 | [Éditeur de contenu — création guidée](superpowers/specs/2026-09-08-editeur-de-contenu-creation-guidee-design.md) · [plan](superpowers/plans/2026-09-08-editeur-de-contenu-creation-guidee.md) | 08/09/2026 |
+| 📐🔨 | [Éditeur de contenu — formulaire inféré et ressources liées](superpowers/specs/2026-09-14-editeur-de-contenu-formulaire-infere-et-ressources-design.md) · [plan](superpowers/plans/2026-09-14-editeur-de-contenu-formulaire-infere-et-ressources.md) | 14/09/2026 |
+| 📐🔨 | [Éditeur de contenu — habillage « éditeur »](superpowers/specs/2026-09-15-editeur-de-contenu-habillage-editeur-design.md) · [plan](superpowers/plans/2026-09-15-editeur-de-contenu-habillage-editeur.md) | 15/09/2026 |
 
 ---
 
