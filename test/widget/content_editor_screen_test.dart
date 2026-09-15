@@ -16,6 +16,7 @@ import 'package:roguelike_card_game/ui/theme/app_colors.dart';
 import 'package:roguelike_card_game/ui/theme/app_theme.dart';
 import 'package:roguelike_card_game/ui/widgets/content_editor/choice_button.dart';
 import 'package:roguelike_card_game/ui/widgets/content_editor/color_field.dart';
+import 'package:roguelike_card_game/ui/widgets/content_editor/property_row.dart';
 
 import 'content_editor/contrast.dart';
 
@@ -98,6 +99,15 @@ void main() {
   /// aussi sous ce champ : c'est dans le bandeau qu'on la compte.
   Finder inIssue(Finder finder) => find.descendant(
         of: find.byKey(const Key('editeur-issue')),
+        matching: finder,
+      );
+
+  /// Ce que dit la rangee `id` de la classe, ou de toute entite editee.
+  Finder inIdRow(Finder finder) => find.descendant(
+        of: find.ancestor(
+          of: find.byKey(const Key('editeur-id')),
+          matching: find.byType(PropertyRow),
+        ),
         matching: finder,
       );
 
@@ -751,6 +761,10 @@ void main() {
 
       expect(inIssue(find.textContaining('un identifiant est requis')),
           findsOneWidget);
+      // La faute est celle de la carte : la rangee `id` de la classe, dont
+      // l'identifiant est valide, n'en dit rien.
+      expect(inIdRow(find.textContaining('un identifiant est requis')),
+          findsNothing);
     });
 
     testWidgets('Valider ne reproche pas la prose que le remplissage fournit',
@@ -774,6 +788,35 @@ void main() {
         reason: 'Valider jugeait le brouillon non rempli',
       );
     });
+  });
+
+  testWidgets('une faute de carte de signature vise son panneau, pas la classe',
+      (tester) async {
+    // Une carte de signature n'a pas de rangee a elle : sa faute `id` bordait
+    // de rouge l'identifiant de la classe, pourtant valide, et y ramenait.
+    await tester.pumpWidget(harness(projectRoot: root));
+    await tester.tap(find.text('Classe'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Créer'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(const Key('editeur-id')), 'gambler');
+    await tester.enterText(
+        find.byKey(const Key('editeur-nombre-cartes')), '1');
+    await tester.pump();
+    await tester.tap(find.text('Valider'));
+    await tester.pump();
+
+    final classId =
+        tester.widget<TextField>(find.byKey(const Key('editeur-id')));
+    expect(
+      (classId.decoration!.enabledBorder! as OutlineInputBorder)
+          .borderSide
+          .color,
+      isNot(AppColors.danger),
+    );
+    expect(inIdRow(find.byIcon(Icons.error)), findsNothing);
+    expect(inIssue(find.textContaining('carte 1 :')), findsOneWidget);
   });
 
   testWidgets('le proprietaire d une carte est un champ, pas un niveau',

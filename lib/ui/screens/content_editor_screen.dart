@@ -320,19 +320,36 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
       imports: _pendingImports(),
     );
 
-    return (
-      drafts: drafts,
-      faults: [
-        // Les fautes de conversion du document d'abord : une saisie illisible
-        // (« 1a » pour un entier) ne decode meme pas en un brouillon coherent.
-        if (!_rawView) ..._document!.conversionFaults,
-        // Les fautes de la recette ensuite : `EntityValidator` juge un
-        // brouillon a la fois et ne peut pas voir que deux cartes de signature
-        // partagent un identifiant — seule la recette voit l'ensemble.
-        if (recipe != null) ...recipe.faults(),
-        for (final draft in drafts) ...validator.validate(draft),
-      ],
-    );
+    final faults = <ValidationFault>[
+      // Les fautes de conversion du document d'abord : une saisie illisible
+      // (« 1a » pour un entier) ne decode meme pas en un brouillon coherent.
+      if (!_rawView) ..._document!.conversionFaults,
+      // Les fautes de la recette ensuite : `EntityValidator` juge un
+      // brouillon a la fois et ne peut pas voir que deux cartes de signature
+      // partagent un identifiant — seule la recette voit l'ensemble.
+      if (recipe != null) ...recipe.faults(),
+    ];
+    var cardRank = 0;
+    for (final draft in drafts) {
+      final draftFaults = validator.validate(draft);
+      if (recipe == null || draft.descriptor.category != EntityCategory.card) {
+        faults.addAll(draftFaults);
+        continue;
+      }
+      // Une carte de signature n'a pas de rangee a elle dans le formulaire :
+      // ses fautes nommaient le champ homonyme de la classe (`id`, `name_fr`),
+      // qui se bordait de rouge a tort et y ramenait. Elles visent donc le
+      // panneau des cartes de signature, ancre sous `skills`, qui affiche
+      // `faults['skills']` ; le rang de la carte dit laquelle est en cause.
+      cardRank++;
+      for (final fault in draftFaults) {
+        faults.add(ValidationFault(
+          'carte $cardRank : ${fault.message}',
+          field: 'skills',
+        ));
+      }
+    }
+    return (drafts: drafts, faults: faults);
   }
 
   /// Le corps courant du formulaire — vue document, ou vue brute decodee.
