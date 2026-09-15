@@ -86,7 +86,12 @@ class DeckState {
       final (validUpgrades, upgradesMissing) =
           ForgeUpgradeData.filterValidRefs(instance.forgeUpgrades);
       missing.addAll(upgradesMissing);
-      kept.add(instance.copyWith(data: freshData, forgeUpgrades: validUpgrades));
+      // Une carte `unique` dont le modèle ne l'est pas ne vient que de l'ancienne
+      // fusion de trois légendaires (ADR-094) : elle retrouve sa légendaire.
+      final rarity = instance.rarity == CardRarity.unique && freshData.rarity != CardRarity.unique
+          ? CardRarity.legendary
+          : instance.rarity;
+      kept.add(instance.copyWith(data: freshData, rarity: rarity, forgeUpgrades: validUpgrades));
     }
 
     return (kept, missing);

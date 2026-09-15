@@ -20,11 +20,24 @@ void main() {
       effects: [],
     );
 
+    const holyShield = CardData(
+      id: 'holy_shield',
+      nameFr: 'Bouclier Sacre',
+      nameEn: 'Holy Shield',
+      cost: 1,
+      type: CardType.skill,
+      category: CardCategory.characterSpecific,
+      rarity: CardRarity.unique,
+      target: CardTarget.self,
+      effects: [],
+      baseMaxForgeUpgrades: 5,
+    );
+
     setUp(() {
       GameDataRegistry(
         enemies: [],
         heroes: [],
-        cards: [strike],
+        cards: [strike, holyShield],
         events: [],
         passives: [],
         relics: [],
@@ -110,6 +123,31 @@ void main() {
           category: 'forgeUpgrade',
         ),
       ]);
+    });
+
+    test('une carte neutre rendue unique par l ancienne fusion de legendaires revient legendaire', () {
+      final damaged = CardInstance(
+        uniqueId: 'card-4',
+        data: strike,
+        rarity: CardRarity.unique,
+        forgeUpgrades: const ['sharp:1'],
+      );
+      final json = DeckState(masterDeck: [damaged]).toJson();
+
+      final (restored, missing) = DeckState.fromJsonWithReport(json);
+
+      expect(restored.masterDeck.single.rarity, CardRarity.legendary);
+      expect(restored.masterDeck.single.forgeUpgrades, ['sharp:1']);
+      expect(missing, isEmpty);
+    });
+
+    test('une carte de classe reste unique au chargement', () {
+      final signature = CardInstance(uniqueId: 'card-5', data: holyShield);
+      final json = DeckState(masterDeck: [signature]).toJson();
+
+      final (restored, _) = DeckState.fromJsonWithReport(json);
+
+      expect(restored.masterDeck.single.rarity, CardRarity.unique);
     });
   });
 }
