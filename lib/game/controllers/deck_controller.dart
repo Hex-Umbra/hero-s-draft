@@ -290,12 +290,15 @@ class DeckNotifier extends Notifier<DeckState> {
     }
 
     if (selectedCards.length == 3) {
-      // Une carte `unique` ou légendaire n'a pas de rareté au-delà.
-      final nextRarity = selectedCards[0].rarity.next;
-      if (nextRarity == null || selectedCards.any((c) => c.rarity.next == null)) {
+      // Trois exemplaires d'une même carte à une même rareté, qui en a une
+      // au-delà : ni une carte `unique` ni une légendaire n'en ont.
+      final first = selectedCards[0];
+      final nextRarity = first.rarity.next;
+      if (nextRarity == null ||
+          selectedCards.any((c) => c.data.id != first.data.id || c.rarity != first.rarity)) {
         return;
       }
-      final baseCardData = selectedCards[0].data;
+      final baseCardData = first.data;
 
       // Retire les 3 exemplaires
       currentMasterDeck.removeWhere((c) => selectedIds.contains(c.uniqueId));

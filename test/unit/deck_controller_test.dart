@@ -196,6 +196,29 @@ void main() {
       );
     });
 
+    test('mergeCards refuse trois cartes de raretes differentes', () {
+      final data = _card('strike').data;
+      final trio = [
+        CardInstance(data: data),
+        CardInstance(data: data),
+        CardInstance(data: data, rarity: CardRarity.epic),
+      ];
+      notifier.initializeStarterDeck(trio);
+
+      notifier.mergeCards(trio.map((c) => c.uniqueId).toList(), const []);
+
+      expect(notifier.state.masterDeck, trio);
+    });
+
+    test('mergeCards refuse trois cartes differentes', () {
+      final trio = [_card('strike'), _card('strike'), _card('defend')];
+      notifier.initializeStarterDeck(trio);
+
+      notifier.mergeCards(trio.map((c) => c.uniqueId).toList(), const []);
+
+      expect(notifier.state.masterDeck, trio);
+    });
+
     test('copyableCards ecarte les cartes unique du master deck', () {
       final strike = _card('strike');
       final signature = CardInstance(
