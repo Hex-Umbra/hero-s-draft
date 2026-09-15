@@ -67,6 +67,21 @@ abstract final class EditorColors {
 
   /// Le texte d'une entite non choisie de l'explorateur.
   static const Color explorerItemInk = Color(0xFFB9C5CC);
+
+  /// Le fond d'une etiquette du panneau de reference.
+  static const Color tagFill = Color(0xFF1A1A31);
+
+  /// Le bord d'une etiquette du panneau de reference.
+  static const Color tagBorder = Color(0xFF26264A);
+
+  /// Le texte d'un refus dans le bandeau d'issue.
+  static const Color refusedInk = Color(0xFFFFB3C0);
+
+  /// Le texte d'une ecriture reussie dans le bandeau d'issue.
+  static const Color writtenInk = Color(0xFFB5FFD9);
+
+  /// L'ombre portee de la barre d'actions : un noir a 35 %.
+  static const Color barShadow = Color(0x59000000);
 }
 
 /// Les cles JSON, chemins et identifiants : ce que l'auteur retrouvera tel
