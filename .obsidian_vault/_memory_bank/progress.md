@@ -9,26 +9,26 @@
 
 | Métrique | Valeur | Commande |
 |:---|:---|:---|
-| Tests automatisés (jeu) | 809 au vert | `flutter test` |
+| Tests automatisés (jeu) | 811 au vert | `flutter test` |
 | Fichiers de test | 118 | `find test -name "*.dart" \| wc -l` |
 | Analyse statique | 0 erreur (`No issues found!`) | `dart analyze` |
 | Fichiers Dart (`lib/`) | 235 | `find lib -name "*.dart" \| wc -l` |
-| Lignes de code (`lib/`) | 47 912 | `find lib -name "*.dart" -exec cat {} + \| wc -l` |
+| Lignes de code (`lib/`) | 47 917 | `find lib -name "*.dart" -exec cat {} + \| wc -l` |
 | Fichiers de données | 73 | `find assets/data -name '*.json' \| wc -l` |
 | Tests de la logique du site | 20 au vert | `cd site && node --test` |
 | Assertions du harnais CI | 57 au vert | `bash .github/scripts/test_scripts.sh` |
 | Fichiers suivis sous `site/` | 16 | `git ls-files site/ \| wc -l` |
 
 > [!NOTE]
-> Relevé sur `5792b77`, branche `fix/p40-bloc-2` (P-40 bloc 2), **non fusionnée** : `main` en est
+> Relevé sur `2d19d42`, branche `fix/p40-bloc-2` (P-40), **non fusionnée** : `main` en est
 > resté aux chiffres du relevé précédent, 773 tests et 234 fichiers Dart. Tout le mouvement vient
 > des corrections de cartes et de forge d'[ADR-094](../_adr/ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md).
 >
-> **+1 fichier Dart** (234 → 235, +14 lignes nettes) : `lib/game/services/forge_rune_rules.dart`,
+> **+1 fichier Dart** (234 → 235, +19 lignes nettes) : `lib/game/services/forge_rune_rules.dart`,
 > qui absorbe trois copies de l'algorithme de cumul. Liste exacte :
-> `git diff --name-status 75d47f2 5792b77 -- lib`.
+> `git diff --name-status 75d47f2 2d19d42 -- lib`.
 >
-> **+36 tests** (773 → 809) dans **+3 fichiers** : `card_rarity_test.dart`,
+> **+38 tests** (773 → 811) dans **+3 fichiers** : `card_rarity_test.dart`,
 > `forge_rune_rules_test.dart` et `ui_card_rune_sockets_test.dart`, le reste dans des fichiers
 > existants. Le nombre de fichiers de données (seul `enduring.json` change), `site/` et le harnais CI
 > n'ont pas bougé.
@@ -49,7 +49,7 @@
 | Autosave à checkpoint carte | `SaveService`, `checkpointProvider`, `autosaveOrchestratorProvider` | `shared_preferences`, slot unique, JSON versionné (`schemaVersion`), à chaque nœud résolu, jamais en cours de combat |
 | Réhydratation des contrôleurs | `RunController.hydrate()`, `DeckNotifier`, `InventoryController` | Remplacement intégral de l'état depuis les données chargées, navigation directe vers `MapScreen` |
 | Reprise depuis l'accueil | `HomeScreen` | Bouton « Continuer » (si `SaveService.hasSave()`), confirmation avant écrasement ; réactivité après retour via `Navigator.popUntil` corrigée — [ADR-073](../_adr/ADR-073-reactivite-du-bouton-continuer-de-homescreen-apres.md) |
-| Dégradation gracieuse du contenu manquant | `MissingSaveItem`, `SaveLoadResult.missingItems` | Élément supprimé du catalogue depuis la sauvegarde : retiré silencieusement, signalé nommément au chargement |
+| Dégradation gracieuse du contenu manquant | `MissingSaveItem`, `SaveLoadResult.missingItems` | Élément supprimé du catalogue depuis la sauvegarde : retiré silencieusement, signalé nommément au chargement ; carte rendue `unique` par l'ancienne fusion de légendaires ramenée en légendaire — [ADR-094](../_adr/ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md) D6 |
 | Sauvegarde corrompue = échec total | `SaveService.load()` | JSON illisible ou `schemaVersion` inconnue → échec propre, pas de récupération partielle |
 | Run debug sans persistance | `SaveService._isDebugRun`, `debugRunProvider` | `save` et `clear` inopérants pendant une run debug, mode rabaissé au chargement — [ADR-087](../_adr/ADR-087-run-debug-declaree-au-lancement-et-verrou-de-persis.md) |
 | Fin de run | `DeathOverlay` (`lib/ui/widgets/hud/death_overlay.dart`) | Sauvegarde effacée à la mort du héros — vérifié le 2026-09-05, `grep -rn 'SaveService.clear' lib/` |

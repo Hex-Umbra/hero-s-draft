@@ -1,4 +1,4 @@
-<!-- last-sync: 2026-09-15 | commit: 5792b77 -->
+<!-- last-sync: 2026-09-15 | commit: 2d19d42 -->
 
 # 🧠 Contexte Actuel
 
@@ -11,15 +11,15 @@
 cartes et de forge relevés le 2026-08-05, re-vérifiés contre le code, sont corrigés à leur cause —
 [ADR-094](../_adr/ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md). Une revue
 indépendante a rendu « prête à fusionner après corrections », corrections faites dans la branche. Le
-**bloc 3**, les dérives documentaires, est traité dans la même passe : P-40 n'a plus que son bloc 4,
-une décision.
+**bloc 3** (dérives documentaires) et le **bloc 4** (corpus de formation figé) suivent : **P-40 est
+clos**.
 
 Réserves à ne pas perdre de vue :
 
-- **Quatre décisions du propriétaire attendent** : fusionner la branche (PR, comme la #36) ; porter
-  ses changements visibles dans la note `0.5.1`, dont les cartes de classe passées de 10 à 5 runes ;
-  réparer au chargement une carte neutre devenue `unique` par l'ancienne fusion de légendaires
-  (spec du bloc 2, §5) ; le sort du corpus `docs/formation-heros-draft/` (bloc 4).
+- **La branche `fix/p40-bloc-2` attend d'être fusionnée** — gardée telle quelle, décision du
+  propriétaire le 2026-09-15, qui a tranché le même jour : changements visibles ajoutés à la note
+  `0.5.1` (`2d19d42`), cartes abîmées par l'ancienne fusion de légendaires réparées au chargement
+  (`71d97cb`), corpus `docs/formation-heros-draft/` figé en instantané daté (`69fef58`).
 - **Un dossier de classe `gambler` vide**, laissé par une écriture de l'éditeur, faisait rougir deux
   tests sur `main`. Supprimé le 2026-09-15 ; `entity_writer.dart` tient ce cas pour « sans conséquence ».
 - **Les changements visibles de P-30 ont rejoint la note `0.5.1`** (`d8d9319`, décision du
@@ -45,13 +45,14 @@ Réserves à ne pas perdre de vue :
 
 1. **P-40 bloc 2 — cartes et forge** (2026-09-15, branche `fix/p40-bloc-2`, 11 commits de code et de
    test, `b19b39a` → `9196a6e`) — une carte de classe porte 5 runes et non plus 10 ; trois
-   légendaires ne fusionnent plus en une `unique` ; ni le draft de boss ni les deux Miroirs ne
+   légendaires ne fusionnent plus en une `unique`, et une carte ainsi abîmée redevient légendaire
+   au chargement ; ni le draft de boss ni les deux Miroirs ne
    copient plus une carte de classe ; Persistant retire l'épuisement à tout tier et ne se fusionne
    plus. Trois causes plutôt que quatre symptômes : l'échelle de rareté devient `CardRarity.next` et
    `forgeSlotBonus` au lieu de l'ordre de l'enum, la règle d'acquisition `CardRarity.isAcquirable`,
    et une rune se déclare `stackable: false` en donnée, lue par un service unique, `ForgeRuneRules`
-   ([ADR-094](../_adr/ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md)). 809 tests,
-   36 de plus ; la revue a vérifié que les tests de régression échouent sur l'ancien code.
+   ([ADR-094](../_adr/ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md)). 811 tests,
+   38 de plus ; la revue a vérifié que les tests de régression échouent sur l'ancien code.
 2. **Éditeur de contenu — habillage « éditeur »** (2026-09-15, 14 commits, `78f342c` → `2c9ba6d`) —
    présentation seule, `lib/services/` intact. Onglets de type et segmenté Créer / Modifier
    remplacent les niveaux de l'arbre ; un explorateur groupe les entités par propriétaire en mode
@@ -83,8 +84,8 @@ Réserves à ne pas perdre de vue :
 
 ## Prochaine étape
 
-**Trancher les quatre décisions ci-dessus**, puis reprendre le programme « Identité de classe &
-catalogue » par **P-41**, dont la spec est prête ; P-42 peut ensuite passer par l'éditeur. Le filtre
+**Fusionner `fix/p40-bloc-2`**, puis reprendre le programme « Identité de classe & catalogue » par
+**P-41**, dont la spec est prête ; P-42 peut ensuite passer par l'éditeur. Le filtre
 de classe des cartes de signature se traite avant ou avec P-42.
 
 Le Jalon 2 « Feel & contenu » (`docs/ROADMAP.md` §9) reste ouvert : P-06, P-07, le prototype de

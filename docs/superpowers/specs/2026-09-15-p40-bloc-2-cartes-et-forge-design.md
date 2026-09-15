@@ -55,7 +55,7 @@ Aucune migration, `schemaVersion` inchangé.
 - **Carte de classe portant plus de 5 runes** : elle les garde toutes, simplement elle n'en accepte plus. Toutes restent visibles : `card_rune_sockets.dart` n'ajoute que des emplacements vides, et `card_text_renderer.dart` dessine en combat autant d'emplacements que de runes portées quand elles dépassent la capacité (ajouté après revue).
 - **`enduring:2` ou `enduring:3` déjà sauvegardé** : la rune redevient active (D4) et s'affiche « Persistant » comme avant. La prochaine fusion 3→1 la ramène au tier 1.
 - **Copies de cartes de classe** : conservées.
-- **Carte neutre devenue `unique` par une fusion de légendaires (B5)** : conservée telle quelle, et D1 la prive en plus de ses emplacements de rareté — une `strike` passe de 6 emplacements à 1, ses runes restant en place. Une ligne dans `DeckState._decodePile` la ramènerait en légendaire (rareté d'instance `unique` sur un modèle qui ne l'est pas : seul B5 produit ce cas) sans toucher à `schemaVersion`. **Décision du propriétaire, non tranchée.**
+- **Carte neutre devenue `unique` par une fusion de légendaires (B5)** : D1 la priverait en plus de ses emplacements de rareté — une `strike` passerait de 6 emplacements à 1. **Réparée au chargement**, décision du propriétaire le 2026-09-15 (commit `71d97cb`) : dans `DeckState._decodePile`, une instance `unique` dont le modèle ne l'est pas retrouve la rareté légendaire. Seul B5 produit ce cas, aucune carte de classe n'est touchée, ses runes restent en place, `schemaVersion` est inchangé.
 
 ## 6. Hors périmètre, relevé en chemin
 

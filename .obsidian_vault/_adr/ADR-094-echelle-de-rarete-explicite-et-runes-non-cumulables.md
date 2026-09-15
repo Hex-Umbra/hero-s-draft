@@ -1,7 +1,8 @@
 ### Statut
 
 ✅ **Livré le 2026-09-15**, P-40 bloc 2, branche `fix/p40-bloc-2` — commits `b19b39a` à `9196a6e`,
-corrections de la revue indépendante comprises. **Amende** [ADR-025](ADR-025-systeme-de-forge-decouple-et-probabiliste.md)
+corrections de la revue indépendante comprises, plus la réparation des cartes touchées par B5
+(`71d97cb`), décidée le même jour par le propriétaire. **Amende** [ADR-025](ADR-025-systeme-de-forge-decouple-et-probabiliste.md)
 (D1, formule de capacité) et **dépasse en partie**
 [ADR-051](ADR-051-filtrage-des-cartes-de-rarete-unique-dans-les-reco.md) (le pool du draft de boss).
 Conception : `docs/superpowers/specs/2026-09-15-p40-bloc-2-cartes-et-forge-design.md`.
@@ -50,14 +51,18 @@ parce qu'une sauvegarde peut déjà contenir `enduring:2` ou `enduring:3`.
 du cumul — Forge de Fusion, fusion 3→1, dialogue de fusion — par une seule, qui connaît D3, avec un
 seul analyseur de tier : une référence `id:tier` mal formée est ignorée partout.
 
+**D6 — Une carte abîmée par B5 est réparée au chargement.** Dans `DeckState._decodePile`, une
+instance `unique` dont le modèle ne l'est pas retrouve la rareté légendaire : seul B5 produit ce cas.
+Sans D6, D1 aurait retiré à ces cartes leurs emplacements de rareté en plus de leur multiplicateur.
+
 ### Preuves dans le code
 
 - `lib/models/data/card_data.dart` — enum `CardRarity` (`next`, `forgeSlotBonus`, `isAcquirable`),
   `CardData.forgeCapacityAt`.
 - `lib/models/card_instance.dart` — `forgeCapacity`, `exhaustsOnPlay`.
 - `lib/game/services/forge_rune_rules.dart` — `FusionOption`, `ForgeRuneRules`.
-- `lib/game/controllers/deck_controller.dart` — `DeckState.copyableCards`, garde de `mergeCards`,
-  `playCard`.
+- `lib/game/controllers/deck_controller.dart` — `DeckState.copyableCards`, réparation de B5 dans
+  `DeckState._decodePile`, garde de `mergeCards`, `playCard`.
 - `lib/game/controllers/shop_controller.dart` — `_rollRarity` par `next`, tirage de tier par
   `isStackable`.
 - `lib/ui/widgets/ui_card.dart` — `UiCard.forgeCapacity` : `getCardRarityIndex`, qui retrouvait l'index
@@ -66,7 +71,8 @@ seul analyseur de tier : une référence `id:tier` mal formée est ignorée part
   emplacements.
 - Tests : `test/unit/card_rarity_test.dart`, `test/unit/forge_rune_rules_test.dart`,
   `test/widget/ui_card_rune_sockets_test.dart`, et des cas ajoutés à `deck_controller_test`,
-  `decoupled_forge_test`, `reward_controller_test`, `shop_controller_test`, `deck_screen_test`,
+  `deck_state_persistence_test`, `decoupled_forge_test`, `reward_controller_test`,
+  `shop_controller_test`, `deck_screen_test`,
   `shop_screen_test`, `draft_screen_test`, `forge_fusion_screen_test`, `real_bundle_load_test`.
   La revue a vérifié que les tests de régression échouent sur `75d47f2`, chacun pour la raison prévue.
 
@@ -78,8 +84,8 @@ seul analyseur de tier : une référence `id:tier` mal formée est ignorée part
   montre toutes, en combat compris ; `enduring:2/3` redevient actif.
 - ✅ Un calcul sur l'ordre de déclaration de l'enum est désormais une faute de relecture : les
   `switch` exhaustifs de `next` et `forgeSlotBonus` imposent une décision à toute rareté ajoutée.
-- ⚠️ **Une carte neutre devenue `unique` par B5 reste `unique`**, et D1 la prive en plus de ses
-  emplacements de rareté. Sa réparation au chargement est une décision du propriétaire, non tranchée.
+- ✅ **Une carte neutre devenue `unique` par B5 redevient légendaire** en reprenant une partie (D6) ;
+  les deux exemplaires que l'ancienne fusion avait consommés ne reviennent pas.
 - ⚠️ **Hors périmètre, relevé en chemin** (spec §6) : le badge « Usage unique » et les particules
   d'épuisement ignorent Persistant ; un Miroir sans carte copiable échoue en silence ; les textes de
   runes restent codés en dur par id dans le rendu Flame.
