@@ -26,6 +26,23 @@
         ]
       },
       {
+        "category": "Équilibrage",
+        "emoji": "⚖️",
+        "entries": [
+          "Les cartes de rareté Unique propres à chaque classe n'offrent plus que 5 emplacements de runes de forge, au lieu de 10. Les runes déjà posées sont conservées, mais une carte qui en porte plus de 5 n'en accepte plus de nouvelles."
+        ]
+      },
+      {
+        "category": "Corrections",
+        "emoji": "🐛",
+        "entries": [
+          "La rune Persistant retire désormais l'Épuisement quel que soit son niveau : montée par la Forge de Fusion ou héritée d'une fusion de cartes, elle cessait jusqu'ici de fonctionner sans prévenir.",
+          "La Forge de Fusion ne propose plus de fusionner la rune Persistant, qui n'a pas de niveau à cumuler.",
+          "Les cartes propres à votre classe ne peuvent plus être copiées : ni le choix de cartes d'un boss « Récompense Cartes », ni le Miroir Magique de la boutique, ni la récompense « Miroir » de montée de niveau ne les proposent encore.",
+          "Trois exemplaires légendaires d'une même carte ne peuvent plus être fusionnés : l'opération donnait une carte de rareté Unique, ramenée à sa puissance de base. Une carte déjà touchée redevient légendaire en reprenant une partie sauvegardée."
+        ]
+      },
+      {
         "category": "Technique",
         "emoji": "🔧",
         "entries": [
