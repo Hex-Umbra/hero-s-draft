@@ -113,6 +113,13 @@ void main() {
       expect(options.single.cost, 80);
     });
 
+    test('une reference mal formee ne compte pas, comme dans consolidate', () {
+      expect(
+        ForgeRuneRules.fusionOptionsFor(_cardWith(['sharp', 'sharp:x', 'sharp:1'])),
+        isEmpty,
+      );
+    });
+
     test('jamais de fusion pour une rune non cumulable', () {
       expect(
         ForgeRuneRules.fusionOptionsFor(_cardWith(['enduring:1', 'enduring:1'])),
