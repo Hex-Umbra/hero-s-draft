@@ -6,6 +6,7 @@ import '../../models/missing_save_item.dart';
 import '../../models/data/forge_upgrade_data.dart';
 import '../../services/audio/audio_providers.dart';
 import '../../services/audio/game_moment.dart';
+import '../services/forge_rune_rules.dart';
 
 class DeckState {
   final List<CardInstance> masterDeck;
@@ -299,18 +300,8 @@ class DeckNotifier extends Notifier<DeckState> {
       // Retire les 3 exemplaires
       currentMasterDeck.removeWhere((c) => selectedIds.contains(c.uniqueId));
 
-      // Auto-fusionne les upgrades identiques (cumul des tiers)
-      final Map<String, int> consolidatedMap = {};
-      for (var upgrade in inheritedUpgrades) {
-        final parts = upgrade.split(':');
-        if (parts.length != 2) continue;
-        final id = parts[0];
-        final tier = int.tryParse(parts[1]) ?? 0;
-        if (tier <= 0) continue;
-        consolidatedMap[id] = (consolidatedMap[id] ?? 0) + tier;
-      }
-
-      var finalUpgrades = consolidatedMap.entries.map((e) => '${e.key}:${e.value}').toList();
+      // Réunit les runes identiques (voir `ForgeRuneRules.consolidate`)
+      var finalUpgrades = ForgeRuneRules.consolidate(inheritedUpgrades);
 
       // Limite à la capacité de la rareté supérieure
       final capacity = baseCardData.forgeCapacityAt(nextRarity);

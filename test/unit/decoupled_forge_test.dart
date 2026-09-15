@@ -42,6 +42,18 @@ void main() {
             valueMultiplier: 2,
             weight: 80,
           ),
+          const ForgeUpgradeData(
+            id: 'enduring',
+            nameEn: 'Enduring',
+            nameFr: 'Persistant',
+            descriptionEn: 'Removes Exhaust',
+            descriptionFr: 'Retire Épuisement',
+            icon: 'hourglass_bottom_rounded',
+            color: 'greenAccent',
+            pools: ['rare'],
+            requiresExhaust: true,
+            stackable: false,
+          ),
         ],
       );
     });
@@ -197,6 +209,38 @@ void main() {
       }
 
       expect(updatedUpgrades, equals(['sharp:3', 'hardened:1']));
+    });
+
+    test('mergeCards garde une seule rune non cumulable, au tier 1', () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
+      final cardData = CardData(
+        id: 'heal_potion',
+        cost: 1,
+        type: CardType.skill,
+        category: CardCategory.global,
+        rarity: CardRarity.common,
+        target: CardTarget.self,
+        isExhaust: true,
+        effects: [],
+      );
+      final copies = List.generate(
+        3,
+        (_) => CardInstance(data: cardData, forgeUpgrades: ['enduring:1']),
+      );
+      final deckNotifier = container.read(deckProvider.notifier);
+      deckNotifier.initializeStarterDeck(copies);
+
+      deckNotifier.mergeCards(
+        copies.map((c) => c.uniqueId).toList(),
+        ['enduring:1', 'enduring:1', 'enduring:1'],
+      );
+
+      expect(
+        container.read(deckProvider).masterDeck.single.forgeUpgrades,
+        ['enduring:1'],
+      );
     });
   });
 }

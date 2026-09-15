@@ -15,6 +15,7 @@
     "power"
   ],
   "requiresExhaust": true,
+  "stackable": false,
   "weight": 30,
   "emoji": "⏳"
 }

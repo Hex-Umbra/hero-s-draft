@@ -4,6 +4,7 @@ import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'package:roguelike_card_game/ui/widgets/game_dialog.dart';
 import 'package:roguelike_card_game/ui/widgets/game_button.dart';
 import '../../game/controllers/deck_controller.dart';
+import '../../game/services/forge_rune_rules.dart';
 import '../../models/card_instance.dart';
 import '../../models/data/forge_upgrade_data.dart';
 import '../../services/audio/audio_providers.dart';
@@ -222,22 +223,9 @@ class _MergeDialogState extends State<_MergeDialog> {
     if (nextRarity == null) return;
     _capacity = firstCard.data.forgeCapacityAt(nextRarity);
 
-    final Map<String, int> consolidatedMap = {};
-    for (var card in _selectedCards) {
-      for (var upgrade in card.forgeUpgrades) {
-        final parts = upgrade.split(':');
-        if (parts.length != 2) continue;
-        final id = parts[0];
-        final tier = int.tryParse(parts[1]) ?? 0;
-        if (tier <= 0) continue;
-        consolidatedMap[id] = (consolidatedMap[id] ?? 0) + tier;
-      }
-    }
-
-    _consolidatedUpgrades = [];
-    consolidatedMap.forEach((id, tier) {
-      _consolidatedUpgrades.add('$id:$tier');
-    });
+    _consolidatedUpgrades = ForgeRuneRules.consolidate(
+      _selectedCards.expand((card) => card.forgeUpgrades),
+    );
 
     if (_consolidatedUpgrades.length <= _capacity) {
       _performMerge(_consolidatedUpgrades);

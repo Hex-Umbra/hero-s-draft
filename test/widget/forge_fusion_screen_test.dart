@@ -55,6 +55,19 @@ void main() {
     emoji: '⚔️',
   );
 
+  const enduringUpgrade = ForgeUpgradeData(
+    id: 'enduring',
+    nameEn: 'Enduring',
+    nameFr: 'Persistant',
+    descriptionEn: 'Removes Exhaust',
+    descriptionFr: 'Retire Épuisement',
+    icon: 'hourglass_bottom_rounded',
+    color: 'greenAccent',
+    pools: ['rare'],
+    requiresExhaust: true,
+    stackable: false,
+  );
+
   // Constructing GameDataRegistry sets its static `instance`, which is what
   // ForgeUpgradeData.getById() reads from (see lib/models/data/forge_upgrade_data.dart).
   // ignore: unused_local_variable
@@ -65,7 +78,7 @@ void main() {
     events: const [],
     passives: const [],
     relics: const [],
-    forgeUpgrades: const [sharpUpgrade],
+    forgeUpgrades: const [sharpUpgrade, enduringUpgrade],
   );
 
   Future<ProviderContainer> pumpForgeFusionScreen(
@@ -195,6 +208,23 @@ void main() {
       // Pump to let any notification timers expire.
       await tester.pump(const Duration(seconds: 5));
       await tester.pumpWidget(const SizedBox());
+    },
+  );
+
+  testWidgets(
+    'une rune non cumulable portee deux fois ne rend pas la carte eligible',
+    (WidgetTester tester) async {
+      final card = CardInstance(
+        data: strikeCard,
+        forgeUpgrades: const ['enduring:1', 'enduring:1'],
+      );
+
+      await pumpForgeFusionScreen(tester, masterDeck: [card]);
+
+      expect(
+        find.text('No cards in your deck have identical runes to merge.'),
+        findsOneWidget,
+      );
     },
   );
 }

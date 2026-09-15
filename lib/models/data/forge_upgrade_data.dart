@@ -13,6 +13,11 @@ class ForgeUpgradeData {
   final List<String> pools;
   final List<String>? eligibleCardTypes;
   final bool requiresExhaust;
+
+  /// Une rune cumulable additionne ses tiers : deux `sharp:1` valent un
+  /// `sharp:2`. Une rune non cumulable est binaire — `enduring` retire
+  /// l'épuisement ou non — et n'a qu'un tier, 1 (voir `ForgeRuneRules`).
+  final bool stackable;
   final int valueMultiplier;
   final int weight;
   final String emoji;
@@ -28,6 +33,7 @@ class ForgeUpgradeData {
     required this.pools,
     this.eligibleCardTypes,
     this.requiresExhaust = false,
+    this.stackable = true,
     this.valueMultiplier = 1,
     this.weight = 10,
     this.emoji = '🔮',
@@ -47,6 +53,7 @@ class ForgeUpgradeData {
           ? List<String>.from(json['eligibleCardTypes'] as List)
           : null,
       requiresExhaust: json['requiresExhaust'] as bool? ?? false,
+      stackable: json['stackable'] as bool? ?? true,
       valueMultiplier: json['valueMultiplier'] as int? ?? 1,
       weight: json['weight'] as int? ?? 10,
       emoji: json['emoji'] as String? ?? '🔮',
@@ -65,6 +72,7 @@ class ForgeUpgradeData {
       'pools': pools,
       if (eligibleCardTypes != null) 'eligibleCardTypes': eligibleCardTypes,
       'requiresExhaust': requiresExhaust,
+      'stackable': stackable,
       'valueMultiplier': valueMultiplier,
       'weight': weight,
       'emoji': emoji,

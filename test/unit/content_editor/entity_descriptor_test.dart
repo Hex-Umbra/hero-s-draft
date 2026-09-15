@@ -221,6 +221,7 @@ void main() {
         'pools',
         'eligibleCardTypes',
         'requiresExhaust',
+        'stackable',
         'valueMultiplier',
         'weight',
         'emoji',
