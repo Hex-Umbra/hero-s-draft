@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/app_colors.dart';
+import 'choice_surface.dart';
 import 'editor_style.dart';
 
 /// L'explorateur du mode Modifier (spec D2) : les entites existantes,
@@ -234,41 +235,34 @@ class _ExplorerItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      container: true,
-      button: true,
-      selected: isSelected,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 6),
-        child: InkWell(
-          onTap: onTap,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      child: ChoiceSurface(
+        isSelected: isSelected,
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(6),
+        decoration: BoxDecoration(
+          color: isSelected ? _selectedFill : EditorColors.side,
           borderRadius: BorderRadius.circular(6),
-          child: Container(
-            key: const Key('editeur-bouton-fond'),
-            padding: const EdgeInsets.fromLTRB(30, 5, 10, 5),
-            decoration: BoxDecoration(
-              color: isSelected ? _selectedFill : EditorColors.side,
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    id,
-                    overflow: TextOverflow.ellipsis,
-                    style: editorMono(
-                      color: isSelected
-                          ? AppColors.textPrimary
-                          : EditorColors.explorerItemInk,
-                      weight: isSelected ? FontWeight.w700 : FontWeight.w400,
-                    ),
-                  ),
+        ),
+        padding: const EdgeInsets.fromLTRB(30, 5, 10, 5),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                id,
+                overflow: TextOverflow.ellipsis,
+                style: editorMono(
+                  color: isSelected
+                      ? AppColors.textPrimary
+                      : EditorColors.explorerItemInk,
+                  weight: isSelected ? FontWeight.w700 : FontWeight.w400,
                 ),
-                if (isSelected)
-                  const Icon(Icons.check, size: 16, color: EditorColors.accent),
-              ],
+              ),
             ),
-          ),
+            if (isSelected)
+              const Icon(Icons.check, size: 16, color: EditorColors.accent),
+          ],
         ),
       ),
     );

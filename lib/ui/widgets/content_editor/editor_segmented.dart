@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'choice_surface.dart';
 import 'editor_style.dart';
 
 /// Un segment d'[EditorSegmented].
@@ -75,47 +76,40 @@ class EditorSegmented<T> extends StatelessWidget {
   Widget _segment(EditorSegment<T> segment) {
     final isSelected = segment.value == selected;
     final ink = isSelected ? EditorColors.accent : EditorColors.muted;
-    return Semantics(
-      container: true,
-      button: true,
-      selected: isSelected,
-      child: InkWell(
-        key: segment.key,
-        onTap: () => onSelected(segment.value),
+    return ChoiceSurface(
+      isSelected: isSelected,
+      onTap: () => onSelected(segment.value),
+      tapKey: segment.key,
+      borderRadius: BorderRadius.circular(6),
+      decoration: BoxDecoration(
+        color: isSelected ? _selectedFill : EditorColors.well,
         borderRadius: BorderRadius.circular(6),
-        child: Container(
-          key: const Key('editeur-bouton-fond'),
-          padding: EdgeInsets.symmetric(
-            horizontal: dense ? 10 : 12,
-            vertical: dense ? 4 : 6,
-          ),
-          decoration: BoxDecoration(
-            color: isSelected ? _selectedFill : EditorColors.well,
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(
-              color: isSelected
-                  ? EditorColors.accent.withValues(alpha: 0.5)
-                  : Colors.transparent,
+        border: Border.all(
+          color: isSelected
+              ? EditorColors.accent.withValues(alpha: 0.5)
+              : Colors.transparent,
+        ),
+      ),
+      padding: EdgeInsets.symmetric(
+        horizontal: dense ? 10 : 12,
+        vertical: dense ? 4 : 6,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (segment.icon != null) ...[
+            Icon(segment.icon, size: dense ? 15 : 17, color: ink),
+            const SizedBox(width: 6),
+          ],
+          Text(
+            segment.label,
+            style: TextStyle(
+              color: ink,
+              fontSize: dense ? 12 : 13,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
             ),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (segment.icon != null) ...[
-                Icon(segment.icon, size: dense ? 15 : 17, color: ink),
-                const SizedBox(width: 6),
-              ],
-              Text(
-                segment.label,
-                style: TextStyle(
-                  color: ink,
-                  fontSize: dense ? 12 : 13,
-                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
+        ],
       ),
     );
   }

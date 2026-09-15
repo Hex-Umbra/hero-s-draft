@@ -690,15 +690,21 @@ class _StepButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Tooltip(
       message: tooltip,
-      child: InkWell(
-        onTap: onPressed,
-        child: SizedBox(
-          width: 32,
-          height: 32,
-          child: Icon(
-            icon,
-            size: 18,
-            color: onPressed == null ? EditorColors.faint : EditorColors.accent,
+      // Le `Material` transparent est ce qui manquait a l'encre du survol et
+      // du focus pour se voir : sans lui, elle peint sous le fond de l'ecran.
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          onTap: onPressed,
+          child: SizedBox(
+            width: 32,
+            height: 32,
+            child: Icon(
+              icon,
+              size: 18,
+              color:
+                  onPressed == null ? EditorColors.faint : EditorColors.accent,
+            ),
           ),
         ),
       ),

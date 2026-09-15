@@ -137,10 +137,15 @@ class OutcomeBanner extends StatelessWidget {
       ],
     ]);
     if (field == null) return line;
-    return InkWell(
-      onTap: () => onJump?.call(field),
-      borderRadius: BorderRadius.circular(5),
-      child: line,
+    // Le `Material` transparent est ce qui manquait a l'encre du survol et du
+    // focus pour se voir : sans lui, elle peint sous le fond du bandeau.
+    return Material(
+      type: MaterialType.transparency,
+      child: InkWell(
+        onTap: () => onJump?.call(field),
+        borderRadius: BorderRadius.circular(5),
+        child: line,
+      ),
     );
   }
 

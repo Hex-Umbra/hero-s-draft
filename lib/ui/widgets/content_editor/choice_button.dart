@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'choice_surface.dart';
 import 'color_field.dart';
 import 'editor_style.dart';
 
@@ -84,46 +85,39 @@ class ChoiceButton extends StatelessWidget {
             weight: isSelected ? FontWeight.w700 : FontWeight.w500,
           );
 
-    return Semantics(
-      container: true,
-      button: true,
-      selected: isSelected,
-      child: Container(
-        // L'anneau d'un choix d'identite, separe du bouton par le fond de
-        // l'ecran : il se detache de toute couleur de classe. Sa place est
-        // gardee au repos, pour que choisir ne decale pas la rangee.
-        padding: const EdgeInsets.all(2),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(_radius + 4),
-          border: Border.all(
-            color: identity != null && isSelected
-                ? EditorColors.accent
-                : Colors.transparent,
-            width: 2,
-          ),
+    return Container(
+      // L'anneau d'un choix d'identite, separe du bouton par le fond de
+      // l'ecran : il se detache de toute couleur de classe. Sa place est
+      // gardee au repos, pour que choisir ne decale pas la rangee.
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(_radius + 4),
+        border: Border.all(
+          color: identity != null && isSelected
+              ? EditorColors.accent
+              : Colors.transparent,
+          width: 2,
         ),
-        child: InkWell(
-          onTap: onTap,
+      ),
+      child: ChoiceSurface(
+        isSelected: isSelected,
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(_radius),
+        decoration: BoxDecoration(
+          color: fill,
           borderRadius: BorderRadius.circular(_radius),
-          child: Container(
-            key: const Key('editeur-bouton-fond'),
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: fill,
-              borderRadius: BorderRadius.circular(_radius),
-              border: Border.all(color: edge),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (isSelected) ...[
-                  Icon(Icons.check, size: 15, color: ink),
-                  const SizedBox(width: 5),
-                ],
-                Text(label, style: labelStyle),
-              ],
-            ),
-          ),
+          border: Border.all(color: edge),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isSelected) ...[
+              Icon(Icons.check, size: 15, color: ink),
+              const SizedBox(width: 5),
+            ],
+            Text(label, style: labelStyle),
+          ],
         ),
       ),
     );

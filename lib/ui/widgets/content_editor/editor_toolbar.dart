@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../services/content_editor/entity_descriptor.dart';
 import '../../theme/app_colors.dart';
+import 'choice_surface.dart';
 import 'editor_style.dart';
 
 /// La barre d'outils (spec D1) : les types en onglets, et au bout l'action.
@@ -73,46 +74,38 @@ class _TypeTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      container: true,
-      button: true,
-      selected: isSelected,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          key: const Key('editeur-bouton-fond'),
-          height: 48,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            color: EditorColors.side,
-            border: Border(
-              bottom: BorderSide(
-                color: isSelected ? EditorColors.accent : Colors.transparent,
-                width: 2,
-              ),
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                icon,
-                size: 18,
-                color: isSelected ? EditorColors.accent : EditorColors.faint,
-              ),
-              const SizedBox(width: 7),
-              Text(
-                label,
-                style: TextStyle(
-                  color:
-                      isSelected ? AppColors.textPrimary : EditorColors.muted,
-                  fontSize: 13.5,
-                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-                ),
-              ),
-            ],
+    return ChoiceSurface(
+      isSelected: isSelected,
+      onTap: onTap,
+      height: 48,
+      decoration: BoxDecoration(
+        color: EditorColors.side,
+        border: Border(
+          bottom: BorderSide(
+            color: isSelected ? EditorColors.accent : Colors.transparent,
+            width: 2,
           ),
         ),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 18,
+            color: isSelected ? EditorColors.accent : EditorColors.faint,
+          ),
+          const SizedBox(width: 7),
+          Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? AppColors.textPrimary : EditorColors.muted,
+              fontSize: 13.5,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }
