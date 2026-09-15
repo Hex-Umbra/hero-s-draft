@@ -1,7 +1,10 @@
 ## ⚔️ ADR-025 : Système de Forge Découplé et Probabiliste
 
 ### Statut
-✅ Accepté & Implémenté
+✅ Accepté & Implémenté — **D1 amendé par [ADR-094](ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md)
+le 2026-09-15** (P-40 bloc 2) : la capacité vaut `baseMaxForgeUpgrades + forgeSlotBonus` et non plus
+`+ rarityIndex`, pour qu'une carte `unique` n'ajoute aucun emplacement. Rien ne change pour les cinq
+raretés de l'échelle.
 
 ### Contexte
 L'amélioration des cartes au feu de camp manquait d'aléa et de choix stratégiques significatifs. Proposer des choix d'améliorations fixes et illimités rendait la forge monotone. Un système roguelike robuste exigeait des options aléatoires limitées par la rareté de la carte, des probabilités de slots d'options variables et un coût de relance exponentiel.

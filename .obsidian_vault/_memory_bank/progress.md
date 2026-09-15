@@ -9,29 +9,29 @@
 
 | Métrique | Valeur | Commande |
 |:---|:---|:---|
-| Tests automatisés (jeu) | 773 au vert | `flutter test` |
-| Fichiers de test | 115 | `find test -name "*.dart" \| wc -l` |
+| Tests automatisés (jeu) | 809 au vert | `flutter test` |
+| Fichiers de test | 118 | `find test -name "*.dart" \| wc -l` |
 | Analyse statique | 0 erreur (`No issues found!`) | `dart analyze` |
-| Fichiers Dart (`lib/`) | 234 | `find lib -name "*.dart" \| wc -l` |
-| Lignes de code (`lib/`) | 47 898 | `find lib -name "*.dart" -exec cat {} + \| wc -l` |
+| Fichiers Dart (`lib/`) | 235 | `find lib -name "*.dart" \| wc -l` |
+| Lignes de code (`lib/`) | 47 912 | `find lib -name "*.dart" -exec cat {} + \| wc -l` |
 | Fichiers de données | 73 | `find assets/data -name '*.json' \| wc -l` |
 | Tests de la logique du site | 20 au vert | `cd site && node --test` |
 | Assertions du harnais CI | 57 au vert | `bash .github/scripts/test_scripts.sh` |
 | Fichiers suivis sous `site/` | 16 | `git ls-files site/ \| wc -l` |
 
 > [!NOTE]
-> Relevé sur `2c9ba6d`, branche `feat/menu-debug-lot-2` ; `main` porte le même code depuis la fusion
-> `5d62709` (`git diff --stat 2c9ba6d 5d62709 -- lib test assets` est vide). Tout le mouvement depuis le 2026-09-14 vient
-> de l'**éditeur de contenu** (P-30), hormis la montée de Flame en 1.38.2 (`c155f50`).
+> Relevé sur `5792b77`, branche `fix/p40-bloc-2` (P-40 bloc 2), **non fusionnée** : `main` en est
+> resté aux chiffres du relevé précédent, 773 tests et 234 fichiers Dart. Tout le mouvement vient
+> des corrections de cartes et de forge d'[ADR-094](../_adr/ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md).
 >
-> **+21 fichiers Dart** (213 → 234, +4 397 lignes) : +8 pour le formulaire inféré — 6 dans
-> `lib/services/content_editor/`, `document_form.dart` et `asset_field.dart` — et +13 pour l'habillage
-> « éditeur », 14 widgets moins `tree_level.dart`. Liste exacte :
-> `git diff --name-status d8d9319 2c9ba6d -- lib`.
+> **+1 fichier Dart** (234 → 235, +14 lignes nettes) : `lib/game/services/forge_rune_rules.dart`,
+> qui absorbe trois copies de l'algorithme de cumul. Liste exacte :
+> `git diff --name-status 75d47f2 5792b77 -- lib`.
 >
-> **+156 tests** (617 au relevé du 2026-09-14 → 773) dans **+16 fichiers** : 5 sous
-> `test/unit/content_editor/`, 10 de widgets d'éditeur, et `floating_text_test.dart`, venu avec Flame.
-> Le nombre de fichiers de données, `site/` et le harnais CI n'ont pas bougé.
+> **+36 tests** (773 → 809) dans **+3 fichiers** : `card_rarity_test.dart`,
+> `forge_rune_rules_test.dart` et `ui_card_rune_sockets_test.dart`, le reste dans des fichiers
+> existants. Le nombre de fichiers de données (seul `enduring.json` change), `site/` et le harnais CI
+> n'ont pas bougé.
 
 > [!NOTE]
 > **La version ne vit pas ici.** La version de référence se lit dans `pubspec.yaml`
@@ -87,14 +87,14 @@ Design complet — [ADR-069](../_adr/ADR-069-systeme-de-sauvegarde-de-run-checkp
 
 | Fonctionnalité | Implémentation | Détails |
 |:---|:---|:---|
-| Auto-Merge (3→1) | `DeckNotifier.mergeCards()` | 3 copies même ID + rareté → 1 copie rareté supérieure ; cartes `unique` non fusionnables |
+| Auto-Merge (3→1) | `DeckNotifier.mergeCards()`, `ForgeRuneRules` | 3 copies même ID + rareté → 1 copie de la rareté suivante (`CardRarity.next`) ; ni `unique` ni légendaire ne fusionnent |
 | Foil Unique Progressif | `PolychromaticBorder`, `UiCard` | Bordure polychromatique au survol, nombre de couleurs croissant avec les upgrades |
 | Rareté Dynamique | `EffectResolver.resolveCard()` | Progression par rareté (common → legendary), rareté `unique` fixée à ×1.0 |
 | Catalogue de cartes | `assets/data/cards/`, `assets/data/classes/<id>/cards/` | 23 cartes, un fichier par carte : 17 globales (communes) + 6 de classe (unique) |
-| Effets et exhaust | `EffectResolver`, `CardEffect`, `DeckNotifier.playCard()` | damage/heal/armor/draw/gain_mana/apply_status ; Power et `isExhaust` → pile d'épuisement |
+| Effets et exhaust | `EffectResolver`, `CardEffect`, `CardInstance.exhaustsOnPlay` | damage/heal/armor/draw/gain_mana/apply_status ; Power, et `isExhaust` sans rune `enduring` à quelque tier que ce soit → pile d'épuisement |
 | Moteur de pioche | `DeckNotifier._drawInto`, `.drawCards`, `.startCombat`, `deckRandomProvider` | Remélange à sec (défausse → pioche uniquement si pioche vide), arrêt net à `GameConstants.maxHandSize` (10), aléatoire injectable pour les tests de séquence, `DeckState.reshuffleCount` observable |
 | Règle de tour joueur | `TurnPhaseManager.startPlayerCombat()`/`.startPlayerTurn()` | Moitié joueur du cycle, symétrique de `startEnemyTurn`/`endEnemyTurn` ; tour 1 et tour N+1 sur le même chemin ; nombre de cartes piochées piloté par `RunState.cardsPerTurn` (défaut 5) |
-| Forge et Fusion | `DeckNotifier.addForgeUpgrade()`, `ForgeUpgradeDialog`, `ForgeFusionScreen` | Upgrades pilotées par `assets/data/forge_upgrades/`, un fichier par amélioration, cumulables sans limite |
+| Forge et Fusion | `DeckNotifier.addForgeUpgrade()`, `ForgeUpgradeDialog`, `ForgeFusionScreen` | Upgrades pilotées par `assets/data/forge_upgrades/`, un fichier par amélioration, cumulables sauf déclarées `stackable: false` ; capacité `CardData.forgeCapacityAt`, fixe à 5 pour une carte de classe |
 | Draft (départ, post-combat) et suppression | `DraftScreen`, `StarterDeckDraftScreen`, `DeckNotifier.removeCardById()` | 3 choix post-victoire, 5 cartes globales au départ, oubli au feu de camp |
 
 ### ⚔️ Combat

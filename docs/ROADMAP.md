@@ -46,7 +46,7 @@ pie title Répartition de l'effort restant estimé (~91 jours)
 > [!WARNING]
 > **Le camembert et le total de ~91 jours sont antérieurs au programme P-40→P-44** (ajouté le
 > 2026-08-07) et ne l'incluent pas. Le solde net n'est pas calculable en l'état : P-41 est chiffré
-> (5-7 j) et P-40 aussi (1-1,5 j à l'origine, **~0,75-1 j restant** depuis la livraison de son bloc 1), mais **P-42, P-43 et P-44 attendent leur spec**, tandis que P-18
+> (5-7 j) et P-40 aussi (1-1,5 j à l'origine ; **blocs 1 à 3 livrés** au 2026-09-15, reste le bloc 4, une décision sans code), mais **P-42, P-43 et P-44 attendent leur spec**, tandis que P-18
 > et P-20 sortent du Tier C par redistribution. Recalculer l'ensemble à la prochaine passe de
 > re-priorisation, pas avant — un total partiellement mis à jour serait plus trompeur que celui-ci.
 
@@ -444,7 +444,7 @@ Les runes de forge `eco` et `quick` (regain de mana / pioche à la lecture d'une
 
 | ID | Chantier | Effort | Difficulté | Apport |
 |:---|:---|:---:|:---:|:---:|
-| **P-40** | **Nettoyage héros & cartes** : ~~suppression de la chaîne `skills.json`~~ *(livré, `ced306e`)*, 3 bugs confirmés, dérives documentaires — *lot S1 du programme P-40→P-44* | **~0,75-1 j** *(restant)* | ★★☆☆☆ | 🔥🔥 |
+| **P-40** | **Nettoyage héros & cartes** : ~~suppression de la chaîne `skills.json`~~ *(livré, `ced306e`)*, ~~3 bugs confirmés~~ *(corrigés, branche `fix/p40-bloc-2`)*, ~~dérives documentaires~~ *(re-vérifiées le 2026-09-15)*, sort du corpus de formation — *lot S1 du programme P-40→P-44* | *décision seule* | ★☆☆☆☆ | 🔥 |
 | **P-26** | **Lot d'hygiène** : `GameDataRegistry` en `Map` O(1), `MapNode` découplé de `Vector2`, ~~`SkillData` bilingue~~ *(annulé par P-40)* | **1 j** | ★★☆☆☆ | 🔥🔥 |
 | **P-22** | **Typage des modèles** : `==`/`hashCode` sur les 12 modèles suivis, sérialisation d'`EventState` | **1,5-2 j** | ★★★☆☆ | 🔥🔥 |
 | **P-27** | **Event Bus** (remplace les 13 callbacks de constructeur de `HerosDraftGame`) | **2-3 j** | ★★★★☆ | 🔥 |
@@ -458,11 +458,17 @@ Les runes de forge `eco` et `quick` (regain de mana / pioche à la lecture d'une
 Trois blocs sans aucune décision de design à prendre, donc exécutable immédiatement et indépendamment de P-41.
 
 > [!NOTE]
-> **Bloc 1 livré le 2026-09-04** (`ced306e`). Restent ouverts les blocs 2 et 3, soit ~0,75-1 j.
+> **Bloc 1 livré le 2026-09-04** (`ced306e`). **Blocs 2 et 3 livrés le 2026-09-15**, branche
+> `fix/p40-bloc-2`, **pas encore fusionnée** — conception et plan :
+> [spec](superpowers/specs/2026-09-15-p40-bloc-2-cartes-et-forge-design.md) ·
+> [plan](superpowers/plans/2026-09-15-p40-bloc-2-cartes-et-forge.md), décisions en
+> [ADR-094](../.obsidian_vault/_adr/ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md).
+> Reste le bloc 4, une décision. **En attente du propriétaire** : réparer ou non, au chargement,
+> une carte neutre devenue `unique` par l'ancienne fusion de légendaires (spec §5).
 
 1. ~~**Supprimer la chaîne `skills.json`**~~ — ✅ **livré** — 6 entrées de données, `SkillData`, `SkillController`, `SkillState`, les deux `executeSkill` et le champ de sauvegarde. Le système était **inatteignable** : aucun appelant de `_game.executeSkill(...)`, aucun bouton de compétence dans `lib/ui/`. Conception et conséquences — [ADR-084](../.obsidian_vault/_adr/ADR-084-suppression-de-la-chaine-de-competences-heroiques.md). ⚠️ **`applyLifestealBuff()`** a été conservée en paire : c'est la **façade** `RunController.applyLifestealBuff` (`run_controller.dart:438`) qui n'a plus d'appelant, l'implémentation (`run/player_stats_manager.dart:475`) restant appelée par elle. Elle vit dans `RunController`, pas dans le système de compétences ; P-41 doit reprendre ou supprimer les deux.
-2. **Trois bugs confirmés** — la rune `enduring` cassée dès le tier 2 (`'enduring:1'` codé en dur, `deck_controller.dart:188`, alors que la fusion de runes *et* la fusion 3→1 produisent des tiers supérieurs) ; la duplication des cartes `unique` par trois voies de clonage non filtrées ; l'écart de capacité de forge 1 ↔ 10 entre carte commune et carte de classe, où le code contredit `_rules/03-8`.
-3. **Dix dérives documentaires** entre les fiches du vault et le code, listées en Partie III.C de l'[état des lieux](analysis_reports/05082026_etat_des_lieux_heros_et_cartes_Opus5.md) — dont deux entrées **de ce document** (§5, P-17 : « `Attaque Rapide` gratuite » et « Paladin 20 armure de base ») héritées sans re-mesure et fausses. C'est exactement le motif documenté au §10.4 pour le Tier D ; le Tier C n'a pas encore subi ce contrôle.
+2. ~~**Trois bugs confirmés**~~ — ✅ **corrigés le 2026-09-15**, re-vérifiés d'abord : la rune `enduring` cassée dès le tier 2, la duplication des cartes `unique` par trois voies de copie, la capacité de forge 10 au lieu de 5 des cartes de classe. Un quatrième, de même cause que le dernier, est corrigé avec : trois légendaires fusionnaient en une carte `unique`. Suites relevées sans relever du bloc : §7, correctifs ponctuels.
+3. ~~**Dix dérives documentaires**~~ — ✅ **re-vérifiées une à une le 2026-09-15** ([état des lieux](analysis_reports/05082026_etat_des_lieux_heros_et_cartes_Opus5.md), Partie III.C) : cinq étaient déjà corrigées (n° 1, 5 et 6 le 2026-09-05, n° 8 et 9 — P-17 — le 2026-08-11), deux sont **devenues vraies par le code** du bloc 2 (n° 3 et 4, `_rules/03-8`), trois sont corrigées dans le vault (n° 2 `heal_potion`, n° 7 coût des cartes, n° 10 statut d'ADR-051), plus une trouvée en chemin : `_rules/03-1` décrivait encore `CardInstance.temporaryCost`, supprimé.
 4. **Le corpus de formation `docs/formation-heros-draft/`** *(relevé le 2026-09-05)* : **13 de ses 21 chapitres** documentent la chaîne de compétences supprimée comme du code vivant, listings de source à l'appui — `grep -lE 'SkillController|SkillData|SkillState|executeSkill|skillProvider|skills\.json' docs/formation-heros-draft/ch*.html | wc -l`. Il n'est indexé nulle part dans `docs/INDEX.md` : décider s'il devient un instantané daté ou s'il est mis à jour.
 
 **Double débloquage** : annule le tiers `SkillData` de P-26, et referme le correctif `unique` du §7.
@@ -546,7 +552,12 @@ Sur les 14 blocs `catch` de `lib/`, **un seul est totalement muet** : `lib/ui/sc
   - « aller au champ » reste inerte pour une faute dont le champ n'a pas d'ancre montée.
 - **Les cartes de signature ne sont pas filtrées par classe** en boutique ni sur le bonus de boss —
   [analyse](possible_upgrades/08-09-2026_filtre_cartes_de_classe_Opus5.md). À traiter avant ou
-  avec **P-42**, qui multipliera ces cartes.
+  avec **P-42**, qui multipliera ces cartes. Depuis le 2026-09-15, les deux pools lisent
+  `CardRarity.isAcquirable` : c'est là que le filtre de classe viendra se joindre.
+- **Une écriture de l'éditeur peut laisser un dossier de classe vide**, qui fait rougir la suite :
+  `hero_display_order_test` lit `class.json` dans chaque dossier sans garde. Constaté le 2026-09-15
+  sur un dossier `gambler` vide, supprimé depuis ; `entity_writer.dart` affirme au contraire un tel
+  dossier « sans conséquence ».
 
 ### P-31 — Ne pas ouvrir sans lire le prérequis
 
@@ -566,7 +577,10 @@ Sur les 14 blocs `catch` de `lib/`, **un seul est totalement muet** : `lib/ui/sc
 > Le même prérequis conditionne le volet visuel de **P-12** (Biomes).
 
 ### Correctifs ponctuels signalés dans `upgrade_ideas.md` (non estimés séparément, ≈ 1,5 j au total)
-- ~~Exclure les cartes de rareté `unique` du menu de draft post-boss~~ → **repris par P-40**, qui en identifie la cause exacte (le pool source du draft post-boss est devenu *le deck du joueur*, ADR-051 n'a donc pas été supprimé mais contourné) et **deux voies de duplication supplémentaires** : le Miroir Magique de boutique et la récompense « Miroir » de level-up.
+- ~~Exclure les cartes de rareté `unique` du menu de draft post-boss~~ → **repris par P-40**, qui en identifie la cause exacte (le pool source du draft post-boss est devenu *le deck du joueur*, ADR-051 n'a donc pas été supprimé mais contourné) et **deux voies de duplication supplémentaires** : le Miroir Magique de boutique et la récompense « Miroir » de level-up. ✅ **Corrigé le 2026-09-15** (P-40 bloc 2, `DeckState.copyableCards`).
+- **Le badge « Usage unique », l'avertissement d'infobulle et les particules d'épuisement ignorent Persistant**, à tout tier : la carte part en défausse mais le jeu l'annonce épuisée. `CardInstance.exhaustsOnPlay` est prêt à servir de source unique. *(Relevé le 2026-09-15, spec du bloc 2 de P-40, §6.)*
+- **Un Miroir sans carte copiable échoue en silence** — deck réduit à ses cartes de classe : le Miroir de montée de niveau termine le draft sans rien donner, celui de la boutique ne s'ouvre pas. Masquer le choix ou prévenir le joueur, avec ses textes bilingues : décision d'interface. *(Même source.)*
+- **La forge peut proposer une rune non cumulable que la carte porte déjà** : un emplacement gaspillé si le joueur la prend. *(Même source.)*
 - Vérifier que la règle anti-répétition de nœuds fonctionne réellement, et que les quotas par acte sont respectés.
 - Repositionner la popup d'aperçu des améliorations d'une carte (forge et tous les autres écrans concernés).
 - Mettre `docs/animations/card_animations_system.md` en conformité avec le code (documentation fausse sur 4 points).
@@ -614,7 +628,7 @@ Constats faits en consolidant ce document — **à traiter avant de se fier aux 
 | 4 | `pubspec.yaml` à `0.1.0+1` vs `patch_notes.json` à `0.4.7` | Confirmé | → **P-01** — ✅ clos le 2026-08-03 |
 | 5 | Taux de complétion divergents | Rapport 22/07 : « ~86 % de 146 items » · `progress.md` §3 : « ~60 % de 95 items » | Recompter sur la base de ce document |
 | 6 | Aucun `.github/workflows/` | Confirmé | → **P-04** — ✅ clos le 2026-08-20 (trois workflows) |
-| 7 | `systemPatterns.md` : `## 2.` porte un `### 2.1.bis` et **deux** sous-sections `### 2.5` (`ShopController` et Immutabilité Stricte des Modèles d'État) | Constaté le 2026-08-20 | Slugs distincts → aucune collision de nom de fichier, mais la numérotation reste à trancher |
+| 7 | `systemPatterns.md` : `## 2.` porte un `### 2.1.bis` et **deux** sous-sections `### 2.5` (`ShopController` et Immutabilité Stricte des Modèles d'État) | Constaté le 2026-08-20 | Slugs distincts → aucune collision de nom de fichier, mais la numérotation reste à trancher. Re-vérifié le 2026-09-15 : les en-têtes `### 2.5` ont quitté l'index le 2026-09-14, la double numérotation demeure dans les noms de fiche (`02-5-immutabilite-…`, `02-5-shopcontroller`) et le libellé `2.1.bis` |
 
 ---
 
@@ -653,7 +667,7 @@ Corrige les règles cassées, comble le trou audio, automatise la distribution. 
 L'ordre compte : P-06 crée `vfx_tokens.dart` dont P-07 dépend ; le prototype de P-08 tranche le pipeline d'assets dont dépendent les sprites de P-05, à lancer en production dès la décision prise. À la sortie de ce jalon, le jeu devrait être nettement plus agréable à jouer sans qu'aucun système n'ait changé de forme.
 
 ### Jalon 3 — Structure *(≈ 11 j)* → P-10, P-11, P-16
-Donne une fin à une run, archive les résultats, puis recalibre l'économie **une fois** que P-02 et le nouveau contenu ont stabilisé la base. Intercaler **P-26 et P-25** (1,1 j de dette à faible risque, dont la violation bilingue de `SkillData`) selon l'humeur — c'est le couple qui remplace l'ancienne recommandation « P-23 et P-25 », P-23 ayant été rétrogradé après re-vérification.
+Donne une fin à une run, archive les résultats, puis recalibre l'économie **une fois** que P-02 et le nouveau contenu ont stabilisé la base. Intercaler **P-26 et P-25** (1,1 j de dette à faible risque ; la violation bilingue de `SkillData` qu'y comptait ce paragraphe est close depuis le 2026-09-04, P-40 ayant supprimé le modèle) selon l'humeur — c'est le couple qui remplace l'ancienne recommandation « P-23 et P-25 », P-23 ayant été rétrogradé après re-vérification.
 
 **Au-delà** : P-14 (Variantes d'Élite) et P-13 (méta-progression) sont les deux gros morceaux suivants ; P-12 (Biomes) est prêt côté code mais attend 15 illustrations — c'est le seul chantier qu'il est rationnel de lancer *maintenant* côté art, en parallèle de tout le reste.
 
