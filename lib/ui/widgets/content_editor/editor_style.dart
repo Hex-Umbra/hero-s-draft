@@ -54,6 +54,19 @@ abstract final class EditorColors {
   /// Le repli d'un champ de couleur dont la valeur n'est pas un `#RRGGBB` : un
   /// magenta, qui doit se voir.
   static const Color colorFallback = Color(0xFFFF00FF);
+
+  /// L'ombre portee du titre de la barre : un noir a 59 %.
+  static const Color titleShadow = Color(0x96000000);
+
+  /// Le texte du badge DEBUG : blanc pur, seul a tenir 4,5:1 sur `debug`
+  /// (4,81:1 contre 4,17:1 pour `AppColors.textPrimary`).
+  static const Color debugInk = Colors.white;
+
+  /// L'ombre portee de la pastille de proprietaire d'un groupe.
+  static const Color groupDotShadow = Color(0x66000000);
+
+  /// Le texte d'une entite non choisie de l'explorateur.
+  static const Color explorerItemInk = Color(0xFFB9C5CC);
 }
 
 /// Les cles JSON, chemins et identifiants : ce que l'auteur retrouvera tel
