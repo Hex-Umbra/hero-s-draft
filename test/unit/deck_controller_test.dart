@@ -179,6 +179,62 @@ void main() {
       // Upgrades should be limited to 2
       expect(mergedCard.forgeUpgrades.length, 2);
     });
+
+    test('mergeCards refuse trois legendaires : aucune rarete au-dela', () {
+      final copies = List.generate(
+        3,
+        (_) => CardInstance(data: _card('strike').data, rarity: CardRarity.legendary),
+      );
+      notifier.initializeStarterDeck(copies);
+
+      notifier.mergeCards(copies.map((c) => c.uniqueId).toList(), const []);
+
+      expect(notifier.state.masterDeck, hasLength(3));
+      expect(
+        notifier.state.masterDeck.map((c) => c.rarity).toSet(),
+        {CardRarity.legendary},
+      );
+    });
+
+    test('mergeCards refuse trois cartes de raretes differentes', () {
+      final data = _card('strike').data;
+      final trio = [
+        CardInstance(data: data),
+        CardInstance(data: data),
+        CardInstance(data: data, rarity: CardRarity.epic),
+      ];
+      notifier.initializeStarterDeck(trio);
+
+      notifier.mergeCards(trio.map((c) => c.uniqueId).toList(), const []);
+
+      expect(notifier.state.masterDeck, trio);
+    });
+
+    test('mergeCards refuse trois cartes differentes', () {
+      final trio = [_card('strike'), _card('strike'), _card('defend')];
+      notifier.initializeStarterDeck(trio);
+
+      notifier.mergeCards(trio.map((c) => c.uniqueId).toList(), const []);
+
+      expect(notifier.state.masterDeck, trio);
+    });
+
+    test('copyableCards ecarte les cartes unique du master deck', () {
+      final strike = _card('strike');
+      final signature = CardInstance(
+        data: const CardData(
+          id: 'holy_shield',
+          cost: 1,
+          type: CardType.skill,
+          category: CardCategory.characterSpecific,
+          rarity: CardRarity.unique,
+          target: CardTarget.self,
+          effects: [],
+        ),
+      );
+
+      expect(DeckState(masterDeck: [strike, signature]).copyableCards, [strike]);
+    });
   });
 
   group('DeckNotifier — aléatoire et compteur de remélange', () {
@@ -382,6 +438,69 @@ void main() {
       expect(notifier.state.hand.length, 3);
       expect(notifier.state.drawPile.length, 7);
       expectConservation(notifier.state);
+    });
+  });
+
+  group('DeckNotifier.playCard — epuisement', () {
+    late ProviderContainer container;
+    late DeckNotifier notifier;
+
+    setUp(() {
+      container = ProviderContainer();
+      notifier = container.read(deckProvider.notifier);
+    });
+
+    tearDown(() => container.dispose());
+
+    CardInstance cardWith({
+      CardType type = CardType.skill,
+      bool isExhaust = true,
+      List<String> runes = const [],
+    }) =>
+        CardInstance(
+          data: CardData(
+            id: 'heal_potion',
+            cost: 1,
+            type: type,
+            category: CardCategory.global,
+            rarity: CardRarity.common,
+            target: CardTarget.self,
+            isExhaust: isExhaust,
+            effects: const [],
+          ),
+          forgeUpgrades: runes,
+        );
+
+    void play(CardInstance card) {
+      notifier.state = notifier.state.copyWith(hand: [card]);
+      notifier.playCard(card);
+    }
+
+    test('une carte isExhaust sans rune est epuisee', () {
+      final card = cardWith();
+      play(card);
+      expect(notifier.state.exhaustPile, [card]);
+      expect(notifier.state.discardPile, isEmpty);
+    });
+
+    test('Persistant au tier 1 envoie la carte en defausse', () {
+      final card = cardWith(runes: const ['enduring:1']);
+      play(card);
+      expect(notifier.state.discardPile, [card]);
+      expect(notifier.state.exhaustPile, isEmpty);
+    });
+
+    test('Persistant au tier 2 envoie aussi la carte en defausse', () {
+      final card = cardWith(runes: const ['sharp:1', 'enduring:2']);
+      play(card);
+      expect(notifier.state.discardPile, [card]);
+      expect(notifier.state.exhaustPile, isEmpty);
+    });
+
+    test('un pouvoir est epuise meme s il porte Persistant', () {
+      final card = cardWith(type: CardType.power, isExhaust: false, runes: const ['enduring:1']);
+      play(card);
+      expect(notifier.state.exhaustPile, [card]);
     });
   });
 }

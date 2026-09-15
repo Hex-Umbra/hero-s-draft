@@ -6,6 +6,7 @@ import '../../models/missing_save_item.dart';
 import '../../models/data/forge_upgrade_data.dart';
 import '../../services/audio/audio_providers.dart';
 import '../../services/audio/game_moment.dart';
+import '../services/forge_rune_rules.dart';
 
 class DeckState {
   final List<CardInstance> masterDeck;
@@ -45,6 +46,14 @@ class DeckState {
     );
   }
 
+  /// Cartes du master deck qu'une récompense peut copier : draft de boss,
+  /// Miroir Magique, Miroir de montée de niveau.
+  ///
+  /// Liste neuve et modifiable à chaque appel : les trois appelants la
+  /// mélangent en place sans toucher à l'état.
+  List<CardInstance> get copyableCards =>
+      masterDeck.where((card) => card.rarity.isAcquirable).toList();
+
   Map<String, dynamic> toJson() => {
         'masterDeck': masterDeck.map((c) => c.toJson()).toList(),
         'drawPile': drawPile.map((c) => c.toJson()).toList(),
@@ -77,7 +86,12 @@ class DeckState {
       final (validUpgrades, upgradesMissing) =
           ForgeUpgradeData.filterValidRefs(instance.forgeUpgrades);
       missing.addAll(upgradesMissing);
-      kept.add(instance.copyWith(data: freshData, forgeUpgrades: validUpgrades));
+      // Une carte `unique` dont le modèle ne l'est pas ne vient que de l'ancienne
+      // fusion de trois légendaires (ADR-094) : elle retrouve sa légendaire.
+      final rarity = instance.rarity == CardRarity.unique && freshData.rarity != CardRarity.unique
+          ? CardRarity.legendary
+          : instance.rarity;
+      kept.add(instance.copyWith(data: freshData, rarity: rarity, forgeUpgrades: validUpgrades));
     }
 
     return (kept, missing);
@@ -239,7 +253,7 @@ class DeckNotifier extends Notifier<DeckState> {
     state = state.copyWith(hand: [], discardPile: currentDiscardPile);
   }
 
-  /// Joue une carte : la retire de la main et l'envoie dans la défausse (ou l'épuise si pouvoir)
+  /// Joue une carte : la retire de la main et l'envoie dans la défausse, ou l'épuise (voir `CardInstance.exhaustsOnPlay`)
   void playCard(CardInstance card) {
     var currentHand = List<CardInstance>.from(state.hand);
     var currentDiscardPile = List<CardInstance>.from(state.discardPile);
@@ -251,9 +265,7 @@ class DeckNotifier extends Notifier<DeckState> {
     if (index != -1) {
       final cardToPlay = currentHand.removeAt(index);
 
-      final isExhausted = cardToPlay.data.isExhaust && !cardToPlay.forgeUpgrades.contains('enduring:1');
-
-      if (cardToPlay.data.type == CardType.power || isExhausted) {
+      if (cardToPlay.exhaustsOnPlay) {
         currentExhaustPile.add(cardToPlay);
       } else {
         currentDiscardPile.add(cardToPlay);
@@ -286,34 +298,24 @@ class DeckNotifier extends Notifier<DeckState> {
     }
 
     if (selectedCards.length == 3) {
-      if (selectedCards.any((c) => c.rarity == CardRarity.unique)) {
+      // Trois exemplaires d'une même carte à une même rareté, qui en a une
+      // au-delà : ni une carte `unique` ni une légendaire n'en ont.
+      final first = selectedCards[0];
+      final nextRarity = first.rarity.next;
+      if (nextRarity == null ||
+          selectedCards.any((c) => c.data.id != first.data.id || c.rarity != first.rarity)) {
         return;
       }
-      final baseCardData = selectedCards[0].data;
-      final rarity = selectedCards[0].rarity;
+      final baseCardData = first.data;
 
       // Retire les 3 exemplaires
       currentMasterDeck.removeWhere((c) => selectedIds.contains(c.uniqueId));
 
-      // Détermine la rareté suivante
-      final nextRarityIndex = min(rarity.index + 1, CardRarity.values.length - 1);
-      final nextRarity = CardRarity.values[nextRarityIndex];
-
-      // Auto-fusionne les upgrades identiques (cumul des tiers)
-      final Map<String, int> consolidatedMap = {};
-      for (var upgrade in inheritedUpgrades) {
-        final parts = upgrade.split(':');
-        if (parts.length != 2) continue;
-        final id = parts[0];
-        final tier = int.tryParse(parts[1]) ?? 0;
-        if (tier <= 0) continue;
-        consolidatedMap[id] = (consolidatedMap[id] ?? 0) + tier;
-      }
-
-      var finalUpgrades = consolidatedMap.entries.map((e) => '${e.key}:${e.value}').toList();
+      // Réunit les runes identiques (voir `ForgeRuneRules.consolidate`)
+      var finalUpgrades = ForgeRuneRules.consolidate(inheritedUpgrades);
 
       // Limite à la capacité de la rareté supérieure
-      final capacity = baseCardData.baseMaxForgeUpgrades + nextRarityIndex;
+      final capacity = baseCardData.forgeCapacityAt(nextRarity);
       if (finalUpgrades.length > capacity) {
         finalUpgrades = finalUpgrades.sublist(0, capacity);
       }
@@ -336,19 +338,6 @@ class DeckNotifier extends Notifier<DeckState> {
     var currentMasterDeck = List<CardInstance>.from(state.masterDeck);
     currentMasterDeck.removeWhere((c) => c.uniqueId == uniqueId);
     state = state.copyWith(masterDeck: currentMasterDeck);
-  }
-
-  /// Améliore une carte définitivement (Forge) en augmentant sa rareté
-  void upgradeCard(String uniqueId) {
-    state = state.copyWith(
-      masterDeck: state.masterDeck.map((c) {
-        if (c.uniqueId == uniqueId) {
-          final nextRarityIndex = min(c.rarity.index + 1, CardRarity.values.length - 1);
-          return c.copyWith(rarity: CardRarity.values[nextRarityIndex]);
-        }
-        return c;
-      }).toList(),
-    );
   }
 
   /// Ajoute une amélioration de forge à une carte spécifique du Master Deck

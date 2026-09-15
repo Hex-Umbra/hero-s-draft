@@ -561,13 +561,12 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
   }
 
   void _showCloneModal(BuildContext context, WidgetRef ref) {
-    final deckState = ref.read(deckProvider);
-    final masterDeck = List.of(deckState.masterDeck);
+    final copyableCards = ref.read(deckProvider).copyableCards;
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).languageCode;
 
-    masterDeck.shuffle();
-    final options = masterDeck.take(3).toList();
+    copyableCards.shuffle();
+    final options = copyableCards.take(3).toList();
 
     if (options.isEmpty) {
       _finishDraft(ref);

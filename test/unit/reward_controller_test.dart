@@ -264,6 +264,25 @@ void main() {
       expect(rewardController.state.rolledCards, isEmpty);
     });
 
+    test('handleVictory ne propose jamais de carte unique au draft de boss', () {
+      deckNotifier.addCardToMasterDeck(CardInstance(data: allCards[0]));
+      deckNotifier.addCardToMasterDeck(CardInstance(data: allCards[2]));
+
+      rewardController.handleVictory(
+        defeatedEnemies: [makeEnemy(xp: 10, gold: 10)],
+        currentNode: makeNode(bossRewardType: BossRewardType.cards),
+        allRelics: allRelics,
+        allCards: allCards,
+        luck: 0,
+        act: 1,
+      );
+
+      expect(
+        rewardController.state.rolledCards.map((c) => c.data.id),
+        ['c_normal'],
+      );
+    });
+
     test('handleVictory rolls a bonus card excluding status/unique cards, only for a doubleXp boss node', () {
       for (var i = 0; i < 30; i++) {
         rewardController.handleVictory(

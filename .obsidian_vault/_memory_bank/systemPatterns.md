@@ -18,7 +18,7 @@
 | 7. Flux Complet d'un Tour de Combat | [07-00-flux-complet-d-un-tour-de-combat.md](../_patterns/07-00-flux-complet-d-un-tour-de-combat.md) | 71 |
 | 8. Conventions de Code & Standards Techniques | [08-00-conventions-de-code-standards-techniques.md](../_patterns/08-00-conventions-de-code-standards-techniques.md) | 94 |
 | 9. Architecture du Système de Tutoriel Autonome (Tutorial System Technical Design) | [09-00-architecture-du-systeme-de-tutoriel-autonome.md](../_patterns/09-00-architecture-du-systeme-de-tutoriel-autonome.md) | 133 |
-| 10. Architecture du Système de Forge et de Fusion de Cartes (Forge & Card Merge Technical Design) | [10-00-architecture-du-systeme-de-forge-et-de-fusion.md](../_patterns/10-00-architecture-du-systeme-de-forge-et-de-fusion.md) | 109 |
+| 10. Architecture du Système de Forge et de Fusion de Cartes (Forge & Card Merge Technical Design) | [10-00-architecture-du-systeme-de-forge-et-de-fusion.md](../_patterns/10-00-architecture-du-systeme-de-forge-et-de-fusion.md) | 112 |
 | 11. Système de Reliques Avancé : Déclencheurs de Cartes Spécifiques et Charges | [11-00-systeme-de-reliques-avance-declencheurs-de-ca.md](../_patterns/11-00-systeme-de-reliques-avance-declencheurs-de-ca.md) | 58 |
 | 12. Autel d'Échange de Reliques (`RelicExchangeScreen`) | [12-00-autel-d-echange-de-reliques.md](../_patterns/12-00-autel-d-echange-de-reliques.md) | 47 |
 | 15. Chaîne de Release et Site Vitrine (`.github/` et `site/`) | [15-00-chaine-de-release-et-site-vitrine.md](../_patterns/15-00-chaine-de-release-et-site-vitrine.md) | 83 |
@@ -34,7 +34,7 @@
 | 2.1. `RunController` (`runProvider`) — Superviseur Global (Façade) | [02-1-runcontroller-superviseur-global.md](../_patterns/02-1-runcontroller-superviseur-global.md) | 26 |
 | 2.1.bis Persistance de Run — `SaveService`, Checkpoints et Réhydratation (v3.2.0) | [02-1-bis-bis-persistance-de-run-saveservice-checkpoint.md](../_patterns/02-1-bis-bis-persistance-de-run-saveservice-checkpoint.md) | 14 |
 | 2.2. `CombatController` (`combatProvider`) — Pilote de Combat (Façade) | [02-2-combatcontroller-pilote-de-combat.md](../_patterns/02-2-combatcontroller-pilote-de-combat.md) | 31 |
-| 2.3. `DeckNotifier` (`deckProvider`) — Maître du Deck | [02-3-decknotifier-maitre-du-deck.md](../_patterns/02-3-decknotifier-maitre-du-deck.md) | 32 |
+| 2.3. `DeckNotifier` (`deckProvider`) — Maître du Deck | [02-3-decknotifier-maitre-du-deck.md](../_patterns/02-3-decknotifier-maitre-du-deck.md) | 33 |
 | 2.4. `EventController` (`eventProvider`) | [02-4-eventcontroller.md](../_patterns/02-4-eventcontroller.md) | 49 |
 | 2.5. `ShopController` (`shopProvider`) | [02-5-shopcontroller.md](../_patterns/02-5-shopcontroller.md) | 30 |
 | 2.5. Immutabilité Stricte des Modèles d'État | [02-5-immutabilite-stricte-des-modeles-d-etat.md](../_patterns/02-5-immutabilite-stricte-des-modeles-d-etat.md) | 4 |

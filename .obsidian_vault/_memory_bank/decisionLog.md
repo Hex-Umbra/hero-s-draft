@@ -5,10 +5,11 @@ Index des **ADR** (Architecture Decision Records) de **Hero's Draft**. Le corps 
 > [!IMPORTANT]
 > **Plafond : 250 lignes.** Ce fichier est un index, jamais un contenu. Un nouvel ADR prend le numéro `max(index) + 1` lu ici, jamais un numéro deviné.
 
-**Vérifié le 2026-09-15** — 93 décisions, numéros `ADR-001` à `ADR-093`, sans doublon ni trou.
+**Vérifié le 2026-09-15** — 94 décisions, numéros `ADR-001` à `ADR-094`, sans doublon ni trou.
 
 | N° | Décision | Statut | Version | Fichier |
 |:---|:---|:---:|:---:|:---|
+| `ADR-094` | Échelle de Rareté Explicite, Règle d'Acquisition Unique et Runes Non Cumulables (chantier P-40, bloc 2) — **amende `ADR-025`, dépasse en partie `ADR-051`** | ✅ | — | [ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md](../_adr/ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md) |
 | `ADR-093` | Éditeur de Contenu — Jetons de Couleur Nommés et Contrat de Choix (habillage « éditeur », chantier P-30) | ✅ | — | [ADR-093-habillage-editeur-jetons-nommes-et-contrat-de-choix.md](../_adr/ADR-093-habillage-editeur-jetons-nommes-et-contrat-de-choix.md) |
 | `ADR-092` | Éditeur de Contenu — Formulaire Inféré du Document, Vocabulaires du Disque et Ressources sous Rollback (chantier P-30) | ✅ | — | [ADR-092-formulaire-infere-du-document-et-ressources-liees.md](../_adr/ADR-092-formulaire-infere-du-document-et-ressources-liees.md) |
 | `ADR-091` | Menu d'Accueil — Quitter par Plateforme, Retours Arrière et Retrait de la Persistance du Tutoriel | ✅ | — | [ADR-091-menu-d-accueil-quitter-par-plateforme-et-retrait-du.md](../_adr/ADR-091-menu-d-accueil-quitter-par-plateforme-et-retrait-du.md) |
@@ -51,7 +52,7 @@ Index des **ADR** (Architecture Decision Records) de **Hero's Draft**. Le corps 
 | `ADR-054` | Centralisation et Harmonisation des Constantes (v0.1.9) | ✅ | v0.1.9 | [ADR-054-centralisation-et-harmonisation-des-constantes.md](../_adr/ADR-054-centralisation-et-harmonisation-des-constantes.md) |
 | `ADR-053` | Réinitialisation de l'Armure du Joueur en Début de Tour & Suppression de l'Animation (v0.1.8) | ✅ | v0.1.8 | [ADR-053-reinitialisation-de-l-armure-du-joueur-en-debut-de.md](../_adr/ADR-053-reinitialisation-de-l-armure-du-joueur-en-debut-de.md) |
 | `ADR-052` | Amélioration Visuelle, Caching Anti-Exploit du Magic Mirror et Gating de Solde de la Boutique (v0.1.7) | ✅ | v0.1.7 | [ADR-052-amelioration-visuelle-caching-anti-exploit-du-magi.md](../_adr/ADR-052-amelioration-visuelle-caching-anti-exploit-du-magi.md) |
-| `ADR-051` | Filtrage des Cartes de Rareté Unique dans les Récompenses de Boss (v0.1.7) | ✅ | v0.1.7 | [ADR-051-filtrage-des-cartes-de-rarete-unique-dans-les-reco.md](../_adr/ADR-051-filtrage-des-cartes-de-rarete-unique-dans-les-reco.md) |
+| `ADR-051` | Filtrage des Cartes de Rareté Unique dans les Récompenses de Boss (v0.1.7) — **dépassé en partie par `ADR-094`** | ⚠️ | v0.1.7 | [ADR-051-filtrage-des-cartes-de-rarete-unique-dans-les-reco.md](../_adr/ADR-051-filtrage-des-cartes-de-rarete-unique-dans-les-reco.md) |
 | `ADR-050` | Animation Dynamique des Particules du Carrousel de Reliques (v0.1.7) | ✅ | v0.1.7 | [ADR-050-animation-dynamique-des-particules-du-carrousel-de.md](../_adr/ADR-050-animation-dynamique-des-particules-du-carrousel-de.md) |
 | `ADR-049` | Correction de la Relique Croc Kunaï (v0.1.7) | ✅ | v0.1.7 | [ADR-049-correction-de-la-relique-croc-kunai.md](../_adr/ADR-049-correction-de-la-relique-croc-kunai.md) |
 | `ADR-048` | État Critique Déterministe, Nombres Flottants Néon et Décélération de Jauge HP (v0.1.7) | ✅ | v0.1.7 | [ADR-048-etat-critique-deterministe-nombres-flottants-neon.md](../_adr/ADR-048-etat-critique-deterministe-nombres-flottants-neon.md) |
@@ -77,7 +78,7 @@ Index des **ADR** (Architecture Decision Records) de **Hero's Draft**. Le corps 
 | `ADR-028` | Équilibrage Hybride de la Difficulté et Système de Réserve de Vagues (Hybrid Difficulty Balancing & Wave Reserve System) | ✅ | — | [ADR-028-equilibrage-hybride-de-la-difficulte-et-systeme-de.md](../_adr/ADR-028-equilibrage-hybride-de-la-difficulte-et-systeme-de.md) |
 | `ADR-027` | Système de Coup Critique et Rééquilibrage du Scaling Ennemi (Critical Hit System & Enemy Scaling Tuning) | ✅ | — | [ADR-027-systeme-de-coup-critique-et-reequilibrage-du-scali.md](../_adr/ADR-027-systeme-de-coup-critique-et-reequilibrage-du-scali.md) |
 | `ADR-026` | Isolation des Cartes de Classe "Unique" et Standardisation du Draft Initial (Class Card Isolation & Starter Draft Overhaul) | ✅ | — | [ADR-026-isolation-des-cartes-de-classe-unique-et-standardi.md](../_adr/ADR-026-isolation-des-cartes-de-classe-unique-et-standardi.md) |
-| `ADR-025` | Système de Forge Découplé et Probabiliste | ✅ | — | [ADR-025-systeme-de-forge-decouple-et-probabiliste.md](../_adr/ADR-025-systeme-de-forge-decouple-et-probabiliste.md) |
+| `ADR-025` | Système de Forge Découplé et Probabiliste — **D1 amendé par `ADR-094`** | ✅ | — | [ADR-025-systeme-de-forge-decouple-et-probabiliste.md](../_adr/ADR-025-systeme-de-forge-decouple-et-probabiliste.md) |
 | `ADR-024` | Progression par Rareté Dynamique et Fusion Interactive (3→1) | ✅ | — | [ADR-024-progression-par-rarete-dynamique-et-fusion-interac.md](../_adr/ADR-024-progression-par-rarete-dynamique-et-fusion-interac.md) |
 | `ADR-023` | Système de Statuts Élémentaires Riches & Vulnérabilité Universelle | ✅ | — | [ADR-023-systeme-de-statuts-elementaires-riches-vulnerabili.md](../_adr/ADR-023-systeme-de-statuts-elementaires-riches-vulnerabili.md) |
 | `ADR-022` | Ciblage Interactif en Deux Phases et Clarté des Info-bulles (Two-Phase Targeting & Canvas Cards Tooltips) | ✅ | — | [ADR-022-ciblage-interactif-en-deux-phases-et-clarte-des-in.md](../_adr/ADR-022-ciblage-interactif-en-deux-phases-et-clarte-des-in.md) |

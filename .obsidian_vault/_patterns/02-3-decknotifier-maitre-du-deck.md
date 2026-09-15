@@ -9,9 +9,10 @@
 - **Immuabilité stricte de `CardInstance`** : Le modèle `CardInstance` est garanti immuable (tous les attributs sont `final`, et `forgeUpgrades` est verrouillé dans `List<String>.unmodifiable`). Toutes les mutations temporaires ou permanentes se font via son pattern `copyWith` pour assurer l'intégrité de l'état.
 - **Cycle de vie** : `clearDeck()`, `initializeStarterDeck(cards)`, `startCombat({handSize, maxHandSize})` — mélange le master deck, tire la main d'ouverture et remet `reshuffleCount` à 0, **en une seule affectation de `state`**.
 - **Mécanique de pioche** : `drawCards(amount, {required maxHandSize})` — remélange automatiquement la défausse dès que la pioche est vide, s'arrête net quand la main est pleine. Il n'existe pas de méthode de remélange manuel.
-- **Jeu de carte** : `playCard(card)` — retire de la main. Cartes Power ou `isExhaust` → exhaustPile; autres → discardPile.
-- **Gestion du deck** : `addCardToMasterDeck()`, `removeCardById()`, `upgradeCard(uniqueId)` (level+1 permanent).
-- **Auto-Merge** : `mergeCards(cardId, level)` — cherche 3 copies (même baseCardId + level), supprime les 3, ajoute 1 copie à level+1.
+- **Jeu de carte** : `playCard(card)` — retire de la main, puis `CardInstance.exhaustsOnPlay` décide : pouvoir, ou `isExhaust` sans rune `enduring` à quelque tier que ce soit → exhaustPile ; autres → discardPile.
+- **Gestion du deck** : `addCardToMasterDeck()`, `removeCardById()`, `addForgeUpgrade()`, `setForgeUpgrades()`. Aucune méthode ne monte la rareté d'une carte hors fusion (`upgradeCard`, sans appelant, supprimée le 2026-09-15).
+- **Auto-Merge** : `mergeCards(selectedIds, inheritedUpgrades)` — exige 3 exemplaires d'une même carte à une même rareté qui a une rareté au-delà (`CardRarity.next`), les remplace par 1 carte de cette rareté, runes réunies par `ForgeRuneRules.consolidate`.
+- **Copies** : `DeckState.copyableCards` — les cartes du master deck qu'une récompense peut copier, sans les `unique` ; liste neuve à chaque appel, que ses appelants mélangent en place — [ADR-094](../_adr/ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md).
 - **Défausse/Main** : `discardHand()` (main → défausse), `addCardToDiscardPile()` (ajout direct en défausse).
 
 > [!NOTE]

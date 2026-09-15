@@ -1,12 +1,11 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'package:roguelike_card_game/ui/widgets/game_dialog.dart';
 import 'package:roguelike_card_game/ui/widgets/game_button.dart';
 import '../../game/controllers/deck_controller.dart';
+import '../../game/services/forge_rune_rules.dart';
 import '../../models/card_instance.dart';
-import '../../models/data/card_data.dart';
 import '../../models/data/forge_upgrade_data.dart';
 import '../../services/audio/audio_providers.dart';
 import '../../services/audio/music_scene.dart';
@@ -103,7 +102,7 @@ class DeckScreen extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      if (card.rarity == CardRarity.unique)
+                      if (card.rarity.next == null)
                         const SizedBox.shrink()
                       else if (canMerge && allowMerge)
                         ElevatedButton(
@@ -169,12 +168,11 @@ class DeckScreen extends ConsumerWidget {
       builder: (ctx) => _MergeDialog(duplicates: duplicates, ref: ref),
     );
 
-    if (merged == true) {
+    final nextRarity = card.rarity.next;
+    if (merged == true && nextRarity != null) {
       if (context.mounted) {
-        final nextRarityIndex =
-            min(card.rarity.index + 1, CardRarity.values.length - 1);
         context.showNotification(
-          l10n.deckMergeSuccess(cardName, nextRarityIndex + 1),
+          l10n.deckMergeSuccess(cardName, nextRarity.index + 1),
           type: NotificationType.success,
         );
       }
@@ -221,26 +219,13 @@ class _MergeDialogState extends State<_MergeDialog> {
     if (_selectedCards.length != 3) return;
 
     final firstCard = _selectedCards[0];
-    final nextRarityIndex =
-        min(firstCard.rarity.index + 1, CardRarity.values.length - 1);
-    _capacity = firstCard.data.baseMaxForgeUpgrades + nextRarityIndex;
+    final nextRarity = firstCard.rarity.next;
+    if (nextRarity == null) return;
+    _capacity = firstCard.data.forgeCapacityAt(nextRarity);
 
-    final Map<String, int> consolidatedMap = {};
-    for (var card in _selectedCards) {
-      for (var upgrade in card.forgeUpgrades) {
-        final parts = upgrade.split(':');
-        if (parts.length != 2) continue;
-        final id = parts[0];
-        final tier = int.tryParse(parts[1]) ?? 0;
-        if (tier <= 0) continue;
-        consolidatedMap[id] = (consolidatedMap[id] ?? 0) + tier;
-      }
-    }
-
-    _consolidatedUpgrades = [];
-    consolidatedMap.forEach((id, tier) {
-      _consolidatedUpgrades.add('$id:$tier');
-    });
+    _consolidatedUpgrades = ForgeRuneRules.consolidate(
+      _selectedCards.expand((card) => card.forgeUpgrades),
+    );
 
     if (_consolidatedUpgrades.length <= _capacity) {
       _performMerge(_consolidatedUpgrades);
@@ -296,7 +281,7 @@ class _MergeDialogState extends State<_MergeDialog> {
                             final tier = parts.length > 1 ? parts[1] : '1';
                             final upgradeData = ForgeUpgradeData.getById(id);
                             return upgradeData != null
-                                ? (id == 'enduring' ? upgradeData.getName(locale) : '${upgradeData.getName(locale)} $tier')
+                                ? (upgradeData.stackable ? '${upgradeData.getName(locale)} $tier' : upgradeData.getName(locale))
                                 : '$id $tier';
                           }).join(', ');
                     return CheckboxListTile(
@@ -374,7 +359,7 @@ class _MergeDialogState extends State<_MergeDialog> {
                     final tier = parts[1];
                     final upgradeData = ForgeUpgradeData.getById(id);
                     final displayName = upgradeData != null 
-                        ? (id == 'enduring' ? upgradeData.getName(locale) : '${upgradeData.getName(locale)} (Niveau $tier)')
+                        ? (upgradeData.stackable ? '${upgradeData.getName(locale)} (Niveau $tier)' : upgradeData.getName(locale))
                         : '${id.toUpperCase()} (Niveau $tier)';
                     final isSelected = _chosenUpgrades.contains(upgrade);
                     return CheckboxListTile(

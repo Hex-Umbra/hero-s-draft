@@ -148,4 +148,29 @@ void main() {
       await tester.pumpWidget(const SizedBox());
     },
   );
+
+  testWidgets(
+    'DeckScreen ne propose aucune fusion pour trois legendaires',
+    (WidgetTester tester) async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
+      final deckNotifier = container.read(deckProvider.notifier);
+      for (var i = 0; i < 3; i++) {
+        deckNotifier.addCardToMasterDeck(
+          CardInstance(data: strikeCard, rarity: CardRarity.legendary),
+        );
+      }
+
+      // Le bouton ne s'affiche qu'avec allowMerge, la mention « Fusion
+      // possible » que sans : chaque mode garde l'une des deux.
+      await tester.pumpWidget(buildApp(container, allowMerge: true));
+      await tester.pumpAndSettle();
+      expect(find.text('FUSIONNER (3)'), findsNothing);
+
+      await tester.pumpWidget(buildApp(container, allowMerge: false));
+      await tester.pumpAndSettle();
+      expect(find.text('Fusion possible'), findsNothing);
+    },
+  );
 }

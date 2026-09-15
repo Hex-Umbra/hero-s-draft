@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../game/controllers/deck_controller.dart';
 import '../../game/controllers/inventory_controller.dart';
 import '../../game/controllers/run_controller.dart';
+import '../../game/services/forge_rune_rules.dart';
 import '../../models/card_instance.dart';
 import '../../models/data/card_data.dart';
 import '../../models/data/game_data_registry.dart';
@@ -47,9 +48,7 @@ class _ForgeUpgradeDialogState extends ConsumerState<ForgeUpgradeDialog> {
   @override
   void initState() {
     super.initState();
-    final rarityIndex = widget.card.rarity.index;
-    _totalMaxForgeUpgrades =
-        widget.card.data.baseMaxForgeUpgrades + rarityIndex;
+    _totalMaxForgeUpgrades = widget.card.forgeCapacity;
 
     final runState = ref.read(runProvider);
     if (runState.forgeTargetSessions.containsKey(widget.card.uniqueId)) {
@@ -174,7 +173,7 @@ class _ForgeUpgradeDialogState extends ConsumerState<ForgeUpgradeDialog> {
     rolledId ??= 'sharp';
 
     int tier = 1;
-    if (rolledId != 'enduring') {
+    if (ForgeRuneRules.isStackable(rolledId)) {
       final t = rand.nextInt(100);
       if (t < 80) {
         tier = 1;

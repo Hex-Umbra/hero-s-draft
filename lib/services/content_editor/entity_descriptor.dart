@@ -308,6 +308,7 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
   "pools": ["common"],
   "eligibleCardTypes": ["attack", "skill", "power", "status"],
   "requiresExhaust": false,
+  "stackable": true,
   "valueMultiplier": 1,
   "weight": 10,
   "emoji": "🔮"

@@ -168,10 +168,9 @@ class RewardController extends Notifier<RewardState> {
     // 4. Roll Cards
     List<CardInstance> rolledCards = [];
     if (currentNode.bossRewardType == BossRewardType.cards) {
-      final playerDeck = ref.read(deckProvider).masterDeck;
-      if (playerDeck.isNotEmpty) {
+      final candidates = ref.read(deckProvider).copyableCards;
+      if (candidates.isNotEmpty) {
         final random = Random();
-        final List<CardInstance> candidates = List<CardInstance>.from(playerDeck);
         candidates.shuffle(random);
         final toTake = min(5, candidates.length);
         for (int i = 0; i < toTake; i++) {
@@ -187,7 +186,7 @@ class RewardController extends Notifier<RewardState> {
     CardData? rolledBonusCard;
     if (currentNode.bossRewardType == BossRewardType.doubleXp) {
       final validCards = allCards
-          .where((c) => c.type != CardType.status && c.rarity != CardRarity.unique)
+          .where((c) => c.type != CardType.status && c.rarity.isAcquirable)
           .toList();
       if (validCards.isNotEmpty) {
         rolledBonusCard = validCards[Random().nextInt(validCards.length)];

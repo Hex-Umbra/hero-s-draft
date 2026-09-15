@@ -18,7 +18,7 @@ class UiCard extends StatelessWidget {
   final int? level;
   final double rarityMultiplier;
   final List<String> forgeUpgrades;
-  final int baseMaxForgeUpgrades;
+  final int forgeCapacity;
   final List<CardEffect>? effects;
   final CardType? type;
   final CardTarget? targetType;
@@ -37,7 +37,7 @@ class UiCard extends StatelessWidget {
     this.level,
     this.rarityMultiplier = 1.0,
     this.forgeUpgrades = const [],
-    this.baseMaxForgeUpgrades = 1,
+    this.forgeCapacity = 1,
     this.effects,
     this.type,
     this.targetType,
@@ -66,7 +66,7 @@ class UiCard extends StatelessWidget {
       level: 1,
       rarityMultiplier: card.rarityMultiplier,
       forgeUpgrades: card.forgeUpgrades,
-      baseMaxForgeUpgrades: card.data.baseMaxForgeUpgrades,
+      forgeCapacity: card.forgeCapacity,
       effects: card.data.effects,
       type: card.data.type,
       targetType: card.data.target,
@@ -98,7 +98,7 @@ class UiCard extends StatelessWidget {
       level: 1,
       rarityMultiplier: rarityMultiplier,
       forgeUpgrades: forgeUpgrades,
-      baseMaxForgeUpgrades: card.baseMaxForgeUpgrades,
+      forgeCapacity: card.forgeCapacityAt(card.rarity),
       effects: card.effects,
       type: card.type,
       targetType: card.target,
@@ -115,8 +115,6 @@ class UiCard extends StatelessWidget {
     final typeColor = getCardTypeColor(type, isGrayedOut: isGrayedOut);
     final bgColor = getCardBackgroundColor(type, isGrayedOut: isGrayedOut);
     final rarityColor = getCardRarityColor(context, rarity);
-
-    final rarityIndex = getCardRarityIndex(context, rarity);
 
     final showBadge = isExhaust || type == CardType.power;
     final descriptionTop = showBadge ? 52.0 : 40.0;
@@ -240,8 +238,7 @@ class UiCard extends StatelessWidget {
                                 const SizedBox(height: 3),
                                 CardRuneSockets(
                                   forgeUpgrades: forgeUpgrades,
-                                  baseMaxForgeUpgrades: baseMaxForgeUpgrades,
-                                  rarityIndex: rarityIndex,
+                                  totalSlots: forgeCapacity,
                                 ),
                                 if (showBadge) ...[
                                   const SizedBox(height: 3),

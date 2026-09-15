@@ -206,10 +206,9 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     List<CardInstance> options = shopState.cloneOptions;
 
     if (options.isEmpty) {
-      final deckState = ref.read(deckProvider);
-      final masterDeck = List.of(deckState.masterDeck);
-      masterDeck.shuffle();
-      options = masterDeck.take(3).toList();
+      final copyableCards = ref.read(deckProvider).copyableCards;
+      copyableCards.shuffle();
+      options = copyableCards.take(3).toList();
       if (options.isNotEmpty) {
         ref.read(shopProvider.notifier).setCloneOptions(options);
       }

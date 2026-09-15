@@ -1,7 +1,11 @@
 ## 🃏 ADR-051 : Filtrage des Cartes de Rareté Unique dans les Récompenses de Boss (v0.1.7)
 
 ### Statut
-✅ Accepté & Implémenté (v0.1.7)
+⚠️ **Dépassé en partie par [ADR-094](ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md)
+le 2026-09-15** (P-40 bloc 2). Accepté & implémenté en v0.1.7, mais le draft de boss a depuis cessé de
+tirer du catalogue : il copie depuis le deck du joueur, où le filtre ci-dessous ne s'appliquait pas.
+C'est désormais `DeckState.copyableCards` qui l'en protège, et la conséquence « 15 cartes globales
+neutres uniquement » ne décrit plus le pool. Conservé pour mémoire.
 
 ### Contexte
 1. Lors de l'implémentation de la récompense de cartes du Boss 1 (position x=0) via `BossCardDraftScreen`, les cartes étaient générées par `RewardController` en tirant depuis `allCards` sans filtrage de rareté spécifique.

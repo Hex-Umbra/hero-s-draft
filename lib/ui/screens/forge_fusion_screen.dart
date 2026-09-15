@@ -4,6 +4,7 @@ import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../game/controllers/deck_controller.dart';
 import '../../game/controllers/inventory_controller.dart';
 import '../../game/controllers/run_controller.dart';
+import '../../game/services/forge_rune_rules.dart';
 import '../../models/card_instance.dart';
 import '../../models/data/forge_upgrade_data.dart';
 import '../../services/audio/audio_providers.dart';
@@ -15,20 +16,6 @@ import '../widgets/ui_card.dart';
 import '../widgets/game_button.dart';
 import '../widgets/notification_overlay.dart';
 
-class FusionOption {
-  final String upgradeId;
-  final List<String> originalUpgrades;
-  final int totalTier;
-  final int cost;
-
-  FusionOption({
-    required this.upgradeId,
-    required this.originalUpgrades,
-    required this.totalTier,
-    required this.cost,
-  });
-}
-
 class ForgeFusionScreen extends ConsumerStatefulWidget {
   const ForgeFusionScreen({super.key});
 
@@ -38,34 +25,6 @@ class ForgeFusionScreen extends ConsumerStatefulWidget {
 
 class _ForgeFusionScreenState extends ConsumerState<ForgeFusionScreen> {
   CardInstance? _selectedCard;
-
-  List<FusionOption> _getFusionsForCard(CardInstance card) {
-    final Map<String, List<String>> groups = {};
-    for (final upg in card.forgeUpgrades) {
-      final id = upg.split(':')[0];
-      groups.putIfAbsent(id, () => []).add(upg);
-    }
-
-    final fusions = <FusionOption>[];
-    groups.forEach((id, list) {
-      if (list.length >= 2) {
-        int totalTier = 0;
-        for (final upg in list) {
-          final parts = upg.split(':');
-          final tier = parts.length > 1 ? (int.tryParse(parts[1]) ?? 1) : 1;
-          totalTier += tier;
-        }
-        final cost = 80 * (list.length - 1);
-        fusions.add(FusionOption(
-          upgradeId: id,
-          originalUpgrades: list,
-          totalTier: totalTier,
-          cost: cost,
-        ));
-      }
-    });
-    return fusions;
-  }
 
   void _onCardSelected(CardInstance card) {
     setState(() {
@@ -140,7 +99,7 @@ class _ForgeFusionScreenState extends ConsumerState<ForgeFusionScreen> {
 
     // Trouver toutes les cartes éligibles du deck (ayant au moins deux améliorations de même type)
     final eligibleCards = masterDeck.where((card) {
-      return _getFusionsForCard(card).isNotEmpty;
+      return ForgeRuneRules.fusionOptionsFor(card).isNotEmpty;
     }).toList();
 
     // Si la carte sélectionnée n'est plus éligible, la déselectionner
@@ -150,7 +109,7 @@ class _ForgeFusionScreenState extends ConsumerState<ForgeFusionScreen> {
         _selectedCard = null;
       } else {
         final currentCardInDeck = masterDeck.firstWhere((c) => c.uniqueId == _selectedCard!.uniqueId);
-        if (_getFusionsForCard(currentCardInDeck).isEmpty) {
+        if (ForgeRuneRules.fusionOptionsFor(currentCardInDeck).isEmpty) {
           _selectedCard = null;
         }
       }
@@ -238,7 +197,7 @@ class _ForgeFusionScreenState extends ConsumerState<ForgeFusionScreen> {
                                 itemBuilder: (context, index) {
                                   final card = eligibleCards[index];
                                   final isSelected = _selectedCard?.uniqueId == card.uniqueId;
-                                  final fusions = _getFusionsForCard(card);
+                                  final fusions = ForgeRuneRules.fusionOptionsFor(card);
                                   return Container(
                                     margin: const EdgeInsets.only(bottom: 8),
                                     decoration: BoxDecoration(
@@ -319,7 +278,7 @@ class _ForgeFusionScreenState extends ConsumerState<ForgeFusionScreen> {
                                           Expanded(
                                             child: _buildFusionOptionsList(
                                               _selectedCard!,
-                                              _getFusionsForCard(_selectedCard!),
+                                              ForgeRuneRules.fusionOptionsFor(_selectedCard!),
                                               currentGold,
                                             ),
                                           ),
@@ -342,7 +301,7 @@ class _ForgeFusionScreenState extends ConsumerState<ForgeFusionScreen> {
                                             const SizedBox(height: 24),
                                             _buildFusionOptionsList(
                                               _selectedCard!,
-                                              _getFusionsForCard(_selectedCard!),
+                                              ForgeRuneRules.fusionOptionsFor(_selectedCard!),
                                               currentGold,
                                             ),
                                           ],

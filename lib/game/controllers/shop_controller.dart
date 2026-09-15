@@ -5,6 +5,7 @@ import '../../models/data/card_data.dart';
 import '../../models/data/game_data_registry.dart';
 import '../../models/data/forge_upgrade_data.dart';
 import '../../models/card_instance.dart';
+import '../services/forge_rune_rules.dart';
 import 'run_controller.dart';
 import 'deck_controller.dart';
 import 'inventory_controller.dart';
@@ -45,7 +46,7 @@ class ShopController extends Notifier<ShopState> {
     return allCards
         .where((c) =>
             c.type != CardType.status &&
-            c.rarity != CardRarity.unique)
+            c.rarity.isAcquirable)
         .toList();
   }
 
@@ -143,7 +144,7 @@ class ShopController extends Notifier<ShopState> {
     rolledId ??= 'sharp';
 
     int tier = 1;
-    if (rolledId != 'enduring') {
+    if (ForgeRuneRules.isStackable(rolledId)) {
       final t = rng.nextInt(100);
       if (t < 80) {
         tier = 1;
@@ -158,8 +159,6 @@ class ShopController extends Notifier<ShopState> {
 
   /// Helper pour tirer la rareté finale d'une carte selon l'acte
   CardRarity _rollRarity(CardRarity baseRarity, int act, Random rng) {
-    if (baseRarity == CardRarity.unique) return baseRarity;
-
     int increase = 0;
     final roll = rng.nextInt(100);
     if (act == 1) {
@@ -178,18 +177,13 @@ class ShopController extends Notifier<ShopState> {
       }
     }
 
-    if (increase == 0) return baseRarity;
-
-    final rarities = CardRarity.values;
-    int baseIndex = rarities.indexOf(baseRarity);
-    int targetIndex = baseIndex + increase;
-
-    int maxIndex = rarities.indexOf(CardRarity.legendary);
-    if (targetIndex > maxIndex) {
-      targetIndex = maxIndex;
+    // Monte l'échelle marche par marche : elle s'arrête d'elle-même à
+    // `legendary`, et une carte `unique`, hors échelle, ne monte pas.
+    var rarity = baseRarity;
+    for (var i = 0; i < increase; i++) {
+      rarity = rarity.next ?? rarity;
     }
-
-    return rarities[targetIndex];
+    return rarity;
   }
 
   /// Helper privé réalisant la génération complète d'une instance de carte pour la boutique
@@ -201,8 +195,7 @@ class ShopController extends Notifier<ShopState> {
       rarity: finalRarity,
     );
 
-    final int rarityIndex = CardRarity.values.indexOf(finalRarity);
-    final int maxUpgrades = data.baseMaxForgeUpgrades + rarityIndex;
+    final int maxUpgrades = data.forgeCapacityAt(finalRarity);
 
     int upgradesToRoll = 0;
     final rollUpgrade = rng.nextInt(100);

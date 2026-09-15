@@ -212,39 +212,6 @@ Color getCardRarityColor(BuildContext context, String? rarity) {
   return Colors.white54;
 }
 
-int getCardRarityIndex(BuildContext context, String? rarity) {
-  if (rarity == null) return 0;
-  final l10n = AppLocalizations.of(context)!;
-  final r = rarity.toLowerCase();
-  if (r == l10n.rarityLegendary.toLowerCase() ||
-      r.contains('legendary') ||
-      r.contains('légendaire')) {
-    return 4;
-  }
-  if (r == l10n.rarityEpic.toLowerCase() ||
-      r.contains('epic') ||
-      r.contains('épique')) {
-    return 3;
-  }
-  if (r == l10n.rarityRare.toLowerCase() || r.contains('rare')) {
-    return 2;
-  }
-  if (r == l10n.rarityUncommon.toLowerCase() ||
-      r.contains('uncommon') ||
-      r.contains('peu commun')) {
-    return 1;
-  }
-  if (r == l10n.rarityCommon.toLowerCase() ||
-      r.contains('common') ||
-      r.contains('commun')) {
-    return 0;
-  }
-  if (r.contains('unique')) {
-    return 5;
-  }
-  return 0;
-}
-
 String getRuneEmoji(String upgrade) {
   final id = upgrade.split(':')[0];
   switch (id) {

@@ -78,16 +78,19 @@ graph TD
 La fusion interactive permet au joueur de fusionner 3 exemplaires d'une carte à la même rareté vers la rareté supérieure tout en préservant leurs améliorations :
 
 1. **Validation 3→1** :
-   La méthode `mergeCards` de `DeckNotifier` reçoit les identifiants uniques des 3 cartes sélectionnées. Elle valide que ces 3 cartes existent dans le deck, partagent le même `baseCardId` et ont la même rareté courante.
+   La méthode `mergeCards` de `DeckNotifier` reçoit les identifiants uniques des 3 cartes sélectionnées. Elle valide que ces 3 cartes existent dans le deck, partagent le même id de carte et la même rareté courante, et que cette rareté a une suivante (`CardRarity.next`, nul pour `legendary` et `unique`) — validation complète depuis le 2026-09-15.
 
-2. **Consolidation des Upgrades** :
-   Le système rassemble toutes les améliorations de forge des 3 cartes consommées. Si plusieurs cartes possèdent la même amélioration (même ID d'upgrade), leurs Tiers sont cumulés (ex: `sharp:1` + `sharp:2` = `sharp:3`). Les améliorations uniques sont simplement copiées.
+2. **Consolidation des Upgrades (`ForgeRuneRules`)** :
+   Le système rassemble toutes les améliorations de forge des 3 cartes consommées. Si plusieurs cartes possèdent la même amélioration (même ID d'upgrade), leurs Tiers sont cumulés (ex: `sharp:1` + `sharp:2` = `sharp:3`), **sauf une rune non cumulable** (`ForgeUpgradeData.stackable` faux), gardée une fois au tier 1. Les améliorations uniques sont simplement copiées.
+
+   > [!IMPORTANT]
+   > **Un seul algorithme de cumul.** `lib/game/services/forge_rune_rules.dart` sert la fusion 3→1 (`consolidate`), son dialogue d'héritage (le même `consolidate`) et la Forge de Fusion (`fusionOptionsFor`), avec un seul analyseur de tier. Les trois en portaient chacun une copie, dont aucune ne connaissait les runes non cumulables — [ADR-094](../_adr/ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md).
 
 3. **Capacité Limite par Rareté** :
-   Chaque palier de rareté possède une capacité d'amélioration maximale :
-   $$\text{Capacité} = baseMaxForgeUpgrades + rarityIndex$$
-   - Commune ($rarityIndex=0$) : 2 upgrades max.
-   - Légendaire ($rarityIndex=4$) : 6 upgrades max.
+   Chaque palier de rareté possède une capacité d'amélioration maximale (`CardData.forgeCapacityAt`) :
+   $$\text{Capacité} = baseMaxForgeUpgrades + forgeSlotBonus$$
+   - Carte globale (`baseMaxForgeUpgrades: 1`) : 1 emplacement en commune, 5 en légendaire.
+   - Carte de classe (`baseMaxForgeUpgrades: 5`) : 5, la rareté `unique` n'ajoutant rien.
    
    Si la liste des améliorations consolidées dépasse la capacité de la rareté supérieure ciblée par la fusion, l'interface utilisateur impose un choix d'héritage interactif pour sélectionner précisément les upgrades à conserver.
 

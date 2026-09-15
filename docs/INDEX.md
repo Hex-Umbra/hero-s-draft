@@ -45,6 +45,7 @@ Chaque sujet suit la même chaîne. Tous les documents n'en parcourent pas tous 
 | 🔨 | [P-48 — Plan du lot 3](superpowers/plans/2026-09-04-reorganisation-donnees-lot-3.md) *(la migration ; livré)* | 04/09/2026 |
 | 📐🔨 | [Création guidée & identité de classe en donnée](superpowers/specs/2026-09-08-editeur-de-contenu-creation-guidee-design.md) · [plan](superpowers/plans/2026-09-08-editeur-de-contenu-creation-guidee.md) *(livré ; voir aussi §16)* | 08/09/2026 |
 | 🔍 | [Filtre de classe manquant sur deux pools de cartes](possible_upgrades/08-09-2026_filtre_cartes_de_classe_Opus5.md) *(→ P-42)* | 08/09/2026 |
+| 📐🔨 | [P-40 bloc 2 — Trois bugs de cartes et de forge](superpowers/specs/2026-09-15-p40-bloc-2-cartes-et-forge-design.md) · [plan](superpowers/plans/2026-09-15-p40-bloc-2-cartes-et-forge.md) | 15/09/2026 |
 | 🗄️ | [Documentation des classes](archives/classes_documentation.md) · [Système de passifs](archives/système_de_passifs.md) · [Bilan changement compétences](archives/bilan_changement_competences.md) | — |
 | 🗄️ | [Analyse d'équilibrage des cartes](archives/card_balancing_analysis_01-06-2026.md) | 01/06/2026 |
 | 🗄️ | [Refactoring & équilibrage unifié des cartes](implementation_plans/done/unified_cards_refactoring_and_balancing.md) · [Refonte des raretés](implementation_plans/done/implementation_plan_cards_rarity_refactoring.md) · [Ajustements d'équilibrage](implementation_plans/done/22_card_balance_adjustments.md) | — |
@@ -150,6 +151,7 @@ Chaque sujet suit la même chaîne. Tous les documents n'en parcourent pas tous 
 | 📐 | [Mise à jour du README](superpowers/specs/2026-05-18-readme-update-design.md) | 18/05/2026 |
 | ⚠️🗄️ | [Backlog & roadmap du 22/07](archives/backlog_and_roadmap_report_22072026.md) — **remplacé par [`ROADMAP.md`](ROADMAP.md)** | 22/07/2026 |
 | 🗄️ | [README v1](old_Readmes/README_1.md) · [v2](old_Readmes/README_2.md) | — |
+| 🗄️⚠️ | [Formation complète au projet](formation-heros-draft/index.html) *(21 chapitres)* — **instantané du 2026-08-20, non maintenu** depuis le 2026-09-15 : 13 chapitres décrivent la chaîne de compétences supprimée, 15 les catalogues JSON monolithiques | 20/08/2026 |
 
 ## 13. Transverse — leçons techniques
 

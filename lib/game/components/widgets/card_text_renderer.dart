@@ -1,3 +1,4 @@
+import 'dart:math' show max;
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import '../../../models/data/card_data.dart';
@@ -511,10 +512,10 @@ class CardTextRenderer {
 
 
     // Rune sockets row instead of stars
-    final int baseMaxForgeUpgrades = card.card.data.baseMaxForgeUpgrades;
-    final int rarityIndex = card.card.rarity.index;
-    final int totalSlots = baseMaxForgeUpgrades + rarityIndex;
     final int appliedUpgradesCount = card.card.forgeUpgrades.length;
+    // Une carte sauvegardée au-delà de sa capacité montre toutes ses runes,
+    // comme `CardRuneSockets` hors combat.
+    final int totalSlots = max(card.card.forgeCapacity, appliedUpgradesCount);
 
     final double socketDiameter = 14.0;
     final double socketRadius = 7.0;
