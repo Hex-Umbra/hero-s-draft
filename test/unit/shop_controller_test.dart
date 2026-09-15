@@ -280,9 +280,42 @@ void main() {
       expect(shopController.state.clonePurchasedCount, 0);
     });
 
-    // Dernier test du groupe : le registre statique qu'il installe resterait
-    // visible des tests suivants.
+    test('la rarete tiree en boutique monte au plus jusqu a legendaire', () {
+      runController.updateState(container.read(runProvider).copyWith(act: 3));
+      const epicCard = CardData(
+        id: 'epic_strike',
+        cost: 1,
+        type: CardType.attack,
+        category: CardCategory.global,
+        rarity: CardRarity.epic,
+        target: CardTarget.singleEnemy,
+        effects: [],
+      );
+
+      // A l'acte 3 : moitie sans hausse, 40 % a +1, 10 % a +2 plafonne.
+      final rolled = <CardRarity>{};
+      for (var i = 0; i < 200; i++) {
+        shopController.initializeShop(const [epicCard], 0);
+        rolled.addAll(shopController.state.cardsForSale.map((c) => c.rarity));
+      }
+
+      expect(rolled, {CardRarity.epic, CardRarity.legendary});
+    });
+
     test('la boutique ne tire une rune non cumulable qu au tier 1', () {
+      // Le registre est statique : un registre vide le remplace en sortie,
+      // equivalent a son absence pour ce controleur.
+      addTearDown(
+        () => GameDataRegistry(
+          enemies: const [],
+          heroes: const [],
+          cards: const [],
+          events: const [],
+          passives: const [],
+          relics: const [],
+          forgeUpgrades: const [],
+        ),
+      );
       // Un id autre qu'`enduring` : c'est la donnee qui decide, pas l'id.
       GameDataRegistry(
         enemies: const [],

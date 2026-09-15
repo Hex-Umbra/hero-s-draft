@@ -159,8 +159,6 @@ class ShopController extends Notifier<ShopState> {
 
   /// Helper pour tirer la rareté finale d'une carte selon l'acte
   CardRarity _rollRarity(CardRarity baseRarity, int act, Random rng) {
-    if (baseRarity == CardRarity.unique) return baseRarity;
-
     int increase = 0;
     final roll = rng.nextInt(100);
     if (act == 1) {
@@ -179,18 +177,13 @@ class ShopController extends Notifier<ShopState> {
       }
     }
 
-    if (increase == 0) return baseRarity;
-
-    final rarities = CardRarity.values;
-    int baseIndex = rarities.indexOf(baseRarity);
-    int targetIndex = baseIndex + increase;
-
-    int maxIndex = rarities.indexOf(CardRarity.legendary);
-    if (targetIndex > maxIndex) {
-      targetIndex = maxIndex;
+    // Monte l'échelle marche par marche : elle s'arrête d'elle-même à
+    // `legendary`, et une carte `unique`, hors échelle, ne monte pas.
+    var rarity = baseRarity;
+    for (var i = 0; i < increase; i++) {
+      rarity = rarity.next ?? rarity;
     }
-
-    return rarities[targetIndex];
+    return rarity;
   }
 
   /// Helper privé réalisant la génération complète d'une instance de carte pour la boutique
