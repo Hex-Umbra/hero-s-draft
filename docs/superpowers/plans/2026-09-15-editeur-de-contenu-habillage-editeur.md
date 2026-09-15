@@ -297,7 +297,7 @@ void main() {
 
     testWidgets('une ancre sans champ ne leve rien', (tester) async {
       await pump(tester, const SizedBox());
-      await FieldAnchors().reveal('absent');
+      await expectLater(FieldAnchors().reveal('absent'), completes);
     });
   });
 }
