@@ -31,7 +31,7 @@ Une rune `enduring` retire l'épuisement ou ne le retire pas : son tier ne veut 
 
 ## 3. Décisions
 
-**D1 — `CardRarity` porte l'échelle.** Deux accesseurs sur l'enum : `next`, la rareté que produit une fusion 3→1 (`null` pour `legendary`, sommet de l'échelle, comme pour `unique`, qui n'en fait pas partie), et `forgeSlotBonus`, les emplacements qu'ajoute la rareté (0 à 4 le long de l'échelle, 0 pour `unique`). La capacité se lit à un seul endroit : `CardData.forgeCapacityAt(rarity)`, et `CardInstance.forgeCapacity` pour une carte en jeu. `index` ne sert plus qu'à l'ordre d'affichage (`CardData.compareByDisplayOrder`). `DeckNotifier.upgradeCard`, sans appelant et porteur du même calcul, est supprimée.
+**D1 — `CardRarity` porte l'échelle.** Deux accesseurs sur l'enum : `next`, la rareté que produit une fusion 3→1 (`null` pour `legendary`, sommet de l'échelle, comme pour `unique`, qui n'en fait pas partie), et `forgeSlotBonus`, les emplacements qu'ajoute la rareté (0 à 4 le long de l'échelle, 0 pour `unique`). La capacité se lit à un seul endroit : `CardData.forgeCapacityAt(rarity)`, et `CardInstance.forgeCapacity` pour une carte en jeu. Toute montée de rareté passe par `next`, y compris le tirage de la boutique (`ShopController._rollRarity`, relevé en revue). `index` ne sert plus qu'à l'affichage : l'ordre du dictionnaire (`CardData.compareByDisplayOrder`) et le numéro de niveau du message de fusion. `DeckNotifier.upgradeCard`, sans appelant et porteur du même calcul, est supprimée ; `mergeCards` exige trois exemplaires d'une même carte à une même rareté.
 
 **D2 — `CardRarity.isAcquirable`** vaut faux pour `unique` seulement. Les cinq sources l'appliquent : les deux qui filtraient déjà, et les trois qui copient depuis le deck, via `DeckState.copyableCards`.
 
@@ -39,7 +39,7 @@ Une rune `enduring` retire l'épuisement ou ne le retire pas : son tier ne veut 
 
 **D4 — `CardInstance.exhaustsOnPlay`** est la seule règle d'épuisement : un pouvoir l'est toujours, une carte `isExhaust` l'est sauf si elle porte `enduring`, **quel que soit le tier**. Le tier est ignoré même après D3, parce qu'une sauvegarde peut déjà contenir `enduring:2` ou `enduring:3`.
 
-**D5 — `ForgeRuneRules`** (`lib/game/services/forge_rune_rules.dart`) regroupe `isStackable`, `consolidate` et `fusionOptionsFor`. Les trois copies de l'algorithme de cumul — Forge de Fusion, fusion 3→1, dialogue de fusion — n'en forment plus qu'une, qui connaît D3.
+**D5 — `ForgeRuneRules`** (`lib/game/services/forge_rune_rules.dart`) regroupe `isStackable`, `consolidate` et `fusionOptionsFor`. Les trois copies de l'algorithme de cumul — Forge de Fusion, fusion 3→1, dialogue de fusion — n'en forment plus qu'une, qui connaît D3, avec un seul analyseur de tier : une référence `id:tier` mal formée est ignorée partout.
 
 ## 4. Ce que le joueur verra
 
@@ -52,9 +52,10 @@ Une rune `enduring` retire l'épuisement ou ne le retire pas : son tier ne veut 
 
 Aucune migration, `schemaVersion` inchangé.
 
-- **Carte de classe portant plus de 5 runes** : elle les garde toutes, simplement elle n'en accepte plus. `card_rune_sockets.dart` n'ajoute que des emplacements vides, donc toutes s'affichent en dehors du combat. En combat, `card_text_renderer.dart` ne dessine que la capacité : les runes au-delà de 5 ne s'y voient plus, mais leurs effets s'appliquent toujours.
+- **Carte de classe portant plus de 5 runes** : elle les garde toutes, simplement elle n'en accepte plus. Toutes restent visibles : `card_rune_sockets.dart` n'ajoute que des emplacements vides, et `card_text_renderer.dart` dessine en combat autant d'emplacements que de runes portées quand elles dépassent la capacité (ajouté après revue).
 - **`enduring:2` ou `enduring:3` déjà sauvegardé** : la rune redevient active (D4) et s'affiche « Persistant » comme avant. La prochaine fusion 3→1 la ramène au tier 1.
-- **Copies de cartes de classe, `unique` issue d'une fusion de légendaires** : conservées telles quelles.
+- **Copies de cartes de classe** : conservées.
+- **Carte neutre devenue `unique` par une fusion de légendaires (B5)** : conservée telle quelle, et D1 la prive en plus de ses emplacements de rareté — une `strike` passe de 6 emplacements à 1, ses runes restant en place. Une ligne dans `DeckState._decodePile` la ramènerait en légendaire (rareté d'instance `unique` sur un modèle qui ne l'est pas : seul B5 produit ce cas) sans toucher à `schemaVersion`. **Décision du propriétaire, non tranchée.**
 
 ## 6. Hors périmètre, relevé en chemin
 
@@ -62,7 +63,12 @@ Aucune migration, `schemaVersion` inchangé.
 - **La forge peut proposer une rune non cumulable que la carte porte déjà** (`forge_upgrade_dialog.dart:81-101` n'exclut que les doublons du tirage en cours) : un emplacement gaspillé si le joueur la prend.
 - **Le tirage de runes est écrit deux fois**, dans `forge_upgrade_dialog.dart` et `shop_controller.dart` : c'est ainsi que le test sur `'enduring'` existait en deux exemplaires.
 - **Les textes de runes restent codés en dur par id** dans `card_component.dart` et `card_text_renderer.dart`, alors que noms et descriptions bilingues sont en donnée : une rune créée par l'éditeur n'y apparaît pas.
+- **Un Miroir sans carte copiable échoue en silence** : si le deck ne contient plus que des cartes `unique`, le Miroir de montée de niveau termine le draft sans rien donner (`draft_screen.dart`) et celui de la boutique ne s'ouvre pas (`shop_screen.dart`). Atteignable depuis D2, en purgeant toutes les cartes neutres. Masquer le choix ou prévenir le joueur est une décision d'interface, avec ses textes bilingues.
+- **Les options des deux Miroirs sont tirées dans les widgets**, et `ShopController.cloneCard` ne vérifie pas `isAcquirable` : la règle tient par les écrans.
+- **Une quinzaine de sites découpent `id:tier` à la main** (`split(':')`), chacun décidant seul du sort d'une référence mal formée. Un petit type de rune analysée les remplacerait.
 - Vérifié sans suite : aucun pouvoir ne porte `isExhaust`, Persistant n'est donc jamais proposé sur un pouvoir, où il ne ferait rien.
+
+*Revue indépendante du 2026-09-15 : prête à fusionner après corrections — un point important (`_rollRarity`) et sept points mineurs corrigés dans la branche ; les suites ci-dessus sont celles qu'elle a relevées sans qu'elles relèvent de ce lot.*
 
 ## 7. Stratégie de test
 
