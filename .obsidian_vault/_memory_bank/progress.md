@@ -20,7 +20,8 @@
 | Fichiers suivis sous `site/` | 16 | `git ls-files site/ \| wc -l` |
 
 > [!NOTE]
-> Relevé sur `2c9ba6d`, branche `feat/menu-debug-lot-2`. Tout le mouvement depuis le 2026-09-14 vient
+> Relevé sur `2c9ba6d`, branche `feat/menu-debug-lot-2` ; `main` porte le même code depuis la fusion
+> `5d62709` (`git diff --stat 2c9ba6d 5d62709 -- lib test assets` est vide). Tout le mouvement depuis le 2026-09-14 vient
 > de l'**éditeur de contenu** (P-30), hormis la montée de Flame en 1.38.2 (`c155f50`).
 >
 > **+21 fichiers Dart** (213 → 234, +4 397 lignes) : +8 pour le formulaire inféré — 6 dans

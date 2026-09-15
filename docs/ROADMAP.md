@@ -504,7 +504,7 @@ Sur les 14 blocs `catch` de `lib/`, **un seul est totalement muet** : `lib/ui/sc
 | ID | Chantier | Effort | Difficulté | Apport |
 |:---|:---|:---:|:---:|:---:|
 | **P-29** | **Lot P2 animations** : signature VFX des 6 cartes de classe + différenciation réelle feu/glace/foudre/poison | **4-6 j** | ★★★☆☆ | 🔥🔥 |
-| ~~**P-30**~~ | ~~Menu de **debug** (`add_gold`, `spawn_relic`, `jump_to_floor`…)~~ ✅ **Livré le 2026-09-09** sur `feat/menu-debug-lot-2`, non fusionné — manipulateur de run *et* éditeur de contenu, voir ci-dessous | — | — | — |
+| ~~**P-30**~~ | ~~Menu de **debug** (`add_gold`, `spawn_relic`, `jump_to_floor`…)~~ ✅ **Livré le 2026-09-09**, fusionné dans `main` le 2026-09-15 (PR #36) — manipulateur de run *et* éditeur de contenu, voir ci-dessous | — | — | — |
 | **P-31** | **Nœuds Trésor 💎 & Mystère ❓** sur la carte — ⚠️ **prérequis de rendu**, voir ci-dessous | **1-2 j** *(hors prérequis)* | ★★☆☆☆ | 🔥 |
 | **P-32** | **Historique de notifications** (panneau consultable, type chat) | **1-2 j** | ★★☆☆☆ | 🔥 |
 | **P-33** | **Système d'achievements / trophées** | **2-3 j** | ★★★☆☆ | 🔥 |
@@ -518,8 +518,9 @@ Sur les 14 blocs `catch` de `lib/`, **un seul est totalement muet** : `lib/ui/sc
 
 ### P-30 — Menu de debug
 
-> ✅ **Livré le 2026-09-09**, en deux lots, sur la branche `feat/menu-debug-lot-2` — **non fusionnée**
-> au 2026-09-15, dernier commit de code `2c9ba6d`. Le périmètre a dépassé la ligne d'origine :
+> ✅ **Livré le 2026-09-09**, en deux lots, sur la branche `feat/menu-debug-lot-2` — **fusionnée dans
+> `main`** le 2026-09-15 par la PR #36 (`5d62709`), **124 commits** comptés après la fusion
+> (`git rev-list --count --no-merges 5d62709^1..5d62709^2`), dernier commit de code `2c9ba6d`. Le périmètre a dépassé la ligne d'origine :
 > au manipulateur de run s'est ajouté un éditeur de contenu, que P-48 avait rendu possible, puis
 > son formulaire inféré (2026-09-14) et son habillage « éditeur » (2026-09-15).
 
@@ -533,8 +534,9 @@ Sur les 14 blocs `catch` de `lib/`, **un seul est totalement muet** : `lib/ui/sc
 **Reste ouvert**, sans chiffrage :
 
 - **La modification d'entité** a reçu ses corrections (formulaire inféré, commit `47f6731`) et chaque
-  fichier livré en fait l'aller-retour en test (`25b2945`) ; aucune nouvelle validation manuelle n'est
-  consignée depuis. La création est vérifiée : un redémarrage à chaud suffit (2026-09-14).
+  fichier livré en fait l'aller-retour en test (`25b2945`). La création est vérifiée : un redémarrage à
+  chaud suffit (2026-09-14). Le propriétaire a vérifié à l'œil l'habillage et l'import de ressources
+  le 2026-09-15 ; aucune passe dédiée à la modification d'une entité existante n'est consignée.
 - **Suites différées de l'habillage** (2026-09-15), petites et sans risque de données :
   - les champs texte ont perdu leur nom accessible — le libellé est frère du champ, pas son parent
     (envelopper la rangée d'un `MergeSemantics`) ;

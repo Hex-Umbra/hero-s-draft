@@ -1,4 +1,4 @@
-<!-- last-sync: 2026-09-15 | commit: 2c9ba6d -->
+<!-- last-sync: 2026-09-15 | commit: 5d62709 -->
 
 # 🧠 Contexte Actuel
 
@@ -7,8 +7,8 @@
 
 ## Focus courant
 
-**P-30, le menu de debug, est livré sur la branche `feat/menu-debug-lot-2`**, pas encore
-fusionnée : 123 commits depuis `main` au 2026-09-15, les deux derniers lots donnant à l'éditeur son
+**P-30, le menu de debug, est livré et fusionné dans `main`** : PR #36, merge `5d62709` du
+2026-09-15, 124 commits de `feat/menu-debug-lot-2`, les deux derniers lots donnant à l'éditeur son
 formulaire inféré puis son habillage. Deux outils, deux niveaux de conséquence : un **manipulateur
 de run** en mémoire vive ([`_patterns/18-00`](../_patterns/18-00-menu-de-debug-run-declaree-et-tiroir-ancre.md)),
 et un **éditeur de contenu** qui écrit dans `assets/data/` — moteur en
@@ -33,11 +33,11 @@ Réserves à ne pas perdre de vue :
   [filtre de classe](../../docs/possible_upgrades/08-09-2026_filtre_cartes_de_classe_Opus5.md).
   À traiter avant ou avec P-42.
 - **La modification d'entité a reçu ses corrections** (commit `47f6731`) et chaque fichier livré
-  en fait l'aller-retour en test (`25b2945`), mais **aucune nouvelle validation manuelle** n'est
-  consignée depuis le 2026-09-14. La création, elle, est vérifiée à la main ce jour-là.
+  en fait l'aller-retour en test (`25b2945`). La création est vérifiée à la main le 2026-09-14 ;
+  le 2026-09-15, le propriétaire a vérifié à l'œil l'habillage et l'import de ressources. Aucune
+  passe dédiée à la modification d'une entité existante n'est consignée.
 - **Les tiers A, B, C et E de `docs/ROADMAP.md` n'ont toujours pas été re-vérifiés contre le
   code** — seuls S et D l'ont été (2026-08-04).
-- **Le webhook Discord a transité en clair** le 19/08 et n'a pas été régénéré depuis.
 - **Bouton de téléchargement mort** si le build Windows échoue quand le web réussit — correctif
   identifié, non fait, voir [ADR-080](../_adr/ADR-080-site-vitrine-pilote-par-la-donnee-et-jointure-decl.md).
 
@@ -82,11 +82,11 @@ Réserves à ne pas perdre de vue :
 
 ## Prochaine étape
 
-**Fusionner la branche** — le travail est commité, et les deux derniers lots n'appellent pas de
-note de version —, idéalement après une passe manuelle du propriétaire sur la modification
-d'entité. **Ensuite, reprendre le programme « Identité de classe & catalogue »** : P-40 blocs 2
-et 3 (trois bugs de gameplay confirmés, ~0,75-1 j) referment le lot S1 avant P-41 et P-42 — et
-P-42 peut désormais passer par l'éditeur.
+**Reprendre le programme « Identité de classe & catalogue »** : P-40 blocs 2 et 3 (trois bugs de
+gameplay, ~0,75-1 j) referment le lot S1 avant P-41 et P-42 — et P-42 peut désormais passer par
+l'éditeur. Ces bugs ont été relevés le 2026-08-05 : les re-vérifier contre le code avant d'ouvrir le
+chantier (`docs/ROADMAP.md` §10.4). Le filtre de classe des cartes de signature se traite avant ou
+avec P-42.
 
 Le Jalon 2 « Feel & contenu » (`docs/ROADMAP.md` §9) reste ouvert : P-06, P-07, le prototype de
 P-08, P-05. **P-07 doit lire [ADR-083](../_adr/ADR-083-latence-et-synchronisation-du-chemin-de-lecture.md)

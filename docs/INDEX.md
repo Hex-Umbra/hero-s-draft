@@ -178,7 +178,7 @@ Notes de maîtrise, indépendantes de tout chantier.
 
 ## 16. Outils de développement
 
-*Chantier **P-30** de [`ROADMAP.md`](ROADMAP.md) — livré, branche non fusionnée au 2026-09-15.*
+*Chantier **P-30** de [`ROADMAP.md`](ROADMAP.md) — livré, fusionné dans `main` le 2026-09-15 (PR #36).*
 
 | | Document | Date |
 |:---:|:---|:---|
