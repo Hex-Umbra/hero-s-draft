@@ -23,6 +23,15 @@ class CardInstance {
   /// Nombre de runes de forge que cette carte peut porter.
   int get forgeCapacity => data.forgeCapacityAt(rarity);
 
+  /// La carte est-elle épuisée une fois jouée ? Un pouvoir l'est toujours ;
+  /// une carte `isExhaust` l'est sauf si elle porte la rune `enduring`,
+  /// **quel que soit son tier** : la fusion de runes et la fusion 3→1 en ont
+  /// produit des tiers supérieurs, qu'une sauvegarde peut encore contenir.
+  bool get exhaustsOnPlay =>
+      data.type == CardType.power ||
+      (data.isExhaust &&
+          !forgeUpgrades.any((rune) => rune.split(':').first == 'enduring'));
+
   double get rarityMultiplier {
     switch (rarity) {
       case CardRarity.common:

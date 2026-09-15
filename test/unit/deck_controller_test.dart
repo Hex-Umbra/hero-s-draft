@@ -417,4 +417,67 @@ void main() {
       expectConservation(notifier.state);
     });
   });
+
+  group('DeckNotifier.playCard — epuisement', () {
+    late ProviderContainer container;
+    late DeckNotifier notifier;
+
+    setUp(() {
+      container = ProviderContainer();
+      notifier = container.read(deckProvider.notifier);
+    });
+
+    tearDown(() => container.dispose());
+
+    CardInstance cardWith({
+      CardType type = CardType.skill,
+      bool isExhaust = true,
+      List<String> runes = const [],
+    }) =>
+        CardInstance(
+          data: CardData(
+            id: 'heal_potion',
+            cost: 1,
+            type: type,
+            category: CardCategory.global,
+            rarity: CardRarity.common,
+            target: CardTarget.self,
+            isExhaust: isExhaust,
+            effects: const [],
+          ),
+          forgeUpgrades: runes,
+        );
+
+    void play(CardInstance card) {
+      notifier.state = notifier.state.copyWith(hand: [card]);
+      notifier.playCard(card);
+    }
+
+    test('une carte isExhaust sans rune est epuisee', () {
+      final card = cardWith();
+      play(card);
+      expect(notifier.state.exhaustPile, [card]);
+      expect(notifier.state.discardPile, isEmpty);
+    });
+
+    test('Persistant au tier 1 envoie la carte en defausse', () {
+      final card = cardWith(runes: const ['enduring:1']);
+      play(card);
+      expect(notifier.state.discardPile, [card]);
+      expect(notifier.state.exhaustPile, isEmpty);
+    });
+
+    test('Persistant au tier 2 envoie aussi la carte en defausse', () {
+      final card = cardWith(runes: const ['sharp:1', 'enduring:2']);
+      play(card);
+      expect(notifier.state.discardPile, [card]);
+      expect(notifier.state.exhaustPile, isEmpty);
+    });
+
+    test('un pouvoir est epuise meme s il porte Persistant', () {
+      final card = cardWith(type: CardType.power, isExhaust: false, runes: const ['enduring:1']);
+      play(card);
+      expect(notifier.state.exhaustPile, [card]);
+    });
+  });
 }

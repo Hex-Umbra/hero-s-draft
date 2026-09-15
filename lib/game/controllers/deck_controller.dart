@@ -244,7 +244,7 @@ class DeckNotifier extends Notifier<DeckState> {
     state = state.copyWith(hand: [], discardPile: currentDiscardPile);
   }
 
-  /// Joue une carte : la retire de la main et l'envoie dans la défausse (ou l'épuise si pouvoir)
+  /// Joue une carte : la retire de la main et l'envoie dans la défausse, ou l'épuise (voir `CardInstance.exhaustsOnPlay`)
   void playCard(CardInstance card) {
     var currentHand = List<CardInstance>.from(state.hand);
     var currentDiscardPile = List<CardInstance>.from(state.discardPile);
@@ -256,9 +256,7 @@ class DeckNotifier extends Notifier<DeckState> {
     if (index != -1) {
       final cardToPlay = currentHand.removeAt(index);
 
-      final isExhausted = cardToPlay.data.isExhaust && !cardToPlay.forgeUpgrades.contains('enduring:1');
-
-      if (cardToPlay.data.type == CardType.power || isExhausted) {
+      if (cardToPlay.exhaustsOnPlay) {
         currentExhaustPile.add(cardToPlay);
       } else {
         currentDiscardPile.add(cardToPlay);
