@@ -1101,10 +1101,11 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
     );
   }
 
-  /// Le panneau de reference (`ReferencePanel`) relit tout le repertoire de la
-  /// categorie : hors de question de le faire a chaque frappe. La table est donc retenue tant que la categorie
-  /// ne change pas, et invalidee apres une ecriture — qui, elle, ajoute une
-  /// valeur.
+  /// Relit tout le repertoire de la categorie : hors de question de le faire
+  /// a chaque frappe. `vocabularyOf` l'appelle a chaque construction du
+  /// formulaire, panneau Reference affiche ou non — la table est donc
+  /// retenue tant que la categorie ne change pas, et invalidee apres une
+  /// ecriture, qui ajoute une valeur.
   Map<String, List<String>> _knownValuesFor(String root) {
     if (_valuesFor != _category) {
       _values = knownValues(

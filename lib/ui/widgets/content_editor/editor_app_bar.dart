@@ -77,11 +77,10 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
               ),
             ),
           ),
-          const Spacer(),
           if (root != null)
-            Flexible(
+            Expanded(
               child: Row(
-                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   const Icon(
                     Icons.folder_open,
