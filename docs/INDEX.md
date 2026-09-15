@@ -151,6 +151,7 @@ Chaque sujet suit la même chaîne. Tous les documents n'en parcourent pas tous 
 | 📐 | [Mise à jour du README](superpowers/specs/2026-05-18-readme-update-design.md) | 18/05/2026 |
 | ⚠️🗄️ | [Backlog & roadmap du 22/07](archives/backlog_and_roadmap_report_22072026.md) — **remplacé par [`ROADMAP.md`](ROADMAP.md)** | 22/07/2026 |
 | 🗄️ | [README v1](old_Readmes/README_1.md) · [v2](old_Readmes/README_2.md) | — |
+| 🗄️⚠️ | [Formation complète au projet](formation-heros-draft/index.html) *(21 chapitres)* — **instantané du 2026-08-20, non maintenu** depuis le 2026-09-15 : 13 chapitres décrivent la chaîne de compétences supprimée, 15 les catalogues JSON monolithiques | 20/08/2026 |
 
 ## 13. Transverse — leçons techniques
 
