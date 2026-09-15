@@ -362,14 +362,14 @@ class TutorialEngine extends ChangeNotifier {
   }
 
   /// Sème la main de l'étape Fusion : trois copies d'une carte du deck du
-  /// joueur, en excluant les cartes de classe (rareté `unique`, qui ne
-  /// fusionnent jamais — l'étape l'enseigne elle-même). Repli sur les
+  /// joueur, en excluant celles qui ne fusionnent pas — les cartes de classe
+  /// (rareté `unique`) en tête, l'étape l'enseigne elle-même. Repli sur les
   /// fixtures si le deck est vide ou n'en contient aucune hors classe
   /// (étape 03 sautée).
   void _seedMergeHand() {
     CardData? candidate;
     for (final instance in mockState.masterDeck) {
-      if (instance.data.rarity != CardRarity.unique) {
+      if (instance.data.rarity.next != null) {
         candidate = instance.data;
         break;
       }
