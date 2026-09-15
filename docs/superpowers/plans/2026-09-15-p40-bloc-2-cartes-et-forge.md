@@ -1454,7 +1454,7 @@ et libellé du choix d'héritage :
 - [ ] **Step 5 : lancer les tests, vérifier qu'ils passent**
 
 Run : `flutter test test/unit/shop_controller_test.dart test/widget/shop_screen_test.dart test/widget/deck_screen_test.dart test/widget/rest_screen_test.dart` puis `dart analyze`
-Expected : tout passe ; `No issues found!`. Contrôle : `grep -rn "== 'enduring'\|!= 'enduring'\|'enduring:1'" lib` ne rend rien.
+Expected : tout passe ; `No issues found!`. Contrôle : `grep -rn "'enduring" lib | grep -v "case 'enduring':"` ne rend qu'une ligne, `card_instance.dart` — la règle d'épuisement de la tâche 3, qui reconnaît l'effet à son id quel que soit le tier.
 
 - [ ] **Step 6 : commit**
 
@@ -1479,5 +1479,7 @@ Expected : `No issues found!` ; code de sortie 0.
 
 - [ ] **Step 3 : plus aucune trace des trois causes**
 
-Run : `grep -rn "rarity.index + 1\|CardRarity.values.length\|rarityIndex\|'enduring:1'\|== 'enduring'\|!= 'enduring'" lib`
-Expected : aucune ligne.
+Run : `grep -rn "rarity.index + 1\|CardRarity.values.length\|rarityIndex" lib` puis `grep -rn "'enduring" lib | grep -v "case 'enduring':"`
+Expected : aucune ligne pour la première ; pour la seconde, la seule `card_instance.dart` (`exhaustsOnPlay`). Les `case 'enduring':` restants sont les textes de runes codés en dur par id, hors périmètre (spec §6).
+
+> **Mesuré le 2026-09-15** : 805 tests au vert, `No issues found!`, `sync_assets --check` à 0, contrôles conformes.
