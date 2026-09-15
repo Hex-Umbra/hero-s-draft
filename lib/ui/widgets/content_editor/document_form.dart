@@ -6,8 +6,14 @@ import '../../../services/content_editor/editor_document.dart';
 import '../../../services/content_editor/entity_descriptor.dart';
 import '../../../services/content_editor/field_kind.dart';
 import '../../../services/content_editor/field_path.dart';
+import '../../theme/app_colors.dart';
 import 'choice_button.dart';
 import 'color_field.dart';
+import 'editor_panel.dart';
+import 'editor_style.dart';
+import 'field_anchors.dart';
+import 'form_blocks.dart';
+import 'property_row.dart';
 
 /// La mecanique d'une entite, **inferee du document** (spec §4).
 ///
@@ -27,6 +33,8 @@ class DocumentForm extends StatefulWidget {
     required this.assetField,
     this.referenceOptions = const {},
     this.vocabulary = const {},
+    this.faults = const {},
+    this.anchors,
   });
 
   final EditorDocument document;
@@ -41,6 +49,13 @@ class DocumentForm extends StatefulWidget {
   final Widget Function(String key, AssetSlot slot) assetField;
   final Map<String, List<String>> referenceOptions;
   final Map<String, List<String>> vocabulary;
+
+  /// Le message de la premiere faute de chaque champ, par libelle
+  /// (`effects[0].value`) : le champ se borde de rouge et l'affiche dessous.
+  final Map<String, String> faults;
+
+  /// Ou poser l'ancre de chaque champ, pour que le bandeau d'issue y ramene.
+  final FieldAnchors? anchors;
 
   @override
   State<DocumentForm> createState() => _DocumentFormState();
@@ -63,18 +78,18 @@ class _DocumentFormState extends State<DocumentForm> {
   Widget build(BuildContext context) {
     final root = _document.root;
     final descriptor = widget.descriptor;
-    final keys = <String>[
+    final fields = <String, Object?>{
       for (final key in root.keys)
-        if (_isField(key)) key,
+        if (_isField(key)) key: root[key],
       for (final key in descriptor.assetKeys.keys)
-        if (!root.containsKey(key)) key,
+        if (!root.containsKey(key)) key: null,
       for (final key in descriptor.referenceKeys.keys)
-        if (!root.containsKey(key)) key,
-    ];
+        if (!root.containsKey(key)) key: null,
+    };
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [for (final key in keys) _field([key], root[key])],
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: separatedRows(_rows(const [], fields)),
     );
   }
 
@@ -97,252 +112,60 @@ class _DocumentFormState extends State<DocumentForm> {
     widget.onChanged();
   }
 
-  Widget _field(FieldPath path, Object? value) {
-    final descriptor = widget.descriptor;
-    final pattern = patternOf(path);
-    final kind = inferFieldKind(
-      path: path,
-      value: value,
-      descriptor: descriptor,
-      hasModelElement: value is List && _document.modelElementFor(path) != null,
-    );
+  FieldKind _kindOf(FieldPath path, Object? value) => inferFieldKind(
+        path: path,
+        value: value,
+        descriptor: widget.descriptor,
+        hasModelElement:
+            value is List && _document.modelElementFor(path) != null,
+      );
 
-    switch (kind) {
-      case FieldKind.asset:
-        return widget.assetField(pattern, descriptor.assetKeys[pattern]!);
-      case FieldKind.reference:
-        return _choices(
-          path,
-          widget.referenceOptions[pattern] ?? const [],
-          isSelected: (option) => value == option,
-          onTap: (option) => _set(path, option),
-          noneSelected: value == null,
-          onNone: () {
-            _document.removeAt(path);
-            widget.onChanged();
-          },
-        );
-      case FieldKind.color:
-        return _labelled(
-          path,
-          ColorField(
-            key: Key('editeur-champ-${labelOf(path)}'),
-            value: hexToColor(value is String ? value : '') ??
-                const Color(0xFFFF00FF),
-            onChanged: (color) => _set(path, colorToHex(color)),
-          ),
-        );
-      case FieldKind.enumChoice:
-        return _choices(
-          path,
-          descriptor.enumKeys[pattern]!,
-          isSelected: (option) => value == option,
-          onTap: (option) => _set(path, option),
-        );
-      case FieldKind.enumMulti:
-        final options = descriptor.enumListKeys[pattern]!;
-        // Une valeur qui n'est pas une liste (vue brute, fichier retouche)
-        // ne selectionne rien : la validation dira pourquoi elle est refusee.
-        final selected = {
-          ...(value is List ? value.whereType<String>() : const <String>[]),
-        };
-        return _choices(
-          path,
-          options,
-          isSelected: selected.contains,
-          onTap: (option) => _set(path, [
-            for (final o in options)
-              if (selected.contains(o) != (o == option)) o,
-          ]),
-        );
-      case FieldKind.vocabulary:
-        // La valeur fautive reste visible, et choisie : la validation dira
-        // pourquoi elle est refusee.
-        final options = {
-          ...?widget.vocabulary[pattern],
-          if (value is String && value.isNotEmpty) value,
-        }.toList();
-        return _choices(
-          path,
-          options,
-          isSelected: (option) => value == option,
-          onTap: (option) => _set(path, option),
-        );
-      case FieldKind.boolean:
-        return SwitchListTile(
-          key: Key('editeur-champ-${labelOf(path)}'),
-          contentPadding: EdgeInsets.zero,
-          title: Text(_name(path)),
-          value: value! as bool,
-          onChanged: (checked) => _set(path, checked),
-        );
-      case FieldKind.integer:
-        return _textField(path, '$value', (text) {
-          final parsed = int.tryParse(text.trim());
-          if (parsed == null) {
-            _document.reportConversion(path, '« $text » n\'est pas un entier');
-            widget.onChanged();
-          } else {
-            _set(path, parsed);
-          }
-        }, keyboard: TextInputType.number);
-      case FieldKind.decimal:
-        return _textField(path, '$value', (text) {
-          final parsed = double.tryParse(text.trim());
-          if (parsed == null) {
-            _document.reportConversion(path, '« $text » n\'est pas un nombre');
-            widget.onChanged();
-          } else {
-            _set(path, parsed);
-          }
-        }, keyboard: const TextInputType.numberWithOptions(decimal: true));
-      case FieldKind.text:
-        return _textField(path, value! as String, (text) => _set(path, text));
-      case FieldKind.objectList:
-        return _objectList(path, value! as List);
-      case FieldKind.stringList:
-        return _stringList(path, (value! as List).cast<String>());
-      case FieldKind.object:
-        return _labelled(
-          path,
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: _objectFields(path, value! as Map<String, dynamic>),
-          ),
-        );
-      case FieldKind.rawJson:
-        return _textField(path, jsonEncode(value), (text) {
-          try {
-            _set(path, jsonDecode(text));
-          } on FormatException {
-            _document.reportConversion(path, 'JSON invalide');
-            widget.onChanged();
-          }
-        });
-    }
+  bool _isNumber(FieldPath path, Object? value) {
+    final kind = _kindOf(path, value);
+    return kind == FieldKind.integer || kind == FieldKind.decimal;
   }
+
+  bool _isRequired(FieldPath path) =>
+      path.length == 1 && widget.descriptor.requiredKeys.contains(path.first);
 
   /// Le dernier segment nomme du chemin : `type` pour `effects[0].type`.
   String _name(FieldPath path) =>
       path.lastWhere((segment) => segment is String) as String;
 
-  Widget _labelled(FieldPath path, Widget child) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(_name(path), style: const TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 4),
-            child,
-          ],
-        ),
-      );
+  Widget _anchored(String label, Widget child) {
+    final anchors = widget.anchors;
+    return anchors == null
+        ? child
+        : KeyedSubtree(key: anchors.keyFor(label), child: child);
+  }
 
-  Widget _choices(
-    FieldPath path,
-    List<String> options, {
-    required bool Function(String option) isSelected,
-    required void Function(String option) onTap,
-    VoidCallback? onNone,
-    bool noneSelected = false,
+  /// Les rangees d'un objet, dans l'ordre du document. Une suite d'au moins
+  /// deux nombres forme une grille ; une paire `x_fr` / `x_en` de chaines, une
+  /// seule rangee ; le reste, une rangee par champ.
+  List<Widget> _rows(
+    FieldPath prefix,
+    Map<String, Object?> map, {
+    double labelWidth = 170,
   }) {
-    return _labelled(
-      path,
-      Wrap(
-        key: Key('editeur-champ-${labelOf(path)}'),
-        spacing: 4,
-        runSpacing: 4,
-        children: [
-          if (onNone != null)
-            ChoiceButton(label: 'aucun', isSelected: noneSelected, onTap: onNone),
-          for (final option in options)
-            ChoiceButton(
-              label: option,
-              isSelected: isSelected(option),
-              onTap: () => onTap(option),
-            ),
-        ],
-      ),
-    );
-  }
+    final rows = <Widget>[];
+    final numbers = <FieldPath>[];
 
-  Widget _textField(
-    FieldPath path,
-    String initial,
-    ValueChanged<String> onChanged, {
-    TextInputType? keyboard,
-  }) {
-    final label = labelOf(path);
-    final controller = _controllers.putIfAbsent(
-      label,
-      () => TextEditingController(text: initial),
-    );
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: TextField(
-        key: Key('editeur-champ-$label'),
-        controller: controller,
-        keyboardType: keyboard,
-        decoration: InputDecoration(
-          labelText: _name(path),
-          floatingLabelBehavior: FloatingLabelBehavior.always,
-        ),
-        onChanged: onChanged,
-      ),
-    );
-  }
+    void flushNumbers() {
+      if (numbers.length >= 2) {
+        rows.add(NumberGrid(cells: [
+          for (final path in numbers) _numberCell(path, map[path.last]),
+        ]));
+      } else {
+        for (final path in numbers) {
+          rows.add(_field(path, map[path.last], labelWidth: labelWidth));
+        }
+      }
+      numbers.clear();
+    }
 
-  Widget _objectList(FieldPath path, List<dynamic> list) {
-    final label = labelOf(path);
-    return _labelled(
-      path,
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (var i = 0; i < list.length; i++)
-            Card(
-              margin: const EdgeInsets.symmetric(vertical: 4),
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ..._objectFields(
-                        [...path, i], list[i] as Map<String, dynamic>),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        key: Key('editeur-retirer-$label[$i]'),
-                        onPressed: () {
-                          _document.removeElement(path, i);
-                          widget.onStructureChanged();
-                        },
-                        child: const Text('Retirer'),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          TextButton.icon(
-            key: Key('editeur-ajouter-$label'),
-            onPressed: () {
-              if (_document.addElement(path)) widget.onStructureChanged();
-            },
-            icon: const Icon(Icons.add),
-            label: const Text('Ajouter'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Les champs d'un objet ; une paire `x_fr` / `x_en` tient sur une rangee,
-  /// francais a gauche.
-  List<Widget> _objectFields(FieldPath prefix, Map<String, dynamic> map) {
-    final widgets = <Widget>[];
     for (final entry in map.entries) {
       final key = entry.key;
+      final path = [...prefix, key];
       final french = key.endsWith('_en')
           ? '${key.substring(0, key.length - 3)}_fr'
           : null;
@@ -355,53 +178,437 @@ class _DocumentFormState extends State<DocumentForm> {
           ? '${key.substring(0, key.length - 3)}_en'
           : null;
       if (english != null && map[english] is String && entry.value is String) {
-        widgets.add(Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(child: _field([...prefix, key], entry.value)),
-            const SizedBox(width: 8),
-            Expanded(child: _field([...prefix, english], map[english])),
-          ],
-        ));
+        flushNumbers();
+        rows.add(_bilingual(path, [...prefix, english], map,
+            labelWidth: labelWidth));
         continue;
       }
-      widgets.add(_field([...prefix, key], entry.value));
+      if (_isNumber(path, entry.value)) {
+        numbers.add(path);
+        continue;
+      }
+      flushNumbers();
+      rows.add(_field(path, entry.value, labelWidth: labelWidth));
     }
-    return widgets;
+    flushNumbers();
+    return rows;
   }
 
-  Widget _stringList(FieldPath path, List<String> list) {
+  Widget _field(FieldPath path, Object? value, {double labelWidth = 170}) {
+    final descriptor = widget.descriptor;
+    final pattern = patternOf(path);
     final label = labelOf(path);
-    return _labelled(
-      path,
-      Wrap(
-        spacing: 4,
-        runSpacing: 4,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          for (var i = 0; i < list.length; i++)
-            InputChip(
-              label: Text(list[i]),
-              onDeleted: () {
-                _document.setAt(path, [...list]..removeAt(i));
-                widget.onStructureChanged();
-              },
+
+    PropertyRow row(Widget child, {bool alignTop = false}) => PropertyRow(
+          label: _name(path),
+          isRequired: _isRequired(path),
+          errorText: widget.faults[label],
+          alignTop: alignTop,
+          labelWidth: labelWidth,
+          child: child,
+        );
+
+    final Widget built;
+    switch (_kindOf(path, value)) {
+      case FieldKind.asset:
+        built = widget.assetField(pattern, descriptor.assetKeys[pattern]!);
+      case FieldKind.reference:
+        built = row(
+          _choices(
+            path,
+            widget.referenceOptions[pattern] ?? const [],
+            isSelected: (option) => value == option,
+            onTap: (option) => _set(path, option),
+            noneSelected: value == null,
+            onNone: () {
+              _document.removeAt(path);
+              widget.onChanged();
+            },
+          ),
+          alignTop: true,
+        );
+      case FieldKind.color:
+        built = row(ColorField(
+          key: Key('editeur-champ-$label'),
+          value: hexToColor(value is String ? value : '') ??
+              EditorColors.colorFallback,
+          onChanged: (color) => _set(path, colorToHex(color)),
+        ));
+      case FieldKind.enumChoice:
+        // Les raretes portent les couleurs du jeu : elles se reconnaissent
+        // d'un coup d'oeil.
+        final tints =
+            _name(path) == 'rarity' ? kRarityColors : const <String, Color>{};
+        built = row(
+          _choices(
+            path,
+            descriptor.enumKeys[pattern]!,
+            isSelected: (option) => value == option,
+            onTap: (option) => _set(path, option),
+            tintOf: (option) => tints[option],
+          ),
+          alignTop: true,
+        );
+      case FieldKind.enumMulti:
+        final options = descriptor.enumListKeys[pattern]!;
+        // Une valeur qui n'est pas une liste (vue brute, fichier retouche)
+        // ne selectionne rien : la validation dira pourquoi elle est refusee.
+        final selected = {
+          ...(value is List ? value.whereType<String>() : const <String>[]),
+        };
+        built = row(
+          _choices(
+            path,
+            options,
+            isSelected: selected.contains,
+            onTap: (option) => _set(path, [
+              for (final o in options)
+                if (selected.contains(o) != (o == option)) o,
+            ]),
+          ),
+          alignTop: true,
+        );
+      case FieldKind.vocabulary:
+        // La valeur fautive reste visible, et choisie : la validation dira
+        // pourquoi elle est refusee.
+        final options = {
+          ...?widget.vocabulary[pattern],
+          if (value is String && value.isNotEmpty) value,
+        }.toList();
+        built = row(
+          _choices(
+            path,
+            options,
+            isSelected: (option) => value == option,
+            onTap: (option) => _set(path, option),
+          ),
+          alignTop: true,
+        );
+      case FieldKind.boolean:
+        built = row(Align(
+          alignment: Alignment.centerLeft,
+          child: Switch(
+            key: Key('editeur-champ-$label'),
+            value: value! as bool,
+            activeTrackColor: EditorColors.accent,
+            onChanged: (checked) => _set(path, checked),
+          ),
+        ));
+      case FieldKind.integer:
+        built = row(_narrow(_integerField(path, value)));
+      case FieldKind.decimal:
+        built = row(_narrow(_decimalField(path, value)));
+      case FieldKind.text:
+        built = row(
+          _textField(path, value! as String, (text) => _set(path, text)),
+        );
+      case FieldKind.objectList:
+        built = _objectList(path, value! as List);
+      case FieldKind.stringList:
+        built = row(
+          _stringList(path, (value! as List).cast<String>()),
+          alignTop: true,
+        );
+      case FieldKind.object:
+        built = Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          child: ElementCard(
+            title: _name(path),
+            children: separatedRows(
+              _rows(path, value! as Map<String, dynamic>, labelWidth: 110),
             ),
-          SizedBox(
-            width: 160,
-            child: TextField(
+          ),
+        );
+      case FieldKind.rawJson:
+        built = row(_textField(
+          path,
+          jsonEncode(value),
+          (text) {
+            try {
+              _set(path, jsonDecode(text));
+            } on FormatException {
+              _document.reportConversion(path, 'JSON invalide');
+              widget.onChanged();
+            }
+          },
+          mono: true,
+        ));
+    }
+    return _anchored(label, built);
+  }
+
+  /// Un nombre n'a pas besoin de toute la largeur.
+  Widget _narrow(Widget field) => Align(
+        alignment: Alignment.centerLeft,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 140),
+          child: field,
+        ),
+      );
+
+  Widget _integerField(FieldPath path, Object? value) =>
+      _textField(path, '$value', (text) {
+        final parsed = int.tryParse(text.trim());
+        if (parsed == null) {
+          _document.reportConversion(path, '« $text » n\'est pas un entier');
+          widget.onChanged();
+        } else {
+          _set(path, parsed);
+        }
+      }, keyboard: TextInputType.number, mono: true);
+
+  Widget _decimalField(FieldPath path, Object? value) =>
+      _textField(path, '$value', (text) {
+        final parsed = double.tryParse(text.trim());
+        if (parsed == null) {
+          _document.reportConversion(path, '« $text » n\'est pas un nombre');
+          widget.onChanged();
+        } else {
+          _set(path, parsed);
+        }
+      },
+          keyboard: const TextInputType.numberWithOptions(decimal: true),
+          mono: true);
+
+  /// Une cellule de la grille de nombres : sa cle au-dessus, son champ, et
+  /// le message d'une faute.
+  Widget _numberCell(FieldPath path, Object? value) {
+    final label = labelOf(path);
+    final error = widget.faults[label];
+    final field = _kindOf(path, value) == FieldKind.integer
+        ? _integerField(path, value)
+        : _decimalField(path, value);
+    return _anchored(
+      label,
+      Padding(
+        padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: PropertyLabel(
+                label: _name(path),
+                isRequired: _isRequired(path),
+                hasError: error != null,
+              ),
+            ),
+            const SizedBox(height: 6),
+            field,
+            if (error != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 5),
+                child: FieldError(error),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Une paire `x_fr` / `x_en` sur une rangee, francais a gauche.
+  Widget _bilingual(
+    FieldPath french,
+    FieldPath english,
+    Map<String, Object?> map, {
+    double labelWidth = 170,
+  }) {
+    final frenchKey = french.last as String;
+    final frenchLabel = labelOf(french);
+    final englishLabel = labelOf(english);
+    return PropertyRow(
+      label: frenchKey.substring(0, frenchKey.length - 3),
+      alignTop: true,
+      labelWidth: labelWidth,
+      errorText: widget.faults[frenchLabel] ?? widget.faults[englishLabel],
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: _anchored(
+              frenchLabel,
+              _textField(french, map[frenchKey]! as String,
+                  (text) => _set(french, text),
+                  language: 'FR'),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: _anchored(
+              englishLabel,
+              _textField(english, map[english.last]! as String,
+                  (text) => _set(english, text),
+                  language: 'EN'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _choices(
+    FieldPath path,
+    List<String> options, {
+    required bool Function(String option) isSelected,
+    required void Function(String option) onTap,
+    VoidCallback? onNone,
+    bool noneSelected = false,
+    Color? Function(String option)? tintOf,
+  }) {
+    return Wrap(
+      key: Key('editeur-champ-${labelOf(path)}'),
+      spacing: 6,
+      runSpacing: 6,
+      children: [
+        if (onNone != null)
+          ChoiceButton(
+            label: 'aucun',
+            isPlaceholder: true,
+            isSelected: noneSelected,
+            onTap: onNone,
+          ),
+        for (final option in options)
+          ChoiceButton(
+            label: option,
+            isSelected: isSelected(option),
+            onTap: () => onTap(option),
+            tint: tintOf?.call(option),
+          ),
+      ],
+    );
+  }
+
+  Widget _textField(
+    FieldPath path,
+    String initial,
+    ValueChanged<String> onChanged, {
+    TextInputType? keyboard,
+    bool mono = false,
+    String? language,
+  }) {
+    final label = labelOf(path);
+    final controller = _controllers.putIfAbsent(
+      label,
+      () => TextEditingController(text: initial),
+    );
+    final decoration =
+        editorInputDecoration(hasError: widget.faults.containsKey(label));
+    return TextField(
+      key: Key('editeur-champ-$label'),
+      controller: controller,
+      keyboardType: keyboard,
+      style: mono
+          ? editorMono(size: 13, color: AppColors.textPrimary)
+          : const TextStyle(color: AppColors.textPrimary, fontSize: 13.5),
+      decoration: language == null
+          ? decoration
+          : decoration.copyWith(
+              prefixIcon: Padding(
+                padding: const EdgeInsets.only(left: 8, right: 6),
+                child: LangBadge(language),
+              ),
+              prefixIconConstraints:
+                  const BoxConstraints(minWidth: 0, minHeight: 0),
+            ),
+      onChanged: onChanged,
+    );
+  }
+
+  Widget _objectList(FieldPath path, List<dynamic> list) {
+    final label = labelOf(path);
+    final error = widget.faults[label];
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Flexible(
+                child: PropertyLabel(
+                  label: _name(path),
+                  isRequired: _isRequired(path),
+                  hasError: error != null,
+                ),
+              ),
+              const SizedBox(width: 8),
+              CountBadge(list.length),
+            ],
+          ),
+          if (error != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 5),
+              child: FieldError(error),
+            ),
+          for (var i = 0; i < list.length; i++)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: ElementCard(
+                index: i + 1,
+                summary: summaryOf(list[i]),
+                removeKey: Key('editeur-retirer-$label[$i]'),
+                onRemove: () {
+                  _document.removeElement(path, i);
+                  widget.onStructureChanged();
+                },
+                children: separatedRows(_rows(
+                  [...path, i],
+                  list[i] as Map<String, dynamic>,
+                  labelWidth: 110,
+                )),
+              ),
+            ),
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: AddElementButton(
               key: Key('editeur-ajouter-$label'),
-              decoration: const InputDecoration(hintText: 'ajouter…'),
-              onSubmitted: (text) {
-                final added = text.trim();
-                if (added.isEmpty) return;
-                _document.setAt(path, [...list, added]);
-                widget.onStructureChanged();
+              onPressed: () {
+                if (_document.addElement(path)) widget.onStructureChanged();
               },
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _stringList(FieldPath path, List<String> list) {
+    final label = labelOf(path);
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        for (var i = 0; i < list.length; i++)
+          InputChip(
+            label: Text(list[i], style: editorMono(color: EditorColors.soft)),
+            backgroundColor: EditorColors.chip,
+            side: const BorderSide(color: EditorColors.chipBorder),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(6),
+            ),
+            deleteIconColor: EditorColors.faint,
+            visualDensity: VisualDensity.compact,
+            onDeleted: () {
+              _document.setAt(path, [...list]..removeAt(i));
+              widget.onStructureChanged();
+            },
+          ),
+        SizedBox(
+          width: 160,
+          child: TextField(
+            key: Key('editeur-ajouter-$label'),
+            style: editorMono(size: 13, color: AppColors.textPrimary),
+            decoration: editorInputDecoration(hintText: 'ajouter…'),
+            onSubmitted: (text) {
+              final added = text.trim();
+              if (added.isEmpty) return;
+              _document.setAt(path, [...list, added]);
+              widget.onStructureChanged();
+            },
+          ),
+        ),
+      ],
     );
   }
 }

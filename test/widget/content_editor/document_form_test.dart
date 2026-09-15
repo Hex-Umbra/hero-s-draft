@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/services/content_editor/editor_document.dart';
 import 'package:roguelike_card_game/services/content_editor/entity_descriptor.dart';
+import 'package:roguelike_card_game/ui/theme/app_colors.dart';
 import 'package:roguelike_card_game/ui/theme/app_theme.dart';
 import 'package:roguelike_card_game/ui/widgets/content_editor/document_form.dart';
+import 'package:roguelike_card_game/ui/widgets/content_editor/editor_style.dart';
+import 'package:roguelike_card_game/ui/widgets/content_editor/field_anchors.dart';
 
 void main() {
   final card = kEntityDescriptors[EntityCategory.card]!;
@@ -20,6 +23,8 @@ void main() {
     EntityDescriptor descriptor, {
     Map<String, List<String>> references = const {},
     Map<String, List<String>> vocabulary = const {},
+    Map<String, String> faults = const {},
+    FieldAnchors? anchors,
   }) async {
     structureChanges = 0;
     tester.view.physicalSize = const Size(1200, 4000);
@@ -36,6 +41,8 @@ void main() {
             onStructureChanged: () => structureChanges++,
             referenceOptions: references,
             vocabulary: vocabulary,
+            faults: faults,
+            anchors: anchors,
             assetField: (key, slot) => Text('ressource $key'),
           ),
         ),
@@ -182,5 +189,76 @@ void main() {
     expect(find.byKey(const Key('editeur-champ-name_fr')), findsNothing);
     expect(find.byKey(const Key('editeur-champ-skills')), findsNothing);
     expect(find.byKey(const Key('editeur-champ-maxHp')), findsOneWidget);
+  });
+
+  testWidgets('une suite de nombres se range en grille', (tester) async {
+    await pump(tester, templateOf(hero), hero);
+
+    final maxHp = tester.getTopLeft(find.byKey(const Key('editeur-champ-maxHp')));
+    final maxMana =
+        tester.getTopLeft(find.byKey(const Key('editeur-champ-maxMana')));
+    final luck = tester.getTopLeft(find.byKey(const Key('editeur-champ-luck')));
+    expect(maxMana.dy, maxHp.dy, reason: 'deux nombres voisins, une rangee');
+    expect(maxMana.dx, greaterThan(maxHp.dx));
+    expect(luck.dy, greaterThan(maxHp.dy), reason: 'trois colonnes au plus');
+  });
+
+  testWidgets('un nombre isole garde sa rangee de propriete', (tester) async {
+    await pump(tester, templateOf(relic), relic);
+
+    expect(
+      tester.getTopLeft(find.byKey(const Key('editeur-champ-value'))).dx,
+      greaterThanOrEqualTo(tester.getTopLeft(find.text('value')).dx + 170),
+    );
+  });
+
+  testWidgets('une faute nommant un champ le borde et s affiche sous lui',
+      (tester) async {
+    await pump(tester, templateOf(relic), relic,
+        faults: const {'value': 'champ obligatoire absent'});
+
+    final field = find.byKey(const Key('editeur-champ-value'));
+    expect(
+      tester.getTopLeft(find.text('champ obligatoire absent')).dy,
+      greaterThan(tester.getBottomLeft(field).dy),
+    );
+    final decoration = tester.widget<TextField>(field).decoration!;
+    expect(
+      (decoration.enabledBorder! as OutlineInputBorder).borderSide.color,
+      AppColors.danger,
+    );
+  });
+
+  testWidgets('une rarete prend la couleur du jeu', (tester) async {
+    await pump(tester, templateOf(relic), relic);
+
+    expect(
+      tester.widget<Text>(find.text('legendary')).style!.color,
+      Color.lerp(kRarityColors['legendary'], Colors.white, 0.4),
+    );
+  });
+
+  testWidgets('chaque champ pose son ancre', (tester) async {
+    final anchors = FieldAnchors();
+    await pump(tester, templateOf(card), card,
+        anchors: anchors,
+        vocabulary: const {'effects[].type': ['damage']});
+
+    expect(anchors.keyFor('cost').currentContext, isNotNull);
+    expect(anchors.keyFor('effects[0].value').currentContext, isNotNull);
+  });
+
+  testWidgets('un element de liste se resume et se retire', (tester) async {
+    final document = templateOf(card);
+    await pump(tester, document, card, vocabulary: const {
+      'effects[].type': ['damage'],
+    });
+
+    expect(find.text('#1'), findsOneWidget);
+    expect(find.text('damage · 6'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('editeur-retirer-effects[0]')));
+    expect(document.root['effects'], isEmpty);
+    expect(structureChanges, 1);
   });
 }

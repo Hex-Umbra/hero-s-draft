@@ -50,6 +50,10 @@ abstract final class EditorColors {
 
   /// La case claire du damier d'un apercu d'image.
   static const Color checkerLight = Color(0xFF1B1B32);
+
+  /// Le repli d'un champ de couleur dont la valeur n'est pas un `#RRGGBB` : un
+  /// magenta, qui doit se voir.
+  static const Color colorFallback = Color(0xFFFF00FF);
 }
 
 /// Les cles JSON, chemins et identifiants : ce que l'auteur retrouvera tel
