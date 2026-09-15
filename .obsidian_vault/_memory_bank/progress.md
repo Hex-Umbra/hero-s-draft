@@ -5,32 +5,32 @@
 
 ## Métriques
 
-**Vérifié le 2026-09-14**
+**Vérifié le 2026-09-15**
 
 | Métrique | Valeur | Commande |
 |:---|:---|:---|
-| Tests automatisés (jeu) | 617 au vert | `flutter test` |
-| Fichiers de test | 99 | `find test -name "*.dart" \| wc -l` |
+| Tests automatisés (jeu) | 773 au vert | `flutter test` |
+| Fichiers de test | 115 | `find test -name "*.dart" \| wc -l` |
 | Analyse statique | 0 erreur (`No issues found!`) | `dart analyze` |
-| Fichiers Dart (`lib/`) | 213 | `find lib -name "*.dart" \| wc -l` |
-| Lignes de code (`lib/`) | 43 501 | `find lib -name "*.dart" -exec cat {} + \| wc -l` |
+| Fichiers Dart (`lib/`) | 234 | `find lib -name "*.dart" \| wc -l` |
+| Lignes de code (`lib/`) | 47 898 | `find lib -name "*.dart" -exec cat {} + \| wc -l` |
 | Fichiers de données | 73 | `find assets/data -name '*.json' \| wc -l` |
 | Tests de la logique du site | 20 au vert | `cd site && node --test` |
 | Assertions du harnais CI | 57 au vert | `bash .github/scripts/test_scripts.sh` |
 | Fichiers suivis sous `site/` | 16 | `git ls-files site/ \| wc -l` |
 
 > [!NOTE]
-> Relevé sur `d8d9319`, branche `feat/menu-debug-lot-2`. Tout le mouvement depuis le 2026-09-05 vient de **P-30**.
+> Relevé sur `2c9ba6d`, branche `feat/menu-debug-lot-2`. Tout le mouvement depuis le 2026-09-14 vient
+> de l'**éditeur de contenu** (P-30), hormis la montée de Flame en 1.38.2 (`c155f50`).
 >
-> **+28 fichiers Dart** (185 → 213) : +29 — 14 pour le moteur de l'éditeur
-> (`lib/services/content_editor/`), 5 pour son écran et ses widgets, 7 pour le tiroir de debug
-> et ses onglets, `debug_run_controller.dart`, `debug_actions.dart` et `class_identity.dart` — et −1,
-> `tutorial_progress_service.dart`. Liste exacte : `git diff --name-status ac37596 d8d9319 -- lib`.
+> **+21 fichiers Dart** (213 → 234, +4 397 lignes) : +8 pour le formulaire inféré — 6 dans
+> `lib/services/content_editor/`, `document_form.dart` et `asset_field.dart` — et +13 pour l'habillage
+> « éditeur », 14 widgets moins `tree_level.dart`. Liste exacte :
+> `git diff --name-status d8d9319 2c9ba6d -- lib`.
 >
-> **+190 tests** (427 → 617) dans **+18 fichiers** : 10 sous `test/unit/content_editor/`, 3 de
-> widgets d'éditeur, 3 de debug, 2 d'identité de classe, `home_screen_menu_test.dart`, moins
-> `tutorial_progress_service_test.dart`. Le nombre de fichiers de données, `site/` et le harnais CI
-> n'ont pas bougé.
+> **+156 tests** (617 au relevé du 2026-09-14 → 773) dans **+16 fichiers** : 5 sous
+> `test/unit/content_editor/`, 10 de widgets d'éditeur, et `floating_text_test.dart`, venu avec Flame.
+> Le nombre de fichiers de données, `site/` et le harnais CI n'ont pas bougé.
 
 > [!NOTE]
 > **La version ne vit pas ici.** La version de référence se lit dans `pubspec.yaml`
@@ -222,11 +222,11 @@ dépôt ne la reproduit ni ne garde ce seuil** — une régression de démarrage
 |:---|:---|:---|
 | Run debug déclarée au lancement | `debugRunProvider`, `HomeScreen._startDebugRun` | Bouton « RUN DEBUG » ; la run ne persiste rien et `DebugActions` refuse d'agir hors d'elle — [ADR-087](../_adr/ADR-087-run-debug-declaree-au-lancement-et-verrou-de-persis.md) |
 | Tiroir de debug | `DebugDrawer`, `lib/ui/widgets/debug/tabs/` | Ancré au bord gauche : Héros/Run/Deck/Reliques sur la carte, Combat seul en combat — [ADR-088](../_adr/ADR-088-tiroir-de-debug-ancre-et-sortie-de-combat-par-sa-pr.md) |
-| Éditeur de contenu | `ContentEditorScreen`, `lib/services/content_editor/` | Créer ou modifier une entité des 7 catégories, classe entière en un geste ; validation totale avant écriture transactionnelle — [ADR-089](../_adr/ADR-089-editeur-de-contenu-seam-disque-et-validation-totale.md) |
+| Éditeur de contenu | `ContentEditorScreen`, `lib/services/content_editor/` | Créer ou modifier une entité des 7 catégories, classe entière en un geste ; validation totale avant écriture transactionnelle — [ADR-089](../_adr/ADR-089-editeur-de-contenu-seam-disque-et-validation-totale.md). Formulaire inféré du document, sons et images importés sous rollback — [ADR-092](../_adr/ADR-092-formulaire-infere-du-document-et-ressources-liees.md). Onglets de type, explorateur, barre d'actions fixe, contrat de choix — [ADR-093](../_adr/ADR-093-habillage-editeur-jetons-nommes-et-contrat-de-choix.md) |
 | Accès | `HomeScreen` | Colonne de debug à droite du menu joueur, sous `kDebugMode` — [ADR-091](../_adr/ADR-091-menu-d-accueil-quitter-par-plateforme-et-retrait-du.md) |
 
-Architecture — [`_patterns/18-00`](../_patterns/18-00-menu-de-debug-run-declaree-et-tiroir-ancre.md)
-et [`_patterns/19-00`](../_patterns/19-00-editeur-de-contenu-seam-disque-validation-ecriture.md).
+Architecture — [`_patterns/18-00`](../_patterns/18-00-menu-de-debug-run-declaree-et-tiroir-ancre.md),
+[`_patterns/19-00`](../_patterns/19-00-editeur-de-contenu-seam-disque-validation-ecriture.md) et [`_patterns/19-5`](../_patterns/19-5-editeur-de-contenu-interface.md).
 
 ## 2. Dette métier assumée
 

@@ -3,7 +3,10 @@
 ✅ **Livré le 2026-09-09**, chantier P-30 (menu de debug), lot 2, et sa suite « création guidée »,
 branche `feat/menu-debug-lot-2`. Repose sur [ADR-085](ADR-085-regle-de-partage-catalogue-configuration.md)
 et [ADR-086](ADR-086-autorite-du-repertoire-avec-expiration-de-la-toler.md) : sans un fichier par
-entité, un outil d'écriture aurait dû réécrire des catalogues entiers.
+entité, un outil d'écriture aurait dû réécrire des catalogues entiers. **Amendé par
+[ADR-092](ADR-092-formulaire-infere-du-document-et-ressources-liees.md) le 2026-09-14** : la saisie
+non convertible devient une faute (Conséquences ci-dessous), un import explicite peut écraser une
+image (E9), et l'écriture peut toucher `audio.json`. E6 tient inchangé.
 
 ### Contexte
 

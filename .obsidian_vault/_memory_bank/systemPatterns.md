@@ -3,7 +3,7 @@
 > [!IMPORTANT]
 > **Plafond : 150 lignes.** Ce fichier est un index, jamais un contenu. Chaque pattern d'architecture vit dans sa fiche sous `../_patterns/`. Les arbitrages qui les ont produits vivent dans `../_adr/`.
 
-**Vérifié le 2026-09-14** — 43 fiches. Provenance du découpage, sections ajoutées et numéros non réattribués (§2.7, §13, §14) : `../_archive/2026-09-05-systemPatterns-historique.md` et `../_archive/2026-08-25-systemPatterns-historique.md`.
+**Vérifié le 2026-09-15** — 44 fiches. Provenance du découpage, sections ajoutées et numéros non réattribués (§2.7, §13, §14) : `../_archive/2026-09-05-systemPatterns-historique.md` et `../_archive/2026-08-25-systemPatterns-historique.md`.
 
 > [!NOTE]
 > **Mise en forme du 2026-09-14**, arbitrage du propriétaire : le plafond passe de 120 à 150 lignes, et les sections qui ne portent qu'une fiche perdent leur en-tête `###`, dont le titre répétait à l'identique la ligne de tableau. Elles sont regroupées dans le premier tableau ; seules les sections à plusieurs fiches gardent un en-tête. Aucune ligne de fiche n'a disparu.
@@ -25,7 +25,6 @@
 | 16. Architecture du Système Audio | [16-00-architecture-du-systeme-audio.md](../_patterns/16-00-architecture-du-systeme-audio.md) | 149 |
 | 17. Chargeur de Données Générique et Motifs de Chemin (`GameDataLoader`) | [17-00-chargeur-de-donnees-generique-et-motifs-de-che.md](../_patterns/17-00-chargeur-de-donnees-generique-et-motifs-de-che.md) | 108 |
 | 18. Menu de Debug — Run Déclarée et Tiroir Ancré (P-30, lot 1) | [18-00-menu-de-debug-run-declaree-et-tiroir-ancre.md](../_patterns/18-00-menu-de-debug-run-declaree-et-tiroir-ancre.md) | 89 |
-| 19. Éditeur de Contenu — Seam Disque, Validation, Écriture (P-30, lot 2) | [19-00-editeur-de-contenu-seam-disque-validation-ecriture.md](../_patterns/19-00-editeur-de-contenu-seam-disque-validation-ecriture.md) | 102 |
 
 ### 2. Rôle des Contrôleurs et Architecture Modulaire (`lib/game/controllers/`)
 
@@ -70,3 +69,10 @@
 | 5.9. Pattern de Draft Card Reels Staggered et 3D Flip (Interactive Reels Reveal) | [05-9-pattern-de-draft-card-reels-staggered-et-3d-f.md](../_patterns/05-9-pattern-de-draft-card-reels-staggered-et-3d-f.md) | 27 |
 | 5.10. Optimisations de Rendu GPU/CPU & Effet Physique de Pioche | [05-10-optimisations-de-rendu-gpu-cpu-effet-physique.md](../_patterns/05-10-optimisations-de-rendu-gpu-cpu-effet-physique.md) | 16 |
 | 5.11. Unification UI et Composants Communs (v0.2.2) | [05-11-unification-ui-et-composants-communs.md](../_patterns/05-11-unification-ui-et-composants-communs.md) | 27 |
+
+### 19. Éditeur de Contenu (P-30)
+
+| Domaine | Fiche | Lignes |
+|:---|:---|---:|
+| 19. Éditeur de Contenu — Seam Disque, Validation, Écriture (P-30, lot 2) | [19-00-editeur-de-contenu-seam-disque-validation-ecriture.md](../_patterns/19-00-editeur-de-contenu-seam-disque-validation-ecriture.md) | 116 |
+| 19.5. Éditeur de Contenu — Interface : Formulaire Inféré et Habillage « Éditeur » | [19-5-editeur-de-contenu-interface.md](../_patterns/19-5-editeur-de-contenu-interface.md) | 90 |

@@ -5,7 +5,7 @@ ordre ils ont été écrits. C'est un index de navigation — il ne contient **a
 des liens. Si tu cherches une réponse plutôt qu'un document, la table de `CLAUDE.md` (§Documentation
 Map) t'oriente plus vite.
 
-**Dernière mise à jour** : 2026-09-14
+**Dernière mise à jour** : 2026-09-15
 
 ---
 
@@ -178,13 +178,15 @@ Notes de maîtrise, indépendantes de tout chantier.
 
 ## 16. Outils de développement
 
-*Chantier **P-30** de [`ROADMAP.md`](ROADMAP.md) — livré, branche non fusionnée au 2026-09-14.*
+*Chantier **P-30** de [`ROADMAP.md`](ROADMAP.md) — livré, branche non fusionnée au 2026-09-15.*
 
 | | Document | Date |
 |:---:|:---|:---|
 | 📐🔨 | [Menu de debug, lot 1 — manipulateur de run](superpowers/specs/2026-09-05-menu-debug-lot-1-manipulateur-de-run-design.md) · [plan](superpowers/plans/2026-09-05-menu-debug-lot-1.md) | 05/09/2026 |
 | 📐🔨 | [Menu de debug, lot 2 — éditeur de contenu](superpowers/specs/2026-09-06-menu-debug-lot-2-editeur-de-contenu-design.md) · [plan](superpowers/plans/2026-09-06-menu-debug-lot-2.md) | 06/09/2026 |
 | 📐🔨 | [Éditeur de contenu — création guidée](superpowers/specs/2026-09-08-editeur-de-contenu-creation-guidee-design.md) · [plan](superpowers/plans/2026-09-08-editeur-de-contenu-creation-guidee.md) | 08/09/2026 |
+| 📐🔨 | [Éditeur de contenu — formulaire inféré et ressources liées](superpowers/specs/2026-09-14-editeur-de-contenu-formulaire-infere-et-ressources-design.md) · [plan](superpowers/plans/2026-09-14-editeur-de-contenu-formulaire-infere-et-ressources.md) | 14/09/2026 |
+| 📐🔨 | [Éditeur de contenu — habillage « éditeur »](superpowers/specs/2026-09-15-editeur-de-contenu-habillage-editeur-design.md) · [plan](superpowers/plans/2026-09-15-editeur-de-contenu-habillage-editeur.md) | 15/09/2026 |
 
 ---
 

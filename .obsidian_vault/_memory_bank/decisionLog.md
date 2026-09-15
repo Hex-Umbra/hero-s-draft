@@ -5,13 +5,15 @@ Index des **ADR** (Architecture Decision Records) de **Hero's Draft**. Le corps 
 > [!IMPORTANT]
 > **Plafond : 250 lignes.** Ce fichier est un index, jamais un contenu. Un nouvel ADR prend le numéro `max(index) + 1` lu ici, jamais un numéro deviné.
 
-**Vérifié le 2026-09-14** — 91 décisions, numéros `ADR-001` à `ADR-091`, sans doublon ni trou.
+**Vérifié le 2026-09-15** — 93 décisions, numéros `ADR-001` à `ADR-093`, sans doublon ni trou.
 
 | N° | Décision | Statut | Version | Fichier |
 |:---|:---|:---:|:---:|:---|
+| `ADR-093` | Éditeur de Contenu — Jetons de Couleur Nommés et Contrat de Choix (habillage « éditeur », chantier P-30) | ✅ | — | [ADR-093-habillage-editeur-jetons-nommes-et-contrat-de-choix.md](../_adr/ADR-093-habillage-editeur-jetons-nommes-et-contrat-de-choix.md) |
+| `ADR-092` | Éditeur de Contenu — Formulaire Inféré du Document, Vocabulaires du Disque et Ressources sous Rollback (chantier P-30) | ✅ | — | [ADR-092-formulaire-infere-du-document-et-ressources-liees.md](../_adr/ADR-092-formulaire-infere-du-document-et-ressources-liees.md) |
 | `ADR-091` | Menu d'Accueil — Quitter par Plateforme, Retours Arrière et Retrait de la Persistance du Tutoriel | ✅ | — | [ADR-091-menu-d-accueil-quitter-par-plateforme-et-retrait-du.md](../_adr/ADR-091-menu-d-accueil-quitter-par-plateforme-et-retrait-du.md) |
 | `ADR-090` | Identité Visuelle de Classe Portée par la Donnée — `classCard`, `themeColor`, `iconPath` (création guidée) | ✅ | — | [ADR-090-identite-visuelle-de-classe-portee-par-la-donnee.md](../_adr/ADR-090-identite-visuelle-de-classe-portee-par-la-donnee.md) |
-| `ADR-089` | Éditeur de Contenu — Seam Disque, Validation Totale avant Écriture Transactionnelle (chantier P-30, lot 2) | ✅ | — | [ADR-089-editeur-de-contenu-seam-disque-et-validation-totale.md](../_adr/ADR-089-editeur-de-contenu-seam-disque-et-validation-totale.md) |
+| `ADR-089` | Éditeur de Contenu — Seam Disque, Validation Totale avant Écriture Transactionnelle (chantier P-30, lot 2) — **amendé par `ADR-092`** | ✅ | — | [ADR-089-editeur-de-contenu-seam-disque-et-validation-totale.md](../_adr/ADR-089-editeur-de-contenu-seam-disque-et-validation-totale.md) |
 | `ADR-088` | Tiroir de Debug Ancré et Sortie de Combat par sa Propre Route (chantier P-30, lot 1) | ✅ | — | [ADR-088-tiroir-de-debug-ancre-et-sortie-de-combat-par-sa-pr.md](../_adr/ADR-088-tiroir-de-debug-ancre-et-sortie-de-combat-par-sa-pr.md) |
 | `ADR-087` | Run Debug Déclarée au Lancement et Verrou de Persistance dans `SaveService` (chantier P-30, lot 1) | ✅ | — | [ADR-087-run-debug-declaree-au-lancement-et-verrou-de-persis.md](../_adr/ADR-087-run-debug-declaree-au-lancement-et-verrou-de-persis.md) |
 | `ADR-086` | Autorité du Répertoire sur l'Appartenance, avec Expiration de la Tolérance de Champ Redondant (chantier P-48, lot 3) | ✅ | — | [ADR-086-autorite-du-repertoire-avec-expiration-de-la-toler.md](../_adr/ADR-086-autorite-du-repertoire-avec-expiration-de-la-toler.md) |
