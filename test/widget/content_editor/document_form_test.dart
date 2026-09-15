@@ -43,7 +43,6 @@ void main() {
             vocabulary: vocabulary,
             faults: faults,
             anchors: anchors,
-            assetField: (key, slot) => Text('ressource $key'),
           ),
         ),
       ),
@@ -111,10 +110,16 @@ void main() {
     expect(structureChanges, 1);
   });
 
-  testWidgets('une ressource absente du document a quand meme son champ',
+  testWidgets('une ressource n est pas un champ de la mecanique',
       (tester) async {
-    await pump(tester, templateOf(relic), relic);
-    expect(find.text('ressource sfx'), findsOneWidget);
+    // Elle a sa propre section, Ressources, que l'ecran compose.
+    await pump(
+      tester,
+      EditorDocument({...relic.decodeTemplate(), 'sfx': 'clang'}),
+      relic,
+    );
+    expect(find.byKey(const Key('editeur-champ-sfx')), findsNothing);
+    expect(find.text('sfx'), findsNothing);
   });
 
   testWidgets('une reference absente se choisit dans son catalogue',

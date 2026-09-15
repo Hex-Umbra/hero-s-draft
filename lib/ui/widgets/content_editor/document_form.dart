@@ -17,9 +17,10 @@ import 'property_row.dart';
 
 /// La mecanique d'une entite, **inferee du document** (spec §4).
 ///
-/// Les champs viennent du document, plus les ressources et les references
-/// qu'il ne porte pas encore. Aucune cle du fichier n'est perdue : une cle
-/// inconnue recoit le widget de son type.
+/// Les champs viennent du document, plus les references qu'il ne porte pas
+/// encore. Aucune cle du fichier n'est perdue : une cle inconnue recoit le
+/// widget de son type. Les ressources ont leur propre section, que l'ecran
+/// compose.
 ///
 /// L'ecran recree ce widget (`ValueKey`) quand la structure change — un
 /// element ajoute ou retire decale les libelles, donc les controleurs.
@@ -30,7 +31,6 @@ class DocumentForm extends StatefulWidget {
     required this.descriptor,
     required this.onChanged,
     required this.onStructureChanged,
-    required this.assetField,
     this.referenceOptions = const {},
     this.vocabulary = const {},
     this.faults = const {},
@@ -46,7 +46,6 @@ class DocumentForm extends StatefulWidget {
   /// Un element a ete ajoute ou retire.
   final VoidCallback onStructureChanged;
 
-  final Widget Function(String key, AssetSlot slot) assetField;
   final Map<String, List<String>> referenceOptions;
   final Map<String, List<String>> vocabulary;
 
@@ -81,8 +80,6 @@ class _DocumentFormState extends State<DocumentForm> {
     final fields = <String, Object?>{
       for (final key in root.keys)
         if (_isField(key)) key: root[key],
-      for (final key in descriptor.assetKeys.keys)
-        if (!root.containsKey(key)) key: null,
       for (final key in descriptor.referenceKeys.keys)
         if (!root.containsKey(key)) key: null,
     };
@@ -99,6 +96,8 @@ class _DocumentFormState extends State<DocumentForm> {
     final descriptor = widget.descriptor;
     if (key == 'id' || key == 'skills') return false;
     if (descriptor.forbiddenKeys.contains(key)) return false;
+    // Une ressource a sa propre section, que l'ecran compose.
+    if (descriptor.assetKeys.containsKey(key)) return false;
     for (final base in descriptor.bilingualBases) {
       if (key == base || key == '${base}_fr' || key == '${base}_en') {
         return false;
@@ -211,7 +210,9 @@ class _DocumentFormState extends State<DocumentForm> {
     final Widget built;
     switch (_kindOf(path, value)) {
       case FieldKind.asset:
-        built = widget.assetField(pattern, descriptor.assetKeys[pattern]!);
+        // Jamais atteint : les ressources sont ecartees par `_isField`, et
+        // aucune n'est imbriquee. Elles vivent dans la section Ressources.
+        built = const SizedBox.shrink();
       case FieldKind.reference:
         built = row(
           _choices(

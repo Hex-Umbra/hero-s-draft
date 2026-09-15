@@ -7,8 +7,8 @@ import 'editor_style.dart';
 /// couleurs de classe. Le gris clair d'avant les eclipsait.
 const Color kNeutralOwnerColor = Color(0xFF9E9E9E);
 
-/// Un choix de l'editeur : un niveau de l'arbre, une pastille de proprietaire,
-/// une option de formulaire. Suit le contrat de choix (spec D9) : fond opaque
+/// Un choix de l'editeur : une pastille de proprietaire, une option de
+/// formulaire. Suit le contrat de choix (spec D9) : fond opaque
 /// derriere `Key('editeur-bouton-fond')`, texte et coche a 4,5:1, coche sur le
 /// seul choix actif.
 ///
@@ -27,7 +27,6 @@ class ChoiceButton extends StatelessWidget {
     this.identityColor,
     this.tint,
     this.isPlaceholder = false,
-    this.imagePath,
   });
 
   final String label;
@@ -47,9 +46,6 @@ class ChoiceButton extends StatelessWidget {
   /// « aucun » : l'absence de valeur, en italique tant qu'elle n'est pas
   /// choisie.
   final bool isPlaceholder;
-
-  /// L'icone ou la carte de la classe proprietaire.
-  final String? imagePath;
 
   static const double _radius = 6;
 
@@ -123,19 +119,6 @@ class ChoiceButton extends StatelessWidget {
                 if (isSelected) ...[
                   Icon(Icons.check, size: 15, color: ink),
                   const SizedBox(width: 5),
-                ],
-                if (imagePath != null) ...[
-                  ClipOval(
-                    child: Image.asset(
-                      imagePath!,
-                      width: 16,
-                      height: 16,
-                      fit: BoxFit.cover,
-                      // Un placeholder absent ne doit pas faire tomber l'ecran.
-                      errorBuilder: (_, _, _) => const SizedBox(width: 16),
-                    ),
-                  ),
-                  const SizedBox(width: 6),
                 ],
                 Text(label, style: labelStyle),
               ],

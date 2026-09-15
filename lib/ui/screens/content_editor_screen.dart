@@ -17,19 +17,34 @@ import '../../services/content_editor/entity_writer.dart';
 import '../../services/content_editor/known_values.dart';
 import '../../services/content_editor/pending_import.dart';
 import '../../services/content_editor/placeholder_filler.dart';
-import '../theme/app_colors.dart';
 import '../widgets/content_editor/asset_field.dart';
 import '../widgets/content_editor/choice_button.dart';
 import '../widgets/content_editor/color_field.dart';
 import '../widgets/content_editor/document_form.dart';
+import '../widgets/content_editor/editor_action_bar.dart';
+import '../widgets/content_editor/editor_app_bar.dart';
+import '../widgets/content_editor/editor_button.dart';
+import '../widgets/content_editor/editor_panel.dart';
+import '../widgets/content_editor/editor_segmented.dart';
+import '../widgets/content_editor/editor_style.dart';
+import '../widgets/content_editor/editor_toolbar.dart';
+import '../widgets/content_editor/entity_explorer.dart';
 import '../widgets/content_editor/entity_form.dart';
-import '../widgets/content_editor/tree_level.dart';
+import '../widgets/content_editor/field_anchors.dart';
+import '../widgets/content_editor/reference_panel.dart';
+import '../widgets/screen_scaffold.dart';
 
 /// Le niveau 1 de l'arbre : creer une entite neuve, ou modifier une existante.
 enum _EditorMode { create, modify }
 
 /// Editeur de contenu. **Hors run** : il ne touche a aucun etat de jeu, et le
 /// verrou de persistance du lot 1 ne le concerne pas.
+///
+/// La barre d'outils (`EditorToolbar`) choisit le type et l'action ; viennent
+/// ensuite le formulaire (`EntityForm`) et sa barre d'actions
+/// (`EditorActionBar`), l'explorateur (`EntityExplorer`) a gauche en mode
+/// Modifier, et le panneau de reference (`ReferencePanel`) a droite quand la
+/// place le permet.
 ///
 /// Les libelles sont en francais dans le code, exception delibaree et limitee
 /// a cet ecran : ajouter des cles ARB pour un outil jamais publie serait un
@@ -45,7 +60,8 @@ class ContentEditorScreen extends ConsumerStatefulWidget {
 class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
   // Les trois niveaux de l'arbre. Rien ne se replie vers le haut : descendre
   // d'un niveau n'efface jamais celui du dessus, seulement ce qui pendait
-  // dessous (voir les `onSelected` de chaque niveau, dans `_form`).
+  // dessous (voir les `onSelected` de chaque niveau, dans `_workspace` et
+  // `_explorer`).
   EntityCategory? _category;
   _EditorMode? _mode;
   String? _target;
@@ -89,6 +105,9 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
   List<ValidationFault> _faults = const [];
   WriteReport? _report;
   String? _failure;
+
+  /// Les ancres des champs, pour que le bandeau d'issue y ramene.
+  final FieldAnchors _anchors = FieldAnchors();
 
   /// Le chemin dont le contenu est actuellement dans le formulaire, relu du
   /// disque. `null` tant que rien n'a ete charge.
@@ -535,7 +554,7 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
           // Retour a la branche 0 : la nouvelle entite n'est pas dans le
           // registre avant le redemarrage a chaud, et ouvrir son formulaire ferait
           // croire le contraire. Le compte rendu, lui, reste affiche — voir
-          // `_form`.
+          // `_idle`.
           if (drafts.any((d) => !d.isModification)) {
             _category = null;
             _mode = null;
@@ -557,8 +576,8 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
   Widget build(BuildContext context) {
     final root = ref.watch(projectRootProvider);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Éditeur de contenu')),
+    return ScreenScaffold(
+      appBar: EditorAppBar(rootPath: root),
       body: root == null
           ? const Center(
               child: Padding(
@@ -569,119 +588,174 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
                   "pubspec.yaml et assets/data/. L'éditeur ne peut pas savoir "
                   "où écrire, et refuse donc de s'ouvrir.",
                   textAlign: TextAlign.center,
+                  style: TextStyle(color: EditorColors.muted, fontSize: 14),
                 ),
               ),
             )
-          : _form(root),
+          : _workspace(root),
     );
   }
 
-  /// Les trois niveaux de l'arbre, puis — une fois un type et un mode choisis
-  /// — le formulaire d'entite lui-meme.
-  ///
-  /// Le compte rendu (`_outcome`) est rendu **une seule fois**, a l'un des
-  /// deux endroits selon qu'une branche est ouverte : dans le formulaire tant
-  /// qu'il est visible, ou ici quand la branche vient de se refermer — sans
-  /// quoi une creation qui revient a la branche 0 ferait disparaitre son
-  /// propre compte rendu.
-  Widget _form(String root) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
+  /// La barre d'outils — les niveaux Type et Action de l'arbre —, puis le
+  /// formulaire une fois les deux choisis. Rien ne se replie vers le haut :
+  /// choisir un niveau n'efface jamais celui du dessus, seulement ce qui
+  /// pendait dessous.
+  Widget _workspace(String root) {
+    final hasForm = _category != null && _mode != null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        EditorToolbar(
+          selected: _category,
+          onSelected: (category) => setState(() {
+            // La barre rappelle aussi le choix courant : le retaper ne change
+            // rien, et ne doit pas effacer la saisie.
+            if (category == _category) return;
+            // Changer de type referme tout ce qui pendait dessous : une cible
+            // d'une autre categorie n'a plus de sens.
+            _category = category;
+            _mode = null;
+            _target = null;
+            _targetOwner = null;
+            _loadCategory();
+          }),
+          trailing: _category == null
+              ? null
+              : EditorSegmented<_EditorMode>(
+                  selected: _mode,
+                  segments: const [
+                    EditorSegment(
+                      value: _EditorMode.create,
+                      label: 'Créer',
+                      icon: Icons.add,
+                    ),
+                    EditorSegment(
+                      value: _EditorMode.modify,
+                      label: 'Modifier',
+                      icon: Icons.edit,
+                    ),
+                  ],
+                  onSelected: (mode) => setState(() {
+                    // Retaper le mode courant ne reensemence pas le document.
+                    if (mode == _mode) return;
+                    _mode = mode;
+                    _target = null;
+                    _targetOwner = null;
+                    _seedDocument(_templateSeed());
+                    _loadedPath = null;
+                    // Rien de choisi encore sous ce mode : un import en
+                    // attente visait le formulaire precedent.
+                    _importSources.clear();
+                    _importSoundIds.clear();
+                    _images.clear();
+                  }),
+                ),
+        ),
+        Expanded(child: hasForm ? _editing(root) : _idle()),
+      ],
+    );
+  }
+
+  /// Rien a editer encore : ce qu'il reste a choisir, et l'issue du dernier
+  /// geste. Une creation referme la branche : son compte rendu doit rester
+  /// visible ici.
+  Widget _idle() {
+    final banner = outcomeBannerFor(
+      failure: _failure,
+      faults: _faults,
+      report: _report,
+      onJump: _anchors.reveal,
+    );
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(26, 20, 26, 20),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          TreeLevel(
-            caption: 'Type',
-            choices: [
-              for (final descriptor in kEntityDescriptors.values)
-                TreeChoice(value: descriptor.category, label: descriptor.label),
+          Row(
+            children: [
+              const Icon(
+                Icons.info_outline,
+                size: 18,
+                color: EditorColors.faint,
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  _category == null
+                      ? 'Choisir un type dans la barre ci-dessus.'
+                      : "Choisir l'action au bout de la barre : créer une "
+                          'entité neuve, ou en modifier une existante.',
+                  style: const TextStyle(
+                    color: EditorColors.muted,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
             ],
-            selected: _category,
-            onSelected: (value) => setState(() {
-              // `TreeLevel` rappelle aussi le choix courant : le retaper ne
-              // change rien, et ne doit pas effacer la saisie.
-              if (value == _category) return;
-              // Changer de type referme tout ce qui pendait dessous : une
-              // cible d'une autre categorie n'a plus de sens.
-              _category = value as EntityCategory;
-              _mode = null;
-              _target = null;
-              _targetOwner = null;
-              _loadCategory();
-            }),
           ),
-          if (_category != null)
-            TreeLevel(
-              depth: 1,
-              caption: 'Action',
-              choices: const [
-                TreeChoice(value: _EditorMode.create, label: 'Créer'),
-                TreeChoice(value: _EditorMode.modify, label: 'Modifier'),
-              ],
-              selected: _mode,
-              onSelected: (value) => setState(() {
-                // Retaper le mode courant ne reensemence pas le document.
-                if (value == _mode) return;
-                _mode = value as _EditorMode;
-                _target = null;
-                _targetOwner = null;
-                _seedDocument(_templateSeed());
-                _loadedPath = null;
-                // Rien de choisi encore sous ce mode : un import en attente
-                // visait le formulaire precedent.
-                _importSources.clear();
-                _importSoundIds.clear();
-                _images.clear();
-              }),
-            ),
-          if (_mode == _EditorMode.modify) _targetLevel(root),
-          if (_category != null && _mode != null)
-            Expanded(child: _entityFormRow(root))
-          else
-            _outcome(),
+          if (banner != null) ...[const SizedBox(height: 16), banner],
         ],
       ),
     );
   }
 
-  /// Le niveau 2 : ce qui existe, groupe par proprietaire et colore par lui.
-  Widget _targetLevel(String root) {
+  /// L'explorateur en mode Modifier, le formulaire et sa barre d'actions, et
+  /// le panneau de reference quand il y a la place.
+  Widget _editing(String root) {
     _ensureCatalog(root);
-    final byOwner = _byOwner;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Sous cette largeur, le panneau de reference ecrasait les champs.
+        final showReference = constraints.maxWidth >= 1100;
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (_mode == _EditorMode.modify)
+              SizedBox(width: 240, child: _explorer(root)),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(child: _entityForm(root)),
+                  _actionBar(root),
+                ],
+              ),
+            ),
+            if (showReference)
+              SizedBox(
+                width: 300,
+                child: ReferencePanel(
+                  values: _knownValuesFor(root),
+                  entityCount: _byOwner.values
+                      .fold<int>(0, (sum, ids) => sum + ids.length),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
 
-    final choices = <TreeChoice>[];
-    // Les neutres d'abord, puis chaque classe en bloc : le groupement se voit
-    // sans qu'il faille un niveau de plus.
-    final owners = byOwner.keys.whereType<String>().toList()..sort();
-    for (final owner in [null, ...owners]) {
-      for (final id in byOwner[owner] ?? const <String>[]) {
-        choices.add(TreeChoice(
-          value: '${owner ?? ''}/$id',
-          label: id,
-          identityColor: owner == null
-              ? kNeutralOwnerColor
-              : _ownerColor(root, owner) ?? kNeutralOwnerColor,
-          imagePath: owner == null ? null : _ownerImage(root, owner),
-        ));
-      }
-    }
-
-    return TreeLevel(
-      depth: 2,
-      caption: 'Entité',
-      choices: choices,
-      selected: _target == null ? null : '${_targetOwner ?? ''}/$_target',
-      onSelected: (value) {
+  /// Le niveau Entite de l'arbre : ce qui existe, groupe par proprietaire et
+  /// colore par lui.
+  Widget _explorer(String root) {
+    return EntityExplorer(
+      idsByOwner: _byOwner,
+      selectedOwner: _targetOwner,
+      selectedId: _target,
+      colorOf: (owner) => owner == null
+          ? kNeutralOwnerColor
+          : _ownerColor(root, owner) ?? kNeutralOwnerColor,
+      onSelected: (owner, id) {
         setState(() {
-          final parts = (value as String).split('/');
-          _targetOwner = parts.first.isEmpty ? null : parts.first;
-          _target = parts.last;
+          _targetOwner = owner;
+          _target = id;
           // (a) Choisir une entite ici designe reellement la cible : sans
           // cette ligne, le surlignage divergeait en silence de ce que
           // « Charger » et « Écrire » visaient — `_target` changeait, l'usager
           // le voyait selectionne, mais le triangle d'identite pointait
           // ailleurs.
-          _id.text = _target!;
+          _id.text = id;
         });
         // Choisir, c'est charger : sans relecture, le formulaire montrait le
         // gabarit — le meme pour toutes les entites — ou le contenu de
@@ -700,25 +774,13 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
     return hex is String ? hexToColor(hex) : null;
   }
 
-  /// L'icone de la classe proprietaire, ou a defaut sa carte. Meme tolerance
-  /// aux dossiers incomplets que [_ownerColor].
-  String? _ownerImage(String root, String owner) {
-    final json = _ownerClassJson(root, owner);
-    if (json == null) return null;
-    final icon = json['iconPath'];
-    if (icon is String) return icon;
-    final classCard = json['classCard'];
-    return classCard is String ? classCard : null;
-  }
-
   /// Le contenu decode de `assets/data/classes/<owner>/class.json`, ou `null`
   /// si le fichier manque ou ne decode pas.
   ///
-  /// Retenu par proprietaire, et vide par [_ensureCatalog] : chaque bouton de
-  /// carte de classe demande sa couleur **et** son image, et `build` est
+  /// Retenu par proprietaire, et vide par [_ensureCatalog] : l'explorateur,
+  /// les pastilles et l'en-tete demandent chacun sa couleur, et `build` est
   /// relance a chaque frappe. Sans cette table, une liste de vingt cartes de
-  /// classe relisait et decodait le meme fichier quarante fois par caractere
-  /// tape.
+  /// classe relisait et decodait le meme fichier a chaque caractere tape.
   Map<String, dynamic>? _ownerClassJson(String root, String owner) {
     if (_ownerJson.containsKey(owner)) return _ownerJson[owner];
 
@@ -785,61 +847,98 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
     _catalogFor = _category;
   }
 
-  /// Le formulaire d'une entite, et a droite le panneau de valeurs connues.
-  Widget _entityFormRow(String root) {
-    _ensureCatalog(root);
+  /// Le message de la premiere faute de chaque champ nomme : c'est lui que
+  /// le champ affiche.
+  Map<String, String> _faultsByField() {
+    final byField = <String, String>{};
+    for (final fault in _faults) {
+      final field = fault.field;
+      if (field != null) byField.putIfAbsent(field, () => fault.message);
+    }
+    return byField;
+  }
+
+  /// La teinte de la tuile d'en-tete : la classe proprietaire d'une carte, ou
+  /// le `themeColor` d'une classe. `null` : l'accent.
+  Color? _identityColor(String root) {
+    final owner = _targetOwner;
+    if (_descriptor.supportsHeroClass && owner != null) {
+      return _ownerColor(root, owner);
+    }
+    if (_category == EntityCategory.heroClass && !_rawView) {
+      final hex = _document!.root['themeColor'];
+      return hex is String ? hexToColor(hex) : null;
+    }
+    return null;
+  }
+
+  /// La ligne d'aide de la barre d'actions : ce que feront les boutons, ou ce
+  /// qui les arrete.
+  String _note() {
+    final count = _faults.length;
+    if (count == 1) return "1 faute · rien n'est écrit tant qu'elle reste";
+    if (count > 1) return "$count fautes · rien n'est écrit tant qu'il en reste";
+    if (_mode == _EditorMode.modify) {
+      return "Changer l'identifiant désigne un autre fichier : il faut le "
+          "recharger avant d'écrire";
+    }
+    if (_isClassRecipe && _cardCountValue > 0) {
+      final cards =
+          _cardCountValue == 1 ? 'sa carte' : 'ses $_cardCountValue cartes';
+      return 'Valider vérifie sans écrire · Écrire valide, puis écrit la '
+          'classe et $cards';
+    }
+    return 'Valider vérifie sans écrire · Écrire valide, puis écrit le fichier';
+  }
+
+  Widget _entityForm(String root) {
     final draft = _draft();
     final isModification = _mode == _EditorMode.modify;
+    final faults = _faultsByField();
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          flex: 2,
-          child: EntityForm(
-            descriptor: _descriptor,
-            isModification: isModification,
-            idController: _id,
-            onIdentityChanged: () => setState(() {}),
-            pathPreview: draft.path,
-            proseControllers: _prose,
-            onLoad: isModification ? () => _load(root) : null,
-            ownerClassIds: isModification ? const [] : _ownerClassIds,
-            selectedOwner: _targetOwner,
-            onOwnerSelected: (value) => setState(() => _targetOwner = value),
-            ownerColorOf: (classId) => _ownerColor(root, classId),
-            mechanics: _mechanicsView(root),
-            rawView: _rawView,
-            onToggleRaw: _toggleRaw,
-            showSignatureCards: _isClassRecipe,
-            cardCountController: _cardCount,
-            cardCount: _cardCountValue,
-            onCardCountChanged: (n) => setState(() => _setCardCount(n)),
-            cardIds: _cardIds,
-            cardNameFr: _cardNameFr,
-            cardNameEn: _cardNameEn,
-            onValidate: () => setState(() => _faults = _judge(root).faults),
-            onWrite: () => _write(root),
-            outcome: _outcome(),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(child: _knownValuesPanel(root)),
-      ],
+    return EntityForm(
+      descriptor: _descriptor,
+      isModification: isModification,
+      idController: _id,
+      onIdentityChanged: () => setState(() {}),
+      pathPreview: draft.path,
+      status: !isModification
+          ? EntityFileStatus.newFile
+          : _loadedPath == draft.path
+              ? EntityFileStatus.loaded
+              : EntityFileStatus.notLoaded,
+      identityColor: _identityColor(root),
+      proseControllers: _prose,
+      ownerClassIds: isModification ? const [] : _ownerClassIds,
+      selectedOwner: _targetOwner,
+      onOwnerSelected: (value) => setState(() => _targetOwner = value),
+      ownerColorOf: (classId) => _ownerColor(root, classId),
+      mechanics: _mechanicsView(root, faults),
+      rawView: _rawView,
+      onToggleRaw: _toggleRaw,
+      resources: _resources(root, faults),
+      faults: faults,
+      anchors: _anchors,
+      showSignatureCards: _isClassRecipe,
+      cardCountController: _cardCount,
+      cardCount: _cardCountValue,
+      onCardCountChanged: (n) => setState(() => _setCardCount(n)),
+      cardIds: _cardIds,
+      cardNameFr: _cardNameFr,
+      cardNameEn: _cardNameEn,
     );
   }
 
-  Widget _mechanicsView(String root) {
+  Widget _mechanicsView(String root, Map<String, String> faults) {
     if (_rawView) {
-      return TextField(
-        key: const Key('editeur-json-brut'),
-        controller: _raw,
-        maxLines: 14,
-        style: const TextStyle(fontFamily: 'monospace'),
-        decoration: const InputDecoration(
-          labelText: 'Mécanique (JSON)',
-          floatingLabelBehavior: FloatingLabelBehavior.always,
-          alignLabelWithHint: true,
+      return Padding(
+        padding: const EdgeInsets.all(14),
+        child: TextField(
+          key: const Key('editeur-json-brut'),
+          controller: _raw,
+          maxLines: 14,
+          style: editorMono(size: 13, color: EditorColors.soft),
+          decoration: editorInputDecoration(),
         ),
       );
     }
@@ -854,11 +953,40 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
       }),
       referenceOptions: _references,
       vocabulary: vocabularyOf(_descriptor, _knownValuesFor(root)),
-      assetField: (key, slot) => _assetField(root, key, slot),
+      faults: faults,
+      anchors: _anchors,
     );
   }
 
-  Widget _assetField(String root, String key, AssetSlot slot) {
+  /// La section Ressources : les requises d'abord. Absente en vue brute — le
+  /// texte y fait foi, et un champ qui ecrirait dans le document le
+  /// contredirait.
+  Widget? _resources(String root, Map<String, String> faults) {
+    if (_rawView || _descriptor.assetKeys.isEmpty) return null;
+    final slots = [
+      for (final entry in _descriptor.assetKeys.entries)
+        if (entry.value.isRequired) entry,
+      for (final entry in _descriptor.assetKeys.entries)
+        if (!entry.value.isRequired) entry,
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: separatedRows([
+        for (final entry in slots)
+          KeyedSubtree(
+            key: _anchors.keyFor(entry.key),
+            child: _assetField(root, entry.key, entry.value, faults[entry.key]),
+          ),
+      ]),
+    );
+  }
+
+  Widget _assetField(
+    String root,
+    String key,
+    AssetSlot slot,
+    String? errorText,
+  ) {
     final document = _document!;
     final source = _importSources[key];
     final pending = source == null
@@ -873,6 +1001,7 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
         value: value is String ? value : null,
         soundIds: _soundIds,
         pendingLabel: pending,
+        errorText: errorText,
         onSelectSound: (id) => setState(() {
           _importSources.remove(key);
           _importSoundIds.remove(key);
@@ -900,6 +1029,7 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
               ? _bytesOf('$root/$relative')
               : null),
       pendingLabel: pending,
+      errorText: errorText,
       onClear: () => setState(() {
         _importSources.remove(key);
         document.removeAt([key]);
@@ -908,57 +1038,42 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
     );
   }
 
-  /// L'issue du dernier geste, coloree par sa nature : un refus en rouge, une
-  /// ecriture en vert, et en ambre ce qu'il reste a faire pour la voir.
-  Widget _outcome() {
-    const refused = TextStyle(color: AppColors.danger);
-    if (_failure != null) {
-      return Padding(
-        padding: const EdgeInsets.only(top: 12),
-        child: Text('Échec : $_failure', style: refused),
-      );
-    }
-    if (_faults.isNotEmpty) {
-      return Padding(
-        padding: const EdgeInsets.only(top: 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            for (final fault in _faults) Text('• $fault', style: refused),
-          ],
-        ),
-      );
-    }
-    final report = _report;
-    if (report == null) return const SizedBox.shrink();
-
-    return Padding(
-      padding: const EdgeInsets.only(top: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (final path in report.written)
-            Text(
-              'Écrit : $path',
-              style: const TextStyle(color: AppColors.success),
-            ),
-          if (report.syncFailed)
-            Text('sync_assets a échoué : ${report.sync!.output}', style: refused),
-          // §6.3 de la spec : pour une creation, le redemarrage a chaud a ete
-          // verifie a la main le 2026-09-14 ; la modification reste en test.
-          Text(
-            report.createdEntity
-                ? 'Redémarrage à chaud pour charger la nouvelle entité.'
-                : 'Redémarrage à chaud pour voir la modification.',
-            style: const TextStyle(color: AppColors.warning),
-          ),
-        ],
+  Widget _actionBar(String root) {
+    return EditorActionBar(
+      banner: outcomeBannerFor(
+        failure: _failure,
+        faults: _faults,
+        report: _report,
+        onJump: _anchors.reveal,
       ),
+      note: _note(),
+      noteIsAlarm: _faults.isNotEmpty,
+      actions: [
+        if (_mode == _EditorMode.modify)
+          EditorButton(
+            label: 'Charger',
+            icon: Icons.sync,
+            tone: EditorButtonTone.quiet,
+            onPressed: () => _load(root),
+          ),
+        EditorButton(
+          label: 'Valider',
+          icon: Icons.fact_check,
+          onPressed: () => setState(() => _faults = _judge(root).faults),
+        ),
+        // Le seul geste qui engage le disque est le seul bouton plein.
+        EditorButton(
+          label: 'Écrire',
+          icon: Icons.save,
+          tone: EditorButtonTone.primary,
+          onPressed: () => _write(root),
+        ),
+      ],
     );
   }
 
-  /// Le panneau relit tout le repertoire de la categorie : hors de question de
-  /// le faire a chaque frappe. La table est donc retenue tant que la categorie
+  /// Le panneau de reference (`ReferencePanel`) relit tout le repertoire de la
+  /// categorie : hors de question de le faire a chaque frappe. La table est donc retenue tant que la categorie
   /// ne change pas, et invalidee apres une ecriture — qui, elle, ajoute une
   /// valeur.
   Map<String, List<String>> _knownValuesFor(String root) {
@@ -971,28 +1086,6 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
       _valuesFor = _category;
     }
     return _values;
-  }
-
-  Widget _knownValuesPanel(String root) {
-    final values = _knownValuesFor(root);
-
-    return ListView(
-      children: [
-        const Text(
-          'Valeurs déjà utilisées',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 8),
-        for (final entry in values.entries)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 2),
-            child: Text(
-              '${entry.key} : ${entry.value.join(', ')}',
-              style: const TextStyle(fontSize: 12),
-            ),
-          ),
-      ],
-    );
   }
 }
 

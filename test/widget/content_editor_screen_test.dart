@@ -12,7 +12,9 @@ import 'package:roguelike_card_game/services/content_editor/content_file_system.
 import 'package:roguelike_card_game/services/content_editor/content_file_system_io.dart';
 import 'package:roguelike_card_game/services/content_editor/entity_descriptor.dart';
 import 'package:roguelike_card_game/ui/screens/content_editor_screen.dart';
+import 'package:roguelike_card_game/ui/theme/app_colors.dart';
 import 'package:roguelike_card_game/ui/theme/app_theme.dart';
+import 'package:roguelike_card_game/ui/widgets/content_editor/choice_button.dart';
 import 'package:roguelike_card_game/ui/widgets/content_editor/color_field.dart';
 
 import 'content_editor/contrast.dart';
@@ -90,6 +92,13 @@ void main() {
   Finder buttonOf(String label) => find.ancestor(
         of: find.text(label),
         matching: find.byKey(const Key('editeur-bouton-fond')),
+      );
+
+  /// Ce que dit le bandeau d'issue. Une faute qui nomme son champ s'affiche
+  /// aussi sous ce champ : c'est dans le bandeau qu'on la compte.
+  Finder inIssue(Finder finder) => find.descendant(
+        of: find.byKey(const Key('editeur-issue')),
+        matching: finder,
       );
 
   testWidgets('sans racine, l ecran refuse et explique pourquoi',
@@ -202,8 +211,8 @@ void main() {
 
   testWidgets('retaper le choix deja selectionne ne vide pas la saisie',
       (tester) async {
-    // `TreeLevel` rappelle `onSelected` pour le choix courant aussi : sans
-    // garde, retaper « Créer » reensemencait le document au gabarit, et
+    // La barre d'outils rappelle `onSelected` pour le choix courant aussi :
+    // sans garde, retaper « Créer » reensemencait le document au gabarit, et
     // retaper « Relique » effacait l'identifiant et le formulaire.
     await tester.pumpWidget(harness(projectRoot: root));
     await tester.tap(find.text('Relique'));
@@ -286,11 +295,18 @@ void main() {
       expectReadable(const ['regen_armor']);
     });
 
-    testWidgets('seul le choix actif porte la coche', (tester) async {
+    testWidgets('seul le choix actif est marque choisi', (tester) async {
+      final semantics = tester.ensureSemantics();
+      Matcher chosen(bool yes) => isSemantics(isSelected: yes);
       Finder checkOn(String label) => find.descendant(
             of: buttonOf(label),
             matching: find.byIcon(Icons.check),
           );
+      BorderSide underline(String label) =>
+          ((tester.widget<Container>(buttonOf(label)).decoration!
+                      as BoxDecoration)
+                  .border! as Border)
+              .bottom;
 
       seedOwners();
       await tester.pumpWidget(harness(projectRoot: root));
@@ -299,17 +315,21 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Créer'));
       await tester.pumpAndSettle();
-      expect(checkOn('Relique'), findsOneWidget);
-      expect(checkOn('Carte'), findsNothing);
-      expect(checkOn('Créer'), findsOneWidget);
-      expect(checkOn('Modifier'), findsNothing);
+      expect(tester.getSemantics(buttonOf('Relique')), chosen(true));
+      expect(tester.getSemantics(buttonOf('Carte')), chosen(false));
+      expect(tester.getSemantics(buttonOf('Créer')), chosen(true));
+      expect(tester.getSemantics(buttonOf('Modifier')), chosen(false));
+      // Un onglet choisi se souligne : la selection ne repose pas sur la
+      // seule couleur de son texte.
+      expect(underline('Relique').color, AppColors.neonBlue);
+      expect(underline('Carte').color, Colors.transparent);
 
-      // Changer de type deplace la coche, et referme le mode choisi dessous.
+      // Changer de type deplace la selection, et referme le mode choisi dessous.
       await tester.tap(find.text('Carte'));
       await tester.pumpAndSettle();
-      expect(checkOn('Carte'), findsOneWidget);
-      expect(checkOn('Relique'), findsNothing);
-      expect(checkOn('Créer'), findsNothing);
+      expect(tester.getSemantics(buttonOf('Carte')), chosen(true));
+      expect(tester.getSemantics(buttonOf('Relique')), chosen(false));
+      expect(tester.getSemantics(buttonOf('Créer')), chosen(false));
 
       // Une pastille garde sa couleur, choisie ou non : seule la coche dit
       // laquelle l'est.
@@ -321,6 +341,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(checkOn('mage'), findsOneWidget);
       expect(checkOn('Neutre'), findsNothing);
+      semantics.dispose();
     });
 
     testWidgets('le formulaire annonce ce qu il edite', (tester) async {
@@ -376,10 +397,15 @@ void main() {
       await tester.pump();
 
       // Plus etroite que le formulaire, la faute se centrait, loin des
-      // boutons qui venaient de la produire.
+      // boutons qui venaient de la produire : le bandeau s'aligne sur le
+      // formulaire.
       expect(
-        tester.getTopLeft(find.textContaining('un identifiant est requis')).dx,
-        tester.getTopLeft(find.byKey(const Key('editeur-titre'))).dx,
+        inIssue(find.textContaining('un identifiant est requis')),
+        findsOneWidget,
+      );
+      expect(
+        tester.getTopLeft(find.byKey(const Key('editeur-issue'))).dx,
+        tester.getTopLeft(find.byKey(const Key('editeur-entete'))).dx,
       );
     });
   });
@@ -404,20 +430,25 @@ void main() {
     await tester.tap(find.text('Modifier'));
     await tester.pumpAndSettle();
 
-    Color? backgroundOf(String label) {
-      final button = tester.widget<Container>(
-        find.ancestor(
-          of: find.text(label),
-          matching: find.byKey(const Key('editeur-bouton-fond')),
-        ),
-      );
-      return (button.decoration as BoxDecoration?)?.color;
-    }
+    Finder group(String owner) => find.byKey(Key('editeur-groupe-$owner'));
+    Color dotOf(String owner) => (tester
+            .widget<Container>(find.descendant(
+              of: group(owner),
+              matching: find.byKey(const Key('editeur-groupe-pastille')),
+            ))
+            .decoration! as BoxDecoration)
+        .color!;
 
+    // Chaque carte se range sous son proprietaire, qui porte sa couleur.
+    expect(find.descendant(of: group('mage'), matching: find.text('eclair')),
+        findsOneWidget);
+    expect(find.descendant(of: group('neutre'), matching: find.text('frappe')),
+        findsOneWidget);
     // Sans cette assertion, la couleur pourrait etre uniforme et le test
     // passerait quand meme : c'est la *difference* qui porte l'information.
-    expect(backgroundOf('eclair'), isNot(backgroundOf('frappe')));
-    expect(backgroundOf('eclair'), const Color(0xFF9C27B0));
+    expect(dotOf('mage'), isNot(dotOf('neutre')));
+    expect(dotOf('mage'), const Color(0xFF9C27B0));
+    expect(dotOf('neutre'), kNeutralOwnerColor);
   });
 
   testWidgets('le chemin calcule est affiche et suit la categorie',
@@ -452,7 +483,7 @@ void main() {
     await tester.tap(find.text('Valider'));
     await tester.pump();
 
-    expect(find.textContaining('minuscules'), findsOneWidget);
+    expect(inIssue(find.textContaining('minuscules')), findsOneWidget);
     expect(Directory('$root/assets/data').listSync(), hasLength(1));
   });
 
@@ -484,7 +515,7 @@ void main() {
     // autre habit.
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('minuscules'), findsOneWidget);
+    expect(inIssue(find.textContaining('minuscules')), findsOneWidget);
     expect(_dataTreeSnapshot(root), equals(before));
   });
 
@@ -659,7 +690,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Écrit :'), findsNothing);
-    expect(find.textContaining('deux cartes de signature'), findsOneWidget);
+    expect(inIssue(find.textContaining('deux cartes de signature')),
+        findsOneWidget);
     expect(
       Directory('$root/assets/data/classes').existsSync(),
       isFalse,
@@ -695,7 +727,8 @@ void main() {
 
       // C'est la faute que « Écrire » leve sur ce meme formulaire, deux tests
       // plus haut. Valider ne peut pas rester muet la ou Ecrire refuse.
-      expect(find.textContaining('deux cartes de signature'), findsOneWidget);
+      expect(inIssue(find.textContaining('deux cartes de signature')),
+          findsOneWidget);
     });
 
     testWidgets('Valider voit la carte de signature non nommee',
@@ -716,7 +749,8 @@ void main() {
       await tester.tap(find.text('Valider'));
       await tester.pump();
 
-      expect(find.textContaining('un identifiant est requis'), findsOneWidget);
+      expect(inIssue(find.textContaining('un identifiant est requis')),
+          findsOneWidget);
     });
 
     testWidgets('Valider ne reproche pas la prose que le remplissage fournit',
@@ -802,7 +836,8 @@ void main() {
     await tester.tap(find.text('Écrire'));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('n\'est pas un entier'), findsOneWidget);
+    expect(inIssue(find.textContaining('n\'est pas un entier')),
+        findsOneWidget);
     expect(_dataTreeSnapshot(root), equals(before));
   });
 
@@ -1004,6 +1039,100 @@ void main() {
     expect(fs.listings, greaterThan(listings));
     expect(find.text('frappe'), findsOneWidget);
     expect(find.text('talisman_de_fer'), findsNothing);
+  });
+
+  testWidgets('toucher une faute ramene a son champ', (tester) async {
+    tester.view.physicalSize = const Size(1000, 560);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(harness(projectRoot: root));
+    await tester.tap(find.text('Relique'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Créer'));
+    await tester.pumpAndSettle();
+    final value = find.byKey(const Key('editeur-champ-value'));
+    await tester.ensureVisible(value);
+    await tester.enterText(value, '1a');
+    await tester.pump();
+    // Retour en haut du formulaire : le champ fautif sort de la vue.
+    await tester.drag(
+      find.byKey(const Key('editeur-formulaire')),
+      const Offset(0, 4000),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Valider'));
+    await tester.pumpAndSettle();
+
+    final viewport = tester.getRect(find.byKey(const Key('editeur-formulaire')));
+    expect(tester.getRect(value).top, greaterThanOrEqualTo(viewport.bottom),
+        reason: 'le champ doit etre hors de vue avant le saut');
+
+    await tester.tap(inIssue(find.text('value')));
+    await tester.pumpAndSettle();
+
+    final field = tester.getRect(value);
+    expect(field.top, greaterThanOrEqualTo(viewport.top));
+    expect(field.bottom, lessThanOrEqualTo(viewport.bottom));
+  });
+
+  testWidgets('les valeurs deja utilisees ne s affichent qu avec la place',
+      (tester) async {
+    File('$root/assets/data/relics/talisman_de_fer.json')
+        .writeAsStringSync('{"effectType":"gain_armor"}');
+    await tester.pumpWidget(harness(projectRoot: root));
+    await tester.tap(find.text('Relique'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Créer'));
+    await tester.pumpAndSettle();
+    expect(find.text('VALEURS DÉJÀ UTILISÉES'), findsNothing);
+
+    tester.view.physicalSize = const Size(1400, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpAndSettle();
+    expect(find.text('VALEURS DÉJÀ UTILISÉES'), findsOneWidget);
+  });
+
+  testWidgets('plus et moins reglent le nombre de cartes de signature',
+      (tester) async {
+    await tester.pumpWidget(harness(projectRoot: root));
+    await tester.tap(find.text('Classe'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Créer'));
+    await tester.pumpAndSettle();
+
+    final plus = find.byKey(const Key('editeur-cartes-plus'));
+    await tester.ensureVisible(plus);
+    await tester.tap(plus);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('editeur-carte-0-id')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('editeur-cartes-moins')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('editeur-carte-0-id')), findsNothing);
+  });
+
+  testWidgets('l etat du fichier suit sa relecture', (tester) async {
+    File('$root/assets/data/relics/talisman_de_fer.json')
+        .writeAsStringSync('{}');
+    await tester.pumpWidget(harness(projectRoot: root));
+    await tester.tap(find.text('Relique'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Créer'));
+    await tester.pumpAndSettle();
+    expect(find.text('Nouveau fichier'), findsOneWidget);
+
+    await tester.tap(find.text('Modifier'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('talisman_de_fer'));
+    await tester.pumpAndSettle();
+    expect(find.text('Relu du disque'), findsOneWidget);
+
+    // Un autre identifiant designe un autre fichier, qui n'a pas ete relu.
+    await tester.enterText(find.byKey(const Key('editeur-id')), 'autre');
+    await tester.pump();
+    expect(find.text('Non chargé'), findsOneWidget);
   });
 
   group('mode Modifier', () {
@@ -1363,7 +1492,8 @@ void main() {
       await tester.tap(find.text('Écrire'));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('existe déjà dans audio.json'), findsOneWidget);
+      expect(inIssue(find.textContaining('existe déjà dans audio.json')),
+          findsOneWidget);
       expect(Directory('$root/assets/audio').existsSync(), isFalse);
     });
 

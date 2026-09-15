@@ -82,6 +82,9 @@ abstract final class EditorColors {
 
   /// L'ombre portee de la barre d'actions : un noir a 35 %.
   static const Color barShadow = Color(0x59000000);
+
+  /// Le separateur des dossiers du chemin, dans l'en-tete du fichier.
+  static const Color crumbSeparator = Color(0xFF3D4B55);
 }
 
 /// Les cles JSON, chemins et identifiants : ce que l'auteur retrouvera tel
