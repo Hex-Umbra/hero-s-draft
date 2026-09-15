@@ -56,21 +56,23 @@ class _EditorButtonState extends State<EditorButton> {
     final Color edge;
     final Color ink;
     if (!enabled) {
-      fill = Colors.white.withValues(alpha: 0.05);
+      fill = EditorColors.disabledFill;
       edge = EditorColors.line;
       ink = EditorColors.faint;
     } else {
       switch (widget.tone) {
         case EditorButtonTone.quiet:
-          fill = hovered ? const Color(0xFF1C1C34) : Colors.transparent;
-          edge = hovered ? const Color(0xFF6A6A95) : EditorColors.lineStrong;
+          fill = hovered ? EditorColors.quietHoverFill : Colors.transparent;
+          edge = hovered
+              ? EditorColors.quietHoverEdge
+              : EditorColors.lineStrong;
           ink = EditorColors.soft;
         case EditorButtonTone.outlined:
           fill = accent.withValues(alpha: hovered ? 0.22 : 0.1);
           edge = hovered ? accent : accent.withValues(alpha: 0.5);
           ink = accent;
         case EditorButtonTone.primary:
-          fill = hovered ? const Color(0xFF45E0FF) : accent;
+          fill = hovered ? EditorColors.accentHover : accent;
           edge = accent;
           ink = EditorColors.accentInk;
       }

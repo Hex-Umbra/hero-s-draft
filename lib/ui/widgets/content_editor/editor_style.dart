@@ -32,6 +32,18 @@ abstract final class EditorColors {
 
   /// Celle du tiroir de debug : le badge DEBUG dit la meme chose.
   static const Color debug = Colors.deepPurpleAccent;
+
+  /// Le fond d'un bouton inerte : un blanc a 5 %.
+  static const Color disabledFill = Color(0x0DFFFFFF);
+
+  /// Le fond du ton discret au survol.
+  static const Color quietHoverFill = Color(0xFF1C1C34);
+
+  /// Le bord du ton discret au survol.
+  static const Color quietHoverEdge = Color(0xFF6A6A95);
+
+  /// L'accent au survol, sur le geste principal.
+  static const Color accentHover = Color(0xFF45E0FF);
 }
 
 /// Les cles JSON, chemins et identifiants : ce que l'auteur retrouvera tel
