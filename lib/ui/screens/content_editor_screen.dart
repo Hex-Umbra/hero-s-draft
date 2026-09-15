@@ -312,12 +312,17 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
   ) {
     final recipe = _isClassRecipe ? _recipe() : null;
     final drafts = recipe?.toDrafts() ?? [fillPlaceholders(_draft())];
+    final imports = _pendingImports();
+    // Un import en attente (`classCard`, `iconPath`...) appartient a la
+    // classe, jamais a une carte de signature : ecarte ces cles pour ne pas
+    // repeter sa faute pour chaque carte, plus bas.
+    final importKeys = {for (final pending in imports) pending.key};
 
     final validator = EntityValidator(
       fs: ref.read(contentFileSystemProvider)!,
       rootPath: root,
       registry: GameDataRegistry.instance,
-      imports: _pendingImports(),
+      imports: imports,
     );
 
     final faults = <ValidationFault>[
@@ -343,6 +348,13 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
       // `faults['skills']` ; le rang de la carte dit laquelle est en cause.
       cardRank++;
       for (final fault in draftFaults) {
+        // `EntityValidator` juge chaque import en attente contre chaque
+        // brouillon, carte comprise : sans ce filtre, une faute d'import de
+        // la classe (fichier introuvable, extension refusee...) serait
+        // repetee pour chaque carte de signature. Le brouillon de la classe
+        // la rapporte deja — la porte d'« Écrire » ne s'en trouve pas
+        // changee.
+        if (fault.field != null && importKeys.contains(fault.field)) continue;
         faults.add(ValidationFault(
           'carte $cardRank : ${fault.message}',
           field: 'skills',

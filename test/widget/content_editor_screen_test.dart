@@ -1739,6 +1739,43 @@ void main() {
         'nouvelle icone',
       );
     });
+
+    testWidgets(
+        'une faute d import de classe n est pas repetee par ses cartes',
+        (tester) async {
+      // `EntityValidator` juge un import en attente contre chaque brouillon,
+      // carte de signature comprise : sans le filtre de `_judge`, ce fichier
+      // introuvable serait rapporte une fois pour la classe, et une fois de
+      // plus, taguee « carte 1 : », pour sa seule carte.
+      final missing = '$root/import/introuvable.png';
+      await tester.pumpWidget(
+          harness(projectRoot: root, picker: _FakePicker(missing)));
+      await tester.tap(find.text('Classe'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Créer'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byKey(const Key('editeur-id')), 'gambler');
+      await tester.enterText(
+          find.byKey(const Key('editeur-nombre-cartes')), '1');
+      await tester.pump();
+      await tester.enterText(
+          find.byKey(const Key('editeur-carte-0-id')), 'bluff');
+
+      final button = find.byKey(const Key('editeur-importer-classCard'));
+      await tester.ensureVisible(button);
+      await tester.tap(button);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Valider'));
+      await tester.pump();
+
+      expect(
+        inIssue(find.textContaining('fichier introuvable')),
+        findsOneWidget,
+      );
+      expect(inIssue(find.textContaining('carte 1 :')), findsNothing);
+    });
   });
 }
 
