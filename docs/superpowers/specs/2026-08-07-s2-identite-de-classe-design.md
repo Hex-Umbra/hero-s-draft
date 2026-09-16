@@ -1,7 +1,7 @@
 # S2 — Identité de classe — Conception
 
 Date : 2026-08-07 · **Révisée le 2026-09-16**
-Statut : **Design validé, non implémenté** — découpé en quatre lots (A → D) et un chantier frère (P-49)
+Statut : **Lot A implémenté** (branche `feat/p41-lot-a`) — lots B à D et chantier frère P-49 non implémentés
 
 > [!IMPORTANT]
 > **Révision du 2026-09-16 — lire le §0 avant tout le reste.** La conception du 2026-08-07 a été
