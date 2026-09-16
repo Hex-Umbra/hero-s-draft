@@ -260,7 +260,6 @@ Marqué **priorité haute** dans le rapport du 22/07 et jamais traité. Difficul
 | **P-42** | **Pools de cartes par classe** — séparation `unique`/`heroClass`, ~25-30 cartes | *à chiffrer en spec* | ★★★★☆ | 🔥🔥🔥 |
 | **P-43** | **Économie de deck** — récompense de carte, limite de taille, rééquilibrage fusion | *à chiffrer en spec* | ★★★☆☆ | 🔥🔥 |
 | **P-44** | **Profondeur de cartes** — coût 3, `scaleWith`, génération, cible `none`, malédictions | *à chiffrer en spec* | ★★★★☆ | 🔥🔥 |
-| **P-50** | **Système de sauvegarde complet** — plusieurs emplacements, chargement à tout moment, métadonnées par sauvegarde, prise en compte de la version · **avant la `1.0.0`**, pas avant | *à chiffrer en spec* | ★★★★☆ | 🔥🔥 |
 | ~~**P-48**~~ | ~~**Réorganisation des données** — un fichier par entité, dossiers auto-suffisants, chargeur générique~~ ✅ **Livré le 2026-09-05** — 8 catalogues monolithiques éclatés en 71 fichiers d'entité, lus par un chargeur générique piloté par des motifs de chemin · [spec](superpowers/specs/2026-09-04-reorganisation-donnees-un-fichier-par-entite-design.md) | — | — | — |
 
 ### P-10 — Finale de Séquence
@@ -298,30 +297,6 @@ Rien n'existe hors-run aujourd'hui. Gain d'une monnaie à la fin de chaque run p
 - L'**interface** de déblocage
 - La **monnaie** méta et la boutique d'améliorations permanentes
 - **Plusieurs passifs actifs** par run, si retenu : `RunState.activePassive` est singulier, son passage à une liste demande une étape de migration
-
-### P-50 — Système de sauvegarde complet
-Décision du propriétaire, le 2026-09-16. Aujourd'hui, `SaveService` tient **une seule partie en
-cours**, écrite automatiquement quand un nœud de carte est résolu et reprise par « Continuer ». Avant
-la `1.0.0`, ce mécanisme sera **entièrement retravaillé** en un vrai système de sauvegarde :
-
-- **plusieurs sauvegardes** possibles, et non plus une seule partie en cours ;
-- **chargeables à n'importe quel moment**, pas seulement depuis l'écran d'accueil ;
-- chacune avec **ses propres informations et données** : de quoi la reconnaître avant de la charger ;
-- **en tenant compte de la version** du jeu qui l'a écrite.
-
-> [!IMPORTANT]
-> **Jusqu'à la `1.0.0`, les sauvegardes ne se transfèrent pas d'une version à l'autre**, et ce n'est
-> pas un défaut : le jeu est en alpha. Une partie d'une ancienne version peut être effacée ou devenue
-> inutilisable. Aucun chantier d'ici là ne doit se donner la compatibilité des sauvegardes comme
-> objectif ; la chaîne de migration posée par P-41 lot A
-> ([ADR-095](../.obsidian_vault/_adr/ADR-095-passage-unique-des-gains-scission-des-puissances-et.md))
-> n'est à étendre que si un changement de format l'impose.
-
-**À trancher en spec, le moment venu** — rien n'est décidé : nombre et nature des emplacements
-(manuels, automatiques, les deux), ce que « à n'importe quel moment » autorise (en combat ou non —
-`SaveService` n'est aujourd'hui jamais appelé en combat), les métadonnées affichées, le support de
-stockage (`shared_preferences` n'est pas taillé pour plusieurs parties, même réserve que **P-11**),
-le sort des sauvegardes d'une autre version, et l'articulation avec le stockage de profil de **P-13**.
 
 ### P-14 — Variantes d'Élite
 **Le chantier le plus ambitieux de tout le backlog.** Cinq affixes (Ardent, Foudroyant, Glacial, Vampirique, Parfait) applicables à n'importe quel ennemi dans n'importe quel combat, s'additionnant aux multiplicateurs de nœud existants. Nécessite un **système de triggers côté ennemi** (`onAttackLanded`/`onDamageTaken`/`onTurnStart`) calqué sur celui des reliques — architecture nouvelle. Chaque affixe « riche » (Foudroyant et sa charge conditionnelle en particulier) est une mini-mécanique à concevoir et tester séparément.
@@ -448,7 +423,8 @@ suites techniques listées dans le plan du lot A lui-même
 Deux autres suites de la revue finale portaient sur la compatibilité des sauvegardes entre versions
 (arbitrage par `savedAt` entre `run_save` et `run_save_v1`, avertissement d'écrasement d'une partie
 écrite par un build plus récent). **Retirées le 2026-09-16 par décision du propriétaire** : avant la
-`1.0.0`, les sauvegardes ne se transfèrent pas d'une version à l'autre — voir **P-50**.
+`1.0.0`, les sauvegardes ne se transfèrent pas d'une version à l'autre — voir « Plus tard, avant la
+`1.0.0` » en §9.
 
 **Ce que le programme referme ailleurs dans ce document** — à ne pas traiter deux fois :
 
@@ -761,6 +737,34 @@ L'ordre compte : P-06 crée `vfx_tokens.dart` dont P-07 dépend ; le prototype d
 Donne une fin à une run, archive les résultats, puis recalibre l'économie **une fois** que P-02 et le nouveau contenu ont stabilisé la base. Intercaler **P-26 et P-25** (1,1 j de dette à faible risque ; la violation bilingue de `SkillData` qu'y comptait ce paragraphe est close depuis le 2026-09-04, P-40 ayant supprimé le modèle) selon l'humeur — c'est le couple qui remplace l'ancienne recommandation « P-23 et P-25 », P-23 ayant été rétrogradé après re-vérification.
 
 **Au-delà** : P-14 (Variantes d'Élite) et P-13 (méta-progression) sont les deux gros morceaux suivants ; P-12 (Biomes) est prêt côté code mais attend 15 illustrations — c'est le seul chantier qu'il est rationnel de lancer *maintenant* côté art, en parallèle de tout le reste.
+
+### Plus tard, avant la `1.0.0` — sans identifiant ni place dans la file
+
+Idées retenues par le propriétaire, mais loin derrière le reste : elles ne reçoivent un `P-xx` que le
+jour où elles entrent dans la file.
+
+**Refonte complète du système de sauvegarde** *(noté le 2026-09-16)*. Aujourd'hui, `SaveService` tient
+**une seule partie en cours**, écrite automatiquement quand un nœud de carte est résolu et reprise par
+« Continuer ». Il deviendra un vrai système de sauvegarde :
+
+- **plusieurs sauvegardes** possibles, et non plus une seule partie en cours ;
+- **chargeables à n'importe quel moment**, pas seulement depuis l'écran d'accueil ;
+- chacune avec **ses propres informations et données** : de quoi la reconnaître avant de la charger ;
+- **en tenant compte de la version** du jeu qui l'a écrite.
+
+> [!IMPORTANT]
+> **Jusqu'à la `1.0.0`, les sauvegardes ne se transfèrent pas d'une version à l'autre**, et ce n'est
+> pas un défaut : le jeu est en alpha. Une partie d'une ancienne version peut être effacée ou devenue
+> inutilisable. Aucun chantier d'ici là ne doit se donner la compatibilité des sauvegardes comme
+> objectif ; la chaîne de migration posée par P-41 lot A
+> ([ADR-095](../.obsidian_vault/_adr/ADR-095-passage-unique-des-gains-scission-des-puissances-et.md))
+> n'est à étendre que si un changement de format l'impose.
+
+**À trancher en spec, le moment venu** — rien n'est décidé : nombre et nature des emplacements
+(manuels, automatiques, les deux), ce que « à n'importe quel moment » autorise (en combat ou non —
+`SaveService` n'est aujourd'hui jamais appelé en combat), les métadonnées affichées, le support de
+stockage (`shared_preferences` n'est pas taillé pour plusieurs parties, même réserve que **P-11**),
+le sort des sauvegardes d'une autre version, et l'articulation avec le stockage de profil de **P-13**.
 
 ---
 
