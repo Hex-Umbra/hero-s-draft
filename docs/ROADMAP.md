@@ -256,7 +256,7 @@ Marqué **priorité haute** dans le rapport du 22/07 et jamais traité. Difficul
 | **P-14** | **Variantes d'Élite adaptatives** (5 affixes, triggers côté ennemi) | **5-8 j** | ★★★★★ | 🔥🔥🔥 |
 | **P-15** | **Ennemis tiers 2-5** (20 concepts restants) | **3-5 j** *(+ sprites)* | ★★★☆☆ | 🔥🔥 |
 | **P-41** | **Identité de classe** — `statRules`, split des 3 puissances, 9 passifs sélectionnables, récompenses data-driven · **4 lots (A → D)** · [spec](superpowers/specs/2026-08-07-s2-identite-de-classe-design.md), révisée le 2026-09-16 | *à chiffrer par lot* | ★★★★☆ | 🔥🔥🔥 |
-| **P-49** | **Passifs partagés** — répertoire commun, éligibilité déclarée par le passif, point d'accès unique ; **prépare P-13** · frontière dans la [spec de P-41](superpowers/specs/2026-08-07-s2-identite-de-classe-design.md) §5 | *à chiffrer en spec* | ★★★☆☆ | 🔥🔥 |
+| **P-49** | **Passifs partagés** — répertoire commun, éligibilité déclarée par le passif, point d'accès unique, Maîtrise dont chaque passif déclare l'effet ; **prépare P-13** · [spec](superpowers/specs/2026-09-16-p49-passifs-partages-design.md), écrite le 2026-09-16 | *à chiffrer au plan* | ★★★☆☆ | 🔥🔥 |
 | **P-42** | **Pools de cartes par classe** — séparation `unique`/`heroClass`, ~25-30 cartes | *à chiffrer en spec* | ★★★★☆ | 🔥🔥🔥 |
 | **P-43** | **Économie de deck** — récompense de carte, limite de taille, rééquilibrage fusion | *à chiffrer en spec* | ★★★☆☆ | 🔥🔥 |
 | **P-44** | **Profondeur de cartes** — coût 3, `scaleWith`, génération, cible `none`, malédictions | *à chiffrer en spec* | ★★★★☆ | 🔥🔥 |
@@ -372,13 +372,13 @@ reste le seul geste déclenchant `release.yml`, et il suppose `main` poussé.
 > [brainstorm](analysis_reports/05082026_brainstorm_heros_et_cartes_Opus5.md)), dont le constat
 > central est que *les trois classes ne se distinguent que par les PV et un passif, et que toute
 > « progression » de carte est l'inflation numérique de l'une des 17 communes*. Seul **P-41** est
-> conçu à ce jour ; les trois suivants attendent leur spec, et **P-49**, chantier frère né de la
-> re-vérification du 2026-09-16, aussi.
+> conçu à ce jour avec **P-49**, chantier frère né de la re-vérification du 2026-09-16 (spec écrite le
+> même jour) ; les trois suivants attendent leur spec.
 
 | Lot | ID | Dépend de |
 |:---|:---|:---|
 | S1 — Nettoyage | ~~**P-40**~~ *(Tier D)* ✅ clos le 2026-09-15 | — |
-| *Chantier frère* — Passifs partagés | **P-49** | **P-41**, son lot A (chaîne de migration) |
+| *Chantier frère* — Passifs partagés | **P-49** | **P-41**, son lot A (passage unique des gains) |
 | S2 — Identité de classe | **P-41** | **P-49**, pour son lot B |
 | S3 — Pools de cartes | **P-42** | **P-41** |
 | S4 — Économie de deck | **P-43** | P-42 |
@@ -400,14 +400,14 @@ causes de leur ordre et invariant de découpage :
 | Lot | Contenu | Dépend de |
 |:---|:---|:---|
 | **P-41 A** | ✅ **Fusionné dans `main` le 2026-09-16 (PR #38)** — Point de passage unique des gains, à source étiquetée, scission de `attaque` en trois puissances, chaîne de migration de sauvegarde sous une nouvelle clé — **sans changement de comportement** · [plan](superpowers/plans/2026-09-16-p41-lot-a-passage-unique-scission-migration.md) | — |
-| **P-49** | Passifs partagés, dont la refonte de la Maîtrise d'Armure en bonus de passif — *spec à écrire* | P-41 A |
+| **P-49** | Passifs partagés, dont la refonte de la Maîtrise d'Armure en bonus de passif — [spec](superpowers/specs/2026-09-16-p49-passifs-partages-design.md), *plan à écrire* | P-41 A |
 | **P-41 B** | `statRules`, les neuf passifs, stats de départ | P-41 A, P-49 |
 | **P-41 C** | Récompenses de niveau data-driven *(indépendante, parallélisable avec A)*, puis nouvelles récompenses et écran de sélection | B, pour sa seconde partie |
 | **P-41 D** | Mise à jour fonctionnelle du tutoriel et de la console de debug | B, C |
 
-**Trois questions ouvertes, notées dans la spec pour ne pas être découvertes en cours de lot :**
-- **Refondre la Maîtrise d'Armure en bonus de passif** (décision du propriétaire, 2026-09-16) — stat
-  globale ou stat par passif, **à trancher au brainstorm de P-49** (spec, §5.4) ;
+**Deux questions ouvertes, notées dans la spec pour ne pas être découvertes en cours de lot** — une
+troisième, la forme de la Maîtrise, a été tranchée au brainstorm de P-49 le 2026-09-16
+([spec de P-49](superpowers/specs/2026-09-16-p49-passifs-partages-design.md), N1) :
 - **La conversion du Mage porte-t-elle aussi sur la Force ?** — à trancher au lot B (spec, §4.2) ;
 - **Et sur le retrait d'une relique**, gain négatif de source `progression` ? — à trancher au lot B
   (spec, §7.1).
