@@ -120,9 +120,7 @@ void main() {
 
       // Damage the hero first (well below max) so we can observe an
       // uncapped heal, then verify the notification and state update.
-      container.read(runProvider.notifier).setHeroStats(
-        currentPv: maxPv - healAmount - 5,
-      );
+      container.read(runProvider.notifier).takeDamage(healAmount + 5);
       final pvBeforeHeal = container.read(runProvider).heroStats.currentPv;
 
       await tester.tap(find.text('SE REPOSER'));
@@ -147,7 +145,7 @@ void main() {
       final container = await pumpRestScreen(tester);
 
       final maxPv = container.read(runProvider).heroStats.maxPv;
-      container.read(runProvider.notifier).setHeroStats(currentPv: maxPv - 1);
+      container.read(runProvider.notifier).takeDamage(1);
 
       await tester.tap(find.text('SE REPOSER'));
       await tester.pumpAndSettle();

@@ -99,7 +99,7 @@ void main() {
         runController.startNewRun(berserkerHero, berserkerArmor);
 
         // Set missing HP: 80 max HP, set current to 60 (20 missing HP)
-        runController.setHeroStats(currentPv: 60, armure: 0);
+        runController.takeDamage(20);
 
         // Travel to a node to have currentNodeId set
         runController.travelToNode('node_1');

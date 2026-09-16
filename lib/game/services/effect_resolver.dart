@@ -5,6 +5,7 @@ import '../../models/status_effect.dart';
 import '../controllers/run_controller.dart';
 import '../controllers/deck_controller.dart';
 import '../controllers/combat_controller.dart';
+import '../systems/stat_gains.dart';
 import '../systems/power_rules.dart';
 import 'effects/effect_strategy.dart';
 import '../game_constants.dart';
@@ -167,8 +168,9 @@ class EffectResolver {
       deckController.drawCards(extraDraw, maxHandSize: GameConstants.maxHandSize);
     }
     if (extraMana > 0) {
-      final currentMana = runController.currentState.heroStats.currentMana;
-      runController.setHeroStats(currentMana: currentMana + extraMana);
+      runController.grant(
+        StatGain(GainResource.mana, extraMana, GainSource.rune),
+      );
     }
 
     // Apply elemental statuses if this is an Attack card
@@ -242,8 +244,9 @@ class EffectResolver {
 
     final hasArmorEffect = card.data.effects.any((e) => e.type == 'armor');
     if (!hasArmorEffect && extraArmor > 0) {
-      final currentStats = runController.currentState.heroStats;
-      runController.setHeroStats(armure: currentStats.armure + extraArmor);
+      runController.grant(
+        StatGain(GainResource.armor, extraArmor, GainSource.rune),
+      );
     }
 
     return true;

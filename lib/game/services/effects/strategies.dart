@@ -4,6 +4,7 @@ import '../../../models/data/card_data.dart';
 import '../../controllers/run_controller.dart';
 import '../../controllers/deck_controller.dart';
 import '../../controllers/combat_controller.dart';
+import '../../systems/stat_gains.dart';
 import '../../systems/power_rules.dart';
 import '../damage_pipeline.dart';
 import '../effect_resolver.dart';
@@ -89,8 +90,9 @@ class ArmorEffectStrategy implements EffectStrategy {
     required CombatController combatController,
     required String? selectedEnemyId,
   }) {
-    final currentStats = runController.currentState.heroStats;
-    runController.setHeroStats(armure: currentStats.armure + scaledValue);
+    runController.grant(
+      StatGain(GainResource.armor, scaledValue, GainSource.card),
+    );
   }
 }
 
@@ -105,8 +107,9 @@ class GainManaEffectStrategy implements EffectStrategy {
     required CombatController combatController,
     required String? selectedEnemyId,
   }) {
-    final currentMana = runController.currentState.heroStats.currentMana;
-    runController.setHeroStats(currentMana: currentMana + scaledValue);
+    runController.grant(
+      StatGain(GainResource.mana, scaledValue, GainSource.card),
+    );
     runController.ref.read(audioDirectorProvider).onMoment(GameMoment.manaGain);
   }
 }

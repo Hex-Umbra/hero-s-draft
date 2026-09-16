@@ -10,6 +10,7 @@ import '../../models/missing_save_item.dart';
 import '../../models/data/forge_upgrade_data.dart';
 import '../../services/map_generator_service.dart';
 import '../systems/trait_system.dart';
+import '../systems/stat_gains.dart';
 import 'debug_run_controller.dart';
 import 'inventory_controller.dart';
 import 'run/player_stats_manager.dart';
@@ -340,21 +341,10 @@ class RunController extends Notifier<RunState> {
     _playerStatsManager.heal(amount, isCrit: isCrit);
   }
 
-  /// Modifie la valeur exacte d'un champ sans affecter les max (pour la récupération d'armure par ex)
-  void setHeroStats({
-    int? currentPv,
-    int? armure,
-    int? currentMana,
-    int? armorMastery,
-    bool? lastActionWasCrit,
-  }) {
-    _playerStatsManager.setHeroStats(
-      currentPv: currentPv,
-      armure: armure,
-      currentMana: currentMana,
-      armorMastery: armorMastery,
-      lastActionWasCrit: lastActionWasCrit,
-    );
+  /// Accorde au héros un gain d'armure, de mana ou de puissance, par le point
+  /// de passage unique `StatGains` (spec P-41, §4.1).
+  void grant(StatGain gain) {
+    _playerStatsManager.grant(gain);
   }
 
   /// Subit des dégâts

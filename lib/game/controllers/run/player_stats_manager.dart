@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/status_effect.dart';
 import '../../../models/data/relic_data.dart';
+import '../../systems/stat_gains.dart';
 import '../inventory_controller.dart';
 import '../run_controller.dart';
 import '../checkpoint_controller.dart';
@@ -39,18 +40,22 @@ class PlayerStatsManager {
       newMaxMana,
     );
 
+    final modifiedStats = currentStats.copyWith(
+      maxPv: newMaxPv,
+      currentPv: newCurrentPv,
+      maxMana: newMaxMana,
+      currentMana: newCurrentMana,
+      armorMastery: currentStats.armorMastery + armorAcc,
+      luck: currentStats.luck + luckAcc,
+      critChance: currentStats.critChance + critChanceAcc,
+      critMultiplier: currentStats.critMultiplier + critDamageAcc,
+    );
+
     controller.updateState(
       controller.currentState.copyWith(
-        heroStats: currentStats.copyWith(
-          maxPv: newMaxPv,
-          currentPv: newCurrentPv,
-          maxMana: newMaxMana,
-          currentMana: newCurrentMana,
-          attackPower: currentStats.attackPower + attackAcc,
-          armorMastery: currentStats.armorMastery + armorAcc,
-          luck: currentStats.luck + luckAcc,
-          critChance: currentStats.critChance + critChanceAcc,
-          critMultiplier: currentStats.critMultiplier + critDamageAcc,
+        heroStats: StatGains.apply(
+          modifiedStats,
+          StatGain(GainResource.attackPower, attackAcc, GainSource.progression),
         ),
       ),
     );
@@ -136,23 +141,12 @@ class PlayerStatsManager {
     );
   }
 
-  /// Modifie la valeur exacte d'un champ sans affecter les max (pour la récupération d'armure par ex)
-  void setHeroStats({
-    int? currentPv,
-    int? armure,
-    int? currentMana,
-    int? armorMastery,
-    bool? lastActionWasCrit,
-  }) {
+  /// Accorde au héros un gain d'armure, de mana ou de puissance : voir
+  /// `StatGains`, seul endroit où un gain est calculé.
+  void grant(StatGain gain) {
     controller.updateState(
       controller.currentState.copyWith(
-        heroStats: controller.currentState.heroStats.copyWith(
-          currentPv: currentPv ?? controller.currentState.heroStats.currentPv,
-          armure: armure ?? controller.currentState.heroStats.armure,
-          currentMana: currentMana ?? controller.currentState.heroStats.currentMana,
-          armorMastery: armorMastery ?? controller.currentState.heroStats.armorMastery,
-          lastActionWasCrit: lastActionWasCrit ?? false,
-        ),
+        heroStats: StatGains.apply(controller.currentState.heroStats, gain),
       ),
     );
   }
@@ -195,23 +189,11 @@ class PlayerStatsManager {
         if (relic.trigger == RelicTrigger.startOfRun) {
           applyHeroStatModifier(maxManaAcc: relic.value);
         } else {
-          controller.updateState(
-            controller.currentState.copyWith(
-              heroStats: controller.currentState.heroStats.copyWith(
-                currentMana: controller.currentState.heroStats.currentMana + relic.value,
-              ),
-            ),
-          );
+          grant(StatGain(GainResource.mana, relic.value, GainSource.relic));
         }
         break;
       case 'gain_armor':
-        controller.updateState(
-          controller.currentState.copyWith(
-            heroStats: controller.currentState.heroStats.copyWith(
-              armure: controller.currentState.heroStats.armure + relic.value,
-            ),
-          ),
-        );
+        grant(StatGain(GainResource.armor, relic.value, GainSource.relic));
         break;
       case 'gain_strength':
         if (relic.trigger == RelicTrigger.startOfRun) {
@@ -380,7 +362,7 @@ class PlayerStatsManager {
               ),
             ),
           );
-          setHeroStats(armure: controller.currentState.heroStats.armure + relic.value);
+          grant(StatGain(GainResource.armor, relic.value, GainSource.relic));
         } else {
           addStatus(
             const StatusEffect(

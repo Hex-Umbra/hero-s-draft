@@ -532,7 +532,7 @@ void main() {
 
         // 3. VULNERABLE TEST (Enemy to Player)
         // Reset player HP to 100
-        runController.setHeroStats(currentPv: 100);
+        runController.heal(100);
         // Add vulnerable status to hero
         runController.addStatus(
           const StatusEffect(

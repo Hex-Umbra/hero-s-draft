@@ -8,7 +8,7 @@ class EntityStats {
   final int maxMana;
   final int currentMana;
   final int armure;
-  final int armorMastery; // Bonus permanent ajouté à chaque gain d'armure
+  final int armorMastery; // Bonus permanent ajouté aux gains d'armure des passifs (voir StatGains)
   final int attackPower; // Dégâts des cartes Attaque — la Force s'y ajoute
   final int skillPower; // Dégâts des cartes Compétence
   final int alterationPower; // Intensité des statuts posés sur un ennemi

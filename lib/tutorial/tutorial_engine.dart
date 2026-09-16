@@ -9,6 +9,7 @@ import '../models/data/passive_data.dart';
 import '../models/entity_stats.dart';
 import '../models/enemy_instance.dart';
 import '../game/services/damage_pipeline.dart';
+import '../game/systems/stat_gains.dart';
 import '../game/systems/power_rules.dart';
 import 'tutorial_data.dart';
 import 'tutorial_fixtures.dart';
@@ -351,8 +352,9 @@ class TutorialEngine extends ChangeNotifier {
           stats: enemy.stats.takeDamage(dealt, isCrit: isCrit),
         );
       } else if (effect.type == 'armor') {
-        mockState.heroStats = mockState.heroStats.copyWith(
-          armure: mockState.heroStats.armure + scaled,
+        mockState.heroStats = StatGains.apply(
+          mockState.heroStats,
+          StatGain(GainResource.armor, scaled, GainSource.card),
         );
         if (scaled > 0) _armorGainedThisStep = true;
       }

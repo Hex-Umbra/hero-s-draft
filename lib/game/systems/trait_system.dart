@@ -2,6 +2,7 @@ import '../controllers/run_controller.dart';
 import '../../models/card_instance.dart';
 import '../../models/data/card_data.dart';
 import '../../models/data/relic_data.dart';
+import 'stat_gains.dart';
 
 class TraitSystem {
   /// Appelé au début du tour du joueur
@@ -17,13 +18,13 @@ class TraitSystem {
         final multiplier = missingHp ~/ 10;
         final armorGain = multiplier * passive.value;
         if (armorGain > 0) {
-          controller.setHeroStats(
-            armure: stats.armure + armorGain + stats.effectiveArmorMastery,
+          controller.grant(
+            StatGain(GainResource.armor, armorGain, GainSource.passive),
           );
         }
       } else if (passive.effectType == 'gain_armor') {
-        controller.setHeroStats(
-          armure: stats.armure + passive.value + stats.effectiveArmorMastery,
+        controller.grant(
+          StatGain(GainResource.armor, passive.value, GainSource.passive),
         );
       }
     }
@@ -33,12 +34,11 @@ class TraitSystem {
   static void onTurnEnd(RunController controller) {
     final passive = controller.currentState.activePassive;
     if (passive == null) return;
-    final stats = controller.currentState.heroStats;
 
     if (passive.trigger == RelicTrigger.endOfTurn) {
       if (passive.effectType == 'gain_armor') {
-        controller.setHeroStats(
-          armure: stats.armure + passive.value + stats.effectiveArmorMastery,
+        controller.grant(
+          StatGain(GainResource.armor, passive.value, GainSource.passive),
         );
       }
     }
@@ -48,13 +48,12 @@ class TraitSystem {
   static void onCardPlayed(RunController controller, CardInstance card) {
     final passive = controller.currentState.activePassive;
     if (passive == null) return;
-    final stats = controller.currentState.heroStats;
 
     if (passive.trigger == RelicTrigger.onCardPlayed) {
       if (passive.effectType == 'spell_armor') {
         if (card.data.type == CardType.skill) {
-          controller.setHeroStats(
-            armure: stats.armure + passive.value + stats.effectiveArmorMastery,
+          controller.grant(
+            StatGain(GainResource.armor, passive.value, GainSource.passive),
           );
         }
       }
