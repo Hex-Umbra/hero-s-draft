@@ -2,7 +2,8 @@
 
 ### Statut
 ✅ Accepté & Implémenté — branche `feat/p41-lot-a` (commits `674545c`..`b94c854`, 10 commits),
-**non fusionnée, PR à venir** — **amende [ADR-069](ADR-069-systeme-de-sauvegarde-de-run-checkpoint-carte-refr.md)**
+**fusionnée dans `main` par la PR #38 le 2026-09-16** (merge `f8be03a`) — **amende
+[ADR-069](ADR-069-systeme-de-sauvegarde-de-run-checkpoint-carte-refr.md)**
 (point 5, chaîne de sauvegarde).
 
 ### Contexte

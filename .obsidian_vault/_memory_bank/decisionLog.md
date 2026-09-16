@@ -9,7 +9,7 @@ Index des **ADR** (Architecture Decision Records) de **Hero's Draft**. Le corps 
 
 | N° | Décision | Statut | Version | Fichier |
 |:---|:---|:---:|:---:|:---|
-| `ADR-095` | Passage Unique des Gains, Scission des Puissances et Chaîne de Migration de Sauvegarde (P-41, lot A, sur branche `feat/p41-lot-a`, PR à venir) — **amende `ADR-069`** | ✅ | — | [ADR-095-passage-unique-des-gains-scission-des-puissances-et.md](../_adr/ADR-095-passage-unique-des-gains-scission-des-puissances-et.md) |
+| `ADR-095` | Passage Unique des Gains, Scission des Puissances et Chaîne de Migration de Sauvegarde (P-41, lot A, fusionné dans `main` par la PR #38) — **amende `ADR-069`** | ✅ | — | [ADR-095-passage-unique-des-gains-scission-des-puissances-et.md](../_adr/ADR-095-passage-unique-des-gains-scission-des-puissances-et.md) |
 | `ADR-094` | Échelle de Rareté Explicite, Règle d'Acquisition Unique et Runes Non Cumulables (chantier P-40, bloc 2) — **amende `ADR-025`, dépasse en partie `ADR-051`** | ✅ | — | [ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md](../_adr/ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md) |
 | `ADR-093` | Éditeur de Contenu — Jetons de Couleur Nommés et Contrat de Choix (habillage « éditeur », chantier P-30) | ✅ | — | [ADR-093-habillage-editeur-jetons-nommes-et-contrat-de-choix.md](../_adr/ADR-093-habillage-editeur-jetons-nommes-et-contrat-de-choix.md) |
 | `ADR-092` | Éditeur de Contenu — Formulaire Inféré du Document, Vocabulaires du Disque et Ressources sous Rollback (chantier P-30) | ✅ | — | [ADR-092-formulaire-infere-du-document-et-ressources-liees.md](../_adr/ADR-092-formulaire-infere-du-document-et-ressources-liees.md) |

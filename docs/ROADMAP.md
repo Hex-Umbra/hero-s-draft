@@ -286,7 +286,7 @@ Rien n'existe hors-run aujourd'hui. Gain d'une monnaie à la fin de chaque run p
 
 - [ ] Éligibilité des passifs par classe, déclarée par le passif (`"classes"`) — *P-49*
 - [ ] Point d'accès unique « passifs disponibles = éligibles **et** débloqués », qui vaut « tous » tant que P-13 n'existe pas — *P-49*
-- [x] Chaîne de migration de la sauvegarde de run — *P-41, lot A*, livré sur `feat/p41-lot-a` (`b94c854`), PR à venir
+- [x] Chaîne de migration de la sauvegarde de run — *P-41, lot A*, fusionné dans `main` le 2026-09-16 (PR #38)
 - [ ] Récompenses de passif éligibles par ce point d'accès — *P-41, lot C*
 
 **Reste entièrement à P-13 :**
@@ -335,7 +335,7 @@ travail de relecture.
 **ni `heroClass` ni `category`** : le répertoire les injecte, et les déclarer fait échouer le
 chargement. Chaque nouveau dossier impose un `dart run tool/sync_assets.dart`.
 
-**La note `0.5.1` n'attend plus P-42.** Tranché le 2026-09-05 : les cartes de P-42 devaient rejoindre l'entrée `0.5.1`, rouverte en place. **Décision remplacée le 2026-09-16** par le propriétaire : `0.5.1` est publiée telle quelle (tag `v0.5.1`), et **P-42 comme tout ce qui suit iront en `0.5.2`**.
+**La note `0.5.1` n'attend plus P-42.** Tranché le 2026-09-05 : les cartes de P-42 devaient rejoindre l'entrée `0.5.1`, rouverte en place. **Décision remplacée le 2026-09-16** par le propriétaire : `0.5.1` est publiée telle quelle (tag `v0.5.1`), et **P-42 comme tout ce qui suit iront en `0.5.2`**. **Fait, même jour** : la note `0.5.2` a finalement été rédigée pour P-41 lot A (`fbec30d`), pas encore taguée. La version que visera P-42 reste une décision ouverte du propriétaire (`0.5.3`, ou rouvrir `0.5.2` avant qu'elle soit taguée) — non tranchée ici.
 
 **Conséquence pour P-41.** Sa spec est la seule non implémentée à contenir des **instructions
 d'édition de données** ; elle a été rebasée le 2026-09-05. Un champ ajouté à une classe
@@ -399,7 +399,7 @@ causes de leur ordre et invariant de découpage :
 
 | Lot | Contenu | Dépend de |
 |:---|:---|:---|
-| **P-41 A** | ✅ **Livré sur `feat/p41-lot-a` (`b94c854`), PR à venir** — Point de passage unique des gains, à source étiquetée, scission de `attaque` en trois puissances, chaîne de migration de sauvegarde sous une nouvelle clé — **sans changement de comportement** · [plan](superpowers/plans/2026-09-16-p41-lot-a-passage-unique-scission-migration.md) | — |
+| **P-41 A** | ✅ **Fusionné dans `main` le 2026-09-16 (PR #38)** — Point de passage unique des gains, à source étiquetée, scission de `attaque` en trois puissances, chaîne de migration de sauvegarde sous une nouvelle clé — **sans changement de comportement** · [plan](superpowers/plans/2026-09-16-p41-lot-a-passage-unique-scission-migration.md) | — |
 | **P-49** | Passifs partagés, dont la refonte de la Maîtrise d'Armure en bonus de passif — *spec à écrire* | P-41 A |
 | **P-41 B** | `statRules`, les neuf passifs, stats de départ | P-41 A, P-49 |
 | **P-41 C** | Récompenses de niveau data-driven *(indépendante, parallélisable avec A)*, puis nouvelles récompenses et écran de sélection | B, pour sa seconde partie |

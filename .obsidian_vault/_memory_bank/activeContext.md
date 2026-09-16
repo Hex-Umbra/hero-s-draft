@@ -1,4 +1,4 @@
-<!-- last-sync: 2026-09-16 | commit: b94c854 -->
+<!-- last-sync: 2026-09-16 | commit: f8be03a -->
 
 # 🧠 Contexte Actuel
 
@@ -7,15 +7,17 @@
 
 ## Focus courant
 
-**P-41 lot A est livré sur sa branche, pas encore fusionné.** `feat/p41-lot-a` (10 commits,
-`674545c` → `b94c854`) fait passer tout gain d'armure, de mana et de puissance par
-`StatGains.apply`, scinde `attaque` en trois puissances (`attackPower`, `skillPower`,
-`alterationPower`) régies par `PowerRules`, et pose la première chaîne de migration de sauvegarde du
-projet sous une nouvelle clé — voir « 3 dernières livraisons » et
-[ADR-095](../_adr/ADR-095-passage-unique-des-gains-scission-des-puissances-et.md). **Deux décisions
-du propriétaire restent ouvertes** : une note de version pour ce lot (aucune conséquence visible sauf
-la clé de sauvegarde, spec §4 lot A Step 5) et le calendrier de fusion/PR vers `main`. `dart analyze`
-propre et 876 tests au vert sur la branche (Métriques de `progress.md`, vérifiées le 2026-09-16).
+**P-41 lot A est fusionné dans `main`.** La PR #38 (merge `f8be03a`, 2026-09-16) a intégré
+`feat/p41-lot-a` (10 commits, `674545c` → `b94c854`), branche et worktree supprimées ; fait passer
+tout gain d'armure, de mana et de puissance par `StatGains.apply`, scinde `attaque` en trois
+puissances (`attackPower`, `skillPower`, `alterationPower`) régies par `PowerRules`, et pose la
+première chaîne de migration de sauvegarde du projet sous une nouvelle clé — voir « 3 dernières
+livraisons » et [ADR-095](../_adr/ADR-095-passage-unique-des-gains-scission-des-puissances-et.md).
+**La note de version `0.5.2` est écrite** (`fbec30d`, « Des Sauvegardes Qui Durent ») mais **pas
+encore taguée** : le propriétaire tague `v0.5.2` après sa propre campagne de test manuelle.
+`dart analyze` propre et 876 tests au vert sur `main` (Métriques de `progress.md`, vérifiées le
+2026-09-16 ; `git diff --stat b94c854 f8be03a -- lib test assets` ne touche que
+`patch_notes.json`, donc ces métriques décrivent toujours le code présent).
 
 Le programme « Identité de classe & catalogue » continue avec **P-41 lot B** (`statRules`, les neuf
 passifs, stats de départ), qui dépend du lot A et de **P-49** (passifs partagés, spec encore à
@@ -59,7 +61,7 @@ Réserves à ne pas perdre de vue :
 ## 3 dernières livraisons
 
 1. **P-41 lot A — passage unique des gains, scission des puissances, migration de sauvegarde**
-   (2026-09-16, branche `feat/p41-lot-a` **livrée, non fusionnée, PR à venir**, 10 commits,
+   (2026-09-16, **fusionné dans `main` par la PR #38**, branche `feat/p41-lot-a` supprimée, 10 commits,
    `674545c` → `b94c854`) — `StatGains.apply` devient le seul point de passage d'un gain d'armure,
    de mana ou de puissance, étiqueté par sa source (`GainSource`) ; la Maîtrise d'Armure ne s'ajoute
    qu'aux gains passifs, comportement préservé et désormais verrouillé par un guard test.
@@ -104,11 +106,13 @@ Réserves à ne pas perdre de vue :
 
 ## Prochaine étape
 
-**P-41 lot B** (`statRules`, les neuf passifs, stats de départ), qui dépend du lot A — livré, en
-attente de fusion — et de **P-49** (passifs partagés, dont la refonte de la Maîtrise d'Armure en
-bonus de passif, spec encore à écrire). Lots, chantier frère P-49 et ordre d'exécution :
-`docs/ROADMAP.md` §4, qui mène à la spec et à ses décisions D1 à D8. Le filtre de classe des cartes
-de signature se traite avant ou avec P-42 — sa réserve ci-dessus dit où et combien.
+**La campagne de test manuelle du propriétaire sur `0.5.2`**, avant la pose du tag `v0.5.2` — seul
+geste déclenchant `release.yml`. Ensuite, **le brainstorm puis la spec de P-49** (passifs partagés,
+dont la refonte de la Maîtrise d'Armure en bonus de passif), encore à écrire, qui précède **P-41
+lot B** (`statRules`, les neuf passifs, stats de départ) : ce dernier dépend du lot A — fusionné —
+et de P-49. Lots, chantier frère P-49 et ordre d'exécution : `docs/ROADMAP.md` §4, qui mène à la
+spec et à ses décisions D1 à D8. Le filtre de classe des cartes de signature se traite avant ou avec
+P-42 — sa réserve ci-dessus dit où et combien.
 
 Le Jalon 2 « Feel & contenu » (`docs/ROADMAP.md` §9) reste ouvert : P-06, P-07, le prototype de
 P-08, P-05. **P-07 doit lire [ADR-083](../_adr/ADR-083-latence-et-synchronisation-du-chemin-de-lecture.md)
