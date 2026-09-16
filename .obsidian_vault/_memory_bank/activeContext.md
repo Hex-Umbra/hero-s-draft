@@ -1,4 +1,4 @@
-<!-- last-sync: 2026-09-16 | commit: dc15184 -->
+<!-- last-sync: 2026-09-16 | commit: fc93efc -->
 
 # 🧠 Contexte Actuel
 
@@ -14,8 +14,8 @@ sont corrigés à leur cause —
 (dérives documentaires) et le **bloc 4** (corpus de formation figé) sont livrés avec. `main` porte
 811 tests au vert et `dart analyze` propre (Métriques de `progress.md`, vérifiées le 2026-09-16).
 
-Le programme « Identité de classe & catalogue » reprend donc à **P-41**, seul lot du programme dont
-la spec soit écrite — il lui manque son plan TDD.
+Le programme « Identité de classe & catalogue » reprend donc à **P-41** : spec révisée, plan du lot A
+écrit et revu, pas encore exécuté.
 
 Réserves à ne pas perdre de vue :
 
@@ -32,10 +32,9 @@ Réserves à ne pas perdre de vue :
   de passifs en `snake_case` (commit `7da5db2`), clé `run_save_v1` et `schemaVersion: 1`
   inchangées : une partie d'avant se recharge **et perd son passif de classe**, signalé par un
   `MissingSaveItem`. La note de version est le seul canal qui prévienne *avant*.
-- **La note `0.5.1` est close et publiée** — décision du propriétaire le 2026-09-16, qui **remplace
-  celle du 2026-09-05** : la note n'attend plus les cartes de P-42, elle sort telle quelle. **P-42 et
-  tout ce qui suit iront en `0.5.2`.** Le numéro se lit dans `pubspec.yaml` et la 1ʳᵉ entrée
-  de `assets/data/patch_notes.json`, jamais ici.
+- **La note `0.5.1` est close et publiée** (décision du 2026-09-16). La version que visent P-42 et la
+  suite est tenue dans `docs/ROADMAP.md` ; le numéro publié se lit dans `pubspec.yaml` et la 1ʳᵉ
+  entrée de `assets/data/patch_notes.json`, jamais ici.
 - **Les cartes de signature non `unique` fuient toujours entre classes** en boutique et sur le bonus
   de boss — [filtre de classe](../../docs/possible_upgrades/08-09-2026_filtre_cartes_de_classe_Opus5.md),
   à joindre à `CardRarity.isAcquirable`, avant ou avec P-42. **Re-vérifié contre le code le
@@ -95,10 +94,11 @@ Réserves à ne pas perdre de vue :
 
 ## Prochaine étape
 
-**Écrire le plan TDD de P-41** et l'exécuter : la [spec](../../docs/superpowers/specs/2026-08-07-s2-identite-de-classe-design.md)
-est validée et rebasée sur P-48, mais aucun plan ne lui répond dans `docs/superpowers/plans/`.
-P-42 peut ensuite passer par l'éditeur. Le filtre de classe des cartes de signature se traite avant
-ou avec P-42 — sa réserve ci-dessus dit où et combien.
+**Exécuter le [plan du lot A de P-41](../../docs/superpowers/plans/2026-09-16-p41-lot-a-passage-unique-scission-migration.md)**,
+Task 0 d'abord : la documentation se commite sur `main`, le code part sur `feat/p41-lot-a`. Lots,
+chantier frère P-49 et ordre d'exécution : `docs/ROADMAP.md` §4, qui mène à la spec et à ses décisions
+D1 à D8. Le filtre de classe des cartes de signature se traite avant ou avec P-42 — sa réserve
+ci-dessus dit où et combien.
 
 Le Jalon 2 « Feel & contenu » (`docs/ROADMAP.md` §9) reste ouvert : P-06, P-07, le prototype de
 P-08, P-05. **P-07 doit lire [ADR-083](../_adr/ADR-083-latence-et-synchronisation-du-chemin-de-lecture.md)
