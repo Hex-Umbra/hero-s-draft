@@ -136,9 +136,11 @@ void main() {
 
       expect(find.text("Partie d'une version plus récente"), findsOneWidget);
 
+      await tester.ensureVisible(find.text('OK'));
       await tester.tap(find.text('OK'));
       await tester.pumpAndSettle();
 
+      expect(find.text("Partie d'une version plus récente"), findsNothing);
       expect(find.text('Continuer'), findsOneWidget);
       expect(await SaveService.hasSave(), isTrue);
     });
