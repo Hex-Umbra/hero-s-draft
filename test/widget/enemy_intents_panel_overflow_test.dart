@@ -18,7 +18,7 @@ import 'package:roguelike_card_game/ui/widgets/hud/enemy_intents_panel.dart';
 /// dans `enemy_intents_panel.dart`.
 
 /// Le Slime, mais avec l'attaque qu'on lui demande : `effectiveIntent`
-/// multiplie par `stats.attaque / data.baseDamage`, donc on garde les deux
+/// multiplie par `stats.attackPower / data.baseDamage`, donc on garde les deux
 /// égaux pour que la valeur affichée soit exactement celle passée ici.
 EnemyInstance _enemy({required int intentValue, String nameFr = 'Slime'}) {
   final data = EnemyData(
@@ -36,7 +36,7 @@ EnemyInstance _enemy({required int intentValue, String nameFr = 'Slime'}) {
       maxPv: data.maxHp,
       currentPv: data.maxHp,
       armure: 0,
-      attaque: data.baseDamage,
+      attackPower: data.baseDamage,
     ),
     currentIntent: EnemyIntent(type: IntentType.attack, value: intentValue),
   );

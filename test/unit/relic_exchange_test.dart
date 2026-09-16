@@ -90,7 +90,7 @@ void main() {
       inventoryController.addRelic(relic2);
       inventoryController.addRelic(relic3);
 
-      expect(runController.state.heroStats.attaque, 2);
+      expect(runController.state.heroStats.attackPower, 2);
       expect(runController.state.heroStats.luck, 1);
       expect(inventoryController.state.relics.length, 3);
 
@@ -109,7 +109,7 @@ void main() {
       expect(inventoryController.state.relics.length, 1);
       expect(inventoryController.state.relics.first.id, 'gained_relic');
 
-      expect(runController.state.heroStats.attaque, 5);
+      expect(runController.state.heroStats.attackPower, 5);
       expect(runController.state.heroStats.luck, 0);
     });
 

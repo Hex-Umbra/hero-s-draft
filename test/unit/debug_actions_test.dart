@@ -148,7 +148,7 @@ void main() {
 
     EnemyInstance freshGoblin() => EnemyInstance(
       data: goblinData,
-      stats: EntityStats(maxPv: 20, currentPv: 20, armure: 0, attaque: 5),
+      stats: EntityStats(maxPv: 20, currentPv: 20, armure: 0, attackPower: 5),
     );
 
     test('setEnemyHp a 0 tue la cible et laisse les autres intacts', () {

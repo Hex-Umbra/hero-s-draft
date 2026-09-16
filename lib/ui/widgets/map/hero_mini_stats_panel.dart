@@ -97,7 +97,7 @@ class HeroMiniStatsPanel extends ConsumerWidget {
           // Attaque
           _buildMiniStatRowWidget(
             icon: SwordIcon(size: 16, color: Colors.orangeAccent),
-            value: '${stats.attaque} ${locale == 'fr' ? 'Attaque' : 'Attack'}',
+            value: '${stats.attackPower} ${locale == 'fr' ? 'Attaque' : 'Attack'}',
           ),
           const SizedBox(height: 6),
           // Maîtrise

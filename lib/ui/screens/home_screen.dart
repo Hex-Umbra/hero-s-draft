@@ -31,6 +31,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (!mounted) return;
 
     if (!result.success) {
+      if (result.savedByNewerBuild) {
+        // Écrite par un build plus récent : SaveService.load l'a conservée et
+        // le bouton « Continuer » reste. Dire pourquoi elle ne s'ouvre pas.
+        await showDialog<void>(
+          context: context,
+          builder: (dialogContext) => GameDialog(
+            title: Text(AppLocalizations.of(context)!.newerSaveTitle),
+            content: Text(AppLocalizations.of(context)!.newerSaveMessage),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: Text(AppLocalizations.of(context)!.ok),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
       // The save was corrupted or unreadable; SaveService.load already
       // cleared it internally, so simply refresh this screen — the
       // "Continuer" button will disappear on rebuild.

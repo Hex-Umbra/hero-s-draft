@@ -1,4 +1,4 @@
-<!-- last-sync: 2026-09-16 | commit: dc15184 -->
+<!-- last-sync: 2026-09-16 | commit: b94c854 -->
 
 # 🧠 Contexte Actuel
 
@@ -7,15 +7,19 @@
 
 ## Focus courant
 
-**P-40 est clos et fusionné** : la PR #37 a intégré `fix/p40-bloc-2` dans `main` le 2026-09-15
-(`dc15184`). Les trois bugs de cartes et de forge relevés le 2026-08-05, re-vérifiés contre le code,
-sont corrigés à leur cause —
-[ADR-094](../_adr/ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md) ; le **bloc 3**
-(dérives documentaires) et le **bloc 4** (corpus de formation figé) sont livrés avec. `main` porte
-811 tests au vert et `dart analyze` propre (Métriques de `progress.md`, vérifiées le 2026-09-16).
+**P-41 lot A est livré sur sa branche, pas encore fusionné.** `feat/p41-lot-a` (10 commits,
+`674545c` → `b94c854`) fait passer tout gain d'armure, de mana et de puissance par
+`StatGains.apply`, scinde `attaque` en trois puissances (`attackPower`, `skillPower`,
+`alterationPower`) régies par `PowerRules`, et pose la première chaîne de migration de sauvegarde du
+projet sous une nouvelle clé — voir « 3 dernières livraisons » et
+[ADR-095](../_adr/ADR-095-passage-unique-des-gains-scission-des-puissances-et.md). **Deux décisions
+du propriétaire restent ouvertes** : une note de version pour ce lot (aucune conséquence visible sauf
+la clé de sauvegarde, spec §4 lot A Step 5) et le calendrier de fusion/PR vers `main`. `dart analyze`
+propre et 876 tests au vert sur la branche (Métriques de `progress.md`, vérifiées le 2026-09-16).
 
-Le programme « Identité de classe & catalogue » reprend donc à **P-41**, seul lot du programme dont
-la spec soit écrite — il lui manque son plan TDD.
+Le programme « Identité de classe & catalogue » continue avec **P-41 lot B** (`statRules`, les neuf
+passifs, stats de départ), qui dépend du lot A et de **P-49** (passifs partagés, spec encore à
+écrire).
 
 Réserves à ne pas perdre de vue :
 
@@ -28,14 +32,15 @@ Réserves à ne pas perdre de vue :
 - **Les changements visibles de P-30 ont rejoint la note `0.5.1`** (`d8d9319`, décision du
   propriétaire le 2026-09-14) : bouton « Quitter », retours arrière, fin du badge « NEW »,
   illustration de classe. Rien sur le menu de debug ni l'éditeur, absents des builds publiés.
-- **⚠️ Les lots 1-2 de P-48 cassent les sauvegardes antérieures, sur le passif seulement.** Ids
-  de passifs en `snake_case` (commit `7da5db2`), clé `run_save_v1` et `schemaVersion: 1`
-  inchangées : une partie d'avant se recharge **et perd son passif de classe**, signalé par un
-  `MissingSaveItem`. La note de version est le seul canal qui prévienne *avant*.
-- **La note `0.5.1` est close et publiée** — décision du propriétaire le 2026-09-16, qui **remplace
-  celle du 2026-09-05** : la note n'attend plus les cartes de P-42, elle sort telle quelle. **P-42 et
-  tout ce qui suit iront en `0.5.2`.** Le numéro se lit dans `pubspec.yaml` et la 1ʳᵉ entrée
-  de `assets/data/patch_notes.json`, jamais ici.
+- **⚠️ Les lots 1-2 de P-48 cassent toujours les sauvegardes antérieures à leurs ids de passifs en
+  `snake_case`** (commit `7da5db2`). P-41 lot A a posé une chaîne de migration (`SaveMigrator`) et
+  changé de clé de stockage (`run_save`, repli sur `run_save_v1`), mais sa seule étape migre
+  `attaque` → `attackPower` : l'id de passif n'y est pas touché, et une partie d'avant `7da5db2` perd
+  toujours son passif de classe au chargement, signalé par un `MissingSaveItem`. La note de version
+  reste le seul canal qui prévienne *avant*.
+- **La note `0.5.1` est close et publiée** (décision du 2026-09-16). La version que visent P-42 et la
+  suite est tenue dans `docs/ROADMAP.md` ; le numéro publié se lit dans `pubspec.yaml` et la 1ʳᵉ
+  entrée de `assets/data/patch_notes.json`, jamais ici.
 - **Les cartes de signature non `unique` fuient toujours entre classes** en boutique et sur le bonus
   de boss — [filtre de classe](../../docs/possible_upgrades/08-09-2026_filtre_cartes_de_classe_Opus5.md),
   à joindre à `CardRarity.isAcquirable`, avant ou avec P-42. **Re-vérifié contre le code le
@@ -53,7 +58,18 @@ Réserves à ne pas perdre de vue :
 
 ## 3 dernières livraisons
 
-1. **P-40 bloc 2 — cartes et forge** (2026-09-15, branche `fix/p40-bloc-2` **fusionnée par la
+1. **P-41 lot A — passage unique des gains, scission des puissances, migration de sauvegarde**
+   (2026-09-16, branche `feat/p41-lot-a` **livrée, non fusionnée, PR à venir**, 10 commits,
+   `674545c` → `b94c854`) — `StatGains.apply` devient le seul point de passage d'un gain d'armure,
+   de mana ou de puissance, étiqueté par sa source (`GainSource`) ; la Maîtrise d'Armure ne s'ajoute
+   qu'aux gains passifs, comportement préservé et désormais verrouillé par un guard test.
+   `attaque` devient `attackPower`, rejoint par `skillPower` et `alterationPower` (à 0) ; `PowerRules`
+   décide quelle puissance renforce quelle carte — aucun effet visible aujourd'hui. `SaveMigrator`
+   pose la première chaîne de migration du projet ; le jeu écrit désormais sous la clé `run_save`
+   (repli sur `run_save_v1`) et ne détruit plus jamais une sauvegarde écrite par un build plus récent,
+   conservée avec un message à l'accueil. 876 tests (+65), `dart analyze` propre. Voir
+   [ADR-095](../_adr/ADR-095-passage-unique-des-gains-scission-des-puissances-et.md).
+2. **P-40 bloc 2 — cartes et forge** (2026-09-15, branche `fix/p40-bloc-2` **fusionnée par la
    PR #37**, 11 commits de code et de
    test, `b19b39a` → `9196a6e`) — une carte de classe porte 5 runes et non plus 10 ; trois
    légendaires ne fusionnent plus en une `unique`, et une carte ainsi abîmée redevient légendaire
@@ -64,7 +80,7 @@ Réserves à ne pas perdre de vue :
    et une rune se déclare `stackable: false` en donnée, lue par un service unique, `ForgeRuneRules`
    ([ADR-094](../_adr/ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md)). 811 tests,
    38 de plus ; la revue a vérifié que les tests de régression échouent sur l'ancien code.
-2. **Éditeur de contenu — habillage « éditeur »** (2026-09-15, 14 commits, `78f342c` → `2c9ba6d`) —
+3. **Éditeur de contenu — habillage « éditeur »** (2026-09-15, 14 commits, `78f342c` → `2c9ba6d`) —
    présentation seule, `lib/services/` intact. Onglets de type et segmenté Créer / Modifier
    remplacent les niveaux de l'arbre ; un explorateur groupe les entités par propriétaire en mode
    Modifier ; le formulaire devient en-tête de fichier et sections, la mécanique un inspecteur
@@ -72,19 +88,12 @@ Réserves à ne pas perdre de vue :
    dont une faute ramène à son champ. **Toute couleur est un jeton nommé**, et **tout
    sélectionnable suit un contrat de choix** — fond opaque, 4,5:1, `selected`, indice hors couleur —
    porté par `ChoiceSurface` ([ADR-093](../_adr/ADR-093-habillage-editeur-jetons-nommes-et-contrat-de-choix.md)).
-3. **Éditeur de contenu — formulaire inféré et ressources liées** (2026-09-14, 28 commits,
-   `891351c` → `25b2945`) — l'état du formulaire devient un **document**, dont les champs sont
-   inférés : plus de boîte JSON en modification, aucune clé du fichier perdue, et une saisie non
-   convertible est une faute au lieu d'être remplacée en silence. Les gabarits n'écrivent plus de
-   `sfx` vide, qui faisait rougir la suite à chaque création ; les types d'effet se valident contre
-   l'usage du disque ; un son ou une image s'importe sous rollback, `audio.json` compris
-   ([ADR-092](../_adr/ADR-092-formulaire-infere-du-document-et-ressources-liees.md), qui amende
-   ADR-089). Au passage, Flame monte en 1.38.2 (`c155f50`).
 
 > [!NOTE]
-> **Rotations.** La livraison sortie en seconde rotation du 2026-09-15 (menu d'accueil et retours
-> arrière) est conservée verbatim dans `../_archive/2026-09-15-activeContext-livraisons-2.md`. Les
-> rotations précédentes :
+> **Rotations.** La livraison sortie le 2026-09-16 (formulaire inféré et ressources liées) est
+> conservée verbatim dans `../_archive/2026-09-16-activeContext-livraisons.md`. Les rotations
+> précédentes :
+> `../_archive/2026-09-15-activeContext-livraisons-2.md`,
 > `../_archive/2026-09-15-activeContext-livraisons.md`,
 > `../_archive/2026-09-14-activeContext-livraisons.md`,
 > `../_archive/2026-09-05-activeContext-livraisons.md`,
@@ -95,10 +104,11 @@ Réserves à ne pas perdre de vue :
 
 ## Prochaine étape
 
-**Écrire le plan TDD de P-41** et l'exécuter : la [spec](../../docs/superpowers/specs/2026-08-07-s2-identite-de-classe-design.md)
-est validée et rebasée sur P-48, mais aucun plan ne lui répond dans `docs/superpowers/plans/`.
-P-42 peut ensuite passer par l'éditeur. Le filtre de classe des cartes de signature se traite avant
-ou avec P-42 — sa réserve ci-dessus dit où et combien.
+**P-41 lot B** (`statRules`, les neuf passifs, stats de départ), qui dépend du lot A — livré, en
+attente de fusion — et de **P-49** (passifs partagés, dont la refonte de la Maîtrise d'Armure en
+bonus de passif, spec encore à écrire). Lots, chantier frère P-49 et ordre d'exécution :
+`docs/ROADMAP.md` §4, qui mène à la spec et à ses décisions D1 à D8. Le filtre de classe des cartes
+de signature se traite avant ou avec P-42 — sa réserve ci-dessus dit où et combien.
 
 Le Jalon 2 « Feel & contenu » (`docs/ROADMAP.md` §9) reste ouvert : P-06, P-07, le prototype de
 P-08, P-05. **P-07 doit lire [ADR-083](../_adr/ADR-083-latence-et-synchronisation-du-chemin-de-lecture.md)

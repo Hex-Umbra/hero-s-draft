@@ -8,6 +8,7 @@ import '../run_controller.dart';
 import '../combat_controller.dart';
 import '../deck_controller.dart';
 import 'status_effect_processor.dart';
+import '../../systems/stat_gains.dart';
 import '../../services/damage_pipeline.dart';
 import '../../game_constants.dart';
 import '../../../services/audio/audio_providers.dart';
@@ -129,8 +130,9 @@ class TurnPhaseManager {
         break;
       case IntentType.defend:
         final updatedEnemy = enemy.copyWith(
-          stats: enemy.stats.copyWith(
-            armure: enemy.stats.armure + intent.value,
+          stats: StatGains.apply(
+            enemy.stats,
+            StatGain(GainResource.armor, intent.value, GainSource.enemyIntent),
           ),
         );
         controller.updateEnemy(updatedEnemy);

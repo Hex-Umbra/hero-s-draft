@@ -104,9 +104,9 @@ void main() {
 
       final prefs = await SharedPreferences.getInstance();
       final payload =
-          jsonDecode(prefs.getString('run_save_v1')!) as Map<String, dynamic>;
+          jsonDecode(prefs.getString('run_save')!) as Map<String, dynamic>;
       payload['skills'] = {'skill1Cooldown': 2, 'skill2Cooldown': 0};
-      await prefs.setString('run_save_v1', jsonEncode(payload));
+      await prefs.setString('run_save', jsonEncode(payload));
 
       final freshContainer = ProviderContainer();
       addTearDown(freshContainer.dispose);
@@ -129,7 +129,7 @@ void main() {
 
     test('load returns a failed result and clears storage on corrupted JSON', () async {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('run_save_v1', 'not valid json {{{');
+      await prefs.setString('run_save', 'not valid json {{{');
 
       final container = ProviderContainer();
       addTearDown(container.dispose);
@@ -139,11 +139,11 @@ void main() {
       expect(await SaveService.hasSave(), isFalse);
     });
 
-    test('load returns a failed result on an unknown schemaVersion', () async {
+    test('load refuses a save written by a newer build and keeps it', () async {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(
-        'run_save_v1',
-        '{"schemaVersion": 999, "run": {}, "deck": {}, "inventory": {}, "skills": {}}',
+        'run_save',
+        '{"schemaVersion": 999, "run": {}, "deck": {}, "inventory": {}}',
       );
 
       final container = ProviderContainer();
@@ -151,7 +151,113 @@ void main() {
       final result = await SaveService.load(container.read);
 
       expect(result.success, isFalse);
+      expect(result.savedByNewerBuild, isTrue);
+      expect(await SaveService.hasSave(), isTrue);
+    });
+
+    test('load returns a failed result and clears storage when schemaVersion is missing', () async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('run_save', '{"run": {}, "deck": {}, "inventory": {}}');
+
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final result = await SaveService.load(container.read);
+
+      expect(result.success, isFalse);
+      expect(result.savedByNewerBuild, isFalse);
       expect(await SaveService.hasSave(), isFalse);
+    });
+
+    test('save writes under run_save and retires the legacy run_save_v1', () async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('run_save_v1', '{"schemaVersion": 1}');
+
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      await SaveService.save(container.read);
+
+      expect(prefs.containsKey('run_save'), isTrue);
+      expect(prefs.containsKey('run_save_v1'), isFalse);
+    });
+
+    test('load falls back to a legacy run_save_v1 save', () async {
+      const hero = HeroData(
+        id: 'paladin',
+        classCard: 'paladin.png',
+        maxHp: 100,
+        maxMana: 3,
+        baseDamage: 5,
+        passiveTrait: 'regen_armor',
+      );
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      container.read(runProvider.notifier).startNewRun(hero);
+      await SaveService.save(container.read);
+
+      // Remet la sauvegarde sous l'ancienne clé, là où la laisse un build
+      // publié jusqu'à 0.5.1.
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('run_save_v1', prefs.getString('run_save')!);
+      await prefs.remove('run_save');
+
+      final fresh = ProviderContainer();
+      addTearDown(fresh.dispose);
+      final result = await SaveService.load(fresh.read);
+
+      expect(result.success, isTrue);
+      expect(fresh.read(runProvider).heroClassId, 'paladin');
+    });
+
+    test('clear also removes a legacy run_save_v1 save', () async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('run_save_v1', '{"schemaVersion": 1}');
+      expect(await SaveService.hasSave(), isTrue);
+
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      await SaveService.clear(container.read);
+
+      expect(await SaveService.hasSave(), isFalse);
+    });
+
+    test('load migrates a legacy v1 save: attaque is kept as attackPower', () async {
+      const hero = HeroData(
+        id: 'paladin',
+        classCard: 'paladin.png',
+        maxHp: 100,
+        maxMana: 3,
+        baseDamage: 5,
+        passiveTrait: 'regen_armor',
+      );
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      container.read(runProvider.notifier).startNewRun(hero);
+      container.read(runProvider.notifier).applyHeroStatModifier(attackAcc: 4);
+      await SaveService.save(container.read);
+
+      // Réécrit la sauvegarde telle que l'écrivaient tous les builds jusqu'à
+      // 0.5.1 : version 1, clé `attaque`, sans les deux nouvelles puissances,
+      // sous l'ancienne clé de stockage.
+      final prefs = await SharedPreferences.getInstance();
+      final save =
+          jsonDecode(prefs.getString('run_save')!) as Map<String, dynamic>;
+      final run = save['run'] as Map<String, dynamic>;
+      final heroStats = run['heroStats'] as Map<String, dynamic>;
+      heroStats['attaque'] = heroStats.remove('attackPower');
+      heroStats.remove('skillPower');
+      heroStats.remove('alterationPower');
+      save['schemaVersion'] = 1;
+      await prefs.setString('run_save_v1', jsonEncode(save));
+      await prefs.remove('run_save');
+
+      final fresh = ProviderContainer();
+      addTearDown(fresh.dispose);
+      final result = await SaveService.load(fresh.read);
+
+      expect(result.success, isTrue);
+      expect(fresh.read(runProvider).heroStats.attackPower, 4);
+      expect(fresh.read(runProvider).heroStats.skillPower, 0);
+      expect(fresh.read(runProvider).heroStats.alterationPower, 0);
     });
   });
 }

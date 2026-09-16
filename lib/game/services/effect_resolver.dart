@@ -5,6 +5,8 @@ import '../../models/status_effect.dart';
 import '../controllers/run_controller.dart';
 import '../controllers/deck_controller.dart';
 import '../controllers/combat_controller.dart';
+import '../systems/stat_gains.dart';
+import '../systems/power_rules.dart';
 import 'effects/effect_strategy.dart';
 import '../game_constants.dart';
 
@@ -166,23 +168,28 @@ class EffectResolver {
       deckController.drawCards(extraDraw, maxHandSize: GameConstants.maxHandSize);
     }
     if (extraMana > 0) {
-      final currentMana = runController.currentState.heroStats.currentMana;
-      runController.setHeroStats(currentMana: currentMana + extraMana);
+      runController.grant(
+        StatGain(GainResource.mana, extraMana, GainSource.rune),
+      );
     }
 
     // Apply elemental statuses if this is an Attack card
     if (card.data.type == CardType.attack) {
       final List<StatusEffect> extraStatuses = [];
+      // Même règle qu'un statut posé par la carte (`PowerRules`) : ces runes
+      // sont résolues ici, hors du registre de stratégies.
+      final bonus =
+          runController.currentState.heroStats.statusBonusFor(card.data.target);
       if (elementBurn > 0) {
-        final st = createStatus('burn', elementBurn, elementBurn);
+        final st = createStatus('burn', elementBurn + bonus, elementBurn);
         if (st != null) extraStatuses.add(st);
       }
       if (elementFreeze > 0) {
-        final st = createStatus('freeze', elementFreeze, elementFreeze);
+        final st = createStatus('freeze', elementFreeze + bonus, elementFreeze);
         if (st != null) extraStatuses.add(st);
       }
       if (elementShock > 0) {
-        final st = createStatus('shock', elementShock, elementShock);
+        final st = createStatus('shock', elementShock + bonus, elementShock);
         if (st != null) extraStatuses.add(st);
       }
 
@@ -237,8 +244,9 @@ class EffectResolver {
 
     final hasArmorEffect = card.data.effects.any((e) => e.type == 'armor');
     if (!hasArmorEffect && extraArmor > 0) {
-      final currentStats = runController.currentState.heroStats;
-      runController.setHeroStats(armure: currentStats.armure + extraArmor);
+      runController.grant(
+        StatGain(GainResource.armor, extraArmor, GainSource.rune),
+      );
     }
 
     return true;

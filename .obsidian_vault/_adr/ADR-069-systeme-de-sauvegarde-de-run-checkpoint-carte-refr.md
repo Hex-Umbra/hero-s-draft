@@ -1,7 +1,11 @@
 ## 💾 ADR-069 : Système de Sauvegarde de Run — Checkpoint Carte, `RefReader`, et Dégradation Gracieuse du Contenu Manquant (v3.2.0)
 
 ### Statut
-✅ Accepté, Implémenté & **Mergé vers `main`** (v3.2.0, branche `feat/save_run`, PR #19, 13+ commits) — **résout ADR-011**.
+✅ Accepté, Implémenté & **Mergé vers `main`** (v3.2.0, branche `feat/save_run`, PR #19, 13+ commits) — **résout ADR-011**. **Point 5 amendé par [ADR-095](ADR-095-passage-unique-des-gains-scission-des-puissances-et.md)
+le 2026-09-16** (P-41, lot A) : un `schemaVersion` inconnu ou non entier reste traité comme corrompu
+et efface la clé, mais un `schemaVersion` **supérieur** à la version courante n'est plus « futur et
+effacé » — il est refusé et **conservé** pour le build qui sait le lire, `SaveMigrator` amenant tout
+le reste à la version courante au lieu d'échouer dès qu'il diffère de 1.
 
 ### Contexte
 `RunState`, `DeckState`, `InventoryState` et `SkillState` ne vivaient qu'en mémoire dans les `Notifier` Riverpod (cf. ADR-011). Fermer l'application, la mettre en arrière-plan ou un crash entraînait la perte totale d'une run pouvant durer 30 à 60+ minutes sur ~10 étages. Le point d'extension existait déjà mais était un stub vide (`RunPersistenceManager`), et `shared_preferences` était déjà une dépendance du projet (utilisée par `TutorialProgressService`).

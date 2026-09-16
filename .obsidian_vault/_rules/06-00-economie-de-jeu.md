@@ -13,7 +13,7 @@ Le système de récompenses par statistiques (Vitalité, Aiguisage, Forge, Sages
 | Attribut | Bonus base | Note |
 |:---|:---|:---|
 | `maxPvAcc` | +X PV Max | Soigne aussi le delta |
-| `attackAcc` | +X Attaque permanente | Additionné à `effectiveAttaque` |
+| `attackAcc` | +X Attaque permanente | Additionné à `effectiveAttackPower` |
 | `armorAcc` | +X Maîtrise d'Armure | Bonus permanent sur tous les gains d'armure |
 | `maxManaAcc` | +X Mana Max | Augmente le plafond régénéré chaque tour |
 | `luckAcc` | +X Chance | Influence rareté des récompenses et reliques |

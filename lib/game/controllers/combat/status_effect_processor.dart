@@ -1,5 +1,6 @@
 import '../../../models/entity_stats.dart';
 import '../../../models/status_effect.dart';
+import '../../systems/stat_gains.dart';
 
 class StatusEffectProcessor {
   /// Applique les effets de statut de début de tour sur le joueur.
@@ -35,8 +36,9 @@ class StatusEffectProcessor {
       );
     }
     if (armorGain > 0) {
-      updatedStats = updatedStats.copyWith(
-        armure: updatedStats.armure + armorGain,
+      updatedStats = StatGains.apply(
+        updatedStats,
+        StatGain(GainResource.armor, armorGain, GainSource.status),
       );
     }
 
@@ -82,8 +84,9 @@ class StatusEffectProcessor {
       );
     }
     if (armorGain > 0) {
-      updatedStats = updatedStats.copyWith(
-        armure: updatedStats.armure + armorGain,
+      updatedStats = StatGains.apply(
+        updatedStats,
+        StatGain(GainResource.armor, armorGain, GainSource.status),
       );
     }
 

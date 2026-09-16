@@ -45,8 +45,9 @@ pie title Répartition de l'effort restant estimé (~91 jours)
 
 > [!WARNING]
 > **Le camembert et le total de ~91 jours sont antérieurs au programme P-40→P-44** (ajouté le
-> 2026-08-07) et ne l'incluent pas. Le solde net n'est pas calculable en l'état : P-41 est chiffré
-> (5-7 j) et P-40 aussi (1-1,5 j à l'origine ; **clos le 2026-09-15**, bloc 2 fusionné dans `main` le
+> 2026-08-07) et ne l'incluent pas. Le solde net n'est pas calculable en l'état : P-41 était chiffré
+> (5-7 j), chiffrage **caduc** depuis sa re-vérification du 2026-09-16, qui a doublé son périmètre et
+> l'a découpé en quatre lots à chiffrer chacun dans son plan, plus un chantier frère, P-49 ; P-40 était chiffré aussi (1-1,5 j à l'origine ; **clos le 2026-09-15**, bloc 2 fusionné dans `main` le
 > 2026-09-15 par la PR #37), mais **P-42, P-43 et P-44 attendent leur spec**, tandis que P-18
 > et P-20 sortent du Tier C par redistribution. Recalculer l'ensemble à la prochaine passe de
 > re-priorisation, pas avant — un total partiellement mis à jour serait plus trompeur que celui-ci.
@@ -67,10 +68,13 @@ graph TD
     P11 --> P13[P-13 Méta-progression]
     P09[P-09 Boss multi-phases] -.mécanisme de seuil HP réutilisable.-> P10
     P40["P-40 Nettoyage héros & cartes ✅ clos"] -.annule un tiers de.-> P26[P-26 Lot d'hygiène]
-    P41[P-41 Identité de classe] --> P42[P-42 Pools par classe]
+    P41[P-41 Identité de classe] -.son lot A précède.-> P49[P-49 Passifs partagés]
+    P49 -.précède le lot B de.-> P41
+    P41 --> P42[P-42 Pools par classe]
     P42 --> P43[P-43 Économie de deck]
     P42 --> P44[P-44 Profondeur de cartes]
-    P41 -.pose le seam passiveSlots.-> P13
+    P49 -.pose le point d'accès aux passifs.-> P13
+    P41 -.pose la chaîne de migration.-> P13
 ```
 
 ---
@@ -251,7 +255,8 @@ Marqué **priorité haute** dans le rapport du 22/07 et jamais traité. Difficul
 | **P-13** | **Méta-progression** : monnaie persistante inter-runs + boutique de méta-upgrades | **3-5 j** | ★★★☆☆ | 🔥🔥 |
 | **P-14** | **Variantes d'Élite adaptatives** (5 affixes, triggers côté ennemi) | **5-8 j** | ★★★★★ | 🔥🔥🔥 |
 | **P-15** | **Ennemis tiers 2-5** (20 concepts restants) | **3-5 j** *(+ sprites)* | ★★★☆☆ | 🔥🔥 |
-| **P-41** | **Identité de classe** — `statRules`, split des 3 puissances, 9 passifs sélectionnables · [spec](superpowers/specs/2026-08-07-s2-identite-de-classe-design.md) | **5-7 j** | ★★★★☆ | 🔥🔥🔥 |
+| **P-41** | **Identité de classe** — `statRules`, split des 3 puissances, 9 passifs sélectionnables, récompenses data-driven · **4 lots (A → D)** · [spec](superpowers/specs/2026-08-07-s2-identite-de-classe-design.md), révisée le 2026-09-16 | *à chiffrer par lot* | ★★★★☆ | 🔥🔥🔥 |
+| **P-49** | **Passifs partagés** — répertoire commun, éligibilité déclarée par le passif, point d'accès unique ; **prépare P-13** · frontière dans la [spec de P-41](superpowers/specs/2026-08-07-s2-identite-de-classe-design.md) §5 | *à chiffrer en spec* | ★★★☆☆ | 🔥🔥 |
 | **P-42** | **Pools de cartes par classe** — séparation `unique`/`heroClass`, ~25-30 cartes | *à chiffrer en spec* | ★★★★☆ | 🔥🔥🔥 |
 | **P-43** | **Économie de deck** — récompense de carte, limite de taille, rééquilibrage fusion | *à chiffrer en spec* | ★★★☆☆ | 🔥🔥 |
 | **P-44** | **Profondeur de cartes** — coût 3, `scaleWith`, génération, cible `none`, malédictions | *à chiffrer en spec* | ★★★★☆ | 🔥🔥 |
@@ -269,6 +274,29 @@ Côté code, c'est petit : un `biomes.json`, un champ `biomes` sur `EnemyData`, 
 
 ### P-13 — Méta-progression
 Rien n'existe hors-run aujourd'hui. Gain d'une monnaie à la fin de chaque run proportionnel à la progression, dépensable en améliorations permanentes. Conceptuellement adossé à P-11 (qui produit déjà les données de fin de run). Chantier de **rétention**, pas de contenu : à faire quand la boucle de jeu est jugée bonne, pas avant.
+
+> [!NOTE]
+> **Préparé en amont par P-41 et P-49** — décision du propriétaire le 2026-09-16 : la méta-progression
+> est pour plus tard, mais ses points d'accroche sont posés dès maintenant, pour ne pas avoir à rouvrir
+> ces deux chantiers. Conception des points d'accroche :
+> [spec de P-41, §10](superpowers/specs/2026-08-07-s2-identite-de-classe-design.md).
+> **Une case ne se coche que lorsque le chantier qui la porte est livré.**
+
+**Points d'accroche posés par d'autres chantiers :**
+
+- [ ] Éligibilité des passifs par classe, déclarée par le passif (`"classes"`) — *P-49*
+- [ ] Point d'accès unique « passifs disponibles = éligibles **et** débloqués », qui vaut « tous » tant que P-13 n'existe pas — *P-49*
+- [x] Chaîne de migration de la sauvegarde de run — *P-41, lot A*, livré sur `feat/p41-lot-a` (`b94c854`), PR à venir
+- [ ] Récompenses de passif éligibles par ce point d'accès — *P-41, lot C*
+
+**Reste entièrement à P-13 :**
+
+- Un **stockage de profil** persistant — conception : [spec de P-41, §10](superpowers/specs/2026-08-07-s2-identite-de-classe-design.md)
+- L'**état de déblocage** des passifs, par personnage, branché derrière le point d'accès de P-49
+- Les **conditions et coûts** de déblocage, en donnée
+- L'**interface** de déblocage
+- La **monnaie** méta et la boutique d'améliorations permanentes
+- **Plusieurs passifs actifs** par run, si retenu : `RunState.activePassive` est singulier, son passage à une liste demande une étape de migration
 
 ### P-14 — Variantes d'Élite
 **Le chantier le plus ambitieux de tout le backlog.** Cinq affixes (Ardent, Foudroyant, Glacial, Vampirique, Parfait) applicables à n'importe quel ennemi dans n'importe quel combat, s'additionnant aux multiplicateurs de nœud existants. Nécessite un **système de triggers côté ennemi** (`onAttackLanded`/`onDamageTaken`/`onTurnStart`) calqué sur celui des reliques — architecture nouvelle. Chaque affixe « riche » (Foudroyant et sa charge conditionnelle en particulier) est une mini-mécanique à concevoir et tester séparément.
@@ -307,11 +335,11 @@ travail de relecture.
 **ni `heroClass` ni `category`** : le répertoire les injecte, et les déclarer fait échouer le
 chargement. Chaque nouveau dossier impose un `dart run tool/sync_assets.dart`.
 
-**P-42 porte aussi la publication.** La note `0.5.1`, écrite le 2026-09-05, attend ses cartes : c'est le premier lot depuis `0.5.0` qui donnera quelque chose à voir au joueur. **Tranché le 2026-09-05** : ses cartes **rejoindront l'entrée `0.5.1` existante**, rouverte et complétée en place par `patch-notes-writer`. Le numéro ne bouge pas, les trois fichiers porteurs non plus — c'est la seconde réouverture du projet, après `0.5.0`, et pour la même raison : la note n'a jamais été publiée.
+**La note `0.5.1` n'attend plus P-42.** Tranché le 2026-09-05 : les cartes de P-42 devaient rejoindre l'entrée `0.5.1`, rouverte en place. **Décision remplacée le 2026-09-16** par le propriétaire : `0.5.1` est publiée telle quelle (tag `v0.5.1`), et **P-42 comme tout ce qui suit iront en `0.5.2`**.
 
 **Conséquence pour P-41.** Sa spec est la seule non implémentée à contenir des **instructions
 d'édition de données** ; elle a été rebasée le 2026-09-05. Un champ ajouté à une classe
-(table de redirection de passifs, retrait de `baseDamage`) se pose désormais dans **chacun**
+(`statRules`, retrait de `baseDamage`) se pose désormais dans **chacun**
 des trois `assets/data/classes/<id>/class.json`, et non plus en un point d'un catalogue
 unique — il n'existe plus d'endroit où écrire une valeur « pour toutes les classes à la fois ».
 
@@ -330,9 +358,9 @@ entièrement des lots 1-2 — les réordonnancements du dictionnaire (cartes *et
 pool de draft de départ et de la sélection de classe, **plus la casse du passif des
 sauvegardes antérieures** que le passage des ids en `snake_case` (`7da5db2`) entraîne, clé et
 `schemaVersion` étant inchangés. Le lot 3 est invisible et ne casse aucune sauvegarde.
-**Publication différée** — décision du propriétaire, le 2026-09-05. Ce lot n'a rien à montrer
-au joueur : la note attend les cartes de **P-42** et sera taguée avec elles. Poser le tag reste
-le seul geste déclenchant `release.yml`, et il suppose `main` poussé.
+**Publication** : différée le 2026-09-05 dans l'attente des cartes de **P-42**, puis tranchée
+autrement — voir « La note `0.5.1` n'attend plus P-42 », plus haut dans cette section. Poser le tag
+reste le seul geste déclenchant `release.yml`, et il suppose `main` poussé.
 
 ---
 
@@ -344,12 +372,14 @@ le seul geste déclenchant `release.yml`, et il suppose `main` poussé.
 > [brainstorm](analysis_reports/05082026_brainstorm_heros_et_cartes_Opus5.md)), dont le constat
 > central est que *les trois classes ne se distinguent que par les PV et un passif, et que toute
 > « progression » de carte est l'inflation numérique de l'une des 17 communes*. Seul **P-41** est
-> conçu à ce jour ; les trois suivants attendent leur spec.
+> conçu à ce jour ; les trois suivants attendent leur spec, et **P-49**, chantier frère né de la
+> re-vérification du 2026-09-16, aussi.
 
 | Lot | ID | Dépend de |
 |:---|:---|:---|
 | S1 — Nettoyage | ~~**P-40**~~ *(Tier D)* ✅ clos le 2026-09-15 | — |
-| S2 — Identité de classe | **P-41** | — |
+| *Chantier frère* — Passifs partagés | **P-49** | **P-41**, son lot A (chaîne de migration) |
+| S2 — Identité de classe | **P-41** | **P-49**, pour son lot B |
 | S3 — Pools de cartes | **P-42** | **P-41** |
 | S4 — Économie de deck | **P-43** | P-42 |
 | S5 — Profondeur de cartes | **P-44** | P-42 |
@@ -361,6 +391,43 @@ passifs se conçoivent sans connaître la liste des cartes, et **P-41 se teste s
 catalogue actuel de 23 cartes. Le raisonnement complet est en préambule de la
 [spec de P-41](superpowers/specs/2026-08-07-s2-identite-de-classe-design.md).
 
+**P-41 et P-49 — découpage, révisé le 2026-09-16.** La spec de P-41 a été re-vérifiée contre le
+code par six passes indépendantes. Aucun arbitrage n'est tombé, mais le périmètre avait doublé : le
+propriétaire a découpé P-41 en lots et sorti les passifs partagés en chantier frère. Contenu des lots,
+causes de leur ordre et invariant de découpage :
+[spec, §2](superpowers/specs/2026-08-07-s2-identite-de-classe-design.md). L'ordre lui-même est tenu ici.
+
+| Lot | Contenu | Dépend de |
+|:---|:---|:---|
+| **P-41 A** | ✅ **Livré sur `feat/p41-lot-a` (`b94c854`), PR à venir** — Point de passage unique des gains, à source étiquetée, scission de `attaque` en trois puissances, chaîne de migration de sauvegarde sous une nouvelle clé — **sans changement de comportement** · [plan](superpowers/plans/2026-09-16-p41-lot-a-passage-unique-scission-migration.md) | — |
+| **P-49** | Passifs partagés, dont la refonte de la Maîtrise d'Armure en bonus de passif — *spec à écrire* | P-41 A |
+| **P-41 B** | `statRules`, les neuf passifs, stats de départ | P-41 A, P-49 |
+| **P-41 C** | Récompenses de niveau data-driven *(indépendante, parallélisable avec A)*, puis nouvelles récompenses et écran de sélection | B, pour sa seconde partie |
+| **P-41 D** | Mise à jour fonctionnelle du tutoriel et de la console de debug | B, C |
+
+**Trois questions ouvertes, notées dans la spec pour ne pas être découvertes en cours de lot :**
+- **Refondre la Maîtrise d'Armure en bonus de passif** (décision du propriétaire, 2026-09-16) — stat
+  globale ou stat par passif, **à trancher au brainstorm de P-49** (spec, §5.4) ;
+- **La conversion du Mage porte-t-elle aussi sur la Force ?** — à trancher au lot B (spec, §4.2) ;
+- **Et sur le retrait d'une relique**, gain négatif de source `progression` ? — à trancher au lot B
+  (spec, §7.1).
+
+**Trois suites relevées à la revue finale du lot A, à traiter aux lots suivants** — voir aussi les six
+suites techniques listées dans le plan du lot A lui-même
+([§ Suites relevées, hors du lot A](superpowers/plans/2026-09-16-p41-lot-a-passage-unique-scission-migration.md#suites-relevées-hors-du-lot-a)) :
+- **Arbitrer par `savedAt` quand `run_save` et `run_save_v1` coexistent** — un joueur qui alterne entre
+  ce build et un build publié jusqu'à `0.5.1` peut voir ce dernier écrire sous `run_save_v1` une run
+  plus récente que celle que `run_save` porte ; `SaveService` préfère aujourd'hui `run_save` sans
+  comparer les dates, donc une run plus récente peut être silencieusement écrasée au prochain
+  chargement — *lot B ou C*.
+- **Le dialogue d'écrasement de « Nouvelle Partie »** ne dit pas qu'une sauvegarde existante peut avoir
+  été écrite par un build plus récent — le joueur peut écraser une partie que ce build-ci ne sait pas
+  lire sans en être averti — *lot B ou C*.
+- **Surveiller le double bonus d'`alterationPower`** si une carte de statut et une rune élémentaire
+  s'appliquent toutes deux à la même carte : les deux passent par `PowerRules.statusBonusFor`
+  indépendamment, et rien n'empêche aujourd'hui un cumul non voulu — à vérifier dès que l'un des deux
+  chemins devient réel, aux lots B ou C.
+
 **Ce que le programme referme ailleurs dans ce document** — à ne pas traiter deux fois :
 
 | Chantier existant | Effet |
@@ -368,7 +435,7 @@ catalogue actuel de 23 cartes. Le raisonnement complet est en préambule de la
 | **P-18** | Sa moitié « restrictions par classe » devient une conséquence de **P-42** |
 | **P-20** | « Scaling de `mastery` par classe » est absorbé par **P-41** (stats de départ différenciées) |
 | **P-26** | Son tiers « `SkillData` bilingue » est **annulé** par P-40, qui supprime le modèle. ⚠️ Ne pas ouvrir P-26 avant P-40, sous peine de localiser en deux langues un modèle destiné à la suppression |
-| **P-13** | P-41 pose le seam `passiveSlots` que la méta-progression alimentera — mais **P-41 n'en dépend pas** |
+| **P-13** | P-49 pose le point d'accès unique aux passifs et P-41 la chaîne de migration, que la méta-progression alimentera — **ni l'un ni l'autre n'en dépend**. Liste tenue en section P-13. *(Le seam `passiveSlots` que cette ligne annonçait n'a jamais existé dans le code.)* |
 | §7, correctif `unique` | Sa cause exacte et ses trois voies de duplication sont couvertes par P-40 — ✅ corrigées le 2026-09-15 |
 
 **Ce que le programme laisse explicitement à P-16** : le rééquilibrage des valeurs et des paliers
@@ -395,7 +462,6 @@ prédicats de filtrage), le design ne l'est pas. À assumer comme un engagement 
 ### P-16 — Le sujet le plus important de ce tier
 Les runes de forge `eco` et `quick` (regain de mana / pioche à la lecture d'une carte) rendent le mana quasi illimité, alors que c'est la ressource la plus importante du jeu. Cumulé avec la récompense de mana au Level Up disponible jusqu'en légendaire, le joueur perd toute sensation de contrainte. Le chantier consiste à revoir **l'ensemble** des tables de probabilité et le poids des récompenses par rareté — donc à re-calibrer plusieurs systèmes en même temps, d'où ★★★★☆ malgré un code trivial.
 **Interaction connue** : P-02 change la difficulté ressentie via le remélange à sec. ✅ **Levée le 2026-08-06** — P-02 est livré et son playtest validé, la base ne bougera donc plus sous P-16. Calibrer sur l'état actuel, pas sur les chiffres antérieurs au 2026-08-06.
-
 ### P-17 — Trois constats, pas cinq
 
 > [!WARNING]
@@ -410,7 +476,7 @@ Les runes de forge `eco` et `quick` (regain de mana / pioche à la lecture d'une
 | # | Constat d'origine | Statut au 2026-08-11 |
 |:---:|:---|:---|
 | 1 | Économie de mana permissive | ⚠️ non re-mesuré — **recouvre P-16**, ne pas traiter deux fois |
-| 2 | ~~Paladin quasi invulnérable (20 armure de base)~~ | ❌ **faux** — aucune armure dans `classes/paladin/class.json` ; son passif donne +2/tour |
+| 2 | ~~Paladin quasi invulnérable (20 armure de base)~~ | ❌ **faux** — aucune armure dans `assets/data/classes/paladin/class.json` ; son passif donne +2/tour |
 | 3 | HP des sbires trop bas | ⚠️ non re-mesuré |
 | 4 | ~~`Attaque Rapide` gratuite (0 mana → 3 dégâts + 1 pioche)~~ | ❌ **faux** — `"cost": 1` |
 | 5 | Soin répétable | ⚠️ non re-mesuré |

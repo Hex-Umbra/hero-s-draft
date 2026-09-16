@@ -53,7 +53,7 @@ void main() {
           maxPv: 20,
           currentPv: 0,
           armure: 0,
-          attaque: 5,
+          attackPower: 5,
           level: level,
         ),
       );

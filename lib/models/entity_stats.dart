@@ -8,8 +8,10 @@ class EntityStats {
   final int maxMana;
   final int currentMana;
   final int armure;
-  final int armorMastery; // Bonus permanent ajouté à chaque gain d'armure
-  final int attaque;
+  final int armorMastery; // Bonus permanent ajouté aux gains d'armure des passifs (voir StatGains)
+  final int attackPower; // Dégâts des cartes Attaque — la Force s'y ajoute
+  final int skillPower; // Dégâts des cartes Compétence
+  final int alterationPower; // Intensité des statuts posés sur un ennemi
   final int luck;
   final int level;
   final int xp;
@@ -26,7 +28,9 @@ class EntityStats {
     this.currentMana = 0,
     required this.armure,
     this.armorMastery = 0,
-    required this.attaque,
+    required this.attackPower,
+    this.skillPower = 0,
+    this.alterationPower = 0,
     this.luck = 0,
     this.level = 1,
     this.xp = 0,
@@ -44,7 +48,9 @@ class EntityStats {
     int? currentMana,
     int? armure,
     int? armorMastery,
-    int? attaque,
+    int? attackPower,
+    int? skillPower,
+    int? alterationPower,
     int? luck,
     int? level,
     int? xp,
@@ -61,7 +67,9 @@ class EntityStats {
       currentMana: currentMana ?? this.currentMana,
       armure: armure ?? this.armure,
       armorMastery: armorMastery ?? this.armorMastery,
-      attaque: attaque ?? this.attaque,
+      attackPower: attackPower ?? this.attackPower,
+      skillPower: skillPower ?? this.skillPower,
+      alterationPower: alterationPower ?? this.alterationPower,
       luck: luck ?? this.luck,
       level: level ?? this.level,
       xp: xp ?? this.xp,
@@ -88,7 +96,9 @@ class EntityStats {
       currentMana: json['currentMana'] as int? ?? 0,
       armure: json['armure'] as int,
       armorMastery: json['armorMastery'] as int? ?? 0,
-      attaque: json['attaque'] as int,
+      attackPower: json['attackPower'] as int,
+      skillPower: json['skillPower'] as int? ?? 0,
+      alterationPower: json['alterationPower'] as int? ?? 0,
       luck: json['luck'] as int? ?? 0,
       level: json['level'] as int? ?? 1,
       xp: json['xp'] as int? ?? 0,
@@ -107,7 +117,9 @@ class EntityStats {
     'currentMana': currentMana,
     'armure': armure,
     'armorMastery': armorMastery,
-    'attaque': attaque,
+    'attackPower': attackPower,
+    'skillPower': skillPower,
+    'alterationPower': alterationPower,
     'luck': luck,
     'level': level,
     'xp': xp,
@@ -164,14 +176,14 @@ class EntityStats {
   }
 
   /// Calcule l'attaque effective en prenant en compte les buffs de force
-  int get effectiveAttaque {
+  int get effectiveAttackPower {
     int bonus = 0;
     for (var status in statuses) {
       if (status.id == 'strength') {
         bonus += status.value;
       }
     }
-    return attaque + bonus;
+    return attackPower + bonus;
   }
 
   int get effectiveCritChance {

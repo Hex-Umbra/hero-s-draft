@@ -141,7 +141,7 @@ void main() {
 
       final statsAfter = container.read(runProvider).heroStats;
       final changed = statsAfter.maxPv != statsBefore.maxPv ||
-          statsAfter.attaque != statsBefore.attaque ||
+          statsAfter.attackPower != statsBefore.attackPower ||
           statsAfter.armorMastery != statsBefore.armorMastery ||
           statsAfter.maxMana != statsBefore.maxMana ||
           statsAfter.luck != statsBefore.luck ||

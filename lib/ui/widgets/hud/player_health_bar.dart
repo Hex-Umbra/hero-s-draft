@@ -5,14 +5,14 @@ class PlayerHealthBar extends StatefulWidget {
   final int currentPv;
   final int maxPv;
   final int armure;
-  final int effectiveAttaque;
+  final int effectiveAttackPower;
 
   const PlayerHealthBar({
     super.key,
     required this.currentPv,
     required this.maxPv,
     required this.armure,
-    required this.effectiveAttaque,
+    required this.effectiveAttackPower,
   });
 
   @override
@@ -128,7 +128,7 @@ class _PlayerHealthBarState extends State<PlayerHealthBar>
                       SwordIcon(size: iconSize, color: Colors.white),
                       const SizedBox(width: 4),
                       Text(
-                        '${widget.effectiveAttaque}',
+                        '${widget.effectiveAttackPower}',
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,

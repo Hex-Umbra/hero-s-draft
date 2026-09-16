@@ -125,7 +125,7 @@ class EnemyCard extends CombatEntity
       value: '${stats.currentPv}/${stats.maxPv}',
       isCircle: false,
       fillPercentage: stats.maxPv > 0 ? stats.currentPv / stats.maxPv : 1.0,
-      attackValue: stats.effectiveAttaque,
+      attackValue: stats.effectiveAttackPower,
       armorValue: stats.armure,
       armorPercentage: stats.maxPv > 0 ? stats.armure / stats.maxPv : 0.0,
     );
@@ -194,7 +194,7 @@ class EnemyCard extends CombatEntity
     hpBadge.updateHpValues(
       '${stats.currentPv}/${stats.maxPv}',
       stats.maxPv > 0 ? stats.currentPv / stats.maxPv : 0.0,
-      stats.effectiveAttaque,
+      stats.effectiveAttackPower,
       stats.armure,
       armorPercentage: stats.maxPv > 0 ? stats.armure / stats.maxPv : 0.0,
       tooltipTitle: getTranslation(
@@ -205,11 +205,11 @@ class EnemyCard extends CombatEntity
         (l) => l.enemyStatsDesc(
           stats.currentPv,
           stats.maxPv,
-          stats.effectiveAttaque,
+          stats.effectiveAttackPower,
           stats.armure,
         ),
         fallback:
-            'Santé : ${stats.currentPv}/${stats.maxPv} $hpSuffix.\nAttaque : ${stats.effectiveAttaque}.\nArmure : ${stats.armure}.',
+            'Santé : ${stats.currentPv}/${stats.maxPv} $hpSuffix.\nAttaque : ${stats.effectiveAttackPower}.\nArmure : ${stats.armure}.',
       ),
     );
   }

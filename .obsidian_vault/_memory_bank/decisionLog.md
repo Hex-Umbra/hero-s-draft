@@ -5,10 +5,11 @@ Index des **ADR** (Architecture Decision Records) de **Hero's Draft**. Le corps 
 > [!IMPORTANT]
 > **Plafond : 250 lignes.** Ce fichier est un index, jamais un contenu. Un nouvel ADR prend le numéro `max(index) + 1` lu ici, jamais un numéro deviné.
 
-**Vérifié le 2026-09-16** — 94 décisions, numéros `ADR-001` à `ADR-094`, sans doublon ni trou, en bijection avec `../_adr/`.
+**Vérifié le 2026-09-16** — 95 décisions, numéros `ADR-001` à `ADR-095`, sans doublon ni trou, en bijection avec `../_adr/`.
 
 | N° | Décision | Statut | Version | Fichier |
 |:---|:---|:---:|:---:|:---|
+| `ADR-095` | Passage Unique des Gains, Scission des Puissances et Chaîne de Migration de Sauvegarde (P-41, lot A, sur branche `feat/p41-lot-a`, PR à venir) — **amende `ADR-069`** | ✅ | — | [ADR-095-passage-unique-des-gains-scission-des-puissances-et.md](../_adr/ADR-095-passage-unique-des-gains-scission-des-puissances-et.md) |
 | `ADR-094` | Échelle de Rareté Explicite, Règle d'Acquisition Unique et Runes Non Cumulables (chantier P-40, bloc 2) — **amende `ADR-025`, dépasse en partie `ADR-051`** | ✅ | — | [ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md](../_adr/ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md) |
 | `ADR-093` | Éditeur de Contenu — Jetons de Couleur Nommés et Contrat de Choix (habillage « éditeur », chantier P-30) | ✅ | — | [ADR-093-habillage-editeur-jetons-nommes-et-contrat-de-choix.md](../_adr/ADR-093-habillage-editeur-jetons-nommes-et-contrat-de-choix.md) |
 | `ADR-092` | Éditeur de Contenu — Formulaire Inféré du Document, Vocabulaires du Disque et Ressources sous Rollback (chantier P-30) | ✅ | — | [ADR-092-formulaire-infere-du-document-et-ressources-liees.md](../_adr/ADR-092-formulaire-infere-du-document-et-ressources-liees.md) |
@@ -34,7 +35,7 @@ Index des **ADR** (Architecture Decision Records) de **Hero's Draft**. Le corps 
 | `ADR-072` | Resserrement de la Cadence du Scaling de Difficulté — Palier tous les 2 Actes & Tier tous les 5 Actes (branche `fix/combat_scaling`, suite d'ADR-070/ADR-071) | ✅ | v0.4.6 | [ADR-072-resserrement-de-la-cadence-du-scaling-de-difficult.md](../_adr/ADR-072-resserrement-de-la-cadence-du-scaling-de-difficult.md) |
 | `ADR-071` | Plafonnement du Nombre d'Ennemis par Acte & Résolution de la Dérive Log/Calcul (branche `feature/combat_scaling`, suite d'ADR-070) | ✅ | — | [ADR-071-plafonnement-du-nombre-d-ennemis-par-acte-resoluti.md](../_adr/ADR-071-plafonnement-du-nombre-d-ennemis-par-acte-resoluti.md) |
 | `ADR-070` | Scaling de Difficulté en Escalier Géométrique & Déblocage de Tier d'Ennemi (branche `feature/combat_scaling`) | ✅ | v0.4.5 | [ADR-070-scaling-de-difficulte-en-escalier-geometrique-debl.md](../_adr/ADR-070-scaling-de-difficulte-en-escalier-geometrique-debl.md) |
-| `ADR-069` | Système de Sauvegarde de Run — Checkpoint Carte, `RefReader`, et Dégradation Gracieuse du Contenu Manquant (v3.2.0) | ✅ | v3.2.0 | [ADR-069-systeme-de-sauvegarde-de-run-checkpoint-carte-refr.md](../_adr/ADR-069-systeme-de-sauvegarde-de-run-checkpoint-carte-refr.md) |
+| `ADR-069` | Système de Sauvegarde de Run — Checkpoint Carte, `RefReader`, et Dégradation Gracieuse du Contenu Manquant (v3.2.0) — **point 5 amendé par `ADR-095`** | ✅ | v3.2.0 | [ADR-069-systeme-de-sauvegarde-de-run-checkpoint-carte-refr.md](../_adr/ADR-069-systeme-de-sauvegarde-de-run-checkpoint-carte-refr.md) |
 | `ADR-068` | Refonte Équilibrée, Rendu Visuel et Validation d'Éligibilité du Système d'Événements (v0.3.0) | ✅ | v0.3.0 | [ADR-068-refonte-equilibree-rendu-visuel-et-validation-d-el.md](../_adr/ADR-068-refonte-equilibree-rendu-visuel-et-validation-d-el.md) |
 | `ADR-067` | Équilibrage de l'Économie, Scaling par Acte des Cartes en Boutique et Réinitialisation du Miroir Magique (v0.2.9) | ✅ | v0.2.9 | [ADR-067-equilibrage-de-l-economie-scaling-par-acte-des-car.md](../_adr/ADR-067-equilibrage-de-l-economie-scaling-par-acte-des-car.md) |
 | `ADR-066` | Révision du Scaling de Difficulté et du Spawn des Ennemis (v0.2.7) | ✅ | v0.2.7 | [ADR-066-revision-du-scaling-de-difficulte-et-du-spawn-des.md](../_adr/ADR-066-revision-du-scaling-de-difficulte-et-du-spawn-des.md) |

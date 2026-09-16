@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../models/data/card_data.dart';
 import '../../../models/data/forge_upgrade_data.dart';
 import '../card_component.dart';
+import '../../systems/power_rules.dart';
 
 class _RendererEffectVisuals {
   final IconData icon;
@@ -91,7 +92,7 @@ class CardTextRenderer {
     } else {
       descPainter = null;
       badges.clear();
-      final heroAttack = card.game.heroCard?.stats.effectiveAttaque ?? 0;
+      final damageBonus = card.game.heroCard?.stats.damageBonusFor(card.card.data.type) ?? 0;
 
       int extraDamage = 0;
       int extraArmor = 0;
@@ -120,7 +121,7 @@ class CardTextRenderer {
 
         int valueToDisplay = scaledValue;
         if (effect.type == 'damage') {
-          valueToDisplay = scaledValue + heroAttack;
+          valueToDisplay = scaledValue + damageBonus;
         }
 
         final visuals = _getEffectVisuals(effect);
@@ -353,7 +354,7 @@ class CardTextRenderer {
 
   String buildDescription() {
     String desc = '';
-    final heroAttack = card.game.heroCard?.stats.effectiveAttaque ?? 0;
+    final damageBonus = card.game.heroCard?.stats.damageBonusFor(card.card.data.type) ?? 0;
 
     int extraDamage = 0;
     int extraArmor = 0;
@@ -376,7 +377,7 @@ class CardTextRenderer {
       }
 
       if (effect.type == 'damage') {
-        final totalDmg = scaledValue + heroAttack;
+        final totalDmg = scaledValue + damageBonus;
         if (card.card.data.target == CardTarget.allEnemies) {
           desc +=
               '${card.getTranslation((l) => l.cardDescDamageAll(totalDmg), fallback: "Inflige $totalDmg dégâts à tous les ennemis.")}\n';

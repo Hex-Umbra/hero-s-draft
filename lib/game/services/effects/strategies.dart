@@ -4,6 +4,8 @@ import '../../../models/data/card_data.dart';
 import '../../controllers/run_controller.dart';
 import '../../controllers/deck_controller.dart';
 import '../../controllers/combat_controller.dart';
+import '../../systems/stat_gains.dart';
+import '../../systems/power_rules.dart';
 import '../damage_pipeline.dart';
 import '../effect_resolver.dart';
 import '../../game_constants.dart';
@@ -29,7 +31,7 @@ class DamageEffectStrategy implements EffectStrategy {
       if (enemyIndex != -1) {
         final enemy = combatController.currentState.enemies[enemyIndex];
         final (finalDmg, isCrit) = DamagePipeline.calculate(
-          initialDamage: scaledValue + runController.currentState.heroStats.effectiveAttaque,
+          initialDamage: scaledValue + runController.currentState.heroStats.damageBonusFor(card.data.type),
           attackerStats: runController.currentState.heroStats,
           defenderStats: enemy.stats,
         );
@@ -41,7 +43,7 @@ class DamageEffectStrategy implements EffectStrategy {
     } else if (card.data.target == CardTarget.allEnemies) {
       for (var enemy in combatController.currentState.enemies) {
         final (individualDmg, isCrit) = DamagePipeline.calculate(
-          initialDamage: scaledValue + runController.currentState.heroStats.effectiveAttaque,
+          initialDamage: scaledValue + runController.currentState.heroStats.damageBonusFor(card.data.type),
           attackerStats: runController.currentState.heroStats,
           defenderStats: enemy.stats,
         );
@@ -88,8 +90,9 @@ class ArmorEffectStrategy implements EffectStrategy {
     required CombatController combatController,
     required String? selectedEnemyId,
   }) {
-    final currentStats = runController.currentState.heroStats;
-    runController.setHeroStats(armure: currentStats.armure + scaledValue);
+    runController.grant(
+      StatGain(GainResource.armor, scaledValue, GainSource.card),
+    );
   }
 }
 
@@ -104,8 +107,9 @@ class GainManaEffectStrategy implements EffectStrategy {
     required CombatController combatController,
     required String? selectedEnemyId,
   }) {
-    final currentMana = runController.currentState.heroStats.currentMana;
-    runController.setHeroStats(currentMana: currentMana + scaledValue);
+    runController.grant(
+      StatGain(GainResource.mana, scaledValue, GainSource.card),
+    );
     runController.ref.read(audioDirectorProvider).onMoment(GameMoment.manaGain);
   }
 }
@@ -137,9 +141,11 @@ class ApplyStatusEffectStrategy implements EffectStrategy {
     required String? selectedEnemyId,
   }) {
     if (effect.statusId != null) {
+      // Le ciblage se lit sur la carte, pas sur l'effet : `CardEffect` n'en a pas.
       final status = EffectResolver.createStatus(
         effect.statusId!,
-        scaledValue,
+        scaledValue +
+            runController.currentState.heroStats.statusBonusFor(card.data.target),
         effect.duration ?? 1,
       );
       if (status != null) {

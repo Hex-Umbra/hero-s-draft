@@ -10,6 +10,7 @@ import '../../models/missing_save_item.dart';
 import '../../models/data/forge_upgrade_data.dart';
 import '../../services/map_generator_service.dart';
 import '../systems/trait_system.dart';
+import '../systems/stat_gains.dart';
 import 'debug_run_controller.dart';
 import 'inventory_controller.dart';
 import 'run/player_stats_manager.dart';
@@ -39,8 +40,6 @@ class RunState {
 
   bool get isBossLevel => currentLevel > 0 && currentLevel % 10 == 0;
   bool get isDead => heroStats.currentPv <= 0;
-
-  int get effectiveAttaque => heroStats.effectiveAttaque;
 
   MapNodeType? get currentNodeType {
     if (currentNodeId == null) return null;
@@ -218,7 +217,7 @@ class RunController extends Notifier<RunState> {
         maxMana: 3,
         currentMana: 3,
         armure: 0,
-        attaque: 0, // Force de base à 0
+        attackPower: 0, // Force de base à 0
         luck: 0,
       ),
       pendingDrafts: 0,
@@ -251,7 +250,7 @@ class RunController extends Notifier<RunState> {
         currentMana: chosenClass.maxMana,
         armure: 0,
         armorMastery: chosenClass.armorMastery,
-        attaque: 0, // Force de base à 0
+        attackPower: 0, // Force de base à 0
         luck: chosenClass.luck,
       ),
       mapNodes: generatedMap,
@@ -342,21 +341,10 @@ class RunController extends Notifier<RunState> {
     _playerStatsManager.heal(amount, isCrit: isCrit);
   }
 
-  /// Modifie la valeur exacte d'un champ sans affecter les max (pour la récupération d'armure par ex)
-  void setHeroStats({
-    int? currentPv,
-    int? armure,
-    int? currentMana,
-    int? armorMastery,
-    bool? lastActionWasCrit,
-  }) {
-    _playerStatsManager.setHeroStats(
-      currentPv: currentPv,
-      armure: armure,
-      currentMana: currentMana,
-      armorMastery: armorMastery,
-      lastActionWasCrit: lastActionWasCrit,
-    );
+  /// Accorde au héros un gain d'armure, de mana ou de puissance, par le point
+  /// de passage unique `StatGains` (spec P-41, §4.1).
+  void grant(StatGain gain) {
+    _playerStatsManager.grant(gain);
   }
 
   /// Subit des dégâts

@@ -9,6 +9,8 @@ import '../models/data/passive_data.dart';
 import '../models/entity_stats.dart';
 import '../models/enemy_instance.dart';
 import '../game/services/damage_pipeline.dart';
+import '../game/systems/stat_gains.dart';
+import '../game/systems/power_rules.dart';
 import 'tutorial_data.dart';
 import 'tutorial_fixtures.dart';
 import 'tutorial_step.dart';
@@ -26,7 +28,7 @@ class TutorialMockState {
     maxMana: 3,
     currentMana: 3,
     armure: 0,
-    attaque: 0,
+    attackPower: 0,
   );
   List<CardInstance> hand = [];
   EnemyInstance? enemy;
@@ -47,7 +49,7 @@ class TutorialMockState {
         maxMana: 3,
         currentMana: 3,
         armure: 0,
-        attaque: 0,
+        attackPower: 0,
       );
     }
     return EntityStats(
@@ -57,7 +59,7 @@ class TutorialMockState {
       currentMana: hero.maxMana,
       armure: 0,
       armorMastery: hero.armorMastery,
-      attaque: 0,
+      attackPower: 0,
       luck: hero.luck,
     );
   }
@@ -271,7 +273,7 @@ class TutorialEngine extends ChangeNotifier {
         maxPv: data.maxHp,
         currentPv: data.maxHp,
         armure: 0,
-        attaque: data.baseDamage,
+        attackPower: data.baseDamage,
       ),
       currentIntent: data.intents?.first,
     );
@@ -342,7 +344,7 @@ class TutorialEngine extends ChangeNotifier {
         final enemy = mockState.enemy;
         if (enemy == null) continue;
         final (dealt, isCrit) = DamagePipeline.calculate(
-          initialDamage: scaled + mockState.heroStats.effectiveAttaque,
+          initialDamage: scaled + mockState.heroStats.damageBonusFor(card.data.type),
           attackerStats: mockState.heroStats,
           defenderStats: enemy.stats,
         );
@@ -350,8 +352,9 @@ class TutorialEngine extends ChangeNotifier {
           stats: enemy.stats.takeDamage(dealt, isCrit: isCrit),
         );
       } else if (effect.type == 'armor') {
-        mockState.heroStats = mockState.heroStats.copyWith(
-          armure: mockState.heroStats.armure + scaled,
+        mockState.heroStats = StatGains.apply(
+          mockState.heroStats,
+          StatGain(GainResource.armor, scaled, GainSource.card),
         );
         if (scaled > 0) _armorGainedThisStep = true;
       }

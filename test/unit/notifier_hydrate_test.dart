@@ -20,7 +20,7 @@ void main() {
         currentLevel: 9,
         act: 3,
         heroClassId: 'berserker',
-        heroStats: EntityStats(maxPv: 50, currentPv: 10, armure: 0, attaque: 5),
+        heroStats: EntityStats(maxPv: 50, currentPv: 10, armure: 0, attackPower: 5),
       );
       controller.hydrate(hydrated);
 
