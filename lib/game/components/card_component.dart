@@ -7,6 +7,7 @@ import '../../models/card_instance.dart';
 import '../../models/data/card_data.dart';
 import '../heros_draft_game.dart';
 import '../game_constants.dart';
+import '../systems/power_rules.dart';
 import 'entities/enemy_card.dart';
 import 'visual_effects/ribbon_trail.dart';
 import 'widgets/card_text_renderer.dart';
@@ -340,7 +341,7 @@ class CardComponent extends PositionComponent
           '${getTranslation((l) => l.exhaustWarning, fallback: '⚠️ USAGE UNIQUE (Épuisement)')}\n\n';
     }
 
-    final heroAttack = game.heroCard?.stats.effectiveAttackPower ?? 0;
+    final damageBonus = game.heroCard?.stats.damageBonusFor(card.data.type) ?? 0;
 
     int extraDamage = 0;
     int extraArmor = 0;
@@ -362,7 +363,7 @@ class CardComponent extends PositionComponent
         scaledValue += extraArmor;
       }
       if (effect.type == 'damage') {
-        final totalDmg = scaledValue + heroAttack;
+        final totalDmg = scaledValue + damageBonus;
         if (card.data.target == CardTarget.allEnemies) {
           desc +=
               '• ${getTranslation((l) => l.cardDescDamageAll(totalDmg), fallback: 'Inflige $totalDmg dégâts à tous les ennemis.')}\n';

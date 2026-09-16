@@ -9,6 +9,7 @@ import '../models/data/passive_data.dart';
 import '../models/entity_stats.dart';
 import '../models/enemy_instance.dart';
 import '../game/services/damage_pipeline.dart';
+import '../game/systems/power_rules.dart';
 import 'tutorial_data.dart';
 import 'tutorial_fixtures.dart';
 import 'tutorial_step.dart';
@@ -342,7 +343,7 @@ class TutorialEngine extends ChangeNotifier {
         final enemy = mockState.enemy;
         if (enemy == null) continue;
         final (dealt, isCrit) = DamagePipeline.calculate(
-          initialDamage: scaled + mockState.heroStats.effectiveAttackPower,
+          initialDamage: scaled + mockState.heroStats.damageBonusFor(card.data.type),
           attackerStats: mockState.heroStats,
           defenderStats: enemy.stats,
         );

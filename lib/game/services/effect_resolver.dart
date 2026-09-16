@@ -5,6 +5,7 @@ import '../../models/status_effect.dart';
 import '../controllers/run_controller.dart';
 import '../controllers/deck_controller.dart';
 import '../controllers/combat_controller.dart';
+import '../systems/power_rules.dart';
 import 'effects/effect_strategy.dart';
 import '../game_constants.dart';
 
@@ -173,16 +174,20 @@ class EffectResolver {
     // Apply elemental statuses if this is an Attack card
     if (card.data.type == CardType.attack) {
       final List<StatusEffect> extraStatuses = [];
+      // Même règle qu'un statut posé par la carte (`PowerRules`) : ces runes
+      // sont résolues ici, hors du registre de stratégies.
+      final bonus =
+          runController.currentState.heroStats.statusBonusFor(card.data.target);
       if (elementBurn > 0) {
-        final st = createStatus('burn', elementBurn, elementBurn);
+        final st = createStatus('burn', elementBurn + bonus, elementBurn);
         if (st != null) extraStatuses.add(st);
       }
       if (elementFreeze > 0) {
-        final st = createStatus('freeze', elementFreeze, elementFreeze);
+        final st = createStatus('freeze', elementFreeze + bonus, elementFreeze);
         if (st != null) extraStatuses.add(st);
       }
       if (elementShock > 0) {
-        final st = createStatus('shock', elementShock, elementShock);
+        final st = createStatus('shock', elementShock + bonus, elementShock);
         if (st != null) extraStatuses.add(st);
       }
 
