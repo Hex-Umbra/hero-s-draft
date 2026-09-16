@@ -335,7 +335,7 @@ travail de relecture.
 **ni `heroClass` ni `category`** : le répertoire les injecte, et les déclarer fait échouer le
 chargement. Chaque nouveau dossier impose un `dart run tool/sync_assets.dart`.
 
-**La note `0.5.1` n'attend plus P-42.** Tranché le 2026-09-05 : les cartes de P-42 devaient rejoindre l'entrée `0.5.1`, rouverte en place. **Décision remplacée le 2026-09-16** par le propriétaire : `0.5.1` est publiée telle quelle (tag `v0.5.1`), et **P-42 comme tout ce qui suit iront en `0.5.2`**. **Fait, même jour** : la note `0.5.2` a finalement été rédigée pour P-41 lot A (`fbec30d`), pas encore taguée. La version que visera P-42 reste une décision ouverte du propriétaire (`0.5.3`, ou rouvrir `0.5.2` avant qu'elle soit taguée) — non tranchée ici.
+**La note `0.5.1` n'attend plus P-42.** Tranché le 2026-09-05 : les cartes de P-42 devaient rejoindre l'entrée `0.5.1`, rouverte en place. **Décision remplacée le 2026-09-16** par le propriétaire : `0.5.1` est publiée telle quelle (tag `v0.5.1`), et **P-42 comme tout ce qui suit iront en `0.5.2`**. **Fait, même jour** : la note `0.5.2` a finalement été rédigée pour P-41 lot A (`fbec30d`), pas encore taguée. **Tranché le 2026-09-16 par le propriétaire : pas de nouveau numéro, P-42 rejoint `0.5.2`**, rouverte en place par `patch-notes-writer`. Le tag `v0.5.2` attend donc les cartes de P-42.
 
 **Conséquence pour P-41.** Sa spec est la seule non implémentée à contenir des **instructions
 d'édition de données** ; elle a été rebasée le 2026-09-05. Un champ ajouté à une classe

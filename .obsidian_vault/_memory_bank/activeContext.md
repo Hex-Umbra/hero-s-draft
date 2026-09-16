@@ -14,7 +14,7 @@ puissances (`attackPower`, `skillPower`, `alterationPower`) régies par `PowerRu
 première chaîne de migration de sauvegarde du projet sous une nouvelle clé — voir « 3 dernières
 livraisons » et [ADR-095](../_adr/ADR-095-passage-unique-des-gains-scission-des-puissances-et.md).
 **La note de version `0.5.2` est écrite** (`fbec30d`, « Des Sauvegardes Qui Durent ») mais **pas
-encore taguée** : le propriétaire tague `v0.5.2` après sa propre campagne de test manuelle.
+encore taguée** : P-42 la rejoindra, le tag `v0.5.2` attend ses cartes.
 `dart analyze` propre et 876 tests au vert sur `main` (Métriques de `progress.md`, vérifiées le
 2026-09-16 ; `git diff --stat b94c854 f8be03a -- lib test assets` ne touche que
 `patch_notes.json`, donc ces métriques décrivent toujours le code présent).
@@ -106,8 +106,9 @@ Réserves à ne pas perdre de vue :
 
 ## Prochaine étape
 
-**La campagne de test manuelle du propriétaire sur `0.5.2`**, avant la pose du tag `v0.5.2` — seul
-geste déclenchant `release.yml`. Ensuite, **le brainstorm puis la spec de P-49** (passifs partagés,
+**La campagne de test manuelle du propriétaire sur `0.5.2`**. Le tag `v0.5.2` — seul geste
+déclenchant `release.yml` — attend P-42, qui rejoint `0.5.2` sans nouveau numéro (décision du
+propriétaire, 2026-09-16). Ensuite, **le brainstorm puis la spec de P-49** (passifs partagés,
 dont la refonte de la Maîtrise d'Armure en bonus de passif), encore à écrire, qui précède **P-41
 lot B** (`statRules`, les neuf passifs, stats de départ) : ce dernier dépend du lot A — fusionné —
 et de P-49. Lots, chantier frère P-49 et ordre d'exécution : `docs/ROADMAP.md` §4, qui mène à la
