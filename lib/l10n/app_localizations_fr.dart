@@ -496,6 +496,13 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get newerSaveTitle => 'Partie d\'une version plus récente';
+
+  @override
+  String get newerSaveMessage =>
+      'Cette partie a été sauvegardée par une version plus récente du jeu. Elle est conservée : ouvrez cette version pour la reprendre.';
+
+  @override
   String get ok => 'OK';
 
   @override

@@ -93,7 +93,7 @@ void main() {
 
     testWidgets('CONTINUER appears when a save exists', (tester) async {
       SharedPreferences.setMockInitialValues({
-        'run_save_v1': '{"schemaVersion":1,"run":{},"deck":{},"inventory":{},"skills":{}}',
+        'run_save': '{"schemaVersion":1,"run":{},"deck":{},"inventory":{},"skills":{}}',
       });
       // Seed a syntactically valid but minimal save purely to make hasSave() true;
       // the "Continuer" tap flow itself is exercised in SaveService's own unit tests.
@@ -106,7 +106,7 @@ void main() {
 
     testWidgets('Nouvelle Partie shows a confirmation dialog when a save exists', (tester) async {
       SharedPreferences.setMockInitialValues({
-        'run_save_v1': '{"schemaVersion":1,"run":{},"deck":{},"inventory":{},"skills":{}}',
+        'run_save': '{"schemaVersion":1,"run":{},"deck":{},"inventory":{},"skills":{}}',
       });
 
       await tester.pumpWidget(wrapHome());
@@ -120,6 +120,26 @@ void main() {
       // Cancel so the test does not need to also stub ClassSelectionScreen navigation.
       await tester.tap(find.text('Annuler'));
       await tester.pumpAndSettle();
+      expect(await SaveService.hasSave(), isTrue);
+    });
+
+    testWidgets('Continuer explains a save written by a newer build and keeps it', (tester) async {
+      SharedPreferences.setMockInitialValues({
+        'run_save': '{"schemaVersion":999,"run":{},"deck":{},"inventory":{}}',
+      });
+
+      await tester.pumpWidget(wrapHome());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Continuer'));
+      await tester.pumpAndSettle();
+
+      expect(find.text("Partie d'une version plus récente"), findsOneWidget);
+
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Continuer'), findsOneWidget);
       expect(await SaveService.hasSave(), isTrue);
     });
 
@@ -147,7 +167,7 @@ void main() {
         // after resolving a map node).
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString(
-          'run_save_v1',
+          'run_save',
           '{"schemaVersion":1,"run":{},"deck":{},"inventory":{},"skills":{}}',
         );
 

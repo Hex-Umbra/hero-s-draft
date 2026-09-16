@@ -8,6 +8,7 @@ import '../game/controllers/deck_controller.dart';
 import '../game/controllers/inventory_controller.dart';
 import '../models/inventory_state.dart';
 import '../models/missing_save_item.dart';
+import 'save_migrations.dart';
 
 /// The subset of Ref/WidgetRef/ProviderContainer that SaveService needs:
 /// a plain synchronous provider read. Accepting this instead of `Ref`
@@ -20,12 +21,25 @@ class SaveLoadResult {
   final bool success;
   final List<MissingSaveItem> missingItems;
 
-  const SaveLoadResult({required this.success, this.missingItems = const []});
+  /// La sauvegarde a été écrite par un build plus récent : elle n'est pas
+  /// chargée, mais elle est conservée pour ce build-là.
+  final bool savedByNewerBuild;
+
+  const SaveLoadResult({
+    required this.success,
+    this.missingItems = const [],
+    this.savedByNewerBuild = false,
+  });
 }
 
 class SaveService {
-  static const String _saveKey = 'run_save_v1';
-  static const int _schemaVersion = 1;
+  // La version vit dans le blob, et `saveMigrator` amène un blob ancien à la
+  // version courante. La clé n'a changé qu'une fois : les builds publiés
+  // jusqu'à 0.5.1 lisent `run_save_v1` et effacent toute version autre que 1.
+  // Toutes les versions web partagent le même stockage, et ces builds-là ne
+  // se corrigent plus (spec P-41, §4.3).
+  static const String _saveKey = 'run_save';
+  static const String _legacySaveKey = 'run_save_v1';
 
   /// Une run debug ne persiste rien : ni ecriture, ni effacement.
   ///
@@ -41,24 +55,28 @@ class SaveService {
     if (_isDebugRun(read)) return;
     final prefs = await SharedPreferences.getInstance();
     final payload = {
-      'schemaVersion': _schemaVersion,
+      'schemaVersion': saveMigrator.currentVersion,
       'savedAt': DateTime.now().toIso8601String(),
       'run': read(runProvider).toJson(),
       'deck': read(deckProvider).toJson(),
       'inventory': read(inventoryProvider).toJson(),
     };
     await prefs.setString(_saveKey, jsonEncode(payload));
+    // La partie vit désormais sous la nouvelle clé : l'ancienne copie ne doit
+    // plus être proposée, ni ici, ni par un build antérieur.
+    await prefs.remove(_legacySaveKey);
   }
 
   static Future<bool> hasSave() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.containsKey(_saveKey);
+    return prefs.containsKey(_saveKey) || prefs.containsKey(_legacySaveKey);
   }
 
   static Future<void> clear(RefReader read) async {
     if (_isDebugRun(read)) return;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_saveKey);
+    await prefs.remove(_legacySaveKey);
   }
 
   static Future<SaveLoadResult> load(RefReader read) async {
@@ -68,7 +86,7 @@ class SaveService {
     read(debugRunProvider.notifier).clearForLoadedRun();
 
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_saveKey);
+    final raw = prefs.getString(_saveKey) ?? prefs.getString(_legacySaveKey);
     if (raw == null) {
       return const SaveLoadResult(success: false);
     }
@@ -76,11 +94,17 @@ class SaveService {
     Map<String, dynamic> json;
     try {
       final decoded = jsonDecode(raw);
-      if (decoded is! Map<String, dynamic> ||
-          decoded['schemaVersion'] != _schemaVersion) {
-        throw const FormatException('Unsupported or missing schemaVersion');
+      if (decoded is! Map<String, dynamic>) {
+        throw const FormatException('Save data is not a JSON object');
       }
-      json = decoded;
+      json = saveMigrator.migrate(decoded);
+    } on SaveFromNewerBuildException catch (e) {
+      // Ni lisible ici, ni corrompue : la laisser intacte pour le build qui
+      // l'a écrite. L'écran d'accueil l'explique au joueur.
+      if (kDebugMode) {
+        debugPrint('SaveService.load: save written by a newer build ($e)');
+      }
+      return const SaveLoadResult(success: false, savedByNewerBuild: true);
     } catch (e) {
       if (kDebugMode) {
         debugPrint('SaveService.load: corrupted or unsupported save data ($e)');

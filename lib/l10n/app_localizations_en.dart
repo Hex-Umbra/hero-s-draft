@@ -492,6 +492,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get newerSaveTitle => 'Game from a newer version';
+
+  @override
+  String get newerSaveMessage =>
+      'This game was saved by a newer version of the game. It has been kept: open that version to resume it.';
+
+  @override
   String get ok => 'OK';
 
   @override

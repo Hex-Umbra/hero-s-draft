@@ -336,6 +336,8 @@
   "newGameOverwriteConfirm": "Overwrite and continue",
   "missingItemsTitle": "Save restored",
   "missingItemsMessage": "Some items are no longer available due to an update and have been removed: {items}. Your progress has been kept.",
+  "newerSaveTitle": "Game from a newer version",
+  "newerSaveMessage": "This game was saved by a newer version of the game. It has been kept: open that version to resume it.",
   "ok": "OK",
   "shopExpanded": "Shop expanded permanently!",
   "shopRerolled": "Cards renewed!",

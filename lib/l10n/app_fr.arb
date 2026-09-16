@@ -140,6 +140,8 @@
   "newGameOverwriteConfirm": "Écraser et continuer",
   "missingItemsTitle": "Sauvegarde restaurée",
   "missingItemsMessage": "Certains éléments ne sont plus disponibles suite à une mise à jour et ont été retirés : {items}. Votre progression a été conservée.",
+  "newerSaveTitle": "Partie d'une version plus récente",
+  "newerSaveMessage": "Cette partie a été sauvegardée par une version plus récente du jeu. Elle est conservée : ouvrez cette version pour la reprendre.",
   "ok": "OK",
   "shopExpanded": "Boutique agrandie définitivement !",
   "shopRerolled": "Cartes renouvelées !",

@@ -902,6 +902,18 @@ abstract class AppLocalizations {
   /// **'Some items are no longer available due to an update and have been removed: {items}. Your progress has been kept.'**
   String missingItemsMessage(Object items);
 
+  /// No description provided for @newerSaveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Game from a newer version'**
+  String get newerSaveTitle;
+
+  /// No description provided for @newerSaveMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This game was saved by a newer version of the game. It has been kept: open that version to resume it.'**
+  String get newerSaveMessage;
+
   /// No description provided for @ok.
   ///
   /// In en, this message translates to:
