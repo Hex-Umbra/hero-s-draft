@@ -7,7 +7,7 @@ Les combattants accumulent des altérations d'état. Le décompte (`tickStatuses
 | Statut (`id`) | Type | Empilable | Effet Mécanique | Tick |
 |:---|:---:|:---:|:---|:---|
 | `poison` | Debuff | Oui | Inflige dégâts directs = valeur au début du tour | Durée -1 chaque tour |
-| `strength` | Buff | Oui | Ajoute sa valeur à `effectiveAttaque` pour les dégâts physiques | Durée -1 chaque tour |
+| `strength` | Buff | Oui | Ajoute sa valeur à `effectiveAttackPower` pour les dégâts physiques | Durée -1 chaque tour |
 | `weakness` | Debuff | Oui | Réduit les dégâts physiques infligés de **25%** (`×0.75`) | Durée -1 chaque tour |
 | `strength_regen` | Buff | Oui | Ajoute sa valeur au statut `strength` au début du tour | Durée -1 chaque tour |
 | `armor_regen` | Buff | Oui | Génère de l'armure = valeur au début du tour | Durée -1 chaque tour |

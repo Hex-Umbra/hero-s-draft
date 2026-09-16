@@ -286,7 +286,7 @@ Rien n'existe hors-run aujourd'hui. Gain d'une monnaie à la fin de chaque run p
 
 - [ ] Éligibilité des passifs par classe, déclarée par le passif (`"classes"`) — *P-49*
 - [ ] Point d'accès unique « passifs disponibles = éligibles **et** débloqués », qui vaut « tous » tant que P-13 n'existe pas — *P-49*
-- [ ] Chaîne de migration de la sauvegarde de run — *P-41, lot A*
+- [x] Chaîne de migration de la sauvegarde de run — *P-41, lot A*, livré sur `feat/p41-lot-a` (`b94c854`), PR à venir
 - [ ] Récompenses de passif éligibles par ce point d'accès — *P-41, lot C*
 
 **Reste entièrement à P-13 :**
@@ -399,7 +399,7 @@ causes de leur ordre et invariant de découpage :
 
 | Lot | Contenu | Dépend de |
 |:---|:---|:---|
-| **P-41 A** | Point de passage unique des gains, à source étiquetée, scission de `attaque` en trois puissances, chaîne de migration de sauvegarde sous une nouvelle clé — **sans changement de comportement** · [plan](superpowers/plans/2026-09-16-p41-lot-a-passage-unique-scission-migration.md) | — |
+| **P-41 A** | ✅ **Livré sur `feat/p41-lot-a` (`b94c854`), PR à venir** — Point de passage unique des gains, à source étiquetée, scission de `attaque` en trois puissances, chaîne de migration de sauvegarde sous une nouvelle clé — **sans changement de comportement** · [plan](superpowers/plans/2026-09-16-p41-lot-a-passage-unique-scission-migration.md) | — |
 | **P-49** | Passifs partagés, dont la refonte de la Maîtrise d'Armure en bonus de passif — *spec à écrire* | P-41 A |
 | **P-41 B** | `statRules`, les neuf passifs, stats de départ | P-41 A, P-49 |
 | **P-41 C** | Récompenses de niveau data-driven *(indépendante, parallélisable avec A)*, puis nouvelles récompenses et écran de sélection | B, pour sa seconde partie |
@@ -411,6 +411,22 @@ causes de leur ordre et invariant de découpage :
 - **La conversion du Mage porte-t-elle aussi sur la Force ?** — à trancher au lot B (spec, §4.2) ;
 - **Et sur le retrait d'une relique**, gain négatif de source `progression` ? — à trancher au lot B
   (spec, §7.1).
+
+**Trois suites relevées à la revue finale du lot A, à traiter aux lots suivants** — voir aussi les six
+suites techniques listées dans le plan du lot A lui-même
+([§ Suites relevées, hors du lot A](superpowers/plans/2026-09-16-p41-lot-a-passage-unique-scission-migration.md#suites-relevées-hors-du-lot-a)) :
+- **Arbitrer par `savedAt` quand `run_save` et `run_save_v1` coexistent** — un joueur qui alterne entre
+  ce build et un build publié jusqu'à `0.5.1` peut voir ce dernier écrire sous `run_save_v1` une run
+  plus récente que celle que `run_save` porte ; `SaveService` préfère aujourd'hui `run_save` sans
+  comparer les dates, donc une run plus récente peut être silencieusement écrasée au prochain
+  chargement — *lot B ou C*.
+- **Le dialogue d'écrasement de « Nouvelle Partie »** ne dit pas qu'une sauvegarde existante peut avoir
+  été écrite par un build plus récent — le joueur peut écraser une partie que ce build-ci ne sait pas
+  lire sans en être averti — *lot B ou C*.
+- **Surveiller le double bonus d'`alterationPower`** si une carte de statut et une rune élémentaire
+  s'appliquent toutes deux à la même carte : les deux passent par `PowerRules.statusBonusFor`
+  indépendamment, et rien n'empêche aujourd'hui un cumul non voulu — à vérifier dès que l'un des deux
+  chemins devient réel, aux lots B ou C.
 
 **Ce que le programme referme ailleurs dans ce document** — à ne pas traiter deux fois :
 
