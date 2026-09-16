@@ -1,5 +1,28 @@
 [
   {
+    "version": "0.5.2",
+    "date": "2026-09-16",
+    "title": "Des Sauvegardes Qui Durent",
+    "sections": [
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "Le jeu sait désormais convertir une sauvegarde écrite par une version précédente : une partie en cours se reprend normalement après une mise à jour, au lieu d'être perdue quand le format de sauvegarde évolue.",
+          "Une partie sauvegardée par une version plus récente du jeu n'est plus effacée quand vous ouvrez une version plus ancienne : elle est conservée, et l'écran d'accueil vous indique d'ouvrir la version récente pour la reprendre.",
+          "Sur le site, une partie sauvegardée avec cette version n'est plus proposée par les versions précédentes du jeu, qui l'auraient effacée : reprenez-la depuis la version 0.5.2 ou une version plus récente."
+        ]
+      },
+      {
+        "category": "Technique",
+        "emoji": "🔧",
+        "entries": [
+          "Les bonus du héros distinguent désormais les cartes Attaque des cartes Compétence, en préparation de l'identité propre à chaque classe. Aucune valeur ne change pour l'instant : vos cartes infligent exactement les mêmes dégâts."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.5.1",
     "date": "2026-09-05",
     "title": "Chaque Chose à Sa Place",
