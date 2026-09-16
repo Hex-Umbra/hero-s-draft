@@ -59,4 +59,21 @@ class SaveMigrator {
 
 /// La chaîne de production. Monter `currentVersion` et ajouter l'étape qui
 /// quitte l'ancienne version vont toujours ensemble.
-const saveMigrator = SaveMigrator(currentVersion: 1, steps: {});
+const saveMigrator = SaveMigrator(
+  currentVersion: 2,
+  steps: {1: _migrateV1ToV2},
+);
+
+/// v1 → v2 (P-41, lot A) : `attaque` devient `attackPower`. `skillPower` et
+/// `alterationPower` n'ont pas à être écrites : `EntityStats.fromJson` les lit
+/// à 0 quand elles manquent. Aucun ennemi n'est sérialisé : `SaveService`
+/// n'est jamais appelé en combat.
+Map<String, dynamic> _migrateV1ToV2(Map<String, dynamic> save) {
+  final run = save['run'];
+  final heroStats = run is Map<String, dynamic> ? run['heroStats'] : null;
+  if (heroStats is! Map<String, dynamic>) {
+    throw const FormatException('v1 save without run.heroStats');
+  }
+  heroStats['attackPower'] = heroStats.remove('attaque');
+  return save;
+}

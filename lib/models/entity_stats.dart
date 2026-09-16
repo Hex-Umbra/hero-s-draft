@@ -9,7 +9,9 @@ class EntityStats {
   final int currentMana;
   final int armure;
   final int armorMastery; // Bonus permanent ajouté à chaque gain d'armure
-  final int attackPower;
+  final int attackPower; // Dégâts des cartes Attaque — la Force s'y ajoute
+  final int skillPower; // Dégâts des cartes Compétence
+  final int alterationPower; // Intensité des statuts posés sur un ennemi
   final int luck;
   final int level;
   final int xp;
@@ -27,6 +29,8 @@ class EntityStats {
     required this.armure,
     this.armorMastery = 0,
     required this.attackPower,
+    this.skillPower = 0,
+    this.alterationPower = 0,
     this.luck = 0,
     this.level = 1,
     this.xp = 0,
@@ -45,6 +49,8 @@ class EntityStats {
     int? armure,
     int? armorMastery,
     int? attackPower,
+    int? skillPower,
+    int? alterationPower,
     int? luck,
     int? level,
     int? xp,
@@ -62,6 +68,8 @@ class EntityStats {
       armure: armure ?? this.armure,
       armorMastery: armorMastery ?? this.armorMastery,
       attackPower: attackPower ?? this.attackPower,
+      skillPower: skillPower ?? this.skillPower,
+      alterationPower: alterationPower ?? this.alterationPower,
       luck: luck ?? this.luck,
       level: level ?? this.level,
       xp: xp ?? this.xp,
@@ -88,7 +96,9 @@ class EntityStats {
       currentMana: json['currentMana'] as int? ?? 0,
       armure: json['armure'] as int,
       armorMastery: json['armorMastery'] as int? ?? 0,
-      attackPower: json['attaque'] as int,
+      attackPower: json['attackPower'] as int,
+      skillPower: json['skillPower'] as int? ?? 0,
+      alterationPower: json['alterationPower'] as int? ?? 0,
       luck: json['luck'] as int? ?? 0,
       level: json['level'] as int? ?? 1,
       xp: json['xp'] as int? ?? 0,
@@ -107,7 +117,9 @@ class EntityStats {
     'currentMana': currentMana,
     'armure': armure,
     'armorMastery': armorMastery,
-    'attaque': attackPower,
+    'attackPower': attackPower,
+    'skillPower': skillPower,
+    'alterationPower': alterationPower,
     'luck': luck,
     'level': level,
     'xp': xp,

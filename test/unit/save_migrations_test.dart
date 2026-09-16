@@ -70,5 +70,31 @@ void main() {
         {for (var v = 1; v < saveMigrator.currentVersion; v++) v},
       );
     });
+
+    test('v1 vers v2 : attaque devient attackPower', () {
+      final migrated = saveMigrator.migrate(<String, dynamic>{
+        'schemaVersion': 1,
+        'run': <String, dynamic>{
+          'heroStats': <String, dynamic>{'maxPv': 80, 'attaque': 7},
+        },
+      });
+
+      final run = migrated['run'] as Map<String, dynamic>;
+      final heroStats = run['heroStats'] as Map<String, dynamic>;
+      expect(migrated['schemaVersion'], 2);
+      expect(heroStats.containsKey('attaque'), isFalse);
+      expect(heroStats['attackPower'], 7);
+      expect(heroStats['maxPv'], 80);
+    });
+
+    test('une v1 sans stats de heros est refusee', () {
+      expect(
+        () => saveMigrator.migrate(<String, dynamic>{
+          'schemaVersion': 1,
+          'run': <String, dynamic>{},
+        }),
+        throwsFormatException,
+      );
+    });
   });
 }

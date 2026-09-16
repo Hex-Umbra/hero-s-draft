@@ -219,5 +219,45 @@ void main() {
 
       expect(await SaveService.hasSave(), isFalse);
     });
+
+    test('load migrates a legacy v1 save: attaque is kept as attackPower', () async {
+      const hero = HeroData(
+        id: 'paladin',
+        classCard: 'paladin.png',
+        maxHp: 100,
+        maxMana: 3,
+        baseDamage: 5,
+        passiveTrait: 'regen_armor',
+      );
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      container.read(runProvider.notifier).startNewRun(hero);
+      container.read(runProvider.notifier).applyHeroStatModifier(attackAcc: 4);
+      await SaveService.save(container.read);
+
+      // Réécrit la sauvegarde telle que l'écrivaient tous les builds jusqu'à
+      // 0.5.1 : version 1, clé `attaque`, sans les deux nouvelles puissances,
+      // sous l'ancienne clé de stockage.
+      final prefs = await SharedPreferences.getInstance();
+      final save =
+          jsonDecode(prefs.getString('run_save')!) as Map<String, dynamic>;
+      final run = save['run'] as Map<String, dynamic>;
+      final heroStats = run['heroStats'] as Map<String, dynamic>;
+      heroStats['attaque'] = heroStats.remove('attackPower');
+      heroStats.remove('skillPower');
+      heroStats.remove('alterationPower');
+      save['schemaVersion'] = 1;
+      await prefs.setString('run_save_v1', jsonEncode(save));
+      await prefs.remove('run_save');
+
+      final fresh = ProviderContainer();
+      addTearDown(fresh.dispose);
+      final result = await SaveService.load(fresh.read);
+
+      expect(result.success, isTrue);
+      expect(fresh.read(runProvider).heroStats.attackPower, 4);
+      expect(fresh.read(runProvider).heroStats.skillPower, 0);
+      expect(fresh.read(runProvider).heroStats.alterationPower, 0);
+    });
   });
 }
