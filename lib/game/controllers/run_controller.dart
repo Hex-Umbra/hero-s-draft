@@ -40,8 +40,6 @@ class RunState {
   bool get isBossLevel => currentLevel > 0 && currentLevel % 10 == 0;
   bool get isDead => heroStats.currentPv <= 0;
 
-  int get effectiveAttaque => heroStats.effectiveAttaque;
-
   MapNodeType? get currentNodeType {
     if (currentNodeId == null) return null;
     try {

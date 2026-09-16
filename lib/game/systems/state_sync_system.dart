@@ -36,8 +36,6 @@ class StateSyncSystem extends Component with HasGameReference<HerosDraftGame> {
   void _applyState(RunState state) {
     currentState = state;
 
-    int bonusAtt = state.effectiveAttaque - state.heroStats.attaque;
-
     if (game.heroCard == null) {
       // Pas de repli : un héros introuvable est un bug de données, pas un cas
       // à masquer. `test/unit/referential_integrity_test.dart` garde l'intégrité
@@ -48,13 +46,12 @@ class StateSyncSystem extends Component with HasGameReference<HerosDraftGame> {
 
       game.heroCard = HeroCard(
         state.heroStats,
-        bonusAttack: bonusAtt,
         imagePath: heroData.classCard,
       );
       game.heroCard!.position = Vector2(game.size.x / 2, game.size.y * 0.51);
       game.add(game.heroCard!);
     } else {
-      game.heroCard!.updateStats(state.heroStats, bonusAttack: bonusAtt);
+      game.heroCard!.updateStats(state.heroStats);
     }
 
     for (var card in game.handCards) {

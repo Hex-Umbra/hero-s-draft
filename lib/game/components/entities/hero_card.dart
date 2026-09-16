@@ -10,7 +10,6 @@ import 'combat_entity.dart';
 
 class HeroCard extends CombatEntity with TapCallbacks {
   EntityStats stats;
-  int bonusAttack;
   final String imagePath;
   bool suppressArmorChangeAnimation = false;
 
@@ -22,7 +21,7 @@ class HeroCard extends CombatEntity with TapCallbacks {
   @override
   late final SpriteComponent sprite;
 
-  HeroCard(this.stats, {this.bonusAttack = 0, required this.imagePath})
+  HeroCard(this.stats, {required this.imagePath})
     : super(size: Vector2(120, 160));
 
   @override
@@ -143,10 +142,9 @@ class HeroCard extends CombatEntity with TapCallbacks {
   /// ainsi deux bruitages superposes. La resolution est desormais rendue a la
   /// frappe d'impact de l'animation, comme pour les ennemis.
   EntityStats? _pendingStats;
-  int _pendingBonusAttack = 0;
   bool _pendingSuppressArmorChange = false;
 
-  void updateStats(EntityStats newStats, {int bonusAttack = 0}) {
+  void updateStats(EntityStats newStats) {
     // Le drapeau est consomme dans les deux branches : le laisser arme
     // jusqu'a la resolution le ferait s'appliquer a une mise a jour ulterieure
     // qui ne l'a pas demande.
@@ -155,12 +153,11 @@ class HeroCard extends CombatEntity with TapCallbacks {
 
     if (game.isCardAnimating) {
       _pendingStats = newStats;
-      _pendingBonusAttack = bonusAttack;
       _pendingSuppressArmorChange = suppress;
       return;
     }
 
-    _applyStats(newStats, bonusAttack, suppress);
+    _applyStats(newStats, suppress);
   }
 
   /// Applique ce qui attendait la frappe d'impact. Sans rien en attente, ne
@@ -169,18 +166,13 @@ class HeroCard extends CombatEntity with TapCallbacks {
     final pending = _pendingStats;
     if (pending == null) return;
     _pendingStats = null;
-    _applyStats(pending, _pendingBonusAttack, _pendingSuppressArmorChange);
+    _applyStats(pending, _pendingSuppressArmorChange);
   }
 
-  void _applyStats(
-    EntityStats newStats,
-    int bonusAttack,
-    bool suppressArmorChange,
-  ) {
+  void _applyStats(EntityStats newStats, bool suppressArmorChange) {
     triggerHitReactions(stats, newStats, suppressArmorChange: suppressArmorChange);
 
     stats = newStats;
-    this.bonusAttack = bonusAttack;
   }
 
   void _refreshBorderVisuals() {
