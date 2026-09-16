@@ -340,7 +340,7 @@ class CardComponent extends PositionComponent
           '${getTranslation((l) => l.exhaustWarning, fallback: '⚠️ USAGE UNIQUE (Épuisement)')}\n\n';
     }
 
-    final heroAttack = game.heroCard?.stats.effectiveAttaque ?? 0;
+    final heroAttack = game.heroCard?.stats.effectiveAttackPower ?? 0;
 
     int extraDamage = 0;
     int extraArmor = 0;

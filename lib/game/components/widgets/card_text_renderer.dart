@@ -91,7 +91,7 @@ class CardTextRenderer {
     } else {
       descPainter = null;
       badges.clear();
-      final heroAttack = card.game.heroCard?.stats.effectiveAttaque ?? 0;
+      final heroAttack = card.game.heroCard?.stats.effectiveAttackPower ?? 0;
 
       int extraDamage = 0;
       int extraArmor = 0;
@@ -353,7 +353,7 @@ class CardTextRenderer {
 
   String buildDescription() {
     String desc = '';
-    final heroAttack = card.game.heroCard?.stats.effectiveAttaque ?? 0;
+    final heroAttack = card.game.heroCard?.stats.effectiveAttackPower ?? 0;
 
     int extraDamage = 0;
     int extraArmor = 0;

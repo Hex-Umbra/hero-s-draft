@@ -167,7 +167,7 @@ class StatsDialog extends ConsumerWidget {
                   child: _buildCompactStatCard(
                     icon: SwordIcon(size: 16, color: Colors.orangeAccent),
                     title: locale == 'fr' ? 'Attaque' : 'Attack',
-                    value: '${stats.attaque}',
+                    value: '${stats.attackPower}',
                     subtitle: locale == 'fr' ? 'Dégâts de base' : 'Base damage',
                   ),
                 ),

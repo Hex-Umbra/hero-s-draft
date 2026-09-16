@@ -26,7 +26,7 @@ class TutorialMockState {
     maxMana: 3,
     currentMana: 3,
     armure: 0,
-    attaque: 0,
+    attackPower: 0,
   );
   List<CardInstance> hand = [];
   EnemyInstance? enemy;
@@ -47,7 +47,7 @@ class TutorialMockState {
         maxMana: 3,
         currentMana: 3,
         armure: 0,
-        attaque: 0,
+        attackPower: 0,
       );
     }
     return EntityStats(
@@ -57,7 +57,7 @@ class TutorialMockState {
       currentMana: hero.maxMana,
       armure: 0,
       armorMastery: hero.armorMastery,
-      attaque: 0,
+      attackPower: 0,
       luck: hero.luck,
     );
   }
@@ -271,7 +271,7 @@ class TutorialEngine extends ChangeNotifier {
         maxPv: data.maxHp,
         currentPv: data.maxHp,
         armure: 0,
-        attaque: data.baseDamage,
+        attackPower: data.baseDamage,
       ),
       currentIntent: data.intents?.first,
     );
@@ -342,7 +342,7 @@ class TutorialEngine extends ChangeNotifier {
         final enemy = mockState.enemy;
         if (enemy == null) continue;
         final (dealt, isCrit) = DamagePipeline.calculate(
-          initialDamage: scaled + mockState.heroStats.effectiveAttaque,
+          initialDamage: scaled + mockState.heroStats.effectiveAttackPower,
           attackerStats: mockState.heroStats,
           defenderStats: enemy.stats,
         );

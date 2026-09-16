@@ -337,22 +337,22 @@ void main() {
       final active1 = EnemyInstance(
         id: 'active_1',
         data: slimeData,
-        stats: EntityStats(maxPv: 18, currentPv: 18, armure: 0, attaque: 4),
+        stats: EntityStats(maxPv: 18, currentPv: 18, armure: 0, attackPower: 4),
       );
       final active2 = EnemyInstance(
         id: 'active_2',
         data: slimeData,
-        stats: EntityStats(maxPv: 18, currentPv: 18, armure: 0, attaque: 4),
+        stats: EntityStats(maxPv: 18, currentPv: 18, armure: 0, attackPower: 4),
       );
       final reserve1 = EnemyInstance(
         id: 'reserve_1',
         data: goblinData,
-        stats: EntityStats(maxPv: 28, currentPv: 28, armure: 0, attaque: 5),
+        stats: EntityStats(maxPv: 28, currentPv: 28, armure: 0, attackPower: 5),
       );
       final reserve2 = EnemyInstance(
         id: 'reserve_2',
         data: goblinData,
-        stats: EntityStats(maxPv: 28, currentPv: 28, armure: 0, attaque: 5),
+        stats: EntityStats(maxPv: 28, currentPv: 28, armure: 0, attackPower: 5),
       );
 
       combatController.state = CombatState(
@@ -367,7 +367,7 @@ void main() {
       // 1. Defeat active_1 (set its PV to 0)
       combatController.updateEnemyStats(
         'active_1',
-        EntityStats(maxPv: 18, currentPv: 0, armure: 0, attaque: 4),
+        EntityStats(maxPv: 18, currentPv: 0, armure: 0, attackPower: 4),
       );
 
       // Trigger cleanDeadEnemies by starting enemy turn
@@ -393,11 +393,11 @@ void main() {
       // 2. Defeat both remaining enemies
       combatController.updateEnemyStats(
         'active_2',
-        EntityStats(maxPv: 18, currentPv: 0, armure: 0, attaque: 4),
+        EntityStats(maxPv: 18, currentPv: 0, armure: 0, attackPower: 4),
       );
       combatController.updateEnemyStats(
         'reserve_1',
-        EntityStats(maxPv: 28, currentPv: 0, armure: 0, attaque: 5),
+        EntityStats(maxPv: 28, currentPv: 0, armure: 0, attackPower: 5),
       );
 
       combatController.startEnemyTurn();
@@ -412,7 +412,7 @@ void main() {
       // 3. Defeat the last reserve enemy
       combatController.updateEnemyStats(
         'reserve_2',
-        EntityStats(maxPv: 28, currentPv: 0, armure: 0, attaque: 5),
+        EntityStats(maxPv: 28, currentPv: 0, armure: 0, attackPower: 5),
       );
       combatController.startEnemyTurn();
 

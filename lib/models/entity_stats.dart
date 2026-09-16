@@ -9,7 +9,7 @@ class EntityStats {
   final int currentMana;
   final int armure;
   final int armorMastery; // Bonus permanent ajouté à chaque gain d'armure
-  final int attaque;
+  final int attackPower;
   final int luck;
   final int level;
   final int xp;
@@ -26,7 +26,7 @@ class EntityStats {
     this.currentMana = 0,
     required this.armure,
     this.armorMastery = 0,
-    required this.attaque,
+    required this.attackPower,
     this.luck = 0,
     this.level = 1,
     this.xp = 0,
@@ -44,7 +44,7 @@ class EntityStats {
     int? currentMana,
     int? armure,
     int? armorMastery,
-    int? attaque,
+    int? attackPower,
     int? luck,
     int? level,
     int? xp,
@@ -61,7 +61,7 @@ class EntityStats {
       currentMana: currentMana ?? this.currentMana,
       armure: armure ?? this.armure,
       armorMastery: armorMastery ?? this.armorMastery,
-      attaque: attaque ?? this.attaque,
+      attackPower: attackPower ?? this.attackPower,
       luck: luck ?? this.luck,
       level: level ?? this.level,
       xp: xp ?? this.xp,
@@ -88,7 +88,7 @@ class EntityStats {
       currentMana: json['currentMana'] as int? ?? 0,
       armure: json['armure'] as int,
       armorMastery: json['armorMastery'] as int? ?? 0,
-      attaque: json['attaque'] as int,
+      attackPower: json['attaque'] as int,
       luck: json['luck'] as int? ?? 0,
       level: json['level'] as int? ?? 1,
       xp: json['xp'] as int? ?? 0,
@@ -107,7 +107,7 @@ class EntityStats {
     'currentMana': currentMana,
     'armure': armure,
     'armorMastery': armorMastery,
-    'attaque': attaque,
+    'attaque': attackPower,
     'luck': luck,
     'level': level,
     'xp': xp,
@@ -164,14 +164,14 @@ class EntityStats {
   }
 
   /// Calcule l'attaque effective en prenant en compte les buffs de force
-  int get effectiveAttaque {
+  int get effectiveAttackPower {
     int bonus = 0;
     for (var status in statuses) {
       if (status.id == 'strength') {
         bonus += status.value;
       }
     }
-    return attaque + bonus;
+    return attackPower + bonus;
   }
 
   int get effectiveCritChance {

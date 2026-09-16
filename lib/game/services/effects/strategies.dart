@@ -29,7 +29,7 @@ class DamageEffectStrategy implements EffectStrategy {
       if (enemyIndex != -1) {
         final enemy = combatController.currentState.enemies[enemyIndex];
         final (finalDmg, isCrit) = DamagePipeline.calculate(
-          initialDamage: scaledValue + runController.currentState.heroStats.effectiveAttaque,
+          initialDamage: scaledValue + runController.currentState.heroStats.effectiveAttackPower,
           attackerStats: runController.currentState.heroStats,
           defenderStats: enemy.stats,
         );
@@ -41,7 +41,7 @@ class DamageEffectStrategy implements EffectStrategy {
     } else if (card.data.target == CardTarget.allEnemies) {
       for (var enemy in combatController.currentState.enemies) {
         final (individualDmg, isCrit) = DamagePipeline.calculate(
-          initialDamage: scaledValue + runController.currentState.heroStats.effectiveAttaque,
+          initialDamage: scaledValue + runController.currentState.heroStats.effectiveAttackPower,
           attackerStats: runController.currentState.heroStats,
           defenderStats: enemy.stats,
         );

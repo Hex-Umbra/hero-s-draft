@@ -46,7 +46,7 @@ class PlayerStatsManager {
           currentPv: newCurrentPv,
           maxMana: newMaxMana,
           currentMana: newCurrentMana,
-          attaque: currentStats.attaque + attackAcc,
+          attackPower: currentStats.attackPower + attackAcc,
           armorMastery: currentStats.armorMastery + armorAcc,
           luck: currentStats.luck + luckAcc,
           critChance: currentStats.critChance + critChanceAcc,

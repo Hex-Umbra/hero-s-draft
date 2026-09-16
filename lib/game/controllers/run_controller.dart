@@ -216,7 +216,7 @@ class RunController extends Notifier<RunState> {
         maxMana: 3,
         currentMana: 3,
         armure: 0,
-        attaque: 0, // Force de base à 0
+        attackPower: 0, // Force de base à 0
         luck: 0,
       ),
       pendingDrafts: 0,
@@ -249,7 +249,7 @@ class RunController extends Notifier<RunState> {
         currentMana: chosenClass.maxMana,
         armure: 0,
         armorMastery: chosenClass.armorMastery,
-        attaque: 0, // Force de base à 0
+        attackPower: 0, // Force de base à 0
         luck: chosenClass.luck,
       ),
       mapNodes: generatedMap,

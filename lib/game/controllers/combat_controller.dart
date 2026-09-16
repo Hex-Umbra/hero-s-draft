@@ -151,7 +151,7 @@ class CombatController extends Notifier<CombatState> {
         maxPv: (data.maxHp * enemyHpMultiplier).round(),
         currentPv: (data.maxHp * enemyHpMultiplier).round(),
         armure: 0,
-        attaque: (data.baseDamage * enemyDamageMultiplier).round(),
+        attackPower: (data.baseDamage * enemyDamageMultiplier).round(),
         level: enemyLevel,
         critChance: data.critChance,
       );

@@ -124,7 +124,7 @@ void main() {
         expect(eventController.state.isResolved, true);
         expect(eventController.state.selectedChoice, choice);
         // Hero stats update: strength + 2
-        expect(runController.state.heroStats.attaque, 2);
+        expect(runController.state.heroStats.attackPower, 2);
         // HP decreases by 10
         expect(runController.state.heroStats.currentPv, 90);
       },
