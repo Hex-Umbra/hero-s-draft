@@ -32,8 +32,9 @@ Réserves à ne pas perdre de vue :
   de passifs en `snake_case` (commit `7da5db2`), clé `run_save_v1` et `schemaVersion: 1`
   inchangées : une partie d'avant se recharge **et perd son passif de classe**, signalé par un
   `MissingSaveItem`. La note de version est le seul canal qui prévienne *avant*.
-- **La note `0.5.1` attend les cartes de P-42** (décision du propriétaire, 2026-09-05) et les
-  accueillera en place, entrée rouverte. Le numéro se lit dans `pubspec.yaml` et la 1ʳᵉ entrée
+- **La note `0.5.1` est close et publiée** — décision du propriétaire le 2026-09-16, qui **remplace
+  celle du 2026-09-05** : la note n'attend plus les cartes de P-42, elle sort telle quelle. **P-42 et
+  tout ce qui suit iront en `0.5.2`.** Le numéro se lit dans `pubspec.yaml` et la 1ʳᵉ entrée
   de `assets/data/patch_notes.json`, jamais ici.
 - **Les cartes de signature non `unique` fuient toujours entre classes** en boutique et sur le bonus
   de boss — [filtre de classe](../../docs/possible_upgrades/08-09-2026_filtre_cartes_de_classe_Opus5.md),
