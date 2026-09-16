@@ -1,4 +1,4 @@
-<!-- last-sync: 2026-09-15 | commit: 2d19d42 -->
+<!-- last-sync: 2026-09-16 | commit: dc15184 -->
 
 # 🧠 Contexte Actuel
 
@@ -7,19 +7,22 @@
 
 ## Focus courant
 
-**P-40 bloc 2 est livré sur la branche `fix/p40-bloc-2`, pas encore fusionnée** : les trois bugs de
-cartes et de forge relevés le 2026-08-05, re-vérifiés contre le code, sont corrigés à leur cause —
-[ADR-094](../_adr/ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md). Une revue
-indépendante a rendu « prête à fusionner après corrections », corrections faites dans la branche. Le
-**bloc 3** (dérives documentaires) et le **bloc 4** (corpus de formation figé) suivent : **P-40 est
-clos**.
+**P-40 est clos et fusionné** : la PR #37 a intégré `fix/p40-bloc-2` dans `main` le 2026-09-15
+(`dc15184`). Les trois bugs de cartes et de forge relevés le 2026-08-05, re-vérifiés contre le code,
+sont corrigés à leur cause —
+[ADR-094](../_adr/ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md) ; le **bloc 3**
+(dérives documentaires) et le **bloc 4** (corpus de formation figé) sont livrés avec. `main` porte
+811 tests au vert et `dart analyze` propre (Métriques de `progress.md`, vérifiées le 2026-09-16).
+
+Le programme « Identité de classe & catalogue » reprend donc à **P-41**, seul lot du programme dont
+la spec soit écrite — il lui manque son plan TDD.
 
 Réserves à ne pas perdre de vue :
 
-- **La branche `fix/p40-bloc-2` attend d'être fusionnée** — gardée telle quelle, décision du
-  propriétaire le 2026-09-15, qui a tranché le même jour : changements visibles ajoutés à la note
-  `0.5.1` (`2d19d42`), cartes abîmées par l'ancienne fusion de légendaires réparées au chargement
-  (`71d97cb`), corpus `docs/formation-heros-draft/` figé en instantané daté (`69fef58`).
+- **Les trois décisions du propriétaire du 2026-09-15 sont intégrées à `main`** par la PR #37 :
+  changements visibles ajoutés à la note `0.5.1` (`2d19d42`), cartes abîmées par l'ancienne fusion
+  de légendaires réparées au chargement (`71d97cb`), corpus `docs/formation-heros-draft/` figé en
+  instantané daté (`69fef58`). Plus aucune branche de P-40 n'est en attente.
 - **Un dossier de classe `gambler` vide**, laissé par une écriture de l'éditeur, faisait rougir deux
   tests sur `main`. Supprimé le 2026-09-15 ; `entity_writer.dart` tient ce cas pour « sans conséquence ».
 - **Les changements visibles de P-30 ont rejoint la note `0.5.1`** (`d8d9319`, décision du
@@ -32,9 +35,15 @@ Réserves à ne pas perdre de vue :
 - **La note `0.5.1` attend les cartes de P-42** (décision du propriétaire, 2026-09-05) et les
   accueillera en place, entrée rouverte. Le numéro se lit dans `pubspec.yaml` et la 1ʳᵉ entrée
   de `assets/data/patch_notes.json`, jamais ici.
-- **Les cartes de signature non `unique` fuient entre classes** en boutique et sur le bonus de boss —
-  [filtre de classe](../../docs/possible_upgrades/08-09-2026_filtre_cartes_de_classe_Opus5.md), à
-  joindre à `CardRarity.isAcquirable`, avant ou avec P-42.
+- **Les cartes de signature non `unique` fuient toujours entre classes** en boutique et sur le bonus
+  de boss — [filtre de classe](../../docs/possible_upgrades/08-09-2026_filtre_cartes_de_classe_Opus5.md),
+  à joindre à `CardRarity.isAcquirable`, avant ou avec P-42. **Re-vérifié contre le code le
+  2026-09-16 : non fait.** Les deux prédicats fautifs ne testent que le type et la rareté
+  (`shop_controller.dart:45-51`, `reward_controller.dart:189`), aucun des deux `Notifier` ne lit
+  `runProvider.heroClassId`, et `CardData` ne porte aucun prédicat de proposabilité. Ce que P-40
+  bloc 2 a fait à ces deux mêmes lignes, c'est y substituer `CardRarity.isAcquirable` au
+  `rarity != unique` en ligne — la condition de classe n'y est jamais entrée, et le seul commit sur
+  le sujet reste `39ac887`, qui documente le défaut sans le corriger.
 - **La modification d'entité par l'éditeur** est testée (`47f6731`, `25b2945`), sans passe dédiée consignée.
 - **Les tiers A, B, C et E de `docs/ROADMAP.md` n'ont toujours pas été re-vérifiés contre le
   code** — seuls S et D l'ont été (2026-08-04).
@@ -43,7 +52,8 @@ Réserves à ne pas perdre de vue :
 
 ## 3 dernières livraisons
 
-1. **P-40 bloc 2 — cartes et forge** (2026-09-15, branche `fix/p40-bloc-2`, 11 commits de code et de
+1. **P-40 bloc 2 — cartes et forge** (2026-09-15, branche `fix/p40-bloc-2` **fusionnée par la
+   PR #37**, 11 commits de code et de
    test, `b19b39a` → `9196a6e`) — une carte de classe porte 5 runes et non plus 10 ; trois
    légendaires ne fusionnent plus en une `unique`, et une carte ainsi abîmée redevient légendaire
    au chargement ; ni le draft de boss ni les deux Miroirs ne
@@ -84,9 +94,10 @@ Réserves à ne pas perdre de vue :
 
 ## Prochaine étape
 
-**Fusionner `fix/p40-bloc-2`**, puis reprendre le programme « Identité de classe & catalogue » par
-**P-41**, dont la spec est prête ; P-42 peut ensuite passer par l'éditeur. Le filtre
-de classe des cartes de signature se traite avant ou avec P-42.
+**Écrire le plan TDD de P-41** et l'exécuter : la [spec](../../docs/superpowers/specs/2026-08-07-s2-identite-de-classe-design.md)
+est validée et rebasée sur P-48, mais aucun plan ne lui répond dans `docs/superpowers/plans/`.
+P-42 peut ensuite passer par l'éditeur. Le filtre de classe des cartes de signature se traite avant
+ou avec P-42 — sa réserve ci-dessus dit où et combien.
 
 Le Jalon 2 « Feel & contenu » (`docs/ROADMAP.md` §9) reste ouvert : P-06, P-07, le prototype de
 P-08, P-05. **P-07 doit lire [ADR-083](../_adr/ADR-083-latence-et-synchronisation-du-chemin-de-lecture.md)

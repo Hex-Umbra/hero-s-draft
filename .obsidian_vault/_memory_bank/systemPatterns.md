@@ -3,7 +3,7 @@
 > [!IMPORTANT]
 > **Plafond : 150 lignes.** Ce fichier est un index, jamais un contenu. Chaque pattern d'architecture vit dans sa fiche sous `../_patterns/`. Les arbitrages qui les ont produits vivent dans `../_adr/`.
 
-**Vérifié le 2026-09-15** — 44 fiches. Provenance du découpage, sections ajoutées et numéros non réattribués (§2.7, §13, §14) : `../_archive/2026-09-05-systemPatterns-historique.md` et `../_archive/2026-08-25-systemPatterns-historique.md`.
+**Vérifié le 2026-09-16** — 44 fiches, en bijection avec `../_patterns/`. Provenance du découpage, sections ajoutées et numéros non réattribués (§2.7, §13, §14) : `../_archive/2026-09-05-systemPatterns-historique.md` et `../_archive/2026-08-25-systemPatterns-historique.md`.
 
 > [!NOTE]
 > **Mise en forme du 2026-09-14**, arbitrage du propriétaire : le plafond passe de 120 à 150 lignes, et les sections qui ne portent qu'une fiche perdent leur en-tête `###`, dont le titre répétait à l'identique la ligne de tableau. Elles sont regroupées dans le premier tableau ; seules les sections à plusieurs fiches gardent un en-tête. Aucune ligne de fiche n'a disparu.

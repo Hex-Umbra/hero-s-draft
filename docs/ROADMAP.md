@@ -46,7 +46,8 @@ pie title Répartition de l'effort restant estimé (~91 jours)
 > [!WARNING]
 > **Le camembert et le total de ~91 jours sont antérieurs au programme P-40→P-44** (ajouté le
 > 2026-08-07) et ne l'incluent pas. Le solde net n'est pas calculable en l'état : P-41 est chiffré
-> (5-7 j) et P-40 aussi (1-1,5 j à l'origine ; **clos le 2026-09-15**, branche du bloc 2 pas encore fusionnée), mais **P-42, P-43 et P-44 attendent leur spec**, tandis que P-18
+> (5-7 j) et P-40 aussi (1-1,5 j à l'origine ; **clos le 2026-09-15**, bloc 2 fusionné dans `main` le
+> 2026-09-15 par la PR #37), mais **P-42, P-43 et P-44 attendent leur spec**, tandis que P-18
 > et P-20 sortent du Tier C par redistribution. Recalculer l'ensemble à la prochaine passe de
 > re-priorisation, pas avant — un total partiellement mis à jour serait plus trompeur que celui-ci.
 
@@ -444,7 +445,7 @@ Les runes de forge `eco` et `quick` (regain de mana / pioche à la lecture d'une
 
 | ID | Chantier | Effort | Difficulté | Apport |
 |:---|:---|:---:|:---:|:---:|
-| ~~**P-40**~~ | ~~**Nettoyage héros & cartes**~~ ✅ **Clos le 2026-09-15** — chaîne `skills.json` supprimée (`ced306e`), 3 bugs corrigés et un quatrième (branche `fix/p40-bloc-2`, **pas encore fusionnée**), dérives documentaires re-vérifiées, corpus de formation figé — *lot S1 du programme P-40→P-44* | — | — | — |
+| ~~**P-40**~~ | ~~**Nettoyage héros & cartes**~~ ✅ **Clos le 2026-09-15**, **fusionné dans `main` le 2026-09-15 (PR #37)** — chaîne `skills.json` supprimée (`ced306e`), 3 bugs corrigés et un quatrième (`fix/p40-bloc-2`), dérives documentaires re-vérifiées, corpus de formation figé — *lot S1 du programme P-40→P-44* | — | — | — |
 | **P-26** | **Lot d'hygiène** : `GameDataRegistry` en `Map` O(1), `MapNode` découplé de `Vector2`, ~~`SkillData` bilingue~~ *(annulé par P-40)* | **1 j** | ★★☆☆☆ | 🔥🔥 |
 | **P-22** | **Typage des modèles** : `==`/`hashCode` sur les 12 modèles suivis, sérialisation d'`EventState` | **1,5-2 j** | ★★★☆☆ | 🔥🔥 |
 | **P-27** | **Event Bus** (remplace les 13 callbacks de constructeur de `HerosDraftGame`) | **2-3 j** | ★★★★☆ | 🔥 |
@@ -459,14 +460,14 @@ Trois blocs sans aucune décision de design à prendre, donc exécutable immédi
 
 > [!NOTE]
 > **Bloc 1 livré le 2026-09-04** (`ced306e`). **Blocs 2 et 3 livrés le 2026-09-15**, branche
-> `fix/p40-bloc-2`, **pas encore fusionnée** — conception et plan :
+> `fix/p40-bloc-2`, **fusionnée dans `main` le 2026-09-15 par la PR #37** (`dc15184`) — conception et plan :
 > [spec](superpowers/specs/2026-09-15-p40-bloc-2-cartes-et-forge-design.md) ·
 > [plan](superpowers/plans/2026-09-15-p40-bloc-2-cartes-et-forge.md), décisions en
 > [ADR-094](../.obsidian_vault/_adr/ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md).
 > **Bloc 4 tranché le 2026-09-15** : le corpus de formation devient un instantané daté.
 > Décisions du propriétaire le même jour : la carte neutre devenue `unique` par l'ancienne fusion de
 > légendaires est réparée au chargement (`71d97cb`), et les changements visibles rejoignent la note
-> `0.5.1` (`2d19d42`). **P-40 est clos** ; reste à fusionner la branche.
+> `0.5.1` (`2d19d42`). **P-40 est clos et intégré** : plus rien n'en reste en attente.
 
 1. ~~**Supprimer la chaîne `skills.json`**~~ — ✅ **livré** — 6 entrées de données, `SkillData`, `SkillController`, `SkillState`, les deux `executeSkill` et le champ de sauvegarde. Le système était **inatteignable** : aucun appelant de `_game.executeSkill(...)`, aucun bouton de compétence dans `lib/ui/`. Conception et conséquences — [ADR-084](../.obsidian_vault/_adr/ADR-084-suppression-de-la-chaine-de-competences-heroiques.md). ⚠️ **`applyLifestealBuff()`** a été conservée en paire : c'est la **façade** `RunController.applyLifestealBuff` (`run_controller.dart:438`) qui n'a plus d'appelant, l'implémentation (`run/player_stats_manager.dart:475`) restant appelée par elle. Elle vit dans `RunController`, pas dans le système de compétences ; P-41 doit reprendre ou supprimer les deux.
 2. ~~**Trois bugs confirmés**~~ — ✅ **corrigés le 2026-09-15**, re-vérifiés d'abord : la rune `enduring` cassée dès le tier 2, la duplication des cartes `unique` par trois voies de copie, la capacité de forge 10 au lieu de 5 des cartes de classe. Un quatrième, de même cause que le dernier, est corrigé avec : trois légendaires fusionnaient en une carte `unique`. Suites relevées sans relever du bloc : §7, correctifs ponctuels.

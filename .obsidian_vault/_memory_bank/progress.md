@@ -5,7 +5,7 @@
 
 ## Métriques
 
-**Vérifié le 2026-09-15**
+**Vérifié le 2026-09-16**
 
 | Métrique | Valeur | Commande |
 |:---|:---|:---|
@@ -20,9 +20,9 @@
 | Fichiers suivis sous `site/` | 16 | `git ls-files site/ \| wc -l` |
 
 > [!NOTE]
-> Relevé sur `2d19d42`, branche `fix/p40-bloc-2` (P-40), **non fusionnée** : `main` en est
-> resté aux chiffres du relevé précédent, 773 tests et 234 fichiers Dart. Tout le mouvement vient
-> des corrections de cartes et de forge d'[ADR-094](../_adr/ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md).
+> **Relevé sur `main` (`dc15184`)**, la PR #37 ayant fusionné `fix/p40-bloc-2` le 2026-09-15 —
+> valeurs re-mesurées une à une, identiques au relevé de la veille. `main` venait de 773 tests et
+> 234 fichiers Dart ; le mouvement vient des corrections de cartes et de forge d'[ADR-094](../_adr/ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md).
 >
 > **+1 fichier Dart** (234 → 235, +19 lignes nettes) : `lib/game/services/forge_rune_rules.dart`,
 > qui absorbe trois copies de l'algorithme de cumul. Liste exacte :

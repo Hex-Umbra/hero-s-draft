@@ -1,6 +1,7 @@
 ### Statut
 
-✅ **Livré le 2026-09-15**, P-40 bloc 2, branche `fix/p40-bloc-2` — commits `b19b39a` à `9196a6e`,
+✅ **Livré le 2026-09-15**, P-40 bloc 2, branche `fix/p40-bloc-2` **fusionnée dans `main` le
+2026-09-15 par la PR #37** (`dc15184`) — commits `b19b39a` à `9196a6e`,
 corrections de la revue indépendante comprises, plus la réparation des cartes touchées par B5
 (`71d97cb`), décidée le même jour par le propriétaire. **Amende** [ADR-025](ADR-025-systeme-de-forge-decouple-et-probabiliste.md)
 (D1, formule de capacité) et **dépasse en partie**
