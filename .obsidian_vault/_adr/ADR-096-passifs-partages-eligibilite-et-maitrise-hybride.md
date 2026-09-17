@@ -1,7 +1,7 @@
 ### Statut
 
 ✅ **Livré sur la branche `feat/p49-passifs-partages`** (chantier P-49, commits `a422544`..`4e937fa`),
-**pas encore fusionnée dans `main`**. **Remplace la décision D4 d'[ADR-086](ADR-086-autorite-du-repertoire-avec-expiration-de-la-toler.md).**
+**fusionnée dans `main` par la PR #39 le 2026-09-17** (merge `56be78d`). **Remplace la décision D4 d'[ADR-086](ADR-086-autorite-du-repertoire-avec-expiration-de-la-toler.md).**
 Prépare [P-13](../../docs/ROADMAP.md) (méta-progression) sans en construire aucune part. Précède le
 lot B de P-41 (spec [S2](../../docs/superpowers/specs/2026-08-07-s2-identite-de-classe-design.md)),
 qui en dépend.

@@ -1,4 +1,4 @@
-<!-- last-sync: 2026-09-17 | commit: 4e937fa -->
+<!-- last-sync: 2026-09-17 | commit: 56be78d -->
 
 # 🧠 Contexte Actuel
 
@@ -7,20 +7,17 @@
 
 ## Focus courant
 
-**P-49 (passifs partagés) est codé sur `feat/p49-passifs-partages`, pas encore fusionné dans
-`main`.** Les onze commits du lot (`a422544` → `4e937fa`, 2026-09-17, détail en « 3 dernières
-livraisons ») font déclarer par chaque passif ses classes éligibles et sa Maîtrise, lus par un
-point d'accès unique et un répartiteur de stratégies — voir
+**P-49 (passifs partagés) est fusionné dans `main`** par la PR #39 (2026-09-17, merge `56be78d`,
+détail en « 3 dernières livraisons ») : chaque passif déclare ses classes éligibles et sa Maîtrise,
+lus par un point d'accès unique et un répartiteur de stratégies — voir
 [ADR-096](../_adr/ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md), qui remplace la D4
-d'ADR-086. `dart analyze` propre et 923 tests au vert au dernier commit de code du lot (`ce8c2aa`) ;
-les trois commits suivants ne touchent que la documentation (`git diff --stat ce8c2aa HEAD --
-lib test assets` est vide ; métriques de `progress.md`, vérifiées le 2026-09-17). **Aucune note de
-version n'est encore écrite** : la note `0.5.2` sera rouverte en place pour l'absorber, avec
-l'accord du propriétaire — pas encore donné à ce jour (`docs/ROADMAP.md` §4).
+d'ADR-086. La note `0.5.2` a été rouverte en place pour l'absorber (`5f168db`), **toujours pas
+taguée**. Les métriques de `main` sont dans `progress.md`.
 
 Le programme « Identité de classe & catalogue » continue avec **P-41 lot B** (`statRules`, les neuf
-passifs, stats de départ), qui dépend du lot A (fusionné) et de P-49 (livré sur branche, en attente
-de fusion).
+passifs, stats de départ) : ses deux dépendances, le lot A et P-49, sont fusionnées. Il n'a pas
+encore de plan, et ses deux questions ouvertes (`docs/ROADMAP.md` §4) sont en cours de clarification
+avec le propriétaire.
 
 Réserves à ne pas perdre de vue :
 
@@ -60,7 +57,7 @@ Réserves à ne pas perdre de vue :
 ## 3 dernières livraisons
 
 1. **P-49 — passifs partagés, éligibilité déclarée par le passif et Maîtrise hybride**
-   (2026-09-17, branche `feat/p49-passifs-partages`, **pas encore fusionnée**, 11 commits,
+   (2026-09-17, **fusionné dans `main` par la PR #39**, 11 commits,
    `a422544` → `4e937fa`) — chaque passif déclare ses classes éligibles (`classes`, absent = toutes)
    et ce qu'un point de Maîtrise lui apporte (`mastery`) ; `availablePassivesFor` devient l'unique
    point d'accès aux passifs d'une classe (sélection, tutoriel) ; `TraitSystem.dispatch` remplace
@@ -106,11 +103,9 @@ Réserves à ne pas perdre de vue :
 
 ## Prochaine étape
 
-**Fusionner `feat/p49-passifs-partages`, puis la décision du propriétaire sur la note de
-version.** `superpowers:finishing-a-development-branch` reste à invoquer pour le lot ; la note
-`0.5.2` sera rouverte en place pour l'absorber une fois l'accord donné (`docs/ROADMAP.md` §4).
-Une fois fusionné, **P-41 lot B** (`statRules`, les neuf passifs, stats de départ) devient
-exécutable : il dépend du lot A (fusionné) et de P-49. Le tag `v0.5.2` — seul geste déclenchant
+**Trancher les deux questions ouvertes du lot B de P-41, puis écrire son plan.** La conception est
+dans la [spec de P-41](../../docs/superpowers/specs/2026-08-07-s2-identite-de-classe-design.md), §6
+et §7 ; les questions sont listées dans `docs/ROADMAP.md` §4. Le tag `v0.5.2` — seul geste déclenchant
 `release.yml` — attend toujours P-42 et la campagne de test manuelle du propriétaire. Le filtre de
 classe des cartes de signature se traite avant ou avec P-42 — sa réserve ci-dessus dit où et
 combien.

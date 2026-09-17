@@ -20,16 +20,14 @@
 | Fichiers suivis sous `site/` | 16 | `git ls-files site/ \| wc -l` |
 
 > [!NOTE]
-> **P-49 (passifs partagés) est codé sur la branche `feat/p49-passifs-partages`, pas encore
-> fusionnée dans `main`.** `flutter test` (`+923`) et `dart analyze` (`No issues found!`) ont été
-> mesurés dans cette session au dernier commit de code du lot (`ce8c2aa`, 2026-09-17) ; les trois
-> commits suivants ne touchent que `docs/` et `.obsidian_vault/` — `git diff --stat ce8c2aa HEAD --
-> lib test assets` est vide, donc ces métriques décrivent toujours le code de la branche à `HEAD`.
-> Voir [ADR-096](../_adr/ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md).
+> **P-49 (passifs partagés) est fusionné dans `main`** par la PR #39 (2026-09-17, merge `56be78d`).
+> Métriques mesurées le 2026-09-17 : `flutter test` et `dart analyze` à `5f168db`, dernier commit
+> de la branche, dont `56be78d` porte exactement l'arbre (`git diff --stat 5f168db 56be78d` est
+> vide) ; comptes de fichiers, `node --test` et harnais CI à `56be78d`. Voir
+> [ADR-096](../_adr/ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md).
 >
-> **Aucune note de version n'est encore écrite pour ce lot** : la note `0.5.2` sera rouverte en
-> place pour l'absorber, avec l'accord du propriétaire (`docs/ROADMAP.md` §4) — pas encore donné à
-> ce jour. `pubspec.yaml` et `assets/data/patch_notes.json` restent donc inchangés par ce lot.
+> **Note de version `0.5.2` rouverte en place pour ce lot** (`5f168db`) : Maîtrise, Affinité, Armure
+> du Berserker rééquilibrée. **Pas encore taguée** (`docs/ROADMAP.md` §4).
 >
 > **P-41 lot A reste fusionné dans `main`** par la PR #38 (2026-09-16, merge `f8be03a`).
 
