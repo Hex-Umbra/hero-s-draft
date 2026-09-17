@@ -10,6 +10,7 @@
   "maxMana": 3,
   "baseDamage": 15,
   "luck": 0,
+  "mightTargets": ["attack"],
   "displayOrder": 2,
   "skills": [
     "reckless_strike",

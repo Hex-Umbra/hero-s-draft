@@ -41,6 +41,7 @@ HeroData fixtureHero(String id) => HeroData.fromJson({
       'maxHp': 80,
       'maxMana': 3,
       'baseDamage': 5,
+      'mightTargets': ['attack'],
     });
 
 GameDataRegistry fixtureRegistry({
