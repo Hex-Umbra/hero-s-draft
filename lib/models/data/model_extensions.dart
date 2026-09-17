@@ -4,6 +4,7 @@ import 'package:roguelike_card_game/ui/theme/app_colors.dart';
 import 'card_data.dart';
 import 'relic_data.dart';
 import '../enemy_intent.dart';
+import '../might_target.dart';
 
 extension CardRarityExtension on CardRarity {
   String getLabel(AppLocalizations l10n) {
@@ -107,4 +108,19 @@ extension IntentTypeExtension on IntentType {
         return l10n.intentBuff(value);
     }
   }
+}
+
+extension MightTargetsLabels on Set<MightTarget> {
+  /// Ce que renforce la Puissance, en abrégé et dans l'ordre de [MightTarget],
+  /// quel que soit l'ordre du `Set` : « Compétences · Altérations » (spec P-41,
+  /// §7.4).
+  String shortLabel(AppLocalizations l10n) => [
+        for (final target in MightTarget.values)
+          if (contains(target))
+            switch (target) {
+              MightTarget.attack => l10n.mightTargetAttackShort,
+              MightTarget.skill => l10n.mightTargetSkillShort,
+              MightTarget.alteration => l10n.mightTargetAlterationShort,
+            },
+      ].join(' · ');
 }

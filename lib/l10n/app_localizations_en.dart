@@ -299,10 +299,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Absorbs next attacks\' damage. Removed at turn start.';
 
   @override
-  String get tooltipAttackTitle => 'Attack Damage Boost';
+  String get tooltipAttackTitle => 'Might';
 
   @override
-  String get tooltipAttackDesc => 'Increases the damage of your attack cards.';
+  String get tooltipAttackDesc =>
+      'Strengthens what your class channels it into: Attacks, Skills or alterations.';
+
+  @override
+  String get mightTargetAttackShort => 'Attacks';
+
+  @override
+  String get mightTargetSkillShort => 'Skills';
+
+  @override
+  String get mightTargetAlterationShort => 'Alterations';
 
   @override
   String get tooltipManaTitle => 'Mana';
@@ -361,15 +371,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String intentBuff(int value) {
-    return 'Buff Attack: +$value';
+    return 'Buff Might: +$value';
   }
 
   @override
   String get enemyStatsTitle => 'ENEMY STATS';
 
   @override
-  String enemyStatsDesc(int hp, int maxHp, int attack, int armor) {
-    return 'Health: $hp/$maxHp HP.\nAttack: $attack.\nArmor: $armor.';
+  String enemyStatsDesc(int hp, int maxHp, int might, int armor) {
+    return 'Health: $hp/$maxHp HP.\nMight: $might.\nArmor: $armor.';
   }
 
   @override
@@ -403,8 +413,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String cardDescStatusStrength(int amount, int duration) {
-    return 'Gains $amount ATK for $duration turns.';
+  String cardDescStatusMight(int amount, int duration) {
+    return 'Gains $amount Might for $duration turns.';
   }
 
   @override
@@ -443,8 +453,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String cardDescStatusStrengthRegen(int amount, int duration) {
-    return 'Gains $amount Attack Awakening for $duration turns.';
+  String cardDescStatusMightRegen(int amount, int duration) {
+    return 'Gains $amount Might Awakening for $duration turns.';
   }
 
   @override
@@ -677,7 +687,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String draftChoiceSharpeningDesc(int amount) {
-    return '+$amount Attack';
+    return '+$amount Might';
   }
 
   @override
@@ -738,8 +748,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String statusStrength(int value) {
-    return 'Attack: +$value';
+  String statusMight(int value) {
+    return 'Might: +$value';
   }
 
   @override
@@ -753,8 +763,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String statusStrengthRegen(int value) {
-    return 'Attack Awakening: +$value';
+  String statusMightRegen(int value) {
+    return 'Might Awakening: +$value';
   }
 
   @override
@@ -827,8 +837,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String eventGainAttack(int amount) {
-    return '+$amount Attack';
+  String eventGainMight(int amount) {
+    return '+$amount Might';
   }
 
   @override

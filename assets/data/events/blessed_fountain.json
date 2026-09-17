@@ -18,8 +18,8 @@
       ]
     },
     {
-      "text_en": "Purify your mind (-12 Max HP, +1 Attack)",
-      "text_fr": "Purifier son esprit (-12 PV Max, +1 Attaque)",
+      "text_en": "Purify your mind (-12 Max HP, +1 Might)",
+      "text_fr": "Purifier son esprit (-12 PV Max, +1 Puissance)",
       "result_text_en": "You plunge your head into the fountain. The pain is intense, but your mind becomes incredibly sharp.",
       "result_text_fr": "Vous plongez votre tête dans la fontaine. La douleur est vive, mais votre esprit devient incroyablement aiguisé.",
       "actions": [

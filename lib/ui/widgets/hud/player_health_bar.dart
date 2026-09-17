@@ -114,7 +114,7 @@ class _PlayerHealthBarState extends State<PlayerHealthBar>
               spacing: 14.0,
               runSpacing: 4.0,
               children: [
-                // Dégâts d'Attaque (Rouge Gradient, sans fond)
+                // Puissance (Rouge Gradient, sans fond)
                 ShaderMask(
                   shaderCallback: (bounds) => const LinearGradient(
                     colors: [Color(0xFFFF2A2A), Color(0xFFFF7A7A)],

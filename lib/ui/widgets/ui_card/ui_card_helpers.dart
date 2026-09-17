@@ -385,7 +385,7 @@ String buildDetailedDescription(
       final localeCode = Localizations.localeOf(context).languageCode;
       switch (effect.statusId) {
         case 'might':
-          desc += '${l10n.cardDescStatusStrength(scaledValue, duration)}\n';
+          desc += '${l10n.cardDescStatusMight(scaledValue, duration)}\n';
           break;
         case 'armor_regen':
           desc += '${l10n.cardDescStatusArmorRegen(scaledValue, duration)}\n';
@@ -413,7 +413,7 @@ String buildDetailedDescription(
           break;
         case 'might_regen':
           desc +=
-              '${l10n.cardDescStatusStrengthRegen(scaledValue, duration)}\n';
+              '${l10n.cardDescStatusMightRegen(scaledValue, duration)}\n';
           break;
         case 'burn':
           desc +=

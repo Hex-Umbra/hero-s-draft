@@ -629,14 +629,32 @@ abstract class AppLocalizations {
   /// No description provided for @tooltipAttackTitle.
   ///
   /// In en, this message translates to:
-  /// **'Attack Damage Boost'**
+  /// **'Might'**
   String get tooltipAttackTitle;
 
   /// No description provided for @tooltipAttackDesc.
   ///
   /// In en, this message translates to:
-  /// **'Increases the damage of your attack cards.'**
+  /// **'Strengthens what your class channels it into: Attacks, Skills or alterations.'**
   String get tooltipAttackDesc;
+
+  /// No description provided for @mightTargetAttackShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Attacks'**
+  String get mightTargetAttackShort;
+
+  /// No description provided for @mightTargetSkillShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Skills'**
+  String get mightTargetSkillShort;
+
+  /// No description provided for @mightTargetAlterationShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Alterations'**
+  String get mightTargetAlterationShort;
 
   /// No description provided for @tooltipManaTitle.
   ///
@@ -731,7 +749,7 @@ abstract class AppLocalizations {
   /// No description provided for @intentBuff.
   ///
   /// In en, this message translates to:
-  /// **'Buff Attack: +{value}'**
+  /// **'Buff Might: +{value}'**
   String intentBuff(int value);
 
   /// No description provided for @enemyStatsTitle.
@@ -743,8 +761,8 @@ abstract class AppLocalizations {
   /// No description provided for @enemyStatsDesc.
   ///
   /// In en, this message translates to:
-  /// **'Health: {hp}/{maxHp} HP.\nAttack: {attack}.\nArmor: {armor}.'**
-  String enemyStatsDesc(int hp, int maxHp, int attack, int armor);
+  /// **'Health: {hp}/{maxHp} HP.\nMight: {might}.\nArmor: {armor}.'**
+  String enemyStatsDesc(int hp, int maxHp, int might, int armor);
 
   /// No description provided for @cardDescDamage.
   ///
@@ -782,11 +800,11 @@ abstract class AppLocalizations {
   /// **'Draws {amount} cards.'**
   String cardDescDraw(int amount);
 
-  /// No description provided for @cardDescStatusStrength.
+  /// No description provided for @cardDescStatusMight.
   ///
   /// In en, this message translates to:
-  /// **'Gains {amount} ATK for {duration} turns.'**
-  String cardDescStatusStrength(int amount, int duration);
+  /// **'Gains {amount} Might for {duration} turns.'**
+  String cardDescStatusMight(int amount, int duration);
 
   /// No description provided for @cardDescStatusArmorRegen.
   ///
@@ -830,11 +848,11 @@ abstract class AppLocalizations {
   /// **'Applies {amount} Vulnerable for {duration} turns.'**
   String cardDescStatusVulnerableDuration(int amount, int duration);
 
-  /// No description provided for @cardDescStatusStrengthRegen.
+  /// No description provided for @cardDescStatusMightRegen.
   ///
   /// In en, this message translates to:
-  /// **'Gains {amount} Attack Awakening for {duration} turns.'**
-  String cardDescStatusStrengthRegen(int amount, int duration);
+  /// **'Gains {amount} Might Awakening for {duration} turns.'**
+  String cardDescStatusMightRegen(int amount, int duration);
 
   /// No description provided for @cardDescStatusBurn.
   ///
@@ -1223,7 +1241,7 @@ abstract class AppLocalizations {
   /// No description provided for @draftChoiceSharpeningDesc.
   ///
   /// In en, this message translates to:
-  /// **'+{amount} Attack'**
+  /// **'+{amount} Might'**
   String draftChoiceSharpeningDesc(int amount);
 
   /// No description provided for @draftChoiceAffinity.
@@ -1310,11 +1328,11 @@ abstract class AppLocalizations {
   /// **'Poison: {value}'**
   String statusPoison(int value);
 
-  /// No description provided for @statusStrength.
+  /// No description provided for @statusMight.
   ///
   /// In en, this message translates to:
-  /// **'Attack: +{value}'**
-  String statusStrength(int value);
+  /// **'Might: +{value}'**
+  String statusMight(int value);
 
   /// No description provided for @statusWeakness.
   ///
@@ -1328,11 +1346,11 @@ abstract class AppLocalizations {
   /// **'Vulnerable: {value}'**
   String statusVulnerable(int value);
 
-  /// No description provided for @statusStrengthRegen.
+  /// No description provided for @statusMightRegen.
   ///
   /// In en, this message translates to:
-  /// **'Attack Awakening: +{value}'**
-  String statusStrengthRegen(int value);
+  /// **'Might Awakening: +{value}'**
+  String statusMightRegen(int value);
 
   /// No description provided for @statusArmorRegen.
   ///
@@ -1424,11 +1442,11 @@ abstract class AppLocalizations {
   /// **'+{amount} Max HP'**
   String eventGainMaxHp(int amount);
 
-  /// No description provided for @eventGainAttack.
+  /// No description provided for @eventGainMight.
   ///
   /// In en, this message translates to:
-  /// **'+{amount} Attack'**
-  String eventGainAttack(int amount);
+  /// **'+{amount} Might'**
+  String eventGainMight(int amount);
 
   /// No description provided for @eventGainRelic.
   ///

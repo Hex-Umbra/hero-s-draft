@@ -94,10 +94,10 @@ class HeroMiniStatsPanel extends ConsumerWidget {
             value: '${stats.currentMana}/${stats.maxMana} Mana',
           ),
           const SizedBox(height: 6),
-          // Attaque
+          // Puissance
           _buildMiniStatRowWidget(
             icon: SwordIcon(size: 16, color: Colors.orangeAccent),
-            value: '${stats.might} ${locale == 'fr' ? 'Attaque' : 'Attack'}',
+            value: '${stats.might} ${locale == 'fr' ? 'Puissance' : 'Might'}',
           ),
           const SizedBox(height: 6),
           // Maîtrise

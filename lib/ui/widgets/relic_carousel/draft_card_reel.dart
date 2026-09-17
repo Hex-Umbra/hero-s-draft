@@ -44,8 +44,8 @@ class _DraftCardReelState extends State<DraftCardReel>
   // Themed upgrade mock data to scroll through during spin phase (neutral / no rarity)
   final List<Map<String, String>> _mockUpgrades = [
     {'title': 'Vitalité', 'description': '+10 PV Max'},
-    {'title': 'Aiguisage', 'description': '+4 Attaque'},
-    {'title': 'Forge d\'Acier', 'description': '+2 gains d\'Armure'},
+    {'title': 'Aiguisage', 'description': '+4 Puissance'},
+    {'title': 'Affinité', 'description': '+2 Maîtrise'},
     {'title': 'Sagesse', 'description': '+1 Mana Max'},
     {'title': 'Trèfle à 4 feuilles', 'description': '+1 Chance'},
     {'title': 'Miroir', 'description': 'Cloner une carte'},

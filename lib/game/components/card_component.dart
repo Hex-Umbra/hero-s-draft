@@ -393,7 +393,7 @@ class CardComponent extends PositionComponent
         switch (effect.statusId) {
           case 'might':
             desc +=
-                '• ${getTranslation((l) => l.cardDescStatusStrength(scaledValue, duration), fallback: 'Gagne $scaledValue ATK pendant $duration tours.')}\n';
+                '• ${getTranslation((l) => l.cardDescStatusMight(scaledValue, duration), fallback: 'Gagne $scaledValue Puissance pendant $duration tours.')}\n';
             break;
           case 'armor_regen':
             desc +=
@@ -422,7 +422,7 @@ class CardComponent extends PositionComponent
             break;
           case 'might_regen':
             desc +=
-                '• ${getTranslation((l) => l.cardDescStatusStrengthRegen(scaledValue, duration), fallback: 'Gagne $scaledValue Éveil d\'Attaque pendant $duration tours.')}\n';
+                '• ${getTranslation((l) => l.cardDescStatusMightRegen(scaledValue, duration), fallback: 'Gagne $scaledValue Éveil de Puissance pendant $duration tours.')}\n';
             break;
           case 'burn':
             desc +=

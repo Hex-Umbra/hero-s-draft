@@ -407,7 +407,7 @@ class CardTextRenderer {
         switch (effect.statusId) {
           case 'might':
             desc +=
-                '${card.getTranslation((l) => l.cardDescStatusStrength(scaledValue, duration), fallback: "Gagne $scaledValue ATK pendant $duration tours.")}\n';
+                '${card.getTranslation((l) => l.cardDescStatusMight(scaledValue, duration), fallback: "Gagne $scaledValue Puissance pendant $duration tours.")}\n';
             break;
           case 'armor_regen':
             desc +=
@@ -427,7 +427,7 @@ class CardTextRenderer {
             break;
           case 'might_regen':
             desc +=
-                '${card.getTranslation((l) => l.cardDescStatusStrengthRegen(scaledValue, duration), fallback: "Gagne $scaledValue Éveil d'Attaque pendant $duration tours.")}\n';
+                '${card.getTranslation((l) => l.cardDescStatusMightRegen(scaledValue, duration), fallback: "Gagne $scaledValue Éveil de Puissance pendant $duration tours.")}\n';
             break;
           case 'burn':
             desc +=

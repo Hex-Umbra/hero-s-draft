@@ -209,7 +209,7 @@ class EnemyCard extends CombatEntity
           stats.armure,
         ),
         fallback:
-            'Santé : ${stats.currentPv}/${stats.maxPv} $hpSuffix.\nAttaque : ${stats.effectiveMight}.\nArmure : ${stats.armure}.',
+            'Santé : ${stats.currentPv}/${stats.maxPv} $hpSuffix.\nPuissance : ${stats.effectiveMight}.\nArmure : ${stats.armure}.',
       ),
     );
   }

@@ -80,7 +80,7 @@ class StatusEffectsPanel extends StatelessWidget {
                 case 'might':
                   icon = Icons.flash_on;
                   color = Colors.orangeAccent;
-                  label = l10n.statusStrength(status.value);
+                  label = l10n.statusMight(status.value);
                   break;
                 case 'poison':
                   icon = Icons.sick;
@@ -106,7 +106,7 @@ class StatusEffectsPanel extends StatelessWidget {
                 case 'might_regen':
                   icon = Icons.flash_on;
                   color = Colors.orangeAccent;
-                  label = l10n.statusStrengthRegen(status.value);
+                  label = l10n.statusMightRegen(status.value);
                   break;
                 case 'lifesteal':
                   icon = Icons.favorite;
