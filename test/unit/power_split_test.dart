@@ -77,7 +77,6 @@ void main() {
       maxHp: 60,
       maxMana: 3,
       baseDamage: 0,
-      passiveTrait: 'spell_armor',
     );
     final slime = EnemyData(
       id: 'slime',

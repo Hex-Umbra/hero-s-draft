@@ -28,7 +28,6 @@ final _registry = GameDataRegistry(
       maxHp: 100,
       maxMana: 3,
       baseDamage: 5,
-      passiveTrait: 'regen_armor',
     ),
   ],
   cards: const [],

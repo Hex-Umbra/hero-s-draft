@@ -10,7 +10,6 @@
   "maxMana": 3,
   "baseDamage": 5,
   "luck": 0,
-  "passiveTrait": "regen_armor",
   "displayOrder": 1,
   "skills": [
     "holy_shield",

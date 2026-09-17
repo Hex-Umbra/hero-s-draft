@@ -9,6 +9,20 @@ void main() {
   final hero = kEntityDescriptors[EntityCategory.heroClass]!;
   final enemy = kEntityDescriptors[EntityCategory.enemy]!;
   final forge = kEntityDescriptors[EntityCategory.forgeUpgrade]!;
+  // Aucun descripteur livre ne declare de reference unique depuis que la
+  // classe ne nomme plus son passif (spec P-49, §3.4) : le mecanisme se
+  // verifie sur un descripteur de test.
+  final mentor = EntityDescriptor(
+    category: EntityCategory.heroClass,
+    label: 'Classe de test',
+    directory: 'classes',
+    folderFile: 'class.json',
+    requiredKeys: const {},
+    bilingualBases: const [],
+    construct: (_) {},
+    template: '{}',
+    referenceKeys: const {'mentor': EntityCategory.passive},
+  );
 
   FieldKind kindOf(
     EntityDescriptor descriptor,
@@ -25,7 +39,7 @@ void main() {
 
   test('les metadonnees du descripteur passent avant le type JSON', () {
     expect(kindOf(relic, const ['sfx'], 'clang'), FieldKind.asset);
-    expect(kindOf(hero, const ['passiveTrait'], null), FieldKind.reference);
+    expect(kindOf(mentor, const ['mentor'], null), FieldKind.reference);
     expect(kindOf(hero, const ['themeColor'], '#FF00FF'), FieldKind.color);
     // `rarity` est une chaine, mais une enumeration d'abord.
     expect(kindOf(card, const ['rarity'], 'common'), FieldKind.enumChoice);

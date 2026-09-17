@@ -85,8 +85,6 @@ void main() {
         '"themeColor":"$color","maxHp":100,"maxMana":3,"baseDamage":5}',
       );
     }
-    Directory('$root/assets/data/passives').createSync(recursive: true);
-    File('$root/assets/data/passives/regen_armor.json').writeAsStringSync('{}');
   }
 
   /// Le bouton de choix qui porte [label].
@@ -294,15 +292,6 @@ void main() {
       await tester.tap(find.text('Créer'));
       await tester.pumpAndSettle();
       expectReadable(const ['Neutre', 'mage', 'paladin']);
-
-      await tester.tap(find.text('Classe'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Créer'));
-      await tester.pumpAndSettle();
-      await tester.ensureVisible(find.text('regen_armor'));
-      await tester.tap(find.text('regen_armor'));
-      await tester.pumpAndSettle();
-      expectReadable(const ['regen_armor']);
     });
 
     testWidgets('seul le choix actif est marque choisi', (tester) async {
@@ -845,23 +834,6 @@ void main() {
       isTrue,
       reason: 'le propriétaire choisi décide du répertoire',
     );
-  });
-
-  testWidgets('le passif se choisit dans le catalogue, pas dans l usage',
-      (tester) async {
-    // Un passif present sur le disque qu'aucune classe n'emploie : le cas que
-    // `knownValues`, qui liste les valeurs *employees*, manquerait.
-    Directory('$root/assets/data/passives').createSync(recursive: true);
-    File('$root/assets/data/passives/chance_du_joueur.json')
-        .writeAsStringSync('{}');
-
-    await tester.pumpWidget(harness(projectRoot: root));
-    await tester.tap(find.text('Classe'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Créer'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('chance_du_joueur'), findsWidgets);
   });
 
   testWidgets('une saisie non entiere est une faute, et rien n est ecrit',

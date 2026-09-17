@@ -32,7 +32,6 @@ void main() {
     maxMana: 3,
     baseDamage: 5,
     armorMastery: 3,
-    passiveTrait: 'regen_armor',
   );
 
   const metallicize = StatusEffect(

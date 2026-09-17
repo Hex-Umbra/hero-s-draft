@@ -21,7 +21,6 @@ const paladin = HeroData(
   baseDamage: 5,
   luck: 0,
   armorMastery: 0,
-  passiveTrait: 'regen_armor',
 );
 
 void main() {

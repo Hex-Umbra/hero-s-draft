@@ -312,9 +312,9 @@ class EntityValidator {
 
   /// Famille 6 — les references vers une autre categorie.
   ///
-  /// `passiveTrait` doit designer un passif existant : `referential_integrity_test`
-  /// le verifie deja, et une reference pendante ferait rougir la suite bien
-  /// apres l'ecriture.
+  /// Une reference doit designer une entite existante : une reference
+  /// pendante ferait rougir `referential_integrity_test` bien apres
+  /// l'ecriture.
   List<ValidationFault> _references(
     EntityDraft draft,
     Map<String, dynamic> mechanics,

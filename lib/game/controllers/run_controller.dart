@@ -25,7 +25,6 @@ class RunState {
   final String heroClassId;
   final List<MapNode> mapNodes;
   final String? currentNodeId;
-  final String? passiveTrait; // Trait passif du héros (ex: regen_armor)
   final PassiveData? activePassive; // Passif dynamique du héros
   final List<String> forgeSlots;
   final String? forgeTargetCardId;
@@ -62,7 +61,6 @@ class RunState {
     required this.heroClassId,
     this.mapNodes = const [],
     this.currentNodeId,
-    this.passiveTrait,
     this.activePassive,
     this.forgeSlots = const [],
     this.forgeTargetCardId,
@@ -80,7 +78,6 @@ class RunState {
     List<MapNode>? mapNodes,
     String? currentNodeId,
     bool resetCurrentNode = false,
-    String? passiveTrait,
     PassiveData? activePassive,
     List<String>? forgeSlots,
     String? forgeTargetCardId,
@@ -100,7 +97,6 @@ class RunState {
       currentNodeId: resetCurrentNode
           ? null
           : (currentNodeId ?? this.currentNodeId),
-      passiveTrait: passiveTrait ?? this.passiveTrait,
       activePassive: activePassive ?? this.activePassive,
       forgeSlots: forgeSlots ?? this.forgeSlots,
       forgeTargetCardId: resetForgeTargetCardId
@@ -122,7 +118,6 @@ class RunState {
         'heroClassId': heroClassId,
         'mapNodes': mapNodes.map((n) => n.toJson()).toList(),
         'currentNodeId': currentNodeId,
-        'passiveTrait': passiveTrait,
         'activePassiveId': activePassive?.id,
         'activePassiveNameFr': activePassive?.nameFr,
         'activePassiveNameEn': activePassive?.nameEn,
@@ -178,7 +173,6 @@ class RunState {
           .map((n) => MapNode.fromJson(n as Map<String, dynamic>))
           .toList(),
       currentNodeId: json['currentNodeId'] as String?,
-      passiveTrait: json['passiveTrait'] as String?,
       activePassive: activePassive,
       forgeSlots: forgeSlots,
       forgeTargetCardId: json['forgeTargetCardId'] as String?,
@@ -209,7 +203,6 @@ class RunController extends Notifier<RunState> {
       currentLevel: 1,
       act: 1,
       heroClassId: 'paladin',
-      passiveTrait: 'regen_armor',
       activePassive: null,
       heroStats: EntityStats(
         maxPv: 100,
@@ -241,7 +234,6 @@ class RunController extends Notifier<RunState> {
       currentLevel: 1,
       act: 1,
       heroClassId: chosenClass.id,
-      passiveTrait: chosenClass.passiveTrait,
       activePassive: activePassive,
       heroStats: EntityStats(
         maxPv: chosenClass.maxHp,

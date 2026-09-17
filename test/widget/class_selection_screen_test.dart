@@ -23,7 +23,6 @@ const _heroes = [
     maxHp: 100,
     maxMana: 3,
     baseDamage: 5,
-    passiveTrait: 'regen_armor',
     // Declared first but sorts last: keeps the grid order dependent on
     // displayOrder rather than on declaration order or List.sort stability.
     displayOrder: 3,
@@ -38,7 +37,6 @@ const _heroes = [
     maxHp: 80,
     maxMana: 3,
     baseDamage: 15,
-    passiveTrait: 'berserker_armor',
     // Declared second and sorts first (lowest displayOrder).
     displayOrder: 1,
   ),
@@ -52,7 +50,6 @@ const _heroes = [
     maxHp: 60,
     maxMana: 3,
     baseDamage: 10,
-    passiveTrait: 'spell_armor',
     // Declared third and sorts in the middle.
     displayOrder: 2,
   ),

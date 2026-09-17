@@ -189,9 +189,6 @@ void main() {
   // - `iconPath`, derive de l'identifiant par `ClassRecipe` ;
   // - `skills`, alimente carte par carte par `_registerSignatureCard` ;
   // - `heroClass` et `category`, imposes par le repertoire ;
-  // - `passiveTrait`, qui est une `referenceKeys` : le formulaire le rend en
-  //   catalogue de passifs, pas en champ texte. L'assertion qui suit la table
-  //   le verifie.
   test('chaque gabarit porte exactement les cles attendues', () {
     const expected = <EntityCategory, Set<String>>{
       EntityCategory.card: {
@@ -259,16 +256,6 @@ void main() {
         reason: '${kEntityDescriptors[category]!.label} : gabarit divergent',
       );
     });
-  });
-
-  // `passiveTrait` est la seule cle de modele deliberement absente d'un
-  // gabarit tout en restant atteignable : le formulaire la rend en catalogue
-  // de passifs (§5.5), et la substitution du §5.1 la laisse absente plutot que
-  // d'inventer une reference.
-  test('passiveTrait est atteignable par le catalogue, pas par le gabarit', () {
-    final descriptor = kEntityDescriptors[EntityCategory.heroClass]!;
-    expect(descriptor.decodeTemplate().containsKey('passiveTrait'), isFalse);
-    expect(descriptor.referenceKeys.keys, contains('passiveTrait'));
   });
 
   test('sfx est une ressource son des trois categories qui le lisent', () {

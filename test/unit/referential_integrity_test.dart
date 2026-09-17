@@ -20,7 +20,7 @@ void main() {
     registry = await loadGameDataRegistry(rootBundle);
   });
 
-  // Garde de tete de fichier : sans elle, les quatre tests suivants
+  // Garde de tete de fichier : sans elle, les tests suivants
   // bouclent sur `registry.heroes` et `registry.enemies` et passeraient a
   // vide si le bundle perdait la totalite de assets/data/classes/*/ ou
   // assets/data/enemies/*/ — une boucle for sur une liste vide ne produit
@@ -62,21 +62,6 @@ void main() {
       isEmpty,
       reason: 'classes sans passif : ${offenders.join(', ')}',
     );
-  });
-
-  test('tout passiveTrait designe un passif existant', () {
-    final known = registry.passives.map((p) => p.id).toSet();
-    final offenders = <String>[];
-
-    for (final hero in registry.heroes) {
-      final trait = hero.passiveTrait;
-      if (trait == null) continue;
-      if (!known.contains(trait)) {
-        offenders.add('${hero.id} → passiveTrait "$trait" introuvable');
-      }
-    }
-
-    expect(offenders, isEmpty, reason: offenders.join('\n'));
   });
 
   test('toute carte de signature existe et appartient bien a sa classe', () {

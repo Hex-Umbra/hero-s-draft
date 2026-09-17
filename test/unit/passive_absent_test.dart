@@ -9,14 +9,13 @@ void main() {
     final container = ProviderContainer();
     addTearDown(container.dispose);
 
-    // Un héros dont le passiveTrait ne désigne aucun passif chargé.
+    // Un héros démarré sans passif actif.
     const orphan = HeroData(
       id: 'orphan',
       classCard: 'hero_paladin.png',
       maxHp: 100,
       maxMana: 3,
       baseDamage: 5,
-      passiveTrait: 'inexistant',
     );
 
     final controller = container.read(runProvider.notifier);

@@ -274,46 +274,40 @@ void main() {
   });
 
   group('famille 6 — references', () {
-    test('un passiveTrait pendant est refuse', () {
-      final descriptor = kEntityDescriptors[EntityCategory.heroClass]!;
+    // Aucun descripteur livre ne declare de reference unique depuis que la
+    // classe ne nomme plus son passif (spec P-49, §3.4) : le mecanisme se
+    // verifie sur un descripteur de test.
+    final mentor = EntityDescriptor(
+      category: EntityCategory.heroClass,
+      label: 'Classe de test',
+      directory: 'classes',
+      folderFile: 'class.json',
+      requiredKeys: const {},
+      bilingualBases: const [],
+      construct: (_) {},
+      template: '{}',
+      referenceKeys: const {'mentor': EntityCategory.passive},
+    );
+
+    EntityDraft draftWith(String mechanics) => EntityDraft(
+          descriptor: mentor,
+          id: 'barde',
+          bilingual: const {},
+          mechanics: mechanics,
+        );
+
+    test('une reference pendante est refusee', () {
       final faults = validatorWith(
         registry: fixtureRegistry(passives: [fixturePassive('regen_armor')]),
-      ).validate(
-        EntityDraft(
-          descriptor: descriptor,
-          id: 'barde',
-          bilingual: const {
-            'name_fr': 'Le Barde',
-            'name_en': 'The Bard',
-            'description_fr': 'Oriente soutien',
-            'description_en': 'Support oriented',
-          },
-          mechanics: '{"maxHp": 90, "maxMana": 3, "baseDamage": 4, '
-              '"passiveTrait": "chant_inexistant"}',
-        ),
-      );
+      ).validate(draftWith('{"mentor": "chant_inexistant"}'));
       expect(faults, hasLength(1));
-      expect(faults.first.field, 'passiveTrait');
+      expect(faults.first.field, 'mentor');
     });
 
-    test('un passiveTrait resolu passe', () {
-      final descriptor = kEntityDescriptors[EntityCategory.heroClass]!;
+    test('une reference resolue passe', () {
       final faults = validatorWith(
         registry: fixtureRegistry(passives: [fixturePassive('regen_armor')]),
-      ).validate(
-        EntityDraft(
-          descriptor: descriptor,
-          id: 'barde',
-          bilingual: const {
-            'name_fr': 'Le Barde',
-            'name_en': 'The Bard',
-            'description_fr': 'Oriente soutien',
-            'description_en': 'Support oriented',
-          },
-          mechanics: '{"maxHp": 90, "maxMana": 3, "baseDamage": 4, '
-              '"passiveTrait": "regen_armor"}',
-        ),
-      );
+      ).validate(draftWith('{"mentor": "regen_armor"}'));
       expect(faults, isEmpty);
     });
   });

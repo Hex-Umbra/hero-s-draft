@@ -486,7 +486,7 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
   ///
   /// **Sans cette relecture, « Modifier » ecrit le gabarit par-dessus la
   /// cible** : toute cle que le gabarit ne porte pas — le `skills` d'une
-  /// classe, son `passiveTrait`, les `effects` d'une carte, les `intents` d'un
+  /// classe, les `classes` d'un passif, les `effects` d'une carte, les `intents` d'un
   /// ennemi — disparaitrait en silence, validation passee et ecriture reussie.
   void _load(String root) {
     final draft = _draft();

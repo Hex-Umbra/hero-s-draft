@@ -10,7 +10,6 @@
   "maxMana": 3,
   "baseDamage": 15,
   "luck": 0,
-  "passiveTrait": "berserker_armor",
   "displayOrder": 2,
   "skills": [
     "reckless_strike",

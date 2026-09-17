@@ -124,13 +124,26 @@ void main() {
 
   testWidgets('une reference absente se choisit dans son catalogue',
       (tester) async {
-    final document = templateOf(hero);
-    await pump(tester, document, hero, references: const {
-      'passiveTrait': ['regen_armor'],
+    // Aucun descripteur livre ne declare de reference unique depuis P-49 :
+    // le mecanisme se verifie sur un descripteur de test.
+    final mentor = EntityDescriptor(
+      category: EntityCategory.heroClass,
+      label: 'Classe de test',
+      directory: 'classes',
+      folderFile: 'class.json',
+      requiredKeys: const {},
+      bilingualBases: const [],
+      construct: (_) {},
+      template: '{}',
+      referenceKeys: const {'mentor': EntityCategory.passive},
+    );
+    final document = templateOf(mentor);
+    await pump(tester, document, mentor, references: const {
+      'mentor': ['regen_armor'],
     });
 
     await tester.tap(find.text('regen_armor'));
-    expect(document.root['passiveTrait'], 'regen_armor');
+    expect(document.root['mentor'], 'regen_armor');
   });
 
   testWidgets('un vocabulaire montre aussi la valeur fautive', (tester) async {
