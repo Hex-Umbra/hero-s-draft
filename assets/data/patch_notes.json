@@ -13,7 +13,9 @@
           "Sur le site, une partie sauvegardée avec cette version n'est plus proposée par les versions précédentes du jeu, qui l'auraient effacée : reprenez-la depuis la version 0.5.2 ou une version plus récente.",
           "La Maîtrise d'Armure devient la Maîtrise : elle renforce désormais ce que produit votre passif, et chaque passif indique ce qu'un point de Maîtrise lui apporte.",
           "La récompense Forge d'Acier devient Affinité, avec les mêmes valeurs : sa carte indique ce que la Maîtrise obtenue apporte à votre passif actuel.",
-          "La fiche des statistiques affiche l'effet de votre Maîtrise sur votre passif, et l'écran de sélection de classe indique ce qu'un point de Maîtrise apporte au passif de chaque classe."
+          "La fiche des statistiques affiche l'effet de votre Maîtrise sur votre passif, et l'écran de sélection de classe indique ce qu'un point de Maîtrise apporte au passif de chaque classe.",
+        "La Force et l'Attaque de votre héros deviennent la Puissance : un seul mot, sur les cartes, les reliques, les événements, les statuts et le tutoriel. Vos dégâts ne changent pas.",
+        "La fiche des statistiques indique ce que votre Puissance renforce."
         ]
       },
       {
