@@ -64,6 +64,18 @@
   },
   "heroStatsTitle": "Hero Statistics",
   "classPassive": "Class Passive",
+  "passiveMasteryCurrent": "Mastery: {effect}",
+  "@passiveMasteryCurrent": {
+    "placeholders": {
+      "effect": { "type": "String" }
+    }
+  },
+  "passiveMasteryPerPoint": "Per Mastery point: {effect}",
+  "@passiveMasteryPerPoint": {
+    "placeholders": {
+      "effect": { "type": "String" }
+    }
+  },
   "relicInventory": "Relic Inventory",
   "emptyInventory": "Your inventory is empty",
   "luckPercentageTitle": "Rarity Loot Rates",
@@ -439,9 +451,16 @@
       "amount": { "type": "int" }
     }
   },
-  "draftChoiceSteelForge": "Steel Forge",
-  "draftChoiceSteelForgeDesc": "+{amount} to your passive's Block gain",
-  "@draftChoiceSteelForgeDesc": {
+  "draftChoiceAffinity": "Affinity",
+  "draftChoiceAffinityDesc": "{passive}: {effect}",
+  "@draftChoiceAffinityDesc": {
+    "placeholders": {
+      "passive": { "type": "String" },
+      "effect": { "type": "String" }
+    }
+  },
+  "draftChoiceAffinityNoEffect": "+{amount} Mastery, no effect on your passive",
+  "@draftChoiceAffinityNoEffect": {
     "placeholders": {
       "amount": { "type": "int" }
     }

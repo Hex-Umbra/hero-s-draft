@@ -127,6 +127,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get classPassive => 'Effet Passif';
 
   @override
+  String passiveMasteryCurrent(String effect) {
+    return 'Maîtrise : $effect';
+  }
+
+  @override
+  String passiveMasteryPerPoint(String effect) {
+    return 'Par point de Maîtrise : $effect';
+  }
+
+  @override
   String get relicInventory => 'Inventaire des Reliques';
 
   @override
@@ -679,11 +689,16 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get draftChoiceSteelForge => 'Forge d\'Acier';
+  String get draftChoiceAffinity => 'Affinité';
 
   @override
-  String draftChoiceSteelForgeDesc(int amount) {
-    return '+$amount aux gains d\'Armure de votre passif';
+  String draftChoiceAffinityDesc(String passive, String effect) {
+    return '$passive : $effect';
+  }
+
+  @override
+  String draftChoiceAffinityNoEffect(int amount) {
+    return '+$amount Maîtrise, sans effet sur votre passif';
   }
 
   @override

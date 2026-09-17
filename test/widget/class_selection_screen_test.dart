@@ -264,5 +264,30 @@ void main() {
         expect(find.text('WARD'), findsNothing);
       },
     );
+
+    testWidgets('le passif dit ce qu un point de Maitrise lui apporte', (
+      WidgetTester tester,
+    ) async {
+      const regen = PassiveData(
+        id: 'regen_armor',
+        nameEn: 'Armor Regeneration',
+        nameFr: "Régénération d'Armure",
+        classes: ['paladin'],
+        trigger: RelicTrigger.endOfTurn,
+        effectType: 'gain_armor',
+        value: 2,
+        mastery: PassiveMastery(
+          field: 'value',
+          perPoint: 1,
+          descriptionEn: '+{amount} Block at end of turn',
+          descriptionFr: '+{amount} Armure en fin de tour',
+        ),
+      );
+      await _buildAndReady(tester, passives: const [regen]);
+      expect(
+        find.text('Per Mastery point: +1 Block at end of turn'),
+        findsOneWidget,
+      );
+    });
   });
 }

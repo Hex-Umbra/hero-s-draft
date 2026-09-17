@@ -162,6 +162,9 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
 
     final String traitName = passive?.getName(locale) ?? '—';
     final String traitDesc = passive?.getDescription(locale) ?? '';
+    // Ce qu'un point de Maîtrise apporte au passif (spec P-49, §6.5).
+    final String? masteryPerPoint = passive?.mastery?.describe(locale, 1);
+    final l10n = AppLocalizations.of(context)!;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -413,6 +416,27 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                         ),
                                         textAlign: TextAlign.center,
                                       ),
+                                      if (masteryPerPoint != null) ...[
+                                        SizedBox(
+                                          height: widget.isMobile ? 1 : 3,
+                                        ),
+                                        Text(
+                                          l10n.passiveMasteryPerPoint(
+                                            masteryPerPoint,
+                                          ),
+                                          style: TextStyle(
+                                            fontSize: widget.isMobile
+                                                ? 9
+                                                : 10,
+                                            fontStyle: FontStyle.italic,
+                                            color: Colors.cyanAccent.withValues(
+                                              alpha: 0.7,
+                                            ),
+                                            height: 1.2,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ],
                                     ],
                                   ),
                                 ),

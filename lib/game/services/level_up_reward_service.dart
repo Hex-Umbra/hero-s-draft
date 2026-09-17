@@ -8,7 +8,7 @@ enum RewardRarity { common, uncommon, rare, epic, legendary, mythic }
 enum LevelUpRewardType {
   vitality,
   sharpening,
-  steelForge,
+  affinity,
   wisdom,
   luckyClover,
   mirror,
@@ -20,7 +20,7 @@ class DraftChoice {
   final LevelUpRewardType type;
   final int pvBoost;
   final int atkBoost;
-  final int armorBoost;
+  final int masteryBoost;
   final int manaBoost;
   final int luckBoost;
   final bool isCloneOption;
@@ -32,7 +32,7 @@ class DraftChoice {
     required this.type,
     this.pvBoost = 0,
     this.atkBoost = 0,
-    this.armorBoost = 0,
+    this.masteryBoost = 0,
     this.manaBoost = 0,
     this.luckBoost = 0,
     this.isCloneOption = false,
@@ -122,9 +122,9 @@ class LevelUpRewardService {
 
       // Un `switch` exhaustif, pas une cascade de `if` : l'analyseur refuse
       // alors tout palier de rarete oublie. C'est precisement une cascade de
-      // `if` qui avait laisse passer l'absence du palier legendaire sur la
-      // Maitrise d'Armure ci-dessous, ou un legendaire retombait sur la
-      // valeur d'un commun.
+      // `if` qui avait laisse passer l'absence du palier legendaire sur
+      // l'Affinite ci-dessous, alors Forge d'Acier, ou un legendaire
+      // retombait sur la valeur d'un commun.
       //
       // `mythic` est inatteignable ici — `rollRarity` ne le rend que pour
       // `isLevelReward: true`, et les deux options mythiques (Trefle, Miroir)
@@ -163,10 +163,11 @@ class LevelUpRewardService {
         );
       }
       if (type == 2) {
-        // La Maitrise d'Armure a sa propre courbe : elle s'ajoute a *chaque*
-        // gain d'armure du passif, donc a chaque tour pour le Paladin mais a
-        // chaque Competence jouee pour le Mage. Elle compose plus fort que
-        // les autres recompenses, d'ou une progression distincte.
+        // L'Affinite a sa propre courbe : la Maitrise augmente le parametre
+        // du passif a *chacun* de ses declenchements — chaque tour pour le
+        // Paladin, chaque Competence jouee pour le Mage (spec P-49, §6). Elle
+        // compose plus fort que les autres recompenses, d'ou une progression
+        // distincte.
         final int boost;
         switch (rarity) {
           case RewardRarity.common:
@@ -182,8 +183,8 @@ class LevelUpRewardService {
             boost = 7;
         }
         return DraftChoice(
-          type: LevelUpRewardType.steelForge,
-          armorBoost: boost,
+          type: LevelUpRewardType.affinity,
+          masteryBoost: boost,
           rarity: rarity,
         );
       }

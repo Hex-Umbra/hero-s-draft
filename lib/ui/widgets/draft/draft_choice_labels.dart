@@ -1,5 +1,6 @@
 import '../../../game/services/level_up_reward_service.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../models/data/passive_data.dart';
 
 /// Dérive les libellés localisés d'un [DraftChoice] (titre, description et
 /// rareté) tel que généré par [LevelUpRewardService.generateChoices].
@@ -9,8 +10,8 @@ import '../../../l10n/app_localizations.dart';
 /// `TutorialDraftWidget` : les deux doivent afficher exactement les mêmes
 /// libellés pour un même [DraftChoice], sans dupliquer la correspondance
 /// type -> texte localisé. Ne dépend que d'[AppLocalizations] et des
-/// modèles de `level_up_reward_service.dart` — jamais de `BuildContext` ni
-/// de Riverpod, pour rester consommable depuis `lib/tutorial/`.
+/// modèles — jamais de `BuildContext` ni de Riverpod, pour rester
+/// consommable depuis `lib/tutorial/`.
 class DraftChoiceLabels {
   const DraftChoiceLabels._();
 
@@ -39,8 +40,8 @@ class DraftChoiceLabels {
         return l10n.draftChoiceVitality;
       case LevelUpRewardType.sharpening:
         return l10n.draftChoiceSharpening;
-      case LevelUpRewardType.steelForge:
-        return l10n.draftChoiceSteelForge;
+      case LevelUpRewardType.affinity:
+        return l10n.draftChoiceAffinity;
       case LevelUpRewardType.wisdom:
         return l10n.draftChoiceWisdom;
       case LevelUpRewardType.luckyClover:
@@ -55,17 +56,29 @@ class DraftChoiceLabels {
   }
 
   /// Description (avec la valeur du gain) affichée pour ce choix de draft.
+  ///
+  /// [passive] est le passif actif : *Affinité* se décrit par ce que la
+  /// Maîtrise tirée lui apporte (spec P-49, §6.5). Les autres récompenses
+  /// l'ignorent.
   static String getChoiceDescription(
     AppLocalizations l10n,
-    DraftChoice choice,
-  ) {
+    DraftChoice choice, {
+    PassiveData? passive,
+  }) {
     switch (choice.type) {
       case LevelUpRewardType.vitality:
         return l10n.draftChoiceVitalityDesc(choice.pvBoost);
       case LevelUpRewardType.sharpening:
         return l10n.draftChoiceSharpeningDesc(choice.atkBoost);
-      case LevelUpRewardType.steelForge:
-        return l10n.draftChoiceSteelForgeDesc(choice.armorBoost);
+      case LevelUpRewardType.affinity:
+        final mastery = passive?.mastery;
+        if (passive == null || mastery == null) {
+          return l10n.draftChoiceAffinityNoEffect(choice.masteryBoost);
+        }
+        return l10n.draftChoiceAffinityDesc(
+          passive.getName(l10n.localeName),
+          mastery.describe(l10n.localeName, choice.masteryBoost),
+        );
       case LevelUpRewardType.wisdom:
         return l10n.draftChoiceWisdomDesc(choice.manaBoost);
       case LevelUpRewardType.luckyClover:
